@@ -3,6 +3,7 @@
 www.orbitprofiler.com
 
 Pierric Gimmig
+
 [ <img src="https://github.com/pierricgimmig/orbitprofiler/blob/master/logos/twitter.png">](https://twitter.com/pierricgimmig)[ <img src="https://github.com/pierricgimmig/orbitprofiler/blob/master/logos/linkedin.png">](https://www.linkedin.com/in/pgimmig/)[ <img src="https://github.com/pierricgimmig/orbitprofiler/blob/master/logos/mail.png">](mailto:pierric.gimmig@gmail.com)
 
 Thank you for using Orbit.
@@ -13,7 +14,7 @@ http://telescopp.com/howto
 A more in-depth video can be found here:
 www.telescopp.com
 
-Workflow
+**Workflow**
 1. Select a process in the list of currently running processes in the "Home" tab
 2. The list of loaded modules will appear on the bottom of the "Home" tab.  If a .pdb file was found for a module, it will appear in blue
 3. Right click on the module(s) for wich you want to load debug information and select "Load Pdb".  Wait a little bit for Orbit to parse the pdb.  Once its done, The "Functions", "Types" and "Globals" tabs will get populated.
