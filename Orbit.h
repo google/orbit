@@ -8,8 +8,12 @@
 // Orbit API
 // 
 // Simply include this header in your project, there is no lib and no cpp file.
-// 
+//
 // MANUAL INSTRUMENTATION:
+// The main feature of Orbit is its ability to dynamically instrument functions
+// without having to recompile or even relaunch your application.  However,
+// if you still want to manually instrument your code, you can.
+//
 // Use ORBIT_SCOPE or ORBIT_START/ORBIT_STOP *macros* only.
 // DO NOT use OrbitScope(...)/OrbitStart(...)/OrbitStop() directly.
 // NOTE: You need to use string literals.  Dynamic strings are not supported yet.
