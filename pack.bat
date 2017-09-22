@@ -31,7 +31,7 @@ xcopy bin\x64\Release\msdia140.dll                    %TARGET_PATH%
 xcopy licenses\*.*                                    %LICENS_PATH%
 
 ::ReleaseNotes
-xcopy release_notes.txt       					      %TARGET_PATH%
+xcopy release_notes.txt                               %TARGET_PATH%
                                                       
 ::Qt                                                  
 xcopy bin\x64\Release\Qt5Core.dll                     %TARGET_PATH%
