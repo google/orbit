@@ -21,6 +21,7 @@ Orbit analyses the debug information present in the pdb files and performs runti
 - Full type information (detailed memory layout, class hierarchy...)
 - Portable Executable Files Parsing (PE Parsing)
 - Code View
+- Disassembly View
 - Support for Win32 and x64
 - Global Initialization Profiling
 - Blazing Fast UI
@@ -30,6 +31,8 @@ Orbit analyses the debug information present in the pdb files and performs runti
 - Tested on Unreal, Unity, Lumberyard, Qt, Doom3, PhysX, ...
 - Built-in Support For Unreal Types (FNames, UObject)
 - "Don’t pay for what you don’t use" (Performance)
+- "Show Include" Util
+- Diff Util
 - and more!
 
 
