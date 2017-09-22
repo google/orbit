@@ -13,7 +13,7 @@ http://telescopp.com/howto
 A more in-depth video can be found here:
 www.telescopp.com
 
-**Building**
+**Building**  
 The current version of Orbit requires **Visual Studio 2015** and **Qt 5.8**.  Open Orbit.sln, select x64 Release and build.  Don't forget to build the Win32 version of OrbitDll if you want to hook into 32 bit processes.
 
 **Workflow**
