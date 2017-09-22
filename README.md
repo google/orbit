@@ -2,8 +2,7 @@
 
 www.orbitprofiler.com
 
-Pierric Gimmig
-
+**Pierric Gimmig**
 [ <img src="https://github.com/pierricgimmig/orbitprofiler/blob/master/logos/twitter.png">](https://twitter.com/pierricgimmig)[ <img src="https://github.com/pierricgimmig/orbitprofiler/blob/master/logos/linkedin.png">](https://www.linkedin.com/in/pgimmig/)[ <img src="https://github.com/pierricgimmig/orbitprofiler/blob/master/logos/mail.png">](mailto:pierric.gimmig@gmail.com)
 
 Thank you for using Orbit.
