@@ -2,8 +2,36 @@
 
 www.orbitprofiler.com
 
-**Pierric Gimmig**  
-[ <img src="https://github.com/pierricgimmig/orbitprofiler/blob/master/logos/twitter.png">](https://twitter.com/pierricgimmig)[ <img src="https://github.com/pierricgimmig/orbitprofiler/blob/master/logos/linkedin.png">](https://www.linkedin.com/in/pgimmig/)[ <img src="https://github.com/pierricgimmig/orbitprofiler/blob/master/logos/mail.png">](mailto:pierric.gimmig@gmail.com)
+**Orbit** is a standalone **C/C++** profiler for Windows. Its main purpose is to help developers visualize the execution flow of a complex application.
+
+The key differentiator with many existing tools is that no alteration to the target process is necessary. Orbit does not require you to change a single line of code.  It doesn't require you to recompile or even relaunch the application you want to debug. Everything is done seamlessly, right when you need it. It requires zero integration time and zero iteration time.
+
+Orbit analyses the debug information present in the pdb files and performs runtime injection into the target process to open up a communication channel between the two applications.  It can then dynamically instrument functions that the user selects easily from the intuitive UI.  It also contains a robust sampling profiler and context switch tracker based on ETW (Event Tracing for Windows).  Instrumentation data is presented in the form of a flame chart onto which sampling data is overlaid.
+
+Features
+- No Code Change Required
+- Fast Pdb Parsing
+- Runtime Injection
+- Dynamic Instrumentation (Hooking)
+- Robust Sampling (ETW)
+- Context Switch Tracking
+- Remote Profiling
+- Data Tracking
+- Automatic Variable Tweaking
+- Full type information (detailed memory layout, class hierarchy...)
+- Portable Executable Files Parsing (PE Parsing)
+- Code View
+- Support for Win32 and x64
+- Global Initialization Profiling
+- Blazing Fast UI
+- Plugin Architecture for custom visualizers
+- Data Driven User Sessions
+- Full Serialization of Captured Data
+- Tested on Unreal, Unity, Lumberyard, Qt, Doom3, PhysX, ...
+- Built-in Support For Unreal Types (FNames, UObject)
+- "Don’t pay for what you don’t use" (Performance)
+- and more!
+
 
 Thank you for using Orbit.
 
@@ -28,6 +56,9 @@ Sessions
 Once you have loaded the debug information for your modules and have chosen functions of interest, you can save your profiling session so that you won't have to do this manually again.  To save a session, go to "File"->"Save Session"
 
 Questions and comments are more than welcome, please send them directly to pierric.gimmig@gmail.com.
+
+**Pierric Gimmig**  
+[ <img src="https://github.com/pierricgimmig/orbitprofiler/blob/master/logos/twitter.png">](https://twitter.com/pierricgimmig)[ <img src="https://github.com/pierricgimmig/orbitprofiler/blob/master/logos/linkedin.png">](https://www.linkedin.com/in/pgimmig/)[ <img src="https://github.com/pierricgimmig/orbitprofiler/blob/master/logos/mail.png">](mailto:pierric.gimmig@gmail.com)  
 
 License (BSD 2-clause)
 ======
