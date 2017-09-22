@@ -1,3 +1,8 @@
 /*
-!/.gitignore
+!/platforms/
 !/libcurl.dll
+!/glew32.dll
+!/msdia140.dll
+!/Qt5Core.dll
+!/Qt5Gui.dll
+!/Qt5Widgets.dll
