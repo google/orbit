@@ -1,4 +1,4 @@
-![Orbit logo](https://github.com/pierricgimmig/orbitprofiler/tree/master/logos/orbit_logo.png)
+![Alt text](logos/orbit_logo.png)
 
 www.orbitprofiler.com
 
