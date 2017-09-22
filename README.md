@@ -8,7 +8,7 @@ The key differentiator with many existing tools is that no alteration to the tar
 
 Orbit analyses the debug information present in the pdb files and performs runtime injection into the target process to open up a communication channel between the two applications.  It can then dynamically instrument functions that the user selects easily from the intuitive UI.  It also contains a robust sampling profiler and context switch tracker based on ETW (Event Tracing for Windows).  Instrumentation data is presented in the form of a flame chart onto which sampling data is overlaid.
 
-Features
+**Features**
 - No Code Change Required
 - Fast Pdb Parsing
 - Runtime Injection
@@ -17,7 +17,7 @@ Features
 - Context Switch Tracking
 - Remote Profiling
 - Data Tracking
-- Automatic Variable Tweaking
+- Variable Tweaking
 - Full type information (detailed memory layout, class hierarchy...)
 - Portable Executable Files Parsing (PE Parsing)
 - Code View
