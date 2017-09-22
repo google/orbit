@@ -13,6 +13,9 @@ http://telescopp.com/howto
 A more in-depth video can be found here:
 www.telescopp.com
 
+**Building**
+The current version of Orbit requires **Visual Studio 2015** and **Qt 5.8**.  Open Orbit.sln, select x64 Release and build.  Don't forget to build the Win32 version of OrbitDll if you want to hook into 32 bit processes.
+
 **Workflow**
 1. Select a process in the list of currently running processes in the "Home" tab
 2. The list of loaded modules will appear on the bottom of the "Home" tab.  If a .pdb file was found for a module, it will appear in blue
