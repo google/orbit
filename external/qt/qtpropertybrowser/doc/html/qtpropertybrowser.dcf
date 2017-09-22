@@ -1,0 +1,586 @@
+<!DOCTYPE DCF>
+<DCF ref="index.html" icon="qtpropertybrowser.png" imagedir="../../gif" title="Qt Solutions: Property Browser Documentation">
+<section ref="classes.html" title="Classes">
+    <section ref="qtabstracteditorfactory.html" title="QtAbstractEditorFactory Class Reference">
+        <keyword ref="qtabstracteditorfactory.html">QtAbstractEditorFactory</keyword>
+        <keyword ref="qtabstracteditorfactory.html#addPropertyManager">addPropertyManager</keyword>
+        <keyword ref="qtabstracteditorfactory.html#connectPropertyManager">connectPropertyManager</keyword>
+        <keyword ref="qtabstracteditorfactory.html#createEditor">createEditor</keyword>
+        <keyword ref="qtabstracteditorfactory.html#disconnectPropertyManager">disconnectPropertyManager</keyword>
+        <keyword ref="qtabstracteditorfactory.html#propertyManager">propertyManager</keyword>
+        <keyword ref="qtabstracteditorfactory.html#propertyManagers">propertyManagers</keyword>
+        <keyword ref="qtabstracteditorfactory.html#removePropertyManager">removePropertyManager</keyword>
+        <section ref="qtabstracteditorfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtabstracteditorfactorybase.html" title="QtAbstractEditorFactoryBase Class Reference">
+        <keyword ref="qtabstracteditorfactorybase.html">QtAbstractEditorFactoryBase</keyword>
+        <keyword ref="qtabstracteditorfactorybase.html#createEditor">createEditor</keyword>
+        <section ref="qtabstracteditorfactorybase-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtabstractpropertybrowser.html" title="QtAbstractPropertyBrowser Class Reference">
+        <keyword ref="qtabstractpropertybrowser.html">QtAbstractPropertyBrowser</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#addProperty">addProperty</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#clear">clear</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#createEditor">createEditor</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#currentItem">currentItem</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#currentItemChanged">currentItemChanged</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#insertProperty">insertProperty</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#itemChanged">itemChanged</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#itemInserted">itemInserted</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#itemRemoved">itemRemoved</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#items">items</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#properties">properties</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#removeProperty">removeProperty</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#setCurrentItem">setCurrentItem</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#setFactoryForManager">setFactoryForManager</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#topLevelItem">topLevelItem</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#topLevelItems">topLevelItems</keyword>
+        <keyword ref="qtabstractpropertybrowser.html#unsetFactoryForManager">unsetFactoryForManager</keyword>
+        <section ref="qtabstractpropertybrowser-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtabstractpropertymanager.html" title="QtAbstractPropertyManager Class Reference">
+        <keyword ref="qtabstractpropertymanager.html">QtAbstractPropertyManager</keyword>
+        <keyword ref="qtabstractpropertymanager.html#addProperty">addProperty</keyword>
+        <keyword ref="qtabstractpropertymanager.html#clear">clear</keyword>
+        <keyword ref="qtabstractpropertymanager.html#createProperty">createProperty</keyword>
+        <keyword ref="qtabstractpropertymanager.html#hasValue">hasValue</keyword>
+        <keyword ref="qtabstractpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtabstractpropertymanager.html#properties">properties</keyword>
+        <keyword ref="qtabstractpropertymanager.html#propertyChanged">propertyChanged</keyword>
+        <keyword ref="qtabstractpropertymanager.html#propertyDestroyed">propertyDestroyed</keyword>
+        <keyword ref="qtabstractpropertymanager.html#propertyInserted">propertyInserted</keyword>
+        <keyword ref="qtabstractpropertymanager.html#propertyRemoved">propertyRemoved</keyword>
+        <keyword ref="qtabstractpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtabstractpropertymanager.html#valueIcon">valueIcon</keyword>
+        <keyword ref="qtabstractpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtabstractpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtboolpropertymanager.html" title="QtBoolPropertyManager Class Reference">
+        <keyword ref="qtboolpropertymanager.html">QtBoolPropertyManager</keyword>
+        <keyword ref="qtboolpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtboolpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtboolpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtboolpropertymanager.html#value">value</keyword>
+        <keyword ref="qtboolpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtboolpropertymanager.html#valueIcon">valueIcon</keyword>
+        <keyword ref="qtboolpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtboolpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtbrowseritem.html" title="QtBrowserItem Class Reference">
+        <keyword ref="qtbrowseritem.html">QtBrowserItem</keyword>
+        <keyword ref="qtbrowseritem.html#browser">browser</keyword>
+        <keyword ref="qtbrowseritem.html#children">children</keyword>
+        <keyword ref="qtbrowseritem.html#parent">parent</keyword>
+        <keyword ref="qtbrowseritem.html#property">property</keyword>
+        <section ref="qtbrowseritem-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtbuttonpropertybrowser.html" title="QtButtonPropertyBrowser Class Reference">
+        <keyword ref="qtbuttonpropertybrowser.html">QtButtonPropertyBrowser</keyword>
+        <keyword ref="qtbuttonpropertybrowser.html#collapsed">collapsed</keyword>
+        <keyword ref="qtbuttonpropertybrowser.html#expanded">expanded</keyword>
+        <keyword ref="qtbuttonpropertybrowser.html#isExpanded">isExpanded</keyword>
+        <keyword ref="qtbuttonpropertybrowser.html#itemChanged">itemChanged</keyword>
+        <keyword ref="qtbuttonpropertybrowser.html#itemInserted">itemInserted</keyword>
+        <keyword ref="qtbuttonpropertybrowser.html#itemRemoved">itemRemoved</keyword>
+        <keyword ref="qtbuttonpropertybrowser.html#setExpanded">setExpanded</keyword>
+        <section ref="qtbuttonpropertybrowser-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtchareditorfactory.html" title="QtCharEditorFactory Class Reference">
+        <keyword ref="qtchareditorfactory.html">QtCharEditorFactory</keyword>
+        <section ref="qtchareditorfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtcharpropertymanager.html" title="QtCharPropertyManager Class Reference">
+        <keyword ref="qtcharpropertymanager.html">QtCharPropertyManager</keyword>
+        <keyword ref="qtcharpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtcharpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtcharpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtcharpropertymanager.html#value">value</keyword>
+        <keyword ref="qtcharpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtcharpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtcharpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtcheckboxfactory.html" title="QtCheckBoxFactory Class Reference">
+        <keyword ref="qtcheckboxfactory.html">QtCheckBoxFactory</keyword>
+        <section ref="qtcheckboxfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtcoloreditorfactory.html" title="QtColorEditorFactory Class Reference">
+        <keyword ref="qtcoloreditorfactory.html">QtColorEditorFactory</keyword>
+        <section ref="qtcoloreditorfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtcolorpropertymanager.html" title="QtColorPropertyManager Class Reference">
+        <keyword ref="qtcolorpropertymanager.html">QtColorPropertyManager</keyword>
+        <keyword ref="qtcolorpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtcolorpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtcolorpropertymanager.html#subIntPropertyManager">subIntPropertyManager</keyword>
+        <keyword ref="qtcolorpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtcolorpropertymanager.html#value">value</keyword>
+        <keyword ref="qtcolorpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtcolorpropertymanager.html#valueIcon">valueIcon</keyword>
+        <keyword ref="qtcolorpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtcolorpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtcursoreditorfactory.html" title="QtCursorEditorFactory Class Reference">
+        <keyword ref="qtcursoreditorfactory.html">QtCursorEditorFactory</keyword>
+        <section ref="qtcursoreditorfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtcursorpropertymanager.html" title="QtCursorPropertyManager Class Reference">
+        <keyword ref="qtcursorpropertymanager.html">QtCursorPropertyManager</keyword>
+        <keyword ref="qtcursorpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtcursorpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtcursorpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtcursorpropertymanager.html#value">value</keyword>
+        <keyword ref="qtcursorpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtcursorpropertymanager.html#valueIcon">valueIcon</keyword>
+        <keyword ref="qtcursorpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtcursorpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtdateeditfactory.html" title="QtDateEditFactory Class Reference">
+        <keyword ref="qtdateeditfactory.html">QtDateEditFactory</keyword>
+        <section ref="qtdateeditfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtdatepropertymanager.html" title="QtDatePropertyManager Class Reference">
+        <keyword ref="qtdatepropertymanager.html">QtDatePropertyManager</keyword>
+        <keyword ref="qtdatepropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtdatepropertymanager.html#maximum">maximum</keyword>
+        <keyword ref="qtdatepropertymanager.html#minimum">minimum</keyword>
+        <keyword ref="qtdatepropertymanager.html#rangeChanged">rangeChanged</keyword>
+        <keyword ref="qtdatepropertymanager.html#setMaximum">setMaximum</keyword>
+        <keyword ref="qtdatepropertymanager.html#setMinimum">setMinimum</keyword>
+        <keyword ref="qtdatepropertymanager.html#setRange">setRange</keyword>
+        <keyword ref="qtdatepropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtdatepropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtdatepropertymanager.html#value">value</keyword>
+        <keyword ref="qtdatepropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtdatepropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtdatepropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtdatetimeeditfactory.html" title="QtDateTimeEditFactory Class Reference">
+        <keyword ref="qtdatetimeeditfactory.html">QtDateTimeEditFactory</keyword>
+        <section ref="qtdatetimeeditfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtdatetimepropertymanager.html" title="QtDateTimePropertyManager Class Reference">
+        <keyword ref="qtdatetimepropertymanager.html">QtDateTimePropertyManager</keyword>
+        <keyword ref="qtdatetimepropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtdatetimepropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtdatetimepropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtdatetimepropertymanager.html#value">value</keyword>
+        <keyword ref="qtdatetimepropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtdatetimepropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtdatetimepropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtdoublepropertymanager.html" title="QtDoublePropertyManager Class Reference">
+        <keyword ref="qtdoublepropertymanager.html">QtDoublePropertyManager</keyword>
+        <keyword ref="qtdoublepropertymanager.html#decimals">decimals</keyword>
+        <keyword ref="qtdoublepropertymanager.html#decimalsChanged">decimalsChanged</keyword>
+        <keyword ref="qtdoublepropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtdoublepropertymanager.html#maximum">maximum</keyword>
+        <keyword ref="qtdoublepropertymanager.html#minimum">minimum</keyword>
+        <keyword ref="qtdoublepropertymanager.html#rangeChanged">rangeChanged</keyword>
+        <keyword ref="qtdoublepropertymanager.html#setDecimals">setDecimals</keyword>
+        <keyword ref="qtdoublepropertymanager.html#setMaximum">setMaximum</keyword>
+        <keyword ref="qtdoublepropertymanager.html#setMinimum">setMinimum</keyword>
+        <keyword ref="qtdoublepropertymanager.html#setRange">setRange</keyword>
+        <keyword ref="qtdoublepropertymanager.html#setSingleStep">setSingleStep</keyword>
+        <keyword ref="qtdoublepropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtdoublepropertymanager.html#singleStep">singleStep</keyword>
+        <keyword ref="qtdoublepropertymanager.html#singleStepChanged">singleStepChanged</keyword>
+        <keyword ref="qtdoublepropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtdoublepropertymanager.html#value">value</keyword>
+        <keyword ref="qtdoublepropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtdoublepropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtdoublepropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtdoublespinboxfactory.html" title="QtDoubleSpinBoxFactory Class Reference">
+        <keyword ref="qtdoublespinboxfactory.html">QtDoubleSpinBoxFactory</keyword>
+        <section ref="qtdoublespinboxfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtenumeditorfactory.html" title="QtEnumEditorFactory Class Reference">
+        <keyword ref="qtenumeditorfactory.html">QtEnumEditorFactory</keyword>
+        <section ref="qtenumeditorfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtenumpropertymanager.html" title="QtEnumPropertyManager Class Reference">
+        <keyword ref="qtenumpropertymanager.html">QtEnumPropertyManager</keyword>
+        <keyword ref="qtenumpropertymanager.html#enumIcons">enumIcons</keyword>
+        <keyword ref="qtenumpropertymanager.html#enumIconsChanged">enumIconsChanged</keyword>
+        <keyword ref="qtenumpropertymanager.html#enumNames">enumNames</keyword>
+        <keyword ref="qtenumpropertymanager.html#enumNamesChanged">enumNamesChanged</keyword>
+        <keyword ref="qtenumpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtenumpropertymanager.html#setEnumIcons">setEnumIcons</keyword>
+        <keyword ref="qtenumpropertymanager.html#setEnumNames">setEnumNames</keyword>
+        <keyword ref="qtenumpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtenumpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtenumpropertymanager.html#value">value</keyword>
+        <keyword ref="qtenumpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtenumpropertymanager.html#valueIcon">valueIcon</keyword>
+        <keyword ref="qtenumpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtenumpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtflagpropertymanager.html" title="QtFlagPropertyManager Class Reference">
+        <keyword ref="qtflagpropertymanager.html">QtFlagPropertyManager</keyword>
+        <keyword ref="qtflagpropertymanager.html#flagNames">flagNames</keyword>
+        <keyword ref="qtflagpropertymanager.html#flagNamesChanged">flagNamesChanged</keyword>
+        <keyword ref="qtflagpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtflagpropertymanager.html#setFlagNames">setFlagNames</keyword>
+        <keyword ref="qtflagpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtflagpropertymanager.html#subBoolPropertyManager">subBoolPropertyManager</keyword>
+        <keyword ref="qtflagpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtflagpropertymanager.html#value">value</keyword>
+        <keyword ref="qtflagpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtflagpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtflagpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtfonteditorfactory.html" title="QtFontEditorFactory Class Reference">
+        <keyword ref="qtfonteditorfactory.html">QtFontEditorFactory</keyword>
+        <section ref="qtfonteditorfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtfontpropertymanager.html" title="QtFontPropertyManager Class Reference">
+        <keyword ref="qtfontpropertymanager.html">QtFontPropertyManager</keyword>
+        <keyword ref="qtfontpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtfontpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtfontpropertymanager.html#subBoolPropertyManager">subBoolPropertyManager</keyword>
+        <keyword ref="qtfontpropertymanager.html#subEnumPropertyManager">subEnumPropertyManager</keyword>
+        <keyword ref="qtfontpropertymanager.html#subIntPropertyManager">subIntPropertyManager</keyword>
+        <keyword ref="qtfontpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtfontpropertymanager.html#value">value</keyword>
+        <keyword ref="qtfontpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtfontpropertymanager.html#valueIcon">valueIcon</keyword>
+        <keyword ref="qtfontpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtfontpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtgroupboxpropertybrowser.html" title="QtGroupBoxPropertyBrowser Class Reference">
+        <keyword ref="qtgroupboxpropertybrowser.html">QtGroupBoxPropertyBrowser</keyword>
+        <keyword ref="qtgroupboxpropertybrowser.html#itemChanged">itemChanged</keyword>
+        <keyword ref="qtgroupboxpropertybrowser.html#itemInserted">itemInserted</keyword>
+        <keyword ref="qtgroupboxpropertybrowser.html#itemRemoved">itemRemoved</keyword>
+        <section ref="qtgroupboxpropertybrowser-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtgrouppropertymanager.html" title="QtGroupPropertyManager Class Reference">
+        <keyword ref="qtgrouppropertymanager.html">QtGroupPropertyManager</keyword>
+        <keyword ref="qtgrouppropertymanager.html#hasValue">hasValue</keyword>
+        <keyword ref="qtgrouppropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtgrouppropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <section ref="qtgrouppropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtintpropertymanager.html" title="QtIntPropertyManager Class Reference">
+        <keyword ref="qtintpropertymanager.html">QtIntPropertyManager</keyword>
+        <keyword ref="qtintpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtintpropertymanager.html#maximum">maximum</keyword>
+        <keyword ref="qtintpropertymanager.html#minimum">minimum</keyword>
+        <keyword ref="qtintpropertymanager.html#rangeChanged">rangeChanged</keyword>
+        <keyword ref="qtintpropertymanager.html#setMaximum">setMaximum</keyword>
+        <keyword ref="qtintpropertymanager.html#setMinimum">setMinimum</keyword>
+        <keyword ref="qtintpropertymanager.html#setRange">setRange</keyword>
+        <keyword ref="qtintpropertymanager.html#setSingleStep">setSingleStep</keyword>
+        <keyword ref="qtintpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtintpropertymanager.html#singleStep">singleStep</keyword>
+        <keyword ref="qtintpropertymanager.html#singleStepChanged">singleStepChanged</keyword>
+        <keyword ref="qtintpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtintpropertymanager.html#value">value</keyword>
+        <keyword ref="qtintpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtintpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtintpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtkeysequenceeditorfactory.html" title="QtKeySequenceEditorFactory Class Reference">
+        <keyword ref="qtkeysequenceeditorfactory.html">QtKeySequenceEditorFactory</keyword>
+        <section ref="qtkeysequenceeditorfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtkeysequencepropertymanager.html" title="QtKeySequencePropertyManager Class Reference">
+        <keyword ref="qtkeysequencepropertymanager.html">QtKeySequencePropertyManager</keyword>
+        <keyword ref="qtkeysequencepropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtkeysequencepropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtkeysequencepropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtkeysequencepropertymanager.html#value">value</keyword>
+        <keyword ref="qtkeysequencepropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtkeysequencepropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtkeysequencepropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtlineeditfactory.html" title="QtLineEditFactory Class Reference">
+        <keyword ref="qtlineeditfactory.html">QtLineEditFactory</keyword>
+        <section ref="qtlineeditfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtlocalepropertymanager.html" title="QtLocalePropertyManager Class Reference">
+        <keyword ref="qtlocalepropertymanager.html">QtLocalePropertyManager</keyword>
+        <keyword ref="qtlocalepropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtlocalepropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtlocalepropertymanager.html#subEnumPropertyManager">subEnumPropertyManager</keyword>
+        <keyword ref="qtlocalepropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtlocalepropertymanager.html#value">value</keyword>
+        <keyword ref="qtlocalepropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtlocalepropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtlocalepropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtpointfpropertymanager.html" title="QtPointFPropertyManager Class Reference">
+        <keyword ref="qtpointfpropertymanager.html">QtPointFPropertyManager</keyword>
+        <keyword ref="qtpointfpropertymanager.html#decimals">decimals</keyword>
+        <keyword ref="qtpointfpropertymanager.html#decimalsChanged">decimalsChanged</keyword>
+        <keyword ref="qtpointfpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtpointfpropertymanager.html#setDecimals">setDecimals</keyword>
+        <keyword ref="qtpointfpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtpointfpropertymanager.html#subDoublePropertyManager">subDoublePropertyManager</keyword>
+        <keyword ref="qtpointfpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtpointfpropertymanager.html#value">value</keyword>
+        <keyword ref="qtpointfpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtpointfpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtpointfpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtpointpropertymanager.html" title="QtPointPropertyManager Class Reference">
+        <keyword ref="qtpointpropertymanager.html">QtPointPropertyManager</keyword>
+        <keyword ref="qtpointpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtpointpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtpointpropertymanager.html#subIntPropertyManager">subIntPropertyManager</keyword>
+        <keyword ref="qtpointpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtpointpropertymanager.html#value">value</keyword>
+        <keyword ref="qtpointpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtpointpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtpointpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtproperty.html" title="QtProperty Class Reference">
+        <keyword ref="qtproperty.html">QtProperty</keyword>
+        <keyword ref="qtproperty.html#addSubProperty">addSubProperty</keyword>
+        <keyword ref="qtproperty.html#hasValue">hasValue</keyword>
+        <keyword ref="qtproperty.html#insertSubProperty">insertSubProperty</keyword>
+        <keyword ref="qtproperty.html#isEnabled">isEnabled</keyword>
+        <keyword ref="qtproperty.html#isModified">isModified</keyword>
+        <keyword ref="qtproperty.html#propertyManager">propertyManager</keyword>
+        <keyword ref="qtproperty.html#propertyName">propertyName</keyword>
+        <keyword ref="qtproperty.html#removeSubProperty">removeSubProperty</keyword>
+        <keyword ref="qtproperty.html#setEnabled">setEnabled</keyword>
+        <keyword ref="qtproperty.html#setModified">setModified</keyword>
+        <keyword ref="qtproperty.html#setPropertyName">setPropertyName</keyword>
+        <keyword ref="qtproperty.html#setStatusTip">setStatusTip</keyword>
+        <keyword ref="qtproperty.html#setToolTip">setToolTip</keyword>
+        <keyword ref="qtproperty.html#setWhatsThis">setWhatsThis</keyword>
+        <keyword ref="qtproperty.html#statusTip">statusTip</keyword>
+        <keyword ref="qtproperty.html#subProperties">subProperties</keyword>
+        <keyword ref="qtproperty.html#toolTip">toolTip</keyword>
+        <keyword ref="qtproperty.html#valueIcon">valueIcon</keyword>
+        <keyword ref="qtproperty.html#valueText">valueText</keyword>
+        <keyword ref="qtproperty.html#whatsThis">whatsThis</keyword>
+        <section ref="qtproperty-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtrectfpropertymanager.html" title="QtRectFPropertyManager Class Reference">
+        <keyword ref="qtrectfpropertymanager.html">QtRectFPropertyManager</keyword>
+        <keyword ref="qtrectfpropertymanager.html#constraint">constraint</keyword>
+        <keyword ref="qtrectfpropertymanager.html#constraintChanged">constraintChanged</keyword>
+        <keyword ref="qtrectfpropertymanager.html#decimals">decimals</keyword>
+        <keyword ref="qtrectfpropertymanager.html#decimalsChanged">decimalsChanged</keyword>
+        <keyword ref="qtrectfpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtrectfpropertymanager.html#setConstraint">setConstraint</keyword>
+        <keyword ref="qtrectfpropertymanager.html#setDecimals">setDecimals</keyword>
+        <keyword ref="qtrectfpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtrectfpropertymanager.html#subDoublePropertyManager">subDoublePropertyManager</keyword>
+        <keyword ref="qtrectfpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtrectfpropertymanager.html#value">value</keyword>
+        <keyword ref="qtrectfpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtrectfpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtrectfpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtrectpropertymanager.html" title="QtRectPropertyManager Class Reference">
+        <keyword ref="qtrectpropertymanager.html">QtRectPropertyManager</keyword>
+        <keyword ref="qtrectpropertymanager.html#constraint">constraint</keyword>
+        <keyword ref="qtrectpropertymanager.html#constraintChanged">constraintChanged</keyword>
+        <keyword ref="qtrectpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtrectpropertymanager.html#setConstraint">setConstraint</keyword>
+        <keyword ref="qtrectpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtrectpropertymanager.html#subIntPropertyManager">subIntPropertyManager</keyword>
+        <keyword ref="qtrectpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtrectpropertymanager.html#value">value</keyword>
+        <keyword ref="qtrectpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtrectpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtrectpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtscrollbarfactory.html" title="QtScrollBarFactory Class Reference">
+        <keyword ref="qtscrollbarfactory.html">QtScrollBarFactory</keyword>
+        <section ref="qtscrollbarfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtsizefpropertymanager.html" title="QtSizeFPropertyManager Class Reference">
+        <keyword ref="qtsizefpropertymanager.html">QtSizeFPropertyManager</keyword>
+        <keyword ref="qtsizefpropertymanager.html#decimals">decimals</keyword>
+        <keyword ref="qtsizefpropertymanager.html#decimalsChanged">decimalsChanged</keyword>
+        <keyword ref="qtsizefpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtsizefpropertymanager.html#maximum">maximum</keyword>
+        <keyword ref="qtsizefpropertymanager.html#minimum">minimum</keyword>
+        <keyword ref="qtsizefpropertymanager.html#rangeChanged">rangeChanged</keyword>
+        <keyword ref="qtsizefpropertymanager.html#setDecimals">setDecimals</keyword>
+        <keyword ref="qtsizefpropertymanager.html#setMaximum">setMaximum</keyword>
+        <keyword ref="qtsizefpropertymanager.html#setMinimum">setMinimum</keyword>
+        <keyword ref="qtsizefpropertymanager.html#setRange">setRange</keyword>
+        <keyword ref="qtsizefpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtsizefpropertymanager.html#subDoublePropertyManager">subDoublePropertyManager</keyword>
+        <keyword ref="qtsizefpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtsizefpropertymanager.html#value">value</keyword>
+        <keyword ref="qtsizefpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtsizefpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtsizefpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtsizepolicypropertymanager.html" title="QtSizePolicyPropertyManager Class Reference">
+        <keyword ref="qtsizepolicypropertymanager.html">QtSizePolicyPropertyManager</keyword>
+        <keyword ref="qtsizepolicypropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtsizepolicypropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtsizepolicypropertymanager.html#subEnumPropertyManager">subEnumPropertyManager</keyword>
+        <keyword ref="qtsizepolicypropertymanager.html#subIntPropertyManager">subIntPropertyManager</keyword>
+        <keyword ref="qtsizepolicypropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtsizepolicypropertymanager.html#value">value</keyword>
+        <keyword ref="qtsizepolicypropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtsizepolicypropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtsizepolicypropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtsizepropertymanager.html" title="QtSizePropertyManager Class Reference">
+        <keyword ref="qtsizepropertymanager.html">QtSizePropertyManager</keyword>
+        <keyword ref="qtsizepropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtsizepropertymanager.html#maximum">maximum</keyword>
+        <keyword ref="qtsizepropertymanager.html#minimum">minimum</keyword>
+        <keyword ref="qtsizepropertymanager.html#rangeChanged">rangeChanged</keyword>
+        <keyword ref="qtsizepropertymanager.html#setMaximum">setMaximum</keyword>
+        <keyword ref="qtsizepropertymanager.html#setMinimum">setMinimum</keyword>
+        <keyword ref="qtsizepropertymanager.html#setRange">setRange</keyword>
+        <keyword ref="qtsizepropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtsizepropertymanager.html#subIntPropertyManager">subIntPropertyManager</keyword>
+        <keyword ref="qtsizepropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtsizepropertymanager.html#value">value</keyword>
+        <keyword ref="qtsizepropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtsizepropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtsizepropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtsliderfactory.html" title="QtSliderFactory Class Reference">
+        <keyword ref="qtsliderfactory.html">QtSliderFactory</keyword>
+        <section ref="qtsliderfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtspinboxfactory.html" title="QtSpinBoxFactory Class Reference">
+        <keyword ref="qtspinboxfactory.html">QtSpinBoxFactory</keyword>
+        <section ref="qtspinboxfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtstringpropertymanager.html" title="QtStringPropertyManager Class Reference">
+        <keyword ref="qtstringpropertymanager.html">QtStringPropertyManager</keyword>
+        <keyword ref="qtstringpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtstringpropertymanager.html#regExp">regExp</keyword>
+        <keyword ref="qtstringpropertymanager.html#regExpChanged">regExpChanged</keyword>
+        <keyword ref="qtstringpropertymanager.html#setRegExp">setRegExp</keyword>
+        <keyword ref="qtstringpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtstringpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtstringpropertymanager.html#value">value</keyword>
+        <keyword ref="qtstringpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtstringpropertymanager.html#valueText">valueText</keyword>
+        <section ref="qtstringpropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qttimeeditfactory.html" title="QtTimeEditFactory Class Reference">
+        <keyword ref="qttimeeditfactory.html">QtTimeEditFactory</keyword>
+        <section ref="qttimeeditfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qttimepropertymanager.html" title="QtTimePropertyManager Class Reference">
+        <keyword ref="qttimepropertymanager.html">QtTimePropertyManager</keyword>
+        <keyword ref="qttimepropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qttimepropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qttimepropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qttimepropertymanager.html#value">value</keyword>
+        <keyword ref="qttimepropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qttimepropertymanager.html#valueText">valueText</keyword>
+        <section ref="qttimepropertymanager-members.html" title="List of all members"/>
+    </section>
+    <section ref="qttreepropertybrowser.html" title="QtTreePropertyBrowser Class Reference">
+        <keyword ref="qttreepropertybrowser.html">QtTreePropertyBrowser</keyword>
+        <keyword ref="qttreepropertybrowser.html#ResizeMode-enum">ResizeMode</keyword>
+        <keyword ref="qttreepropertybrowser.html#ResizeMode-enum">QtTreePropertyBrowser::ResizeToContents</keyword>
+        <keyword ref="qttreepropertybrowser.html#ResizeMode-enum">QtTreePropertyBrowser::Stretch</keyword>
+        <keyword ref="qttreepropertybrowser.html#ResizeMode-enum">QtTreePropertyBrowser::Interactive</keyword>
+        <keyword ref="qttreepropertybrowser.html#ResizeMode-enum">QtTreePropertyBrowser::Fixed</keyword>
+        <keyword ref="qttreepropertybrowser.html#alternatingRowColors-prop">alternatingRowColors</keyword>
+        <keyword ref="qttreepropertybrowser.html#alternatingRowColors-prop">setAlternatingRowColors</keyword>
+        <keyword ref="qttreepropertybrowser.html#headerVisible-prop">headerVisible</keyword>
+        <keyword ref="qttreepropertybrowser.html#headerVisible-prop">isHeaderVisible</keyword>
+        <keyword ref="qttreepropertybrowser.html#headerVisible-prop">setHeaderVisible</keyword>
+        <keyword ref="qttreepropertybrowser.html#indentation-prop">indentation</keyword>
+        <keyword ref="qttreepropertybrowser.html#indentation-prop">setIndentation</keyword>
+        <keyword ref="qttreepropertybrowser.html#propertiesWithoutValueMarked-prop">propertiesWithoutValueMarked</keyword>
+        <keyword ref="qttreepropertybrowser.html#propertiesWithoutValueMarked-prop">setPropertiesWithoutValueMarked</keyword>
+        <keyword ref="qttreepropertybrowser.html#resizeMode-prop">resizeMode</keyword>
+        <keyword ref="qttreepropertybrowser.html#resizeMode-prop">setResizeMode</keyword>
+        <keyword ref="qttreepropertybrowser.html#rootIsDecorated-prop">rootIsDecorated</keyword>
+        <keyword ref="qttreepropertybrowser.html#rootIsDecorated-prop">setRootIsDecorated</keyword>
+        <keyword ref="qttreepropertybrowser.html#splitterPosition-prop">splitterPosition</keyword>
+        <keyword ref="qttreepropertybrowser.html#splitterPosition-prop">setSplitterPosition</keyword>
+        <keyword ref="qttreepropertybrowser.html#backgroundColor">backgroundColor</keyword>
+        <keyword ref="qttreepropertybrowser.html#calculatedBackgroundColor">calculatedBackgroundColor</keyword>
+        <keyword ref="qttreepropertybrowser.html#collapsed">collapsed</keyword>
+        <keyword ref="qttreepropertybrowser.html#editItem">editItem</keyword>
+        <keyword ref="qttreepropertybrowser.html#expanded">expanded</keyword>
+        <keyword ref="qttreepropertybrowser.html#isExpanded">isExpanded</keyword>
+        <keyword ref="qttreepropertybrowser.html#isItemVisible">isItemVisible</keyword>
+        <keyword ref="qttreepropertybrowser.html#itemChanged">itemChanged</keyword>
+        <keyword ref="qttreepropertybrowser.html#itemInserted">itemInserted</keyword>
+        <keyword ref="qttreepropertybrowser.html#itemRemoved">itemRemoved</keyword>
+        <keyword ref="qttreepropertybrowser.html#setBackgroundColor">setBackgroundColor</keyword>
+        <keyword ref="qttreepropertybrowser.html#setExpanded">setExpanded</keyword>
+        <keyword ref="qttreepropertybrowser.html#setItemVisible">setItemVisible</keyword>
+        <section ref="qttreepropertybrowser-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtvarianteditorfactory.html" title="QtVariantEditorFactory Class Reference">
+        <keyword ref="qtvarianteditorfactory.html">QtVariantEditorFactory</keyword>
+        <section ref="qtvarianteditorfactory-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtvariantproperty.html" title="QtVariantProperty Class Reference">
+        <keyword ref="qtvariantproperty.html">QtVariantProperty</keyword>
+        <keyword ref="qtvariantproperty.html#attributeValue">attributeValue</keyword>
+        <keyword ref="qtvariantproperty.html#propertyType">propertyType</keyword>
+        <keyword ref="qtvariantproperty.html#setAttribute">setAttribute</keyword>
+        <keyword ref="qtvariantproperty.html#setValue">setValue</keyword>
+        <keyword ref="qtvariantproperty.html#value">value</keyword>
+        <keyword ref="qtvariantproperty.html#valueType">valueType</keyword>
+        <section ref="qtvariantproperty-members.html" title="List of all members"/>
+    </section>
+    <section ref="qtvariantpropertymanager.html" title="QtVariantPropertyManager Class Reference">
+        <keyword ref="qtvariantpropertymanager.html">QtVariantPropertyManager</keyword>
+        <keyword ref="qtvariantpropertymanager.html#addProperty">addProperty</keyword>
+        <keyword ref="qtvariantpropertymanager.html#attributeChanged">attributeChanged</keyword>
+        <keyword ref="qtvariantpropertymanager.html#attributeType">attributeType</keyword>
+        <keyword ref="qtvariantpropertymanager.html#attributeValue">attributeValue</keyword>
+        <keyword ref="qtvariantpropertymanager.html#attributes">attributes</keyword>
+        <keyword ref="qtvariantpropertymanager.html#createProperty">createProperty</keyword>
+        <keyword ref="qtvariantpropertymanager.html#enumTypeId">enumTypeId</keyword>
+        <keyword ref="qtvariantpropertymanager.html#flagTypeId">flagTypeId</keyword>
+        <keyword ref="qtvariantpropertymanager.html#groupTypeId">groupTypeId</keyword>
+        <keyword ref="qtvariantpropertymanager.html#hasValue">hasValue</keyword>
+        <keyword ref="qtvariantpropertymanager.html#iconMapTypeId">iconMapTypeId</keyword>
+        <keyword ref="qtvariantpropertymanager.html#initializeProperty">initializeProperty</keyword>
+        <keyword ref="qtvariantpropertymanager.html#isPropertyTypeSupported">isPropertyTypeSupported</keyword>
+        <keyword ref="qtvariantpropertymanager.html#propertyType">propertyType</keyword>
+        <keyword ref="qtvariantpropertymanager.html#setAttribute">setAttribute</keyword>
+        <keyword ref="qtvariantpropertymanager.html#setValue">setValue</keyword>
+        <keyword ref="qtvariantpropertymanager.html#uninitializeProperty">uninitializeProperty</keyword>
+        <keyword ref="qtvariantpropertymanager.html#value">value</keyword>
+        <keyword ref="qtvariantpropertymanager.html#valueChanged">valueChanged</keyword>
+        <keyword ref="qtvariantpropertymanager.html#valueIcon">valueIcon</keyword>
+        <keyword ref="qtvariantpropertymanager.html#valueText">valueText</keyword>
+        <keyword ref="qtvariantpropertymanager.html#valueType">valueType</keyword>
+        <keyword ref="qtvariantpropertymanager.html#variantProperty">variantProperty</keyword>
+        <section ref="qtvariantpropertymanager-members.html" title="List of all members"/>
+    </section>
+</section>
+<section ref="overviews.html" title="Overviews">
+    <section ref="qtpropertybrowser-example-decoration.html" title="Decoration Example">
+        <keyword ref="qtpropertybrowser-example-decoration.html">Decoration Example</keyword>
+    </section>
+    <section ref="qtpropertybrowser-example-demo.html" title="Demo Example">
+        <keyword ref="qtpropertybrowser-example-demo.html">Demo Example</keyword>
+    </section>
+    <section ref="qtpropertybrowser-example-extension.html" title="Extension Example">
+        <keyword ref="qtpropertybrowser-example-extension.html">Extension Example</keyword>
+    </section>
+    <section ref="index.html" title="Property Browser">
+        <keyword ref="index.html">Property Browser</keyword>
+    </section>
+    <section ref="qtpropertybrowser-example-simple.html" title="Simple Tree Property Browser Example">
+        <keyword ref="qtpropertybrowser-example-simple.html">Simple Tree Property Browser Example</keyword>
+    </section>
+    <section ref="qtpropertybrowser-example-object-controller.html" title="The Object Controller Example.">
+        <keyword ref="qtpropertybrowser-example-object-controller.html">The Object Controller Example.</keyword>
+    </section>
+    <section ref="qtpropertybrowser-example-canvas-typed.html" title="Type Based Canvas Example">
+        <keyword ref="qtpropertybrowser-example-canvas-typed.html">Type Based Canvas Example</keyword>
+    </section>
+    <section ref="qtpropertybrowser-example-canvas-variant.html" title="Variant Based Canvas Example">
+        <keyword ref="qtpropertybrowser-example-canvas-variant.html">Variant Based Canvas Example</keyword>
+    </section>
+</section>
+<section ref="examples.html" title="Tutorial &amp; Examples"/>
+</DCF>

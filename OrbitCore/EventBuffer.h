@@ -1,0 +1,65 @@
+//-----------------------------------
+// Copyright Pierric Gimmig 2013-2017
+//-----------------------------------
+#pragma once
+
+#include "Core.h"
+#include "Callstack.h"
+#include "BlockChain.h"
+#include "SerializationMacros.h"
+
+#include <set>
+
+//-----------------------------------------------------------------------------
+struct CallstackEvent
+{
+    CallstackEvent( long long a_Time = 0, CallstackID a_Id = 0, ThreadID a_TID = 0 ) : m_Id( a_Id ), m_Time( a_Time ), m_TID( a_TID ){}
+    long long   m_Time;
+    CallstackID m_Id;
+    ThreadID    m_TID;
+
+    ORBIT_SERIALIZABLE;
+};
+
+//-----------------------------------------------------------------------------
+class EventBuffer
+{
+public:
+    EventBuffer() : m_MaxTime(0), m_MinTime(LLONG_MAX){}
+    ~EventBuffer(){}
+
+    void Print();
+    void Reset(){ m_CallstackEvents.clear(); m_MinTime = LLONG_MAX; m_MaxTime = 0; }
+    std::map< ThreadID, std::map< long long, CallstackEvent > > & GetCallstacks(){ return m_CallstackEvents; }
+    Mutex & GetMutex(){ return m_Mutex; }
+    std::vector< CallstackEvent > GetCallstackEvents( long long a_TimeBegin, long long a_TimeEnd, ThreadID a_ThreadId = -1 );
+    long long GetMaxTime() const { return m_MaxTime; }
+    long long GetMinTime() const { return m_MinTime; }
+    bool HasEvent() { ScopeLock lock( m_Mutex ); return m_CallstackEvents.size() > 0; }
+
+    //-----------------------------------------------------------------------------
+    void RegisterTime( long long a_Time )
+    {
+        if( a_Time > m_MaxTime )
+            m_MaxTime = a_Time;
+        if( a_Time < m_MinTime )
+            m_MinTime = a_Time;
+    }
+
+    //-----------------------------------------------------------------------------
+    void AddCallstackEvent( long long a_Time, CallStack & a_CallStack )
+    {
+        ScopeLock lock( m_Mutex );
+        std::map< long long, CallstackEvent > & threadMap = m_CallstackEvents[ a_CallStack.m_ThreadId ];
+        threadMap[a_Time] = CallstackEvent( a_Time, a_CallStack.Hash(), a_CallStack.m_ThreadId );
+        RegisterTime( a_Time );
+    }
+
+    ORBIT_SERIALIZABLE;
+
+private:
+    Mutex m_Mutex;
+    std::map< ThreadID, std::map< long long, CallstackEvent > > m_CallstackEvents;
+    std::atomic<long long> m_MaxTime;
+    std::atomic<long long> m_MinTime;
+};

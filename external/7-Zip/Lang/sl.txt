@@ -1,0 +1,404 @@
+﻿;!@Lang2@!UTF-8!
+;       : tomazek
+;  4.55 : miles
+;
+;
+;
+;
+;
+;
+;
+;
+;
+0
+7-Zip
+Slovenian
+Slovenski
+401
+V redu
+Prekliči
+
+
+
+&Da
+&Ne
+&Zapri
+Pomoč
+
+&Nadaljuj
+440
+Da za &vse
+Ne za v&se
+Zaustavi
+Ponovno zaženi
+&Ozadje
+O&spredje
+&Začasno zaustavi
+Zaustavljen
+Ste prepričani, da želite preklicati?
+500
+&Datoteka
+&Urejanje
+&Pogled
+Pr&iljubljene
+O&rodja
+Po&moč
+540
+&Odpri
+Odpri &znotraj
+Odpri zu&naj
+P&rikaz
+&Urejanje
+Prei&menuj
+&Kopiraj ...
+&Premakni ...
+Iz&briši
+&Razdeli datoteko ...
+&Združi datoteke ...
+L&astnosti
+Opomb&e
+Izračunaj preskusno vsoto
+
+Ustvari mapo
+Ustvari datoteko
+&Izhod
+600
+Izberi &vse
+Razveljavi izbiro vseh
+&Preobrni izbor
+Izberi ...
+Razveljavi izbiro ...
+Izberi glede na vrsto
+Razveljavi izbiro glede na vrsto
+700
+&Velike ikone
+&Majhne ikone
+&Seznam
+&Podrobnosti
+730
+Nerazvrščeno
+Splošen pogled
+&Dve podokni
+&Orodne vrstice
+Odpri korensko mapo
+Nadrejena raven
+Zgodovina mape ...
+&Osveži
+750
+Orodna vrstica arhiva
+Navadna orodna vrstica
+Veliki gumbi
+Pokaži besedilo gumbov
+800
+&Dodaj mapo med Priljubljene kot
+Zaznamek
+900
+&Možnosti ...
+Me&ritev
+960
+&Vsebina pomoči ...
+&O programu 7-Zip ...
+1003
+Pot
+Ime
+Pripona
+Mapa
+Velikost
+Stisnjena velikost
+Atributi
+Izdelano
+Uporabljeno
+Spremenjeno
+Trdno
+Komentirano
+Šifrirano
+Razdeli pred
+Razdeli po
+Slovar
+CRC
+Vrsta
+Anti
+Metoda
+Gostiteljski OS
+Datotečni sistem
+Uporabnik
+Skupina
+Blok
+Opomba
+Položaj
+Predpona poti
+Mape
+Datoteke
+Različica
+Nosilec
+Več nosilcev
+Zamik
+Povezave
+Bloki
+Nosilcev
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Napaka
+Skupna velikost
+Prostega prostora
+Velikost gruče
+Oznaka
+Krajevno ime
+Ponudnik
+2100
+Možnosti
+Jezik
+Jezik:
+Urejevalnik
+&Urejevalnik:
+
+2200
+Sistem
+Poveži 7-Zip z:
+2301
+Integracija 7-Zip v kontekstni meni lupine
+Kaskadni kontekstni meni
+Izbire kontekstnega menija:
+2320
+<Mapa>
+<Arhiv>
+Odpri arhiv
+Razširi datoteke ...
+Stisni v arhiv ...
+Preizkusi arhiv
+Razširi semkaj
+Razširi v {0}
+Dodaj v {0}
+Stisni in pošlji ...
+Stisni v {0} in pošlji po e-pošti
+2400
+Mape
+&Delovna mapa
+&Sistemska začasna mapa
+&Trenutna mapa
+&Navedeno:
+Uporabi le za izmenljive pogone
+Navedite mesto za začasne arhivske datoteke.
+2500
+Nastavitve
+Pokaži postavko ".."
+Pokaži prave ikone datotek
+Pokaži sistemski meni
+&Izbor celotne vrstice
+Pokaži &mrežne črte
+
+&Alternativni način izbiranja
+Uporabi &velike spominske strani
+2900
+O programu 7-Zip
+7-Zip je brezplačen.  Njegov razvoj podprete s tem, da se registrirate.
+3000
+
+Brez napak
+Izbran(ih) {0} objekt(ov)
+Mape '{0}' ni mogoče ustvariti
+Za ta arhiv operacije osveževanja niso podprte.
+Datoteke '{0}' ni mogoče odpreti kot arhiv
+Šifriranega arhiva '{0}' ni mogoče odpreti. Je morda geslo napačno?
+
+
+Datoteka '{0}' je bila spremenjena.\nJo želite osvežiti v arhivu?
+Datoteke ni mogoče osvežiti\n'{0}'
+Urejevalnika ni mogoče pognati.
+
+
+
+
+Preveč izbir
+3300
+Razširjanje
+Stiskanje
+Preizkušanje
+Odpiranje ...
+Pregledovanje ...
+3400
+Razširi
+R&azširi v:
+Določite mesto razširjanja datotek.
+3410
+Poti
+Polne poti
+Brez poti
+3420
+Prepisovalni način
+Zahtevaj potrditev
+Prepiši brez potrditve
+Preskoči obstoječe datoteke
+Samodejno preimenuj
+Samodejno preimenuj obstoječe datoteke
+3500
+Potrditev zamenjave datoteke
+Ciljna mapa že vsebuje obdelovano datoteko.
+Želite zamenjati obstoječo datoteko
+s to datoteko?
+{0} bajtov
+Samodejno &preimenuj
+3700
+Nepodprta metoda stiskanja za '{0}'.
+Podatkovna napaka v '{0}'. Datoteka je poškodovana.
+Napaka CRC v '{0}'. Datoteka je poškodovana.
+Podatkovna napaka v šifrirani datoteki '{0}'. Je geslo pravilno?
+Napaka CRC v šifrirani datoteki '{0}'. Je geslo pravilno?
+3800
+Vnos gesla
+Vnesite geslo:
+Ponovno vnesite geslo:
+&Pokaži geslo
+Gesli se ne ujemata
+Za geslo uporabite le črke, številke in posebne znake angleške abecede (!, #, $, ...)
+Geslo je predolgo
+Geslo
+3900
+Pretečeni čas:
+Preostali čas:
+Velikost:
+Hitrost:
+Obdelano:
+Razmerje stiskanja:
+Napake:
+Arhivi:
+4000
+Dodaj v arhiv
+&Arhiv:
+&Način osveževanja:
+&Vrsta arhiva:
+Raven &stiskanja:
+&Metoda stiskanja:
+&Velikost slovarja:
+Velikost &besede:
+Velikost trdnega bloka:
+Število niti CPE:
+&Parametri:
+Možnosti
+Izdelaj arhiv SF&X
+Stisni skupne datoteke
+Šifriranje
+Metoda šifriranja:
+Šifriraj &imena datotek
+Poraba pomnilnika za stiskanje:
+Poraba pomnilnika za razširjanje:
+4050
+Brez stiskanja
+Najhitrejše
+Hitro
+Običajno
+Največje stiskanje
+Ultra
+4060
+Dodaj in zamenjaj datoteke
+Osveži in dodaj datoteke
+Osveži obstoječe datoteke
+Sinhroniziraj datoteke
+4070
+Prebrskaj
+Vse datoteke
+Ne-trdno
+Trdno
+6000
+Kopiraj
+Premakni
+Kopiraj v:
+Premakni v:
+Kopiranje ...
+Premikanje ...
+Preimenovanje ...
+Izberite ciljno mapo.
+Operacija ni podprta.
+Napaka pri preimenovanju datoteke ali mape
+Potrditev kopiranja datoteke
+Ste prepričani, da želite kopirati datoteke v arhiv?
+6100
+Potrditev brisanja datoteke
+Potrditev brisanja mape
+Potrditev brisanja več datotek
+Ste prepričani, da želite zbrisati '{0}'?
+Ste prepričani, da želite zbrisati mapo '{0}' in celotno njeno vsebino?
+Ste prepričani, da želite zbrisati teh {0} postavk?
+Brisanje ...
+Napaka pri brisanju datoteke ali mape
+
+6300
+Izdelava mape
+Ustvarjanje datoteke
+Ime mape:
+Ime datoteke:
+Nova mapa
+Nova datoteka
+Napaka pri ustvarjanju mape
+Napaka pri ustvarjanju datoteke
+6400
+Opomba
+&Opomba:
+Izberi
+Razveljavi izbiro
+Maska:
+6600
+Properties
+Zgodovina map
+Diagnostična sporočila
+Sporočilo
+7100
+Računalnik
+Omrežje
+
+Sistem
+7200
+Dodaj
+Razširi
+Preizkusi
+Kopiraj
+Premakni
+Izbriši
+Informacije
+7300
+Razdeli datoteko
+&Razdeli na:
+Razdeli na &nosilce velikosti (v bajtih):
+Razdeljevanje ...
+Potrditev razdelitve
+Ste prepričani, da želite razdeliti datoteko na {0} nosilcev?
+Velikost nosilca mora biti manjša kot velikost izvorne datoteke
+Neveljavna velikost nosilca
+Navedena velikost nosilca: {0} bajtov.\nSte prepričani, da želite razdeliti arhiv na takšne nosilce?
+7400
+Združi datoteke
+&Združi v:
+Združevanje  ...
+Izberite samo prvo datoteko
+
+
+7500
+Izračun preskusne vsote ...
+Podatki o preskusni vsoti
+Preskusna vsota za podatke:
+Preskusna vsota za podatke in imena:
+7600
+Meritev
+Poraba pomnilnika:
+Stiskanje
+Razširjanje
+Ocena
+Skupna ocena
+Trenutno
+Končno
+Uporaba CPE
+Ocena / uporaba
+Prehodi:

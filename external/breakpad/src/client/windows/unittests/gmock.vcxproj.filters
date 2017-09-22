@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\..\..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\..\..\testing">
+      <UniqueIdentifier>{681E52FB-4BB5-C8E2-1D1A-B7C4F2495A5E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\..\..\testing\googlemock">
+      <UniqueIdentifier>{A6FED509-4E36-0513-DE35-032489F9A06F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\..\..\testing\googlemock\src">
+      <UniqueIdentifier>{8CDEE807-BC53-E450-C8B8-4DEBB66742D4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\..\..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\..\..\testing">
+      <UniqueIdentifier>{681E52FB-4BB5-C8E2-1D1A-B7C4F2495A5E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\..\..\testing\googletest">
+      <UniqueIdentifier>{6EDDA1DE-C4B0-692A-E334-641598EC7D03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\..\..\testing\googletest\src">
+      <UniqueIdentifier>{8CDEE807-BC53-E450-C8B8-4DEBB66742D4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\testing\googlemock\src\gmock-all.cc">
+      <Filter>..\..\..\testing\googlemock\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\testing\googletest\src\gtest_main.cc">
+      <Filter>..\..\..\testing\googletest\src</Filter>
+    </ClCompile>
+    <None Include="testing.gyp"/>
+  </ItemGroup>
+</Project>

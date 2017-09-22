@@ -1,0 +1,35 @@
+============================================================================
+STLSoft - Known Issues:
+
+; Created:  29th March 2002
+; Updated:  21st June 2010
+
+============================================================================
+
+
+STLSoft 1.9 Known Issues:
+-------------------------
+
+ * The "safe string" library compatibility is not done yet. This is planned
+   to be fully complete with 1.10.
+
+ * There are some problems with GCC 4+ in compiling the fixed array classes
+   with the subscript operators.
+
+ * The GCC atomic integer APIs are not yet used. This is planned for the
+   future.
+
+ * The documentation is still hopeless. This will be addressed in the
+   release of 1.10.
+
+ * Several unixstl::system_traits methods are declared but not defined, with
+   the intention to flesh them out from Linux system calls (and have
+   emulations/workarounds for other architectures)
+
+STLSoft 1.9 Suspected Issues:
+-----------------------------
+
+ * The SunPro C/C++ has not been fully tested, and remains speculative for
+   the moment
+
+=============================== End of file ================================

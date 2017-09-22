@@ -1,0 +1,495 @@
+﻿;!@Lang2@!UTF-8!
+;  4.07 : Leandro Spagnol
+;       : Vincenzo Reale (some corrections)
+; 15.05 : 2015-06-17 : TJL73 : http://tjl73.altervista.org/
+;
+;
+;
+;
+;
+;
+;
+;
+0
+7-Zip
+Italian
+Italiano
+401
+OK
+Annulla
+
+
+
+&Sì
+&No
+&Chiudi
+Aiuto
+
+&Riprendi
+440
+Sì per &tutti
+No per t&utti
+Ferma
+Riavvia
+&In background
+&In primo piano
+&Pausa
+In pausa
+Sei sicuro di voler annullare?
+500
+&File
+&Modifica
+&Visualizza
+&Preferiti
+&Strumenti
+&Aiuto
+540
+&Apri
+Apri in &7-Zip File Manager
+Apri in E&xplorer
+&Visualizza
+Apri con l'&editor predefinito
+Rino&mina
+&Copia in...
+&Sposta in...
+&Elimina
+&Dividi il file...
+&Unisci i file...
+&Proprietà
+Comme&nto...
+Calcola chec&ksum
+Comparazione differenze (Diff)
+Crea cartella
+Crea file
+E&sci
+Collegamento
+&Alternate Data Streams
+600
+&Seleziona tutto
+&Deseleziona tutto
+In&verti selezione
+Seleziona...
+Deseleziona...
+Seleziona per tipo
+Deseleziona per tipo
+700
+Icone &grandi
+Icone &piccole
+&Elenco
+&Dettagli
+730
+Nessun ordine
+Vista non strutturata
+Interfaccia a &2 pannelli
+Barre degli &strumenti
+Apri cartella principale
+Livello superiore
+Cronologia...
+&Aggiorna
+Aggiornamento automatico
+750
+Barra archivio
+Barra standard
+Icone grandi
+Mostra etichette di testo
+800
+&Aggiungi la cartella ai Preferiti come
+Collegamento
+900
+&Opzioni...
+&Benchmark
+960
+&Guida...
+&Informazioni su 7-Zip...
+1003
+Percorso
+Nome
+Estensione
+Cartella
+Dimensione
+Dimensione compressa
+Attributi
+Creato
+Ultimo accesso
+Ultima modifica
+Solido
+Commentato
+Cifrato
+Dividi prima
+Dividi dopo
+Dizionario
+
+Tipo
+Estensione
+Metodo
+OS destinatario
+File system
+Utente
+Gruppo
+Blocco
+Commento
+Posizione
+Percorso completo
+Cartelle
+File
+Versione
+Unità
+Unità multiple
+Offset
+Collegamenti
+Blocchi
+Unità
+
+64-bit
+Big-endian
+CPU
+Dimensione fisica
+Dimensione intestazioni
+Checksum
+Caratteristiche
+Indirizzo virtuale
+ID
+Nome breve
+Applicativo origine
+Dimensione settore
+Modalità
+Collegamento simbolico
+Errore
+Capacità
+Disponibili
+Dimensione dei cluster
+Etichetta
+Nome locale
+Rete
+Sicurezza NT
+Flusso alternato
+Ausiliario
+Eliminato
+Ad albero
+
+
+Tipo di errori
+Errori
+Errori
+Avvertimenti
+Avvertimento
+Flussi
+Flussi alternati
+Dimensione dei flussi alternati
+Dimensione virtuale
+Dimensione decompressione
+Dimensione fisica totale
+Indice del volume
+Sottotipo
+Commento breve
+Pagina dei codici
+
+
+
+Dimensione della coda
+Dimensione della matrice integrato
+Collegamento
+Collegamento statico
+iNode
+
+Sola lettura
+2100
+Opzioni
+Lingua
+Lingua:
+Editor
+&Editor predefinito:
+Comparatore &differenze (Diff):
+2200
+Sistema
+Associa 7-Zip a:
+Tutti gli utenti
+2301
+Integra 7-Zip nel menu contestuale della shell
+Menu contestuale a cascata
+Elementi del menu contestuale:
+Icone nel menu contestuale
+2320
+<cartella>
+<archivio>
+Apri
+Estrai i file...
+Aggiungi all'archivio...
+Verifica l'archivio
+Estrai qui
+Estrai in {0}
+Aggiungi a {0}
+Comprimi ed invia per email...
+Comprimi in {0} ed invia per email
+2400
+Cartelle
+Cartella di lavoro
+Cartella &TEMP di sistema
+&Corrente
+&Specificata:
+&Utilizza solo per dischi rimovibili
+Specifica una cartella per i file temporanei.
+2500
+Impostazioni
+Mostra l'elemento ".."
+Mostra le icone dei file
+Mostra le icone di sistema
+Selezione a &riga intera
+Mostra &griglia
+Click singolo per aprire una voce
+Modalità di selezione &alternativa
+Utilizza pagine &larghe di memoria
+2900
+Informazioni
+7-Zip è un software libero.\n\nLocalizzazione italiana a cura di:\nTJL73 <http://tjl73.altervista.org/>
+3000
+Non è possibile allocare la quantità di memoria richiesta
+Nessun errore.
+Oggetti selezionati: {0}
+Impossibile creare la cartella '{0}'
+Non è possibile effettuare aggiornamenti su questo archivio.
+Impossibile aprire il file '{0}' come archivio.
+Impossibile aprire l'archivio cifrato '{0}'. Password errata?
+Archivio non supportato
+Il file {0} è già presente
+Il file '{0}' è stato modificato.\nVuoi aggiornare l'archivio?
+Impossibile aggiornare il file\n'{0}'
+Impossibile avviare l'editor.
+Il file sembra essere un virus (contiene molti spazi nel nome).
+L'operazione non può essere richiamata da una cartella con percorso lungo.
+Devi selezionare un file
+Devi selezionare almeno un file
+Troppi elementi
+Impossibile aprire il file come archivio {0}
+Il file è aperto come archivio {0}
+L'archivio è aperto con offset
+3300
+Estrazione in corso
+Compressione in corso
+Verifica archivio
+Apertura in corso...
+Scansione...
+Rimozione
+3320
+Aggiunta
+Aggiornamento
+Analisi
+Replica
+Ripacchettizzazione
+Salto
+Eliminazione
+Creazione intestazione
+3400
+Estrai
+E&strai in:
+Specifica una cartella in cui estrarre i file.
+3410
+Struttura delle cartelle:
+Percorsi completi
+Nessun percorso
+Percorsi assoluti
+Percorsi relativi
+3420
+Sovrascrittura:
+Chiedi prima di sovrascrivere
+Sovrascrivi senza chiedere
+Non sovrascrivere i file esistenti
+Rinomina automaticamente
+Rinomina autom. i file esistenti
+3430
+Elimina la duplicazione della radice
+Ripristina sicurezza dei file
+3500
+Conferma la sovrascrittura del file
+File già esistente nella cartella di destinazione.
+Vuoi sostituire il file esistente
+con questo?
+{0} byte
+&Rinomina automaticamente
+3700
+Metodo di compressione non supportato per '{0}'.
+Errore nei dati in '{0}'. Il file è danneggiato.
+CRC non corretto in '{0}'. Il file è danneggiato.
+Errore nel file cifrato '{0}'. Password errata?
+CRC errato nel file cifrato '{0}'. Password errata?
+3710
+Password errata?
+3721
+Metodo di compressione non supportata
+Errore dei dati
+CRC errato
+Dati non disponibili
+Fine dei dati inattesa
+Sono presenti dati oltre la fine del blocco utile
+Non è un archivio
+Errore intestazioni
+Password errata
+3763
+Inizio dell'archivio non disponibile
+Inizio dell'archivio non confermato
+	
+	
+	
+Funzionalità non supportata
+3800
+Inserisci password
+&Inserisci password:
+&Reinserisci password:
+Mostra pass&word
+Password differenti
+Per la password, utilizzare solo lettere ASCII, numeri e caratteri speciali (!, #, $, ...)
+La password è troppo lunga
+Password
+3900
+Tempo trascorso:
+Tempo rimanente:
+Dimensione totale:
+Velocità:
+Elaborato:
+Rapporto compressione:
+Errori:
+Archivi:
+4000
+Aggiungi all'archivio
+Nome &archivio:
+Modalità a&ggiornamento:
+&Formato dell'archivio:
+&Livello di compressione:
+&Metodo di compressione:
+Dimensione &Dizionario:
+Dimensioni &Parola:
+Dimensione del &blocco solido:
+N&umero di flussi (thread) CPU:
+Parametri &opzionali:
+Opzioni
+Crea archivio auto-&estraente
+Comprimi file condivisi
+Cifratura
+Metodo &cifratura:
+Cifra anche il &nome dei file
+Quantità memoria per compressione:
+Quantità memoria per decompressione:
+Elimina i file dopo la compressione
+4040
+Memorizza collegamenti simbolici
+Memorizza collegamenti statici
+Memorizza flussi dati alternati
+Memorizza sicurezza dei file
+4050
+Nessuna
+Velocissima
+Veloce
+Normale
+Massima
+Ultra
+4060
+Aggiungi e sostituisci i file
+Aggiorna e aggiungi i file
+Aggiorna i file esistenti
+Sincronizza i file
+4070
+Sfoglia
+Tutti i file
+Non-solido
+Solido
+6000
+Copia
+Sposta
+Copia in:
+Sposta in:
+Copia in corso...
+Spostamento in corso...
+Rinomina in corso...
+Selezionare la cartella di destinazione.
+Operazione non supportata per questa cartella.
+Errore nella rinomina del file o cartella
+Conferma copia
+Sei sicuro di voler copiare questi file nell'archivio
+6100
+Conferma l'eliminazione del file
+Conferma l'eliminazione della cartella
+Conferma l'eliminazione di più elementi
+Sei certo di voler eliminare '{0}'?
+Sei certo di voler eliminare la cartella '{0}' e tutto il suo contenuto?
+Sei certo di voler eliminare questi {0} elementi?
+Eliminazione in corso...
+Errore nell'eliminazione del file o della cartella
+Impossibile spostare un file con percorso lungo nel Cestino
+6300
+Crea cartella
+Crea file
+Nome cartella:
+Nome file:
+Nuova cartella
+Nuovo file
+Errore nella creazione della cartella
+Errore nella creazione del file
+6400
+Commento
+&Commento:
+Seleziona
+Deseleziona
+Filtro:
+6600
+Proprietà
+Cronologia
+Messaggi di diagnostica
+Messaggio
+7100
+Computer
+Rete
+Documenti
+Sistema
+7200
+Aggiungi
+Estrai
+Verifica
+Copia
+Sposta
+Elimina
+Proprietà
+7300
+Dividi file
+&Dividi in:
+Di&vidi in più file (dimensione in byte):
+Dividi in...
+Conferma divisione
+Sicuro di voler dividere l'archivio in {0} porzioni?
+La dimensione di ciascuna porzione deve essere più piccola della dimensione totale dell'archivio originale
+Dimensione non corretta
+Dimensione specificata: {0} byte.\nSicuro di voler dividere l'archivio in questo modo?
+7400
+Unisci i file
+&Unisci in:
+Unisci...
+Seleziona solo la prima parte del file diviso
+Impossibile riconoscere il file come archivio diviso
+Impossibile trovare più di una parte dell'archivio diviso
+7500
+Calcolo del checksum...
+Informazioni sul checksum
+CRC checksum sui dati:
+CRC checksum su dati e nomi:
+7600
+Benchmark
+Utilizzo memoria:
+Compressione in corso
+Decompressione in corso
+Valutazione
+Valutazione totale
+Attuale
+Risultante
+Utilizzo CPU
+Stima / Utilizzo
+Passaggi:
+7700
+Collegamento
+Collega
+Origine collegamento:
+Destinazione collegamento:
+7710
+Tipo di collegamento
+Collegamento statico
+Collegamento simbolico al file
+Collegamento simbolico alla cartella
+Giunzione cartella

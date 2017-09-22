@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!-- qtpropertybrowser.cpp -->
+<head>
+  <title>QtAbstractPropertyBrowser Class Reference</title>
+  <link href="classic.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td align="left" valign="top" width="32"><img src="images/qt-logo.png" align="left" width="57" height="67" border="0" /></td>
+<td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a></td>
+</tr></table><h1 class="title">QtAbstractPropertyBrowser Class Reference</h1>
+<p>QtAbstractPropertyBrowser provides a base class for implementing property browsers. <a href="#details">More...</a></p>
+<pre> #include &lt;QtAbstractPropertyBrowser&gt;</pre><p>Inherits <a href="http://qt.nokia.com/doc/4.6/qwidget.html">QWidget</a>.</p>
+<p>Inherited by <a href="qtbuttonpropertybrowser.html">QtButtonPropertyBrowser</a>, <a href="qtgroupboxpropertybrowser.html">QtGroupBoxPropertyBrowser</a>, and <a href="qttreepropertybrowser.html">QtTreePropertyBrowser</a>.</p>
+<ul>
+<li><a href="qtabstractpropertybrowser-members.html">List of all members, including inherited members</a></li>
+</ul>
+<hr />
+<a name="public-functions"></a>
+<h2>Public Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#QtAbstractPropertyBrowser">QtAbstractPropertyBrowser</a></b> ( QWidget * <i>parent</i> = 0 )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#dtor.QtAbstractPropertyBrowser">~QtAbstractPropertyBrowser</a></b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#clear">clear</a></b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QtBrowserItem * </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#currentItem">currentItem</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QList&lt;QtBrowserItem *&gt; </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#items">items</a></b> ( QtProperty * <i>property</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QList&lt;QtProperty *&gt; </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#properties">properties</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#setCurrentItem">setCurrentItem</a></b> ( QtBrowserItem * <i>item</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#setFactoryForManager">setFactoryForManager</a></b> ( PropertyManager * <i>manager</i>, QtAbstractEditorFactory&lt;PropertyManager&gt; * <i>factory</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QtBrowserItem * </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#topLevelItem">topLevelItem</a></b> ( QtProperty * <i>property</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QList&lt;QtBrowserItem *&gt; </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#topLevelItems">topLevelItems</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#unsetFactoryForManager">unsetFactoryForManager</a></b> ( QtAbstractPropertyManager * <i>manager</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>217 public functions inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#public-functions">QWidget</a></li>
+<li><div bar="2" class="fn"></div>13 public functions inherited from <a href="http://qt.nokia.com/doc/4.6/qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div bar="2" class="fn"></div>29 public functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-functions">QObject</a></li>
+</ul>
+<hr />
+<a name="public-slots"></a>
+<h2>Public Slots</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">QtBrowserItem * </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#addProperty">addProperty</a></b> ( QtProperty * <i>property</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QtBrowserItem * </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#insertProperty">insertProperty</a></b> ( QtProperty * <i>property</i>, QtProperty * <i>afterProperty</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#removeProperty">removeProperty</a></b> ( QtProperty * <i>property</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>19 public slots inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#public-slots">QWidget</a></li>
+<li><div bar="2" class="fn"></div>1 public slot inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-slots">QObject</a></li>
+</ul>
+<hr />
+<a name="signals"></a>
+<h2>Signals</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#currentItemChanged">currentItemChanged</a></b> ( QtBrowserItem * <i>current</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>1 signal inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#signals">QWidget</a></li>
+<li><div bar="2" class="fn"></div>1 signal inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#signals">QObject</a></li>
+</ul>
+<hr />
+<a name="protected-functions"></a>
+<h2>Protected Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">virtual QWidget * </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#createEditor">createEditor</a></b> ( QtProperty * <i>property</i>, QWidget * <i>parent</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#itemChanged">itemChanged</a></b> ( QtBrowserItem * <i>item</i> ) = 0</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#itemInserted">itemInserted</a></b> ( QtBrowserItem * <i>insertedItem</i>, QtBrowserItem * <i>precedingItem</i> ) = 0</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertybrowser.html#itemRemoved">itemRemoved</a></b> ( QtBrowserItem * <i>item</i> ) = 0</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>37 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#protected-functions">QWidget</a></li>
+<li><div bar="2" class="fn"></div>1 protected function inherited from <a href="http://qt.nokia.com/doc/4.6/qpaintdevice.html#protected-functions">QPaintDevice</a></li>
+<li><div bar="2" class="fn"></div>7 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-functions">QObject</a></li>
+</ul>
+<h3>Additional Inherited Members</h3>
+<ul>
+<li><div class="fn"></div>58 properties inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#properties">QWidget</a></li>
+<li><div class="fn"></div>1 property inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>1 public type inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-variables">QObject</a></li>
+<li><div class="fn"></div>4 static public members inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#static-public-members">QWidget</a></li>
+<li><div class="fn"></div>4 static public members inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>1 protected slot inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#protected-slots">QWidget</a></li>
+<li><div class="fn"></div>1 protected type inherited from <a href="http://qt.nokia.com/doc/4.6/qpaintdevice.html#protected-variables">QPaintDevice</a></li>
+<li><div class="fn"></div>2 protected variables inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-variables">QObject</a></li>
+</ul>
+<a name="details"></a>
+<hr />
+<h2>Detailed Description</h2>
+<p>QtAbstractPropertyBrowser provides a base class for implementing property browsers.</p>
+<p>A property browser is a widget that enables the user to edit a given set of properties. Each property is represented by a label specifying the property's name, and an editing widget (e.g&#x2e; a line edit or a combobox) holding its value. A property can have zero or more subproperties.</p>
+<p align="center"><img src="images/qtpropertybrowser.png" /></p><p>The top level properties can be retrieved using the <a href="qtabstractpropertybrowser.html#properties">properties</a>() function. To traverse each property's subproperties, use the <a href="qtproperty.html#subProperties">QtProperty::subProperties</a>() function. In addition, the set of top level properties can be manipulated using the <a href="qtabstractpropertybrowser.html#addProperty">addProperty</a>(), <a href="qtabstractpropertybrowser.html#insertProperty">insertProperty</a>() and <a href="qtabstractpropertybrowser.html#removeProperty">removeProperty</a>() functions. Note that the <a href="qtproperty.html">QtProperty</a> class provides a corresponding set of functions making it possible to manipulate the set of subproperties as well.</p>
+<p>To remove all the properties from the property browser widget, use the <a href="qtabstractpropertybrowser.html#clear">clear</a>() function. This function will clear the editor, but it will not delete the properties since they can still be used in other editors.</p>
+<p>The properties themselves are created and managed by implementations of the <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> class. A manager can handle (i.e&#x2e; create and manage) properties of a given type. In the property browser the managers are associated with implementations of the <a href="qtabstracteditorfactory.html">QtAbstractEditorFactory</a>: A factory is a class able to create an editing widget of a specified type.</p>
+<p>When using a property browser widget, managers must be created for each of the required property types before the properties themselves can be created. To ensure that the properties' values will be displayed using suitable editing widgets, the managers must be associated with objects of the preferred factory implementations using the <a href="qtabstractpropertybrowser.html#setFactoryForManager">setFactoryForManager</a>() function. The property browser will use these associations to determine which factory it should use to create the preferred editing widget.</p>
+<p>Note that a factory can be associated with many managers, but a manager can only be associated with one single factory within the context of a single property browser. The associations between managers and factories can at any time be removed using the <a href="qtabstractpropertybrowser.html#unsetFactoryForManager">unsetFactoryForManager</a>() function.</p>
+<p>Whenever the property data changes or a property is inserted or removed, the <a href="qtabstractpropertybrowser.html#itemChanged">itemChanged</a>(), <a href="qtabstractpropertybrowser.html#itemInserted">itemInserted</a>() or <a href="qtabstractpropertybrowser.html#itemRemoved">itemRemoved</a>() functions are called, respectively. These functions must be reimplemented in derived classes in order to update the property browser widget. Be aware that some property instances can appear several times in an abstract tree structure. For example:</p>
+<p><table class="generic" width="100%" align="center" cellpadding="2" cellspacing="1" border="0">
+<tr valign="top" class="odd"><td><pre> QtProperty *property1, *property2, *property3;
+
+ property2-&gt;addSubProperty(property1);
+ property3-&gt;addSubProperty(property2);
+
+ QtAbstractPropertyBrowser *editor;
+
+ editor-&gt;addProperty(property1);
+ editor-&gt;addProperty(property2);
+ editor-&gt;addProperty(property3);</pre>
+</td><td><p align="center"><img src="images/qtpropertybrowser-duplicate.png" /></p></td></tr>
+</table></p>
+<p>The <a href="qtabstractpropertybrowser.html#addProperty">addProperty</a>() function returns a <a href="qtbrowseritem.html">QtBrowserItem</a> that uniquely identifies the created item.</p>
+<p>To make a property editable in the property browser, the <a href="qtabstractpropertybrowser.html#createEditor">createEditor</a>() function must be called to provide the property with a suitable editing widget.</p>
+<p>Note that there are two ready-made property browser implementations:</p>
+<ul>
+<li><a href="qtgroupboxpropertybrowser.html">QtGroupBoxPropertyBrowser</a></li>
+<li><a href="qttreepropertybrowser.html">QtTreePropertyBrowser</a></li>
+</ul>
+<p>See also <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> and <a href="qtabstracteditorfactorybase.html">QtAbstractEditorFactoryBase</a>.</p>
+<hr />
+<h2>Member Function Documentation</h2>
+<h3 class="fn"><a name="QtAbstractPropertyBrowser"></a>QtAbstractPropertyBrowser::QtAbstractPropertyBrowser ( <a href="http://qt.nokia.com/doc/4.6/qwidget.html">QWidget</a> * <i>parent</i> = 0 )</h3>
+<p>Creates an abstract property browser with the given <i>parent</i>.</p>
+<h3 class="fn"><a name="dtor.QtAbstractPropertyBrowser"></a>QtAbstractPropertyBrowser::~QtAbstractPropertyBrowser ()</h3>
+<p>Destroys the property browser, and destroys all the items that were created by this property browser.</p>
+<p>Note that the properties that were displayed in the editor are not deleted since they still can be used in other editors. Neither does the destructor delete the property managers and editor factories that were used by this property browser widget unless this widget was their parent.</p>
+<p>See also <a href="qtabstractpropertymanager.html#dtor.QtAbstractPropertyManager">QtAbstractPropertyManager::~QtAbstractPropertyManager</a>().</p>
+<h3 class="fn"><a name="addProperty"></a><a href="qtbrowseritem.html">QtBrowserItem</a> * QtAbstractPropertyBrowser::addProperty ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
+<p>Appends the given <i>property</i> (and its subproperties) to the property browser's list of top level properties. Returns the item created by property browser which is associated with the <i>property</i>. In order to get all children items created by the property browser in this call, the returned item should be traversed.</p>
+<p>If the specified <i>property</i> is already added, this function does nothing and returns 0.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#insertProperty">insertProperty</a>(), <a href="qtproperty.html#addSubProperty">QtProperty::addSubProperty</a>(), and <a href="qtabstractpropertybrowser.html#properties">properties</a>().</p>
+<h3 class="fn"><a name="clear"></a>void QtAbstractPropertyBrowser::clear ()</h3>
+<p>Removes all the properties from the editor, but does not delete them since they can still be used in other editors.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#removeProperty">removeProperty</a>() and <a href="qtabstractpropertymanager.html#clear">QtAbstractPropertyManager::clear</a>().</p>
+<h3 class="fn"><a name="createEditor"></a><a href="http://qt.nokia.com/doc/4.6/qwidget.html">QWidget</a> * QtAbstractPropertyBrowser::createEditor ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, <a href="http://qt.nokia.com/doc/4.6/qwidget.html">QWidget</a> * <i>parent</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Creates an editing widget (with the given <i>parent</i>) for the given <i>property</i> according to the previously established associations between property managers and editor factories.</p>
+<p>If the property is created by a property manager which was not associated with any of the existing factories in <i>this</i> property editor, the function returns 0.</p>
+<p>To make a property editable in the property browser, the createEditor() function must be called to provide the property with a suitable editing widget.</p>
+<p>Reimplement this function to provide additional decoration for the editing widgets created by the installed factories.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#setFactoryForManager">setFactoryForManager</a>().</p>
+<h3 class="fn"><a name="currentItem"></a><a href="qtbrowseritem.html">QtBrowserItem</a> * QtAbstractPropertyBrowser::currentItem () const</h3>
+<p>Returns the current item in the property browser.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#setCurrentItem">setCurrentItem</a>().</p>
+<h3 class="fn"><a name="currentItemChanged"></a>void QtAbstractPropertyBrowser::currentItemChanged ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>current</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted when the current item changes. The current item is specified by <i>current</i>.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#setCurrentItem">QtAbstractPropertyBrowser::setCurrentItem</a>().</p>
+<h3 class="fn"><a name="insertProperty"></a><a href="qtbrowseritem.html">QtBrowserItem</a> * QtAbstractPropertyBrowser::insertProperty ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, <a href="qtproperty.html">QtProperty</a> * <i>afterProperty</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
+<p>Inserts the given <i>property</i> (and its subproperties) after the specified <i>afterProperty</i> in the browser's list of top level properties. Returns item created by property browser which is associated with the <i>property</i>. In order to get all children items created by the property browser in this call returned item should be traversed.</p>
+<p>If the specified <i>afterProperty</i> is 0, the given <i>property</i> is inserted at the beginning of the list. If <i>property</i> is already inserted, this function does nothing and returns 0.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#addProperty">addProperty</a>(), <a href="qtproperty.html#insertSubProperty">QtProperty::insertSubProperty</a>(), and <a href="qtabstractpropertybrowser.html#properties">properties</a>().</p>
+<h3 class="fn"><a name="itemChanged"></a>void QtAbstractPropertyBrowser::itemChanged ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i> )&nbsp;&nbsp;<tt> [pure virtual protected]</tt></h3>
+<p>This function is called whenever a property's data changes, passing a pointer to the <i>item</i> of property as parameter.</p>
+<p>This function must be reimplemented in derived classes in order to update the property browser widget whenever a property's name, tool tip, status tip, &quot;what's this&quot; text, value text or value icon changes.</p>
+<p>Note that if the property browser contains several occurrences of the same property, this method will be called once for each occurrence (with a different item each time).</p>
+<p>See also <a href="qtproperty.html">QtProperty</a> and <a href="qtabstractpropertybrowser.html#items">items</a>().</p>
+<h3 class="fn"><a name="itemInserted"></a>void QtAbstractPropertyBrowser::itemInserted ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>insertedItem</i>, <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>precedingItem</i> )&nbsp;&nbsp;<tt> [pure virtual protected]</tt></h3>
+<p>This function is called to update the widget whenever a property is inserted or added to the property browser, passing pointers to the <i>insertedItem</i> of property and the specified <i>precedingItem</i> as parameters.</p>
+<p>If <i>precedingItem</i> is 0, the <i>insertedItem</i> was put at the beginning of its parent item's list of subproperties. If the parent of <i>insertedItem</i> is 0, the <i>insertedItem</i> was added as a top level property of <i>this</i> property browser.</p>
+<p>This function must be reimplemented in derived classes. Note that if the <i>insertedItem</i>'s property has subproperties, this method will be called for those properties as soon as the current call is finished.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#insertProperty">insertProperty</a>() and <a href="qtabstractpropertybrowser.html#addProperty">addProperty</a>().</p>
+<h3 class="fn"><a name="itemRemoved"></a>void QtAbstractPropertyBrowser::itemRemoved ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i> )&nbsp;&nbsp;<tt> [pure virtual protected]</tt></h3>
+<p>This function is called to update the widget whenever a property is removed from the property browser, passing the pointer to the <i>item</i> of the property as parameters. The passed <i>item</i> is deleted just after this call is finished.</p>
+<p>If the the parent of <i>item</i> is 0, the removed <i>item</i> was a top level property in this editor.</p>
+<p>This function must be reimplemented in derived classes. Note that if the removed <i>item</i>'s property has subproperties, this method will be called for those properties just before the current call is started.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#removeProperty">removeProperty</a>().</p>
+<h3 class="fn"><a name="items"></a><a href="http://qt.nokia.com/doc/4.6/qlist.html">QList</a>&lt;<a href="qtbrowseritem.html">QtBrowserItem</a> *&gt; QtAbstractPropertyBrowser::items ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const</h3>
+<p>Returns the property browser's list of all items associated with the given <i>property</i>.</p>
+<p>There is one item per instance of the property in the browser.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#topLevelItem">topLevelItem</a>().</p>
+<h3 class="fn"><a name="properties"></a><a href="http://qt.nokia.com/doc/4.6/qlist.html">QList</a>&lt;<a href="qtproperty.html">QtProperty</a> *&gt; QtAbstractPropertyBrowser::properties () const</h3>
+<p>Returns the property browser's list of top level properties.</p>
+<p>To traverse the subproperties, use the <a href="qtproperty.html#subProperties">QtProperty::subProperties</a>() function.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#addProperty">addProperty</a>(), <a href="qtabstractpropertybrowser.html#insertProperty">insertProperty</a>(), and <a href="qtabstractpropertybrowser.html#removeProperty">removeProperty</a>().</p>
+<h3 class="fn"><a name="removeProperty"></a>void QtAbstractPropertyBrowser::removeProperty ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
+<p>Removes the specified <i>property</i> (and its subproperties) from the property browser's list of top level properties. All items that were associated with the given <i>property</i> and its children are deleted.</p>
+<p>Note that the properties are <i>not</i> deleted since they can still be used in other editors.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#clear">clear</a>(), <a href="qtproperty.html#removeSubProperty">QtProperty::removeSubProperty</a>(), and <a href="qtabstractpropertybrowser.html#properties">properties</a>().</p>
+<h3 class="fn"><a name="setCurrentItem"></a>void QtAbstractPropertyBrowser::setCurrentItem ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i> )</h3>
+<p>Sets the current item in the property browser to <i>item</i>.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#currentItem">currentItem</a>() and <a href="qtabstractpropertybrowser.html#currentItemChanged">currentItemChanged</a>().</p>
+<h3 class="fn"><a name="setFactoryForManager"></a>void QtAbstractPropertyBrowser::setFactoryForManager ( PropertyManager * <i>manager</i>, <a href="qtabstracteditorfactory.html">QtAbstractEditorFactory</a>&lt;PropertyManager&gt; * <i>factory</i> )</h3>
+<p>Connects the given <i>manager</i> to the given <i>factory</i>, ensuring that properties of the <i>manager</i>'s type will be displayed with an editing widget suitable for their value.</p>
+<p>For example:</p>
+<pre> QtIntPropertyManager *intManager;
+ QtDoublePropertyManager *doubleManager;
+
+ QtProperty *myInteger = intManager-&gt;addProperty();
+ QtProperty *myDouble = doubleManager-&gt;addProperty();
+
+ QtSpinBoxFactory  *spinBoxFactory;
+ QtDoubleSpinBoxFactory *doubleSpinBoxFactory;
+
+ QtAbstractPropertyBrowser *editor;
+ editor-&gt;setFactoryForManager(intManager, spinBoxFactory);
+ editor-&gt;setFactoryForManager(doubleManager, doubleSpinBoxFactory);
+
+ editor-&gt;addProperty(myInteger);
+ editor-&gt;addProperty(myDouble);</pre>
+<p>In this example the <tt>myInteger</tt> property's value is displayed with a <a href="http://qt.nokia.com/doc/4.6/qspinbox.html">QSpinBox</a> widget, while the <tt>myDouble</tt> property's value is displayed with a <a href="http://qt.nokia.com/doc/4.6/qdoublespinbox.html">QDoubleSpinBox</a> widget.</p>
+<p>Note that a factory can be associated with many managers, but a manager can only be associated with one single factory. If the given <i>manager</i> already is associated with another factory, the old association is broken before the new one established.</p>
+<p>This function ensures that the given <i>manager</i> and the given <i>factory</i> are compatible, and it automatically calls the <a href="qtabstracteditorfactory.html#addPropertyManager">QtAbstractEditorFactory::addPropertyManager</a>() function if necessary.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#unsetFactoryForManager">unsetFactoryForManager</a>().</p>
+<h3 class="fn"><a name="topLevelItem"></a><a href="qtbrowseritem.html">QtBrowserItem</a> * QtAbstractPropertyBrowser::topLevelItem ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const</h3>
+<p>Returns the top-level items associated with the given <i>property</i>.</p>
+<p>Returns 0 if <i>property</i> wasn't inserted into this property browser or isn't a top-level one.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#topLevelItems">topLevelItems</a>() and <a href="qtabstractpropertybrowser.html#items">items</a>().</p>
+<h3 class="fn"><a name="topLevelItems"></a><a href="http://qt.nokia.com/doc/4.6/qlist.html">QList</a>&lt;<a href="qtbrowseritem.html">QtBrowserItem</a> *&gt; QtAbstractPropertyBrowser::topLevelItems () const</h3>
+<p>Returns the list of top-level items.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#topLevelItem">topLevelItem</a>().</p>
+<h3 class="fn"><a name="unsetFactoryForManager"></a>void QtAbstractPropertyBrowser::unsetFactoryForManager ( <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> * <i>manager</i> )</h3>
+<p>Removes the association between the given <i>manager</i> and the factory bound to it, automatically calling the <a href="qtabstracteditorfactory.html#removePropertyManager">QtAbstractEditorFactory::removePropertyManager</a>() function if necessary.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#setFactoryForManager">setFactoryForManager</a>().</p>
+<p /><address><hr /><div align="center">
+<table width="100%" cellspacing="0" border="0"><tr class="address">
+<td width="30%" align="left">Copyright &copy; 2010 Nokia Corporation and/or its subsidiary(-ies)</td>
+<td width="40%" align="center"><a href="http://qt.nokia.com/doc/trademarks.html">Trademarks</a></td>
+<td width="30%" align="right"><div align="right">Qt Solutions</div></td>
+</tr></table></div></address></body>
+</html>

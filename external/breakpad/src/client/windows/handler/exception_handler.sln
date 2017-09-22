@@ -1,0 +1,67 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2015
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "(crash_generation)", "..\crash_generation", "{71054F76-E083-ED71-B3F9-3E9B872F3E9E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "(handler)", ".", "{07BF0989-2B77-D3C5-75FC-813F97B41E10}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "..\common.vcxproj", "{4ED48541-4F88-BEA7-7F51-2F7D869EF242}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crash_generation_server", "..\crash_generation\crash_generation_server.vcxproj", "{B984A5D6-73F4-EF0A-6117-F9116594EBB2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "exception_handler", "exception_handler.vcxproj", "{D2921270-F22B-9E45-D11B-A9A9F381909F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Purify|Win32 = Purify|Win32
+		Purify|x64 = Purify|x64
+		Release|x64 = Release|x64
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4ED48541-4F88-BEA7-7F51-2F7D869EF242}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4ED48541-4F88-BEA7-7F51-2F7D869EF242}.Debug|Win32.Build.0 = Debug|Win32
+		{4ED48541-4F88-BEA7-7F51-2F7D869EF242}.Debug|x64.ActiveCfg = Debug|x64
+		{4ED48541-4F88-BEA7-7F51-2F7D869EF242}.Debug|x64.Build.0 = Debug|x64
+		{4ED48541-4F88-BEA7-7F51-2F7D869EF242}.Purify|Win32.ActiveCfg = Purify|Win32
+		{4ED48541-4F88-BEA7-7F51-2F7D869EF242}.Purify|Win32.Build.0 = Purify|Win32
+		{4ED48541-4F88-BEA7-7F51-2F7D869EF242}.Purify|x64.ActiveCfg = Purify|x64
+		{4ED48541-4F88-BEA7-7F51-2F7D869EF242}.Purify|x64.Build.0 = Purify|x64
+		{4ED48541-4F88-BEA7-7F51-2F7D869EF242}.Release|x64.ActiveCfg = Release|x64
+		{4ED48541-4F88-BEA7-7F51-2F7D869EF242}.Release|x64.Build.0 = Release|x64
+		{4ED48541-4F88-BEA7-7F51-2F7D869EF242}.Release|Win32.ActiveCfg = Release|Win32
+		{4ED48541-4F88-BEA7-7F51-2F7D869EF242}.Release|Win32.Build.0 = Release|Win32
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2}.Debug|Win32.Build.0 = Debug|Win32
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2}.Debug|x64.ActiveCfg = Debug|x64
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2}.Debug|x64.Build.0 = Debug|x64
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2}.Purify|Win32.ActiveCfg = Purify|Win32
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2}.Purify|Win32.Build.0 = Purify|Win32
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2}.Purify|x64.ActiveCfg = Purify|x64
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2}.Purify|x64.Build.0 = Purify|x64
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2}.Release|x64.ActiveCfg = Release|x64
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2}.Release|x64.Build.0 = Release|x64
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2}.Release|Win32.ActiveCfg = Release|Win32
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2}.Release|Win32.Build.0 = Release|Win32
+		{D2921270-F22B-9E45-D11B-A9A9F381909F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D2921270-F22B-9E45-D11B-A9A9F381909F}.Debug|Win32.Build.0 = Debug|Win32
+		{D2921270-F22B-9E45-D11B-A9A9F381909F}.Debug|x64.ActiveCfg = Debug|x64
+		{D2921270-F22B-9E45-D11B-A9A9F381909F}.Debug|x64.Build.0 = Debug|x64
+		{D2921270-F22B-9E45-D11B-A9A9F381909F}.Purify|Win32.ActiveCfg = Purify|Win32
+		{D2921270-F22B-9E45-D11B-A9A9F381909F}.Purify|Win32.Build.0 = Purify|Win32
+		{D2921270-F22B-9E45-D11B-A9A9F381909F}.Purify|x64.ActiveCfg = Purify|x64
+		{D2921270-F22B-9E45-D11B-A9A9F381909F}.Purify|x64.Build.0 = Purify|x64
+		{D2921270-F22B-9E45-D11B-A9A9F381909F}.Release|x64.ActiveCfg = Release|x64
+		{D2921270-F22B-9E45-D11B-A9A9F381909F}.Release|x64.Build.0 = Release|x64
+		{D2921270-F22B-9E45-D11B-A9A9F381909F}.Release|Win32.ActiveCfg = Release|Win32
+		{D2921270-F22B-9E45-D11B-A9A9F381909F}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B984A5D6-73F4-EF0A-6117-F9116594EBB2} = {71054F76-E083-ED71-B3F9-3E9B872F3E9E}
+		{D2921270-F22B-9E45-D11B-A9A9F381909F} = {07BF0989-2B77-D3C5-75FC-813F97B41E10}
+	EndGlobalSection
+EndGlobal

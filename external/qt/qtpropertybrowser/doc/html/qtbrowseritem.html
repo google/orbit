@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!-- qtpropertybrowser.cpp -->
+<head>
+  <title>QtBrowserItem Class Reference</title>
+  <link href="classic.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td align="left" valign="top" width="32"><img src="images/qt-logo.png" align="left" width="57" height="67" border="0" /></td>
+<td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a></td>
+</tr></table><h1 class="title">QtBrowserItem Class Reference</h1>
+<p>The QtBrowserItem class represents a property in a property browser instance. <a href="#details">More...</a></p>
+<pre> #include &lt;QtBrowserItem&gt;</pre><ul>
+<li><a href="qtbrowseritem-members.html">List of all members, including inherited members</a></li>
+</ul>
+<hr />
+<a name="public-functions"></a>
+<h2>Public Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">QtAbstractPropertyBrowser * </td><td class="memItemRight" valign="bottom"><b><a href="qtbrowseritem.html#browser">browser</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QList&lt;QtBrowserItem *&gt; </td><td class="memItemRight" valign="bottom"><b><a href="qtbrowseritem.html#children">children</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QtBrowserItem * </td><td class="memItemRight" valign="bottom"><b><a href="qtbrowseritem.html#parent">parent</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QtProperty * </td><td class="memItemRight" valign="bottom"><b><a href="qtbrowseritem.html#property">property</a></b> () const</td></tr>
+</table>
+<a name="details"></a>
+<hr />
+<h2>Detailed Description</h2>
+<p>The QtBrowserItem class represents a property in a property browser instance.</p>
+<p>Browser items are created whenever a <a href="qtproperty.html">QtProperty</a> is inserted to the property browser. A QtBrowserItem uniquely identifies a browser's item. Thus, if the same <a href="qtproperty.html">QtProperty</a> is inserted multiple times, each occurrence gets its own unique QtBrowserItem. The items are owned by <a href="qtabstractpropertybrowser.html">QtAbstractPropertyBrowser</a> and automatically deleted when they are removed from the browser.</p>
+<p>You can traverse a browser's properties by calling <a href="qtbrowseritem.html#parent">parent</a>() and <a href="qtbrowseritem.html#children">children</a>(). The property and the browser associated with an item are available as <a href="qtbrowseritem.html#property">property</a>() and <a href="qtbrowseritem.html#browser">browser</a>().</p>
+<p>See also <a href="qtabstractpropertybrowser.html">QtAbstractPropertyBrowser</a> and <a href="qtproperty.html">QtProperty</a>.</p>
+<hr />
+<h2>Member Function Documentation</h2>
+<h3 class="fn"><a name="browser"></a><a href="qtabstractpropertybrowser.html">QtAbstractPropertyBrowser</a> * QtBrowserItem::browser () const</h3>
+<p>Returns the property browser which owns <i>this</i> item.</p>
+<h3 class="fn"><a name="children"></a><a href="http://qt.nokia.com/doc/4.6/qlist.html">QList</a>&lt;QtBrowserItem *&gt; QtBrowserItem::children () const</h3>
+<p>Returns the children items of <i>this</i> item. The properties reproduced from children items are always the same as reproduced from associated property' children, for example:</p>
+<pre> QtBrowserItem *item;
+ QList&lt;QtBrowserItem *&gt; childrenItems = item-&gt;children();
+
+ QList&lt;QtProperty *&gt; childrenProperties = item-&gt;property()-&gt;subProperties();</pre>
+<p>The <i>childrenItems</i> list represents the same list as <i>childrenProperties</i>.</p>
+<h3 class="fn"><a name="parent"></a>QtBrowserItem * QtBrowserItem::parent () const</h3>
+<p>Returns the parent item of <i>this</i> item. Returns 0 if <i>this</i> item is associated with top-level property in item's property browser.</p>
+<p>See also <a href="qtbrowseritem.html#children">children</a>().</p>
+<h3 class="fn"><a name="property"></a><a href="qtproperty.html">QtProperty</a> * QtBrowserItem::property () const</h3>
+<p>Returns the property which is accosiated with this item. Note that several items can be associated with the same property instance in the same property browser.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#items">QtAbstractPropertyBrowser::items</a>().</p>
+<p /><address><hr /><div align="center">
+<table width="100%" cellspacing="0" border="0"><tr class="address">
+<td width="30%" align="left">Copyright &copy; 2010 Nokia Corporation and/or its subsidiary(-ies)</td>
+<td width="40%" align="center"><a href="http://qt.nokia.com/doc/trademarks.html">Trademarks</a></td>
+<td width="30%" align="right"><div align="right">Qt Solutions</div></td>
+</tr></table></div></address></body>
+</html>

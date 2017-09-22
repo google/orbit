@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+  <Type Name="std::shared_ptr&lt;oqpi::task_base&gt;">
+    <DisplayString Condition="_Ptr">
+      {_Ptr->uid_} [priority={_Ptr->priority_}, grabbed={(bool)_Ptr->grabbed_._My_val}, done={(bool)_Ptr->done_._My_val}]
+    </DisplayString>
+    <DisplayString Condition="!_Ptr">
+      empty
+    </DisplayString>
+  </Type>
+  
+  <Type Name="std::shared_ptr&lt;oqpi::task&lt;*,*&gt;&gt;">
+    <DisplayString Condition="_Ptr">
+      {_Ptr->uid_} [{oqpi::task_type($T1)}, priority={_Ptr->priority_}, grabbed={(bool)_Ptr->grabbed_._My_val}, done={(bool)_Ptr->done_._My_val}]
+    </DisplayString>
+    <DisplayString Condition="!_Ptr">
+      empty
+    </DisplayString>
+  </Type>
+  
+  <Type Name="std::unique_ptr&lt;oqpi::worker_base, *&gt;">
+    <DisplayString Condition="!_Mypair._Myval2->hTask_.spTask_._Ptr">
+      Idle 
+    </DisplayString>
+    <DisplayString Condition="_Mypair._Myval2->hTask_.spTask_._Ptr">
+      Busy {_Mypair._Myval2->hTask_.spTask_._Ptr->uid_}
+    </DisplayString>
+    <Expand>
+      <Item Name="Task" Condition="_Mypair._Myval2->hTask_.spTask_._Ptr">
+        _Mypair._Myval2->hTask_.spTask_
+      </Item>
+      <Item Name="Parent" Condition="_Mypair._Myval2->hTask_.spTask_._Ptr->spParentGroup_._Ptr">
+        _Mypair._Myval2->hTask_.spTask_._Ptr->spParentGroup_._Ptr
+      </Item>
+    </Expand>
+  </Type>
+  
+</AutoVisualizer>

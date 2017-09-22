@@ -1,0 +1,472 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebugMT|Win32">
+      <Configuration>DebugMT</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugMT|x64">
+      <Configuration>DebugMT</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseMT|Win32">
+      <Configuration>ReleaseMT</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseMT|x64">
+      <Configuration>ReleaseMT</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\external\imgui\imconfig.h" />
+    <ClInclude Include="..\external\imgui\imgui.h" />
+    <ClInclude Include="..\external\imgui\imgui_internal.h" />
+    <ClInclude Include="..\external\imgui\stb_rect_pack.h" />
+    <ClInclude Include="..\external\imgui\stb_textedit.h" />
+    <ClInclude Include="..\external\imgui\stb_truetype.h" />
+    <ClInclude Include="Batcher.h" />
+    <ClInclude Include="BlackBoard.h" />
+    <ClInclude Include="CallStackDataView.h" />
+    <ClInclude Include="CaptureSerializer.h" />
+    <ClInclude Include="CaptureWindow.h" />
+    <ClInclude Include="DataViewModel.h" />
+    <ClInclude Include="DataViewTypes.h" />
+    <ClInclude Include="Debugger.h" />
+    <ClInclude Include="Disassembler.h" />
+    <ClInclude Include="EventTrack.h" />
+    <ClInclude Include="FunctionDataView.h" />
+    <ClInclude Include="Geometry.h" />
+    <ClInclude Include="GlCanvas.h" />
+    <ClInclude Include="GlobalDataView.h" />
+    <ClInclude Include="GlPanel.h" />
+    <ClInclude Include="GlSlider.h" />
+    <ClInclude Include="HomeWindow.h" />
+    <ClInclude Include="Images.h" />
+    <ClInclude Include="ImmediateWindow.h" />
+    <ClInclude Include="LiveFunctionDataView.h" />
+    <ClInclude Include="ModuleDataView.h" />
+    <ClInclude Include="LogDataView.h" />
+    <ClInclude Include="PickingManager.h" />
+    <ClInclude Include="PluginCanvas.h" />
+    <ClInclude Include="PluginManager.h" />
+    <ClInclude Include="ProcessDataView.h" />
+    <ClInclude Include="RuleEditor.h" />
+    <ClInclude Include="SamplingReport.h" />
+    <ClInclude Include="SamplingReportDataView.h" />
+    <ClInclude Include="SessionsDataView.h" />
+    <ClInclude Include="ThreadDataViewGl.h" />
+    <ClInclude Include="ThreadView.h" />
+    <ClInclude Include="TimeGraphLayout.h" />
+    <ClInclude Include="TypeDataView.h" />
+    <ClInclude Include="App.h" />
+    <ClInclude Include="Card.h" />
+    <ClInclude Include="GlUtils.h" />
+    <ClInclude Include="ImGuiOrbit.h" />
+    <ClInclude Include="OpenGl.h" />
+    <ClInclude Include="TextBox.h" />
+    <ClInclude Include="TextRenderer.h" />
+    <ClInclude Include="TimeGraph.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\external\freetype-gl\mat4.c" />
+    <ClCompile Include="..\external\freetype-gl\shader.c" />
+    <ClCompile Include="..\external\imgui\imgui.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
+    <ClCompile Include="Batcher.cpp" />
+    <ClCompile Include="BlackBoard.cpp" />
+    <ClCompile Include="CallStackDataView.cpp" />
+    <ClCompile Include="CaptureSerializer.cpp" />
+    <ClCompile Include="CaptureWindow.cpp" />
+    <ClCompile Include="Card.cpp" />
+    <ClCompile Include="DataViewModel.cpp" />
+    <ClCompile Include="Debugger.cpp" />
+    <ClCompile Include="Disassembler.cpp" />
+    <ClCompile Include="EventTrack.cpp" />
+    <ClCompile Include="FunctionDataView.cpp" />
+    <ClCompile Include="GlCanvas.cpp">
+      <ShowIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ShowIncludes>
+    </ClCompile>
+    <ClCompile Include="GlobalDataView.cpp" />
+    <ClCompile Include="GlSlider.cpp" />
+    <ClCompile Include="GlUtils.cpp" />
+    <ClCompile Include="HomeWindow.cpp" />
+    <ClCompile Include="ImGuiOrbit.cpp">
+      <ShowIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ShowIncludes>
+    </ClCompile>
+    <ClCompile Include="ImmediateWindow.cpp" />
+    <ClCompile Include="LiveFunctionDataView.cpp" />
+    <ClCompile Include="ModuleDataView.cpp" />
+    <ClCompile Include="LogDataView.cpp" />
+    <ClCompile Include="PickingManager.cpp" />
+    <ClCompile Include="PluginCanvas.cpp" />
+    <ClCompile Include="PluginManager.cpp" />
+    <ClCompile Include="ProcessDataView.cpp" />
+    <ClCompile Include="RuleEditor.cpp" />
+    <ClCompile Include="SamplingReport.cpp" />
+    <ClCompile Include="SamplingReportDataView.cpp" />
+    <ClCompile Include="SessionsDataView.cpp" />
+    <ClCompile Include="TextBox.cpp" />
+    <ClCompile Include="TextRenderer.cpp" />
+    <ClCompile Include="GlPanel.cpp" />
+    <ClCompile Include="ThreadDataViewGl.cpp" />
+    <ClCompile Include="ThreadView.cpp" />
+    <ClCompile Include="TimeGraph.cpp" />
+    <ClCompile Include="TimeGraphLayout.cpp" />
+    <ClCompile Include="TypeDataView.cpp" />
+    <ClCompile Include="App.cpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A2F8D23A-D5E2-41C7-94F5-6E8707B447BE}</ProjectGuid>
+    <RootNamespace>hookui</RootNamespace>
+    <ProjectName>OrbitGl</ProjectName>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMT|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMT|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugMT|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugMT|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IntDir>..\intermediate\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
+    <IntDir>..\intermediate\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>..\intermediate\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>..\intermediate\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IntDir>..\intermediate\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMT|Win32'">
+    <IntDir>..\intermediate\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>..\intermediate\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMT|x64'">
+    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>..\intermediate\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BrowseInformation>false</BrowseInformation>
+      <ShowIncludes>false</ShowIncludes>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_CRT_SECURE_NO_DEPRECATE;_WIN32_WINNT=0x0700</PreprocessorDefinitions>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>wxmsw30ud_aui.lib;wxmsw30ud_html.lib;wxmsw30ud_adv.lib;wxmsw30ud_core.lib;wxmsw30ud_propgrid.lib;wxbase30ud_xml.lib;wxmsw30ud_gl.lib;wxbase30ud.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;hooklib.lib;freeglut_static.lib;freetype-gl.lib;freetype261.lib;glew32.lib;libMinHook.x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\external\wxWidgets-3.0.1\lib\vc_lib;..\bin\Win32\Debug;..\external\freeglut-2.8.1\lib\x86\;..\external\freetype-gl\Win32\Release\;..\external\freetype\lib\Win32;..\external\glew-1.13.0\lib\Release\Win32;..\external\minhook\lib\Debug;$(BOOST_ROOT)\lib32-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\external\wxWidgets-3.0.1\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugMT|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BrowseInformation>true</BrowseInformation>
+      <ShowIncludes>false</ShowIncludes>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>wxmsw30ud_aui.lib;wxmsw30ud_html.lib;wxmsw30ud_adv.lib;wxmsw30ud_core.lib;wxmsw30ud_propgrid.lib;wxbase30ud_xml.lib;wxmsw30ud_gl.lib;wxbase30ud.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;hookpdb.lib;freeglut_static.lib;hooklib.lib;freetype-gl.lib;freetype26.lib;glew32.lib;libboost_thread-vc120-mt-gd-1_56.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\external\wxWidgets-3.0.1\lib\vc_lib;..\bin\Win32\Debug;..\external\freeglut-2.8.1\lib\x86\Debug;..\external\freetype-gl\build\lib\Win32\Debug\;..\external\freetype-gl\windows\freetype\Win32;..\external\glew-1.13.0\lib\Release\Win32;$(BOOST_ROOT)\lib32-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\external\wxWidgets-3.0.1\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;..\external\curl-7.52.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BrowseInformation>false</BrowseInformation>
+      <ShowIncludes>false</ShowIncludes>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions);_CRT_SECURE_NO_DEPRECATE;_WIN32_WINNT=0x0700</PreprocessorDefinitions>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;hooklib.lib;freetype-gl.lib;freetype261.lib;opengl32.lib;glu32.lib;glew32.lib;libMinHook.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\bin\x64\Debug;..\external\wxWidgets-3.0.1\lib\vc_x64_lib;..\external\freeglut-2.8.1\lib\x64\Debug;..\external\freetype\lib\x64;..\external\freetype-gl\x64\Debug\;..\external\glew-1.13.0\lib\Release\x64;..\external\minhook\lib\Release;$(BOOST_ROOT)\lib64-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\external\wxWidgets-3.0.1\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugMT|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;..\external\curl-7.52.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BrowseInformation>true</BrowseInformation>
+      <ShowIncludes>false</ShowIncludes>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>wxmsw30ud_aui.lib;wxmsw30ud_html.lib;wxmsw30ud_adv.lib;wxmsw30ud_core.lib;wxbase30ud_xml.lib;wxmsw30ud_gl.lib;wxbase30ud.lib;wxmsw30ud_propgrid.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;hookpdb.lib;hooklib.lib;freetype-gl.lib;freetype26.lib;opengl32.lib;glu32.lib;glew32.lib;freeglut_static.lib;libboost_thread-vc120-mt-gd-1_56.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\bin\x64\DebugMT;..\external\wxWidgets-3.0.1\lib\vc_x64_lib;..\external\freeglut-2.8.1\lib\x64\Debug;..\external\freetype-gl\windows\freetype\x64;..\external\freetype-gl\build\lib\x64\Debug\;..\external\glew-1.13.0\lib\Release\x64;$(BOOST_ROOT)\lib64-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\external\wxWidgets-3.0.1\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ShowIncludes>false</ShowIncludes>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_UNICODE;_CRT_SECURE_NO_DEPRECATE;_WIN32_WINNT=0x0700</PreprocessorDefinitions>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+      <OptimizeReferences>false</OptimizeReferences>
+      <AdditionalDependencies>wxmsw30u_aui.lib;wxmsw30u_html.lib;wxmsw30u_adv.lib;wxmsw30u_core.lib;wxbase30u_xml.lib;wxmsw30u_propgrid.lib;wxbase30u.lib;wxtiff.lib;wxjpeg.lib;wxpng.lib;wxzlib.lib;wxregexu.lib;wxexpat.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;wxmsw30u_gl.lib;opengl32.lib;glu32.lib;hooklib.lib;dbghelp.lib;freeglut_static.lib;freetype-gl.lib;freetype261.lib;glew32.lib;libMinHook.x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\bin\Win32\Release;..\external\wxWidgets-3.0.1\lib\vc_lib;..\external\freeglut-2.8.1\lib\x86;..\external\freetype-gl\Win32\Release\;..\external\glew-1.13.0\lib\Release\Win32;..\external\freetype-gl\windows\freetype\Win32;..\external\minhook\lib\Release;$(BOOST_ROOT)\lib32-msvc-12.0;..\external\freetype\lib\Win32</AdditionalLibraryDirectories>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\external\wxWidgets-3.0.1\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <ShowIncludes>false</ShowIncludes>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_UNICODE</PreprocessorDefinitions>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+      <OptimizeReferences>false</OptimizeReferences>
+      <AdditionalDependencies>wxmsw30u_aui.lib;wxmsw30u_html.lib;wxmsw30u_adv.lib;wxmsw30u_core.lib;wxbase30u_xml.lib;wxmsw30u_propgrid.lib;wxbase30u.lib;wxtiff.lib;wxjpeg.lib;wxpng.lib;wxzlib.lib;wxregexu.lib;wxexpat.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;wxmsw30u_gl.lib;opengl32.lib;glu32.lib;hooklib.lib;hookpdb.lib;dbghelp.lib;freeglut_static.lib;freetype-gl.lib;freetype26.lib;glew32.lib;libboost_thread-vc120-mt-gd-1_56.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\bin\Win32\Release;..\external\wxWidgets-3.0.1\lib\vc_lib;..\external\freeglut-2.8.1\lib\x86;..\external\freetype-gl\build\lib\Win32\Release\;..\external\glew-1.13.0\lib\Release\Win32;..\external\freetype-gl\windows\freetype\Win32;$(BOOST_ROOT)\lib32-msvc-12.0</AdditionalLibraryDirectories>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\external\wxWidgets-3.0.1\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;..\external\curl-7.52.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ShowIncludes>false</ShowIncludes>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions);_CRT_SECURE_NO_DEPRECATE;_WIN32_WINNT=0x0700</PreprocessorDefinitions>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+      <OptimizeReferences>false</OptimizeReferences>
+      <AdditionalDependencies>winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;wxmsw30u_gl.lib;opengl32.lib;glu32.lib;hooklib.lib;dbghelp.lib;glew32.lib;freeglut_static.lib;freetype-gl.lib;freetype261.lib;libMinHook.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\bin\x64\Release;..\external\wxWidgets-3.0.1\lib\vc_x64_lib;..\external\freeglut-2.8.1\lib\x64\;..\external\freetype\lib\x64;..\external\freetype-gl\x64\Release\;..\external\glew-1.13.0\lib\Release\x64;..\external\minhook\lib\Release;$(BOOST_ROOT)\lib64-msvc-12.0</AdditionalLibraryDirectories>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\external\wxWidgets-3.0.1\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;..\external\curl-7.52.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+      <OptimizeReferences>false</OptimizeReferences>
+      <AdditionalDependencies>wxmsw30u_aui.lib;wxmsw30u_html.lib;wxmsw30u_adv.lib;wxmsw30u_core.lib;wxbase30u_xml.lib;wxbase30u.lib;wxmsw30u_propgrid.lib;wxtiff.lib;wxjpeg.lib;wxpng.lib;wxzlib.lib;wxregexu.lib;wxexpat.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;wxmsw30u_gl.lib;opengl32.lib;glu32.lib;hookpdb.lib;hooklib.lib;dbghelp.lib;glew32.lib;freeglut_static.lib;freetype-gl.lib;freetype26.lib;libboost_system-vc120-mt-1_56.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\bin\x64\Release;..\external\wxWidgets-3.0.1\lib\vc_x64_lib;..\external\freeglut-2.8.1\lib\x64;..\external\freetype-gl\build\lib\x64\Release\;..\external\freetype-gl\windows\freetype\x64;..\external\glew-1.13.0\lib\Release\x64;$(BOOST_ROOT)\lib64-msvc-12.0</AdditionalLibraryDirectories>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\external\wxWidgets-3.0.1\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

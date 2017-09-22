@@ -1,0 +1,7 @@
+GLX_ARB_context_flush_control
+http://www.opengl.org/registry/specs/KHR/context_flush_control.txt
+GLX_ARB_context_flush_control
+
+	GLX_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB 0x0000
+	GLX_CONTEXT_RELEASE_BEHAVIOR_ARB 0x2097
+	GLX_CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB 0x2098

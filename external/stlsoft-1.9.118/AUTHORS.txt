@@ -1,0 +1,103 @@
+============================================================================
+STLSoft - Authors
+
+; Created:  29th March 2002
+; Updated:  16th February 2013
+
+============================================================================
+
+
+Major Contributors:
+
+    Matthew Wilson        (most of the libraries)
+    Pablo Aguilar         (Windows ToolHelp Library)
+
+
+Bug reports, fixes and suggestions (for which we are very grateful):
+
+    Adi Shavit
+    Allan McLellan
+    Anders F Björklund
+    Andrew Bond
+    Anton Sekeris
+    Bart van der Velden
+    Bjorn Karlsson
+    Brad Cox
+    Carlos Santander Bernal
+    Carston Schmidt
+    chenchang
+    Chris Newcombe
+    Christian Roessel
+    Christopher Diggins
+    Cláudio Albuquerque
+    Colin Gravell
+    Dave Brooks
+    David Wang
+    Diego Chanoux
+    Dimitri Kaparis
+    Eduardo Bezerra
+    Eugene Gershnik
+    Felix Gartsman
+    Gabor Fischer
+    Greg Peet
+    HeartIcy
+    Kevlin Henney
+    iceboy
+    Ilya Minkov
+    jesusmalo
+    Javier Estrada
+    John Abney
+    Jon Papaioannou
+    Jonathan Wakely
+    Joseph McCay
+    Joe Mariadassou
+    Josh Kelley
+    Julio César Carrascal Urquijo
+    Lars Ivar Igesund
+    Luoyi
+    Maciej Kaniewski
+    Manfred Ehrhart
+    Marc Kamradt
+    markitus82
+    Martin J Moene
+    Mateusz Loskot
+    Michal Makowski
+    Mikael Pahmp
+    Mike Batten
+    Neal Becker
+    Nevin Liber
+    Pablo Aguilar
+    Pavel Vozenilek
+    Peter Bannister
+    Peter Schregle
+    Raindog
+    Robert Kreger
+    Rupert Kittinger
+    Ryan Ginstrom
+    Sam Fisher
+    Sean Cavanaugh
+    Sean Kelly
+    Sergey Nikulov
+    Shawn Poulson
+    Scott Meyers
+    Scott Michel
+    Scott Patterson
+    Sean Kelly
+    ShaChris23
+    Steven (Kuaf Lee)
+    Vivi Orunitia
+    Victor Gaydov
+    Victor T
+    Vinson Lee
+    Volker Lukas
+    W³odzimierz Skiba
+    Yakov Markovitch
+    yozara
+    Zar Eindl
+    zer0god
+
+    and many others whose posts and requests have been invaluable
+
+Contributions are welcomed.
+
+=============================== End of file ================================

@@ -1,0 +1,5 @@
+recursive-include src *
+include LICENSE.TXT
+include README.txt
+include BUILDING.txt
+include Makefile

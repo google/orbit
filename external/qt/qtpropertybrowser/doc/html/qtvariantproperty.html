@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!-- qtvariantproperty.cpp -->
+<head>
+  <title>QtVariantProperty Class Reference</title>
+  <link href="classic.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td align="left" valign="top" width="32"><img src="images/qt-logo.png" align="left" width="57" height="67" border="0" /></td>
+<td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a></td>
+</tr></table><h1 class="title">QtVariantProperty Class Reference</h1>
+<p>The QtVariantProperty class is a convenience class handling <a href="http://qt.nokia.com/doc/4.6/qvariant.html">QVariant</a> based properties. <a href="#details">More...</a></p>
+<pre> #include &lt;QtVariantProperty&gt;</pre><p>Inherits <a href="qtproperty.html">QtProperty</a>.</p>
+<ul>
+<li><a href="qtvariantproperty-members.html">List of all members, including inherited members</a></li>
+</ul>
+<hr />
+<a name="public-functions"></a>
+<h2>Public Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtvariantproperty.html#dtor.QtVariantProperty">~QtVariantProperty</a></b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QVariant </td><td class="memItemRight" valign="bottom"><b><a href="qtvariantproperty.html#attributeValue">attributeValue</a></b> ( const QString &amp; <i>attribute</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int </td><td class="memItemRight" valign="bottom"><b><a href="qtvariantproperty.html#propertyType">propertyType</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtvariantproperty.html#setAttribute">setAttribute</a></b> ( const QString &amp; <i>attribute</i>, const QVariant &amp; <i>value</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtvariantproperty.html#setValue">setValue</a></b> ( const QVariant &amp; <i>value</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QVariant </td><td class="memItemRight" valign="bottom"><b><a href="qtvariantproperty.html#value">value</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int </td><td class="memItemRight" valign="bottom"><b><a href="qtvariantproperty.html#valueType">valueType</a></b> () const</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>20 public functions inherited from <a href="qtproperty.html#public-functions">QtProperty</a></li>
+</ul>
+<hr />
+<a name="protected-functions"></a>
+<h2>Protected Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtvariantproperty.html#QtVariantProperty">QtVariantProperty</a></b> ( QtVariantPropertyManager * <i>manager</i> )</td></tr>
+</table>
+<a name="details"></a>
+<hr />
+<h2>Detailed Description</h2>
+<p>The QtVariantProperty class is a convenience class handling <a href="http://qt.nokia.com/doc/4.6/qvariant.html">QVariant</a> based properties.</p>
+<p>QtVariantProperty provides additional API: A property's type, value type, attribute values and current value can easily be retrieved using the <a href="qtvariantproperty.html#propertyType">propertyType</a>(), <a href="qtvariantproperty.html#valueType">valueType</a>(), <a href="qtvariantproperty.html#attributeValue">attributeValue</a>() and <a href="qtvariantproperty.html#value">value</a>() functions respectively. In addition, the attribute values and the current value can be set using the corresponding <a href="qtvariantproperty.html#setValue">setValue</a>() and <a href="qtvariantproperty.html#setAttribute">setAttribute</a>() functions.</p>
+<p>For example, instead of writing:</p>
+<pre> QtVariantPropertyManager *variantPropertyManager;
+ QtProperty *property;
+
+ variantPropertyManager-&gt;setValue(property, 10);</pre>
+<p>you can write:</p>
+<pre> QtVariantPropertyManager *variantPropertyManager;
+ QtVariantProperty *property;
+
+ property-&gt;setValue(10);</pre>
+<p>QtVariantProperty instances can only be created by the <a href="qtvariantpropertymanager.html">QtVariantPropertyManager</a> class.</p>
+<p>See also <a href="qtproperty.html">QtProperty</a>, <a href="qtvariantpropertymanager.html">QtVariantPropertyManager</a>, and <a href="qtvarianteditorfactory.html">QtVariantEditorFactory</a>.</p>
+<hr />
+<h2>Member Function Documentation</h2>
+<h3 class="fn"><a name="QtVariantProperty"></a>QtVariantProperty::QtVariantProperty ( <a href="qtvariantpropertymanager.html">QtVariantPropertyManager</a> * <i>manager</i> )&nbsp;&nbsp;<tt> [protected]</tt></h3>
+<p>Creates a variant property using the given <i>manager</i>.</p>
+<p>Do not use this constructor to create variant property instances; use the <a href="qtvariantpropertymanager.html#addProperty">QtVariantPropertyManager::addProperty</a>() function instead. This constructor is used internally by the <a href="qtvariantpropertymanager.html#createProperty">QtVariantPropertyManager::createProperty</a>() function.</p>
+<p>See also <a href="qtvariantpropertymanager.html">QtVariantPropertyManager</a>.</p>
+<h3 class="fn"><a name="dtor.QtVariantProperty"></a>QtVariantProperty::~QtVariantProperty ()</h3>
+<p>Destroys this property.</p>
+<p>See also <a href="qtproperty.html#dtor.QtProperty">QtProperty::~QtProperty</a>().</p>
+<h3 class="fn"><a name="attributeValue"></a><a href="http://qt.nokia.com/doc/4.6/qvariant.html">QVariant</a> QtVariantProperty::attributeValue ( const <a href="http://qt.nokia.com/doc/4.6/qstring.html">QString</a> &amp; <i>attribute</i> ) const</h3>
+<p>Returns this property's value for the specified <i>attribute</i>.</p>
+<p><a href="qtvariantpropertymanager.html">QtVariantPropertyManager</a> provides a couple of related functions: <a href="qtvariantpropertymanager.html#attributes">attributes()</a> and <a href="qtvariantpropertymanager.html#attributeType">attributeType()</a>.</p>
+<p>See also <a href="qtvariantproperty.html#setAttribute">setAttribute</a>().</p>
+<h3 class="fn"><a name="propertyType"></a>int QtVariantProperty::propertyType () const</h3>
+<p>Returns this property's type.</p>
+<p><a href="qtvariantpropertymanager.html">QtVariantPropertyManager</a> provides several related functions: <a href="qtvariantpropertymanager.html#enumTypeId">enumTypeId()</a>, <a href="qtvariantpropertymanager.html#flagTypeId">flagTypeId()</a> and <a href="qtvariantpropertymanager.html#groupTypeId">groupTypeId()</a>.</p>
+<p>See also <a href="qtvariantproperty.html#valueType">valueType</a>().</p>
+<h3 class="fn"><a name="setAttribute"></a>void QtVariantProperty::setAttribute ( const <a href="http://qt.nokia.com/doc/4.6/qstring.html">QString</a> &amp; <i>attribute</i>, const <a href="http://qt.nokia.com/doc/4.6/qvariant.html">QVariant</a> &amp; <i>value</i> )</h3>
+<p>Sets the <i>attribute</i> of property to <i>value</i>.</p>
+<p><a href="qtvariantpropertymanager.html">QtVariantPropertyManager</a> provides the related <a href="qtvariantpropertymanager.html#setAttribute">setAttribute()</a> function.</p>
+<p>See also <a href="qtvariantproperty.html#attributeValue">attributeValue</a>().</p>
+<h3 class="fn"><a name="setValue"></a>void QtVariantProperty::setValue ( const <a href="http://qt.nokia.com/doc/4.6/qvariant.html">QVariant</a> &amp; <i>value</i> )</h3>
+<p>Sets the value of this property to <i>value</i>.</p>
+<p>The specified <i>value</i> must be of the type returned by <a href="qtvariantproperty.html#valueType">valueType</a>(), or of a type that can be converted to <a href="qtvariantproperty.html#valueType">valueType</a>() using the <a href="http://qt.nokia.com/doc/4.6/qvariant.html#canConvert">QVariant::canConvert</a>() function; otherwise this function does nothing.</p>
+<p>See also <a href="qtvariantproperty.html#value">value</a>().</p>
+<h3 class="fn"><a name="value"></a><a href="http://qt.nokia.com/doc/4.6/qvariant.html">QVariant</a> QtVariantProperty::value () const</h3>
+<p>Returns the property's current value.</p>
+<p>See also <a href="qtvariantproperty.html#valueType">valueType</a>() and <a href="qtvariantproperty.html#setValue">setValue</a>().</p>
+<h3 class="fn"><a name="valueType"></a>int QtVariantProperty::valueType () const</h3>
+<p>Returns the type of this property's value.</p>
+<p>See also <a href="qtvariantproperty.html#propertyType">propertyType</a>().</p>
+<p /><address><hr /><div align="center">
+<table width="100%" cellspacing="0" border="0"><tr class="address">
+<td width="30%" align="left">Copyright &copy; 2010 Nokia Corporation and/or its subsidiary(-ies)</td>
+<td width="40%" align="center"><a href="http://qt.nokia.com/doc/trademarks.html">Trademarks</a></td>
+<td width="30%" align="right"><div align="right">Qt Solutions</div></td>
+</tr></table></div></address></body>
+</html>

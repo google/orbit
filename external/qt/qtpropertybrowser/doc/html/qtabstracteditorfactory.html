@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!-- qtpropertybrowser.cpp -->
+<head>
+  <title>QtAbstractEditorFactory Class Reference</title>
+  <link href="classic.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td align="left" valign="top" width="32"><img src="images/qt-logo.png" align="left" width="57" height="67" border="0" /></td>
+<td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a></td>
+</tr></table><h1 class="title">QtAbstractEditorFactory Class Reference</h1>
+<p>The QtAbstractEditorFactory is the base template class for editor factories. <a href="#details">More...</a></p>
+<pre> #include &lt;QtAbstractEditorFactory&gt;</pre><p>Inherits <a href="qtabstracteditorfactorybase.html">QtAbstractEditorFactoryBase</a>.</p>
+<p>Inherited by <a href="qtchareditorfactory.html">QtCharEditorFactory</a>, <a href="qtcheckboxfactory.html">QtCheckBoxFactory</a>, <a href="qtcoloreditorfactory.html">QtColorEditorFactory</a>, <a href="qtcursoreditorfactory.html">QtCursorEditorFactory</a>, <a href="qtdateeditfactory.html">QtDateEditFactory</a>, <a href="qtdatetimeeditfactory.html">QtDateTimeEditFactory</a>, <a href="qtdoublespinboxfactory.html">QtDoubleSpinBoxFactory</a>, <a href="qtenumeditorfactory.html">QtEnumEditorFactory</a>, <a href="qtfonteditorfactory.html">QtFontEditorFactory</a>, <a href="qtkeysequenceeditorfactory.html">QtKeySequenceEditorFactory</a>, <a href="qtlineeditfactory.html">QtLineEditFactory</a>, <a href="qtscrollbarfactory.html">QtScrollBarFactory</a>, <a href="qtsliderfactory.html">QtSliderFactory</a>, <a href="qtspinboxfactory.html">QtSpinBoxFactory</a>, <a href="qttimeeditfactory.html">QtTimeEditFactory</a>, and <a href="qtvarianteditorfactory.html">QtVariantEditorFactory</a>.</p>
+<ul>
+<li><a href="qtabstracteditorfactory-members.html">List of all members, including inherited members</a></li>
+</ul>
+<hr />
+<a name="public-functions"></a>
+<h2>Public Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtabstracteditorfactory.html#QtAbstractEditorFactory">QtAbstractEditorFactory</a></b> ( QObject * <i>parent</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstracteditorfactory.html#addPropertyManager">addPropertyManager</a></b> ( PropertyManager * <i>manager</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">PropertyManager * </td><td class="memItemRight" valign="bottom"><b><a href="qtabstracteditorfactory.html#propertyManager">propertyManager</a></b> ( QtProperty * <i>property</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QSet&lt;PropertyManager *&gt; </td><td class="memItemRight" valign="bottom"><b><a href="qtabstracteditorfactory.html#propertyManagers">propertyManagers</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstracteditorfactory.html#removePropertyManager">removePropertyManager</a></b> ( PropertyManager * <i>manager</i> )</td></tr>
+</table>
+<hr />
+<a name="reimplemented-public-functions"></a>
+<h2>Reimplemented Public Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">virtual QWidget * </td><td class="memItemRight" valign="bottom"><b><a href="qtabstracteditorfactory.html#createEditor">createEditor</a></b> ( QtProperty * <i>property</i>, QWidget * <i>parent</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>1 public function inherited from <a href="qtabstracteditorfactorybase.html#public-functions">QtAbstractEditorFactoryBase</a></li>
+<li><div bar="2" class="fn"></div>29 public functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-functions">QObject</a></li>
+</ul>
+<hr />
+<a name="protected-functions"></a>
+<h2>Protected Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstracteditorfactory.html#connectPropertyManager">connectPropertyManager</a></b> ( PropertyManager * <i>manager</i> ) = 0</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual QWidget * </td><td class="memItemRight" valign="bottom"><b><a href="qtabstracteditorfactory.html#createEditor-2">createEditor</a></b> ( PropertyManager * <i>manager</i>, QtProperty * <i>property</i>, QWidget * <i>parent</i> ) = 0</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstracteditorfactory.html#disconnectPropertyManager">disconnectPropertyManager</a></b> ( PropertyManager * <i>manager</i> ) = 0</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>7 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-functions">QObject</a></li>
+</ul>
+<h3>Additional Inherited Members</h3>
+<ul>
+<li><div class="fn"></div>1 property inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>1 public slot inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-slots">QObject</a></li>
+<li><div class="fn"></div>1 signal inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#signals">QObject</a></li>
+<li><div class="fn"></div>1 public type inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-variables">QObject</a></li>
+<li><div class="fn"></div>4 static public members inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>2 protected variables inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-variables">QObject</a></li>
+</ul>
+<a name="details"></a>
+<hr />
+<h2>Detailed Description</h2>
+<p>The QtAbstractEditorFactory is the base template class for editor factories.</p>
+<p>An editor factory is a class that is able to create an editing widget of a specified type (e.g&#x2e; line edits or comboboxes) for a given <a href="qtproperty.html">QtProperty</a> object, and it is used in conjunction with the <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> and <a href="qtabstractpropertybrowser.html">QtAbstractPropertyBrowser</a> classes.</p>
+<p>Note that the QtAbstractEditorFactory functions are using the PropertyManager template argument class which can be any <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> subclass. For example:</p>
+<pre> QtSpinBoxFactory *factory;
+ QSet&lt;QtIntPropertyManager *&gt; managers = factory-&gt;propertyManagers();</pre>
+<p>Note that <a href="qtspinboxfactory.html">QtSpinBoxFactory</a> by definition creates editing widgets <i>only</i> for properties created by <a href="qtintpropertymanager.html">QtIntPropertyManager</a>.</p>
+<p>When using a property browser widget, the properties are created and managed by implementations of the <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> class. To ensure that the properties' values will be displayed using suitable editing widgets, the managers are associated with objects of QtAbstractEditorFactory subclasses. The property browser will use these associations to determine which factories it should use to create the preferred editing widgets.</p>
+<p>A QtAbstractEditorFactory object is capable of producing editors for several property managers at the same time. To create an association between this factory and a given manager, use the <a href="qtabstracteditorfactory.html#addPropertyManager">addPropertyManager</a>() function. Use the <a href="qtabstracteditorfactory.html#removePropertyManager">removePropertyManager</a>() function to make this factory stop producing editors for a given property manager. Use the <a href="qtabstracteditorfactory.html#propertyManagers">propertyManagers</a>() function to retrieve the set of managers currently associated with this factory.</p>
+<p>Several ready-made implementations of the QtAbstractEditorFactory class are available:</p>
+<ul>
+<li><a href="qtcheckboxfactory.html">QtCheckBoxFactory</a></li>
+<li><a href="qtdateeditfactory.html">QtDateEditFactory</a></li>
+<li><a href="qtdatetimeeditfactory.html">QtDateTimeEditFactory</a></li>
+<li><a href="qtdoublespinboxfactory.html">QtDoubleSpinBoxFactory</a></li>
+<li><a href="qtenumeditorfactory.html">QtEnumEditorFactory</a></li>
+<li><a href="qtlineeditfactory.html">QtLineEditFactory</a></li>
+<li><a href="qtscrollbarfactory.html">QtScrollBarFactory</a></li>
+<li><a href="qtsliderfactory.html">QtSliderFactory</a></li>
+<li><a href="qtspinboxfactory.html">QtSpinBoxFactory</a></li>
+<li><a href="qttimeeditfactory.html">QtTimeEditFactory</a></li>
+<li><a href="qtvarianteditorfactory.html">QtVariantEditorFactory</a></li>
+</ul>
+<p>When deriving from the QtAbstractEditorFactory class, several pure virtual functions must be implemented: the <a href="qtabstracteditorfactory.html#connectPropertyManager">connectPropertyManager</a>() function is used by the factory to connect to the given manager's signals, the <a href="qtabstracteditorfactory.html#createEditor">createEditor</a>() function is supposed to create an editor for the given property controlled by the given manager, and finally the <a href="qtabstracteditorfactory.html#disconnectPropertyManager">disconnectPropertyManager</a>() function is used by the factory to disconnect from the specified manager's signals.</p>
+<p>See also <a href="qtabstracteditorfactorybase.html">QtAbstractEditorFactoryBase</a> and <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a>.</p>
+<hr />
+<h2>Member Function Documentation</h2>
+<h3 class="fn"><a name="QtAbstractEditorFactory"></a>QtAbstractEditorFactory::QtAbstractEditorFactory ( <a href="http://qt.nokia.com/doc/4.6/qobject.html">QObject</a> * <i>parent</i> )</h3>
+<p>Creates an editor factory with the given <i>parent</i>.</p>
+<p>See also <a href="qtabstracteditorfactory.html#addPropertyManager">addPropertyManager</a>().</p>
+<h3 class="fn"><a name="addPropertyManager"></a>void QtAbstractEditorFactory::addPropertyManager ( PropertyManager * <i>manager</i> )</h3>
+<p>Adds the given <i>manager</i> to this factory's set of managers, making this factory produce editing widgets for properties created by the given manager.</p>
+<p>The PropertyManager type is a template argument class, and represents the chosen <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> subclass.</p>
+<p>See also <a href="qtabstracteditorfactory.html#propertyManagers">propertyManagers</a>() and <a href="qtabstracteditorfactory.html#removePropertyManager">removePropertyManager</a>().</p>
+<h3 class="fn"><a name="connectPropertyManager"></a>void QtAbstractEditorFactory::connectPropertyManager ( PropertyManager * <i>manager</i> )&nbsp;&nbsp;<tt> [pure virtual protected]</tt></h3>
+<p>Connects this factory to the given <i>manager</i>'s signals. The PropertyManager type is a template argument class, and represents the chosen <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> subclass.</p>
+<p>This function is used internally by the <a href="qtabstracteditorfactory.html#addPropertyManager">addPropertyManager</a>() function, and makes it possible to update an editing widget when the associated property's data changes. This is typically done in custom slots responding to the signals emitted by the property's manager, e.g&#x2e; <a href="qtintpropertymanager.html#valueChanged">QtIntPropertyManager::valueChanged</a>() and <a href="qtintpropertymanager.html#rangeChanged">QtIntPropertyManager::rangeChanged</a>().</p>
+<p>See also <a href="qtabstracteditorfactory.html#propertyManagers">propertyManagers</a>() and <a href="qtabstracteditorfactory.html#disconnectPropertyManager">disconnectPropertyManager</a>().</p>
+<h3 class="fn"><a name="createEditor"></a><a href="http://qt.nokia.com/doc/4.6/qwidget.html">QWidget</a> * QtAbstractEditorFactory::createEditor ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, <a href="http://qt.nokia.com/doc/4.6/qwidget.html">QWidget</a> * <i>parent</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
+<p>Reimplemented from <a href="qtabstracteditorfactorybase.html#createEditor">QtAbstractEditorFactoryBase::createEditor</a>().</p>
+<p>Creates an editing widget (with the given <i>parent</i>) for the given <i>property</i>.</p>
+<h3 class="fn"><a name="createEditor-2"></a><a href="http://qt.nokia.com/doc/4.6/qwidget.html">QWidget</a> * QtAbstractEditorFactory::createEditor ( PropertyManager * <i>manager</i>, <a href="qtproperty.html">QtProperty</a> * <i>property</i>, <a href="http://qt.nokia.com/doc/4.6/qwidget.html">QWidget</a> * <i>parent</i> )&nbsp;&nbsp;<tt> [pure virtual protected]</tt></h3>
+<p>Creates an editing widget with the given <i>parent</i> for the specified <i>property</i> created by the given <i>manager</i>. The PropertyManager type is a template argument class, and represents the chosen <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> subclass.</p>
+<p>This function must be implemented in derived classes: It is recommended to store a pointer to the widget and map it to the given <i>property</i>, since the widget must be updated whenever the associated property's data changes. This is typically done in custom slots responding to the signals emitted by the property's manager, e.g&#x2e; <a href="qtintpropertymanager.html#valueChanged">QtIntPropertyManager::valueChanged</a>() and <a href="qtintpropertymanager.html#rangeChanged">QtIntPropertyManager::rangeChanged</a>().</p>
+<p>See also <a href="qtabstracteditorfactory.html#connectPropertyManager">connectPropertyManager</a>().</p>
+<h3 class="fn"><a name="disconnectPropertyManager"></a>void QtAbstractEditorFactory::disconnectPropertyManager ( PropertyManager * <i>manager</i> )&nbsp;&nbsp;<tt> [pure virtual protected]</tt></h3>
+<p>Disconnects this factory from the given <i>manager</i>'s signals. The PropertyManager type is a template argument class, and represents the chosen <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> subclass.</p>
+<p>This function is used internally by the <a href="qtabstracteditorfactory.html#removePropertyManager">removePropertyManager</a>() function.</p>
+<p>See also <a href="qtabstracteditorfactory.html#propertyManagers">propertyManagers</a>() and <a href="qtabstracteditorfactory.html#connectPropertyManager">connectPropertyManager</a>().</p>
+<h3 class="fn"><a name="propertyManager"></a>PropertyManager * QtAbstractEditorFactory::propertyManager ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const</h3>
+<p>Returns the property manager for the given <i>property</i>, or 0 if the given <i>property</i> doesn't belong to any of this factory's registered managers.</p>
+<p>The PropertyManager type is a template argument class, and represents the chosen <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> subclass.</p>
+<p>See also <a href="qtabstracteditorfactory.html#propertyManagers">propertyManagers</a>().</p>
+<h3 class="fn"><a name="propertyManagers"></a><a href="http://qt.nokia.com/doc/4.6/qset.html">QSet</a>&lt;PropertyManager *&gt; QtAbstractEditorFactory::propertyManagers () const</h3>
+<p>Returns the factory's set of associated managers. The PropertyManager type is a template argument class, and represents the chosen <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> subclass.</p>
+<p>See also <a href="qtabstracteditorfactory.html#addPropertyManager">addPropertyManager</a>() and <a href="qtabstracteditorfactory.html#removePropertyManager">removePropertyManager</a>().</p>
+<h3 class="fn"><a name="removePropertyManager"></a>void QtAbstractEditorFactory::removePropertyManager ( PropertyManager * <i>manager</i> )</h3>
+<p>Removes the given <i>manager</i> from this factory's set of managers. The PropertyManager type is a template argument class, and may be any <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> subclass.</p>
+<p>See also <a href="qtabstracteditorfactory.html#propertyManagers">propertyManagers</a>() and <a href="qtabstracteditorfactory.html#addPropertyManager">addPropertyManager</a>().</p>
+<p /><address><hr /><div align="center">
+<table width="100%" cellspacing="0" border="0"><tr class="address">
+<td width="30%" align="left">Copyright &copy; 2010 Nokia Corporation and/or its subsidiary(-ies)</td>
+<td width="40%" align="center"><a href="http://qt.nokia.com/doc/trademarks.html">Trademarks</a></td>
+<td width="30%" align="right"><div align="right">Qt Solutions</div></td>
+</tr></table></div></address></body>
+</html>

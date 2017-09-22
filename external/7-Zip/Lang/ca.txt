@@ -1,0 +1,404 @@
+﻿;!@Lang2@!UTF-8!
+;  9.07 : Josep Casals, Marc Folch
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+0
+7-Zip
+Catalan
+Català
+401
+D'acord
+Cancel.la
+
+
+
+&Sí
+&No
+Tan&ca
+Ajuda
+
+&Continua
+440
+Sí a &tot
+No a t&ot
+Atura
+Reinicia
+Rerefons
+Primer pla
+&Pausa
+Aturat
+Esteu segur que voleu cancel.lar?
+500
+&Fitxer
+&Edita
+&Visualitza
+&Preferits
+E&ines
+Aj&uda
+540
+&Obre
+Obre d&ins
+Obre fora
+&Visualitza
+&Edita
+Renom&ena
+&Copia a...
+&Moure a...
+Suprimeix
+&Divideix el fitxer...
+Com&bina el fitxer...
+P&ropietats
+Come&ntari
+Calcula el checksum
+Diff
+Crea carpeta
+Crea fitxer
+Surt
+600
+Seleccion&a-ho tot
+Deselecciona-ho tot
+&Inverteix selecció
+Selecciona...
+Deselecciona...
+Selecciona per tipus
+Deselecciona per tipus
+700
+Icones g&rans
+Icones petites
+&Llista
+&Detalls
+730
+No ordenat
+Vista plana
+&2 Taules
+&Barres d'eines
+Obre carpeta arrel
+Carpeta pare
+Historial de carpetes...
+&Actualitza
+750
+Barra d'eines afegeix/extreu
+Barra d'eines estàndard
+Botons grans
+Mostra botons amb text
+800
+&Afegeix la carpeta als Preferits com
+Personal
+900
+Opcions...
+&Test de referència
+960
+&Contingut...
+Quant a 7-Zip...
+1003
+Adreça
+Nom
+Tipus de fitxer
+Carpeta
+Mida
+Mida comprimit
+Atributs
+Creat
+Darrer accés
+Darrera modificació
+Compacte
+Comentari
+Xifrat
+Expandit abans
+Expandit després
+Diccionari
+CRC
+Tipus
+Anti
+Mètode
+SO orígen
+Sistema de fitxers
+Usuari
+Grup
+Bloc
+Comentari
+Posició
+Path Prefix
+Carpetes
+Fitxers
+Versió
+Volum
+Multivolum
+Desplaçament
+Enllaços
+Blocs
+Volums
+
+64-bits
+Big-endian
+CPU
+Mida física
+Mida capçaleres
+Suma de verificació
+Característiques
+Adreça virtual
+ID
+Nom curt
+Aplicació creadora
+Mida del sector
+Mode
+Enllaç
+Error
+Mida total
+Espai lliure
+Mida sector
+Etiqueta
+Nom local
+Proveïdor
+2100
+Opcions
+Llengua
+Llengua:
+Editor
+&Editor:
+&Diff:
+2200
+Sistema
+Associa 7-Zip amb:
+2301
+Integra 7-Zip dins el menú contextual de Windows
+Menú contextual en cascada
+Objectes del menú contextual:
+2320
+<Carpeta>
+<fitxer>
+Obre
+Extreu fitxers...
+Afegeix al fitxer...
+Comprova el fitxer
+Extreu a aquesta carpeta
+Extreu a {0}
+Afegeix a {0}
+Comprimeix i envia per correu electrònic...
+Comprimeix a {0} i envia per correu electrònic
+2400
+Carpetes
+Carpeta de &treball
+Carpeta temporal del &sistema
+Carpeta a&ctual
+E&specifica una carpeta:
+Utilitza únicament per a discs extraïbles
+Especifica una carpeta pels fitxers temporals.
+2500
+Selecció
+Mostra l'element ".."
+Mostra icones reals dels fitxers
+Mostra el menú de sistema
+&Selecció de columna completa
+Mostra les línies de &graella
+Obre amb un sol clic els elements
+Mode de selecció &alternatiu
+Usa pàgines de memòria &grans
+2900
+Informació sobre 7-Zip
+7-Zip és programari lliure. De totes maneres, podeu col.laborar en el seu desenvolupament registrant el programa.
+3000
+El sistema no pot assignar la quantitat de memòria requerida
+No hi ha errors
+{0} objecte(s) seleccionat(s)
+No es pot crear la carpeta '{0}'
+Aquest tipus de fitxer no permet actualització.
+No es pot obrir el fitxe '{0}' com a arxiu
+No es pot obrir el fitxer xifrat '{0}'. La contrasenya és incorrecta?
+Tipus d'arxiu no admès
+El fitxer {0} ja existeix
+El fitxer '{0}' ha estat modificat.\nVoleu actualitzar-lo a l'arxiu?
+No pot actualitzar-se el fitxer\n'{0}'
+No pot executar-se l'editor.
+El fitxer sembla un virus (el nom del fitxer conté espais molt llargs al nom).
+L'operació no es pot cridar des d'una carpeta amb una ruta llarga.
+Heu de seleccionar un fitxer
+Heu de seleccionar un o més fitxers
+Massa objectes
+3300
+Extraient
+Comprimint
+Provant
+Obrint...
+Scanning...
+3400
+Extreu
+E&xtreu a:
+Seleccioneu una destinació pels fitxers extrets.
+3410
+Mode d'adreça
+Adreça completa
+Sense adreça
+3420
+Sobreescriure
+Amb confirmació
+Sense confirmació
+Conserva els fitxers ja existents
+Reanomena automàticament
+Auto-reanomena fitxers existents
+3500
+Confirmeu substitució de fitxers
+La carpeta de destí conté un fitxer amb el mateix nom.
+Voleu substituir el fitxer existent
+per aquest altre?
+{0} bytes
+Renomena a&utomàticament
+3700
+Mètode de compressió no vàlid per a '{0}'.
+Error de dades en '{0}'. El fitxer és corrupte.
+CRC ha fallat en '{0}'. El fitxer és corrupte.
+Error de dades al fitxer xifrat '{0}'. Contrasenya errònia?
+CRC ha fallat al fitxer xifrat '{0}'. Contrasenya errònia?
+3800
+Introduïu la contrasenya
+Introduïu la contrasenya:
+Torneu a introduir la contrasenya:
+Mo&stra la contrasenya
+Les contrasenyes no coincideixen
+Utilitza només lletres (sense accents), números i caràcters especials (!, #, $, ...) a la contrasenya
+La contrasenya és massa llarga
+Contrasenya
+3900
+Temps transcorregut:
+Temps restant:
+Mida:
+Taxa:
+Processat:
+Ràtio de compressió:
+Errors:
+Arxius:
+4000
+Afegir al fitxer
+&Fitxer:
+Mode d'act&ualització:
+&Format del fitxer:
+Nivell de &compressió:
+&Tipus de compressió:
+Mida del &diccionari:
+Mida de la paraula:
+Mida de bloc sòlid:
+Nombre de fils de la CPU:
+&Paràmetres:
+Opcions
+Crea fitxer SF&X
+Comprimeix fitxers compartits
+Xifrat
+Mètode de xifrat:
+Xifra el nom dels fitxers
+Ús de memòria per comprimir:
+Ús de memòria per descomprimir:
+4050
+Sense compressió
+Ràpida
+
+Normal
+Màxima
+Ultra
+4060
+Afegeix i substitueix fitxers
+Actualitza i afegeix fitxers
+Actualitza fitxers ja presents
+Sincronitza fitxers
+4070
+Visualitza
+Tots els fitxers
+No sòlid
+Sòlid
+6000
+Copia
+Mou
+Copia a:
+Mou a:
+Copiant...
+Movent...
+Renomenant...
+Seleccioneu una carpeta de destí.
+Operació no permesa.
+Error renomenant fitxer o carpeta
+Confirmeu la còpia del fitxer
+Esteu segur que voleu copiar els fitxers a l'arxiu
+6100
+Confirmeu la supressió del fitxer
+Confirmeu la supressió de la carpeta
+Confirmeu supressió múltiple de fitxers
+Esteu segur que voleu suprimir '{0}'?
+Esteu segur que voleu suprimir la carpeta '{0}' i tot el seu contingut?
+Esteu segur que voleu esborrar aquests {0} elements?
+Suprimint...
+Error esborrant fitxer o carpeta
+El sistema no pot moure un fitxer amb una ruta llarga a la paperea de reciclatge
+6300
+Crea carpeta
+Crea arxiu
+Nom de carpeta:
+Nom d'arxiu:
+Carpeta nova
+Fitxer nou
+Error creant carpeta
+Error creant el fitxer
+6400
+Comentari
+&Comentari:
+Selecciona
+No selecciona
+Màscara:
+6600
+Properties
+Historial de carpetes
+Missatges de diagnosi
+Missatge
+7100
+El meu ordinador
+Entorn de xarxa
+Documents
+Sistema
+7200
+Afegeix
+Extreu
+Prova
+Copia
+Mou
+Suprimeix
+Info
+7300
+Divideix fitxer
+&Divideix a:
+Divideix en &volums, bytes:
+Dividint...
+Confirmació de la divisió
+Esteu segur que voleu dividir el fitxer en {0} volums?
+La mida del volum ha de ser més petita que la mida del fitxer original
+Mida del volum incorrecte
+Mida de volum especificada: {0} bytes.\nEsteu segur que voleu dividir el fitxer en aquests volums?
+7400
+Combina fitxers
+&Combina a:
+Combinant...
+Seleccioneu només el primer fitxer
+No es pot detectar un fitxer com a una part del fitxer dividit
+No es pot trobar més d'una part del fitxer dividit
+7500
+Calculant el checksum...
+Informació del checksum
+CRC checksum per les dades:
+CRC checksum per les dades i els noms:
+7600
+Test de referència
+Ús de la memòria:
+Comprimint
+Decomprimint
+Taxa
+Taxa total
+Actual
+Resultant
+Ús de la CPU
+Taxa / Ús
+Passades:

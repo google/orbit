@@ -1,0 +1,404 @@
+﻿;!@Lang2@!UTF-8!
+;  9.07 : 2009-09-22 : X-FoRcE 
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+0
+7-Zip
+Turkish
+Türkçe
+401
+Tamam
+İptal
+
+
+
+&Evet
+&Hayır
+&Kapat
+Yardım
+
+De&vam et
+440
+Tümüne E&vet
+Tümüne Ha&yır
+Dur
+Tekrar başlat
+&Arka planda
+Ö&nde
+&Duraklat
+Duraklatıldı -
+İptal edilsin mi?
+500
+&Dosya
+Dü&zenle
+Gö&rüntüle
+Sı&k Kullanılanlar
+&Araçlar
+&Yardım
+540
+&Aç
+Pa&nelde Aç
+Pence&rede Aç
+&Görüntüle
+Dü&zenle
+Yeni a&d ver
+K&opyala
+&Taşı
+&Sil
+&Parçala...
+&Birleştir...
+Öz&ellikler
+Açıkla&ma
+Toplam checksum hesapla
+Fark
+Yeni k&lasör
+Yeni dos&ya
+Çı&k
+600
+&Tümünü seç
+Tüm seçimi ka&ldır
+&Aksini seç
+Seç...
+Seçimi kaldır...
+Bu uzantıyı seç
+Uzantılı seçimi kaldır
+700
+&Büyük Simgeler
+&Küçük Simgeler
+&Liste
+&Detaylar
+730
+Sırasız
+Düz Görünüm
+&2 Panel aç
+&Araç çubukları
+Kök Klasörü Aç
+Bir Seviye Yukarı
+Klasör Geçmişi...
+&Yenile
+750
+Arşiv çubuğu
+Standart çubuk
+Büyük düğmeler
+Düğme metinleri görünsün
+800
+Geçerli &klasörü ekle
+Yer
+900
+&Seçenekler...
+&Performans ölçümü
+960
+İç&indekiler...
+7-Zip &Hakkında...
+1003
+Yol
+Ad
+Uzantı
+Klasör
+Boyut
+Arşivde boyutu
+Öznitelikler
+Oluşturma
+Erişim
+Değiştirme
+Katı
+Açıklanmış
+Şifrelenmiş
+Önceki parça
+Sonraki parça
+Sözlük
+CRC
+Tür
+Anti
+Sıkıştırma şekli
+İşletim sistemi
+Dosya Sistemi
+Kullanıcı
+Grup
+Blok
+Açıklama
+Konum
+Yol Öneki
+Klasörler
+Dosyalar
+Sürüm
+Cilt
+Çoklu Cilt
+Konum
+Bağlantılar
+Bloklar
+Ciltler
+
+64-bit
+Big-endian
+İşlemci
+Fiziksel Boyut
+Başlık Boyutu
+Checksum
+Karakteristik
+Sanal Adres
+ID
+Kısa İsim
+Oluşturan Yazılım
+Kesim Boyutu
+Biçim
+Bağlantı
+Hata
+Toplam Boyut
+Boş Alan
+Küme Boyutu
+Etiket
+Yerel Ad
+Sağlayıcı
+2100
+Seçenekler
+Dil
+Dil:
+Düzenleyici
+Metin &düzenleyici:
+&Fark:
+2200
+Sistem
+7-Zip ile ilişkilendir:
+2301
+İçerik menülerinde 7-Zip görünsün
+Kademeli içerik menüsü
+İçerik menü öğeleri:
+2320
+<Klasör>
+<Arşiv>
+Arşivi aç
+Dosyaları çıkart...
+Arşivle...
+Arşivi sına
+Burada çıkart
+{0} klasörüne çıkart
+{0} olarak arşivle
+Sıkıştırıp postala...
+{0} olarak sıkıştır ve postala
+2400
+Klasörler
+Ça&lışma klasörü
+&Sistem TEMP klasörü
+&Geçerli klasör
+&Belirtilen klasör:
+Sadece çıkarılabilen sürücüler için kullan
+Geçici arşiv dosyaları için bir yer belirleyin.
+2500
+Ayarlar
+".." öğesi görünsün
+Gerçek dosya simgeleri görünsün
+Sistem menüsü görünsün
+&Tüm satır seçilsin
+Tabl&o çizgileri görünsün
+Öğeyi açmak için tek tıkla
+&Alternatif seçim kipi
+Geniş &bellek sayfaları kullan
+2900
+7-Zip hakkında
+7-Zip özgür bir yazılımdır. Ancak, kayıt olarak 7-zip geliştirme faaliyetine destek olabilirsiniz.
+3000
+Sistem gerekli belleği ayarlayamadı
+Hata yok.
+{0} adet öğe seçili
+'{0}' klasörü oluşturulamıyor
+Bu arşiv üzerinde güncelleme yapamazsınız.
+'{0}' arşiv dosyası olarak açılamıyor.
+'{0}' dosyası açılamıyor. Şifreniz yanlış olabilir mi?
+Desteklenmeyen arşiv tipi
+Dosya {0} zaten mevcut
+'{0}' dosyası değişmiş.\nArşivde güncellensin mi?
+'{0}' dosyası güncellenemedi
+Metin düzenleyici başlatılamadı.
+Bu dosya virüs gibi görünüyor.(Dosya ismi uzun boşluk içeriyor).
+The operation cannot be called from a folder that has a long path.
+Bir dosya seçmelisiniz
+Bir veya daha fazla dosya seçmelisiniz
+Çok fazla öğe
+3300
+çıkartılıyor
+sıkıştırılıyor
+Sınanıyor
+açılıyor...
+Taranıyor...
+3400
+Çıkart
+&Çıkartılacak yer:
+Çıkartılacak dosyalar için bir yer belirleyin.
+3410
+Yol adları
+Tam yol adları
+Yol adları olmasın
+3420
+Olan dosyalar
+Üzerine yazmak için sor
+Sormadan üzerine yaz
+Çıkartma
+Arşivdekilere yeni ad ver
+Olanlara yeni ad ver
+3500
+Üzerine Yazma Durumu
+Hedef klasörde bu adla bir dosya var. Üzerine yazılsın mı?
+Mevcut dosya:
+Çıkartılan dosya:
+{0} bayt
+&Yeni ad ver
+3700
+'{0}' için sıkıştırma şekli tanınamadı.
+'{0}' bozuk. (Veri hatası)
+'{0}' bozuk. (CRC hatası)
+Şifrelenmiş '{0}' dosyası hatalı. Şifreniz yanlış olabilir mi?
+'{0}' dosyasında CRC hatası. Şifreniz yanlış olabilir mi?
+3800
+Parola Girişi
+Parolayı girin:
+Şifre tekrarı:
+Par&ola görünsün
+Şifreler birbiriyle uyuşmuyor.
+Şifre için İngilizce harfler, sayılar ve özel karekterden (!, #, $, ...) kullanabilirsiniz.
+Şifre çok uzun
+Parola
+3900
+Geçen süre:
+Kalan süre:
+Boyut:
+Hız:
+İşlenen:
+Sıkıştırma oranı:
+Hatalı:
+Arşivler:
+4000
+Arşivle
+&Arşiv:
+&Güncelleme şekli:
+Arşiv &biçimi:
+Sıkıştırma dü&zeyi:
+Sı&kıştırma şekli:
+&Sözlük boyutu:
+Ke&lime boyutu:
+Aralıksız blok boyutu:
+İşlemci iş parçası sayısı:
+&Parametreler:
+Seçenekler
+Ke&ndi çıkartsın (SFX)
+Paylaşılan dosyaları sıkıştır
+Şifreleme
+Şifreleme metodu:
+Dosya adlarını şi&frele
+Bellek kullanımı (Sıkıştırma):
+Bellek kullanımı (Çözme):
+4050
+Sıkıştırmasız
+En hızlı
+Hızlı
+Normal
+Maksimum
+Ultra
+4060
+Dosyaları ekle, olanları çıkart
+Dosyaları ekle, eskileri güncelle
+Sadece eskileri güncelle
+Dosyaları eşitle
+4070
+Gözat
+Tüm dosyalar
+Aralıklı
+Aralıksız
+6000
+Kopyala
+Taşı
+Kopyalanacak yer:
+Taşınacak yer:
+Kopyalanıyor...
+Taşınıyor...
+Dosya Adı Değiştiriliyor...
+Hedef klasörü seçiniz.
+Bu klasör için istenen işlem desteklenmiyor.
+Dosya veya Klasör Adlandırma Hatası
+Kopyalama Onayı
+Dosyalar arşive kopyalansın mı
+6100
+Dosya Silme Onayı
+Klasör Silme Onayı
+Birden Fazla Dosya Silme Onayı
+'{0}' silinsin mi?
+'{0}' klasörü ve içindekiler silinsin mi?
+{0} silinsin mi?
+Siliniyor...
+Dosya veya Klasör Silme Hatası
+Dosya yolu uzun olduğundan Geri Dönüşüm Kutusuna taşınamıyor
+6300
+Yeni klasör
+Yeni dosya
+Klasör adı:
+Dosya Adı:
+Yeni Klasör
+Yeni Dosya
+Klasör Oluşturma Hatası
+Dosya Oluşturma Hatası
+6400
+Açıklama
+&Açıklama:
+Seç
+Seçimi kaldır
+Seçim ifadesi:
+6600
+Özellikler
+Klasör Geçmişi
+Tanılayıcı iletiler
+İleti
+7100
+Bilgisayar
+Ağ
+Belgeler
+Sistem
+7200
+Arşivle
+Çıkart
+Sına
+Kopyala
+Taşı
+Sil
+Bilgi
+7300
+Parçala
+Şu &klasörde parçala:
+Bayt/&cilt olarak parçala:
+Parçalanıyor...
+Silmeyi onaylayın
+Dosyayı {0} parçaya ayırmak istediğinizden emin misiniz?
+Parça büyüklüğü, orjinal dosya boyutundan küçük olmalıdır
+Yanlış cilt boyutu
+Belirtilen cilt boyutu: {0} bayt.\nBu boyutta ciltlere ayırmak istediğinize emin misiniz?
+7400
+Birleştir
+Şu &klasörde birleştir:
+Birleştiriliyor...
+Sadece ilk parçayı seçiniz
+Parçalanan dosya tespit edilemedi
+Parçalanmış dosyanın bir parçadan fazlası bulunamadı
+7500
+Checksum değeri hesaplanıyor...
+Checksum bilgisi
+Verinin CRC değeri:
+Verinin CRC değeri ve isimler:
+7600
+Bilgisayar performansı
+Bellek kullanımı:
+Sıkıştırılıyor
+Çözülüyor
+Puan
+Toplam Puan
+Mevcut
+Sonuç
+İşlemci kullanımı
+Puan / Kullanım
+Başarılı:

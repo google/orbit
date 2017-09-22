@@ -1,0 +1,143 @@
+1.0.0
+Initial public release
+
+0.4.7
+- Assembly view
+- Rule Editor
+
+0.4.6
+- Show Includes Utility: Added filtering (tools->"Show Includes Utility")
+
+0.4.5 
+- Previous Orbit.exe (0.4.4) did require administrator privileges.
+
+0.4.4
+- MAJOR: Capture serialization (Phase II).  We can now save a capture with full sampling information, functions stats, process, modules, etc.  A loaded capture is now the same as a live one.
+- Added Tools->"Show Include Utility" that spawns a dialog where you can copy the output of Visual Studio's "show include" to visualize the text as a proper tree view.
+
+- Reverted symbol resolution fix.  Needs further investigation.
+
+0.4.3
+- Fixed event selection so that you don't need to click between events to start selection.  
+- Fixed debug info loading when selecting process for better symbol resolution in sampling reports.
+
+0.4.2
+- Capture serialization (Phase I).  We can now save a capture to disk (File->Save Capture) and reload it (File->"Open Capture")
+
+0.4.1
+- Live view now shows more detailed function stats: count, total time, min, max and average.
+- Fixed event drawing when "Context Switches" are turned off.
+
+********
+* 0.4.0 *
+********
+- MAJOR: Remote Profiling
+--  Usage: on remote machine, run "orbit.exe -inject:ProcessName -host:192.XXX.XXX.XXX:1789".  This will inject Orbit's dll into target app and connect to a remote instance of Orbit.  The pdbs need to be available only the host machine running the UI.  Pdb signature is checked to make sure the right version is used.  Pdb paths can be specified in C:\OrbitProfiler\config\Symbols.txt.
+
+- OrbitAPI
+-- Added OrbitAPI class in Orbit.h which allows user to connect to an instance of Orbit from code i.e. without having to manually inject in the target application.
+
+- NOTE:  License file, config file, dumps etc.  are now centralized in a global director: "MainDrive":\OrbitProfiler\...  This way, you don't have to migrate files or re-enter license on every update.
+
+- Fix function hooking from sampling data view
+- Added option to "load pdb" from sampling report view
+- fix sorting of threads in capture view (based on number of hooked functions and then number of samples)
+- Split "Track Events" into "Sampling" and "Context Switches"
+- Exposed port number in config\config.xml
+
+0.3.6 : Fixed crash if VS2015 is not installed (force load packaged msdia140.dll)
+0.3.5 : Allow unsafe hooks in presets
+0.3.4 : Added option to allow "unsafe hooking" into dlls for which we don't have pdbs.  Use at your own risk.
+0.3.3 : Fixed crash when target program exits when capturing
+0.3.2 : Fixed crash when loading dll information for which pdb info was not found
+
+********
+* 0.3.1 *
+********
+- Integrated google breakpad for crash handling
+- Fixed argument passing when launching a process
+- Fixed crash when clicking "visualize" when pdb is not loaded
+
+********
+* 0.3.0 *
+********
+New Features
+- Process Launching:  
+-- We can now launch an executable and track functions and events before "main" is called.
+-- Tracking starts from the entry point of the executable (_tmainCRTStartup for example)
+-- See home tab launch panel.
+- Unreal FName support.  UObject's names are now sent to orbit automatically when you select a method of a type derived from UObject.  The name appears in brakets next to the function's name in the capture view.  
+-- NOTE: to work, Orbit needs to have parsed the pdbs containing the UObject, FName and FNameEntry types.
+-- Full string is sent once per UObject per thread, otherwise simply send the index.
+- Orbit API.  Added Orbit.h which is a header only "lib" that contains functions needed to manually instrument zones inside functions.  User simply includes "Orbit.h" and can use ORBIT_START, ORBIT_STOP and ORBIT_SCOPE macros.
+- OutputDebugString support: Orbit can now receive outputDebugString messages with full callstack.  See "Output" pane on right tab.  Right-click on message to see callstack.
+- Callstack visualization in sampling report
+
+Performance
+- integrated oqpi "header only" concurrency library. https://github.com/H-EAL/oqpi.  (Thank you Houssem Achouri!)
+- MAJOR performance improvement when loading pdbs.  Functions, types and globals are now parsed in parallel.  Removed useless wstring to string conversions.  Parallelized hashing of function names using oqpi.
+- Used oqpi to parallelize function and type data view filtering, >5 times faster now.
+- Major performance improvement when enumerating modules
+- Upgraded to Qt 5.8
+
+Stability
+- Much better support for programs compiled with Whole Program Optimization.  It is still highly recommended to turn it off, but there are now way less crashes when instrumenting a WPO enabled executable.
+- Fixed flickering in capture view
+- Fixed capture view bug on first draw
+- Fixed crash on exit of app while capturing.
+
+NOTES:
+- Serialization of presets has changed and is not compatible with previous version.  Trying to load .opr files from previous version will cause a crash.
+
+4/20/2017
+
+********
+* 0.2.0 *
+********
+- MAJOR UPDATE
+- Sampling profiler now uses ETW events which makes it more lightweight and much more robust and accurate
+-- Events from newly created threads will get picked up (VerySleepy doesn't support this)
+-- Sampling events are now drawn in the capture view and can be selected
+- Major work in capture view
+-- Removed immediate mode rendering and replaced it by batched rendering for huge performance gains
+-- Don't draw when we don't need too (considerable drop in CPU consumption)
+-- Cleaner layout
+-- Added a slider and time bar
+-- Threads are now automatically sorted based on number of instrumented functions and then on number of callstack events.
+- Added "Sessions" tab that lists available presets
+- Fixed crash when selecting different process after having captured instrumented functions. 
+- Fixed HUGE bug.  Microseconds were off by a factor of 1000 :-S.  Thanks BenC
+
+********
+* 0.1.2 *
+********
+- Exposed font size property in config/config.xml
+- Time periods are now properly formatted (ns, ms, s, min, h, days)
+- Added middle button selection in capture view (useful to measure time without zooming)
+
+********
+* 0.1.1 *
+********
+MAJOR: Context switch tracking and visualization of core utilization on time line(off by default, turn on throught Options->"Track Context Switches" before a capture.
+-- Click on a function in a thread to see when and on what core(s) it was running.
+-- Highlighted portions of functions in thread view represent when the thread was actually running (not swapped out).
+
+********
+* 0.0.3 *
+********
+- Fixed crash at init when website is down
+- Adde File->"Save Session" to save current session without file dialog
+
+********
+* 0.0.2 *
+********
+- Allow multiple selection of pdbs in the modules view.
+- Added msdia140.dll so that Orbit can run on machines that don't have Visual Studio installed.
+- Orbit now checks for updates at www.telescopp.com/update
+- Sessions are saved with .opr extension
+- Relaxed eula
+
+********
+* 0.0.1 *
+********
+Original Beta Version

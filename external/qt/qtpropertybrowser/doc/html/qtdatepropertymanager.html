@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!-- qtpropertymanager.cpp -->
+<head>
+  <title>QtDatePropertyManager Class Reference</title>
+  <link href="classic.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td align="left" valign="top" width="32"><img src="images/qt-logo.png" align="left" width="57" height="67" border="0" /></td>
+<td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a></td>
+</tr></table><h1 class="title">QtDatePropertyManager Class Reference</h1>
+<p>The QtDatePropertyManager provides and manages <a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> properties. <a href="#details">More...</a></p>
+<pre> #include &lt;QtDatePropertyManager&gt;</pre><p>Inherits <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a>.</p>
+<ul>
+<li><a href="qtdatepropertymanager-members.html">List of all members, including inherited members</a></li>
+</ul>
+<hr />
+<a name="public-functions"></a>
+<h2>Public Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#QtDatePropertyManager">QtDatePropertyManager</a></b> ( QObject * <i>parent</i> = 0 )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#dtor.QtDatePropertyManager">~QtDatePropertyManager</a></b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QDate </td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#maximum">maximum</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QDate </td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#minimum">minimum</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QDate </td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#value">value</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>3 public functions inherited from <a href="qtabstractpropertymanager.html#public-functions">QtAbstractPropertyManager</a></li>
+<li><div bar="2" class="fn"></div>29 public functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-functions">QObject</a></li>
+</ul>
+<hr />
+<a name="public-slots"></a>
+<h2>Public Slots</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#setMaximum">setMaximum</a></b> ( QtProperty * <i>property</i>, const QDate &amp; <i>maxVal</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#setMinimum">setMinimum</a></b> ( QtProperty * <i>property</i>, const QDate &amp; <i>minVal</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#setRange">setRange</a></b> ( QtProperty * <i>property</i>, const QDate &amp; <i>minimum</i>, const QDate &amp; <i>maximum</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#setValue">setValue</a></b> ( QtProperty * <i>property</i>, const QDate &amp; <i>value</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>1 public slot inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-slots">QObject</a></li>
+</ul>
+<hr />
+<a name="signals"></a>
+<h2>Signals</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#rangeChanged">rangeChanged</a></b> ( QtProperty * <i>property</i>, const QDate &amp; <i>minimum</i>, const QDate &amp; <i>maximum</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#valueChanged">valueChanged</a></b> ( QtProperty * <i>property</i>, const QDate &amp; <i>value</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>4 signals inherited from <a href="qtabstractpropertymanager.html#signals">QtAbstractPropertyManager</a></li>
+<li><div bar="2" class="fn"></div>1 signal inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#signals">QObject</a></li>
+</ul>
+<hr />
+<a name="reimplemented-protected-functions"></a>
+<h2>Reimplemented Protected Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#initializeProperty">initializeProperty</a></b> ( QtProperty * <i>property</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#uninitializeProperty">uninitializeProperty</a></b> ( QtProperty * <i>property</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual QString </td><td class="memItemRight" valign="bottom"><b><a href="qtdatepropertymanager.html#valueText">valueText</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>6 protected functions inherited from <a href="qtabstractpropertymanager.html#protected-functions">QtAbstractPropertyManager</a></li>
+<li><div bar="2" class="fn"></div>7 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-functions">QObject</a></li>
+</ul>
+<h3>Additional Inherited Members</h3>
+<ul>
+<li><div class="fn"></div>1 property inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>1 public type inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-variables">QObject</a></li>
+<li><div class="fn"></div>4 static public members inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>6 protected functions inherited from <a href="qtabstractpropertymanager.html#protected-functions">QtAbstractPropertyManager</a></li>
+<li><div class="fn"></div>7 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-functions">QObject</a></li>
+<li><div class="fn"></div>2 protected variables inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-variables">QObject</a></li>
+</ul>
+<a name="details"></a>
+<hr />
+<h2>Detailed Description</h2>
+<p>The QtDatePropertyManager provides and manages <a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> properties.</p>
+<p>A date property has a current value, and a range specifying the valid dates. The range is defined by a minimum and a maximum value.</p>
+<p>The property's values can be retrieved using the <a href="qtdatepropertymanager.html#minimum">minimum</a>(), <a href="qtdatepropertymanager.html#maximum">maximum</a>() and <a href="qtdatepropertymanager.html#value">value</a>() functions, and can be set using the <a href="qtdatepropertymanager.html#setMinimum">setMinimum</a>(), <a href="qtdatepropertymanager.html#setMaximum">setMaximum</a>() and <a href="qtdatepropertymanager.html#setValue">setValue</a>() slots. Alternatively, the range can be defined in one go using the <a href="qtdatepropertymanager.html#setRange">setRange</a>() slot.</p>
+<p>In addition, QtDatePropertyManager provides the <a href="qtdatepropertymanager.html#valueChanged">valueChanged</a>() signal which is emitted whenever a property created by this manager changes, and the <a href="qtdatepropertymanager.html#rangeChanged">rangeChanged</a>() signal which is emitted whenever such a property changes its range of valid dates.</p>
+<p>See also <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a>, <a href="qtdateeditfactory.html">QtDateEditFactory</a>, and <a href="qtdatetimepropertymanager.html">QtDateTimePropertyManager</a>.</p>
+<hr />
+<h2>Member Function Documentation</h2>
+<h3 class="fn"><a name="QtDatePropertyManager"></a>QtDatePropertyManager::QtDatePropertyManager ( <a href="http://qt.nokia.com/doc/4.6/qobject.html">QObject</a> * <i>parent</i> = 0 )</h3>
+<p>Creates a manager with the given <i>parent</i>.</p>
+<h3 class="fn"><a name="dtor.QtDatePropertyManager"></a>QtDatePropertyManager::~QtDatePropertyManager ()</h3>
+<p>Destroys this manager, and all the properties it has created.</p>
+<h3 class="fn"><a name="initializeProperty"></a>void QtDatePropertyManager::initializeProperty ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertymanager.html#initializeProperty">QtAbstractPropertyManager::initializeProperty</a>().</p>
+<h3 class="fn"><a name="maximum"></a><a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> QtDatePropertyManager::maximum ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const</h3>
+<p>Returns the given <i>property</i>'s maximum date.</p>
+<p>See also <a href="qtdatepropertymanager.html#setMaximum">setMaximum</a>(), <a href="qtdatepropertymanager.html#minimum">minimum</a>(), and <a href="qtdatepropertymanager.html#setRange">setRange</a>().</p>
+<h3 class="fn"><a name="minimum"></a><a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> QtDatePropertyManager::minimum ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const</h3>
+<p>Returns the given <i>property</i>'s minimum date.</p>
+<p>See also <a href="qtdatepropertymanager.html#setMinimum">setMinimum</a>(), <a href="qtdatepropertymanager.html#maximum">maximum</a>(), and <a href="qtdatepropertymanager.html#setRange">setRange</a>().</p>
+<h3 class="fn"><a name="rangeChanged"></a>void QtDatePropertyManager::rangeChanged ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, const <a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> &amp; <i>minimum</i>, const <a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> &amp; <i>maximum</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted whenever a property created by this manager changes its range of valid dates, passing a pointer to the <i>property</i> and the new <i>minimum</i> and <i>maximum</i> dates.</p>
+<p>See also <a href="qtdatepropertymanager.html#setRange">setRange</a>().</p>
+<h3 class="fn"><a name="setMaximum"></a>void QtDatePropertyManager::setMaximum ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, const <a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> &amp; <i>maxVal</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
+<p>Sets the maximum value for the given <i>property</i> to <i>maxVal</i>.</p>
+<p>When setting the maximum value, the minimum and current values are adjusted if necessary (ensuring that the range remains valid and that the current value is within in the range).</p>
+<p>See also <a href="qtdatepropertymanager.html#maximum">maximum</a>() and <a href="qtdatepropertymanager.html#setRange">setRange</a>().</p>
+<h3 class="fn"><a name="setMinimum"></a>void QtDatePropertyManager::setMinimum ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, const <a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> &amp; <i>minVal</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
+<p>Sets the minimum value for the given <i>property</i> to <i>minVal</i>.</p>
+<p>When setting the minimum value, the maximum and current values are adjusted if necessary (ensuring that the range remains valid and that the current value is within in the range).</p>
+<p>See also <a href="qtdatepropertymanager.html#minimum">minimum</a>() and <a href="qtdatepropertymanager.html#setRange">setRange</a>().</p>
+<h3 class="fn"><a name="setRange"></a>void QtDatePropertyManager::setRange ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, const <a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> &amp; <i>minimum</i>, const <a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> &amp; <i>maximum</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
+<p>Sets the range of valid dates.</p>
+<p>This is a convenience function defining the range of valid dates in one go; setting the <i>minimum</i> and <i>maximum</i> values for the given <i>property</i> with a single function call.</p>
+<p>When setting a new date range, the current value is adjusted if necessary (ensuring that the value remains in date range).</p>
+<p>See also <a href="qtdatepropertymanager.html#setMinimum">setMinimum</a>(), <a href="qtdatepropertymanager.html#setMaximum">setMaximum</a>(), and <a href="qtdatepropertymanager.html#rangeChanged">rangeChanged</a>().</p>
+<h3 class="fn"><a name="setValue"></a>void QtDatePropertyManager::setValue ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, const <a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> &amp; <i>value</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
+<p>Sets the value of the given <i>property</i> to <i>value</i>.</p>
+<p>If the specified <i>value</i> is not a valid date according to the given <i>property</i>'s range, the value is adjusted to the nearest valid value within the range.</p>
+<p>See also <a href="qtdatepropertymanager.html#value">value</a>(), <a href="qtdatepropertymanager.html#setRange">setRange</a>(), and <a href="qtdatepropertymanager.html#valueChanged">valueChanged</a>().</p>
+<h3 class="fn"><a name="uninitializeProperty"></a>void QtDatePropertyManager::uninitializeProperty ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertymanager.html#uninitializeProperty">QtAbstractPropertyManager::uninitializeProperty</a>().</p>
+<h3 class="fn"><a name="value"></a><a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> QtDatePropertyManager::value ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const</h3>
+<p>Returns the given <i>property</i>'s value.</p>
+<p>If the given <i>property</i> is not managed by <i>this</i> manager, this function returns an invalid date.</p>
+<p>See also <a href="qtdatepropertymanager.html#setValue">setValue</a>().</p>
+<h3 class="fn"><a name="valueChanged"></a>void QtDatePropertyManager::valueChanged ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, const <a href="http://qt.nokia.com/doc/4.6/qdate.html">QDate</a> &amp; <i>value</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted whenever a property created by this manager changes its value, passing a pointer to the <i>property</i> and the new <i>value</i> as parameters.</p>
+<p>See also <a href="qtdatepropertymanager.html#setValue">setValue</a>().</p>
+<h3 class="fn"><a name="valueText"></a><a href="http://qt.nokia.com/doc/4.6/qstring.html">QString</a> QtDatePropertyManager::valueText ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertymanager.html#valueText">QtAbstractPropertyManager::valueText</a>().</p>
+<p /><address><hr /><div align="center">
+<table width="100%" cellspacing="0" border="0"><tr class="address">
+<td width="30%" align="left">Copyright &copy; 2010 Nokia Corporation and/or its subsidiary(-ies)</td>
+<td width="40%" align="center"><a href="http://qt.nokia.com/doc/trademarks.html">Trademarks</a></td>
+<td width="30%" align="right"><div align="right">Qt Solutions</div></td>
+</tr></table></div></address></body>
+</html>

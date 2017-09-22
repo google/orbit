@@ -1,0 +1,32 @@
+# Travis build integration.
+# https://docs.travis-ci.com/
+language: cpp
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - clang
+      - gcc-4.8
+      - g++-4.8
+
+env:
+  global:
+    - secure: "FPczJ1u7FWGXOtUVf5AONeexfQDYnKRtuNs3phLwlPPAbgAlIc/WeTRSHC8DAb1T8IyPdN3Zi7cqLz0dvPol0iX1fWSfr8YdtW0ea8nUYH5ldmmp6H75FEUJUcISmYwL4WN7TldC6Hnzrlbw/0xmBH8gtAgddtBXKc9P9SwEZvM4OiFMHbMPwZEhRj+D95rfH12lgh3D16nbXGnx3rSNbHszvIxrU2VvlLo9Aa+hbmVj5CsBiNJjhDS64ie+VMTkuzcWNqLRYaGOCQ8ftKAlj/fjGfoKjPDN9dSJg9gW1FjOMPeQo93qhSc/hCmTq7sWxBJu48telinUgESdE5q/8gRf5J05ImWPntZAkC/wQkA20K7Kp/fH1CRaYXQMWKjts8c6dQZ5R4WxE4WXUo5rz573Ti9uyVTLys9whnzaib3YbqYv04irkhpgzo3rd8PF8SXpgK99ySQCcv/Dh7UQuXPpcaknOk2mBySXjQDgpQHHXDN2uUek1HEo5xit8fQuQw3TdPIZ9ZgzQ/c5/Dx6sLWAGEfVH9MN+hy6AiZnJ1JI+XF82kAf1pnf8WddHtlE7pAdWRFQt0iOj9T9esV1/o0VCJVzJLRdpKecF0sTpJxDuan6cFI0tNCkNjHFA5wJKYAvdOPAmYkqre7aIIqSOKy3Fjh9JP9CBJFy7eals9U="
+
+# TODO: Add an OS X config.
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      env: USE_CC=gcc-4.8 USE_CXX=g++-4.8 COVERITY_SCAN=true
+    - os: linux
+      compiler: clang
+
+before_install: ./scripts/travis-checkout.sh
+script: ./scripts/travis-build.sh
+
+notifications:
+  email:
+    - google-breakpad-dev@googlegroups.com

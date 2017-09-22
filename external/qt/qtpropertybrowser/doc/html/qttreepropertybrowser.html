@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!-- qttreepropertybrowser.cpp -->
+<head>
+  <title>QtTreePropertyBrowser Class Reference</title>
+  <link href="classic.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td align="left" valign="top" width="32"><img src="images/qt-logo.png" align="left" width="57" height="67" border="0" /></td>
+<td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a></td>
+</tr></table><h1 class="title">QtTreePropertyBrowser Class Reference</h1>
+<p>The QtTreePropertyBrowser class provides <a href="http://qt.nokia.com/doc/4.6/qtreewidget.html">QTreeWidget</a> based property browser. <a href="#details">More...</a></p>
+<pre> #include &lt;QtTreePropertyBrowser&gt;</pre><p>Inherits <a href="qtabstractpropertybrowser.html">QtAbstractPropertyBrowser</a>.</p>
+<ul>
+<li><a href="qttreepropertybrowser-members.html">List of all members, including inherited members</a></li>
+</ul>
+<hr />
+<a name="public-types"></a>
+<h2>Public Types</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">enum </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#ResizeMode-enum">ResizeMode</a></b> { Interactive, Fixed, Stretch, ResizeToContents }</td></tr>
+</table>
+<hr />
+<a name="properties"></a>
+<h2>Properties</h2>
+<p><table class="propsummary" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr><td width="45%" valign="top"><ul>
+<li><div class="fn"><b><a href="qttreepropertybrowser.html#alternatingRowColors-prop">alternatingRowColors</a></b> : bool</div></li>
+<li><div class="fn"><b><a href="qttreepropertybrowser.html#headerVisible-prop">headerVisible</a></b> : bool</div></li>
+<li><div class="fn"><b><a href="qttreepropertybrowser.html#indentation-prop">indentation</a></b> : int</div></li>
+<li><div class="fn"><b><a href="qttreepropertybrowser.html#propertiesWithoutValueMarked-prop">propertiesWithoutValueMarked</a></b> : bool</div></li>
+</ul></td><td valign="top"><ul>
+<li><div class="fn"><b><a href="qttreepropertybrowser.html#resizeMode-prop">resizeMode</a></b> : ResizeMode</div></li>
+<li><div class="fn"><b><a href="qttreepropertybrowser.html#rootIsDecorated-prop">rootIsDecorated</a></b> : bool</div></li>
+<li><div class="fn"><b><a href="qttreepropertybrowser.html#splitterPosition-prop">splitterPosition</a></b> : int</div></li>
+</ul>
+</td></tr>
+</table></p>
+<ul>
+<li><div bar="2" class="fn"></div>58 properties inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#properties">QWidget</a></li>
+<li><div bar="2" class="fn"></div>1 property inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#properties">QObject</a></li>
+</ul>
+<hr />
+<a name="public-functions"></a>
+<h2>Public Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#QtTreePropertyBrowser">QtTreePropertyBrowser</a></b> ( QWidget * <i>parent</i> = 0 )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#dtor.QtTreePropertyBrowser">~QtTreePropertyBrowser</a></b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">bool </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#alternatingRowColors-prop">alternatingRowColors</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QColor </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#backgroundColor">backgroundColor</a></b> ( QtBrowserItem * <i>item</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QColor </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#calculatedBackgroundColor">calculatedBackgroundColor</a></b> ( QtBrowserItem * <i>item</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#editItem">editItem</a></b> ( QtBrowserItem * <i>item</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#indentation-prop">indentation</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">bool </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#isExpanded">isExpanded</a></b> ( QtBrowserItem * <i>item</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">bool </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#headerVisible-prop">isHeaderVisible</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">bool </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#isItemVisible">isItemVisible</a></b> ( QtBrowserItem * <i>item</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">bool </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#propertiesWithoutValueMarked-prop">propertiesWithoutValueMarked</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">ResizeMode </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#resizeMode-prop">resizeMode</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">bool </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#rootIsDecorated-prop">rootIsDecorated</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#alternatingRowColors-prop">setAlternatingRowColors</a></b> ( bool <i>enable</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#setBackgroundColor">setBackgroundColor</a></b> ( QtBrowserItem * <i>item</i>, const QColor &amp; <i>color</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#setExpanded">setExpanded</a></b> ( QtBrowserItem * <i>item</i>, bool <i>expanded</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#headerVisible-prop">setHeaderVisible</a></b> ( bool <i>visible</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#indentation-prop">setIndentation</a></b> ( int <i>i</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#setItemVisible">setItemVisible</a></b> ( QtBrowserItem * <i>item</i>, bool <i>visible</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#propertiesWithoutValueMarked-prop">setPropertiesWithoutValueMarked</a></b> ( bool <i>mark</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#resizeMode-prop">setResizeMode</a></b> ( ResizeMode <i>mode</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#rootIsDecorated-prop">setRootIsDecorated</a></b> ( bool <i>show</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#splitterPosition-prop">setSplitterPosition</a></b> ( int <i>position</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#splitterPosition-prop">splitterPosition</a></b> () const</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>9 public functions inherited from <a href="qtabstractpropertybrowser.html#public-functions">QtAbstractPropertyBrowser</a></li>
+<li><div bar="2" class="fn"></div>217 public functions inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#public-functions">QWidget</a></li>
+<li><div bar="2" class="fn"></div>13 public functions inherited from <a href="http://qt.nokia.com/doc/4.6/qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div bar="2" class="fn"></div>29 public functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-functions">QObject</a></li>
+</ul>
+<hr />
+<a name="signals"></a>
+<h2>Signals</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#collapsed">collapsed</a></b> ( QtBrowserItem * <i>item</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#expanded">expanded</a></b> ( QtBrowserItem * <i>item</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>1 signal inherited from <a href="qtabstractpropertybrowser.html#signals">QtAbstractPropertyBrowser</a></li>
+<li><div bar="2" class="fn"></div>1 signal inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#signals">QWidget</a></li>
+<li><div bar="2" class="fn"></div>1 signal inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#signals">QObject</a></li>
+</ul>
+<hr />
+<a name="reimplemented-protected-functions"></a>
+<h2>Reimplemented Protected Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#itemChanged">itemChanged</a></b> ( QtBrowserItem * <i>item</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#itemInserted">itemInserted</a></b> ( QtBrowserItem * <i>item</i>, QtBrowserItem * <i>afterItem</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qttreepropertybrowser.html#itemRemoved">itemRemoved</a></b> ( QtBrowserItem * <i>item</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>4 protected functions inherited from <a href="qtabstractpropertybrowser.html#protected-functions">QtAbstractPropertyBrowser</a></li>
+<li><div bar="2" class="fn"></div>37 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#protected-functions">QWidget</a></li>
+<li><div bar="2" class="fn"></div>1 protected function inherited from <a href="http://qt.nokia.com/doc/4.6/qpaintdevice.html#protected-functions">QPaintDevice</a></li>
+<li><div bar="2" class="fn"></div>7 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-functions">QObject</a></li>
+</ul>
+<h3>Additional Inherited Members</h3>
+<ul>
+<li><div class="fn"></div>3 public slots inherited from <a href="qtabstractpropertybrowser.html#public-slots">QtAbstractPropertyBrowser</a></li>
+<li><div class="fn"></div>19 public slots inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#public-slots">QWidget</a></li>
+<li><div class="fn"></div>1 public slot inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-slots">QObject</a></li>
+<li><div class="fn"></div>1 public type inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-variables">QObject</a></li>
+<li><div class="fn"></div>4 static public members inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#static-public-members">QWidget</a></li>
+<li><div class="fn"></div>4 static public members inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>4 protected functions inherited from <a href="qtabstractpropertybrowser.html#protected-functions">QtAbstractPropertyBrowser</a></li>
+<li><div class="fn"></div>37 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#protected-functions">QWidget</a></li>
+<li><div class="fn"></div>1 protected function inherited from <a href="http://qt.nokia.com/doc/4.6/qpaintdevice.html#protected-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>7 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-functions">QObject</a></li>
+<li><div class="fn"></div>1 protected slot inherited from <a href="http://qt.nokia.com/doc/4.6/qwidget.html#protected-slots">QWidget</a></li>
+<li><div class="fn"></div>1 protected type inherited from <a href="http://qt.nokia.com/doc/4.6/qpaintdevice.html#protected-variables">QPaintDevice</a></li>
+<li><div class="fn"></div>2 protected variables inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-variables">QObject</a></li>
+</ul>
+<a name="details"></a>
+<hr />
+<h2>Detailed Description</h2>
+<p>The QtTreePropertyBrowser class provides <a href="http://qt.nokia.com/doc/4.6/qtreewidget.html">QTreeWidget</a> based property browser.</p>
+<p>A property browser is a widget that enables the user to edit a given set of properties. Each property is represented by a label specifying the property's name, and an editing widget (e.g&#x2e; a line edit or a combobox) holding its value. A property can have zero or more subproperties.</p>
+<p>QtTreePropertyBrowser provides a tree based view for all nested properties, i.e&#x2e; properties that have subproperties can be in an expanded (subproperties are visible) or collapsed (subproperties are hidden) state. For example:</p>
+<p align="center"><img src="images/qttreepropertybrowser.png" /></p><p>Use the <a href="qtabstractpropertybrowser.html">QtAbstractPropertyBrowser</a> API to add, insert and remove properties from an instance of the QtTreePropertyBrowser class. The properties themselves are created and managed by implementations of the <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> class.</p>
+<p>See also <a href="qtgroupboxpropertybrowser.html">QtGroupBoxPropertyBrowser</a> and <a href="qtabstractpropertybrowser.html">QtAbstractPropertyBrowser</a>.</p>
+<hr />
+<h2>Member Type Documentation</h2>
+<h3 class="fn"><a name="ResizeMode-enum"></a>enum QtTreePropertyBrowser::ResizeMode</h3>
+<p>The resize mode specifies the behavior of the header sections.</p>
+<p><table class="valuelist" border="1" cellpadding="2" cellspacing="1" width="100%">
+<tr><th width="25%">Constant</th><th width="15%">Value</th><th width="60%">Description</th></tr>
+<tr><td valign="top"><tt>QtTreePropertyBrowser::Interactive</tt></td><td align="center" valign="top"><tt>0</tt></td><td valign="top">The user can resize the sections. The sections can also be resized programmatically using <a href="qttreepropertybrowser.html#splitterPosition-prop">setSplitterPosition</a>().</td></tr>
+<tr><td valign="top"><tt>QtTreePropertyBrowser::Fixed</tt></td><td align="center" valign="top"><tt>2</tt></td><td valign="top">The user cannot resize the section. The section can only be resized programmatically using <a href="qttreepropertybrowser.html#splitterPosition-prop">setSplitterPosition</a>().</td></tr>
+<tr><td valign="top"><tt>QtTreePropertyBrowser::Stretch</tt></td><td align="center" valign="top"><tt>1</tt></td><td valign="top"><a href="http://qt.nokia.com/doc/4.6/qheaderview.html">QHeaderView</a> will automatically resize the section to fill the available space. The size cannot be changed by the user or programmatically.</td></tr>
+<tr><td valign="top"><tt>QtTreePropertyBrowser::ResizeToContents</tt></td><td align="center" valign="top"><tt>3</tt></td><td valign="top"><a href="http://qt.nokia.com/doc/4.6/qheaderview.html">QHeaderView</a> will automatically resize the section to its optimal size based on the contents of the entire column. The size cannot be changed by the user or programmatically.</td></tr>
+</table></p>
+<p>See also <a href="qttreepropertybrowser.html#resizeMode-prop">setResizeMode</a>().</p>
+<hr />
+<h2>Property Documentation</h2>
+<h3 class="fn"><a name="alternatingRowColors-prop"></a>alternatingRowColors : bool</h3>
+<p>This property holds whether to draw the background using alternating colors. By default this property is set to true.</p>
+<p><b>Access functions:</b></p>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">bool </td><td class="memItemRight" valign="bottom"><b>alternatingRowColors</b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b>setAlternatingRowColors</b> ( bool <i>enable</i> )</td></tr>
+</table>
+<h3 class="fn"><a name="headerVisible-prop"></a>headerVisible : bool</h3>
+<p>This property holds whether to show the header.</p>
+<p><b>Access functions:</b></p>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">bool </td><td class="memItemRight" valign="bottom"><b>isHeaderVisible</b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b>setHeaderVisible</b> ( bool <i>visible</i> )</td></tr>
+</table>
+<h3 class="fn"><a name="indentation-prop"></a>indentation : int</h3>
+<p>This property holds indentation of the items in the tree view.</p>
+<p><b>Access functions:</b></p>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">int </td><td class="memItemRight" valign="bottom"><b>indentation</b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b>setIndentation</b> ( int <i>i</i> )</td></tr>
+</table>
+<h3 class="fn"><a name="propertiesWithoutValueMarked-prop"></a>propertiesWithoutValueMarked : bool</h3>
+<p>This property holds whether to enable or disable marking properties without value.</p>
+<p>When marking is enabled the item's background is rendered in dark color and item's foreground is rendered with light color.</p>
+<p><b>Access functions:</b></p>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">bool </td><td class="memItemRight" valign="bottom"><b>propertiesWithoutValueMarked</b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b>setPropertiesWithoutValueMarked</b> ( bool <i>mark</i> )</td></tr>
+</table>
+<p>See also propertiesWithoutValueMarked().</p>
+<h3 class="fn"><a name="resizeMode-prop"></a>resizeMode : <a href="qttreepropertybrowser.html#ResizeMode-enum">ResizeMode</a></h3>
+<p>This property holds the resize mode of setions in the header.</p>
+<p><b>Access functions:</b></p>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">ResizeMode </td><td class="memItemRight" valign="bottom"><b>resizeMode</b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b>setResizeMode</b> ( ResizeMode <i>mode</i> )</td></tr>
+</table>
+<h3 class="fn"><a name="rootIsDecorated-prop"></a>rootIsDecorated : bool</h3>
+<p>This property holds whether to show controls for expanding and collapsing root items.</p>
+<p><b>Access functions:</b></p>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">bool </td><td class="memItemRight" valign="bottom"><b>rootIsDecorated</b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b>setRootIsDecorated</b> ( bool <i>show</i> )</td></tr>
+</table>
+<h3 class="fn"><a name="splitterPosition-prop"></a>splitterPosition : int</h3>
+<p>This property holds the position of the splitter between the colunms.</p>
+<p><b>Access functions:</b></p>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">int </td><td class="memItemRight" valign="bottom"><b>splitterPosition</b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b>setSplitterPosition</b> ( int <i>position</i> )</td></tr>
+</table>
+<hr />
+<h2>Member Function Documentation</h2>
+<h3 class="fn"><a name="QtTreePropertyBrowser"></a>QtTreePropertyBrowser::QtTreePropertyBrowser ( <a href="http://qt.nokia.com/doc/4.6/qwidget.html">QWidget</a> * <i>parent</i> = 0 )</h3>
+<p>Creates a property browser with the given <i>parent</i>.</p>
+<h3 class="fn"><a name="dtor.QtTreePropertyBrowser"></a>QtTreePropertyBrowser::~QtTreePropertyBrowser ()</h3>
+<p>Destroys this property browser.</p>
+<p>Note that the properties that were inserted into this browser are <i>not</i> destroyed since they may still be used in other browsers. The properties are owned by the manager that created them.</p>
+<p>See also <a href="qtproperty.html">QtProperty</a> and <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a>.</p>
+<h3 class="fn"><a name="backgroundColor"></a><a href="http://qt.nokia.com/doc/4.6/qcolor.html">QColor</a> QtTreePropertyBrowser::backgroundColor ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i> ) const</h3>
+<p>Returns the <i>item</i>'s color. If there is no color set for item it returns invalid color.</p>
+<p>See also <a href="qttreepropertybrowser.html#calculatedBackgroundColor">calculatedBackgroundColor</a>() and <a href="qttreepropertybrowser.html#setBackgroundColor">setBackgroundColor</a>().</p>
+<h3 class="fn"><a name="calculatedBackgroundColor"></a><a href="http://qt.nokia.com/doc/4.6/qcolor.html">QColor</a> QtTreePropertyBrowser::calculatedBackgroundColor ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i> ) const</h3>
+<p>Returns the <i>item</i>'s color. If there is no color set for item it returns parent <i>item</i>'s color (if there is no color set for parent it returns grandparent's color and so on). In case the color is not set for <i>item</i> and it's top level item it returns invalid color.</p>
+<p>See also <a href="qttreepropertybrowser.html#backgroundColor">backgroundColor</a>() and <a href="qttreepropertybrowser.html#setBackgroundColor">setBackgroundColor</a>().</p>
+<h3 class="fn"><a name="collapsed"></a>void QtTreePropertyBrowser::collapsed ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted when the <i>item</i> is collapsed.</p>
+<p>See also <a href="qttreepropertybrowser.html#expanded">expanded</a>() and <a href="qttreepropertybrowser.html#setExpanded">setExpanded</a>().</p>
+<h3 class="fn"><a name="editItem"></a>void QtTreePropertyBrowser::editItem ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i> )</h3>
+<p>Sets the current item to <i>item</i> and opens the relevant editor for it.</p>
+<h3 class="fn"><a name="expanded"></a>void QtTreePropertyBrowser::expanded ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted when the <i>item</i> is expanded.</p>
+<p>See also <a href="qttreepropertybrowser.html#collapsed">collapsed</a>() and <a href="qttreepropertybrowser.html#setExpanded">setExpanded</a>().</p>
+<h3 class="fn"><a name="isExpanded"></a>bool QtTreePropertyBrowser::isExpanded ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i> ) const</h3>
+<p>Returns true if the <i>item</i> is expanded; otherwise returns false.</p>
+<p>See also <a href="qttreepropertybrowser.html#setExpanded">setExpanded</a>().</p>
+<h3 class="fn"><a name="isItemVisible"></a>bool QtTreePropertyBrowser::isItemVisible ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i> ) const</h3>
+<p>Returns true if the <i>item</i> is visible; otherwise returns false.</p>
+<p>This function was introduced in qtpropertybrowser 4.5.</p>
+<p>See also <a href="qttreepropertybrowser.html#setItemVisible">setItemVisible</a>().</p>
+<h3 class="fn"><a name="itemChanged"></a>void QtTreePropertyBrowser::itemChanged ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertybrowser.html#itemChanged">QtAbstractPropertyBrowser::itemChanged</a>().</p>
+<h3 class="fn"><a name="itemInserted"></a>void QtTreePropertyBrowser::itemInserted ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i>, <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>afterItem</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertybrowser.html#itemInserted">QtAbstractPropertyBrowser::itemInserted</a>().</p>
+<h3 class="fn"><a name="itemRemoved"></a>void QtTreePropertyBrowser::itemRemoved ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertybrowser.html#itemRemoved">QtAbstractPropertyBrowser::itemRemoved</a>().</p>
+<h3 class="fn"><a name="setBackgroundColor"></a>void QtTreePropertyBrowser::setBackgroundColor ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i>, const <a href="http://qt.nokia.com/doc/4.6/qcolor.html">QColor</a> &amp; <i>color</i> )</h3>
+<p>Sets the <i>item</i>'s background color to <i>color</i>. Note that while item's background is rendered every second row is being drawn with alternate color (which is a bit lighter than items <i>color</i>)</p>
+<p>See also <a href="qttreepropertybrowser.html#backgroundColor">backgroundColor</a>() and <a href="qttreepropertybrowser.html#calculatedBackgroundColor">calculatedBackgroundColor</a>().</p>
+<h3 class="fn"><a name="setExpanded"></a>void QtTreePropertyBrowser::setExpanded ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i>, bool <i>expanded</i> )</h3>
+<p>Sets the <i>item</i> to either collapse or expanded, depending on the value of <i>expanded</i>.</p>
+<p>See also <a href="qttreepropertybrowser.html#isExpanded">isExpanded</a>(), <a href="qttreepropertybrowser.html#expanded">expanded</a>(), and <a href="qttreepropertybrowser.html#collapsed">collapsed</a>().</p>
+<h3 class="fn"><a name="setItemVisible"></a>void QtTreePropertyBrowser::setItemVisible ( <a href="qtbrowseritem.html">QtBrowserItem</a> * <i>item</i>, bool <i>visible</i> )</h3>
+<p>Sets the <i>item</i> to be visible, depending on the value of <i>visible</i>.</p>
+<p>This function was introduced in qtpropertybrowser 4.5.</p>
+<p>See also <a href="qttreepropertybrowser.html#isItemVisible">isItemVisible</a>().</p>
+<p /><address><hr /><div align="center">
+<table width="100%" cellspacing="0" border="0"><tr class="address">
+<td width="30%" align="left">Copyright &copy; 2010 Nokia Corporation and/or its subsidiary(-ies)</td>
+<td width="40%" align="center"><a href="http://qt.nokia.com/doc/trademarks.html">Trademarks</a></td>
+<td width="30%" align="right"><div align="right">Qt Solutions</div></td>
+</tr></table></div></address></body>
+</html>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!-- qtpropertymanager.cpp -->
+<head>
+  <title>QtSizePolicyPropertyManager Class Reference</title>
+  <link href="classic.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td align="left" valign="top" width="32"><img src="images/qt-logo.png" align="left" width="57" height="67" border="0" /></td>
+<td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a></td>
+</tr></table><h1 class="title">QtSizePolicyPropertyManager Class Reference</h1>
+<p>The QtSizePolicyPropertyManager provides and manages <a href="http://qt.nokia.com/doc/4.6/qsizepolicy.html">QSizePolicy</a> properties. <a href="#details">More...</a></p>
+<pre> #include &lt;QtSizePolicyPropertyManager&gt;</pre><p>Inherits <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a>.</p>
+<ul>
+<li><a href="qtsizepolicypropertymanager-members.html">List of all members, including inherited members</a></li>
+</ul>
+<hr />
+<a name="public-functions"></a>
+<h2>Public Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtsizepolicypropertymanager.html#QtSizePolicyPropertyManager">QtSizePolicyPropertyManager</a></b> ( QObject * <i>parent</i> = 0 )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtsizepolicypropertymanager.html#dtor.QtSizePolicyPropertyManager">~QtSizePolicyPropertyManager</a></b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QtEnumPropertyManager * </td><td class="memItemRight" valign="bottom"><b><a href="qtsizepolicypropertymanager.html#subEnumPropertyManager">subEnumPropertyManager</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QtIntPropertyManager * </td><td class="memItemRight" valign="bottom"><b><a href="qtsizepolicypropertymanager.html#subIntPropertyManager">subIntPropertyManager</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QSizePolicy </td><td class="memItemRight" valign="bottom"><b><a href="qtsizepolicypropertymanager.html#value">value</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>3 public functions inherited from <a href="qtabstractpropertymanager.html#public-functions">QtAbstractPropertyManager</a></li>
+<li><div bar="2" class="fn"></div>29 public functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-functions">QObject</a></li>
+</ul>
+<hr />
+<a name="public-slots"></a>
+<h2>Public Slots</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtsizepolicypropertymanager.html#setValue">setValue</a></b> ( QtProperty * <i>property</i>, const QSizePolicy &amp; <i>value</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>1 public slot inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-slots">QObject</a></li>
+</ul>
+<hr />
+<a name="signals"></a>
+<h2>Signals</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtsizepolicypropertymanager.html#valueChanged">valueChanged</a></b> ( QtProperty * <i>property</i>, const QSizePolicy &amp; <i>value</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>4 signals inherited from <a href="qtabstractpropertymanager.html#signals">QtAbstractPropertyManager</a></li>
+<li><div bar="2" class="fn"></div>1 signal inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#signals">QObject</a></li>
+</ul>
+<hr />
+<a name="reimplemented-protected-functions"></a>
+<h2>Reimplemented Protected Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtsizepolicypropertymanager.html#initializeProperty">initializeProperty</a></b> ( QtProperty * <i>property</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtsizepolicypropertymanager.html#uninitializeProperty">uninitializeProperty</a></b> ( QtProperty * <i>property</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual QString </td><td class="memItemRight" valign="bottom"><b><a href="qtsizepolicypropertymanager.html#valueText">valueText</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>6 protected functions inherited from <a href="qtabstractpropertymanager.html#protected-functions">QtAbstractPropertyManager</a></li>
+<li><div bar="2" class="fn"></div>7 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-functions">QObject</a></li>
+</ul>
+<h3>Additional Inherited Members</h3>
+<ul>
+<li><div class="fn"></div>1 property inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>1 public type inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-variables">QObject</a></li>
+<li><div class="fn"></div>4 static public members inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>6 protected functions inherited from <a href="qtabstractpropertymanager.html#protected-functions">QtAbstractPropertyManager</a></li>
+<li><div class="fn"></div>7 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-functions">QObject</a></li>
+<li><div class="fn"></div>2 protected variables inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-variables">QObject</a></li>
+</ul>
+<a name="details"></a>
+<hr />
+<h2>Detailed Description</h2>
+<p>The QtSizePolicyPropertyManager provides and manages <a href="http://qt.nokia.com/doc/4.6/qsizepolicy.html">QSizePolicy</a> properties.</p>
+<p>A size policy property has nested <i>horizontalPolicy</i>, <i>verticalPolicy</i>, <i>horizontalStretch</i> and <i>verticalStretch</i> subproperties. The top-level property's value can be retrieved using the <a href="qtsizepolicypropertymanager.html#value">value</a>() function, and set using the <a href="qtsizepolicypropertymanager.html#setValue">setValue</a>() slot.</p>
+<p>The subproperties are created by <a href="qtintpropertymanager.html">QtIntPropertyManager</a> and <a href="qtenumpropertymanager.html">QtEnumPropertyManager</a> objects. These managers can be retrieved using the <a href="qtsizepolicypropertymanager.html#subIntPropertyManager">subIntPropertyManager</a>() and <a href="qtsizepolicypropertymanager.html#subEnumPropertyManager">subEnumPropertyManager</a>() functions respectively. In order to provide editing widgets for the subproperties in a property browser widget, these managers must be associated with editor factories.</p>
+<p>In addition, QtSizePolicyPropertyManager provides the <a href="qtsizepolicypropertymanager.html#valueChanged">valueChanged</a>() signal which is emitted whenever a property created by this manager changes.</p>
+<p>See also <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a>, <a href="qtintpropertymanager.html">QtIntPropertyManager</a>, and <a href="qtenumpropertymanager.html">QtEnumPropertyManager</a>.</p>
+<hr />
+<h2>Member Function Documentation</h2>
+<h3 class="fn"><a name="QtSizePolicyPropertyManager"></a>QtSizePolicyPropertyManager::QtSizePolicyPropertyManager ( <a href="http://qt.nokia.com/doc/4.6/qobject.html">QObject</a> * <i>parent</i> = 0 )</h3>
+<p>Creates a manager with the given <i>parent</i>.</p>
+<h3 class="fn"><a name="dtor.QtSizePolicyPropertyManager"></a>QtSizePolicyPropertyManager::~QtSizePolicyPropertyManager ()</h3>
+<p>Destroys this manager, and all the properties it has created.</p>
+<h3 class="fn"><a name="initializeProperty"></a>void QtSizePolicyPropertyManager::initializeProperty ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertymanager.html#initializeProperty">QtAbstractPropertyManager::initializeProperty</a>().</p>
+<h3 class="fn"><a name="setValue"></a>void QtSizePolicyPropertyManager::setValue ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, const <a href="http://qt.nokia.com/doc/4.6/qsizepolicy.html">QSizePolicy</a> &amp; <i>value</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
+<p>Sets the value of the given <i>property</i> to <i>value</i>. Nested properties are updated automatically.</p>
+<p>See also <a href="qtsizepolicypropertymanager.html#value">value</a>() and <a href="qtsizepolicypropertymanager.html#valueChanged">valueChanged</a>().</p>
+<h3 class="fn"><a name="subEnumPropertyManager"></a><a href="qtenumpropertymanager.html">QtEnumPropertyManager</a> * QtSizePolicyPropertyManager::subEnumPropertyManager () const</h3>
+<p>Returns the manager that creates the nested <i>horizontalPolicy</i> and <i>verticalPolicy</i> subproperties.</p>
+<p>In order to provide editing widgets for the mentioned subproperties in a property browser widget, this manager must be associated with an editor factory.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#setFactoryForManager">QtAbstractPropertyBrowser::setFactoryForManager</a>().</p>
+<h3 class="fn"><a name="subIntPropertyManager"></a><a href="qtintpropertymanager.html">QtIntPropertyManager</a> * QtSizePolicyPropertyManager::subIntPropertyManager () const</h3>
+<p>Returns the manager that creates the nested <i>horizontalStretch</i> and <i>verticalStretch</i> subproperties.</p>
+<p>In order to provide editing widgets for the mentioned subproperties in a property browser widget, this manager must be associated with an editor factory.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#setFactoryForManager">QtAbstractPropertyBrowser::setFactoryForManager</a>().</p>
+<h3 class="fn"><a name="uninitializeProperty"></a>void QtSizePolicyPropertyManager::uninitializeProperty ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertymanager.html#uninitializeProperty">QtAbstractPropertyManager::uninitializeProperty</a>().</p>
+<h3 class="fn"><a name="value"></a><a href="http://qt.nokia.com/doc/4.6/qsizepolicy.html">QSizePolicy</a> QtSizePolicyPropertyManager::value ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const</h3>
+<p>Returns the given <i>property</i>'s value.</p>
+<p>If the given property is not managed by this manager, this function returns the default size policy.</p>
+<p>See also <a href="qtsizepolicypropertymanager.html#setValue">setValue</a>().</p>
+<h3 class="fn"><a name="valueChanged"></a>void QtSizePolicyPropertyManager::valueChanged ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, const <a href="http://qt.nokia.com/doc/4.6/qsizepolicy.html">QSizePolicy</a> &amp; <i>value</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted whenever a property created by this manager changes its value, passing a pointer to the <i>property</i> and the new <i>value</i> as parameters.</p>
+<p>See also <a href="qtsizepolicypropertymanager.html#setValue">setValue</a>().</p>
+<h3 class="fn"><a name="valueText"></a><a href="http://qt.nokia.com/doc/4.6/qstring.html">QString</a> QtSizePolicyPropertyManager::valueText ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertymanager.html#valueText">QtAbstractPropertyManager::valueText</a>().</p>
+<p /><address><hr /><div align="center">
+<table width="100%" cellspacing="0" border="0"><tr class="address">
+<td width="30%" align="left">Copyright &copy; 2010 Nokia Corporation and/or its subsidiary(-ies)</td>
+<td width="40%" align="center"><a href="http://qt.nokia.com/doc/trademarks.html">Trademarks</a></td>
+<td width="30%" align="right"><div align="right">Qt Solutions</div></td>
+</tr></table></div></address></body>
+</html>

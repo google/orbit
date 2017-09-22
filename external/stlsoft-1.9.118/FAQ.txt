@@ -1,0 +1,94 @@
+============================================================================
+STLSoft - FAQ
+
+; Created:  29th March 2002
+; Updated:  30th September 2010
+
+============================================================================
+
+
+
+The FAQ list is under (constant) development. If you post a question on the
+Tutorials forum (https://sourceforge.net/forum/forum.php?forum_id=903893)
+it will be used to create one.
+
+FAQs:
+=====
+
+Q1: "How do I build STLSoft?"
+
+A1:
+  You don't: STLSoft is 100% header-only, so all you have to do is #include
+  it. We do recommend that you use an environment variable, e.g. STLSOFT, so
+  that you can use new versions of the library from your projects without
+  disruption.
+
+
+Q2: "How do I install STLSoft?"
+
+A2:
+  There are three steps:
+    1. Download the latest distribution of STLSoft, from http://stlsoft.org/
+    2. Unzip it to a directory of your choice, e.g /3pty/stlsoft-1.9.98
+    3. Define an environment variable STLSOFT, whose value is the directory
+       in which you unzipped it, e.g. STLSOFT=/3pty/stlsoft-1.9.98
+
+
+Q3: "How do I use STLSoft?"
+
+A3:
+  Assuming you've installed it (as per instructions A2):
+
+  In your IDE settings, add the include directory $(STLSOFT)/include, OR in
+  your makefiles, add the include directory:
+    * -I$STLSOFT/include (if you're on UNIX), OR
+    * -I%STLSOFT%/include (if you're on Windows)
+
+
+Q4: "Does STLSoft have unit-tests?"
+
+A4:
+  Yes, but for various reasons they're not available with the STLSoft 1.9
+  distribution. The STLSoft 1.10 alpha distributions come with an increasing
+  number of unit-/component-tests for both STLSoft 1.9 and STLSoft 1.10, and
+  when STLSoft 1.10 enters beta phase, it will ship with tests.
+
+
+Q5: "What is STLSoft 1.10?"
+
+A5:
+  STLSoft 1.10 is the next version of STLSoft. As well as containing several
+  new components, it also incorporates wholesale refactoring of code and of
+  the structural aspects (including packaging and directories). STLSoft 1.10
+  is still in alpha-delta stage (see A6).
+
+
+Q6: "How do I use STLSoft 1.10?"
+
+A6:
+  While it's still in alpha stage, the STLSoft 1.10 releases are in "delta"
+  form, i.e. they must be "added" to an up-to-date STLSoft 1.9 distribution.
+  This is achieved in one of two ways:
+
+  (1) Overwrite
+
+  You download and install STLSoft 1.9 as per A2. You then download the
+  STLSoft 1.10 alpha-delta archive and extract it directly over the STLSoft
+  1.9 directory.
+
+  (2) Include Path Interposition
+
+  You download and install STLSoft 1.9 as per A2. You then download the
+  STLSoft 1.10 alpha-delta archive and extract it to a separate directory,
+  defining an environment variable STLSOFT_1_10 to that directory. You then
+  specify the include paths in your IDE project files and in makefiles in
+  reverse order, as in:
+
+    * -I$STLSOFT_1_10/include -I$STLSOFT/include (if you're on UNIX), OR
+    * -I%STLSOFT_1_10%/include -I%STLSOFT%/include (if you're on Windows)
+
+
+  We strongly recommend using method (2).
+
+
+=============================== End of file ================================

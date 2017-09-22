@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!-- qtpropertymanager.cpp -->
+<head>
+  <title>QtEnumPropertyManager Class Reference</title>
+  <link href="classic.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td align="left" valign="top" width="32"><img src="images/qt-logo.png" align="left" width="57" height="67" border="0" /></td>
+<td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a></td>
+</tr></table><h1 class="title">QtEnumPropertyManager Class Reference</h1>
+<p>The QtEnumPropertyManager provides and manages enum properties. <a href="#details">More...</a></p>
+<pre> #include &lt;QtEnumPropertyManager&gt;</pre><p>Inherits <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a>.</p>
+<ul>
+<li><a href="qtenumpropertymanager-members.html">List of all members, including inherited members</a></li>
+</ul>
+<hr />
+<a name="public-functions"></a>
+<h2>Public Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#QtEnumPropertyManager">QtEnumPropertyManager</a></b> ( QObject * <i>parent</i> = 0 )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#dtor.QtEnumPropertyManager">~QtEnumPropertyManager</a></b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QMap&lt;int, QIcon&gt; </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#enumIcons">enumIcons</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QStringList </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#enumNames">enumNames</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#value">value</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>3 public functions inherited from <a href="qtabstractpropertymanager.html#public-functions">QtAbstractPropertyManager</a></li>
+<li><div bar="2" class="fn"></div>29 public functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-functions">QObject</a></li>
+</ul>
+<hr />
+<a name="public-slots"></a>
+<h2>Public Slots</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#setEnumIcons">setEnumIcons</a></b> ( QtProperty * <i>property</i>, const QMap&lt;int, QIcon&gt; &amp; <i>enumIcons</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#setEnumNames">setEnumNames</a></b> ( QtProperty * <i>property</i>, const QStringList &amp; <i>enumNames</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#setValue">setValue</a></b> ( QtProperty * <i>property</i>, int <i>value</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>1 public slot inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-slots">QObject</a></li>
+</ul>
+<hr />
+<a name="signals"></a>
+<h2>Signals</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#enumIconsChanged">enumIconsChanged</a></b> ( QtProperty * <i>property</i>, const QMap&lt;int, QIcon&gt; &amp; <i>icons</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#enumNamesChanged">enumNamesChanged</a></b> ( QtProperty * <i>property</i>, const QStringList &amp; <i>names</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#valueChanged">valueChanged</a></b> ( QtProperty * <i>property</i>, int <i>value</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>4 signals inherited from <a href="qtabstractpropertymanager.html#signals">QtAbstractPropertyManager</a></li>
+<li><div bar="2" class="fn"></div>1 signal inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#signals">QObject</a></li>
+</ul>
+<hr />
+<a name="reimplemented-protected-functions"></a>
+<h2>Reimplemented Protected Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#initializeProperty">initializeProperty</a></b> ( QtProperty * <i>property</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#uninitializeProperty">uninitializeProperty</a></b> ( QtProperty * <i>property</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual QIcon </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#valueIcon">valueIcon</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual QString </td><td class="memItemRight" valign="bottom"><b><a href="qtenumpropertymanager.html#valueText">valueText</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>6 protected functions inherited from <a href="qtabstractpropertymanager.html#protected-functions">QtAbstractPropertyManager</a></li>
+<li><div bar="2" class="fn"></div>7 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-functions">QObject</a></li>
+</ul>
+<h3>Additional Inherited Members</h3>
+<ul>
+<li><div class="fn"></div>1 property inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>1 public type inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-variables">QObject</a></li>
+<li><div class="fn"></div>4 static public members inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>6 protected functions inherited from <a href="qtabstractpropertymanager.html#protected-functions">QtAbstractPropertyManager</a></li>
+<li><div class="fn"></div>7 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-functions">QObject</a></li>
+<li><div class="fn"></div>2 protected variables inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-variables">QObject</a></li>
+</ul>
+<a name="details"></a>
+<hr />
+<h2>Detailed Description</h2>
+<p>The QtEnumPropertyManager provides and manages enum properties.</p>
+<p>Each enum property has an associated list of enum names which can be retrieved using the <a href="qtenumpropertymanager.html#enumNames">enumNames</a>() function, and set using the corresponding <a href="qtenumpropertymanager.html#setEnumNames">setEnumNames</a>() function. An enum property's value is represented by an index in this list, and can be retrieved and set using the <a href="qtenumpropertymanager.html#value">value</a>() and <a href="qtenumpropertymanager.html#setValue">setValue</a>() slots respectively.</p>
+<p>Each enum value can also have an associated icon. The mapping from values to icons can be set using the <a href="qtenumpropertymanager.html#setEnumIcons">setEnumIcons</a>() function and queried with the <a href="qtenumpropertymanager.html#enumIcons">enumIcons</a>() function.</p>
+<p>In addition, QtEnumPropertyManager provides the <a href="qtenumpropertymanager.html#valueChanged">valueChanged</a>() signal which is emitted whenever a property created by this manager changes. The <a href="qtenumpropertymanager.html#enumNamesChanged">enumNamesChanged</a>() or <a href="qtenumpropertymanager.html#enumIconsChanged">enumIconsChanged</a>() signal is emitted whenever the list of enum names or icons is altered.</p>
+<p>See also <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> and <a href="qtenumeditorfactory.html">QtEnumEditorFactory</a>.</p>
+<hr />
+<h2>Member Function Documentation</h2>
+<h3 class="fn"><a name="QtEnumPropertyManager"></a>QtEnumPropertyManager::QtEnumPropertyManager ( <a href="http://qt.nokia.com/doc/4.6/qobject.html">QObject</a> * <i>parent</i> = 0 )</h3>
+<p>Creates a manager with the given <i>parent</i>.</p>
+<h3 class="fn"><a name="dtor.QtEnumPropertyManager"></a>QtEnumPropertyManager::~QtEnumPropertyManager ()</h3>
+<p>Destroys this manager, and all the properties it has created.</p>
+<h3 class="fn"><a name="enumIcons"></a><a href="http://qt.nokia.com/doc/4.6/qmap.html">QMap</a>&lt;int, <a href="http://qt.nokia.com/doc/4.6/qicon.html">QIcon</a>&gt; QtEnumPropertyManager::enumIcons ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const</h3>
+<p>Returns the given <i>property</i>'s map of enum values to their icons.</p>
+<p>See also <a href="qtenumpropertymanager.html#value">value</a>() and <a href="qtenumpropertymanager.html#setEnumIcons">setEnumIcons</a>().</p>
+<h3 class="fn"><a name="enumIconsChanged"></a>void QtEnumPropertyManager::enumIconsChanged ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, const <a href="http://qt.nokia.com/doc/4.6/qmap.html">QMap</a>&lt;int, <a href="http://qt.nokia.com/doc/4.6/qicon.html">QIcon</a>&gt; &amp; <i>icons</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted whenever a property created by this manager changes its enum icons, passing a pointer to the <i>property</i> and the new mapping of values to <i>icons</i> as parameters.</p>
+<p>See also <a href="qtenumpropertymanager.html#setEnumIcons">setEnumIcons</a>().</p>
+<h3 class="fn"><a name="enumNames"></a><a href="http://qt.nokia.com/doc/4.6/qstringlist.html">QStringList</a> QtEnumPropertyManager::enumNames ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const</h3>
+<p>Returns the given <i>property</i>'s list of enum names.</p>
+<p>See also <a href="qtenumpropertymanager.html#value">value</a>() and <a href="qtenumpropertymanager.html#setEnumNames">setEnumNames</a>().</p>
+<h3 class="fn"><a name="enumNamesChanged"></a>void QtEnumPropertyManager::enumNamesChanged ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, const <a href="http://qt.nokia.com/doc/4.6/qstringlist.html">QStringList</a> &amp; <i>names</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted whenever a property created by this manager changes its enum names, passing a pointer to the <i>property</i> and the new <i>names</i> as parameters.</p>
+<p>See also <a href="qtenumpropertymanager.html#setEnumNames">setEnumNames</a>().</p>
+<h3 class="fn"><a name="initializeProperty"></a>void QtEnumPropertyManager::initializeProperty ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertymanager.html#initializeProperty">QtAbstractPropertyManager::initializeProperty</a>().</p>
+<h3 class="fn"><a name="setEnumIcons"></a>void QtEnumPropertyManager::setEnumIcons ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, const <a href="http://qt.nokia.com/doc/4.6/qmap.html">QMap</a>&lt;int, <a href="http://qt.nokia.com/doc/4.6/qicon.html">QIcon</a>&gt; &amp; <i>enumIcons</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
+<p>Sets the given <i>property</i>'s map of enum values to their icons to <i>enumIcons</i>.</p>
+<p>Each enum value can have associated icon. This association is represented with passed <i>enumIcons</i> map.</p>
+<p>See also <a href="qtenumpropertymanager.html#enumIcons">enumIcons</a>(), <a href="qtenumpropertymanager.html#enumNames">enumNames</a>(), and <a href="qtenumpropertymanager.html#enumNamesChanged">enumNamesChanged</a>().</p>
+<h3 class="fn"><a name="setEnumNames"></a>void QtEnumPropertyManager::setEnumNames ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, const <a href="http://qt.nokia.com/doc/4.6/qstringlist.html">QStringList</a> &amp; <i>enumNames</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
+<p>Sets the given <i>property</i>'s list of enum names to <i>enumNames</i>. The <i>property</i>'s current value is reset to 0 indicating the first item of the list.</p>
+<p>If the specified <i>enumNames</i> list is empty, the <i>property</i>'s current value is set to -1.</p>
+<p>See also <a href="qtenumpropertymanager.html#enumNames">enumNames</a>() and <a href="qtenumpropertymanager.html#enumNamesChanged">enumNamesChanged</a>().</p>
+<h3 class="fn"><a name="setValue"></a>void QtEnumPropertyManager::setValue ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, int <i>value</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
+<p>Sets the value of the given <i>property</i> to <i>value</i>.</p>
+<p>The specified <i>value</i> must be less than the size of the given <i>property</i>'s <a href="qtenumpropertymanager.html#enumNames">enumNames</a>() list, and larger than (or equal to) 0.</p>
+<p>See also <a href="qtenumpropertymanager.html#value">value</a>() and <a href="qtenumpropertymanager.html#valueChanged">valueChanged</a>().</p>
+<h3 class="fn"><a name="uninitializeProperty"></a>void QtEnumPropertyManager::uninitializeProperty ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertymanager.html#uninitializeProperty">QtAbstractPropertyManager::uninitializeProperty</a>().</p>
+<h3 class="fn"><a name="value"></a>int QtEnumPropertyManager::value ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const</h3>
+<p>Returns the given <i>property</i>'s value which is an index in the list returned by <a href="qtenumpropertymanager.html#enumNames">enumNames</a>()</p>
+<p>If the given property is not managed by this manager, this function returns -1.</p>
+<p>See also <a href="qtenumpropertymanager.html#enumNames">enumNames</a>() and <a href="qtenumpropertymanager.html#setValue">setValue</a>().</p>
+<h3 class="fn"><a name="valueChanged"></a>void QtEnumPropertyManager::valueChanged ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, int <i>value</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted whenever a property created by this manager changes its value, passing a pointer to the <i>property</i> and the new <i>value</i> as parameters.</p>
+<p>See also <a href="qtenumpropertymanager.html#setValue">setValue</a>().</p>
+<h3 class="fn"><a name="valueIcon"></a><a href="http://qt.nokia.com/doc/4.6/qicon.html">QIcon</a> QtEnumPropertyManager::valueIcon ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertymanager.html#valueIcon">QtAbstractPropertyManager::valueIcon</a>().</p>
+<h3 class="fn"><a name="valueText"></a><a href="http://qt.nokia.com/doc/4.6/qstring.html">QString</a> QtEnumPropertyManager::valueText ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Reimplemented from <a href="qtabstractpropertymanager.html#valueText">QtAbstractPropertyManager::valueText</a>().</p>
+<p /><address><hr /><div align="center">
+<table width="100%" cellspacing="0" border="0"><tr class="address">
+<td width="30%" align="left">Copyright &copy; 2010 Nokia Corporation and/or its subsidiary(-ies)</td>
+<td width="40%" align="center"><a href="http://qt.nokia.com/doc/trademarks.html">Trademarks</a></td>
+<td width="30%" align="right"><div align="right">Qt Solutions</div></td>
+</tr></table></div></address></body>
+</html>

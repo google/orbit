@@ -1,0 +1,936 @@
+============================================================================
+STLSoft - History
+
+; Created:  29th March 2002
+; Updated:  31st May 2014
+
+============================================================================
+
+
+31st May 2014 - 1.9.118 released
+--------------------------------
+
+ * added Visual C++ 12 (VS 2013) compatibility
+ * added struct initialisers for CONSOLE_SCREEN_BUFFER_INFO & CONSOLE_SCREEN_BUFFER_INFOEX
+ * added second overload of winstl::filesystem_traits::ensure_dir_end() that takes a pointer to a length-added counter variable
+ * added forward-compatibility with STLSoft 1.10's substantially enhanced and expanded synchronisation exception hierarchy to Synchronisation Library types
+ * added winstl::system_traits::get_home_directory() (although it's only operative in 1.10+ or when using 1.10 alpha with 1.9)
+ * various minor fixes
+ * various minor changes
+
+16th February 2013 - 1.9.117 released
+-------------------------------------
+
+ * added Visual C++ 11 compatibility
+ * various minor changes
+
+
+19th August 2012 - 1.9.116 released
+-----------------------------------
+
+ * fixed defect in winstl::pipe::close_write()
+ * various other minor warning suppression and reformatting
+
+
+31st July 2012 - 1.9.115 released
+---------------------------------
+
+ * stlsoft::integer_to_string() new overloads with out-parameter as pointer; deprecated overloads with out-parameter as reference
+ * winstl::integral_printf_traits added octal_format_a/w(), hexadecimal_format_a/w(), decimal_format_a/w(); deprecated format_a/w() and hex_format_a/w() methods, and size_min, size_max, and size member constants
+ * Windows 7-compatibility for winstl::drophandle_sequence
+ * winstl::spin_mutex now uses SwitchToThread if _WIN32_WINNT >= 0x0400
+ * added winstl::added GetTimeFormat_msExA/W() by which custom time markers can be specified
+
+
+4th June 2012 - 1.9.114 released
+--------------------------------
+
+ * added unixstl::filesystem_traits::is_socket(char_type const*) method
+ * added unixstl::filesystem_traits::is_link(char_type const*) method
+ * added unixstl::filesystem_traits::is_socket(stat_data_type const*) method
+ * added unixstl::filesystem_traits::find_next_path_name_separator() method
+ * added unixstl::filesystem_traits::find_last_path_name_separator() method
+ * unixstl::filesystem_traits::get_full_path_name() now canonicalises '.'/'..'-trailing paths
+ * unixstl::readdir_sequence.hpp now includes directory name in thrown exception
+
+
+4th June 2012 - 1.9.113 released
+--------------------------------
+
+ * Intel C/C++ 12 support
+ * support for STLSOFT_COMPILE_VERBOSE; deprecation of _STLSOFT_COMPILE_VERBOSE
+ * fixed unixstl::filesystem_traits::broken get_current_directory()
+ * fixed unixstl::filesystem_traits::broken invalid_file_handle_value()
+ * fixed unixstl::filesystem_traits::is_file() / is_directory() / is_link()
+ * numerous improvements to unixstl::filesystem_traits::glob_sequence
+ * unixstl::readdir_sequence correction to elide sockets from search results
+ * winstl/time/conversion_functions.h renaming (and deprecation) of non-standard C function names
+
+
+7th February 2012 - 1.9.112 released
+------------------------------------
+
+ * added winstl_C_format_message_strerror_a(), an analogue of strerror() for Windows API "error" codes
+ * adjusted discrimination of exception-support macros, based on presence of GCC compiler's __EXCEPTIONS symbol
+ * minor VC++ compatibility fix for stlsoft/shims/access/string/std/exception.hpp
+
+
+30th November 2011 - 1.9.111 released
+-------------------------------------
+
+ * fix for GCC 4.5+ unixstl::filesystem_traits
+
+
+25th November 2011 - 1.9.110 released
+-------------------------------------
+
+ * fix for GCC 4.5+ unixstl::filesystem_traits
+ * added result_code_type to both unixstl::system_traits and winstl::system_traits
+ * correction(s)/enhancement(s) to which of MFCSTL's string access shim headers are automatically included
+ * added discrimination of new pre-processor symbol PLATFORMSTL_NO_PLATFORM_NAMESPACE, to ease dependent library implementation
+ * avoidance of false memory-leak reports in use of stlsoft::truncation_test
+
+
+13th August 2011 - 1.9.109 released
+-----------------------------------
+
+ * added rbegin()/rend() to stlsoft::frequency_map<>
+ * added push_n() to stlsoft::frequency_map<>
+ * refactored throw statement(s) in terms of STLSOFT_THROW_X() throughout
+ * added reset() method to stlsoft::shared_ptr<>
+ * added various STLSoft deprecation macros
+ * added is_path_rooted(), is_path_absolute(), and is_path_UNC() methods to unixstl::filesystem_traits<>
+ * added two-parameters overloads of is_path_rooted(), is_path_absolute(), and is_path_UNC() methods to winstl::filesystem_traits<>
+ * include/winstl/error/error_functions.h: substantial refactoring of format_message()-family of functions (and their C analogues)
+
+
+31st January 2011 - 1.9.108 released
+------------------------------------
+
+ * changed erroneously named new unixstl::/winstl::filesystem_traits method's name from invalid_handle_value() to invalid_file_handle_value()
+ * added third, defaulted, template parameter to stlsoft::frequency_map for specification of predicate
+
+
+30th January 2011 - 1.9.107 released
+------------------------------------
+
+ * added data() member to stlsoft::multibyte2wide and stlsoft::wide2multibyte
+ * added data() member to winstl::multibyte2wide and winstl::wide2multibyte
+ * improved performance of of c_str_len(_a|_w)() shim overloads of stlsoft::multibyte2wide and stlsoft::wide2multibyte
+ * improved performance of of c_str_len(_a|_w)() shim overloads of winstl::multibyte2wide and winstl::wide2multibyte
+ * added equal() method and operator ==/!=() non-member functions to unixstl::memory_mapped_file
+ * added equal() method and operator ==/!=() non-member functions to winstl::memory_mapped_file
+ * added non-member unixstl::swap() function for unixstl::memory_mapped_file
+ * added non-member platformstl::swap() function for platformstl::memory_mapped_file
+ * changed definition of unixstl::memory_mapped_file::size_type to be size_t
+ * added invalid_handle_value() method to unixstl::filesystem_traits<>
+ * added invalid_handle_value() method to winstl::filesystem_traits<>
+ * added added get_file_size(stat_data_type const&) and get_file_size(stat_data_type const*) overloads to unixstl::filesystem_traits<>
+ * added added get_file_size(stat_data_type const&) and get_file_size(stat_data_type const*) overloads to winstl::filesystem_traits<>
+ * reduced dependencies on other string access shim overloads in winstl::error_desc
+
+
+28th December 2010 - 1.9.106 released
+-------------------------------------
+
+ * workaround for Intel compile error
+
+
+27th December 2010 - 1.9.105 released
+-------------------------------------
+
+ * several new minor facilities in stlsoft::frequency_map
+ * improved compiler-compatibility in stlsoft::multibyte2wide and stlsoft::wide2multibyte
+ * WinSTL now recognises Win64 architecture when _WIN64 is defined even when WIN64 is not
+
+
+22nd November 2010 - 1.9.104 released
+-------------------------------------
+
+ * refactored wide string exception string access shim functions, to avoid so-called "deprecated" (standard) functions when using VC++
+ * expanded internal buffers of shim strings for exception string access shims, from 10 to 100
+
+
+21st November 2010 - 1.9.103 released
+-------------------------------------
+
+ * changed mechanism of discriminating Dinkumware standard library versions
+ * added typedefs for path_a and path_w to introduce them into the platformstl namespace
+
+
+8th November 2010 - 1.9.102 released
+------------------------------------
+
+ * added wide string string access shims for std::exception
+ * fixed infinite-recursion defects in ambient shim function definitions
+ * other compatibility fixes
+
+
+30th September 2010 - 1.9.101 released
+--------------------------------------
+
+ * stlsoft::transform_iterator can now support transformation to types that do not support default construction
+ * fixed defect in stlsoft::transform_iterator
+ * platformstl::basic_file_lines refactored, and exception-safety enhanced
+ * winstl::memory_mapped_file refactored in preparation for substantial enhancement in 1.10; also no longer supports compilers that do not have native 64-bit integers
+
+
+12th August 2010 - 1.9.100 released
+-----------------------------------
+
+ * added stlsoft/iterators/common/string_concatenation_flags.hpp
+ * string_concatenator_iterator now strictly skips separator insertion for empty elements if no flags are specified, and always inserts separator if string_concatenation_flags::AlwaysSeparate is specified
+ * added performance_counter_init::get_period_and_restart() method
+ * added STLSOFT_CC_CDECL_VALUE, STLSOFT_CC_FASTCALL_VALUE, STLSOFT_CC_STDCALL_VALUE
+ * special_string_instance now uses atomic_int_type
+ * string_tokeniser iterator dereference operator changed to disallow return of mutable instance
+ * string_view has improved comparison algorithm
+ * added 3-, 4-, and 5-parameter overloads of stlsoft::minimum() and stlsoft::maximum()
+ * various fixes and enhancements to platformstl::file_lines 
+ * added size() and empty() methods to winstl::environment_variable
+ * implemented winstl::system_traits::str_n_compare_no_case()
+
+
+21st June 2010 - 1.9.99 released
+--------------------------------
+
+ * added filesystem_traits::str_fs_compare() (UNIXSTL & WinSTL)
+ * added filesystem_traits::str_fs_n_compare() (UNIXSTL & WinSTL)
+ * added str_n_compare_no_case declaration to system_traits (UNIXSTL & WinSTL)
+ * added assoc_select_first() and assoc_select_second() creator functions for associative_select_iterator
+ * incorporated Manfred Ehrhart's fixes for associative_select_iterator
+ * Borland/GCC-compatibility fixes
+ * GCC-compatibility fixes
+ * nullptr support correction for VC++
+ * various minor fixes
+
+
+7th June 2010 - 1.9.98 released
+-------------------------------
+
+ * added range overload of stlsoft::read_line(), so can read lines from an iterator range
+ * added nullptr (C++0x) support for VC++ 10
+ * added swap() method to stlsoft::basic_shim_string
+ * added 3, 4, 5, and 6-split overloads to stlsoft::split()
+ * added sized-string ctor, data() and size() methods, and string access shims (to simplify xTests-based unit-testing, if nothing else) to stlsoft::exception_string
+ * added VARIANT_BOOL overload to comstl::method_cast()
+ * added platformstl::file_lines empty() method
+ * separated PlatformSTL's atomic types into separate file platformstl/synch/atomic_types.h
+ * separated UNIXSTL's atomic types into separate file unixstl/synch/atomic_types.h
+ * separated WinSTL's atomic types into separate file winstl/synch/atomic_types.h
+ * fixed winstl::memory_mapped_file to handle case where an offset is specified but there are 0 remaining bytes in the file to be mapped at that location: constructs an instance with 0 size
+ * fixed potential memory leak of format-message-string if windows_exception creation throws an exception 
+ * moved COMSTL_CCH_GUID to comstl/comstl.h from comstl/shims/access/string/guid.hpp
+ * adjusted winstl::drophandle_sequence for Win64 compatibility
+ * adjusted winstl::version_info for Win64 compatibility
+ * various components no longer rely on operator += of exception_string type, in preparation for 1.10 versions
+
+
+4th April 2010 - 1.9.97 released
+--------------------------------
+
+ * added stlsoft::copy_preinc() and stlsoft::copy_postinc() algorithms
+ * added str_set() method to unixstl::/winstl::system_traits
+ * added unixstl/shims/conversion/to_uint64/stat.hpp
+ * added missing widestring specialisation of inetstl::filesystem_traits::is_path_name_separator()
+ * stlsoft::basic_error_desc synthesises widestring functionality if wcserror() is not available
+ * exposes widestring version of platformstl::system_traits from UNIXSTL
+ * comstl::variant compatibility with exception-support disabled
+ * removed erroneous definitions of strtol(), strtoul(), strtod()
+ * added missing 'mode' parameter to unixstl::module::load(), and uses 'mode' parameter passed to constructor template
+ * typename corrections to platformstl::basic_file_path_buffer and platformstl::basic_path
+ * improved discrimination of Visual C++ 9 / 10
+ * fixed defective arithmetic in unixstl::/winstl::memory_mapped_file
+ * refactored implementation of winstl::reg_key::create_key() to avoid infinite loop faults
+
+
+10th March 2010 - 1.9.96 released
+---------------------------------
+
+ * Visual C++ 10 compatibility
+
+
+7th March 2010 - 1.9.95 released
+--------------------------------
+
+ * minor interface modifications to comstl::com_exception
+
+
+5th March 2010 - 1.9.94 released
+--------------------------------
+
+ * corrected omission of inline from swap for unixstl::memory_mapped_file
+ * corrected omission of inline from swap for winstl::memory_mapped_file
+
+
+15th February 2010 - 1.9.93 released
+------------------------------------
+
+ * STLSOFT_CF_NAMESPACE_SUPPORT is now only defined in C++ compilation units
+ * added WINSTL_CONST_MAX_PATH, which is now used instead of _MAX_PATH throughout winstl
+
+
+11th February 2010 - 1.9.92 released
+------------------------------------
+
+ * added inetstl::filesystem_traits<>::is_path_name_separator()
+
+
+2nd February 2010 - 1.9.91 released
+-----------------------------------
+
+ * introducing unixstl::/winstl::remove_directory_recurse() into platformstl namespace
+ * removal of dependency on so-called "unsafe" string functions
+ * elimination of calls to memcpy() in path classes
+ * throwing of exception in make_absolute() if failed to get full path
+
+
+21st January 2010 - 1.9.90 released
+-----------------------------------
+
+ * fixed defect in unixstl::filesystem_traits<>::get_full_path_name() when passed "."
+ * header ordering workaround for GCC 3.4's strange COM headers on Windows
+
+
+19th January 2010 - 1.9.89 released
+-----------------------------------
+
+ * fixed defective stream inserter for stlsoft::error_desc
+ * fixed erroneous push-pop in include/acestl/reactor/custom_event_handler.hpp:
+ * safe-string compatibility for various UNIXSTL system/filesystem components
+
+
+12th January 2010 - 1.9.88 released
+-----------------------------------
+
+ * added throwOnAccessFailure search flag to winstl::basic_findfile_sequence, along with supporting code
+ * added winstl::access_exception
+ * full integer handling for comstl::variant
+ * addition of max_size() static method to basic_file_path_buffer class template
+ * change of max_size() method to be static in basic_path
+ * fixed longstanding incompatibility between reverse_iterator and const_reverse_iterator
+ * C compatibility fixes
+ * compatibility with GCC 3.4
+ * truncation_test is now a function template (rather than a macro to an internal function)
+ * deprecation/removal of reserved symbols, and replacement with valid symbols
+
+
+11th August 2009 - 1.9.87 released
+----------------------------------
+
+ * trivial formatting changes
+
+
+24th July 2009 - 1.9.86 released
+--------------------------------
+
+ * added STLSOFT_CF_THISCALL_SUPPORTED
+ * added thiscall overloads of mem_fun_ref() and mem_fun_ref_void()
+ * Borland compatibility for scoped_handle
+ * fix to unixstl::filesystem_traits::get_full_path_name() (to detect when path contains reserved characters)
+
+
+16th June 2009 - 1.9.85 released
+--------------------------------
+
+ * added merge() and swap() to stlsoft::frequence_map class template
+ * winstl::listview_sequence::value_type::string_type (aka lvs_string_t) is now overrideable via the preprocessor, in preparation for future expansion of flexibility
+
+
+23rd May 2009 - 1.9.84 released
+-------------------------------
+
+ * fixed defect in winstl::basic_reg_key::set_value() for REG_MULTI_SZ values (widestring only)
+ * "safe string" library and widestring support for stlsoft::basic_error_desc
+ * various 64-bit LP64 compatibility changes
+
+
+19th May 2009 - 1.9.83 released
+-------------------------------
+
+ * fixed defects in winstl::basic_reg_value::value_sz()/value_multi_sz()
+ * fixed defects in exception-safety in winstl::basic_reg_value and winstl::basic_reg_key
+ * various minor fixes and documentation mods
+
+
+15th May 2009 - 1.9.82 released
+-------------------------------
+
+ * added winstl::reg_traits<>::reg_delete_tree()
+ * added IOStreams compatibility for winstl::findfile_sequence::value_type
+
+
+7th May 2009 - 1.9.81 released
+------------------------------
+
+ * now recognises __func__, provided by Sun Pro, via STLSOFT_CF_func_SYMBOL_SUPPORT
+ * abstracts __FUNCTION__ support to STLSOFT_FUNCTION_SYMBOL
+
+
+6th May 2009 - 1.9.80 released
+------------------------------
+
+ * now recognises support for variadic macros and #pragma once for later versions of Borland C/C++
+ * SunPro compatibility improvements for UNIXSTL synchronisation components
+ * fixes to defects in stlsoft::basic_simple_string at() and 5-parameter compare() methods
+ * basic_path class templates (both UNIXSTL and WinSTL versions) now implement assignment operator differently to avoid possibilities of infinite loops (which can happen when a type with an opposing string encoding is used)
+ * correction to stlsoft::auto_buffer to ensure allocators are involved in swap() operations
+ * correction to struct in_addr string access shims for compatibility with big-endian architectures
+ * various changes for compatibility with "safe string" library
+
+
+2nd May 2009 - 1.9.79 released
+------------------------------
+
+ * UNIX compatibility for InetSTL
+ * "safe string" library compatibility for InetSTL
+
+
+27th April 2009 - 1.9.78 released
+---------------------------------
+
+ * fixed serious defect in atlstl::copy_enumerator_impl::Reset()
+ * stlsoft::shared_ptr now works correctly if fails to allocate counter
+   variable in conditions where exception handling is not supported
+ * stlsoft::c_str_data_a(struct fm const*) now correctly handles case where
+   tm pointer is NULL
+ * corrected behaviour of get_environment_variable for both UNIXSTL and
+   WinSTL system_traits traits classes
+ * various compiler compatibility fixes
+ * various documentation corrections
+
+
+9th March 2009 - 1.9.77 released
+--------------------------------
+
+ * corrected invalid invariants in memory_mapped_file classes in UNIXSTL and
+   WinSTL
+
+
+6th March 2009 - 1.9.76 released
+--------------------------------
+
+ * added swap() methods to memory_mapped_file classes in UNIXSTL and WinSTL
+ * corrected defect in VC++ detection of bad_alloc support (which only
+   affects VC++ 6 or earlier)
+
+
+26th February 2009 - 1.9.75 released
+------------------------------------
+
+ * tidied up COMSTL documentation
+ * tidied up scoped_handle use in winstl::memory_mapped_file
+ * added checks to detect at compile time accidental use of &stat_data with winstl::filesystem_traits<>::get_file_size()
+ * fixed defect in winstl::basic_reg_value::value_sz(), whereby the nul-terminator is included in the resultant string length
+ * tidied up winstl::basic_path, and added max_size() method
+ * tidied up winstl::basic_commandline_parser, added substring-constructor, and changed subscript operator to allow indexing (but not use) of the end element
+
+
+13th February 2009 - 1.9.74 released
+------------------------------------
+
+ * further implementation of special Borland version of stlsoft::scoped_handle
+ * further workarounds to Borland code generation defects in stlsoft::basic_simple_string and platformstl::basic_file_lines
+
+
+3rd February 2009 - 1.9.73 released
+-----------------------------------
+
+ * added partial support for Borland 5.9.x and 6.1.x; to support use of Borland with Pantheios
+ * re-applied VC++ 7.1 workaround eroneously removed in 1.9.70
+
+
+1st February 2009 - 1.9.72 released
+-----------------------------------
+
+ * added char_copy() methods to filesystem_traits classes in UNIXSTL, as part of move away from "unsafe" string functions
+ * fixed defect in winstl::squeeze_path() whereby wrong length is returned if buffer size is < 5 and the file length < buffer size
+ * removes unwanted trailing slash in application directory from winstl::basic_searchpath_sequence
+ * further work to remove dependency on "unsafe" string functions
+
+
+28th January 2009 - 1.9.71 released
+-----------------------------------
+
+ * fixed DMC++ incompatibility introduced in 1.9.70
+
+
+25th January 2009 - 1.9.70 released
+-----------------------------------
+
+ * improved stlsoft::find_next_token() function templates to ensure that all empty fields are reported to caller
+ * added char_copy() methods to filesystem_traits classes in InetSTL and WinSTL, as part of move away from "unsafe" string functions
+ * minor enhancements to platformstl::readdir_sequence, to disambiguate constructor overloads
+ * removed all "unsafe" string functions from winstl::basic_findfile_sequence class template and supporting components
+ * improved winstl::basic_path class template to ensure proper behaviour in corner cases of use of push() and pop() methods
+
+
+23rd January 2009 - 1.9.69 released
+-----------------------------------
+
+ * improved robustness of winstl::path_squeeze
+ * more "Safe String" library compatibility changes
+
+
+19th January 2009 - 1.9.68 released
+-----------------------------------
+
+ * fix defect, and updated docs, for stlsoft::must_init utility class template
+
+
+17th January 2009 - 1.9.67 released
+-----------------------------------
+
+ * compatibility with GCC on Fedora on PPC
+ * correction of semantics of null_allocator
+
+
+4th January 2009 - 1.9.66 released
+----------------------------------
+
+ * compatibility with GCC 4.3's pedantic precedence warnings
+ * compatibility with SunPro compiler for limit_traits
+
+
+1st January 2009 - 1.9.65 released
+----------------------------------
+
+ * "Safe String" library compatibility changes
+
+
+28th December 2008 - 1.9.64 released
+------------------------------------
+
+ * fix to string access shims for VARIANT
+
+
+9th December 2008 - 1.9.63 released
+-----------------------------------
+
+ * optimised stlsoft::basic_string_view::reserve()
+ * enhanced compatibility for stlsoft::fixed_array_?d class templates
+
+
+1st December 2008 - 1.9.62 released
+-----------------------------------
+
+ * fixed defect in interface_cast<> and try_interface_cast<>
+ * improved compatibility with Visual C++ 9
+ * speculative support for Intel C/C++ 11.0
+ * fixed defect in winstl::to_SYSTEMTIME(DATE) overload
+
+
+19th November 2008 - 1.9.61 released
+------------------------------------
+
+ * better compatibility with SAPI.h for COMSTL's sapi_util.hpp
+ * documentation markup improvements for a number of files
+
+
+27th October 2008 - 1.9.60 released
+-----------------------------------
+
+ * added stlsoft::apply_const()
+ * added stlsoft/conversion/m2w.hpp
+
+
+25th October 2008 - 1.9.59 released
+-----------------------------------
+
+ * change in ATLSTL's property method helpers to avoid infinite loop in
+   Visual C++ 6 problem when implementing property puts to CComBSTR
+ * fixed compile error with GCC when using VARIANTs in C compilation units
+
+
+16th October 2008 - 1.9.58 released
+-----------------------------------
+
+ * fixed major defect introduced in 1.9.52 to WinSTL's time string access
+   shims
+ * fixed minor defects in COMSTL's VARIANT string access shims
+ * fixed defect in documentation generation whereby examples were omitted
+ * reduced compilation dependencies in STLSoft's time string access shims
+
+10th October 2008 - 1.9.57 released
+-----------------------------------
+
+ * addition of missing const_reference member type in various Windows
+   controls collection classes
+ * C / C++ compatibility fixes for COMSTL
+ * fix of minor non-standard name in winstl::int_to_string() supporting
+   class
+ * a large number of files were altered in minor ways, to do with whitespace
+   and the placement of * and & symbols
+ * several files' documentation markup was cleaned up
+
+1st October 2008 - 1.9.56 released
+----------------------------------
+
+ * a large number of minor enhancements to the documentation markup
+ * fixes to defects to include guards in UNIXSTL
+
+27th September 2008 - 1.9.55 released
+-------------------------------------
+
+ * corrected defects in stlsoft::wide2multibyte and stlsoft::multibyte2wide
+   conversion classes
+ * fixes to various x64 defects related to use of inappropriate calling
+   convention specifiers with use of dl_call
+ * sundry other modifications in internal pre-processor facilities and
+   small improvements to Watcom compatibility
+
+15th September 2008 - 1.9.54 released
+-------------------------------------
+
+ * added stlsoft::exception_string::truncate() method
+ * removed dependency of UDATE for to_FILETIME() and to_SYSTEMTIME() shim
+   overloads for DATE type
+
+14th September 2008 - 1.9.53 released
+-------------------------------------
+
+ * changed definition of STLSOFT_STATIC_ASSERT() to work with GCC
+ * defect defect in pre-condition enforcement of
+   winstl::system_traits::expand_environment_strings()
+
+11th September 2008 - 1.9.52 released
+-------------------------------------
+
+ * fixed for warnings in 64-bit compilation (VC9) in WinSTL string access
+   shims for SYSTEMTIME; also added extra safeguard against external race
+   condition
+
+7th September 2008 - 1.9.51 released
+------------------------------------
+
+ * workaround for defective exception-throwing behaviour of
+   stlsoft::conversion_error with VC6
+ * fixed defect in WinSTL string access shims for SYSTEMTIME that faults
+   when asked to process an invalid time value
+
+3rd September 2008 - 1.9.50 released
+------------------------------------
+
+ * added stlsoft character conversion typedefs m2w, w2m, t2m, m2t
+ * fix for VC++ 6 defect in requiring return code after exception throw
+
+2nd September 2008 - 1.9.49 released
+------------------------------------
+
+ * fix for DMC++ defect in winstl::reg_value function template definition
+ * added winstl character conversion typedefs m2w, w2m, t2m, m2t
+
+23rd August 2008 - 1.9.48 released
+----------------------------------
+
+ * added comstl/util/CY_functions.h
+ * added comstl/util/DECIMAL_functions.h
+ * added comstl/util/VARIANT_functions.h
+ * added comstl::variant conversion constructor for DECIMAL
+ * fixed bug in stlsoft::trim_all()
+ * added winstl::basic_error_desc<>::empty()
+
+12th August 2008 - 1.9.47 released
+----------------------------------
+
+ * enhancement of stlsoft::read_line() function template to work with
+   various line-termination sequences
+ * enhancement of fixed array classes to allow zero size
+ * winstl::clipboard_format_sequence enhancements to iterator type profile
+ * winstl::clipboard_scope defect fix and documentation enhancement
+ * syntactic modification of contract enforcement statements to a large
+   number of components to address warnings with GCC 4.3 in pedantic mode
+
+11th August 2008 - 1.9.46 released
+----------------------------------
+
+ * defect fixes to stlsoft::pod_vector
+ * reduced coupling, and increased functionality, of stlsoft::format_bytes()
+ * sundry compatibility improvements
+
+8th June 2008 - 1.9.45 released
+-------------------------------
+
+ * enhancement to stlsoft::to_uint64 conversion shim for ULARGE_INTEGER
+ * more Win-64 compatibility changes
+ * fixes to winstl::basic_path class template
+
+1st June 2008 - 1.9.44 released
+-------------------------------
+
+ * bug fix in winstl/shims/access/string/LSA_UNICODE_STRING.hpp, required
+   for newly released flecxx library
+
+31st May 2008 - 1.9.43 released
+-------------------------------
+
+ * more Win64-compatibility modifications
+ * more Safe String library modifications
+ * expanded the stlsoft::get_FILE_ptr attribute shim for MFC's CStdioFile
+
+17th May 2008 - 1.9.42 released
+-------------------------------
+
+ * more Win64-compatibility modifications
+ * more Safe String library modifications
+
+13th May 2008 - 1.9.41 released
+-------------------------------
+
+ * bug fix for GCC compilation on PowerPC that was broken with 1.9.40
+
+13th May 2008 - 1.9.40 released
+-------------------------------
+
+ * significant refactoring of compiler-capability discrimination for GCC and
+   VC++
+ * compatibility fixes for SunPro compilers
+ * bug fix in integral_printf_traits (introduced in 1.9.39)
+
+11th May 2008 - 1.9.39 released
+-------------------------------
+
+ * next tranche of changes for Win64 support
+
+4th May 2008 - 1.9.38 released
+------------------------------
+
+ * next tranche of changes for Win64 support
+
+3rd May 2008 - 1.9.37 released
+------------------------------
+
+ * first tranche of changes for Win64 support
+
+30th April 2008 - 1.9.36 released
+---------------------------------
+
+ * added support for FreeBSD operating system
+
+29th April 2008 - 1.9.35 released
+---------------------------------
+
+ * added value_multi_sz() to winstl::reg_value
+
+25th April 2008 - 1.9.34 released
+---------------------------------
+
+ * renamed winstl::get_hwnd attribute shim to winstl::get_HWND
+ * minor adjustments to Sun Pro support
+ * library feature discrimination symbol cleanup
+ * refactored error/exception handling in Windows Registry library
+
+25th April 2008 - 1.9.33 released
+---------------------------------
+
+ * added support for the SunPro C and C++ compilers
+ * various mods to ensure headers are self-contained when used with
+    Windows "lean and mean" suppression symbols
+
+22nd April 2008 - 1.9.32 released
+---------------------------------
+
+ * fix for VC++ 8/9 linker error in the allocator_selector
+ * refactoring of string access shim headers for lightweight compilation
+
+13th April 2008 - 1.9.31 released
+---------------------------------
+
+ * exception hierarchy refactoring
+ * bug fix to stlsoft::must_init
+
+3rd April 2008 - 1.9.30 released
+--------------------------------
+
+ * tidying of distribution
+
+3rd March 2008 - 1.9.29 released
+--------------------------------
+
+ * more preparation for safe string library compatibility
+
+24th March 2008 - 1.9.28 released
+---------------------------------
+
+ * enhancement to winstl::reg_key class
+ * preparation for safe string library compatibility
+ * bug fix for C-compilation in winstl/controls/functions.h
+
+17th March 2008 - 1.9.27 released
+---------------------------------
+
+ * support for Visual C++ 9 (Visual C++ 2008)
+ * fixed pre-processor typo that breaks GCC -pedantic
+ * added item-data functions for list-/combo-boxes
+
+15th March 2008 - 1.9.26 released
+---------------------------------
+
+ * definition, where appropriate, of STLSOFT_CF_FUNCTION_SYMBOL_SUPPORT,
+   denoting that a particular compiler supports the __FUNCTION__
+   pre-processor symbol
+
+9th March 2008 - 1.9.24 released
+--------------------------------
+
+ * wholesale increase of use of forward include guards, to reduce
+   compilation times
+
+8th March 2008 - 1.9.24 released
+--------------------------------
+
+ * finishing up some missed std::swap refactoring
+
+20th February 2008 - 1.9.23 released
+------------------------------------
+
+ * fix for minor compiler compatibility issue
+
+8th February 2008 - 1.9.22 released
+-----------------------------------
+
+ * refactored unixstl/synch/util/features.h
+
+5th February 2008 - 1.9.21 released
+-----------------------------------
+
+ * fixed a bug in platformstl/synch/util/features.h
+
+3rd February 2008 - 1.9.20 released
+-----------------------------------
+
+ * added new stlsoft::singlethreaded_tss_index synchronisation utility class
+
+2nd February 2008 - 1.9.19 released
+-----------------------------------
+
+ * enhancement of SAPI utility header for COMSTL
+
+27th January 2008 - 1.9.18 released
+-----------------------------------
+
+ * enhancement of STLSoft's integral_printf_trait component to support
+   Pantheios 1.0.1 beta 91
+ * release of SAPI utility header for COMSTL
+
+5th January 2008 - 1.9.17 released
+----------------------------------
+
+ * bug fix for UNIXSTL on Leopard/GCC 4.0.1
+
+29th December 2007 - 1.9.16 released
+------------------------------------
+
+ * bug fix in stlsoft::printf_traits
+ * bug fix in winstl::GetTimeFormat_msA/W
+ * other minor bug fixes
+ * minor feature enhancements & refactoring
+
+24th December 2007 - 1.9.15 released
+------------------------------------
+
+ * minor bug fix for C compilation
+
+23rd December 2007 - 1.9.14 released
+------------------------------------
+
+ * updated stlsoft version (_STLSOFT_VER) missing in 1.9.13
+
+20th December 2007 - 1.9.13 released
+------------------------------------
+
+ * features enhancements to fixed array classes
+
+19th December 2007 - 1.9.12 released
+------------------------------------
+
+ * features enhancements to fixed array classes
+
+17th December 2007 - 1.9.11 released
+------------------------------------
+
+ * minor modifications and bug-fixes
+
+10th December 2007 - 1.9.10 released
+------------------------------------
+
+ * bug fix for recls (http://recls.org/)
+ * minor feature enhancements
+
+19th November 2007 - 1.9.9 released
+-----------------------------------
+
+ shim fixes in UNIXSTL
+
+18th November 2007 - 1.9.8 released
+-----------------------------------
+
+ compatibility with Borland C/C++ 5.82 (Turbo C++); now supports VOLE
+
+16th November 2007 - 1.9.7 released
+-----------------------------------
+
+ Win 64-bit compilation support; not perfect yet
+ Borland Turbo C++ v5.82 support; not perfect yet
+ new stlsoft::get_FILE_ptr shim
+ new platformstl::file_lines class
+ new winstl::to_DATE conversion shim
+ major enhancements to unixstl::memory_mapped_file
+ multiple compiler compatibility enhancement fixes
+ minor compilation warning fixes
+
+25th September 2007 - 1.9.6 released
+------------------------------------
+
+ bug fixes - mostly minor
+
+
+2nd August 2007 - 1.9.5 released
+--------------------------------
+
+ minor additions and bug fixes
+
+
+2nd August 2007 - 1.9.4 released
+--------------------------------
+
+ __VA_ARGS__ compiler-support detection
+
+
+29th July 2007 - 1.9.3 released
+-------------------------------
+
+ A couple of small additions.
+
+ Documentation still outstanding ... resolved soon. Hopefully.
+
+
+2nd June 2007 - 1.9.2 released
+------------------------------
+
+ A few changes and updates to various components, primarily to support the
+ release of recls 1.8.10 (http://recls.org/downloads.html).
+
+ The elephant in the living room is still the lack of documentation. It's
+ coming ... honest.
+
+
+30th April 2007 - 1.9.1 released (for Extended STL, volume 1: CD)
+-----------------------------------------------------------------
+
+ There has been an enormous amount of change in STLSoft from the last
+ release, 1.8.9 (October 2005), to the new release, 1.9.1 (April/May 2007).
+
+ Consequently, I just can't muster the effort at this time to detail the
+ entire set of changes. The one big change I will note, however, is that
+ the library files no longer reside in the root directory, e.g.
+
+   comstl_bstr_functions.h
+
+ and are now in appropriate sub-directories under the sub-project
+ sub-directories, e.g.
+
+   comstl/string/bstr_functions.h
+
+
+=============================== End of file ================================

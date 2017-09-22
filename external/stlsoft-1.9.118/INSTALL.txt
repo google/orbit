@@ -1,0 +1,46 @@
+============================================================================
+STLSoft - Install
+
+; Created:  29th March 2002
+; Updated:  31st May 2014
+
+============================================================================
+
+ STLSoft is a 100% header-only library, and so requires no building.
+
+ It is recommended that you define an STLSOFT environment variable.
+ 
+ For example, if you're using UNIX and you install
+  to /usr/local/stlsoft/stlsoft-1.9.118 then you should set the environment
+  variable STLSOFT to /usr/local/stlsoft/stlsoft-1.9.118 in which case the
+  file stlsoft/stlsoft.h will be located in
+  $STLSOFT/include/stlsoft/stlsoft.h
+  
+ Conversely, if you're using Windows and you intall
+  to C:\3pty\STLSoft\stlsoft-1.9.118 then you should set the environment
+  variable STLSoft to C:\3pty\STLSoft\stlsoft-1.9.118 in which case the
+  file stlsoft/stlsoft.h will be located in
+  C:\3pty\STLSoft\stlsoft-1.9.118\stlsoft\stlsoft.h
+
+ The makefiles / project files of several other open-source projects expect
+ this symbol, including:
+
+  * b64             http://synesis.com.au/software/b64.html
+  * FastFormat      http://fastformat.org/
+  * flecxx          http://flecxx.org/
+  * Open-RJ         http://openrj.org/
+  * Pantheios       http://pantheios.org/
+  * recls           http://recls.org/
+  * shwild          http://shwild.org/
+  * xContract       http://xcontract.org/
+  * xCover          http://xcover.org/
+  * xTests          http://xtests.org/
+
+ If you're using STLSoft on UNIX, you might want to apply dos2unix over all
+ the files before using it. You *must* do this if you're using the SunPro
+ C compiler.
+
+ NOTE: If you're using STLSoft 1.10 in alpha (delta) form, please consult
+	FAQ #6 in the accompanying FAQ.txt file.
+
+=============================== End of file ================================

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!-- qtpropertybrowser.cpp -->
+<head>
+  <title>QtAbstractPropertyManager Class Reference</title>
+  <link href="classic.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td align="left" valign="top" width="32"><img src="images/qt-logo.png" align="left" width="57" height="67" border="0" /></td>
+<td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a></td>
+</tr></table><h1 class="title">QtAbstractPropertyManager Class Reference</h1>
+<p>The QtAbstractPropertyManager provides an interface for property managers. <a href="#details">More...</a></p>
+<pre> #include &lt;QtAbstractPropertyManager&gt;</pre><p>Inherits <a href="http://qt.nokia.com/doc/4.6/qobject.html">QObject</a>.</p>
+<p>Inherited by <a href="qtboolpropertymanager.html">QtBoolPropertyManager</a>, <a href="qtcharpropertymanager.html">QtCharPropertyManager</a>, <a href="qtcolorpropertymanager.html">QtColorPropertyManager</a>, <a href="qtcursorpropertymanager.html">QtCursorPropertyManager</a>, <a href="qtdatepropertymanager.html">QtDatePropertyManager</a>, <a href="qtdatetimepropertymanager.html">QtDateTimePropertyManager</a>, <a href="qtdoublepropertymanager.html">QtDoublePropertyManager</a>, <a href="qtenumpropertymanager.html">QtEnumPropertyManager</a>, <a href="qtflagpropertymanager.html">QtFlagPropertyManager</a>, <a href="qtfontpropertymanager.html">QtFontPropertyManager</a>, <a href="qtgrouppropertymanager.html">QtGroupPropertyManager</a>, <a href="qtintpropertymanager.html">QtIntPropertyManager</a>, <a href="qtkeysequencepropertymanager.html">QtKeySequencePropertyManager</a>, <a href="qtlocalepropertymanager.html">QtLocalePropertyManager</a>, <a href="qtpointfpropertymanager.html">QtPointFPropertyManager</a>, <a href="qtpointpropertymanager.html">QtPointPropertyManager</a>, <a href="qtrectfpropertymanager.html">QtRectFPropertyManager</a>, <a href="qtrectpropertymanager.html">QtRectPropertyManager</a>, <a href="qtsizefpropertymanager.html">QtSizeFPropertyManager</a>, <a href="qtsizepolicypropertymanager.html">QtSizePolicyPropertyManager</a>, <a href="qtsizepropertymanager.html">QtSizePropertyManager</a>, <a href="qtstringpropertymanager.html">QtStringPropertyManager</a>, <a href="qttimepropertymanager.html">QtTimePropertyManager</a>, and <a href="qtvariantpropertymanager.html">QtVariantPropertyManager</a>.</p>
+<ul>
+<li><a href="qtabstractpropertymanager-members.html">List of all members, including inherited members</a></li>
+</ul>
+<hr />
+<a name="public-functions"></a>
+<h2>Public Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#QtAbstractPropertyManager">QtAbstractPropertyManager</a></b> ( QObject * <i>parent</i> = 0 )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"></td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#dtor.QtAbstractPropertyManager">~QtAbstractPropertyManager</a></b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QtProperty * </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#addProperty">addProperty</a></b> ( const QString &amp; <i>name</i> = QString() )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#clear">clear</a></b> () const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">QSet&lt;QtProperty *&gt; </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#properties">properties</a></b> () const</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>29 public functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-functions">QObject</a></li>
+</ul>
+<hr />
+<a name="signals"></a>
+<h2>Signals</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#propertyChanged">propertyChanged</a></b> ( QtProperty * <i>property</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#propertyDestroyed">propertyDestroyed</a></b> ( QtProperty * <i>property</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#propertyInserted">propertyInserted</a></b> ( QtProperty * <i>newProperty</i>, QtProperty * <i>parentProperty</i>, QtProperty * <i>precedingProperty</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#propertyRemoved">propertyRemoved</a></b> ( QtProperty * <i>property</i>, QtProperty * <i>parent</i> )</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>1 signal inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#signals">QObject</a></li>
+</ul>
+<hr />
+<a name="protected-functions"></a>
+<h2>Protected Functions</h2>
+<table class="alignedsummary" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr><td class="memItemLeft" align="right" valign="top">virtual QtProperty * </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#createProperty">createProperty</a></b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual bool </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#hasValue">hasValue</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#initializeProperty">initializeProperty</a></b> ( QtProperty * <i>property</i> ) = 0</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual void </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#uninitializeProperty">uninitializeProperty</a></b> ( QtProperty * <i>property</i> )</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual QIcon </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#valueIcon">valueIcon</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">virtual QString </td><td class="memItemRight" valign="bottom"><b><a href="qtabstractpropertymanager.html#valueText">valueText</a></b> ( const QtProperty * <i>property</i> ) const</td></tr>
+</table>
+<ul>
+<li><div bar="2" class="fn"></div>7 protected functions inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-functions">QObject</a></li>
+</ul>
+<h3>Additional Inherited Members</h3>
+<ul>
+<li><div class="fn"></div>1 property inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>1 public slot inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-slots">QObject</a></li>
+<li><div class="fn"></div>1 public type inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#public-variables">QObject</a></li>
+<li><div class="fn"></div>4 static public members inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>2 protected variables inherited from <a href="http://qt.nokia.com/doc/4.6/qobject.html#protected-variables">QObject</a></li>
+</ul>
+<a name="details"></a>
+<hr />
+<h2>Detailed Description</h2>
+<p>The QtAbstractPropertyManager provides an interface for property managers.</p>
+<p>A manager can create and manage properties of a given type, and is used in conjunction with the <a href="qtabstractpropertybrowser.html">QtAbstractPropertyBrowser</a> class.</p>
+<p>When using a property browser widget, the properties are created and managed by implementations of the QtAbstractPropertyManager class. To ensure that the properties' values will be displayed using suitable editing widgets, the managers are associated with objects of <a href="qtabstracteditorfactory.html">QtAbstractEditorFactory</a> subclasses. The property browser will use these associations to determine which factories it should use to create the preferred editing widgets.</p>
+<p>The QtAbstractPropertyManager class provides common functionality like creating a property using the <a href="qtabstractpropertymanager.html#addProperty">addProperty</a>() function, and retrieving the properties created by the manager using the <a href="qtabstractpropertymanager.html#properties">properties</a>() function. The class also provides signals that are emitted when the manager's properties change: <a href="qtabstractpropertymanager.html#propertyInserted">propertyInserted</a>(), <a href="qtabstractpropertymanager.html#propertyRemoved">propertyRemoved</a>(), <a href="qtabstractpropertymanager.html#propertyChanged">propertyChanged</a>() and <a href="qtabstractpropertymanager.html#propertyDestroyed">propertyDestroyed</a>().</p>
+<p>QtAbstractPropertyManager subclasses are supposed to provide their own type specific API. Note that several ready-made implementations are available:</p>
+<ul>
+<li><a href="qtboolpropertymanager.html">QtBoolPropertyManager</a></li>
+<li><a href="qtcolorpropertymanager.html">QtColorPropertyManager</a></li>
+<li><a href="qtdatepropertymanager.html">QtDatePropertyManager</a></li>
+<li><a href="qtdatetimepropertymanager.html">QtDateTimePropertyManager</a></li>
+<li><a href="qtdoublepropertymanager.html">QtDoublePropertyManager</a></li>
+<li><a href="qtenumpropertymanager.html">QtEnumPropertyManager</a></li>
+<li><a href="qtflagpropertymanager.html">QtFlagPropertyManager</a></li>
+<li><a href="qtfontpropertymanager.html">QtFontPropertyManager</a></li>
+<li><a href="qtgrouppropertymanager.html">QtGroupPropertyManager</a></li>
+<li><a href="qtintpropertymanager.html">QtIntPropertyManager</a></li>
+<li><a href="qtpointpropertymanager.html">QtPointPropertyManager</a></li>
+<li><a href="qtrectpropertymanager.html">QtRectPropertyManager</a></li>
+<li><a href="qtsizepropertymanager.html">QtSizePropertyManager</a></li>
+<li><a href="qtsizepolicypropertymanager.html">QtSizePolicyPropertyManager</a></li>
+<li><a href="qtstringpropertymanager.html">QtStringPropertyManager</a></li>
+<li><a href="qttimepropertymanager.html">QtTimePropertyManager</a></li>
+<li><a href="qtvariantpropertymanager.html">QtVariantPropertyManager</a></li>
+</ul>
+<p>See also <a href="qtabstracteditorfactorybase.html">QtAbstractEditorFactoryBase</a>, <a href="qtabstractpropertybrowser.html">QtAbstractPropertyBrowser</a>, and <a href="qtproperty.html">QtProperty</a>.</p>
+<hr />
+<h2>Member Function Documentation</h2>
+<h3 class="fn"><a name="QtAbstractPropertyManager"></a>QtAbstractPropertyManager::QtAbstractPropertyManager ( <a href="http://qt.nokia.com/doc/4.6/qobject.html">QObject</a> * <i>parent</i> = 0 )</h3>
+<p>Creates an abstract property manager with the given <i>parent</i>.</p>
+<h3 class="fn"><a name="dtor.QtAbstractPropertyManager"></a>QtAbstractPropertyManager::~QtAbstractPropertyManager ()</h3>
+<p>Destroys the manager. All properties created by the manager are destroyed.</p>
+<h3 class="fn"><a name="addProperty"></a><a href="qtproperty.html">QtProperty</a> * QtAbstractPropertyManager::addProperty ( const <a href="http://qt.nokia.com/doc/4.6/qstring.html">QString</a> &amp; <i>name</i> = QString() )</h3>
+<p>Creates a property with the given <i>name</i> which then is owned by this manager.</p>
+<p>Internally, this function calls the <a href="qtabstractpropertymanager.html#createProperty">createProperty</a>() and <a href="qtabstractpropertymanager.html#initializeProperty">initializeProperty</a>() functions.</p>
+<p>See also <a href="qtabstractpropertymanager.html#initializeProperty">initializeProperty</a>() and <a href="qtabstractpropertymanager.html#properties">properties</a>().</p>
+<h3 class="fn"><a name="clear"></a>void QtAbstractPropertyManager::clear () const</h3>
+<p>Destroys all the properties that this manager has created.</p>
+<p>See also <a href="qtabstractpropertymanager.html#propertyDestroyed">propertyDestroyed</a>() and <a href="qtabstractpropertymanager.html#uninitializeProperty">uninitializeProperty</a>().</p>
+<h3 class="fn"><a name="createProperty"></a><a href="qtproperty.html">QtProperty</a> * QtAbstractPropertyManager::createProperty ()&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Creates a property.</p>
+<p>The base implementation produce <a href="qtproperty.html">QtProperty</a> instances; Reimplement this function to make this manager produce objects of a <a href="qtproperty.html">QtProperty</a> subclass.</p>
+<p>See also <a href="qtabstractpropertymanager.html#addProperty">addProperty</a>() and <a href="qtabstractpropertymanager.html#initializeProperty">initializeProperty</a>().</p>
+<h3 class="fn"><a name="hasValue"></a>bool QtAbstractPropertyManager::hasValue ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Returns whether the given <i>property</i> has a value.</p>
+<p>The default implementation of this function returns true.</p>
+<p>See also <a href="qtproperty.html#hasValue">QtProperty::hasValue</a>().</p>
+<h3 class="fn"><a name="initializeProperty"></a>void QtAbstractPropertyManager::initializeProperty ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> )&nbsp;&nbsp;<tt> [pure virtual protected]</tt></h3>
+<p>This function is called whenever a new valid property pointer has been created, passing the pointer as parameter.</p>
+<p>The purpose is to let the manager know that the <i>property</i> has been created so that it can provide additional attributes for the new property, e.g&#x2e; <a href="qtintpropertymanager.html">QtIntPropertyManager</a> adds <a href="qtintpropertymanager.html#value">value</a>, <a href="qtintpropertymanager.html#minimum">minimum</a> and <a href="qtintpropertymanager.html#maximum">maximum</a> attributes. Since each manager subclass adds type specific attributes, this function is pure virtual and must be reimplemented when deriving from the <a href="qtabstractpropertymanager.html">QtAbstractPropertyManager</a> class.</p>
+<p>See also <a href="qtabstractpropertymanager.html#addProperty">addProperty</a>() and <a href="qtabstractpropertymanager.html#createProperty">createProperty</a>().</p>
+<h3 class="fn"><a name="properties"></a><a href="http://qt.nokia.com/doc/4.6/qset.html">QSet</a>&lt;<a href="qtproperty.html">QtProperty</a> *&gt; QtAbstractPropertyManager::properties () const</h3>
+<p>Returns the set of properties created by this manager.</p>
+<p>See also <a href="qtabstractpropertymanager.html#addProperty">addProperty</a>().</p>
+<h3 class="fn"><a name="propertyChanged"></a>void QtAbstractPropertyManager::propertyChanged ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted whenever a property's data changes, passing a pointer to the <i>property</i> as parameter.</p>
+<p>Note that signal is only emitted for properties that are created by this manager.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#itemChanged">QtAbstractPropertyBrowser::itemChanged</a>().</p>
+<h3 class="fn"><a name="propertyDestroyed"></a>void QtAbstractPropertyManager::propertyDestroyed ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted when the specified <i>property</i> is about to be destroyed.</p>
+<p>Note that signal is only emitted for properties that are created by this manager.</p>
+<p>See also <a href="qtabstractpropertymanager.html#clear">clear</a>() and <a href="qtabstractpropertymanager.html#uninitializeProperty">uninitializeProperty</a>().</p>
+<h3 class="fn"><a name="propertyInserted"></a>void QtAbstractPropertyManager::propertyInserted ( <a href="qtproperty.html">QtProperty</a> * <i>newProperty</i>, <a href="qtproperty.html">QtProperty</a> * <i>parentProperty</i>, <a href="qtproperty.html">QtProperty</a> * <i>precedingProperty</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted when a new subproperty is inserted into an existing property, passing pointers to the <i>newProperty</i>, <i>parentProperty</i> and <i>precedingProperty</i> as parameters.</p>
+<p>If <i>precedingProperty</i> is 0, the <i>newProperty</i> was inserted at the beginning of the <i>parentProperty</i>'s subproperties list.</p>
+<p>Note that signal is emitted only if the <i>parentProperty</i> is created by this manager.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#itemInserted">QtAbstractPropertyBrowser::itemInserted</a>().</p>
+<h3 class="fn"><a name="propertyRemoved"></a>void QtAbstractPropertyManager::propertyRemoved ( <a href="qtproperty.html">QtProperty</a> * <i>property</i>, <a href="qtproperty.html">QtProperty</a> * <i>parent</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted when a subproperty is removed, passing pointers to the removed <i>property</i> and the <i>parent</i> property as parameters.</p>
+<p>Note that signal is emitted only when the <i>parent</i> property is created by this manager.</p>
+<p>See also <a href="qtabstractpropertybrowser.html#itemRemoved">QtAbstractPropertyBrowser::itemRemoved</a>().</p>
+<h3 class="fn"><a name="uninitializeProperty"></a>void QtAbstractPropertyManager::uninitializeProperty ( <a href="qtproperty.html">QtProperty</a> * <i>property</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>This function is called just before the specified <i>property</i> is destroyed.</p>
+<p>The purpose is to let the property manager know that the <i>property</i> is being destroyed so that it can remove the property's additional attributes.</p>
+<p>See also <a href="qtabstractpropertymanager.html#clear">clear</a>() and <a href="qtabstractpropertymanager.html#propertyDestroyed">propertyDestroyed</a>().</p>
+<h3 class="fn"><a name="valueIcon"></a><a href="http://qt.nokia.com/doc/4.6/qicon.html">QIcon</a> QtAbstractPropertyManager::valueIcon ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Returns an icon representing the current state of the given <i>property</i>.</p>
+<p>The default implementation of this function returns an invalid icon.</p>
+<p>See also <a href="qtproperty.html#valueIcon">QtProperty::valueIcon</a>().</p>
+<h3 class="fn"><a name="valueText"></a><a href="http://qt.nokia.com/doc/4.6/qstring.html">QString</a> QtAbstractPropertyManager::valueText ( const <a href="qtproperty.html">QtProperty</a> * <i>property</i> ) const&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>Returns a string representing the current state of the given <i>property</i>.</p>
+<p>The default implementation of this function returns an empty string.</p>
+<p>See also <a href="qtproperty.html#valueText">QtProperty::valueText</a>().</p>
+<p /><address><hr /><div align="center">
+<table width="100%" cellspacing="0" border="0"><tr class="address">
+<td width="30%" align="left">Copyright &copy; 2010 Nokia Corporation and/or its subsidiary(-ies)</td>
+<td width="40%" align="center"><a href="http://qt.nokia.com/doc/trademarks.html">Trademarks</a></td>
+<td width="30%" align="right"><div align="right">Qt Solutions</div></td>
+</tr></table></div></address></body>
+</html>

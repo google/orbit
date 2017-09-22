@@ -1,0 +1,174 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="include\synchronization">
+      <UniqueIdentifier>{ca81a43e-2070-47cf-9b63-883e4e0d0437}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\scheduling">
+      <UniqueIdentifier>{a584993f-6103-45c0-a0ee-fb70eafe81b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\parallel_algorithms">
+      <UniqueIdentifier>{ecdbe945-13ab-45f5-afd4-04effcbb8b86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\scheduling\_tasks">
+      <UniqueIdentifier>{f9c935e2-64e1-4b65-a016-83d3db886fd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\synchronization\interface">
+      <UniqueIdentifier>{d8949f15-c2a9-4c7a-85c7-6285f604207a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\synchronization\win">
+      <UniqueIdentifier>{b0b5fc0a-11ff-414d-896c-1b4628b77866}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\scheduling\_workers">
+      <UniqueIdentifier>{3c69bfd8-f566-4365-bb69-f9b3b2df27d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\scheduling\_groups">
+      <UniqueIdentifier>{703cc9c8-4e70-417b-9499-dcef50807375}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\threading">
+      <UniqueIdentifier>{e4098ca4-bef3-4996-876b-0d59fdc0d2e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\threading\_impl">
+      <UniqueIdentifier>{b80e97f0-058b-45b4-9448-79c2ae895ed1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\_utils">
+      <UniqueIdentifier>{ccd08aa3-26d9-4843-8644-9e1dcf59d308}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\parallel_algorithms\_partitioners">
+      <UniqueIdentifier>{a1f45b61-79d6-41b7-b56e-1db52ec8034c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\oqpi.hpp" />
+    <ClInclude Include="..\..\include\oqpi\scheduling.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\synchronization.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\parallel_algorithms.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\task_base.hpp">
+      <Filter>include\scheduling\_tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\task_type.hpp">
+      <Filter>include\scheduling\_tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\task_notifier.hpp">
+      <Filter>include\scheduling\_tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\task.hpp">
+      <Filter>include\scheduling\_tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\task_context.hpp">
+      <Filter>include\scheduling\_tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\context_container.hpp">
+      <Filter>include\scheduling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\synchronization\interface\interface_event.hpp">
+      <Filter>include\synchronization\interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\synchronization\win\win_event.hpp">
+      <Filter>include\synchronization\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\synchronization\event.hpp">
+      <Filter>include\synchronization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\worker_base.hpp">
+      <Filter>include\scheduling\_workers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\task_handle.hpp">
+      <Filter>include\scheduling\_tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\worker.hpp">
+      <Filter>include\scheduling\_workers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\worker_context.hpp">
+      <Filter>include\scheduling\_workers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\synchronization\semaphore.hpp">
+      <Filter>include\synchronization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\synchronization\win\win_semaphore.hpp">
+      <Filter>include\synchronization\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\synchronization\interface\interface_semaphore.hpp">
+      <Filter>include\synchronization\interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\task_group_base.hpp">
+      <Filter>include\scheduling\_groups</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\task_group.hpp">
+      <Filter>include\scheduling\_groups</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\parallel_group.hpp">
+      <Filter>include\scheduling\_groups</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\sequence_group.hpp">
+      <Filter>include\scheduling\_groups</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\group_context.hpp">
+      <Filter>include\scheduling\_groups</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\parallel_algorithms\parallel_for.hpp">
+      <Filter>include\parallel_algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\parallel_algorithms\base_partitioner.hpp">
+      <Filter>include\parallel_algorithms\_partitioners</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\parallel_algorithms\simple_partitioner.hpp">
+      <Filter>include\parallel_algorithms\_partitioners</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\threading.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\threading\interface_thread.hpp">
+      <Filter>include\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\threading\this_thread.hpp">
+      <Filter>include\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\threading\thread.hpp">
+      <Filter>include\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\threading\thread_attributes.hpp">
+      <Filter>include\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\threading\win_thread.hpp">
+      <Filter>include\threading\_impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\empty_layer.hpp">
+      <Filter>include\_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\error_handling.hpp">
+      <Filter>include\_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\platform.hpp">
+      <Filter>include\_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\scheduler.hpp">
+      <Filter>include\scheduling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling\task_result.hpp">
+      <Filter>include\scheduling\_tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\parallel_algorithms\atomic_partitioner.hpp">
+      <Filter>include\parallel_algorithms\_partitioners</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\scheduling_helpers.hpp">
+      <Filter>include\_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oqpi\concurrent_queue.hpp">
+      <Filter>include\_utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="oqpi.natvis" />
+  </ItemGroup>
+</Project>
