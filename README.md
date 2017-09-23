@@ -1,5 +1,6 @@
 ![Alt text](logos/orbit_logo.png)
 
+**Download**  
 www.orbitprofiler.com
 
 **Orbit** is a standalone **C/C++** profiler for Windows. Its main purpose is to help developers visualize the execution flow of a complex application.
@@ -50,10 +51,11 @@ The current version of Orbit requires **Visual Studio 2015** and **Qt 5.8**.  Op
 **Workflow**
 1. Select a process in the list of currently running processes in the "Home" tab
 2. The list of loaded modules will appear on the bottom of the "Home" tab.  If a .pdb file was found for a module, it will appear in blue
-3. Right click on the module(s) for wich you want to load debug information and select "Load Pdb".  Wait a little bit for Orbit to parse the pdb.  Once its done, The "Functions", "Types" and "Globals" tabs will get populated.
-4. Select functions you wish to profile in the "Functions" tab by right clicking and choosing "Select"
-5. In the "Capture" tab, start profiling by pressing 'X'.  To stop profiling, press 'X' again.  You can zoom time using the scroll wheel.  To zoom vertically, hold 'CTRL' while scrolling.  You can also right-click and drag to zoom time.  Press A to Zoom All.
+3. Right click on the module(s) for which you want to load debug information and select "Load Pdb".  Wait a little bit for Orbit to parse the pdb.  Once its done, The "Functions", "Types" and "Globals" tabs will get populated.
+4. Select functions you wish to profile in the "Functions" tab by right clicking and choosing "Hook"
+5. In the "Capture" tab, start profiling by pressing 'X'.  To stop profiling, press 'X' again.  You can zoom time using the scroll wheel.  To zoom vertically, hold 'CTRL' while scrolling.  You can also right-click and drag to zoom time.  Press A to Zoom the last 2 seconds of capture.
 6. When you select a function in the "Capture" view, the full callstack will be available in the "Callstack" tab.  You can select functions to be profiled in the callstack tab as well.  Also, if code is available on your machine, it will be displayed in the "Code" tab.
+7.  You can select sections of the per-thread sampling event section to get a sampling report of your selection.
 
 Sessions
 Once you have loaded the debug information for your modules and have chosen functions of interest, you can save your profiling session so that you won't have to do this manually again.  To save a session, go to "File"->"Save Session"
