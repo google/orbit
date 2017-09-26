@@ -47,6 +47,21 @@ inline wstring s2ws( const std::string& str )
 }
 
 //-----------------------------------------------------------------------------
+inline std::string GetEnvVar( const char* a_Var )
+{
+    std::string var;
+    char* buf = nullptr;
+    size_t sz = 0;
+    if( _dupenv_s( &buf, &sz, a_Var ) == 0 && buf != nullptr )
+    {
+        var = buf;
+        free( buf );
+    }
+
+    return var;
+}
+
+//-----------------------------------------------------------------------------
 inline unsigned long long StringHash( const std::string & a_String )
 {
     return XXH64( a_String.data(), a_String.size(), 0xBADDCAFEDEAD10CC );

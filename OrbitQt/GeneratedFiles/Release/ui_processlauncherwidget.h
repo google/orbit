@@ -33,11 +33,13 @@ public:
     OrbitDataViewPanel *LiveProcessList;
     QFrame *frame;
     QGridLayout *gridLayout_2;
-    QPushButton *LaunchButton;
     QComboBox *ArgumentsComboBox;
-    QComboBox *ProcessComboBox;
-    QPushButton *BrowseButton;
+    QPushButton *LaunchButton;
     QCheckBox *checkBoxPause;
+    QPushButton *BrowseButton;
+    QComboBox *ProcessComboBox;
+    QComboBox *WorkingDirComboBox;
+    QPushButton *BrowseWorkingDirButton;
 
     void setupUi(QWidget *ProcessLauncherWidget)
     {
@@ -59,16 +61,26 @@ public:
         frame->setFrameShadow(QFrame::Raised);
         gridLayout_2 = new QGridLayout(frame);
         gridLayout_2->setObjectName(QStringLiteral("gridLayout_2"));
-        LaunchButton = new QPushButton(frame);
-        LaunchButton->setObjectName(QStringLiteral("LaunchButton"));
-
-        gridLayout_2->addWidget(LaunchButton, 1, 1, 1, 1);
-
         ArgumentsComboBox = new QComboBox(frame);
         ArgumentsComboBox->setObjectName(QStringLiteral("ArgumentsComboBox"));
         ArgumentsComboBox->setEditable(true);
 
-        gridLayout_2->addWidget(ArgumentsComboBox, 1, 0, 1, 1);
+        gridLayout_2->addWidget(ArgumentsComboBox, 2, 0, 1, 1);
+
+        LaunchButton = new QPushButton(frame);
+        LaunchButton->setObjectName(QStringLiteral("LaunchButton"));
+
+        gridLayout_2->addWidget(LaunchButton, 2, 1, 1, 1);
+
+        checkBoxPause = new QCheckBox(frame);
+        checkBoxPause->setObjectName(QStringLiteral("checkBoxPause"));
+
+        gridLayout_2->addWidget(checkBoxPause, 3, 0, 1, 1);
+
+        BrowseButton = new QPushButton(frame);
+        BrowseButton->setObjectName(QStringLiteral("BrowseButton"));
+
+        gridLayout_2->addWidget(BrowseButton, 0, 1, 1, 1);
 
         ProcessComboBox = new QComboBox(frame);
         ProcessComboBox->setObjectName(QStringLiteral("ProcessComboBox"));
@@ -76,15 +88,16 @@ public:
 
         gridLayout_2->addWidget(ProcessComboBox, 0, 0, 1, 1);
 
-        BrowseButton = new QPushButton(frame);
-        BrowseButton->setObjectName(QStringLiteral("BrowseButton"));
+        WorkingDirComboBox = new QComboBox(frame);
+        WorkingDirComboBox->setObjectName(QStringLiteral("WorkingDirComboBox"));
+        WorkingDirComboBox->setEditable(true);
 
-        gridLayout_2->addWidget(BrowseButton, 0, 1, 1, 1);
+        gridLayout_2->addWidget(WorkingDirComboBox, 1, 0, 1, 1);
 
-        checkBoxPause = new QCheckBox(frame);
-        checkBoxPause->setObjectName(QStringLiteral("checkBoxPause"));
+        BrowseWorkingDirButton = new QPushButton(frame);
+        BrowseWorkingDirButton->setObjectName(QStringLiteral("BrowseWorkingDirButton"));
 
-        gridLayout_2->addWidget(checkBoxPause, 2, 0, 1, 1);
+        gridLayout_2->addWidget(BrowseWorkingDirButton, 1, 1, 1, 1);
 
         splitter->addWidget(frame);
 
@@ -100,11 +113,12 @@ public:
     {
         ProcessLauncherWidget->setWindowTitle(QApplication::translate("ProcessLauncherWidget", "Form", Q_NULLPTR));
         LaunchButton->setText(QApplication::translate("ProcessLauncherWidget", "Launch", Q_NULLPTR));
-        BrowseButton->setText(QApplication::translate("ProcessLauncherWidget", "...", Q_NULLPTR));
 #ifndef QT_NO_TOOLTIP
         checkBoxPause->setToolTip(QApplication::translate("ProcessLauncherWidget", "Resume exectution by starting a capture", Q_NULLPTR));
 #endif // QT_NO_TOOLTIP
         checkBoxPause->setText(QApplication::translate("ProcessLauncherWidget", "Pause at Entry Point", Q_NULLPTR));
+        BrowseButton->setText(QApplication::translate("ProcessLauncherWidget", "...", Q_NULLPTR));
+        BrowseWorkingDirButton->setText(QApplication::translate("ProcessLauncherWidget", "...", Q_NULLPTR));
     } // retranslateUi
 
 };

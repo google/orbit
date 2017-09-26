@@ -682,9 +682,9 @@ void OrbitApp::OnOpenPdb( const std::wstring a_FileName )
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnLaunchProcess( const std::wstring a_ProcessName, const std::wstring a_Args )
+void OrbitApp::OnLaunchProcess( const std::wstring a_ProcessName, const std::wstring a_WorkingDir, const std::wstring a_Args )
 {
-    m_Debugger->LaunchProcess( a_ProcessName, a_Args );
+    m_Debugger->LaunchProcess( a_ProcessName, a_WorkingDir, a_Args );
 }
 
 //-----------------------------------------------------------------------------

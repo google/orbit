@@ -13,12 +13,12 @@ public:
     Debugger();
     ~Debugger();
 
-    void LaunchProcess( const std::wstring & a_ProcessName, const std::wstring & a_Args );
+    void LaunchProcess( const std::wstring & a_ProcessName, const std::wstring & a_WorkingDir, const std::wstring & a_Args );
     void MainTick();
     void SendThawMessage();
 
 protected:
-    void DebuggerThread( const std::wstring & a_ProcessName, const std::wstring & a_Args );
+    void DebuggerThread( const std::wstring & a_ProcessName, const std::wstring & a_WorkingDir, const std::wstring & a_Args );
 
 private:
     OrbitWaitLoop     m_WaitLoop;

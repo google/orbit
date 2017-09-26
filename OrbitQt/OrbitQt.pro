@@ -95,7 +95,7 @@ DISTFILES += \
     qtpropertybrowser/qtpropertybrowser.pri
 
 LIBS += -L$$PWD/../external/curl-7.52.1/lib/                  -llibcurl_imp
-LIBS += -L$$PWD/../external/glew-1.13.0/lib/Release/x64/      -lglew32
+LIBS += -L$$PWD/../external/glew-2.0.0/lib/Release/x64/      -lglew32
 LIBS +=                                                       -lopengl32
 LIBS +=                                                       -lglu32
 LIBS +=                                                       -dbghelp

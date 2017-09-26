@@ -7,7 +7,7 @@
 bool        OrbitVersion::s_NeedsUpdate;
 std::string OrbitVersion::s_LatestVersion;
 
-#define OrbitVersionStr "0.4.6"
+#define OrbitVersionStr "dev"
 
 //-----------------------------------------------------------------------------
 std::string OrbitVersion::GetVersion()

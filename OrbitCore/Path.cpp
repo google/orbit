@@ -27,7 +27,7 @@ std::wstring Path::GetExecutableName()
     dwLength = ::GetModuleFileNameW(NULL, pszBuffer, dwMaxChars);
     wstring exeFullName = wstring(pszBuffer);
 
-    // Clean up "../" insinde full path
+    // Clean up "../" inside full path
     wchar_t buffer[MAX_PATH];
     GetFullPathName( exeFullName.c_str(), MAX_PATH, buffer, nullptr );
     exeFullName = buffer;
@@ -253,8 +253,8 @@ wstring Path::GetProgramFilesPath()
 //-----------------------------------------------------------------------------
 wstring Path::GetAppDataPath()
 {
-    std::string drive = ws2s( GetMainDrive() );
-    std::string path = drive + "\\OrbitProfiler\\";
+    std::string appData = GetEnvVar( "APPDATA" );
+    std::string path = appData + "\\OrbitProfiler\\";
     _mkdir( path.c_str() );
     return s2ws( path );
 }
@@ -262,17 +262,7 @@ wstring Path::GetAppDataPath()
 //-----------------------------------------------------------------------------
 wstring Path::GetMainDrive()
 {
-    wstring mainDrive;
-
-    char* buf = nullptr;
-    size_t sz = 0;
-    if( _dupenv_s( &buf, &sz, "SystemDrive" ) == 0 && buf != nullptr )
-    {
-        mainDrive = s2ws( buf );
-        free( buf );
-    }
-
-    return mainDrive;
+    return s2ws( GetEnvVar("SystemDrive") );
 }
 
 //-----------------------------------------------------------------------------

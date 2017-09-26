@@ -23,9 +23,9 @@ Debugger::~Debugger()
 }
 
 //-----------------------------------------------------------------------------
-void Debugger::LaunchProcess( const std::wstring & a_ProcessName, const std::wstring & a_Args )
+void Debugger::LaunchProcess( const std::wstring & a_ProcessName, const std::wstring & a_WorkingDir, const std::wstring & a_Args )
 {
-    std::thread t( &Debugger::DebuggerThread, this, a_ProcessName, a_Args );
+    std::thread t( &Debugger::DebuggerThread, this, a_ProcessName, a_WorkingDir, a_Args );
     t.detach();
 }
 
@@ -142,7 +142,7 @@ HANDLE hProcess = 0;
 void* startAddress = 0;
 
 //-----------------------------------------------------------------------------
-void Debugger::DebuggerThread( const std::wstring & a_ProcessName, const std::wstring & a_Args )
+void Debugger::DebuggerThread( const std::wstring & a_ProcessName, const std::wstring & a_WorkingDir, const std::wstring & a_Args )
 {
     SetThreadName( GetCurrentThreadId(), "Debugger" );
 
@@ -152,7 +152,7 @@ void Debugger::DebuggerThread( const std::wstring & a_ProcessName, const std::ws
     si.cb = sizeof( si );
     ZeroMemory( &pi, sizeof( pi ) );
 
-    std::wstring dir = Path::GetDirectory( a_ProcessName );
+    std::wstring dir = a_WorkingDir.size() ? a_WorkingDir : Path::GetDirectory( a_ProcessName );
     std::wstring args = a_ProcessName + L" " + a_Args;
     TCHAR commandline[MAX_PATH + 1];
     int numChars = (int)min( (size_t)MAX_PATH, args.size() );

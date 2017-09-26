@@ -22,6 +22,8 @@ private slots:
 
     void on_checkBoxPause_clicked(bool checked);
 
+    void on_BrowseWorkingDirButton_clicked();
+
 private:
     Ui::ProcessLauncherWidget *ui;
 };

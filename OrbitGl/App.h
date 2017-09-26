@@ -42,7 +42,7 @@ public:
     void OnSaveCapture( const std::wstring a_FileName );
     void OnLoadCapture( const std::wstring a_FileName );
     void OnOpenPdb(const std::wstring a_FileName);
-    void OnLaunchProcess(const std::wstring a_ProcessName, const std::wstring a_Args );
+    void OnLaunchProcess(const std::wstring a_ProcessName, const std::wstring a_WorkingDir, const std::wstring a_Args );
     void Inject(const std::wstring a_FileName);
     void StartCapture();
     void StopCapture();

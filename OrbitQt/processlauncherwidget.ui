@@ -40,24 +40,27 @@
        <enum>QFrame::Raised</enum>
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
-       <item row="1" column="1">
-        <widget class="QPushButton" name="LaunchButton">
-         <property name="text">
-          <string>Launch</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
+       <item row="2" column="0">
         <widget class="QComboBox" name="ArgumentsComboBox">
          <property name="editable">
           <bool>true</bool>
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QComboBox" name="ProcessComboBox">
-         <property name="editable">
-          <bool>true</bool>
+       <item row="2" column="1">
+        <widget class="QPushButton" name="LaunchButton">
+         <property name="text">
+          <string>Launch</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QCheckBox" name="checkBoxPause">
+         <property name="toolTip">
+          <string>Resume exectution by starting a capture</string>
+         </property>
+         <property name="text">
+          <string>Pause at Entry Point</string>
          </property>
         </widget>
        </item>
@@ -68,13 +71,24 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QCheckBox" name="checkBoxPause">
-         <property name="toolTip">
-          <string>Resume exectution by starting a capture</string>
+       <item row="0" column="0">
+        <widget class="QComboBox" name="ProcessComboBox">
+         <property name="editable">
+          <bool>true</bool>
          </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QComboBox" name="WorkingDirComboBox">
+         <property name="editable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="BrowseWorkingDirButton">
          <property name="text">
-          <string>Pause at Entry Point</string>
+          <string>...</string>
          </property>
         </widget>
        </item>

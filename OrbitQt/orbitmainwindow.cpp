@@ -101,7 +101,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget *parent)
     CreateSelectionTab();
     CreatePluginTabs();
 
-    this->setWindowTitle("Orbit Profiler [beta]");
+    this->setWindowTitle("Orbit Profiler");
     this->setWindowIcon(QIcon("orbit.ico"));
 
     GMainWindow = this;
@@ -384,7 +384,7 @@ void OrbitMainWindow::OnReceiveMessage( const std::wstring & a_Message )
     }
     else if( a_Message == L"Update" )
     {
-        std::string title = "Orbit Profiler Beta";
+        std::string title = "Orbit Profiler";
 
         title += " | Version " + GOrbitApp->GetVersion();
         std::string msg = Format("A new version (%s) is available at <a href='www.telescopp.com/update'>telescopp.com/update</a>", OrbitVersion::s_LatestVersion.c_str() );
@@ -411,7 +411,7 @@ void OrbitMainWindow::OnAddToWatch( const class Variable* a_Variable )
 void OrbitMainWindow::GetLicense()
 {
     LicenseDialog dialog(this);
-    dialog.setWindowTitle("Orbit Profiler Beta");
+    dialog.setWindowTitle("Orbit Profiler");
     if( dialog.exec() == QDialog::Accepted )
     {
         GOrbitApp->SetLicense( dialog.GetLicense() );
@@ -425,7 +425,7 @@ void OrbitMainWindow::GetLicense()
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionAbout_triggered()
 {
-    std::string title = "Orbit Profiler Beta";
+    std::string title = "Orbit Profiler";
 
     title += " | Version " + GOrbitApp->GetVersion();
 
@@ -565,7 +565,7 @@ void OrbitMainWindow::on_actionLaunch_Process_triggered()
     QStringList list = QFileDialog::getOpenFileNames( this, "Select an executable to launch...", "", "*.exe" );
     for( auto & file : list )
     {
-        GOrbitApp->OnLaunchProcess( file.toStdWString(), TEXT("") );
+        GOrbitApp->OnLaunchProcess( file.toStdWString(), TEXT(""), TEXT("") );
         break;
     }
 }
