@@ -3,6 +3,8 @@
 **Download**  
 www.orbitprofiler.com
 
+![Alt text](logos/screenshot.png)
+
 **Orbit** is a standalone **C/C++** profiler for Windows. Its main purpose is to help developers visualize the execution flow of a complex application.
 
 The key differentiator with many existing tools is that no alteration to the target process is necessary. Orbit does not require you to change a single line of code.  It doesn't require you to recompile or even relaunch the application you want to debug. Everything is done seamlessly, right when you need it. It requires zero integration time and zero iteration time.
