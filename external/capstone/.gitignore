@@ -71,8 +71,8 @@ packages/freebsd/ports/devel/capstone/distinfo
 
 # VisualStudio
 ProjectUpgradeLog.log
-Debug/
-Release/
+# Debug/
+# Release/
 ipch/
 *.sdf
 *.opensdf
