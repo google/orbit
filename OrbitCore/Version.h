@@ -15,6 +15,7 @@ public:
 
     static std::string GenerateBetaLicense( const std::string & a_Email );
     static bool CheckLicense( const std::wstring & a_License );
+    static bool IsDev();
 
     static bool        s_NeedsUpdate;
     static std::string s_LatestVersion;

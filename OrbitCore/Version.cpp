@@ -16,6 +16,12 @@ std::string OrbitVersion::GetVersion()
 }
 
 //-----------------------------------------------------------------------------
+bool OrbitVersion::IsDev()
+{
+    return GetVersion() == std::string("dev");
+}
+
+//-----------------------------------------------------------------------------
 bool OrbitVersion::CheckLicense( const std::wstring & a_License )
 {
     std::vector< std::wstring > tokens = Tokenize( a_License, L"\r\n" );
@@ -42,8 +48,11 @@ static size_t WriteCallback( void *contents, size_t size, size_t nmemb, void *us
 //-----------------------------------------------------------------------------
 void OrbitVersion::CheckForUpdate()
 {
-    std::thread* thread = new std::thread( [&](){ CheckForUpdateThread(); } );
-    thread->detach();
+    if( !IsDev() )
+    {
+        std::thread* thread = new std::thread( [&](){ CheckForUpdateThread(); } );
+        thread->detach();
+    }
 }
 
 //-----------------------------------------------------------------------------
