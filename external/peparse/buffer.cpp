@@ -170,6 +170,7 @@ bounded_buffer *readFileToFileBuffer(const char *filePath) {
   HANDLE  hMap = CreateFileMapping(h, NULL, PAGE_READONLY, 0, 0, NULL);
 
   if(hMap == NULL) {
+	delete p;
     CloseHandle(h);
     PE_ERR(PEERR_MEM);
     return NULL;
