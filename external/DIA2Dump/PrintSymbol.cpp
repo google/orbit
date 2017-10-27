@@ -2976,7 +2976,7 @@ void PrintPropertyStorage(IDiaPropertyStorage *pPropertyStorage)
                 VariantClear((VARIANTARG *)&vt);
             }
 
-            SysFreeString(prop.lpwstrName);
+            SysFreeString(SysAllocString(prop.lpwstrName));
         }
 
         pEnumProps->Release();
