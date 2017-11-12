@@ -18,6 +18,7 @@ public:
 
     void UpdateWheelMomentum( float a_DeltaTime ) override;
     void MouseMoved(int a_X, int a_Y, bool a_Left, bool a_Right, bool a_Middle) override;
+    void LeftDoubleClick() override;
     void LeftDown(int a_X, int a_Y) override;
     void LeftUp() override;
     void Pick( int a_X, int a_Y );

@@ -157,6 +157,14 @@ void CaptureWindow::LeftUp()
 }
 
 //-----------------------------------------------------------------------------
+void CaptureWindow::LeftDoubleClick()
+{
+    GlCanvas::LeftDoubleClick();
+    m_DoubleClicking = true;
+    m_Picking = true;
+}
+
+//-----------------------------------------------------------------------------
 void CaptureWindow::Pick( int a_X, int a_Y )
 {
     // 4 bytes per pixel (RGBA), 1x1 bitmap
@@ -227,6 +235,11 @@ void CaptureWindow::SelectTextBox( class TextBox* a_TextBox )
     }
 
     FindCode( address );
+
+    if( m_DoubleClicking && a_TextBox )
+    {
+        m_TimeGraph.Zoom( a_TextBox );
+    }
 }
 
 //-----------------------------------------------------------------------------

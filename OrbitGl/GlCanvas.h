@@ -144,5 +144,6 @@ protected:
     Timer           m_UpdateTimer;
     PickingManager  m_PickingManager;
     bool            m_Picking;
+    bool            m_DoubleClicking;
 };
 

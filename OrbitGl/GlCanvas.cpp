@@ -62,6 +62,7 @@ GlCanvas::GlCanvas()
     m_IsSelecting = false;
     m_IsSelectingMiddle = false;
     m_Picking = false;
+    m_DoubleClicking = false;
     m_NeedsRedraw = true;
 
     m_WheelDelta = 0;
@@ -212,6 +213,8 @@ void GlCanvas::LeftDoubleClick()
 {
     ScopeImguiContext state(m_ImGuiContext);
     ImGuiIO& io = ImGui::GetIO();
+
+    m_DoubleClicking = true;
 
     // TODO:
     //io.ExternalDoubleClick = true;
@@ -524,6 +527,9 @@ void GlCanvas::Render( int a_Width, int a_Height )
     m_ImguiActive = ImGui::IsAnyItemActive();
 
     PostRender();
+
+    m_Picking = false;
+    m_DoubleClicking = false;
 }
 
 //-----------------------------------------------------------------------------

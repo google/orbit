@@ -102,6 +102,20 @@ void TimeGraph::ZoomAll()
 }
 
 //-----------------------------------------------------------------------------
+void TimeGraph::Zoom( const TextBox* a_TextBox )
+{
+    const Timer& timer = a_TextBox->GetTimer();
+
+    double start = (double)PerfCounter::get_microseconds(m_SessionMinCounter, timer.m_PerfCounter.get_start());
+    double end   = (double)PerfCounter::get_microseconds(m_SessionMinCounter, timer.m_PerfCounter.get_end());
+
+    double mid = (start+end)/2.0;
+    double extent = 1.1*(end-start)/2.0;
+
+    SetMinMax( mid-extent, mid+extent );
+}
+
+//-----------------------------------------------------------------------------
 double TimeGraph::GetSessionTimeSpanUs()
 {
     if( UpdateSessionMinMaxCounter() )

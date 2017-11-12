@@ -58,6 +58,7 @@ public:
     
     void Clear();
     void ZoomAll();
+    void Zoom( const TextBox* a_TextBox );
     void ZoomTime( float a_ZoomValue, double a_MouseRatio );
     void SetMinMax( double a_MinEpochTime, double a_MaxEpochTime );
     void PanTime( int a_InitialX, int a_CurrentX, int a_Width, double a_InitialTime );
