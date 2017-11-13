@@ -44,6 +44,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget *parent)
     OrbitApp::Init();
 
     ui->setupUi(this);
+    ui->ProcessesList->SetProcessParams();
 
     QList<int> sizes;
     sizes.append(5000);
@@ -397,6 +398,14 @@ void OrbitMainWindow::OnReceiveMessage( const std::wstring & a_Message )
     else if( StartsWith( a_Message, L"RuleEditor" ) )
     {
         m_RuleEditor->show();
+    }
+    else if (StartsWith(a_Message, L"UpdateProcessParams"))
+    {
+        ui->ProcessesList->UpdateProcessParams();
+    }
+    else if (StartsWith(a_Message, L"SetProcessParams"))
+    {
+        ui->ProcessesList->SetProcessParams();
     }
 }
 

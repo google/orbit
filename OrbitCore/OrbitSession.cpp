@@ -15,3 +15,12 @@ Session::~Session()
 {
 
 }
+
+//-----------------------------------------------------------------------------
+ORBIT_SERIALIZE(Session, 1)
+{
+    ORBIT_NVP_VAL(0, m_ProcessFullPath);
+    ORBIT_NVP_VAL(0, m_Modules);
+    ORBIT_NVP_VAL(1, m_WorkingDirectory);
+    ORBIT_NVP_VAL(1, m_Arguments);
+}

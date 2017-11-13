@@ -4,6 +4,7 @@
 
 #include "Params.h"
 #include "Core.h"
+#include "CoreApp.h"
 #include "ScopeTimer.h"
 #include "Serialization.h"
 #include <algorithm>
@@ -31,7 +32,7 @@ Params::Params() : m_LoadTypeInfo( true )
     
 }
 
-ORBIT_SERIALIZE( Params, 9 )
+ORBIT_SERIALIZE( Params, 10 )
 {
     ORBIT_NVP_VAL( 0, m_LoadTypeInfo );
     ORBIT_NVP_VAL( 0, m_SendCallStacks );
@@ -49,11 +50,15 @@ ORBIT_SERIALIZE( Params, 9 )
     ORBIT_NVP_VAL( 7, m_DiffArgs );
     ORBIT_NVP_VAL( 8, m_NumBytesAssembly );
     ORBIT_NVP_VAL( 9, m_HookOutputDebugString );
+    ORBIT_NVP_VAL( 10, m_ProcessPath );
+    ORBIT_NVP_VAL( 10, m_Arguments );
+    ORBIT_NVP_VAL( 10, m_WorkingDirectory );
 }
 
 //-----------------------------------------------------------------------------
 void Params::Save()
 {
+    GCoreApp->SendToUiNow(L"UpdateProcessParams");
     std::wstring fileName = Path::GetParamsFileName();
     SCOPE_TIMER_LOG( Format( L"Saving hook params in %s", fileName.c_str() ) );
     std::ofstream file( fileName );

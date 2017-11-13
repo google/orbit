@@ -15,6 +15,9 @@ public:
     explicit ProcessLauncherWidget(QWidget *parent = 0);
     ~ProcessLauncherWidget();
 
+    void SetProcessParams();
+    void UpdateProcessParams();
+
 private slots:
     void on_BrowseButton_clicked();
 

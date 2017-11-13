@@ -19,6 +19,7 @@
 #include "CoreApp.h"
 #include "Params.h"
 #include "OrbitRule.h"
+#include "CoreApp.h"
 #include <fstream>
 #include <ostream>
 
@@ -509,6 +510,12 @@ void Capture::LoadSession( const shared_ptr<Session> & a_Session )
     {
         GLoadPdbAsync( modulesToLoad );
     }
+
+    GParams.m_ProcessPath = ws2s( a_Session->m_ProcessFullPath );
+    GParams.m_Arguments = ws2s( a_Session->m_Arguments );
+    GParams.m_WorkingDirectory = ws2s( a_Session->m_WorkingDirectory );
+
+    GCoreApp->SendToUiNow(L"SetProcessParams");
 }
 
 //-----------------------------------------------------------------------------
@@ -516,6 +523,12 @@ void Capture::SaveSession( const std::wstring & a_FileName )
 {
     Session session;
     session.m_ProcessFullPath = GTargetProcess->GetFullName();
+
+    GCoreApp->SendToUiNow(L"UpdateProcessParams");
+
+    session.m_ProcessFullPath = s2ws(GParams.m_ProcessPath);
+    session.m_Arguments = s2ws(GParams.m_Arguments);
+    session.m_WorkingDirectory = s2ws(GParams.m_WorkingDirectory);
     
     for( Function* func : GTargetProcess->GetFunctions() )
     {

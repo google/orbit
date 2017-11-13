@@ -38,6 +38,9 @@ public:
     std::string m_DiffArgs;
     std::vector< string > m_PdbHistory;
     std::unordered_map< string, string > m_CachedPdbsMap;
+    std::string m_ProcessPath;
+    std::string m_Arguments;
+    std::string m_WorkingDirectory;
 
     ORBIT_SERIALIZABLE;
 };

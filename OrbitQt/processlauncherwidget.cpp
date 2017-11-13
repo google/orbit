@@ -28,6 +28,29 @@ ProcessLauncherWidget::~ProcessLauncherWidget()
     delete ui;
 }
 
+void ProcessLauncherWidget::SetProcessParams()
+{
+    if (GParams.m_ProcessPath != "")
+    {
+        ui->ProcessComboBox->lineEdit()->setText(GParams.m_ProcessPath.c_str());
+    }
+    if (GParams.m_WorkingDirectory != "")
+    {
+        ui->WorkingDirComboBox->lineEdit()->setText(GParams.m_WorkingDirectory.c_str());
+    }
+    if (GParams.m_Arguments != "")
+    {
+        ui->ArgumentsComboBox->lineEdit()->setText(GParams.m_Arguments.c_str());
+    }
+}
+
+void ProcessLauncherWidget::UpdateProcessParams()
+{
+    GParams.m_ProcessPath = ui->ProcessComboBox->lineEdit()->text().toStdString();
+    GParams.m_Arguments = ui->ArgumentsComboBox->lineEdit()->text().toStdString();
+    GParams.m_WorkingDirectory = ui->WorkingDirComboBox->lineEdit()->text().toStdString();
+}
+
 void ProcessLauncherWidget::on_BrowseButton_clicked()
 {
     QStringList list = QFileDialog::getOpenFileNames( this, "Select an executable file...", "", "*.exe" );

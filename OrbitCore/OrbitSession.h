@@ -29,14 +29,11 @@ public:
     Session();
     ~Session();
 
-    template <class Archive>
-    void serialize( Archive & a_Archive, std::uint32_t const a_Version )
-    {
-        a_Archive( CEREAL_NVP(m_ProcessFullPath)
-                 , CEREAL_NVP(m_Modules) );
-    }
+    ORBIT_SERIALIZABLE;
 
     std::wstring m_FileName;
     std::wstring m_ProcessFullPath;
+    std::wstring m_WorkingDirectory;
+    std::wstring m_Arguments;
     std::map< std::wstring, SessionModule > m_Modules;
 };
