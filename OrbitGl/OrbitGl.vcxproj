@@ -262,7 +262,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-2.0.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BrowseInformation>false</BrowseInformation>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_CRT_SECURE_NO_DEPRECATE;_WIN32_WINNT=0x0700</PreprocessorDefinitions>
@@ -273,7 +273,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>wxmsw30ud_aui.lib;wxmsw30ud_html.lib;wxmsw30ud_adv.lib;wxmsw30ud_core.lib;wxmsw30ud_propgrid.lib;wxbase30ud_xml.lib;wxmsw30ud_gl.lib;wxbase30ud.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;hooklib.lib;freeglut_static.lib;freetype-gl.lib;freetype261.lib;glew32.lib;libMinHook.x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\external\wxWidgets-3.0.1\lib\vc_lib;..\bin\Win32\Debug;..\external\freeglut-2.8.1\lib\x86\;..\external\freetype-gl\Win32\Release\;..\external\freetype\lib\Win32;..\external\glew-1.13.0\lib\Release\Win32;..\external\minhook\lib\Debug;$(BOOST_ROOT)\lib32-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\external\wxWidgets-3.0.1\lib\vc_lib;..\bin\Win32\Debug;..\external\freeglut-2.8.1\lib\x86\;..\external\freetype-gl\Win32\Release\;..\external\freetype\lib\Win32;..\external\glew-2.0.0\lib\Release\Win32;..\external\minhook\lib\Debug;$(BOOST_ROOT)\lib32-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
     </Link>
     <Bscmake>
@@ -288,7 +288,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-2.0.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BrowseInformation>true</BrowseInformation>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);</PreprocessorDefinitions>
@@ -298,7 +298,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>wxmsw30ud_aui.lib;wxmsw30ud_html.lib;wxmsw30ud_adv.lib;wxmsw30ud_core.lib;wxmsw30ud_propgrid.lib;wxbase30ud_xml.lib;wxmsw30ud_gl.lib;wxbase30ud.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;hookpdb.lib;freeglut_static.lib;hooklib.lib;freetype-gl.lib;freetype26.lib;glew32.lib;libboost_thread-vc120-mt-gd-1_56.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\external\wxWidgets-3.0.1\lib\vc_lib;..\bin\Win32\Debug;..\external\freeglut-2.8.1\lib\x86\Debug;..\external\freetype-gl\build\lib\Win32\Debug\;..\external\freetype-gl\windows\freetype\Win32;..\external\glew-1.13.0\lib\Release\Win32;$(BOOST_ROOT)\lib32-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\external\wxWidgets-3.0.1\lib\vc_lib;..\bin\Win32\Debug;..\external\freeglut-2.8.1\lib\x86\Debug;..\external\freetype-gl\build\lib\Win32\Debug\;..\external\freetype-gl\windows\freetype\Win32;..\external\glew-2.0.0\lib\Release\Win32;$(BOOST_ROOT)\lib32-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
     </Link>
     <Bscmake>
@@ -313,7 +313,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;..\external\curl-7.52.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-2.0.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;..\external\curl-7.52.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BrowseInformation>false</BrowseInformation>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions);_CRT_SECURE_NO_DEPRECATE;_WIN32_WINNT=0x0700</PreprocessorDefinitions>
@@ -324,7 +324,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;hooklib.lib;freetype-gl.lib;freetype261.lib;opengl32.lib;glu32.lib;glew32.lib;libMinHook.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\bin\x64\Debug;..\external\wxWidgets-3.0.1\lib\vc_x64_lib;..\external\freeglut-2.8.1\lib\x64\Debug;..\external\freetype\lib\x64;..\external\freetype-gl\x64\Debug\;..\external\glew-1.13.0\lib\Release\x64;..\external\minhook\lib\Release;$(BOOST_ROOT)\lib64-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\bin\x64\Debug;..\external\wxWidgets-3.0.1\lib\vc_x64_lib;..\external\freeglut-2.8.1\lib\x64\Debug;..\external\freetype\lib\x64;..\external\freetype-gl\x64\Debug\;..\external\glew-2.0.0\lib\Release\x64;..\external\minhook\lib\Release;$(BOOST_ROOT)\lib64-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
     </Link>
     <Bscmake>
@@ -339,7 +339,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;..\external\curl-7.52.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-2.0.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;..\external\curl-7.52.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BrowseInformation>true</BrowseInformation>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);</PreprocessorDefinitions>
@@ -349,7 +349,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>wxmsw30ud_aui.lib;wxmsw30ud_html.lib;wxmsw30ud_adv.lib;wxmsw30ud_core.lib;wxbase30ud_xml.lib;wxmsw30ud_gl.lib;wxbase30ud.lib;wxmsw30ud_propgrid.lib;wxtiffd.lib;wxjpegd.lib;wxpngd.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;hookpdb.lib;hooklib.lib;freetype-gl.lib;freetype26.lib;opengl32.lib;glu32.lib;glew32.lib;freeglut_static.lib;libboost_thread-vc120-mt-gd-1_56.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\bin\x64\DebugMT;..\external\wxWidgets-3.0.1\lib\vc_x64_lib;..\external\freeglut-2.8.1\lib\x64\Debug;..\external\freetype-gl\windows\freetype\x64;..\external\freetype-gl\build\lib\x64\Debug\;..\external\glew-1.13.0\lib\Release\x64;$(BOOST_ROOT)\lib64-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\bin\x64\DebugMT;..\external\wxWidgets-3.0.1\lib\vc_x64_lib;..\external\freeglut-2.8.1\lib\x64\Debug;..\external\freetype-gl\windows\freetype\x64;..\external\freetype-gl\build\lib\x64\Debug\;..\external\glew-2.0.0\lib\Release\x64;$(BOOST_ROOT)\lib64-msvc-12.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
     </Link>
     <Bscmake>
@@ -366,7 +366,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-2.0.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ShowIncludes>false</ShowIncludes>
@@ -378,7 +378,7 @@
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
       <AdditionalDependencies>wxmsw30u_aui.lib;wxmsw30u_html.lib;wxmsw30u_adv.lib;wxmsw30u_core.lib;wxbase30u_xml.lib;wxmsw30u_propgrid.lib;wxbase30u.lib;wxtiff.lib;wxjpeg.lib;wxpng.lib;wxzlib.lib;wxregexu.lib;wxexpat.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;wxmsw30u_gl.lib;opengl32.lib;glu32.lib;hooklib.lib;dbghelp.lib;freeglut_static.lib;freetype-gl.lib;freetype261.lib;glew32.lib;libMinHook.x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\bin\Win32\Release;..\external\wxWidgets-3.0.1\lib\vc_lib;..\external\freeglut-2.8.1\lib\x86;..\external\freetype-gl\Win32\Release\;..\external\glew-1.13.0\lib\Release\Win32;..\external\freetype-gl\windows\freetype\Win32;..\external\minhook\lib\Release;$(BOOST_ROOT)\lib32-msvc-12.0;..\external\freetype\lib\Win32</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\bin\Win32\Release;..\external\wxWidgets-3.0.1\lib\vc_lib;..\external\freeglut-2.8.1\lib\x86;..\external\freetype-gl\Win32\Release\;..\external\glew-2.0.0\lib\Release\Win32;..\external\freetype-gl\windows\freetype\Win32;..\external\minhook\lib\Release;$(BOOST_ROOT)\lib32-msvc-12.0;..\external\freetype\lib\Win32</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
     </Link>
@@ -393,7 +393,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-2.0.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <ShowIncludes>false</ShowIncludes>
@@ -405,7 +405,7 @@
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
       <AdditionalDependencies>wxmsw30u_aui.lib;wxmsw30u_html.lib;wxmsw30u_adv.lib;wxmsw30u_core.lib;wxbase30u_xml.lib;wxmsw30u_propgrid.lib;wxbase30u.lib;wxtiff.lib;wxjpeg.lib;wxpng.lib;wxzlib.lib;wxregexu.lib;wxexpat.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;wxmsw30u_gl.lib;opengl32.lib;glu32.lib;hooklib.lib;hookpdb.lib;dbghelp.lib;freeglut_static.lib;freetype-gl.lib;freetype26.lib;glew32.lib;libboost_thread-vc120-mt-gd-1_56.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\bin\Win32\Release;..\external\wxWidgets-3.0.1\lib\vc_lib;..\external\freeglut-2.8.1\lib\x86;..\external\freetype-gl\build\lib\Win32\Release\;..\external\glew-1.13.0\lib\Release\Win32;..\external\freetype-gl\windows\freetype\Win32;$(BOOST_ROOT)\lib32-msvc-12.0</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\bin\Win32\Release;..\external\wxWidgets-3.0.1\lib\vc_lib;..\external\freeglut-2.8.1\lib\x86;..\external\freetype-gl\build\lib\Win32\Release\;..\external\glew-2.0.0\lib\Release\Win32;..\external\freetype-gl\windows\freetype\Win32;$(BOOST_ROOT)\lib32-msvc-12.0</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
     </Link>
@@ -420,7 +420,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;..\external\curl-7.52.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-2.0.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;..\external\curl-7.52.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ShowIncludes>false</ShowIncludes>
@@ -432,7 +432,7 @@
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
       <AdditionalDependencies>winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;wxmsw30u_gl.lib;opengl32.lib;glu32.lib;hooklib.lib;dbghelp.lib;glew32.lib;freeglut_static.lib;freetype-gl.lib;freetype261.lib;libMinHook.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\bin\x64\Release;..\external\wxWidgets-3.0.1\lib\vc_x64_lib;..\external\freeglut-2.8.1\lib\x64\;..\external\freetype\lib\x64;..\external\freetype-gl\x64\Release\;..\external\glew-1.13.0\lib\Release\x64;..\external\minhook\lib\Release;$(BOOST_ROOT)\lib64-msvc-12.0</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\bin\x64\Release;..\external\wxWidgets-3.0.1\lib\vc_x64_lib;..\external\freeglut-2.8.1\lib\x64\;..\external\freetype\lib\x64;..\external\freetype-gl\x64\Release\;..\external\glew-2.0.0\lib\Release\x64;..\external\minhook\lib\Release;$(BOOST_ROOT)\lib64-msvc-12.0</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
     </Link>
@@ -447,7 +447,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-1.13.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;..\external\curl-7.52.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\OrbitCore\;..\external\freeglut-2.8.1\include\GL\;..\external\freetype-gl;..\external\glew-2.0.0\include;..\external\cereal-1.1.2\include;..\external\concurrentqueue\;..\external\asio\include;..\external\sqlite\;..\external\imgui\;..\external\stlsoft-1.9.118\include\;..\external\multicore\common\;..\external\websocket;..\external\curl-7.52.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -458,7 +458,7 @@
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
       <AdditionalDependencies>wxmsw30u_aui.lib;wxmsw30u_html.lib;wxmsw30u_adv.lib;wxmsw30u_core.lib;wxbase30u_xml.lib;wxbase30u.lib;wxmsw30u_propgrid.lib;wxtiff.lib;wxjpeg.lib;wxpng.lib;wxzlib.lib;wxregexu.lib;wxexpat.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;wininet.lib;wxmsw30u_gl.lib;opengl32.lib;glu32.lib;hookpdb.lib;hooklib.lib;dbghelp.lib;glew32.lib;freeglut_static.lib;freetype-gl.lib;freetype26.lib;libboost_system-vc120-mt-1_56.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\bin\x64\Release;..\external\wxWidgets-3.0.1\lib\vc_x64_lib;..\external\freeglut-2.8.1\lib\x64;..\external\freetype-gl\build\lib\x64\Release\;..\external\freetype-gl\windows\freetype\x64;..\external\glew-1.13.0\lib\Release\x64;$(BOOST_ROOT)\lib64-msvc-12.0</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\bin\x64\Release;..\external\wxWidgets-3.0.1\lib\vc_x64_lib;..\external\freeglut-2.8.1\lib\x64;..\external\freetype-gl\build\lib\x64\Release\;..\external\freetype-gl\windows\freetype\x64;..\external\glew-2.0.0\lib\Release\x64;$(BOOST_ROOT)\lib64-msvc-12.0</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <IgnoreSpecificDefaultLibraries>LIBCMT.LIB</IgnoreSpecificDefaultLibraries>
     </Link>
