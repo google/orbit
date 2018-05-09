@@ -96,7 +96,7 @@ public:
     class Type* GetParentType();
     void ResetStats();
     void GetDisassembly();
-	void FindFile();
+    void FindFile();
 
     enum MemberID
     {

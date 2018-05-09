@@ -30,7 +30,7 @@ public:
     bool  m_StartPaused;
     bool  m_AllowUnsafeHooking;
     bool  m_HookOutputDebugString;
-	bool  m_FindFileAndLineInfo;
+    bool  m_FindFileAndLineInfo;
     int   m_MaxNumTimers;
     float m_FontSize;
     int   m_Port;

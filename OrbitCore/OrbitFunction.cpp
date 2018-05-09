@@ -150,13 +150,13 @@ void Function::GetDisassembly()
 
 void Function::FindFile()
 {
-    if( m_Pdb )
+    if (m_Pdb)
     {
-	    LineInfo lineInfo;
-	    m_Pdb->LineInfoFromAddress( GetVirtualAddress(), lineInfo );
-	    if( lineInfo.m_File != L"" )
-		    m_File = lineInfo.m_File;
-	    m_Line = lineInfo.m_Line;
+        LineInfo lineInfo;
+        m_Pdb->LineInfoFromAddress(GetVirtualAddress(), lineInfo);
+        if (lineInfo.m_File != L"")
+            m_File = lineInfo.m_File;
+        m_Line = lineInfo.m_Line;
     }
 }
 

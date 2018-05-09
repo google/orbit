@@ -239,12 +239,12 @@ void FunctionsDataView::ParallelFilter()
     {
         std::vector<int> & result = indicesArray[a_BlockIndex];
         const std::wstring & name = functions[a_ElementIndex]->Lower();
-		const std::wstring & file = functions[a_ElementIndex]->m_File;
+        const std::wstring & file = functions[a_ElementIndex]->m_File;
 
         for( std::wstring & filterToken : m_FilterTokens )
         {
             if( name.find( filterToken ) == std::wstring::npos &&
-				file.find( filterToken ) == std::wstring::npos )
+                file.find( filterToken ) == std::wstring::npos )
             {
                 return;
             }
