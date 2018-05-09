@@ -750,6 +750,15 @@ void Pdb::ProcessData()
         GOrbitUnreal.OnFunctionAdded( &func );
     }
 
+    if( GParams.m_FindFileAndLineInfo )
+	{
+		SCOPE_TIMER_LOG( L"Find File and Line info" );
+		for( Function & func : m_Functions )
+		{
+			func.FindFile();
+		}
+	}
+
     for( Type & type : m_Types )
     {
         type.m_Pdb = this;

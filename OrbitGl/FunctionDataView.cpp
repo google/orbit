@@ -121,7 +121,7 @@ void FunctionsDataView::OnSort( int a_Column, bool a_Toggle )
     case Function::FILE:     sorter = ORBIT_FUNC_SORT( m_File );           break;
     case Function::LINE:     sorter = ORBIT_FUNC_SORT( m_Line );           break;
     case Function::SIZE:     sorter = ORBIT_FUNC_SORT( m_Size );           break;
-    case Function::SELECTED: sorter = ORBIT_FUNC_SORT( IsSelected() );       break;
+    case Function::SELECTED: sorter = ORBIT_FUNC_SORT( IsSelected() );     break;
     case Function::CALL_CONV:sorter = ORBIT_FUNC_SORT( m_CallConv );       break;
     }
 
@@ -239,10 +239,12 @@ void FunctionsDataView::ParallelFilter()
     {
         std::vector<int> & result = indicesArray[a_BlockIndex];
         const std::wstring & name = functions[a_ElementIndex]->Lower();
+		const std::wstring & file = functions[a_ElementIndex]->m_File;
 
         for( std::wstring & filterToken : m_FilterTokens )
         {
-            if( name.find( filterToken ) == std::wstring::npos )
+            if( name.find( filterToken ) == std::wstring::npos &&
+				file.find( filterToken ) == std::wstring::npos )
             {
                 return;
             }
