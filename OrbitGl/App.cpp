@@ -913,7 +913,10 @@ void OrbitApp::SendToUiAsync( const std::wstring & a_Msg )
 //-----------------------------------------------------------------------------
 void OrbitApp::SendToUiNow( const std::wstring & a_Msg )
 {
-    m_UiCallback( a_Msg );
+    if( m_UiCallback )
+    {
+        m_UiCallback( a_Msg );
+    }
 }
 
 //-----------------------------------------------------------------------------
