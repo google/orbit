@@ -40,6 +40,7 @@ public:
 
 protected:
     std::shared_ptr<Process> GetProcess( unsigned int a_Row ) const;
+	void ClearSelectedProcess();
 
     ProcessList                 m_ProcessList;
     std::shared_ptr<Process>    m_RemoteProcess;

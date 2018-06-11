@@ -9,6 +9,7 @@
 #include "Capture.h"
 #include "App.h"
 #include "Callstack.h"
+#include "Params.h"
 
 //-----------------------------------------------------------------------------
 ProcessesDataView::ProcessesDataView()
@@ -181,16 +182,33 @@ void ProcessesDataView::Refresh()
 //-----------------------------------------------------------------------------
 void ProcessesDataView::SetSelectedItem()
 {
+	int initialIndex = m_SelectedIndex;
     m_SelectedIndex = -1;
 
     for( int i = 0; i < GetNumElements(); ++i )
     {
         if( GetProcess( i ) == m_SelectedProcess )
         {
-            m_SelectedIndex = i; //m_Indices[i];
-            break;
+            m_SelectedIndex = i;
+            return;
         }
     }
+
+	if( GParams.m_AutoReleasePdb && initialIndex != -1 )
+	{
+		ClearSelectedProcess();
+	}
+}
+
+//-----------------------------------------------------------------------------
+void ProcessesDataView::ClearSelectedProcess()
+{
+	shared_ptr<Process> process = std::make_shared<Process>();
+	Capture::SetTargetProcess( process );
+	m_ModulesDataView->SetProcess( process );
+	m_SelectedProcess = process;
+	GPdbDbg = nullptr;
+	GOrbitApp->FireRefreshCallbacks();
 }
 
 //-----------------------------------------------------------------------------

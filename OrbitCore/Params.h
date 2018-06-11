@@ -31,6 +31,7 @@ public:
     bool  m_AllowUnsafeHooking;
     bool  m_HookOutputDebugString;
     bool  m_FindFileAndLineInfo;
+    bool  m_AutoReleasePdb;
     int   m_MaxNumTimers;
     float m_FontSize;
     int   m_Port;

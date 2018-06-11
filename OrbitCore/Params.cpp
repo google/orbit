@@ -26,6 +26,7 @@ Params::Params() : m_LoadTypeInfo( true )
                  , m_AllowUnsafeHooking(false)
                  , m_HookOutputDebugString(false)
                  , m_FindFileAndLineInfo(false)
+                 , m_AutoReleasePdb(false)
                  , m_Port(1789)
                  , m_DiffArgs("%1 %2")
                  , m_NumBytesAssembly(1024)
@@ -33,7 +34,7 @@ Params::Params() : m_LoadTypeInfo( true )
     
 }
 
-ORBIT_SERIALIZE( Params, 11 )
+ORBIT_SERIALIZE( Params, 12 )
 {
     ORBIT_NVP_VAL( 0, m_LoadTypeInfo );
     ORBIT_NVP_VAL( 0, m_SendCallStacks );
@@ -55,6 +56,7 @@ ORBIT_SERIALIZE( Params, 11 )
     ORBIT_NVP_VAL( 10, m_Arguments );
     ORBIT_NVP_VAL( 10, m_WorkingDirectory );
     ORBIT_NVP_VAL( 11, m_FindFileAndLineInfo );
+    ORBIT_NVP_VAL( 12, m_AutoReleasePdb );
 }
 
 //-----------------------------------------------------------------------------
