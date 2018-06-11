@@ -438,7 +438,7 @@ void OrbitMainWindow::on_actionAbout_triggered()
 
     title += " | Version " + GOrbitApp->GetVersion();
 
-    QMessageBox::about(this, title.c_str(), "Copyright (c) 2013-2017 - Pierric Gimmig");
+    QMessageBox::about(this, title.c_str(), "Copyright (c) 2013-2018 - Pierric Gimmig");
 }
 
 //-----------------------------------------------------------------------------

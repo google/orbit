@@ -1,3 +1,13 @@
+1.0.2
+- CaptureWindow: double clicking on a textbox will zoom it in/out to ~90% of the screen width.
+- ProcessLauncher: process path, working dir and params are now serialized into session and global params.  Fixes https://github.com/pierricgimmig/orbitprofiler/issues/13.
+- Better file and line resolution at initial pdb parsing
+
+- Release handle on pdb (experimental, off by default, see https://github.com/pierricgimmig/orbitprofiler/commit/b695ce516520fc8c8362634346d826d57fb5207e)
+
+1.0.1
+Minor fixes
+
 1.0.0
 Initial public release
 
