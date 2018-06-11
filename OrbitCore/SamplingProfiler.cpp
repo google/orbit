@@ -433,11 +433,11 @@ void SamplingProfiler::AddAddress( DWORD64 a_Address )
         symName = Format( L"%I64x", a_Address );
         PRINT_VAR( GetLastErrorAsString() );
 
-        IDiaSymbol* symbol = m_Process->SymbolFromAddress( a_Address );
-        if( symbol )
+        std::shared_ptr<OrbitDiaSymbol> symbol = m_Process->SymbolFromAddress( a_Address );
+        if( symbol->m_Symbol )
         {
             BSTR bstrName;
-            if( symbol->get_name( &bstrName ) == S_OK )
+            if( symbol->m_Symbol->get_name( &bstrName ) == S_OK )
             {
                 symName = bstrName;
                 SysFreeString( bstrName );

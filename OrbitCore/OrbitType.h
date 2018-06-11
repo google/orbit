@@ -10,6 +10,7 @@
 
 #include "cvconst.h"
 
+#include "DiaManager.h"
 #include "OrbitDbgHelp.h"
 #include "Variable.h"
 #include "FunctionStats.h"
@@ -72,7 +73,7 @@ public:
     Pdb* GetPdb() const { return m_Pdb; }
     const std::wstring & GetName() const { return m_Name; }
     const std::wstring & GetNameLower(){ if( m_NameLower.size() == 0 ){ m_NameLower = ToLower( m_Name ); } return m_NameLower;  }
-    IDiaSymbol* GetDiaSymbol();
+    std::shared_ptr<OrbitDiaSymbol> GetDiaSymbol();
     bool IsA( const std::wstring & a_TypeName );
     int GetOffset( const std::wstring & a_Member );
     bool HasMembers() const { return m_DataMembers.size() > 0; }

@@ -480,7 +480,7 @@ const wchar_t * const rgLocationTypeString[] =
 ////////////////////////////////////////////////////////////
 // Print a public symbol info: name, VA, RVA, SEG:OFF
 //
-void PrintPublicSymbol(IDiaSymbol *pSymbol)
+void PrintPublicSymbol(IDiaSymbol* pSymbol)
 {
     DWORD dwSymTag;
     DWORD dwRVA;
@@ -544,7 +544,7 @@ void PrintPublicSymbol(IDiaSymbol *pSymbol)
 ////////////////////////////////////////////////////////////
 // Print a global symbol info: name, VA, RVA, SEG:OFF
 //
-void PrintGlobalSymbol(IDiaSymbol *pSymbol)
+void PrintGlobalSymbol(IDiaSymbol* pSymbol)
 {
     DWORD dwSymTag;
     DWORD dwRVA;
@@ -632,7 +632,7 @@ std::wstring GetBasicType(DWORD a_BaseType)
     return BasicTypeMap[a_BaseType];
 }
 
-void OrbitAddGlobalSymbol(IDiaSymbol *pSymbol)
+void OrbitAddGlobalSymbol(IDiaSymbol* pSymbol)
 {
     DWORD dwSymTag;
     DWORD dwRVA;
@@ -660,7 +660,6 @@ void OrbitAddGlobalSymbol(IDiaSymbol *pSymbol)
 
         if (pSymbol->get_name(&bstrName) == S_OK) {
             LOGF(L"%s\n", bstrName);
-
             SysFreeString(bstrName);
         }
 
@@ -674,7 +673,6 @@ void OrbitAddGlobalSymbol(IDiaSymbol *pSymbol)
             LOGF(L"target -> [%08X][%04X:%08X]\n", dwRVA, dwSeg, dwOff);
         }
     }
-
     else
     {
         BSTR bstrName;
@@ -698,44 +696,38 @@ void OrbitAddGlobalSymbol(IDiaSymbol *pSymbol)
             SysFreeString(bstrName);
         }
 
-        if (Contains(Var.m_Name, L"GOutput"))
-        {
-            static volatile bool found = false;
-            found = true;
-        }
-
         DWORD index;
         pSymbol->get_symIndexId(&index);
 
-        IDiaSymbol* globalType;
-        if (pSymbol->get_type(&globalType) == S_OK)
+        OrbitDiaSymbol globalType;
+        if (pSymbol->get_type(&globalType.m_Symbol) == S_OK)
         {
             BSTR bstrTypeName;
-            if (globalType->get_name(&bstrTypeName) == S_OK)
+            if (globalType.m_Symbol->get_name(&bstrTypeName) == S_OK)
             {
                 Var.SetType(bstrTypeName);
             }
 
             DWORD baseType;
-            if (globalType->get_baseType(&baseType) == S_OK)
+            if (globalType.m_Symbol->get_baseType(&baseType) == S_OK)
             {
                 Var.SetType(GetBasicType(baseType));
             }
 
             ULONGLONG length;
-            if (globalType->get_length(&length) == S_OK)
+            if (globalType.m_Symbol->get_length(&length) == S_OK)
             {
                 Var.m_Size = (ULONG)length;
             }
 
             DWORD TypeId;
-            if( globalType->get_symIndexId( &TypeId ) == S_OK )
+            if( globalType.m_Symbol->get_symIndexId( &TypeId ) == S_OK )
             {
                 Var.m_TypeIndex = TypeId;
             }
 
             DWORD unmodifiedID;
-            if( globalType->get_unmodifiedTypeId( &unmodifiedID ) == S_OK )
+            if( globalType.m_Symbol->get_unmodifiedTypeId( &unmodifiedID ) == S_OK )
             {
                 Var.m_UnmodifiedTypeId = unmodifiedID;
             }
@@ -760,7 +752,7 @@ void OrbitAddGlobalSymbol(IDiaSymbol *pSymbol)
 ////////////////////////////////////////////////////////////
 // Print a callsite symbol info: SEG:OFF, RVA, type
 //
-void PrintCallSiteInfo(IDiaSymbol *pSymbol)
+void PrintCallSiteInfo(IDiaSymbol* pSymbol)
 {
     DWORD dwISect, dwOffset;
     if (pSymbol->get_addressSection(&dwISect) == S_OK &&
@@ -773,31 +765,32 @@ void PrintCallSiteInfo(IDiaSymbol *pSymbol)
         LOGF(L"0x%08X  ", rva);
     }
 
-    IDiaSymbol *pFuncType;
-    if (pSymbol->get_type(&pFuncType) == S_OK) {
+    OrbitDiaSymbol pFuncType;
+    if (pSymbol->get_type(&pFuncType.m_Symbol) == S_OK) 
+    {
         DWORD tag;
-        if (pFuncType->get_symTag(&tag) == S_OK) {
+        if (pFuncType->get_symTag(&tag) == S_OK) 
+        {
             switch (tag)
             {
             case SymTagFunctionType:
                 PrintFunctionType(pSymbol);
                 break;
             case SymTagPointerType:
-                PrintFunctionType(pFuncType);
+                PrintFunctionType(pFuncType.m_Symbol);
                 break;
             default:
                 LOGF(L"???\n");
                 break;
             }
         }
-        pFuncType->Release();
     }
 }
 
 ////////////////////////////////////////////////////////////
 // Print a callsite symbol info: SEG:OFF, RVA, type
 //
-void PrintHeapAllocSite(IDiaSymbol *pSymbol)
+void PrintHeapAllocSite(IDiaSymbol* pSymbol)
 {
     DWORD dwISect, dwOffset;
     if (pSymbol->get_addressSection(&dwISect) == S_OK &&
@@ -810,17 +803,16 @@ void PrintHeapAllocSite(IDiaSymbol *pSymbol)
         LOGF(L"0x%08X  ", rva);
     }
 
-    IDiaSymbol *pAllocType;
-    if (pSymbol->get_type(&pAllocType) == S_OK) {
-        PrintType(pAllocType);
-        pAllocType->Release();
+    OrbitDiaSymbol pAllocType;
+    if (pSymbol->get_type(&pAllocType.m_Symbol) == S_OK) {
+        PrintType(pAllocType.m_Symbol);
     }
 }
 
 ////////////////////////////////////////////////////////////
 // Print a COFF group symbol info: SEG:OFF, RVA, length, name
 //
-void PrintCoffGroup(IDiaSymbol *pSymbol)
+void PrintCoffGroup(IDiaSymbol* pSymbol)
 {
     DWORD dwISect, dwOffset;
     if (pSymbol->get_addressSection(&dwISect) == S_OK &&
@@ -849,9 +841,8 @@ void PrintCoffGroup(IDiaSymbol *pSymbol)
 ////////////////////////////////////////////////////////////
 // Print a symbol info: name, type etc.
 //
-void PrintSymbol(IDiaSymbol *pSymbol, DWORD dwIndent)
+void PrintSymbol(IDiaSymbol* pSymbol, DWORD dwIndent)
 {
-    IDiaSymbol *pType;
     DWORD dwSymTag;
     ULONGLONG ulLen;
 
@@ -885,6 +876,7 @@ void PrintSymbol(IDiaSymbol *pSymbol, DWORD dwIndent)
 
     case SymTagFunction:
     case SymTagBlock:
+    {
         PrintLocation(pSymbol);
 
         if (pSymbol->get_length(&ulLen) == S_OK) {
@@ -986,21 +978,21 @@ void PrintSymbol(IDiaSymbol *pSymbol, DWORD dwIndent)
             LOGF(L"\n");
         }
 
-        IDiaEnumSymbols *pEnumChildren;
+        OrbitDiaEnumSymbols pEnumChildren;
 
-        if (SUCCEEDED(pSymbol->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren))) {
-            IDiaSymbol *pChild;
+        if (SUCCEEDED(pSymbol->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren.m_Symbol))) 
+        {
+            OrbitDiaSymbol pChild;
             ULONG celt = 0;
 
-            while (SUCCEEDED(pEnumChildren->Next(1, &pChild, &celt)) && (celt == 1)) {
-                PrintSymbol(pChild, dwIndent + 2);
-                pChild->Release();
+            while (SUCCEEDED(pEnumChildren->Next(1, &pChild.m_Symbol, &celt)) && (celt == 1)) 
+            {
+                PrintSymbol(pChild.m_Symbol, dwIndent + 2);
+                pChild.Release();
             }
-
-            pEnumChildren->Release();
         }
         return;
-
+    }
     case SymTagAnnotation:
         PrintLocation(pSymbol);
         LOGF(L"\n");
@@ -1029,14 +1021,15 @@ void PrintSymbol(IDiaSymbol *pSymbol, DWORD dwIndent)
     case SymTagPointerType:
     case SymTagArrayType:
     case SymTagBaseType:
-        if (pSymbol->get_type(&pType) == S_OK) {
-            PrintType(pType);
-            pType->Release();
+    {
+        OrbitDiaSymbol pType;
+        if (pSymbol->get_type(&pType.m_Symbol) == S_OK) {
+            PrintType(pType.m_Symbol);
         }
 
         LOGF(L"\n");
         break;
-
+    }
     case SymTagThunk:
         PrintThunk(pSymbol);
         break;
@@ -1054,30 +1047,30 @@ void PrintSymbol(IDiaSymbol *pSymbol, DWORD dwIndent)
         break;
 
     default:
+    {
         PrintName(pSymbol);
-
-        if (pSymbol->get_type(&pType) == S_OK) {
+        OrbitDiaSymbol pType;
+        if (pSymbol->get_type(&pType.m_Symbol) == S_OK) 
+        {
             LOGF(L" has type ");
-            PrintType(pType);
-            pType->Release();
+            PrintType(pType.m_Symbol);
         }
     }
+    }
 
-    if ((dwSymTag == SymTagUDT) || (dwSymTag == SymTagAnnotation)) {
-        IDiaEnumSymbols *pEnumChildren;
-
+    if ((dwSymTag == SymTagUDT) || (dwSymTag == SymTagAnnotation)) 
+    {
+        OrbitDiaEnumSymbols pEnumChildren;
         LOGF(L"\n");
 
-        if (SUCCEEDED(pSymbol->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren))) {
-            IDiaSymbol *pChild;
+        if (SUCCEEDED(pSymbol->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren.m_Symbol))) {
+            OrbitDiaSymbol pChild;
             ULONG celt = 0;
 
-            while (SUCCEEDED(pEnumChildren->Next(1, &pChild, &celt)) && (celt == 1)) {
-                PrintSymbol(pChild, dwIndent + 2);
-                pChild->Release();
+            while (SUCCEEDED(pEnumChildren->Next(1, &pChild.m_Symbol, &celt)) && (celt == 1)) {
+                PrintSymbol(pChild.m_Symbol, dwIndent + 2);
+                pChild.Release();
             }
-
-            pEnumChildren->Release();
         }
     }
     LOGF(L"\n");
@@ -1104,7 +1097,7 @@ std::wstring GetLocation( IDiaSymbol* pSymbol )
     return strLog.m_String;
 }
 
-std::wstring GetSymbolType( IDiaSymbol *pSymbol )
+std::wstring GetSymbolType( IDiaSymbol* pSymbol )
 {
     StringLogger strLog;
     ScopeLog log( &strLog );
@@ -1122,11 +1115,11 @@ std::wstring GetName( IDiaSymbol* pSymbol )
 
 ULONGLONG GetSize( IDiaSymbol* pSymbol )
 {
-    IDiaSymbol* typeSym;
-    if( pSymbol->get_type(&typeSym) == S_OK )
+    OrbitDiaSymbol typeSym;
+    if( pSymbol->get_type(&typeSym.m_Symbol) == S_OK )
     {
         ULONGLONG length = 0;
-        if (typeSym->get_length(&length) == S_OK)
+        if (typeSym.m_Symbol->get_length(&length) == S_OK)
         {
             return length;
         }
@@ -1149,13 +1142,12 @@ DWORD GetSymbolID( IDiaSymbol* pSymbol )
 
 DWORD GetTypeID( IDiaSymbol* pSymbol )
 {
-    IDiaSymbol *pType;
+    OrbitDiaSymbol pType;
 
-    if( pSymbol->get_type( &pType ) == S_OK ) 
+    if( pSymbol->get_type( &pType.m_Symbol ) == S_OK ) 
     {
-        PrintTypeInDetail( pType, 0 );
-        DWORD typeId = GetSymbolID( pType );
-        TYPELOGF( L"Blah typeid = %u: ", typeId );
+        PrintTypeInDetail( pType.m_Symbol, 0 );
+        DWORD typeId = GetSymbolID( pType.m_Symbol );
         return typeId;
     }
 
@@ -1170,7 +1162,7 @@ void TypeLogSymTag( DWORD dwSymTag )
 ////////////////////////////////////////////////////////////
 // Print the name of the symbol
 //
-void PrintName(IDiaSymbol *pSymbol)
+void PrintName(IDiaSymbol* pSymbol)
 {
     BSTR bstrName;
     BSTR bstrUndName;
@@ -1206,7 +1198,7 @@ void PrintName(IDiaSymbol *pSymbol)
 ////////////////////////////////////////////////////////////
 // Print the name of the symbol
 //
-void PrintNameTypeLog( IDiaSymbol *pSymbol )
+void PrintNameTypeLog( IDiaSymbol* pSymbol )
 {
     BSTR bstrName;
     BSTR bstrUndName;
@@ -1244,7 +1236,7 @@ void PrintNameTypeLog( IDiaSymbol *pSymbol )
 //  - only SymTagFunction, SymTagData and SymTagPublicSymbol
 //    can have this property set
 //
-void PrintUndName(IDiaSymbol *pSymbol)
+void PrintUndName(IDiaSymbol* pSymbol)
 {
     BSTR bstrName;
 
@@ -1274,7 +1266,7 @@ void PrintUndName(IDiaSymbol *pSymbol)
 ////////////////////////////////////////////////////////////
 // Print a SymTagThunk symbol's info
 //
-void PrintThunk(IDiaSymbol *pSymbol)
+void PrintThunk(IDiaSymbol* pSymbol)
 {
     DWORD dwRVA;
     DWORD dwISect;
@@ -1302,7 +1294,7 @@ void PrintThunk(IDiaSymbol *pSymbol)
 ////////////////////////////////////////////////////////////
 // Print the compiland/module details: language, platform...
 //
-void PrintCompilandDetails(IDiaSymbol *pSymbol)
+void PrintCompilandDetails(IDiaSymbol* pSymbol)
 {
     DWORD dwLanguage;
 
@@ -1487,7 +1479,7 @@ void PrintCompilandDetails(IDiaSymbol *pSymbol)
 ////////////////////////////////////////////////////////////
 // Print the compilan/module env
 //
-void PrintCompilandEnv(IDiaSymbol *pSymbol)
+void PrintCompilandEnv(IDiaSymbol* pSymbol)
 {
     PrintName(pSymbol);
     LOGF(L" =");
@@ -1503,7 +1495,7 @@ void PrintCompilandEnv(IDiaSymbol *pSymbol)
 ////////////////////////////////////////////////////////////
 // Print a string corespondig to a location type
 //
-void PrintLocation(IDiaSymbol *pSymbol)
+void PrintLocation(IDiaSymbol* pSymbol)
 {
     DWORD dwLocType;
     DWORD dwRVA, dwSect, dwOff, dwReg, dwBitPos, dwSlot;
@@ -1591,7 +1583,7 @@ void PrintLocation(IDiaSymbol *pSymbol)
 ////////////////////////////////////////////////////////////
 // Print the type, value and the name of a const symbol
 //
-void PrintConst(IDiaSymbol *pSymbol)
+void PrintConst(IDiaSymbol* pSymbol)
 {
     PrintSymbolType(pSymbol);
 
@@ -1608,7 +1600,7 @@ void PrintConst(IDiaSymbol *pSymbol)
 ////////////////////////////////////////////////////////////
 // Print the name and the type of an user defined type
 //
-void PrintUDT(IDiaSymbol *pSymbol)
+void PrintUDT(IDiaSymbol* pSymbol)
 {
     PrintName(pSymbol);
     PrintSymbolType(pSymbol);
@@ -1617,36 +1609,32 @@ void PrintUDT(IDiaSymbol *pSymbol)
 ////////////////////////////////////////////////////////////
 // Print a string representing the type of a symbol
 //
-void PrintSymbolType(IDiaSymbol *pSymbol)
+void PrintSymbolType(IDiaSymbol* pSymbol)
 {
-    IDiaSymbol *pType;
+    OrbitDiaSymbol pType;
 
-    if (pSymbol->get_type(&pType) == S_OK) {
+    if (pSymbol->get_type(&pType.m_Symbol) == S_OK) {
         PRINTF(L", Type: ");
-        PrintType(pType);
-        pType->Release();
+        PrintType(pType.m_Symbol);
     }
 }
 
-void PrintSymbolTypeNoPrefix( IDiaSymbol *pSymbol )
+void PrintSymbolTypeNoPrefix( IDiaSymbol* pSymbol )
 {
-    IDiaSymbol *pType;
+    OrbitDiaSymbol pType;
 
-    if( pSymbol->get_type( &pType ) == S_OK ) {
+    if( pSymbol->get_type( &pType.m_Symbol ) == S_OK ) 
+    {
         //PRINTF(L", Type: ");
-        PrintType( pType );
-        pType->Release();
+        PrintType( pType.m_Symbol );
     }
 }
 
 ////////////////////////////////////////////////////////////
 // Print the information details for a type symbol
 //
-void PrintType(IDiaSymbol *pSymbol)
+void PrintType(IDiaSymbol* pSymbol)
 {
-    IDiaSymbol *pBaseType;
-    IDiaEnumSymbols *pEnumSym;
-    IDiaSymbol *pSym;
     DWORD dwTag;
     BSTR bstrName;
     DWORD dwInfo;
@@ -1698,7 +1686,9 @@ void PrintType(IDiaSymbol *pSymbol)
         break;
 
     case SymTagPointerType:
-        if (pSymbol->get_type(&pBaseType) != S_OK) {
+    {
+        OrbitDiaSymbol pBaseType;
+        if (pSymbol->get_type(&pBaseType.m_Symbol) != S_OK) {
             LOGF(L"ERROR - SymTagPointerType get_type");
             if (bstrName != NULL) {
                 SysFreeString(bstrName);
@@ -1706,8 +1696,7 @@ void PrintType(IDiaSymbol *pSymbol)
             return;
         }
 
-        PrintType(pBaseType);
-        pBaseType->Release();
+        PrintType(pBaseType.m_Symbol);
 
         if ((pSymbol->get_reference(&bSet) == S_OK) && bSet) {
             LOGF(L" &");
@@ -1729,59 +1718,55 @@ void PrintType(IDiaSymbol *pSymbol)
             LOGF(L" __unaligned");
         }
         break;
-
+    }
     case SymTagArrayType:
-        if (pSymbol->get_type(&pBaseType) == S_OK) {
-            PrintType(pBaseType);
+    {
+        OrbitDiaSymbol pBaseType;
+        OrbitDiaEnumSymbols pEnumSym;
+        if (pSymbol->get_type(&pBaseType.m_Symbol) == S_OK) 
+        {
+            PrintType(pBaseType.m_Symbol);
 
-            if (pSymbol->get_rank(&dwRank) == S_OK) {
-                if (SUCCEEDED(pSymbol->findChildren(SymTagDimension, NULL, nsNone, &pEnumSym)) && (pEnumSym != NULL)) {
-                    while (SUCCEEDED(pEnumSym->Next(1, &pSym, &celt)) && (celt == 1)) {
-                        IDiaSymbol *pBound;
-
+            if (pSymbol->get_rank(&dwRank) == S_OK) 
+            {
+                if (SUCCEEDED(pSymbol->findChildren(SymTagDimension, NULL, nsNone, &pEnumSym.m_Symbol)) && (pEnumSym.m_Symbol != NULL)) 
+                {
+                    OrbitDiaSymbol pSym;
+                    while (SUCCEEDED(pEnumSym->Next(1, &pSym.m_Symbol, &celt)) && (celt == 1)) 
+                    {
+                        OrbitDiaSymbol lowerBound;
                         LOGF(L"[");
-
-                        if (pSym->get_lowerBound(&pBound) == S_OK) {
-                            PrintBound(pBound);
-
+                        if (pSym->get_lowerBound(&lowerBound.m_Symbol) == S_OK) {
+                            PrintBound(lowerBound.m_Symbol);
                             LOGF(L"..");
-
-                            pBound->Release();
                         }
 
-                        pBound = NULL;
-
-                        if (pSym->get_upperBound(&pBound) == S_OK) {
-                            PrintBound(pBound);
-
-                            pBound->Release();
+                        OrbitDiaSymbol upperBound;
+                        if (pSym->get_upperBound(&upperBound.m_Symbol) == S_OK) 
+                        {
+                            PrintBound(upperBound.m_Symbol);
                         }
-
-                        pSym->Release();
-                        pSym = NULL;
-
                         LOGF(L"]");
-                    }
 
-                    pEnumSym->Release();
+                        pSym.Release();
+                    }
                 }
             }
-
-            else if (SUCCEEDED(pSymbol->findChildren(SymTagCustomType, NULL, nsNone, &pEnumSym)) &&
-                (pEnumSym != NULL) &&
-                (pEnumSym->get_Count(&lCount) == S_OK) &&
-                (lCount > 0)) {
-                while (SUCCEEDED(pEnumSym->Next(1, &pSym, &celt)) && (celt == 1)) {
+            else if (SUCCEEDED(pSymbol->findChildren(SymTagCustomType, NULL, nsNone, &pEnumSym.m_Symbol)) &&
+                    (pEnumSym.m_Symbol != NULL) &&
+                    (pEnumSym->get_Count(&lCount) == S_OK) &&
+                    (lCount > 0)) 
+            {
+                OrbitDiaSymbol pSym;
+                while (SUCCEEDED(pEnumSym->Next(1, &pSym.m_Symbol, &celt)) && (celt == 1)) 
+                {
                     LOGF(L"[");
-                    PrintType(pSym);
+                    PrintType(pSym.m_Symbol);
                     LOGF(L"]");
 
-                    pSym->Release();
+                    pSym.Release();
                 }
-
-                pEnumSym->Release();
             }
-
             else {
                 DWORD dwCountElems;
                 ULONGLONG ulLenArray;
@@ -1814,7 +1799,7 @@ void PrintType(IDiaSymbol *pSymbol)
             return;
         }
         break;
-
+    }
     case SymTagBaseType:
         if (pSymbol->get_baseType(&dwInfo) != S_OK) {
             LOGF(L"SymTagBaseType get_baseType\n");
@@ -1898,7 +1883,7 @@ void PrintType(IDiaSymbol *pSymbol)
         }
 
         if (pSymbol->get_types(0, &count, NULL) == S_OK) {
-            IDiaSymbol** rgpDiaSymbols = (IDiaSymbol**)_alloca(sizeof(IDiaSymbol *) * count);
+            IDiaSymbol** rgpDiaSymbols = (IDiaSymbol**)_alloca(sizeof(IDiaSymbol* ) * count);
 
             if (pSymbol->get_types(count, &count, rgpDiaSymbols) == S_OK) {
                 for (ULONG i = 0; i < count; i++) {
@@ -1939,7 +1924,7 @@ void PrintType(IDiaSymbol *pSymbol)
 ////////////////////////////////////////////////////////////
 // Print bound information
 //
-void PrintBound(IDiaSymbol *pSymbol)
+void PrintBound(IDiaSymbol* pSymbol)
 {
     DWORD dwTag = 0;
     DWORD dwKind;
@@ -1970,7 +1955,7 @@ void PrintBound(IDiaSymbol *pSymbol)
 
 ////////////////////////////////////////////////////////////
 //
-void PrintData(IDiaSymbol *pSymbol)
+void PrintData(IDiaSymbol* pSymbol)
 {
     PrintLocation(pSymbol);
 
@@ -2003,7 +1988,7 @@ void PrintData(IDiaSymbol *pSymbol)
     PrintName(pSymbol);
 }
 
-std::wstring GetData( IDiaSymbol *pSymbol )
+std::wstring GetData( IDiaSymbol* pSymbol )
 {
     StringLogger strLog;
     ScopeLog log( &strLog );
@@ -2013,7 +1998,7 @@ std::wstring GetData( IDiaSymbol *pSymbol )
 
 ////////////////////////////////////////////////////////////
 //
-void GetData( IDiaSymbol *pSymbol, Type* a_OrbitType )
+void GetData( IDiaSymbol* pSymbol, Type* a_OrbitType )
 {
     PrintLocation( pSymbol );
 
@@ -2099,7 +2084,7 @@ void PrintVariant(VARIANT var)
 ////////////////////////////////////////////////////////////
 // Print a string corresponding to a UDT kind
 //
-void PrintUdtKind(IDiaSymbol *pSymbol)
+void PrintUdtKind(IDiaSymbol* pSymbol)
 {
     DWORD dwKind = 0;
 
@@ -2110,8 +2095,6 @@ void PrintUdtKind(IDiaSymbol *pSymbol)
 
 void PrintClassHierarchy( IDiaSymbol* pSymbol, DWORD dwIndent, IDiaSymbol* a_Parent )
 {
-    IDiaEnumSymbols *pEnumChildren;
-    IDiaSymbol *pChild;
     DWORD dwSymTag;
     ULONG celt = 0;
     BOOL bFlag;
@@ -2150,24 +2133,29 @@ void PrintClassHierarchy( IDiaSymbol* pSymbol, DWORD dwIndent, IDiaSymbol* a_Par
     case SymTagVTable:
     case SymTagEnum:
     case SymTagUDT:
+	{
+		IDiaEnumSymbols *pEnumChildren;
+		OrbitDiaSymbol pChild;
         if (SUCCEEDED(pSymbol->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren)))
         {
-            while (SUCCEEDED(pEnumChildren->Next(1, &pChild, &celt)) && (celt == 1))
+            while (SUCCEEDED(pEnumChildren->Next(1, &pChild.m_Symbol, &celt)) && (celt == 1))
             {
-                PrintClassHierarchy(pChild, dwIndent + 2, pSymbol);
-                pChild->Release();
+                PrintClassHierarchy(pChild.m_Symbol, dwIndent + 2, pSymbol);
+				pChild.Release();
             }
 
             pEnumChildren->Release();
         }
         return;
         break;
+	}
     case SymTagBaseClass:
+	{
         PrintNameTypeLog(pSymbol);
 
         if ((pSymbol->get_virtualBaseClass(&bFlag) == S_OK) && bFlag)
         {
-            IDiaSymbol *pVBTableType;
+            OrbitDiaSymbol pVBTableType;
             LONG ptrOffset;
             DWORD dispIndex;
 
@@ -2176,10 +2164,9 @@ void PrintClassHierarchy( IDiaSymbol* pSymbol, DWORD dwIndent, IDiaSymbol* a_Par
             {
                 TYPELOGF(L" virtual, offset = 0x%X, pointer offset = %ld, virtual base pointer type = ", dispIndex, ptrOffset);
 
-                if (pSymbol->get_virtualBaseTableType(&pVBTableType) == S_OK)
+                if (pSymbol->get_virtualBaseTableType(&pVBTableType.m_Symbol) == S_OK)
                 {
-                    PrintType(pVBTableType);
-                    pVBTableType->Release();
+                    PrintType(pVBTableType.m_Symbol);
                 }
                 else
                 {
@@ -2196,11 +2183,11 @@ void PrintClassHierarchy( IDiaSymbol* pSymbol, DWORD dwIndent, IDiaSymbol* a_Par
             }
         }
 
-        IDiaSymbol* typeSym;
-        if( pSymbol->get_type( &typeSym ) == S_OK )
+        OrbitDiaSymbol typeSym;
+        if( pSymbol->get_type( &typeSym.m_Symbol ) == S_OK )
         {
             DWORD typeId;
-            if( typeSym->get_symIndexId( &typeId ) == S_OK )
+            if( typeSym.m_Symbol->get_symIndexId( &typeId ) == S_OK )
             {
                 TYPELOGF( L" - typeID = %u ", typeId );
             }
@@ -2208,17 +2195,20 @@ void PrintClassHierarchy( IDiaSymbol* pSymbol, DWORD dwIndent, IDiaSymbol* a_Par
 
         TYPELOGF(L"\n");
 
+        IDiaEnumSymbols* pEnumChildren;
         if (SUCCEEDED(pSymbol->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren)))
         {
-            while (SUCCEEDED(pEnumChildren->Next(1, &pChild, &celt)) && (celt == 1))
+            OrbitDiaSymbol pChild;
+            while (SUCCEEDED(pEnumChildren->Next(1, &pChild.m_Symbol, &celt)) && (celt == 1))
             {
-                PrintClassHierarchy(pChild, dwIndent + 2, pSymbol);
-                pChild->Release();
+                PrintClassHierarchy(pChild.m_Symbol, dwIndent + 2, pSymbol);
+                pChild.Release();
             }
 
             pEnumChildren->Release();
         }
         break;
+	}
 
 
     default: break;
@@ -2235,11 +2225,9 @@ void GetTypeInformation( class Type* a_Type, DWORD a_TagType )
     GetTypeInformation( a_Type, a_Type->GetDiaSymbol(), a_TagType, 0 );
 }
 
-void GetTypeInformation( Type* a_Type, IDiaSymbol *pSymbol, DWORD a_TagType, DWORD dwIndent )
+void GetTypeInformation( Type* a_Type, std::shared_ptr<OrbitDiaSymbol> a_Symbol, DWORD a_TagType, DWORD dwIndent )
 {
-    IDiaEnumSymbols *pEnumChildren;
-    IDiaSymbol *pType;
-    IDiaSymbol *pChild;
+	IDiaSymbol* pSymbol = a_Symbol->m_Symbol;
     DWORD dwSymTag;
     DWORD dwSymTagType;
     ULONG celt = 0;
@@ -2264,9 +2252,11 @@ void GetTypeInformation( Type* a_Type, IDiaSymbol *pSymbol, DWORD a_TagType, DWO
     switch( dwSymTag )
     {
     case SymTagData:
+    {
         GetData( pSymbol, a_Type );
 
-        if( pSymbol->get_type( &pType ) == S_OK )
+        OrbitDiaSymbol pType;
+        if( pSymbol->get_type( &pType.m_Symbol ) == S_OK )
         {
             if( pType->get_symTag( &dwSymTagType ) == S_OK )
             {
@@ -2276,10 +2266,9 @@ void GetTypeInformation( Type* a_Type, IDiaSymbol *pSymbol, DWORD a_TagType, DWO
                     //PrintTypeInDetail( pType, dwIndent + 2 );
                 }
             }
-            pType->Release();
         }
         break;
-
+    }
     case SymTagTypedef:
     case SymTagVTable:
         PrintSymbolType( pSymbol );
@@ -2287,22 +2276,24 @@ void GetTypeInformation( Type* a_Type, IDiaSymbol *pSymbol, DWORD a_TagType, DWO
 
     case SymTagEnum:
     case SymTagUDT:
+    {
         PrintUDT( pSymbol );
         LOGF( L"\n" );
 
-        if( dwIndent == 0 && SUCCEEDED( pSymbol->findChildren( SymTagNull, NULL, nsNone, &pEnumChildren ) ) )
+        OrbitDiaEnumSymbols pEnumChildren;
+        if( dwIndent == 0 && SUCCEEDED( pSymbol->findChildren( SymTagNull, NULL, nsNone, &pEnumChildren.m_Symbol ) ) )
         {
-            while( SUCCEEDED( pEnumChildren->Next( 1, &pChild, &celt ) ) && ( celt == 1 ) )
+            OrbitDiaSymbol pChild;
+            while( SUCCEEDED( pEnumChildren->Next( 1, &pChild.m_Symbol, &celt ) ) && ( celt == 1 ) )
             {
-                GetTypeInformation( a_Type, pChild, a_TagType, dwIndent + 2 );
-                pChild->Release();
+				std::shared_ptr<OrbitDiaSymbol> childSymbol = std::make_shared<OrbitDiaSymbol>(pChild);
+                GetTypeInformation( a_Type, childSymbol, a_TagType, dwIndent + 2 );
+                pChild.Release();
             }
-
-            pEnumChildren->Release();
         }
         return;
         break;
-
+    }
     case SymTagFunction:
         PrintFunctionType( pSymbol );
         return;
@@ -2330,7 +2321,7 @@ void GetTypeInformation( Type* a_Type, IDiaSymbol *pSymbol, DWORD a_TagType, DWO
 
         if( ( pSymbol->get_virtualBaseClass( &bFlag ) == S_OK ) && bFlag )
         {
-            IDiaSymbol *pVBTableType;
+            OrbitDiaSymbol pVBTableType;
             LONG ptrOffset;
             DWORD dispIndex;
 
@@ -2339,10 +2330,9 @@ void GetTypeInformation( Type* a_Type, IDiaSymbol *pSymbol, DWORD a_TagType, DWO
             {
                 LOGF( L" virtual, offset = 0x%X, pointer offset = %ld, virtual base pointer type = ", dispIndex, ptrOffset );
 
-                if( pSymbol->get_virtualBaseTableType( &pVBTableType ) == S_OK )
+                if( pSymbol->get_virtualBaseTableType( &pVBTableType.m_Symbol ) == S_OK )
                 {
-                    PrintType( pVBTableType );
-                    pVBTableType->Release();
+                    PrintType( pVBTableType.m_Symbol );
                 }
                 else
                 {
@@ -2375,12 +2365,14 @@ void GetTypeInformation( Type* a_Type, IDiaSymbol *pSymbol, DWORD a_TagType, DWO
         break;
 
     case SymTagFunctionType:
-        if( pSymbol->get_type( &pType ) == S_OK )
+    {
+        OrbitDiaSymbol pType;
+        if( pSymbol->get_type( &pType.m_Symbol ) == S_OK )
         {
-            PrintType( pType );
+            PrintType( pType.m_Symbol );
         }
         break;
-
+    }
     case SymTagThunk:
         // Happens for functions which only have S_PROCREF
         PrintThunk( pSymbol );
@@ -2396,11 +2388,8 @@ void GetTypeInformation( Type* a_Type, IDiaSymbol *pSymbol, DWORD a_TagType, DWO
 ////////////////////////////////////////////////////////////
 // Print type informations is details
 //
-void PrintTypeInDetail(IDiaSymbol *pSymbol, DWORD dwIndent)
+void PrintTypeInDetail(IDiaSymbol* pSymbol, DWORD dwIndent)
 {
-    IDiaEnumSymbols *pEnumChildren;
-    IDiaSymbol *pType;
-    IDiaSymbol *pChild;
     DWORD dwSymTag;
     DWORD dwSymTagType;
     ULONG celt = 0;
@@ -2438,22 +2427,22 @@ void PrintTypeInDetail(IDiaSymbol *pSymbol, DWORD dwIndent)
     switch (dwSymTag)
     {
     case SymTagData:
+    {
         PrintData(pSymbol);
-
-        if (pSymbol->get_type(&pType) == S_OK)
+        OrbitDiaSymbol pType;
+        if (pSymbol->get_type(&pType.m_Symbol) == S_OK)
         {
             if (pType->get_symTag(&dwSymTagType) == S_OK)
             {
                 if (dwSymTagType == SymTagUDT)
                 {
                     LOGF(L"\n");
-                    PrintTypeInDetail(pType, dwIndent + 2);
+                    PrintTypeInDetail(pType.m_Symbol, dwIndent + 2);
                 }
             }
-            pType->Release();
         }
         break;
-
+    }
     case SymTagTypedef:
     case SymTagVTable:
         PrintSymbolType(pSymbol);
@@ -2461,22 +2450,22 @@ void PrintTypeInDetail(IDiaSymbol *pSymbol, DWORD dwIndent)
 
     case SymTagEnum:
     case SymTagUDT:
+    {
         PrintUDT(pSymbol);
         LOGF(L"\n");
-
-        if (SUCCEEDED(pSymbol->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren)))
+        OrbitDiaEnumSymbols pEnumChildren;
+        if (SUCCEEDED(pSymbol->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren.m_Symbol)))
         {
-            while (SUCCEEDED(pEnumChildren->Next(1, &pChild, &celt)) && (celt == 1))
+            OrbitDiaSymbol pChild;
+            while (SUCCEEDED(pEnumChildren->Next(1, &pChild.m_Symbol, &celt)) && (celt == 1))
             {
-                PrintTypeInDetail(pChild, dwIndent + 2);
-                pChild->Release();
+                PrintTypeInDetail(pChild.m_Symbol, dwIndent + 2);
+                pChild.Release();
             }
-
-            pEnumChildren->Release();
         }
         return;
         break;
-
+    }
     case SymTagFunction:
         PrintFunctionType(pSymbol);
         return;
@@ -2500,11 +2489,12 @@ void PrintTypeInDetail(IDiaSymbol *pSymbol, DWORD dwIndent)
 
     case SymTagVTableShape:
     case SymTagBaseClass:
+    {
         PrintName(pSymbol);
 
         if ((pSymbol->get_virtualBaseClass(&bFlag) == S_OK) && bFlag)
         {
-            IDiaSymbol *pVBTableType;
+            OrbitDiaSymbol pVBTableType;
             LONG ptrOffset;
             DWORD dispIndex;
 
@@ -2513,10 +2503,9 @@ void PrintTypeInDetail(IDiaSymbol *pSymbol, DWORD dwIndent)
             {
                 LOGF(L" virtual, offset = 0x%X, pointer offset = %ld, virtual base pointer type = ", dispIndex, ptrOffset);
 
-                if (pSymbol->get_virtualBaseTableType(&pVBTableType) == S_OK)
+                if (pSymbol->get_virtualBaseTableType(&pVBTableType.m_Symbol) == S_OK)
                 {
-                    PrintType(pVBTableType);
-                    pVBTableType->Release();
+                    PrintType(pVBTableType.m_Symbol);
                 }
                 else
                 {
@@ -2535,26 +2524,27 @@ void PrintTypeInDetail(IDiaSymbol *pSymbol, DWORD dwIndent)
         }
 
         LOGF(L"\n");
-
-        if (SUCCEEDED(pSymbol->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren)))
+        OrbitDiaEnumSymbols pEnumChildren;
+        if (SUCCEEDED(pSymbol->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren.m_Symbol)))
         {
-            while (SUCCEEDED(pEnumChildren->Next(1, &pChild, &celt)) && (celt == 1))
+            OrbitDiaSymbol pChild;
+            while (SUCCEEDED(pEnumChildren->Next(1, &pChild.m_Symbol, &celt)) && (celt == 1))
             {
-                PrintTypeInDetail(pChild, dwIndent + 2);
-                pChild->Release();
+                PrintTypeInDetail(pChild.m_Symbol, dwIndent + 2);
+                pChild.Release();
             }
-
-            pEnumChildren->Release();
         }
         break;
-
+    }
     case SymTagFunctionType:
-        if (pSymbol->get_type(&pType) == S_OK)
+    {
+        OrbitDiaSymbol pType;
+        if (pSymbol->get_type(&pType.m_Symbol) == S_OK)
         {
-            PrintType(pType);
+            PrintType(pType.m_Symbol);
         }
         break;
-
+    }
     case SymTagThunk:
         // Happens for functions which only have S_PROCREF
         PrintThunk(pSymbol);
@@ -2570,7 +2560,7 @@ void PrintTypeInDetail(IDiaSymbol *pSymbol, DWORD dwIndent)
 ////////////////////////////////////////////////////////////
 // Print a function type
 //
-void PrintFunctionType(IDiaSymbol *pSymbol)
+void PrintFunctionType(IDiaSymbol* pSymbol)
 {
     DWORD dwAccess = 0;
 
@@ -2584,56 +2574,47 @@ void PrintFunctionType(IDiaSymbol *pSymbol)
         PRINTF(L"static ");
     }
 
-    IDiaSymbol *pFuncType;
+    OrbitDiaSymbol pFuncType;
+    if (pSymbol->get_type(&pFuncType.m_Symbol) == S_OK) {
+        OrbitDiaSymbol pReturnType;
 
-    if (pSymbol->get_type(&pFuncType) == S_OK) {
-        IDiaSymbol *pReturnType;
-
-        if (pFuncType->get_type(&pReturnType) == S_OK) {
-            PrintType(pReturnType);
+        if (pFuncType->get_type(&pReturnType.m_Symbol) == S_OK) {
+            PrintType(pReturnType.m_Symbol);
             LOGF(L" ");
 
             BSTR bstrName;
-
             if (pSymbol->get_name(&bstrName) == S_OK) {
                 LOGF(L"%s", bstrName);
 
                 SysFreeString(bstrName);
             }
 
-            IDiaEnumSymbols *pEnumChildren;
-
-            if (SUCCEEDED(pFuncType->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren))) {
-                IDiaSymbol *pChild;
+            OrbitDiaEnumSymbols pEnumChildren;
+            if (SUCCEEDED(pFuncType->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren.m_Symbol))) 
+            {
+                OrbitDiaSymbol pChild;
                 ULONG celt = 0;
                 ULONG nParam = 0;
 
                 PRINTF(L"(");
 
-                while (SUCCEEDED(pEnumChildren->Next(1, &pChild, &celt)) && (celt == 1)) {
-                    IDiaSymbol *pType;
-
-                    if (pChild->get_type(&pType) == S_OK) {
-                        if (nParam++) {
+                while (SUCCEEDED(pEnumChildren->Next(1, &pChild.m_Symbol, &celt)) && (celt == 1)) 
+                {
+                    OrbitDiaSymbol pType;
+                    if (pChild->get_type(&pType.m_Symbol) == S_OK) 
+                    {
+                        if (nParam++) 
+                        {
                             PRINTF(L", ");
                         }
-
-                        PrintType(pType);
-                        pType->Release();
+                        PrintType(pType.m_Symbol);
                     }
 
-                    pChild->Release();
+                    pChild.Release();
                 }
-
-                pEnumChildren->Release();
-
                 PRINTF(L")\n");
             }
-
-            pReturnType->Release();
         }
-
-        pFuncType->Release();
     }
 }
 
@@ -2696,7 +2677,7 @@ void PrintSourceFile(IDiaSourceFile *pSource)
 
 ////////////////////////////////////////////////////////////
 //
-void PrintLines(IDiaSession *pSession, IDiaSymbol *pFunction)
+void PrintLines(IDiaSession *pSession, IDiaSymbol* pFunction)
 {
     DWORD dwSymTag;
 
@@ -2795,19 +2776,16 @@ void PrintSecContribs(IDiaSectionContrib *pSegment)
     DWORD dwSect;
     DWORD dwOffset;
     DWORD dwLen;
-    IDiaSymbol *pCompiland;
+    OrbitDiaSymbol pCompiland;
     BSTR bstrName;
 
     if ((pSegment->get_relativeVirtualAddress(&dwRVA) == S_OK) &&
         (pSegment->get_addressSection(&dwSect) == S_OK) &&
         (pSegment->get_addressOffset(&dwOffset) == S_OK) &&
         (pSegment->get_length(&dwLen) == S_OK) &&
-        (pSegment->get_compiland(&pCompiland) == S_OK) &&
+        (pSegment->get_compiland(&pCompiland.m_Symbol) == S_OK) &&
         (pCompiland->get_name(&bstrName) == S_OK)) {
         LOGF(L"  %08X  %04X:%08X  %08X  %s\n", dwRVA, dwSect, dwOffset, dwLen, bstrName);
-
-        pCompiland->Release();
-
         SysFreeString(bstrName);
     }
 }

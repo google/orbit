@@ -133,7 +133,7 @@ void Capture::SetTargetProcess( const std::shared_ptr< Process > & a_Process )
         GInjected = false;
         GInjectedProcess = "";
 
-        if( !a_Process->GetIsRemote() )
+        if( a_Process && !a_Process->GetIsRemote() )
         {
             // In the case of a remote process, 
             // connection is already active
@@ -141,12 +141,12 @@ void Capture::SetTargetProcess( const std::shared_ptr< Process > & a_Process )
         }
 
         GTargetProcess = a_Process;
-        GTargetProcess->LoadDebugInfo();
         GSamplingProfiler = std::make_shared<SamplingProfiler>( a_Process );
         GSelectedFunctionsMap.clear();
         GSessionPresets = nullptr;
         GOrbitUnreal.Clear();
-        GTargetProcess->ClearWatchedVariables();
+		GTargetProcess->LoadDebugInfo();
+		GTargetProcess->ClearWatchedVariables();
     }
 }
 

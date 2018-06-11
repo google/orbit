@@ -4,46 +4,45 @@
 
 #include "DiaManager.h"
 #include "ScopeTimer.h"
+#include "ObjectCount.h"
 
 #include "external/DIA2Dump/dia2dump.h"
 #include "external/DIA2Dump/PrintSymbol.h"
 
 //-----------------------------------------------------------------------------
-DiaManager GDiaManager;
-typedef HRESULT( WINAPI *pfnGetFactory )( REFCLSID, REFIID, void** );
+void OrbitDiaReleasePtr( IUnknown* a_Symbol )
+{
+    a_Symbol->Release();
+}
 
 //-----------------------------------------------------------------------------
-DiaManager::DiaManager() : m_DiaDataSource(nullptr)
+void OrbitSmartPtrCreated()
+{
+	//PRINT_VAR( GObjectCounter.Inc("DiaPtr") );
+}
+
+//-----------------------------------------------------------------------------
+void OrbitSmartPtrDestroyed()
+{
+	//PRINT_VAR( GObjectCounter.Dec("DiaPtr") );
+}
+
+//-----------------------------------------------------------------------------
+typedef HRESULT( WINAPI *pfnGetFactory )( REFCLSID, REFIID, void** );
+
+
+//-----------------------------------------------------------------------------
+DiaManager::DiaManager()
 {
 }
 
 //-----------------------------------------------------------------------------
 DiaManager::~DiaManager()
 {
-    DeInit();
 }
 
 //-----------------------------------------------------------------------------
-void DiaManager::Init()
-{
-    if( m_DiaDataSource == nullptr )
-    {
-        InitDataSource();
-    }
-}
-
-//-----------------------------------------------------------------------------
-void DiaManager::DeInit()
-{
-   if( m_DiaDataSource )
-   {
-        m_DiaDataSource->Release();
-        m_DiaDataSource = nullptr;
-   }
-}
-
-//-----------------------------------------------------------------------------
-bool DiaManager::InitDataSource()
+bool InitDataSource( IDiaDataSource** a_DiaDataSource )
 {
     SCOPE_TIMER_LOG( L"InitDataSource" );
 
@@ -58,7 +57,7 @@ bool DiaManager::InitDataSource()
         LoadLibrary( dllFullPath.c_str() );
     }
 
-    hr = CoCreateInstance( __uuidof( DiaSource ), NULL, CLSCTX_INPROC_SERVER, __uuidof( IDiaDataSource ), (void **)&m_DiaDataSource );
+    hr = CoCreateInstance( __uuidof( DiaSource ), NULL, CLSCTX_INPROC_SERVER, __uuidof( IDiaDataSource ), (void **)a_DiaDataSource );
     if( !SUCCEEDED( hr ) )
     {
         ORBIT_VIZ("CoCreateInstance Failed : ");
@@ -74,11 +73,17 @@ bool DiaManager::InitDataSource()
 }
 
 //-----------------------------------------------------------------------------
-bool DiaManager::LoadDataFromPdb( const wchar_t* a_FileName, IDiaSession ** a_Session, IDiaSymbol ** a_GlobalSymbol )
+bool DiaManager::LoadDataFromPdb( const wchar_t* a_FileName
+								, IDiaDataSource** a_DiaDataSource
+								, IDiaSession ** a_Session
+								, IDiaSymbol* * a_GlobalSymbol )
 {
-    Init();
+	if (!*a_DiaDataSource)
+	{
+		InitDataSource( a_DiaDataSource );
+	}
 
-    if( m_DiaDataSource )
+    if( *a_DiaDataSource )
     {
         wchar_t wszExt[MAX_PATH];
         _wsplitpath_s( a_FileName, NULL, 0, NULL, 0, NULL, 0, wszExt, MAX_PATH );
@@ -87,7 +92,7 @@ bool DiaManager::LoadDataFromPdb( const wchar_t* a_FileName, IDiaSession ** a_Se
         if( !_wcsicmp( wszExt, L".pdb" ) )
         {
             // Open and prepare a program database (.pdb) file as a debug data source
-            hr = m_DiaDataSource->loadDataFromPdb( a_FileName );
+            hr = (*a_DiaDataSource)->loadDataFromPdb( a_FileName );
 
             if( FAILED( hr ) ) 
             {
@@ -118,7 +123,7 @@ bool DiaManager::LoadDataFromPdb( const wchar_t* a_FileName, IDiaSession ** a_Se
 
         // Open a session for querying symbols
 
-        hr = m_DiaDataSource->openSession( a_Session );
+        hr = (*a_DiaDataSource)->openSession( a_Session );
 
         if( FAILED( hr ) ) 
         {

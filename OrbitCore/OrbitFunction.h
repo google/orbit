@@ -52,19 +52,7 @@ struct FunctionArgInfo
 class Function
 {
 public:
-    Function() : m_Address( 0 )
-               , m_Size( 0 )
-               , m_Line( 0 )
-               , m_ModBase( 0 )
-               , m_Selected( 0 )
-               , m_CallConv( -1 )
-               , m_Id( 0 )
-               , m_ParentId( 0 )
-               , m_Pdb( nullptr )
-               , m_NameHash( 0 )
-               , m_OrbitType( OrbitType::NONE )
-    {}
-
+    Function();
     ~Function();
 
     void Print();

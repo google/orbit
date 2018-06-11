@@ -73,6 +73,7 @@
     <ClInclude Include="EventUtils.h" />
     <ClInclude Include="EventGuid.h" />
     <ClInclude Include="EventTracer.h" />
+    <ClInclude Include="ObjectCount.h" />
     <ClInclude Include="LogInterface.h" />
     <ClInclude Include="MiniDump.h" />
     <ClInclude Include="OrbitAsio.h" />
@@ -187,6 +188,7 @@
     <ClCompile Include="Injection.cpp" />
     <ClCompile Include="LogInterface.cpp" />
     <ClCompile Include="MiniDump.cpp" />
+    <ClCompile Include="ObjectCount.cpp" />
     <ClCompile Include="OrbitAsio.cpp" />
     <ClCompile Include="OrbitDia.cpp" />
     <ClCompile Include="OrbitFunction.cpp" />

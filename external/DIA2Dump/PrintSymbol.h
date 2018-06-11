@@ -63,7 +63,7 @@ void PrintPropertyStorage( IDiaPropertyStorage* );
 void PrintClassHierarchy( IDiaSymbol* , DWORD, IDiaSymbol* a_Parent = nullptr );
 
 void GetTypeInformation( class Type* a_Type, DWORD a_TagType );
-void GetTypeInformation( class Type* a_Type, IDiaSymbol *pSymbol, DWORD a_TagType, DWORD dwIndent );
+void GetTypeInformation( class Type* a_Type, std::shared_ptr<OrbitDiaSymbol> pSymbol, DWORD a_TagType, DWORD dwIndent );
 
 template<class T> void PrintGeneric( T t ){
   IDiaPropertyStorage* pPropertyStorage;

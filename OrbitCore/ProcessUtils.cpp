@@ -168,3 +168,17 @@ void ProcessList::UpdateCpuTimes()
         process->UpdateCpuTime();
     }
 }
+
+//-----------------------------------------------------------------------------
+bool ProcessList::Contains( DWORD a_PID ) const
+{
+	for( const std::shared_ptr< Process > & process : m_Processes )
+	{
+		if( process->GetID() == a_PID )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}

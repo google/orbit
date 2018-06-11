@@ -19,11 +19,10 @@ extern DWORD g_dwMachineType;
 extern DWORD g_NumFunctions;
 extern DWORD g_NumUserTypes;
 
-bool LoadPdbDia( const wchar_t* a_PdbName );
 void PrintHelpOptions();
 bool ParseArg(int , wchar_t *[]);
 
-void Cleanup();
+void CleanupDia();
 bool LoadDataFromPdb(const wchar_t *, IDiaDataSource **, IDiaSession **, IDiaSymbol **);
 
 void DumpAllPdbInfo(IDiaSession *, IDiaSymbol *);

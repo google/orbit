@@ -26,7 +26,8 @@ void Type::LoadDiaInfo()
 {
     if( !m_DiaInfoLoaded )
     {
-        if( IDiaSymbol* diaSymbol = GetDiaSymbol() )
+		std::shared_ptr<OrbitDiaSymbol> orbitDiaSymbol = GetDiaSymbol();
+        if( orbitDiaSymbol )
         {
             m_DiaInfoLoaded = true;
             GenerateDiaHierarchy();
@@ -45,9 +46,8 @@ void Type::GenerateDiaHierarchy()
         return;
 
     LoadDiaInfo();
-    IDiaSymbol* diaSymbol = GetDiaSymbol();
-    GenerateDiaHierarchy( diaSymbol );
-    diaSymbol->Release();
+    std::shared_ptr<OrbitDiaSymbol> diaSymbol = GetDiaSymbol();
+    GenerateDiaHierarchy( diaSymbol->m_Symbol );
 
     for( auto & pair : m_ParentTypes )
     {
@@ -71,11 +71,11 @@ void Type::AddParent( IDiaSymbol* a_Parent )
     LONG offset;
     if( a_Parent->get_offset( &offset ) == S_OK )
     {
-        IDiaSymbol* typeSym;
-        if( a_Parent->get_type( &typeSym ) == S_OK )
+        OrbitDiaSymbol typeSym;
+        if( a_Parent->get_type( &typeSym.m_Symbol ) == S_OK )
         {
             DWORD typeId;
-            if( typeSym->get_symIndexId( &typeId ) == S_OK )
+            if( typeSym.m_Symbol->get_symIndexId( &typeId ) == S_OK )
             {
                 if( m_ParentTypes.find( typeId ) != m_ParentTypes.end() )
                 {
@@ -96,27 +96,25 @@ void Type::AddParent( IDiaSymbol* a_Parent )
 //-----------------------------------------------------------------------------
 void Type::GenerateDiaHierarchy( IDiaSymbol* a_DiaSymbol )
 {
-    IDiaEnumSymbols *pEnumChildren;
-    IDiaSymbol *pChild;
     DWORD dwSymTag;
     ULONG celt = 0;
 
-    if( a_DiaSymbol->get_symTag( &dwSymTag ) != S_OK )
+    if( a_DiaSymbol == nullptr || a_DiaSymbol->get_symTag( &dwSymTag ) != S_OK )
     {
         return;
     }
 
     if( dwSymTag  == SymTagUDT )
     {
-        if( SUCCEEDED( a_DiaSymbol->findChildren( SymTagBaseClass, NULL, nsNone, &pEnumChildren ) ) )
+        OrbitDiaEnumSymbols pEnumChildren;
+        if( SUCCEEDED( a_DiaSymbol->findChildren( SymTagBaseClass, NULL, nsNone, &pEnumChildren.m_Symbol ) ) )
         {
-            while( SUCCEEDED( pEnumChildren->Next( 1, &pChild, &celt ) ) && ( celt == 1 ) )
+            OrbitDiaSymbol pChild;
+            while( SUCCEEDED( pEnumChildren->Next( 1, &pChild.m_Symbol, &celt ) ) && ( celt == 1 ) )
             {
-                AddParent( pChild );
-                pChild->Release();
+                AddParent( pChild.m_Symbol );
+                pChild.Release();
             }
-
-            pEnumChildren->Release();
         }
     }
 
@@ -173,18 +171,19 @@ const map<ULONG, Variable > & Type::GetFullVariableMap() const
 }
 
 //-----------------------------------------------------------------------------
-IDiaSymbol* Type::GetDiaSymbol()
+std::shared_ptr<OrbitDiaSymbol> Type::GetDiaSymbol()
 {
     if( !m_Pdb )
     {
-        return nullptr;
+        return std::make_shared<OrbitDiaSymbol>();
     }
 
-    IDiaSymbol* sym = m_Pdb->GetDiaSymbolFromId( m_Id );
-    if( sym == nullptr )
+    std::shared_ptr<OrbitDiaSymbol> sym = m_Pdb->GetDiaSymbolFromId( m_Id );
+    if( sym->m_Symbol == nullptr )
     {
         sym = m_Pdb->GetDiaSymbolFromId( m_UnmodifiedId );
     }
+
     return sym;
 }
 
@@ -369,7 +368,10 @@ std::shared_ptr<Variable> Type::GenerateVariable( DWORD64 a_Address, const std::
         ULONG memberOffset = pair.first;
         Variable & member = pair.second;
         Type* type = m_Pdb->GetTypePtrFromId( member.m_TypeIndex );
-        type->LoadDiaInfo();
+
+		if(!type)
+			continue;
+
         if( type && type->HasMembers() )
         {
             var->AddChild( type->GenerateVariable( a_Address + memberOffset, &member.m_Name ) );
