@@ -1,5 +1,7 @@
 ![Alt text](logos/orbit_logo.png)
 
+**O**rbit **R**untime **B**inary **I**nstrumentation **T**ool
+
 **Download**  
 www.orbitprofiler.com
 
