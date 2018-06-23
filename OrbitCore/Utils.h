@@ -477,6 +477,20 @@ namespace OrbitUtils
         return asc ? a < b : a > b;
     }
 
+	//-----------------------------------------------------------------------------
+	template< class T >
+	inline bool CompareAsc(const T & a, const T & b)
+	{
+		return a < b;
+	}
+
+	//-----------------------------------------------------------------------------
+	template< class T >
+	inline bool CompareDesc(const T & a, const T & b)
+	{
+		return a > b;
+	}
+
     //-----------------------------------------------------------------------------
     template<> inline bool Compare<string>(const string & a, const string & b, bool asc)
     {
@@ -546,3 +560,8 @@ namespace OrbitUtils
     std::string GetTimeStamp();
     inline std::wstring GetTimeStampW(){ return s2ws(GetTimeStamp()); }
 }
+
+#define CONCAT_(x,y) x##y
+#define CONCAT(x,y) CONCAT_(x,y)
+#define UNIQUE_VAR CONCAT(Unique, __LINE__)
+#define UNIQUE_ID  CONCAT(Id_, __LINE__)

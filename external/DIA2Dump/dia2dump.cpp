@@ -22,35 +22,10 @@
 const wchar_t *g_szFilename;
 IDiaDataSource *g_pDiaDataSource;
 IDiaSession *g_pDiaSession;
-IDiaSymbol *g_pGlobalSymbol;
+IDiaSymbol* g_pGlobalSymbol;
 DWORD g_dwMachineType = CV_CFL_80386;
 DWORD g_NumFunctions = 0;
 DWORD g_NumUserTypes = 0;
-
-//-----------------------------------------------------------------------------
-bool LoadPdbDia( const wchar_t* a_PdbName )
-{
-    g_szFilename = a_PdbName;
-    g_NumFunctions = 0;
-    g_NumUserTypes = 0;
-
-    // CoCreate() and initialize COM objects
-    if( !LoadDataFromPdb(g_szFilename, &g_pDiaDataSource, &g_pDiaSession, &g_pGlobalSymbol) )
-    {
-        return false;
-    }
-
-    GPdbDbg->Reserve();
-
-    auto group = oqpi_tk::make_parallel_group<oqpi::task_type::waitable>( "Fork" );
-    group->addTask( oqpi_tk::make_task_item( "DumpAllFunctions"    , DumpAllFunctions  , g_pGlobalSymbol ) );
-    group->addTask( oqpi_tk::make_task_item( "DumpTypes"           , DumpTypes         , g_pGlobalSymbol ) );
-    group->addTask( oqpi_tk::make_task_item( "OrbitDumpAllGlobals"  , OrbitDumpAllGlobals, g_pGlobalSymbol ) );
-    oqpi_tk::schedule_task( oqpi::task_handle( group ) ).wait();
-
-    Cleanup();
-    return true;
-}
 
 ////////////////////////////////////////////////////////////
 //
@@ -91,14 +66,14 @@ int wmain(int argc, wchar_t *argv[])
   }
 
   else if (!ParseArg(argc-2, &argv[1])) {
-    Cleanup();
+    CleanupDia();
 
     return -1;
   }
 
   // release COM objects and CoUninitialize()
 
-  Cleanup();
+  CleanupDia();
 
   system("pause");
 
@@ -224,16 +199,24 @@ bool LoadDataFromPdb(
 ////////////////////////////////////////////////////////////
 // Release DIA objects and CoUninitialize
 //
-void Cleanup()
+void CleanupDia()
 {
-  if (g_pGlobalSymbol) {
+  if (g_pGlobalSymbol) 
+  {
     g_pGlobalSymbol->Release();
     g_pGlobalSymbol = NULL;
   }
 
-  if (g_pDiaSession) {
+  if (g_pDiaSession) 
+  {
     g_pDiaSession->Release();
     g_pDiaSession = NULL;
+  }
+
+  if (g_pDiaDataSource) 
+  {
+	  g_pDiaDataSource->Release();
+	  g_pDiaDataSource = NULL;
   }
 
   CoUninitialize();
@@ -779,46 +762,36 @@ void DumpAllPdbInfo(IDiaSession *pSession, IDiaSymbol *pGlobal)
 //
 bool DumpAllMods(IDiaSymbol *pGlobal)
 {
-  PRINTF(L"\n\n*** MODULES\n\n");
+	PRINTF(L"\n\n*** MODULES\n\n");
 
-  // Retrieve all the compiland symbols
+	// Retrieve all the compiland symbols
 
-  IDiaEnumSymbols *pEnumSymbols;
+	OrbitDiaEnumSymbols pEnumSymbols;
 
-  if (FAILED(pGlobal->findChildren(SymTagCompiland, NULL, nsNone, &pEnumSymbols))) {
-    return false;
-  }
+	if (FAILED(pGlobal->findChildren(SymTagCompiland, NULL, nsNone, &pEnumSymbols.m_Symbol))) {
+		return false;
+	}
 
-  IDiaSymbol *pCompiland;
-  ULONG celt = 0;
-  ULONG iMod = 1;
+	OrbitDiaSymbol pCompiland;
+	ULONG celt = 0;
+	ULONG iMod = 1;
 
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pCompiland, &celt)) && (celt == 1)) {
-    BSTR bstrName;
+	while (SUCCEEDED(pEnumSymbols->Next(1, &pCompiland.m_Symbol, &celt)) && (celt == 1))
+	{
+		BSTR bstrName;
+		if (pCompiland->get_name(&bstrName) != S_OK) 
+		{
+			PRINTF(L"ERROR - Failed to get the compiland's name\n");
+			return false;
+		}
 
-    if (pCompiland->get_name(&bstrName) != S_OK) {
-      PRINTF(L"ERROR - Failed to get the compiland's name\n");
+		PRINTF(L"%04X %s\n", iMod++, bstrName);
+		SysFreeString(bstrName);
+	}
 
-      pCompiland->Release();
-      pEnumSymbols->Release();
+	putwchar(L'\n');
 
-      return false;
-    }
-
-    PRINTF(L"%04X %s\n", iMod++, bstrName);
-
-    // Deallocate the string allocated previously by the call to get_name
-
-    SysFreeString(bstrName);
-
-    pCompiland->Release();
-  }
-
-  pEnumSymbols->Release();
-
-  putwchar(L'\n');
-
-  return true;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////
@@ -827,28 +800,22 @@ bool DumpAllMods(IDiaSymbol *pGlobal)
 bool DumpAllPublics( IDiaSymbol *pGlobal )
 {
     PRINTF( L"\n\n*** PUBLICS\n\n" );
-
-    // Retrieve all the public symbols
-
-    IDiaEnumSymbols *pEnumSymbols;
-
-    if( FAILED( pGlobal->findChildren( SymTagPublicSymbol, NULL, nsNone, &pEnumSymbols ) ) ) {
+	OrbitDiaEnumSymbols pEnumSymbols;
+	if (FAILED(pGlobal->findChildren(SymTagPublicSymbol, NULL, nsNone, &pEnumSymbols.m_Symbol))) 
+	{
         return false;
     }
 
-    IDiaSymbol *pSymbol;
+	OrbitDiaSymbol pSymbol;
     ULONG celt = 0;
 
-    while( SUCCEEDED( pEnumSymbols->Next( 1, &pSymbol, &celt ) ) && ( celt == 1 ) ) {
-        PrintPublicSymbol( pSymbol );
-
-        pSymbol->Release();
+	while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1))
+	{
+        PrintPublicSymbol( pSymbol.m_Symbol );
+        pSymbol.Release();
     }
 
-    pEnumSymbols->Release();
-
     putwchar( L'\n' );
-
     return true;
 }
 
@@ -856,8 +823,8 @@ bool DumpAllPublics( IDiaSymbol *pGlobal )
 bool DumpAllFunctions( IDiaSymbol *pGlobal )
 {
     SCOPE_TIMER_LOG( L"DumpFunctions" );
-    IDiaEnumSymbols *pEnumSymbols;
-    HRESULT res = pGlobal->findChildren( SymTagFunction, NULL, nsNone, &pEnumSymbols );
+	OrbitDiaEnumSymbols pEnumSymbols;
+	HRESULT res = pGlobal->findChildren(SymTagFunction, NULL, nsNone, &pEnumSymbols.m_Symbol);
     if( FAILED( res ) )
     {
         PRINT_VAR(res);
@@ -865,9 +832,9 @@ bool DumpAllFunctions( IDiaSymbol *pGlobal )
         return false;
     }
 
-    IDiaSymbol *pSymbol;
+    OrbitDiaSymbol pSymbol;
     ULONG celt = 0;
-    while( SUCCEEDED( pEnumSymbols->Next( 1, &pSymbol, &celt ) ) && ( celt == 1 ) )
+	while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1))
     {
         ++g_NumFunctions;
         Function Func;
@@ -899,8 +866,8 @@ bool DumpAllFunctions( IDiaSymbol *pGlobal )
             Func.m_Size = (ULONG)length;
         }
 
-        IDiaSymbol *pFuncType;
-        if( pSymbol->get_type( &pFuncType ) == S_OK )
+        OrbitDiaSymbol pFuncType;
+		if (pSymbol->get_type(&pFuncType.m_Symbol) == S_OK)
         {
             if( pFuncType->get_callingConvention( &callingConv ) == S_OK )
             {
@@ -909,26 +876,29 @@ bool DumpAllFunctions( IDiaSymbol *pGlobal )
         }
 
         DWORD classParentId = 0;
-        IDiaSymbol* classParentSym = nullptr;
-        if( pSymbol->get_classParent( &classParentSym ) == S_OK )
+        OrbitDiaSymbol classParentSym;
+        if( pSymbol->get_classParent( &classParentSym.m_Symbol ) == S_OK )
         {
-            if( classParentSym->get_symIndexId( &classParentId ) == S_OK )
+            if( classParentSym.m_Symbol->get_symIndexId( &classParentId ) == S_OK )
             {
                 Func.m_ParentId = classParentId;
             }
-
-            classParentSym->Release();
         }
 
-        pSymbol->Release();
+		BSTR bstrFile;
+		if (pSymbol->get_sourceFileName(&bstrFile) == S_OK)
+		{
+			Func.m_File = bstrFile;
+			SysFreeString( bstrName );
+		}
 
         if( Func.m_PrettyName.size() && Func.m_PrettyName[0] != TEXT( '`' ) )
         {
-            GPdbDbg->AddFunction(Func);
+			GPdbDbg->AddFunction(Func);
         }
-    }
 
-    pEnumSymbols->Release();
+		pSymbol.Release();
+    }
 
     return true;
 }
@@ -937,18 +907,18 @@ bool DumpAllFunctions( IDiaSymbol *pGlobal )
 bool DumpTypes(IDiaSymbol *pGlobal)
 {
     SCOPE_TIMER_LOG( L"DumpTypes" );
-    IDiaEnumSymbols *pEnumSymbols;
+    OrbitDiaEnumSymbols pEnumSymbols;
 
-    if( FAILED( pGlobal->findChildren( SymTagUDT, NULL, nsNone, &pEnumSymbols ) ) ) 
+	if (FAILED(pGlobal->findChildren(SymTagUDT, NULL, nsNone, &pEnumSymbols.m_Symbol)))
     {
         PRINTF( L"ERROR - DumpAllUDTs() returned no symbols\n" );
         return false;
     }
 
-    IDiaSymbol *pSymbol;
+    OrbitDiaSymbol pSymbol;
     ULONG celt = 0;
 
-    while( SUCCEEDED( pEnumSymbols->Next( 1, &pSymbol, &celt ) ) && ( celt == 1 ) )
+	while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1))
     {
         Type orbitType;
 
@@ -986,10 +956,9 @@ bool DumpTypes(IDiaSymbol *pGlobal)
 
         GPdbDbg->AddType( orbitType );
         ++g_NumUserTypes;
-        pSymbol->Release();
+        pSymbol.Release();
     }
 
-    pEnumSymbols->Release();
     return true;
 }
 
@@ -1002,16 +971,16 @@ bool DumpAllSymbols(IDiaSymbol *pGlobal)
 
   // Retrieve the compilands first
 
-  IDiaEnumSymbols *pEnumSymbols;
+  OrbitDiaEnumSymbols pEnumSymbols;
 
-  if (FAILED(pGlobal->findChildren(SymTagCompiland, NULL, nsNone, &pEnumSymbols))) {
+  if (FAILED(pGlobal->findChildren(SymTagCompiland, NULL, nsNone, &pEnumSymbols.m_Symbol))) {
     return false;
   }
 
-  IDiaSymbol *pCompiland;
+  OrbitDiaSymbol pCompiland;
   ULONG celt = 0;
 
-  while( SUCCEEDED( pEnumSymbols->Next( 1, &pCompiland, &celt ) ) && ( celt == 1 ) )
+  while (SUCCEEDED(pEnumSymbols->Next(1, &pCompiland.m_Symbol, &celt)) && (celt == 1))
   {
       PRINTF( L"\n** Module: " );
       BSTR bstrName;
@@ -1027,29 +996,24 @@ bool DumpAllSymbols(IDiaSymbol *pGlobal)
       }
 
       // Find all the symbols defined in this compiland and print their info
-      IDiaEnumSymbols *pEnumChildren;
+      OrbitDiaEnumSymbols pEnumChildren;
 
-      if( SUCCEEDED( pCompiland->findChildren( SymTagNull, NULL, nsNone, &pEnumChildren ) ) ) 
+	  if (SUCCEEDED(pCompiland->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren.m_Symbol)))
       {
-          IDiaSymbol *pSymbol;
+          OrbitDiaSymbol pSymbol;
           ULONG celtChildren = 0;
 
-          while( SUCCEEDED( pEnumChildren->Next( 1, &pSymbol, &celtChildren ) ) && ( celtChildren == 1 ) ) 
+		  while (SUCCEEDED(pEnumChildren->Next(1, &pSymbol.m_Symbol, &celtChildren)) && (celtChildren == 1))
           {
-              PrintSymbol( pSymbol, 0 );
-              pSymbol->Release();
+              PrintSymbol( pSymbol.m_Symbol, 0 );
+			  pSymbol.Release();
           }
-
-          pEnumChildren->Release();
       }
 
-      pCompiland->Release();
+	  pCompiland.Release();
   }
 
-  pEnumSymbols->Release();
-
   putwchar(L'\n');
-
   return true;
 }
 
@@ -1059,66 +1023,53 @@ bool DumpAllSymbols(IDiaSymbol *pGlobal)
 //
 bool DumpAllGlobals(IDiaSymbol *pGlobal)
 {
-  IDiaEnumSymbols *pEnumSymbols;
-  IDiaSymbol *pSymbol;
-  enum SymTagEnum dwSymTags[] = { SymTagFunction, SymTagThunk, SymTagData };
-  ULONG celt = 0;
+	OrbitDiaEnumSymbols pEnumSymbols;
+	OrbitDiaSymbol pSymbol;
+	enum SymTagEnum dwSymTags[] = { SymTagFunction, SymTagThunk, SymTagData };
+	ULONG celt = 0;
 
-  PRINTF(L"\n\n*** GLOBALS\n\n");
+	PRINTF(L"\n\n*** GLOBALS\n\n");
 
-  for (size_t i = 0; i < _countof(dwSymTags); i++, pEnumSymbols = NULL) {
-    if (SUCCEEDED(pGlobal->findChildren(dwSymTags[i], NULL, nsNone, &pEnumSymbols))) {
-      while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol, &celt)) && (celt == 1)) {
-        PrintGlobalSymbol(pSymbol);
+	for (size_t i = 0; i < _countof(dwSymTags); i++)
+	{
+		if (SUCCEEDED(pGlobal->findChildren(dwSymTags[i], NULL, nsNone, &pEnumSymbols.m_Symbol))) {
+			while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1)) {
+				PrintGlobalSymbol(pSymbol.m_Symbol);
+				pSymbol.Release();
+			}
+		}
 
-        pSymbol->Release();
-      }
+		else {
+			PRINTF(L"ERROR - DumpAllGlobals() returned no symbols\n");
 
-      pEnumSymbols->Release();
-    }
+			return false;
+		}
+	}
 
-    else {
-      PRINTF(L"ERROR - DumpAllGlobals() returned no symbols\n");
+	PRINTF(L"\n");
 
-      return false;
-    }
-  }
-
-  PRINTF(L"\n");
-
-  return true;
+	return true;
 }
 
 bool OrbitDumpAllGlobals(IDiaSymbol *pGlobal)
 {
     SCOPE_TIMER_LOG( L"DumpAllGlobals" );
-    IDiaEnumSymbols *pEnumSymbols;
-    IDiaSymbol *pSymbol;
-    enum SymTagEnum dwSymTags[] = { /*SymTagFunction, SymTagThunk, */SymTagData };
+    OrbitDiaEnumSymbols pEnumSymbols;
+    OrbitDiaSymbol pSymbol;
     ULONG celt = 0;
-
-    //PRINTF(L"\n\n*** GLOBALS\n\n");
-
-    for (size_t i = 0; i < _countof(dwSymTags); i++, pEnumSymbols = NULL) 
+	
+    if (SUCCEEDED(pGlobal->findChildren(SymTagData, NULL, nsNone, &pEnumSymbols.m_Symbol)))
     {
-        if (SUCCEEDED(pGlobal->findChildren(dwSymTags[i], NULL, nsNone, &pEnumSymbols))) 
+        while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1)) 
         {
-            while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol, &celt)) && (celt == 1)) 
-            {
-                OrbitAddGlobalSymbol(pSymbol);
-                pSymbol->Release();
-            }
+            OrbitAddGlobalSymbol(pSymbol.m_Symbol);
+            pSymbol.Release();
+        }
 
-            pEnumSymbols->Release();
-        }
-        else 
-        {
-            //PRINTF(L"ERROR - DumpAllGlobals() returned no symbols\n");
-            return false;
-        }
+        return true;
     }
-
-    return true;
+    
+    return false;
 }
 
 ////////////////////////////////////////////////////////////
@@ -1141,30 +1092,26 @@ bool DumpAllTypes(IDiaSymbol *pGlobal)
 //
 bool DumpAllUDTs(IDiaSymbol *pGlobal)
 {
-  PRINTF(L"\n\n** User Defined Types\n\n");
+	PRINTF(L"\n\n** User Defined Types\n\n");
 
-  IDiaEnumSymbols *pEnumSymbols;
+	OrbitDiaEnumSymbols pEnumSymbols;
 
-  if (FAILED(pGlobal->findChildren(SymTagUDT, NULL, nsNone, &pEnumSymbols))) {
-    PRINTF(L"ERROR - DumpAllUDTs() returned no symbols\n");
+	if (FAILED(pGlobal->findChildren(SymTagUDT, NULL, nsNone, &pEnumSymbols.m_Symbol))) {
+		PRINTF(L"ERROR - DumpAllUDTs() returned no symbols\n");
 
-    return false;
-  }
+		return false;
+	}
 
-  IDiaSymbol *pSymbol;
-  ULONG celt = 0;
+	OrbitDiaSymbol pSymbol;
+	ULONG celt = 0;
 
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol, &celt)) && (celt == 1)) {
-    PrintTypeInDetail(pSymbol, 0);
+	while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1)) {
+		PrintTypeInDetail(pSymbol.m_Symbol, 0);
+		pSymbol.Release();
+	}
 
-    pSymbol->Release();
-  }
-
-  pEnumSymbols->Release();
-
-  putwchar(L'\n');
-
-  return true;
+	putwchar(L'\n');
+	return true;
 }
 
 ////////////////////////////////////////////////////////////
@@ -1172,30 +1119,26 @@ bool DumpAllUDTs(IDiaSymbol *pGlobal)
 //
 bool DumpAllEnums(IDiaSymbol *pGlobal)
 {
-  PRINTF(L"\n\n** ENUMS\n\n");
+	PRINTF(L"\n\n** ENUMS\n\n");
 
-  IDiaEnumSymbols *pEnumSymbols;
+	OrbitDiaEnumSymbols pEnumSymbols;
 
-  if (FAILED(pGlobal->findChildren(SymTagEnum, NULL, nsNone, &pEnumSymbols))) {
-    PRINTF(L"ERROR - DumpAllEnums() returned no symbols\n");
+	if (FAILED(pGlobal->findChildren(SymTagEnum, NULL, nsNone, &pEnumSymbols.m_Symbol))) {
+		PRINTF(L"ERROR - DumpAllEnums() returned no symbols\n");
+		return false;
+	}
 
-    return false;
-  }
+	OrbitDiaSymbol pSymbol;
+	ULONG celt = 0;
 
-  IDiaSymbol *pSymbol;
-  ULONG celt = 0;
+	while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1))
+	{
+		PrintTypeInDetail(pSymbol.m_Symbol, 0);
+		pSymbol.Release();
+	}
 
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol, &celt)) && (celt == 1)) {
-    PrintTypeInDetail(pSymbol, 0);
-
-    pSymbol->Release();
-  }
-
-  pEnumSymbols->Release();
-
-  putwchar(L'\n');
-
-  return true;
+	putwchar(L'\n');
+	return true;
 }
 
 ////////////////////////////////////////////////////////////
@@ -1203,30 +1146,26 @@ bool DumpAllEnums(IDiaSymbol *pGlobal)
 //
 bool DumpAllTypedefs(IDiaSymbol *pGlobal)
 {
-  PRINTF(L"\n\n** TYPEDEFS\n\n");
+	PRINTF(L"\n\n** TYPEDEFS\n\n");
 
-  IDiaEnumSymbols *pEnumSymbols;
+	OrbitDiaEnumSymbols pEnumSymbols;
 
-  if (FAILED(pGlobal->findChildren(SymTagTypedef, NULL, nsNone, &pEnumSymbols))) {
-    PRINTF(L"ERROR - DumpAllTypedefs() returned no symbols\n");
+	if (FAILED(pGlobal->findChildren(SymTagTypedef, NULL, nsNone, &pEnumSymbols.m_Symbol))) {
+		PRINTF(L"ERROR - DumpAllTypedefs() returned no symbols\n");
+		return false;
+	}
 
-    return false;
-  }
+	OrbitDiaSymbol pSymbol;
+	ULONG celt = 0;
 
-  IDiaSymbol *pSymbol;
-  ULONG celt = 0;
+	while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1)) 
+	{
+		PrintTypeInDetail(pSymbol.m_Symbol, 0);
+		pSymbol.Release();
+	}
 
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol, &celt)) && (celt == 1)) {
-    PrintTypeInDetail(pSymbol, 0);
-
-    pSymbol->Release();
-  }
-
-  pEnumSymbols->Release();
-
-  putwchar(L'\n');
-
-  return true;
+	putwchar(L'\n');
+	return true;
 }
 
 ////////////////////////////////////////////////////////////
@@ -1236,27 +1175,24 @@ bool DumpAllOEMs(IDiaSymbol *pGlobal)
 {
   PRINTF(L"\n\n*** OEM Specific types\n\n");
 
-  IDiaEnumSymbols *pEnumSymbols;
+  OrbitDiaEnumSymbols pEnumSymbols;
 
-  if (FAILED(pGlobal->findChildren(SymTagCustomType, NULL, nsNone, &pEnumSymbols))) {
+  if (FAILED(pGlobal->findChildren(SymTagCustomType, NULL, nsNone, &pEnumSymbols.m_Symbol))) 
+  {
     PRINTF(L"ERROR - DumpAllOEMs() returned no symbols\n");
-
     return false;
   }
 
-  IDiaSymbol *pSymbol;
+  OrbitDiaSymbol pSymbol;
   ULONG celt = 0;
 
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol, &celt)) && (celt == 1)) {
-    PrintTypeInDetail(pSymbol, 0);
-
-    pSymbol->Release();
+  while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1)) 
+  {
+    PrintTypeInDetail(pSymbol.m_Symbol, 0);
+    pSymbol.Release();
   }
 
-  pEnumSymbols->Release();
-
   putwchar(L'\n');
-
   return true;
 }
 
@@ -1265,54 +1201,52 @@ bool DumpAllOEMs(IDiaSymbol *pGlobal)
 //
 bool DumpAllFiles(IDiaSession *pSession, IDiaSymbol *pGlobal)
 {
-  PRINTF(L"\n\n*** FILES\n\n");
+	PRINTF(L"\n\n*** FILES\n\n");
 
-  // In order to find the source files, we have to look at the image's compilands/modules
+	// In order to find the source files, we have to look at the image's compilands/modules
 
-  IDiaEnumSymbols *pEnumSymbols;
+	OrbitDiaEnumSymbols pEnumSymbols;
 
-  if (FAILED(pGlobal->findChildren(SymTagCompiland, NULL, nsNone, &pEnumSymbols))) {
-    return false;
-  }
+	if (FAILED(pGlobal->findChildren(SymTagCompiland, NULL, nsNone, &pEnumSymbols.m_Symbol))) {
+		return false;
+	}
 
-  IDiaSymbol *pCompiland;
-  ULONG celt = 0;
+	OrbitDiaSymbol pCompiland;
+	ULONG celt = 0;
 
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pCompiland, &celt)) && (celt == 1)) {
-    BSTR bstrName;
+	while (SUCCEEDED(pEnumSymbols->Next(1, &pCompiland.m_Symbol, &celt)) && (celt == 1))
+	{
+		BSTR bstrName;
+		if (pCompiland->get_name(&bstrName) == S_OK)
+		{
+			PRINTF(L"\nCompiland = %s\n\n", bstrName);
+			SysFreeString(bstrName);
+		}
 
-    if (pCompiland->get_name(&bstrName) == S_OK) {
-      PRINTF(L"\nCompiland = %s\n\n", bstrName);
+		// Every compiland could contain multiple references to the source files which were used to build it
+		// Retrieve all source files by compiland by passing NULL for the name of the source file
 
-      SysFreeString(bstrName);
-    }
+		OrbitDiaEnumSourceFiles pEnumSourceFiles;
 
-    // Every compiland could contain multiple references to the source files which were used to build it
-    // Retrieve all source files by compiland by passing NULL for the name of the source file
+		if (SUCCEEDED(pSession->findFile(pCompiland.m_Symbol, NULL, nsNone, &pEnumSourceFiles.m_Symbol)))
+		{
+			OrbitDiaSourceFile pSourceFile;
 
-    IDiaEnumSourceFiles *pEnumSourceFiles;
+			while (SUCCEEDED(pEnumSourceFiles->Next(1, &pSourceFile.m_Symbol, &celt)) && (celt == 1))
+			{
+				PrintSourceFile(pSourceFile.m_Symbol);
+				putwchar(L'\n');
 
-    if (SUCCEEDED(pSession->findFile(pCompiland, NULL, nsNone, &pEnumSourceFiles))) {
-      IDiaSourceFile *pSourceFile;
+				pSourceFile.Release();
+			}
 
-      while (SUCCEEDED(pEnumSourceFiles->Next(1, &pSourceFile, &celt)) && (celt == 1)) {
-        PrintSourceFile(pSourceFile);
-        putwchar(L'\n');
+			pCompiland.Release();
+		}
 
-        pSourceFile->Release();
-      }
+		putwchar(L'\n');
+	}
 
-      pEnumSourceFiles->Release();
-    }
-
-    putwchar(L'\n');
-
-    pCompiland->Release();
-  }
-
-  pEnumSymbols->Release();
-
-  return true;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////
@@ -1320,44 +1254,34 @@ bool DumpAllFiles(IDiaSession *pSession, IDiaSymbol *pGlobal)
 //  Only function symbols have corresponding line numbering information
 bool DumpAllLines(IDiaSession *pSession, IDiaSymbol *pGlobal)
 {
-  PRINTF(L"\n\n*** LINES\n\n");
+	PRINTF(L"\n\n*** LINES\n\n");
 
-  // First retrieve the compilands/modules
+	OrbitDiaEnumSymbols pEnumSymbols;
+	if (FAILED(pGlobal->findChildren(SymTagCompiland, NULL, nsNone, &pEnumSymbols.m_Symbol))) 
+	{
+		return false;
+	}
 
-  IDiaEnumSymbols *pEnumSymbols;
+	OrbitDiaSymbol pCompiland;
+	ULONG celt = 0;
+	while (SUCCEEDED(pEnumSymbols->Next(1, &pCompiland.m_Symbol, &celt)) && (celt == 1))
+	{
+		OrbitDiaEnumSymbols pEnumFunction;
+		if (SUCCEEDED(pCompiland->findChildren(SymTagFunction, NULL, nsNone, &pEnumFunction.m_Symbol))) 
+		{
+			OrbitDiaSymbol pFunction;
+			while (SUCCEEDED(pEnumFunction->Next(1, &pFunction.m_Symbol, &celt)) && (celt == 1)) 
+			{
+				PrintLines(pSession, pFunction.m_Symbol);
+				pFunction.Release();
+			}
+		}
 
-  if (FAILED(pGlobal->findChildren(SymTagCompiland, NULL, nsNone, &pEnumSymbols))) {
-    return false;
-  }
+		pCompiland.Release();
+	}
 
-  IDiaSymbol *pCompiland;
-  ULONG celt = 0;
-
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pCompiland, &celt)) && (celt == 1)) {
-    IDiaEnumSymbols *pEnumFunction;
-
-    // For every function symbol defined in the compiland, retrieve and print the line numbering info
-
-    if (SUCCEEDED(pCompiland->findChildren(SymTagFunction, NULL, nsNone, &pEnumFunction))) {
-      IDiaSymbol *pFunction;
-
-      while (SUCCEEDED(pEnumFunction->Next(1, &pFunction, &celt)) && (celt == 1)) {
-        PrintLines(pSession, pFunction);
-
-        pFunction->Release();
-      }
-
-      pEnumFunction->Release();
-    }
-
-    pCompiland->Release();
-  }
-
-  pEnumSymbols->Release();
-
-  putwchar(L'\n');
-
-  return true;
+	putwchar(L'\n');
+	return true;
 }
 
 ////////////////////////////////////////////////////////////
@@ -1370,14 +1294,13 @@ bool DumpAllLines(IDiaSession *pSession, DWORD dwRVA, DWORD dwRange)
 
   IDiaEnumLineNumbers *pLines;
 
-  if (FAILED(pSession->findLinesByRVA(dwRVA, dwRange, &pLines))) {
+  if (FAILED(pSession->findLinesByRVA(dwRVA, dwRange, &pLines))) 
+  {
     return false;
   }
 
   PrintLines(pLines);
-
   pLines->Release();
-
   putwchar(L'\n');
 
   return true;
@@ -1396,7 +1319,8 @@ bool DumpAllSecContribs(IDiaSession *pSession)
 
   IDiaEnumSectionContribs *pEnumSecContribs;
 
-  if (FAILED(GetTable(pSession, __uuidof(IDiaEnumSectionContribs), (void **) &pEnumSecContribs))) {
+  if (FAILED(GetTable(pSession, __uuidof(IDiaEnumSectionContribs), (void **) &pEnumSecContribs))) 
+  {
     return false;
   }
 
@@ -1426,10 +1350,8 @@ bool DumpAllDebugStreams(IDiaSession *pSession)
   IDiaEnumDebugStreams *pEnumStreams;
 
   PRINTF(L"\n\n*** DEBUG STREAMS\n\n");
-
-  // Retrieve an enumerated sequence of debug data streams
-
-  if (FAILED(pSession->getEnumDebugStreams(&pEnumStreams))) {
+  if (FAILED(pSession->getEnumDebugStreams(&pEnumStreams))) 
+  {
     return false;
   }
 
@@ -1438,14 +1360,11 @@ bool DumpAllDebugStreams(IDiaSession *pSession)
 
   for (; SUCCEEDED(pEnumStreams->Next(1, &pStream, &celt)) && (celt == 1); pStream = NULL) {
     PrintStreamData(pStream);
-
     pStream->Release();
   }
 
   pEnumStreams->Release();
-
   putwchar(L'\n');
-
   return true;
 }
 
@@ -1528,16 +1447,17 @@ bool DumpAllSourceFiles(IDiaSession *pSession, IDiaSymbol *pGlobal)
   // To get the complete source file info we must go through the compiland first
   // by passing NULL instead all the source file names only will be retrieved
 
-  IDiaEnumSymbols *pEnumSymbols;
+  OrbitDiaEnumSymbols pEnumSymbols;
 
-  if (FAILED(pGlobal->findChildren(SymTagCompiland, NULL, nsNone, &pEnumSymbols))) {
+  if (FAILED(pGlobal->findChildren(SymTagCompiland, NULL, nsNone, &pEnumSymbols.m_Symbol))) {
     return false;
   }
 
-  IDiaSymbol *pCompiland;
+  OrbitDiaSymbol pCompiland;
   ULONG celt = 0;
 
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pCompiland, &celt)) && (celt == 1)) {
+  while (SUCCEEDED(pEnumSymbols->Next(1, &pCompiland.m_Symbol, &celt)) && (celt == 1)) 
+  {
     BSTR bstrName;
 
     if (pCompiland->get_name(&bstrName) == S_OK) {
@@ -1549,27 +1469,22 @@ bool DumpAllSourceFiles(IDiaSession *pSession, IDiaSymbol *pGlobal)
     // Every compiland could contain multiple references to the source files which were used to build it
     // Retrieve all source files by compiland by passing NULL for the name of the source file
 
-    IDiaEnumSourceFiles *pEnumSourceFiles;
+    OrbitDiaEnumSourceFiles pEnumSourceFiles;
 
-    if (SUCCEEDED(pSession->findFile(pCompiland, NULL, nsNone, &pEnumSourceFiles))) {
-      IDiaSourceFile *pSourceFile;
-
-      while (SUCCEEDED(pEnumSourceFiles->Next(1, &pSourceFile, &celt)) && (celt == 1)) {
-        PrintSourceFile(pSourceFile);
+    if (SUCCEEDED(pSession->findFile(pCompiland.m_Symbol, NULL, nsNone, &pEnumSourceFiles.m_Symbol))) {
+      OrbitDiaSourceFile pSourceFile;
+      while (SUCCEEDED(pEnumSourceFiles->Next(1, &pSourceFile.m_Symbol, &celt)) && (celt == 1)) 
+      {
+        PrintSourceFile(pSourceFile.m_Symbol);
         putwchar(L'\n');
-
-        pSourceFile->Release();
+        pSourceFile.Release();
       }
-
-      pEnumSourceFiles->Release();
     }
 
     putwchar(L'\n');
 
-    pCompiland->Release();
+    pCompiland.Release();
   }
-
-  pEnumSymbols->Release();
 
   return true;
 }
@@ -1657,33 +1572,30 @@ bool DumpFPO(IDiaSession *pSession, DWORD dwRVA)
 //
 bool DumpFPO(IDiaSession *pSession, IDiaSymbol *pGlobal, const wchar_t *szSymbolName)
 {
-  IDiaEnumSymbols *pEnumSymbols;
-  IDiaSymbol *pSymbol;
+  OrbitDiaEnumSymbols pEnumSymbols;
+  OrbitDiaSymbol pSymbol;
   ULONG celt = 0;
   DWORD dwRVA;
 
   // Find first all the function symbols that their names matches the search criteria
 
-  if (FAILED(pGlobal->findChildren(SymTagFunction, szSymbolName, nsRegularExpression, &pEnumSymbols))) {
+  if (FAILED(pGlobal->findChildren(SymTagFunction, szSymbolName, nsRegularExpression, &pEnumSymbols.m_Symbol))) 
+  {
     PRINTF(L"ERROR - DumpFPO() findChildren could not find symol %s\n", szSymbolName);
-
     return false;
   }
 
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol, &celt)) && (celt == 1)) {
-    if (pSymbol->get_relativeVirtualAddress(&dwRVA) == S_OK) {
-      PrintPublicSymbol(pSymbol);
-
+  while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1)) 
+  {
+    if (pSymbol->get_relativeVirtualAddress(&dwRVA) == S_OK) 
+    {
+      PrintPublicSymbol(pSymbol.m_Symbol);
       DumpFPO(pSession, dwRVA);
     }
 
-    pSymbol->Release();
+    pSymbol.Release();
   }
-
-  pEnumSymbols->Release();
-
   putwchar(L'\n');
-
   return true;
 }
 
@@ -1698,45 +1610,38 @@ bool DumpCompiland(IDiaSymbol *pGlobal, const wchar_t *szCompName)
     return false;
   }
 
-  IDiaSymbol *pCompiland;
+  OrbitDiaSymbol pCompiland;
   ULONG celt = 0;
 
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pCompiland, &celt)) && (celt == 1)) {
+  while (SUCCEEDED(pEnumSymbols->Next(1, &pCompiland.m_Symbol, &celt)) && (celt == 1)) 
+  {
     PRINTF(L"\n** Module: ");
-
-    // Retrieve the name of the module
-
     BSTR bstrName;
-
-    if (pCompiland->get_name(&bstrName) != S_OK) {
+    if (pCompiland->get_name(&bstrName) != S_OK) 
+    {
       PRINTF(L"(???)\n\n");
     }
-
-    else {
+    else 
+    {
       PRINTF(L"%s\n\n", bstrName);
-
       SysFreeString(bstrName);
     }
 
-    IDiaEnumSymbols *pEnumChildren;
+    OrbitDiaEnumSymbols pEnumChildren;
 
-    if (SUCCEEDED(pCompiland->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren))) {
-      IDiaSymbol *pSymbol;
+    if (SUCCEEDED(pCompiland->findChildren(SymTagNull, NULL, nsNone, &pEnumChildren.m_Symbol))) 
+    {
+      OrbitDiaSymbol pSymbol;
       ULONG celt_ = 0;
-
-      while (SUCCEEDED(pEnumChildren->Next(1, &pSymbol, &celt_)) && (celt_ == 1)) {
-        PrintSymbol(pSymbol, 0);
-
-        pSymbol->Release();
+      while (SUCCEEDED(pEnumChildren->Next(1, &pSymbol.m_Symbol, &celt_)) && (celt_ == 1)) 
+      {
+        PrintSymbol(pSymbol.m_Symbol, 0);
+        pSymbol.Release();
       }
-
-      pEnumChildren->Release();
     }
 
-    pCompiland->Release();
+    pCompiland.Release();
   }
-
-  pEnumSymbols->Release();
 
   return true;
 }
@@ -1765,22 +1670,21 @@ bool DumpLines(IDiaSession *pSession, DWORD dwRVA)
 //
 bool DumpLines(IDiaSession *pSession, IDiaSymbol *pGlobal, const wchar_t *szFuncName)
 {
-  IDiaEnumSymbols *pEnumSymbols;
+  OrbitDiaEnumSymbols pEnumSymbols;
 
-  if (FAILED(pGlobal->findChildren(SymTagFunction, szFuncName, nsRegularExpression, &pEnumSymbols))) {
+  if (FAILED(pGlobal->findChildren(SymTagFunction, szFuncName, nsRegularExpression, &pEnumSymbols.m_Symbol))) 
+  {
     return false;
   }
 
-  IDiaSymbol *pFunction;
+  OrbitDiaSymbol pFunction;
   ULONG celt = 0;
 
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pFunction, &celt)) && (celt == 1)) {
-    PrintLines(pSession, pFunction);
-
-    pFunction->Release();
+  while (SUCCEEDED(pEnumSymbols->Next(1, &pFunction.m_Symbol, &celt)) && (celt == 1)) 
+  {
+    PrintLines(pSession, pFunction.m_Symbol);
+    pFunction.Release();
   }
-
-  pEnumSymbols->Release();
 
   return true;
 }
@@ -1790,10 +1694,10 @@ bool DumpLines(IDiaSession *pSession, IDiaSymbol *pGlobal, const wchar_t *szFunc
 //
 bool DumpSymbolWithRVA(IDiaSession *pSession, DWORD dwRVA, const wchar_t *szChildname)
 {
-  IDiaSymbol *pSymbol;
+  OrbitDiaSymbol pSymbol;
   LONG lDisplacement;
 
-  if (FAILED(pSession->findSymbolByRVAEx(dwRVA, SymTagNull, &pSymbol, &lDisplacement))) {
+  if (FAILED(pSession->findSymbolByRVAEx(dwRVA, SymTagNull, &pSymbol.m_Symbol, &lDisplacement))) {
     return false;
   }
 
@@ -1801,23 +1705,22 @@ bool DumpSymbolWithRVA(IDiaSession *pSession, DWORD dwRVA, const wchar_t *szChil
 
   PrintGeneric(pSymbol);
 
-  DumpSymbolWithChildren(pSymbol, szChildname);
+  DumpSymbolWithChildren(pSymbol.m_Symbol, szChildname);
   
-  while (pSymbol != NULL) {
-    IDiaSymbol *pParent;
+  while (pSymbol.m_Symbol != NULL) {
+    IDiaSymbol* pParent;
 
     if ((pSymbol->get_lexicalParent(&pParent) == S_OK) && pParent) {
       PRINTF(L"\nParent\n");
 
       PrintSymbol(pParent, 0);
 
-      pSymbol->Release();
-
-      pSymbol = pParent;
+      pSymbol.Release();
+      pSymbol.m_Symbol = pParent;
     }
-
-    else {
-      pSymbol->Release();
+    else 
+	{
+      pSymbol.Release();
       break;
     }
   }
@@ -1831,26 +1734,23 @@ bool DumpSymbolWithRVA(IDiaSession *pSession, DWORD dwRVA, const wchar_t *szChil
 //
 bool DumpSymbolsWithRegEx(IDiaSymbol *pGlobal, const wchar_t *szRegEx, const wchar_t *szChildname)
 {
-  IDiaEnumSymbols *pEnumSymbols;
-
-  if (FAILED(pGlobal->findChildren(SymTagNull, szRegEx, nsRegularExpression, &pEnumSymbols))) {
+  OrbitDiaEnumSymbols pEnumSymbols;
+  if (FAILED(pGlobal->findChildren(SymTagNull, szRegEx, nsRegularExpression, &pEnumSymbols.m_Symbol))) 
+  {
     return false;
   }
 
   bool bReturn = true;
 
-  IDiaSymbol *pSymbol;
+  OrbitDiaSymbol pSymbol;
   ULONG celt = 0;
 
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol, &celt)) && (celt == 1)) {
-    PrintGeneric(pSymbol);
-
-    bReturn = DumpSymbolWithChildren(pSymbol, szChildname);
-
-    pSymbol->Release();
+  while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1)) 
+  {
+    PrintGeneric(pSymbol.m_Symbol);
+    bReturn = DumpSymbolWithChildren(pSymbol.m_Symbol, szChildname);
+    pSymbol.Release();
   }
-
-  pEnumSymbols->Release();
 
   return bReturn;
 }
@@ -1862,23 +1762,21 @@ bool DumpSymbolsWithRegEx(IDiaSymbol *pGlobal, const wchar_t *szRegEx, const wch
 bool DumpSymbolWithChildren(IDiaSymbol *pSymbol, const wchar_t *szChildname)
 {
   if (szChildname != NULL) {
-    IDiaEnumSymbols *pEnumSyms;
+    OrbitDiaEnumSymbols pEnumSyms;
 
-    if (FAILED(pSymbol->findChildren(SymTagNull, szChildname, nsRegularExpression, &pEnumSyms))) {
+    if (FAILED(pSymbol->findChildren(SymTagNull, szChildname, nsRegularExpression, &pEnumSyms.m_Symbol))) {
       return false;
     }
 
-    IDiaSymbol *pChild;
+    OrbitDiaSymbol pChild;
     DWORD celt = 1;
 
-    while (SUCCEEDED(pEnumSyms->Next(celt, &pChild, &celt)) && (celt == 1)) {
-      PrintGeneric(pChild);
-      PrintSymbol(pChild, 0);
-
-      pChild->Release();
+    while (SUCCEEDED(pEnumSyms->Next(celt, &pChild.m_Symbol, &celt)) && (celt == 1)) 
+    {
+      PrintGeneric(pChild.m_Symbol);
+      PrintSymbol(pChild.m_Symbol, 0);
+      pChild.Release();
     }
-
-    pEnumSyms->Release();
   }
 
   else {
@@ -1904,22 +1802,22 @@ bool DumpSymbolWithChildren(IDiaSymbol *pSymbol, const wchar_t *szChildname)
 //
 bool DumpType(IDiaSymbol *pGlobal, const wchar_t *szRegEx)
 {
-  IDiaEnumSymbols *pEnumSymbols;
+  OrbitDiaEnumSymbols pEnumSymbols;
 
-  if (FAILED(pGlobal->findChildren(SymTagUDT, szRegEx, nsRegularExpression, &pEnumSymbols))) {
+  if (FAILED(pGlobal->findChildren(SymTagUDT, szRegEx, nsRegularExpression, &pEnumSymbols.m_Symbol))) 
+  {
     return false;
   }
 
-  IDiaSymbol *pSymbol;
+  OrbitDiaSymbol pSymbol;
   ULONG celt = 0;
 
-  while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol, &celt)) && (celt == 1)) {
-    PrintTypeInDetail(pSymbol, 0);
+  while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1)) 
+  {
+    PrintTypeInDetail(pSymbol.m_Symbol, 0);
 
-    pSymbol->Release();
+    pSymbol.Release();
   }
-
-  pEnumSymbols->Release();
 
   return true;
 }
@@ -1943,10 +1841,10 @@ bool DumpLinesForSourceFile(IDiaSession *pSession, const wchar_t *szFileName, DW
     IDiaEnumSymbols *pEnumCompilands;
 
     if (pSrcFile->get_compilands(&pEnumCompilands) == S_OK) {
-      IDiaSymbol *pCompiland;
+      OrbitDiaSymbol pCompiland;
 
       celt = 0;
-      while (SUCCEEDED(pEnumCompilands->Next(1, &pCompiland, &celt)) && (celt == 1)) {
+      while (SUCCEEDED(pEnumCompilands->Next(1, &pCompiland.m_Symbol, &celt)) && (celt == 1)) {
         BSTR bstrName;
 
         if (pCompiland->get_name(&bstrName) == S_OK) {
@@ -1962,22 +1860,18 @@ bool DumpLinesForSourceFile(IDiaSession *pSession, const wchar_t *szFileName, DW
         IDiaEnumLineNumbers *pLines;
 
         if (dwLine != 0) {
-          if (SUCCEEDED(pSession->findLinesByLinenum(pCompiland, pSrcFile, dwLine, 0, &pLines))) {
+          if (SUCCEEDED(pSession->findLinesByLinenum(pCompiland.m_Symbol, pSrcFile, dwLine, 0, &pLines))) {
             PrintLines(pLines);
-
             pLines->Release();
           }
         }
 
         else {
-          if (SUCCEEDED(pSession->findLines(pCompiland, pSrcFile, &pLines))) {
+          if (SUCCEEDED(pSession->findLines(pCompiland.m_Symbol, pSrcFile, &pLines))) {
             PrintLines(pLines);
-
             pLines->Release();
           }
         }
-
-        pCompiland->Release();
       }
 
       pEnumCompilands->Release();
@@ -2003,37 +1897,35 @@ bool DumpPublicSymbolsSorted(IDiaSession *pSession, DWORD dwRVA, DWORD dwRange, 
     return false;
   }
 
-  IDiaSymbol *pSymbol;
+  OrbitDiaSymbol pSymbol;
 
-  if (SUCCEEDED(pEnumSymsByAddr->symbolByRVA(dwRVA, &pSymbol))) {
+  if (SUCCEEDED(pEnumSymsByAddr->symbolByRVA(dwRVA, &pSymbol.m_Symbol))) {
     if (dwRange == 0) {
-      PrintPublicSymbol(pSymbol);
+      PrintPublicSymbol(pSymbol.m_Symbol);
     }
 
     ULONG celt;
     ULONG i;
 
-    if (bReverse) {
-      pSymbol->Release();
+    if (bReverse) 
+    {
+      pSymbol.Release();
 
       i = 0;
 
-      for (pSymbol = NULL; (i < dwRange) && SUCCEEDED(pEnumSymsByAddr->Next(1, &pSymbol, &celt)) && (celt == 1); i++) {
-        PrintPublicSymbol(pSymbol);
-
-        pSymbol->Release();
+      for (pSymbol = NULL; (i < dwRange) && SUCCEEDED(pEnumSymsByAddr->Next(1, &pSymbol.m_Symbol, &celt)) && (celt == 1); i++) {
+        PrintPublicSymbol(pSymbol.m_Symbol);
+        pSymbol.Release();
       }
     }
-
-    else {
-      PrintPublicSymbol(pSymbol);
-
-      pSymbol->Release();
+    else 
+    {
+      PrintPublicSymbol(pSymbol.m_Symbol);
+      pSymbol.Release();
 
       i = 1;
-
-      for (pSymbol = NULL; (i < dwRange) && SUCCEEDED(pEnumSymsByAddr->Prev(1, &pSymbol, &celt)) && (celt == 1); i++) {
-        PrintPublicSymbol(pSymbol);
+      for (pSymbol.m_Symbol = NULL; (i < dwRange) && SUCCEEDED(pEnumSymsByAddr->Prev(1, &pSymbol.m_Symbol, &celt)) && (celt == 1); i++) {
+        PrintPublicSymbol(pSymbol.m_Symbol);
       }
     }
   }
@@ -2048,19 +1940,15 @@ bool DumpPublicSymbolsSorted(IDiaSession *pSession, DWORD dwRVA, DWORD dwRange, 
 //
 bool DumpLabel(IDiaSession *pSession, DWORD dwRVA)
 {
-  IDiaSymbol *pSymbol;
+  OrbitDiaSymbol pSymbol;
   LONG lDisplacement;
 
-  if (FAILED(pSession->findSymbolByRVAEx(dwRVA, SymTagLabel, &pSymbol, &lDisplacement)) || (pSymbol == NULL)) {
+  if (FAILED(pSession->findSymbolByRVAEx(dwRVA, SymTagLabel, &pSymbol.m_Symbol, &lDisplacement)) || (pSymbol.m_Symbol == NULL)) {
     return false;
   }
 
   PRINTF(L"Displacement = 0x%X\n", lDisplacement);
-
-  PrintGeneric(pSymbol);
-
-  pSymbol->Release();
-
+  PrintGeneric(pSymbol.m_Symbol);
   return true;
 }
 
@@ -2069,19 +1957,16 @@ bool DumpLabel(IDiaSession *pSession, DWORD dwRVA)
 //
 bool DumpAnnotations(IDiaSession *pSession, DWORD dwRVA)
 {
-  IDiaSymbol *pSymbol;
+  OrbitDiaSymbol pSymbol;
   LONG lDisplacement;
 
-  if (FAILED(pSession->findSymbolByRVAEx(dwRVA, SymTagAnnotation, &pSymbol, &lDisplacement)) || (pSymbol == NULL)) {
+  if (FAILED(pSession->findSymbolByRVAEx(dwRVA, SymTagAnnotation, &pSymbol.m_Symbol, &lDisplacement)) || (pSymbol.m_Symbol == NULL)) 
+  {
     return false;
   }
 
   PRINTF(L"Displacement = 0x%X\n", lDisplacement);
-
-  PrintGeneric(pSymbol);
-
-  pSymbol->Release();
-
+  PrintGeneric(pSymbol.m_Symbol);
   return true;
 }
 

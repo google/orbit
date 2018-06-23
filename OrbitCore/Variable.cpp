@@ -200,7 +200,8 @@ void Variable::PrintDetails()
     {
         DiaParser parser;
         type->LoadDiaInfo();
-        parser.PrintTypeInDetail( type->GetDiaSymbol(), 0 );
+        std::shared_ptr<OrbitDiaSymbol> diaSymbol = type->GetDiaSymbol();
+        parser.PrintTypeInDetail( diaSymbol ? diaSymbol->m_Symbol : nullptr, 0 );
         ORBIT_VIZ("\n\nDetails:\n");
         ORBIT_VIZ(parser.m_Log);
     }

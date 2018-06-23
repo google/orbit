@@ -15,7 +15,7 @@ template <typename ArgType>
 void DumpDIAValue( std::ostream &OS
                  , int Indent
                  , StringRef Name
-                 , IDiaSymbol *Symbol
+                 , IDiaSymbol* Symbol
                  , HRESULT( __stdcall IDiaSymbol::*Method )( ArgType * ) ) 
 {
     ArgType Value;
@@ -31,7 +31,7 @@ void DumpDIAValue( std::ostream &OS
 void DumpDIAValue( std::ostream &OS
     , int Indent
     , StringRef Name
-    , IDiaSymbol *Symbol
+    , IDiaSymbol* Symbol
     , HRESULT( __stdcall IDiaSymbol::*Method )( GUID * ) )
 {
     GUID Value;
@@ -47,7 +47,7 @@ void DumpDIAValue( std::ostream &OS
 void DumpDIAValue( std::ostream &OS
                  , int Indent
                  , StringRef Name
-                 , IDiaSymbol *Symbol
+                 , IDiaSymbol* Symbol
                  , HRESULT( __stdcall IDiaSymbol::*Method )( BSTR * ) ) 
 {
     BSTR Value = nullptr;
@@ -71,7 +71,7 @@ void DumpDIAValue( std::ostream &OS
 void DumpDIAValue( std::ostream &OS
                  , int Indent
                  , StringRef Name
-                 , IDiaSymbol *Symbol
+                 , IDiaSymbol* Symbol
                  , HRESULT( __stdcall IDiaSymbol::*Method )( VARIANT * ) ) 
 {
     PRINT_FUNC;
@@ -325,9 +325,9 @@ void OrbitDia::DiaDump( IDiaSymbol* a_Symbol )
 //-----------------------------------------------------------------------------
 void OrbitDia::DiaDump( unsigned long a_SymbolID )
 {
-    IDiaSymbol* symbol;
-    if( g_pDiaSession->symbolById( a_SymbolID, &symbol ) == S_OK )
+    OrbitDiaSymbol symbol;
+    if( g_pDiaSession->symbolById( a_SymbolID, &symbol.m_Symbol ) == S_OK )
     {
-        OrbitDia::DiaDump( symbol );
+        OrbitDia::DiaDump( symbol.m_Symbol );
     }
 }

@@ -14,6 +14,7 @@
 
 struct IDiaSymbol;
 struct IDiaSession;
+struct IDiaDataSource;
 
 class Pdb
 {
@@ -61,7 +62,7 @@ public:
 
     Function* GetFunctionFromExactAddress( DWORD64 a_Address );
     Function* GetFunctionFromProgramCounter( DWORD64 a_Address );
-    IDiaSymbol* SymbolFromAddress( DWORD64 a_Address );
+    std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress( DWORD64 a_Address );
     bool LineInfoFromAddress( DWORD64 a_Address, struct LineInfo & o_LineInfo );
 
     void SetLoadTime( float a_LoadTime ) { m_LastLoadTime = a_LoadTime; }
@@ -87,7 +88,7 @@ public:
           , CEREAL_NVP(m_TypeMap) );*/
     }
 
-    IDiaSymbol* GetDiaSymbolFromId( ULONG a_Id );
+    std::shared_ptr<OrbitDiaSymbol> GetDiaSymbolFromId(ULONG a_Id);
     void ProcessData();
 protected:
     void SendStatusToUi();
@@ -122,6 +123,7 @@ protected:
     // DIA
     IDiaSession*                        m_DiaSession;
     IDiaSymbol*                         m_DiaGlobalSymbol;
+    IDiaDataSource*	                    m_DiaDataSource;
 };
 
 extern std::shared_ptr<Pdb> GPdbDbg;

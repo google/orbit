@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OrbitCore", "OrbitCore\OrbitCore.vcxproj", "{F0D7A3D4-1D29-4053-A29A-32BE327C3BEB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3FE26F37-74CE-4111-8654-50FC00DFBB9E} = {3FE26F37-74CE-4111-8654-50FC00DFBB9E}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OrbitDll", "OrbitDll\OrbitDll.vcxproj", "{FCD5BAF3-2F7F-4160-ADC2-7798444B030D}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -16,10 +19,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OrbitGl", "OrbitGl\OrbitGl.
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OrbitQt", "OrbitQt\OrbitQt.vcxproj", "{C0BDDADB-33BF-3DD7-B0C0-F79A90D4AD49}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3FE26F37-74CE-4111-8654-50FC00DFBB9E} = {3FE26F37-74CE-4111-8654-50FC00DFBB9E}
+		{A2F8D23A-D5E2-41C7-94F5-6E8707B447BE} = {A2F8D23A-D5E2-41C7-94F5-6E8707B447BE}
+		{F0D7A3D4-1D29-4053-A29A-32BE327C3BEB} = {F0D7A3D4-1D29-4053-A29A-32BE327C3BEB}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OrbitAsm", "OrbitAsm\OrbitAsm.vcxproj", "{3FE26F37-74CE-4111-8654-50FC00DFBB9E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OrbitPlugin", "OrbitPlugin\OrbitPlugin.vcxproj", "{5AB5D714-E6B1-46A5-B496-0B9FA73886E7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F0D7A3D4-1D29-4053-A29A-32BE327C3BEB} = {F0D7A3D4-1D29-4053-A29A-32BE327C3BEB}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -6,6 +6,7 @@
 #include "BaseTypes.h"
 #include "SerializationMacros.h"
 #include "Threading.h"
+#include "DiaManager.h"
 
 #include <set>
 #include <unordered_set>
@@ -62,7 +63,7 @@ public:
 
     Function* GetFunctionFromAddress( DWORD64 a_Address, bool a_IsExact = true );
     std::shared_ptr<Module> GetModuleFromAddress( DWORD64 a_Address );
-    IDiaSymbol* SymbolFromAddress( DWORD64 a_Address );
+    std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress( DWORD64 a_Address );
     bool LineInfoFromAddress( DWORD64 a_Address, struct LineInfo & o_LineInfo );
 
     void LoadSession(const Session & a_Session);

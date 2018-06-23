@@ -22,6 +22,7 @@
 #include "OrbitType.h"
 #include "OrbitUnreal.h"
 #include "DiaManager.h"
+#include "ObjectCount.h"
 
 #include "external/DIA2Dump/dia2dump.h"
 #include "external/DIA2Dump/PrintSymbol.h"
@@ -39,6 +40,7 @@ Pdb::Pdb( const wchar_t* a_PdbName ) : m_FileName( a_PdbName )
                                      , m_IsPopulatingFunctionStringMap(false)
                                      , m_DiaSession(nullptr)
                                      , m_DiaGlobalSymbol(nullptr)
+									 , m_DiaDataSource(nullptr)
 {
     m_Name = Path::GetFileName( m_FileName );
     memset( &m_ModuleInfo, 0, sizeof(IMAGEHLP_MODULE64) );
@@ -58,18 +60,18 @@ Pdb::~Pdb()
     {
         m_DiaGlobalSymbol->Release();
     }
+
+	if (m_DiaDataSource)
+	{
+		m_DiaDataSource->Release();
+	}
 }
 
 //-----------------------------------------------------------------------------
 void Pdb::AddFunction( Function & a_Function )
 {
-    if( Contains( a_Function.m_Name, L"OutputDebugString" ) )
-    {
-        PRINT_VAR( a_Function.m_Address );
-        PRINT_VAR( this->m_MainModule );
-    }
     CheckOrbitFunction( a_Function );
-    m_Functions.emplace_back( a_Function );
+    m_Functions.push_back( a_Function );
 }
 
 //-----------------------------------------------------------------------------
@@ -488,7 +490,8 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
 bool Pdb::LoadDataFromPdb()
 {
     DiaManager diaManager;
-    if( !diaManager.LoadDataFromPdb( m_FileName.c_str(), &m_DiaSession, &m_DiaGlobalSymbol ) )
+	IDiaDataSource** dataSource = (IDiaDataSource**)&m_DiaDataSource;
+    if( !diaManager.LoadDataFromPdb( m_FileName.c_str(), dataSource, &m_DiaSession, &m_DiaGlobalSymbol ) )
     {
         return false;
     }
@@ -641,13 +644,14 @@ Function* Pdb::GetFunctionFromProgramCounter( DWORD64 a_Address )
 }
 
 //-----------------------------------------------------------------------------
-IDiaSymbol* Pdb::SymbolFromAddress( DWORD64 a_Address )
+std::shared_ptr<OrbitDiaSymbol> Pdb::SymbolFromAddress( DWORD64 a_Address )
 {
+	std::shared_ptr<OrbitDiaSymbol> symbol = std::make_shared<OrbitDiaSymbol>();
+
     if( m_DiaSession )
     {
-        IDiaSymbol* symbol;
         DWORD rva = DWORD(a_Address - (DWORD64)GetHModule());
-        auto error = m_DiaSession->findSymbolByRVA( rva, SymTagFunction, &symbol );
+        auto error = m_DiaSession->findSymbolByRVA( rva, SymTagFunction, &symbol->m_Symbol );
         if( error == S_OK )
         {
             return symbol;
@@ -658,7 +662,7 @@ IDiaSymbol* Pdb::SymbolFromAddress( DWORD64 a_Address )
         }
     }
 
-    return nullptr;
+    return symbol;
 }
 
 //-----------------------------------------------------------------------------
@@ -669,18 +673,18 @@ bool Pdb::LineInfoFromAddress( DWORD64 a_Address, LineInfo & o_LineInfo )
         return false;
     }
 
-    IDiaEnumLineNumbers * lineNumbers = nullptr;
+    OrbitDiaEnumLineNumbers lineNumbers;
     DWORD rva = DWORD(a_Address - (DWORD64)GetHModule());
     std::wstring fileNameW;
-    if( SUCCEEDED( m_DiaSession->findLinesByRVA( rva, 1, &lineNumbers ) ) )
+    if( SUCCEEDED( m_DiaSession->findLinesByRVA( rva, 1, &lineNumbers.m_Symbol ) ) )
     {
-        IDiaLineNumber* pLineNumber;
+        OrbitDiaLineNumber pLineNumber;
         ULONG celt = 0;
 
-        while( SUCCEEDED( lineNumbers->Next( 1, &pLineNumber, &celt ) ) && celt == 1 && fileNameW.size() == 0 )
+        while( SUCCEEDED( lineNumbers->Next( 1, &pLineNumber.m_Symbol, &celt ) ) && celt == 1 && fileNameW.size() == 0 )
         {
-            IDiaSourceFile* sourceFile;
-            if( SUCCEEDED( pLineNumber->get_sourceFile( &sourceFile ) ) )
+            OrbitDiaSourceFile sourceFile;
+            if( SUCCEEDED( pLineNumber->get_sourceFile( &sourceFile.m_Symbol ) ) )
             {
                 BSTR fileName;
                 if( SUCCEEDED( sourceFile->get_fileName( &fileName ) ) )
@@ -698,37 +702,30 @@ bool Pdb::LineInfoFromAddress( DWORD64 a_Address, LineInfo & o_LineInfo )
                 {
                     o_LineInfo.m_Line = lineNumber;
                 }
-
-                sourceFile->Release();
             }
 
-            pLineNumber->Release();
+            pLineNumber.Release();
         }
-
-        lineNumbers->Release();
     }
 
     return fileNameW.size() > 0;
 }
 
 //-----------------------------------------------------------------------------
-IDiaSymbol* Pdb::GetDiaSymbolFromId( ULONG a_Id )
+std::shared_ptr<OrbitDiaSymbol> Pdb::GetDiaSymbolFromId( ULONG a_Id )
 {
-    IDiaSymbol* symbol;
+    std::shared_ptr<OrbitDiaSymbol> symbol = std::make_shared<OrbitDiaSymbol>();
+
     if( m_DiaSession )
     {
-        auto error = m_DiaSession->symbolById( a_Id, &symbol );
-        if( error  == S_OK )
-        {
-            return symbol;
-        }
-        else
+        auto error = m_DiaSession->symbolById( a_Id, &symbol->m_Symbol );
+        if( error != S_OK )
         {
             PrintLastError();
         }
     }
 
-    return nullptr;
+    return symbol;
 }
 
 //-----------------------------------------------------------------------------

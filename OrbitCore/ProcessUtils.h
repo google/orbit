@@ -22,6 +22,7 @@ struct ProcessList
     void SortByName();
     void SortByCPU();
     void UpdateCpuTimes();
+    bool Contains( DWORD a_PID ) const;
     std::vector< std::shared_ptr< Process > > m_Processes;
     std::unordered_map< DWORD, std::shared_ptr< Process > > m_ProcessesMap;
 };

@@ -43,10 +43,10 @@ Process::Process(DWORD a_ID) : m_ID(a_ID)
 //-----------------------------------------------------------------------------
 Process::~Process()
 {
-    /*if( m_DebugInfoLoaded )
+    if( m_DebugInfoLoaded )
     {
         OrbitSymCleanup( m_Handle );
-    }*/
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -273,7 +273,7 @@ shared_ptr<Module> Process::GetModuleFromAddress( DWORD64 a_Address )
 	if (!m_Modules.empty() && it != m_Modules.begin())
 	{
 		--it;
-		std::shared_ptr<Module> & module = it->second;
+		std::shared_ptr<Module> module = it->second;
 		return module;
 	}
 
@@ -281,14 +281,14 @@ shared_ptr<Module> Process::GetModuleFromAddress( DWORD64 a_Address )
 }
 
 //-----------------------------------------------------------------------------
-IDiaSymbol * Process::SymbolFromAddress( DWORD64 a_Address )
+std::shared_ptr<OrbitDiaSymbol> Process::SymbolFromAddress( DWORD64 a_Address )
 {
     shared_ptr<Module> module = GetModuleFromAddress( a_Address );
     if( module && module->m_Pdb )
     {
         return module->m_Pdb->SymbolFromAddress( a_Address );
     }
-    return nullptr;
+    return make_shared<OrbitDiaSymbol>();
 }
 
 //-----------------------------------------------------------------------------

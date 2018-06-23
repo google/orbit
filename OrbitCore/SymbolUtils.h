@@ -57,11 +57,10 @@ inline bool SymInit( HANDLE a_Handle )
 //-----------------------------------------------------------------------------
 inline void OrbitSymCleanup(HANDLE a_Handle)
 {
-    return;
-    /*if( !SymCleanup( a_Handle ) )
+    if( !SymCleanup( a_Handle ) )
     {
         ORBIT_ERROR;
-    }*/
+    }
 }
 
 //-----------------------------------------------------------------------------

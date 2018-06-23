@@ -232,7 +232,8 @@ void TypesDataView::OnView( std::vector<int> & a_Items )
         Type & type = GetType( item );
         std::shared_ptr<Variable> var = type.GetTemplateVariable();
         var->PrintDetails();
-        OrbitDia::DiaDump( type.GetDiaSymbol() );
+        std::shared_ptr<OrbitDiaSymbol> diaSymbol = type.GetDiaSymbol();
+        OrbitDia::DiaDump( diaSymbol ? diaSymbol->m_Symbol : nullptr );
         GOrbitApp->SendToUiNow( L"output" );
     }
 }

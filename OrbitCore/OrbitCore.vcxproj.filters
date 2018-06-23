@@ -282,6 +282,9 @@
     <ClInclude Include="Diff.h">
       <Filter>Inc</Filter>
     </ClInclude>
+    <ClInclude Include="ObjectCount.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\external\xxHash-r42\xxhash.c">
@@ -458,6 +461,7 @@
     <ClCompile Include="Diff.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="ObjectCount.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\external\gte\GteVector.inl">

@@ -21,9 +21,24 @@
 #include "dia2.h"
 
 //-----------------------------------------------------------------------------
+Function::Function() 
+	: m_Address(0)
+	, m_Size(0)
+	, m_Line(0)
+	, m_ModBase(0)
+	, m_Selected(0)
+	, m_CallConv(-1)
+	, m_Id(0)
+	, m_ParentId(0)
+	, m_Pdb(nullptr)
+	, m_NameHash(0)
+	, m_OrbitType(OrbitType::NONE)
+{
+}
+
+//-----------------------------------------------------------------------------
 Function::~Function()
 {
-
 }
 
 //-----------------------------------------------------------------------------
@@ -150,14 +165,12 @@ void Function::GetDisassembly()
 
 void Function::FindFile()
 {
-    if (m_Pdb)
-    {
-        LineInfo lineInfo;
-        m_Pdb->LineInfoFromAddress(GetVirtualAddress(), lineInfo);
-        if (lineInfo.m_File != L"")
-            m_File = lineInfo.m_File;
-        m_Line = lineInfo.m_Line;
-    }
+	LineInfo lineInfo;
+	SymUtils::GetLineInfo( m_Address + (DWORD64)m_Pdb->GetHModule(), lineInfo );
+	if( lineInfo.m_File != L"" )
+		m_File = lineInfo.m_File;
+	m_File = ToLower( m_File );
+	m_Line = lineInfo.m_Line;
 }
 
 //-----------------------------------------------------------------------------
@@ -269,10 +282,10 @@ void Function::Print()
         return;
     }
 
-    IDiaSymbol* diaSymbol = m_Pdb->GetDiaSymbolFromId( this->m_Id );
-    if( diaSymbol )
+    std::shared_ptr<OrbitDiaSymbol> diaSymbol = m_Pdb->GetDiaSymbolFromId( this->m_Id );
+    if( diaSymbol->m_Symbol )
     {
-        OrbitDia::DiaDump( diaSymbol );
+        OrbitDia::DiaDump( diaSymbol->m_Symbol );
 
         if( m_ParentId )
         {
@@ -282,11 +295,9 @@ void Function::Print()
         }
 
         DiaParser parser;
-        parser.PrintFunctionType( diaSymbol );
+        parser.PrintFunctionType( diaSymbol->m_Symbol );
         ORBIT_VIZ( parser.m_Log );
     }
-
-    diaSymbol->Release();
 
     LineInfo lineInfo;
     SymUtils::GetLineInfo( m_Address + (DWORD64)m_Pdb->GetHModule(), lineInfo );
