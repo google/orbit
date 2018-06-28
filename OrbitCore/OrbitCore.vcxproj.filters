@@ -462,6 +462,9 @@
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="ObjectCount.cpp" />
+    <ClCompile Include="Profiling.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\external\gte\GteVector.inl">

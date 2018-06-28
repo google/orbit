@@ -160,7 +160,6 @@ bool OrbitApp::Init()
 
     Path::Init();
 
-    GTimerManager->m_GlobalTimer.start();
     DiaManager::InitMsDiaDll();
     GModuleManager.Init();
     Capture::Init();

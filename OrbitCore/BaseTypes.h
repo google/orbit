@@ -5,3 +5,4 @@
 
 #include <BaseTsd.h>
 #include <wtypes.h>
+#include <cstdint>

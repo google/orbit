@@ -24,16 +24,17 @@ public:
         m_UserData[0] = 0;
         m_UserData[1] = 0;
     }
-
+    
     void Start();
     void Stop();
     void Reset(){ Stop(); Start(); }
-
+    
+    inline double ElapsedMicros() const;
     inline double ElapsedMillis() const;
     inline double ElapsedSeconds() const;
 
-    inline double QueryMillis()  { m_PerfCounter.stop(); return ElapsedMillis(); }
-    inline double QuerySeconds() { m_PerfCounter.stop(); return ElapsedSeconds(); }
+    inline double QueryMillis()  { Stop(); return ElapsedMillis(); }
+    inline double QuerySeconds() { Stop(); return ElapsedSeconds(); }
 
     static inline int GetCurrentDepthTLS() { return CurrentDepth; }
     static inline void ClearThreadDepthTLS() { CurrentDepth = 0; }
@@ -67,28 +68,8 @@ public:
     DWORD64     m_CallstackHash;
     DWORD64     m_FunctionAddress;
     DWORD64     m_UserData[2];
-    PerfCounter m_PerfCounter;
-};
-
-//-----------------------------------------------------------------------------
-class SimpleTimer
-{
-public:
-    SimpleTimer() : m_IsRunning(false){}
-
-    void Start() { m_PerfCounter.start(); m_IsRunning = true; }
-    void Stop()  { m_PerfCounter.stop(); m_IsRunning = false; }
-
-    inline bool IsRunning() const { return m_IsRunning; }
-    inline double ElapsedMillis();
-    inline double ElapsedSeconds();
-
-    inline double QueryMillis()  { if( m_IsRunning ) { m_PerfCounter.stop(); } return ElapsedMillis(); }
-    inline double QuerySeconds() { if( m_IsRunning ) { m_PerfCounter.stop(); } return ElapsedSeconds(); }
-
-public:
-    PerfCounter m_PerfCounter;
-    bool            m_IsRunning;
+    EpochType   m_Start;
+    EpochType   m_End;
 };
 
 //-----------------------------------------------------------------------------
@@ -129,35 +110,25 @@ protected:
     enum { NameSize = 64 };
 
     Timer m_Timer;
-    bool      m_Active;
-    char      m_Name[NameSize];
+    bool  m_Active;
+    char  m_Name[NameSize];
 };
+
+//-----------------------------------------------------------------------------
+inline double Timer::ElapsedMicros() const
+{
+    return GetMicroSeconds( m_Start, m_End );
+}
 
 //-----------------------------------------------------------------------------
 inline double Timer::ElapsedMillis() const
 {
-    IntervalType elapsedMicros = PerfCounter::get_microseconds(m_PerfCounter.get_start(), m_PerfCounter.get_end());
-    return (double)elapsedMicros * 0.001;
+    return ElapsedMicros() * 0.001;
 }
 
 //-----------------------------------------------------------------------------
 inline double Timer::ElapsedSeconds() const
 {
-    IntervalType elapsedMicros = PerfCounter::get_microseconds(m_PerfCounter.get_start(), m_PerfCounter.get_end());
-    return (double)elapsedMicros * 0.000001;
-}
-
-//-----------------------------------------------------------------------------
-inline double SimpleTimer::ElapsedMillis()
-{
-    IntervalType elapsedMicros = PerfCounter::get_microseconds(m_PerfCounter.get_start(), m_PerfCounter.get_end());
-    return (double)elapsedMicros * 0.001;
-}
-
-//-----------------------------------------------------------------------------
-inline double SimpleTimer::ElapsedSeconds()
-{
-    IntervalType elapsedMicros = PerfCounter::get_microseconds(m_PerfCounter.get_start(), m_PerfCounter.get_end());
-    return (double)elapsedMicros * 0.000001;
+    return ElapsedMicros() * 0.000001;
 }
 

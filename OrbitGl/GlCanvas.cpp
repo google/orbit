@@ -39,7 +39,6 @@ void ClearCaptureData()
     if( GCurrentTimeGraph )
     {
         GCurrentTimeGraph->Clear();
-        GTimerManager->m_GlobalTimer.start();
     }
 
     GOrbitApp->FireRefreshCallbacks( DataViewType::LIVEFUNCTIONS );

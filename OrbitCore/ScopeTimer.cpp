@@ -15,13 +15,13 @@ void Timer::Start()
     m_TID = GetCurrentThreadId();
     m_Depth = CurrentDepth++;
     m_SessionID = Message::GSessionID;
-    m_PerfCounter.start();
+    m_Start = OrbitTicks();
 }
 
 //-----------------------------------------------------------------------------
 void Timer::Stop()
 {
-    m_PerfCounter.stop();
+    m_End = OrbitTicks();
     --CurrentDepth;
 }
 

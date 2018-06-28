@@ -78,7 +78,7 @@ bool TimeGraph::UpdateSessionMinMaxCounter()
 
     if( m_TextBoxes.size() )
     {
-        m_SessionMinCounter = m_TextBoxes.m_Root->m_Data[0].GetTimer().m_PerfCounter.get_start();
+        m_SessionMinCounter = m_TextBoxes.m_Root->m_Data[0].GetTimer().m_Start;
     }
 
     if( GEventTracer.GetEventBuffer().HasEvent() )
@@ -95,7 +95,7 @@ void TimeGraph::ZoomAll()
 {    
     if( UpdateSessionMinMaxCounter() )
     {
-        m_MaxEpochTimeUs = (double)PerfCounter::get_microseconds( m_SessionMinCounter, m_SessionMaxCounter );
+        m_MaxEpochTimeUs = GetMicroSeconds( m_SessionMinCounter, m_SessionMaxCounter );
         m_MinEpochTimeUs = m_MaxEpochTimeUs - (GNumHistorySeconds*1000*1000);
         NeedsUpdate();
     }
@@ -106,8 +106,8 @@ void TimeGraph::Zoom( const TextBox* a_TextBox )
 {
     const Timer& timer = a_TextBox->GetTimer();
 
-    double start = (double)PerfCounter::get_microseconds(m_SessionMinCounter, timer.m_PerfCounter.get_start());
-    double end   = (double)PerfCounter::get_microseconds(m_SessionMinCounter, timer.m_PerfCounter.get_end());
+    double start = GetMicroSeconds(m_SessionMinCounter, timer.m_Start);
+    double end   = GetMicroSeconds(m_SessionMinCounter, timer.m_End);
 
     double mid = (start+end)/2.0;
     double extent = 1.1*(end-start)/2.0;
@@ -120,8 +120,7 @@ double TimeGraph::GetSessionTimeSpanUs()
 {
     if( UpdateSessionMinMaxCounter() )
     {
-        IntervalType maxEpochTimeUs = PerfCounter::get_microseconds( m_SessionMinCounter, m_SessionMaxCounter );
-        return (double)maxEpochTimeUs;
+        return GetMicroSeconds( m_SessionMinCounter, m_SessionMaxCounter );
     }
 
     return 0;
@@ -207,8 +206,8 @@ double TimeGraph::GetTimeIntervalMicro( double a_Ratio )
 //-----------------------------------------------------------------------------
 void TimeGraph::ProcessTimer( Timer & a_Timer )
 {
-    EpochType start = a_Timer.m_PerfCounter.get_start();
-    EpochType end   = a_Timer.m_PerfCounter.get_end();
+    EpochType start = a_Timer.m_Start;
+    EpochType end   = a_Timer.m_End;
 
     if( end > m_SessionMaxCounter )
     {
@@ -276,8 +275,8 @@ void TimeGraph::AddContextSwitch( const ContextSwitch & a_CS )
                 if( lastCS.m_Type == ContextSwitch::In )
                 {
                     Timer timer;
-                    timer.m_PerfCounter.set_start(lastCS.m_Time);
-                    timer.m_PerfCounter.set_end(a_CS.m_Time);
+                    timer.m_Start = lastCS.m_Time;
+                    timer.m_End = a_CS.m_Time;
                     timer.m_TID = a_CS.m_ThreadId;
                     timer.m_Processor = (int8_t)a_CS.m_ProcessorIndex;
                     timer.m_SessionID = Message::GSessionID;
@@ -299,8 +298,8 @@ void TimeGraph::AddContextSwitch( const ContextSwitch & a_CS )
                 if( lastCS.m_Type == ContextSwitch::In )
                 {
                     Timer timer;
-                    timer.m_PerfCounter.set_start( lastCS.m_Time );
-                    timer.m_PerfCounter.set_end( a_CS.m_Time );
+                    timer.m_Start = lastCS.m_Time;
+                    timer.m_End = a_CS.m_Time;
                     timer.m_TID = a_CS.m_ThreadId;
                     timer.m_SessionID = Message::GSessionID;
                     timer.SetType(Timer::THREAD_ACTIVITY);
@@ -381,7 +380,7 @@ float TimeGraph::GetWorldFromRawTimeStamp( IntervalType a_Time ) const
 {
     if( m_TimeWindowUs > 0 )
     {
-        double start = (double)PerfCounter::get_microseconds(m_SessionMinCounter, a_Time) - m_MinEpochTimeUs;
+        double start = GetMicroSeconds(m_SessionMinCounter, a_Time) - m_MinEpochTimeUs;
         double normalizedStart = start / m_TimeWindowUs;
         float pos = float( m_WorldStartX + normalizedStart*m_WorldWidth );
         return pos;
@@ -402,13 +401,13 @@ IntervalType TimeGraph::GetRawTimeStampFromWorld( float a_WorldX )
     double ratio = m_WorldWidth ? (double)( ( a_WorldX - m_WorldStartX ) / m_WorldWidth ) : 0;
     double timeStamp = GetTime( ratio );
     
-    return m_SessionMinCounter + PerfCounter::get_period_count_from_microseconds( (IntervalType)timeStamp );
+    return m_SessionMinCounter + TicksFromMicroseconds( timeStamp );
 }
 
 //-----------------------------------------------------------------------------
 IntervalType TimeGraph::GetRawTimeStampFromUs( double a_MicroSeconds ) const
 {
-    return m_SessionMinCounter + PerfCounter::get_period_count_from_microseconds( (IntervalType)a_MicroSeconds );
+    return m_SessionMinCounter + TicksFromMicroseconds( a_MicroSeconds );
 }
 
 //-----------------------------------------------------------------------------
@@ -486,10 +485,10 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
     {
         const Timer & timer = textBox.GetTimer();
 
-        if( !( rawStart > timer.m_PerfCounter.get_end() || rawStop < timer.m_PerfCounter.get_start() ) )
+        if( !( rawStart > timer.m_End || rawStop < timer.m_Start ) )
         {          
-            double start = (double)PerfCounter::get_microseconds( m_SessionMinCounter, timer.m_PerfCounter.get_start() ) - m_MinEpochTimeUs;
-            double end = (double)PerfCounter::get_microseconds( m_SessionMinCounter, timer.m_PerfCounter.get_end() ) - m_MinEpochTimeUs;
+            double start = GetMicroSeconds( m_SessionMinCounter, timer.m_Start ) - m_MinEpochTimeUs;
+            double end = GetMicroSeconds( m_SessionMinCounter, timer.m_End ) - m_MinEpochTimeUs;
             double elapsed = end - start;
 
             double NormalizedStart  = start   * invTimeWindow;
@@ -656,7 +655,7 @@ void TimeGraph::UpdateEvents()
         float ThreadOffset = (float)m_Layout.GetSamplingTrackOffset( threadID );
         for( auto & callstackPair : callstacks )
         {
-            long long time = callstackPair.first;
+            unsigned long long time = callstackPair.first;
 
             if( time > rawMin && time < rawMax )
             {
@@ -973,8 +972,8 @@ void TimeGraph::DrawMainFrame( TextBox & a_Box )
 //-----------------------------------------------------------------------------
 bool TimeGraph::IsVisible( const Timer & a_Timer )
 {
-    double start = (double)PerfCounter::get_microseconds(m_SessionMinCounter, a_Timer.m_PerfCounter.get_start());
-    double end   = (double)PerfCounter::get_microseconds(m_SessionMinCounter, a_Timer.m_PerfCounter.get_end());
+    double start = GetMicroSeconds(m_SessionMinCounter, a_Timer.m_Start);
+    double end   = GetMicroSeconds(m_SessionMinCounter, a_Timer.m_End);
 
     if( m_MinEpochTimeUs > end || m_MaxEpochTimeUs < start )
     {

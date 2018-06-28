@@ -206,6 +206,7 @@
     <ClCompile Include="OrbitSession.cpp" />
     <ClCompile Include="OrbitProcess.cpp" />
     <ClCompile Include="ProcessUtils.cpp" />
+    <ClCompile Include="Profiling.cpp" />
     <ClCompile Include="SamplingProfiler.cpp" />
     <ClCompile Include="ScopeTimer.cpp">
       <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessToFile>

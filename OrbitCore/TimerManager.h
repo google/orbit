@@ -56,7 +56,6 @@ public:
     std::atomic<int>        m_NumTimersFromPreviousSession;
 	std::atomic<int>		m_NumFlushedTimers;
 
-    PerfCounter             m_GlobalTimer;
     int                     m_ThreadCounter;
     LockFreeQueue<Timer>    m_LockFreeQueue;
     LockFreeQueue<Message>  m_LockFreeMessageQueue;

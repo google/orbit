@@ -30,6 +30,8 @@ TimerManager::TimerManager( bool a_IsClient )
     , m_NumFlushedTimers(0)
     , m_IsClient(a_IsClient)
 {
+    InitProfiling();
+
     if( m_IsClient )
     {
         m_ConsumerThread = new std::thread([&](){ SendTimers(); });
@@ -48,8 +50,6 @@ void TimerManager::StartRecording()
     {
         return;
     }
-    
-    //CreateDataBase();
 
     if( !m_ConsumerThread )
     {

@@ -202,10 +202,8 @@ void Hijacking::PrologOutputDebugString( void* a_OriginalFunctionAddress, void**
 {
     SSE_SCOPE;
     CheckTls();
-    PerfCounter timer;
-    timer.start();
     OrbitLogEntry entry;
-    entry.m_Time = timer.get_start();
+    entry.m_Time = OrbitTicks();
 
     Context* context = (Context*)( (char*)_AddressOfReturnAddress() + s_StackOffset );
 #ifdef _WIN64
@@ -226,10 +224,8 @@ void Hijacking::PrologSendData( void* a_OriginalFunctionAddress, void** a_Return
 {
     SSE_SCOPE;
     CheckTls();
-    PerfCounter timer;
-    timer.start();
     Orbit::UserData entry;
-    entry.m_Time = timer.get_start();
+    entry.m_Time = OrbitTicks();
 
     Context* context = (Context*)( (char*)_AddressOfReturnAddress() + s_StackOffset );
 
