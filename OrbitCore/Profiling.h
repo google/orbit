@@ -3,19 +3,19 @@
 //-----------------------------------
 #pragma once
 
-#include <windows.h>
+#include "Platform.h"
 #include "BaseTypes.h"
 
 //-----------------------------------------------------------------------------
-typedef uint64_t IntervalType;
-typedef uint64_t EpochType;
-extern LARGE_INTEGER GFrequency;
+typedef uint64_t TickType;
+extern TickType  GFrequency;
+extern double    GPeriod;
 
 //-----------------------------------------------------------------------------
 void InitProfiling();
 
 //-----------------------------------------------------------------------------
-inline EpochType OrbitTicks()
+inline TickType OrbitTicks()
 {
     LARGE_INTEGER ticks;
     QueryPerformanceCounter(&ticks);
@@ -23,16 +23,13 @@ inline EpochType OrbitTicks()
 }
 
 //-----------------------------------------------------------------------------
-inline double GetMicroSeconds( EpochType a_Start, EpochType a_End )
+inline double MicroSecondsFromTicks( TickType a_Start, TickType a_End )
 {
-    IntervalType count = static_cast<IntervalType>( a_End - a_Start );
-    count *= IntervalType( 1000000 );
-    count /= IntervalType( GFrequency.QuadPart );
-    return (double)count;
+    return double(1000000*(a_End - a_Start))*GPeriod;
 }
 
 //-----------------------------------------------------------------------------
-inline IntervalType TicksFromMicroseconds( double a_Micros )
+inline TickType TicksFromMicroseconds( double a_Micros )
 {
-    return GFrequency.QuadPart*(IntervalType)a_Micros / (IntervalType)1000000;
+    return (TickType)(GFrequency*a_Micros*0.000001);
 }

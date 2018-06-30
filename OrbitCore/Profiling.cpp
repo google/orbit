@@ -4,10 +4,15 @@
 
 #include "Profiling.h"
 
-LARGE_INTEGER GFrequency;
+TickType GFrequency;
+double   GPeriod;
+
 
 //-----------------------------------------------------------------------------
 void InitProfiling()
 {
-    QueryPerformanceFrequency( reinterpret_cast<LARGE_INTEGER*>( &GFrequency ) );
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency( &frequency );
+    GFrequency = frequency.QuadPart;
+    GPeriod = 1.0/(double)GFrequency;
 }
