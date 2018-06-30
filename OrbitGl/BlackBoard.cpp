@@ -145,7 +145,7 @@ static void ShowExampleAppCustomRendering(bool* opened)
 
         float xsize = GMax.x - GMin.x;
         float ysize = GMax.y - GMin.y;
-        float size = max(ysize, xsize);
+        float size = std::max(ysize, xsize);
         if( size == 0.f ) size = 1.f;
         for (int i = 0; i < points.Size - 1; i += 2)
         {

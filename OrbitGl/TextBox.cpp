@@ -138,7 +138,7 @@ void TextBox::Draw( TextRenderer & a_TextRenderer
 
         static Color s_Color(255, 255, 255, 255);
             
-        float posX = max( m_Pos[0], a_MinX );
+        float posX = std::max( m_Pos[0], a_MinX );
         if (a_RightJustify)
         {
             posX += m_Size[0];

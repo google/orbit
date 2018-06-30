@@ -54,8 +54,8 @@ void ThreadView::RenderUI()
     {
         float sizex = fabs(m_SelectStop[0] - m_SelectStart[0]);
         float sizey = fabs(m_SelectStop[1] - m_SelectStart[1]);
-        float posx = min(m_SelectStop[0], m_SelectStart[0]);
-        float posy = min(m_SelectStop[1], m_SelectStart[1]);
+        float posx = std::min(m_SelectStop[0], m_SelectStart[0]);
+        float posy = std::min(m_SelectStop[1], m_SelectStart[1]);
         Vec2 pos(posx, posy);
         Vec2 size(sizex, sizey);
 

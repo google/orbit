@@ -62,7 +62,7 @@ void SymUtils::ListModules( HANDLE a_ProcessHandle, std::map< DWORD64, std::shar
         if( std::tr2::sys::exists( filePath ) )
         {
             module->m_FoundPdb = true;
-            module->m_PdbSize = ::tr2::sys::file_size( filePath );
+            module->m_PdbSize = std::tr2::sys::file_size( filePath );
             module->m_PdbName = filePath.wstring();
         }
         else if( Contains( module->m_FullName, L"qt" ) )
@@ -72,7 +72,7 @@ void SymUtils::ListModules( HANDLE a_ProcessHandle, std::map< DWORD64, std::shar
             if( std::tr2::sys::exists( filePath ) )
             {
                 module->m_FoundPdb = true;
-                module->m_PdbSize = ::tr2::sys::file_size( filePath );
+                module->m_PdbSize = std::tr2::sys::file_size( filePath );
                 module->m_PdbName = filePath.wstring();
             }
         }

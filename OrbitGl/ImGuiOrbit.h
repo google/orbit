@@ -146,7 +146,7 @@ public:
     bool                ScrollToBottom;
     bool                m_Open;
 
-    void Draw(const char* title, const vector<string> & lines, bool* p_opened = NULL)
+    void Draw(const char* title, const std::vector<std::string> & lines, bool* p_opened = NULL)
     {
         ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiSetCond_FirstUseEver);
         ImGui::Begin(title, p_opened);

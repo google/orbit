@@ -11,13 +11,13 @@ struct Thread_TypeGroup1
 {
     uint32_t ProcessId;
     uint32_t TThreadId;
-    ptr_type StackBase;
-    ptr_type StackLimit;
-    ptr_type UserStackBase;
-    ptr_type UserStackLimit;
-    ptr_type Affinity;
-    ptr_type Win32StartAddr;
-    ptr_type TebBase;
+    ULONG64  StackBase;
+    ULONG64  StackLimit;
+    ULONG64  UserStackBase;
+    ULONG64  UserStackLimit;
+    ULONG64  Affinity;
+    ULONG64  Win32StartAddr;
+    ULONG64  TebBase;
     uint32_t SubProcessTag;
     uint8_t  BasePriority;
     uint8_t  PagePriority;
@@ -54,7 +54,7 @@ struct CSwitch
 //[EventType{ 46 }, EventTypeName{ "SampleProfile" }]
 struct PerfInfo_SampledProfile
 {
-    ptr_type InstructionPointer;
+    ULONG64 InstructionPointer;
     uint32_t ThreadId;
     uint32_t Count;
 
@@ -70,8 +70,8 @@ struct DiskIo_TypeGroup1
     uint32_t TransferSize;
     uint32_t Reserved;
     int64_t  ByteOffset;
-    ptr_type FileObject;
-    ptr_type Irp;
+    ULONG64  FileObject;
+    ULONG64  Irp;
     uint64_t HighResResponseTime;
     uint32_t IssuingThreadId;
 
@@ -83,7 +83,7 @@ struct DiskIo_TypeGroup1
 //[EventType{ 12, 13, 15 }, EventTypeName{ "ReadInit", "WriteInit", "FlushInit" }]
 struct DiskIo_TypeGroup2
 {
-    ptr_type Irp;
+    ULONG64 Irp;
     uint32_t IssuingThreadId;
 
     static const UCHAR OPCODE_READ_INIT = EVENT_TRACE_TYPE_IO_READ_INIT;
@@ -98,7 +98,7 @@ struct DiskIo_TypeGroup3
     uint32_t DiskNumber;
     uint32_t IrpFlags;
     uint64_t HighResResponseTime;
-    ptr_type Irp;
+    ULONG64  Irp;
     uint32_t IssuingThreadId;
 
     static const UCHAR OPCODE_FLUSH_BUFFER = EVENT_TRACE_TYPE_IO_FLUSH;
@@ -108,7 +108,7 @@ struct DiskIo_TypeGroup3
 //[EventType{ 0, 32, 35, 36 }, EventTypeName{ "Name", "FileCreate", "FileDelete", "FileRundown" }]
 struct FileIo_Name
 {
-    ptr_type FileObject;
+    ULONG64 FileObject;
     wchar_t  FileName[1];
 
     static const UCHAR OPCODE_NAME = 0;
@@ -121,9 +121,9 @@ struct FileIo_Name
 //[EventType{ 64 }, EventTypeName{ "Create" }]
 struct FileIo_Create
 {
-    ptr_type IrpPtr;
-    ptr_type TTID;
-    ptr_type FileObject;
+    ULONG64  IrpPtr;
+    ULONG64  TTID;
+    ULONG64  FileObject;
     uint32_t CreateOptions;
     uint32_t FileAttributes;
     uint32_t ShareAccess;
@@ -136,11 +136,11 @@ struct FileIo_Create
 //[EventType{ 69, 70, 71, 74, 75 }, EventTypeName{ "SetInfo", "Delete", "Rename", "QueryInfo", "FSControl" }]
 struct FileIo_Info
 {
-    ptr_type IrpPtr;
-    ptr_type TTID;
-    ptr_type FileObject;
-    ptr_type FileKey;
-    ptr_type ExtraInfo;
+    ULONG64  IrpPtr;
+    ULONG64  TTID;
+    ULONG64  FileObject;
+    ULONG64  FileKey;
+    ULONG64  ExtraInfo;
     uint32_t InfoClass;
 
     static const UCHAR OPCODE_SET_INFO = 69;
@@ -157,10 +157,10 @@ struct FileIo_ReadWrite
     // https://msdn.microsoft.com/en-us/library/windows/desktop/aa964772(v=vs.85).aspx
 
     uint64_t Offset;
-    ptr_type IrpPtr;
-    ptr_type TTID;
-    ptr_type FileObject;
-    ptr_type FileKey; //To determine the file name, match the value of this property to the FileObject property of a FileIo_Name event.
+    ULONG64  IrpPtr;
+    ULONG64  TTID;
+    ULONG64  FileObject;
+    ULONG64  FileKey; //To determine the file name, match the value of this property to the FileObject property of a FileIo_Name event.
     uint32_t IoSize;
     uint32_t IoFlags;
 
@@ -201,7 +201,7 @@ struct StackWalk_Event
     uint64_t EventTimeStamp;
     uint32_t StackProcess;
     uint32_t StackThread;
-    ptr_type Stack1;
+    ULONG64  Stack1;
 
     static const UCHAR OPCODE_STACK = 32;
 };

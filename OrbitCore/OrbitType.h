@@ -17,8 +17,6 @@
 #include "SerializationMacros.h"
 #include "OrbitFunction.h"
 
-using namespace std;
-
 //-----------------------------------------------------------------------------
 struct Parent
 {
@@ -69,7 +67,7 @@ public:
     void GenerateDiaHierarchy();
     void GenerateDiaHierarchy( struct IDiaSymbol* a_DiaSymbol );
     void AddParent( IDiaSymbol* a_Parent );
-    const map<ULONG, Variable> & GetFullVariableMap() const;
+    const std::map<ULONG, Variable> & GetFullVariableMap() const;
     Pdb* GetPdb() const { return m_Pdb; }
     const std::wstring & GetName() const { return m_Name; }
     const std::wstring & GetNameLower(){ if( m_NameLower.size() == 0 ){ m_NameLower = ToLower( m_Name ); } return m_NameLower;  }
@@ -84,38 +82,38 @@ public:
 
 protected:
     void GenerateDataLayout() const;
-    void ListDataMembers( ULONG a_BaseOffset, map<ULONG, Variable> & o_DataMembers ) const;
+    void ListDataMembers( ULONG a_BaseOffset, std::map<ULONG, Variable> & o_DataMembers ) const;
     void OutputPadding() const;
 
 public:
-    void GenerateHierarchy( map<ULONG, Parent> & a_ParentTypes, int a_Offset = 0 ) const;
+    void GenerateHierarchy( std::map<ULONG, Parent> & a_ParentTypes, int a_Offset = 0 ) const;
     unsigned long long Hash();
 
-    ULONG              m_Id;
-    ULONG              m_UnmodifiedId;
-    ULONG              m_PointedTypeId;
-    wstring            m_Name;
-    wstring            m_NameLower;
-    ULONG64            m_Length;
-    int                m_NumVariables;
-    int                m_NumFunctions;
-    int                m_NumBaseClasses;
-    bool               m_Nested;
-    LONG               m_BaseOffset;
+    ULONG                   m_Id;
+    ULONG                   m_UnmodifiedId;
+    ULONG                   m_PointedTypeId;
+    std::wstring            m_Name;
+    std::wstring            m_NameLower;
+    ULONG64                 m_Length;
+    int                     m_NumVariables;
+    int                     m_NumFunctions;
+    int                     m_NumBaseClasses;
+    bool                    m_Nested;
+    LONG                    m_BaseOffset;
 
-    vector<Function>   m_Functions;
-    map<ULONG, Parent> m_ParentTypes;
-    UdtKind            m_Type;
-    bool               m_Selected;
-    TypeInfo           m_TypeInfo;
-    Pdb*               m_Pdb;
-    unsigned long long m_Hash;
-    bool               m_DiaInfoLoaded;
-    bool               m_HierarchyGenerated;
+    std::vector<Function>   m_Functions;
+    std::map<ULONG, Parent> m_ParentTypes;
+    UdtKind                 m_Type;
+    bool                    m_Selected;
+    TypeInfo                m_TypeInfo;
+    Pdb*                    m_Pdb;
+    unsigned long long      m_Hash;
+    bool                    m_DiaInfoLoaded;
+    bool                    m_HierarchyGenerated;
 
     // TODO: should not be mutable, but they are so we can lazy populate them
-    mutable map<ULONG, Variable> m_DataMembers;     //offset, Member
-    mutable map<ULONG, Variable> m_DataMembersFull; //offset, Variable
-    mutable map<ULONG, Parent>   m_Hierarchy;
-    std::shared_ptr<Variable>    m_TemplateVariable;
+    mutable std::map<ULONG, Variable> m_DataMembers;     //offset, Member
+    mutable std::map<ULONG, Variable> m_DataMembersFull; //offset, Variable
+    mutable std::map<ULONG, Parent>   m_Hierarchy;
+    std::shared_ptr<Variable>         m_TemplateVariable;
 };

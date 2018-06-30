@@ -206,15 +206,15 @@ void OrbitApp::LoadFileMapping()
     if ( !Path::FileExists( fileName ) )
     {
         std::ofstream outfile( fileName );
-        outfile << "//-------------------" << endl
-                << "// Orbit File Mapping" << endl
-                << "//-------------------" << endl
-                << "// If the file path in the pdb is \"D:\\NoAccess\\File.cpp\"" << endl
-                << "// and File.cpp is locally available in \"C:\\Available\\\""  << endl
-                << "// then enter a file mapping on its own line like so:"        << endl
-                << "// \"D:\\NoAccess\\File.cpp\" \"C:\\Available\\\"" << endl
-                << endl
-                << "\"D:\\NoAccess\" \"C:\\Avalaible\"" << endl;
+        outfile << "//-------------------" << std::endl
+                << "// Orbit File Mapping" << std::endl
+                << "//-------------------" << std::endl
+                << "// If the file path in the pdb is \"D:\\NoAccess\\File.cpp\"" << std::endl
+                << "// and File.cpp is locally available in \"C:\\Available\\\""  << std::endl
+                << "// then enter a file mapping on its own line like so:"        << std::endl
+                << "// \"D:\\NoAccess\\File.cpp\" \"C:\\Available\\\"" << std::endl
+                << std::endl
+                << "\"D:\\NoAccess\" \"C:\\Avalaible\"" << std::endl;
 
         outfile.close();
     }
@@ -264,14 +264,14 @@ void OrbitApp::LoadSymbolsFile()
     if( !Path::FileExists( fileName ) )
     {
         std::ofstream outfile( fileName );
-        outfile << "//-------------------" << endl
-            << "// Orbit Symbol Locations" << endl
-            << "//-------------------" << endl
-            << "// Orbit will scan the specified directories for pdb files." << endl
-            << "// Enter one directory per line, like so:" << endl
-            << "// \"D:\\MyApp\\Release\"" << endl
-            << "// \"D:\\MySymbolServer\\" << endl
-            << endl;
+        outfile << "//-------------------" << std::endl
+            << "// Orbit Symbol Locations" << std::endl
+            << "//-------------------" << std::endl
+            << "// Orbit will scan the specified directories for pdb files." << std::endl
+            << "// Enter one directory per line, like so:" << std::endl
+            << "// \"D:\\MyApp\\Release\"" << std::endl
+            << "// \"D:\\MySymbolServer\\" << std::endl
+            << std::endl;
 
         outfile.close();
     }
@@ -301,7 +301,7 @@ void OrbitApp::ListSessions()
     std::vector< std::shared_ptr< Session > > sessions;
     for( std::wstring & fileName : sessionFileNames )
     {
-        shared_ptr<Session> session = std::make_shared<Session>();
+        std::shared_ptr<Session> session = std::make_shared<Session>();
 
         std::ifstream file( fileName.c_str(), std::ios::binary );
         if( !file.fail() )
@@ -447,7 +447,7 @@ void OrbitApp::CheckLicense()
             SendToUiNow( L"license" );
         } while( !OrbitVersion::CheckLicense( m_License ) );
 
-        wofstream outFile( Path::GetLicenseName() );
+        std::wofstream outFile( Path::GetLicenseName() );
         if( !outFile.fail() )
         {
             outFile << m_License;
@@ -498,8 +498,8 @@ void OrbitApp::MainTick()
     
     if( Capture::GProcessToInject != L"" )
     {
-        cout << "Injecting into " << ws2s(Capture::GTargetProcess->GetFullName()) << endl;
-        cout << "Orbit host: " << ws2s(Capture::GCaptureHost) << endl;
+        std::cout << "Injecting into " << ws2s(Capture::GTargetProcess->GetFullName()) << std::endl;
+        std::cout << "Orbit host: " << ws2s(Capture::GCaptureHost) << std::endl;
         GOrbitApp->SelectProcess(Capture::GProcessToInject);
         Capture::InjectRemote();
         exit(0);
@@ -709,7 +709,7 @@ void OrbitApp::OnSaveSession( const std::wstring a_FileName )
 //-----------------------------------------------------------------------------
 void OrbitApp::OnLoadSession( const std::wstring a_FileName )
 {
-    shared_ptr<Session> session = std::make_shared<Session>();
+    std::shared_ptr<Session> session = std::make_shared<Session>();
 
     std::wstring fileName = Path::GetDirectory( a_FileName ) == L"" ? Path::GetPresetPath() + a_FileName : a_FileName; 
 

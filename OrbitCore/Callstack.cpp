@@ -2,6 +2,7 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+#include "Core.h"
 #include "Callstack.h"
 #include "PrintVar.h"
 #include "OrbitProcess.h"
@@ -36,7 +37,7 @@ void CallStack::Print()
 //-----------------------------------------------------------------------------
 std::wstring CallStack::GetString()
 {
-    wstring callstackString;
+    std::wstring callstackString;
     
     ScopeLock lock( Capture::GTargetProcess->GetDataMutex() );
     for( int i = 0; i < m_Depth; ++i )

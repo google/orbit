@@ -162,7 +162,7 @@ std::multimap<int, CallstackID> SamplingProfiler::GetCallStacksFromAddress( DWOR
 //-----------------------------------------------------------------------------
 std::shared_ptr< SortedCallstackReport > SamplingProfiler::GetSortedCallstacksFromAddress( DWORD64 a_Addr, ThreadID a_TID )
 {
-    std::shared_ptr<SortedCallstackReport> report = make_shared<SortedCallstackReport>();
+    std::shared_ptr<SortedCallstackReport> report = std::make_shared<SortedCallstackReport>();
     std::multimap<int, CallstackID> multiMap = GetCallStacksFromAddress( a_Addr, a_TID, report->m_NumCallStacksTotal );
     int numUniqueCallstacks = (int)multiMap.size();
     report->m_CallStacks.resize( numUniqueCallstacks );
@@ -472,7 +472,7 @@ void SamplingProfiler::OutputStats()
         ORBIT_LOGV(threadID);
         ORBIT_LOGV(threadSampleData.m_NumSamples);
 
-        for( multimap< unsigned int, DWORD64 >::reverse_iterator sortedIt = threadSampleData.m_AddressCountSorted.rbegin();
+        for( std::multimap< unsigned int, DWORD64 >::reverse_iterator sortedIt = threadSampleData.m_AddressCountSorted.rbegin();
              sortedIt != threadSampleData.m_AddressCountSorted.rend(); ++sortedIt )
         {
             int numOccurences = sortedIt->first;

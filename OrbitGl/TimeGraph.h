@@ -39,7 +39,7 @@ public:
 
     void ProcessTimer( Timer & a_Timer );
     void UpdateThreadDepth( int a_ThreadId, int a_Depth );
-    void UpdateMaxTimeStamp( IntervalType a_Time );
+    void UpdateMaxTimeStamp( TickType a_Time );
     void AddContextSwitch();
     
     int GetThreadDepth( int a_ThreadId ) const;
@@ -47,10 +47,10 @@ public:
     float GetThreadTotalHeight();
     float GetTextBoxHeight() const { return m_Layout.m_TextBoxHeight; }
     int GetMarginInPixels() const { return m_Margin; }
-    float GetWorldFromRawTimeStamp( IntervalType a_Time ) const;
+    float GetWorldFromRawTimeStamp( TickType a_Time ) const;
     float GetWorldFromUs( double a_Micros ) const;
-    IntervalType GetRawTimeStampFromWorld( float a_WorldX );
-    IntervalType GetRawTimeStampFromUs( double a_MicroSeconds ) const;
+    TickType GetRawTimeStampFromWorld( float a_WorldX );
+    TickType GetRawTimeStampFromUs( double a_MicroSeconds ) const;
     void GetWorldMinMax( float & a_Min, float & a_Max ) const;
     bool UpdateSessionMinMaxCounter();
 
@@ -87,8 +87,8 @@ public:
     double                          m_RefEpochTimeUs;
     double                          m_MinEpochTimeUs;
     double                          m_MaxEpochTimeUs;
-    IntervalType                    m_SessionMinCounter;
-    IntervalType                    m_SessionMaxCounter;
+    TickType                        m_SessionMinCounter;
+    TickType                        m_SessionMaxCounter;
     std::map< ThreadID, int >       m_ThreadDepths;
     std::map< ThreadID, uint32_t >  m_EventCount;
     double                          m_TimeWindowUs;

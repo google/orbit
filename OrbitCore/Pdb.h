@@ -40,9 +40,9 @@ public:
 
     const std::wstring & GetName() const             { return m_Name; }
     const std::wstring & GetFileName() const         { return m_FileName; }
-    vector<Function>&    GetFunctions()              { return m_Functions; }
-    vector<Type>&        GetTypes()                  { return m_Types; }
-    vector<Variable>&    GetGlobals()                { return m_Globals; }
+    std::vector<Function>&    GetFunctions()         { return m_Functions; }
+    std::vector<Type>&        GetTypes()             { return m_Types; }
+    std::vector<Variable>&    GetGlobals()           { return m_Globals; }
     HMODULE              GetHModule()                { return m_MainModule; }
     Type &               GetTypeFromId( ULONG a_Id ) { return m_TypeMap[a_Id]; }
     Type*                GetTypePtrFromId( ULONG a_ID );
@@ -111,9 +111,9 @@ protected:
     // Data
     std::wstring                        m_Name;
     std::wstring                        m_FileName;
-    vector<Function>                    m_Functions;
-    vector<Type>                        m_Types;
-    vector<Variable>                    m_Globals;
+    std::vector<Function>               m_Functions;
+    std::vector<Type>                   m_Types;
+    std::vector<Variable>               m_Globals;
     IMAGEHLP_MODULE64                   m_ModuleInfo;
     std::unordered_map<ULONG, Type>     m_TypeMap;
     std::map<DWORD64, Function*>        m_FunctionMap;

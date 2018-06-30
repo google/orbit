@@ -121,7 +121,7 @@ std::wstring LiveFunctionsDataView::GetValue( int a_Row, int a_Column )
 //-----------------------------------------------------------------------------
 void LiveFunctionsDataView::OnSort( int a_Column, bool a_Toggle )
 {
-    const vector<Function*> & functions = m_Functions;
+    const std::vector<Function*> & functions = m_Functions;
     auto MemberID = LiveFunction::Columns( s_HeaderMap[a_Column] );
 
     if (a_Toggle)

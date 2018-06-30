@@ -89,7 +89,7 @@ std::wstring SamplingReportDataView::GetValue( int a_Row, int a_Column )
 //-----------------------------------------------------------------------------
 void SamplingReportDataView::OnSort(int a_Column, bool a_Toggle)
 {
-    const vector<SampledFunction> & functions = m_Functions;
+    const std::vector<SampledFunction> & functions = m_Functions;
     SamplingColumn column = SamplingColumn(s_HeaderMap[a_Column]);
 
     if (a_Toggle)

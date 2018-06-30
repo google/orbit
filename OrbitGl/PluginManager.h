@@ -4,6 +4,7 @@
 #pragma once
 
 namespace Orbit{ class Plugin; }
+class Message;
 
 class PluginManager
 {

@@ -3,7 +3,9 @@
 //-----------------------------------
 #pragma once
 
-#include <windows.h>
+#include "Platform.h"
+
+#include <algorithm>
 #include <string>
 #include <unordered_map>
 #include <map>
@@ -16,14 +18,11 @@
 #include <stdarg.h>
 
 #include "external/xxHash-r42/xxhash.h"
-#include "external/websocketpp/websocketpp/base64/base64.hpp"
-
-using namespace std;
 
 //-----------------------------------------------------------------------------
-inline string ws2s( const std::wstring& wstr )
+inline std::string ws2s( const std::wstring& wstr )
 {
-    string str;
+    std::string str;
     str.resize( wstr.size() );
     for( std::size_t i = 0; i < str.size(); ++i )
     {
@@ -34,9 +33,9 @@ inline string ws2s( const std::wstring& wstr )
 }
 
 //-----------------------------------------------------------------------------
-inline wstring s2ws( const std::string& str )
+inline std::wstring s2ws( const std::string& str )
 {
-    wstring wstr;
+    std::wstring wstr;
     wstr.resize( str.size() );
     for( std::size_t i = 0; i < str.size(); ++i )
     {
@@ -154,7 +153,7 @@ inline std::vector< std::wstring > Tokenize( std::wstring a_String, const wchar_
 
 //-----------------------------------------------------------------------------
 template < class U >
-inline bool Contains( const string & a_String, const U & a_SubString, bool a_MatchCase = false )
+inline bool Contains( const std::string & a_String, const U & a_SubString, bool a_MatchCase = false )
 {
     std::string str( a_String );
     std::string substr( a_SubString );
@@ -170,7 +169,7 @@ inline bool Contains( const string & a_String, const U & a_SubString, bool a_Mat
 
 //-----------------------------------------------------------------------------
 template < class U >
-inline bool Contains( const wstring & a_String, const U & a_SubString, bool a_MatchCase = false )
+inline bool Contains( const std::wstring & a_String, const U & a_SubString, bool a_MatchCase = false )
 {
     std::wstring str( a_String );
     std::wstring substr( a_SubString );
@@ -249,7 +248,7 @@ inline void ReplaceStringInPlace( std::string& subject, const std::string& searc
     while( ( pos = subject.find( search, pos ) ) != std::string::npos )
     {
         subject.replace( pos, search.length(), replace );
-        pos += max(replace.length(),(size_t)1);
+        pos += std::max( replace.length(), (size_t)1 );
     }
 }
 
@@ -259,7 +258,7 @@ inline void ReplaceStringInPlace( std::wstring& subject, const std::wstring& sea
     size_t pos = 0;
     while( ( pos = subject.find( search, pos ) ) != std::wstring::npos ) {
         subject.replace( pos, search.length(), replace );
-        pos += max(replace.length(),(size_t)1);
+        pos += std::max(replace.length(),(size_t)1);
     }
 }
 
@@ -292,13 +291,13 @@ inline std::wstring Replace( const std::wstring& a_Subject, const std::wstring& 
 //-----------------------------------------------------------------------------
 inline bool IsBlank(const std::string & a_Str)
 {
-    return a_Str.find_first_not_of("\t\n ") == string::npos;
+    return a_Str.find_first_not_of("\t\n ") == std::string::npos;
 }
 
 //-----------------------------------------------------------------------------
 inline bool IsBlank( const std::wstring & a_Str )
 {
-    return a_Str.find_first_not_of( L"\t\n " ) == string::npos;
+    return a_Str.find_first_not_of( L"\t\n " ) == std::string::npos;
 }
 
 //-----------------------------------------------------------------------------
@@ -338,7 +337,7 @@ std::string GuidToString( GUID a_Guid );
 //-----------------------------------------------------------------------------
 template <typename T> inline std::string ToHexString( T a_Value )
 {
-    stringstream l_StringStream;
+    std::stringstream l_StringStream;
     l_StringStream << std::hex << a_Value;
     return l_StringStream.str();
 }
@@ -492,7 +491,7 @@ namespace OrbitUtils
 	}
 
     //-----------------------------------------------------------------------------
-    template<> inline bool Compare<string>(const string & a, const string & b, bool asc)
+    template<> inline bool Compare<std::string>(const std::string & a, const std::string & b, bool asc)
     {
         return asc ? a < b : a > b;
     }

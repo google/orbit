@@ -68,8 +68,8 @@ public:
     DWORD64     m_CallstackHash;
     DWORD64     m_FunctionAddress;
     DWORD64     m_UserData[2];
-    EpochType   m_Start;
-    EpochType   m_End;
+    TickType    m_Start;
+    TickType    m_End;
 };
 
 //-----------------------------------------------------------------------------
@@ -117,7 +117,7 @@ protected:
 //-----------------------------------------------------------------------------
 inline double Timer::ElapsedMicros() const
 {
-    return GetMicroSeconds( m_Start, m_End );
+    return MicroSecondsFromTicks( m_Start, m_End );
 }
 
 //-----------------------------------------------------------------------------

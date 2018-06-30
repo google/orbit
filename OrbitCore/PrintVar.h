@@ -28,7 +28,7 @@ inline void PrintVar( const char* a_VarName, const T& a_Value, bool a_SameLine =
 inline void PrintVar( const char* a_VarName, const std::wstring& a_Value, bool a_SameLine = false )
 {    
     OutputDebugStringA( a_VarName );
-    OutputDebugStringW( wstring( L" = " + a_Value).c_str() );
+    OutputDebugStringW( std::wstring( L" = " + a_Value).c_str() );
     if( !a_SameLine )
     {
         OutputDebugStringA( "\r\n" );

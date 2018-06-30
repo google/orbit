@@ -76,7 +76,7 @@ void MemoryTracker::DumpReport()
 
         DWORD64 numBytes = rit->first;
         DWORD64 cid = id;
-        wstring msg = Format( L"Callstack[%llu] allocated %llu bytes\n", cid, numBytes );
+        std::wstring msg = Format( L"Callstack[%llu] allocated %llu bytes\n", cid, numBytes );
         ORBIT_VIZ(msg);
         if( callstack )
         {

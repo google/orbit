@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <queue>
+#include <map>
 
 #include "OrbitCore\CoreApp.h"
 #include "OrbitCore\CrashHandler.h"

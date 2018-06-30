@@ -574,7 +574,7 @@ void GlCanvas::RenderSamplingUI()
     float curTime = Capture::GSamplingProfiler->GetSampleTime();
     float totTime = Capture::GSamplingProfiler->GetSampleTimeTotal();
     std::string prog = Format("%f/%f", curTime, totTime);
-    ImGui::ProgressBar(min(curTime/totTime, 1.f), ImVec2(0.f, 0.f), prog.c_str());
+    ImGui::ProgressBar(std::min(curTime/totTime, 1.f), ImVec2(0.f, 0.f), prog.c_str());
 
     ImGui::End();
 }

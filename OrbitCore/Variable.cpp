@@ -215,7 +215,7 @@ void Variable::Populate()
         if( Type* type = GetType() )
         {
             type->LoadDiaInfo();
-            const map<ULONG, Variable> & TypeMap = type->GetFullVariableMap();
+            const std::map<ULONG, Variable> & TypeMap = type->GetFullVariableMap();
             for( auto & pair : TypeMap )
             {
                 std::shared_ptr<Variable> var = std::make_shared<Variable>(pair.second);

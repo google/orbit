@@ -77,7 +77,7 @@ void Pdb::AddFunction( Function & a_Function )
 //-----------------------------------------------------------------------------
 void Pdb::CheckOrbitFunction( Function & a_Function )
 {
-    const wstring & name = a_Function.m_PrettyName;
+    const std::wstring & name = a_Function.m_PrettyName;
     if( name == L"OrbitStart" )
     {
         a_Function.m_OrbitType = Function::ORBIT_TIMER_START;
@@ -121,11 +121,11 @@ void Pdb::AddArgumentRegister( const std::string & a_Reg, const std::string & a_
 {
     m_ArgumentRegisters.insert(a_Reg);
 
-    if( a_Reg.find("ESP") != string::npos )
+    if( a_Reg.find("ESP") != std::string::npos )
     {
         m_RegFunctionsMap["ESP"].push_back( a_Function );
     }
-    else if( a_Reg.find("30006") != string::npos )
+    else if( a_Reg.find("30006") != std::string::npos )
     {
         m_RegFunctionsMap["30006"].push_back( a_Function );
     }
@@ -463,7 +463,7 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
     std::string msg = "pdb:" + ws2s( a_PdbName );
     GTcpServer->SendToUiAsync( msg );
 
-    string nameStr = ws2s( a_PdbName );
+    std::string nameStr = ws2s( a_PdbName );
 
     if( ToLower( Path::GetExtension( a_PdbName ) ) == L".dll" )
     {
@@ -537,7 +537,7 @@ void Pdb::PopulateFunctionMap()
 
     for( Function & Function : m_Functions )
     {
-        m_FunctionMap.insert( make_pair( Function.m_Address, &Function ) );
+        m_FunctionMap.insert( std::make_pair( Function.m_Address, &Function ) );
     }
 
     m_IsPopulatingFunctionMap = false;

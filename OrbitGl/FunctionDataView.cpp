@@ -102,7 +102,7 @@ void FunctionsDataView::OnSort( int a_Column, bool a_Toggle )
         return;
     }
 
-    const vector<Function*> & functions = Capture::GTargetProcess->GetFunctions();
+    const std::vector<Function*> & functions = Capture::GTargetProcess->GetFunctions();
     auto MemberID = Function::MemberID( s_HeaderMap[a_Column] );
 
     if (a_Toggle)
@@ -228,7 +228,7 @@ void FunctionsDataView::OnFilter( const std::wstring & a_Filter )
 //-----------------------------------------------------------------------------
 void FunctionsDataView::ParallelFilter()
 {
-    vector<Function*> & functions = Capture::GTargetProcess->GetFunctions();
+    std::vector<Function*> & functions = Capture::GTargetProcess->GetFunctions();
     const auto prio = oqpi::task_priority::normal;
     auto numWorkers = oqpi_tk::scheduler().workersCount( prio );
     //int numWorkers = oqpi::thread::hardware_concurrency();
@@ -290,6 +290,6 @@ void FunctionsDataView::OnDataChanged()
 //-----------------------------------------------------------------------------
 Function & FunctionsDataView::GetFunction( unsigned int a_Row )
 {
-    vector<Function*> & functions = Capture::GTargetProcess->GetFunctions();
+    std::vector<Function*> & functions = Capture::GTargetProcess->GetFunctions();
     return *functions[m_Indices[a_Row]];
 }

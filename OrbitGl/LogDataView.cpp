@@ -46,7 +46,7 @@ std::wstring LogDataView::GetValue( int a_Row, int a_Column )
     {
     case LDV_Time:
     {
-        IntervalType micros = (IntervalType)GetMicroSeconds(Capture::GCaptureTimer.m_Start, entry.m_Time);
+        TickType micros = (TickType)MicroSecondsFromTicks(Capture::GCaptureTimer.m_Start, entry.m_Time);
         std::chrono::system_clock::time_point sysTime = Capture::GCaptureTimePoint + std::chrono::microseconds(micros);
         std::time_t now_c = std::chrono::system_clock::to_time_t(sysTime);
         std::tm now_tm = *std::localtime(&now_c);

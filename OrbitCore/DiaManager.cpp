@@ -5,9 +5,11 @@
 #include "DiaManager.h"
 #include "ScopeTimer.h"
 #include "ObjectCount.h"
+#include "Platform.h"
 
 #include "external/DIA2Dump/dia2dump.h"
 #include "external/DIA2Dump/PrintSymbol.h"
+#include <Shellapi.h>
 
 //-----------------------------------------------------------------------------
 void OrbitDiaReleasePtr( IUnknown* a_Symbol )
@@ -48,7 +50,7 @@ bool InitDataSource( IDiaDataSource** a_DiaDataSource )
 
     DWORD dwMachType = 0;
     HRESULT hr = CoInitialize( NULL );
-    wstring dllFullPath = Path::GetExecutablePath() + L"msdia140.dll";
+    std::wstring dllFullPath = Path::GetExecutablePath() + L"msdia140.dll";
     
     // Load library once
     static HMODULE msDiaModule;
@@ -63,7 +65,7 @@ bool InitDataSource( IDiaDataSource** a_DiaDataSource )
         ORBIT_VIZ("CoCreateInstance Failed : ");
         ORBIT_VIZ(dllFullPath);
         ORBIT_VIZ("\n");
-        wstring msg = Format( L"HRESULT = %08X\n", hr );
+        std::wstring msg = Format( L"HRESULT = %08X\n", hr );
         ORBIT_VIZ(msg);
         
         return false;
@@ -96,7 +98,7 @@ bool DiaManager::LoadDataFromPdb( const wchar_t* a_FileName
 
             if( FAILED( hr ) ) 
             {
-                wstring msg = Format( L"loadDataFromPdb failed - HRESULT = %08X\n", hr );
+                std::wstring msg = Format( L"loadDataFromPdb failed - HRESULT = %08X\n", hr );
                 ORBIT_VIZ(msg);
                 return false;
             }
@@ -127,7 +129,7 @@ bool DiaManager::LoadDataFromPdb( const wchar_t* a_FileName
 
         if( FAILED( hr ) ) 
         {
-            wstring msg = Format( L"openSession failed - HRESULT = %08X\n", hr );
+            std::wstring msg = Format( L"openSession failed - HRESULT = %08X\n", hr );
             ORBIT_VIZ( msg );
             return false;
         }
@@ -159,7 +161,7 @@ bool DiaManager::LoadDataFromPdb( const wchar_t* a_FileName
 
 void DiaManager::InitMsDiaDll()
 {
-    wstring dllFullPath = Path::GetExecutablePath() + L"msdia140.dll";
+    std::wstring dllFullPath = Path::GetExecutablePath() + L"msdia140.dll";
     std::wstring args = L"/C regsvr32 /s " + dllFullPath;
     ShellExecute( 0, L"open", L"cmd.exe", args.c_str(), 0, SW_HIDE );
 }

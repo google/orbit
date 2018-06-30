@@ -3,7 +3,7 @@
 //-----------------------------------
 
 #include "UserPlugin.h"
-#include "windows.h"
+#include "../OrbitCore/Platform.h"
 
 //-----------------------------------------------------------------------------
 void UserPlugin::Draw( ImGuiContext* a_ImguiContext, int a_Width, int a_Height  )

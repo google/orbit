@@ -26,8 +26,8 @@ bool DmpCallback( const wchar_t* dump_path, const wchar_t* minidump_id, void* co
 {
     PRINT_FUNC;
 
-    wstring dir = Path::GetDumpPath();
-    wstring msg = L"A crash dump was generated in " + dir;
+    std::wstring dir = Path::GetDumpPath();
+    std::wstring msg = L"A crash dump was generated in " + dir;
     int msgboxID = MessageBox(
         NULL,
         succeeded ? msg.c_str() : L"Failed to generate crash dump",

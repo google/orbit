@@ -92,6 +92,7 @@
     <ClInclude Include="OrbitModule.h" />
     <ClInclude Include="OrbitRule.h" />
     <ClInclude Include="OrbitUnreal.h" />
+    <ClInclude Include="Platform.h" />
     <ClInclude Include="Params.h" />
     <ClInclude Include="Path.h" />
     <ClInclude Include="Pdb.h" />

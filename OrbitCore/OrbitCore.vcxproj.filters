@@ -285,6 +285,9 @@
     <ClInclude Include="ObjectCount.h">
       <Filter>Inc</Filter>
     </ClInclude>
+    <ClInclude Include="Platform.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\external\xxHash-r42\xxhash.c">
@@ -461,8 +464,10 @@
     <ClCompile Include="Diff.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="ObjectCount.cpp" />
     <ClCompile Include="Profiling.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectCount.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Core.h"
+#include "Message.h"
 #include <unordered_map>
 #include <string>
 

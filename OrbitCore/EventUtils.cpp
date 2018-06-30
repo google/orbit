@@ -3,11 +3,8 @@
 //-----------------------------------
 
 #include "EventUtils.h"
+#include "Platform.h"
 
-//Turns the DEFINE_GUID for EventTraceGuid into a const.
-#define INITGUID
-
-#include <windows.h>
 #include <stdio.h>
 #include <wbemidl.h>
 #include <wmistr.h>

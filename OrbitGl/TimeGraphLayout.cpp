@@ -26,7 +26,7 @@ float TimeGraphLayout::GetThreadStart()
 {
     if( Capture::GHasContextSwitches )
     {
-        return m_WorldY - m_NumCores*m_CoresHeight - max( m_NumCores - 1, 0 )*m_SpaceBetweenCores - m_SpaceBetweenCoresAndThread;
+        return m_WorldY - m_NumCores*m_CoresHeight - std::max( m_NumCores - 1, 0 )*m_SpaceBetweenCores - m_SpaceBetweenCoresAndThread;
     }
 
     return m_WorldY;
@@ -35,7 +35,7 @@ float TimeGraphLayout::GetThreadStart()
 //-----------------------------------------------------------------------------
 float TimeGraphLayout::GetTracksHeight()
 {
-    return m_NumTracks ? m_NumTracks*m_EventTrackHeight + max( m_NumTracks - 1, 0 )*m_SpaceBetweenTracks + m_SpaceBetweenTracksAndThread : 0;
+    return m_NumTracks ? m_NumTracks*m_EventTrackHeight + std::max( m_NumTracks - 1, 0 )*m_SpaceBetweenTracks + m_SpaceBetweenTracksAndThread : 0;
 }
 
 //-----------------------------------------------------------------------------

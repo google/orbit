@@ -59,7 +59,7 @@ extern CounterStreamBuffer GStreamCounter;
 //-----------------------------------------------------------------------------
 struct ScopeCounter
 {
-    ScopeCounter( const string & a_Msg ) : m_Message( a_Msg )
+    ScopeCounter( const std::string & a_Msg ) : m_Message( a_Msg )
     {
         m_SizeBegin = GStreamCounter.Size();
     }
@@ -67,11 +67,11 @@ struct ScopeCounter
     ~ScopeCounter()
     {
         m_SizeEnd = GStreamCounter.Size();
-        wstring size = GetPrettySize(m_SizeEnd - m_SizeBegin);
+        std::wstring size = GetPrettySize(m_SizeEnd - m_SizeBegin);
         PRINT( L"%s size: %s\n", s2ws(m_Message).c_str(), size.c_str() );
     }
 
-    string m_Message;
+    std::string m_Message;
     size_t m_SizeBegin;
     size_t m_SizeEnd;
 };

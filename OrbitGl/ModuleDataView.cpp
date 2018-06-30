@@ -119,7 +119,7 @@ const std::vector<std::wstring>& ModulesDataView::GetContextMenu( int a_Index )
     static std::vector<std::wstring> dllMenu = { L"Load dll exports", L"Find pdb" };
     static std::vector<std::wstring> EmptyMenu;
 
-    shared_ptr<Module> module = GetModule( a_Index );
+    std::shared_ptr<Module> module = GetModule( a_Index );
     if( !module->m_Loaded )
     {
         if( module->m_FoundPdb )

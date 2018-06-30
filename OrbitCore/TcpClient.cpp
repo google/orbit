@@ -162,7 +162,7 @@ void TcpClient::DecodeMessage( Message & a_Message )
     case Msg_String:
     {
         char* msg = a_Message.GetData();
-        cout << msg << endl;
+        std::cout << msg << std::endl;
         PRINT_VAR(msg);
         break;
     }
@@ -180,7 +180,7 @@ void TcpClient::DecodeMessage( Message & a_Message )
         const DataTransferHeader & header = MessageHeader.m_DataTransferHeader;
         Message msg = a_Message;
         msg.m_Type = Msg_SetData;
-        vector<char> buffer; 
+        std::vector<char> buffer; 
         
         if( !IsBadReadPtr((void*)header.m_Address, a_Message.m_Size) )
         {

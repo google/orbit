@@ -3,8 +3,6 @@
 //-----------------------------------
 #pragma once
 
-#include "Core.h"
-
 //-----------------------------------------------------------------------------
 struct ContextSwitch
 {
@@ -16,6 +14,6 @@ public:
     unsigned int    m_ThreadId;
     SwitchType      m_Type;
     long long       m_Time;
-    USHORT          m_ProcessorIndex;
-    UCHAR           m_ProcessorNumber;
+    unsigned short  m_ProcessorIndex;
+    unsigned char   m_ProcessorNumber;
 };

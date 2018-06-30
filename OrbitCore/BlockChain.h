@@ -166,7 +166,7 @@ template < class T, int BlockSize > struct BlockChain
     bool keep( int a_MaxElems )
     {
         bool hasDeleted = false;
-        a_MaxElems = max( BlockSize + 1, a_MaxElems );
+        a_MaxElems = std::max( BlockSize + 1, a_MaxElems );
 
         while( m_NumItems > a_MaxElems )
         {
@@ -212,6 +212,6 @@ template < class T, int BlockSize > struct BlockChain
 
     Block<T, BlockSize>* m_Root;
     Block<T, BlockSize>* m_Current;
-    atomic<int>          m_NumBlocks;
-    atomic<int>          m_NumItems;
+    std::atomic<int>     m_NumBlocks;
+    std::atomic<int>     m_NumItems;
 };

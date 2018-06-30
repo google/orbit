@@ -8,7 +8,9 @@
 #include "Capture.h"
 #include "PrintVar.h"
 
-#include <websocketpp/frame.hpp>
+#include "websocketpp/frame.hpp"
+#include "websocketpp/base64/base64.hpp"
+#include "websocketpp/sha1/sha1.hpp"
 
 // Based off asio sample
 // https://github.com/chriskohlhoff/asio/

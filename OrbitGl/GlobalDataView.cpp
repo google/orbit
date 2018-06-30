@@ -91,7 +91,7 @@ std::wstring GlobalsDataView::GetValue( int a_Row, int a_Column )
 //-----------------------------------------------------------------------------
 void GlobalsDataView::OnSort(int a_Column, bool a_Toggle)
 {
-    const vector<Variable*> & functions = Capture::GTargetProcess->GetGlobals();
+    const std::vector<Variable*> & functions = Capture::GTargetProcess->GetGlobals();
     auto MemberID = Variable::MemberID( s_HeaderMap[a_Column] );
 
     if (a_Toggle)
@@ -184,7 +184,7 @@ void GlobalsDataView::OnFilter( const std::wstring & a_Filter )
 //-----------------------------------------------------------------------------
 void GlobalsDataView::ParallelFilter()
 {
-    const vector<Variable*> & globals = Capture::GTargetProcess->GetGlobals();
+    const std::vector<Variable*> & globals = Capture::GTargetProcess->GetGlobals();
     const auto prio = oqpi::task_priority::normal;
     auto numWorkers = oqpi_tk::scheduler().workersCount( prio );
     std::vector< std::vector<int> > indicesArray;
@@ -236,6 +236,6 @@ void GlobalsDataView::OnDataChanged()
 //-----------------------------------------------------------------------------
 Variable & GlobalsDataView::GetVariable(unsigned int a_Row) const
 {
-    vector<Variable*> & globals = Capture::GTargetProcess->GetGlobals();
+    std::vector<Variable*> & globals = Capture::GTargetProcess->GetGlobals();
     return *globals[m_Indices[a_Row]];
 }

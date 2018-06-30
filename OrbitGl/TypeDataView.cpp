@@ -119,7 +119,7 @@ void TypesDataView::OnFilter( const std::wstring & a_Filter )
 void TypesDataView::ParallelFilter( const std::wstring & a_Filter )
 {
     m_FilterTokens = Tokenize( ToLower( a_Filter ) );
-    vector<Type*> & types = Capture::GTargetProcess->GetTypes();
+    std::vector<Type*> & types = Capture::GTargetProcess->GetTypes();
     const auto prio = oqpi::task_priority::normal;
     auto numWorkers = oqpi_tk::scheduler().workersCount( prio );
     std::vector< std::vector<int> > indicesArray;
@@ -163,7 +163,7 @@ void TypesDataView::ParallelFilter( const std::wstring & a_Filter )
 //-----------------------------------------------------------------------------
 void TypesDataView::OnSort( int a_Column, bool a_Toggle )
 {
-    const vector<Type*> & types = Capture::GTargetProcess->GetTypes();
+    const std::vector<Type*> & types = Capture::GTargetProcess->GetTypes();
     auto MemberID = Type::MemberID( s_HeaderMap[a_Column] );
 
     if (a_Toggle)
@@ -260,6 +260,6 @@ void TypesDataView::OnContextMenu( int a_MenuIndex, std::vector<int> & a_ItemInd
 //-----------------------------------------------------------------------------
 Type & TypesDataView::GetType(unsigned int a_Row) const
 {
-    vector<Type*> & types = Capture::GTargetProcess->GetTypes();
+    std::vector<Type*> & types = Capture::GTargetProcess->GetTypes();
     return *types[m_Indices[a_Row]];
 }

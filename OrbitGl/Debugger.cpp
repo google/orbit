@@ -155,7 +155,7 @@ void Debugger::DebuggerThread( const std::wstring & a_ProcessName, const std::ws
     std::wstring dir = a_WorkingDir.size() ? a_WorkingDir : Path::GetDirectory( a_ProcessName );
     std::wstring args = a_ProcessName + L" " + a_Args;
     TCHAR commandline[MAX_PATH + 1];
-    int numChars = (int)min( (size_t)MAX_PATH, args.size() );
+    int numChars = (int)std::min( (size_t)MAX_PATH, args.size() );
     memcpy( commandline, args.c_str(), numChars*sizeof(TCHAR) );
     commandline[numChars] = 0;
 

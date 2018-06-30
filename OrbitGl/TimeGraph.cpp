@@ -20,8 +20,8 @@
 #include "SamplingProfiler.h"
 #include "App.h"
 #include "OrbitUnreal.h"
+#include "TimerManager.h"
 #include <algorithm>
-using namespace std;
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
@@ -83,8 +83,8 @@ bool TimeGraph::UpdateSessionMinMaxCounter()
 
     if( GEventTracer.GetEventBuffer().HasEvent() )
     {
-        m_SessionMinCounter = min( (long long)m_SessionMinCounter, GEventTracer.GetEventBuffer().GetMinTime() );
-        m_SessionMaxCounter = max( (long long)m_SessionMaxCounter, GEventTracer.GetEventBuffer().GetMaxTime() );
+        m_SessionMinCounter = std::min( (long long)m_SessionMinCounter, GEventTracer.GetEventBuffer().GetMinTime() );
+        m_SessionMaxCounter = std::max( (long long)m_SessionMaxCounter, GEventTracer.GetEventBuffer().GetMaxTime() );
     }
 
     return m_SessionMinCounter != LLONG_MAX;
@@ -95,7 +95,7 @@ void TimeGraph::ZoomAll()
 {    
     if( UpdateSessionMinMaxCounter() )
     {
-        m_MaxEpochTimeUs = GetMicroSeconds( m_SessionMinCounter, m_SessionMaxCounter );
+        m_MaxEpochTimeUs = MicroSecondsFromTicks( m_SessionMinCounter, m_SessionMaxCounter );
         m_MinEpochTimeUs = m_MaxEpochTimeUs - (GNumHistorySeconds*1000*1000);
         NeedsUpdate();
     }
@@ -106,8 +106,8 @@ void TimeGraph::Zoom( const TextBox* a_TextBox )
 {
     const Timer& timer = a_TextBox->GetTimer();
 
-    double start = GetMicroSeconds(m_SessionMinCounter, timer.m_Start);
-    double end   = GetMicroSeconds(m_SessionMinCounter, timer.m_End);
+    double start = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_Start);
+    double end   = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_End);
 
     double mid = (start+end)/2.0;
     double extent = 1.1*(end-start)/2.0;
@@ -120,7 +120,7 @@ double TimeGraph::GetSessionTimeSpanUs()
 {
     if( UpdateSessionMinMaxCounter() )
     {
-        return GetMicroSeconds( m_SessionMinCounter, m_SessionMaxCounter );
+        return MicroSecondsFromTicks( m_SessionMinCounter, m_SessionMaxCounter );
     }
 
     return 0;
@@ -146,8 +146,8 @@ void TimeGraph::ZoomTime( float a_ZoomValue, double a_MouseRatio )
     m_CurrentTimeWindow = CurrentTimeWindowUs;
     m_RefEpochTimeUs = m_MinEpochTimeUs + a_MouseRatio * CurrentTimeWindowUs;
 
-    double timeLeft  = max( m_RefEpochTimeUs - m_MinEpochTimeUs, 0.0 );
-    double timeRight = max( m_MaxEpochTimeUs - m_RefEpochTimeUs, 0.0 );
+    double timeLeft  = std::max( m_RefEpochTimeUs - m_MinEpochTimeUs, 0.0 );
+    double timeRight = std::max( m_MaxEpochTimeUs - m_RefEpochTimeUs, 0.0 );
     m_TimeLeft = timeLeft = scale * timeLeft;
     m_TimeRight = timeRight = scale * timeRight;
 
@@ -168,8 +168,8 @@ void TimeGraph::ZoomTime( float a_ZoomValue, double a_MouseRatio )
 void TimeGraph::SetMinMax( double a_MinEpochTime, double a_MaxEpochTime )
 {
     double desiredTimeWindow = a_MaxEpochTime - a_MinEpochTime;
-    m_MinEpochTimeUs = max( a_MinEpochTime, 0.0 );
-    m_MaxEpochTimeUs = min( m_MinEpochTimeUs + desiredTimeWindow, GetSessionTimeSpanUs() );
+    m_MinEpochTimeUs = std::max( a_MinEpochTime, 0.0 );
+    m_MaxEpochTimeUs = std::min( m_MinEpochTimeUs + desiredTimeWindow, GetSessionTimeSpanUs() );
     m_CurrentTimeWindow = m_MaxEpochTimeUs - m_MinEpochTimeUs;
 
     NeedsUpdate();
@@ -206,8 +206,8 @@ double TimeGraph::GetTimeIntervalMicro( double a_Ratio )
 //-----------------------------------------------------------------------------
 void TimeGraph::ProcessTimer( Timer & a_Timer )
 {
-    EpochType start = a_Timer.m_Start;
-    EpochType end   = a_Timer.m_End;
+    TickType start = a_Timer.m_Start;
+    TickType end   = a_Timer.m_End;
 
     if( end > m_SessionMaxCounter )
     {
@@ -317,7 +317,7 @@ void TimeGraph::AddContextSwitch( const ContextSwitch & a_CS )
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::UpdateMaxTimeStamp( IntervalType a_Time )
+void TimeGraph::UpdateMaxTimeStamp( TickType a_Time )
 {
     if( a_Time > m_SessionMaxCounter ) 
     {
@@ -376,11 +376,11 @@ Color TimeGraph::GetThreadColor( int a_ThreadId )
 }
 
 //-----------------------------------------------------------------------------
-float TimeGraph::GetWorldFromRawTimeStamp( IntervalType a_Time ) const
+float TimeGraph::GetWorldFromRawTimeStamp( TickType a_Time ) const
 {
     if( m_TimeWindowUs > 0 )
     {
-        double start = GetMicroSeconds(m_SessionMinCounter, a_Time) - m_MinEpochTimeUs;
+        double start = MicroSecondsFromTicks(m_SessionMinCounter, a_Time) - m_MinEpochTimeUs;
         double normalizedStart = start / m_TimeWindowUs;
         float pos = float( m_WorldStartX + normalizedStart*m_WorldWidth );
         return pos;
@@ -396,7 +396,7 @@ float TimeGraph::GetWorldFromUs(double a_Micros) const
 }
 
 //-----------------------------------------------------------------------------
-IntervalType TimeGraph::GetRawTimeStampFromWorld( float a_WorldX )
+TickType TimeGraph::GetRawTimeStampFromWorld( float a_WorldX )
 {
     double ratio = m_WorldWidth ? (double)( ( a_WorldX - m_WorldStartX ) / m_WorldWidth ) : 0;
     double timeStamp = GetTime( ratio );
@@ -405,7 +405,7 @@ IntervalType TimeGraph::GetRawTimeStampFromWorld( float a_WorldX )
 }
 
 //-----------------------------------------------------------------------------
-IntervalType TimeGraph::GetRawTimeStampFromUs( double a_MicroSeconds ) const
+TickType TimeGraph::GetRawTimeStampFromUs( double a_MicroSeconds ) const
 {
     return m_SessionMinCounter + TicksFromMicroseconds( a_MicroSeconds );
 }
@@ -420,11 +420,11 @@ void TimeGraph::GetWorldMinMax( float & a_Min, float & a_Max ) const
 //-----------------------------------------------------------------------------
 void TimeGraph::Select( const Vec2 & a_WorldStart, const Vec2 a_WorldStop )
 {
-    float x0 = min( a_WorldStart[0], a_WorldStop[0] );
-    float x1 = max( a_WorldStart[0], a_WorldStop[0] );
+    float x0 = std::min( a_WorldStart[0], a_WorldStop[0] );
+    float x1 = std::max( a_WorldStart[0], a_WorldStop[0] );
 
-    IntervalType t0 = GetRawTimeStampFromWorld( x0 );
-    IntervalType t1 = GetRawTimeStampFromWorld( x1 );
+    TickType t0 = GetRawTimeStampFromWorld( x0 );
+    TickType t1 = GetRawTimeStampFromWorld( x1 );
 
     m_SelectedCallstackEvents = GEventTracer.GetEventBuffer().GetCallstackEvents( t0, t1 );
 
@@ -477,8 +477,8 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
 
     m_Layout.CalculateOffsets();
 
-    IntervalType rawStart = GetRawTimeStampFromUs( m_MinEpochTimeUs );
-    IntervalType rawStop  = GetRawTimeStampFromUs( m_MaxEpochTimeUs );
+    TickType rawStart = GetRawTimeStampFromUs( m_MinEpochTimeUs );
+    TickType rawStop  = GetRawTimeStampFromUs( m_MaxEpochTimeUs );
 
     unsigned int TextBoxID = 0;
     for( TextBox & textBox : m_TextBoxes )
@@ -487,8 +487,8 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
 
         if( !( rawStart > timer.m_End || rawStop < timer.m_Start ) )
         {          
-            double start = GetMicroSeconds( m_SessionMinCounter, timer.m_Start ) - m_MinEpochTimeUs;
-            double end = GetMicroSeconds( m_SessionMinCounter, timer.m_End ) - m_MinEpochTimeUs;
+            double start = MicroSecondsFromTicks( m_SessionMinCounter, timer.m_Start ) - m_MinEpochTimeUs;
+            double end = MicroSecondsFromTicks( m_SessionMinCounter, timer.m_End ) - m_MinEpochTimeUs;
             double elapsed = end - start;
 
             double NormalizedStart  = start   * invTimeWindow;
@@ -593,7 +593,7 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
 
                     const Vec2 & pos  = textBox.GetPos();
                     const Vec2 & size = textBox.GetSize();
-                    float posX = max( pos[0], minX );
+                    float posX = std::max( pos[0], minX );
                     float maxSize = pos[0] + size[0] - posX;
                     m_TextRendererStatic.AddText( textBox.GetText().c_str()
                                                 , posX
@@ -638,8 +638,8 @@ void TimeGraph::UpdateEvents()
     float x1 = GetWorldFromRawTimeStamp( m_SessionMaxCounter );
     float sizeX = x1 - x0;
 
-    IntervalType rawMin = GetRawTimeStampFromUs( m_MinEpochTimeUs );
-    IntervalType rawMax = GetRawTimeStampFromUs( m_MaxEpochTimeUs );
+    TickType rawMin = GetRawTimeStampFromUs( m_MinEpochTimeUs );
+    TickType rawMax = GetRawTimeStampFromUs( m_MaxEpochTimeUs );
 
     ScopeLock lock( GEventTracer.GetEventBuffer().GetMutex() );
 
@@ -691,8 +691,8 @@ void TimeGraph::SelectEvents( float a_WorldStart, float a_WorldEnd, ThreadID a_T
         std::swap( a_WorldEnd, a_WorldStart );
     }
 
-    IntervalType t0 = GetRawTimeStampFromWorld( a_WorldStart );
-    IntervalType t1 = GetRawTimeStampFromWorld( a_WorldEnd );
+    TickType t0 = GetRawTimeStampFromWorld( a_WorldStart );
+    TickType t1 = GetRawTimeStampFromWorld( a_WorldEnd );
 
     m_SelectedCallstackEvents = GEventTracer.GetEventBuffer().GetCallstackEvents( t0, t1, a_TID );
 
@@ -803,7 +803,7 @@ void TimeGraph::DrawIdentifiers()
     float x0 = GetWorldFromRawTimeStamp( m_SessionMinCounter );
     int xPos, yPos;
     m_Canvas->WorldToScreen( x0, 0, xPos, yPos );
-    xPos = max( 0, xPos );
+    xPos = std::max( 0, xPos );
     int i = 0;
     
 
@@ -919,8 +919,8 @@ void TimeGraph::DrawEvents( bool a_Picking )
     float WorldStartX = m_Canvas->GetWorldTopLeftX();
     float WorldWidth = m_Canvas->GetWorldWidth();
 
-    IntervalType rawMin = GetRawTimeStampFromUs( m_MinEpochTimeUs );
-    IntervalType rawMax = GetRawTimeStampFromUs( m_MaxEpochTimeUs );
+    TickType rawMin = GetRawTimeStampFromUs( m_MinEpochTimeUs );
+    TickType rawMax = GetRawTimeStampFromUs( m_MaxEpochTimeUs );
 
     // Draw track background
     float x0 = GetWorldFromRawTimeStamp( m_SessionMinCounter );
@@ -972,8 +972,8 @@ void TimeGraph::DrawMainFrame( TextBox & a_Box )
 //-----------------------------------------------------------------------------
 bool TimeGraph::IsVisible( const Timer & a_Timer )
 {
-    double start = GetMicroSeconds(m_SessionMinCounter, a_Timer.m_Start);
-    double end   = GetMicroSeconds(m_SessionMinCounter, a_Timer.m_End);
+    double start = MicroSecondsFromTicks(m_SessionMinCounter, a_Timer.m_Start);
+    double end   = MicroSecondsFromTicks(m_SessionMinCounter, a_Timer.m_End);
 
     if( m_MinEpochTimeUs > end || m_MaxEpochTimeUs < start )
     {

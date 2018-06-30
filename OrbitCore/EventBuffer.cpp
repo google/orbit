@@ -34,7 +34,7 @@ std::vector< CallstackEvent > EventBuffer::GetCallstackEvents( long long a_TimeB
                                                              , long long a_TimeEnd
                                                              , ThreadID a_ThreadId /*=-1*/)
 {
-    vector< CallstackEvent > callstackEvents;
+    std::vector< CallstackEvent > callstackEvents;
     for( auto & pair : m_CallstackEvents )
     {
         ThreadID threadID = pair.first;

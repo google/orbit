@@ -32,7 +32,6 @@ THE SOFTWARE.
 #include <string>
 
 #include "../../OrbitCore/Log.h"
-#include "../../OrbitCore/Params.h"
 #include "../../OrbitCore/Pdb.h"
 
 using namespace std;

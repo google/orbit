@@ -52,10 +52,10 @@ void TextRenderer::Init()
 
     m_Font = NULL;
     m_Atlas = texture_atlas_new(512, 512, 1);
-    string exePath = ws2s(Path::GetExecutablePath());
-    string fontFileName = exePath + "../../../external/freetype-gl/fonts/Vera.ttf";
-    string vertShaderFileName = exePath + "../../../external/freetype-gl/shaders/v3f-t2f-c4f.vert";
-    string fragShaderFileName = exePath + "../../../external/freetype-gl/shaders/v3f-t2f-c4f.frag";
+    std::string exePath = ws2s(Path::GetExecutablePath());
+    std::string fontFileName = exePath + "../../../external/freetype-gl/fonts/Vera.ttf";
+    std::string vertShaderFileName = exePath + "../../../external/freetype-gl/shaders/v3f-t2f-c4f.vert";
+    std::string fragShaderFileName = exePath + "../../../external/freetype-gl/shaders/v3f-t2f-c4f.frag";
 
     wchar_t *text = L"A Quick Brown Fox Jumps Over The Lazy Dog 0123456789";
     
@@ -213,8 +213,8 @@ void TextRenderer::AddTextInternal( texture_font_t* font
                                      { (float)x1, (float)y1, textZ, s1, t1, r, g, b, a },
                                      { (float)x1, (float)y0, textZ, s1, t0, r, g, b, a } };
 
-            minX = min( minX, x0 );
-            maxX = max( maxX, x1 );
+            minX = std::min( minX, x0 );
+            maxX = std::max( maxX, x1 );
             strWidth = float( maxX - minX );
 
             if( strWidth > maxWidth )

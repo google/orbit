@@ -58,7 +58,7 @@ void* Injection::RemoteWrite( const char* a_Data, int a_NumBytes )
 }
 
 //-----------------------------------------------------------------------------
-bool Injection::Inject( const wstring & a_DllName, const Process & a_Process, const std::string & ProcName )
+bool Injection::Inject( const std::wstring & a_DllName, const Process & a_Process, const std::string & ProcName )
 {
     SCOPE_TIMER_LOG( Format( L"Injecting in %s", a_Process.GetName().c_str() ) );
 
@@ -155,10 +155,10 @@ HMODULE GetModule( HANDLE pHandle )
             TCHAR szModName[MAX_PATH];
             if (GetModuleFileNameEx(pHandle, hMods[i], szModName, sizeof(szModName) / sizeof(TCHAR)))
             {
-                wstring wstrModName = szModName;
+                std::wstring wstrModName = szModName;
                 //you will need to change this to the name of the exe of the foreign process
-                wstring wstrModContain = L"OrbitApp.exe";
-                if (wstrModName.find(wstrModContain) != string::npos)
+                std::wstring wstrModContain = L"OrbitApp.exe";
+                if (wstrModName.find(wstrModContain) != std::string::npos)
                 {
                     CloseHandle(pHandle);
                     return hMods[i];
@@ -170,7 +170,7 @@ HMODULE GetModule( HANDLE pHandle )
 }
 
 //-----------------------------------------------------------------------------
-HANDLE Injection::GetTargetProcessHandle( const string & a_Target, DWORD & o_ProcessID )
+HANDLE Injection::GetTargetProcessHandle( const std::string & a_Target, DWORD & o_ProcessID )
 {
     // from Very Sleepy 
     // https://github.com/VerySleepy/verysleepy/blob/master/src/profiler/processinfo.cpp
@@ -216,7 +216,7 @@ HANDLE Injection::GetTargetProcessHandle( const string & a_Target, DWORD & o_Pro
             //}
 #endif
 
-            if (processname.find(a_Target) != string::npos)
+            if (processname.find(a_Target) != std::string::npos)
             {
                 DWORD PID = GetProcessId( process_handle );
                 if( PID != GetCurrentProcessId() )
@@ -491,7 +491,7 @@ FARPROC WINAPI Injection::GetRemoteProcAddress(HANDLE hProcess, HMODULE hModule,
             ExportFunctionTable[FunctionTableIndex] <= ExportDirectory.VirtualAddress + ExportDirectory.Size)
         {
             Done = FALSE;
-            string TempForwardString;
+            std::string TempForwardString;
             TempForwardString.clear(); // Empty the string so we can fill it with a new name
 
             /* Get the forwarder string one character at a time because we don't know how long it is */
@@ -512,13 +512,13 @@ FARPROC WINAPI Injection::GetRemoteProcAddress(HANDLE hProcess, HMODULE hModule,
 
             /* Find the dot that seperates the module name and the function name/ordinal */
             size_t Dot = TempForwardString.find('.');
-            if (Dot == string::npos)
+            if (Dot == std::string::npos)
                 goto GRPA_FAIL_JMP;
 
             /* Temporary variables that hold parts of the forwarder string */
-            string RealModuleName, RealFunctionId;
+            std::string RealModuleName, RealFunctionId;
             RealModuleName = TempForwardString.substr(0, Dot - 1);
-            RealFunctionId = TempForwardString.substr(Dot + 1, string::npos);
+            RealFunctionId = TempForwardString.substr(Dot + 1, std::string::npos);
 
             HMODULE RealModule = GetRemoteModuleHandle(hProcess, RealModuleName.c_str());
             FARPROC TempReturn;// Make a temporary variable to hold return value 
@@ -579,9 +579,9 @@ FARPROC WINAPI Injection::GetRemoteProcAddress(HANDLE hProcess, HMODULE hModule,
     /* Iterate through all the names and see if they match the one we are looking for */
     for (DWORD i = 0; i<ExportTable.NumberOfNames; ++i)	
     {
-        string TempFunctionName;
+        std::string TempFunctionName;
 
-            Done = FALSE;// Reset for next name
+        Done = FALSE;// Reset for next name
         TempFunctionName.clear(); // Empty the string so we can fill it with a new name
 
         /* Get the function name one character at a time because we don't know how long it is */
@@ -600,7 +600,7 @@ FARPROC WINAPI Injection::GetRemoteProcAddress(HANDLE hProcess, HMODULE hModule,
         }
 
         /* Does the name match? */
-        if (TempFunctionName.find(lpProcName) != string::npos)
+        if (TempFunctionName.find(lpProcName) != std::string::npos)
         {
             /* NOTE:
             /* Microsoft's PE/COFF specification says we need to subtract the ordinal base
@@ -611,7 +611,7 @@ FARPROC WINAPI Injection::GetRemoteProcAddress(HANDLE hProcess, HMODULE hModule,
                 ExportFunctionTable[ExportOrdinalTable[i]] <= ExportDirectory.VirtualAddress + ExportDirectory.Size)
             {
                 Done = FALSE;
-                string TempForwardString;
+                std::string TempForwardString;
                 TempForwardString.clear(); // Empty the string so we can fill it with a new name
 
                 /* Get the forwarder string one character at a time because we don't know how long it is */
@@ -632,13 +632,13 @@ FARPROC WINAPI Injection::GetRemoteProcAddress(HANDLE hProcess, HMODULE hModule,
 
                 /* Find the dot that seperates the module name and the function name/ordinal */
                 size_t Dot = TempForwardString.find('.');
-                if (Dot == string::npos)
+                if (Dot == std::string::npos)
                     goto GRPA_FAIL_JMP;
 
                 /* Temporary variables that hold parts of the forwarder string */
-                string RealModuleName, RealFunctionId;
+                std::string RealModuleName, RealFunctionId;
                 RealModuleName = TempForwardString.substr(0, Dot);
-                RealFunctionId = TempForwardString.substr(Dot + 1, string::npos);
+                RealFunctionId = TempForwardString.substr(Dot + 1, std::string::npos);
 
                 HMODULE RealModule = GetRemoteModuleHandle(hProcess, RealModuleName.c_str());
                 FARPROC TempReturn;// Make a temporary variable to hold return value 

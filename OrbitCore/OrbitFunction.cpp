@@ -67,7 +67,7 @@ bool Function::Hookable()
     // Functions that loop back to first 5 bytes of instructions will explode as
     // the IP lands in the middle of the relative jump instruction...
     // Ideally, we would detect such a loop back and not allow hooking.
-    if( m_File.find( L".asm" ) != wstring::npos )
+    if( m_File.find( L".asm" ) != std::wstring::npos )
     {
         return false;
     }
@@ -112,7 +112,7 @@ std::wstring Function::GetModuleName()
     }
     else
     {
-        shared_ptr<Module> module = Capture::GTargetProcess->GetModuleFromAddress( m_Address );
+        std::shared_ptr<Module> module = Capture::GTargetProcess->GetModuleFromAddress( m_Address );
         return module ? module->m_Name : L"";
     }
 }
@@ -154,7 +154,7 @@ void Function::GetDisassembly()
             if( module )
             {
                 DWORD64 maxSize = module->m_AddressEnd - address;
-                size = min( GParams.m_NumBytesAssembly, maxSize );
+                size = std::min( GParams.m_NumBytesAssembly, maxSize );
             }
         }
 
@@ -242,8 +242,8 @@ bool FunctionParam::InRegister( int a_Index )
 //-----------------------------------------------------------------------------
 bool FunctionParam::IsFloat()
 {
-    return ( m_Type.find( TEXT( "float" ) ) != wstring::npos ||
-        m_Type.find( TEXT( "double" ) ) != wstring::npos );
+    return ( m_Type.find( TEXT( "float" ) ) != std::wstring::npos ||
+        m_Type.find( TEXT( "double" ) ) != std::wstring::npos );
 }
 
 //-----------------------------------------------------------------------------

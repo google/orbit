@@ -146,7 +146,7 @@ void Type::GenerateDataLayout() const
 }
 
 //-----------------------------------------------------------------------------
-void Type::ListDataMembers( ULONG a_BaseOffset, map<ULONG, Variable> & o_DataMembersFull ) const
+void Type::ListDataMembers( ULONG a_BaseOffset, std::map<ULONG, Variable> & o_DataMembersFull ) const
 {
     for( auto & pair : m_DataMembers )
     {
@@ -164,7 +164,7 @@ void Type::ListDataMembers( ULONG a_BaseOffset, map<ULONG, Variable> & o_DataMem
 }
 
 //-----------------------------------------------------------------------------
-const map<ULONG, Variable > & Type::GetFullVariableMap() const
+const std::map<ULONG, Variable > & Type::GetFullVariableMap() const
 {   
     GenerateDataLayout();
     return m_DataMembersFull;
@@ -275,7 +275,7 @@ void Type::OutputPadding() const
 }
 
 //-----------------------------------------------------------------------------
-void Type::GenerateHierarchy( map<ULONG, Parent> & a_Hierarchy, int a_Offset ) const
+void Type::GenerateHierarchy( std::map<ULONG, Parent> & a_Hierarchy, int a_Offset ) const
 {
     for( auto it : m_ParentTypes )
     {

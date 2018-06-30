@@ -14,7 +14,7 @@ Module::Module()
 }
 
 //-----------------------------------------------------------------------------
-const wstring & Module::GetPrettyName()
+const std::wstring & Module::GetPrettyName()
 {
     if( m_PrettyName.size() == 0 )
     {

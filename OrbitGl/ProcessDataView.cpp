@@ -88,7 +88,7 @@ void ProcessesDataView::OnSort(int a_Column, bool a_Toggle)
         a_Column = PdvColumn::PDV_CPU;
     }
 
-    const vector< std::shared_ptr<Process> > & processes = m_ProcessList.m_Processes;
+    const std::vector< std::shared_ptr<Process> > & processes = m_ProcessList.m_Processes;
     PdvColumn pdvColumn = PdvColumn(a_Column);
     
     if (a_Toggle)
@@ -203,7 +203,7 @@ void ProcessesDataView::SetSelectedItem()
 //-----------------------------------------------------------------------------
 void ProcessesDataView::ClearSelectedProcess()
 {
-	shared_ptr<Process> process = std::make_shared<Process>();
+	std::shared_ptr<Process> process = std::make_shared<Process>();
 	Capture::SetTargetProcess( process );
 	m_ModulesDataView->SetProcess( process );
 	m_SelectedProcess = process;
@@ -251,7 +251,7 @@ bool ProcessesDataView::SelectProcess( DWORD a_ProcessId )
 void ProcessesDataView::OnFilter( const std::wstring & a_Filter )
 {
     std::vector<int> indices;
-    const vector<std::shared_ptr<Process>> & processes = m_ProcessList.m_Processes;
+    const std::vector<std::shared_ptr<Process>> & processes = m_ProcessList.m_Processes;
 
     std::vector< std::wstring > tokens = Tokenize( ToLower( a_Filter ) );
 

@@ -169,7 +169,7 @@ void FloatGraphCard::Draw( GlCanvas* a_Canvas )
 
     Color col(255, 255, 255, 255);
 
-    std::string cardValue = Format( "%s: %s  min(%s) max(%s)",  m_Name.c_str(), std::to_string(m_Data.Latest()).c_str(), to_string(m_Min).c_str(), to_string(m_Max).c_str() );
+    std::string cardValue = Format( "%s: %s  min(%s) max(%s)",  m_Name.c_str(), std::to_string(m_Data.Latest()).c_str(), std::to_string(m_Min).c_str(), std::to_string(m_Max).c_str() );
     a_Canvas->GetTextRenderer().AddText2D(cardValue.c_str(), (int)m_Pos[0], (int)m_Pos[1], GlCanvas::Z_VALUE_TEXT, col, -1.f, false, false);
 }
 
@@ -289,7 +289,7 @@ void Vector2DGraphCard::DrawImGui( GlCanvas* a_Canvas )
 
         float xsize = m_Max.x - m_Min.x;
         float ysize = m_Max.y - m_Min.y;
-        float size = max(ysize, xsize);
+        float size = std::max(ysize, xsize);
         if( size == 0.f ) size = 1.f;
         for (int i = 0; i < m_Points.Size - 1; i += 2)
         {

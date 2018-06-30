@@ -129,7 +129,16 @@
     <ClCompile Include="GlPanel.cpp" />
     <ClCompile Include="ThreadDataViewGl.cpp" />
     <ClCompile Include="ThreadView.cpp" />
-    <ClCompile Include="TimeGraph.cpp" />
+    <ClCompile Include="TimeGraph.cpp">
+      <ShowIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ShowIncludes>
+      <ShowIncludes Condition="'$(Configuration)|$(Platform)'=='DebugMT|Win32'">false</ShowIncludes>
+      <ShowIncludes Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">false</ShowIncludes>
+      <ShowIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ShowIncludes>
+      <ShowIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ShowIncludes>
+      <ShowIncludes Condition="'$(Configuration)|$(Platform)'=='DebugMT|x64'">false</ShowIncludes>
+      <ShowIncludes Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|x64'">false</ShowIncludes>
+      <ShowIncludes Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ShowIncludes>
+    </ClCompile>
     <ClCompile Include="TimeGraphLayout.cpp" />
     <ClCompile Include="TypeDataView.cpp" />
     <ClCompile Include="App.cpp" />

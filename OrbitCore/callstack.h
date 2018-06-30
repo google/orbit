@@ -3,7 +3,6 @@
 //-----------------------------------
 #pragma once
 
-#include "Core.h"
 #include "OrbitDbgHelp.h"
 #include "ScopeTimer.h"
 #include "CallstackTypes.h"

@@ -3,7 +3,9 @@
 //-----------------------------------
 #pragma once
 
-#include "OrbitType.h"
+struct OrbitWaitLoop;
+struct FunctionArgInfo;
+struct OrbitUnrealInfo;
 
 namespace Hijacking
 {

@@ -10,6 +10,8 @@
 #include "ScopeTimer.h"
 #include "Context.h"
 #include "Message.h"
+#include "OrbitType.h"
+#include "TimerManager.h"
 #include <iostream>
 #include <vector>
 #include <unordered_set>
@@ -18,8 +20,6 @@
 #include "../OrbitPlugin/OrbitSDK.h"
 #include "../external/minhook/src/buffer.h"
 #include "../external/minhook/src/trampoline.h"
-
-using namespace std;
 
 const unsigned int MAX_DEPTH = 64;
 
@@ -434,7 +434,7 @@ void* Hijacking::EpilogZoneStop()
         // Send string once (per thread)
         if( TlsData->m_SentLiterals.find( zoneName ) == TlsData->m_SentLiterals.end() )
         {
-            size_t numChars = min( strlen( zoneName ), size_t( OrbitZoneName::NUM_CHAR - 1 ) );
+            size_t numChars = std::min( strlen( zoneName ), size_t( OrbitZoneName::NUM_CHAR - 1 ) );
             OrbitZoneName zone;
 #ifdef _WIN64
             zone.m_Address = context->m_RCX.m_Reg64;

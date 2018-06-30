@@ -2,19 +2,20 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+#include "Core.h"
 #include "TcpServer.h"
 #include "Tcp.h"
 #include "VariableTracing.h"
-#include "Core.h"
 #include "Log.h"
 #include "Context.h"
 #include "Capture.h"
-#include <thread>
-#include <windows.h>
 #include "OrbitAsio.h"
 #include "Callstack.h"
 #include "SamplingProfiler.h"
+#include "TimerManager.h"
 #include "OrbitUnreal.h"
+
+#include <thread>
 
 TcpServer* GTcpServer;
 
@@ -106,7 +107,7 @@ void TcpServer::Receive( const Message & a_Message )
     case Msg_String:
     {
         const char* msg = a_Message.GetData();
-        cout << msg << endl;
+        std::cout << msg << std::endl;
         PRINT_VAR(msg);
         break;
     }
@@ -156,7 +157,7 @@ void TcpServer::Receive( const Message & a_Message )
     {
         const UnrealObjectHeader & header = MessageHeader.m_UnrealObjectHeader;
         
-        wstring & objectName = GOrbitUnreal.GetObjectNames()[header.m_Ptr];
+        std::wstring & objectName = GOrbitUnreal.GetObjectNames()[header.m_Ptr];
         if( header.m_WideStr )
         {
             objectName = (wchar_t*)a_Message.GetData();

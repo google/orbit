@@ -137,8 +137,8 @@ protected:
     Vec4    m_BackgroundColor;
 
     ImGuiContext    m_ImGuiContext;
-    EpochType       m_RefTimeClick;
-    IntervalType    m_SelectedInterval;
+    TickType        m_RefTimeClick;
+    TickType        m_SelectedInterval;
     TextRenderer    m_TextRenderer;
     TextBox         m_SceneBox;
     Timer           m_UpdateTimer;

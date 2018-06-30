@@ -12,8 +12,6 @@
 #include "OrbitCore\TcpClient.h"
 #include "OrbitCore\PrintVar.h"
 
-using namespace std;
-
 extern "C"
 {
     __declspec(dllexport) void __cdecl OrbitInit( void* a_Host )

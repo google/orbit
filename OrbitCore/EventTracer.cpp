@@ -5,8 +5,7 @@
 #include "EventTracer.h"
 #include "SamplingProfiler.h"
 
-#define INITGUID
-#include <windows.h>
+#include "Platform.h"
 #include <strsafe.h>
 #include <wmistr.h>
 #include <evntrace.h>

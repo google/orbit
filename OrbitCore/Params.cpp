@@ -86,7 +86,7 @@ void Params::Load()
 }
 
 //-----------------------------------------------------------------------------
-void Params::AddToPdbHistory( const string & a_PdbName )
+void Params::AddToPdbHistory( const std::string & a_PdbName )
 {
     m_PdbHistory.push_back( a_PdbName );
     auto it = std::unique( m_PdbHistory.begin(), m_PdbHistory.end() );
@@ -100,7 +100,7 @@ void Params::ScanPdbCache()
     std::wstring cachePath = Path::GetCachePath();
     SCOPE_TIMER_LOG( Format( L"Scanning cache (%s)", cachePath.c_str() ) );
 
-    for( auto it = tr2::sys::directory_iterator( cachePath ); it != tr2::sys::directory_iterator(); ++it )
+    for( auto it = std::tr2::sys::directory_iterator( cachePath ); it != std::tr2::sys::directory_iterator(); ++it )
     {
         const auto& file = it->path();
         if( file.extension() == ".bin" )

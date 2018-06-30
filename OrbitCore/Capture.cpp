@@ -2,6 +2,7 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+#include "Core.h"
 #include "Capture.h"
 #include "TimerManager.h"
 #include "TcpServer.h"
@@ -79,7 +80,7 @@ void Capture::Init()
 bool Capture::Inject( bool a_WaitForConnection )
 {
     Injection inject;
-    wstring dllName = Path::GetDllPath( GTargetProcess->GetIs64Bit() );
+    std::wstring dllName = Path::GetDllPath( GTargetProcess->GetIs64Bit() );
 
     GTcpServer->Disconnect();
 
@@ -110,7 +111,7 @@ bool Capture::Inject( bool a_WaitForConnection )
 bool Capture::InjectRemote()
 {
     Injection inject;
-    wstring dllName = Path::GetDllPath( GTargetProcess->GetIs64Bit() );
+    std::wstring dllName = Path::GetDllPath( GTargetProcess->GetIs64Bit() );
     GTcpServer->Disconnect();
 
     GInjected = inject.Inject( dllName.c_str(), *GTargetProcess, "OrbitInitRemote" );
@@ -494,7 +495,7 @@ bool Capture::IsOtherInstanceRunning()
 }
 
 //-----------------------------------------------------------------------------
-void Capture::LoadSession( const shared_ptr<Session> & a_Session )
+void Capture::LoadSession( const std::shared_ptr<Session> & a_Session )
 {
     GSessionPresets = a_Session;
 

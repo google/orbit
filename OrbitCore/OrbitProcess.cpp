@@ -100,7 +100,7 @@ void Process::ListModules()
 
     for( auto & pair : m_Modules )
     {
-        shared_ptr<Module> & module = pair.second;
+        std::shared_ptr<Module> & module = pair.second;
         std::wstring name = ToLower( module->m_Name );
         m_NameToModuleMap[name] = module;
         module->LoadDebugInfo();
@@ -266,7 +266,7 @@ Function* Process::GetFunctionFromAddress( DWORD64 a_Address, bool a_IsExact )
 }
 
 //-----------------------------------------------------------------------------
-shared_ptr<Module> Process::GetModuleFromAddress( DWORD64 a_Address )
+std::shared_ptr<Module> Process::GetModuleFromAddress( DWORD64 a_Address )
 {
 	DWORD64 address = (DWORD64)a_Address;
 	auto & it = m_Modules.upper_bound(address);
@@ -283,18 +283,18 @@ shared_ptr<Module> Process::GetModuleFromAddress( DWORD64 a_Address )
 //-----------------------------------------------------------------------------
 std::shared_ptr<OrbitDiaSymbol> Process::SymbolFromAddress( DWORD64 a_Address )
 {
-    shared_ptr<Module> module = GetModuleFromAddress( a_Address );
+    std::shared_ptr<Module> module = GetModuleFromAddress( a_Address );
     if( module && module->m_Pdb )
     {
         return module->m_Pdb->SymbolFromAddress( a_Address );
     }
-    return make_shared<OrbitDiaSymbol>();
+    return std::make_shared<OrbitDiaSymbol>();
 }
 
 //-----------------------------------------------------------------------------
 bool Process::LineInfoFromAddress( DWORD64 a_Address, LineInfo & o_LineInfo )
 {
-    shared_ptr<Module> module = GetModuleFromAddress( a_Address );
+    std::shared_ptr<Module> module = GetModuleFromAddress( a_Address );
     if( module && module->m_Pdb )
     {
         return module->m_Pdb->LineInfoFromAddress( a_Address, o_LineInfo );
@@ -346,7 +346,7 @@ void Process::AddType(Type & a_Type)
 }
 
 //-----------------------------------------------------------------------------
-void Process::AddModule( shared_ptr<Module> & a_Module )
+void Process::AddModule( std::shared_ptr<Module> & a_Module )
 {
     m_Modules[a_Module->m_AddressStart] = a_Module;
 }
@@ -362,7 +362,7 @@ void Process::FindPdbs( const std::vector< std::wstring > & a_SearchLocations )
         std::vector< std::wstring > pdbFiles = Path::ListFiles( dir, L".pdb" );
         for( const std::wstring & pdb : pdbFiles )
         {
-            wstring pdbLower = Path::GetFileName( ToLower( pdb ) );
+            std::wstring pdbLower = Path::GetFileName( ToLower( pdb ) );
             nameToPaths[pdbLower].push_back( pdb );
         }
     }
@@ -379,7 +379,7 @@ void Process::FindPdbs( const std::vector< std::wstring > & a_SearchLocations )
 
             const std::vector< std::wstring > & pdbs = nameToPaths[pdbName];
 
-            for( const wstring & pdb : pdbs )
+            for( const std::wstring & pdb : pdbs )
             {
 
                 module->m_PdbName = pdb;
@@ -391,7 +391,7 @@ void Process::FindPdbs( const std::vector< std::wstring > & a_SearchLocations )
                 if( Contains( module->m_DebugSignature, signature ) )
                 {
                     // Found matching pdb
-                    module->m_PdbSize = ::tr2::sys::file_size( module->m_PdbName );
+                    module->m_PdbSize = std::tr2::sys::file_size( module->m_PdbName );
                     break;
                 }
                 else
@@ -472,7 +472,7 @@ DWORD64 Process::GetOutputDebugStringAddress()
     auto it = m_NameToModuleMap.find( L"kernelbase.dll" );
     if( it != m_NameToModuleMap.end() )
     {
-        shared_ptr<Module> module = it->second;
+        std::shared_ptr<Module> module = it->second;
         auto remoteAddr = Injection::GetRemoteProcAddress( GetHandle(), module->m_ModuleHandle, "OutputDebugStringA" );
         return (DWORD64)remoteAddr;
     }
@@ -486,7 +486,7 @@ DWORD64 Process::GetRaiseExceptionAddress()
     auto it = m_NameToModuleMap.find( L"kernelbase.dll" );
     if (it != m_NameToModuleMap.end())
     {
-        shared_ptr<Module> module = it->second;
+        std::shared_ptr<Module> module = it->second;
         auto remoteAddr = Injection::GetRemoteProcAddress(GetHandle(), module->m_ModuleHandle, "RaiseException");
         return (DWORD64)remoteAddr;
     }

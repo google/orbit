@@ -4,11 +4,13 @@
 
 #include "Utils.h"
 
+#include <cguid.h>
+#include <AtlBase.h>
+#include <atlconv.h>
+
 #include <algorithm>
 #include <thread>
 #include <mutex>
-#include <AtlBase.h>
-#include <atlconv.h>
 #include <time.h>
 
 //-----------------------------------------------------------------------------
@@ -34,7 +36,7 @@ std::string GetLastErrorAsString()
 //-----------------------------------------------------------------------------
 std::string GuidToString(GUID a_Guid)
 {
-    string guidStr;
+    std::string guidStr;
     LPOLESTR wszCLSID = NULL;
     HRESULT hr = StringFromCLSID(a_Guid, &wszCLSID);
     if (hr == S_OK)
@@ -284,7 +286,7 @@ std::string CWindowsMessageToString::GetStringFromMsg(DWORD dwMessage, bool bSho
         }
     }
 
-    return to_string( dwMessage );
+    return std::to_string( dwMessage );
 }
 
 //-----------------------------------------------------------------------------

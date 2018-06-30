@@ -111,7 +111,7 @@ void RuleEditorWindow::RefreshAutoComplete( const std::string & a_Line )
                 if( Contains( varName, currentWord ) )
                 {
                     m_AutoComplete.push_back( varName );
-                    m_MaxTextWidth = max( m_MaxTextWidth, ImGui::CalcTextSize(varName.c_str()).x );
+                    m_MaxTextWidth = std::max( m_MaxTextWidth, ImGui::CalcTextSize(varName.c_str()).x );
                 }
             }
         }

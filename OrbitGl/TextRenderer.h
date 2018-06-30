@@ -3,6 +3,7 @@
 //-----------------------------------
 #pragma once
 
+#include "Platform.h"
 #include "freetype-gl.h"
 #include "mat4.h"
 #include "TextBox.h"

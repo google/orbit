@@ -87,15 +87,15 @@ public:
     template<class T>
     inline void Log(OrbitLog::Type a_Type, const char* a_VarName, const T& a_Value)
     {
-        stringstream l_StringStream;
-        l_StringStream << a_VarName << " = " << a_Value << endl;
+        std::stringstream l_StringStream;
+        l_StringStream << a_VarName << " = " << a_Value << std::endl;
         Log( a_Type, l_StringStream.str().c_str() );
     }
 
     inline void Log(OrbitLog::Type a_Type, const char* a_VarName, const std::wstring & a_Value)
     {
-        stringstream l_StringStream;
-        l_StringStream << a_VarName << " = " << ws2s(a_Value) << endl;
+        std::stringstream l_StringStream;
+        l_StringStream << a_VarName << " = " << ws2s(a_Value) << std::endl;
         Log(a_Type, l_StringStream.str().c_str());
     }
 

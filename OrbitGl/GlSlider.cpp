@@ -30,7 +30,7 @@ void GlSlider::SetSliderRatio( float a_Ratio ) // [0,1]
 void GlSlider::SetSliderWidthRatio( float a_WidthRatio ) // [0,1]
 {
     float minWidth = m_MinSliderPixelWidth/(float)m_Canvas->getWidth();
-    m_Length = max( a_WidthRatio, minWidth );
+    m_Length = std::max( a_WidthRatio, minWidth );
 }
 
 //-----------------------------------------------------------------------------

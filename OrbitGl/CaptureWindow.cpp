@@ -8,6 +8,7 @@
 #include "App.h"
 #include "SymbolUtils.h"
 #include "TcpServer.h"
+#include "TimerManager.h"
 #include "PluginManager.h"
 #include "../OrbitPlugin/OrbitSDK.h"
 
@@ -139,7 +140,7 @@ void CaptureWindow::LeftDown( int a_X, int a_Y )
     ScreenToWorld(a_X, a_Y, m_WorldClickX, m_WorldClickY);
     m_ScreenClickX = a_X;
     m_ScreenClickY = a_Y;
-    m_RefTimeClick = (EpochType)m_TimeGraph.GetTime((double)a_X / (double)getWidth());
+    m_RefTimeClick = (TickType)m_TimeGraph.GetTime((double)a_X / (double)getWidth());
 
     m_IsSelecting = false;
 
@@ -168,7 +169,7 @@ void CaptureWindow::LeftDoubleClick()
 void CaptureWindow::Pick( int a_X, int a_Y )
 {
     // 4 bytes per pixel (RGBA), 1x1 bitmap
-    vector< unsigned char > pixels(1 * 1 * 4);
+    std::vector< unsigned char > pixels(1 * 1 * 4);
     glReadPixels(a_X, m_MainWindowHeight - a_Y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
     
     PickingID pickId = PickingID::Get( *((uint32_t*)(&pixels[0])) );
@@ -246,7 +247,7 @@ void CaptureWindow::SelectTextBox( class TextBox* a_TextBox )
 void CaptureWindow::Hover( int a_X, int a_Y )
 {
     // 4 bytes per pixel (RGBA), 1x1 bitmap
-    vector< unsigned char > pixels( 1 * 1 * 4 );
+    std::vector< unsigned char > pixels( 1 * 1 * 4 );
     glReadPixels( a_X, m_MainWindowHeight - a_Y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0] );
 
     PickingID pickId = *((PickingID*)(&pixels[0]));
@@ -348,8 +349,8 @@ void CaptureWindow::RightUp()
 {
     if( m_IsSelecting && ( m_SelectStart[0] != m_SelectStop[0] ) )
     {
-        float minWorld = min(m_SelectStop[0], m_SelectStart[0]);
-        float maxWorld = max(m_SelectStop[0], m_SelectStart[0]);
+        float minWorld = std::min(m_SelectStop[0], m_SelectStart[0]);
+        float maxWorld = std::max(m_SelectStop[0], m_SelectStart[0]);
 
         double newMin = m_TimeGraph.GetTime( (minWorld-m_WorldTopLeftX)/m_WorldWidth );
         double newMax = m_TimeGraph.GetTime( (maxWorld-m_WorldTopLeftX)/m_WorldWidth );
@@ -423,7 +424,7 @@ void CaptureWindow::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl 
         float zoomInc = zoomRatio * m_DesiredWorldHeight;
         m_DesiredWorldHeight += delta * zoomInc;
         m_WorldTopLeftY = worldy + (float)mousey / (float)getHeight()*m_DesiredWorldHeight;
-        m_WorldTopLeftY = min( m_WorldMaxY, m_WorldTopLeftY );
+        m_WorldTopLeftY = std::min( m_WorldMaxY, m_WorldTopLeftY );
     }
 
     Orbit_ImGui_ScrollCallback(this, -delta);
@@ -530,14 +531,14 @@ void CaptureWindow::Draw()
     if( m_IsSelecting )
     {
         float sizex = fabs(m_SelectStop[0] - m_SelectStart[0]);
-        float posx = min(m_SelectStop[0], m_SelectStart[0]);
+        float posx = std::min(m_SelectStop[0], m_SelectStart[0]);
         
         Vec2 pos( posx, m_WorldTopLeftY - m_WorldHeight );
         Vec2 size( sizex, m_WorldHeight );
 
         if( m_IsSelectingMiddle )
         {
-            pos[1] = min( m_SelectStart[1], m_MouseY );
+            pos[1] = std::min( m_SelectStart[1], m_MouseY );
             size[1] = fabs( m_SelectStop[1] - m_SelectStart[1] );
         }        
 

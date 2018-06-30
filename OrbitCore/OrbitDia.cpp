@@ -56,7 +56,7 @@ void DumpDIAValue( std::ostream &OS
 
     const char *Bytes = reinterpret_cast<const char *>( Value );
 
-    wstring wresult = Value;
+    std::wstring wresult = Value;
     std::string result = ws2s(wresult);
     {
         OS << "\n";
@@ -308,7 +308,7 @@ void OrbitDia::DiaDump( IDiaSymbol* Symbol, std::ostream &OS, int Indent )
     RAW_METHOD_DUMP( OS, get_volatileType )
     RAW_METHOD_DUMP( OS, get_wasInlined )
 
-    OS << endl << endl;
+    OS << std::endl << std::endl;
 }
 
 //-----------------------------------------------------------------------------

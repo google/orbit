@@ -13,12 +13,13 @@
 #include "ContextSwitch.h"
 #include "OrbitProcess.h"
 #include "SamplingProfiler.h"
+#include "TimerManager.h"
 
 #include "evntcons.h"
 
 //-----------------------------------------------------------------------------
 std::unordered_map< ULONG64, EventTracing::EventCallback > GEventCallbacks;
-std::unordered_map< ptr_type, std::wstring > GFileMap;
+std::unordered_map< ULONG64, std::wstring > GFileMap;
 std::unordered_map< uint32_t, uint32_t > GThreadToProcessMap;
 std::unordered_map< ULONG64, ULONG > GEventCountByProviderId;
 bool GOutputEvent = false;
@@ -130,7 +131,7 @@ void EventTracing::CallbackFileIo( PEVENT_RECORD a_EventRecord, UCHAR a_Opcode )
     {
         FileIo_Name* name = (FileIo_Name*)a_EventRecord->UserData;
 
-        wstring & fileName = GFileMap[name->FileObject];
+        std::wstring & fileName = GFileMap[name->FileObject];
         if( fileName != name->FileName )
         {
             GFileMap[name->FileObject] = name->FileName;
@@ -250,12 +251,12 @@ void EventTracing::CallbackStackWalk( PEVENT_RECORD a_EventRecord, UCHAR a_Opcod
 
         if( event->StackProcess == Capture::GTargetProcess->GetID() )
         {
-            int stackDepth = ( a_EventRecord->UserDataLength - (sizeof(StackWalk_Event) - sizeof(event->Stack1)) )/sizeof(ptr_type);
+            int stackDepth = ( a_EventRecord->UserDataLength - (sizeof(StackWalk_Event) - sizeof(event->Stack1)) )/sizeof(ULONG64);
             
             CallStack CS;
             CS.m_Depth = stackDepth;
             CS.m_ThreadId = event->StackThread;
-            size_t numBytes = min(stackDepth, ORBIT_STACK_SIZE)*sizeof(ptr_type);
+            size_t numBytes = std::min(stackDepth, ORBIT_STACK_SIZE)*sizeof(ULONG64);
             CS.m_Data.resize(stackDepth);
             memcpy(CS.m_Data.data(), &event->Stack1, numBytes );
 
