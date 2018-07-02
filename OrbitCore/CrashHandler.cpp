@@ -57,7 +57,7 @@ CrashHandler::CrashHandler()
 
     assert( GHandler == nullptr );
 
-    GHandler = new google_breakpad::ExceptionHandler(
+    /*GHandler = new google_breakpad::ExceptionHandler(
         Path::GetDumpPath().c_str(),
         DmpFilter,
         DmpCallback,
@@ -65,14 +65,14 @@ CrashHandler::CrashHandler()
         google_breakpad::ExceptionHandler::HANDLER_ALL,
         MiniDumpNormal,
         L"",
-        0 );
+        0 );*/
 }
 
 //-----------------------------------------------------------------------------
 void CrashHandler::SendMiniDump()
 {
-    SCOPE_TIMER_LOG(L"CrashHandler::WriteDump");
-    google_breakpad::ExceptionHandler::WriteMinidump( Path::GetDumpPath(), OnDemandDmpCallback, nullptr );
+    /*SCOPE_TIMER_LOG(L"CrashHandler::WriteDump");
+    google_breakpad::ExceptionHandler::WriteMinidump( Path::GetDumpPath(), OnDemandDmpCallback, nullptr );*/
 }
 
 //-----------------------------------------------------------------------------

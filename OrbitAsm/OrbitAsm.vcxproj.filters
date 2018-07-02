@@ -5,9 +5,11 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    <Filter Include="HDE">
+      <UniqueIdentifier>{e090c4ae-04d4-42fb-9f9a-6ae3a0802abe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MinHook">
+      <UniqueIdentifier>{6a9f6abb-a1b3-465f-b11c-7827cf404f08}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -19,10 +21,52 @@
     <ClCompile Include="OrbitAsm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\external\minhook\src\HDE\hde32.c">
+      <Filter>HDE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\minhook\src\HDE\hde64.c">
+      <Filter>HDE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\minhook\src\buffer.c">
+      <Filter>MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\minhook\src\hook.c">
+      <Filter>MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\minhook\src\trampoline.c">
+      <Filter>MinHook</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\external\minhook\src\HDE\hde32.h">
+      <Filter>HDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\minhook\src\HDE\hde64.h">
+      <Filter>HDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\minhook\src\HDE\pstdint.h">
+      <Filter>HDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\minhook\src\HDE\table32.h">
+      <Filter>HDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\minhook\src\HDE\table64.h">
+      <Filter>HDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\minhook\src\buffer.h">
+      <Filter>MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\minhook\src\trampoline.h">
+      <Filter>MinHook</Filter>
+    </ClInclude>
     <ClInclude Include="OrbitAsm.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\minhook\include\MinHook.h">
+      <Filter>MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="OrbitAsmC.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -4,8 +4,26 @@
 #pragma once
 
 #include <windows.h>
+#include "OrbitAsmC.h"
+
+//-----------------------------------------------------------------------------
+struct OrbitProlog
+{
+    OrbitProlog(){ memset( this, 0, sizeof( OrbitProlog ) ); }
+    void Init();
+    Prolog m_Data;
+};
+
+//-----------------------------------------------------------------------------
+struct OrbitEpilog
+{
+    OrbitEpilog(){ memset( this, 0, sizeof( OrbitEpilog ) ); }
+    void Init();
+    Epilog m_Data;
+};
 
 #pragma pack(push, 1)
+//-----------------------------------------------------------------------------
 struct OrbitSSEContext
 {
     _M128A xmm0;
@@ -28,6 +46,13 @@ struct OrbitSSEContext
 #pragma pack(pop)
 
 #ifdef _WIN64
+//-----------------------------------------------------------------------------
 extern "C" void OrbitGetSSEContext( OrbitSSEContext * a_Context );
 extern "C" void OrbitSetSSEContext( OrbitSSEContext * a_Context );
+extern "C" void OrbitPrologAsm();
+extern "C" void OrbitEpilogAsm();
+#else
+//-----------------------------------------------------------------------------
+void OrbitPrologAsm();
+void OrbitEpilogAsm();
 #endif

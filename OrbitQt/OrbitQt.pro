@@ -42,8 +42,8 @@ SOURCES += main.cpp \
            qtpropertybrowser/qttreepropertybrowser.cpp \
            qtpropertybrowser/qtvariantproperty.cpp \
            orbitwatchwidget.cpp \
-    orbitdisassemblydialog.cpp \
-    orbitvisualizer.cpp
+           orbitdisassemblydialog.cpp \
+           orbitvisualizer.cpp
 
 HEADERS  += \
     orbitmainwindow.h \
@@ -94,6 +94,10 @@ DISTFILES += \
     orbit_16_32_48_256.ico \
     qtpropertybrowser/qtpropertybrowser.pri
 
+INCLUDEPATH += \
+    ../external/xxHash-r42/ \
+    ../external/imgui/
+
 LIBS += -L$$PWD/../external/curl-7.52.1/lib/                  -llibcurl_imp
 LIBS += -L$$PWD/../external/glew-2.0.0/lib/Release/x64/       -lglew32
 LIBS +=                                                       -lopengl32
@@ -108,13 +112,12 @@ CONFIG( debug, debug|release ) {
     LIBS += -L$$PWD/../bin/x64/debug/                                      -lOrbitGl
     LIBS += -L$$PWD/../bin/x64/debug/                                      -lOrbitAsm
     LIBS += -L$$PWD/../external/freeglut-2.8.1/lib/x64/debug/              -lfreeglut_static
-    LIBS += -L$$PWD/../external/minhook/lib/debug/                         -llibMinHook.x64
     LIBS += -L$$PWD/../external/breakpad/src/client/windows/x64/Debug/lib/ -lexception_handler
     LIBS += -L$$PWD/../external/breakpad/src/client/windows/x64/Debug/lib/ -lcrash_generation_client
     LIBS += -L$$PWD/../external/breakpad/src/client/windows/x64/Debug/lib/ -lcommon
     LIBS += -L$$PWD/../external/breakpad/src/client/windows/x64/Debug/lib/ -lexception_handler
     LIBS += -L$$PWD/../external/breakpad/src/client/windows/x64/Debug/lib/ -lprocessor_bits
-    LIBS += -L$$PWD/../external/capstone/msvc/x64/Release/                   -lcapstone
+    LIBS += -L$$PWD/../external/capstone/msvc/x64/Release/                 -lcapstone
 
     OBJECTS_DIR = $$PWD/../intermediate/x64/OrbitQt/debug/
     DESTDIR     = $$PWD/../bin/x64/debug/
@@ -126,7 +129,6 @@ CONFIG( debug, debug|release ) {
     LIBS += -L$$PWD/../bin/x64/release/                                      -lOrbitGl
     LIBS += -L$$PWD/../bin/x64/release/                                      -lOrbitAsm
     LIBS += -L$$PWD/../external/freeglut-2.8.1/lib/x64/                      -lfreeglut_static
-    LIBS += -L$$PWD/../external/minhook/lib/release/                         -llibMinHook.x64
     LIBS += -L$$PWD/../external/breakpad/src/client/windows/x64/Release/lib/ -lexception_handler
     LIBS += -L$$PWD/../external/breakpad/src/client/windows/x64/Release/lib/ -lcrash_generation_client
     LIBS += -L$$PWD/../external/breakpad/src/client/windows/x64/Release/lib/ -lcommon

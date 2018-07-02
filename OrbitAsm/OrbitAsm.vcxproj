@@ -97,6 +97,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>_M_X64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -119,6 +120,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>_M_X64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -133,10 +135,24 @@
     </MASM>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\external\minhook\src\buffer.c" />
+    <ClCompile Include="..\external\minhook\src\HDE\hde32.c" />
+    <ClCompile Include="..\external\minhook\src\HDE\hde64.c" />
+    <ClCompile Include="..\external\minhook\src\hook.c" />
+    <ClCompile Include="..\external\minhook\src\trampoline.c" />
     <ClCompile Include="OrbitAsm.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\external\minhook\include\MinHook.h" />
+    <ClInclude Include="..\external\minhook\src\buffer.h" />
+    <ClInclude Include="..\external\minhook\src\HDE\hde32.h" />
+    <ClInclude Include="..\external\minhook\src\HDE\hde64.h" />
+    <ClInclude Include="..\external\minhook\src\HDE\pstdint.h" />
+    <ClInclude Include="..\external\minhook\src\HDE\table32.h" />
+    <ClInclude Include="..\external\minhook\src\HDE\table64.h" />
+    <ClInclude Include="..\external\minhook\src\trampoline.h" />
     <ClInclude Include="OrbitAsm.h" />
+    <ClInclude Include="OrbitAsmC.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

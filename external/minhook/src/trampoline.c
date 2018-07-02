@@ -27,7 +27,7 @@
  */
 
 #include <windows.h>
-#include "orbitasm.h"
+#include "../../../OrbitAsm/OrbitAsmC.h"
 #include <stdio.h>
 #include <assert.h>
 
@@ -557,25 +557,28 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
         ct->patchAbove = TRUE;
     }
 
+    const struct Prolog* orbitProlog = GetOrbitProlog();
+    const struct Epilog* orbitEpilog = GetOrbitEpilog();
+
     LPBYTE pProlog = (LPBYTE)ct->pTrampoline + newPos;
-    LPBYTE pEpilog = pProlog + sizeof(OrbitProlog);
+    LPBYTE pEpilog = pProlog + orbitProlog->m_Size;
 
     // Trampoline function is too large.
-    if( ( newPos + sizeof( OrbitProlog ) + sizeof( OrbitEpilog ) ) > TRAMPOLINE_MAX_SIZE )
+    if( ( newPos + orbitProlog->m_Size + orbitEpilog->m_Size ) > TRAMPOLINE_MAX_SIZE )
     {
         assert(0);
     }
 
     // Create OrbitProlog
-    memcpy( pProlog, &OrbitProlog, sizeof(OrbitProlog) );
-    memcpy( &pProlog[Prolog_OriginalFunction],&ct->pTarget,          sizeof(LPVOID) );
-    memcpy( &pProlog[Prolog_CallbackAddress], &ct->pPrologCallback,  sizeof(LPVOID) );
-    memcpy( &pProlog[Prolog_OriginalAddress], &ct->pTrampoline,      sizeof(LPVOID) );
-    memcpy( &pProlog[Prolog_EpilogAddress],   &pEpilog,              sizeof(LPVOID) );
+    memcpy( pProlog, orbitProlog->m_Code, orbitProlog->m_Size );
+    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_OriginalFunction]],&ct->pTarget,          sizeof(LPVOID) );
+    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_CallbackAddress]], &ct->pPrologCallback,  sizeof(LPVOID) );
+    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_OriginalAddress]], &ct->pTrampoline,      sizeof(LPVOID) );
+    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_EpilogAddress]],   &pEpilog,              sizeof(LPVOID) );
 
     // Create OrbitEpilog
-    memcpy( pEpilog, &OrbitEpilog, sizeof(OrbitEpilog) );
-    memcpy( &pEpilog[Epilog_CallbackAddress], &ct->pEpilogCallback,  sizeof(LPVOID) );
+    memcpy( pEpilog, orbitEpilog->m_Code, orbitEpilog->m_Size );
+    memcpy( &pEpilog[orbitEpilog->m_Offsets[Epilog_CallbackAddress]], &ct->pEpilogCallback,  sizeof(LPVOID) );
 
 #ifdef _M_X64
     ct->pRelay = pProlog;
