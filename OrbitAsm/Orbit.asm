@@ -4,9 +4,9 @@
 OrbitPrologAsm PROC
     mov     R11, RSP                ; //Save address of return address
     push    RCX
-	push    RDX
-	push    R8
-	push    R9
+    push    RDX
+    push    R8
+    push    R9
     push    RBX
 
     sub     RSP , 16
@@ -54,17 +54,17 @@ OrbitPrologAsm PROC
 
     mov     R11, 0123456789ABCDEFh  ;// Will be ovewritten with address of trampoline to original function
     jmp     R11                     ;// Jump to orignial function through trampolime TODO: Make this a relative jump for better perf and 7 bytes saving
-	mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
+    mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
 OrbitPrologAsm	ENDP
 
 
 OrbitEpilogAsm PROC
     push    RAX                     ;// Save eax (return value)
-	push    RBX
-	push    RCX
-	push    RDX
-	push    R8
-	push    R9
+    push    RBX
+    push    RCX
+    push    RDX
+    push    R8
+    push    R9
     sub     RSP , 16                
     movdqu xmmword ptr[RSP], xmm0   ;// Save XMM0 (float return value)
     mov     R11, 0123456789ABCDEFh  ;// Will be overwritten by callback address
@@ -74,15 +74,15 @@ OrbitEpilogAsm PROC
     mov     R11, RAX                ;// RDX contains return address
     movdqu xmm0, xmmword ptr[RSP]   ;// XMM0 contains float return value
     add     RSP , 16                
-	pop     R9
-	pop     R8
-	pop     RDX
-	pop     RCX
-	pop     RBX
+    pop     R9
+    pop     R8
+    pop     RDX
+    pop     RCX
+    pop     RBX
     pop     RAX                     ;// RAX contains return value
     push    R11                     ;// Push caller address on stack
     ret                             ;// return
-	mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
+    mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
 OrbitEpilogAsm ENDP
 
 OrbitGetSSEContext PROC
