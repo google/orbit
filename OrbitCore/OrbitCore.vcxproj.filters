@@ -105,9 +105,6 @@
     <ClInclude Include="CoreApp.h">
       <Filter>Inc</Filter>
     </ClInclude>
-    <ClInclude Include="CoreMath.h">
-      <Filter>Inc</Filter>
-    </ClInclude>
     <ClInclude Include="CrashHandler.h">
       <Filter>Inc</Filter>
     </ClInclude>

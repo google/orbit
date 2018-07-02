@@ -11,10 +11,6 @@
 #include "PickingManager.h"
 #include "GlUtils.h"
 
-#define FREEGLUT_STATIC
-#define GLUT_DISABLE_ATEXIT_HACK
-#include <freeglut.h>
-
 class GlCanvas : public GlPanel
 {
 public:
@@ -87,7 +83,7 @@ public:
     virtual void RenderText(){}
     void RenderSamplingUI();
 
-    ImGuiContext & GetImGuiContext() { return m_ImGuiContext; }
+    ImGuiContext * GetImGuiContext() { return m_ImGuiContext; }
 
     PickingManager & GetPickingManager() { return m_PickingManager; }
 
@@ -136,7 +132,7 @@ protected:
     int     m_ID;
     Vec4    m_BackgroundColor;
 
-    ImGuiContext    m_ImGuiContext;
+    ImGuiContext*   m_ImGuiContext;
     TickType        m_RefTimeClick;
     TickType        m_SelectedInterval;
     TextRenderer    m_TextRenderer;

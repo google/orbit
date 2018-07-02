@@ -17,7 +17,6 @@
 #include <wchar.h>
 
 #include "Threading.h"
-#include "CoreMath.h"
 #include "Utils.h"
 #include "VariableTracing.h"
 #include "Path.h"

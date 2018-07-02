@@ -4,9 +4,9 @@
 
 #include "Variable.h"
 #include "Pdb.h"
-#include "OrbitCore/Core.h"
-#include "OrbitCore/Log.h"
-#include "OrbitCore/TcpServer.h"
+#include "Core.h"
+#include "Log.h"
+#include "TcpServer.h"
 #include "ScopeTimer.h"
 #include "Capture.h"
 #include "CoreApp.h"

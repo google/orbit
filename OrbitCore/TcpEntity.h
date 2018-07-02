@@ -52,7 +52,7 @@ public:
     void FlushSendQueue();
 
     // Note: All Send methods can be called concurrently from multiple threads
-    inline void Send(MessageType a_Type) { SendMsg(Message(a_Type), nullptr); }
+    inline void Send(MessageType a_Type) { Message msg(a_Type); SendMsg(msg, nullptr); }
     inline void Send(Message & a_Message, void* a_Data);
     inline void Send(Message & a_Message);
     inline void Send(std::string& a_String);

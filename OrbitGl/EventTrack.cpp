@@ -50,10 +50,10 @@ void EventTrack::Draw( GlCanvas* a_Canvas, bool a_Picking )
         Vec2 & from = m_MousePos[0];
         Vec2 & to = m_MousePos[1];
 
-        float x0 = from[0];
-        float y0 = m_Pos[1];
-        float x1 = to[0];
-        float y1 = y0 - m_Size[1];
+        x0 = from[0];
+        y0 = m_Pos[1];
+        x1 = to[0];
+        y1 = y0 - m_Size[1];
 
         glColor4ub( 0, 128, 255, 128 );
         glBegin( GL_QUADS );

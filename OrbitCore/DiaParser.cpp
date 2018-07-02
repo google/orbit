@@ -1,8 +1,8 @@
 #include "Core.h"
 
 #include <malloc.h>
-#include "external/DIA2Dump/dia2dump.h"
-#include "external/DIA2Dump/regs.h"
+#include "dia2dump.h"
+#include "regs.h"
 
 #include "DiaParser.h"
 #include <map>

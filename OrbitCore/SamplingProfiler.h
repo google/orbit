@@ -7,7 +7,6 @@
 #include "Pdb.h"
 #include "Callstack.h"
 #include "BlockChain.h"
-#include "external/xxHash-r42/xxhash.h"
 #include "SerializationMacros.h"
 
 class Process;

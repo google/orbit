@@ -651,12 +651,12 @@ FARPROC WINAPI Injection::GetRemoteProcAddress(HANDLE hProcess, HMODULE hModule,
                     RealFunctionId.erase(0, 1); // Remove '#' from string
 
                     /* My version of atoi() because I was to lazy to use the real one... */
-                    for (size_t i = 0; i < RealFunctionId.size(); ++i)
+                    for (size_t j = 0; j < RealFunctionId.size(); ++j)
                     {
-                        if (RealFunctionId[i] >= '0' && RealFunctionId[i] <= '9')
+                        if (RealFunctionId[j] >= '0' && RealFunctionId[j] <= '9')
                         {
                             RealOrdinal *= 10;
-                            RealOrdinal += RealFunctionId[i] - '0';
+                            RealOrdinal += RealFunctionId[j] - '0';
                         }
                         else
                             break;

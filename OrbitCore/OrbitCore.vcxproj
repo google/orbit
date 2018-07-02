@@ -85,7 +85,6 @@
     <ClInclude Include="OrbitFunction.h" />
     <ClInclude Include="OrbitLib.h" />
     <ClInclude Include="Log.h" />
-    <ClInclude Include="CoreMath.h" />
     <ClInclude Include="MemoryTracker.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="ModuleManager.h" />
@@ -382,7 +381,7 @@
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <BrowseInformation>false</BrowseInformation>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;$(VCInstallDir)\..\DIA SDK\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;..\external\xxHash-r42\;$(VCInstallDir)\..\DIA SDK\include;..\external\DIA2Dump\;..\external\imgui\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>ORBIT_PROFILER;_WIN32_WINNT=0x0700;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
@@ -405,7 +404,7 @@
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BrowseInformation>true</BrowseInformation>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;$(VCInstallDir)\..\DIA SDK\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;..\external\xxHash-r42\;$(VCInstallDir)\..\DIA SDK\include;..\external\DIA2Dump\;..\external\imgui\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>ORBIT_PROFILER;_WIN32_WINNT=0x0700;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
@@ -423,7 +422,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;$(VCInstallDir)\..\DIA SDK\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;..\external\xxHash-r42\;$(VCInstallDir)\..\DIA SDK\include;..\external\DIA2Dump\;..\external\imgui\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>ORBIT_PROFILER;_WIN32_WINNT=0x0700;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
@@ -443,7 +442,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;$(VCInstallDir)\..\DIA SDK\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;..\external\xxHash-r42\;$(VCInstallDir)\..\DIA SDK\include;..\external\DIA2Dump\;..\external\imgui\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>ORBIT_PROFILER;_WIN32_WINNT=0x0700;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
@@ -465,7 +464,7 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;$(VCInstallDir)\..\DIA SDK\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;..\external\xxHash-r42\;$(VCInstallDir)\..\DIA SDK\include;..\external\DIA2Dump\;..\external\imgui\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>ORBIT_PROFILER;_WIN32_WINNT=0x0700;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
@@ -489,7 +488,7 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;$(VCInstallDir)\..\DIA SDK\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;..\external\xxHash-r42\;$(VCInstallDir)\..\DIA SDK\include;..\external\DIA2Dump\;..\external\imgui\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>ORBIT_PROFILER;_WIN32_WINNT=0x0700;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
@@ -511,7 +510,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;$(VCInstallDir)\..\DIA SDK\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;..\external\xxHash-r42\;$(VCInstallDir)\..\DIA SDK\include;..\external\DIA2Dump\;..\external\imgui\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>ORBIT_PROFILER;_WIN32_WINNT=0x0700;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
@@ -535,7 +534,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;$(VCInstallDir)\..\DIA SDK\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\sqlite\;..\external\concurrentqueue\;..\external\asio\include\;..\external\minhook\include\;..\external\cereal-1.1.2\include\;..\external\multicore\common\;..\external\websocketpp\;..\external\curl-7.52.1\include;..\external\breakpad\src;..\external\xxHash-r42\;$(VCInstallDir)\..\DIA SDK\include;..\external\DIA2Dump\;..\external\imgui\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>ORBIT_PROFILER;_WIN32_WINNT=0x0700;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>

@@ -5,8 +5,7 @@
 
 #include "OrbitData.h"
 #include "OrbitUserData.h"
-#include "../external/imgui/imgui.h"
-#include "../external/imgui/imgui_internal.h"
+#include "imgui.h"
 
 namespace Orbit {
 

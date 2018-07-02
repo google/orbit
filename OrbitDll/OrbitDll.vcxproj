@@ -167,7 +167,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <BrowseInformation>true</BrowseInformation>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include;..\external\xxHash-r42\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -175,7 +175,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>OrbitCore.lib;libMinHook.x86.lib;crash_generation_client.lib;common.lib;exception_handler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OrbitAsm.lib;OrbitCore.lib;crash_generation_client.lib;common.lib;exception_handler.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\bin\Win32\Debug;$(BOOST_ROOT)\lib32-msvc-12.0;..\external\minhook\lib\Debug;..\external\breakpad\src\client\windows\Win32\Debug\lib\</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
@@ -189,7 +189,7 @@
       <SDLCheck>true</SDLCheck>
       <BrowseInformation>true</BrowseInformation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include;..\external\xxHash-r42\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
     </ClCompile>
@@ -208,7 +208,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <BrowseInformation>true</BrowseInformation>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include;..\external\xxHash-r42\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -217,7 +217,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>OrbitAsm.lib;OrbitCore.lib;libMinHook.x64.lib;crash_generation_client.lib;common.lib;exception_handler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OrbitAsm.lib;OrbitCore.lib;crash_generation_client.lib;common.lib;exception_handler.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\bin\x64\Debug;..\external\minhook\lib\Release;..\external\breakpad\src\client\windows\x64\Debug\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
@@ -231,7 +231,7 @@
       <SDLCheck>true</SDLCheck>
       <BrowseInformation>true</BrowseInformation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include;..\external\xxHash-r42\</AdditionalIncludeDirectories>
       <ShowIncludes>true</ShowIncludes>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
     </ClCompile>
@@ -252,7 +252,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include;..\external\xxHash-r42\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
     </ClCompile>
@@ -260,7 +260,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>OrbitCore.lib;libMinHook.x86.lib;crash_generation_client.lib;common.lib;exception_handler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OrbitCore.lib;OrbitAsm.lib;crash_generation_client.lib;common.lib;exception_handler.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\bin\Win32\Release;$(BOOST_ROOT)\lib32-msvc-12.0;..\external\minhook\lib\Release;..\external\breakpad\src\client\windows\Win32\Release\lib\</AdditionalLibraryDirectories>
       <Profile>true</Profile>
     </Link>
@@ -273,7 +273,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include;..\external\xxHash-r42\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
     </ClCompile>
@@ -293,7 +293,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include;..\external\xxHash-r42\</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -302,7 +302,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>OrbitCore.lib;OrbitAsm.lib;libMinHook.x64.lib;crash_generation_client.lib;common.lib;exception_handler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OrbitCore.lib;OrbitAsm.lib;crash_generation_client.lib;common.lib;exception_handler.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\bin\x64\Release;..\external\minhook\lib\Release;..\external\breakpad\src\client\windows\x64\Release\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <Profile>true</Profile>
     </Link>
@@ -316,7 +316,7 @@
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\;..\external\stlsoft-1.9.118\include\;..\external\concurrentqueue\;..\external\asio\include;..\external\minhook\include;..\external\multicore\common;..\external\cereal-1.1.2\include;..\external\xxHash-r42\</AdditionalIncludeDirectories>
       <ShowIncludes>true</ShowIncludes>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
     </ClCompile>

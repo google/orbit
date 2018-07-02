@@ -17,7 +17,6 @@ typedef std::recursive_mutex                    Mutex;
 typedef std::lock_guard<std::recursive_mutex>   ScopeLock;
 typedef std::unique_lock<std::recursive_mutex>  UniqueLock;
 typedef std::condition_variable                 ConditionVariable;
-typedef AutoResetEvent                          AutoResetEvent;
 
 template<typename T>
 using LockFreeQueue = moodycamel::ConcurrentQueue<T>;

@@ -146,3 +146,4 @@ OrbitWeb/Bin/
 external/glew-2.0.0/auto/bin/
 external/glew-2.0.0/bin/
 external/minhook/bin/
+build/

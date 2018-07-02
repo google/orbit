@@ -16,7 +16,7 @@
 #include <vector>
 #include <unordered_set>
 #include "Callstack.h"
-#include "OrbitAsm/OrbitAsm.h"
+#include "../OrbitAsm/OrbitAsm.h"
 #include "../OrbitPlugin/OrbitSDK.h"
 #include "../external/minhook/src/buffer.h"
 #include "../external/minhook/src/trampoline.h"

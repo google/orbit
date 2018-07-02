@@ -6,9 +6,9 @@
 #include "ScopeTimer.h"
 #include "ObjectCount.h"
 #include "Platform.h"
+#include "dia2dump.h"
+#include "PrintSymbol.h"
 
-#include "external/DIA2Dump/dia2dump.h"
-#include "external/DIA2Dump/PrintSymbol.h"
 #include <Shellapi.h>
 
 //-----------------------------------------------------------------------------

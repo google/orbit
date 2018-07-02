@@ -4,9 +4,9 @@
 #pragma once
 
 #include <unordered_map>
-#include <OrbitCore\CoreMath.h>
-#include <OrbitCore\RingBuffer.h>
-#include <OrbitCore\Threading.h>
+#include "CoreMath.h"
+#include "..\OrbitCore\RingBuffer.h"
+#include "..\OrbitCore\Threading.h"
 #include "ImguiOrbit.h"
 
 

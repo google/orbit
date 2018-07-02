@@ -8,9 +8,9 @@
 #include <windows.h>
 #include <iostream>
 #include <fstream>
-#include "OrbitCore\OrbitLib.h"
-#include "OrbitCore\TcpClient.h"
-#include "OrbitCore\PrintVar.h"
+#include "..\OrbitCore\OrbitLib.h"
+#include "..\OrbitCore\TcpClient.h"
+#include "..\OrbitCore\PrintVar.h"
 
 extern "C"
 {

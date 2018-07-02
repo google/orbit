@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Platform.h"
+#include "xxhash.h"
 
 #include <algorithm>
 #include <string>
@@ -16,8 +17,6 @@
 #include <tchar.h>
 #include <wchar.h>
 #include <stdarg.h>
-
-#include "external/xxHash-r42/xxhash.h"
 
 //-----------------------------------------------------------------------------
 inline std::string ws2s( const std::wstring& wstr )

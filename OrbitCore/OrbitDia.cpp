@@ -6,7 +6,7 @@
 #include "Log.h"
 #include "Core.h"
 #include "dia2.h"
-#include "external/DIA2Dump/dia2dump.h"
+#include "dia2dump.h"
 
 #define StringRef char*
 

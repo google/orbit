@@ -340,8 +340,8 @@ void RuleEditorWindow::DrawPopup( ImVec2 pos, ImVec2 size, bool& isFocused )
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoMove |
         ImGuiWindowFlags_HorizontalScrollbar |
-        ImGuiWindowFlags_NoSavedSettings |
-        ImGuiWindowFlags_ShowBorders;
+        ImGuiWindowFlags_NoSavedSettings;
+        //ImGuiWindowFlags_ShowBorders;
     //ImGui::SetNextWindowFocus();
     ImGui::SetNextWindowPos( pos );
 
@@ -443,8 +443,6 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size )
     if( ImGui::InputText( "Blah", &m_TextBuffer[0], m_TextBuffer.size(), flags, InputCallbackGlobal, this ) )
     {
         ImGui::SetKeyboardFocusHere( -1 );
-
-        ImVec2 & pos = ImGui::GetCurrentContext()->OsImePosRequest;
 
         if( m_State.m_PopupOpen && m_State.m_ActiveIdx != -1 )
         {
@@ -550,7 +548,7 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size )
     if( m_State.m_PopupOpen )
     {
         //ImGui::SetNextWindowPos();
-        DrawPopup( ImGui::GetCurrentContext()->OsImePosRequest, ImGui::GetWindowSize(), popupFocused );
+        DrawPopup( ImGui::GetCursorPos(), ImGui::GetWindowSize(), popupFocused );
     }
 
     // Restore focus to the input box if we just clicked an item

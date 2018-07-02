@@ -8,7 +8,7 @@
 #include "Pdb.h"
 #include "Log.h"
 #include "Capture.h"
-#include "external/xxHash-r42/xxhash.h"
+#include "Hashing.h"
 #include "SamplingProfiler.h"
 #include "SymbolUtils.h"
 #include "PrintVar.h"

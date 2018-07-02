@@ -31,6 +31,7 @@
 #include "PluginManager.h"
 #include "RuleEditor.h"
 
+#include "OrbitAsm\OrbitAsm.h"
 #include "OrbitCore\Pdb.h"
 #include "OrbitCore\ModuleManager.h"
 #include "OrbitCore\TcpServer.h"
@@ -47,6 +48,10 @@
 #include <thread>
 #include <cmath>
 #include <fstream>
+
+#define FREEGLUT_STATIC
+#define GLUT_DISABLE_ATEXIT_HACK
+#include "GL\freeglut.h"
 
 class OrbitApp* GOrbitApp;
 float GFontSize;

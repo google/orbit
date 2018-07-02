@@ -89,7 +89,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../OrbitSDK</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../OrbitSDK;../external/imgui</AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
       <Command>
@@ -101,7 +101,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../OrbitSDK</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../OrbitSDK;../external/imgui</AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
       <Command>
@@ -115,7 +115,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../OrbitSDK</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../OrbitSDK;../external/imgui</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -133,7 +133,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../OrbitSDK</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../OrbitSDK;../external/imgui</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

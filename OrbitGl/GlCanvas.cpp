@@ -15,9 +15,8 @@
 #include "App.h"
 #include "SamplingProfiler.h"
 
-#include "OrbitCore\Core.h"
-#include "OrbitCore\VariableTracing.h"
-#include "../external/imgui/imgui.h"
+#include "..\OrbitCore\Core.h"
+#include "..\OrbitCore\VariableTracing.h"
 #include "Card.h"
 #include <vector>
 #include <string>
@@ -84,6 +83,7 @@ GlCanvas::GlCanvas()
 
     UpdateSceneBox();
 
+    m_ImGuiContext = ImGui::CreateContext();
     ScopeImguiContext state( m_ImGuiContext );
     Orbit_ImGui_Init();
 }
@@ -91,6 +91,7 @@ GlCanvas::GlCanvas()
 //-----------------------------------------------------------------------------
 GlCanvas::~GlCanvas()
 {
+    ImGui::DestroyContext( m_ImGuiContext );
     ScopeImguiContext state( m_ImGuiContext );
 }
 

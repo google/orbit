@@ -2,8 +2,7 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <string.h>
-
-#include "dia2.h"
+#include <dia2.h>
 
 #include "../../OrbitCore/Core.h"
 #include "../../OrbitCore/Log.h"

@@ -24,8 +24,8 @@
 #include "DiaManager.h"
 #include "ObjectCount.h"
 
-#include "external/DIA2Dump/dia2dump.h"
-#include "external/DIA2Dump/PrintSymbol.h"
+#include "dia2dump.h"
+#include "PrintSymbol.h"
 
 std::shared_ptr<Pdb> GPdbDbg;
 
