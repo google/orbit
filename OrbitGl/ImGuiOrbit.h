@@ -10,7 +10,6 @@
 // https://github.com/ocornut/imgui
 
 #include "imgui.h"
-#include "imgui_internal.h"
 #include "OrbitType.h"
 #include "ProcessUtils.h"
 #include <string>
@@ -41,13 +40,13 @@ extern ImFont* GOrbitImguiFont;
 
 struct ScopeImguiContext
 {
-    ScopeImguiContext( ImGuiContext & a_State ) : m_ImGuiContext( nullptr )
+    ScopeImguiContext( ImGuiContext * a_State ) : m_ImGuiContext( nullptr )
     {
         ImGuiContext* state = (ImGuiContext*)ImGui::GetCurrentContext();
-        if( state != &a_State )
+        if( state != a_State )
         {
             m_ImGuiContext = state;
-            ImGui::SetCurrentContext( &a_State );
+            ImGui::SetCurrentContext( a_State );
         }
     }
     ~ScopeImguiContext()
@@ -74,12 +73,12 @@ struct DebugWindow
 
     void    Clear()     { Buf.clear(); LineOffsets.clear(); }
 
-    void    AddLog(const char* fmt, ...) IM_PRINTFARGS(2)
+    void    AddLog(const char* fmt, ...)
     {
         int old_size = Buf.size();
         va_list args;
         va_start(args, fmt);
-        Buf.appendv(fmt, args);
+        Buf.appendfv(fmt, args);
         va_end(args);
         for (int new_size = Buf.size(); old_size < new_size; old_size++)
             if (Buf[old_size] == '\n')
@@ -194,12 +193,12 @@ struct VizWindow
 
     void    Clear()     { Buf.clear(); LineOffsets.clear(); }
 
-    void    AddLog(const char* fmt, ...) IM_PRINTFARGS(2)
+    void    AddLog(const char* fmt, ...)
     {
         int old_size = Buf.size();
         va_list args;
         va_start(args, fmt);
-        Buf.appendv(fmt, args);
+        Buf.appendfv(fmt, args);
         va_end(args);
         for (int new_size = Buf.size(); old_size < new_size; old_size++)
             if (Buf[old_size] == '\n')
@@ -289,12 +288,12 @@ struct OutputWindow
         AddLog( "%s\n", a_String.c_str() );
     }
 
-    void AddLog( const char* fmt, ... ) IM_PRINTFARGS( 2 )
+    void AddLog( const char* fmt, ... )
     {
         int old_size = Buf.size();
         va_list args;
         va_start( args, fmt );
-        Buf.appendv( fmt, args );
+        Buf.appendfv( fmt, args );
         va_end( args );
         for( int new_size = Buf.size(); old_size < new_size; old_size++ )
             if( Buf[old_size] == '\n' )
