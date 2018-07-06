@@ -90,8 +90,15 @@ void Orbit::DeInit()
 //-----------------------------------------------------------------------------
 void Orbit::Start()
 {
-	GTimerManager->StartClient();
-    GIsCaptureEnabled = true;
+    if( GTimerManager )
+    {
+	    GTimerManager->StartClient();
+        GIsCaptureEnabled = true;
+    }
+    else
+    {
+        PRINT("GTimerManager not created yet");
+    }
 }
 
 //-----------------------------------------------------------------------------
