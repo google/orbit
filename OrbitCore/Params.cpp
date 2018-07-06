@@ -34,7 +34,7 @@ Params::Params() : m_LoadTypeInfo( true )
     
 }
 
-ORBIT_SERIALIZE( Params, 12 )
+ORBIT_SERIALIZE( Params, 13 )
 {
     ORBIT_NVP_VAL( 0, m_LoadTypeInfo );
     ORBIT_NVP_VAL( 0, m_SendCallStacks );
@@ -57,6 +57,7 @@ ORBIT_SERIALIZE( Params, 12 )
     ORBIT_NVP_VAL( 10, m_WorkingDirectory );
     ORBIT_NVP_VAL( 11, m_FindFileAndLineInfo );
     ORBIT_NVP_VAL( 12, m_AutoReleasePdb );
+    ORBIT_NVP_VAL( 13, m_ProcessFilter );
 }
 
 //-----------------------------------------------------------------------------

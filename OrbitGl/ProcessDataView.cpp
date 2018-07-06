@@ -177,6 +177,8 @@ void ProcessesDataView::Refresh()
             Capture::GTargetProcess->UpdateThreadUsage();
         }
     }
+
+    GParams.m_ProcessFilter = ws2s( m_Filter );
 }
 
 //-----------------------------------------------------------------------------

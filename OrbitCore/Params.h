@@ -41,6 +41,7 @@ public:
     std::string m_ProcessPath;
     std::string m_Arguments;
     std::string m_WorkingDirectory;
+    std::string m_ProcessFilter;
 
     ORBIT_SERIALIZABLE;
 };

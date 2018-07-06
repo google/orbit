@@ -17,6 +17,11 @@ ProcessLauncherWidget::ProcessLauncherWidget(QWidget *parent) :
     ui->ArgumentsComboBox->lineEdit()->setPlaceholderText("Arguments");
     ui->LiveProcessList->Initialize( DataViewType::PROCESSES );
 
+    if( GParams.m_ProcessFilter != "" )
+    {
+        ui->LiveProcessList->SetFilter( GParams.m_ProcessFilter.c_str() );
+    }
+
     ui->gridLayout_2->setColumnStretch(0, 90);
     ui->checkBoxPause->setChecked( GParams.m_StartPaused );
 
