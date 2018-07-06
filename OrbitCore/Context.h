@@ -16,6 +16,7 @@ struct IntReg
 {
     union
     {
+        DWORD64 m_Reg;
         DWORD64 m_Reg64;
         Reg32   m_Reg32;
         RegF    m_RegF;
@@ -26,6 +27,15 @@ struct IntReg
     IntReg & operator=(void* a_Ptr) { m_Ptr = a_Ptr; return *this; }
 };
 static_assert(sizeof(IntReg) == 8, "IntReg must be 64 bits");
+
+struct IntReg32
+{
+    union 
+    {
+        DWORD m_Reg;
+        void* m_Ptr;
+    };
+};
 
 // Floating point register
 //-----------------------------------------------------------------------------
@@ -63,56 +73,24 @@ struct RetValue
 struct Context64
 {
     // Has to match prologue in orbitasm.asm...
-
-    /*
-    ...
-    STACK	HIGH ADDR
-    STACK
-    STACK
-    STACK
-    RSP ->	(a_ReturnAddressLocation)
-    RCX	    8   --|
-    RDX	    16    |
-    R8	    24    |
-    R9	    32    |
-    RBX	    40    |
-    XMM0	48    |
-    XMM0	56    |-> Context on stack
-    XMM1	64    |
-    XMM1	72    |
-    XMM2	80    |
-    XMM2	88    |
-    XMM3	96    |
-    XMM3	104   |
-    RSP	    112 --|
-    RSP	    120 --| // Dummy for stack alignment
-    SHADOW
-    SHADOW
-    SHADOW
-    SHADOW	LOW ADDR
-    return addr
-*/
-    IntReg m_Dummy;
-    IntReg m_RSP;
-    XmmReg m_XMM3;
-    XmmReg m_XMM2;
-    XmmReg m_XMM1;
-    XmmReg m_XMM0;
-    IntReg m_RBX;
+    IntReg m_R11;
+    IntReg m_R10;
     IntReg m_R9;
     IntReg m_R8;
     IntReg m_RDX;
     IntReg m_RCX;
+    IntReg m_RAX;
+    IntReg m_RBP;
+    IntReg m_OldRBP;
     IntReg m_RET;
 
     enum { MaxStackBytes = 128
          , StackDataSize = MaxStackBytes + sizeof(int) };
     char m_Stack[MaxStackBytes]; // Arguments passed on the stack
-    int  m_StackSize;
     
 #ifdef _WIN64
-    void* GetRet(){ return m_RET.m_Ptr; }
-    void* GetThis(){ return m_RCX.m_Ptr; }
+    void* GetRet()  const { return m_RET.m_Ptr; }
+    void* GetThis() const { return m_RCX.m_Ptr; }
 #endif
     static int GetFixedDataSize() { return sizeof(Context64) - StackDataSize; }
 };
@@ -141,6 +119,7 @@ struct Context32
 
     DWORD  m_Arg0;
     DWORD  m_Arg1;
+    DWORD  m_Arg2;
     XmmReg m_XMM3;
     XmmReg m_XMM2;
     XmmReg m_XMM1;
@@ -149,7 +128,7 @@ struct Context32
     DWORD  m_ECX;
     DWORD  m_EAX;
     DWORD  m_EBP;
-    DWORD  m_RET;
+    IntReg32 m_RET;
     
     enum { MaxStackBytes = 128
          , StackDataSize = MaxStackBytes + sizeof(int)
@@ -158,8 +137,8 @@ struct Context32
     int  m_StackSize;
 
 #ifndef _WIN64
-    void* GetRet(){ return (void*)m_RET; }
-    void* GetThis(){ return (void*)m_ECX; }
+    void* GetRet() const  { return (void*)m_RET.m_Ptr; }
+    void* GetThis() const { return (void*)m_ECX; }
 #endif
     static int GetFixedDataSize() { return sizeof(Context32) - StackDataSize; }
 };
