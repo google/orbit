@@ -1,0 +1,120 @@
+set(HEADERS
+    App.h
+    Batcher.h
+    BlackBoard.h
+    CallStackDataView.h
+    CaptureSerializer.h
+    CaptureWindow.h
+    Card.h
+    CoreMath.h
+    DataViewModel.h
+    DataViewTypes.h
+    Debugger.h
+    Disassembler.h
+    EventTrack.h
+    FunctionDataView.h
+    Geometry.h
+    GlCanvas.h
+    GlobalDataView.h
+    GlPanel.h
+    GlSlider.h
+    GlUtils.h
+    HomeWindow.h
+    Images.h
+    ImGuiOrbit.h
+    ImmediateWindow.h
+    LiveFunctionDataView.h
+    LogDataView.h
+    mat4.h
+    ModuleDataView.h
+    OpenGl.h
+    PickingManager.h
+    PluginCanvas.h
+    PluginManager.h
+    ProcessDataView.h
+    resource.h
+    RuleEditor.h
+    SamplingReport.h
+    SamplingReportDataView.h
+    SessionsDataView.h
+    shader.h
+    TextBox.h
+    TextRenderer.h
+    ThreadDataViewGl.h
+    ThreadView.h
+    TimeGraph.h
+    TimeGraphLayout.h
+    TypeDataView.h
+)
+
+set(SOURCES
+    shader.cpp
+    mat4.cpp
+
+    App.cpp
+    Batcher.cpp
+    BlackBoard.cpp
+    CallStackDataView.cpp
+    CaptureSerializer.cpp
+    CaptureWindow.cpp
+    Card.cpp
+    DataViewModel.cpp
+    Debugger.cpp
+    Disassembler.cpp
+    EventTrack.cpp
+    FunctionDataView.cpp
+    GlCanvas.cpp
+    GlobalDataView.cpp
+    GlPanel.cpp
+    GlSlider.cpp
+    GlUtils.cpp
+    HomeWindow.cpp
+    ImGuiOrbit.cpp
+    ImmediateWindow.cpp
+    LiveFunctionDataView.cpp
+    LogDataView.cpp
+    ModuleDataView.cpp
+    PickingManager.cpp
+    PluginCanvas.cpp
+    PluginManager.cpp
+    ProcessDataView.cpp
+    RuleEditor.cpp
+    SamplingReport.cpp
+    SamplingReportDataView.cpp
+    SessionsDataView.cpp
+    TextBox.cpp
+    TextRenderer.cpp
+    ThreadDataViewGl.cpp
+    ThreadView.cpp
+    TimeGraph.cpp
+    TimeGraphLayout.cpp
+    TypeDataView.cpp
+)
+
+source_group("Header Files" FILES ${HEADERS})
+source_group("Source Files" FILES ${SOURCES})
+
+add_library(OrbitGl STATIC ${SOURCES} ${HEADERS})
+
+target_include_directories(OrbitGl
+PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+PRIVATE
+    ${FREETYPE_GL_INCLUDE_DIR}
+    ${CAPSTONE_INCLUDE_DIR}
+    ${FREEGLUT_INCLUDE_DIR}
+    ${IMGUI_INCLUDE_DIR}
+    ..
+)
+
+target_link_libraries(OrbitGl
+    OrbitCore
+	OrbitAsm
+
+    ${FREEGLUT_LIB}
+    ${FREETYPE_LIBRARIES}
+    ${IMGUI_LIB}
+    ${GLEW_LIBRARIES}
+    ${FREETYPE_GL_LIB}
+    ${CAPSTONE_LIBRARIES}
+)
