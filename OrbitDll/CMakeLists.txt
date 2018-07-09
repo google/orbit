@@ -29,7 +29,5 @@ PRIVATE
 target_link_libraries(OrbitDll
     OrbitCore
 	OrbitAsm
-	debug "${MINHOOK_ROOT}/lib/Debug/libMinHook.${CMAKE_VS_PLATFORM_NAME}.lib"
-	optimized "${MINHOOK_ROOT}/lib/Release/libMinHook.${CMAKE_VS_PLATFORM_NAME}.lib"
 	${BREAKPAD_LIBRARIES}
 )

@@ -1,9 +1,0 @@
-Qt is in C:\Qt\5.8\msvc2015_64\
-
-set VCPKG_DEFAULT_TRIPLET=x64-windows-static
-vcpkg install capstone freetype-gl cereal asio imgui websocketpp freeglut curl breakpad
-# Take a break while boost builds and installs
-
-mkdir build
-cd build
-cmake -DCMAKE_TOOLCHAIN_FILE='..\external\vcpkg\scripts\buildsystems\vcpkg.cmake' -DCMAKE_GENERATOR_PLATFORM=x64 ..
