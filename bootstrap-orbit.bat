@@ -4,7 +4,7 @@
 git submodule init
 git submodule update
 cd external/vcpkg
-.\bootstrap-vcpkg.bat
+call .\bootstrap-vcpkg.bat
 
 :: Build dynamic dependencies
 set VCPKG_DEFAULT_TRIPLET=x64-windows
