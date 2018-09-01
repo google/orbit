@@ -8,7 +8,8 @@ call .\bootstrap-vcpkg.bat
 
 :: Build dynamic dependencies
 set VCPKG_DEFAULT_TRIPLET=x64-windows
-vcpkg install freeglut glew freetype-gl curl breakpad capstone asio websocketpp cereal imgui
+vcpkg install freeglut glew freetype-gl curl breakpad capstone asio cereal imgui
+:: websocketpp
 
 :: Build static dependencies
 set VCPKG_DEFAULT_TRIPLET=x64-windows-static
