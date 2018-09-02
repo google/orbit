@@ -127,20 +127,11 @@ void LogDataView::OnFilter( const std::wstring & a_Filter )
 }
 
 //-----------------------------------------------------------------------------
-enum LDV_ContextMenu
-{
-    GO_TO_CODE,
-    GO_TO_CALLSTACK,
-    COPY
-};
-
-//-----------------------------------------------------------------------------
-const std::vector<std::wstring>& LogDataView::GetContextMenu( int a_Index )
+std::vector<std::wstring> LogDataView::GetContextMenu( int a_Index )
 {
     const OrbitLogEntry & entry = LogDataView::GetEntry( a_Index );
     m_SelectedCallstack = Capture::GetCallstack( entry.m_CallstackHash );
-    static std::vector<std::wstring> menu;
-    menu.clear();
+    std::vector<std::wstring> menu;
     if( m_SelectedCallstack )
     {
         for( int i = 0; i < m_SelectedCallstack->m_Depth; ++i )
@@ -149,15 +140,20 @@ const std::vector<std::wstring>& LogDataView::GetContextMenu( int a_Index )
             menu.push_back( Capture::GSamplingProfiler->GetSymbolFromAddress(addr) );
         }
     }
+    Append( menu, DataViewModel::GetContextMenu(a_Index) );
     return menu;
 }
 
 //-----------------------------------------------------------------------------
-void LogDataView::OnContextMenu( int a_Index, std::vector<int>& a_ItemIndices )
+void LogDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
 {
-    if( m_SelectedCallstack && m_SelectedCallstack->m_Depth > a_Index )
+    if( m_SelectedCallstack && m_SelectedCallstack->m_Depth > a_MenuIndex )
     {
-        GOrbitApp->GoToCode( m_SelectedCallstack->m_Data[a_Index] );
+        GOrbitApp->GoToCode( m_SelectedCallstack->m_Data[a_MenuIndex] );
+    }
+    else
+    {
+        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

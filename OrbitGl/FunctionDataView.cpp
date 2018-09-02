@@ -134,81 +134,84 @@ void FunctionsDataView::OnSort( int a_Column, bool a_Toggle )
 }
 
 //-----------------------------------------------------------------------------
-enum TypesContextMenu
-{
-    FUN_SELECT,
-    FUN_UNSELECT,
-    FUNC_MENU_VIEW,
-    FUNC_GO_TO_DISASSEMBLY,
-    FUNC_CREATE_RULE,
-    FUNC_SET_AS_FRAME
-};
+std::wstring FUN_SELECT       = L"Hook";
+std::wstring FUN_UNSELECT	  = L"UnHook";
+std::wstring FUN_VIEW	      = L"Visualize";
+std::wstring FUN_DISASSEMBLY  = L"Go To Disassembly";
+std::wstring FUN_CREATE_RULE  = L"Create Rule";
+std::wstring FUN_SET_AS_FRAME = L"Set As Main Frame";
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& FunctionsDataView::GetContextMenu(int a_Index)
+std::vector<std::wstring> FunctionsDataView::GetContextMenu(int a_Index)
 {
-    static std::vector<std::wstring> Menu = { L"Hook", L"Unhook", L"Visualize", L"Go To Disassembly", L"Create Rule"/*, "Set as Main Frame"*/ };
-    return Menu;
+    std::vector<std::wstring> menu = 
+        { FUN_SELECT
+        , FUN_UNSELECT
+        , FUN_VIEW
+        , FUN_DISASSEMBLY
+        , FUN_CREATE_RULE };
+
+    Append( menu, DataViewModel::GetContextMenu(a_Index) );
+
+    return menu;
 }
 
 //-----------------------------------------------------------------------------
-void FunctionsDataView::OnContextMenu( int a_MenuIndex, std::vector<int> & a_ItemIndices )
+void FunctionsDataView::OnContextMenu( const std::wstring& a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
 {
-    switch (a_MenuIndex)
+    if (a_Action == FUN_SELECT)
     {
-        case FUN_SELECT:
+        for (int i : a_ItemIndices)
         {
-            for (int i : a_ItemIndices)
-            {
-                Function & func = GetFunction(i);
-                func.Select();
-            }
-            break;
+            Function & func = GetFunction(i);
+            func.Select();
         }
-        case FUN_UNSELECT:
+    }
+    else if (a_Action == FUN_UNSELECT)
+    {
+        for (int i : a_ItemIndices)
         {
-            for( int i : a_ItemIndices )
-            {
-                Function & func = GetFunction( i );
-                func.UnSelect();
-            }
-            break;
+            Function & func = GetFunction(i);
+            func.UnSelect();
         }
-        case FUNC_MENU_VIEW: 
+    }
+    else if (a_Action == FUN_VIEW)
+    {
+        for (int i : a_ItemIndices)
         {
-            for( int i : a_ItemIndices )
-            {
-                GetFunction(i).Print();
-            }
+            GetFunction(i).Print();
+        }
 
-            GOrbitApp->SendToUiNow(L"output");
-            break;
-        }
-        case FUNC_GO_TO_DISASSEMBLY:
+        GOrbitApp->SendToUiNow(L"output");
+    }
+    else if (a_Action == FUN_DISASSEMBLY)
+    {
+        for (int i : a_ItemIndices)
         {
-            for( int i : a_ItemIndices )
-            {
-                Function & func = GetFunction( i );
-                func.GetDisassembly();
-            }
+            Function & func = GetFunction(i);
+            func.GetDisassembly();
+        }
+    }
+    else if (a_Action == FUN_CREATE_RULE)
+    {
+        for (int i : a_ItemIndices)
+        {
+            Function & func = GetFunction(i);
+            GOrbitApp->LaunchRuleEditor(&func);
             break;
         }
-        case FUNC_CREATE_RULE:
-            for( int i : a_ItemIndices )
-            {
-                Function & func = GetFunction( i );
-                GOrbitApp->LaunchRuleEditor(&func);
-                break;
-            }
+    }
+    else if (a_Action == FUN_SET_AS_FRAME)
+    {
+        for (int i : a_ItemIndices)
+        {
+            GetFunction(i).SetAsMainFrameFunction();
             break;
-        case FUNC_SET_AS_FRAME:
-            for( int i : a_ItemIndices )
-            {
-                GetFunction( i ).SetAsMainFrameFunction();
-                break;
-            }
-            break;
-        default: break;
+        }
+    }
+    else
+    {
+        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

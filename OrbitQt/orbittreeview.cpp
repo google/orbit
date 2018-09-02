@@ -10,6 +10,7 @@
 #include <QPainter>
 #include <QScrollBar>
 #include <QFontDatabase>
+#include <QKeyEvent>
 #include <set>
 
 #include "../OrbitGl/App.h"
@@ -220,7 +221,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint &pos)
     QModelIndex index = this->indexAt(pos);
     if( index.isValid() )
     {
-        const std::vector<std::wstring> & menu = m_Model->GetDataViewModel()->GetContextMenu(index.row());
+        std::vector<std::wstring> menu = m_Model->GetDataViewModel()->GetContextMenu(index.row());
 
         if( menu.size() > 0 )
         {
@@ -249,6 +250,8 @@ void OrbitTreeView::ShowContextMenu(const QPoint &pos)
 //-----------------------------------------------------------------------------
 void OrbitTreeView::OnMenuClicked(int a_Index)
 {
+	const std::vector<std::wstring> & menu = m_Model->GetDataViewModel()->GetContextMenu(a_Index);
+
     QModelIndexList list = selectionModel()->selectedIndexes();
     std::set<int> selection;
     for (QModelIndex & index : list)
@@ -256,7 +259,27 @@ void OrbitTreeView::OnMenuClicked(int a_Index)
         selection.insert( index.row() );
     }
     
-    m_Model->GetDataViewModel()->OnContextMenu( a_Index, std::vector<int>(selection.begin(), selection.end()) );
+    m_Model->GetDataViewModel()->OnContextMenu( menu[a_Index], a_Index, std::vector<int>(selection.begin(), selection.end()) );
+}
+
+//-----------------------------------------------------------------------------
+void OrbitTreeView::keyPressEvent( QKeyEvent *event )
+{
+    if( event->matches( QKeySequence::Copy ) )
+    {
+        QModelIndexList list = selectionModel()->selectedIndexes();
+        std::set<int> selection;
+        for( QModelIndex & index : list )
+        {
+            selection.insert( index.row() );
+        }
+
+        this->m_Model->GetDataViewModel()->CopySelection( std::vector<int>(selection.begin(), selection.end()) );
+    }
+    else
+    {
+        QTreeView::keyPressEvent(event);
+    }
 }
 
 //-----------------------------------------------------------------------------

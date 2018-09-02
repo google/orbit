@@ -20,6 +20,7 @@
 #include "OrbitType.h"
 #include "Log.h"
 #include "Params.h"
+#include <fstream>
 
 //-----------------------------------------------------------------------------
 DataViewModel::~DataViewModel()
@@ -69,8 +70,97 @@ const std::vector<float>& DataViewModel::GetColumnHeadersRatios()
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& DataViewModel::GetContextMenu(int a_Index)
+const std::wstring DV_COPY_SELECTION = L"Copy Selection";
+const std::wstring DV_EXPORT_TO_CSV  = L"Export to CSV";
+
+//-----------------------------------------------------------------------------
+std::vector<std::wstring> DataViewModel::GetContextMenu(int a_Index)
 {
-    static std::vector<std::wstring> empty;
-    return empty;
+    static std::vector<std::wstring> menu = { DV_COPY_SELECTION, DV_EXPORT_TO_CSV };
+    return menu;
+}
+
+//-----------------------------------------------------------------------------
+void DataViewModel::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
+{
+    UNUSED(a_MenuIndex);
+
+    if (a_Action == DV_EXPORT_TO_CSV)
+    {
+        ExportCSV( GOrbitApp->GetSaveFile( L".csv" ) );
+    }
+    else if( a_Action == DV_COPY_SELECTION )
+    {
+        CopySelection( a_ItemIndices );
+    }
+}
+
+//-----------------------------------------------------------------------------
+void DataViewModel::ExportCSV( const std::wstring & a_FileName )
+{
+	std::ofstream out( a_FileName );
+	if( out.fail() )
+		return;
+
+	const std::vector<std::wstring> & headers = GetColumnHeaders();
+
+	for (size_t i = 0; i < headers.size(); ++i)
+	{
+		out << ws2s(headers[i]);
+		if (i < headers.size() - 1)
+			out << ", ";
+	}
+
+	out << "\n";
+
+	size_t numColumns = headers.size();
+	size_t numElements = GetNumElements();
+	for (size_t i = 0; i < numElements; ++i)
+	{
+		for (size_t j = 0; j < numColumns; ++j)
+		{
+			out << ws2s(GetValue(i, j));
+			if (j < numColumns - 1)
+				out << ", ";
+		}
+
+		out << "\n";
+	}
+
+	out.close();
+}
+
+//-----------------------------------------------------------------------------
+void DataViewModel::CopySelection(std::vector<int>& selection)
+{
+	std::wstring clipboard;
+	const std::vector<std::wstring> & headers = GetColumnHeaders();
+
+	for (size_t i = 0; i < headers.size(); ++i)
+	{
+		clipboard += headers[i];
+		if( i < headers.size() - 1 )
+			clipboard += L", ";
+	}
+
+	clipboard += L"\n";
+
+	size_t numColumns = headers.size();
+    size_t numElements = GetNumElements();
+	for (size_t i : selection)
+	{
+		if( i >= 0 && i < numElements )
+		{
+			for (size_t j = 0; j < numColumns; ++j)
+			{
+				clipboard += GetValue( i, j );
+				if( j < numColumns - 1 )
+					clipboard += L", ";
+			}
+
+			clipboard += L"\n";
+		}
+	}
+
+	GOrbitApp->SetClipboard( clipboard );
 }

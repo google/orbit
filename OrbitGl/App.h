@@ -38,6 +38,8 @@ public:
 
     std::wstring GetCaptureFileName();
     std::wstring GetSessionFileName();
+	std::wstring GetSaveFile( const std::wstring & a_Extension );
+    void SetClipboard( const std::wstring & a_Text );
     void OnSaveSession( const std::wstring a_FileName );
     void OnLoadSession( const std::wstring a_FileName );
     void OnSaveCapture( const std::wstring a_FileName );
@@ -95,13 +97,17 @@ public:
     void AddSelectionReportCallback( SamplingReportCallback a_Callback ) { m_SelectionReportCallbacks.push_back( a_Callback ); }
     typedef std::function< void( Variable* a_Variable ) > WatchCallback;
     void AddWatchCallback( WatchCallback a_Callback ){ m_AddToWatchCallbacks.push_back( a_Callback ); }
-    void AddUpdateWatchCallback( WatchCallback a_Callback ){ m_UpdateWatchCallbacks.push_back( a_Callback ); }
+	typedef std::function< void( const std::wstring & a_Extension, std::wstring& o_Variable ) > SaveFileCallback;
+	void SetSaveFileCallback( SaveFileCallback a_Callback ) { m_SaveFileCallback = a_Callback; }
+	void AddUpdateWatchCallback( WatchCallback a_Callback ){ m_UpdateWatchCallbacks.push_back( a_Callback ); }
     void FireRefreshCallbacks( DataViewType a_Type = DataViewType::ALL );
     void Refresh( DataViewType a_Type = DataViewType::ALL ){ FireRefreshCallbacks( a_Type ); }
     void AddUiMessageCallback( std::function< void( const std::wstring & ) > a_Callback );
     typedef std::function< std::wstring( const std::wstring & a_Caption, const std::wstring & a_Dir, const std::wstring & a_Filter ) > FindFileCallback;
     void SetFindFileCallback( FindFileCallback a_Callback ){ m_FindFileCallback = a_Callback; }
     std::wstring FindFile( const std::wstring & a_Caption, const std::wstring & a_Dir, const std::wstring & a_Filter );
+    typedef std::function< void( const std::wstring & ) > ClipboardCallback;
+    void SetClipboardCallback( ClipboardCallback a_Callback ){ m_ClipboardCallback = a_Callback; }
 
     void SetCommandLineArguments( const std::vector< std::string > & a_Args );
     const std::vector< std::string > & GetCommandLineArguments(){ return m_Arguments; }
@@ -146,6 +152,8 @@ private:
     std::vector< SamplingReportCallback > m_SelectionReportCallbacks;
     std::vector< class DataViewModel* >   m_Panels;
     FindFileCallback                      m_FindFileCallback;
+	SaveFileCallback					  m_SaveFileCallback;
+    ClipboardCallback                     m_ClipboardCallback;
     
     ProcessesDataView*      m_ProcessesDataView;
     ModulesDataView*        m_ModulesDataView;

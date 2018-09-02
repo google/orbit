@@ -121,26 +121,22 @@ void SamplingReportDataView::OnSort(int a_Column, bool a_Toggle)
 }
 
 //-----------------------------------------------------------------------------
-enum SampleReportContextMenuIDs
-{
-    SELECT,
-    DESELECT,
-    MODULES_LOAD
-};
+std::wstring SELECT       = L"Hook";
+std::wstring DESELECT     = L"Unhook";
+std::wstring MODULES_LOAD = L"Load Pdb";
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& SamplingReportDataView::GetContextMenu( int a_Index )
+std::vector<std::wstring> SamplingReportDataView::GetContextMenu( int a_Index )
 {
-    static std::vector<std::wstring> Menu = { L"Hook", L"Unhook", L"Load Pdb" };
-    return Menu;
+    std::vector<std::wstring> menu = { SELECT, DESELECT, MODULES_LOAD };
+    Append( menu, DataViewModel::GetContextMenu(a_Index) );
+    return menu;
 }
 
 //-----------------------------------------------------------------------------
-void SamplingReportDataView::OnContextMenu( int a_MenuIndex, std::vector<int> & a_ItemIndices )
+void SamplingReportDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
 {
-    switch (a_MenuIndex)
-    {
-    case MODULES_LOAD: 
+    if( a_Action == MODULES_LOAD ) 
     {
         if (Capture::GTargetProcess)
         {
@@ -164,12 +160,10 @@ void SamplingReportDataView::OnContextMenu( int a_MenuIndex, std::vector<int> & 
 
             GOrbitApp->LoadModules();
         }
-        break;
     }
-    case DESELECT:
-    case SELECT:
+    else if( a_Action == DESELECT || a_Action == SELECT )
     {
-        bool unhook = a_MenuIndex == DESELECT;
+        bool unhook = a_Action == DESELECT;
 
         if( Capture::GTargetProcess )
         {
@@ -193,10 +187,10 @@ void SamplingReportDataView::OnContextMenu( int a_MenuIndex, std::vector<int> & 
                 }
             }
         }
-
-        break;
     }
-    default: break;
+    else
+    {
+        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

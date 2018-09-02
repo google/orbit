@@ -154,27 +154,30 @@ void LiveFunctionsDataView::OnSort( int a_Column, bool a_Toggle )
 }
 
 //-----------------------------------------------------------------------------
-enum LiveFunctionsContextMenu
-{
-    FUN_SELECT,
-    FUNC_MENU_VIEW,
-    FUNC_SET_AS_FRAME
-};
+std::wstring TOGGLE_SELECT = L"Toggle Select";
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& LiveFunctionsDataView::GetContextMenu(int a_Index)
+std::vector<std::wstring> LiveFunctionsDataView::GetContextMenu(int a_Index)
 {
-    static std::vector<std::wstring> Menu = { L"Toggle Select" };
-    return Menu;
+    std::vector<std::wstring> menu = { TOGGLE_SELECT };
+    Append( menu, DataViewModel::GetContextMenu(a_Index) );
+    return menu;
 }
 
 //-----------------------------------------------------------------------------
-void LiveFunctionsDataView::OnContextMenu( int a_MenuIndex, std::vector<int> & a_ItemIndices )
+void LiveFunctionsDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
 {
-    for( int i : a_ItemIndices )
+    if( a_Action == TOGGLE_SELECT )
     {
-        Function & func = GetFunction( i );
-        func.ToggleSelect();
+        for( int i : a_ItemIndices )
+        {
+            Function & func = GetFunction( i );
+            func.ToggleSelect();
+        }
+    }
+    else
+    {
+        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

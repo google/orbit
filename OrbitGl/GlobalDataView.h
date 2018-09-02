@@ -11,15 +11,15 @@ class GlobalsDataView : public DataViewModel
 public:
     GlobalsDataView();
 
-    virtual const std::vector<std::wstring>& GetColumnHeaders() override;
-    virtual const std::vector<float>& GetColumnHeadersRatios() override;
-    virtual const std::vector<std::wstring>& GetContextMenu(int a_Index) override;
-    virtual std::wstring GetValue(int a_Row, int a_Column) override;
+    const std::vector<std::wstring>& GetColumnHeaders() override;
+    const std::vector<float>& GetColumnHeadersRatios() override;
+    std::vector<std::wstring> GetContextMenu(int a_Index) override;
+    std::wstring GetValue(int a_Row, int a_Column) override;
 
-    virtual void OnFilter(const std::wstring & a_Filter) override;
+    void OnFilter(const std::wstring & a_Filter) override;
     void ParallelFilter();
-    virtual void OnSort(int a_Column, bool a_Toggle = true) override;
-    virtual void OnContextMenu( int a_Index, std::vector<int> & a_ItemIndices ) override;
+    void OnSort(int a_Column, bool a_Toggle = true) override;
+    void OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices ) override;
     void OnDataChanged() override;
     void OnAddToWatch( std::vector<int> & a_Items );
 

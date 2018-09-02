@@ -17,6 +17,7 @@
 #include <QBuffer>
 #include <QMouseEvent>
 #include <QToolTip>
+#include <QClipboard>
 
 #include "../OrbitGl/SamplingReport.h"
 #include "../OrbitGl/App.h"
@@ -59,6 +60,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget *parent)
     GOrbitApp->AddUiMessageCallback( [this]( const std::wstring & a_Message ) { this->OnReceiveMessage( a_Message ); } );
     GOrbitApp->SetFindFileCallback( [this]( const std::wstring & a_Caption, const std::wstring & a_Dir, const std::wstring & a_Filter ){ return this->FindFile( a_Caption, a_Dir, a_Filter ); } );
     GOrbitApp->AddWatchCallback( [this]( const Variable* a_Variable ) { this->OnAddToWatch( a_Variable ); } );
+	GOrbitApp->SetSaveFileCallback( [this]( const std::wstring & a_Ext, std::wstring & o_FileName ) { this->OnGetSaveFileName(a_Ext, o_FileName); } );
+    GOrbitApp->SetClipboardCallback( [this]( const std::wstring & a_Text ){ this->OnSetClipboard( a_Text ); } );
 
     ParseCommandlineArguments();
 
@@ -414,6 +417,19 @@ void OrbitMainWindow::OnAddToWatch( const class Variable* a_Variable )
 {
     ui->WatchWidget->AddToWatch( a_Variable );
     ui->MainTabWidget->setCurrentWidget( ui->WatchTab );
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::OnGetSaveFileName(const std::wstring & a_Extension, std::wstring & o_FileName)
+{
+	QString file = QFileDialog::getSaveFileName(this, "Specify a file to save...", nullptr, ws2s( a_Extension ).c_str() );
+	o_FileName = file.toStdWString();
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::OnSetClipboard( const std::wstring & a_Text )
+{
+    QApplication::clipboard()->setText( QString::fromStdWString( a_Text ) );
 }
 
 //-----------------------------------------------------------------------------

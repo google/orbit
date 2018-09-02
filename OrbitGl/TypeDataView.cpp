@@ -198,18 +198,15 @@ void TypesDataView::OnSort( int a_Column, bool a_Toggle )
 }
 
 //-----------------------------------------------------------------------------
-enum TypesContextMenu
-{
-    TYPES_MENU_PROP,
-    TYPES_MENU_VIEW,
-    TYPES_MENU_CLIP
-};
+std::wstring TYPES_SUMMARY = L"Summary";
+std::wstring TYPES_DETAILS = L"Details";
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& TypesDataView::GetContextMenu(int a_Index)
+std::vector<std::wstring> TypesDataView::GetContextMenu(int a_Index)
 {
-    static std::vector<std::wstring> Menu = { L"Summary", L"Details" /*, L"Copy"*/ };
-    return Menu;
+    std::vector<std::wstring> menu = { TYPES_SUMMARY, TYPES_DETAILS };
+    Append( menu, DataViewModel::GetContextMenu(a_Index) );
+    return menu;
 }
 
 //-----------------------------------------------------------------------------
@@ -246,14 +243,19 @@ void TypesDataView::OnClip( std::vector<int> & a_Items )
 }
 
 //-----------------------------------------------------------------------------
-void TypesDataView::OnContextMenu( int a_MenuIndex, std::vector<int> & a_ItemIndices )
+void TypesDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
 {
-    switch (a_MenuIndex)
+    if( a_Action == TYPES_SUMMARY )
     {
-        case TYPES_MENU_PROP: OnProp(a_ItemIndices); break;
-        case TYPES_MENU_VIEW: OnView(a_ItemIndices); break;
-        case TYPES_MENU_CLIP: OnClip(a_ItemIndices); break;
-        default: break;
+        OnProp(a_ItemIndices);
+    }
+    else if( a_Action == TYPES_DETAILS )
+    {
+        OnView(a_ItemIndices);
+    }
+    else
+    {
+        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

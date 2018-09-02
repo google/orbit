@@ -22,6 +22,7 @@ public:
     void Link( OrbitTreeView* a_Link );
     void SetGlWidget( OrbitGLWidget* a_Link );
     void resizeEvent(QResizeEvent * event);
+    void keyPressEvent(QKeyEvent *event);
     OrbitTableModel* GetModel() { return m_Model; }
     std::wstring GetLabel();
 

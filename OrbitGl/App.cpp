@@ -71,6 +71,8 @@ OrbitApp::OrbitApp() : m_ProcessesDataView(nullptr)
                      , m_UnrealEnabled(true)
                      , m_FindFileCallback(nullptr)
                      , m_RuleEditor(nullptr)
+                     , m_SaveFileCallback(nullptr)
+                     , m_ClipboardCallback(nullptr)
 {
     m_Debugger = new Debugger();
 }
@@ -701,6 +703,22 @@ std::wstring OrbitApp::GetCaptureFileName()
 std::wstring OrbitApp::GetSessionFileName()
 {
     return Capture::GSessionPresets ? Capture::GSessionPresets->m_FileName : L"";
+}
+
+//-----------------------------------------------------------------------------
+std::wstring OrbitApp::GetSaveFile( const std::wstring & a_Extension )
+{
+	std::wstring fileName;
+	if( m_SaveFileCallback )
+		m_SaveFileCallback( a_Extension, fileName );
+	return fileName;
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::SetClipboard( const std::wstring & a_Text )
+{
+    if( m_ClipboardCallback )
+        m_ClipboardCallback( a_Text );
 }
 
 //-----------------------------------------------------------------------------

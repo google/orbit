@@ -37,19 +37,6 @@ const std::vector<std::wstring>& SessionsDataView::GetColumnHeaders()
 }
 
 //-----------------------------------------------------------------------------
-enum SessionsContextMenuIDs
-{
-    SESSIONS_LOAD
-};
-
-//-----------------------------------------------------------------------------
-const std::vector<std::wstring>& SessionsDataView::GetContextMenu( int a_Index )
-{
-    static std::vector<std::wstring> Menu = { L"Load Session" };
-    return Menu;
-}
-
-//-----------------------------------------------------------------------------
 const std::vector<float>& SessionsDataView::GetColumnHeadersRatios()
 {
     return s_HeaderRatios;
@@ -115,11 +102,20 @@ void SessionsDataView::OnSort(int a_Column, bool a_Toggle)
 }
 
 //-----------------------------------------------------------------------------
-void SessionsDataView::OnContextMenu( int a_Index, std::vector<int> & a_ItemIndices )
+std::wstring SESSIONS_LOAD = L"Load Session";
+
+//-----------------------------------------------------------------------------
+std::vector<std::wstring> SessionsDataView::GetContextMenu( int a_Index )
 {
-    switch( a_Index )
-    {
-    case SESSIONS_LOAD:
+    std::vector<std::wstring> menu = { SESSIONS_LOAD };
+    Append( menu, DataViewModel::GetContextMenu( a_Index ) );
+    return menu;
+}
+
+//-----------------------------------------------------------------------------
+void SessionsDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
+{
+    if( a_Action == SESSIONS_LOAD )
     {
         for( int index : a_ItemIndices )
         {
@@ -131,9 +127,10 @@ void SessionsDataView::OnContextMenu( int a_Index, std::vector<int> & a_ItemIndi
         }
 
         GOrbitApp->LoadModules();
-        break;
     }
-    default: break;
+    else 
+    {
+        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 
