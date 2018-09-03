@@ -5,9 +5,9 @@
 
 #include "OrbitType.h"
 #include "ProcessUtils.h"
-#include "DataViewModel.h"
+#include "DataView.h"
 
-class ModulesDataView : public DataViewModel
+class ModulesDataView : public DataView
 {
 public:
     ModulesDataView();

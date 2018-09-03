@@ -5,10 +5,10 @@
 
 #include "OrbitType.h"
 #include "ProcessUtils.h"
-#include "DataViewModel.h"
+#include "DataView.h"
 #include "SamplingProfiler.h"
 
-class SamplingReportDataView : public DataViewModel
+class SamplingReportDataView : public DataView
 {
 public:
     SamplingReportDataView();
@@ -24,7 +24,7 @@ public:
     void OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices ) override;
     void OnSelect(int a_Index) override;
 
-    virtual void LinkModel( DataViewModel* a_DataView ) override;
+    virtual void LinkDataView( DataView* a_DataView ) override;
     void SetSamplingProfiler( std::shared_ptr<SamplingProfiler> & a_Profiler ){ m_SamplingProfiler = a_Profiler; }
     void SetSamplingReport( class SamplingReport* a_SamplingReport ){ m_SamplingReport = a_SamplingReport; }
     void SetSampledFunctions( const std::vector< SampledFunction > & a_Functions );

@@ -3,7 +3,7 @@
 //-----------------------------------
 
 #include "Core.h"
-#include "DataViewModel.h"
+#include "DataView.h"
 #include "TypeDataView.h"
 #include "FunctionDataView.h"
 #include "CallStackDataView.h"
@@ -23,7 +23,7 @@
 #include <fstream>
 
 //-----------------------------------------------------------------------------
-DataViewModel::~DataViewModel()
+DataView::~DataView()
 {
     if( GOrbitApp )
     {
@@ -32,9 +32,9 @@ DataViewModel::~DataViewModel()
 }
 
 //-----------------------------------------------------------------------------
-DataViewModel* DataViewModel::Create( DataViewType a_Type )
+DataView* DataView::Create( DataViewType a_Type )
 {
-    DataViewModel* model = nullptr;
+    DataView* model = nullptr;
     switch( a_Type )
     {
         case DataViewType::FUNCTIONS:      model = new FunctionsDataView();      break;
@@ -56,14 +56,14 @@ DataViewModel* DataViewModel::Create( DataViewType a_Type )
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& DataViewModel::GetColumnHeaders()
+const std::vector<std::wstring>& DataView::GetColumnHeaders()
 {
     static std::vector<std::wstring> columns = { L"Invalid Header" };
     return columns;
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<float>& DataViewModel::GetColumnHeadersRatios()
+const std::vector<float>& DataView::GetColumnHeadersRatios()
 {
     static std::vector<float> empty;
     return empty;
@@ -74,14 +74,14 @@ const std::wstring DV_COPY_SELECTION = L"Copy Selection";
 const std::wstring DV_EXPORT_TO_CSV  = L"Export to CSV";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> DataViewModel::GetContextMenu(int a_Index)
+std::vector<std::wstring> DataView::GetContextMenu(int a_Index)
 {
     static std::vector<std::wstring> menu = { DV_COPY_SELECTION, DV_EXPORT_TO_CSV };
     return menu;
 }
 
 //-----------------------------------------------------------------------------
-void DataViewModel::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
+void DataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
 {
     UNUSED(a_MenuIndex);
 
@@ -96,7 +96,7 @@ void DataViewModel::OnContextMenu( const std::wstring & a_Action, int a_MenuInde
 }
 
 //-----------------------------------------------------------------------------
-void DataViewModel::ExportCSV( const std::wstring & a_FileName )
+void DataView::ExportCSV( const std::wstring & a_FileName )
 {
 	std::ofstream out( a_FileName );
 	if( out.fail() )
@@ -119,7 +119,7 @@ void DataViewModel::ExportCSV( const std::wstring & a_FileName )
 	{
 		for (size_t j = 0; j < numColumns; ++j)
 		{
-			out << ws2s(GetValue(i, j));
+			out << ws2s(GetValue((int)i, (int)j));
 			if (j < numColumns - 1)
 				out << ", ";
 		}
@@ -131,7 +131,7 @@ void DataViewModel::ExportCSV( const std::wstring & a_FileName )
 }
 
 //-----------------------------------------------------------------------------
-void DataViewModel::CopySelection(std::vector<int>& selection)
+void DataView::CopySelection(std::vector<int>& selection)
 {
 	std::wstring clipboard;
 	const std::vector<std::wstring> & headers = GetColumnHeaders();
@@ -153,7 +153,7 @@ void DataViewModel::CopySelection(std::vector<int>& selection)
 		{
 			for (size_t j = 0; j < numColumns; ++j)
 			{
-				clipboard += GetValue( i, j );
+				clipboard += GetValue( (int)i, (int)j );
 				if( j < numColumns - 1 )
 					clipboard += L", ";
 			}

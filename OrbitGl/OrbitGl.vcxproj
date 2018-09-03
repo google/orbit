@@ -46,7 +46,7 @@
     <ClInclude Include="CallStackDataView.h" />
     <ClInclude Include="CaptureSerializer.h" />
     <ClInclude Include="CaptureWindow.h" />
-    <ClInclude Include="DataViewModel.h" />
+    <ClInclude Include="DataView.h" />
     <ClInclude Include="DataViewTypes.h" />
     <ClInclude Include="Debugger.h" />
     <ClInclude Include="Disassembler.h" />
@@ -97,7 +97,7 @@
     <ClCompile Include="CaptureSerializer.cpp" />
     <ClCompile Include="CaptureWindow.cpp" />
     <ClCompile Include="Card.cpp" />
-    <ClCompile Include="DataViewModel.cpp" />
+    <ClCompile Include="DataView.cpp" />
     <ClCompile Include="Debugger.cpp" />
     <ClCompile Include="Disassembler.cpp" />
     <ClCompile Include="EventTrack.cpp" />

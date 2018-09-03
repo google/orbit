@@ -205,7 +205,7 @@ std::wstring TYPES_DETAILS = L"Details";
 std::vector<std::wstring> TypesDataView::GetContextMenu(int a_Index)
 {
     std::vector<std::wstring> menu = { TYPES_SUMMARY, TYPES_DETAILS };
-    Append( menu, DataViewModel::GetContextMenu(a_Index) );
+    Append( menu, DataView::GetContextMenu(a_Index) );
     return menu;
 }
 
@@ -255,7 +255,7 @@ void TypesDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuInde
     }
     else
     {
-        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
+        DataView::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

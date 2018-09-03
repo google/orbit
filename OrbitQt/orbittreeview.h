@@ -15,7 +15,7 @@ public:
     explicit OrbitTreeView(QWidget *parent = 0);
     virtual ~OrbitTreeView();
     void Initialize(DataViewType a_Type);
-    void SetDataModel(std::shared_ptr<DataViewModel> a_Model);
+    void SetDataModel(std::shared_ptr<DataView> a_Model);
     void OnFilter( const QString & a_Filter );
     void Select( int a_Row );
     void Refresh();

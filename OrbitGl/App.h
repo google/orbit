@@ -81,7 +81,7 @@ public:
     void RegisterOutputLog( class LogDataView* a_Log );
     void RegisterRuleEditor( class RuleEditor* a_RuleEditor );
 
-    void Unregister( class DataViewModel* a_Model );
+    void Unregister( class DataView* a_Model );
     bool SelectProcess( const std::wstring& a_Process );
     bool SelectProcess( unsigned long a_ProcessID );
     bool Inject( unsigned long a_ProcessId );
@@ -150,7 +150,7 @@ private:
     std::vector< WatchCallback >          m_UpdateWatchCallbacks;
     std::vector< SamplingReportCallback > m_SamplingReportsCallbacks;
     std::vector< SamplingReportCallback > m_SelectionReportCallbacks;
-    std::vector< class DataViewModel* >   m_Panels;
+    std::vector< class DataView* >        m_Panels;
     FindFileCallback                      m_FindFileCallback;
 	SaveFileCallback					  m_SaveFileCallback;
     ClipboardCallback                     m_ClipboardCallback;

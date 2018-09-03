@@ -4,10 +4,10 @@
 #pragma once
 
 #include "OrbitType.h"
-#include "DataViewModel.h"
+#include "DataView.h"
 
 //-----------------------------------------------------------------------------
-class LiveFunctionsDataView : public DataViewModel
+class LiveFunctionsDataView : public DataView
 {
 public:
     LiveFunctionsDataView();

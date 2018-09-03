@@ -127,7 +127,7 @@ std::wstring TYPES_MENU_WATCH = L"Add to watch";
 std::vector<std::wstring> GlobalsDataView::GetContextMenu(int a_Index)
 {
     std::vector<std::wstring> menu = { TYPES_MENU_WATCH };
-    Append( menu, DataViewModel::GetContextMenu(a_Index) );
+    Append( menu, DataView::GetContextMenu(a_Index) );
     return menu;
 }
 
@@ -140,7 +140,7 @@ void GlobalsDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIn
     }
     else
     {
-        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
+        DataView::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

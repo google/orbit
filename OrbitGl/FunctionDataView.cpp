@@ -151,7 +151,7 @@ std::vector<std::wstring> FunctionsDataView::GetContextMenu(int a_Index)
         , FUN_DISASSEMBLY
         , FUN_CREATE_RULE };
 
-    Append( menu, DataViewModel::GetContextMenu(a_Index) );
+    Append( menu, DataView::GetContextMenu(a_Index) );
 
     return menu;
 }
@@ -211,7 +211,7 @@ void FunctionsDataView::OnContextMenu( const std::wstring& a_Action, int a_MenuI
     }
     else
     {
-        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
+        DataView::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

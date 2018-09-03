@@ -5,12 +5,12 @@
 
 #include "Message.h"
 #include "Threading.h"
-#include "DataViewModel.h"
+#include "DataView.h"
 
 struct CallStack;
 
 //-----------------------------------------------------------------------------
-class LogDataView : public DataViewModel
+class LogDataView : public DataView
 {
 public:
     LogDataView();

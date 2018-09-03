@@ -108,7 +108,7 @@ std::wstring SESSIONS_LOAD = L"Load Session";
 std::vector<std::wstring> SessionsDataView::GetContextMenu( int a_Index )
 {
     std::vector<std::wstring> menu = { SESSIONS_LOAD };
-    Append( menu, DataViewModel::GetContextMenu( a_Index ) );
+    Append( menu, DataView::GetContextMenu( a_Index ) );
     return menu;
 }
 
@@ -130,7 +130,7 @@ void SessionsDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuI
     }
     else 
     {
-        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
+        DataView::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

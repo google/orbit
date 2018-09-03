@@ -4,9 +4,9 @@
 #pragma once
 
 #include "OrbitType.h"
-#include "DataViewModel.h"
+#include "DataView.h"
 
-class FunctionsDataView : public DataViewModel
+class FunctionsDataView : public DataView
 {
 public:
     FunctionsDataView();

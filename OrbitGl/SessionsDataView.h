@@ -3,12 +3,12 @@
 //-----------------------------------
 #pragma once
 
-#include "DataViewModel.h"
+#include "DataView.h"
 #include <memory>
 
 class Session;
 
-class SessionsDataView : public DataViewModel
+class SessionsDataView : public DataView
 {
 public:
     SessionsDataView();

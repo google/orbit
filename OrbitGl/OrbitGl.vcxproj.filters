@@ -41,9 +41,6 @@
     <ClInclude Include="CaptureWindow.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="DataViewModel.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="FunctionDataView.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -161,6 +158,9 @@
     <ClInclude Include="GlSlider.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="DataView.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\external\imgui\imgui.cpp">
@@ -179,9 +179,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="Card.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="DataViewModel.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="FunctionDataView.cpp">
@@ -290,6 +287,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="GlSlider.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="DataView.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

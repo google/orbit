@@ -821,7 +821,7 @@ void OrbitApp::LogMsg( const std::wstring & a_Msg )
 //-----------------------------------------------------------------------------
 void OrbitApp::FireRefreshCallbacks( DataViewType a_Type )
 {
-    for( DataViewModel* panel : m_Panels )
+    for( DataView* panel : m_Panels )
     {
         if( a_Type == DataViewType::ALL || a_Type == panel->GetType() )
         {
@@ -875,7 +875,7 @@ void OrbitApp::ToggleCapture()
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::Unregister( DataViewModel * a_Model )
+void OrbitApp::Unregister( DataView * a_Model )
 {
     for( int i = 0; i < m_Panels.size(); ++i )
     {

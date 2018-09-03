@@ -8,18 +8,18 @@
 #include "DataViewTypes.h"
 
 //-----------------------------------------------------------------------------
-class DataViewModel
+class DataView
 {
 public:
-    DataViewModel() : m_LastSortedColumn(-1)
+    DataView() : m_LastSortedColumn(-1)
                     , m_UpdatePeriodMs(-1)
                     , m_SelectedIndex(-1)
                     , m_Type( INVALID )
     {}
 
-    ~DataViewModel();
+    ~DataView();
 
-    static DataViewModel* Create( DataViewType a_Type );
+    static DataView* Create( DataViewType a_Type );
 
     virtual void SetAsMainInstance(){}
     virtual const std::vector<std::wstring>& GetColumnHeaders();
@@ -42,7 +42,7 @@ public:
     virtual const std::wstring & GetName() { static std::wstring s(L"noname"); return s; }
     virtual std::wstring GetLabel(){ return L""; }
     virtual void SetGlPanel( class GlPanel* /*a_GlPanel*/ ){}
-    virtual void LinkModel( DataViewModel* /*a_DataView*/ ){}
+    virtual void LinkDataView( DataView* /*a_DataView*/ ){}
     virtual bool ScrollToBottom(){ return false; }
     virtual bool SkipTimer(){ return false; }
 	virtual void ExportCSV( const std::wstring & a_FileName );

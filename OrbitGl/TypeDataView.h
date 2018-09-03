@@ -3,11 +3,11 @@
 //-----------------------------------
 #pragma once
 
-#include "DataViewModel.h"
+#include "DataView.h"
 #include "OrbitType.h"
 #include <vector>
 
-class TypesDataView : public DataViewModel
+class TypesDataView : public DataView
 {
 public:
     TypesDataView();

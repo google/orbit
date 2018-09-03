@@ -140,7 +140,7 @@ std::vector<std::wstring> LogDataView::GetContextMenu( int a_Index )
             menu.push_back( Capture::GSamplingProfiler->GetSymbolFromAddress(addr) );
         }
     }
-    Append( menu, DataViewModel::GetContextMenu(a_Index) );
+    Append( menu, DataView::GetContextMenu(a_Index) );
     return menu;
 }
 
@@ -153,7 +153,7 @@ void LogDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex,
     }
     else
     {
-        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
+        DataView::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

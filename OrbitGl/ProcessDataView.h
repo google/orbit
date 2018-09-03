@@ -4,9 +4,9 @@
 #pragma once
 
 #include "ProcessUtils.h"
-#include "DataViewModel.h"
+#include "DataView.h"
 
-class ProcessesDataView : public DataViewModel
+class ProcessesDataView : public DataView
 {
 public:
     ProcessesDataView();

@@ -160,7 +160,7 @@ std::wstring TOGGLE_SELECT = L"Toggle Select";
 std::vector<std::wstring> LiveFunctionsDataView::GetContextMenu(int a_Index)
 {
     std::vector<std::wstring> menu = { TOGGLE_SELECT };
-    Append( menu, DataViewModel::GetContextMenu(a_Index) );
+    Append( menu, DataView::GetContextMenu(a_Index) );
     return menu;
 }
 
@@ -177,7 +177,7 @@ void LiveFunctionsDataView::OnContextMenu( const std::wstring & a_Action, int a_
     }
     else
     {
-        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
+        DataView::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

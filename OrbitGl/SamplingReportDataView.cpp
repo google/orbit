@@ -129,7 +129,7 @@ std::wstring MODULES_LOAD = L"Load Pdb";
 std::vector<std::wstring> SamplingReportDataView::GetContextMenu( int a_Index )
 {
     std::vector<std::wstring> menu = { SELECT, DESELECT, MODULES_LOAD };
-    Append( menu, DataViewModel::GetContextMenu(a_Index) );
+    Append( menu, DataView::GetContextMenu(a_Index) );
     return menu;
 }
 
@@ -190,7 +190,7 @@ void SamplingReportDataView::OnContextMenu( const std::wstring & a_Action, int a
     }
     else
     {
-        DataViewModel::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
+        DataView::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 
@@ -202,7 +202,7 @@ void SamplingReportDataView::OnSelect( int a_Index )
 }
 
 //-----------------------------------------------------------------------------
-void SamplingReportDataView::LinkModel( DataViewModel* a_DataView )
+void SamplingReportDataView::LinkDataView( DataView* a_DataView )
 {
     if( a_DataView->GetType() == CALLSTACK )
     {
