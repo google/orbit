@@ -2,6 +2,7 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 #pragma once
+#include <vector>
 
 class GlPanel
 {
@@ -33,7 +34,7 @@ public:
     virtual void LeftDown ( int /*a_X*/, int /*a_Y*/ ){}
     virtual void LeftUp(){}
     virtual void RightDown( int /*a_X*/, int /*a_Y*/ ){}
-    virtual void RightUp(){}
+    virtual bool RightUp() { return false; }
     virtual void MiddleDown(  int /*a_X*/, int /*a_Y*/ ){}
     virtual void MiddleUp( int /*a_X*/, int /*a_Y*/ ){}
     virtual void LeftDoubleClick(){}
@@ -41,6 +42,8 @@ public:
     virtual void CharEvent( unsigned int /*a_Char*/ ){}
     virtual void KeyPressed( unsigned int /*a_KeyCode*/, bool /*a_Ctrl*/, bool /*a_Shift*/, bool /*a_Alt*/ ){}
     virtual void KeyReleased( unsigned int /*a_KeyCode*/ ){}
+    virtual std::vector<std::wstring> GetContextMenu() { return std::vector<std::wstring>(); }
+    virtual void OnContextMenu( const std::wstring & /*a_Action*/, int /*a_MenuIndex*/ ) {}
 
     Type GetType() const { return m_Type; }
     virtual bool GetNeedsRedraw() const { return m_NeedsRedraw; }

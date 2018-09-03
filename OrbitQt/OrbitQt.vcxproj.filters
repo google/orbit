@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Form Files">
@@ -218,6 +218,14 @@
     <CustomBuild Include="showincludesdialog.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\OrbitQt\GeneratedFiles\debug\moc_predefs.h.cbt" />
+    <CustomBuild Include="..\OrbitQt\GeneratedFiles\release\moc_predefs.h.cbt" />
+    <CustomBuild Include="..\OrbitQt\GeneratedFiles\debug\qteditorfactory.moc.cbt" />
+    <CustomBuild Include="..\OrbitQt\GeneratedFiles\release\qteditorfactory.moc.cbt" />
+    <CustomBuild Include="..\OrbitQt\GeneratedFiles\debug\qtpropertymanager.moc.cbt" />
+    <CustomBuild Include="..\OrbitQt\GeneratedFiles\release\qtpropertymanager.moc.cbt" />
+    <CustomBuild Include="..\OrbitQt\GeneratedFiles\debug\qttreepropertybrowser.moc.cbt" />
+    <CustomBuild Include="..\OrbitQt\GeneratedFiles\release\qttreepropertybrowser.moc.cbt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GeneratedFiles\debug\moc_licensedialog.cpp">
@@ -310,12 +318,6 @@
     <ClCompile Include="GeneratedFiles\release\moc_outputdialog.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <CustomBuild Include="D:\git\Orbit\OrbitQt\GeneratedFiles\debug\moc_predefs.h.cbt">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="D:\git\Orbit\OrbitQt\GeneratedFiles\release\moc_predefs.h.cbt">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
     <ClCompile Include="GeneratedFiles\debug\moc_processlauncherwidget.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
@@ -340,24 +342,6 @@
     <ClCompile Include="release\qrc_qtpropertybrowser.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <CustomBuild Include="D:\git\Orbit\OrbitQt\GeneratedFiles\debug\qteditorfactory.moc.cbt">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="D:\git\Orbit\OrbitQt\GeneratedFiles\release\qteditorfactory.moc.cbt">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="D:\git\Orbit\OrbitQt\GeneratedFiles\debug\qtpropertymanager.moc.cbt">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="D:\git\Orbit\OrbitQt\GeneratedFiles\release\qtpropertymanager.moc.cbt">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="D:\git\Orbit\OrbitQt\GeneratedFiles\debug\qttreepropertybrowser.moc.cbt">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="D:\git\Orbit\OrbitQt\GeneratedFiles\release\qttreepropertybrowser.moc.cbt">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
     <ClInclude Include="GeneratedFiles\debug\ui_licensedialog.h">
       <Filter>Generated Files</Filter>
     </ClInclude>

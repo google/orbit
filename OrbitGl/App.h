@@ -88,6 +88,7 @@ public:
     static void AddSamplingReport( std::shared_ptr< class SamplingProfiler> & a_SamplingProfiler );
     static void AddSelectionReport( std::shared_ptr<SamplingProfiler> & a_SamplingProfiler );
     void GoToCode( DWORD64 a_Address );
+    void GoToCallstack();
 
     // Callbacks
     typedef std::function< void( DataViewType a_Type ) > RefreshCallback;

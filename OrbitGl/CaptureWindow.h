@@ -21,12 +21,13 @@ public:
     void LeftDoubleClick() override;
     void LeftDown(int a_X, int a_Y) override;
     void LeftUp() override;
+    void Pick();
     void Pick( int a_X, int a_Y );
     void Pick( PickingID a_ID, int a_X, int a_Y  );
     void Hover( int a_X, int a_Y );
     void FindCode( DWORD64 address );
     void RightDown(int a_X, int a_Y) override;
-    void RightUp() override;
+    bool RightUp() override;
     void MiddleDown( int a_X, int a_Y ) override;
     void MiddleUp( int a_X, int a_Y ) override;
     void MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl ) override;
@@ -53,6 +54,8 @@ public:
     void ToggleSampling();
     void OnCaptureStarted();
     float GetTopBarTextY();
+    virtual std::vector<std::wstring> GetContextMenu();
+    virtual void OnContextMenu( const std::wstring & a_Action, int a_MenuIndex );
 
 private:
     TimeGraph       m_TimeGraph;

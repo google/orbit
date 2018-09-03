@@ -235,11 +235,12 @@ void GlCanvas::RightDown( int a_X, int a_Y )
 }
 
 //-----------------------------------------------------------------------------
-void GlCanvas::RightUp()
+bool GlCanvas::RightUp()
 {
     Orbit_ImGui_MouseButtonCallback(this, 1, false);
     m_IsSelecting = true;
     NeedsRedraw();
+    return false;
 }
 
 //-----------------------------------------------------------------------------

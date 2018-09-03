@@ -664,6 +664,12 @@ void OrbitApp::GoToCode( DWORD64 a_Address )
 }
 
 //-----------------------------------------------------------------------------
+void OrbitApp::GoToCallstack()
+{
+    SendToUiNow( L"gotocallstack" );
+}
+
+//-----------------------------------------------------------------------------
 void OrbitApp::OnOpenPdb( const std::wstring a_FileName )
 {
     Capture::GTargetProcess = std::make_shared<Process>();

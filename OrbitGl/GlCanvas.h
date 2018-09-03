@@ -42,7 +42,7 @@ public:
     virtual void LeftUp();
     virtual void LeftDoubleClick();
     virtual void RightDown( int a_X, int a_Y );
-    virtual void RightUp();
+    virtual bool RightUp();
     virtual void mouseLeftWindow();
     virtual void CharEvent( unsigned int a_Char );
     virtual void KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt );

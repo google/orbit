@@ -35,6 +35,8 @@ public:
 
 protected slots:
     void messageLogged(const QOpenGLDebugMessage &msg);
+    void showContextMenu();
+    void OnMenuClicked(int a_Index);
     
 private:
     GlPanel*            m_OrbitPanel;

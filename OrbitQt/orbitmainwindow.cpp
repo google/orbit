@@ -354,6 +354,10 @@ void OrbitMainWindow::OnReceiveMessage( const std::wstring & a_Message )
     {
         ui->RightTabWidget->setCurrentWidget( ui->CodeTab );
     }
+    else if( StartsWith( a_Message, L"gotocallstack" ) )
+    {
+        ui->RightTabWidget->setCurrentWidget( ui->CallStackTab );
+    }
     else if( StartsWith( a_Message, L"startcapture") )
     {
         ui->RightTabWidget->setCurrentWidget( ui->LiveTab );

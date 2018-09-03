@@ -166,6 +166,13 @@ void CaptureWindow::LeftDoubleClick()
 }
 
 //-----------------------------------------------------------------------------
+void CaptureWindow::Pick()
+{
+    m_Picking = true;
+    NeedsRedraw();
+}
+
+//-----------------------------------------------------------------------------
 void CaptureWindow::Pick( int a_X, int a_Y )
 {
     // 4 bytes per pixel (RGBA), 1x1 bitmap
@@ -255,11 +262,13 @@ void CaptureWindow::Hover( int a_X, int a_Y )
     TextBox* textBox = m_TimeGraph.m_Batcher.GetTextBox( pickId );
     if( textBox )
     {
-        Function* func = Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
-        m_ToolTip = Format( L"%s %s", func ? func->PrettyName().c_str() : L"", s2ws(textBox->GetText()).c_str() );
-
-        GOrbitApp->SendToUiAsync( L"tooltip:" + m_ToolTip );
-        NeedsRedraw();
+        if( !textBox->GetTimer().IsType(Timer::CORE_ACTIVITY) )
+        {
+            Function* func = Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
+            m_ToolTip = Format( L"%s %s", func ? func->PrettyName().c_str() : L"", s2ws(textBox->GetText()).c_str() );
+            GOrbitApp->SendToUiAsync( L"tooltip:" + m_ToolTip );
+            NeedsRedraw();
+        }
     }
 }
 
@@ -337,15 +346,18 @@ void CaptureWindow::Resize( int a_Width, int a_Height )
 //-----------------------------------------------------------------------------
 void CaptureWindow::RightDown( int a_X, int a_Y )
 {
-    float worldx, worldy;
-    ScreenToWorld(a_X, a_Y, worldx, worldy);
+    ScreenToWorld( a_X, a_Y, m_WorldClickX, m_WorldClickY );
+    m_ScreenClickX = a_X;
+    m_ScreenClickY = a_Y;
+    Pick();
+
     m_IsSelecting = true;
-    m_SelectStart = Vec2( worldx, worldy );
+    m_SelectStart = Vec2( m_WorldClickX, m_WorldClickY );
     m_SelectStop = m_SelectStart;
 }
 
 //-----------------------------------------------------------------------------
-void CaptureWindow::RightUp()
+bool CaptureWindow::RightUp()
 {
     if( m_IsSelecting && ( m_SelectStart[0] != m_SelectStop[0] ) )
     {
@@ -358,8 +370,16 @@ void CaptureWindow::RightUp()
         m_TimeGraph.SetMinMax( newMin, newMax );
     }
 
+    bool showContextMenu = false;
+    if( m_SelectStart[0] == m_SelectStop[0] )
+    {
+        showContextMenu = true;
+    }
+
     m_IsSelecting = false;
     NeedsRedraw();
+    
+    return showContextMenu;
 }
 
 //-----------------------------------------------------------------------------
@@ -487,6 +507,34 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
 }
 
 //-----------------------------------------------------------------------------
+std::wstring GOTO_CALLSTACK = L"Go to Callstack";
+std::wstring GOTO_SOURCE    = L"Go to Source";
+
+//-----------------------------------------------------------------------------
+std::vector<std::wstring> CaptureWindow::GetContextMenu()
+{
+    static std::vector< std::wstring > menu = { GOTO_CALLSTACK, GOTO_SOURCE };
+    static std::vector< std::wstring > emptyMenu;
+    return Capture::GSelectedTextBox ? menu : emptyMenu;
+}
+
+//-----------------------------------------------------------------------------
+void CaptureWindow::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex )
+{
+    if( Capture::GSelectedTextBox )
+    {
+        if( a_Action == GOTO_SOURCE )
+        {
+            GOrbitApp->GoToCode( Capture::GSelectedTextBox->GetTimer().m_FunctionAddress );
+        }
+        else if( a_Action == GOTO_CALLSTACK )
+        {
+            GOrbitApp->GoToCallstack();
+        }
+    }    
+}
+
+//-----------------------------------------------------------------------------
 void CaptureWindow::ToggleSampling()
 {
     if( Capture::GIsSampling )
@@ -528,7 +576,7 @@ void CaptureWindow::Draw()
 
     m_TimeGraph.Draw( m_Picking );
 
-    if( m_IsSelecting )
+    if( m_IsSelecting && m_SelectStart[0] != m_SelectStop[0] )
     {
         float sizex = fabs(m_SelectStop[0] - m_SelectStart[0]);
         float posx = std::min(m_SelectStop[0], m_SelectStart[0]);
