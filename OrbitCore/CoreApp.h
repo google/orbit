@@ -21,7 +21,7 @@ public:
     virtual bool GetOutputDebugStringEnabled(){ return false; }
     virtual void LogMsg( const std::wstring & /*a_Msg*/ ){}
     virtual void UpdateVariable( class Variable * /*a_Variable*/ ){}
-    virtual void Disassemble( class Function*, const char*, int ){}
+    virtual void Disassemble( const std::string & /*a_FunctionName*/, DWORD64 /*a_VirtualAddress*/, const char * /*a_MachineCode*/, int /*a_Size*/ ){}
     virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >* GetRules(){ return nullptr; }
 
     std::vector< std::wstring > m_SymbolLocations;

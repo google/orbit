@@ -370,12 +370,12 @@ void OrbitApp::RefreshWatch()
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::Disassemble( Function * a_Function, const char * a_MachineCode, int a_Size )
+void OrbitApp::Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, int a_Size )
 {
     Disassembler disasm;
-    disasm.LOGF( "asm: /* %s */\n", a_Function->PrettyNameStr().c_str() );
+    disasm.LOGF( "asm: /* %s */\n", a_FunctionName.c_str() );
     const unsigned char* code = (const unsigned char*)a_MachineCode;
-    disasm.Disassemble( code, a_Size, a_Function->GetVirtualAddress(), Capture::GTargetProcess->GetIs64Bit() );
+    disasm.Disassemble( code, a_Size, a_VirtualAddress, Capture::GTargetProcess->GetIs64Bit() );
     SendToUiAsync(disasm.GetResult());
 }
 
@@ -667,6 +667,29 @@ void OrbitApp::GoToCode( DWORD64 a_Address )
 void OrbitApp::GoToCallstack()
 {
     SendToUiNow( L"gotocallstack" );
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::GetDisassembly( DWORD64 a_Address, DWORD a_NumBytesBelow, DWORD a_NumBytes )
+{
+    std::shared_ptr<Module> module = Capture::GTargetProcess->GetModuleFromAddress( a_Address );
+    if( module && module->m_Pdb && Capture::Connect() )
+    {
+        Message msg( Msg_GetData );
+        ULONG64 address = (ULONG64)a_Address - a_NumBytesBelow;
+        if( address < module->m_AddressStart )
+            address = module->m_AddressStart;
+        
+        DWORD64 endAddress = address + a_NumBytes;
+        if( endAddress > module->m_AddressEnd )
+            endAddress = module->m_AddressEnd;
+
+        msg.m_Header.m_DataTransferHeader.m_Address = address;
+        msg.m_Header.m_DataTransferHeader.m_Type = DataTransferHeader::Code;
+       
+        msg.m_Size = (int)a_NumBytes;
+        GTcpServer->Send( msg );
+    }
 }
 
 //-----------------------------------------------------------------------------

@@ -65,7 +65,7 @@ public:
     void UpdateVariable( Variable* a_Variable ) override;
     void ClearWatchedVariables();
     void RefreshWatch();
-    virtual void Disassemble( Function* a_Function, const char* a_MachineCode, int a_Size );
+    virtual void Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, int a_Size );
 
     int* GetScreenRes() { return m_ScreenRes; }
 
@@ -89,6 +89,7 @@ public:
     static void AddSelectionReport( std::shared_ptr<SamplingProfiler> & a_SamplingProfiler );
     void GoToCode( DWORD64 a_Address );
     void GoToCallstack();
+    void GetDisassembly( DWORD64 a_Address, DWORD a_NumBytesBelow, DWORD a_NumBytes );
 
     // Callbacks
     typedef std::function< void( DataViewType a_Type ) > RefreshCallback;
@@ -139,7 +140,7 @@ public:
 
     void RequestThaw(){ m_NeedsThawing = true; }
     void OnMiniDump( const Message & a_Message );
-    void LaunchRuleEditor( Function* a_Function );
+    void LaunchRuleEditor( class Function* a_Function );
 
     RuleEditor* GetRuleEditor() { return m_RuleEditor; }
     virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >* GetRules();

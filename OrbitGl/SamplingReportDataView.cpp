@@ -124,11 +124,12 @@ void SamplingReportDataView::OnSort(int a_Column, bool a_Toggle)
 std::wstring SELECT       = L"Hook";
 std::wstring DESELECT     = L"Unhook";
 std::wstring MODULES_LOAD = L"Load Pdb";
+std::wstring MODULES_DIS  = L"Go To Disassembly";
 
 //-----------------------------------------------------------------------------
 std::vector<std::wstring> SamplingReportDataView::GetContextMenu( int a_Index )
 {
-    std::vector<std::wstring> menu = { SELECT, DESELECT, MODULES_LOAD };
+    std::vector<std::wstring> menu = { SELECT, DESELECT, MODULES_LOAD, MODULES_DIS };
     Append( menu, DataView::GetContextMenu(a_Index) );
     return menu;
 }
@@ -186,6 +187,14 @@ void SamplingReportDataView::OnContextMenu( const std::wstring & a_Action, int a
                     unhook ? func->UnSelect() : func->Select();
                 }
             }
+        }
+    }
+    else if( a_Action == MODULES_DIS )
+    {
+        for( int i = 0; i < a_ItemIndices.size(); ++i )
+        {
+            SampledFunction & sampledFunc = GetFunction( a_ItemIndices[i] );
+            GOrbitApp->GetDisassembly( sampledFunc.m_Address, 200, 400 );
         }
     }
     else
