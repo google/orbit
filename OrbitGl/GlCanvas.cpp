@@ -57,10 +57,14 @@ GlCanvas::GlCanvas()
     m_WorldMinWidth = 1.f;
     m_SelectStart = Vec2( 0.f, 0.f );
     m_SelectStop = Vec2( 0.f, 0.f );
+    m_TimeStart = 0.0;
+    m_TimeStop = 0.0;
     m_IsSelecting = false;
-    m_IsSelectingMiddle = false;
     m_Picking = false;
     m_DoubleClicking = false;
+    m_ControlKey = false;
+    m_ShiftKey = false;
+    m_AltKey = false;
     m_NeedsRedraw = true;
 
     m_WheelDelta = 0;
@@ -258,6 +262,7 @@ void GlCanvas::CharEvent( unsigned int a_Char )
 //-----------------------------------------------------------------------------
 void GlCanvas::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt )
 {
+    UpdateSpecialKeys( a_Ctrl, a_Shift, a_Alt );
     ScopeImguiContext state(m_ImGuiContext);
     ImGuiIO& io = ImGui::GetIO();
     io.KeyCtrl = a_Ctrl;
@@ -269,10 +274,37 @@ void GlCanvas::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bo
 }
 
 //-----------------------------------------------------------------------------
-void GlCanvas::KeyReleased( unsigned int a_KeyCode ) 
+void GlCanvas::KeyReleased( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt )
 {
+    UpdateSpecialKeys( a_Ctrl, a_Shift, a_Alt );
     Orbit_ImGui_KeyCallback( this, a_KeyCode, false );
     NeedsRedraw();
+}
+
+//-----------------------------------------------------------------------------
+void GlCanvas::UpdateSpecialKeys( bool a_Ctrl, bool a_Shift, bool a_Alt )
+{
+    m_ControlKey = a_Ctrl;
+    m_ShiftKey = a_Shift;
+    m_AltKey = a_Alt;
+}
+
+//-----------------------------------------------------------------------------
+bool GlCanvas::ControlPressed()
+{
+    return m_ControlKey;
+}
+
+//-----------------------------------------------------------------------------
+bool GlCanvas::ShiftPressed()
+{
+    return m_ShiftKey;
+}
+
+//-----------------------------------------------------------------------------
+bool GlCanvas::AltPressed()
+{
+    return m_AltKey;
 }
 
 //-----------------------------------------------------------------------------

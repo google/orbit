@@ -56,6 +56,7 @@ public:
     Type GetType() const { return m_Type; }
     void SetType( Type a_Type ){ m_Type = a_Type; }
     bool IsType( Type a_Type ) const { return m_Type == a_Type; }
+    bool IsCoreActivity() const { return m_Type == CORE_ACTIVITY; }
 
 public:
 

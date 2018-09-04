@@ -121,6 +121,7 @@ void CaptureWindow::MouseMoved( int a_X, int a_Y, bool a_Left, bool a_Right, boo
     if ( m_IsSelecting  )
     {
         m_SelectStop = Vec2(worldx, worldy);
+        m_TimeStop   = m_TimeGraph.GetRawTimeStampFromWorld( worldx );
     }
 
     if( a_Left )
@@ -353,13 +354,15 @@ void CaptureWindow::RightDown( int a_X, int a_Y )
 
     m_IsSelecting = true;
     m_SelectStart = Vec2( m_WorldClickX, m_WorldClickY );
-    m_SelectStop = m_SelectStart;
+    m_SelectStop  = m_SelectStart;
+    m_TimeStart   = m_TimeGraph.GetRawTimeStampFromWorld( m_WorldClickX );
+    m_TimeStop    = m_TimeStart;
 }
 
 //-----------------------------------------------------------------------------
 bool CaptureWindow::RightUp()
 {
-    if( m_IsSelecting && ( m_SelectStart[0] != m_SelectStop[0] ) )
+    if( m_IsSelecting && ( m_SelectStart[0] != m_SelectStop[0] ) && ControlPressed() )
     {
         float minWorld = std::min(m_SelectStop[0], m_SelectStart[0]);
         float maxWorld = std::max(m_SelectStop[0], m_SelectStart[0]);
@@ -368,17 +371,12 @@ bool CaptureWindow::RightUp()
         double newMax = m_TimeGraph.GetTime( (maxWorld-m_WorldTopLeftX)/m_WorldWidth );
 
         m_TimeGraph.SetMinMax( newMin, newMax );
+        m_SelectStart = m_SelectStop;
     }
 
-    bool showContextMenu = false;
-    if( m_SelectStart[0] == m_SelectStop[0] )
-    {
-        showContextMenu = true;
-    }
-
+    bool showContextMenu = m_SelectStart[0] == m_SelectStop[0];
     m_IsSelecting = false;
     NeedsRedraw();
-    
     return showContextMenu;
 }
 
@@ -388,7 +386,6 @@ void CaptureWindow::MiddleDown( int a_X, int a_Y )
     float worldx, worldy;
     ScreenToWorld( a_X, a_Y, worldx, worldy );
     m_IsSelecting = true;
-    m_IsSelectingMiddle = true;
     m_SelectStart = Vec2( worldx, worldy );
     m_SelectStop = m_SelectStart;
 }
@@ -399,7 +396,6 @@ void CaptureWindow::MiddleUp( int a_X, int a_Y )
     float worldx, worldy;
     ScreenToWorld( a_X, a_Y, worldx, worldy );
     m_IsSelecting = false;
-    m_IsSelectingMiddle = false;
 
     m_SelectStop = Vec2( worldx, worldy );
     //m_TimeGraph.SelectEvents( m_SelectStart[0], m_SelectStop[0], -1 );
@@ -410,7 +406,7 @@ void CaptureWindow::MiddleUp( int a_X, int a_Y )
 //-----------------------------------------------------------------------------
 void CaptureWindow::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl )
 {
-	if (a_Delta == 0 || m_IsSelectingMiddle)
+	if ( a_Delta == 0 )
 		return;
 
     // Zoom
@@ -457,6 +453,8 @@ void CaptureWindow::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl 
 //-----------------------------------------------------------------------------
 void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt )
 {
+    UpdateSpecialKeys( a_Ctrl, a_Shift, a_Alt );
+
     ScopeImguiContext state(m_ImGuiContext);
 
     if (!m_ImguiActive)
@@ -497,9 +495,9 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
     }
 
     ImGuiIO& io = ImGui::GetIO();
-    io.KeyCtrl = a_Ctrl;
+    io.KeyCtrl  = a_Ctrl;
     io.KeyShift = a_Shift;
-    io.KeyAlt = a_Alt;
+    io.KeyAlt   = a_Alt;
 
     Orbit_ImGui_KeyCallback(this, a_KeyCode, true);
 
@@ -515,7 +513,8 @@ std::vector<std::wstring> CaptureWindow::GetContextMenu()
 {
     static std::vector< std::wstring > menu = { GOTO_CALLSTACK, GOTO_SOURCE };
     static std::vector< std::wstring > emptyMenu;
-    return Capture::GSelectedTextBox ? menu : emptyMenu;
+    TextBox* selection = Capture::GSelectedTextBox;
+    return selection && !selection->GetTimer().IsCoreActivity() ? menu : emptyMenu;
 }
 
 //-----------------------------------------------------------------------------
@@ -576,21 +575,19 @@ void CaptureWindow::Draw()
 
     m_TimeGraph.Draw( m_Picking );
 
-    if( m_IsSelecting && m_SelectStart[0] != m_SelectStop[0] )
+    if( m_SelectStart[0] != m_SelectStop[0] )
     {
-        float sizex = fabs(m_SelectStop[0] - m_SelectStart[0]);
-        float posx = std::min(m_SelectStop[0], m_SelectStart[0]);
-        
-        Vec2 pos( posx, m_WorldTopLeftY - m_WorldHeight );
+        TickType minTime = std::min( m_TimeStart, m_TimeStop );
+        TickType maxTime = std::max( m_TimeStart, m_TimeStop );
+
+        float from = m_TimeGraph.GetWorldFromRawTimeStamp( minTime );
+        float to   = m_TimeGraph.GetWorldFromRawTimeStamp( maxTime );
+
+        double micros = MicroSecondsFromTicks( minTime, maxTime );
+        float sizex = to - from;
+        Vec2 pos( from, m_WorldTopLeftY - m_WorldHeight );
         Vec2 size( sizex, m_WorldHeight );
 
-        if( m_IsSelectingMiddle )
-        {
-            pos[1] = std::min( m_SelectStart[1], m_MouseY );
-            size[1] = fabs( m_SelectStop[1] - m_SelectStart[1] );
-        }        
-
-        double micros = m_TimeGraph.GetTimeIntervalMicro( sizex/m_WorldWidth );
         std::string time = GetPrettyTime( micros*0.001 );
         TextBox box( pos, size, time, &m_TextRenderer, Color(0, 128, 0, 128) );
         box.SetTextY( m_SelectStop[1] );
@@ -824,8 +821,8 @@ void CaptureWindow::RenderHelpUi()
     }
 
     ImGui::Text( "Start/Stop capture: 'X'" );
-    ImGui::Text( "Time zoom: scroll or right-click/drag" );
-    ImGui::Text( "Y axis zoom: 'CTRL' & scroll" );
+    ImGui::Text( "Time zoom: scroll or CTRL+right-click/drag" );
+    ImGui::Text( "Y axis zoom: CTRL+scroll" );
     ImGui::Text( "Zoom last 2 seconds: 'A'" );
     ImGui::Separator();
     ImGui::Text( "Icons:" );

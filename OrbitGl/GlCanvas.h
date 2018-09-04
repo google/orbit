@@ -46,7 +46,11 @@ public:
     virtual void mouseLeftWindow();
     virtual void CharEvent( unsigned int a_Char );
     virtual void KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt );
-    virtual void KeyReleased( unsigned int a_KeyCode );
+    virtual void KeyReleased( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt );
+    virtual void UpdateSpecialKeys( bool a_Ctrl, bool a_Shift, bool a_Alt );
+    virtual bool ControlPressed();
+    virtual bool ShiftPressed();
+    virtual bool AltPressed();
 
     float GetWorldWidth() const { return m_WorldWidth; }
     void SetWorldWidth( float val ) { m_WorldWidth = val; }
@@ -116,6 +120,8 @@ protected:
     int     m_MousePosY;
     Vec2    m_SelectStart;
     Vec2    m_SelectStop;
+    TickType m_TimeStart;
+    TickType m_TimeStop;
     int     m_ScreenClickX;
     int     m_ScreenClickY;
     int     m_WheelDelta;
@@ -125,7 +131,6 @@ protected:
     float   m_DeltaTime;
     double  m_DeltaTimeMs;
     bool    m_IsSelecting;
-    bool    m_IsSelectingMiddle;
     double  m_MouseRatio;
     bool    m_DrawUI;
     bool    m_ImguiActive;
@@ -141,5 +146,8 @@ protected:
     PickingManager  m_PickingManager;
     bool            m_Picking;
     bool            m_DoubleClicking;
+    bool            m_ControlKey;
+    bool            m_ShiftKey;
+    bool            m_AltKey;
 };
 

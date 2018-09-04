@@ -41,7 +41,7 @@ public:
     virtual void MouseWheelMoved( int /*a_X*/, int /*a_Y*/, int /*a_Delta*/, bool /*a_Ctrl*/ ){}
     virtual void CharEvent( unsigned int /*a_Char*/ ){}
     virtual void KeyPressed( unsigned int /*a_KeyCode*/, bool /*a_Ctrl*/, bool /*a_Shift*/, bool /*a_Alt*/ ){}
-    virtual void KeyReleased( unsigned int /*a_KeyCode*/ ){}
+    virtual void KeyReleased( unsigned int /*a_KeyCode*/, bool /*a_Ctrl*/, bool /*a_Shift*/, bool /*a_Alt*/ ){}
     virtual std::vector<std::wstring> GetContextMenu() { return std::vector<std::wstring>(); }
     virtual void OnContextMenu( const std::wstring & /*a_Action*/, int /*a_MenuIndex*/ ) {}
 

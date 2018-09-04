@@ -343,7 +343,10 @@ void OrbitGLWidget::keyReleaseEvent(QKeyEvent *event)
 {
     if (m_OrbitPanel)
     {
-        m_OrbitPanel->KeyReleased( event->key()&0x00FFFFFF );
+        bool ctrl  = event->modifiers() & Qt::ControlModifier;
+        bool shift = event->modifiers() & Qt::ShiftModifier;
+        bool alt   = event->modifiers() & Qt::AltModifier;
+        m_OrbitPanel->KeyReleased( event->key()&0x00FFFFFF, ctrl, shift, alt );
     }
 
     update();
