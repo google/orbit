@@ -636,6 +636,7 @@ void OrbitMainWindow::on_actionOpen_Capture_2_triggered()
     {
         GOrbitApp->OnLoadCapture( file.toStdWString() );
         SetTitle( file.toStdString() );
+        ui->MainTabWidget->setCurrentWidget( ui->CaptureTab );
         break;
     }
 }
