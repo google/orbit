@@ -194,9 +194,11 @@ bool Capture::StartCapture()
         GEventTracer.Start();
     }
 
+    GCoreApp->SendToUiNow( L"startcapture" );
+    
     if( GSelectedFunctionsMap.size() > 0 )
     {
-        GCoreApp->SendToUiNow( L"startcapture" );
+        GCoreApp->SendToUiNow( L"gotolive" );
     }
     
     return true;

@@ -50,7 +50,6 @@ public:
     void StartCapture();
     void StopCapture();
     void ToggleCapture();
-    void OnOpenCapture(const std::wstring a_FileName);
     void OnDisconnect();
     void OnPdbLoaded();
     void LogMsg( const std::wstring & a_Msg ) override;

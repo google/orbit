@@ -814,13 +814,6 @@ void GLoadPdbAsync( const std::shared_ptr<Module> & a_Module )
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnOpenCapture( const std::wstring a_FileName )
-{
-    Capture::OpenCapture( a_FileName );
-    OnPdbLoaded();
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::OnDisconnect()
 {
     GTcpServer->Send( Msg_Unload );

@@ -360,6 +360,10 @@ void OrbitMainWindow::OnReceiveMessage( const std::wstring & a_Message )
     }
     else if( StartsWith( a_Message, L"startcapture") )
     {
+        SetTitle("");
+    }
+    else if( StartsWith( a_Message, L"gototlive" ) )
+    {
         ui->RightTabWidget->setCurrentWidget( ui->LiveTab );
     }
     else if( StartsWith(a_Message, L"license") )
@@ -495,12 +499,6 @@ void OrbitMainWindow::OnHideSearch()
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionOpen_Capture_triggered()
 {
-    QStringList list = QFileDialog::getOpenFileNames(this, "Select a file to open...", ws2s(Path::GetCapturePath()).c_str(), "*.hdb" );
-    for( auto & file : list )
-    {
-        GOrbitApp->OnOpenCapture( file.toStdWString() );
-        break;
-    }
 }
 
 //-----------------------------------------------------------------------------
@@ -637,6 +635,7 @@ void OrbitMainWindow::on_actionOpen_Capture_2_triggered()
     for( auto & file : list )
     {
         GOrbitApp->OnLoadCapture( file.toStdWString() );
+        SetTitle( file.toStdString() );
         break;
     }
 }
@@ -670,6 +669,18 @@ void OrbitMainWindow::OpenDisassembly( const std::wstring & a_String )
     dialog->setAttribute( Qt::WA_DeleteOnClose );
     dialog->setWindowFlags( dialog->windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint );
     dialog->show();
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::SetTitle( const std::string & a_Title )
+{
+    std::string title = "Orbit Profiler";
+    if( a_Title != "" )
+    {
+        title += " - ";
+        title += a_Title;
+    }
+    this->setWindowTitle( title.c_str() );
 }
 
 //-----------------------------------------------------------------------------
