@@ -106,45 +106,36 @@ void ModulesDataView::OnSort(int a_Column, bool a_Toggle)
 }
 
 //-----------------------------------------------------------------------------
-enum ModulesContextMenuIDs
-{
-    MODULES_LOAD,
-    FIND_PDB
-};
+const std::wstring MODULES_LOAD = L"Load PDB";
+const std::wstring DLL_EXPORTS  = L"Load Dll Exports";
+const std::wstring DLL_FIND_PDB = L"Find Pdb";
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& ModulesDataView::GetContextMenu( int a_Index )
+std::vector<std::wstring> ModulesDataView::GetContextMenu( int a_Index )
 {
-    static std::vector<std::wstring> Menu = { L"Load PDB" };
-    static std::vector<std::wstring> dllMenu = { L"Load dll exports", L"Find pdb" };
-    static std::vector<std::wstring> EmptyMenu;
+    std::vector<std::wstring> menu;
 
     std::shared_ptr<Module> module = GetModule( a_Index );
     if( !module->m_Loaded )
     {
         if( module->m_FoundPdb )
         {
-            return Menu;
+            menu = { MODULES_LOAD };
         }
         else if( module->IsDll() )
         {
-            return dllMenu;
-        }
-        else
-        {
-            return EmptyMenu;
+            menu = { DLL_EXPORTS, DLL_FIND_PDB };
         }
     }
-
-    return EmptyMenu;
+    
+    Append( menu, DataView::GetContextMenu(a_Index) );
+    return menu;
 }
 
 //-----------------------------------------------------------------------------
-void ModulesDataView::OnContextMenu( int a_MenuIndex, std::vector<int> & a_ItemIndices )
+void ModulesDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
 {
-    switch (a_MenuIndex)
-    {
-    case MODULES_LOAD: 
+    if( a_Action == MODULES_LOAD )
     {
         for( int index : a_ItemIndices )
         {
@@ -167,14 +158,14 @@ void ModulesDataView::OnContextMenu( int a_MenuIndex, std::vector<int> & a_ItemI
         }
 
         GOrbitApp->LoadModules();
-        break;
     }
-    case FIND_PDB:
+    else if( a_Action == DLL_FIND_PDB )
     {
         std::wstring FileName = GOrbitApp->FindFile(L"Find Pdb File", L"", L"*.pdb" );
     }
-        break;
-    default: break;
+    else
+    {
+        DataView::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

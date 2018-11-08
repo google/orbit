@@ -10,10 +10,11 @@
 #include <QPainter>
 #include <QScrollBar>
 #include <QFontDatabase>
+#include <QKeyEvent>
 #include <set>
 
 #include "../OrbitGl/App.h"
-#include "../OrbitGl/DataViewModel.h"
+#include "../OrbitGl/DataView.h"
 
 
 //-----------------------------------------------------------------------------
@@ -96,10 +97,10 @@ void OrbitTreeView::Initialize(DataViewType a_Type)
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTreeView::SetDataModel(std::shared_ptr<DataViewModel> a_Model)
+void OrbitTreeView::SetDataModel(std::shared_ptr<DataView> a_Model)
 {
     m_Model = new OrbitTableModel(); 
-    m_Model->SetDataViewModel( a_Model );
+    m_Model->SetDataView( a_Model );
     setModel( m_Model );
 }
 
@@ -128,7 +129,7 @@ void OrbitTreeView::Select( int a_Row )
 //-----------------------------------------------------------------------------
 void OrbitTreeView::OnTimer()
 {
-    if( this->isVisible() && !m_Model->GetDataViewModel()->SkipTimer() )
+    if( this->isVisible() && !m_Model->GetDataView()->SkipTimer() )
     {
         m_Model->OnTimer();
         Refresh();
@@ -151,7 +152,7 @@ void OrbitTreeView::Refresh()
 {
     QModelIndexList list = selectionModel()->selectedIndexes();
 
-    if( this->m_Model->GetDataViewModel()->GetType() == DataViewType::LIVEFUNCTIONS )
+    if( this->m_Model->GetDataView()->GetType() == DataViewType::LIVEFUNCTIONS )
     {
         m_Model->layoutAboutToBeChanged();
         m_Model->layoutChanged();
@@ -173,10 +174,10 @@ void OrbitTreeView::Refresh()
 //-----------------------------------------------------------------------------
 void OrbitTreeView::resizeEvent(QResizeEvent * event)
 {
-    if( m_AutoResize && m_Model && m_Model->GetDataViewModel() )
+    if( m_AutoResize && m_Model && m_Model->GetDataView() )
     {
         QSize headerSize = size();
-        const std::vector<float> & columnRatios = m_Model->GetDataViewModel()->GetColumnHeadersRatios();
+        const std::vector<float> & columnRatios = m_Model->GetDataView()->GetColumnHeadersRatios();
         for (size_t i = 0; i < columnRatios.size(); ++i)
         {
             float ratio = columnRatios[i];
@@ -195,14 +196,14 @@ void OrbitTreeView::Link( OrbitTreeView* a_Link )
 {
     m_Links.push_back( a_Link );
 
-    std::shared_ptr<DataViewModel> model = a_Link->GetModel()->GetDataViewModel();
-    m_Model->GetDataViewModel()->LinkModel( model.get() );
+    std::shared_ptr<DataView> dataView = a_Link->GetModel()->GetDataView();
+    m_Model->GetDataView()->LinkDataView( dataView.get() );
 }
 
 //-----------------------------------------------------------------------------
 void OrbitTreeView::SetGlWidget( OrbitGLWidget* a_GlWidget )
 {
-    this->m_Model->GetDataViewModel()->SetGlPanel( a_GlWidget->GetPanel() );
+    this->m_Model->GetDataView()->SetGlPanel( a_GlWidget->GetPanel() );
 }
 
 //-----------------------------------------------------------------------------
@@ -220,7 +221,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint &pos)
     QModelIndex index = this->indexAt(pos);
     if( index.isValid() )
     {
-        const std::vector<std::wstring> & menu = m_Model->GetDataViewModel()->GetContextMenu(index.row());
+        std::vector<std::wstring> menu = m_Model->GetDataView()->GetContextMenu(index.row());
 
         if( menu.size() > 0 )
         {
@@ -249,6 +250,8 @@ void OrbitTreeView::ShowContextMenu(const QPoint &pos)
 //-----------------------------------------------------------------------------
 void OrbitTreeView::OnMenuClicked(int a_Index)
 {
+	const std::vector<std::wstring> & menu = m_Model->GetDataView()->GetContextMenu(a_Index);
+
     QModelIndexList list = selectionModel()->selectedIndexes();
     std::set<int> selection;
     for (QModelIndex & index : list)
@@ -256,14 +259,34 @@ void OrbitTreeView::OnMenuClicked(int a_Index)
         selection.insert( index.row() );
     }
     
-    m_Model->GetDataViewModel()->OnContextMenu( a_Index, std::vector<int>(selection.begin(), selection.end()) );
+    m_Model->GetDataView()->OnContextMenu( menu[a_Index], a_Index, std::vector<int>(selection.begin(), selection.end()) );
+}
+
+//-----------------------------------------------------------------------------
+void OrbitTreeView::keyPressEvent( QKeyEvent *event )
+{
+    if( event->matches( QKeySequence::Copy ) )
+    {
+        QModelIndexList list = selectionModel()->selectedIndexes();
+        std::set<int> selection;
+        for( QModelIndex & index : list )
+        {
+            selection.insert( index.row() );
+        }
+
+        this->m_Model->GetDataView()->CopySelection( std::vector<int>(selection.begin(), selection.end()) );
+    }
+    else
+    {
+        QTreeView::keyPressEvent(event);
+    }
 }
 
 //-----------------------------------------------------------------------------
 void OrbitTreeView::OnRangeChanged(int /*a_Min*/, int a_Max)
 {
-    std::shared_ptr<DataViewModel> dataViewModel = m_Model->GetDataViewModel();
-    if( dataViewModel->ScrollToBottom() )
+    std::shared_ptr<DataView> DataView = m_Model->GetDataView();
+    if( DataView->ScrollToBottom() )
     {
         verticalScrollBar()->setValue(a_Max);
     }
@@ -272,9 +295,9 @@ void OrbitTreeView::OnRangeChanged(int /*a_Min*/, int a_Max)
 //-----------------------------------------------------------------------------
 std::wstring OrbitTreeView::GetLabel()
 {
-    if( m_Model && m_Model->GetDataViewModel() )
+    if( m_Model && m_Model->GetDataView() )
     {
-        return m_Model->GetDataViewModel()->GetLabel();
+        return m_Model->GetDataView()->GetLabel();
     }
     
     return L"";

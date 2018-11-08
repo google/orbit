@@ -5,7 +5,7 @@
 
 #include <QAbstractTableModel>
 #include <memory>
-#include "../OrbitGl/DataViewModel.h"
+#include "../OrbitGl/DataView.h"
 
 //-----------------------------------------------------------------------------
 class OrbitTableModel : public QAbstractTableModel
@@ -22,18 +22,18 @@ public:
     virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
 
-    int GetUpdatePeriodMs() { return m_DataViewModel->GetUpdatePeriodMs(); }
-    int GetSelectedIndex() { return m_DataViewModel->GetSelectedIndex(); }
+    int GetUpdatePeriodMs() { return m_DataView->GetUpdatePeriodMs(); }
+    int GetSelectedIndex() { return m_DataView->GetSelectedIndex(); }
     QModelIndex CreateIndex( int a_Row, int a_Column ){ return createIndex(a_Row, a_Column); }
-    std::shared_ptr<DataViewModel> GetDataViewModel() { return m_DataViewModel; }
-    void SetDataViewModel( std::shared_ptr<DataViewModel> a_Model ){ m_DataViewModel = a_Model; }
+    std::shared_ptr<DataView> GetDataView() { return m_DataView; }
+    void SetDataView( std::shared_ptr<DataView> a_Model ){ m_DataView = a_Model; }
 
     void OnTimer();
     void OnFilter( const QString & a_Filter );
     void OnClicked( const QModelIndex & index );
 
 protected:
-    std::shared_ptr<DataViewModel> m_DataViewModel;
+    std::shared_ptr<DataView> m_DataView;
     bool m_AlternateRowColor;
 };
 

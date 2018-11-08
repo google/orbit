@@ -563,3 +563,4 @@ namespace OrbitUtils
 #define CONCAT(x,y) CONCAT_(x,y)
 #define UNIQUE_VAR CONCAT(Unique, __LINE__)
 #define UNIQUE_ID  CONCAT(Id_, __LINE__)
+#define UNUSED(x) (void)(x)

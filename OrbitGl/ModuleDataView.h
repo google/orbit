@@ -5,21 +5,21 @@
 
 #include "OrbitType.h"
 #include "ProcessUtils.h"
-#include "DataViewModel.h"
+#include "DataView.h"
 
-class ModulesDataView : public DataViewModel
+class ModulesDataView : public DataView
 {
 public:
     ModulesDataView();
 
     virtual const std::vector<std::wstring>& GetColumnHeaders() override;
     virtual const std::vector<float>& GetColumnHeadersRatios() override;
-    virtual const std::vector<std::wstring>& GetContextMenu(int a_Index) override;
+    virtual std::vector<std::wstring> GetContextMenu(int a_Index) override;
     virtual std::wstring GetValue(int a_Row, int a_Column) override;;
 
     virtual void OnFilter(const std::wstring & a_Filter) override;
     virtual void OnSort(int a_Column, bool a_Toggle = true) override;
-    virtual void OnContextMenu( int a_Index, std::vector<int> & a_ItemIndices ) override;
+    virtual void OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices ) override;
     virtual void OnTimer() override;
     virtual bool WantsDisplayColor() override { return true; }
     virtual bool GetDisplayColor(int /*a_Row*/, int /*a_Column*/, unsigned char& /*r*/, unsigned char& /*g*/, unsigned char& /*b*/);

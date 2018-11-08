@@ -71,6 +71,8 @@ OrbitApp::OrbitApp() : m_ProcessesDataView(nullptr)
                      , m_UnrealEnabled(true)
                      , m_FindFileCallback(nullptr)
                      , m_RuleEditor(nullptr)
+                     , m_SaveFileCallback(nullptr)
+                     , m_ClipboardCallback(nullptr)
 {
     m_Debugger = new Debugger();
 }
@@ -368,12 +370,12 @@ void OrbitApp::RefreshWatch()
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::Disassemble( Function * a_Function, const char * a_MachineCode, int a_Size )
+void OrbitApp::Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, int a_Size )
 {
     Disassembler disasm;
-    disasm.LOGF( "asm: /* %s */\n", a_Function->PrettyNameStr().c_str() );
+    disasm.LOGF( "asm: /* %s */\n", a_FunctionName.c_str() );
     const unsigned char* code = (const unsigned char*)a_MachineCode;
-    disasm.Disassemble( code, a_Size, a_Function->GetVirtualAddress(), Capture::GTargetProcess->GetIs64Bit() );
+    disasm.Disassemble( code, a_Size, a_VirtualAddress, Capture::GTargetProcess->GetIs64Bit() );
     SendToUiAsync(disasm.GetResult());
 }
 
@@ -662,6 +664,35 @@ void OrbitApp::GoToCode( DWORD64 a_Address )
 }
 
 //-----------------------------------------------------------------------------
+void OrbitApp::GoToCallstack()
+{
+    SendToUiNow( L"gotocallstack" );
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::GetDisassembly( DWORD64 a_Address, DWORD a_NumBytesBelow, DWORD a_NumBytes )
+{
+    std::shared_ptr<Module> module = Capture::GTargetProcess->GetModuleFromAddress( a_Address );
+    if( module && module->m_Pdb && Capture::Connect() )
+    {
+        Message msg( Msg_GetData );
+        ULONG64 address = (ULONG64)a_Address - a_NumBytesBelow;
+        if( address < module->m_AddressStart )
+            address = module->m_AddressStart;
+        
+        DWORD64 endAddress = address + a_NumBytes;
+        if( endAddress > module->m_AddressEnd )
+            endAddress = module->m_AddressEnd;
+
+        msg.m_Header.m_DataTransferHeader.m_Address = address;
+        msg.m_Header.m_DataTransferHeader.m_Type = DataTransferHeader::Code;
+       
+        msg.m_Size = (int)a_NumBytes;
+        GTcpServer->Send( msg );
+    }
+}
+
+//-----------------------------------------------------------------------------
 void OrbitApp::OnOpenPdb( const std::wstring a_FileName )
 {
     Capture::GTargetProcess = std::make_shared<Process>();
@@ -701,6 +732,22 @@ std::wstring OrbitApp::GetCaptureFileName()
 std::wstring OrbitApp::GetSessionFileName()
 {
     return Capture::GSessionPresets ? Capture::GSessionPresets->m_FileName : L"";
+}
+
+//-----------------------------------------------------------------------------
+std::wstring OrbitApp::GetSaveFile( const std::wstring & a_Extension )
+{
+	std::wstring fileName;
+	if( m_SaveFileCallback )
+		m_SaveFileCallback( a_Extension, fileName );
+	return fileName;
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::SetClipboard( const std::wstring & a_Text )
+{
+    if( m_ClipboardCallback )
+        m_ClipboardCallback( a_Text );
 }
 
 //-----------------------------------------------------------------------------
@@ -767,13 +814,6 @@ void GLoadPdbAsync( const std::shared_ptr<Module> & a_Module )
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnOpenCapture( const std::wstring a_FileName )
-{
-    Capture::OpenCapture( a_FileName );
-    OnPdbLoaded();
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::OnDisconnect()
 {
     GTcpServer->Send( Msg_Unload );
@@ -803,7 +843,7 @@ void OrbitApp::LogMsg( const std::wstring & a_Msg )
 //-----------------------------------------------------------------------------
 void OrbitApp::FireRefreshCallbacks( DataViewType a_Type )
 {
-    for( DataViewModel* panel : m_Panels )
+    for( DataView* panel : m_Panels )
     {
         if( a_Type == DataViewType::ALL || a_Type == panel->GetType() )
         {
@@ -857,7 +897,7 @@ void OrbitApp::ToggleCapture()
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::Unregister( DataViewModel * a_Model )
+void OrbitApp::Unregister( DataView * a_Model )
 {
     for( int i = 0; i < m_Panels.size(); ++i )
     {

@@ -17,6 +17,7 @@
 #include <QBuffer>
 #include <QMouseEvent>
 #include <QToolTip>
+#include <QClipboard>
 
 #include "../OrbitGl/SamplingReport.h"
 #include "../OrbitGl/App.h"
@@ -59,6 +60,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget *parent)
     GOrbitApp->AddUiMessageCallback( [this]( const std::wstring & a_Message ) { this->OnReceiveMessage( a_Message ); } );
     GOrbitApp->SetFindFileCallback( [this]( const std::wstring & a_Caption, const std::wstring & a_Dir, const std::wstring & a_Filter ){ return this->FindFile( a_Caption, a_Dir, a_Filter ); } );
     GOrbitApp->AddWatchCallback( [this]( const Variable* a_Variable ) { this->OnAddToWatch( a_Variable ); } );
+	GOrbitApp->SetSaveFileCallback( [this]( const std::wstring & a_Ext, std::wstring & o_FileName ) { this->OnGetSaveFileName(a_Ext, o_FileName); } );
+    GOrbitApp->SetClipboardCallback( [this]( const std::wstring & a_Text ){ this->OnSetClipboard( a_Text ); } );
 
     ParseCommandlineArguments();
 
@@ -351,7 +354,15 @@ void OrbitMainWindow::OnReceiveMessage( const std::wstring & a_Message )
     {
         ui->RightTabWidget->setCurrentWidget( ui->CodeTab );
     }
+    else if( StartsWith( a_Message, L"gotocallstack" ) )
+    {
+        ui->RightTabWidget->setCurrentWidget( ui->CallStackTab );
+    }
     else if( StartsWith( a_Message, L"startcapture") )
+    {
+        SetTitle("");
+    }
+    else if( StartsWith( a_Message, L"gototlive" ) )
     {
         ui->RightTabWidget->setCurrentWidget( ui->LiveTab );
     }
@@ -417,6 +428,19 @@ void OrbitMainWindow::OnAddToWatch( const class Variable* a_Variable )
 }
 
 //-----------------------------------------------------------------------------
+void OrbitMainWindow::OnGetSaveFileName(const std::wstring & a_Extension, std::wstring & o_FileName)
+{
+	QString file = QFileDialog::getSaveFileName(this, "Specify a file to save...", nullptr, ws2s( a_Extension ).c_str() );
+	o_FileName = file.toStdWString();
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::OnSetClipboard( const std::wstring & a_Text )
+{
+    QApplication::clipboard()->setText( QString::fromStdWString( a_Text ) );
+}
+
+//-----------------------------------------------------------------------------
 void OrbitMainWindow::GetLicense()
 {
     LicenseDialog dialog(this);
@@ -475,12 +499,6 @@ void OrbitMainWindow::OnHideSearch()
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionOpen_Capture_triggered()
 {
-    QStringList list = QFileDialog::getOpenFileNames(this, "Select a file to open...", ws2s(Path::GetCapturePath()).c_str(), "*.hdb" );
-    for( auto & file : list )
-    {
-        GOrbitApp->OnOpenCapture( file.toStdWString() );
-        break;
-    }
 }
 
 //-----------------------------------------------------------------------------
@@ -617,6 +635,8 @@ void OrbitMainWindow::on_actionOpen_Capture_2_triggered()
     for( auto & file : list )
     {
         GOrbitApp->OnLoadCapture( file.toStdWString() );
+        SetTitle( file.toStdString() );
+        ui->MainTabWidget->setCurrentWidget( ui->CaptureTab );
         break;
     }
 }
@@ -650,6 +670,18 @@ void OrbitMainWindow::OpenDisassembly( const std::wstring & a_String )
     dialog->setAttribute( Qt::WA_DeleteOnClose );
     dialog->setWindowFlags( dialog->windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint );
     dialog->show();
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::SetTitle( const std::string & a_Title )
+{
+    std::string title = "Orbit Profiler";
+    if( a_Title != "" )
+    {
+        title += " - ";
+        title += a_Title;
+    }
+    this->setWindowTitle( title.c_str() );
 }
 
 //-----------------------------------------------------------------------------

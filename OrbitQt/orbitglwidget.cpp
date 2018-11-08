@@ -9,6 +9,7 @@
 #include <QMenuBar>
 #include <QOpenGLDebugLogger>
 #include <QOpenGLDebugMessage>
+#include <QSignalMapper>
 
 #include "../OrbitCore/PrintVar.h"
 #include "../OrbitCore/Utils.h"
@@ -242,7 +243,10 @@ void OrbitGLWidget::mouseReleaseEvent(QMouseEvent* event)
 
         if (event->button() == Qt::RightButton)
         {
-            m_OrbitPanel->RightUp();
+            if( m_OrbitPanel->RightUp() )
+            {
+                showContextMenu();
+            }
         }
 
         if( event->button() == Qt::MiddleButton )
@@ -252,6 +256,40 @@ void OrbitGLWidget::mouseReleaseEvent(QMouseEvent* event)
     }
 
     update();
+}
+
+//-----------------------------------------------------------------------------
+void OrbitGLWidget::showContextMenu()
+{
+    std::vector<std::wstring> menu = m_OrbitPanel->GetContextMenu();
+
+    if( menu.size() > 0 )
+    {
+        QMenu contextMenu( tr( "GlContextMenu" ), this );
+        QSignalMapper signalMapper( this );
+        std::vector<QAction*> actions;
+
+        for( int i = 0; i < (int)menu.size(); ++i )
+        {
+            actions.push_back( new QAction( QString::fromStdWString( menu[i] ) ) );
+            connect( actions[i], SIGNAL( triggered() ), &signalMapper, SLOT( map() ) );
+            signalMapper.setMapping( actions[i], i );
+            contextMenu.addAction( actions[i] );
+        }
+
+        connect( &signalMapper, SIGNAL( mapped( int ) ), this, SLOT( OnMenuClicked( int ) ) );
+        contextMenu.exec( QCursor::pos() );
+
+
+        for( QAction* action : actions ) delete action;
+    }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitGLWidget::OnMenuClicked( int a_Index )
+{
+    const std::vector<std::wstring> & menu = m_OrbitPanel->GetContextMenu();
+    m_OrbitPanel->OnContextMenu( menu[a_Index], a_Index );
 }
 
 //-----------------------------------------------------------------------------
@@ -305,7 +343,10 @@ void OrbitGLWidget::keyReleaseEvent(QKeyEvent *event)
 {
     if (m_OrbitPanel)
     {
-        m_OrbitPanel->KeyReleased( event->key()&0x00FFFFFF );
+        bool ctrl  = event->modifiers() & Qt::ControlModifier;
+        bool shift = event->modifiers() & Qt::ShiftModifier;
+        bool alt   = event->modifiers() & Qt::AltModifier;
+        m_OrbitPanel->KeyReleased( event->key()&0x00FFFFFF, ctrl, shift, alt );
     }
 
     update();

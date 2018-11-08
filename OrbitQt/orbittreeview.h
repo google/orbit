@@ -15,13 +15,14 @@ public:
     explicit OrbitTreeView(QWidget *parent = 0);
     virtual ~OrbitTreeView();
     void Initialize(DataViewType a_Type);
-    void SetDataModel(std::shared_ptr<DataViewModel> a_Model);
+    void SetDataModel(std::shared_ptr<DataView> a_Model);
     void OnFilter( const QString & a_Filter );
     void Select( int a_Row );
     void Refresh();
     void Link( OrbitTreeView* a_Link );
     void SetGlWidget( OrbitGLWidget* a_Link );
     void resizeEvent(QResizeEvent * event);
+    void keyPressEvent(QKeyEvent *event);
     OrbitTableModel* GetModel() { return m_Model; }
     std::wstring GetLabel();
 

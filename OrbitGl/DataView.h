@@ -8,30 +8,30 @@
 #include "DataViewTypes.h"
 
 //-----------------------------------------------------------------------------
-class DataViewModel
+class DataView
 {
 public:
-    DataViewModel() : m_LastSortedColumn(-1)
+    DataView() : m_LastSortedColumn(-1)
                     , m_UpdatePeriodMs(-1)
                     , m_SelectedIndex(-1)
                     , m_Type( INVALID )
     {}
 
-    ~DataViewModel();
+    ~DataView();
 
-    static DataViewModel* Create( DataViewType a_Type );
+    static DataView* Create( DataViewType a_Type );
 
     virtual void SetAsMainInstance(){}
     virtual const std::vector<std::wstring>& GetColumnHeaders();
     virtual const std::vector<float>& GetColumnHeadersRatios();
-    virtual const std::vector<std::wstring>& GetContextMenu(int a_Index);
+    virtual std::vector<std::wstring> GetContextMenu(int a_Index);
     virtual int  GetNumElements() { return (int)m_Indices.size(); }
     virtual std::wstring GetValue(int /*a_Row*/, int /*a_Column*/) { return L""; }
     virtual std::wstring GetToolTip(int /*a_Row*/, int /*a_Column*/) { return L""; }
     virtual void SetFilter( const std::wstring & a_Filter ) { m_Filter = a_Filter; OnFilter( a_Filter ); }
     virtual void OnFilter( const std::wstring & /*a_Filter*/ ) {}
     virtual void OnSort( int /*a_Column*/, bool /*a_Toggle*/ = true ) {}
-    virtual void OnContextMenu( int /*a_MenuIndex*/, std::vector<int> & /*a_ItemIndices*/ ) {}
+    virtual void OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices );
     virtual void OnItemActivated() {}
     virtual void OnSelect(int /*a_Index*/) {}
     virtual int GetSelectedIndex(){ return m_SelectedIndex; }
@@ -42,9 +42,11 @@ public:
     virtual const std::wstring & GetName() { static std::wstring s(L"noname"); return s; }
     virtual std::wstring GetLabel(){ return L""; }
     virtual void SetGlPanel( class GlPanel* /*a_GlPanel*/ ){}
-    virtual void LinkModel( DataViewModel* /*a_DataView*/ ){}
+    virtual void LinkDataView( DataView* /*a_DataView*/ ){}
     virtual bool ScrollToBottom(){ return false; }
     virtual bool SkipTimer(){ return false; }
+	virtual void ExportCSV( const std::wstring & a_FileName );
+	virtual void CopySelection(std::vector<int>& selection);
     
     int GetUpdatePeriodMs() const { return m_UpdatePeriodMs; }
     DataViewType GetType() const { return m_Type; }

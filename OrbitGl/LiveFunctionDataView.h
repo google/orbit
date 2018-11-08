@@ -4,22 +4,22 @@
 #pragma once
 
 #include "OrbitType.h"
-#include "DataViewModel.h"
+#include "DataView.h"
 
 //-----------------------------------------------------------------------------
-class LiveFunctionsDataView : public DataViewModel
+class LiveFunctionsDataView : public DataView
 {
 public:
     LiveFunctionsDataView();
 
     virtual const std::vector<std::wstring>& GetColumnHeaders() override;
     virtual const std::vector<float>& GetColumnHeadersRatios() override;
-    virtual const std::vector<std::wstring>& GetContextMenu( int a_Index );
+    virtual std::vector<std::wstring> GetContextMenu( int a_Index );
     virtual std::wstring GetValue( int a_Row, int a_Column );
 
     void OnFilter( const std::wstring & a_Filter ) override;
     void OnSort( int a_Column, bool a_Toggle = true ) override;
-    void OnContextMenu( int a_Index, std::vector<int> & a_ItemIndices ) override;
+    void OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices ) override;
     void OnDataChanged() override;
     virtual void OnTimer() override;
 

@@ -38,6 +38,8 @@ public:
 
     std::wstring GetCaptureFileName();
     std::wstring GetSessionFileName();
+	std::wstring GetSaveFile( const std::wstring & a_Extension );
+    void SetClipboard( const std::wstring & a_Text );
     void OnSaveSession( const std::wstring a_FileName );
     void OnLoadSession( const std::wstring a_FileName );
     void OnSaveCapture( const std::wstring a_FileName );
@@ -48,7 +50,6 @@ public:
     void StartCapture();
     void StopCapture();
     void ToggleCapture();
-    void OnOpenCapture(const std::wstring a_FileName);
     void OnDisconnect();
     void OnPdbLoaded();
     void LogMsg( const std::wstring & a_Msg ) override;
@@ -63,7 +64,7 @@ public:
     void UpdateVariable( Variable* a_Variable ) override;
     void ClearWatchedVariables();
     void RefreshWatch();
-    virtual void Disassemble( Function* a_Function, const char* a_MachineCode, int a_Size );
+    virtual void Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, int a_Size );
 
     int* GetScreenRes() { return m_ScreenRes; }
 
@@ -79,13 +80,15 @@ public:
     void RegisterOutputLog( class LogDataView* a_Log );
     void RegisterRuleEditor( class RuleEditor* a_RuleEditor );
 
-    void Unregister( class DataViewModel* a_Model );
+    void Unregister( class DataView* a_Model );
     bool SelectProcess( const std::wstring& a_Process );
     bool SelectProcess( unsigned long a_ProcessID );
     bool Inject( unsigned long a_ProcessId );
     static void AddSamplingReport( std::shared_ptr< class SamplingProfiler> & a_SamplingProfiler );
     static void AddSelectionReport( std::shared_ptr<SamplingProfiler> & a_SamplingProfiler );
     void GoToCode( DWORD64 a_Address );
+    void GoToCallstack();
+    void GetDisassembly( DWORD64 a_Address, DWORD a_NumBytesBelow, DWORD a_NumBytes );
 
     // Callbacks
     typedef std::function< void( DataViewType a_Type ) > RefreshCallback;
@@ -95,13 +98,17 @@ public:
     void AddSelectionReportCallback( SamplingReportCallback a_Callback ) { m_SelectionReportCallbacks.push_back( a_Callback ); }
     typedef std::function< void( Variable* a_Variable ) > WatchCallback;
     void AddWatchCallback( WatchCallback a_Callback ){ m_AddToWatchCallbacks.push_back( a_Callback ); }
-    void AddUpdateWatchCallback( WatchCallback a_Callback ){ m_UpdateWatchCallbacks.push_back( a_Callback ); }
+	typedef std::function< void( const std::wstring & a_Extension, std::wstring& o_Variable ) > SaveFileCallback;
+	void SetSaveFileCallback( SaveFileCallback a_Callback ) { m_SaveFileCallback = a_Callback; }
+	void AddUpdateWatchCallback( WatchCallback a_Callback ){ m_UpdateWatchCallbacks.push_back( a_Callback ); }
     void FireRefreshCallbacks( DataViewType a_Type = DataViewType::ALL );
     void Refresh( DataViewType a_Type = DataViewType::ALL ){ FireRefreshCallbacks( a_Type ); }
     void AddUiMessageCallback( std::function< void( const std::wstring & ) > a_Callback );
     typedef std::function< std::wstring( const std::wstring & a_Caption, const std::wstring & a_Dir, const std::wstring & a_Filter ) > FindFileCallback;
     void SetFindFileCallback( FindFileCallback a_Callback ){ m_FindFileCallback = a_Callback; }
     std::wstring FindFile( const std::wstring & a_Caption, const std::wstring & a_Dir, const std::wstring & a_Filter );
+    typedef std::function< void( const std::wstring & ) > ClipboardCallback;
+    void SetClipboardCallback( ClipboardCallback a_Callback ){ m_ClipboardCallback = a_Callback; }
 
     void SetCommandLineArguments( const std::vector< std::string > & a_Args );
     const std::vector< std::string > & GetCommandLineArguments(){ return m_Arguments; }
@@ -132,7 +139,7 @@ public:
 
     void RequestThaw(){ m_NeedsThawing = true; }
     void OnMiniDump( const Message & a_Message );
-    void LaunchRuleEditor( Function* a_Function );
+    void LaunchRuleEditor( class Function* a_Function );
 
     RuleEditor* GetRuleEditor() { return m_RuleEditor; }
     virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >* GetRules();
@@ -144,8 +151,10 @@ private:
     std::vector< WatchCallback >          m_UpdateWatchCallbacks;
     std::vector< SamplingReportCallback > m_SamplingReportsCallbacks;
     std::vector< SamplingReportCallback > m_SelectionReportCallbacks;
-    std::vector< class DataViewModel* >   m_Panels;
+    std::vector< class DataView* >        m_Panels;
     FindFileCallback                      m_FindFileCallback;
+	SaveFileCallback					  m_SaveFileCallback;
+    ClipboardCallback                     m_ClipboardCallback;
     
     ProcessesDataView*      m_ProcessesDataView;
     ModulesDataView*        m_ModulesDataView;

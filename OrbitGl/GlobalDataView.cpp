@@ -121,25 +121,26 @@ void GlobalsDataView::OnSort(int a_Column, bool a_Toggle)
 }
 
 //-----------------------------------------------------------------------------
-enum GlobalsContextMenu
-{
-    TYPES_MENU_WATCH
-};
+std::wstring TYPES_MENU_WATCH = L"Add to watch";
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& GlobalsDataView::GetContextMenu(int a_Index)
+std::vector<std::wstring> GlobalsDataView::GetContextMenu(int a_Index)
 {
-    static std::vector<std::wstring> Menu = { L"Add to watch" };
-    return Menu;
+    std::vector<std::wstring> menu = { TYPES_MENU_WATCH };
+    Append( menu, DataView::GetContextMenu(a_Index) );
+    return menu;
 }
 
 //-----------------------------------------------------------------------------
-void GlobalsDataView::OnContextMenu( int a_MenuIndex, std::vector<int> & a_ItemIndices )
+void GlobalsDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
 {
-    switch (a_MenuIndex)
+    if( a_Action == TYPES_MENU_WATCH )
     {
-    case TYPES_MENU_WATCH: OnAddToWatch(a_ItemIndices); break;
-    default: break;
+        OnAddToWatch(a_ItemIndices);
+    }
+    else
+    {
+        DataView::OnContextMenu( a_Action, a_MenuIndex, a_ItemIndices );
     }
 }
 

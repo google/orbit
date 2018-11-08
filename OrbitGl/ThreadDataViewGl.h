@@ -4,9 +4,9 @@
 #pragma once
 
 #include "OrbitType.h"
-#include "DataViewModel.h"
+#include "DataView.h"
 
-class ThreadDataViewGl : public DataViewModel
+class ThreadDataViewGl : public DataView
 {
 public:
     ThreadDataViewGl();

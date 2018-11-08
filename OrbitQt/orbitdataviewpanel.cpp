@@ -27,7 +27,7 @@ void OrbitDataViewPanel::Initialize( DataViewType a_Type, bool a_IsMainInstance 
 
     if( a_IsMainInstance )
     {
-        ui->treeView->GetModel()->GetDataViewModel()->SetAsMainInstance();
+        ui->treeView->GetModel()->GetDataView()->SetAsMainInstance();
     }
 
     std::wstring label = ui->treeView->GetLabel();
@@ -57,7 +57,7 @@ void OrbitDataViewPanel::Refresh()
 }
 
 //-----------------------------------------------------------------------------
-void OrbitDataViewPanel::SetDataModel( std::shared_ptr<DataViewModel> a_Model )
+void OrbitDataViewPanel::SetDataModel( std::shared_ptr<DataView> a_Model )
 { 
     ui->treeView->SetDataModel( a_Model );
 }

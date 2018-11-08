@@ -39,7 +39,7 @@ void OrbitSamplingReport::Initialize( std::shared_ptr<SamplingReport> a_Report )
 
     m_SamplingReport->SetUiRefreshFunc( [&](){ this->Refresh(); } );
 
-    for( std::shared_ptr<class DataViewModel> report : a_Report->GetThreadReports() )
+    for( std::shared_ptr<class DataView> report : a_Report->GetThreadReports() )
     {
         //OrbitDataViewPanel *treeView = new OrbitDataViewPanel();
         QWidget* tab = new QWidget();

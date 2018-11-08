@@ -53,10 +53,9 @@ void ModuleManager::OnReceiveMessage( const Message & a_Msg )
         }
         else if( dataType == DataTransferHeader::Code )
         {
-            if( Function* func = Capture::GTargetProcess->GetFunctionFromAddress( header.m_Address, true ) )
-            {
-                GCoreApp->Disassemble( func, a_Msg.GetData(), a_Msg.m_Size );
-            }
+            Function* func = Capture::GTargetProcess->GetFunctionFromAddress( header.m_Address, true );
+            std::string name = func ? func->PrettyNameStr() : Format( "%p", (void*)header.m_Address );
+            GCoreApp->Disassemble( name, header.m_Address, a_Msg.GetData(), a_Msg.m_Size );
         }
     }
 }

@@ -30,12 +30,15 @@ public:
     void OnNewSelection( std::shared_ptr<class SamplingReport> a_SamplingReport );
     void OnReceiveMessage( const std::wstring & a_Message );
     void OnAddToWatch( const class Variable* a_Variable );
+	void OnGetSaveFileName( const std::wstring & a_Extension, std::wstring & a_FileName );
+    void OnSetClipboard( const std::wstring & a_Text );
     void ParseCommandlineArguments();
     bool IsHeadless() { return m_Headless; }
     void PostInit();
     bool HideTab(QTabWidget* a_TabWidget, const char* a_TabName);
     std::wstring FindFile( const std::wstring & a_Caption, const std::wstring & a_Dir, const std::wstring & a_Filter );
     void OpenDisassembly( const std::wstring & a_String );
+    void SetTitle( const std::string & a_Title );
 
 private slots:
     void on_actionAbout_triggered();
