@@ -1,4 +1,5 @@
-set(QTDIR "C:/Qt/5.8/msvc2015_64")
+set(QTDIR "C:/Qt/5.11.2/msvc2017_64")
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${QTDIR}")
 
 find_package(Qt5 CONFIG REQUIRED 

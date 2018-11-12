@@ -7,7 +7,7 @@
 #include "ScopeTimer.h"
 #include "TcpClient.h"
 #include "OrbitDbgHelp.h"
-#include "../external/breakpad/src/client/windows/handler/exception_handler.h"
+#include <client/windows/handler/exception_handler.h>
 
 #include <fstream>
 

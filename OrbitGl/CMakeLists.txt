@@ -7,7 +7,7 @@ set(HEADERS
     CaptureWindow.h
     Card.h
     CoreMath.h
-    DataViewModel.h
+    DataView.h
     DataViewTypes.h
     Debugger.h
     Disassembler.h
@@ -58,7 +58,7 @@ set(SOURCES
     CaptureSerializer.cpp
     CaptureWindow.cpp
     Card.cpp
-    DataViewModel.cpp
+    DataView.cpp
     Debugger.cpp
     Disassembler.cpp
     EventTrack.cpp

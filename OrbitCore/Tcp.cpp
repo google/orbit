@@ -8,9 +8,11 @@
 #include "Capture.h"
 #include "PrintVar.h"
 
+/*
 #include "websocketpp/frame.hpp"
 #include "websocketpp/base64/base64.hpp"
 #include "websocketpp/sha1/sha1.hpp"
+*/
 
 // Based off asio sample
 // https://github.com/chriskohlhoff/asio/
@@ -108,9 +110,9 @@ void TcpConnection::ReadMessage()
 //-----------------------------------------------------------------------------
 void TcpConnection::ReadWebsocketMessage()
 {
-    asio::async_read( m_Socket, asio::buffer( &m_WebSocketBuffer, sizeof(websocketpp::frame::basic_header) ),
+    /*asio::async_read( m_Socket, asio::buffer( &m_WebSocketBuffer, sizeof(websocketpp::frame::basic_header) ),
 
-        [this]( asio::error_code ec, std::size_t /*length*/ )
+        [this]( asio::error_code ec, std::size_t  )
     {
         if( !ec )
         {
@@ -127,7 +129,7 @@ void TcpConnection::ReadWebsocketMessage()
         }
     }
 
-    );
+    );*/
 }
 
 //-----------------------------------------------------------------------------
@@ -213,13 +215,13 @@ bool IsWebSocketHandshakeMessage( Message& a_Message )
 //-----------------------------------------------------------------------------
 void process_handshake_key( std::string & key )
 {
-    static char const ws_handshake_guid[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    /*static char const ws_handshake_guid[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
     key.append( ws_handshake_guid );
 
     unsigned char message_digest[20];
     websocketpp::sha1::calc( key.c_str(), key.length(), message_digest );
-    key = websocketpp::base64_encode( message_digest, 20 );
+    key = websocketpp::base64_encode( message_digest, 20 );*/
 }
 
 //-----------------------------------------------------------------------------

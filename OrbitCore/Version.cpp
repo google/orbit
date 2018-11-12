@@ -2,7 +2,6 @@
 #include "Utils.h"
 #include "Core.h"
 #include "curl/curl.h"
-#include "websocketpp/base64/base64.hpp"
 
 //-----------------------------------------------------------------------------
 bool        OrbitVersion::s_NeedsUpdate;
@@ -20,23 +19,6 @@ std::string OrbitVersion::GetVersion()
 bool OrbitVersion::IsDev()
 {
     return GetVersion() == std::string("dev");
-}
-
-//-----------------------------------------------------------------------------
-bool OrbitVersion::CheckLicense( const std::wstring & a_License )
-{
-    std::vector< std::wstring > tokens = Tokenize( a_License, L"\r\n" );
-    if( tokens.size() == 2 )
-    {
-        std::string decodedStr = XorString( websocketpp::base64_decode( ws2s(tokens[1]) ) );
-
-        if( decodedStr == ws2s( tokens[0] ) )
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 //-----------------------------------------------------------------------------

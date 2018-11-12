@@ -15,6 +15,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_set>
+#include <intrin.h>
 #include "Callstack.h"
 #include "../OrbitAsm/OrbitAsm.h"
 #include "../OrbitPlugin/OrbitSDK.h"
