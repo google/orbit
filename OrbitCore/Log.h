@@ -99,8 +99,7 @@ public:
         Log(a_Type, l_StringStream.str().c_str());
     }
 
-    template <typename Func>
-    void GetLockedLog( OrbitLog::Type a_Type, Func & a_Func, bool a_Clear = false )
+	void GetLockedLog( OrbitLog::Type a_Type, std::function<void(const std::vector<std::string>)> a_Func, bool a_Clear = false )
     {
         ScopeLock lock( m_Mutexes[a_Type] );
         a_Func( m_Logs[a_Type].GetEntries() );

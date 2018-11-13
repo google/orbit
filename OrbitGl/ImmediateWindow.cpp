@@ -34,9 +34,6 @@ void ImmediateWindow::RenderUI()
 
     RenderSamplingUI();
     RenderProcessUI();
-
-    bool show_test_window = true;
-    bool show_another_window = false;
     ImVec4 clear_color = ImColor(114, 144, 154);
 
     //GLogger.GetLockedLog(Log::Viz, [&](const std::vector<std::string> & a_Entries)

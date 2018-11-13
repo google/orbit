@@ -216,12 +216,7 @@ void GlCanvas::LeftUp()
 void GlCanvas::LeftDoubleClick()
 {
     ScopeImguiContext state(m_ImGuiContext);
-    ImGuiIO& io = ImGui::GetIO();
-
     m_DoubleClicking = true;
-
-    // TODO:
-    //io.ExternalDoubleClick = true;
     NeedsRedraw();
 }
 
@@ -410,11 +405,6 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x
     //TRACE_VAR( GDeltaTimeBuffer[512] );
     //TRACE_VAR( Capture::GOpenCaptureTime );
     //TRACE_VAR( Capture::GNumContextSwitches );
-
-    if( m_IsSelecting )
-    {
-        double ratio = ( double( abs( m_SelectStop[0] - m_SelectStart[0] ) ) ) / (double)m_WorldWidth;
-    }
         
     if( m_WorldWidth <= 0 )
         m_WorldWidth = 1.f;

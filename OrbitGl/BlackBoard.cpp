@@ -66,7 +66,7 @@ void BlackBoard::AddPos( float x, float y )
 }
 
 //-----------------------------------------------------------------------------
-static void ShowExampleAppCustomRendering(bool* opened)
+void ShowExampleAppCustomRendering(bool* opened)
 {
     GMin = ImVec2(FLT_MAX, FLT_MAX);
     GMax = ImVec2(-FLT_MAX, -FLT_MAX);
@@ -184,5 +184,4 @@ bool BlackBoard::GetNeedsRedraw() const
 {
     extern bool GRedrawBlackBoard;
     return m_NeedsRedraw || GRedrawBlackBoard;
-    GRedrawBlackBoard = false;
 }

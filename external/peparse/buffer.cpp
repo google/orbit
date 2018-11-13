@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <string.h>
 #include "parse.h"
 
-#define WIN32 __WINDOWS__
+//#define WIN32 __WINDOWS__
 
 #ifdef WIN32
 #include <windows.h>

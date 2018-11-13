@@ -2,6 +2,8 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+#define _SILENCE_TR2_SYS_NAMESPACE_DEPRECATION_WARNING 1 // TODO: use std::filesystem instead of std::tr2
+
 #include "Core.h"
 #include "Pdb.h"
 #include <algorithm>
@@ -632,7 +634,7 @@ Function* Pdb::GetFunctionFromProgramCounter( DWORD64 a_Address )
 {
     DWORD64 address = a_Address - (DWORD64)GetHModule();
 
-    auto & it = m_FunctionMap.upper_bound( address );
+    auto it = m_FunctionMap.upper_bound( address );
     if (!m_FunctionMap.empty() && it != m_FunctionMap.begin())
     {
         --it;

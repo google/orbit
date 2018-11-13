@@ -6,7 +6,7 @@
 #include "Profiling.h"
 #include <string>
 
-#define SCOPE_TIMER_LOG( msg ) LocalScopeTimer ScopeTimer(msg)
+#define SCOPE_TIMER_LOG( msg ) LocalScopeTimer UNIQUE_ID(msg)
 extern __declspec(thread) int CurrentDepth;
 
 //-----------------------------------------------------------------------------

@@ -13,7 +13,6 @@ void EventBuffer::Print()
     size_t numCallstacks = 0;
     for( auto & pair : m_CallstackEvents )
     {
-        ThreadID threadID = pair.first;
         std::map< long long, CallstackEvent > & callstacks = pair.second;
         numCallstacks += callstacks.size();
     }

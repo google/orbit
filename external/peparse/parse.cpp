@@ -332,8 +332,8 @@ bool getSections( bounded_buffer  *b,
     //now we have the section header information, so fill in a section 
     //object appropriately
     section thisSec;
-    for(::uint32_t i = 0; i < NT_SHORT_NAME_LEN; i++) {
-      ::uint8_t c = curSec.Name[i];
+    for(::uint32_t j = 0; j < NT_SHORT_NAME_LEN; j++) {
+      ::uint8_t c = curSec.Name[j];
       if(c == 0) {
         break;
       }
@@ -1197,9 +1197,9 @@ parsed_pe *ParsePEFromFile(const char *filePath) {
         return NULL;
       }
 
-      ::uint32_t  nameOff = uint32_t( name - nameSec.sectionBase );
+      ::uint32_t  nameOffset = uint32_t( name - nameSec.sectionBase );
       string      modName;
-      if (readCString(*nameSec.sectionData, nameOff, modName) == false ) {
+      if (readCString(*nameSec.sectionData, nameOffset, modName) == false ) {
           deleteBuffer(remaining);
           deleteBuffer(p->fileBuffer);
           delete p;
@@ -1211,7 +1211,7 @@ parsed_pe *ParsePEFromFile(const char *filePath) {
       //boost::to_upper(modName);
 
       //then, try and get all of the sub-symbols
-      VA lookupVA;
+      VA lookupVA = 0;
       if(curEnt.LookupTableRVA != 0) { 
         if (p->peHeader.nt.OptionalMagic == NT_OPTIONAL_32_MAGIC) {
           lookupVA = curEnt.LookupTableRVA + p->peHeader.nt.OptionalHeader.ImageBase;

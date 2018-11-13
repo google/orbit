@@ -70,7 +70,7 @@ void Variable::ReceiveValue( const Message & a_Msg )
 {
     m_SyncTimer->Stop();
     ORBIT_LOGV(m_SyncTimer->ElapsedMillis());
-    if( a_Msg.m_Size != m_Size )
+    if( a_Msg.m_Size != (int)m_Size )
     {
         ORBIT_LOG( "Variable::ReceiveValue size mismatch" );
     }
@@ -130,8 +130,9 @@ int MaxOffsetWidth( DWORD64 a_Size )
 {
     DWORD64 size = a_Size;
     int count = 1;
-    while( size = size / 10 )
+    while( size )
     {
+		size = size / 10;
         ++count;
     }
     return count;

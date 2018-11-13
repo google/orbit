@@ -292,7 +292,8 @@ void TcpConnection::ReadPayload()
     if( IsWebSocketHandshakeMessage( m_Message ) )
     {
         ReadWebsocketHandshake();
-        DecodeMessage(Message(Msg_WebSocketHandshake));
+		Message msg(Msg_WebSocketHandshake);
+        DecodeMessage(msg);
         return;
     }
 

@@ -65,8 +65,6 @@ void CaptureWindow::ZoomAll()
 {
     m_TimeGraph.ZoomAll();
     m_DesiredWorldHeight = m_TimeGraph.GetThreadTotalHeight();
-
-    float margin = (float)m_TimeGraph.GetMarginInPixels();
     m_WorldTopLeftY = m_WorldMaxY;
     ResetHoverTimer();
     NeedsUpdate();
@@ -992,10 +990,7 @@ void CaptureWindow::RenderTimeBar()
         double incr   = millis/float(numTimePoints-1);
         double unit   = GetIncrementMs(incr);
         double normInc= (double((int)((incr+unit)/unit)))*unit;
-
         double startMs = m_TimeGraph.m_MinEpochTimeUs*0.001;
-        double endMs   = m_TimeGraph.m_MaxEpochTimeUs*0.001;
-
         double normStartUs = 1000.0*(double(int(startMs/normInc)))*normInc;
 
         static int pixelMargin = 2;

@@ -201,7 +201,6 @@ bool OrbitApp::Init()
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit()
 {
-    //GOrbitApp->CheckLicense();
     GOrbitApp->CallHome();
 }
 
@@ -431,39 +430,6 @@ void OrbitApp::CallHomeThread()
     stream << XorString(content);
 
     stream.flush();
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::CheckLicense()
-{
-    m_License.clear();
-    std::wifstream infile( Path::GetLicenseName() );
-    
-    if( !infile.fail() )
-    {
-        std::wstringstream buffer;
-        buffer << infile.rdbuf();
-        m_License = buffer.str();
-        infile.close();
-    }
-
-    if( !OrbitVersion::CheckLicense( m_License ) )
-    {
-        do
-        {
-            SendToUiNow( L"license" );
-        } while( !OrbitVersion::CheckLicense( m_License ) );
-
-        std::wofstream outFile( Path::GetLicenseName() );
-        if( !outFile.fail() )
-        {
-            outFile << m_License;
-            outFile.close();
-        }
-    }
-
-    m_User = Tokenize( m_License, L":" )[0];
-    PRINT_VAR(m_User);
 }
 
 //-----------------------------------------------------------------------------

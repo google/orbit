@@ -27,7 +27,7 @@
  */
 
 #define STRICT
-#define _WIN32_WINNT 0x0501
+//#define _WIN32_WINNT 0x0501
 #include <windows.h>
 #include <tlhelp32.h>
 #include <limits.h>
@@ -228,7 +228,7 @@ static void ProcessThreadIPs(HANDLE hThread, UINT pos, UINT action)
     for (; pos < count; ++pos)
     {
         PHOOK_ENTRY pHook = &g_hooks.pItems[pos];
-        BOOL        enable;
+        BOOL        enable = FALSE;
         DWORD_PTR   ip;
 
         switch (action)
@@ -376,7 +376,7 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
         {
             PJMP_REL_SHORT pShortJmp = (PJMP_REL_SHORT)pHook->pTarget;
             pShortJmp->opcode = 0xEB;
-            pShortJmp->operand = (UINT8)(0 - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL)));
+            pShortJmp->operand = (0 - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL)));
         }
     }
     else

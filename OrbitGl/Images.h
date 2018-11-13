@@ -1,5 +1,7 @@
 /* GIMP RGBA C-Source image dump (inject.c) */
 
+#pragma warning(push, 0)        
+
 static const struct {
     unsigned int 	 width;
     unsigned int 	 height;
@@ -2674,5 +2676,5 @@ static const struct {
   "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
 };
 
-
+#pragma warning(pop)
 

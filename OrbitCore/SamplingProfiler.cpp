@@ -294,7 +294,6 @@ void SamplingProfiler::ProcessSamples()
 
     for( auto & dataIt : m_ThreadSampleData )
     {
-        ThreadID threadID = dataIt.first;
         ThreadSampleData & threadSampleData = dataIt.second;
         
         threadSampleData.ComputeAverageThreadUsage();
@@ -364,7 +363,7 @@ std::multimap< int, CallstackID > ThreadSampleData::SortCallstacks( const std::s
     int numCallstacks = 0;
     for( CallstackID id : a_CallStacks )
     {
-        auto & it = m_CallstackCount.find( id );
+        auto it = m_CallstackCount.find( id );
         if( it != m_CallstackCount.end() )
         {
             int count = it->second;
@@ -425,7 +424,11 @@ void SamplingProfiler::AddAddress( DWORD64 a_Address )
     symbol_info->SizeOfStruct = sizeof( SYMBOL_INFOW );
     symbol_info->MaxNameLen = ( ( sizeof( buffer ) - sizeof( SYMBOL_INFOW ) ) / sizeof( WCHAR ) ) - 1;
     DWORD64 displacement = 0;
-    BOOL result = m_Process ? SymFromAddrW( m_Process->GetHandle(), (DWORD64)a_Address, &displacement, symbol_info ) : false;
+	
+	if (m_Process)
+	{
+		SymFromAddrW(m_Process->GetHandle(), (DWORD64)a_Address, &displacement, symbol_info);
+	}
 
     std::wstring symName = symbol_info->Name;
     if( symName == L"" )

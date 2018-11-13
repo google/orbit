@@ -170,6 +170,8 @@ void Debugger::DebuggerThread( const std::wstring & a_ProcessName, const std::ws
                                 , &si
                                 , &pi ) != 0;
 
+	UNUSED(success);
+
     std::string strEventMessage;
     std::map<LPVOID, std::string> DllNameMap;
     DEBUG_EVENT debug_event = { 0 };
@@ -245,7 +247,7 @@ void Debugger::DebuggerThread( const std::wstring & a_ProcessName, const std::ws
         break;
 
         case UNLOAD_DLL_DEBUG_EVENT:
-            strEventMessage = Format( "%s", DllNameMap[debug_event.u.UnloadDll.lpBaseOfDll] );
+            strEventMessage = DllNameMap[debug_event.u.UnloadDll.lpBaseOfDll];
             break;
 
         case OUTPUT_DEBUG_STRING_EVENT:

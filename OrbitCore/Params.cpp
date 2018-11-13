@@ -2,6 +2,8 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+#define _SILENCE_TR2_SYS_NAMESPACE_DEPRECATION_WARNING 1 // TODO: use std::filesystem instead of std::tr2
+
 #include "Params.h"
 #include "Core.h"
 #include "CoreApp.h"

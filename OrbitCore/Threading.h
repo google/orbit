@@ -6,9 +6,12 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
-#include <concurrentqueue.h>
 #include <autoresetevent.h>
 #include "ScopeTimer.h"
+
+#pragma warning(push, 0)        
+#include <concurrentqueue.h>
+#pragma warning(pop)
 
 #define OQPI_USE_DEFAULT
 #include "../external/oqpi/include/oqpi.hpp"

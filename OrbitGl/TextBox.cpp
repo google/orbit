@@ -96,7 +96,7 @@ void TextBox::Draw( TextRenderer & a_TextRenderer
 {
     bool isCoreActivity = m_Timer.IsType(Timer::CORE_ACTIVITY);
     bool isSameThreadIdAsSelected = isCoreActivity &&
-                                    m_Timer.m_TID == Capture::GSelectedThreadId;
+                                    m_Timer.m_TID == (int)Capture::GSelectedThreadId;
 
     if( Capture::GSelectedThreadId != 0 && isCoreActivity && !isSameThreadIdAsSelected )
     {
@@ -122,8 +122,8 @@ void TextBox::Draw( TextRenderer & a_TextRenderer
     }
     else
     {
-        GLubyte* col = (GLubyte*)&a_ID;
-        col[3] = 255;
+        GLubyte* color = (GLubyte*)&a_ID;
+        color[3] = 255;
         glColor4ubv( (GLubyte*)&a_ID );
     }
 

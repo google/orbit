@@ -163,7 +163,6 @@ PBYTE PrintProperties( PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo, DWORD Poin
     USHORT PropertyLength = 0;
     DWORD FormattedDataSize = 0;
     USHORT UserDataConsumed = 0;
-    USHORT UserDataLength = 0;
     LPWSTR pFormattedData = NULL;
     DWORD LastMember = 0;  // Last member of a structure
     USHORT ArraySize = 0;

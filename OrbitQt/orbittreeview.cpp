@@ -259,7 +259,8 @@ void OrbitTreeView::OnMenuClicked(int a_Index)
         selection.insert( index.row() );
     }
     
-    m_Model->GetDataView()->OnContextMenu( menu[a_Index], a_Index, std::vector<int>(selection.begin(), selection.end()) );
+	std::vector<int> indices(selection.begin(), selection.end());
+    m_Model->GetDataView()->OnContextMenu( menu[a_Index], a_Index, indices );
 }
 
 //-----------------------------------------------------------------------------
@@ -274,7 +275,8 @@ void OrbitTreeView::keyPressEvent( QKeyEvent *event )
             selection.insert( index.row() );
         }
 
-        this->m_Model->GetDataView()->CopySelection( std::vector<int>(selection.begin(), selection.end()) );
+		std::vector<int> items(selection.begin(), selection.end());
+        this->m_Model->GetDataView()->CopySelection( items );
     }
     else
     {

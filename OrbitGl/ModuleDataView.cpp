@@ -147,11 +147,11 @@ void ModulesDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIn
                 auto it = processModules.find( module->m_AddressStart );
                 if( it != processModules.end() )
                 {
-                    std::shared_ptr<Module> & module = it->second;
+                    std::shared_ptr<Module> & mod = it->second;
 
-                    if( !module->m_Loaded )
+                    if( !mod->m_Loaded )
                     {
-                        GOrbitApp->EnqueueModuleToLoad( module );
+                        GOrbitApp->EnqueueModuleToLoad( mod );
                     }
                 }
             }

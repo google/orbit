@@ -111,12 +111,12 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data)
     glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]);
 }
 
-static const char* Orbit_ImGui_GetClipboardText()
+const char* Orbit_ImGui_GetClipboardText()
 {
     return nullptr; //return glfwGetClipboardString(g_Window);
 }
 
-static void Orbit_ImGui_SetClipboardText(const char* text)
+void Orbit_ImGui_SetClipboardText(const char* text)
 {
     // TODO
 }
@@ -329,7 +329,7 @@ ImFont* AddFontDefault()
         font_cfg.OversampleH = font_cfg.OversampleV = 1;
         font_cfg.PixelSnapH = true;
     }
-    if (font_cfg.Name[0] == '\0') strcpy(font_cfg.Name, "ProggyClean.ttf, 13px");
+    if (font_cfg.Name[0] == '\0') strcpy_s(font_cfg.Name, 40, "ProggyClean.ttf, 13px");
 
     const char* ttf_compressed_base85 = GetDefaultCompressedFontDataTTFBase85();
     ImFont* font = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, GParams.m_FontSize, &font_cfg, ImGui::GetIO().Fonts->GetGlyphRangesDefault());
@@ -438,7 +438,6 @@ void Orbit_ImGui_NewFrame( GlCanvas * a_Canvas )
     //io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
 
     // Setup time step
-    double current_time =  0;
     io.DeltaTime = a_Canvas->GetDeltaTimeSeconds();
 
     // Setup inputs
@@ -491,8 +490,6 @@ void WatchWindow::Draw(const char* title, bool* p_opened )
             ImGui::Text( ws2s(var.m_Name).c_str() );
             ImGui::NextColumn();
             ImGui::AlignFirstTextHeightToWidgets();
-
-            bool sendVariable = false;
 
             switch( var.m_BasicType )
             {

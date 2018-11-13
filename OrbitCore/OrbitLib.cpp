@@ -20,7 +20,7 @@ UserScopeTimer::UserScopeTimer( const char* a_Name ) : m_Valid( false )
     if( GIsCaptureEnabled )
     {
         m_Valid = true;
-        ScopeTimer* Timer = new(m_Data)ScopeTimer( a_Name );
+        new(m_Data)ScopeTimer( a_Name );
     }
 }
 

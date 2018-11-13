@@ -47,6 +47,8 @@
 #include <QDate>
 #include <QLocale>
 
+#pragma warning(push, 0)        
+
 #if defined(Q_CC_MSVC)
 #    pragma warning(disable: 4786) /* MS VS 6: truncating debug info after 255 characters */
 #endif
@@ -2373,3 +2375,5 @@ QT_END_NAMESPACE
 #endif
 
 #include "moc_qtvariantproperty.cpp"
+
+#pragma warning(pop)

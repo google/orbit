@@ -65,7 +65,8 @@ void TcpClient::Start()
     std::thread t( [&](){ this->ClientThread(); } );
     t.detach();
 
-    this->Send( std::string("Hello from TcpClient") );
+	std::string msg("Hello from TcpClient");
+    this->Send( msg );
 
     ReadMessage();
 }
@@ -143,7 +144,8 @@ void TcpClient::OnError( const std::error_code& ec)
 {
     if ( ( ec == asio::error::eof) || ( ec == asio::error::connection_reset ) )
     {
-        DecodeMessage(Message(Msg_Unload));
+		Message msg(Msg_Unload);
+        DecodeMessage(msg);
     }
 
     PRINT_VAR(ec.message().c_str());

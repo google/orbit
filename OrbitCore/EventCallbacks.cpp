@@ -100,11 +100,13 @@ void EventTracing::CallbackDiskIo( PEVENT_RECORD a_EventRecord, UCHAR a_Opcode )
     case DiskIo_TypeGroup2::OPCODE_FLUSH_INIT:
     {
         DiskIo_TypeGroup2* event = (DiskIo_TypeGroup2*)a_EventRecord->UserData;
+		UNUSED(event);
         break;
     }
 
     case DiskIo_TypeGroup3::OPCODE_FLUSH_BUFFER:
         DiskIo_TypeGroup3* event = (DiskIo_TypeGroup3*)a_EventRecord->UserData;
+		UNUSED(event);
         break;
     }
 
@@ -285,7 +287,6 @@ inline void ProcessContextSwitch( PEVENT_RECORD a_EventRecord )
     EVENT_HEADER &Header = a_EventRecord->EventHeader;
     UCHAR ProcessorNumber = a_EventRecord->BufferContext.ProcessorNumber;
     USHORT ProcessorIndex = a_EventRecord->BufferContext.ProcessorIndex;
-    ULONG ThreadID = Header.ThreadId;
     LONGLONG CycleTime = Header.TimeStamp.QuadPart;
     CSwitch* switchEvent = (CSwitch*)a_EventRecord->UserData;
 
@@ -321,6 +322,11 @@ inline void ProcessProfileEvent( PEVENT_RECORD a_EventRecord )
     ULONG ThreadID = Header.ThreadId;
     LONGLONG CycleTime = Header.TimeStamp.QuadPart;
     PerfInfo_SampledProfile* sampleEvent = (PerfInfo_SampledProfile*)a_EventRecord->UserData;
+
+	UNUSED(ThreadID);
+	UNUSED(CycleTime);
+	UNUSED(ProcessorNumber);
+	UNUSED(ProcessorIndex);
 
     if( Capture::GTargetProcess->HasThread( sampleEvent->ThreadId ) && Capture::IsCapturing() )
     {

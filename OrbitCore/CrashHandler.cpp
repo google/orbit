@@ -28,7 +28,7 @@ bool DmpCallback( const wchar_t* dump_path, const wchar_t* minidump_id, void* co
 
     std::wstring dir = Path::GetDumpPath();
     std::wstring msg = L"A crash dump was generated in " + dir;
-    int msgboxID = MessageBox(
+    MessageBox(
         NULL,
         succeeded ? msg.c_str() : L"Failed to generate crash dump",
         L"Orbit Crash Handler: ",

@@ -54,8 +54,6 @@ void DumpDIAValue( std::ostream &OS
     if( S_OK != ( Symbol->*Method )( &Value ) )
         return;
 
-    const char *Bytes = reinterpret_cast<const char *>( Value );
-
     std::wstring wresult = Value;
     std::string result = ws2s(wresult);
     {

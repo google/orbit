@@ -441,21 +441,6 @@ void OrbitMainWindow::OnSetClipboard( const std::wstring & a_Text )
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::GetLicense()
-{
-    LicenseDialog dialog(this);
-    dialog.setWindowTitle("Orbit Profiler");
-    if( dialog.exec() == QDialog::Accepted )
-    {
-        GOrbitApp->SetLicense( dialog.GetLicense() );
-    }
-    else
-    {
-        exit(0);
-    }
-}
-
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionAbout_triggered()
 {
     std::string title = "Orbit Profiler";

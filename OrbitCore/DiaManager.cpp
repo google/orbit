@@ -48,7 +48,6 @@ bool InitDataSource( IDiaDataSource** a_DiaDataSource )
 {
     SCOPE_TIMER_LOG( L"InitDataSource" );
 
-    DWORD dwMachType = 0;
     HRESULT hr = CoInitialize( NULL );
     std::wstring dllFullPath = Path::GetExecutablePath() + L"msdia140.dll";
     

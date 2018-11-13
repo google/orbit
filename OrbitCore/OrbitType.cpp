@@ -153,6 +153,7 @@ void Type::ListDataMembers( ULONG a_BaseOffset, std::map<ULONG, Variable> & o_Da
         ULONG offset = pair.first + a_BaseOffset;
         const Variable & member = pair.second;
         const Type & memberType = m_Pdb->GetTypeFromId( member.m_TypeIndex );
+		UNUSED( memberType );
        
         if( o_DataMembersFull.find(offset) != o_DataMembersFull.end() )
         {
@@ -258,7 +259,7 @@ void Type::OutputPadding() const
         const Variable& member = pair.second;
         const Type & memberType = m_Pdb->GetTypeFromId(member.m_TypeIndex);
 
-        auto & nextIt = m_DataMembersFull.upper_bound( pair.first );
+        auto nextIt = m_DataMembersFull.upper_bound( pair.first );
         nextOffset = nextIt != m_DataMembersFull.end() ? nextIt->first : m_Length;
         
         idealNextOffset = offset + memberType.m_Length;
@@ -350,10 +351,10 @@ std::shared_ptr<Variable> Type::GenerateVariable( DWORD64 a_Address, const std::
     // Parents
     for( auto & pair : m_ParentTypes )
     {
-        Parent & parent = pair.second;
-        ULONG baseOffset = parent.m_BaseOffset;
+        Parent & parentType = pair.second;
+        ULONG baseOffset = parentType.m_BaseOffset;
         
-        if( Type* type = m_Pdb->GetTypePtrFromId( parent.m_TypeId ) )
+        if( Type* type = m_Pdb->GetTypePtrFromId(parentType.m_TypeId ) )
         {
             std::shared_ptr<Variable> parent = type->GenerateVariable( a_Address + baseOffset );
             parent->m_IsParent = true;

@@ -435,8 +435,8 @@ void OrbitCodeEditor::highlightCurrentLine()
 
         for( int i = 0; i < m_SelectedText.Size(); ++i )
         {
-            std::wstring word = m_SelectedText.Data()[i];
-            HighlightWord( word, m_SelectedColors[i], extraSelections );
+            std::wstring selectedWord = m_SelectedText.Data()[i];
+            HighlightWord( selectedWord, m_SelectedColors[i], extraSelections );
         }
     }
 

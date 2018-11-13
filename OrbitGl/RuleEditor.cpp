@@ -29,6 +29,7 @@ RuleEditorWindow::RuleEditorWindow( Function* a_Function )
 void RuleEditorWindow::SetInputFromActiveIndex( ImGuiTextEditCallbackData* data, int entryIndex )
 {
     RuleEditorWindow* ruleEditor = reinterpret_cast<RuleEditorWindow*>( data->UserData );
+	UNUSED(ruleEditor);
 
     std::string  entry = m_AutoComplete[entryIndex];
     ReplaceStringInPlace( entry, GetCurrentWord(m_Text), "" );
@@ -62,7 +63,7 @@ std::shared_ptr<Variable> RuleEditorWindow::GetLastVariable( const std::string &
 
         for( int i = tokens[0] == "this" ? 1 : 0; var && type && i < tokens.size(); ++i )
         {
-            std::wstring & varName = s2ws(tokens[i]);
+            std::wstring varName = s2ws(tokens[i]);
             std::shared_ptr<Variable> child = var->FindImmediateChild(varName);
             if( child )
             { 
@@ -98,8 +99,8 @@ void RuleEditorWindow::RefreshAutoComplete( const std::string & a_Line )
     {
         m_AutoComplete.clear();
         m_MaxTextWidth = 0;
-        std::shared_ptr<Variable> var = GetLastVariable( a_Line );
-        Type* type = var ? var->GetType() : nullptr;
+        std::shared_ptr<Variable> lastVar = GetLastVariable( a_Line );
+        Type* type = lastVar ? lastVar->GetType() : nullptr;
         if( type )
         {
             std::string currentWord = GetCurrentWord( a_Line );
@@ -117,7 +118,7 @@ void RuleEditorWindow::RefreshAutoComplete( const std::string & a_Line )
         }
 
         m_PopupHeight = ImGui::CalcTextSize("Test").y * m_AutoComplete.size();
-        m_LastVariable = var;
+        m_LastVariable = lastVar;
         m_LastText = a_Line;
         if( m_AutoComplete.size() == 0 )
         {
@@ -217,7 +218,7 @@ int RuleEditorWindow::InputCallback( ImGuiTextEditCallbackData* data )
     case ImGuiInputTextFlags_CallbackCharFilter:
         if( data->EventChar == '.' )
         {
-            ImVec2 & pos = ImGui::GetCursorPos();
+            ImVec2 pos = ImGui::GetCursorPos();
             m_PopupPos = pos;
             m_PopupPos.y += ImGui::GetFontSize();
             m_State.m_PopupOpen = true;
@@ -394,7 +395,6 @@ void RuleEditorWindow::DrawPopup( ImVec2 pos, ImVec2 size, bool& isFocused )
 
 void RuleEditorWindow::UpdateTextBuffer()
 {
-    size_t len = m_Text.size();
     m_TextBuffer.resize(m_Text.size() + 8192);
     memcpy(&m_TextBuffer[0], &m_Text[0], m_Text.size() + 1);
 }
@@ -646,14 +646,10 @@ void RuleEditor::OnReceiveMessage( const Message & a_Message )
     if( a_Message.GetType() == Msg_SavedContext )
     {
         GRedrawBlackBoard = true;
+		m_NeedsRedraw = true;
 
         int ContextSize = Capture::GTargetProcess->GetIs64Bit() ? sizeof(SavedContext64) : sizeof(SavedContext32);
         void* argData = (void*)(a_Message.GetData() + ContextSize);
-        int argDataSize = a_Message.m_Size - ContextSize;
-
-        //DemoPosition( context, argData, argDataSize );
-        RuleEditor* ruleEditor = GOrbitApp->GetRuleEditor();
-        m_NeedsRedraw = true;
 
         DWORD64 address = a_Message.m_Header.m_GenericHeader.m_Address;
 

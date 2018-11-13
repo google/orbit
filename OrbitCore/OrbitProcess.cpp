@@ -2,6 +2,8 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+#define _SILENCE_TR2_SYS_NAMESPACE_DEPRECATION_WARNING 1 // TODO: use std::filesystem instead of std::tr2
+
 #include "Core.h"
 #include "OrbitProcess.h"
 #include "OrbitModule.h"
@@ -241,7 +243,7 @@ std::shared_ptr<Module> Process::FindModule( const std::wstring & a_ModuleName )
 Function* Process::GetFunctionFromAddress( DWORD64 a_Address, bool a_IsExact )
 {
     DWORD64 address = (DWORD64)a_Address;
-    auto & it = m_Modules.upper_bound( address );
+    auto it = m_Modules.upper_bound( address );
     if( !m_Modules.empty() && it != m_Modules.begin() )
     {
         --it;
@@ -269,7 +271,7 @@ Function* Process::GetFunctionFromAddress( DWORD64 a_Address, bool a_IsExact )
 std::shared_ptr<Module> Process::GetModuleFromAddress( DWORD64 a_Address )
 {
 	DWORD64 address = (DWORD64)a_Address;
-	auto & it = m_Modules.upper_bound(address);
+	auto it = m_Modules.upper_bound(address);
 	if (!m_Modules.empty() && it != m_Modules.begin())
 	{
 		--it;
@@ -501,8 +503,6 @@ void Process::FindCoreFunctions()
     SCOPE_TIMER_LOG(L"FindCoreFunctions");
 
     const auto prio = oqpi::task_priority::normal;
-    auto numWorkers = oqpi_tk::scheduler().workersCount( prio );
-    //int numWorkers = oqpi::thread::hardware_concurrency();
 
     oqpi_tk::parallel_for( "FindAllocFreeFunctions", (int32_t)m_Functions.size(), [&]( int32_t a_BlockIndex, int32_t a_ElementIndex )
     {

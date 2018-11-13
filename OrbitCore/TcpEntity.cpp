@@ -104,7 +104,6 @@ void TcpEntity::SendData()
         while( !m_ExitRequested && !m_FlushRequested && m_SendQueue.try_dequeue( buffer ) )
         {
             --m_NumQueuedEntries;
-            Message* msg = (Message*)buffer.Data()->data();
             TcpSocket* socket = GetSocket();
             if( socket && socket->m_Socket && socket->m_Socket->is_open() )
             {

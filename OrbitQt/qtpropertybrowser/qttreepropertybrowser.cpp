@@ -56,6 +56,8 @@
 QT_BEGIN_NAMESPACE
 #endif
 
+#pragma warning(disable: 4996) //warning C4996: 'QStyleOptionViewItemV3': was declared deprecated
+
 class QtPropertyEditorView;
 
 class QtTreePropertyBrowserPrivate
