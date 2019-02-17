@@ -5,7 +5,10 @@
 #include "Core.h"
 #include "EventGuid.h"
 #include "EventBuffer.h"
+
+#ifdef _WIN32
 #include <evntrace.h>
+#endif
 
 //-----------------------------------------------------------------------------
 class EventTracer

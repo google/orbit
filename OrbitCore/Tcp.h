@@ -3,9 +3,11 @@
 //-----------------------------------
 #pragma once
 
+#ifdef _WIN32
 //#define _WIN32_WINNT 0x0501
 #include <sdkddkver.h>
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
+#endif
 
 #include <ctime>
 #include <iostream>

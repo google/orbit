@@ -3,7 +3,10 @@
 //-----------------------------------
 
 #include "OrbitThread.h"
+
+#ifdef _WIN32
 #include "Utils.h"
+#endif
 
 //-----------------------------------------------------------------------------
 void Thread::UpdateUsage()
@@ -14,6 +17,7 @@ void Thread::UpdateUsage()
 //-----------------------------------------------------------------------------
 float Thread::GetUsage()
 {
+#ifdef _WIN32
     if( m_Handle )
     {
         FILETIME CreationTime;
@@ -42,6 +46,7 @@ float Thread::GetUsage()
             return (float)threadUsage;
         }
     }
+#endif
 
     return -1.f;
 }

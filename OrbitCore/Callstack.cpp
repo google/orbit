@@ -58,6 +58,7 @@ std::wstring CallStack::GetString()
     return callstackString;
 }
 
+#ifdef _WIN32
 //-----------------------------------------------------------------------------
 StackFrame::StackFrame( HANDLE a_Thread )
 {
@@ -99,7 +100,7 @@ StackFrame::StackFrame( HANDLE a_Thread )
     s.AddrStack.Offset = c.IntSp;
     s.AddrStack.Mode = AddrModeFlat;
 #else
-#error "Platform not supported!"
+#warning "Platform not supported!"
 #endif
 }
 
@@ -172,6 +173,8 @@ __declspec( noinline ) CallStackPOD CallStackPOD::Walk( DWORD64 a_Rip, DWORD64 a
     callstack.Hash();
     return callstack;
 }
+
+#endif
 
 //-----------------------------------------------------------------------------
 ORBIT_SERIALIZE( CallStack, 0 )

@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "Tcp.h"
+#include "BaseTypes.h"
 #include "TcpClient.h"
 #include "OrbitLib.h"
 #include "Hijacking.h"
@@ -12,6 +13,11 @@
 #include <thread>
 
 std::unique_ptr<TcpClient> GTcpClient;
+
+#ifdef __linux__
+inline bool IsBadWritePtr( void* addr, int ){ return false; }
+inline bool IsBadReadPtr( void* addr, int ){ return false; }
+#endif
 
 //-----------------------------------------------------------------------------
 TcpClient::TcpClient( const std::string & a_Host )
@@ -61,7 +67,7 @@ void TcpClient::Start()
     TcpEntity::Start();
 
     PRINT_FUNC;
-    OutputDebugString(L"TcpClient::Start()\n");
+    OutputDebugStringW(L"TcpClient::Start()\n");
     std::thread t( [&](){ this->ClientThread(); } );
     t.detach();
 
@@ -75,16 +81,16 @@ void TcpClient::Start()
 void TcpClient::ClientThread()
 {
     SetThreadName( GetCurrentThreadId(), "OrbitTcpClient" );
-    OutputDebugString(L"io_service started...\n");
+    OutputDebugStringW(L"io_service started...\n");
     asio::io_service::work work( *m_TcpService->m_IoService );
     m_TcpService->m_IoService->run();
-    OutputDebugString(L"io_service ended...\n");
+    OutputDebugStringW(L"io_service ended...\n");
 }
 
 //-----------------------------------------------------------------------------
 void TcpClient::ReadMessage()
 {
-    OutputDebugString(L"ReadMessage\n");
+    OutputDebugStringW(L"ReadMessage\n");
     asio::async_read ( *m_TcpSocket->m_Socket, asio::buffer( &m_Message, sizeof(Message) ), 
         
         [this](const asio::error_code& ec, std::size_t ReadMessageLength)
@@ -149,7 +155,7 @@ void TcpClient::OnError( const std::error_code& ec)
     }
 
     PRINT_VAR(ec.message().c_str());
-    OutputDebugString(L"Closing socket\n");
+    OutputDebugStringW(L"Closing socket\n");
     Stop();
     Orbit::DeInit();
 }
@@ -210,7 +216,7 @@ void TcpClient::DecodeMessage( Message & a_Message )
         {
             void* address = (void*)addresses[i];
             std::wstring dbgMsg = s2ws( Format( "Hooking function at address: %p\n", address ) );
-            OutputDebugString(dbgMsg.c_str());
+            OutputDebugStringW(dbgMsg.c_str());
             Hijacking::CreateHook( address );
             GTcpClient->Send( Msg_NumInstalledHooks, i+1 );
         }
@@ -366,7 +372,7 @@ void TcpClient::DecodeMessage( Message & a_Message )
         {
             void* address = (void*)addresses[i];
             std::wstring dbgMsg = s2ws( Format( "Callstack tracking for address: %p\n", address ) );
-            OutputDebugString( dbgMsg.c_str() );
+            OutputDebugStringW( dbgMsg.c_str() );
             Hijacking::TrackCallstack( addresses[i] );
         }
         break;

@@ -63,3 +63,15 @@ private:
     std::atomic<long long> m_MaxTime;
     std::atomic<long long> m_MinTime;
 };
+
+#ifdef __linux
+struct EventTracer
+{
+    EventBuffer & GetEventBuffer(){ return m_EventBuffer; }
+    EventBuffer m_EventBuffer;
+    void Start(){}
+    void Stop(){}
+};
+
+extern EventTracer GEventTracer;
+#endif

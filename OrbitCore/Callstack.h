@@ -47,6 +47,7 @@ struct CallStack
     ORBIT_SERIALIZABLE;
 };
 
+#ifdef _WIN32
 //-----------------------------------------------------------------------------
 struct StackFrame
 {
@@ -166,5 +167,7 @@ inline CallStack GetCallStackAsm()
 
     return GetCallstackManual( c.Eip, c.Ebp + 4 );
 }
+
+#endif
 
 #endif

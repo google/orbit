@@ -9,7 +9,10 @@
 #include "TcpClient.h"
 #include "Params.h"
 #include "OrbitLib.h"
+
+#ifdef _WIN32
 #include <direct.h>
+#endif
 
 TimerManager* GTimerManager;
 
@@ -131,7 +134,9 @@ void TimerManager::Stop()
 void TimerManager::ConsumeTimers()
 {
     SetThreadName( GetCurrentThreadId(), "OrbitConsumeTimers" );
+#ifdef _WIN32
     SetThreadPriority( GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL );
+#endif
 
     Timer Timer;
 

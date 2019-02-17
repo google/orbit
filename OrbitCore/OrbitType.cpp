@@ -10,20 +10,23 @@
 #include "Capture.h"
 #include "Hashing.h"
 #include "SamplingProfiler.h"
-#include "SymbolUtils.h"
 #include "PrintVar.h"
-#include "OrbitDia.h"
-#include "DiaManager.h"
-#include "DiaParser.h"
 #include "Params.h"
 #include "Serialization.h"
 #include "TcpServer.h"
 
-#include "dia2.h"
+#ifdef _WIN32
+#include "OrbitDia.h"
+#include "DiaManager.h"
+#include "SymbolUtils.h"
+#include "DiaParser.h"
+#include <dia2.h>
+#endif
 
 //-----------------------------------------------------------------------------
 void Type::LoadDiaInfo()
 {
+#ifdef _WIN32
     if( !m_DiaInfoLoaded )
     {
 		std::shared_ptr<OrbitDiaSymbol> orbitDiaSymbol = GetDiaSymbol();
@@ -37,11 +40,13 @@ void Type::LoadDiaInfo()
             GenerateDataLayout();
         }
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------
 void Type::GenerateDiaHierarchy()
 {
+#ifdef _WIN32
     if( m_HierarchyGenerated )
         return;
 
@@ -63,11 +68,13 @@ void Type::GenerateDiaHierarchy()
     }
 
     m_HierarchyGenerated = true;
+#endif
 }
 
 //-----------------------------------------------------------------------------
 void Type::AddParent( IDiaSymbol* a_Parent )
 {
+#ifdef _WIN32
     LONG offset;
     if( a_Parent->get_offset( &offset ) == S_OK )
     {
@@ -91,11 +98,13 @@ void Type::AddParent( IDiaSymbol* a_Parent )
             }
         }
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------
 void Type::GenerateDiaHierarchy( IDiaSymbol* a_DiaSymbol )
 {
+#ifdef _WIN32
     DWORD dwSymTag;
     ULONG celt = 0;
 
@@ -124,6 +133,7 @@ void Type::GenerateDiaHierarchy( IDiaSymbol* a_DiaSymbol )
         Type & type = m_Pdb->GetTypeFromId( parent.m_TypeId );
         type.GenerateDiaHierarchy();
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -179,6 +189,7 @@ std::shared_ptr<OrbitDiaSymbol> Type::GetDiaSymbol()
         return std::make_shared<OrbitDiaSymbol>();
     }
 
+#ifdef _WIN32
     std::shared_ptr<OrbitDiaSymbol> sym = m_Pdb->GetDiaSymbolFromId( m_Id );
     if( sym->m_Symbol == nullptr )
     {
@@ -186,6 +197,9 @@ std::shared_ptr<OrbitDiaSymbol> Type::GetDiaSymbol()
     }
 
     return sym;
+#else
+    return nullptr;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -342,6 +356,8 @@ std::shared_ptr<Variable> Type::GenerateVariable( DWORD64 a_Address, const std::
     LoadDiaInfo();
 
     std::shared_ptr<Variable> var = std::make_shared<Variable>();
+
+#ifdef _WIN32
     var->m_Pdb = this->m_Pdb;
     var->m_Address = a_Address;
     var->m_TypeIndex = m_Id;
@@ -385,6 +401,7 @@ std::shared_ptr<Variable> Type::GenerateVariable( DWORD64 a_Address, const std::
             var->AddChild( newMember );
         }
     }
+#endif
 
     return var;
 }

@@ -28,7 +28,7 @@ if [ ! -d build/ ]; then
 mkdir build
 fi
 cd build
-cmake -DCMAKE_TOOLCHAIN_FILE='..\external\vcpkg\scripts\buildsystems\vcpkg.cmake' -DCMAKE_GENERATOR_PLATFORM=x64 ..
+cmake -DCMAKE_TOOLCHAIN_FILE='../external/vcpkg/scripts/buildsystems/vcpkg.cmake' -DCMAKE_GENERATOR_PLATFORM=x64 ..
 
 cd ..
 

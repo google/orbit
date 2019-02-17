@@ -105,7 +105,9 @@ public:
     std::map<ULONG, Parent> m_ParentTypes;
     UdtKind                 m_Type;
     bool                    m_Selected;
+#ifdef _WIN32
     TypeInfo                m_TypeInfo;
+#endif
     Pdb*                    m_Pdb;
     unsigned long long      m_Hash;
     bool                    m_DiaInfoLoaded;

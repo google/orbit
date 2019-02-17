@@ -5,15 +5,18 @@
 #include "SamplingProfiler.h"
 #include "Injection.h"
 #include "Capture.h"
-#include "SymbolUtils.h"
 #include "Log.h"
 #include "Params.h"
 #include "OrbitThread.h"
 #include <set>
 #include <map>
-#include "dia2.h"
 #include "Serialization.h"
 #include "OrbitModule.h"
+
+#ifdef _WIN32
+#include "SymbolUtils.h"
+#include "dia2.h"
+#endif
 
 double GThreadUsageSamplePeriodMs = 200.0;
 
@@ -78,6 +81,7 @@ void SamplingProfiler::StopCapture()
 //-----------------------------------------------------------------------------
 void SamplingProfiler::SampleThreadsAsync()
 {
+#ifdef _WIN32
     SetThreadPriority( GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL );
     ReserveThreadData();
 
@@ -110,6 +114,7 @@ void SamplingProfiler::SampleThreadsAsync()
     }
 
     ProcessSamples();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -416,6 +421,7 @@ void SamplingProfiler::ProcessAddresses()
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddAddress( DWORD64 a_Address )
 {
+#ifdef _WIN32
     ScopeLock lock( m_SymbolMutex );
 
     unsigned char buffer[1024];
@@ -461,6 +467,7 @@ void SamplingProfiler::AddAddress( DWORD64 a_Address )
         lineInfo.m_File = L"";
         m_AddressToLineInfo[a_Address] = lineInfo;
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -507,6 +514,7 @@ void SamplingProfiler::OutputStats()
 //-----------------------------------------------------------------------------
 void SamplingProfiler::GetThreadCallstack( Thread* a_Thread )
 {
+#ifdef _WIN32
     StackFrame frame( a_Thread->m_Handle );
 
     unsigned int depth = 0;
@@ -531,6 +539,7 @@ void SamplingProfiler::GetThreadCallstack( Thread* a_Thread )
         frame.m_Callstack.m_ThreadId = a_Thread->m_TID;
         m_Callstacks.push_back( frame.m_Callstack );
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------

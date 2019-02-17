@@ -7,7 +7,7 @@
 #include <string>
 
 #define SCOPE_TIMER_LOG( msg ) LocalScopeTimer UNIQUE_ID(msg)
-extern __declspec(thread) int CurrentDepth;
+extern thread_local int CurrentDepth;
 
 //-----------------------------------------------------------------------------
 class Timer

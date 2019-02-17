@@ -10,6 +10,9 @@
 
 //-----------------------------------------------------------------------------
 TcpEntity::TcpEntity() : m_NumQueuedEntries(0)
+                       , m_ExitRequested(false)
+                       , m_FlushRequested(false)
+                       , m_NumFlushedItems(0)
 {
     PRINT_FUNC;
     m_TcpSocket = new TcpSocket();

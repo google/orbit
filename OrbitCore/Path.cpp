@@ -6,9 +6,14 @@
 
 #include "Path.h"
 #include "Utils.h"
-#include <direct.h>
 #include <fstream>
+
+#ifdef _WIN32
+#include <direct.h>
 #include "Shlobj.h"
+#else
+#include <dirent.h>
+#endif
 
 std::wstring Path::m_BasePath;
 bool         Path::m_IsPackaged;
@@ -21,6 +26,7 @@ void Path::Init()
 //-----------------------------------------------------------------------------
 std::wstring Path::GetExecutableName()
 {
+#ifdef _WIN32
     WCHAR  cwBuffer[2048] = { 0 };
     LPWSTR pszBuffer = cwBuffer;
     DWORD  dwMaxChars = _countof(cwBuffer);
@@ -36,6 +42,12 @@ std::wstring Path::GetExecutableName()
 
     std::replace(exeFullName.begin(), exeFullName.end(), '\\', '/');
     return exeFullName;
+#else
+    char result[PATH_MAX];
+    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+    std::string fullPath = std::string(result, (count > 0) ? count : 0);
+    return s2ws(fullPath);
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -49,13 +61,14 @@ std::wstring Path::GetExecutablePath()
 //-----------------------------------------------------------------------------
 bool Path::FileExists(const std::wstring & a_File)
 {
-    std::ifstream f( a_File.c_str() );
+    std::ifstream f( ws2s(a_File).c_str() );
     return f.good();
 }
 
 //-----------------------------------------------------------------------------
 bool Path::DirExists( const std::wstring & a_Dir )
 {
+#if _WIN32
     DWORD ftyp = GetFileAttributesA( ws2s(a_Dir).c_str() );
     if( ftyp == INVALID_FILE_ATTRIBUTES )
         return false;
@@ -64,6 +77,18 @@ bool Path::DirExists( const std::wstring & a_Dir )
         return true;
 
     return false;
+#else
+    DIR *pDir;
+    bool exists = false;
+    pDir = opendir (ws2s(a_Dir).c_str());
+    if (pDir != NULL)
+    {
+        exists = true;    
+        (void) closedir (pDir);
+    }
+
+    return exists;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -243,19 +268,27 @@ std::wstring Path::GetDirectory( const std::wstring & a_FullName )
 //-----------------------------------------------------------------------------
 std::wstring Path::GetProgramFilesPath()
 {
+#ifdef WIN32
     TCHAR pf[MAX_PATH] = {0};
     SHGetSpecialFolderPath(
         0,
         pf,
         CSIDL_PROGRAM_FILES,
         FALSE );
-    return std::wstring(pf) + L"\\OrbitProfiler\\";
+    return wstring(pf) + L"\\OrbitProfiler\\";
+#else
+    return L"TodoLinux";
+#endif
 }
 
 //-----------------------------------------------------------------------------
 std::wstring Path::GetAppDataPath()
 {
+#ifdef WIN32
     std::string appData = GetEnvVar( "APPDATA" );
+#else
+    std::string appData = GetEnvVar( "XDG_DATA_DIRS" );
+#endif
     std::string path = appData + "\\OrbitProfiler\\";
     _mkdir( path.c_str() );
     return s2ws( path );
@@ -279,6 +312,7 @@ std::vector< std::wstring > Path::ListFiles( const std::wstring & a_Dir, std::fu
 {
     std::vector< std::wstring > files;
 
+#ifdef _WIN32
     for( auto it = std::tr2::sys::recursive_directory_iterator( a_Dir );
         it != std::tr2::sys::recursive_directory_iterator(); ++it )
     {
@@ -289,6 +323,7 @@ std::vector< std::wstring > Path::ListFiles( const std::wstring & a_Dir, std::fu
             files.push_back( file.wstring() );
         }
     }
+#endif
 
     return files;
 }

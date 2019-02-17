@@ -8,7 +8,10 @@
 #include "Params.h"
 
 #include <fstream>
+
+#ifdef _WIN32
 #include <Shellapi.h>
+#endif
 
 //-----------------------------------------------------------------------------
 void Diff::Exec( const std::string & a_A, const std::string & a_B )
@@ -19,8 +22,8 @@ void Diff::Exec( const std::string & a_A, const std::string & a_B )
     std::ofstream fileA;
     std::ofstream fileB;
 
-    fileA.open( fileNameA );
-    fileB.open( fileNameB );
+    fileA.open( ws2s(fileNameA) );
+    fileB.open( ws2s(fileNameB) );
 
     if( fileA.fail() || fileB.fail() )
     {
@@ -39,6 +42,11 @@ void Diff::Exec( const std::string & a_A, const std::string & a_B )
     ReplaceStringInPlace( args, L"%1", fileNameA );
     ReplaceStringInPlace( args, L"%2", fileNameB );
 
+#ifdef _WIN32
     ShellExecute( 0, nullptr, s2ws(GParams.m_DiffExe).c_str(), args.c_str(), 0, SW_HIDE );
+#else
+    std::string cmd = GParams.m_DiffExe + " " + GParams.m_DiffArgs;
+    system(cmd.c_str());
+#endif
 }
 

@@ -41,7 +41,7 @@ public:
     std::vector< std::string > GetStats();
 
 protected:
-    class TcpSocket* TcpServer::GetSocket() override final;
+    class TcpSocket* GetSocket() override final;
     void ServerThread();
 
 private:

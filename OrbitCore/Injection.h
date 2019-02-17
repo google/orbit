@@ -17,8 +17,11 @@ public:
     HANDLE GetProcessHandle() const { return m_InjectedProcessHandle; }
 
     static HANDLE GetTargetProcessHandle( const std::string & a_Target, DWORD & o_ProcessID );
+
+#ifdef _WIN32
     static HMODULE WINAPI GetRemoteModuleHandle( HANDLE hProcess, LPCSTR lpModuleName );
     static FARPROC WINAPI GetRemoteProcAddress( HANDLE hProcess, HMODULE hModule, LPCSTR lpProcName, UINT Ordinal = 0, BOOL UseOrdinal = FALSE );
+#endif
 
 protected:
     void* RemoteWrite( const char* a_Data, int a_NumBytes );

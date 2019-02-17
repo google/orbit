@@ -5,6 +5,7 @@
 
 //#define _NO_CVCONST_H
 #include "OrbitDbgHelp.h"
+#include "Serialization.h"
 
 // Maximal length of name buffers (in characters) 
 #define TIS_MAXNAMELEN  256

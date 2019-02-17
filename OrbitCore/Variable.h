@@ -103,6 +103,7 @@ public:
         void *              m_Data;
         int                 m_Int;
         unsigned int        m_UInt;
+#ifdef _WIN32
         __int8              m_Int8;
         unsigned __int8     m_UInt8;
         __int16             m_Int16;
@@ -111,6 +112,7 @@ public:
         unsigned __int32    m_UInt32;
         __int64             m_Int64;
         unsigned __int64    m_UInt64;
+#endif
         bool                m_Bool;
         char                m_Char;
         signed char         m_SChar;
@@ -121,7 +123,6 @@ public:
         unsigned long       m_ULong;
         long long           m_LongLong;
         unsigned long long  m_ULongLong;
-        enum                m_Enum;
         float               m_Float;
         double              m_Double;
         long double         m_LDouble;

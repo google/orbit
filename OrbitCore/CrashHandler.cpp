@@ -7,8 +7,9 @@
 #include "ScopeTimer.h"
 #include "TcpClient.h"
 #include "OrbitDbgHelp.h"
-#include <client/windows/handler/exception_handler.h>
 
+#ifdef _WIN32
+#include <client/windows/handler/exception_handler.h>
 #include <fstream>
 
 //-----------------------------------------------------------------------------
@@ -96,3 +97,5 @@ void SendDumpInternal( const std::wstring & a_Dir, const std::wstring & a_Id )
 
     file.close();
 }
+
+#endif

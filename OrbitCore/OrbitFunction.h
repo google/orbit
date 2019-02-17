@@ -4,12 +4,15 @@
 #pragma once
 
 #include <string>
-#include "TypeInfoStructs.h"
 #include "OrbitDbgHelp.h"
 #include "cvconst.h"
 #include "BaseTypes.h"
 #include "FunctionStats.h"
 #include "SerializationMacros.h"
+
+#ifdef _WIN32
+#include "TypeInfoStructs.h"
+#endif
 
 class Pdb;
 
@@ -21,7 +24,10 @@ struct FunctionParam
     std::wstring     m_ParamType;
     std::wstring     m_Type;
     std::wstring     m_Address;
+
+#ifdef _WIN32
     SYMBOL_INFO m_SymbolInfo;
+#endif
 
     bool InRegister( int a_Index );
     bool IsPointer() { return m_Type.find( L"*" ) != std::wstring::npos; }

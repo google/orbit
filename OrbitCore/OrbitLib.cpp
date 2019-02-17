@@ -7,7 +7,7 @@
 #include "ScopeTimer.h"
 #include "TimerManager.h"
 #include "Hijacking.h"
-#include "CallStack.h"
+#include "Callstack.h"
 #include "CrashHandler.h"
 
 std::string GHost;

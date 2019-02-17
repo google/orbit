@@ -17,9 +17,13 @@ void InitProfiling();
 //-----------------------------------------------------------------------------
 inline TickType OrbitTicks()
 {
+#ifdef _WIN32
     LARGE_INTEGER ticks;
     QueryPerformanceCounter(&ticks);
     return ticks.QuadPart;
+#else
+    return 0;
+#endif
 }
 
 //-----------------------------------------------------------------------------

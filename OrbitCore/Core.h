@@ -13,8 +13,10 @@
 #include <chrono>
 #include <ctime>
 #include <codecvt>
-#include <tchar.h>
 #include <wchar.h>
+#ifdef _WIN32
+#include <tchar.h>
+#endif
 
 #include "Threading.h"
 #include "Utils.h"

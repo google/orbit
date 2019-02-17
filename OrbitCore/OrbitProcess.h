@@ -10,6 +10,7 @@
 
 #include <set>
 #include <unordered_set>
+#include <vector>
 #include <memory>
 #include <map>
 
@@ -45,7 +46,10 @@ public:
     void FindPdbs( const std::vector< std::wstring > & a_SearchLocations );
 
     static bool IsElevated( HANDLE a_Process );
+
+#ifdef _WIN32
     static bool SetPrivilege( LPCTSTR a_Name, bool a_Enable );
+#endif
 
     std::map< DWORD64, std::shared_ptr<Module> >& GetModules() { return m_Modules; }
     std::map< std::wstring, std::shared_ptr<Module> >& GetNameToModulesMap() { return m_NameToModuleMap; }

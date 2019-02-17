@@ -9,13 +9,13 @@
 #include "TcpForward.h"
 #include "Path.h"
 #include "Injection.h"
+#include "EventBuffer.h"
 #include "SamplingProfiler.h"
 #include "OrbitSession.h"
 #include "Serialization.h"
 #include "Pdb.h"
 #include "Log.h"
 #include "Params.h"
-#include "EventTracer.h"
 #include "OrbitUnreal.h"
 #include "CoreApp.h"
 #include "Params.h"
@@ -23,6 +23,12 @@
 #include "CoreApp.h"
 #include <fstream>
 #include <ostream>
+
+#ifdef _WIN32
+#include "EventTracer.h"
+#else
+std::shared_ptr<Pdb> GPdbDbg;
+#endif
 
 bool        Capture::GInjected = false;
 bool        Capture::GIsConnected = false;
@@ -548,7 +554,7 @@ void Capture::SaveSession( const std::wstring & a_FileName )
     }
 
     SCOPE_TIMER_LOG( Format( L"Saving Orbit session in %s", saveFileName.c_str() ) );
-    std::ofstream file( saveFileName, std::ios::binary );
+    std::ofstream file( ws2s(saveFileName), std::ios::binary );
     cereal::BinaryOutputArchive archive(file);
     archive( cereal::make_nvp("Session", session) );
 }

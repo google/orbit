@@ -11,7 +11,10 @@
 #include "Capture.h"
 #include "CoreApp.h"
 #include "Serialization.h"
+
+#ifdef _WIN32
 #include "DiaParser.h"
+#endif
 
 //-----------------------------------------------------------------------------
 Variable::Variable() : m_Line(0)
@@ -197,6 +200,7 @@ void Variable::PrintHierarchy( int a_Indent )
 //-----------------------------------------------------------------------------
 void Variable::PrintDetails()
 {
+#ifdef _WIN32
     if( Type* type = GetType() )
     {
         DiaParser parser;
@@ -206,6 +210,7 @@ void Variable::PrintDetails()
         ORBIT_VIZ("\n\nDetails:\n");
         ORBIT_VIZ(parser.m_Log);
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -265,13 +270,21 @@ std::shared_ptr<Variable> Variable::FindImmediateChild( const std::wstring & a_N
 //-----------------------------------------------------------------------------
 const Type * Variable::GetType() const
 {
+#ifdef _WIN32
      return m_Pdb ? m_Pdb->GetTypePtrFromId(m_TypeIndex) : nullptr;
+#else
+    return nullptr;
+#endif
 }
 
 //-----------------------------------------------------------------------------
 Type * Variable::GetType()
 {
+#ifdef _WIN32
     return m_Pdb ? m_Pdb->GetTypePtrFromId( m_TypeIndex ) : nullptr;
+#else
+    return nullptr;
+#endif
 }
 
 //-----------------------------------------------------------------------------

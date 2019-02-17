@@ -10,7 +10,7 @@
 #include "ScopeTimer.h"
 #include "Serialization.h"
 #include <algorithm>
-#include <filesystem>
+#include <experimental/filesystem>
 #include <fstream>
 
 Params GParams;
@@ -68,7 +68,7 @@ void Params::Save()
     GCoreApp->SendToUiNow(L"UpdateProcessParams");
     std::wstring fileName = Path::GetParamsFileName();
     SCOPE_TIMER_LOG( Format( L"Saving hook params in %s", fileName.c_str() ) );
-    std::ofstream file( fileName );
+    std::ofstream file( ws2s(fileName) );
     cereal::XMLOutputArchive archive( file );
     archive( cereal::make_nvp("Params", *this) );
 }
@@ -76,7 +76,7 @@ void Params::Save()
 //-----------------------------------------------------------------------------
 void Params::Load()
 {
-    std::ifstream file( Path::GetParamsFileName() );
+    std::ifstream file( ws2s(Path::GetParamsFileName()) );
     if( !file.fail() )
     {
         cereal::XMLInputArchive archive( file );
@@ -100,6 +100,7 @@ void Params::AddToPdbHistory( const std::string & a_PdbName )
 //-----------------------------------------------------------------------------
 void Params::ScanPdbCache()
 {
+#ifdef _WIN32
     std::wstring cachePath = Path::GetCachePath();
     SCOPE_TIMER_LOG( Format( L"Scanning cache (%s)", cachePath.c_str() ) );
 
@@ -113,4 +114,5 @@ void Params::ScanPdbCache()
             m_CachedPdbsMap.insert( std::make_pair( fileName, ws2s(cachePath + file.filename().wstring()) ) );
         }
     }
+#endif
 }

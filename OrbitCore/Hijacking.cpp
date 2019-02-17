@@ -29,8 +29,7 @@ struct ContextScope
 {
 #ifdef _WIN64
     // NOTE:  To support Whole Program Optimization, we need more conservative 
-    // register preserving so that programs 
-    // Tested on oqpi and Unity, works much better now.
+    // register preserving.  Tested on oqpi and Unity, works much better now.
     ContextScope() { OrbitGetSSEContext( &m_Context ); }
     ~ContextScope(){ OrbitSetSSEContext( &m_Context ); }
     OrbitSSEContext m_Context;

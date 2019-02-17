@@ -6,15 +6,19 @@
 #include "ScopeTimer.h"
 #include "ObjectCount.h"
 #include "Platform.h"
+
+#ifdef _WIN32
 #include "dia2dump.h"
 #include "PrintSymbol.h"
-
 #include <Shellapi.h>
+#endif
 
 //-----------------------------------------------------------------------------
 void OrbitDiaReleasePtr( IUnknown* a_Symbol )
 {
+#ifdef _WIN32
     a_Symbol->Release();
+#endif
 }
 
 //-----------------------------------------------------------------------------

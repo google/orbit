@@ -9,7 +9,7 @@
 
 // Integer register
 //-----------------------------------------------------------------------------
-struct Reg32 { DWORD Low; DWORD High; };
+struct Reg32 { uint32_t Low; uint32_t High; };
 struct RegF  { float LowF; float HighF; };
 struct Reg8  { char A; char B; char C; char D; char E; char F; char G; char H; };
 struct IntReg

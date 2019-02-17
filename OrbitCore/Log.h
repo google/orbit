@@ -38,7 +38,7 @@ public:
     inline void LOGF( const wchar_t* const _Format, Args&&... args )
     {
         std::wstring log = Format( _Format, std::forward<Args>( args )... );
-        Log( log );
+        Log( log.c_str() );
     }
 
 protected:

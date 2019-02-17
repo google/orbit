@@ -77,9 +77,9 @@ protected:
     AutoResetEvent             m_ConditionVariable;
     LockFreeQueue< TcpPacket > m_SendQueue;
     std::atomic<int>           m_NumQueuedEntries;
-    std::atomic<bool>          m_ExitRequested = false;
-    std::atomic<bool>          m_FlushRequested = false;
-    std::atomic<int>           m_NumFlushedItems = 0;
+    std::atomic<bool>          m_ExitRequested;
+    std::atomic<bool>          m_FlushRequested;
+    std::atomic<int>           m_NumFlushedItems;
 };
 
 //-----------------------------------------------------------------------------

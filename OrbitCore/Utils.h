@@ -5,7 +5,8 @@
 
 #include "Platform.h"
 #include "xxhash.h"
-
+#include <stdio.h>
+#include <vector>
 #include <algorithm>
 #include <string>
 #include <unordered_map>
@@ -14,8 +15,7 @@
 #include <algorithm>
 #include <codecvt>
 #include <string.h>
-#include <tchar.h>
-#include <wchar.h>
+#include <BaseTypes.h>
 #include <stdarg.h>
 
 //-----------------------------------------------------------------------------
@@ -47,7 +47,9 @@ inline std::wstring s2ws( const std::string& str )
 //-----------------------------------------------------------------------------
 inline std::string GetEnvVar( const char* a_Var )
 {
-    std::string var;
+     std::string var;
+
+#ifdef _WIN32
     char* buf = nullptr;
     size_t sz = 0;
     if( _dupenv_s( &buf, &sz, a_Var ) == 0 && buf != nullptr )
@@ -55,6 +57,9 @@ inline std::string GetEnvVar( const char* a_Var )
         var = buf;
         free( buf );
     }
+#else
+    var = getenv(a_Var);
+#endif
 
     return var;
 }
@@ -71,8 +76,10 @@ inline unsigned long long StringHash( const std::wstring & a_String )
     return XXH64(a_String.data(), a_String.size()*sizeof(wchar_t), 0xBADDCAFEDEAD10CC);
 }
 
+#ifdef _WIN32
 #define MemPrintf( Dest, DestSize, Source, ... ) _stprintf_s( Dest, DestSize, Source, __VA_ARGS__ )
 #define Log( Msg, ... ) OrbitPrintf( Msg, __VA_ARGS__ )
+#endif
 
 //-----------------------------------------------------------------------------
 template <typename T, size_t N>
@@ -125,11 +132,11 @@ inline std::vector< std::string > Tokenize( std::string a_String, const char* a_
 {
     std::vector< std::string > tokens;
     char* next_token;
-    char* token = strtok_s( &a_String[0], a_Delimiters, &next_token );
+    char* token = strtok_r( &a_String[0], a_Delimiters, &next_token );
     while (token != NULL)
     {
         tokens.push_back( token );
-        token = strtok_s( NULL, a_Delimiters, &next_token );
+        token = strtok_r( NULL, a_Delimiters, &next_token );
     }
 
     return tokens;
@@ -333,6 +340,7 @@ std::string GetLastErrorAsString();
 //-----------------------------------------------------------------------------
 std::string GuidToString( GUID a_Guid );
 
+#ifdef _WIN32
 //-----------------------------------------------------------------------------
 template <typename T> inline std::string ToHexString( T a_Value )
 {
@@ -355,6 +363,7 @@ class CWindowsMessageToString
 public:
     static std::string GetStringFromMsg(DWORD dwMessage, bool = true);
 };
+#endif
 
 //-----------------------------------------------------------------------------
 inline std::wstring GetPrettySize( ULONG64 a_Size )

@@ -3,8 +3,28 @@
 //-----------------------------------
 
 #include "ProcessUtils.h"
-#include <tlhelp32.h>
 #include "Log.h"
+#include <memory>
+
+#ifdef _WIN32
+#include <tlhelp32.h>
+#else
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/types.h> // for opendir(), readdir(), closedir()
+#include <sys/stat.h> // for stat()
+
+#include <iostream>
+#include <cstdlib>
+#include <cstring>
+#include <cstdarg>
+
+#define PROC_DIRECTORY "/proc/"
+#define CASE_SENSITIVE    1
+#define CASE_INSENSITIVE  0
+#define EXACT_MATCH       1
+#define INEXACT_MATCH     0
+#endif
 
 // Is64BitProcess function taken from Very Sleepy
 #ifdef _WIN64
@@ -14,9 +34,18 @@ Wow64GetThreadContext_t *fn_Wow64GetThreadContext = (Wow64GetThreadContext_t *)G
 Wow64SuspendThread_t *fn_Wow64SuspendThread = (Wow64SuspendThread_t *)GetProcAddress(GetModuleHandle(L"kernel32"), "Wow64SuspendThread");
 #endif
 
+int IsNumeric(const char* ccharptr_CharacterList)
+{
+    for ( ; *ccharptr_CharacterList; ccharptr_CharacterList++)
+        if (*ccharptr_CharacterList < '0' || *ccharptr_CharacterList > '9')
+            return 0; // false
+    return 1; // true
+}
+
 //-----------------------------------------------------------------------------
 bool ProcessUtils::Is64Bit(HANDLE hProcess)
 {
+#ifdef _WIN32
     // https://github.com/VerySleepy/verysleepy/blob/master/src/utils/osutils.cpp
 
     typedef BOOL WINAPI IsWow64Process_t(__in   HANDLE hProcess, __out  PBOOL Wow64Process);
@@ -49,6 +78,8 @@ bool ProcessUtils::Is64Bit(HANDLE hProcess)
             return true;
         }
     }
+
+#endif
     return false;
 }
 
@@ -68,6 +99,7 @@ void ProcessList::Clear()
 //-----------------------------------------------------------------------------
 void ProcessList::Refresh()
 {
+#ifdef _WIN32
     m_Processes.clear();
     std::unordered_map< DWORD, std::shared_ptr< Process > > previousProcessesMap = m_ProcessesMap;
     m_ProcessesMap.clear();
@@ -137,9 +169,64 @@ void ProcessList::Refresh()
 
         } while (Process32Next(snapshot, &processinfo));
     }
+    CloseHandle(snapshot);
+
+#else
+    m_Processes.clear();
+
+    char chrarry_CommandLinePath[100];
+    char chrarry_NameOfProcess[300];
+    char* chrptr_StringToCompare = NULL;
+    pid_t pid_ProcessIdentifier = (pid_t) -1;
+    struct dirent* de_DirEntity = NULL;
+    DIR* dir_proc = NULL;
+
+    dir_proc = opendir(PROC_DIRECTORY);
+    if (dir_proc == NULL)
+    {
+        perror("Couldn't open the " PROC_DIRECTORY " directory") ;
+        return;
+    }
+
+    int count = 0;
+
+    // Loop while not NULL
+    while ( (de_DirEntity = readdir(dir_proc)) )
+    {
+        if (de_DirEntity->d_type == DT_DIR)
+        {
+            if (IsNumeric(de_DirEntity->d_name))
+            {
+                int pid = atoi(de_DirEntity->d_name);
+                strcpy(chrarry_CommandLinePath, PROC_DIRECTORY) ;
+                strcat(chrarry_CommandLinePath, de_DirEntity->d_name) ;
+                strcat(chrarry_CommandLinePath, "/cmdline") ;
+                FILE* fd_CmdLineFile = fopen (chrarry_CommandLinePath, "rt") ;  // open the file for reading text
+                if (fd_CmdLineFile)
+                {
+                    fscanf(fd_CmdLineFile, "%s", chrarry_NameOfProcess) ; // read from /proc/<NR>/cmdline
+                    fclose(fd_CmdLineFile);  // close the file prior to exiting the routine
+
+                    if (strrchr(chrarry_NameOfProcess, '/'))
+                        chrptr_StringToCompare = strrchr(chrarry_NameOfProcess, '/') + 1 ;
+                    else
+                        chrptr_StringToCompare = chrarry_NameOfProcess ;
+
+                    auto process = std::make_shared<Process>();
+                    process->m_Name = s2ws( chrarry_NameOfProcess );
+                    process->SetID(pid);
+
+                    m_Processes.push_back(process);
+                    //printf("Process name: %s\n", chrarry_NameOfProcess);
+                    //printf("Pure Process name: %s\n", chrptr_StringToCompare );
+                }
+            }
+        }
+    }
+    closedir(dir_proc) ;
+#endif
 
     SortByCPU();
-    CloseHandle(snapshot);
 }
 
 //-----------------------------------------------------------------------------

@@ -13,8 +13,12 @@
 #include <concurrentqueue.h>
 #pragma warning(pop)
 
+// TODO: make oqpi compile on linux
+#ifdef _WIN32
 #define OQPI_USE_DEFAULT
 #include "../external/oqpi/include/oqpi.hpp"
+using oqpi_tk = oqpi::default_helpers;
+#endif
 
 typedef std::recursive_mutex                    Mutex;
 typedef std::lock_guard<std::recursive_mutex>   ScopeLock;
@@ -23,7 +27,6 @@ typedef std::condition_variable                 ConditionVariable;
 
 template<typename T>
 using LockFreeQueue = moodycamel::ConcurrentQueue<T>;
-using oqpi_tk       = oqpi::default_helpers;
 
 //-----------------------------------------------------------------------------
 class ConditionalLock
@@ -47,6 +50,7 @@ private:
     bool                  m_Locked;
 };
 
+#ifdef _WIN32
 const DWORD MS_VC_EXCEPTION = 0x406D1388;
 
 #pragma pack(push,8)
@@ -76,4 +80,4 @@ inline void SetThreadName( DWORD dwThreadID, char* threadName )
     {
     }
 }
-
+#endif
