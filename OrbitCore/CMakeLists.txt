@@ -1,93 +1,27 @@
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+cmake_minimum_required(VERSION 3.6)
 
-include(CheckIncludeFiles)
-include(CheckIncludeFileCXX)
-include(CheckFunctionExists)
-include(CheckSymbolExists)
-include(CheckLibraryExists)
-include(CheckStructHasMember)
+# Orbit directories
+set(ORBIT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
+set(EXTERN_ROOT "${ORBIT_ROOT}/external")
+set(ORBIT_UTILS "${ORBIT_ROOT}/OrbitUtils")
 
-function(PrintVars var)
-message("=== PRINT VARS ===")
-message("=")
-message(${var})
-get_cmake_property(_variableNames VARIABLES)
-list (SORT _variableNames)
-foreach (_variableName ${_variableNames})
-    if(_variableName MATCHES ${var})
-        message(STATUS "${_variableName}=${${_variableName}}")
-    endif()
-endforeach()
-message("=")
-message("=== PRINT VARS ===")
-endfunction()
+# Orbit utils (PrintVars, PrintAllVars...)
+include(${ORBIT_UTILS}/utils.cmake)
 
-function(PrintAllVars)
-message("=== ALL VARS ===")
-message("=")
-get_cmake_property(_variableNames VARIABLES)
-list (SORT _variableNames)
-foreach (_variableName ${_variableNames})
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
-message("=")
-message("=== ALL VARS ===")
-endfunction(PrintAllVars)
+# Vcpkg toolchain
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE "${EXTERN_ROOT}/vcpkg/scripts/buildsystems/vcpkg.cmake")
+endif()
 
-set(EXTERN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../external")
-#get_filename_component(EXTERN_ROOT ${CMAKE_SOURCE_DIR}/external REALPATH)
+# Linux
+if(UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
 
-set(EXTERNAL_HEADERS
+# OrbitCore
+project(OrbitCore)
 
-#    ${EXTERN_ROOT}/DIA2Dump/Callback.h
-#    ${EXTERN_ROOT}/DIA2Dump/dia2dump.h
-#    ${EXTERN_ROOT}/DIA2Dump/PrintSymbol.h
-#    ${EXTERN_ROOT}/DIA2Dump/regs.h
-#    ${EXTERN_ROOT}/peparse/nt-headers.h
-#    ${EXTERN_ROOT}/peparse/parse.h
-#    ${EXTERN_ROOT}/peparse/to_string.h
-
-    ${EXTERN_ROOT}/multicore/common/autoresetevent.h
-    ${EXTERN_ROOT}/multicore/common/autoreseteventcondvar.h
-    ${EXTERN_ROOT}/multicore/common/benaphore.h
-    ${EXTERN_ROOT}/multicore/common/bitfield.h
-    ${EXTERN_ROOT}/multicore/common/diningphilosophers.h
-    ${EXTERN_ROOT}/multicore/common/inmemorylogger.h
-    ${EXTERN_ROOT}/multicore/common/rwlock.h
-    ${EXTERN_ROOT}/multicore/common/sema.h
-)
-
-set(EXTERNAL_SOURCES
-
-#    ${EXTERN_ROOT}/DIA2Dump/dia2dump.cpp
-#    ${EXTERN_ROOT}/DIA2Dump/PrintSymbol.cpp
-#    ${EXTERN_ROOT}/DIA2Dump/regs.cpp
-#    ${EXTERN_ROOT}/peparse/buffer.cpp
-#    ${EXTERN_ROOT}/peparse/dump.cpp
-#    ${EXTERN_ROOT}/peparse/parse.cpp
-    #${EXTERN_ROOT}/multicore/common/inmemorylogger.cpp
-
-    ${EXTERN_ROOT}/xxHash-r42/xxhash.c
-)
-
-source_group("External\\Header Files" FILES ${EXTERNAL_HEADERS})
-source_group("External\\Source Files" FILES ${EXTERNAL_SOURCES})
-
-#PrintAllVars()
-
-#pkg_check_modules(GLEW glew REQUIRED)
-find_package(glew REQUIRED)
-PrintVars(glew)
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-find_package(cereal REQUIRED)
-include_directories("${_VCPKG_INSTALLED_DIR}/x64-linux/include")
-PrintVars(cereal)
-
-add_definitions(
-    -Wfatal-errors
-    )
-
+# Headers
 set(HEADERS
     BaseTypes.h
     BlockChain.h
@@ -146,19 +80,7 @@ set(HEADERS
     Version.h
 )
 
-set(PLATFORM_HEADERS
-    DiaManager.h
-    DiaParser.h
-    EventCallbacks.h
-    EventGuid.h
-    EventTracer.h
-    EventUtils.h
-    Hijacking.h
-    OrbitDia.h
-    OrbitLib.h
-    SymbolUtils.h
-)
-
+# Sources
 set(SOURCES
     Callstack.cpp
     Capture.cpp
@@ -197,54 +119,105 @@ set(SOURCES
     TcpEntity.cpp
     TcpServer.cpp
     TimerManager.cpp
-    #TypeInfo.cpp
     Variable.cpp
     VariableTracing.cpp
     Version.cpp
 )
 
-set(PLATFORM_SOURCES
-    DiaManager.cpp
-    DiaParser.cpp
-    EventCallbacks.cpp
-    EventTracer.cpp
-    EventUtils.cpp
-    Hijacking.cpp
-    OrbitDia.cpp
-    OrbitLib.cpp
-    Pdb.cpp
-    SymbolUtils.cpp
-    Utils.cpp
-    TypeInfo.cpp
-)
+# Windows
+if(WIN32)
+    set(PLATFORM_HEADERS
+        DiaManager.h
+        DiaParser.h
+        EventCallbacks.h
+        EventGuid.h
+        EventTracer.h
+        EventUtils.h
+        Hijacking.h
+        OrbitDia.h
+        OrbitLib.h
+        SymbolUtils.h
+    )
+    set(PLATFORM_SOURCES
+        DiaManager.cpp
+        DiaParser.cpp
+        EventCallbacks.cpp
+        EventTracer.cpp
+        EventUtils.cpp
+        Hijacking.cpp
+        OrbitDia.cpp
+        OrbitLib.cpp
+        Pdb.cpp
+        SymbolUtils.cpp
+        Utils.cpp
+        TypeInfo.cpp
+    )
+    set(EXTERNAL_HEADERS
+        ${EXTERN_ROOT}/DIA2Dump/Callback.h
+        ${EXTERN_ROOT}/DIA2Dump/dia2dump.h
+        ${EXTERN_ROOT}/DIA2Dump/PrintSymbol.h
+        ${EXTERN_ROOT}/DIA2Dump/regs.h
+        ${EXTERN_ROOT}/peparse/nt-headers.h
+        ${EXTERN_ROOT}/peparse/parse.h
+        ${EXTERN_ROOT}/peparse/to_string.h
+        ${EXTERN_ROOT}/xxHash-r42/xxhash.h
+        ${EXTERN_ROOT}/multicore/common/autoresetevent.h)
+endif()
 
-source_group("Header Files" FILES ${HEADERS})
-source_group("Source Files" FILES ${SOURCES})
+# Linux
+if(LINUX)
+    set(PLATFORM_HEADERS "")
+    set(PLATFORM_SOURCES "")
+    set(EXTERNAL_HEADERS
+        ${EXTERN_ROOT}/xxHash-r42/xxhash.h
+        ${EXTERN_ROOT}/multicore/common/autoresetevent.h)
+endif()
 
+# Groups
+source_group("Header Files" FILES ${HEADERS} ${PLATFORM_HEADERS})
+source_group("Source Files" FILES ${SOURCES} ${PLATFORM_SOURCES})
+source_group("External\\Header Files" FILES ${EXTERNAL_HEADERS})
+source_group("External\\Source Files" FILES ${EXTERNAL_SOURCES})
+
+# Find cereal
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+find_package(cereal REQUIRED)
+include_directories("${_VCPKG_INSTALLED_DIR}/x64-linux/include")
+
+# Stop compilation on first error
+add_definitions(-Wfatal-errors)
+
+# Library
 add_library(OrbitCore STATIC
-    ${SOURCES} ${EXTERNAL_SOURCES}
-    ${HEADERS} ${EXTERNAL_HEADERS}
+    ${SOURCES} ${PLATFORM_SOURCES} ${EXTERNAL_SOURCES}
+    ${HEADERS} ${PLATFORM_HEADERS} ${EXTERNAL_HEADERS}
 )
 
+# Include directories
 target_include_directories(OrbitCore
 PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CEREAL_INCLUDE_DIR}
-    ${EXTERN_ROOT}/concurrentqueue
+    ${EXTERN_ROOT}/concurrentqueue/
     ${EXTERN_ROOT}/multicore/common/
-    ${EXTERN_ROOT}/xxHash-r42
-#    ${EXTERN_ROOT}/oqpi/include
+    ${EXTERN_ROOT}/xxHash-r42/
     ${EXTERN_ROOT}/breakpad/src/
     ${EXTERN_ROOT}/minhook/include/
 
-#    ${EXTERN_ROOT}/DIA2Dump/
-#    ${DIASDKDir}/include
+    if(WIN32)
+    ${EXTERN_ROOT}/oqpi/include/
+    ${EXTERN_ROOT}/DIA2Dump/
+    ${DIASDKDir}/include/
+    endif()
 
 PRIVATE
     ${BREAKPAD_INCLUDE_DIR}
 )
 
+# Link libraries
 target_link_libraries(OrbitCore
-#    dbghelp.lib
+if(WIN32)
+    dbghelp.lib
+endif()
     ${BREAKPAD_LIBRARIES}
 )
