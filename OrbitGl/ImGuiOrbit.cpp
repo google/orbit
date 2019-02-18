@@ -12,7 +12,6 @@
 #include "ImGuiOrbit.h"
 #include "GlCanvas.h"
 #include "OpenGl.h"
-#include "SymbolUtils.h"
 #include "Pdb.h"
 #include "Core.h"
 #include "Message.h"
@@ -329,7 +328,7 @@ ImFont* AddFontDefault()
         font_cfg.OversampleH = font_cfg.OversampleV = 1;
         font_cfg.PixelSnapH = true;
     }
-    if (font_cfg.Name[0] == '\0') strcpy_s(font_cfg.Name, 40, "ProggyClean.ttf, 13px");
+    if (font_cfg.Name[0] == '\0') strcpy(font_cfg.Name, "ProggyClean.ttf, 13px");
 
     const char* ttf_compressed_base85 = GetDefaultCompressedFontDataTTFBase85();
     ImFont* font = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, GParams.m_FontSize, &font_cfg, ImGui::GetIO().Fonts->GetGlyphRangesDefault());
@@ -487,7 +486,7 @@ void WatchWindow::Draw(const char* title, bool* p_opened )
             Variable & var = *variable;
             ImGui::PushID(variable.get());                      // Use object uid as identifier. Most commonly you could also use the object pointer as a base ID.
             ImGui::AlignFirstTextHeightToWidgets();  // Text and Tree nodes are less high than regular widgets, here we add vertical spacing to make the tree lines equal high.
-            ImGui::Text( ws2s(var.m_Name).c_str() );
+            ImGui::Text( "%s", ws2s(var.m_Name).c_str() );
             ImGui::NextColumn();
             ImGui::AlignFirstTextHeightToWidgets();
 

@@ -7,10 +7,10 @@
 #include "OrbitDbgHelp.h"
 #include "TcpServer.h"
 #include "App.h"
-#include <psapi.h>
 #include <thread>
 #include <string>
 #include "Params.h"
+#include <psapi.h>
 
 //-----------------------------------------------------------------------------
 Debugger::Debugger() : m_LoopReady(false)
@@ -53,7 +53,7 @@ void Debugger::SendThawMessage()
 //-----------------------------------------------------------------------------
 std::string GetFileNameFromHandle( HANDLE hFile )
 {
-    BOOL bSuccess = FALSE;
+    bool bSuccess = false;
     TCHAR pszFilename[MAX_PATH + 1];
     HANDLE hFileMap;
 
@@ -65,7 +65,7 @@ std::string GetFileNameFromHandle( HANDLE hFile )
 
     if( dwFileSizeLo == 0 && dwFileSizeHi == 0 )
     {
-        return FALSE;
+        return "";
     }
 
     // Create a file mapping object.

@@ -4,8 +4,8 @@
 
 #include "Disassembler.h"
 
-#include <capstone\platform.h>
-#include <capstone\capstone.h>
+#include <capstone/platform.h>
+#include <capstone/capstone.h>
 
 //-----------------------------------------------------------------------------
 void Disassembler::LogHex( const unsigned char *str, size_t len )

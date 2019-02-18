@@ -115,8 +115,8 @@ std::wstring LiveFunctionsDataView::GetValue( int a_Row, int a_Column )
 }
 
 //-----------------------------------------------------------------------------
-#define ORBIT_FUNC_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(functions[a]->##Member, functions[b]->##Member, ascending); }
-#define ORBIT_STAT_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(functions[a]->m_Stats->##Member, functions[b]->m_Stats->##Member, ascending); }
+#define ORBIT_FUNC_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(functions[a]->Member, functions[b]->Member, ascending); }
+#define ORBIT_STAT_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(functions[a]->m_Stats->Member, functions[b]->m_Stats->Member, ascending); }
 
 //-----------------------------------------------------------------------------
 void LiveFunctionsDataView::OnSort( int a_Column, bool a_Toggle )

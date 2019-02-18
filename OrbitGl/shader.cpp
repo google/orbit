@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "opengl.h"
+#include "OpenGl.h"
 #include "shader.h"
 
 #ifdef __cplusplus
@@ -21,7 +21,7 @@ shader_read( const char *filename )
     char * buffer;
 	size_t size;
 
-    fopen_s(&file, filename, "rb");
+    file = fopen(filename, "rb");
     if( !file )
     {
         fprintf( stderr, "Unable to open file \"%s\".\n", filename );

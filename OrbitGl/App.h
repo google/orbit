@@ -12,9 +12,9 @@
 #include <queue>
 #include <map>
 
-#include "..\OrbitCore\CoreApp.h"
-#include "..\OrbitCore\CrashHandler.h"
-#include "..\OrbitCore\Message.h"
+#include "../OrbitCore/CoreApp.h"
+#include "../OrbitCore/CrashHandler.h"
+#include "../OrbitCore/Message.h"
 
 struct CallStack;
 class Process;

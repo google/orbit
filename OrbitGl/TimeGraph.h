@@ -7,12 +7,12 @@
 #include "TextBox.h"
 #include "BlockChain.h"
 #include "ContextSwitch.h"
-#include "EventTracer.h"
 #include "TimeGraphLayout.h"
 #include "Geometry.h"
 #include "Batcher.h"
 #include "TextRenderer.h"
 #include "MemoryTracker.h"
+#include "EventBuffer.h"
 #include <unordered_map>
 
 class TimeGraph

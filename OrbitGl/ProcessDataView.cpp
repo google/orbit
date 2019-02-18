@@ -78,7 +78,7 @@ std::wstring ProcessesDataView::GetToolTip( int a_Row, int a_Column )
 }
 
 //-----------------------------------------------------------------------------
-#define ORBIT_PROC_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(processes[a]->##Member, processes[b]->##Member, ascending); }
+#define ORBIT_PROC_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(processes[a]->Member, processes[b]->Member, ascending); }
 
 //-----------------------------------------------------------------------------
 void ProcessesDataView::OnSort(int a_Column, bool a_Toggle)

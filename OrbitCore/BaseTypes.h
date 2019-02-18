@@ -35,6 +35,7 @@ typedef int64_t __int64;
 #define __int8 char
 #define LONG long
 typedef DWORD ULONG;
+typedef unsigned char byte;
 //struct TypeInfo{};
 #define HMODULE void*
 inline void SetThreadName(int, const char*){}
@@ -45,6 +46,10 @@ inline void SetThreadName(int, const char*){}
 #define UCHAR unsigned char
 inline void Sleep(int millis){ usleep( (float)millis*1000.f ); }
 #define GetCurrentThreadId pthread_self
+typedef struct _M128A {
+	uint64_t Low;
+	uint64_t High;
+} M128A;
 
 inline void OutputDebugStringA(const char* msg)
 {

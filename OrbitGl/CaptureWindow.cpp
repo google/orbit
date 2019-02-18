@@ -6,12 +6,14 @@
 #include "Capture.h"
 #include "GlUtils.h"
 #include "App.h"
-#include "SymbolUtils.h"
 #include "TcpServer.h"
 #include "TimerManager.h"
 #include "PluginManager.h"
 #include "../OrbitPlugin/OrbitSDK.h"
 
+#ifdef _WIN32
+#include "SymbolUtils.h"
+#endif
 //-----------------------------------------------------------------------------
 CaptureWindow::CaptureWindow()
 {
@@ -274,6 +276,7 @@ void CaptureWindow::Hover( int a_X, int a_Y )
 //-----------------------------------------------------------------------------
 void CaptureWindow::FindCode( DWORD64 address )
 {
+#ifdef _WIN32
     SCOPE_TIMER_LOG( L"FindCode" );
 
     LineInfo lineInfo;
@@ -294,6 +297,7 @@ void CaptureWindow::FindCode( DWORD64 address )
             GOrbitApp->SendToUiAsync( Format(L"code^%s^%i", lineInfo.m_File.c_str(), lineInfo.m_Line ) );
         }
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -876,15 +880,15 @@ void CaptureWindow::RenderMemTracker()
     if( memTracker.NumAllocatedBytes() == 0 )
     {
         std::string str = VAR_TO_ANSI( memTracker.NumAllocatedBytes() ) + std::string( "            ");
-        ImGui::Text( str.c_str() );
-        ImGui::Text( VAR_TO_ANSI( memTracker.NumFreedBytes() ) );
-        ImGui::Text( VAR_TO_ANSI( memTracker.NumLiveBytes() ) );
+        ImGui::Text( "%s", str.c_str() );
+        ImGui::Text( "%s", VAR_TO_ANSI( memTracker.NumFreedBytes() ) );
+        ImGui::Text( "%s", VAR_TO_ANSI( memTracker.NumLiveBytes() ) );
     }
     else
     {
-        ImGui::Text( VAR_TO_ANSI( memTracker.NumAllocatedBytes() ) );
-        ImGui::Text( VAR_TO_ANSI( memTracker.NumFreedBytes() ) );
-        ImGui::Text( VAR_TO_ANSI( memTracker.NumLiveBytes() ) );
+        ImGui::Text( "%s", VAR_TO_ANSI( memTracker.NumAllocatedBytes() ) );
+        ImGui::Text( "%s", VAR_TO_ANSI( memTracker.NumFreedBytes() ) );
+        ImGui::Text( "%s", VAR_TO_ANSI( memTracker.NumLiveBytes() ) );
     }
 
     ImGui::End();

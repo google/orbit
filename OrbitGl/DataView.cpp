@@ -98,7 +98,7 @@ void DataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, st
 //-----------------------------------------------------------------------------
 void DataView::ExportCSV( const std::wstring & a_FileName )
 {
-	std::ofstream out( a_FileName );
+	std::ofstream out( ws2s(a_FileName) );
 	if( out.fail() )
 		return;
 

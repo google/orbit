@@ -118,6 +118,7 @@ void TypesDataView::OnFilter( const std::wstring & a_Filter )
 //-----------------------------------------------------------------------------
 void TypesDataView::ParallelFilter( const std::wstring & a_Filter )
 {
+#ifdef _WIN32
     m_FilterTokens = Tokenize( ToLower( a_Filter ) );
     std::vector<Type*> & types = Capture::GTargetProcess->GetTypes();
     const auto prio = oqpi::task_priority::normal;
@@ -155,10 +156,11 @@ void TypesDataView::ParallelFilter( const std::wstring & a_Filter )
     {
         m_Indices.push_back( i );
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------
-#define ORBIT_TYPE_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(types[a]->##Member, types[b]->##Member, ascending); }
+#define ORBIT_TYPE_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(types[a]->Member, types[b]->Member, ascending); }
 
 //-----------------------------------------------------------------------------
 void TypesDataView::OnSort( int a_Column, bool a_Toggle )

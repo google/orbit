@@ -4,7 +4,7 @@
 
 #include "Core.h"
 #include "CallStackDataView.h"
-#include "CallStack.h"
+#include "Callstack.h"
 #include "Capture.h"
 #include "OrbitProcess.h"
 #include "SamplingProfiler.h"

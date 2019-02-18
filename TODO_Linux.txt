@@ -1,0 +1,4 @@
+vcpkg: freetype-gl
+- portfile assumes .lib, in order to install on linux, had to change to .a
+- (orbitprofiler/external/vcpkg/ports/freetype-gl/portfile.cmake)
+- fix and submit pull request!?

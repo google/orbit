@@ -203,7 +203,7 @@ void ThreadViewWindow::DrawLive(const char* title, bool* p_opened, ImVec2* a_Siz
         for( auto & thread : Capture::GTargetProcess->GetThreads() )
         {
             char label[32];
-            sprintf(label, "%*i", GThreadViewColWidth, thread->m_TID);
+            sprintf(label, "%*i", GThreadViewColWidth, (int)thread->m_TID);
             if (ImGui::Selectable(label, selected == i, ImGuiSelectableFlags_SpanAllColumns))
                 selected = i;
             ImGui::NextColumn();
@@ -283,7 +283,7 @@ void ThreadViewWindow::DrawReport( const char* title, bool* p_opened, ImVec2* a_
         for (ThreadSampleData* threadData : m_SamplingProfiler->GetThreadSampleData())
         {
             char label[32];
-            sprintf(label, "%*i", width, threadData->m_TID);
+            sprintf(label, "%*i", width, (int)threadData->m_TID);
             if (ImGui::Selectable(label, selected == i))
                 selected = i;
             ImGui::NextColumn();

@@ -3,8 +3,8 @@
 //-----------------------------------
 #pragma once
 
-#include "..\OrbitCore\Core.h"
-#include "freetype-gl.h"
+#include "../OrbitCore/Core.h"
+#include <freetype-gl.h>
 
 #include <GL/glu.h>
 #include <GL/gl.h>

@@ -11,7 +11,6 @@
 #include "Log.h"
 #include "Capture.h"
 #include "Params.h"
-#include "EventTracer.h"
 #include "Utils.h"
 #include "EventTrack.h"
 #include "Geometry.h"
@@ -23,6 +22,10 @@
 #include "TimerManager.h"
 #include <algorithm>
 
+#ifdef _WIN32
+#include "EventTracer.h"
+#endif
+
 TimeGraph* GCurrentTimeGraph = nullptr;
 
 //-----------------------------------------------------------------------------
@@ -33,8 +36,8 @@ TimeGraph::TimeGraph() : m_NumDrawnTextBoxes(0)
                        , m_TimeWindowUs(0)
                        , m_WorldStartX(0)
                        , m_WorldWidth(0)
-                       , m_SessionMinCounter(_I64_MAX)
-                       , m_SessionMaxCounter(_I64_MIN)
+                       , m_SessionMinCounter(0xFFFFFFFFFFFFFFFF)
+                       , m_SessionMaxCounter(0)
                        , m_Margin(40)
                        , m_MainFrameCounter(0)
                        , m_TrackAlpha(255)
@@ -59,8 +62,8 @@ void TimeGraph::Clear()
 {
     m_Batcher.Reset();
     m_TextBoxes.clear();
-    m_SessionMinCounter = _I64_MAX;
-    m_SessionMaxCounter = _I64_MIN;
+    m_SessionMinCounter = 0xFFFFFFFFFFFFFFFF;
+    m_SessionMaxCounter = 0;
     m_ThreadDepths.clear();
     m_ThreadCountMap.clear();
     GEventTracer.GetEventBuffer().Reset();
@@ -361,7 +364,7 @@ float TimeGraph::GetThreadTotalHeight()
 //-----------------------------------------------------------------------------
 Color TimeGraph::GetThreadColor( int a_ThreadId )
 {
-    static BYTE a = 255;
+    static unsigned char a = 255;
     static std::vector<Color> s_ThreadColors
     {
         Color( 231, 68, 53, a  ),  //red
@@ -644,7 +647,8 @@ void TimeGraph::UpdateEvents()
     ScopeLock lock( GEventTracer.GetEventBuffer().GetMutex() );
 
     Color lineColor[2];
-    Fill( lineColor, Color(255, 255, 255, 255) );
+    Color white(255, 255, 255, 255);
+    Fill( lineColor, white );
 
     for( auto & pair : GEventTracer.GetEventBuffer().GetCallstacks() )
     {
@@ -670,7 +674,8 @@ void TimeGraph::UpdateEvents()
 
     // Draw selected events
     Color selectedColor[2];
-    Fill( selectedColor, Color( 0, 255, 0, 255 ) );
+    Color col( 0, 255, 0, 255 );
+    Fill( selectedColor, col );
     for( CallstackEvent & event : m_SelectedCallstackEvents )
     {
         float x = GetWorldFromRawTimeStamp( event.m_Time );

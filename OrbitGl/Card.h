@@ -5,9 +5,9 @@
 
 #include <unordered_map>
 #include "CoreMath.h"
-#include "..\OrbitCore\RingBuffer.h"
-#include "..\OrbitCore\Threading.h"
-#include "ImguiOrbit.h"
+#include "../OrbitCore/RingBuffer.h"
+#include "../OrbitCore/Threading.h"
+#include "ImGuiOrbit.h"
 
 
 class GlCanvas;

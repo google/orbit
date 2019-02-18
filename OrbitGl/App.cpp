@@ -31,18 +31,17 @@
 #include "PluginManager.h"
 #include "RuleEditor.h"
 
-#include "OrbitAsm\OrbitAsm.h"
-#include "OrbitCore\Pdb.h"
-#include "OrbitCore\ModuleManager.h"
-#include "OrbitCore\TcpServer.h"
-#include "OrbitCore\TimerManager.h"
-#include "OrbitCore\Injection.h"
-#include "OrbitCore\Utils.h"
+#include "OrbitAsm/OrbitAsm.h"
+#include "OrbitCore/Pdb.h"
+#include "OrbitCore/ModuleManager.h"
+#include "OrbitCore/TcpServer.h"
+#include "OrbitCore/TimerManager.h"
+#include "OrbitCore/Injection.h"
+#include "OrbitCore/Utils.h"
 #include "Tcp.h"
 #include "PrintVar.h"
 #include "Version.h"
-#include "curl\curl.h"
-#include "EventTracer.h"
+#include "curl/curl.h"
 #include "Debugger.h"
 
 #include <thread>
@@ -51,7 +50,11 @@
 
 #define FREEGLUT_STATIC
 #define GLUT_DISABLE_ATEXIT_HACK
-#include "GL\freeglut.h"
+#include "GL/freeglut.h"
+
+#ifdef _WIN32
+#include "EventTracer.h"
+#endif
 
 class OrbitApp* GOrbitApp;
 float GFontSize;
@@ -80,7 +83,9 @@ OrbitApp::OrbitApp() : m_ProcessesDataView(nullptr)
 //-----------------------------------------------------------------------------
 OrbitApp::~OrbitApp()
 {
+#ifdef _WIN32
     oqpi_tk::stop_scheduler();
+#endif
     delete m_Debugger;
     GOrbitApp = nullptr;
 }
@@ -139,6 +144,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args
 //-----------------------------------------------------------------------------
 void GetDesktopResolution(int& horizontal, int& vertical)
 {
+#ifdef _WIN32
     RECT desktop;
     // Get a handle to the desktop window
     const HWND hDesktop = GetDesktopWindow();
@@ -149,6 +155,7 @@ void GetDesktopResolution(int& horizontal, int& vertical)
     // (horizontal, vertical)
     horizontal = desktop.right;
     vertical = desktop.bottom;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -167,12 +174,16 @@ bool OrbitApp::Init()
 
     Path::Init();
 
-    DiaManager::InitMsDiaDll();
     GModuleManager.Init();
     Capture::Init();
     Capture::GSamplingDoneCallback = &OrbitApp::AddSamplingReport;
     Capture::SetLoadPdbAsyncFunc( GLoadPdbAsync );
+
+    #ifdef _WIN32
+    DiaManager::InitMsDiaDll();
     oqpi_tk::start_default_scheduler();
+    #endif
+
     GPluginManager.Initialize();
 
     int my_argc = 0;
@@ -211,7 +222,7 @@ void OrbitApp::LoadFileMapping()
     std::wstring fileName = Path::GetFileMappingFileName();
     if ( !Path::FileExists( fileName ) )
     {
-        std::ofstream outfile( fileName );
+        std::ofstream outfile( ws2s(fileName) );
         outfile << "//-------------------" << std::endl
                 << "// Orbit File Mapping" << std::endl
                 << "//-------------------" << std::endl
@@ -225,7 +236,7 @@ void OrbitApp::LoadFileMapping()
         outfile.close();
     }
 
-    std::wfstream infile(fileName);
+    std::wfstream infile(ws2s(fileName));
     if( !infile.fail())
     {
         std::wstring line;
@@ -269,7 +280,7 @@ void OrbitApp::LoadSymbolsFile()
     std::wstring fileName = Path::GetSymbolsFileName();
     if( !Path::FileExists( fileName ) )
     {
-        std::ofstream outfile( fileName );
+        std::ofstream outfile( ws2s(fileName) );
         outfile << "//-------------------" << std::endl
             << "// Orbit Symbol Locations" << std::endl
             << "//-------------------" << std::endl
@@ -282,7 +293,7 @@ void OrbitApp::LoadSymbolsFile()
         outfile.close();
     }
 
-    std::wfstream infile( fileName );
+    std::wfstream infile( ws2s(fileName) );
     if( !infile.fail() )
     {
         std::wstring line;
@@ -309,7 +320,7 @@ void OrbitApp::ListSessions()
     {
         std::shared_ptr<Session> session = std::make_shared<Session>();
 
-        std::ifstream file( fileName.c_str(), std::ios::binary );
+        std::ifstream file( ws2s(fileName), std::ios::binary );
         if( !file.fail() )
         {
             cereal::BinaryInputArchive archive( file );
@@ -332,6 +343,7 @@ void OrbitApp::SetRemoteProcess( std::shared_ptr<Process> a_Process )
 //-----------------------------------------------------------------------------
 void OrbitApp::AddWatchedVariable( Variable * a_Variable )
 {
+#ifdef _WIN32
     // Make sure type hierarchy has been generated
     if( Type* type = a_Variable->m_Pdb->GetTypePtrFromId( a_Variable->m_TypeIndex ) )
     {
@@ -342,6 +354,7 @@ void OrbitApp::AddWatchedVariable( Variable * a_Variable )
     {
         callback( a_Variable );
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -731,7 +744,7 @@ void OrbitApp::OnLoadSession( const std::wstring a_FileName )
 
     std::wstring fileName = Path::GetDirectory( a_FileName ) == L"" ? Path::GetPresetPath() + a_FileName : a_FileName; 
 
-    std::ifstream file( fileName.c_str() );
+    std::ifstream file( ws2s(fileName) );
     if (!file.fail())
     {
         cereal::BinaryInputArchive archive( file );
@@ -1017,7 +1030,7 @@ void OrbitApp::OnMiniDump( const Message & a_Message )
 {
     std::wstring dumpPath = Path::GetDumpPath();
     std::wstring o_File = dumpPath + L"a_received.dmp";
-    std::ofstream out( o_File, std::ios::binary );
+    std::ofstream out( ws2s(o_File), std::ios::binary );
     out.write( a_Message.m_Data, a_Message.m_Size );
     out.close();
 

@@ -92,7 +92,8 @@ std::wstring FunctionsDataView::GetValue( int a_Row, int a_Column )
 }
 
 //-----------------------------------------------------------------------------
-#define ORBIT_FUNC_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(functions[a]->##Member, functions[b]->##Member, ascending); }
+#define ORBIT_FUNC_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(functions[a]->Member, functions[b]->Member, ascending); }
+
 
 //-----------------------------------------------------------------------------
 void FunctionsDataView::OnSort( int a_Column, bool a_Toggle )
@@ -231,6 +232,7 @@ void FunctionsDataView::OnFilter( const std::wstring & a_Filter )
 //-----------------------------------------------------------------------------
 void FunctionsDataView::ParallelFilter()
 {
+#ifdef _WIN32
     std::vector<Function*> & functions = Capture::GTargetProcess->GetFunctions();
     const auto prio = oqpi::task_priority::normal;
     auto numWorkers = oqpi_tk::scheduler().workersCount( prio );
@@ -270,6 +272,7 @@ void FunctionsDataView::ParallelFilter()
     {
         m_Indices.push_back( i );
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------

@@ -12,6 +12,7 @@ PluginManager GPluginManager;
 //-----------------------------------------------------------------------------
 void PluginManager::Initialize()
 {
+#ifdef _WIN32
     std::wstring dir = Path::GetPluginPath();
     std::vector< std::wstring > plugins = Path::ListFiles( dir, L".dll" );
 
@@ -31,6 +32,7 @@ void PluginManager::Initialize()
 
     GTcpServer->SetCallback( Msg_UserData, [=]( const Message & a_Msg ){ this->OnReceiveUserData(a_Msg); } );
     GTcpServer->SetCallback( Msg_OrbitData, [=]( const Message & a_Msg ){ this->OnReceiveOrbitData(a_Msg); } );
+#endif
 }
 
 //-----------------------------------------------------------------------------

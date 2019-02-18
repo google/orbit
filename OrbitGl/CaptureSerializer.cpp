@@ -3,7 +3,7 @@
 #include "Serialization.h"
 #include "ScopeTimer.h"
 #include "Core.h"
-#include "capture.h"
+#include "Capture.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "Callstack.h"
@@ -39,7 +39,7 @@ void CaptureSerializer::Save( const std::wstring a_FileName )
 
     // Binary
     m_CaptureName = ws2s(a_FileName);
-    std::ofstream myfile( a_FileName, std::ios::binary );
+    std::ofstream myfile( m_CaptureName, std::ios::binary );
     if( !myfile.fail() )
     {
         SCOPE_TIMER_LOG( Format( L"Saving capture in %s", a_FileName.c_str() ) );
@@ -120,7 +120,7 @@ void CaptureSerializer::Load( const std::wstring a_FileName )
     SCOPE_TIMER_LOG( Format( L"Loading capture %s", a_FileName.c_str() ) );
 
     // Binary
-    std::ifstream file( a_FileName, std::ios::binary );
+    std::ifstream file( ws2s(a_FileName), std::ios::binary );
     if( !file.fail() )
     {
         // header

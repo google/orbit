@@ -86,7 +86,7 @@ std::wstring GlobalsDataView::GetValue( int a_Row, int a_Column )
 }
 
 //-----------------------------------------------------------------------------
-#define ORBIT_FUNC_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(functions[a]->##Member, functions[b]->##Member, ascending); }
+#define ORBIT_FUNC_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(functions[a]->Member, functions[b]->Member, ascending); }
 
 //-----------------------------------------------------------------------------
 void GlobalsDataView::OnSort(int a_Column, bool a_Toggle)
@@ -185,6 +185,7 @@ void GlobalsDataView::OnFilter( const std::wstring & a_Filter )
 //-----------------------------------------------------------------------------
 void GlobalsDataView::ParallelFilter()
 {
+#ifdef _WIN32
     const std::vector<Variable*> & globals = Capture::GTargetProcess->GetGlobals();
     const auto prio = oqpi::task_priority::normal;
     auto numWorkers = oqpi_tk::scheduler().workersCount( prio );
@@ -221,6 +222,7 @@ void GlobalsDataView::ParallelFilter()
     {
         m_Indices.push_back( i );
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------

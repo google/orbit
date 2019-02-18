@@ -5,7 +5,6 @@
 #include "Core.h"
 #include "SamplingReportDataView.h"
 #include "CallStackDataView.h"
-#include "SymbolUtils.h"
 #include "SamplingReport.h"
 #include "App.h"
 #include "Capture.h"
@@ -84,7 +83,7 @@ std::wstring SamplingReportDataView::GetValue( int a_Row, int a_Column )
 }
 
 //-----------------------------------------------------------------------------
-#define ORBIT_PROC_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(functions[a].##Member, functions[b].##Member, ascending); }
+#define ORBIT_PROC_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(functions[a].Member, functions[b].Member, ascending); }
 
 //-----------------------------------------------------------------------------
 void SamplingReportDataView::OnSort(int a_Column, bool a_Toggle)

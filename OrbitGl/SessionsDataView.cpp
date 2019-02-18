@@ -72,7 +72,7 @@ std::wstring SessionsDataView::GetToolTip( int a_Row, int a_Column )
 }
 
 //-----------------------------------------------------------------------------
-#define ORBIT_SESSION_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(m_Sessions[a]->##Member, m_Sessions[b]->##Member, ascending); }
+#define ORBIT_SESSION_SORT( Member ) [&](int a, int b) { return OrbitUtils::Compare(m_Sessions[a]->Member, m_Sessions[b]->Member, ascending); }
 
 //-----------------------------------------------------------------------------
 void SessionsDataView::OnSort(int a_Column, bool a_Toggle)

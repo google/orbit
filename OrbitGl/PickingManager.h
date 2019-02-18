@@ -13,10 +13,10 @@ class GlCanvas;
 class Pickable
 {
 public:
-    virtual void OnPick( int a_X, int a_Y ) abstract;
+    virtual void OnPick( int a_X, int a_Y ) = 0;
     virtual void OnDrag( int a_X, int a_Y ){}
     virtual void OnRelease(){};
-    virtual void Draw( GlCanvas* a_Canvas, bool a_Picking ) abstract;
+    virtual void Draw( GlCanvas* a_Canvas, bool a_Picking ) = 0;
     virtual bool Draggable() { return false; }
 };
 

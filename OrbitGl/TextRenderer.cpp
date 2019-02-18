@@ -7,7 +7,7 @@
 #include "vertex-buffer.h"
 #include "shader.h"
 
-#include "OrbitCore\Core.h"
+#include "OrbitCore/Core.h"
 #include "GlUtils.h"
 #include "App.h"
 #include "Params.h"
@@ -56,8 +56,6 @@ void TextRenderer::Init()
     std::string fontFileName = exePath + "../../../external/freetype-gl/fonts/Vera.ttf";
     std::string vertShaderFileName = exePath + "../../../external/freetype-gl/shaders/v3f-t2f-c4f.vert";
     std::string fragShaderFileName = exePath + "../../../external/freetype-gl/shaders/v3f-t2f-c4f.frag";
-
-    wchar_t *text = L"A Quick Brown Fox Jumps Over The Lazy Dog 0123456789";
     
     m_Buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");    
     
