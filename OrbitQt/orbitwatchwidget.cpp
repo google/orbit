@@ -5,11 +5,11 @@
 #include <QGridLayout>
 #include <QLabel>
 
-#include "qtpropertybrowser\qtpropertymanager.h"
-#include "qtpropertybrowser\qteditorfactory.h"
-#include "qtpropertybrowser\qttreepropertybrowser.h"
-#include "qtpropertybrowser\qtbuttonpropertybrowser.h"
-#include "qtpropertybrowser\qtgroupboxpropertybrowser.h"
+#include "qtpropertybrowser/qtpropertymanager.h"
+#include "qtpropertybrowser/qteditorfactory.h"
+#include "qtpropertybrowser/qttreepropertybrowser.h"
+#include "qtpropertybrowser/qtbuttonpropertybrowser.h"
+#include "qtpropertybrowser/qtgroupboxpropertybrowser.h"
 
 #include "../OrbitCore/Variable.h"
 #include "../OrbitCore/OrbitType.h"

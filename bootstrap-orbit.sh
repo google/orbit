@@ -15,12 +15,12 @@ fi
 
 ## Build dynamic dependencies
 set VCPKG_DEFAULT_TRIPLET=x64-linux
-./vcpkg install freeglut glew freetype-gl curl breakpad capstone asio cereal imgui
+./vcpkg install freetype-gl curl breakpad capstone asio cereal imgui #freeglut glew
 # websocketpp
 
 # Build static dependencies
-set VCPKG_DEFAULT_TRIPLET=x64-linux-static
-./vcpkg install capstone freeglut imgui
+#set VCPKG_DEFAULT_TRIPLET=x64-linux-static
+#./vcpkg install capstone freeglut imgui
 
 # CMake
 cd ../..

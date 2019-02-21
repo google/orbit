@@ -328,7 +328,10 @@ void OrbitMainWindow::OnReceiveMessage( const std::wstring & a_Message )
         pixMap.save( &file, "PNG" );
 
         std::wstring fileName = file.fileName().toStdWString();
+        
+        #ifdef _WIN32
         ShellExecute(0, 0, fileName.c_str(), 0, 0 , SW_SHOW );
+        #endif
     }
     else if( StartsWith( a_Message, L"code" ) )
     {
@@ -365,10 +368,6 @@ void OrbitMainWindow::OnReceiveMessage( const std::wstring & a_Message )
     else if( StartsWith( a_Message, L"gototlive" ) )
     {
         ui->RightTabWidget->setCurrentWidget( ui->LiveTab );
-    }
-    else if( StartsWith(a_Message, L"license") )
-    {
-        GetLicense();
     }
     else if( StartsWith(a_Message, L"pdb:") )
     {
@@ -444,10 +443,11 @@ void OrbitMainWindow::OnSetClipboard( const std::wstring & a_Text )
 void OrbitMainWindow::on_actionAbout_triggered()
 {
     std::string title = "Orbit Profiler";
-
     title += " | Version " + GOrbitApp->GetVersion();
+    std::string text = "Copyright (c) 2013-2018 - Pierric Gimmig\n Qt:";
+    text += qVersion();
 
-    QMessageBox::about(this, title.c_str(), "Copyright (c) 2013-2018 - Pierric Gimmig");
+    QMessageBox::about(this, title.c_str(), text.c_str());
 }
 
 //-----------------------------------------------------------------------------
@@ -535,7 +535,7 @@ void OrbitMainWindow::on_actionQuit_triggered()
 }
 
 //-----------------------------------------------------------------------------
-__declspec(noinline) QPixmap QtGrab( OrbitMainWindow* a_Window )
+QPixmap QtGrab( OrbitMainWindow* a_Window )
 {
     QPixmap pixMap = a_Window->grab();
     if (GContextMenu)
