@@ -13,14 +13,9 @@ else
     ./bootstrap-vcpkg.sh
 fi
 
-## Build dynamic dependencies
+## Build dependencies
 set VCPKG_DEFAULT_TRIPLET=x64-linux
 ./vcpkg install freetype-gl curl breakpad capstone asio cereal imgui #freeglut glew
-# websocketpp
-
-# Build static dependencies
-#set VCPKG_DEFAULT_TRIPLET=x64-linux-static
-#./vcpkg install capstone freeglut imgui
 
 # CMake
 cd ../..
@@ -28,11 +23,5 @@ if [ ! -d build/ ]; then
 mkdir build
 fi
 cd build
-cmake -DCMAKE_TOOLCHAIN_FILE='../external/vcpkg/scripts/buildsystems/vcpkg.cmake' -DCMAKE_GENERATOR_PLATFORM=x64 ..
-
+cmake ..
 cd ..
-
-
-# TODO
-# investigate how to remove dependency on boost, it's ridiculously slow to build.
-# use vcpkg for Qt
