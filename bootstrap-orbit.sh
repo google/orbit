@@ -1,5 +1,8 @@
 #!/bin/bash
 
+## Override freetype-gl portfile for linux (.lib->.a)
+cp "OrbitUtils/freetype-gl-portfile.cmake" "external/vcpkg/ports/freetype-gl/portfile.cmake"
+
 # Build vcpkg
 cd external/vcpkg
 
@@ -15,7 +18,10 @@ fi
 
 ## Build dependencies
 set VCPKG_DEFAULT_TRIPLET=x64-linux
-./vcpkg install freetype-gl curl breakpad capstone asio cereal imgui #freeglut glew
+./vcpkg install freetype-gl breakpad capstone asio cereal imgui #freeglut glew curl
+
+#remove compiled libfreetype.a TODO: fix in cmakelists.txt
+rm "installed/x64-linux/lib/libfreetype.a"
 
 # CMake
 cd ../..
@@ -24,4 +30,4 @@ mkdir build
 fi
 cd build
 cmake ..
-cd ..
+make
