@@ -4,15 +4,18 @@
 
 #include "Utils.h"
 
+#ifdef _WIN32
 #include <cguid.h>
 #include <AtlBase.h>
 #include <atlconv.h>
+#endif
 
 #include <algorithm>
 #include <thread>
 #include <mutex>
 #include <time.h>
 
+#ifdef _WIN32
 //-----------------------------------------------------------------------------
 std::string GetLastErrorAsString()
 {
@@ -289,17 +292,29 @@ std::string CWindowsMessageToString::GetStringFromMsg(DWORD dwMessage, bool bSho
     return std::to_string( dwMessage );
 }
 
+#else
+std::string GetLastErrorAsString()
+{
+    return "";
+}
+#endif
+
 //-----------------------------------------------------------------------------
 std::string OrbitUtils::GetTimeStamp()
 {
     time_t rawtime;
     struct tm timeinfo;
+    struct tm* time_info = nullptr;
     char buffer[80];
-
     time(&rawtime);
+#ifdef _WIN32
     localtime_s(&timeinfo, &rawtime);
+    time_info = &timeinfo;
+#else
+   time_info = localtime( &rawtime );
+#endif
 
-    strftime(buffer, 80, "%Y_%m_%d_%H_%M_%S", &timeinfo);
+    strftime(buffer, 80, "%Y_%m_%d_%H_%M_%S", time_info);
 
     return std::string(buffer);
 }

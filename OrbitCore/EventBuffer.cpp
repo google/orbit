@@ -5,6 +5,10 @@
 #include "EventBuffer.h"
 #include "Serialization.h"
 
+#ifdef __linux
+EventTracer GEventTracer;
+#endif
+
 //-----------------------------------------------------------------------------
 void EventBuffer::Print()
 {

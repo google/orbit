@@ -4,7 +4,7 @@
 #pragma once
 
 #include "Platform.h"
-#include "xxhash.h"
+#include <xxhash.h>
 #include <stdio.h>
 #include <vector>
 #include <algorithm>
@@ -67,13 +67,21 @@ inline std::string GetEnvVar( const char* a_Var )
 //-----------------------------------------------------------------------------
 inline unsigned long long StringHash( const std::string & a_String )
 {
+    #ifdef _WIN32
     return XXH64( a_String.data(), a_String.size(), 0xBADDCAFEDEAD10CC );
+    #else
+    return 0;
+    #endif
 }
 
 //-----------------------------------------------------------------------------
 inline unsigned long long StringHash( const std::wstring & a_String )
 {
+    #ifdef _WIN32
     return XXH64(a_String.data(), a_String.size()*sizeof(wchar_t), 0xBADDCAFEDEAD10CC);
+    #else
+    return 0;
+    #endif
 }
 
 #ifdef _WIN32

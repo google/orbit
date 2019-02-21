@@ -14,14 +14,13 @@
 #include "Log.h"
 #include "App.h"
 #include "SamplingProfiler.h"
-
 #include "../OrbitCore/Core.h"
 #include "../OrbitCore/VariableTracing.h"
 #include "Card.h"
 #include <vector>
 #include <string>
 
-RingBuffer<float, 512> GDeltaTimeBuffer;
+RingBuffer<float, 512> GDeltaTimeBuffer;\
 
 float GlCanvas::Z_VALUE_UI              =  0.00f;
 float GlCanvas::Z_VALUE_TEXT_UI         =  0.0f;

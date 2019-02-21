@@ -3,6 +3,8 @@
 //-----------------------------------
 #pragma once
 
+#ifdef _WIN32
+
 #include <string>
 
 struct IDiaDataSource;
@@ -49,3 +51,5 @@ public:
     bool LoadDataFromPdb( const wchar_t* a_FileName, IDiaDataSource** a_DiaDataSource, IDiaSession** a_Session, IDiaSymbol** a_GlobalSymbol );
     static void InitMsDiaDll();
 };
+
+#endif

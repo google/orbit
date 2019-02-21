@@ -181,6 +181,7 @@ const std::map<ULONG, Variable > & Type::GetFullVariableMap() const
     return m_DataMembersFull;
 }
 
+#ifdef _WIN32
 //-----------------------------------------------------------------------------
 std::shared_ptr<OrbitDiaSymbol> Type::GetDiaSymbol()
 {
@@ -189,7 +190,6 @@ std::shared_ptr<OrbitDiaSymbol> Type::GetDiaSymbol()
         return std::make_shared<OrbitDiaSymbol>();
     }
 
-#ifdef _WIN32
     std::shared_ptr<OrbitDiaSymbol> sym = m_Pdb->GetDiaSymbolFromId( m_Id );
     if( sym->m_Symbol == nullptr )
     {
@@ -197,10 +197,8 @@ std::shared_ptr<OrbitDiaSymbol> Type::GetDiaSymbol()
     }
 
     return sym;
-#else
-    return nullptr;
-#endif
 }
+#endif
 
 //-----------------------------------------------------------------------------
 bool Type::IsA( const std::wstring & a_TypeName )
@@ -320,6 +318,7 @@ void Type::GenerateHierarchy( std::map<ULONG, Parent> & a_Hierarchy, int a_Offse
 //-----------------------------------------------------------------------------
 unsigned long long Type::Hash()
 {
+#ifdef _WIN32
     if( m_Hash == 0 )
     {
         XXH64_state_t xxHashState;
@@ -337,6 +336,10 @@ unsigned long long Type::Hash()
     }
 
     return m_Hash;
+#else
+    printf("Type::Hash() returning 0... fix me\n");
+    return 0;
+#endif
 }
 
 //-----------------------------------------------------------------------------

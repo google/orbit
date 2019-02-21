@@ -299,20 +299,20 @@ std::shared_ptr<Module> Process::GetModuleFromAddress( DWORD64 a_Address )
 	return nullptr;
 }
 
+#ifdef _WIN32
 //-----------------------------------------------------------------------------
 std::shared_ptr<OrbitDiaSymbol> Process::SymbolFromAddress( DWORD64 a_Address )
 {
-#ifdef _WIN32
     std::shared_ptr<Module> module = GetModuleFromAddress( a_Address );
     if( module && module->m_Pdb )
     {
         return module->m_Pdb->SymbolFromAddress( a_Address );
     }
     return std::make_shared<OrbitDiaSymbol>();
-#endif
 
 return nullptr;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 bool Process::LineInfoFromAddress( DWORD64 a_Address, LineInfo & o_LineInfo )

@@ -53,9 +53,16 @@ void TextRenderer::Init()
     m_Font = NULL;
     m_Atlas = texture_atlas_new(512, 512, 1);
     std::string exePath = ws2s(Path::GetExecutablePath());
+    
+    #ifdef _WIN32
     std::string fontFileName = exePath + "../../../external/freetype-gl/fonts/Vera.ttf";
     std::string vertShaderFileName = exePath + "../../../external/freetype-gl/shaders/v3f-t2f-c4f.vert";
     std::string fragShaderFileName = exePath + "../../../external/freetype-gl/shaders/v3f-t2f-c4f.frag";
+    #else
+    std::string fontFileName = exePath + "../../external/freetype-gl/fonts/Vera.ttf";
+    std::string vertShaderFileName = exePath + "../../external/freetype-gl/shaders/v3f-t2f-c4f.vert";
+    std::string fragShaderFileName = exePath + "../../external/freetype-gl/shaders/v3f-t2f-c4f.frag";
+    #endif
     
     m_Buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");    
     

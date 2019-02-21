@@ -491,7 +491,9 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
             m_DrawMemTracker = !m_DrawMemTracker;
             break;
         case 'K':
+#ifdef _WIN32
             CrashHandler::SendMiniDump();
+#endif
             break;
         }
     }

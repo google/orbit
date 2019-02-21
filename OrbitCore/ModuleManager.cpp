@@ -27,7 +27,8 @@ ModuleManager::~ModuleManager()
 //-----------------------------------------------------------------------------
 void ModuleManager::Init()
 {
-    GTcpServer->SetCallback(Msg_SetData, [=](const Message & a_Msg){ this->OnReceiveMessage(a_Msg); });
+    if( GTcpServer )
+        GTcpServer->SetCallback(Msg_SetData, [=](const Message & a_Msg){ this->OnReceiveMessage(a_Msg); });
 }
 
 //-----------------------------------------------------------------------------
@@ -129,8 +130,10 @@ void ModuleManager::OnPdbLoaded()
         DequeueAndLoad();
     }
     
+#ifdef _WIN32
     // Apply presets on last pdb
     lastPdb->ApplyPresets();
+#endif
 
     if( m_ModulesQueue.empty() )
     {

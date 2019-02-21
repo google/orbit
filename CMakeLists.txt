@@ -9,6 +9,36 @@ cmake_minimum_required(VERSION 3.6)
 # This assumes CMAKE_TOOLCHAIN_FILE is correctly set, in accordance with
 # https://github.com/Microsoft/vcpkg/blob/master/docs/examples/using-sqlite.md#cmake
 
+
+cmake_minimum_required(VERSION 3.6)
+
+# Orbit directories
+set(ORBIT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
+set(EXTERN_ROOT "${ORBIT_ROOT}/external")
+set(ORBIT_UTILS "${ORBIT_ROOT}/OrbitUtils")
+
+# Orbit utils (PrintVars, PrintAllVars...)
+include(${ORBIT_UTILS}/utils.cmake)
+
+# Vcpkg toolchain
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE "${EXTERN_ROOT}/vcpkg/scripts/buildsystems/vcpkg.cmake")
+endif()
+
+# Linux
+if(UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
+
+# Stop compilation on first error
+add_definitions(-Wfatal-errors)
+
+set( LIB_EXT "a" )
+if(WIN32)
+set( LIB_EXT "lib" )
+endif()
+
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 set(NAME orbitProfiler)
@@ -16,40 +46,6 @@ project(${NAME})
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-#include(FindPkgConfig)
-
-function(PrintVars var)
-if(DEFINED ${var}_FOUND)
-    message(STATUS "${var}_FOUND=${${var}_FOUND}")
-endif()
-if(DEFINED ${var}_VERSION)
-    message(STATUS "${var}_VERSION=${${var}_VERSION}")
-endif()
-if(DEFINED ${var}_LIB)
-    message(STATUS "${var}_LIB=${${var}_LIB}")
-endif()
-if(DEFINED ${var}_LIBRARIES)
-    message(STATUS "${var}_LIBRARIES=${${var}_LIBRARIES}")
-endif()
-if(DEFINED ${var}_LIBRARY_DIRS)
-    message(STATUS "${var}_LIBRARY_DIRS=${${var}_LIBRARY_DIRS}")
-endif()
-if(DEFINED ${var}_LDFLAGS)
-    message(STATUS "${var}_LDFLAGS=${${var}_LDFLAGS}")
-endif()
-if(DEFINED ${var}_LDFLAGS_OTHER)
-    message(STATUS "${var}_LDFLAGS_OTHER=${${var}_LDFLAGS_OTHER}")
-endif()
-if(DEFINED ${var}_INCLUDE_DIRS)
-    message(STATUS "${var}_INCLUDE_DIRS=${${var}_INCLUDE_DIRS}")
-endif()
-if(DEFINED ${var}_CFLAGS)
-    message(STATUS "${var}_CFLAGS=${${var}_CFLAGS}")
-endif()
-if(DEFINED ${var}_CFLAGS_OTHER)
-    message(STATUS "${var}_CFLAGS_OTHER=${${var}_CFLAGS_OTHER}")
-endif()
-endfunction()
 
 include(CheckIncludeFiles)
 include(CheckIncludeFileCXX)
@@ -68,27 +64,19 @@ include(CheckStructHasMember)
 
 get_filename_component(EXTERN_ROOT ${CMAKE_SOURCE_DIR}/external REALPATH)
 
+if(WIN32)
 #find_package(unofficial-breakpad REQUIRED)
 find_library(BREAKPAD_LIB libbreakpad.lib)
 PrintVars(BREAKPAD_LIB)
-
-#pkg_check_modules(FREETYPE freetype2 REQUIRED)
-find_package(freetype REQUIRED)
-PrintVars(FREETYPE)
-
-#find_package(freeglut REQUIRED)
-find_path(FREEGLUT_INCLUDE_DIR GL/freeglut.h)
-find_library(FREEGLUT_LIB freeglut_static.lib
-    HINTS "external/vcpkg/buildtrees/freeglut/x64-windows-static-rel/lib/Release")
-PrintVars(FREEGLUT)
+endif()
+if(LINUX)
+find_library(BREAKPAD_LIB liblibbreakpad.a)
+PrintVars(BREAKPAD_LIB)
+endif()
 
 #pkg_check_modules(GLEW glew REQUIRED)
 find_package(glew REQUIRED)
 PrintVars(GLEW)
-
-find_path(FREETYPE_GL_INCLUDE_DIR freetype-gl.h PATH_SUFFIXES freetype-gl)
-find_library(FREETYPE_GL_LIB freetype-gl.lib)
-PrintVars(FREETYPE_GL)
 
 #find_package(imgui REQUIRED)
 find_path(IMGUI_INCLUDE_DIR imgui.h) 
@@ -107,7 +95,7 @@ include_directories(${ASIO_INCLUDE_DIR})
 #pkg_check_modules(CURL libcurl REQUIRED)
 #find_package(curl REQUIRED)
 find_path(CURL_INCLUDE_DIR curl.h PATH_SUFFIXES capstone)
-find_library(CURL_LIBRARIES libcurl) 
+find_library(CURL_LIBRARIES libcurl.a) 
 #HINTS "external/vcpkg/packages/capstone_x64-windows-static/lib")
 PrintVars(CURL)
 
@@ -117,15 +105,22 @@ PrintVars(CEREAL)
 
 #find_package(capstone REQUIRED)
 find_path(CAPSTONE_INCLUDE_DIR capstone.h PATH_SUFFIXES capstone)
-find_library(CAPSTONE_LIBRARIES capstone.lib 
+if(WIN32)
+find_library(CAPSTONE_LIBRARIES capstone.lib
 HINTS "external/vcpkg/packages/capstone_x64-windows-static/lib")
+endif()
+if(LINUX)
+find_library(CAPSTONE_LIBRARIES libcapstone.a )
+endif()
 PrintVars(CAPSTONE)
 
 #string(REGEX REPLACE "/bin/[^/]*$" "" VCINSTALLDIR "${CMAKE_C_COMPILER}")
 #message(STATUS "Guessed MSVC directory: ${VCINSTALLDIR}")
+if(WIN32)
 set(VSInstallDir "C:/Program Files (x86)/Microsoft Visual Studio 14.0" CACHE PATH "")
 set(DIASDKDir "${VSInstallDir}/DIA SDK" CACHE PATH "")
 message(STATUS "DIASDKDir: ${DIASDKDir}")
+endif()
 
 function(AppendToVar var val)
     set("${var}" "${${var}} ${val}" PARENT_SCOPE)
@@ -137,10 +132,12 @@ endfunction()
 #	AppendToVar(CMAKE_CXX_FLAGS "-std=c++17")
 #endif()
 
+if(WIN32)
 # Set preprocessor defines
 add_definitions(-DNOMINMAX)
 add_definitions(-D_WIN32_WINNT=0x0700)
 add_definitions(-DNTDDI_VERSION=0x06030000)
+endif()
 add_definitions(-DUNICODE -D_UNICODE)
 
 #add_definitions(-D_SCL_SECURE_NO_WARNINGS)
@@ -169,8 +166,13 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     AppendToVar(CMAKE_CXX_FLAGS "-Wno-missing-field-initializers")
 endif()
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+
+if(WIN32)
 add_subdirectory(OrbitAsm)
 add_subdirectory(OrbitDll)
+endif()
+
 add_subdirectory(OrbitCore)
 add_subdirectory(OrbitGl)
 add_subdirectory(OrbitQt)

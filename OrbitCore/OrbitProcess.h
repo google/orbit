@@ -67,7 +67,11 @@ public:
 
     Function* GetFunctionFromAddress( DWORD64 a_Address, bool a_IsExact = true );
     std::shared_ptr<Module> GetModuleFromAddress( DWORD64 a_Address );
+    
+#ifdef _WIN32
     std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress( DWORD64 a_Address );
+#endif
+
     bool LineInfoFromAddress( DWORD64 a_Address, struct LineInfo & o_LineInfo );
 
     void LoadSession(const Session & a_Session);

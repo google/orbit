@@ -139,6 +139,7 @@ struct EventGuid
     //-------------------------------------------------------------------------
     static inline ULONG64 Hash( const GUID & a_Guid )
     {
-         return XXH64( &a_Guid, sizeof(GUID), 0x1d1d57ac );
+        return 0;
+        //return XXH64( &a_Guid, sizeof(GUID), 0x1d1d57ac );
     }
 };

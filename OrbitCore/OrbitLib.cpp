@@ -61,16 +61,22 @@ void Orbit::Init( const std::string & a_Host )
 void Orbit::InitRemote( const std::string & a_Host )
 {
     Init( a_Host );
-    
+
+#ifdef _WIN32    
     CrashHandler::SendMiniDump();
+#endif
 }
 
 //-----------------------------------------------------------------------------
 HMODULE GetCurrentModule()
 {
+#ifdef _WIN32
     HMODULE hModule = NULL;
     GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)GetCurrentModule, &hModule);
     return hModule;
+#else
+    return nullptr;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -83,8 +89,11 @@ void Orbit::DeInit()
 
     delete GTimerManager;
     GTimerManager = nullptr;
+
+#ifdef _WIN32
     HMODULE module = GetCurrentModule();
     FreeLibraryAndExitThread(module, 0);
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -106,5 +115,8 @@ void Orbit::Stop()
 {
 	GTimerManager->StopClient();
     GIsCaptureEnabled = false;
+
+#ifdef _WIN32
     Hijacking::DisableAllHooks();
+#endif
 }

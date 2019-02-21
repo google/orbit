@@ -165,6 +165,7 @@ void TcpClient::DecodeMessage( Message & a_Message )
 {
     Message::Header MessageHeader = a_Message.GetHeader();
 
+#ifdef _WIN32
     switch( a_Message.GetType() )
     {
     case Msg_String:
@@ -408,4 +409,5 @@ void TcpClient::DecodeMessage( Message & a_Message )
     default:
         break;
     }
+#endif
 }

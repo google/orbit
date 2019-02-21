@@ -184,7 +184,9 @@ private:
     class EventTracer* m_EventTracer;
     class Debugger*    m_Debugger;
     int m_NumTicks;
+#ifdef _WIN32
     CrashHandler       m_CrashHandler;
+#endif
 };
 
 //-----------------------------------------------------------------------------

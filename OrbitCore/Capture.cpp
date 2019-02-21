@@ -494,12 +494,17 @@ void Capture::OpenCapture( const std::wstring & a_CaptureName )
 //-----------------------------------------------------------------------------
 bool Capture::IsOtherInstanceRunning()
 {
+#ifdef _WIN32
+    printf("test Capture::IsOtherInstanceRunning() \n");
     DWORD procID = 0;
     HANDLE procHandle = Injection::GetTargetProcessHandle( ORBIT_EXE_NAME, procID );
     PRINT_FUNC;
     bool otherInstanceFound = procHandle != NULL;
     PRINT_VAR( otherInstanceFound );
     return otherInstanceFound;
+#else
+    return false;
+#endif
 }
 
 //-----------------------------------------------------------------------------

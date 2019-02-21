@@ -119,6 +119,7 @@ void CaptureSerializer::Load( const std::wstring a_FileName )
 {
     SCOPE_TIMER_LOG( Format( L"Loading capture %s", a_FileName.c_str() ) );
 
+#ifdef _WIN32
     // Binary
     std::ifstream file( ws2s(a_FileName), std::ios::binary );
     if( !file.fail() )
@@ -169,6 +170,7 @@ void CaptureSerializer::Load( const std::wstring a_FileName )
 
         GOrbitApp->FireRefreshCallbacks();
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------

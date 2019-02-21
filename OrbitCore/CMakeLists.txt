@@ -32,22 +32,24 @@ set(HEADERS
     ContextSwitch.h
     Core.h
     CoreApp.h
-	CrashHandler.h
+    CrashHandler.h
     Diff.h
     EventBuffer.h
     EventClasses.h
     FunctionStats.h
     Hashing.h
     Injection.h
-	Log.h
+    Log.h
     LogInterface.h
     MemoryTracker.h
-	Message.h
+    Message.h
     MiniDump.h
     ModuleManager.h
-	OrbitAsio.h
+    ModuleManager.h
+    OrbitAsio.h
     OrbitDbgHelp.h
     OrbitFunction.h
+    OrbitLib.h
     OrbitModule.h
     OrbitProcess.h
     OrbitRule.h
@@ -56,24 +58,24 @@ set(HEADERS
     OrbitType.h
     OrbitUnreal.h
     Params.h
-	Path.h
+    Path.h
     Pdb.h
-	PrintVar.h
+    PrintVar.h
     ProcessUtils.h
-	Profiling.h
+    Profiling.h
     RingBuffer.h
     SamplingProfiler.h
     ScopeTimer.h
     Serialization.h
-	SerializationMacros.h
+    SerializationMacros.h
     Tcp.h
     TcpClient.h
     TcpEntity.h
     TcpServer.h
-	TcpForward.h
-	Threading.h
+    TcpForward.h
+    Threading.h
     TimerManager.h
-	TypeInfoStructs.h
+    TypeInfoStructs.h
     Utils.h
     Variable.h
     VariableTracing.h
@@ -87,19 +89,21 @@ set(SOURCES
     ContextSwitch.cpp
     Core.cpp
     CoreApp.cpp
-	CrashHandler.cpp
+    CrashHandler.cpp
     Diff.cpp
     EventBuffer.cpp
     FunctionStats.cpp
     Injection.cpp
-	Log.cpp
+    Log.cpp
     LogInterface.cpp
     MemoryTracker.cpp
-	Message.cpp
+    Message.cpp
+    ModuleManager.cpp
     MiniDump.cpp
     ModuleManager.cpp
-	OrbitAsio.cpp
+    OrbitAsio.cpp
     OrbitFunction.cpp
+    OrbitLib.cpp
     OrbitModule.cpp
     OrbitProcess.cpp
     OrbitRule.cpp
@@ -108,7 +112,7 @@ set(SOURCES
     OrbitType.cpp
     OrbitUnreal.cpp
     Params.cpp
-	Path.cpp
+    Path.cpp
     ProcessUtils.cpp
     Profiling.cpp
     SamplingProfiler.cpp
@@ -119,9 +123,11 @@ set(SOURCES
     TcpEntity.cpp
     TcpServer.cpp
     TimerManager.cpp
+    Utils.cpp
     Variable.cpp
     VariableTracing.cpp
     Version.cpp
+    #${EXTERN_ROOT}/xxHash-r42/xxhash.c
 )
 
 # Windows
@@ -135,7 +141,6 @@ if(WIN32)
         EventUtils.h
         Hijacking.h
         OrbitDia.h
-        OrbitLib.h
         SymbolUtils.h
     )
     set(PLATFORM_SOURCES
@@ -146,7 +151,6 @@ if(WIN32)
         EventUtils.cpp
         Hijacking.cpp
         OrbitDia.cpp
-        OrbitLib.cpp
         Pdb.cpp
         SymbolUtils.cpp
         Utils.cpp
@@ -216,8 +220,6 @@ PRIVATE
 
 # Link libraries
 target_link_libraries(OrbitCore
-if(WIN32)
-    dbghelp.lib
-endif()
-    ${BREAKPAD_LIBRARIES}
+    #dbghelp.lib
+    #${BREAKPAD_LIBRARIES}
 )

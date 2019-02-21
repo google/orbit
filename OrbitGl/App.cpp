@@ -27,7 +27,6 @@
 #include "DiaManager.h"
 #include "MiniDump.h"
 #include "CaptureSerializer.h"
-#include "Disassembler.h"
 #include "PluginManager.h"
 #include "RuleEditor.h"
 
@@ -53,6 +52,7 @@
 #include "GL/freeglut.h"
 
 #ifdef _WIN32
+#include "Disassembler.h"
 #include "EventTracer.h"
 #endif
 
@@ -64,10 +64,12 @@ OrbitApp::OrbitApp() : m_ProcessesDataView(nullptr)
                      , m_ModulesDataView(nullptr)
                      , m_FunctionsDataView(nullptr)
                      , m_LiveFunctionsDataView(nullptr)
+                     , m_CallStackDataView(nullptr)
                      , m_TypesDataView(nullptr)
                      , m_GlobalsDataView(nullptr)
                      , m_SessionsDataView(nullptr)
                      , m_CaptureWindow(nullptr)
+                     , m_Log(nullptr)
                      , m_HasPromptedForUpdate(false)
                      , m_NumTicks(0)
                      , m_NeedsThawing(false)
@@ -77,7 +79,10 @@ OrbitApp::OrbitApp() : m_ProcessesDataView(nullptr)
                      , m_SaveFileCallback(nullptr)
                      , m_ClipboardCallback(nullptr)
 {
+    m_Debugger = nullptr;
+#ifdef _WIN32
     m_Debugger = new Debugger();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -85,8 +90,8 @@ OrbitApp::~OrbitApp()
 {
 #ifdef _WIN32
     oqpi_tk::stop_scheduler();
-#endif
     delete m_Debugger;
+#endif
     GOrbitApp = nullptr;
 }
 
@@ -384,11 +389,13 @@ void OrbitApp::RefreshWatch()
 //-----------------------------------------------------------------------------
 void OrbitApp::Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, int a_Size )
 {
+#ifdef _WIN32
     Disassembler disasm;
     disasm.LOGF( "asm: /* %s */\n", a_FunctionName.c_str() );
     const unsigned char* code = (const unsigned char*)a_MachineCode;
     disasm.Disassemble( code, a_Size, a_VirtualAddress, Capture::GTargetProcess->GetIs64Bit() );
     SendToUiAsync(disasm.GetResult());
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -491,7 +498,9 @@ void OrbitApp::MainTick()
         exit(0);
     }
 
+#ifdef _WIN32
     GOrbitApp->m_Debugger->MainTick();
+#endif
     GOrbitApp->CheckForUpdate();
 
     ++GOrbitApp->m_NumTicks;
@@ -555,6 +564,7 @@ void OrbitApp::RegisterLiveFunctionsDataView( LiveFunctionsDataView* a_Functions
 //-----------------------------------------------------------------------------
 void OrbitApp::RegisterCallStackDataView( CallStackDataView* a_Callstack )
 {
+    PRINT_FUNC;
     assert(m_CallStackDataView == nullptr );
     m_CallStackDataView = a_Callstack;
     m_Panels.push_back(a_Callstack);
@@ -698,7 +708,9 @@ void OrbitApp::OnOpenPdb( const std::wstring a_FileName )
 //-----------------------------------------------------------------------------
 void OrbitApp::OnLaunchProcess( const std::wstring a_ProcessName, const std::wstring a_WorkingDir, const std::wstring a_Args )
 {
+#ifdef _WIN32
     m_Debugger->LaunchProcess( a_ProcessName, a_WorkingDir, a_Args );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -851,7 +863,9 @@ void OrbitApp::StartCapture()
     
     if( m_NeedsThawing )
     {
+#ifdef _WIN32
         m_Debugger->SendThawMessage();
+#endif
         m_NeedsThawing = false;
     }
 }

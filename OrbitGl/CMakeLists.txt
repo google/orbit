@@ -13,6 +13,8 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE "${EXTERN_ROOT}/vcpkg/scripts/buildsystems/vcpkg.cmake")
 endif()
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+
 # Linux
 if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
@@ -24,8 +26,16 @@ project(OrbitGl)
 # Stop compilation on first error
 add_definitions(-Wfatal-errors)
 
+#freetype
+find_package(Freetype REQUIRED)
+PrintVars(FREETYPE)
+
 #pkg_check_modules(FREETYPE freetype2 REQUIRED)
-find_package(freetype REQUIRED)
+find_library(FREETYPE_LIB libfreetype.a)
+PrintVars(FREETYPE_LIB)
+
+find_package(PNG REQUIRED)
+PrintVars(PNG)
 
 #find_package(freeglut REQUIRED)
 find_path(FREEGLUT_INCLUDE_DIR GL/freeglut.h)
@@ -36,28 +46,32 @@ if(WIN32)
 endif()
 
 if(LINUX)
-     find_library(FREEGLUT_LIB libglut.a)
+find_library(FREEGLUT_LIB libglut.a)
+PrintVars(FREEGLUT)
 endif()
 
 # Glew
 find_package(glew REQUIRED)
+PrintVars(GLEW)
 
-# Freetype
+# Freetype-gl
 find_path(FREETYPE_GL_INCLUDE_DIR freetype-gl.h PATH_SUFFIXES freetype-gl)
-if(WIN32)
-find_library(FREETYPE_GL_LIB freetype-gl.lib)
-endif()
-if(LINUX)
-find_library(FREETYPE_GL_LIB libfreetype-gl.a)
-endif()
+PrintVars(FREETYPE_GL_INCLUDE_DIR)
+# if(WIN32)
+# find_library(FREETYPE_GL_LIB freetype-gl.lib)
+# endif()
+# if(LINUX)
+# find_library(FREETYPE_GL_LIB libfreetype-gl.a)
+# endif()
 
-#find_package(imgui REQUIRED)
+# imgui
 find_path(IMGUI_INCLUDE_DIR imgui.h) 
 if(WIN32)
 find_library(IMGUI_LIB imgui.lib)
 endif()
 if(LINUX)
 find_library(IMGUI_LIB libimgui.a)
+PrintVars(IMGUI_LIB)
 endif()
 
 set(HEADERS
@@ -160,14 +174,20 @@ include_directories("${_VCPKG_INSTALLED_DIR}/x64-linux/include")
 
 add_library(OrbitGl STATIC ${SOURCES} ${HEADERS})
 
+find_package(X11 REQUIRED)
+#PrintVars(X11)
+
 target_include_directories(OrbitGl
 PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 PRIVATE
+    ${FREETYPE_INCLUDE_DIRS}
     ${FREETYPE_GL_INCLUDE_DIR}
     ${CAPSTONE_INCLUDE_DIR}
     ${FREEGLUT_INCLUDE_DIR}
+    ${PNG_INCLUDE_DIR}
     ${IMGUI_INCLUDE_DIR}
+    ${GLEW_INCLUDE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CEREAL_INCLUDE_DIR}
     ${EXTERN_ROOT}/concurrentqueue
@@ -179,14 +199,28 @@ PRIVATE
     ..
 )
 
-target_link_libraries(OrbitGl
-    OrbitCore
-	OrbitAsm
+find_package(OpenGL REQUIRED)
+PrintVars(OPENGL)
 
-    ${FREEGLUT_LIB}
-    ${FREETYPE_LIBRARIES}
-    ${IMGUI_LIB}
-    ${GLEW_LIBRARIES}
-    ${FREETYPE_GL_LIB}
-    ${CAPSTONE_LIBRARIES}
+include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
+
+PrintVars(PNG_LIBRARIES)
+
+set(ORBITGL_DEPENDENCIES
+OrbitCore
+#OrbitAsm
+${PNG_LIBRARIES}
+${FREEGLUT_LIB}
+${IMGUI_LIB}
+${GLEW_LIBRARIES}
+${FREETYPE_LIB}
+${FREETYPE_GL_LIB}
+${GLUT_LIBRARIES}
+${CAPSTONE_LIBRARIES}
+${OPENGL_LIBRARIES}
+${X11_LIBRARIES}
 )
+
+PrintVars(ORBITGL_DEPENDENCIES)
+
+target_link_libraries(OrbitGl ${ORBITGL_DEPENDENCIES})
