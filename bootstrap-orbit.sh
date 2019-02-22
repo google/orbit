@@ -1,8 +1,5 @@
 #!/bin/bash
 
-## Override freetype-gl portfile for linux (.lib->.a)
-cp "OrbitUtils/freetype-gl-portfile.cmake" "external/vcpkg/ports/freetype-gl/portfile.cmake"
-
 # Build vcpkg
 cd external/vcpkg
 
@@ -15,6 +12,11 @@ else
     echo "Orbit: compiling vcpkg"
     ./bootstrap-vcpkg.sh
 fi
+
+## Override freetype-gl portfile for linux (.lib->.a)
+cd ../..
+cp "OrbitUtils/freetype-gl-portfile.cmake" "external/vcpkg/ports/freetype-gl/portfile.cmake"
+cd external/vcpkg
 
 ## Build dependencies
 set VCPKG_DEFAULT_TRIPLET=x64-linux
