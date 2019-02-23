@@ -1,7 +1,9 @@
 #!/bin/bash
 
 #install required dependencies
-sudo apt-get install -y build-essential curl unzip tar libglu1-mesa-dev mesa-common-dev cmake libxi-dev
+sudo apt-get install -y build-essential libcurl4-openssl-dev unzip cmake tar
+sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxi-dev 
+sudo apt-get install -y libfreetype6-dev freeglut3-dev qt5-default
 
 # Build vcpkg
 cd external/vcpkg
