@@ -18,8 +18,8 @@ if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
-# OrbitGl
-project(OrbitGl)
+# OrbitQt
+project(OrbitQt)
 
 # Stop compilation on first error
 add_definitions(-Wfatal-errors)
@@ -138,8 +138,7 @@ PrintVars(GLEW)
 
 #Libpng
 find_package(PNG REQUIRED)
-#find_library(PNG_LIB libpng.a)
-set( PNG_LIB_ORBIT "/home/pierric/dev/orbitprofiler/external/vcpkg/installed/x64-linux/lib/libpng16.a")
+find_library(PNG_LIB libpng.a)
 PrintVars(PNG)
 
 #freetype-gl
@@ -149,8 +148,7 @@ find_library(FREETYPE_GL_LIB freetype-gl.lib)
 endif()
 if(LINUX)
 #find_package(FREETYPE_GL)
-#find_library(FREETYPE_GL_LIB libfreetype-gl.a)
-set(FREETYPE_GL_LIB "/home/pierric/dev/orbitprofiler/external/vcpkg/installed/x64-linux/lib/libfreetype-gl.a")
+find_library(FREETYPE_GL_LIB libfreetype-gl.a)
 PrintVars(FREETYPE_GL)
 endif()
 
@@ -171,8 +169,6 @@ endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	set_target_properties(OrbitQt PROPERTIES COMPILE_FLAGS /wd4127)
 endif()
-
-set(ORBIT_PNG_LIB "/home/pierric/dev/orbitprofiler/external/vcpkg/buildtrees/libpng/x64-linux-rel/libpng16.a")
 
 target_include_directories(OrbitQt
 PUBLIC
@@ -200,8 +196,8 @@ PRIVATE
 PrintVars(PNG_LIBRARIES)
 set(ORBIT_DEPENDENCIES
     OrbitGl
-	OrbitCore
-	${CURL_LIBRARIES}
+    OrbitCore
+    ${CURL_LIBRARIES}
     ${BREAKPAD_LIB}
     ${IMGUI_LIB}
     ${ZLIB_LIBRARIES}
@@ -210,24 +206,12 @@ set(ORBIT_DEPENDENCIES
     ${GLEW_LIBRARIES}
     ${X11_LIBRARIES}
     #${PNG_LIBRARIES}
-    ${ORBIT_PNG_LIB}
+    ${PNG_LIB}
+#    ${FREETYPE_LIBRARY}
     ${FREETYPE_SYSTEM_LIB}
-	Qt5::Widgets
-	Qt5::Core
+    Qt5::Widgets
+    Qt5::Core
 )
-
-# ${CURL_LIBRARIES}
-#     ${BREAKPAD_LIB}
-#     ${IMGUI_LIB}
-#     ${ZLIB_LIBRARIES}
-#     #${ORBIT_PNG_LIB}
-#     ${FREETYPE_GL_LIB}
-#     ${TEST_freetype_LIB}
-#     ${OPENGL_LIBRARIES}
-#     ${PNG_LIBRARIES}
-#     ${GLUT_LIBRARIES}
-#     ${GLEW_LIBRARIES}
-#     ${X11_LIBRARIES}
 
 PrintVars(ORBIT_DEPENDENCIES)
 target_link_libraries (OrbitQt

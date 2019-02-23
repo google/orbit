@@ -30,10 +30,6 @@ add_definitions(-Wfatal-errors)
 find_package(Freetype REQUIRED)
 PrintVars(FREETYPE)
 
-#pkg_check_modules(FREETYPE freetype2 REQUIRED)
-find_library(FREETYPE_LIB libfreetype.a)
-PrintVars(FREETYPE_LIB)
-
 find_package(PNG REQUIRED)
 PrintVars(PNG)
 
