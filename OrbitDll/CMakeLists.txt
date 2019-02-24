@@ -30,4 +30,5 @@ target_link_libraries(OrbitDll
     OrbitCore
 	OrbitAsm
 	${BREAKPAD_LIBRARIES}
+	dbghelp.lib
 )

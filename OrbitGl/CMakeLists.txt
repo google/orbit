@@ -13,8 +13,6 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE "${EXTERN_ROOT}/vcpkg/scripts/buildsystems/vcpkg.cmake")
 endif()
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-
 # Linux
 if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
@@ -25,6 +23,7 @@ project(OrbitGl)
 
 # Stop compilation on first error
 if(LINUX)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 add_definitions(-Wfatal-errors)
 endif()
 
@@ -83,7 +82,7 @@ set(HEADERS
     CoreMath.h
     DataView.h
     DataViewTypes.h
-#    Debugger.h
+    Debugger.h
     Disassembler.h
     EventTrack.h
     FunctionDataView.h
@@ -124,7 +123,6 @@ set(HEADERS
 set(SOURCES
     shader.cpp
     mat4.cpp
-
     App.cpp
     Batcher.cpp
     BlackBoard.cpp
@@ -133,6 +131,7 @@ set(SOURCES
     CaptureWindow.cpp
     Card.cpp
     DataView.cpp
+	Debugger.cpp
     Disassembler.cpp
     EventTrack.cpp
     FunctionDataView.cpp
@@ -164,16 +163,9 @@ set(SOURCES
     TypeDataView.cpp
 )
 
-set(PLATFORM_SRC "")
-if(WIN32)
-set(PLATFORM_SRC
-	EventTracer.cpp
-	Debugger.cpp
-)
-endif()
 
 source_group("Header Files" FILES ${HEADERS})
-source_group("Source Files" FILES ${SOURCES} ${PLATFORM_SRC})
+source_group("Source Files" FILES ${SOURCES})
 
 include_directories("${_VCPKG_INSTALLED_DIR}/x64-linux/include")
 

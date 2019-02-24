@@ -59,6 +59,11 @@
 class OrbitApp* GOrbitApp;
 float GFontSize;
 
+#ifdef _WIN32
+// TODO: This shouldn't be needed
+char ImGuiTextBuffer::EmptyString[1];
+#endif
+
 //-----------------------------------------------------------------------------
 OrbitApp::OrbitApp() : m_ProcessesDataView(nullptr)
                      , m_ModulesDataView(nullptr)

@@ -155,6 +155,7 @@ if(WIN32)
         SymbolUtils.cpp
         Utils.cpp
         TypeInfo.cpp
+		${EXTERN_ROOT}/xxHash-r42/xxhash.c
     )
     set(EXTERNAL_HEADERS
         ${EXTERN_ROOT}/DIA2Dump/Callback.h
@@ -166,12 +167,24 @@ if(WIN32)
         ${EXTERN_ROOT}/peparse/to_string.h
         ${EXTERN_ROOT}/xxHash-r42/xxhash.h
         ${EXTERN_ROOT}/multicore/common/autoresetevent.h)
+
+	set(EXTERNAL_SOURCES
+    ${EXTERN_ROOT}/DIA2Dump/dia2dump.cpp
+    ${EXTERN_ROOT}/DIA2Dump/PrintSymbol.cpp
+    ${EXTERN_ROOT}/DIA2Dump/regs.cpp
+    ${EXTERN_ROOT}/multicore/common/inmemorylogger.cpp
+    ${EXTERN_ROOT}/peparse/buffer.cpp
+    ${EXTERN_ROOT}/peparse/dump.cpp
+    ${EXTERN_ROOT}/peparse/parse.cpp
+    ${EXTERN_ROOT}/xxHash-r42/xxhash.c
+)
 endif()
 
 # Linux
 if(LINUX)
     set(PLATFORM_HEADERS "")
     set(PLATFORM_SOURCES "")
+	set(EXTERNAL_SOURCES "")
     set(EXTERNAL_HEADERS
         ${EXTERN_ROOT}/xxHash-r42/xxhash.h
         ${EXTERN_ROOT}/multicore/common/autoresetevent.h)

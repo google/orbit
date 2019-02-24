@@ -2,6 +2,8 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+#ifdef _WIN32
+
 #include "Core.h"
 #include "Debugger.h"
 #include "OrbitDbgHelp.h"
@@ -327,3 +329,5 @@ void Debugger::DebuggerThread( const std::wstring & a_ProcessName, const std::ws
         }
     }
 }
+
+#endif

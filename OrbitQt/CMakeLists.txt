@@ -198,7 +198,29 @@ PRIVATE
     ..
 )
 
-PrintVars(PNG_LIBRARIES)
+if(WIN32)
+set(ORBIT_DEPENDENCIES
+    OrbitGl
+    OrbitCore
+	OrbitAsm
+    ${CURL_LIBRARIES}
+    ${BREAKPAD_LIB}
+    ${IMGUI_LIB}
+    ${ZLIB_LIBRARIES}
+    ${FREETYPE_GL_LIB}
+    ${GLUT_LIBRARIES}
+    ${GLEW_LIBRARIES}
+    ${X11_LIBRARIES}
+    ${PNG_LIBRARIES}
+#    ${FREETYPE_LIBRARY}
+    ${FREETYPE_SYSTEM_LIB}
+    Qt5::Widgets
+    Qt5::Core
+	dbghelp.lib
+)
+endif()
+
+if(LINUX)
 set(ORBIT_DEPENDENCIES
     OrbitGl
     OrbitCore
@@ -216,6 +238,7 @@ set(ORBIT_DEPENDENCIES
     Qt5::Widgets
     Qt5::Core
 )
+endif()
 
 PrintVars(ORBIT_DEPENDENCIES)
 target_link_libraries (OrbitQt
