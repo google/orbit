@@ -24,7 +24,9 @@ endif()
 project(OrbitGl)
 
 # Stop compilation on first error
+if(LINUX)
 add_definitions(-Wfatal-errors)
+endif()
 
 #freetype
 find_package(Freetype REQUIRED)
@@ -37,14 +39,14 @@ PrintVars(PNG)
 find_path(FREEGLUT_INCLUDE_DIR GL/freeglut.h)
 
 if(WIN32)
-    find_library(FREEGLUT_LIB freeglut_static.lib)
-    #HINTS("external/vcpkg/buildtrees/freeglut/x64-windows-static-rel/lib/Release")
+    find_library(FREEGLUT_LIB freeglut.lib
+    HINTS "${ORBIT_ROOT}/external/vcpkg/installed/x64-windows-static/lib")
 endif()
 
 if(LINUX)
 find_library(FREEGLUT_LIB libglut.a)
-PrintVars(FREEGLUT)
 endif()
+PrintVars(FREEGLUT)
 
 # Glew
 find_package(glew REQUIRED)
@@ -160,11 +162,18 @@ set(SOURCES
     TimeGraph.cpp
     TimeGraphLayout.cpp
     TypeDataView.cpp
-    #Debugger.cpp
 )
 
+set(PLATFORM_SRC "")
+if(WIN32)
+set(PLATFORM_SRC
+	EventTracer.cpp
+	Debugger.cpp
+)
+endif()
+
 source_group("Header Files" FILES ${HEADERS})
-source_group("Source Files" FILES ${SOURCES})
+source_group("Source Files" FILES ${SOURCES} ${PLATFORM_SRC})
 
 include_directories("${_VCPKG_INSTALLED_DIR}/x64-linux/include")
 

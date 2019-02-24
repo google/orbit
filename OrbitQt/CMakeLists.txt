@@ -22,7 +22,9 @@ endif()
 project(OrbitQt)
 
 # Stop compilation on first error
+if(LINUX)
 add_definitions(-Wfatal-errors)
+endif()
 
 if(WIN32)
 set(QTDIR "C:/Qt/5.11.2/msvc2017_64")
@@ -138,7 +140,10 @@ PrintVars(GLEW)
 
 #Libpng
 find_package(PNG REQUIRED)
+if(LINUX)
 find_library(PNG_LIB libpng.a)
+set(PNG_LIBRARIES ${PNG_LIB})
+endif()
 PrintVars(PNG)
 
 #freetype-gl
@@ -205,8 +210,7 @@ set(ORBIT_DEPENDENCIES
     ${GLUT_LIBRARIES}
     ${GLEW_LIBRARIES}
     ${X11_LIBRARIES}
-    #${PNG_LIBRARIES}
-    ${PNG_LIB}
+    ${PNG_LIBRARIES}
 #    ${FREETYPE_LIBRARY}
     ${FREETYPE_SYSTEM_LIB}
     Qt5::Widgets

@@ -1,0 +1,7 @@
+- breakpad
+Add linked_ptr.h to orbitprofiler\external\vcpkg\installed\x64-windows\include\google_breakpad\processor
+In C:\Users\Pierric\dev\orbitprofiler\external\vcpkg\installed\x64-windows\include\google_breakpad\processor\code_modules.h
+	Replace 
+	#include "processor/linked_ptr.h" 
+	by 
+	#include "google_breakpad/processor/linked_ptr.h"

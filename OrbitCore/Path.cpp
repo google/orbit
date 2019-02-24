@@ -275,7 +275,7 @@ std::wstring Path::GetProgramFilesPath()
         pf,
         CSIDL_PROGRAM_FILES,
         FALSE );
-    return wstring(pf) + L"\\OrbitProfiler\\";
+    return std::wstring(pf) + L"\\OrbitProfiler\\";
 #else
     return L"TodoLinux";
 #endif

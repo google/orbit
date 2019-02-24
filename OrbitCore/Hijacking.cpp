@@ -152,7 +152,7 @@ __forceinline CallstackID Hijacking::SendCallstack( void* a_OriginalFunctionAddr
         return cs.m_Hash;
     }
 
-    return 0;
+   // return 0;
 }
 
 //-----------------------------------------------------------------------------

@@ -12,6 +12,8 @@
 #include <string>
 #include <atlconv.h>
 
+#if 0
+
 //-----------------------------------------------------------------------------
 CTypeInfoText::CTypeInfoText( HANDLE hProcess, DWORD64 ModBase  ) 
                             : m_pDump( hProcess, ModBase ) 
@@ -524,3 +526,5 @@ LPCTSTR CTypeInfoText::LocationTypeStr( enum LocationType Loc )
     default:                return _T("UnknownLoc"); 
     }
 }
+
+#endif

@@ -189,7 +189,9 @@ find_package(cereal REQUIRED)
 include_directories("${_VCPKG_INSTALLED_DIR}/x64-linux/include")
 
 # Stop compilation on first error
+if(LINUX)
 add_definitions(-Wfatal-errors)
+endif()
 
 # Library
 add_library(OrbitCore STATIC
@@ -207,13 +209,9 @@ PUBLIC
     ${EXTERN_ROOT}/xxHash-r42/
     ${EXTERN_ROOT}/breakpad/src/
     ${EXTERN_ROOT}/minhook/include/
-
-    if(WIN32)
     ${EXTERN_ROOT}/oqpi/include/
     ${EXTERN_ROOT}/DIA2Dump/
     ${DIASDKDir}/include/
-    endif()
-
 PRIVATE
     ${BREAKPAD_INCLUDE_DIR}
 )

@@ -4,6 +4,7 @@
 #include "ScopeTimer.h"
 #include "Core.h"
 #include "Capture.h"
+#include "EventTracer.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "Callstack.h"

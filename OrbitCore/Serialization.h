@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Utils.h"
+#include "PrintVar.h"
 
 #include <cereal/access.hpp>
 #include <cereal/details/traits.hpp>

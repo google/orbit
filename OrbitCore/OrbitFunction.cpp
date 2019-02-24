@@ -15,7 +15,7 @@
 #include "SamplingProfiler.h"
 #include "Utils.h"
 
-#ifdef _WIN32_
+#ifdef _WIN32
 #include "OrbitDia.h"
 #include "SymbolUtils.h"
 #include "DiaParser.h"

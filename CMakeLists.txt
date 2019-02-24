@@ -31,7 +31,9 @@ if(UNIX AND NOT APPLE)
 endif()
 
 # Stop compilation on first error
+if(LINUX)
 add_definitions(-Wfatal-errors)
+endif()
 
 set( LIB_EXT "a" )
 if(WIN32)

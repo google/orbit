@@ -17,7 +17,12 @@ struct CallStackPOD
 
     inline CallstackID Hash()
     {
-        m_Hash = 0; //XXH64( &m_Data[0], m_Depth * sizeof( DWORD64 ), 0xca1157ac ); return m_Hash;
+#ifdef __linux__
+		m_Hash = 0;
+#else
+        XXH64( &m_Data[0], m_Depth * sizeof( DWORD64 ), 0xca1157ac ); 
+#endif
+		return m_Hash;
     }
 
     // Callstack needs to be POD
@@ -34,7 +39,12 @@ struct CallStack
     CallStack( CallStackPOD a_CS );
     inline CallstackID Hash() 
     { 
-        m_Hash = 0; //XXH64( m_Data.data(), m_Depth * sizeof( DWORD64 ), 0xca1157ac ); return m_Hash; 
+#ifdef __linux__
+        m_Hash = 0; 
+#else
+		XXH64( m_Data.data(), m_Depth * sizeof( DWORD64 ), 0xca1157ac ); 
+#endif
+		return m_Hash; 
     }
     void Print();
     std::wstring GetString();
