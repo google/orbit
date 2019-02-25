@@ -48,6 +48,9 @@ project(${NAME})
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+#Output pdbs
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
 
 include(CheckIncludeFiles)
 include(CheckIncludeFileCXX)
