@@ -242,8 +242,8 @@ void TypesDataView::OnView( std::vector<int> & a_Items )
 //-----------------------------------------------------------------------------
 void TypesDataView::OnClip( std::vector<int> & a_Items )
 {
+    UNUSED(a_Items);
     GOrbitApp->SendToUiAsync( L"output" );
-    for(auto & item : a_Items) {}
 }
 
 //-----------------------------------------------------------------------------

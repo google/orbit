@@ -26,6 +26,7 @@ TextRenderer::TextRenderer() : m_Atlas(NULL)
                              , m_Font(NULL)
                              , m_Canvas(NULL)
                              , m_Initialized(false)
+                             , m_DrawOutline(false)
 {
 
 }

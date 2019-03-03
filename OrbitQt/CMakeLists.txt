@@ -19,7 +19,26 @@ if(UNIX AND NOT APPLE)
 endif()
 
 # OrbitQt
+set(MSVC_INCREMENTAL_DEFAULT ON)
 project(OrbitQt)
+
+# Disable incremental linking as it hides the real address of functions.  
+# This is annoying mainly for the OrbitProlog and OrbitEpilog related code.
+if(WIN32)
+    set( MSVC_INCREMENTAL_YES_FLAG "/INCREMENTAL:NO")
+    set( ORBIT_DEBUG_LINKER_FLAGS "/debug /INCREMENTAL:NO" )
+    
+    # debug
+    message("Changing Debug linker flags from '${CMAKE_EXE_LINKER_FLAGS_DEBUG}' to '${ORBIT_DEBUG_LINKER_FLAGS}'")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG ${ORBIT_DEBUG_LINKER_FLAGS} )
+    message("CMAKE_EXE_LINKER_FLAGS_DEBUG=${CMAKE_EXE_LINKER_FLAGS_DEBUG}")
+
+    # rewithdebinfo
+    PrintVars(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO)
+    message("Changing RelWithDebInfo linker flags from '${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO}' to '${ORBIT_DEBUG_LINKER_FLAGS}'")
+    set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO ${ORBIT_DEBUG_LINKER_FLAGS} )
+endif()
+
 
 # Stop compilation on first error
 if(LINUX)
@@ -251,3 +270,12 @@ PrintVars(ORBIT_DEPENDENCIES)
 target_link_libraries (OrbitQt
     ${ORBIT_DEPENDENCIES}
 )
+
+# administrator privileges
+SET_TARGET_PROPERTIES(OrbitQt PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator'")
+
+# Copy OrbitDll.dll to output directory
+add_custom_command(TARGET OrbitQt POST_BUILD       
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+        "${CMAKE_BINARY_DIR}/OrbitDll/$<CONFIG>/OrbitDll.dll"
+        $<TARGET_FILE_DIR:OrbitQt>)

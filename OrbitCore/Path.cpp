@@ -114,20 +114,16 @@ std::wstring Path::GetOrbitAppPdb()
 std::wstring Path::GetDllPath( bool a_Is64Bit )
 {
     std::wstring basePath = GetBasePath();
-    
-#ifdef _DEBUG
-    basePath += m_IsPackaged ? L"" : ( a_Is64Bit ? L"bin/x64/Debug/" : L"bin/Win32/Debug/" );
-#else
-    basePath += m_IsPackaged ? L"" : ( a_Is64Bit ? L"bin/x64/Release/" : L"bin/Win32/Release/" );
-#endif
 
-    return basePath + GetDllName( a_Is64Bit );
+	return basePath + GetDllName(a_Is64Bit);
 }
 
 //-----------------------------------------------------------------------------
 std::wstring Path::GetDllName( bool a_Is64Bit )
 {
-    return a_Is64Bit ? L"Orbit64.dll" : L"Orbit32.dll";
+    // TODO:
+    return L"OrbitDll.dll";
+    //return a_Is64Bit ? L"Orbit64.dll" : L"Orbit32.dll";
 }
 
 //-----------------------------------------------------------------------------

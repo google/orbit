@@ -1,3 +1,7 @@
+# OrbitDll
+set(MSVC_INCREMENTAL_DEFAULT ON)
+project(OrbitDll)
+
 set(HEADERS
     OrbitDll.h
 )
@@ -8,6 +12,21 @@ set(SOURCES
 
 source_group("Header Files" FILES ${HEADERS})
 source_group("Source Files" FILES ${SOURCES})
+
+# Disable incremental linking as it hides the real address of functions.  
+# This is annoying mainly for the OrbitProlog and OrbitEpilog related code.
+if(WIN32)
+    set( MSVC_INCREMENTAL_YES_FLAG "/INCREMENTAL:NO")
+    set( ORBIT_DEBUG_LINKER_FLAGS "/debug /INCREMENTAL:NO" )
+    
+    # debug
+    message("OrbitDll - Changing Debug linker flags from '${CMAKE_SHARED_LINKER_FLAGS_DEBUG}' to '${ORBIT_DEBUG_LINKER_FLAGS}'")
+    set(CMAKE_SHARED_LINKER_FLAGS_DEBUG ${ORBIT_DEBUG_LINKER_FLAGS} )
+
+    # rewithdebinfo
+    message("OrbitDll - Changing RelWithDebInfo linker flags from '${CMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO}' to '${ORBIT_DEBUG_LINKER_FLAGS}'")
+    set(CMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO ${ORBIT_DEBUG_LINKER_FLAGS} )
+endif()
 
 add_library(OrbitDll SHARED ${SOURCES} ${HEADERS})
 
