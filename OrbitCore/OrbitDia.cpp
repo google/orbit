@@ -5,7 +5,7 @@
 #include "OrbitDia.h"
 #include "Log.h"
 #include "Core.h"
-#include "dia2.h"
+#include <dia2.h>
 #include "dia2dump.h"
 
 #define StringRef char*

@@ -16,7 +16,7 @@
 
 #ifdef _WIN32
 #include "SymbolUtils.h"
-#include "dia2.h"
+#include <dia2.h>
 #endif
 
 double GThreadUsageSamplePeriodMs = 200.0;

@@ -1,4 +1,4 @@
-#include "dia2.h"
+#include <dia2.h>
 
 #pragma warning ( disable : 4100)
 

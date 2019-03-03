@@ -9,7 +9,7 @@
 #include <tlhelp32.h>
 #include <psapi.h>
 #include "Capture.h"
-#include "dia2.h"
+#include <dia2.h>
 #include "OrbitDia.h"
 #include "OrbitModule.h"
 

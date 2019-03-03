@@ -160,7 +160,9 @@ endif()
 #GLUT
 find_package(GLUT REQUIRED)
 PrintVars(GLUT)
+if(LINUX)
 find_package(CURL REQUIRED)
+endif()
 
 #imgui
 find_path(IMGUI_INCLUDE_DIR imgui.h) 
@@ -199,25 +201,30 @@ PRIVATE
 )
 
 if(WIN32)
+
+set(BREAKPAD_LIB optimized;${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/libbreakpad.lib;debug;${EXTERN_ROOT}/vcpkg/installed/x64-windows/debug/lib/libbreakpadd.lib)
+
 set(ORBIT_DEPENDENCIES
     OrbitGl
     OrbitCore
-	OrbitAsm
-    ${CURL_LIBRARIES}
-    ${BREAKPAD_LIB}
-    ${IMGUI_LIB}
-    ${ZLIB_LIBRARIES}
-    ${FREETYPE_GL_LIB}
-    ${GLUT_LIBRARIES}
-    ${GLEW_LIBRARIES}
-    ${X11_LIBRARIES}
-    ${PNG_LIBRARIES}
-#    ${FREETYPE_LIBRARY}
-    ${FREETYPE_SYSTEM_LIB}
+    OrbitAsm
+    OrbitDll
     Qt5::Widgets
     Qt5::Core
-	dbghelp.lib
+    dbghelp.lib
+    ${BREAKPAD_LIB}
+    ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/libcurl.lib;
+    ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/imgui.lib;
+    ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/zlib.lib;
+    ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/freetype-gl.lib;
+    ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/freeglut.lib;
+    ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/glew32.lib;
+    ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/libpng16.lib;
+    ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/zlib.lib;
+    ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/freetype.lib;
+    ${EXTERN_ROOT}/vcpkg/installed/x64-windows-static/lib/capstone.lib
 )
+
 endif()
 
 if(LINUX)

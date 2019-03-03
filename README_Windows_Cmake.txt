@@ -1,5 +1,7 @@
+
 1. Install Qt (5.12.1 works).  Make sure you select the appropriate MSVC versions to install.
 2. Add C:\Qt\5.12.1\msvc2017_64\bin\ to your PATH.  ("set PATH=%PATH%;C:\Qt\5.12.1\msvc2017_64\bin\")
+2.1 Make sure you have the DIA SDK installed, (install Visual Studio with Windows 10 SDK component)
 3. cd to root of orbitprofiler directory
 4. mkdir build && cd build
 5. cmake .. -A x64 (make sure to specify -A x64, otherwise it will try to build 32 bit...)

@@ -199,11 +199,16 @@ source_group("External\\Source Files" FILES ${EXTERNAL_SOURCES})
 # Find cereal
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(cereal REQUIRED)
-include_directories("${_VCPKG_INSTALLED_DIR}/x64-linux/include")
 
 # Stop compilation on first error
 if(LINUX)
+include_directories("${_VCPKG_INSTALLED_DIR}/x64-linux/include")
 add_definitions(-Wfatal-errors)
+endif()
+
+if(WIN32)
+#So that #include "processor/linked_ptr.h" works in core_modules.h
+include_directories("${_VCPKG_INSTALLED_DIR}/x64-windows/include/google_breakpad")
 endif()
 
 # Library
@@ -220,7 +225,6 @@ PUBLIC
     ${EXTERN_ROOT}/concurrentqueue/
     ${EXTERN_ROOT}/multicore/common/
     ${EXTERN_ROOT}/xxHash-r42/
-    ${EXTERN_ROOT}/breakpad/src/
     ${EXTERN_ROOT}/minhook/include/
     ${EXTERN_ROOT}/oqpi/include/
     ${EXTERN_ROOT}/DIA2Dump/

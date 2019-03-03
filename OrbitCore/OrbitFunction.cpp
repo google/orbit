@@ -19,7 +19,7 @@
 #include "OrbitDia.h"
 #include "SymbolUtils.h"
 #include "DiaParser.h"
-#include "dia2.h"
+#include <dia2.h>
 #endif
 
 //-----------------------------------------------------------------------------

@@ -28,7 +28,4 @@ cmake -DCMAKE_TOOLCHAIN_FILE='..\external\vcpkg\scripts\buildsystems\vcpkg.cmake
 
 cd ..
 
-
-:: TODO
-:: investigate how to remove dependency on boost, it's ridiculously slow to build.
-:: use vcpkg for Qt
+copy "external\vcpkg\buildtrees\breakpad\src\9e12edba6d-12269dd01c\src\processor\linked_ptr.h" "external\vcpkg\installed\x64-windows\include\google_breakpad\processor\linked_ptr.h"

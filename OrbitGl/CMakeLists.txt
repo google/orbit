@@ -220,4 +220,6 @@ ${X11_LIBRARIES}
 
 PrintVars(ORBITGL_DEPENDENCIES)
 
+if(LINUX)
 target_link_libraries(OrbitGl ${ORBITGL_DEPENDENCIES})
+endif()
