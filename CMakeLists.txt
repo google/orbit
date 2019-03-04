@@ -170,7 +170,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     AppendToVar(CMAKE_CXX_FLAGS "-Wno-missing-field-initializers")
 endif()
 
+if(LINUX)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+endif()
 
 if(WIN32)
 add_subdirectory(OrbitAsm)
@@ -180,3 +182,8 @@ endif()
 add_subdirectory(OrbitCore)
 add_subdirectory(OrbitGl)
 add_subdirectory(OrbitQt)
+
+if(WIN32)
+# Startup Project
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "OrbitQt")
+endif()

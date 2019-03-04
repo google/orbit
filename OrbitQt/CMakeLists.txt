@@ -271,11 +271,13 @@ target_link_libraries (OrbitQt
     ${ORBIT_DEPENDENCIES}
 )
 
-# administrator privileges
-SET_TARGET_PROPERTIES(OrbitQt PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator'")
+if(WIN32)
+# Administrator privileges
+SET_TARGET_PROPERTIES(OrbitQt PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' /SUBSYSTEM:WINDOWS")
 
 # Copy OrbitDll.dll to output directory
 add_custom_command(TARGET OrbitQt POST_BUILD       
     COMMAND ${CMAKE_COMMAND} -E copy_if_different 
         "${CMAKE_BINARY_DIR}/OrbitDll/$<CONFIG>/OrbitDll.dll"
         $<TARGET_FILE_DIR:OrbitQt>)
+endif()
