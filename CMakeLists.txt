@@ -43,7 +43,7 @@ endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-set(NAME orbitProfiler)
+set(NAME Orbit)
 project(${NAME})
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -120,11 +120,6 @@ find_library(CAPSTONE_LIBRARIES libcapstone.a )
 endif()
 PrintVars(CAPSTONE)
 
-if(WIN32)
-set(VSInstallDir ${CMAKE_GENERATOR_INSTANCE})
-set(DIASDKDir "${CMAKE_GENERATOR_INSTANCE}/DIA SDK" CACHE PATH "")
-message(STATUS "DIASDKDir: ${DIASDKDir}")
-endif()
 
 function(AppendToVar var val)
     set("${var}" "${${var}} ${val}" PARENT_SCOPE)

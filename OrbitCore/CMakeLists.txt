@@ -228,10 +228,12 @@ PUBLIC
     ${EXTERN_ROOT}/minhook/include/
     ${EXTERN_ROOT}/oqpi/include/
     ${EXTERN_ROOT}/DIA2Dump/
-    ${DIASDKDir}/include/
 PRIVATE
     ${BREAKPAD_INCLUDE_DIR}
 )
+
+set(DIASDKDir "$(VSInstallDir)DIA SDK" CACHE PATH "")
+add_definitions(-I"${DIASDKDir}/include/")
 
 # Link libraries
 target_link_libraries(OrbitCore

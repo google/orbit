@@ -46,10 +46,17 @@ add_definitions(-Wfatal-errors)
 endif()
 
 if(WIN32)
-set(QTDIR "C:/Qt/5.11.2/msvc2017_64")
+if(NOT DEFINED ENV{QTDIR})
+	MESSAGE(STATUS "QTDIR environment variable not set.
+    Please QTDIR to your qt installation directory (ex:C:\Qt\5.12.1\msvc2017_64).")
 endif()
 
+set(QTDIR $ENV{QTDIR} CACHE STRING "Qt install path")
+STRING(REGEX REPLACE "\\\\" "/" QTDIR ${QTDIR})
+PrintVars(QTDIR)
+list(APPEND CMAKE_PREFIX_PATH ${QTDIR})
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${QTDIR}")
+endif()
 
 find_package(Qt5 CONFIG REQUIRED 
 	HINTS "${QTDIR}" 
@@ -274,6 +281,13 @@ target_link_libraries (OrbitQt
 if(WIN32)
 # Administrator privileges
 SET_TARGET_PROPERTIES(OrbitQt PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' /SUBSYSTEM:WINDOWS")
+add_custom_command(TARGET OrbitQt POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::Core> $<TARGET_FILE_DIR:OrbitQt>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::Gui> $<TARGET_FILE_DIR:OrbitQt>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::Widgets> $<TARGET_FILE_DIR:OrbitQt>
+    )
+
+PrintVars(qt)
 
 # Copy OrbitDll.dll to output directory
 add_custom_command(TARGET OrbitQt POST_BUILD       
