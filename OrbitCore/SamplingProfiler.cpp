@@ -569,7 +569,6 @@ std::wstring SamplingProfiler::GetSymbolFromAddress( DWORD64 a_Address )
 //-----------------------------------------------------------------------------
 unsigned long long SampledFunction::Hash()
 {
-#ifdef _WIN32
     if (m_Hash == 0)
     {
         XXH64_state_t xxHashState;
@@ -583,9 +582,6 @@ unsigned long long SampledFunction::Hash()
     }
 
     return m_Hash;
-#else
-    return 0;
-#endif
 }
 
 //-----------------------------------------------------------------------------
