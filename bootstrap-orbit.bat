@@ -1,3 +1,16 @@
+@echo off
+
+:: Check for QTDIR environment variable
+if defined QTDIR (
+    echo QTDIR=%QTDIR% 
+) else ( 
+    echo ======= ERROR =======
+    echo QTDIR environment variable not found.
+    echo Please set your QTDIR environment variable to point to your Qt installation directory [ex. C:\Qt\5.12.1\msvc2017_64]
+    echo ======= ERROR =======
+    goto :eof
+)
+
 :: Build vcpkg
 call git submodule init
 call git submodule update
@@ -18,13 +31,14 @@ vcpkg install freeglut glew freetype-gl curl breakpad capstone asio cereal imgui
 set VCPKG_DEFAULT_TRIPLET=x64-windows-static
 vcpkg install capstone freeglut imgui
 
-:: CMake
 cd ../..
 
+:: Fix breakpad missing file
+copy "external\vcpkg\buildtrees\breakpad\src\9e12edba6d-12269dd01c\src\processor\linked_ptr.h" "external\vcpkg\installed\x64-windows\include\google_breakpad\processor\linked_ptr.h" /y
+
+:: CMake
 mkdir build
 cd build
 cmake -DCMAKE_TOOLCHAIN_FILE='../external/vcpkg/scripts/buildsystems/vcpkg.cmake' -DCMAKE_GENERATOR_PLATFORM=x64 ..
 
 cd ..
-
-copy "external\vcpkg\buildtrees\breakpad\src\9e12edba6d-12269dd01c\src\processor\linked_ptr.h" "external\vcpkg\installed\x64-windows\include\google_breakpad\processor\linked_ptr.h" /y
