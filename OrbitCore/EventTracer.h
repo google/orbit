@@ -2,13 +2,13 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 #pragma once
-#include "Core.h"
-#include "EventGuid.h"
-#include "EventBuffer.h"
 
 #ifdef _WIN32
+
+#include "Core.h"
+#include "EventBuffer.h"
+#include "EventGuid.h"
 #include <evntrace.h>
-#endif
 
 //-----------------------------------------------------------------------------
 class EventTracer
@@ -38,3 +38,5 @@ protected:
 };
 
 extern EventTracer GEventTracer;
+
+#endif

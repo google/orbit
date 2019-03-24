@@ -4,7 +4,6 @@
 
 #include "EventTracer.h"
 #include "EventCallbacks.h"
-#include "EventTracer.h"
 #include "EventClasses.h"
 #include "EventUtils.h"
 #include "EventGuid.h"

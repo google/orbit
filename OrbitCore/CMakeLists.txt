@@ -127,7 +127,7 @@ set(SOURCES
     Variable.cpp
     VariableTracing.cpp
     Version.cpp
-    #${EXTERN_ROOT}/xxHash-r42/xxhash.c
+    ${EXTERN_ROOT}/xxHash-r42/xxhash.c
 )
 
 # Windows
