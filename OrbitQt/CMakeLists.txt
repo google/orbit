@@ -282,16 +282,26 @@ if(WIN32)
 # Administrator privileges
 SET_TARGET_PROPERTIES(OrbitQt PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' /SUBSYSTEM:WINDOWS")
 add_custom_command(TARGET OrbitQt POST_BUILD
+    
+    # Qt
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::Core> $<TARGET_FILE_DIR:OrbitQt>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::Gui> $<TARGET_FILE_DIR:OrbitQt>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::Widgets> $<TARGET_FILE_DIR:OrbitQt>
+
+    # External
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/libcurl.dll  $<TARGET_FILE_DIR:OrbitQt> 
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/imgui.dll    $<TARGET_FILE_DIR:OrbitQt> 
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/zlib1.dll    $<TARGET_FILE_DIR:OrbitQt> 
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/bz2.dll      $<TARGET_FILE_DIR:OrbitQt> 
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/freeglut.dll $<TARGET_FILE_DIR:OrbitQt>     	
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/glew32.dll   $<TARGET_FILE_DIR:OrbitQt> 
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/libpng16.dll $<TARGET_FILE_DIR:OrbitQt>     
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/freetype.dll $<TARGET_FILE_DIR:OrbitQt> 
+
+    # OrbitDll
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/OrbitDll/$<CONFIG>/OrbitDll.dll"       $<TARGET_FILE_DIR:OrbitQt>
     )
 
 PrintVars(qt)
 
-# Copy OrbitDll.dll to output directory
-add_custom_command(TARGET OrbitQt POST_BUILD       
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different 
-        "${CMAKE_BINARY_DIR}/OrbitDll/$<CONFIG>/OrbitDll.dll"
-        $<TARGET_FILE_DIR:OrbitQt>)
 endif()
