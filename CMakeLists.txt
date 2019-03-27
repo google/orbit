@@ -175,8 +175,12 @@ add_subdirectory(OrbitDll)
 endif()
 
 add_subdirectory(OrbitCore)
+
+# 64 bits
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 add_subdirectory(OrbitGl)
 add_subdirectory(OrbitQt)
+endif()
 
 if(WIN32)
 # Startup Project

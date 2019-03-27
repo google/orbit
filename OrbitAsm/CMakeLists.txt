@@ -3,6 +3,14 @@ enable_language(ASM_MASM)
 set(HEADERS OrbitAsm.h)
 set(SOURCES Orbit.asm OrbitAsm.cpp)
 
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    # 64 bits
+    set(SOURCES Orbit.asm OrbitAsm.cpp)
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    # 32 bits
+    set(SOURCES OrbitAsm.cpp)
+endif()
+
 set(HDE_FILES
     ${EXTERN_ROOT}/minhook/src/HDE/hde32.h
     ${EXTERN_ROOT}/minhook/src/HDE/hde32.c
