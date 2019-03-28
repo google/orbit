@@ -106,7 +106,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget *parent)
     CreatePluginTabs();
 
     this->setWindowTitle("Orbit Profiler");
-    this->setWindowIcon(QIcon("orbit.ico"));
+    std::string iconFileName = ws2s(Path::GetExecutablePath()) + "orbit.ico";
+    this->setWindowIcon(QIcon(iconFileName.c_str()));
 
     GMainWindow = this;
 

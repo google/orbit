@@ -136,7 +136,7 @@ set(qtpropertybrowser_SOURCES
 source_group("qtpropertybrowser\\Header Files" FILES ${qtpropertybrowser_HEADERS})
 source_group("qtpropertybrowser\\Source Files" FILES ${qtpropertybrowser_SOURCES})
 
-add_executable(OrbitQt 
+add_executable(OrbitQt WIN32
     ${SOURCES} ${HEADERS} 
 	${qtpropertybrowser_SOURCES} ${qtpropertybrowser_HEADERS}
 )
@@ -299,8 +299,14 @@ add_custom_command(TARGET OrbitQt POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/freetype.dll $<TARGET_FILE_DIR:OrbitQt> 
 
     # OrbitDll
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/OrbitDll/$<CONFIG>/OrbitDll.dll"       $<TARGET_FILE_DIR:OrbitQt>
-    )
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/OrbitDll/$<CONFIG>/Orbit64.dll"        $<TARGET_FILE_DIR:OrbitQt>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ORBIT_ROOT}/build/x86/OrbitDll/Release/Orbit32.dll"      $<TARGET_FILE_DIR:OrbitQt>
+
+    # Icon
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ORBIT_ROOT}/OrbitQt/orbit.ico"                           $<TARGET_FILE_DIR:OrbitQt>
+)
+
+set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
 
 PrintVars(qt)
 

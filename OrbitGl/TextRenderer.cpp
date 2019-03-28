@@ -56,9 +56,9 @@ void TextRenderer::Init()
     std::string exePath = ws2s(Path::GetExecutablePath());
     
     #ifdef _WIN32
-    std::string fontFileName = exePath + "../../../external/freetype-gl/fonts/Vera.ttf";
-    std::string vertShaderFileName = exePath + "../../../external/freetype-gl/shaders/v3f-t2f-c4f.vert";
-    std::string fragShaderFileName = exePath + "../../../external/freetype-gl/shaders/v3f-t2f-c4f.frag";
+    std::string fontFileName = exePath + "../../../../external/freetype-gl/fonts/Vera.ttf";
+    std::string vertShaderFileName = exePath + "../../../../external/freetype-gl/shaders/v3f-t2f-c4f.vert";
+    std::string fragShaderFileName = exePath + "../../../../external/freetype-gl/shaders/v3f-t2f-c4f.frag";
     #else
     std::string fontFileName = exePath + "../../external/freetype-gl/fonts/Vera.ttf";
     std::string vertShaderFileName = exePath + "../../external/freetype-gl/shaders/v3f-t2f-c4f.vert";
