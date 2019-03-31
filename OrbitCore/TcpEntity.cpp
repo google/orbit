@@ -92,7 +92,7 @@ void TcpEntity::FlushSendQueue()
 //-----------------------------------------------------------------------------
 void TcpEntity::SendData()
 {
-    SetThreadName( GetCurrentThreadId(), "TcpSender" );
+    SetCurrentThreadName( L"TcpSender" );
 
     while( !m_ExitRequested )
     {

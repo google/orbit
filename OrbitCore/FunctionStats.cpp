@@ -1,5 +1,6 @@
 #include "FunctionStats.h"
 #include "Core.h"
+#include "ScopeTimer.h"
 #include "Serialization.h"
 
 //-----------------------------------------------------------------------------

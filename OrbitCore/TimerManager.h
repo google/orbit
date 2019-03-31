@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <memory>
 #include "Core.h"
+#include "ScopeTimer.h"
 #include "Threading.h"
 #include "Profiling.h"
 #include "Message.h"

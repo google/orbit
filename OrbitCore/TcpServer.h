@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Core.h"
+#include "ScopeTimer.h"
 #include "TcpEntity.h"
 #include <functional>
 #include <unordered_map>

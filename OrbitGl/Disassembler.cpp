@@ -24,10 +24,10 @@ void Disassembler::LogHex( const unsigned char *str, size_t len )
 void Disassembler::Disassemble( const unsigned char* a_MachineCode, int a_Size, DWORD64 a_Address, bool a_Is64Bit )
 {
     std::wstring disAsm;
-    csh handle;
+    csh handle = 0;
     cs_arch arch = CS_ARCH_X86;
-    cs_insn *insn;
-    size_t count;
+    cs_insn *insn = nullptr;
+    size_t count = 0;
     cs_err err;
     cs_mode mode = a_Is64Bit ? CS_MODE_64 : CS_MODE_32;
 
@@ -52,6 +52,12 @@ void Disassembler::Disassemble( const unsigned char* a_MachineCode, int a_Size, 
                 , insn[j].address
                 , insn[j].mnemonic
                 , insn[j].op_str );
+
+            /*std::string log = Format("0x%" PRIx64 ":\t%-12s %s\n"
+                , insn[j].address
+                , insn[j].mnemonic
+                , insn[j].op_str);
+            OutputDebugStringA(log.c_str());*/
         }
 
         // print out the next offset, after the last insn

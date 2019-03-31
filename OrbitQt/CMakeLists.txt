@@ -248,7 +248,7 @@ set(ORBIT_DEPENDENCIES
     ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/libpng16.lib;
     ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/zlib.lib;
     ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/freetype.lib;
-    ${EXTERN_ROOT}/vcpkg/installed/x64-windows-static/lib/capstone.lib
+    ${EXTERN_ROOT}/vcpkg/installed/x64-windows-static/debug/lib/capstone.lib #TODO: figure out why release lib is not working.
 )
 
 endif()

@@ -80,7 +80,7 @@ void TcpClient::Start()
 //-----------------------------------------------------------------------------
 void TcpClient::ClientThread()
 {
-    SetThreadName( GetCurrentThreadId(), "OrbitTcpClient" );
+    SetCurrentThreadName( L"OrbitTcpClient" );
     OutputDebugStringW(L"io_service started...\n");
     asio::io_service::work work( *m_TcpService->m_IoService );
     m_TcpService->m_IoService->run();

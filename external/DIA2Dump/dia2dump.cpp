@@ -15,6 +15,7 @@
 #include "Callback.h"
 
 #include "../../../OrbitCore/OrbitDia.h"
+#include "../../../OrbitCore/ScopeTimer.h"
 #include "../../../OrbitGl/App.h"
 
 #pragma warning (disable : 4100)

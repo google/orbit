@@ -133,7 +133,7 @@ void TimerManager::Stop()
 //-----------------------------------------------------------------------------
 void TimerManager::ConsumeTimers()
 {
-    SetThreadName( GetCurrentThreadId(), "OrbitConsumeTimers" );
+    SetCurrentThreadName( L"OrbitConsumeTimers" );
 #ifdef _WIN32
     SetThreadPriority( GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL );
 #endif
@@ -167,7 +167,7 @@ void TimerManager::ConsumeTimers()
 //-----------------------------------------------------------------------------
 void TimerManager::SendTimers()
 {
-    SetThreadName( GetCurrentThreadId(), "OrbitSendTimers" );
+    SetCurrentThreadName( L"OrbitSendTimers" );
 
     const size_t numTimers = 4096;
     Timer Timers[numTimers];
