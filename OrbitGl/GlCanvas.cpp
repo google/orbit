@@ -20,7 +20,7 @@
 #include <vector>
 #include <string>
 
-RingBuffer<float, 512> GDeltaTimeBuffer;\
+RingBuffer<float, 512> GDeltaTimeBuffer;
 
 float GlCanvas::Z_VALUE_UI              =  0.00f;
 float GlCanvas::Z_VALUE_TEXT_UI         =  0.0f;
@@ -438,7 +438,7 @@ void GlCanvas::WorldToScreen( float wx, float wy, int & x, int & y ) const
     x = (int)((wx-m_WorldTopLeftX)/m_WorldWidth)*getWidth();
     
     float bottomY = m_WorldTopLeftY - m_WorldHeight;
-    y = (int)(1.f-((wy-bottomY)/m_WorldHeight))*getHeight();
+    y = (int)((1.f-((wy-bottomY)/m_WorldHeight))*getHeight());
 }
 
 //-----------------------------------------------------------------------------

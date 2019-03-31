@@ -51,10 +51,17 @@ TimeGraph::TimeGraph() : m_NumDrawnTextBoxes(0)
 
 //-----------------------------------------------------------------------------
 void TimeGraph::SetCanvas( GlCanvas* a_Canvas )
-{ 
-    m_Canvas = a_Canvas; 
+{
+    m_Canvas = a_Canvas;
     m_TextRenderer->SetCanvas( a_Canvas );
     m_TextRendererStatic.SetCanvas( a_Canvas );
+}
+
+//-----------------------------------------------------------------------------
+void TimeGraph::SetFontSize(int a_FontSize)
+{
+	m_TextRenderer->SetFontSize(a_FontSize);
+	m_TextRendererStatic.SetFontSize(a_FontSize);
 }
 
 //-----------------------------------------------------------------------------
@@ -819,7 +826,8 @@ void TimeGraph::DrawIdentifiers()
         float threadOffset = m_Layout.GetThreadBlockStart( threadId );
         int x, y;
         m_Canvas->WorldToScreen( 0, threadOffset-m_Layout.m_EventTrackHeight, x, y );
-        std::string threadName = Format( "%u", threadId );
+        std::string threadName = ws2s(Capture::GTargetProcess->GetThreadNameFromTID(threadId));
+        threadName = Format( "%s [%u]", threadName.c_str(), threadId );
         m_TextRenderer->AddText2D( threadName.c_str(), xPos, y, GlCanvas::Z_VALUE_TEXT, Color( 255, 255, 255, 255 ) );
 
         int trackHeightScreen = m_Canvas->WorldToScreenHeight(m_Layout.m_EventTrackHeight);
@@ -829,7 +837,7 @@ void TimeGraph::DrawIdentifiers()
 
         y = m_Canvas->getHeight() - y;
 
-        Color col = GetThreadColor( i );
+        Color col = GetThreadColor( i+1 );
         col[3] = m_TrackAlpha;
         glColor4ubv( &col[0] );
         glBegin( GL_QUADS );

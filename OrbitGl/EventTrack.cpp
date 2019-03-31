@@ -71,6 +71,8 @@ void EventTrack::Draw( GlCanvas* a_Canvas, bool a_Picking )
 void EventTrack::SetPos( float a_X, float a_Y )
 {
     m_Pos = Vec2( a_X, a_Y );
+	m_ThreadName.SetPos(Vec2(a_X, a_Y));
+	m_ThreadName.SetSize(Vec2(m_Size[0]*0.3f, m_Size[1]));
 }
 
 //-----------------------------------------------------------------------------

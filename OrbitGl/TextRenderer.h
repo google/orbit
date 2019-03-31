@@ -7,6 +7,7 @@
 #include "freetype-gl.h"
 #include "mat4.h"
 #include "TextBox.h"
+#include <map>
 
 namespace ftgl
 {
@@ -35,6 +36,7 @@ public:
     const TextBox & GetSceneBox() const;
     int  GetNumCharacters() const;
     void ToggleDrawOutline() { m_DrawOutline = !m_DrawOutline; }
+    void SetFontSize( int a_Size );
 
 protected:
     void AddTextInternal( texture_font_t* font, const char* text, const vec4& color, vec2* pen, float a_MaxSize = -1.f, float a_Z = -0.01f, bool a_Static = false );
@@ -46,6 +48,7 @@ private:
     texture_atlas_t* m_Atlas;
     vertex_buffer_t* m_Buffer;
     texture_font_t*  m_Font;
+    std::map<int, texture_font_t*> m_FontsBySize;
     GlCanvas*        m_Canvas;
     GLuint           m_Shader;
     mat4             m_Model;

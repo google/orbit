@@ -625,3 +625,56 @@ void SetupImGuiStyle( bool bStyleDark_, float alpha_ )
         }
     }
 }
+
+void OutputWindow::AddLine(const std::string & a_String)
+{
+	AddLog("%s\n", a_String.c_str());
+}
+
+void OutputWindow::AddLog(const char* fmt, ...)
+{
+	int old_size = Buf.size();
+	va_list args;
+	va_start(args, fmt);
+	Buf.appendfv(fmt, args);
+	va_end(args);
+	for (int new_size = Buf.size(); old_size < new_size; old_size++)
+		if (Buf[old_size] == '\n')
+			LineOffsets.push_back(old_size);
+}
+
+void OutputWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size)
+{
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+
+	if (a_Size)
+	{
+		ImGui::SetNextWindowPos(ImVec2(10, 10));
+		ImVec2 CanvasSize = *a_Size;
+		CanvasSize.x -= 20;
+		CanvasSize.y -= 20;
+		ImGui::SetNextWindowSize(CanvasSize, ImGuiSetCond_Always);
+		ImGui::Begin(title, p_opened, CanvasSize, 1.f, WindowFlags);
+	}
+	else
+	{
+		ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiSetCond_FirstUseEver);
+		ImVec2 size(400, 400);
+		ImGui::Begin(title, p_opened, size, 1.f, WindowFlags);
+	}
+
+
+	ImGui::TextUnformatted(Buf.begin());
+
+	static bool checked = true;
+	ImGui::Checkbox("blah", &checked);
+	
+	static int i1 = 0;
+	if (ImGui::SliderInt("slider int", &i1, 10, 100))
+	{
+		GCurrentTimeGraph->SetFontSize(i1);
+	}
+
+	ImGui::End();
+	ImGui::PopStyleVar();
+}

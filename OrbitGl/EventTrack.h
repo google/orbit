@@ -6,6 +6,7 @@
 #include "PickingManager.h"
 #include "CallstackTypes.h"
 #include "CoreMath.h"
+#include "TextBox.h"
 
 class GlCanvas;
 class TimeGraph;
@@ -29,6 +30,7 @@ public:
     void SelectEvents();
 
 protected:
+	TextBox     m_ThreadName;
     GlCanvas*   m_Canvas;
     ThreadID    m_ThreadId;
     TimeGraph*  m_TimeGraph;

@@ -75,6 +75,7 @@ public:
     void AddContextSwitch( const ContextSwitch & a_CS );
     void SetPickingManager( class PickingManager* a_Manager ){ m_PickingManager = a_Manager; }
     void SetCanvas( GlCanvas* a_Canvas );
+	void SetFontSize( int a_FontSize );
     
 public:
     TextRenderer                    m_TextRendererStatic;

@@ -52,7 +52,8 @@ void TextRenderer::Init()
         return;
 
     m_Font = NULL;
-    m_Atlas = texture_atlas_new(512, 512, 1);
+	int atlasSize = 2*1024;
+    m_Atlas = texture_atlas_new(atlasSize, atlasSize, 1);
     std::string exePath = ws2s(Path::GetExecutablePath());
     
     #ifdef _WIN32
@@ -70,6 +71,10 @@ void TextRenderer::Init()
     static float fsize = GParams.m_FontSize;
     m_Buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
     m_Font = texture_font_new_from_file(m_Atlas, fsize, fontFileName.c_str());
+	for (int i = 10; i <= 100; i+=10)
+	{
+		m_FontsBySize[i] = texture_font_new_from_file(m_Atlas, i, fontFileName.c_str());
+	}
 
     if( m_Font == nullptr )
     {
@@ -92,6 +97,16 @@ void TextRenderer::Init()
     mat4_set_identity(&m_View);
 
     m_Initialized = true;
+}
+
+//-----------------------------------------------------------------------------
+void TextRenderer::SetFontSize( int a_Size )
+{
+	texture_font_t* font = m_FontsBySize[a_Size];
+	if (font)
+	{
+		m_Font = font;
+	}
 }
 
 //-----------------------------------------------------------------------------
