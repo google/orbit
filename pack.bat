@@ -7,6 +7,8 @@ set LICENS_PATH=%TARGET_PATH%licenses\
 set SYMSTORE="C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\symstore.exe"
 set PDB_PATH=OrbitPdb\%ORBIT_VERSION%\
 set ZIP_PATH=OrbitWeb\App_Data\download\
+set ORBIT_PATH_64=build\x64\OrbitQt\
+set ORBIT_PATH_32=build\x86\OrbitDll\
 
 @RD /S /Q %TARGET_PATH%
 
@@ -16,9 +18,9 @@ mkdir %SHADER_PATH%
 mkdir %LICENS_PATH%
 
 ::Orbit
-xcopy bin\x64\Release\Orbit.exe                       %TARGET_PATH%
-xcopy bin\x64\Release\Orbit64.dll                     %TARGET_PATH%
-xcopy bin\Win32\Release\Orbit32.dll                   %TARGET_PATH%
+xcopy %ORBIT_PATH_64%Release\Orbit.exe                %TARGET_PATH%
+xcopy %ORBIT_PATH_64%Release\Orbit64.dll              %TARGET_PATH%
+xcopy %ORBIT_PATH_32%Release\Orbit32.dll              %TARGET_PATH%
 xcopy Orbit.h                                         %TARGET_PATH%
 
 ::Curl
