@@ -144,7 +144,6 @@ protected:
     Timer                           m_ThreadUsageTimer;
     int                             m_PeriodMs;
     float                           m_SampleTimeSeconds;
-    bool                            m_ETW;
     bool                            m_GenerateSummary;
     Mutex                           m_SymbolMutex;
     int                             m_NumSamples;

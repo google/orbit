@@ -49,7 +49,8 @@ enum MessageType : int16_t
     Msg_OrbitUnrealObject,
     Msg_MiniDump,
     Msg_UserData,
-    Msg_OrbitData
+    Msg_OrbitData,
+    Msg_ThreadInfo,
 };
 
 //-----------------------------------------------------------------------------
@@ -87,11 +88,12 @@ class Message
 {
 public:
     Message ( MessageType a_Type = Msg_Invalid
-            , int a_Size = 0
+            , size_t a_Size = 0
             , char* a_Data = nullptr )
             : m_Type(a_Type)
             , m_Size(a_Size)
             , m_SessionID(GSessionID)
+            , m_ThreadId(0)
             , m_Data(a_Data)
     {}
 
@@ -112,8 +114,9 @@ public:
 public:
     MessageType    m_Type;
     Header         m_Header;
-    int            m_Size;
+    size_t         m_Size;
     int            m_SessionID;
+    DWORD          m_ThreadId;
     char*          m_Data;
 #ifndef _WIN64
     char*          m_Padding; // Make sure Message is same size on both Win32 and x64

@@ -14,6 +14,7 @@
 #include "SamplingProfiler.h"
 #include "TimerManager.h"
 #include "OrbitUnreal.h"
+#include "OrbitProcess.h"
 
 #include <thread>
 
@@ -169,6 +170,12 @@ void TcpServer::Receive( const Message & a_Message )
         
         break;
     }
+    case Msg_ThreadInfo:
+    {
+        std::wstring threadName((wchar_t*)a_Message.GetData());
+        Capture::GTargetProcess->SetThreadName(a_Message.m_ThreadId, threadName);
+        PRINT_VAR(threadName);
+    }
     default:
     {
         MsgCallback & callback = m_Callbacks[a_Message.GetType()];
@@ -265,6 +272,6 @@ bool TcpServer::HasConnection()
 void TcpServer::ServerThread()
 {
     PRINT_FUNC;
-    SetThreadName(GetCurrentThreadId(), "TcpServer");
+    SetCurrentThreadName(L"TcpServer");
     m_TcpService->m_IoService->run();
 }

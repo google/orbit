@@ -38,7 +38,7 @@ typedef DWORD ULONG;
 typedef unsigned char byte;
 //struct TypeInfo{};
 #define HMODULE void*
-inline void SetThreadName(int, const char*){}
+inline void SetCurrentThreadName(const wchar_t*){}
 #define FILETIME ULONG64
 #define FLT_MAX __FLT_MAX__
 #define TEXT( x ) L##x

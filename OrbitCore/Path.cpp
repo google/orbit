@@ -121,9 +121,7 @@ std::wstring Path::GetDllPath( bool a_Is64Bit )
 //-----------------------------------------------------------------------------
 std::wstring Path::GetDllName( bool a_Is64Bit )
 {
-    // TODO:
-    return L"OrbitDll.dll";
-    //return a_Is64Bit ? L"Orbit64.dll" : L"Orbit32.dll";
+    return a_Is64Bit ? L"Orbit64.dll" : L"Orbit32.dll";
 }
 
 //-----------------------------------------------------------------------------

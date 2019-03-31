@@ -43,7 +43,7 @@ VOID WINAPI EventRecordCallback( _In_ PEVENT_RECORD pEventRecord )
 //-----------------------------------------------------------------------------
 void EventTracer::EventTracerThread()
 {
-    SetThreadName( GetCurrentThreadId(), "EventTracer" );
+    SetCurrentThreadName( L"EventTracer" );
     ULONG error = ProcessTrace( &m_TraceHandle, 1, 0, 0 );
     if( error != ERROR_SUCCESS )
     {

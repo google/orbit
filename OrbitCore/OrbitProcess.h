@@ -7,6 +7,7 @@
 #include "SerializationMacros.h"
 #include "Threading.h"
 #include "DiaManager.h"
+#include "ScopeTimer.h"
 
 #include <set>
 #include <unordered_set>
@@ -42,6 +43,8 @@ public:
     bool HasThread( DWORD a_ThreadId ) const { return m_ThreadIds.find( a_ThreadId ) != m_ThreadIds.end(); }
     void AddThreadId( DWORD a_ThreadId ) { m_ThreadIds.insert(a_ThreadId); }
     void RemoveThreadId( DWORD a_ThreadId ) { m_ThreadIds.erase(a_ThreadId); };
+    void SetThreadName(DWORD a_ThreadId, std::wstring a_Name) { m_ThreadNames[a_ThreadId] = a_Name; }
+    std::wstring GetThreadNameFromTID(DWORD a_ThreadId) { return m_ThreadNames[a_ThreadId]; }
     void AddModule( std::shared_ptr<Module> & a_Module );
     void FindPdbs( const std::vector< std::wstring > & a_SearchLocations );
 
@@ -123,6 +126,7 @@ private:
     std::map< std::wstring, std::shared_ptr<Module> > m_NameToModuleMap;
     std::vector<std::shared_ptr<Thread> >   m_Threads;
     std::unordered_set<DWORD>               m_ThreadIds;
+    std::map<DWORD, std::wstring>           m_ThreadNames;
 
     // Transients
     std::vector< Function* >    m_Functions;

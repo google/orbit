@@ -52,7 +52,9 @@ struct ThreadLocalData
         m_SentCallstacks.reserve( 1024 );
         m_SessionID = -1;
         m_ThreadID = GetCurrentThreadId();
+        m_ThreadName = GetCurrentThreadName();
         m_ZoneStack = 0;
+        SendThreadInfo();
     }
 
     __forceinline void CheckSessionId()
@@ -68,6 +70,17 @@ struct ThreadLocalData
         }
     }
 
+    void SendThreadInfo()
+    {
+        if (!m_ThreadName.empty())
+        {
+            Message msg(Msg_ThreadInfo, (m_ThreadName.size()+1) * sizeof(m_ThreadName[0]), (char*)m_ThreadName.data());
+            msg.m_ThreadId = m_ThreadID;
+            GTcpClient->Send(msg);
+        }
+    }
+
+    std::wstring                    m_ThreadName;
     std::vector<ReturnAddress>      m_ReturnAdresses;
     std::vector<Timer>              m_Timers;
     std::vector<const Context*>     m_Contexts;
@@ -548,8 +561,7 @@ __forceinline void Hijacking::PopContext()
 //-----------------------------------------------------------------------------
 inline void Hijacking::SendContext( const Context * a_Context, EpilogContext* a_EpilogContext )
 {
-    return;
-
+#if 0
     void* address = a_Context->GetRet();
     FunctionArgInfo* argInfo = GetArgInfo( address );
     size_t argDataSize = argInfo ? argInfo->m_ArgDataSize : 0;
@@ -585,6 +597,7 @@ inline void Hijacking::SendContext( const Context * a_Context, EpilogContext* a_
     {
         GTcpClient->Send(msg, (void*)messageData.data());
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------

@@ -27,7 +27,6 @@ SamplingProfiler::SamplingProfiler( const std::shared_ptr<Process> & a_Process, 
     , m_PeriodMs(1)
     , m_State(Idle)
     , m_SampleTimeSeconds(FLT_MAX)
-    , m_ETW( a_ETW )
     , m_GenerateSummary( true )
     , m_NumSamples( 0 )
     , m_LoadedFromFile( false )
@@ -40,7 +39,6 @@ SamplingProfiler::SamplingProfiler()
     , m_PeriodMs( 1 )
     , m_State( Idle )
     , m_SampleTimeSeconds( FLT_MAX )
-    , m_ETW( false )
     , m_GenerateSummary( true )
     , m_NumSamples( 0 )
     , m_LoadedFromFile( false )
@@ -58,14 +56,7 @@ void SamplingProfiler::StartCapture()
     Capture::GNumSamples = 0;
     Capture::GNumSamplingTicks = 0;
     Capture::GIsSampling = true;
-
-    if( !m_ETW )
-    {
-        m_Process->EnumerateThreads();
-        m_Process->SortThreadsByUsage();
-        m_SamplingThread = std::make_unique<std::thread>( &SamplingProfiler::SampleThreadsAsync, this);
-        m_SamplingThread->detach();
-    }
+    m_Process->EnumerateThreads();
 
     m_SamplingTimer.Start();
     m_ThreadUsageTimer.Start();
