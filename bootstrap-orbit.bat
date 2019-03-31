@@ -42,13 +42,15 @@ copy "external\vcpkg\buildtrees\breakpad\src\9e12edba6d-12269dd01c\src\processor
 :: CMake build/x64
 mkdir build
 cd build
-mkdir x64
-cd x64
-cmake -DCMAKE_TOOLCHAIN_FILE='../../external/vcpkg/scripts/buildsystems/vcpkg.cmake' -DCMAKE_GENERATOR_PLATFORM=x64 ../..
-cd ..
 
-:: CMake build/x86
 mkdir x86
 cd x86
 cmake -DCMAKE_TOOLCHAIN_FILE='../../external/vcpkg/scripts/buildsystems/vcpkg.cmake' ../..
+cmake --build . --target ALL_BUILD --config Release
+cd ..
+
+mkdir x64
+cd x64
+cmake -DCMAKE_TOOLCHAIN_FILE='../../external/vcpkg/scripts/buildsystems/vcpkg.cmake' -DCMAKE_GENERATOR_PLATFORM=x64 ../..
+cmake --build . --target ALL_BUILD --config Release
 cd ../..
