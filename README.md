@@ -5,7 +5,7 @@ www.orbitprofiler.com
 
 ![Alt text](logos/screenshot.png)
 
-**O**rbit **R**untime **B**inary **I**nstrumentation **T**ool is a standalone **C/C++** profiler for Windows. Its main purpose is to help developers visualize the execution flow of a complex application.
+Orbit, the **O**pen **R**untime **B**inary **I**nstrumentation **T**ool, is a standalone **C/C++** profiler for Windows. Its main purpose is to help developers visualize the execution flow of a complex application.
 
 The key differentiator with many existing tools is that no alteration to the target process is necessary. Orbit does not require you to change a single line of code.  It doesn't require you to recompile or even relaunch the application you want to debug. Everything is done seamlessly, right when you need it. It requires zero integration time and zero iteration time.
 
@@ -47,12 +47,18 @@ http://telescopp.com/howto
 A more in-depth video can be found here:
 www.telescopp.com
 
-**Building**  
-The current version of Orbit requires **Visual Studio 2015** and **Qt 5.8**.  Open Orbit.sln, select x64 Release and build.  Don't forget to build the Win32 version of OrbitDll if you want to hook into 32 bit processes.
+**Building**
+1. Install [Qt](https://doc.qt.io/qt-5/gettingstarted.html) if not already installed
+2. Set a **QTDIR** environment variable to point to your Qt installation directory (ex. C:\Qt\5.12.1\msvc2017_64)
+3. Run **bootstrap-orbit.bat**
+
+Your freshly compiled version of Orbit should start automatically.  The CMake generated Visual Studio solution is found in **build/x64/OrbitQt/OrbitQt.sln**.  Once the solution has been generated, you can use Visual Studio to build Orbit.  Alternatively, you can continue to use bootstrap-orbit.bat.
+
+NOTE: The initial build will take a bit of time as [vcpkg](https://github.com/microsoft/vcpkg) will be compiled and used to clone and build most of Orbit's external dependencies.  Subsequent builds will be much faster.
 
 **Workflow**
 1. Select a process in the list of currently running processes in the "Home" tab
-2. The list of loaded modules will appear on the bottom of the "Home" tab.  If a .pdb file was found for a module, it will appear in blue
+2. The list of loaded modules will appear on the bottom of the "Home" tab.  If a .pdb file was found for a module, it will be highlighted in blue
 3. Right click on the module(s) for which you want to load debug information and select "Load Pdb".  Wait a little bit for Orbit to parse the pdb.  Once its done, The "Functions", "Types" and "Globals" tabs will get populated.
 4. Select functions you wish to profile in the "Functions" tab by right clicking and choosing "Hook"
 5. In the "Capture" tab, start profiling by pressing 'X'.  To stop profiling, press 'X' again.  You can zoom time using the scroll wheel.  To zoom vertically, hold 'CTRL' while scrolling.  You can also right-click and drag to zoom time.  Press A to Zoom the last 2 seconds of capture.

@@ -54,3 +54,5 @@ cd x64
 cmake -DCMAKE_TOOLCHAIN_FILE='../../external/vcpkg/scripts/buildsystems/vcpkg.cmake' -DCMAKE_GENERATOR_PLATFORM=x64 ../..
 cmake --build . --target ALL_BUILD --config Release
 cd ../..
+start build/x64/OrbitQt/Release/Orbit.exe
+
