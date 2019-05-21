@@ -37,6 +37,7 @@
 #include "OrbitCore/TimerManager.h"
 #include "OrbitCore/Injection.h"
 #include "OrbitCore/Utils.h"
+#include "OrbitCore/Systrace.h"
 #include "Tcp.h"
 #include "PrintVar.h"
 #include "Version.h"
@@ -58,6 +59,7 @@
 
 class OrbitApp* GOrbitApp;
 float GFontSize;
+bool DoZoom = false;
 
 #ifdef _WIN32
 // TODO: This shouldn't be needed
@@ -172,6 +174,44 @@ void GetDesktopResolution(int& horizontal, int& vertical)
 void GLoadPdbAsync( const std::vector<std::wstring> & a_Modules )
 {
     GModuleManager.LoadPdbAsync( a_Modules, [](){ GOrbitApp->OnPdbLoaded(); } );
+}
+
+//-----------------------------------------------------------------------------
+void LoadSystrace(const std::string& a_FileName)
+{
+    Capture::ClearCaptureData();
+    GCurrentTimeGraph->Clear();
+    if (Capture::GClearCaptureDataFunc)
+    {
+        Capture::GClearCaptureDataFunc();
+    }
+
+    std::shared_ptr<Systrace> systrace = std::make_shared<Systrace>(a_FileName.c_str());
+
+    Capture::GSelectedFunctionsMap.clear();
+    for (Function & func : systrace->GetFunctions())
+    {
+        Capture::GSelectedFunctionsMap[func.m_Address] = &func;
+    }
+    Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
+
+    for (const auto& timer : systrace->GetTimers())
+    {
+        GCurrentTimeGraph->ProcessTimer(timer);
+        GCurrentTimeGraph->UpdateThreadDepth(timer.m_TID, timer.m_Depth);
+        ++Capture::GFunctionCountMap[timer.m_FunctionAddress];
+    }
+
+    GCurrentTimeGraph->SetSystrace(systrace);
+
+    for (const auto& pair : systrace->GetThreadNames())
+    {
+        Capture::GTargetProcess->SetThreadName(pair.first, s2ws(pair.second));
+    }
+
+    GOrbitApp->FireRefreshCallbacks();
+    GOrbitApp->StopCapture();
+    DoZoom = true; //TODO: remove global, review logic
 }
 
 //-----------------------------------------------------------------------------
@@ -477,8 +517,6 @@ int OrbitApp::OnExit()
 
 //-----------------------------------------------------------------------------
 Timer GMainTimer;
-
-bool DoZoom = false;
 
 //-----------------------------------------------------------------------------
 void OrbitApp::MainTick()

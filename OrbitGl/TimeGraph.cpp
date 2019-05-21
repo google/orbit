@@ -20,6 +20,7 @@
 #include "App.h"
 #include "OrbitUnreal.h"
 #include "TimerManager.h"
+#include "OrbitCore/Systrace.h"
 #include <algorithm>
 
 #ifdef _WIN32
@@ -214,7 +215,7 @@ double TimeGraph::GetTimeIntervalMicro( double a_Ratio )
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::ProcessTimer( Timer & a_Timer )
+void TimeGraph::ProcessTimer( const Timer & a_Timer )
 {
     TickType start = a_Timer.m_Start;
     TickType end   = a_Timer.m_End;
@@ -531,7 +532,7 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
             bool isVisibleWidth = NormalizedLength * m_Canvas->getWidth() > 1;
             bool isMainFrameFunction = Capture::GMainFrameFunction && ( Capture::GMainFrameFunction == timer.m_FunctionAddress );
             bool isSameThreadIdAsSelected = isCoreActivity && timer.m_TID == Capture::GSelectedThreadId;
-            bool isInactive = ( !isContextSwitch && timer.m_FunctionAddress && ( Capture::GVisibleFunctionsMap[timer.m_FunctionAddress] == nullptr ) ) ||
+            bool isInactive = ( !isContextSwitch && timer.m_FunctionAddress && (Capture::GVisibleFunctionsMap.size() && Capture::GVisibleFunctionsMap[timer.m_FunctionAddress] == nullptr ) ) ||
                               ( Capture::GSelectedThreadId != 0 && isCoreActivity && !isSameThreadIdAsSelected );
             bool isSelected = &textBox == Capture::GSelectedTextBox;
 
@@ -580,6 +581,10 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
                         std::string text = Format( "%s %s %s", name, extraInfo.c_str(), time.c_str() );
 
                         textBox.SetText( text );
+                    }
+                    else if (m_Systrace)
+                    {
+                        textBox.SetText(m_Systrace->GetFunctionName(timer.m_FunctionAddress));
                     }
                     else if( !Capture::IsCapturing() )
                     {

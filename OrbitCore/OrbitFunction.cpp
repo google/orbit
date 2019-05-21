@@ -36,6 +36,7 @@ Function::Function()
 	, m_NameHash(0)
 	, m_OrbitType(OrbitType::NONE)
 {
+    ResetStats();
 }
 
 //-----------------------------------------------------------------------------

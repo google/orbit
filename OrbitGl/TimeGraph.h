@@ -15,6 +15,8 @@
 #include "EventBuffer.h"
 #include <unordered_map>
 
+class Systrace;
+
 class TimeGraph
 {
 public:
@@ -37,7 +39,7 @@ public:
     void UpdateEvents();
     void SelectEvents( float a_WorldStart, float a_WorldEnd, ThreadID a_TID );
 
-    void ProcessTimer( Timer & a_Timer );
+    void ProcessTimer( const Timer & a_Timer );
     void UpdateThreadDepth( int a_ThreadId, int a_Depth );
     void UpdateMaxTimeStamp( TickType a_Time );
     void AddContextSwitch();
@@ -76,6 +78,7 @@ public:
     void SetPickingManager( class PickingManager* a_Manager ){ m_PickingManager = a_Manager; }
     void SetCanvas( GlCanvas* a_Canvas );
 	void SetFontSize( int a_FontSize );
+    void SetSystrace(std::shared_ptr<Systrace> a_Systrace) { m_Systrace = a_Systrace; }
     
 public:
     TextRenderer                    m_TextRendererStatic;
@@ -124,6 +127,7 @@ public:
     Mutex                           m_Mutex;
     Timer                           m_LastThreadReorder;
     MemoryTracker                   m_MemTracker;
+    std::shared_ptr<Systrace>       m_Systrace;
 };
 
 extern TimeGraph* GCurrentTimeGraph;

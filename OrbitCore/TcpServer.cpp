@@ -63,7 +63,8 @@ void TcpServer::Start( unsigned short a_Port )
 void TcpServer::ResetStats()
 {
     m_NumReceivedMessages = 0;
-    m_TcpServer->ResetStats();
+    if(m_TcpServer)
+        m_TcpServer->ResetStats();
 }
 
 //-----------------------------------------------------------------------------

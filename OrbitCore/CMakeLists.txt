@@ -68,6 +68,7 @@ set(HEADERS
     ScopeTimer.h
     Serialization.h
     SerializationMacros.h
+    Systrace.h
     Tcp.h
     TcpClient.h
     TcpEntity.h
@@ -117,6 +118,7 @@ set(SOURCES
     Profiling.cpp
     SamplingProfiler.cpp
     ScopeTimer.cpp
+    Systrace.cpp
     Tcp.cpp
     Tcp.cpp
     TcpClient.cpp

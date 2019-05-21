@@ -105,9 +105,9 @@ std::wstring LiveFunctionsDataView::GetValue( int a_Row, int a_Column )
     case LiveFunction::TIME_MAX:
         value = GetPrettyTimeW(stats->m_MaxMs); break;
     case LiveFunction::ADDRESS:
-        value = Format( L"0x%llx", function.m_Address + (DWORD64)function.m_Pdb->GetHModule()); break;
+        value = function.m_Pdb ? Format(L"0x%llx", function.m_Address + (DWORD64)function.m_Pdb->GetHModule()) : L""; break;
     case LiveFunction::MODULE:
-        value = function.m_Pdb->GetName(); break;
+        value = function.m_Pdb ? function.m_Pdb->GetName() : L""; break;
     default: break;
     }
 
