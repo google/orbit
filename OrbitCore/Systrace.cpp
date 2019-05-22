@@ -154,10 +154,13 @@ Systrace::Systrace(const char* a_FilePath)
             if (isEnd)
             {
                 std::vector<Timer>& timers = m_TimerStacks[threadName];
-                Timer& timer = timers.back();
-                timer.m_End = TicksFromMicroseconds(GetMicros(timestamp));
-                m_Timers.push_back(timer);
-                timers.pop_back();
+                if (timers.size())
+                {
+                    Timer& timer = timers.back();
+                    timer.m_End = TicksFromMicroseconds(GetMicros(timestamp));
+                    m_Timers.push_back(timer);
+                    timers.pop_back();
+                }
             }
         }
     }
