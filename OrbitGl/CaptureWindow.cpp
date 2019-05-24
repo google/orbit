@@ -655,8 +655,6 @@ void CaptureWindow::DrawScreenSpace()
         m_Slider.SetSliderWidthRatio( float(width/timeSpan) );
         m_Slider.Draw( this, m_Picking );
     }
-
-    m_TimeGraph.DrawIdentifiers();
 }   
 
 //-----------------------------------------------------------------------------

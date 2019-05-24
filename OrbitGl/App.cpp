@@ -263,6 +263,7 @@ bool OrbitApp::Init()
 void OrbitApp::PostInit()
 {
     GOrbitApp->CallHome();
+    LoadSystrace("/home/pierric/perf_traces/systrace_tutorial.html");
 }
 
 //-----------------------------------------------------------------------------

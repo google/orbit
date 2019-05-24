@@ -4,8 +4,8 @@
 
 #include "Profiling.h"
 
-TickType GFrequency;
-double   GPeriod;
+TickType GFrequency = 1000000000;
+double   GPeriod = 0.000000001;
 
 
 //-----------------------------------------------------------------------------

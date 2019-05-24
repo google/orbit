@@ -117,6 +117,8 @@ set(HEADERS
     ThreadView.h
     TimeGraph.h
     TimeGraphLayout.h
+    Track.h
+    ThreadTrack.h
     TypeDataView.h
 )
 
@@ -160,6 +162,8 @@ set(SOURCES
     ThreadView.cpp
     TimeGraph.cpp
     TimeGraphLayout.cpp
+    Track.cpp
+    ThreadTrack.cpp
     TypeDataView.cpp
 )
 

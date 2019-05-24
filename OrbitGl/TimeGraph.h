@@ -16,6 +16,7 @@
 #include <unordered_map>
 
 class Systrace;
+class ThreadTrack;
 
 class TimeGraph
 {
@@ -24,7 +25,6 @@ public:
 
     void Draw( bool a_Picking = false );
     void DrawMainFrame( TextBox & a_Box );
-    void DrawIdentifiers();
     void DrawEvents( bool a_Picking = false );
     void DrawTime();
     void UpdateThreadIds();
@@ -128,6 +128,8 @@ public:
     Timer                           m_LastThreadReorder;
     MemoryTracker                   m_MemTracker;
     std::shared_ptr<Systrace>       m_Systrace;
+    
+    std::unordered_map< ThreadID, std::shared_ptr<ThreadTrack> > m_ThreadTracks;
 };
 
 extern TimeGraph* GCurrentTimeGraph;

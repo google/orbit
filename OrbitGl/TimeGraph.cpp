@@ -20,6 +20,7 @@
 #include "App.h"
 #include "OrbitUnreal.h"
 #include "TimerManager.h"
+#include "ThreadTrack.h"
 #include "OrbitCore/Systrace.h"
 #include <algorithm>
 
@@ -254,6 +255,14 @@ void TimeGraph::ProcessTimer( const Timer & a_Timer )
     if( !a_Timer.IsType( Timer::THREAD_ACTIVITY ) && !a_Timer.IsType( Timer::CORE_ACTIVITY ) )
     {
         ++m_ThreadCountMap[a_Timer.m_TID];
+
+        if( m_ThreadTracks.find(a_Timer.m_TID) == m_ThreadTracks.end() )
+        {
+            auto track = std::make_shared<ThreadTrack>();
+            track->SetTimeGraph(this);
+            track->SetID(a_Timer.m_TID);
+            m_ThreadTracks[a_Timer.m_TID] = track;
+        }
     }
 
     TextBox textBox( Vec2(0, 0), Vec2(0, 0), "", m_TextRenderer, Color( 255, 0, 0, 255) );
@@ -487,11 +496,20 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
     }
 
     m_Layout.CalculateOffsets();
+    for( auto& pair : m_ThreadTracks )
+    {
+        auto& track = pair.second;
+        if( track->IsMoving() )
+        {
+            m_Layout.m_ThreadBlockOffsets[track->GetID()] += track->GetMoveDelta()[1];
+        }
+    }
 
     TickType rawStart = GetRawTimeStampFromUs( m_MinEpochTimeUs );
     TickType rawStop  = GetRawTimeStampFromUs( m_MaxEpochTimeUs );
 
     unsigned int TextBoxID = 0;
+
     for( TextBox & textBox : m_TextBoxes )
     {
         const Timer & timer = textBox.GetTimer();
@@ -746,6 +764,26 @@ void TimeGraph::Draw( bool a_Picking )
         UpdatePrimitives( a_Picking );
     }
 
+    // Draw threads
+    for( uint32_t i = 0; i < m_Layout.m_SortedThreadIds.size(); ++i )
+    {
+        ThreadID threadId = m_Layout.m_SortedThreadIds[i];
+        
+        float threadOffset = m_Layout.GetThreadBlockStart( threadId );
+        float trackHeight = m_Layout.m_TextBoxHeight*2.f;
+        float trackWidth = m_WorldWidth * 0.2f;
+
+        auto track = m_ThreadTracks[threadId];
+        if( track->GetName().empty() )
+        {
+            std::string threadName = ws2s(Capture::GTargetProcess->GetThreadNameFromTID(threadId));
+            track->SetName(threadName);
+        }
+        track->SetPos(m_WorldStartX, threadOffset);
+        track->SetSize(trackWidth, trackHeight);
+        track->Draw(m_Canvas, a_Picking);
+    }
+
     DrawBuffered( a_Picking );
     DrawEvents( a_Picking );
 
@@ -811,49 +849,6 @@ void TimeGraph::UpdateThreadIds()
             eventTrack->SetThreadId( threadId );
             m_EventTracks[threadId] = eventTrack;
         }
-    }
-}
-
-//-----------------------------------------------------------------------------
-void TimeGraph::DrawIdentifiers()
-{
-    float x0 = GetWorldFromRawTimeStamp( m_SessionMinCounter );
-    int xPos, yPos;
-    m_Canvas->WorldToScreen( x0, 0, xPos, yPos );
-    xPos = std::max( 0, xPos );
-    int i = 0;
-    
-
-    // Draw threads
-    for( uint32_t i = 0; i < m_Layout.m_SortedThreadIds.size(); ++i )
-    {
-        ThreadID threadId = m_Layout.m_SortedThreadIds[i];
-        float threadOffset = m_Layout.GetThreadBlockStart( threadId );
-        int x, y;
-        m_Canvas->WorldToScreen( 0, threadOffset-m_Layout.m_EventTrackHeight, x, y );
-        std::string threadName = ws2s(Capture::GTargetProcess->GetThreadNameFromTID(threadId));
-        threadName = Format( "%s [%u]", threadName.c_str(), threadId );
-        m_TextRenderer->AddText2D( threadName.c_str(), xPos, y, GlCanvas::Z_VALUE_TEXT, Color( 255, 255, 255, 255 ) );
-
-        int trackHeightScreen = m_Canvas->WorldToScreenHeight(m_Layout.m_EventTrackHeight);
-
-        int strWidth, strHeight;
-        m_TextRenderer->GetStringSize( threadName.c_str(), strWidth, strHeight );
-
-        y = m_Canvas->getHeight() - y;
-
-        Color col = GetThreadColor( i+1 );
-        col[3] = m_TrackAlpha;
-        glColor4ubv( &col[0] );
-        glBegin( GL_QUADS );
-
-        static float zValue = -0.01f;
-
-        glVertex3f( float(xPos), float(y), zValue );
-        glVertex3f( float(xPos+strWidth), float(y), zValue );
-        glVertex3f( float(xPos+strWidth), float(y + trackHeightScreen), zValue );
-        glVertex3f( float(xPos), float(y + trackHeightScreen), zValue );
-        glEnd();
     }
 }
 

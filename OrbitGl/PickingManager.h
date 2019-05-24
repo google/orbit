@@ -18,6 +18,7 @@ public:
     virtual void OnRelease(){};
     virtual void Draw( GlCanvas* a_Canvas, bool a_Picking ) = 0;
     virtual bool Draggable() { return false; }
+    virtual bool Movable() {return false; }
 };
 
 //-----------------------------------------------------------------------------
