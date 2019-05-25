@@ -53,7 +53,7 @@ void CaptureSerializer::Save( const std::wstring a_FileName )
 //-----------------------------------------------------------------------------
 template <class T> void CaptureSerializer::Save( T & a_Archive )
 {
-    m_NumTimers = m_TimeGraph->m_TextBoxes.size();
+    m_NumTimers = m_TimeGraph->GetTextBoxes().size();
 
     // Header
     a_Archive( cereal::make_nvp( "Capture", *this ) );
@@ -104,7 +104,7 @@ template <class T> void CaptureSerializer::Save( T & a_Archive )
 
     // Timers
     int numWrites = 0;
-    for( TextBox & box : m_TimeGraph->m_TextBoxes )
+    for( const TextBox & box : m_TimeGraph->GetTextBoxes() )
     {
         a_Archive( cereal::binary_data( (char*)&box.GetTimer(), sizeof( Timer ) ) );
 
@@ -166,7 +166,6 @@ void CaptureSerializer::Load( const std::wstring a_FileName )
         while( file.read( (char*)&timer, sizeof(Timer) ) )
         {
             m_TimeGraph->ProcessTimer( timer );
-            m_TimeGraph->UpdateThreadDepth( timer.m_TID, timer.m_Depth );
         }
 
         GOrbitApp->FireRefreshCallbacks();

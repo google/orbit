@@ -198,7 +198,6 @@ void LoadSystrace(const std::string& a_FileName)
     for (const auto& timer : systrace->GetTimers())
     {
         GCurrentTimeGraph->ProcessTimer(timer);
-        GCurrentTimeGraph->UpdateThreadDepth(timer.m_TID, timer.m_Depth);
         ++Capture::GFunctionCountMap[timer.m_FunctionAddress];
     }
 
@@ -552,7 +551,6 @@ void OrbitApp::MainTick()
     if( DoZoom )
     {
         GCurrentTimeGraph->UpdateThreadIds();
-        GCurrentTimeGraph->m_Layout.CalculateOffsets();
         GOrbitApp->m_CaptureWindow->ZoomAll();
         GOrbitApp->NeedsRedraw();
         DoZoom = false;
@@ -916,8 +914,7 @@ void OrbitApp::StartCapture()
 
 //-----------------------------------------------------------------------------
 void OrbitApp::StopCapture()
-{   
-    GCurrentTimeGraph->m_MemTracker.DumpReport();
+{
     Capture::StopCapture();
 }
 

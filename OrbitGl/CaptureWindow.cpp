@@ -18,8 +18,8 @@
 CaptureWindow::CaptureWindow()
 {
     GCurrentTimeGraph = &m_TimeGraph;
-    m_TimeGraph.m_TextRenderer = &m_TextRenderer;
-    m_TimeGraph.m_PickingManager = &m_PickingManager;
+    m_TimeGraph.SetTextRenderer( &m_TextRenderer );
+    m_TimeGraph.SetPickingManager( &m_PickingManager );
     m_TimeGraph.SetCanvas(this);
     m_DrawUI = false;
     m_DrawHelp = false;
@@ -200,7 +200,7 @@ void CaptureWindow::Pick( PickingID a_PickingID, int a_X, int a_Y  )
     {
     case PickingID::BOX:
     {
-        void** textBoxPtr = m_TimeGraph.m_Batcher.GetBoxBuffer().m_UserData.SlowAt( id );
+        void** textBoxPtr = m_TimeGraph.GetBatcher().GetBoxBuffer().m_UserData.SlowAt( id );
         if( textBoxPtr )
         {
             TextBox* textBox = (TextBox*)*textBoxPtr;
@@ -210,7 +210,7 @@ void CaptureWindow::Pick( PickingID a_PickingID, int a_X, int a_Y  )
     }
     case PickingID::LINE:
     {
-        void** textBoxPtr = m_TimeGraph.m_Batcher.GetLineBuffer().m_UserData.SlowAt( id );
+        void** textBoxPtr = m_TimeGraph.GetBatcher().GetLineBuffer().m_UserData.SlowAt( id );
         if( textBoxPtr )
         {
             TextBox* textBox = (TextBox*)*textBoxPtr;
@@ -260,7 +260,7 @@ void CaptureWindow::Hover( int a_X, int a_Y )
 
     PickingID pickId = *((PickingID*)(&pixels[0]));
 
-    TextBox* textBox = m_TimeGraph.m_Batcher.GetTextBox( pickId );
+    TextBox* textBox = m_TimeGraph.GetBatcher().GetTextBox( pickId );
     if( textBox )
     {
         if( !textBox->GetTimer().IsType(Timer::CORE_ACTIVITY) )
@@ -310,7 +310,7 @@ void CaptureWindow::PreRender()
         NeedsRedraw();
     }
 
-    m_NeedsRedraw = m_NeedsRedraw || m_TimeGraph.m_NeedsRedraw;
+    m_NeedsRedraw = m_NeedsRedraw || m_TimeGraph.IsRedrawNeeded();
 }
 
 //-----------------------------------------------------------------------------
@@ -479,7 +479,7 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
             GOrbitApp->ToggleCapture();
             break;
         case 'T':
-            m_TimeGraph.m_DrawText = !m_TimeGraph.m_DrawText;
+            m_TimeGraph.ToggleDrawText();
             break;
         case 'O':
             if( a_Ctrl )
@@ -555,7 +555,6 @@ void CaptureWindow::OnCaptureStarted()
 {
     m_DesiredWorldWidth = (float)m_Width;
     m_DesiredWorldHeight = (float)m_Height;
-    m_TimeGraph.m_Layout.Reset();
     m_TimeGraph.ZoomAll();
     NeedsRedraw();
 }
@@ -645,8 +644,8 @@ void CaptureWindow::DrawScreenSpace()
 
     if( timeSpan > 0 )
     {
-        double start = m_TimeGraph.m_MinEpochTimeUs;
-        double stop = m_TimeGraph.m_MaxEpochTimeUs;
+        double start = m_TimeGraph.GetMinTimeUs();
+        double stop = m_TimeGraph.GetMaxTimeUs();
         double width = stop - start;
         double maxStart = timeSpan - width;
         double ratio = Capture::IsCapturing() ? 1.0 : maxStart ? start/maxStart : 0.0;
@@ -660,10 +659,7 @@ void CaptureWindow::DrawScreenSpace()
 //-----------------------------------------------------------------------------
 void CaptureWindow::OnDrag( float a_Ratio )
 {
-    double timeSpan = m_TimeGraph.GetSessionTimeSpanUs();
-    double timeWindow = m_TimeGraph.m_MaxEpochTimeUs - m_TimeGraph.m_MinEpochTimeUs;
-    m_TimeGraph.m_MinEpochTimeUs = a_Ratio*(timeSpan-timeWindow);
-    m_TimeGraph.m_MaxEpochTimeUs = m_TimeGraph.m_MinEpochTimeUs + timeWindow;
+    m_TimeGraph.OnDrag( a_Ratio );
     NeedsUpdate();
 }
 
@@ -748,8 +744,8 @@ void CaptureWindow::RenderUI()
         m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GNumProfileEvents ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GNumInstalledHooks ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetNumDrawnTextBoxes() ) );
-        m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.m_TextBoxes.m_NumItems ) );
-        m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.m_TextBoxes.m_NumBlocks ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetTextBoxes().m_NumItems ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetTextBoxes().m_NumBlocks ) );
 
         for( std::string & line : GTcpServer->GetStats() )
         {
@@ -876,7 +872,7 @@ void CaptureWindow::RenderMemTracker()
 
     ImGui::Text( "=== Memory Tracker ===" );
 
-    MemoryTracker & memTracker = m_TimeGraph.m_MemTracker;
+    const MemoryTracker & memTracker = m_TimeGraph.GetMemoryTracker();
     if( memTracker.NumAllocatedBytes() == 0 )
     {
         std::string str = VAR_TO_ANSI( memTracker.NumAllocatedBytes() ) + std::string( "            ");
@@ -994,7 +990,7 @@ void CaptureWindow::RenderTimeBar()
         double incr   = millis/float(numTimePoints-1);
         double unit   = GetIncrementMs(incr);
         double normInc= (double((int)((incr+unit)/unit)))*unit;
-        double startMs = m_TimeGraph.m_MinEpochTimeUs*0.001;
+        double startMs = m_TimeGraph.GetMinTimeUs()*0.001;
         double normStartUs = 1000.0*(double(int(startMs/normInc)))*normInc;
 
         static int pixelMargin = 2;

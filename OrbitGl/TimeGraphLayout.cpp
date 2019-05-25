@@ -45,8 +45,8 @@ float TimeGraphLayout::GetThreadBlockHeight( ThreadID a_TID )
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraphLayout::CalculateOffsets()
-{
+void TimeGraphLayout::CalculateOffsets( ThreadTrackMap& a_ThreadTracks )
+{    
     m_ThreadBlockOffsets.clear();
 
     m_NumTracks = 0;
@@ -58,6 +58,15 @@ void TimeGraphLayout::CalculateOffsets()
     {
         m_ThreadBlockOffsets[threadID] = offset;
         offset -= ( GetThreadBlockHeight( threadID ) + m_SpaceBetweenThreadBlocks );
+    }
+
+    for( auto& pair : a_ThreadTracks )
+    {
+        auto& track = pair.second;
+        if( track->IsMoving() )
+        {
+            m_ThreadBlockOffsets[track->GetID()] += track->GetMoveDelta()[1];
+        }
     }
 }
 
@@ -117,7 +126,7 @@ void TimeGraphLayout::Reset()
 }
 
 //-----------------------------------------------------------------------------
-Color TimeGraphLayout::GetThreadColor( ThreadID a_TID )
+Color TimeGraphLayout::GetThreadColor( ThreadID a_TID ) const
 {
     auto it = m_ThreadColors.find( a_TID );
     if( it != m_ThreadColors.end() )

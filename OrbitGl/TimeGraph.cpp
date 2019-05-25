@@ -121,7 +121,7 @@ void TimeGraph::Zoom( const TextBox* a_TextBox )
     double start = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_Start);
     double end   = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_End);
 
-    double mid = (start+end)/2.0;
+    double mid = start+((end-start)/2.0);
     double extent = 1.1*(end-start)/2.0;
 
     SetMinMax( mid-extent, mid+extent );
@@ -201,6 +201,15 @@ void TimeGraph::PanTime( int a_InitialX, int a_CurrentX, int a_Width, double a_I
 }
 
 //-----------------------------------------------------------------------------
+void TimeGraph::OnDrag( float a_Ratio )
+{
+    double timeSpan = GetSessionTimeSpanUs();
+    double timeWindow = m_MaxEpochTimeUs - m_MinEpochTimeUs;
+    m_MinEpochTimeUs = a_Ratio*(timeSpan-timeWindow);
+    m_MaxEpochTimeUs = m_MinEpochTimeUs + timeWindow;
+}
+
+//-----------------------------------------------------------------------------
 double TimeGraph::GetTime( double a_Ratio )
 {
     double CurrentWidth = m_MaxEpochTimeUs - m_MinEpochTimeUs;
@@ -255,7 +264,7 @@ void TimeGraph::ProcessTimer( const Timer & a_Timer )
     if( !a_Timer.IsType( Timer::THREAD_ACTIVITY ) && !a_Timer.IsType( Timer::CORE_ACTIVITY ) )
     {
         ++m_ThreadCountMap[a_Timer.m_TID];
-
+        UpdateThreadDepth(a_Timer.m_TID, a_Timer.m_Depth);
         if( m_ThreadTracks.find(a_Timer.m_TID) == m_ThreadTracks.end() )
         {
             auto track = std::make_shared<ThreadTrack>();
@@ -352,24 +361,6 @@ void TimeGraph::UpdateThreadDepth( int a_ThreadId, int a_Depth )
     {
         m_ThreadDepths[a_ThreadId] = a_Depth;
     }
-}
-
-//-----------------------------------------------------------------------------
-int TimeGraph::GetThreadDepth( int a_ThreadId ) const
-{
-    auto it = m_ThreadDepths.find(a_ThreadId);
-    return it != m_ThreadDepths.end() ? it->second : 0;
-}
-
-//-----------------------------------------------------------------------------
-int TimeGraph::GetThreadDepthTotal() const
-{
-    int depth = 0;
-    for( auto it = m_ThreadDepths.begin(); it != m_ThreadDepths.end(); ++it )
-    {
-        depth += it->second;
-    }
-    return depth;
 }
 
 //-----------------------------------------------------------------------------
@@ -490,20 +481,8 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
 
     UpdateThreadIds();
 
-    {
-        ScopeLock lock(m_Mutex);
-        m_Layout.m_ThreadDepths = m_ThreadDepths;
-    }
-
-    m_Layout.CalculateOffsets();
-    for( auto& pair : m_ThreadTracks )
-    {
-        auto& track = pair.second;
-        if( track->IsMoving() )
-        {
-            m_Layout.m_ThreadBlockOffsets[track->GetID()] += track->GetMoveDelta()[1];
-        }
-    }
+    m_Layout.SetThreadDepths(m_ThreadDepths);
+    m_Layout.CalculateOffsets(m_ThreadTracks);
 
     TickType rawStart = GetRawTimeStampFromUs( m_MinEpochTimeUs );
     TickType rawStop  = GetRawTimeStampFromUs( m_MaxEpochTimeUs );
@@ -529,7 +508,7 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
             float threadOffset = !isCore ? m_Layout.GetThreadOffset( timer.m_TID, timer.m_Depth )
                 : m_Layout.GetCoreOffset( timer.m_Processor );
 
-            float boxHeight = !isCore ? m_Layout.m_TextBoxHeight : m_Layout.m_CoresHeight;
+            float boxHeight = !isCore ? m_Layout.GetTextBoxHeight() : m_Layout.GetTextCoresHeight();
 
             float WorldTimerStartX = float( m_WorldStartX + NormalizedStart*m_WorldWidth );
             float WorldTimerWidth = float( NormalizedLength * m_WorldWidth );
@@ -696,7 +675,7 @@ void TimeGraph::UpdateEvents()
                 float x = GetWorldFromRawTimeStamp( time );
                 Line line;
                 line.m_Beg = Vec3( x, ThreadOffset, GlCanvas::Z_VALUE_EVENT );
-                line.m_End = Vec3( x, ThreadOffset - m_Layout.m_EventTrackHeight, GlCanvas::Z_VALUE_EVENT );
+                line.m_End = Vec3( x, ThreadOffset - m_Layout.GetEventTrackHeight(), GlCanvas::Z_VALUE_EVENT );
                 m_Batcher.AddLine( line, lineColor, PickingID::EVENT );
             }
         }
@@ -713,7 +692,7 @@ void TimeGraph::UpdateEvents()
 
         Line line;
         line.m_Beg = Vec3( x, ThreadOffset, GlCanvas::Z_VALUE_EVENT );
-        line.m_End = Vec3( x, ThreadOffset - m_Layout.m_EventTrackHeight, GlCanvas::Z_VALUE_TEXT );
+        line.m_End = Vec3( x, ThreadOffset - m_Layout.GetEventTrackHeight(), GlCanvas::Z_VALUE_TEXT );
         m_Batcher.AddLine( line, selectedColor, PickingID::EVENT );
     }
 }
@@ -764,13 +743,23 @@ void TimeGraph::Draw( bool a_Picking )
         UpdatePrimitives( a_Picking );
     }
 
-    // Draw threads
-    for( uint32_t i = 0; i < m_Layout.m_SortedThreadIds.size(); ++i )
+    DrawThreadTracks( a_Picking );
+    DrawBuffered( a_Picking );
+    DrawEvents( a_Picking );
+
+    m_NeedsRedraw = false;
+}
+
+//-----------------------------------------------------------------------------
+void TimeGraph::DrawThreadTracks( bool a_Picking )
+{
+    const std::vector< ThreadID >& sortedThreadIds = m_Layout.GetSortedThreadIds();
+    for( uint32_t i = 0; i < sortedThreadIds.size(); ++i )
     {
-        ThreadID threadId = m_Layout.m_SortedThreadIds[i];
+        ThreadID threadId = sortedThreadIds[i];
         
         float threadOffset = m_Layout.GetThreadBlockStart( threadId );
-        float trackHeight = m_Layout.m_TextBoxHeight*2.f;
+        float trackHeight = m_Layout.GetTextBoxHeight()*2.f;
         float trackWidth = m_WorldWidth * 0.2f;
 
         auto track = m_ThreadTracks[threadId];
@@ -783,11 +772,6 @@ void TimeGraph::Draw( bool a_Picking )
         track->SetSize(trackWidth, trackHeight);
         track->Draw(m_Canvas, a_Picking);
     }
-
-    DrawBuffered( a_Picking );
-    DrawEvents( a_Picking );
-
-    m_NeedsRedraw = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -816,13 +800,13 @@ void TimeGraph::UpdateThreadIds()
     // Reorder threads once every second when capturing
     if( !Capture::IsCapturing() || m_LastThreadReorder.QueryMillis() > 1000.0 )
     {
-        m_Layout.m_SortedThreadIds.clear();
+        std::vector< ThreadID > sortedThreadIds;
 
         // Show threads with instrumented functions first
         std::vector< std::pair< ThreadID, uint32_t > > sortedThreads = OrbitUtils::ReverseValueSort( m_ThreadCountMap );
         for( auto & pair : sortedThreads )
         {
-            m_Layout.m_SortedThreadIds.push_back( pair.first );
+            sortedThreadIds.push_back( pair.first );
         }
 
         // Then show threads sorted by number of events
@@ -831,17 +815,19 @@ void TimeGraph::UpdateThreadIds()
         {
             if( m_ThreadCountMap.find( pair.first ) == m_ThreadCountMap.end() )
             {
-                m_Layout.m_SortedThreadIds.push_back( pair.first );
+                sortedThreadIds.push_back( pair.first );
             }
         }
      
+        m_Layout.SetSortedThreadIds( sortedThreadIds );
         m_LastThreadReorder.Reset();
     }
 
-    for( uint32_t i = 0; i < m_Layout.m_SortedThreadIds.size(); ++i )
+    int i = 0;
+    for( auto& pair : m_ThreadCountMap )
     {
-        ThreadID threadId = m_Layout.m_SortedThreadIds[i];
-        m_Layout.SetThreadColor( threadId, GetThreadColor( i ) );
+        ThreadID threadId = pair.first;
+        m_Layout.SetThreadColor( threadId, GetThreadColor( i++ ) );
 
         if( m_EventTracks.find( threadId ) == m_EventTracks.end() )
         {
@@ -850,6 +836,8 @@ void TimeGraph::UpdateThreadIds()
             m_EventTracks[threadId] = eventTrack;
         }
     }
+
+    m_Layout.CalculateOffsets(m_ThreadTracks);
 }
 
 //----------------------------------------------------------------------------
@@ -940,19 +928,19 @@ void TimeGraph::DrawEvents( bool a_Picking )
     float x1 = GetWorldFromRawTimeStamp( m_SessionMaxCounter );
     float sizeX = x1 - x0;
 
-    for( uint32_t i = 0; i < m_Layout.m_SortedThreadIds.size(); ++i )
+    for( uint32_t i = 0; i < m_Layout.GetSortedThreadIds().size(); ++i )
     {
-        ThreadID threadId = m_Layout.m_SortedThreadIds[i];
+        ThreadID threadId = m_Layout.GetSortedThreadIds()[i];
         float y0 = m_Layout.GetSamplingTrackOffset( threadId );
 
         if( y0 == -1.f )
             continue;
 
-        float y1 = y0 - m_Layout.m_EventTrackHeight;
+        float y1 = y0 - m_Layout.GetEventTrackHeight();
         EventTrack* eventTrack = m_EventTracks[threadId];
         
         eventTrack->SetPos( x0, y0 );
-        eventTrack->SetSize( sizeX,  m_Layout.m_EventTrackHeight );
+        eventTrack->SetSize( sizeX,  m_Layout.GetEventTrackHeight() );
         eventTrack->Draw( m_Canvas, a_Picking );
     }
 }
@@ -994,20 +982,4 @@ bool TimeGraph::IsVisible( const Timer & a_Timer )
     }
 
     return true;
-}
-
-//-----------------------------------------------------------------------------
-void TimeGraph::GetBounds(Vec2 & a_Min, Vec2 & a_Max)
-{
-    if( m_TextBoxes.size() > 0 )
-    {
-        TextBox dummyBox /*= m_TextBoxes[0]*/;
-        for( TextBox & box : m_TextBoxes )
-        {
-            dummyBox.Expand( box );
-        }
-
-        a_Min = dummyBox.GetMin();
-        a_Max = dummyBox.GetMax();
-    }
 }

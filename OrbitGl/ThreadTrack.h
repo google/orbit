@@ -4,6 +4,8 @@
 #pragma once
 
 #include "Track.h"
+#include "CallstackTypes.h"
+#include <memory>
 
 class TextBox;
 
@@ -18,3 +20,6 @@ public:
     void Draw( GlCanvas* a_Canvas, bool a_Picking ) override;
     void OnDrag( int a_X, int a_Y ) override;
 };
+
+//-----------------------------------------------------------------------------
+typedef std::unordered_map< ThreadID, std::shared_ptr<ThreadTrack> > ThreadTrackMap;
