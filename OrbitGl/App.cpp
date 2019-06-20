@@ -177,7 +177,7 @@ void GLoadPdbAsync( const std::vector<std::wstring> & a_Modules )
 }
 
 //-----------------------------------------------------------------------------
-void LoadSystrace(const std::string& a_FileName)
+void OrbitApp::LoadSystrace(const std::string& a_FileName)
 {
     Capture::ClearCaptureData();
     GCurrentTimeGraph->Clear();
@@ -261,8 +261,6 @@ bool OrbitApp::Init()
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit()
 {
-    GOrbitApp->CallHome();
-    LoadSystrace("/home/pierric/perf_traces/systrace_tutorial.html");
 }
 
 //-----------------------------------------------------------------------------
@@ -447,54 +445,6 @@ void OrbitApp::Disassemble( const std::string & a_FunctionName, DWORD64 a_Virtua
 const std::unordered_map<DWORD64, std::shared_ptr<class Rule> > * OrbitApp::GetRules()
 {
     return &m_RuleEditor->GetRules();
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::CallHome()
-{
-    std::thread* thread = new std::thread( [&](){ CallHomeThread(); } );
-    thread->detach();
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::CallHomeThread()
-{
-    asio::ip::tcp::iostream stream;
-    stream.expires_from_now( std::chrono::seconds( 60 ) );
-
-    const bool isLocal = false;
-
-    if( isLocal )
-        stream.connect( "127.0.0.1", "58642" );
-    else
-        stream.connect( "www.telescopp.com", "http" );
-    
-    if( stream.fail() )
-    {
-        asio::error_code error = stream.error();
-        OutputDebugStringA( error.message().c_str() );
-        return;
-    }
-
-    if( isLocal )
-        stream << "POST http://localhost:58642/update HTTP/1.1\r\n";
-    else
-        stream << "POST http://www.telescopp.com/update HTTP/1.1\r\n";
-    
-    stream << "HAccept: text/html, application/xhtml+xml, image/jxr, */*\r\n";
-    stream << "Referer: http://localhost:58642/\r\n";
-    stream << "Accept-Language: en-US,en;q=0.8,fr-CA;q=0.5,fr;q=0.3\r\n";
-    stream << "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.14965\r\n";
-    //stream << "Content-Type: application/x-www-form-urlencoded\r\n";
-    stream << "Content-Type: multipart/form-data\r\n";
-    stream << "Accept-Encoding: gzip, deflate\r\n";
-    stream << "Host: localhost:60485\r\n";
-    
-    std::string content = ws2s(m_User) + "-" + OrbitVersion::GetVersion();
-    stream << "Content-Length: " << content.length() << "\r\n\r\n";
-    stream << XorString(content);
-
-    stream.flush();
 }
 
 //-----------------------------------------------------------------------------

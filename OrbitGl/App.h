@@ -53,11 +53,10 @@ public:
     void OnDisconnect();
     void OnPdbLoaded();
     void LogMsg( const std::wstring & a_Msg ) override;
-    void CallHome();
-    void CallHomeThread();
     void SetCallStack( std::shared_ptr<CallStack> a_CallStack );
     void LoadFileMapping();
     void LoadSymbolsFile();
+    void LoadSystrace(const std::string& a_FileName);
     void ListSessions();
     void SetRemoteProcess( std::shared_ptr<Process> a_Process );
     void AddWatchedVariable( Variable* a_Variable );
