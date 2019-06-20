@@ -57,10 +57,10 @@ void ThreadView::RenderUI()
         float posx = std::min(m_SelectStop[0], m_SelectStart[0]);
         float posy = std::min(m_SelectStop[1], m_SelectStart[1]);
         Vec2 pos(posx, posy);
-        Vec2 size(sizex, sizey);
+        Vec2 boxSize(sizex, sizey);
 
         TextRenderer & textRenderer = GetTextRenderer();
-        TextBox box(pos, size, "", &textRenderer, Color(255, 255, 255, 255));
+        TextBox box(pos, boxSize, "", &textRenderer, Color(255, 255, 255, 255));
         box.Draw(GetTextRenderer(), -FLT_MAX, true, true);
     }
 }

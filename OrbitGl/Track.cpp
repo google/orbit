@@ -5,6 +5,7 @@
 #include "Track.h"
 #include "GlCanvas.h"
 #include "Capture.h"
+#include "TimeGraphLayout.h"
 
 const float TRACK_Z = 0.1f;
 const float TEXT_Z = 0.2f;
@@ -14,20 +15,27 @@ Track::Track()
 {
     m_ID = 0;
     m_MousePos[0] = m_MousePos[1] = Vec2(0, 0);
+    m_Pos = Vec2(0, 0);
+    m_Size = Vec2(0, 0);
+    m_PickingOffset = Vec2(0, 0);
     m_Picked = false;
     m_Moving = false;
+    m_Canvas = nullptr;
 }
 
 //-----------------------------------------------------------------------------
 void Track::Draw( GlCanvas* a_Canvas, bool a_Picking )
 {
-    auto col = Color( 255, 174, 201, 255 );
+    static volatile unsigned char alpha = 255;
+    static volatile unsigned char grey = 60;
+    auto col = Color( grey, grey, grey, alpha );
     a_Picking ? PickingManager::SetPickingColor( a_Canvas->GetPickingManager().CreatePickableId( this ) )
               : glColor4ubv( &col[0] );
 
     float x0 = m_Pos[0];
-    float y0 = m_Pos[1];
     float x1 = x0 + m_Size[0];
+    
+    float y0 = m_Pos[1];
     float y1 = y0 - m_Size[1];
 
     if( m_Picked )
@@ -54,8 +62,8 @@ void Track::Draw( GlCanvas* a_Canvas, bool a_Picking )
     glVertex3f( x0, y1, TRACK_Z );
     glEnd();
 
-    std::string threadName = Format( "%s [%u]", m_Name.c_str(), m_ID );
-    a_Canvas->AddText( threadName.c_str(), x0, y1, TEXT_Z, Color( 255, 255, 255, 255 ) );        
+    std::string name = Format( "%s [%u]", m_Name.c_str(), m_ID );
+    a_Canvas->AddText( name.c_str(), x0, y1, TEXT_Z, Color( 255, 255, 255, 255 ) );        
 
     m_Canvas = a_Canvas;
 }
@@ -63,8 +71,10 @@ void Track::Draw( GlCanvas* a_Canvas, bool a_Picking )
 //-----------------------------------------------------------------------------
 void Track::SetPos( float a_X, float a_Y )
 {
-    if( !m_Moving )
-        m_Pos = Vec2( a_X, a_Y );
+    if (!m_Moving)
+    {
+        m_Pos = Vec2(a_X, a_Y);
+    }
 }
 
 //-----------------------------------------------------------------------------

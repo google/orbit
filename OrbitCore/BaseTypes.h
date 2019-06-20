@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
+#include <iostream>
 
 #define wcstok_s wcstok
 #define WCHAR wchar_t
@@ -53,12 +54,12 @@ typedef struct _M128A {
 
 inline void OutputDebugStringA(const char* msg)
 {
-    printf( "%s\n", msg);
+    std::cout << msg;
 }
 
 inline void OutputDebugStringW(const wchar_t* wmsg)
 {
-    wprintf( L"%s\n", wmsg);
+    std::cout << wmsg;
 }
 
 #define vsnprintf_s vsnprintf

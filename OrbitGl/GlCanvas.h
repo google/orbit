@@ -127,7 +127,6 @@ protected:
     TickType m_TimeStop;
     int     m_ScreenClickX;
     int     m_ScreenClickY;
-    int     m_WheelDelta;
     int     m_MinWheelDelta;
     int     m_MaxWheelDelta;
     float   m_WheelMomentum;

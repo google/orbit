@@ -66,7 +66,6 @@ GlCanvas::GlCanvas()
     m_AltKey = false;
     m_NeedsRedraw = true;
 
-    m_WheelDelta = 0;
     m_MinWheelDelta = INT_MAX;
     m_MaxWheelDelta = INT_MIN;
     m_WheelMomentum = 0.f;
@@ -168,7 +167,6 @@ void GlCanvas::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl )
 { 
     // Zoom
     int delta = -a_Delta/abs(a_Delta); //-event.GetWheelRotation() / event.GetWheelDelta();
-    m_WheelDelta = delta;
 
     if( delta < m_MinWheelDelta )
         m_MinWheelDelta = delta;
@@ -394,7 +392,6 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x
     //TRACE_VAR( GTimerManager->m_NumQueuedMessages );
     //TRACE_VAR( GTimerManager->m_NumQueuedTimers );
     //TRACE_VAR( GPdbDbg->GetHModule() );
-    //TRACE_VAR( m_WheelDelta );
     //TRACE_VAR( m_MinWheelDelta );
     //TRACE_VAR( m_MaxWheelDelta );
     //TRACE_VAR( m_WheelMomentum );
@@ -409,6 +406,7 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x
         m_WorldWidth = 1.f;
     if( m_WorldHeight <= 0 )
         m_WorldHeight = 1.f;
+
     gluOrtho2D(m_WorldTopLeftX, m_WorldTopLeftX + m_WorldWidth, m_WorldTopLeftY - m_WorldHeight, m_WorldTopLeftY);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();

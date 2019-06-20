@@ -26,7 +26,7 @@ public:
     bool Movable() override { return true; }
 
     bool IsMoving() const { return m_Moving; }
-    Vec2 GetMoveDelta() const { return m_MousePos[1] - m_MousePos[0]; }
+    Vec2 GetMoveDelta() const { return m_Moving ? m_MousePos[1] - m_MousePos[0] : Vec2(0, 0); }
     void SetName( const std::string& a_Name ) { m_Name = a_Name; }
     const std::string& GetName() const { return m_Name; }
     void SetTimeGraph( TimeGraph* a_TimeGraph ) { m_TimeGraph = a_TimeGraph; }

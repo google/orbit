@@ -121,7 +121,7 @@ void CaptureWindow::MouseMoved( int a_X, int a_Y, bool a_Left, bool a_Right, boo
     if ( m_IsSelecting  )
     {
         m_SelectStop = Vec2(worldx, worldy);
-        m_TimeStop   = m_TimeGraph.GetRawTimeStampFromWorld( worldx );
+        m_TimeStop   = m_TimeGraph.GetTickFromWorld( worldx );
     }
 
     if( a_Left )
@@ -357,7 +357,7 @@ void CaptureWindow::RightDown( int a_X, int a_Y )
     m_IsSelecting = true;
     m_SelectStart = Vec2( m_WorldClickX, m_WorldClickY );
     m_SelectStop  = m_SelectStart;
-    m_TimeStart   = m_TimeGraph.GetRawTimeStampFromWorld( m_WorldClickX );
+    m_TimeStart   = m_TimeGraph.GetTickFromWorld( m_WorldClickX );
     m_TimeStop    = m_TimeStart;
 }
 
@@ -406,6 +406,35 @@ void CaptureWindow::MiddleUp( int a_X, int a_Y )
 }
 
 //-----------------------------------------------------------------------------
+void CaptureWindow::Zoom( int a_Delta )
+{
+    if (a_Delta == 0)
+        return;
+
+    a_Delta = -a_Delta;
+
+    float worldx;
+    float worldy;
+
+    ScreenToWorld(m_MousePosX, m_MousePosY, worldx, worldy);
+    m_MouseRatio = (double)m_MousePosX / (double)getWidth();
+
+    m_TimeGraph.ZoomTime((float)a_Delta, m_MouseRatio);
+    m_WheelMomentum = a_Delta * m_WheelMomentum < 0 ? 0.f : m_WheelMomentum + (float)a_Delta;
+
+    NeedsUpdate();
+}
+
+//-----------------------------------------------------------------------------
+void CaptureWindow::Pan( float a_Ratio )
+{  
+    double refTime = (TickType)m_TimeGraph.GetTime((double)m_MousePosX / (double)getWidth());
+    m_TimeGraph.PanTime(m_MousePosX, m_MousePosX + a_Ratio*getWidth(), getWidth(), refTime);
+    UpdateSceneBox();
+    NeedsUpdate();
+}
+
+//-----------------------------------------------------------------------------
 void CaptureWindow::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl )
 {
 	if ( a_Delta == 0 )
@@ -413,7 +442,6 @@ void CaptureWindow::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl 
 
     // Zoom
     int delta = -a_Delta / abs(a_Delta);
-    m_WheelDelta = delta;
 
     if (delta < m_MinWheelDelta)
         m_MinWheelDelta = delta;
@@ -434,7 +462,7 @@ void CaptureWindow::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl 
 
     if (zoomWidth)
     {
-        m_TimeGraph.ZoomTime((float)delta, (double)mousex / (double)getWidth());
+        m_TimeGraph.ZoomTime((float)delta, m_MouseRatio);
         m_WheelMomentum = delta*m_WheelMomentum < 0 ? 0.f : m_WheelMomentum + (float)delta;
     }
     else
@@ -463,17 +491,26 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
     {
         switch (a_KeyCode)
         {
-        case 'A':
+        case ' ':
             ZoomAll();
             break;
+        case 'A':
+            Pan(0.1f);
+            break;
+        case 'D':
+            Pan(-0.1f);
+            break;
         case 'W':
+            Zoom(1);
+            break;
+        case 'S':
+            Zoom(-1);
+            break;
+        case 'I':
             m_DrawStats = !m_DrawStats;
             break;
         case 'H':
             m_DrawHelp = !m_DrawHelp;
-            break;
-        case 'S':
-            ToggleSampling();
             break;
         case 'X':
             GOrbitApp->ToggleCapture();
@@ -494,6 +531,18 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
 #ifdef _WIN32
             CrashHandler::SendMiniDump();
 #endif
+            break;
+        case 18: // Left
+            m_TimeGraph.OnLeft();
+            break;
+        case 20: // Right
+            m_TimeGraph.OnRight();
+            break;
+        case 19: // Up
+            m_TimeGraph.OnUp();
+            break;
+        case 21: // Down
+            m_TimeGraph.OnDown();
             break;
         }
     }
@@ -583,8 +632,8 @@ void CaptureWindow::Draw()
         TickType minTime = std::min( m_TimeStart, m_TimeStop );
         TickType maxTime = std::max( m_TimeStart, m_TimeStop );
 
-        float from = m_TimeGraph.GetWorldFromRawTimeStamp( minTime );
-        float to   = m_TimeGraph.GetWorldFromRawTimeStamp( maxTime );
+        float from = m_TimeGraph.GetWorldFromTick( minTime );
+        float to   = m_TimeGraph.GetWorldFromTick( maxTime );
 
         double micros = MicroSecondsFromTicks( minTime, maxTime );
         float sizex = to - from;
@@ -744,8 +793,7 @@ void CaptureWindow::RenderUI()
         m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GNumProfileEvents ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GNumInstalledHooks ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetNumDrawnTextBoxes() ) );
-        m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetTextBoxes().m_NumItems ) );
-        m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetTextBoxes().m_NumBlocks ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetNumTimers() ) );
 
         for( std::string & line : GTcpServer->GetStats() )
         {

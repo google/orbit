@@ -114,11 +114,12 @@ set(HEADERS
     TextBox.h
     TextRenderer.h
     ThreadDataViewGl.h
+    ThreadTrack.h
+    ThreadTrackMap.h
     ThreadView.h
     TimeGraph.h
     TimeGraphLayout.h
     Track.h
-    ThreadTrack.h
     TypeDataView.h
 )
 

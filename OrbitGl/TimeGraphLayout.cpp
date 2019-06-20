@@ -1,7 +1,7 @@
 #include "TimeGraphLayout.h"
 #include "Params.h"
 #include "Capture.h"
-#include <thread>
+#include "ThreadTrack.h"
 
 //-----------------------------------------------------------------------------
 TimeGraphLayout::TimeGraphLayout()
@@ -39,9 +39,26 @@ float TimeGraphLayout::GetTracksHeight()
 }
 
 //-----------------------------------------------------------------------------
-float TimeGraphLayout::GetThreadBlockHeight( ThreadID a_TID )
+void TimeGraphLayout::SortTracksByPosition( ThreadTrackMap& a_ThreadTracks )
 {
-    return GetTracksHeight() + m_ThreadDepths[a_TID] * m_TextBoxHeight;
+    std::vector< std::shared_ptr<ThreadTrack> > tracks;
+
+    for( auto& pair : a_ThreadTracks )
+    {
+        tracks.push_back(pair.second);
+    }
+
+    std::sort(tracks.begin(), tracks.end(), 
+    [](const std::shared_ptr<ThreadTrack> & a, const std::shared_ptr<ThreadTrack> & b) -> bool
+    { 
+        return a->GetPos()[1] > b->GetPos()[1];
+    });
+
+    m_SortedThreadIds.clear();
+    for( auto& track : tracks )
+    {
+        m_SortedThreadIds.push_back( track->GetID() );
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -53,11 +70,17 @@ void TimeGraphLayout::CalculateOffsets( ThreadTrackMap& a_ThreadTracks )
     if( m_DrawFileIO ) ++m_NumTracks;
     if( Capture::GHasSamples ) ++m_NumTracks;
 
+    SortTracksByPosition(a_ThreadTracks);
+
     float offset = GetThreadStart();
     for( ThreadID threadID : m_SortedThreadIds )
     {
+        std::shared_ptr<ThreadTrack> track = a_ThreadTracks[threadID];
+        if (track == nullptr)
+            continue;
         m_ThreadBlockOffsets[threadID] = offset;
-        offset -= ( GetThreadBlockHeight( threadID ) + m_SpaceBetweenThreadBlocks );
+        float threadBlockHeight = GetTracksHeight() + track->GetDepth() * m_TextBoxHeight;
+        offset -= (threadBlockHeight + m_SpaceBetweenThreadBlocks );
     }
 
     for( auto& pair : a_ThreadTracks )
@@ -65,7 +88,7 @@ void TimeGraphLayout::CalculateOffsets( ThreadTrackMap& a_ThreadTracks )
         auto& track = pair.second;
         if( track->IsMoving() )
         {
-            m_ThreadBlockOffsets[track->GetID()] += track->GetMoveDelta()[1];
+            m_ThreadBlockOffsets[track->GetID()] = track->GetPos()[1];
         }
     }
 }
@@ -97,7 +120,9 @@ float TimeGraphLayout::GetThreadBlockStart( ThreadID a_TID )
 //-----------------------------------------------------------------------------
 float TimeGraphLayout::GetSamplingTrackOffset( ThreadID a_TID )
 {
-    return Capture::GHasSamples ? m_ThreadBlockOffsets[a_TID] : -1.f;
+    // TODO:
+    return m_ThreadBlockOffsets[a_TID];
+    //return Capture::GHasSamples ? m_ThreadBlockOffsets[a_TID] : -1.f;
 }
 
 //-----------------------------------------------------------------------------
@@ -123,22 +148,4 @@ float TimeGraphLayout::GetTotalHeight()
 void TimeGraphLayout::Reset()
 {
     m_DrawFileIO = false;
-}
-
-//-----------------------------------------------------------------------------
-Color TimeGraphLayout::GetThreadColor( ThreadID a_TID ) const
-{
-    auto it = m_ThreadColors.find( a_TID );
-    if( it != m_ThreadColors.end() )
-    {
-        return it->second;
-    }
-
-    return Color( 255, 174, 201, 255 );
-}
-
-//-----------------------------------------------------------------------------
-void TimeGraphLayout::SetThreadColor( ThreadID a_TID, Color a_Color )
-{
-    m_ThreadColors[a_TID] = a_Color;
 }

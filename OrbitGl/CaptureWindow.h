@@ -15,6 +15,8 @@ public:
     virtual ~CaptureWindow();
     
     void ZoomAll();
+    void Zoom(int a_Delta);
+    void Pan(float a_Ratio);
 
     void UpdateWheelMomentum( float a_DeltaTime ) override;
     void MouseMoved(int a_X, int a_Y, bool a_Left, bool a_Right, bool a_Middle) override;
