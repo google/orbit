@@ -206,6 +206,57 @@ template < class T, int BlockSize > struct BlockChain
 
         return nullptr;
     }
+
+    Block<T, BlockSize>* GetBlockContaining(const T* a_Element)
+    {
+        Block<T, BlockSize>* block = m_Root;
+        while (block)
+        {
+            int size = block->m_Size;
+            if (size)
+            {
+                T* begin = &block->m_Data[0];
+                T* end = &block->m_Data[size-1];
+                if (begin <= a_Element && end >= a_Element)
+                {
+                    return block;
+                }
+            }
+            block = block->m_Next;
+        }
+
+        return nullptr;
+    }
+
+    T* GetElementAfter(const T* a_Element)
+    {
+        auto block = GetBlockContaining(a_Element);
+        if (block)
+        {
+            T* begin = &block->m_Data[0];
+            size_t index = a_Element - begin;
+            if (index < block->m_Size - 1)
+                return &block->m_Data[++index];
+            else if (block->m_Next && block->m_Next->m_Size)
+                return &block->m_Next->m_Data[0];
+        }
+        return nullptr;
+    }
+
+    T* GetElementBefore(const T* a_Element)
+    {
+        auto block = GetBlockContaining(a_Element);
+        if (block)
+        {
+            T* begin = &block->m_Data[0];
+            size_t index = a_Element - begin;
+            if (index > 0)
+                return &block->m_Data[--index];
+            else if (block->m_Prev)
+                return &block->m_Prev->m_Data[block->m_Prev->m_Size-1];
+        }
+        return nullptr;
+    }
     
     BlockIterator<T, BlockSize> begin(){ return BlockIterator<T, BlockSize>(m_Root); }
     BlockIterator<T, BlockSize> end(){ return BlockIterator<T, BlockSize>(nullptr); }
