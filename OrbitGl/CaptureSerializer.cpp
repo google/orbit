@@ -53,7 +53,7 @@ void CaptureSerializer::Save( const std::wstring a_FileName )
 //-----------------------------------------------------------------------------
 template <class T> void CaptureSerializer::Save( T & a_Archive )
 {
-    m_NumTimers = m_TimeGraph->GetTextBoxes().size();
+    m_NumTimers = m_TimeGraph->GetNumTimers();
 
     // Header
     a_Archive( cereal::make_nvp( "Capture", *this ) );
@@ -104,13 +104,17 @@ template <class T> void CaptureSerializer::Save( T & a_Archive )
 
     // Timers
     int numWrites = 0;
-    for( const TextBox & box : m_TimeGraph->GetTextBoxes() )
+    std::vector< std::shared_ptr<TimerChain> > chains = m_TimeGraph->GetAllTimerChains();
+    for( const std::shared_ptr<TimerChain>& chain : chains )
     {
-        a_Archive( cereal::binary_data( (char*)&box.GetTimer(), sizeof( Timer ) ) );
-
-        if( ++numWrites > m_NumTimers )
+        for (const TextBox& box : *chain)
         {
-            break;
+            a_Archive(cereal::binary_data((char*)&box.GetTimer(), sizeof(Timer)));
+
+            if (++numWrites > m_NumTimers)
+            {
+                return;
+            }
         }
     }
 }

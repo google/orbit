@@ -3,6 +3,7 @@
 //-----------------------------------
 #pragma once
 #include <atomic>
+#include <assert.h>
 
 //-----------------------------------------------------------------------------
 template < class T, int BlockSize > struct BlockChain;

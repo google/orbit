@@ -14,7 +14,6 @@
 class TextRenderer;
 class EventTrack;
 
-typedef BlockChain<TextBox, 65536>  BoxBlockChain;
 typedef BlockChain<TextBox, 4*1/*024*/> TimerChain;
 
 //-----------------------------------------------------------------------------
@@ -47,6 +46,8 @@ public:
     const TextBox* GetUp(TextBox* a_TextBox) const;
     const TextBox* GetDown(TextBox* a_TextBox) const;
 
+    std::vector< std::shared_ptr<TimerChain> > GetAllChains() const;
+
 protected:
     inline void UpdateDepth( uint32_t a_Depth ) { if(a_Depth > m_Depth) m_Depth = a_Depth; }
     std::shared_ptr<TimerChain> GetTimers(uint32_t a_Depth) const;
@@ -54,7 +55,6 @@ protected:
 protected:
     TextRenderer*               m_TextRenderer = nullptr;
     std::shared_ptr<EventTrack> m_EventTrack;
-    BoxBlockChain               m_TextBoxes;
     uint32_t                    m_Depth = 1;
     ThreadID                    m_ThreadID;
     

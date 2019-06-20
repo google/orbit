@@ -85,6 +85,7 @@ public:
     void SetSystrace(std::shared_ptr<Systrace> a_Systrace) { m_Systrace = a_Systrace; }
     Batcher& GetBatcher() { return m_Batcher; }
     uint32_t GetNumTimers() const;
+    std::vector< std::shared_ptr<TimerChain> > GetAllTimerChains() const;
     double GetMarginRatio() const { return m_MarginRatio; }
 
     void OnDrag( float a_Ratio );

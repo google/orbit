@@ -51,7 +51,6 @@ void ThreadTrack::OnTimer( const Timer& a_Timer )
     UpdateDepth(a_Timer.m_Depth+1);
     TextBox textBox( Vec2(0, 0), Vec2(0, 0), "", m_TextRenderer, Color( 255, 0, 0, 255) );
     textBox.SetTimer( a_Timer );
-    m_TextBoxes.push_back(textBox);
 
     std::shared_ptr<TimerChain> timerChain = m_Timers[a_Timer.m_Depth];
     if (timerChain == nullptr) 
@@ -192,4 +191,15 @@ const TextBox* ThreadTrack::GetDown(TextBox* a_TextBox) const
 {
     const Timer& timer = a_TextBox->GetTimer();
     return GetFirstAfterTime(timer.m_Start, timer.m_Depth + 1);
+}
+
+//-----------------------------------------------------------------------------
+std::vector< std::shared_ptr<TimerChain> > ThreadTrack::GetAllChains() const
+{
+    std::vector< std::shared_ptr<TimerChain> > chains;
+    for (const auto & pair : m_Timers)
+    {
+        chains.push_back(pair.second);
+    }
+    return chains;
 }

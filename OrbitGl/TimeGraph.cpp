@@ -286,6 +286,18 @@ uint32_t TimeGraph::GetNumTimers() const
 }
 
 //-----------------------------------------------------------------------------
+std::vector< std::shared_ptr<TimerChain> > TimeGraph::GetAllTimerChains() const
+{
+    std::vector< std::shared_ptr<TimerChain> > chains;
+    for (const auto& pair : m_ThreadTracks)
+    {
+        const std::shared_ptr<ThreadTrack>& track = pair.second;
+        Append(chains, track->GetAllChains());
+    }
+    return chains;
+}
+
+//-----------------------------------------------------------------------------
 void TimeGraph::AddContextSwitch( const ContextSwitch & a_CS )
 {
     auto pair = std::make_pair(a_CS.m_Time, a_CS);
