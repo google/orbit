@@ -159,7 +159,7 @@ inline std::vector< std::wstring > Tokenize( std::wstring a_String, const wchar_
 
 //-----------------------------------------------------------------------------
 template < class U >
-inline bool Contains( const std::string & a_String, const U & a_SubString, bool a_MatchCase = false )
+inline bool Contains( const std::string & a_String, const U & a_SubString, bool a_MatchCase = true )
 {
     std::string str( a_String );
     std::string substr( a_SubString );

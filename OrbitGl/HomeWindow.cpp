@@ -123,9 +123,6 @@ void HomeWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, 
     {
         switch (a_KeyCode)
         {
-        case 'C':
-            GOrbitApp->CallHome();
-            break;
         case 'D':
             m_DrawDebugDisplay = !m_DrawDebugDisplay;
             Refresh();
