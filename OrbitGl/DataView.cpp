@@ -14,7 +14,6 @@
 #include "SamplingReportDataView.h"
 #include "SessionsDataView.h"
 #include "LogDataView.h"
-#include "ThreadDataViewGl.h"
 #include "Pdb.h"
 #include "App.h"
 #include "OrbitType.h"
@@ -45,7 +44,6 @@ DataView* DataView::Create( DataViewType a_Type )
         case DataViewType::MODULES:        model = new ModulesDataView();        break;
         case DataViewType::SAMPLING:       model = new SamplingReportDataView(); break;
         case DataViewType::PROCESSES:      model = new ProcessesDataView();      break;
-        case DataViewType::THREADS:        model = new ThreadDataViewGl();       break;
         case DataViewType::SESSIONS:       model = new SessionsDataView();       break;
         case DataViewType::LOG:            model = new LogDataView();            break;
         default:                                                                 break;

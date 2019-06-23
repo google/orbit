@@ -212,7 +212,7 @@ void TcpClient::DecodeMessage( Message & a_Message )
     case Msg_FunctionHook:
     {
         ULONG64* addresses = (ULONG64*)a_Message.GetData();
-        int numAddresses = a_Message.m_Size/sizeof(ULONG64);
+        uint32_t numAddresses = (uint32_t)a_Message.m_Size/sizeof(ULONG64);
         for( int i = 0; i < numAddresses; ++i )
         {
             void* address = (void*)addresses[i];
@@ -229,8 +229,8 @@ void TcpClient::DecodeMessage( Message & a_Message )
     case Msg_FunctionHookZoneStart:
     {
         ULONG64* addresses = (ULONG64*)a_Message.GetData();
-        int numAddresses = a_Message.m_Size / sizeof( ULONG64 );
-        for( int i = 0; i < numAddresses; ++i )
+        uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof( ULONG64 );
+        for(uint32_t i = 0; i < numAddresses; ++i )
         {
             void* address = (void*)addresses[i];
             std::string dbgMsg = Format( "Hooking zone function at address: %p\n", address );
@@ -245,8 +245,8 @@ void TcpClient::DecodeMessage( Message & a_Message )
     case Msg_FunctionHookZoneStop:
     {
         ULONG64* addresses = (ULONG64*)a_Message.GetData();
-        int numAddresses = a_Message.m_Size / sizeof( ULONG64 );
-        for( int i = 0; i < numAddresses; ++i )
+        uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof( ULONG64 );
+        for(uint32_t i = 0; i < numAddresses; ++i )
         {
             void* address = (void*)addresses[i];
             std::string dbgMsg = Format( "Hooking zone function at address: %p\n", address );
@@ -261,8 +261,8 @@ void TcpClient::DecodeMessage( Message & a_Message )
     case Msg_FunctionHookOutputDebugString:
     {
         ULONG64* addresses = (ULONG64*)a_Message.GetData();
-        int numAddresses = a_Message.m_Size / sizeof( ULONG64 );
-        for( int i = 0; i < numAddresses; ++i )
+        uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof( ULONG64 );
+        for(uint32_t i = 0; i < numAddresses; ++i )
         {
             void* address = (void*)addresses[i];
             std::string dbgMsg = Format( "Hooking OutputDebugString function at address: %p\n", address );
@@ -277,8 +277,8 @@ void TcpClient::DecodeMessage( Message & a_Message )
     case Msg_FunctionHookUnrealActor:
     {
         ULONG64* addresses = (ULONG64*)a_Message.GetData();
-        int numAddresses = a_Message.m_Size / sizeof( ULONG64 );
-        for( int i = 0; i < numAddresses; ++i )
+        uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof( ULONG64 );
+        for(uint32_t i = 0; i < numAddresses; ++i )
         {
             void* address = (void*)addresses[i];
             std::string dbgMsg = Format( "Hooking Unreal Actor function at address: %p\n", address );
@@ -293,8 +293,8 @@ void TcpClient::DecodeMessage( Message & a_Message )
     case Msg_FunctionHookOrbitData:
     {
         ULONG64* addresses = (ULONG64*)a_Message.GetData();
-        int numAddresses = a_Message.m_Size / sizeof( ULONG64 );
-        for( int i = 0; i < numAddresses; ++i )
+        uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof( ULONG64 );
+        for(uint32_t i = 0; i < numAddresses; ++i )
         {
             void* address = (void*)addresses[i];
             std::string dbgMsg = Format( "Hooking OrbitSendData function at address: %p\n", address );
@@ -309,8 +309,8 @@ void TcpClient::DecodeMessage( Message & a_Message )
     case Msg_FunctionHookAlloc:
     {
         ULONG64* addresses = (ULONG64*)a_Message.GetData();
-        int numAddresses = a_Message.m_Size / sizeof( ULONG64 );
-        for( int i = 0; i < numAddresses; ++i )
+        uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof( ULONG64 );
+        for( uint32_t i = 0; i < numAddresses; ++i )
         {
             void* address = (void*)addresses[i];
             std::string dbgMsg = Format( "Hooking Alloc function at address: %p\n", address );
@@ -325,8 +325,8 @@ void TcpClient::DecodeMessage( Message & a_Message )
     case Msg_FunctionHookFree:
     {
         ULONG64* addresses = (ULONG64*)a_Message.GetData();
-        int numAddresses = a_Message.m_Size / sizeof( ULONG64 );
-        for( int i = 0; i < numAddresses; ++i )
+        uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof( ULONG64 );
+        for(uint32_t i = 0; i < numAddresses; ++i )
         {
             void* address = (void*)addresses[i];
             std::string dbgMsg = Format( "Hooking Free function at address: %p\n", address );
@@ -368,8 +368,8 @@ void TcpClient::DecodeMessage( Message & a_Message )
     case Msg_CallstackTracking:
     {
         ULONG64* addresses = (ULONG64*)a_Message.GetData();
-        int numAddresses = a_Message.m_Size / sizeof( ULONG64 );
-        for( int i = 0; i < numAddresses; ++i )
+        uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof( ULONG64 );
+        for( uint32_t i = 0; i < numAddresses; ++i )
         {
             void* address = (void*)addresses[i];
             std::wstring dbgMsg = s2ws( Format( "Callstack tracking for address: %p\n", address ) );

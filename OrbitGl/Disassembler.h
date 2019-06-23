@@ -12,7 +12,7 @@
 class Disassembler
 {
 public:
-    void Disassemble( const unsigned char* a_MachineCode, int a_Size, DWORD64 a_Address, bool a_Is64Bit );
+    void Disassemble( const unsigned char* a_MachineCode, size_t a_Size, DWORD64 a_Address, bool a_Is64Bit );
     const std::wstring & GetResult() { return m_String; }
 
     template<typename... Args>

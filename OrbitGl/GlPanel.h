@@ -15,7 +15,6 @@ public:
     { 
         CAPTURE,
         IMMEDIATE,
-        THREADS,
         VISUALIZE,
         RULE_EDITOR,
         PLUGIN,

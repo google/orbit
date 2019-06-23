@@ -328,7 +328,7 @@ ImFont* AddFontDefault()
         font_cfg.OversampleH = font_cfg.OversampleV = 1;
         font_cfg.PixelSnapH = true;
     }
-    if (font_cfg.Name[0] == '\0') strcpy(font_cfg.Name, "ProggyClean.ttf, 13px");
+    if (font_cfg.Name[0] == '\0') strcpy_s(font_cfg.Name, SizeOfArray(font_cfg.Name), "ProggyClean.ttf, 13px");
 
     const char* ttf_compressed_base85 = GetDefaultCompressedFontDataTTFBase85();
     ImFont* font = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, GParams.m_FontSize, &font_cfg, ImGui::GetIO().Fonts->GetGlyphRangesDefault());

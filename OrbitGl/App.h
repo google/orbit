@@ -63,7 +63,7 @@ public:
     void UpdateVariable( Variable* a_Variable ) override;
     void ClearWatchedVariables();
     void RefreshWatch();
-    virtual void Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, int a_Size );
+    virtual void Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, size_t a_Size );
 
     int* GetScreenRes() { return m_ScreenRes; }
 

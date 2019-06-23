@@ -115,9 +115,9 @@ void TcpServer::Receive( const Message & a_Message )
     }
     case Msg_Timer:
     {
-        int numTimers = a_Message.m_Size/sizeof(Timer);
+        uint32_t numTimers = (uint32_t)a_Message.m_Size/sizeof(Timer);
         Timer* timers = (Timer*)a_Message.GetData();
-        for (int i = 0; i < numTimers; ++i)
+        for (uint32_t i = 0; i < numTimers; ++i)
         {
             GTimerManager->Add(timers[i]);
         }
@@ -131,16 +131,16 @@ void TcpServer::Receive( const Message & a_Message )
         break;
     }
     case Msg_NumQueuedEntries:
-        m_NumTargetQueuedEntries = *((int*)a_Message.GetData());
+        m_NumTargetQueuedEntries = *((uint32_t*)a_Message.GetData());
         break;
 	case Msg_NumFlushedEntries:
-		m_NumTargetFlushedEntries = *((int*)a_Message.GetData());
+		m_NumTargetFlushedEntries = *((uint32_t*)a_Message.GetData());
 		break;
     case Msg_NumFlushedItems:
-        m_NumTargetFlushedTcpPackets = *( (int*)a_Message.GetData() );
+        m_NumTargetFlushedTcpPackets = *( (uint32_t*)a_Message.GetData() );
         break;
     case Msg_NumInstalledHooks:
-        Capture::GNumInstalledHooks = *((int*)a_Message.GetData());
+        Capture::GNumInstalledHooks = *((uint32_t*)a_Message.GetData());
         break;
     case Msg_Callstack:
     {

@@ -36,7 +36,7 @@ size_t FindSize( const byte* a_Code, size_t a_MaxBytes = 1024 )
 
     for( size_t i = 0; i < a_MaxBytes; ++i )
     {
-        int j = 0;
+        size_t j = 0;
         for( j = 0; j < matchSize; ++j )
         {
             if( a_Code[i+j] != dummyEnd[j] )
@@ -58,7 +58,7 @@ std::vector<size_t> FindOffsets( const byte* a_Code, size_t a_NumOffsets, const 
 
     for( size_t i = 0; i < a_MaxBytes; ++i )
     {
-        int j = 0;
+        size_t j = 0;
         for( j = 0; j < matchSize; ++j )
         {
             if( a_Code[i + j] != a_Identifier[j] )

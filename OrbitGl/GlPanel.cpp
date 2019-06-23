@@ -7,7 +7,6 @@
 #include "BlackBoard.h"
 #include "HomeWindow.h"
 #include "ImmediateWindow.h"
-#include "ThreadView.h"
 #include "CaptureWindow.h"
 #include "PluginCanvas.h"
 #include "RuleEditor.h"
@@ -24,9 +23,6 @@ GlPanel* GlPanel::Create(Type a_Type, void* a_UserData)
         break;
     case IMMEDIATE:
         panel = new ImmediateWindow();
-        break;
-    case THREADS:
-        panel = new ThreadView();
         break;
     case VISUALIZE:
         panel = new BlackBoard();

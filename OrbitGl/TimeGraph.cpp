@@ -195,7 +195,7 @@ void TimeGraph::SetMinMax( double a_MinTimeUs, double a_MaxTimeUs )
 //-----------------------------------------------------------------------------
 void TimeGraph::PanTime( int a_InitialX, int a_CurrentX, int a_Width, double a_InitialTime )
 {
-    double m_TimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
+    m_TimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
     double initialLocalTime = (double)a_InitialX/(double)a_Width * m_TimeWindowUs;
     double dt = (double)(a_CurrentX-a_InitialX)/(double)a_Width * m_TimeWindowUs;
     double currentTime = a_InitialTime - dt;
@@ -232,12 +232,9 @@ double TimeGraph::GetTimeIntervalMicro( double a_Ratio )
 //-----------------------------------------------------------------------------
 void TimeGraph::ProcessTimer( const Timer & a_Timer )
 {
-    TickType start = a_Timer.m_Start;
-    TickType end   = a_Timer.m_End;
-
-    if( end > m_SessionMaxCounter )
+    if(a_Timer.m_End > m_SessionMaxCounter )
     {
-        m_SessionMaxCounter = end;
+        m_SessionMaxCounter = a_Timer.m_End;
     }
 
     switch( a_Timer.m_Type )
@@ -545,7 +542,6 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
                     double elapsed = end - start;
 
                     double NormalizedStart = start * invTimeWindow;
-                    double NormalizedEnd = end * invTimeWindow;
                     double NormalizedLength = elapsed * invTimeWindow;
 
                     bool isCore = timer.IsType(Timer::CORE_ACTIVITY);
@@ -572,8 +568,7 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
                     bool isContextSwitch = timer.IsType(Timer::THREAD_ACTIVITY);
                     bool isCoreActivity = timer.IsType(Timer::CORE_ACTIVITY);
                     bool isVisibleWidth = NormalizedLength * m_Canvas->getWidth() > 1;
-                    bool isMainFrameFunction = Capture::GMainFrameFunction && (Capture::GMainFrameFunction == timer.m_FunctionAddress);
-                    bool isSameThreadIdAsSelected = isCoreActivity && timer.m_TID == Capture::GSelectedThreadId;
+                    bool isSameThreadIdAsSelected = isCoreActivity && (timer.m_TID == Capture::GSelectedThreadId);
                     bool isInactive = (!isContextSwitch && timer.m_FunctionAddress && (Capture::GVisibleFunctionsMap.size() && Capture::GVisibleFunctionsMap[timer.m_FunctionAddress] == nullptr)) ||
                         (Capture::GSelectedThreadId != 0 && isCoreActivity && !isSameThreadIdAsSelected);
                     bool isSelected = &textBox == Capture::GSelectedTextBox;
@@ -645,13 +640,12 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
                         if (!isCoreActivity)
                         {
                             //m_VisibleTextBoxes.push_back(&textBox);
-                            float minX = m_SceneBox.GetPosX();
                             static Color s_Color(255, 255, 255, 255);
 
-                            const Vec2 & pos = textBox.GetPos();
-                            const Vec2 & size = textBox.GetSize();
-                            float posX = std::max(pos[0], minX);
-                            float maxSize = pos[0] + size[0] - posX;
+                            const Vec2 & boxPos = textBox.GetPos();
+                            const Vec2 & boxSize = textBox.GetSize();
+                            float posX = std::max(boxPos[0], minX);
+                            float maxSize = boxPos[0] + boxSize[0] - posX;
                             m_TextRendererStatic.AddText(textBox.GetText().c_str()
                                 , posX
                                 , textBox.GetPosY() + 1.f
@@ -688,10 +682,6 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
 //-----------------------------------------------------------------------------
 void TimeGraph::UpdateEvents()
 {
-    float x0 = GetWorldFromTick( m_SessionMinCounter );
-    float x1 = GetWorldFromTick( m_SessionMaxCounter );
-    float sizeX = x1 - x0;
-
     TickType rawMin = GetTickFromUs( m_MinTimeUs );
     TickType rawMax = GetTickFromUs( m_MaxTimeUs );
 
@@ -1027,13 +1017,6 @@ void TimeGraph::DrawLineBuffer( bool a_Picking )
 //-----------------------------------------------------------------------------
 void TimeGraph::DrawEvents( bool a_Picking )
 {
-    double timeWindow = m_MaxTimeUs - m_MinTimeUs;
-    float WorldStartX = m_Canvas->GetWorldTopLeftX();
-    float WorldWidth = m_Canvas->GetWorldWidth();
-
-    TickType rawMin = GetTickFromUs( m_MinTimeUs );
-    TickType rawMax = GetTickFromUs( m_MaxTimeUs );
-
     // Draw track background
     float x0 = GetWorldFromTick( m_SessionMinCounter );
     float x1 = GetWorldFromTick( m_SessionMaxCounter );
@@ -1047,7 +1030,6 @@ void TimeGraph::DrawEvents( bool a_Picking )
         if( y0 == -1.f )
             continue;
 
-        float y1 = y0 - m_Layout.GetEventTrackHeight();
         EventTrack* eventTrack = m_EventTracks[threadId];
         
         if (eventTrack)

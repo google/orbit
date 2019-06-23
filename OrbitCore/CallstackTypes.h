@@ -4,5 +4,5 @@
 
 //-----------------------------------------------------------------------------
 #define ORBIT_STACK_SIZE 192
-typedef unsigned long long CallstackID;
-typedef unsigned long      ThreadID;
+typedef uint64_t CallstackID;
+typedef uint32_t ThreadID;

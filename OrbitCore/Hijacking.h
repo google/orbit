@@ -20,7 +20,7 @@ namespace Hijacking
 
     bool CreateHook( void* a_FunctionAddress, void* a_PrologCallback, void* a_EpilogCallback );
     bool EnableHook( void* a_FunctionAddress );
-    void EnableHooks( DWORD64* a_Addresses, int a_NumAddresses );
+    void EnableHooks( DWORD64* a_Addresses, uint32_t a_NumAddresses );
     bool DisableHook( void* a_FunctionAddress );
     bool DisableAllHooks();
     bool SuspendBusyLoopThread( OrbitWaitLoop* a_WaitLoop );

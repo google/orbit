@@ -21,7 +21,7 @@ shader_read( const char *filename )
     char * buffer;
 	size_t size;
 
-    file = fopen(filename, "rb");
+    fopen_s(&file, filename, "rb");
     if( !file )
     {
         fprintf( stderr, "Unable to open file \"%s\".\n", filename );

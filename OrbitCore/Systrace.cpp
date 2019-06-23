@@ -103,9 +103,10 @@ uint64_t Systrace::ProcessFunctionName(const std::string& a_String)
 //-----------------------------------------------------------------------------
 const std::string& Systrace::GetFunctionName(uint64_t a_ID) const
 {
+    static std::string default = "";
     auto it = m_StringMap.find(a_ID);
     if (it == m_StringMap.end())
-        return "";
+        return default;
     return it->second;
 }
 
@@ -137,7 +138,7 @@ Systrace::Systrace(const char* a_FilePath)
                 continue;
 
             const std::string& threadName = tokens[0];
-            const std::string& pid = tokens[1];
+            //const std::string& pid = tokens[1];
             const std::string& timestamp = tokens[4];            
 
             if (isBegin)
@@ -145,7 +146,7 @@ Systrace::Systrace(const char* a_FilePath)
                 Timer timer;
                 timer.m_TID = GetThreadId(threadName);
                 timer.m_Start = TicksFromMicroseconds(GetMicros(timestamp));
-                timer.m_Depth = m_TimerStacks[threadName].size();
+                timer.m_Depth = (uint8_t)m_TimerStacks[threadName].size();
                 const std::string& function = tokens[6];
                 timer.m_FunctionAddress = ProcessFunctionName(function);
                 m_TimerStacks[threadName].push_back(timer);

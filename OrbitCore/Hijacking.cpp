@@ -680,7 +680,7 @@ bool Hijacking::EnableHook(void* a_FunctionAddress)
 }
 
 //-----------------------------------------------------------------------------
-void Hijacking::EnableHooks( DWORD64* a_Addresses, int a_NumAddresses )
+void Hijacking::EnableHooks( DWORD64* a_Addresses, uint32_t a_NumAddresses )
 {
     MH_EnableHooks( a_Addresses, a_NumAddresses, true );
 }

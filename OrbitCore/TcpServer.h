@@ -51,18 +51,18 @@ private:
     StrCallback                               m_UiCallback;
     moodycamel::ConcurrentQueue<std::wstring> m_UiLockFreeQueue;
     
-    Timer   m_StatTimer;
-    ULONG64 m_LastNumMessages;
-    ULONG64 m_LastNumBytes;
-    ULONG64 m_NumReceivedMessages;
-    double  m_NumMessagesPerSecond;
-    double  m_BytesPerSecond;
-    int     m_MaxTimersAtOnce;
-    int     m_NumTimersAtOnce;
-    int     m_NumTargetQueuedEntries;
-    int     m_NumTargetFlushedEntries;
-    int     m_NumTargetFlushedTcpPackets;
-    ULONG64 m_NumMessagesFromPreviousSession;
+    Timer    m_StatTimer;
+    ULONG64  m_LastNumMessages;
+    ULONG64  m_LastNumBytes;
+    ULONG64  m_NumReceivedMessages;
+    double   m_NumMessagesPerSecond;
+    double   m_BytesPerSecond;
+    uint32_t m_MaxTimersAtOnce;
+    uint32_t m_NumTimersAtOnce;
+    uint32_t m_NumTargetQueuedEntries;
+    uint32_t m_NumTargetFlushedEntries;
+    uint32_t m_NumTargetFlushedTcpPackets;
+    ULONG64  m_NumMessagesFromPreviousSession;
 };
 
 extern TcpServer* GTcpServer;

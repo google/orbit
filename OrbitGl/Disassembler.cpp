@@ -21,7 +21,7 @@ void Disassembler::LogHex( const unsigned char *str, size_t len )
 }
 
 //-----------------------------------------------------------------------------
-void Disassembler::Disassemble( const unsigned char* a_MachineCode, int a_Size, DWORD64 a_Address, bool a_Is64Bit )
+void Disassembler::Disassemble( const unsigned char* a_MachineCode, size_t a_Size, DWORD64 a_Address, bool a_Is64Bit )
 {
     std::wstring disAsm;
     csh handle = 0;

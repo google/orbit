@@ -18,7 +18,6 @@
 #include "GlobalDataView.h"
 #include "SessionsDataView.h"
 #include "SamplingReport.h"
-#include "ThreadView.h"
 #include "ScopeTimer.h"
 #include "OrbitSession.h"
 #include "Serialization.h"
@@ -430,7 +429,7 @@ void OrbitApp::RefreshWatch()
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, int a_Size )
+void OrbitApp::Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, size_t a_Size )
 {
 #ifdef _WIN32
     Disassembler disasm;
@@ -615,15 +614,11 @@ void OrbitApp::NeedsRedraw()
 void OrbitApp::AddSamplingReport(std::shared_ptr<SamplingProfiler> & a_SamplingProfiler)
 {
     auto report = std::make_shared<SamplingReport>(a_SamplingProfiler);
-    
-    ThreadViewManager::s_CurrentSamplingProfiler = a_SamplingProfiler;
 
     for( SamplingReportCallback & callback : GOrbitApp->m_SamplingReportsCallbacks )
     {
         callback(report);
     }
-
-    ThreadViewManager::s_CurrentSamplingProfiler = nullptr;
 }
 
 //-----------------------------------------------------------------------------

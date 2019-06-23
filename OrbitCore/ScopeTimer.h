@@ -61,11 +61,11 @@ public:
 public:
 
     // Needs to have to exact same layout in win32/x64, debug/release
-    int         m_TID;
-    int8_t      m_Depth;
-    int8_t      m_SessionID;
+    uint32_t    m_TID;
+    uint8_t     m_Depth;
+    uint8_t     m_SessionID;
     Type        m_Type;
-    int8_t      m_Processor;
+    uint8_t     m_Processor;
     DWORD64     m_CallstackHash;
     DWORD64     m_FunctionAddress;
     DWORD64     m_UserData[2];

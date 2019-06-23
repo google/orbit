@@ -62,10 +62,10 @@ struct Capture
     static std::wstring GProcessToInject;
     static bool         GIsSampling;
     static bool         GIsTesting;
-    static int          GNumSamples;
-    static int          GNumSamplingTicks;
-    static int          GFunctionIndex;
-    static int          GNumInstalledHooks;
+    static uint32_t     GNumSamples;
+    static uint32_t     GNumSamplingTicks;
+    static uint32_t     GFunctionIndex;
+    static uint32_t     GNumInstalledHooks;
     static bool         GHasSamples;
     static bool         GHasContextSwitches;
 

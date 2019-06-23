@@ -113,10 +113,8 @@ set(HEADERS
     shader.h
     TextBox.h
     TextRenderer.h
-    ThreadDataViewGl.h
     ThreadTrack.h
     ThreadTrackMap.h
-    ThreadView.h
     TimeGraph.h
     TimeGraphLayout.h
     Track.h
@@ -159,8 +157,6 @@ set(SOURCES
     SessionsDataView.cpp
     TextBox.cpp
     TextRenderer.cpp
-    ThreadDataViewGl.cpp
-    ThreadView.cpp
     TimeGraph.cpp
     TimeGraphLayout.cpp
     Track.cpp

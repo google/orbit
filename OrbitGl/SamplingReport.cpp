@@ -47,7 +47,7 @@ void SamplingReport::FillReport()
 }
 
 //-----------------------------------------------------------------------------
-void SamplingReport::OnSelectAddress( DWORD64 a_Address, ThreadID a_ThreadId )
+void SamplingReport::OnSelectAddress( uint64_t a_Address, ThreadID a_ThreadId )
 {
     if( m_CallstackDataView )
     {

@@ -49,7 +49,8 @@ std::wstring LogDataView::GetValue( int a_Row, int a_Column )
         TickType micros = (TickType)MicroSecondsFromTicks(Capture::GCaptureTimer.m_Start, entry.m_Time);
         std::chrono::system_clock::time_point sysTime = Capture::GCaptureTimePoint + std::chrono::microseconds(micros);
         std::time_t now_c = std::chrono::system_clock::to_time_t(sysTime);
-        std::tm now_tm = *std::localtime(&now_c);
+        std::tm now_tm;
+        localtime_s(&now_tm, &now_c);
         TCHAR buffer[256];
         wcsftime( buffer, sizeof( buffer ), L"%H:%M:%S", &now_tm );
 
@@ -171,6 +172,7 @@ const OrbitLogEntry & LogDataView::GetEntry( unsigned int a_Row ) const
     return m_Entries[m_Indices[a_Row]];
 }
 
+#pragma warning(disable:4315) // TODO: investigate
 //-----------------------------------------------------------------------------
 void LogDataView::OnReceiveMessage( const Message & a_Msg )
 {

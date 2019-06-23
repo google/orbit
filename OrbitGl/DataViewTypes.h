@@ -15,7 +15,6 @@ enum DataViewType
     MODULES,
     SAMPLING,
     PDB,
-    THREADS,
     SESSIONS,
     LOG,
     ALL,

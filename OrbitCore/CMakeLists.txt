@@ -156,7 +156,6 @@ if(WIN32)
         Pdb.cpp
         SymbolUtils.cpp
         Utils.cpp
-        TypeInfo.cpp
 		${EXTERN_ROOT}/xxHash-r42/xxhash.c
     )
     set(EXTERNAL_HEADERS
