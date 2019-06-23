@@ -162,7 +162,6 @@ void TextRenderer::DrawOutline( vertex_buffer_t* a_Buffer )
 {
     glBegin(GL_LINES);
 
-    vector_t* id = a_Buffer->indices;
     for( int i = 0; i < (int)a_Buffer->indices->size; i+=3 )
     {   
         GLuint i0 = *(GLuint*)vector_get(a_Buffer->indices, i+0);

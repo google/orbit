@@ -134,20 +134,6 @@ struct OrbitZoneName
 };
 
 //-----------------------------------------------------------------------------
-struct OrbitLogEntry
-{
-    OrbitLogEntry() : m_Time( 0 ), m_CallstackHash( 0 ), m_ThreadId( 0 ) {}
-    DWORD64     m_Time;
-    DWORD64     m_CallstackHash;
-    DWORD       m_ThreadId;
-    std::string m_Text; // this must be the last member
-
-    static size_t GetSizeWithoutString() { return sizeof(OrbitLogEntry) - sizeof(std::string); }
-    size_t GetStringSize() { return ((m_Text.size()+1)*sizeof(m_Text[0])); }
-    size_t GetBufferSize() { return GetSizeWithoutString() + GetStringSize(); }
-};
-
-//-----------------------------------------------------------------------------
 struct OrbitWaitLoop
 {
     DWORD         m_ThreadId;
@@ -167,3 +153,16 @@ struct OrbitUnrealInfo
 
 #pragma pack(pop)
 
+//-----------------------------------------------------------------------------
+struct OrbitLogEntry
+{
+    OrbitLogEntry() : m_Time(0), m_CallstackHash(0), m_ThreadId(0) {}
+    DWORD64     m_Time;
+    DWORD64     m_CallstackHash;
+    DWORD       m_ThreadId;
+    std::string m_Text; // this must be the last member
+
+    static size_t GetSizeWithoutString() { return sizeof(OrbitLogEntry) - sizeof(std::string); }
+    size_t GetStringSize() { return ((m_Text.size() + 1) * sizeof(m_Text[0])); }
+    size_t GetBufferSize() { return GetSizeWithoutString() + GetStringSize(); }
+};

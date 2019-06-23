@@ -376,7 +376,8 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
         {
             PJMP_REL_SHORT pShortJmp = (PJMP_REL_SHORT)pHook->pTarget;
             pShortJmp->opcode = 0xEB;
-            pShortJmp->operand = (UINT8)(0 - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL)));
+            size_t op = (0 - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL)));
+            pShortJmp->operand = (UINT8)(op);
         }
     }
     else
@@ -790,7 +791,13 @@ MH_STATUS MH_EnableHooks( DWORD64* pTargets, UINT numTargets, BOOL enable )
 
         for( UINT i = 0; i < numTargets; ++i )
         {
-            UINT pos = FindHookEntry( (LPVOID)pTargets[i] );
+            #ifdef _WIN64
+            DWORD64 target = pTargets[i];
+            #else
+            DWORD target = (DWORD)pTargets[i];
+            #endif
+            
+            UINT pos = FindHookEntry( (LPVOID)target );
             if( pos != INVALID_HOOK_POS )
             {
                 if( g_hooks.pItems[pos].isEnabled != enable )

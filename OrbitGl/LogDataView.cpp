@@ -172,7 +172,6 @@ const OrbitLogEntry & LogDataView::GetEntry( unsigned int a_Row ) const
     return m_Entries[m_Indices[a_Row]];
 }
 
-#pragma warning(disable:4315) // TODO: investigate
 //-----------------------------------------------------------------------------
 void LogDataView::OnReceiveMessage( const Message & a_Msg )
 {
