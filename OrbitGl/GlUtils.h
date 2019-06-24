@@ -5,7 +5,6 @@
 
 #include <iostream>
 #include "mat4.h"
-#include "Core.h"
 
 void CheckGlError();
 void OutputGlMatrices();

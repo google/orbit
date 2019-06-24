@@ -524,6 +524,9 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
                 m_TextRenderer.ToggleDrawOutline();
             }
             break;
+        case 'P':
+            GOrbitApp->LoadSystrace("/home/pierric/perf_traces/systrace_tutorial.html");
+        break;
         case 'M':
             m_DrawMemTracker = !m_DrawMemTracker;
             break;

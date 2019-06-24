@@ -4,9 +4,7 @@
 
 #include "GlUtils.h"
 #include "OrbitCore/Core.h"
-
 #include "freetype-gl.h"
-#include "OrbitCore/Core.h"
 #include "Log.h"
 
 void CheckGlError()

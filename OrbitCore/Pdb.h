@@ -137,11 +137,11 @@ public:
 
     void Init(){}
 
-    virtual bool LoadPdb( const wchar_t* a_PdbName ){}
+    virtual bool LoadPdb( const wchar_t* a_PdbName ){return false;}
     virtual void LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_CompletionCallback ){}
 
-    bool LoadDataFromPdb(){}
-    bool LoadPdbDia(){}
+    bool LoadDataFromPdb(){return false;}
+    bool LoadPdbDia(){return false;}
     void Update(){}
     void AddFunction( Function & a_Function ){}
     void CheckOrbitFunction( Function & a_Function ){}

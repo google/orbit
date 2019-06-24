@@ -103,10 +103,10 @@ uint64_t Systrace::ProcessFunctionName(const std::string& a_String)
 //-----------------------------------------------------------------------------
 const std::string& Systrace::GetFunctionName(uint64_t a_ID) const
 {
-    static std::string default = "";
+    static std::string defaultName = "";
     auto it = m_StringMap.find(a_ID);
     if (it == m_StringMap.end())
-        return default;
+        return defaultName;
     return it->second;
 }
 

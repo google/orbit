@@ -473,6 +473,13 @@ inline std::string GetPrettyBitRate( ULONG64 a_SizeInBytes )
     return Format( "%.2f Tbit/s", size / TB );
 }
 
+#ifndef WIN32
+inline void fopen_s( FILE** fp, const char* fileName, const char* mode )
+{
+     *(fp)=fopen( fileName, mode);
+}
+#endif
+
 namespace OrbitUtils
 {
     bool VisualStudioOpenFile( char const * a_Filename, unsigned int a_Line );
