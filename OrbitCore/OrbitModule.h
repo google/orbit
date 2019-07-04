@@ -26,14 +26,14 @@ struct Module
     std::wstring  m_PrettyName;
     std::wstring  m_AddressRange;
     std::wstring  m_DebugSignature;
-    HMODULE       m_ModuleHandle;
-    DWORD64       m_AddressStart;
-    DWORD64       m_AddressEnd;
-    DWORD64       m_EntryPoint;
-    bool          m_FoundPdb;
-    bool          m_Selected;
-    bool          m_Loaded;
-    ULONG64       m_PdbSize;
+    HMODULE       m_ModuleHandle = 0;
+    uint64_t      m_AddressStart = 0;
+    uint64_t      m_AddressEnd = 0;
+    uint64_t      m_EntryPoint = 0;
+    bool          m_FoundPdb = false;
+    bool          m_Selected = false;
+    bool          m_Loaded = false;
+    uint64_t      m_PdbSize = 0;
 
     mutable std::shared_ptr<Pdb> m_Pdb;
 

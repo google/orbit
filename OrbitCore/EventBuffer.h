@@ -8,6 +8,10 @@
 #include "BlockChain.h"
 #include "SerializationMacros.h"
 
+#ifdef __linux
+#include "LinuxUtils.h"
+#endif
+
 #include <set>
 
 //-----------------------------------------------------------------------------
@@ -36,6 +40,7 @@ public:
     long long GetMaxTime() const { return m_MaxTime; }
     long long GetMinTime() const { return m_MinTime; }
     bool HasEvent() { ScopeLock lock( m_Mutex ); return m_CallstackEvents.size() > 0; }
+    size_t GetNumEvents() const;
 
     //-----------------------------------------------------------------------------
     void RegisterTime( long long a_Time )
@@ -69,8 +74,9 @@ struct EventTracer
 {
     EventBuffer & GetEventBuffer(){ return m_EventBuffer; }
     EventBuffer m_EventBuffer;
-    void Start(){}
-    void Stop(){}
+    void Start(uint32_t a_PID);
+    void Stop();
+    std::shared_ptr<LinuxPerf> m_Perf;
 };
 
 extern EventTracer GEventTracer;

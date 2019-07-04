@@ -4,6 +4,8 @@
 
 #include "EventBuffer.h"
 #include "Serialization.h"
+#include "Capture.h"
+#include "SamplingProfiler.h"
 
 #ifdef __linux
 EventTracer GEventTracer;
@@ -80,3 +82,41 @@ ORBIT_SERIALIZE( CallstackEvent, 0 )
     ORBIT_NVP_VAL( 0, m_Id );
     ORBIT_NVP_VAL( 0, m_TID );
 }
+
+#ifdef __linux
+
+//-----------------------------------------------------------------------------
+void EventTracer::Start( uint32_t a_PID )
+{
+    Capture::NewSamplingProfiler();
+    Capture::GSamplingProfiler->StartCapture();
+
+    m_Perf = std::make_shared<LinuxPerf>(a_PID);
+    m_Perf->Start();
+}
+
+//-----------------------------------------------------------------------------
+void EventTracer::Stop()
+{
+    m_Perf->Stop();
+    
+    if( Capture::GSamplingProfiler )
+    {
+        Capture::GSamplingProfiler->StopCapture();
+        Capture::GSamplingProfiler->ProcessSamples();
+    }
+}
+
+//-----------------------------------------------------------------------------
+size_t EventBuffer::GetNumEvents() const 
+{ 
+    size_t numEvents = 0;
+    for( auto& pair : m_CallstackEvents )
+    {
+        numEvents += pair.second.size();
+    }
+
+    return numEvents;
+}
+
+#endif

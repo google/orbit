@@ -140,12 +140,14 @@ void Capture::SetTargetProcess( const std::shared_ptr< Process > & a_Process )
         GInjected = false;
         GInjectedProcess = "";
 
+#ifdef WIN32
         if( a_Process && !a_Process->GetIsRemote() )
         {
             // In the case of a remote process, 
             // connection is already active
             GTcpServer->Disconnect();
         }
+#endif
 
         GTargetProcess = a_Process;
         GSamplingProfiler = std::make_shared<SamplingProfiler>( a_Process );
@@ -179,6 +181,7 @@ bool Capture::StartCapture()
     GCaptureTimer.Start();
     GCaptureTimePoint = std::chrono::system_clock::now();
 
+#ifdef WIN32
     if( !IsRemote() )
     {
         if( !Connect() )
@@ -186,6 +189,7 @@ bool Capture::StartCapture()
             return false;
         }
     }
+#endif
 
     GInjected = true;
     ++Message::GSessionID;
@@ -197,7 +201,11 @@ bool Capture::StartCapture()
 
     if( Capture::IsTrackingEvents() )
     {
+#ifdef WIN32
         GEventTracer.Start();
+#else
+        GEventTracer.Start(GTargetProcess->GetID());
+#endif
     }
 
     GCoreApp->SendToUiNow( L"startcapture" );
@@ -404,6 +412,7 @@ void Capture::TestHooks()
 //-----------------------------------------------------------------------------
 void Capture::StartSampling()
 {
+#ifdef WIN32
     if( !GIsSampling && Capture::IsTrackingEvents() && GTargetProcess->GetName().size() )
     {
         SCOPE_TIMER_LOG( L"Capture::StartSampling" );
@@ -417,6 +426,7 @@ void Capture::StartSampling()
 
         GIsSampling = true;
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -444,10 +454,12 @@ void Capture::Update()
 {
     if( GIsSampling )
     {
+#ifdef WIN32
         if( GSamplingProfiler->ShouldStop() )
         {
             GSamplingProfiler->StopCapture();
         }
+#endif
 
         if( GSamplingProfiler->GetState() == SamplingProfiler::DoneProcessing )
         {
@@ -464,11 +476,13 @@ void Capture::Update()
         GPdbDbg->Update();
     }
 
+#ifdef WIN32
     if( GInjected && !GTcpServer->HasConnection() )
     {
         StopCapture();
         GInjected = false;
     }
+#endif
 
     Capture::GHasSamples = GEventTracer.GetEventBuffer().HasEvent();
 }
@@ -579,6 +593,9 @@ void Capture::NewSamplingProfiler()
 //-----------------------------------------------------------------------------
 bool Capture::IsTrackingEvents()
 {
+#ifdef __linux
+    return true;
+#else
     static bool yieldEvents = false;
     if( yieldEvents && IsOtherInstanceRunning() && GTargetProcess )
     {
@@ -594,6 +611,7 @@ bool Capture::IsTrackingEvents()
     }
     
     return GParams.m_TrackContextSwitches || GParams.m_TrackSamplingEvents;
+#endif
 }
 
 //-----------------------------------------------------------------------------

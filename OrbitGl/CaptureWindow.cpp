@@ -13,7 +13,16 @@
 
 #ifdef _WIN32
 #include "SymbolUtils.h"
+#else
+#include "LinuxUtils.h"
+#include <cstdio>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <array>
 #endif
+
 //-----------------------------------------------------------------------------
 CaptureWindow::CaptureWindow()
 {
@@ -480,6 +489,47 @@ void CaptureWindow::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl 
     NeedsUpdate();
 }
 
+#ifdef __linux__
+//-----------------------------------------------------------------------------
+std::string exec(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        std::cout << "Could not open pipe" << std::endl;
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        std::cout << buffer.data();
+    }
+    return result;
+}
+
+//-----------------------------------------------------------------------------
+void StreamCommandOutput(const char* a_Cmd)
+{
+    std::cout << "Starting output stream for command" << a_Cmd << std::endl;
+    exec(a_Cmd);
+    std::cout << "end stream" << std::endl;
+}
+
+std::shared_ptr<std::thread> m_BpfThread;
+//-----------------------------------------------------------------------------
+void BpfTrace()
+{
+    // TODONOW
+    m_BpfThread = std::make_shared<std::thread>(&exec, "bpftrace /home/pierric/git/orbitprofiler/orbit.bt");
+    m_BpfThread->detach();
+}
+#endif
+
+//-----------------------------------------------------------------------------
+void Trace()
+{
+#ifdef __linux__
+    BpfTrace();
+#endif();
+}
+
 //-----------------------------------------------------------------------------
 void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt )
 {
@@ -514,9 +564,12 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
             break;
         case 'X':
             GOrbitApp->ToggleCapture();
+#ifdef __linux__
+            ZoomAll();
+#endif
             break;
         case 'T':
-            m_TimeGraph.ToggleDrawText();
+            Trace();
             break;
         case 'O':
             if( a_Ctrl )
@@ -766,16 +819,17 @@ void CaptureWindow::RenderUI()
     {
         m_StatsWindow.Clear();
 
-        /*m_StatsWindow.AddLog( VAR_TO_CHAR( m_Width ) );
-        m_StatsWindow.AddLog( VAR_TO_CHAR( m_Height ) );
-        m_StatsWindow.AddLog( VAR_TO_CHAR( m_DesiredWorldHeight ) );
-        m_StatsWindow.AddLog( VAR_TO_CHAR( m_DesiredWorldWidth ) );
-        m_StatsWindow.AddLog( VAR_TO_CHAR( m_WorldHeight ) );
-        m_StatsWindow.AddLog( VAR_TO_CHAR( m_WorldWidth ) );
-        m_StatsWindow.AddLog( VAR_TO_CHAR( m_WorldTopLeftX ) );
-        m_StatsWindow.AddLog( VAR_TO_CHAR( m_WorldTopLeftY ) );
-        m_StatsWindow.AddLog( VAR_TO_CHAR( m_WorldMinWidth ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_Width ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_Height ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_DesiredWorldHeight ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_DesiredWorldWidth ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_WorldHeight ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_WorldWidth ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_WorldTopLeftX ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_WorldTopLeftY ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_WorldMinWidth ) );
 
+/*
         m_StatsWindow.AddLog( VAR_TO_CHAR( GTimerManager->m_NumTimersFromPreviousSession ) );
         m_StatsWindow.AddLog( VAR_TO_CHAR( GTimerManager->m_NumFlushedTimers ) );
         m_StatsWindow.AddLog( VAR_TO_CHAR( Capture::GNumMessagesFromPreviousSession ) );
@@ -797,7 +851,12 @@ void CaptureWindow::RenderUI()
         m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GNumInstalledHooks ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetNumDrawnTextBoxes() ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetNumTimers() ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetThreadTotalHeight() ) );
+        
+        m_StatsWindow.AddLine( VAR_TO_ANSI( GEventTracer.GetEventBuffer().GetCallstacks().size() ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( GEventTracer.GetEventBuffer().GetNumEvents() ) );
 
+#ifdef WIN32
         for( std::string & line : GTcpServer->GetStats() )
         {
             m_StatsWindow.AddLine( line );
@@ -805,6 +864,7 @@ void CaptureWindow::RenderUI()
 
         bool hasConnection = GTcpServer->HasConnection();
         m_StatsWindow.AddLine( VAR_TO_ANSI( hasConnection ) );
+#endif
 
         m_StatsWindow.Draw( "Capture Stats", &m_DrawStats );
     }

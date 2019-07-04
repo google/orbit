@@ -116,12 +116,16 @@ bool TimeGraph::UpdateSessionMinMaxCounter()
 
 //-----------------------------------------------------------------------------
 void TimeGraph::ZoomAll()
-{    
+{   
     if( UpdateSessionMinMaxCounter() )
     {
         m_MaxTimeUs = MicroSecondsFromTicks( m_SessionMinCounter, m_SessionMaxCounter );
         m_MinTimeUs = m_MaxTimeUs - (GNumHistorySeconds*1000*1000);
+        if( m_MinTimeUs < 0 )
+            m_MinTimeUs = 0;
+
         NeedsUpdate();
+        UpdatePrimitives(false);
     }
 }
 

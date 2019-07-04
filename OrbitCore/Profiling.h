@@ -22,10 +22,13 @@ inline TickType OrbitTicks()
     QueryPerformanceCounter(&ticks);
     return ticks.QuadPart;
 #else
-    return 0;
+    timespec ts;
+	clock_gettime(CLOCK_REALTIME, &ts);
+	return 1000000000ll * ts.tv_sec + ts.tv_nsec;
 #endif
 }
 
+#ifdef WIN32
 //-----------------------------------------------------------------------------
 inline double MicroSecondsFromTicks( TickType a_Start, TickType a_End )
 {
@@ -37,3 +40,16 @@ inline TickType TicksFromMicroseconds( double a_Micros )
 {
     return (TickType)(GFrequency*a_Micros*0.000001);
 }
+#else
+//-----------------------------------------------------------------------------
+inline double MicroSecondsFromTicks( TickType a_Start, TickType a_End )
+{
+    return double((a_End - a_Start))*0.001;
+}
+
+//-----------------------------------------------------------------------------
+inline TickType TicksFromMicroseconds( double a_Micros )
+{
+    return (TickType)(a_Micros*1000);
+}
+#endif

@@ -9,10 +9,22 @@
 #define PRINT                PrintDbg
 #define PRINT_VAR( var )	 PrintVar( #var, var )
 #define PRINT_VAR_INL( var ) PrintVar( #var, var, true )
-#define PRINT_FUNC           PrintFunc( __FUNCTION__ );
+#define PRINT_FUNC           PrintFunc( __FUNCTION__, __FILE__, __LINE__ )
 #define VAR_TO_STR( var )    VarToStr( #var, var )
 #define VAR_TO_CHAR( var )   VarToStr( #var, var ).c_str()
 #define VAR_TO_ANSI( var )   VarToAnsi( #var, var ).c_str()
+
+//-----------------------------------------------------------------------------
+inline void PrintVar( const char* a_VarName, const std::wstring& a_Value, bool a_SameLine = false )
+{   
+    OutputDebugStringA( a_VarName );
+    std::wstring value = std::wstring( L" = ") + a_Value;
+    OutputDebugStringW( value.c_str() );
+    if( !a_SameLine )
+    {
+        OutputDebugStringA( "\r\n" );
+    }
+}
 
 //-----------------------------------------------------------------------------
 template<class T>
@@ -25,14 +37,10 @@ inline void PrintVar( const char* a_VarName, const T& a_Value, bool a_SameLine =
 }
 
 //-----------------------------------------------------------------------------
-inline void PrintVar( const char* a_VarName, const std::wstring& a_Value, bool a_SameLine = false )
-{    
-    OutputDebugStringA( a_VarName );
-    OutputDebugStringW( std::wstring( L" = " + a_Value).c_str() );
-    if( !a_SameLine )
-    {
-        OutputDebugStringA( "\r\n" );
-    }
+inline void PrintVar( const char* a_VarName, const wchar_t* a_Value, bool a_SameLine = false )
+{
+    std::wstring value(a_Value);
+    PrintVar( a_VarName, value, a_SameLine );
 }
 
 //-----------------------------------------------------------------------------
@@ -54,9 +62,9 @@ inline std::string VarToAnsi( const char* a_VarName, const T& a_Value )
 }
 
 //-----------------------------------------------------------------------------
-inline void PrintFunc( const char* a_Function )
+inline void PrintFunc( const char* a_Function, const char* a_File, int a_Line )
 {
-    std::string func = Format( "%s TID: %u\n", a_Function, GetCurrentThreadId() );
+    std::string func = Format( "%s %s(%i) TID: %u\n", a_Function, a_File, a_Line, GetCurrentThreadId() );
     OutputDebugStringA( func.c_str() );
 }
 

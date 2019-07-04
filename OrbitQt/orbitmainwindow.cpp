@@ -370,6 +370,10 @@ void OrbitMainWindow::OnReceiveMessage( const std::wstring & a_Message )
     {
         ui->RightTabWidget->setCurrentWidget( ui->LiveTab );
     }
+    else if( StartsWith( a_Message, L"gotocapture" ) )
+    {
+        ui->MainTabWidget->setCurrentWidget( ui->CaptureTab );
+    }
     else if( StartsWith(a_Message, L"pdb:") )
     {
         if( GOrbitApp->IsLoading() )

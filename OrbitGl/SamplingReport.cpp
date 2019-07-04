@@ -13,6 +13,7 @@ SamplingReport::SamplingReport( std::shared_ptr< class SamplingProfiler > a_Samp
     m_Profiler = a_SamplingProfiler;
     m_SelectedAddress = 0;
     m_CallstackDataView = nullptr;
+    m_SelectedSortedCallstackReport = nullptr;
     FillReport();
 }
 

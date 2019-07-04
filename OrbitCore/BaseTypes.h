@@ -59,7 +59,7 @@ inline void OutputDebugStringA(const char* msg)
 
 inline void OutputDebugStringW(const wchar_t* wmsg)
 {
-    std::cout << wmsg;
+    std::wcout << wmsg;
 }
 
 #define vsnprintf_s vsnprintf

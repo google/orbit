@@ -58,7 +58,7 @@ LocalScopeTimer::LocalScopeTimer( const std::wstring & a_Msg ) : m_Millis(nullpt
     {
         tabs += L"  ";
     }
-    PRINT( Format(L"%sStarting %s...\n", tabs.c_str(), m_Msg.c_str()) );
+    PRINT( Format(L"%lsStarting %ls...\n", tabs.c_str(), m_Msg.c_str()) );
 
     ++CurrentDepthLocal;
     m_Timer.Start();
@@ -83,7 +83,7 @@ LocalScopeTimer::~LocalScopeTimer()
             tabs += L"  ";
         }
 
-        PRINT( Format( L"%s%s took %f ms.\n", tabs.c_str(), m_Msg.c_str(), m_Timer.ElapsedMillis() ) );
+        PRINT( Format( L"%ls%ls took %f ms.\n", tabs.c_str(), m_Msg.c_str(), m_Timer.ElapsedMillis() ) );
     }
 }
 

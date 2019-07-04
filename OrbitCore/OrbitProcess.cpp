@@ -19,6 +19,8 @@
 #ifdef _WIN32
 #include "SymbolUtils.h"
 #include <tlhelp32.h>
+#else
+#include "LinuxUtils.h"
 #endif
 
 //-----------------------------------------------------------------------------
@@ -109,6 +111,8 @@ void Process::ListModules()
 
 #ifdef _WIN32
     SymUtils::ListModules( m_Handle, m_Modules );
+#else
+    LinuxUtils::ListModules(m_ID, m_Modules);
 #endif
 
     for( auto & pair : m_Modules )

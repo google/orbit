@@ -87,6 +87,7 @@ public:
     static void AddSelectionReport( std::shared_ptr<SamplingProfiler> & a_SamplingProfiler );
     void GoToCode( DWORD64 a_Address );
     void GoToCallstack();
+    void GoToCapture();
     void GetDisassembly( DWORD64 a_Address, DWORD a_NumBytesBelow, DWORD a_NumBytes );
 
     // Callbacks

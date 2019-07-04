@@ -17,6 +17,7 @@
 #include <string.h>
 #include <BaseTypes.h>
 #include <stdarg.h>
+#include <memory>
 
 //-----------------------------------------------------------------------------
 inline std::string ws2s( const std::wstring& wstr )
@@ -58,7 +59,9 @@ inline std::string GetEnvVar( const char* a_Var )
         free( buf );
     }
 #else
-    var = getenv(a_Var);
+    char* env = getenv(a_Var);
+   if( env )
+       var = env;
 #endif
 
     return var;
@@ -95,27 +98,23 @@ inline void Fill( T& a_Array, U& a_Value )
 }
 
 //-----------------------------------------------------------------------------
-inline std::string Format( const char* msg, ... )
+template<typename ... Args>
+std::string Format( const char* format, Args ... args )
 {
-    va_list ap;
-    const int BUFF_SIZE = 4096;
-    char text[BUFF_SIZE] = { 0, };
-    va_start( ap, msg );
-    vsnprintf_s( text, BUFF_SIZE-1, msg, ap );
-    va_end( ap );
-    return std::string( text );
+    const size_t size = 4096;
+    char buf[size];
+    snprintf( buf, size, format, args ... );
+    return std::string( buf );
 }
 
 //-----------------------------------------------------------------------------
-inline std::wstring Format( const WCHAR* msg, ... )
+template<typename ... Args>
+std::wstring Format( const wchar_t* format, Args ... args )
 {
-    va_list ap;
-    const int BUFF_SIZE = 4096;
-    WCHAR text[BUFF_SIZE] = { 0, };
-    va_start(ap, msg);
-    _vsnwprintf_s(text, BUFF_SIZE-1, msg, ap);
-    va_end(ap);
-    return text;
+    const size_t size = 4096;
+    wchar_t buf[size];
+    swprintf( buf, size, format, args ... );
+    return std::wstring( buf );
 }
 
 //-----------------------------------------------------------------------------

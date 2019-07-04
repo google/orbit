@@ -42,6 +42,7 @@
 #include "Version.h"
 #include "curl/curl.h"
 #include "Debugger.h"
+#include "PrintVar.h"
 
 #include <thread>
 #include <cmath>
@@ -54,6 +55,8 @@
 #ifdef _WIN32
 #include "Disassembler.h"
 #include "EventTracer.h"
+#else
+#include "LinuxUtils.h"
 #endif
 
 class OrbitApp* GOrbitApp;
@@ -187,7 +190,6 @@ void OrbitApp::LoadSystrace(const std::string& a_FileName)
 
     std::shared_ptr<Systrace> systrace = std::make_shared<Systrace>(a_FileName.c_str());
 
-    Capture::GSelectedFunctionsMap.clear();
     for (Function & func : systrace->GetFunctions())
     {
         Capture::GSelectedFunctionsMap[func.m_Address] = &func;
@@ -244,14 +246,15 @@ bool OrbitApp::Init()
         ++Capture::GCapturePort;
     }
 
+#ifdef WIN32
     GTcpServer->SetCallback( Msg_MiniDump, [=](const Message & a_Msg){ GOrbitApp->OnMiniDump(a_Msg); });
     GTcpServer->Start(Capture::GCapturePort);
+#endif
 
     GParams.Load();
     GFontSize = GParams.m_FontSize;
     GOrbitApp->LoadFileMapping();
     GOrbitApp->LoadSymbolsFile();
-
     OrbitVersion::CheckForUpdate();
 
     return true;
@@ -260,6 +263,7 @@ bool OrbitApp::Init()
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit()
 {
+
 }
 
 //-----------------------------------------------------------------------------
@@ -474,7 +478,9 @@ void OrbitApp::MainTick()
 
     GMainTimer.Reset();
     Capture::Update();
+#ifdef WIN32
     GTcpServer->MainThreadTick();
+#endif
 
     if( Capture::GPresetToLoad != L"" )
     {
@@ -555,7 +561,6 @@ void OrbitApp::RegisterLiveFunctionsDataView( LiveFunctionsDataView* a_Functions
 //-----------------------------------------------------------------------------
 void OrbitApp::RegisterCallStackDataView( CallStackDataView* a_Callstack )
 {
-    PRINT_FUNC;
     assert(m_CallStackDataView == nullptr );
     m_CallStackDataView = a_Callstack;
     m_Panels.push_back(a_Callstack);
@@ -643,6 +648,12 @@ void OrbitApp::GoToCode( DWORD64 a_Address )
 void OrbitApp::GoToCallstack()
 {
     SendToUiNow( L"gotocallstack" );
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::GoToCapture()
+{
+    SendToUiNow( L"gotocapture" );
 }
 
 //-----------------------------------------------------------------------------
@@ -861,6 +872,7 @@ void OrbitApp::StartCapture()
 void OrbitApp::StopCapture()
 {
     Capture::StopCapture();
+    FireRefreshCallbacks();
 }
 
 //-----------------------------------------------------------------------------

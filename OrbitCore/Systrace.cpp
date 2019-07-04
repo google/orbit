@@ -3,6 +3,7 @@
 #include "ScopeTimer.h"
 #include "Capture.h"
 #include "Profiling.h"
+#include "LinuxUtils.h"
 #include <fstream>
 
 //-----------------------------------------------------------------------------
@@ -36,23 +37,6 @@ bool IsTraceBegin(const std::string& line)
 bool IsTraceEnd(const std::string& line)
 {
     return Contains(line, "<!-- END TRACE -->");
-}
-
-//-----------------------------------------------------------------------------
-uint64_t GetMicros(std::string timestamp)
-{
-    Replace(timestamp, ":", "");
-    std::vector<std::string> tokens = Tokenize(timestamp, ".");
-    if (tokens.size() != 2)
-    {
-        PRINT_FUNC;
-        PRINT_VAR(timestamp);
-        return 0;
-    }
-
-    uint64_t seconds = atoi(tokens[0].c_str());
-    uint64_t micros = atoi(tokens[1].c_str());
-    return seconds * 1000000 + micros;
 }
 
 //-----------------------------------------------------------------------------
@@ -145,7 +129,7 @@ Systrace::Systrace(const char* a_FilePath)
             {
                 Timer timer;
                 timer.m_TID = GetThreadId(threadName);
-                timer.m_Start = TicksFromMicroseconds(GetMicros(timestamp));
+                timer.m_Start = TicksFromMicroseconds(LinuxUtils::GetMicros(timestamp));
                 timer.m_Depth = (uint8_t)m_TimerStacks[threadName].size();
                 const std::string& function = tokens[6];
                 timer.m_FunctionAddress = ProcessFunctionName(function);
@@ -158,7 +142,7 @@ Systrace::Systrace(const char* a_FilePath)
                 if (timers.size())
                 {
                     Timer& timer = timers.back();
-                    timer.m_End = TicksFromMicroseconds(GetMicros(timestamp));
+                    timer.m_End = TicksFromMicroseconds(LinuxUtils::GetMicros(timestamp));
                     m_Timers.push_back(timer);
                     timers.pop_back();
                 }

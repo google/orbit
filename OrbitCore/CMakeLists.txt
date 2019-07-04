@@ -39,6 +39,7 @@ set(HEADERS
     FunctionStats.h
     Hashing.h
     Injection.h
+    LinuxUtils.h
     Log.h
     LogInterface.h
     MemoryTracker.h
@@ -95,6 +96,7 @@ set(SOURCES
     EventBuffer.cpp
     FunctionStats.cpp
     Injection.cpp
+    LinuxUtils.cpp
     Log.cpp
     LogInterface.cpp
     MemoryTracker.cpp

@@ -221,12 +221,42 @@ void FunctionsDataView::OnFilter( const std::wstring & a_Filter )
 {
     m_FilterTokens = Tokenize( ToLower( a_Filter ) );
 
+#ifdef WIN32
     ParallelFilter();
+#else
+    // TODO: port parallel filtering
+    std::vector<int> indices;
+    std::vector< std::wstring > tokens = Tokenize( ToLower( a_Filter ) );
+    std::vector<Function*> & functions = Capture::GTargetProcess->GetFunctions();
+    for (int i = 0; i < (int)functions.size(); ++i)
+    {
+        Function* function = functions[i];
+        std::wstring name = function->Lower() + function->m_Pdb->GetName();
+
+        bool match = true;
+
+        for( std::wstring & filterToken : tokens )
+        {
+            if ( name.find(filterToken) == std::string::npos )
+            {
+                match = false;
+                break;
+            }
+        }
+
+        if (match)
+        {
+            indices.push_back(i);
+        }
+    }
+
+    m_Indices = indices;
     
     if( m_LastSortedColumn != -1 )
     {
         OnSort(m_LastSortedColumn, false);
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------

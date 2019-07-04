@@ -15,6 +15,10 @@
 #include <memory>
 #include <map>
 
+#ifdef __linux__
+#include "LinuxUtils.h"
+#endif
+
 class Function;
 class Type;
 class Variable;
@@ -73,6 +77,10 @@ public:
     
 #ifdef _WIN32
     std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress( DWORD64 a_Address );
+#else
+    std::shared_ptr<LinuxSymbol> SymbolFromAddress( uint64_t a_Address ) { return m_Symbols[a_Address]; }
+    void AddSymbol( uint64_t a_Address, std::shared_ptr<LinuxSymbol> a_Symbol ){ m_Symbols[a_Address] = a_Symbol; }
+    bool HasSymbol( uint64_t a_Address ) const { return m_Symbols.find(a_Address) != m_Symbols.end(); }
 #endif
 
     bool LineInfoFromAddress( DWORD64 a_Address, struct LineInfo & o_LineInfo );
@@ -127,6 +135,10 @@ private:
     std::vector<std::shared_ptr<Thread> >   m_Threads;
     std::unordered_set<DWORD>               m_ThreadIds;
     std::map<DWORD, std::wstring>           m_ThreadNames;
+
+    #ifdef __linux__
+    std::map< uint64_t, std::shared_ptr<LinuxSymbol> > m_Symbols;
+    #endif
 
     // Transients
     std::vector< Function* >    m_Functions;

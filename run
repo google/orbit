@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./build.sh
+./build/OrbitQt/OrbitQt
