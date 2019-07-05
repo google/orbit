@@ -98,7 +98,10 @@ void EventTracer::Start( uint32_t a_PID )
 //-----------------------------------------------------------------------------
 void EventTracer::Stop()
 {
-    m_Perf->Stop();
+    if( m_Perf )
+    {
+        m_Perf->Stop();
+    }
     
     if( Capture::GSamplingProfiler )
     {
