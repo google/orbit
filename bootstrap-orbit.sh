@@ -5,7 +5,7 @@ sudo add-apt-repository universe
 sudo apt-get update
 sudo apt-get install -y curl build-essential libcurl4-openssl-dev unzip cmake tar
 sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxi-dev 
-sudo apt-get install -y libfreetype6-dev freeglut3-dev qt5-default
+sudo apt-get install -y libfreetype6-dev freeglut3-dev qt5-default linux-tools-common
 
 # Build vcpkg
 cd external/vcpkg
@@ -38,8 +38,8 @@ if [ ! -d build/ ]; then
 mkdir build
 fi
 cd build
-#cmake -DCMAKE_BUILD_TYPE=Debug ..
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+#cmake ..
 make
 cd OrbitQt
 ./OrbitQt
