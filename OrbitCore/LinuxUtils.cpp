@@ -38,9 +38,7 @@ std::vector<std::string> ListModules( uint32_t a_PID )
 {
     std::vector<std::string> modules;
     std::string result = ExecuteCommand( Format("lsof -p %u", a_PID).c_str() );
-    PRINT_VAR(result);
     result = ExecuteCommand( Format("cat /proc/%u/maps", a_PID).c_str() );
-    PRINT_VAR(result);
 
     std::stringstream ss(result);
     std::string line;
@@ -176,6 +174,28 @@ void PrintBuffer( void* a_Buffer, size_t a_Size )
     }
 
     std::cout << std::endl;
+}
+
+//-----------------------------------------------------------------------------
+void StreamCommandOutput(const char* a_Cmd, std::function<void(const std::string&)> a_Callback, bool* a_ExitRequested) 
+{
+    std::cout << "Starting output stream for command" << a_Cmd << std::endl;
+
+    std::array<char, 128> buffer;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(a_Cmd, "r"), pclose);
+    
+    if (!pipe) 
+    {
+        std::cout << "Could not open pipe" << std::endl;
+    }
+    
+    while ( fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr && 
+            !(*a_ExitRequested) )
+    {
+        a_Callback(buffer.data());
+    }
+    
+    std::cout << "end stream" << std::endl;
 }
 
 }
@@ -321,5 +341,28 @@ void LinuxPerf::LoadPerfData( const std::string& a_FileName )
 
     PRINT_VAR(numCallstacks);
     PRINT_FUNC;
+}
+
+//-----------------------------------------------------------------------------
+BpfTrace::BpfTrace(Callback a_Callback)
+{
+    m_Callback = a_Callback;
+}
+
+//-----------------------------------------------------------------------------
+void BpfTrace::Start()
+{
+    m_ExitRequested = false;
+    m_Thread = std::make_shared<std::thread>( &LinuxUtils::StreamCommandOutput
+                                            , "bpftrace /home/pierric/git/orbitprofiler/orbit.bt"
+                                            , m_Callback
+                                            , &m_ExitRequested );
+    m_Thread->detach();
+}
+
+//-----------------------------------------------------------------------------
+void BpfTrace::Stop()
+{
+    m_ExitRequested = true;
 }
 

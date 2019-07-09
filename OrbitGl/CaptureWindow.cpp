@@ -489,44 +489,26 @@ void CaptureWindow::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl 
     NeedsUpdate();
 }
 
-#ifdef __linux__
-//-----------------------------------------------------------------------------
-std::string exec(const char* cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
-        std::cout << "Could not open pipe" << std::endl;
-    }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        std::cout << buffer.data();
-    }
-    return result;
-}
-
-//-----------------------------------------------------------------------------
-void StreamCommandOutput(const char* a_Cmd)
-{
-    std::cout << "Starting output stream for command" << a_Cmd << std::endl;
-    exec(a_Cmd);
-    std::cout << "end stream" << std::endl;
-}
-
-std::shared_ptr<std::thread> m_BpfThread;
-//-----------------------------------------------------------------------------
-void BpfTrace()
-{
-    // TODONOW
-    m_BpfThread = std::make_shared<std::thread>(&exec, "bpftrace /home/pierric/git/orbitprofiler/orbit.bt");
-    m_BpfThread->detach();
-}
-#endif
-
 //-----------------------------------------------------------------------------
 void Trace()
 {
 #ifdef __linux__
-    BpfTrace();
+    static std::shared_ptr<BpfTrace> bpfTrace = std::make_shared<BpfTrace>([](const std::string& a_Buffer)
+        {
+            std::cout << "begin buffer" << std::endl;
+            std::cout << a_Buffer << std::endl;
+            std::cout << "end buffer" << std::endl;
+        });
+
+    if( !bpfTrace->IsRunning())
+    {
+        bpfTrace->Start();
+    }
+    else
+    {
+        bpfTrace->Stop();
+    }
+    
 #endif();
 }
 

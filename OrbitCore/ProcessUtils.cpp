@@ -18,6 +18,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdarg>
+#include <fstream>
+#include <streambuf>
 
 #define PROC_DIRECTORY "/proc/"
 #define CASE_SENSITIVE    1
@@ -173,10 +175,6 @@ void ProcessList::Refresh()
 
 #else
     m_Processes.clear();
-
-    char chrarry_CommandLinePath[100];
-    char chrarry_NameOfProcess[300];
-    char* chrptr_StringToCompare = NULL;
     pid_t pid_ProcessIdentifier = (pid_t) -1;
     struct dirent* de_DirEntity = NULL;
     DIR* dir_proc = NULL;
@@ -190,7 +188,6 @@ void ProcessList::Refresh()
 
     int count = 0;
 
-    // Loop while not NULL
     while ( (de_DirEntity = readdir(dir_proc)) )
     {
         if (de_DirEntity->d_type == DT_DIR)
@@ -198,26 +195,22 @@ void ProcessList::Refresh()
             if (IsNumeric(de_DirEntity->d_name))
             {
                 int pid = atoi(de_DirEntity->d_name);
-                strcpy(chrarry_CommandLinePath, PROC_DIRECTORY) ;
-                strcat(chrarry_CommandLinePath, de_DirEntity->d_name) ;
-                strcat(chrarry_CommandLinePath, "/cmdline") ;
-                FILE* fd_CmdLineFile = fopen (chrarry_CommandLinePath, "rt") ;  // open the file for reading text
-                if (fd_CmdLineFile)
-                {
-                    fscanf(fd_CmdLineFile, "%s", chrarry_NameOfProcess) ; // read from /proc/<NR>/cmdline
-                    fclose(fd_CmdLineFile);  // close the file prior to exiting the routine
+                std::string commandLinePath = Format("%s%s/cmdline",PROC_DIRECTORY, de_DirEntity->d_name);
 
-                    if (strrchr(chrarry_NameOfProcess, '/'))
-                        chrptr_StringToCompare = strrchr(chrarry_NameOfProcess, '/') + 1 ;
-                    else
-                        chrptr_StringToCompare = chrarry_NameOfProcess ;
+                std::ifstream inFile(commandLinePath);
+                if(!inFile.fail())
+                {
+                    std::stringstream buffer;
+                    buffer << inFile.rdbuf();
+                    inFile.close();
+                    const std::string& processName = buffer.str();
 
                     auto iter = m_ProcessesMap.find(pid);
                     std::shared_ptr<Process> process = nullptr;
                     if( iter == m_ProcessesMap.end() )
                     {
                         process = std::make_shared<Process>();
-                        process->m_FullName = s2ws( chrarry_NameOfProcess );
+                        process->m_FullName = s2ws( processName );
                         process->m_Name = Path::GetFileName(process->m_FullName);
                         process->SetID(pid);
                         m_ProcessesMap[pid] = process;
