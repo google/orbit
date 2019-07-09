@@ -212,21 +212,28 @@ void ProcessList::Refresh()
                     else
                         chrptr_StringToCompare = chrarry_NameOfProcess ;
 
-                    auto process = std::make_shared<Process>();
-                    process->m_Name = s2ws( chrarry_NameOfProcess );
-                    process->SetID(pid);
+                    auto iter = m_ProcessesMap.find(pid);
+                    std::shared_ptr<Process> process = nullptr;
+                    if( iter == m_ProcessesMap.end() )
+                    {
+                        process = std::make_shared<Process>();
+                        process->m_FullName = s2ws( chrarry_NameOfProcess );
+                        process->m_Name = Path::GetFileName(process->m_FullName);
+                        process->SetID(pid);
+                        m_ProcessesMap[pid] = process;
+                    }
+                    else
+                    {
+                        process = iter->second;
+                    }
 
                     m_Processes.push_back(process);
-                    //printf("Process name: %s\n", chrarry_NameOfProcess);
-                    //printf("Pure Process name: %s\n", chrptr_StringToCompare );
                 }
             }
         }
     }
     closedir(dir_proc) ;
 #endif
-
-    SortByCPU();
 }
 
 //-----------------------------------------------------------------------------
@@ -250,10 +257,19 @@ void ProcessList::SortByCPU()
 //-----------------------------------------------------------------------------
 void ProcessList::UpdateCpuTimes()
 {
+#ifdef WIN32
     for( std::shared_ptr< Process > & process : m_Processes )
     {
         process->UpdateCpuTime();
     }
+#else
+    std::unordered_map<uint32_t, float> processMap = LinuxUtils::GetCpuUtilization();
+    for( std::shared_ptr< Process > & process : m_Processes )
+    {
+        uint32_t pid = process->GetID();
+        process->SetCpuUsage( processMap[pid] );
+    }
+#endif
 }
 
 //-----------------------------------------------------------------------------

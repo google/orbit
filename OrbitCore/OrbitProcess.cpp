@@ -67,6 +67,8 @@ void Process::Init()
     m_Is64Bit = ProcessUtils::Is64Bit(m_Handle);
     m_IsElevated = IsElevated( m_Handle );   
     m_UpdateCpuTimer.Start();
+#else
+    m_Is64Bit = LinuxUtils::Is64Bit(m_ID);
 #endif
 }
 

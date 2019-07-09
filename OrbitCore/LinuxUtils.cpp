@@ -12,6 +12,7 @@
 #include "SamplingProfiler.h"
 #include "EventBuffer.h"
 #include "Capture.h"
+#include "ScopeTimer.h"
 #include "OrbitProcess.h"
 
 #include <unistd.h>
@@ -54,7 +55,7 @@ std::vector<std::string> ListModules( uint32_t a_PID )
 //-----------------------------------------------------------------------------
 std::string ExecuteCommand( const char* a_Cmd ) 
 {
-    std::cout << "Executing command: " << a_Cmd << std::endl;
+    //SCOPE_TIMER_LOG(L"ExecuteCommand");
     std::array<char, 128> buffer;
     std::string result;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(a_Cmd, "r"), pclose);
@@ -110,6 +111,35 @@ uint32_t GetPID(const char* a_Name)
         return (uint32_t)atoi(tokens[0].c_str());
     std::cout << "Could not find process " << a_Name;
     return 0;
+}
+
+//-----------------------------------------------------------------------------
+std::unordered_map<uint32_t, float> GetCpuUtilization()
+{
+    std::unordered_map<uint32_t, float> processMap;
+    std::string result = ExecuteCommand("top -b -n 1 | sed -n '8, 1000{s/^ *//;s/ *$//;s/  */,/gp;};1000q'");
+    std::stringstream ss(result);
+    std::string line;
+
+    while (std::getline(ss, line, '\n'))
+    {
+        auto tokens = Tokenize(line, ",");
+        if( tokens.size() > 8)
+        {
+            uint32_t pid = atoi(tokens[0].c_str());
+            float cpu = atof(tokens[8].c_str());
+            processMap[pid] = cpu;
+        }
+    }
+
+    return processMap;
+}
+
+//-----------------------------------------------------------------------------
+bool Is64Bit( uint32_t a_PID )
+{
+    std::string result = ExecuteCommand(Format("file -L /proc/%u/exe", a_PID).c_str());
+    return Contains(result, "64-bit");
 }
 
 //-----------------------------------------------------------------------------

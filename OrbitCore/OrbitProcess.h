@@ -71,6 +71,7 @@ public:
     int NumModules() const { return (int)m_Modules.size(); }
     bool GetIsRemote() const { return m_IsRemote; }
     void SetIsRemote( bool val ) { m_IsRemote = val; }
+    void SetCpuUsage( float a_Usage ) { m_CpuUsage = a_Usage; }
 
     Function* GetFunctionFromAddress( DWORD64 a_Address, bool a_IsExact = true );
     std::shared_ptr<Module> GetModuleFromAddress( DWORD64 a_Address );

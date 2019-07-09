@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 #include <thread>
+#include <unordered_map>
 
 class Module;
 
@@ -20,6 +21,8 @@ namespace LinuxUtils
     void ListModules( uint32_t a_PID, std::map< DWORD64, std::shared_ptr<Module> > & o_ModuleMap );
     uint64_t GetMicros( std::string a_TimeStamp );
     int Instructions();
+    std::unordered_map<uint32_t, float> GetCpuUtilization();
+    bool Is64Bit(uint32_t a_PID);
 }
 
 //-----------------------------------------------------------------------------
