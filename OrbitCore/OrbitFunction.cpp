@@ -65,6 +65,9 @@ const std::wstring & Function::PrettyName()
 //-----------------------------------------------------------------------------
 bool Function::Hookable()
 {
+#ifdef __linux__
+    return true;
+#else
     // Don't allow hooking in asm implemented functions (strcpy, stccat...) 
     // TODO: give this better thought.  Here is the theory:
     // Functions that loop back to first 5 bytes of instructions will explode as
@@ -78,6 +81,7 @@ bool Function::Hookable()
     CV_call_e conv = (CV_call_e)m_CallConv;
     return ( ( conv == CV_CALL_NEAR_C || CV_CALL_THISCALL ) && m_Size >= 5 )
         || ( GParams.m_AllowUnsafeHooking && m_Size == 0 );
+#endif
 }
 
 //-----------------------------------------------------------------------------

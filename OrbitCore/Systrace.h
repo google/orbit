@@ -19,7 +19,7 @@ public:
     const std::unordered_map<uint64_t, std::string>& GetStrings() const { return m_StringMap; }
     const std::string& GetFunctionName(uint64_t a_ID) const;
     const std::unordered_map<DWORD, std::string>& GetThreadNames() const { return m_ThreadNames; }
-    std::vector<Function>& GetFunctions() { return m_Functions; } // TODO: Make const
+    std::vector<Function>& GetFunctions() { return m_Functions; }
 
 
 protected:

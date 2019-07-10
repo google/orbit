@@ -30,6 +30,9 @@
 #include <sys/wait.h>
 #include <sstream>
 #include <string>
+#include <cstdlib>
+#include <memory>
+#include <cxxabi.h>
 
 namespace LinuxUtils {
 
@@ -69,6 +72,7 @@ std::string ExecuteCommand( const char* a_Cmd )
 //-----------------------------------------------------------------------------
 void ListModules( uint32_t a_PID, std::map< DWORD64, std::shared_ptr<Module> > & o_ModuleMap )
 {
+    std::map<std::string, std::shared_ptr<Module>> modules;
     std::vector<std::string> result = ListModules( a_PID );
     for( const std::string& line : result )
     {
@@ -76,26 +80,35 @@ void ListModules( uint32_t a_PID, std::map< DWORD64, std::shared_ptr<Module> > &
         if( tokens.size() == 6 )
         {
             std::string& moduleName = tokens[5];
-            //if( Contains(moduleName, ".so") )
+            
+            auto addresses = Tokenize(tokens[0], "-");
+            if( addresses.size() == 2 )
             {
-                auto addresses = Tokenize(tokens[0], "-");
-                if( addresses.size() == 2 )
-                {
-                    uint32_t start = std::stoul(addresses[0], nullptr, 16);
-                    uint32_t end = std::stoul(addresses[1], nullptr, 16);
+                auto iter = modules.find(moduleName);
+                std::shared_ptr<Module> module = 
+                    (iter == modules.end()) ? std::make_shared<Module>() : iter->second;
 
-                    std::shared_ptr<Module> module = std::make_shared<Module>();
+                uint32_t start = std::stoul(addresses[0], nullptr, 16);
+                uint32_t end = std::stoul(addresses[1], nullptr, 16);
+                
+                if( module->m_AddressStart == 0 || start < module->m_AddressStart )
                     module->m_AddressStart = start;
+                if( end > module->m_AddressEnd )
                     module->m_AddressEnd = end;
-                    module->m_FullName = s2ws(moduleName);
-                    module->m_Name = Path::GetFileName( module->m_FullName );;
-                    module->m_Directory = Path::GetDirectory( module->m_FullName );
-                    auto prettyName = module->GetPrettyName();
-                    o_ModuleMap[start] = module;
-                    
-                }
+                
+                module->m_FullName = s2ws(moduleName);
+                module->m_Name = Path::GetFileName( module->m_FullName );;
+                module->m_Directory = Path::GetDirectory( module->m_FullName );
+                auto prettyName = module->GetPrettyName();
+                modules[moduleName] = module;
             }
         }
+    }
+
+    for( auto& iter : modules )
+    {
+        auto module = iter.second;
+        o_ModuleMap[module->m_AddressStart] = module;
     }
 }
 
@@ -141,6 +154,18 @@ bool Is64Bit( uint32_t a_PID )
 }
 
 //-----------------------------------------------------------------------------
+std::string Demangle(const char* name)
+{
+    int status = 0;
+    std::unique_ptr<char, void(*)(void*)> res {
+        abi::__cxa_demangle(name, NULL, NULL, &status),
+        std::free
+    };
+
+    return (status==0) ? res.get() : name;
+}
+
+//-----------------------------------------------------------------------------
 uint64_t GetMicros( std::string a_TimeStamp )
 {
     Replace(a_TimeStamp, ":", "");
@@ -177,7 +202,7 @@ void PrintBuffer( void* a_Buffer, size_t a_Size )
 }
 
 //-----------------------------------------------------------------------------
-void StreamCommandOutput(const char* a_Cmd, std::function<void(const std::string&)> a_Callback, bool* a_ExitRequested) 
+void StreamCommandOutput(const char* a_Cmd, std::function<void(const std::string&)> a_Callback, bool* a_ExitRequested)
 {
     std::cout << "Starting output stream for command" << a_Cmd << std::endl;
 
@@ -274,8 +299,6 @@ void LinuxPerf::LoadPerfData( const std::string& a_FileName )
         return;
     }
 
-    Capture::ClearCaptureData();
-
     std::string header;
     uint32_t tid = 0;
     uint32_t depth = 0;
@@ -341,28 +364,5 @@ void LinuxPerf::LoadPerfData( const std::string& a_FileName )
 
     PRINT_VAR(numCallstacks);
     PRINT_FUNC;
-}
-
-//-----------------------------------------------------------------------------
-BpfTrace::BpfTrace(Callback a_Callback)
-{
-    m_Callback = a_Callback;
-}
-
-//-----------------------------------------------------------------------------
-void BpfTrace::Start()
-{
-    m_ExitRequested = false;
-    m_Thread = std::make_shared<std::thread>( &LinuxUtils::StreamCommandOutput
-                                            , "bpftrace /home/pierric/git/orbitprofiler/orbit.bt"
-                                            , m_Callback
-                                            , &m_ExitRequested );
-    m_Thread->detach();
-}
-
-//-----------------------------------------------------------------------------
-void BpfTrace::Stop()
-{
-    m_ExitRequested = true;
 }
 

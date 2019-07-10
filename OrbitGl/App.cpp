@@ -57,6 +57,7 @@
 #include "EventTracer.h"
 #else
 #include "LinuxUtils.h"
+#include "BpfTrace.h"
 #endif
 
 class OrbitApp* GOrbitApp;
@@ -176,6 +177,13 @@ void GetDesktopResolution(int& horizontal, int& vertical)
 void GLoadPdbAsync( const std::vector<std::wstring> & a_Modules )
 {
     GModuleManager.LoadPdbAsync( a_Modules, [](){ GOrbitApp->OnPdbLoaded(); } );
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
+{
+    GCurrentTimeGraph->ProcessTimer(*a_Timer);
+    ++Capture::GFunctionCountMap[a_Timer->m_FunctionAddress];
 }
 
 //-----------------------------------------------------------------------------
@@ -857,8 +865,16 @@ void OrbitApp::AddUiMessageCallback( std::function< void( const std::wstring & )
 //-----------------------------------------------------------------------------
 void OrbitApp::StartCapture()
 {
-    Capture::StartCapture();
+    bool captureStarted = Capture::StartCapture();
     
+#ifdef __linux__
+    if( captureStarted )
+    {
+        m_BpfTrace = std::make_shared<BpfTrace>();
+        m_BpfTrace->Start();
+    }
+#endif
+
     if( m_NeedsThawing )
     {
 #ifdef _WIN32
@@ -872,6 +888,11 @@ void OrbitApp::StartCapture()
 void OrbitApp::StopCapture()
 {
     Capture::StopCapture();
+
+#ifdef __linux__
+    m_BpfTrace->Stop();
+#endif
+
     FireRefreshCallbacks();
 }
 

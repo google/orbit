@@ -15,6 +15,7 @@
 #include "SymbolUtils.h"
 #else
 #include "LinuxUtils.h"
+#include "BpfTrace.h"
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -490,29 +491,6 @@ void CaptureWindow::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl 
 }
 
 //-----------------------------------------------------------------------------
-void Trace()
-{
-#ifdef __linux__
-    static std::shared_ptr<BpfTrace> bpfTrace = std::make_shared<BpfTrace>([](const std::string& a_Buffer)
-        {
-            std::cout << "begin buffer" << std::endl;
-            std::cout << a_Buffer << std::endl;
-            std::cout << "end buffer" << std::endl;
-        });
-
-    if( !bpfTrace->IsRunning())
-    {
-        bpfTrace->Start();
-    }
-    else
-    {
-        bpfTrace->Stop();
-    }
-    
-#endif();
-}
-
-//-----------------------------------------------------------------------------
 void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift, bool a_Alt )
 {
     UpdateSpecialKeys( a_Ctrl, a_Shift, a_Alt );
@@ -549,9 +527,6 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
 #ifdef __linux__
             ZoomAll();
 #endif
-            break;
-        case 'T':
-            Trace();
             break;
         case 'O':
             if( a_Ctrl )
@@ -831,6 +806,8 @@ void CaptureWindow::RenderUI()
 
         m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GNumProfileEvents ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GNumInstalledHooks ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GSelectedFunctionsMap.size() ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GVisibleFunctionsMap.size() ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetNumDrawnTextBoxes() ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetNumTimers() ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetThreadTotalHeight() ) );

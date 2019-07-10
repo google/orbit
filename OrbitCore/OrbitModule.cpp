@@ -88,7 +88,8 @@ ORBIT_SERIALIZE( Module, 0 )
 void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_CompletionCallback )
 {
     m_LoadingCompleteCallback = a_CompletionCallback;
-    std::string command = std::string("nm ") + ws2s(a_PdbName) + std::string(" -n -l");
+    //std::string command = std::string("nm ") + ws2s(a_PdbName) + std::string(" -n -l");
+    std::string command = std::string("bpftrace -l 'uprobe: ") + ws2s(a_PdbName) + std::string("'");
     std::string result = LinuxUtils::ExecuteCommand( command.c_str() );
 
     m_FileName = a_PdbName;
@@ -99,7 +100,23 @@ void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_Comple
     while(std::getline(ss,line,'\n'))
     {
         std::vector<std::string> tokens = Tokenize(line);
-        if( tokens.size() == 3 )
+        if( tokens.size() == 2 ) // bpftrace
+        {
+            Function func;
+            auto probeTokens = Tokenize(tokens[1], ":");
+            if( probeTokens.size() == 2 )
+            {
+                std::string demangled = LinuxUtils::Demangle(probeTokens[1].c_str());
+                func.m_Probe = tokens[1];
+                func.m_Name = s2ws(demangled);
+                func.m_PrettyName = func.m_Name;
+                func.m_Address = StringHash(func.m_Name);
+                func.m_Module = Path::GetFileName(a_PdbName);
+                func.m_Pdb = this;
+                this->AddFunction(func);
+            }
+        }
+        if( tokens.size() == 3 ) // nm
         {
             std::stringstream addrStream(tokens[0]);
             uint64_t address;

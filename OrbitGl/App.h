@@ -47,8 +47,8 @@ public:
     void OnOpenPdb(const std::wstring a_FileName);
     void OnLaunchProcess(const std::wstring a_ProcessName, const std::wstring a_WorkingDir, const std::wstring a_Args );
     void Inject(const std::wstring a_FileName);
-    void StartCapture();
-    void StopCapture();
+    virtual void StartCapture();
+    virtual void StopCapture();
     void ToggleCapture();
     void OnDisconnect();
     void OnPdbLoaded();
@@ -64,6 +64,7 @@ public:
     void ClearWatchedVariables();
     void RefreshWatch();
     virtual void Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, size_t a_Size );
+    virtual void ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName );
 
     int* GetScreenRes() { return m_ScreenRes; }
 
@@ -186,6 +187,8 @@ private:
     int m_NumTicks;
 #ifdef _WIN32
     CrashHandler       m_CrashHandler;
+#else
+    std::shared_ptr<class BpfTrace> m_BpfTrace;
 #endif
 };
 

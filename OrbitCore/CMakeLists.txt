@@ -185,8 +185,8 @@ endif()
 
 # Linux
 if(LINUX)
-    set(PLATFORM_HEADERS "")
-    set(PLATFORM_SOURCES "")
+    set(PLATFORM_HEADERS BpfTrace.h)
+    set(PLATFORM_SOURCES BpfTrace.cpp)
 	set(EXTERNAL_SOURCES "")
     set(EXTERNAL_HEADERS
         ${EXTERN_ROOT}/xxHash-r42/xxhash.h

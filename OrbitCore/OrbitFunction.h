@@ -128,6 +128,7 @@ public:
     std::wstring  m_PrettyName;
     std::string   m_PrettyNameStr;
     std::wstring  m_PrettyNameLower;
+    std::string   m_Probe;
     DWORD64       m_Address;
     ULONG         m_Size;
     std::wstring  m_Module;
