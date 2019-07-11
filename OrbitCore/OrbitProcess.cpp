@@ -264,7 +264,6 @@ std::shared_ptr<Module> Process::FindModule( const std::wstring & a_ModuleName )
 //-----------------------------------------------------------------------------
 Function* Process::GetFunctionFromAddress( DWORD64 a_Address, bool a_IsExact )
 {
-#ifdef _WIN32
     DWORD64 address = (DWORD64)a_Address;
     auto it = m_Modules.upper_bound( address );
     if( !m_Modules.empty() && it != m_Modules.begin() )
@@ -286,7 +285,6 @@ Function* Process::GetFunctionFromAddress( DWORD64 a_Address, bool a_IsExact )
             }
         }
     }
-#endif
 
     return nullptr;
 }

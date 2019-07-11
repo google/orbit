@@ -243,4 +243,33 @@ void Pdb::PopulateStringFunctionMap()
     m_IsPopulatingFunctionStringMap = false;
 }
 
+//-----------------------------------------------------------------------------
+Function* Pdb::GetFunctionFromExactAddress( DWORD64 a_Address )
+{
+    DWORD64 address = a_Address - (DWORD64)GetHModule();
+
+    if( m_FunctionMap.find(address) != m_FunctionMap.end() )
+    {
+        return m_FunctionMap[address];
+    }
+
+    return nullptr;
+}
+
+//-----------------------------------------------------------------------------
+Function* Pdb::GetFunctionFromProgramCounter( DWORD64 a_Address )
+{
+    DWORD64 address = a_Address - (DWORD64)GetHModule();
+
+    auto it = m_FunctionMap.upper_bound( address );
+    if (!m_FunctionMap.empty() && it != m_FunctionMap.begin())
+    {
+        --it;
+        Function* func = it->second;
+        return func;
+    }
+
+    return nullptr;
+}
+
 #endif
