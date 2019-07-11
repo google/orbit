@@ -49,8 +49,9 @@ std::string BpfTrace::WriteBpfScript()
         if (func->IsSelected())
         {
             Capture::GSelectedFunctionsMap[func->m_Address] = func;
-            outFile << "   uprobe:" << func->m_Probe << R"({ printf("b )" << func->m_Address << R"( %u %lld\n", tid, nsecs); })" << std::endl;
-            outFile << "uretprobe:" << func->m_Probe << R"({ printf("e )" << func->m_Address << R"( %u %lld\n", tid, nsecs); })" << std::endl;
+
+            outFile << "   uprobe:" << func->m_Probe << R"({ printf("b )" << std::to_string((uint64_t)func->GetVirtualAddress()) << R"( %u %lld\n", tid, nsecs); })" << std::endl;
+            outFile << "uretprobe:" << func->m_Probe << R"({ printf("e )" << std::to_string((uint64_t)func->GetVirtualAddress()) << R"( %u %lld\n", tid, nsecs); })" << std::endl;
         }
     }
     outFile.close();

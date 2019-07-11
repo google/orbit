@@ -890,7 +890,10 @@ void OrbitApp::StopCapture()
     Capture::StopCapture();
 
 #ifdef __linux__
-    m_BpfTrace->Stop();
+    if( m_BpfTrace )
+    {
+        m_BpfTrace->Stop();
+    }
 #endif
 
     FireRefreshCallbacks();

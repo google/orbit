@@ -15,8 +15,10 @@ libGL.so.1
 libfreetype.so.6
 libGLEW.so.2.0
 
-Hashing
-- re-enable XXH
-
 CMakeLists
 - a cleanup is required...
+
+"bpftrace -l uprobe" seems to output duplicates
+
+// Make sure application is compiled with -fno-omit-frame-pointer for meaningful callstacks
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")

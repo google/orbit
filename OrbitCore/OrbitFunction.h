@@ -141,7 +141,7 @@ public:
     std::vector<FunctionParam>     m_Params;
     std::vector<Argument>          m_ArgInfo;
     Pdb*                           m_Pdb;
-    unsigned long long             m_NameHash;
+    uint64_t                       m_NameHash;
     OrbitType                      m_OrbitType;
     std::shared_ptr<FunctionStats> m_Stats;
 

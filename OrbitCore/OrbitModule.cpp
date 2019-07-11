@@ -85,19 +85,47 @@ ORBIT_SERIALIZE( Module, 0 )
 #ifndef WIN32
 
 //-----------------------------------------------------------------------------
+Function* Pdb::FunctionFromName( const std::wstring& a_Name )
+{
+    uint64_t hash = StringHash(a_Name);
+    auto iter = m_StringFunctionMap.find(hash);
+    return (iter == m_StringFunctionMap.end()) ? nullptr : iter->second;
+}
+
+//-----------------------------------------------------------------------------
 void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_CompletionCallback )
 {
     m_LoadingCompleteCallback = a_CompletionCallback;
-    //std::string command = std::string("nm ") + ws2s(a_PdbName) + std::string(" -n -l");
-    std::string command = std::string("bpftrace -l 'uprobe: ") + ws2s(a_PdbName) + std::string("'");
-    std::string result = LinuxUtils::ExecuteCommand( command.c_str() );
-
     m_FileName = a_PdbName;
     m_Name = Path::GetFileName( m_FileName );
-
-    std::stringstream ss(result);
+    
+    // nm
+    std::string nmCommand = std::string("nm ") + ws2s(a_PdbName) + std::string(" -n -l");
+    std::string nmResult = LinuxUtils::ExecuteCommand( nmCommand.c_str() );
+    std::stringstream nmStream(nmResult);
     std::string line;
-    while(std::getline(ss,line,'\n'))
+    while(std::getline(nmStream,line,'\n'))
+    {
+        std::vector<std::string> tokens = Tokenize(line);
+        if( tokens.size() == 3 ) // nm
+        {
+            Function func;
+            func.m_Name = s2ws(tokens[2]);
+            func.m_Address = std::stoull(tokens[0], nullptr, 16);
+            func.m_PrettyName = s2ws(LinuxUtils::Demangle(tokens[2].c_str()));
+            func.m_Module = Path::GetFileName(a_PdbName);
+            func.m_Pdb = this;
+            this->AddFunction(func);
+        }
+    }
+
+    ProcessData();
+
+    // find functions that can receive bpftrace uprobes
+    std::string bpfCommand = std::string("bpftrace -l 'uprobe: ") + ws2s(a_PdbName) + std::string("'");
+    std::string bpfResult = LinuxUtils::ExecuteCommand( bpfCommand.c_str() );
+    std::stringstream bpfStream(bpfResult);
+    while(std::getline(bpfStream,line,'\n'))
     {
         std::vector<std::string> tokens = Tokenize(line);
         if( tokens.size() == 2 ) // bpftrace
@@ -106,32 +134,16 @@ void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_Comple
             auto probeTokens = Tokenize(tokens[1], ":");
             if( probeTokens.size() == 2 )
             {
-                std::string demangled = LinuxUtils::Demangle(probeTokens[1].c_str());
-                func.m_Probe = tokens[1];
-                func.m_Name = s2ws(demangled);
-                func.m_PrettyName = func.m_Name;
-                func.m_Address = StringHash(func.m_Name);
-                func.m_Module = Path::GetFileName(a_PdbName);
-                func.m_Pdb = this;
-                this->AddFunction(func);
+                std::string mangled = probeTokens[1];
+                std::wstring demangled = s2ws(LinuxUtils::Demangle(probeTokens[1].c_str()));
+                Function* func = FunctionFromName(demangled);
+                if( func && func->m_Probe.empty() )
+                {
+                    func->m_Probe = tokens[1];
+                }
             }
         }
-        if( tokens.size() == 3 ) // nm
-        {
-            std::stringstream addrStream(tokens[0]);
-            uint64_t address;
-            addrStream >> address;
-            Function func;
-            func.m_Name = s2ws(tokens[2]);
-            func.m_Address = address;
-            func.m_PrettyName = func.m_Name;
-            func.m_Module = Path::GetFileName(a_PdbName);
-            func.m_Pdb = this;
-            this->AddFunction(func);
-        }
     }
-
-    ProcessData();
     
     a_CompletionCallback();
 }
@@ -181,8 +193,7 @@ void Pdb::ProcessData()
     }
 
     PopulateFunctionMap();
-    //PopulateStringFunctionMap();
-    // TODO: parallelize: PopulateStringFunctionMap();
+    PopulateStringFunctionMap();
 }
 
 //-----------------------------------------------------------------------------
@@ -198,6 +209,38 @@ void Pdb::PopulateFunctionMap()
     }
 
     m_IsPopulatingFunctionMap = false;
+}
+
+//-----------------------------------------------------------------------------
+void Pdb::PopulateStringFunctionMap()
+{
+    m_IsPopulatingFunctionStringMap = true;
+
+    SCOPE_TIMER_LOG( Format( L"Pdb::PopulateStringFunctionMap for %s", m_FileName.c_str() ) );
+
+    {
+        SCOPE_TIMER_LOG( L"Reserving map" );
+        m_StringFunctionMap.reserve( unsigned ( 1.5f * (float)m_Functions.size() ) );
+    }
+
+    {
+        SCOPE_TIMER_LOG( L"Hash" );
+        for( Function & Function : m_Functions )
+        {
+            Function.Hash();
+        }
+    }
+
+    {
+        SCOPE_TIMER_LOG( L"Map inserts" );
+
+        for( Function & Function : m_Functions )
+        {
+            m_StringFunctionMap[Function.m_NameHash] = &Function;
+        }
+    }
+
+    m_IsPopulatingFunctionStringMap = false;
 }
 
 #endif

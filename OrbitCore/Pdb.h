@@ -177,6 +177,7 @@ public:
     Function* GetFunctionFromProgramCounter( DWORD64 a_Address );
     IDiaSymbol* SymbolFromAddress( DWORD64 a_Address );
     bool LineInfoFromAddress( DWORD64 a_Address, struct LineInfo & o_LineInfo );
+    Function* FunctionFromName( const std::wstring& a_Name );
 
     void SetLoadTime( float a_LoadTime ) { m_LastLoadTime = a_LoadTime; }
     float GetLoadTime() { return m_LastLoadTime; }
@@ -206,23 +207,22 @@ protected:
     std::atomic<bool>                   m_IsPopulatingFunctionMap;
     std::atomic<bool>                   m_IsPopulatingFunctionStringMap;
     std::function<void()>               m_LoadingCompleteCallback;
-    HMODULE                             m_MainModule;
-    float                               m_LastLoadTime;
-    bool                                m_LoadedFromCache;
+    HMODULE                             m_MainModule = 0;
+    float                               m_LastLoadTime = 0;
     std::vector< Variable >             m_WatchedVariables;
     std::set<std::string>               m_ArgumentRegisters;
     std::map<std::string, std::vector< std::string > >  m_RegFunctionsMap;
 
     // Data
-    std::wstring                        m_Name;
-    std::wstring                        m_FileName;
-    std::vector<Function>               m_Functions;
-    std::vector<Type>                   m_Types;
-    std::vector<Variable>               m_Globals;
-    std::unordered_map<ULONG, Type>     m_TypeMap;
-    std::map<DWORD64, Function*>        m_FunctionMap;
+    std::wstring                            m_Name;
+    std::wstring                            m_FileName;
+    std::vector<Function>                   m_Functions;
+    std::vector<Type>                       m_Types;
+    std::vector<Variable>                   m_Globals;
+    std::unordered_map<ULONG, Type>         m_TypeMap;
+    std::map<DWORD64, Function*>            m_FunctionMap;
     std::unordered_map<unsigned long long, Function*> m_StringFunctionMap;
-    Timer*                              m_LoadTimer;
+    Timer*                                  m_LoadTimer = nullptr;
 };
 #endif
 

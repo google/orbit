@@ -66,7 +66,7 @@ const std::wstring & Function::PrettyName()
 bool Function::Hookable()
 {
 #ifdef __linux__
-    return true;
+    return !m_Probe.empty();
 #else
     // Don't allow hooking in asm implemented functions (strcpy, stccat...) 
     // TODO: give this better thought.  Here is the theory:

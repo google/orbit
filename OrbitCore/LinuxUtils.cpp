@@ -40,8 +40,7 @@ namespace LinuxUtils {
 std::vector<std::string> ListModules( uint32_t a_PID )
 {
     std::vector<std::string> modules;
-    std::string result = ExecuteCommand( Format("lsof -p %u", a_PID).c_str() );
-    result = ExecuteCommand( Format("cat /proc/%u/maps", a_PID).c_str() );
+    std::string result = ExecuteCommand( Format("cat /proc/%u/maps", a_PID).c_str() );
 
     std::stringstream ss(result);
     std::string line;
@@ -88,8 +87,8 @@ void ListModules( uint32_t a_PID, std::map< DWORD64, std::shared_ptr<Module> > &
                 std::shared_ptr<Module> module = 
                     (iter == modules.end()) ? std::make_shared<Module>() : iter->second;
 
-                uint32_t start = std::stoul(addresses[0], nullptr, 16);
-                uint32_t end = std::stoul(addresses[1], nullptr, 16);
+                uint64_t start = std::stoull(addresses[0], nullptr, 16);
+                uint64_t end = std::stoull(addresses[1], nullptr, 16);
                 
                 if( module->m_AddressStart == 0 || start < module->m_AddressStart )
                     module->m_AddressStart = start;
@@ -324,9 +323,8 @@ void LinuxPerf::LoadPerfData( const std::string& a_FileName )
         {            
             auto tokens = Tokenize(line, " \t");
             if( tokens.size() == 3 )
-            {
-                char* pEnd = nullptr;
-                uint64_t address = strtoull (tokens[0].c_str(), &pEnd, 16);
+            {                
+                uint64_t address = std::stoull(tokens[0], nullptr, 16);
                 CS.m_Data.push_back(address);
 
                 if( Capture::GTargetProcess && !Capture::GTargetProcess->HasSymbol(address))
