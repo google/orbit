@@ -31,23 +31,7 @@
 TimeGraph* GCurrentTimeGraph = nullptr;
 
 //-----------------------------------------------------------------------------
-TimeGraph::TimeGraph() : m_NumDrawnTextBoxes(0)
-                       , m_RefTimeUs(0)
-                       , m_MinTimeUs(0)
-                       , m_MaxTimeUs(0)
-                       , m_TimeWindowUs(0)
-                       , m_WorldStartX(0)
-                       , m_WorldWidth(0)
-                       , m_SessionMinCounter(0xFFFFFFFFFFFFFFFF)
-                       , m_SessionMaxCounter(0)
-                       , m_Margin(40)
-                       , m_MainFrameCounter(0)
-                       , m_TrackAlpha(255)
-                       , m_NeedsUpdatePrimitives(false)
-                       , m_NeedsRedraw(false)
-                       , m_DrawText(true)
-                       , m_Canvas(nullptr)
-                       , m_MarginRatio(0.1)
+TimeGraph::TimeGraph()
 {
     m_LastThreadReorder.Start();
 }
@@ -251,6 +235,8 @@ void TimeGraph::ProcessTimer( const Timer & a_Timer )
         return;
     case Timer::CORE_ACTIVITY:
         Capture::GHasContextSwitches = true;
+        break;
+    default:
         break;
     }
 
@@ -750,7 +736,7 @@ void TimeGraph::SelectEvents( float a_WorldStart, float a_WorldEnd, ThreadID a_T
     std::shared_ptr<SamplingProfiler> samplingProfiler = std::make_shared<SamplingProfiler>( Capture::GTargetProcess );
     samplingProfiler->SetState( SamplingProfiler::Sampling );
 
-    samplingProfiler->SetGenerateSummary(a_TID==-1);
+    samplingProfiler->SetGenerateSummary(a_TID==0);
 
     for( CallstackEvent & event : m_SelectedCallstackEvents )
     {

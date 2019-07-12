@@ -105,6 +105,7 @@ void ProcessesDataView::OnSort(int a_Column, bool a_Toggle)
     case PDV_ProcessName: sorter = ORBIT_PROC_SORT(GetName());       break;
     case PDV_CPU: ascending = false; sorter = ORBIT_PROC_SORT(GetCpuUsage()); break;
     case PDV_Type:        sorter = ORBIT_PROC_SORT(GetIs64Bit());    break;
+    default:                                                         break;
     }
 
     if (sorter)
@@ -187,7 +188,7 @@ void ProcessesDataView::SetSelectedItem()
 	int initialIndex = m_SelectedIndex;
     m_SelectedIndex = -1;
 
-    for( int i = 0; i < GetNumElements(); ++i )
+    for( size_t i = 0; i < GetNumElements(); ++i )
     {
         if( GetProcess( i ) == m_SelectedProcess )
         {
@@ -216,7 +217,7 @@ void ProcessesDataView::ClearSelectedProcess()
 //-----------------------------------------------------------------------------
 bool ProcessesDataView::SelectProcess( const std::wstring & a_ProcessName )
 {
-	for( int i = 0; i < GetNumElements(); ++i )
+	for( size_t i = 0; i < GetNumElements(); ++i )
 	{
 		Process & process = *GetProcess(i);
 		if ( process.GetFullName().find( a_ProcessName ) != std::string::npos )
@@ -235,7 +236,7 @@ bool ProcessesDataView::SelectProcess( DWORD a_ProcessId )
 {
     Refresh();
 
-    for( int i = 0; i < GetNumElements(); ++i )
+    for( size_t i = 0; i < GetNumElements(); ++i )
     {       
         Process & process = *GetProcess( i );
         if( process.GetID() == a_ProcessId )
@@ -257,7 +258,7 @@ void ProcessesDataView::OnFilter( const std::wstring & a_Filter )
 
     std::vector< std::wstring > tokens = Tokenize( ToLower( a_Filter ) );
 
-    for (int i = 0; i < (int)processes.size(); ++i)
+    for (size_t i = 0; i < processes.size(); ++i)
     {
         const Process & process = *processes[i];
         std::wstring name = ToLower( process.GetName() );
@@ -294,7 +295,7 @@ void ProcessesDataView::UpdateProcessList()
 {
     size_t numProcesses = m_ProcessList.m_Processes.size();
     m_Indices.resize(numProcesses);
-    for (int i = 0; i < numProcesses; ++i)
+    for (size_t i = 0; i < numProcesses; ++i)
     {
         m_Indices[i] = i;
     }

@@ -96,7 +96,7 @@ void TextBox::Draw( TextRenderer & a_TextRenderer
 {
     bool isCoreActivity = m_Timer.IsType(Timer::CORE_ACTIVITY);
     bool isSameThreadIdAsSelected = isCoreActivity &&
-                                    m_Timer.m_TID == (int)Capture::GSelectedThreadId;
+                                    m_Timer.m_TID == Capture::GSelectedThreadId;
 
     if( Capture::GSelectedThreadId != 0 && isCoreActivity && !isSameThreadIdAsSelected )
     {

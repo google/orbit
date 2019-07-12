@@ -15,18 +15,18 @@ class Thread;
 //-----------------------------------------------------------------------------
 struct SampledFunction
 {
-    SampledFunction() : m_Inclusive(0), m_Exclusive(0), m_Line(0), m_Address(0), m_Hash(0), m_Function(0) {}
+    SampledFunction() {}
     unsigned long long Hash();
     bool GetSelected() const;
     std::wstring m_Name;
     std::wstring m_Module;
     std::wstring m_File;
-    float        m_Exclusive;
-    float        m_Inclusive;
-    int          m_Line;
-    DWORD64      m_Address;
-    unsigned long long m_Hash;
-    Function*   m_Function;
+    float        m_Exclusive = 0;
+    float        m_Inclusive = 0;
+    int          m_Line = 0;
+    uint64_t     m_Address = 0;
+    uint64_t     m_Hash = 0;
+    Function*    m_Function = 0;
 
     ORBIT_SERIALIZABLE;
 };
@@ -34,11 +34,11 @@ struct SampledFunction
 //-----------------------------------------------------------------------------
 struct LineInfo
 {
-    LineInfo() : m_Line(0), m_Address(0) {}
+    LineInfo() {}
     std::wstring  m_File;
-    DWORD         m_Line;
-    DWORD64       m_Address;
-    DWORD64       m_FileNameHash;
+    uint32_t      m_Line = 0;
+    uint64_t      m_Address = 0;
+    uint64_t      m_FileNameHash = 0;
 
     ORBIT_SERIALIZABLE;
 };
@@ -46,18 +46,18 @@ struct LineInfo
 //-----------------------------------------------------------------------------
 struct ThreadSampleData
 {
-    ThreadSampleData() : m_NumSamples(0), m_AverageThreadUsage(0), m_TID(0) { m_ThreadUsage.push_back(0); }
+    ThreadSampleData() { m_ThreadUsage.push_back(0); }
     void ComputeAverageThreadUsage();
     std::multimap< int, CallstackID > SortCallstacks( const std::set< CallstackID > & a_CallStacks, int & o_TotalCallStacks );
     std::unordered_map< CallstackID, unsigned int > m_CallstackCount;
     std::unordered_map< DWORD64, unsigned int >     m_AddressCount;
     std::unordered_map< DWORD64, unsigned int >     m_ExclusiveCount;
     std::multimap< unsigned int, DWORD64 >          m_AddressCountSorted;
-    unsigned int                                    m_NumSamples;
+    unsigned int                                    m_NumSamples = 0;
     std::vector< SampledFunction >                  m_SampleReport;
     std::vector< float >                            m_ThreadUsage;
-    float                                           m_AverageThreadUsage;
-    ThreadID                                        m_TID;
+    float                                           m_AverageThreadUsage = 0;
+    ThreadID                                        m_TID = 0;
     
     ORBIT_SERIALIZABLE;
 };
@@ -65,20 +65,18 @@ struct ThreadSampleData
 //-----------------------------------------------------------------------------
 struct CallstackCount
 {
-    CallstackCount() : m_Count(0){}
-    int                m_Count;
-    CallstackID        m_CallstackId;
-
+    CallstackCount() {}
+    int         m_Count = 0;
+    CallstackID m_CallstackId;
     ORBIT_SERIALIZABLE;
 };
 
 //-----------------------------------------------------------------------------
 struct SortedCallstackReport
 {
-    SortedCallstackReport() : m_NumCallStacksTotal(0){}
-    int m_NumCallStacksTotal;
+    SortedCallstackReport() {}
+    int m_NumCallStacksTotal = 0;
     std::vector< CallstackCount > m_CallStacks;
-
     ORBIT_SERIALIZABLE;
 };
 
@@ -142,12 +140,12 @@ protected:
     BlockChain<CallStack, 16*1024 > m_Callstacks;
     Timer                           m_SamplingTimer;
     Timer                           m_ThreadUsageTimer;
-    int                             m_PeriodMs;
-    float                           m_SampleTimeSeconds;
-    bool                            m_GenerateSummary;
+    int                             m_PeriodMs = 1;
+    float                           m_SampleTimeSeconds = FLT_MAX;
+    bool                            m_GenerateSummary = true;
     Mutex                           m_SymbolMutex;
-    int                             m_NumSamples;
-    bool                            m_LoadedFromFile;
+    int                             m_NumSamples = 0;
+    bool                            m_LoadedFromFile = false;
 
     std::unordered_map<ThreadID, ThreadSampleData>              m_ThreadSampleData;
     std::unordered_map<CallstackID, std::shared_ptr<CallStack>> m_UniqueCallstacks;

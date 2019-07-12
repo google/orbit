@@ -107,27 +107,27 @@ protected:
     
 private:
     TextRenderer                    m_TextRendererStatic;
-    TextRenderer*                   m_TextRenderer;
-    GlCanvas*                       m_Canvas;
+    TextRenderer*                   m_TextRenderer = nullptr;
+    GlCanvas*                       m_Canvas = nullptr;
     TextBox                         m_SceneBox;
-    int                             m_NumDrawnTextBoxes;
+    int                             m_NumDrawnTextBoxes = 0;
     
-    double                          m_RefTimeUs;
-    double                          m_MinTimeUs;
-    double                          m_MaxTimeUs;
-    TickType                        m_SessionMinCounter;
-    TickType                        m_SessionMaxCounter;
+    double                          m_RefTimeUs = 0;
+    double                          m_MinTimeUs = 0;
+    double                          m_MaxTimeUs = 0;
+    TickType                        m_SessionMinCounter = 0;
+    TickType                        m_SessionMaxCounter = 0;
     std::map< ThreadID, int >       m_ThreadDepths;
     std::map< ThreadID, uint32_t >  m_EventCount;
-    double                          m_TimeWindowUs;
-    float                           m_WorldStartX;
-    float                           m_WorldWidth;
-    int                             m_Margin;
+    double                          m_TimeWindowUs = 0;
+    float                           m_WorldStartX = 0;
+    float                           m_WorldWidth = 0;
+    int                             m_Margin = 0;
 
-    double                          m_ZoomValue;
-    double                          m_MouseRatio;
-    unsigned int                    m_MainFrameCounter;
-    unsigned char                   m_TrackAlpha;
+    double                          m_ZoomValue = 0;
+    double                          m_MouseRatio = 0;
+    unsigned int                    m_MainFrameCounter = 0;
+    unsigned char                   m_TrackAlpha = 255;
 
     TimeGraphLayout                 m_Layout;
     std::map< ThreadID, class EventTrack* > m_EventTracks; // TODO: put in ThreadTrack
@@ -138,19 +138,19 @@ private:
     std::map< ThreadID, uint32_t >  m_ThreadCountMap;
 
     std::vector< CallstackEvent >   m_SelectedCallstackEvents;
-    bool                            m_NeedsUpdatePrimitives;
-    bool                            m_DrawText;
-    bool                            m_NeedsRedraw;
+    bool                            m_NeedsUpdatePrimitives = false;
+    bool                            m_DrawText = true;
+    bool                            m_NeedsRedraw = false;
     std::vector<TextBox*>           m_VisibleTextBoxes;
     Batcher                         m_Batcher;
-    PickingManager*                 m_PickingManager;
+    PickingManager*                 m_PickingManager = nullptr;
     Timer                           m_LastThreadReorder;
     MemoryTracker                   m_MemTracker;
     std::shared_ptr<Systrace>       m_Systrace;
     
     mutable Mutex                   m_Mutex;
     ThreadTrackMap                  m_ThreadTracks;
-    double                          m_MarginRatio;
+    double                          m_MarginRatio = 0.1;
 };
 
 extern TimeGraph* GCurrentTimeGraph;

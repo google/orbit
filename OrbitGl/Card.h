@@ -18,7 +18,7 @@ class Card
 public:
     Card();
     Card( const std::string & a_Name );
-    ~Card();
+    virtual ~Card();
 
     enum CardType
     { 

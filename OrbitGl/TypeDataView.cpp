@@ -189,6 +189,7 @@ void TypesDataView::OnSort( int a_Column, bool a_Toggle )
     case Type::BASE_OFFSET:        sorter   = ORBIT_TYPE_SORT(m_BaseOffset);     break;
     case Type::MODULE:             sorter   = ORBIT_TYPE_SORT(m_Pdb->GetName()); break;
     case Type::SELECTED:           sorter   = ORBIT_TYPE_SORT(m_Selected);       break;
+    default:                                                                     break;
     }
 
     if( sorter )

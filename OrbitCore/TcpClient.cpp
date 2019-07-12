@@ -163,9 +163,9 @@ void TcpClient::OnError( const std::error_code& ec)
 //-----------------------------------------------------------------------------
 void TcpClient::DecodeMessage( Message & a_Message )
 {
+#ifdef _WIN32
     Message::Header MessageHeader = a_Message.GetHeader();
 
-#ifdef _WIN32
     switch( a_Message.GetType() )
     {
     case Msg_String:

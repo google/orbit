@@ -175,7 +175,6 @@ void ProcessList::Refresh()
 
 #else
     m_Processes.clear();
-    pid_t pid_ProcessIdentifier = (pid_t) -1;
     struct dirent* de_DirEntity = NULL;
     DIR* dir_proc = NULL;
 
@@ -185,8 +184,6 @@ void ProcessList::Refresh()
         perror("Couldn't open the " PROC_DIRECTORY " directory") ;
         return;
     }
-
-    int count = 0;
 
     while ( (de_DirEntity = readdir(dir_proc)) )
     {

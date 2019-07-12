@@ -17,7 +17,7 @@
 //-----------------------------------------------------------------------------
 struct CallstackEvent
 {
-    CallstackEvent( long long a_Time = 0, CallstackID a_Id = 0, ThreadID a_TID = 0 ) : m_Id( a_Id ), m_Time( a_Time ), m_TID( a_TID ){}
+    CallstackEvent( long long a_Time = 0, CallstackID a_Id = 0, ThreadID a_TID = 0 ) : m_Time( a_Time ), m_Id( a_Id ), m_TID( a_TID ){}
     long long   m_Time;
     CallstackID m_Id;
     ThreadID    m_TID;
@@ -36,7 +36,7 @@ public:
     void Reset(){ m_CallstackEvents.clear(); m_MinTime = LLONG_MAX; m_MaxTime = 0; }
     std::map< ThreadID, std::map< long long, CallstackEvent > > & GetCallstacks(){ return m_CallstackEvents; }
     Mutex & GetMutex(){ return m_Mutex; }
-    std::vector< CallstackEvent > GetCallstackEvents( long long a_TimeBegin, long long a_TimeEnd, ThreadID a_ThreadId = -1 );
+    std::vector< CallstackEvent > GetCallstackEvents( long long a_TimeBegin, long long a_TimeEnd, ThreadID a_ThreadId = 0 );
     long long GetMaxTime() const { return m_MaxTime; }
     long long GetMinTime() const { return m_MinTime; }
     bool HasEvent() { ScopeLock lock( m_Mutex ); return m_CallstackEvents.size() > 0; }

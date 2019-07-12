@@ -70,24 +70,7 @@ char ImGuiTextBuffer::EmptyString[1];
 #endif
 
 //-----------------------------------------------------------------------------
-OrbitApp::OrbitApp() : m_ProcessesDataView(nullptr)
-                     , m_ModulesDataView(nullptr)
-                     , m_FunctionsDataView(nullptr)
-                     , m_LiveFunctionsDataView(nullptr)
-                     , m_CallStackDataView(nullptr)
-                     , m_TypesDataView(nullptr)
-                     , m_GlobalsDataView(nullptr)
-                     , m_SessionsDataView(nullptr)
-                     , m_CaptureWindow(nullptr)
-                     , m_Log(nullptr)
-                     , m_HasPromptedForUpdate(false)
-                     , m_NumTicks(0)
-                     , m_NeedsThawing(false)
-                     , m_UnrealEnabled(true)
-                     , m_FindFileCallback(nullptr)
-                     , m_RuleEditor(nullptr)
-                     , m_SaveFileCallback(nullptr)
-                     , m_ClipboardCallback(nullptr)
+OrbitApp::OrbitApp()
 {
     m_Debugger = nullptr;
 #ifdef _WIN32
@@ -120,7 +103,6 @@ std::wstring OrbitApp::FindFile( const std::wstring & a_Caption, const std::wstr
 void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args)
 { 
     m_Arguments = a_Args;
-    bool inject = false;
 
     for( std::string arg : a_Args )
     {
@@ -150,7 +132,6 @@ void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args
                 std::string & preset = vec[1];
                 Capture::GProcessToInject = s2ws( preset );
             }
-            inject = true;
         }
     }
 }
@@ -914,7 +895,7 @@ void OrbitApp::ToggleCapture()
 //-----------------------------------------------------------------------------
 void OrbitApp::Unregister( DataView * a_Model )
 {
-    for( int i = 0; i < m_Panels.size(); ++i )
+    for( size_t i = 0; i < m_Panels.size(); ++i )
     {
         if( m_Panels[i] == a_Model )
         {

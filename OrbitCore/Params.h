@@ -33,7 +33,7 @@ public:
     int   m_MaxNumTimers;
     float m_FontSize;
     int   m_Port;
-    DWORD64 m_NumBytesAssembly;
+    uint64_t m_NumBytesAssembly;
     std::string m_DiffExe;
     std::string m_DiffArgs;
     std::vector< std::string > m_PdbHistory;

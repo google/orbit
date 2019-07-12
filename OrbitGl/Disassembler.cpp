@@ -12,12 +12,12 @@ void Disassembler::LogHex( const unsigned char *str, size_t len )
 {
     const unsigned char *c;
 
-    LOGF( "Code: " );
+    LOGF( "%s", "Code: " );
     for( c = str; c < str + len; c++ ) 
     {
         LOGF( "0x%02x ", *c & 0xff );
     }
-    LOGF( "\n" );
+    LOGF( "%s", "\n" );
 }
 
 //-----------------------------------------------------------------------------

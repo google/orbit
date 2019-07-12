@@ -17,18 +17,7 @@
 #endif
 
 //-----------------------------------------------------------------------------
-Variable::Variable() : m_Line(0)
-                     , m_Address(0)
-                     , m_Size(0)
-                     , m_TypeIndex(0)
-                     , m_UnmodifiedTypeId(0)
-                     , m_Selected(false)
-                     , m_BasicType(Invalid)
-                     , m_Pdb(0)
-                     , m_Populated(false)
-                     , m_IsParent(false)
-                     , m_Data(nullptr)
-                     , m_BaseOffset(0)
+Variable::Variable()
 {
     m_SyncTimer = new Timer();
 }
@@ -73,7 +62,7 @@ void Variable::ReceiveValue( const Message & a_Msg )
 {
     m_SyncTimer->Stop();
     ORBIT_LOGV(m_SyncTimer->ElapsedMillis());
-    if( a_Msg.m_Size != (int)m_Size )
+    if( a_Msg.m_Size != m_Size )
     {
         ORBIT_LOG( "Variable::ReceiveValue size mismatch" );
     }

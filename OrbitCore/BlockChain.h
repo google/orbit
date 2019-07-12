@@ -6,10 +6,10 @@
 #include <assert.h>
 
 //-----------------------------------------------------------------------------
-template < class T, int BlockSize > struct BlockChain;
+template < class T, uint32_t BlockSize > struct BlockChain;
 
 //-----------------------------------------------------------------------------
-template < class T, int Size > struct Block
+template < class T, uint32_t Size > struct Block
 {
     Block(BlockChain<T, Size>* a_Chain, Block<T, Size>* a_Prev)
         : m_Prev(a_Prev)
@@ -48,11 +48,11 @@ template < class T, int Size > struct Block
     Block<T, Size>*       m_Next;
     T                     m_Data[Size];
     BlockChain<T, Size>*  m_Chain;
-    std::atomic<int>      m_Size;
+    std::atomic<uint32_t> m_Size;
 };
 
 //-----------------------------------------------------------------------------
-template<class T, int BlockSize> struct BlockIterator
+template<class T, uint32_t BlockSize> struct BlockIterator
 {
     BlockIterator(Block<T, BlockSize>* a_Block) : m_Block(a_Block)
     {
@@ -89,11 +89,11 @@ template<class T, int BlockSize> struct BlockIterator
     }
 
     Block<T, BlockSize>* m_Block;
-    int m_Index;
+    uint32_t m_Index;
 };
 
 //-----------------------------------------------------------------------------
-template < class T, int BlockSize > struct BlockChain
+template < class T, uint32_t BlockSize > struct BlockChain
 {
     BlockChain() : m_NumBlocks(1), m_NumItems(0)
     {
@@ -120,15 +120,15 @@ template < class T, int BlockSize > struct BlockChain
         m_Current->Add(a_Item);
     }
 
-    void push_back( const T* a_Array, unsigned int a_Num )
+    void push_back( const T* a_Array, uint32_t a_Num )
     {
-        for( unsigned int i = 0; i < a_Num; ++i )
+        for( uint32_t i = 0; i < a_Num; ++i )
             m_Current->Add( a_Array[i] );
     }
 
-    void push_back_n( const T & a_Item, unsigned int a_Num )
+    void push_back_n( const T & a_Item, uint32_t a_Num )
     {
-        for( unsigned int i = 0; i < a_Num; ++i )
+        for( uint32_t i = 0; i < a_Num; ++i )
             m_Current->Add( a_Item );
     }
 
@@ -164,7 +164,7 @@ template < class T, int BlockSize > struct BlockChain
         m_Current = m_Root;
     }
 
-    bool keep( int a_MaxElems )
+    bool keep( uint32_t a_MaxElems )
     {
         bool hasDeleted = false;
         a_MaxElems = std::max( BlockSize + 1, a_MaxElems );
@@ -187,13 +187,13 @@ template < class T, int BlockSize > struct BlockChain
         return hasDeleted;
     }
 
-    int size() const { return m_NumItems; }
+    uint32_t size() const { return m_NumItems; }
     
-    T* SlowAt( int a_Index )
+    T* SlowAt( uint32_t a_Index )
     {
         if( a_Index < m_NumItems && a_Index >= 0 )
         {
-            int count = 1;
+            uint32_t count = 1;
             Block<T, BlockSize>* block = m_Root;
             while( count * BlockSize < a_Index && block && block->m_Next )
             {
@@ -201,7 +201,7 @@ template < class T, int BlockSize > struct BlockChain
                 ++count;
             }
 
-            int index = a_Index % BlockSize;
+            uint32_t index = a_Index % BlockSize;
             return &block->m_Data[index];
         }
 
@@ -213,7 +213,7 @@ template < class T, int BlockSize > struct BlockChain
         Block<T, BlockSize>* block = m_Root;
         while (block)
         {
-            int size = block->m_Size;
+            uint32_t size = block->m_Size;
             if (size)
             {
                 T* begin = &block->m_Data[0];
@@ -235,7 +235,7 @@ template < class T, int BlockSize > struct BlockChain
         if (block)
         {
             T* begin = &block->m_Data[0];
-            size_t index = a_Element - begin;
+            uint32_t index = a_Element - begin;
             if (index < block->m_Size - 1)
                 return &block->m_Data[++index];
             else if (block->m_Next && block->m_Next->m_Size)
@@ -250,7 +250,7 @@ template < class T, int BlockSize > struct BlockChain
         if (block)
         {
             T* begin = &block->m_Data[0];
-            size_t index = a_Element - begin;
+            uint32_t index = a_Element - begin;
             if (index > 0)
                 return &block->m_Data[--index];
             else if (block->m_Prev)
@@ -264,6 +264,6 @@ template < class T, int BlockSize > struct BlockChain
 
     Block<T, BlockSize>* m_Root;
     Block<T, BlockSize>* m_Current;
-    std::atomic<int>     m_NumBlocks;
-    std::atomic<int>     m_NumItems;
+    std::atomic<uint32_t> m_NumBlocks;
+    std::atomic<uint32_t> m_NumItems;
 };

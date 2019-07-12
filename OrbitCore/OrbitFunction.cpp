@@ -23,18 +23,7 @@
 #endif
 
 //-----------------------------------------------------------------------------
-Function::Function() 
-	: m_Address(0)
-	, m_Size(0)
-	, m_Line(0)
-	, m_ModBase(0)
-	, m_Selected(0)
-	, m_CallConv(-1)
-	, m_Id(0)
-	, m_ParentId(0)
-	, m_Pdb(nullptr)
-	, m_NameHash(0)
-	, m_OrbitType(OrbitType::NONE)
+Function::Function()
 {
     ResetStats();
 }
@@ -149,10 +138,10 @@ void Function::GetDisassembly()
     if( m_Pdb && Capture::Connect() )
     {
         Message msg( Msg_GetData );
-        ULONG64 address = (ULONG64)m_Pdb->GetHModule() + (ULONG64)m_Address;
+        uint64_t address = (uint64_t)m_Pdb->GetHModule() + m_Address;
         msg.m_Header.m_DataTransferHeader.m_Address = address;
         msg.m_Header.m_DataTransferHeader.m_Type = DataTransferHeader::Code;
-        DWORD64 size = m_Size;
+        uint64_t size = m_Size;
 
         // dll
         if( m_Size == 0 )
@@ -160,7 +149,7 @@ void Function::GetDisassembly()
             std::shared_ptr<Module> module = Capture::GTargetProcess->GetModuleFromAddress( address );
             if( module )
             {
-                DWORD64 maxSize = module->m_AddressEnd - address;
+                uint64_t maxSize = module->m_AddressEnd - address;
                 size = std::min( GParams.m_NumBytesAssembly, maxSize );
             }
         }

@@ -56,7 +56,7 @@ std::wstring FunctionsDataView::GetValue( int a_Row, int a_Column )
 {
     ScopeLock lock( Capture::GTargetProcess->GetDataMutex() );
 
-    if( a_Row >= GetNumElements() )
+    if( a_Row >= (int)GetNumElements() )
     {
         return L"";
     }
@@ -124,6 +124,7 @@ void FunctionsDataView::OnSort( int a_Column, bool a_Toggle )
     case Function::SIZE:     sorter = ORBIT_FUNC_SORT( m_Size );           break;
     case Function::SELECTED: sorter = ORBIT_FUNC_SORT( IsSelected() );     break;
     case Function::CALL_CONV:sorter = ORBIT_FUNC_SORT( m_CallConv );       break;
+    default:                                                               break;
     }
 
     if( sorter ) 
@@ -312,7 +313,7 @@ void FunctionsDataView::OnDataChanged()
 
     size_t numFunctions = Capture::GTargetProcess->GetFunctions().size();
     m_Indices.resize(numFunctions);
-    for (int i = 0; i < numFunctions; ++i)
+    for (size_t i = 0; i < numFunctions; ++i)
     {
         m_Indices[i] = i;
     }

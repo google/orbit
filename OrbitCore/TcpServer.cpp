@@ -176,6 +176,7 @@ void TcpServer::Receive( const Message & a_Message )
         std::wstring threadName((wchar_t*)a_Message.GetData());
         Capture::GTargetProcess->SetThreadName(a_Message.m_ThreadId, threadName);
         PRINT_VAR(threadName);
+        break;
     }
     default:
     {

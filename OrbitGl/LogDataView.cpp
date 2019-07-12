@@ -94,7 +94,7 @@ void LogDataView::OnDataChanged()
 {
     ScopeLock lock( m_Mutex );
     m_Indices.resize( m_Entries.size() );
-    for( int i = 0; i < m_Entries.size(); ++i )
+    for( size_t i = 0; i < m_Entries.size(); ++i )
     {
         m_Indices[i] = i;
     }
@@ -106,7 +106,7 @@ void LogDataView::OnFilter( const std::wstring & a_Filter )
     std::vector< std::string > tokens = Tokenize( ToLower( ws2s( a_Filter ) ) );
     std::vector<int> indices;
 
-    for( int i = 0; i < (int)m_Entries.size(); ++i )
+    for( size_t i = 0; i < m_Entries.size(); ++i )
     {
         const OrbitLogEntry & entry = m_Entries[i];
         std::string text = ToLower( entry.m_Text );

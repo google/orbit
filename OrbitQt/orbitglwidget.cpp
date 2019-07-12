@@ -47,8 +47,9 @@ bool OrbitGLWidget::eventFilter( QObject* /*object*/, QEvent* event )
 //-----------------------------------------------------------------------------
 void OrbitGLWidget::Initialize( GlPanel::Type a_Type, OrbitMainWindow* a_MainWindow, void* a_UserData )
 {
-    a_Type;
-    a_MainWindow;
+    UNUSED(a_Type);
+    UNUSED(a_MainWindow);
+
     m_OrbitPanel = GlPanel::Create( a_Type, a_UserData );
 
     if(a_MainWindow)
@@ -130,6 +131,8 @@ void OrbitGLWidget::messageLogged( const QOpenGLDebugMessage &msg )
     case QOpenGLDebugMessage::LowSeverity:
         error += "~~";
         break;
+    default:
+        break;
     }
 
     error += " (";
@@ -145,6 +148,7 @@ void OrbitGLWidget::messageLogged( const QOpenGLDebugMessage &msg )
         CASE( ApplicationSource );
         CASE( OtherSource );
         CASE( InvalidSource );
+        default: break;
     }
 #undef CASE
 
@@ -163,6 +167,7 @@ void OrbitGLWidget::messageLogged( const QOpenGLDebugMessage &msg )
         CASE( MarkerType );
         CASE( GroupPushType );
         CASE( GroupPopType );
+        default: break;
     }
 #undef CASE
 

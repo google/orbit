@@ -57,10 +57,11 @@ class QtPropertyPrivate
 {
 public:
     QtPropertyPrivate(QtAbstractPropertyManager *manager)
-        : m_enabled(true),
+        : m_type("unknown"),
+          m_enabled(true),
           m_modified(false),
-          m_manager(manager),
-          m_type("unknown"){}
+          m_manager(manager)
+          {}
     QtProperty *q_ptr;
 
     QSet<QtProperty *> m_parentItems;

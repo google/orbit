@@ -43,6 +43,7 @@ bool OrbitUnreal::HasFnameInfo()
 //-----------------------------------------------------------------------------
 bool OrbitUnreal::GenerateUnrealInfo()
 {
+#ifdef WIN32
     OrbitUnrealInfo info;
     info.m_GetDisplayNameEntryAddress = GOrbitUnreal.m_GetDisplayNameEntryFunc->GetVirtualAddress();
     info.m_EntryIndexOffset = m_FnameEntryType->GetOffset( L"Index" );
@@ -59,6 +60,7 @@ bool OrbitUnreal::GenerateUnrealInfo()
     }
 
     m_UnrealInfo = info;
+#endif
     return true;
 }
 

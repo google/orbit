@@ -371,7 +371,7 @@ FARPROC WINAPI Injection::GetRemoteProcAddress(HANDLE hProcess, HMODULE hModule,
     WORD* ExportOrdinalTable = NULL;
 
     /* Temporary variables not used until much later but easier
-    /* to define here than in all the the places they are used */
+       to define here than in all the the places they are used */
     CHAR TempChar;
     BOOL Done = FALSE;
 
@@ -479,8 +479,8 @@ FARPROC WINAPI Injection::GetRemoteProcAddress(HANDLE hProcess, HMODULE hModule,
     if (UseOrdinal)
     {
         /* NOTE:
-        /* Microsoft's PE/COFF specification does NOT say we need to subtract the ordinal base
-        /* from our ordinal but it seems to always give the wrong function if we don't */
+           Microsoft's PE/COFF specification does NOT say we need to subtract the ordinal base
+           from our ordinal but it seems to always give the wrong function if we don't */
 
         /* Make sure the ordinal is valid */
         if (Ordinal < ExportTable.Base || (Ordinal - ExportTable.Base) >= ExportTable.NumberOfFunctions)
@@ -605,8 +605,8 @@ FARPROC WINAPI Injection::GetRemoteProcAddress(HANDLE hProcess, HMODULE hModule,
         if (TempFunctionName.find(lpProcName) != std::string::npos)
         {
             /* NOTE:
-            /* Microsoft's PE/COFF specification says we need to subtract the ordinal base
-            /*from the value in the ordinal table but that seems to always give the wrong function */
+               Microsoft's PE/COFF specification says we need to subtract the ordinal base
+               from the value in the ordinal table but that seems to always give the wrong function */
 
             /* Check if the function is forwarded and if so get the real address*/
             if (ExportFunctionTable[ExportOrdinalTable[i]] >= ExportDirectory.VirtualAddress &&
@@ -688,8 +688,8 @@ FARPROC WINAPI Injection::GetRemoteProcAddress(HANDLE hProcess, HMODULE hModule,
                 FARPROC TempReturn;
 
                 /* NOTE:
-                /* Microsoft's PE/COFF specification says we need to subtract the ordinal base
-                /*from the value in the ordinal table but that seems to always give the wrong function */
+                   Microsoft's PE/COFF specification says we need to subtract the ordinal base
+                   from the value in the ordinal table but that seems to always give the wrong function */
                 //TempReturn = (FARPROC)(RemoteModuleBaseVA + ExportFunctionTable[ExportOrdinalTable[i] - ExportTable.Base]);
 
                 /* So we do it this way instead */

@@ -17,22 +17,20 @@
 TimerManager* GTimerManager;
 
 //-----------------------------------------------------------------------------
-TimerManager::TimerManager( bool a_IsClient )
-    : m_TimerIndex(0)
-    , m_ThreadCounter(0)
-    , m_IsFull(false)
-    , m_IsRecording(false)
-    , m_ExitRequested(false)
-    , m_FlushRequested(false)
-    , m_LockFreeQueue(65534)
-    , m_ConsumerThread(nullptr)
-    , m_NumQueuedEntries(0)
-    , m_NumQueuedMessages(0)
-    , m_NumQueuedTimers(0)
-    , m_NumTimersFromPreviousSession(0)
-    , m_NumFlushedTimers(0)
-    , m_IsClient(a_IsClient)
+TimerManager::TimerManager( bool a_IsClient ) : m_LockFreeQueue(65534), m_IsClient(a_IsClient)
 {
+    m_Paused = false;
+    m_IsFull = false;
+    m_IsRecording = false;
+    m_ExitRequested = false;
+    m_FlushRequested = false;
+    m_NumQueuedEntries = 0;
+    m_NumQueuedTimers = 0;
+    m_NumQueuedMessages = 0;
+    m_TimerIndex = 0;
+    m_NumTimersFromPreviousSession = 0;
+    m_NumFlushedTimers = 0;
+    
     InitProfiling();
 
     if( m_IsClient )

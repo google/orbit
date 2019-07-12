@@ -23,26 +23,15 @@ double GThreadUsageSamplePeriodMs = 200.0;
 
 //-----------------------------------------------------------------------------
 SamplingProfiler::SamplingProfiler( const std::shared_ptr<Process> & a_Process, bool a_ETW )
-    : m_Process(a_Process)
-    , m_PeriodMs(1)
-    , m_State(Idle)
-    , m_SampleTimeSeconds(FLT_MAX)
-    , m_GenerateSummary( true )
-    , m_NumSamples( 0 )
-    , m_LoadedFromFile( false )
 {
+    m_Process = a_Process;
+    m_State = SamplingState::Idle;
 }
 
 //-----------------------------------------------------------------------------
 SamplingProfiler::SamplingProfiler()
-    : m_Process( nullptr )
-    , m_PeriodMs( 1 )
-    , m_State( Idle )
-    , m_SampleTimeSeconds( FLT_MAX )
-    , m_GenerateSummary( true )
-    , m_NumSamples( 0 )
-    , m_LoadedFromFile( false )
 {
+    m_State = SamplingState::Idle;
 }
 
 //-----------------------------------------------------------------------------

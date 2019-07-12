@@ -44,7 +44,6 @@ public:
 public:
     AutoResetEvent          m_ConditionVariable;
 
-
     std::atomic<bool>       m_Paused;
     std::atomic<bool>       m_IsFull;
     std::atomic<bool>       m_IsRecording;
@@ -60,8 +59,8 @@ public:
     int                     m_ThreadCounter;
     LockFreeQueue<Timer>    m_LockFreeQueue;
     LockFreeQueue<Message>  m_LockFreeMessageQueue;
-    std::thread*            m_ConsumerThread;
-    bool                    m_IsClient;
+    std::thread*            m_ConsumerThread = nullptr;
+    bool                    m_IsClient = false;
 
     typedef std::function<void(Timer&)> TimerAddedCallback;
     std::vector< TimerAddedCallback > m_TimerAddedCallbacks;

@@ -104,12 +104,13 @@ void GlobalsDataView::OnSort(int a_Column, bool a_Toggle)
 
     switch (MemberID)
     {
-    case Variable::NAME:     sorter = ORBIT_FUNC_SORT(m_Name);     break;
-    case Variable::ADDRESS:  sorter = ORBIT_FUNC_SORT(m_Address);  break;
-    case Variable::TYPE:     sorter = ORBIT_FUNC_SORT(m_Type);     break;
-    case Variable::MODULE:   sorter = ORBIT_FUNC_SORT(m_Pdb->GetName());   break;
-    case Variable::FILE:     sorter = ORBIT_FUNC_SORT(m_File);     break;
-    case Variable::SELECTED: sorter = ORBIT_FUNC_SORT(m_Selected); break;
+    case Variable::NAME:     sorter = ORBIT_FUNC_SORT(m_Name);           break;
+    case Variable::ADDRESS:  sorter = ORBIT_FUNC_SORT(m_Address);        break;
+    case Variable::TYPE:     sorter = ORBIT_FUNC_SORT(m_Type);           break;
+    case Variable::MODULE:   sorter = ORBIT_FUNC_SORT(m_Pdb->GetName()); break;
+    case Variable::FILE:     sorter = ORBIT_FUNC_SORT(m_File);           break;
+    case Variable::SELECTED: sorter = ORBIT_FUNC_SORT(m_Selected);       break;
+    default:                                                             break;
     }
 
     if (sorter)
@@ -230,7 +231,7 @@ void GlobalsDataView::OnDataChanged()
 {
     size_t numGlobals = Capture::GTargetProcess->GetGlobals().size();
     m_Indices.resize(numGlobals);
-    for (int i = 0; i < numGlobals; ++i)
+    for (size_t i = 0; i < numGlobals; ++i)
     {
         m_Indices[i] = i;
     }

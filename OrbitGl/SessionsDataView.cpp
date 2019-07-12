@@ -91,6 +91,7 @@ void SessionsDataView::OnSort(int a_Column, bool a_Toggle)
     {
     case SDV_SessionName: sorter = ORBIT_SESSION_SORT(m_FileName); break;
     case SDV_ProcessName: sorter = ORBIT_SESSION_SORT(m_ProcessFullPath); break;
+    default: break;
     }
 
     if (sorter)
@@ -141,7 +142,7 @@ void SessionsDataView::OnFilter( const std::wstring & a_Filter )
 
     std::vector< std::wstring > tokens = Tokenize( ToLower( a_Filter ) );
 
-    for (int i = 0; i < (int)m_Sessions.size(); ++i)
+    for (size_t i = 0; i < m_Sessions.size(); ++i)
     {
         const Session & session = *m_Sessions[i];
         std::wstring name = Path::GetFileName( ToLower( session.m_FileName ) );
@@ -177,7 +178,7 @@ void SessionsDataView::OnFilter( const std::wstring & a_Filter )
 void SessionsDataView::OnDataChanged()
 {
     m_Indices.resize( m_Sessions.size() );
-    for( int i = 0; i < m_Sessions.size(); ++i )
+    for( size_t i = 0; i < m_Sessions.size(); ++i )
     {
         m_Indices[i] = i;
     }

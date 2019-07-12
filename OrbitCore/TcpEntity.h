@@ -45,7 +45,7 @@ class TcpEntity
 {
 public:
     TcpEntity();
-    ~TcpEntity();
+    virtual ~TcpEntity();
 
     virtual void Start();
     void Stop();

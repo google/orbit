@@ -24,9 +24,9 @@ void CallStackDataView::SetAsMainInstance()
 }
 
 //-----------------------------------------------------------------------------
-int CallStackDataView::GetNumElements()
+size_t CallStackDataView::GetNumElements()
 {
-    return (int)m_Indices.size();
+    return m_Indices.size();
 }
 
 //-----------------------------------------------------------------------------
@@ -34,7 +34,7 @@ void CallStackDataView::OnDataChanged()
 {
     size_t numFunctions = m_CallStack ? m_CallStack->m_Depth : 0;
     m_Indices.resize(numFunctions);
-    for( int i = 0; i < numFunctions; ++i )
+    for( size_t i = 0; i < numFunctions; ++i )
     {
         m_Indices[i] = i;
     }
@@ -43,7 +43,7 @@ void CallStackDataView::OnDataChanged()
 //-----------------------------------------------------------------------------
 std::wstring CallStackDataView::GetValue(int a_Row, int a_Column)
 {
-    if (a_Row >= GetNumElements())
+    if (a_Row >= (int)GetNumElements())
     {
         return L"";
     }

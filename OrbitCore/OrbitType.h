@@ -31,21 +31,8 @@ struct Parent
 class Type
 {
 public:
-    Type() : m_Id(0)
-           , m_UnmodifiedId(0)
-           , m_PointedTypeId(0)
-           , m_Selected(false)
-           , m_BaseOffset(0)
-           , m_Length(0)
-           , m_NumVariables(0)
-           , m_NumFunctions(0)
-           , m_NumBaseClasses(0)
-           , m_Pdb(nullptr)
-           , m_Hash(0)
-           , m_DiaInfoLoaded(false)
-           , m_HierarchyGenerated(false)
-    {
-    }
+    Type()
+    {}
 
     enum MemberID
     {
@@ -93,29 +80,29 @@ public:
     void GenerateHierarchy( std::map<ULONG, Parent> & a_ParentTypes, int a_Offset = 0 ) const;
     unsigned long long Hash();
 
-    ULONG                   m_Id;
-    ULONG                   m_UnmodifiedId;
-    ULONG                   m_PointedTypeId;
+    ULONG                   m_Id = 0;
+    ULONG                   m_UnmodifiedId = 0;
+    ULONG                   m_PointedTypeId = 0;
     std::wstring            m_Name;
     std::wstring            m_NameLower;
-    ULONG64                 m_Length;
-    int                     m_NumVariables;
-    int                     m_NumFunctions;
-    int                     m_NumBaseClasses;
-    bool                    m_Nested;
-    LONG                    m_BaseOffset;
+    uint64_t                m_Length = 0;
+    int                     m_NumVariables = 0;
+    int                     m_NumFunctions = 0;
+    int                     m_NumBaseClasses = 0;
+    bool                    m_Nested = false;
+    LONG                    m_BaseOffset = 0;
 
     std::vector<Function>   m_Functions;
     std::map<ULONG, Parent> m_ParentTypes;
     UdtKind                 m_Type;
-    bool                    m_Selected;
+    bool                    m_Selected = false;
 #ifdef _WIN32
     TypeInfo                m_TypeInfo;
 #endif
-    Pdb*                    m_Pdb;
-    unsigned long long      m_Hash;
-    bool                    m_DiaInfoLoaded;
-    bool                    m_HierarchyGenerated;
+    Pdb*                    m_Pdb = nullptr;
+    unsigned long long      m_Hash = 0;
+    bool                    m_DiaInfoLoaded = false;
+    bool                    m_HierarchyGenerated = false;
 
     // TODO: should not be mutable, but they are so we can lazy populate them
     mutable std::map<ULONG, Variable> m_DataMembers;     //offset, Member

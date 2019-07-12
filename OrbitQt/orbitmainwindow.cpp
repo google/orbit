@@ -36,8 +36,8 @@ extern QMenu* GContextMenu;
 
 //-----------------------------------------------------------------------------
 OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget *parent)
-    : m_App( a_App )
-    , QMainWindow(parent)
+    : QMainWindow(parent)
+    , m_App( a_App )
     , ui(new Ui::OrbitMainWindow)
     , m_Headless( false )
     , m_IsDev( false )
@@ -554,7 +554,7 @@ QPixmap QtGrab( OrbitMainWindow* a_Window )
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionToogleDevMode_toggled(bool a_Toggle)
 {
-    a_Toggle;
+    UNUSED(a_Toggle);
 }
 
 //-----------------------------------------------------------------------------
@@ -608,7 +608,7 @@ void OrbitMainWindow::on_actionEnable_Sampling_triggered( bool checked )
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionEnable_Sampling_toggled(bool arg1)
 {
-    arg1;
+    UNUSED(arg1);
 }
 
 //-----------------------------------------------------------------------------

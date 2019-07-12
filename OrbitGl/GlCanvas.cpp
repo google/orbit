@@ -373,7 +373,7 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x
 
     Capture::DisplayStats();
 
-    extern TcpServer* GTcpServer;
+    //extern TcpServer* GTcpServer;
     //TRACE_VAR( m_ScreenClickY );
     //TRACE_VAR( GTcpServer->HasConnection( Server_LocalTarget ) );
     //TRACE_VAR( GTcpServer->HasConnection( Server_RemoteTarget ) );

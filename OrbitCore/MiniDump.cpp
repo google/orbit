@@ -77,6 +77,6 @@ std::shared_ptr<Process> MiniDump::ToOrbitProcess()
 
 MiniDump::MiniDump( std::wstring a_FileName ){}
 MiniDump::~MiniDump(){}
-std::shared_ptr<Process> MiniDump::ToOrbitProcess(){}
+std::shared_ptr<Process> MiniDump::ToOrbitProcess(){ return nullptr; }
 
 #endif

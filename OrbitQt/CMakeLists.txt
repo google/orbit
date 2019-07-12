@@ -306,8 +306,15 @@ add_custom_command(TARGET OrbitQt POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ORBIT_ROOT}/OrbitQt/orbit.ico"                           $<TARGET_FILE_DIR:OrbitQt>
 )
 
-set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
-
 PrintVars(qt)
 
+endif()
+
+set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
+
+if(LINUX)
+add_custom_command(TARGET OrbitQt POST_BUILD
+    # Icon
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ORBIT_ROOT}/OrbitQt/orbit.ico"                           $<TARGET_FILE_DIR:OrbitQt>
+)
 endif()

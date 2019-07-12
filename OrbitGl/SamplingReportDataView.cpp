@@ -105,10 +105,11 @@ void SamplingReportDataView::OnSort(int a_Column, bool a_Toggle)
         case SamplingColumn::FunctionName: sorter = ORBIT_PROC_SORT(m_Name);        break;
         case SamplingColumn::Exclusive   : sorter = ORBIT_PROC_SORT(m_Exclusive);   break;
         case SamplingColumn::Inclusive   : sorter = ORBIT_PROC_SORT(m_Inclusive);   break;
-        case SamplingColumn::ModuleName      : sorter = ORBIT_PROC_SORT(m_Module);      break;
+        case SamplingColumn::ModuleName  : sorter = ORBIT_PROC_SORT(m_Module);      break;
         case SamplingColumn::SourceFile  : sorter = ORBIT_PROC_SORT(m_File);        break;
         case SamplingColumn::SourceLine  : sorter = ORBIT_PROC_SORT(m_Line);        break;
         case SamplingColumn::Address     : sorter = ORBIT_PROC_SORT(m_Address);     break;
+        default:                                                                    break;
     }
 
     if (sorter)
@@ -142,7 +143,7 @@ void SamplingReportDataView::OnContextMenu( const std::wstring & a_Action, int a
         {
             std::set< std::wstring > moduleNames;
 
-            for (int i = 0; i < a_ItemIndices.size(); ++i)
+            for (size_t i = 0; i < a_ItemIndices.size(); ++i)
             {
                 SampledFunction & sampledFunc = GetFunction(a_ItemIndices[i]);
                 moduleNames.insert(sampledFunc.m_Module);
@@ -167,7 +168,7 @@ void SamplingReportDataView::OnContextMenu( const std::wstring & a_Action, int a
 
         if( Capture::GTargetProcess )
         {
-            for( int i = 0; i < a_ItemIndices.size(); ++i )
+            for( size_t i = 0; i < a_ItemIndices.size(); ++i )
             {
                 Function* func = nullptr;
                 SampledFunction & sampledFunc = GetFunction( a_ItemIndices[i] );
@@ -190,7 +191,7 @@ void SamplingReportDataView::OnContextMenu( const std::wstring & a_Action, int a
     }
     else if( a_Action == MODULES_DIS )
     {
-        for( int i = 0; i < a_ItemIndices.size(); ++i )
+        for( size_t i = 0; i < a_ItemIndices.size(); ++i )
         {
             SampledFunction & sampledFunc = GetFunction( a_ItemIndices[i] );
             GOrbitApp->GetDisassembly( sampledFunc.m_Address, 200, 400 );
@@ -226,7 +227,7 @@ void SamplingReportDataView::SetSampledFunctions( const std::vector< SampledFunc
     
     size_t numFunctions = m_Functions.size();
     m_Indices.resize(numFunctions);
-    for (int i = 0; i < numFunctions; ++i)
+    for (size_t i = 0; i < numFunctions; ++i)
     {
         m_Indices[i] = i;
     }
@@ -251,7 +252,7 @@ void SamplingReportDataView::OnFilter(const std::wstring & a_Filter)
 
     std::vector< std::wstring > tokens = Tokenize( ToLower( a_Filter ) );
 
-    for (int i = 0; i < (int)m_Functions.size(); ++i)
+    for (size_t i = 0; i < m_Functions.size(); ++i)
     {
         SampledFunction & func = m_Functions[i];
         std::wstring name = ToLower( func.m_Name );

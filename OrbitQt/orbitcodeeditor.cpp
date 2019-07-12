@@ -314,7 +314,7 @@ bool OrbitCodeEditor::eventFilter( QObject *object, QEvent *event )
 //-----------------------------------------------------------------------------
 void OrbitCodeEditor::Find( const QString & a_String, bool a_BackWards )
 {
-    a_String;
+    UNUSED(a_String);
     find( m_FindLineEdit->text(), a_BackWards ? QTextDocument::FindBackward : QTextDocument::FindFlag() );
 }
 

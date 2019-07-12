@@ -42,7 +42,6 @@ void OrbitVersion::CheckForUpdate()
 void OrbitVersion::CheckForUpdateThread()
 {
     CURL *curl;
-    CURLcode res;
     std::string readBuffer;
 
     curl = curl_easy_init();
@@ -51,7 +50,7 @@ void OrbitVersion::CheckForUpdateThread()
         curl_easy_setopt( curl, CURLOPT_URL, "http://www.telescopp.com/update" );
         curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, WriteCallback );
         curl_easy_setopt( curl, CURLOPT_WRITEDATA, &readBuffer );
-        res = curl_easy_perform( curl );
+        curl_easy_perform( curl );
         curl_easy_cleanup( curl );
 
         // Get latest version from html, this needs to match what is on the website...

@@ -34,19 +34,6 @@ void ImmediateWindow::RenderUI()
 
     RenderSamplingUI();
     RenderProcessUI();
-    ImVec4 clear_color = ImColor(114, 144, 154);
-
-    //GLogger.GetLockedLog(Log::Viz, [&](const std::vector<std::string> & a_Entries)
-    //{
-    //    for( auto & line : a_Entries )
-    //    {
-    //        m_ImmediateWindow.AddLog(line.c_str());
-    //        //m_ImmediateWindow.AddLog("\n");
-    //    }
-
-    //    ImVec2 size((float)getWidth(), (float)getHeight());
-    //    m_ImmediateWindow.Draw("Immediate", nullptr, &size );
-    //}, true );
 
     // Rendering
     glViewport(0, 0, getWidth(), getHeight());

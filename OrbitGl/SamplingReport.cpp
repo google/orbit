@@ -112,7 +112,7 @@ std::wstring SamplingReport::GetSelectedCallstackString()
 //-----------------------------------------------------------------------------
 void SamplingReport::OnCallstackIndexChanged( int a_Index )
 {
-    if( a_Index >= 0 && a_Index < m_SelectedSortedCallstackReport->m_CallStacks.size() )
+    if( a_Index >= 0 && a_Index < (int)m_SelectedSortedCallstackReport->m_CallStacks.size() )
     {
         CallstackCount & cs = m_SelectedSortedCallstackReport->m_CallStacks[a_Index];
         m_SelectedAddressCallstackIndex = a_Index;

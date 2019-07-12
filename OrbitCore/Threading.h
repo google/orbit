@@ -9,9 +9,13 @@
 #include <autoresetevent.h>
 
 // Moodycamel's concurrent queue
-#pragma warning(push, 0)        
+#ifdef WIN32
+#pragma warning(push, 0)
+#endif
 #include <concurrentqueue.h>
+#ifdef WIN32
 #pragma warning(pop)
+#endif
 
 // HEA-L's oqpi
 #ifdef _WIN32

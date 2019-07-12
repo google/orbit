@@ -94,6 +94,7 @@ void ModulesDataView::OnSort(int a_Column, bool a_Toggle)
     case MDV_HasPdb:        sorter = ORBIT_PROC_SORT(m_FoundPdb);     break;
     case MDV_PdbSize:       sorter = ORBIT_PROC_SORT(m_PdbSize);      break;
     case MDV_Loaded:        sorter = ORBIT_PROC_SORT(m_Loaded);       break;
+    default:                                                          break;
     }
 
     if (sorter)

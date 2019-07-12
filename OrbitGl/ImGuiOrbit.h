@@ -140,10 +140,10 @@ protected:
 class LogWindow
 {
 public:
-    LogWindow() : m_Open(false), ScrollToBottom(false) {}
+    LogWindow() {}
     ImGuiTextFilter     Filter;
-    bool                ScrollToBottom;
-    bool                m_Open;
+    bool                ScrollToBottom = false;
+    bool                m_Open = false;
 
     void Draw(const char* title, const std::vector<std::string> & lines, bool* p_opened = NULL)
     {

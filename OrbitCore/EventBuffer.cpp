@@ -37,7 +37,7 @@ void EventBuffer::Print()
 //-----------------------------------------------------------------------------
 std::vector< CallstackEvent > EventBuffer::GetCallstackEvents( long long a_TimeBegin
                                                              , long long a_TimeEnd
-                                                             , ThreadID a_ThreadId /*=-1*/)
+                                                             , ThreadID a_ThreadId /*= 0*/)
 {
     std::vector< CallstackEvent > callstackEvents;
     for( auto & pair : m_CallstackEvents )
@@ -45,7 +45,7 @@ std::vector< CallstackEvent > EventBuffer::GetCallstackEvents( long long a_TimeB
         ThreadID threadID = pair.first;
         std::map< long long, CallstackEvent > & callstacks = pair.second;
 
-        if( a_ThreadId == -1 || threadID == a_ThreadId )
+        if( a_ThreadId == 0 || threadID == a_ThreadId )
         {
             for( auto it = callstacks.lower_bound( a_TimeBegin ); it != callstacks.end(); ++it )
             {

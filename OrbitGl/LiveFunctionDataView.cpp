@@ -76,7 +76,7 @@ const std::vector<float>& LiveFunctionsDataView::GetColumnHeadersRatios()
 //-----------------------------------------------------------------------------
 std::wstring LiveFunctionsDataView::GetValue( int a_Row, int a_Column )
 {
-    if( a_Row >= GetNumElements() )
+    if( a_Row >= (int)GetNumElements() )
     {
         return L"";
     }
@@ -143,6 +143,7 @@ void LiveFunctionsDataView::OnSort( int a_Column, bool a_Toggle )
     case LiveFunction::ADDRESS:  sorter = ORBIT_FUNC_SORT( m_Address );        break;
     case LiveFunction::MODULE:   sorter = ORBIT_FUNC_SORT( m_Pdb->GetName() ); break;
     case LiveFunction::SELECTED: sorter = ORBIT_FUNC_SORT( IsSelected() );     break;
+    default:                                                                   break;
     }
 
     if( sorter ) 
@@ -188,7 +189,7 @@ void LiveFunctionsDataView::OnFilter( const std::wstring & a_Filter )
 
     std::vector< std::wstring > tokens = Tokenize( ToLower( a_Filter ) );
 
-    for( int i = 0; i < (int)m_Functions.size(); ++i )
+    for( size_t i = 0; i < m_Functions.size(); ++i )
     {
         const Function* function = m_Functions[i];
         if( function )
@@ -224,7 +225,7 @@ void LiveFunctionsDataView::OnFilter( const std::wstring & a_Filter )
 
     // Filter drawn textboxes
     Capture::GVisibleFunctionsMap.clear();
-    for( int i = 0; i < m_Indices.size(); ++i )
+    for( size_t i = 0; i < m_Indices.size(); ++i )
     {
         Function & func = GetFunction(i);
         Capture::GVisibleFunctionsMap[func.GetVirtualAddress()] = &func;
@@ -238,7 +239,7 @@ void LiveFunctionsDataView::OnDataChanged()
 {
     size_t numFunctions = Capture::GFunctionCountMap.size();
     m_Indices.resize(numFunctions);
-    for (int i = 0; i < numFunctions; ++i)
+    for (size_t i = 0; i < numFunctions; ++i)
     {
         m_Indices[i] = i;
     }

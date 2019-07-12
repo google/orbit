@@ -14,7 +14,7 @@ OrbitTableModel::OrbitTableModel(DataViewType a_Type, QObject* parent)
     , m_DataView(nullptr)
     , m_AlternateRowColor(true)
 {
-    a_Type;
+    UNUSED(a_Type);
     m_DataView = std::shared_ptr<DataView>(DataView::Create(a_Type));
     
     if( a_Type == DataViewType::LOG )
@@ -131,7 +131,7 @@ void OrbitTableModel::OnFilter( const QString & a_Filter )
 //-----------------------------------------------------------------------------
 void OrbitTableModel::OnClicked( const QModelIndex & index )
 {
-    if( m_DataView->GetNumElements() > index.row() )
+    if( (int)m_DataView->GetNumElements() > index.row() )
     {
         m_DataView->OnSelect( index.row() );
     }

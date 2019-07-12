@@ -21,7 +21,7 @@
 
 // Data
 struct GLFWwindow{};
-static GLFWwindow*  g_Window = NULL;
+//static GLFWwindow*  g_Window = NULL;
 static bool         g_MousePressed[3] = { false, false, false };
 static float        g_MouseWheel = 0.0f;
 static GLuint       g_FontTexture = 0;

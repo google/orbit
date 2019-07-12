@@ -300,7 +300,6 @@ void LinuxPerf::LoadPerfData( const std::string& a_FileName )
 
     std::string header;
     uint32_t tid = 0;
-    uint32_t depth = 0;
     uint64_t time = 0;
     uint64_t numCallstacks = 0;
 

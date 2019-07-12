@@ -147,7 +147,7 @@ void DataView::CopySelection(std::vector<int>& selection)
     size_t numElements = GetNumElements();
 	for (size_t i : selection)
 	{
-		if( i >= 0 && i < numElements )
+		if( i < numElements )
 		{
 			for (size_t j = 0; j < numColumns; ++j)
 			{

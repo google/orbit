@@ -135,18 +135,19 @@ public:
     std::wstring            m_Function;
     std::wstring            m_File;
     std::wstring            m_FilterString;
-    int                     m_Line;
-    ULONG64                 m_Address;
-    ULONG                   m_Size;
-    ULONG                   m_TypeIndex;
-    ULONG                   m_UnmodifiedTypeId;
+    
+    uint64_t                m_Address = 0;
+    uint64_t                m_BaseOffset = 0;
+    uint32_t                m_Size = 0;
+    uint32_t                m_TypeIndex = 0;
+    uint32_t                m_UnmodifiedTypeId = 0;
+    int                     m_Line = 0;
     bool                    m_Selected;
     BasicType               m_BasicType;
-    class Timer*            m_SyncTimer;
-    Pdb*                    m_Pdb;
-    bool                    m_Populated;
-    bool                    m_IsParent;
-    DWORD64                 m_BaseOffset;
+    class Timer*            m_SyncTimer = nullptr;
+    Pdb*                    m_Pdb = nullptr;
+    bool                    m_Populated = false;
+    bool                    m_IsParent = false;
 
     // Hierarchy
     std::vector< std::shared_ptr<Variable> > m_Parents;

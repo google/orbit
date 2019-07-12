@@ -14,7 +14,7 @@ class CallStackDataView : public FunctionsDataView
 public:
     CallStackDataView();
     void SetAsMainInstance() override;
-    int  GetNumElements() override;
+    size_t GetNumElements() override;
     bool SortAllowed() override { return false; }
     void OnDataChanged() override;
     std::wstring GetValue( int a_Row, int a_Column ) override;

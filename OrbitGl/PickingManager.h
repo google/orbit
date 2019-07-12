@@ -53,7 +53,7 @@ struct PickingID
 class PickingManager
 {
 public:
-    PickingManager() : m_IdCounter( 0 ), m_Picked(nullptr), m_IdStart(0) {}
+    PickingManager() {}
 
     PickingID CreatePickableId( Pickable* a_Pickable );
     void ClearIds();
@@ -68,9 +68,9 @@ public:
 
 protected:
     std::vector< Pickable* > m_Pickables;
-    uint32_t                 m_IdCounter;
-    uint32_t                 m_IdStart;
+    uint32_t                 m_IdCounter = 0;
+    uint32_t                 m_IdStart = 0;
     std::unordered_map< Pickable*, uint32_t > m_PickableIdMap;
     std::unordered_map< uint32_t, Pickable* > m_IdPickableMap;
-    Pickable*                m_Picked;
+    Pickable*                m_Picked = nullptr;
 };

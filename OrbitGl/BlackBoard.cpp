@@ -96,7 +96,6 @@ void ShowExampleAppCustomRendering(bool* opened)
 
     ImGui::Separator();
     {
-        static bool adding_line = false;
         //ImGui::Text("Canvas example");
         if (ImGui::Button("Clear")) points.clear();
         /*if (points.Size >= 2) 

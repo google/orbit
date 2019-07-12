@@ -123,21 +123,21 @@ public:
 
     ORBIT_SERIALIZABLE;
 
-public:
+public: // TODO...
     std::wstring  m_Name;
     std::wstring  m_PrettyName;
-    std::string   m_PrettyNameStr;
     std::wstring  m_PrettyNameLower;
-    std::string   m_Probe;
-    DWORD64       m_Address;
-    ULONG         m_Size;
     std::wstring  m_Module;
     std::wstring  m_File;
-    int           m_Line;
-    ULONG64       m_ModBase;
-    int           m_CallConv;
-    ULONG         m_Id;
-    DWORD         m_ParentId;
+    std::string   m_PrettyNameStr;
+    std::string   m_Probe;
+    uint64_t      m_Address = 0;
+    uint64_t      m_ModBase = 0;
+    uint32_t      m_Size;
+    uint32_t      m_Id = 0;
+    uint32_t      m_ParentId = 0;
+    int           m_Line = 0;
+    int           m_CallConv = -1;
     std::vector<FunctionParam>     m_Params;
     std::vector<Argument>          m_ArgInfo;
     Pdb*                           m_Pdb;
@@ -146,5 +146,5 @@ public:
     std::shared_ptr<FunctionStats> m_Stats;
 
 protected:
-    bool     m_Selected;
+    bool     m_Selected = false;
 };

@@ -61,7 +61,7 @@ std::shared_ptr<Variable> RuleEditorWindow::GetLastVariable( const std::string &
     {
         type = m_Type;
 
-        for( int i = tokens[0] == "this" ? 1 : 0; var && type && i < tokens.size(); ++i )
+        for( size_t i = tokens[0] == "this" ? 1 : 0; var && type && i < tokens.size(); ++i )
         {
             std::wstring varName = s2ws(tokens[i]);
             std::shared_ptr<Variable> child = var->FindImmediateChild(varName);
@@ -350,11 +350,11 @@ void RuleEditorWindow::DrawPopup( ImVec2 pos, ImVec2 size, bool& isFocused )
     ImGui::Begin( "input_popup", nullptr, flags );
     ImGui::PushAllowKeyboardFocus( false );
 
-    for( int i = 0; i < m_AutoComplete.size(); i++ )
+    for( size_t i = 0; i < m_AutoComplete.size(); i++ )
     {
         // Track if we're drawing the active index so we
         // can scroll to it if it has changed
-        bool isIndexActive = m_State.m_ActiveIdx == i;
+        bool isIndexActive = (size_t)m_State.m_ActiveIdx == i;
 
         if( isIndexActive )
         {
@@ -440,7 +440,7 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size )
                                 ImGuiInputTextFlags_CallbackCompletion |
                                 ImGuiInputTextFlags_CallbackHistory;
 
-    if( ImGui::InputText( "Blah", &m_TextBuffer[0], m_TextBuffer.size(), flags, InputCallbackGlobal, this ) )
+    if( ImGui::InputText( "", &m_TextBuffer[0], m_TextBuffer.size(), flags, InputCallbackGlobal, this ) )
     {
         ImGui::SetKeyboardFocusHere( -1 );
 
@@ -450,7 +450,6 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size )
             // the popup was open and we had an 'active' item.
             // So we copy the entry to the input buffer here
             std::string entry = m_AutoComplete[m_State.m_ActiveIdx];
-            const size_t length = entry.size();
 
             ReplaceStringInPlace( entry, GetCurrentWord( m_Text ), "" );
             m_Text += entry;
@@ -477,7 +476,7 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size )
         ImGui::Text( "Type: %s\nLength: %i\nOffset:%i", typeName.c_str(), (int)m_LastVariable->m_Size, (int)m_LastVariable->m_Address );
     }
 
-    int numOptions = (int)GPluginManager.m_Plugins.size() + (int)Card::NUM_CARD_TYPES;
+    size_t numOptions = GPluginManager.m_Plugins.size() + Card::NUM_CARD_TYPES;
 
     if( m_PluginToggles.size() != numOptions )
     {
@@ -507,7 +506,7 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size )
         ImGui::Separator();
 
         // Plugins
-        for( int i = 0; i < plugins.size(); i++ )
+        for( size_t i = 0; i < plugins.size(); i++ )
         {
             ImGui::MenuItem( plugins[i]->GetName(), "", (bool*)&m_PluginToggles[Card::NUM_CARD_TYPES + i] );
         }
@@ -515,7 +514,7 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size )
         ImGui::EndPopup();
     }
 
-    for( int i = 0; i < m_PluginToggles.size(); ++i )
+    for( size_t i = 0; i < m_PluginToggles.size(); ++i )
     {
         if( i < Card::NUM_CARD_TYPES )
         {

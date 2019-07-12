@@ -18,8 +18,6 @@ Params GParams;
 //-----------------------------------------------------------------------------
 Params::Params() : m_LoadTypeInfo( true )
                  , m_SendCallStacks( true )
-                 , m_MaxNumTimers( 1000000 )
-                 , m_FontSize( 14.f )
                  , m_TrackContextSwitches(true)
                  , m_TrackSamplingEvents(true)
                  , m_UnrealSupport(true)
@@ -29,11 +27,12 @@ Params::Params() : m_LoadTypeInfo( true )
                  , m_HookOutputDebugString(false)
                  , m_FindFileAndLineInfo(true)
                  , m_AutoReleasePdb(false)
+                 , m_MaxNumTimers( 1000000 )
+                 , m_FontSize( 14.f )
                  , m_Port(1789)
-                 , m_DiffArgs("%1 %2")
                  , m_NumBytesAssembly(1024)
+                 , m_DiffArgs("%1 %2")
 {
-    
 }
 
 ORBIT_SERIALIZE( Params, 13 )

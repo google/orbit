@@ -99,47 +99,53 @@ void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_Comple
     m_FileName = a_PdbName;
     m_Name = Path::GetFileName( m_FileName );
     
-    // nm
-    std::string nmCommand = std::string("nm ") + ws2s(a_PdbName) + std::string(" -n -l");
-    std::string nmResult = LinuxUtils::ExecuteCommand( nmCommand.c_str() );
-    std::stringstream nmStream(nmResult);
-    std::string line;
-    while(std::getline(nmStream,line,'\n'))
     {
-        std::vector<std::string> tokens = Tokenize(line);
-        if( tokens.size() == 3 ) // nm
+        SCOPE_TIMER_LOG(L"nm");
+        // nm
+        std::string nmCommand = std::string("nm ") + ws2s(a_PdbName) + std::string(" -n -l");
+        std::string nmResult = LinuxUtils::ExecuteCommand( nmCommand.c_str() );
+        std::stringstream nmStream(nmResult);
+        std::string line;
+        while(std::getline(nmStream,line,'\n'))
         {
-            Function func;
-            func.m_Name = s2ws(tokens[2]);
-            func.m_Address = std::stoull(tokens[0], nullptr, 16);
-            func.m_PrettyName = s2ws(LinuxUtils::Demangle(tokens[2].c_str()));
-            func.m_Module = Path::GetFileName(a_PdbName);
-            func.m_Pdb = this;
-            this->AddFunction(func);
+            std::vector<std::string> tokens = Tokenize(line);
+            if( tokens.size() == 3 ) // nm
+            {
+                Function func;
+                func.m_Name = s2ws(tokens[2]);
+                func.m_Address = std::stoull(tokens[0], nullptr, 16);
+                func.m_PrettyName = s2ws(LinuxUtils::Demangle(tokens[2].c_str()));
+                func.m_Module = Path::GetFileName(a_PdbName);
+                func.m_Pdb = this;
+                this->AddFunction(func);
+            }
         }
     }
-
     ProcessData();
-
-    // find functions that can receive bpftrace uprobes
-    std::string bpfCommand = std::string("bpftrace -l 'uprobe: ") + ws2s(a_PdbName) + std::string("'");
-    std::string bpfResult = LinuxUtils::ExecuteCommand( bpfCommand.c_str() );
-    std::stringstream bpfStream(bpfResult);
-    while(std::getline(bpfStream,line,'\n'))
+    
     {
-        std::vector<std::string> tokens = Tokenize(line);
-        if( tokens.size() == 2 ) // bpftrace
+        SCOPE_TIMER_LOG(L"bpftrace -l");
+        // find functions that can receive bpftrace uprobes
+        std::string bpfCommand = std::string("bpftrace -l 'uprobe: ") + ws2s(a_PdbName) + std::string("'");
+        std::string bpfResult = LinuxUtils::ExecuteCommand( bpfCommand.c_str() );
+        std::stringstream bpfStream(bpfResult);
+        std::string line;
+        while(std::getline(bpfStream,line,'\n'))
         {
-            Function func;
-            auto probeTokens = Tokenize(tokens[1], ":");
-            if( probeTokens.size() == 2 )
+            std::vector<std::string> tokens = Tokenize(line);
+            if( tokens.size() == 2 ) // bpftrace
             {
-                std::string mangled = probeTokens[1];
-                std::wstring demangled = s2ws(LinuxUtils::Demangle(probeTokens[1].c_str()));
-                Function* func = FunctionFromName(demangled);
-                if( func && func->m_Probe.empty() )
+                Function func;
+                auto probeTokens = Tokenize(tokens[1], ":");
+                if( probeTokens.size() == 2 )
                 {
-                    func->m_Probe = tokens[1];
+                    std::string mangled = probeTokens[1];
+                    std::wstring demangled = s2ws(LinuxUtils::Demangle(probeTokens[1].c_str()));
+                    Function* func = FunctionFromName(demangled);
+                    if( func && func->m_Probe.empty() )
+                    {
+                        func->m_Probe = tokens[1];
+                    }
                 }
             }
         }
@@ -151,6 +157,7 @@ void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_Comple
 //-----------------------------------------------------------------------------
 void Pdb::ProcessData()
 {
+    SCOPE_TIMER_LOG( L"ProcessData" );
     ScopeLock lock( Capture::GTargetProcess->GetDataMutex() );
 
     auto & functions = Capture::GTargetProcess->GetFunctions();
@@ -201,7 +208,7 @@ void Pdb::PopulateFunctionMap()
 {
     m_IsPopulatingFunctionMap = true;
     
-    SCOPE_TIMER_LOG( Format( L"Pdb::PopulateFunctionMap for %s", m_FileName.c_str() ) );
+    SCOPE_TIMER_LOG( L"Pdb::PopulateFunctionMap" );
 
     for( Function & Function : m_Functions )
     {
@@ -216,15 +223,13 @@ void Pdb::PopulateStringFunctionMap()
 {
     m_IsPopulatingFunctionStringMap = true;
 
-    SCOPE_TIMER_LOG( Format( L"Pdb::PopulateStringFunctionMap for %s", m_FileName.c_str() ) );
-
     {
-        SCOPE_TIMER_LOG( L"Reserving map" );
+        //SCOPE_TIMER_LOG( L"Reserving map" );
         m_StringFunctionMap.reserve( unsigned ( 1.5f * (float)m_Functions.size() ) );
     }
 
     {
-        SCOPE_TIMER_LOG( L"Hash" );
+        //SCOPE_TIMER_LOG( L"Hash" );
         for( Function & Function : m_Functions )
         {
             Function.Hash();
@@ -232,7 +237,7 @@ void Pdb::PopulateStringFunctionMap()
     }
 
     {
-        SCOPE_TIMER_LOG( L"Map inserts" );
+        //SCOPE_TIMER_LOG( L"Map inserts" );
 
         for( Function & Function : m_Functions )
         {
