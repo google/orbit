@@ -133,15 +133,15 @@ public: // TODO...
     std::string   m_Probe;
     uint64_t      m_Address = 0;
     uint64_t      m_ModBase = 0;
-    uint32_t      m_Size;
+    uint32_t      m_Size = 0;
     uint32_t      m_Id = 0;
     uint32_t      m_ParentId = 0;
     int           m_Line = 0;
     int           m_CallConv = -1;
     std::vector<FunctionParam>     m_Params;
     std::vector<Argument>          m_ArgInfo;
-    Pdb*                           m_Pdb;
-    uint64_t                       m_NameHash;
+    Pdb*                           m_Pdb = nullptr;
+    uint64_t                       m_NameHash = 0;
     OrbitType                      m_OrbitType;
     std::shared_ptr<FunctionStats> m_Stats;
 
