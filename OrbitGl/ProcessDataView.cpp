@@ -188,7 +188,7 @@ void ProcessesDataView::SetSelectedItem()
 	int initialIndex = m_SelectedIndex;
     m_SelectedIndex = -1;
 
-    for( size_t i = 0; i < GetNumElements(); ++i )
+    for( uint32_t i = 0; i < (uint32_t)GetNumElements(); ++i )
     {
         if( GetProcess( i ) == m_SelectedProcess )
         {
@@ -217,7 +217,7 @@ void ProcessesDataView::ClearSelectedProcess()
 //-----------------------------------------------------------------------------
 bool ProcessesDataView::SelectProcess( const std::wstring & a_ProcessName )
 {
-	for( size_t i = 0; i < GetNumElements(); ++i )
+	for( uint32_t i = 0; i < GetNumElements(); ++i )
 	{
 		Process & process = *GetProcess(i);
 		if ( process.GetFullName().find( a_ProcessName ) != std::string::npos )
@@ -236,7 +236,7 @@ bool ProcessesDataView::SelectProcess( DWORD a_ProcessId )
 {
     Refresh();
 
-    for( size_t i = 0; i < GetNumElements(); ++i )
+    for( uint32_t i = 0; i < GetNumElements(); ++i )
     {       
         Process & process = *GetProcess( i );
         if( process.GetID() == a_ProcessId )
@@ -253,12 +253,12 @@ bool ProcessesDataView::SelectProcess( DWORD a_ProcessId )
 //-----------------------------------------------------------------------------
 void ProcessesDataView::OnFilter( const std::wstring & a_Filter )
 {
-    std::vector<int> indices;
+    std::vector<uint32_t> indices;
     const std::vector<std::shared_ptr<Process>> & processes = m_ProcessList.m_Processes;
 
     std::vector< std::wstring > tokens = Tokenize( ToLower( a_Filter ) );
 
-    for (size_t i = 0; i < processes.size(); ++i)
+    for (uint32_t i = 0; i < processes.size(); ++i)
     {
         const Process & process = *processes[i];
         std::wstring name = ToLower( process.GetName() );
@@ -295,7 +295,7 @@ void ProcessesDataView::UpdateProcessList()
 {
     size_t numProcesses = m_ProcessList.m_Processes.size();
     m_Indices.resize(numProcesses);
-    for (size_t i = 0; i < numProcesses; ++i)
+    for (uint32_t i = 0; i < numProcesses; ++i)
     {
         m_Indices[i] = i;
     }

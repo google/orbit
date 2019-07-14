@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <functional>
 
-class Module;
+struct Module;
 
 //-----------------------------------------------------------------------------
 namespace LinuxUtils
@@ -21,7 +21,6 @@ namespace LinuxUtils
     void StreamCommandOutput(const char* a_Cmd, std::function<void(const std::string&)> a_Callback, bool* a_ExitRequested);
     std::vector<std::string> ListModules( uint32_t a_PID );
     void ListModules( uint32_t a_PID, std::map< DWORD64, std::shared_ptr<Module> > & o_ModuleMap );
-    uint64_t GetMicros( std::string a_TimeStamp );
     std::unordered_map<uint32_t, float> GetCpuUtilization();
     bool Is64Bit(uint32_t a_PID);
     std::string Demangle( const char* a_Symbol );

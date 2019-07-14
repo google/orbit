@@ -129,7 +129,7 @@ Systrace::Systrace(const char* a_FilePath)
             {
                 Timer timer;
                 timer.m_TID = GetThreadId(threadName);
-                timer.m_Start = TicksFromMicroseconds(LinuxUtils::GetMicros(timestamp));
+                timer.m_Start = TicksFromMicroseconds(GetMicros(timestamp));
                 timer.m_Depth = (uint8_t)m_TimerStacks[threadName].size();
                 const std::string& function = tokens[6];
                 timer.m_FunctionAddress = ProcessFunctionName(function);
@@ -142,7 +142,7 @@ Systrace::Systrace(const char* a_FilePath)
                 if (timers.size())
                 {
                     Timer& timer = timers.back();
-                    timer.m_End = TicksFromMicroseconds(LinuxUtils::GetMicros(timestamp));
+                    timer.m_End = TicksFromMicroseconds(GetMicros(timestamp));
                     m_Timers.push_back(timer);
                     timers.pop_back();
                 }

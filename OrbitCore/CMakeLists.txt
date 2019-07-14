@@ -39,7 +39,6 @@ set(HEADERS
     FunctionStats.h
     Hashing.h
     Injection.h
-    LinuxUtils.h
     Log.h
     LogInterface.h
     MemoryTracker.h
@@ -96,7 +95,6 @@ set(SOURCES
     EventBuffer.cpp
     FunctionStats.cpp
     Injection.cpp
-    LinuxUtils.cpp
     Log.cpp
     LogInterface.cpp
     MemoryTracker.cpp
@@ -185,8 +183,14 @@ endif()
 
 # Linux
 if(LINUX)
-    set(PLATFORM_HEADERS BpfTrace.h)
-    set(PLATFORM_SOURCES BpfTrace.cpp)
+    set(PLATFORM_HEADERS 
+        BpfTrace.h
+        LinuxUtils.h
+    )
+    set(PLATFORM_SOURCES 
+        BpfTrace.cpp
+        LinuxUtils.cpp
+    )
 	set(EXTERNAL_SOURCES "")
     set(EXTERNAL_HEADERS
         ${EXTERN_ROOT}/xxHash-r42/xxhash.h

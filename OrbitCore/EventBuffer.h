@@ -40,7 +40,10 @@ public:
     long long GetMaxTime() const { return m_MaxTime; }
     long long GetMinTime() const { return m_MinTime; }
     bool HasEvent() { ScopeLock lock( m_Mutex ); return m_CallstackEvents.size() > 0; }
+
+#ifdef __linux__
     size_t GetNumEvents() const;
+#endif
 
     //-----------------------------------------------------------------------------
     void RegisterTime( long long a_Time )

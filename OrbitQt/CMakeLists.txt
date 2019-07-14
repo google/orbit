@@ -19,7 +19,7 @@ if(UNIX AND NOT APPLE)
 endif()
 
 # OrbitQt
-set(MSVC_INCREMENTAL_DEFAULT ON)
+set(MSVC_INCREMENTAL_DEFAULT ON 
 project(OrbitQt)
 
 # Disable incremental linking as it hides the real address of functions.  

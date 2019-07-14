@@ -227,7 +227,7 @@ void SamplingReportDataView::SetSampledFunctions( const std::vector< SampledFunc
     
     size_t numFunctions = m_Functions.size();
     m_Indices.resize(numFunctions);
-    for (size_t i = 0; i < numFunctions; ++i)
+    for (uint32_t i = 0; i < numFunctions; ++i)
     {
         m_Indices[i] = i;
     }
@@ -248,11 +248,11 @@ void SamplingReportDataView::SetThreadID( ThreadID a_TID )
 //-----------------------------------------------------------------------------
 void SamplingReportDataView::OnFilter(const std::wstring & a_Filter)
 {
-    std::vector<int> indices;
+    std::vector<uint32_t> indices;
 
     std::vector< std::wstring > tokens = Tokenize( ToLower( a_Filter ) );
 
-    for (size_t i = 0; i < m_Functions.size(); ++i)
+    for (uint32_t i = 0; i < m_Functions.size(); ++i)
     {
         SampledFunction & func = m_Functions[i];
         std::wstring name = ToLower( func.m_Name );

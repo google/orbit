@@ -357,6 +357,21 @@ inline LONGLONG FileTimeDiffInMillis( const FILETIME & a_T0, const FILETIME & a_
 }
 
 //-----------------------------------------------------------------------------
+inline uint64_t GetMicros(std::string a_TimeStamp)
+{
+    Replace(a_TimeStamp, ":", "");
+    std::vector<std::string> tokens = Tokenize(a_TimeStamp, ".");
+    if (tokens.size() != 2)
+    {
+        return 0;
+    }
+
+    uint64_t seconds = atoi(tokens[0].c_str());
+    uint64_t micros = atoi(tokens[1].c_str());
+    return seconds * 1000000 + micros;
+}
+
+//-----------------------------------------------------------------------------
 class CWindowsMessageToString
 {
 public:

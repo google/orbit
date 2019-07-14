@@ -9,6 +9,7 @@
 #include "TcpServer.h"
 #include "TimerManager.h"
 #include "PluginManager.h"
+#include "EventTracer.h"
 #include "../OrbitPlugin/OrbitSDK.h"
 
 #ifdef _WIN32
@@ -811,9 +812,6 @@ void CaptureWindow::RenderUI()
         m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetNumDrawnTextBoxes() ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetNumTimers() ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( m_TimeGraph.GetThreadTotalHeight() ) );
-        
-        m_StatsWindow.AddLine( VAR_TO_ANSI( GEventTracer.GetEventBuffer().GetCallstacks().size() ) );
-        m_StatsWindow.AddLine( VAR_TO_ANSI( GEventTracer.GetEventBuffer().GetNumEvents() ) );
 
 #ifdef WIN32
         for( std::string & line : GTcpServer->GetStats() )
@@ -823,6 +821,9 @@ void CaptureWindow::RenderUI()
 
         bool hasConnection = GTcpServer->HasConnection();
         m_StatsWindow.AddLine( VAR_TO_ANSI( hasConnection ) );
+#else
+        m_StatsWindow.AddLine(VAR_TO_ANSI(GEventTracer.GetEventBuffer().GetCallstacks().size()));
+        m_StatsWindow.AddLine(VAR_TO_ANSI(GEventTracer.GetEventBuffer().GetNumEvents()));
 #endif
 
         m_StatsWindow.Draw( "Capture Stats", &m_DrawStats );

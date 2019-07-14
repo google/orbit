@@ -231,7 +231,7 @@ void GlobalsDataView::OnDataChanged()
 {
     size_t numGlobals = Capture::GTargetProcess->GetGlobals().size();
     m_Indices.resize(numGlobals);
-    for (size_t i = 0; i < numGlobals; ++i)
+    for (uint32_t i = 0; i < numGlobals; ++i)
     {
         m_Indices[i] = i;
     }

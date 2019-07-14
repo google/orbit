@@ -316,11 +316,13 @@ std::shared_ptr<Module> Process::GetModuleFromName( const std::wstring& a_Name )
     return nullptr;
 }
 
+#ifdef __linux__
 //-----------------------------------------------------------------------------
 void Process::AddSymbol( uint64_t a_Address, std::shared_ptr<LinuxSymbol> a_Symbol )
 { 
     m_Symbols[a_Address] = a_Symbol; 
 }
+#endif
 
 #ifdef _WIN32
 //-----------------------------------------------------------------------------
@@ -332,8 +334,6 @@ std::shared_ptr<OrbitDiaSymbol> Process::SymbolFromAddress( DWORD64 a_Address )
         return module->m_Pdb->SymbolFromAddress( a_Address );
     }
     return std::make_shared<OrbitDiaSymbol>();
-
-return nullptr;
 }
 #endif
 

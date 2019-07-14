@@ -350,7 +350,7 @@ void RuleEditorWindow::DrawPopup( ImVec2 pos, ImVec2 size, bool& isFocused )
     ImGui::Begin( "input_popup", nullptr, flags );
     ImGui::PushAllowKeyboardFocus( false );
 
-    for( size_t i = 0; i < m_AutoComplete.size(); i++ )
+    for( uint32_t i = 0; i < m_AutoComplete.size(); i++ )
     {
         // Track if we're drawing the active index so we
         // can scroll to it if it has changed
@@ -514,7 +514,7 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size )
         ImGui::EndPopup();
     }
 
-    for( size_t i = 0; i < m_PluginToggles.size(); ++i )
+    for( uint32_t i = 0; i < m_PluginToggles.size(); ++i )
     {
         if( i < Card::NUM_CARD_TYPES )
         {

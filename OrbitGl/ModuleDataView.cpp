@@ -177,7 +177,7 @@ void ModulesDataView::OnTimer()
 //-----------------------------------------------------------------------------
 void ModulesDataView::OnFilter(const std::wstring & a_Filter)
 {
-    std::vector<int> indices;
+    std::vector<uint32_t> indices;
     std::vector< std::wstring > tokens = Tokenize( ToLower( a_Filter ) );
 
     for (int i = 0; i < (int)m_Modules.size(); ++i)

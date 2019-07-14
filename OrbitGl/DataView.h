@@ -53,12 +53,12 @@ public:
     
 
 protected:
-    std::vector<int>  m_Indices;
-    std::vector<bool> m_SortingToggles;
-    int               m_LastSortedColumn;
-    std::wstring      m_Filter;
-    int               m_UpdatePeriodMs;
-    int               m_SelectedIndex;
-    DataViewType      m_Type;
+    std::vector<uint32_t> m_Indices;
+    std::vector<bool>     m_SortingToggles;
+    int                   m_LastSortedColumn;
+    std::wstring          m_Filter;
+    int                   m_UpdatePeriodMs;
+    int                   m_SelectedIndex;
+    DataViewType          m_Type;
 };
 

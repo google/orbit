@@ -313,7 +313,7 @@ void FunctionsDataView::OnDataChanged()
 
     size_t numFunctions = Capture::GTargetProcess->GetFunctions().size();
     m_Indices.resize(numFunctions);
-    for (size_t i = 0; i < numFunctions; ++i)
+    for (uint32_t i = 0; i < numFunctions; ++i)
     {
         m_Indices[i] = i;
     }

@@ -165,23 +165,6 @@ std::string Demangle(const char* name)
 }
 
 //-----------------------------------------------------------------------------
-uint64_t GetMicros( std::string a_TimeStamp )
-{
-    Replace(a_TimeStamp, ":", "");
-    std::vector<std::string> tokens = Tokenize(a_TimeStamp, ".");
-    if (tokens.size() != 2)
-    {
-        PRINT_FUNC;
-        PRINT_VAR(a_TimeStamp);
-        return 0;
-    }
-
-    uint64_t seconds = atoi(tokens[0].c_str());
-    uint64_t micros = atoi(tokens[1].c_str());
-    return seconds * 1000000 + micros;
-}
-
-//-----------------------------------------------------------------------------
 void PrintBuffer( void* a_Buffer, size_t a_Size )
 {
     unsigned char* buffer = (unsigned char*) a_Buffer;
@@ -315,7 +298,7 @@ void LinuxPerf::LoadPerfData( const std::string& a_FileName )
         {
             header = line;
             auto tokens = Tokenize(line);
-            time = tokens.size() > 2 ? LinuxUtils::GetMicros(tokens[2])*1000 : 0;
+            time = tokens.size() > 2 ? GetMicros(tokens[2])*1000 : 0;
             tid  = tokens.size() > 1 ? atoi(tokens[1].c_str()) : 0;
         }
         else if(isStackLine)

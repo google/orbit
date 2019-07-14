@@ -194,12 +194,14 @@ bool OrbitMainWindow::HideTab( QTabWidget* a_TabWidget, const char* a_TabName )
 std::wstring OrbitMainWindow::FindFile( const std::wstring & a_Caption, const std::wstring & a_Dir, const std::wstring & a_Filter )
 {
     QStringList list = QFileDialog::getOpenFileNames( this, ws2s(a_Caption).c_str(), ws2s(a_Dir).c_str(), ws2s(a_Filter).c_str() );
+    std::wstring result;
     for( auto & file : list )
     {
-        return file.toStdWString();
+        result = file.toStdWString();
+        break;
     }
 
-    return L"";
+    return result;
 }
 
 //-----------------------------------------------------------------------------

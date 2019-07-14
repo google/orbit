@@ -34,7 +34,7 @@ void CallStackDataView::OnDataChanged()
 {
     size_t numFunctions = m_CallStack ? m_CallStack->m_Depth : 0;
     m_Indices.resize(numFunctions);
-    for( size_t i = 0; i < numFunctions; ++i )
+    for( uint32_t i = 0; i < numFunctions; ++i )
     {
         m_Indices[i] = i;
     }
@@ -84,7 +84,7 @@ void CallStackDataView::OnFilter( const std::wstring & a_Filter )
     if( !m_CallStack )
         return;
     
-    std::vector<int> indices;
+    std::vector<uint32_t> indices;
     std::vector< std::wstring > tokens = Tokenize( ToLower( a_Filter ) );
      
     for( int i = 0; i < (int)m_CallStack->m_Depth; ++i )

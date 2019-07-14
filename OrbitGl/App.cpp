@@ -846,10 +846,10 @@ void OrbitApp::AddUiMessageCallback( std::function< void( const std::wstring & )
 //-----------------------------------------------------------------------------
 void OrbitApp::StartCapture()
 {
-    bool captureStarted = Capture::StartCapture();
-    
-#ifdef __linux__
-    if( captureStarted )
+#ifdef WIN32
+    Capture::StartCapture();
+#else
+    if( Capture::StartCapture() )
     {
         m_BpfTrace = std::make_shared<BpfTrace>();
         m_BpfTrace->Start();

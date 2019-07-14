@@ -154,7 +154,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	AppendToVar(CMAKE_CXX_FLAGS "/wd4244")
 	AppendToVar(CMAKE_CXX_FLAGS "/wd4481")
 	AppendToVar(CMAKE_CXX_FLAGS "/wd4201")
-	AppendToVar(CMAKE_CXX_FLAGS "-Wno-unused-local-typedef")
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)

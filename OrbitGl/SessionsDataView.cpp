@@ -138,11 +138,11 @@ void SessionsDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuI
 //-----------------------------------------------------------------------------
 void SessionsDataView::OnFilter( const std::wstring & a_Filter )
 {
-    std::vector<int> indices;
+    std::vector<uint32_t> indices;
 
     std::vector< std::wstring > tokens = Tokenize( ToLower( a_Filter ) );
 
-    for (size_t i = 0; i < m_Sessions.size(); ++i)
+    for (uint32_t i = 0; i < m_Sessions.size(); ++i)
     {
         const Session & session = *m_Sessions[i];
         std::wstring name = Path::GetFileName( ToLower( session.m_FileName ) );
@@ -178,7 +178,7 @@ void SessionsDataView::OnFilter( const std::wstring & a_Filter )
 void SessionsDataView::OnDataChanged()
 {
     m_Indices.resize( m_Sessions.size() );
-    for( size_t i = 0; i < m_Sessions.size(); ++i )
+    for(uint32_t i = 0; i < m_Sessions.size(); ++i )
     {
         m_Indices[i] = i;
     }
