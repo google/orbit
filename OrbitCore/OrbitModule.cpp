@@ -64,6 +64,20 @@ bool Module::LoadDebugInfo()
 }
 
 //-----------------------------------------------------------------------------
+uint64_t Module::ValidateAddress( uint64_t a_Address )
+{
+    if( ContainsAddress(a_Address ) )
+        return a_Address;
+
+    // Treat input address as RVA
+    uint64_t newAddress = m_AddressStart + a_Address;
+    if( ContainsAddress(newAddress) )
+        return newAddress;
+
+    return 0xbadadd;
+}
+
+//-----------------------------------------------------------------------------
 ORBIT_SERIALIZE( Module, 0 )
 {
     ORBIT_NVP_VAL( 0, m_Name );

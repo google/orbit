@@ -453,7 +453,7 @@ void SamplingProfiler::AddAddress( DWORD64 a_Address )
     //TODO: find function start address 
     m_ExactAddresses[a_Address] = /*symbol_info->Address ? symbol_info->Address :*/ a_Address;
     std::shared_ptr<LinuxSymbol> symbol = m_Process->SymbolFromAddress( a_Address );
-    m_AddressToSymbol[(DWORD64)a_Address] = s2ws(symbol->m_Name);
+    m_AddressToSymbol[(DWORD64)a_Address] = s2ws(symbol ? symbol->m_Name : "??");
 #endif
 }
 

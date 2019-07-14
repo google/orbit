@@ -18,6 +18,8 @@ struct Module
     const std::wstring & GetPrettyName();
     bool IsDll() const;
     bool LoadDebugInfo();
+    bool ContainsAddress( uint64_t a_Address ) { return m_AddressStart <= a_Address && m_AddressEnd > a_Address; }
+    uint64_t ValidateAddress( uint64_t a_Address );
 
     std::wstring  m_Name;
     std::wstring  m_FullName;

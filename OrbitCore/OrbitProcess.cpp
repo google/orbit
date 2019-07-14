@@ -304,6 +304,24 @@ std::shared_ptr<Module> Process::GetModuleFromAddress( DWORD64 a_Address )
 	return nullptr;
 }
 
+//-----------------------------------------------------------------------------
+std::shared_ptr<Module> Process::GetModuleFromName( const std::wstring& a_Name )
+{
+    auto iter = m_NameToModuleMap.find(a_Name);
+    if( iter != m_NameToModuleMap.end() )
+    {
+        return iter->second;
+    }
+
+    return nullptr;
+}
+
+//-----------------------------------------------------------------------------
+void Process::AddSymbol( uint64_t a_Address, std::shared_ptr<LinuxSymbol> a_Symbol )
+{ 
+    m_Symbols[a_Address] = a_Symbol; 
+}
+
 #ifdef _WIN32
 //-----------------------------------------------------------------------------
 std::shared_ptr<OrbitDiaSymbol> Process::SymbolFromAddress( DWORD64 a_Address )

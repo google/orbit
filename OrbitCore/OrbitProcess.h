@@ -75,12 +75,13 @@ public:
 
     Function* GetFunctionFromAddress( DWORD64 a_Address, bool a_IsExact = true );
     std::shared_ptr<Module> GetModuleFromAddress( DWORD64 a_Address );
+    std::shared_ptr<Module> GetModuleFromName( const std::wstring& a_Name );
     
 #ifdef _WIN32
     std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress( DWORD64 a_Address );
 #else
     std::shared_ptr<LinuxSymbol> SymbolFromAddress( uint64_t a_Address ) { return m_Symbols[a_Address]; }
-    void AddSymbol( uint64_t a_Address, std::shared_ptr<LinuxSymbol> a_Symbol ){ m_Symbols[a_Address] = a_Symbol; }
+    void AddSymbol( uint64_t a_Address, std::shared_ptr<LinuxSymbol> a_Symbol );
     bool HasSymbol( uint64_t a_Address ) const { return m_Symbols.find(a_Address) != m_Symbols.end(); }
 #endif
 

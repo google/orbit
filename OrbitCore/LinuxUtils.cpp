@@ -322,15 +322,26 @@ void LinuxPerf::LoadPerfData( const std::string& a_FileName )
         {            
             auto tokens = Tokenize(line, " \t");
             if( tokens.size() == 3 )
-            {                
+            {
                 uint64_t address = std::stoull(tokens[0], nullptr, 16);
+
+                std::string moduleFullName = Replace(tokens[2], "(", "");
+                moduleFullName = Replace(moduleFullName, ")", "");
+                std::wstring moduleName = ToLower(Path::GetFileName(s2ws(moduleFullName)));
+                std::shared_ptr<Module> moduleFromName = Capture::GTargetProcess->GetModuleFromName( moduleName );
+
+                if( moduleFromName )
+                {
+                    address = moduleFromName->ValidateAddress(address);
+                }
+
                 CS.m_Data.push_back(address);
 
                 if( Capture::GTargetProcess && !Capture::GTargetProcess->HasSymbol(address))
                 {
                     auto symbol = std::make_shared<LinuxSymbol>();
                     symbol->m_Name = tokens[1];
-                    symbol->m_File = tokens[2];
+                    symbol->m_Module = moduleFullName; 
                     Capture::GTargetProcess->AddSymbol( address, symbol );
                 }
             }

@@ -142,7 +142,7 @@ public: // TODO...
     std::vector<Argument>          m_ArgInfo;
     Pdb*                           m_Pdb = nullptr;
     uint64_t                       m_NameHash = 0;
-    OrbitType                      m_OrbitType;
+    OrbitType                      m_OrbitType = NONE;
     std::shared_ptr<FunctionStats> m_Stats;
 
 protected:
