@@ -39,7 +39,7 @@ float TimeGraphLayout::GetTracksHeight()
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraphLayout::SortTracksByPosition( ThreadTrackMap& a_ThreadTracks )
+void TimeGraphLayout::SortTracksByPosition( const ThreadTrackMap& a_ThreadTracks )
 {
     std::vector< std::shared_ptr<ThreadTrack> > tracks;
 
@@ -62,7 +62,7 @@ void TimeGraphLayout::SortTracksByPosition( ThreadTrackMap& a_ThreadTracks )
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraphLayout::CalculateOffsets( ThreadTrackMap& a_ThreadTracks )
+void TimeGraphLayout::CalculateOffsets( const ThreadTrackMap& a_ThreadTracks )
 {    
     m_ThreadBlockOffsets.clear();
 
@@ -70,14 +70,19 @@ void TimeGraphLayout::CalculateOffsets( ThreadTrackMap& a_ThreadTracks )
     if( m_DrawFileIO ) ++m_NumTracks;
     if( Capture::GHasSamples ) ++m_NumTracks;
 
-    SortTracksByPosition(a_ThreadTracks);
+    if (!Capture::IsCapturing())
+    {
+        SortTracksByPosition(a_ThreadTracks);
+    }
 
     float offset = GetThreadStart();
     for( ThreadID threadID : m_SortedThreadIds )
     {
-        std::shared_ptr<ThreadTrack> track = a_ThreadTracks[threadID];
-        if (track == nullptr)
+        auto iter = a_ThreadTracks.find(threadID);
+        if (iter == a_ThreadTracks.end())
             continue;
+
+        std::shared_ptr<ThreadTrack> track = iter->second;
         m_ThreadBlockOffsets[threadID] = offset;
         float threadBlockHeight = GetTracksHeight() + track->GetDepth() * m_TextBoxHeight;
         offset -= (threadBlockHeight + m_SpaceBetweenThreadBlocks );
@@ -86,7 +91,7 @@ void TimeGraphLayout::CalculateOffsets( ThreadTrackMap& a_ThreadTracks )
     for( auto& pair : a_ThreadTracks )
     {
         auto& track = pair.second;
-        if( track->IsMoving() )
+        if( track.get() && track->IsMoving() )
         {
             m_ThreadBlockOffsets[track->GetID()] = track->GetPos()[1];
         }
@@ -120,9 +125,10 @@ float TimeGraphLayout::GetThreadBlockStart( ThreadID a_TID )
 //-----------------------------------------------------------------------------
 float TimeGraphLayout::GetSamplingTrackOffset( ThreadID a_TID )
 {
-    // TODO:
-    return m_ThreadBlockOffsets[a_TID];
-    //return Capture::GHasSamples ? m_ThreadBlockOffsets[a_TID] : -1.f;
+    auto iter = m_ThreadBlockOffsets.find(a_TID);
+    if( iter != m_ThreadBlockOffsets.end() )
+        return m_ThreadBlockOffsets[a_TID];
+    return -1.f;
 }
 
 //-----------------------------------------------------------------------------

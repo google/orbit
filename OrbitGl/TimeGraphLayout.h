@@ -27,14 +27,15 @@ public:
     float GetTextBoxHeight() const { return m_TextBoxHeight; }
     float GetTextCoresHeight() const { return m_CoresHeight; }
     float GetEventTrackHeight() const { return m_EventTrackHeight; }
-    void CalculateOffsets( ThreadTrackMap& a_ThreadTracks );
+    float GetSpaceBetweenTracksAndThread() const { return m_SpaceBetweenTracksAndThread; }
+    void CalculateOffsets( const ThreadTrackMap& a_ThreadTracks );
     void Reset();
 
     void SetSortedThreadIds( const std::vector< ThreadID >& a_SortedThreadIds ) { m_SortedThreadIds = a_SortedThreadIds; }
     const std::vector< ThreadID >& GetSortedThreadIds() const { return m_SortedThreadIds; }
 
 protected:
-    void SortTracksByPosition( ThreadTrackMap& a_ThreadTracks );
+    void SortTracksByPosition( const ThreadTrackMap& a_ThreadTracks );
 
 
 protected:

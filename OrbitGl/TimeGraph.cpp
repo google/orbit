@@ -256,6 +256,7 @@ void TimeGraph::ProcessTimer( const Timer & a_Timer )
     if( !a_Timer.IsType( Timer::THREAD_ACTIVITY ) && !a_Timer.IsType( Timer::CORE_ACTIVITY ) )
     {
         GetThreadTrack(a_Timer.m_TID)->OnTimer(a_Timer);
+        ++m_ThreadCountMap[a_Timer.m_TID];
     }
 }
 
@@ -688,17 +689,20 @@ void TimeGraph::UpdateEvents()
 
         // Sampling Events
         float ThreadOffset = (float)m_Layout.GetSamplingTrackOffset( threadID );
-        for( auto & callstackPair : callstacks )
+        if (ThreadOffset != -1.f)
         {
-            unsigned long long time = callstackPair.first;
-
-            if( time > rawMin && time < rawMax )
+            for (auto & callstackPair : callstacks)
             {
-                float x = GetWorldFromTick( time );
-                Line line;
-                line.m_Beg = Vec3( x, ThreadOffset, GlCanvas::Z_VALUE_EVENT );
-                line.m_End = Vec3( x, ThreadOffset - m_Layout.GetEventTrackHeight(), GlCanvas::Z_VALUE_EVENT );
-                m_Batcher.AddLine( line, lineColor, PickingID::EVENT );
+                unsigned long long time = callstackPair.first;
+
+                if (time > rawMin && time < rawMax)
+                {
+                    float x = GetWorldFromTick(time);
+                    Line line;
+                    line.m_Beg = Vec3(x, ThreadOffset, GlCanvas::Z_VALUE_EVENT);
+                    line.m_End = Vec3(x, ThreadOffset - m_Layout.GetEventTrackHeight(), GlCanvas::Z_VALUE_EVENT);
+                    m_Batcher.AddLine(line, lineColor, PickingID::EVENT);
+                }
             }
         }
     }
