@@ -226,7 +226,7 @@ void FunctionsDataView::OnFilter( const std::wstring & a_Filter )
     ParallelFilter();
 #else
     // TODO: port parallel filtering
-    std::vector<int> indices;
+    std::vector<uint32_t> indices;
     std::vector< std::wstring > tokens = Tokenize( ToLower( a_Filter ) );
     std::vector<Function*> & functions = Capture::GTargetProcess->GetFunctions();
     for (int i = 0; i < (int)functions.size(); ++i)

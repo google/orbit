@@ -339,6 +339,21 @@ std::string GetLastErrorAsString();
 //-----------------------------------------------------------------------------
 std::string GuidToString( GUID a_Guid );
 
+//-----------------------------------------------------------------------------
+inline uint64_t GetMicros(std::string a_TimeStamp)
+{
+    Replace(a_TimeStamp, ":", "");
+    std::vector<std::string> tokens = Tokenize(a_TimeStamp, ".");
+    if (tokens.size() != 2)
+    {
+        return 0;
+    }
+
+    uint64_t seconds = atoi(tokens[0].c_str());
+    uint64_t micros = atoi(tokens[1].c_str());
+    return seconds * 1000000 + micros;
+}
+
 #ifdef _WIN32
 //-----------------------------------------------------------------------------
 template <typename T> inline std::string ToHexString( T a_Value )
@@ -354,21 +369,6 @@ inline LONGLONG FileTimeDiffInMillis( const FILETIME & a_T0, const FILETIME & a_
     __int64 i0 = (__int64(a_T0.dwHighDateTime) << 32) + a_T0.dwLowDateTime;
     __int64 i1 = (__int64(a_T1.dwHighDateTime) << 32) + a_T1.dwLowDateTime;
     return (i1 - i0) / 10000;
-}
-
-//-----------------------------------------------------------------------------
-inline uint64_t GetMicros(std::string a_TimeStamp)
-{
-    Replace(a_TimeStamp, ":", "");
-    std::vector<std::string> tokens = Tokenize(a_TimeStamp, ".");
-    if (tokens.size() != 2)
-    {
-        return 0;
-    }
-
-    uint64_t seconds = atoi(tokens[0].c_str());
-    uint64_t micros = atoi(tokens[1].c_str());
-    return seconds * 1000000 + micros;
 }
 
 //-----------------------------------------------------------------------------
