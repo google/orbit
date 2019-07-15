@@ -38,9 +38,6 @@ CaptureWindow::CaptureWindow()
     m_FirstHelpDraw = true;
     m_DrawStats = false;
     m_Picking = false;
-
-    m_DesiredWorldWidth  = (float)m_Width;
-    m_DesiredWorldHeight = (float)m_Height;
     m_WorldTopLeftX = 0;
     m_WorldTopLeftY = 0;
     m_WorldMaxY = 0;
@@ -77,7 +74,6 @@ void CaptureWindow::OnTimer()
 void CaptureWindow::ZoomAll()
 {
     m_TimeGraph.ZoomAll();
-    m_DesiredWorldHeight = m_TimeGraph.GetThreadTotalHeight();
     m_WorldTopLeftY = m_WorldMaxY;
     ResetHoverTimer();
     NeedsUpdate();
