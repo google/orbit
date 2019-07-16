@@ -202,6 +202,9 @@ void ProcessList::Refresh()
                     inFile.close();
                     const std::string& processName = buffer.str();
 
+                    if( processName.empty() )
+                        continue;
+                        
                     auto iter = m_ProcessesMap.find(pid);
                     std::shared_ptr<Process> process = nullptr;
                     if( iter == m_ProcessesMap.end() )
