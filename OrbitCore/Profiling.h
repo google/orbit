@@ -15,15 +15,16 @@ extern double    GPeriod;
 void InitProfiling();
 
 //-----------------------------------------------------------------------------
-inline TickType OrbitTicks()
+inline TickType OrbitTicks( uint32_t a_Clock = 0 /*CLOCK_REALTIME*/ )
 {
 #ifdef _WIN32
+    UNUSED(a_Clock);
     LARGE_INTEGER ticks;
     QueryPerformanceCounter(&ticks);
     return ticks.QuadPart;
 #else
     timespec ts;
-	clock_gettime(CLOCK_REALTIME, &ts);
+	clock_gettime(a_Clock, &ts);
 	return 1000000000ll * ts.tv_sec + ts.tv_nsec;
 #endif
 }

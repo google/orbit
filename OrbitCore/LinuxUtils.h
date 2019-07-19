@@ -24,6 +24,7 @@ namespace LinuxUtils
     std::unordered_map<uint32_t, float> GetCpuUtilization();
     bool Is64Bit(uint32_t a_PID);
     std::string Demangle( const char* a_Symbol );
+    void DumpClocks();
 }
 
 //-----------------------------------------------------------------------------

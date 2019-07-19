@@ -165,6 +165,34 @@ std::string Demangle(const char* name)
 }
 
 //-----------------------------------------------------------------------------
+double GetSecondsFromNanos( uint64_t a_Nanos )
+{
+    return 0.000000001*(double)a_Nanos;
+}
+
+//-----------------------------------------------------------------------------
+void DumpClocks()
+{
+    uint64_t realTime     = OrbitTicks(CLOCK_REALTIME);
+    uint64_t monotonic    = OrbitTicks(CLOCK_MONOTONIC);
+    uint64_t monotonicRaw = OrbitTicks(CLOCK_MONOTONIC_RAW);
+    uint64_t bootTime     = OrbitTicks(CLOCK_BOOTTIME);
+    uint64_t tai          = OrbitTicks(CLOCK_TAI);
+    
+    printf("    realTime: %lu \n", realTime);
+    printf("   monotonic: %lu \n", monotonic);
+    printf("monotonicRaw: %lu \n", monotonicRaw);
+    printf("    bootTime: %lu \n", bootTime);
+    printf("         tai: %lu \n\n", tai);
+
+    printf("    realTime: %f \n",   GetSecondsFromNanos(realTime));
+    printf("   monotonic: %f \n",   GetSecondsFromNanos(monotonic));
+    printf("monotonicRaw: %f \n",   GetSecondsFromNanos(monotonicRaw));
+    printf("    bootTime: %f \n",   GetSecondsFromNanos(bootTime));
+    printf("         tai: %f \n\n", GetSecondsFromNanos(tai));
+}
+
+//-----------------------------------------------------------------------------
 void PrintBuffer( void* a_Buffer, size_t a_Size )
 {
     unsigned char* buffer = (unsigned char*) a_Buffer;
@@ -232,6 +260,7 @@ void LinuxPerf::Start()
         execl   ( "/usr/bin/perf"
                 , "/usr/bin/perf"
                 , "record"
+                , "-k", "monotonic"
                 , "-F", Format("%u", m_Frequency).c_str()
                 , "-p", Format("%u", m_PID).c_str()
                 , "-g"

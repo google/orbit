@@ -501,6 +501,11 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
         case ' ':
             ZoomAll();
             break;
+        case 'C':
+#ifdef __linux__
+            LinuxUtils::DumpClocks();
+#endif
+            break;
         case 'A':
             Pan(0.1f);
             break;
