@@ -9,6 +9,7 @@
 #include "Hijacking.h"
 #include "Callstack.h"
 #include "CrashHandler.h"
+#include "Utils.h"
 
 std::string GHost;
 bool GIsCaptureEnabled = false;

@@ -5,6 +5,7 @@
 
 #include "Platform.h"
 #include "BaseTypes.h"
+#include "Utils.h"
 
 //-----------------------------------------------------------------------------
 typedef uint64_t TickType;
