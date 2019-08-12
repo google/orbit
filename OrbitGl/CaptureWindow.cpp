@@ -34,6 +34,7 @@ CaptureWindow::CaptureWindow()
     m_TimeGraph.SetCanvas(this);
     m_DrawUI = false;
     m_DrawHelp = false;
+    m_DrawFilter = false;
     m_DrawMemTracker = false;
     m_FirstHelpDraw = true;
     m_DrawStats = false;
@@ -526,6 +527,9 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
         case 'S':
             Zoom(-1);
             break;
+        case 'F':
+            m_DrawFilter = !m_DrawFilter;
+            break;
         case 'I':
             m_DrawStats = !m_DrawStats;
             break;
@@ -882,6 +886,11 @@ void CaptureWindow::RenderUI()
         }
     }
 
+    if (m_DrawFilter)
+    {
+        RenderThreadFilterUi();
+    }
+
     if( m_DrawMemTracker && !m_DrawHelp )
     {
         RenderMemTracker();
@@ -957,6 +966,30 @@ void CaptureWindow::RenderHelpUi()
     ImGui::Image( (void*)(DWORD64)GTextureHelp, ImVec2( size, size ), ImVec2( 0, 0 ), ImVec2( 1, 1 ), ImColor( 255, 255, 255, 255 ), ImColor( 255, 255, 255, 128 ) );
     ImGui::SameLine();
     ImGui::Text( "Help" );
+
+    ImGui::End();
+
+    ImGui::PopStyleColor();
+}
+
+//-----------------------------------------------------------------------------
+void CaptureWindow::RenderThreadFilterUi()
+{
+    float barHeight = m_Slider.GetPixelHeight();
+    ImGui::SetNextWindowPos(ImVec2(0, barHeight * 1.5f));
+
+    ImVec4 color(1.f, 0, 0, 1.f);
+    ColorToFloat(m_Slider.GetBarColor(), &color.x);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, color);
+
+    if (!ImGui::Begin("Thread Filter", &m_DrawHelp, ImVec2(0, 0), 1.f, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+    {
+        ImGui::PopStyleColor();
+        ImGui::End();
+        return;
+    }
+
+    ImGui::Text("Thread Filter");
 
     ImGui::End();
 

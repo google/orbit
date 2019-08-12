@@ -44,6 +44,7 @@ public:
     void PostRender() override;
     void Resize( int a_Width, int a_Height ) override;
     void RenderHelpUi();
+    void RenderThreadFilterUi();
     void RenderMemTracker();
     void RenderBar();
     void RenderTimeBar();
@@ -70,6 +71,7 @@ private:
     bool            m_IsHovering;
     bool            m_CanHover;
     bool            m_DrawHelp;
+    bool            m_DrawFilter;
     bool            m_DrawMemTracker;
     bool            m_FirstHelpDraw;
     bool            m_DrawStats;

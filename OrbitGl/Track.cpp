@@ -7,8 +7,8 @@
 #include "Capture.h"
 #include "TimeGraphLayout.h"
 
-const float TRACK_Z = 0.1f;
-const float TEXT_Z = 0.2f;
+float TEXT_Z  = -0.004f;
+float TRACK_Z = -0.005f;
 
 //-----------------------------------------------------------------------------
 Track::Track()
