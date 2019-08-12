@@ -25,9 +25,7 @@ void ThreadTrack::Draw( GlCanvas* a_Canvas, bool a_Picking )
 {
     TimeGraphLayout& layout = m_TimeGraph->GetLayout();
     float threadOffset = layout.GetThreadBlockStart(m_ID);
-    float trackHeight = layout.GetTextBoxHeight()*GetDepth() + 
-                        layout.GetSpaceBetweenTracksAndThread() + 
-                        layout.GetEventTrackHeight();
+    float trackHeight = GetHeight();
     float trackWidth = a_Canvas->GetWorldWidth() * m_TimeGraph->GetMarginRatio();
 
     SetPos(a_Canvas->GetWorldTopLeftX(), threadOffset);
@@ -66,6 +64,15 @@ void ThreadTrack::OnTimer( const Timer& a_Timer )
         m_MinTime = a_Timer.m_Start;
     if (a_Timer.m_End > m_MaxTime)
         m_MaxTime = a_Timer.m_End;
+}
+
+//-----------------------------------------------------------------------------
+float ThreadTrack::GetHeight() const
+{
+    TimeGraphLayout& layout = m_TimeGraph->GetLayout();
+    return layout.GetTextBoxHeight()* GetDepth() +
+           layout.GetSpaceBetweenTracksAndThread() +
+           layout.GetEventTrackHeight();
 }
 
 //-----------------------------------------------------------------------------

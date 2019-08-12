@@ -787,7 +787,7 @@ void TimeGraph::DrawThreadTracks( bool a_Picking )
     {
         ThreadID threadId = sortedThreadIds[i];
 
-        auto track = GetThreadTrack(threadId);
+        std::shared_ptr<ThreadTrack> track = GetThreadTrack(threadId);
         if( track->GetName().empty() )
         {
             std::string threadName = ws2s(Capture::GTargetProcess->GetThreadNameFromTID(threadId));

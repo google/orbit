@@ -53,6 +53,10 @@ CaptureWindow::CaptureWindow()
 
     m_Slider.SetCanvas(this);
     m_Slider.SetDragCallback( [&]( float a_Ratio ){ this->OnDrag( a_Ratio ); } );
+    
+    m_VerticalSlider.SetCanvas(this);
+    m_VerticalSlider.SetVertical();
+    m_VerticalSlider.SetDragCallback([&](float a_Ratio) { this->OnVerticalDrag(a_Ratio); });
 
     GOrbitApp->RegisterCaptureWindow(this);
 }
@@ -117,11 +121,11 @@ void CaptureWindow::MouseMoved( int a_X, int a_Y, bool a_Left, bool a_Right, boo
         m_WorldTopLeftY = m_WorldClickY + (float)mousey / (float)getHeight() * m_WorldHeight;
 
         m_WorldTopLeftX = clamp( m_WorldTopLeftX, worldMin, worldMax-m_WorldWidth );
-        m_WorldTopLeftY = clamp( m_WorldTopLeftY, -FLT_MAX, m_WorldMaxY );
+        m_WorldTopLeftY = clamp( m_WorldTopLeftY, m_WorldHeight - m_TimeGraph.GetThreadTotalHeight(), m_WorldMaxY );
         UpdateSceneBox();
 
         m_TimeGraph.PanTime(m_ScreenClickX, a_X, getWidth(), (double)m_RefTimeClick);
-
+        UpdateVerticalSlider();
         NeedsUpdate();
     }
 
@@ -456,7 +460,6 @@ void CaptureWindow::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl 
         m_MaxWheelDelta = delta;
 
     float mousex = (float)a_X;
-    float mousey = (float)a_Y;
 
     float worldx;
     float worldy;
@@ -476,8 +479,13 @@ void CaptureWindow::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl 
     {
         float zoomInc = zoomRatio * m_DesiredWorldHeight;
         m_DesiredWorldHeight += delta * zoomInc;
-        m_WorldTopLeftY = worldy + (float)mousey / (float)getHeight()*m_DesiredWorldHeight;
-        m_WorldTopLeftY = std::min( m_WorldMaxY, m_WorldTopLeftY );
+
+        float worldMin, worldMax;
+        m_TimeGraph.GetWorldMinMax(worldMin, worldMax);
+        m_WorldTopLeftX = clamp(m_WorldTopLeftX, worldMin, worldMax - m_WorldWidth);
+        m_WorldTopLeftY = clamp(m_WorldTopLeftY, -FLT_MAX, m_WorldMaxY);
+
+        UpdateSceneBox();
     }
 
     Orbit_ImGui_ScrollCallback(this, -delta);
@@ -537,7 +545,12 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
             }
             break;
         case 'P':
+
+#ifdef _WIN32
+            GOrbitApp->LoadSystrace("C:/Users/pierr/Downloads/perf_traces/systrace_tutorial.html");
+#else
             GOrbitApp->LoadSystrace("/home/pierric/perf_traces/systrace_tutorial.html");
+#endif
         break;
         case 'M':
             m_DrawMemTracker = !m_DrawMemTracker;
@@ -633,7 +646,7 @@ void CaptureWindow::ResetHoverTimer()
 //-----------------------------------------------------------------------------
 void CaptureWindow::Draw()
 {   
-    m_WorldMaxY = 1.5f * ScreenToWorldHeight( (int)m_Slider.GetPixelHeight() );
+    m_WorldMaxY = 1.5f * ScreenToWorldHeight((int)m_Slider.GetPixelHeight());
 
     if( Capture::IsCapturing() )
     {
@@ -717,6 +730,13 @@ void CaptureWindow::DrawScreenSpace()
         m_Slider.SetSliderRatio( (float)ratio );
         m_Slider.SetSliderWidthRatio( float(width/timeSpan) );
         m_Slider.Draw( this, m_Picking );
+
+        float verticalRatio = m_WorldHeight / m_TimeGraph.GetThreadTotalHeight();
+        if (verticalRatio < 1.f)
+        {
+            m_VerticalSlider.SetSliderWidthRatio(verticalRatio);
+            m_VerticalSlider.Draw(this, m_Picking);
+        }
     }
 }   
 
@@ -725,6 +745,25 @@ void CaptureWindow::OnDrag( float a_Ratio )
 {
     m_TimeGraph.OnDrag( a_Ratio );
     NeedsUpdate();
+}
+
+//-----------------------------------------------------------------------------
+void CaptureWindow::OnVerticalDrag(float a_Ratio)
+{
+    float min = m_WorldMaxY;
+    float max = m_WorldHeight - m_TimeGraph.GetThreadTotalHeight(); 
+    float range = max - min;
+    m_WorldTopLeftY = min + a_Ratio * range;
+    NeedsUpdate();
+}
+
+//-----------------------------------------------------------------------------
+void CaptureWindow::UpdateVerticalSlider()
+{
+    float min = m_WorldMaxY;
+    float max = m_WorldHeight - m_TimeGraph.GetThreadTotalHeight();
+    float ratio = (m_WorldTopLeftY-min)/(max-min);
+    m_VerticalSlider.SetSliderRatio(ratio);
 }
 
 //-----------------------------------------------------------------------------

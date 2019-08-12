@@ -52,12 +52,14 @@ public:
     void ResetHoverTimer();
     void SelectTextBox( class TextBox* a_TextBox );
     void OnDrag( float a_Ratio );
+    void OnVerticalDrag(float a_Ratio);
     void NeedsUpdate();
     void ToggleSampling();
     void OnCaptureStarted();
     float GetTopBarTextY();
     virtual std::vector<std::wstring> GetContextMenu();
     virtual void OnContextMenu( const std::wstring & a_Action, int a_MenuIndex );
+    void UpdateVerticalSlider();
 
 private:
     TimeGraph       m_TimeGraph;
@@ -72,6 +74,7 @@ private:
     bool            m_FirstHelpDraw;
     bool            m_DrawStats;
     GlSlider        m_Slider;
+    GlSlider        m_VerticalSlider;
     int             m_ProcessX;
 };
 

@@ -194,6 +194,7 @@ void GlCanvas::MouseWheelMoved( int a_X, int a_Y, int a_Delta, bool a_Ctrl )
         float zoomInc = zoomRatio * m_DesiredWorldHeight;
         m_DesiredWorldHeight += delta * zoomInc;
         m_WorldTopLeftY = worldy + (float)mousey / (float)getHeight()*m_DesiredWorldHeight;
+        UpdateSceneBox();
     }
 
     Orbit_ImGui_ScrollCallback( this, -delta );

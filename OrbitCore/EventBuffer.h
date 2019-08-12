@@ -40,6 +40,7 @@ public:
     long long GetMaxTime() const { return m_MaxTime; }
     long long GetMinTime() const { return m_MinTime; }
     bool HasEvent() { ScopeLock lock( m_Mutex ); return m_CallstackEvents.size() > 0; }
+    bool HasEvent(ThreadID a_TID) { ScopeLock lock(m_Mutex); return m_CallstackEvents.find(a_TID) != m_CallstackEvents.end(); }
 
 #ifdef __linux__
     size_t GetNumEvents() const;

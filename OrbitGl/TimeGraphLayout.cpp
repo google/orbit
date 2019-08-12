@@ -66,9 +66,8 @@ void TimeGraphLayout::CalculateOffsets( const ThreadTrackMap& a_ThreadTracks )
 {    
     m_ThreadBlockOffsets.clear();
 
-    m_NumTracks = 0;
+    m_NumTracks = 1;
     if( m_DrawFileIO ) ++m_NumTracks;
-    if( Capture::GHasSamples ) ++m_NumTracks;
 
     if (!Capture::IsCapturing())
     {

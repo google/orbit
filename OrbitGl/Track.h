@@ -25,6 +25,8 @@ public:
     bool Draggable() override { return true; }
     bool Movable() override { return true; }
 
+    virtual float GetHeight() const { return 0.f; };
+
     bool IsMoving() const { return m_Moving; }
     Vec2 GetMoveDelta() const { return m_Moving ? m_MousePos[1] - m_MousePos[0] : Vec2(0, 0); }
     void SetName( const std::string& a_Name ) { m_Name = a_Name; }

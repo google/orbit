@@ -66,7 +66,6 @@ struct Capture
     static uint32_t     GNumSamplingTicks;
     static uint32_t     GFunctionIndex;
     static uint32_t     GNumInstalledHooks;
-    static bool         GHasSamples;
     static bool         GHasContextSwitches;
 
     static Timer        GTestTimer;

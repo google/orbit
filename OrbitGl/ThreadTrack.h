@@ -28,6 +28,9 @@ public:
     void OnDrag( int a_X, int a_Y ) override;
     void OnTimer( const Timer& a_Timer );
 
+    // Track
+    float GetHeight() const override;
+
     std::vector<std::shared_ptr<TimerChain>> GetTimers();
     uint32_t GetDepth() const { return m_Depth; }
     

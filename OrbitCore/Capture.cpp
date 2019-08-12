@@ -41,7 +41,6 @@ uint32_t    Capture::GNumSamples = 0;
 uint32_t    Capture::GNumSamplingTicks = 0;
 uint32_t    Capture::GFunctionIndex = -1;
 uint32_t    Capture::GNumInstalledHooks;
-bool        Capture::GHasSamples;
 bool        Capture::GHasContextSwitches;
 Timer       Capture::GTestTimer;
 ULONG64     Capture::GMainFrameFunction;
@@ -258,7 +257,6 @@ void Capture::ClearCaptureData()
     GNumProfileEvents = 0;
     GTcpServer->ResetStats();
     GOrbitUnreal.NewSession();
-    GHasSamples = false;
     GHasContextSwitches = false;
 }
 
@@ -483,8 +481,6 @@ void Capture::Update()
         GInjected = false;
     }
 #endif
-
-    Capture::GHasSamples = GEventTracer.GetEventBuffer().HasEvent();
 }
 
 //-----------------------------------------------------------------------------

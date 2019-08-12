@@ -25,9 +25,18 @@ public:
     void SetCanvas( GlCanvas* a_Canvas ) { m_Canvas = a_Canvas; }
     Color GetBarColor() const { return m_SliderColor; }
     float GetPixelHeight() const { return GParams.m_FontSize*1.5f; }
+    void SetVertical() { m_Vertical = true; }
 
     typedef std::function< void(float) > DragCallback;
     void SetDragCallback( DragCallback a_Callback ){ m_DragCallback = a_Callback; }
+
+protected:
+    void DrawHorizontal(GlCanvas* a_Canvas, bool a_Picking);
+    void DrawVertical(GlCanvas* a_Canvas, bool a_Picking);
+    void OnDragHorizontal(int a_X, int a_Y);
+    void OnDragVertical(int a_X, int a_Y);
+    void OnPickHorizontal(int a_X, int a_Y);
+    void OnPickVertical(int a_X, int a_Y);
 
 protected:
     TextBox m_Slider;
@@ -42,4 +51,5 @@ protected:
     Color m_BarColor;
     float m_MinSliderPixelWidth;
     float m_PixelHeight;
+    bool  m_Vertical;
 };
