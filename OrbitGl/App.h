@@ -27,7 +27,7 @@ public:
     virtual ~OrbitApp();
 
     static bool Init();
-    static void PostInit();
+    void PostInit();
     static int  OnExit();
     static void MainTick();
     void CheckLicense();
@@ -182,6 +182,7 @@ private:
     std::wstring m_License;
 
     std::queue< std::shared_ptr<struct Module> > m_ModulesToLoad;
+    std::vector< std::string > m_PostInitArguments;
 
     class EventTracer* m_EventTracer = nullptr;
     class Debugger*    m_Debugger = nullptr;

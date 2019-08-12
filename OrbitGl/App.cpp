@@ -133,6 +133,10 @@ void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args
                 Capture::GProcessToInject = s2ws( preset );
             }
         }
+        else if (Contains(arg, "systrace:"))
+        {
+            m_PostInitArguments.push_back(arg);               
+        }
     }
 }
 
@@ -280,7 +284,24 @@ bool OrbitApp::Init()
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit()
 {
-
+    for (std::string& arg : m_PostInitArguments)
+    {
+        if (Contains(arg, "systrace:"))
+        {
+            std::string command = Replace(arg, "systrace:", "");
+            auto tokens = Tokenize(command, ",");
+            if (tokens.size())
+            {
+                GoToCapture();
+                LoadSystrace(tokens[0]);
+            }
+            for (int i = 1; i + 1 < tokens.size(); i += 2)
+            {
+                AppendSystrace(tokens[i], std::stoull(tokens[i + 1]));
+            }
+            SystraceManager::Get().Dump();
+        }
+    }
 }
 
 //-----------------------------------------------------------------------------

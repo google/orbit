@@ -40,6 +40,33 @@ bool IsTraceEnd(const std::string& line)
 }
 
 //-----------------------------------------------------------------------------
+std::string GetThreadName(const std::string& a_Line)
+{
+    auto tokens = Tokenize(a_Line, "(");
+    return tokens.size() ? tokens[0] : "unknown-thread-name";
+}
+
+//-----------------------------------------------------------------------------
+std::string GetTimeStamp(const std::string& a_Line)
+{
+    auto tokens = Tokenize(a_Line, "]");
+    if (tokens.size() > 1)
+    {
+        tokens = Tokenize(tokens[1]);
+        if (tokens.size() > 1)
+            return tokens[1];
+    }
+    return "0";
+}
+
+//-----------------------------------------------------------------------------
+std::string GetFunction(const std::string& a_Line)
+{
+    auto tokens = Tokenize(a_Line, "|");
+    return tokens.size() ? tokens.back() : "unknown-function";
+}
+
+//-----------------------------------------------------------------------------
 DWORD Systrace::GetThreadId(const std::string& a_ThreadName)
 {
     auto it = m_ThreadIDs.find(a_ThreadName);
@@ -97,12 +124,6 @@ const std::string& Systrace::GetFunctionName(uint64_t a_ID) const
 //-----------------------------------------------------------------------------
 void Systrace::UpdateMinMax(const Timer& a_Timer)
  {
-    if( a_Timer.m_Start == m_TimeOffsetNs )
-    {
-        // TODO: investigate
-        std::cout << "timer is 0" << std::endl;
-        return;
-    }
     if( a_Timer.m_Start < m_MinTime )
         m_MinTime = a_Timer.m_Start;
     if( a_Timer.m_End > m_MaxTime )
@@ -131,24 +152,17 @@ Systrace::Systrace(const char* a_FilePath, uint64_t a_TimeOffsetNs)
         bool isEnd = IsEnd(line);
         if (isBegin || isEnd)
         {
-            line = Replace(line, "(", "");
-            line = Replace(line, ")", "");
-            std::vector<std::string> tokens = Tokenize(line);
-           
-            if (tokens.size() < 7)
-                continue;
-
-            const std::string& threadName = tokens[0];
-            //const std::string& pid = tokens[1];
-            const std::string& timestamp = tokens[4];            
+            const std::string& threadName = GetThreadName(line);
+            const std::string& timestamp = GetTimeStamp(line);
 
             if (isBegin)
             {
                 Timer timer;
                 timer.m_TID = GetThreadId(threadName);
-                timer.m_Start = TicksFromMicroseconds(GetMicros(timestamp)) + m_TimeOffsetNs; // TODO: Fix offset on Windows
+                timer.m_Start = TicksFromMicroseconds(GetMicros(timestamp) + m_TimeOffsetNs*0.001);
+
                 timer.m_Depth = (uint8_t)m_TimerStacks[threadName].size();
-                const std::string& function = tokens[6];
+                const std::string& function = GetFunction(line);
                 timer.m_FunctionAddress = ProcessFunctionName(function);
                 m_TimerStacks[threadName].push_back(timer);
             }
@@ -159,12 +173,9 @@ Systrace::Systrace(const char* a_FilePath, uint64_t a_TimeOffsetNs)
                 if (timers.size())
                 {
                     Timer& timer = timers.back();
-                    timer.m_End = TicksFromMicroseconds(GetMicros(timestamp)) + m_TimeOffsetNs;
-                    if (timer.m_Start != m_TimeOffsetNs)
-                    {
-                        m_Timers.push_back(timer);
-                        UpdateMinMax(timer);
-                    }
+                    timer.m_End = TicksFromMicroseconds(GetMicros(timestamp) + m_TimeOffsetNs*0.001);
+                    m_Timers.push_back(timer);
+                    UpdateMinMax(timer);
                     timers.pop_back();
                 }
             }

@@ -111,7 +111,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget *parent)
 
     GMainWindow = this;
 
-    OrbitApp::PostInit();
+    GOrbitApp->PostInit();
 }
 
 //-----------------------------------------------------------------------------
