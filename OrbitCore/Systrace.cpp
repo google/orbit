@@ -45,7 +45,7 @@ DWORD Systrace::GetThreadId(const std::string& a_ThreadName)
     auto it = m_ThreadIDs.find(a_ThreadName);
     if (it == m_ThreadIDs.end())
     {
-        auto tid = m_ThreadCount++;
+        auto tid = SystraceManager::Get().GetNewThreadID();
         m_ThreadIDs[a_ThreadName] = tid;
         m_ThreadNames[tid] = a_ThreadName;
     }
@@ -95,11 +95,28 @@ const std::string& Systrace::GetFunctionName(uint64_t a_ID) const
 }
 
 //-----------------------------------------------------------------------------
-Systrace::Systrace(const char* a_FilePath)
+void Systrace::UpdateMinMax(const Timer& a_Timer)
+ {
+    if( a_Timer.m_Start == m_TimeOffsetNs )
+    {
+        // TODO: investigate
+        std::cout << "timer is 0" << std::endl;
+        return;
+    }
+    if( a_Timer.m_Start < m_MinTime )
+        m_MinTime = a_Timer.m_Start;
+    if( a_Timer.m_End > m_MaxTime )
+        m_MaxTime = a_Timer.m_End;
+}
+
+//-----------------------------------------------------------------------------
+Systrace::Systrace(const char* a_FilePath, uint64_t a_TimeOffsetNs)
 {
     SCOPE_TIMER_LOG(L"Systrace Parsing");
+    m_Name = a_FilePath;
     std::ifstream infile(a_FilePath);
     std::string line;
+    m_TimeOffsetNs = a_TimeOffsetNs;
     bool foundBegin = false;
     while (std::getline(infile, line))
     {
@@ -129,7 +146,7 @@ Systrace::Systrace(const char* a_FilePath)
             {
                 Timer timer;
                 timer.m_TID = GetThreadId(threadName);
-                timer.m_Start = TicksFromMicroseconds(GetMicros(timestamp));
+                timer.m_Start = TicksFromMicroseconds(GetMicros(timestamp)) + m_TimeOffsetNs; // TODO: Fix offset on Windows
                 timer.m_Depth = (uint8_t)m_TimerStacks[threadName].size();
                 const std::string& function = tokens[6];
                 timer.m_FunctionAddress = ProcessFunctionName(function);
@@ -142,8 +159,12 @@ Systrace::Systrace(const char* a_FilePath)
                 if (timers.size())
                 {
                     Timer& timer = timers.back();
-                    timer.m_End = TicksFromMicroseconds(GetMicros(timestamp));
-                    m_Timers.push_back(timer);
+                    timer.m_End = TicksFromMicroseconds(GetMicros(timestamp)) + m_TimeOffsetNs;
+                    if (timer.m_Start != m_TimeOffsetNs)
+                    {
+                        m_Timers.push_back(timer);
+                        UpdateMinMax(timer);
+                    }
                     timers.pop_back();
                 }
             }
@@ -165,4 +186,50 @@ Systrace::Systrace(const char* a_FilePath)
             m_FunctionMap[timer.m_FunctionAddress]->m_Stats->Update(timer);
         }
     }
+}
+
+//-----------------------------------------------------------------------------
+SystraceManager& SystraceManager::Get()
+{
+    static SystraceManager manager;
+    return manager;
+}
+
+//-----------------------------------------------------------------------------
+void SystraceManager::Clear()
+{
+    m_ThreadCount = 0;
+    m_Systraces.clear();
+}
+
+//-----------------------------------------------------------------------------
+void SystraceManager::Dump() const
+{
+    for (auto systrace : m_Systraces)
+    {
+        PRINT_VAR(systrace->GetName());
+        PRINT_VAR(systrace->GetMinTime());
+        PRINT_VAR(systrace->GetMaxTime());
+        PRINT_VAR(systrace->GetTimeRange() * 0.001);
+    }
+}
+
+//-----------------------------------------------------------------------------
+void SystraceManager::Add(std::shared_ptr<Systrace> a_Systrace)
+{
+    m_Systraces.push_back(a_Systrace);
+}
+
+//-----------------------------------------------------------------------------
+const std::string& SystraceManager::GetFunctionName(uint64_t a_ID) const
+{
+    for (auto& systrace : m_Systraces)
+    {
+        const std::string& name = systrace->GetFunctionName(a_ID);
+        if (!name.empty())
+            return name;
+    }
+
+    static std::string defaultString;
+    return defaultString;
 }

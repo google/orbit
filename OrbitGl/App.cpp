@@ -170,6 +170,7 @@ void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadSystrace(const std::string& a_FileName)
 {
+    SystraceManager::Get().Clear();
     Capture::ClearCaptureData();
     GCurrentTimeGraph->Clear();
     if (Capture::GClearCaptureDataFunc)
@@ -191,13 +192,40 @@ void OrbitApp::LoadSystrace(const std::string& a_FileName)
         ++Capture::GFunctionCountMap[timer.m_FunctionAddress];
     }
 
-    GCurrentTimeGraph->SetSystrace(systrace);
+    for (const auto& pair : systrace->GetThreadNames())
+    {
+        Capture::GTargetProcess->SetThreadName(pair.first, s2ws(pair.second));
+    }
+    
+    SystraceManager::Get().Add(systrace);
+    GOrbitApp->FireRefreshCallbacks();
+    GOrbitApp->StopCapture();
+    DoZoom = true; //TODO: remove global, review logic
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::AppendSystrace(const std::string& a_FileName, uint64_t a_TimeOffset)
+{
+    std::shared_ptr<Systrace> systrace = std::make_shared<Systrace>(a_FileName.c_str(), a_TimeOffset);
+
+    for (Function& func : systrace->GetFunctions())
+    {
+        Capture::GSelectedFunctionsMap[func.m_Address] = &func;
+    }
+    Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
+
+    for (const auto& timer : systrace->GetTimers())
+    {
+        GCurrentTimeGraph->ProcessTimer(timer);
+        Capture::GFunctionCountMap[timer.m_FunctionAddress];
+    }
 
     for (const auto& pair : systrace->GetThreadNames())
     {
         Capture::GTargetProcess->SetThreadName(pair.first, s2ws(pair.second));
     }
 
+    SystraceManager::Get().Add(systrace);
     GOrbitApp->FireRefreshCallbacks();
     GOrbitApp->StopCapture();
     DoZoom = true; //TODO: remove global, review logic

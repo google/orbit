@@ -73,6 +73,7 @@ public:
     void NeedsRedraw(){ m_NeedsRedraw = true; }
     bool IsRedrawNeeded() const { return m_NeedsRedraw; }
     void ToggleDrawText() { m_DrawText = !m_DrawText; }
+    void SetThreadFilter(const std::string& a_Filter);
 
     bool IsVisible( const Timer & a_Timer );
     int GetNumDrawnTextBoxes(){ return m_NumDrawnTextBoxes; }
@@ -151,6 +152,7 @@ private:
     mutable Mutex                   m_Mutex;
     ThreadTrackMap                  m_ThreadTracks;
     double                          m_MarginRatio = 0.1;
+    std::string                     m_ThreadFilter;
 };
 
 extern TimeGraph* GCurrentTimeGraph;

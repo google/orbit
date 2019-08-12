@@ -10,6 +10,7 @@
 #include "TimerManager.h"
 #include "PluginManager.h"
 #include "EventTracer.h"
+#include "Systrace.h"
 #include "../OrbitPlugin/OrbitSDK.h"
 
 #ifdef _WIN32
@@ -977,6 +978,7 @@ void CaptureWindow::RenderThreadFilterUi()
 {
     float barHeight = m_Slider.GetPixelHeight();
     ImGui::SetNextWindowPos(ImVec2(0, barHeight * 1.5f));
+    ImGui::SetNextWindowSize(ImVec2(barHeight*50.f, barHeight * 3.f));
 
     ImVec4 color(1.f, 0, 0, 1.f);
     ColorToFloat(m_Slider.GetBarColor(), &color.x);
@@ -989,7 +991,10 @@ void CaptureWindow::RenderThreadFilterUi()
         return;
     }
 
+    static char filter[128] = "";
     ImGui::Text("Thread Filter");
+    ImGui::InputText("", filter, IM_ARRAYSIZE(filter));
+    GCurrentTimeGraph->SetThreadFilter(filter);
 
     ImGui::End();
 

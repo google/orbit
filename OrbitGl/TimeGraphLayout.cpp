@@ -54,11 +54,18 @@ void TimeGraphLayout::SortTracksByPosition( const ThreadTrackMap& a_ThreadTracks
         return a->GetPos()[1] > b->GetPos()[1];
     });
 
-    m_SortedThreadIds.clear();
-    for( auto& track : tracks )
+    // Reorder sorted threadIss
+    std::vector< ThreadID > sortedThreadIds;
+    for (auto& track : tracks)
     {
-        m_SortedThreadIds.push_back( track->GetID() );
+        ThreadID tid = track->GetID();
+        if (std::find(m_SortedThreadIds.begin(), m_SortedThreadIds.end(), tid) != m_SortedThreadIds.end())
+        {
+            sortedThreadIds.push_back(tid);
+        }
     }
+
+    m_SortedThreadIds = sortedThreadIds;
 }
 
 //-----------------------------------------------------------------------------
@@ -137,6 +144,12 @@ float TimeGraphLayout::GetFileIOTrackOffset( ThreadID a_TID )
 }
 
 //-----------------------------------------------------------------------------
+bool TimeGraphLayout::IsThreadVisible(ThreadID a_TID)
+{
+    return std::find(m_SortedThreadIds.begin(), m_SortedThreadIds.end(), a_TID) != m_SortedThreadIds.end();
+}
+
+//-----------------------------------------------------------------------------
 float TimeGraphLayout::GetTotalHeight()
 {
     if( m_SortedThreadIds.size() > 0 )
@@ -147,6 +160,12 @@ float TimeGraphLayout::GetTotalHeight()
     }
 
     return GetThreadStart();
+}
+
+//-----------------------------------------------------------------------------
+void TimeGraphLayout::SetSortedThreadIds(const std::vector< ThreadID >& a_SortedThreadIds)
+{
+    m_SortedThreadIds = a_SortedThreadIds;
 }
 
 //-----------------------------------------------------------------------------

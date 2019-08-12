@@ -23,6 +23,7 @@ public:
     float GetTracksHeight();
     float GetSamplingTrackOffset( ThreadID a_TID );
     float GetFileIOTrackOffset( ThreadID a_TID );
+    bool  IsThreadVisible(ThreadID a_TID);
     float GetTotalHeight();
     float GetTextBoxHeight() const { return m_TextBoxHeight; }
     float GetTextCoresHeight() const { return m_CoresHeight; }
@@ -31,7 +32,7 @@ public:
     void CalculateOffsets( const ThreadTrackMap& a_ThreadTracks );
     void Reset();
 
-    void SetSortedThreadIds( const std::vector< ThreadID >& a_SortedThreadIds ) { m_SortedThreadIds = a_SortedThreadIds; }
+    void SetSortedThreadIds(const std::vector< ThreadID >& a_SortedThreadIds);
     const std::vector< ThreadID >& GetSortedThreadIds() const { return m_SortedThreadIds; }
 
 protected:

@@ -516,6 +516,10 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
     for (auto& pair : GetThreadTracksCopy())
     {
         std::shared_ptr<ThreadTrack>& threadTrack = pair.second;
+        
+        if (!m_Layout.IsThreadVisible(threadTrack->GetID()))
+            continue;
+
         std::vector<std::shared_ptr<TimerChain>> depthChain = threadTrack->GetTimers();
         for (auto& textBoxes : depthChain)
         {
@@ -610,9 +614,9 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
 
                                 textBox.SetText(text);
                             }
-                            else if (m_Systrace)
+                            else if (!SystraceManager::Get().IsEmpty())
                             {
-                                textBox.SetText(m_Systrace->GetFunctionName(timer.m_FunctionAddress));
+                                textBox.SetText(SystraceManager::Get().GetFunctionName(timer.m_FunctionAddress));
                             }
                             else if (!Capture::IsCapturing())
                             {
@@ -819,6 +823,14 @@ ThreadTrackMap TimeGraph::GetThreadTracksCopy() const
 }
 
 //-----------------------------------------------------------------------------
+void TimeGraph::SetThreadFilter(const std::string& a_Filter)
+{
+    std::cout << "Setting thread filter: " << a_Filter << std::endl;
+    m_ThreadFilter = a_Filter;
+    NeedsUpdate();
+}
+
+//-----------------------------------------------------------------------------
 void TimeGraph::UpdateThreadIds()
 {
     {
@@ -855,6 +867,26 @@ void TimeGraph::UpdateThreadIds()
             {
                 sortedThreadIds.push_back( pair.first );
             }
+        }
+
+        // Filter thread ids if needed
+        if (!m_ThreadFilter.empty())
+        {
+            std::vector<std::string> filters = Tokenize(m_ThreadFilter, " ");
+            std::vector< ThreadID > filteredThreadIds;
+            for (ThreadID tid : sortedThreadIds)
+            {
+                std::shared_ptr<ThreadTrack> track = GetThreadTrack(tid);
+
+                for (auto& filter : filters)
+                {
+                    if (track && Contains(track->GetName(), filter))
+                    {
+                        filteredThreadIds.push_back(tid);
+                    }
+                }
+            }
+            sortedThreadIds = filteredThreadIds;
         }
      
         m_Layout.SetSortedThreadIds( sortedThreadIds );
