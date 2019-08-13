@@ -70,7 +70,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-extern TimerManager* GTimerManager;
+extern std::unique_ptr<TimerManager> GTimerManager;
 
 //-----------------------------------------------------------------------------
 struct ScopeStartRecording

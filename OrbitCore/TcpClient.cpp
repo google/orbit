@@ -156,6 +156,7 @@ void TcpClient::OnError( const std::error_code& ec)
 
     PRINT_VAR(ec.message().c_str());
     OutputDebugStringW(L"Closing socket\n");
+    m_IsValid = false;
     Stop();
     Orbit::DeInit();
 }

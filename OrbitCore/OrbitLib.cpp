@@ -41,16 +41,13 @@ void Orbit::Init( const std::string & a_Host )
     PRINT_FUNC;
     PRINT_VAR(a_Host);
     
-    delete GTimerManager;
     GTimerManager = nullptr;
-    
     GHost = a_Host;
     GTcpClient = std::make_unique<TcpClient>(a_Host);
 
     if( GTcpClient->IsValid() )
     {
-        GTcpClient->Start();
-        GTimerManager = new TimerManager( true );
+        GTimerManager = std::make_unique<TimerManager>(true);
     }
     else
     {
@@ -86,10 +83,8 @@ void Orbit::DeInit()
     if( GTimerManager )
     {
         GTimerManager->Stop();
+        GTimerManager = nullptr;
     }
-
-    delete GTimerManager;
-    GTimerManager = nullptr;
 
 #ifdef _WIN32
     HMODULE module = GetCurrentModule();

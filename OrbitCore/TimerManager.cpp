@@ -14,7 +14,7 @@
 #include <direct.h>
 #endif
 
-TimerManager* GTimerManager;
+std::unique_ptr<TimerManager> GTimerManager;
 
 //-----------------------------------------------------------------------------
 TimerManager::TimerManager( bool a_IsClient ) : m_LockFreeQueue(65534), m_IsClient(a_IsClient)
@@ -35,6 +35,7 @@ TimerManager::TimerManager( bool a_IsClient ) : m_LockFreeQueue(65534), m_IsClie
 
     if( m_IsClient )
     {
+        GTcpClient->Start();
         m_ConsumerThread = new std::thread([&](){ SendTimers(); });
     }
 }

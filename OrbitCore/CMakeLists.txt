@@ -30,6 +30,7 @@ set(HEADERS
     Capture.h
     Context.h
     ContextSwitch.h
+    ConnectionManager.h
     Core.h
     CoreApp.h
     CrashHandler.h
@@ -91,6 +92,7 @@ set(SOURCES
     Core.cpp
     CoreApp.cpp
     CrashHandler.cpp
+    ConnectionManager.cpp
     Diff.cpp
     EventBuffer.cpp
     FunctionStats.cpp

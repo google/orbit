@@ -38,6 +38,7 @@
 #include "OrbitCore/Utils.h"
 #include "OrbitCore/Systrace.h"
 #include "Tcp.h"
+#include "ConnectionManager.h"
 #include "PrintVar.h"
 #include "Version.h"
 #include "curl/curl.h"
@@ -108,12 +109,9 @@ void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args
     {
         if( Contains( arg, "host:" )  )
         { 
-            std::vector< std::string > vec = Tokenize( arg, ":" );
-            if( vec.size() > 1 )
-            {
-                std::string & host = vec[1];
-                Capture::GCaptureHost = s2ws(host);
-            }
+            std::string host = Replace(arg, "host:", "");
+            Capture::GCaptureHost = s2ws(host);
+            ConnectionManager::Get().Init(host);
         }
         else if( Contains( arg, "preset:" ) )
         {
@@ -240,7 +238,7 @@ bool OrbitApp::Init()
 {
     GOrbitApp = new OrbitApp();
     GCoreApp = GOrbitApp;
-    GTimerManager = new TimerManager();
+    GTimerManager = std::make_unique<TimerManager>();
     GTcpServer = new TcpServer();
 
     Path::Init();
@@ -499,7 +497,7 @@ int OrbitApp::OnExit()
 {
     GParams.Save();
     delete GOrbitApp;
-	delete GTimerManager;
+	GTimerManager = nullptr;
     GTcpServer->Stop();
     delete GTcpServer;
     Orbit_ImGui_Shutdown();
