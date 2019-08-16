@@ -61,16 +61,16 @@ public:
 public:
 
     // Needs to have to exact same layout in win32/x64, debug/release
-    uint32_t    m_TID;
-    uint8_t     m_Depth;
-    uint8_t     m_SessionID;
-    Type        m_Type;
-    uint8_t     m_Processor;
-    DWORD64     m_CallstackHash;
-    DWORD64     m_FunctionAddress;
-    DWORD64     m_UserData[2];
-    TickType    m_Start;
-    TickType    m_End;
+    uint32_t m_TID;
+    uint8_t  m_Depth;
+    uint8_t  m_SessionID;
+    Type     m_Type;
+    uint8_t  m_Processor;
+    uint64_t m_CallstackHash;
+    uint64_t m_FunctionAddress;
+    uint64_t m_UserData[2];
+    TickType m_Start;
+    TickType m_End;
 };
 
 //-----------------------------------------------------------------------------

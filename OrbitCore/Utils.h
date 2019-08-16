@@ -18,6 +18,7 @@
 #include <BaseTypes.h>
 #include <stdarg.h>
 #include <memory>
+#include <iomanip>
 
 //-----------------------------------------------------------------------------
 inline std::string ws2s( const std::wstring& wstr )
@@ -352,6 +353,37 @@ inline uint64_t GetMicros(std::string a_TimeStamp)
     uint64_t seconds = atoi(tokens[0].c_str());
     uint64_t micros = atoi(tokens[1].c_str());
     return seconds * 1000000 + micros;
+}
+
+//-----------------------------------------------------------------------------
+inline void PrintBuffer( const char* a_Buffer, uint32_t a_Size, uint32_t a_Width = 16 )
+{
+    unsigned char* buffer = (unsigned char*) a_Buffer;
+    for (size_t i = 0; i < a_Size; ++i)
+    {
+        std::cout << std::hex 
+                  << std::setfill('0') << std::setw(2) 
+                  << (int)buffer[i] << " ";
+        
+        if( (i+1) % a_Width == 0 )
+        {
+            std::cout << std::endl;
+        }
+    }
+
+    std::cout << std::endl;
+
+    for (size_t i = 0; i < a_Size; ++i)
+    {
+        std::cout << buffer[i];
+        
+        if( (i+1) % a_Width == 0 )
+        {
+            std::cout << std::endl;
+        }
+    }
+
+    std::cout << std::endl;
 }
 
 #ifdef _WIN32

@@ -293,7 +293,7 @@ void OrbitApp::PostInit()
                 GoToCapture();
                 LoadSystrace(tokens[0]);
             }
-            for (int i = 1; i + 1 < tokens.size(); i += 2)
+            for (size_t i = 1; i + 1 < tokens.size(); i += 2)
             {
                 AppendSystrace(tokens[i], std::stoull(tokens[i + 1]));
             }

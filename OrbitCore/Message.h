@@ -6,9 +6,7 @@
 #include "BaseTypes.h"
 #include <string>
 
-#ifndef _WINDEF_
-typedef unsigned long DWORD;
-#endif
+#pragma pack(push, 1)
 
 //-----------------------------------------------------------------------------
 enum MessageType : int16_t
@@ -30,14 +28,14 @@ enum MessageType : int16_t
     Msg_FunctionHookFree,
     Msg_FunctionHookRealloc,
     Msg_FunctionHookOrbitData,
-	Msg_SavedContext,
+    Msg_SavedContext,
     Msg_ClearArgTracking,
     Msg_ArgTracking,
     Msg_CallstackTracking,
     Msg_Unload,
     Msg_WebSocketHandshake,
     Msg_NumQueuedEntries,
-	Msg_NumFlushedEntries,
+    Msg_NumFlushedEntries,
     Msg_NumFlushedItems,
     Msg_NumInstalledHooks,
     Msg_Callstack,
@@ -56,34 +54,33 @@ enum MessageType : int16_t
 //-----------------------------------------------------------------------------
 struct MessageGeneric
 {
-    ULONG64 m_Address;
+    uint64_t m_Address;
 };
 
 //-----------------------------------------------------------------------------
 struct DataTransferHeader
 {
     enum DataType{ Data, Code };
-    ULONG64  m_Address;
+    uint64_t m_Address;
     DataType m_Type;
 };
 
 //-----------------------------------------------------------------------------
 struct ArgTrackingHeader
 {
-    ULONG64 m_Function;
-    int     m_NumArgs;
+    uint64_t m_Function;
+    uint32_t m_NumArgs;
 };
 
 //-----------------------------------------------------------------------------
 struct UnrealObjectHeader
 {
-    ULONG64 m_Ptr;
-    int     m_StrSize : 31;
-    bool    m_WideStr  : 1;
+    uint64_t m_Ptr;
+    uint32_t m_StrSize;
+    bool     m_WideStr;
 };
 
 //-----------------------------------------------------------------------------
-#pragma pack(push, 1)
 class Message
 {
 public:
@@ -110,34 +107,37 @@ public:
     const Header & GetHeader() const { return m_Header; }
     const char*    GetData()   const { return m_Data; }
     char*          GetData()         { return m_Data; }
+    static void    Dump();
 
 public:
     MessageType    m_Type;
     Header         m_Header;
-    size_t         m_Size;
-    int            m_SessionID;
-    DWORD          m_ThreadId;
+    uint32_t       m_Size;
+    uint32_t       m_SessionID;
+    uint32_t       m_ThreadId;
     char*          m_Data;
+#ifdef WIN32
 #ifndef _WIN64
     char*          m_Padding; // Make sure Message is same size on both Win32 and x64
 #endif
+#endif
 
-    static int GSessionID;
+    static uint32_t GSessionID;
 };
 
 //-----------------------------------------------------------------------------
 struct OrbitZoneName
 {
     enum { NUM_CHAR = 64 };
-    DWORD64 m_Address;
-    char    m_Data[NUM_CHAR];
+    uint64_t m_Address;
+    char     m_Data[NUM_CHAR];
 };
 
 //-----------------------------------------------------------------------------
 struct OrbitWaitLoop
 {
-    DWORD         m_ThreadId;
-    DWORD64       m_Address;
+    uint32_t      m_ThreadId;
+    uint64_t      m_Address;
     unsigned char m_OriginalBytes[2];
 };
 
@@ -145,24 +145,24 @@ struct OrbitWaitLoop
 struct OrbitUnrealInfo
 {
     OrbitUnrealInfo(){ memset(this, 0, sizeof(*this) ); }
-    DWORD64       m_GetDisplayNameEntryAddress;
-    DWORD         m_UobjectNameOffset;
-    DWORD         m_EntryNameOffset;
-    DWORD         m_EntryIndexOffset;
+    uint64_t m_GetDisplayNameEntryAddress;
+    uint32_t m_UobjectNameOffset;
+    uint32_t m_EntryNameOffset;
+    uint32_t m_EntryIndexOffset;
 };
-
-#pragma pack(pop)
 
 //-----------------------------------------------------------------------------
 struct OrbitLogEntry
 {
     OrbitLogEntry() : m_Time(0), m_CallstackHash(0), m_ThreadId(0) {}
-    DWORD64     m_Time;
-    DWORD64     m_CallstackHash;
-    DWORD       m_ThreadId;
+    uint64_t    m_Time;
+    uint64_t    m_CallstackHash;
+    uint32_t    m_ThreadId;
     std::string m_Text; // this must be the last member
 
     static size_t GetSizeWithoutString() { return sizeof(OrbitLogEntry) - sizeof(std::string); }
     size_t GetStringSize() { return ((m_Text.size() + 1) * sizeof(m_Text[0])); }
     size_t GetBufferSize() { return GetSizeWithoutString() + GetStringSize(); }
 };
+
+#pragma pack(pop)

@@ -165,7 +165,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 if(LINUX)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -fno-omit-frame-pointer -g")
 endif()
 
 if(WIN32)

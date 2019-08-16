@@ -193,25 +193,6 @@ void DumpClocks()
 }
 
 //-----------------------------------------------------------------------------
-void PrintBuffer( void* a_Buffer, size_t a_Size )
-{
-    unsigned char* buffer = (unsigned char*) a_Buffer;
-    for (size_t i = 0; i < a_Size; ++i)
-    {
-        std::cout << std::hex 
-                  << std::setfill('0') << std::setw(2) 
-                  << (int)buffer[i] << " ";
-        
-        if( (i+1) % 32 == 0 )
-        {
-            std::cout << std::endl;
-        }
-    }
-
-    std::cout << std::endl;
-}
-
-//-----------------------------------------------------------------------------
 void StreamCommandOutput(const char* a_Cmd, std::function<void(const std::string&)> a_Callback, bool* a_ExitRequested)
 {
     std::cout << "Starting output stream for command" << a_Cmd << std::endl;
@@ -249,14 +230,10 @@ void LinuxPerf::Start()
 {
     m_IsRunning = true;
 
-    //std::string cmd = Format("record -F %u -p %u -g -o /tmp/perf.data", m_Frequency, m_PID);
-    std::string cmd = "record -F 1000";
     std::string path = ws2s(Path::GetBasePath());
     
     pid_t PID = fork();
     if(PID == 0) {
-        PRINT_VAR(cmd);
-        PRINT_VAR(path);
         execl   ( "/usr/bin/perf"
                 , "/usr/bin/perf"
                 , "record"

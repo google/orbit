@@ -6,6 +6,7 @@
 #include "Message.h"
 #include "TcpForward.h"
 #include "Threading.h"
+#include "Utils.h"
 #include "../OrbitPlugin/OrbitUserData.h"
 
 #include <type_traits>
@@ -32,6 +33,12 @@ public:
         // Footer
         const unsigned int footer = MAGIC_FOOT_MSG;
         memcpy( m_Data->data() + sizeof( Message ) + a_Message.m_Size, &footer, 4 );
+    }
+
+    void Dump() const
+    {
+        std::cout << "TcpPacket [" << std::dec << (int)m_Data->size() << " bytes]" << std::endl;
+        PrintBuffer(m_Data->data(), m_Data->size());
     }
 
     std::shared_ptr< std::vector<char> > Data() { return m_Data; };

@@ -106,7 +106,7 @@ void ModulesDataView::OnSort(int a_Column, bool a_Toggle)
 }
 
 //-----------------------------------------------------------------------------
-const std::wstring MODULES_LOAD = L"Load PDB";
+const std::wstring MODULES_LOAD = L"Load Symbols";
 const std::wstring DLL_FIND_PDB = L"Find Pdb";
 const std::wstring DLL_EXPORTS  = L"Load Symbols";
 
