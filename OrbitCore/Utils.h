@@ -19,6 +19,7 @@
 #include <stdarg.h>
 #include <memory>
 #include <iomanip>
+#include <iostream>
 
 //-----------------------------------------------------------------------------
 inline std::string ws2s( const std::wstring& wstr )
@@ -356,7 +357,7 @@ inline uint64_t GetMicros(std::string a_TimeStamp)
 }
 
 //-----------------------------------------------------------------------------
-inline void PrintBuffer( const char* a_Buffer, uint32_t a_Size, uint32_t a_Width = 16 )
+inline void PrintBuffer( const void* a_Buffer, uint32_t a_Size, uint32_t a_Width = 16 )
 {
     unsigned char* buffer = (unsigned char*) a_Buffer;
     for (size_t i = 0; i < a_Size; ++i)

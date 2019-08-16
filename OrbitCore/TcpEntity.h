@@ -38,7 +38,7 @@ public:
     void Dump() const
     {
         std::cout << "TcpPacket [" << std::dec << (int)m_Data->size() << " bytes]" << std::endl;
-        PrintBuffer(m_Data->data(), m_Data->size());
+        PrintBuffer(m_Data->data(), (uint32_t)m_Data->size());
     }
 
     std::shared_ptr< std::vector<char> > Data() { return m_Data; };
