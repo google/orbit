@@ -9,6 +9,9 @@
 #include "Serialization.h"
 
 #include <fstream>
+#include <streambuf>
+#include <sstream>
+#include <iostream>
 
 //-----------------------------------------------------------------------------
 struct CrossPlatformMessage
@@ -20,16 +23,26 @@ struct CrossPlatformMessage
     void Load();
     void Dump();
 
+    std::string ToRaw();
+    void FromRaw(const char* data, uint32_t size);
+
     ORBIT_SERIALIZABLE;
+    uint32_t m_Id;
     std::string m_Name;
     std::vector<std::string> m_Strings;
     std::map<uint32_t, std::string> m_StringMap;
     std::string m_SerializationPath;
+    uint32_t m_Size;
+    uint32_t m_SizeOnSave;
 };
 
 //-----------------------------------------------------------------------------
 CrossPlatformMessage::CrossPlatformMessage()
 {
+    static uint32_t id = 0;
+    m_Id = ++id;
+    m_Size = sizeof(CrossPlatformMessage);
+    m_SizeOnSave = 0;
     m_SerializationPath = ws2s( Path::GetBasePath() ) + "xmsg.orbit";
     PRINT_VAR(m_SerializationPath);
 }
@@ -40,6 +53,8 @@ ORBIT_SERIALIZE( CrossPlatformMessage, 1 )
     ORBIT_NVP_VAL( 0, m_Name );
     ORBIT_NVP_VAL( 0, m_Strings );
     ORBIT_NVP_VAL( 0, m_StringMap );
+    ORBIT_NVP_VAL( 1, m_SizeOnSave );
+    ORBIT_NVP_VAL( 1, m_Id );
 }
 
 //-----------------------------------------------------------------------------
@@ -60,11 +75,32 @@ void CrossPlatformMessage::Save()
     std::ofstream myfile( m_SerializationPath, std::ios::binary );
     if( !myfile.fail() )
     {
+        m_SizeOnSave = sizeof(CrossPlatformMessage);
         SCOPE_TIMER_LOG( Format( L"Saving cross platform message" ) );
         cereal::BinaryOutputArchive archive( myfile );
         archive(*this);
         myfile.close();
     }
+}
+
+//-----------------------------------------------------------------------------
+std::string CrossPlatformMessage::ToRaw()
+{
+    m_SizeOnSave = sizeof(CrossPlatformMessage);
+    std::stringstream buffer;
+    cereal::BinaryOutputArchive archive( buffer );
+    archive(*this);
+    PRINT_VAR(buffer.str().size());
+    return buffer.str();
+}
+
+void CrossPlatformMessage::FromRaw(const char* data, uint32_t size)
+{
+    PRINT_FUNC;
+    PRINT_VAR(size);
+    std::istringstream buffer(std::string(data, size));
+    cereal::BinaryInputArchive inputAr( buffer );
+    inputAr(*this);
 }
 
 //-----------------------------------------------------------------------------
@@ -129,6 +165,7 @@ ConnectionManager& ConnectionManager::Get()
 //-----------------------------------------------------------------------------
 void ConnectionManager::Init(std::string a_Host)
 {
+    SetupTestMessageHandler();
     m_Host = a_Host;
     TerminateThread();
     m_Thread = std::make_unique<std::thread>(&ConnectionManager::ConnectionThread, this);
@@ -142,6 +179,29 @@ void ConnectionManager::Init(std::string a_Host)
 void ConnectionManager::Stop()
 {
     m_ExitRequested = true;
+}
+
+//-----------------------------------------------------------------------------
+void ConnectionManager::SetupTestMessageHandler()
+{
+    GTcpServer->SetCallback( Msg_CrossPlatform, [=]( const Message & a_Msg )
+    {
+        CrossPlatformMessage msg;
+        PRINT_VAR(a_Msg.m_Size);
+        msg.FromRaw(a_Msg.m_Data, a_Msg.m_Size);
+        msg.Dump();
+    } );
+}
+
+//-----------------------------------------------------------------------------
+void ConnectionManager::SendTestMessage()
+{
+    static uint32_t id = 0;
+    CrossPlatformMessage msg;
+    msg.Fill();
+
+    std::string rawMsg = msg.ToRaw();
+    GTcpClient->Send(Msg_CrossPlatform, (void*)rawMsg.data(), rawMsg.size());
 }
 
 //-----------------------------------------------------------------------------
@@ -161,6 +221,9 @@ void ConnectionManager::ConnectionThread()
         {
             std::string msg("Hello from ConnectionManager");
             GTcpClient->Send(msg);
+
+            SendTestMessage();
+
             Sleep(2000);
         }
     }

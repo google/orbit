@@ -37,7 +37,7 @@ public:
 
     void Dump() const
     {
-        std::cout << "TcpPacket [" << std::dec << (int)m_Data->size() << " bytes]" << std::endl;
+        std::cout << "TcpPacket [" << std::dec << (uint32_t)m_Data->size() << " bytes]" << std::endl;
         PrintBuffer(m_Data->data(), (uint32_t)m_Data->size());
     }
 
@@ -83,10 +83,10 @@ protected:
     std::thread*               m_SenderThread;
     AutoResetEvent             m_ConditionVariable;
     LockFreeQueue< TcpPacket > m_SendQueue;
-    std::atomic<int>           m_NumQueuedEntries;
+    std::atomic<uint32_t>      m_NumQueuedEntries;
     std::atomic<bool>          m_ExitRequested;
     std::atomic<bool>          m_FlushRequested;
-    std::atomic<int>           m_NumFlushedItems;
+    std::atomic<uint32_t>      m_NumFlushedItems;
 };
 
 //-----------------------------------------------------------------------------
@@ -104,7 +104,7 @@ inline void TcpEntity::Send( Message & a_Message )
 //-----------------------------------------------------------------------------
 void TcpEntity::Send( std::string& a_String )
 {
-    Message msg(Msg_String, (int)(a_String.size() + 1)*sizeof(a_String[0]));
+    Message msg(Msg_String, (uint32_t)(a_String.size() + 1)*sizeof(a_String[0]));
     Send(msg, (void*)a_String.data());
 }
 
@@ -112,7 +112,7 @@ void TcpEntity::Send( std::string& a_String )
 void TcpEntity::Send( OrbitLogEntry& a_Entry )
 {
     char stackBuffer[1024];
-    int entrySize = (int)a_Entry.GetBufferSize();
+    uint32_t entrySize = (uint32_t)a_Entry.GetBufferSize();
     bool needsAlloc = entrySize > 1024;
     char* buffer = !needsAlloc ? stackBuffer : new char[entrySize];
     
@@ -152,7 +152,7 @@ void TcpEntity::Send( Orbit::UserData& a_UserData )
 //-----------------------------------------------------------------------------
 template<class T> void TcpEntity::Send( Message & a_Message, const std::vector<T> & a_Vector )
 {
-    a_Message.m_Size = (int)a_Vector.size()*sizeof(T);
+    a_Message.m_Size = (uint32_t)a_Vector.size()*sizeof(T);
     SendMsg(a_Message, (void*)a_Vector.data());
 }
 
@@ -166,7 +166,7 @@ template<class T> void TcpEntity::Send( MessageType a_Type, const std::vector<T>
 //-----------------------------------------------------------------------------
 template<class T> void TcpEntity::Send( Message & a_Message, const T& a_Item )
 {
-    a_Message.m_Size = (int)sizeof(T);
+    a_Message.m_Size = (uint32_t)sizeof(T);
     SendMsg(a_Message, (void*)&a_Item);
 }
 
@@ -181,7 +181,7 @@ template<class T> void TcpEntity::Send( MessageType a_Type, const T& a_Item )
 void TcpEntity::Send( MessageType a_Type , void* a_Data, size_t a_Size )
 {
     Message msg(a_Type);
-    msg.m_Size = (int)a_Size;
+    msg.m_Size = (uint32_t)a_Size;
     SendMsg( msg, a_Data );
 }
 

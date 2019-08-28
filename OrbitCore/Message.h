@@ -49,6 +49,7 @@ enum MessageType : int16_t
     Msg_UserData,
     Msg_OrbitData,
     Msg_ThreadInfo,
+    Msg_CrossPlatform,
 };
 
 //-----------------------------------------------------------------------------

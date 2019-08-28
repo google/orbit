@@ -21,6 +21,8 @@ public:
 protected:
     void ConnectionThread();
     void TerminateThread();
+    void SetupTestMessageHandler();
+    void SendTestMessage();
 
 protected:
     std::unique_ptr<std::thread> m_Thread;
