@@ -55,7 +55,7 @@ std::shared_ptr<Process> MiniDump::ToOrbitProcess()
             
             if( EndsWith( mod->m_Name, TEXT( ".exe" ) ) )
             {
-                process->m_Name = mod->m_Name;
+                process->m_Name = ws2s(mod->m_Name);
             }
 
             mod->m_Directory = Path::GetDirectory( mod->m_FullName );
