@@ -210,8 +210,8 @@ void ProcessList::Refresh()
                     if( iter == m_ProcessesMap.end() )
                     {
                         process = std::make_shared<Process>();
-                        process->m_FullName = s2ws( processName );
-                        process->m_Name = Path::GetFileName(process->m_FullName);
+                        process->m_FullName = processName;
+                        process->m_Name = ws2s(Path::GetFileName(s2ws(process->m_FullName)));
                         process->SetID(pid);
                         m_ProcessesMap[pid] = process;
                     }

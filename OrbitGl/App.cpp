@@ -730,7 +730,7 @@ void OrbitApp::OnOpenPdb( const std::wstring a_FileName )
     mod->m_FoundPdb = true;
     mod->LoadDebugInfo();
 
-    Capture::GTargetProcess->m_Name = Path::StripExtension( mod->m_Name );
+    Capture::GTargetProcess->m_Name = ws2s(Path::StripExtension( mod->m_Name ));
     Capture::GTargetProcess->AddModule( mod );
 
     m_ModulesDataView->SetProcess( Capture::GTargetProcess );

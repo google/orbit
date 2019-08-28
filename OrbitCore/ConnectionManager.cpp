@@ -28,6 +28,7 @@ struct CrossPlatformMessage
     void FromRaw(const char* data, uint32_t size);
 
     ORBIT_SERIALIZABLE;
+    std::wstring m_WName;
     uint32_t m_Id;
     std::string m_Name;
     std::vector<std::string> m_Strings;
@@ -56,12 +57,14 @@ ORBIT_SERIALIZE( CrossPlatformMessage, 1 )
     ORBIT_NVP_VAL( 0, m_StringMap );
     ORBIT_NVP_VAL( 1, m_SizeOnSave );
     ORBIT_NVP_VAL( 1, m_Id );
+    ORBIT_NVP_VAL( 1, m_WName );
 }
 
 //-----------------------------------------------------------------------------
 void CrossPlatformMessage::Fill()
 {
     m_Name = "Orbit CrossPlatformMessage";
+    m_WName = L"Wname";
     for( int i = 0 ; i < 1000; ++i )
     {
         std::string val = std::to_string(i);

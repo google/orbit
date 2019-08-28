@@ -62,8 +62,8 @@ public:
     std::map< std::wstring, std::shared_ptr<Module> >& GetNameToModulesMap() { return m_NameToModuleMap; }
     std::shared_ptr<Module> FindModule( const std::wstring & a_ModuleName );
 
-    const std::wstring & GetName() const { return m_Name; }
-    const std::wstring & GetFullName() const { return m_FullName; }
+    const std::wstring GetName() const { return s2ws(m_Name); }
+    const std::wstring GetFullName() const { return s2ws(m_FullName); }
     DWORD GetID() const { return m_ID; }
     double GetCpuUsage() const { return m_CpuUsage; }
     HANDLE GetHandle() const { return m_Handle; }
@@ -110,8 +110,8 @@ public:
 
     void FindCoreFunctions();
 
-    std::wstring     m_Name;
-    std::wstring     m_FullName;
+    std::string     m_Name;
+    std::string     m_FullName;
 
     ORBIT_SERIALIZABLE;
 

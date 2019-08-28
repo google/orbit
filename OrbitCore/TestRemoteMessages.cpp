@@ -31,7 +31,7 @@ TestRemoteMessages::~TestRemoteMessages()
 
 void TestRemoteMessages::Init()
 {
-
+    SetupMessageHandlers();
 }
 
 //-----------------------------------------------------------------------------
@@ -48,8 +48,8 @@ template <class T> std::string SerializeObject(T& a_Object)
 void TestRemoteMessages::Run()
 {
     Process process;
-    process.m_Name = L"process.m_Name";
-    process.m_FullName = L"process.m_FullName";
+    process.m_Name = "process.m_Name";
+    process.m_FullName = "process.m_FullName";
     process.SetID( 22 );
     process.m_Is64Bit = true;
     process.m_DebugInfoLoaded = true;
@@ -74,7 +74,7 @@ void TestRemoteMessages::Run()
     module.m_AddressEnd = 3;
     module.m_EntryPoint = 4;
     module.m_FoundPdb = true;
-    
+
     module.m_Selected = true;
     module.m_Loaded = true;
     module.m_PdbSize = 110;
