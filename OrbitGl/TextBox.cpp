@@ -147,7 +147,7 @@ void TextBox::Draw( TextRenderer & a_TextRenderer
         float maxSize = m_Pos[0]+m_Size[0] - posX;
 
         Function* func = Capture::GSelectedFunctionsMap[m_Timer.m_FunctionAddress];
-        std::string text = Format( "%s %s", func ? func->PrettyNameStr().c_str() : "", m_Text.c_str() );
+        std::string text = Format( "%s %s", func ? func->PrettyName().c_str() : "", m_Text.c_str() );
 
         if( !a_IsPicking && !isCoreActivity )
         {

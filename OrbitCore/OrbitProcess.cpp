@@ -120,7 +120,7 @@ void Process::ListModules()
     for( auto & pair : m_Modules )
     {
         std::shared_ptr<Module> & module = pair.second;
-        std::wstring name = ToLower( module->m_Name );
+        std::string name = ToLower( module->m_Name );
         m_NameToModuleMap[name] = module;
         module->LoadDebugInfo();
     }
@@ -252,7 +252,7 @@ std::shared_ptr<Module> Process::FindModule( const std::wstring & a_ModuleName )
     for( auto & it : m_Modules )
     {
         std::shared_ptr<Module> & module = it.second;
-        if( ToLower( Path::GetFileNameNoExt( module->m_Name ) ) == moduleName )
+        if( ToLower( Path::GetFileNameNoExt( s2ws(module->m_Name) ) ) == moduleName )
         {
             return module;
         }
@@ -307,7 +307,7 @@ std::shared_ptr<Module> Process::GetModuleFromAddress( DWORD64 a_Address )
 //-----------------------------------------------------------------------------
 std::shared_ptr<Module> Process::GetModuleFromName( const std::wstring& a_Name )
 {
-    auto iter = m_NameToModuleMap.find(a_Name);
+    auto iter = m_NameToModuleMap.find(ws2s(a_Name));
     if( iter != m_NameToModuleMap.end() )
     {
         return iter->second;
@@ -595,7 +595,7 @@ ORBIT_SERIALIZE_XML( Process, 0 )
     ORBIT_NVP_VAL( 0, m_Is64Bit );
     ORBIT_NVP_VAL( 0, m_DebugInfoLoaded );
     ORBIT_NVP_VAL( 0, m_IsRemote );
-    //ORBIT_NVP_VAL( 0, m_Modules );
-    //ORBIT_NVP_VAL( 0, m_NameToModuleMap );
+    ORBIT_NVP_VAL( 0, m_Modules );
+    ORBIT_NVP_VAL( 0, m_NameToModuleMap );
     ORBIT_NVP_VAL( 0, m_ThreadIds );
 }

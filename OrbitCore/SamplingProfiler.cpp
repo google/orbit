@@ -488,7 +488,7 @@ void SamplingProfiler::OutputStats()
             function.m_Address = address;
 
             std::shared_ptr<Module> module = m_Process->GetModuleFromAddress(address);
-            function.m_Module = module ? module->m_Name : L"unknown module";
+            function.m_Module = module ? s2ws(module->m_Name) : L"unknown module";
             
             const LineInfo & lineInfo = m_AddressToLineInfo[address];
             function.m_Line = lineInfo.m_Line;

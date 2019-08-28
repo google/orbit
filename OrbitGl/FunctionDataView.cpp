@@ -63,32 +63,32 @@ std::wstring FunctionsDataView::GetValue( int a_Row, int a_Column )
 
     Function & function = GetFunction( a_Row );
 
-    std::wstring value;
+    std::string value;
 
     switch ( s_HeaderMap[a_Column] )
     {
     case Function::INDEX:
-        value = Format(L"%d", a_Row); break;
+        value = Format("%d", a_Row); break;
     case Function::SELECTED:
-        value = function.IsSelected() ? L"X" : L"-"; break;
+        value = function.IsSelected() ? "X" : "-"; break;
     case Function::NAME:
         value = function.PrettyName(); break;
     case Function::ADDRESS:
-        value = Format(L"0x%llx", function.GetVirtualAddress()); break;
+        value = Format("0x%llx", function.GetVirtualAddress()); break;
     case Function::FILE:
         value = function.m_File; break;
     case Function::MODULE:
-        value = function.m_Pdb ? function.m_Pdb->GetName() : L""; break;
+        value = function.m_Pdb ? ws2s(function.m_Pdb->GetName()) : ""; break;
     case Function::LINE:
-        value = Format( L"%i", function.m_Line ); break;
+        value = Format( "%i", function.m_Line ); break;
     case Function::SIZE:
-        value = Format( L"%lu", function.m_Size ); break;
+        value = Format( "%lu", function.m_Size ); break;
     case Function::CALL_CONV:
-        value = Function::GetCallingConventionString(function.m_CallConv); break;
+        value = ws2s(Function::GetCallingConventionString(function.m_CallConv)); break;
     default: break;
     }
 
-    return value;
+    return s2ws(value);
 }
 
 //-----------------------------------------------------------------------------
@@ -232,7 +232,7 @@ void FunctionsDataView::OnFilter( const std::wstring & a_Filter )
     for (int i = 0; i < (int)functions.size(); ++i)
     {
         Function* function = functions[i];
-        std::wstring name = function->Lower() + function->m_Pdb->GetName();
+        std::wstring name = s2ws(function->Lower()) + function->m_Pdb->GetName();
 
         bool match = true;
 

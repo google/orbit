@@ -45,12 +45,12 @@ const std::vector<float>& ModulesDataView::GetColumnHeadersRatios()
 std::wstring ModulesDataView::GetValue( int row, int col )
 {
     const std::shared_ptr<Module> & module = GetModule(row);
-    std::wstring value;
+    std::string value;
     
     switch (col)
     {
     case MDV_Index:
-        value = std::to_wstring((long)row); break;
+        value = std::to_string((long)row); break;
     case MDV_ModuleName:
         value = module->m_Name; break;
     case MDV_Path:
@@ -58,16 +58,16 @@ std::wstring ModulesDataView::GetValue( int row, int col )
     case MDV_AddressRange:
         value = module->m_AddressRange; break;
     case MDV_HasPdb:
-        value = module->m_FoundPdb ? L"*" : L""; break;
+        value = module->m_FoundPdb ? "*" : ""; break;
     case MDV_PdbSize:
-        value = module->m_FoundPdb ? GetPrettySize( module->m_PdbSize ) : L""; break;
+        value = module->m_FoundPdb ? ws2s(GetPrettySize( module->m_PdbSize )) : ""; break;
     case MDV_Loaded:
-        value = module->m_Loaded ? L"*" : L""; break;
+        value = module->m_Loaded ? "*" : ""; break;
     default:
         break;
     }
 
-    return value;
+    return s2ws(value);
 }
 
 //-----------------------------------------------------------------------------

@@ -133,6 +133,7 @@ class Pdb
 {
 public:
     Pdb( const wchar_t* a_PdbName ){}
+    Pdb( const char* a_PdbName){}
     ~Pdb(){}
 
     void Init(){}

@@ -424,7 +424,7 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size )
     if( m_Function )
     {
         ImGui::NewLine();
-        std::string funcName = m_Function->PrettyNameStr();
+        std::string funcName = m_Function->PrettyName();
         ImGui::Text( "When [%s] is called, send:", funcName.c_str() );
     }
    

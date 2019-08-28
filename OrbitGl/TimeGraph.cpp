@@ -609,7 +609,7 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
                             if (func)
                             {
                                 std::string extraInfo = GetExtraInfo(timer);
-                                name = func->PrettyNameStr().c_str();
+                                name = func->PrettyName().c_str();
                                 std::string text = Format("%s %s %s", name, extraInfo.c_str(), time.c_str());
 
                                 textBox.SetText(text);

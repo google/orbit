@@ -55,7 +55,7 @@ void ModuleManager::OnReceiveMessage( const Message & a_Msg )
         else if( dataType == DataTransferHeader::Code )
         {
             Function* func = Capture::GTargetProcess->GetFunctionFromAddress( header.m_Address, true );
-            std::string name = func ? func->PrettyNameStr() : Format( "%p", (void*)header.m_Address );
+            std::string name = func ? func->PrettyName() : Format( "%p", (void*)header.m_Address );
             GCoreApp->Disassemble( name, header.m_Address, a_Msg.GetData(), a_Msg.m_Size );
         }
     }
@@ -69,7 +69,7 @@ void ModuleManager::LoadPdbAsync( const std::shared_ptr<Module> & a_Module, std:
         bool loadExports = a_Module->IsDll() && !a_Module->m_FoundPdb;
         if( a_Module->m_FoundPdb || loadExports )
         {
-            std::wstring pdbName = loadExports ? a_Module->m_FullName : a_Module->m_PdbName;
+            std::wstring pdbName = loadExports ? s2ws(a_Module->m_FullName) : s2ws(a_Module->m_PdbName);
             m_UserCompletionCallback = a_CompletionCallback;
 
             GPdbDbg = a_Module->m_Pdb;
@@ -104,12 +104,13 @@ void ModuleManager::DequeueAndLoad()
         if( module )
         {
             GPdbDbg = module->m_Pdb;
-            if( module->m_PdbName == L"" )
+            if( module->m_PdbName == "" )
             {
                 module->m_PdbName = module->m_FullName;
             }
 
-            GPdbDbg->LoadPdbAsync( module->m_PdbName.c_str(), [&](){ this->OnPdbLoaded(); });
+            std::wstring pdbName = s2ws(module->m_PdbName);
+            GPdbDbg->LoadPdbAsync( pdbName.c_str(), [&](){ this->OnPdbLoaded(); });
             return;
         }
     }

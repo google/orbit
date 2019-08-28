@@ -76,13 +76,13 @@ void TestRemoteMessages::Run()
     GTcpClient->Send(Msg_RemoteProcesses, (void*)processData.data(), processData.size());
 
     Module module;
-    module.m_Name = L"module.m_Name";
-    module.m_FullName = L"module.m_FullName";
-    module.m_PdbName = L"module.m_PdbName";
-    module.m_Directory = L"module.m_Directory";
-    module.m_PrettyName = L"module.m_PrettyName";
-    module.m_AddressRange = L"module.m_AddressRange";
-    module.m_DebugSignature = L"module.m_DebugSignature";
+    module.m_Name = "module.m_Name";
+    module.m_FullName = "module.m_FullName";
+    module.m_PdbName = "module.m_PdbName";
+    module.m_Directory = "module.m_Directory";
+    module.m_PrettyName = "module.m_PrettyName";
+    module.m_AddressRange = "module.m_AddressRange";
+    module.m_DebugSignature = "module.m_DebugSignature";
     module.m_ModuleHandle = (HMODULE)1;
     module.m_AddressStart = 2;
     module.m_AddressEnd = 3;
@@ -93,8 +93,26 @@ void TestRemoteMessages::Run()
     module.m_Loaded = true;
     module.m_PdbSize = 110;
 
-    std::string moduleData = SerializeObject(module);
+    std::string moduleData = SerializeObjectHumanReadable(module);
     GTcpClient->Send(Msg_RemoteModules, (void*)moduleData.data(), moduleData.size());
+
+    Function function;
+    function.m_Name = "m_Name";
+    function.m_PrettyName = "m_PrettyName";
+    function.m_PrettyNameLower = "m_PrettyNameLower";
+    function.m_Module = "m_Module";
+    function.m_File = "m_File";
+    function.m_Probe = "m_Probe";
+    function.m_Address = 1;
+    function.m_ModBase = 2;
+    function.m_Size = 3;
+    function.m_Id = 4;
+    function.m_ParentId = 5;
+    function.m_Line = 6;
+    function.m_CallConv = 7;
+
+    std::string functionData = SerializeObjectHumanReadable(function);
+    GTcpClient->Send(Msg_RemoteFunctions, (void*)functionData.data(), functionData.size());
 }
 
 //-----------------------------------------------------------------------------
@@ -114,7 +132,7 @@ void TestRemoteMessages::SetupMessageHandlers()
     {
         PRINT_VAR(a_Msg.m_Size);
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
-        cereal::BinaryInputArchive inputAr( buffer );
+        cereal::XMLInputArchive inputAr( buffer );
         Module module;
         inputAr(module);
         PRINT_VAR(module.m_Name);
@@ -124,7 +142,7 @@ void TestRemoteMessages::SetupMessageHandlers()
     {
         PRINT_VAR(a_Msg.m_Size);
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
-        cereal::BinaryInputArchive inputAr( buffer );
+        cereal::XMLInputArchive inputAr( buffer );
         Function function;
         inputAr(function);
         PRINT_VAR(function.m_Name);

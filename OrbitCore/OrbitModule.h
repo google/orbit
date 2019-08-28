@@ -15,19 +15,19 @@ struct Module
 {
     Module();
 
-    const std::wstring & GetPrettyName();
+    std::wstring GetPrettyName();
     bool IsDll() const;
     bool LoadDebugInfo();
     bool ContainsAddress( uint64_t a_Address ) { return m_AddressStart <= a_Address && m_AddressEnd > a_Address; }
     uint64_t ValidateAddress( uint64_t a_Address );
 
-    std::wstring  m_Name;
-    std::wstring  m_FullName;
-    std::wstring  m_PdbName;
-    std::wstring  m_Directory;
-    std::wstring  m_PrettyName;
-    std::wstring  m_AddressRange;
-    std::wstring  m_DebugSignature;
+    std::string   m_Name;
+    std::string   m_FullName;
+    std::string   m_PdbName;
+    std::string   m_Directory;
+    std::string   m_PrettyName;
+    std::string   m_AddressRange;
+    std::string   m_DebugSignature;
     HMODULE       m_ModuleHandle = 0;
     uint64_t      m_AddressStart = 0;
     uint64_t      m_AddressEnd = 0;

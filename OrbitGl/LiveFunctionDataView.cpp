@@ -84,34 +84,34 @@ std::wstring LiveFunctionsDataView::GetValue( int a_Row, int a_Column )
     Function & function = GetFunction( a_Row );
     std::shared_ptr<FunctionStats> stats = function.m_Stats;
 
-    std::wstring value;
+    std::string value;
     
     switch ( s_HeaderMap[a_Column] )
     {
     case LiveFunction::SELECTED:
-        value = function.IsSelected() ? L"X" : L"-"; break;
+        value = function.IsSelected() ? "X" : "-"; break;
     case LiveFunction::INDEX:
-        value = Format(L"%d", a_Row); break;
+        value = Format("%d", a_Row); break;
     case LiveFunction::NAME:
         value = function.PrettyName(); break;
     case LiveFunction::COUNT:
-        value = Format( L"%lu", stats->m_Count ); break;
+        value = Format( "%lu", stats->m_Count ); break;
     case LiveFunction::TIME_TOTAL:
-        value = GetPrettyTimeW(stats->m_TotalTimeMs); break;
+        value = GetPrettyTime(stats->m_TotalTimeMs); break;
     case LiveFunction::TIME_AVG:
-        value = GetPrettyTimeW(stats->m_AverageTimeMs); break;
+        value = GetPrettyTime(stats->m_AverageTimeMs); break;
     case LiveFunction::TIME_MIN:
-        value = GetPrettyTimeW(stats->m_MinMs); break;
+        value = GetPrettyTime(stats->m_MinMs); break;
     case LiveFunction::TIME_MAX:
-        value = GetPrettyTimeW(stats->m_MaxMs); break;
+        value = GetPrettyTime(stats->m_MaxMs); break;
     case LiveFunction::ADDRESS:
-        value = function.m_Pdb ? Format(L"0x%llx", function.m_Address + (DWORD64)function.m_Pdb->GetHModule()) : L""; break;
+        value = function.m_Pdb ? Format("0x%llx", function.m_Address + (DWORD64)function.m_Pdb->GetHModule()) : ""; break;
     case LiveFunction::MODULE:
-        value = function.m_Pdb ? function.m_Pdb->GetName() : L""; break;
+        value = function.m_Pdb ? ws2s(function.m_Pdb->GetName()) : ""; break;
     default: break;
     }
 
-    return value;
+    return s2ws(value);
 }
 
 //-----------------------------------------------------------------------------
@@ -194,7 +194,7 @@ void LiveFunctionsDataView::OnFilter( const std::wstring & a_Filter )
         const Function* function = m_Functions[i];
         if( function )
         {
-            std::wstring name = ToLower( function->m_PrettyName );
+            std::wstring name = ToLower( s2ws(function->m_PrettyName) );
             //std::string file = ToLower( function.m_File );
 
             bool match = true;

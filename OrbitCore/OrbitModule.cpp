@@ -24,7 +24,7 @@ Module::Module()
 }
 
 //-----------------------------------------------------------------------------
-const std::wstring & Module::GetPrettyName()
+std::wstring Module::GetPrettyName()
 {
     if( m_PrettyName.size() == 0 )
     {
@@ -33,20 +33,20 @@ const std::wstring & Module::GetPrettyName()
         m_AddressRange = Format( L"[%I64x - %I64x]", m_AddressStart, m_AddressEnd );
         #else
         m_PrettyName = m_FullName;
-        m_AddressRange = Format( L"[%016llx - %016llx]", m_AddressStart, m_AddressEnd );
+        m_AddressRange = Format( "[%016llx - %016llx]", m_AddressStart, m_AddressEnd );
         m_PdbName = m_FullName;
         m_FoundPdb = true;
         #endif
     }
 
-    return m_PrettyName;
+    return s2ws(m_PrettyName);
 }
 
 //-----------------------------------------------------------------------------
 bool Module::IsDll() const
 {
-    return ToLower( Path::GetExtension( m_FullName ) ) == std::wstring( L".dll" ) ||
-           Contains(m_Name, L".so" );
+    return ToLower( Path::GetExtension( s2ws(m_FullName) ) ) == std::wstring( L".dll" ) ||
+           Contains(m_Name, ".so" );
 }
 
 //-----------------------------------------------------------------------------
@@ -78,7 +78,7 @@ uint64_t Module::ValidateAddress( uint64_t a_Address )
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( Module, 0 )
+ORBIT_SERIALIZE_XML( Module, 0 )
 {
     ORBIT_NVP_VAL( 0, m_Name );
     ORBIT_NVP_VAL( 0, m_FullName );
@@ -126,15 +126,15 @@ void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_Comple
             if( tokens.size() > 2 ) // nm
             {
                 Function func;
-                func.m_Name = s2ws(tokens[2]);
+                func.m_Name = tokens[2];
                 func.m_Address = std::stoull(tokens[0], nullptr, 16);
-                func.m_PrettyName = s2ws(LinuxUtils::Demangle(tokens[2].c_str()));
-                func.m_Module = Path::GetFileName(a_PdbName);
+                func.m_PrettyName = LinuxUtils::Demangle(tokens[2].c_str());
+                func.m_Module = ws2s(Path::GetFileName(a_PdbName));
                 func.m_Pdb = this;
                 this->AddFunction(func);
 
                 // Debug - Temporary
-                if( Contains(func.m_PrettyName, L"Renderer::render") )
+                if( Contains(func.m_PrettyName, "Renderer::render") )
                 {
                     PRINT_VAR(tokens[0]);
                 }

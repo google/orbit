@@ -152,7 +152,7 @@ void SamplingReportDataView::OnContextMenu( const std::wstring & a_Action, int a
             auto & moduleMap = Capture::GTargetProcess->GetNameToModulesMap();
             for (const std::wstring & moduleName : moduleNames)
             {
-                std::shared_ptr<Module> module = moduleMap[ToLower(moduleName)];
+                std::shared_ptr<Module> module = moduleMap[ws2s(ToLower(moduleName))];
                 if (module && module->m_FoundPdb && !module->m_Loaded)
                 {
                     GOrbitApp->EnqueueModuleToLoad(module);

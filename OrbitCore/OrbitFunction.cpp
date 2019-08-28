@@ -41,7 +41,7 @@ void Function::SetAsMainFrameFunction()
 }
 
 //-----------------------------------------------------------------------------
-const std::wstring & Function::PrettyName()
+const std::string & Function::PrettyName()
 {
     if( m_PrettyName.size() == 0 )
     {
@@ -109,7 +109,7 @@ std::wstring Function::GetModuleName()
     else
     {
         std::shared_ptr<Module> module = Capture::GTargetProcess->GetModuleFromAddress( m_Address );
-        return module ? module->m_Name : L"";
+        return module ? s2ws(module->m_Name) : L"";
     }
 }
 
@@ -206,7 +206,7 @@ const TCHAR* Function::GetCallingConventionString( int a_CallConv )
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( Function, 1 )
+ORBIT_SERIALIZE_XML( Function, 1 )
 {
     ORBIT_NVP_VAL( 0, m_Name );
     ORBIT_NVP_VAL( 0, m_PrettyName );

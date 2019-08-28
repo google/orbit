@@ -279,7 +279,7 @@ void CaptureWindow::Hover( int a_X, int a_Y )
         if( !textBox->GetTimer().IsType(Timer::CORE_ACTIVITY) )
         {
             Function* func = Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
-            m_ToolTip = Format( L"%s %s", func ? func->PrettyName().c_str() : L"", s2ws(textBox->GetText()).c_str() );
+            m_ToolTip = s2ws(Format( "%s %s", func ? func->PrettyName().c_str() : "", textBox->GetText().c_str() ));
             GOrbitApp->SendToUiAsync( L"tooltip:" + m_ToolTip );
             NeedsRedraw();
         }

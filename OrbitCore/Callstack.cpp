@@ -47,7 +47,7 @@ std::wstring CallStack::GetString()
 
         if( func )
         {
-            callstackString += func->PrettyName() + L"\n";
+            callstackString += s2ws(func->PrettyName()) + L"\n";
         }
         else
         {

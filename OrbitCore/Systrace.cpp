@@ -101,8 +101,7 @@ uint64_t Systrace::ProcessFunctionName(const std::string& a_String)
         uint64_t hash = ProcessString(function);
         Function func;
         func.m_Address = hash;
-        func.m_Name = func.m_PrettyName = s2ws(function);
-        func.m_PrettyNameStr = function;
+        func.m_Name = func.m_PrettyName = function;
         func.m_PrettyNameLower = ToLower(func.m_Name);
         m_Functions.push_back(func);
         return hash;

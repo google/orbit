@@ -723,14 +723,14 @@ void OrbitApp::OnOpenPdb( const std::wstring a_FileName )
     Capture::GTargetProcess = std::make_shared<Process>();
     std::shared_ptr<Module> mod = std::make_shared<Module>();
     
-    mod->m_FullName = a_FileName;
-    mod->m_Name = Path::GetFileName( mod->m_FullName );
-    mod->m_Directory = Path::GetDirectory( mod->m_FullName );
-    mod->m_PdbName = a_FileName;
+    mod->m_FullName = ws2s(a_FileName);
+    mod->m_Name = ws2s(Path::GetFileName( a_FileName ) );
+    mod->m_Directory = ws2s( Path::GetDirectory( a_FileName ) );
+    mod->m_PdbName = mod->m_FullName;
     mod->m_FoundPdb = true;
     mod->LoadDebugInfo();
 
-    Capture::GTargetProcess->m_Name = ws2s(Path::StripExtension( mod->m_Name ));
+    Capture::GTargetProcess->m_Name = ws2s(Path::StripExtension( s2ws(mod->m_Name) ));
     Capture::GTargetProcess->AddModule( mod );
 
     m_ModulesDataView->SetProcess( Capture::GTargetProcess );

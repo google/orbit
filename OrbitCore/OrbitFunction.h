@@ -64,9 +64,8 @@ public:
     void Print();
     void SetAsMainFrameFunction();
     void AddParameter( const FunctionParam & a_Param ){ m_Params.push_back( a_Param ); }
-    const std::wstring & PrettyName();
-    inline const std::string & PrettyNameStr() { if( m_PrettyNameStr.size() == 0 ) m_PrettyNameStr = ws2s( m_PrettyName ); return m_PrettyNameStr; }
-    inline const std::wstring & Lower() { if( m_PrettyNameLower.size() == 0 ) m_PrettyNameLower = ToLower( m_PrettyName ); return m_PrettyNameLower; }
+    const std::string & PrettyName();
+    inline const std::string & Lower() { if( m_PrettyNameLower.size() == 0 ) m_PrettyNameLower = ToLower( m_PrettyName ); return m_PrettyNameLower; }
     static const TCHAR* GetCallingConventionString( int a_CallConv );
     void ProcessArgumentInfo();
     bool IsMemberFunction();
@@ -124,12 +123,11 @@ public:
     ORBIT_SERIALIZABLE;
 
 public: // TODO...
-    std::wstring  m_Name;
-    std::wstring  m_PrettyName;
-    std::wstring  m_PrettyNameLower;
-    std::wstring  m_Module;
-    std::wstring  m_File;
-    std::string   m_PrettyNameStr;
+    std::string   m_Name;
+    std::string   m_PrettyName;
+    std::string   m_PrettyNameLower;
+    std::string   m_Module;
+    std::string   m_File;
     std::string   m_Probe;
     uint64_t      m_Address = 0;
     uint64_t      m_ModBase = 0;

@@ -31,7 +31,7 @@ void FunctionStats::Update( const Timer & a_Timer )
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( FunctionStats, 0 )
+ORBIT_SERIALIZE_XML( FunctionStats, 0 )
 {
     ORBIT_NVP_VAL( 0, m_Address );
     ORBIT_NVP_VAL( 0, m_Count );

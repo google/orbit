@@ -95,9 +95,9 @@ void ListModules( uint32_t a_PID, std::map< uint64_t, std::shared_ptr<Module> > 
                 if( end > module->m_AddressEnd )
                     module->m_AddressEnd = end;
                 
-                module->m_FullName = s2ws(moduleName);
-                module->m_Name = Path::GetFileName( module->m_FullName );;
-                module->m_Directory = Path::GetDirectory( module->m_FullName );
+                module->m_FullName = moduleName;
+                module->m_Name = ws2s(Path::GetFileName( s2ws(module->m_FullName) ));
+                module->m_Directory = ws2s(Path::GetDirectory( s2ws(module->m_FullName) ));
                 auto prettyName = module->GetPrettyName();
                 modules[moduleName] = module;
             }

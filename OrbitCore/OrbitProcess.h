@@ -59,7 +59,7 @@ public:
 #endif
 
     std::map< uint64_t, std::shared_ptr<Module> >& GetModules() { return m_Modules; }
-    std::map< std::wstring, std::shared_ptr<Module> >& GetNameToModulesMap() { return m_NameToModuleMap; }
+    std::map< std::string, std::shared_ptr<Module> >& GetNameToModulesMap() { return m_NameToModuleMap; }
     std::shared_ptr<Module> FindModule( const std::wstring & a_ModuleName );
 
     const std::wstring GetName() const { return s2ws(m_Name); }
@@ -133,7 +133,7 @@ private:
     Mutex       m_DataMutex;
 
     std::map< uint64_t, std::shared_ptr<Module> > m_Modules;
-    std::map< std::wstring, std::shared_ptr<Module> > m_NameToModuleMap;
+    std::map< std::string, std::shared_ptr<Module> > m_NameToModuleMap;
     std::vector<std::shared_ptr<Thread> >   m_Threads;
     std::unordered_set<uint32_t>            m_ThreadIds;
     std::map<uint32_t, std::wstring>        m_ThreadNames;
