@@ -47,11 +47,14 @@ template <class T> std::string SerializeObject(T& a_Object)
 //-----------------------------------------------------------------------------
 template <class T> std::string SerializeObjectHumanReadable(T& a_Object)
 {
-    std::stringstream buffer;
-    cereal::XMLOutputArchive archive( std::cout );
-    archive(a_Object);
-    PRINT_VAR(buffer.str().size());
-    return buffer.str();
+    std::stringstream ss;
+    {
+        cereal::XMLOutputArchive archive(ss);
+        archive(a_Object);
+    }
+    std::cout << "ss:" << ss.str() << std::endl;
+    PRINT_VAR(ss.str().size());
+    return ss.str();
 }
 
 //-----------------------------------------------------------------------------
