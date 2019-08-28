@@ -141,7 +141,7 @@ void ProcessList::Refresh()
             {
                 // Process was not there previously
                 auto process = std::make_shared<Process>();
-                process->m_Name = processinfo.szExeFile;
+                process->m_Name = ws2s(processinfo.szExeFile);
                 process->SetID(processinfo.th32ProcessID);
                 
                 /*TCHAR fullPath[1024];
@@ -159,7 +159,7 @@ void ProcessList::Refresh()
                     {
                         ORBIT_ERROR;
                     }
-                    process->m_FullName = moduleEntry.szExePath;
+                    process->m_FullName = ws2s(moduleEntry.szExePath);
 
                     CloseHandle(moduleSnapshot);
                 }
