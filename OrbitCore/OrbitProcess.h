@@ -149,5 +149,7 @@ private:
     std::vector< std::shared_ptr<Variable> > m_WatchedVariables;
     
     std::unordered_set< uint64_t > m_UniqueTypeHash;
+
+    friend class TestRemoteMessages;
 };
 

@@ -40,4 +40,6 @@ struct Module
     mutable std::shared_ptr<Pdb> m_Pdb;
 
     ORBIT_SERIALIZABLE;
+
+    friend class TestRemoteMessages;
 };

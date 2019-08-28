@@ -74,6 +74,7 @@ void TestRemoteMessages::Run()
     module.m_AddressEnd = 3;
     module.m_EntryPoint = 4;
     module.m_FoundPdb = true;
+    
     module.m_Selected = true;
     module.m_Loaded = true;
     module.m_PdbSize = 110;
