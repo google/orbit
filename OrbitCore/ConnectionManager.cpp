@@ -7,6 +7,7 @@
 #include "TcpServer.h"
 #include "TimerManager.h"
 #include "Serialization.h"
+#include "TestRemoteMessages.h"
 
 #include <fstream>
 #include <streambuf>
@@ -163,9 +164,14 @@ ConnectionManager& ConnectionManager::Get()
 }
 
 //-----------------------------------------------------------------------------
-void ConnectionManager::Init(std::string a_Host)
+void ConnectionManager::Init()
 {
     SetupTestMessageHandler();
+}
+
+//-----------------------------------------------------------------------------
+void ConnectionManager::InitAsRemote(std::string a_Host)
+{
     m_Host = a_Host;
     TerminateThread();
     m_Thread = std::make_unique<std::thread>(&ConnectionManager::ConnectionThread, this);
@@ -196,12 +202,13 @@ void ConnectionManager::SetupTestMessageHandler()
 //-----------------------------------------------------------------------------
 void ConnectionManager::SendTestMessage()
 {
-    static uint32_t id = 0;
     CrossPlatformMessage msg;
     msg.Fill();
 
     std::string rawMsg = msg.ToRaw();
     GTcpClient->Send(Msg_CrossPlatform, (void*)rawMsg.data(), rawMsg.size());
+
+    TestRemoteMessages::Get().Run();
 }
 
 //-----------------------------------------------------------------------------

@@ -21,6 +21,7 @@
 #include "Params.h"
 #include "OrbitRule.h"
 #include "CoreApp.h"
+#include "TestRemoteMessages.h"
 #include <fstream>
 #include <ostream>
 
@@ -657,4 +658,10 @@ void Capture::PreSave()
     {
         GSamplingProfiler->AddAddress( pair.first );
     }
+}
+
+//-----------------------------------------------------------------------------
+void Capture::TestRemoteMessages()
+{
+    TestRemoteMessages::Get().Run();
 }

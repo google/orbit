@@ -58,7 +58,7 @@ public:
     static bool SetPrivilege( LPCTSTR a_Name, bool a_Enable );
 #endif
 
-    std::map< DWORD64, std::shared_ptr<Module> >& GetModules() { return m_Modules; }
+    std::map< uint64_t, std::shared_ptr<Module> >& GetModules() { return m_Modules; }
     std::map< std::wstring, std::shared_ptr<Module> >& GetNameToModulesMap() { return m_NameToModuleMap; }
     std::shared_ptr<Module> FindModule( const std::wstring & a_ModuleName );
 
@@ -68,7 +68,7 @@ public:
     double GetCpuUsage() const { return m_CpuUsage; }
     HANDLE GetHandle() const { return m_Handle; }
     bool GetIs64Bit() const { return m_Is64Bit; }
-    int NumModules() const { return (int)m_Modules.size(); }
+    uint32_t NumModules() const { return (uint32_t)m_Modules.size(); }
     bool GetIsRemote() const { return m_IsRemote; }
     void SetIsRemote( bool val ) { m_IsRemote = val; }
     void SetCpuUsage( float a_Usage ) { m_CpuUsage = a_Usage; }
@@ -132,11 +132,11 @@ private:
     bool        m_IsRemote;
     Mutex       m_DataMutex;
 
-    std::map< DWORD64, std::shared_ptr<Module> > m_Modules;
+    std::map< uint64_t, std::shared_ptr<Module> > m_Modules;
     std::map< std::wstring, std::shared_ptr<Module> > m_NameToModuleMap;
     std::vector<std::shared_ptr<Thread> >   m_Threads;
-    std::unordered_set<DWORD>               m_ThreadIds;
-    std::map<DWORD, std::wstring>           m_ThreadNames;
+    std::unordered_set<uint32_t>            m_ThreadIds;
+    std::map<uint32_t, std::wstring>        m_ThreadNames;
 
     #ifdef __linux__
     std::map< uint64_t, std::shared_ptr<LinuxSymbol> > m_Symbols;
@@ -148,6 +148,6 @@ private:
     std::vector< Variable* >    m_Globals;
     std::vector< std::shared_ptr<Variable> > m_WatchedVariables;
     
-    std::unordered_set< unsigned long long > m_UniqueTypeHash;
+    std::unordered_set< uint64_t > m_UniqueTypeHash;
 };
 

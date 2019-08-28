@@ -144,7 +144,7 @@ void ModuleManager::OnPdbLoaded()
 //-----------------------------------------------------------------------------
 void ModuleManager::AddPdb( const std::shared_ptr<Pdb> & a_Pdb )
 { 
-    std::map< DWORD64, std::shared_ptr<Module> >& modules = Capture::GTargetProcess->GetModules();
+    std::map< uint64_t, std::shared_ptr<Module> >& modules = Capture::GTargetProcess->GetModules();
 
     auto it = modules.find( (DWORD64)a_Pdb->GetHModule() );
     if( it != modules.end() )

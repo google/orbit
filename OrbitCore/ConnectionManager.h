@@ -15,7 +15,8 @@ public:
     ConnectionManager();
     ~ConnectionManager();
     static ConnectionManager& Get();
-    void Init(std::string a_Host);
+    void Init();
+    void InitAsRemote(std::string a_Host);
     void Stop();
 
 protected:

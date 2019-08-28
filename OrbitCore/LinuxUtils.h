@@ -20,7 +20,7 @@ namespace LinuxUtils
     std::string ExecuteCommand( const char* a_Cmd );
     void StreamCommandOutput(const char* a_Cmd, std::function<void(const std::string&)> a_Callback, bool* a_ExitRequested);
     std::vector<std::string> ListModules( uint32_t a_PID );
-    void ListModules( uint32_t a_PID, std::map< DWORD64, std::shared_ptr<Module> > & o_ModuleMap );
+    void ListModules( uint32_t a_PID, std::map< uint64_t, std::shared_ptr<Module> > & o_ModuleMap );
     std::unordered_map<uint32_t, float> GetCpuUtilization();
     bool Is64Bit(uint32_t a_PID);
     std::string Demangle( const char* a_Symbol );

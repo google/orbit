@@ -69,7 +69,7 @@ std::string ExecuteCommand( const char* a_Cmd )
 }
 
 //-----------------------------------------------------------------------------
-void ListModules( uint32_t a_PID, std::map< DWORD64, std::shared_ptr<Module> > & o_ModuleMap )
+void ListModules( uint32_t a_PID, std::map< uint64_t, std::shared_ptr<Module> > & o_ModuleMap )
 {
     std::map<std::string, std::shared_ptr<Module>> modules;
     std::vector<std::string> result = ListModules( a_PID );

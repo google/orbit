@@ -143,7 +143,7 @@ void ModulesDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIn
 
             if( module->m_FoundPdb || module->IsDll() )
             {
-                std::map< DWORD64, std::shared_ptr<Module>  >& processModules = m_Process->GetModules();
+                std::map< uint64_t, std::shared_ptr<Module>  >& processModules = m_Process->GetModules();
                 auto it = processModules.find( module->m_AddressStart );
                 if( it != processModules.end() )
                 {

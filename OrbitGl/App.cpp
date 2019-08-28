@@ -44,6 +44,7 @@
 #include "curl/curl.h"
 #include "Debugger.h"
 #include "PrintVar.h"
+#include "TestRemoteMessages.h"
 
 #include <thread>
 #include <cmath>
@@ -111,7 +112,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args
         { 
             std::string host = Replace(arg, "host:", "");
             Capture::GCaptureHost = s2ws(host);
-            ConnectionManager::Get().Init(host);
+            ConnectionManager::Get().InitAsRemote(host);
         }
         else if( Contains( arg, "preset:" ) )
         {
@@ -275,7 +276,8 @@ bool OrbitApp::Init()
     GOrbitApp->LoadFileMapping();
     GOrbitApp->LoadSymbolsFile();
     OrbitVersion::CheckForUpdate();
-
+    ConnectionManager::Get().Init();
+    TestRemoteMessages::Get().Init();
     return true;
 }
 

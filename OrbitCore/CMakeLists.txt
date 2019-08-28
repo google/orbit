@@ -75,6 +75,7 @@ set(HEADERS
     TcpEntity.h
     TcpServer.h
     TcpForward.h
+    TestRemoteMessages.h
     Threading.h
     TimerManager.h
     TypeInfoStructs.h
@@ -126,6 +127,7 @@ set(SOURCES
     TcpClient.cpp
     TcpEntity.cpp
     TcpServer.cpp
+    TestRemoteMessages.cpp
     TimerManager.cpp
     Utils.cpp
     Variable.cpp
