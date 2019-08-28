@@ -62,10 +62,10 @@ public:
     void Reserve();
     void ApplyPresets();
 
-    Function* GetFunctionFromExactAddress( DWORD64 a_Address );
-    Function* GetFunctionFromProgramCounter( DWORD64 a_Address );
-    std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress( DWORD64 a_Address );
-    bool LineInfoFromAddress( DWORD64 a_Address, struct LineInfo & o_LineInfo );
+    Function* GetFunctionFromExactAddress( uint64_t a_Address );
+    Function* GetFunctionFromProgramCounter( uint64_t a_Address );
+    std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress( uint64_t a_Address );
+    bool LineInfoFromAddress( uint64_t a_Address, struct LineInfo & o_LineInfo );
 
     void SetLoadTime( float a_LoadTime ) { m_LastLoadTime = a_LoadTime; }
     float GetLoadTime() { return m_LastLoadTime; }
@@ -118,7 +118,7 @@ protected:
     std::vector<Variable>               m_Globals;
     IMAGEHLP_MODULE64                   m_ModuleInfo;
     std::unordered_map<ULONG, Type>     m_TypeMap;
-    std::map<DWORD64, Function*>        m_FunctionMap;
+    std::map<uint64_t, Function*>        m_FunctionMap;
     std::unordered_map<unsigned long long, Function*> m_StringFunctionMap;
     Timer*                              m_LoadTimer;
     
@@ -173,10 +173,10 @@ public:
     void Reserve();
     void ApplyPresets();
 
-    Function* GetFunctionFromExactAddress( DWORD64 a_Address );
-    Function* GetFunctionFromProgramCounter( DWORD64 a_Address );
-    IDiaSymbol* SymbolFromAddress( DWORD64 a_Address );
-    bool LineInfoFromAddress( DWORD64 a_Address, struct LineInfo & o_LineInfo );
+    Function* GetFunctionFromExactAddress( uint64_t a_Address );
+    Function* GetFunctionFromProgramCounter( uint64_t a_Address );
+    IDiaSymbol* SymbolFromAddress( uint64_t a_Address );
+    bool LineInfoFromAddress( uint64_t a_Address, struct LineInfo & o_LineInfo );
     Function* FunctionFromName( const std::wstring& a_Name );
 
     void SetLoadTime( float a_LoadTime ) { m_LastLoadTime = a_LoadTime; }
@@ -220,7 +220,7 @@ protected:
     std::vector<Type>                       m_Types;
     std::vector<Variable>                   m_Globals;
     std::unordered_map<ULONG, Type>         m_TypeMap;
-    std::map<DWORD64, Function*>            m_FunctionMap;
+    std::map<uint64_t, Function*>           m_FunctionMap;
     std::unordered_map<unsigned long long, Function*> m_StringFunctionMap;
     Timer*                                  m_LoadTimer = nullptr;
 };

@@ -330,7 +330,7 @@ bool PdbGetFileSize( const TCHAR* pFileName, DWORD& FileSize )
 
 
 //-----------------------------------------------------------------------------
-bool GetFileParams(const TCHAR* pFileName, DWORD64& BaseAddr, DWORD& FileSize)
+bool GetFileParams(const TCHAR* pFileName, uint64_t& BaseAddr, DWORD& FileSize)
 {
     // Check parameters 
 
@@ -617,9 +617,9 @@ void Pdb::ApplyPresets()
 }
 
 //-----------------------------------------------------------------------------
-Function* Pdb::GetFunctionFromExactAddress( DWORD64 a_Address )
+Function* Pdb::GetFunctionFromExactAddress( uint64_t a_Address )
 {
-    DWORD64 address = a_Address - (DWORD64)GetHModule();
+    uint64_t address = a_Address - (uint64_t)GetHModule();
 
     if( m_FunctionMap.find(address) != m_FunctionMap.end() )
     {
@@ -630,9 +630,9 @@ Function* Pdb::GetFunctionFromExactAddress( DWORD64 a_Address )
 }
 
 //-----------------------------------------------------------------------------
-Function* Pdb::GetFunctionFromProgramCounter( DWORD64 a_Address )
+Function* Pdb::GetFunctionFromProgramCounter( uint64_t a_Address )
 {
-    DWORD64 address = a_Address - (DWORD64)GetHModule();
+    uint64_t address = a_Address - (uint64_t)GetHModule();
 
     auto it = m_FunctionMap.upper_bound( address );
     if (!m_FunctionMap.empty() && it != m_FunctionMap.begin())
@@ -646,13 +646,13 @@ Function* Pdb::GetFunctionFromProgramCounter( DWORD64 a_Address )
 }
 
 //-----------------------------------------------------------------------------
-std::shared_ptr<OrbitDiaSymbol> Pdb::SymbolFromAddress( DWORD64 a_Address )
+std::shared_ptr<OrbitDiaSymbol> Pdb::SymbolFromAddress( uint64_t a_Address )
 {
 	std::shared_ptr<OrbitDiaSymbol> symbol = std::make_shared<OrbitDiaSymbol>();
 
     if( m_DiaSession )
     {
-        DWORD rva = DWORD(a_Address - (DWORD64)GetHModule());
+        DWORD rva = DWORD(a_Address - (uint64_t)GetHModule());
         auto error = m_DiaSession->findSymbolByRVA( rva, SymTagFunction, &symbol->m_Symbol );
         if( error == S_OK )
         {
@@ -668,7 +668,7 @@ std::shared_ptr<OrbitDiaSymbol> Pdb::SymbolFromAddress( DWORD64 a_Address )
 }
 
 //-----------------------------------------------------------------------------
-bool Pdb::LineInfoFromAddress( DWORD64 a_Address, LineInfo & o_LineInfo )
+bool Pdb::LineInfoFromAddress( uint64_t a_Address, LineInfo & o_LineInfo )
 {
     if( !m_DiaSession )
     {
@@ -676,7 +676,7 @@ bool Pdb::LineInfoFromAddress( DWORD64 a_Address, LineInfo & o_LineInfo )
     }
 
     OrbitDiaEnumLineNumbers lineNumbers;
-    DWORD rva = DWORD(a_Address - (DWORD64)GetHModule());
+    DWORD rva = DWORD(a_Address - (uint64_t)GetHModule());
     std::wstring fileNameW;
     if( SUCCEEDED( m_DiaSession->findLinesByRVA( rva, 1, &lineNumbers.m_Symbol ) ) )
     {

@@ -1,4 +1,5 @@
 #!/bin/bash
 
 ./build.sh
+#./build/OrbitQt/Orbit host:192.168.1.68:1789
 ./build/OrbitQt/Orbit

@@ -274,6 +274,29 @@ void LinuxPerf::Stop()
 }
 
 //-----------------------------------------------------------------------------
+bool ParseStackLine( const std::string& a_Line, uint64_t& o_Address, std::string& o_Name, std::string& o_Module )
+{
+    // Module
+    std::size_t moduleBegin = a_Line.find_last_of("(");
+    if( moduleBegin == std::string::npos )
+        return false;
+    o_Module = Replace(a_Line.substr(moduleBegin+1), ")", "");
+
+    // Function name
+    std::string line = LTrim(a_Line.substr(0, moduleBegin));
+    std::size_t nameBegin = line.find_first_of(" ");
+    if( nameBegin == std::string::npos ) 
+        return false;
+    o_Name = line.substr(nameBegin);
+
+    // Address
+    std::string address = line.substr(0, nameBegin);
+    o_Address = std::stoull(address, nullptr, 16);
+
+    return true;
+}
+
+//-----------------------------------------------------------------------------
 void LinuxPerf::LoadPerfData( const std::string& a_FileName )
 {
     std::ifstream infile(a_FileName.c_str());
@@ -308,38 +331,58 @@ void LinuxPerf::LoadPerfData( const std::string& a_FileName )
             tid  = tokens.size() > 1 ? atoi(tokens[1].c_str()) : 0;
         }
         else if(isStackLine)
-        {            
-            auto tokens = Tokenize(line, " \t");
-            if( tokens.size() == 3 )
+        {   
+            std::string module;         
+            std::string function;
+            uint64_t    address;
+            
+            if( !ParseStackLine( line, address, function, module ) )
             {
-                uint64_t address = std::stoull(tokens[0], nullptr, 16);
+                PRINT_VAR("ParseStackLine error");
+                PRINT_VAR(line);
+                continue;
+            }
 
-                std::string moduleFullName = Replace(tokens[2], "(", "");
-                moduleFullName = Replace(moduleFullName, ")", "");
-                std::wstring moduleName = ToLower(Path::GetFileName(s2ws(moduleFullName)));
-                std::shared_ptr<Module> moduleFromName = Capture::GTargetProcess->GetModuleFromName( moduleName );
+            std::wstring moduleName = ToLower(Path::GetFileName(s2ws(module)));
+            std::shared_ptr<Module> moduleFromName = Capture::GTargetProcess->GetModuleFromName( moduleName );
+            
+            // Debug - Temporary
+            if( Contains(function, "Renderer::render") )
+            {
+                PRINT_VAR(function);
+                PRINT_VAR(moduleName);
+                PRINT_VAR(address);
+            }
 
-                if( moduleFromName )
+            if( moduleFromName )
+            {
+                uint64_t new_address = moduleFromName->ValidateAddress(address);
+
+                // Debug - Temporary
+                if( Contains(function, "Renderer::render") )
                 {
-                    address = moduleFromName->ValidateAddress(address);
+                    std::cout << std::hex << address << " -> " << std::hex << new_address << std::endl;   
                 }
-
-                CS.m_Data.push_back(address);
-
-                if( Capture::GTargetProcess && !Capture::GTargetProcess->HasSymbol(address))
-                {
-                    auto symbol = std::make_shared<LinuxSymbol>();
-                    symbol->m_Name = tokens[1];
-                    symbol->m_Module = moduleFullName; 
-                    Capture::GTargetProcess->AddSymbol( address, symbol );
-                }
+                address = new_address;
             }
             else
             {
-                PRINT_FUNC;
-                PRINT_VAR(line);
+                // Debug - Temporary
+                if( Contains(function, "Renderer::render") ) {
+                    PRINT_VAR("could not validate address");
+                    PRINT_VAR(moduleName);
+                }
             }
-            
+
+            CS.m_Data.push_back(address);
+
+            if( Capture::GTargetProcess && !Capture::GTargetProcess->HasSymbol(address))
+            {
+                auto symbol = std::make_shared<LinuxSymbol>();
+                symbol->m_Name = function;
+                symbol->m_Module = module; 
+                Capture::GTargetProcess->AddSymbol( address, symbol );
+            }
         }
         else if(isEndBlock)
         {
