@@ -274,8 +274,8 @@ void FunctionsDataView::ParallelFilter()
     oqpi_tk::parallel_for( "FunctionsDataViewParallelFor", (int)functions.size(), [&]( int32_t a_BlockIndex, int32_t a_ElementIndex )
     {
         std::vector<int> & result = indicesArray[a_BlockIndex];
-        const std::wstring & name = functions[a_ElementIndex]->Lower();
-        const std::wstring & file = functions[a_ElementIndex]->m_File;
+        const std::wstring & name = s2ws(functions[a_ElementIndex]->Lower());
+        const std::wstring & file = s2ws(functions[a_ElementIndex]->m_File);
 
         for( std::wstring & filterToken : m_FilterTokens )
         {

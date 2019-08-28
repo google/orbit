@@ -79,24 +79,24 @@ void Pdb::AddFunction( Function & a_Function )
 //-----------------------------------------------------------------------------
 void Pdb::CheckOrbitFunction( Function & a_Function )
 {
-    const std::wstring & name = a_Function.m_PrettyName;
-    if( name == L"OrbitStart" )
+    const std::string & name = a_Function.m_PrettyName;
+    if( name == "OrbitStart" )
     {
         a_Function.m_OrbitType = Function::ORBIT_TIMER_START;
     }
-    else if (name == L"OrbitStop")
+    else if (name == "OrbitStop")
     {
         a_Function.m_OrbitType = Function::ORBIT_TIMER_STOP;
     }
-    else if (name == L"OrbitLog")
+    else if (name == "OrbitLog")
     {
         a_Function.m_OrbitType = Function::ORBIT_LOG;
     }
-    else if( name == L"OutputDebugStringA" )
+    else if( name == "OutputDebugStringA" )
     {
         a_Function.m_OrbitType = Function::ORBIT_OUTPUT_DEBUG_STRING;
     }
-    else if( name == L"OrbitSendData" )
+    else if( name == "OrbitSendData" )
     {
         a_Function.m_OrbitType = Function::ORBIT_DATA;
     }

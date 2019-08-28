@@ -141,10 +141,12 @@ void TestRemoteMessages::SetupMessageHandlers()
     GTcpServer->SetCallback( Msg_RemoteFunctions, [=]( const Message & a_Msg )
     {
         PRINT_VAR(a_Msg.m_Size);
-        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
-        cereal::XMLInputArchive inputAr( buffer );
         Function function;
-        inputAr(function);
+        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        {
+            cereal::XMLInputArchive inputAr(buffer);
+            inputAr(function);
+        }
         PRINT_VAR(function.m_Name);
     } );
 }

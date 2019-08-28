@@ -62,7 +62,7 @@ bool Function::Hookable()
     // Functions that loop back to first 5 bytes of instructions will explode as
     // the IP lands in the middle of the relative jump instruction...
     // Ideally, we would detect such a loop back and not allow hooking.
-    if( m_File.find( L".asm" ) != std::wstring::npos )
+    if( m_File.find( ".asm" ) != std::wstring::npos )
     {
         return false;
     }
@@ -165,7 +165,7 @@ void Function::FindFile()
 	LineInfo lineInfo;
 	SymUtils::GetLineInfo( m_Address + (DWORD64)m_Pdb->GetHModule(), lineInfo );
 	if( lineInfo.m_File != L"" )
-		m_File = lineInfo.m_File;
+		m_File = ws2s(lineInfo.m_File);
 	m_File = ToLower( m_File );
 	m_Line = lineInfo.m_Line;
 #endif
