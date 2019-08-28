@@ -45,6 +45,16 @@ template <class T> std::string SerializeObject(T& a_Object)
 }
 
 //-----------------------------------------------------------------------------
+template <class T> std::string SerializeObjectHumanReadable(T& a_Object)
+{
+    std::stringstream buffer;
+    cereal::XMLOutputArchive archive( std::cout );
+    archive(a_Object);
+    PRINT_VAR(buffer.str().size());
+    return buffer.str();
+}
+
+//-----------------------------------------------------------------------------
 void TestRemoteMessages::Run()
 {
     Process process;
@@ -58,8 +68,9 @@ void TestRemoteMessages::Run()
     process.m_ThreadIds.insert(1);
     process.m_ThreadIds.insert(2);
 
-    std::string processData = SerializeObject(process);
-    GTcpClient->Send(Msg_RemoteModules, (void*)processData.data(), processData.size());
+    std::string processData = SerializeObjectHumanReadable(process);
+    PRINT_VAR(processData);
+    GTcpClient->Send(Msg_RemoteProcesses, (void*)processData.data(), processData.size());
 
     Module module;
     module.m_Name = L"module.m_Name";
@@ -90,7 +101,7 @@ void TestRemoteMessages::SetupMessageHandlers()
     {
         PRINT_VAR(a_Msg.m_Size);
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
-        cereal::BinaryInputArchive inputAr( buffer );
+        cereal::XMLInputArchive inputAr( buffer );
         Process process;
         inputAr(process);
         PRINT_VAR(process.GetName());

@@ -585,7 +585,7 @@ void Process::FindCoreFunctions()
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( Process, 0 )
+ORBIT_SERIALIZE_XML( Process, 0 )
 {
     ORBIT_NVP_VAL( 0, m_Name );
     ORBIT_NVP_VAL( 0, m_FullName );
@@ -595,7 +595,7 @@ ORBIT_SERIALIZE( Process, 0 )
     ORBIT_NVP_VAL( 0, m_Is64Bit );
     ORBIT_NVP_VAL( 0, m_DebugInfoLoaded );
     ORBIT_NVP_VAL( 0, m_IsRemote );
-    ORBIT_NVP_VAL( 0, m_Modules );
-    ORBIT_NVP_VAL( 0, m_NameToModuleMap );
+    //ORBIT_NVP_VAL( 0, m_Modules );
+    //ORBIT_NVP_VAL( 0, m_NameToModuleMap );
     ORBIT_NVP_VAL( 0, m_ThreadIds );
 }
