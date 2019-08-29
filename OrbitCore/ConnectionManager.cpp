@@ -10,6 +10,7 @@
 #include "Serialization.h"
 #include "TestRemoteMessages.h"
 #include "EventBuffer.h"
+#include "LinuxPerf.h"
 
 #if __linux__
 #include "LinuxUtils.h"
@@ -176,6 +177,7 @@ ConnectionManager& ConnectionManager::Get()
 void ConnectionManager::Init()
 {
     SetupTestMessageHandler();
+    SetupServerCallbacks();
 }
 
 //-----------------------------------------------------------------------------
