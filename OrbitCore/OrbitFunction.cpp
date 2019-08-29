@@ -206,7 +206,7 @@ const TCHAR* Function::GetCallingConventionString( int a_CallConv )
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_XML( Function, 1 )
+ORBIT_SERIALIZE( Function, 1 )
 {
     ORBIT_NVP_VAL( 0, m_Name );
     ORBIT_NVP_VAL( 0, m_PrettyName );

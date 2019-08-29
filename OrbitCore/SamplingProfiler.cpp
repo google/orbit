@@ -577,7 +577,7 @@ bool SampledFunction::GetSelected() const
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( SampledFunction, 0 )
+ORBIT_SERIALIZE_WSTRING( SampledFunction, 0 )
 {
     ORBIT_NVP_VAL( 0, m_Name );
     ORBIT_NVP_VAL( 0, m_Module );
@@ -591,7 +591,7 @@ ORBIT_SERIALIZE( SampledFunction, 0 )
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( SamplingProfiler, 1 )
+ORBIT_SERIALIZE_WSTRING( SamplingProfiler, 1 )
 {
     ORBIT_NVP_VAL( 0, m_PeriodMs );
     ORBIT_NVP_VAL( 0, m_NumSamples );
@@ -609,21 +609,21 @@ ORBIT_SERIALIZE( SamplingProfiler, 1 )
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( SortedCallstackReport, 0 )
+ORBIT_SERIALIZE_WSTRING( SortedCallstackReport, 0 )
 {
     ORBIT_NVP_VAL( 0, m_NumCallStacksTotal );
     ORBIT_NVP_VAL( 0, m_CallStacks );
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( CallstackCount, 0 )
+ORBIT_SERIALIZE_WSTRING( CallstackCount, 0 )
 {
     ORBIT_NVP_VAL( 0, m_Count );
     ORBIT_NVP_VAL( 0, m_CallstackId );
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( ThreadSampleData, 0 )
+ORBIT_SERIALIZE_WSTRING( ThreadSampleData, 0 )
 {
     ORBIT_NVP_VAL( 0, m_CallstackCount );
     ORBIT_NVP_VAL( 0, m_AddressCount );
@@ -637,7 +637,7 @@ ORBIT_SERIALIZE( ThreadSampleData, 0 )
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( LineInfo, 1 )
+ORBIT_SERIALIZE_WSTRING( LineInfo, 1 )
 {
     ORBIT_NVP_VAL( 0, m_File );
     ORBIT_NVP_VAL( 0, m_Line );

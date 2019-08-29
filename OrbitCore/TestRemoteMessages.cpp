@@ -49,7 +49,7 @@ template <class T> std::string SerializeObjectHumanReadable(T& a_Object)
 {
     std::stringstream ss;
     {
-        cereal::XMLOutputArchive archive(ss);
+        cereal::JSONOutputArchive archive(ss);
         archive(a_Object);
     }
     std::cout << "ss:" << ss.str() << std::endl;
@@ -122,7 +122,7 @@ void TestRemoteMessages::SetupMessageHandlers()
     {
         PRINT_VAR(a_Msg.m_Size);
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
-        cereal::XMLInputArchive inputAr( buffer );
+        cereal::JSONInputArchive inputAr( buffer );
         Process process;
         inputAr(process);
         PRINT_VAR(process.GetName());
@@ -132,7 +132,7 @@ void TestRemoteMessages::SetupMessageHandlers()
     {
         PRINT_VAR(a_Msg.m_Size);
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
-        cereal::XMLInputArchive inputAr( buffer );
+        cereal::JSONInputArchive inputAr( buffer );
         Module module;
         inputAr(module);
         PRINT_VAR(module.m_Name);
@@ -142,7 +142,7 @@ void TestRemoteMessages::SetupMessageHandlers()
     {
         PRINT_VAR(a_Msg.m_Size);
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
-        cereal::XMLInputArchive inputAr( buffer );
+        cereal::JSONInputArchive inputAr( buffer );
         Function function;
         inputAr(function);
         PRINT_VAR(function.m_Name);

@@ -57,7 +57,7 @@ ORBIT_SERIALIZE( CrossPlatformMessage, 1 )
     ORBIT_NVP_VAL( 0, m_StringMap );
     ORBIT_NVP_VAL( 1, m_SizeOnSave );
     ORBIT_NVP_VAL( 1, m_Id );
-    ORBIT_NVP_VAL( 1, m_WName );
+    //ORBIT_NVP_VAL( 1, m_WName );
 }
 
 //-----------------------------------------------------------------------------

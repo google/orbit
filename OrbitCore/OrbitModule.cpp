@@ -78,7 +78,7 @@ uint64_t Module::ValidateAddress( uint64_t a_Address )
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_XML( Module, 0 )
+ORBIT_SERIALIZE( Module, 0 )
 {
     ORBIT_NVP_VAL( 0, m_Name );
     ORBIT_NVP_VAL( 0, m_FullName );

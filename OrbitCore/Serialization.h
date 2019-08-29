@@ -85,18 +85,20 @@ struct ScopeCounter
 
 #define ORBIT_NVP_DEBUG( v, x ) if( a_Version >= v ){ ORBIT_SIZE_SCOPE(#x); a_Archive( cereal::make_nvp( #x, x ) ); }
 
-#define ORBIT_SERIALIZATION_TEMPLATE_INST( x ) template void x::serialize<cereal::BinaryOutputArchive>(cereal::BinaryOutputArchive & a_Archive, std::uint32_t const a_Version); \
-                                               template void x::serialize<cereal::BinaryInputArchive>(cereal::BinaryInputArchive & a_Archive, std::uint32_t const a_Version);
+#define ORBIT_SERIALIZATION_TEMPLATE_INST_WSTRING( x ) template void x::serialize<cereal::BinaryOutputArchive>(cereal::BinaryOutputArchive & a_Archive, std::uint32_t const a_Version); \
+                                                       template void x::serialize<cereal::BinaryInputArchive>(cereal::BinaryInputArchive & a_Archive, std::uint32_t const a_Version);
 
-#define ORBIT_SERIALIZATION_TEMPLATE_INST_XML( x ) template void x::serialize<cereal::BinaryOutputArchive>(cereal::BinaryOutputArchive & a_Archive, std::uint32_t const a_Version); \
-                                                   template void x::serialize<cereal::BinaryInputArchive>(cereal::BinaryInputArchive & a_Archive, std::uint32_t const a_Version); \
-                                                   template void x::serialize<cereal::XMLOutputArchive>(cereal::XMLOutputArchive & a_Archive, std::uint32_t const a_Version); \
-                                                   template void x::serialize<cereal::XMLInputArchive>(cereal::XMLInputArchive & a_Archive, std::uint32_t const a_Version);
+#define ORBIT_SERIALIZATION_TEMPLATE_INST( x ) template void x::serialize<cereal::BinaryOutputArchive>(cereal::BinaryOutputArchive & a_Archive, std::uint32_t const a_Version); \
+                                               template void x::serialize<cereal::BinaryInputArchive>(cereal::BinaryInputArchive & a_Archive, std::uint32_t const a_Version); \
+                                               template void x::serialize<cereal::XMLOutputArchive>(cereal::XMLOutputArchive & a_Archive, std::uint32_t const a_Version); \
+                                               template void x::serialize<cereal::XMLInputArchive>(cereal::XMLInputArchive & a_Archive, std::uint32_t const a_Version); \
+                                               template void x::serialize<cereal::JSONOutputArchive>(cereal::JSONOutputArchive & a_Archive, std::uint32_t const a_Version); \
+                                               template void x::serialize<cereal::JSONInputArchive>(cereal::JSONInputArchive & a_Archive, std::uint32_t const a_Version);
+
+#define ORBIT_SERIALIZE_WSTRING( x, v ) CEREAL_CLASS_VERSION( x, v ); \
+                                        ORBIT_SERIALIZATION_TEMPLATE_INST_WSTRING( x ); \
+                                        template <class Archive> void x::serialize( Archive & a_Archive, std::uint32_t const a_Version )
 
 #define ORBIT_SERIALIZE( x, v ) CEREAL_CLASS_VERSION( x, v ); \
                                 ORBIT_SERIALIZATION_TEMPLATE_INST( x ); \
-                                template <class Archive> void x::serialize( Archive & a_Archive, std::uint32_t const a_Version )
-
-#define ORBIT_SERIALIZE_XML( x, v ) CEREAL_CLASS_VERSION( x, v ); \
-                                ORBIT_SERIALIZATION_TEMPLATE_INST_XML( x ); \
                                 template <class Archive> void x::serialize( Archive & a_Archive, std::uint32_t const a_Version )

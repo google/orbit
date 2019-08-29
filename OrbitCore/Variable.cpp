@@ -342,7 +342,7 @@ void Variable::SetDouble( double a_Value )
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( Variable, 0 )
+ORBIT_SERIALIZE_WSTRING( Variable, 0 )
 {
     ORBIT_NVP_VAL( 0, m_Name );
     ORBIT_NVP_VAL( 0, m_Type );
