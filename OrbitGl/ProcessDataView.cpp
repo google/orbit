@@ -160,7 +160,7 @@ void ProcessesDataView::Refresh()
             m_ProcessList.m_Processes.push_back( m_RemoteProcess );
             UpdateProcessList();
             SetFilter( L"" );
-            SelectProcess(0);
+            SelectProcess(m_RemoteProcess->GetID());
             SetSelectedItem();
         }
     }

@@ -269,9 +269,8 @@ bool OrbitApp::Init()
 #ifdef WIN32
     GTcpServer->AddCallback( Msg_MiniDump, [=](const Message & a_Msg){ GOrbitApp->OnMiniDump(a_Msg); });
     GTcpServer->Start(Capture::GCapturePort);
-#else
-    GTcpServer->AddCallback( Msg_RemoteProcess, [=](const Message & a_Msg){ GOrbitApp->OnRemoteProcess(a_Msg); });
 #endif
+    GTcpServer->AddCallback( Msg_RemoteProcess, [=](const Message & a_Msg){ GOrbitApp->OnRemoteProcess(a_Msg); });
 
     GParams.Load();
     GFontSize = GParams.m_FontSize;
@@ -1115,6 +1114,7 @@ void OrbitApp::OnRemoteProcess( const Message & a_Message )
     cereal::JSONInputArchive inputAr( buffer );
     std::shared_ptr<Process> remoteProcess = std::make_shared<Process>();
     inputAr(*remoteProcess);
+    remoteProcess->SetIsRemote(true);
     PRINT_VAR(remoteProcess->GetName());
     remoteProcess->SetID( (DWORD)a_Message.GetHeader().m_GenericHeader.m_Address );
     GOrbitApp->m_ProcessesDataView->SetRemoteProcess(remoteProcess);
