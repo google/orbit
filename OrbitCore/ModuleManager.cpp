@@ -64,7 +64,7 @@ void ModuleManager::OnReceiveMessage( const Message & a_Msg )
 //-----------------------------------------------------------------------------
 void ModuleManager::LoadPdbAsync( const std::shared_ptr<Module> & a_Module, std::function<void()> a_CompletionCallback )
 {   
-    if (!a_Module->m_Loaded)
+    if (!a_Module->GetLoaded())
     {
         bool loadExports = a_Module->IsDll() && !a_Module->m_FoundPdb;
         if( a_Module->m_FoundPdb || loadExports )
@@ -150,6 +150,6 @@ void ModuleManager::AddPdb( const std::shared_ptr<Pdb> & a_Pdb )
     auto it = modules.find( (DWORD64)a_Pdb->GetHModule() );
     if( it != modules.end() )
     {
-        it->second->m_Loaded = true;
+        it->second->SetLoaded(true);
     }
 }

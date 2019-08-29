@@ -20,6 +20,8 @@ struct Module
     bool LoadDebugInfo();
     bool ContainsAddress( uint64_t a_Address ) { return m_AddressStart <= a_Address && m_AddressEnd > a_Address; }
     uint64_t ValidateAddress( uint64_t a_Address );
+    void SetLoaded(bool a_Value);
+    bool GetLoaded() { return m_Loaded; }
 
     std::string   m_Name;
     std::string   m_FullName;
@@ -34,12 +36,14 @@ struct Module
     uint64_t      m_EntryPoint = 0;
     bool          m_FoundPdb = false;
     bool          m_Selected = false;
-    bool          m_Loaded = false;
     uint64_t      m_PdbSize = 0;
 
     mutable std::shared_ptr<Pdb> m_Pdb;
 
     ORBIT_SERIALIZABLE;
+
+private:
+    bool          m_Loaded = false;
 
     friend class TestRemoteMessages;
 };

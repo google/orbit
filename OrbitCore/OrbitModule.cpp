@@ -79,6 +79,12 @@ uint64_t Module::ValidateAddress( uint64_t a_Address )
 }
 
 //-----------------------------------------------------------------------------
+void Module::SetLoaded(bool a_Value)
+{
+    m_Loaded = a_Value;
+}
+
+//-----------------------------------------------------------------------------
 ORBIT_SERIALIZE( Module, 0 )
 {
     ORBIT_NVP_VAL( 0, m_Name );

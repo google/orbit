@@ -62,7 +62,7 @@ std::wstring ModulesDataView::GetValue( int row, int col )
     case MDV_PdbSize:
         value = module->m_FoundPdb ? ws2s(GetPrettySize( module->m_PdbSize )) : ""; break;
     case MDV_Loaded:
-        value = module->m_Loaded ? "*" : ""; break;
+        value = module->GetLoaded() ? "*" : ""; break;
     default:
         break;
     }
@@ -93,7 +93,7 @@ void ModulesDataView::OnSort(int a_Column, bool a_Toggle)
     case MDV_AddressRange:  sorter = ORBIT_PROC_SORT(m_AddressStart); break;
     case MDV_HasPdb:        sorter = ORBIT_PROC_SORT(m_FoundPdb);     break;
     case MDV_PdbSize:       sorter = ORBIT_PROC_SORT(m_PdbSize);      break;
-    case MDV_Loaded:        sorter = ORBIT_PROC_SORT(m_Loaded);       break;
+    case MDV_Loaded:        sorter = ORBIT_PROC_SORT(GetLoaded());       break;
     default:                                                          break;
     }
 
@@ -116,7 +116,7 @@ std::vector<std::wstring> ModulesDataView::GetContextMenu( int a_Index )
     std::vector<std::wstring> menu;
 
     std::shared_ptr<Module> module = GetModule( a_Index );
-    if( !module->m_Loaded )
+    if( !module->GetLoaded() )
     {
         if( module->m_FoundPdb )
         {
@@ -135,6 +135,7 @@ std::vector<std::wstring> ModulesDataView::GetContextMenu( int a_Index )
 //-----------------------------------------------------------------------------
 void ModulesDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
 {
+    PRINT_VAR(a_Action);
     if( a_Action == MODULES_LOAD )
     {
         for( int index : a_ItemIndices )
@@ -149,7 +150,7 @@ void ModulesDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIn
                 {
                     std::shared_ptr<Module> & mod = it->second;
 
-                    if( !mod->m_Loaded )
+                    if( !mod->GetLoaded() )
                     {
                         GOrbitApp->EnqueueModuleToLoad( mod );
                     }
@@ -241,7 +242,7 @@ const std::shared_ptr<Module> & ModulesDataView::GetModule( unsigned int a_Row )
 //-----------------------------------------------------------------------------
 bool ModulesDataView::GetDisplayColor( int a_Row, int a_Column, unsigned char& r, unsigned char& g, unsigned char& b )
 {
-    if ( GetModule(a_Row)->m_Loaded )
+    if ( GetModule(a_Row)->GetLoaded() )
     {
         static unsigned char R = 42;
         static unsigned char G = 218;

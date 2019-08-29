@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "ConnectionManager.h"
+#include "Capture.h"
 #include "TcpClient.h"
 #include "TcpServer.h"
 #include "TimerManager.h"
@@ -185,6 +186,18 @@ void ConnectionManager::InitAsRemote(std::string a_Host)
 }
 
 //-----------------------------------------------------------------------------
+void ConnectionManager::StartCaptureAsRemote()
+{
+    Capture::StartCapture();
+}
+
+//-----------------------------------------------------------------------------
+void ConnectionManager::StopCaptureAsRemote()
+{
+    Capture::StopCapture();
+}
+
+//-----------------------------------------------------------------------------
 void ConnectionManager::Stop()
 {
     m_ExitRequested = true;
@@ -200,6 +213,16 @@ void ConnectionManager::SetupTestMessageHandler()
         msg.FromRaw(a_Msg.m_Data, a_Msg.m_Size);
         msg.Dump();
     } );
+
+    GTcpServer->AddCallback( Msg_StartCapture, [=]( const Message & a_Msg )
+    {
+        StartCaptureAsRemote();
+    } );
+
+    GTcpServer->AddCallback( Msg_StopCapture, [=]( const Message & a_Msg )
+    {
+        StopCaptureAsRemote();
+    } );
 }
 
 //-----------------------------------------------------------------------------
@@ -211,7 +234,7 @@ void ConnectionManager::SendTestMessage()
     std::string rawMsg = msg.ToRaw();
     GTcpClient->Send(Msg_CrossPlatform, (void*)rawMsg.data(), rawMsg.size());
 
-    TestRemoteMessages::Get().Run();
+    //TestRemoteMessages::Get().Run();
 }
 
 //-----------------------------------------------------------------------------

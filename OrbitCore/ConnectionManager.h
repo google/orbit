@@ -17,6 +17,8 @@ public:
     static ConnectionManager& Get();
     void Init();
     void InitAsRemote(std::string a_Host);
+    void StartCaptureAsRemote();
+    void StopCaptureAsRemote();
     void Stop();
 
 protected:
