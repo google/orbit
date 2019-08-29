@@ -24,10 +24,8 @@ public:
     void SendToUiAsync( const std::string & a_Message ){ SendToUiAsync(s2ws(a_Message)); }
     void SendToUiNow( const std::string & a_Message ){ SendToUiNow(s2ws(a_Message)); }
 
-    typedef std::function< void( const Message & ) > MsgCallback;
     typedef std::function< void( const std::wstring & ) > StrCallback;
 
-    void AddCallback( MessageType a_MsgType, MsgCallback a_Callback ) { m_Callbacks[a_MsgType].push_back(a_Callback); }
     void SetUiCallback( StrCallback a_Callback ){ m_UiCallback = a_Callback; }
     void MainThreadTick();
 
@@ -47,7 +45,6 @@ protected:
 
 private:
     class tcp_server*                                   m_TcpServer;
-    std::unordered_map< int, std::vector<MsgCallback> > m_Callbacks;
     StrCallback                                         m_UiCallback;
     moodycamel::ConcurrentQueue<std::wstring>           m_UiLockFreeQueue;
     

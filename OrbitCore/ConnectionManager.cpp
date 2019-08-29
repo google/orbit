@@ -213,13 +213,17 @@ void ConnectionManager::SetupTestMessageHandler()
         msg.FromRaw(a_Msg.m_Data, a_Msg.m_Size);
         msg.Dump();
     } );
+}
 
-    GTcpServer->AddCallback( Msg_StartCapture, [=]( const Message & a_Msg )
+//-----------------------------------------------------------------------------
+void ConnectionManager::SetupClientCallbacks()
+{
+    GTcpClient->AddCallback( Msg_StartCapture, [=]( const Message & a_Msg )
     {
         StartCaptureAsRemote();
     } );
 
-    GTcpServer->AddCallback( Msg_StopCapture, [=]( const Message & a_Msg )
+    GTcpClient->AddCallback( Msg_StopCapture, [=]( const Message & a_Msg )
     {
         StopCaptureAsRemote();
     } );
@@ -247,6 +251,7 @@ void ConnectionManager::ConnectionThread()
             GTcpClient = std::make_unique<TcpClient>(m_Host);
             if (GTcpClient->IsValid())
             {
+                SetupClientCallbacks();
                 GTimerManager = std::make_unique<TimerManager>(true);
             }
         }

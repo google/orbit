@@ -25,6 +25,7 @@ protected:
     void ConnectionThread();
     void TerminateThread();
     void SetupTestMessageHandler();
+    void SetupClientCallbacks();
     void SendTestMessage();
 
 protected:

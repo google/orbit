@@ -12,6 +12,7 @@
 #include <type_traits>
 #include <vector>
 #include <atomic>
+#include <unordered_map>
 
 //-----------------------------------------------------------------------------
 class TcpPacket
@@ -72,6 +73,9 @@ public:
     template<class T> void Send( Message & a_Message, const T& a_Item );
     template<class T> void Send( MessageType a_Type , const T& a_Item );
 
+    typedef std::function< void( const Message & ) > MsgCallback;
+    void AddCallback( MessageType a_MsgType, MsgCallback a_Callback ) { m_Callbacks[a_MsgType].push_back(a_Callback); }
+
 protected:
     void SendMsg( Message & a_Message, const void* a_Payload );
     virtual TcpSocket* GetSocket() = 0;
@@ -87,6 +91,8 @@ protected:
     std::atomic<bool>          m_ExitRequested;
     std::atomic<bool>          m_FlushRequested;
     std::atomic<uint32_t>      m_NumFlushedItems;
+
+    std::unordered_map< int, std::vector<MsgCallback> > m_Callbacks;
 };
 
 //-----------------------------------------------------------------------------
