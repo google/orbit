@@ -6,11 +6,13 @@
 #include "Capture.h"
 #include "GlUtils.h"
 #include "App.h"
-#include "TcpServer.h"
-#include "TimerManager.h"
 #include "PluginManager.h"
 #include "EventTracer.h"
 #include "Systrace.h"
+#include "Serialization.h"
+#include "TcpClient.h"
+#include "TcpServer.h"
+#include "TimerManager.h"
 #include "../OrbitPlugin/OrbitSDK.h"
 
 #ifdef _WIN32
@@ -561,9 +563,7 @@ void CaptureWindow::KeyPressed( unsigned int a_KeyCode, bool a_Ctrl, bool a_Shif
             m_DrawMemTracker = !m_DrawMemTracker;
             break;
         case 'K':
-#ifdef _WIN32
-            CrashHandler::SendMiniDump();
-#endif
+            SendProcess();
             break;
         case 18: // Left
             m_TimeGraph.OnLeft();
@@ -1180,4 +1180,18 @@ void CaptureWindow::OnTimerAdded( Timer & a_Timer )
 void CaptureWindow::OnContextSwitchAdded( const ContextSwitch & a_CS )
 {
     m_TimeGraph.AddContextSwitch( a_CS );
+}
+
+void CaptureWindow::SendProcess()
+{
+#ifdef _WIN32
+    CrashHandler::SendMiniDump();
+#else
+    if( Capture::GTargetProcess )
+    {
+        std::string processData = SerializeObjectHumanReadable(*Capture::GTargetProcess);
+        PRINT_VAR(processData);
+        GTcpClient->Send(Msg_RemoteProcess, (void*)processData.data(), processData.size());
+    }
+#endif
 }

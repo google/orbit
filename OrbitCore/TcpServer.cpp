@@ -180,9 +180,9 @@ void TcpServer::Receive( const Message & a_Message )
     }
     default:
     {
-        MsgCallback & callback = m_Callbacks[a_Message.GetType()];
+        std::vector<MsgCallback> & callbacks = m_Callbacks[a_Message.GetType()];
 
-        if( callback )
+        for( MsgCallback& callback : callbacks )
         {
             callback(a_Message);
         }
@@ -225,7 +225,7 @@ void TcpServer::MainThreadTick()
         m_NumMessagesPerSecond = ((double)(m_NumReceivedMessages - m_LastNumMessages))/(elapsedTime*0.001);
         m_LastNumMessages = m_NumReceivedMessages;
 
-        ULONG64 numBytesReceived = m_TcpServer ? m_TcpServer->GetNumBytesReceived() : 0;
+        uint64_t numBytesReceived = m_TcpServer ? m_TcpServer->GetNumBytesReceived() : 0;
         m_BytesPerSecond = (double( numBytesReceived - m_LastNumBytes))/(elapsedTime*0.001);
         m_LastNumBytes = numBytesReceived;
         m_StatTimer.Reset();

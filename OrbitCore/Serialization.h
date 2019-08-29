@@ -77,6 +77,17 @@ struct ScopeCounter
     size_t m_SizeEnd;
 };
 
+//-----------------------------------------------------------------------------
+template <class T> inline std::string SerializeObjectHumanReadable(T& a_Object)
+{
+    std::stringstream ss;
+    {
+        cereal::JSONOutputArchive archive(ss);
+        archive(a_Object);
+    }
+    return ss.str();
+}
+
 #define ORBIT_SIZE_SCOPE( x ) ScopeCounter counter( x )
 
 #define ORBIT_NVP( v, x ) if( a_Version >= v ) a_Archive( cereal::make_nvp( #x, p.x ) )

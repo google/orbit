@@ -50,8 +50,8 @@ enum MessageType : int16_t
     Msg_OrbitData,
     Msg_ThreadInfo,
     Msg_CrossPlatform,
-    Msg_RemoteProcesses,
-    Msg_RemoteModules,
+    Msg_RemoteProcess,
+    Msg_RemoteModule,
     Msg_RemoteFunctions,
 };
 

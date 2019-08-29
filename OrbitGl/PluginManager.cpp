@@ -30,8 +30,8 @@ void PluginManager::Initialize()
         }
     }
 
-    GTcpServer->SetCallback( Msg_UserData, [=]( const Message & a_Msg ){ this->OnReceiveUserData(a_Msg); } );
-    GTcpServer->SetCallback( Msg_OrbitData, [=]( const Message & a_Msg ){ this->OnReceiveOrbitData(a_Msg); } );
+    GTcpServer->AddCallback( Msg_UserData, [=]( const Message & a_Msg ){ this->OnReceiveUserData(a_Msg); } );
+    GTcpServer->AddCallback( Msg_OrbitData, [=]( const Message & a_Msg ){ this->OnReceiveOrbitData(a_Msg); } );
 #endif
 }
 

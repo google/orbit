@@ -267,8 +267,10 @@ bool OrbitApp::Init()
     }
 
 #ifdef WIN32
-    GTcpServer->SetCallback( Msg_MiniDump, [=](const Message & a_Msg){ GOrbitApp->OnMiniDump(a_Msg); });
+    GTcpServer->AddCallback( Msg_MiniDump, [=](const Message & a_Msg){ GOrbitApp->OnMiniDump(a_Msg); });
     GTcpServer->Start(Capture::GCapturePort);
+#else
+    GTcpServer->AddCallback( Msg_RemoteProcess, [=](const Message & a_Msg){ GOrbitApp->OnRemoteProcess(a_Msg); });
 #endif
 
     GParams.Load();
@@ -1104,6 +1106,18 @@ void OrbitApp::OnMiniDump( const Message & a_Message )
     std::shared_ptr<Process> process = miniDump.ToOrbitProcess();
     process->SetID( (DWORD)a_Message.GetHeader().m_GenericHeader.m_Address );
     GOrbitApp->m_ProcessesDataView->SetRemoteProcess( process );
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::OnRemoteProcess( const Message & a_Message )
+{
+    std::istringstream buffer(std::string(a_Message.m_Data, a_Message.m_Size));
+    cereal::JSONInputArchive inputAr( buffer );
+    std::shared_ptr<Process> remoteProcess = std::make_shared<Process>();
+    inputAr(*remoteProcess);
+    PRINT_VAR(remoteProcess->GetName());
+    remoteProcess->SetID( (DWORD)a_Message.GetHeader().m_GenericHeader.m_Address );
+    GOrbitApp->m_ProcessesDataView->SetRemoteProcess(remoteProcess);
 }
 
 //-----------------------------------------------------------------------------

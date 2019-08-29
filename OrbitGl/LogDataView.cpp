@@ -13,7 +13,7 @@ std::vector<float> LogDataView::s_HeaderRatios;
 LogDataView::LogDataView()
 {
     GOrbitApp->RegisterOutputLog( this );
-    GTcpServer->SetCallback( Msg_OrbitLog, [=]( const Message & a_Msg ){ this->OnReceiveMessage(a_Msg); } );
+    GTcpServer->AddCallback( Msg_OrbitLog, [=]( const Message & a_Msg ){ this->OnReceiveMessage(a_Msg); } );
     m_UpdatePeriodMs = 100;
 }
 

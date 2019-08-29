@@ -567,7 +567,7 @@ RuleEditor::RuleEditor()
     : GlCanvas()
 {
     GOrbitApp->RegisterRuleEditor(this);
-    GTcpServer->SetCallback( Msg_SavedContext, [=]( const Message & a_Msg ){ this->OnReceiveMessage(a_Msg); } );
+    GTcpServer->AddCallback( Msg_SavedContext, [=]( const Message & a_Msg ){ this->OnReceiveMessage(a_Msg); } );
     m_Opened = true;
 }
 

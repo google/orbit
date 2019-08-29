@@ -28,7 +28,7 @@ ModuleManager::~ModuleManager()
 void ModuleManager::Init()
 {
     if( GTcpServer )
-        GTcpServer->SetCallback(Msg_SetData, [=](const Message & a_Msg){ this->OnReceiveMessage(a_Msg); });
+        GTcpServer->AddCallback(Msg_SetData, [=](const Message & a_Msg){ this->OnReceiveMessage(a_Msg); });
 }
 
 //-----------------------------------------------------------------------------

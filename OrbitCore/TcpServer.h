@@ -27,7 +27,7 @@ public:
     typedef std::function< void( const Message & ) > MsgCallback;
     typedef std::function< void( const std::wstring & ) > StrCallback;
 
-    void SetCallback( MessageType a_MsgType, MsgCallback a_Callback ) { m_Callbacks[a_MsgType] = a_Callback; }
+    void AddCallback( MessageType a_MsgType, MsgCallback a_Callback ) { m_Callbacks[a_MsgType].push_back(a_Callback); }
     void SetUiCallback( StrCallback a_Callback ){ m_UiCallback = a_Callback; }
     void MainThreadTick();
 
@@ -46,10 +46,10 @@ protected:
     void ServerThread();
 
 private:
-    class tcp_server*                         m_TcpServer;
-    std::unordered_map< int, MsgCallback >    m_Callbacks;
-    StrCallback                               m_UiCallback;
-    moodycamel::ConcurrentQueue<std::wstring> m_UiLockFreeQueue;
+    class tcp_server*                                   m_TcpServer;
+    std::unordered_map< int, std::vector<MsgCallback> > m_Callbacks;
+    StrCallback                                         m_UiCallback;
+    moodycamel::ConcurrentQueue<std::wstring>           m_UiLockFreeQueue;
     
     Timer    m_StatTimer;
     ULONG64  m_LastNumMessages;

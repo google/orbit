@@ -45,19 +45,6 @@ template <class T> std::string SerializeObject(T& a_Object)
 }
 
 //-----------------------------------------------------------------------------
-template <class T> std::string SerializeObjectHumanReadable(T& a_Object)
-{
-    std::stringstream ss;
-    {
-        cereal::JSONOutputArchive archive(ss);
-        archive(a_Object);
-    }
-    std::cout << "ss:" << ss.str() << std::endl;
-    PRINT_VAR(ss.str().size());
-    return ss.str();
-}
-
-//-----------------------------------------------------------------------------
 void TestRemoteMessages::Run()
 {
     Process process;
@@ -73,7 +60,7 @@ void TestRemoteMessages::Run()
 
     std::string processData = SerializeObjectHumanReadable(process);
     PRINT_VAR(processData);
-    GTcpClient->Send(Msg_RemoteProcesses, (void*)processData.data(), processData.size());
+    GTcpClient->Send(Msg_RemoteProcess, (void*)processData.data(), processData.size());
 
     Module module;
     module.m_Name = "module.m_Name";
@@ -94,7 +81,7 @@ void TestRemoteMessages::Run()
     module.m_PdbSize = 110;
 
     std::string moduleData = SerializeObjectHumanReadable(module);
-    GTcpClient->Send(Msg_RemoteModules, (void*)moduleData.data(), moduleData.size());
+    GTcpClient->Send(Msg_RemoteModule, (void*)moduleData.data(), moduleData.size());
 
     Function function;
     function.m_Name = "m_Name";
@@ -118,7 +105,7 @@ void TestRemoteMessages::Run()
 //-----------------------------------------------------------------------------
 void TestRemoteMessages::SetupMessageHandlers()
 {
-    GTcpServer->SetCallback( Msg_RemoteProcesses, [=]( const Message & a_Msg )
+    GTcpServer->AddCallback( Msg_RemoteProcess, [=]( const Message & a_Msg )
     {
         PRINT_VAR(a_Msg.m_Size);
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
@@ -128,7 +115,7 @@ void TestRemoteMessages::SetupMessageHandlers()
         PRINT_VAR(process.GetName());
     } );
 
-    GTcpServer->SetCallback( Msg_RemoteModules, [=]( const Message & a_Msg )
+    GTcpServer->AddCallback( Msg_RemoteModule, [=]( const Message & a_Msg )
     {
         PRINT_VAR(a_Msg.m_Size);
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
@@ -138,7 +125,7 @@ void TestRemoteMessages::SetupMessageHandlers()
         PRINT_VAR(module.m_Name);
     } );
 
-    GTcpServer->SetCallback( Msg_RemoteFunctions, [=]( const Message & a_Msg )
+    GTcpServer->AddCallback( Msg_RemoteFunctions, [=]( const Message & a_Msg )
     {
         PRINT_VAR(a_Msg.m_Size);
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));

@@ -61,6 +61,7 @@ public:
     virtual std::vector<std::wstring> GetContextMenu();
     virtual void OnContextMenu( const std::wstring & a_Action, int a_MenuIndex );
     void UpdateVerticalSlider();
+    void SendProcess();
 
 private:
     TimeGraph       m_TimeGraph;

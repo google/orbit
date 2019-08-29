@@ -585,7 +585,7 @@ void Process::FindCoreFunctions()
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( Process, 0 )
+ORBIT_SERIALIZE( Process, 1 )
 {
     ORBIT_NVP_VAL( 0, m_Name );
     ORBIT_NVP_VAL( 0, m_FullName );
@@ -598,4 +598,5 @@ ORBIT_SERIALIZE( Process, 0 )
     ORBIT_NVP_VAL( 0, m_Modules );
     ORBIT_NVP_VAL( 0, m_NameToModuleMap );
     ORBIT_NVP_VAL( 0, m_ThreadIds );
+    ORBIT_NVP_VAL( 1, m_Modules );
 }

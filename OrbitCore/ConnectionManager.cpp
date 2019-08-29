@@ -193,7 +193,7 @@ void ConnectionManager::Stop()
 //-----------------------------------------------------------------------------
 void ConnectionManager::SetupTestMessageHandler()
 {
-    GTcpServer->SetCallback( Msg_CrossPlatform, [=]( const Message & a_Msg )
+    GTcpServer->AddCallback( Msg_CrossPlatform, [=]( const Message & a_Msg )
     {
         CrossPlatformMessage msg;
         PRINT_VAR(a_Msg.m_Size);

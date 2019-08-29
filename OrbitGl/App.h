@@ -141,6 +141,7 @@ public:
 
     void RequestThaw(){ m_NeedsThawing = true; }
     void OnMiniDump( const Message & a_Message );
+    void OnRemoteProcess( const Message & a_Message );
     void LaunchRuleEditor( class Function* a_Function );
 
     RuleEditor* GetRuleEditor() { return m_RuleEditor; }
