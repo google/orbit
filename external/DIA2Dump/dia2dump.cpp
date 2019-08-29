@@ -850,7 +850,7 @@ bool DumpAllFunctions( IDiaSymbol *pGlobal )
 
         if( pSymbol->get_name( &bstrName ) == S_OK )
         {
-            Func.m_PrettyName = bstrName;
+            Func.m_PrettyName = ws2s(bstrName);
             SysFreeString( bstrName );
         }
 
@@ -889,7 +889,7 @@ bool DumpAllFunctions( IDiaSymbol *pGlobal )
 		BSTR bstrFile;
 		if (pSymbol->get_sourceFileName(&bstrFile) == S_OK)
 		{
-			Func.m_File = bstrFile;
+			Func.m_File = ws2s(bstrFile);
 			SysFreeString( bstrName );
 		}
 

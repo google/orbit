@@ -50,18 +50,18 @@ std::shared_ptr<Process> MiniDump::ToOrbitProcess()
 
             std::shared_ptr<Module> mod = std::make_shared<Module>();
             
-            mod->m_FullName = s2ws( module->code_file() );
-            mod->m_Name = Path::GetFileName( mod->m_FullName );
+            mod->m_FullName = module->code_file();
+            mod->m_Name = ws2s(Path::GetFileName( s2ws(mod->m_FullName) ));
             
-            if( EndsWith( mod->m_Name, TEXT( ".exe" ) ) )
+            if( EndsWith( mod->m_Name, ".exe" ) )
             {
-                process->m_Name = ws2s(mod->m_Name);
+                process->m_Name = mod->m_Name;
             }
 
-            mod->m_Directory = Path::GetDirectory( mod->m_FullName );
+            mod->m_Directory = ws2s(Path::GetDirectory( s2ws(mod->m_FullName) ));
             mod->m_AddressStart = module->base_address();
             mod->m_AddressEnd =   module->base_address() + module->size();
-            mod->m_DebugSignature = s2ws( module->debug_identifier() );
+            mod->m_DebugSignature = module->debug_identifier();
 
             process->AddModule(mod);
         }

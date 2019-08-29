@@ -52,9 +52,9 @@ void SymUtils::ListModules( HANDLE a_ProcessHandle, std::map< DWORD64, std::shar
         GetModuleInformation(a_ProcessHandle, hModule, &moduleInfo, sizeof(MODULEINFO));
 
         std::shared_ptr<Module> module = std::make_shared<Module>();
-        module->m_Name = ModuleNameBuffer;
-        module->m_FullName = ModuleFullNameBuffer;
-        module->m_Directory = Path::GetDirectory( module->m_FullName );
+        module->m_Name = ws2s(ModuleNameBuffer);
+        module->m_FullName = ws2s(ModuleFullNameBuffer);
+        module->m_Directory = ws2s(Path::GetDirectory( s2ws(module->m_FullName) ));
         module->m_AddressStart = (DWORD64)moduleInfo.lpBaseOfDll;
         module->m_AddressEnd = (DWORD64)moduleInfo.lpBaseOfDll + moduleInfo.SizeOfImage;
         module->m_EntryPoint = (DWORD64)moduleInfo.EntryPoint;
@@ -65,9 +65,9 @@ void SymUtils::ListModules( HANDLE a_ProcessHandle, std::map< DWORD64, std::shar
         {
             module->m_FoundPdb = true;
             module->m_PdbSize = std::tr2::sys::file_size( filePath );
-            module->m_PdbName = filePath.wstring();
+            module->m_PdbName = filePath.string();
         }
-        else if( Contains( module->m_FullName, L"qt" ) )
+        else if( Contains( module->m_FullName, "qt" ) )
         {
             std::wstring pdbName = Path::GetFileName( filePath.wstring() );
             filePath = std::wstring( L"C:\\Qt\\5.8\\msvc2015_64\\bin\\" ) + pdbName;
@@ -75,7 +75,7 @@ void SymUtils::ListModules( HANDLE a_ProcessHandle, std::map< DWORD64, std::shar
             {
                 module->m_FoundPdb = true;
                 module->m_PdbSize = std::tr2::sys::file_size( filePath );
-                module->m_PdbName = filePath.wstring();
+                module->m_PdbName = filePath.string();
             }
         }
 

@@ -423,7 +423,7 @@ void Process::FindPdbs( const std::vector< std::wstring > & a_SearchLocations )
 
         if( !module->m_FoundPdb )
         {
-            std::wstring moduleName = ToLower( module->m_Name );
+            std::wstring moduleName = ToLower( s2ws( module->m_Name) );
             std::wstring pdbName = Path::StripExtension( moduleName ) + L".pdb";
 
             const std::vector< std::wstring > & pdbs = nameToPaths[pdbName];
@@ -431,11 +431,11 @@ void Process::FindPdbs( const std::vector< std::wstring > & a_SearchLocations )
             for( const std::wstring & pdb : pdbs )
             {
 
-                module->m_PdbName = pdb;
+                module->m_PdbName = ws2s(pdb);
                 module->m_FoundPdb = true;
                 module->LoadDebugInfo();
 
-                std::wstring signature = s2ws( GuidToString( module->m_Pdb->GetGuid() ) );
+                std::string signature = GuidToString( module->m_Pdb->GetGuid() );
 
                 if( Contains( module->m_DebugSignature, signature ) )
                 {
@@ -524,7 +524,7 @@ bool Process::SetPrivilege( LPCTSTR a_Name, bool a_Enable )
 DWORD64 Process::GetOutputDebugStringAddress()
 {
 #ifdef _WIN32
-    auto it = m_NameToModuleMap.find( L"kernelbase.dll" );
+    auto it = m_NameToModuleMap.find( "kernelbase.dll" );
     if( it != m_NameToModuleMap.end() )
     {
         std::shared_ptr<Module> module = it->second;
@@ -540,7 +540,7 @@ DWORD64 Process::GetOutputDebugStringAddress()
 DWORD64 Process::GetRaiseExceptionAddress()
 {
 #ifdef _WIN32
-    auto it = m_NameToModuleMap.find( L"kernelbase.dll" );
+    auto it = m_NameToModuleMap.find( "kernelbase.dll" );
     if (it != m_NameToModuleMap.end())
     {
         std::shared_ptr<Module> module = it->second;
