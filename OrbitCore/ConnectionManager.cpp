@@ -9,6 +9,11 @@
 #include "TimerManager.h"
 #include "Serialization.h"
 #include "TestRemoteMessages.h"
+#include "EventBuffer.h"
+
+#if __linux__
+#include "LinuxUtils.h"
+#endif
 
 #include <fstream>
 #include <streambuf>
@@ -139,7 +144,7 @@ void CrossPlatformMessage::Dump()
 }
 
 //-----------------------------------------------------------------------------
-ConnectionManager::ConnectionManager() : m_ExitRequested(false)
+ConnectionManager::ConnectionManager() : m_ExitRequested(false), m_IsRemote(false)
 {
 }
 
@@ -176,6 +181,7 @@ void ConnectionManager::Init()
 //-----------------------------------------------------------------------------
 void ConnectionManager::InitAsRemote(std::string a_Host)
 {
+    m_IsRemote = true;
     m_Host = a_Host;
     TerminateThread();
     m_Thread = std::make_unique<std::thread>(&ConnectionManager::ConnectionThread, this);
@@ -226,6 +232,18 @@ void ConnectionManager::SetupClientCallbacks()
     GTcpClient->AddCallback( Msg_StopCapture, [=]( const Message & a_Msg )
     {
         StopCaptureAsRemote();
+    } );
+}
+
+//-----------------------------------------------------------------------------
+void ConnectionManager::SetupServerCallbacks()
+{
+    GTcpServer->AddCallback( Msg_RemotePerf, [=]( const Message & a_Msg )
+    {
+        PRINT_VAR(a_Msg.m_Size);
+        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        LinuxPerf perf(0);
+        perf.LoadPerfData(buffer);
     } );
 }
 
