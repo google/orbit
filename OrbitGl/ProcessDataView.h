@@ -24,6 +24,7 @@ public:
     bool SelectProcess( const std::wstring & a_ProcessName );
     bool SelectProcess( DWORD a_ProcessId );
     void UpdateProcessList();
+    void SetRemoteProcessList(std::shared_ptr<ProcessList> a_RemoteProcessList);
     void SetRemoteProcess( std::shared_ptr<Process> a_Process );
     void SetModulesDataView( class ModulesDataView* a_ModulesCtrl ) { m_ModulesDataView = a_ModulesCtrl; }
     void Refresh();
@@ -46,7 +47,7 @@ protected:
     std::shared_ptr<Process>    m_RemoteProcess;
     ModulesDataView*            m_ModulesDataView;
     std::shared_ptr< Process >  m_SelectedProcess;
-    Mutex                       m_Mutex;
     static std::vector<float>   s_HeaderRatios;
+    bool                        m_IsRemote;
 };
 

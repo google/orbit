@@ -75,6 +75,9 @@ public:
 
     typedef std::function< void( const Message & ) > MsgCallback;
     void AddCallback( MessageType a_MsgType, MsgCallback a_Callback ) { m_Callbacks[a_MsgType].push_back(a_Callback); }
+    void AddMainThreadCallback( MessageType a_MsgType, MsgCallback a_Callback ) { m_MainThreadCallbacks[a_MsgType].push_back(a_Callback); }
+    void Callback( const Message& a_Message );
+    void ProcessMainThreadCallbacks();
 
 protected:
     void SendMsg( Message & a_Message, const void* a_Payload );
@@ -91,8 +94,11 @@ protected:
     std::atomic<bool>          m_ExitRequested;
     std::atomic<bool>          m_FlushRequested;
     std::atomic<uint32_t>      m_NumFlushedItems;
+    Mutex                      m_Mutex;
 
     std::unordered_map< int, std::vector<MsgCallback> > m_Callbacks;
+    std::unordered_map< int, std::vector<MsgCallback> > m_MainThreadCallbacks;
+    std::unordered_map< int, std::vector<std::shared_ptr<MessageOwner>> > m_MainThreadMessages;
 };
 
 //-----------------------------------------------------------------------------

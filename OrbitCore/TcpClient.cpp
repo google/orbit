@@ -164,12 +164,7 @@ void TcpClient::OnError( const std::error_code& ec)
 //-----------------------------------------------------------------------------
 void TcpClient::DecodeMessage( Message & a_Message )
 {
-    std::vector<MsgCallback> & callbacks = m_Callbacks[a_Message.GetType()];
-
-    for( MsgCallback& callback : callbacks )
-    {
-        callback(a_Message);
-    }
+    Callback(a_Message);
 
 #ifdef _WIN32
     Message::Header MessageHeader = a_Message.GetHeader();

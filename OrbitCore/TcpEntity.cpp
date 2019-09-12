@@ -119,3 +119,44 @@ void TcpEntity::SendData()
         }
     }
 }
+
+//-----------------------------------------------------------------------------
+void TcpEntity::Callback( const Message& a_Message )
+{
+    MessageType type = a_Message.GetType();
+    // Non main thread
+    std::vector<MsgCallback> & callbacks = m_Callbacks[type];
+    for( MsgCallback& callback : callbacks )
+    {
+        callback(a_Message);
+    }
+
+    // Main thread callbacks
+    ScopeLock lock(m_Mutex);
+    const auto& pair = m_MainThreadCallbacks.find(type);
+    if( pair != m_MainThreadCallbacks.end() )
+    {
+        std::shared_ptr<MessageOwner> messageOwner = std::make_shared<MessageOwner>(a_Message);
+        m_MainThreadMessages[type].push_back(messageOwner);
+    }
+}
+
+//-----------------------------------------------------------------------------
+void TcpEntity::ProcessMainThreadCallbacks()
+{
+    ScopeLock lock(m_Mutex);
+    for( auto& pair : m_MainThreadMessages )
+    {
+        MessageType type = MessageType(pair.first);
+        std::vector<std::shared_ptr<MessageOwner> >& messageOwners = pair.second;
+        for( auto& messageOwner : messageOwners )
+        {
+            std::vector<MsgCallback> &callbacks = m_MainThreadCallbacks[type];
+            for (MsgCallback &callback : callbacks) {
+                callback(*messageOwner);
+            }
+        }
+    }
+
+    m_MainThreadMessages.clear();
+}

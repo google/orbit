@@ -33,6 +33,7 @@
 #include "OrbitCore/Pdb.h"
 #include "OrbitCore/ModuleManager.h"
 #include "OrbitCore/TcpServer.h"
+#include "OrbitCore/TcpClient.h"
 #include "OrbitCore/TimerManager.h"
 #include "OrbitCore/Injection.h"
 #include "OrbitCore/Utils.h"
@@ -270,7 +271,9 @@ bool OrbitApp::Init()
     GTcpServer->AddCallback( Msg_MiniDump, [=](const Message & a_Msg){ GOrbitApp->OnMiniDump(a_Msg); });
     GTcpServer->Start(Capture::GCapturePort);
 #endif
-    GTcpServer->AddCallback( Msg_RemoteProcess, [=](const Message & a_Msg){ GOrbitApp->OnRemoteProcess(a_Msg); });
+
+    GTcpServer->AddMainThreadCallback( Msg_RemoteProcess, [=](const Message & a_Msg){ GOrbitApp->OnRemoteProcess(a_Msg); });
+    GTcpServer->AddMainThreadCallback( Msg_RemoteProcessList, [=](const Message & a_Msg){ GOrbitApp->OnRemoteProcessList(a_Msg); });
 
     GParams.Load();
     GFontSize = GParams.m_FontSize;
@@ -514,6 +517,11 @@ Timer GMainTimer;
 void OrbitApp::MainTick()
 {
     TRACE_VAR( GMainTimer.QueryMillis() );
+
+    if( GTcpServer )
+        GTcpServer->ProcessMainThreadCallbacks();
+    if( GTcpClient )
+        GTcpClient->ProcessMainThreadCallbacks();
 
     GMainTimer.Reset();
     Capture::Update();
@@ -1118,6 +1126,17 @@ void OrbitApp::OnRemoteProcess( const Message & a_Message )
     PRINT_VAR(remoteProcess->GetName());
     remoteProcess->SetID( (DWORD)a_Message.GetHeader().m_GenericHeader.m_Address );
     GOrbitApp->m_ProcessesDataView->SetRemoteProcess(remoteProcess);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::OnRemoteProcessList( const Message & a_Message )
+{
+    std::istringstream buffer(std::string(a_Message.m_Data, a_Message.m_Size));
+    cereal::JSONInputArchive inputAr( buffer );
+    std::shared_ptr<ProcessList> remoteProcessList = std::make_shared<ProcessList>();
+    inputAr(*remoteProcessList);
+    PRINT_VAR("remoteProcessList");
+    GOrbitApp->m_ProcessesDataView->SetRemoteProcessList(remoteProcessList);
 }
 
 //-----------------------------------------------------------------------------

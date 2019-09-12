@@ -4,6 +4,7 @@
 #pragma once
 
 #include "OrbitProcess.h"
+#include "Serialization.h"
 #include <unordered_map>
 
 //-----------------------------------------------------------------------------
@@ -25,5 +26,7 @@ struct ProcessList
     bool Contains( DWORD a_PID ) const;
     std::vector< std::shared_ptr< Process > > m_Processes;
     std::unordered_map< DWORD, std::shared_ptr< Process > > m_ProcessesMap;
+
+    ORBIT_SERIALIZABLE;
 };
 

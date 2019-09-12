@@ -139,14 +139,14 @@ void SamplingProfiler::FireDoneProcessingCallbacks()
 }
 
 //-----------------------------------------------------------------------------
-std::multimap<int, CallstackID> SamplingProfiler::GetCallStacksFromAddress( DWORD64 a_Addr, ThreadID a_TID, int & o_NumCallstacks )
+std::multimap<int, CallstackID> SamplingProfiler::GetCallStacksFromAddress( uint64_t a_Addr, ThreadID a_TID, int & o_NumCallstacks )
 {
     std::set<CallstackID> & callstacks = m_FunctionToCallstacks[a_Addr];
     return m_ThreadSampleData[a_TID].SortCallstacks( callstacks, o_NumCallstacks );
 }
 
 //-----------------------------------------------------------------------------
-std::shared_ptr< SortedCallstackReport > SamplingProfiler::GetSortedCallstacksFromAddress( DWORD64 a_Addr, ThreadID a_TID )
+std::shared_ptr< SortedCallstackReport > SamplingProfiler::GetSortedCallstacksFromAddress( uint64_t a_Addr, ThreadID a_TID )
 {
     std::shared_ptr<SortedCallstackReport> report = std::make_shared<SortedCallstackReport>();
     std::multimap<int, CallstackID> multiMap = GetCallStacksFromAddress( a_Addr, a_TID, report->m_NumCallStacksTotal );
@@ -207,7 +207,7 @@ void SamplingProfiler::SortByThreadID()
 }
 
 //-----------------------------------------------------------------------------
-bool SamplingProfiler::GetLineInfo( DWORD64 a_Address, LineInfo & a_LineInfo )
+bool SamplingProfiler::GetLineInfo( uint64_t a_Address, LineInfo & a_LineInfo )
 {
     auto it = m_AddressToLineInfo.find( a_Address );
     if( it != m_AddressToLineInfo.end() )
@@ -296,13 +296,13 @@ void SamplingProfiler::ProcessSamples()
             // exclusive stat
             threadSampleData.m_ExclusiveCount[ callstack->m_Data[0] ] += callstackCount;
 
-            std::set<DWORD64> uniqueAddresses;
+            std::set<uint64_t> uniqueAddresses;
             for( int i = 0; i < callstack->m_Depth; ++i )
             {
                 uniqueAddresses.insert(callstack->m_Data[i]);
             }
 
-            for( DWORD64 address : uniqueAddresses )
+            for( uint64_t address : uniqueAddresses )
             {
                 threadSampleData.m_AddressCount[address] += callstackCount;
             }
@@ -311,7 +311,7 @@ void SamplingProfiler::ProcessSamples()
         // sort thread addresses by count
         for( auto & addressCountIt : threadSampleData.m_AddressCount )
         {
-            const DWORD64 address = addressCountIt.first;
+            const uint64_t address = addressCountIt.first;
             const unsigned int count = addressCountIt.second;
             threadSampleData.m_AddressCountSorted.insert( std::make_pair(count, address) );
         }
@@ -373,7 +373,7 @@ void SamplingProfiler::ProcessAddresses()
 
         for( int i = 0; i < callstack->m_Depth; ++i )
         {
-            DWORD64 addr = callstack->m_Data[i];
+            uint64_t addr = callstack->m_Data[i];
 
             if( m_ExactAddresses.find(addr) == m_ExactAddresses.end() )
             {
@@ -383,7 +383,7 @@ void SamplingProfiler::ProcessAddresses()
             auto addrIt = m_ExactAddresses.find(addr);
             if( addrIt != m_ExactAddresses.end() )
             {
-                const DWORD64 & functionAddr = addrIt->second;
+                const uint64_t & functionAddr = addrIt->second;
                 ResolvedCallstack.m_Data[i] = functionAddr;
                 m_FunctionToCallstacks[functionAddr].insert( rawCallstackId );
             }
@@ -400,7 +400,7 @@ void SamplingProfiler::ProcessAddresses()
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::AddAddress( DWORD64 a_Address )
+void SamplingProfiler::AddAddress( uint64_t a_Address )
 {
 #ifdef _WIN32
     ScopeLock lock( m_SymbolMutex );
@@ -410,11 +410,11 @@ void SamplingProfiler::AddAddress( DWORD64 a_Address )
     SYMBOL_INFOW* symbol_info = (SYMBOL_INFOW*)buffer;
     symbol_info->SizeOfStruct = sizeof( SYMBOL_INFOW );
     symbol_info->MaxNameLen = ( ( sizeof( buffer ) - sizeof( SYMBOL_INFOW ) ) / sizeof( WCHAR ) ) - 1;
-    DWORD64 displacement = 0;
+    uint64_t displacement = 0;
 	
 	if (m_Process)
 	{
-		SymFromAddrW(m_Process->GetHandle(), (DWORD64)a_Address, &displacement, symbol_info);
+		SymFromAddrW(m_Process->GetHandle(), (uint64_t)a_Address, &displacement, symbol_info);
 	}
 
     std::wstring symName = symbol_info->Name;
@@ -436,13 +436,13 @@ void SamplingProfiler::AddAddress( DWORD64 a_Address )
     }
 
     m_ExactAddresses[a_Address] = symbol_info->Address ? symbol_info->Address : a_Address;
-    m_AddressToSymbol[(DWORD64)a_Address] = symName;
+    m_AddressToSymbol[(uint64_t)a_Address] = symName;
     m_AddressToSymbol[symbol_info->Address] = symName;    
 
     LineInfo lineInfo;
     if( SymUtils::GetLineInfo( a_Address, lineInfo ) )
     {
-        DWORD64 hash = StringHash(lineInfo.m_File);
+        uint64_t hash = StringHash(lineInfo.m_File);
         lineInfo.m_FileNameHash = hash;
         m_FileNames[hash] = lineInfo.m_File;
         lineInfo.m_File = L"";
@@ -453,7 +453,7 @@ void SamplingProfiler::AddAddress( DWORD64 a_Address )
     //TODO: find function start address 
     m_ExactAddresses[a_Address] = /*symbol_info->Address ? symbol_info->Address :*/ a_Address;
     std::shared_ptr<LinuxSymbol> symbol = m_Process->SymbolFromAddress( a_Address );
-    m_AddressToSymbol[(DWORD64)a_Address] = s2ws(symbol ? symbol->m_Name : "??");
+    m_AddressToSymbol[(uint64_t)a_Address] = s2ws(symbol ? symbol->m_Name : "??");
 #endif
 }
 
@@ -469,11 +469,11 @@ void SamplingProfiler::OutputStats()
         ORBIT_LOGV(threadID);
         ORBIT_LOGV(threadSampleData.m_NumSamples);
 
-        for( std::multimap< unsigned int, DWORD64 >::reverse_iterator sortedIt = threadSampleData.m_AddressCountSorted.rbegin();
+        for( std::multimap< unsigned int, uint64_t >::reverse_iterator sortedIt = threadSampleData.m_AddressCountSorted.rbegin();
              sortedIt != threadSampleData.m_AddressCountSorted.rend(); ++sortedIt )
         {
             int numOccurences = sortedIt->first;
-            DWORD64 address = sortedIt->second;
+            uint64_t address = sortedIt->second;
             float prct = 100.f * ((float)numOccurences) / (float)threadSampleData.m_NumSamples;
 
             SampledFunction function;
@@ -530,7 +530,7 @@ void SamplingProfiler::GetThreadCallstack( Thread* a_Thread )
 }
 
 //-----------------------------------------------------------------------------
-std::wstring SamplingProfiler::GetSymbolFromAddress( DWORD64 a_Address )
+std::wstring SamplingProfiler::GetSymbolFromAddress( uint64_t a_Address )
 {
     ScopeLock lock( m_SymbolMutex );
 

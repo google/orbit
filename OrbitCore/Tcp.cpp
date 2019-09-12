@@ -339,6 +339,6 @@ void TcpConnection::ReadFooter()
 //-----------------------------------------------------------------------------
 void TcpConnection::DecodeMessage( Message & a_Message )
 {
-    GTcpServer->GetServer()->RegisterConnection( this->shared_from_this() );
+    GTcpServer->GetServer()->RegisterConnection( this->shared_from_this() ); // TODO:
     GTcpServer->Receive( a_Message );
 }

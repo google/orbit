@@ -10,6 +10,7 @@
 #include "Serialization.h"
 #include "TestRemoteMessages.h"
 #include "EventBuffer.h"
+#include "ProcessUtils.h"
 
 #if __linux__
 #include "LinuxUtils.h"
@@ -260,6 +261,15 @@ void ConnectionManager::SendTestMessage()
 }
 
 //-----------------------------------------------------------------------------
+void ConnectionManager::SendProcesses()
+{
+    ProcessList processList;
+    std::string processData = SerializeObjectHumanReadable(processList);
+    PRINT_VAR(processData);
+    GTcpClient->Send(Msg_RemoteProcessList, (void*)processData.data(), processData.size());
+}
+
+//-----------------------------------------------------------------------------
 void ConnectionManager::ConnectionThread()
 {
     while (!m_ExitRequested)
@@ -278,7 +288,7 @@ void ConnectionManager::ConnectionThread()
             std::string msg("Hello from ConnectionManager");
             GTcpClient->Send(msg);
 
-            SendTestMessage();
+            SendProcesses();
 
             Sleep(2000);
         }

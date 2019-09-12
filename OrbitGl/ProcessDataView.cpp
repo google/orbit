@@ -17,6 +17,7 @@ ProcessesDataView::ProcessesDataView()
     m_SortingToggles.resize(PDV_NumColumns, false);
     UpdateProcessList();
     m_UpdatePeriodMs = 1000;
+    m_IsRemote = false;
 
     GOrbitApp->RegisterProcessesDataView(this);
 }
@@ -144,12 +145,11 @@ void ProcessesDataView::OnTimer()
 //-----------------------------------------------------------------------------
 void ProcessesDataView::Refresh()
 {
-    if( Capture::IsCapturing() )
+    if( Capture::IsCapturing() || m_IsRemote )
     {
         return;
     }
 
-    ScopeLock lock( m_Mutex );
     if( m_RemoteProcess )
     {
         std::shared_ptr< Process > CurrentRemoteProcess = m_ProcessList.m_Processes.size() == 1 ? m_ProcessList.m_Processes[0] : nullptr;
@@ -302,9 +302,15 @@ void ProcessesDataView::UpdateProcessList()
 }
 
 //-----------------------------------------------------------------------------
+void ProcessesDataView::SetRemoteProcessList(std::shared_ptr<ProcessList> a_RemoteProcessList)
+{
+    m_IsRemote = true;
+    m_ProcessList = *a_RemoteProcessList;
+}
+
+//-----------------------------------------------------------------------------
 void ProcessesDataView::SetRemoteProcess( std::shared_ptr<Process> a_Process )
 {
-    ScopeLock lock( m_Mutex );
     m_RemoteProcess = a_Process;
 }
 

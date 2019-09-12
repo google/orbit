@@ -50,9 +50,9 @@ struct ThreadSampleData
     void ComputeAverageThreadUsage();
     std::multimap< int, CallstackID > SortCallstacks( const std::set< CallstackID > & a_CallStacks, int & o_TotalCallStacks );
     std::unordered_map< CallstackID, unsigned int > m_CallstackCount;
-    std::unordered_map< DWORD64, unsigned int >     m_AddressCount;
-    std::unordered_map< DWORD64, unsigned int >     m_ExclusiveCount;
-    std::multimap< unsigned int, DWORD64 >          m_AddressCountSorted;
+    std::unordered_map< uint64_t, unsigned int >    m_AddressCount;
+    std::unordered_map< uint64_t, unsigned int >    m_ExclusiveCount;
+    std::multimap< unsigned int, uint64_t >         m_AddressCountSorted;
     unsigned int                                    m_NumSamples = 0;
     std::vector< SampledFunction >                  m_SampleReport;
     std::vector< float >                            m_ThreadUsage;
@@ -97,8 +97,8 @@ public:
     void FireDoneProcessingCallbacks();
     void AddCallStack( CallStack & a_CallStack ) { if( m_State == Sampling ) m_Callstacks.push_back( a_CallStack ); }
     const std::shared_ptr<CallStack> GetCallStack( CallstackID a_ID ) { return m_UniqueCallstacks[a_ID]; }
-    std::multimap<int, CallstackID> GetCallStacksFromAddress( DWORD64 a_Addr, ThreadID a_TID, int & o_NumCallstacks );
-    std::shared_ptr< SortedCallstackReport > GetSortedCallstacksFromAddress( DWORD64 a_Addr, ThreadID a_TID );
+    std::multimap<int, CallstackID> GetCallStacksFromAddress( uint64_t a_Addr, ThreadID a_TID, int & o_NumCallstacks );
+    std::shared_ptr< SortedCallstackReport > GetSortedCallstacksFromAddress( uint64_t a_Addr, ThreadID a_TID );
     
     enum SamplingState { Idle, Sampling, PendingStop, Processing, DoneProcessing };
     SamplingState GetState() const { return m_State; }
@@ -108,19 +108,19 @@ public:
 
     typedef std::function< void() > ProcessingDoneCallback;
     void AddCallback( ProcessingDoneCallback a_Callback ) { m_Callbacks.push_back( a_Callback ); }
-    void SetSelectedFunctions( std::unordered_map<DWORD64, SampledFunction> & a_SelectedFunctions );
+    void SetSelectedFunctions( std::unordered_map<uint64_t, SampledFunction> & a_SelectedFunctions );
     void SetGenerateSummary( bool a_Value ) { m_GenerateSummary = a_Value; }
     bool GetGenerateSummary() const { return m_GenerateSummary; }
     void SortByThreadUsage();
     void SortByThreadID();
-    bool GetLineInfo( DWORD64 a_Address, LineInfo & a_LineInfo );
+    bool GetLineInfo( uint64_t a_Address, LineInfo & a_LineInfo );
     void Resolve(){ ProcessSamples(); }
     void Print();
     void ProcessSamples();
     void ProcessSamplesAsync();
-    void AddAddress( DWORD64 a_Address );
+    void AddAddress( uint64_t a_Address );
 
-    std::wstring GetSymbolFromAddress( DWORD64 a_Address );
+    std::wstring GetSymbolFromAddress( uint64_t a_Address );
     const ThreadSampleData & GetSummary(){ return m_ThreadSampleData[0]; }
 
     ORBIT_SERIALIZABLE;
@@ -151,11 +151,11 @@ protected:
     std::unordered_map<CallstackID, std::shared_ptr<CallStack>> m_UniqueCallstacks;
     std::unordered_map<CallstackID, std::shared_ptr<CallStack>> m_UniqueResolvedCallstacks;
     std::unordered_map<CallstackID, CallstackID>                m_RawToResolvedMap;
-    std::unordered_map<DWORD64, std::set<CallstackID>>          m_FunctionToCallstacks;
-    std::unordered_map<DWORD64, DWORD64>                        m_ExactAddresses;
-    std::unordered_map<DWORD64, std::wstring>                   m_AddressToSymbol;
-    std::unordered_map<DWORD64, LineInfo>                       m_AddressToLineInfo;
-    std::unordered_map<DWORD64, std::wstring>                   m_FileNames;
+    std::unordered_map<uint64_t, std::set<CallstackID>>         m_FunctionToCallstacks;
+    std::unordered_map<uint64_t, uint64_t>                      m_ExactAddresses;
+    std::unordered_map<uint64_t, std::wstring>                  m_AddressToSymbol;
+    std::unordered_map<uint64_t, LineInfo>                      m_AddressToLineInfo;
+    std::unordered_map<uint64_t, std::wstring>                  m_FileNames;
     std::vector< ProcessingDoneCallback >                       m_Callbacks;
     std::vector< ThreadSampleData* >                            m_SortedThreadSampleData;
 };

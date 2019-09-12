@@ -29,6 +29,7 @@ protected:
     void SetupClientCallbacks();
     void SetupServerCallbacks();
     void SendTestMessage();
+    void SendProcesses();
 
 protected:
     std::unique_ptr<std::thread> m_Thread;

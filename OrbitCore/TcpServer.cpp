@@ -180,12 +180,7 @@ void TcpServer::Receive( const Message & a_Message )
     }
     default:
     {
-        std::vector<MsgCallback> & callbacks = m_Callbacks[a_Message.GetType()];
-
-        for( MsgCallback& callback : callbacks )
-        {
-            callback(a_Message);
-        }
+        Callback(a_Message);
         break;
     }
     }

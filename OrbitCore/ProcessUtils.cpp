@@ -278,3 +278,10 @@ bool ProcessList::Contains( DWORD a_PID ) const
 
 	return false;
 }
+
+//-----------------------------------------------------------------------------
+ORBIT_SERIALIZE( ProcessList, 0 )
+{
+    ORBIT_NVP_VAL( 0, m_Processes );
+    ORBIT_NVP_VAL( 0, m_ProcessesMap );
+}
