@@ -273,6 +273,7 @@ void ConnectionManager::SendTestMessage()
 void ConnectionManager::SendProcesses()
 {
     ProcessList processList;
+    processList.UpdateCpuTimes();
     std::string processData = SerializeObjectHumanReadable(processList);
     PRINT_VAR(processData);
     GTcpClient->Send(Msg_RemoteProcessList, (void*)processData.data(), processData.size());
