@@ -12,6 +12,7 @@
 #include "EventBuffer.h"
 #include "ProcessUtils.h"
 #include "LinuxPerf.h"
+#include "SamplingProfiler.h"
 
 #if __linux__
 #include "LinuxUtils.h"
@@ -246,7 +247,13 @@ void ConnectionManager::SetupServerCallbacks()
         PRINT_VAR(a_Msg.m_Size);
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
         LinuxPerf perf(0);
+
+        Capture::NewSamplingProfiler();
+        Capture::GSamplingProfiler->StartCapture();
         perf.LoadPerfData(buffer);
+        Capture::GSamplingProfiler->StopCapture();
+        Capture::GSamplingProfiler->ProcessSamples();
+
     } );
 }
 
