@@ -137,7 +137,8 @@ class MessageOwner : public Message
 public:
     MessageOwner(Message a_Message)
     {
-        *this = a_Message;
+        Message* message = this;
+        *message = a_Message;
         m_OwnedData.resize(m_Size);
         memcpy(m_OwnedData.data(), m_Data, m_Size);
         m_Data = m_OwnedData.data();

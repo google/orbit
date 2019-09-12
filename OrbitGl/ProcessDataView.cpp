@@ -145,7 +145,7 @@ void ProcessesDataView::OnTimer()
 //-----------------------------------------------------------------------------
 void ProcessesDataView::Refresh()
 {
-    if( Capture::IsCapturing() || m_IsRemote )
+    if( Capture::IsCapturing() )
     {
         return;
     }
@@ -166,8 +166,11 @@ void ProcessesDataView::Refresh()
     }
     else
     {
-        m_ProcessList.Refresh();
-        m_ProcessList.UpdateCpuTimes();
+        if (!m_IsRemote)
+        {
+            m_ProcessList.Refresh();
+            m_ProcessList.UpdateCpuTimes();
+        }
         UpdateProcessList();
         OnSort( m_LastSortedColumn, false );
         OnFilter( m_Filter );
