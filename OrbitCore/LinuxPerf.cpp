@@ -18,6 +18,8 @@
 #include "OrbitModule.h"
 #include "ConnectionManager.h"
 #include "TcpClient.h"
+#include "EventBuffer.h"
+#include "EventTracer.h"
 
 #if __linux__
 #include <unistd.h>
@@ -221,6 +223,7 @@ void LinuxPerf::LoadPerfData( std::istream& a_Stream )
 
             CS.m_Data.push_back(address);
 
+#if __linux__
             if( Capture::GTargetProcess && !Capture::GTargetProcess->HasSymbol(address))
             {
                 auto symbol = std::make_shared<LinuxSymbol>();
@@ -228,6 +231,7 @@ void LinuxPerf::LoadPerfData( std::istream& a_Stream )
                 symbol->m_Module = module;
                 Capture::GTargetProcess->AddSymbol( address, symbol );
             }
+#endif
         }
         else if(isEndBlock)
         {
