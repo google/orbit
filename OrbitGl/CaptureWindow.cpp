@@ -1182,16 +1182,13 @@ void CaptureWindow::OnContextSwitchAdded( const ContextSwitch & a_CS )
     m_TimeGraph.AddContextSwitch( a_CS );
 }
 
+//-----------------------------------------------------------------------------
 void CaptureWindow::SendProcess()
 {
-#ifdef _WIN32
-    CrashHandler::SendMiniDump();
-#else
     if( Capture::GTargetProcess )
     {
         std::string processData = SerializeObjectHumanReadable(*Capture::GTargetProcess);
         PRINT_VAR(processData);
         GTcpClient->Send(Msg_RemoteProcess, (void*)processData.data(), processData.size());
     }
-#endif
 }

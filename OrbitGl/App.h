@@ -60,6 +60,7 @@ public:
     void AppendSystrace(const std::string& a_FileName, uint64_t a_TimeOffset);
     void ListSessions();
     void SetRemoteProcess( std::shared_ptr<Process> a_Process );
+    void SendRemoteProcess( uint32_t a_PID );
     void AddWatchedVariable( Variable* a_Variable );
     void UpdateVariable( Variable* a_Variable ) override;
     void ClearWatchedVariables();
@@ -83,7 +84,7 @@ public:
 
     void Unregister( class DataView* a_Model );
     bool SelectProcess( const std::wstring& a_Process );
-    bool SelectProcess( unsigned long a_ProcessID );
+    bool SelectProcess( uint32_t a_ProcessID );
     bool Inject( unsigned long a_ProcessId );
     static void AddSamplingReport( std::shared_ptr< class SamplingProfiler> & a_SamplingProfiler );
     static void AddSelectionReport( std::shared_ptr<SamplingProfiler> & a_SamplingProfiler );

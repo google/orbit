@@ -434,6 +434,19 @@ void OrbitApp::SetRemoteProcess( std::shared_ptr<Process> a_Process )
 }
 
 //-----------------------------------------------------------------------------
+void OrbitApp::SendRemoteProcess( uint32_t a_PID )
+{
+    std::shared_ptr<Process> process = m_ProcessesDataView->SelectProcess(a_PID);
+
+    if (process)
+    {
+        std::string processData = SerializeObjectHumanReadable(*process);
+        PRINT_VAR(processData);
+        GTcpClient->Send(Msg_RemoteProcess, (void*)processData.data(), processData.size());
+    }
+}
+
+//-----------------------------------------------------------------------------
 void OrbitApp::AddWatchedVariable( Variable * a_Variable )
 {
 #ifdef _WIN32
@@ -974,11 +987,11 @@ bool OrbitApp::SelectProcess( const std::wstring & a_Process )
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::SelectProcess( unsigned long a_ProcessID )
+bool OrbitApp::SelectProcess( uint32_t a_ProcessID )
 {
     if( m_ProcessesDataView )
     {
-        return m_ProcessesDataView->SelectProcess( a_ProcessID );
+        return m_ProcessesDataView->SelectProcess( a_ProcessID ) != nullptr;
     }
 
     return false;

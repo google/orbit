@@ -103,7 +103,7 @@ void ProcessList::Refresh()
 {
 #ifdef _WIN32
     m_Processes.clear();
-    std::unordered_map< DWORD, std::shared_ptr< Process > > previousProcessesMap = m_ProcessesMap;
+    std::unordered_map< uint32_t, std::shared_ptr< Process > > previousProcessesMap = m_ProcessesMap;
     m_ProcessesMap.clear();
 
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS | TH32CS_SNAPMODULE/*| TH32CS_SNAPTHREAD*/, 0);
@@ -145,7 +145,7 @@ void ProcessList::Refresh()
                 process->SetID(processinfo.th32ProcessID);
                 
                 /*TCHAR fullPath[1024];
-                DWORD pathSize = 1024;
+                uint32_t pathSize = 1024;
                 QueryFullProcessImageName( process->GetHandle(), 0, fullPath, &pathSize );*/
 
                 // Full path
@@ -266,7 +266,7 @@ void ProcessList::UpdateCpuTimes()
 }
 
 //-----------------------------------------------------------------------------
-bool ProcessList::Contains( DWORD a_PID ) const
+bool ProcessList::Contains(uint32_t a_PID ) const
 {
 	for( const std::shared_ptr< Process > & process : m_Processes )
 	{
@@ -278,6 +278,17 @@ bool ProcessList::Contains( DWORD a_PID ) const
 
 	return false;
 }
+
+//-----------------------------------------------------------------------------
+std::shared_ptr<Process> ProcessList::GetProcess(uint32_t a_PID)
+{
+    std::shared_ptr<Process> result = nullptr;
+    auto iter = m_ProcessesMap.find(a_PID);
+    if (iter != m_ProcessesMap.end())
+        result = iter->second;
+    return result;
+}
+
 
 //-----------------------------------------------------------------------------
 ORBIT_SERIALIZE( ProcessList, 0 )

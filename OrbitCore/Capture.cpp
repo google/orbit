@@ -140,15 +140,6 @@ void Capture::SetTargetProcess( const std::shared_ptr< Process > & a_Process )
         GInjected = false;
         GInjectedProcess = "";
 
-#ifdef WIN32
-        if( a_Process && !a_Process->GetIsRemote() )
-        {
-            // In the case of a remote process, 
-            // connection is already active
-            GTcpServer->Disconnect();
-        }
-#endif
-
         GTargetProcess = a_Process;
         GSamplingProfiler = std::make_shared<SamplingProfiler>( a_Process );
         GSelectedFunctionsMap.clear();

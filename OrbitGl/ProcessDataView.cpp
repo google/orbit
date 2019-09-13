@@ -10,6 +10,7 @@
 #include "App.h"
 #include "Callstack.h"
 #include "Params.h"
+#include "TcpServer.h"
 
 //-----------------------------------------------------------------------------
 ProcessesDataView::ProcessesDataView()
@@ -122,18 +123,28 @@ void ProcessesDataView::OnSort(int a_Column, bool a_Toggle)
 void ProcessesDataView::OnSelect( int a_Index )
 {
 	m_SelectedProcess = GetProcess( a_Index );
+    UpdateModuleDataView(m_SelectedProcess);
+}
 
-	if( m_ModulesDataView )
-	{
-        if( !m_SelectedProcess->GetIsRemote() )
+void ProcessesDataView::UpdateModuleDataView(std::shared_ptr<Process> a_Process)
+{
+    if (m_ModulesDataView)
+    {
+        if (!a_Process->GetIsRemote())
         {
-		    m_SelectedProcess->ListModules();
+            a_Process->ListModules();
+        }
+        else
+        {
+            Message msg(Msg_RemoteProcessRequest);
+            msg.m_Header.m_GenericHeader.m_Address = a_Process->GetID();
+            GTcpServer->Send(msg);
         }
 
-		m_ModulesDataView->SetProcess( m_SelectedProcess );
-		Capture::SetTargetProcess( m_SelectedProcess );
+        m_ModulesDataView->SetProcess(a_Process);
+        Capture::SetTargetProcess(a_Process);
         GOrbitApp->FireRefreshCallbacks();
-	}
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -193,7 +204,7 @@ void ProcessesDataView::SetSelectedItem()
 
     for( uint32_t i = 0; i < (uint32_t)GetNumElements(); ++i )
     {
-        if( GetProcess( i ) == m_SelectedProcess )
+        if(m_SelectedProcess && GetProcess( i )->GetID() == m_SelectedProcess->GetID() )
         {
             m_SelectedIndex = i;
             return;
@@ -235,7 +246,7 @@ bool ProcessesDataView::SelectProcess( const std::wstring & a_ProcessName )
 }
 
 //-----------------------------------------------------------------------------
-bool ProcessesDataView::SelectProcess( DWORD a_ProcessId )
+std::shared_ptr<Process> ProcessesDataView::SelectProcess( DWORD a_ProcessId )
 {
     Refresh();
 
@@ -246,11 +257,11 @@ bool ProcessesDataView::SelectProcess( DWORD a_ProcessId )
         {
             OnSelect( i );
             Capture::GPresetToLoad = L"";
-            return true;
+            return m_SelectedProcess;
         }
     }
 
-    return false;
+    return nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -309,12 +320,25 @@ void ProcessesDataView::SetRemoteProcessList(std::shared_ptr<ProcessList> a_Remo
 {
     m_IsRemote = true;
     m_ProcessList = *a_RemoteProcessList;
+    UpdateProcessList();
+    OnSort(m_LastSortedColumn, false);
+    OnFilter(m_Filter);
+    SetSelectedItem();
 }
 
 //-----------------------------------------------------------------------------
 void ProcessesDataView::SetRemoteProcess( std::shared_ptr<Process> a_Process )
 {
-    m_RemoteProcess = a_Process;
+    std::shared_ptr<Process> targetProcess = m_ProcessList.GetProcess(a_Process->GetID());
+    if (targetProcess)
+    {
+        m_SelectedProcess = a_Process;
+        UpdateModuleDataView(m_SelectedProcess);
+    }
+    else
+    {
+        m_RemoteProcess = a_Process;
+    }
 }
 
 //-----------------------------------------------------------------------------

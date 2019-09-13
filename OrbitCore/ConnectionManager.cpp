@@ -13,6 +13,7 @@
 #include "ProcessUtils.h"
 #include "LinuxPerf.h"
 #include "SamplingProfiler.h"
+#include "CoreApp.h"
 
 #if __linux__
 #include "LinuxUtils.h"
@@ -107,6 +108,7 @@ std::string CrossPlatformMessage::ToRaw()
     return buffer.str();
 }
 
+//-----------------------------------------------------------------------------
 void CrossPlatformMessage::FromRaw(const char* data, uint32_t size)
 {
     PRINT_FUNC;
@@ -228,15 +230,21 @@ void ConnectionManager::SetupTestMessageHandler()
 //-----------------------------------------------------------------------------
 void ConnectionManager::SetupClientCallbacks()
 {
-    GTcpClient->AddCallback( Msg_StartCapture, [=]( const Message & a_Msg )
+    GTcpClient->AddMainThreadCallback( Msg_StartCapture, [=]( const Message & a_Msg )
     {
         StartCaptureAsRemote();
     } );
 
-    GTcpClient->AddCallback( Msg_StopCapture, [=]( const Message & a_Msg )
+    GTcpClient->AddMainThreadCallback( Msg_StopCapture, [=]( const Message & a_Msg )
     {
         StopCaptureAsRemote();
     } );
+
+    GTcpClient->AddMainThreadCallback(Msg_RemoteProcessRequest, [=](const Message & a_Msg)
+    {
+        uint32_t pid = (uint32_t)a_Msg.m_Header.m_GenericHeader.m_Address;
+        GCoreApp->SendRemoteProcess(pid);
+    });
 }
 
 //-----------------------------------------------------------------------------

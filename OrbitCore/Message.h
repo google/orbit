@@ -52,6 +52,7 @@ enum MessageType : int16_t
     Msg_ThreadInfo,
     Msg_CrossPlatform,
     Msg_RemoteProcess,
+    Msg_RemoteProcessRequest,
     Msg_RemoteModule,
     Msg_RemoteFunctions,
     Msg_RemotePerf,
