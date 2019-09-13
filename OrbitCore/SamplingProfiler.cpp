@@ -400,61 +400,65 @@ void SamplingProfiler::ProcessAddresses()
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::AddAddress( uint64_t a_Address )
+void SamplingProfiler::AddAddress(uint64_t a_Address)
 {
+    ScopeLock lock(m_SymbolMutex);
 #ifdef _WIN32
-    ScopeLock lock( m_SymbolMutex );
-
-    unsigned char buffer[1024];
-    memset( buffer, 0, 1024 );
-    SYMBOL_INFOW* symbol_info = (SYMBOL_INFOW*)buffer;
-    symbol_info->SizeOfStruct = sizeof( SYMBOL_INFOW );
-    symbol_info->MaxNameLen = ( ( sizeof( buffer ) - sizeof( SYMBOL_INFOW ) ) / sizeof( WCHAR ) ) - 1;
-    uint64_t displacement = 0;
-	
-	if (m_Process)
-	{
-		SymFromAddrW(m_Process->GetHandle(), (uint64_t)a_Address, &displacement, symbol_info);
-	}
-
-    std::wstring symName = symbol_info->Name;
-    if( symName == L"" )
+    
+    if( !m_IsLinuxPerf )
     {
-        symName = Format( L"%I64x", a_Address );
-        PRINT_VAR( GetLastErrorAsString() );
+        unsigned char buffer[1024];
+        memset(buffer, 0, 1024);
+        SYMBOL_INFOW* symbol_info = (SYMBOL_INFOW*)buffer;
+        symbol_info->SizeOfStruct = sizeof(SYMBOL_INFOW);
+        symbol_info->MaxNameLen = ((sizeof(buffer) - sizeof(SYMBOL_INFOW)) / sizeof(WCHAR)) - 1;
+        uint64_t displacement = 0;
 
-        std::shared_ptr<OrbitDiaSymbol> symbol = m_Process->SymbolFromAddress( a_Address );
-        if( symbol->m_Symbol )
+        if (m_Process)
         {
-            BSTR bstrName;
-            if( symbol->m_Symbol->get_name( &bstrName ) == S_OK )
+            SymFromAddrW(m_Process->GetHandle(), (uint64_t)a_Address, &displacement, symbol_info);
+        }
+
+        std::wstring symName = symbol_info->Name;
+        if (symName == L"")
+        {
+            symName = Format(L"%I64x", a_Address);
+            PRINT_VAR(GetLastErrorAsString());
+
+            std::shared_ptr<OrbitDiaSymbol> symbol = m_Process->SymbolFromAddress(a_Address);
+            if (symbol->m_Symbol)
             {
-                symName = bstrName;
-                SysFreeString( bstrName );
+                BSTR bstrName;
+                if (symbol->m_Symbol->get_name(&bstrName) == S_OK)
+                {
+                    symName = bstrName;
+                    SysFreeString(bstrName);
+                }
             }
         }
+
+        m_ExactAddresses[a_Address] = symbol_info->Address ? symbol_info->Address : a_Address;
+        m_AddressToSymbol[(uint64_t)a_Address] = symName;
+        m_AddressToSymbol[symbol_info->Address] = symName;
+
+        LineInfo lineInfo;
+        if (SymUtils::GetLineInfo(a_Address, lineInfo))
+        {
+            uint64_t hash = StringHash(lineInfo.m_File);
+            lineInfo.m_FileNameHash = hash;
+            m_FileNames[hash] = lineInfo.m_File;
+            lineInfo.m_File = L"";
+            m_AddressToLineInfo[a_Address] = lineInfo;
+        }
     }
-
-    m_ExactAddresses[a_Address] = symbol_info->Address ? symbol_info->Address : a_Address;
-    m_AddressToSymbol[(uint64_t)a_Address] = symName;
-    m_AddressToSymbol[symbol_info->Address] = symName;    
-
-    LineInfo lineInfo;
-    if( SymUtils::GetLineInfo( a_Address, lineInfo ) )
-    {
-        uint64_t hash = StringHash(lineInfo.m_File);
-        lineInfo.m_FileNameHash = hash;
-        m_FileNames[hash] = lineInfo.m_File;
-        lineInfo.m_File = L"";
-        m_AddressToLineInfo[a_Address] = lineInfo;
-    }
-#else
-
-    //TODO: find function start address 
-    m_ExactAddresses[a_Address] = /*symbol_info->Address ? symbol_info->Address :*/ a_Address;
-    std::shared_ptr<LinuxSymbol> symbol = m_Process->SymbolFromAddress( a_Address );
-    m_AddressToSymbol[(uint64_t)a_Address] = s2ws(symbol ? symbol->m_Name : "??");
+    else
 #endif
+    {
+        //TODO: find function start address 
+        m_ExactAddresses[a_Address] = /*symbol_info->Address ? symbol_info->Address :*/ a_Address;
+        std::shared_ptr<LinuxSymbol> symbol = m_Process->LinuxSymbolFromAddress(a_Address);
+        m_AddressToSymbol[(uint64_t)a_Address] = s2ws(symbol ? symbol->m_Name : "??");
+    }
 }
 
 //-----------------------------------------------------------------------------

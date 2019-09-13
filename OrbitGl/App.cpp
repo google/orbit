@@ -1137,7 +1137,6 @@ void OrbitApp::OnRemoteProcess( const Message & a_Message )
     inputAr(*remoteProcess);
     remoteProcess->SetIsRemote(true);
     PRINT_VAR(remoteProcess->GetName());
-    remoteProcess->SetID( (DWORD)a_Message.GetHeader().m_GenericHeader.m_Address );
     GOrbitApp->m_ProcessesDataView->SetRemoteProcess(remoteProcess);
 }
 

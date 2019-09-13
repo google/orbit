@@ -258,6 +258,7 @@ void ConnectionManager::SetupServerCallbacks()
 
         Capture::NewSamplingProfiler();
         Capture::GSamplingProfiler->StartCapture();
+        Capture::GSamplingProfiler->SetIsLinuxPerf(true);
         perf.LoadPerfData(buffer);
         Capture::GSamplingProfiler->StopCapture();
         Capture::GSamplingProfiler->ProcessSamples();

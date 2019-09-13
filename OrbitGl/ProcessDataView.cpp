@@ -130,11 +130,11 @@ void ProcessesDataView::UpdateModuleDataView(std::shared_ptr<Process> a_Process)
 {
     if (m_ModulesDataView)
     {
-        if (!a_Process->GetIsRemote())
+        if (!m_IsRemote)
         {
             a_Process->ListModules();
         }
-        else
+        else if( a_Process->GetModules().size() == 0 )
         {
             Message msg(Msg_RemoteProcessRequest);
             msg.m_Header.m_GenericHeader.m_Address = a_Process->GetID();

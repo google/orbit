@@ -8,6 +8,7 @@
 #include "Threading.h"
 #include "DiaManager.h"
 #include "ScopeTimer.h"
+#include "LinuxPerf.h"
 
 #include <set>
 #include <unordered_set>
@@ -79,11 +80,10 @@ public:
     
 #ifdef _WIN32
     std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress( DWORD64 a_Address );
-#else
-    std::shared_ptr<LinuxSymbol> SymbolFromAddress( uint64_t a_Address ) { return m_Symbols[a_Address]; }
+#endif
+    std::shared_ptr<LinuxSymbol> LinuxSymbolFromAddress( uint64_t a_Address ) { return m_Symbols[a_Address]; }
     void AddSymbol( uint64_t a_Address, std::shared_ptr<LinuxSymbol> a_Symbol );
     bool HasSymbol( uint64_t a_Address ) const { return m_Symbols.find(a_Address) != m_Symbols.end(); }
-#endif
 
     bool LineInfoFromAddress( DWORD64 a_Address, struct LineInfo & o_LineInfo );
 
@@ -138,9 +138,7 @@ private:
     std::unordered_set<uint32_t>            m_ThreadIds;
     std::map<uint32_t, std::wstring>        m_ThreadNames;
 
-    #ifdef __linux__
     std::map< uint64_t, std::shared_ptr<LinuxSymbol> > m_Symbols;
-    #endif
 
     // Transients
     std::vector< Function* >    m_Functions;

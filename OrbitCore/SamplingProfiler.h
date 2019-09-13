@@ -104,7 +104,8 @@ public:
     SamplingState GetState() const { return m_State; }
     void SetState( SamplingState a_State ){ m_State = a_State; }
     const std::vector< ThreadSampleData* > & GetThreadSampleData() const { return m_SortedThreadSampleData; }
-    void SetLoadedFromFile( bool a_Value = true ) { m_LoadedFromFile = a_Value; }
+    void SetLoadedFromFile(bool a_Value = true) { m_LoadedFromFile = a_Value; }
+    void SetIsLinuxPerf( bool a_Value = true ) { m_IsLinuxPerf = a_Value; }
 
     typedef std::function< void() > ProcessingDoneCallback;
     void AddCallback( ProcessingDoneCallback a_Callback ) { m_Callbacks.push_back( a_Callback ); }
@@ -146,6 +147,7 @@ protected:
     Mutex                           m_SymbolMutex;
     int                             m_NumSamples = 0;
     bool                            m_LoadedFromFile = false;
+    bool                            m_IsLinuxPerf = false;
 
     std::unordered_map<ThreadID, ThreadSampleData>              m_ThreadSampleData;
     std::unordered_map<CallstackID, std::shared_ptr<CallStack>> m_UniqueCallstacks;
