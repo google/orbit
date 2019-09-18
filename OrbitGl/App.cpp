@@ -257,7 +257,7 @@ bool OrbitApp::Init()
 
     GPluginManager.Initialize();
 
-    if( !m_Headless )
+    if( !GOrbitApp->GetHeadless() )
     {
         int my_argc = 0;
         glutInit(&my_argc, NULL);
