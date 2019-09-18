@@ -257,10 +257,13 @@ bool OrbitApp::Init()
 
     GPluginManager.Initialize();
 
-    int my_argc = 0;
-    glutInit(&my_argc, NULL);
-    glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH );
-    GetDesktopResolution(GOrbitApp->m_ScreenRes[0], GOrbitApp->m_ScreenRes[1]);
+    if( !m_HeadLess )
+    {
+        int my_argc = 0;
+        glutInit(&my_argc, NULL);
+        glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH );
+        GetDesktopResolution(GOrbitApp->m_ScreenRes[0], GOrbitApp->m_ScreenRes[1]);
+    }
 
     if( Capture::IsOtherInstanceRunning() )
     {

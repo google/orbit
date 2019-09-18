@@ -149,8 +149,9 @@ void OrbitMainWindow::ParseCommandlineArguments()
     {
         args.push_back(arg.toStdString());
 
-        if( arg == "remote" )
+        if( arg == "remote" || arg == "headless" )
         {
+            GOrbitApp->SetHeadless(true);
             m_Headless = true;
             this->menuBar()->hide();
         }

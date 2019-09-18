@@ -145,6 +145,8 @@ public:
     void OnRemoteProcess( const Message & a_Message );
     void OnRemoteProcessList( const Message & a_Message );
     void LaunchRuleEditor( class Function* a_Function );
+    void SetHeadless( bool a_HeadLess ) { m_HeadLess = a_HeadLess; }
+    bool GetHeadless() const { return m_HeadLess; }
 
     RuleEditor* GetRuleEditor() { return m_RuleEditor; }
     virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >* GetRules();
@@ -160,6 +162,7 @@ private:
     FindFileCallback                      m_FindFileCallback;
 	SaveFileCallback					  m_SaveFileCallback;
     ClipboardCallback                     m_ClipboardCallback;
+    bool                                  m_Headless = false;
 
     ProcessesDataView*      m_ProcessesDataView = nullptr;
     ModulesDataView*        m_ModulesDataView = nullptr;
