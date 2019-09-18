@@ -145,8 +145,8 @@ public:
     void OnRemoteProcess( const Message & a_Message );
     void OnRemoteProcessList( const Message & a_Message );
     void LaunchRuleEditor( class Function* a_Function );
-    void SetHeadless( bool a_HeadLess ) { m_HeadLess = a_HeadLess; }
-    bool GetHeadless() const { return m_HeadLess; }
+    void SetHeadless( bool a_Headless ) { m_Headless = a_Headless; }
+    bool GetHeadless() const { return m_Headless; }
 
     RuleEditor* GetRuleEditor() { return m_RuleEditor; }
     virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >* GetRules();
