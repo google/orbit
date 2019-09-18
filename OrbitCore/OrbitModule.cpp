@@ -106,7 +106,7 @@ ORBIT_SERIALIZE( Module, 0 )
 #ifndef WIN32
 
 //-----------------------------------------------------------------------------
-Function* Pdb::FunctionFromName( const std::wstring& a_Name )
+Function* Pdb::FunctionFromName( const std::string& a_Name )
 {
     uint64_t hash = StringHash(a_Name);
     auto iter = m_StringFunctionMap.find(hash);
@@ -141,9 +141,9 @@ void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_Comple
                 this->AddFunction(func);
 
                 // Debug - Temporary
-                if( Contains(func.m_PrettyName, "Renderer::render") )
+                if( Contains(func.m_PrettyName, "btCollisionDispatcher::needsCollision") )
                 {
-                    PRINT_VAR(tokens[0]);
+                    PRINT_VAR(func.m_PrettyName);
                 }
             }
         }
@@ -167,10 +167,10 @@ void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_Comple
                 if( probeTokens.size() == 2 )
                 {
                     std::string mangled = probeTokens[1];
-                    std::wstring demangled = s2ws(LinuxUtils::Demangle(probeTokens[1].c_str()));
+                    std::string demangled = LinuxUtils::Demangle(probeTokens[1].c_str());
 
                     // Debug - Temporary
-                    if( Contains(demangled, L"$") )
+                    if( Contains(demangled, "btCollisionDispatcher::needsCollision") )
                         PRINT_VAR(demangled);
                     Function* func = FunctionFromName(demangled);
                     if( func && func->m_Probe.empty() )

@@ -178,7 +178,7 @@ public:
     Function* GetFunctionFromProgramCounter( uint64_t a_Address );
     IDiaSymbol* SymbolFromAddress( uint64_t a_Address );
     bool LineInfoFromAddress( uint64_t a_Address, struct LineInfo & o_LineInfo );
-    Function* FunctionFromName( const std::wstring& a_Name );
+    Function* FunctionFromName( const std::string& a_Name );
 
     void SetLoadTime( float a_LoadTime ) { m_LastLoadTime = a_LoadTime; }
     float GetLoadTime() { return m_LastLoadTime; }
