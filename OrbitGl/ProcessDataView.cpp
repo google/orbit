@@ -10,7 +10,7 @@
 #include "App.h"
 #include "Callstack.h"
 #include "Params.h"
-#include "TcpServer.h"
+#include "TcpClient.h"
 
 //-----------------------------------------------------------------------------
 ProcessesDataView::ProcessesDataView()
@@ -138,7 +138,7 @@ void ProcessesDataView::UpdateModuleDataView(std::shared_ptr<Process> a_Process)
         {
             Message msg(Msg_RemoteProcessRequest);
             msg.m_Header.m_GenericHeader.m_Address = a_Process->GetID();
-            GTcpServer->Send(msg);
+            GTcpClient->Send(msg);
         }
 
         m_ModulesDataView->SetProcess(a_Process);

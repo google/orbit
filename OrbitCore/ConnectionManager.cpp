@@ -144,6 +144,7 @@ void ConnectionManager::ConnectionThread()
         if (!GTcpClient->IsValid())
         {
             GTcpClient->Connect( m_RemoteAddress );
+            GTcpClient->Start();
         }
         else
         {

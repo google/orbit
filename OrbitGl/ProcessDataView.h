@@ -29,6 +29,7 @@ public:
     void SetModulesDataView( class ModulesDataView* a_ModulesCtrl ) { m_ModulesDataView = a_ModulesCtrl; }
     void Refresh();
     void UpdateModuleDataView(std::shared_ptr<Process> a_Process);
+    void SetIsRemote( bool a_Value ) { m_IsRemote = true; }
 
     //void SetSelectedProcessCtrl(SelectedProcessPanel* a_Panel ) { m_SelectedProcessPanel = a_Panel; }
 

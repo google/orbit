@@ -118,6 +118,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args
             GTcpClient->AddMainThreadCallback(Msg_RemoteProcess, [=](const Message & a_Msg) { GOrbitApp->OnRemoteProcess(a_Msg); });
             GTcpClient->AddMainThreadCallback(Msg_RemoteProcessList, [=](const Message & a_Msg) { GOrbitApp->OnRemoteProcessList(a_Msg); });
             ConnectionManager::Get().ConnectToRemote(address);
+            m_ProcessesDataView->SetIsRemote(true);
         }
         else if( Contains( arg, "preset:" ) )
         {
@@ -1153,6 +1154,7 @@ void OrbitApp::OnRemoteProcessList( const Message & a_Message )
     std::istringstream buffer(std::string(a_Message.m_Data, a_Message.m_Size));
     cereal::JSONInputArchive inputAr( buffer );
     std::shared_ptr<ProcessList> remoteProcessList = std::make_shared<ProcessList>();
+    remoteProcessList->SetRemote(true);
     inputAr(*remoteProcessList);
     PRINT_VAR("remoteProcessList");
     GOrbitApp->m_ProcessesDataView->SetRemoteProcessList(remoteProcessList);
