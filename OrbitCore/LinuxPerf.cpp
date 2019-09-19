@@ -54,6 +54,7 @@ LinuxPerf::LinuxPerf( uint32_t a_PID, uint32_t a_Freq )
 //-----------------------------------------------------------------------------
 void LinuxPerf::Start()
 {
+    PRINT_FUNC;
 #if __linux__
     m_IsRunning = true;
 
@@ -82,6 +83,7 @@ void LinuxPerf::Start()
 //-----------------------------------------------------------------------------
 void LinuxPerf::Stop()
 {
+    PRINT_FUNC;
 #if __linux__
     if( m_ForkedPID != 0 )
     {
