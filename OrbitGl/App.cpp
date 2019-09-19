@@ -257,14 +257,6 @@ bool OrbitApp::Init()
 
     GPluginManager.Initialize();
 
-    if( !GOrbitApp->GetHeadless() )
-    {
-        int my_argc = 0;
-        glutInit(&my_argc, NULL);
-        glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH );
-        GetDesktopResolution(GOrbitApp->m_ScreenRes[0], GOrbitApp->m_ScreenRes[1]);
-    }
-
     if( Capture::IsOtherInstanceRunning() )
     {
         ++Capture::GCapturePort;
@@ -306,6 +298,14 @@ void OrbitApp::PostInit()
             }
             SystraceManager::Get().Dump();
         }
+    }
+
+    if (!GOrbitApp->GetHeadless())
+    {
+        int my_argc = 0;
+        glutInit(&my_argc, NULL);
+        glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+        GetDesktopResolution(GOrbitApp->m_ScreenRes[0], GOrbitApp->m_ScreenRes[1]);
     }
 
     Path::Dump();
