@@ -103,7 +103,8 @@ void TcpServer::Receive( const Message & a_Message )
     PRINT_VAR(Message::GSessionID);
 
     // Disregard messages from previous session
-    if( a_Message.m_SessionID != Message::GSessionID )
+    // TODO: Take care of the IsRemote case
+    if( !Capture::IsRemote() && a_Message.m_SessionID != Message::GSessionID )
     {
         ++m_NumMessagesFromPreviousSession;
         return;
