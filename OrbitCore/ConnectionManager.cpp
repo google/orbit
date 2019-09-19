@@ -147,7 +147,7 @@ void ConnectionManager::ConnectionThread()
         }
         else
         {
-            std::string msg("Hello from ConnectionManager");
+            std::string msg("Hello from dev machine");
             GTcpClient->Send(msg);
         }
 

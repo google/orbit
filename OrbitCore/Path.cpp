@@ -317,7 +317,6 @@ std::wstring Path::GetSourceRoot()
 
     for (int i = 0; i < numIterations; ++i)
     {
-        PRINT_VAR(currentDir);
         if (ContainsFile(currentDir, fileName))
         {
             return currentDir;
