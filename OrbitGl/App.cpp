@@ -449,8 +449,7 @@ void OrbitApp::SendRemoteProcess( uint32_t a_PID )
     if (process)
     {
         std::string processData = SerializeObjectHumanReadable(*process);
-        PRINT_VAR(processData);
-        GTcpClient->Send(Msg_RemoteProcess, (void*)processData.data(), processData.size());
+        GTcpServer->Send(Msg_RemoteProcess, (void*)processData.data(), processData.size());
     }
 }
 
