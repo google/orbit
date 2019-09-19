@@ -274,7 +274,6 @@ bool OrbitApp::Init()
     GOrbitApp->LoadFileMapping();
     GOrbitApp->LoadSymbolsFile();
     OrbitVersion::CheckForUpdate();
-    TestRemoteMessages::Get().Init();
     return true;
 }
 
@@ -306,6 +305,11 @@ void OrbitApp::PostInit()
         glutInit(&my_argc, NULL);
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
         GetDesktopResolution(GOrbitApp->m_ScreenRes[0], GOrbitApp->m_ScreenRes[1]);
+    }
+    else
+    {
+        // TODO: headless doesn't necessarily means remote...
+        ConnectionManager::Get().InitAsRemote();
     }
 
     Path::Dump();

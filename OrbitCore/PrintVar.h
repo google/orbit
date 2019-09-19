@@ -6,10 +6,16 @@
 #include <sstream>
 #include "Utils.h"
 
+#if __linux__
+#define FUNCTION_NAME        __PRETTY_FUNCTION__
+#else
+#define FUNCTION_NAME        __FUNCTION__
+#endif
+
 #define PRINT                PrintDbg
 #define PRINT_VAR( var )	 PrintVar( #var, var )
 #define PRINT_VAR_INL( var ) PrintVar( #var, var, true )
-#define PRINT_FUNC           PrintFunc( __FUNCTION__, __FILE__, __LINE__ )
+#define PRINT_FUNC           PrintFunc( FUNCTION_NAME, __FILE__, __LINE__ )
 #define VAR_TO_STR( var )    VarToStr( #var, var )
 #define VAR_TO_CHAR( var )   VarToStr( #var, var ).c_str()
 #define VAR_TO_ANSI( var )   VarToAnsi( #var, var ).c_str()

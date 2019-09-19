@@ -150,8 +150,6 @@ void ConnectionManager::ConnectionThread()
         {
             std::string msg("Hello from ConnectionManager");
             GTcpClient->Send(msg);
-
-            SendProcesses(GTcpClient.get());
         }
 
         Sleep(2000);
