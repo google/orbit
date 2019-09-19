@@ -133,7 +133,6 @@ void ConnectionManager::SendProcesses(TcpEntity* a_TcpEntity)
     ProcessList processList;
     processList.UpdateCpuTimes();
     std::string processData = SerializeObjectHumanReadable(processList);
-    PRINT_VAR(processData);
     a_TcpEntity->Send(Msg_RemoteProcessList, (void*)processData.data(), processData.size());
 }
 
@@ -162,16 +161,14 @@ void ConnectionManager::RemoteThread()
     while (!m_ExitRequested)
     {
         PRINT_FUNC;
-
+        PRINT_VAR(GTcpServer->HasConnection());
+        
         if (GTcpServer->HasConnection())
         {
             std::string msg("Hello from remote instance");
+            PRINT_VAR(msg);
             GTcpServer->Send(msg);
             SendProcesses(GTcpServer);
-        }
-        else
-        {
-            PRINT_VAR(GTcpServer->HasConnection());
         }
 
         Sleep(2000);
