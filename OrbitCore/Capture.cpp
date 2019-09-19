@@ -223,7 +223,8 @@ void Capture::StopCapture()
         return;
     }
 
-    GTcpServer->Send( Msg_StopCapture );
+    TcpEntity* tcpEntity = Capture::GetMainTcpEntity();
+    tcpEntity->Send( Msg_StopCapture );
     GTimerManager->StopRecording();
 }
 

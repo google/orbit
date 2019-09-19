@@ -73,12 +73,14 @@ void ConnectionManager::InitAsRemote()
 //-----------------------------------------------------------------------------
 void ConnectionManager::StartCaptureAsRemote()
 {
+    PRINT_FUNC;
     Capture::StartCapture();
 }
 
 //-----------------------------------------------------------------------------
 void ConnectionManager::StopCaptureAsRemote()
 {
+    PRINT_FUNC;
     Capture::StopCapture();
 }
 
@@ -148,8 +150,8 @@ void ConnectionManager::ConnectionThread()
         }
         else
         {
-            std::string msg("Hello from dev machine");
-            GTcpClient->Send(msg);
+            //std::string msg("Hello from dev machine");
+            //GTcpClient->Send(msg);
         }
 
         Sleep(2000);
@@ -161,9 +163,8 @@ void ConnectionManager::RemoteThread()
 {
     while (!m_ExitRequested)
     {
-        PRINT_VAR(GTcpServer->HasConnection());
-        
-        //if (GTcpServer->HasConnection())
+        //PRINT_VAR(GTcpServer->HasConnection());
+        //if (GTcpServer->HasConnection())F
         {
             std::string msg("Hello from remote instance");
             GTcpServer->Send(msg);
