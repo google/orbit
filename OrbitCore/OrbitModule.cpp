@@ -175,7 +175,8 @@ void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_Comple
                     Function* func = FunctionFromName(demangled);
                     if( func && func->m_Probe.empty() )
                     {
-                        func->m_Probe = tokens[1];
+                        std::string probe = Replace(tokens[1], ".", "*");
+                        func->m_Probe = probe;
                     }
                 }
             }

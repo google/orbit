@@ -270,10 +270,8 @@ bool OrbitApp::Init()
         ++Capture::GCapturePort;
     }
 
-#ifdef WIN32
     GTcpServer->AddCallback( Msg_MiniDump, [=](const Message & a_Msg){ GOrbitApp->OnMiniDump(a_Msg); });
     GTcpServer->Start(Capture::GCapturePort);
-#endif
 
     GTcpServer->AddMainThreadCallback( Msg_RemoteProcess, [=](const Message & a_Msg){ GOrbitApp->OnRemoteProcess(a_Msg); });
     GTcpServer->AddMainThreadCallback( Msg_RemoteProcessList, [=](const Message & a_Msg){ GOrbitApp->OnRemoteProcessList(a_Msg); });

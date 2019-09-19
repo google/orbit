@@ -29,7 +29,7 @@ Params::Params() : m_LoadTypeInfo( true )
                  , m_AutoReleasePdb(false)
                  , m_MaxNumTimers( 1000000 )
                  , m_FontSize( 14.f )
-                 , m_Port(1789)
+                 , m_Port(44766)
                  , m_NumBytesAssembly(1024)
                  , m_DiffArgs("%1 %2")
 {
@@ -66,7 +66,7 @@ void Params::Save()
 {
     GCoreApp->SendToUiNow(L"UpdateProcessParams");
     std::wstring fileName = Path::GetParamsFileName();
-    SCOPE_TIMER_LOG( Format( L"Saving hook params in %s", fileName.c_str() ) );
+    SCOPE_TIMER_LOG( Format( L"Saving params in %s", fileName.c_str() ) );
     std::ofstream file( ws2s(fileName) );
     cereal::XMLOutputArchive archive( file );
     archive( cereal::make_nvp("Params", *this) );
