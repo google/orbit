@@ -99,6 +99,9 @@ void TcpServer::Receive( const Message & a_Message )
     const Message::Header & MessageHeader = a_Message.GetHeader();
     ++m_NumReceivedMessages;
 
+    PRINT_VAR(a_Message.m_SessionID);
+    PRINT_VAR(Message::GSessionID);
+
     // Disregard messages from previous session
     if( a_Message.m_SessionID != Message::GSessionID )
     {
@@ -106,6 +109,7 @@ void TcpServer::Receive( const Message & a_Message )
         return;
     }
 
+    PRINT_VAR(a_Message.GetType());
     switch (a_Message.GetType())
     {
     case Msg_String:
