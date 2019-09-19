@@ -20,33 +20,50 @@ inline bool IsBadReadPtr( void* addr, int ){ return false; }
 #endif
 
 //-----------------------------------------------------------------------------
+TcpClient::TcpClient() : m_IsValid(false)
+{
+
+}
+
+//-----------------------------------------------------------------------------
 TcpClient::TcpClient( const std::string & a_Host )
 {
+    Connect(a_Host);
+}
+
+//-----------------------------------------------------------------------------
+TcpClient::~TcpClient()
+{
+}
+
+//-----------------------------------------------------------------------------
+void TcpClient::Connect(const std::string& a_Host)
+{
     PRINT_FUNC;
-    PRINT_VAR( a_Host );
-    std::vector< std::string > vec = Tokenize( a_Host, ":" );
+    PRINT_VAR(a_Host);
+    std::vector< std::string > vec = Tokenize(a_Host, ":");
     std::string & host = vec[0];
     std::string & port = vec[1];
 
     m_TcpService->m_IoService = new asio::io_service();
-    m_TcpSocket->m_Socket = new tcp::socket( *m_TcpService->m_IoService );
+    m_TcpSocket->m_Socket = new tcp::socket(*m_TcpService->m_IoService);
 
     asio::ip::tcp::socket & socket = *m_TcpSocket->m_Socket;
-    asio::ip::tcp::resolver resolver( *m_TcpService->m_IoService );
-    asio::ip::tcp::resolver::query query( host, port, tcp::resolver::query::canonical_name );
-    asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve( query );
+    asio::ip::tcp::resolver resolver(*m_TcpService->m_IoService);
+    asio::ip::tcp::resolver::query query(host, port, tcp::resolver::query::canonical_name);
+    asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
     asio::ip::tcp::resolver::iterator end;
 
     // Connect to host
     asio::error_code error = asio::error::host_not_found;
-    while(error && endpoint_iterator != end)
+    while (error && endpoint_iterator != end)
     {
         socket.close();
-        auto err = socket.connect( *endpoint_iterator++, error );
+        auto err = socket.connect(*endpoint_iterator++, error);
         PRINT_VAR(err.message().c_str());
     }
 
-    if(error)
+    if (error)
     {
         PRINT_VAR(error.message().c_str());
         m_IsValid = false;
@@ -54,11 +71,6 @@ TcpClient::TcpClient( const std::string & a_Host )
     }
 
     m_IsValid = true;
-}
-
-//-----------------------------------------------------------------------------
-TcpClient::~TcpClient()
-{
 }
 
 //-----------------------------------------------------------------------------

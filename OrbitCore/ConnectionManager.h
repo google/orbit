@@ -16,7 +16,8 @@ public:
     ~ConnectionManager();
     static ConnectionManager& Get();
     void Init();
-    void InitAsRemote(std::string a_Host);
+    void InitAsRemote();
+    void ConnectToRemote(std::string a_RemoteAddress);
     bool IsRemote(){ return m_IsRemote; }
     void StartCaptureAsRemote();
     void StopCaptureAsRemote();
@@ -24,16 +25,15 @@ public:
 
 protected:
     void ConnectionThread();
+    void RemoteThread();
     void TerminateThread();
-    void SetupTestMessageHandler();
     void SetupClientCallbacks();
     void SetupServerCallbacks();
-    void SendTestMessage();
-    void SendProcesses();
+    void SendProcesses(class TcpEntity* a_TcpEntity);
 
 protected:
     std::unique_ptr<std::thread> m_Thread;
-    std::string                  m_Host;
+    std::string                  m_RemoteAddress;
     std::atomic<bool>            m_ExitRequested;
     bool                         m_IsRemote;
 };

@@ -111,9 +111,13 @@ void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args
     {
         if( Contains( arg, "gamelet:" )  )
         { 
-            std::string host = Replace(arg, "gamelet:", "");
-            Capture::GCaptureHost = s2ws(host);
-            ConnectionManager::Get().InitAsRemote(host);
+            std::string address = Replace(arg, "gamelet:", "");
+            Capture::GCaptureHost = s2ws(address);
+
+            GTcpClient = std::make_unique<TcpClient>();
+            GTcpClient->AddMainThreadCallback(Msg_RemoteProcess, [=](const Message & a_Msg) { GOrbitApp->OnRemoteProcess(a_Msg); });
+            GTcpClient->AddMainThreadCallback(Msg_RemoteProcessList, [=](const Message & a_Msg) { GOrbitApp->OnRemoteProcessList(a_Msg); });
+            ConnectionManager::Get().ConnectToRemote(address);
         }
         else if( Contains( arg, "preset:" ) )
         {
@@ -265,15 +269,11 @@ bool OrbitApp::Init()
     GTcpServer->AddCallback( Msg_MiniDump, [=](const Message & a_Msg){ GOrbitApp->OnMiniDump(a_Msg); });
     GTcpServer->Start(Capture::GCapturePort);
 
-    GTcpServer->AddMainThreadCallback( Msg_RemoteProcess, [=](const Message & a_Msg){ GOrbitApp->OnRemoteProcess(a_Msg); });
-    GTcpServer->AddMainThreadCallback( Msg_RemoteProcessList, [=](const Message & a_Msg){ GOrbitApp->OnRemoteProcessList(a_Msg); });
-
     GParams.Load();
     GFontSize = GParams.m_FontSize;
     GOrbitApp->LoadFileMapping();
     GOrbitApp->LoadSymbolsFile();
     OrbitVersion::CheckForUpdate();
-    ConnectionManager::Get().Init();
     TestRemoteMessages::Get().Init();
     return true;
 }

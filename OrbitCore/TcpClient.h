@@ -9,9 +9,11 @@
 class TcpClient : public TcpEntity
 {
 public:
-    TcpClient( const std::string & a_Host );
+    TcpClient();
+    TcpClient(const std::string & a_Host);
     ~TcpClient();
 
+    void Connect( const std::string & a_Host );
     bool IsValid() const { return m_IsValid; }
     void Start() override;
 

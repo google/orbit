@@ -103,7 +103,7 @@ void LinuxPerf::Stop()
         std::stringstream buffer;
         buffer << t.rdbuf();
         std::string perfData = buffer.str();
-        GTcpClient->Send(Msg_RemotePerf, (void*)perfData.data(), perfData.size());
+        GTcpServer->Send(Msg_RemotePerf, (void*)perfData.data(), perfData.size());
     }
     //else
     {
