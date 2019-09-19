@@ -17,7 +17,7 @@
 #include "OrbitProcess.h"
 #include "OrbitModule.h"
 #include "ConnectionManager.h"
-#include "TcpClient.h"
+#include "TcpServer.h"
 #include "EventBuffer.h"
 #include "EventTracer.h"
 
