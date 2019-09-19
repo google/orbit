@@ -109,9 +109,9 @@ void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args
 
     for( std::string arg : a_Args )
     {
-        if( Contains( arg, "host:" )  )
+        if( Contains( arg, "gamelet:" )  )
         { 
-            std::string host = Replace(arg, "host:", "");
+            std::string host = Replace(arg, "gamelet:", "");
             Capture::GCaptureHost = s2ws(host);
             ConnectionManager::Get().InitAsRemote(host);
         }

@@ -147,19 +147,20 @@ void OrbitMainWindow::ParseCommandlineArguments()
     std::vector< std::string > args;
     for (QString arg : QCoreApplication::arguments())
     {
-        args.push_back(arg.toStdString());
+        std::string argStr = arg.toStdString();
+        args.push_back(argStr);
 
-        if( arg == "remote" || arg == "headless" )
+        if( Contains( argStr, "headless" ) )
         {
             GOrbitApp->SetHeadless(true);
             m_Headless = true;
             this->menuBar()->hide();
         }
-        else if( Contains(arg.toStdString(), "inject:") )
+        else if( Contains( argStr, "inject:" ) )
         {
             m_Headless = true;
         }
-        else if( arg == "dev" )
+        else if( argStr == "dev" )
         {
             m_IsDev = true;
         }
