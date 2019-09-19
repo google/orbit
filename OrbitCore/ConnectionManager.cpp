@@ -160,7 +160,6 @@ void ConnectionManager::RemoteThread()
 {
     while (!m_ExitRequested)
     {
-        PRINT_FUNC;
         PRINT_VAR(GTcpServer->HasConnection());
         
         if (GTcpServer->HasConnection())

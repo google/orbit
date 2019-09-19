@@ -23,6 +23,7 @@ TcpServer* GTcpServer;
 //-----------------------------------------------------------------------------
 TcpServer::TcpServer() : m_TcpServer(nullptr)
 {
+    PRINT_FUNC;
     m_LastNumMessages = 0;
     m_LastNumBytes = 0;
     m_NumReceivedMessages = 0;

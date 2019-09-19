@@ -45,12 +45,15 @@ void tcp_server::Disconnect()
 //-----------------------------------------------------------------------------
 void tcp_server::RegisterConnection( std::shared_ptr<TcpConnection> a_Connection )
 {
+    PRINT_FUNC;
     m_Connection = a_Connection;
 }
 
 //-----------------------------------------------------------------------------
 void tcp_server::start_accept()
 {
+    PRINT_FUNC;
+
     // creates a socket
     TcpConnection::pointer new_connection = TcpConnection::create( m_Acceptor.get_io_service() );
 
@@ -69,6 +72,7 @@ void tcp_server::start_accept()
 //-----------------------------------------------------------------------------
 void tcp_server::handle_accept(TcpConnection::pointer new_connection, const asio::error_code& error)
 {
+    PRINT_FUNC;
     if( !error )
     {
         PRINT_FUNC;
@@ -88,6 +92,7 @@ TcpConnection::~TcpConnection()
 //-----------------------------------------------------------------------------
 void TcpConnection::ReadMessage()
 {
+    PRINT_FUNC;
     asio::async_read( m_Socket, asio::buffer( &m_Message, sizeof(Message) ), 
         
     [this]( asio::error_code ec, std::size_t /*length*/ )
@@ -339,6 +344,7 @@ void TcpConnection::ReadFooter()
 //-----------------------------------------------------------------------------
 void TcpConnection::DecodeMessage( Message & a_Message )
 {
+    PRINT_FUNC;
     GTcpServer->GetServer()->RegisterConnection( this->shared_from_this() ); // TODO:
     GTcpServer->Receive( a_Message );
 }
