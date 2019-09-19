@@ -30,7 +30,7 @@ inline TickType OrbitTicks( uint32_t a_Clock = 0 /*CLOCK_REALTIME*/ )
 #endif
 }
 
-#ifdef WIN32
+#ifdef WIN32_DONT_GO_THROUGH_THIS_CODE // TODO
 //-----------------------------------------------------------------------------
 inline double MicroSecondsFromTicks( TickType a_Start, TickType a_End )
 {

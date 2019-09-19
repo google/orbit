@@ -742,6 +742,7 @@ void TimeGraph::SelectEvents( float a_WorldStart, float a_WorldEnd, ThreadID a_T
 
     // Generate report
     std::shared_ptr<SamplingProfiler> samplingProfiler = std::make_shared<SamplingProfiler>( Capture::GTargetProcess );
+    samplingProfiler->SetIsLinuxPerf(Capture::IsRemote()); //TODO: could be windows to windows remote capture...
     samplingProfiler->SetState( SamplingProfiler::Sampling );
 
     samplingProfiler->SetGenerateSummary(a_TID==0);

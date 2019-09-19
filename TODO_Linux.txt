@@ -22,3 +22,8 @@ CMakeLists
 
 // Make sure application is compiled with -fno-omit-frame-pointer for meaningful callstacks
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+
+REMOTE
+- Send clock/platform of incoming data
+-- Windows instance should be able to handle local captures and remote captures from Linux
+-- See Profiling.h, MicroSecondsFromTicks
