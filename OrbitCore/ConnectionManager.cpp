@@ -93,6 +93,7 @@ void ConnectionManager::Stop()
 //-----------------------------------------------------------------------------
 void ConnectionManager::SetupServerCallbacks()
 {
+    PRINT_FUNC;
     GTcpServer->AddMainThreadCallback( Msg_StartCapture, [=]( const Message & a_Msg )
     {
         StartCaptureAsRemote();
