@@ -227,7 +227,7 @@ void TcpServer::MainThreadTick()
         m_StatTimer.Reset();
     }
 
-    if( Capture::GInjected && Capture::IsCapturing() )
+    if( !Capture::IsRemote() && Capture::GInjected && Capture::IsCapturing() )
     {
         TcpSocket* socket = GetSocket();
         if( socket == nullptr || !socket->m_Socket || !socket->m_Socket->is_open() )

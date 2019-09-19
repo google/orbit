@@ -51,6 +51,7 @@ struct Capture
     typedef void (*LoadPdbAsyncFunc)( const std::vector<std::wstring> & a_Modules );
     static void SetLoadPdbAsyncFunc( LoadPdbAsyncFunc a_Func ){ GLoadPdbAsync = a_Func; }
     static void TestRemoteMessages();
+    static class TcpEntity* GetMainTcpEntity();
 
     static bool         GInjected;
     static bool         GIsConnected;

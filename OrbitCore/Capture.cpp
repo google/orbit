@@ -6,6 +6,7 @@
 #include "Capture.h"
 #include "TimerManager.h"
 #include "TcpServer.h"
+#include "TcpClient.h"
 #include "TcpForward.h"
 #include "Path.h"
 #include "Injection.h"
@@ -328,7 +329,10 @@ void Capture::SendFunctionHooks()
         GClearCaptureDataFunc();
     }
 
-    GTcpServer->Send( Msg_StartCapture );
+    if( Capture::IsRemote() )
+        GTcpClient->Send(Msg_StartCapture);
+    else
+        GTcpServer->Send( Msg_StartCapture );
 
     // Unreal
     if( Capture::GUnrealSupported )
@@ -440,6 +444,12 @@ bool Capture::IsCapturing()
 }
 
 //-----------------------------------------------------------------------------
+TcpEntity* Capture::GetMainTcpEntity()
+{
+    return Capture::IsRemote() ? (TcpEntity*)GTcpClient.get() : (TcpEntity*)GTcpServer;
+}
+
+//-----------------------------------------------------------------------------
 void Capture::Update()
 {
     if( GIsSampling )
@@ -467,7 +477,7 @@ void Capture::Update()
     }
 
 #ifdef WIN32
-    if( GInjected && !GTcpServer->HasConnection() )
+    if( !Capture::IsRemote() && GInjected && !GTcpServer->HasConnection() )
     {
         StopCapture();
         GInjected = false;
