@@ -15,6 +15,7 @@
 #include "TimerManager.h"
 #include "OrbitUnreal.h"
 #include "OrbitProcess.h"
+#include "ConnectionManager.h"
 
 #include <thread>
 
@@ -99,12 +100,9 @@ void TcpServer::Receive( const Message & a_Message )
     const Message::Header & MessageHeader = a_Message.GetHeader();
     ++m_NumReceivedMessages;
 
-    PRINT_VAR(a_Message.m_SessionID);
-    PRINT_VAR(Message::GSessionID);
-
     // Disregard messages from previous session
     // TODO: Take care of the IsRemote case
-    if( !Capture::IsRemote() && a_Message.m_SessionID != Message::GSessionID )
+    if( !ConnectionManager::Get().IsRemote() && a_Message.m_SessionID != Message::GSessionID )
     {
         ++m_NumMessagesFromPreviousSession;
         return;
