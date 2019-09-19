@@ -4,7 +4,7 @@
 sudo add-apt-repository universe
 sudo apt-get update
 sudo apt-get install -y curl build-essential libcurl4-openssl-dev unzip cmake tar
-sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxi-dev 
+sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev 
 sudo apt-get install -y libfreetype6-dev freeglut3-dev qt5-default linux-tools-common
 
 # Build vcpkg
