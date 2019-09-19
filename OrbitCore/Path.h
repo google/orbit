@@ -28,14 +28,18 @@ public:
     static std::wstring GetCapturePath();
     static std::wstring GetDumpPath();
     static std::wstring GetTmpPath();
+    static std::wstring GetProgramFilesPath();
+    static std::wstring GetAppDataPath();
+    static std::wstring GetMainDrive();
+    static std::wstring GetSourceRoot();
+    static void Dump();
+
     static std::wstring GetFileName( const std::wstring & a_FullName );
     static std::wstring GetFileNameNoExt( const std::wstring & a_FullName );
     static std::wstring StripExtension( const std::wstring & a_FullName );
     static std::wstring GetExtension( const std::wstring & a_FullName );
-    static std::wstring GetDirectory( const std::wstring & a_FullName );
-    static std::wstring GetProgramFilesPath();
-    static std::wstring GetAppDataPath();
-    static std::wstring GetMainDrive();
+    static std::wstring GetDirectory(const std::wstring & a_FullName);
+    static std::wstring GetParentDirectory( std::wstring a_FullName );
     
     static bool FileExists( const std::wstring & a_File );
     static bool DirExists( const std::wstring & a_Dir );
@@ -44,6 +48,7 @@ public:
 
     static std::vector< std::wstring > ListFiles( const std::wstring & a_Dir, std::function< bool(const std::wstring &)> a_Filter = [](const std::wstring &){ return true; });
     static std::vector< std::wstring > ListFiles( const std::wstring & a_Dir, const std::wstring & a_Filter );
+    static bool ContainsFile(const std::wstring a_Dir, const std::wstring a_File);
 
 private:
     static std::wstring m_BasePath;

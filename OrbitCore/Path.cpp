@@ -6,6 +6,7 @@
 
 #include "Path.h"
 #include "Utils.h"
+#include "PrintVar.h"
 #include <fstream>
 
 #ifdef _WIN32
@@ -260,6 +261,19 @@ std::wstring Path::GetDirectory( const std::wstring & a_FullName )
 }
 
 //-----------------------------------------------------------------------------
+std::wstring Path::GetParentDirectory(std::wstring a_Directory)
+{
+    if (a_Directory.size() < 1)
+        return L"";
+    std::replace(a_Directory.begin(), a_Directory.end(), '\\', '/');
+    wchar_t lastChar = a_Directory.c_str()[a_Directory.size()-1];
+    if (lastChar == '/')
+        a_Directory.erase(a_Directory.size() - 1);
+
+    return GetDirectory(a_Directory);
+}
+
+//-----------------------------------------------------------------------------
 std::wstring Path::GetProgramFilesPath()
 {
 #ifdef WIN32
@@ -295,6 +309,61 @@ std::wstring Path::GetMainDrive()
 }
 
 //-----------------------------------------------------------------------------
+std::wstring Path::GetSourceRoot()
+{
+    std::wstring currentDir = GetExecutablePath();
+    const int numIterations = 10;
+    const std::wstring fileName = L"bootstrap-orbit";
+
+    for (int i = 0; i < numIterations; ++i)
+    {
+        PRINT_VAR(currentDir);
+        if (ContainsFile(currentDir, fileName))
+        {
+            return currentDir;
+        }
+
+        currentDir = GetParentDirectory(currentDir);
+    }
+
+    return L"";
+}
+
+//-----------------------------------------------------------------------------
+bool Path::ContainsFile(const std::wstring a_Dir, const std::wstring a_File)
+{
+    auto fileList = ListFiles(a_Dir, a_File);
+    return fileList.size() > 0;
+}
+
+//-----------------------------------------------------------------------------
+void Path::Dump()   
+{
+    PRINT_VAR(GetExecutableName());
+    PRINT_VAR(GetExecutablePath());
+    PRINT_VAR(GetBasePath());
+    PRINT_VAR(GetOrbitAppPdb());
+    PRINT_VAR(GetDllPath(true));
+    PRINT_VAR(GetDllName(true));
+    PRINT_VAR(GetDllPath(false));
+    PRINT_VAR(GetDllName(false));
+    PRINT_VAR(GetParamsFileName());
+    PRINT_VAR(GetFileMappingFileName());
+    PRINT_VAR(GetSymbolsFileName());
+    PRINT_VAR(GetLicenseName());
+    PRINT_VAR(GetCachePath());
+    PRINT_VAR(GetPresetPath());
+    PRINT_VAR(GetPluginPath());
+    PRINT_VAR(GetCapturePath());
+    PRINT_VAR(GetDumpPath());
+    PRINT_VAR(GetTmpPath());
+    PRINT_VAR(GetProgramFilesPath());
+    PRINT_VAR(GetAppDataPath());
+    PRINT_VAR(GetMainDrive());
+    PRINT_VAR(GetSourceRoot());
+}
+
+//-----------------------------------------------------------------------------
 bool Path::IsSourceFile( const std::wstring & a_File )
 {
     std::wstring ext = Path::GetExtension( a_File );
@@ -307,8 +376,8 @@ std::vector< std::wstring > Path::ListFiles( const std::wstring & a_Dir, std::fu
     std::vector< std::wstring > files;
 
 #ifdef _WIN32
-    for( auto it = std::tr2::sys::recursive_directory_iterator( a_Dir );
-        it != std::tr2::sys::recursive_directory_iterator(); ++it )
+    for( auto it = std::tr2::sys::directory_iterator( a_Dir );
+        it != std::tr2::sys::directory_iterator(); ++it )
     {
         const auto& file = it->path();
 
