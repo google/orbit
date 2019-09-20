@@ -115,7 +115,7 @@ Function* Pdb::FunctionFromName( const std::string& a_Name )
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::LoadPdb( const wchar_t* a_PdbName )
+bool Pdb::LoadPdb( const wchar_t* a_PdbName )
 {
     m_FileName = a_PdbName;
     m_Name = Path::GetFileName(m_FileName);
@@ -182,6 +182,8 @@ void Pdb::LoadPdb( const wchar_t* a_PdbName )
             }
         }
     }
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------
