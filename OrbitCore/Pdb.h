@@ -141,7 +141,7 @@ public:
     virtual bool LoadPdb( const wchar_t* a_PdbName );
     virtual void LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_CompletionCallback );
 
-    bool LoadDataFromPdb() { LoadPdb(m_Name); }
+    bool LoadDataFromPdb() { LoadPdb(m_Name.c_str()); }
     bool LoadPdbDia(){return false;}
     void Update(){}
     void AddFunction( Function & a_Function ){ m_Functions.push_back( a_Function ); }
