@@ -313,8 +313,6 @@ void OrbitApp::PostInit()
         // TODO: headless doesn't necessarily means remote...
         ConnectionManager::Get().InitAsRemote();
     }
-
-    Path::Dump();
 }
 
 //-----------------------------------------------------------------------------
