@@ -620,6 +620,16 @@ bool Capture::IsRemote()
 }
 
 //-----------------------------------------------------------------------------
+bool Capture::IsLinuxData()
+{
+    bool isLinux = false;
+#if __linux__
+    isLinux = true;
+#endif
+    return IsRemote() || isLinux;
+}
+
+//-----------------------------------------------------------------------------
 void Capture::RegisterZoneName( DWORD64 a_ID, char* a_Name )
 {
     GZoneNames[a_ID] = a_Name;

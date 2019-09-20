@@ -1198,13 +1198,15 @@ void OrbitApp::OnRemoteModuleDebugInfo(const Message & a_Message)
 
         if (module)
         {
+            module->LoadDebugInfo(); // To allocate m_Pdb - TODO: clean that up
+
             for (auto& function : moduleInfo.m_Functions)
             {
                 // Add function to pdb
-                module->LoadDebugInfo(); // To allocate m_Pdb - TODO: clean that up
                 module->m_Pdb->AddFunction(function);
-                module->m_Pdb->ProcessData();
             }
+
+            module->m_Pdb->ProcessData();
         }
     }
 

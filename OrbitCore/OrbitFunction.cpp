@@ -54,23 +54,26 @@ const std::string & Function::PrettyName()
 //-----------------------------------------------------------------------------
 bool Function::Hookable()
 {
-#ifdef __linux__
-    return !m_Probe.empty();
-#else
-    // Don't allow hooking in asm implemented functions (strcpy, stccat...) 
-    // TODO: give this better thought.  Here is the theory:
-    // Functions that loop back to first 5 bytes of instructions will explode as
-    // the IP lands in the middle of the relative jump instruction...
-    // Ideally, we would detect such a loop back and not allow hooking.
-    if( m_File.find( ".asm" ) != std::wstring::npos )
+    if (Capture::IsLinuxData())
     {
-        return false;
+        return !m_Probe.empty();
     }
+    else
+    {
+        // Don't allow hooking in asm implemented functions (strcpy, stccat...) 
+        // TODO: give this better thought.  Here is the theory:
+        // Functions that loop back to first 5 bytes of instructions will explode as
+        // the IP lands in the middle of the relative jump instruction...
+        // Ideally, we would detect such a loop back and not allow hooking.
+        if (m_File.find(".asm") != std::wstring::npos)
+        {
+            return false;
+        }
 
-    CV_call_e conv = (CV_call_e)m_CallConv;
-    return ( ( conv == CV_CALL_NEAR_C || CV_CALL_THISCALL ) && m_Size >= 5 )
-        || ( GParams.m_AllowUnsafeHooking && m_Size == 0 );
-#endif
+        CV_call_e conv = (CV_call_e)m_CallConv;
+        return ((conv == CV_CALL_NEAR_C || CV_CALL_THISCALL) && m_Size >= 5)
+            || (GParams.m_AllowUnsafeHooking && m_Size == 0);
+    }
 }
 
 //-----------------------------------------------------------------------------
