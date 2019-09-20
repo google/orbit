@@ -124,6 +124,7 @@ void ConnectionManager::SetupServerCallbacks()
         for (std::string& module : modules)
         {
             ModuleDebugInfo moduleDebugInfo;
+            moduleDebugInfo.m_Name = module;
             Capture::GTargetProcess->FillModuleDebugInfo(moduleDebugInfo);
             remoteModuleDebugInfo.push_back(moduleDebugInfo);
         }

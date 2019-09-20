@@ -454,10 +454,12 @@ void Process::FindPdbs( const std::vector< std::wstring > & a_SearchLocations )
 //-----------------------------------------------------------------------------
 void Process::FillModuleDebugInfo(ModuleDebugInfo& a_ModuleDebugInfo)
 {
+    PRINT_VAR(m_FullName);
+
     // Get module from name
     std::wstring name = s2ws(a_ModuleDebugInfo.m_Name);
     std::shared_ptr<Module> module = GetModuleFromName(name);
-
+    
     if (module)
     {
         PRINT_VAR(module->m_FullName);
