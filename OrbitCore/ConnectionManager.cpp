@@ -130,7 +130,7 @@ void ConnectionManager::SetupServerCallbacks()
 
         // Send data back
         std::string messageData = SerializeObjectHumanReadable(remoteModuleDebugInfo);
-        GTcpServer->Send(Msg_RemoteProcessList, (void*)messageData.data(), messageData.size());
+        GTcpServer->Send(Msg_RemoteModuleDebugInfo, (void*)messageData.data(), messageData.size());
         
     });
 }
