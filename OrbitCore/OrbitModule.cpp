@@ -56,6 +56,7 @@ bool Module::LoadDebugInfo()
     m_Pdb = std::make_shared<Pdb>( pdbName.c_str() );
     m_Pdb->SetMainModule( (HMODULE)m_AddressStart );
 
+    PRINT_VAR(m_FoundPdb);
     if( m_FoundPdb )
     {
         return m_Pdb->LoadDataFromPdb();
@@ -114,23 +115,22 @@ Function* Pdb::FunctionFromName( const std::string& a_Name )
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_CompletionCallback )
+void Pdb::LoadPdb( const wchar_t* a_PdbName )
 {
-    m_LoadingCompleteCallback = a_CompletionCallback;
     m_FileName = a_PdbName;
-    m_Name = Path::GetFileName( m_FileName );
-    
+    m_Name = Path::GetFileName(m_FileName);
+
     {
         SCOPE_TIMER_LOG(L"nm");
         // nm
         std::string nmCommand = std::string("nm ") + ws2s(a_PdbName) + std::string(" -n -l");
-        std::string nmResult = LinuxUtils::ExecuteCommand( nmCommand.c_str() );
+        std::string nmResult = LinuxUtils::ExecuteCommand(nmCommand.c_str());
         std::stringstream nmStream(nmResult);
         std::string line;
-        while(std::getline(nmStream,line,'\n'))
+        while (std::getline(nmStream, line, '\n'))
         {
             std::vector<std::string> tokens = Tokenize(line, " \t");
-            if( tokens.size() > 2 ) // nm
+            if (tokens.size() > 2) // nm
             {
                 Function func;
                 func.m_Name = tokens[2];
@@ -141,7 +141,7 @@ void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_Comple
                 this->AddFunction(func);
 
                 // Debug - Temporary
-                if( Contains(func.m_PrettyName, "btCollisionDispatcher::needsCollision") )
+                if (Contains(func.m_PrettyName, "btCollisionDispatcher::needsCollision"))
                 {
                     PRINT_VAR(func.m_PrettyName);
                 }
@@ -149,31 +149,31 @@ void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_Comple
         }
     }
     ProcessData();
-    
+
     {
         SCOPE_TIMER_LOG(L"bpftrace -l");
         // find functions that can receive bpftrace uprobes
         std::string bpfCommand = std::string("bpftrace -l 'uprobe: ") + ws2s(a_PdbName) + std::string("'");
-        std::string bpfResult = LinuxUtils::ExecuteCommand( bpfCommand.c_str() );
+        std::string bpfResult = LinuxUtils::ExecuteCommand(bpfCommand.c_str());
         std::stringstream bpfStream(bpfResult);
         std::string line;
-        while(std::getline(bpfStream,line,'\n'))
+        while (std::getline(bpfStream, line, '\n'))
         {
             std::vector<std::string> tokens = Tokenize(line);
-            if( tokens.size() == 2 ) // bpftrace
+            if (tokens.size() == 2) // bpftrace
             {
                 Function func;
                 auto probeTokens = Tokenize(tokens[1], ":");
-                if( probeTokens.size() == 2 )
+                if (probeTokens.size() == 2)
                 {
                     std::string mangled = probeTokens[1];
                     std::string demangled = LinuxUtils::Demangle(probeTokens[1].c_str());
 
                     // Debug - Temporary
-                    if( Contains(demangled, "btCollisionDispatcher::needsCollision") )
+                    if (Contains(demangled, "btCollisionDispatcher::needsCollision"))
                         PRINT_VAR(demangled);
                     Function* func = FunctionFromName(demangled);
-                    if( func && func->m_Probe.empty() )
+                    if (func && func->m_Probe.empty())
                     {
                         std::string probe = Replace(tokens[1], ".", "*");
                         func->m_Probe = probe;
@@ -182,7 +182,13 @@ void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_Comple
             }
         }
     }
-    
+}
+
+//-----------------------------------------------------------------------------
+void Pdb::LoadPdbAsync( const wchar_t* a_PdbName, std::function<void()> a_CompletionCallback )
+{
+    m_LoadingCompleteCallback = a_CompletionCallback;
+    LoadPdb(a_PdbName);
     a_CompletionCallback();
 }
 
@@ -320,3 +326,11 @@ Function* Pdb::GetFunctionFromProgramCounter( uint64_t a_Address )
 }
 
 #endif
+
+//-----------------------------------------------------------------------------
+ORBIT_SERIALIZE(ModuleDebugInfo, 0)
+{
+    ORBIT_NVP_VAL(0, m_Pid);
+    ORBIT_NVP_VAL(0, m_Name);
+    ORBIT_NVP_VAL(0, m_Functions);
+}

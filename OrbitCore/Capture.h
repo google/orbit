@@ -41,7 +41,7 @@ struct Capture
     static void SaveSession( const std::wstring & a_FileName );
     static void NewSamplingProfiler();
     static bool IsTrackingEvents();
-    static bool IsRemote();
+    static bool IsRemote(); // True when Orbit is receiving data from remote source
     static void RegisterZoneName( DWORD64 a_ID, char* a_Name );
     static void AddCallstack( CallStack & a_CallStack );
     static std::shared_ptr<CallStack> GetCallstack( CallstackID a_ID );

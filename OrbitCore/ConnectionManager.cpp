@@ -14,6 +14,7 @@
 #include "LinuxPerf.h"
 #include "SamplingProfiler.h"
 #include "CoreApp.h"
+#include "OrbitModule.h"
 
 #if __linux__
 #include "LinuxUtils.h"
@@ -108,6 +109,29 @@ void ConnectionManager::SetupServerCallbacks()
     {
         uint32_t pid = (uint32_t)a_Msg.m_Header.m_GenericHeader.m_Address;
         GCoreApp->SendRemoteProcess(pid);
+    });
+
+    
+    GTcpServer->AddMainThreadCallback( Msg_RemoteModuleDebugInfo, [=](const Message & a_Msg)
+    {
+        std::vector<ModuleDebugInfo> remoteModuleDebugInfo;
+        std::vector<std::string> modules;
+
+        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        cereal::JSONInputArchive inputAr(buffer);
+        inputAr(modules);
+
+        for (std::string& module : modules)
+        {
+            ModuleDebugInfo moduleDebugInfo;
+            Capture::GTargetProcess->FillModuleDebugInfo(moduleDebugInfo);
+            remoteModuleDebugInfo.push_back(moduleDebugInfo);
+        }
+
+        // Send data back
+        std::string messageData = SerializeObjectHumanReadable(remoteModuleDebugInfo);
+        GTcpServer->Send(Msg_RemoteProcessList, (void*)messageData.data(), messageData.size());
+        
     });
 }
 

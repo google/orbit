@@ -206,7 +206,7 @@ const TCHAR* Function::GetCallingConventionString( int a_CallConv )
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( Function, 1 )
+ORBIT_SERIALIZE( Function, 2 )
 {
     ORBIT_NVP_VAL( 0, m_Name );
     ORBIT_NVP_VAL( 0, m_PrettyName );
@@ -218,6 +218,7 @@ ORBIT_SERIALIZE( Function, 1 )
     ORBIT_NVP_VAL( 0, m_ModBase );
     ORBIT_NVP_VAL( 0, m_CallConv );
     ORBIT_NVP_VAL( 1, m_Stats );
+    ORBIT_NVP_VAL( 2, m_Probe );
 }
 
 //-----------------------------------------------------------------------------

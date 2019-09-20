@@ -27,3 +27,5 @@ REMOTE
 - Send clock/platform of incoming data
 -- Windows instance should be able to handle local captures and remote captures from Linux
 -- See Profiling.h, MicroSecondsFromTicks
+- Orbit sometimes crashes when remote instance is not reachable.
+- Encapsulate!!  -> OrbitProcess.GetFunctions()

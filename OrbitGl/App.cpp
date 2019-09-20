@@ -117,6 +117,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args
             GTcpClient = std::make_unique<TcpClient>();
             GTcpClient->AddMainThreadCallback(Msg_RemoteProcess, [=](const Message & a_Msg) { GOrbitApp->OnRemoteProcess(a_Msg); });
             GTcpClient->AddMainThreadCallback(Msg_RemoteProcessList, [=](const Message & a_Msg) { GOrbitApp->OnRemoteProcessList(a_Msg); });
+            GTcpClient->AddMainThreadCallback(Msg_RemoteModuleDebugInfo, [=](const Message & a_Msg) { GOrbitApp->OnRemoteModuleDebugInfo(a_Msg); });
             ConnectionManager::Get().ConnectToRemote(address);
             m_ProcessesDataView->SetIsRemote(true);
         }
@@ -1048,10 +1049,32 @@ void OrbitApp::LoadModules()
 {
     if( m_ModulesToLoad.size() > 0 )
     {
-        std::shared_ptr< Module > module = m_ModulesToLoad.front();
-        m_ModulesToLoad.pop();
-        GLoadPdbAsync( module );
+        if( Capture::IsRemote() )
+        {
+            LoadRemoteModules();
+        }
+        else
+        {
+            std::shared_ptr< Module > module = m_ModulesToLoad.front();
+            m_ModulesToLoad.pop();
+            GLoadPdbAsync(module);
+        }
     }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::LoadRemoteModules()
+{
+    std::vector<std::string> modules;
+    while (!m_ModulesToLoad.empty())
+    {
+        auto module = m_ModulesToLoad.front();
+        m_ModulesToLoad.pop();
+        modules.push_back(module->m_Name);
+    }
+
+    std::string moduleData = SerializeObjectHumanReadable(modules);
+    GTcpClient->Send(Msg_RemoteModuleDebugInfo, (void*)moduleData.data(), moduleData.size());
 }
 
 //-----------------------------------------------------------------------------
@@ -1157,6 +1180,35 @@ void OrbitApp::OnRemoteProcessList( const Message & a_Message )
     inputAr(*remoteProcessList);
     PRINT_VAR("remoteProcessList");
     GOrbitApp->m_ProcessesDataView->SetRemoteProcessList(remoteProcessList);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::OnRemoteModuleDebugInfo(const Message & a_Message)
+{
+    std::istringstream buffer(std::string(a_Message.m_Data, a_Message.m_Size));
+    cereal::JSONInputArchive inputAr(buffer);
+    std::vector<ModuleDebugInfo> remoteModuleDebugInfo;
+    inputAr(remoteModuleDebugInfo);
+
+    for (auto & moduleInfo : remoteModuleDebugInfo)
+    {
+        // Get module from name
+        std::wstring name = s2ws(moduleInfo.m_Name);
+        std::shared_ptr<Module> module = Capture::GTargetProcess->GetModuleFromName(name);
+
+        if (module)
+        {
+            for (auto& function : moduleInfo.m_Functions)
+            {
+                // Add function to pdb
+                module->LoadDebugInfo(); // To allocate m_Pdb - TODO: clean that up
+                module->m_Pdb->AddFunction(function);
+                module->m_Pdb->ProcessData();
+            }
+        }
+    }
+
+    GOrbitApp->FireRefreshCallbacks();
 }
 
 //-----------------------------------------------------------------------------

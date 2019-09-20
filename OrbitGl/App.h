@@ -61,6 +61,7 @@ public:
     void ListSessions();
     void SetRemoteProcess( std::shared_ptr<Process> a_Process );
     void SendRemoteProcess( uint32_t a_PID );
+    void RequestRemoteModules( const std::vector<std::string> a_Modules );
     void AddWatchedVariable( Variable* a_Variable );
     void UpdateVariable( Variable* a_Variable ) override;
     void ClearWatchedVariables();
@@ -124,6 +125,7 @@ public:
 
     void EnqueueModuleToLoad( const std::shared_ptr<struct Module> & a_Module );
     void LoadModules();
+    void LoadRemoteModules();
     bool IsLoading();
     void SetTrackContextSwitches( bool a_Value );
     bool GetTrackContextSwitches();
@@ -144,6 +146,7 @@ public:
     void OnMiniDump( const Message & a_Message );
     void OnRemoteProcess( const Message & a_Message );
     void OnRemoteProcessList( const Message & a_Message );
+    void OnRemoteModuleDebugInfo( const Message & a_Message );
     void LaunchRuleEditor( class Function* a_Function );
     void SetHeadless( bool a_Headless ) { m_Headless = a_Headless; }
     bool GetHeadless() const { return m_Headless; }

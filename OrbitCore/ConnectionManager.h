@@ -18,7 +18,7 @@ public:
     void Init();
     void InitAsRemote();
     void ConnectToRemote(std::string a_RemoteAddress);
-    bool IsRemote(){ return m_IsRemote; }
+    bool IsRemote(){ return m_IsRemote; } // True when Orbit instance is headless, next to remote process
     void StartCaptureAsRemote();
     void StopCaptureAsRemote();
     void Stop();

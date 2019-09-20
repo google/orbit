@@ -26,6 +26,7 @@ class Variable;
 class Thread;
 class Session;
 struct Module;
+struct ModuleDebugInfo;
 struct IDiaSymbol;
 
 //-----------------------------------------------------------------------------
@@ -52,6 +53,7 @@ public:
     std::wstring GetThreadNameFromTID(DWORD a_ThreadId) { return m_ThreadNames[a_ThreadId]; }
     void AddModule( std::shared_ptr<Module> & a_Module );
     void FindPdbs( const std::vector< std::wstring > & a_SearchLocations );
+    void FillModuleDebugInfo( ModuleDebugInfo& a_ModuleDebugInfo );
 
     static bool IsElevated( HANDLE a_Process );
 

@@ -7,6 +7,7 @@
 #include <memory.h>
 #include "BaseTypes.h"
 #include "SerializationMacros.h"
+#include "OrbitFunction.h"
 
 class Pdb;
 
@@ -46,4 +47,13 @@ private:
     bool          m_Loaded = false;
 
     friend class TestRemoteMessages;
+};
+
+//-----------------------------------------------------------------------------
+struct ModuleDebugInfo
+{
+    uint32_t m_Pid = 0;
+    std::string m_Name;
+    std::vector<Function> m_Functions;
+    ORBIT_SERIALIZABLE;
 };
