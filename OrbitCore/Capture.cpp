@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "Core.h"
+#include "BpfTrace.h"
 #include "Capture.h"
 #include "TimerManager.h"
 #include "TcpServer.h"
@@ -330,8 +331,12 @@ void Capture::SendFunctionHooks()
         GClearCaptureDataFunc();
     }
 
-    if( Capture::IsRemote() )
+    if (Capture::IsRemote())
+    {
+        //BpfTrace bpfTrace;
+        //PRINT_VAR(bpfTrace.GetBpfScript());
         GTcpClient->Send(Msg_StartCapture);
+    }
     else
         GTcpServer->Send( Msg_StartCapture );
 

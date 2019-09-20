@@ -46,6 +46,7 @@
 #include "Debugger.h"
 #include "PrintVar.h"
 #include "TestRemoteMessages.h"
+#include "BpfTrace.h"
 
 #include <thread>
 #include <cmath>
@@ -60,7 +61,6 @@
 #include "EventTracer.h"
 #else
 #include "LinuxUtils.h"
-#include "BpfTrace.h"
 #endif
 
 class OrbitApp* GOrbitApp;

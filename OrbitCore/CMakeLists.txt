@@ -24,6 +24,7 @@ project(OrbitCore)
 # Headers
 set(HEADERS
     BaseTypes.h
+    BpfTrace.h
     BlockChain.h
     Callstack.h
     CallstackTypes.h
@@ -88,6 +89,7 @@ set(HEADERS
 
 # Sources
 set(SOURCES
+    BpfTrace.cpp
     Callstack.cpp
     Capture.cpp
     ContextSwitch.cpp
@@ -190,11 +192,9 @@ endif()
 # Linux
 if(LINUX)
     set(PLATFORM_HEADERS 
-        BpfTrace.h
         LinuxUtils.h
     )
     set(PLATFORM_SOURCES 
-        BpfTrace.cpp
         LinuxUtils.cpp
     )
 	set(EXTERNAL_SOURCES "")

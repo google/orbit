@@ -9,7 +9,7 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <unordered_map>
+#include <unordered_map>;
 
 class BpfTrace
 {
@@ -21,6 +21,7 @@ public:
     void Stop();
     void Toggle() { IsRunning() ? Stop() : Start(); }
     bool IsRunning() const { return !m_ExitRequested; }
+    std::string GetBpfScript();
 
 protected:
     uint64_t ProcessString(const std::string& a_String);

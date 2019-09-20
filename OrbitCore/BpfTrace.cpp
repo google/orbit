@@ -8,6 +8,7 @@
 #include "Capture.h"
 #include "OrbitProcess.h"
 #include <fstream>
+#include <sstream>
 
 //-----------------------------------------------------------------------------
 BpfTrace::BpfTrace(Callback a_Callback)
@@ -21,6 +22,7 @@ BpfTrace::BpfTrace(Callback a_Callback)
 //-----------------------------------------------------------------------------
 void BpfTrace::Start()
 {
+#if __linux__
     m_ExitRequested = false;
     m_BpfCommand = std::string("bpftrace ") + WriteBpfScript();
     m_Thread = std::make_shared<std::thread>
@@ -29,6 +31,7 @@ void BpfTrace::Start()
         , m_Callback
         , &m_ExitRequested );
     m_Thread->detach();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -38,22 +41,31 @@ void BpfTrace::Stop()
 }
 
 //-----------------------------------------------------------------------------
-std::string BpfTrace::WriteBpfScript()
+std::string BpfTrace::GetBpfScript()
 {
-    std::string filePath = ws2s(Path::GetBasePath()) + "orbit.bt";
-    std::ofstream outFile;
-    
-    outFile.open(filePath);
+    std::stringstream ss;
+
     for (Function *func : Capture::GTargetProcess->GetFunctions())
     {
         if (func->IsSelected())
         {
             Capture::GSelectedFunctionsMap[func->m_Address] = func;
 
-            outFile << "   uprobe:" << func->m_Probe << R"({ printf("b )" << std::to_string((uint64_t)func->GetVirtualAddress()) << R"( %u %lld\n", tid, nsecs); })" << std::endl;
-            outFile << "uretprobe:" << func->m_Probe << R"({ printf("e )" << std::to_string((uint64_t)func->GetVirtualAddress()) << R"( %u %lld\n", tid, nsecs); })" << std::endl;
+            ss << "   uprobe:" << func->m_Probe << R"({ printf("b )" << std::to_string((uint64_t)func->GetVirtualAddress()) << R"( %u %lld\n", tid, nsecs); })" << std::endl;
+            ss << "uretprobe:" << func->m_Probe << R"({ printf("e )" << std::to_string((uint64_t)func->GetVirtualAddress()) << R"( %u %lld\n", tid, nsecs); })" << std::endl;
         }
     }
+
+    return ss.str();
+}
+
+//-----------------------------------------------------------------------------
+std::string BpfTrace::WriteBpfScript()
+{
+    std::string filePath = ws2s(Path::GetBasePath()) + "orbit.bt";
+    std::ofstream outFile;
+    outFile.open(filePath);
+    outFile << GetBpfScript();
     outFile.close();
     
     PRINT_VAR(Capture::GSelectedFunctionsMap.size());

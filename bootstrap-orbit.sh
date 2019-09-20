@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#install required dependencies
+# Install required dependencies
 sudo add-apt-repository universe
 sudo apt-get update
 sudo apt-get install -y curl build-essential libcurl4-openssl-dev unzip cmake tar
@@ -41,5 +41,3 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 #cmake ..
 make
-cd OrbitQt
-./OrbitQt
