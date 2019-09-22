@@ -212,19 +212,9 @@ add_custom_command(TARGET OrbitService POST_BUILD
 
     # OrbitDll
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/OrbitDll/$<CONFIG>/Orbit64.dll"        $<TARGET_FILE_DIR:OrbitService>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ORBIT_ROOT}/build/x86/OrbitDll/Release/Orbit32.dll"      $<TARGET_FILE_DIR:OrbitService>
-
-    # Icon
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ORBIT_ROOT}/OrbitQt/orbit.ico"                           $<TARGET_FILE_DIR:OrbitService>
+    #COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ORBIT_ROOT}/build/x86/OrbitDll/Release/Orbit32.dll"      $<TARGET_FILE_DIR:OrbitService>
 )
 
 endif()
 
 set_target_properties(OrbitService PROPERTIES OUTPUT_NAME "OrbitService")
-
-if(LINUX)
-add_custom_command(TARGET OrbitService POST_BUILD
-    # Icon
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ORBIT_ROOT}/OrbitService/orbit.ico"                           $<TARGET_FILE_DIR:OrbitService>
-)
-endif()
