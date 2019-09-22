@@ -15,6 +15,7 @@ TcpEntity::TcpEntity() : m_NumQueuedEntries(0)
                        , m_NumFlushedItems(0)
 {
     PRINT_FUNC;
+    m_IsValid = false;
     m_TcpSocket = new TcpSocket();
     m_TcpService = new TcpService();
 }
