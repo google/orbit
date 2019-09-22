@@ -59,6 +59,7 @@ void TcpServer::Start( unsigned short a_Port )
     t.detach();
 
     m_StatTimer.Start();
+    m_IsValid = true;
 }
 
 //-----------------------------------------------------------------------------

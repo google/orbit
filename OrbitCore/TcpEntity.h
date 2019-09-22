@@ -78,6 +78,7 @@ public:
     void AddMainThreadCallback( MessageType a_MsgType, MsgCallback a_Callback ) { m_MainThreadCallbacks[a_MsgType].push_back(a_Callback); }
     void Callback( const Message& a_Message );
     void ProcessMainThreadCallbacks();
+    bool IsValid() const { return m_IsValid; }
 
 protected:
     void SendMsg( Message & a_Message, const void* a_Payload );
@@ -95,6 +96,7 @@ protected:
     std::atomic<bool>          m_FlushRequested;
     std::atomic<uint32_t>      m_NumFlushedItems;
     Mutex                      m_Mutex;
+    std::atomic<bool>          m_IsValid = false;
 
     std::unordered_map< int, std::vector<MsgCallback> > m_Callbacks;
     std::unordered_map< int, std::vector<MsgCallback> > m_MainThreadCallbacks;

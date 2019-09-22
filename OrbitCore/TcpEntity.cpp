@@ -97,14 +97,14 @@ void TcpEntity::SendData()
     while( !m_ExitRequested )
     {
         // Wait for non-empty queue
-        while( m_NumQueuedEntries <= 0 && !m_ExitRequested )
+        while( !m_IsValid && m_NumQueuedEntries <= 0 && !m_ExitRequested )
         {
             m_ConditionVariable.wait();
         }
 
         // Send messages
         TcpPacket buffer;
-        while( !m_ExitRequested && !m_FlushRequested && m_SendQueue.try_dequeue( buffer ) )
+        while( m_IsValid && !m_ExitRequested && !m_FlushRequested && m_SendQueue.try_dequeue( buffer ) )
         {
             --m_NumQueuedEntries;
             TcpSocket* socket = GetSocket();

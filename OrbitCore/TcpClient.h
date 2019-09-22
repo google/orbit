@@ -14,7 +14,6 @@ public:
     ~TcpClient();
 
     void Connect( const std::string & a_Host );
-    bool IsValid() const { return m_IsValid; }
     void Start() override;
 
 protected:
@@ -29,7 +28,6 @@ protected:
 private:
     Message           m_Message;
     std::vector<char> m_Payload;
-    bool              m_IsValid;
 };
 
 extern std::unique_ptr<TcpClient> GTcpClient;

@@ -20,7 +20,7 @@ inline bool IsBadReadPtr( void* addr, int ){ return false; }
 #endif
 
 //-----------------------------------------------------------------------------
-TcpClient::TcpClient() : m_IsValid(false)
+TcpClient::TcpClient()
 {
 
 }
