@@ -94,7 +94,7 @@ class Message
 {
 public:
     Message ( MessageType a_Type = Msg_Invalid
-            , size_t a_Size = 0
+            , uint32_t a_Size = 0
             , char* a_Data = nullptr )
             : m_Type(a_Type)
             , m_Size(a_Size)

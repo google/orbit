@@ -87,8 +87,8 @@ struct ThreadLocalData
     std::unordered_set<CallstackID> m_SentCallstacks;
     std::unordered_set<char*>       m_SentLiterals;
     std::unordered_set<char*>       m_SentActorNames;
-    int                             m_SessionID;
-    DWORD                           m_ThreadID;
+    uint32_t                        m_SessionID;
+    uint32_t                        m_ThreadID;
     int                             m_ZoneStack;
 };
 
