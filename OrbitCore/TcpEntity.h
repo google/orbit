@@ -96,7 +96,7 @@ protected:
     std::atomic<bool>          m_FlushRequested;
     std::atomic<uint32_t>      m_NumFlushedItems;
     Mutex                      m_Mutex;
-    std::atomic<bool>          m_IsValid = false;
+    std::atomic<bool>          m_IsValid;
 
     std::unordered_map< int, std::vector<MsgCallback> > m_Callbacks;
     std::unordered_map< int, std::vector<MsgCallback> > m_MainThreadCallbacks;
