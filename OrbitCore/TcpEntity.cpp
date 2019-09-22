@@ -98,7 +98,7 @@ void TcpEntity::SendData()
     while( !m_ExitRequested )
     {
         // Wait for non-empty queue
-        while( !m_IsValid && m_NumQueuedEntries <= 0 && !m_ExitRequested )
+        while( ( !m_IsValid || m_NumQueuedEntries <= 0 ) && !m_ExitRequested )
         {
             m_ConditionVariable.wait();
         }
