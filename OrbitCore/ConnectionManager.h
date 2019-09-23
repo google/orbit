@@ -36,4 +36,5 @@ protected:
     std::string                  m_RemoteAddress;
     std::atomic<bool>            m_ExitRequested;
     bool                         m_IsRemote;
+    std::shared_ptr<class BpfTrace> m_BpfTrace;
 };

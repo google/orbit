@@ -43,6 +43,11 @@ void BpfTrace::Stop()
 //-----------------------------------------------------------------------------
 std::string BpfTrace::GetBpfScript()
 {
+    if (!m_Script.empty())
+    {
+        return m_Script;
+    }
+
     std::stringstream ss;
 
     for (Function *func : Capture::GTargetProcess->GetFunctions())

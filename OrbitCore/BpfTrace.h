@@ -21,6 +21,7 @@ public:
     void Stop();
     void Toggle() { IsRunning() ? Stop() : Start(); }
     bool IsRunning() const { return !m_ExitRequested; }
+    void SetBpfScript(const std::string& a_Script) { m_Script = a_Script; }
     std::string GetBpfScript();
 
 protected:
@@ -37,4 +38,5 @@ private:
     bool m_ExitRequested = true;
     uint32_t m_PID = 0;
     Callback m_Callback;
+    std::string m_Script;
 };

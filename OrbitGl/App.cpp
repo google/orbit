@@ -173,8 +173,18 @@ void GLoadPdbAsync( const std::vector<std::wstring> & a_Modules )
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
 {
-    GCurrentTimeGraph->ProcessTimer(*a_Timer);
-    ++Capture::GFunctionCountMap[a_Timer->m_FunctionAddress];
+    if (ConnectionManager::Get().IsRemote())
+    {
+        // TODO: buffer incoming timers before sending them
+        Message Msg(Msg_RemoteTimers);
+        Msg.m_Size = sizeof(Timer);
+        GTcpServer->Send(Msg, (void*)a_Timer);
+    }
+    else
+    {
+        GCurrentTimeGraph->ProcessTimer(*a_Timer);
+        ++Capture::GFunctionCountMap[a_Timer->m_FunctionAddress];
+    }
 }
 
 //-----------------------------------------------------------------------------

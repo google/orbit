@@ -15,6 +15,7 @@
 #include "SamplingProfiler.h"
 #include "CoreApp.h"
 #include "OrbitModule.h"
+#include "BpfTrace.h"
 
 #if __linux__
 #include "LinuxUtils.h"
@@ -28,6 +29,7 @@
 //-----------------------------------------------------------------------------
 ConnectionManager::ConnectionManager() : m_ExitRequested(false), m_IsRemote(false)
 {
+    m_BpfTrace = std::make_shared<BpfTrace>();
 }
 
 //-----------------------------------------------------------------------------
@@ -76,12 +78,14 @@ void ConnectionManager::StartCaptureAsRemote()
 {
     PRINT_FUNC;
     Capture::StartCapture();
+    m_BpfTrace->Start();
 }
 
 //-----------------------------------------------------------------------------
 void ConnectionManager::StopCaptureAsRemote()
 {
     PRINT_FUNC;
+    m_BpfTrace->Stop();
     Capture::StopCapture();
 }
 
@@ -94,7 +98,11 @@ void ConnectionManager::Stop()
 //-----------------------------------------------------------------------------
 void ConnectionManager::SetupServerCallbacks()
 {
-    PRINT_FUNC;
+    GTcpServer->AddMainThreadCallback( Msg_BpfScript, [=](const Message& a_Msg )
+    {
+        m_BpfTrace->SetBpfScript(a_Msg.GetData());
+    } );
+
     GTcpServer->AddMainThreadCallback( Msg_StartCapture, [=]( const Message & a_Msg )
     {
         StartCaptureAsRemote();
@@ -153,6 +161,17 @@ void ConnectionManager::SetupClientCallbacks()
         Capture::GSamplingProfiler->ProcessSamples();
 
     } );
+
+    
+    GTcpClient->AddCallback(Msg_RemoteTimers, [=](const Message& a_Msg)
+    {
+        uint32_t numTimers = (uint32_t)a_Msg.m_Size / sizeof(Timer);
+        Timer* timers = (Timer*)a_Msg.GetData();
+        for (uint32_t i = 0; i < numTimers; ++i)
+        {
+            GTimerManager->Add(timers[i]);
+        }
+    } );
 }
 
 //-----------------------------------------------------------------------------
@@ -190,7 +209,7 @@ void ConnectionManager::RemoteThread()
     while (!m_ExitRequested)
     {
         //PRINT_VAR(GTcpServer->HasConnection());
-        //if (GTcpServer->HasConnection())F
+        //if (GTcpServer->HasConnection())
         {
             std::string msg("Hello from remote instance");
             GTcpServer->Send(msg);

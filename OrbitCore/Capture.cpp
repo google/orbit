@@ -333,8 +333,9 @@ void Capture::SendFunctionHooks()
 
     if (Capture::IsRemote())
     {
-        //BpfTrace bpfTrace;
-        //PRINT_VAR(bpfTrace.GetBpfScript());
+        BpfTrace bpfTrace;
+        PRINT_VAR(bpfTrace.GetBpfScript());
+        GTcpClient->Send(Msg_BpfScript, bpfTrace.GetBpfScript());
         GTcpClient->Send(Msg_StartCapture);
     }
     else
