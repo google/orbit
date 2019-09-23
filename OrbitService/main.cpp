@@ -1,7 +1,7 @@
 #include "OrbitService.h"
 #include <iostream>
 
-int WinMain()
+int main()
 {
     std::cout << "Starting OrbitService" << std::endl;
     OrbitService service;

@@ -180,6 +180,7 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 add_subdirectory(OrbitGl)
 add_subdirectory(OrbitQt)
 add_subdirectory(OrbitService)
+add_subdirectory(OrbitTest)
 endif()
 
 if(WIN32)
