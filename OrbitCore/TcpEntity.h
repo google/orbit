@@ -63,15 +63,16 @@ public:
     inline void Send(MessageType a_Type) { Message msg(a_Type); SendMsg(msg, nullptr); }
     inline void Send(Message & a_Message, void* a_Data);
     inline void Send(Message & a_Message);
-    inline void Send(std::string& a_String);
+    inline void Send(const std::string& a_String);
     inline void Send(OrbitLogEntry& a_Entry);
     inline void Send(Orbit::UserData& a_Entry);
-    inline void Send( MessageType a_Type , void* a_Data, size_t a_Size );
+    inline void Send(MessageType a_Type , void* a_Data, size_t a_Size);
 
     template<class T> void Send( Message & a_Message, const std::vector<T> & a_Vector );
     template<class T> void Send( MessageType a_Type , const std::vector<T> & a_Vector );
     template<class T> void Send( Message & a_Message, const T& a_Item );
     template<class T> void Send( MessageType a_Type , const T& a_Item );
+    inline void Send( MessageType a_Type , const std::string& a_Item );
 
     typedef std::function< void( const Message & ) > MsgCallback;
     void AddCallback( MessageType a_MsgType, MsgCallback a_Callback ) { m_Callbacks[a_MsgType].push_back(a_Callback); }
@@ -116,10 +117,16 @@ inline void TcpEntity::Send( Message & a_Message )
 }
 
 //-----------------------------------------------------------------------------
-void TcpEntity::Send( std::string& a_String )
+inline void TcpEntity::Send( MessageType a_Type, const std::string& a_String )
 {
-    Message msg(Msg_String, (uint32_t)(a_String.size() + 1)*sizeof(a_String[0]));
+    Message msg(a_Type, (uint32_t)(a_String.size() + 1)*sizeof(a_String[0]));
     Send(msg, (void*)a_String.data());
+}
+
+//-----------------------------------------------------------------------------
+inline void TcpEntity::Send( const std::string& a_String )
+{
+    Send(Msg_String, a_String);
 }
 
 //-----------------------------------------------------------------------------
