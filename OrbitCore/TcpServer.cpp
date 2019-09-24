@@ -109,7 +109,6 @@ void TcpServer::Receive( const Message & a_Message )
         return;
     }
 
-    PRINT_VAR(a_Message.GetType());
     switch (a_Message.GetType())
     {
     case Msg_String:
