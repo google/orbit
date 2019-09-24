@@ -305,9 +305,9 @@ std::shared_ptr<Module> Process::GetModuleFromAddress( DWORD64 a_Address )
 }
 
 //-----------------------------------------------------------------------------
-std::shared_ptr<Module> Process::GetModuleFromName( const std::wstring& a_Name )
+std::shared_ptr<Module> Process::GetModuleFromName( const std::string& a_Name )
 {
-    auto iter = m_NameToModuleMap.find(ws2s(a_Name));
+    auto iter = m_NameToModuleMap.find(a_Name);
     if( iter != m_NameToModuleMap.end() )
     {
         return iter->second;
@@ -457,7 +457,7 @@ void Process::FillModuleDebugInfo(ModuleDebugInfo& a_ModuleDebugInfo)
     PRINT_VAR(m_FullName);
 
     // Get module from name
-    std::wstring name = s2ws(a_ModuleDebugInfo.m_Name);
+    std::string name = ToLower(a_ModuleDebugInfo.m_Name);
     std::shared_ptr<Module> module = GetModuleFromName(name);
     
     if (module)
@@ -467,6 +467,14 @@ void Process::FillModuleDebugInfo(ModuleDebugInfo& a_ModuleDebugInfo)
         std::wstring moduleName = s2ws(module->m_FullName);
         module->m_Pdb->LoadPdb(moduleName.c_str());
         a_ModuleDebugInfo.m_Functions = module->m_Pdb->GetFunctions();
+    }
+    else
+    {
+        PRINT_VAR(a_ModuleDebugInfo.m_Name);
+        for( auto & pair : m_NameToModuleMap )
+        {
+            PRINT_VAR(pair.first);
+        }
     }
 }
 

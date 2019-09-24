@@ -193,7 +193,7 @@ void LinuxPerf::LoadPerfData( std::istream& a_Stream )
             }
 
             std::wstring moduleName = ToLower(Path::GetFileName(s2ws(module)));
-            std::shared_ptr<Module> moduleFromName = Capture::GTargetProcess->GetModuleFromName( moduleName );
+            std::shared_ptr<Module> moduleFromName = Capture::GTargetProcess->GetModuleFromName( ws2s(moduleName) );
 
             // Debug - Temporary
             if( Contains(function, "Renderer::render") )

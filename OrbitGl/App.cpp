@@ -1201,7 +1201,7 @@ void OrbitApp::OnRemoteModuleDebugInfo(const Message & a_Message)
     for (auto & moduleInfo : remoteModuleDebugInfo)
     {
         // Get module from name
-        std::wstring name = s2ws(moduleInfo.m_Name);
+        std::string name = ToLower(moduleInfo.m_Name);
         std::shared_ptr<Module> module = Capture::GTargetProcess->GetModuleFromName(name);
 
         if (module)

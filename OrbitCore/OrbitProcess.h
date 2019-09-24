@@ -78,7 +78,7 @@ public:
 
     Function* GetFunctionFromAddress( DWORD64 a_Address, bool a_IsExact = true );
     std::shared_ptr<Module> GetModuleFromAddress( DWORD64 a_Address );
-    std::shared_ptr<Module> GetModuleFromName( const std::wstring& a_Name );
+    std::shared_ptr<Module> GetModuleFromName( const std::string& a_Name );
     
 #ifdef _WIN32
     std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress( DWORD64 a_Address );
