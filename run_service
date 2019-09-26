@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./build/OrbitQt/Orbit headless -platform offscreen
