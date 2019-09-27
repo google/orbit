@@ -27,7 +27,7 @@ public:
 protected:
     uint64_t ProcessString(const std::string& a_String);
     void CommandCallback(const std::string& a_Line);
-    std::string WriteBpfScript();
+    bool WriteBpfScript();
 
 private:    
     std::map<std::string, std::vector<Timer>> m_TimerStacks;
@@ -39,4 +39,5 @@ private:
     uint32_t m_PID = 0;
     Callback m_Callback;
     std::string m_Script;
+    std::string m_ScriptFullPath;
 };

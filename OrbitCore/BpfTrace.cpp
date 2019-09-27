@@ -17,6 +17,8 @@ BpfTrace::BpfTrace(Callback a_Callback)
     {
         CommandCallback(a_Buffer);
     };
+
+    m_ScriptFullPath = ws2s(Path::GetBasePath()) + "orbit.bt";
 }
 
 //-----------------------------------------------------------------------------
@@ -24,7 +26,10 @@ void BpfTrace::Start()
 {
 #if __linux__
     m_ExitRequested = false;
-    m_BpfCommand = std::string("bpftrace ") + WriteBpfScript();
+    if( !WriteBpfScript() )
+        return;
+
+    m_BpfCommand = std::string("bpftrace ") + scriptName;
     m_Thread = std::make_shared<std::thread>
         ( &LinuxUtils::StreamCommandOutput
         , m_BpfCommand.c_str()
@@ -65,16 +70,20 @@ std::string BpfTrace::GetBpfScript()
 }
 
 //-----------------------------------------------------------------------------
-std::string BpfTrace::WriteBpfScript()
+bool BpfTrace::WriteBpfScript()
 {
-    std::string filePath = ws2s(Path::GetBasePath()) + "orbit.bt";
+    std::string script = GetBpfScript();
+    if (script.empty())
+        return false;
+
     std::ofstream outFile;
-    outFile.open(filePath);
-    outFile << GetBpfScript();
+    outFile.open(m_ScriptFullPath);
+    if (outFile.fail())
+        return false;
+
+    outFile << script;
     outFile.close();
-    
-    PRINT_VAR(Capture::GSelectedFunctionsMap.size());
-    return filePath;
+    return true;
 }
 
 //-----------------------------------------------------------------------------
