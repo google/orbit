@@ -24,7 +24,7 @@ void BpfTrace::Start()
 {
 #if __linux__
     m_ExitRequested = false;
-    m_BpfCommand = std::string("unbuffer bpftrace ") + WriteBpfScript();
+    m_BpfCommand = std::string("bpftrace ") + WriteBpfScript();
     m_Thread = std::make_shared<std::thread>
         ( &LinuxUtils::StreamCommandOutput
         , m_BpfCommand.c_str()
