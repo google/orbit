@@ -39,5 +39,5 @@ private:
     uint32_t m_PID = 0;
     Callback m_Callback;
     std::string m_Script;
-    std::string m_ScriptFullPath;
+    std::string m_ScriptFileName;
 };

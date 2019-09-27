@@ -18,7 +18,7 @@ BpfTrace::BpfTrace(Callback a_Callback)
         CommandCallback(a_Buffer);
     };
 
-    m_ScriptFullPath = ws2s(Path::GetBasePath()) + "orbit.bt";
+    m_ScriptFileName = ws2s(Path::GetBasePath()) + "orbit.bt";
 }
 
 //-----------------------------------------------------------------------------
@@ -29,7 +29,7 @@ void BpfTrace::Start()
     if( !WriteBpfScript() )
         return;
 
-    m_BpfCommand = std::string("bpftrace ") + scriptName;
+    m_BpfCommand = std::string("bpftrace ") + m_ScriptFileName;
     m_Thread = std::make_shared<std::thread>
         ( &LinuxUtils::StreamCommandOutput
         , m_BpfCommand.c_str()
@@ -77,7 +77,7 @@ bool BpfTrace::WriteBpfScript()
         return false;
 
     std::ofstream outFile;
-    outFile.open(m_ScriptFullPath);
+    outFile.open(m_ScriptFileName);
     if (outFile.fail())
         return false;
 
