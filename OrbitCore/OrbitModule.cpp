@@ -176,7 +176,6 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
                     if (func && func->m_Probe.empty())
                     {
                         std::string probe = Replace(tokens[1], ".", "*");
-                        probe = Replace(probe, ":", "*");
                         func->m_Probe = probe;
                         PRINT_VAR(func->m_Probe);
                     }
