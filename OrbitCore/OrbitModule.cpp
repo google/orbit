@@ -175,7 +175,7 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
                     Function* func = FunctionFromName(demangled);
                     if (func && func->m_Probe.empty())
                     {
-                        //std::string probe = Replace(tokens[1], ".", "*");
+                        std::string probe = tokens[1];
                         func->m_Probe = probe;
                         PRINT_VAR(func->m_Probe);
                     }
