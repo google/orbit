@@ -237,7 +237,7 @@ void LinuxPerf::LoadPerfData( std::istream& a_Stream )
         {
             if( CS.m_Data.size() )
             {
-                CS.m_Depth = CS.m_Data.size();
+                CS.m_Depth = (uint32_t)CS.m_Data.size();
                 CS.m_ThreadId = tid;
                 Capture::GSamplingProfiler->AddCallStack( CS );
                 GEventTracer.GetEventBuffer().AddCallstackEvent( time, CS );

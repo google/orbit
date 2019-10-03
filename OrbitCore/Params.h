@@ -16,7 +16,6 @@ struct Params
     void Save();
     
     void AddToPdbHistory( const std::string & a_PdbName );
-    void ScanPdbCache();
 
 public:
     bool  m_LoadTypeInfo;

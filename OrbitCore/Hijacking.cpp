@@ -314,7 +314,7 @@ __forceinline void Hijacking::SendUObjectName( void* a_UObject )
                 Message msg( Msg_OrbitUnrealObject, (int)numChars, actorName );
                 msg.m_Header.m_UnrealObjectHeader.m_WideStr = false;
                 msg.m_Header.m_UnrealObjectHeader.m_Ptr = (DWORD64)a_UObject;
-                msg.m_Header.m_UnrealObjectHeader.m_StrSize = numChars;
+                msg.m_Header.m_UnrealObjectHeader.m_StrSize = (uint32_t)numChars;
                 GTcpClient->Send( msg );
             }
 

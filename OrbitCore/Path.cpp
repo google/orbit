@@ -2,8 +2,6 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#define _SILENCE_TR2_SYS_NAMESPACE_DEPRECATION_WARNING 1 // TODO: use std::filesystem instead of std::tr2
-
 #include "Path.h"
 #include "Utils.h"
 #include "PrintVar.h"
@@ -64,6 +62,15 @@ bool Path::FileExists(const std::wstring & a_File)
 {
     std::ifstream f( ws2s(a_File).c_str() );
     return f.good();
+}
+
+//-----------------------------------------------------------------------------
+uint64_t Path::FileSize(const std::string& a_File)
+{
+    struct stat stat_buf;
+    std::string filename = a_File;
+    int rc = stat(filename.c_str(), &stat_buf);
+    return rc == 0 ? stat_buf.st_size : -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -375,15 +382,15 @@ std::vector< std::wstring > Path::ListFiles( const std::wstring & a_Dir, std::fu
     std::vector< std::wstring > files;
 
 #ifdef _WIN32
-    for( auto it = std::tr2::sys::directory_iterator( a_Dir );
-        it != std::tr2::sys::directory_iterator(); ++it )
-    {
-        const auto& file = it->path();
-
-        if( !is_directory( file ) && a_Filter( file.wstring() ) )
-        {
-            files.push_back( file.wstring() );
-        }
+    std::wstring pattern(a_Dir);
+    pattern.append(L"\\*");
+    WIN32_FIND_DATA data;
+    HANDLE hFind;
+    if ((hFind = FindFirstFile(pattern.c_str(), &data)) != INVALID_HANDLE_VALUE) {
+        do {
+            files.push_back(data.cFileName);
+        } while (FindNextFile(hFind, &data) != 0);
+        FindClose(hFind);
     }
 #endif
 

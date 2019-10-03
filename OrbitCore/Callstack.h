@@ -31,7 +31,7 @@ struct CallStackPOD
 //-----------------------------------------------------------------------------
 struct CallStack
 {
-    CallStack(){ memset( this, 0, sizeof( CallStack ) ); }
+    CallStack(){}
     CallStack( CallStackPOD a_CS );
     inline CallstackID Hash() 
     { 
@@ -41,9 +41,9 @@ struct CallStack
     void Print();
     std::wstring GetString();
 
-    CallstackID m_Hash;
-    int         m_Depth;
-    ThreadID    m_ThreadId;
+    CallstackID m_Hash = 0;
+    uint32_t    m_Depth = 0;
+    ThreadID    m_ThreadId = 0;
     std::vector<uint64_t> m_Data;
 
     ORBIT_SERIALIZABLE;

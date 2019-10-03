@@ -2,8 +2,6 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#define _SILENCE_TR2_SYS_NAMESPACE_DEPRECATION_WARNING 1 // TODO: use std::filesystem instead of std::tr2
-
 #include "Core.h"
 #include "OrbitProcess.h"
 #include "OrbitModule.h"
@@ -438,7 +436,7 @@ void Process::FindPdbs( const std::vector< std::wstring > & a_SearchLocations )
                 if( Contains( module->m_DebugSignature, signature ) )
                 {
                     // Found matching pdb
-                    module->m_PdbSize = std::tr2::sys::file_size( module->m_PdbName );
+                    module->m_PdbSize = Path::FileSize( module->m_PdbName );
                     break;
                 }
                 else

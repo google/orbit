@@ -139,7 +139,7 @@ std::vector<std::wstring> LogDataView::GetContextMenu( int a_Index )
     std::vector<std::wstring> menu;
     if( m_SelectedCallstack )
     {
-        for( int i = 0; i < m_SelectedCallstack->m_Depth; ++i )
+        for( uint32_t i = 0; i < m_SelectedCallstack->m_Depth; ++i )
         {
             DWORD64 addr = m_SelectedCallstack->m_Data[i];
             menu.push_back( Capture::GSamplingProfiler->GetSymbolFromAddress(addr) );
@@ -152,7 +152,7 @@ std::vector<std::wstring> LogDataView::GetContextMenu( int a_Index )
 //-----------------------------------------------------------------------------
 void LogDataView::OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices )
 {
-    if( m_SelectedCallstack && m_SelectedCallstack->m_Depth > a_MenuIndex )
+    if( m_SelectedCallstack && (int)m_SelectedCallstack->m_Depth > a_MenuIndex )
     {
         GOrbitApp->GoToCode( m_SelectedCallstack->m_Data[a_MenuIndex] );
     }

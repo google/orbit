@@ -109,7 +109,7 @@ void ModuleManager::DequeueAndLoad()
                 module->m_PdbName = module->m_FullName;
             }
 
-            std::wstring pdbName = s2ws(module->m_PdbName);
+            pdbName = s2ws(module->m_PdbName);
             GPdbDbg->LoadPdbAsync( pdbName.c_str(), [&](){ this->OnPdbLoaded(); });
             return;
         }

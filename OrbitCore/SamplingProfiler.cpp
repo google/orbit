@@ -230,7 +230,7 @@ void SamplingProfiler::Print()
         {
             PRINT_VAR( (void*)callstack->m_Hash );
             PRINT_VAR( callstack->m_Depth );
-            for( int i = 0; i < callstack->m_Depth; ++i )
+            for( uint32_t i = 0; i < callstack->m_Depth; ++i )
             {
                 PRINT( "%s\n", m_AddressToSymbol[callstack->m_Data[i]].c_str() );
             }
@@ -297,7 +297,7 @@ void SamplingProfiler::ProcessSamples()
             threadSampleData.m_ExclusiveCount[ callstack->m_Data[0] ] += callstackCount;
 
             std::set<uint64_t> uniqueAddresses;
-            for( int i = 0; i < callstack->m_Depth; ++i )
+            for( uint32_t i = 0; i < callstack->m_Depth; ++i )
             {
                 uniqueAddresses.insert(callstack->m_Data[i]);
             }
@@ -371,7 +371,7 @@ void SamplingProfiler::ProcessAddresses()
         const std::shared_ptr<CallStack> callstack = it.second;
         CallStack ResolvedCallstack = *callstack;
 
-        for( int i = 0; i < callstack->m_Depth; ++i )
+        for( uint32_t i = 0; i < callstack->m_Depth; ++i )
         {
             uint64_t addr = callstack->m_Data[i];
 

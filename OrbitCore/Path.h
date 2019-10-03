@@ -4,8 +4,8 @@
 #pragma once
 
 #include <string>
-#include <experimental/filesystem>
 #include <functional>
+#include <vector>
 
 class Path
 {
@@ -42,6 +42,7 @@ public:
     static std::wstring GetParentDirectory( std::wstring a_FullName );
     
     static bool FileExists( const std::wstring & a_File );
+    static uint64_t FileSize(const std::string& a_File);
     static bool DirExists( const std::wstring & a_Dir );
     static bool IsSourceFile( const std::wstring & a_File );
     static bool IsPackaged() { return m_IsPackaged; }

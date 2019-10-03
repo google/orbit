@@ -27,7 +27,7 @@ void CallStack::Print()
     PRINT_VAR( m_Depth );
     PRINT_VAR( m_ThreadId );
 
-    for( int i = 0; i < m_Depth; ++i )
+    for( uint32_t i = 0; i < m_Depth; ++i )
     {
         std::string address = ws2s( VAR_TO_STR( (void*) m_Data[i] ) );
         PRINT_VAR_INL( address );
@@ -40,7 +40,7 @@ std::wstring CallStack::GetString()
     std::wstring callstackString;
     
     ScopeLock lock( Capture::GTargetProcess->GetDataMutex() );
-    for( int i = 0; i < m_Depth; ++i )
+    for( uint32_t i = 0; i < m_Depth; ++i )
     {
         DWORD64 addr = m_Data[i];
         Function* func = Capture::GTargetProcess->GetFunctionFromAddress( addr, false );

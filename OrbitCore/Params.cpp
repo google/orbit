@@ -2,15 +2,12 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#define _SILENCE_TR2_SYS_NAMESPACE_DEPRECATION_WARNING 1 // TODO: use std::filesystem instead of std::tr2
-
 #include "Params.h"
 #include "Core.h"
 #include "CoreApp.h"
 #include "ScopeTimer.h"
 #include "Serialization.h"
 #include <algorithm>
-#include <experimental/filesystem>
 #include <fstream>
 
 Params GParams;
@@ -94,24 +91,4 @@ void Params::AddToPdbHistory( const std::string & a_PdbName )
     auto it = std::unique( m_PdbHistory.begin(), m_PdbHistory.end() );
     m_PdbHistory.resize( std::distance( m_PdbHistory.begin(), it) );
     Save();
-}
-
-//-----------------------------------------------------------------------------
-void Params::ScanPdbCache()
-{
-#ifdef _WIN32
-    std::wstring cachePath = Path::GetCachePath();
-    SCOPE_TIMER_LOG( Format( L"Scanning cache (%s)", cachePath.c_str() ) );
-
-    for( auto it = std::tr2::sys::directory_iterator( cachePath ); it != std::tr2::sys::directory_iterator(); ++it )
-    {
-        const auto& file = it->path();
-        if( file.extension() == ".bin" )
-        {
-            std::string fileName(file.filename().string());
-            fileName = fileName.substr( 0, fileName.find_first_of('_') );
-            m_CachedPdbsMap.insert( std::make_pair( fileName, ws2s(cachePath + file.filename().wstring()) ) );
-        }
-    }
-#endif
 }

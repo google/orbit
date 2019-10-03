@@ -2,8 +2,6 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#define _SILENCE_TR2_SYS_NAMESPACE_DEPRECATION_WARNING 1 // TODO: use std::filesystem instead of std::tr2
-
 #include "Core.h"
 #include "Pdb.h"
 #include <algorithm>
@@ -215,9 +213,9 @@ void Pdb::PrintGlobals() const
 std::wstring Pdb::GetCachedName()
 {
     std::string pdbName = ws2s( Path::GetFileName( m_FileName ) );
-    std::tr2::sys::path fileName = GuidToString( m_ModuleInfo.PdbSig70 ) + "-" + ToHexString( m_ModuleInfo.PdbAge ) + "_" + pdbName;
-    fileName.replace_extension(".bin");
-    return fileName.wstring();
+    std::string fileName = GuidToString( m_ModuleInfo.PdbSig70 ) + "-" + ToHexString( m_ModuleInfo.PdbAge ) + "_" + pdbName;
+    fileName += ".bin";
+    return s2ws(fileName);
 }
 
 //-----------------------------------------------------------------------------

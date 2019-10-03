@@ -2,8 +2,6 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#define _SILENCE_TR2_SYS_NAMESPACE_DEPRECATION_WARNING 1 // TODO: use std::filesystem instead of std::tr2
-
 #include "SymbolUtils.h"
 #include "OrbitDbgHelp.h"
 #include <tlhelp32.h>
@@ -59,24 +57,14 @@ void SymUtils::ListModules( HANDLE a_ProcessHandle, std::map< DWORD64, std::shar
         module->m_AddressEnd = (DWORD64)moduleInfo.lpBaseOfDll + moduleInfo.SizeOfImage;
         module->m_EntryPoint = (DWORD64)moduleInfo.EntryPoint;
 
-        std::tr2::sys::path filePath = module->m_FullName;
-        filePath.replace_extension( ".pdb" );
-        if( std::tr2::sys::exists( filePath ) )
+        std::string filePath = module->m_FullName;
+        Replace(filePath, ".exe", ".pdb" );
+        Replace(filePath, ".dll", ".pdb");
+        if( Path::FileExists( s2ws(filePath) ) )
         {
             module->m_FoundPdb = true;
-            module->m_PdbSize = std::tr2::sys::file_size( filePath );
-            module->m_PdbName = filePath.string();
-        }
-        else if( Contains( module->m_FullName, "qt" ) )
-        {
-            std::wstring pdbName = Path::GetFileName( filePath.wstring() );
-            filePath = std::wstring( L"C:\\Qt\\5.8\\msvc2015_64\\bin\\" ) + pdbName;
-            if( std::tr2::sys::exists( filePath ) )
-            {
-                module->m_FoundPdb = true;
-                module->m_PdbSize = std::tr2::sys::file_size( filePath );
-                module->m_PdbName = filePath.string();
-            }
+            module->m_PdbSize = Path::FileSize( filePath );
+            module->m_PdbName = filePath;
         }
 
         module->m_ModuleHandle = hModule;
