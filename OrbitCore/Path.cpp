@@ -12,6 +12,7 @@
 #include "Shlobj.h"
 #else
 #include <dirent.h>
+#include <sys/stat.h>
 #endif
 
 std::wstring Path::m_BasePath;
