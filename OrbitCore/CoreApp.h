@@ -27,6 +27,7 @@ public:
     virtual void ProcessTimer( Timer* /*a_Timer*/, const std::string& /*a_FunctionName*/ ) {}
     virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >* GetRules(){ return nullptr; }
     virtual void SendRemoteProcess(uint32_t a_PID) {}
+    virtual void RefreshCaptureView() {}
 
     std::vector< std::wstring > m_SymbolLocations;
 };

@@ -60,7 +60,8 @@ public:
     void AppendSystrace(const std::string& a_FileName, uint64_t a_TimeOffset);
     void ListSessions();
     void SetRemoteProcess( std::shared_ptr<Process> a_Process );
-    void SendRemoteProcess( uint32_t a_PID );
+    void SendRemoteProcess( uint32_t a_PID ) override;
+    void RefreshCaptureView() override;
     void RequestRemoteModules( const std::vector<std::string> a_Modules );
     void AddWatchedVariable( Variable* a_Variable );
     void UpdateVariable( Variable* a_Variable ) override;

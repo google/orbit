@@ -463,6 +463,14 @@ void OrbitApp::SendRemoteProcess( uint32_t a_PID )
 }
 
 //-----------------------------------------------------------------------------
+void OrbitApp::RefreshCaptureView()
+{
+    NeedsRedraw();
+    GOrbitApp->FireRefreshCallbacks();
+    DoZoom = true; //TODO: remove global, review logic
+}
+
+//-----------------------------------------------------------------------------
 void OrbitApp::AddWatchedVariable( Variable * a_Variable )
 {
 #ifdef _WIN32

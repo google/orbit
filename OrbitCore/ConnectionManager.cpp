@@ -160,7 +160,7 @@ void ConnectionManager::SetupClientCallbacks()
         perf.LoadPerfData(buffer);
         Capture::GSamplingProfiler->StopCapture();
         Capture::GSamplingProfiler->ProcessSamples();
-
+        GCoreApp->RefreshCaptureView();
     } );
 
     
