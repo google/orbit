@@ -25,6 +25,7 @@ BpfTrace::BpfTrace(Callback a_Callback)
 void BpfTrace::Start()
 {
 #if __linux__
+    m_TimerStacks.clear();
     m_ExitRequested = false;
     if( !WriteBpfScript() )
         return;

@@ -172,4 +172,6 @@ void TimeGraphLayout::SetSortedThreadIds(const std::vector< ThreadID >& a_Sorted
 void TimeGraphLayout::Reset()
 {
     m_DrawFileIO = false;
+    m_ThreadBlockOffsets.clear();
+    m_ThreadDepths.clear();
 }
