@@ -16,7 +16,6 @@
 #include "../OrbitGl/App.h"
 #include "../OrbitGl/DataView.h"
 
-
 //-----------------------------------------------------------------------------
 OrbitTreeView::OrbitTreeView(QWidget *parent) : QTreeView(parent)
                                               , m_Model(nullptr)
@@ -250,17 +249,19 @@ void OrbitTreeView::ShowContextMenu(const QPoint &pos)
 //-----------------------------------------------------------------------------
 void OrbitTreeView::OnMenuClicked(int a_Index)
 {
-	const std::vector<std::wstring> & menu = m_Model->GetDataView()->GetContextMenu(a_Index);
-
     QModelIndexList list = selectionModel()->selectedIndexes();
     std::set<int> selection;
     for (QModelIndex & index : list)
     {
         selection.insert( index.row() );
     }
-    
-	std::vector<int> indices(selection.begin(), selection.end());
-    m_Model->GetDataView()->OnContextMenu( menu[a_Index], a_Index, indices );
+ 
+    std::vector<int> indices(selection.begin(), selection.end());
+    if (indices.size())
+    {
+        const std::vector<std::wstring>& menu = m_Model->GetDataView()->GetContextMenu(indices[0]);
+        m_Model->GetDataView()->OnContextMenu(menu[a_Index], a_Index, indices);
+    }
 }
 
 //-----------------------------------------------------------------------------
