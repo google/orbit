@@ -61,7 +61,6 @@ void TimeGraph::Clear()
     GEventTracer.GetEventBuffer().Reset();
     m_MemTracker.Clear();
     m_Layout.Reset();
-    m_ThreadDepths.clear();
 
     ScopeLock lock(m_Mutex);
     m_ThreadTracks.clear();

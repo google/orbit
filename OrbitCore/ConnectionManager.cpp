@@ -77,7 +77,6 @@ void ConnectionManager::InitAsRemote()
 void ConnectionManager::StartCaptureAsRemote()
 {
     PRINT_FUNC;
-    m_BpfTrace = std::make_shared<BpfTrace>();
     Capture::StartCapture();
     m_BpfTrace->Start();
 }
