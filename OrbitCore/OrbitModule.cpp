@@ -162,7 +162,6 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
             std::vector<std::string> tokens = Tokenize(line);
             if (tokens.size() == 2) // bpftrace
             {
-                Function func;
                 auto probeTokens = Tokenize(tokens[1], ":");
                 if (probeTokens.size() == 2)
                 {
