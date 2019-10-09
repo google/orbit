@@ -179,6 +179,7 @@ void ConnectionManager::SetupClientCallbacks()
 void ConnectionManager::SendProcesses(TcpEntity* a_TcpEntity)
 {
     ProcessList processList;
+    processList.Refresh();
     processList.UpdateCpuTimes();
     std::string processData = SerializeObjectHumanReadable(processList);
     a_TcpEntity->Send(Msg_RemoteProcessList, (void*)processData.data(), processData.size());
