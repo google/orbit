@@ -621,5 +621,6 @@ ORBIT_SERIALIZE( Process, 1 )
     ORBIT_NVP_VAL( 0, m_Modules );
     ORBIT_NVP_VAL( 0, m_NameToModuleMap );
     ORBIT_NVP_VAL( 0, m_ThreadIds );
+    //TODO: why is it here twice?
     ORBIT_NVP_VAL( 1, m_Modules );
 }

@@ -9,6 +9,7 @@
 #include "Utils.h"
 #include "PrintVar.h"
 #include "Capture.h"
+#include "CoreApp.h"
 #include "Callstack.h"
 #include "SamplingProfiler.h"
 #include "EventBuffer.h"
@@ -20,6 +21,8 @@
 #include "TcpServer.h"
 #include "EventBuffer.h"
 #include "EventTracer.h"
+#include "Params.h"
+#include <regex>
 
 #if __linux__
 #include <unistd.h>
@@ -56,20 +59,62 @@ void LinuxPerf::Start()
 {
     PRINT_FUNC;
 #if __linux__
+    if (!GParams.m_UseBPFTrace)
+        AttachProbes();
+
     m_IsRunning = true;
 
     std::string path = ws2s(Path::GetBasePath());
 
     pid_t PID = fork();
     if(PID == 0) {
-        execl   ( "/usr/bin/perf"
-                , "/usr/bin/perf"
-                , "record"
-                , "-k", "monotonic"
-                , "-F", Format("%u", m_Frequency).c_str()
-                , "-p", Format("%u", m_PID).c_str()
-                , "-g"
-                , "-o", m_OutputFile.c_str(), (const char*)nullptr);
+        std::vector<std::string> args;
+        args.push_back("/usr/bin/perf");
+        args.push_back("record");
+
+        args.push_back("-k"); 
+        args.push_back("monotonic");
+
+        args.push_back("-g");
+
+        args.push_back("-o");
+        args.push_back(m_OutputFile);
+
+        args.push_back("--event=cycles");
+        
+        args.push_back("-F");
+        args.push_back(Format("%u", m_Frequency));
+
+        args.push_back("-p");
+        args.push_back(Format("%u", m_PID));
+            
+        if (!GParams.m_UseBPFTrace)
+        {
+            PRINT("Adding Probe Events To Perf");
+            for (auto pair : Capture::GSelectedFunctionsMap) {
+                Function *func = pair.second;
+                assert(func->IsSelected());
+
+                uint64_t func_Address = func->m_Address;
+                std::string module_name = LinuxUtils::GetModuleBaseName(func->m_Module);
+                std::stringstream probe_name;
+                probe_name << "--event='{probe_" << module_name << ":abs_" << std::hex << func_Address <<",";
+                probe_name << "probe_" << module_name << ":abs_" << std::hex << func_Address <<"__return}'";
+
+                args.push_back(probe_name.str());
+                args.push_back("-p");
+                args.push_back(Format("%u", m_PID));
+            }
+        }
+
+        std::vector<const char *> argsv;
+
+        for (const auto& arg : args) {
+            argsv.push_back(arg.c_str());
+        }
+        argsv.push_back(nullptr);
+
+        execv( "/usr/bin/perf", (char* const*) argsv.data());
         exit(1);
     }
     else
@@ -111,10 +156,68 @@ void LinuxPerf::Stop()
     {
         LoadPerfData(m_ReportFile);
     }
+
+    if (!GParams.m_UseBPFTrace)
+        DetachProbes();
     // });
 
     // m_Thread->detach();
 #endif
+}
+
+void LinuxPerf::AttachProbes()
+{
+    #if __linux__
+        PRINT_FUNC;
+        std::stringstream ss;
+        ss << "perf probe";
+        for (auto pair : Capture::GSelectedFunctionsMap) {
+            Function *func = pair.second;
+            assert(func->IsSelected());
+
+            uint64_t func_Address = func->m_Address;
+            std::wstring module_file = func->m_Pdb->GetFileName();
+            {
+                ss << " -x " << ws2s(module_file) << " -a '0x" << std::hex << func_Address << "'";
+                ss << " -x " << ws2s(module_file) << " -a '0x" << std::hex << func_Address << "%return'";
+            }
+        }  
+
+        PRINT_VAR(Capture::GSelectedFunctionsMap.size());
+        if (Capture::GSelectedFunctionsMap.empty())
+            return ;
+
+        std::string perf_command = ss.str();
+        PRINT_VAR(perf_command);
+        LinuxUtils::ExecuteCommand(perf_command.c_str());
+    #endif
+}
+
+void LinuxPerf::DetachProbes()
+{
+    PRINT_FUNC;
+    #if __linux__
+        if (Capture::GSelectedFunctionsMap.empty())
+            return;
+
+        std::stringstream ss;
+        ss << "perf probe";
+
+        for (auto pair : Capture::GSelectedFunctionsMap) {
+            Function *func = pair.second;
+            assert(func->IsSelected());
+
+            uint64_t func_Address = func->m_Address;
+            std::string func_Module = func->m_Module;
+            std::string module_name = LinuxUtils::GetModuleBaseName(func->m_Module);
+            ss << " -d probe_" << module_name << ":abs_" << std::hex << func_Address;
+            ss << " -d probe_" << module_name << ":abs_" << std::hex << func_Address << "__return";
+        }
+
+        std::string perf_command = ss.str();
+        PRINT_VAR(perf_command);
+        LinuxUtils::ExecuteCommand(perf_command.c_str());
+    #endif
 }
 
 //-----------------------------------------------------------------------------
@@ -159,25 +262,70 @@ void LinuxPerf::LoadPerfData( const std::string& a_FileName )
 //-----------------------------------------------------------------------------
 void LinuxPerf::LoadPerfData( std::istream& a_Stream )
 {
+    PRINT_FUNC;
     std::string header;
     uint32_t tid = 0;
     uint64_t time = 0;
     uint64_t numCallstacks = 0;
+    std::string probe_name;
+    uint64_t virtual_function_address = 0;
+    bool isUProbeBegin = false;
 
     CallStack CS;
+    std::map<uint32_t, std::vector<Timer>> timerStacks;
 
+    // regex groups: comm, pid, tid?, time, binary_name, func_addr, return?
+    const std::regex uprobe_regex("([^ ]+) ([0-9]+) \\[([0-9]+)\\][ \t]+([0-9\\.]+):[ \t]+probe_([^:]+):abs_([a-f0-9]+)(__return)?:[ \t]+\\(([a-f0-9]+)");
+    std::smatch match;        
+    
     for (std::string line; std::getline(a_Stream, line); )
     {
         bool isHeader = !line.empty() && !StartsWith(line, "\t");
         bool isStackLine = !isHeader && !line.empty();
         bool isEndBlock = !isStackLine && line.empty() && !header.empty();
+        bool isUProbeEnd;
 
         if(isHeader)
         {
             header = line;
-            auto tokens = Tokenize(line);
-            time = tokens.size() > 2 ? GetMicros(tokens[2])*1000 : 0;
-            tid  = tokens.size() > 1 ? atoi(tokens[1].c_str()) : 0;
+            if (std::regex_search(header, match, uprobe_regex))
+            {
+                // in case of a uprobe:
+                isUProbeBegin = true;
+                tid = std::stoi(match.str(2));
+                time = GetMicros(match.str(4))*1000;
+                isUProbeBegin = match.str(7).empty();
+                isUProbeEnd = !isUProbeBegin;
+                virtual_function_address = std::stoull(match.str(8), nullptr, 16);
+                
+                if (isUProbeBegin)
+                {
+                    Timer timer;
+                    timer.m_TID = tid;
+                    timer.m_Start = time;
+                    timer.m_Depth = (uint8_t)timerStacks[tid].size();
+                    timer.m_FunctionAddress = virtual_function_address;
+                    timerStacks[tid].push_back(timer);
+                }
+
+                if (isUProbeEnd)
+                {
+                    std::vector<Timer>& timers = timerStacks[tid];
+                    if (timers.size())
+                    {
+                        Timer& timer = timers.back();
+                        timer.m_End = time;
+                        GCoreApp->ProcessTimer(&timer, std::to_string(virtual_function_address));
+                        timers.pop_back();
+                    }
+                }
+            } else {
+                // in case of a sampling event:
+                isUProbeBegin = false;
+                auto tokens = Tokenize(line);
+                time = tokens.size() > 2 ? GetMicros(tokens[2])*1000 : 0;
+                tid  = tokens.size() > 1 ? atoi(tokens[1].c_str()) : 0;
+            }
         }
         else if(isStackLine)
         {
@@ -239,8 +387,21 @@ void LinuxPerf::LoadPerfData( std::istream& a_Stream )
             {
                 CS.m_Depth = (uint32_t)CS.m_Data.size();
                 CS.m_ThreadId = tid;
-                Capture::GSamplingProfiler->AddCallStack( CS );
-                GEventTracer.GetEventBuffer().AddCallstackEvent( time, CS );
+                if (isUProbeBegin)
+                {
+                    std::vector<Timer>& timers = timerStacks[tid];
+                    if (timers.size())
+                    {
+                        Timer& timer = timers.back();
+                        timer.m_CallstackHash = CS.Hash();
+                        Capture::AddCallstack( CS );
+                    }
+                }
+                else
+                {
+                    Capture::GSamplingProfiler->AddCallStack( CS );
+                    GEventTracer.GetEventBuffer().AddCallstackEvent( time, CS );
+                }
                 ++numCallstacks;
             }
 
@@ -248,6 +409,9 @@ void LinuxPerf::LoadPerfData( std::istream& a_Stream )
             header = "";
             time = 0;
             tid = 0;
+            probe_name = "";
+            virtual_function_address = 0;
+            isUProbeBegin = false;
         }
     }
 

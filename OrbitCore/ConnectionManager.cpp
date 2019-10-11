@@ -15,21 +15,27 @@
 #include "SamplingProfiler.h"
 #include "CoreApp.h"
 #include "OrbitModule.h"
+#include "OrbitFunction.h"
 #include "BpfTrace.h"
+#include "Params.h"
 
 #if __linux__
 #include "LinuxUtils.h"
 #endif
 
+#include <map>
 #include <fstream>
 #include <streambuf>
 #include <sstream>
 #include <iostream>
+#include <cereal/types/vector.hpp>
 
 //-----------------------------------------------------------------------------
 ConnectionManager::ConnectionManager() : m_ExitRequested(false), m_IsRemote(false)
 {
-    m_BpfTrace = std::make_shared<BpfTrace>();
+
+    if (GParams.m_UseBPFTrace)
+        m_BpfTrace = std::make_shared<BpfTrace>();
 }
 
 //-----------------------------------------------------------------------------
@@ -74,18 +80,47 @@ void ConnectionManager::InitAsRemote()
 }
 
 //-----------------------------------------------------------------------------
+void ConnectionManager::SetSelectedFunctionsOnRemote( const char* a_Data, size_t a_Size ) {
+    PRINT_FUNC;
+    std::istringstream buffer(std::string(a_Data, a_Size));
+    cereal::JSONInputArchive inputAr( buffer );
+    std::vector<std::string> selectedFunctions;
+    inputAr(selectedFunctions);
+
+    Capture::GSelectedFunctionsMap.clear();
+    for (Function* function : Capture::GTargetProcess->GetFunctions()) {
+        function->UnSelect();
+    }
+
+    for (const std::string& address : selectedFunctions) {
+        PRINT_VAR(address);
+        Function* function = Capture::GTargetProcess->GetFunctionFromAddress(std::stoll(address));
+        if (!function)
+            PRINT("received invalid address");
+        else{
+            PRINT(Format("Received Selected Function: %s\n", function->m_PrettyName.c_str()));
+            // this also adds the function to the map.
+            function->Select();
+        }
+
+    }
+}
+
+//-----------------------------------------------------------------------------
 void ConnectionManager::StartCaptureAsRemote()
 {
     PRINT_FUNC;
     Capture::StartCapture();
-    m_BpfTrace->Start();
+    if (GParams.m_UseBPFTrace)
+        m_BpfTrace->Start();
 }
 
 //-----------------------------------------------------------------------------
 void ConnectionManager::StopCaptureAsRemote()
 {
     PRINT_FUNC;
-    m_BpfTrace->Stop();
+    if (GParams.m_UseBPFTrace)
+        m_BpfTrace->Stop();
     Capture::StopCapture();
 }
 
@@ -98,9 +133,17 @@ void ConnectionManager::Stop()
 //-----------------------------------------------------------------------------
 void ConnectionManager::SetupServerCallbacks()
 {
-    GTcpServer->AddMainThreadCallback( Msg_BpfScript, [=](const Message& a_Msg )
+    if (GParams.m_UseBPFTrace)
     {
-        m_BpfTrace->SetBpfScript(a_Msg.GetData());
+        GTcpServer->AddMainThreadCallback( Msg_BpfScript, [=](const Message& a_Msg )
+        {
+            m_BpfTrace->SetBpfScript(a_Msg.GetData());
+        } );
+    }
+
+    GTcpServer->AddMainThreadCallback( Msg_RemoteSelectedFunctionsMap, [=]( const Message & a_Msg )
+    {
+        SetSelectedFunctionsOnRemote(a_Msg.GetData(), a_Msg.m_Size);
     } );
 
     GTcpServer->AddMainThreadCallback( Msg_StartCapture, [=]( const Message & a_Msg )

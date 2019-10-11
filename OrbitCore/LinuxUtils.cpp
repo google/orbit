@@ -39,6 +39,7 @@
 #include <cstdlib>
 #include <memory>
 #include <cxxabi.h>
+#include <regex>
 
 namespace LinuxUtils {
 
@@ -217,6 +218,15 @@ void StreamCommandOutput(const char* a_Cmd, std::function<void(const std::string
     }
     
     std::cout << "end stream" << std::endl;
+}
+
+//-----------------------------------------------------------------------------
+std::string GetModuleBaseName( const std::string& a_Module )
+{
+    const std::regex re("([a-z]*).*");
+    std::smatch match;
+    assert(std::regex_match(a_Module, match, re));
+    return match.str(1);
 }
 
 }

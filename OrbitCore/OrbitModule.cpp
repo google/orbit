@@ -152,6 +152,8 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
     }
     ProcessData();
 
+    
+    if (GParams.m_UseBPFTrace)
     {
         SCOPE_TIMER_LOG(L"bpftrace -l");
         // find functions that can receive bpftrace uprobes
@@ -181,6 +183,27 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
                         PRINT_VAR(func->m_Probe);
                     }
                 }
+            }
+        }
+    }
+    else
+    {
+        SCOPE_TIMER_LOG(L"perf probe --func");
+        std::string perfCommand = std::string("perf probe --funcs -v -x ") + ws2s(a_PdbName);
+        std::string perfResult = LinuxUtils::ExecuteCommand(perfCommand.c_str());
+        std::stringstream perfStream(perfResult);
+        std::string functionName;
+        while (std::getline(perfStream, functionName, '\n'))
+        {
+            // Debug - Temporary
+            if (Contains(functionName, "btCollisionDispatcher::needsCollision"))
+                PRINT_VAR(functionName);
+
+            Function* func = FunctionFromName(functionName);
+            if (func && !func->m_hookable)
+            {
+                func->m_hookable = true;
+                PRINT_VAR(func->m_PrettyName);
             }
         }
     }

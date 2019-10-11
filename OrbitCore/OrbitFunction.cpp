@@ -14,6 +14,7 @@
 #include "TcpServer.h"
 #include "SamplingProfiler.h"
 #include "Utils.h"
+#include <map>
 
 #ifdef _WIN32
 #include "OrbitDia.h"
@@ -56,7 +57,10 @@ bool Function::Hookable()
 {
     if (Capture::IsLinuxData())
     {
-        return !m_Probe.empty();
+        if (GParams.m_UseBPFTrace)
+            return !m_Probe.empty();
+        else
+            return m_hookable;
     }
     else
     {
@@ -74,6 +78,21 @@ bool Function::Hookable()
         return ((conv == CV_CALL_NEAR_C || CV_CALL_THISCALL) && m_Size >= 5)
             || (GParams.m_AllowUnsafeHooking && m_Size == 0);
     }
+}
+
+void Function::Select()
+{ 
+    if( Hookable() )
+    {
+        m_Selected = true; 
+        Capture::GSelectedFunctionsMap[GetVirtualAddress()] = this;
+    }
+}
+
+void Function::UnSelect()
+{
+    m_Selected = false;
+    Capture::GSelectedFunctionsMap.erase(GetVirtualAddress());
 }
 
 //-----------------------------------------------------------------------------
@@ -209,7 +228,7 @@ const TCHAR* Function::GetCallingConventionString( int a_CallConv )
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE( Function, 2 )
+ORBIT_SERIALIZE( Function, 3 )
 {
     ORBIT_NVP_VAL( 0, m_Name );
     ORBIT_NVP_VAL( 0, m_PrettyName );
@@ -222,6 +241,7 @@ ORBIT_SERIALIZE( Function, 2 )
     ORBIT_NVP_VAL( 0, m_CallConv );
     ORBIT_NVP_VAL( 1, m_Stats );
     ORBIT_NVP_VAL( 2, m_Probe );
+    ORBIT_NVP_VAL( 3, m_hookable );
 }
 
 //-----------------------------------------------------------------------------

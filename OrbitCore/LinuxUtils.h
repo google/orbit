@@ -26,4 +26,5 @@ namespace LinuxUtils
     bool Is64Bit(uint32_t a_PID);
     std::string Demangle( const char* a_Symbol );
     void DumpClocks();
+    std::string GetModuleBaseName( const std::string& a_Module );
 }

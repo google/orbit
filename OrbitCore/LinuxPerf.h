@@ -16,6 +16,8 @@ public:
     LinuxPerf(uint32_t a_PID, uint32_t a_Freq = 1000);
     void Start();
     void Stop();
+    void AttachProbes();
+    void DetachProbes();
     bool IsRunning() const { return m_IsRunning; }
     void LoadPerfData( const std::string& a_FileName );
     void LoadPerfData( std::istream& a_Stream );

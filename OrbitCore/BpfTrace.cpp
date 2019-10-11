@@ -56,16 +56,17 @@ std::string BpfTrace::GetBpfScript()
 
     std::stringstream ss;
 
-    for (Function *func : Capture::GTargetProcess->GetFunctions())
-    {
-        if (func->IsSelected())
-        {
-            uint64_t virtual_address = (uint64_t)func->GetVirtualAddress();
-            Capture::GSelectedFunctionsMap[func->m_Address] = func;
-
-            ss << "   uprobe:" << func->m_Probe << R"({ printf("b )" << std::to_string(virtual_address) << R"( %u %lld\n", tid, nsecs); })" << std::endl;
-            ss << "uretprobe:" << func->m_Probe << R"({ printf("e )" << std::to_string(virtual_address) << R"( %u %lld\n", tid, nsecs); })" << std::endl;
-        }
+    for (auto pair : Capture::GSelectedFunctionsMap) {
+        Function *func = pair.second;
+        assert(func->IsSelected());
+        uint64_t func_Address = (uint64_t)func->GetVirtualAddress();
+        std::string func_Address_String = std::to_string(func_Address);
+        std::string func_Probe = func->m_Probe;
+        
+        Capture::GSelectedFunctionsMap[func_Address] = func;
+        
+        ss << "   uprobe:" << func_Probe << R"({ printf("b )" << func_Address_String << R"( %u %lld\n", tid, nsecs); })" << std::endl;
+        ss << "uretprobe:" << func_Probe << R"({ printf("e )" << func_Address_String << R"( %u %lld\n", tid, nsecs); })" << std::endl;
     }
 
     return ss.str();

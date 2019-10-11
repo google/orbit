@@ -946,8 +946,11 @@ void OrbitApp::StartCapture()
 #else
     if( Capture::StartCapture() )
     {
-        m_BpfTrace = std::make_shared<BpfTrace>();
-        m_BpfTrace->Start();
+        if (GParams.m_UseBPFTrace)
+        {
+            m_BpfTrace = std::make_shared<BpfTrace>();
+            m_BpfTrace->Start();
+        }
     }
 #endif
 
@@ -966,9 +969,9 @@ void OrbitApp::StopCapture()
     Capture::StopCapture();
 
 #ifdef __linux__
-    if( m_BpfTrace )
+    if ( GParams.m_UseBPFTrace && m_BpfTrace )
     {
-        m_BpfTrace->Stop();
+            m_BpfTrace->Stop();
     }
 #endif
 

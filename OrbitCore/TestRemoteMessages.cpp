@@ -90,6 +90,7 @@ void TestRemoteMessages::Run()
     function.m_Module = "m_Module";
     function.m_File = "m_File";
     function.m_Probe = "m_Probe";
+    function.m_hookable = true;
     function.m_Address = 1;
     function.m_ModBase = 2;
     function.m_Size = 3;
