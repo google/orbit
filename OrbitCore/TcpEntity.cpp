@@ -139,7 +139,7 @@ void TcpEntity::Callback( const Message& a_Message )
     if( pair != m_MainThreadCallbacks.end() )
     {
         std::shared_ptr<MessageOwner> messageOwner = std::make_shared<MessageOwner>(a_Message);
-        m_MainThreadMessages[type].push_back(messageOwner);
+        m_MainThreadMessages.push_back(messageOwner);
     }
 }
 
@@ -147,16 +147,12 @@ void TcpEntity::Callback( const Message& a_Message )
 void TcpEntity::ProcessMainThreadCallbacks()
 {
     ScopeLock lock(m_Mutex);
-    for( auto& pair : m_MainThreadMessages )
+    for( auto& message : m_MainThreadMessages )
     {
-        MessageType type = MessageType(pair.first);
-        std::vector<std::shared_ptr<MessageOwner> >& messageOwners = pair.second;
-        for( auto& messageOwner : messageOwners )
+        std::vector<MsgCallback> &callbacks = m_MainThreadCallbacks[message->GetType()];
+        for (MsgCallback &callback : callbacks) 
         {
-            std::vector<MsgCallback> &callbacks = m_MainThreadCallbacks[type];
-            for (MsgCallback &callback : callbacks) {
-                callback(*messageOwner);
-            }
+            callback(*message);
         }
     }
 

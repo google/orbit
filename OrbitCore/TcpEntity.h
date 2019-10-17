@@ -101,7 +101,7 @@ protected:
 
     std::unordered_map< int, std::vector<MsgCallback> > m_Callbacks;
     std::unordered_map< int, std::vector<MsgCallback> > m_MainThreadCallbacks;
-    std::unordered_map< int, std::vector<std::shared_ptr<MessageOwner>> > m_MainThreadMessages;
+    std::vector<std::shared_ptr<MessageOwner>>          m_MainThreadMessages;
 };
 
 //-----------------------------------------------------------------------------
