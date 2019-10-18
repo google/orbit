@@ -303,16 +303,21 @@ std::string GetLastErrorAsString()
 std::string OrbitUtils::GetTimeStamp()
 {
     time_t rawtime;
+    time(&rawtime);
+    return FormatTime(rawtime);
+}
+
+//-----------------------------------------------------------------------------
+std::string OrbitUtils::FormatTime(const time_t& rawtime) {
     struct tm* time_info = nullptr;
     char buffer[80];
-    time(&rawtime);
-#ifdef _WIN32
-    struct tm timeinfo;
-    localtime_s(&timeinfo, &rawtime);
-    time_info = &timeinfo;
-#else
-   time_info = localtime( &rawtime );
-#endif
+    #ifdef _WIN32
+        struct tm timeinfo;
+        localtime_s(&timeinfo, &rawtime);
+        time_info = &timeinfo;
+    #else
+        time_info = localtime( &rawtime );
+    #endif
 
     strftime(buffer, 80, "%Y_%m_%d_%H_%M_%S", time_info);
 
