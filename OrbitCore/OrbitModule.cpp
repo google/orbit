@@ -123,7 +123,9 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
     {
         SCOPE_TIMER_LOG(L"nm");
         // nm
-        std::string nmCommand = std::string("nm ") + ws2s(a_PdbName) + std::string(" -n -l");
+        // TODO: If we need linenumber information at some point, we need to find an
+        // alternative, as "nm -l" is super slow.
+        std::string nmCommand = std::string("nm ") + ws2s(a_PdbName) + std::string(" -n");
         std::string nmResult = LinuxUtils::ExecuteCommand(nmCommand.c_str());
         std::stringstream nmStream(nmResult);
         std::string line;
