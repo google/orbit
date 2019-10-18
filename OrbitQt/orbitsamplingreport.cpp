@@ -64,6 +64,7 @@ void OrbitSamplingReport::Initialize( std::shared_ptr<SamplingReport> a_Report )
 //-----------------------------------------------------------------------------
 void OrbitSamplingReport::on_NextCallstackButton_clicked()
 {
+    assert(m_SamplingReport);
     m_SamplingReport->IncrementCallstackIndex();
     Refresh();
 }
@@ -71,6 +72,7 @@ void OrbitSamplingReport::on_NextCallstackButton_clicked()
 //-----------------------------------------------------------------------------
 void OrbitSamplingReport::on_PreviousCallstackButton_clicked()
 {
+    assert(m_SamplingReport);
     m_SamplingReport->DecrementCallstackIndex();
     Refresh();
 }
@@ -78,6 +80,7 @@ void OrbitSamplingReport::on_PreviousCallstackButton_clicked()
 //-----------------------------------------------------------------------------
 void OrbitSamplingReport::Refresh()
 {
+    assert(m_SamplingReport);
     std::wstring label = m_SamplingReport->GetSelectedCallstackString();
     ui->CallStackLabel->setText( QString::fromStdWString(label) );
     ui->CallstackTreeView->Refresh();

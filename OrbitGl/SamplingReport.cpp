@@ -69,6 +69,7 @@ void SamplingReport::OnSelectAddress( uint64_t a_Address, ThreadID a_ThreadId )
 //-----------------------------------------------------------------------------
 void SamplingReport::IncrementCallstackIndex()
 {
+    assert(m_SelectedSortedCallstackReport);
     int maxIndex = (int)m_SelectedSortedCallstackReport->m_CallStacks.size() - 1;
     if( ++m_SelectedAddressCallstackIndex > maxIndex )
     {
@@ -81,6 +82,7 @@ void SamplingReport::IncrementCallstackIndex()
 //-----------------------------------------------------------------------------
 void SamplingReport::DecrementCallstackIndex()
 {
+    assert(m_SelectedSortedCallstackReport);
     int maxIndex = (int)m_SelectedSortedCallstackReport->m_CallStacks.size() - 1;
     if( --m_SelectedAddressCallstackIndex < 0 )
     {
