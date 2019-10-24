@@ -30,8 +30,6 @@ TimerManager::TimerManager( bool a_IsClient ) : m_LockFreeQueue(65534), m_IsClie
     m_TimerIndex = 0;
     m_NumTimersFromPreviousSession = 0;
     m_NumFlushedTimers = 0;
-    
-    InitProfiling();
 
     if( m_IsClient )
     {
