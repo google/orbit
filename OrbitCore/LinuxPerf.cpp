@@ -50,8 +50,11 @@ LinuxPerf::LinuxPerf( uint32_t a_PID, uint32_t a_Freq )
         : m_PID(a_PID)
         , m_Frequency(a_Freq)
 {
-    m_OutputFile = "/tmp/perf.data";
-    m_ReportFile = Replace(m_OutputFile, ".data", ".txt");
+    m_OutputFileSampling = "/tmp/perf.data";
+    m_ReportFileSampling = Replace(m_OutputFileSampling, ".data", ".txt");
+
+    m_OutputFileUProbes = "/tmp/perf_uprobes.data";
+    m_ReportFileUProbes = Replace(m_OutputFileUProbes, ".data", ".txt");
 }
 
 //-----------------------------------------------------------------------------
@@ -66,30 +69,42 @@ void LinuxPerf::Start()
 
     std::string path = ws2s(Path::GetBasePath());
 
+    // start sampling
     pid_t PID = fork();
     if(PID == 0) {
-        std::vector<std::string> args;
-        args.push_back("/usr/bin/perf");
-        args.push_back("record");
+        execl   ( "/usr/bin/perf"
+                , "/usr/bin/perf"
+                , "record"
+                , "-k", "monotonic"
+                , "-F", Format("%u", m_Frequency).c_str()
+                , "-p", Format("%u", m_PID).c_str()
+                , "-g"
+                , "-o", m_OutputFileSampling.c_str(), (const char*)nullptr);
+        exit(1);
+    }
+    else
+    {
+        m_ForkedPIDSampling = PID;
+        PRINT_VAR(m_ForkedPIDSampling);
+    }
 
-        args.push_back("-k"); 
-        args.push_back("monotonic");
+    // start dynamic instrumentation
+    if (!GParams.m_UseBPFTrace)
+    {
+        pid_t PID = fork();
+        if(PID == 0) {
+            std::vector<std::string> args;
+            args.push_back("/usr/bin/perf");
+            args.push_back("record");
 
-        args.push_back("-g");
+            args.push_back("-k"); 
+            args.push_back("monotonic");
 
-        args.push_back("-o");
-        args.push_back(m_OutputFile);
+            args.push_back("-g");
 
-        args.push_back("--event=cycles");
-        
-        args.push_back("-F");
-        args.push_back(Format("%u", m_Frequency));
-
-        args.push_back("-p");
-        args.push_back(Format("%u", m_PID));
-            
-        if (!GParams.m_UseBPFTrace)
-        {
+            args.push_back("-o");
+            args.push_back(m_OutputFileUProbes);
+                
             PRINT("Adding Probe Events To Perf");
             for (auto pair : Capture::GSelectedFunctionsMap) {
                 Function *func = pair.second;
@@ -105,22 +120,22 @@ void LinuxPerf::Start()
                 args.push_back("-p");
                 args.push_back(Format("%u", m_PID));
             }
+            
+            std::vector<const char *> argsv;
+
+            for (const auto& arg : args) {
+                argsv.push_back(arg.c_str());
+            }
+            argsv.push_back(nullptr);
+
+            execv( "/usr/bin/perf", (char* const*) argsv.data());
+            exit(1);
         }
-
-        std::vector<const char *> argsv;
-
-        for (const auto& arg : args) {
-            argsv.push_back(arg.c_str());
+        else
+        {
+            m_ForkedPIDUProbes = PID;
+            PRINT_VAR(m_ForkedPIDUProbes);
         }
-        argsv.push_back(nullptr);
-
-        execv( "/usr/bin/perf", (char* const*) argsv.data());
-        exit(1);
-    }
-    else
-    {
-        m_ForkedPID = PID;
-        PRINT_VAR(m_ForkedPID);
     }
 #endif
 }
@@ -130,32 +145,66 @@ void LinuxPerf::Stop()
 {
     PRINT_FUNC;
 #if __linux__
-    if( m_ForkedPID != 0 )
+    // stop sampling
+    if( m_ForkedPIDSampling != 0 )
     {
-        kill(m_ForkedPID, 15);
+        kill(m_ForkedPIDSampling, 15);
         int status = 0;
-        waitpid(m_ForkedPID, &status, 0);
+        waitpid(m_ForkedPIDSampling, &status, 0);
+    }
+
+    // stop dynamic instrumentation
+    if( !GParams.m_UseBPFTrace && m_ForkedPIDUProbes != 0 )
+    {
+        kill(m_ForkedPIDUProbes, 15);
+        int status = 0;
+        waitpid(m_ForkedPIDUProbes, &status, 0);
     }
 
     m_IsRunning = false;
 
     //m_Thread = std::make_shared<std::thread>([this]{
-    std::string cmd = Format("perf script -i %s > %s", m_OutputFile.c_str(), m_ReportFile.c_str());
+    
+    // get sampling output
+    std::string cmd = Format("perf script -i %s > %s", m_OutputFileSampling.c_str(), m_ReportFileSampling.c_str());
     PRINT_VAR(cmd);
     LinuxUtils::ExecuteCommand(cmd.c_str());
 
     if( ConnectionManager::Get().IsRemote() )
     {
-        std::ifstream t(m_ReportFile);
+        std::ifstream t(m_ReportFileSampling);
         std::stringstream buffer;
         buffer << t.rdbuf();
         std::string perfData = buffer.str();
-        GTcpServer->Send(Msg_RemotePerf, (void*)perfData.data(), perfData.size());
+        GTcpServer->Send(Msg_RemotePerfSampling, (void*)perfData.data(), perfData.size());
     }
     //else
     {
-        LoadPerfData(m_ReportFile);
+        LoadPerfData(m_ReportFileSampling);
     }
+
+
+    if (!GParams.m_UseBPFTrace)
+    {
+        // get dynamic instrumentation output
+        std::string cmd = Format("perf script -i %s > %s", m_OutputFileUProbes.c_str(), m_ReportFileUProbes.c_str());
+        PRINT_VAR(cmd);
+        LinuxUtils::ExecuteCommand(cmd.c_str());
+
+        if( ConnectionManager::Get().IsRemote() )
+        {
+            std::ifstream t(m_ReportFileUProbes);
+            std::stringstream buffer;
+            buffer << t.rdbuf();
+            std::string perfData = buffer.str();
+            GTcpServer->Send(Msg_RemotePerfUProbes, (void*)perfData.data(), perfData.size());
+        }
+        //else
+        {
+            LoadPerfData(m_ReportFileUProbes);
+        }
+    }
+    
 
     if (!GParams.m_UseBPFTrace)
         DetachProbes();

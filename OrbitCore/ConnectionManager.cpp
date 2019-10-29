@@ -190,7 +190,7 @@ void ConnectionManager::SetupServerCallbacks()
 //-----------------------------------------------------------------------------
 void ConnectionManager::SetupClientCallbacks()
 {
-    GTcpClient->AddMainThreadCallback( Msg_RemotePerf, [=]( const Message & a_Msg )
+    GTcpClient->AddMainThreadCallback( Msg_RemotePerfSampling, [=]( const Message & a_Msg )
     {
         PRINT_VAR(a_Msg.m_Size);
         std::string msgStr(a_Msg.m_Data, a_Msg.m_Size);
@@ -203,6 +203,17 @@ void ConnectionManager::SetupClientCallbacks()
         perf.LoadPerfData(buffer);
         Capture::GSamplingProfiler->StopCapture();
         Capture::GSamplingProfiler->ProcessSamples();
+        GCoreApp->RefreshCaptureView();
+    } );
+
+        GTcpClient->AddMainThreadCallback( Msg_RemotePerfUProbes, [=]( const Message & a_Msg )
+    {
+        PRINT_VAR(a_Msg.m_Size);
+        std::string msgStr(a_Msg.m_Data, a_Msg.m_Size);
+        std::istringstream buffer(msgStr);
+        LinuxPerf perf(0);
+
+        perf.LoadPerfData(buffer);
         GCoreApp->RefreshCaptureView();
     } );
 
