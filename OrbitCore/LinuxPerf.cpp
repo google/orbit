@@ -218,9 +218,9 @@ void LinuxPerf::AttachProbes()
 {
     #if __linux__
         PRINT_FUNC;
-        std::stringstream ss;
-        ss << "perf probe";
         for (auto pair : Capture::GSelectedFunctionsMap) {
+            std::stringstream ss;
+            ss << "perf probe";
             Function *func = pair.second;
             assert(func->IsSelected());
 
@@ -230,15 +230,15 @@ void LinuxPerf::AttachProbes()
                 ss << " -x " << ws2s(module_file) << " -a '0x" << std::hex << func_Address << "'";
                 ss << " -x " << ws2s(module_file) << " -a '0x" << std::hex << func_Address << "%return'";
             }
+            std::string perf_command = ss.str();
+            PRINT_VAR(perf_command);
+            LinuxUtils::ExecuteCommand(perf_command.c_str());
         }  
 
         PRINT_VAR(Capture::GSelectedFunctionsMap.size());
         if (Capture::GSelectedFunctionsMap.empty())
             return ;
 
-        std::string perf_command = ss.str();
-        PRINT_VAR(perf_command);
-        LinuxUtils::ExecuteCommand(perf_command.c_str());
     #endif
 }
 

@@ -180,7 +180,7 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
                     {
                         std::string probe = tokens[1];
                         func->m_Probe = probe;
-                        PRINT_VAR(func->m_Probe);
+                        //PRINT_VAR(func->m_Probe);
                     }
                 }
             }
@@ -203,7 +203,6 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
             if (func && !func->m_hookable)
             {
                 func->m_hookable = true;
-                PRINT_VAR(func->m_PrettyName);
             }
         }
     }
