@@ -89,7 +89,7 @@ void LinuxPerf::Start()
     }
 
     // start dynamic instrumentation
-    if (!GParams.m_UseBPFTrace)
+    if (!GParams.m_UseBPFTrace && !sCapture::GSelectedFunctionsMap.empty())
     {
         pid_t PID = fork();
         if(PID == 0) {
