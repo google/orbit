@@ -51,6 +51,7 @@
 #include <thread>
 #include <cmath>
 #include <fstream>
+#include <chrono>
 
 #define FREEGLUT_STATIC
 #define GLUT_DISABLE_ATEXIT_HACK
@@ -798,7 +799,10 @@ void OrbitApp::OnLaunchProcess( const std::wstring a_ProcessName, const std::wst
 //-----------------------------------------------------------------------------
 std::wstring OrbitApp::GetCaptureFileName()
 {
-    return Path::StripExtension( Capture::GTargetProcess->GetName() ) + L"_" + OrbitUtils::GetTimeStampW() + L".orbit";
+    assert(Capture::GTargetProcess);
+    time_t timestamp = std::chrono::system_clock::to_time_t(Capture::GCaptureTimePoint);
+    std::wstring timestamp_string = s2ws(OrbitUtils::FormatTime(timestamp));
+    return Path::StripExtension( Capture::GTargetProcess->GetName() ) + L"_" + timestamp_string + L".orbit";
 }
 
 //-----------------------------------------------------------------------------

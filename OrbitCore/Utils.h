@@ -640,6 +640,7 @@ namespace OrbitUtils
 
     std::string GetTimeStamp();
     inline std::wstring GetTimeStampW(){ return s2ws(GetTimeStamp()); }
+    std::string FormatTime(const time_t& rawtime);
 }
 
 #define CONCAT_(x,y) x##y
