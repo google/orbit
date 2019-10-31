@@ -13,7 +13,7 @@ OrbitSamplingReport::OrbitSamplingReport(QWidget *parent) : QWidget(parent)
                                                           , ui(new Ui::OrbitSamplingReport)
 {
     ui->setupUi(this);
-    if (!m_SamplingReport || !m_SamplingReport->m_SelectedSortedCallstackReport)
+    if (!m_SamplingReport || !m_SamplingReport->HasCallstacks())
     {
         ui->NextCallstackButton->setEnabled(false);
         ui->NextCallstackButton->setStyleSheet(QString::fromUtf8("QPushButton:disabled{ color: gray }"));
@@ -88,7 +88,7 @@ void OrbitSamplingReport::on_PreviousCallstackButton_clicked()
 void OrbitSamplingReport::Refresh()
 {
     assert(m_SamplingReport);
-    if (m_SamplingReport->m_SelectedSortedCallstackReport)
+    if (m_SamplingReport->HasCallstacks())
     {
         ui->NextCallstackButton->setEnabled(true);
         ui->PreviousCallstackButton->setEnabled(true);

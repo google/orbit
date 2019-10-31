@@ -25,7 +25,7 @@ public:
     void DecrementCallstackIndex();
     std::wstring GetSelectedCallstackString();
     void SetUiRefreshFunc( std::function<void()> a_Func ){ m_UiRefreshFunc = a_Func; }
-    std::shared_ptr< struct SortedCallstackReport >     m_SelectedSortedCallstackReport;
+    bool HasCallstacks() const { return m_SelectedSortedCallstackReport != nullptr; } 
 
 protected:
     std::shared_ptr< class SamplingProfiler >           m_Profiler;
@@ -33,6 +33,7 @@ protected:
     CallStackDataView*                                  m_CallstackDataView;
     
     unsigned long long                                  m_SelectedAddress;
+    std::shared_ptr< struct SortedCallstackReport >     m_SelectedSortedCallstackReport;
     int                                                 m_SelectedAddressCallstackIndex;
     std::function<void()>                               m_UiRefreshFunc;
 };
