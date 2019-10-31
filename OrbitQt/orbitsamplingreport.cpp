@@ -8,6 +8,8 @@
 #include "ui_orbitsamplingreport.h"
 #include "../OrbitGl/SamplingReport.h"
 
+#include <cassert>
+
 //-----------------------------------------------------------------------------
 OrbitSamplingReport::OrbitSamplingReport(QWidget *parent) : QWidget(parent)
                                                           , ui(new Ui::OrbitSamplingReport)
