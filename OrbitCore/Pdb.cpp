@@ -29,6 +29,7 @@
 
 std::shared_ptr<Pdb> GPdbDbg;
 
+// TODO: As there is an implementation in the header, this will never called.
 //-----------------------------------------------------------------------------
 Pdb::Pdb( const wchar_t* a_PdbName ) : m_FileName( a_PdbName )
                                      , m_MainModule(0)

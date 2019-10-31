@@ -132,8 +132,10 @@ protected:
 class Pdb
 {
 public:
+    //TODO: these constructors seem to be not usefull
     Pdb( const wchar_t* a_PdbName ){}
     Pdb( const char* a_PdbName){}
+    Pdb(){}
     ~Pdb(){}
 
     void Init(){}
