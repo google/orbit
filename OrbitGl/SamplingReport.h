@@ -25,6 +25,7 @@ public:
     void DecrementCallstackIndex();
     std::wstring GetSelectedCallstackString();
     void SetUiRefreshFunc( std::function<void()> a_Func ){ m_UiRefreshFunc = a_Func; }
+    bool HasCallstacks() const { return m_SelectedSortedCallstackReport != nullptr; } 
 
 protected:
     std::shared_ptr< class SamplingProfiler >           m_Profiler;

@@ -13,6 +13,13 @@ OrbitSamplingReport::OrbitSamplingReport(QWidget *parent) : QWidget(parent)
                                                           , ui(new Ui::OrbitSamplingReport)
 {
     ui->setupUi(this);
+    if (!m_SamplingReport || !m_SamplingReport->HasCallstacks())
+    {
+        ui->NextCallstackButton->setEnabled(false);
+        ui->NextCallstackButton->setStyleSheet(QString::fromUtf8("QPushButton:disabled{ color: gray }"));
+        ui->PreviousCallstackButton->setEnabled(false);
+        ui->PreviousCallstackButton->setStyleSheet(QString::fromUtf8("QPushButton:disabled{ color: gray }"));
+    }
 
     QList<int> sizes;
     sizes.append( 5000 );
@@ -64,6 +71,7 @@ void OrbitSamplingReport::Initialize( std::shared_ptr<SamplingReport> a_Report )
 //-----------------------------------------------------------------------------
 void OrbitSamplingReport::on_NextCallstackButton_clicked()
 {
+    assert(m_SamplingReport);
     m_SamplingReport->IncrementCallstackIndex();
     Refresh();
 }
@@ -71,6 +79,7 @@ void OrbitSamplingReport::on_NextCallstackButton_clicked()
 //-----------------------------------------------------------------------------
 void OrbitSamplingReport::on_PreviousCallstackButton_clicked()
 {
+    assert(m_SamplingReport);
     m_SamplingReport->DecrementCallstackIndex();
     Refresh();
 }
@@ -78,6 +87,12 @@ void OrbitSamplingReport::on_PreviousCallstackButton_clicked()
 //-----------------------------------------------------------------------------
 void OrbitSamplingReport::Refresh()
 {
+    assert(m_SamplingReport);
+    if (m_SamplingReport->HasCallstacks())
+    {
+        ui->NextCallstackButton->setEnabled(true);
+        ui->PreviousCallstackButton->setEnabled(true);
+    }
     std::wstring label = m_SamplingReport->GetSelectedCallstackString();
     ui->CallStackLabel->setText( QString::fromStdWString(label) );
     ui->CallstackTreeView->Refresh();
