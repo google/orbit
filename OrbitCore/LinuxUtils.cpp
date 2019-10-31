@@ -103,6 +103,7 @@ void ListModules( uint32_t a_PID, std::map< uint64_t, std::shared_ptr<Module> > 
                 module->m_FullName = moduleName;
                 module->m_Name = ws2s(Path::GetFileName( s2ws(module->m_FullName) ));
                 module->m_Directory = ws2s(Path::GetDirectory( s2ws(module->m_FullName) ));
+                module->m_PdbSize = Path::FileSize( moduleName );
                 auto prettyName = module->GetPrettyName();
                 modules[moduleName] = module;
             }
