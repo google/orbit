@@ -605,6 +605,8 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
                             std::string time = GetPrettyTime(elapsedMillis);
                             Function* func = Capture::GSelectedFunctionsMap[timer.m_FunctionAddress];
 
+                            textBox.SetElapsedTimeTextLength(time.length());
+
                             const char* name = nullptr;
                             if (func)
                             {
@@ -641,11 +643,12 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
                             const Vec2 & boxSize = textBox.GetSize();
                             float posX = std::max(boxPos[0], minX);
                             float maxSize = boxPos[0] + boxSize[0] - posX;
-                            m_TextRendererStatic.AddText(textBox.GetText().c_str()
+                            m_TextRendererStatic.AddTextTrailingTimePrioritized(textBox.GetText().c_str()
                                 , posX
                                 , textBox.GetPosY() + 1.f
                                 , GlCanvas::Z_VALUE_TEXT
                                 , s_Color
+                                , textBox.GetElapsedTimeTextLength()
                                 , maxSize);
                         }
                     }

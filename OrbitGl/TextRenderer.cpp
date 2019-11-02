@@ -271,6 +271,85 @@ void TextRenderer::AddText( const char* a_Text
 }
 
 //-----------------------------------------------------------------------------
+void TextRenderer::AddTextTrailingTimePrioritized( const char* a_Text
+                                   , float a_X
+                                   , float a_Y
+                                   , float a_Z
+                                   , const Color& a_Color
+                                   , size_t timeStringLength
+                                   , float a_MaxSize )
+{
+    float tempPenX = ToScreenSpace( a_X );
+    float maxWidth = a_MaxSize == -1.f ? FLT_MAX : ToScreenSpace( a_MaxSize );
+    float strWidth = 0.f;
+    int minX = INT_MAX;
+    int maxX = -INT_MAX;
+
+    const size_t textLen = strlen( a_Text );
+
+    size_t i;
+    for( i = 0; i < textLen; ++i )
+    {
+        if( !texture_font_find_glyph( m_Font, a_Text + i ) )
+        {
+            texture_font_load_glyph( m_Font, a_Text + i );
+        }
+
+        texture_glyph_t *glyph = texture_font_get_glyph(m_Font, a_Text + i);
+        if (glyph != NULL)
+        {
+            float kerning = 0.0f;
+            if (i > 0)
+            {
+                kerning = texture_glyph_get_kerning(glyph, a_Text + i - 1);
+            }
+            tempPenX += kerning;
+            int x0 = (int)(tempPenX + glyph->offset_x);
+            int x1 = (int)(x0 + glyph->width);
+
+            minX = std::min( minX, x0 );
+            maxX = std::max( maxX, x1 );
+            strWidth = float( maxX - minX );
+
+            if( strWidth > maxWidth )
+            {
+                break;
+            }
+
+            tempPenX += glyph->advance_x;
+        }
+    }
+
+    // TODO: Technically, we'd want the size of "... <TIME>" + remaining characters
+
+    auto fittingCharsCount = i;
+
+    static const char *ELLIPSIS_TEXT = "... ";
+    static const size_t ELLIPSIS_TEXT_LEN = strlen( ELLIPSIS_TEXT );
+    static const size_t LEADING_CHARS_COUNT = 1;
+    static const size_t ELLIPSIS_BUFFER_SIZE = ELLIPSIS_TEXT_LEN + LEADING_CHARS_COUNT;
+
+    bool useEllipsisText = (fittingCharsCount < textLen) && (fittingCharsCount > (timeStringLength + ELLIPSIS_BUFFER_SIZE));
+    
+    if (!useEllipsisText)
+    {
+        AddText( a_Text, a_X, a_Y, a_Z, a_Color, a_MaxSize );
+    }
+    else
+    {
+        auto leadingCharCount = fittingCharsCount - (timeStringLength + ELLIPSIS_TEXT_LEN);
+
+        std::string modifiedText(a_Text, leadingCharCount);
+        modifiedText.append( ELLIPSIS_TEXT );
+
+        auto timePosition = textLen - timeStringLength;
+        modifiedText.append( &a_Text[timePosition], timeStringLength );
+
+        AddText( modifiedText.c_str(), a_X, a_Y, a_Z, a_Color, a_MaxSize );
+    }
+}
+
+//-----------------------------------------------------------------------------
 int TextRenderer::AddText2D( const char* a_Text
                             , int a_X
                             , int a_Y
