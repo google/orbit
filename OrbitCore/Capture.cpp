@@ -200,6 +200,13 @@ bool Capture::StartCapture()
         GEventTracer.Start(GTargetProcess->GetID());
 #endif
     }
+    else if ( Capture::IsRemote() )
+    {
+        LinuxPerf perf(0);
+        Capture::NewSamplingProfiler();
+        Capture::GSamplingProfiler->StartCapture();
+        Capture::GSamplingProfiler->SetIsLinuxPerf(true);
+    }
 
     GCoreApp->SendToUiNow( L"startcapture" );
     
@@ -217,6 +224,12 @@ void Capture::StopCapture()
     if( IsTrackingEvents() )
     {
         GEventTracer.Stop();
+    }
+    else if ( Capture::IsRemote() )
+    {        
+        Capture::GSamplingProfiler->StopCapture();
+        Capture::GSamplingProfiler->ProcessSamples();
+        GCoreApp->RefreshCaptureView();
     }
 
     if (!GInjected)

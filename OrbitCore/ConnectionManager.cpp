@@ -12,6 +12,7 @@
 #include "EventBuffer.h"
 #include "ProcessUtils.h"
 #include "LinuxPerf.h"
+#include "LinuxPerfData.h"
 #include "SamplingProfiler.h"
 #include "CoreApp.h"
 #include "OrbitModule.h"
@@ -161,6 +162,18 @@ void ConnectionManager::SetupClientCallbacks()
         Capture::GSamplingProfiler->StopCapture();
         Capture::GSamplingProfiler->ProcessSamples();
         GCoreApp->RefreshCaptureView();
+    } );
+
+    GTcpClient->AddMainThreadCallback ( Msg_SamplingCallstack, [=]( const Message& a_Msg )
+    {
+        // TODO: Send buffered callstacks.
+        LinuxPerfData data;
+
+        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        cereal::JSONInputArchive inputAr(buffer);
+        inputAr(data);
+
+        GCoreApp->ProcessSamplingCallStack(&data);
     } );
 
     

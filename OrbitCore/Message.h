@@ -40,6 +40,9 @@ enum MessageType : int16_t
     Msg_NumFlushedItems,
     Msg_NumInstalledHooks,
     Msg_Callstack,
+    // TODO: this should basically be the same.
+    Msg_SamplingCallstack,
+    Msg_TimerCallstack,
     Msg_OrbitZoneName,
     Msg_OrbitLog,
     Msg_WaitLoop,
