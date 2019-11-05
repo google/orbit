@@ -195,32 +195,11 @@ void LinuxPerf::LoadPerfData( std::istream& a_Stream )
             std::wstring moduleName = ToLower(Path::GetFileName(s2ws(module)));
             std::shared_ptr<Module> moduleFromName = Capture::GTargetProcess->GetModuleFromName( ws2s(moduleName) );
 
-            // Debug - Temporary
-            if( Contains(function, "Renderer::render") )
-            {
-                PRINT_VAR(function);
-                PRINT_VAR(moduleName);
-                PRINT_VAR(address);
-            }
-
             if( moduleFromName )
             {
                 uint64_t new_address = moduleFromName->ValidateAddress(address);
 
-                // Debug - Temporary
-                if( Contains(function, "Renderer::render") )
-                {
-                    std::cout << std::hex << address << " -> " << std::hex << new_address << std::endl;
-                }
                 address = new_address;
-            }
-            else
-            {
-                // Debug - Temporary
-                if( Contains(function, "Renderer::render") ) {
-                    PRINT_VAR("could not validate address");
-                    PRINT_VAR(moduleName);
-                }
             }
 
             CS.m_Data.push_back(address);
