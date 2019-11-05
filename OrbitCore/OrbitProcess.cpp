@@ -123,8 +123,6 @@ void Process::ListModules()
         #ifdef _WIN32
             // TODO: check if the windows implementation does something meaningfull
             module->LoadDebugInfo();
-        #else
-            module->m_Pdb = std::make_shared<Pdb>();
         #endif
     }
 }

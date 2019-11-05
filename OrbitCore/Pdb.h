@@ -21,7 +21,7 @@ struct IDiaDataSource;
 class Pdb
 {
 public:
-    Pdb( const wchar_t* a_PdbName );
+    Pdb( const wchar_t* a_PdbName = L"");
     ~Pdb();
 
     void Init();
