@@ -6,7 +6,9 @@
 #include "LinuxUtils.h"
 #include "CoreApp.h"
 #include "Capture.h"
+#include "OrbitModule.h"
 #include "OrbitProcess.h"
+#include "Utils.h"
 #include <fstream>
 #include <sstream>
 
@@ -63,7 +65,7 @@ std::string BpfTrace::GetBpfScript()
             uint64_t virtual_address = (uint64_t)func->GetVirtualAddress();
             Capture::GSelectedFunctionsMap[func->m_Address] = func;
 
-            ss << "   uprobe:" << func->m_Probe << R"({ printf("b )" << std::to_string(virtual_address) << R"( %u %lld\n", tid, nsecs); })" << std::endl;
+            ss << "   uprobe:" << func->m_Probe << R"({ printf("b )" << std::to_string(virtual_address) << R"( %u %lld\n%s\nd\n", tid, nsecs, ustack(perf)); })" << std::endl;
             ss << "uretprobe:" << func->m_Probe << R"({ printf("e )" << std::to_string(virtual_address) << R"( %u %lld\n", tid, nsecs); })" << std::endl;
         }
     }
@@ -103,14 +105,79 @@ uint64_t BpfTrace::ProcessString(const std::string& a_String)
 //-----------------------------------------------------------------------------
 void BpfTrace::CommandCallback(const std::string& a_Line)
 {
+    if (a_Line.empty() || a_Line == "\n")
+        return;
+    
     auto tokens = Tokenize(a_Line);
-    const std::string& mode             = tokens[0];
+    
+    const std::string& mode = tokens[0];
+    bool isBegin = mode == "b";
+    bool isEnd   = mode == "e";
+
+    bool isStackLine = StartsWith(a_Line, "\t");
+    bool isEndOfStack = a_Line == "d\n";
+
+    if (!isBegin && !isEnd && !isStackLine && !isEndOfStack)
+    {
+        assert(StartsWith(a_Line, "Attaching"));
+        return;
+    }
+
+    if (isStackLine) {
+        const std::string& addressStr = LTrim(tokens[0]);
+        uint64_t address = std::stoull(addressStr, nullptr, 16);
+
+        std::string function = tokens[1];
+
+        std::string moduleRaw = tokens[2];
+        std::string module = Replace(moduleRaw.substr(1), ")\n", "");
+
+        // TODO: this is copy&paste from LinuxPerf.cpp
+        std::wstring moduleName = ToLower(Path::GetFileName(s2ws(module)));
+        std::shared_ptr<Module> moduleFromName = Capture::GTargetProcess->GetModuleFromName( ws2s(moduleName) );
+       
+        if( moduleFromName )
+        {
+            uint64_t new_address = moduleFromName->ValidateAddress(address);
+            address = new_address;
+        }
+
+        m_CallStack.m_Data.push_back(address);
+        if( Capture::GTargetProcess && !Capture::GTargetProcess->HasSymbol(address))
+        {
+            auto symbol = std::make_shared<LinuxSymbol>();
+            symbol->m_Name = function;
+            symbol->m_Module = module;
+            Capture::GTargetProcess->AddSymbol( address, symbol );
+        }
+
+        return;
+    }
+
+    if (isEndOfStack)
+    {
+        if ( m_CallStack.m_Data.size() ) {
+            m_CallStack.m_Depth = (uint32_t)m_CallStack.m_Data.size();
+            m_CallStack.m_ThreadId = atoi(m_LastThreadName.c_str());
+            std::vector<Timer>& timers = m_TimerStacks[m_LastThreadName];
+            if (timers.size())
+            {
+                Timer& timer = timers.back();
+                timer.m_CallstackHash = m_CallStack.Hash();
+                Capture::AddCallstack( m_CallStack );
+            }
+        }
+
+        m_CallStack.m_Data.clear();
+        m_LastThreadName = "";
+        return;
+    }
+
     const std::string& functionAddress  = tokens[1];
     const std::string& threadName       = tokens[2];
     const std::string& timestamp        = tokens[3];
 
-    bool isBegin = mode == "b";
-    bool isEnd   = !isBegin;
+    m_LastThreadName = threadName;
 
     if (isBegin)
     {
@@ -121,6 +188,7 @@ void BpfTrace::CommandCallback(const std::string& a_Line)
         timer.m_Depth = (uint8_t)m_TimerStacks[threadName].size();
         timer.m_FunctionAddress = std::stoull(functionAddress);
         m_TimerStacks[threadName].push_back(timer);
+        return;
     }
 
     if (isEnd)
@@ -134,5 +202,6 @@ void BpfTrace::CommandCallback(const std::string& a_Line)
             GCoreApp->ProcessTimer(&timer, functionAddress);
             timers.pop_back();
         }
+        return;
     }
 }

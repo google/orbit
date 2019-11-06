@@ -21,6 +21,7 @@
 //-----------------------------------------------------------------------------
 Module::Module()
 {
+    m_Pdb = std::make_shared<Pdb>();
 }
 
 //-----------------------------------------------------------------------------
@@ -52,8 +53,7 @@ bool Module::IsDll() const
 //-----------------------------------------------------------------------------
 bool Module::LoadDebugInfo()
 {
-    std::wstring pdbName = s2ws(m_PdbName);
-    m_Pdb = std::make_shared<Pdb>( pdbName.c_str() );
+    assert(m_Pdb);
     m_Pdb->SetMainModule( (HMODULE)m_AddressStart );
 
     PRINT_VAR(m_FoundPdb);

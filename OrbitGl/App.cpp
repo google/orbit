@@ -539,6 +539,9 @@ void OrbitApp::SetLicense( const std::wstring & a_License )
 //-----------------------------------------------------------------------------
 int OrbitApp::OnExit()
 {
+    if( GTimerManager->m_IsRecording )
+        GOrbitApp->StopCapture();
+
     GParams.Save();
     delete GOrbitApp;
 	GTimerManager = nullptr;

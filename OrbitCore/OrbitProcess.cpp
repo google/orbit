@@ -120,7 +120,10 @@ void Process::ListModules()
         std::shared_ptr<Module> & module = pair.second;
         std::string name = ToLower( module->m_Name );
         m_NameToModuleMap[name] = module;
-        module->LoadDebugInfo();
+        #ifdef _WIN32
+            // TODO: check if the windows implementation does something meaningfull
+            module->LoadDebugInfo();
+        #endif
     }
 }
 

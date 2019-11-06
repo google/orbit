@@ -6,6 +6,7 @@
 #include "Core.h"
 #include "ScopeTimer.h"
 #include "OrbitFunction.h"
+#include "Callstack.h"
 #include <vector>
 #include <string>
 #include <map>
@@ -40,4 +41,6 @@ private:
     Callback m_Callback;
     std::string m_Script;
     std::string m_ScriptFileName;
+    CallStack m_CallStack;
+    std::string m_LastThreadName;
 };
