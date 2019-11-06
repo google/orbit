@@ -67,6 +67,9 @@ public:
 
     void SetTextY( float a_Y ){ m_TextY = a_Y; }
 
+    void SetElapsedTimeTextLength( size_t a_Length ){ m_ElapsedTimeTextLength = a_Length; }
+    size_t GetElapsedTimeTextLength() const { return m_ElapsedTimeTextLength; }
+
     inline void SetColor( Color & a_Color ) { m_Color = a_Color; }
     inline void SetColor( UCHAR a_R, UCHAR a_G, UCHAR a_B ){ m_Color[0] = a_R; m_Color[1] = a_G; m_Color[2] = a_B; }
     inline Color GetColor() { return m_Color; }
@@ -94,8 +97,9 @@ protected:
     Color        m_Color;
     Timer        m_Timer;
     int          m_MainFrameCounter;
-    bool		 m_Selected;
+    bool         m_Selected;
     float        m_TextY;
+    size_t       m_ElapsedTimeTextLength;
 };
 
 //-----------------------------------------------------------------------------
