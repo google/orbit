@@ -27,6 +27,7 @@ public:
     virtual void Disassemble( const std::string & /*a_FunctionName*/, DWORD64 /*a_VirtualAddress*/, const char * /*a_MachineCode*/, size_t /*a_Size*/ ){}
     virtual void ProcessTimer( Timer* /*a_Timer*/, const std::string& /*a_FunctionName*/ ) {}
     virtual void ProcessCallStack( CallStack* /*a_CallStack*/ ){}
+    virtual void AddSymbol(uint64_t /*a_Address*/, const std::string& /*a_Module*/, const std::string& /*a_Name*/){}
     virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >* GetRules(){ return nullptr; }
     virtual void SendRemoteProcess(uint32_t a_PID) {}
     virtual void RefreshCaptureView() {}

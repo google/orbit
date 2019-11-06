@@ -145,10 +145,7 @@ void BpfTrace::CommandCallback(const std::string& a_Line)
         m_CallStack.m_Data.push_back(address);
         if( Capture::GTargetProcess && !Capture::GTargetProcess->HasSymbol(address))
         {
-            auto symbol = std::make_shared<LinuxSymbol>();
-            symbol->m_Name = function;
-            symbol->m_Module = module;
-            Capture::GTargetProcess->AddSymbol( address, symbol );
+            GCoreApp->AddSymbol(address, module, function);
         }
 
         return;

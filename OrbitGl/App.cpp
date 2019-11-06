@@ -63,6 +63,7 @@
 #include "EventTracer.h"
 #else
 #include "LinuxUtils.h"
+#include "LinuxPerf.h"
 #endif
 
 class OrbitApp* GOrbitApp;
@@ -202,6 +203,24 @@ void OrbitApp::ProcessCallStack( CallStack* a_CallStack )
     }
 
     Capture::AddCallstack( *a_CallStack );
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::AddSymbol(uint64_t a_Address, const std::string& a_Module, const std::string& a_Name)
+{
+    if (ConnectionManager::Get().IsRemote())
+    {
+        LinuxSymbolWithAddress symbol;
+        symbol.m_Module = a_Module;
+        symbol.m_Name = a_Name;
+        symbol.m_Address = a_Address;
+        std::string messageData = SerializeObjectHumanReadable(symbol);
+        GTcpServer->Send(Msg_RemoteSymbol, (void*)messageData.c_str(), messageData.size());
+    }
+    auto symbol = std::make_shared<LinuxSymbol>();
+    symbol->m_Name = a_Name;
+    symbol->m_Module = a_Module;
+    Capture::GTargetProcess->AddSymbol( a_Address, symbol );
 }
 
 //-----------------------------------------------------------------------------
