@@ -65,7 +65,7 @@ std::string BpfTrace::GetBpfScript()
             uint64_t virtual_address = (uint64_t)func->GetVirtualAddress();
             Capture::GSelectedFunctionsMap[func->m_Address] = func;
 
-            ss << "   uprobe:" << func->m_Probe << R"({ printf("b )" << std::to_string(virtual_address) << R"( %u %lld\n%s\nd\n", tid, nsecs, ustack(perf)); })" << std::endl;
+            ss << "   uprobe:" << func->m_Probe << R"({ printf("b )" << std::to_string(virtual_address) << R"( %u %lld\n%s\n\nd\n\n", tid, nsecs, ustack(perf)); })" << std::endl;
             ss << "uretprobe:" << func->m_Probe << R"({ printf("e )" << std::to_string(virtual_address) << R"( %u %lld\n", tid, nsecs); })" << std::endl;
         }
     }
