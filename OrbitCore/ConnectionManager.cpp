@@ -173,6 +173,16 @@ void ConnectionManager::SetupClientCallbacks()
             GTimerManager->Add(timers[i]);
         }
     } );
+
+    GTcpClient->AddCallback(Msg_RemoteCallStack, [=](const Message& a_Msg)
+    {
+        CallStack stack;
+        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        cereal::JSONInputArchive inputAr(buffer);
+        inputAr(stack);
+
+        GCoreApp->ProcessCallStack(&stack);
+    } );
 }
 
 //-----------------------------------------------------------------------------

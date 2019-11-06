@@ -19,6 +19,7 @@
 #include "SessionsDataView.h"
 #include "SamplingReport.h"
 #include "ScopeTimer.h"
+#include "Callstack.h"
 #include "OrbitSession.h"
 #include "Serialization.h"
 #include "CaptureWindow.h"
@@ -186,6 +187,21 @@ void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
         GCurrentTimeGraph->ProcessTimer(*a_Timer);
         ++Capture::GFunctionCountMap[a_Timer->m_FunctionAddress];
     }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::ProcessCallStack( CallStack* a_CallStack )
+{
+    if (ConnectionManager::Get().IsRemote())
+    {
+        // we only need to send the callstack, if it not yet present
+        if ( !Capture::GetCallstack(a_CallStack->Hash()) ) {
+            std::string messageData = SerializeObjectHumanReadable(*a_CallStack);
+            GTcpServer->Send(Msg_RemoteCallStack, messageData.c_str(), messageData.size());
+        }
+    }
+
+    Capture::AddCallstack( *a_CallStack );
 }
 
 //-----------------------------------------------------------------------------

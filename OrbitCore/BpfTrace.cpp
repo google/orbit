@@ -164,7 +164,7 @@ void BpfTrace::CommandCallback(const std::string& a_Line)
             {
                 Timer& timer = timers.back();
                 timer.m_CallstackHash = m_CallStack.Hash();
-                Capture::AddCallstack( m_CallStack );
+                GCoreApp->ProcessCallStack(&m_CallStack);
             }
         }
 
