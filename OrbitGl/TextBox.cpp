@@ -15,6 +15,7 @@ TextBox::TextBox() : m_Pos( Vec2::Zero() )
                    , m_MainFrameCounter( -1 )
                    , m_Selected( false )
                    , m_TextY( FLT_MAX )
+                   , m_ElapsedTimeTextLength( 0 )
 {
     Update();
 }
@@ -31,6 +32,7 @@ TextBox::TextBox( const Vec2 & a_Pos
                 , m_Color( a_Color )
                 , m_MainFrameCounter( -1 )
                 , m_Selected( false )
+                , m_ElapsedTimeTextLength( 0 )
 {
     Update();
 }
@@ -45,6 +47,7 @@ TextBox::TextBox( const Vec2 & a_Pos
                 , m_Color( a_Color )
                 , m_MainFrameCounter( -1 )
                 , m_Selected( false )
+                , m_ElapsedTimeTextLength( 0 )
 {
     Update();
 }
@@ -56,6 +59,7 @@ TextBox::TextBox( const Vec2 & a_Pos
                 , m_Size( a_Size )
                 , m_MainFrameCounter( -1 )
                 , m_Selected( false )
+                , m_ElapsedTimeTextLength( 0 )
 {
     Update();
 }

@@ -271,12 +271,12 @@ void TextRenderer::AddText( const char* a_Text
 }
 
 //-----------------------------------------------------------------------------
-void TextRenderer::AddTextTrailingTimePrioritized( const char* a_Text
+void TextRenderer::AddTextTrailingCharsPrioritized( const char* a_Text
                                    , float a_X
                                    , float a_Y
                                    , float a_Z
                                    , const Color& a_Color
-                                   , size_t timeStringLength
+                                   , size_t a_TrailingCharsLength
                                    , float a_MaxSize )
 {
     float tempPenX = ToScreenSpace( a_X );
@@ -329,7 +329,7 @@ void TextRenderer::AddTextTrailingTimePrioritized( const char* a_Text
     static const size_t LEADING_CHARS_COUNT = 1;
     static const size_t ELLIPSIS_BUFFER_SIZE = ELLIPSIS_TEXT_LEN + LEADING_CHARS_COUNT;
 
-    bool useEllipsisText = (fittingCharsCount < textLen) && (fittingCharsCount > (timeStringLength + ELLIPSIS_BUFFER_SIZE));
+    bool useEllipsisText = (fittingCharsCount < textLen) && (fittingCharsCount > (a_TrailingCharsLength + ELLIPSIS_BUFFER_SIZE));
     
     if (!useEllipsisText)
     {
@@ -337,13 +337,13 @@ void TextRenderer::AddTextTrailingTimePrioritized( const char* a_Text
     }
     else
     {
-        auto leadingCharCount = fittingCharsCount - (timeStringLength + ELLIPSIS_TEXT_LEN);
+        auto leadingCharCount = fittingCharsCount - (a_TrailingCharsLength + ELLIPSIS_TEXT_LEN);
 
         std::string modifiedText(a_Text, leadingCharCount);
         modifiedText.append( ELLIPSIS_TEXT );
 
-        auto timePosition = textLen - timeStringLength;
-        modifiedText.append( &a_Text[timePosition], timeStringLength );
+        auto timePosition = textLen - a_TrailingCharsLength;
+        modifiedText.append( &a_Text[timePosition], a_TrailingCharsLength );
 
         AddText( modifiedText.c_str(), a_X, a_Y, a_Z, a_Color, a_MaxSize );
     }

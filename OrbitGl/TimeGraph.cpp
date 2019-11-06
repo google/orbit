@@ -643,7 +643,7 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
                             const Vec2 & boxSize = textBox.GetSize();
                             float posX = std::max(boxPos[0], minX);
                             float maxSize = boxPos[0] + boxSize[0] - posX;
-                            m_TextRendererStatic.AddTextTrailingTimePrioritized(textBox.GetText().c_str()
+                            m_TextRendererStatic.AddTextTrailingCharsPrioritized(textBox.GetText().c_str()
                                 , posX
                                 , textBox.GetPosY() + 1.f
                                 , GlCanvas::Z_VALUE_TEXT
