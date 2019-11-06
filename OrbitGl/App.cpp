@@ -197,7 +197,7 @@ void OrbitApp::ProcessCallStack( CallStack* a_CallStack )
         // we only need to send the callstack, if it not yet present
         if ( !Capture::GetCallstack(a_CallStack->Hash()) ) {
             std::string messageData = SerializeObjectHumanReadable(*a_CallStack);
-            GTcpServer->Send(Msg_RemoteCallStack, messageData.c_str(), messageData.size());
+            GTcpServer->Send(Msg_RemoteCallStack, (void*) messageData.c_str(), messageData.size());
         }
     }
 
