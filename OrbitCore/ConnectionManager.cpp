@@ -15,6 +15,7 @@
 #include "SamplingProfiler.h"
 #include "CoreApp.h"
 #include "OrbitModule.h"
+#include "OrbitFunction.h"
 #include "BpfTrace.h"
 
 #if __linux__
@@ -25,6 +26,7 @@
 #include <streambuf>
 #include <sstream>
 #include <iostream>
+#include <cereal/types/vector.hpp>
 
 //-----------------------------------------------------------------------------
 ConnectionManager::ConnectionManager() : m_ExitRequested(false), m_IsRemote(false)
@@ -74,6 +76,33 @@ void ConnectionManager::InitAsRemote()
 }
 
 //-----------------------------------------------------------------------------
+void ConnectionManager::SetSelectedFunctionsOnRemote( const char* a_Data, size_t a_Size ) {
+    PRINT_FUNC;
+    std::istringstream buffer(std::string(a_Data, a_Size));
+    cereal::JSONInputArchive inputAr( buffer );
+    std::vector<std::string> selectedFunctions;
+    inputAr(selectedFunctions);
+
+    Capture::GSelectedFunctionsMap.clear();
+    for (Function* function : Capture::GTargetProcess->GetFunctions()) {
+        function->UnSelect();
+    }
+
+    for (const std::string& address : selectedFunctions) {
+        PRINT_VAR(address);
+        Function* function = Capture::GTargetProcess->GetFunctionFromAddress(std::stoll(address));
+        if (!function)
+            PRINT("received invalid address");
+        else{
+            PRINT(Format("Received Selected Function: %s\n", function->m_PrettyName.c_str()));
+            // this also adds the function to the map.
+            function->Select();
+        }
+
+    }
+}
+
+//-----------------------------------------------------------------------------
 void ConnectionManager::StartCaptureAsRemote()
 {
     PRINT_FUNC;
@@ -101,6 +130,11 @@ void ConnectionManager::SetupServerCallbacks()
     GTcpServer->AddMainThreadCallback( Msg_BpfScript, [=](const Message& a_Msg )
     {
         m_BpfTrace->SetBpfScript(a_Msg.GetData());
+    } );
+
+    GTcpServer->AddMainThreadCallback( Msg_RemoteSelectedFunctionsMap, [=]( const Message & a_Msg )
+    {
+        SetSelectedFunctionsOnRemote(a_Msg.GetData(), a_Msg.m_Size);
     } );
 
     GTcpServer->AddMainThreadCallback( Msg_StartCapture, [=]( const Message & a_Msg )

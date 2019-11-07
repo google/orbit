@@ -60,6 +60,7 @@ enum MessageType : int16_t
     Msg_RemoteModuleDebugInfo,
     Msg_BpfScript,
     Msg_RemoteTimers,
+    Msg_RemoteSelectedFunctionsMap,
 };
 
 //-----------------------------------------------------------------------------

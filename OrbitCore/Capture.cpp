@@ -26,6 +26,7 @@
 #include "TestRemoteMessages.h"
 #include <fstream>
 #include <ostream>
+#include <cereal/types/vector.hpp>
 
 #ifdef _WIN32
 #include "EventTracer.h"
@@ -333,6 +334,17 @@ void Capture::SendFunctionHooks()
 
     if (Capture::IsRemote())
     {
+        std::vector<std::string> selectedFunctions;
+        for (auto pair : GSelectedFunctionsMap)
+        {
+            PRINT(Format("Send Selected Function: %s\n", pair.second->m_PrettyName.c_str()));
+            selectedFunctions.push_back(std::to_string(pair.first));
+        }
+
+        std::string selectedFunctionsData = SerializeObjectHumanReadable(selectedFunctions);
+        PRINT_VAR(selectedFunctionsData);
+        GTcpClient->Send(Msg_RemoteSelectedFunctionsMap, (void*)selectedFunctionsData.data(), selectedFunctionsData.size());
+
         BpfTrace bpfTrace;
         PRINT_VAR(bpfTrace.GetBpfScript());
         GTcpClient->Send(Msg_BpfScript, bpfTrace.GetBpfScript());

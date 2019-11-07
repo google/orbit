@@ -71,9 +71,9 @@ public:
     bool IsMemberFunction();
     unsigned long long Hash() { if( m_NameHash == 0 ) { m_NameHash = StringHash( m_PrettyName ); } return m_NameHash; }
     bool Hookable();
-    void Select(){ if( Hookable() ) m_Selected = true; }
+    void Select();
     void PreHook();
-    void UnSelect(){ m_Selected = false; }
+    void UnSelect();
     void ToggleSelect() { /*if( Hookable() )*/ m_Selected = !m_Selected; }
     bool IsSelected() const { return m_Selected; }
     DWORD64 GetVirtualAddress() const;
