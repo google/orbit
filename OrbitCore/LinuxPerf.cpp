@@ -218,8 +218,15 @@ void LinuxPerf::LoadPerfData( std::istream& a_Stream )
             {
                 CS.m_Depth = (uint32_t)CS.m_Data.size();
                 CS.m_ThreadId = tid;
-                Capture::GSamplingProfiler->AddCallStack( CS );
-                GEventTracer.GetEventBuffer().AddCallstackEvent( time, CS );
+                CallstackID hash = CS.Hash();
+
+                HashedCallStack hashedCallStack;
+                hashedCallStack.m_Depth = CS.m_Depth;
+                hashedCallStack.m_Hash = hash;
+                hashedCallStack.m_ThreadId = tid;
+
+                Capture::GSamplingProfiler->AddHashedCallStack( hashedCallStack );
+                GEventTracer.GetEventBuffer().AddCallstackEvent( time, hash, tid );
                 ++numCallstacks;
             }
 
