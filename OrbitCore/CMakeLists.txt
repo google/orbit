@@ -43,6 +43,10 @@ set(HEADERS
     Injection.h
     LinuxPerf.h
     LinuxPerfData.h
+    LinuxPerfEvent.h
+    LinuxPerfEventVisitor.h
+    LinuxPerfUtils.h
+    LinuxEventTracer.h
     Log.h
     LogInterface.h
     MemoryTracker.h
@@ -104,6 +108,9 @@ set(SOURCES
     Injection.cpp
     LinuxPerf.cpp
     LinuxPerfData.cpp
+    LinuxPerfEvent.cpp
+    LinuxPerfUtils.cpp
+    LinuxEventTracer.cpp
     Log.cpp
     LogInterface.cpp
     MemoryTracker.cpp

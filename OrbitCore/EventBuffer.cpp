@@ -93,6 +93,9 @@ void EventTracer::Start( uint32_t a_PID )
 
     m_Perf = std::make_shared<LinuxPerf>(a_PID);
     m_Perf->Start();
+
+    m_EventTracer = std::make_shared<LinuxEventTracer>();
+    m_EventTracer->Start();
 }
 
 //-----------------------------------------------------------------------------
@@ -107,6 +110,11 @@ void EventTracer::Stop()
     {
         Capture::GSamplingProfiler->StopCapture();
         Capture::GSamplingProfiler->ProcessSamples();
+    }
+
+    if ( m_EventTracer )
+    {
+        m_EventTracer->Stop();
     }
 }
 
