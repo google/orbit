@@ -19,7 +19,7 @@ public:
     void InitAsRemote();
     void ConnectToRemote(std::string a_RemoteAddress);
     bool IsRemote(){ return m_IsRemote; } // True when Orbit instance is headless, next to remote process
-    void SetSelectedFunctionsOnRemote(const char* a_Data, size_t a_Size );
+    void SetSelectedFunctionsOnRemote(const Message & a_Msg);
     void StartCaptureAsRemote();
     void StopCaptureAsRemote();
     void Stop();
