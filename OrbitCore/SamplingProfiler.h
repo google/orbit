@@ -100,7 +100,13 @@ public:
     void AddHashedCallStack( HashedCallStack & a_CallStack );
     void AddUniqueCallStack( CallStack & a_CallStack );
     const std::shared_ptr<CallStack> GetCallStack( CallstackID a_ID ) { return m_UniqueCallstacks[a_ID]; }
-    bool HasCallStack( CallstackID a_ID );
+    
+    inline bool HasCallStack( CallstackID a_ID )
+    {
+        auto it = m_UniqueCallstacks.find( a_ID ); 
+        return it != m_UniqueCallstacks.end();
+    }
+
     std::multimap<int, CallstackID> GetCallStacksFromAddress( uint64_t a_Addr, ThreadID a_TID, int & o_NumCallstacks );
     std::shared_ptr< SortedCallstackReport > GetSortedCallstacksFromAddress( uint64_t a_Addr, ThreadID a_TID );
     

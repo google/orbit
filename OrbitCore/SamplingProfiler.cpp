@@ -163,8 +163,13 @@ void SamplingProfiler::AddCallStack( CallStack & a_CallStack )
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddHashedCallStack( HashedCallStack & a_CallStack )
 {
-    assert( m_State == Sampling ); 
-    assert( HasCallStack(a_CallStack.m_Hash) );
+    if (m_State != Sampling) {
+        PRINT("Error: Callstacks can only be added while sampling.");
+    }
+    if ( !HasCallStack(a_CallStack.m_Hash) )
+    {
+        PRINT("Error: Callstacks can only be added by hash when they are already present.");
+    }
     m_Callstacks.push_back( a_CallStack );
 }
 
@@ -172,13 +177,6 @@ void SamplingProfiler::AddHashedCallStack( HashedCallStack & a_CallStack )
 void SamplingProfiler::AddUniqueCallStack( CallStack & a_CallStack )
 {
     m_UniqueCallstacks[a_CallStack.Hash()] = std::make_shared<CallStack>(a_CallStack);
-}
-
-//-----------------------------------------------------------------------------
-bool SamplingProfiler::HasCallStack( CallstackID a_ID )
-{
-    auto it = m_UniqueCallstacks.find( a_ID ); 
-    return it != m_UniqueCallstacks.end();
 }
 
 //-----------------------------------------------------------------------------
@@ -292,10 +290,11 @@ void SamplingProfiler::ProcessSamples()
     // Unique call stacks and per thread data
     for( HashedCallStack & callstack : m_Callstacks )
     {
-        assert( HasCallStack(callstack.m_Hash) );
-        //{
-        //    m_UniqueCallstacks[callstack.m_Hash] = std::make_shared<CallStack>(callstack);
-        //}
+        if ( !HasCallStack(callstack.m_Hash) )
+        {
+            PRINT("Error: Processed unknown callstack!");
+        }
+
 
         ThreadSampleData & threadSampleData = m_ThreadSampleData[callstack.m_ThreadId];
         threadSampleData.m_NumSamples++;
