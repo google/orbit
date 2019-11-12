@@ -181,12 +181,12 @@ void ConnectionManager::SetupClientCallbacks()
         cereal::JSONInputArchive inputAr(buffer);
         inputAr(stack);
 
-        GCoreApp->ProcessCallStack(&stack);
+        GCoreApp->ProcessCallStack(stack);
     } );
 
     GTcpClient->AddCallback(Msg_RemoteSymbol, [=](const Message& a_Msg)
     {
-        LinuxSymbolWithAddress symbol;
+        LinuxSymbol symbol;
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
         cereal::JSONInputArchive inputAr(buffer);
         inputAr(symbol);

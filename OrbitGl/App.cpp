@@ -191,18 +191,18 @@ void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::ProcessCallStack( CallStack* a_CallStack )
+void OrbitApp::ProcessCallStack( CallStack& a_CallStack )
 {
     if (ConnectionManager::Get().IsRemote())
     {
         // we only need to send the callstack, if it not yet present
-        if ( !Capture::GetCallstack(a_CallStack->Hash()) ) {
-            std::string messageData = SerializeObjectHumanReadable(*a_CallStack);
+        if ( !Capture::GetCallstack(a_CallStack.Hash()) ) {
+            std::string messageData = SerializeObjectHumanReadable(a_CallStack);
             GTcpServer->Send(Msg_RemoteCallStack, (void*) messageData.c_str(), messageData.size());
         }
     }
 
-    Capture::AddCallstack( *a_CallStack );
+    Capture::AddCallstack( a_CallStack );
 }
 
 //-----------------------------------------------------------------------------
@@ -210,7 +210,7 @@ void OrbitApp::AddSymbol(uint64_t a_Address, const std::string& a_Module, const 
 {
     if (ConnectionManager::Get().IsRemote())
     {
-        LinuxSymbolWithAddress symbol;
+        LinuxSymbol symbol;
         symbol.m_Module = a_Module;
         symbol.m_Name = a_Name;
         symbol.m_Address = a_Address;

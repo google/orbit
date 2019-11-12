@@ -37,25 +37,18 @@ struct LinuxSymbol
 {
     std::string m_Module;
     std::string m_Name;
-    // TODO: the latter ones are not used!
     std::string m_File;
     uint32_t    m_Line = 0;
-};
-
-//-----------------------------------------------------------------------------
-class LinuxSymbolWithAddress
-{
-public:    
-    std::string m_Module;
-    std::string m_Name;
-    uint64_t    m_Address;
+    uint64_t    m_Address = 0;
 
     ORBIT_SERIALIZABLE;
 };
 
-ORBIT_SERIALIZE( LinuxSymbolWithAddress, 0 )
+ORBIT_SERIALIZE( LinuxSymbol, 0 )
 {
     ORBIT_NVP_VAL( 0, m_Module );
     ORBIT_NVP_VAL( 0, m_Name );
+    ORBIT_NVP_VAL( 0, m_File );
+    ORBIT_NVP_VAL( 0, m_Line);
     ORBIT_NVP_VAL( 0, m_Address );
 }
