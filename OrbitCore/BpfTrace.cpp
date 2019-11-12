@@ -118,8 +118,19 @@ void BpfTrace::CommandCallback(const std::string& a_Line)
     bool isEndOfStack = a_Line == "d\n";
 
     if (!isBegin && !isEnd && !isStackLine && !isEndOfStack)
-    {
-        assert(StartsWith(a_Line, "Attaching"));
+    {  
+        if (StartsWith(a_Line, "Lost"))
+        {
+            PRINT(a_Line.c_str());
+            return;
+        }
+
+        if (StartsWith(a_Line, "Attaching")) 
+            return;
+
+        // if the line does not start with one of the above,
+        // we might have a broken line, e.g. due to a small buffer
+        PRINT(Format("read unexpected line:%s\nthe buffer might be to small.", a_Line));
         return;
     }
 
