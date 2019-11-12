@@ -109,7 +109,6 @@ bool ParseStackLine( const std::string& a_Line, uint64_t& o_Address, std::string
 
 void LinuxPerf::HandleLine( const std::string& a_Line )
 {
-    std::cout << a_Line;
     bool isEmptyLine = (a_Line.empty() || a_Line == "\n");
     bool isHeader = !isEmptyLine && !StartsWith(a_Line, "\t");
     bool isStackLine = !isHeader && !isEmptyLine;
@@ -161,7 +160,7 @@ void LinuxPerf::HandleLine( const std::string& a_Line )
         {
             m_PerfData.m_CS.m_Depth = (uint32_t)m_PerfData.m_CS.m_Data.size();
             m_PerfData.m_CS.m_ThreadId = m_PerfData.m_tid;
-            GCoreApp->ProcessSamplingCallStack(&m_PerfData);
+            GCoreApp->ProcessSamplingCallStack(m_PerfData);
             ++m_PerfData.m_numCallstacks;
         }
 

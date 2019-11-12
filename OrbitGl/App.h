@@ -69,7 +69,7 @@ public:
     void RefreshWatch();
     virtual void Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, size_t a_Size );
     virtual void ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName );
-    virtual void ProcessSamplingCallStack(LinuxPerfData* a_CallStack);
+    virtual void ProcessSamplingCallStack(LinuxPerfData& a_CallStack);
 
     int* GetScreenRes() { return m_ScreenRes; }
 

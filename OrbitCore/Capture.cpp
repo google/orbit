@@ -204,8 +204,8 @@ bool Capture::StartCapture()
     {
         LinuxPerf perf(0);
         Capture::NewSamplingProfiler();
-        Capture::GSamplingProfiler->StartCapture();
         Capture::GSamplingProfiler->SetIsLinuxPerf(true);
+        Capture::GSamplingProfiler->StartCapture();
     }
 
     GCoreApp->SendToUiNow( L"startcapture" );

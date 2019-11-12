@@ -193,17 +193,17 @@ void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
 
 // TODO: This method should try to send the callstack hashes only.
 //-----------------------------------------------------------------------------
-void OrbitApp::ProcessSamplingCallStack(LinuxPerfData* a_CallStack)
+void OrbitApp::ProcessSamplingCallStack(LinuxPerfData& a_CallStack)
 {
     if (ConnectionManager::Get().IsRemote())
     {
-        std::string messageData = SerializeObjectHumanReadable(*a_CallStack);
+        std::string messageData = SerializeObjectHumanReadable(a_CallStack);
         GTcpServer->Send(Msg_SamplingCallstack, messageData.c_str(), messageData.size());
     }
     else
     {
-        Capture::GSamplingProfiler->AddCallStack( a_CallStack->m_CS );
-        GEventTracer.GetEventBuffer().AddCallstackEvent( a_CallStack->m_time, a_CallStack->m_CS );
+        Capture::GSamplingProfiler->AddCallStack( a_CallStack.m_CS );
+        GEventTracer.GetEventBuffer().AddCallstackEvent( a_CallStack.m_time, a_CallStack.m_CS );
     }
 }
 

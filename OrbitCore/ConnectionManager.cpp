@@ -173,7 +173,7 @@ void ConnectionManager::SetupClientCallbacks()
         cereal::JSONInputArchive inputAr(buffer);
         inputAr(data);
 
-        GCoreApp->ProcessSamplingCallStack(&data);
+        GCoreApp->ProcessSamplingCallStack(data);
     } );
 
     
