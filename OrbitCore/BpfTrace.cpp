@@ -130,7 +130,7 @@ void BpfTrace::CommandCallback(const std::string& a_Line)
 
         // if the line does not start with one of the above,
         // we might have a broken line, e.g. due to a small buffer
-        PRINT(Format("read unexpected line:%s\nthe buffer might be to small.", a_Line));
+        PRINT("read unexpected line:%s\nthe buffer might be to small.", a_Line.c_str());
         return;
     }
 
