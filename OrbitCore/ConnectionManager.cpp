@@ -164,7 +164,7 @@ void ConnectionManager::SetupClientCallbacks()
         GCoreApp->RefreshCaptureView();
     } );
 
-    GTcpClient->AddMainThreadCallback ( Msg_SamplingCallstack, [=]( const Message& a_Msg )
+    GTcpClient->AddCallback ( Msg_SamplingCallstack, [=]( const Message& a_Msg )
     {
         // TODO: Send buffered callstacks.
         LinuxPerfData data;

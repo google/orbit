@@ -95,7 +95,7 @@ public:
     float GetSampleTimeTotal() const { return m_SampleTimeSeconds; }
     bool  ShouldStop();
     void FireDoneProcessingCallbacks();
-    void AddCallStack( CallStack & a_CallStack ) { if( m_State == Sampling ) m_Callstacks.push_back( a_CallStack ); }
+    void AddCallStack( CallStack & a_CallStack );
     const std::shared_ptr<CallStack> GetCallStack( CallstackID a_ID ) { return m_UniqueCallstacks[a_ID]; }
     std::multimap<int, CallstackID> GetCallStacksFromAddress( uint64_t a_Addr, ThreadID a_TID, int & o_NumCallstacks );
     std::shared_ptr< SortedCallstackReport > GetSortedCallstacksFromAddress( uint64_t a_Addr, ThreadID a_TID );
