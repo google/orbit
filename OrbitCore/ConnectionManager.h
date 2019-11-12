@@ -3,6 +3,8 @@
 //-----------------------------------
 #pragma once
 
+#include "Message.h"
+
 #include <string>
 #include <vector>
 #include <memory>
