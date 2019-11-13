@@ -19,6 +19,7 @@
 #include "SessionsDataView.h"
 #include "SamplingReport.h"
 #include "ScopeTimer.h"
+#include "Callstack.h"
 #include "OrbitSession.h"
 #include "Serialization.h"
 #include "CaptureWindow.h"
@@ -62,6 +63,7 @@
 #include "EventTracer.h"
 #else
 #include "LinuxUtils.h"
+#include "LinuxPerf.h"
 #endif
 
 class OrbitApp* GOrbitApp;
@@ -186,6 +188,39 @@ void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
         GCurrentTimeGraph->ProcessTimer(*a_Timer);
         ++Capture::GFunctionCountMap[a_Timer->m_FunctionAddress];
     }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::ProcessCallStack( CallStack& a_CallStack )
+{
+    if (ConnectionManager::Get().IsRemote())
+    {
+        // we only need to send the callstack, if it not yet present
+        if ( !Capture::GetCallstack(a_CallStack.Hash()) ) {
+            std::string messageData = SerializeObjectHumanReadable(a_CallStack);
+            GTcpServer->Send(Msg_RemoteCallStack, (void*) messageData.c_str(), messageData.size());
+        }
+    }
+
+    Capture::AddCallstack( a_CallStack );
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::AddSymbol(uint64_t a_Address, const std::string& a_Module, const std::string& a_Name)
+{
+    if (ConnectionManager::Get().IsRemote())
+    {
+        LinuxSymbol symbol;
+        symbol.m_Module = a_Module;
+        symbol.m_Name = a_Name;
+        symbol.m_Address = a_Address;
+        std::string messageData = SerializeObjectHumanReadable(symbol);
+        GTcpServer->Send(Msg_RemoteSymbol, (void*)messageData.c_str(), messageData.size());
+    }
+    auto symbol = std::make_shared<LinuxSymbol>();
+    symbol->m_Name = a_Name;
+    symbol->m_Module = a_Module;
+    Capture::GTargetProcess->AddSymbol( a_Address, symbol );
 }
 
 //-----------------------------------------------------------------------------

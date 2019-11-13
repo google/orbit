@@ -156,10 +156,7 @@ void BpfTrace::CommandCallback(const std::string& a_Line)
         m_CallStack.m_Data.push_back(address);
         if( Capture::GTargetProcess && !Capture::GTargetProcess->HasSymbol(address))
         {
-            auto symbol = std::make_shared<LinuxSymbol>();
-            symbol->m_Name = function;
-            symbol->m_Module = module;
-            Capture::GTargetProcess->AddSymbol( address, symbol );
+            GCoreApp->AddSymbol(address, module, function);
         }
 
         return;
@@ -175,7 +172,7 @@ void BpfTrace::CommandCallback(const std::string& a_Line)
             {
                 Timer& timer = timers.back();
                 timer.m_CallstackHash = m_CallStack.Hash();
-                Capture::AddCallstack( m_CallStack );
+                GCoreApp->ProcessCallStack( m_CallStack );
             }
         }
 
