@@ -99,7 +99,7 @@ void LinuxPerf::Stop()
     PRINT_VAR(cmd);
     LinuxUtils::ExecuteCommand(cmd.c_str());
 
-    if( ConnectionManager::Get().IsRemote() )
+    if( ConnectionManager::Get().IsService() )
     {
         std::ifstream t(m_ReportFile);
         std::stringstream buffer;

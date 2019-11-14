@@ -599,7 +599,7 @@ void Capture::NewSamplingProfiler()
 bool Capture::IsTrackingEvents()
 {
 #ifdef __linux
-    return true;
+    return !IsRemote();
 #else
     static bool yieldEvents = false;
     if( yieldEvents && IsOtherInstanceRunning() && GTargetProcess )

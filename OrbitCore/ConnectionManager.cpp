@@ -27,7 +27,7 @@
 #include <iostream>
 
 //-----------------------------------------------------------------------------
-ConnectionManager::ConnectionManager() : m_ExitRequested(false), m_IsRemote(false)
+ConnectionManager::ConnectionManager() : m_ExitRequested(false), m_IsService(false)
 {
     m_BpfTrace = std::make_shared<BpfTrace>();
 }
@@ -66,9 +66,9 @@ void ConnectionManager::ConnectToRemote(std::string a_RemoteAddress)
 }
 
 //-----------------------------------------------------------------------------
-void ConnectionManager::InitAsRemote()
+void ConnectionManager::InitAsService()
 {
-    m_IsRemote = true;
+    m_IsService = true;
     SetupServerCallbacks();
     m_Thread = std::make_unique<std::thread>(&ConnectionManager::RemoteThread, this);
 }

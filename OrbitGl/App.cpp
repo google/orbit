@@ -176,7 +176,7 @@ void GLoadPdbAsync( const std::vector<std::wstring> & a_Modules )
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
 {
-    if (ConnectionManager::Get().IsRemote())
+    if (ConnectionManager::Get().IsService())
     {
         // TODO: buffer incoming timers before sending them
         Message Msg(Msg_RemoteTimers);
@@ -193,9 +193,9 @@ void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessCallStack( CallStack& a_CallStack )
 {
-    if (ConnectionManager::Get().IsRemote())
+    if (ConnectionManager::Get().IsService())
     {
-        // we only need to send the callstack, if it not yet present
+        // Send full callstack once
         if ( !Capture::GetCallstack(a_CallStack.Hash()) ) {
             std::string messageData = SerializeObjectHumanReadable(a_CallStack);
             GTcpServer->Send(Msg_RemoteCallStack, (void*) messageData.c_str(), messageData.size());
@@ -208,7 +208,7 @@ void OrbitApp::ProcessCallStack( CallStack& a_CallStack )
 //-----------------------------------------------------------------------------
 void OrbitApp::AddSymbol(uint64_t a_Address, const std::string& a_Module, const std::string& a_Name)
 {
-    if (ConnectionManager::Get().IsRemote())
+    if (ConnectionManager::Get().IsService())
     {
         LinuxSymbol symbol;
         symbol.m_Module = a_Module;
@@ -356,8 +356,7 @@ void OrbitApp::PostInit()
     }
     else
     {
-        // TODO: headless doesn't necessarily means remote...
-        ConnectionManager::Get().InitAsRemote();
+        ConnectionManager::Get().InitAsService();
     }
 }
 

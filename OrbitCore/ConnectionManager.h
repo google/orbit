@@ -16,9 +16,9 @@ public:
     ~ConnectionManager();
     static ConnectionManager& Get();
     void Init();
-    void InitAsRemote();
+    void InitAsService();
     void ConnectToRemote(std::string a_RemoteAddress);
-    bool IsRemote(){ return m_IsRemote; } // True when Orbit instance is headless, next to remote process
+    bool IsService(){ return m_IsService; }
     void StartCaptureAsRemote();
     void StopCaptureAsRemote();
     void Stop();
@@ -35,6 +35,6 @@ protected:
     std::unique_ptr<std::thread> m_Thread;
     std::string                  m_RemoteAddress;
     std::atomic<bool>            m_ExitRequested;
-    bool                         m_IsRemote;
+    bool                         m_IsService;
     std::shared_ptr<class BpfTrace> m_BpfTrace;
 };
