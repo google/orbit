@@ -119,7 +119,7 @@ Function & CallStackDataView::GetFunction( unsigned int a_Row )
 
     if( m_CallStack )
     {
-        if( (int)a_Row < m_CallStack->m_Depth )
+        if( a_Row < m_CallStack->m_Depth )
         {
             ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
