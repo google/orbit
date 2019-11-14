@@ -28,7 +28,7 @@
 #include <iostream>
 
 //-----------------------------------------------------------------------------
-ConnectionManager::ConnectionManager() : m_ExitRequested(false), m_IsRemote(false)
+ConnectionManager::ConnectionManager() : m_ExitRequested(false), m_IsService(false)
 {
     m_BpfTrace = std::make_shared<BpfTrace>();
 }
@@ -67,9 +67,9 @@ void ConnectionManager::ConnectToRemote(std::string a_RemoteAddress)
 }
 
 //-----------------------------------------------------------------------------
-void ConnectionManager::InitAsRemote()
+void ConnectionManager::InitAsService()
 {
-    m_IsRemote = true;
+    m_IsService = true;
     SetupServerCallbacks();
     m_Thread = std::make_unique<std::thread>(&ConnectionManager::RemoteThread, this);
 }
@@ -185,6 +185,26 @@ void ConnectionManager::SetupClientCallbacks()
         {
             GTimerManager->Add(timers[i]);
         }
+    } );
+
+    GTcpClient->AddCallback(Msg_RemoteCallStack, [=](const Message& a_Msg)
+    {
+        CallStack stack;
+        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        cereal::JSONInputArchive inputAr(buffer);
+        inputAr(stack);
+
+        GCoreApp->ProcessCallStack(stack);
+    } );
+
+    GTcpClient->AddCallback(Msg_RemoteSymbol, [=](const Message& a_Msg)
+    {
+        LinuxSymbol symbol;
+        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        cereal::JSONInputArchive inputAr(buffer);
+        inputAr(symbol);
+
+        GCoreApp->AddSymbol(symbol.m_Address, symbol.m_Module, symbol.m_Name);
     } );
 }
 

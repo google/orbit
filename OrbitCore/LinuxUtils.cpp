@@ -203,7 +203,8 @@ void StreamCommandOutput(const char* a_Cmd, std::function<void(const std::string
 {
     std::cout << "Starting output stream for command" << a_Cmd << std::endl;
 
-    std::array<char, 128> buffer;
+    //TODO: Decrease the buffer to 128 again after we found a solution for bpftrace.
+    std::array<char, 2048> buffer;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(a_Cmd, "r"), pclose);
     
     if (!pipe) 

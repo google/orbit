@@ -145,13 +145,9 @@ void LinuxPerf::HandleLine( const std::string& a_Line )
         }
 
         m_PerfData.m_CS.m_Data.push_back(address);
-
         if( Capture::GTargetProcess && !Capture::GTargetProcess->HasSymbol(address))
         {
-            auto symbol = std::make_shared<LinuxSymbol>();
-            symbol->m_Name = function;
-            symbol->m_Module = module;
-            Capture::GTargetProcess->AddSymbol( address, symbol );
+            GCoreApp->AddSymbol(address, module, function);
         }
     }
     else if(isEndBlock)

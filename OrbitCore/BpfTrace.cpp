@@ -65,7 +65,7 @@ std::string BpfTrace::GetBpfScript()
             uint64_t virtual_address = (uint64_t)func->GetVirtualAddress();
             Capture::GSelectedFunctionsMap[func->m_Address] = func;
 
-            ss << "   uprobe:" << func->m_Probe << R"({ printf("b )" << std::to_string(virtual_address) << R"( %u %lld\n%s\nd\n", tid, nsecs, ustack(perf)); })" << std::endl;
+            ss << "   uprobe:" << func->m_Probe << R"({ printf("b )" << std::to_string(virtual_address) << R"( %u %lld\n%s\n\nd\n\n", tid, nsecs, ustack(perf)); })" << std::endl;
             ss << "uretprobe:" << func->m_Probe << R"({ printf("e )" << std::to_string(virtual_address) << R"( %u %lld\n", tid, nsecs); })" << std::endl;
         }
     }
@@ -118,8 +118,19 @@ void BpfTrace::CommandCallback(const std::string& a_Line)
     bool isEndOfStack = a_Line == "d\n";
 
     if (!isBegin && !isEnd && !isStackLine && !isEndOfStack)
-    {
-        assert(StartsWith(a_Line, "Attaching"));
+    {  
+        if (StartsWith(a_Line, "Lost"))
+        {
+            PRINT(a_Line.c_str());
+            return;
+        }
+
+        if (StartsWith(a_Line, "Attaching")) 
+            return;
+
+        // if the line does not start with one of the above,
+        // we might have a broken line, e.g. due to a small buffer
+        PRINT("read unexpected line:%s\nthe buffer might be to small.", a_Line.c_str());
         return;
     }
 
@@ -145,10 +156,7 @@ void BpfTrace::CommandCallback(const std::string& a_Line)
         m_CallStack.m_Data.push_back(address);
         if( Capture::GTargetProcess && !Capture::GTargetProcess->HasSymbol(address))
         {
-            auto symbol = std::make_shared<LinuxSymbol>();
-            symbol->m_Name = function;
-            symbol->m_Module = module;
-            Capture::GTargetProcess->AddSymbol( address, symbol );
+            GCoreApp->AddSymbol(address, module, function);
         }
 
         return;
@@ -164,7 +172,7 @@ void BpfTrace::CommandCallback(const std::string& a_Line)
             {
                 Timer& timer = timers.back();
                 timer.m_CallstackHash = m_CallStack.Hash();
-                Capture::AddCallstack( m_CallStack );
+                GCoreApp->ProcessCallStack( m_CallStack );
             }
         }
 
