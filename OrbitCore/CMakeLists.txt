@@ -47,6 +47,7 @@ set(HEADERS
     LinuxPerfEventVisitor.h
     LinuxPerfUtils.h
     LinuxEventTracer.h
+    LinuxEventTracerVisitor.h
     Log.h
     LogInterface.h
     MemoryTracker.h
@@ -111,6 +112,7 @@ set(SOURCES
     LinuxPerfEvent.cpp
     LinuxPerfUtils.cpp
     LinuxEventTracer.cpp
+    LinuxEventTracerVisitor.cpp
     Log.cpp
     LogInterface.cpp
     MemoryTracker.cpp

@@ -7,7 +7,9 @@
 #include "PrintVar.h"
 #include "LinuxPerfUtils.h"
 #include "LinuxPerfEvent.h"
+#include "LinuxPerfEventVisitor.h"
 #include "LinuxEventTracer.h"
+#include "LinuxEventTracerVisitor.h"
 #include "LinuxUtils.h"
 #include "Utils.h"
 #include "Capture.h"
@@ -35,14 +37,8 @@ void LinuxEventTracer::Start()
 #if __linux__
     m_ExitRequested = false;
 
-    m_Thread = std::make_shared<std::thread>(&LinuxEventTracer::foo, &m_ExitRequested);
+    m_Thread = std::make_shared<std::thread>(&LinuxEventTracer::Run, &m_ExitRequested);
 
-   /* m_Thread = std::make_shared<std::thread>
-        ( &LinuxUtils::StreamCommandOutput
-        , "perf record -e sched:sched_switch -o - | perf script -i -"
-        , m_Callback
-        , &m_ExitRequested );
-    */
     m_Thread->detach();
 #endif
 }
@@ -53,71 +49,7 @@ void LinuxEventTracer::Stop()
     m_ExitRequested = true;
 }
 
-
-//-----------------------------------------------------------------------------
-void LinuxEventTracer::CommandCallback(std::string a_Line)
-{
-    std::vector<std::string> tokens = Tokenize(a_Line);
-    
-    // TODO: log broken lines
-    if (tokens[4] != "sched:sched_switch:" || tokens[8] != "==>")
-    {
-        return;
-    }
-
-    auto oldTID = atoi(tokens[1].c_str());
-    auto cpu = atoi(trim(tokens[2], "[]").c_str());
-    auto time = GetMicros(tokens[3])*1000;
-    char state = tokens[7].at(0);
-
-    auto newCommCPUTID = Tokenize(tokens[9], "/:");
-    auto newTID = atoi(newCommCPUTID.back().c_str());
-
-    // TODO: only process context switches that relate to the traced process.
-
-    ContextSwitch::SwitchType type = ContextSwitch::Invalid;
-    int tid = -1;
-    switch (state)
-    {
-    // sleep:
-    case 'S':
-        //if (!Capture::GTargetProcess->HasThread(oldTID))
-        //    return;
-
-        type = ContextSwitch::Out;
-        tid = oldTID;
-        break;
-    
-    // run:
-    case 'R':
-        //if (!Capture::GTargetProcess->HasThread(newTID))
-        //    return;
-
-        type = ContextSwitch::In;
-        tid = newTID;
-        break;
-
-    // TODO: handle the other cases
-
-    default:
-        return;
-    }
-
-    if (state != ContextSwitch::Invalid && tid != -1)
-    {
-        ++Capture::GNumContextSwitches;
-
-        ContextSwitch CS ( type );
-        CS.m_ThreadId = tid;
-        CS.m_Time = time;
-        CS.m_ProcessorIndex = cpu;
-        //TODO: Is this correct?
-        CS.m_ProcessorNumber = cpu;
-        GTimerManager->Add( CS );
-    }
-}
-
-void LinuxEventTracer::foo(bool* a_ExitRequested)
+void LinuxEventTracer::Run(bool* a_ExitRequested)
 {
     int cpus = std::stoi(LinuxUtils::ExecuteCommand("nproc"));
     uint64_t tracepointID = LinuxUtils::GetTracePointID("sched", "sched_switch");
@@ -129,7 +61,6 @@ void LinuxEventTracer::foo(bool* a_ExitRequested)
         fds.push_back(LinuxPerfUtils::task_event_open(cpu)); 
         fds.push_back(LinuxPerfUtils::tracepoint_event_open(tracepointID, -1 /*pid*/, cpu)); 
     }
-
 
     // TODO: wrap the ringbuffers into a class
     std::vector<perf_event_mmap_page*> metadatas;
@@ -155,11 +86,10 @@ void LinuxEventTracer::foo(bool* a_ExitRequested)
     }
 
     // keep threads in synch.
-    auto targetProcess = Capture::GTargetProcess;
-    auto threads = LinuxUtils::ListThreads(targetProcess->GetID());
+    auto threads = LinuxUtils::ListThreads(Capture::GTargetProcess->GetID());
 
     for (uint64_t tid : threads) {
-        targetProcess->AddThreadId(tid);
+        Capture::GTargetProcess->AddThreadId(tid);
     }
 
     // create a priority queue to buffer events an process them in sorted by their timestamp
@@ -175,13 +105,14 @@ void LinuxEventTracer::foo(bool* a_ExitRequested)
         decltype(compare)
     > event_queue(compare);
 
+    LinuxEventTracerVisitor visitor;
 
     while (!(*a_ExitRequested))
     {
         while(!event_queue.empty())
         {
             auto event = event_queue.top();
-            //TODO: call the visitor
+            event->accept(visitor);
             event_queue.pop();
         }
 
@@ -227,19 +158,11 @@ void LinuxEventTracer::foo(bool* a_ExitRequested)
                 } else if (header.type == PERF_RECORD_LOST) {
                     perf_event_lost* lost = reinterpret_cast<perf_event_lost*>(record);
                     auto e = std::make_shared<LinuxPerfLostEvent>(lost);
-                    PRINT("Lost Events");
                     event_queue.push(e);
                 } else if (header.type == PERF_RECORD_FORK) {
                     perf_event_fork_exit* fork = reinterpret_cast<perf_event_fork_exit*>(record);
                     auto e = std::make_shared<LinuxForkEvent>(fork);
                     event_queue.push(e);
-                    // TODO: move this to the visitor
-                    // todo: check if this is correct:
-                    // todo: it might be also correct to check check if ppid == process.id
-                    if (targetProcess->HasThread(fork->ptid))
-                    {
-                        targetProcess->AddThreadId(fork->tid);
-                    }
                 } else if (header.type == PERF_RECORD_EXIT) {
                     // TODO: here we could easily remove the threads from the process again.
                 } else {

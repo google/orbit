@@ -23,6 +23,6 @@ private:
     std::shared_ptr<std::thread> m_Thread;
     Callback m_Callback;
 
-    static void foo(bool* a_ExitRequested);
+    static void Run(bool* a_ExitRequested);
 
 };

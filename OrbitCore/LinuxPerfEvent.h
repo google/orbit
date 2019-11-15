@@ -36,6 +36,8 @@ public:
         LinuxPerfLostEvent(lost_event->sample_id.time, lost_event->lost)
     {}
 
+    uint32_t Lost() { return m_Lost; }
+
     void accept(LinuxPerfEventVisitor& v) override;
 private:
     uint32_t m_Lost;
@@ -110,9 +112,6 @@ public:
     ) : LinuxTracePointEvent(a_Timestamp, a_PID, a_TID, a_CPU),
         m_PrevPID(a_PrevPID), m_PrevState(a_PrevState), m_NextPID(a_NextPID)
     {
-        if (a_PrevPID != PID()){
-            //PRINT("Unexpected PID's on context switch - Please file a bug.\n");
-        }
     }
 
     LinuxSchedSwitchEvent(const perf_event_sched_switch_tp* sched_switch) 
@@ -123,6 +122,10 @@ public:
     )
     {
     }
+
+    int32_t PrevPID() { return m_PrevPID; }
+    int64_t PrevState() { return m_PrevState; }
+    int32_t NextPID() { return m_NextPID; }
 
     void accept(LinuxPerfEventVisitor& v) override;
 private:

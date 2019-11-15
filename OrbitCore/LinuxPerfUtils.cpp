@@ -48,6 +48,8 @@ int32_t LinuxPerfUtils::task_event_open(int32_t cpu) {
     pe.config = PERF_COUNT_SW_DUMMY;
     pe.task = 1;
     pe.sample_period = 1;
+    // we want the sample_id present in all events
+    pe.sample_id_all = 1;
     pe.disabled = 1;
 
     pe.sample_type = 0;
@@ -62,6 +64,8 @@ int32_t LinuxPerfUtils::tracepoint_event_open(uint64_t a_TracepointID, pid_t pid
     pe.type = PERF_TYPE_TRACEPOINT;
     pe.config = a_TracepointID;
     pe.sample_period = 1;
+    // we want the sample_id struct in the lost events
+    pe.sample_id_all = 1;
     pe.disabled = 1;
     // TODO: This would be needed if we also want to capture the stack
     pe.sample_stack_user = (1u << 16u) - 8;

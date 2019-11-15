@@ -7,7 +7,7 @@
 class LinuxPerfEventVisitor
 {
 public:
-    virtual void visit(const LinuxPerfLostEvent* e) = 0;
-    virtual void visit(const LinuxForkEvent* e) = 0;
-    virtual void visit(const LinuxSchedSwitchEvent* e) = 0;
+    virtual void visit(LinuxPerfLostEvent* e) = 0;
+    virtual void visit(LinuxForkEvent* e) = 0;
+    virtual void visit(LinuxSchedSwitchEvent* e) = 0;
 };
