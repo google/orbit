@@ -22,15 +22,6 @@
 
 
 //-----------------------------------------------------------------------------
-LinuxEventTracer::LinuxEventTracer()
-{
-    //m_Callback = a_Callback ? a_Callback : [this](const std::string& a_Buffer)
-    //{
-    //    CommandCallback(a_Buffer);
-    //};
-}
-
-//-----------------------------------------------------------------------------
 void LinuxEventTracer::Start()
 {
     PRINT_FUNC;

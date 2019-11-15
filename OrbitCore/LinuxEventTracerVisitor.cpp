@@ -22,7 +22,6 @@ void LinuxEventTracerVisitor::visit(LinuxForkEvent* e)
         targetProcess->AddThreadId(e->TID());
         if (e->ParentPID() != targetProcess->GetID())
         {
-            PRINT("ASD\n");
         }
     }
 }
@@ -44,7 +43,6 @@ void LinuxEventTracerVisitor::visit(LinuxSchedSwitchEvent* e)
         //TODO: Is this correct?
         CS.m_ProcessorNumber = e->CPU();
         GTimerManager->Add( CS );
-        PRINT("OUT%u\n", e->PrevPID());
     }
 
     // the known thread starts running
@@ -59,7 +57,5 @@ void LinuxEventTracerVisitor::visit(LinuxSchedSwitchEvent* e)
         //TODO: Is this correct?
         CS.m_ProcessorNumber = e->CPU();
         GTimerManager->Add( CS );
-
-        PRINT("IN%u\n", e->NextPID());
     }
 }

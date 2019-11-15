@@ -10,7 +10,6 @@ class LinuxEventTracer
 {
 public:
     typedef std::function<void(const std::string& a_Data)> Callback;
-    LinuxEventTracer();
     void Start();
     void Stop();
     bool IsRunning() const { return !m_ExitRequested; }
