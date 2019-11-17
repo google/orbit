@@ -205,7 +205,7 @@ void OrbitApp::ProcessSamplingCallStack(LinuxPerfData& a_CallStack)
     else
     {
         Capture::GSamplingProfiler->AddCallStack( a_CallStack.m_CS );
-        GEventTracer.GetEventBuffer().AddCallstackEvent( a_CallStack.m_time, a_CallStack.m_CS );
+        GEventTracer.GetEventBuffer().AddCallstackEvent( a_CallStack.m_time, a_CallStack.m_CS.Hash(), a_CallStack.m_tid );
     }
 }
 

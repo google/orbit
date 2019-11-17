@@ -152,28 +152,23 @@ void LinuxPerf::HandleLine( const std::string& a_Line )
     }
     else if(isEndBlock)
     {
-        if( m_PerfData.m_CS.m_Data.size() )
+        CallStack& CS = m_PerfData.m_CS;
+        if( CS.m_Data.size() )
         {
-            if( CS.m_Data.size() )
-            {
-                CS.m_Depth = (uint32_t)CS.m_Data.size();
-                CS.m_ThreadId = tid;
-                CallstackID hash = CS.Hash();
+            CS.m_Depth = (uint32_t)CS.m_Data.size();
+            CS.m_ThreadId = m_PerfData.m_tid;
+            CallstackID hash = CS.Hash();
 
-                HashedCallStack hashedCallStack;
-                hashedCallStack.m_Depth = CS.m_Depth;
-                hashedCallStack.m_Hash = hash;
-                hashedCallStack.m_ThreadId = tid;
+            GCoreApp->ProcessSamplingCallStack(m_PerfData);
+            ++m_PerfData.m_numCallstacks;
 
-                Capture::GSamplingProfiler->AddHashedCallStack( hashedCallStack );
-                GEventTracer.GetEventBuffer().AddCallstackEvent( time, hash, tid );
-                ++numCallstacks;
-            }
+            HashedCallStack hashedCallStack;
+            hashedCallStack.m_Depth = CS.m_Depth;
+            hashedCallStack.m_Hash = hash;
+            hashedCallStack.m_ThreadId = m_PerfData.m_tid;
 
-            CS.m_Data.clear();
-            header = "";
-            time = 0;
-            tid = 0;
+            Capture::GSamplingProfiler->AddHashedCallStack( hashedCallStack );
+            GEventTracer.GetEventBuffer().AddCallstackEvent( m_PerfData.m_time, hash, m_PerfData.m_tid );
         }
 
         m_PerfData.Clear();
