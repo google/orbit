@@ -3,6 +3,8 @@
 //-----------------------------------
 #pragma once
 
+#include "Message.h"
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -18,6 +20,8 @@ public:
     void Init();
     void InitAsService();
     void ConnectToRemote(std::string a_RemoteAddress);
+    bool IsRemote(){ return m_IsRemote; } // True when Orbit instance is headless, next to remote process
+    void SetSelectedFunctionsOnRemote(const Message & a_Msg);
     bool IsService(){ return m_IsService; }
     void StartCaptureAsRemote();
     void StopCaptureAsRemote();

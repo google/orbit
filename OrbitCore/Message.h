@@ -65,6 +65,7 @@ enum MessageType : int16_t
     Msg_RemoteSymbol,
     Msg_SamplingCallstack,
     Msg_TimerCallstack,
+    Msg_RemoteSelectedFunctionsMap,
 };
 
 //-----------------------------------------------------------------------------

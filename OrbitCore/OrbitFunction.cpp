@@ -15,6 +15,8 @@
 #include "SamplingProfiler.h"
 #include "Utils.h"
 
+#include <map>
+
 #ifdef _WIN32
 #include "OrbitDia.h"
 #include "SymbolUtils.h"
@@ -74,6 +76,21 @@ bool Function::Hookable()
         return ((conv == CV_CALL_NEAR_C || conv == CV_CALL_THISCALL) && m_Size >= 5)
             || (GParams.m_AllowUnsafeHooking && m_Size == 0);
     }
+}
+
+void Function::Select()
+{ 
+    if( Hookable() )
+    {
+        m_Selected = true; 
+        Capture::GSelectedFunctionsMap[GetVirtualAddress()] = this;
+    }
+}
+
+void Function::UnSelect()
+{
+    m_Selected = false;
+    Capture::GSelectedFunctionsMap.erase(GetVirtualAddress());
 }
 
 //-----------------------------------------------------------------------------

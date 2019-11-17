@@ -16,7 +16,9 @@
 #include "SamplingProfiler.h"
 #include "CoreApp.h"
 #include "OrbitModule.h"
+#include "OrbitFunction.h"
 #include "BpfTrace.h"
+#include "Serialization.h"
 
 #if __linux__
 #include "LinuxUtils.h"
@@ -75,6 +77,43 @@ void ConnectionManager::InitAsService()
 }
 
 //-----------------------------------------------------------------------------
+void ConnectionManager::SetSelectedFunctionsOnRemote( const Message & a_Msg ) {
+    PRINT_FUNC;
+    const char* a_Data = a_Msg.GetData();
+     size_t a_Size = a_Msg.m_Size;
+    std::istringstream buffer(std::string(a_Data, a_Size));
+    cereal::JSONInputArchive inputAr( buffer );
+    std::vector<std::string> selectedFunctions;
+    inputAr(selectedFunctions);
+
+    // Unselect the all currently selected functions:
+    std::vector<Function*> prevSelectedFuncs;
+    for (auto& pair : Capture::GSelectedFunctionsMap)
+    {
+        prevSelectedFuncs.push_back(pair.second);
+    }
+
+    Capture::GSelectedFunctionsMap.clear();
+    for (Function* function : prevSelectedFuncs) {
+        function->UnSelect();
+    }
+
+    // Select the received functions:
+    for (const std::string& address : selectedFunctions) {
+        PRINT_VAR(address);
+        Function* function = Capture::GTargetProcess->GetFunctionFromAddress(std::stoll(address));
+        if (!function)
+            PRINT("received invalid address");
+        else{
+            PRINT("Received Selected Function: %s\n", function->m_PrettyName.c_str());
+            // this also adds the function to the map.
+            function->Select();
+        }
+
+    }
+}
+
+//-----------------------------------------------------------------------------
 void ConnectionManager::StartCaptureAsRemote()
 {
     PRINT_FUNC;
@@ -102,6 +141,11 @@ void ConnectionManager::SetupServerCallbacks()
     GTcpServer->AddMainThreadCallback( Msg_BpfScript, [=](const Message& a_Msg )
     {
         m_BpfTrace->SetBpfScript(a_Msg.GetData());
+    } );
+
+    GTcpServer->AddMainThreadCallback( Msg_RemoteSelectedFunctionsMap, [=]( const Message & a_Msg )
+    {
+        SetSelectedFunctionsOnRemote(a_Msg);
     } );
 
     GTcpServer->AddMainThreadCallback( Msg_StartCapture, [=]( const Message & a_Msg )
