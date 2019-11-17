@@ -176,7 +176,7 @@ void BpfTrace::CommandCallback(const std::string& a_Line)
             }
         }
 
-        m_CallStack.m_Data.clear();
+        m_CallStack.Clear();
         m_LastThreadName = "";
         return;
     }

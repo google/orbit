@@ -41,6 +41,7 @@ struct CallStack
     }
     void Print();
     std::wstring GetString();
+    void Clear() { m_Data.clear(); m_Hash = m_Depth = m_ThreadId = 0; }
 
     CallstackID m_Hash = 0;
     uint32_t    m_Depth = 0;
