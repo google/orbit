@@ -66,7 +66,7 @@ public:
     inline void Send(const std::string& a_String);
     inline void Send(OrbitLogEntry& a_Entry);
     inline void Send(Orbit::UserData& a_Entry);
-    inline void Send(MessageType a_Type , void* a_Data, size_t a_Size);
+    inline void Send(MessageType a_Type , const void* a_Data, size_t a_Size);
 
     template<class T> void Send( Message & a_Message, const std::vector<T> & a_Vector );
     template<class T> void Send( MessageType a_Type , const std::vector<T> & a_Vector );
@@ -199,7 +199,7 @@ template<class T> void TcpEntity::Send( MessageType a_Type, const T& a_Item )
 }
 
 //-----------------------------------------------------------------------------
-void TcpEntity::Send( MessageType a_Type , void* a_Data, size_t a_Size )
+void TcpEntity::Send( MessageType a_Type , const void* a_Data, size_t a_Size )
 {
     Message msg(a_Type);
     msg.m_Size = (uint32_t)a_Size;

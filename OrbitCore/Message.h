@@ -39,6 +39,7 @@ enum MessageType : int16_t
     Msg_NumFlushedEntries,
     Msg_NumFlushedItems,
     Msg_NumInstalledHooks,
+    // TODO: This should not be needed in the future.
     Msg_Callstack,
     Msg_OrbitZoneName,
     Msg_OrbitLog,
@@ -60,6 +61,11 @@ enum MessageType : int16_t
     Msg_RemoteModuleDebugInfo,
     Msg_BpfScript,
     Msg_RemoteTimers,
+    Msg_RemoteCallStack,
+    Msg_RemoteSymbol,
+    Msg_SamplingCallstack,
+    Msg_TimerCallstack,
+    Msg_RemoteSelectedFunctionsMap,
 };
 
 //-----------------------------------------------------------------------------

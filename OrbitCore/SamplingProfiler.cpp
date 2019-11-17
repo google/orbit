@@ -139,6 +139,15 @@ void SamplingProfiler::FireDoneProcessingCallbacks()
 }
 
 //-----------------------------------------------------------------------------
+void SamplingProfiler::AddCallStack( CallStack & a_CallStack ) {
+    if( m_State == Sampling )
+    {
+        ScopeLock lock(m_SymbolMutex);
+        m_Callstacks.push_back( a_CallStack );
+    }
+}
+
+//-----------------------------------------------------------------------------
 std::multimap<int, CallstackID> SamplingProfiler::GetCallStacksFromAddress( uint64_t a_Addr, ThreadID a_TID, int & o_NumCallstacks )
 {
     std::set<CallstackID> & callstacks = m_FunctionToCallstacks[a_Addr];

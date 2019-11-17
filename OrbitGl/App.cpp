@@ -19,6 +19,7 @@
 #include "SessionsDataView.h"
 #include "SamplingReport.h"
 #include "ScopeTimer.h"
+#include "Callstack.h"
 #include "OrbitSession.h"
 #include "Serialization.h"
 #include "CaptureWindow.h"
@@ -28,9 +29,12 @@
 #include "CaptureSerializer.h"
 #include "PluginManager.h"
 #include "RuleEditor.h"
+#include "LinuxPerfData.h"
 
 #include "OrbitAsm/OrbitAsm.h"
 #include "OrbitCore/Pdb.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/SamplingProfiler.h"
 #include "OrbitCore/ModuleManager.h"
 #include "OrbitCore/TcpServer.h"
 #include "OrbitCore/TcpClient.h"
@@ -62,6 +66,7 @@
 #include "EventTracer.h"
 #else
 #include "LinuxUtils.h"
+#include "LinuxPerf.h"
 #endif
 
 class OrbitApp* GOrbitApp;
@@ -174,7 +179,7 @@ void GLoadPdbAsync( const std::vector<std::wstring> & a_Modules )
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
 {
-    if (ConnectionManager::Get().IsRemote())
+    if (ConnectionManager::Get().IsService())
     {
         // TODO: buffer incoming timers before sending them
         Message Msg(Msg_RemoteTimers);
@@ -186,6 +191,55 @@ void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
         GCurrentTimeGraph->ProcessTimer(*a_Timer);
         ++Capture::GFunctionCountMap[a_Timer->m_FunctionAddress];
     }
+}
+
+// TODO: This method should try to send the callstack hashes only.
+//-----------------------------------------------------------------------------
+void OrbitApp::ProcessSamplingCallStack(LinuxPerfData& a_CallStack)
+{
+    if (ConnectionManager::Get().IsService())
+    {
+        std::string messageData = SerializeObjectHumanReadable(a_CallStack);
+        GTcpServer->Send(Msg_SamplingCallstack, messageData.c_str(), messageData.size());
+    }
+    else
+    {
+        Capture::GSamplingProfiler->AddCallStack( a_CallStack.m_CS );
+        GEventTracer.GetEventBuffer().AddCallstackEvent( a_CallStack.m_time, a_CallStack.m_CS );
+    }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::ProcessCallStack( CallStack& a_CallStack )
+{
+    if (ConnectionManager::Get().IsService())
+    {
+        // Send full callstack once
+        if ( !Capture::GetCallstack(a_CallStack.Hash()) ) {
+            std::string messageData = SerializeObjectHumanReadable(a_CallStack);
+            GTcpServer->Send(Msg_RemoteCallStack, (void*) messageData.c_str(), messageData.size());
+        }
+    }
+
+    Capture::AddCallstack( a_CallStack );
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::AddSymbol(uint64_t a_Address, const std::string& a_Module, const std::string& a_Name)
+{
+    if (ConnectionManager::Get().IsService())
+    {
+        LinuxSymbol symbol;
+        symbol.m_Module = a_Module;
+        symbol.m_Name = a_Name;
+        symbol.m_Address = a_Address;
+        std::string messageData = SerializeObjectHumanReadable(symbol);
+        GTcpServer->Send(Msg_RemoteSymbol, (void*)messageData.c_str(), messageData.size());
+    }
+    auto symbol = std::make_shared<LinuxSymbol>();
+    symbol->m_Name = a_Name;
+    symbol->m_Module = a_Module;
+    Capture::GTargetProcess->AddSymbol( a_Address, symbol );
 }
 
 //-----------------------------------------------------------------------------
@@ -321,8 +375,7 @@ void OrbitApp::PostInit()
     }
     else
     {
-        // TODO: headless doesn't necessarily means remote...
-        ConnectionManager::Get().InitAsRemote();
+        ConnectionManager::Get().InitAsService();
     }
 }
 

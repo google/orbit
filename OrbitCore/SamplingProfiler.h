@@ -95,10 +95,11 @@ public:
     float GetSampleTimeTotal() const { return m_SampleTimeSeconds; }
     bool  ShouldStop();
     void FireDoneProcessingCallbacks();
-    // TODO: remove this method in the future.
+
     void AddCallStack( CallStack & a_CallStack );
     void AddHashedCallStack( HashedCallStack & a_CallStack );
     void AddUniqueCallStack( CallStack & a_CallStack );
+  
     const std::shared_ptr<CallStack> GetCallStack( CallstackID a_ID ) { return m_UniqueCallstacks[a_ID]; }
     
     inline bool HasCallStack( CallstackID a_ID )

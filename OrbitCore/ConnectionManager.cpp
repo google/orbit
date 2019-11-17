@@ -12,10 +12,13 @@
 #include "EventBuffer.h"
 #include "ProcessUtils.h"
 #include "LinuxPerf.h"
+#include "LinuxPerfData.h"
 #include "SamplingProfiler.h"
 #include "CoreApp.h"
 #include "OrbitModule.h"
+#include "OrbitFunction.h"
 #include "BpfTrace.h"
+#include "Serialization.h"
 
 #if __linux__
 #include "LinuxUtils.h"
@@ -27,7 +30,7 @@
 #include <iostream>
 
 //-----------------------------------------------------------------------------
-ConnectionManager::ConnectionManager() : m_ExitRequested(false), m_IsRemote(false)
+ConnectionManager::ConnectionManager() : m_ExitRequested(false), m_IsService(false)
 {
     m_BpfTrace = std::make_shared<BpfTrace>();
 }
@@ -66,11 +69,48 @@ void ConnectionManager::ConnectToRemote(std::string a_RemoteAddress)
 }
 
 //-----------------------------------------------------------------------------
-void ConnectionManager::InitAsRemote()
+void ConnectionManager::InitAsService()
 {
-    m_IsRemote = true;
+    m_IsService = true;
     SetupServerCallbacks();
     m_Thread = std::make_unique<std::thread>(&ConnectionManager::RemoteThread, this);
+}
+
+//-----------------------------------------------------------------------------
+void ConnectionManager::SetSelectedFunctionsOnRemote( const Message & a_Msg ) {
+    PRINT_FUNC;
+    const char* a_Data = a_Msg.GetData();
+     size_t a_Size = a_Msg.m_Size;
+    std::istringstream buffer(std::string(a_Data, a_Size));
+    cereal::JSONInputArchive inputAr( buffer );
+    std::vector<std::string> selectedFunctions;
+    inputAr(selectedFunctions);
+
+    // Unselect the all currently selected functions:
+    std::vector<Function*> prevSelectedFuncs;
+    for (auto& pair : Capture::GSelectedFunctionsMap)
+    {
+        prevSelectedFuncs.push_back(pair.second);
+    }
+
+    Capture::GSelectedFunctionsMap.clear();
+    for (Function* function : prevSelectedFuncs) {
+        function->UnSelect();
+    }
+
+    // Select the received functions:
+    for (const std::string& address : selectedFunctions) {
+        PRINT_VAR(address);
+        Function* function = Capture::GTargetProcess->GetFunctionFromAddress(std::stoll(address));
+        if (!function)
+            PRINT("received invalid address");
+        else{
+            PRINT("Received Selected Function: %s\n", function->m_PrettyName.c_str());
+            // this also adds the function to the map.
+            function->Select();
+        }
+
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -101,6 +141,11 @@ void ConnectionManager::SetupServerCallbacks()
     GTcpServer->AddMainThreadCallback( Msg_BpfScript, [=](const Message& a_Msg )
     {
         m_BpfTrace->SetBpfScript(a_Msg.GetData());
+    } );
+
+    GTcpServer->AddMainThreadCallback( Msg_RemoteSelectedFunctionsMap, [=]( const Message & a_Msg )
+    {
+        SetSelectedFunctionsOnRemote(a_Msg);
     } );
 
     GTcpServer->AddMainThreadCallback( Msg_StartCapture, [=]( const Message & a_Msg )
@@ -163,6 +208,18 @@ void ConnectionManager::SetupClientCallbacks()
         GCoreApp->RefreshCaptureView();
     } );
 
+    GTcpClient->AddCallback ( Msg_SamplingCallstack, [=]( const Message& a_Msg )
+    {
+        // TODO: Send buffered callstacks.
+        LinuxPerfData data;
+
+        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        cereal::JSONInputArchive inputAr(buffer);
+        inputAr(data);
+
+        GCoreApp->ProcessSamplingCallStack(data);
+    } );
+
     
     GTcpClient->AddCallback(Msg_RemoteTimers, [=](const Message& a_Msg)
     {
@@ -172,6 +229,26 @@ void ConnectionManager::SetupClientCallbacks()
         {
             GTimerManager->Add(timers[i]);
         }
+    } );
+
+    GTcpClient->AddCallback(Msg_RemoteCallStack, [=](const Message& a_Msg)
+    {
+        CallStack stack;
+        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        cereal::JSONInputArchive inputAr(buffer);
+        inputAr(stack);
+
+        GCoreApp->ProcessCallStack(stack);
+    } );
+
+    GTcpClient->AddCallback(Msg_RemoteSymbol, [=](const Message& a_Msg)
+    {
+        LinuxSymbol symbol;
+        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        cereal::JSONInputArchive inputAr(buffer);
+        inputAr(symbol);
+
+        GCoreApp->AddSymbol(symbol.m_Address, symbol.m_Module, symbol.m_Name);
     } );
 }
 

@@ -10,6 +10,7 @@
 #include "PrintVar.h"
 #include "Capture.h"
 #include "Callstack.h"
+#include "CoreApp.h"
 #include "SamplingProfiler.h"
 #include "EventBuffer.h"
 #include "Capture.h"
@@ -47,8 +48,11 @@ LinuxPerf::LinuxPerf( uint32_t a_PID, uint32_t a_Freq )
         : m_PID(a_PID)
         , m_Frequency(a_Freq)
 {
-    m_OutputFile = "/tmp/perf.data";
-    m_ReportFile = Replace(m_OutputFile, ".data", ".txt");
+    m_Callback = [this](const std::string& a_Buffer)
+    {
+        HandleLine( a_Buffer );
+    };
+    m_PerfCommand = Format("perf record -k monotonic -F %u -p %u -g --no-buffering -o - | perf script -i -", m_Frequency, m_PID);
 }
 
 //-----------------------------------------------------------------------------
@@ -56,27 +60,18 @@ void LinuxPerf::Start()
 {
     PRINT_FUNC;
 #if __linux__
-    m_IsRunning = true;
+    m_ExitRequested = false;
 
-    std::string path = ws2s(Path::GetBasePath());
+    m_PerfData.Clear();
 
-    pid_t PID = fork();
-    if(PID == 0) {
-        execl   ( "/usr/bin/perf"
-                , "/usr/bin/perf"
-                , "record"
-                , "-k", "monotonic"
-                , "-F", Format("%u", m_Frequency).c_str()
-                , "-p", Format("%u", m_PID).c_str()
-                , "-g"
-                , "-o", m_OutputFile.c_str(), (const char*)nullptr);
-        exit(1);
-    }
-    else
-    {
-        m_ForkedPID = PID;
-        PRINT_VAR(m_ForkedPID);
-    }
+    m_Thread = std::make_shared<std::thread>
+        ( &LinuxUtils::StreamCommandOutput
+        , m_PerfCommand.c_str()
+        , m_Callback
+        , &m_ExitRequested
+        );
+    
+    m_Thread->detach();
 #endif
 }
 
@@ -85,35 +80,7 @@ void LinuxPerf::Stop()
 {
     PRINT_FUNC;
 #if __linux__
-    if( m_ForkedPID != 0 )
-    {
-        kill(m_ForkedPID, 15);
-        int status = 0;
-        waitpid(m_ForkedPID, &status, 0);
-    }
-
-    m_IsRunning = false;
-
-    //m_Thread = std::make_shared<std::thread>([this]{
-    std::string cmd = Format("perf script -i %s > %s", m_OutputFile.c_str(), m_ReportFile.c_str());
-    PRINT_VAR(cmd);
-    LinuxUtils::ExecuteCommand(cmd.c_str());
-
-    if( ConnectionManager::Get().IsRemote() )
-    {
-        std::ifstream t(m_ReportFile);
-        std::stringstream buffer;
-        buffer << t.rdbuf();
-        std::string perfData = buffer.str();
-        GTcpServer->Send(Msg_RemotePerf, (void*)perfData.data(), perfData.size());
-    }
-    //else
-    {
-        LoadPerfData(m_ReportFile);
-    }
-    // });
-
-    // m_Thread->detach();
+    m_ExitRequested = true;
 #endif
 }
 
@@ -140,79 +107,52 @@ bool ParseStackLine( const std::string& a_Line, uint64_t& o_Address, std::string
     return true;
 }
 
-//-----------------------------------------------------------------------------
-void LinuxPerf::LoadPerfData( const std::string& a_FileName )
+void LinuxPerf::HandleLine( const std::string& a_Line )
 {
-    SCOPE_TIMER_LOG(L"LoadPerfData");
-    std::ifstream inFile(a_FileName);
-    if( inFile.fail() )
+    bool isEmptyLine = (a_Line.empty() || a_Line == "\n");
+    bool isHeader = !isEmptyLine && !StartsWith(a_Line, "\t");
+    bool isStackLine = !isHeader && !isEmptyLine;
+    bool isEndBlock = !isStackLine && isEmptyLine && !m_PerfData.m_header.empty();
+
+    if(isHeader)
     {
-        PRINT_VAR("Could not open input file");
-        PRINT_VAR(a_FileName);
-        return;
+        m_PerfData.m_header = a_Line;
+        auto tokens = Tokenize(a_Line);
+        m_PerfData.m_time = tokens.size() > 2 ? GetMicros(tokens[2])*1000 : 0;
+        m_PerfData.m_tid  = tokens.size() > 1 ? atoi(tokens[1].c_str()) : 0;
     }
-
-    LoadPerfData(inFile);
-    inFile.close();
-}
-
-//-----------------------------------------------------------------------------
-void LinuxPerf::LoadPerfData( std::istream& a_Stream )
-{
-    std::string header;
-    uint32_t tid = 0;
-    uint64_t time = 0;
-    uint64_t numCallstacks = 0;
-
-    CallStack CS;
-
-    for (std::string line; std::getline(a_Stream, line); )
+    else if(isStackLine)
     {
-        bool isHeader = !line.empty() && !StartsWith(line, "\t");
-        bool isStackLine = !isHeader && !line.empty();
-        bool isEndBlock = !isStackLine && line.empty() && !header.empty();
+        std::string module;
+        std::string function;
+        uint64_t    address;
 
-        if(isHeader)
+        if( !ParseStackLine( a_Line, address, function, module ) )
         {
-            header = line;
-            auto tokens = Tokenize(line);
-            time = tokens.size() > 2 ? GetMicros(tokens[2])*1000 : 0;
-            tid  = tokens.size() > 1 ? atoi(tokens[1].c_str()) : 0;
+            PRINT_VAR("ParseStackLine error");
+            PRINT_VAR(a_Line);
+            return;
         }
-        else if(isStackLine)
+
+        std::wstring moduleName = ToLower(Path::GetFileName(s2ws(module)));
+        std::shared_ptr<Module> moduleFromName = Capture::GTargetProcess->GetModuleFromName( ws2s(moduleName) );
+
+        if( moduleFromName )
         {
-            std::string module;
-            std::string function;
-            uint64_t    address;
+            uint64_t new_address = moduleFromName->ValidateAddress(address);
 
-            if( !ParseStackLine( line, address, function, module ) )
-            {
-                PRINT_VAR("ParseStackLine error");
-                PRINT_VAR(line);
-                continue;
-            }
-
-            std::wstring moduleName = ToLower(Path::GetFileName(s2ws(module)));
-            std::shared_ptr<Module> moduleFromName = Capture::GTargetProcess->GetModuleFromName( ws2s(moduleName) );
-
-            if( moduleFromName )
-            {
-                uint64_t new_address = moduleFromName->ValidateAddress(address);
-
-                address = new_address;
-            }
-
-            CS.m_Data.push_back(address);
-
-            if( Capture::GTargetProcess && !Capture::GTargetProcess->HasSymbol(address))
-            {
-                auto symbol = std::make_shared<LinuxSymbol>();
-                symbol->m_Name = function;
-                symbol->m_Module = module;
-                Capture::GTargetProcess->AddSymbol( address, symbol );
-            }
+            address = new_address;
         }
-        else if(isEndBlock)
+
+        m_PerfData.m_CS.m_Data.push_back(address);
+        if( Capture::GTargetProcess && !Capture::GTargetProcess->HasSymbol(address))
+        {
+            GCoreApp->AddSymbol(address, module, function);
+        }
+    }
+    else if(isEndBlock)
+    {
+        if( m_PerfData.m_CS.m_Data.size() )
         {
             if( CS.m_Data.size() )
             {
@@ -235,8 +175,21 @@ void LinuxPerf::LoadPerfData( std::istream& a_Stream )
             time = 0;
             tid = 0;
         }
+
+        m_PerfData.Clear();
+    }
+}
+
+//-----------------------------------------------------------------------------
+void LinuxPerf::LoadPerfData( std::istream& a_Stream )
+{
+    m_PerfData.Clear();
+
+    for (std::string line; std::getline(a_Stream, line); )
+    {
+        HandleLine(line);
     }
 
-    PRINT_VAR(numCallstacks);
+    PRINT_VAR(m_PerfData.m_numCallstacks);
     PRINT_FUNC;
 }
