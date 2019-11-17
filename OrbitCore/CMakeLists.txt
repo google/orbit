@@ -42,6 +42,7 @@ set(HEADERS
     Hashing.h
     Injection.h
     LinuxPerf.h
+    LinuxPerfData.h
     Log.h
     LogInterface.h
     MemoryTracker.h
@@ -102,6 +103,7 @@ set(SOURCES
     FunctionStats.cpp
     Injection.cpp
     LinuxPerf.cpp
+    LinuxPerfData.cpp
     Log.cpp
     LogInterface.cpp
     MemoryTracker.cpp

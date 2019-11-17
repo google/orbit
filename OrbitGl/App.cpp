@@ -29,9 +29,12 @@
 #include "CaptureSerializer.h"
 #include "PluginManager.h"
 #include "RuleEditor.h"
+#include "LinuxPerfData.h"
 
 #include "OrbitAsm/OrbitAsm.h"
 #include "OrbitCore/Pdb.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/SamplingProfiler.h"
 #include "OrbitCore/ModuleManager.h"
 #include "OrbitCore/TcpServer.h"
 #include "OrbitCore/TcpClient.h"
@@ -187,6 +190,22 @@ void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
     {
         GCurrentTimeGraph->ProcessTimer(*a_Timer);
         ++Capture::GFunctionCountMap[a_Timer->m_FunctionAddress];
+    }
+}
+
+// TODO: This method should try to send the callstack hashes only.
+//-----------------------------------------------------------------------------
+void OrbitApp::ProcessSamplingCallStack(LinuxPerfData& a_CallStack)
+{
+    if (ConnectionManager::Get().IsService())
+    {
+        std::string messageData = SerializeObjectHumanReadable(a_CallStack);
+        GTcpServer->Send(Msg_SamplingCallstack, messageData.c_str(), messageData.size());
+    }
+    else
+    {
+        Capture::GSamplingProfiler->AddCallStack( a_CallStack.m_CS );
+        GEventTracer.GetEventBuffer().AddCallstackEvent( a_CallStack.m_time, a_CallStack.m_CS );
     }
 }
 
