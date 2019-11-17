@@ -6,6 +6,7 @@
 void LinuxPerfData::Clear()
 {
     m_CS.m_Data.clear();
+    m_CS.m_Hash = 0;
     m_header = "";
     m_time = 0;
     m_tid = 0;
