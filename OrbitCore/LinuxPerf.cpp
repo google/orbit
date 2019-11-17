@@ -154,10 +154,26 @@ void LinuxPerf::HandleLine( const std::string& a_Line )
     {
         if( m_PerfData.m_CS.m_Data.size() )
         {
-            m_PerfData.m_CS.m_Depth = (uint32_t)m_PerfData.m_CS.m_Data.size();
-            m_PerfData.m_CS.m_ThreadId = m_PerfData.m_tid;
-            GCoreApp->ProcessSamplingCallStack(m_PerfData);
-            ++m_PerfData.m_numCallstacks;
+            if( CS.m_Data.size() )
+            {
+                CS.m_Depth = (uint32_t)CS.m_Data.size();
+                CS.m_ThreadId = tid;
+                CallstackID hash = CS.Hash();
+
+                HashedCallStack hashedCallStack;
+                hashedCallStack.m_Depth = CS.m_Depth;
+                hashedCallStack.m_Hash = hash;
+                hashedCallStack.m_ThreadId = tid;
+
+                Capture::GSamplingProfiler->AddHashedCallStack( hashedCallStack );
+                GEventTracer.GetEventBuffer().AddCallstackEvent( time, hash, tid );
+                ++numCallstacks;
+            }
+
+            CS.m_Data.clear();
+            header = "";
+            time = 0;
+            tid = 0;
         }
 
         m_PerfData.Clear();

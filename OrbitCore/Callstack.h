@@ -35,6 +35,7 @@ struct CallStack
     CallStack( CallStackPOD a_CS );
     inline CallstackID Hash() 
     { 
+        if (m_Hash != 0) return m_Hash;
         m_Hash = XXH64( m_Data.data(), m_Depth * sizeof( uint64_t ), 0xca1157ac );
         return m_Hash; 
     }
@@ -45,6 +46,16 @@ struct CallStack
     uint32_t    m_Depth = 0;
     ThreadID    m_ThreadId = 0;
     std::vector<uint64_t> m_Data;
+
+    ORBIT_SERIALIZABLE;
+};
+
+//-----------------------------------------------------------------------------
+struct HashedCallStack
+{
+    CallstackID m_Hash = 0;
+    uint32_t    m_Depth = 0;
+    ThreadID    m_ThreadId = 0;
 
     ORBIT_SERIALIZABLE;
 };

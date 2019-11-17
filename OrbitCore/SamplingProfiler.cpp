@@ -155,6 +155,40 @@ std::multimap<int, CallstackID> SamplingProfiler::GetCallStacksFromAddress( uint
 }
 
 //-----------------------------------------------------------------------------
+void SamplingProfiler::AddCallStack( CallStack & a_CallStack )
+{
+    CallstackID hash = a_CallStack.Hash();
+    if (!HasCallStack( hash ))
+    {
+        AddUniqueCallStack( a_CallStack );
+    }
+    HashedCallStack hashedCS;
+    hashedCS.m_Hash = hash;
+    hashedCS.m_Depth = a_CallStack.m_Depth;
+    hashedCS.m_ThreadId = a_CallStack.m_ThreadId;
+    AddHashedCallStack ( hashedCS );
+}
+
+//-----------------------------------------------------------------------------
+void SamplingProfiler::AddHashedCallStack( HashedCallStack & a_CallStack )
+{
+    if (m_State != Sampling) {
+        PRINT("Error: Callstacks can only be added while sampling.");
+    }
+    if ( !HasCallStack(a_CallStack.m_Hash) )
+    {
+        PRINT("Error: Callstacks can only be added by hash when they are already present.");
+    }
+    m_Callstacks.push_back( a_CallStack );
+}
+
+//-----------------------------------------------------------------------------
+void SamplingProfiler::AddUniqueCallStack( CallStack & a_CallStack )
+{
+    m_UniqueCallstacks[a_CallStack.Hash()] = std::make_shared<CallStack>(a_CallStack);
+}
+
+//-----------------------------------------------------------------------------
 std::shared_ptr< SortedCallstackReport > SamplingProfiler::GetSortedCallstacksFromAddress( uint64_t a_Addr, ThreadID a_TID )
 {
     std::shared_ptr<SortedCallstackReport> report = std::make_shared<SortedCallstackReport>();
@@ -263,14 +297,13 @@ void SamplingProfiler::ProcessSamples()
     m_State = Processing;
 
     // Unique call stacks and per thread data
-    for( CallStack & callstack : m_Callstacks )
+    for( HashedCallStack & callstack : m_Callstacks )
     {
-        callstack.Hash();
-        auto it = m_UniqueCallstacks.find( callstack.m_Hash );
-        if( it == m_UniqueCallstacks.end() )
+        if ( !HasCallStack(callstack.m_Hash) )
         {
-            m_UniqueCallstacks[callstack.m_Hash] = std::make_shared<CallStack>(callstack);
+            PRINT("Error: Processed unknown callstack!");
         }
+
 
         ThreadSampleData & threadSampleData = m_ThreadSampleData[callstack.m_ThreadId];
         threadSampleData.m_NumSamples++;

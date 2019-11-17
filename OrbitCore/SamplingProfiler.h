@@ -95,8 +95,19 @@ public:
     float GetSampleTimeTotal() const { return m_SampleTimeSeconds; }
     bool  ShouldStop();
     void FireDoneProcessingCallbacks();
+
     void AddCallStack( CallStack & a_CallStack );
+    void AddHashedCallStack( HashedCallStack & a_CallStack );
+    void AddUniqueCallStack( CallStack & a_CallStack );
+  
     const std::shared_ptr<CallStack> GetCallStack( CallstackID a_ID ) { return m_UniqueCallstacks[a_ID]; }
+    
+    inline bool HasCallStack( CallstackID a_ID )
+    {
+        auto it = m_UniqueCallstacks.find( a_ID ); 
+        return it != m_UniqueCallstacks.end();
+    }
+
     std::multimap<int, CallstackID> GetCallStacksFromAddress( uint64_t a_Addr, ThreadID a_TID, int & o_NumCallstacks );
     std::shared_ptr< SortedCallstackReport > GetSortedCallstacksFromAddress( uint64_t a_Addr, ThreadID a_TID );
     
@@ -135,19 +146,19 @@ protected:
     void OutputStats();
 
 protected:
-    std::shared_ptr<Process>        m_Process;
-    std::unique_ptr<std::thread>    m_SamplingThread;
-    std::atomic<SamplingState>      m_State;
-    BlockChain<CallStack, 16*1024 > m_Callstacks;
-    Timer                           m_SamplingTimer;
-    Timer                           m_ThreadUsageTimer;
-    int                             m_PeriodMs = 1;
-    float                           m_SampleTimeSeconds = FLT_MAX;
-    bool                            m_GenerateSummary = true;
-    Mutex                           m_SymbolMutex;
-    int                             m_NumSamples = 0;
-    bool                            m_LoadedFromFile = false;
-    bool                            m_IsLinuxPerf = false;
+    std::shared_ptr<Process>                m_Process;
+    std::unique_ptr<std::thread>            m_SamplingThread;
+    std::atomic<SamplingState>              m_State;
+    BlockChain<HashedCallStack, 16*1024 >   m_Callstacks;
+    Timer                                   m_SamplingTimer;
+    Timer                                   m_ThreadUsageTimer;
+    int                                     m_PeriodMs = 1;
+    float                                   m_SampleTimeSeconds = FLT_MAX;
+    bool                                    m_GenerateSummary = true;
+    Mutex                                   m_SymbolMutex;
+    int                                     m_NumSamples = 0;
+    bool                                    m_LoadedFromFile = false;
+    bool                                    m_IsLinuxPerf = false;
 
     std::unordered_map<ThreadID, ThreadSampleData>              m_ThreadSampleData;
     std::unordered_map<CallstackID, std::shared_ptr<CallStack>> m_UniqueCallstacks;
