@@ -11,6 +11,7 @@
 #include <set>
 #include <map>
 #include <memory>
+#include <vector>
 #include "Serialization.h"
 #include "OrbitModule.h"
 
@@ -170,12 +171,16 @@ void SamplingProfiler::AddHashedCallStack( HashedCallStack & a_CallStack )
     {
         PRINT("Error: Callstacks can only be added by hash when they are already present.\n");
     }
-    m_Callstacks.push_back( a_CallStack );
+    {
+        ScopeLock lock(m_Mutex);
+        m_Callstacks.push_back( a_CallStack );
+    }
 }
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddUniqueCallStack( CallStack & a_CallStack )
 {
+    ScopeLock lock(m_Mutex);
     m_UniqueCallstacks[a_CallStack.Hash()] = std::make_shared<CallStack>(a_CallStack);
 }
 
@@ -257,6 +262,7 @@ bool SamplingProfiler::GetLineInfo( uint64_t a_Address, LineInfo & a_LineInfo )
 //-----------------------------------------------------------------------------
 void SamplingProfiler::Print()
 {
+    ScopeLock lock(m_Mutex);
 	for( auto & pair : m_UniqueCallstacks )
 	{
 		std::shared_ptr<CallStack> callstack = pair.second;
@@ -287,25 +293,35 @@ void SamplingProfiler::ProcessSamples()
 
     m_State = Processing;
 
-    // Unique call stacks and per thread data
-    for( HashedCallStack & callstack : m_Callstacks )
+    // collect the callstacks to be processed before hand,
+    //  in order to avoid a dead-lock (HasCallstack also locks).
+    std::vector<const HashedCallStack *> callstacks;
     {
-        if ( !HasCallStack(callstack.m_Hash) )
+        ScopeLock lock(m_Mutex);
+        for (HashedCallStack & callstack : m_Callstacks)
+        {
+            callstacks.push_back(&callstack);
+        }
+    }
+
+    // Unique call stacks and per thread data
+    for( const HashedCallStack* callstack : callstacks )
+    {
+        if ( !HasCallStack(callstack->m_Hash) )
         {
             PRINT("Error: Processed unknown callstack!\n");
         }
 
-
-        ThreadSampleData & threadSampleData = m_ThreadSampleData[callstack.m_ThreadId];
+        ThreadSampleData & threadSampleData = m_ThreadSampleData[callstack->m_ThreadId];
         threadSampleData.m_NumSamples++;
-        threadSampleData.m_CallstackCount[callstack.m_Hash]++;
-        numAddressesTotal += callstack.m_Depth;
+        threadSampleData.m_CallstackCount[callstack->m_Hash]++;
+        numAddressesTotal += callstack->m_Depth;
 
         if( m_GenerateSummary )
         {
             ThreadSampleData & threadSampleDataAll = m_ThreadSampleData[0];
             threadSampleDataAll.m_NumSamples++;
-            threadSampleDataAll.m_CallstackCount[callstack.m_Hash]++;
+            threadSampleDataAll.m_CallstackCount[callstack->m_Hash]++;
         }
     }
 
@@ -354,9 +370,12 @@ void SamplingProfiler::ProcessSamples()
 
     OutputStats();
 
-    m_NumSamples = m_Callstacks.size();
-    m_Callstacks.clear();
-    m_State = DoneProcessing;
+    {
+        ScopeLock lock(m_Mutex);
+        m_NumSamples = m_Callstacks.size();
+        m_Callstacks.clear();
+        m_State = DoneProcessing;
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -398,6 +417,7 @@ std::multimap< int, CallstackID > ThreadSampleData::SortCallstacks( const std::s
 //-----------------------------------------------------------------------------
 void SamplingProfiler::ProcessAddresses()
 {
+    ScopeLock lock(m_Mutex);
     for( const auto & it : m_UniqueCallstacks )
     {
         CallstackID rawCallstackId = it.first;
@@ -435,7 +455,7 @@ void SamplingProfiler::ProcessAddresses()
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddAddress(uint64_t a_Address)
 {
-    ScopeLock lock(m_SymbolMutex);
+    ScopeLock lock(m_Mutex);
 #ifdef _WIN32
     
     if( !m_IsLinuxPerf )
@@ -569,7 +589,7 @@ void SamplingProfiler::GetThreadCallstack( Thread* a_Thread )
 //-----------------------------------------------------------------------------
 std::wstring SamplingProfiler::GetSymbolFromAddress( uint64_t a_Address )
 {
-    ScopeLock lock( m_SymbolMutex );
+    ScopeLock lock( m_Mutex );
 
     auto it = m_AddressToSymbol.find( a_Address );
     if( it != m_AddressToSymbol.end() )
