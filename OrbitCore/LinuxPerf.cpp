@@ -91,7 +91,7 @@ bool ParseStackLine( const std::string& a_Line, uint64_t& o_Address, std::string
     std::size_t moduleBegin = a_Line.find_last_of("(");
     if( moduleBegin == std::string::npos )
         return false;
-    o_Module = Replace(a_Line.substr(moduleBegin+1), ")", "");
+    o_Module = RTrim(Replace(a_Line.substr(moduleBegin+1), ")", ""));
 
     // Function name
     std::string line = LTrim(a_Line.substr(0, moduleBegin));
@@ -140,7 +140,6 @@ void LinuxPerf::HandleLine( const std::string& a_Line )
         if( moduleFromName )
         {
             uint64_t new_address = moduleFromName->ValidateAddress(address);
-
             address = new_address;
         }
 
