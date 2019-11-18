@@ -1,38 +1,29 @@
+#if __linux__
+
 #include "OrbitProcess.h"
 #include "ContextSwitch.h"
 #include "TimerManager.h"
-#include "Capture.h"
 #include "LinuxEventTracerVisitor.h"
 #include "LinuxPerfEvent.h"
 #include "PrintVar.h"
 
 void LinuxEventTracerVisitor::visit(LinuxPerfLostEvent* e)
 {
-    PRINT("Lost %u Events", e->Lost());
+    PRINT("Lost %u Events\n", e->Lost());
 }
 
 void LinuxEventTracerVisitor::visit(LinuxForkEvent* e)
 {
-    // todo: move this as a class member
-    auto targetProcess = Capture::GTargetProcess;
-    // todo: check if this is correct:
-    // todo: it might be also correct to check check if ppid == process.id
-    if (targetProcess->HasThread(e->ParentTID()))
+    if (m_Process->HasThread(e->ParentTID()))
     {
-        targetProcess->AddThreadId(e->TID());
-        if (e->ParentPID() != targetProcess->GetID())
-        {
-        }
+        m_Process->AddThreadId(e->TID());
     }
 }
 
 void LinuxEventTracerVisitor::visit(LinuxSchedSwitchEvent* e)
 {
-    // todo: move this as a class member
-    auto targetProcess = Capture::GTargetProcess;
-
     // the known thread stopped running
-    if (targetProcess->HasThread(e->PrevPID()))
+    if (m_Process->HasThread(e->PrevPID()))
     {
         ++Capture::GNumContextSwitches;
 
@@ -46,7 +37,7 @@ void LinuxEventTracerVisitor::visit(LinuxSchedSwitchEvent* e)
     }
 
     // the known thread starts running
-    if (targetProcess->HasThread(e->NextPID()))
+    if (m_Process->HasThread(e->NextPID()))
     {
         ++Capture::GNumContextSwitches;
 
@@ -59,3 +50,5 @@ void LinuxEventTracerVisitor::visit(LinuxSchedSwitchEvent* e)
         GTimerManager->Add( CS );
     }
 }
+
+#endif

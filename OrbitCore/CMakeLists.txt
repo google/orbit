@@ -45,6 +45,8 @@ set(HEADERS
     LinuxPerfData.h
     LinuxPerfEvent.h
     LinuxPerfEventVisitor.h
+    LinuxPerfEventProcessor.h
+    LinuxPerfRingBuffer.h
     LinuxPerfUtils.h
     LinuxEventTracer.h
     LinuxEventTracerVisitor.h
@@ -110,6 +112,7 @@ set(SOURCES
     LinuxPerf.cpp
     LinuxPerfData.cpp
     LinuxPerfEvent.cpp
+    LinuxPerfRingBuffer.cpp
     LinuxPerfUtils.cpp
     LinuxEventTracer.cpp
     LinuxEventTracerVisitor.cpp

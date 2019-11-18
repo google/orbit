@@ -3,6 +3,8 @@
 //-----------------------------------
 #pragma once
 
+#if __linux__
+
 #include <thread>
 
 //-----------------------------------------------------------------------------
@@ -23,5 +25,6 @@ private:
     Callback m_Callback;
 
     static void Run(bool* a_ExitRequested);
-
 };
+
+#endif
