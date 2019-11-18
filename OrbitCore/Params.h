@@ -29,6 +29,7 @@ public:
     bool  m_HookOutputDebugString;
     bool  m_FindFileAndLineInfo;
     bool  m_AutoReleasePdb;
+    bool  m_BpftraceCallstacks;
     int   m_MaxNumTimers;
     float m_FontSize;
     int   m_Port;

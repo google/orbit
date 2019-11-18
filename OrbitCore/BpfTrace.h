@@ -28,6 +28,7 @@ public:
 protected:
     uint64_t ProcessString(const std::string& a_String);
     void CommandCallback(const std::string& a_Line);
+    void CommandCallbackWithCallstacks(const std::string& a_Line);
     bool WriteBpfScript();
 
 private:    

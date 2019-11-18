@@ -24,6 +24,7 @@ Params::Params() : m_LoadTypeInfo( true )
                  , m_HookOutputDebugString(false)
                  , m_FindFileAndLineInfo(true)
                  , m_AutoReleasePdb(false)
+                 , m_BpftraceCallstacks(false)
                  , m_MaxNumTimers( 1000000 )
                  , m_FontSize( 14.f )
                  , m_Port(44766)
@@ -32,7 +33,7 @@ Params::Params() : m_LoadTypeInfo( true )
 {
 }
 
-ORBIT_SERIALIZE( Params, 13 )
+ORBIT_SERIALIZE( Params, 14 )
 {
     ORBIT_NVP_VAL( 0, m_LoadTypeInfo );
     ORBIT_NVP_VAL( 0, m_SendCallStacks );
@@ -56,6 +57,7 @@ ORBIT_SERIALIZE( Params, 13 )
     ORBIT_NVP_VAL( 11, m_FindFileAndLineInfo );
     ORBIT_NVP_VAL( 12, m_AutoReleasePdb );
     ORBIT_NVP_VAL( 13, m_ProcessFilter );
+    ORBIT_NVP_VAL( 14, m_BpftraceCallstacks );
 }
 
 //-----------------------------------------------------------------------------
