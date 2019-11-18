@@ -161,12 +161,7 @@ void LinuxPerf::HandleLine( const std::string& a_Line )
             GCoreApp->ProcessSamplingCallStack(m_PerfData);
             ++m_PerfData.m_numCallstacks;
 
-            HashedCallStack hashedCallStack;
-            hashedCallStack.m_Depth = CS.m_Depth;
-            hashedCallStack.m_Hash = hash;
-            hashedCallStack.m_ThreadId = m_PerfData.m_tid;
-
-            Capture::GSamplingProfiler->AddHashedCallStack( hashedCallStack );
+            Capture::GSamplingProfiler->AddCallStack( CS );
             GEventTracer.GetEventBuffer().AddCallstackEvent( m_PerfData.m_time, hash, m_PerfData.m_tid );
         }
 

@@ -164,11 +164,11 @@ void SamplingProfiler::AddCallStack( CallStack & a_CallStack )
 void SamplingProfiler::AddHashedCallStack( HashedCallStack & a_CallStack )
 {
     if (m_State != Sampling) {
-        PRINT("Error: Callstacks can only be added while sampling.");
+        PRINT("Error: Callstacks can only be added while sampling.\n");
     }
     if ( !HasCallStack(a_CallStack.m_Hash) )
     {
-        PRINT("Error: Callstacks can only be added by hash when they are already present.");
+        PRINT("Error: Callstacks can only be added by hash when they are already present.\n");
     }
     m_Callstacks.push_back( a_CallStack );
 }
@@ -292,7 +292,7 @@ void SamplingProfiler::ProcessSamples()
     {
         if ( !HasCallStack(callstack.m_Hash) )
         {
-            PRINT("Error: Processed unknown callstack!");
+            PRINT("Error: Processed unknown callstack!\n");
         }
 
 
