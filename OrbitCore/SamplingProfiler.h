@@ -100,10 +100,15 @@ public:
     void AddHashedCallStack( HashedCallStack & a_CallStack );
     void AddUniqueCallStack( CallStack & a_CallStack );
   
-    const std::shared_ptr<CallStack> GetCallStack( CallstackID a_ID ) { return m_UniqueCallstacks[a_ID]; }
+    const std::shared_ptr<CallStack> GetCallStack( CallstackID a_ID )
+    {
+        ScopeLock lock(m_Mutex);
+        return m_UniqueCallstacks[a_ID];
+    }
     
     inline bool HasCallStack( CallstackID a_ID )
     {
+        ScopeLock lock(m_Mutex);
         auto it = m_UniqueCallstacks.find( a_ID ); 
         return it != m_UniqueCallstacks.end();
     }
@@ -155,7 +160,7 @@ protected:
     int                                     m_PeriodMs = 1;
     float                                   m_SampleTimeSeconds = FLT_MAX;
     bool                                    m_GenerateSummary = true;
-    Mutex                                   m_SymbolMutex;
+    Mutex                                   m_Mutex;
     int                                     m_NumSamples = 0;
     bool                                    m_LoadedFromFile = false;
     bool                                    m_IsLinuxPerf = false;
