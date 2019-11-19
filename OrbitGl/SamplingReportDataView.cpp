@@ -123,7 +123,7 @@ void SamplingReportDataView::OnSort(int a_Column, bool a_Toggle)
 //-----------------------------------------------------------------------------
 std::wstring SELECT       = L"Hook";
 std::wstring DESELECT     = L"Unhook";
-std::wstring MODULES_LOAD = L"Load Pdb";
+std::wstring MODULES_LOAD = L"Load Symbols";
 std::wstring MODULES_DIS  = L"Go To Disassembly";
 
 //-----------------------------------------------------------------------------
