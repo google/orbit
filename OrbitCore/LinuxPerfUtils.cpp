@@ -3,20 +3,12 @@
 //-----------------------------------
 #if __linux__
 
-// TODO: clean up.
 #include "PrintVar.h"
-#include "Capture.h"
 #include "LinuxPerfUtils.h"
-#include "LinuxPerfRingBuffer.h"
 
-#include <asm/perf_regs.h>
-#include <asm/unistd.h>
 #include <linux/perf_event.h>
 #include <sys/errno.h>
-#include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <unistd.h>
-#include <string>
 
 //-----------------------------------------------------------------------------
 int32_t LinuxPerfUtils::task_event_open(int32_t cpu) {
