@@ -1,7 +1,6 @@
 //-----------------------------------
 // Copyright Pierric Gimmig 2013-2019
 //-----------------------------------
-#if __linux__
 
 #include "PrintVar.h"
 #include "LinuxPerfUtils.h"
@@ -80,4 +79,3 @@ void* LinuxPerfUtils::mmap_mapping(int32_t fd)
 
     return mmap_ret;
 }
-#endif

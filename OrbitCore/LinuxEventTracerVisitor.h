@@ -1,7 +1,5 @@
 #pragma once
 
-#if __linux__
-
 #include "LinuxPerfEvent.h"
 #include "LinuxPerfEventVisitor.h"
 #include "OrbitProcess.h"
@@ -17,5 +15,3 @@ public:
 private:
     std::shared_ptr<Process> m_Process = Capture::GTargetProcess;
 };
-
-#endif

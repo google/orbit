@@ -3,8 +3,6 @@
 //-----------------------------------
 #pragma once
 
-#if __linux__
-
 #include <thread>
 
 //-----------------------------------------------------------------------------
@@ -26,5 +24,3 @@ private:
 
     static void Run(bool* a_ExitRequested);
 };
-
-#endif

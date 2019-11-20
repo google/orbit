@@ -3,8 +3,6 @@
 //-----------------------------------
 #pragma once
 
-#if __linux__
-
 #include "LinuxPerfUtils.h"
 #include <linux/perf_event.h>
 
@@ -38,5 +36,3 @@ private:
     //-----------------------------------------------------------------------------
     void Read(void* dest, uint64_t count);
 };
-
-#endif

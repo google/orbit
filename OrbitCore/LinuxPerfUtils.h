@@ -3,8 +3,6 @@
 //-----------------------------------
 #pragma once
 
-#if __linux__
-
 #include <asm/unistd.h>
 #include <linux/perf_event.h>
 #include <sys/errno.h>
@@ -99,4 +97,3 @@ namespace LinuxPerfUtils
 
     void* mmap_mapping(int32_t fd);
 }
-#endif

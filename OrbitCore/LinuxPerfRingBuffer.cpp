@@ -1,5 +1,3 @@
-#if __linux__
-
 #include "PrintVar.h"
 #include "LinuxPerfRingBuffer.h"
 #include "LinuxPerfUtils.h"
@@ -65,5 +63,3 @@ void LinuxPerfRingBuffer::Read(void* dest, uint64_t count) {
         PRINT("Unexpected error while reading from the ring buffer\n");
     }
 }
-
-#endif

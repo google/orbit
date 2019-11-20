@@ -1,5 +1,3 @@
-#if __linux__
-
 #include "OrbitProcess.h"
 #include "ContextSwitch.h"
 #include "TimerManager.h"
@@ -50,5 +48,3 @@ void LinuxEventTracerVisitor::visit(LinuxSchedSwitchEvent* e)
         GTimerManager->Add( CS );
     }
 }
-
-#endif

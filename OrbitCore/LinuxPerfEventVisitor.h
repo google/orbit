@@ -1,7 +1,5 @@
 #pragma once
 
-#if __linux__
-
 #include "LinuxPerfEvent.h"
 
 // TODO: As the class hierachy is not fixed yet, we need to 
@@ -13,5 +11,3 @@ public:
     virtual void visit(LinuxForkEvent* e) = 0;
     virtual void visit(LinuxSchedSwitchEvent* e) = 0;
 };
-
-#endif

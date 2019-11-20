@@ -2,7 +2,6 @@
 // Copyright Pierric Gimmig 2013-2019
 //-----------------------------------
 
-#if __linux__
 
 #include "OrbitProcess.h"
 #include "PrintVar.h"
@@ -122,5 +121,3 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
         LinuxPerfUtils::stop_capturing(fd);
     }
 }
-
-#endif

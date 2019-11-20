@@ -3,8 +3,6 @@
 //-----------------------------------
 #pragma once
 
-#if __linux__
-
 #include <queue>
 #include "LinuxPerfEvent.h"
 #include "LinuxPerfEventVisitor.h"
@@ -79,5 +77,3 @@ private:
 
     uint64_t m_MaxTimestamp = 0;
 };
-
-#endif

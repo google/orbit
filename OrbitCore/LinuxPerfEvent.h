@@ -3,8 +3,6 @@
 //-----------------------------------
 #pragma once
 
-#if __linux__
-
 #include "PrintVar.h"
 #include "LinuxPerfUtils.h"
 
@@ -132,5 +130,3 @@ private:
 	int64_t m_PrevState;
 	int32_t m_NextPID;
 };
-
-#endif
