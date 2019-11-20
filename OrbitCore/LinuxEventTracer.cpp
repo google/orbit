@@ -85,27 +85,40 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                 // perf_event_header::type contains the type of record, e.g.,
                 //  PERF_RECORD_SAMPLE, PERF_RECORD_MMAP, etc., defined in enum
                 //  perf_event_type in perf_event.h.
-                if (header.type == PERF_RECORD_SAMPLE) {
-                    // we need to know the type of the perf_record_sample at compile time,
-                    //  i.e. for multiple perf_event_open calls, we need be able to
-                    //  distinguish the different ring buffers.
-                    auto sched_switch = ring_buffer->ConsumeRecord<perf_event_record<sched_switch_tp>>(header);
-                    auto e = std::make_shared<LinuxSchedSwitchEvent>(sched_switch);
-                    event_buffer.Push(e);
-                } else if (header.type == PERF_RECORD_LOST) {
-                    auto lost = ring_buffer->ConsumeRecord<perf_event_lost>(header);
-                    auto e = std::make_shared<LinuxPerfLostEvent>(lost);
-                    event_buffer.Push(e);
-                } else if (header.type == PERF_RECORD_FORK) {
-                    auto fork = ring_buffer->ConsumeRecord<perf_event_fork_exit>(header);
-                    auto e = std::make_shared<LinuxForkEvent>(fork);
-                    event_buffer.Push(e);
-                } else if (header.type == PERF_RECORD_EXIT) {
+                switch (header.type)
+                {
+                case PERF_RECORD_SAMPLE:
+                    {
+                        // we need to know the type of the perf_record_sample at compile time,
+                        //  i.e. for multiple perf_event_open calls, we need be able to
+                        //  distinguish the different ring buffers.
+                        auto sched_switch = ring_buffer->ConsumeRecord<perf_event_record<sched_switch_tp>>(header);
+                        auto e = std::make_shared<LinuxSchedSwitchEvent>(sched_switch);
+                        event_buffer.Push(e);
+                    }
+                    break;
+                case PERF_RECORD_LOST:
+                    {
+                        auto lost = ring_buffer->ConsumeRecord<perf_event_lost>(header);
+                        auto e = std::make_shared<LinuxPerfLostEvent>(lost);
+                        event_buffer.Push(e);
+                    }
+                    break;
+                case PERF_RECORD_FORK:
+                    {
+                        auto fork = ring_buffer->ConsumeRecord<perf_event_fork_exit>(header);
+                        auto e = std::make_shared<LinuxForkEvent>(fork);
+                        event_buffer.Push(e);
+                    }
+                    break;
+                case PERF_RECORD_EXIT:
                     // TODO: here we could easily remove the threads from the process again.
                     ring_buffer->SkipRecord(header);
-                } else {
+                    break;
+                default:
                     PRINT("Unexpected Perf Sample Type: %u", header.type);
                     ring_buffer->SkipRecord(header);
+                    break;
                 }
             }
         }
