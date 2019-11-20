@@ -210,6 +210,7 @@ if(LINUX)
         LinuxPerfUtils.cpp
         LinuxEventTracer.cpp
         LinuxEventTracerVisitor.cpp
+        LinuxPerfEventProcessor.cpp
     )
 	set(EXTERNAL_SOURCES "")
     set(EXTERNAL_HEADERS

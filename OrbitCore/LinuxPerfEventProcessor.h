@@ -3,9 +3,11 @@
 //-----------------------------------
 #pragma once
 
-#include <queue>
 #include "LinuxPerfEvent.h"
 #include "LinuxPerfEventVisitor.h"
+#include "PrintVar.h"
+
+#include <queue>
 
 // A comparator used for the priority queue, such that pop/top will
 // always return the oldest event in the queue.
@@ -22,49 +24,21 @@ class LinuxPerfEventProcessor
 {
 public:
     // While processing, we do not touch the events with a timestamp less 
-    // than 1/100 sec smaller than the most recent one in the queue.
+    // than 1/10 sec smaller than the most recent one in the queue.
     // This way we can ensure, that all events (from different sources)
     // are processed in the correct order.
-    uint64_t OFFSET_IN_NS = 10000000 /*ns*/;
+    uint64_t DELAY_IN_NS = 100000000 /*ns*/;
 
     LinuxPerfEventProcessor(std::unique_ptr<LinuxPerfEventVisitor> a_Visitor) :
         m_Visitor(std::move(a_Visitor))
     { 
     }
 
-    void Push(std::shared_ptr<LinuxPerfEvent> a_Event)
-    {
-        uint64_t timestamp = a_Event->Timestamp();
-        if (timestamp > m_MaxTimestamp)
-            m_MaxTimestamp = timestamp;
-        m_EventQueue.push(a_Event);
-    }
+    void Push(std::shared_ptr<LinuxPerfEvent> a_Event);
 
-    void ProcessAll()
-    {
-        while(!m_EventQueue.empty())
-        {
-            std::shared_ptr<LinuxPerfEvent> event = m_EventQueue.top();
-            event->accept(m_Visitor.get());
-            m_EventQueue.pop();
-        }
-    }
+    void ProcessAll();
 
-    void ProcessTillOffset()
-    {
-        // Process the events in the event_queue
-        while(!m_EventQueue.empty())
-        {
-            std::shared_ptr<LinuxPerfEvent> event = m_EventQueue.top();
-
-            // We should not read all events, otherwise we could miss events
-            // close to the max timestamp in the queue.
-            if (event->Timestamp() + OFFSET_IN_NS > m_MaxTimestamp) 
-                break;
-            event->accept(m_Visitor.get());
-            m_EventQueue.pop();
-        }
-    }
+    void ProcessTillOffset();
 
 private:
     std::priority_queue<
@@ -76,4 +50,7 @@ private:
     std::unique_ptr<LinuxPerfEventVisitor> m_Visitor;
 
     uint64_t m_MaxTimestamp = 0;
+    #ifndef NDEBUG
+    uint64_t m_LastProcessTimestamp = 0;
+    #endif
 };

@@ -72,7 +72,10 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
 
     while (!(*a_ExitRequested))
     {
-        usleep(5000);
+        // Lets sleep a bit, such that we are not constantly reading from the buffers
+        // and thus wasting cpu time. 5000 microseconds are still small enought to 
+        // not have our buffers overflown and therefore loosing events.
+        usleep(1000);
 
         // read from all ring buffers, create events and store them in the event_queue
         for (std::shared_ptr<LinuxPerfRingBuffer> ring_buffer : ring_buffers)
@@ -131,6 +134,6 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
     {
         LinuxPerfUtils::stop_capturing(fd);
     }
-    
+
     event_buffer.ProcessAll();
 }
