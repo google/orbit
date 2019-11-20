@@ -41,7 +41,7 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
     // get the number of cpus
     int cpus = std::stoi(LinuxUtils::ExecuteCommand("nproc"));
 
-    uint64_t tracepointID = LinuxUtils::GetTracePointID("sched", "sched_switch");
+    uint64_t tracepoint_ID = LinuxUtils::GetTracePointID("sched", "sched_switch");
     
     std::vector<uint32_t> fds;
 
@@ -49,7 +49,7 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
     for (int cpu = 0; cpu < cpus; cpu++)
     {
         fds.push_back(LinuxPerfUtils::task_event_open(cpu)); 
-        fds.push_back(LinuxPerfUtils::tracepoint_event_open(tracepointID, -1 /*pid*/, cpu)); 
+        fds.push_back(LinuxPerfUtils::tracepoint_event_open(tracepoint_ID, -1 /*pid*/, cpu)); 
     }
 
     std::vector<std::shared_ptr<LinuxPerfRingBuffer>> ring_buffers;

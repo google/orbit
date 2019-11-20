@@ -18,7 +18,7 @@ public:
 
     uint64_t Timestamp() { return m_Timestamp; }
 
-    virtual void accept(LinuxPerfEventVisitor* v) = 0;
+    virtual void accept(LinuxPerfEventVisitor* a_Visitor) = 0;
 private:
     uint64_t m_Timestamp;
 };
@@ -30,13 +30,13 @@ public:
         LinuxPerfEvent(a_Timestamp), m_Lost(a_Lost)
     {}
 
-    LinuxPerfLostEvent(const perf_event_lost& lost_event) : 
-        LinuxPerfLostEvent(lost_event.sample_id.time, lost_event.lost)
+    LinuxPerfLostEvent(const perf_event_lost& a_LostEvent) : 
+        LinuxPerfLostEvent(a_LostEvent.sample_id.time, a_LostEvent.lost)
     {}
 
     uint32_t Lost() { return m_Lost; }
 
-    void accept(LinuxPerfEventVisitor* v) override;
+    void accept(LinuxPerfEventVisitor* a_Visitor) override;
 private:
     uint32_t m_Lost;
 };
@@ -71,10 +71,10 @@ public:
     {
     }
 
-    explicit LinuxForkEvent(const perf_event_fork_exit& fork_event) : 
+    explicit LinuxForkEvent(const perf_event_fork_exit& a_ForkEvent) : 
         LinuxForkExitEvent(
-            fork_event.time, fork_event.pid, fork_event.ppid, 
-            fork_event.tid, fork_event.ptid
+            a_ForkEvent.time, a_ForkEvent.pid, a_ForkEvent.ppid, 
+            a_ForkEvent.tid, a_ForkEvent.ptid
         ) {}
 
     void accept(LinuxPerfEventVisitor* v) override;
@@ -111,11 +111,11 @@ public:
     {
     }
 
-    explicit LinuxSchedSwitchEvent(const perf_event_record<sched_switch_tp>& sched_switch) 
+    explicit LinuxSchedSwitchEvent(const perf_event_record<sched_switch_tp>& a_SchedSwitchEvent) 
     : LinuxSchedSwitchEvent(
-        sched_switch.time, sched_switch.pid, sched_switch.tid, 
-        sched_switch.cpu, sched_switch.data.prev_pid, 
-        sched_switch.data.prev_state, sched_switch.data.next_pid
+        a_SchedSwitchEvent.time, a_SchedSwitchEvent.pid, a_SchedSwitchEvent.tid, 
+        a_SchedSwitchEvent.cpu, a_SchedSwitchEvent.data.prev_pid, 
+        a_SchedSwitchEvent.data.prev_state, a_SchedSwitchEvent.data.next_pid
     )
     {
     }
@@ -124,7 +124,7 @@ public:
     int64_t PrevState() { return m_PrevState; }
     int32_t NextPID() { return m_NextPID; }
 
-    void accept(LinuxPerfEventVisitor* v) override;
+    void accept(LinuxPerfEventVisitor* a_Visitor) override;
 private:
 	int32_t m_PrevPID;
 	int64_t m_PrevState;

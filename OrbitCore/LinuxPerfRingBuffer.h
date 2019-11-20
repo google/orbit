@@ -9,21 +9,21 @@
 class LinuxPerfRingBuffer
 {
 public:
-    LinuxPerfRingBuffer(uint32_t perf_file_descriptor);
+    LinuxPerfRingBuffer(uint32_t a_PerfFileDescriptor);
     bool HasNewData();
-    void ReadHeader(perf_event_header* header);
-    void SkipRecord(const perf_event_header& header);
+    void ReadHeader(perf_event_header* a_Header);
+    void SkipRecord(const perf_event_header& a_Header);
 
     //-----------------------------------------------------------------------------
     template<typename T>
-    T ConsumeRecord(const perf_event_header& header)
+    T ConsumeRecord(const perf_event_header& a_Header)
     {
         T record;
 
         // perf_event_header::size contains the size of the entire record.
-        Read(&record, header.size);
+        Read(&record, a_Header.size);
 
-        SkipRecord(header);
+        SkipRecord(a_Header);
 
         return record;
     }
@@ -34,5 +34,5 @@ private:
     uint64_t m_BufferLength;
 
     //-----------------------------------------------------------------------------
-    void Read(void* dest, uint64_t count);
+    void Read(void* a_Destination, uint64_t a_Count);
 };

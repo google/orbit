@@ -10,7 +10,7 @@
 #include <sys/mman.h>
 
 //-----------------------------------------------------------------------------
-int32_t LinuxPerfUtils::task_event_open(int32_t cpu) {
+int32_t LinuxPerfUtils::task_event_open(int32_t a_CPU) {
     perf_event_attr pe{};
     pe.size = sizeof(struct perf_event_attr);
     pe.type = PERF_TYPE_SOFTWARE;
@@ -23,7 +23,7 @@ int32_t LinuxPerfUtils::task_event_open(int32_t cpu) {
 
     pe.sample_type = SAMPLE_TYPE_FLAGS;
 
-    int32_t fd = perf_event_open(&pe, -1, cpu, -1 /*group_fd*/, 0 /*flags*/);
+    int32_t fd = perf_event_open(&pe, -1, a_CPU, -1 /*group_fd*/, 0 /*flags*/);
 
     if (fd == -1)
     {
@@ -34,7 +34,7 @@ int32_t LinuxPerfUtils::task_event_open(int32_t cpu) {
 }
 
 //-----------------------------------------------------------------------------
-int32_t LinuxPerfUtils::tracepoint_event_open(uint64_t a_TracepointID, pid_t pid, int32_t cpu) {
+int32_t LinuxPerfUtils::tracepoint_event_open(uint64_t a_TracepointID, pid_t a_PID, int32_t a_CPU) {
     perf_event_attr pe{};
     pe.size = sizeof(struct perf_event_attr);
     pe.type = PERF_TYPE_TRACEPOINT;
@@ -49,7 +49,7 @@ int32_t LinuxPerfUtils::tracepoint_event_open(uint64_t a_TracepointID, pid_t pid
     pe.sample_type = SAMPLE_TYPE_FLAGS;
 
 
-    int32_t fd = perf_event_open(&pe, pid, cpu, -1 /*grpup_fd*/, 0 /*flags*/);
+    int32_t fd = perf_event_open(&pe, a_PID, a_CPU, -1 /*grpup_fd*/, 0 /*flags*/);
 
     if (fd == -1)
     {
@@ -60,7 +60,7 @@ int32_t LinuxPerfUtils::tracepoint_event_open(uint64_t a_TracepointID, pid_t pid
 }
 
 //-----------------------------------------------------------------------------
-void* LinuxPerfUtils::mmap_mapping(int32_t fd)
+void* LinuxPerfUtils::mmap_mapping(int32_t a_FileDescriptor)
 {
     const size_t PAGE_SIZE = getpagesize();  // 4 KB
 
@@ -72,7 +72,7 @@ void* LinuxPerfUtils::mmap_mapping(int32_t fd)
     // http://man7.org/linux/man-pages/man2/mmap.2.html
     // Use mmap to get access to the ring buffer.
     void* mmap_ret =
-        mmap(nullptr, mmap_length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+        mmap(nullptr, mmap_length, PROT_READ | PROT_WRITE, MAP_SHARED, a_FileDescriptor, 0);
     if (mmap_ret == reinterpret_cast<void*>(-1)) {
         PRINT("mmap error: %d\n", errno);
     }

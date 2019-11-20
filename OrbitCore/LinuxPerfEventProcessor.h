@@ -12,9 +12,9 @@
 class TimeStampCompare
 {
 public:
-    bool operator() (std::shared_ptr<LinuxPerfEvent> lhs, std::shared_ptr<LinuxPerfEvent> rhs)
+    bool operator() (std::shared_ptr<LinuxPerfEvent> a_LHS, std::shared_ptr<LinuxPerfEvent> a_RHS)
     {
-        return lhs->Timestamp() > rhs->Timestamp();
+        return a_LHS->Timestamp() > a_RHS->Timestamp();
     }
 };
 
@@ -32,12 +32,12 @@ public:
     { 
     }
 
-    void Push(std::shared_ptr<LinuxPerfEvent> e)
+    void Push(std::shared_ptr<LinuxPerfEvent> a_Event)
     {
-        uint64_t timestamp = e->Timestamp();
+        uint64_t timestamp = a_Event->Timestamp();
         if (timestamp > m_MaxTimestamp)
             m_MaxTimestamp = timestamp;
-        m_EventQueue.push(e);
+        m_EventQueue.push(a_Event);
     }
 
     void ProcessAll()

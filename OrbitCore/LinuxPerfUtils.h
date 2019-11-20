@@ -49,15 +49,14 @@ struct sched_switch_tp {
 
 
 // This struct must be in sync with the SAMPLE_TYPE_FLAGS.
-// TODO: rename T
-template<typename RecordData>
+template<typename record_data>
 struct __attribute__((__packed__)) perf_event_record {
     struct perf_event_header header;
     uint32_t                 pid, tid;   /* if PERF_SAMPLE_TID */
     uint64_t                 time;       /* if PERF_SAMPLE_TIME */
     uint32_t                 cpu, res;   /* if PERF_SAMPLE_CPU */
     uint32_t                 size;       /* if PERF_SAMPLE_RAW */
-    RecordData               data;       /* if PERF_SAMPLE_RAW */
+    record_data              data;       /* if PERF_SAMPLE_RAW */
 };
 
 //-----------------------------------------------------------------------------
@@ -75,9 +74,9 @@ namespace LinuxPerfUtils
         PERF_SAMPLE_RAW | 
         0u;
 
-    inline int32_t perf_event_open(struct perf_event_attr* hw_event, pid_t pid,
-                                int32_t cpu, int32_t group_fd, uint32_t flags) {
-        return syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags);
+    inline int32_t perf_event_open(struct perf_event_attr* a_HWEvent, pid_t a_PID,
+                                int32_t a_CPU, int32_t a_GroupFD, uint32_t a_Flags) {
+        return syscall(__NR_perf_event_open, a_HWEvent, a_PID, a_CPU, a_GroupFD, a_Flags);
     }
 
     inline void start_capturing(uint32_t a_FileDescriptor)
@@ -91,9 +90,9 @@ namespace LinuxPerfUtils
         ioctl(a_FileDescriptor, PERF_EVENT_IOC_DISABLE, 0);
     }
 
-    int32_t task_event_open(int32_t cpu);
+    int32_t task_event_open(int32_t a_CPU);
 
-    int32_t tracepoint_event_open(uint64_t a_TracepointID, pid_t pid, int32_t cpu);
+    int32_t tracepoint_event_open(uint64_t a_TracepointID, pid_t a_PID, int32_t a_CPU);
 
-    void* mmap_mapping(int32_t fd);
+    void* mmap_mapping(int32_t a_FileDescriptor);
 }

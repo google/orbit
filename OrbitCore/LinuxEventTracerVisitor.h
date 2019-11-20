@@ -8,9 +8,9 @@
 class LinuxEventTracerVisitor : public LinuxPerfEventVisitor
 {
 public:
-    void visit(LinuxPerfLostEvent* e) override;
-    void visit(LinuxForkEvent* e) override;
-    void visit(LinuxSchedSwitchEvent* e) override;
+    void visit(LinuxPerfLostEvent* a_Event) override;
+    void visit(LinuxForkEvent* a_Event) override;
+    void visit(LinuxSchedSwitchEvent* a_Event) override;
 
 private:
     std::shared_ptr<Process> m_Process = Capture::GTargetProcess;
