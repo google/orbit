@@ -126,11 +126,11 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
         event_buffer.ProcessTillOffset();
     }
 
-    event_buffer.ProcessAll();
-
     // stop capturing
     for (int32_t fd : fds)
     {
         LinuxPerfUtils::stop_capturing(fd);
     }
+    
+    event_buffer.ProcessAll();
 }
