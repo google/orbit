@@ -39,6 +39,8 @@
 #include <cstdlib>
 #include <memory>
 #include <cxxabi.h>
+#include <iostream>
+#include <fstream>
 
 namespace LinuxUtils {
 
@@ -46,7 +48,7 @@ namespace LinuxUtils {
 std::vector<std::string> ListModules( uint32_t a_PID )
 {
     std::vector<std::string> modules;
-    // TODO: we should read the file directly instead
+    // TODO: we should read the file directly instead or mempry map it.
     std::string result = ExecuteCommand( Format("cat /proc/%u/maps", a_PID).c_str() );
 
     std::stringstream ss(result);

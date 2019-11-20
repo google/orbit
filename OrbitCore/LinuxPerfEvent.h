@@ -6,7 +6,6 @@
 #include "PrintVar.h"
 #include "LinuxPerfUtils.h"
 
-
 class LinuxPerfEventVisitor;
 
 // Subclasses of this class, should be in synch with the

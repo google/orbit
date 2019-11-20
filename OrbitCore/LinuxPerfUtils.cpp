@@ -67,6 +67,7 @@ void* LinuxPerfUtils::mmap_mapping(int32_t a_FileDescriptor)
     // "The mmap size should be 1+2^n pages, where the first page is a meta‐
     // data page (struct perf_event_mmap_page) that contains various bits of
     // information such as where the ring-buffer head is."
+    // http://man7.org/linux/man-pages/man2/perf_event_open.2.html
     const size_t mmap_length = (1 + RING_BUFFER_PAGE_COUNT) * PAGE_SIZE;
 
     // http://man7.org/linux/man-pages/man2/mmap.2.html

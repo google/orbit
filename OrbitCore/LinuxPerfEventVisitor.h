@@ -2,8 +2,8 @@
 
 #include "LinuxPerfEvent.h"
 
-// TODO: As the class hierachy is not fixed yet, we need to 
-//  keep this in sync.
+// TODO: As the class hierarchy of LinuxPerfEvent is not fixed yet, we need to 
+//  keep this class in sync wtih the hierarchy.
 class LinuxPerfEventVisitor
 {
 public:
