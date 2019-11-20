@@ -32,6 +32,8 @@ private:
     perf_event_mmap_page* m_Metadata;
     char* m_Buffer;
     uint64_t m_BufferLength;
+    // the buffer length must be a power of 2, so we can do shifting for division.
+    uint32_t m_BufferLengthExponent;
 
     //-----------------------------------------------------------------------------
     void Read(void* a_Destination, uint64_t a_Count);

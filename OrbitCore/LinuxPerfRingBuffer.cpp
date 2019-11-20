@@ -14,6 +14,13 @@ LinuxPerfRingBuffer::LinuxPerfRingBuffer(uint32_t a_PerfFileDescriptor)
     m_Metadata = reinterpret_cast<perf_event_mmap_page*>(mmap_ret);
     m_BufferLength = m_Metadata->data_size;
 
+    // the buffer length must be a power of 2, so find the exponent in order 
+    // to later optimize the code using shifts/masks instead of divs/mods.
+    uint32_t exponent = 0;
+    uint64_t rest = m_BufferLength;
+    while( rest >>= 1) ++exponent;
+    m_BufferLengthExponent = exponent;
+
     // beginning of the ring buffer
     m_Buffer = reinterpret_cast<char*>(mmap_ret) + m_Metadata->data_offset; 
 }
@@ -46,19 +53,33 @@ void LinuxPerfRingBuffer::SkipRecord(const perf_event_header& a_Header)
 //-----------------------------------------------------------------------------
 void LinuxPerfRingBuffer::Read(void* a_Destination, uint64_t a_Count) {
     uint64_t index = m_Metadata->data_tail;
+    uint32_t exponent = m_BufferLengthExponent;
+
+    // as m_BufferLength is a power of two, we can optimize index % m_BufferLength to:
+    uint64_t modulo = index & (m_BufferLength-1);
+
+    // also we can optimize index / m_BufferLength to:
+    uint64_t index_div_length = 
+        (index + ((index >> 31) & ((1 << exponent) + ~0))) >> exponent;
+
+    uint64_t index_count = index + a_Count - 1;
+    // and also (index + a_Count - 1) / m_BufferLength
+    uint64_t index_count_div_length = 
+        (index_count + ((index_count >> 31) & ((1 << exponent) + ~0))) >> exponent;
+
     if (a_Count > m_BufferLength) {
         // If mmap has been called with PROT_WRITE and
         // perf_event_mmap_page::data_tail is used properly, this should not happen,
         // as the kernel would not overwrite unread data.
         PRINT("Error %u: too slow reading from the ring buffer\n", stderr);
-    } else if (index / m_BufferLength == (index + a_Count - 1) / m_BufferLength) {
-        memcpy(a_Destination, m_Buffer + index % m_BufferLength, a_Count);
-    } else if (index / m_BufferLength == (index + a_Count - 1) / m_BufferLength - 1) {
+    } else if (index_div_length == index_count_div_length) {
+        memcpy(a_Destination, m_Buffer + modulo, a_Count);
+    } else if (index_div_length == (index + a_Count - 1) / m_BufferLength - 1) {
         // Need two copies as the data to read wraps around the ring buffer.
-        memcpy(a_Destination, m_Buffer + index % m_BufferLength,
-            m_BufferLength - index % m_BufferLength);
-        memcpy(a_Destination + (m_BufferLength - index % m_BufferLength), m_Buffer,
-            a_Count - (m_BufferLength - index % m_BufferLength));
+        memcpy(a_Destination, m_Buffer + modulo,
+            m_BufferLength - modulo);
+        memcpy(a_Destination + (m_BufferLength - modulo), m_Buffer,
+            a_Count - (m_BufferLength - modulo));
     } else {
         PRINT("Unexpected error while reading from the ring buffer\n");
     }
