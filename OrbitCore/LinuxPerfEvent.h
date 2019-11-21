@@ -104,9 +104,9 @@ class LinuxSchedSwitchEvent : public LinuxPerfRecordEvent
 public:
     LinuxSchedSwitchEvent(
         uint64_t a_Timestamp, uint32_t a_PID, uint32_t a_TID, uint32_t a_CPU,
-        uint32_t a_PrevPID, uint64_t a_PrevState, uint32_t a_NextPID
+        uint32_t a_PrevTID, uint64_t a_PrevState, uint32_t a_NextTID
     ) : LinuxPerfRecordEvent(a_Timestamp, a_PID, a_TID, a_CPU),
-        m_PrevPID(a_PrevPID), m_PrevState(a_PrevState), m_NextPID(a_NextPID)
+        m_PrevTID(a_PrevTID), m_PrevState(a_PrevState), m_NextTID(a_NextTID)
     {
     }
 
@@ -119,13 +119,13 @@ public:
     {
     }
 
-    int32_t PrevPID() { return m_PrevPID; }
+    int32_t PrevTID() { return m_PrevTID; }
     int64_t PrevState() { return m_PrevState; }
-    int32_t NextPID() { return m_NextPID; }
+    int32_t NextTID() { return m_NextTID; }
 
     void accept(LinuxPerfEventVisitor* a_Visitor) override;
 private:
-	int32_t m_PrevPID;
+	int32_t m_PrevTID;
 	int64_t m_PrevState;
-	int32_t m_NextPID;
+	int32_t m_NextTID;
 };

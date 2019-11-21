@@ -39,10 +39,12 @@ struct sched_switch_tp {
 	int32_t common_pid;
 
 	char prev_comm[16];
+    // this is actually a thread id
 	int32_t prev_pid;
 	int32_t prev_prio;
 	int64_t prev_state;
 	char next_comm[16];
+    // this is actually a thread id
 	int32_t next_pid;
 	int32_t next_prio;
 };

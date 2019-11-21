@@ -21,12 +21,12 @@ void LinuxEventTracerVisitor::visit(LinuxForkEvent* a_Event)
 void LinuxEventTracerVisitor::visit(LinuxSchedSwitchEvent* a_Event)
 {
     // the known thread stopped running
-    if (m_Process->HasThread(a_Event->PrevPID()))
+    if (m_Process->HasThread(a_Event->PrevTID()))
     {
         ++Capture::GNumContextSwitches;
 
         ContextSwitch CS ( ContextSwitch::Out );
-        CS.m_ThreadId = a_Event->PrevPID();
+        CS.m_ThreadId = a_Event->PrevTID();
         CS.m_Time = a_Event->Timestamp();
         CS.m_ProcessorIndex = a_Event->CPU();
         //TODO: Is this correct?
@@ -35,12 +35,12 @@ void LinuxEventTracerVisitor::visit(LinuxSchedSwitchEvent* a_Event)
     }
 
     // the known thread starts running
-    if (m_Process->HasThread(a_Event->NextPID()))
+    if (m_Process->HasThread(a_Event->NextTID()))
     {
         ++Capture::GNumContextSwitches;
 
         ContextSwitch CS ( ContextSwitch::In );
-        CS.m_ThreadId = a_Event->NextPID();
+        CS.m_ThreadId = a_Event->NextTID();
         CS.m_Time = a_Event->Timestamp();
         CS.m_ProcessorIndex = a_Event->CPU();
         //TODO: Is this correct?

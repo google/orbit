@@ -13,6 +13,9 @@
 #include "LinuxPerfEventProcessor.h"
 #include "LinuxUtils.h"
 #include "Capture.h"
+#include "Params.h"
+#include "TimerManager.h"
+#include "ContextSwitch.h"
 
 #include <vector>
 
@@ -48,7 +51,10 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
     // open perf events for all cpus to keep track of process spawning
     for (int cpu = 0; cpu < cpus; cpu++)
     {
-        fds.push_back(LinuxPerfUtils::task_event_open(cpu)); 
+        if ( !GParams.m_SystemWideScheduling )
+        {
+            fds.push_back(LinuxPerfUtils::task_event_open(cpu)); 
+        }
         fds.push_back(LinuxPerfUtils::tracepoint_event_open(tracepoint_ID, -1 /*pid*/, cpu)); 
     }
 
@@ -68,6 +74,7 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
         Capture::GTargetProcess->AddThreadId(tid);
     }
 
+    // we will only use that buffer on non-system wide profiling
     LinuxPerfEventProcessor event_buffer(std::make_unique<LinuxEventTracerVisitor>());
 
     while (!(*a_ExitRequested))
@@ -92,21 +99,54 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                 {
                 case PERF_RECORD_SAMPLE:
                     {
-                        // we need to know the type of the perf_record_sample at compile time,
-                        //  i.e. for multiple perf_event_open calls, we need be able to
-                        //  distinguish the different ring buffers.
                         auto sched_switch = ring_buffer->ConsumeRecord<perf_event_record<sched_switch_tp>>(header);
-                        auto e = std::make_shared<LinuxSchedSwitchEvent>(sched_switch);
-                        event_buffer.Push(e);
+                        if ( GParams.m_SystemWideScheduling )
+                        {
+                            // record end of excetion
+                            if (sched_switch.data.prev_pid != 0)
+                            {
+                                ++Capture::GNumContextSwitches;
+
+                                ContextSwitch CS ( ContextSwitch::Out );
+                                CS.m_ThreadId = sched_switch.data.prev_pid;
+                                CS.m_Time = sched_switch.time;
+                                CS.m_ProcessorIndex = sched_switch.cpu;
+                                //TODO: Is this correct?
+                                CS.m_ProcessorNumber = sched_switch.cpu;
+                                GTimerManager->Add( CS );
+                            }
+
+                            // record start of excetion
+                            if (sched_switch.data.next_pid != 0)
+                            {
+                                ++Capture::GNumContextSwitches;
+
+                                ContextSwitch CS ( ContextSwitch::In );
+                                CS.m_ThreadId = sched_switch.data.next_pid;
+                                CS.m_Time = sched_switch.time;
+                                CS.m_ProcessorIndex = sched_switch.cpu;
+                                //TODO: Is this correct?
+                                CS.m_ProcessorNumber = sched_switch.cpu;
+                                GTimerManager->Add( CS );
+                            }
+                        }
+                        else
+                        {
+                            // we need to know the type of the perf_record_sample at compile time,
+                            //  i.e. for multiple perf_event_open calls, we need be able to
+                            //  distinguish the different ring buffers.
+                            auto e = std::make_shared<LinuxSchedSwitchEvent>(sched_switch);
+                            event_buffer.Push(e);
+                        }
                     }
                     break;
                 case PERF_RECORD_LOST:
                     {
                         auto lost = ring_buffer->ConsumeRecord<perf_event_lost>(header);
-                        auto e = std::make_shared<LinuxPerfLostEvent>(lost);
-                        event_buffer.Push(e);
+                        PRINT("Lost %u Events\n", lost.lost);
                     }
                     break;
+                // the next two events will not occur when collecting system wide information
                 case PERF_RECORD_FORK:
                     {
                         auto fork = ring_buffer->ConsumeRecord<perf_event_fork_exit>(header);
@@ -126,6 +166,7 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
             }
         }
 
+        // will be empty when collecting system wide information
         event_buffer.ProcessTillOffset();
     }
 
@@ -135,5 +176,7 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
         LinuxPerfUtils::stop_capturing(fd);
     }
 
+
+    // will be empty when collecting system wide information
     event_buffer.ProcessAll();
 }
