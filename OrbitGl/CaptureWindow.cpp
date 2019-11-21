@@ -849,7 +849,8 @@ void CaptureWindow::RenderUI()
         m_StatsWindow.AddLog( VAR_TO_CHAR( Capture::GNumTargetQueuedEntries ) );
         m_StatsWindow.AddLog( VAR_TO_CHAR( m_MousePosX ) );
         m_StatsWindow.AddLog( VAR_TO_CHAR( m_MousePosY ) );*/
-
+        m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GNumContextSwitches ) );
+        m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GNumLinuxEvents ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GNumProfileEvents ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GNumInstalledHooks ) );
         m_StatsWindow.AddLine( VAR_TO_ANSI( Capture::GSelectedFunctionsMap.size() ) );

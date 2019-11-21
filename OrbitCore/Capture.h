@@ -74,6 +74,7 @@ struct Capture
     static Timer        GTestTimer;
     static ULONG64      GMainFrameFunction;
     static ULONG64      GNumContextSwitches;
+    static ULONG64      GNumLinuxEvents;
     static ULONG64      GNumProfileEvents;
     static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
     static std::shared_ptr<Process>          GTargetProcess;

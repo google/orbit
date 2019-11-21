@@ -50,6 +50,7 @@ bool        Capture::GHasContextSwitches;
 Timer       Capture::GTestTimer;
 ULONG64     Capture::GMainFrameFunction;
 ULONG64     Capture::GNumContextSwitches;
+ULONG64     Capture::GNumLinuxEvents;
 ULONG64     Capture::GNumProfileEvents;
 int         Capture::GCapturePort = 0;
 std::wstring Capture::GCaptureHost = L"localhost";
@@ -268,6 +269,8 @@ void Capture::ClearCaptureData()
     GTcpServer->ResetStats();
     GOrbitUnreal.NewSession();
     GHasContextSwitches = false;
+    GNumLinuxEvents = 0;
+    GNumContextSwitches = 0;
 }
 
 //-----------------------------------------------------------------------------
