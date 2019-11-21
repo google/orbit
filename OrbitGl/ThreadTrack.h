@@ -14,7 +14,7 @@
 class TextRenderer;
 class EventTrack;
 
-typedef BlockChain<TextBox, 4*1/*024*/> TimerChain;
+typedef BlockChain<TextBox, 4*1024> TimerChain;
 
 //-----------------------------------------------------------------------------
 class ThreadTrack : public Track
@@ -51,6 +51,9 @@ public:
 
     std::vector< std::shared_ptr<TimerChain> > GetAllChains() const;
 
+    bool GetVisible() const { return m_Visible; }
+    void SetVisible(bool value) { m_Visible = value; }
+
 protected:
     inline void UpdateDepth( uint32_t a_Depth ) { if(a_Depth > m_Depth) m_Depth = a_Depth; }
     std::shared_ptr<TimerChain> GetTimers(uint32_t a_Depth) const;
@@ -60,6 +63,7 @@ protected:
     std::shared_ptr<EventTrack> m_EventTrack;
     uint32_t                    m_Depth = 1;
     ThreadID                    m_ThreadID;
+    bool                        m_Visible = true;
     
     std::atomic<uint32_t>       m_NumTimers;
     std::atomic<TickType>       m_MinTime;

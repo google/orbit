@@ -45,7 +45,10 @@ void TimeGraphLayout::SortTracksByPosition( const ThreadTrackMap& a_ThreadTracks
 
     for( auto& pair : a_ThreadTracks )
     {
-        tracks.push_back(pair.second);
+        if( pair.second->GetVisible() )
+        {
+            tracks.push_back(pair.second);
+        }
     }
 
     std::sort(tracks.begin(), tracks.end(), 

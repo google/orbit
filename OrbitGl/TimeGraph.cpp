@@ -258,6 +258,12 @@ void TimeGraph::ProcessTimer( const Timer & a_Timer )
         GetThreadTrack(a_Timer.m_TID)->OnTimer(a_Timer);
         ++m_ThreadCountMap[a_Timer.m_TID];
     }
+    else
+    {
+        // Use thead 0 as container for scheduling events.
+        GetThreadTrack(0)->OnTimer(a_Timer);
+        ++m_ThreadCountMap[0];
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -555,17 +561,16 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
                     textBox.SetPos(pos);
                     textBox.SetSize(size);
 
-                    if (!timer.IsType(Timer::CORE_ACTIVITY))
+                    if (!isCore)
                     {
                         UpdateThreadDepth(timer.m_TID, timer.m_Depth + 1);
                     }
 
                     bool isContextSwitch = timer.IsType(Timer::THREAD_ACTIVITY);
-                    bool isCoreActivity = timer.IsType(Timer::CORE_ACTIVITY);
                     bool isVisibleWidth = NormalizedLength * m_Canvas->getWidth() > 1;
-                    bool isSameThreadIdAsSelected = isCoreActivity && (timer.m_TID == Capture::GSelectedThreadId);
+                    bool isSameThreadIdAsSelected = isCore && (timer.m_TID == Capture::GSelectedThreadId);
                     bool isInactive = (!isContextSwitch && timer.m_FunctionAddress && (Capture::GVisibleFunctionsMap.size() && Capture::GVisibleFunctionsMap[timer.m_FunctionAddress] == nullptr)) ||
-                        (Capture::GSelectedThreadId != 0 && isCoreActivity && !isSameThreadIdAsSelected);
+                        (Capture::GSelectedThreadId != 0 && isCore && !isSameThreadIdAsSelected);
                     bool isSelected = &textBox == Capture::GSelectedTextBox;
 
 
@@ -634,7 +639,7 @@ void TimeGraph::UpdatePrimitives( bool a_Picking )
                             }
                         }
 
-                        if (!isCoreActivity)
+                        if (!isCore)
                         {
                             //m_VisibleTextBoxes.push_back(&textBox);
                             static Color s_Color(255, 255, 255, 255);
