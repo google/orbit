@@ -26,6 +26,7 @@ Params::Params() : m_LoadTypeInfo( true )
                  , m_AutoReleasePdb(false)
                  , m_BpftraceCallstacks(false)
                  , m_SystemWideScheduling(true)
+                 , m_UseBpftrace(false)
                  , m_MaxNumTimers( 1000000 )
                  , m_FontSize( 14.f )
                  , m_Port(44766)
@@ -34,7 +35,7 @@ Params::Params() : m_LoadTypeInfo( true )
 {
 }
 
-ORBIT_SERIALIZE( Params, 15 )
+ORBIT_SERIALIZE( Params, 16 )
 {
     ORBIT_NVP_VAL( 0, m_LoadTypeInfo );
     ORBIT_NVP_VAL( 0, m_SendCallStacks );
@@ -60,6 +61,7 @@ ORBIT_SERIALIZE( Params, 15 )
     ORBIT_NVP_VAL( 13, m_ProcessFilter );
     ORBIT_NVP_VAL( 14, m_BpftraceCallstacks );
     ORBIT_NVP_VAL( 15, m_SystemWideScheduling );
+    ORBIT_NVP_VAL( 16, m_UseBpftrace );
 }
 
 //-----------------------------------------------------------------------------

@@ -13,6 +13,21 @@
 #include <fstream>
 #include <sstream>
 
+#if __linux__
+#include "BpfTraceVisitor.h"
+#include "LinuxPerfEvent.h"
+#include "LinuxPerfEventProcessor.h"
+#include "LinuxPerfRingBuffer.h"
+#include "LinuxPerfUtils.h"
+#include "OrbitFunction.h"
+#include "Pdb.h"
+#include <linux/perf_event.h>
+#include <map>
+#include <vector>
+
+using namespace LinuxPerfUtils;
+#endif
+
 //-----------------------------------------------------------------------------
 BpfTrace::BpfTrace(Callback a_Callback)
 {
@@ -37,11 +52,20 @@ void BpfTrace::Start()
         return;
 
     m_BpfCommand = std::string("bpftrace ") + m_ScriptFileName;
-    m_Thread = std::make_shared<std::thread>
-        ( &LinuxUtils::StreamCommandOutput
-        , m_BpfCommand.c_str()
-        , m_Callback
-        , &m_ExitRequested );
+    if ( GParams.m_UseBpftrace || GParams.m_BpftraceCallstacks ) {    
+        m_Thread = std::make_shared<std::thread>
+            ( &LinuxUtils::StreamCommandOutput
+            , m_BpfCommand.c_str()
+            , m_Callback
+            , &m_ExitRequested );
+    }
+    else
+    {
+        m_Thread = std::make_shared<std::thread>
+            ( BpfTrace::RunPerfEventOpen
+            , &m_ExitRequested );
+    }
+    
     m_Thread->detach();
 #endif
 }
@@ -261,4 +285,159 @@ void BpfTrace::CommandCallbackWithCallstacks(const std::string& a_Line)
         }
         return;
     }
+}
+
+
+//-----------------------------------------------------------------------------
+void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
+{
+    #if __linux__
+    int ROUND_ROBIN_BATCH_SIZE = 5;
+    std::vector<uint64_t> fds;
+    std::map<Function*, LinuxPerfRingBuffer> uprobe_ring_buffers;
+    std::map<Function*, LinuxPerfRingBuffer> uretprobe_ring_buffers;
+    
+    for (const auto& pair : Capture::GSelectedFunctionsMap)
+    {
+        // gather function information
+        Function* function = pair.second;
+        uint64_t offset = function->m_Address;
+        uint64_t virtual_address = function->GetVirtualAddress();
+        std::string module = ws2s(function->m_Pdb->GetFileName());
+
+        // create uprobe for that function on that PID profiling all cpus
+        uint64_t uprobe_fd = 0;
+        if (GParams.m_BpftraceCallstacks)
+            uprobe_fd = LinuxPerfUtils::uprobe_event_open(
+                module.c_str(), offset, Capture::GTargetProcess->GetID(), -1, 
+                PERF_SAMPLE_STACK_USER | PERF_SAMPLE_REGS_USER
+            );
+        else
+            uprobe_fd = LinuxPerfUtils::uprobe_event_open(
+                module.c_str(), offset, Capture::GTargetProcess->GetID(), -1
+            );
+
+        uprobe_ring_buffers.emplace(function, uprobe_fd);
+        fds.push_back(uprobe_fd);
+
+        // create uretprobe for that function on that PID profiling all cpus
+        uint64_t uretprobe_fd = LinuxPerfUtils::uretprobe_event_open(
+            module.c_str(), offset, Capture::GTargetProcess->GetID(), -1
+        );
+        uretprobe_ring_buffers.emplace(function, uretprobe_fd);
+        fds.push_back(uretprobe_fd);
+
+        // start capturing
+        LinuxPerfUtils::start_capturing(uprobe_fd);
+        LinuxPerfUtils::start_capturing(uretprobe_fd);
+    }
+
+    LinuxPerfEventProcessor event_buffer(std::make_unique<BpfTraceVisitor>());
+
+    bool new_events = false;
+
+    while( !(*a_ExitRequested) )
+    {
+        // Lets sleep a bit, such that we are not constantly reading from the buffers
+        // and thus wasting cpu time. 1000 microseconds are still small enought to 
+        // not have our buffers overflown and therefore loosing events.
+        if (!new_events)
+        {
+            usleep(10000);
+        }
+
+        new_events = false;
+
+        // read from all ring buffers, create events and store them in the event_queue
+        // TODO: implement a better scheduling strategy.
+        for (auto& pair : uprobe_ring_buffers)
+        {
+            auto& ring_buffer = pair.second;
+            int i = 0;
+            // read everything that is new
+            while (ring_buffer.HasNewData() && i < ROUND_ROBIN_BATCH_SIZE)
+            {
+                perf_event_header header{};
+                ring_buffer.ReadHeader(&header);
+
+                // perf_event_header::type contains the type of record,
+                // defined in enum perf_event_type in perf_event.h.
+                switch (header.type)
+                {
+                case PERF_RECORD_SAMPLE:
+                    {
+                        if (GParams.m_BpftraceCallstacks)
+                        {
+                            auto record = ring_buffer.ConsumeRecord<LinuxUprobeEventWithStack>(header);
+                            record.SetFunction(pair.first);
+                            event_buffer.Push(std::make_unique<LinuxUprobeEventWithStack>(std::move(record)));
+                        }
+                        else
+                        {
+                            auto record = ring_buffer.ConsumeRecord<LinuxUprobeEvent>(header);
+                            record.SetFunction(pair.first);
+                            event_buffer.Push(std::make_unique<LinuxUprobeEvent>(std::move(record)));
+                        }
+                        
+                    }
+                    break;
+                 case PERF_RECORD_LOST:
+                    {
+                        auto lost = ring_buffer.ConsumeRecord<LinuxPerfLostEvent>(header);
+                        PRINT("Lost %u Events\n", lost.Lost());
+                    }
+                    break;
+                default:
+                    PRINT("Unexpected Perf Sample Type: %u", header.type);
+                    ring_buffer.SkipRecord(header);
+                    break;
+                }
+            }
+        }
+
+        for (auto& pair : uretprobe_ring_buffers)
+        {
+            auto& ring_buffer = pair.second;
+            int i = 0;
+            // read everything that is new
+            while (ring_buffer.HasNewData() && i < ROUND_ROBIN_BATCH_SIZE)
+            {
+                perf_event_header header{};
+                ring_buffer.ReadHeader(&header);
+
+                // perf_event_header::type contains the type of record,
+                // defined in enum perf_event_type in perf_event.h.
+                switch (header.type)
+                {
+                case PERF_RECORD_SAMPLE:
+                    {
+                        auto record = ring_buffer.ConsumeRecord<LinuxUretprobeEvent>(header);
+                        record.SetFunction(pair.first);
+                        event_buffer.Push(std::make_unique<LinuxUretprobeEvent>(std::move(record)));
+                    }
+                    break;
+                 case PERF_RECORD_LOST:
+                    {
+                        auto lost = ring_buffer.ConsumeRecord<LinuxPerfLostEvent>(header);
+                        PRINT("Lost %u Events\n", lost.Lost());
+                    }
+                    break;
+                default:
+                    PRINT("Unexpected Perf Sample Type: %u", header.type);
+                    ring_buffer.SkipRecord(header);
+                    break;
+                }
+            }
+        }
+
+        event_buffer.ProcessTillOffset();
+    }
+
+    for (auto fd : fds)
+    {
+        LinuxPerfUtils::stop_capturing(fd);
+    }
+
+    event_buffer.ProcessAll();
+    #endif
 }

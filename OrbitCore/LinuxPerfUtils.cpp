@@ -72,3 +72,57 @@ int32_t LinuxPerfUtils::tracepoint_event_open(
 
     return fd;
 }
+
+//-----------------------------------------------------------------------------
+int32_t LinuxPerfUtils::uprobe_event_open(
+    const char* a_Module,
+    uint64_t a_FunctionOffset,
+    pid_t a_PID,
+    int32_t a_CPU,
+    uint64_t additonal_sample_type
+)
+{
+    perf_event_attr pe = generic_perf_event_attr();
+
+    pe.type = 7;
+    pe.config = 0;
+    pe.uprobe_path = reinterpret_cast<uint64_t>(a_Module);
+    pe.probe_offset = a_FunctionOffset;
+    pe.sample_type |= additonal_sample_type;
+
+    int32_t fd = perf_event_open(&pe, a_PID, a_CPU, -1 /*grpup_fd*/, 0 /*flags*/);
+
+    if (fd == -1)
+    {
+        PRINT("perf_event_open error: %d\n", errno);
+    }
+
+    return fd;
+}
+
+//-----------------------------------------------------------------------------
+int32_t LinuxPerfUtils::uretprobe_event_open(
+    const char* a_Module,
+    uint64_t a_FunctionOffset, 
+    pid_t a_PID,
+    int32_t a_CPU,
+    uint64_t additonal_sample_type
+)
+{
+    perf_event_attr pe = generic_perf_event_attr();
+
+    pe.type = 7;
+    pe.config = 1;
+    pe.uprobe_path = reinterpret_cast<uint64_t>(a_Module);
+    pe.probe_offset = a_FunctionOffset;
+    pe.sample_type |= additonal_sample_type;
+
+    int32_t fd = perf_event_open(&pe, a_PID, a_CPU, -1 /*grpup_fd*/, 0 /*flags*/);
+
+    if (fd == -1)
+    {
+        PRINT("perf_event_open error: %d\n", errno);
+    }
+
+    return fd;
+}
