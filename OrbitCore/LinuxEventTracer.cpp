@@ -77,18 +77,31 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
     // we will only use that buffer on non-system wide profiling
     LinuxPerfEventProcessor event_buffer(std::make_unique<LinuxEventTracerVisitor>());
 
+    bool new_events = false;
+
     while (!(*a_ExitRequested))
     {
+        // If there was nothing new in the last iteration:
         // Lets sleep a bit, such that we are not constantly reading from the buffers
-        // and thus wasting cpu time. 5000 microseconds are still small enought to 
+        // and thus wasting cpu time. 10000 microseconds are still way small enought to 
         // not have our buffers overflown and therefore loosing events.
-        usleep(1000);
+        if (!new_events)
+        {
+            usleep(10000);
+        }
 
-        // read from all ring buffers, create events and store them in the event_queue
+        new_events = false;
+
+        // Read from all ring buffers, create events and store them in the event_queue.
+        // In order to ensure, no buffer is read constantly while others overflow,
+        // we schedule the reading using round robbin like scheduling.
         for (std::shared_ptr<LinuxPerfRingBuffer> ring_buffer : ring_buffers)
         {
+            int i = 0;
             // read everything that is new
-            while (ring_buffer->HasNewData()) {
+            while (ring_buffer->HasNewData() && i < ROUND_ROBIN_BATCH_SIZE) {
+                i++;
+                new_events = true;
                 perf_event_header header{};
                 ring_buffer->ReadHeader(&header);
 

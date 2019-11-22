@@ -9,6 +9,7 @@
 class LinuxEventTracer
 {
 public:
+    static const uint32_t ROUND_ROBIN_BATCH_SIZE = 5;
     typedef std::function<void(const std::string& a_Data)> Callback;
     void Start();
     void Stop();
