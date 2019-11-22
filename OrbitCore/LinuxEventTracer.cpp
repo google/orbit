@@ -135,8 +135,7 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                             // we need to know the type of the perf_record_sample at compile time,
                             //  i.e. for multiple perf_event_open calls, we need be able to
                             //  distinguish the different ring buffers.
-                            auto e = std::make_shared<LinuxSchedSwitchEvent>(sched_switch);
-                            event_buffer.Push(e);
+                            event_buffer.Push(std::make_unique<LinuxSchedSwitchEvent>(sched_switch));
                         }
                     }
                     break;
@@ -150,8 +149,7 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                 case PERF_RECORD_FORK:
                     {
                         auto fork = ring_buffer->ConsumeRecord<perf_event_fork_exit>(header);
-                        auto e = std::make_shared<LinuxForkEvent>(fork);
-                        event_buffer.Push(e);
+                        event_buffer.Push(std::make_unique<LinuxForkEvent>(fork));
                     }
                     break;
                 case PERF_RECORD_EXIT:

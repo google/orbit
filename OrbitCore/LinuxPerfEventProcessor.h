@@ -14,7 +14,7 @@
 class TimestampCompare
 {
 public:
-    bool operator() (std::shared_ptr<LinuxPerfEvent> a_LHS, std::shared_ptr<LinuxPerfEvent> a_RHS)
+    bool operator() (const std::unique_ptr<LinuxPerfEvent>& a_LHS, const std::unique_ptr<LinuxPerfEvent>& a_RHS)
     {
         return a_LHS->Timestamp() > a_RHS->Timestamp();
     }
@@ -34,7 +34,7 @@ public:
     { 
     }
 
-    void Push(std::shared_ptr<LinuxPerfEvent> a_Event);
+    void Push(std::unique_ptr<LinuxPerfEvent> a_Event);
 
     void ProcessAll();
 
@@ -42,8 +42,8 @@ public:
 
 private:
     std::priority_queue<
-        std::shared_ptr<LinuxPerfEvent>, 
-        std::vector<std::shared_ptr<LinuxPerfEvent>>, 
+        std::unique_ptr<LinuxPerfEvent>, 
+        std::vector<std::unique_ptr<LinuxPerfEvent>>, 
         TimestampCompare
     > m_EventQueue;
 
