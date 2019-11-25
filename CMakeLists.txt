@@ -125,11 +125,11 @@ function(AppendToVar var val)
     set("${var}" "${${var}} ${val}" PARENT_SCOPE)
 endfunction()
 
-#if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-#	AppendToVar(CMAKE_CXX_FLAGS "/std:c++17")
-#else()
-#	AppendToVar(CMAKE_CXX_FLAGS "-std=c++17")
-#endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	AppendToVar(CMAKE_CXX_FLAGS "/std:c++17")
+else()
+	AppendToVar(CMAKE_CXX_FLAGS "-std=c++17")
+endif()
 
 if(WIN32)
 # Set preprocessor defines
@@ -171,6 +171,11 @@ endif()
 if(WIN32)
 add_subdirectory(OrbitAsm)
 add_subdirectory(OrbitDll)
+endif()
+
+if(LINUX)
+add_subdirectory(${EXTERN_ROOT}/lzma)
+add_subdirectory(${EXTERN_ROOT}/libunwindstack)
 endif()
 
 add_subdirectory(OrbitCore)
