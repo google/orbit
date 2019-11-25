@@ -64,6 +64,9 @@ void TimeGraph::Clear()
 
     ScopeLock lock(m_Mutex);
     m_ThreadTracks.clear();
+
+    m_ContextSwitchesMap.clear();
+    m_CoreUtilizationMap.clear();
 }
 
 //-----------------------------------------------------------------------------
