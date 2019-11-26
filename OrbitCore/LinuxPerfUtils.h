@@ -14,8 +14,8 @@
 namespace LinuxPerfUtils
 {
     // TODO: these constants should be made available in some settings
-    static constexpr uint32_t STACK_SIZE = (1u << 16u) - 8; // TODO: the stack is not yet recorded
-    static constexpr size_t RING_BUFFER_PAGE_COUNT = 64; // 64: 256 KB; 2048: 8 MB
+    static constexpr uint32_t STACK_SIZE = (1u << 13u) - 8; // TODO: the stack is not yet recorded
+    static constexpr size_t RING_BUFFER_PAGE_COUNT = 2048; // 64: 256 KB; 2048: 8 MB
     // sample stack and instruction pointer (used later for stack unwinding)
     static constexpr uint64_t SAMPLE_REGS_USER = (0x1 << PERF_REG_X86_SP) | (0x1 << PERF_REG_X86_IP);
 
@@ -57,6 +57,12 @@ namespace LinuxPerfUtils
         // uint64_t    regs[__builtin_popcount(SAMPLE_REGS_USER)]; 
         uint64_t sp;
         uint64_t ip;
+    };
+
+    struct perf_sample_stack_user {
+        uint64_t    size;        /* if PERF_SAMPLE_STACK_USER */
+        char   data[STACK_SIZE]; /* if PERF_SAMPLE_STACK_USER */
+        uint64_t    dyn_size;    /* if PERF_SAMPLE_STACK_USER && size != 0 */
     };
 
     // This struct must be in sync with the SAMPLE_TYPE_FLAGS.
