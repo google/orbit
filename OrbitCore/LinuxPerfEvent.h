@@ -6,6 +6,8 @@
 #include "PrintVar.h"
 #include "LinuxPerfUtils.h"
 
+using namespace LinuxPerfUtils;
+
 class LinuxPerfEventVisitor;
 
 // Subclasses of this class, should be in synch with the
@@ -110,11 +112,11 @@ public:
     {
     }
 
-    explicit LinuxSchedSwitchEvent(const perf_event_record<sched_switch_tp>& a_SchedSwitchEvent) 
+    explicit LinuxSchedSwitchEvent(const sched_switch_record_t& a_SchedSwitchEvent) 
     : LinuxSchedSwitchEvent(
         a_SchedSwitchEvent.time, a_SchedSwitchEvent.pid, a_SchedSwitchEvent.tid, 
-        a_SchedSwitchEvent.cpu, a_SchedSwitchEvent.data.prev_pid, 
-        a_SchedSwitchEvent.data.prev_state, a_SchedSwitchEvent.data.next_pid
+        a_SchedSwitchEvent.cpu, a_SchedSwitchEvent.raw_data.prev_pid, 
+        a_SchedSwitchEvent.raw_data.prev_state, a_SchedSwitchEvent.raw_data.next_pid
     )
     {
     }

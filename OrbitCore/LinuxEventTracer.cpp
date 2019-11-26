@@ -112,16 +112,16 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                 {
                 case PERF_RECORD_SAMPLE:
                     {
-                        auto sched_switch = ring_buffer->ConsumeRecord<perf_event_record<sched_switch_tp>>(header);
+                        auto sched_switch = ring_buffer->ConsumeRecord<sched_switch_record_t>(header);
                         if ( GParams.m_SystemWideScheduling )
                         {
                             // record end of excetion
-                            if (sched_switch.data.prev_pid != 0)
+                            if (sched_switch.raw_data.prev_pid != 0)
                             {
                                 ++Capture::GNumContextSwitches;
 
                                 ContextSwitch CS ( ContextSwitch::Out );
-                                CS.m_ThreadId = sched_switch.data.prev_pid;
+                                CS.m_ThreadId = sched_switch.raw_data.prev_pid;
                                 CS.m_Time = sched_switch.time;
                                 CS.m_ProcessorIndex = sched_switch.cpu;
                                 //TODO: Is this correct?
@@ -130,12 +130,12 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                             }
 
                             // record start of excetion
-                            if (sched_switch.data.next_pid != 0)
+                            if (sched_switch.raw_data.next_pid != 0)
                             {
                                 ++Capture::GNumContextSwitches;
 
                                 ContextSwitch CS ( ContextSwitch::In );
-                                CS.m_ThreadId = sched_switch.data.next_pid;
+                                CS.m_ThreadId = sched_switch.raw_data.next_pid;
                                 CS.m_Time = sched_switch.time;
                                 CS.m_ProcessorIndex = sched_switch.cpu;
                                 //TODO: Is this correct?
