@@ -569,7 +569,7 @@ void SamplingProfiler::GetThreadCallstack( Thread* a_Thread )
     {
         frame.m_Callstack.m_Depth = depth;
         frame.m_Callstack.m_ThreadId = a_Thread->m_TID;
-        m_Callstacks.push_back( frame.m_Callstack );
+        AddCallStack( frame.m_Callstack );
     }
 #endif
 }
