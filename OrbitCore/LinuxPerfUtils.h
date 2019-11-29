@@ -77,7 +77,7 @@ namespace LinuxPerfUtils
     };
 
     // TODO: This struct might change. We should read this from debugfs.
-    struct sched_switch_tp {
+    struct __attribute__((__packed__)) sched_switch_tp {
         uint32_t size; /* if PERF_SAMPLE_RAW */
         uint16_t common_type;
         unsigned char common_flags;

@@ -102,7 +102,7 @@ void LinuxPerfRingBuffer::Read(void* a_Destination, uint64_t a_Count) {
     const uint64_t index_count = index + a_Count - 1;
     // and also (index + a_Count - 1) / m_BufferLength
     const uint64_t index_count_div_length = 
-        (index_count + ((index_count >> 31) & ((1 << exponent) + ~0))) >> exponent;
+        (index_count + ((index_count >> 63) & ((1 << exponent) + ~0llu))) >> exponent;
 
     if (a_Count > m_BufferLength)
     {
