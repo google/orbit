@@ -7,7 +7,6 @@
 
 #include <linux/perf_event.h>
 #include <sys/errno.h>
-#include <sys/mman.h>
 
 //-----------------------------------------------------------------------------
 perf_event_attr LinuxPerfUtils::generic_perf_event_attr()
@@ -68,26 +67,4 @@ int32_t LinuxPerfUtils::tracepoint_event_open(
     }
 
     return fd;
-}
-
-//-----------------------------------------------------------------------------
-void* LinuxPerfUtils::mmap_mapping(int32_t a_FileDescriptor)
-{
-    const size_t PAGE_SIZE = getpagesize();  // 4 KB
-
-    // "The mmap size should be 1+2^n pages, where the first page is a meta‐
-    // data page (struct perf_event_mmap_page) that contains various bits of
-    // information such as where the ring-buffer head is."
-    // http://man7.org/linux/man-pages/man2/perf_event_open.2.html
-    const size_t mmap_length = (1 + RING_BUFFER_PAGE_COUNT) * PAGE_SIZE;
-
-    // http://man7.org/linux/man-pages/man2/mmap.2.html
-    // Use mmap to get access to the ring buffer.
-    void* mmap_ret =
-        mmap(nullptr, mmap_length, PROT_READ | PROT_WRITE, MAP_SHARED, a_FileDescriptor, 0);
-    if (mmap_ret == reinterpret_cast<void*>(-1)) {
-        PRINT("mmap error: %d\n", errno);
-    }
-
-    return mmap_ret;
 }

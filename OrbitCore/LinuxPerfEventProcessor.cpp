@@ -3,7 +3,7 @@
 
 void LinuxPerfEventProcessor::Push(std::unique_ptr<LinuxPerfEvent> a_Event)
 {
-    uint64_t timestamp = a_Event->Timestamp();
+    const uint64_t timestamp = a_Event->Timestamp();
     #ifndef NDEBUG
     if (m_LastProcessTimestamp > 0 && timestamp < m_LastProcessTimestamp - DELAY_IN_NS)
         PRINT("Error: processed an event out of order.\n");

@@ -42,7 +42,10 @@ void LinuxEventTracer::Stop()
 void LinuxEventTracer::Run(bool* a_ExitRequested)
 {
     // get the number of cpus
-    int cpus = std::stoi(LinuxUtils::ExecuteCommand("nproc"));
+    int cpus = std::thread::hardware_concurrency();
+    // some compilers does not support hardware_concurrency.
+    if (cpus == 0)
+        int cpus = std::stoi(LinuxUtils::ExecuteCommand("nproc"));
 
     uint64_t tracepoint_ID = LinuxUtils::GetTracePointID("sched", "sched_switch");
     
@@ -58,11 +61,10 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
         fds.push_back(LinuxPerfUtils::tracepoint_event_open(tracepoint_ID, -1 /*pid*/, cpu)); 
     }
 
-    std::vector<std::shared_ptr<LinuxPerfRingBuffer>> ring_buffers;
+    std::vector<LinuxPerfRingBuffer> ring_buffers;
     for (int32_t fd : fds)
     {
-        auto ring_buffer = std::make_shared<LinuxPerfRingBuffer>(fd);
-        ring_buffers.push_back(ring_buffer);
+        ring_buffers.emplace_back(fd);
     
         // start recording via ioctl
         LinuxPerfUtils::start_capturing(fd);
@@ -95,15 +97,15 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
         // Read from all ring buffers, create events and store them in the event_queue.
         // In order to ensure, no buffer is read constantly while others overflow,
         // we schedule the reading using round robbin like scheduling.
-        for (std::shared_ptr<LinuxPerfRingBuffer> ring_buffer : ring_buffers)
+        for (LinuxPerfRingBuffer& ring_buffer : ring_buffers)
         {
             int i = 0;
-            // read everything that is new
-            while (ring_buffer->HasNewData() && i < ROUND_ROBIN_BATCH_SIZE) {
+            // Read up to ROUND_ROBIN_BATCH_SIZE (5) new events
+            while (ring_buffer.HasNewData() && i < ROUND_ROBIN_BATCH_SIZE) {
                 i++;
                 new_events = true;
                 perf_event_header header{};
-                ring_buffer->ReadHeader(&header);
+                ring_buffer.ReadHeader(&header);
 
                 // perf_event_header::type contains the type of record, e.g.,
                 //  PERF_RECORD_SAMPLE, PERF_RECORD_MMAP, etc., defined in enum
@@ -112,7 +114,7 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                 {
                 case PERF_RECORD_SAMPLE:
                     {
-                        auto sched_switch = ring_buffer->ConsumeRecord<sched_switch_record_t>(header);
+                        auto sched_switch = ring_buffer.ConsumeRecord<sched_switch_record_t>(header);
                         if ( GParams.m_SystemWideScheduling )
                         {
                             // record end of excetion
@@ -154,24 +156,24 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                     break;
                 case PERF_RECORD_LOST:
                     {
-                        auto lost = ring_buffer->ConsumeRecord<perf_event_lost>(header);
+                        auto lost = ring_buffer.ConsumeRecord<perf_event_lost>(header);
                         PRINT("Lost %u Events\n", lost.lost);
                     }
                     break;
                 // the next two events will not occur when collecting system wide information
                 case PERF_RECORD_FORK:
                     {
-                        auto fork = ring_buffer->ConsumeRecord<perf_event_fork_exit>(header);
+                        auto fork = ring_buffer.ConsumeRecord<perf_event_fork_exit>(header);
                         event_buffer.Push(std::make_unique<LinuxForkEvent>(fork));
                     }
                     break;
                 case PERF_RECORD_EXIT:
                     // TODO: here we could easily remove the threads from the process again.
-                    ring_buffer->SkipRecord(header);
+                    ring_buffer.SkipRecord(header);
                     break;
                 default:
                     PRINT("Unexpected Perf Sample Type: %u", header.type);
-                    ring_buffer->SkipRecord(header);
+                    ring_buffer.SkipRecord(header);
                     break;
                 }
             }

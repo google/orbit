@@ -15,7 +15,6 @@ namespace LinuxPerfUtils
 {
     // TODO: these constants should be made available in some settings
     static constexpr uint32_t STACK_SIZE = (1u << 13u) - 8; // TODO: the stack is not yet recorded
-    static constexpr size_t RING_BUFFER_PAGE_COUNT = 2048; // 64: 256 KB; 2048: 8 MB
     // sample stack and instruction pointer (used later for stack unwinding)
     static constexpr uint64_t SAMPLE_REGS_USER = (0x1 << PERF_REG_X86_SP) | (0x1 << PERF_REG_X86_IP);
 
@@ -119,6 +118,4 @@ namespace LinuxPerfUtils
     int32_t task_event_open(int32_t a_CPU);
 
     int32_t tracepoint_event_open(uint64_t a_TracepointID, pid_t a_PID, int32_t a_CPU, uint64_t additonal_sample_type = 0);
-
-    void* mmap_mapping(int32_t a_FileDescriptor);
 }
