@@ -76,7 +76,21 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
         Capture::GTargetProcess->AddThreadId(tid);
     }
 
-    // we will only use that buffer on non-system wide profiling
+    // We will only use that buffer on non-system wide profiling.
+    // On non-system wide profiling, we want only process context-switches that
+    //  of threads that correspond to that process. This requires us to keep track of
+    //  all threads being created by that process (fork events). As these all events,
+    //  come from different ring buffers, we must ensure that we will not process a 
+    //  context-switch before processing the corresponding fork event. Otherwise, we would
+    //  not add this context-switch to the UI.
+    //  The event_buffer, ensures that we process all events in synch to their timestamp.
+    // TODO: Instead of using this buffer, which allows use to process all events in the
+    //  order of their timestamp, we could do the following:
+    //    1) When receiving a context-switch:
+    //     a) If the TID already belongs to the PID => process the context-switch
+    //     b) Otherwise => add the context-switch to a queue for this TID.
+    //    2) When receiving a fork creating a TID belonging to this PID 
+    //     => process all events queued for this TID.
     LinuxPerfEventProcessor event_buffer(std::make_unique<LinuxEventTracerVisitor>());
 
     bool new_events = false;
