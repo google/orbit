@@ -128,34 +128,34 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                 {
                 case PERF_RECORD_SAMPLE:
                     {
-                        auto sched_switch = ring_buffer.ConsumeRecord<sched_switch_record_t>(header);
+                        auto sched_switch = ring_buffer.ConsumeRecord<LinuxSchedSwitchEvent>(header);
                         if ( GParams.m_SystemWideScheduling )
                         {
                             // record end of excetion
-                            if (sched_switch.raw_data.prev_pid != 0)
+                            if (sched_switch.PrevTID() != 0)
                             {
                                 ++Capture::GNumContextSwitches;
 
                                 ContextSwitch CS ( ContextSwitch::Out );
-                                CS.m_ThreadId = sched_switch.raw_data.prev_pid;
-                                CS.m_Time = sched_switch.time;
-                                CS.m_ProcessorIndex = sched_switch.cpu;
+                                CS.m_ThreadId = sched_switch.PrevTID();
+                                CS.m_Time = sched_switch.Timestamp();
+                                CS.m_ProcessorIndex = sched_switch.CPU();
                                 //TODO: Is this correct?
-                                CS.m_ProcessorNumber = sched_switch.cpu;
+                                CS.m_ProcessorNumber = sched_switch.CPU();
                                 GTimerManager->Add( CS );
                             }
 
                             // record start of excetion
-                            if (sched_switch.raw_data.next_pid != 0)
+                            if (sched_switch.NextTID() != 0)
                             {
                                 ++Capture::GNumContextSwitches;
 
                                 ContextSwitch CS ( ContextSwitch::In );
-                                CS.m_ThreadId = sched_switch.raw_data.next_pid;
-                                CS.m_Time = sched_switch.time;
-                                CS.m_ProcessorIndex = sched_switch.cpu;
+                                CS.m_ThreadId = sched_switch.NextTID();
+                                CS.m_Time = sched_switch.Timestamp();
+                                CS.m_ProcessorIndex = sched_switch.CPU();
                                 //TODO: Is this correct?
-                                CS.m_ProcessorNumber = sched_switch.cpu;
+                                CS.m_ProcessorNumber = sched_switch.CPU();
                                 GTimerManager->Add( CS );
                             }
                         }
@@ -164,21 +164,21 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                             // we need to know the type of the perf_record_sample at compile time,
                             //  i.e. for multiple perf_event_open calls, we need be able to
                             //  distinguish the different ring buffers.
-                            event_buffer.Push(std::make_unique<LinuxSchedSwitchEvent>(sched_switch));
+                            event_buffer.Push(std::make_unique<LinuxSchedSwitchEvent>(std::move(sched_switch)));
                         }
                     }
                     break;
                 case PERF_RECORD_LOST:
                     {
-                        auto lost = ring_buffer.ConsumeRecord<perf_event_lost>(header);
-                        PRINT("Lost %u Events\n", lost.lost);
+                        auto lost = ring_buffer.ConsumeRecord<LinuxPerfLostEvent>(header);
+                        PRINT("Lost %u Events\n", lost.Lost());
                     }
                     break;
                 // the next two events will not occur when collecting system wide information
                 case PERF_RECORD_FORK:
                     {
-                        auto fork = ring_buffer.ConsumeRecord<perf_event_fork_exit>(header);
-                        event_buffer.Push(std::make_unique<LinuxForkEvent>(fork));
+                        auto fork = ring_buffer.ConsumeRecord<LinuxForkEvent>(header);
+                        event_buffer.Push(std::make_unique<LinuxForkEvent>(std::move(fork)));
                     }
                     break;
                 case PERF_RECORD_EXIT:

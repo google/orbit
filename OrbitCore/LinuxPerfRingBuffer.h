@@ -20,13 +20,15 @@ public:
     void SkipRecord(const perf_event_header& a_Header);
 
     //-----------------------------------------------------------------------------
-    template<typename T>
-    T ConsumeRecord(const perf_event_header& a_Header)
+    template<typename LinuxPerfEvent>
+    LinuxPerfEvent ConsumeRecord(const perf_event_header& a_Header)
     {
-        T record;
+        LinuxPerfEvent record;
 
         // perf_event_header::size contains the size of the entire record.
-        Read(&record, a_Header.size);
+        // As record is an object of type LinuxPerfEvent, it has the vtable
+        // at offset 0. The data fields start at the address of the header.
+        Read(&record.header, a_Header.size);
 
         SkipRecord(a_Header);
 
@@ -47,8 +49,7 @@ private:
     uint64_t m_BufferLength;
     // the buffer length must be a power of 2, so we can do shifting for division.
     uint32_t m_BufferLengthExponent;
-
-    //-----------------------------------------------------------------------------
+    
     void Read(void* a_Destination, uint64_t a_Count);
 
     void* mmap_mapping(int32_t a_FileDescriptor);
