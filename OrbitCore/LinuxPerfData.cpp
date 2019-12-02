@@ -28,3 +28,10 @@ ORBIT_SERIALIZE( LinuxPerfData, 0 )
     ORBIT_NVP_VAL( 0, m_numCallstacks );
     ORBIT_NVP_VAL( 0, m_CS );
 }
+
+
+ORBIT_SERIALIZE( HashedLinuxPerfData, 0 )
+{
+    ORBIT_NVP_VAL( 0, m_time );
+    ORBIT_NVP_VAL( 0, m_CS );
+}

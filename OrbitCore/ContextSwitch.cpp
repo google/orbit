@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "ContextSwitch.h"
+#include "Serialization.h"
 
 //-----------------------------------------------------------------------------
 ContextSwitch::ContextSwitch( SwitchType a_Type ) : m_ThreadId( 0 )
@@ -18,4 +19,13 @@ ContextSwitch::ContextSwitch( SwitchType a_Type ) : m_ThreadId( 0 )
 ContextSwitch::~ContextSwitch()
 {
 
+}
+
+ORBIT_SERIALIZE( ContextSwitch, 0 )
+{
+    ORBIT_NVP_VAL( 0, m_ThreadId );
+    ORBIT_NVP_VAL( 0, m_Type );
+    ORBIT_NVP_VAL( 0, m_Time );
+    ORBIT_NVP_VAL( 0, m_ProcessorIndex );
+    ORBIT_NVP_VAL( 0, m_ProcessorNumber );
 }

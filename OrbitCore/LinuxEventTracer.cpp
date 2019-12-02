@@ -20,7 +20,7 @@
 #include "Params.h"
 #include "TimerManager.h"
 #include "ContextSwitch.h"
-#include "ConnectionManager.h"
+#include "CoreApp.h"
 
 #include <vector>
 
@@ -32,12 +32,9 @@ void LinuxEventTracer::Start()
 #if __linux__
     m_ExitRequested = false;
 
-    // TODO: DISABLE REMOTE SCHEDULER INFORMATION TRACING UNTIL WE ACTUALLY SEND THE EVENTS.
-    if ( !ConnectionManager::Get().IsService() )
-    {
-        m_Thread = std::make_shared<std::thread>(&LinuxEventTracer::Run, &m_ExitRequested);
-        m_Thread->detach();
-    }
+    m_Thread = std::make_shared<std::thread>(&LinuxEventTracer::Run, &m_ExitRequested);
+    m_Thread->detach();
+
 #endif
 }
 
@@ -150,7 +147,7 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                                 CS.m_ProcessorIndex = sched_switch.CPU();
                                 //TODO: Is this correct?
                                 CS.m_ProcessorNumber = sched_switch.CPU();
-                                GTimerManager->Add( CS );
+                                GCoreApp->ProcessContextSwitch( CS );
                             }
 
                             // record start of excetion
@@ -164,7 +161,7 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                                 CS.m_ProcessorIndex = sched_switch.CPU();
                                 //TODO: Is this correct?
                                 CS.m_ProcessorNumber = sched_switch.CPU();
-                                GTimerManager->Add( CS );
+                                GCoreApp->ProcessContextSwitch( CS );
                             }
                         }
                         else

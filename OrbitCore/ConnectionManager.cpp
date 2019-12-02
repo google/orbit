@@ -19,6 +19,7 @@
 #include "OrbitFunction.h"
 #include "BpfTrace.h"
 #include "Serialization.h"
+#include "ContextSwitch.h"
 
 #if __linux__
 #include "LinuxUtils.h"
@@ -119,6 +120,7 @@ void ConnectionManager::StartCaptureAsRemote()
     PRINT_FUNC;
     Capture::StartCapture();
     m_BpfTrace->Start();
+    GCoreApp->StartRemoteCaptureBufferingThread();
 }
 
 //-----------------------------------------------------------------------------
@@ -127,6 +129,7 @@ void ConnectionManager::StopCaptureAsRemote()
     PRINT_FUNC;
     m_BpfTrace->Stop();
     Capture::StopCapture();
+    GCoreApp->StopRemoteCaptureBufferingThread();
 }
 
 //-----------------------------------------------------------------------------
@@ -249,6 +252,51 @@ void ConnectionManager::SetupClientCallbacks()
         inputAr(symbol);
 
         GCoreApp->AddSymbol(symbol.m_Address, symbol.m_Module, symbol.m_Name);
+    } );
+
+    GTcpClient->AddCallback(Msg_RemoteContextSwitches, [=](const Message& a_Msg)
+    {
+        const char* a_Data = a_Msg.GetData();
+        size_t a_Size = a_Msg.m_Size;
+        std::istringstream buffer(std::string(a_Data, a_Size));
+        cereal::JSONInputArchive inputAr( buffer );
+        std::vector<ContextSwitch> context_switches;
+        inputAr(context_switches);
+
+        for (const auto& cs : context_switches)
+        {
+            GCoreApp->ProcessContextSwitch(cs);
+        }
+    } );
+
+    GTcpClient->AddCallback(Msg_SamplingCallstacks, [=](const Message& a_Msg)
+    {
+        const char* a_Data = a_Msg.GetData();
+        size_t a_Size = a_Msg.m_Size;
+        std::istringstream buffer(std::string(a_Data, a_Size));
+        cereal::JSONInputArchive inputAr( buffer );
+        std::vector<LinuxPerfData> call_stacks;
+        inputAr(call_stacks);
+
+        for (auto& cs : call_stacks)
+        {
+            GCoreApp->ProcessSamplingCallStack(cs);
+        }
+    } );
+
+    GTcpClient->AddCallback(Msg_SamplingHashedCallstacks, [=](const Message& a_Msg)
+    {
+        const char* a_Data = a_Msg.GetData();
+        size_t a_Size = a_Msg.m_Size;
+        std::istringstream buffer(std::string(a_Data, a_Size));
+        cereal::JSONInputArchive inputAr( buffer );
+        std::vector<HashedLinuxPerfData> call_stacks;
+        inputAr(call_stacks);
+
+        for (auto& cs : call_stacks)
+        {
+            GCoreApp->ProcessHashedSamplingCallStack(cs);
+        }
     } );
 }
 

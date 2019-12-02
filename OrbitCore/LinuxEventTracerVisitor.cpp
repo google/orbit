@@ -11,6 +11,7 @@
 #include "LinuxEventTracerVisitor.h"
 #include "LinuxPerfEvent.h"
 #include "PrintVar.h"
+#include "CoreApp.h"
 
 void LinuxEventTracerVisitor::visit(LinuxPerfLostEvent* a_Event)
 {
@@ -38,7 +39,7 @@ void LinuxEventTracerVisitor::visit(LinuxSchedSwitchEvent* a_Event)
         CS.m_ProcessorIndex = a_Event->CPU();
         //TODO: Is this correct?
         CS.m_ProcessorNumber = a_Event->CPU();
-        GTimerManager->Add( CS );
+        GCoreApp->ProcessContextSwitch( CS );
     }
 
     // the known thread starts running
@@ -52,6 +53,6 @@ void LinuxEventTracerVisitor::visit(LinuxSchedSwitchEvent* a_Event)
         CS.m_ProcessorIndex = a_Event->CPU();
         //TODO: Is this correct?
         CS.m_ProcessorNumber = a_Event->CPU();
-        GTimerManager->Add( CS );
+        GCoreApp->ProcessContextSwitch( CS );
     }
 }

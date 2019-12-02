@@ -5,6 +5,7 @@
 
 
 #include "DataViewTypes.h"
+#include "Threading.h"
 
 #include <functional>
 #include <memory>
@@ -17,6 +18,7 @@
 #include "../OrbitCore/Message.h"
 
 struct CallStack;
+struct ContextSwitch;
 class Process;
 
 //-----------------------------------------------------------------------------
@@ -49,6 +51,8 @@ public:
     void Inject(const std::wstring a_FileName);
     virtual void StartCapture();
     virtual void StopCapture();
+    virtual void StartRemoteCaptureBufferingThread();
+    virtual void StopRemoteCaptureBufferingThread();
     void ToggleCapture();
     void OnDisconnect();
     void OnPdbLoaded();
@@ -70,8 +74,11 @@ public:
     virtual void Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, size_t a_Size );
     virtual void ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName );
     virtual void ProcessSamplingCallStack(LinuxPerfData& a_CallStack);
+    virtual void ProcessHashedSamplingCallStack(HashedLinuxPerfData& a_CallStack);
     virtual void ProcessCallStack( CallStack& a_CallStack );
+    virtual void ProcessContextSwitch( const ContextSwitch& a_CallStack );
     virtual void AddSymbol(uint64_t a_Address, const std::string& a_Module, const std::string& a_Name);
+    void ProcessBufferedCaptureData();
 
     int* GetScreenRes() { return m_ScreenRes; }
 
@@ -165,6 +172,10 @@ private:
     std::vector< WatchCallback >          m_UpdateWatchCallbacks;
     std::vector< SamplingReportCallback > m_SamplingReportsCallbacks;
     std::vector< SamplingReportCallback > m_SelectionReportCallbacks;
+    std::vector< ContextSwitch >          m_ContextSwitchBuffer;
+    std::vector< Timer >                  m_TimerBuffer;
+    std::vector< LinuxPerfData >          m_SamplingCallstackBuffer;
+    std::vector< HashedLinuxPerfData >    m_HashedSamplingCallstackBuffer;
     std::vector< class DataView* >        m_Panels;
     FindFileCallback                      m_FindFileCallback;
 	SaveFileCallback					  m_SaveFileCallback;
@@ -190,6 +201,10 @@ private:
     std::vector< std::shared_ptr< class SamplingReport> > m_SamplingReports;
     std::map< std::wstring, std::wstring > m_FileMapping;
     std::function< void( const std::wstring & ) > m_UiCallback;
+
+    // buffering data to send large messages instead of small ones:
+    std::shared_ptr<std::thread> m_MessageBufferThread = nullptr;
+    Mutex m_MessageBufferMutex;
 
     std::wstring m_User;
     std::wstring m_License;
