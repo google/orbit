@@ -86,10 +86,15 @@ protected:
     stack_t                  stack;      /* if PERF_SAMPLE_STACK_USER */
 
 public:
+    LinuxPerfEventRecord() {};
     virtual uint64_t Timestamp() override {
         return time;
     }
-    LinuxPerfEventRecord() {};
+
+    uint32_t PID() { return pid; }
+    uint32_t TID() { return tid; }
+    uint32_t CPU() { return cpu; }
+
 };
 
 // TODO: This struct might change. We should read this from debugfs.
@@ -121,5 +126,4 @@ public:
 
     uint32_t PrevTID() { return raw_data.prev_pid; }
     uint32_t NextTID() { return raw_data.next_pid; }
-    uint32_t CPU() { return cpu; }
 };
