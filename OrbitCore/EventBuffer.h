@@ -10,6 +10,7 @@
 
 #ifdef __linux
 #include "LinuxUtils.h"
+#include "LinuxEventTracer.h"
 #endif
 
 #include <set>
@@ -81,6 +82,7 @@ struct EventTracer
     void Start(uint32_t a_PID);
     void Stop();
     std::shared_ptr<LinuxPerf> m_Perf;
+    std::shared_ptr<LinuxEventTracer> m_EventTracer;
 };
 
 extern EventTracer GEventTracer;

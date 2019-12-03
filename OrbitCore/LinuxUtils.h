@@ -21,6 +21,8 @@ namespace LinuxUtils
     std::string ExecuteCommand( const char* a_Cmd );
     void StreamCommandOutput(const char* a_Cmd, std::function<void(const std::string&)> a_Callback, bool* a_ExitRequested);
     std::vector<std::string> ListModules( uint32_t a_PID );
+    std::vector<uint64_t> ListThreads( uint32_t a_PID );
+    uint64_t GetTracePointID( const char* a_Group, const char* a_Event );
     void ListModules( uint32_t a_PID, std::map< uint64_t, std::shared_ptr<Module> > & o_ModuleMap );
     std::unordered_map<uint32_t, float> GetCpuUtilization();
     bool Is64Bit(uint32_t a_PID);

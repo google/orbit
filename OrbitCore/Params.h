@@ -30,6 +30,7 @@ public:
     bool  m_FindFileAndLineInfo;
     bool  m_AutoReleasePdb;
     bool  m_BpftraceCallstacks;
+    bool  m_SystemWideScheduling;
     int   m_MaxNumTimers;
     float m_FontSize;
     int   m_Port;
