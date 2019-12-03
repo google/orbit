@@ -20,6 +20,7 @@
 #include "Params.h"
 #include "TimerManager.h"
 #include "ContextSwitch.h"
+#include "ConnectionManager.h"
 
 #include <vector>
 
@@ -31,9 +32,12 @@ void LinuxEventTracer::Start()
 #if __linux__
     m_ExitRequested = false;
 
-    m_Thread = std::make_shared<std::thread>(&LinuxEventTracer::Run, &m_ExitRequested);
-
-    m_Thread->detach();
+    // TODO: DISABLE REMOTE SCHEDULER INFORMATION TRACING UNTIL WE ACTUALLY SEND THE EVENTS.
+    if ( !ConnectionManager::Get().IsService() )
+    {
+        m_Thread = std::make_shared<std::thread>(&LinuxEventTracer::Run, &m_ExitRequested);
+        m_Thread->detach();
+    }
 #endif
 }
 
