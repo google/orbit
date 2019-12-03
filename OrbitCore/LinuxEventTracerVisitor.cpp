@@ -1,3 +1,10 @@
+//-----------------------------------
+// Copyright Pierric Gimmig 2013-2017
+//-----------------------------------
+
+//-----------------------------------
+// Author: Florian Kuebler
+//-----------------------------------
 #include "OrbitProcess.h"
 #include "ContextSwitch.h"
 #include "TimerManager.h"

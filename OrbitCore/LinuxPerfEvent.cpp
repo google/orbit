@@ -1,3 +1,11 @@
+//-----------------------------------
+// Copyright Pierric Gimmig 2013-2017
+//-----------------------------------
+
+//-----------------------------------
+// Author: Florian Kuebler
+//-----------------------------------
+
 #include "LinuxPerfEvent.h"
 #include "LinuxPerfEventVisitor.h"
 

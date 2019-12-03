@@ -1,3 +1,10 @@
+//-----------------------------------
+// Copyright Pierric Gimmig 2013-2017
+//-----------------------------------
+
+//-----------------------------------
+// Author: Florian Kuebler
+//-----------------------------------
 #include "LinuxPerfData.h"
 #include "SerializationMacros.h"
 #include "Serialization.h"

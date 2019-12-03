@@ -1,3 +1,10 @@
+//-----------------------------------
+// Copyright Pierric Gimmig 2013-2017
+//-----------------------------------
+
+//-----------------------------------
+// Author: Florian Kuebler
+//-----------------------------------
 #include "PrintVar.h"
 #include "LinuxPerfRingBuffer.h"
 #include "LinuxPerfUtils.h"
