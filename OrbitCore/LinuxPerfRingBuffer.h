@@ -26,9 +26,17 @@ public:
         LinuxPerfEvent record;
 
         // perf_event_header::size contains the size of the entire record.
-        // As record is an object of type LinuxPerfEvent, it has the vtable
-        // at offset 0. The data fields start at the address of the header.
-        Read(&record.header, a_Header.size);
+        // This must be the same as the size of the ring_buffer_data field,
+        // in which we want to copy the data.
+        // If the sizes are not the same, the memory layout defined in LinuxPerfEvent.h 
+        // does not match the one found in the ring buffer.
+        assert(
+            sizeof(record.ring_buffer_data) == a_Header.size && 
+            "Incorrect layout of the perf ring buffer data.\nPlease file a bug at https://github.com/pierricgimmig/orbitprofiler.\n"
+        );
+    
+        // Copy the data from the ringbuffer into the placeholer in that class.
+        Read(&record.ring_buffer_data, a_Header.size);
 
         SkipRecord(a_Header);
 

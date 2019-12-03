@@ -10,95 +10,88 @@ using namespace LinuxPerfUtils;
 
 class LinuxPerfEventVisitor;
 
-typedef int NullType[0];
-
 class LinuxPerfEventVisitor;
 
-// We will use the subclasses of LinuxPerfEvent in order to memcpy
-// the event data from the ringbuffer and access/process the data via
-// their actuall names (and given their types) instead of doing the
-// pointer arithmetic by ourself.
-// However, this requires the memory layout of the corresponding
-// subclass to be exactly the same as the one from the perf data in 
-// the ringbuffer (for that particular event).
+// This base class will be used in order to do processing of
+// different perf events using the visitor patter.
+// The data of the perf events will be copied from the ring buffer
+// via memcpy dirrectly into the concrete subclass (depending on the
+// event typ).
+// The target of the memcpy will be a field "ring_buffer_data" that
+// must be present for the subclass at compile time.
+// As the perf_event_open ringbuffer, is 8byte alligned, this field
+// must also be extended with dummy bytes at the end of the record.
+
 class LinuxPerfEvent
 {
 public:
-    // On offset 0, in the memory layout of objects of this class,
-    //  there will be always the vtable. 
-    // This header filed will always be at the beginnning of the data blocks,
-    //  containing the sample data. So we can use its address
-    //  for memcopy (copy the data from the ringbuffer to this object).
-    // We need to make sure, that each subclass has the subsequent data fields
-    //  followed by this header.
-    struct perf_event_header header;
-
     virtual uint64_t Timestamp() = 0;
     virtual void accept(LinuxPerfEventVisitor* a_Visitor) = 0;
-    LinuxPerfEvent() {};
 };
 
-class __attribute__((__packed__)) LinuxForkEvent : public LinuxPerfEvent {
-private:
+struct __attribute__((__packed__)) perf_fork_exit_event {
+    struct perf_event_header header;
     uint32_t    pid, ppid;
     uint32_t    tid, ptid;
     uint64_t    time;
     struct perf_sample_id sample_id;
+};
+
+class LinuxForkEvent : public LinuxPerfEvent {
 public: 
+    perf_fork_exit_event ring_buffer_data;
+
     virtual uint64_t Timestamp() override {
-        return time;
+        return ring_buffer_data.time;
     }
 
     virtual void accept(LinuxPerfEventVisitor* a_Visitor) override;
 
-    uint32_t PID() { return pid; }
-    uint32_t ParentPID() { return ppid; }
-    uint32_t TID() { return tid; }
-    uint32_t ParentTID() { return ptid; }
+    uint32_t PID() { return ring_buffer_data.pid; }
+    uint32_t ParentPID() { return ring_buffer_data.ppid; }
+    uint32_t TID() { return ring_buffer_data.tid; }
+    uint32_t ParentTID() { return ring_buffer_data.ptid; }
 };
 
-class __attribute__((__packed__)) LinuxPerfLostEvent : public LinuxPerfEvent {
-private:
+struct __attribute__((__packed__)) perf_lost_event 
+{
+    struct perf_event_header header;
     uint64_t    id;
     uint64_t    lost;
     struct perf_sample_id sample_id;
+};
+
+class LinuxPerfLostEvent : public LinuxPerfEvent {
 public:
+    perf_lost_event ring_buffer_data;
+
     virtual uint64_t Timestamp() override {
-        return sample_id.time;
+        return ring_buffer_data.sample_id.time;
     }
 
     virtual void accept(LinuxPerfEventVisitor* a_Visitor) override;
 
     uint64_t Lost() {
-        return lost;
+        return ring_buffer_data.lost;
     }
 };
 
-// This struct must be in sync with the SAMPLE_TYPE_FLAGS.
-template<typename raw_data_t, typename registers_t, typename stack_t>
-class __attribute__((__packed__)) LinuxPerfEventRecord : public LinuxPerfEvent {
-protected:
-    uint32_t                 pid, tid;   /* if PERF_SAMPLE_TID */
-    uint64_t                 time;       /* if PERF_SAMPLE_TIME */
-    uint32_t                 cpu, res;   /* if PERF_SAMPLE_CPU */
-    raw_data_t               raw_data;   /* if PERF_SAMPLE_RAW */
-    registers_t              registers;  /* if PERF_SAMPLE_REGS_USER */
-    stack_t                  stack;      /* if PERF_SAMPLE_STACK_USER */
-
+template<typename perf_record_data_t>
+class LinuxPerfEventRecord : public LinuxPerfEvent {
 public:
-    LinuxPerfEventRecord() {};
+    perf_record_data_t ring_buffer_data;
+
     virtual uint64_t Timestamp() override {
-        return time;
+        return ring_buffer_data.record.time;
     }
 
-    uint32_t PID() { return pid; }
-    uint32_t TID() { return tid; }
-    uint32_t CPU() { return cpu; }
-
+    uint32_t PID() { return ring_buffer_data.record.pid; }
+    uint32_t TID() { return ring_buffer_data.record.tid; }
+    uint32_t CPU() { return ring_buffer_data.record.cpu; }
 };
 
 // TODO: This struct might change. We should read this from debugfs.
-struct __attribute__((__packed__)) sched_switch_tp {
+struct __attribute__((__packed__)) sched_switch_trace_point {
     uint32_t size; /* if PERF_SAMPLE_RAW */
     uint16_t common_type;
     unsigned char common_flags;
@@ -114,16 +107,23 @@ struct __attribute__((__packed__)) sched_switch_tp {
     // this is actually a thread id
     int32_t next_pid;
     int32_t next_prio;
+
+    uint32_t alignment;
 };
 
-// Currently, we do not record callstacks for sched. switch events, so we use the
-// NullType here.
-class LinuxSchedSwitchEvent : public LinuxPerfEventRecord<sched_switch_tp, NullType, NullType>
+struct __attribute__((__packed__)) perf_record_sched_switch_event
+{
+    struct perf_event_header header;
+    struct perf_sample_id basic_sample_data; /* common PERF_SAMPLE fields */
+    struct sched_switch_trace_point trace_point; /* PERF_SAMPLE_RAW */
+};
+
+// Currently, we do not record callstacks for sched.
+class LinuxSchedSwitchEvent : public LinuxPerfEventRecord<perf_record_sched_switch_event>
 {
 public:
-    LinuxSchedSwitchEvent() {};
     virtual void accept(LinuxPerfEventVisitor* a_Visitor) override;
 
-    uint32_t PrevTID() { return raw_data.prev_pid; }
-    uint32_t NextTID() { return raw_data.next_pid; }
+    uint32_t PrevTID() { return ring_buffer_data.trace_point.prev_pid; }
+    uint32_t NextTID() { return ring_buffer_data.trace_point.next_pid; }
 };

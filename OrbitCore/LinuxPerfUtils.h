@@ -36,7 +36,6 @@ namespace LinuxPerfUtils
     struct perf_sample_regs_user {
         /* if PERF_SAMPLE_REGS_USER */
         uint64_t    abi;
-        // uint64_t    regs[__builtin_popcount(SAMPLE_REGS_USER)]; 
         uint64_t sp;
         uint64_t ip;
     };
