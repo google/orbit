@@ -262,7 +262,7 @@ void EventTracing::CallbackStackWalk( PEVENT_RECORD a_EventRecord, UCHAR a_Opcod
             memcpy(CS.m_Data.data(), &event->Stack1, numBytes );
 
             Capture::GSamplingProfiler->AddCallStack( CS );
-            GEventTracer.GetEventBuffer().AddCallstackEvent( a_EventRecord->EventHeader.TimeStamp.QuadPart, CS );
+            GEventTracer.GetEventBuffer().AddCallstackEvent( a_EventRecord->EventHeader.TimeStamp.QuadPart, CS.Hash(), CS.m_ThreadId );
         }
     }
 }
