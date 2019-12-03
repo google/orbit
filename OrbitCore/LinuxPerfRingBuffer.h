@@ -5,6 +5,7 @@
 
 #include "LinuxPerfUtils.h"
 #include <linux/perf_event.h>
+#include <assert.h>
 
 class LinuxPerfRingBuffer
 {

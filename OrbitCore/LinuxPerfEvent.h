@@ -82,12 +82,12 @@ public:
     perf_record_data_t ring_buffer_data;
 
     virtual uint64_t Timestamp() override {
-        return ring_buffer_data.record.time;
+        return ring_buffer_data.basic_sample_data.time;
     }
 
-    uint32_t PID() { return ring_buffer_data.record.pid; }
-    uint32_t TID() { return ring_buffer_data.record.tid; }
-    uint32_t CPU() { return ring_buffer_data.record.cpu; }
+    uint32_t PID() { return ring_buffer_data.basic_sample_data.pid; }
+    uint32_t TID() { return ring_buffer_data.basic_sample_data.tid; }
+    uint32_t CPU() { return ring_buffer_data.basic_sample_data.cpu; }
 };
 
 // TODO: This struct might change. We should read this from debugfs.
