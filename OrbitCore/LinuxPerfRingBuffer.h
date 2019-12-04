@@ -41,7 +41,8 @@ public:
         );
     
         // Copy the data from the ringbuffer into the placeholer in that class.
-        Read(&record.ring_buffer_data, a_Header.size);
+        uint8_t* dest = reinterpret_cast<uint8_t*>(&record.ring_buffer_data);
+        Read(dest, a_Header.size);
 
         SkipRecord(a_Header);
 
@@ -63,7 +64,7 @@ private:
     // the buffer length must be a power of 2, so we can do shifting for division.
     uint32_t m_BufferLengthExponent;
     
-    void Read(void* a_Destination, uint64_t a_Count);
+    void Read(uint8_t* a_Destination, uint64_t a_Count);
 
     void* mmap_mapping(int32_t a_FileDescriptor);
 };

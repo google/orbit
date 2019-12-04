@@ -53,6 +53,8 @@ LinuxPerfRingBuffer& LinuxPerfRingBuffer::operator=(LinuxPerfRingBuffer&& other)
     std::swap(m_Buffer, other.m_Buffer);
     std::swap(m_BufferLength, other.m_BufferLength);
     std::swap(m_BufferLengthExponent, other.m_BufferLengthExponent);
+    
+    return *this;
 }
 
 //-----------------------------------------------------------------------------
@@ -78,7 +80,7 @@ bool LinuxPerfRingBuffer::HasNewData()
 //-----------------------------------------------------------------------------
 void LinuxPerfRingBuffer::ReadHeader(perf_event_header* a_Header)
 {
-    Read(reinterpret_cast<char*>(a_Header), sizeof(perf_event_header));
+    Read(reinterpret_cast<uint8_t*>(a_Header), sizeof(perf_event_header));
 
     // This must never happen! Reading the buffer failed or the buffer is broken!
     // If this happens, it is probably due to an error in the code, 
@@ -95,7 +97,7 @@ void LinuxPerfRingBuffer::SkipRecord(const perf_event_header& a_Header)
 }
 
 //-----------------------------------------------------------------------------
-void LinuxPerfRingBuffer::Read(void* a_Destination, uint64_t a_Count) {
+void LinuxPerfRingBuffer::Read(uint8_t* a_Destination, uint64_t a_Count) {
     const uint64_t index = m_Metadata->data_tail;
     const uint32_t exponent = m_BufferLengthExponent;
 

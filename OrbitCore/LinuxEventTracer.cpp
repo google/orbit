@@ -53,7 +53,7 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
     int cpus = std::thread::hardware_concurrency();
     // some compilers does not support hardware_concurrency.
     if (cpus == 0)
-        int cpus = std::stoi(LinuxUtils::ExecuteCommand("nproc"));
+        cpus = std::stoi(LinuxUtils::ExecuteCommand("nproc"));
 
     uint64_t tracepoint_ID = LinuxUtils::GetTracePointID("sched", "sched_switch");
     
@@ -121,7 +121,7 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
         // we schedule the reading using round robbin like scheduling.
         for (LinuxPerfRingBuffer& ring_buffer : ring_buffers)
         {
-            int i = 0;
+            uint32_t i = 0;
             // Read up to ROUND_ROBIN_BATCH_SIZE (5) new events
             while (ring_buffer.HasNewData() && i < ROUND_ROBIN_BATCH_SIZE) {
                 i++;
