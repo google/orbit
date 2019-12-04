@@ -153,33 +153,23 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
     ProcessData();
 
     {
-        SCOPE_TIMER_LOG(L"bpftrace -l");
-        // find functions that can receive bpftrace uprobes
-        std::string bpfCommand = std::string("bpftrace -l 'uprobe: ") + ws2s(a_PdbName) + std::string("'");
-        std::string bpfResult = LinuxUtils::ExecuteCommand(bpfCommand.c_str());
-        std::stringstream bpfStream(bpfResult);
-        std::string line;
-        while (std::getline(bpfStream, line, '\n'))
+        SCOPE_TIMER_LOG(L"objdump -tT");
+        // find functions that can receive uprobes
+        std::string objdumpCommand = std::string("objdump -tT ") + 
+            ws2s(a_PdbName) + 
+            std::string(" | grep \"F .text\" | grep -oE '[^[:space:]]+$'");
+        std::string objdumpResult = LinuxUtils::ExecuteCommand(objdumpCommand.c_str());
+        std::stringstream objdumpStream(objdumpResult);
+        std::string mangled;
+        while (std::getline(objdumpStream, mangled, '\n'))
         {
-            std::vector<std::string> tokens = Tokenize(line);
-            if (tokens.size() == 2) // bpftrace
-            {
-                auto probeTokens = Tokenize(tokens[1], ":");
-                if (probeTokens.size() == 2)
-                {
-                    std::string mangled = probeTokens[1];
-                    std::string demangled = LinuxUtils::Demangle(probeTokens[1].c_str());
+            std::string demangled = LinuxUtils::Demangle(mangled.c_str());
 
-                    // Debug - Temporary
-                    if (Contains(demangled, "btCollisionDispatcher::needsCollision"))
-                        PRINT_VAR(demangled);
-                    Function* func = FunctionFromName(demangled);
-                    if (func && func->m_Probe.empty())
-                    {
-                        std::string probe = tokens[1];
-                        func->m_Probe = probe;
-                    }
-                }
+            Function* func = FunctionFromName(demangled);
+            if (func && func->m_Probe.empty())
+            {
+                std::string probe = ws2s(a_PdbName) + std::string(":") + mangled;
+                func->m_Probe = probe;
             }
         }
     }
