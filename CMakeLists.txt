@@ -174,8 +174,8 @@ add_subdirectory(OrbitDll)
 endif()
 
 if(LINUX)
-add_subdirectory(${EXTERN_ROOT}/lzma)
-add_subdirectory(${EXTERN_ROOT}/libunwindstack)
+#add_subdirectory(${EXTERN_ROOT}/lzma)
+#add_subdirectory(${EXTERN_ROOT}/libunwindstack)
 endif()
 
 add_subdirectory(OrbitCore)
