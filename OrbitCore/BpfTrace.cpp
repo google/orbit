@@ -357,6 +357,8 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
             // read everything that is new
             while (ring_buffer.HasNewData() && i < ROUND_ROBIN_BATCH_SIZE)
             {
+                i++;
+                new_events = true;
                 perf_event_header header{};
                 ring_buffer.ReadHeader(&header);
 
@@ -402,6 +404,8 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
             // read everything that is new
             while (ring_buffer.HasNewData() && i < ROUND_ROBIN_BATCH_SIZE)
             {
+                i++;
+                new_events = true;
                 perf_event_header header{};
                 ring_buffer.ReadHeader(&header);
 
