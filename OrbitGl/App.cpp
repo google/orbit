@@ -181,8 +181,11 @@ void GLoadPdbAsync( const std::vector<std::wstring> & a_Modules )
 void OrbitApp::StartRemoteCaptureBufferingThread()
 {
     PRINT_FUNC;
+    m_TimerBuffer.clear();
+    m_SamplingCallstackBuffer.clear();
+    m_HashedSamplingCallstackBuffer.clear();
+    m_ContextSwitchBuffer.clear();
     m_MessageBufferThread = std::make_shared<std::thread>(&OrbitApp::ProcessBufferedCaptureData, this);
-    m_MessageBufferThread->detach();
 }
 
 //-----------------------------------------------------------------------------
@@ -191,6 +194,7 @@ void OrbitApp::StopRemoteCaptureBufferingThread()
     PRINT_FUNC;
     if ( m_MessageBufferThread )
     {
+        m_MessageBufferThread->join();
         m_MessageBufferThread = nullptr;
     }
 }
