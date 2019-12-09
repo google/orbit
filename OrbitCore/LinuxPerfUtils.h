@@ -10,6 +10,7 @@
 #include <asm/unistd.h>
 #include <asm/perf_regs.h>
 #include <linux/perf_event.h>
+#include <linux/version.h>
 #include <sys/errno.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -72,7 +73,9 @@ namespace LinuxPerfUtils
 
     int32_t tracepoint_event_open(uint64_t a_TracepointID, pid_t a_PID, int32_t a_CPU, uint64_t additonal_sample_type = 0);
 
-    int32_t uprobe_event_open(const char* a_Module, uint64_t a_FunctionOffset, pid_t a_PID, int32_t a_CPU, uint64_t additonal_sample_type = 0);
 
+    #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0)
+    int32_t uprobe_event_open(const char* a_Module, uint64_t a_FunctionOffset, pid_t a_PID, int32_t a_CPU, uint64_t additonal_sample_type = 0);
     int32_t uretprobe_event_open(const char* a_Module, uint64_t a_FunctionOffset, pid_t a_PID, int32_t a_CPU, uint64_t additonal_sample_type = 0);
+    #endif
 }

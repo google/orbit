@@ -10,6 +10,7 @@
 #include "LinuxPerfUtils.h"
 
 #include <linux/perf_event.h>
+#include <linux/version.h>
 #include <sys/errno.h>
 
 //-----------------------------------------------------------------------------
@@ -73,6 +74,7 @@ int32_t LinuxPerfUtils::tracepoint_event_open(
     return fd;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0)
 //-----------------------------------------------------------------------------
 int32_t LinuxPerfUtils::uprobe_event_open(
     const char* a_Module,
@@ -126,3 +128,4 @@ int32_t LinuxPerfUtils::uretprobe_event_open(
 
     return fd;
 }
+#endif

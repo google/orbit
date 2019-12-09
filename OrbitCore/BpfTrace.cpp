@@ -22,6 +22,7 @@
 #include "OrbitFunction.h"
 #include "Pdb.h"
 #include <linux/perf_event.h>
+#include <linux/version.h>
 #include <map>
 #include <vector>
 
@@ -46,6 +47,10 @@ BpfTrace::BpfTrace(Callback a_Callback)
 void BpfTrace::Start()
 {
 #if __linux__
+
+    #if LINUX_VERSION_CODE < KERNEL_VERSION(4,17,0)
+    GParams.m_UseBpftrace = true;
+    #endif
     m_ExitRequested = false;
     m_TimerStacks.clear();
     if( !WriteBpfScript() )
@@ -61,9 +66,11 @@ void BpfTrace::Start()
     }
     else
     {
+        #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0)
         m_Thread = std::make_shared<std::thread>
             ( BpfTrace::RunPerfEventOpen
             , &m_ExitRequested );
+        #endif
     }
     
     m_Thread->detach();
@@ -292,6 +299,7 @@ void BpfTrace::CommandCallbackWithCallstacks(const std::string& a_Line)
 void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
 {
     #if __linux__
+    #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0)
     int ROUND_ROBIN_BATCH_SIZE = 5;
     std::vector<uint64_t> fds;
     std::map<Function*, LinuxPerfRingBuffer> uprobe_ring_buffers;
@@ -443,5 +451,6 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
     }
 
     event_buffer.ProcessAll();
+    #endif
     #endif
 }
