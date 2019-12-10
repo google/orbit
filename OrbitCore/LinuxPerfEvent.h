@@ -9,6 +9,7 @@
 
 #include "PrintVar.h"
 #include "LinuxPerfUtils.h"
+#include "OrbitFunction.h"
 
 using namespace LinuxPerfUtils;
 
@@ -130,4 +131,48 @@ public:
 
     uint32_t PrevTID() { return ring_buffer_data.trace_point.prev_pid; }
     uint32_t NextTID() { return ring_buffer_data.trace_point.next_pid; }
+};
+    
+
+
+template<typename perf_record_data_t>
+class AbstractLinuxUprobeEvent : public LinuxPerfEventRecord<perf_record_data_t>
+{
+public: 
+    Function* GetFunction() { return m_Function; }
+    void SetFunction(Function* a_Function) { m_Function = a_Function; }
+private: 
+    Function* m_Function = nullptr;
+};
+
+struct perf_empty_record
+{
+    struct perf_event_header header;
+    struct perf_sample_id basic_sample_data;
+};
+
+struct perf_record_with_stack
+{
+    struct perf_event_header header;
+    struct perf_sample_id basic_sample_data;
+    struct perf_sample_regs_user register_data;
+    struct perf_sample_stack_user stack_data;
+};
+
+class LinuxUprobeEvent : public AbstractLinuxUprobeEvent<perf_empty_record>
+{
+public:
+    void accept(LinuxPerfEventVisitor* a_Visitor) override;
+};
+
+class LinuxUprobeEventWithStack : public AbstractLinuxUprobeEvent<perf_record_with_stack>
+{
+public:
+    void accept(LinuxPerfEventVisitor* a_Visitor) override;
+};
+
+class LinuxUretprobeEvent : public AbstractLinuxUprobeEvent<perf_empty_record>
+{
+public:
+    void accept(LinuxPerfEventVisitor* a_Visitor) override;
 };

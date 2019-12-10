@@ -14,7 +14,10 @@
 class LinuxPerfEventVisitor
 {
 public:
-    virtual void visit(LinuxPerfLostEvent* a_Event) = 0;
-    virtual void visit(LinuxForkEvent* a_Event) = 0;
-    virtual void visit(LinuxSchedSwitchEvent* a_Event) = 0;
+    virtual void visit(LinuxPerfLostEvent* a_Event) {};
+    virtual void visit(LinuxForkEvent* a_Event) {};
+    virtual void visit(LinuxSchedSwitchEvent* a_Event) {};
+    virtual void visit(LinuxUprobeEvent* a_Event) {};
+    virtual void visit(LinuxUprobeEventWithStack* a_Event) {};
+    virtual void visit(LinuxUretprobeEvent* a_Event) {};
 };

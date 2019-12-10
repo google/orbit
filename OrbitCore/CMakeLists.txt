@@ -194,6 +194,7 @@ endif()
 # Linux
 if(LINUX)
     set(PLATFORM_HEADERS 
+        BpfTraceVisitor.cpp
         LinuxUtils.h    
         LinuxPerfEvent.h
         LinuxPerfEventVisitor.h
@@ -204,6 +205,7 @@ if(LINUX)
         LinuxEventTracerVisitor.h
     )
     set(PLATFORM_SOURCES 
+        BpfTraceVisitor.cpp
         LinuxUtils.cpp
         LinuxPerfEvent.cpp
         LinuxPerfRingBuffer.cpp
