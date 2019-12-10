@@ -74,6 +74,28 @@ int32_t LinuxPerfUtils::tracepoint_event_open(
     return fd;
 }
 
+//-----------------------------------------------------------------------------
+int32_t LinuxPerfUtils::sampling_event_open(pid_t a_PID, uint64_t frequency, uint64_t additional_sample_type)
+{
+    perf_event_attr pe = generic_perf_event_attr();
+    pe.type = PERF_TYPE_SOFTWARE;
+    pe.config = PERF_COUNT_SW_CPU_CLOCK;
+    pe.sample_freq = frequency;
+    pe.freq = 1;
+    pe.sample_type |= PERF_SAMPLE_STACK_USER | PERF_SAMPLE_REGS_USER;
+    pe.sample_type |= additional_sample_type;
+    pe.mmap = 1;
+
+    int32_t fd = perf_event_open(&pe, a_PID, -1 /*all CPUs*/, -1 /*grpup_fd*/, 0 /*flags*/);
+    
+    if (fd == -1)
+    {
+        PRINT("perf_event_open error: %d\n", errno);
+    }
+
+    return fd;
+}
+
 #if HAS_UPROBE_PERF_EVENT_SUPPORT
 //-----------------------------------------------------------------------------
 int32_t LinuxPerfUtils::uprobe_event_open(

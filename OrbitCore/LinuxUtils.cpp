@@ -78,6 +78,18 @@ std::vector<uint64_t> ListThreads( uint32_t a_PID )
 }
 
 //-----------------------------------------------------------------------------
+std::string RetrieveMaps( uint32_t a_PID )
+{
+    std::ifstream maps_file{"/proc/" + std::to_string(a_PID) + "/maps"};
+    std::string maps_buffer;
+    std::string maps_line;
+    while (std::getline(maps_file, maps_line)) {
+        maps_buffer.append(maps_line).append("\n");
+    }
+    return maps_buffer;
+}
+
+//-----------------------------------------------------------------------------
 uint64_t GetTracePointID( const char* a_Group, const char* a_Event )
 {   
     std::string cmd = Format("cat /sys/kernel/debug/tracing/events/%s/%s/id", a_Group, a_Event);

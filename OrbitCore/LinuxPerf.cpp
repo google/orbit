@@ -21,27 +21,7 @@
 #include "TcpServer.h"
 #include "EventBuffer.h"
 #include "EventTracer.h"
-
-#if __linux__
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/syscall.h>
-#include <linux/types.h>
-#include <linux/perf_event.h>
-#include <asm/unistd.h>
-#include <sys/mman.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <iomanip>
-#include <signal.h>
-#include <sys/wait.h>
-#include <sstream>
-#include <string>
-#include <cstdlib>
-#include <memory>
-#include <cxxabi.h>
-#endif
+#include "Params.h"
 
 //-----------------------------------------------------------------------------
 LinuxPerf::LinuxPerf( uint32_t a_PID, uint32_t a_Freq )
@@ -61,7 +41,6 @@ void LinuxPerf::Start()
     PRINT_FUNC;
 #if __linux__
     m_ExitRequested = false;
-
     m_PerfData.Clear();
 
     m_Thread = std::make_shared<std::thread>
@@ -70,7 +49,7 @@ void LinuxPerf::Start()
         , m_Callback
         , &m_ExitRequested
         );
-    
+
     m_Thread->detach();
 #endif
 }

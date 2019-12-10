@@ -32,6 +32,7 @@ public:
     bool  m_BpftraceCallstacks;
     bool  m_SystemWideScheduling;
     bool  m_UseBpftrace;
+    bool  m_UsePerf;
     int   m_MaxNumTimers;
     float m_FontSize;
     int   m_Port;

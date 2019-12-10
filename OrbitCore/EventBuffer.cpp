@@ -6,6 +6,7 @@
 #include "Serialization.h"
 #include "Capture.h"
 #include "SamplingProfiler.h"
+#include "Params.h"
 
 #ifdef __linux
 EventTracer GEventTracer;
@@ -90,10 +91,16 @@ void EventTracer::Start( uint32_t a_PID )
 {
     Capture::NewSamplingProfiler();
     Capture::GSamplingProfiler->StartCapture();
-
-    m_Perf = std::make_shared<LinuxPerf>(a_PID);
-    m_Perf->Start();
-
+    if ( GParams.m_UsePerf )
+    {
+        m_Perf = std::make_shared<LinuxPerf>(a_PID);
+        m_Perf->Start();
+    }
+    else 
+    {
+        m_Sampling = std::make_shared<LinuxSampling>(a_PID);
+        m_Sampling->Start();
+    }
     m_EventTracer = std::make_shared<LinuxEventTracer>();
     m_EventTracer->Start();
 }
@@ -104,6 +111,10 @@ void EventTracer::Stop()
     if( m_Perf )
     {
         m_Perf->Stop();
+    }
+    if( m_Sampling )
+    {
+        m_Sampling->Stop();
     }
     
     if( Capture::GSamplingProfiler )

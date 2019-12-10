@@ -12,6 +12,9 @@ cmake_minimum_required(VERSION 3.6)
 
 cmake_minimum_required(VERSION 3.6)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
 # Orbit directories
 set(ORBIT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 set(EXTERN_ROOT "${ORBIT_ROOT}/external")
@@ -174,8 +177,8 @@ add_subdirectory(OrbitDll)
 endif()
 
 if(LINUX)
-#add_subdirectory(${EXTERN_ROOT}/lzma)
-#add_subdirectory(${EXTERN_ROOT}/libunwindstack)
+add_subdirectory(${EXTERN_ROOT}/lzma)
+add_subdirectory(${EXTERN_ROOT}/libunwindstack)
 endif()
 
 add_subdirectory(OrbitCore)

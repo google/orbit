@@ -159,6 +159,15 @@ struct perf_record_with_stack
     struct perf_sample_stack_user stack_data;
 };
 
+class LinuxSamplingEvent: public LinuxPerfEventRecord<perf_record_with_stack>
+{
+public:
+    const perf_sample_regs_user& Regs() { return ring_buffer_data.register_data; }
+    const char* StackDump() { return ring_buffer_data.stack_data.data; }
+    uint64_t StackSize() { return ring_buffer_data.stack_data.dyn_size; }
+    void accept(LinuxPerfEventVisitor* a_Visitor) override;
+};
+
 class LinuxUprobeEvent : public AbstractLinuxUprobeEvent<perf_empty_record>
 {
 public:

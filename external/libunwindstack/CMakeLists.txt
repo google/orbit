@@ -7,7 +7,11 @@ set(UNWINDSTACK_ROOT "${ANDROID_CORE_ROOT}/libunwindstack")
 set(ANDROID_BASE_ROOT "${ANDROID_CORE_ROOT}/base")
 set(LZMA_ROOT "${EXTERN_ROOT}/lzma")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unknown-pragmas -Wno-sign-compare")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-sign-compare -DNO_LIBDEXFILE_SUPPORT -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unknown-pragmas -Wno-sign-compare -DNO_LIBDEXFILE_SUPPORT -fPIC")
+project(assembler C ASM)
+set_source_files_properties(ASM_GET_REGS ${UNWINDSTACK_ROOT}/AsmGetRegsX86_64.S PROPERTIES COMPILE_FLAGS "-x assembler-with-cpp")
+SET(CMAKE_ASM_FLAGS "${CFLAGS} -x assembler-with-cpp")
 
 project(unwindstack)
 
@@ -24,11 +28,11 @@ include_directories(
 
 # TODO: We might miss sources from "base" or "demangle" when linking
 set(SOURCES
-    #${ANDROID_BASE_ROOT}/file.cpp
-    #${ANDROID_BASE_ROOT}/logging.cpp
-    #${ANDROID_BASE_ROOT}/stringprintf.cpp
-    #${ANDROID_BASE_ROOT}/strings.cpp
-    #${ANDROID_BASE_ROOT}/threads.cpp
+    ${ANDROID_BASE_ROOT}/file.cpp
+    ${ANDROID_BASE_ROOT}/logging.cpp
+    ${ANDROID_BASE_ROOT}/stringprintf.cpp
+    ${ANDROID_BASE_ROOT}/strings.cpp
+    ${ANDROID_BASE_ROOT}/threads.cpp
     ${UNWINDSTACK_ROOT}/ArmExidx.cpp
     ${UNWINDSTACK_ROOT}/DwarfCfa.cpp
     ${UNWINDSTACK_ROOT}/DwarfEhFrameWithHdr.cpp

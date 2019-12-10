@@ -203,6 +203,8 @@ if(LINUX)
         LinuxPerfUtils.h
         LinuxEventTracer.h
         LinuxEventTracerVisitor.h
+        LinuxSampling.h
+        UnwindStackUtils.h
     )
     set(PLATFORM_SOURCES 
         BpfTraceVisitor.cpp
@@ -213,6 +215,8 @@ if(LINUX)
         LinuxEventTracer.cpp
         LinuxEventTracerVisitor.cpp
         LinuxPerfEventProcessor.cpp
+        LinuxSampling.cpp
+        UnwindStackUtils.cpp
     )
 	set(EXTERNAL_SOURCES "")
     set(EXTERNAL_HEADERS
@@ -258,6 +262,9 @@ PUBLIC
     ${EXTERN_ROOT}/minhook/include/
     ${EXTERN_ROOT}/oqpi/include/
     ${EXTERN_ROOT}/DIA2Dump/
+    if(LINUX)
+    ${EXTERN_ROOT}/libunwindstack/android-core/libunwindstack/include/
+    endif()
 PRIVATE
     ${BREAKPAD_INCLUDE_DIR}
 )
@@ -266,7 +273,14 @@ set(DIASDKDir "$(VSInstallDir)DIA SDK" CACHE PATH "")
 add_definitions(-I"${DIASDKDir}/include/")
 
 # Link libraries
+if(LINUX)
+target_link_libraries(OrbitCore
+    unwindstack
+    lzma
+)
+else()
 target_link_libraries(OrbitCore
     #dbghelp.lib
     #${BREAKPAD_LIBRARIES}
 )
+endif()
