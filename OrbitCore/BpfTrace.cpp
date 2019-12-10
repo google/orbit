@@ -347,8 +347,8 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
     while( !(*a_ExitRequested) )
     {
         // Lets sleep a bit, such that we are not constantly reading from the buffers
-        // and thus wasting cpu time. 1000 microseconds are still small enought to 
-        // not have our buffers overflown and therefore loosing events.
+        // and thus wasting cpu time. 10000 microseconds are still small enough to 
+        // not have our buffers overflown and therefore losing events.
         if (!new_events)
         {
             usleep(10000);
