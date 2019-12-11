@@ -256,16 +256,11 @@ void ConnectionManager::SetupClientCallbacks()
 
     GTcpClient->AddCallback(Msg_RemoteContextSwitches, [=](const Message& a_Msg)
     {
-        const char* a_Data = a_Msg.GetData();
-        size_t a_Size = a_Msg.m_Size;
-        std::istringstream buffer(std::string(a_Data, a_Size));
-        cereal::JSONInputArchive inputAr( buffer );
-        std::vector<ContextSwitch> context_switches;
-        inputAr(context_switches);
-
-        for (const auto& cs : context_switches)
+        uint32_t num_context_switches = (uint32_t)a_Msg.m_Size / sizeof(ContextSwitch);
+        ContextSwitch* context_switches = (ContextSwitch*) a_Msg.GetData();
+        for (uint32_t i = 0; i < num_context_switches; i++)
         {
-            GCoreApp->ProcessContextSwitch(cs);
+            GCoreApp->ProcessContextSwitch(context_switches[i]);
         }
     } );
 

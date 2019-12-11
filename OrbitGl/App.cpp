@@ -230,8 +230,9 @@ void OrbitApp::ProcessBufferedCaptureData()
 
         // context switches
         if (m_ContextSwitchBuffer.size() > 0){
-            std::string message_data = SerializeObjectHumanReadable(m_ContextSwitchBuffer);
-            GTcpServer->Send(Msg_RemoteContextSwitches, (void*) message_data.c_str(), message_data.size());
+            Message Msg(Msg_RemoteContextSwitches);
+            Msg.m_Size = sizeof(ContextSwitch) * m_ContextSwitchBuffer.size();
+            GTcpServer->Send(Msg, (void*)m_ContextSwitchBuffer.data());
             m_ContextSwitchBuffer.clear();
         }
     }
