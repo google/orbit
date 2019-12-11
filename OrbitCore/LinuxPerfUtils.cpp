@@ -74,7 +74,7 @@ int32_t LinuxPerfUtils::tracepoint_event_open(
     return fd;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0)
+#if HAS_UPROBE_PERF_EVENT_SUPPORT
 //-----------------------------------------------------------------------------
 int32_t LinuxPerfUtils::uprobe_event_open(
     const char* a_Module,

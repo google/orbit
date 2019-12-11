@@ -32,6 +32,19 @@ using namespace LinuxPerfUtils;
 //-----------------------------------------------------------------------------
 BpfTrace::BpfTrace(Callback a_Callback)
 {
+    // Until perf_events are fixed...
+    GParams.m_UseBpftrace = true;
+
+    // TODO: we shouldn't hijack the BpfTrace class and move perf_event related
+    //       code to its own class.
+
+    // Uprobe perf_events not supported until Kernel 4.17
+    #if HAS_UPROBE_PERF_EVENT_SUPPORT
+    m_UsePerfEvents = !GParams.m_UseBpftrace && !GParams.m_BpftraceCallstacks;
+    #else
+    m_UsePerfEvents = false;
+    #endif
+
     m_Callback = a_Callback ? a_Callback : [this](const std::string& a_Buffer)
     {
         if( GParams.m_BpftraceCallstacks )
@@ -47,17 +60,15 @@ BpfTrace::BpfTrace(Callback a_Callback)
 void BpfTrace::Start()
 {
 #if __linux__
-
-    #if LINUX_VERSION_CODE < KERNEL_VERSION(4,17,0)
-    GParams.m_UseBpftrace = true;
-    #endif
     m_ExitRequested = false;
     m_TimerStacks.clear();
+
     if( !WriteBpfScript() )
         return;
 
     m_BpfCommand = std::string("bpftrace ") + m_ScriptFileName;
-    if ( GParams.m_UseBpftrace || GParams.m_BpftraceCallstacks ) {    
+
+    if ( !m_UsePerfEvents ) {
         m_Thread = std::make_shared<std::thread>
             ( &LinuxUtils::StreamCommandOutput
             , m_BpfCommand.c_str()
@@ -66,11 +77,9 @@ void BpfTrace::Start()
     }
     else
     {
-        #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0)
         m_Thread = std::make_shared<std::thread>
             ( BpfTrace::RunPerfEventOpen
             , &m_ExitRequested );
-        #endif
     }
     
     m_Thread->detach();
@@ -299,7 +308,7 @@ void BpfTrace::CommandCallbackWithCallstacks(const std::string& a_Line)
 void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
 {
     #if __linux__
-    #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0)
+    #if HAS_UPROBE_PERF_EVENT_SUPPORT
     int ROUND_ROBIN_BATCH_SIZE = 5;
     std::vector<uint64_t> fds;
     std::map<Function*, LinuxPerfRingBuffer> uprobe_ring_buffers;

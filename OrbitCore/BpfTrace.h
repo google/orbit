@@ -32,7 +32,7 @@ protected:
     bool WriteBpfScript();
     static void RunPerfEventOpen(bool* a_ExitRequested);
 
-private:    
+private:
     std::map<std::string, std::vector<Timer>> m_TimerStacks;
     std::unordered_map<uint64_t, std::string> m_StringMap;
     std::string                               m_BpfCommand;
@@ -40,6 +40,7 @@ private:
     std::shared_ptr<std::thread> m_Thread;
     bool m_ExitRequested = true;
     uint32_t m_PID = 0;
+    bool m_UsePerfEvents;
     Callback m_Callback;
     std::string m_Script;
     std::string m_ScriptFileName;
