@@ -319,7 +319,6 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
         // gather function information
         Function* function = pair.second;
         uint64_t offset = function->m_Address;
-        uint64_t virtual_address = function->GetVirtualAddress();
         std::string module = ws2s(function->m_Pdb->GetFileName());
 
         // create uprobe for that function on that PID profiling all cpus
