@@ -220,7 +220,7 @@ void OrbitApp::ProcessBufferedCaptureData()
         {
             ScopeLock lock( m_SamplingCallstackMutex );
             if (m_SamplingCallstackBuffer.size() > 0){
-                std::string messageData = SerializeObjectHumanReadable(m_SamplingCallstackBuffer);
+                std::string messageData = SerializeObjectBinary(m_SamplingCallstackBuffer);
                 GTcpServer->Send(Msg_SamplingCallstacks, messageData.c_str(), messageData.size());
                 m_SamplingCallstackBuffer.clear();
             }
@@ -230,7 +230,7 @@ void OrbitApp::ProcessBufferedCaptureData()
         {
             ScopeLock lock( m_HashedSamplingCallstackMutex );
             if (m_HashedSamplingCallstackBuffer.size() > 0){  
-                std::string messageData = SerializeObjectHumanReadable(m_HashedSamplingCallstackBuffer);
+                std::string messageData = SerializeObjectBinary(m_HashedSamplingCallstackBuffer);
                 GTcpServer->Send(Msg_SamplingHashedCallstacks, messageData.c_str(), messageData.size());
                 m_HashedSamplingCallstackBuffer.clear();
             }

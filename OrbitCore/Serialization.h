@@ -88,6 +88,17 @@ template <class T> inline std::string SerializeObjectHumanReadable(T& a_Object)
     return ss.str();
 }
 
+//-----------------------------------------------------------------------------
+template <class T> inline std::string SerializeObjectBinary(T& a_Object)
+{
+    std::stringstream ss;
+    {
+        cereal::BinaryOutputArchive archive(ss);
+        archive(a_Object);
+    }
+    return ss.str();
+}
+
 #define ORBIT_SIZE_SCOPE( x ) ScopeCounter counter( x )
 
 #define ORBIT_NVP( v, x ) if( a_Version >= v ) a_Archive( cereal::make_nvp( #x, p.x ) )

@@ -269,7 +269,7 @@ void ConnectionManager::SetupClientCallbacks()
         const char* a_Data = a_Msg.GetData();
         size_t a_Size = a_Msg.m_Size;
         std::istringstream buffer(std::string(a_Data, a_Size));
-        cereal::JSONInputArchive inputAr( buffer );
+        cereal::BinaryInputArchive inputAr( buffer );
         std::vector<LinuxCallstackEvent> call_stacks;
         inputAr(call_stacks);
 
@@ -284,7 +284,7 @@ void ConnectionManager::SetupClientCallbacks()
         const char* a_Data = a_Msg.GetData();
         size_t a_Size = a_Msg.m_Size;
         std::istringstream buffer(std::string(a_Data, a_Size));
-        cereal::JSONInputArchive inputAr( buffer );
+        cereal::BinaryInputArchive inputAr( buffer );
         std::vector<CallstackEvent> call_stacks;
         inputAr(call_stacks);
 
