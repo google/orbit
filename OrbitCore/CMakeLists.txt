@@ -41,8 +41,8 @@ set(HEADERS
     FunctionStats.h
     Hashing.h
     Injection.h
+    LinuxCallstackEvent.h
     LinuxPerf.h
-    LinuxPerfData.h
     Log.h
     LogInterface.h
     MemoryTracker.h
@@ -102,8 +102,8 @@ set(SOURCES
     EventBuffer.cpp
     FunctionStats.cpp
     Injection.cpp
+    LinuxCallstackEvent.cpp
     LinuxPerf.cpp
-    LinuxPerfData.cpp
     Log.cpp
     LogInterface.cpp
     MemoryTracker.cpp

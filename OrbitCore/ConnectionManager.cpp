@@ -12,7 +12,7 @@
 #include "EventBuffer.h"
 #include "ProcessUtils.h"
 #include "LinuxPerf.h"
-#include "LinuxPerfData.h"
+#include "LinuxCallstackEvent.h"
 #include "SamplingProfiler.h"
 #include "CoreApp.h"
 #include "OrbitModule.h"
@@ -214,7 +214,7 @@ void ConnectionManager::SetupClientCallbacks()
     GTcpClient->AddCallback ( Msg_SamplingCallstack, [=]( const Message& a_Msg )
     {
         // TODO: Send buffered callstacks.
-        LinuxPerfData data;
+        LinuxCallstackEvent data;
 
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
         cereal::JSONInputArchive inputAr(buffer);
@@ -270,7 +270,7 @@ void ConnectionManager::SetupClientCallbacks()
         size_t a_Size = a_Msg.m_Size;
         std::istringstream buffer(std::string(a_Data, a_Size));
         cereal::JSONInputArchive inputAr( buffer );
-        std::vector<LinuxPerfData> call_stacks;
+        std::vector<LinuxCallstackEvent> call_stacks;
         inputAr(call_stacks);
 
         for (auto& cs : call_stacks)
@@ -285,7 +285,7 @@ void ConnectionManager::SetupClientCallbacks()
         size_t a_Size = a_Msg.m_Size;
         std::istringstream buffer(std::string(a_Data, a_Size));
         cereal::JSONInputArchive inputAr( buffer );
-        std::vector<HashedLinuxPerfData> call_stacks;
+        std::vector<CallstackEvent> call_stacks;
         inputAr(call_stacks);
 
         for (auto& cs : call_stacks)

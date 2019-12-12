@@ -189,6 +189,5 @@ ORBIT_SERIALIZE( CallStack, 0 )
 ORBIT_SERIALIZE( HashedCallStack, 0 )
 {
     ORBIT_NVP_VAL( 0, m_Hash );
-    ORBIT_NVP_VAL( 0, m_Depth );
     ORBIT_NVP_VAL( 0, m_ThreadId );
 }

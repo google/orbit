@@ -154,20 +154,19 @@ void SamplingProfiler::AddCallStack( CallStack & a_CallStack )
     {
         AddUniqueCallStack( a_CallStack );
     }
-    HashedCallStack hashedCS;
-    hashedCS.m_Hash = hash;
-    hashedCS.m_Depth = a_CallStack.m_Depth;
-    hashedCS.m_ThreadId = a_CallStack.m_ThreadId;
+    CallstackEvent hashedCS;
+    hashedCS.m_Id = hash;
+    hashedCS.m_TID = a_CallStack.m_ThreadId;
     AddHashedCallStack ( hashedCS );
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::AddHashedCallStack( HashedCallStack & a_CallStack )
+void SamplingProfiler::AddHashedCallStack( CallstackEvent & a_CallStack )
 {
     if (m_State != Sampling) {
         PRINT("Error: Callstacks can only be added while sampling.\n");
     }
-    if ( !HasCallStack(a_CallStack.m_Hash) )
+    if ( !HasCallStack(a_CallStack.m_Id) )
     {
         PRINT("Error: Callstacks can only be added by hash when they are already present.\n");
     }
@@ -288,28 +287,26 @@ void SamplingProfiler::ProcessSamplesAsync()
 void SamplingProfiler::ProcessSamples()
 {
     ScopeLock lock(m_Mutex);
-    unsigned int numAddressesTotal = 0;
 
     m_State = Processing;
 
     // Unique call stacks and per thread data
-    for( const HashedCallStack& callstack : m_Callstacks )
+    for( const CallstackEvent& callstack : m_Callstacks )
     {
-        if ( !HasCallStack(callstack.m_Hash) )
+        if ( !HasCallStack(callstack.m_Id) )
         {
             PRINT("Error: Processed unknown callstack!\n");
         }
 
-        ThreadSampleData & threadSampleData = m_ThreadSampleData[callstack.m_ThreadId];
+        ThreadSampleData & threadSampleData = m_ThreadSampleData[callstack.m_TID];
         threadSampleData.m_NumSamples++;
-        threadSampleData.m_CallstackCount[callstack.m_Hash]++;
-        numAddressesTotal += callstack.m_Depth;
+        threadSampleData.m_CallstackCount[callstack.m_Id]++;
 
         if( m_GenerateSummary )
         {
             ThreadSampleData & threadSampleDataAll = m_ThreadSampleData[0];
             threadSampleDataAll.m_NumSamples++;
-            threadSampleDataAll.m_CallstackCount[callstack.m_Hash]++;
+            threadSampleDataAll.m_CallstackCount[callstack.m_Id]++;
         }
     }
 

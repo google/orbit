@@ -8,6 +8,7 @@
 #include "Callstack.h"
 #include "BlockChain.h"
 #include "SerializationMacros.h"
+#include "EventBuffer.h"
 
 class Process;
 class Thread;
@@ -97,7 +98,7 @@ public:
     void FireDoneProcessingCallbacks();
 
     void AddCallStack( CallStack & a_CallStack );
-    void AddHashedCallStack( HashedCallStack & a_CallStack );
+    void AddHashedCallStack( CallstackEvent & a_CallStack );
     void AddUniqueCallStack( CallStack & a_CallStack );
   
     const std::shared_ptr<CallStack> GetCallStack( CallstackID a_ID )
@@ -154,7 +155,7 @@ protected:
     std::shared_ptr<Process>                m_Process;
     std::unique_ptr<std::thread>            m_SamplingThread;
     std::atomic<SamplingState>              m_State;
-    BlockChain<HashedCallStack, 16*1024 >   m_Callstacks;
+    BlockChain<CallstackEvent, 16*1024 >    m_Callstacks;
     Timer                                   m_SamplingTimer;
     Timer                                   m_ThreadUsageTimer;
     int                                     m_PeriodMs = 1;

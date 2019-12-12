@@ -56,7 +56,6 @@ struct CallStack
 struct HashedCallStack
 {
     CallstackID m_Hash = 0;
-    uint32_t    m_Depth = 0;
     ThreadID    m_ThreadId = 0;
 
     ORBIT_SERIALIZABLE;

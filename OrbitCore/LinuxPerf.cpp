@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "LinuxUtils.h"
+#include "LinuxCallstackEvent.h"
 #include "Utils.h"
 #include "PrintVar.h"
 #include "Capture.h"
@@ -119,7 +119,7 @@ void LinuxPerf::HandleLine( const std::string& a_Line )
         m_PerfData.m_header = a_Line;
         auto tokens = Tokenize(a_Line);
         m_PerfData.m_time = tokens.size() > 2 ? GetMicros(tokens[2])*1000 : 0;
-        m_PerfData.m_tid  = tokens.size() > 1 ? atoi(tokens[1].c_str()) : 0;
+        m_PerfData.m_CS.m_ThreadId = tokens.size() > 1 ? atoi(tokens[1].c_str()) : 0;
     }
     else if(isStackLine)
     {
@@ -155,14 +155,10 @@ void LinuxPerf::HandleLine( const std::string& a_Line )
         if( CS.m_Data.size() )
         {
             CS.m_Depth = (uint32_t)CS.m_Data.size();
-            CS.m_ThreadId = m_PerfData.m_tid;
             CallstackID hash = CS.Hash();
 
             GCoreApp->ProcessSamplingCallStack(m_PerfData);
             ++m_PerfData.m_numCallstacks;
-
-            Capture::GSamplingProfiler->AddCallStack( CS );
-            GEventTracer.GetEventBuffer().AddCallstackEvent( m_PerfData.m_time, hash, m_PerfData.m_tid );
         }
 
         m_PerfData.Clear();

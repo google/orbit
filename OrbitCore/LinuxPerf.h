@@ -4,7 +4,7 @@
 #pragma once
 
 #include "BaseTypes.h"
-#include "LinuxPerfData.h"
+#include "LinuxCallstackEvent.h"
 #include "SerializationMacros.h"
 #include "Serialization.h"
 #include <string>
@@ -34,7 +34,7 @@ private:
     std::function<void(const std::string& a_Data)> m_Callback;
     std::string m_PerfCommand;
 
-    LinuxPerfData m_PerfData;
+    LinuxCallstackEvent m_PerfData;
 };
 
 //-----------------------------------------------------------------------------

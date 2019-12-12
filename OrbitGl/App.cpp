@@ -29,7 +29,7 @@
 #include "CaptureSerializer.h"
 #include "PluginManager.h"
 #include "RuleEditor.h"
-#include "LinuxPerfData.h"
+#include "LinuxCallstackEvent.h"
 
 #include "OrbitAsm/OrbitAsm.h"
 #include "OrbitCore/Pdb.h"
@@ -205,35 +205,46 @@ void OrbitApp::ProcessBufferedCaptureData()
     while (Capture::IsCapturing())
     {  
         usleep(20000);
-        ScopeLock lock( m_MessageBufferMutex );
         // timers:
-        if (m_TimerBuffer.size() > 0) {
-            Message Msg(Msg_RemoteTimers);
-            Msg.m_Size = sizeof(Timer) * m_TimerBuffer.size();
-            GTcpServer->Send(Msg, (void*)m_TimerBuffer.data());
-            m_TimerBuffer.clear();
+        {
+            ScopeLock lock( m_TimerMutex );
+            if (m_TimerBuffer.size() > 0) {
+                Message Msg(Msg_RemoteTimers);
+                Msg.m_Size = sizeof(Timer) * m_TimerBuffer.size();
+                GTcpServer->Send(Msg, (void*)m_TimerBuffer.data());
+                m_TimerBuffer.clear();
+            }
         }
         
         // sampling callstacks
-        if (m_SamplingCallstackBuffer.size() > 0){
-            std::string messageData = SerializeObjectHumanReadable(m_SamplingCallstackBuffer);
-            GTcpServer->Send(Msg_SamplingCallstacks, messageData.c_str(), messageData.size());
-            m_SamplingCallstackBuffer.clear();
+        {
+            ScopeLock lock( m_SamplingCallstackMutex );
+            if (m_SamplingCallstackBuffer.size() > 0){
+                std::string messageData = SerializeObjectHumanReadable(m_SamplingCallstackBuffer);
+                GTcpServer->Send(Msg_SamplingCallstacks, messageData.c_str(), messageData.size());
+                m_SamplingCallstackBuffer.clear();
+            }
         }
 
         // hashed sampling callstacks
-        if (m_HashedSamplingCallstackBuffer.size() > 0){  
-            std::string messageData = SerializeObjectHumanReadable(m_HashedSamplingCallstackBuffer);
-            GTcpServer->Send(Msg_SamplingHashedCallstacks, messageData.c_str(), messageData.size());
-            m_HashedSamplingCallstackBuffer.clear();
+        {
+            ScopeLock lock( m_HashedSamplingCallstackMutex );
+            if (m_HashedSamplingCallstackBuffer.size() > 0){  
+                std::string messageData = SerializeObjectHumanReadable(m_HashedSamplingCallstackBuffer);
+                GTcpServer->Send(Msg_SamplingHashedCallstacks, messageData.c_str(), messageData.size());
+                m_HashedSamplingCallstackBuffer.clear();
+            }
         }
 
         // context switches
-        if (m_ContextSwitchBuffer.size() > 0){
-            Message Msg(Msg_RemoteContextSwitches);
-            Msg.m_Size = sizeof(ContextSwitch) * m_ContextSwitchBuffer.size();
-            GTcpServer->Send(Msg, (void*)m_ContextSwitchBuffer.data());
-            m_ContextSwitchBuffer.clear();
+        {
+            ScopeLock lock( m_ContextSwitchMutex );
+            if (m_ContextSwitchBuffer.size() > 0){
+                Message Msg(Msg_RemoteContextSwitches);
+                Msg.m_Size = sizeof(ContextSwitch) * m_ContextSwitchBuffer.size();
+                GTcpServer->Send(Msg, (void*)m_ContextSwitchBuffer.data());
+                m_ContextSwitchBuffer.clear();
+            }
         }
     }
 }
@@ -243,7 +254,7 @@ void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
 {
     if (ConnectionManager::Get().IsService())
     {
-        ScopeLock lock( m_MessageBufferMutex );
+        ScopeLock lock( m_TimerMutex );
         m_TimerBuffer.push_back(*a_Timer);
     }
     else
@@ -254,43 +265,40 @@ void OrbitApp::ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName )
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::ProcessSamplingCallStack(LinuxPerfData& a_CallStack)
+void OrbitApp::ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack)
 {
     if (ConnectionManager::Get().IsService())
     {
         // only send the callstack hash, if we know the callstack
         if (Capture::GSamplingProfiler->HasCallStack(a_CallStack.m_CS.Hash()))
         {
-            HashedCallStack hashed_call_stack;
-            hashed_call_stack.m_Depth = a_CallStack.m_CS.m_Depth;
-            hashed_call_stack.m_Hash = a_CallStack.m_CS.m_Hash;
-            hashed_call_stack.m_ThreadId = a_CallStack.m_CS.m_ThreadId;
-            HashedLinuxPerfData data;
-            data.m_CS = hashed_call_stack;
-            data.m_time = a_CallStack.m_time;
+            CallstackEvent hashed_call_stack;
+            hashed_call_stack.m_Id = a_CallStack.m_CS.m_Hash;
+            hashed_call_stack.m_TID = a_CallStack.m_CS.m_ThreadId;
+            hashed_call_stack.m_Time = a_CallStack.m_time;
 
-            ProcessHashedSamplingCallStack( data );
+            ProcessHashedSamplingCallStack( hashed_call_stack );
         }
         else {
-            ScopeLock lock( m_MessageBufferMutex );
+            ScopeLock lock( m_SamplingCallstackMutex );
             m_SamplingCallstackBuffer.push_back(a_CallStack);
         }
     }
 
     Capture::GSamplingProfiler->AddCallStack( a_CallStack.m_CS );
-    GEventTracer.GetEventBuffer().AddCallstackEvent( a_CallStack.m_time, a_CallStack.m_CS.m_Hash, a_CallStack.m_tid );
+    GEventTracer.GetEventBuffer().AddCallstackEvent( a_CallStack.m_time, a_CallStack.m_CS.m_Hash, a_CallStack.m_CS.m_ThreadId );
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::ProcessHashedSamplingCallStack(HashedLinuxPerfData& a_CallStack)
+void OrbitApp::ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack)
 {
     if (ConnectionManager::Get().IsService())
     {
-        ScopeLock lock( m_MessageBufferMutex );
+        ScopeLock lock( m_HashedSamplingCallstackMutex );
         m_HashedSamplingCallstackBuffer.push_back(a_CallStack);
     }
-    Capture::GSamplingProfiler->AddHashedCallStack(a_CallStack.m_CS);
-    GEventTracer.GetEventBuffer().AddCallstackEvent( a_CallStack.m_time, a_CallStack.m_CS.m_Hash, a_CallStack.m_CS.m_ThreadId );
+    Capture::GSamplingProfiler->AddHashedCallStack(a_CallStack);
+    GEventTracer.GetEventBuffer().AddCallstackEvent( a_CallStack.m_Time, a_CallStack.m_Id, a_CallStack.m_TID );
 }
 
 //-----------------------------------------------------------------------------
@@ -313,7 +321,7 @@ void OrbitApp::ProcessContextSwitch( const ContextSwitch& a_CallStack )
 {
     if (ConnectionManager::Get().IsService())
     {
-        ScopeLock lock( m_MessageBufferMutex );
+        ScopeLock lock( m_ContextSwitchMutex );
         m_ContextSwitchBuffer.push_back(a_CallStack);
     }
 

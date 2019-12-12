@@ -73,8 +73,8 @@ public:
     void RefreshWatch();
     virtual void Disassemble( const std::string & a_FunctionName, DWORD64 a_VirtualAddress, const char * a_MachineCode, size_t a_Size );
     virtual void ProcessTimer( Timer* a_Timer, const std::string& a_FunctionName );
-    virtual void ProcessSamplingCallStack(LinuxPerfData& a_CallStack);
-    virtual void ProcessHashedSamplingCallStack(HashedLinuxPerfData& a_CallStack);
+    virtual void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack);
+    virtual void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack);
     virtual void ProcessCallStack( CallStack& a_CallStack );
     virtual void ProcessContextSwitch( const ContextSwitch& a_CallStack );
     virtual void AddSymbol(uint64_t a_Address, const std::string& a_Module, const std::string& a_Name);
@@ -172,10 +172,6 @@ private:
     std::vector< WatchCallback >          m_UpdateWatchCallbacks;
     std::vector< SamplingReportCallback > m_SamplingReportsCallbacks;
     std::vector< SamplingReportCallback > m_SelectionReportCallbacks;
-    std::vector< ContextSwitch >          m_ContextSwitchBuffer;
-    std::vector< Timer >                  m_TimerBuffer;
-    std::vector< LinuxPerfData >          m_SamplingCallstackBuffer;
-    std::vector< HashedLinuxPerfData >    m_HashedSamplingCallstackBuffer;
     std::vector< class DataView* >        m_Panels;
     FindFileCallback                      m_FindFileCallback;
 	SaveFileCallback					  m_SaveFileCallback;
@@ -204,7 +200,14 @@ private:
 
     // buffering data to send large messages instead of small ones:
     std::shared_ptr<std::thread> m_MessageBufferThread = nullptr;
-    Mutex m_MessageBufferMutex;
+    std::vector< ContextSwitch >        m_ContextSwitchBuffer;
+    Mutex                               m_ContextSwitchMutex;
+    std::vector< Timer >                m_TimerBuffer;
+    Mutex                               m_TimerMutex;
+    std::vector< LinuxCallstackEvent >        m_SamplingCallstackBuffer;
+    Mutex                               m_SamplingCallstackMutex;
+    std::vector< CallstackEvent >       m_HashedSamplingCallstackBuffer;
+    Mutex                               m_HashedSamplingCallstackMutex;
 
     std::wstring m_User;
     std::wstring m_License;
