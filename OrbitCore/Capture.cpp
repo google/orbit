@@ -368,6 +368,7 @@ void Capture::SendFunctionHooks()
         GTcpClient->Send(Msg_StartCapture);
     }
     else
+        // TODO: Why is this? This seems to be unnecessary.
         GTcpServer->Send( Msg_StartCapture );
 
     // Unreal

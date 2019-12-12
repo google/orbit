@@ -13,11 +13,10 @@
 #include <string>
 
 //-----------------------------------------------------------------------------
-class LinuxPerfData
+class LinuxCallstackEvent
 {
 public:
     std::string m_header = "";
-    uint32_t m_tid = 0;
     uint64_t m_time = 0;
     uint64_t m_numCallstacks = 0;
 

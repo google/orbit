@@ -3,6 +3,8 @@
 //-----------------------------------
 #pragma once
 
+#include "Serialization.h"
+
 //-----------------------------------------------------------------------------
 struct ContextSwitch
 {
@@ -11,9 +13,11 @@ public:
     ContextSwitch( SwitchType a_Type = Invalid );
     ~ContextSwitch();
 
-    unsigned int    m_ThreadId;
-    SwitchType      m_Type;
-    long long       m_Time;
-    unsigned short  m_ProcessorIndex;
-    unsigned char   m_ProcessorNumber;
+    uint32_t    m_ThreadId;
+    SwitchType  m_Type;
+    uint64_t    m_Time;
+    uint16_t    m_ProcessorIndex;
+    uint8_t     m_ProcessorNumber;
+
+    ORBIT_SERIALIZABLE;
 };

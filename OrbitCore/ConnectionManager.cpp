@@ -12,13 +12,14 @@
 #include "EventBuffer.h"
 #include "ProcessUtils.h"
 #include "LinuxPerf.h"
-#include "LinuxPerfData.h"
+#include "LinuxCallstackEvent.h"
 #include "SamplingProfiler.h"
 #include "CoreApp.h"
 #include "OrbitModule.h"
 #include "OrbitFunction.h"
 #include "BpfTrace.h"
 #include "Serialization.h"
+#include "ContextSwitch.h"
 
 #if __linux__
 #include "LinuxUtils.h"
@@ -119,6 +120,7 @@ void ConnectionManager::StartCaptureAsRemote()
     PRINT_FUNC;
     Capture::StartCapture();
     m_BpfTrace->Start();
+    GCoreApp->StartRemoteCaptureBufferingThread();
 }
 
 //-----------------------------------------------------------------------------
@@ -127,6 +129,7 @@ void ConnectionManager::StopCaptureAsRemote()
     PRINT_FUNC;
     m_BpfTrace->Stop();
     Capture::StopCapture();
+    GCoreApp->StopRemoteCaptureBufferingThread();
 }
 
 //-----------------------------------------------------------------------------
@@ -211,7 +214,7 @@ void ConnectionManager::SetupClientCallbacks()
     GTcpClient->AddCallback ( Msg_SamplingCallstack, [=]( const Message& a_Msg )
     {
         // TODO: Send buffered callstacks.
-        LinuxPerfData data;
+        LinuxCallstackEvent data;
 
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
         cereal::JSONInputArchive inputAr(buffer);
@@ -249,6 +252,46 @@ void ConnectionManager::SetupClientCallbacks()
         inputAr(symbol);
 
         GCoreApp->AddSymbol(symbol.m_Address, symbol.m_Module, symbol.m_Name);
+    } );
+
+    GTcpClient->AddCallback(Msg_RemoteContextSwitches, [=](const Message& a_Msg)
+    {
+        uint32_t num_context_switches = (uint32_t)a_Msg.m_Size / sizeof(ContextSwitch);
+        ContextSwitch* context_switches = (ContextSwitch*) a_Msg.GetData();
+        for (uint32_t i = 0; i < num_context_switches; i++)
+        {
+            GCoreApp->ProcessContextSwitch(context_switches[i]);
+        }
+    } );
+
+    GTcpClient->AddCallback(Msg_SamplingCallstacks, [=](const Message& a_Msg)
+    {
+        const char* a_Data = a_Msg.GetData();
+        size_t a_Size = a_Msg.m_Size;
+        std::istringstream buffer(std::string(a_Data, a_Size));
+        cereal::BinaryInputArchive inputAr( buffer );
+        std::vector<LinuxCallstackEvent> call_stacks;
+        inputAr(call_stacks);
+
+        for (auto& cs : call_stacks)
+        {
+            GCoreApp->ProcessSamplingCallStack(cs);
+        }
+    } );
+
+    GTcpClient->AddCallback(Msg_SamplingHashedCallstacks, [=](const Message& a_Msg)
+    {
+        const char* a_Data = a_Msg.GetData();
+        size_t a_Size = a_Msg.m_Size;
+        std::istringstream buffer(std::string(a_Data, a_Size));
+        cereal::BinaryInputArchive inputAr( buffer );
+        std::vector<CallstackEvent> call_stacks;
+        inputAr(call_stacks);
+
+        for (auto& cs : call_stacks)
+        {
+            GCoreApp->ProcessHashedSamplingCallStack(cs);
+        }
     } );
 }
 
