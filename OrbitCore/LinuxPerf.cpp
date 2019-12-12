@@ -155,7 +155,6 @@ void LinuxPerf::HandleLine( const std::string& a_Line )
         if( CS.m_Data.size() )
         {
             CS.m_Depth = (uint32_t)CS.m_Data.size();
-            CallstackID hash = CS.Hash();
 
             GCoreApp->ProcessSamplingCallStack(m_PerfData);
             ++m_PerfData.m_numCallstacks;
