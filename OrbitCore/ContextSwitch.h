@@ -6,6 +6,7 @@
 #include "Serialization.h"
 
 //-----------------------------------------------------------------------------
+#pragma pack(push, 1)
 struct ContextSwitch
 {
 public:
@@ -21,3 +22,10 @@ public:
 
     ORBIT_SERIALIZABLE;
 };
+#pragma pack(pop)
+static_assert(sizeof(ContextSwitch) == 19);
+static_assert(offsetof(ContextSwitch, m_ThreadId) == 0);
+static_assert(offsetof(ContextSwitch, m_Type) == 4);
+static_assert(offsetof(ContextSwitch, m_Time) == 8);
+static_assert(offsetof(ContextSwitch, m_ProcessorIndex) == 16);
+static_assert(offsetof(ContextSwitch, m_ProcessorNumber) == 18);
