@@ -377,6 +377,16 @@ inline uint64_t GetMicros(std::string a_TimeStamp)
 }
 
 //-----------------------------------------------------------------------------
+inline void OrbitSleepMs( uint64_t a_Ms )
+{
+#if __linux__
+    usleep(a_Ms*1000);
+#else
+    Sleep(a_Ms);
+#endif
+}
+
+//-----------------------------------------------------------------------------
 inline void PrintBuffer( const void* a_Buffer, uint32_t a_Size, uint32_t a_Width = 16 )
 {
     unsigned char* buffer = (unsigned char*) a_Buffer;
@@ -422,16 +432,6 @@ inline LONGLONG FileTimeDiffInMillis( const FILETIME & a_T0, const FILETIME & a_
     __int64 i0 = (__int64(a_T0.dwHighDateTime) << 32) + a_T0.dwLowDateTime;
     __int64 i1 = (__int64(a_T1.dwHighDateTime) << 32) + a_T1.dwLowDateTime;
     return (i1 - i0) / 10000;
-}
-
-//-----------------------------------------------------------------------------
-inline void OrbitSleepMs( uint64_t a_Ms )
-{
-#if __linux__
-    usleep(a_MS * 1000);
-#else
-    Sleep(a_Ms);
-#endif
 }
 
 //-----------------------------------------------------------------------------
