@@ -425,6 +425,16 @@ inline LONGLONG FileTimeDiffInMillis( const FILETIME & a_T0, const FILETIME & a_
 }
 
 //-----------------------------------------------------------------------------
+inline void OrbitSleepMs( uint64_t a_Ms )
+{
+#if __linux__
+    usleep(a_MS * 1000);
+#else
+    Sleep(a_Ms);
+#endif
+}
+
+//-----------------------------------------------------------------------------
 class CWindowsMessageToString
 {
 public:

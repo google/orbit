@@ -204,7 +204,8 @@ void OrbitApp::ProcessBufferedCaptureData()
 {
     while (Capture::IsCapturing())
     {  
-        usleep(20000);
+        OrbitSleepMs(20);
+
         // timers:
         {
             ScopeLock lock( m_TimerMutex );
