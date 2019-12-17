@@ -73,6 +73,8 @@ namespace LinuxPerfUtils
 
     int32_t task_event_open(int32_t a_CPU);
 
+    int32_t context_switch_open(pid_t a_PID, int32_t a_CPU);
+
     int32_t tracepoint_event_open(uint64_t a_TracepointID, pid_t a_PID, int32_t a_CPU, uint64_t additonal_sample_type = 0);
 
 

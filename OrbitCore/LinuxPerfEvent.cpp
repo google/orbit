@@ -16,7 +16,10 @@ void LinuxPerfLostEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->v
 void LinuxForkEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
 
 //-----------------------------------------------------------------------------
-void LinuxSchedSwitchEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
+void LinuxContextSwitchEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
+
+//-----------------------------------------------------------------------------
+void LinuxSystemWideContextSwitchEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
 
 //-----------------------------------------------------------------------------
 void LinuxUprobeEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }

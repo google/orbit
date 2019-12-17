@@ -34,6 +34,79 @@ public:
     virtual void accept(LinuxPerfEventVisitor* a_Visitor) = 0;
 };
 
+struct __attribute__((__packed__)) perf_context_switch_event {
+    struct perf_event_header header;
+    struct perf_sample_id sample_id;
+};
+
+class LinuxContextSwitchEvent : public LinuxPerfEvent {
+public: 
+    perf_context_switch_event ring_buffer_data;
+
+    virtual uint64_t Timestamp() override {
+        return ring_buffer_data.sample_id.time;
+    }
+
+    virtual void accept(LinuxPerfEventVisitor* a_Visitor) override;
+
+    uint32_t PID() { return ring_buffer_data.sample_id.pid; }
+    uint32_t TID() { return ring_buffer_data.sample_id.tid; }
+    uint32_t CPU() { return ring_buffer_data.sample_id.cpu; }
+    bool IsSwitchOut() { return ring_buffer_data.header.misc & PERF_RECORD_MISC_SWITCH_OUT; }
+    bool IsSwitchIn() { return !IsSwitchOut(); }
+};
+
+struct __attribute__((__packed__)) perf_context_switch_cpu_wide_event {
+    struct perf_event_header header;
+    uint32_t next_prev_pid;
+    uint32_t next_prev_tid;
+    struct perf_sample_id sample_id;
+};
+
+class LinuxSystemWideContextSwitchEvent : public LinuxPerfEvent {
+public: 
+    perf_context_switch_cpu_wide_event ring_buffer_data;
+
+    virtual uint64_t Timestamp() override {
+        return ring_buffer_data.sample_id.time;
+    }
+
+    virtual void accept(LinuxPerfEventVisitor* a_Visitor) override;
+
+    uint32_t PrevPID()
+    {
+        if (IsSwitchOut())
+            return ring_buffer_data.sample_id.pid;
+        else
+            return ring_buffer_data.next_prev_pid;
+    }
+    uint32_t PrevTID()
+    {
+        if (IsSwitchOut())
+            return ring_buffer_data.sample_id.tid;
+        else
+            return ring_buffer_data.next_prev_tid;
+    }
+    uint32_t NextPID()
+    { 
+        if (IsSwitchOut())
+            return ring_buffer_data.next_prev_pid;
+        else
+            return ring_buffer_data.sample_id.pid;
+    }
+    uint32_t NextTID()
+    {
+        if (IsSwitchOut())
+            return ring_buffer_data.next_prev_tid;
+        else
+            return ring_buffer_data.sample_id.tid;
+    }
+    bool IsSwitchOut() { return ring_buffer_data.header.misc & PERF_RECORD_MISC_SWITCH_OUT; }
+    bool IsSwitchIn() { return !IsSwitchOut(); }
+
+    uint32_t CPU() { return ring_buffer_data.sample_id.cpu; }
+};
+
 struct __attribute__((__packed__)) perf_fork_exit_event {
     struct perf_event_header header;
     uint32_t    pid, ppid;
@@ -93,47 +166,7 @@ public:
     uint32_t PID() { return ring_buffer_data.basic_sample_data.pid; }
     uint32_t TID() { return ring_buffer_data.basic_sample_data.tid; }
     uint32_t CPU() { return ring_buffer_data.basic_sample_data.cpu; }
-};
-
-// TODO: This struct might change. We should read this from debugfs.
-struct __attribute__((__packed__)) sched_switch_trace_point {
-    uint32_t size; /* if PERF_SAMPLE_RAW */
-    uint16_t common_type;
-    unsigned char common_flags;
-    unsigned char common_preempt_count;
-    int32_t common_pid;
-
-    char prev_comm[16];
-    // this is actually a thread id
-    int32_t prev_pid;
-    int32_t prev_prio;
-    int64_t prev_state;
-    char next_comm[16];
-    // this is actually a thread id
-    int32_t next_pid;
-    int32_t next_prio;
-
-    uint32_t alignment;
-};
-
-struct __attribute__((__packed__)) perf_record_sched_switch_event
-{
-    struct perf_event_header header;
-    struct perf_sample_id basic_sample_data; /* common PERF_SAMPLE fields */
-    struct sched_switch_trace_point trace_point; /* PERF_SAMPLE_RAW */
-};
-
-// Currently, we do not record callstacks for sched.
-class LinuxSchedSwitchEvent : public LinuxPerfEventRecord<perf_record_sched_switch_event>
-{
-public:
-    virtual void accept(LinuxPerfEventVisitor* a_Visitor) override;
-
-    uint32_t PrevTID() { return ring_buffer_data.trace_point.prev_pid; }
-    uint32_t NextTID() { return ring_buffer_data.trace_point.next_pid; }
-};
-    
-
+};  
 
 template<typename perf_record_data_t>
 class AbstractLinuxUprobeEvent : public LinuxPerfEventRecord<perf_record_data_t>
