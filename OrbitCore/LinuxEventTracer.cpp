@@ -13,7 +13,6 @@
 #include "LinuxPerfRingBuffer.h"
 #include "LinuxPerfUtils.h"
 #include "LinuxEventTracer.h"
-#include "LinuxEventTracerVisitor.h"
 #include "LinuxPerfEventProcessor.h"
 #include "LinuxUtils.h"
 #include "Capture.h"
@@ -51,19 +50,21 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
     // some compilers does not support hardware_concurrency.
     if (cpus == 0)
         cpus = std::stoi(LinuxUtils::ExecuteCommand("nproc"));
-
-    uint64_t tracepoint_ID = LinuxUtils::GetTracePointID("sched", "sched_switch");
     
     std::vector<uint32_t> fds;
 
-    // open perf events for all cpus to keep track of process spawning
-    for (int cpu = 0; cpu < cpus; cpu++)
+    if ( GParams.m_SystemWideScheduling )
     {
-        if ( !GParams.m_SystemWideScheduling )
+        // open perf events for all cpus to keep track of process spawning    
+        for (int cpu = 0; cpu < cpus; cpu++)
         {
-            fds.push_back(LinuxPerfUtils::task_event_open(cpu)); 
+            fds.push_back(LinuxPerfUtils::context_switch_open(-1, cpu));
         }
-        fds.push_back(LinuxPerfUtils::tracepoint_event_open(tracepoint_ID, -1 /*pid*/, cpu)); 
+    }
+    else 
+    {
+        // open_perf_events for all cpus and the PID to keep track of process spawning
+        fds.push_back(LinuxPerfUtils::context_switch_open(Capture::GTargetProcess->GetID(), -1));
     }
 
     std::vector<LinuxPerfRingBuffer> ring_buffers;
@@ -81,34 +82,17 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
         Capture::GTargetProcess->AddThreadId(tid);
     }
 
-    // We will only use that buffer on non-system wide profiling.
-    // On non-system wide profiling, we want only process context-switches that
-    //  of threads that correspond to that process. This requires us to keep track of
-    //  all threads being created by that process (fork events). As these all events,
-    //  come from different ring buffers, we must ensure that we will not process a 
-    //  context-switch before processing the corresponding fork event. Otherwise, we would
-    //  not add this context-switch to the UI.
-    //  The event_buffer, ensures that we process all events in synch to their timestamp.
-    // TODO: Instead of using this buffer, which allows use to process all events in the
-    //  order of their timestamp, we could do the following:
-    //    1) When receiving a context-switch:
-    //     a) If the TID already belongs to the PID => process the context-switch
-    //     b) Otherwise => add the context-switch to a queue for this TID.
-    //    2) When receiving a fork creating a TID belonging to this PID 
-    //     => process all events queued for this TID.
-    LinuxPerfEventProcessor event_buffer(std::make_unique<LinuxEventTracerVisitor>());
-
     bool new_events = false;
 
     while (!(*a_ExitRequested))
     {
         // If there was nothing new in the last iteration:
         // Lets sleep a bit, such that we are not constantly reading from the buffers
-        // and thus wasting cpu time. 10000 microseconds are still way small enought to 
+        // and thus wasting cpu time. 10 ms are still way small enought to 
         // not have our buffers overflown and therefore loosing events.
         if (!new_events)
         {
-            usleep(10000);
+            OrbitSleepMs(10);
         }
 
         new_events = false;
@@ -131,75 +115,84 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
                 //  perf_event_type in perf_event.h.
                 switch (header.type)
                 {
-                case PERF_RECORD_SAMPLE:
+                // non system-wide profiling:
+                case PERF_RECORD_SWITCH:
                     {
-                        auto sched_switch = ring_buffer.ConsumeRecord<LinuxSchedSwitchEvent>(header);
-                        if ( GParams.m_SystemWideScheduling )
+                        auto context_switch = ring_buffer.ConsumeRecord<LinuxContextSwitchEvent>(header);
+                        if ( context_switch.IsSwitchOut() )
                         {
-                            // record end of excetion
-                            if (sched_switch.PrevTID() != 0)
-                            {
-                                ++Capture::GNumContextSwitches;
+                            ++Capture::GNumContextSwitches;
 
-                                ContextSwitch CS ( ContextSwitch::Out );
-                                CS.m_ThreadId = sched_switch.PrevTID();
-                                CS.m_Time = sched_switch.Timestamp();
-                                CS.m_ProcessorIndex = sched_switch.CPU();
-                                //TODO: Is this correct?
-                                CS.m_ProcessorNumber = sched_switch.CPU();
-                                GCoreApp->ProcessContextSwitch( CS );
-                            }
-
-                            // record start of excetion
-                            if (sched_switch.NextTID() != 0)
-                            {
-                                ++Capture::GNumContextSwitches;
-
-                                ContextSwitch CS ( ContextSwitch::In );
-                                CS.m_ThreadId = sched_switch.NextTID();
-                                CS.m_Time = sched_switch.Timestamp();
-                                CS.m_ProcessorIndex = sched_switch.CPU();
-                                //TODO: Is this correct?
-                                CS.m_ProcessorNumber = sched_switch.CPU();
-                                GCoreApp->ProcessContextSwitch( CS );
-                            }
+                            ContextSwitch CS ( ContextSwitch::Out );
+                            CS.m_ThreadId = context_switch.TID();
+                            CS.m_Time = context_switch.Timestamp();
+                            CS.m_ProcessorIndex = context_switch.CPU();
+                            //TODO: Is this correct?
+                            CS.m_ProcessorNumber = context_switch.CPU();
+                            GCoreApp->ProcessContextSwitch( CS );
                         }
                         else
                         {
-                            // we need to know the type of the perf_record_sample at compile time,
-                            //  i.e. for multiple perf_event_open calls, we need be able to
-                            //  distinguish the different ring buffers.
-                            event_buffer.Push(std::make_unique<LinuxSchedSwitchEvent>(std::move(sched_switch)));
+                            ++Capture::GNumContextSwitches;
+
+                            ContextSwitch CS ( ContextSwitch::In );
+                            CS.m_ThreadId = context_switch.TID();
+                            CS.m_Time = context_switch.Timestamp();
+                            CS.m_ProcessorIndex = context_switch.CPU();
+                            //TODO: Is this correct?
+                            CS.m_ProcessorNumber = context_switch.CPU();
+                            GCoreApp->ProcessContextSwitch( CS );
                         }
                     }
                     break;
+
+                // system-wide profiling
+                case PERF_RECORD_SWITCH_CPU_WIDE:
+                    {
+                        auto context_switch = ring_buffer.ConsumeRecord<LinuxSystemWideContextSwitchEvent>(header);
+                        if (context_switch.PrevTID() != 0)
+                        {
+                            ++Capture::GNumContextSwitches;
+
+                            ContextSwitch CS ( ContextSwitch::Out );
+                            CS.m_ThreadId = context_switch.PrevTID();
+                            CS.m_Time = context_switch.Timestamp();
+                            CS.m_ProcessorIndex = context_switch.CPU();
+                            //TODO: Is this correct?
+                            CS.m_ProcessorNumber = context_switch.CPU();
+                            GCoreApp->ProcessContextSwitch( CS );
+                        }
+
+                        // record start of excetion
+                        if (context_switch.NextTID() != 0)
+                        {
+                            ++Capture::GNumContextSwitches;
+
+                            ContextSwitch CS ( ContextSwitch::In );
+                            CS.m_ThreadId = context_switch.NextTID();
+                            CS.m_Time = context_switch.Timestamp();
+                            CS.m_ProcessorIndex = context_switch.CPU();
+                            //TODO: Is this correct?
+                            CS.m_ProcessorNumber = context_switch.CPU();
+                            GCoreApp->ProcessContextSwitch( CS );
+                        }
+                    }
+                    break;
+
                 case PERF_RECORD_LOST:
                     {
                         auto lost = ring_buffer.ConsumeRecord<LinuxPerfLostEvent>(header);
                         PRINT("Lost %u Events\n", lost.Lost());
                     }
                     break;
-                // the next two events will not occur when collecting system wide information
-                case PERF_RECORD_FORK:
-                    {
-                        auto fork = ring_buffer.ConsumeRecord<LinuxForkEvent>(header);
-                        event_buffer.Push(std::make_unique<LinuxForkEvent>(std::move(fork)));
-                    }
-                    break;
-                case PERF_RECORD_EXIT:
-                    // TODO: here we could easily remove the threads from the process again.
-                    ring_buffer.SkipRecord(header);
-                    break;
+
                 default:
-                    PRINT("Unexpected Perf Sample Type: %u", header.type);
+                    PRINT("Unexpected Perf Sample Type: %u\n", header.type);
                     ring_buffer.SkipRecord(header);
                     break;
                 }
             }
         }
-
-        // will be empty when collecting system wide information
-        event_buffer.ProcessTillOffset();
     }
 
     // stop capturing
@@ -207,8 +200,4 @@ void LinuxEventTracer::Run(bool* a_ExitRequested)
     {
         LinuxPerfUtils::stop_capturing(fd);
     }
-
-
-    // will be empty when collecting system wide information
-    event_buffer.ProcessAll();
 }

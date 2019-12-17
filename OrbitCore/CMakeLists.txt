@@ -202,7 +202,6 @@ if(LINUX)
         LinuxPerfRingBuffer.h
         LinuxPerfUtils.h
         LinuxEventTracer.h
-        LinuxEventTracerVisitor.h
     )
     set(PLATFORM_SOURCES 
         BpfTraceVisitor.cpp
@@ -211,7 +210,6 @@ if(LINUX)
         LinuxPerfRingBuffer.cpp
         LinuxPerfUtils.cpp
         LinuxEventTracer.cpp
-        LinuxEventTracerVisitor.cpp
         LinuxPerfEventProcessor.cpp
     )
 	set(EXTERNAL_SOURCES "")

@@ -51,6 +51,24 @@ int32_t LinuxPerfUtils::task_event_open(int32_t a_CPU) {
 }
 
 //-----------------------------------------------------------------------------
+int32_t LinuxPerfUtils::context_switch_open(pid_t a_PID, int32_t a_CPU)
+{
+    perf_event_attr pe = generic_perf_event_attr();
+    pe.type = PERF_TYPE_SOFTWARE;
+    pe.config = PERF_COUNT_SW_DUMMY;
+    pe.context_switch = 1;
+
+    int32_t fd = perf_event_open(&pe, a_PID, a_CPU, -1 /*group_fd*/, 0 /*flags*/);
+
+    if (fd == -1)
+    {
+        PRINT("perf_event_open error: %d\n", errno);
+    }
+
+    return fd;
+}
+
+//-----------------------------------------------------------------------------
 int32_t LinuxPerfUtils::tracepoint_event_open(
     uint64_t a_TracepointID, 
     pid_t a_PID, 
