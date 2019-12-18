@@ -20,6 +20,7 @@
 #include "BpfTrace.h"
 #include "Serialization.h"
 #include "ContextSwitch.h"
+#include "Params.h"
 
 #if __linux__
 #include "LinuxUtils.h"
@@ -72,6 +73,12 @@ void ConnectionManager::ConnectToRemote(std::string a_RemoteAddress)
 //-----------------------------------------------------------------------------
 void ConnectionManager::InitAsService()
 {
+    // TODO: In their current state, context switches on linux are not in the
+    // same time domain as the sampling events.  Disable until the issue is fixed.
+    #if __linux__
+    GParams.m_TrackContextSwitches = false;
+    #endif
+
     m_IsService = true;
     SetupServerCallbacks();
     m_Thread = std::make_unique<std::thread>(&ConnectionManager::RemoteThread, this);
