@@ -10,6 +10,7 @@
 #include "LinuxPerfEvent.h"
 #include "LinuxPerfEventVisitor.h"
 #include "PrintVar.h"
+#include "Threading.h"
 
 #include <queue>
 
@@ -34,6 +35,9 @@ public:
 //  So we will stop processing at the first event that is close (according to the 
 //  delay) to the latest timestamp seen. If we only touch events that are 
 //  old enough, we will never process events out of order.
+// The priority_queue is now guarded with a mutex. So this container is 
+//  thread-safe. However, this is not the most efficient implementation of a
+//  thread-safe priority queue.
 
 // TODO: instead of having unique pointers inside the priority_queue, 
 //  we could have a queue of LinuxPerfEvent objects. This would give use
@@ -49,10 +53,10 @@ class LinuxPerfEventProcessor
 {
 public:
     // While processing, we do not touch the events with a timestamp less 
-    // than 1/10 sec smaller than the most recent one in the queue.
+    // than 3/10 sec smaller than the most recent one in the queue.
     // This way we can ensure, that all events (from different sources)
     // are processed in the correct order.
-    const uint64_t DELAY_IN_NS = 100000000 /*ns*/;
+    const uint64_t DELAY_IN_NS = 300000000 /*ns*/;
 
     LinuxPerfEventProcessor(std::unique_ptr<LinuxPerfEventVisitor> a_Visitor) :
         m_Visitor(std::move(a_Visitor))
@@ -75,6 +79,9 @@ private:
     std::unique_ptr<LinuxPerfEventVisitor> m_Visitor;
 
     uint64_t m_MaxTimestamp = 0;
+
+    Mutex m_Mutex;
+
     #ifndef NDEBUG
     uint64_t m_LastProcessTimestamp = 0;
     #endif

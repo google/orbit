@@ -32,9 +32,6 @@ using namespace LinuxPerfUtils;
 //-----------------------------------------------------------------------------
 BpfTrace::BpfTrace(Callback a_Callback)
 {
-    // Until perf_events are fixed...
-    GParams.m_UseBpftrace = true;
-
     // TODO: we shouldn't hijack the BpfTrace class and move perf_event related
     //       code to its own class.
 
@@ -347,8 +344,23 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
         LinuxPerfUtils::start_capturing(uprobe_fd);
         LinuxPerfUtils::start_capturing(uretprobe_fd);
     }
-
     LinuxPerfEventProcessor event_buffer(std::make_unique<BpfTraceVisitor>());
+    
+    auto process = [](LinuxPerfEventProcessor* event_buffer, bool* a_ExitRequested)
+    {
+        while (!(*a_ExitRequested))
+        {
+            usleep(10000);
+            event_buffer->ProcessTillOffset();
+        }
+        event_buffer->ProcessAll();
+    };
+
+    std::thread buffer_thread = std::thread(
+        process
+        , &event_buffer
+        , a_ExitRequested
+    );
 
     bool new_events = false;
 
@@ -449,8 +461,6 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
                 }
             }
         }
-
-        event_buffer.ProcessTillOffset();
     }
 
     for (auto fd : fds)
@@ -458,7 +468,7 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
         LinuxPerfUtils::stop_capturing(fd);
     }
 
-    event_buffer.ProcessAll();
+    buffer_thread.join();
     #endif
     #endif
 }

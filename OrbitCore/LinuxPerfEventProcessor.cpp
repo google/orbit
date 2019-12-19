@@ -11,6 +11,7 @@
 
 void LinuxPerfEventProcessor::Push(std::unique_ptr<LinuxPerfEvent> a_Event)
 {
+    ScopeLock lock(m_Mutex);
     const uint64_t timestamp = a_Event->Timestamp();
     #ifndef NDEBUG
     if (m_LastProcessTimestamp > 0 && timestamp < m_LastProcessTimestamp - DELAY_IN_NS)
@@ -25,6 +26,7 @@ void LinuxPerfEventProcessor::Push(std::unique_ptr<LinuxPerfEvent> a_Event)
 
 void LinuxPerfEventProcessor::ProcessAll()
 {
+    ScopeLock lock(m_Mutex);
     while(!m_EventQueue.empty())
     {
         LinuxPerfEvent* event = m_EventQueue.top().get();
@@ -39,8 +41,12 @@ void LinuxPerfEventProcessor::ProcessAll()
 void LinuxPerfEventProcessor::ProcessTillOffset()
 {
     // Process the events in the event_queue
+    // We do not lock this read, as otherwise, 
+    //  it would lock the complete exceution of 
+    //  that function.
     while(!m_EventQueue.empty())
     {
+        ScopeLock lock(m_Mutex);
         LinuxPerfEvent* event = m_EventQueue.top().get();
 
         // We should not read all events, otherwise we could miss events
