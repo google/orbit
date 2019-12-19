@@ -337,6 +337,13 @@ std::wstring Path::GetSourceRoot()
 }
 
 //-----------------------------------------------------------------------------
+std::wstring Path::GetHome()
+{
+    std::string home = GetEnvVar("HOME") + "//";
+    return s2ws(home);
+}
+
+//-----------------------------------------------------------------------------
 bool Path::ContainsFile(const std::wstring a_Dir, const std::wstring a_File)
 {
     auto fileList = ListFiles(a_Dir, a_File);

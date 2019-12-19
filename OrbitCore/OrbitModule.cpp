@@ -122,7 +122,7 @@ std::wstring FindSymbols(const std::wstring& a_ModuleFullPath)
     //       for unique identifier in the symbols file...
 
     std::wstring dir = Path::GetDirectory(a_ModuleFullPath);
-    std::vector<std::wstring> symbolDirectories = { L"~/", dir, dir + L"debug_symbols/" };
+    std::vector<std::wstring> symbolDirectories = { L"~/", Path::GetHome(),  dir, dir + L"debug_symbols/" };
     std::wstring file = Path::StripExtension(Path::GetFileName(a_ModuleFullPath));
 
     for (auto& symbolDirectory : symbolDirectories)
