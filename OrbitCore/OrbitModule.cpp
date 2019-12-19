@@ -121,20 +121,20 @@ std::wstring FindSymbols(const std::wstring& a_ModuleFullPath)
     // TODO: .debug file might not have same name as module, we should check
     //       for unique identifier in the symbols file...
 
-    std::vector<std::wstring> symbolDirectories = { L"", L"~/", L"debug_symbols/" };
     std::wstring dir = Path::GetDirectory(a_ModuleFullPath);
+    std::vector<std::wstring> symbolDirectories = { L"~/", dir, dir + L"debug_symbols/" };
     std::wstring file = Path::StripExtension(Path::GetFileName(a_ModuleFullPath));
 
     for (auto& symbolDirectory : symbolDirectories)
     {
-        std::wstring debugFile = dir + symbolDirectory + file + L".debug";
+        std::wstring debugFile = symbolDirectory + file + L".debug";
         if (Path::FileExists(debugFile))
         {
             PRINT_VAR(debugFile);
             return debugFile;
         }
 
-        debugFile = dir + symbolDirectory + file + L".elf.debug";
+        debugFile = symbolDirectory + file + L".elf.debug";
         if (Path::FileExists(debugFile))
         {
             PRINT_VAR(debugFile);
