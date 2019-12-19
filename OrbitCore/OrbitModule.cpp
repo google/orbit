@@ -115,9 +115,40 @@ Function* Pdb::FunctionFromName( const std::string& a_Name )
 }
 
 //-----------------------------------------------------------------------------
+std::wstring FindSymbols(const std::wstring& a_ModuleFullPath)
+{
+    // Look for .debug files associated with passed in module name
+    // TODO: .debug file might not have same name as module, we should check
+    //       for unique identifier in the symbols file...
+
+    std::vector<std::wstring> symbolDirectories = { L"", L"~/", L"debug_symbols/" };
+    std::wstring dir = Path::GetDirectory(a_ModuleFullPath);
+    std::wstring file = Path::StripExtension(Path::GetFileName(a_ModuleFullPath));
+
+    for (auto& symbolDirectory : symbolDirectories)
+    {
+        std::wstring debugFile = dir + symbolDirectory + file + L".debug";
+        if (Path::FileExists(debugFile))
+        {
+            PRINT_VAR(debugFile);
+            return debugFile;
+        }
+
+        debugFile = dir + symbolDirectory + file + L".elf.debug";
+        if (Path::FileExists(debugFile))
+        {
+            PRINT_VAR(debugFile);
+            return debugFile;
+        }
+    }
+
+    return a_ModuleFullPath;
+}
+
+//-----------------------------------------------------------------------------
 bool Pdb::LoadPdb( const wchar_t* a_PdbName )
 {
-    m_FileName = a_PdbName;
+    m_FileName = FindSymbols(a_PdbName);
     m_Name = Path::GetFileName(m_FileName);
 
     {
@@ -125,7 +156,7 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
         // nm
         // TODO: If we need linenumber information at some point, we need to find an
         // alternative, as "nm -l" is super slow.
-        std::string nmCommand = std::string("nm ") + ws2s(a_PdbName) + std::string(" -n");
+        std::string nmCommand = std::string("nm ") + ws2s(m_FileName) + std::string(" -n");
         std::string nmResult = LinuxUtils::ExecuteCommand(nmCommand.c_str());
         std::stringstream nmStream(nmResult);
         std::string line;
@@ -144,6 +175,7 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
             }
         }
     }
+
     ProcessData();
 
     {
