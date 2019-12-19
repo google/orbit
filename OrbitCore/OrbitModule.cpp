@@ -141,12 +141,6 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
                 func.m_Module = ws2s(Path::GetFileName(a_PdbName));
                 func.m_Pdb = this;
                 this->AddFunction(func);
-
-                // Debug - Temporary
-                if (Contains(func.m_PrettyName, "btCollisionDispatcher::needsCollision"))
-                {
-                    PRINT_VAR(func.m_PrettyName);
-                }
             }
         }
     }
