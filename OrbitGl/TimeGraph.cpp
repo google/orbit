@@ -84,7 +84,7 @@ bool TimeGraph::UpdateSessionMinMaxCounter()
         if (track->GetNumTimers())
         {
             TickType min = track->GetMinTime();
-            if (min < m_SessionMinCounter)
+            if (min > 0 && min < m_SessionMinCounter)
             {
                 m_SessionMinCounter = min;
             }

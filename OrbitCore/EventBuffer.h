@@ -52,7 +52,7 @@ public:
     {
         if( a_Time > m_MaxTime )
             m_MaxTime = a_Time;
-        if( a_Time < m_MinTime )
+        if( a_Time > 0 && a_Time < m_MinTime )
             m_MinTime = a_Time;
     }
 
