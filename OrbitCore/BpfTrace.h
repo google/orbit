@@ -7,7 +7,6 @@
 #include "ScopeTimer.h"
 #include "OrbitFunction.h"
 #include "Callstack.h"
-#include "LinuxPerfEventProcessor.h"
 #include <vector>
 #include <string>
 #include <map>

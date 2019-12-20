@@ -14,7 +14,7 @@ void LinuxPerfEventProcessor::Push(std::unique_ptr<LinuxPerfEvent> a_Event)
     ScopeLock lock(m_Mutex);
     const uint64_t timestamp = a_Event->Timestamp();
     #ifndef NDEBUG
-    if (m_LastProcessTimestamp > 0 && timestamp < m_LastProcessTimestamp - DELAY_IN_NS)
+    if (m_LastProcessTimestamp > 0 && timestamp < m_LastProcessTimestamp - (1000000 * DELAY_IN_MS))
         PRINT("Error: processed an event out of order.\n");
     #endif
 
@@ -25,16 +25,16 @@ void LinuxPerfEventProcessor::Push(std::unique_ptr<LinuxPerfEvent> a_Event)
 }
 
 void LinuxPerfEventProcessor::ProcessAll()
-{
-    ScopeLock lock(m_Mutex);
-    while(!m_EventQueue.empty())
+{   
+    while(true)
     {
-        LinuxPerfEvent* event = m_EventQueue.top().get();
+        std::unique_ptr<LinuxPerfEvent> event = TryDequeue();
+        if (event == nullptr)
+            break;
         event->accept(m_Visitor.get());
         #ifndef NDEBUG
         m_LastProcessTimestamp = event->Timestamp();
         #endif
-        m_EventQueue.pop();
     }
 }
 
@@ -44,19 +44,39 @@ void LinuxPerfEventProcessor::ProcessTillOffset()
     // We do not lock this read, as otherwise, 
     //  it would lock the complete exceution of 
     //  that function.
-    while(!m_EventQueue.empty())
+    
+    while(true)
     {
-        ScopeLock lock(m_Mutex);
-        LinuxPerfEvent* event = m_EventQueue.top().get();
+        std::unique_ptr<LinuxPerfEvent> event = TryDequeue();
+        if (event == nullptr)
+            break;
 
         // We should not read all events, otherwise we could miss events
         // close to the max timestamp in the queue.
-        if (event->Timestamp() + DELAY_IN_NS > m_MaxTimestamp) 
+        if (event->Timestamp() + (1000000 * DELAY_IN_MS) > m_MaxTimestamp) 
             break;
         event->accept(m_Visitor.get());
         #ifndef NDEBUG
         m_LastProcessTimestamp = event->Timestamp();
         #endif
-        m_EventQueue.pop();
     }
+}
+
+std::unique_ptr<LinuxPerfEvent> LinuxPerfEventProcessor::TryDequeue()
+{
+
+    ScopeLock lock(m_Mutex);
+    if (m_EventQueue.empty())
+    {
+        return nullptr;
+    }
+    // needed to do the const_cast here, as pop() is void, 
+    // so we need ot move out here
+    std::unique_ptr<LinuxPerfEvent> element = std::move(
+        const_cast<std::unique_ptr<LinuxPerfEvent>&>(m_EventQueue.top())
+    );
+    
+    m_EventQueue.pop();
+
+    return element;
 }

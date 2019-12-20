@@ -350,7 +350,7 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
     {
         while (!(*a_ExitRequested))
         {
-            usleep(10000);
+            OrbitSleepMs(10);
             event_buffer->ProcessTillOffset();
         }
         event_buffer->ProcessAll();
@@ -367,11 +367,11 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
     while( !(*a_ExitRequested) )
     {
         // Lets sleep a bit, such that we are not constantly reading from the buffers
-        // and thus wasting cpu time. 10000 microseconds are still small enough to 
+        // and thus wasting cpu time. 10 milliseconds are still small enough to 
         // not have our buffers overflown and therefore losing events.
         if (!new_events)
         {
-            usleep(10000);
+            OrbitSleepMs(10);
         }
 
         new_events = false;

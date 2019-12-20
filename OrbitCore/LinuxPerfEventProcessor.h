@@ -53,10 +53,10 @@ class LinuxPerfEventProcessor
 {
 public:
     // While processing, we do not touch the events with a timestamp less 
-    // than 3/10 sec smaller than the most recent one in the queue.
+    // than 300 msecs smaller than the most recent one in the queue.
     // This way we can ensure, that all events (from different sources)
     // are processed in the correct order.
-    const uint64_t DELAY_IN_NS = 300000000 /*ns*/;
+    const uint64_t DELAY_IN_MS = 300 /*ms*/;
 
     LinuxPerfEventProcessor(std::unique_ptr<LinuxPerfEventVisitor> a_Visitor) :
         m_Visitor(std::move(a_Visitor))
@@ -81,6 +81,8 @@ private:
     uint64_t m_MaxTimestamp = 0;
 
     Mutex m_Mutex;
+
+    std::unique_ptr<LinuxPerfEvent> TryDequeue();
 
     #ifndef NDEBUG
     uint64_t m_LastProcessTimestamp = 0;
