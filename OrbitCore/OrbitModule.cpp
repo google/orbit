@@ -182,7 +182,7 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
         SCOPE_TIMER_LOG(L"objdump -tT");
         // find functions that can receive uprobes
         std::string objdumpCommand = std::string("objdump -tT ") + 
-            ws2s(a_PdbName) + 
+            ws2s(m_FileName) +
             std::string(" | grep \"F .text\" | grep -oE '[^[:space:]]+$'");
         std::string objdumpResult = LinuxUtils::ExecuteCommand(objdumpCommand.c_str());
         std::stringstream objdumpStream(objdumpResult);
@@ -194,7 +194,7 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
             Function* func = FunctionFromName(demangled);
             if (func && func->m_Probe.empty())
             {
-                std::string probe = ws2s(a_PdbName) + std::string(":") + mangled;
+                std::string probe = ws2s(m_FileName) + std::string(":") + mangled;
                 func->m_Probe = probe;
             }
         }
