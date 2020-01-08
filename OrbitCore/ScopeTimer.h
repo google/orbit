@@ -74,17 +74,17 @@ public:
     TickType m_End;
 };
 #pragma pack(pop)
-static_assert(sizeof(Timer) == 56);
-static_assert(offsetof(Timer, m_TID) == 0);
-static_assert(offsetof(Timer, m_Depth) == 4);
-static_assert(offsetof(Timer, m_SessionID) == 5);
-static_assert(offsetof(Timer, m_Type) == 6);
-static_assert(offsetof(Timer, m_Processor) == 7);
-static_assert(offsetof(Timer, m_CallstackHash) == 8);
-static_assert(offsetof(Timer, m_FunctionAddress) == 16);
-static_assert(offsetof(Timer, m_UserData) == 24);
-static_assert(offsetof(Timer, m_Start) == 40);
-static_assert(offsetof(Timer, m_End) == 48);
+// static_assert(sizeof(Timer) == 56);
+// static_assert(offsetof(Timer, m_TID) == 0);
+// static_assert(offsetof(Timer, m_Depth) == 4);
+// static_assert(offsetof(Timer, m_SessionID) == 5);
+// static_assert(offsetof(Timer, m_Type) == 6);
+// static_assert(offsetof(Timer, m_Processor) == 7);
+// static_assert(offsetof(Timer, m_CallstackHash) == 8);
+// static_assert(offsetof(Timer, m_FunctionAddress) == 16);
+// static_assert(offsetof(Timer, m_UserData) == 24);
+// static_assert(offsetof(Timer, m_Start) == 40);
+// static_assert(offsetof(Timer, m_End) == 48);
 
 //-----------------------------------------------------------------------------
 class ScopeTimer

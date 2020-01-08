@@ -125,11 +125,11 @@ function(AppendToVar var val)
     set("${var}" "${${var}} ${val}" PARENT_SCOPE)
 endfunction()
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	AppendToVar(CMAKE_CXX_FLAGS "/std:c++17")
-else()
-	AppendToVar(CMAKE_CXX_FLAGS "-std=c++17")
-endif()
+#if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+#	AppendToVar(CMAKE_CXX_FLAGS "/std:c++17")
+#else()
+#	AppendToVar(CMAKE_CXX_FLAGS "-std=c++17")
+#endif()
 
 if(WIN32)
 # Set preprocessor defines
