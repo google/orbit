@@ -21,6 +21,7 @@ bool         Path::m_IsPackaged;
 //-----------------------------------------------------------------------------
 void Path::Init()
 {
+    GetBasePath();
 }
 
 //-----------------------------------------------------------------------------
@@ -337,6 +338,15 @@ std::wstring Path::GetSourceRoot()
 }
 
 //-----------------------------------------------------------------------------
+std::wstring Path::GetExternalPath()
+{
+    if (m_IsPackaged)
+        return GetExecutablePath() + L"external/";
+    else
+        return GetSourceRoot() + L"external/";
+}
+
+//-----------------------------------------------------------------------------
 std::wstring Path::GetHome()
 {
     std::string home = GetEnvVar("HOME") + "//";
@@ -347,7 +357,12 @@ std::wstring Path::GetHome()
 bool Path::ContainsFile(const std::wstring a_Dir, const std::wstring a_File)
 {
     auto fileList = ListFiles(a_Dir, a_File);
-    return fileList.size() > 0;
+    for (const std::wstring& file : fileList)
+    {
+        if (Contains(file, a_File))
+            return true;
+    }
+    return false;
 }
 
 //-----------------------------------------------------------------------------

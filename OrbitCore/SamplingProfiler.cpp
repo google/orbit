@@ -495,7 +495,25 @@ void SamplingProfiler::AddAddress(uint64_t a_Address)
         //TODO: find function start address 
         m_ExactAddresses[a_Address] = /*symbol_info->Address ? symbol_info->Address :*/ a_Address;
         std::shared_ptr<LinuxSymbol> symbol = m_Process->LinuxSymbolFromAddress(a_Address);
-        m_AddressToSymbol[(uint64_t)a_Address] = s2ws(symbol ? symbol->m_Name : "??");
+        std::string symbolName = "???";
+
+        if (symbol == nullptr || Contains(symbol->m_Name, "[unknown]"))
+        {
+            Function* function = m_Process->GetFunctionFromAddress(a_Address, false);
+            if (function)
+            {
+                symbolName = function->PrettyName();
+                if (symbol)
+                {
+                    symbol->m_Name = symbolName;
+                }
+            }
+        }
+        else
+        {
+            symbolName = symbol->m_Name;
+        }
+        m_AddressToSymbol[(uint64_t)a_Address] = s2ws(symbolName);
     }
 }
 

@@ -451,6 +451,41 @@ void ShowSymbolInfo( IMAGEHLP_MODULE64 & ModuleInfo )
     ORBIT_LOG( Format( _T("Public symbols: %s \n"), ModuleInfo.Publics ? _T("Available") : _T("Not available") ) ); 
 }
 
+//-----------------------------------------------------------------------------
+bool Pdb::LoadLinuxDebugSymbols(const wchar_t* a_PdbName)
+{
+    SCOPE_TIMER_LOG(L"LoadLinuxDebugSymbols");
+    std::string external = ws2s(Path::GetExternalPath());
+    std::string tmp = ws2s(Path::GetTmpPath()) + "cmd_" + OrbitUtils::GetTimeStamp() + ".txt";
+    std::string nmCommand = external + std::string("llvm\\llvm-nm.exe ") + ws2s(a_PdbName) /*+ std::string(" -n")*/;
+    
+    const char* tmpname = tmp.data();
+    std::string cmd = nmCommand + " > " + tmpname;
+    std::system(cmd.c_str());
+    std::ifstream file(tmpname, std::ios::in | std::ios::binary);
+    std::string result;
+    std::string line;
+    int numAddedFunctions = 0;
+    while (std::getline(file, line))
+    {
+        std::vector<std::string> tokens = Tokenize(line);
+        if (tokens.size() == 3)
+        {
+            const std::string& address = tokens[0];
+            const std::string& symbol = tokens[2];
+            Function func;
+            func.m_Name = symbol;
+            func.m_Address = std::stoull(address, nullptr, 16);
+            func.m_PrettyName = symbol;
+            func.m_Module = ws2s(Path::GetFileName(a_PdbName));
+            func.m_Pdb = this;
+            this->AddFunction(func);
+            ++numAddedFunctions;
+        }
+    }
+    remove(tmpname);
+    return numAddedFunctions > 0;
+}
 
 //-----------------------------------------------------------------------------
 bool Pdb::LoadPdb( const wchar_t* a_PdbName )
@@ -465,14 +500,18 @@ bool Pdb::LoadPdb( const wchar_t* a_PdbName )
 
     std::string nameStr = ws2s( a_PdbName );
 
-    if( ToLower( Path::GetExtension( a_PdbName ) ) == L".dll" )
+    std::wstring extension = ToLower(Path::GetExtension(a_PdbName));
+    if (extension == L".dll")
     {
-        SCOPE_TIMER_LOG( L"LoadDll Exports" );
-        ParseDll( nameStr.c_str() );
+        SCOPE_TIMER_LOG(L"LoadDll Exports");
+        ParseDll(nameStr.c_str());
+    }
+    else if (extension == L".debug")
+    {
+        LoadLinuxDebugSymbols(a_PdbName);
     }
     else
     {
-        SCOPE_TIMER_LOG( L"LoadPdbDia" );
         LoadPdbDia();
     }
 

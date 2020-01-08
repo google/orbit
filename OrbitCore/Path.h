@@ -32,6 +32,7 @@ public:
     static std::wstring GetAppDataPath();
     static std::wstring GetMainDrive();
     static std::wstring GetSourceRoot();
+    static std::wstring GetExternalPath();
     static std::wstring GetHome();
     static void Dump();
 

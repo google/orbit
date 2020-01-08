@@ -697,7 +697,7 @@ void OrbitApp::SetLicense( const std::wstring & a_License )
 //-----------------------------------------------------------------------------
 int OrbitApp::OnExit()
 {
-    if( GTimerManager->m_IsRecording )
+    if (GTimerManager && GTimerManager->m_IsRecording)
         GOrbitApp->StopCapture();
 
     GParams.Save();
@@ -1244,6 +1244,27 @@ void OrbitApp::LoadModules()
 }
 
 //-----------------------------------------------------------------------------
+bool OrbitApp::LoadRemoteModuleLocally(std::shared_ptr<struct Module>& a_Module)
+{
+    std::string debugName = a_Module->m_Name + ".debug";
+    std::wstring debugNameW = s2ws(debugName);
+    for (const auto& dir : m_SymbolLocations)
+    {
+        // TODO: check that build-id in debug file 
+        //       matches build-id in executable.
+        std::wstring fileName = dir + debugNameW;
+        if (Path::FileExists(fileName))
+        {
+            a_Module->m_PdbName = ws2s(fileName);
+            PRINT_VAR(fileName);
+            GLoadPdbAsync(a_Module);
+            return true;
+        }
+    }
+    return false;
+}
+
+//-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules()
 {
     std::vector<std::string> modules;
@@ -1251,7 +1272,10 @@ void OrbitApp::LoadRemoteModules()
     {
         auto module = m_ModulesToLoad.front();
         m_ModulesToLoad.pop();
-        modules.push_back(module->m_Name);
+        if (!LoadRemoteModuleLocally(module))
+        {
+            modules.push_back(module->m_Name);
+        }
     }
 
     std::string moduleData = SerializeObjectHumanReadable(modules);

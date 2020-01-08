@@ -137,6 +137,7 @@ public:
     void EnqueueModuleToLoad( const std::shared_ptr<struct Module> & a_Module );
     void LoadModules();
     void LoadRemoteModules();
+    bool LoadRemoteModuleLocally(std::shared_ptr<struct Module>& a_Module);
     bool IsLoading();
     void SetTrackContextSwitches( bool a_Value );
     bool GetTrackContextSwitches();
@@ -195,7 +196,8 @@ private:
     bool                    m_UnrealEnabled = false;
 
     std::vector< std::shared_ptr< class SamplingReport> > m_SamplingReports;
-    std::map< std::wstring, std::wstring > m_FileMapping;
+    std::map< std::wstring, std::wstring >        m_FileMapping;
+    std::vector< std::string >                    m_SymbolDirectories;
     std::function< void( const std::wstring & ) > m_UiCallback;
 
     // buffering data to send large messages instead of small ones:

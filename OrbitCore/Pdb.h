@@ -31,6 +31,7 @@ public:
 
     bool LoadDataFromPdb();
     bool LoadPdbDia();
+    bool LoadLinuxDebugSymbols(const wchar_t* a_PdbName);
     void Update();
     void AddFunction( Function & a_Function );
     void CheckOrbitFunction( Function & a_Function );
