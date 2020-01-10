@@ -28,4 +28,7 @@ namespace LinuxUtils
     bool Is64Bit(uint32_t a_PID);
     std::string Demangle( const char* a_Symbol );
     void DumpClocks();
+    std::string GetKernelVersionStr();
+    uint32_t GetKernelVersion();
+    bool IsKernelOlderThan(const char* a_Version);
 }

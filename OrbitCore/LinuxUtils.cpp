@@ -10,6 +10,7 @@
 #include "PrintVar.h"
 #include "OrbitModule.h"
 #include "Path.h"
+#include "PrintVar.h"
 #include "ScopeTimer.h"
 #include "Capture.h"
 #include "Callstack.h"
@@ -24,8 +25,10 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
+#include <sys/utsname.h>
 #include <linux/types.h>
 #include <linux/perf_event.h>
+#include <linux/version.h>
 #include <asm/unistd.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
@@ -247,6 +250,43 @@ void StreamCommandOutput(const char* a_Cmd, std::function<void(const std::string
     }
     
     std::cout << "end stream" << std::endl;
+}
+
+//-----------------------------------------------------------------------------
+std::string GetKernelVersionStr()
+{
+    struct utsname buffer;
+    if (uname(&buffer) != 0)
+    {
+        return "unknown version";
+    }
+
+    std::string version = buffer.release;
+    version = version.substr(0, version.find("-"));
+    return version;
+}
+
+//-----------------------------------------------------------------------------
+uint32_t GetVersion(const std::string& a_Version)
+{
+    std::vector<std::string> v = Tokenize(a_Version, ".");
+    if( v.size() == 3 )
+        return KERNEL_VERSION(std::stoi(v[0]), std::stoi(v[1]), std::stoi(v[2]));
+    PRINT("Error: GetVersion: Invalid argument\n");
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+uint32_t GetKernelVersion()
+{
+    static uint32_t version = GetVersion(GetKernelVersionStr());
+    return version;
+}
+
+//-----------------------------------------------------------------------------
+bool IsKernelOlderThan(const char* a_Version)
+{
+    return GetKernelVersion() < GetVersion(a_Version);
 }
 
 }
