@@ -15,8 +15,6 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
-#define HAS_UPROBE_PERF_EVENT_SUPPORT (LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0))
-
 //-----------------------------------------------------------------------------
 namespace LinuxPerfUtils
 {
@@ -77,9 +75,7 @@ namespace LinuxPerfUtils
 
     int32_t tracepoint_event_open(uint64_t a_TracepointID, pid_t a_PID, int32_t a_CPU, uint64_t additonal_sample_type = 0);
 
-
-    #if HAS_UPROBE_PERF_EVENT_SUPPORT
+    bool supports_perf_event_uprobes();
     int32_t uprobe_event_open(const char* a_Module, uint64_t a_FunctionOffset, pid_t a_PID, int32_t a_CPU, uint64_t additonal_sample_type = 0);
     int32_t uretprobe_event_open(const char* a_Module, uint64_t a_FunctionOffset, pid_t a_PID, int32_t a_CPU, uint64_t additonal_sample_type = 0);
-    #endif
 }

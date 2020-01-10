@@ -67,6 +67,7 @@
 #else
 #include "LinuxUtils.h"
 #include "LinuxPerf.h"
+#include "LinuxPerfUtils.h"
 #endif
 
 class OrbitApp* GOrbitApp;
@@ -446,6 +447,11 @@ bool OrbitApp::Init()
     GOrbitApp->LoadFileMapping();
     GOrbitApp->LoadSymbolsFile();
     OrbitVersion::CheckForUpdate();
+
+#if __linux__
+    PRINT_VAR(LinuxPerfUtils::supports_perf_event_uprobes());
+#endif
+
     return true;
 }
 

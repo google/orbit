@@ -39,11 +39,14 @@ BpfTrace::BpfTrace(Callback a_Callback)
     //       code to its own class.
 
     // Uprobe perf_events not supported until Kernel 4.17
-    #if HAS_UPROBE_PERF_EVENT_SUPPORT
-    m_UsePerfEvents = !GParams.m_UseBpftrace && !GParams.m_BpftraceCallstacks;
-    #else
-    m_UsePerfEvents = false;
-    #endif
+    if( LinuxPerfUtils::supports_perf_event_uprobes() )
+    {
+        m_UsePerfEvents = !GParams.m_UseBpftrace && !GParams.m_BpftraceCallstacks;
+    }
+    else
+    {
+        m_UsePerfEvents = false;
+    }
 
     m_Callback = a_Callback ? a_Callback : [this](const std::string& a_Buffer)
     {
@@ -308,7 +311,6 @@ void BpfTrace::CommandCallbackWithCallstacks(const std::string& a_Line)
 void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
 {
     #if __linux__
-    #if HAS_UPROBE_PERF_EVENT_SUPPORT
     int ROUND_ROBIN_BATCH_SIZE = 5;
     std::vector<uint64_t> fds;
     std::map<Function*, LinuxPerfRingBuffer> uprobe_ring_buffers;
@@ -459,6 +461,5 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
     }
 
     event_buffer.ProcessAll();
-    #endif
     #endif
 }
