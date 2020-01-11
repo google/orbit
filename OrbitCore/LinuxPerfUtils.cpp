@@ -9,6 +9,7 @@
 #include "LinuxUtils.h"
 #include "PrintVar.h"
 #include "LinuxPerfUtils.h"
+#include "ScopeTimer.h"
 
 #include <linux/perf_event.h>
 #include <linux/version.h>
@@ -108,6 +109,7 @@ int32_t LinuxPerfUtils::uprobe_event_open(
     uint64_t additonal_sample_type
 )
 {
+    SCOPE_TIMER_FUNC;
     perf_event_attr pe = generic_perf_event_attr();
 
     pe.type = 7;
@@ -123,6 +125,7 @@ int32_t LinuxPerfUtils::uprobe_event_open(
         PRINT("perf_event_open error: %d\n", errno);
     }
 
+    PRINT_VAR(fd);
     return fd;
 }
 
@@ -135,6 +138,7 @@ int32_t LinuxPerfUtils::uretprobe_event_open(
     uint64_t additonal_sample_type
 )
 {
+    SCOPE_TIMER_FUNC;
     perf_event_attr pe = generic_perf_event_attr();
 
     pe.type = 7;
@@ -150,5 +154,6 @@ int32_t LinuxPerfUtils::uretprobe_event_open(
         PRINT("perf_event_open error: %d\n", errno);
     }
 
+    PRINT_VAR(fd);
     return fd;
 }
