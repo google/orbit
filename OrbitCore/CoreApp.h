@@ -35,7 +35,7 @@ public:
     virtual void ProcessContextSwitch( const ContextSwitch& /*a_ContextSwitch*/ ){}
     virtual void AddSymbol(uint64_t /*a_Address*/, const std::string& /*a_Module*/, const std::string& /*a_Name*/){}
     virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >* GetRules(){ return nullptr; }
-    virtual void SendRemoteProcess(uint32_t a_PID) {}
+    virtual void SendRemoteProcess(uint32_t /*a_PID*/) {}
     virtual void RefreshCaptureView() {}
 
     virtual void StartRemoteCaptureBufferingThread(){}

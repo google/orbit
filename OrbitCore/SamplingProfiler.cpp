@@ -355,12 +355,9 @@ void SamplingProfiler::ProcessSamples()
 
     OutputStats();
 
-    {
-        ScopeLock lock(m_Mutex);
-        m_NumSamples = m_Callstacks.size();
-        m_Callstacks.clear();
-        m_State = DoneProcessing;
-    }
+    m_NumSamples = m_Callstacks.size();
+    m_Callstacks.clear();
+    m_State = DoneProcessing;
 }
 
 //-----------------------------------------------------------------------------

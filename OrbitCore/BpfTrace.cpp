@@ -32,6 +32,8 @@ using namespace LinuxPerfUtils;
 //-----------------------------------------------------------------------------
 BpfTrace::BpfTrace(Callback a_Callback)
 {
+#if __linux__
+
     // TODO: we shouldn't hijack the BpfTrace class and move perf_event related
     //       code to its own class.
 
@@ -56,6 +58,7 @@ BpfTrace::BpfTrace(Callback a_Callback)
     };
 
     m_ScriptFileName = ws2s(Path::GetBasePath()) + "orbit.bt";
+#endif
 }
 
 //-----------------------------------------------------------------------------
