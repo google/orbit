@@ -400,7 +400,7 @@ void TcpClient::DecodeMessage( Message & a_Message )
         Argument* argPtr = (Argument*)a_Message.GetData();
         FunctionArgInfo argInfo;
         argInfo.m_NumStackBytes = 1; // used so that epilog knows we need to send argInfo
-        for( int i = 0; i < header.m_NumArgs; ++i )
+        for( uint32_t i = 0; i < header.m_NumArgs; ++i )
         {
             // TODO: x86: Check if arg is actually on stack or in register
             argInfo.m_ArgDataSize += argPtr[i].m_NumBytes;

@@ -74,7 +74,7 @@ struct ThreadLocalData
     {
         if (!m_ThreadName.empty())
         {
-            Message msg(Msg_ThreadInfo, (m_ThreadName.size()+1) * sizeof(m_ThreadName[0]), (char*)m_ThreadName.data());
+            Message msg(Msg_ThreadInfo, uint32_t((m_ThreadName.size()+1) * sizeof(m_ThreadName[0])), (char*)m_ThreadName.data());
             msg.m_ThreadId = m_ThreadID;
             GTcpClient->Send(msg);
         }
@@ -305,7 +305,7 @@ __forceinline void Hijacking::SendUObjectName( void* a_UObject )
                 Message msg( Msg_OrbitUnrealObject, (int)( numChars * sizeof( wchar_t ) ), (char*)actorNameW );
                 msg.m_Header.m_UnrealObjectHeader.m_WideStr = true;
                 msg.m_Header.m_UnrealObjectHeader.m_Ptr = (DWORD64)a_UObject;
-                msg.m_Header.m_UnrealObjectHeader.m_StrSize = numChars;
+                msg.m_Header.m_UnrealObjectHeader.m_StrSize = (uint32_t)numChars;
                 GTcpClient->Send( msg );
             }
             else

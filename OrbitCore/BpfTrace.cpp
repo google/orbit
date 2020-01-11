@@ -32,6 +32,7 @@ using namespace LinuxPerfUtils;
 //-----------------------------------------------------------------------------
 BpfTrace::BpfTrace(Callback a_Callback)
 {
+#if __linux__
     // Until perf_events are fixed...
     GParams.m_UseBpftrace = true;
 
@@ -57,6 +58,7 @@ BpfTrace::BpfTrace(Callback a_Callback)
     };
 
     m_ScriptFileName = ws2s(Path::GetBasePath()) + "orbit.bt";
+#endif
 }
 
 //-----------------------------------------------------------------------------

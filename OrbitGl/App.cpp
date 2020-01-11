@@ -212,7 +212,7 @@ void OrbitApp::ProcessBufferedCaptureData()
             ScopeLock lock( m_TimerMutex );
             if (m_TimerBuffer.size() > 0) {
                 Message Msg(Msg_RemoteTimers);
-                Msg.m_Size = sizeof(Timer) * m_TimerBuffer.size();
+                Msg.m_Size = uint32_t(sizeof(Timer) * m_TimerBuffer.size());
                 GTcpServer->Send(Msg, (void*)m_TimerBuffer.data());
                 m_TimerBuffer.clear();
             }
@@ -243,7 +243,7 @@ void OrbitApp::ProcessBufferedCaptureData()
             ScopeLock lock( m_ContextSwitchMutex );
             if (m_ContextSwitchBuffer.size() > 0){
                 Message Msg(Msg_RemoteContextSwitches);
-                Msg.m_Size = sizeof(ContextSwitch) * m_ContextSwitchBuffer.size();
+                Msg.m_Size = uint32_t(sizeof(ContextSwitch) * m_ContextSwitchBuffer.size());
                 GTcpServer->Send(Msg, (void*)m_ContextSwitchBuffer.data());
                 m_ContextSwitchBuffer.clear();
             }
