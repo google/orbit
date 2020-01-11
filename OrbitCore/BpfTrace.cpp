@@ -360,7 +360,7 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
 
     while( !(*a_ExitRequested) )
     {
-        SCOPE_TIMER("Perf events consume iteration");
+        SCOPE_TIMER_LOG("Perf events consume iteration");
         // Lets sleep a bit, such that we are not constantly reading from the buffers
         // and thus wasting cpu time. 10000 microseconds are still small enough to 
         // not have our buffers overflown and therefore losing events.
