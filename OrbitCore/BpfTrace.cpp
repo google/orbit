@@ -9,6 +9,7 @@
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
 #include "Params.h"
+#include "ScopeTimer.h"
 #include "Utils.h"
 #include <fstream>
 #include <sstream>
@@ -313,6 +314,7 @@ void BpfTrace::CommandCallbackWithCallstacks(const std::string& a_Line)
 void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
 {
     #if __linux__
+    SCOPE_TIMER_FUNC;
     int ROUND_ROBIN_BATCH_SIZE = 5;
     std::vector<uint64_t> fds;
     std::map<Function*, LinuxPerfRingBuffer> uprobe_ring_buffers;
@@ -358,6 +360,7 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
 
     while( !(*a_ExitRequested) )
     {
+        SCOPE_TIMER("Perf events consume iteration");
         // Lets sleep a bit, such that we are not constantly reading from the buffers
         // and thus wasting cpu time. 10000 microseconds are still small enough to 
         // not have our buffers overflown and therefore losing events.
@@ -388,6 +391,7 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
                 {
                 case PERF_RECORD_SAMPLE:
                     {
+                        PRINT("Consuming uprobe record...");
                         if (GParams.m_BpftraceCallstacks)
                         {
                             auto record = ring_buffer.ConsumeRecord<LinuxUprobeEventWithStack>(header);
@@ -435,6 +439,7 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
                 {
                 case PERF_RECORD_SAMPLE:
                     {
+                        PRINT("Consuming uretprobe record...");
                         auto record = ring_buffer.ConsumeRecord<LinuxUretprobeEvent>(header);
                         record.SetFunction(pair.first);
                         event_buffer.Push(std::make_unique<LinuxUretprobeEvent>(std::move(record)));
