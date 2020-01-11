@@ -11,7 +11,7 @@ public:
 
     void Start();
     void Stop();
-    void ThreadLoop();
+    void Loop();
     void TestFunc(uint32_t a_Depth = 0);
 
 private:

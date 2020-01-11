@@ -3,6 +3,8 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <stdio.h>
+#include <sstream>
 
 static const uint32_t NUM_THREADS = 10;
 static const uint32_t NUM_RECURSIVE_CALLS = 10;
@@ -12,6 +14,22 @@ static const uint32_t NUM_RECURSIVE_CALLS = 10;
 #else
 #define NO_INLINE __declspec(noinline)
 #endif
+
+//-----------------------------------------------------------------------------
+uint64_t GetThreadID()
+{
+    std::stringstream ss;
+    ss << std::this_thread::get_id();
+    uint64_t id = std::stoull(ss.str());
+}
+
+//-----------------------------------------------------------------------------
+void SetThreadName(const std::string& a_Name)
+{
+#if __linux__
+    pthread_setname_np(pthread_self(), a_Name.c_str());
+#endif
+}
 
 //-----------------------------------------------------------------------------
 OrbitTest::OrbitTest()
@@ -34,14 +52,16 @@ void OrbitTest::Start()
 {
     for (uint32_t i = 0; i < NUM_THREADS; ++i)
     {
-        std::shared_ptr<std::thread> thread = std::make_shared<std::thread>(&OrbitTest::ThreadLoop, this);
+        auto thread = std::make_shared<std::thread>(&OrbitTest::Loop, this);
         m_Threads.push_back(thread);
     }
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTest::ThreadLoop()
+void OrbitTest::Loop()
 {
+    SetThreadName(std::string("OrbitThread_") + std::to_string(GetThreadID()));
+
     while (!m_ExitRequested)
     {
         TestFunc();
