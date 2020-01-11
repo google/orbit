@@ -6,6 +6,11 @@
 #include "Utils.h"
 #include "PrintVar.h"
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
 #include <cereal/access.hpp>
 #include <cereal/details/traits.hpp>
 #include <cereal/details/helpers.hpp>
@@ -44,6 +49,10 @@
 #include <cereal/archives/json.hpp>
 
 #include "SerializationMacros.h"
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 //-----------------------------------------------------------------------------
 class CounterStreamBuffer : public std::streambuf
