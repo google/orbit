@@ -105,6 +105,7 @@ class LocalScopeTimer
 public:
     LocalScopeTimer();
     LocalScopeTimer( const std::wstring & a_Message );
+	LocalScopeTimer( const char* a_Message );
     LocalScopeTimer( double* a_Millis );
     ~LocalScopeTimer();
 protected:

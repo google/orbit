@@ -65,6 +65,12 @@ LocalScopeTimer::LocalScopeTimer( const std::wstring & a_Msg ) : m_Millis(nullpt
 }
 
 //-----------------------------------------------------------------------------
+LocalScopeTimer::LocalScopeTimer(const char* a_Message) : LocalScopeTimer(s2ws(a_Message))
+{
+
+}
+
+//-----------------------------------------------------------------------------
 LocalScopeTimer::~LocalScopeTimer()
 {
     m_Timer.Stop();
