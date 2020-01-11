@@ -6,7 +6,7 @@
 #include "Utils.h"
 #include "PrintVar.h"
 
-#ifdef __GNUC__
+#if (__GNUC__ >= 7)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
@@ -50,7 +50,7 @@
 
 #include "SerializationMacros.h"
 
-#ifdef __GNUC__
+#if (__GNUC__ >= 7)
 #pragma GCC diagnostic pop
 #endif
 

@@ -110,6 +110,11 @@ int32_t LinuxPerfUtils::uprobe_event_open(
 )
 {
     SCOPE_TIMER_FUNC;
+    PRINT_VAR(a_Module);
+    PRINT_VAR(a_FunctionOffset);
+    PRINT_VAR(a_PID);
+    PRINT_VAR(a_CPU);
+    PRINT_VAR(additonal_sample_type);
     perf_event_attr pe = generic_perf_event_attr();
 
     pe.type = 7;
