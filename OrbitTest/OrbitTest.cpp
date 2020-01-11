@@ -20,7 +20,7 @@ uint64_t GetThreadID()
 {
     std::stringstream ss;
     ss << std::this_thread::get_id();
-    uint64_t id = std::stoull(ss.str());
+    return std::stoull(ss.str());
 }
 
 //-----------------------------------------------------------------------------
