@@ -31,6 +31,7 @@ protected:
     void CommandCallbackWithCallstacks(const std::string& a_Line);
     bool WriteBpfScript();
     static void RunPerfEventOpen(bool* a_ExitRequested);
+    static void RunPerfEventOpenSingleBuffers(bool* a_ExitRequested);
 
 private:
     std::map<std::string, std::vector<Timer>> m_TimerStacks;

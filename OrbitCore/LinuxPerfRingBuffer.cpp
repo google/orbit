@@ -16,7 +16,8 @@
 //-----------------------------------------------------------------------------
 LinuxPerfRingBuffer::LinuxPerfRingBuffer(uint32_t a_PerfFileDescriptor)
 {
-    void* mmap_ret = mmap_mapping(a_PerfFileDescriptor);
+    m_FileDescriptor = a_PerfFileDescriptor;
+    void* mmap_ret = mmap_mapping(m_FileDescriptor);
 
     // the memory directly before the ring buffer contains the metadata
     m_Metadata = reinterpret_cast<perf_event_mmap_page*>(mmap_ret);
@@ -40,6 +41,7 @@ LinuxPerfRingBuffer::LinuxPerfRingBuffer(LinuxPerfRingBuffer&& other) noexcept
     m_Buffer = other.m_Buffer;
     m_BufferLength = other.m_BufferLength;
     m_BufferLengthExponent = other.m_BufferLengthExponent;
+    m_FileDescriptor = other.m_FileDescriptor;
     other.m_Metadata = nullptr;
     other.m_Buffer = nullptr;
     other.m_BufferLength = 0;
@@ -53,6 +55,7 @@ LinuxPerfRingBuffer& LinuxPerfRingBuffer::operator=(LinuxPerfRingBuffer&& other)
     std::swap(m_Buffer, other.m_Buffer);
     std::swap(m_BufferLength, other.m_BufferLength);
     std::swap(m_BufferLengthExponent, other.m_BufferLengthExponent);
+    std::swap(m_FileDescriptor, other.m_FileDescriptor);
     
     return *this;
 }

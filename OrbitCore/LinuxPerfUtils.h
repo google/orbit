@@ -76,6 +76,6 @@ namespace LinuxPerfUtils
     int32_t tracepoint_event_open(uint64_t a_TracepointID, pid_t a_PID, int32_t a_CPU, uint64_t additonal_sample_type = 0);
 
     bool supports_perf_event_uprobes();
-    int32_t uprobe_event_open(const char* a_Module, uint64_t a_FunctionOffset, pid_t a_PID, int32_t a_CPU, uint64_t additonal_sample_type = 0);
-    int32_t uretprobe_event_open(const char* a_Module, uint64_t a_FunctionOffset, pid_t a_PID, int32_t a_CPU, uint64_t additonal_sample_type = 0);
+    int32_t uprobe_event_open(const char* a_Module, uint64_t a_FunctionOffset, pid_t a_PID, int32_t a_CPU, int32_t a_GroupFd = -1, uint64_t additonal_sample_type = 0);
+    int32_t uretprobe_event_open(const char* a_Module, uint64_t a_FunctionOffset, pid_t a_PID, int32_t a_CPU, int32_t a_GroupFd = -1, uint64_t additonal_sample_type = 0);
 }

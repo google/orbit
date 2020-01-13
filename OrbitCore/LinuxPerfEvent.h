@@ -63,6 +63,40 @@ struct __attribute__((__packed__)) perf_context_switch_cpu_wide_event {
     struct perf_sample_id sample_id;
 };
 
+struct __attribute__((__packed__)) perf_sample_event {
+    //struct perf_event_header header;
+    uint64_t    sample_id;   /* if PERF_SAMPLE_IDENTIFIER */
+    uint64_t    ip;          /* if PERF_SAMPLE_IP */
+    uint32_t    pid, tid;    /* if PERF_SAMPLE_TID */
+    uint64_t    time;        /* if PERF_SAMPLE_TIME */
+    uint64_t    addr;        /* if PERF_SAMPLE_ADDR */
+    uint64_t    id;          /* if PERF_SAMPLE_ID */
+    uint64_t    stream_id;   /* if PERF_SAMPLE_STREAM_ID */
+    uint32_t    cpu, res;    /* if PERF_SAMPLE_CPU */
+    uint64_t    period;      /* if PERF_SAMPLE_PERIOD */
+    // struct read_format v;    /* if PERF_SAMPLE_READ */
+    // uint64_t    nr;          /* if PERF_SAMPLE_CALLCHAIN */
+    // uint64_t    ips[nr];     /* if PERF_SAMPLE_CALLCHAIN */
+    // uint32_t    size;        /* if PERF_SAMPLE_RAW */
+    // char        data[size];  /* if PERF_SAMPLE_RAW */
+    // uint64_t    bnr;         /* if PERF_SAMPLE_BRANCH_STACK */
+    // struct perf_branch_entry lbr[bnr];
+    //                          /* if PERF_SAMPLE_BRANCH_STACK */
+    // uint64_t    abi;         /* if PERF_SAMPLE_REGS_USER */
+    // uint64_t    regs[weight(mask)];
+    //                          /* if PERF_SAMPLE_REGS_USER */
+    // uint64_t    size;        /* if PERF_SAMPLE_STACK_USER */
+    // char   data[size];       /* if PERF_SAMPLE_STACK_USER */
+    // uint64_t    dyn_size;    /* if PERF_SAMPLE_STACK_USER &&
+    //                             size != 0 */
+    // uint64_t    weight;      /* if PERF_SAMPLE_WEIGHT */
+    // uint64_t    data_src;    /* if PERF_SAMPLE_DATA_SRC */
+    // uint64_t    transaction; /* if PERF_SAMPLE_TRANSACTION */
+    // uint64_t    abi;         /* if PERF_SAMPLE_REGS_INTR */
+    // uint64_t    regs[weight(mask)];
+    //                          /* if PERF_SAMPLE_REGS_INTR */
+};
+
 class LinuxSystemWideContextSwitchEvent : public LinuxPerfEvent {
 public: 
     perf_context_switch_cpu_wide_event ring_buffer_data;

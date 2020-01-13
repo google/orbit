@@ -106,6 +106,7 @@ int32_t LinuxPerfUtils::uprobe_event_open(
     uint64_t a_FunctionOffset,
     pid_t a_PID,
     int32_t a_CPU,
+    int32_t a_GroupFd,
     uint64_t additonal_sample_type
 )
 {
@@ -114,16 +115,18 @@ int32_t LinuxPerfUtils::uprobe_event_open(
     PRINT_VAR(a_FunctionOffset);
     PRINT_VAR(a_PID);
     PRINT_VAR(a_CPU);
+    PRINT_VAR(a_GroupFd);
     PRINT_VAR(additonal_sample_type);
+    
     perf_event_attr pe = generic_perf_event_attr();
 
-    pe.type = 7;
+    pe.type = 7; // TODO: should be read from "/sys/bus/event_source/devices/uprobe/type"
     pe.config = 0;
     pe.config1 = reinterpret_cast<uint64_t>(a_Module); // pe.config1 == pe.uprobe_path
     pe.config2 = a_FunctionOffset;                     // pe.config2 == pe.probe_offset
     pe.sample_type |= additonal_sample_type;
 
-    int32_t fd = perf_event_open(&pe, a_PID, a_CPU, -1 /*grpup_fd*/, 0 /*flags*/);
+    int32_t fd = perf_event_open(&pe, a_PID, a_CPU, a_GroupFd, 0 /*flags*/);
 
     if (fd == -1)
     {
@@ -140,19 +143,27 @@ int32_t LinuxPerfUtils::uretprobe_event_open(
     uint64_t a_FunctionOffset, 
     pid_t a_PID,
     int32_t a_CPU,
+    int32_t a_GroupFd,
     uint64_t additonal_sample_type
 )
 {
     SCOPE_TIMER_FUNC;
+    PRINT_VAR(a_Module);
+    PRINT_VAR(a_FunctionOffset);
+    PRINT_VAR(a_PID);
+    PRINT_VAR(a_CPU);
+    PRINT_VAR(a_GroupFd);
+    PRINT_VAR(additonal_sample_type);
+
     perf_event_attr pe = generic_perf_event_attr();
 
-    pe.type = 7;
+    pe.type = 7; // TODO: should be read from "/sys/bus/event_source/devices/uprobe/type"
     pe.config = 1;
     pe.config1 = reinterpret_cast<uint64_t>(a_Module); // pe.config1 == pe.uprobe_path
     pe.config2 = a_FunctionOffset;                     // pe.config2 == pe.probe_offset
     pe.sample_type |= additonal_sample_type;
 
-    int32_t fd = perf_event_open(&pe, a_PID, a_CPU, -1 /*grpup_fd*/, 0 /*flags*/);
+    int32_t fd = perf_event_open(&pe, a_PID, a_CPU, a_GroupFd, 0 /*flags*/);
 
     if (fd == -1)
     {

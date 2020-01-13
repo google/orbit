@@ -58,11 +58,12 @@ private:
     // http://man7.org/linux/man-pages/man2/perf_event_open.2.html
     const size_t MMAP_LENGTH = (1 + RING_BUFFER_PAGE_COUNT) * PAGE_SIZE;
 
-    perf_event_mmap_page* m_Metadata;
-    char* m_Buffer;
-    uint64_t m_BufferLength;
+    uint32_t m_FileDescriptor = -1;
+    perf_event_mmap_page* m_Metadata = nullptr;
+    char* m_Buffer = nullptr;
+    uint64_t m_BufferLength = 0;
     // the buffer length must be a power of 2, so we can do shifting for division.
-    uint32_t m_BufferLengthExponent;
+    uint32_t m_BufferLengthExponent = 0;
     
     void Read(uint8_t* a_Destination, uint64_t a_Count);
 
