@@ -509,7 +509,7 @@ void BpfTrace::RunPerfEventOpenSingleBuffers(bool* a_ExitRequested)
                 master_uprobe_fd, sampleType);
 
         // create uretprobe for that function on that PID profiling all cpus
-        uint64_t uretprobe_fd = LinuxPerfUtils::uretprobe_event_open(
+        int32_t uretprobe_fd = LinuxPerfUtils::uretprobe_event_open(
             module.c_str(), offset, Capture::GTargetProcess->GetID(), -1, -1);
         
         // Check that both uprobe and uretprobe were created successfully
