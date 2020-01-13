@@ -35,6 +35,9 @@ BpfTrace::BpfTrace(Callback a_Callback)
 {
 #if __linux__
 
+    // Until perf_events are fixed...
+    GParams.m_UseBpftrace = true;
+
     // TODO: we shouldn't hijack the BpfTrace class and move perf_event related
     //       code to its own class.
 
