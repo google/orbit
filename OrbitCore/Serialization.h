@@ -11,6 +11,11 @@
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
 
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
+
 #include <cereal/access.hpp>
 #include <cereal/details/traits.hpp>
 #include <cereal/details/helpers.hpp>
@@ -49,6 +54,10 @@
 #include <cereal/archives/json.hpp>
 
 #include "SerializationMacros.h"
+
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic pop
+#endif
 
 #if (__GNUC__ >= 7)
 #pragma GCC diagnostic pop

@@ -253,6 +253,14 @@ ORBIT_SERIALIZE( Function, 2 )
 //}
 
 //-----------------------------------------------------------------------------
+FunctionParam::FunctionParam()
+{
+#ifdef _WIN32
+    memset( &m_SymbolInfo, 0, sizeof( m_SymbolInfo ) );
+#endif
+}
+
+//-----------------------------------------------------------------------------
 bool FunctionParam::InRegister( int a_Index )
 {
     return a_Index < 4;

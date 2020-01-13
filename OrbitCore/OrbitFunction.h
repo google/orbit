@@ -19,11 +19,11 @@ class Pdb;
 //-----------------------------------------------------------------------------
 struct FunctionParam
 {
-    FunctionParam(){ memset( this, 0, sizeof( FunctionParam ) ); }
-    std::wstring     m_Name;
-    std::wstring     m_ParamType;
-    std::wstring     m_Type;
-    std::wstring     m_Address;
+    FunctionParam();
+    std::wstring m_Name;
+    std::wstring m_ParamType;
+    std::wstring m_Type;
+    std::wstring m_Address;
 
 #ifdef _WIN32
     SYMBOL_INFO m_SymbolInfo;
