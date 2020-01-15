@@ -21,6 +21,7 @@ perf_event_attr LinuxPerfUtils::generic_perf_event_attr()
     perf_event_attr pe{};
     pe.size = sizeof(struct perf_event_attr);
     pe.sample_period = 1;
+    pe.use_clockid = 1;
     pe.clockid = CLOCK_MONOTONIC;
     pe.sample_id_all = 1; // also include timestamps for lost events
     pe.disabled = 1;

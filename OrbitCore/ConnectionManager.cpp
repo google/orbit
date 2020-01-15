@@ -73,10 +73,8 @@ void ConnectionManager::ConnectToRemote(std::string a_RemoteAddress)
 //-----------------------------------------------------------------------------
 void ConnectionManager::InitAsService()
 {
-    // TODO: In their current state, context switches on linux are not in the
-    // same time domain as the sampling events.  Disable until the issue is fixed.
     #if __linux__
-    GParams.m_TrackContextSwitches = false;
+    GParams.m_TrackContextSwitches = true;
     #endif
 
     m_IsService = true;
