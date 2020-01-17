@@ -47,7 +47,7 @@ int32_t LinuxPerfUtils::task_event_open(int32_t a_CPU) {
 
     if (fd == -1)
     {
-        PRINT("perf_event_open error: %d\n", errno);
+        PRINT("perf_event_open error: %s\n", strerror(errno));
     }
 
     return fd;
@@ -65,7 +65,7 @@ int32_t LinuxPerfUtils::context_switch_open(pid_t a_PID, int32_t a_CPU)
 
     if (fd == -1)
     {
-        PRINT("perf_event_open error: %d\n", errno);
+        PRINT("perf_event_open error: %s\n", strerror(errno));
     }
 
     return fd;
@@ -89,7 +89,7 @@ int32_t LinuxPerfUtils::tracepoint_event_open(
 
     if (fd == -1)
     {
-        PRINT("perf_event_open error: %d\n", errno);
+        PRINT("perf_event_open error: %s\n", strerror(errno));
     }
 
     return fd;
@@ -131,7 +131,7 @@ int32_t LinuxPerfUtils::uprobe_event_open(
 
     if (fd == -1)
     {
-        PRINT("perf_event_open error: %d\n", errno);
+        PRINT("perf_event_open error: %s\n", strerror(errno));
     }
 
     PRINT_VAR(fd);
@@ -168,7 +168,7 @@ int32_t LinuxPerfUtils::uretprobe_event_open(
 
     if (fd == -1)
     {
-        PRINT("perf_event_open error: %d\n", errno);
+        PRINT("perf_event_open error: %s\n", strerror(errno));
     }
 
     PRINT_VAR(fd);
