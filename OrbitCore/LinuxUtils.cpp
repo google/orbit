@@ -48,10 +48,10 @@
 namespace LinuxUtils {
 
 //-----------------------------------------------------------------------------
-std::vector<std::string> ListModules( uint32_t a_PID )
+std::vector<std::string> ListModules( pid_t a_PID )
 {
     std::vector<std::string> modules;
-    // TODO: we should read the file directly instead or mempry map it.
+    // TODO: we should read the file directly instead or memory map it.
     std::string result = ExecuteCommand( Format("cat /proc/%u/maps", a_PID).c_str() );
 
     std::stringstream ss(result);
@@ -65,19 +65,35 @@ std::vector<std::string> ListModules( uint32_t a_PID )
 }
 
 //-----------------------------------------------------------------------------
-std::vector<uint64_t> ListThreads( uint32_t a_PID )
+std::vector<pid_t> ListThreads( pid_t a_PID )
 {
-    std::vector<uint64_t> threads;
+    std::vector<pid_t> threads;
     std::string result = ExecuteCommand( Format("ls /proc/%u/task", a_PID).c_str() );
 
     std::stringstream ss(result);
     std::string line;
     while(std::getline(ss, line,'\n'))
     {
-        threads.push_back(std::stoull(line));
+        threads.push_back(std::stol(line));
     }
 
     return threads;
+}
+
+//-----------------------------------------------------------------------------
+std::string ReadMaps( pid_t a_PID )
+{
+    std::ifstream maps_file{"/proc/" + std::to_string(a_PID) + "/maps"};
+    if (!maps_file) {
+      return "";
+    }
+
+    std::string maps_buffer;
+    std::string maps_line;
+    while (std::getline(maps_file, maps_line)) {
+        maps_buffer.append(maps_line).append("\n");
+    }
+    return maps_buffer;
 }
 
 //-----------------------------------------------------------------------------
@@ -105,7 +121,7 @@ std::string ExecuteCommand( const char* a_Cmd )
 }
 
 //-----------------------------------------------------------------------------
-void ListModules( uint32_t a_PID, std::map< uint64_t, std::shared_ptr<Module> > & o_ModuleMap )
+void ListModules( pid_t a_PID, std::map< uint64_t, std::shared_ptr<Module> > & o_ModuleMap )
 {
     std::map<std::string, std::shared_ptr<Module>> modules;
     std::vector<std::string> result = ListModules( a_PID );
@@ -183,7 +199,7 @@ std::unordered_map<uint32_t, float> GetCpuUtilization()
 }
 
 //-----------------------------------------------------------------------------
-bool Is64Bit( uint32_t a_PID )
+bool Is64Bit( pid_t a_PID )
 {
     std::string result = ExecuteCommand(Format("file -L /proc/%u/exe", a_PID).c_str());
     return Contains(result, "64-bit");
