@@ -40,8 +40,10 @@ void TcpEntity::Stop()
         m_ExitRequested = true;
     }
 
-    m_ConditionVariable.signal();
-    m_SenderThread->join();
+    if (m_SenderThread) {
+        m_ConditionVariable.signal();
+        m_SenderThread->join();
+    }
     
     if( m_TcpSocket && m_TcpSocket->m_Socket )
     {
