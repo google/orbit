@@ -5,6 +5,10 @@
 #include "ProcessUtils.h"
 #include "Log.h"
 #include <memory>
+#include <string>
+#include <algorithm>
+#include <locale>
+#include <iterator>
 
 #ifdef _WIN32
 #include <tlhelp32.h>
@@ -43,6 +47,39 @@ int IsNumeric(const char* ccharptr_CharacterList)
             return 0; // false
     return 1; // true
 }
+
+#ifndef _WIN32
+namespace  {
+std::string PrettifyProcessName(const std::string &processName) {
+  // Idea: processName contains (if not changed by the process) a
+  // null-separated list of arguments, while the first is the path to the
+  // executable as called by the user. We check wether that first string is a
+  // file path. If so, we search for the last forward slash in this string and
+  // copy from there up to the end of the whole string. So we get the
+  // executable name and the arguments.
+
+  auto resultingName = [&]() -> std::string {
+    const auto end = std::find(processName.begin(), processName.end(), '\0');
+
+    const std::string filepath{processName.begin(), end};
+
+    struct stat st{};
+    const auto result = stat(filepath.c_str(), &st);
+
+    if (result == 0) {
+        // We found a file
+        const auto begin = std::find(std::make_reverse_iterator(end),
+                                     processName.rend(), '/');
+        return std::string{begin.base(), processName.end()};
+    }
+    return processName;
+  }();
+
+  std::replace(resultingName.begin(), resultingName.end(), '\0', ' ');
+  return resultingName;
+}
+} // namespace
+#endif
 
 //-----------------------------------------------------------------------------
 bool ProcessUtils::Is64Bit(HANDLE hProcess)
@@ -210,7 +247,7 @@ void ProcessList::Refresh()
                     {
                         process = std::make_shared<Process>();
                         process->m_FullName = processName;
-                        process->m_Name = ws2s(Path::GetFileName(s2ws(process->m_FullName)));
+                        process->m_Name = PrettifyProcessName(processName);
                         process->SetID(pid);
                         m_ProcessesMap[pid] = process;
                     }
