@@ -114,7 +114,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args
 { 
     m_Arguments = a_Args;
 
-    for( std::string arg : a_Args )
+    for( const std::string& arg : a_Args )
     {
         if( Contains( arg, "gamelet:" )  )
         { 
@@ -127,6 +127,11 @@ void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args
             GTcpClient->AddMainThreadCallback(Msg_RemoteModuleDebugInfo, [=](const Message & a_Msg) { GOrbitApp->OnRemoteModuleDebugInfo(a_Msg); });
             ConnectionManager::Get().ConnectToRemote(address);
             m_ProcessesDataView->SetIsRemote(true);
+            SetIsRemote(true);
+        }
+        else if( Contains( arg, "headless" ) )
+        {
+            SetHeadless(true);
         }
         else if( Contains( arg, "preset:" ) )
         {
@@ -439,9 +444,6 @@ bool OrbitApp::Init()
         ++Capture::GCapturePort;
     }
 
-    GTcpServer->AddCallback( Msg_MiniDump, [=](const Message & a_Msg){ GOrbitApp->OnMiniDump(a_Msg); });
-    GTcpServer->Start(Capture::GCapturePort);
-
     GParams.Load();
     GFontSize = GParams.m_FontSize;
     GOrbitApp->LoadFileMapping();
@@ -458,13 +460,18 @@ bool OrbitApp::Init()
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit()
 {
+    if (HasTcpServer()) {
+        GTcpServer->AddCallback( Msg_MiniDump, [=](const Message & a_Msg){ GOrbitApp->OnMiniDump(a_Msg); });
+        GTcpServer->Start(Capture::GCapturePort);
+    }
+
     for (std::string& arg : m_PostInitArguments)
     {
         if (Contains(arg, "systrace:"))
         {
             std::string command = Replace(arg, "systrace:", "");
             auto tokens = Tokenize(command, ",");
-            if (tokens.size())
+            if (!tokens.empty())
             {
                 GoToCapture();
                 LoadSystrace(tokens[0]);
@@ -707,10 +714,12 @@ int OrbitApp::OnExit()
         GOrbitApp->StopCapture();
 
     GParams.Save();
-    delete GOrbitApp;
 	GTimerManager = nullptr;
-    GTcpServer->Stop();
+	if (GOrbitApp->HasTcpServer()) {
+        GTcpServer->Stop();
+    }
     delete GTcpServer;
+    delete GOrbitApp;
     Orbit_ImGui_Shutdown();
     return 0;
 }

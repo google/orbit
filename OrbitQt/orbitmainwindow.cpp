@@ -152,7 +152,6 @@ void OrbitMainWindow::ParseCommandlineArguments()
 
         if( Contains( argStr, "headless" ) )
         {
-            GOrbitApp->SetHeadless(true);
             m_Headless = true;
             this->menuBar()->hide();
         }

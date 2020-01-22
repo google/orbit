@@ -44,9 +44,9 @@ protected:
     void ServerThread();
 
 private:
-    class tcp_server*                                   m_TcpServer;
-    StrCallback                                         m_UiCallback;
-    moodycamel::ConcurrentQueue<std::wstring>           m_UiLockFreeQueue;
+    class tcp_server*                         m_TcpServer = nullptr;
+    StrCallback                               m_UiCallback;
+    moodycamel::ConcurrentQueue<std::wstring> m_UiLockFreeQueue;
     
     Timer    m_StatTimer;
     ULONG64  m_LastNumMessages;

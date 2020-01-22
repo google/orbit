@@ -89,7 +89,7 @@ protected:
 protected:
     TcpService*                m_TcpService;
     TcpSocket*                 m_TcpSocket;
-    std::thread*               m_SenderThread;
+    std::thread*               m_SenderThread = nullptr;
     AutoResetEvent             m_ConditionVariable;
     LockFreeQueue< TcpPacket > m_SendQueue;
     std::atomic<uint32_t>      m_NumQueuedEntries;
