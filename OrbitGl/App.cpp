@@ -446,7 +446,6 @@ bool OrbitApp::Init()
     GFontSize = GParams.m_FontSize;
     GOrbitApp->LoadFileMapping();
     GOrbitApp->LoadSymbolsFile();
-    OrbitVersion::CheckForUpdate();
 
 #if __linux__
     PRINT_VAR(LinuxPerfUtils::supports_perf_event_uprobes());
@@ -751,7 +750,6 @@ void OrbitApp::MainTick()
 #ifdef _WIN32
     GOrbitApp->m_Debugger->MainTick();
 #endif
-    GOrbitApp->CheckForUpdate();
 
     ++GOrbitApp->m_NumTicks;
 
@@ -761,16 +759,6 @@ void OrbitApp::MainTick()
         GOrbitApp->m_CaptureWindow->ZoomAll();
         GOrbitApp->NeedsRedraw();
         DoZoom = false;
-    }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::CheckForUpdate()
-{
-    if( !m_HasPromptedForUpdate && OrbitVersion::s_NeedsUpdate )
-    {
-        SendToUiNow( L"Update" );
-        m_HasPromptedForUpdate = true;
     }
 }
 

@@ -35,7 +35,6 @@ public:
     void CheckLicense();
     void SetLicense( const std::wstring & a_License );
     std::string GetVersion();
-    void CheckForUpdate();
     void CheckDebugger();
 
     std::wstring GetCaptureFileName();

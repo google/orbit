@@ -186,9 +186,6 @@ endif()
 #GLUT
 find_package(GLUT REQUIRED)
 PrintVars(GLUT)
-if(LINUX)
-find_package(CURL REQUIRED)
-endif()
 
 #imgui
 find_path(IMGUI_INCLUDE_DIR imgui.h) 
@@ -239,7 +236,6 @@ set(ORBIT_DEPENDENCIES
     Qt5::Core
     dbghelp.lib
     ${BREAKPAD_LIB}
-    ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/libcurl.lib;
     ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/imgui.lib;
     ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/zlib.lib;
     ${EXTERN_ROOT}/vcpkg/installed/x64-windows/lib/freetype-gl.lib;
@@ -257,7 +253,6 @@ if(LINUX)
 set(ORBIT_DEPENDENCIES
     OrbitGl
     OrbitCore
-    ${CURL_LIBRARIES}
     ${BREAKPAD_LIB}
     ${IMGUI_LIB}
     ${ZLIB_LIBRARIES}
@@ -289,7 +284,6 @@ add_custom_command(TARGET OrbitQt POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Qt5::Widgets> $<TARGET_FILE_DIR:OrbitQt>
 
     # External
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/libcurl.dll  $<TARGET_FILE_DIR:OrbitQt> 
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/imgui.dll    $<TARGET_FILE_DIR:OrbitQt> 
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/zlib1.dll    $<TARGET_FILE_DIR:OrbitQt> 
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERN_ROOT}/vcpkg/installed/x64-windows/bin/bz2.dll      $<TARGET_FILE_DIR:OrbitQt> 
