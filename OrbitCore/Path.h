@@ -37,6 +37,7 @@ public:
     static void Dump();
 
     static std::wstring GetFileName( const std::wstring & a_FullName );
+    static std::string GetFileName( const std::string & a_FullName );
     static std::wstring GetFileNameNoExt( const std::wstring & a_FullName );
     static std::wstring StripExtension( const std::wstring & a_FullName );
     static std::wstring GetExtension( const std::wstring & a_FullName );

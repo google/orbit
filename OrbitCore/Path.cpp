@@ -230,6 +230,21 @@ std::wstring Path::GetFileName( const std::wstring & a_FullName )
 }
 
 //-----------------------------------------------------------------------------
+std::string Path::GetFileName( const std::string & a_FullName )
+{
+    std::string FullName = a_FullName;
+    std::replace( FullName.begin(), FullName.end(), '\\', '/' );
+    auto index = FullName.find_last_of( "/" );
+    if( index != std::wstring::npos )
+    {
+        std::string FileName = FullName.substr( FullName.find_last_of( "/" ) + 1 );
+        return FileName;
+    }
+    
+    return a_FullName;
+}
+
+//-----------------------------------------------------------------------------
 std::wstring Path::GetFileNameNoExt( const std::wstring & a_FullName )
 {
     return StripExtension( GetFileName( a_FullName ) );
