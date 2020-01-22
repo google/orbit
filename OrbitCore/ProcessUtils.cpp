@@ -199,7 +199,8 @@ void ProcessList::Refresh()
                     std::stringstream buffer;
                     buffer << inFile.rdbuf();
                     inFile.close();
-                    const std::string& processName = buffer.str();
+                    std::string processName = buffer.str();
+                    std::replace(processName.begin(), processName.end(), '\0', ' ');
 
                     if( processName.empty() )
                         continue;
@@ -210,7 +211,8 @@ void ProcessList::Refresh()
                     {
                         process = std::make_shared<Process>();
                         process->m_FullName = processName;
-                        process->m_Name = ws2s(Path::GetFileName(s2ws(process->m_FullName)));
+                        auto tokens = Tokenize(processName);
+                        process->m_Name = !tokens.empty() ? Path::GetFileName(tokens[0]) : processName;
                         process->SetID(pid);
                         m_ProcessesMap[pid] = process;
                     }
