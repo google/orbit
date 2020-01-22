@@ -98,6 +98,19 @@ void ProcessList::Clear()
 }
 
 //-----------------------------------------------------------------------------
+static std::string FileToString(const std::string &a_FileName)
+{
+    std::stringstream buffer;
+    std::ifstream inFile(a_FileName);
+    if (!inFile.fail())
+    {
+        buffer << inFile.rdbuf();
+        inFile.close();
+    }
+    return buffer.str();
+}
+
+//-----------------------------------------------------------------------------
 void ProcessList::Refresh()
 {
 #ifdef _WIN32
@@ -191,38 +204,26 @@ void ProcessList::Refresh()
             if (IsNumeric(de_DirEntity->d_name))
             {
                 int pid = atoi(de_DirEntity->d_name);
-                std::string commandLinePath = Format("%s%s/cmdline",PROC_DIRECTORY, de_DirEntity->d_name);
-
-                std::ifstream inFile(commandLinePath);
-                if(!inFile.fail())
+                auto iter = m_ProcessesMap.find(pid);
+                std::shared_ptr<Process> process = nullptr;
+                if( iter == m_ProcessesMap.end() )
                 {
-                    std::stringstream buffer;
-                    buffer << inFile.rdbuf();
-                    inFile.close();
-                    std::string processName = buffer.str();
-                    std::replace(processName.begin(), processName.end(), '\0', ' ');
-
-                    if( processName.empty() )
-                        continue;
-                        
-                    auto iter = m_ProcessesMap.find(pid);
-                    std::shared_ptr<Process> process = nullptr;
-                    if( iter == m_ProcessesMap.end() )
-                    {
-                        process = std::make_shared<Process>();
-                        process->m_FullName = processName;
-                        auto tokens = Tokenize(processName);
-                        process->m_Name = !tokens.empty() ? Path::GetFileName(tokens[0]) : processName;
-                        process->SetID(pid);
-                        m_ProcessesMap[pid] = process;
-                    }
-                    else
-                    {
-                        process = iter->second;
-                    }
-
-                    m_Processes.push_back(process);
+                    process = std::make_shared<Process>();
+                    std::string dir = Format("%s%s/",PROC_DIRECTORY, de_DirEntity->d_name);
+                    std::string comm = FileToString(dir + "comm");
+                    std::string cmdline = FileToString(dir + "cmdline");
+                    process->m_Name = RTrim(comm);
+                    std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
+                    process->m_FullName = cmdline;
+                    process->SetID(pid);
+                    m_ProcessesMap[pid] = process;
                 }
+                else
+                {
+                    process = iter->second;
+                }
+
+                m_Processes.push_back(process);
             }
         }
     }
