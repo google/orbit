@@ -7,7 +7,7 @@
 #include "vertex-buffer.h"
 #include "shader.h"
 
-#include "OrbitCore/Core.h"
+#include "Core.h"
 #include "GlUtils.h"
 #include "App.h"
 #include "Params.h"

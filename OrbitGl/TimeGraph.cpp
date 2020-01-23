@@ -21,7 +21,7 @@
 #include "OrbitUnreal.h"
 #include "TimerManager.h"
 #include "ThreadTrack.h"
-#include "OrbitCore/Systrace.h"
+#include "Systrace.h"
 #include <algorithm>
 
 #ifdef _WIN32
