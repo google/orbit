@@ -25,7 +25,8 @@ target_sources(
           processlauncherwidget.h
           resource.h
           showincludesdialog.h
-          GgpInstance.h)
+          GgpInstance.h
+          GgpInstanceItemModel.h)
 
 target_sources(
   OrbitQt
@@ -48,7 +49,8 @@ target_sources(
           outputdialog.cpp
           processlauncherwidget.cpp
           showincludesdialog.cpp
-          GgpInstance.cpp)
+          GgpInstance.cpp
+          GgpInstanceItemModel.cpp)
 
 target_sources(
   OrbitQt
@@ -108,11 +110,14 @@ target_sources(
   OrbitQtTests
   PRIVATE GgpInstanceTests.cpp
           GgpInstance.cpp
+          GgpInstanceItemModelTests.cpp
+          GgpInstanceItemModel.cpp
 )
 
 target_link_libraries(
   OrbitQtTests
-  PRIVATE GTest::Main
+  PRIVATE OrbitBase
+          GTest::Main
           Qt5::Core
           Qt5::Widgets
 )
