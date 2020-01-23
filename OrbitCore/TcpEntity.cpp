@@ -42,7 +42,10 @@ void TcpEntity::Stop()
     }
 
     m_ConditionVariable.signal();
-    m_SenderThread->join();
+    if (m_SenderThread != nullptr)
+    {
+        m_SenderThread->join();
+    }
     
     if( m_TcpSocket && m_TcpSocket->m_Socket )
     {
