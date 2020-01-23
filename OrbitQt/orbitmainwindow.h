@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "../OrbitGl/DataViewTypes.h"
+#include "ggpclient.h"
 
 namespace Ui { class OrbitMainWindow; }
 
@@ -81,6 +82,8 @@ private slots:
 
     void on_actionRule_Editor_triggered();
 
+    void on_actionConnectToStadiaInstance_triggered();
+
 private:
     void StartMainTimer();
     void GetLicense();
@@ -111,5 +114,7 @@ private:
     class OutputDialog* m_OutputDialog;
     std::string         m_CurrentPdbName;
     bool                m_IsDev;
+
+    std::optional<GgpClient> ggpClient;
 };
 

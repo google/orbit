@@ -266,6 +266,8 @@
     <addaction name="actionLaunch_Process"/>
     <addaction name="actionDisconnect"/>
     <addaction name="separator"/>
+    <addaction name="actionConnectToStadiaInstance"/>
+    <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -335,6 +337,11 @@
   <action name="actionStop_Capture">
    <property name="text">
     <string>Stop Capture</string>
+   </property>
+  </action>
+  <action name="actionConnectToStadiaInstance">
+   <property name="text">
+    <string>Connect To Stadia Instance</string>
    </property>
   </action>
   <action name="actionQuit">

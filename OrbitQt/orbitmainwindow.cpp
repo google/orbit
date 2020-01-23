@@ -3,6 +3,14 @@
 //-----------------------------------
 
 #include "orbitmainwindow.h"
+#include <QApplication>
+#include <QDialogButtonBox>
+#include <QItemSelectionModel>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QTableView>
+#include "ggpinstance.h"
+#include "ggpinstanceitemmodel.h"
 #include "orbitsamplingreport.h"
 #include "licensedialog.h"
 #include "outputdialog.h"
@@ -18,6 +26,9 @@
 #include <QMouseEvent>
 #include <QToolTip>
 #include <QClipboard>
+#include <QDebug>
+#include <QStyle>
+#include <optional>
 
 #include "../OrbitGl/SamplingReport.h"
 #include "../OrbitGl/App.h"
@@ -688,4 +699,102 @@ void OrbitMainWindow::on_actionOutputDebugString_triggered(bool checked)
 void OrbitMainWindow::on_actionRule_Editor_triggered()
 {    
     m_RuleEditor->show();
+}
+
+
+void OrbitMainWindow::on_actionConnectToStadiaInstance_triggered() {
+
+    if (!ggpClient) {
+        auto client = GgpClient::Instantiate();
+
+        if (!client) {
+            QMessageBox::critical(this, QApplication::applicationDisplayName(),
+            QString("Orbit was unable to communicate with the GGP command line "
+                    "tool. The error message was: %1")
+                    .arg(client.GetError()));
+            return;
+        }
+
+        ggpClient.emplace(std::move(*client));
+    }
+
+    const auto raiseRetrieveError = [&](const QString& errorMessage) {
+        QMessageBox::critical(this, QApplication::applicationDisplayName(),
+        QString("Orbit was unable to retrieve the list of available Stadia "
+                "Instances. The error message was: %1")
+                .arg(errorMessage));
+    };
+
+    auto firstSetOfInstances = ggpClient->SyncGetInstances();
+    if (!firstSetOfInstances) {
+        raiseRetrieveError(firstSetOfInstances.GetError());
+        return;
+    }
+
+    GgpInstanceItemModel model{std::move(*firstSetOfInstances)};
+
+    QDialog dialog{this, Qt::Dialog};
+    dialog.setSizeGripEnabled(true);
+    dialog.setMinimumSize(QSize{700, 400});
+    dialog.setWindowModality(Qt::ApplicationModal);
+    QGridLayout layout{&dialog};
+
+    QTableView view{};
+    view.setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+    view.setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+    view.setModel(&model);
+    layout.addWidget(&view, 0, 0);
+
+    QPushButton refreshButton{&dialog};
+    refreshButton.setIcon(
+        QApplication::style()->standardIcon(QStyle::SP_BrowserReload)
+    );
+    layout.addWidget(&refreshButton, 0, 1, Qt::AlignTop);
+    QObject::connect(&refreshButton, &QPushButton::clicked, &dialog, [&](){
+        if (ggpClient->GetRequestsRunning() > 0) return;
+
+        ggpClient->AsyncGetInstances([&](auto instances){
+            if (!instances) {
+                raiseRetrieveError(instances.GetError());
+            } else {
+                model.setInstances(std::move(*instances));
+            }
+        });
+    });
+
+    QDialogButtonBox buttonBox{QDialogButtonBox::StandardButton::Ok |
+        QDialogButtonBox::StandardButton::Cancel};
+    QObject::connect(&buttonBox, &QDialogButtonBox::accepted,
+                     &dialog, &QDialog::accept);
+    QObject::connect(&buttonBox, &QDialogButtonBox::rejected,
+                     &dialog, &QDialog::reject);
+    layout.addWidget(&buttonBox, 1, 0);
+
+    std::optional<GgpInstance> chosenInstance;
+    QObject::connect(view.selectionModel(),
+                     &QItemSelectionModel::currentChanged,
+                     &dialog,
+                     [&](const QModelIndex& current, const QModelIndex&) {
+                         if (!current.isValid()) {
+                            chosenInstance = std::nullopt;
+                            return;
+                         }
+
+                         assert(current.model() == &model);
+                         chosenInstance = current.data(Qt::UserRole)
+                            .value<GgpInstance>();
+                     });
+
+    view.selectionModel()->setCurrentIndex(model.index(0,0),
+        QItemSelectionModel::SelectionFlag::SelectCurrent |
+        QItemSelectionModel::SelectionFlag::Rows);
+
+    QObject::connect(&view, &QTableView::doubleClicked,
+                     &dialog, &QDialog::accept);
+
+    if (dialog.exec() == QDialog::Accepted && chosenInstance.has_value()) {
+        GOrbitApp->ConnectToStadiaInstance(
+            QString("%1:44766").arg(chosenInstance->ipAddress)
+            .toStdString());
+    }
 }

@@ -166,6 +166,8 @@ public:
     RuleEditor* GetRuleEditor() { return m_RuleEditor; }
     virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >* GetRules();
 
+    void ConnectToStadiaInstance(const std::string& hostAndPort);
+
 private:
     std::vector< std::string >            m_Arguments;
     std::vector< RefreshCallback >        m_RefreshCallbacks;

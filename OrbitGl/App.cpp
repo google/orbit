@@ -119,14 +119,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector< std::string > & a_Args
         if( Contains( arg, "gamelet:" )  )
         { 
             std::string address = Replace(arg, "gamelet:", "");
-            Capture::GCaptureHost = s2ws(address);
-
-            GTcpClient = std::make_unique<TcpClient>();
-            GTcpClient->AddMainThreadCallback(Msg_RemoteProcess, [=](const Message & a_Msg) { GOrbitApp->OnRemoteProcess(a_Msg); });
-            GTcpClient->AddMainThreadCallback(Msg_RemoteProcessList, [=](const Message & a_Msg) { GOrbitApp->OnRemoteProcessList(a_Msg); });
-            GTcpClient->AddMainThreadCallback(Msg_RemoteModuleDebugInfo, [=](const Message & a_Msg) { GOrbitApp->OnRemoteModuleDebugInfo(a_Msg); });
-            ConnectionManager::Get().ConnectToRemote(address);
-            m_ProcessesDataView->SetIsRemote(true);
+            ConnectToStadiaInstance(address);
         }
         else if( Contains( arg, "preset:" ) )
         {
@@ -1430,4 +1423,15 @@ void OrbitApp::LaunchRuleEditor( Function * a_Function )
 {
     m_RuleEditor->m_Window.Launch( a_Function );
     SendToUiNow(TEXT("RuleEditor"));
+}
+
+void OrbitApp::ConnectToStadiaInstance(const std::string &hostAndPort) {
+    Capture::GCaptureHost = s2ws(hostAndPort);
+
+    GTcpClient = std::make_unique<TcpClient>();
+    GTcpClient->AddMainThreadCallback(Msg_RemoteProcess, [=](const Message & a_Msg) { GOrbitApp->OnRemoteProcess(a_Msg); });
+    GTcpClient->AddMainThreadCallback(Msg_RemoteProcessList, [=](const Message & a_Msg) { GOrbitApp->OnRemoteProcessList(a_Msg); });
+    GTcpClient->AddMainThreadCallback(Msg_RemoteModuleDebugInfo, [=](const Message & a_Msg) { GOrbitApp->OnRemoteModuleDebugInfo(a_Msg); });
+    ConnectionManager::Get().ConnectToRemote(hostAndPort);
+    m_ProcessesDataView->SetIsRemote(true);
 }
