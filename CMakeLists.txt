@@ -12,6 +12,8 @@ cmake_minimum_required(VERSION 3.6)
 
 cmake_minimum_required(VERSION 3.6)
 
+enable_testing()
+
 # Orbit directories
 set(ORBIT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 set(EXTERN_ROOT "${ORBIT_ROOT}/external")

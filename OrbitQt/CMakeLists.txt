@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.8)
 
 # Orbit directories
 set(ORBIT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
@@ -58,9 +58,9 @@ list(APPEND CMAKE_PREFIX_PATH ${QTDIR})
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${QTDIR}")
 endif()
 
-find_package(Qt5 CONFIG REQUIRED 
-	HINTS "${QTDIR}" 
-	COMPONENTS Widgets Core
+find_package(Qt5 CONFIG REQUIRED
+       HINTS "${QTDIR}"
+       COMPONENTS Widgets Core Network
 )
 
 set(CMAKE_AUTOMOC ON)
@@ -87,7 +87,9 @@ set(HEADERS
     processlauncherwidget.h
     resource.h
     showincludesdialog.h
-)
+    ggpclient.h
+    ggpinstance.h
+    ggpinstanceitemmodel.h)
 set(SOURCES
     licensedialog.cpp
     main.cpp
@@ -108,7 +110,9 @@ set(SOURCES
     outputdialog.cpp
     processlauncherwidget.cpp
     showincludesdialog.cpp
-)
+    ggpclient.cpp
+    ggpinstance.cpp
+    ggpinstanceitemmodel.cpp)
 
 source_group("Header Files" FILES ${HEADERS})
 source_group("Source Files" FILES ${SOURCES})
@@ -318,3 +322,30 @@ add_custom_command(TARGET OrbitQt POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ORBIT_ROOT}/OrbitQt/orbit.ico"                           $<TARGET_FILE_DIR:OrbitQt>
 )
 endif()
+
+target_compile_features(OrbitQt PUBLIC cxx_std_17)
+
+add_executable(ggpclient_test)
+target_sources(ggpclient_test PRIVATE ggpclient_test.cpp ggpclient.cpp
+                                      ggpinstance.cpp)
+target_link_libraries(ggpclient_test PUBLIC Qt5::Core Qt5::Network)
+target_compile_features(ggpclient_test PUBLIC cxx_std_17)
+
+add_executable(ggpinstanceitemmodel_test)
+target_sources(
+  ggpinstanceitemmodel_test PRIVATE ggpinstanceitemmodel_test.cpp
+                                    ggpinstanceitemmodel.cpp ggpinstance.cpp)
+target_link_libraries(ggpinstanceitemmodel_test PUBLIC Qt5::Core Qt5::Network)
+target_compile_features(ggpinstanceitemmodel_test PUBLIC cxx_std_17)
+
+add_executable(ggpinstanceitemmodel_demo)
+target_sources(
+  ggpinstanceitemmodel_demo
+  PRIVATE ggpinstanceitemmodel_demo.cpp ggpinstanceitemmodel.cpp
+          ggpinstance.cpp ggpclient.cpp)
+target_link_libraries(ggpinstanceitemmodel_demo PUBLIC Qt5::Core Qt5::Network
+                                                       Qt5::Widgets)
+target_compile_features(ggpinstanceitemmodel_demo PUBLIC cxx_std_17)
+
+add_test(NAME ggpclient_test COMMAND ggpclient_test)
+add_test(NAME ggpinstanceitemmodel_test COMMAND ggpinstanceitemmodel_test)
