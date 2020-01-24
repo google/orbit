@@ -13,16 +13,15 @@
 #include <string>
 
 //-----------------------------------------------------------------------------
-class LinuxCallstackEvent
-{
-public:
-    std::string m_header = "";
-    uint64_t m_time = 0;
-    uint64_t m_numCallstacks = 0;
+class LinuxCallstackEvent {
+ public:
+  std::string m_header = "";
+  uint64_t m_time = 0;
+  uint64_t m_numCallstacks = 0;
 
-    CallStack m_CS;
+  CallStack m_CS;
 
-    void Clear();
+  void Clear();
 
-    ORBIT_SERIALIZABLE;
+  ORBIT_SERIALIZABLE;
 };

@@ -7,20 +7,19 @@
 
 //-----------------------------------------------------------------------------
 #pragma pack(push, 1)
-struct ContextSwitch
-{
-public:
-    enum SwitchType { In, Out, Invalid };
-    ContextSwitch( SwitchType a_Type = Invalid );
-    ~ContextSwitch();
+struct ContextSwitch {
+ public:
+  enum SwitchType { In, Out, Invalid };
+  ContextSwitch(SwitchType a_Type = Invalid);
+  ~ContextSwitch();
 
-    uint32_t    m_ThreadId;
-    SwitchType  m_Type;
-    uint64_t    m_Time;
-    uint16_t    m_ProcessorIndex;
-    uint8_t     m_ProcessorNumber;
+  uint32_t m_ThreadId;
+  SwitchType m_Type;
+  uint64_t m_Time;
+  uint16_t m_ProcessorIndex;
+  uint8_t m_ProcessorNumber;
 
-    ORBIT_SERIALIZABLE;
+  ORBIT_SERIALIZABLE;
 };
 #pragma pack(pop)
 // static_assert(sizeof(ContextSwitch) == 19);

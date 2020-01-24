@@ -8,18 +8,17 @@ namespace Ui {
 class OrbitDisassemblyDialog;
 }
 
-class OrbitDisassemblyDialog : public QDialog
-{
-    Q_OBJECT
+class OrbitDisassemblyDialog : public QDialog {
+  Q_OBJECT
 
-public:
-    explicit OrbitDisassemblyDialog(QWidget *parent = 0);
-    ~OrbitDisassemblyDialog();
+ public:
+  explicit OrbitDisassemblyDialog(QWidget *parent = 0);
+  ~OrbitDisassemblyDialog();
 
-    void SetText( const std::wstring & a_Text );
+  void SetText(const std::wstring &a_Text);
 
-private:
-    Ui::OrbitDisassemblyDialog *ui;
+ private:
+  Ui::OrbitDisassemblyDialog *ui;
 };
 
-#endif // ORBITDISASSEMBLYDIALOG_H
+#endif  // ORBITDISASSEMBLYDIALOG_H

@@ -51,8 +51,8 @@
 #ifndef CODEEDITOR_H
 #define CODEEDITOR_H
 
-#include <QPlainTextEdit>
 #include <QObject>
+#include <QPlainTextEdit>
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
 
@@ -70,117 +70,112 @@ class LineNumberArea;
 
 //![codeeditordefinition]
 
-class OrbitCodeEditor : public QPlainTextEdit
-{
-    Q_OBJECT
+class OrbitCodeEditor : public QPlainTextEdit {
+  Q_OBJECT
 
-public:
-    OrbitCodeEditor(QWidget *parent = 0);
+ public:
+  OrbitCodeEditor(QWidget *parent = 0);
 
-    void lineNumberAreaPaintEvent(QPaintEvent *event);
-    int lineNumberAreaWidth();
-    bool loadCode( std::string a_Msg );
-    void loadFileMap();
-    void saveFileMap();
-    void gotoLine( int a_Line );
-    void OnTimer();
-    void SetText( const std::wstring & a_Text );
-    void HighlightWord( const std::wstring & a_Text, const QColor & a_Color, QList<QTextEdit::ExtraSelection>& extraSelections );
-    
-    static void setFileMappingWidget( QWidget* a_Widget ){ GFileMapWidget = a_Widget; }
+  void lineNumberAreaPaintEvent(QPaintEvent *event);
+  int lineNumberAreaWidth();
+  bool loadCode(std::string a_Msg);
+  void loadFileMap();
+  void saveFileMap();
+  void gotoLine(int a_Line);
+  void OnTimer();
+  void SetText(const std::wstring &a_Text);
+  void HighlightWord(const std::wstring &a_Text, const QColor &a_Color,
+                     QList<QTextEdit::ExtraSelection> &extraSelections);
 
-	enum EditorType
-	{
-		CODE_VIEW,
-		FILE_MAPPING
-	};
+  static void setFileMappingWidget(QWidget *a_Widget) {
+    GFileMapWidget = a_Widget;
+  }
 
-	void SetEditorType(EditorType a_Type);
-    void SetFindLineEdit( class QLineEdit* a_Find );
-    void SetSaveButton( class QPushButton* a_Button );
-    void SetIsOutputWindow() { m_IsOutput = true; }
+  enum EditorType { CODE_VIEW, FILE_MAPPING };
 
-protected:
-    void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent *e) override;
-    bool eventFilter( QObject *object, QEvent *event ) override;
-    void Find( const QString & a_String, bool a_BackWards = false );
+  void SetEditorType(EditorType a_Type);
+  void SetFindLineEdit(class QLineEdit *a_Find);
+  void SetSaveButton(class QPushButton *a_Button);
+  void SetIsOutputWindow() { m_IsOutput = true; }
 
-private slots:
-    void updateLineNumberAreaWidth(int newBlockCount);
-    void highlightCurrentLine();
-    void updateLineNumberArea(const QRect &, int);
-    void OnFindTextEntered(const QString &);
-    void OnSaveMapFile();
+ protected:
+  void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
+  void keyPressEvent(QKeyEvent *e) override;
+  bool eventFilter(QObject *object, QEvent *event) override;
+  void Find(const QString &a_String, bool a_BackWards = false);
 
-private:
-    QWidget*            lineNumberArea;
-    class Highlighter*  highlighter;
-    class QLineEdit*    m_FindLineEdit;
-    class QPushButton*  m_SaveButton;
-	EditorType          m_Type;
-    bool                m_IsOutput;
+ private slots:
+  void updateLineNumberAreaWidth(int newBlockCount);
+  void highlightCurrentLine();
+  void updateLineNumberArea(const QRect &, int);
+  void OnFindTextEntered(const QString &);
+  void OnSaveMapFile();
 
-    static OrbitCodeEditor* GFileMapEditor;
-    static QWidget* GFileMapWidget;
+ private:
+  QWidget *lineNumberArea;
+  class Highlighter *highlighter;
+  class QLineEdit *m_FindLineEdit;
+  class QPushButton *m_SaveButton;
+  EditorType m_Type;
+  bool m_IsOutput;
 
-    static const int HISTORY_SIZE = 2;
-    RingBuffer<std::wstring, HISTORY_SIZE> m_SelectedText;
-    QColor                                 m_SelectedColors[HISTORY_SIZE];
+  static OrbitCodeEditor *GFileMapEditor;
+  static QWidget *GFileMapWidget;
+
+  static const int HISTORY_SIZE = 2;
+  RingBuffer<std::wstring, HISTORY_SIZE> m_SelectedText;
+  QColor m_SelectedColors[HISTORY_SIZE];
 };
 
 //![codeeditordefinition]
 //![extraarea]
 
-class LineNumberArea : public QWidget
-{
-public:
-    LineNumberArea(OrbitCodeEditor *editor) : QWidget(editor) {
-        codeEditor = editor;
-    }
+class LineNumberArea : public QWidget {
+ public:
+  LineNumberArea(OrbitCodeEditor *editor) : QWidget(editor) {
+    codeEditor = editor;
+  }
 
-    QSize sizeHint() const Q_DECL_OVERRIDE {
-        return QSize(codeEditor->lineNumberAreaWidth(), 0);
-    }
+  QSize sizeHint() const Q_DECL_OVERRIDE {
+    return QSize(codeEditor->lineNumberAreaWidth(), 0);
+  }
 
-protected:
-    void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE {
-        codeEditor->lineNumberAreaPaintEvent(event);
-    }
+ protected:
+  void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE {
+    codeEditor->lineNumberAreaPaintEvent(event);
+  }
 
-private:
-    OrbitCodeEditor *codeEditor;
+ private:
+  OrbitCodeEditor *codeEditor;
 };
 
 //! [0]
-class Highlighter : public QSyntaxHighlighter
-{
-    Q_OBJECT
+class Highlighter : public QSyntaxHighlighter {
+  Q_OBJECT
 
-public:
-    Highlighter( QTextDocument *parent = 0 );
+ public:
+  Highlighter(QTextDocument *parent = 0);
 
-protected:
-    void highlightBlock( const QString &text ) Q_DECL_OVERRIDE;
+ protected:
+  void highlightBlock(const QString &text) Q_DECL_OVERRIDE;
 
-private:
-    struct HighlightingRule
-    {
-        QRegExp pattern;
-        QTextCharFormat format;
-    };
-    QVector<HighlightingRule> highlightingRules;
+ private:
+  struct HighlightingRule {
+    QRegExp pattern;
+    QTextCharFormat format;
+  };
+  QVector<HighlightingRule> highlightingRules;
 
-    QRegExp commentStartExpression;
-    QRegExp commentEndExpression;
+  QRegExp commentStartExpression;
+  QRegExp commentEndExpression;
 
-    QTextCharFormat keywordFormat;
-    QTextCharFormat classFormat;
-    QTextCharFormat singleLineCommentFormat;
-    QTextCharFormat multiLineCommentFormat;
-    QTextCharFormat quotationFormat;
-    QTextCharFormat functionFormat;
-    QTextCharFormat hexFormat;
+  QTextCharFormat keywordFormat;
+  QTextCharFormat classFormat;
+  QTextCharFormat singleLineCommentFormat;
+  QTextCharFormat multiLineCommentFormat;
+  QTextCharFormat quotationFormat;
+  QTextCharFormat functionFormat;
+  QTextCharFormat hexFormat;
 };
 
 #endif

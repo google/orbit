@@ -3,11 +3,12 @@
 //-----------------------------------
 #pragma once
 
-#include "CallstackTypes.h"
 #include <memory>
 #include <unordered_map>
+#include "CallstackTypes.h"
 
 class ThreadTrack;
 
 //-----------------------------------------------------------------------------
-typedef std::unordered_map< ThreadID, std::shared_ptr<ThreadTrack> > ThreadTrackMap;
+typedef std::unordered_map<ThreadID, std::shared_ptr<ThreadTrack> >
+    ThreadTrackMap;

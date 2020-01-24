@@ -1,13 +1,12 @@
 #pragma once
 #include <vector>
-class OrbitService
-{
-public:
-    OrbitService();
-    ~OrbitService();
+class OrbitService {
+ public:
+  OrbitService();
+  ~OrbitService();
 
-    void Run();
+  void Run();
 
-private:
-    bool m_ExitRequested = false;
+ private:
+  bool m_ExitRequested = false;
 };

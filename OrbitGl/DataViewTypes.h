@@ -4,19 +4,18 @@
 #pragma once
 
 //-----------------------------------------------------------------------------
-enum DataViewType
-{
-    FUNCTIONS,
-    LIVEFUNCTIONS,
-    CALLSTACK,
-    TYPES,
-    GLOBALS,
-    PROCESSES,
-    MODULES,
-    SAMPLING,
-    PDB,
-    SESSIONS,
-    LOG,
-    ALL,
-    INVALID
+enum DataViewType {
+  FUNCTIONS,
+  LIVEFUNCTIONS,
+  CALLSTACK,
+  TYPES,
+  GLOBALS,
+  PROCESSES,
+  MODULES,
+  SAMPLING,
+  PDB,
+  SESSIONS,
+  LOG,
+  ALL,
+  INVALID
 };

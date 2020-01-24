@@ -5,9 +5,8 @@
 
 #include <string>
 
-class CrashHandler
-{
-public:
-    CrashHandler();
-    static void SendMiniDump();
+class CrashHandler {
+ public:
+  CrashHandler();
+  static void SendMiniDump();
 };

@@ -9,23 +9,23 @@
 #include "SerializationMacros.h"
 
 //-----------------------------------------------------------------------------
-class CaptureSerializer
-{
-public:
-    CaptureSerializer();
-    void Save( const std::wstring a_FileName );
-    void Load( const std::wstring a_FileName );
+class CaptureSerializer {
+ public:
+  CaptureSerializer();
+  void Save(const std::wstring a_FileName);
+  void Load(const std::wstring a_FileName);
 
-    template <class T> void Save( T & a_Archive );
+  template <class T>
+  void Save(T& a_Archive);
 
-    class  TimeGraph*        m_TimeGraph;
-    class  SamplingProfiler* m_SamplingProfiler;
+  class TimeGraph* m_TimeGraph;
+  class SamplingProfiler* m_SamplingProfiler;
 
-    std::string              m_CaptureName;
-    int                      m_Version;
-    int                      m_TimerVersion;
-    int                      m_NumTimers;
-    int                      m_SizeOfTimer;
+  std::string m_CaptureName;
+  int m_Version;
+  int m_TimerVersion;
+  int m_NumTimers;
+  int m_SizeOfTimer;
 
-    ORBIT_SERIALIZABLE;
+  ORBIT_SERIALIZABLE;
 };

@@ -10,16 +10,15 @@
 namespace Orbit {
 
 //-----------------------------------------------------------------------------
-struct Data
-{
-    Data() { memset(this, 0, sizeof(*this)); }
-    uint64_t      m_Time;
-    uint64_t      m_CallstackHash;
-    unsigned long m_ThreadId;
-    int           m_NumBytes;
-    void*         m_Data;
+struct Data {
+  Data() { memset(this, 0, sizeof(*this)); }
+  uint64_t m_Time;
+  uint64_t m_CallstackHash;
+  unsigned long m_ThreadId;
+  int m_NumBytes;
+  void* m_Data;
 };
 
-}
+}  // namespace Orbit
 
 #pragma pack(pop)

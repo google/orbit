@@ -10,25 +10,24 @@ namespace Ui {
 class OrbitDataViewPanel;
 }
 
-class OrbitDataViewPanel : public QWidget
-{
-    Q_OBJECT
+class OrbitDataViewPanel : public QWidget {
+  Q_OBJECT
 
-public:
-    explicit OrbitDataViewPanel(QWidget *parent = 0);
-    ~OrbitDataViewPanel();
+ public:
+  explicit OrbitDataViewPanel(QWidget *parent = 0);
+  ~OrbitDataViewPanel();
 
-    void Initialize(DataViewType a_Type, bool a_MainInstance = true);
-    void Link( OrbitDataViewPanel* a_Panel );
-    void Refresh();
-    void SetDataModel( std::shared_ptr<DataView> a_Model );
-    void SetFilter( QString a_Filter );
-    void Select( int a_Row );
-    class OrbitTreeView* GetTreeView();
+  void Initialize(DataViewType a_Type, bool a_MainInstance = true);
+  void Link(OrbitDataViewPanel *a_Panel);
+  void Refresh();
+  void SetDataModel(std::shared_ptr<DataView> a_Model);
+  void SetFilter(QString a_Filter);
+  void Select(int a_Row);
+  class OrbitTreeView *GetTreeView();
 
-private slots:
-    void on_FilterLineEdit_textEdited(const QString &a_Text);
+ private slots:
+  void on_FilterLineEdit_textEdited(const QString &a_Text);
 
-private:
-    Ui::OrbitDataViewPanel *ui;
+ private:
+  Ui::OrbitDataViewPanel *ui;
 };

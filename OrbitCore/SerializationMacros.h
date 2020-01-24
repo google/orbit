@@ -3,4 +3,6 @@
 //-----------------------------------
 #pragma once
 
-#define ORBIT_SERIALIZABLE template <class Archive> void serialize(Archive & a_Archive, std::uint32_t const a_Version)
+#define ORBIT_SERIALIZABLE \
+  template <class Archive> \
+  void serialize(Archive& a_Archive, std::uint32_t const a_Version)
