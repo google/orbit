@@ -1124,8 +1124,10 @@ void OrbitApp::StartCapture()
 #ifdef WIN32
     Capture::StartCapture();
 #else
-    if( Capture::StartCapture() )
+    if( Capture::StartCapture() && !Capture::IsRemote() )
     {
+        // TODO: Either we remove BpfTrace soon, or we should use it from a
+        //  single code location (the other one is in ConnectionManager.h/.cpp)
         m_BpfTrace = std::make_shared<BpfTrace>();
         m_BpfTrace->Start();
     }

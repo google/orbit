@@ -6,14 +6,15 @@
 // Author: Florian Kuebler
 //-----------------------------------
 
-#include "LinuxUtils.h"
-#include "PrintVar.h"
 #include "LinuxPerfUtils.h"
-#include "ScopeTimer.h"
 
+#include <cerrno>
 #include <linux/perf_event.h>
 #include <linux/version.h>
-#include <sys/errno.h>
+
+#include "LinuxUtils.h"
+#include "PrintVar.h"
+#include "ScopeTimer.h"
 
 //-----------------------------------------------------------------------------
 perf_event_attr LinuxPerfUtils::generic_perf_event_attr()
@@ -28,8 +29,8 @@ perf_event_attr LinuxPerfUtils::generic_perf_event_attr()
 
     // we can set these even if we do not do sampling, as without the flag being
     // set in sample_type, they won't be used anyways.
-    pe.sample_stack_user = STACK_SIZE;
-    pe.sample_regs_user = SAMPLE_REGS_USER;
+    pe.sample_stack_user = SAMPLE_STACK_USER_SIZE;
+    pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
 
     pe.sample_type = SAMPLE_TYPE_FLAGS;
 
@@ -72,20 +73,18 @@ int32_t LinuxPerfUtils::context_switch_open(pid_t a_PID, int32_t a_CPU)
 }
 
 //-----------------------------------------------------------------------------
-int32_t LinuxPerfUtils::tracepoint_event_open(
-    uint64_t a_TracepointID, 
-    pid_t a_PID, 
-    int32_t a_CPU, 
-    uint64_t additonal_sample_type
-)
-{
+int32_t LinuxPerfUtils::stack_sample_event_open(pid_t a_PID,
+                                                uint64_t a_Frequency) {
     perf_event_attr pe = generic_perf_event_attr();
-    pe.type = PERF_TYPE_TRACEPOINT;
-    pe.config = a_TracepointID;
-    pe.sample_type |= PERF_SAMPLE_RAW;
-    pe.sample_type |= additonal_sample_type;
+    pe.type = PERF_TYPE_SOFTWARE;
+    pe.config = PERF_COUNT_SW_CPU_CLOCK;
+    pe.sample_freq = a_Frequency;
+    pe.freq = 1;
+    pe.sample_type |= PERF_SAMPLE_STACK_USER | PERF_SAMPLE_REGS_USER;
+    pe.task = 1;
+    pe.mmap = 1;
 
-    int32_t fd = perf_event_open(&pe, a_PID, a_CPU, -1 /*grpup_fd*/, 0 /*flags*/);
+    int32_t fd = perf_event_open(&pe, a_PID, -1, -1, 0);
 
     if (fd == -1)
     {

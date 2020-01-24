@@ -644,7 +644,7 @@ void BpfTrace::RunPerfEventOpenSingleBuffers(bool* a_ExitRequested)
                         event_buffer.Push(std::make_unique<LinuxUretprobeEvent>(std::move(record)));
                     }
                     break;
-                 case PERF_RECORD_LOST:
+                case PERF_RECORD_LOST:
                     {
                         auto lost = ring_buffer->ConsumeRecord<LinuxPerfLostEvent>(header);
                         PRINT("Lost %u Events\n", lost.Lost());

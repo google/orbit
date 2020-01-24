@@ -70,7 +70,7 @@ void LinuxPerf::Start()
         , m_Callback
         , &m_ExitRequested
         );
-    
+
     m_Thread->detach();
 #endif
 }

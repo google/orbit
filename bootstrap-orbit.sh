@@ -2,11 +2,18 @@
 
 # Install required dependencies
 sudo add-apt-repository universe
+if [ $? -ne 0 ]; then
+  sudo apt-get install -y software-properties-common
+  sudo add-apt-repository universe
+fi
 sudo apt-get update
 sudo apt-get install -y curl build-essential libcurl4-openssl-dev unzip cmake tar
 sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev 
 sudo apt-get install -y libfreetype6-dev freeglut3-dev qt5-default 
 sudo apt-get install -y linux-tools-common
+
+# Load Submodules (vcpkg, libunwindstack)
+git submodule update --init --recursive
 
 # Build vcpkg
 cd external/vcpkg
@@ -15,8 +22,6 @@ if [ -f "vcpkg" ]
 then
     echo "Orbit: found vcpkg"
 else
-    git submodule init
-    git submodule update
     echo "Orbit: compiling vcpkg"
     ./bootstrap-vcpkg.sh
 fi

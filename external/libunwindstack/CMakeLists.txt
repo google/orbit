@@ -7,34 +7,52 @@ set(UNWINDSTACK_ROOT "${ANDROID_CORE_ROOT}/libunwindstack")
 set(ANDROID_BASE_ROOT "${ANDROID_CORE_ROOT}/base")
 set(LZMA_ROOT "${EXTERN_ROOT}/lzma")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unknown-pragmas -Wno-sign-compare")
+# Contains Android's or libunwindstack's files that we want to replace because
+# they cause building issues on gamelets or that would cause too many additional
+# Android dependencies.
+set(OVERRIDES "./overrides")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-sign-compare -DNO_LIBDEXFILE_SUPPORT -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unknown-pragmas -Wno-sign-compare -DNO_LIBDEXFILE_SUPPORT -fPIC")
+project(assembler C ASM)
+set_source_files_properties(ASM_GET_REGS ${UNWINDSTACK_ROOT}/AsmGetRegsX86_64.S PROPERTIES COMPILE_FLAGS "-x assembler-with-cpp")
+SET(CMAKE_ASM_FLAGS "${CFLAGS} -x assembler-with-cpp")
 
 project(unwindstack)
 
 include_directories(
+    ${OVERRIDES}
     ${UNWINDSTACK_ROOT} 
     ${UNWINDSTACK_ROOT}/include
-    ${ANDROID_BASE_ROOT}/include 
+    ${ANDROID_BASE_ROOT}/include
+    ${ANDROID_CORE_ROOT}/demangle/include
     ${ANDROID_CORE_ROOT}/include
     ${ANDROID_CORE_ROOT}/liblog/include
     ${ANDROID_CORE_ROOT}/libprocinfo/include
-    ${ANDROID_CORE_ROOT}/demangle/include
     ${LZMA_ROOT}/lzma/C
 )
 
-# TODO: We might miss sources from "base" or "demangle" when linking
+# Override file.cpp to avoid depending on Android's logging.
+# Override strings.h/.cpp to not use <string_view>, which requires C++17 that gamelets' GCC does not support.
+# Override libunwindstack's files that gamelet's GCC fails to compile.
+# TODO: Until we switch to clang, make sure to update the overrides of libunwindstack's files if the originals are updated.
 set(SOURCES
-    #${ANDROID_BASE_ROOT}/file.cpp
-    #${ANDROID_BASE_ROOT}/logging.cpp
-    #${ANDROID_BASE_ROOT}/stringprintf.cpp
-    #${ANDROID_BASE_ROOT}/strings.cpp
-    #${ANDROID_BASE_ROOT}/threads.cpp
+#    ${ANDROID_BASE_ROOT}/file.cpp
+    ${OVERRIDES}/file.cpp
+#    ${ANDROID_BASE_ROOT}/liblog_symbols.cpp
+#    ${ANDROID_BASE_ROOT}/logging.cpp
+    ${ANDROID_BASE_ROOT}/stringprintf.cpp
+#    ${ANDROID_BASE_ROOT}/strings.cpp
+    ${OVERRIDES}/strings.cpp
+    ${ANDROID_BASE_ROOT}/threads.cpp
+#    ${ANDROID_CORE_ROOT}/liblog/properties.cpp
     ${UNWINDSTACK_ROOT}/ArmExidx.cpp
     ${UNWINDSTACK_ROOT}/DwarfCfa.cpp
     ${UNWINDSTACK_ROOT}/DwarfEhFrameWithHdr.cpp
     ${UNWINDSTACK_ROOT}/DwarfMemory.cpp
     ${UNWINDSTACK_ROOT}/DwarfOp.cpp
-    ${UNWINDSTACK_ROOT}/DwarfSection.cpp
+#    ${UNWINDSTACK_ROOT}/DwarfSection.cpp
+    ${OVERRIDES}/DwarfSection.cpp
     ${UNWINDSTACK_ROOT}/Elf.cpp
     ${UNWINDSTACK_ROOT}/ElfInterface.cpp
     ${UNWINDSTACK_ROOT}/ElfInterfaceArm.cpp
@@ -62,6 +80,5 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64)
 elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES x86)
     SET(ASM_GET_REGS ${UNWINDSTACK_ROOT}/AsmGetRegsX86.S)
 endif()
-
 
 add_library(unwindstack STATIC ${SOURCES} ${ASM_GET_REGS})

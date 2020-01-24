@@ -9,7 +9,7 @@
 #include "LinuxPerfRingBuffer.h"
 #include "LinuxPerfUtils.h"
 
-#include <assert.h>
+#include <cassert>
 #include <linux/perf_event.h>
 #include <sys/mman.h>
 
@@ -65,11 +65,11 @@ LinuxPerfRingBuffer::~LinuxPerfRingBuffer()
 {
     if (m_Metadata != nullptr)
     {
-        // delete the mamory mapping
+        // delete the memory mapping
         int error = munmap(m_Metadata, MMAP_LENGTH);
         if (error == -1)
         {
-            PRINT("mmap error: %d\n", errno);
+            PRINT("mmap error: %d\n", strerror(errno));
         }
     }
 }

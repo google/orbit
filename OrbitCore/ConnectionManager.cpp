@@ -124,6 +124,8 @@ void ConnectionManager::StartCaptureAsRemote()
 {
     PRINT_FUNC;
     Capture::StartCapture();
+    // TODO: Either we remove BpfTrace soon, or we should use it from a single
+    //  code location (the other one is in App.cpp)
     m_BpfTrace->Start();
     GCoreApp->StartRemoteCaptureBufferingThread();
 }

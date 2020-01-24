@@ -7,9 +7,10 @@
 //-----------------------------------
 #pragma once
 
-#include "LinuxPerfUtils.h"
+#include <cassert>
 #include <linux/perf_event.h>
-#include <assert.h>
+
+#include "LinuxPerfUtils.h"
 
 class LinuxPerfRingBuffer
 {
@@ -36,12 +37,12 @@ public:
         // If the sizes are not the same, the memory layout defined in LinuxPerfEvent.h 
         // does not match the one found in the ring buffer.
         assert(
-            sizeof(record.ring_buffer_data) == a_Header.size && 
-            "Incorrect layout of the perf ring buffer data.\nPlease file a bug at https://github.com/pierricgimmig/orbitprofiler.\n"
+            sizeof(record.ring_buffer_data) == a_Header.size &&
+            "Incorrect layout of the perf ring buffer data."
         );
     
         // Copy the data from the ringbuffer into the placeholer in that class.
-        uint8_t* dest = reinterpret_cast<uint8_t*>(&record.ring_buffer_data);
+        auto* dest = reinterpret_cast<uint8_t*>(&record.ring_buffer_data);
         Read(dest, a_Header.size);
 
         SkipRecord(a_Header);

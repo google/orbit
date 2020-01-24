@@ -77,7 +77,7 @@ private:
 #ifdef __linux
 struct EventTracer
 {
-    EventBuffer & GetEventBuffer(){ return m_EventBuffer; }
+    EventBuffer& GetEventBuffer(){ return m_EventBuffer; }
     EventBuffer m_EventBuffer;
     void Start(uint32_t a_PID);
     void Stop();

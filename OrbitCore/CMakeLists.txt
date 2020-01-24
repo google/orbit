@@ -193,24 +193,26 @@ endif()
 
 # Linux
 if(LINUX)
-    set(PLATFORM_HEADERS 
-        BpfTraceVisitor.cpp
-        LinuxUtils.h    
+    set(PLATFORM_HEADERS
+        BpfTraceVisitor.h
+        LibunwindstackUnwinder.h
+        LinuxEventTracer.h
         LinuxPerfEvent.h
         LinuxPerfEventVisitor.h
         LinuxPerfEventProcessor.h
         LinuxPerfRingBuffer.h
         LinuxPerfUtils.h
-        LinuxEventTracer.h
+        LinuxUtils.h
     )
-    set(PLATFORM_SOURCES 
+    set(PLATFORM_SOURCES
         BpfTraceVisitor.cpp
-        LinuxUtils.cpp
+        LibunwindstackUnwinder.cpp
+        LinuxEventTracer.cpp
         LinuxPerfEvent.cpp
+        LinuxPerfEventProcessor.cpp
         LinuxPerfRingBuffer.cpp
         LinuxPerfUtils.cpp
-        LinuxEventTracer.cpp
-        LinuxPerfEventProcessor.cpp
+        LinuxUtils.cpp
     )
 	set(EXTERNAL_SOURCES "")
     set(EXTERNAL_HEADERS
@@ -256,6 +258,10 @@ PUBLIC
     ${EXTERN_ROOT}/minhook/include/
     ${EXTERN_ROOT}/oqpi/include/
     ${EXTERN_ROOT}/DIA2Dump/
+if(LINUX)
+    ${EXTERN_ROOT}/libunwindstack/overrides/
+    ${EXTERN_ROOT}/libunwindstack/android-core/libunwindstack/include/
+endif()
 PRIVATE
     ${BREAKPAD_INCLUDE_DIR}
 )
@@ -268,3 +274,9 @@ target_link_libraries(OrbitCore
     #dbghelp.lib
     #${BREAKPAD_LIBRARIES}
 )
+if(LINUX)
+target_link_libraries(OrbitCore
+    unwindstack
+    lzma
+)
+endif()
