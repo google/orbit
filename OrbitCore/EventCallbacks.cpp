@@ -2,6 +2,11 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+// clang-format off
+#include "Platform.h"
+#include "BaseTypes.h"
+// clang-format on
+
 #include "EventCallbacks.h"
 
 #include "Capture.h"
@@ -13,7 +18,6 @@
 #include "OrbitProcess.h"
 #include "SamplingProfiler.h"
 #include "TimerManager.h"
-#include "evntcons.h"
 
 //-----------------------------------------------------------------------------
 std::unordered_map<ULONG64, EventTracing::EventCallback> GEventCallbacks;

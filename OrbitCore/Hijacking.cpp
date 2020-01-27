@@ -2,7 +2,6 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#include "Hijacking.h"
 
 #include <intrin.h>
 
@@ -23,6 +22,10 @@
 #include "ScopeTimer.h"
 #include "TcpClient.h"
 #include "TimerManager.h"
+
+// clang-format off
+#include "Hijacking.h"
+// clang-format on
 
 const unsigned int MAX_DEPTH = 64;
 

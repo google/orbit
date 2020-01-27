@@ -30,6 +30,10 @@
 #include "showincludesdialog.h"
 #include "ui_orbitmainwindow.h"
 
+#ifdef _WIN32
+#include <shellapi.h>
+#endif
+
 //-----------------------------------------------------------------------------
 OrbitMainWindow* GMainWindow;
 extern QMenu* GContextMenu;

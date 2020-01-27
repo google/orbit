@@ -9,7 +9,6 @@
 
 #include "Capture.h"
 #include "CoreApp.h"
-#include "LinuxUtils.h"
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
 #include "Params.h"
@@ -17,6 +16,7 @@
 #include "Utils.h"
 
 #if __linux__
+#include "LinuxUtils.h"
 #include <linux/perf_event.h>
 #include <linux/version.h>
 

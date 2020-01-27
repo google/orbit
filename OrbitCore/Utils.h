@@ -3,7 +3,6 @@
 //-----------------------------------
 #pragma once
 
-#include <BaseTypes.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -21,6 +20,8 @@
 #include <vector>
 
 #include "Platform.h"
+#include "BaseTypes.h"
+
 
 //-----------------------------------------------------------------------------
 inline std::string ws2s(const std::wstring& wstr) {
@@ -122,10 +123,10 @@ inline std::vector<std::string> Tokenize(std::string a_String,
                                          const char* a_Delimiters = " ") {
   std::vector<std::string> tokens;
   char* next_token;
-  char* token = strtok_r(&a_String[0], a_Delimiters, &next_token);
+  char* token = strtok_s(&a_String[0], a_Delimiters, &next_token);
   while (token != NULL) {
     tokens.push_back(token);
-    token = strtok_r(NULL, a_Delimiters, &next_token);
+    token = strtok_s(NULL, a_Delimiters, &next_token);
   }
 
   return tokens;

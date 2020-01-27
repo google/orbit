@@ -2,6 +2,10 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+// clang-format off
+#include "OrbitAsio.h"
+// clang-format on
+
 #include "TcpClient.h"
 
 #include <thread>

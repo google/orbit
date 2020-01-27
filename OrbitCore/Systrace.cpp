@@ -3,7 +3,6 @@
 #include <fstream>
 
 #include "Capture.h"
-#include "LinuxUtils.h"
 #include "PrintVar.h"
 #include "Profiling.h"
 #include "ScopeTimer.h"

@@ -5,9 +5,11 @@
 #include "Utils.h"
 
 #ifdef _WIN32
+// clang-format off
+#include <cguid.h>
 #include <AtlBase.h>
 #include <atlconv.h>
-#include <cguid.h>
+// clang-format on
 #endif
 
 #include <time.h>

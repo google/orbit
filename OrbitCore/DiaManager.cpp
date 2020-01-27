@@ -11,8 +11,10 @@
 #ifdef _WIN32
 #include <Shellapi.h>
 
-#include "PrintSymbol.h"
+// clang-format off
 #include "dia2dump.h"
+// clang-format on
+#include "PrintSymbol.h"
 #endif
 
 //-----------------------------------------------------------------------------

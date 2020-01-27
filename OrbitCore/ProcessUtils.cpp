@@ -16,6 +16,13 @@
 #include <sys/types.h>  // for opendir(), readdir(), closedir()
 #include <unistd.h>
 
+#define PROC_DIRECTORY "/proc/"
+#define CASE_SENSITIVE 1
+#define CASE_INSENSITIVE 0
+#define EXACT_MATCH 1
+#define INEXACT_MATCH 0
+#endif
+
 #include <cstdarg>
 #include <cstdlib>
 #include <cstring>
@@ -23,12 +30,6 @@
 #include <iostream>
 #include <streambuf>
 
-#define PROC_DIRECTORY "/proc/"
-#define CASE_SENSITIVE 1
-#define CASE_INSENSITIVE 0
-#define EXACT_MATCH 1
-#define INEXACT_MATCH 0
-#endif
 
 // Is64BitProcess function taken from Very Sleepy
 #ifdef _WIN64

@@ -10,6 +10,10 @@
 
 #include "BaseTypes.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 class Timer;
 class LinuxCallstackEvent;
 struct CallStack;

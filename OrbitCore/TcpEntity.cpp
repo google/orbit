@@ -2,11 +2,14 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+// clang-format off
+#include "OrbitAsio.h"
+// clang-format on
+
 #include "TcpEntity.h"
 
 #include "Core.h"
 #include "Log.h"
-#include "OrbitAsio.h"
 #include "Tcp.h"
 
 //-----------------------------------------------------------------------------

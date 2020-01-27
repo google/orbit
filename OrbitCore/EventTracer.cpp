@@ -2,6 +2,11 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+// clang-format off
+#include "Platform.h"
+#include "BaseTypes.h"
+// clang-format on
+
 #include "EventTracer.h"
 
 #include <evntcons.h>
@@ -15,7 +20,6 @@
 #include "EventGuid.h"
 #include "OrbitProcess.h"
 #include "Params.h"
-#include "Platform.h"
 #include "PrintVar.h"
 #include "SamplingProfiler.h"
 #include "Threading.h"

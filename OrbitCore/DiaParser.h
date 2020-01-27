@@ -6,6 +6,7 @@
 #include <string>
 
 #include "BaseTypes.h"
+#include "dia2dump.h"
 
 struct IDiaSymbol;
 struct IDiaSourceFile;

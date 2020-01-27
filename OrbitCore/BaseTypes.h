@@ -3,13 +3,12 @@
 //-----------------------------------
 #pragma once
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <BaseTsd.h>
 #include <tchar.h>
 #include <wtypes.h>
 
 #include <cstdint>
-#define strtok_r strtok_s
 #endif
 
 #ifdef __linux__

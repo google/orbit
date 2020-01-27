@@ -2,16 +2,20 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+// clang-format off
+#include "Platform.h"
+#include "BaseTypes.h"
+// clang-format on
+
 #include "EventUtils.h"
 
 #include <evntrace.h>
+#include <evntcons.h>
 #include <in6addr.h>
 #include <stdio.h>
 #include <tdh.h>
 #include <wbemidl.h>
 #include <wmistr.h>
-
-#include "Platform.h"
 
 #pragma comment(lib, "tdh.lib")
 

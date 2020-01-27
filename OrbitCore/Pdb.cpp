@@ -19,13 +19,15 @@
 #include "OrbitType.h"
 #include "OrbitUnreal.h"
 #include "Params.h"
+// clang-format off
+#include "dia2dump.h"
+// clang-format on
 #include "PrintSymbol.h"
 #include "Serialization.h"
 #include "SymbolUtils.h"
 #include "Tcp.h"
 #include "TcpServer.h"
 #include "Utils.h"
-#include "dia2dump.h"
 
 std::shared_ptr<Pdb> GPdbDbg;
 
