@@ -1,21 +1,5 @@
 project(OrbitQt CXX)
 
-# # Disable incremental linking as it hides the real address of functions. #
-# This is annoying mainly for the OrbitProlog and OrbitEpilog related code.
-# if(WIN32) set( MSVC_INCREMENTAL_YES_FLAG "/INCREMENTAL:NO") set(
-# ORBIT_DEBUG_LINKER_FLAGS "/debug /INCREMENTAL:NO" )
-
-# # debug message("Changing Debug linker flags from
-# '${CMAKE_EXE_LINKER_FLAGS_DEBUG}' to '${ORBIT_DEBUG_LINKER_FLAGS}'")
-# set(CMAKE_EXE_LINKER_FLAGS_DEBUG ${ORBIT_DEBUG_LINKER_FLAGS} )
-# message("CMAKE_EXE_LINKER_FLAGS_DEBUG=${CMAKE_EXE_LINKER_FLAGS_DEBUG}")
-
-# # rewithdebinfo PrintVars(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO)
-# message("Changing RelWithDebInfo linker flags from
-# '${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO}' to '${ORBIT_DEBUG_LINKER_FLAGS}'")
-# set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO ${ORBIT_DEBUG_LINKER_FLAGS} )
-# endif()
-
 add_executable(OrbitQt)
 
 target_sources(

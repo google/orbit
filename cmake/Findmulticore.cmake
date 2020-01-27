@@ -14,7 +14,7 @@ add_library(
   ${DIR}/rwlock.h
   ${DIR}/sema.h)
 
-target_include_directories(multicore PUBLIC ${DIR})
+target_include_directories(multicore SYSTEM PUBLIC ${DIR})
 target_compile_features(multicore PUBLIC cxx_std_11)
 target_link_libraries(multicore PUBLIC Threads::Threads)
 

@@ -3,8 +3,6 @@ project(DIASDK)
 set(MSVC_DIA_SDK_DIR "$ENV{VSINSTALLDIR}DIA SDK" CACHE PATH "Path to the DIA SDK")
 
 if (IS_DIRECTORY ${MSVC_DIA_SDK_DIR})
-    message(STATUS "${MSVC_DIA_SDK_DIR}")
-
     set(DIA_PLATFORM_NAME "")
 
     if(CMAKE_VS_PLATFORM_NAME STREQUAL "x64")
@@ -24,7 +22,7 @@ if(DIASDK_FOUND)
   add_library(DIASDK STATIC IMPORTED GLOBAL)
   set_target_properties(DIASDK PROPERTIES IMPORTED_LOCATION
                                                    ${DIASDK_LIB})
-  target_include_directories(DIASDK INTERFACE ${DIASDK_INC})
+  target_include_directories(DIASDK SYSTEM INTERFACE ${DIASDK_INC})
 
   add_library(DIASDK::DIASDK ALIAS DIASDK)
 endif()

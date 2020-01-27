@@ -12,7 +12,7 @@ if(freetype-gl_FOUND)
   add_library(freetype-gl STATIC IMPORTED GLOBAL)
   set_target_properties(freetype-gl PROPERTIES IMPORTED_LOCATION
                                                ${FREETYPE_GL_LIBRARY})
-  target_include_directories(freetype-gl INTERFACE ${FREETYPE_GL_INCLUDE_DIR})
+  target_include_directories(freetype-gl SYSTEM INTERFACE ${FREETYPE_GL_INCLUDE_DIR})
 
   add_library(freetype-gl::freetype-gl ALIAS freetype-gl)
 endif()

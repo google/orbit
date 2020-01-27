@@ -174,11 +174,12 @@ target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(
   OrbitCore PUBLIC cereal xxHash::xxHash concurrentqueue::concurrentqueue
-                   multicore::multicore libcurl::libcurl oqpi::oqpi )
+                   multicore::multicore libcurl::libcurl oqpi::oqpi)
 
 
 if(WIN32)
   target_link_libraries(OrbitCore PRIVATE minhook::minhook DIA2Dump::DIA2Dump breakpad::breakpad_client)
+  target_link_libraries(OrbitCore PRIVATE dbghelp.lib peparse::peparse)
   target_compile_definitions(OrbitCore PRIVATE -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitCore PRIVATE -DNTDDI_VERSION=0x06030000)
 endif()

@@ -107,4 +107,5 @@ target_link_libraries(
          Freetype::Freetype
          GLEW::glew
          imgui::imgui
-         freeglut::freeglut)
+         freeglut::freeglut
+         capstone::capstone)

@@ -12,7 +12,7 @@ if(libcurl_FOUND)
   add_library(libcurl STATIC IMPORTED GLOBAL)
   set_target_properties(libcurl PROPERTIES IMPORTED_LOCATION
                                                ${LIBCURL_STATIC})
-  target_include_directories(libcurl INTERFACE ${LIBCURL_INCLUDE_DIR})
+  target_include_directories(libcurl SYSTEM INTERFACE ${LIBCURL_INCLUDE_DIR})
 
   add_library(libcurl::libcurl ALIAS libcurl)
 endif()

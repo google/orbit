@@ -13,7 +13,7 @@ target_sources(DIA2Dump PRIVATE
     ${DIR}/PrintSymbol.cpp
     ${DIR}/regs.cpp)
 
-target_include_directories(DIA2Dump PUBLIC ${DIR})
+target_include_directories(DIA2Dump SYSTEM PUBLIC ${DIR})
 target_link_libraries(DIA2Dump PUBLIC DIASDK::DIASDK)
 
 # FIXME: DIA2Dump depends on OrbitCore and OrbitGl, hence

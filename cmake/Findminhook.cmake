@@ -15,6 +15,6 @@ target_sources(
           ${DIR}/src/trampoline.c)
 target_sources(minhook PUBLIC ${DIR}/include/MinHook.h)
 
-target_include_directories(minhook PUBLIC ${DIR}/include)
+target_include_directories(minhook SYSTEM PUBLIC ${DIR}/include)
 
 add_library(minhook::minhook ALIAS minhook)

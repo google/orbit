@@ -12,5 +12,5 @@ endif()
 
 target_link_libraries(OrbitAsm PUBLIC minhook::minhook)
 target_include_directories(OrbitAsm PUBLIC ${CMAKE_CURRENT_LIST_DIR})
-target_compile_options(OrbitAsm PRIVATE "$<IF:$<CONFIG:Debug>,-MD,-MT>")
-#set_target_properties(OrbitAsm PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+target_compile_options(OrbitAsm PRIVATE "$<IF:$<CONFIG:Debug>,/MDd,/MD>")

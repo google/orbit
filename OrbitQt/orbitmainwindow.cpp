@@ -30,6 +30,10 @@
 
 #include "../external/concurrentqueue/concurrentqueue.h"
 
+#ifdef _WIN32
+#  include <shellapi.h>
+#endif
+
 //-----------------------------------------------------------------------------
 OrbitMainWindow* GMainWindow;
 extern QMenu* GContextMenu;
