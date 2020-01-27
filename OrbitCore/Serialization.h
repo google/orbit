@@ -22,10 +22,6 @@
 #include <cereal/archives/portable_binary.hpp>
 #include <cereal/archives/xml.hpp>
 #include <cereal/cereal.hpp>
-#include <cereal/details/helpers.hpp>
-#include <cereal/details/polymorphic_impl.hpp>
-#include <cereal/details/traits.hpp>
-#include <cereal/details/util.hpp>
 #include <cereal/types/array.hpp>
 #include <cereal/types/base_class.hpp>
 #include <cereal/types/bitset.hpp>
