@@ -71,7 +71,8 @@ if(WIN32)
   add_subdirectory(OrbitDll)
   add_subdirectory(OrbitAsm)
 else()
-  # Hack
+  # Hack: Some parts on linux depend on headers in OrbitAsm,
+  # but OrbitAsm is not available for Windows.
   add_library(OrbitAsm INTERFACE)
   target_include_directories(OrbitAsm INTERFACE OrbitAsm/)
 endif()
