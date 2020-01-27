@@ -4,6 +4,7 @@
 #pragma once
 
 #include <string>
+
 #include "Profiling.h"
 
 #define SCOPE_TIMER_LOG(msg) LocalScopeTimer UNIQUE_ID(msg)

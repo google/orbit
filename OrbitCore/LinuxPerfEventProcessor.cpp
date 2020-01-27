@@ -7,6 +7,7 @@
 //-----------------------------------
 
 #include "LinuxPerfEventProcessor.h"
+
 #include <queue>
 
 void LinuxPerfEventProcessor::Push(std::unique_ptr<LinuxPerfEvent> a_Event) {

@@ -3,6 +3,9 @@
 //-----------------------------------
 
 #include "TcpServer.h"
+
+#include <thread>
+
 #include "Callstack.h"
 #include "Capture.h"
 #include "ConnectionManager.h"
@@ -16,8 +19,6 @@
 #include "Tcp.h"
 #include "TimerManager.h"
 #include "VariableTracing.h"
-
-#include <thread>
 
 TcpServer* GTcpServer;
 

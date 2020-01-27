@@ -74,53 +74,53 @@ class OrbitCodeEditor : public QPlainTextEdit {
   Q_OBJECT
 
  public:
-  OrbitCodeEditor(QWidget *parent = 0);
+  OrbitCodeEditor(QWidget* parent = 0);
 
-  void lineNumberAreaPaintEvent(QPaintEvent *event);
+  void lineNumberAreaPaintEvent(QPaintEvent* event);
   int lineNumberAreaWidth();
   bool loadCode(std::string a_Msg);
   void loadFileMap();
   void saveFileMap();
   void gotoLine(int a_Line);
   void OnTimer();
-  void SetText(const std::wstring &a_Text);
-  void HighlightWord(const std::wstring &a_Text, const QColor &a_Color,
-                     QList<QTextEdit::ExtraSelection> &extraSelections);
+  void SetText(const std::wstring& a_Text);
+  void HighlightWord(const std::wstring& a_Text, const QColor& a_Color,
+                     QList<QTextEdit::ExtraSelection>& extraSelections);
 
-  static void setFileMappingWidget(QWidget *a_Widget) {
+  static void setFileMappingWidget(QWidget* a_Widget) {
     GFileMapWidget = a_Widget;
   }
 
   enum EditorType { CODE_VIEW, FILE_MAPPING };
 
   void SetEditorType(EditorType a_Type);
-  void SetFindLineEdit(class QLineEdit *a_Find);
-  void SetSaveButton(class QPushButton *a_Button);
+  void SetFindLineEdit(class QLineEdit* a_Find);
+  void SetSaveButton(class QPushButton* a_Button);
   void SetIsOutputWindow() { m_IsOutput = true; }
 
  protected:
-  void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
-  void keyPressEvent(QKeyEvent *e) override;
-  bool eventFilter(QObject *object, QEvent *event) override;
-  void Find(const QString &a_String, bool a_BackWards = false);
+  void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
+  void keyPressEvent(QKeyEvent* e) override;
+  bool eventFilter(QObject* object, QEvent* event) override;
+  void Find(const QString& a_String, bool a_BackWards = false);
 
  private slots:
   void updateLineNumberAreaWidth(int newBlockCount);
   void highlightCurrentLine();
-  void updateLineNumberArea(const QRect &, int);
-  void OnFindTextEntered(const QString &);
+  void updateLineNumberArea(const QRect&, int);
+  void OnFindTextEntered(const QString&);
   void OnSaveMapFile();
 
  private:
-  QWidget *lineNumberArea;
-  class Highlighter *highlighter;
-  class QLineEdit *m_FindLineEdit;
-  class QPushButton *m_SaveButton;
+  QWidget* lineNumberArea;
+  class Highlighter* highlighter;
+  class QLineEdit* m_FindLineEdit;
+  class QPushButton* m_SaveButton;
   EditorType m_Type;
   bool m_IsOutput;
 
-  static OrbitCodeEditor *GFileMapEditor;
-  static QWidget *GFileMapWidget;
+  static OrbitCodeEditor* GFileMapEditor;
+  static QWidget* GFileMapWidget;
 
   static const int HISTORY_SIZE = 2;
   RingBuffer<std::wstring, HISTORY_SIZE> m_SelectedText;
@@ -132,7 +132,7 @@ class OrbitCodeEditor : public QPlainTextEdit {
 
 class LineNumberArea : public QWidget {
  public:
-  LineNumberArea(OrbitCodeEditor *editor) : QWidget(editor) {
+  LineNumberArea(OrbitCodeEditor* editor) : QWidget(editor) {
     codeEditor = editor;
   }
 
@@ -141,12 +141,12 @@ class LineNumberArea : public QWidget {
   }
 
  protected:
-  void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE {
+  void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE {
     codeEditor->lineNumberAreaPaintEvent(event);
   }
 
  private:
-  OrbitCodeEditor *codeEditor;
+  OrbitCodeEditor* codeEditor;
 };
 
 //! [0]
@@ -154,10 +154,10 @@ class Highlighter : public QSyntaxHighlighter {
   Q_OBJECT
 
  public:
-  Highlighter(QTextDocument *parent = 0);
+  Highlighter(QTextDocument* parent = 0);
 
  protected:
-  void highlightBlock(const QString &text) Q_DECL_OVERRIDE;
+  void highlightBlock(const QString& text) Q_DECL_OVERRIDE;
 
  private:
   struct HighlightingRule {

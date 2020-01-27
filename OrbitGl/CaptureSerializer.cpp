@@ -1,4 +1,8 @@
 #include "CaptureSerializer.h"
+
+#include <fstream>
+#include <memory>
+
 #include "App.h"
 #include "Callstack.h"
 #include "Capture.h"
@@ -13,9 +17,6 @@
 #include "Serialization.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
-
-#include <fstream>
-#include <memory>
 
 //-----------------------------------------------------------------------------
 CaptureSerializer::CaptureSerializer() {

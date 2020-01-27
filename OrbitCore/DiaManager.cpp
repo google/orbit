@@ -3,12 +3,14 @@
 //-----------------------------------
 
 #include "DiaManager.h"
+
 #include "ObjectCount.h"
 #include "Platform.h"
 #include "ScopeTimer.h"
 
 #ifdef _WIN32
 #include <Shellapi.h>
+
 #include "PrintSymbol.h"
 #include "dia2dump.h"
 #endif

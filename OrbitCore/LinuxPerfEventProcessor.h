@@ -7,11 +7,11 @@
 //-----------------------------------
 #pragma once
 
+#include <queue>
+
 #include "LinuxPerfEvent.h"
 #include "LinuxPerfEventVisitor.h"
 #include "PrintVar.h"
-
-#include <queue>
 
 // A comparator used for the priority queue, such that pop/top will
 // always return the oldest event in the queue.

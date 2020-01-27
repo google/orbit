@@ -3,9 +3,11 @@
 //-----------------------------------
 
 #include "SymbolUtils.h"
+
 #include <dia2.h>
 #include <psapi.h>
 #include <tlhelp32.h>
+
 #include "Capture.h"
 #include "OrbitDbgHelp.h"
 #include "OrbitDia.h"

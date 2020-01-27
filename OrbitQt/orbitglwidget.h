@@ -5,6 +5,7 @@
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
+
 #include "../OrbitGl/GlPanel.h"
 
 class QOpenGLDebugMessage;

@@ -3,7 +3,6 @@
 //-----------------------------------
 
 #include "EventUtils.h"
-#include "Platform.h"
 
 #include <evntrace.h>
 #include <in6addr.h>
@@ -11,6 +10,8 @@
 #include <tdh.h>
 #include <wbemidl.h>
 #include <wmistr.h>
+
+#include "Platform.h"
 
 #pragma comment(lib, "tdh.lib")
 

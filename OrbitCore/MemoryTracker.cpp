@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "MemoryTracker.h"
+
 #include "Callstack.h"
 #include "Capture.h"
 #include "Log.h"

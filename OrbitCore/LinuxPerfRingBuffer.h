@@ -8,6 +8,7 @@
 #pragma once
 
 #include <linux/perf_event.h>
+
 #include <cassert>
 
 #include "LinuxPerfUtils.h"

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <memory>
+
 #include "DataView.h"
 
 class Session;

@@ -3,6 +3,10 @@
 //-----------------------------------
 
 #include "Capture.h"
+
+#include <fstream>
+#include <ostream>
+
 #include "BpfTrace.h"
 #include "Core.h"
 #include "CoreApp.h"
@@ -22,9 +26,6 @@
 #include "TcpServer.h"
 #include "TestRemoteMessages.h"
 #include "TimerManager.h"
-
-#include <fstream>
-#include <ostream>
 
 #ifdef _WIN32
 #include "EventTracer.h"

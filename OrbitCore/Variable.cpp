@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "Variable.h"
+
 #include "Capture.h"
 #include "Core.h"
 #include "CoreApp.h"

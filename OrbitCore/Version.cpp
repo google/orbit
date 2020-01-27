@@ -1,4 +1,5 @@
 #include "Version.h"
+
 #include "Core.h"
 #include "Utils.h"
 #include "curl/curl.h"
@@ -16,23 +17,23 @@ std::string OrbitVersion::GetVersion() { return OrbitVersionStr; }
 bool OrbitVersion::IsDev() { return GetVersion() == std::string("dev"); }
 
 //-----------------------------------------------------------------------------
-static size_t WriteCallback(void *contents, size_t size, size_t nmemb,
-                            void *userp) {
-  ((std::string *)userp)->append((char *)contents, size * nmemb);
+static size_t WriteCallback(void* contents, size_t size, size_t nmemb,
+                            void* userp) {
+  ((std::string*)userp)->append((char*)contents, size * nmemb);
   return size * nmemb;
 }
 
 //-----------------------------------------------------------------------------
 void OrbitVersion::CheckForUpdate() {
   if (!IsDev()) {
-    std::thread *thread = new std::thread([&]() { CheckForUpdateThread(); });
+    std::thread* thread = new std::thread([&]() { CheckForUpdateThread(); });
     thread->detach();
   }
 }
 
 //-----------------------------------------------------------------------------
 void OrbitVersion::CheckForUpdateThread() {
-  CURL *curl;
+  CURL* curl;
   std::string readBuffer;
 
   curl = curl_easy_init();

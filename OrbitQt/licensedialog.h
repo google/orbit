@@ -11,13 +11,13 @@ class LicenseDialog : public QDialog {
   Q_OBJECT
 
  public:
-  explicit LicenseDialog(QWidget *parent = 0);
+  explicit LicenseDialog(QWidget* parent = 0);
   ~LicenseDialog();
 
   std::wstring GetLicense();
 
  private:
-  Ui::LicenseDialog *ui;
+  Ui::LicenseDialog* ui;
 };
 
 #endif  // LICENSEDIALOG_H

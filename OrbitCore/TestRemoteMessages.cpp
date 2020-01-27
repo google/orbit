@@ -1,15 +1,16 @@
 #include "TestRemoteMessages.h"
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <streambuf>
+
 #include "OrbitFunction.h"
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
 #include "Serialization.h"
 #include "TcpClient.h"
 #include "TcpServer.h"
-
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <streambuf>
 
 //-----------------------------------------------------------------------------
 TestRemoteMessages& TestRemoteMessages::Get() {

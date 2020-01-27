@@ -11,13 +11,13 @@ class OrbitVisualizer : public QMainWindow {
   Q_OBJECT
 
  public:
-  explicit OrbitVisualizer(QWidget *parent = 0);
+  explicit OrbitVisualizer(QWidget* parent = 0);
   ~OrbitVisualizer();
 
-  void Initialize(class OrbitMainWindow *a_MainWindow);
+  void Initialize(class OrbitMainWindow* a_MainWindow);
 
  private:
-  Ui::OrbitVisualizer *ui;
+  Ui::OrbitVisualizer* ui;
 };
 
 #endif  // ORBITVISUALIZER_H

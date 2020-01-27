@@ -3,9 +3,10 @@
 //-----------------------------------
 #pragma once
 #include <assert.h>
+
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
-#include <algorithm>
 
 //-----------------------------------------------------------------------------
 template <class T, uint32_t BlockSize>

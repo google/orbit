@@ -8,8 +8,8 @@
 #include <capstone/platform.h>
 
 //-----------------------------------------------------------------------------
-void Disassembler::LogHex(const unsigned char *str, size_t len) {
-  const unsigned char *c;
+void Disassembler::LogHex(const unsigned char* str, size_t len) {
+  const unsigned char* c;
 
   LOGF("%s", "Code: ");
   for (c = str; c < str + len; c++) {
@@ -19,13 +19,13 @@ void Disassembler::LogHex(const unsigned char *str, size_t len) {
 }
 
 //-----------------------------------------------------------------------------
-void Disassembler::Disassemble(const unsigned char *a_MachineCode,
+void Disassembler::Disassemble(const unsigned char* a_MachineCode,
                                size_t a_Size, DWORD64 a_Address,
                                bool a_Is64Bit) {
   std::wstring disAsm;
   csh handle = 0;
   cs_arch arch = CS_ARCH_X86;
-  cs_insn *insn = nullptr;
+  cs_insn* insn = nullptr;
   size_t count = 0;
   cs_err err;
   cs_mode mode = a_Is64Bit ? CS_MODE_64 : CS_MODE_32;

@@ -1,13 +1,14 @@
 #include "showincludesdialog.h"
-#include "orbittreeitem.h"
-#include "orbittreemodel.h"
-#include "ui_showincludesdialog.h"
 
 #include <QMenu>
 #include <QSignalMapper>
 #include <functional>
 
-ShowIncludesDialog::ShowIncludesDialog(QWidget *parent)
+#include "orbittreeitem.h"
+#include "orbittreemodel.h"
+#include "ui_showincludesdialog.h"
+
+ShowIncludesDialog::ShowIncludesDialog(QWidget* parent)
     : QDialog(parent),
       ui(new Ui::ShowIncludesDialog),
       m_TreeModel(nullptr),
@@ -18,8 +19,8 @@ ShowIncludesDialog::ShowIncludesDialog(QWidget *parent)
   ui->treeView->setModel(m_TreeModel);
 
   ui->treeView->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(ui->treeView, SIGNAL(customContextMenuRequested(const QPoint &)),
-          this, SLOT(onCustomContextMenu(const QPoint &)));
+  connect(ui->treeView, SIGNAL(customContextMenuRequested(const QPoint&)), this,
+          SLOT(onCustomContextMenu(const QPoint&)));
 
   m_ModelIndex = QModelIndex();
 
@@ -36,16 +37,16 @@ ShowIncludesDialog::ShowIncludesDialog(QWidget *parent)
 
 enum ShowIncludesMenuItems { EXPAND, COLLAPSE };
 
-const std::vector<std::wstring> &GContextMenuShowIncludes = {L"Expand",
+const std::vector<std::wstring>& GContextMenuShowIncludes = {L"Expand",
                                                              L"Collapse"};
 
-void ShowIncludesDialog::onCustomContextMenu(const QPoint &point) {
+void ShowIncludesDialog::onCustomContextMenu(const QPoint& point) {
   m_ModelIndex = ui->treeView->indexAt(point);
   if (m_ModelIndex.isValid()) {
     if (GContextMenuShowIncludes.size() > 0) {
       QMenu contextMenu(tr("ContextMenu"), this);
       QSignalMapper signalMapper(this);
-      std::vector<QAction *> actions;
+      std::vector<QAction*> actions;
 
       for (int i = 0; i < (int)GContextMenuShowIncludes.size(); ++i) {
         actions.push_back(
@@ -59,19 +60,19 @@ void ShowIncludesDialog::onCustomContextMenu(const QPoint &point) {
               SLOT(OnMenuClicked(int)));
       contextMenu.exec(ui->treeView->mapToGlobal(point));
 
-      for (QAction *action : actions) delete action;
+      for (QAction* action : actions) delete action;
     }
   }
 }
 
-void expandChildren(const QModelIndex &index, QTreeView *view) {
+void expandChildren(const QModelIndex& index, QTreeView* view) {
   if (!index.isValid()) {
     return;
   }
 
   int childCount = index.model()->rowCount(index);
   for (int i = 0; i < childCount; i++) {
-    const QModelIndex &child = index.child(i, 0);
+    const QModelIndex& child = index.child(i, 0);
     expandChildren(child, view);
   }
 
@@ -80,14 +81,14 @@ void expandChildren(const QModelIndex &index, QTreeView *view) {
   }
 }
 
-void collapseChildren(const QModelIndex &index, QTreeView *view) {
+void collapseChildren(const QModelIndex& index, QTreeView* view) {
   if (!index.isValid()) {
     return;
   }
 
   int childCount = index.model()->rowCount(index);
   for (int i = 0; i < childCount; i++) {
-    const QModelIndex &child = index.child(i, 0);
+    const QModelIndex& child = index.child(i, 0);
     collapseChildren(child, view);
   }
 
@@ -111,7 +112,7 @@ void ShowIncludesDialog::on_plainTextEdit_textChanged() {
   QString filter = ui->lineEdit->text();
 
   if (filter != "") {
-    for (QString &line : lines) {
+    for (QString& line : lines) {
       if (line.contains(filter)) {
         QStringList tokens = line.split(filter);
         if (tokens.size() == 2) {
@@ -130,7 +131,7 @@ void ShowIncludesDialog::on_plainTextEdit_textChanged() {
   }
 
   text = "";
-  for (QString &line : filtered) {
+  for (QString& line : filtered) {
     text += line;
     text += "\n";
   }
@@ -140,7 +141,7 @@ void ShowIncludesDialog::on_plainTextEdit_textChanged() {
   ui->treeView->setModel(m_TreeModel);
 }
 
-void ShowIncludesDialog::on_lineEdit_textChanged(const QString & /*arg1*/) {
+void ShowIncludesDialog::on_lineEdit_textChanged(const QString& /*arg1*/) {
   on_plainTextEdit_textChanged();
 }
 
@@ -150,8 +151,8 @@ void ShowIncludesDialog::on_pushButton_2_clicked() {
   ui->treeView->collapseAll();
 }
 
-void iterate(const QModelIndex &index, const QAbstractItemModel *model,
-             const std::function<void(const QModelIndex &, int)> &fun,
+void iterate(const QModelIndex& index, const QAbstractItemModel* model,
+             const std::function<void(const QModelIndex&, int)>& fun,
              int depth = 0) {
   if (index.isValid()) fun(index, depth);
   if (!model->hasChildren(index)) return;
@@ -162,16 +163,16 @@ void iterate(const QModelIndex &index, const QAbstractItemModel *model,
       iterate(model->index(i, j, index), model, fun, depth + 1);
 }
 
-void ShowIncludesDialog::on_lineEdit_2_textChanged(const QString &arg1) {
+void ShowIncludesDialog::on_lineEdit_2_textChanged(const QString& arg1) {
   std::wstring filter = arg1.toStdWString();
   m_TreeModel->Filter(filter);
 
   ui->treeView->collapseAll();
 
   iterate(ui->treeView->rootIndex(), ui->treeView->model(),
-          [=](const QModelIndex &idx, int /*depth*/) {
-            OrbitTreeItem *item =
-                static_cast<OrbitTreeItem *>(idx.internalPointer());
+          [=](const QModelIndex& idx, int /*depth*/) {
+            OrbitTreeItem* item =
+                static_cast<OrbitTreeItem*>(idx.internalPointer());
             if (item->IsVisible()) {
               ui->treeView->expand(idx);
             }

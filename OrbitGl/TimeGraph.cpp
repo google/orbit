@@ -3,7 +3,9 @@
 //-----------------------------------
 
 #include "TimeGraph.h"
+
 #include <algorithm>
+
 #include "App.h"
 #include "Batcher.h"
 #include "Capture.h"

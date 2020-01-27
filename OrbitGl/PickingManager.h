@@ -5,6 +5,7 @@
 
 #include <unordered_map>
 #include <vector>
+
 #include "CoreMath.h"
 
 class GlCanvas;

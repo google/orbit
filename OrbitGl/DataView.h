@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+
 #include "DataViewTypes.h"
 
 //-----------------------------------------------------------------------------

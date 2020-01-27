@@ -3,10 +3,13 @@
 //-----------------------------------
 
 #include "Hijacking.h"
+
 #include <intrin.h>
+
 #include <iostream>
 #include <unordered_set>
 #include <vector>
+
 #include "../OrbitAsm/OrbitAsm.h"
 #include "../external/minhook/src/buffer.h"
 #include "../external/minhook/src/trampoline.h"

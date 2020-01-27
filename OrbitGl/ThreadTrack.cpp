@@ -1,5 +1,7 @@
 #include "ThreadTrack.h"
+
 #include <limits>
+
 #include "EventTrack.h"
 #include "GlCanvas.h"
 #include "TimeGraph.h"

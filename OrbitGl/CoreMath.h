@@ -4,6 +4,7 @@
 #pragma once
 
 #include <algorithm>
+
 #include "../external/gte/GteVector2.h"
 #include "../external/gte/GteVector3.h"
 #include "../external/gte/GteVector4.h"

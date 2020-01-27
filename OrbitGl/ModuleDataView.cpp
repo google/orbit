@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "ModuleDataView.h"
+
 #include "App.h"
 #include "Core.h"
 #include "OrbitModule.h"

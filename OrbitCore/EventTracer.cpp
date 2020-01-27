@@ -3,13 +3,11 @@
 //-----------------------------------
 
 #include "EventTracer.h"
-#include "SamplingProfiler.h"
 
 #include <evntcons.h>
 #include <evntrace.h>
 #include <strsafe.h>
 #include <wmistr.h>
-#include "Platform.h"
 
 #include "Capture.h"
 #include "EventCallbacks.h"
@@ -17,7 +15,9 @@
 #include "EventGuid.h"
 #include "OrbitProcess.h"
 #include "Params.h"
+#include "Platform.h"
 #include "PrintVar.h"
+#include "SamplingProfiler.h"
 #include "Threading.h"
 
 //-----------------------------------------------------------------------------

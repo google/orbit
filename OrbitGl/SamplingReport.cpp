@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "SamplingReport.h"
+
 #include "CallStackDataView.h"
 #include "SamplingProfiler.h"
 #include "SamplingReportDataView.h"

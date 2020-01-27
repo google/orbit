@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "CaptureWindow.h"
+
 #include "../OrbitPlugin/OrbitSDK.h"
 #include "App.h"
 #include "Capture.h"
@@ -24,6 +25,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+
 #include "BpfTrace.h"
 #include "LinuxUtils.h"
 #endif

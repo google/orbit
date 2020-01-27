@@ -7,6 +7,7 @@
 #include <BaseTsd.h>
 #include <tchar.h>
 #include <wtypes.h>
+
 #include <cstdint>
 #define strtok_r strtok_s
 #endif
@@ -18,6 +19,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <wchar.h>
+
 #include <iostream>
 
 #define wcstok_s wcstok

@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "RuleEditor.h"
+
 #include "../OrbitPlugin/OrbitSDK.h"
 #include "App.h"
 #include "Capture.h"

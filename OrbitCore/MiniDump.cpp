@@ -3,7 +3,9 @@
 //-----------------------------------
 
 #include "MiniDump.h"
+
 #include <memory>
+
 #include "Core.h"
 #include "CoreApp.h"
 #include "OrbitProcess.h"

@@ -3,10 +3,10 @@
 //-----------------------------------
 #pragma once
 
+#include <unordered_map>
+
 #include "Core.h"
 #include "ScopeTimer.h"
-
-#include <unordered_map>
 
 class Function;
 class MemoryTracker {

@@ -8,14 +8,13 @@
 #include <string>
 #include <vector>
 
-#include "cvconst.h"
-
 #include "DiaManager.h"
 #include "FunctionStats.h"
 #include "OrbitDbgHelp.h"
 #include "OrbitFunction.h"
 #include "SerializationMacros.h"
 #include "Variable.h"
+#include "cvconst.h"
 
 //-----------------------------------------------------------------------------
 struct Parent {

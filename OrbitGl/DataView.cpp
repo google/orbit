@@ -3,7 +3,9 @@
 //-----------------------------------
 
 #include "DataView.h"
+
 #include <fstream>
+
 #include "App.h"
 #include "CallStackDataView.h"
 #include "Core.h"

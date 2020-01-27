@@ -3,12 +3,15 @@
 //-----------------------------------
 
 #include "Path.h"
+
 #include <fstream>
+
 #include "PrintVar.h"
 #include "Utils.h"
 
 #ifdef _WIN32
 #include <direct.h>
+
 #include "Shlobj.h"
 #else
 #include <dirent.h>

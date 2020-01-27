@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "FunctionDataView.h"
+
 #include "App.h"
 #include "Capture.h"
 #include "Core.h"

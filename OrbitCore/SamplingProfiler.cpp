@@ -3,10 +3,12 @@
 //-----------------------------------
 
 #include "SamplingProfiler.h"
+
 #include <map>
 #include <memory>
 #include <set>
 #include <vector>
+
 #include "Capture.h"
 #include "Injection.h"
 #include "Log.h"
@@ -17,6 +19,7 @@
 
 #ifdef _WIN32
 #include <dia2.h>
+
 #include "SymbolUtils.h"
 #endif
 

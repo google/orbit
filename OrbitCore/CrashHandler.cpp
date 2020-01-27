@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "CrashHandler.h"
+
 #include "Core.h"
 #include "OrbitDbgHelp.h"
 #include "ScopeTimer.h"
@@ -10,6 +11,7 @@
 
 #ifdef _WIN32
 #include <client/windows/handler/exception_handler.h>
+
 #include <fstream>
 
 //-----------------------------------------------------------------------------

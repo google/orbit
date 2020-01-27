@@ -4,6 +4,7 @@
 #pragma once
 
 #include <functional>
+
 #include "Params.h"
 #include "PickingManager.h"
 #include "TextBox.h"

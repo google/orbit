@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <xxhash.h>
+
 #include <algorithm>
 #include <codecvt>
 #include <functional>
@@ -18,6 +19,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
 #include "Platform.h"
 
 //-----------------------------------------------------------------------------

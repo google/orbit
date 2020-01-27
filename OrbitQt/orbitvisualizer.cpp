@@ -1,4 +1,5 @@
 #include "orbitvisualizer.h"
+
 #include "ui_orbitvisualizer.h"
 
 OrbitVisualizer::OrbitVisualizer(QWidget* parent)

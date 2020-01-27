@@ -4,6 +4,7 @@
 #pragma once
 
 #include <map>
+
 #include "Platform.h"
 #include "TextBox.h"
 #include "freetype-gl.h"

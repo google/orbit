@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <unordered_map>
+
 #include "CallstackTypes.h"
 
 class ThreadTrack;

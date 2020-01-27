@@ -4,6 +4,7 @@
 #pragma once
 
 #include <string>
+
 #include "BaseTypes.h"
 
 struct IDiaSymbol;

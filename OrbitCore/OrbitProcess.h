@@ -3,18 +3,18 @@
 //-----------------------------------
 #pragma once
 
+#include <map>
+#include <memory>
+#include <set>
+#include <unordered_set>
+#include <vector>
+
 #include "BaseTypes.h"
 #include "DiaManager.h"
 #include "LinuxPerf.h"
 #include "ScopeTimer.h"
 #include "SerializationMacros.h"
 #include "Threading.h"
-
-#include <map>
-#include <memory>
-#include <set>
-#include <unordered_set>
-#include <vector>
 
 #ifdef __linux__
 #include "LinuxUtils.h"

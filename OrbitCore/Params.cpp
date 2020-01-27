@@ -3,8 +3,10 @@
 //-----------------------------------
 
 #include "Params.h"
+
 #include <algorithm>
 #include <fstream>
+
 #include "Core.h"
 #include "CoreApp.h"
 #include "ScopeTimer.h"

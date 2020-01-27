@@ -2,22 +2,7 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#include <fstream>
-#include <iostream>
-
-#include "Callstack.h"
-#include "Capture.h"
-#include "ConnectionManager.h"
-#include "EventBuffer.h"
 #include "LinuxUtils.h"
-#include "OrbitModule.h"
-#include "OrbitProcess.h"
-#include "Path.h"
-#include "PrintVar.h"
-#include "SamplingProfiler.h"
-#include "ScopeTimer.h"
-#include "TcpClient.h"
-#include "Utils.h"
 
 #include <asm/unistd.h>
 #include <cxxabi.h>
@@ -34,6 +19,7 @@
 #include <sys/utsname.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
 #include <cstdlib>
 #include <fstream>
 #include <iomanip>
@@ -41,6 +27,19 @@
 #include <memory>
 #include <sstream>
 #include <string>
+
+#include "Callstack.h"
+#include "Capture.h"
+#include "ConnectionManager.h"
+#include "EventBuffer.h"
+#include "OrbitModule.h"
+#include "OrbitProcess.h"
+#include "Path.h"
+#include "PrintVar.h"
+#include "SamplingProfiler.h"
+#include "ScopeTimer.h"
+#include "TcpClient.h"
+#include "Utils.h"
 
 namespace LinuxUtils {
 

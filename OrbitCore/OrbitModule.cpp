@@ -3,7 +3,9 @@
 //-----------------------------------
 
 #include "OrbitModule.h"
+
 #include <string>
+
 #include "Core.h"
 #include "Pdb.h"
 #include "Serialization.h"

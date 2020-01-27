@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "Injection.h"
+
 #include "Capture.h"
 #include "Core.h"
 #include "Log.h"
@@ -15,6 +16,7 @@
 
 #include <psapi.h>
 #include <tlhelp32.h>
+
 #include <cstdio>
 
 //-----------------------------------------------------------------------------

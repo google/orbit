@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "BlackBoard.h"
+
 #include "App.h"
 #include "Capture.h"
 #include "Card.h"

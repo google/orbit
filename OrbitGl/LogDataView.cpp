@@ -1,5 +1,7 @@
 #include "LogDataView.h"
+
 #include <chrono>
+
 #include "App.h"
 #include "Callstack.h"
 #include "Capture.h"

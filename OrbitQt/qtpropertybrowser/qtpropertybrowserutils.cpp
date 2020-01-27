@@ -46,6 +46,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QStyleOption>
+
 #include "qtpropertybrowserutils_p.h"
 
 #if QT_VERSION >= 0x040400
@@ -150,8 +151,8 @@ void QtCursorDatabase::clear() {
   m_cursorShapeToValue.clear();
 }
 
-void QtCursorDatabase::appendCursor(Qt::CursorShape shape, const QString &name,
-                                    const QIcon &icon) {
+void QtCursorDatabase::appendCursor(Qt::CursorShape shape, const QString& name,
+                                    const QIcon& icon) {
   if (m_cursorShapeToValue.contains(shape)) return;
   const int value = m_cursorNames.count();
   m_cursorNames.append(name);
@@ -166,18 +167,18 @@ QMap<int, QIcon> QtCursorDatabase::cursorShapeIcons() const {
   return m_cursorIcons;
 }
 
-QString QtCursorDatabase::cursorToShapeName(const QCursor &cursor) const {
+QString QtCursorDatabase::cursorToShapeName(const QCursor& cursor) const {
   int val = cursorToValue(cursor);
   if (val >= 0) return m_cursorNames.at(val);
   return QString();
 }
 
-QIcon QtCursorDatabase::cursorToShapeIcon(const QCursor &cursor) const {
+QIcon QtCursorDatabase::cursorToShapeIcon(const QCursor& cursor) const {
   int val = cursorToValue(cursor);
   return m_cursorIcons.value(val);
 }
 
-int QtCursorDatabase::cursorToValue(const QCursor &cursor) const {
+int QtCursorDatabase::cursorToValue(const QCursor& cursor) const {
 #ifndef QT_NO_CURSOR
   Qt::CursorShape shape = cursor.shape();
   if (m_cursorShapeToValue.contains(shape)) return m_cursorShapeToValue[shape];
@@ -193,7 +194,7 @@ QCursor QtCursorDatabase::valueToCursor(int value) const {
 }
 #endif
 
-QPixmap QtPropertyBrowserUtils::brushValuePixmap(const QBrush &b) {
+QPixmap QtPropertyBrowserUtils::brushValuePixmap(const QBrush& b) {
   QImage img(16, 16, QImage::Format_ARGB32_Premultiplied);
   img.fill(0);
 
@@ -212,11 +213,11 @@ QPixmap QtPropertyBrowserUtils::brushValuePixmap(const QBrush &b) {
   return QPixmap::fromImage(img);
 }
 
-QIcon QtPropertyBrowserUtils::brushValueIcon(const QBrush &b) {
+QIcon QtPropertyBrowserUtils::brushValueIcon(const QBrush& b) {
   return QIcon(brushValuePixmap(b));
 }
 
-QString QtPropertyBrowserUtils::colorValueText(const QColor &c) {
+QString QtPropertyBrowserUtils::colorValueText(const QColor& c) {
   return QCoreApplication::translate("QtPropertyBrowserUtils",
                                      "[%1, %2, %3] (%4)")
       .arg(c.red())
@@ -225,7 +226,7 @@ QString QtPropertyBrowserUtils::colorValueText(const QColor &c) {
       .arg(c.alpha());
 }
 
-QPixmap QtPropertyBrowserUtils::fontValuePixmap(const QFont &font) {
+QPixmap QtPropertyBrowserUtils::fontValuePixmap(const QFont& font) {
   QFont f = font;
   QImage img(16, 16, QImage::Format_ARGB32_Premultiplied);
   img.fill(0);
@@ -240,19 +241,19 @@ QPixmap QtPropertyBrowserUtils::fontValuePixmap(const QFont &font) {
   return QPixmap::fromImage(img);
 }
 
-QIcon QtPropertyBrowserUtils::fontValueIcon(const QFont &f) {
+QIcon QtPropertyBrowserUtils::fontValueIcon(const QFont& f) {
   return QIcon(fontValuePixmap(f));
 }
 
-QString QtPropertyBrowserUtils::fontValueText(const QFont &f) {
+QString QtPropertyBrowserUtils::fontValueText(const QFont& f) {
   return QCoreApplication::translate("QtPropertyBrowserUtils", "[%1, %2]")
       .arg(f.family())
       .arg(f.pointSize());
 }
 
-QtBoolEdit::QtBoolEdit(QWidget *parent)
+QtBoolEdit::QtBoolEdit(QWidget* parent)
     : QWidget(parent), m_checkBox(new QCheckBox(this)), m_textVisible(true) {
-  QHBoxLayout *lt = new QHBoxLayout;
+  QHBoxLayout* lt = new QHBoxLayout;
   if (QApplication::layoutDirection() == Qt::LeftToRight)
     lt->setContentsMargins(4, 0, 0, 0);
   else
@@ -294,7 +295,7 @@ bool QtBoolEdit::blockCheckBoxSignals(bool block) {
   return m_checkBox->blockSignals(block);
 }
 
-void QtBoolEdit::mousePressEvent(QMouseEvent *event) {
+void QtBoolEdit::mousePressEvent(QMouseEvent* event) {
   if (event->buttons() == Qt::LeftButton) {
     m_checkBox->click();
     event->accept();
@@ -303,16 +304,16 @@ void QtBoolEdit::mousePressEvent(QMouseEvent *event) {
   }
 }
 
-void QtBoolEdit::paintEvent(QPaintEvent *) {
+void QtBoolEdit::paintEvent(QPaintEvent*) {
   QStyleOption opt;
   opt.init(this);
   QPainter p(this);
   style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 }
 
-QtKeySequenceEdit::QtKeySequenceEdit(QWidget *parent)
+QtKeySequenceEdit::QtKeySequenceEdit(QWidget* parent)
     : QWidget(parent), m_num(0), m_lineEdit(new QLineEdit(this)) {
-  QHBoxLayout *layout = new QHBoxLayout(this);
+  QHBoxLayout* layout = new QHBoxLayout(this);
   layout->addWidget(m_lineEdit);
   layout->setMargin(0);
   m_lineEdit->installEventFilter(this);
@@ -322,23 +323,23 @@ QtKeySequenceEdit::QtKeySequenceEdit(QWidget *parent)
   setAttribute(Qt::WA_InputMethodEnabled);
 }
 
-bool QtKeySequenceEdit::eventFilter(QObject *o, QEvent *e) {
+bool QtKeySequenceEdit::eventFilter(QObject* o, QEvent* e) {
   if (o == m_lineEdit && e->type() == QEvent::ContextMenu) {
-    QContextMenuEvent *c = static_cast<QContextMenuEvent *>(e);
-    QMenu *menu = m_lineEdit->createStandardContextMenu();
-    const QList<QAction *> actions = menu->actions();
-    QListIterator<QAction *> itAction(actions);
+    QContextMenuEvent* c = static_cast<QContextMenuEvent*>(e);
+    QMenu* menu = m_lineEdit->createStandardContextMenu();
+    const QList<QAction*> actions = menu->actions();
+    QListIterator<QAction*> itAction(actions);
     while (itAction.hasNext()) {
-      QAction *action = itAction.next();
+      QAction* action = itAction.next();
       action->setShortcut(QKeySequence());
       QString actionString = action->text();
       const int pos = actionString.lastIndexOf(QLatin1Char('\t'));
       if (pos > 0) actionString.remove(pos, actionString.length() - pos);
       action->setText(actionString);
     }
-    QAction *actionBefore = 0;
+    QAction* actionBefore = 0;
     if (actions.count() > 0) actionBefore = actions[0];
-    QAction *clearAction = new QAction(tr("Clear Shortcut"), menu);
+    QAction* clearAction = new QAction(tr("Clear Shortcut"), menu);
     menu->insertAction(actionBefore, clearAction);
     menu->insertSeparator(actionBefore);
     clearAction->setEnabled(!m_keySequence.isEmpty());
@@ -358,7 +359,7 @@ void QtKeySequenceEdit::slotClearShortcut() {
   emit keySequenceChanged(m_keySequence);
 }
 
-void QtKeySequenceEdit::handleKeyEvent(QKeyEvent *e) {
+void QtKeySequenceEdit::handleKeyEvent(QKeyEvent* e) {
   int nextKey = e->key();
   if (nextKey == Qt::Key_Control || nextKey == Qt::Key_Shift ||
       nextKey == Qt::Key_Meta || nextKey == Qt::Key_Alt ||
@@ -400,7 +401,7 @@ void QtKeySequenceEdit::handleKeyEvent(QKeyEvent *e) {
   emit keySequenceChanged(m_keySequence);
 }
 
-void QtKeySequenceEdit::setKeySequence(const QKeySequence &sequence) {
+void QtKeySequenceEdit::setKeySequence(const QKeySequence& sequence) {
   if (sequence == m_keySequence) return;
   m_num = 0;
   m_keySequence = sequence;
@@ -410,7 +411,7 @@ void QtKeySequenceEdit::setKeySequence(const QKeySequence &sequence) {
 QKeySequence QtKeySequenceEdit::keySequence() const { return m_keySequence; }
 
 int QtKeySequenceEdit::translateModifiers(Qt::KeyboardModifiers state,
-                                          const QString &text) const {
+                                          const QString& text) const {
   int result = 0;
   if ((state & Qt::ShiftModifier) &&
       (text.size() == 0 || !text.at(0).isPrint() || text.at(0).isLetter() ||
@@ -422,33 +423,33 @@ int QtKeySequenceEdit::translateModifiers(Qt::KeyboardModifiers state,
   return result;
 }
 
-void QtKeySequenceEdit::focusInEvent(QFocusEvent *e) {
+void QtKeySequenceEdit::focusInEvent(QFocusEvent* e) {
   m_lineEdit->event(e);
   m_lineEdit->selectAll();
   QWidget::focusInEvent(e);
 }
 
-void QtKeySequenceEdit::focusOutEvent(QFocusEvent *e) {
+void QtKeySequenceEdit::focusOutEvent(QFocusEvent* e) {
   m_num = 0;
   m_lineEdit->event(e);
   QWidget::focusOutEvent(e);
 }
 
-void QtKeySequenceEdit::keyPressEvent(QKeyEvent *e) {
+void QtKeySequenceEdit::keyPressEvent(QKeyEvent* e) {
   handleKeyEvent(e);
   e->accept();
 }
 
-void QtKeySequenceEdit::keyReleaseEvent(QKeyEvent *e) { m_lineEdit->event(e); }
+void QtKeySequenceEdit::keyReleaseEvent(QKeyEvent* e) { m_lineEdit->event(e); }
 
-void QtKeySequenceEdit::paintEvent(QPaintEvent *) {
+void QtKeySequenceEdit::paintEvent(QPaintEvent*) {
   QStyleOption opt;
   opt.init(this);
   QPainter p(this);
   style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 }
 
-bool QtKeySequenceEdit::event(QEvent *e) {
+bool QtKeySequenceEdit::event(QEvent* e) {
   if (e->type() == QEvent::Shortcut || e->type() == QEvent::ShortcutOverride ||
       e->type() == QEvent::KeyRelease) {
     e->accept();

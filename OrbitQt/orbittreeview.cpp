@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "orbittreeview.h"
+
 #include <QFontDatabase>
 #include <QHeaderView>
 #include <QKeyEvent>
@@ -11,10 +12,10 @@
 #include <QScrollBar>
 #include <QSignalMapper>
 #include <set>
-#include "orbitglwidget.h"
 
 #include "../OrbitGl/App.h"
 #include "../OrbitGl/DataView.h"
+#include "orbitglwidget.h"
 
 //-----------------------------------------------------------------------------
 OrbitTreeView::OrbitTreeView(QWidget* parent)

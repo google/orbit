@@ -3,6 +3,7 @@
 //-----------------------------------
 #pragma once
 #include <vector>
+
 #include "BlockChain.h"
 #include "Geometry.h"
 #include "PickingManager.h"

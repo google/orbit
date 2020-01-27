@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "OrbitProcess.h"
+
 #include "Core.h"
 #include "Injection.h"
 #include "OrbitModule.h"
@@ -16,6 +17,7 @@
 
 #ifdef _WIN32
 #include <tlhelp32.h>
+
 #include "SymbolUtils.h"
 #else
 #include "LinuxUtils.h"

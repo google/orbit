@@ -3,11 +3,12 @@
 //-----------------------------------
 
 #include "Diff.h"
+
+#include <fstream>
+
 #include "Core.h"
 #include "Params.h"
 #include "Path.h"
-
-#include <fstream>
 
 #ifdef _WIN32
 #include <Shellapi.h>

@@ -3,13 +3,14 @@
 //-----------------------------------
 
 #include "orbittablemodel.h"
+
 #include <QColor>
 #include <memory>
 
 #define UNUSED(x) (void)(x)
 
 //-----------------------------------------------------------------------------
-OrbitTableModel::OrbitTableModel(DataViewType a_Type, QObject *parent)
+OrbitTableModel::OrbitTableModel(DataViewType a_Type, QObject* parent)
     : QAbstractTableModel(parent),
       m_DataView(nullptr),
       m_AlternateRowColor(true) {
@@ -22,20 +23,20 @@ OrbitTableModel::OrbitTableModel(DataViewType a_Type, QObject *parent)
 }
 
 //-----------------------------------------------------------------------------
-OrbitTableModel::OrbitTableModel(QObject *parent)
+OrbitTableModel::OrbitTableModel(QObject* parent)
     : QAbstractTableModel(parent), m_DataView(nullptr) {}
 
 //-----------------------------------------------------------------------------
 OrbitTableModel::~OrbitTableModel() {}
 
 //-----------------------------------------------------------------------------
-int OrbitTableModel::columnCount(const QModelIndex &parent) const {
+int OrbitTableModel::columnCount(const QModelIndex& parent) const {
   UNUSED(parent);
   return (int)m_DataView->GetColumnHeaders().size();
 }
 
 //-----------------------------------------------------------------------------
-int OrbitTableModel::rowCount(const QModelIndex &parent) const {
+int OrbitTableModel::rowCount(const QModelIndex& parent) const {
   UNUSED(parent);
   return (int)m_DataView->GetNumElements();
 }
@@ -61,7 +62,7 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation,
 }
 
 //-----------------------------------------------------------------------------
-QVariant OrbitTableModel::data(const QModelIndex &index, int role) const {
+QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
   if (role == Qt::DisplayRole) {
     return QVariant(QString::fromStdWString(
         m_DataView->GetValue(index.row(), index.column()).c_str()));
@@ -98,12 +99,12 @@ void OrbitTableModel::sort(int column, Qt::SortOrder /*order*/) {
 void OrbitTableModel::OnTimer() { m_DataView->OnTimer(); }
 
 //-----------------------------------------------------------------------------
-void OrbitTableModel::OnFilter(const QString &a_Filter) {
+void OrbitTableModel::OnFilter(const QString& a_Filter) {
   m_DataView->SetFilter(a_Filter.toStdWString());
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTableModel::OnClicked(const QModelIndex &index) {
+void OrbitTableModel::OnClicked(const QModelIndex& index) {
   if ((int)m_DataView->GetNumElements() > index.row()) {
     m_DataView->OnSelect(index.row());
   }

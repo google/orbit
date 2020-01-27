@@ -5,10 +5,11 @@
 #include <QApplication>
 #include <QFontDatabase>
 #include <QStyleFactory>
+
 #include "../OrbitGl/App.h"
 #include "orbitmainwindow.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   QApplication a(argc, argv);
 
   a.setStyle(QStyleFactory::create("Fusion"));

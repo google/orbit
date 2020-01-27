@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "orbitmainwindow.h"
+
 #include <QBuffer>
 #include <QClipboard>
 #include <QFileDialog>
@@ -10,14 +11,6 @@
 #include <QMouseEvent>
 #include <QTimer>
 #include <QToolTip>
-#include "licensedialog.h"
-#include "orbitdiffdialog.h"
-#include "orbitdisassemblydialog.h"
-#include "orbitsamplingreport.h"
-#include "orbitvisualizer.h"
-#include "outputdialog.h"
-#include "showincludesdialog.h"
-#include "ui_orbitmainwindow.h"
 
 #include "../OrbitCore/Path.h"
 #include "../OrbitCore/PrintVar.h"
@@ -27,8 +20,15 @@
 #include "../OrbitGl/PluginManager.h"
 #include "../OrbitGl/SamplingReport.h"
 #include "../OrbitPlugin/OrbitSDK.h"
-
 #include "../external/concurrentqueue/concurrentqueue.h"
+#include "licensedialog.h"
+#include "orbitdiffdialog.h"
+#include "orbitdisassemblydialog.h"
+#include "orbitsamplingreport.h"
+#include "orbitvisualizer.h"
+#include "outputdialog.h"
+#include "showincludesdialog.h"
+#include "ui_orbitmainwindow.h"
 
 //-----------------------------------------------------------------------------
 OrbitMainWindow* GMainWindow;

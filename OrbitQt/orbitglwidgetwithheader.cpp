@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "orbitglwidgetwithheader.h"
+
 #include "ui_orbitglwidgetwithheader.h"
 
 //-----------------------------------------------------------------------------

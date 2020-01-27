@@ -12,13 +12,13 @@ class OrbitDisassemblyDialog : public QDialog {
   Q_OBJECT
 
  public:
-  explicit OrbitDisassemblyDialog(QWidget *parent = 0);
+  explicit OrbitDisassemblyDialog(QWidget* parent = 0);
   ~OrbitDisassemblyDialog();
 
-  void SetText(const std::wstring &a_Text);
+  void SetText(const std::wstring& a_Text);
 
  private:
-  Ui::OrbitDisassemblyDialog *ui;
+  Ui::OrbitDisassemblyDialog* ui;
 };
 
 #endif  // ORBITDISASSEMBLYDIALOG_H

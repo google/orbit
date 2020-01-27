@@ -4,9 +4,11 @@
  * file `LICENSE` for more details.
  */
 #include "shader.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "OpenGl.h"
 
 #ifdef __cplusplus
@@ -14,9 +16,9 @@ namespace ftgl {
 #endif
 
 // ------------------------------------------------------------ shader_read ---
-char *shader_read(const char *filename) {
-  FILE *file = nullptr;
-  char *buffer;
+char* shader_read(const char* filename) {
+  FILE* file = nullptr;
+  char* buffer;
   size_t size;
 
   fopen_s(&file, filename, "rb");
@@ -27,7 +29,7 @@ char *shader_read(const char *filename) {
   fseek(file, 0, SEEK_END);
   size = ftell(file);
   fseek(file, 0, SEEK_SET);
-  buffer = (char *)malloc((size + 1) * sizeof(char *));
+  buffer = (char*)malloc((size + 1) * sizeof(char*));
   fread(buffer, sizeof(char), size, file);
   buffer[size] = 0;
   fclose(file);
@@ -35,7 +37,7 @@ char *shader_read(const char *filename) {
 }
 
 // --------------------------------------------------------- shader_compile ---
-GLuint shader_compile(const char *source, const GLenum type) {
+GLuint shader_compile(const char* source, const GLenum type) {
   GLint compile_status;
   GLuint handle = glCreateShader(type);
   glShaderSource(handle, 1, &source, 0);
@@ -52,19 +54,19 @@ GLuint shader_compile(const char *source, const GLenum type) {
 }
 
 // ------------------------------------------------------------ shader_load ---
-GLuint shader_load(const char *vert_filename, const char *frag_filename) {
+GLuint shader_load(const char* vert_filename, const char* frag_filename) {
   GLuint handle = glCreateProgram();
   GLint link_status;
 
   if (vert_filename && strlen(vert_filename)) {
-    char *vert_source = shader_read(vert_filename);
+    char* vert_source = shader_read(vert_filename);
     GLuint vert_shader = shader_compile(vert_source, GL_VERTEX_SHADER);
     glAttachShader(handle, vert_shader);
     glDeleteShader(vert_shader);
     free(vert_source);
   }
   if (frag_filename && strlen(frag_filename)) {
-    char *frag_source = shader_read(frag_filename);
+    char* frag_source = shader_read(frag_filename);
     GLuint frag_shader = shader_compile(frag_source, GL_FRAGMENT_SHADER);
     glAttachShader(handle, frag_shader);
     glDeleteShader(frag_shader);

@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "OrbitType.h"
+
 #include "BaseTypes.h"
 #include "Capture.h"
 #include "Core.h"
@@ -17,6 +18,7 @@
 
 #ifdef _WIN32
 #include <dia2.h>
+
 #include "DiaManager.h"
 #include "DiaParser.h"
 #include "OrbitDia.h"

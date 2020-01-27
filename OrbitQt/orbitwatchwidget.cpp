@@ -1,21 +1,20 @@
 #include "orbitwatchwidget.h"
-#include "ui_orbitwatchwidget.h"
 
 #include <QGridLayout>
 #include <QLabel>
 #include <QScrollArea>
-
-#include "qtpropertybrowser/qtbuttonpropertybrowser.h"
-#include "qtpropertybrowser/qteditorfactory.h"
-#include "qtpropertybrowser/qtgroupboxpropertybrowser.h"
-#include "qtpropertybrowser/qtpropertymanager.h"
-#include "qtpropertybrowser/qttreepropertybrowser.h"
 
 #include "../OrbitCore/OrbitType.h"
 #include "../OrbitCore/Pdb.h"
 #include "../OrbitCore/PrintVar.h"
 #include "../OrbitCore/Variable.h"
 #include "../OrbitGl/App.h"
+#include "qtpropertybrowser/qtbuttonpropertybrowser.h"
+#include "qtpropertybrowser/qteditorfactory.h"
+#include "qtpropertybrowser/qtgroupboxpropertybrowser.h"
+#include "qtpropertybrowser/qtpropertymanager.h"
+#include "qtpropertybrowser/qttreepropertybrowser.h"
+#include "ui_orbitwatchwidget.h"
 
 //-----------------------------------------------------------------------------
 void OrbitWatchWidget::valueChanged(QtProperty* property, int val) {

@@ -1,12 +1,13 @@
 #include "processlauncherwidget.h"
+
 #include <QFileDialog>
 #include <QLineEdit>
-#include "ui_processlauncherwidget.h"
 
 #include "../OrbitCore/Params.h"
 #include "../OrbitGl/App.h"
+#include "ui_processlauncherwidget.h"
 
-ProcessLauncherWidget::ProcessLauncherWidget(QWidget *parent)
+ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
     : QWidget(parent), ui(new Ui::ProcessLauncherWidget) {
   ui->setupUi(this);
   ui->ProcessComboBox->lineEdit()->setPlaceholderText("Process");
@@ -49,7 +50,7 @@ void ProcessLauncherWidget::UpdateProcessParams() {
 void ProcessLauncherWidget::on_BrowseButton_clicked() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Select an executable file...", "", "*.exe");
-  for (auto &file : list) {
+  for (auto& file : list) {
     ui->ProcessComboBox->lineEdit()->setText(file);
     break;
   }

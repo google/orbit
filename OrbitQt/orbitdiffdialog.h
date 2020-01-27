@@ -11,7 +11,7 @@ class OrbitDiffDialog : public QDialog {
   Q_OBJECT
 
  public:
-  explicit OrbitDiffDialog(QWidget *parent = 0);
+  explicit OrbitDiffDialog(QWidget* parent = 0);
   ~OrbitDiffDialog();
 
  private slots:
@@ -19,14 +19,14 @@ class OrbitDiffDialog : public QDialog {
 
   void on_BrowseButton_clicked();
 
-  void on_DiffExeLineEdit_textChanged(const QString &arg1);
+  void on_DiffExeLineEdit_textChanged(const QString& arg1);
 
-  void on_ArgsLineEdit_textChanged(const QString &arg1);
+  void on_ArgsLineEdit_textChanged(const QString& arg1);
 
   void on_buttonBox_accepted();
 
  private:
-  Ui::OrbitDiffDialog *ui;
+  Ui::OrbitDiffDialog* ui;
 };
 
 #endif  // ORBITDIFFDIALOG_H

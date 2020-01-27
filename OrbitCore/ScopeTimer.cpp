@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "ScopeTimer.h"
+
 #include "Log.h"
 #include "TimerManager.h"
 

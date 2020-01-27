@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "LogInterface.h"
+
 #include "Log.h"
 
 std::vector<std::string> LogInterface::GetOutput() {

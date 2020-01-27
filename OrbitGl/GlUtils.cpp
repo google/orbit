@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "GlUtils.h"
+
 #include "Log.h"
 #include "OrbitCore/Core.h"
 #include "freetype-gl.h"

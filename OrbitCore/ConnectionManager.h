@@ -3,13 +3,13 @@
 //-----------------------------------
 #pragma once
 
-#include "Message.h"
-
 #include <atomic>
 #include <memory>
 #include <string>
 #include <thread>
 #include <vector>
+
+#include "Message.h"
 
 class ConnectionManager {
  public:

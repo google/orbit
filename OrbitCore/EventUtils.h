@@ -4,6 +4,7 @@
 #pragma once
 
 #include <evntrace.h>
+
 #include "Core.h"
 
 namespace EventUtils {

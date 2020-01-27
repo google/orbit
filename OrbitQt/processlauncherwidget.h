@@ -11,7 +11,7 @@ class ProcessLauncherWidget : public QWidget {
   Q_OBJECT
 
  public:
-  explicit ProcessLauncherWidget(QWidget *parent = 0);
+  explicit ProcessLauncherWidget(QWidget* parent = 0);
   ~ProcessLauncherWidget();
 
   void SetProcessParams();
@@ -27,7 +27,7 @@ class ProcessLauncherWidget : public QWidget {
   void on_BrowseWorkingDirButton_clicked();
 
  private:
-  Ui::ProcessLauncherWidget *ui;
+  Ui::ProcessLauncherWidget* ui;
 };
 
 #endif  // PROCESSLAUNCHERWIDGET_H

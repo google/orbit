@@ -4,6 +4,7 @@
 #pragma once
 
 #include <autoresetevent.h>
+
 #include <condition_variable>
 #include <mutex>
 #include <thread>

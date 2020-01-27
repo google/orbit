@@ -5,9 +5,12 @@
 #ifdef _WIN32
 
 #include "Debugger.h"
+
 #include <psapi.h>
+
 #include <string>
 #include <thread>
+
 #include "App.h"
 #include "Core.h"
 #include "OrbitDbgHelp.h"

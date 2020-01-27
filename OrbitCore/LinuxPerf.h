@@ -7,6 +7,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+
 #include "BaseTypes.h"
 #include "LinuxCallstackEvent.h"
 #include "Serialization.h"

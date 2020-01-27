@@ -17,12 +17,17 @@
 #endif
 
 #include <cereal/access.hpp>
+#include <cereal/archives/binary.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/portable_binary.hpp>
+#include <cereal/archives/xml.hpp>
 #include <cereal/cereal.hpp>
 #include <cereal/details/helpers.hpp>
+#include <cereal/details/polymorphic_impl.hpp>
 #include <cereal/details/traits.hpp>
-#include <cereal/types/base_class.hpp>
-
+#include <cereal/details/util.hpp>
 #include <cereal/types/array.hpp>
+#include <cereal/types/base_class.hpp>
 #include <cereal/types/bitset.hpp>
 #include <cereal/types/chrono.hpp>
 #include <cereal/types/common.hpp>
@@ -32,12 +37,7 @@
 #include <cereal/types/list.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/types/memory.hpp>
-
-#include <cereal/details/util.hpp>
-
-#include <cereal/details/polymorphic_impl.hpp>
 #include <cereal/types/polymorphic.hpp>
-
 #include <cereal/types/queue.hpp>
 #include <cereal/types/set.hpp>
 #include <cereal/types/stack.hpp>
@@ -47,11 +47,6 @@
 #include <cereal/types/unordered_set.hpp>
 #include <cereal/types/utility.hpp>
 #include <cereal/types/vector.hpp>
-
-#include <cereal/archives/binary.hpp>
-#include <cereal/archives/json.hpp>
-#include <cereal/archives/portable_binary.hpp>
-#include <cereal/archives/xml.hpp>
 
 #include "SerializationMacros.h"
 

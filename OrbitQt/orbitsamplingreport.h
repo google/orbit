@@ -14,7 +14,7 @@ class OrbitSamplingReport : public QWidget {
   Q_OBJECT
 
  public:
-  explicit OrbitSamplingReport(QWidget *parent = 0);
+  explicit OrbitSamplingReport(QWidget* parent = 0);
   ~OrbitSamplingReport();
 
   void Initialize(std::shared_ptr<class SamplingReport> a_Report);
@@ -27,6 +27,6 @@ class OrbitSamplingReport : public QWidget {
   void on_PreviousCallstackButton_clicked();
 
  private:
-  Ui::OrbitSamplingReport *ui;
+  Ui::OrbitSamplingReport* ui;
   std::shared_ptr<SamplingReport> m_SamplingReport;
 };

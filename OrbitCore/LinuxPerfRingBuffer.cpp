@@ -6,12 +6,14 @@
 // Author: Florian Kuebler
 //-----------------------------------
 #include "LinuxPerfRingBuffer.h"
-#include "LinuxPerfUtils.h"
-#include "PrintVar.h"
 
 #include <linux/perf_event.h>
 #include <sys/mman.h>
+
 #include <cassert>
+
+#include "LinuxPerfUtils.h"
+#include "PrintVar.h"
 
 //-----------------------------------------------------------------------------
 LinuxPerfRingBuffer::LinuxPerfRingBuffer(uint32_t a_PerfFileDescriptor) {

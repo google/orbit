@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+
 #include "Message.h"
 
 class Debugger {

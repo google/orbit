@@ -3,7 +3,9 @@
 //-----------------------------------
 
 #include "TypeDataView.h"
+
 #include <algorithm>
+
 #include "App.h"
 #include "Capture.h"
 #include "Core.h"

@@ -3,9 +3,6 @@
 //-----------------------------------
 #pragma once
 
-#include "DataViewTypes.h"
-#include "Threading.h"
-
 #include <functional>
 #include <map>
 #include <memory>
@@ -15,6 +12,8 @@
 #include "../OrbitCore/CoreApp.h"
 #include "../OrbitCore/CrashHandler.h"
 #include "../OrbitCore/Message.h"
+#include "DataViewTypes.h"
+#include "Threading.h"
 
 struct CallStack;
 struct ContextSwitch;

@@ -3,7 +3,9 @@
 //-----------------------------------
 
 #include "SamplingReportDataView.h"
+
 #include <memory>
+
 #include "App.h"
 #include "CallStackDataView.h"
 #include "Capture.h"

@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "GlPanel.h"
+
 #include "BlackBoard.h"
 #include "CaptureWindow.h"
 #include "GlCanvas.h"

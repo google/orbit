@@ -3,8 +3,10 @@
 //-----------------------------------
 
 #include "GlCanvas.h"
+
 #include <string>
 #include <vector>
+
 #include "../OrbitCore/Core.h"
 #include "../OrbitCore/VariableTracing.h"
 #include "App.h"
@@ -540,7 +542,8 @@ void GlCanvas::RenderSamplingUI() {
   ImGui::Begin("Sampling target application", &opened);
 
   //// Typically we would use ImVec2(-1.0f,0.0f) to use all available width, or
-  ///ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses ItemWidth.
+  /// ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses
+  /// ItemWidth.
   // ImGui::ProgressBar(progress, ImVec2(-1.0f, 0.0f));
   ////ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
   // ImGui::Text("Progress Bar");

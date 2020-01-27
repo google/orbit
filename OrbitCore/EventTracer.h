@@ -6,6 +6,7 @@
 #ifdef _WIN32
 
 #include <evntrace.h>
+
 #include "Core.h"
 #include "EventBuffer.h"
 #include "EventGuid.h"

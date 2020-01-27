@@ -3,15 +3,15 @@
 //-----------------------------------
 
 #include "Pdb.h"
+
 #include <ppl.h>
+
 #include <algorithm>
 #include <fstream>
 #include <functional>
-#include "Core.h"
-
-#include "SymbolUtils.h"
 
 #include "Capture.h"
+#include "Core.h"
 #include "DiaManager.h"
 #include "Log.h"
 #include "ObjectCount.h"
@@ -19,12 +19,12 @@
 #include "OrbitType.h"
 #include "OrbitUnreal.h"
 #include "Params.h"
+#include "PrintSymbol.h"
 #include "Serialization.h"
+#include "SymbolUtils.h"
 #include "Tcp.h"
 #include "TcpServer.h"
 #include "Utils.h"
-
-#include "PrintSymbol.h"
 #include "dia2dump.h"
 
 std::shared_ptr<Pdb> GPdbDbg;

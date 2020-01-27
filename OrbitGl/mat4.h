@@ -24,34 +24,34 @@ typedef union {
   };
 } mat4;
 
-mat4 *mat4_new(void);
+mat4* mat4_new(void);
 
-void mat4_set_identity(mat4 *self);
+void mat4_set_identity(mat4* self);
 
-void mat4_set_zero(mat4 *self);
+void mat4_set_zero(mat4* self);
 
-void mat4_multiply(mat4 *self, mat4 *other);
+void mat4_multiply(mat4* self, mat4* other);
 
-void mat4_set_orthographic(mat4 *self, float left, float right, float bottom,
+void mat4_set_orthographic(mat4* self, float left, float right, float bottom,
                            float top, float znear, float zfar);
 
-void mat4_set_perspective(mat4 *self, float fovy, float aspect, float zNear,
+void mat4_set_perspective(mat4* self, float fovy, float aspect, float zNear,
                           float zFar);
 
-void mat4_set_frustum(mat4 *self, float left, float right, float bottom,
+void mat4_set_frustum(mat4* self, float left, float right, float bottom,
                       float top, float znear, float zfar);
 
-void mat4_set_rotation(mat4 *self, float angle, float x, float y, float z);
+void mat4_set_rotation(mat4* self, float angle, float x, float y, float z);
 
-void mat4_set_translation(mat4 *self, float x, float y, float z);
+void mat4_set_translation(mat4* self, float x, float y, float z);
 
-void mat4_set_scaling(mat4 *self, float x, float y, float z);
+void mat4_set_scaling(mat4* self, float x, float y, float z);
 
-void mat4_rotate(mat4 *self, float angle, float x, float y, float z);
+void mat4_rotate(mat4* self, float angle, float x, float y, float z);
 
-void mat4_translate(mat4 *self, float x, float y, float z);
+void mat4_translate(mat4* self, float x, float y, float z);
 
-void mat4_scale(mat4 *self, float x, float y, float z);
+void mat4_scale(mat4* self, float x, float y, float z);
 
 #ifdef __cplusplus
 }

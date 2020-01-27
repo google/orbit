@@ -1,16 +1,16 @@
-#include "Core.h"
-
-#include <malloc.h>
-#include "dia2dump.h"
-#include "regs.h"
-
-#include <map>
 #include "DiaParser.h"
 
+#include <malloc.h>
+
+#include <map>
+
+#include "Core.h"
 #include "Log.h"
 #include "OrbitType.h"
 #include "Pdb.h"
 #include "Utils.h"
+#include "dia2dump.h"
+#include "regs.h"
 
 inline int myDebugBreak(int) {
   DebugBreak();

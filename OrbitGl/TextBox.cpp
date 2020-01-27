@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "TextBox.h"
+
 #include "Capture.h"
 #include "GlCanvas.h"
 #include "OpenGl.h"

@@ -3,14 +3,14 @@
 //-----------------------------------
 #pragma once
 
-#include "OrbitDbgHelp.h"
-#include "OrbitType.h"
-#include "Variable.h"
-
 #include <atomic>
 #include <functional>
 #include <thread>
 #include <vector>
+
+#include "OrbitDbgHelp.h"
+#include "OrbitType.h"
+#include "Variable.h"
 
 struct IDiaSymbol;
 struct IDiaSession;

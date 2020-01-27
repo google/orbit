@@ -1,8 +1,9 @@
 #include "OrbitService.h"
-#include "App.h"
-#include "Core.h"
 
 #include <iostream>
+
+#include "App.h"
+#include "Core.h"
 
 //-----------------------------------------------------------------------------
 OrbitService::OrbitService() {

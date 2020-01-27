@@ -3,10 +3,10 @@
 //-----------------------------------
 #pragma once
 
+#include <memory>
+
 #include "BaseTypes.h"
 #include "SerializationMacros.h"
-
-#include <memory>
 
 //-----------------------------------------------------------------------------
 struct FunctionStats {

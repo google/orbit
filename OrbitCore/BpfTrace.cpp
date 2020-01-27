@@ -3,8 +3,10 @@
 //-----------------------------------
 
 #include "BpfTrace.h"
+
 #include <fstream>
 #include <sstream>
+
 #include "Capture.h"
 #include "CoreApp.h"
 #include "LinuxUtils.h"
@@ -17,8 +19,10 @@
 #if __linux__
 #include <linux/perf_event.h>
 #include <linux/version.h>
+
 #include <map>
 #include <vector>
+
 #include "BpfTraceVisitor.h"
 #include "LinuxPerfEvent.h"
 #include "LinuxPerfEventProcessor.h"

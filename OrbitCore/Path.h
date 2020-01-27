@@ -35,26 +35,26 @@ class Path {
   static std::wstring GetHome();
   static void Dump();
 
-  static std::wstring GetFileName(const std::wstring &a_FullName);
-  static std::string GetFileName(const std::string &a_FullName);
-  static std::wstring GetFileNameNoExt(const std::wstring &a_FullName);
-  static std::wstring StripExtension(const std::wstring &a_FullName);
-  static std::wstring GetExtension(const std::wstring &a_FullName);
-  static std::wstring GetDirectory(const std::wstring &a_FullName);
+  static std::wstring GetFileName(const std::wstring& a_FullName);
+  static std::string GetFileName(const std::string& a_FullName);
+  static std::wstring GetFileNameNoExt(const std::wstring& a_FullName);
+  static std::wstring StripExtension(const std::wstring& a_FullName);
+  static std::wstring GetExtension(const std::wstring& a_FullName);
+  static std::wstring GetDirectory(const std::wstring& a_FullName);
   static std::wstring GetParentDirectory(std::wstring a_FullName);
 
-  static bool FileExists(const std::wstring &a_File);
-  static uint64_t FileSize(const std::string &a_File);
-  static bool DirExists(const std::wstring &a_Dir);
-  static bool IsSourceFile(const std::wstring &a_File);
+  static bool FileExists(const std::wstring& a_File);
+  static uint64_t FileSize(const std::string& a_File);
+  static bool DirExists(const std::wstring& a_Dir);
+  static bool IsSourceFile(const std::wstring& a_File);
   static bool IsPackaged() { return m_IsPackaged; }
 
   static std::vector<std::wstring> ListFiles(
-      const std::wstring &a_Dir,
-      std::function<bool(const std::wstring &)> a_Filter =
-          [](const std::wstring &) { return true; });
-  static std::vector<std::wstring> ListFiles(const std::wstring &a_Dir,
-                                             const std::wstring &a_Filter);
+      const std::wstring& a_Dir,
+      std::function<bool(const std::wstring&)> a_Filter =
+          [](const std::wstring&) { return true; });
+  static std::vector<std::wstring> ListFiles(const std::wstring& a_Dir,
+                                             const std::wstring& a_Filter);
   static bool ContainsFile(const std::wstring a_Dir, const std::wstring a_File);
 
  private:

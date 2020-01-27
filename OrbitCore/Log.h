@@ -4,6 +4,7 @@
 #pragma once
 
 #include <vector>
+
 #include "Core.h"
 
 #define ORBIT_LOG(msg) GLogger.Log(OrbitLog::Global, msg)

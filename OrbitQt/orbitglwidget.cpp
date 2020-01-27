@@ -3,16 +3,17 @@
 //-----------------------------------
 
 #include "orbitglwidget.h"
+
 #include <QImageWriter>
 #include <QMenuBar>
 #include <QMouseEvent>
 #include <QOpenGLDebugLogger>
 #include <QOpenGLDebugMessage>
 #include <QSignalMapper>
-#include "orbitmainwindow.h"
 
 #include "../OrbitCore/PrintVar.h"
 #include "../OrbitCore/Utils.h"
+#include "orbitmainwindow.h"
 
 #define ORBIT_DEBUG_OPEN_GL 0
 

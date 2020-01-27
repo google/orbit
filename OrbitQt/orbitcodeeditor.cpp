@@ -49,9 +49,11 @@
 ****************************************************************************/
 
 #include "orbitcodeeditor.h"
+
 #include <QPushButton>
 #include <QTextCursor>
 #include <QtWidgets>
+#include <fstream>
 
 #include "../OrbitCore/LogInterface.h"
 #include "../OrbitCore/Path.h"
@@ -59,14 +61,12 @@
 #include "../OrbitCore/Utils.h"
 #include "../OrbitGl/App.h"
 
-#include <fstream>
-
-OrbitCodeEditor *OrbitCodeEditor::GFileMapEditor;
-QWidget *OrbitCodeEditor::GFileMapWidget;
+OrbitCodeEditor* OrbitCodeEditor::GFileMapEditor;
+QWidget* OrbitCodeEditor::GFileMapWidget;
 
 //![constructor]
 
-OrbitCodeEditor::OrbitCodeEditor(QWidget *parent) : QPlainTextEdit(parent) {
+OrbitCodeEditor::OrbitCodeEditor(QWidget* parent) : QPlainTextEdit(parent) {
   lineNumberArea = new LineNumberArea(this);
 
   const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -114,18 +114,18 @@ void OrbitCodeEditor::SetEditorType(EditorType a_Type) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitCodeEditor::SetFindLineEdit(QLineEdit *a_Find) {
+void OrbitCodeEditor::SetFindLineEdit(QLineEdit* a_Find) {
   if (a_Find) {
     m_FindLineEdit = a_Find;
     m_FindLineEdit->hide();
-    connect(a_Find, SIGNAL(textChanged(const QString &)), this,
-            SLOT(OnFindTextEntered(const QString &)));
+    connect(a_Find, SIGNAL(textChanged(const QString&)), this,
+            SLOT(OnFindTextEntered(const QString&)));
     m_FindLineEdit->installEventFilter(this);
   }
 }
 
 //-----------------------------------------------------------------------------
-void OrbitCodeEditor::SetSaveButton(QPushButton *a_Button) {
+void OrbitCodeEditor::SetSaveButton(QPushButton* a_Button) {
   if (m_Type == OrbitCodeEditor::FILE_MAPPING) {
     m_SaveButton = a_Button;
     connect(a_Button, SIGNAL(pressed()), this, SLOT(OnSaveMapFile()));
@@ -139,7 +139,7 @@ void OrbitCodeEditor::OnSaveMapFile() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitCodeEditor::OnFindTextEntered(const QString &) {
+void OrbitCodeEditor::OnFindTextEntered(const QString&) {
   // setFocus();
   PRINT_VAR(m_FindLineEdit->text().toStdString());
   QTextCursor cursor(textCursor());
@@ -229,7 +229,7 @@ void OrbitCodeEditor::gotoLine(int a_Line) {
 void OrbitCodeEditor::OnTimer() {
   if (m_IsOutput && isVisible()) {
     std::vector<std::string> outputEntries = LogInterface::GetOutput();
-    for (std::string &line : outputEntries) {
+    for (std::string& line : outputEntries) {
       QTextCursor prev_cursor = textCursor();
       moveCursor(QTextCursor::End);
       insertPlainText(line.c_str());
@@ -239,7 +239,7 @@ void OrbitCodeEditor::OnTimer() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitCodeEditor::SetText(const std::wstring &a_Text) {
+void OrbitCodeEditor::SetText(const std::wstring& a_Text) {
   this->document()->setPlainText(QString::fromStdWString(a_Text));
 }
 
@@ -249,7 +249,7 @@ void OrbitCodeEditor::updateLineNumberAreaWidth(int /* newBlockCount */) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitCodeEditor::updateLineNumberArea(const QRect &rect, int dy) {
+void OrbitCodeEditor::updateLineNumberArea(const QRect& rect, int dy) {
   if (dy)
     lineNumberArea->scroll(0, dy);
   else
@@ -259,7 +259,7 @@ void OrbitCodeEditor::updateLineNumberArea(const QRect &rect, int dy) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitCodeEditor::resizeEvent(QResizeEvent *e) {
+void OrbitCodeEditor::resizeEvent(QResizeEvent* e) {
   QPlainTextEdit::resizeEvent(e);
 
   QRect cr = contentsRect();
@@ -268,9 +268,9 @@ void OrbitCodeEditor::resizeEvent(QResizeEvent *e) {
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitCodeEditor::eventFilter(QObject *object, QEvent *event) {
+bool OrbitCodeEditor::eventFilter(QObject* object, QEvent* event) {
   if (object == m_FindLineEdit && event->type() == QEvent::KeyPress) {
-    QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+    QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
 
     switch (keyEvent->key()) {
       case Qt::Key_Escape:
@@ -290,14 +290,14 @@ bool OrbitCodeEditor::eventFilter(QObject *object, QEvent *event) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitCodeEditor::Find(const QString &a_String, bool a_BackWards) {
+void OrbitCodeEditor::Find(const QString& a_String, bool a_BackWards) {
   UNUSED(a_String);
   find(m_FindLineEdit->text(),
        a_BackWards ? QTextDocument::FindBackward : QTextDocument::FindFlag());
 }
 
 //-----------------------------------------------------------------------------
-void OrbitCodeEditor::keyPressEvent(QKeyEvent *e) {
+void OrbitCodeEditor::keyPressEvent(QKeyEvent* e) {
   QPlainTextEdit::keyPressEvent(e);
 
   if ((e->key() == Qt::Key_F)) {
@@ -345,10 +345,10 @@ void OrbitCodeEditor::saveFileMap() {
 
 //-----------------------------------------------------------------------------
 void OrbitCodeEditor::HighlightWord(
-    const std::wstring &a_Text, const QColor &a_Color,
-    QList<QTextEdit::ExtraSelection> &extraSelections) {
+    const std::wstring& a_Text, const QColor& a_Color,
+    QList<QTextEdit::ExtraSelection>& extraSelections) {
   QString searchString(QString::fromStdWString(a_Text));
-  QTextDocument *document = this->document();
+  QTextDocument* document = this->document();
   QTextCursor highlightCursor(document);
   QTextCursor cursor(document);
 
@@ -401,7 +401,7 @@ void OrbitCodeEditor::highlightCurrentLine() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitCodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
+void OrbitCodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event) {
   QPainter painter(lineNumberArea);
   painter.fillRect(event->rect(), QColor(30, 30, 30));
 
@@ -431,7 +431,7 @@ void OrbitCodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
 }
 
 //-----------------------------------------------------------------------------
-Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent) {
+Highlighter::Highlighter(QTextDocument* parent) : QSyntaxHighlighter(parent) {
   HighlightingRule rule;
 
   keywordFormat.setForeground(QColor(86, 156, 205));
@@ -472,7 +472,7 @@ Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent) {
                   << "\\b__asm"
                   << "\\bbool"
                   << "\\bfloat";
-  foreach (const QString &pattern, keywordPatterns) {
+  foreach (const QString& pattern, keywordPatterns) {
     rule.pattern = QRegExp(pattern);
     rule.format = keywordFormat;
     highlightingRules.append(rule);
@@ -523,8 +523,8 @@ Highlighter::Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent) {
 }
 
 //-----------------------------------------------------------------------------
-void Highlighter::highlightBlock(const QString &text) {
-  foreach (const HighlightingRule &rule, highlightingRules) {
+void Highlighter::highlightBlock(const QString& text) {
+  foreach (const HighlightingRule& rule, highlightingRules) {
     QRegExp expression(rule.pattern);
     int index = expression.indexIn(text);
     while (index >= 0) {

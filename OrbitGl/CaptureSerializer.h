@@ -5,6 +5,7 @@
 
 #include <string>
 #include <unordered_map>
+
 #include "OrbitType.h"
 #include "SerializationMacros.h"
 

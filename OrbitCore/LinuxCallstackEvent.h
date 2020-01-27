@@ -7,10 +7,10 @@
 //-----------------------------------
 #pragma once
 
+#include <string>
+
 #include "Callstack.h"
 #include "SerializationMacros.h"
-
-#include <string>
 
 //-----------------------------------------------------------------------------
 class LinuxCallstackEvent {

@@ -3,11 +3,20 @@
 //-----------------------------------
 
 #include "App.h"
+
+#include <chrono>
+#include <cmath>
+#include <fstream>
+#include <thread>
+
+#include "BpfTrace.h"
 #include "CallStackDataView.h"
 #include "Callstack.h"
 #include "Capture.h"
 #include "CaptureSerializer.h"
 #include "CaptureWindow.h"
+#include "ConnectionManager.h"
+#include "Debugger.h"
 #include "DiaManager.h"
 #include "FunctionDataView.h"
 #include "GlCanvas.h"
@@ -19,21 +28,6 @@
 #include "LogDataView.h"
 #include "MiniDump.h"
 #include "ModuleDataView.h"
-#include "OrbitSession.h"
-#include "Params.h"
-#include "PluginManager.h"
-#include "ProcessDataView.h"
-#include "RuleEditor.h"
-#include "SamplingReport.h"
-#include "ScopeTimer.h"
-#include "Serialization.h"
-#include "SessionsDataView.h"
-#include "TextRenderer.h"
-#include "TypeDataView.h"
-
-#include "BpfTrace.h"
-#include "ConnectionManager.h"
-#include "Debugger.h"
 #include "OrbitAsm/OrbitAsm.h"
 #include "OrbitCore/Capture.h"
 #include "OrbitCore/Injection.h"
@@ -45,16 +39,22 @@
 #include "OrbitCore/TcpServer.h"
 #include "OrbitCore/TimerManager.h"
 #include "OrbitCore/Utils.h"
+#include "OrbitSession.h"
+#include "Params.h"
+#include "PluginManager.h"
 #include "PrintVar.h"
+#include "ProcessDataView.h"
+#include "RuleEditor.h"
+#include "SamplingReport.h"
+#include "ScopeTimer.h"
+#include "Serialization.h"
+#include "SessionsDataView.h"
 #include "Tcp.h"
 #include "TestRemoteMessages.h"
+#include "TextRenderer.h"
+#include "TypeDataView.h"
 #include "Version.h"
 #include "curl/curl.h"
-
-#include <chrono>
-#include <cmath>
-#include <fstream>
-#include <thread>
 
 #define FREEGLUT_STATIC
 #define GLUT_DISABLE_ATEXIT_HACK

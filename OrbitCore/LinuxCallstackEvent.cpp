@@ -6,6 +6,7 @@
 // Author: Florian Kuebler
 //-----------------------------------
 #include "LinuxCallstackEvent.h"
+
 #include "Serialization.h"
 #include "SerializationMacros.h"
 

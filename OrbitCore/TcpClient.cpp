@@ -3,7 +3,9 @@
 //-----------------------------------
 
 #include "TcpClient.h"
+
 #include <thread>
+
 #include "BaseTypes.h"
 #include "Core.h"
 #include "Hijacking.h"

@@ -4,6 +4,7 @@
  * file `LICENSE` for more details.
  */
 #include "mat4.h"
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,18 +15,18 @@
 namespace ftgl {
 #endif
 
-mat4 *mat4_new(void) {
-  mat4 *self = (mat4 *)malloc(sizeof(mat4));
+mat4* mat4_new(void) {
+  mat4* self = (mat4*)malloc(sizeof(mat4));
   return self;
 }
 
-void mat4_set_zero(mat4 *self) {
+void mat4_set_zero(mat4* self) {
   if (!self) return;
 
   memset(self, 0, sizeof(mat4));
 }
 
-void mat4_set_identity(mat4 *self) {
+void mat4_set_identity(mat4* self) {
   if (!self) return;
 
   memset(self, 0, sizeof(mat4));
@@ -35,7 +36,7 @@ void mat4_set_identity(mat4 *self) {
   self->m33 = 1.0;
 }
 
-void mat4_multiply(mat4 *self, mat4 *other) {
+void mat4_multiply(mat4* self, mat4* other) {
   mat4 m;
   size_t i;
 
@@ -65,7 +66,7 @@ void mat4_multiply(mat4 *self, mat4 *other) {
   memcpy(self, &m, sizeof(mat4));
 }
 
-void mat4_set_orthographic(mat4 *self, float left, float right, float bottom,
+void mat4_set_orthographic(mat4* self, float left, float right, float bottom,
                            float top, float znear, float zfar) {
   if (!self) return;
 
@@ -82,7 +83,7 @@ void mat4_set_orthographic(mat4 *self, float left, float right, float bottom,
   self->m33 = 1.0f;
 }
 
-void mat4_set_perspective(mat4 *self, float fovy, float aspect, float znear,
+void mat4_set_perspective(mat4* self, float fovy, float aspect, float znear,
                           float zfar) {
   float h, w;
 
@@ -96,7 +97,7 @@ void mat4_set_perspective(mat4 *self, float fovy, float aspect, float znear,
   mat4_set_frustum(self, -w, w, -h, h, znear, zfar);
 }
 
-void mat4_set_frustum(mat4 *self, float left, float right, float bottom,
+void mat4_set_frustum(mat4* self, float left, float right, float bottom,
                       float top, float znear, float zfar) {
   if (!self) return;
 
@@ -116,7 +117,7 @@ void mat4_set_frustum(mat4 *self, float left, float right, float bottom,
   self->m23 = -1.0f;
 }
 
-void mat4_set_rotation(mat4 *self, float angle, float x, float y, float z) {
+void mat4_set_rotation(mat4* self, float angle, float x, float y, float z) {
   float c, s, norm;
 
   if (!self) return;
@@ -144,7 +145,7 @@ void mat4_set_rotation(mat4 *self, float angle, float x, float y, float z) {
   self->m22 = z * z * (1 - c) + c;
 }
 
-void mat4_set_translation(mat4 *self, float x, float y, float z) {
+void mat4_set_translation(mat4* self, float x, float y, float z) {
   if (!self) return;
 
   mat4_set_identity(self);
@@ -153,7 +154,7 @@ void mat4_set_translation(mat4 *self, float x, float y, float z) {
   self->m32 = z;
 }
 
-void mat4_set_scaling(mat4 *self, float x, float y, float z) {
+void mat4_set_scaling(mat4* self, float x, float y, float z) {
   if (!self) return;
 
   mat4_set_identity(self);
@@ -162,7 +163,7 @@ void mat4_set_scaling(mat4 *self, float x, float y, float z) {
   self->m22 = z;
 }
 
-void mat4_rotate(mat4 *self, float angle, float x, float y, float z) {
+void mat4_rotate(mat4* self, float angle, float x, float y, float z) {
   mat4 m;
 
   if (!self) return;
@@ -171,7 +172,7 @@ void mat4_rotate(mat4 *self, float angle, float x, float y, float z) {
   mat4_multiply(self, &m);
 }
 
-void mat4_translate(mat4 *self, float x, float y, float z) {
+void mat4_translate(mat4* self, float x, float y, float z) {
   mat4 m;
 
   if (!self) return;
@@ -180,7 +181,7 @@ void mat4_translate(mat4 *self, float x, float y, float z) {
   mat4_multiply(self, &m);
 }
 
-void mat4_scale(mat4 *self, float x, float y, float z) {
+void mat4_scale(mat4* self, float x, float y, float z) {
   mat4 m;
 
   if (!self) return;

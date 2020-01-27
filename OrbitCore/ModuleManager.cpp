@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "ModuleManager.h"
+
 #include "Capture.h"
 #include "CoreApp.h"
 #include "OrbitModule.h"

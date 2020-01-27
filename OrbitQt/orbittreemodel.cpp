@@ -1,10 +1,11 @@
 #include "orbittreemodel.h"
-#include "orbittreeitem.h"
 
 #include <QColor>
 #include <QStringList>
 
-OrbitTreeModel::OrbitTreeModel(const QString &data, QObject *parent)
+#include "orbittreeitem.h"
+
+OrbitTreeModel::OrbitTreeModel(const QString& data, QObject* parent)
     : QAbstractItemModel(parent) {
   QList<QVariant> rootData;
   rootData << "Header";
@@ -14,18 +15,17 @@ OrbitTreeModel::OrbitTreeModel(const QString &data, QObject *parent)
 
 OrbitTreeModel::~OrbitTreeModel() { delete rootItem; }
 
-int OrbitTreeModel::columnCount(const QModelIndex &parent) const {
+int OrbitTreeModel::columnCount(const QModelIndex& parent) const {
   if (parent.isValid())
-    return static_cast<OrbitTreeItem *>(parent.internalPointer())
-        ->columnCount();
+    return static_cast<OrbitTreeItem*>(parent.internalPointer())->columnCount();
   else
     return rootItem->columnCount();
 }
 
-QVariant OrbitTreeModel::data(const QModelIndex &index, int role) const {
+QVariant OrbitTreeModel::data(const QModelIndex& index, int role) const {
   if (!index.isValid()) return QVariant();
 
-  OrbitTreeItem *item = static_cast<OrbitTreeItem *>(index.internalPointer());
+  OrbitTreeItem* item = static_cast<OrbitTreeItem*>(index.internalPointer());
 
   if (role == Qt::ForegroundRole) {
     return item->MatchesFilter() ? QColor(42, 130, 218) : QColor(255, 255, 255);
@@ -36,7 +36,7 @@ QVariant OrbitTreeModel::data(const QModelIndex &index, int role) const {
   return QVariant();
 }
 
-Qt::ItemFlags OrbitTreeModel::flags(const QModelIndex &index) const {
+Qt::ItemFlags OrbitTreeModel::flags(const QModelIndex& index) const {
   if (!index.isValid()) return 0;
 
   return QAbstractItemModel::flags(index);
@@ -51,50 +51,50 @@ QVariant OrbitTreeModel::headerData(int section, Qt::Orientation orientation,
 }
 
 QModelIndex OrbitTreeModel::index(int row, int column,
-                                  const QModelIndex &parent) const {
+                                  const QModelIndex& parent) const {
   if (!hasIndex(row, column, parent)) return QModelIndex();
 
-  OrbitTreeItem *parentItem;
+  OrbitTreeItem* parentItem;
 
   if (!parent.isValid())
     parentItem = rootItem;
   else
-    parentItem = static_cast<OrbitTreeItem *>(parent.internalPointer());
+    parentItem = static_cast<OrbitTreeItem*>(parent.internalPointer());
 
-  OrbitTreeItem *childItem = parentItem->child(row);
+  OrbitTreeItem* childItem = parentItem->child(row);
   if (childItem)
     return createIndex(row, column, childItem);
   else
     return QModelIndex();
 }
 
-QModelIndex OrbitTreeModel::parent(const QModelIndex &index) const {
+QModelIndex OrbitTreeModel::parent(const QModelIndex& index) const {
   if (!index.isValid()) return QModelIndex();
 
-  OrbitTreeItem *childItem =
-      static_cast<OrbitTreeItem *>(index.internalPointer());
-  OrbitTreeItem *parentItem = childItem->parentItem();
+  OrbitTreeItem* childItem =
+      static_cast<OrbitTreeItem*>(index.internalPointer());
+  OrbitTreeItem* parentItem = childItem->parentItem();
 
   if (parentItem == rootItem) return QModelIndex();
 
   return createIndex(parentItem->row(), 0, parentItem);
 }
 
-int OrbitTreeModel::rowCount(const QModelIndex &parent) const {
-  OrbitTreeItem *parentItem;
+int OrbitTreeModel::rowCount(const QModelIndex& parent) const {
+  OrbitTreeItem* parentItem;
   if (parent.column() > 0) return 0;
 
   if (!parent.isValid())
     parentItem = rootItem;
   else
-    parentItem = static_cast<OrbitTreeItem *>(parent.internalPointer());
+    parentItem = static_cast<OrbitTreeItem*>(parent.internalPointer());
 
   return parentItem->childCount();
 }
 
-void OrbitTreeModel::setupModelData(const QStringList &lines,
-                                    OrbitTreeItem *parent) {
-  QList<OrbitTreeItem *> parents;
+void OrbitTreeModel::setupModelData(const QStringList& lines,
+                                    OrbitTreeItem* parent) {
+  QList<OrbitTreeItem*> parents;
   QList<int> indentations;
   parents << parent;
   indentations << 0;
@@ -141,7 +141,7 @@ void OrbitTreeModel::setupModelData(const QStringList &lines,
   }
 }
 
-void OrbitTreeModel::Filter(const std::wstring &a_Filter) {
+void OrbitTreeModel::Filter(const std::wstring& a_Filter) {
   if (rootItem) {
     rootItem->Filter(a_Filter);
   }

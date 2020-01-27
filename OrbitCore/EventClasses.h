@@ -154,8 +154,8 @@ struct FileIo_ReadWrite {
   ULONG64 TTID;
   ULONG64 FileObject;
   ULONG64
-      FileKey;  // To determine the file name, match the value of this property
-                // to the FileObject property of a FileIo_Name event.
+  FileKey;  // To determine the file name, match the value of this property
+            // to the FileObject property of a FileIo_Name event.
   uint32_t IoSize;
   uint32_t IoFlags;
 

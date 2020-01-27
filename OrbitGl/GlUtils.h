@@ -4,6 +4,7 @@
 #pragma once
 
 #include <iostream>
+
 #include "mat4.h"
 
 void CheckGlError();

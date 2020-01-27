@@ -4,6 +4,7 @@
 #pragma once
 
 #include <vector>
+
 #include "TcpEntity.h"
 
 class TcpClient : public TcpEntity {

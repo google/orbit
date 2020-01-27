@@ -4,6 +4,7 @@
 #pragma once
 
 #include <memory>
+
 #include "BaseTypes.h"
 #include "SerializationMacros.h"
 #include "Utils.h"

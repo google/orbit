@@ -1,13 +1,13 @@
 #include "orbitdiffdialog.h"
-#include "ui_orbitdiffdialog.h"
 
 #include <QFileDialog>
 
 #include "../OrbitCore/Diff.h"
 #include "../OrbitCore/Params.h"
 #include "../OrbitCore/Path.h"
+#include "ui_orbitdiffdialog.h"
 
-OrbitDiffDialog::OrbitDiffDialog(QWidget *parent)
+OrbitDiffDialog::OrbitDiffDialog(QWidget* parent)
     : QDialog(parent), ui(new Ui::OrbitDiffDialog) {
   ui->setupUi(this);
   ui->DiffExeLineEdit->setText(GParams.m_DiffExe.c_str());
@@ -25,11 +25,11 @@ void OrbitDiffDialog::on_BrowseButton_clicked() {
   ui->DiffExeLineEdit->setText(file);
 }
 
-void OrbitDiffDialog::on_DiffExeLineEdit_textChanged(const QString &arg1) {
+void OrbitDiffDialog::on_DiffExeLineEdit_textChanged(const QString& arg1) {
   GParams.m_DiffExe = arg1.toStdString();
 }
 
-void OrbitDiffDialog::on_ArgsLineEdit_textChanged(const QString &arg1) {
+void OrbitDiffDialog::on_ArgsLineEdit_textChanged(const QString& arg1) {
   GParams.m_DiffArgs = arg1.toStdString();
 }
 

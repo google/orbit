@@ -3,17 +3,16 @@
 //-----------------------------------
 
 #include "EventCallbacks.h"
+
+#include "Capture.h"
+#include "ContextSwitch.h"
 #include "EventClasses.h"
 #include "EventGuid.h"
 #include "EventTracer.h"
 #include "EventUtils.h"
-
-#include "Capture.h"
-#include "ContextSwitch.h"
 #include "OrbitProcess.h"
 #include "SamplingProfiler.h"
 #include "TimerManager.h"
-
 #include "evntcons.h"
 
 //-----------------------------------------------------------------------------

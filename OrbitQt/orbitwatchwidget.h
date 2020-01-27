@@ -2,7 +2,6 @@
 #define ORBITWATCHWIDGET_H
 
 #include <QWidget>
-
 #include <mutex>
 #include <unordered_map>
 

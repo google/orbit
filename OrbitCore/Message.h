@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+
 #include "BaseTypes.h"
 
 #pragma pack(push, 1)

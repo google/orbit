@@ -1,8 +1,10 @@
 #include "licensedialog.h"
+
 #include <QPlainTextEdit>
+
 #include "ui_licensedialog.h"
 
-LicenseDialog::LicenseDialog(QWidget *parent)
+LicenseDialog::LicenseDialog(QWidget* parent)
     : QDialog(parent), ui(new Ui::LicenseDialog) {
   ui->setupUi(this);
 }

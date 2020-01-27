@@ -3,7 +3,9 @@
 //-----------------------------------
 
 #include "OrbitDia.h"
+
 #include <dia2.h>
+
 #include "Core.h"
 #include "Log.h"
 #include "dia2dump.h"

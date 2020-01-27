@@ -3,7 +3,9 @@
 //-----------------------------------
 
 #include "ProcessUtils.h"
+
 #include <memory>
+
 #include "Log.h"
 
 #ifdef _WIN32
@@ -33,15 +35,15 @@
 typedef BOOL WINAPI Wow64GetThreadContext_t(__in HANDLE hThread,
                                             __inout PWOW64_CONTEXT lpContext);
 typedef DWORD WINAPI Wow64SuspendThread_t(__in HANDLE hThread);
-Wow64GetThreadContext_t *fn_Wow64GetThreadContext =
-    (Wow64GetThreadContext_t *)GetProcAddress(GetModuleHandle(L"kernel32"),
-                                              "Wow64GetThreadContext");
-Wow64SuspendThread_t *fn_Wow64SuspendThread =
-    (Wow64SuspendThread_t *)GetProcAddress(GetModuleHandle(L"kernel32"),
-                                           "Wow64SuspendThread");
+Wow64GetThreadContext_t* fn_Wow64GetThreadContext =
+    (Wow64GetThreadContext_t*)GetProcAddress(GetModuleHandle(L"kernel32"),
+                                             "Wow64GetThreadContext");
+Wow64SuspendThread_t* fn_Wow64SuspendThread =
+    (Wow64SuspendThread_t*)GetProcAddress(GetModuleHandle(L"kernel32"),
+                                          "Wow64SuspendThread");
 #endif
 
-int IsNumeric(const char *ccharptr_CharacterList) {
+int IsNumeric(const char* ccharptr_CharacterList) {
   for (; *ccharptr_CharacterList; ccharptr_CharacterList++)
     if (*ccharptr_CharacterList < '0' || *ccharptr_CharacterList > '9')
       return 0;  // false
@@ -56,7 +58,7 @@ bool ProcessUtils::Is64Bit(HANDLE hProcess) {
   typedef BOOL WINAPI IsWow64Process_t(__in HANDLE hProcess,
                                        __out PBOOL Wow64Process);
   static bool first = true;
-  static IsWow64Process_t *IsWow64ProcessPtr = NULL;
+  static IsWow64Process_t* IsWow64ProcessPtr = NULL;
 
 #ifndef _WIN64
   static BOOL isOn64BitOs = 0;
@@ -64,7 +66,7 @@ bool ProcessUtils::Is64Bit(HANDLE hProcess) {
 
   if (first) {
     first = false;
-    IsWow64ProcessPtr = (IsWow64Process_t *)GetProcAddress(
+    IsWow64ProcessPtr = (IsWow64Process_t*)GetProcAddress(
         GetModuleHandle(L"kernel32"), "IsWow64Process");
 #ifndef _WIN64
     if (!IsWow64ProcessPtr) return false;
@@ -99,7 +101,7 @@ void ProcessList::Clear() {
 }
 
 //-----------------------------------------------------------------------------
-static std::string FileToString(const std::string &a_FileName) {
+static std::string FileToString(const std::string& a_FileName) {
   std::stringstream buffer;
   std::ifstream inFile(a_FileName);
   if (!inFile.fail()) {
@@ -224,7 +226,7 @@ void ProcessList::Refresh() {
 //-----------------------------------------------------------------------------
 void ProcessList::SortByID() {
   std::sort(m_Processes.begin(), m_Processes.end(),
-            [](std::shared_ptr<Process> &a_P1, std::shared_ptr<Process> &a_P2) {
+            [](std::shared_ptr<Process>& a_P1, std::shared_ptr<Process>& a_P2) {
               return a_P1->GetID() < a_P2->GetID();
             });
 }
@@ -232,7 +234,7 @@ void ProcessList::SortByID() {
 //-----------------------------------------------------------------------------
 void ProcessList::SortByName() {
   std::sort(m_Processes.begin(), m_Processes.end(),
-            [](std::shared_ptr<Process> &a_P1, std::shared_ptr<Process> &a_P2) {
+            [](std::shared_ptr<Process>& a_P1, std::shared_ptr<Process>& a_P2) {
               return a_P1->m_Name < a_P2->m_Name;
             });
 }
@@ -240,7 +242,7 @@ void ProcessList::SortByName() {
 //-----------------------------------------------------------------------------
 void ProcessList::SortByCPU() {
   std::sort(m_Processes.begin(), m_Processes.end(),
-            [](std::shared_ptr<Process> &a_P1, std::shared_ptr<Process> &a_P2) {
+            [](std::shared_ptr<Process>& a_P1, std::shared_ptr<Process>& a_P2) {
               return a_P1->GetCpuUsage() < a_P2->GetCpuUsage();
             });
 }
@@ -248,7 +250,7 @@ void ProcessList::SortByCPU() {
 //-----------------------------------------------------------------------------
 void ProcessList::UpdateCpuTimes() {
 #ifdef WIN32
-  for (std::shared_ptr<Process> &process : m_Processes) {
+  for (std::shared_ptr<Process>& process : m_Processes) {
     process->UpdateCpuTime();
   }
 #else
@@ -263,7 +265,7 @@ void ProcessList::UpdateCpuTimes() {
 
 //-----------------------------------------------------------------------------
 bool ProcessList::Contains(uint32_t a_PID) const {
-  for (const std::shared_ptr<Process> &process : m_Processes) {
+  for (const std::shared_ptr<Process>& process : m_Processes) {
     if (process->GetID() == a_PID) {
       return true;
     }
@@ -274,7 +276,7 @@ bool ProcessList::Contains(uint32_t a_PID) const {
 
 //-----------------------------------------------------------------------------
 void ProcessList::SetRemote(bool a_Value) {
-  for (std::shared_ptr<Process> &process : m_Processes) {
+  for (std::shared_ptr<Process>& process : m_Processes) {
     process->SetIsRemote(true);
   }
 }

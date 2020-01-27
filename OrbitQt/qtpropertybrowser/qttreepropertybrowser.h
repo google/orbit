@@ -67,7 +67,7 @@ class QT_QTPROPERTYBROWSER_EXPORT QtTreePropertyBrowser
  public:
   enum ResizeMode { Interactive, Stretch, Fixed, ResizeToContents };
 
-  QtTreePropertyBrowser(QWidget *parent = 0);
+  QtTreePropertyBrowser(QWidget* parent = 0);
   ~QtTreePropertyBrowser();
 
   int indentation() const;
@@ -88,41 +88,41 @@ class QT_QTPROPERTYBROWSER_EXPORT QtTreePropertyBrowser
   int splitterPosition() const;
   void setSplitterPosition(int position);
 
-  void setExpanded(QtBrowserItem *item, bool expanded);
-  bool isExpanded(QtBrowserItem *item) const;
+  void setExpanded(QtBrowserItem* item, bool expanded);
+  bool isExpanded(QtBrowserItem* item) const;
 
-  bool isItemVisible(QtBrowserItem *item) const;
-  void setItemVisible(QtBrowserItem *item, bool visible);
+  bool isItemVisible(QtBrowserItem* item) const;
+  void setItemVisible(QtBrowserItem* item, bool visible);
 
-  void setBackgroundColor(QtBrowserItem *item, const QColor &color);
-  QColor backgroundColor(QtBrowserItem *item) const;
-  QColor calculatedBackgroundColor(QtBrowserItem *item) const;
+  void setBackgroundColor(QtBrowserItem* item, const QColor& color);
+  QColor backgroundColor(QtBrowserItem* item) const;
+  QColor calculatedBackgroundColor(QtBrowserItem* item) const;
 
   void setPropertiesWithoutValueMarked(bool mark);
   bool propertiesWithoutValueMarked() const;
 
-  void editItem(QtBrowserItem *item);
+  void editItem(QtBrowserItem* item);
 
  Q_SIGNALS:
 
-  void collapsed(QtBrowserItem *item);
-  void expanded(QtBrowserItem *item);
+  void collapsed(QtBrowserItem* item);
+  void expanded(QtBrowserItem* item);
 
  protected:
-  virtual void itemInserted(QtBrowserItem *item, QtBrowserItem *afterItem);
-  virtual void itemRemoved(QtBrowserItem *item);
-  virtual void itemChanged(QtBrowserItem *item);
+  virtual void itemInserted(QtBrowserItem* item, QtBrowserItem* afterItem);
+  virtual void itemRemoved(QtBrowserItem* item);
+  virtual void itemChanged(QtBrowserItem* item);
 
  private:
-  QtTreePropertyBrowserPrivate *d_ptr;
+  QtTreePropertyBrowserPrivate* d_ptr;
   Q_DECLARE_PRIVATE(QtTreePropertyBrowser)
   Q_DISABLE_COPY(QtTreePropertyBrowser)
 
-  Q_PRIVATE_SLOT(d_func(), void slotCollapsed(const QModelIndex &))
-  Q_PRIVATE_SLOT(d_func(), void slotExpanded(const QModelIndex &))
-  Q_PRIVATE_SLOT(d_func(), void slotCurrentBrowserItemChanged(QtBrowserItem *))
-  Q_PRIVATE_SLOT(d_func(), void slotCurrentTreeItemChanged(QTreeWidgetItem *,
-                                                           QTreeWidgetItem *))
+  Q_PRIVATE_SLOT(d_func(), void slotCollapsed(const QModelIndex&))
+  Q_PRIVATE_SLOT(d_func(), void slotExpanded(const QModelIndex&))
+  Q_PRIVATE_SLOT(d_func(), void slotCurrentBrowserItemChanged(QtBrowserItem*))
+  Q_PRIVATE_SLOT(d_func(), void slotCurrentTreeItemChanged(QTreeWidgetItem*,
+                                                           QTreeWidgetItem*))
 };
 
 #if QT_VERSION >= 0x040400

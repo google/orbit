@@ -3,16 +3,16 @@
 //-----------------------------------
 #pragma once
 
+#include <atomic>
+#include <type_traits>
+#include <unordered_map>
+#include <vector>
+
 #include "../OrbitPlugin/OrbitUserData.h"
 #include "Message.h"
 #include "TcpForward.h"
 #include "Threading.h"
 #include "Utils.h"
-
-#include <atomic>
-#include <type_traits>
-#include <unordered_map>
-#include <vector>
 
 //-----------------------------------------------------------------------------
 class TcpPacket {

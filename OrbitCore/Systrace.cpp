@@ -1,5 +1,7 @@
 #include "Systrace.h"
+
 #include <fstream>
+
 #include "Capture.h"
 #include "LinuxUtils.h"
 #include "PrintVar.h"
