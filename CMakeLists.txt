@@ -23,6 +23,7 @@ find_package(OpenGL REQUIRED)
 find_package(glew REQUIRED)
 find_package(imgui REQUIRED)
 find_package(libcurl REQUIRED)
+find_package(oqpi REQUIRED)
 
 if(NOT WIN32)
   find_package(X11 REQUIRED)
@@ -34,6 +35,9 @@ find_package(Qt5 COMPONENTS Core Widgets)
 
 if(WIN32)
   find_package(minhook REQUIRED)
+  find_package(breakpad REQUIRED)
+  find_package(DIASDK REQUIRED)
+  find_package(DIA2Dump REQUIRED)
 endif()
 
 if(WIN32)

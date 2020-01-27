@@ -1,10 +1,9 @@
 project(freetype-gl)
 
 find_path(FREETYPE_GL_INCLUDE_DIR freetype-gl.h PATH_SUFFIXES freetype-gl)
-find_library(FREETYPE_GL_LIBRARY freetype-gl)
+find_library(FREETYPE_GL_LIBRARY freetype-gl${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 include(FindPackageHandleStandardArgs)
-
 find_package_handle_standard_args(freetype-gl DEFAULT_MSG FREETYPE_GL_LIBRARY
                                   FREETYPE_GL_INCLUDE_DIR)
 

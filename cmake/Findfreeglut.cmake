@@ -1,18 +1,18 @@
 project(freeglut)
 
-find_library(FREEGLUT_SHARED libglut.so)
-find_library(FREEGLUT_STATIC libglut.a)
+#find_library(FREEGLUT_SHARED freeglut${CMAKE_SHARED_LIBRARY_SUFFIX})
+find_library(FREEGLUT_LIB freeglut${CMAKE_STATIC_LIBRARY_SUFFIX})
 find_path(FREEGLUT_INCLUDE_DIR glut.h PATH_SUFFIXES GL)
 
 include(FindPackageHandleStandardArgs)
 
-find_package_handle_standard_args(freeglut_shared DEFAULT_MSG FREEGLUT_SHARED
+find_package_handle_standard_args(freeglut_shared DEFAULT_MSG FREEGLUT_LIB
                                   FREEGLUT_INCLUDE_DIR)
 
 if(freeglut_shared_FOUND)
   add_library(freeglut_shared SHARED IMPORTED GLOBAL)
   set_target_properties(freeglut_shared PROPERTIES IMPORTED_LOCATION
-                                                   ${FREEGLUT_SHARED})
+                                                   ${FREEGLUT_LIB})
   target_include_directories(freeglut_shared INTERFACE ${FREEGLUT_INCLUDE_DIR})
 
   add_library(freeglut::freeglut ALIAS freeglut_shared)

@@ -1,4 +1,3 @@
-
 project(xxHash C)
 set(DIR external/xxHash-r42)
 
