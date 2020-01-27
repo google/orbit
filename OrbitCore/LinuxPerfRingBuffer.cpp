@@ -5,6 +5,7 @@
 //-----------------------------------
 // Author: Florian Kuebler
 //-----------------------------------
+
 #include "LinuxPerfRingBuffer.h"
 
 #include <linux/perf_event.h>
@@ -15,17 +16,17 @@
 #include "LinuxPerfUtils.h"
 #include "PrintVar.h"
 
-//-----------------------------------------------------------------------------
 LinuxPerfRingBuffer::LinuxPerfRingBuffer(uint32_t a_PerfFileDescriptor) {
   m_FileDescriptor = a_PerfFileDescriptor;
   void* mmap_ret = mmap_mapping(m_FileDescriptor);
 
-  // the memory directly before the ring buffer contains the metadata
+  // The first page, just before the ring buffer, is the metadata page.
   m_Metadata = reinterpret_cast<perf_event_mmap_page*>(mmap_ret);
   m_BufferLength = m_Metadata->data_size;
 
-  // the buffer length must be a power of 2, so find the exponent in order
-  // to later optimize the code using shifts/masks instead of divs/mods.
+  // The buffer length is a power of 2 (otherwise mmap for the perf_event_open
+  // ring buffer would have failed), so find the exponent in order to later
+  // optimize the code using shifts/masks instead of divs/mods.
   uint32_t exponent = 0;
   uint64_t rest = m_BufferLength;
   while (rest >>= 1) ++exponent;
@@ -35,49 +36,40 @@ LinuxPerfRingBuffer::LinuxPerfRingBuffer(uint32_t a_PerfFileDescriptor) {
   m_Buffer = reinterpret_cast<char*>(mmap_ret) + m_Metadata->data_offset;
 }
 
-//-----------------------------------------------------------------------------
 LinuxPerfRingBuffer::LinuxPerfRingBuffer(LinuxPerfRingBuffer&& other) noexcept {
-  m_Metadata = other.m_Metadata;
-  m_Buffer = other.m_Buffer;
-  m_BufferLength = other.m_BufferLength;
-  m_BufferLengthExponent = other.m_BufferLengthExponent;
-  m_FileDescriptor = other.m_FileDescriptor;
-  other.m_Metadata = nullptr;
-  other.m_Buffer = nullptr;
-  other.m_BufferLength = 0;
-  other.m_BufferLengthExponent = 0;
+  m_Metadata = std::exchange(other.m_Metadata, nullptr);
+  m_Buffer = std::exchange(other.m_Buffer, nullptr);
+  m_BufferLength = std::exchange(other.m_BufferLength, 0);
+  m_BufferLengthExponent = std::exchange(other.m_BufferLengthExponent, 0);
+  m_FileDescriptor = std::exchange(other.m_FileDescriptor, -1);
 }
 
-//-----------------------------------------------------------------------------
 LinuxPerfRingBuffer& LinuxPerfRingBuffer::operator=(
     LinuxPerfRingBuffer&& other) noexcept {
-  std::swap(m_Metadata, other.m_Metadata);
-  std::swap(m_Buffer, other.m_Buffer);
-  std::swap(m_BufferLength, other.m_BufferLength);
-  std::swap(m_BufferLengthExponent, other.m_BufferLengthExponent);
-  std::swap(m_FileDescriptor, other.m_FileDescriptor);
-
+  if (&other != this) {
+    std::swap(m_Metadata, other.m_Metadata);
+    std::swap(m_Buffer, other.m_Buffer);
+    std::swap(m_BufferLength, other.m_BufferLength);
+    std::swap(m_BufferLengthExponent, other.m_BufferLengthExponent);
+    std::swap(m_FileDescriptor, other.m_FileDescriptor);
+  }
   return *this;
 }
 
-//-----------------------------------------------------------------------------
 LinuxPerfRingBuffer::~LinuxPerfRingBuffer() {
   if (m_Metadata != nullptr) {
-    // delete the memory mapping
-    int error = munmap(m_Metadata, MMAP_LENGTH);
-    if (error == -1) {
-      PRINT("mmap error: %d\n", strerror(errno));
+    int munmap_ret = munmap(m_Metadata, MMAP_LENGTH);
+    if (munmap_ret != 0) {
+      PRINT("munmap error: %s\n", strerror(errno));
     }
   }
 }
 
-//-----------------------------------------------------------------------------
 bool LinuxPerfRingBuffer::HasNewData() {
   return m_Metadata->data_tail + sizeof(perf_event_header) <=
          m_Metadata->data_head;
 }
 
-//-----------------------------------------------------------------------------
 void LinuxPerfRingBuffer::ReadHeader(perf_event_header* a_Header) {
   Read(reinterpret_cast<uint8_t*>(a_Header), sizeof(perf_event_header));
 
@@ -88,27 +80,24 @@ void LinuxPerfRingBuffer::ReadHeader(perf_event_header* a_Header) {
   assert(m_Metadata->data_tail + a_Header->size <= m_Metadata->data_head);
 }
 
-//-----------------------------------------------------------------------------
 void LinuxPerfRingBuffer::SkipRecord(const perf_event_header& a_Header) {
   // write back how far we read the buffer.
   m_Metadata->data_tail += a_Header.size;
 }
 
-//-----------------------------------------------------------------------------
 void LinuxPerfRingBuffer::Read(uint8_t* a_Destination, uint64_t a_Count) {
   const uint64_t index = m_Metadata->data_tail;
   const uint32_t exponent = m_BufferLengthExponent;
 
-  // as m_BufferLength is a power of two, we can optimize index % m_BufferLength
-  // to:
+  // As m_BufferLength is a power of two, optimize index % m_BufferLength to:
   const uint64_t modulo = index & (m_BufferLength - 1);
 
-  // also we can optimize index / m_BufferLength to:
+  // Also we can optimize index / m_BufferLength to:
   const uint64_t index_div_length =
       (index + ((index >> 63) & ((1 << exponent) + ~0llu))) >> exponent;
 
   const uint64_t index_count = index + a_Count - 1;
-  // and also (index + a_Count - 1) / m_BufferLength
+  // And also (index + a_Count - 1) / m_BufferLength to:
   const uint64_t index_count_div_length =
       (index_count + ((index_count >> 63) & ((1 << exponent) + ~0llu))) >>
       exponent;
@@ -130,14 +119,14 @@ void LinuxPerfRingBuffer::Read(uint8_t* a_Destination, uint64_t a_Count) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void* LinuxPerfRingBuffer::mmap_mapping(int32_t a_FileDescriptor) {
   // http://man7.org/linux/man-pages/man2/mmap.2.html
   // Use mmap to get access to the ring buffer.
+  assert(__builtin_popcount(MMAP_LENGTH - getpagesize()) == 1);
   void* mmap_ret = mmap(nullptr, MMAP_LENGTH, PROT_READ | PROT_WRITE,
                         MAP_SHARED, a_FileDescriptor, 0);
   if (mmap_ret == reinterpret_cast<void*>(-1)) {
-    PRINT("mmap error: %d\n", errno);
+    PRINT("mmap error: %s\n", strerror(errno));
   }
 
   return mmap_ret;

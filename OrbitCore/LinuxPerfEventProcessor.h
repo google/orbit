@@ -52,7 +52,8 @@ class LinuxPerfEventProcessor {
   // are processed in the correct order.
   const uint64_t DELAY_IN_NS = 100000000 /*ns*/;
 
-  LinuxPerfEventProcessor(std::unique_ptr<LinuxPerfEventVisitor> a_Visitor)
+  explicit LinuxPerfEventProcessor(
+      std::unique_ptr<LinuxPerfEventVisitor> a_Visitor)
       : m_Visitor(std::move(a_Visitor)) {}
 
   void Push(std::unique_ptr<LinuxPerfEvent> a_Event);

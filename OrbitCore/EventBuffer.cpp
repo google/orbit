@@ -89,6 +89,14 @@ void EventTracer::Start(uint32_t a_PID) {
 
   if (GParams.m_TrackContextSwitches || !GParams.m_SampleWithPerf) {
     m_EventTracer = std::make_shared<LinuxEventTracer>(a_PID);
+
+    std::vector<Function*> selected_functions;
+    selected_functions.reserve(Capture::GSelectedFunctionsMap.size());
+    for (const auto& function : Capture::GSelectedFunctionsMap) {
+      selected_functions.push_back(function.second);
+    }
+    m_EventTracer->SetInstrumentedFunctions(selected_functions);
+
     m_EventTracer->Start();
   }
 }

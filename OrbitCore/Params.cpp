@@ -29,7 +29,7 @@ Params::Params()
       m_AutoReleasePdb(false),
       m_BpftraceCallstacks(false),
       m_SystemWideScheduling(true),
-      m_UseBpftrace(true),
+      m_UseBpftrace(false),
       m_SampleWithPerf(false),
       m_MaxNumTimers(1000000),
       m_FontSize(14.f),

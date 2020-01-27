@@ -10,6 +10,8 @@
 
 #include <vector>
 
+// TODO: Remove all references to BpfTrace.
+#include "BpfTraceVisitor.h"
 #include "Capture.h"
 #include "ContextSwitch.h"
 #include "CoreApp.h"
@@ -21,69 +23,79 @@
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
 #include "Params.h"
-#include "PrintVar.h"
 #include "SamplingProfiler.h"
 #include "TimerManager.h"
 
-//-----------------------------------------------------------------------------
-void LinuxEventTracer::Start() {
-  PRINT_FUNC;
-#if __linux__
-  *m_ExitRequested = false;
-
-  m_Thread = std::make_shared<std::thread>(&LinuxEventTracer::Run, m_Pid,
-                                           m_Frequency, m_ExitRequested);
-  m_Thread->detach();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-void LinuxEventTracer::Stop() { *m_ExitRequested = true; }
-
-//-----------------------------------------------------------------------------
-void LinuxEventTracer::Run(
-    pid_t a_Pid, int32_t a_Frequency,
+// TODO: Refactor this huge method.
+void LinuxEventTracerThread::Run(
     const std::shared_ptr<std::atomic<bool>>& a_ExitRequested) {
-  int cpus = static_cast<int>(std::thread::hardware_concurrency());
-  // Some compilers does not support hardware_concurrency.
-  if (cpus == 0) {
-    cpus = std::stoi(LinuxUtils::ExecuteCommand("nproc"));
+  if (!ComputeSamplingPeriodNs()) {
+    return;
   }
 
+  LoadNumCpus();
+
   std::vector<int32_t> fds;
+  std::unordered_map<int32_t, Function*> uprobe_fds_to_function;
+  std::unordered_map<int32_t, Function*> uretprobe_fds_to_function;
 
   if (GParams.m_TrackContextSwitches) {
     if (GParams.m_SystemWideScheduling) {
       // perf_event_open for all cpus to keep track of process spawning.
-      for (int cpu = 0; cpu < cpus; cpu++) {
+      for (int32_t cpu = 0; cpu < num_cpus_; cpu++) {
         fds.push_back(LinuxPerfUtils::context_switch_open(-1, cpu));
       }
     } else {
       // perf_event_open for all cpus and the PID to keep track of process
       // spawning.
-      fds.push_back(LinuxPerfUtils::context_switch_open(
-          Capture::GTargetProcess->GetID(), -1));
+      fds.push_back(LinuxPerfUtils::context_switch_open(pid_, -1));
     }
   }
 
-  // TODO(b/148209993): Consider switching to CPU-wide profiling.
-  for (pid_t tid : LinuxUtils::ListThreads(Capture::GTargetProcess->GetID())) {
-    // Keep threads in sync.
-    Capture::GTargetProcess->AddThreadId(tid);
+  LinuxPerfEventProcessor uprobe_event_processor(
+      std::make_unique<BpfTraceVisitor>());
 
-    if (!GParams.m_SampleWithPerf) {
-      fds.push_back(LinuxPerfUtils::stack_sample_event_open(tid, a_Frequency));
+  if (!GParams.m_UseBpftrace) {
+    for (const auto& function : instrumented_functions_) {
+      for (int32_t cpu = 0; cpu < num_cpus_; cpu++) {
+        int uprobe_fd = LinuxPerfUtils::uprobe_stack_event_open(
+            ws2s(function->m_Pdb->GetFileName()).c_str(), function->m_Address,
+            -1, cpu);
+        fds.push_back(uprobe_fd);
+        uprobe_fds_to_function[uprobe_fd] = function;
+
+        int uretprobe_fd = LinuxPerfUtils::uretprobe_stack_event_open(
+            ws2s(function->m_Pdb->GetFileName()).c_str(), function->m_Address,
+            -1, cpu);
+        fds.push_back(uretprobe_fd);
+        uretprobe_fds_to_function[uretprobe_fd] = function;
+      }
     }
   }
 
   LibunwindstackUnwinder unwinder{};
-  unwinder.SetMaps(LinuxUtils::ReadMaps(a_Pid));
+  unwinder.SetMaps(LinuxUtils::ReadMaps(pid_));
 
+  // TODO(b/148209993): Sample based on CPU and filter by pid.
+  for (pid_t tid : LinuxUtils::ListThreads(pid_)) {
+    // Keep threads in sync.
+    Capture::GTargetProcess->AddThreadId(tid);
+
+    if (!GParams.m_SampleWithPerf) {
+      fds.push_back(LinuxPerfUtils::stack_sample_event_open(tid, sampling_period_ns_));
+    }
+  }
+
+  // TODO: New threads might spawn here before forks can be recorded.
+
+  // Create the perf_event_open ring buffers.
   std::vector<LinuxPerfRingBuffer> ring_buffers;
+  ring_buffers.reserve(fds.size());
   for (int32_t fd : fds) {
     ring_buffers.emplace_back(fd);
-
-    // Start recording via ioctl.
+  }
+  // Start capturing.
+  for (int32_t fd : fds) {
     LinuxPerfUtils::start_capturing(fd);
   }
 
@@ -99,79 +111,93 @@ void LinuxEventTracer::Run(
     }
 
     new_events = false;
+    pid_t new_thread = -1;
 
     // Read from all ring buffers, create events and store them in the
     // event_queue. In order to ensure that no buffer is read constantly while
     // others overflow, we schedule the reading using round-robin like
     // scheduling.
     for (LinuxPerfRingBuffer& ring_buffer : ring_buffers) {
+      if (*a_ExitRequested || new_thread >= 0) {
+        break;
+      }
+
+      bool is_uprobes =
+          uprobe_fds_to_function.count(ring_buffer.FileDescriptor()) > 0;
+      bool is_uretprobes =
+          uretprobe_fds_to_function.count(ring_buffer.FileDescriptor()) > 0;
+
       uint32_t read_from_this_buffer = 0;
       // Read up to ROUND_ROBIN_BATCH_SIZE (5) new events
       while (ring_buffer.HasNewData() &&
              read_from_this_buffer < ROUND_ROBIN_BATCH_SIZE) {
+        if (*a_ExitRequested || new_thread >= 0) {
+          break;
+        }
+
         read_from_this_buffer++;
         new_events = true;
         perf_event_header header{};
         ring_buffer.ReadHeader(&header);
 
         // perf_event_header::type contains the type of record, e.g.,
-        //  PERF_RECORD_SAMPLE, PERF_RECORD_MMAP, etc., defined in enum
-        //  perf_event_type in perf_event.h.
+        // PERF_RECORD_SAMPLE, PERF_RECORD_MMAP, etc., defined in enum
+        // perf_event_type in perf_event.h.
         switch (header.type) {
           // non system-wide profiling:
           case PERF_RECORD_SWITCH: {
-            auto context_switch =
+            auto event =
                 ring_buffer.ConsumeRecord<LinuxContextSwitchEvent>(header);
-            if (context_switch.IsSwitchOut()) {
+            if (event.IsSwitchOut()) {
               ++Capture::GNumContextSwitches;
 
-              ContextSwitch CS(ContextSwitch::Out);
-              CS.m_ThreadId = context_switch.TID();
-              CS.m_Time = context_switch.Timestamp();
-              CS.m_ProcessorIndex = context_switch.CPU();
+              ContextSwitch context_switch(ContextSwitch::Out);
+              context_switch.m_ThreadId = event.TID();
+              context_switch.m_Time = event.Timestamp();
+              context_switch.m_ProcessorIndex = event.CPU();
               // TODO: Is this correct?
-              CS.m_ProcessorNumber = context_switch.CPU();
-              GCoreApp->ProcessContextSwitch(CS);
+              context_switch.m_ProcessorNumber = event.CPU();
+              GCoreApp->ProcessContextSwitch(context_switch);
             } else {
               ++Capture::GNumContextSwitches;
 
               ContextSwitch CS(ContextSwitch::In);
-              CS.m_ThreadId = context_switch.TID();
-              CS.m_Time = context_switch.Timestamp();
-              CS.m_ProcessorIndex = context_switch.CPU();
+              CS.m_ThreadId = event.TID();
+              CS.m_Time = event.Timestamp();
+              CS.m_ProcessorIndex = event.CPU();
               // TODO: Is this correct?
-              CS.m_ProcessorNumber = context_switch.CPU();
+              CS.m_ProcessorNumber = event.CPU();
               GCoreApp->ProcessContextSwitch(CS);
             }
           } break;
 
           // system-wide profiling
           case PERF_RECORD_SWITCH_CPU_WIDE: {
-            auto context_switch =
+            auto event =
                 ring_buffer.ConsumeRecord<LinuxSystemWideContextSwitchEvent>(
                     header);
-            if (context_switch.PrevTID() != 0) {
+            if (event.PrevTID() != 0) {
               ++Capture::GNumContextSwitches;
 
-              ContextSwitch CS(ContextSwitch::Out);
-              CS.m_ThreadId = context_switch.PrevTID();
-              CS.m_Time = context_switch.Timestamp();
-              CS.m_ProcessorIndex = context_switch.CPU();
+              ContextSwitch context_switch(ContextSwitch::Out);
+              context_switch.m_ThreadId = event.PrevTID();
+              context_switch.m_Time = event.Timestamp();
+              context_switch.m_ProcessorIndex = event.CPU();
               // TODO: Is this correct?
-              CS.m_ProcessorNumber = context_switch.CPU();
-              GCoreApp->ProcessContextSwitch(CS);
+              context_switch.m_ProcessorNumber = event.CPU();
+              GCoreApp->ProcessContextSwitch(context_switch);
             }
 
             // record start of excetion
-            if (context_switch.NextTID() != 0) {
+            if (event.NextTID() != 0) {
               ++Capture::GNumContextSwitches;
 
               ContextSwitch CS(ContextSwitch::In);
-              CS.m_ThreadId = context_switch.NextTID();
-              CS.m_Time = context_switch.Timestamp();
-              CS.m_ProcessorIndex = context_switch.CPU();
+              CS.m_ThreadId = event.NextTID();
+              CS.m_Time = event.Timestamp();
+              CS.m_ProcessorIndex = event.CPU();
               // TODO: Is this correct?
-              CS.m_ProcessorNumber = context_switch.CPU();
+              CS.m_ProcessorNumber = event.CPU();
               GCoreApp->ProcessContextSwitch(CS);
             }
           } break;
@@ -179,70 +205,135 @@ void LinuxEventTracer::Run(
           case PERF_RECORD_FORK: {
             auto fork = ring_buffer.ConsumeRecord<LinuxForkEvent>(header);
 
-            if (fork.PID() == a_Pid) {
-              // A new thread of the sampled process was spawned:
-              // start sampling it.
-              int32_t fd = LinuxPerfUtils::stack_sample_event_open(fork.TID(),
-                                                                   a_Frequency);
-              fds.push_back(fd);
-              ring_buffers.emplace_back(fd);
-              LinuxPerfUtils::start_capturing(fd);
+            if (fork.PID() == pid_) {
+              // A new thread of the sampled process was spawned.
+              new_thread = fork.TID();
+              // Do not add a new ring buffer to ring_buffers here as we are
+              // already iterating over ring_buffers.
             }
           } break;
 
           case PERF_RECORD_EXIT: {
             auto exit = ring_buffer.ConsumeRecord<LinuxForkEvent>(header);
-            if (exit.PID() == a_Pid) {
+            if (exit.PID() == pid_) {
               // TODO: stop event recording, close ring buffer, close file
-              // descriptor.
+              //  descriptor.
             }
           } break;
 
           case PERF_RECORD_MMAP: {
-            // There was a call to mmap with PROT_EXEC, hence
-            // refresh the maps. This should happen rarely.
+            // There was a call to mmap with PROT_EXEC, hence refresh the maps.
+            // This should happen rarely.
             ring_buffer.SkipRecord(header);
-            unwinder.SetMaps(LinuxUtils::ReadMaps(a_Pid));
+            unwinder.SetMaps(LinuxUtils::ReadMaps(pid_));
           } break;
 
           case PERF_RECORD_SAMPLE: {
-            auto sample =
-                ring_buffer.ConsumeRecord<LinuxStackSampleEvent>(header);
+            if (is_uprobes) {
+              auto sample =
+                  ring_buffer.ConsumeRecord<LinuxUprobeEventWithStack>(header);
 
-            std::vector<unwindstack::FrameData> frames = unwinder.Unwind(
-                sample.Registers(), sample.StackDump(), sample.StackSize());
-            if (!frames.empty()) {
-              HandleCallstack(sample.TID(), sample.Timestamp(), frames);
+              std::vector<unwindstack::FrameData> frames = unwinder.Unwind(
+                  sample.Registers(), sample.StackDump(), sample.StackSize());
+              if (!frames.empty()) {
+                HandleCallstack(sample.TID(), sample.Timestamp(), frames);
+              }
+
+              sample.SetFunction(
+                  uprobe_fds_to_function.at(ring_buffer.FileDescriptor()));
+              uprobe_event_processor.Push(
+                  std::make_unique<LinuxUprobeEventWithStack>(
+                      std::move(sample)));
+
+            } else if (is_uretprobes) {
+              auto sample =
+                  ring_buffer.ConsumeRecord<LinuxUretprobeEventWithStack>(
+                      header);
+
+              std::vector<unwindstack::FrameData> frames = unwinder.Unwind(
+                  sample.Registers(), sample.StackDump(), sample.StackSize());
+              if (!frames.empty()) {
+                HandleCallstack(sample.TID(), sample.Timestamp(), frames);
+              }
+
+              sample.SetFunction(
+                  uretprobe_fds_to_function.at(ring_buffer.FileDescriptor()));
+              uprobe_event_processor.Push(
+                  std::make_unique<LinuxUretprobeEventWithStack>(
+                      std::move(sample)));
+
+            } else {
+              auto sample =
+                  ring_buffer.ConsumeRecord<LinuxStackSampleEvent>(header);
+
+              std::vector<unwindstack::FrameData> frames = unwinder.Unwind(
+                  sample.Registers(), sample.StackDump(), sample.StackSize());
+              if (!frames.empty()) {
+                HandleCallstack(sample.TID(), sample.Timestamp(), frames);
+              }
             }
           } break;
 
           case PERF_RECORD_LOST: {
             auto lost = ring_buffer.ConsumeRecord<LinuxPerfLostEvent>(header);
-            PRINT("Lost %u Events\n", lost.Lost());
+            PRINT("Lost %u events\n", lost.Lost());
           } break;
 
-          default:
-            PRINT("Unexpected Perf Sample Type: %u\n", header.type);
+          default: {
+            PRINT("Unexpected perf_event_header::type: %u\n", header.type);
             ring_buffer.SkipRecord(header);
-            break;
+          } break;
         }
       }
     }
+
+    if (new_thread >= 0) {
+      int32_t fd =
+          LinuxPerfUtils::stack_sample_event_open(new_thread, sampling_period_ns_);
+      fds.push_back(fd);
+      ring_buffers.emplace_back(fd);
+      LinuxPerfUtils::start_capturing(fd);
+    }
+
+    uprobe_event_processor.ProcessTillOffset();
   }
+
+  uprobe_event_processor.ProcessAll();
 
   // stop capturing
   for (int32_t fd : fds) {
     LinuxPerfUtils::stop_capturing(fd);
   }
+
   ring_buffers.clear();
   for (int32_t fd : fds) {
     close(fd);
   }
 }
 
-//-----------------------------------------------------------------------------
-void LinuxEventTracer::HandleCallstack(
-    ThreadID tid, uint64_t timestamp,
+bool LinuxEventTracerThread::ComputeSamplingPeriodNs() {
+  double period_ns_dbl = 1'000'000'000 / sampling_frequency_;
+  if (period_ns_dbl > 0 &&
+      period_ns_dbl <
+          static_cast<double>(std::numeric_limits<uint64_t>::max())) {
+    sampling_period_ns_ = static_cast<uint64_t>(period_ns_dbl);
+    return true;
+  } else {
+    PRINT("Invalid frequency: %.3f\n", sampling_frequency_);
+    return false;
+  }
+}
+
+void LinuxEventTracerThread::LoadNumCpus() {
+  num_cpus_ = static_cast<int>(std::thread::hardware_concurrency());
+  // Some compilers does not support hardware_concurrency.
+  if (num_cpus_ == 0) {
+    num_cpus_ = std::stoi(LinuxUtils::ExecuteCommand("nproc"));
+  }
+}
+
+void LinuxEventTracerThread::HandleCallstack(
+    pid_t tid, uint64_t timestamp,
     const std::vector<unwindstack::FrameData>& frames) {
   CallStack cs;
   cs.m_ThreadId = tid;

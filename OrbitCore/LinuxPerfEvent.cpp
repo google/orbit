@@ -14,48 +14,43 @@
 // LinuxPerfEventVisitor needs to be an incomplete type to avoid the circular
 // dependency between LinuxPerfEvent.h and LinuxPerfEventVisitor.h.
 
-//-----------------------------------------------------------------------------
 void LinuxPerfLostEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
   a_Visitor->visit(this);
 }
 
-//-----------------------------------------------------------------------------
 void LinuxForkEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
   a_Visitor->visit(this);
 }
 
-//-----------------------------------------------------------------------------
 void LinuxExitEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
   a_Visitor->visit(this);
 }
 
-//-----------------------------------------------------------------------------
 void LinuxContextSwitchEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
   a_Visitor->visit(this);
 }
 
-//-----------------------------------------------------------------------------
 void LinuxSystemWideContextSwitchEvent::accept(
     LinuxPerfEventVisitor* a_Visitor) {
   a_Visitor->visit(this);
 }
 
-//-----------------------------------------------------------------------------
 void LinuxStackSampleEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
   a_Visitor->visit(this);
 }
 
-//-----------------------------------------------------------------------------
 void LinuxUprobeEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
   a_Visitor->visit(this);
 }
 
-//-----------------------------------------------------------------------------
 void LinuxUprobeEventWithStack::accept(LinuxPerfEventVisitor* a_Visitor) {
   a_Visitor->visit(this);
 }
 
-//-----------------------------------------------------------------------------
 void LinuxUretprobeEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
+  a_Visitor->visit(this);
+}
+
+void LinuxUretprobeEventWithStack::accept(LinuxPerfEventVisitor* a_Visitor) {
   a_Visitor->visit(this);
 }
