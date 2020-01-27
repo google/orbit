@@ -150,6 +150,7 @@ else()
   target_sources(
     OrbitCore
     PUBLIC BpfTraceVisitor.h
+           BpfTrace.h
            LinuxUtils.h
            LinuxPerfEvent.h
            LinuxPerfEventVisitor.h
@@ -173,4 +174,19 @@ target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(
   OrbitCore PUBLIC cereal xxHash::xxHash concurrentqueue::concurrentqueue
-                   multicore::multicore libcurl::libcurl)
+                   multicore::multicore libcurl::libcurl oqpi::oqpi )
+
+
+if(WIN32)
+  target_link_libraries(OrbitCore PRIVATE minhook::minhook DIA2Dump::DIA2Dump breakpad::breakpad_client)
+  target_compile_definitions(OrbitCore PRIVATE -D_WIN32_WINNT=0x0700)
+  target_compile_definitions(OrbitCore PRIVATE -DNTDDI_VERSION=0x06030000)
+endif()
+
+target_compile_definitions(OrbitCore PUBLIC WIN32_LEAN_AND_MEAN)
+target_compile_definitions(OrbitCore PUBLIC INITGUID)
+target_compile_definitions(OrbitCore PUBLIC NOMINMAX)
+target_compile_definitions(OrbitCore PUBLIC UNICODE)
+target_compile_definitions(OrbitCore PUBLIC _UNICODE)
+
+target_compile_features(OrbitCore PUBLIC cxx_std_11)

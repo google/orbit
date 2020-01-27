@@ -3,7 +3,6 @@
 //-----------------------------------
 #pragma once
 
-#define INITGUID
 #include <evntrace.h>
 #include <Guiddef.h>
 

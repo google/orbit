@@ -105,6 +105,6 @@ target_link_libraries(
          freetype-gl::freetype-gl
          OpenGL::GL
          Freetype::Freetype
-         GLEW::glew_s
+         GLEW::glew
          imgui::imgui
-         freeglut::freeglut_s)
+         freeglut::freeglut)

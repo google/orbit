@@ -10,7 +10,7 @@
 
 #ifdef _WIN32
 
-#include <google_breakpad/processor/minidump.h>
+#include <processor/minidump.h>
 
 using namespace google_breakpad;
 

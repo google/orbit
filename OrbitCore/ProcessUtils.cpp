@@ -14,19 +14,19 @@
 #include <sys/types.h> // for opendir(), readdir(), closedir()
 #include <sys/stat.h> // for stat()
 
-#include <iostream>
-#include <cstdlib>
-#include <cstring>
-#include <cstdarg>
-#include <fstream>
-#include <streambuf>
-
 #define PROC_DIRECTORY "/proc/"
 #define CASE_SENSITIVE    1
 #define CASE_INSENSITIVE  0
 #define EXACT_MATCH       1
 #define INEXACT_MATCH     0
 #endif
+
+#include <iostream>
+#include <cstdlib>
+#include <cstring>
+#include <cstdarg>
+#include <fstream>
+#include <streambuf>
 
 // Is64BitProcess function taken from Very Sleepy
 #ifdef _WIN64

@@ -1,12 +1,6 @@
-set(HEADERS 
-    OrbitData.h
-    OrbitSDK.h
-    OrbitUserData.h
-    UserPlugin.h
-)
-set(SOURCES UserPlugin.cpp)
+add_library(OrbitPlugin STATIC)
 
-source_group("Header Files" FILES ${HEADERS})
-source_group("Source Files" FILES ${SOURCES})
+target_sources(OrbitPlugin PRIVATE OrbitData.h OrbitSDK.h OrbitUserData.h UserPlugin.h)
+target_sources(OrbitPlugin PUBLIC UserPlugin.cpp)
 
-add_library(OrbitPlugin STATIC ${SOURCES})
+target_link_libraries(OrbitPlugin PUBLIC OrbitCore imgui::imgui)

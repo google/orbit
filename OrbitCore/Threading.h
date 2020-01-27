@@ -8,6 +8,7 @@
 #include <thread>
 #include <autoresetevent.h>
 
+
 // Moodycamel's concurrent queue
 #ifdef WIN32
 #pragma warning(push, 0)
@@ -19,8 +20,9 @@
 
 // HEA-L's oqpi
 #ifdef _WIN32
+#include <processthreadsapi.h>
 #define OQPI_USE_DEFAULT
-#include "../external/oqpi/include/oqpi.hpp"
+#include "oqpi.hpp"
 using oqpi_tk = oqpi::default_helpers;
 #endif
 
