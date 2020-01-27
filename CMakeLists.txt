@@ -30,7 +30,7 @@ endif()
 
 find_package(freeglut REQUIRED)
 
-find_package(Qt5 COMPONENTS Core Widgets Network)
+find_package(Qt5 COMPONENTS Core Widgets)
 
 if(WIN32)
   find_package(minhook REQUIRED)
