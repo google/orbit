@@ -110,7 +110,8 @@ target_link_libraries(
          capstone::capstone)
 
 if(NOT WIN32)
-  target_link_libraries(OrbitGl PRIVATE X11::X11 X11::Xi X11::Xxf86vm GLEW::glew_s)
+  target_link_libraries(OrbitGl PRIVATE X11::X11 X11::Xi X11::Xxf86vm
+                                        GLEW::glew_s)
 else()
   target_link_libraries(OrbitGl PRIVATE GLEW::glew)
 endif()
