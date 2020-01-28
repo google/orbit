@@ -5,6 +5,7 @@
 
 #include <map>
 
+#include "OrbitGl/OpenGl.h"
 #include "Platform.h"
 #include "TextBox.h"
 #include "freetype-gl.h"

@@ -6,6 +6,7 @@
 
 #include "Log.h"
 #include "OrbitCore/Core.h"
+#include "OrbitGl/OpenGl.h"
 #include "freetype-gl.h"
 
 void CheckGlError() {
