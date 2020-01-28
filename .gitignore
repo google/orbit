@@ -149,3 +149,5 @@ external/minhook/bin/
 build/
 /.idea/
 /cmake-build*/
+.clangd/
+compile_commands.json

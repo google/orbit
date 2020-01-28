@@ -157,11 +157,13 @@ else()
            LinuxPerfEventProcessor.h
            LinuxPerfRingBuffer.h
            LinuxPerfUtils.h
+           LibunwindstackUnwinder.h
            LinuxEventTracer.h)
 
   target_sources(
     OrbitCore
     PUBLIC BpfTraceVisitor.cpp
+           LibunwindstackUnwinder.cpp
            LinuxUtils.cpp
            LinuxPerfEvent.cpp
            LinuxPerfRingBuffer.cpp
@@ -185,6 +187,8 @@ if(WIN32)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib peparse::peparse)
   target_compile_definitions(OrbitCore PRIVATE -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitCore PRIVATE -DNTDDI_VERSION=0x06030000)
+else()
+  target_link_libraries(OrbitCore PUBLIC unwindstack::unwindstack)
 endif()
 
 target_compile_definitions(OrbitCore PUBLIC WIN32_LEAN_AND_MEAN)

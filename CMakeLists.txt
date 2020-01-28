@@ -32,6 +32,8 @@ find_package(oqpi REQUIRED)
 find_package(capstone REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(Qt5 COMPONENTS Core Widgets)
+find_package(lzma REQUIRED)
+find_package(unwindstack REQUIRED)
 
 if(WIN32)
   find_package(minhook REQUIRED)
@@ -55,6 +57,7 @@ if(NOT WIN32)
 endif()
 add_library(CURL::CURL ALIAS CURL)
 
+
 # Set preprocessor defines
 # These are only necessary for windows, but we will define them
 # on all platforms, to keep the builds similar as possible.
@@ -63,19 +66,7 @@ add_definitions(-DUNICODE -D_UNICODE)
 
 if(WIN32)
   add_definitions(-DWIN32)
-endif()
 
-# # Clang specific stuff
-# if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-#   list(APPEND CMAKE_CXX_FLAGS "-Wno-switch-enum")
-# endif()
-
-# if(CMAKE_COMPILER_IS_GNUCXX) list(APPEND CMAKE_CXX_FLAGS "-Wall") list(APPEND
-# CMAKE_CXX_FLAGS "-Wextra") list(APPEND CMAKE_CXX_FLAGS "-Wno-unused-
-# parameter") list(APPEND CMAKE_CXX_FLAGS "-Wno-missing-field-initializers")
-# endif()
-
-if(WIN32)
   add_subdirectory(OrbitDll)
   add_subdirectory(OrbitAsm)
 else()

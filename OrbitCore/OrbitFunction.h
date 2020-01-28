@@ -4,11 +4,14 @@
 #pragma once
 
 #include <string>
+#include <vector>
+
 #include "OrbitDbgHelp.h"
 #include "cvconst.h"
 #include "BaseTypes.h"
 #include "FunctionStats.h"
 #include "SerializationMacros.h"
+#include "Utils.h"
 
 #ifdef _WIN32
 #include "TypeInfoStructs.h"

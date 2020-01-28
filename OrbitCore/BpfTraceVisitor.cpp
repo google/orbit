@@ -20,7 +20,7 @@ void BpfTraceVisitor::visit(LinuxUprobeEvent* a_Event)
 void BpfTraceVisitor::visit(LinuxUretprobeEvent* a_Event)
 {
     std::vector<Timer>& timers = m_TimerStacks[a_Event->TID()];
-    if (timers.size())
+    if (!timers.empty())
     {
         Timer& timer = timers.back();
         timer.m_End = a_Event->Timestamp();

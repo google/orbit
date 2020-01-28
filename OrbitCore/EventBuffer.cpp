@@ -36,9 +36,9 @@ void EventBuffer::Print()
 }
 
 //-----------------------------------------------------------------------------
-std::vector< CallstackEvent > EventBuffer::GetCallstackEvents( long long a_TimeBegin
-                                                             , long long a_TimeEnd
-                                                             , ThreadID a_ThreadId /*= 0*/)
+std::vector< CallstackEvent > EventBuffer::GetCallstackEvents( long long a_TimeBegin,
+                                                               long long a_TimeEnd,
+                                                               ThreadID a_ThreadId /*= 0*/)
 {
     std::vector< CallstackEvent > callstackEvents;
     for( auto & pair : m_CallstackEvents )
@@ -92,12 +92,15 @@ void EventTracer::Start( uint32_t a_PID )
     Capture::NewSamplingProfiler();
     Capture::GSamplingProfiler->StartCapture();
 
-    m_Perf = std::make_shared<LinuxPerf>(a_PID);
-    m_Perf->Start();
-
-    if( GParams.m_TrackContextSwitches )
+    if ( GParams.m_SampleWithPerf )
     {
-        m_EventTracer = std::make_shared<LinuxEventTracer>();
+        m_Perf = std::make_shared<LinuxPerf>(a_PID);
+        m_Perf->Start();
+    }
+
+    if( GParams.m_TrackContextSwitches || !GParams.m_SampleWithPerf )
+    {
+        m_EventTracer = std::make_shared<LinuxEventTracer>(a_PID);
         m_EventTracer->Start();
     }
 }
