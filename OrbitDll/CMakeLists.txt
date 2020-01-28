@@ -8,7 +8,8 @@ target_link_libraries(
     OrbitCore
 	OrbitAsm
     minhook::minhook
-    breakpad::breakpad_client
+    unofficial::breakpad::libbreakpad
+    unofficial::breakpad::libbreakpad_client
 )
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)

@@ -178,7 +178,7 @@ target_link_libraries(
 
 
 if(WIN32)
-  target_link_libraries(OrbitCore PRIVATE minhook::minhook DIA2Dump::DIA2Dump breakpad::breakpad_client)
+  target_link_libraries(OrbitCore PRIVATE minhook::minhook DIA2Dump::DIA2Dump unofficial::breakpad::libbreakpad unofficial::breakpad::libbreakpad_client)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib peparse::peparse)
   target_compile_definitions(OrbitCore PRIVATE -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitCore PRIVATE -DNTDDI_VERSION=0x06030000)

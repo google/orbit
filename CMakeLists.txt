@@ -35,10 +35,14 @@ find_package(Qt5 COMPONENTS Core Widgets)
 
 if(WIN32)
   find_package(minhook REQUIRED)
-  find_package(breakpad REQUIRED)
+  find_package(unofficial-breakpad CONFIG REQUIRED)
   find_package(DIASDK REQUIRED)
   find_package(DIA2Dump REQUIRED)
   find_package(peparse REQUIRED)
+
+  # Fix the include path in the breakpad target
+  get_target_property(INC unofficial::breakpad::libbreakpad INTERFACE_INCLUDE_DIRECTORIES)
+  set_target_properties(unofficial::breakpad::libbreakpad unofficial::breakpad::libbreakpad_client PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${INC}/google_breakpad")
 endif()
 
 # Since the curl packages does not provide cmake targets, we
