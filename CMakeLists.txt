@@ -12,26 +12,25 @@ project(Orbit C CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+if(NOT WIN32)
+  find_package(X11 REQUIRED)
+endif()
+
 find_package(Threads REQUIRED)
 find_package(cereal REQUIRED)
 find_package(xxHash REQUIRED)
 find_package(multicore REQUIRED)
 find_package(concurrentqueue REQUIRED)
-find_package(freetype REQUIRED)
+find_package(Freetype REQUIRED)
 find_package(freetype-gl REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(glew REQUIRED)
+find_package(GLEW REQUIRED)
 find_package(imgui REQUIRED)
-find_package(libcurl REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(CURL REQUIRED)
 find_package(oqpi REQUIRED)
 find_package(capstone REQUIRED)
-
-if(NOT WIN32)
-  find_package(X11 REQUIRED)
-endif()
-
-find_package(freeglut REQUIRED)
-
+find_package(GLUT REQUIRED)
 find_package(Qt5 COMPONENTS Core Widgets)
 
 if(WIN32)
@@ -42,39 +41,41 @@ if(WIN32)
   find_package(peparse REQUIRED)
 endif()
 
-if(WIN32)
-  # Set preprocessor defines
-  add_definitions(-DNOMINMAX)
-  add_definitions(-DUNICODE -D_UNICODE)
-endif()
+# Since the curl packages does not provide cmake targets, we
+# will add one here.
+add_library(CURL STATIC IMPORTED GLOBAL)
+set_target_properties(CURL PROPERTIES IMPORTED_LOCATION ${CURL_LIBRARIES})
+target_include_directories(CURL SYSTEM INTERFACE ${CURK_INCLUDE_DIRS})
+target_link_libraries(CURL INTERFACE OpenSSL::SSL)
+add_library(CURL::CURL ALIAS CURL)
 
-# Clang specific stuff
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  list(APPEND CMAKE_CXX_FLAGS "-Wno-switch-enum")
-endif()
+# Set preprocessor defines
+# These are only necessary for windows, but we will define them
+# on all platforms, to keep the builds similar as possible.
+add_definitions(-DNOMINMAX)
+add_definitions(-DUNICODE -D_UNICODE)
 
-#if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-#  list(APPEND CMAKE_CXX_FLAGS "/W4")
-#  list(APPEND CMAKE_CXX_FLAGS "/wd4100")
-#  list(APPEND CMAKE_CXX_FLAGS "/wd4245")
-#  list(APPEND CMAKE_CXX_FLAGS "/wd4244")
-#  list(APPEND CMAKE_CXX_FLAGS "/wd4481")
-#  list(APPEND CMAKE_CXX_FLAGS "/wd4201")
-#endif()
+# # Clang specific stuff
+# if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#   list(APPEND CMAKE_CXX_FLAGS "-Wno-switch-enum")
+# endif()
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-  list(APPEND CMAKE_CXX_FLAGS "-Wall")
-  list(APPEND CMAKE_CXX_FLAGS "-Wextra")
-  list(APPEND CMAKE_CXX_FLAGS "-Wno-unused-parameter")
-  list(APPEND CMAKE_CXX_FLAGS "-Wno-missing-field-initializers")
-endif()
+# if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC") list(APPEND CMAKE_CXX_FLAGS "/W4")
+# list(APPEND CMAKE_CXX_FLAGS "/wd4100") list(APPEND CMAKE_CXX_FLAGS "/wd4245")
+# list(APPEND CMAKE_CXX_FLAGS "/wd4244") list(APPEND CMAKE_CXX_FLAGS "/wd4481")
+# list(APPEND CMAKE_CXX_FLAGS "/wd4201") endif()
+
+# if(CMAKE_COMPILER_IS_GNUCXX) list(APPEND CMAKE_CXX_FLAGS "-Wall") list(APPEND
+# CMAKE_CXX_FLAGS "-Wextra") list(APPEND CMAKE_CXX_FLAGS "-Wno-unused-
+# parameter") list(APPEND CMAKE_CXX_FLAGS "-Wno-missing-field-initializers")
+# endif()
 
 if(WIN32)
   add_subdirectory(OrbitDll)
   add_subdirectory(OrbitAsm)
 else()
-  # Hack: Some parts on linux depend on headers in OrbitAsm,
-  # but OrbitAsm is not available for Windows.
+  # Hack: Some parts on linux depend on headers in OrbitAsm, but OrbitAsm is not
+  # available for Windows.
   add_library(OrbitAsm INTERFACE)
   target_include_directories(OrbitAsm INTERFACE OrbitAsm/)
 endif()
