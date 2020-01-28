@@ -62,7 +62,7 @@ PrintVars(FREETYPE_GL_INCLUDE_DIR)
 # endif()
 
 # imgui
-find_path(IMGUI_INCLUDE_DIR imgui.h) 
+find_path(IMGUI_INCLUDE_DIR imgui.h)
 if(WIN32)
 find_library(IMGUI_LIB imgui.lib)
 endif()
@@ -105,7 +105,6 @@ set(HEADERS
     PluginCanvas.h
     PluginManager.h
     ProcessDataView.h
-    resource.h
     RuleEditor.h
     SamplingReport.h
     SamplingReportDataView.h
