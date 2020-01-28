@@ -79,8 +79,8 @@ void BpfTrace::Start() {
                                              m_BpfCommand.c_str(), m_Callback,
                                              &m_ExitRequested);
   } else {
-    m_Thread = std::make_shared<std::thread>(
-        BpfTrace::RunPerfEventOpenSingleBuffers, &m_ExitRequested);
+    m_Thread = std::make_shared<std::thread>(BpfTrace::RunPerfEventOpen,
+                                             &m_ExitRequested);
   }
 
   m_Thread->detach();
@@ -327,7 +327,6 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested) {
   bool new_events = false;
 
   while (!(*a_ExitRequested)) {
-    SCOPE_TIMER_LOG("Perf events consume iteration");
     // Lets sleep a bit, such that we are not constantly reading from the
     // buffers and thus wasting cpu time. 10000 microseconds are still small
     // enough to not have our buffers overflown and therefore losing events.
@@ -354,7 +353,7 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested) {
         // defined in enum perf_event_type in perf_event.h.
         switch (header.type) {
           case PERF_RECORD_SAMPLE: {
-            PRINT("Consuming uprobe record...");
+            SCOPE_TIMER_LOG("PERF_RECORD_SAMPLE");
             if (GParams.m_BpftraceCallstacks) {
               auto record =
                   ring_buffer.ConsumeRecord<LinuxUprobeEventWithStack>(header);
