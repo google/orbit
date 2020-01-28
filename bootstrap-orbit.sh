@@ -3,7 +3,7 @@
 # Install required dependencies
 sudo add-apt-repository universe
 sudo apt-get update
-sudo apt-get install -y build-essential cmake
+sudo apt-get install -y build-essential cmake ninja
 sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev 
 sudo apt-get install -y linux-tools-common
 
@@ -14,7 +14,7 @@ if [ -f "vcpkg" ]
 then
     echo "Orbit: found vcpkg"
 else
-    git submodule update --init .
+    git submodule update --init
     echo "Orbit: compiling vcpkg"
     ./bootstrap-vcpkg.sh
 fi
@@ -26,9 +26,12 @@ fi
 # CMake
 cd ../..
 if [ ! -d build/ ]; then
-mkdir build
+  mkdir build
 fi
+
 cd build
-cmake -DCMAKE_BUILD_TYPE=Debug ..
-#cmake ..
-make
+if [ ! -f toolchain.cmake ]; then
+  cp ../contrib/toolchains/toolchain-linux-default-release.cmake toolchain.cmake
+fi
+cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -G Ninja ..
+cmake --build .
