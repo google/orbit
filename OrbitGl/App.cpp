@@ -57,7 +57,6 @@
 #include <fstream>
 #include <chrono>
 
-#define FREEGLUT_STATIC
 #define GLUT_DISABLE_ATEXIT_HACK
 #include "GL/freeglut.h"
 

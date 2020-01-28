@@ -1,19 +1,18 @@
 @echo off
 
 :: Check for QTDIR environment variable
-if defined QTDIR (
-    echo QTDIR=%QTDIR% 
+if defined Qt5_DIR (
+    echo Qt5_DIR=%Qt5_DIR% 
 ) else ( 
     echo ======= ERROR =======
-    echo QTDIR environment variable not found.
-    echo Please set your QTDIR environment variable to point to your Qt installation directory [ex. C:\Qt\5.12.1\msvc2017_64]
+    echo Qt5_DIR environment variable not found.
+    echo Please set your Qt5_DIR environment variable to point to your Qt installation directory [ex. C:\Qt\5.12.1\msvc2017_64\lib\cmake\Qt5]
     echo ======= ERROR =======
     goto :eof
 )
 
 :: Build vcpkg
-call git submodule init
-call git submodule update
+call git submodule update --init
 cd external/vcpkg
 
 if exist "vcpkg.exe" (
@@ -24,35 +23,27 @@ if exist "vcpkg.exe" (
 
 :: 32 bit
 set VCPKG_DEFAULT_TRIPLET=x86-windows
-vcpkg install asio cereal breakpad curl
+vcpkg install freeglut glew freetype-gl curl breakpad capstone asio cereal imgui
 
 :: Build dynamic dependencies
 set VCPKG_DEFAULT_TRIPLET=x64-windows
 vcpkg install freeglut glew freetype-gl curl breakpad capstone asio cereal imgui
 
-:: Build static dependencies
-set VCPKG_DEFAULT_TRIPLET=x64-windows-static
-vcpkg install capstone freeglut imgui
-
 cd ../..
 
 :: Fix breakpad missing file
 copy "external\vcpkg\buildtrees\breakpad\src\9e12edba6d-12269dd01c\src\processor\linked_ptr.h" "external\vcpkg\installed\x64-windows\include\google_breakpad\processor\linked_ptr.h" /y
+copy "external\vcpkg\buildtrees\breakpad\src\9e12edba6d-12269dd01c\src\processor\linked_ptr.h" "external\vcpkg\installed\x86-windows\include\google_breakpad\processor\linked_ptr.h" /y
 
-:: CMake build/x64
-mkdir build
-cd build
-
-mkdir x86
-cd x86
-cmake -DCMAKE_TOOLCHAIN_FILE='../../external/vcpkg/scripts/buildsystems/vcpkg.cmake' ../..
-cmake --build . --target ALL_BUILD --config Release
+:: CMake build
+mkdir build_release_x86
+cd build_release_x86
+copy "..\contrib\toolchains\toolchain-windows-msvc2019-release.cmake" "toolchain.cmake" /y
+cmake -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" -G "Visual Studio 16 2019" -A "Win32" ..
 cd ..
 
-mkdir x64
-cd x64
-cmake -DCMAKE_TOOLCHAIN_FILE='../../external/vcpkg/scripts/buildsystems/vcpkg.cmake' -DCMAKE_GENERATOR_PLATFORM=x64 ../..
-cmake --build . --target ALL_BUILD --config Release
-cd ../..
-start build/x64/OrbitQt/Release/Orbit.exe
-
+mkdir build_release_x64
+cd build_release_x64
+copy "..\contrib\toolchains\toolchain-windows-msvc2019-release.cmake" "toolchain.cmake" /y
+cmake -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" -G "Visual Studio 16 2019" -A "x64" ..
+cd ..

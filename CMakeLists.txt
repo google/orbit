@@ -61,15 +61,14 @@ add_library(CURL::CURL ALIAS CURL)
 add_definitions(-DNOMINMAX)
 add_definitions(-DUNICODE -D_UNICODE)
 
+if(WIN32)
+  add_definitions(-DWIN32)
+endif()
+
 # # Clang specific stuff
 # if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 #   list(APPEND CMAKE_CXX_FLAGS "-Wno-switch-enum")
 # endif()
-
-# if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC") list(APPEND CMAKE_CXX_FLAGS "/W4")
-# list(APPEND CMAKE_CXX_FLAGS "/wd4100") list(APPEND CMAKE_CXX_FLAGS "/wd4245")
-# list(APPEND CMAKE_CXX_FLAGS "/wd4244") list(APPEND CMAKE_CXX_FLAGS "/wd4481")
-# list(APPEND CMAKE_CXX_FLAGS "/wd4201") endif()
 
 # if(CMAKE_COMPILER_IS_GNUCXX) list(APPEND CMAKE_CXX_FLAGS "-Wall") list(APPEND
 # CMAKE_CXX_FLAGS "-Wextra") list(APPEND CMAKE_CXX_FLAGS "-Wno-unused-
