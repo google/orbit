@@ -153,18 +153,6 @@ inline CallStackPOD GetCallstackManual(DWORD64 a_ProgramCounter,
   return CS;
 }
 
-//-----------------------------------------------------------------------------
-inline CallStack GetCallStackAsm() {
-  CONTEXT c;
-  memset(&c, 0, sizeof(CONTEXT));
-
-  __asm call x __asm x : pop eax __asm mov c.Eip, eax __asm mov c.Ebp,
-      ebp __asm mov c.Esp,
-      esp
-
-      return GetCallstackManual(c.Eip, c.Ebp + 4);
-}
-
 #endif
 
 #endif
