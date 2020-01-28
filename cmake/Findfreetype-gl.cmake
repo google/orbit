@@ -2,9 +2,9 @@ project(freetype-gl)
 
 find_path(FREETYPE_GL_INCLUDE_DIR freetype-gl.h PATH_SUFFIXES freetype-gl)
 if(WIN32)
-  find_library(FREETYPE_GL_LIBRARY libfreetype-gl.lib)
+  find_library(FREETYPE_GL_LIBRARY freetype-gl.lib)
 else()
-  find_library(FREETYPE_GL_LIBRARY liblibfreetype-gl.a)
+  find_library(FREETYPE_GL_LIBRARY libfreetype-gl.a)
 endif()
 
 include(FindPackageHandleStandardArgs)

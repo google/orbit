@@ -105,11 +105,12 @@ target_link_libraries(
          freetype-gl::freetype-gl
          OpenGL::GL
          Freetype::Freetype
-         GLEW::glew_s
          imgui::imgui
          GLUT::GLUT
          capstone::capstone)
 
 if(NOT WIN32)
-  target_link_libraries(OrbitGl PRIVATE X11::X11 X11::Xi X11::Xxf86vm)
+  target_link_libraries(OrbitGl PRIVATE X11::X11 X11::Xi X11::Xxf86vm GLEW::glew_s)
+else()
+  target_link_libraries(OrbitGl PRIVATE GLEW::glew)
 endif()
