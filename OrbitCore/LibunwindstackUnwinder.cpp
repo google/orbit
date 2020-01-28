@@ -16,29 +16,16 @@ bool LibunwindstackUnwinder::SetMaps(const std::string& maps_buffer) {
 
 const std::array<int, unwindstack::X86_64_REG_LAST>
     LibunwindstackUnwinder::UNWINDSTACK_REGS_TO_PERF_REGS{
-    PERF_REG_X86_AX,
-    PERF_REG_X86_DX,
-    PERF_REG_X86_CX,
-    PERF_REG_X86_BX,
-    PERF_REG_X86_SI,
-    PERF_REG_X86_DI,
-    PERF_REG_X86_BP,
-    PERF_REG_X86_SP,
-    PERF_REG_X86_R8,
-    PERF_REG_X86_R9,
-    PERF_REG_X86_R10,
-    PERF_REG_X86_R11,
-    PERF_REG_X86_R12,
-    PERF_REG_X86_R13,
-    PERF_REG_X86_R14,
-    PERF_REG_X86_R15,
-    PERF_REG_X86_IP,
-};
+        PERF_REG_X86_AX,  PERF_REG_X86_DX,  PERF_REG_X86_CX,  PERF_REG_X86_BX,
+        PERF_REG_X86_SI,  PERF_REG_X86_DI,  PERF_REG_X86_BP,  PERF_REG_X86_SP,
+        PERF_REG_X86_R8,  PERF_REG_X86_R9,  PERF_REG_X86_R10, PERF_REG_X86_R11,
+        PERF_REG_X86_R12, PERF_REG_X86_R13, PERF_REG_X86_R14, PERF_REG_X86_R15,
+        PERF_REG_X86_IP,
+    };
 
 std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
     const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
     const char* stack_dump, uint64_t stack_dump_size) {
-
   if (!maps_) {
     PRINT("LibunwindstackUnwinder::Unwind: maps not set\n");
     return {};
@@ -56,7 +43,8 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
           regs[unwindstack::X86_64_REG_RSP] + stack_dump_size);
 
   unwindstack::Unwinder unwinder{MAX_FRAMES, maps_.get(), &regs, memory};
-  // Careful: regs are modified. Use regs.Clone() if you need to reuse regs later.
+  // Careful: regs are modified. Use regs.Clone() if you need to reuse regs
+  // later.
   unwinder.Unwind();
 
   if (unwinder.LastErrorCode() != 0) {

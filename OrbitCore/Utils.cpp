@@ -5,77 +5,73 @@
 #include "Utils.h"
 
 #ifdef _WIN32
+// clang-format off
 #include <cguid.h>
 #include <AtlBase.h>
 #include <atlconv.h>
+// clang-format on
 #endif
 
-#include <algorithm>
-#include <thread>
-#include <mutex>
 #include <time.h>
+
+#include <algorithm>
+#include <mutex>
+#include <thread>
 
 #ifdef _WIN32
 //-----------------------------------------------------------------------------
-std::string GetLastErrorAsString()
-{
-    //Get the error message, if any.
-    DWORD errorMessageID = ::GetLastError();
-    if(errorMessageID == 0)
-        return "No error message has been recorded";
+std::string GetLastErrorAsString() {
+  // Get the error message, if any.
+  DWORD errorMessageID = ::GetLastError();
+  if (errorMessageID == 0) return "No error message has been recorded";
 
-    LPSTR messageBuffer = nullptr;
-    size_t size = FormatMessageA( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, errorMessageID, MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ), (LPSTR)&messageBuffer, 0, NULL );
+  LPSTR messageBuffer = nullptr;
+  size_t size = FormatMessageA(
+      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+          FORMAT_MESSAGE_IGNORE_INSERTS,
+      NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+      (LPSTR)&messageBuffer, 0, NULL);
 
-    std::string message( messageBuffer, size );
+  std::string message(messageBuffer, size);
 
-    //Free the buffer.
-    LocalFree( messageBuffer );
+  // Free the buffer.
+  LocalFree(messageBuffer);
 
-    return message;
+  return message;
 }
 
 //-----------------------------------------------------------------------------
-std::string GuidToString(GUID a_Guid)
-{
-    std::string guidStr;
-    LPOLESTR wszCLSID = NULL;
-    HRESULT hr = StringFromCLSID(a_Guid, &wszCLSID);
-    if (hr == S_OK)
-    {
-        // wszCLSID looks like: "{96F93FED-50B7-44B8-94AF-C205B68334FE}"
-        guidStr = ws2s(wszCLSID);
-        CoTaskMemFree(wszCLSID);
-        auto len = guidStr.size();
-        if (len > 2)
-        {
-            guidStr = guidStr.substr(1, len - 2);
-        }
-        guidStr.erase( std::remove( guidStr.begin(), guidStr.end(), '-' ), guidStr.end() );
+std::string GuidToString(GUID a_Guid) {
+  std::string guidStr;
+  LPOLESTR wszCLSID = NULL;
+  HRESULT hr = StringFromCLSID(a_Guid, &wszCLSID);
+  if (hr == S_OK) {
+    // wszCLSID looks like: "{96F93FED-50B7-44B8-94AF-C205B68334FE}"
+    guidStr = ws2s(wszCLSID);
+    CoTaskMemFree(wszCLSID);
+    auto len = guidStr.size();
+    if (len > 2) {
+      guidStr = guidStr.substr(1, len - 2);
     }
+    guidStr.erase(std::remove(guidStr.begin(), guidStr.end(), '-'),
+                  guidStr.end());
+  }
 
-    return guidStr;
+  return guidStr;
 }
 
 //-----------------------------------------------------------------------------
-std::wstring GuidToStringW( GUID a_Guid )
-{
-    return s2ws( GuidToString( a_Guid ) );
-}
-
+std::wstring GuidToStringW(GUID a_Guid) { return s2ws(GuidToString(a_Guid)); }
 
 #include "dde.h"
 
-
-struct AFX_MAP_MESSAGE
-{
-    UINT    nMsg;
-    LPCSTR  lpszMsg;
+struct AFX_MAP_MESSAGE {
+  UINT nMsg;
+  LPCSTR lpszMsg;
 };
-#define DEFINE_MESSAGE(wm){ wm, #wm }
-static const AFX_MAP_MESSAGE allMessages[] =
-{
+#define DEFINE_MESSAGE(wm) \
+  { wm, #wm }
+static const AFX_MAP_MESSAGE allMessages[] = {
     DEFINE_MESSAGE(WM_CREATE),
     DEFINE_MESSAGE(WM_DESTROY),
     DEFINE_MESSAGE(WM_MOVE),
@@ -257,69 +253,60 @@ static const AFX_MAP_MESSAGE allMessages[] =
     DEFINE_MESSAGE(WM_DEVICECHANGE),
     DEFINE_MESSAGE(WM_PRINT),
     DEFINE_MESSAGE(WM_PRINTCLIENT),
-    { 0, NULL, }    // end of message list
+    {
+        0,
+        NULL,
+    }  // end of message list
 };
-std::string CWindowsMessageToString::GetStringFromMsg(DWORD dwMessage, bool bShowFrequentMessages)
-{
-    if (!bShowFrequentMessages &&
-        (dwMessage == WM_MOUSEMOVE ||
-        dwMessage == WM_NCMOUSEMOVE ||
-        dwMessage == WM_NCHITTEST ||
-        dwMessage == WM_SETCURSOR ||
-        dwMessage == WM_CTLCOLORBTN ||
-        dwMessage == WM_CTLCOLORDLG ||
-        dwMessage == WM_CTLCOLOREDIT ||
-        dwMessage == WM_CTLCOLORLISTBOX ||
-        dwMessage == WM_CTLCOLORMSGBOX ||
-        dwMessage == WM_CTLCOLORSCROLLBAR ||
-        dwMessage == WM_CTLCOLORSTATIC ||
-        dwMessage == WM_ENTERIDLE ||
-        dwMessage == WM_CANCELMODE ||
-        dwMessage == 0x0118))    // WM_SYSTIMER (caret blink)
-    {
-        // don't report very frequently sent messages
-        return "";
+std::string CWindowsMessageToString::GetStringFromMsg(
+    DWORD dwMessage, bool bShowFrequentMessages) {
+  if (!bShowFrequentMessages &&
+      (dwMessage == WM_MOUSEMOVE || dwMessage == WM_NCMOUSEMOVE ||
+       dwMessage == WM_NCHITTEST || dwMessage == WM_SETCURSOR ||
+       dwMessage == WM_CTLCOLORBTN || dwMessage == WM_CTLCOLORDLG ||
+       dwMessage == WM_CTLCOLOREDIT || dwMessage == WM_CTLCOLORLISTBOX ||
+       dwMessage == WM_CTLCOLORMSGBOX || dwMessage == WM_CTLCOLORSCROLLBAR ||
+       dwMessage == WM_CTLCOLORSTATIC || dwMessage == WM_ENTERIDLE ||
+       dwMessage == WM_CANCELMODE ||
+       dwMessage == 0x0118))  // WM_SYSTIMER (caret blink)
+  {
+    // don't report very frequently sent messages
+    return "";
+  }
+  const AFX_MAP_MESSAGE* pMapMsg = allMessages;
+  for (/*null*/; pMapMsg->lpszMsg != NULL; pMapMsg++) {
+    if (pMapMsg->nMsg == dwMessage) {
+      return pMapMsg->lpszMsg;
     }
-    const AFX_MAP_MESSAGE* pMapMsg = allMessages;
-    for (/*null*/; pMapMsg->lpszMsg != NULL; pMapMsg++)
-    {
-        if (pMapMsg->nMsg == dwMessage)
-        {
-            return pMapMsg->lpszMsg;
-        }
-    }
+  }
 
-    return std::to_string( dwMessage );
+  return std::to_string(dwMessage);
 }
 
 #else
-std::string GetLastErrorAsString()
-{
-    return "";
-}
+std::string GetLastErrorAsString() { return ""; }
 #endif
 
 //-----------------------------------------------------------------------------
-std::string OrbitUtils::GetTimeStamp()
-{
-    time_t rawtime;
-    time(&rawtime);
-    return FormatTime(rawtime);
+std::string OrbitUtils::GetTimeStamp() {
+  time_t rawtime;
+  time(&rawtime);
+  return FormatTime(rawtime);
 }
 
 //-----------------------------------------------------------------------------
 std::string OrbitUtils::FormatTime(const time_t& rawtime) {
-    struct tm* time_info = nullptr;
-    char buffer[80];
-    #ifdef _WIN32
-        struct tm timeinfo;
-        localtime_s(&timeinfo, &rawtime);
-        time_info = &timeinfo;
-    #else
-        time_info = localtime( &rawtime );
-    #endif
+  struct tm* time_info = nullptr;
+  char buffer[80];
+#ifdef _WIN32
+  struct tm timeinfo;
+  localtime_s(&timeinfo, &rawtime);
+  time_info = &timeinfo;
+#else
+  time_info = localtime(&rawtime);
+#endif
 
-    strftime(buffer, 80, "%Y_%m_%d_%H_%M_%S", time_info);
+  strftime(buffer, 80, "%Y_%m_%d_%H_%M_%S", time_info);
 
-    return std::string(buffer);
+  return std::string(buffer);
 }

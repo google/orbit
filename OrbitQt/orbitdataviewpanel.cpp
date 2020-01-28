@@ -3,80 +3,61 @@
 //-----------------------------------
 
 #include "orbitdataviewpanel.h"
+
 #include "ui_orbitdataviewpanel.h"
 
 //-----------------------------------------------------------------------------
-OrbitDataViewPanel::OrbitDataViewPanel(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::OrbitDataViewPanel)
-{
-    ui->setupUi(this);
-    ui->label->hide();
+OrbitDataViewPanel::OrbitDataViewPanel(QWidget* parent)
+    : QWidget(parent), ui(new Ui::OrbitDataViewPanel) {
+  ui->setupUi(this);
+  ui->label->hide();
 }
 
 //-----------------------------------------------------------------------------
-OrbitDataViewPanel::~OrbitDataViewPanel()
-{
-    delete ui;
+OrbitDataViewPanel::~OrbitDataViewPanel() { delete ui; }
+
+//-----------------------------------------------------------------------------
+void OrbitDataViewPanel::Initialize(DataViewType a_Type,
+                                    bool a_IsMainInstance) {
+  ui->treeView->Initialize(a_Type);
+
+  if (a_IsMainInstance) {
+    ui->treeView->GetModel()->GetDataView()->SetAsMainInstance();
+  }
+
+  std::wstring label = ui->treeView->GetLabel();
+  if (label != L"") {
+    this->ui->label->setText(QString::fromStdWString(label));
+    this->ui->label->show();
+  }
 }
 
 //-----------------------------------------------------------------------------
-void OrbitDataViewPanel::Initialize( DataViewType a_Type, bool a_IsMainInstance )
-{
-    ui->treeView->Initialize(a_Type);
+OrbitTreeView* OrbitDataViewPanel::GetTreeView() { return ui->treeView; }
 
-    if( a_IsMainInstance )
-    {
-        ui->treeView->GetModel()->GetDataView()->SetAsMainInstance();
-    }
-
-    std::wstring label = ui->treeView->GetLabel();
-    if( label != L"" )
-    {
-        this->ui->label->setText( QString::fromStdWString(label) );
-        this->ui->label->show();
-    }
+//-----------------------------------------------------------------------------
+void OrbitDataViewPanel::Link(OrbitDataViewPanel* a_Panel) {
+  ui->treeView->Link(a_Panel->ui->treeView);
 }
 
 //-----------------------------------------------------------------------------
-OrbitTreeView* OrbitDataViewPanel::GetTreeView()
-{
-    return ui->treeView;
+void OrbitDataViewPanel::Refresh() { ui->treeView->Refresh(); }
+
+//-----------------------------------------------------------------------------
+void OrbitDataViewPanel::SetDataModel(std::shared_ptr<DataView> a_Model) {
+  ui->treeView->SetDataModel(a_Model);
 }
 
 //-----------------------------------------------------------------------------
-void OrbitDataViewPanel::Link( OrbitDataViewPanel* a_Panel )
-{
-    ui->treeView->Link( a_Panel->ui->treeView );
+void OrbitDataViewPanel::SetFilter(QString a_Filter) {
+  ui->FilterLineEdit->setText(a_Filter);
+  ui->treeView->OnFilter(a_Filter);
 }
 
 //-----------------------------------------------------------------------------
-void OrbitDataViewPanel::Refresh()
-{
-    ui->treeView->Refresh();
-}
+void OrbitDataViewPanel::Select(int a_Row) { ui->treeView->Select(a_Row); }
 
 //-----------------------------------------------------------------------------
-void OrbitDataViewPanel::SetDataModel( std::shared_ptr<DataView> a_Model )
-{ 
-    ui->treeView->SetDataModel( a_Model );
-}
-
-//-----------------------------------------------------------------------------
-void OrbitDataViewPanel::SetFilter( QString a_Filter )
-{
-    ui->FilterLineEdit->setText( a_Filter );
-    ui->treeView->OnFilter( a_Filter );
-}
-
-//-----------------------------------------------------------------------------
-void OrbitDataViewPanel::Select( int a_Row )
-{
-    ui->treeView->Select( a_Row );
-}
-
-//-----------------------------------------------------------------------------
-void OrbitDataViewPanel::on_FilterLineEdit_textEdited( const QString &a_Text )
-{
-    ui->treeView->OnFilter(a_Text);
+void OrbitDataViewPanel::on_FilterLineEdit_textEdited(const QString& a_Text) {
+  ui->treeView->OnFilter(a_Text);
 }

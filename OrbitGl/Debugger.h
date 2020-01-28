@@ -3,25 +3,30 @@
 //-----------------------------------
 #pragma once
 
-#include "Message.h"
+#include <atomic>
 #include <string>
 #include <vector>
 
-class Debugger
-{
-public:
-    Debugger();
-    ~Debugger();
+#include "Message.h"
 
-    void LaunchProcess( const std::wstring & a_ProcessName, const std::wstring & a_WorkingDir, const std::wstring & a_Args );
-    void MainTick();
-    void SendThawMessage();
+class Debugger {
+ public:
+  Debugger();
+  ~Debugger();
 
-protected:
-    void DebuggerThread( const std::wstring & a_ProcessName, const std::wstring & a_WorkingDir, const std::wstring & a_Args );
+  void LaunchProcess(const std::wstring& a_ProcessName,
+                     const std::wstring& a_WorkingDir,
+                     const std::wstring& a_Args);
+  void MainTick();
+  void SendThawMessage();
 
-private:
-    OrbitWaitLoop     m_WaitLoop;
-    std::atomic<bool> m_LoopReady;
-    DWORD             m_ProcessID;
+ protected:
+  void DebuggerThread(const std::wstring& a_ProcessName,
+                      const std::wstring& a_WorkingDir,
+                      const std::wstring& a_Args);
+
+ private:
+  OrbitWaitLoop m_WaitLoop;
+  std::atomic<bool> m_LoopReady;
+  DWORD m_ProcessID;
 };

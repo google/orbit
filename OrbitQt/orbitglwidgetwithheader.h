@@ -9,18 +9,16 @@ namespace Ui {
 class OrbitGlWidgetWithHeader;
 }
 
-class OrbitGlWidgetWithHeader : public QWidget
-{
-    Q_OBJECT
+class OrbitGlWidgetWithHeader : public QWidget {
+  Q_OBJECT
 
-public:
-    explicit OrbitGlWidgetWithHeader(QWidget *parent = 0);
-    ~OrbitGlWidgetWithHeader();
+ public:
+  explicit OrbitGlWidgetWithHeader(QWidget* parent = 0);
+  ~OrbitGlWidgetWithHeader();
 
-    class OrbitTreeView* GetTreeView();
-    class OrbitGLWidget* GetGLWidget();
-    
+  class OrbitTreeView* GetTreeView();
+  class OrbitGLWidget* GetGLWidget();
 
-private:
-    Ui::OrbitGlWidgetWithHeader *ui;
+ private:
+  Ui::OrbitGlWidgetWithHeader* ui;
 };

@@ -2,6 +2,8 @@
 //-----------------------------------
 #pragma once
 
+#include <cstdint>
+
 //-----------------------------------------------------------------------------
 #define ORBIT_STACK_SIZE 192
 typedef uint64_t CallstackID;

@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 //#define WIN32 __WINDOWS__
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
 #include <sys/types.h>

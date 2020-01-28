@@ -1,20 +1,19 @@
 #pragma once
-#include <vector>
-#include <thread>
 #include <memory>
+#include <thread>
+#include <vector>
 
-class OrbitTest
-{
-public:
-    OrbitTest();
-    ~OrbitTest();
+class OrbitTest {
+ public:
+  OrbitTest();
+  ~OrbitTest();
 
-    void Start();
-    void Stop();
-    void Loop();
-    void TestFunc(uint32_t a_Depth = 0);
+  void Start();
+  void Stop();
+  void Loop();
+  void TestFunc(uint32_t a_Depth = 0);
 
-private:
-    bool m_ExitRequested = false;
-    std::vector<std::shared_ptr<std::thread>> m_Threads;
+ private:
+  bool m_ExitRequested = false;
+  std::vector<std::shared_ptr<std::thread>> m_Threads;
 };

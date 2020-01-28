@@ -38,7 +38,6 @@
 **
 ****************************************************************************/
 
-
 #ifndef QTGROUPBOXPROPERTYBROWSER_H
 #define QTGROUPBOXPROPERTYBROWSER_H
 
@@ -50,27 +49,24 @@ QT_BEGIN_NAMESPACE
 
 class QtGroupBoxPropertyBrowserPrivate;
 
-class QT_QTPROPERTYBROWSER_EXPORT QtGroupBoxPropertyBrowser : public QtAbstractPropertyBrowser
-{
-    Q_OBJECT
-public:
+class QT_QTPROPERTYBROWSER_EXPORT QtGroupBoxPropertyBrowser
+    : public QtAbstractPropertyBrowser {
+  Q_OBJECT
+ public:
+  QtGroupBoxPropertyBrowser(QWidget* parent = 0);
+  ~QtGroupBoxPropertyBrowser();
 
-    QtGroupBoxPropertyBrowser(QWidget *parent = 0);
-    ~QtGroupBoxPropertyBrowser();
+ protected:
+  virtual void itemInserted(QtBrowserItem* item, QtBrowserItem* afterItem);
+  virtual void itemRemoved(QtBrowserItem* item);
+  virtual void itemChanged(QtBrowserItem* item);
 
-protected:
-    virtual void itemInserted(QtBrowserItem *item, QtBrowserItem *afterItem);
-    virtual void itemRemoved(QtBrowserItem *item);
-    virtual void itemChanged(QtBrowserItem *item);
-
-private:
-
-    QtGroupBoxPropertyBrowserPrivate *d_ptr;
-    Q_DECLARE_PRIVATE(QtGroupBoxPropertyBrowser)
-    Q_DISABLE_COPY(QtGroupBoxPropertyBrowser)
-    Q_PRIVATE_SLOT(d_func(), void slotUpdate())
-    Q_PRIVATE_SLOT(d_func(), void slotEditorDestroyed())
-
+ private:
+  QtGroupBoxPropertyBrowserPrivate* d_ptr;
+  Q_DECLARE_PRIVATE(QtGroupBoxPropertyBrowser)
+  Q_DISABLE_COPY(QtGroupBoxPropertyBrowser)
+  Q_PRIVATE_SLOT(d_func(), void slotUpdate())
+  Q_PRIVATE_SLOT(d_func(), void slotEditorDestroyed())
 };
 
 #if QT_VERSION >= 0x040400
