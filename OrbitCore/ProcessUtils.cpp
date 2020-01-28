@@ -30,7 +30,6 @@
 #include <iostream>
 #include <streambuf>
 
-
 // Is64BitProcess function taken from Very Sleepy
 #ifdef _WIN64
 typedef BOOL WINAPI Wow64GetThreadContext_t(__in HANDLE hThread,

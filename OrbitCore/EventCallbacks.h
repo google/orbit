@@ -3,8 +3,8 @@
 //-----------------------------------
 #pragma once
 
-#include <evntrace.h>
 #include <evntcons.h>
+#include <evntrace.h>
 
 #include "Core.h"
 

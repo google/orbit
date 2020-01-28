@@ -2,7 +2,6 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-
 #include <intrin.h>
 
 #include <iostream>

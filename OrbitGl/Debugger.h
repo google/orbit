@@ -3,9 +3,9 @@
 //-----------------------------------
 #pragma once
 
+#include <atomic>
 #include <string>
 #include <vector>
-#include <atomic>
 
 #include "Message.h"
 

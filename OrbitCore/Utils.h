@@ -19,9 +19,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Platform.h"
 #include "BaseTypes.h"
-
+#include "Platform.h"
 
 //-----------------------------------------------------------------------------
 inline std::string ws2s(const std::wstring& wstr) {
@@ -122,7 +121,7 @@ inline T ToLower(const T& a_Str) {
 inline std::vector<std::string> Tokenize(std::string a_String,
                                          const char* a_Delimiters = " ") {
 #ifdef _WIN32
-#  define strtok_r strtok_s
+#define strtok_r strtok_s
 #endif
 
   std::vector<std::string> tokens;
@@ -134,7 +133,7 @@ inline std::vector<std::string> Tokenize(std::string a_String,
   }
 
 #ifdef _WIN32
-#  undef strtok_r
+#undef strtok_r
 #endif
 
   return tokens;

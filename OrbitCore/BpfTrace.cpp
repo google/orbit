@@ -16,7 +16,6 @@
 #include "Utils.h"
 
 #if __linux__
-#include "LinuxUtils.h"
 #include <linux/perf_event.h>
 #include <linux/version.h>
 
@@ -28,6 +27,7 @@
 #include "LinuxPerfEventProcessor.h"
 #include "LinuxPerfRingBuffer.h"
 #include "LinuxPerfUtils.h"
+#include "LinuxUtils.h"
 #include "OrbitFunction.h"
 #include "Pdb.h"
 
