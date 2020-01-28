@@ -87,7 +87,7 @@ void BpfTrace::Start()
     else
     {
         m_Thread = std::make_shared<std::thread>
-            ( BpfTrace::RunPerfEventOpenSingleBuffers
+            ( BpfTrace::RunPerfEventOpen
             , &m_ExitRequested );
     }
     
