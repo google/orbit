@@ -363,7 +363,6 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
 
     while( !(*a_ExitRequested) )
     {
-        SCOPE_TIMER_LOG("Perf events consume iteration");
         // Lets sleep a bit, such that we are not constantly reading from the buffers
         // and thus wasting cpu time. 10000 microseconds are still small enough to 
         // not have our buffers overflown and therefore losing events.
@@ -394,7 +393,7 @@ void BpfTrace::RunPerfEventOpen(bool* a_ExitRequested)
                 {
                 case PERF_RECORD_SAMPLE:
                     {
-                        PRINT("Consuming uprobe record...");
+                        SCOPE_TIMER_LOG("PERF_RECORD_SAMPLE");
                         if (GParams.m_BpftraceCallstacks)
                         {
                             auto record = ring_buffer.ConsumeRecord<LinuxUprobeEventWithStack>(header);
