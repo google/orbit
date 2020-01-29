@@ -85,7 +85,7 @@ struct DebugWindow {
   }
 
   void Draw(const char* title, bool* p_opened = NULL) {
-    ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImGui::Begin(title, p_opened);
     if (ImGui::Button("Clear")) Clear();
     ImGui::SameLine();
@@ -140,7 +140,7 @@ class LogWindow {
 
   void Draw(const char* title, const std::vector<std::string>& lines,
             bool* p_opened = NULL) {
-    ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImGui::Begin(title, p_opened);
 
     bool copy = ImGui::Button("Copy");
@@ -213,10 +213,10 @@ struct VizWindow {
       ImVec2 CanvasSize = *a_Size;
       CanvasSize.x -= 20;
       CanvasSize.y -= 20;
-      ImGui::SetNextWindowSize(CanvasSize, ImGuiSetCond_Always);
+      ImGui::SetNextWindowSize(CanvasSize, ImGuiCond_Always);
       ImGui::Begin(title, p_opened, CanvasSize, 1.f, WindowFlags);
     } else {
-      ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiSetCond_FirstUseEver);
+      ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
       ImVec2 size(400, 400);
       ImGui::Begin(title, p_opened, size, 1.f, WindowFlags);
     }

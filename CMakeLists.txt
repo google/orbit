@@ -19,16 +19,16 @@ if(NOT WIN32)
 endif()
 
 find_package(Threads REQUIRED)
-find_package(cereal REQUIRED)
+find_package(cereal CONFIG REQUIRED)
 find_package(xxHash REQUIRED)
 find_package(multicore REQUIRED)
 find_package(concurrentqueue REQUIRED)
-find_package(Freetype REQUIRED)
+find_package(freetype CONFIG REQUIRED)
 find_package(freetype-gl REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(imgui REQUIRED)
-find_package(CURL REQUIRED)
+find_package(imgui CONFIG REQUIRED)
+find_package(CURL CONFIG REQUIRED)
 find_package(oqpi REQUIRED)
 find_package(capstone REQUIRED)
 find_package(GLUT REQUIRED)
@@ -50,15 +50,6 @@ if(WIN32)
     unofficial::breakpad::libbreakpad unofficial::breakpad::libbreakpad_client
     PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${INC}/google_breakpad")
 endif()
-
-# Since the curl packages does not provide cmake targets, we will add one here.
-add_library(CURL STATIC IMPORTED GLOBAL)
-set_target_properties(CURL PROPERTIES IMPORTED_LOCATION ${CURL_LIBRARIES})
-target_include_directories(CURL SYSTEM INTERFACE ${CURK_INCLUDE_DIRS})
-if(NOT WIN32)
-  target_link_libraries(CURL INTERFACE OpenSSL::SSL)
-endif()
-add_library(CURL::CURL ALIAS CURL)
 
 # Set preprocessor defines These are only necessary for windows, but we will
 # define them on all platforms, to keep the builds similar as possible.

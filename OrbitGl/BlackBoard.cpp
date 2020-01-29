@@ -60,7 +60,7 @@ void ShowExampleAppCustomRendering(bool* opened) {
     if (p.x > GMax.x) GMax.x = p.x;
     if (p.y > GMax.y) GMax.y = p.y;
   }
-  ImGui::SetNextWindowSize(ImVec2(350, 560), ImGuiSetCond_FirstUseEver);
+  ImGui::SetNextWindowSize(ImVec2(350, 560), ImGuiCond_FirstUseEver);
   if (!ImGui::Begin("Player Position XY", opened)) {
     ImGui::End();
     return;
