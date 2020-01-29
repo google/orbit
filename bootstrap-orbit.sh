@@ -14,6 +14,9 @@ sudo apt-get install -y linux-tools-common
 # Load Submodules (vcpkg, libunwindstack)
 git submodule update --init --recursive
 
+# Patching freetype-gl
+cp "OrbitUtils/freetype-gl-portfile.cmake" "external/vcpkg/ports/freetype-gl/portfile.cmake"
+
 # Build vcpkg
 cd external/vcpkg
 
