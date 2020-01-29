@@ -31,6 +31,7 @@ add_compile_options(
   -Wredundant-decls
   -Winvalid-pch
   -Wdisabled-optimization
-  -Wstack-protector)
+  -Wstack-protector
+  -fcolor-diagnostics)
 
 include("${CMAKE_CURRENT_LIST_DIR}/../external/vcpkg/scripts/buildsystems/vcpkg.cmake")
