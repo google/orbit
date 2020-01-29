@@ -24,4 +24,5 @@ class LinuxPerfEventVisitor {
   virtual void visit(LinuxUprobeEventWithStack* a_Event) {}
   virtual void visit(LinuxUretprobeEvent* a_Event) {}
   virtual void visit(LinuxUretprobeEventWithStack* a_Event) {}
+  virtual void visit(LinuxMapsEvent* a_Event) {}
 };

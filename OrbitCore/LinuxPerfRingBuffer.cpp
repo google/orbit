@@ -103,10 +103,12 @@ void LinuxPerfRingBuffer::Read(uint8_t* a_Destination, uint64_t a_Count) {
       exponent;
 
   if (a_Count > m_BufferLength) {
+    PRINT("Error: reading more than the size of the ring buffer\n");
+  } else if (m_Metadata->data_head > m_Metadata->data_tail + m_BufferLength) {
     // If mmap has been called with PROT_WRITE and
     // perf_event_mmap_page::data_tail is used properly, this should not happen,
     // as the kernel would not overwrite unread data.
-    PRINT("Error %u: too slow reading from the ring buffer\n", stderr);
+    PRINT("Error: too slow reading from the ring buffer\n");
   } else if (index_div_length == index_count_div_length) {
     memcpy(a_Destination, m_Buffer + modulo, a_Count);
   } else if (index_div_length == (index + a_Count - 1) / m_BufferLength - 1) {

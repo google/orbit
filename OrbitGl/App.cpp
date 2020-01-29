@@ -307,13 +307,13 @@ void OrbitApp::ProcessCallStack(CallStack& a_CallStack) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::ProcessContextSwitch(const ContextSwitch& a_CallStack) {
+void OrbitApp::ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) {
   if (ConnectionManager::Get().IsService()) {
     ScopeLock lock(m_ContextSwitchMutex);
-    m_ContextSwitchBuffer.push_back(a_CallStack);
+    m_ContextSwitchBuffer.push_back(a_ContextSwitch);
   }
 
-  GTimerManager->Add(a_CallStack);
+  GTimerManager->Add(a_ContextSwitch);
 }
 
 //-----------------------------------------------------------------------------

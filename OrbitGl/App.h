@@ -77,7 +77,7 @@ class OrbitApp : public CoreApp {
   virtual void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack);
   virtual void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack);
   virtual void ProcessCallStack(CallStack& a_CallStack);
-  virtual void ProcessContextSwitch(const ContextSwitch& a_CallStack);
+  virtual void ProcessContextSwitch(const ContextSwitch& a_ContextSwitch);
   virtual void AddSymbol(uint64_t a_Address, const std::string& a_Module,
                          const std::string& a_Name);
   void ProcessBufferedCaptureData();

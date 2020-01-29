@@ -10,8 +10,6 @@
 
 #include <vector>
 
-// TODO: Remove all references to BpfTrace.
-#include "BpfTraceVisitor.h"
 #include "Capture.h"
 #include "ContextSwitch.h"
 #include "CoreApp.h"
@@ -19,6 +17,7 @@
 #include "LinuxPerfEventProcessor.h"
 #include "LinuxPerfRingBuffer.h"
 #include "LinuxPerfUtils.h"
+#include "LinuxUprobesUnwindingVisitor.h"
 #include "LinuxUtils.h"
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
@@ -52,8 +51,9 @@ void LinuxEventTracerThread::Run(
     }
   }
 
-  LinuxPerfEventProcessor uprobe_event_processor(
-      std::make_unique<BpfTraceVisitor>());
+  LinuxPerfEventProcessor uprobe_event_processor{
+      std::make_unique<LinuxUprobesUnwindingVisitor>(
+          pid_, LinuxUtils::ReadMaps(pid_))};
 
   if (!GParams.m_UseBpftrace) {
     for (const auto& function : instrumented_functions_) {
@@ -73,16 +73,14 @@ void LinuxEventTracerThread::Run(
     }
   }
 
-  LibunwindstackUnwinder unwinder{};
-  unwinder.SetMaps(LinuxUtils::ReadMaps(pid_));
-
   // TODO(b/148209993): Sample based on CPU and filter by pid.
   for (pid_t tid : LinuxUtils::ListThreads(pid_)) {
     // Keep threads in sync.
     Capture::GTargetProcess->AddThreadId(tid);
 
     if (!GParams.m_SampleWithPerf) {
-      fds.push_back(LinuxPerfUtils::stack_sample_event_open(tid, sampling_period_ns_));
+      fds.push_back(
+          LinuxPerfUtils::stack_sample_event_open(tid, sampling_period_ns_));
     }
   }
 
@@ -155,19 +153,17 @@ void LinuxEventTracerThread::Run(
               context_switch.m_ThreadId = event.TID();
               context_switch.m_Time = event.Timestamp();
               context_switch.m_ProcessorIndex = event.CPU();
-              // TODO: Is this correct?
               context_switch.m_ProcessorNumber = event.CPU();
               GCoreApp->ProcessContextSwitch(context_switch);
             } else {
               ++Capture::GNumContextSwitches;
 
-              ContextSwitch CS(ContextSwitch::In);
-              CS.m_ThreadId = event.TID();
-              CS.m_Time = event.Timestamp();
-              CS.m_ProcessorIndex = event.CPU();
-              // TODO: Is this correct?
-              CS.m_ProcessorNumber = event.CPU();
-              GCoreApp->ProcessContextSwitch(CS);
+              ContextSwitch context_switch(ContextSwitch::In);
+              context_switch.m_ThreadId = event.TID();
+              context_switch.m_Time = event.Timestamp();
+              context_switch.m_ProcessorIndex = event.CPU();
+              context_switch.m_ProcessorNumber = event.CPU();
+              GCoreApp->ProcessContextSwitch(context_switch);
             }
           } break;
 
@@ -183,7 +179,6 @@ void LinuxEventTracerThread::Run(
               context_switch.m_ThreadId = event.PrevTID();
               context_switch.m_Time = event.Timestamp();
               context_switch.m_ProcessorIndex = event.CPU();
-              // TODO: Is this correct?
               context_switch.m_ProcessorNumber = event.CPU();
               GCoreApp->ProcessContextSwitch(context_switch);
             }
@@ -192,13 +187,12 @@ void LinuxEventTracerThread::Run(
             if (event.NextTID() != 0) {
               ++Capture::GNumContextSwitches;
 
-              ContextSwitch CS(ContextSwitch::In);
-              CS.m_ThreadId = event.NextTID();
-              CS.m_Time = event.Timestamp();
-              CS.m_ProcessorIndex = event.CPU();
-              // TODO: Is this correct?
-              CS.m_ProcessorNumber = event.CPU();
-              GCoreApp->ProcessContextSwitch(CS);
+              ContextSwitch context_switch(ContextSwitch::In);
+              context_switch.m_ThreadId = event.NextTID();
+              context_switch.m_Time = event.Timestamp();
+              context_switch.m_ProcessorIndex = event.CPU();
+              context_switch.m_ProcessorNumber = event.CPU();
+              GCoreApp->ProcessContextSwitch(context_switch);
             }
           } break;
 
@@ -225,20 +219,15 @@ void LinuxEventTracerThread::Run(
             // There was a call to mmap with PROT_EXEC, hence refresh the maps.
             // This should happen rarely.
             ring_buffer.SkipRecord(header);
-            unwinder.SetMaps(LinuxUtils::ReadMaps(pid_));
+            uprobe_event_processor.Push(std::make_unique<LinuxMapsEvent>(
+                LinuxPerfUtils::GetClockRealtime(),
+                LinuxUtils::ReadMaps(pid_)));
           } break;
 
           case PERF_RECORD_SAMPLE: {
             if (is_uprobes) {
               auto sample =
                   ring_buffer.ConsumeRecord<LinuxUprobeEventWithStack>(header);
-
-              std::vector<unwindstack::FrameData> frames = unwinder.Unwind(
-                  sample.Registers(), sample.StackDump(), sample.StackSize());
-              if (!frames.empty()) {
-                HandleCallstack(sample.TID(), sample.Timestamp(), frames);
-              }
-
               sample.SetFunction(
                   uprobe_fds_to_function.at(ring_buffer.FileDescriptor()));
               uprobe_event_processor.Push(
@@ -249,13 +238,6 @@ void LinuxEventTracerThread::Run(
               auto sample =
                   ring_buffer.ConsumeRecord<LinuxUretprobeEventWithStack>(
                       header);
-
-              std::vector<unwindstack::FrameData> frames = unwinder.Unwind(
-                  sample.Registers(), sample.StackDump(), sample.StackSize());
-              if (!frames.empty()) {
-                HandleCallstack(sample.TID(), sample.Timestamp(), frames);
-              }
-
               sample.SetFunction(
                   uretprobe_fds_to_function.at(ring_buffer.FileDescriptor()));
               uprobe_event_processor.Push(
@@ -265,12 +247,8 @@ void LinuxEventTracerThread::Run(
             } else {
               auto sample =
                   ring_buffer.ConsumeRecord<LinuxStackSampleEvent>(header);
-
-              std::vector<unwindstack::FrameData> frames = unwinder.Unwind(
-                  sample.Registers(), sample.StackDump(), sample.StackSize());
-              if (!frames.empty()) {
-                HandleCallstack(sample.TID(), sample.Timestamp(), frames);
-              }
+              uprobe_event_processor.Push(
+                  std::make_unique<LinuxStackSampleEvent>(std::move(sample)));
             }
           } break;
 
@@ -288,17 +266,17 @@ void LinuxEventTracerThread::Run(
     }
 
     if (new_thread >= 0) {
-      int32_t fd =
-          LinuxPerfUtils::stack_sample_event_open(new_thread, sampling_period_ns_);
+      int32_t fd = LinuxPerfUtils::stack_sample_event_open(new_thread,
+                                                           sampling_period_ns_);
       fds.push_back(fd);
       ring_buffers.emplace_back(fd);
       LinuxPerfUtils::start_capturing(fd);
     }
 
-    uprobe_event_processor.ProcessTillOffset();
+    uprobe_event_processor.ProcessOldEvents();
   }
 
-  uprobe_event_processor.ProcessAll();
+  uprobe_event_processor.ProcessAllEvents();
 
   // stop capturing
   for (int32_t fd : fds) {
@@ -330,36 +308,4 @@ void LinuxEventTracerThread::LoadNumCpus() {
   if (num_cpus_ == 0) {
     num_cpus_ = std::stoi(LinuxUtils::ExecuteCommand("nproc"));
   }
-}
-
-void LinuxEventTracerThread::HandleCallstack(
-    pid_t tid, uint64_t timestamp,
-    const std::vector<unwindstack::FrameData>& frames) {
-  CallStack cs;
-  cs.m_ThreadId = tid;
-  for (const auto& frame : frames) {
-    // TODO: Avoid repeating symbol resolution by caching already seen PCs.
-    std::wstring moduleName = ToLower(Path::GetFileName(s2ws(frame.map_name)));
-    std::shared_ptr<Module> moduleFromName =
-        Capture::GTargetProcess->GetModuleFromName(ws2s(moduleName));
-
-    uint64_t address = frame.pc;
-    if (moduleFromName) {
-      uint64_t new_address = moduleFromName->ValidateAddress(address);
-      address = new_address;
-    }
-    cs.m_Data.push_back(address);
-
-    if (!frame.function_name.empty() &&
-        !Capture::GTargetProcess->HasSymbol(address)) {
-      std::stringstream ss;
-      ss << LinuxUtils::Demangle(frame.function_name.c_str()) << "+0x"
-         << std::hex << frame.function_offset;
-      GCoreApp->AddSymbol(address, frame.map_name, ss.str());
-    }
-  }
-  cs.m_Depth = cs.m_Data.size();
-
-  LinuxCallstackEvent callstack_event{"", timestamp, 1, cs};
-  GCoreApp->ProcessSamplingCallStack(callstack_event);
 }

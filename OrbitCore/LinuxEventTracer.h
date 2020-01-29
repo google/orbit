@@ -14,7 +14,6 @@
 #include <thread>
 #include <utility>
 
-#include "CallstackTypes.h"
 #include "LibunwindstackUnwinder.h"
 #include "OrbitFunction.h"
 #include "PrintVar.h"
@@ -48,8 +47,6 @@ class LinuxEventTracerThread {
 
   bool ComputeSamplingPeriodNs();
   void LoadNumCpus();
-  static void HandleCallstack(pid_t tid, uint64_t timestamp,
-                              const std::vector<unwindstack::FrameData>& frames);
 };
 
 class LinuxEventTracer {
@@ -58,7 +55,8 @@ class LinuxEventTracer {
 
   LinuxEventTracer(pid_t pid, double sampling_frequency,
                    std::vector<Function*> instrumented_functions)
-      : pid_{pid}, sampling_frequency_{sampling_frequency},
+      : pid_{pid},
+        sampling_frequency_{sampling_frequency},
         instrumented_functions_{std::move(instrumented_functions)} {}
 
   explicit LinuxEventTracer(pid_t pid)
@@ -84,8 +82,8 @@ class LinuxEventTracer {
     PRINT_FUNC;
     *exit_requested_ = false;
     thread_ = std::make_shared<std::thread>(
-        &LinuxEventTracer::Run,
-        pid_, sampling_frequency_, instrumented_functions_, exit_requested_);
+        &LinuxEventTracer::Run, pid_, sampling_frequency_,
+        instrumented_functions_, exit_requested_);
     thread_->detach();
   }
 
@@ -106,8 +104,8 @@ class LinuxEventTracer {
   static void Run(pid_t pid, double sampling_frequency,
                   const std::vector<Function*>& instrumented_functions,
                   const std::shared_ptr<std::atomic<bool>>& exit_requested) {
-    LinuxEventTracerThread{pid, sampling_frequency, instrumented_functions}
-        .Run(exit_requested);
+    LinuxEventTracerThread{pid, sampling_frequency, instrumented_functions}.Run(
+        exit_requested);
   }
 };
 

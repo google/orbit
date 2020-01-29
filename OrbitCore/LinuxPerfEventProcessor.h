@@ -5,8 +5,11 @@
 //-----------------------------------
 // Author: Florian Kuebler
 //-----------------------------------
-#pragma once
 
+#ifndef ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_H_
+#define ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_H_
+
+#include <ctime>
 #include <queue>
 
 #include "LinuxPerfEvent.h"
@@ -15,63 +18,56 @@
 
 // A comparator used for the priority queue, such that pop/top will
 // always return the oldest event in the queue.
-class TimestampCompare {
+class TimestampReverseCompare {
  public:
-  bool operator()(const std::unique_ptr<LinuxPerfEvent>& a_LHS,
-                  const std::unique_ptr<LinuxPerfEvent>& a_RHS) {
-    return a_LHS->Timestamp() > a_RHS->Timestamp();
+  bool operator()(const std::unique_ptr<LinuxPerfEvent>& lhs,
+                  const std::unique_ptr<LinuxPerfEvent>& rhs) {
+    return lhs->Timestamp() > rhs->Timestamp();
   }
 };
 
-// This class implements a data structure that holds a large number of
-//  possible DIFFERENT entries (events) of various perf ring buffers,
-//  and allows reading them in a garantueed order (oldest first).
-//  So it synchs the events from all the buffers according their timestamps.
-// Its implementation builds on the following assumption:
-//  We never expect events with a timestamp older than DELAY_IN_NS to be
-//  added.
-//  So we will stop processing at the first event that is close (according to
-//  the delay) to the latest timestamp seen. If we only touch events that are
-//  old enough, we will never process events out of order.
-
-// TODO: instead of having unique pointers inside the priority_queue,
-//  we could have a queue of LinuxPerfEvent objects. This would give use
-//  better caching, but we need to copy more data, when rearanging the
-//  heap on insertion.
-// TODO: inserting to this buffer is log(num events). However, all events
-//  within one ringbuffer are already sorted by the timestamp. So we could
-//  implement a priority_queue of ringbuffers, to get log(num ringbuffers).
-//  However, we would need to be very carefull, as the timestamps of the
-//  buffers change over time, and there might be buffers, that do not have
-//  a new event yet, but might have later.
+// This class implements a data structure that holds a large number of different
+// perf_event_open records coming from multiple ring buffers, and allows reading
+// them in order (oldest first). In other words, it synchronizes events from all
+// ring buffers according to their timestamps.
+// Its implementation builds on the assumption that we never expect events with
+// a timestamp older than DELAY_NS to be added. By not processing events that
+// are not older than this delay, we will never process events out of order.
 class LinuxPerfEventProcessor {
  public:
-  // While processing, we do not touch the events with a timestamp less
-  // than 1/10 sec smaller than the most recent one in the queue.
-  // This way we can ensure, that all events (from different sources)
-  // are processed in the correct order.
-  const uint64_t DELAY_IN_NS = 100000000 /*ns*/;
+  // Do not process events that are more recent than 0.1 seconds. There could be
+  // events coming out of order as they are read from different perf_event_open
+  // ring buffers and this ensure that all events are processed in the correct
+  // order.
+  static constexpr uint64_t DELAY_NS = 100'000'000;
 
   explicit LinuxPerfEventProcessor(
-      std::unique_ptr<LinuxPerfEventVisitor> a_Visitor)
-      : m_Visitor(std::move(a_Visitor)) {}
+      std::unique_ptr<LinuxPerfEventVisitor> visitor)
+      : visitor_(std::move(visitor)) {}
 
-  void Push(std::unique_ptr<LinuxPerfEvent> a_Event);
+  void Push(std::unique_ptr<LinuxPerfEvent> event);
 
-  void ProcessAll();
+  void ProcessAllEvents();
 
-  void ProcessTillOffset();
+  void ProcessOldEvents();
 
  private:
+  // TODO: Inserting into this buffer is logarithmic in its size. However, all
+  //  events within one ring buffer are already sorted. We could instead
+  //  implement a priority queue of ring buffers and be logarithmic in the
+  //  number of buffers. This would require moving a ring buffer down the heap
+  //  once an event has been processed, by removing-and-readding or with a
+  //  custom priority queue.
   std::priority_queue<std::unique_ptr<LinuxPerfEvent>,
                       std::vector<std::unique_ptr<LinuxPerfEvent>>,
-                      TimestampCompare>
-      m_EventQueue;
+                      TimestampReverseCompare>
+      event_queue_;
 
-  std::unique_ptr<LinuxPerfEventVisitor> m_Visitor;
+  std::unique_ptr<LinuxPerfEventVisitor> visitor_;
 
-  uint64_t m_MaxTimestamp = 0;
 #ifndef NDEBUG
-  uint64_t m_LastProcessTimestamp = 0;
+  uint64_t last_processed_timestamp_ = 0;
 #endif
 };
+
+#endif  // ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_H_
