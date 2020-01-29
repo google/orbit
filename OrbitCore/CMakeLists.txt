@@ -176,7 +176,7 @@ target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(
   OrbitCore PUBLIC cereal xxHash::xxHash concurrentqueue::concurrentqueue
-                   multicore::multicore CURL::CURL oqpi::oqpi)
+                   multicore::multicore CURL::libcurl oqpi::oqpi asio::asio)
 
 if(WIN32)
   target_link_libraries(

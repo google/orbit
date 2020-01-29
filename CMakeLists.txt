@@ -34,6 +34,7 @@ find_package(capstone REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(Qt5 COMPONENTS Core Widgets)
 find_package(lzma REQUIRED)
+find_package(asio CONFIG REQUIRED)
 
 if(WIN32)
   find_package(minhook REQUIRED)
