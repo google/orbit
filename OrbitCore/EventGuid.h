@@ -3,10 +3,6 @@
 //-----------------------------------
 #pragma once
 
-<<<<<<< HEAD
-=======
-#define INITGUID
->>>>>>> e2026243958763cdad022f2d7f6e830eec149208
 #include <Guiddef.h>
 #include <evntrace.h>
 
