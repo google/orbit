@@ -44,6 +44,7 @@ endif()
 
 find_package(Qt5 COMPONENTS Core Widgets)
 find_package(lzma REQUIRED)
+find_package(GTest MODULE REQUIRED)
 
 if(WIN32)
   find_package(minhook REQUIRED)
