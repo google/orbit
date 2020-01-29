@@ -11,10 +11,9 @@
 #define DBGHELP_TRANSLATE_TCHAR
 #endif
 
-#pragma warning( push )
-#pragma warning( disable : 4091 )
+#pragma warning(push)
+#pragma warning(disable : 4091)
 #include <DbgHelp.h>
-#pragma warning( pop )
+#pragma warning(pop)
 
 #endif
-

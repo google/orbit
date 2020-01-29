@@ -3,9 +3,12 @@
 //-----------------------------------
 #pragma once
 
-#include "../OrbitCore/Core.h"
 #include <GL/glew.h>
-#include <freetype-gl.h>
 #include <GL/glu.h>
-#include <GL/gl.h>
+#include <freetype-gl.h>
 
+#include "Core.h"
+
+// clang-format off
+#include <GL/gl.h>
+// clang-format on
