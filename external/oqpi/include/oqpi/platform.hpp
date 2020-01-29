@@ -9,10 +9,10 @@
 #	undef  OQPI_PLATFORM_WIN
 #	define OQPI_PLATFORM_WIN	(1)
 #   ifndef WIN32_LEAN_AND_MEAN
-#       #error oqpi requires WIN32_LEAN_AND_MEAN
+#     error oqpi requires WIN32_LEAN_AND_MEAN
 #   endif
 #   ifndef VC_EXTRALEAN
-#       #error oqpi requires VC_EXTRALEAN
+#     error oqpi requires VC_EXTRALEAN
 #   endif
 
 #   include <windows.h>

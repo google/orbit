@@ -8,7 +8,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../OrbitAsm/OrbitAsm.h"
+#include "OrbitAsm.h"
 #include "../external/minhook/src/buffer.h"
 #include "../external/minhook/src/trampoline.h"
 #include "Callstack.h"

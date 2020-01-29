@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stdint.h>
+#include <stddef.h>
+
 //-----------------------------------------------------------------------------
 enum OrbitPrologOffset {
   Prolog_OriginalFunction = 0,
@@ -11,7 +14,7 @@ enum OrbitPrologOffset {
 
 //-----------------------------------------------------------------------------
 struct Prolog {
-  byte* m_Code;
+  uint8_t* m_Code;
   size_t m_Size;
   size_t m_Offsets[Prolog_NumOffsets];
 };
@@ -21,7 +24,7 @@ enum OrbitEpilogOffset { Epilog_CallbackAddress = 0, Epilog_NumOffsets };
 
 //-----------------------------------------------------------------------------
 struct Epilog {
-  byte* m_Code;
+  uint8_t* m_Code;
   size_t m_Size;
   size_t m_Offsets[Epilog_NumOffsets];
 };

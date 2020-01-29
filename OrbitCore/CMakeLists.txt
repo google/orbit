@@ -162,14 +162,14 @@ else()
 
   target_sources(
     OrbitCore
-    PUBLIC BpfTraceVisitor.cpp
-           LibunwindstackUnwinder.cpp
-           LinuxUtils.cpp
-           LinuxPerfEvent.cpp
-           LinuxPerfRingBuffer.cpp
-           LinuxPerfUtils.cpp
-           LinuxEventTracer.cpp
-           LinuxPerfEventProcessor.cpp)
+    PRIVATE BpfTraceVisitor.cpp
+            LibunwindstackUnwinder.cpp
+            LinuxUtils.cpp
+            LinuxPerfEvent.cpp
+            LinuxPerfRingBuffer.cpp
+            LinuxPerfUtils.cpp
+            LinuxEventTracer.cpp
+            LinuxPerfEventProcessor.cpp)
 endif()
 
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
@@ -183,10 +183,11 @@ if(WIN32)
     OrbitCore
     PRIVATE minhook::minhook DIA2Dump::DIA2Dump
             unofficial::breakpad::libbreakpad
-            unofficial::breakpad::libbreakpad_client)
+            unofficial::breakpad::libbreakpad_client
+            OrbitAsm)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib peparse::peparse)
-  target_compile_definitions(OrbitCore PRIVATE -D_WIN32_WINNT=0x0700)
-  target_compile_definitions(OrbitCore PRIVATE -DNTDDI_VERSION=0x06030000)
+  target_compile_definitions(OrbitCore PUBLIC -D_WIN32_WINNT=0x0700)
+  target_compile_definitions(OrbitCore PUBLIC -DNTDDI_VERSION=0x06030000)
 else()
   target_link_libraries(OrbitCore PUBLIC unwindstack::unwindstack)
 endif()
