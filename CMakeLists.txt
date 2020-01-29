@@ -43,12 +43,14 @@ if(WIN32)
   find_package(peparse REQUIRED)
 
   # Fix the include path in the breakpad target
-  get_target_property(INC unofficial::breakpad::libbreakpad INTERFACE_INCLUDE_DIRECTORIES)
-  set_target_properties(unofficial::breakpad::libbreakpad unofficial::breakpad::libbreakpad_client PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${INC}/google_breakpad")
+  get_target_property(INC unofficial::breakpad::libbreakpad
+                      INTERFACE_INCLUDE_DIRECTORIES)
+  set_target_properties(
+    unofficial::breakpad::libbreakpad unofficial::breakpad::libbreakpad_client
+    PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${INC}/google_breakpad")
 endif()
 
-# Since the curl packages does not provide cmake targets, we
-# will add one here.
+# Since the curl packages does not provide cmake targets, we will add one here.
 add_library(CURL STATIC IMPORTED GLOBAL)
 set_target_properties(CURL PROPERTIES IMPORTED_LOCATION ${CURL_LIBRARIES})
 target_include_directories(CURL SYSTEM INTERFACE ${CURK_INCLUDE_DIRS})
@@ -57,10 +59,8 @@ if(NOT WIN32)
 endif()
 add_library(CURL::CURL ALIAS CURL)
 
-
-# Set preprocessor defines
-# These are only necessary for windows, but we will define them
-# on all platforms, to keep the builds similar as possible.
+# Set preprocessor defines These are only necessary for windows, but we will
+# define them on all platforms, to keep the builds similar as possible.
 add_definitions(-DNOMINMAX)
 add_definitions(-DUNICODE -D_UNICODE)
 
