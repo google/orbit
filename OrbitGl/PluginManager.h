@@ -3,18 +3,21 @@
 //-----------------------------------
 #pragma once
 
-namespace Orbit{ class Plugin; }
+#include <vector>
+
+namespace Orbit {
+class Plugin;
+}
 class Message;
 
-class PluginManager
-{
-public:
-    void Initialize();
+class PluginManager {
+ public:
+  void Initialize();
 
-    void OnReceiveUserData( const Message & a_Msg );
-    void OnReceiveOrbitData( const Message & a_Msg );
+  void OnReceiveUserData(const Message& a_Msg);
+  void OnReceiveOrbitData(const Message& a_Msg);
 
-    std::vector<Orbit::Plugin*> m_Plugins;
+  std::vector<Orbit::Plugin*> m_Plugins;
 };
 
 extern PluginManager GPluginManager;

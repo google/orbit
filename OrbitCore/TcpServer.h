@@ -3,64 +3,69 @@
 //-----------------------------------
 #pragma once
 
-#include "Core.h"
-#include "ScopeTimer.h"
-#include "TcpEntity.h"
 #include <functional>
 #include <unordered_map>
 
-class TcpServer : public TcpEntity
-{
-public:
-    TcpServer();
-    ~TcpServer();
-    
-    void Start( unsigned short a_Port );
+#include "Core.h"
+#include "ScopeTimer.h"
+#include "TcpEntity.h"
 
-    void Receive( const Message & a_Message );
+class TcpServer : public TcpEntity {
+ public:
+  TcpServer();
+  ~TcpServer();
 
-    void SendToUiAsync( const std::wstring & a_Message );
-    void SendToUiNow( const std::wstring & a_Message );
-    void SendToUiAsync( const std::string & a_Message ){ SendToUiAsync(s2ws(a_Message)); }
-    void SendToUiNow( const std::string & a_Message ){ SendToUiNow(s2ws(a_Message)); }
+  void Start(unsigned short a_Port);
 
-    typedef std::function< void( const std::wstring & ) > StrCallback;
+  void Receive(const Message& a_Message);
 
-    void SetUiCallback( StrCallback a_Callback ){ m_UiCallback = a_Callback; }
-    void MainThreadTick();
+  void SendToUiAsync(const std::wstring& a_Message);
+  void SendToUiNow(const std::wstring& a_Message);
+  void SendToUiAsync(const std::string& a_Message) {
+    SendToUiAsync(s2ws(a_Message));
+  }
+  void SendToUiNow(const std::string& a_Message) {
+    SendToUiNow(s2ws(a_Message));
+  }
 
-    void Disconnect();
-    bool HasConnection();
-    
-    bool IsLocalConnection();
+  typedef std::function<void(const std::wstring&)> StrCallback;
 
-    class tcp_server* GetServer(){ return m_TcpServer; }
+  void SetUiCallback(StrCallback a_Callback) { m_UiCallback = a_Callback; }
+  void MainThreadTick();
 
-    void ResetStats();
-    std::vector< std::string > GetStats();
+  void Disconnect();
+  bool HasConnection();
 
-protected:
-    class TcpSocket* GetSocket() override final;
-    void ServerThread();
+  bool IsLocalConnection();
 
-private:
-    class tcp_server*                         m_TcpServer = nullptr;
-    StrCallback                               m_UiCallback;
-    moodycamel::ConcurrentQueue<std::wstring> m_UiLockFreeQueue;
-    
-    Timer    m_StatTimer;
-    ULONG64  m_LastNumMessages;
-    ULONG64  m_LastNumBytes;
-    ULONG64  m_NumReceivedMessages;
-    double   m_NumMessagesPerSecond;
-    double   m_BytesPerSecond;
-    uint32_t m_MaxTimersAtOnce;
-    uint32_t m_NumTimersAtOnce;
-    uint32_t m_NumTargetQueuedEntries;
-    uint32_t m_NumTargetFlushedEntries;
-    uint32_t m_NumTargetFlushedTcpPackets;
-    ULONG64  m_NumMessagesFromPreviousSession;
+  class tcp_server* GetServer() {
+    return m_TcpServer;
+  }
+
+  void ResetStats();
+  std::vector<std::string> GetStats();
+
+ protected:
+  class TcpSocket* GetSocket() override final;
+  void ServerThread();
+
+ private:
+  class tcp_server* m_TcpServer = nullptr;
+  StrCallback m_UiCallback;
+  moodycamel::ConcurrentQueue<std::wstring> m_UiLockFreeQueue;
+
+  Timer m_StatTimer;
+  ULONG64 m_LastNumMessages;
+  ULONG64 m_LastNumBytes;
+  ULONG64 m_NumReceivedMessages;
+  double m_NumMessagesPerSecond;
+  double m_BytesPerSecond;
+  uint32_t m_MaxTimersAtOnce;
+  uint32_t m_NumTimersAtOnce;
+  uint32_t m_NumTargetQueuedEntries;
+  uint32_t m_NumTargetFlushedEntries;
+  uint32_t m_NumTargetFlushedTcpPackets;
+  ULONG64 m_NumMessagesFromPreviousSession;
 };
 
 extern TcpServer* GTcpServer;
-

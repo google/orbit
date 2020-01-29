@@ -6,6 +6,7 @@
 
 #include "Core.h"
 #include "Log.h"
+#include "OpenGl.h"
 #include "freetype-gl.h"
 
 void CheckGlError() {

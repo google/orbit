@@ -15,28 +15,47 @@
 // dependency between LinuxPerfEvent.h and LinuxPerfEventVisitor.h.
 
 //-----------------------------------------------------------------------------
-void LinuxPerfLostEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
+void LinuxPerfLostEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
+  a_Visitor->visit(this);
+}
 
 //-----------------------------------------------------------------------------
-void LinuxForkEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
+void LinuxForkEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
+  a_Visitor->visit(this);
+}
 
 //-----------------------------------------------------------------------------
-void LinuxExitEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
+void LinuxExitEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
+  a_Visitor->visit(this);
+}
 
 //-----------------------------------------------------------------------------
-void LinuxContextSwitchEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
+void LinuxContextSwitchEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
+  a_Visitor->visit(this);
+}
 
 //-----------------------------------------------------------------------------
-void LinuxSystemWideContextSwitchEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
+void LinuxSystemWideContextSwitchEvent::accept(
+    LinuxPerfEventVisitor* a_Visitor) {
+  a_Visitor->visit(this);
+}
 
 //-----------------------------------------------------------------------------
-void LinuxStackSampleEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
+void LinuxStackSampleEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
+  a_Visitor->visit(this);
+}
 
 //-----------------------------------------------------------------------------
-void LinuxUprobeEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
+void LinuxUprobeEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
+  a_Visitor->visit(this);
+}
 
 //-----------------------------------------------------------------------------
-void LinuxUprobeEventWithStack::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
+void LinuxUprobeEventWithStack::accept(LinuxPerfEventVisitor* a_Visitor) {
+  a_Visitor->visit(this);
+}
 
 //-----------------------------------------------------------------------------
-void LinuxUretprobeEvent::accept(LinuxPerfEventVisitor* a_Visitor) { a_Visitor->visit(this); }
+void LinuxUretprobeEvent::accept(LinuxPerfEventVisitor* a_Visitor) {
+  a_Visitor->visit(this);
+}

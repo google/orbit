@@ -7,18 +7,17 @@ namespace Ui {
 class OrbitVisualizer;
 }
 
-class OrbitVisualizer : public QMainWindow
-{
-    Q_OBJECT
+class OrbitVisualizer : public QMainWindow {
+  Q_OBJECT
 
-public:
-    explicit OrbitVisualizer(QWidget *parent = 0);
-    ~OrbitVisualizer();
+ public:
+  explicit OrbitVisualizer(QWidget* parent = 0);
+  ~OrbitVisualizer();
 
-    void Initialize( class OrbitMainWindow* a_MainWindow );
+  void Initialize(class OrbitMainWindow* a_MainWindow);
 
-private:
-    Ui::OrbitVisualizer *ui;
+ private:
+  Ui::OrbitVisualizer* ui;
 };
 
-#endif // ORBITVISUALIZER_H
+#endif  // ORBITVISUALIZER_H

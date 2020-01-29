@@ -3,42 +3,41 @@
 //-----------------------------------
 #pragma once
 
-#include "DataView.h"
 #include <memory>
+
+#include "DataView.h"
 
 class Session;
 
-class SessionsDataView : public DataView
-{
-public:
-    SessionsDataView();
-    virtual const std::vector<std::wstring>& GetColumnHeaders() override;
-    virtual const std::vector<float>& GetColumnHeadersRatios() override;
-    virtual std::vector<std::wstring> GetContextMenu( int a_Index ) override;
-    virtual std::wstring GetValue( int a_Row, int a_Column ) override;
-    virtual std::wstring GetToolTip( int a_Row, int a_Column ) override;
-    virtual std::wstring GetLabel() override { return L"Sessions"; }
-    
-    void OnDataChanged() override;
-    void OnFilter( const std::wstring & a_Filter ) override;
-    void OnSort( int a_Column, bool a_Toggle = true ) override;
-    void OnContextMenu( const std::wstring & a_Action, int a_MenuIndex, std::vector<int> & a_ItemIndices ) override;
-    
-    void SetSessions( const std::vector< std::shared_ptr< Session > > & a_Sessions );
+class SessionsDataView : public DataView {
+ public:
+  SessionsDataView();
+  virtual const std::vector<std::wstring>& GetColumnHeaders() override;
+  virtual const std::vector<float>& GetColumnHeadersRatios() override;
+  virtual std::vector<std::wstring> GetContextMenu(int a_Index) override;
+  virtual std::wstring GetValue(int a_Row, int a_Column) override;
+  virtual std::wstring GetToolTip(int a_Row, int a_Column) override;
+  virtual std::wstring GetLabel() override { return L"Sessions"; }
 
-    enum SdvColumn
-    {
-        SDV_SessionName,
-        SDV_ProcessName,
-        //SDV_LastUsed,
-        SDV_NumColumns
-    };
+  void OnDataChanged() override;
+  void OnFilter(const std::wstring& a_Filter) override;
+  void OnSort(int a_Column, bool a_Toggle = true) override;
+  void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
+                     std::vector<int>& a_ItemIndices) override;
 
-protected:
-    const std::shared_ptr<Session> & GetSession( unsigned int a_Row ) const;
+  void SetSessions(const std::vector<std::shared_ptr<Session> >& a_Sessions);
 
-protected:
-    std::vector< std::shared_ptr<Session> > m_Sessions;
-    static std::vector<float>               s_HeaderRatios;
+  enum SdvColumn {
+    SDV_SessionName,
+    SDV_ProcessName,
+    // SDV_LastUsed,
+    SDV_NumColumns
+  };
+
+ protected:
+  const std::shared_ptr<Session>& GetSession(unsigned int a_Row) const;
+
+ protected:
+  std::vector<std::shared_ptr<Session> > m_Sessions;
+  static std::vector<float> s_HeaderRatios;
 };
-

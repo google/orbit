@@ -3,6 +3,7 @@
 //-----------------------------------
 
 #include "Core.h"
+
 #include "Serialization.h"
 
 CounterStreamBuffer GStreamCounter;

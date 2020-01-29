@@ -6,7 +6,6 @@
 #include <string>
 
 //-----------------------------------------------------------------------------
-namespace Diff
-{
-    void Exec( const std::string & a_A, const std::string & a_B );
+namespace Diff {
+void Exec(const std::string& a_A, const std::string& a_B);
 };

@@ -3,22 +3,23 @@
 //-----------------------------------
 #pragma once
 
-#include <string>
 #include <memory.h>
+
+#include <string>
+
 #include "BaseTypes.h"
 #include "SerializationMacros.h"
 
-class TestRemoteMessages
-{
-public:
-    static TestRemoteMessages& Get();
+class TestRemoteMessages {
+ public:
+  static TestRemoteMessages& Get();
 
-    TestRemoteMessages();
-    ~TestRemoteMessages();
+  TestRemoteMessages();
+  ~TestRemoteMessages();
 
-    void Init();
-    void Run();
+  void Init();
+  void Run();
 
-protected:
-    void SetupMessageHandlers();
+ protected:
+  void SetupMessageHandlers();
 };

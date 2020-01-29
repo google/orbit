@@ -6,7 +6,7 @@
 #ifndef __SHADER_H__
 #define __SHADER_H__
 
-#include "opengl.h"
+#include "OpenGl.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,9 +44,7 @@ namespace ftgl {
  *                 must be freed after usage.
  *
  */
-  char *
-  shader_read( const char *filename );
-
+char* shader_read(const char* filename);
 
 /**
  * Compile a shader from a text buffer.
@@ -57,10 +55,7 @@ namespace ftgl {
  * @return a handle on the compiled program
  *
  */
-  GLuint
-  shader_compile( const char* source,
-                  const GLenum type );
-
+GLuint shader_compile(const char* source, const GLenum type);
 
 /**
  * Load a vertex and fragment shader sources and build program
@@ -71,10 +66,7 @@ namespace ftgl {
  * @return a handle on the built program
  *
  */
-  GLuint
-  shader_load( const char * vert_filename,
-               const char * frag_filename );
-
+GLuint shader_load(const char* vert_filename, const char* frag_filename);
 
 /** @} */
 

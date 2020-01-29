@@ -1,30 +1,25 @@
 #include "OrbitService.h"
-#include "Core.h"
-#include "App.h"
 
 #include <iostream>
 
+#include "App.h"
+#include "Core.h"
+
 //-----------------------------------------------------------------------------
-OrbitService::OrbitService()
-{
-    OrbitApp::Init();
-    GOrbitApp->SetHeadless(true);
-    GOrbitApp->SetCommandLineArguments({"headless"});
-    GOrbitApp->PostInit();
+OrbitService::OrbitService() {
+  OrbitApp::Init();
+  GOrbitApp->SetHeadless(true);
+  GOrbitApp->SetCommandLineArguments({"headless"});
+  GOrbitApp->PostInit();
 }
 
 //-----------------------------------------------------------------------------
-OrbitService::~OrbitService()
-{
-
-}
+OrbitService::~OrbitService() {}
 
 //-----------------------------------------------------------------------------
-void OrbitService::Run()
-{
-    while (!m_ExitRequested)
-    {
-        OrbitApp::MainTick();
-        Sleep(16);
-    }
+void OrbitService::Run() {
+  while (!m_ExitRequested) {
+    OrbitApp::MainTick();
+    Sleep(16);
+  }
 }

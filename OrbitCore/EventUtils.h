@@ -3,10 +3,11 @@
 //-----------------------------------
 #pragma once
 
-#include "Core.h"
+#include <evntcons.h>
 #include <evntrace.h>
 
-namespace EventUtils
-{
-    void OutputDebugEvent( PEVENT_RECORD pEvent );
+#include "Core.h"
+
+namespace EventUtils {
+void OutputDebugEvent(PEVENT_RECORD pEvent);
 }

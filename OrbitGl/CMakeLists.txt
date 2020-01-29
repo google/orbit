@@ -38,7 +38,6 @@ target_sources(
          PluginCanvas.h
          PluginManager.h
          ProcessDataView.h
-         resource.h
          RuleEditor.h
          SamplingReport.h
          SamplingReportDataView.h
