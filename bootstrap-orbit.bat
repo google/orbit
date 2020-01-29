@@ -37,13 +37,13 @@ copy "external\vcpkg\buildtrees\breakpad\src\9e12edba6d-12269dd01c\src\processor
 
 :: CMake build
 mkdir build_release_x86
-copy "contrib\toolchains\toolchain-windows-32bit-msvc2019-release.cmake" "build_release_x86\toolchain.cmake" /y
+copy "contrib\toolchains\toolchain-windows-32bit-msvc2017-release.cmake" "build_release_x86\toolchain.cmake" /y
 cd build_release_x86
-cmake -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" -G "Visual Studio 16 2019" -A "Win32" ..
+cmake -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" -G "Visual Studio 15 2017" ..
 cd ..
 
 mkdir build_release_x64
-copy "contrib\toolchains\toolchain-windows-64bit-msvc2019-release.cmake" "build_release_x64\toolchain.cmake" /y
+copy "contrib\toolchains\toolchain-windows-64bit-msvc2017-release.cmake" "build_release_x64\toolchain.cmake" /y
 cd build_release_x64
-cmake -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" -G "Visual Studio 16 2019" -A "x64" ..
+cmake -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" -G "Visual Studio 15 2017 Win64" ..
 cd ..
