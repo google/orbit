@@ -12,6 +12,9 @@ string(APPEND CMAKE_CXX_FLAGS " /wd4245")
 string(APPEND CMAKE_CXX_FLAGS " /wd4244")
 string(APPEND CMAKE_CXX_FLAGS " /wd4481")
 string(APPEND CMAKE_CXX_FLAGS " /wd4201")
+string(APPEND CMAKE_CXX_FLAGS " /EHsc")
+string(APPEND CMAKE_CXX_FLAGS " /MP")
+string(APPEND CMAKE_C_FLAGS " /MP")
 
 # This include expects your build directory to be a direct subdirectory of the
 # project root.
