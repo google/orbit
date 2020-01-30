@@ -23,11 +23,11 @@ if exist "vcpkg.exe" (
 
 :: 32 bit
 set VCPKG_DEFAULT_TRIPLET=x86-windows
-vcpkg install freeglut glew freetype freetype-gl curl breakpad capstone asio cereal imgui
+vcpkg install freeglut glew freetype freetype-gl curl breakpad capstone asio cereal imgui qt5-base
 
 :: Build dynamic dependencies
 set VCPKG_DEFAULT_TRIPLET=x64-windows
-vcpkg install freeglut glew freetype freetype-gl curl breakpad capstone asio cereal imgui
+vcpkg install freeglut glew freetype freetype-gl curl breakpad capstone asio cereal imgui qt5-base
 
 cd ..\..
 

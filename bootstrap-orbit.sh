@@ -7,15 +7,12 @@ if [ $? -ne 0 ]; then
   sudo add-apt-repository universe
 fi
 sudo apt-get update
-sudo apt-get install -y build-essential cmake ninja
+sudo apt-get install -y build-essential cmake ninja bison flex
 sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev 
 sudo apt-get install -y linux-tools-common
 
 # Load Submodules (vcpkg, libunwindstack)
 git submodule update --init --recursive
-
-# Patching freetype-gl
-cp "OrbitUtils/freetype-gl-portfile.cmake" "external/vcpkg/ports/freetype-gl/portfile.cmake"
 
 # Build vcpkg
 cd external/vcpkg
@@ -30,7 +27,7 @@ fi
 
 ## Build dependencies
 ./vcpkg install freetype freetype-gl breakpad \
-  capstone asio cereal imgui freeglut glew curl
+  capstone asio cereal imgui freeglut glew curl qt5-base
 
 # CMake
 cd ../..

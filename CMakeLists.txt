@@ -32,7 +32,7 @@ find_package(CURL CONFIG REQUIRED)
 find_package(oqpi REQUIRED)
 find_package(capstone REQUIRED)
 find_package(GLUT REQUIRED)
-find_package(Qt5 COMPONENTS Core Widgets)
+find_package(Qt5 CONFIG COMPONENTS Core Widgets)
 find_package(lzma REQUIRED)
 find_package(asio CONFIG REQUIRED)
 
