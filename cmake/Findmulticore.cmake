@@ -1,5 +1,3 @@
-project(multicore CXX)
-
 set(DIR external/multicore/common)
 
 add_library(

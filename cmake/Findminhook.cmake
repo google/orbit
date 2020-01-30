@@ -1,5 +1,3 @@
-project(minhook C CXX)
-
 add_library(minhook OBJECT)
 
 set(DIR external/minhook)

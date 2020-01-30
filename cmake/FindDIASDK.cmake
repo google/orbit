@@ -1,5 +1,3 @@
-project(DIASDK)
-
 set(MSVC_DIA_SDK_DIR
     "$ENV{VSINSTALLDIR}DIA SDK"
     CACHE PATH "Path to the DIA SDK")

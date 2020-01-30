@@ -1,5 +1,3 @@
-project(capstone C CXX)
-
 if(WIN32)
   find_library(capstone_LIB NAMES capstone_dll)
 else()

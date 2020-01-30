@@ -1,5 +1,3 @@
-project(concurrentqueue CXX)
-
 add_library(concurrentqueue INTERFACE IMPORTED GLOBAL)
 target_include_directories(concurrentqueue SYSTEM
                            INTERFACE external/concurrentqueue)
