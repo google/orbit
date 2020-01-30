@@ -1,4 +1,3 @@
-project(DIA2Dump)
 set(DIR external/DIA2Dump)
 
 add_library(DIA2Dump OBJECT)

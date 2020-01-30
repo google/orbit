@@ -1,5 +1,3 @@
-project(oqpi C CXX)
-
 add_library(oqpi INTERFACE)
 
 set(DIR external/oqpi)

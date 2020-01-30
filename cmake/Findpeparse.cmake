@@ -1,5 +1,3 @@
-project(peparse CXX)
-
 add_library(peparse OBJECT)
 
 set(DIR external/peparse)

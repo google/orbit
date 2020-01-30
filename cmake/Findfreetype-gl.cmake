@@ -1,5 +1,3 @@
-project(freetype-gl)
-
 find_path(FREETYPE_GL_INCLUDE_DIR freetype-gl.h PATH_SUFFIXES freetype-gl)
 if(WIN32)
   find_library(FREETYPE_GL_LIBRARY freetype-gl.lib)
