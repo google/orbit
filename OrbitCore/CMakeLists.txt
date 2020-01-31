@@ -199,3 +199,11 @@ target_compile_definitions(OrbitCore PUBLIC UNICODE)
 target_compile_definitions(OrbitCore PUBLIC _UNICODE)
 
 target_compile_features(OrbitCore PUBLIC cxx_std_11)
+
+add_executable(OrbitCoreTests)
+
+target_sources(OrbitCoreTests
+  PRIVATE RingBufferTests.cpp)
+
+target_link_libraries(
+  OrbitCoreTests PRIVATE OrbitCore GTest::GTest GTest::Main)

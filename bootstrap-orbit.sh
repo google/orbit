@@ -30,7 +30,7 @@ fi
 
 ## Build dependencies
 ./vcpkg install freetype freetype-gl breakpad \
-  capstone asio cereal imgui freeglut glew curl
+  capstone asio cereal imgui freeglut glew curl gtest
 
 # CMake
 cd ../..

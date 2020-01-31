@@ -3,8 +3,10 @@
 //-----------------------------------
 #pragma once
 
+#include <cstddef>
+
 //-----------------------------------------------------------------------------
-template <class T, int BUFFER_SIZE>
+template <class T, size_t BUFFER_SIZE>
 class RingBuffer {
  public:
   //-------------------------------------------------------------------------
@@ -25,14 +27,14 @@ class RingBuffer {
 
   //-------------------------------------------------------------------------
   inline void Fill(const T& a_Item) {
-    for (int i = 0; i < BUFFER_SIZE; ++i) {
+    for (size_t i = 0; i < BUFFER_SIZE; ++i) {
       Add(a_Item);
     }
   }
 
   //-------------------------------------------------------------------------
   inline bool Contains(const T& a_Item) const {
-    for (int i = 0; i < Size(); ++i) {
+    for (size_t i = 0; i < Size(); ++i) {
       if (m_Data[i] == a_Item) return true;
     }
 
@@ -40,24 +42,24 @@ class RingBuffer {
   }
 
   //-------------------------------------------------------------------------
-  inline int Size() const {
+  inline size_t Size() const {
     return m_CurrentSize > BUFFER_SIZE ? BUFFER_SIZE : m_CurrentSize;
   }
 
   //-------------------------------------------------------------------------
-  inline int GetCurrentIndex() const { return m_CurrentIndex; }
+  inline size_t GetCurrentIndex() const { return m_CurrentIndex; }
 
   //-------------------------------------------------------------------------
   inline T* Data() { return m_Data; }
 
   //-------------------------------------------------------------------------
-  inline int IndexOfOldest() const {
+  inline size_t IndexOfOldest() const {
     return m_CurrentSize > BUFFER_SIZE ? m_CurrentIndex : 0;
   }
 
   //-------------------------------------------------------------------------
-  T& operator[](int a_Index) {
-    int index = (IndexOfOldest() + a_Index) % BUFFER_SIZE;
+  T& operator[](size_t a_Index) {
+    size_t index = (IndexOfOldest() + a_Index) % BUFFER_SIZE;
     return m_Data[index];
   }
 
@@ -66,6 +68,6 @@ class RingBuffer {
 
  protected:
   T m_Data[BUFFER_SIZE];
-  int m_CurrentSize;
-  int m_CurrentIndex;
+  size_t m_CurrentSize;
+  size_t m_CurrentIndex;
 };
