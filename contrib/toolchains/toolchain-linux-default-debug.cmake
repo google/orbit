@@ -29,7 +29,8 @@ add_compile_options(
   -Wredundant-decls
   -Winvalid-pch
   -Wdisabled-optimization
-  -Wstack-protector)
+  -Wstack-protector
+  -fno-omit-frame-pointer)
 
 include(
   "${CMAKE_CURRENT_LIST_DIR}/../external/vcpkg/scripts/buildsystems/vcpkg.cmake"

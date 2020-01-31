@@ -36,7 +36,8 @@ add_compile_options(
   -Winvalid-pch
   -Wdisabled-optimization
   -Wstack-protector
-  -fcolor-diagnostics)
+  -fcolor-diagnostics
+  -fno-omit-frame-pointer)
 
 include(
   "${CMAKE_CURRENT_LIST_DIR}/../external/vcpkg/scripts/buildsystems/vcpkg.cmake"
