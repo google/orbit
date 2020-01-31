@@ -26,12 +26,10 @@ find_package(capstone REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(Qt5 CONFIG COMPONENTS Core Widgets)
 
-# Hack for freelgut:
-# freeglut accidentally links against libxrandr when the headers of
-# libxrandr are installed on the current system. Hopefully
-# this will be fixed in a later release of either freeglut
-# or vcpkg.
-if (TARGET X11::Xrandr)
+# Hack for freelgut: freeglut accidentally links against libxrandr when the
+# headers of libxrandr are installed on the current system. Hopefully this will
+# be fixed in a later release of either freeglut or vcpkg.
+if(TARGET X11::Xrandr)
   target_link_libraries(GLUT::GLUT INTERFACE X11::Xrandr)
 endif()
 
