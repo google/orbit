@@ -5,6 +5,7 @@
 //-----------------------------------
 // Author: Florian Kuebler
 //-----------------------------------
+
 #pragma once
 
 #include "LinuxPerfEvent.h"
@@ -22,4 +23,5 @@ class LinuxPerfEventVisitor {
   virtual void visit(LinuxUprobeEvent* a_Event) {}
   virtual void visit(LinuxUprobeEventWithStack* a_Event) {}
   virtual void visit(LinuxUretprobeEvent* a_Event) {}
+  virtual void visit(LinuxUretprobeEventWithStack* a_Event) {}
 };

@@ -178,42 +178,51 @@ struct __attribute__((__packed__)) perf_record_with_stack {
   perf_sample_stack_user stack_data;
 };
 
+namespace {
+std::array<uint64_t, PERF_REG_X86_64_MAX>
+perf_sample_regs_user_all_to_register_array(
+    const perf_sample_regs_user_all& regs) {
+  std::array<uint64_t, PERF_REG_X86_64_MAX> registers{};
+  registers[PERF_REG_X86_AX] = regs.ax;
+  registers[PERF_REG_X86_BX] = regs.bx;
+  registers[PERF_REG_X86_CX] = regs.cx;
+  registers[PERF_REG_X86_DX] = regs.dx;
+  registers[PERF_REG_X86_SI] = regs.si;
+  registers[PERF_REG_X86_DI] = regs.di;
+  registers[PERF_REG_X86_BP] = regs.bp;
+  registers[PERF_REG_X86_SP] = regs.sp;
+  registers[PERF_REG_X86_IP] = regs.ip;
+  registers[PERF_REG_X86_FLAGS] = regs.flags;
+  registers[PERF_REG_X86_CS] = regs.cs;
+  registers[PERF_REG_X86_SS] = regs.ss;
+  // Registers ds, es, fs, gs do not actually exist.
+  registers[PERF_REG_X86_DS] = 0ul;
+  registers[PERF_REG_X86_ES] = 0ul;
+  registers[PERF_REG_X86_FS] = 0ul;
+  registers[PERF_REG_X86_GS] = 0ul;
+  registers[PERF_REG_X86_R8] = regs.r8;
+  registers[PERF_REG_X86_R9] = regs.r9;
+  registers[PERF_REG_X86_R10] = regs.r10;
+  registers[PERF_REG_X86_R11] = regs.r11;
+  registers[PERF_REG_X86_R12] = regs.r12;
+  registers[PERF_REG_X86_R13] = regs.r13;
+  registers[PERF_REG_X86_R14] = regs.r14;
+  registers[PERF_REG_X86_R15] = regs.r15;
+  return registers;
+}
+}  // namespace
+
 class LinuxStackSampleEvent
     : public LinuxPerfEventRecord<perf_record_with_stack> {
  public:
   std::array<uint64_t, PERF_REG_X86_64_MAX> Registers() {
-    std::array<uint64_t, PERF_REG_X86_64_MAX> registers{};
-    const perf_sample_regs_user_all& regs = ring_buffer_data.register_data;
-    registers[PERF_REG_X86_AX] = regs.ax;
-    registers[PERF_REG_X86_BX] = regs.bx;
-    registers[PERF_REG_X86_CX] = regs.cx;
-    registers[PERF_REG_X86_DX] = regs.dx;
-    registers[PERF_REG_X86_SI] = regs.si;
-    registers[PERF_REG_X86_DI] = regs.di;
-    registers[PERF_REG_X86_BP] = regs.bp;
-    registers[PERF_REG_X86_SP] = regs.sp;
-    registers[PERF_REG_X86_IP] = regs.ip;
-    registers[PERF_REG_X86_FLAGS] = regs.flags;
-    registers[PERF_REG_X86_CS] = regs.cs;
-    registers[PERF_REG_X86_SS] = regs.ss;
-    registers[PERF_REG_X86_DS] =
-        0ul;  // These four registers do not actually exist.
-    registers[PERF_REG_X86_ES] = 0ul;
-    registers[PERF_REG_X86_FS] = 0ul;
-    registers[PERF_REG_X86_GS] = 0ul;
-    registers[PERF_REG_X86_R8] = regs.r8;
-    registers[PERF_REG_X86_R9] = regs.r9;
-    registers[PERF_REG_X86_R10] = regs.r10;
-    registers[PERF_REG_X86_R11] = regs.r11;
-    registers[PERF_REG_X86_R12] = regs.r12;
-    registers[PERF_REG_X86_R13] = regs.r13;
-    registers[PERF_REG_X86_R14] = regs.r14;
-    registers[PERF_REG_X86_R15] = regs.r15;
-    return registers;
+    return perf_sample_regs_user_all_to_register_array(
+        ring_buffer_data.register_data);
   }
 
   const char* StackDump() { return ring_buffer_data.stack_data.data; }
   uint64_t StackSize() { return ring_buffer_data.stack_data.dyn_size; }
+
   void accept(LinuxPerfEventVisitor* a_Visitor) override;
 };
 
@@ -236,10 +245,32 @@ class LinuxUprobeEvent : public AbstractLinuxUprobeEvent<perf_empty_record> {
 class LinuxUprobeEventWithStack
     : public AbstractLinuxUprobeEvent<perf_record_with_stack> {
  public:
+  std::array<uint64_t, PERF_REG_X86_64_MAX> Registers() {
+    return perf_sample_regs_user_all_to_register_array(
+        ring_buffer_data.register_data);
+  }
+
+  const char* StackDump() { return ring_buffer_data.stack_data.data; }
+  uint64_t StackSize() { return ring_buffer_data.stack_data.dyn_size; }
+
   void accept(LinuxPerfEventVisitor* a_Visitor) override;
 };
 
 class LinuxUretprobeEvent : public AbstractLinuxUprobeEvent<perf_empty_record> {
  public:
+  void accept(LinuxPerfEventVisitor* a_Visitor) override;
+};
+
+class LinuxUretprobeEventWithStack
+    : public AbstractLinuxUprobeEvent<perf_record_with_stack> {
+ public:
+  std::array<uint64_t, PERF_REG_X86_64_MAX> Registers() {
+    return perf_sample_regs_user_all_to_register_array(
+        ring_buffer_data.register_data);
+  }
+
+  const char* StackDump() { return ring_buffer_data.stack_data.data; }
+  uint64_t StackSize() { return ring_buffer_data.stack_data.dyn_size; }
+
   void accept(LinuxPerfEventVisitor* a_Visitor) override;
 };
