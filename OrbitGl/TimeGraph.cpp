@@ -276,7 +276,7 @@ void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
       std::map<long long, ContextSwitch>& csMap =
           m_CoreUtilizationMap[a_CS.m_ProcessorIndex];
 
-      if (csMap.rbegin() != csMap.rend()) {
+      if (!csMap.empty()) {
         ContextSwitch& lastCS = csMap.rbegin()->second;
         if (lastCS.m_Type == ContextSwitch::In) {
           Timer timer;
@@ -297,7 +297,7 @@ void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
       std::map<long long, ContextSwitch>& csMap =
           m_ContextSwitchesMap[a_CS.m_ThreadId];
 
-      if (csMap.rbegin() != csMap.rend()) {
+      if (!csMap.empty()) {
         ContextSwitch& lastCS = csMap.rbegin()->second;
         if (lastCS.m_Type == ContextSwitch::In) {
           Timer timer;

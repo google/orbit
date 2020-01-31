@@ -16,7 +16,7 @@
 #include "LinuxPerfUtils.h"
 #include "PrintVar.h"
 
-LinuxPerfRingBuffer::LinuxPerfRingBuffer(uint32_t a_PerfFileDescriptor) {
+LinuxPerfRingBuffer::LinuxPerfRingBuffer(int a_PerfFileDescriptor) {
   m_FileDescriptor = a_PerfFileDescriptor;
   void* mmap_ret = mmap_mapping(m_FileDescriptor);
 
