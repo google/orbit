@@ -1,2 +1,1 @@
-- Make sure we ship with all Qt dlls (platforms/qwindows.dll)
 - Compile RelWithDebInfo by default
