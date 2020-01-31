@@ -1,16 +1,5 @@
 @echo off
 
-:: Check for QTDIR environment variable
-if defined Qt5_DIR (
-    echo Qt5_DIR=%Qt5_DIR% 
-) else ( 
-    echo ======= ERROR =======
-    echo Qt5_DIR environment variable not found.
-    echo Please set your Qt5_DIR environment variable to point to your Qt installation directory [ex. C:\Qt\5.12.1\msvc2017_64\lib\cmake\Qt5]
-    echo ======= ERROR =======
-    goto :eof
-)
-
 :: Build vcpkg
 call git submodule update --init
 cd external/vcpkg
