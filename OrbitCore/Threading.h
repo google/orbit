@@ -20,8 +20,9 @@
 
 // HEA-L's oqpi
 #ifdef _WIN32
+#include <processthreadsapi.h>
 #define OQPI_USE_DEFAULT
-#include "../external/oqpi/include/oqpi.hpp"
+#include "oqpi.hpp"
 using oqpi_tk = oqpi::default_helpers;
 #endif
 

@@ -1,6 +1,29 @@
 # Getting started with development
 
-TODO: Describe our development process.
+## Building Orbit
+
+Orbit relies on CMake as its meta build system in a fairly recent version
+(3.15 at least). This won't be available on most stable Linux distributions.
+
+One way to install a recent version of CMake is via Python's pip. This
+script should install CMake on debian-based distributions. For other
+flavors you might need to adjust the commands to your package manager:
+
+```bash
+# Put ~/.local/bin into your PATH with high precedence (high means BEFORE /usr/bin).
+sudo apt install python3-pip
+pip3 install --user --upgrade pip
+which pip # Should point to ~/.local/bin/pip
+pip install --user cmake
+which cmake # Should point to ~/.local/bin/cmake
+cmake --version # Should output 3.15.2 or higher
+```
+
+On Windows, this should work as well. But installing via the Qt Installer or
+via the Windows Installer from cmake.org are also viable options.
+
+Check out the `bootstrap-orbit.{sh, bat}` file for a general description on how
+to install dependencies and on how to set up a `build/`-directory.
 
 
 ## Consistent code styling.

@@ -1,197 +1,102 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.15)
 
-# Note: (Windows + vcpkg) to build and use x64:
-# a) set VCPKG_DEFAULT_TRIPLET=x64-windows, then install all required dependencies
-# b) invoke cmake for 64 bit platform, as follows:
-#    cmake -DCMAKE_GENERATOR_PLATFORM=x64 ..
-# or, i.e.: 
-#    cmake -G "Visual Studio 15 2017 Win64" ..
-# This assumes CMAKE_TOOLCHAIN_FILE is correctly set, in accordance with
-# https://github.com/Microsoft/vcpkg/blob/master/docs/examples/using-sqlite.md#cmake
+# Note: (Windows + vcpkg) to build and use x64: a) set
+# VCPKG_DEFAULT_TRIPLET=x64-windows, then install all required dependencies b)
+# invoke cmake for 64 bit platform, as follows: cmake
+# -DCMAKE_GENERATOR_PLATFORM=x64 .. or, i.e.: cmake -G "Visual Studio 15 2017
+# Win64" .. This assumes CMAKE_TOOLCHAIN_FILE is correctly set, in accordance
+# with https://github.com/Microsoft/vcpkg/blob/master/docs/examples/using-
+# sqlite.md#cmake
 
+project(Orbit C CXX)
 
-cmake_minimum_required(VERSION 3.6)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-
-# Orbit directories
-set(ORBIT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
-set(EXTERN_ROOT "${ORBIT_ROOT}/external")
-set(ORBIT_UTILS "${ORBIT_ROOT}/OrbitUtils")
-
-# Orbit utils (PrintVars, PrintAllVars...)
-include(${ORBIT_UTILS}/utils.cmake)
-
-# Vcpkg toolchain
-if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    set(CMAKE_TOOLCHAIN_FILE "${EXTERN_ROOT}/vcpkg/scripts/buildsystems/vcpkg.cmake")
+if(NOT WIN32)
+  find_package(X11 REQUIRED)
+  find_package(OpenSSL REQUIRED)
+  find_package(unwindstack REQUIRED)
 endif()
 
-# Linux
-if(UNIX AND NOT APPLE)
-    set(LINUX TRUE)
-endif()
-
-# Stop compilation on first error
-if(LINUX)
-add_definitions(-Wfatal-errors)
-endif()
-
-set( LIB_EXT "a" )
-if(WIN32)
-set( LIB_EXT "lib" )
-endif()
-
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
-
-set(NAME Orbit)
-project(${NAME})
-
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-#Output pdbs
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
-set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
-
-include(CheckIncludeFiles)
-include(CheckIncludeFileCXX)
-include(CheckFunctionExists)
-include(CheckSymbolExists)
-include(CheckLibraryExists)
-#include(CheckPrototypeExists)
-include(CheckStructHasMember)
-
-#pkg_check_modules(QT5 Qt5Core REQUIRED)
-#find_package(Qt5Core)
-
-#find_package(LLVM REQUIRED CONFIG)
-#message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-#message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-
-get_filename_component(EXTERN_ROOT ${CMAKE_SOURCE_DIR}/external REALPATH)
-
-if(WIN32)
-#find_package(unofficial-breakpad REQUIRED)
-find_library(BREAKPAD_LIB libbreakpad.lib)
-PrintVars(BREAKPAD_LIB)
-endif()
-if(LINUX)
-find_library(BREAKPAD_LIB liblibbreakpad.a)
-PrintVars(BREAKPAD_LIB)
-endif()
-
-#pkg_check_modules(GLEW glew REQUIRED)
-find_package(glew REQUIRED)
-PrintVars(GLEW)
-
-#find_package(imgui REQUIRED)
-find_path(IMGUI_INCLUDE_DIR imgui.h) 
-find_library(IMGUI_LIB imgui.lib)
-PrintVars(IMGUI)
-
-#pkg_check_modules(ASIO asio REQUIRED)
-#find_package(asio)
-find_path(ASIO_INCLUDE_DIR asio.hpp) 
-PrintVars(ASIO)
-
-#add_definitions(-DASIO_HAS_STD_CHRONO)
-add_definitions(-DASIO_DISABLE_BOOST_DATE_TIME)
-include_directories(${ASIO_INCLUDE_DIR})
-
-#pkg_check_modules(CURL libcurl REQUIRED)
-#find_package(curl REQUIRED)
-find_path(CURL_INCLUDE_DIR curl.h PATH_SUFFIXES capstone)
-if(LINUX)
-find_library(CURL_LIBRARIES libcurl.a) 
-PrintVars(CURL)
-endif()
-
-#pkg_check_modules(CEREAL cereal REQUIRED)
+find_package(Threads REQUIRED)
 find_package(cereal REQUIRED)
-PrintVars(CEREAL)
+find_package(xxHash REQUIRED)
+find_package(multicore REQUIRED)
+find_package(concurrentqueue REQUIRED)
+find_package(Freetype REQUIRED)
+find_package(freetype-gl REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(imgui REQUIRED)
+find_package(CURL REQUIRED)
+find_package(oqpi REQUIRED)
+find_package(capstone REQUIRED)
+find_package(GLUT REQUIRED)
 
-#find_package(capstone REQUIRED)
-find_path(CAPSTONE_INCLUDE_DIR capstone.h PATH_SUFFIXES capstone)
-if(WIN32)
-find_library(CAPSTONE_LIBRARIES capstone.lib
-HINTS "external/vcpkg/packages/capstone_x64-windows-static/lib")
+# Hack for freelgut:
+# freeglut accidentally links against libxrandr when the headers of
+# libxrandr are installed on the current system. Hopefully
+# this will be fixed in a later release of either freeglut
+# or vcpkg.
+if (TARGET X11::Xrandr)
+  target_link_libraries(GLUT::GLUT INTERFACE X11::Xrandr)
 endif()
-if(LINUX)
-find_library(CAPSTONE_LIBRARIES libcapstone.a )
-endif()
-PrintVars(CAPSTONE)
 
-
-function(AppendToVar var val)
-    set("${var}" "${${var}} ${val}" PARENT_SCOPE)
-endfunction()
-
-#if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-#	AppendToVar(CMAKE_CXX_FLAGS "/std:c++17")
-#else()
-#	AppendToVar(CMAKE_CXX_FLAGS "-std=c++17")
-#endif()
+find_package(Qt5 COMPONENTS Core Widgets)
+find_package(lzma REQUIRED)
 
 if(WIN32)
-# Set preprocessor defines
+  find_package(minhook REQUIRED)
+  find_package(unofficial-breakpad CONFIG REQUIRED)
+  find_package(DIASDK REQUIRED)
+  find_package(DIA2Dump REQUIRED)
+  find_package(peparse REQUIRED)
+
+  # Fix the include path in the breakpad target
+  get_target_property(INC unofficial::breakpad::libbreakpad
+                      INTERFACE_INCLUDE_DIRECTORIES)
+  set_target_properties(
+    unofficial::breakpad::libbreakpad unofficial::breakpad::libbreakpad_client
+    PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${INC}/google_breakpad")
+endif()
+
+# Since the curl packages does not provide cmake targets, we will add one here.
+add_library(CURL STATIC IMPORTED GLOBAL)
+set_target_properties(CURL PROPERTIES IMPORTED_LOCATION ${CURL_LIBRARIES})
+target_include_directories(CURL SYSTEM INTERFACE ${CURK_INCLUDE_DIRS})
+if(NOT WIN32)
+  target_link_libraries(CURL INTERFACE OpenSSL::SSL)
+endif()
+add_library(CURL::CURL ALIAS CURL)
+
+# Set preprocessor defines These are only necessary for windows, but we will
+# define them on all platforms, to keep the builds similar as possible.
 add_definitions(-DNOMINMAX)
-add_definitions(-D_WIN32_WINNT=0x0700)
-add_definitions(-DNTDDI_VERSION=0x06030000)
-endif()
 add_definitions(-DUNICODE -D_UNICODE)
 
-#add_definitions(-D_SCL_SECURE_NO_WARNINGS)
-#add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-
-# Clang specific stuff
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    AppendToVar(CMAKE_CXX_FLAGS "-Wno-switch-enum")
-endif()
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	AppendToVar(CMAKE_CXX_FLAGS "/W4")
-	AppendToVar(CMAKE_CXX_FLAGS "/wd4100")
-	AppendToVar(CMAKE_CXX_FLAGS "/wd4245")
-	AppendToVar(CMAKE_CXX_FLAGS "/wd4244")
-	AppendToVar(CMAKE_CXX_FLAGS "/wd4481")
-	AppendToVar(CMAKE_CXX_FLAGS "/wd4201")
-endif()
-
-if(CMAKE_COMPILER_IS_GNUCXX)
-	AppendToVar(CMAKE_CXX_FLAGS "-Wall")
-    AppendToVar(CMAKE_CXX_FLAGS "-Wextra")
-    #AppendToVar(CMAKE_CXX_FLAGS "-Wundef")
-    AppendToVar(CMAKE_CXX_FLAGS "-Wno-unused-parameter")
-    AppendToVar(CMAKE_CXX_FLAGS "-Wno-missing-field-initializers")
-endif()
-
-if(LINUX)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -fno-omit-frame-pointer -g")
-endif()
-
 if(WIN32)
-add_subdirectory(OrbitAsm)
-add_subdirectory(OrbitDll)
-endif()
+  add_definitions(-DWIN32)
 
-if(LINUX)
-add_subdirectory(${EXTERN_ROOT}/lzma)
-add_subdirectory(${EXTERN_ROOT}/libunwindstack)
+  add_subdirectory(OrbitDll)
+  add_subdirectory(OrbitAsm)
+else()
+  # Hack: Some parts on linux depend on headers in OrbitAsm, but OrbitAsm is not
+  # available for Windows.
+  add_library(OrbitAsm INTERFACE)
+  target_include_directories(OrbitAsm INTERFACE OrbitAsm/)
 endif()
 
 add_subdirectory(OrbitCore)
-
-# 64 bits
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 add_subdirectory(OrbitGl)
-add_subdirectory(OrbitQt)
 add_subdirectory(OrbitService)
 add_subdirectory(OrbitTest)
+
+if(TARGET Qt5::Core)
+  add_subdirectory(OrbitQt)
 endif()
 
 if(WIN32)
-# Startup Project
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "OrbitQt")
+  # Startup Project
+  set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT
+                                                              "OrbitQt")
 endif()

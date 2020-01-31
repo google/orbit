@@ -8,8 +8,13 @@
 #if defined(_WIN32)
 #	undef  OQPI_PLATFORM_WIN
 #	define OQPI_PLATFORM_WIN	(1)
-#   define WIN32_LEAN_AND_MEAN
-#   define VC_EXTRALEAN
+#   ifndef WIN32_LEAN_AND_MEAN
+#     error oqpi requires WIN32_LEAN_AND_MEAN
+#   endif
+#   ifndef VC_EXTRALEAN
+#     error oqpi requires VC_EXTRALEAN
+#   endif
+
 #   include <windows.h>
 #elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
 #	undef  OQPI_PLATFORM_POSIX

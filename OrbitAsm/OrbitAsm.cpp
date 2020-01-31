@@ -2,19 +2,20 @@
 
 #include <sstream>
 #include <vector>
+#include <cstdint>
 
 OrbitProlog GProlog;
 OrbitEpilog GEpilog;
 
 //-----------------------------------------------------------------------------
 #ifdef _WIN64
-std::vector<byte> dummyEnd = {0x49, 0xBB, 0xFF, 0xFF, 0xFF,
+std::vector<std::uint8_t> dummyEnd = {0x49, 0xBB, 0xFF, 0xFF, 0xFF,
                               0xFF, 0xFF, 0xFF, 0xFF, 0x0F};
-std::vector<byte> dummyAddress = {0xEF, 0xCD, 0xAB, 0x89,
+std::vector<std::uint8_t> dummyAddress = {0xEF, 0xCD, 0xAB, 0x89,
                                   0x67, 0x45, 0x23, 0x01};
 #else
-std::vector<byte> dummyEnd = {0xB8, 0xFF, 0xFF, 0xFF, 0x0F};
-std::vector<byte> dummyAddress = {0x78, 0x56, 0x34, 0x12};
+std::vector<std::uint8_t> dummyEnd = {0xB8, 0xFF, 0xFF, 0xFF, 0x0F};
+std::vector<std::uint8_t> dummyAddress = {0x78, 0x56, 0x34, 0x12};
 #endif
 
 //-----------------------------------------------------------------------------
@@ -33,7 +34,7 @@ inline void PrintVar(const char* a_VarName, const T& a_Value,
 }
 
 //-----------------------------------------------------------------------------
-size_t FindSize(const byte* a_Code, size_t a_MaxBytes = 1024) {
+size_t FindSize(const std::uint8_t* a_Code, size_t a_MaxBytes = 1024) {
   size_t matchSize = dummyEnd.size();
 
   for (size_t i = 0; i < a_MaxBytes; ++i) {
@@ -49,7 +50,7 @@ size_t FindSize(const byte* a_Code, size_t a_MaxBytes = 1024) {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<size_t> FindOffsets(const byte* a_Code, size_t a_NumOffsets,
+std::vector<size_t> FindOffsets(const std::uint8_t* a_Code, size_t a_NumOffsets,
                                 const std::vector<byte>& a_Identifier,
                                 size_t a_MaxBytes = 1024) {
   size_t matchSize = a_Identifier.size();
@@ -74,7 +75,7 @@ std::vector<size_t> FindOffsets(const byte* a_Code, size_t a_NumOffsets,
 //-----------------------------------------------------------------------------
 void OrbitProlog::Init() {
   if (m_Data.m_Code == nullptr) {
-    m_Data.m_Code = (byte*)&OrbitPrologAsm;
+    m_Data.m_Code = (std::uint8_t*)&OrbitPrologAsm;
     m_Data.m_Size = FindSize(m_Data.m_Code);
     PRINT_VARN("PrologSize", m_Data.m_Size);
 
@@ -96,7 +97,7 @@ void OrbitProlog::Init() {
 //-----------------------------------------------------------------------------
 void OrbitEpilog::Init() {
   if (!m_Data.m_Code) {
-    m_Data.m_Code = (byte*)&OrbitEpilogAsm;
+    m_Data.m_Code = (std::uint8_t*)&OrbitEpilogAsm;
     m_Data.m_Size = FindSize(m_Data.m_Code);
     PRINT_VARN("EpilogSize", m_Data.m_Size);
 

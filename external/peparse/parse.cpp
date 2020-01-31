@@ -31,8 +31,8 @@ THE SOFTWARE.
 #include "to_string.h"
 #include <string>
 
-#include "../../OrbitCore/Log.h"
-#include "../../OrbitCore/Pdb.h"
+#include "Log.h"
+#include "Pdb.h"
 
 using namespace std;
 
