@@ -47,10 +47,18 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
   // later.
   unwinder.Unwind();
 
-  if (unwinder.LastErrorCode() != 0) {
+  // Samples that fall into a function dynamically-instrumented with uretprobes
+  // often result in unwinding errors when hitting the trampoline inserted by
+  // the uretprobe. Do not treat them as errors as we need those callstacks.
+  if (unwinder.LastErrorCode() != 0 &&
+      unwinder.frames().back().map_name != "[uprobes]") {
     PRINT("LibunwindstackUnwinder::Unwind: unwinding error: %s at %#016lx\n",
           LibunwindstackErrorString(unwinder.LastErrorCode()).c_str(),
           unwinder.LastErrorAddress());
+    for (const unwindstack::FrameData& frame : unwinder.frames()) {
+      PRINT(unwinder.FormatFrame(frame) + "\n");
+    }
+    PRINT("\n");
     return {};
   }
 
