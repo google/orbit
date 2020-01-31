@@ -32,6 +32,16 @@ find_package(CURL REQUIRED)
 find_package(oqpi REQUIRED)
 find_package(capstone REQUIRED)
 find_package(GLUT REQUIRED)
+
+# Hack for freelgut:
+# freeglut accidentally links against libxrandr when the headers of
+# libxrandr are installed on the current system. Hopefully
+# this will be fixed in a later release of either freeglut
+# or vcpkg.
+if (TARGET X11::Xrandr)
+  target_link_libraries(GLUT::GLUT INTERFACE X11::Xrandr)
+endif()
+
 find_package(Qt5 COMPONENTS Core Widgets)
 find_package(lzma REQUIRED)
 
