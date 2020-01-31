@@ -35,6 +35,7 @@ endif()
 
 find_package(lzma REQUIRED)
 find_package(asio CONFIG REQUIRED)
+find_package(GTest MODULE REQUIRED)
 
 if(WIN32)
   find_package(minhook REQUIRED)
