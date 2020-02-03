@@ -7,7 +7,7 @@ if [ $? -ne 0 ]; then
   sudo add-apt-repository universe
 fi
 sudo apt-get update
-sudo apt-get install -y build-essential cmake ninja bison flex
+sudo apt-get install -y build-essential cmake ninja-build bison flex
 sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev 
 sudo apt-get install -y linux-tools-common
 
