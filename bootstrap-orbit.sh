@@ -40,6 +40,10 @@ else
     fi
 fi
 
+# Patching Qt5
+patch -p1 -i ../../contrib/patches/vcpkg-qt5-disable-glib.diff || exit 1
+
+
 ## Build dependencies
 ./vcpkg install freetype freetype-gl breakpad \
   capstone asio cereal imgui freeglut glew curl gtest qt5-base gtest
