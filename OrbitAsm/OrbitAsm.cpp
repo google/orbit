@@ -1,8 +1,8 @@
 #include "OrbitAsm.h"
 
+#include <cstdint>
 #include <sstream>
 #include <vector>
-#include <cstdint>
 
 OrbitProlog GProlog;
 OrbitEpilog GEpilog;
@@ -10,9 +10,9 @@ OrbitEpilog GEpilog;
 //-----------------------------------------------------------------------------
 #ifdef _WIN64
 std::vector<std::uint8_t> dummyEnd = {0x49, 0xBB, 0xFF, 0xFF, 0xFF,
-                              0xFF, 0xFF, 0xFF, 0xFF, 0x0F};
+                                      0xFF, 0xFF, 0xFF, 0xFF, 0x0F};
 std::vector<std::uint8_t> dummyAddress = {0xEF, 0xCD, 0xAB, 0x89,
-                                  0x67, 0x45, 0x23, 0x01};
+                                          0x67, 0x45, 0x23, 0x01};
 #else
 std::vector<std::uint8_t> dummyEnd = {0xB8, 0xFF, 0xFF, 0xFF, 0x0F};
 std::vector<std::uint8_t> dummyAddress = {0x78, 0x56, 0x34, 0x12};
