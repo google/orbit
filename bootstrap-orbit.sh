@@ -42,7 +42,7 @@ fi
 
 ## Build dependencies
 ./vcpkg install freetype freetype-gl breakpad \
-  capstone asio cereal imgui freeglut glew curl gtest qt5-base
+  capstone asio cereal imgui freeglut glew curl gtest qt5-base gtest
 
 if [ $? -ne 0 ]; then
   echo "Orbit: Could not install all the dependencies. Check for vcpkg error messages. Exiting..."
