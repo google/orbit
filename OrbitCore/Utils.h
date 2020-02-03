@@ -19,6 +19,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "absl/strings/str_format.h"
+
 #include "BaseTypes.h"
 #include "Platform.h"
 
@@ -93,21 +95,13 @@ inline void Fill(T& a_Array, U& a_Value) {
 
 //-----------------------------------------------------------------------------
 template <typename... Args>
-std::string Format(const char* format, Args... args) {
-  const size_t size = 4096;
-  char buf[size];
-  snprintf(buf, size, format, args...);
-  return std::string(buf);
-}
-
-//-----------------------------------------------------------------------------
-template <typename... Args>
 std::wstring Format(const wchar_t* format, Args... args) {
   const size_t size = 4096;
   wchar_t buf[size];
   swprintf(buf, size, format, args...);
   return std::wstring(buf);
 }
+
 
 //-----------------------------------------------------------------------------
 template <class T>
@@ -414,99 +408,66 @@ class CWindowsMessageToString {
 #endif
 
 //-----------------------------------------------------------------------------
-inline std::wstring GetPrettySize(ULONG64 a_Size) {
-  const double KB = 1024.0;
-  const double MB = 1024.0 * KB;
-  const double GB = 1024.0 * MB;
-  const double TB = 1024.0 * GB;
+inline std::string GetPrettySize(uint64_t size) {
+  constexpr double KB = 1024.0;
+  constexpr double MB = 1024.0 * KB;
+  constexpr double GB = 1024.0 * MB;
+  constexpr double TB = 1024.0 * GB;
 
-  double size = (double)a_Size;
+  if (size < KB) return absl::StrFormat("%" PRIu64" B", size);
+  if (size < MB) return absl::StrFormat("%.2f KB", size / KB);
+  if (size < GB) return absl::StrFormat("%.2f MB", size / MB);
+  if (size < TB) return absl::StrFormat("%.2f GB", size / GB);
 
-  if (size < KB) return Format(L"%I64u B", a_Size);
-  if (size < MB) return Format(L"%.2f KB", size / KB);
-  if (size < GB) return Format(L"%.2f MB", size / MB);
-  if (size < TB) return Format(L"%.2f GB", size / GB);
-
-  return Format(L"%.2f TB", size / TB);
+  return absl::StrFormat("%.2f TB", size / TB);
 }
 
 //-----------------------------------------------------------------------------
-inline std::string GetPrettyTime(double a_MilliSeconds) {
-  const double Day = 24 * 60 * 60 * 1000;
-  const double Hour = 60 * 60 * 1000;
-  const double Minute = 60 * 1000;
-  const double Second = 1000;
-  const double Milli = 1;
-  const double Micro = 0.001;
-  const double Nano = 0.000001;
+inline std::string GetPrettyTime(double milliseconds) {
+  constexpr double Day = 24 * 60 * 60 * 1000;
+  constexpr double Hour = 60 * 60 * 1000;
+  constexpr double Minute = 60 * 1000;
+  constexpr double Second = 1000;
+  constexpr double Milli = 1;
+  constexpr double Micro = 0.001;
+  constexpr double Nano = 0.000001;
 
   std::string res;
 
-  if (a_MilliSeconds < Micro)
-    res = Format("%.3f ns", a_MilliSeconds / Nano);
-  else if (a_MilliSeconds < Milli)
-    res = Format("%.3f us", a_MilliSeconds / Micro);
-  else if (a_MilliSeconds < Second)
-    res = Format("%.3f ms", a_MilliSeconds);
-  else if (a_MilliSeconds < Minute)
-    res = Format("%.3f s", a_MilliSeconds / Second);
-  else if (a_MilliSeconds < Hour)
-    res = Format("%.3f min", a_MilliSeconds / Minute);
-  else if (a_MilliSeconds < Day)
-    res = Format("%.3f h", a_MilliSeconds / Hour);
-  else
-    res = Format("%.3f days", a_MilliSeconds / Day);
+  if (milliseconds < Micro) {
+    res = absl::StrFormat("%.3f ns", milliseconds / Nano);
+  } else if (milliseconds < Milli) {
+    res = absl::StrFormat("%.3f us", milliseconds / Micro);
+  } else if (milliseconds < Second) {
+    res = absl::StrFormat("%.3f ms", milliseconds);
+  } else if (milliseconds < Minute) {
+    res = absl::StrFormat("%.3f s", milliseconds / Second);
+  } else if (milliseconds < Hour) {
+    res = absl::StrFormat("%.3f min", milliseconds / Minute);
+  } else if (milliseconds < Day) {
+    res = absl::StrFormat("%.3f h", milliseconds / Hour);
+  } else {
+    res = absl::StrFormat("%.3f days", milliseconds / Day);
+  }
 
   return res;
 }
 
 //-----------------------------------------------------------------------------
-inline std::wstring GetPrettyTimeW(double a_MilliSeconds) {
-  const double Day = 24 * 60 * 60 * 1000;
-  const double Hour = 60 * 60 * 1000;
-  const double Minute = 60 * 1000;
-  const double Second = 1000;
-  const double Milli = 1;
-  const double Micro = 0.001;
-  const double Nano = 0.000001;
+inline std::string GetPrettyBitRate(uint64_t size_in_bytes) {
+  uint64_t size = 8 * size_in_bytes;
 
-  std::wstring res;
+  constexpr double KB = 1024.0;
+  constexpr double MB = 1024.0 * KB;
+  constexpr double GB = 1024.0 * MB;
+  constexpr double TB = 1024.0 * GB;
 
-  if (a_MilliSeconds < Micro)
-    res = Format(L"%.3f ns", a_MilliSeconds / Nano);
-  else if (a_MilliSeconds < Milli)
-    res = Format(L"%.3f us", a_MilliSeconds / Micro);
-  else if (a_MilliSeconds < Second)
-    res = Format(L"%.3f ms", a_MilliSeconds);
-  else if (a_MilliSeconds < Minute)
-    res = Format(L"%.3f s", a_MilliSeconds / Second);
-  else if (a_MilliSeconds < Hour)
-    res = Format(L"%.3f min", a_MilliSeconds / Minute);
-  else if (a_MilliSeconds < Day)
-    res = Format(L"%.3f h", a_MilliSeconds / Hour);
-  else
-    res = Format(L"%.3f days", a_MilliSeconds / Day);
+  if (size < KB) return absl::StrFormat("%" PRIu64 " bit/s", size);
+  if (size < MB) return absl::StrFormat("%.2f kbit/s", size / KB);
+  if (size < GB) return absl::StrFormat("%.2f Mbit/s", size / MB);
+  if (size < TB) return absl::StrFormat("%.2f Gbit/s", size / GB);
 
-  return res;
-}
-
-//-----------------------------------------------------------------------------
-inline std::string GetPrettyBitRate(ULONG64 a_SizeInBytes) {
-  ULONG64 a_Size = 8 * a_SizeInBytes;
-
-  const double KB = 1024.0;
-  const double MB = 1024.0 * KB;
-  const double GB = 1024.0 * MB;
-  const double TB = 1024.0 * GB;
-
-  double size = (double)a_Size;
-
-  if (size < KB) return Format("%I64u bit/s", a_Size);
-  if (size < MB) return Format("%.2f kbit/s", size / KB);
-  if (size < GB) return Format("%.2f Mbit/s", size / MB);
-  if (size < TB) return Format("%.2f Gbit/s", size / GB);
-
-  return Format("%.2f Tbit/s", size / TB);
+  return absl::StrFormat("%.2f Tbit/s", size / TB);
 }
 
 #ifndef WIN32
@@ -590,7 +551,7 @@ std::vector<std::pair<Key, Val> > ValueSort(
               });
   else
     std::sort(vec.begin(), vec.end(),
-              [&a_SortFunc](const PairType& a, const PairType& b) {
+              [](const PairType& a, const PairType& b) {
                 return a.second < b.second;
               });
 

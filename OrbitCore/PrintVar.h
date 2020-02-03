@@ -5,6 +5,7 @@
 
 #include <sstream>
 
+#include "absl/strings/str_format.h"
 #include "Utils.h"
 
 #if __linux__
@@ -66,9 +67,9 @@ inline std::string VarToAnsi(const char* a_VarName, const T& a_Value) {
 }
 
 //-----------------------------------------------------------------------------
-inline void PrintFunc(const char* a_Function, const char* a_File, int a_Line) {
-  std::string func = Format("%s %s(%i) TID: %u\n", a_Function, a_File, a_Line,
-                            GetCurrentThreadId());
+inline void PrintFunc(const char* function, const char* file, int line) {
+  std::string func = absl::StrFormat("%s %s(%i) TID: %u\n", function, file,
+                                     line, GetCurrentThreadId());
   OutputDebugStringA(func.c_str());
 }
 

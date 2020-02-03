@@ -4,6 +4,7 @@
 
 #include "FunctionDataView.h"
 
+#include "absl/strings/str_format.h"
 #include "App.h"
 #include "Capture.h"
 #include "Core.h"
@@ -80,7 +81,7 @@ std::wstring FunctionsDataView::GetValue(int a_Row, int a_Column) {
 
   switch (s_HeaderMap[a_Column]) {
     case Function::INDEX:
-      value = Format("%d", a_Row);
+      value = absl::StrFormat("%d", a_Row);
       break;
     case Function::SELECTED:
       value = function.IsSelected() ? "X" : "-";
@@ -89,7 +90,7 @@ std::wstring FunctionsDataView::GetValue(int a_Row, int a_Column) {
       value = function.PrettyName();
       break;
     case Function::ADDRESS:
-      value = Format("0x%llx", function.GetVirtualAddress());
+      value = absl::StrFormat("0x%llx", function.GetVirtualAddress());
       break;
     case Function::FILE:
       value = function.m_File;
@@ -98,10 +99,10 @@ std::wstring FunctionsDataView::GetValue(int a_Row, int a_Column) {
       value = function.m_Pdb ? ws2s(function.m_Pdb->GetName()) : "";
       break;
     case Function::LINE:
-      value = Format("%i", function.m_Line);
+      value = absl::StrFormat("%i", function.m_Line);
       break;
     case Function::SIZE:
-      value = Format("%lu", function.m_Size);
+      value = absl::StrFormat("%lu", function.m_Size);
       break;
     case Function::CALL_CONV:
       value = ws2s(Function::GetCallingConventionString(function.m_CallConv));

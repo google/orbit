@@ -4,6 +4,8 @@
 
 #include "GlUtils.h"
 
+#include "absl/strings/str_format.h"
+
 #include "Core.h"
 #include "Log.h"
 #include "OpenGl.h"
@@ -11,11 +13,11 @@
 
 void CheckGlError() {
   GLenum errCode = glGetError();
-  const GLubyte* errString;
+  const char* errString;
   if (errCode != GL_NO_ERROR) {
-    errString = gluErrorString(errCode);
-    ORBIT_LOG(Format("OpenGL ERROR : %s\n", errString));
-    PRINT(Format("OpenGL ERROR : %s\n", errString));
+    errString = reinterpret_cast<const char*>(gluErrorString(errCode));
+    ORBIT_LOG(absl::StrFormat("OpenGL ERROR : %s\n", errString));
+    PRINT(absl::StrFormat("OpenGL ERROR : %s\n", errString));
   }
 }
 

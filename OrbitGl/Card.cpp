@@ -4,6 +4,8 @@
 
 #include "Card.h"
 
+#include "absl/strings/str_format.h"
+
 #include "GlCanvas.h"
 #include "ImGuiOrbit.h"
 
@@ -125,7 +127,7 @@ void FloatGraphCard::Draw(GlCanvas* a_Canvas) {
   static float textHeight = 15.f;
   float YGraphSize = m_Size[1] - textHeight;
 
-  for (int i = 0; i < m_Data.Size() - 1; ++i) {
+  for (size_t i = 0; i < m_Data.Size() - 1; ++i) {
     float x0 = m_Pos[0] + i * xIncrement;
     float x1 = x0 + xIncrement;
     float y0 =
@@ -142,9 +144,10 @@ void FloatGraphCard::Draw(GlCanvas* a_Canvas) {
   Color col(255, 255, 255, 255);
 
   std::string cardValue =
-      Format("%s: %s  min(%s) max(%s)", m_Name.c_str(),
-             std::to_string(m_Data.Latest()).c_str(),
-             std::to_string(m_Min).c_str(), std::to_string(m_Max).c_str());
+      absl::StrFormat("%s: %s  min(%s) max(%s)", m_Name.c_str(),
+                      std::to_string(m_Data.Latest()).c_str(),
+                      std::to_string(m_Min).c_str(),
+                      std::to_string(m_Max).c_str());
   a_Canvas->GetTextRenderer().AddText2D(cardValue.c_str(), (int)m_Pos[0],
                                         (int)m_Pos[1], GlCanvas::Z_VALUE_TEXT,
                                         col, -1.f, false, false);
@@ -177,7 +180,7 @@ void FloatGraphCard::UpdateMinMax() {
   m_Min = FLT_MAX;
   m_Max = FLT_MIN;
 
-  for (int i = 0; i < m_Data.Size(); ++i) {
+  for (size_t i = 0; i < m_Data.Size(); ++i) {
     float val = m_Data[i];
     if (val < m_Min) m_Min = val;
     if (val > m_Max) m_Max = val;

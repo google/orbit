@@ -104,13 +104,13 @@ std::wstring LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
       value = function.IsSelected() ? "X" : "-";
       break;
     case LiveFunction::INDEX:
-      value = Format("%d", a_Row);
+      value = absl::StrFormat("%d", a_Row);
       break;
     case LiveFunction::NAME:
       value = function.PrettyName();
       break;
     case LiveFunction::COUNT:
-      value = Format("%lu", stats->m_Count);
+      value = absl::StrFormat("%lu", stats->m_Count);
       break;
     case LiveFunction::TIME_TOTAL:
       value = GetPrettyTime(stats->m_TotalTimeMs);
@@ -126,8 +126,9 @@ std::wstring LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
       break;
     case LiveFunction::ADDRESS:
       value = function.m_Pdb
-                  ? Format("0x%llx", function.m_Address +
-                                         (DWORD64)function.m_Pdb->GetHModule())
+                  ? absl::StrFormat("0x%llx", function.m_Address +
+                                    reinterpret_cast<DWORD64>(
+                                        function.m_Pdb->GetHModule()))
                   : "";
       break;
     case LiveFunction::MODULE:

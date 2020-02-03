@@ -29,7 +29,7 @@ else
 fi
 
 ## Build dependencies
-./vcpkg install freetype freetype-gl breakpad \
+./vcpkg install abseil freetype freetype-gl breakpad \
   capstone asio cereal imgui freeglut glew curl gtest
 
 # CMake

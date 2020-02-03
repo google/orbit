@@ -67,7 +67,7 @@ std::wstring ModulesDataView::GetValue(int row, int col) {
       value = module->m_FoundPdb ? "*" : "";
       break;
     case MDV_PdbSize:
-      value = module->m_FoundPdb ? ws2s(GetPrettySize(module->m_PdbSize)) : "";
+      value = module->m_FoundPdb ? GetPrettySize(module->m_PdbSize) : "";
       break;
     case MDV_Loaded:
       value = module->GetLoaded() ? "*" : "";

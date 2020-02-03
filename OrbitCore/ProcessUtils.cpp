@@ -30,6 +30,8 @@
 #include <iostream>
 #include <streambuf>
 
+#include "absl/strings/str_format.h"
+
 // Is64BitProcess function taken from Very Sleepy
 #ifdef _WIN64
 typedef BOOL WINAPI Wow64GetThreadContext_t(__in HANDLE hThread,
@@ -203,7 +205,7 @@ void ProcessList::Refresh() {
         if (iter == m_ProcessesMap.end()) {
           process = std::make_shared<Process>();
           std::string dir =
-              Format("%s%s/", PROC_DIRECTORY, de_DirEntity->d_name);
+              absl::StrFormat("%s%s/", PROC_DIRECTORY, de_DirEntity->d_name);
           std::string comm = FileToString(dir + "comm");
           std::string cmdline = FileToString(dir + "cmdline");
           process->m_Name = RTrim(comm);
