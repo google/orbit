@@ -12,8 +12,8 @@
     m_String += s2ws(str); \
   }
 
-#define LOGF(format, args...) { \
-    std::string log = absl::StrFormat(format, args); \
+#define LOGF(...) { \
+    std::string log = absl::StrFormat(__VA_ARGS__); \
     m_String += s2ws(log); \
   }
 
