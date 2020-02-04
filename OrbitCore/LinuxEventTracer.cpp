@@ -220,7 +220,7 @@ void LinuxEventTracerThread::Run(
             // This should happen rarely.
             ring_buffer.SkipRecord(header);
             uprobe_event_processor.Push(std::make_unique<LinuxMapsEvent>(
-                LinuxPerfUtils::GetClockRealtime(),
+                OrbitTicks(CLOCK_MONOTONIC),
                 LinuxUtils::ReadMaps(pid_)));
           } break;
 

@@ -28,12 +28,6 @@ inline int32_t perf_event_open(struct perf_event_attr* attr, pid_t pid,
 
 namespace LinuxPerfUtils {
 
-inline uint64_t GetClockRealtime() {
-  timespec ts{};
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  return ts.tv_sec * 1'000'000'000ul + ts.tv_nsec;
-}
-
 // This must be in sync with the struct perf_sample_id defined below.
 static constexpr uint64_t SAMPLE_TYPE_BASIC_FLAGS =
     PERF_SAMPLE_TID | PERF_SAMPLE_TIME | PERF_SAMPLE_CPU;

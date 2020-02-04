@@ -31,15 +31,16 @@ class TimestampReverseCompare {
 // them in order (oldest first). In other words, it synchronizes events from all
 // ring buffers according to their timestamps.
 // Its implementation builds on the assumption that we never expect events with
-// a timestamp older than DELAY_NS to be added. By not processing events that
-// are not older than this delay, we will never process events out of order.
+// a timestamp older than PROCESSING_DELAY_MS to be added. By not processing
+// events that are not older than this delay, we will never process events out
+// of order.
 class LinuxPerfEventProcessor {
  public:
   // Do not process events that are more recent than 0.1 seconds. There could be
   // events coming out of order as they are read from different perf_event_open
   // ring buffers and this ensure that all events are processed in the correct
   // order.
-  static constexpr uint64_t DELAY_NS = 100'000'000;
+  static constexpr uint64_t PROCESSING_DELAY_MS = 100;
 
   explicit LinuxPerfEventProcessor(
       std::unique_ptr<LinuxPerfEventVisitor> visitor)
