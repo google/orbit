@@ -9,6 +9,7 @@
 #include <xxhash.h>
 
 #include <algorithm>
+#include <cinttypes>
 #include <codecvt>
 #include <functional>
 #include <iomanip>
@@ -19,10 +20,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "absl/strings/str_format.h"
-
 #include "BaseTypes.h"
 #include "Platform.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 inline std::string ws2s(const std::wstring& wstr) {
@@ -101,7 +101,6 @@ std::wstring Format(const wchar_t* format, Args... args) {
   swprintf(buf, size, format, args...);
   return std::wstring(buf);
 }
-
 
 //-----------------------------------------------------------------------------
 template <class T>
@@ -414,7 +413,7 @@ inline std::string GetPrettySize(uint64_t size) {
   constexpr double GB = 1024.0 * MB;
   constexpr double TB = 1024.0 * GB;
 
-  if (size < KB) return absl::StrFormat("%" PRIu64" B", size);
+  if (size < KB) return absl::StrFormat("%" PRIu64 " B", size);
   if (size < MB) return absl::StrFormat("%.2f KB", size / KB);
   if (size < GB) return absl::StrFormat("%.2f MB", size / MB);
   if (size < TB) return absl::StrFormat("%.2f GB", size / GB);
@@ -550,10 +549,9 @@ std::vector<std::pair<Key, Val> > ValueSort(
                 return a_SortFunc(a.second, b.second);
               });
   else
-    std::sort(vec.begin(), vec.end(),
-              [](const PairType& a, const PairType& b) {
-                return a.second < b.second;
-              });
+    std::sort(vec.begin(), vec.end(), [](const PairType& a, const PairType& b) {
+      return a.second < b.second;
+    });
 
   return vec;
 }
