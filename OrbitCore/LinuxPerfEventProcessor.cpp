@@ -10,42 +10,49 @@
 
 #include <queue>
 
-void LinuxPerfEventProcessor::Push(std::unique_ptr<LinuxPerfEvent> a_Event) {
-  const uint64_t timestamp = a_Event->Timestamp();
+#include "Profiling.h"
+
+void LinuxPerfEventProcessor::Push(std::unique_ptr<LinuxPerfEvent> event) {
 #ifndef NDEBUG
-  if (m_LastProcessTimestamp > 0 &&
-      timestamp < m_LastProcessTimestamp - DELAY_IN_NS)
+  if (last_processed_timestamp_ > 0 &&
+      event->Timestamp() <
+          last_processed_timestamp_ - PROCESSING_DELAY_MS * 1'000'000) {
     PRINT("Error: processed an event out of order.\n");
+  }
 #endif
 
-  if (timestamp > m_MaxTimestamp) m_MaxTimestamp = timestamp;
-
-  m_EventQueue.push(std::move(a_Event));
+  event_queue_.push(std::move(event));
 }
 
-void LinuxPerfEventProcessor::ProcessAll() {
-  while (!m_EventQueue.empty()) {
-    LinuxPerfEvent* event = m_EventQueue.top().get();
-    event->accept(m_Visitor.get());
+void LinuxPerfEventProcessor::ProcessAllEvents() {
+  while (!event_queue_.empty()) {
+    LinuxPerfEvent* event = event_queue_.top().get();
+    event->accept(visitor_.get());
+
 #ifndef NDEBUG
-    m_LastProcessTimestamp = event->Timestamp();
+    last_processed_timestamp_ = event->Timestamp();
 #endif
-    m_EventQueue.pop();
+
+    event_queue_.pop();
   }
 }
 
-void LinuxPerfEventProcessor::ProcessTillOffset() {
-  // Process the events in the event_queue
-  while (!m_EventQueue.empty()) {
-    LinuxPerfEvent* event = m_EventQueue.top().get();
+void LinuxPerfEventProcessor::ProcessOldEvents() {
+  uint64_t max_timestamp = OrbitTicks(CLOCK_MONOTONIC);
 
-    // We should not read all events, otherwise we could miss events
-    // close to the max timestamp in the queue.
-    if (event->Timestamp() + DELAY_IN_NS > m_MaxTimestamp) break;
-    event->accept(m_Visitor.get());
+  while (!event_queue_.empty()) {
+    LinuxPerfEvent* event = event_queue_.top().get();
+
+    // Do not read the most recent events are out-of-order events could arrive.
+    if (event->Timestamp() + PROCESSING_DELAY_MS * 1'000'000 >= max_timestamp) {
+      break;
+    }
+    event->accept(visitor_.get());
+
 #ifndef NDEBUG
-    m_LastProcessTimestamp = event->Timestamp();
+    last_processed_timestamp_ = event->Timestamp();
 #endif
-    m_EventQueue.pop();
+
+    event_queue_.pop();
   }
 }

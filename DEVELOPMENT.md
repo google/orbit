@@ -26,7 +26,7 @@ Check out the `bootstrap-orbit.{sh, bat}` file for a general description on how
 to install dependencies and on how to set up a `build/`-directory.
 
 
-## Consistent code styling.
+## Consistent code styling
 
 We use `clang-format` to achieve a consistent code styling across
 the whole code base. You need at least version 7.0.0 of `clang-format`.

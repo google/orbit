@@ -151,25 +151,27 @@ else()
     OrbitCore
     PUBLIC BpfTraceVisitor.h
            BpfTrace.h
-           LinuxUtils.h
+           LibunwindstackUnwinder.h
+           LinuxEventTracer.h
            LinuxPerfEvent.h
-           LinuxPerfEventVisitor.h
            LinuxPerfEventProcessor.h
+           LinuxPerfEventVisitor.h
            LinuxPerfRingBuffer.h
            LinuxPerfUtils.h
-           LibunwindstackUnwinder.h
-           LinuxEventTracer.h)
+           LinuxUprobesUnwindingVisitor.h
+           LinuxUtils.h)
 
   target_sources(
     OrbitCore
     PRIVATE BpfTraceVisitor.cpp
             LibunwindstackUnwinder.cpp
+            LinuxEventTracer.cpp
             LinuxUtils.cpp
             LinuxPerfEvent.cpp
+            LinuxPerfEventProcessor.cpp
             LinuxPerfRingBuffer.cpp
             LinuxPerfUtils.cpp
-            LinuxEventTracer.cpp
-            LinuxPerfEventProcessor.cpp)
+            LinuxUprobesUnwindingVisitor.cpp)
 endif()
 
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
@@ -204,7 +206,8 @@ target_compile_features(OrbitCore PUBLIC cxx_std_11)
 add_executable(OrbitCoreTests)
 
 target_sources(OrbitCoreTests
-  PRIVATE RingBufferTests.cpp)
+  PRIVATE LinuxUprobesUnwindingVisitorTests.cpp
+          RingBufferTests.cpp)
 
 target_link_libraries(
   OrbitCoreTests PRIVATE OrbitCore GTest::GTest GTest::Main)

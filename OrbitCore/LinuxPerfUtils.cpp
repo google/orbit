@@ -15,7 +15,6 @@
 
 #include "LinuxUtils.h"
 #include "PrintVar.h"
-#include "ScopeTimer.h"
 
 namespace LinuxPerfUtils {
 namespace {
@@ -28,8 +27,9 @@ perf_event_attr generic_event_attr() {
   pe.sample_id_all = 1;  // also include timestamps for lost events
   pe.disabled = 1;
 
-  // We can set these even if we do not do sampling, as without the flag being
-  // set in sample_type they won't be used anyways.
+  // We can set these even if we do not do sampling, as without the
+  // PERF_SAMPLE_STACK_USER or PERF_SAMPLE_REGS_USER flags being set in
+  // perf_event_attr::sample_type they will not be used anyways.
   pe.sample_stack_user = SAMPLE_STACK_USER_SIZE;
   pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
 
