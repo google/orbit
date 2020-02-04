@@ -8,7 +8,7 @@ if [ $? -ne 0 ]; then
 fi
 sudo apt-get update
 sudo apt-get install -y build-essential cmake ninja-build bison flex
-sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev 
+sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev
 sudo apt-get install -y linux-tools-common
 
 # Dev dependencies:
@@ -28,16 +28,15 @@ fi
 # Build vcpkg
 cd external/vcpkg
 
-if [ -f "vcpkg" ]
-then
-    echo "Orbit: found vcpkg"
+if [ -f "vcpkg" ]; then
+  echo "Orbit: found vcpkg"
 else
-    echo "Orbit: compiling vcpkg"
-    ./bootstrap-vcpkg.sh
-    if [ $? -ne 0 ]; then
-      echo "Orbit: Could not bootstrap vcpkg. Exiting..."
-      exit 2
-    fi
+  echo "Orbit: compiling vcpkg"
+  ./bootstrap-vcpkg.sh
+  if [ $? -ne 0 ]; then
+    echo "Orbit: Could not bootstrap vcpkg. Exiting..."
+    exit 2
+  fi
 fi
 
 ## Build dependencies
@@ -46,7 +45,8 @@ fi
   capstone asio cereal imgui freeglut glew curl qt5-base gtest
 
 if [ $? -ne 0 ]; then
-  echo "Orbit: Could not install all the dependencies. Check for vcpkg error messages. Exiting..."
+  echo -n "Orbit: Could not install all the dependencies. "
+  echo "Check for vcpkg error messages. Exiting..."
   exit 3
 fi
 
