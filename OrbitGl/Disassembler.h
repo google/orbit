@@ -5,7 +5,8 @@
 
 #include <string>
 
-#include "../OrbitCore/Utils.h"
+#include "absl/strings/str_format.h"
+#include "Utils.h"
 #include "BaseTypes.h"
 
 //-----------------------------------------------------------------------------
@@ -14,14 +15,6 @@ class Disassembler {
   void Disassemble(const unsigned char* a_MachineCode, size_t a_Size,
                    DWORD64 a_Address, bool a_Is64Bit);
   const std::wstring& GetResult() { return m_String; }
-
-  template <typename... Args>
-  void LOGF(const char* format, Args... args) {
-    std::string log = Format(format, std::forward<Args>(args)...);
-    m_String += s2ws(log);
-  }
-
-  void LOGF(const char* format) { m_String += s2ws(format); }
 
   void LogHex(const unsigned char* str, size_t len);
 

@@ -5,6 +5,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "absl/strings/str_format.h"
+
 #include "Callstack.h"
 #include "Capture.h"
 #include "ConnectionManager.h"
@@ -46,7 +48,7 @@
 LinuxPerf::LinuxPerf(uint32_t a_PID, uint32_t a_Freq)
     : m_PID(a_PID), m_Frequency(a_Freq) {
   m_Callback = [this](const std::string& a_Buffer) { HandleLine(a_Buffer); };
-  m_PerfCommand = Format(
+  m_PerfCommand = absl::StrFormat(
       "perf record -k monotonic -F %u -p %u -g --no-buffering -o - | perf "
       "script -i -",
       m_Frequency, m_PID);

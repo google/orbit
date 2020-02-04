@@ -12,6 +12,8 @@
 #include <QTimer>
 #include <QToolTip>
 
+#include "absl/strings/str_format.h"
+
 #include "../OrbitCore/Path.h"
 #include "../OrbitCore/PrintVar.h"
 #include "../OrbitCore/Utils.h"
@@ -380,7 +382,7 @@ void OrbitMainWindow::OnReceiveMessage(const std::wstring& a_Message) {
     std::string title = "Orbit Profiler";
 
     title += " | Version " + GOrbitApp->GetVersion();
-    std::string msg = Format(
+    std::string msg = absl::StrFormat(
         "A new version (%s) is available at <a "
         "href='www.telescopp.com/update'>telescopp.com/update</a>",
         OrbitVersion::s_LatestVersion.c_str());

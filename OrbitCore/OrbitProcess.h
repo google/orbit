@@ -74,6 +74,7 @@ class Process {
   }
   std::shared_ptr<Module> FindModule(const std::wstring& a_ModuleName);
 
+  // TODO: Replace these with std::string
   const std::wstring GetName() const { return s2ws(m_Name); }
   const std::wstring GetFullName() const { return s2ws(m_FullName); }
   DWORD GetID() const { return m_ID; }

@@ -36,6 +36,7 @@ find_package(CURL REQUIRED)
 find_package(oqpi REQUIRED)
 find_package(capstone REQUIRED)
 find_package(GLUT REQUIRED)
+find_package(unofficial-abseil CONFIG REQUIRED)
 
 # Hack for freelgut:
 # freeglut accidentally links against libxrandr when the headers of

@@ -28,6 +28,8 @@
 #include <sstream>
 #include <string>
 
+#include "absl/strings/str_format.h"
+
 #include "Callstack.h"
 #include "Capture.h"
 #include "ConnectionManager.h"
@@ -48,7 +50,7 @@ std::vector<std::string> ListModules(pid_t a_PID) {
   std::vector<std::string> modules;
   // TODO: we should read the file directly instead or memory map it.
   std::string result =
-      ExecuteCommand(Format("cat /proc/%u/maps", a_PID).c_str());
+      ExecuteCommand(absl::StrFormat("cat /proc/%u/maps", a_PID).c_str());
 
   std::stringstream ss(result);
   std::string line;
@@ -63,7 +65,7 @@ std::vector<std::string> ListModules(pid_t a_PID) {
 std::vector<pid_t> ListThreads(pid_t a_PID) {
   std::vector<pid_t> threads;
   std::string result =
-      ExecuteCommand(Format("ls /proc/%u/task", a_PID).c_str());
+      ExecuteCommand(absl::StrFormat("ls /proc/%u/task", a_PID).c_str());
 
   std::stringstream ss(result);
   std::string line;
@@ -92,7 +94,7 @@ std::string ReadMaps(pid_t a_PID) {
 //-----------------------------------------------------------------------------
 uint64_t GetTracePointID(const char* a_Group, const char* a_Event) {
   std::string cmd =
-      Format("cat /sys/kernel/debug/tracing/events/%s/%s/id", a_Group, a_Event);
+      absl::StrFormat("cat /sys/kernel/debug/tracing/events/%s/%s/id", a_Group, a_Event);
   std::string result = ExecuteCommand(cmd.c_str());
   trim(result);
   return std::stoull(result);
@@ -154,7 +156,7 @@ void ListModules(pid_t a_PID,
 
 //-----------------------------------------------------------------------------
 uint32_t GetPID(const char* a_Name) {
-  std::string command = Format("ps -A | grep %s", a_Name);
+  std::string command = absl::StrFormat("ps -A | grep %s", a_Name);
   std::string result = ExecuteCommand(command.c_str());
   auto tokens = Tokenize(result);
   if (!tokens.empty()) return (uint32_t)atoi(tokens[0].c_str());
@@ -185,7 +187,7 @@ std::unordered_map<uint32_t, float> GetCpuUtilization() {
 //-----------------------------------------------------------------------------
 bool Is64Bit(pid_t a_PID) {
   std::string result =
-      ExecuteCommand(Format("file -L /proc/%u/exe", a_PID).c_str());
+      ExecuteCommand(absl::StrFormat("file -L /proc/%u/exe", a_PID).c_str());
   return Contains(result, "64-bit");
 }
 

@@ -4,6 +4,8 @@
 
 #include "CaptureWindow.h"
 
+#include "absl/strings/str_format.h"
+
 #include "../OrbitPlugin/OrbitSDK.h"
 #include "App.h"
 #include "Capture.h"
@@ -271,8 +273,9 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
     if (!textBox->GetTimer().IsType(Timer::CORE_ACTIVITY)) {
       Function* func =
           Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
-      m_ToolTip = s2ws(Format("%s %s", func ? func->PrettyName().c_str() : "",
-                              textBox->GetText().c_str()));
+      m_ToolTip = s2ws(absl::StrFormat("%s %s",
+                                       func ? func->PrettyName().c_str() : "",
+                                       textBox->GetText().c_str()));
       GOrbitApp->SendToUiAsync(L"tooltip:" + m_ToolTip);
       NeedsRedraw();
     }
@@ -759,7 +762,8 @@ void CaptureWindow::DrawStatus() {
   LeftY += s_IncY;
 
   if (Capture::GInjected) {
-    std::string injectStr = Format(" %s", Capture::GInjectedProcess.c_str());
+    std::string injectStr = absl::StrFormat(" %s",
+                                            Capture::GInjectedProcess.c_str());
     m_ProcessX = m_TextRenderer.AddText2D(injectStr.c_str(), PosX, PosY,
                                           Z_VALUE_TEXT_UI, s_Color, -1, true);
     PosY += s_IncY;
@@ -1051,7 +1055,7 @@ void CaptureWindow::RenderBar() {
   double timeSpan = m_TimeGraph.GetSessionTimeSpanUs();
   timerX += size;
   m_TextRenderer.AddText2D(
-      Format("%s", GetPrettyTime(timeSpan * 0.001).c_str()).c_str(),
+      absl::StrFormat("%s", GetPrettyTime(timeSpan * 0.001).c_str()).c_str(),
       (int)timerX, (int)GetTopBarTextY(), GlCanvas::Z_VALUE_TEXT_UI,
       Color(255, 255, 255, 255));
 

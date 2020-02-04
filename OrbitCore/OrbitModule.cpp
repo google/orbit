@@ -6,6 +6,8 @@
 
 #include <string>
 
+#include "absl/strings/str_format.h"
+
 #include "Core.h"
 #include "Pdb.h"
 #include "Serialization.h"
@@ -27,13 +29,13 @@ Module::Module() { m_Pdb = std::make_shared<Pdb>(); }
 std::wstring Module::GetPrettyName() {
   if (m_PrettyName.size() == 0) {
 #ifdef WIN32
-    m_PrettyName = Format("%s [%I64x - %I64x] %s\r\n", m_Name.c_str(),
+    m_PrettyName = absl::StrFormat("%s [%I64x - %I64x] %s\r\n", m_Name.c_str(),
                           m_AddressStart, m_AddressEnd, m_FullName.c_str());
-    m_AddressRange = Format("[%I64x - %I64x]", m_AddressStart, m_AddressEnd);
+    m_AddressRange = absl::StrFormat("[%I64x - %I64x]", m_AddressStart, m_AddressEnd);
 #else
     m_PrettyName = m_FullName;
     m_AddressRange =
-        Format("[%016llx - %016llx]", m_AddressStart, m_AddressEnd);
+        absl::StrFormat("[%016llx - %016llx]", m_AddressStart, m_AddressEnd);
     m_PdbName = m_FullName;
     m_FoundPdb = true;
 #endif

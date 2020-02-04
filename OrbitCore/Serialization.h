@@ -74,8 +74,8 @@ struct ScopeCounter {
 
   ~ScopeCounter() {
     m_SizeEnd = GStreamCounter.Size();
-    std::wstring size = GetPrettySize(m_SizeEnd - m_SizeBegin);
-    PRINT(L"%s size: %s\n", s2ws(m_Message).c_str(), size.c_str());
+    std::string size = GetPrettySize(m_SizeEnd - m_SizeBegin);
+    PRINT(L"%s size: %s\n", s2ws(m_Message).c_str(), s2ws(size).c_str());
   }
 
   std::string m_Message;
