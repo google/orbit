@@ -36,6 +36,16 @@ to have several libraries or tools to be provided by the system. Check out
 On Windows you need to provide a Visual Studio installation with the DIA SDK
 installed.
 
+Under Linux we use a custom triplet for vcpkg. This triplet takes care to build
+some dependencies dynamically and some statically. (At the moment qt5 is built
+dynamically while all the rest is built statically. Check
+`contrib/vcpkg/triplets/x64-linux-mixed.cmake` to be sure if this information
+is still up to date.) When calling `vcpkg` manually be sure to specify the
+correct triplet (`--triplet x64-linux-mixed`) and you have to point `vcpkg` to
+the triplet location directory
+(`--overlay-triplets=$PROJECT_ROOT/contrib/vcpkg/triplets/`). You can check out
+the `bootstrap-orbit.sh` file on how it is done.
+
 
 ## Consistent code styling.
 
