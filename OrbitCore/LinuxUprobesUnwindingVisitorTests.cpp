@@ -53,240 +53,244 @@ TestCallstackToStringPairVector(
 }  // namespace
 
 TEST(UprobesCallstackManager, NoUprobes) {
-  std::vector<unwindstack::FrameData> unwound_cs, real_cs, processed_cs;
+  constexpr pid_t tid = 42;
+  std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
   UprobesCallstackManager callstack_manager{};
 
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha", "beta"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "beta"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha", "gamma"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "gamma"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 }
 
 TEST(UprobesCallstackManager, OneUprobe) {
-  std::vector<unwindstack::FrameData> unwound_cs, real_cs, processed_cs;
+  constexpr pid_t tid = 42;
+  std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
   UprobesCallstackManager callstack_manager{};
 
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // Begin FUNCTION().
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
+  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   unwound_cs = MakeTestUprobesCallstack({"FUNCTION"});
-  real_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   unwound_cs = MakeTestUprobesCallstack({"FUNCTION", "beta"});
-  real_cs = MakeTestCallstack({"main", "alpha", "FUNCTION", "beta"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION", "beta"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // End FUNCTION().
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha"});
-  processed_cs = callstack_manager.ProcessUretprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha"});
+  processed_cs = callstack_manager.ProcessUretprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 }
 
 TEST(UprobesCallstackManager, DifferentThread) {
-  std::vector<unwindstack::FrameData> unwound_cs, real_cs, processed_cs;
+  constexpr pid_t tid = 42;
+  std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
   UprobesCallstackManager callstack_manager{};
 
   // Begin FUNCTION().
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
+  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // Sample from another thread.
-  unwound_cs = real_cs = MakeTestCallstack({"thread", "omega"});
+  unwound_cs = expected_cs = MakeTestCallstack({"thread", "omega"});
   processed_cs = callstack_manager.ProcessSampledCallstack(111, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // End FUNCTION().
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha"});
-  processed_cs = callstack_manager.ProcessUretprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha"});
+  processed_cs = callstack_manager.ProcessUretprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 }
 
 TEST(UprobesCallstackManager, TwoNestedUprobesAndAnotherUprobe) {
-  std::vector<unwindstack::FrameData> unwound_cs, real_cs, processed_cs;
+  constexpr pid_t tid = 42;
+  std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
   UprobesCallstackManager callstack_manager{};
 
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // Begin FOO().
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha", "FOO"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "FOO"});
+  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   unwound_cs = MakeTestUprobesCallstack({"FOO"});
-  real_cs = MakeTestCallstack({"main", "alpha", "FOO"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  expected_cs = MakeTestCallstack({"main", "alpha", "FOO"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // Begin BAR().
   unwound_cs = MakeTestUprobesCallstack({"FOO", "beta", "BAR"});
-  real_cs = MakeTestCallstack({"main", "alpha", "FOO", "beta", "BAR"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  expected_cs = MakeTestCallstack({"main", "alpha", "FOO", "beta", "BAR"});
+  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   unwound_cs = MakeTestUprobesCallstack({"BAR", "gamma"});
-  real_cs = MakeTestCallstack({"main", "alpha", "FOO", "beta", "BAR", "gamma"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  expected_cs =
+      MakeTestCallstack({"main", "alpha", "FOO", "beta", "BAR", "gamma"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // End BAR().
   unwound_cs = MakeTestUprobesCallstack({"FOO"});
-  real_cs = MakeTestCallstack({"main", "alpha", "FOO"});
-  processed_cs = callstack_manager.ProcessUretprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  expected_cs = MakeTestCallstack({"main", "alpha", "FOO"});
+  processed_cs = callstack_manager.ProcessUretprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
-  unwound_cs = MakeTestUprobesCallstack({
-      "FOO",
-      "delta",
-  });
-  real_cs = MakeTestCallstack({"main", "alpha", "FOO", "delta"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = MakeTestUprobesCallstack({"FOO", "delta"});
+  expected_cs = MakeTestCallstack({"main", "alpha", "FOO", "delta"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // End FOO().
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha"});
-  processed_cs = callstack_manager.ProcessUretprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha"});
+  processed_cs = callstack_manager.ProcessUretprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
-  unwound_cs = real_cs = MakeTestCallstack({"main"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // Begin FUNCTION().
-  unwound_cs = real_cs = MakeTestCallstack({"main", "epsilon", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "epsilon", "FUNCTION"});
+  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   unwound_cs = MakeTestUprobesCallstack({"FUNCTION"});
-  real_cs = MakeTestCallstack({"main", "epsilon", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  expected_cs = MakeTestCallstack({"main", "epsilon", "FUNCTION"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   unwound_cs = MakeTestUprobesCallstack({"FUNCTION", "zeta"});
-  real_cs = MakeTestCallstack({"main", "epsilon", "FUNCTION", "zeta"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  expected_cs = MakeTestCallstack({"main", "epsilon", "FUNCTION", "zeta"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // End FUNCTION().
-  unwound_cs = real_cs = MakeTestCallstack({"main", "epsilon"});
-  processed_cs = callstack_manager.ProcessUretprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "epsilon"});
+  processed_cs = callstack_manager.ProcessUretprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
-  unwound_cs = real_cs = MakeTestCallstack({"main"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main"});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 }
 
 TEST(UprobesCallstackManager, UnwindingError) {
-  std::vector<unwindstack::FrameData> unwound_cs, real_cs, processed_cs;
+  constexpr pid_t tid = 42;
+  std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
   UprobesCallstackManager callstack_manager{};
 
   // Begin FUNCTION().
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
+  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // Unwind error.
-  unwound_cs = real_cs = MakeTestCallstack({});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // End FUNCTION().
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha"});
-  processed_cs = callstack_manager.ProcessUretprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha"});
+  processed_cs = callstack_manager.ProcessUretprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 }
 
 TEST(UprobesCallstackManager, UnwindingErrorOnStack) {
-  std::vector<unwindstack::FrameData> unwound_cs, real_cs, processed_cs;
+  constexpr pid_t tid = 42;
+  std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
   UprobesCallstackManager callstack_manager{};
 
   // Begin FUNCTION() with unwind error.
-  unwound_cs = real_cs = MakeTestCallstack({});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({});
+  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   unwound_cs = MakeTestUprobesCallstack({"FUNCTION", "beta"});
-  real_cs = MakeTestCallstack({});
-  processed_cs = callstack_manager.ProcessSampledCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  expected_cs = MakeTestCallstack({});
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 
   // End FUNCTION().
-  unwound_cs = real_cs = MakeTestCallstack({"main", "alpha"});
-  processed_cs = callstack_manager.ProcessUretprobesCallstack(42, unwound_cs);
-  EXPECT_THAT(
-      TestCallstackToStringPairVector(processed_cs),
-      ::testing::ElementsAreArray(TestCallstackToStringPairVector(real_cs)));
+  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha"});
+  processed_cs = callstack_manager.ProcessUretprobesCallstack(tid, unwound_cs);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
 }
