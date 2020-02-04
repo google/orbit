@@ -206,8 +206,12 @@ target_compile_features(OrbitCore PUBLIC cxx_std_11)
 add_executable(OrbitCoreTests)
 
 target_sources(OrbitCoreTests
-  PRIVATE LinuxUprobesUnwindingVisitorTests.cpp
-          RingBufferTests.cpp)
+  PRIVATE RingBufferTests.cpp)
+
+if(NOT WIN32)
+  target_sources(OrbitCoreTests
+    PRIVATE LinuxUprobesUnwindingVisitorTests.cpp)
+endif()
 
 target_link_libraries(
   OrbitCoreTests PRIVATE OrbitCore GTest::GTest GTest::Main)
