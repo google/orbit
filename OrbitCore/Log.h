@@ -71,10 +71,10 @@ class Logger {
     m_Logs[a_Type].Log(a_String);
   }
 
-  void LogError(const char* a_Function, int a_Line) {
+  void LogError(const char* function, int line) {
     std::string err = GetLastErrorAsString();
-    Log(OrbitLog::Global, Format("Error: %s (%i) LastError: %s", a_Function,
-                                 a_Line, err.c_str()));
+    Log(OrbitLog::Global, absl::StrFormat("Error: %s (%i) LastError: %s",
+                                          function, line, err.c_str()));
   }
 
   template <class T>

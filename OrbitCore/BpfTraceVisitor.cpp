@@ -37,6 +37,7 @@ void BpfTraceVisitor::visit(LinuxUprobeEventWithStack* a_Event) {
   m_TimerStacks[a_Event->TID()].push_back(timer);
 }
 
+// TODO: Here, we would also like to handle the callstack
 void BpfTraceVisitor::visit(LinuxUretprobeEventWithStack* a_Event) {
   std::vector<Timer>& timers = m_TimerStacks[a_Event->TID()];
   if (!timers.empty()) {

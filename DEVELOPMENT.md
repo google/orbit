@@ -47,7 +47,7 @@ the triplet location directory
 the `bootstrap-orbit.sh` file on how it is done.
 
 
-## Consistent code styling.
+## Consistent code styling
 
 We use `clang-format` to achieve a consistent code styling across
 the whole code base. You need at least version 7.0.0 of `clang-format`.

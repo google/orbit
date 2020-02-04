@@ -7,8 +7,11 @@
 #include <string>
 #include <vector>
 
-#include "../OrbitCore/Core.h"
-#include "../OrbitCore/VariableTracing.h"
+#include "absl/strings/str_format.h"
+
+#include "Core.h"
+#include "VariableTracing.h"
+
 #include "App.h"
 #include "Capture.h"
 #include "Card.h"
@@ -108,7 +111,7 @@ void GlCanvas::Initialize() {
       exit(EXIT_FAILURE);
     }
     std::string glew =
-        Format("Using GLEW %s\n", (char*)glewGetString(GLEW_VERSION));
+        absl::StrFormat("Using GLEW %s\n", (char*)glewGetString(GLEW_VERSION));
     PRINT_VAR(glew);
     firstInit = false;
   }
@@ -550,7 +553,7 @@ void GlCanvas::RenderSamplingUI() {
 
   float curTime = Capture::GSamplingProfiler->GetSampleTime();
   float totTime = Capture::GSamplingProfiler->GetSampleTimeTotal();
-  std::string prog = Format("%f/%f", curTime, totTime);
+  std::string prog = absl::StrFormat("%f/%f", curTime, totTime);
   ImGui::ProgressBar(std::min(curTime / totTime, 1.f), ImVec2(0.f, 0.f),
                      prog.c_str());
 

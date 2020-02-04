@@ -7,7 +7,16 @@
 #include <capstone/capstone.h>
 #include <capstone/platform.h>
 
-//-----------------------------------------------------------------------------
+
+#define LOG(str) { \
+    m_String += s2ws(str); \
+  }
+
+#define LOGF(format, args...) { \
+    std::string log = absl::StrFormat(format, args); \
+    m_String += s2ws(log); \
+  }
+
 void Disassembler::LogHex(const unsigned char* str, size_t len) {
   const unsigned char* c;
 
@@ -30,7 +39,7 @@ void Disassembler::Disassemble(const unsigned char* a_MachineCode,
   cs_err err;
   cs_mode mode = a_Is64Bit ? CS_MODE_64 : CS_MODE_32;
 
-  LOGF("\n");
+  LOG("\n");
   LOGF("Platform: %s\n",
        a_Is64Bit ? "X86 64 (Intel syntax)" : "X86 32 (Intel syntax)");
   err = cs_open(arch, mode, &handle);
@@ -61,11 +70,11 @@ void Disassembler::Disassemble(const unsigned char* a_MachineCode,
     // free memory allocated by cs_disasm()
     cs_free(insn, count);
   } else {
-    LOGF("****************\n");
-    LOGF("ERROR: Failed to disasm given code!\n");
+    LOG("****************\n");
+    LOG("ERROR: Failed to disasm given code!\n");
   }
 
-  LOGF("\n");
+  LOG("\n");
 
   cs_close(&handle);
 }

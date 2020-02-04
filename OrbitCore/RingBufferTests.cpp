@@ -1,9 +1,9 @@
-#include "RingBuffer.h"
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <utility>
 
-#include <gtest/gtest.h>
+#include "RingBuffer.h"
 
 TEST(RingBuffer, Add) {
   RingBuffer<uint64_t, 5> ring_buffer;

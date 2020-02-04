@@ -21,41 +21,37 @@
 
 using asio::ip::tcp;
 
-//-----------------------------------------------------------------------------
 class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
  public:
-  typedef std::shared_ptr<TcpConnection> pointer;
+  TcpConnection(const TcpConnection&) = delete;
+  TcpConnection& operator=(const TcpConnection&) = delete;
 
-  ~TcpConnection();
-
-  static pointer create(asio::io_service& io_service) {
-    return pointer(new TcpConnection(io_service));
+  static std::shared_ptr<TcpConnection> create(asio::io_service& io_service) {
+    return std::shared_ptr<TcpConnection>(new TcpConnection(io_service));
   }
 
-  TcpSocket& GetSocket() { return m_WrappedSocket; }
+  TcpSocket& GetSocket() { return wrapped_socket_; }
 
   void start() { ReadMessage(); }
 
   void ReadMessage();
   void ReadPayload();
   void ReadFooter();
-  void DecodeMessage(Message& a_Message);
+  void DecodeMessage(Message& message);
 
-  bool IsWebsocket() { return m_WebSocketKey != ""; }
+  bool IsWebsocket() { return !web_socket_key_.empty(); }
   void ReadWebsocketHandshake();
-  void ReadWebsocketMessage();
   void ReadWebsocketMask();
   void ReadWebsocketPayload();
   void DecodeWebsocketPayload();
-  ULONG64 GetNumBytesReceived() { return m_NumBytesReceived; }
+  uint64_t GetNumBytesReceived() { return num_bytes_received_; }
 
   void ResetStats();
   std::vector<std::string> GetStats();
 
  private:
   TcpConnection(asio::io_service& io_service)
-      : m_Socket(io_service), m_WrappedSocket(&m_Socket) {
-    m_NumBytesReceived = 0;
+      : socket_(io_service), wrapped_socket_(&socket_), num_bytes_received_(0) {
   }
   // handle_write() is responsible for any further actions
   // for this client connection.
@@ -65,16 +61,15 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
   void handle_request_line(asio::error_code ec, std::size_t bytes_transferred);
   void SendWebsocketResponse();
 
-  tcp::socket m_Socket;
-  TcpSocket m_WrappedSocket;
-  Message m_Message;
-  std::vector<char> m_Payload;
-  asio::streambuf m_StreamBuf;
-  std::string m_WebSocketKey;
-  char m_WebSocketBuffer[MAX_WS_HEADER_LENGTH];
-  unsigned int m_WebSocketPayloadLength;
-  unsigned int m_WebSocketMask;
-  ULONG64 m_NumBytesReceived;
+  tcp::socket socket_;
+  TcpSocket wrapped_socket_;
+  Message message_;
+  std::vector<char> payload_;
+  asio::streambuf stream_buf_;
+  std::string web_socket_key_;
+  unsigned int web_socket_payload_length_;
+  unsigned int web_socket_mask_;
+  uint64_t num_bytes_received_;
 };
 
 //-----------------------------------------------------------------------------
@@ -84,50 +79,54 @@ class tcp_server : public std::enable_shared_from_this<tcp_server> {
   ~tcp_server();
 
   void Disconnect();
-  bool HasConnection() { return m_Connection != nullptr; }
+  bool HasConnection() { return connection_ != nullptr; }
   TcpSocket* GetSocket() {
-    return m_Connection ? &m_Connection->GetSocket() : nullptr;
+    return connection_ != nullptr ? &connection_->GetSocket() : nullptr;
   }
-  void RegisterConnection(std::shared_ptr<TcpConnection> a_Connection);
+  void RegisterConnection(std::shared_ptr<TcpConnection> connection);
   ULONG64 GetNumBytesReceived() {
-    return m_Connection ? m_Connection->GetNumBytesReceived() : 0;
+    return connection_ != nullptr ? connection_->GetNumBytesReceived() : 0;
   }
   void ResetStats() {
-    if (m_Connection) m_Connection->ResetStats();
+    if (connection_ != nullptr) {
+      connection_->ResetStats();
+    }
   }
 
  private:
   void start_accept();
-  void handle_accept(TcpConnection::pointer new_connection,
+  void handle_accept(std::shared_ptr<TcpConnection> new_connection,
                      const asio::error_code& error);
 
-  tcp::acceptor m_Acceptor;
-  std::shared_ptr<TcpConnection> m_Connection;
-  std::unordered_set<std::shared_ptr<TcpConnection> > m_ConnectionsSet;
+  tcp::acceptor acceptor_;
+  std::shared_ptr<TcpConnection> connection_;
+  // Is this here to keep them alive until server is destroyed?
+  // This is not really used for anything else.
+  std::unordered_set<std::shared_ptr<TcpConnection>> connections_set_;
 };
 
 //-----------------------------------------------------------------------------
 class shared_const_buffer {
  public:
   shared_const_buffer() {}
-  explicit shared_const_buffer(const Message& a_Message, const void* a_Payload)
+  explicit shared_const_buffer(const Message& message, const void* payload)
       : data_(new std::vector<char>()) {
-    data_->resize(sizeof(Message) + a_Message.m_Size + 4);
-    memcpy(data_->data(), &a_Message, sizeof(Message));
+    data_->resize(sizeof(Message) + message.m_Size + 4);
+    memcpy(data_->data(), &message, sizeof(Message));
 
-    if (a_Payload) {
-      memcpy(data_->data() + sizeof(Message), a_Payload, a_Message.m_Size);
+    if (payload != nullptr) {
+      memcpy(data_->data() + sizeof(Message), payload, message.m_Size);
     }
 
     // Footer
     const unsigned int footer = MAGIC_FOOT_MSG;
-    memcpy(data_->data() + sizeof(Message) + a_Message.m_Size, &footer, 4);
+    memcpy(data_->data() + sizeof(Message) + message.m_Size, &footer, 4);
 
     buffer_ = asio::buffer(*data_);
   }
 
-  explicit shared_const_buffer(TcpPacket& a_Packet) {
-    data_ = a_Packet.Data();
+  explicit shared_const_buffer(TcpPacket& packet) {
+    data_ = packet.Data();
     buffer_ = asio::buffer(*data_);
   }
 

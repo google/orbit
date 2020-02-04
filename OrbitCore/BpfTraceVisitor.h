@@ -13,5 +13,5 @@ class BpfTraceVisitor : public LinuxPerfEventVisitor {
   void visit(LinuxUretprobeEventWithStack* a_Event) override;
 
  private:
-  std::map<uint64_t, std::vector<Timer>> m_TimerStacks;
+  std::map<pid_t, std::vector<Timer>> m_TimerStacks;
 };

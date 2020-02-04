@@ -41,7 +41,7 @@ fi
 
 ## Build dependencies
 ./vcpkg install --overlay-triplets=../../contrib/vcpkg/triplets \
-  --triplet x64-linux-mixed freetype freetype-gl breakpad \
+  --triplet x64-linux-mixed abseil freetype freetype-gl breakpad \
   capstone asio cereal imgui freeglut glew curl qt5-base gtest
 
 if [ $? -ne 0 ]; then

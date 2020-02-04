@@ -197,7 +197,7 @@ void OrbitApp::ProcessBufferedCaptureData() {
     // timers:
     {
       ScopeLock lock(m_TimerMutex);
-      if (m_TimerBuffer.size() > 0) {
+      if (!m_TimerBuffer.empty()) {
         Message Msg(Msg_RemoteTimers);
         Msg.m_Size = uint32_t(sizeof(Timer) * m_TimerBuffer.size());
         GTcpServer->Send(Msg, (void*)m_TimerBuffer.data());
@@ -208,7 +208,7 @@ void OrbitApp::ProcessBufferedCaptureData() {
     // sampling callstacks
     {
       ScopeLock lock(m_SamplingCallstackMutex);
-      if (m_SamplingCallstackBuffer.size() > 0) {
+      if (!m_SamplingCallstackBuffer.empty()) {
         std::string messageData =
             SerializeObjectBinary(m_SamplingCallstackBuffer);
         GTcpServer->Send(Msg_SamplingCallstacks, messageData.c_str(),
@@ -220,7 +220,7 @@ void OrbitApp::ProcessBufferedCaptureData() {
     // hashed sampling callstacks
     {
       ScopeLock lock(m_HashedSamplingCallstackMutex);
-      if (m_HashedSamplingCallstackBuffer.size() > 0) {
+      if (!m_HashedSamplingCallstackBuffer.empty()) {
         std::string messageData =
             SerializeObjectBinary(m_HashedSamplingCallstackBuffer);
         GTcpServer->Send(Msg_SamplingHashedCallstacks, messageData.c_str(),
@@ -232,7 +232,7 @@ void OrbitApp::ProcessBufferedCaptureData() {
     // context switches
     {
       ScopeLock lock(m_ContextSwitchMutex);
-      if (m_ContextSwitchBuffer.size() > 0) {
+      if (!m_ContextSwitchBuffer.empty()) {
         Message Msg(Msg_RemoteContextSwitches);
         Msg.m_Size =
             uint32_t(sizeof(ContextSwitch) * m_ContextSwitchBuffer.size());
@@ -302,13 +302,13 @@ void OrbitApp::ProcessCallStack(CallStack& a_CallStack) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::ProcessContextSwitch(const ContextSwitch& a_CallStack) {
+void OrbitApp::ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) {
   if (ConnectionManager::Get().IsService()) {
     ScopeLock lock(m_ContextSwitchMutex);
-    m_ContextSwitchBuffer.push_back(a_CallStack);
+    m_ContextSwitchBuffer.push_back(a_ContextSwitch);
   }
 
-  GTimerManager->Add(a_CallStack);
+  GTimerManager->Add(a_ContextSwitch);
 }
 
 //-----------------------------------------------------------------------------

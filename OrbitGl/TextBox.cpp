@@ -4,6 +4,8 @@
 
 #include "TextBox.h"
 
+#include "absl/strings/str_format.h"
+
 #include "Capture.h"
 #include "GlCanvas.h"
 #include "OpenGl.h"
@@ -128,7 +130,8 @@ void TextBox::Draw(TextRenderer& a_TextRenderer, float a_MinX, bool a_Visible,
 
     Function* func = Capture::GSelectedFunctionsMap[m_Timer.m_FunctionAddress];
     std::string text =
-        Format("%s %s", func ? func->PrettyName().c_str() : "", m_Text.c_str());
+        absl::StrFormat("%s %s", func ? func->PrettyName().c_str() : "",
+                        m_Text.c_str());
 
     if (!a_IsPicking && !isCoreActivity) {
       a_TextRenderer.AddText(

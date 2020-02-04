@@ -7,6 +7,8 @@
 #include <fstream>
 #include <ostream>
 
+#include "absl/strings/str_format.h"
+
 #include "BpfTrace.h"
 #include "Core.h"
 #include "CoreApp.h"
@@ -94,7 +96,8 @@ bool Capture::Inject(bool a_WaitForConnection) {
 
   GInjected = inject.Inject(dllName.c_str(), *GTargetProcess, "OrbitInit");
   if (GInjected) {
-    ORBIT_LOG(Format("Injected in %s", GTargetProcess->GetName().c_str()));
+    ORBIT_LOG(absl::StrFormat("Injected in %s",
+                              ws2s(GTargetProcess->GetName()).c_str()));
     GInjectedProcessW = GTargetProcess->GetName();
     GInjectedProcess = ws2s(GInjectedProcessW);
   }
@@ -103,7 +106,8 @@ bool Capture::Inject(bool a_WaitForConnection) {
     int numTries = 50;
     while (!GTcpServer->HasConnection() && numTries-- > 0) {
       ORBIT_LOG(
-          Format("Waiting for connection on port %i", Capture::GCapturePort));
+          absl::StrFormat("Waiting for connection on port %i",
+                          Capture::GCapturePort));
       Sleep(100);
     }
 
@@ -123,7 +127,8 @@ bool Capture::InjectRemote() {
       inject.Inject(dllName.c_str(), *GTargetProcess, "OrbitInitRemote");
 
   if (GInjected) {
-    ORBIT_LOG(Format("Injected in %s", GTargetProcess->GetName().c_str()));
+    ORBIT_LOG(absl::StrFormat("Injected in %s",
+                              ws2s(GTargetProcess->GetName()).c_str()));
     GInjectedProcessW = GTargetProcess->GetName();
     GInjectedProcess = ws2s(GInjectedProcessW);
   }

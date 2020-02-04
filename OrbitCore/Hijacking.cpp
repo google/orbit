@@ -8,7 +8,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "OrbitAsm.h"
 #include "../external/minhook/src/buffer.h"
 #include "../external/minhook/src/trampoline.h"
 #include "Callstack.h"
@@ -16,6 +15,7 @@
 #include "Core.h"
 #include "Message.h"
 #include "MinHook.h"
+#include "OrbitAsm.h"
 #include "OrbitLib.h"
 #include "OrbitType.h"
 #include "ScopeTimer.h"
