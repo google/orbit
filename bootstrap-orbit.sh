@@ -7,30 +7,48 @@ if [ $? -ne 0 ]; then
   sudo add-apt-repository universe
 fi
 sudo apt-get update
-sudo apt-get install -y build-essential cmake ninja
-sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev 
+sudo apt-get install -y build-essential cmake ninja-build bison flex
+sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev
 sudo apt-get install -y linux-tools-common
+
+# Dev dependencies:
+# - cmake >= 3.15
+# - ninja (optional)
+# - bison (for compiling qt5)
+# - flex (for compiling qt5)
 
 # Load Submodules (vcpkg, libunwindstack)
 git submodule update --init --recursive
 
-# Patching freetype-gl
-cp "OrbitUtils/freetype-gl-portfile.cmake" "external/vcpkg/ports/freetype-gl/portfile.cmake"
+if [ $? -ne 0 ]; then
+  echo "Orbit: Could not update/initialize all the submodules. Exiting..."
+  exit 1
+fi
 
 # Build vcpkg
 cd external/vcpkg
 
-if [ -f "vcpkg" ]
-then
-    echo "Orbit: found vcpkg"
+if [ -f "vcpkg" ]; then
+  echo "Orbit: found vcpkg"
 else
-    echo "Orbit: compiling vcpkg"
-    ./bootstrap-vcpkg.sh
+  echo "Orbit: compiling vcpkg"
+  ./bootstrap-vcpkg.sh
+  if [ $? -ne 0 ]; then
+    echo "Orbit: Could not bootstrap vcpkg. Exiting..."
+    exit 2
+  fi
 fi
 
 ## Build dependencies
-./vcpkg install abseil freetype freetype-gl breakpad \
-  capstone asio cereal imgui freeglut glew curl gtest
+./vcpkg install --overlay-triplets=../../contrib/vcpkg/triplets \
+  --triplet x64-linux-mixed abseil freetype freetype-gl breakpad \
+  capstone asio cereal imgui freeglut glew curl qt5-base gtest
+
+if [ $? -ne 0 ]; then
+  echo -n "Orbit: Could not install all the dependencies. "
+  echo "Check for vcpkg error messages. Exiting..."
+  exit 3
+fi
 
 # CMake
 cd ../..
@@ -42,5 +60,6 @@ cd build
 if [ ! -f toolchain.cmake ]; then
   cp ../contrib/toolchains/toolchain-linux-default-release.cmake toolchain.cmake
 fi
-cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -G Ninja ..
+
+cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -G Ninja .. || exit 4
 cmake --build .

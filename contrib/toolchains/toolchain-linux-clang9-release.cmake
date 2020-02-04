@@ -1,8 +1,16 @@
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE
+    Release
+    CACHE STRING "build type" FORCE)
 set(CMAKE_C_COMPILER clang-9)
 set(CMAKE_CXX_COMPILER clang++-9)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS
+    ON
+    CACHE BOOL "generate compile_commands.json" FORCE)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+
+set(VCPKG_TARGET_TRIPLET
+    "x64-linux-mixed"
+    CACHE STRING "vcpkg target triplet")
 
 string(APPEND CMAKE_EXE_LINKER_FLAGS " -fuse-ld=lld")
 string(APPEND CMAKE_MODULE_LINKER_FLAGS " -fuse-ld=lld")

@@ -540,7 +540,7 @@ void GlCanvas::RenderUI() {
 void GlCanvas::RenderSamplingUI() {
   if (!Capture::GIsSampling) return;
 
-  ImGui::SetNextWindowSize(ImVec2(500, 100), ImGuiSetCond_FirstUseEver);
+  ImGui::SetNextWindowSize(ImVec2(500, 100), ImGuiCond_FirstUseEver);
   bool opened = true;
   ImGui::Begin("Sampling target application", &opened);
 

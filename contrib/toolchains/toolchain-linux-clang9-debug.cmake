@@ -1,7 +1,15 @@
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE
+    Debug
+    CACHE STRING "build type" FORCE)
 set(CMAKE_C_COMPILER clang-9)
 set(CMAKE_CXX_COMPILER clang++-9)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS
+    ON
+    CACHE BOOL "generate compile_commands.json" FORCE)
+
+set(VCPKG_TARGET_TRIPLET
+    "x64-linux-mixed"
+    CACHE STRING "vcpkg target triplet")
 
 string(APPEND CMAKE_EXE_LINKER_FLAGS " -fuse-ld=lld")
 string(APPEND CMAKE_MODULE_LINKER_FLAGS " -fuse-ld=lld")
@@ -36,7 +44,8 @@ add_compile_options(
   -Winvalid-pch
   -Wdisabled-optimization
   -Wstack-protector
-  -fcolor-diagnostics)
+  -fcolor-diagnostics
+  -fno-omit-frame-pointer)
 
 include(
   "${CMAKE_CURRENT_LIST_DIR}/../external/vcpkg/scripts/buildsystems/vcpkg.cmake"

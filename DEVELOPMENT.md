@@ -25,6 +25,27 @@ via the Windows Installer from cmake.org are also viable options.
 Check out the `bootstrap-orbit.{sh, bat}` file for a general description on how
 to install dependencies and on how to set up a `build/`-directory.
 
+## Dependencies
+
+All our 3rd party dependencies are either included via git submodules or they are
+managed by vcpkg. But there are several dependencies vcpkg needs to build our
+dependencies from source. This especially applies to Linux where it is expected
+to have several libraries or tools to be provided by the system. Check out
+`bootstrap-orbit.sh` for more information.
+
+On Windows you need to provide a Visual Studio installation with the DIA SDK
+installed.
+
+Under Linux we use a custom triplet for vcpkg. This triplet takes care to build
+some dependencies dynamically and some statically. (At the moment qt5 is built
+dynamically while all the rest is built statically. Check
+`contrib/vcpkg/triplets/x64-linux-mixed.cmake` to be sure if this information
+is still up to date.) When calling `vcpkg` manually be sure to specify the
+correct triplet (`--triplet x64-linux-mixed`) and you have to point `vcpkg` to
+the triplet location directory
+(`--overlay-triplets=$PROJECT_ROOT/contrib/vcpkg/triplets/`). You can check out
+the `bootstrap-orbit.sh` file on how it is done.
+
 
 ## Consistent code styling
 

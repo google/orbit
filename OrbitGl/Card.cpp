@@ -158,7 +158,7 @@ void FloatGraphCard::DrawImGui(GlCanvas* a_Canvas) {
   UpdateMinMax();
 
   bool p_opened = true;
-  ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiSetCond_FirstUseEver);
+  ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
   ImGui::Begin(m_Name.c_str(), &p_opened);
 
   bool copy = ImGui::Button("Copy");
@@ -197,7 +197,7 @@ void Vector2DGraphCard::DrawImGui(GlCanvas* a_Canvas) {
     if (p.x > m_Max.x) m_Max.x = p.x;
     if (p.y > m_Max.y) m_Max.y = p.y;
   }
-  ImGui::SetNextWindowSize(ImVec2(350, 560), ImGuiSetCond_FirstUseEver);
+  ImGui::SetNextWindowSize(ImVec2(350, 560), ImGuiCond_FirstUseEver);
   if (!ImGui::Begin(m_Name.c_str(), &m_Active)) {
     ImGui::End();
     return;

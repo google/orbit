@@ -1,13 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
 
-# Note: (Windows + vcpkg) to build and use x64: a) set
-# VCPKG_DEFAULT_TRIPLET=x64-windows, then install all required dependencies b)
-# invoke cmake for 64 bit platform, as follows: cmake
-# -DCMAKE_GENERATOR_PLATFORM=x64 .. or, i.e.: cmake -G "Visual Studio 15 2017
-# Win64" .. This assumes CMAKE_TOOLCHAIN_FILE is correctly set, in accordance
-# with https://github.com/Microsoft/vcpkg/blob/master/docs/examples/using-
-# sqlite.md#cmake
-
 set(CMAKE_TOOLCHAIN_FILE
     "${CMAKE_CURRENT_LIST_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake"
     CACHE STRING "Default CMake toolchain file")
@@ -23,32 +15,31 @@ if(NOT WIN32)
 endif()
 
 find_package(Threads REQUIRED)
-find_package(cereal REQUIRED)
+find_package(cereal CONFIG REQUIRED)
 find_package(xxHash REQUIRED)
 find_package(multicore REQUIRED)
 find_package(concurrentqueue REQUIRED)
-find_package(Freetype REQUIRED)
+find_package(freetype CONFIG REQUIRED)
 find_package(freetype-gl REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(imgui REQUIRED)
-find_package(CURL REQUIRED)
+find_package(imgui CONFIG REQUIRED)
+find_package(CURL CONFIG REQUIRED)
 find_package(oqpi REQUIRED)
 find_package(capstone REQUIRED)
 find_package(GLUT REQUIRED)
-find_package(unofficial-abseil CONFIG REQUIRED)
+find_package(Qt5 CONFIG COMPONENTS Core Widgets)
+find_package(absl CONFIG REQUIRED)
 
-# Hack for freelgut:
-# freeglut accidentally links against libxrandr when the headers of
-# libxrandr are installed on the current system. Hopefully
-# this will be fixed in a later release of either freeglut
-# or vcpkg.
-if (TARGET X11::Xrandr)
+# Hack for freelgut: freeglut accidentally links against libxrandr when the
+# headers of libxrandr are installed on the current system. Hopefully this will
+# be fixed in a later release of either freeglut or vcpkg.
+if(TARGET X11::Xrandr)
   target_link_libraries(GLUT::GLUT INTERFACE X11::Xrandr)
 endif()
 
-find_package(Qt5 COMPONENTS Core Widgets)
 find_package(lzma REQUIRED)
+find_package(asio CONFIG REQUIRED)
 find_package(GTest MODULE REQUIRED)
 
 if(WIN32)
@@ -65,15 +56,6 @@ if(WIN32)
     unofficial::breakpad::libbreakpad unofficial::breakpad::libbreakpad_client
     PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${INC}/google_breakpad")
 endif()
-
-# Since the curl packages does not provide cmake targets, we will add one here.
-add_library(CURL STATIC IMPORTED GLOBAL)
-set_target_properties(CURL PROPERTIES IMPORTED_LOCATION ${CURL_LIBRARIES})
-target_include_directories(CURL SYSTEM INTERFACE ${CURK_INCLUDE_DIRS})
-if(NOT WIN32)
-  target_link_libraries(CURL INTERFACE OpenSSL::SSL)
-endif()
-add_library(CURL::CURL ALIAS CURL)
 
 # Set preprocessor defines These are only necessary for windows, but we will
 # define them on all platforms, to keep the builds similar as possible.

@@ -177,17 +177,22 @@ endif()
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(
-  OrbitCore PUBLIC cereal xxHash::xxHash concurrentqueue::concurrentqueue
-                   multicore::multicore CURL::CURL oqpi::oqpi
-                   unofficial::abseil::strings)
+  OrbitCore
+  PUBLIC cereal
+         xxHash::xxHash
+         concurrentqueue::concurrentqueue
+         multicore::multicore
+         CURL::libcurl
+         oqpi::oqpi
+         asio::asio
+         absl::str_format)
 
 if(WIN32)
   target_link_libraries(
     OrbitCore
     PRIVATE minhook::minhook DIA2Dump::DIA2Dump
             unofficial::breakpad::libbreakpad
-            unofficial::breakpad::libbreakpad_client
-            OrbitAsm)
+            unofficial::breakpad::libbreakpad_client OrbitAsm)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib peparse::peparse)
   target_compile_definitions(OrbitCore PUBLIC -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitCore PUBLIC -DNTDDI_VERSION=0x06030000)
@@ -213,5 +218,4 @@ if(NOT WIN32)
     PRIVATE LinuxUprobesUnwindingVisitorTests.cpp)
 endif()
 
-target_link_libraries(
-  OrbitCoreTests PRIVATE OrbitCore GTest::GTest GTest::Main)
+target_link_libraries(OrbitCoreTests PRIVATE OrbitCore GTest::GTest GTest::Main)

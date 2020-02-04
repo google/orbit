@@ -75,11 +75,6 @@ class OrbitApp* GOrbitApp;
 float GFontSize;
 bool DoZoom = false;
 
-#ifdef _WIN32
-// TODO: This shouldn't be needed
-char ImGuiTextBuffer::EmptyString[1];
-#endif
-
 //-----------------------------------------------------------------------------
 OrbitApp::OrbitApp() {
   m_Debugger = nullptr;

@@ -1,6 +1,15 @@
-set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_BUILD_TYPE
+    Release
+    CACHE STRING "build type" FORCE)
+set(CMAKE_EXPORT_COMPILE_COMMANDS
+    ON
+    CACHE BOOL "generate compile_commands.json" FORCE)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+
+set(VCPKG_TARGET_TRIPLET
+    "x64-linux-mixed"
+    CACHE STRING "vcpkg target triplet")
+
 string(APPEND CMAKE_CXX_FLAGS " -march=skylake")
 
 include(

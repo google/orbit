@@ -103,7 +103,7 @@ target_link_libraries(
          OrbitAsm
          freetype-gl::freetype-gl
          OpenGL::GL
-         Freetype::Freetype
+         freetype
          imgui::imgui
          GLUT::GLUT
          capstone::capstone)

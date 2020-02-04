@@ -1,27 +1,9 @@
-vcpkg: freetype-gl
-- portfile assumes .lib, in order to install on linux, had to change to .a
-- (orbitprofiler/external/vcpkg/ports/freetype-gl/portfile.cmake)
-- fix and submit pull request!?
-
-freeglut, freetype-gl are taken from debug directory... should be release.  Find a way to find_library not in debug.
-
-
-Freetype-gl
-- make sure libfreetype.a does not exist in vcpkg installed, we need to link with the system .so version, not the .a.
-- make sure libglew.a does not exist so that we link the system .so
-
 Required system libs:
 libGL.so.1
 libfreetype.so.6
 libGLEW.so.2.0
 
-CMakeLists
-- a cleanup is required...
-
 "bpftrace -l uprobe" seems to output duplicates
-
-// Make sure application is compiled with -fno-omit-frame-pointer for meaningful callstacks
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
 
 REMOTE
 - Send clock/platform of incoming data

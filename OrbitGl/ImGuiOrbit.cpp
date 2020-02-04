@@ -12,6 +12,8 @@
 
 #include "ImGuiOrbit.h"
 
+#include <imgui.h>
+
 #include "Capture.h"
 #include "Core.h"
 #include "GlCanvas.h"
@@ -610,7 +612,7 @@ void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas) {
 
 //-----------------------------------------------------------------------------
 void WatchWindow::Draw(const char* title, bool* p_opened) {
-  ImGui::SetNextWindowSize(ImVec2(430, 450), ImGuiSetCond_FirstUseEver);
+  ImGui::SetNextWindowSize(ImVec2(430, 450), ImGuiCond_FirstUseEver);
   if (!ImGui::Begin(title, p_opened)) {
     ImGui::End();
     return;
@@ -727,9 +729,9 @@ void SetupImGuiStyle(bool bStyleDark_, float alpha_) {
   style.Colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
   style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
   style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-  style.Colors[ImGuiCol_Column] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
-  style.Colors[ImGuiCol_ColumnHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
-  style.Colors[ImGuiCol_ColumnActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+  style.Colors[ImGuiCol_Separator] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+  style.Colors[ImGuiCol_SeparatorHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
+  style.Colors[ImGuiCol_SeparatorActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
   style.Colors[ImGuiCol_ResizeGrip] = ImVec4(0.26f, 0.59f, 0.98f, 0.25f);
   style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
   style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
@@ -795,10 +797,10 @@ void OutputWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size) {
     ImVec2 CanvasSize = *a_Size;
     CanvasSize.x -= 20;
     CanvasSize.y -= 20;
-    ImGui::SetNextWindowSize(CanvasSize, ImGuiSetCond_Always);
+    ImGui::SetNextWindowSize(CanvasSize, ImGuiCond_Always);
     ImGui::Begin(title, p_opened, CanvasSize, 1.f, WindowFlags);
   } else {
-    ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiSetCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImVec2 size(400, 400);
     ImGui::Begin(title, p_opened, size, 1.f, WindowFlags);
   }
