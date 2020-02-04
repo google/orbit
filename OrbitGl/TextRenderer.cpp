@@ -46,25 +46,9 @@ void TextRenderer::Init() {
   m_Font = NULL;
   int atlasSize = 2 * 1024;
   m_Atlas = texture_atlas_new(atlasSize, atlasSize, 1);
-  std::string exePath = ws2s(Path::GetExecutablePath());
 
-#ifdef _WIN32
-  std::string fontFileName =
-      exePath + "../../../../external/freetype-gl/fonts/Vera.ttf";
-  std::string vertShaderFileName =
-      exePath + "../../../../external/freetype-gl/shaders/v3f-t2f-c4f.vert";
-  std::string fragShaderFileName =
-      exePath + "../../../../external/freetype-gl/shaders/v3f-t2f-c4f.frag";
-#else
-  std::string fontFileName =
-      exePath + "../../external/freetype-gl/fonts/Vera.ttf";
-  std::string vertShaderFileName =
-      exePath + "../../external/freetype-gl/shaders/v3f-t2f-c4f.vert";
-  std::string fragShaderFileName =
-      exePath + "../../external/freetype-gl/shaders/v3f-t2f-c4f.frag";
-#endif
-
-  m_Buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
+  const auto exePath = ws2s(Path::GetExecutablePath());
+  const auto fontFileName = exePath + "fonts/Vera.ttf";
 
   static float fsize = GParams.m_FontSize;
   m_Buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
@@ -74,19 +58,13 @@ void TextRenderer::Init() {
         texture_font_new_from_file(m_Atlas, i, fontFileName.c_str());
   }
 
-  if (m_Font == nullptr) {
-    fontFileName = exePath + "text/Vera.ttf";
-    vertShaderFileName = exePath + "text/v3f-t2f-c4f.vert";
-    fragShaderFileName = exePath + "text/v3f-t2f-c4f.frag";
-    m_Font = texture_font_new_from_file(m_Atlas, fsize, fontFileName.c_str());
-  }
-
-  static Color s_Color(255, 255, 255, 255);
-
   m_Pen.x = 0;
   m_Pen.y = 0;
 
   glGenTextures(1, &m_Atlas->id);
+
+  const auto vertShaderFileName = exePath + "shaders/v3f-t2f-c4f.vert";
+  const auto fragShaderFileName = exePath + "shaders/v3f-t2f-c4f.frag";
   m_Shader =
       shader_load(vertShaderFileName.c_str(), fragShaderFileName.c_str());
 
