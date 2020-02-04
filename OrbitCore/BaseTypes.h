@@ -3,16 +3,15 @@
 //-----------------------------------
 #pragma once
 
+#include <cstdint>
+
 #ifdef _WIN32
 #include <BaseTsd.h>
 #include <tchar.h>
 #include <wtypes.h>
-
-#include <cstdint>
 #endif
 
 #ifdef __linux__
-#include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
