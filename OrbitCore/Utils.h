@@ -95,6 +95,15 @@ inline void Fill(T& a_Array, U& a_Value) {
 
 //-----------------------------------------------------------------------------
 template <typename... Args>
+std::string Format(const char* format, Args... args) {
+  const size_t size = 4096;
+  char buf[size];
+  snprintf(buf, size, format, args...);
+  return std::string(buf);
+}
+
+//-----------------------------------------------------------------------------
+template <typename... Args>
 std::wstring Format(const wchar_t* format, Args... args) {
   const size_t size = 4096;
   wchar_t buf[size];
