@@ -185,7 +185,7 @@ target_link_libraries(
          CURL::libcurl
          oqpi::oqpi
          asio::asio
-         absl::strings)
+         absl::str_format)
 
 if(WIN32)
   target_link_libraries(
