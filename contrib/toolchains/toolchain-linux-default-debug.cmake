@@ -1,6 +1,8 @@
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(VCPKG_TARGET_TRIPLET "x64-linux-mixed" CACHE STRING "vcpkg target triplet")
+
 add_compile_options(
   -Wpedantic
   -Wall

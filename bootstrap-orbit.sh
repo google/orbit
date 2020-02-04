@@ -40,13 +40,10 @@ else
     fi
 fi
 
-# Patching Qt5
-patch -p1 -i ../../contrib/patches/vcpkg-qt5-disable-glib.diff || exit 1
-
-
 ## Build dependencies
-./vcpkg install freetype freetype-gl breakpad \
-  capstone asio cereal imgui freeglut glew curl gtest qt5-base gtest
+./vcpkg install --overlay-triplets=../../contrib/vcpkg/triplets \
+  --triplet x64-linux-mixed freetype freetype-gl breakpad \
+  capstone asio cereal imgui freeglut glew curl qt5-base gtest
 
 if [ $? -ne 0 ]; then
   echo "Orbit: Could not install all the dependencies. Check for vcpkg error messages. Exiting..."
