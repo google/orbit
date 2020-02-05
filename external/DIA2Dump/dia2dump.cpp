@@ -823,7 +823,7 @@ bool DumpAllPublics( IDiaSymbol *pGlobal )
 //-----------------------------------------------------------------------------
 bool DumpAllFunctions( IDiaSymbol *pGlobal )
 {
-    SCOPE_TIMER_LOG( L"DumpFunctions" );
+    SCOPE_TIMER_LOG( "DumpFunctions" );
 	OrbitDiaEnumSymbols pEnumSymbols;
 	HRESULT res = pGlobal->findChildren(SymTagFunction, NULL, nsNone, &pEnumSymbols.m_Symbol);
     if( FAILED( res ) )
@@ -907,7 +907,7 @@ bool DumpAllFunctions( IDiaSymbol *pGlobal )
 //-----------------------------------------------------------------------------
 bool DumpTypes(IDiaSymbol *pGlobal)
 {
-    SCOPE_TIMER_LOG( L"DumpTypes" );
+    SCOPE_TIMER_LOG( "DumpTypes" );
     OrbitDiaEnumSymbols pEnumSymbols;
 
 	if (FAILED(pGlobal->findChildren(SymTagUDT, NULL, nsNone, &pEnumSymbols.m_Symbol)))
@@ -1054,7 +1054,7 @@ bool DumpAllGlobals(IDiaSymbol *pGlobal)
 
 bool OrbitDumpAllGlobals(IDiaSymbol *pGlobal)
 {
-    SCOPE_TIMER_LOG( L"DumpAllGlobals" );
+    SCOPE_TIMER_LOG( "DumpAllGlobals" );
     OrbitDiaEnumSymbols pEnumSymbols;
     OrbitDiaSymbol pSymbol;
     ULONG celt = 0;
