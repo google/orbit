@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <windows.h>
+
 // Size of each memory slot.
 #define MEMORY_SLOT_SIZE 256
 
