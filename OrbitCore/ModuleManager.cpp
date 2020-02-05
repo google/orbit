@@ -93,7 +93,7 @@ void ModuleManager::DequeueAndLoad() {
     m_ModulesQueue.pop_back();
 
     module = Capture::GTargetProcess->FindModule(
-        ws2s(Path::GetFileName(pdbName)));
+        Path::GetFileName(ws2s(pdbName)));
     if (module) {
       GPdbDbg = module->m_Pdb;
       if (module->m_PdbName == "") {

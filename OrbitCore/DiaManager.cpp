@@ -48,12 +48,12 @@ bool InitDataSource(IDiaDataSource** a_DiaDataSource) {
   SCOPE_TIMER_LOG("InitDataSource");
 
   HRESULT hr = CoInitialize(NULL);
-  std::wstring dllFullPath = Path::GetExecutablePath() + L"msdia140.dll";
+  std::string dllFullPath = Path::GetExecutablePath() + "msdia140.dll";
 
   // Load library once
   static HMODULE msDiaModule;
   if (msDiaModule == nullptr) {
-    LoadLibrary(dllFullPath.c_str());
+    LoadLibraryA(dllFullPath.c_str());
   }
 
   hr = CoCreateInstance(__uuidof(DiaSource), NULL, CLSCTX_INPROC_SERVER,
@@ -160,7 +160,7 @@ bool DiaManager::LoadDataFromPdb(const wchar_t* a_FileName,
 }
 
 void DiaManager::InitMsDiaDll() {
-  std::wstring dllFullPath = Path::GetExecutablePath() + L"msdia140.dll";
-  std::wstring args = L"/C regsvr32 /s " + dllFullPath;
-  ShellExecute(0, L"open", L"cmd.exe", args.c_str(), 0, SW_HIDE);
+  std::string dllFullPath = Path::GetExecutablePath() + "msdia140.dll";
+  std::string args = "/C regsvr32 /s " + dllFullPath;
+  ShellExecuteA(0, "open", "cmd.exe", args.c_str(), 0, SW_HIDE);
 }

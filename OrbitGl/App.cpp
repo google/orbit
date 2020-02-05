@@ -462,9 +462,9 @@ void OrbitApp::PostInit() {
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadFileMapping() {
   m_FileMapping.clear();
-  std::wstring fileName = Path::GetFileMappingFileName();
+  std::string fileName = Path::GetFileMappingFileName();
   if (!Path::FileExists(fileName)) {
-    std::ofstream outfile(ws2s(fileName));
+    std::ofstream outfile(fileName);
     outfile << "//-------------------" << std::endl
             << "// Orbit File Mapping" << std::endl
             << "//-------------------" << std::endl
@@ -481,7 +481,7 @@ void OrbitApp::LoadFileMapping() {
     outfile.close();
   }
 
-  std::wfstream infile(ws2s(fileName));
+  std::wfstream infile(fileName);
   if (!infile.fail()) {
     std::wstring line;
     while (std::getline(infile, line)) {
@@ -512,9 +512,9 @@ void OrbitApp::LoadFileMapping() {
 void OrbitApp::LoadSymbolsFile() {
   m_SymbolLocations.clear();
 
-  std::wstring fileName = Path::GetSymbolsFileName();
+  std::string fileName = Path::GetSymbolsFileName();
   if (!Path::FileExists(fileName)) {
-    std::ofstream outfile(ws2s(fileName));
+    std::ofstream outfile(fileName);
     outfile << "//-------------------" << std::endl
             << "// Orbit Symbol Locations" << std::endl
             << "//-------------------" << std::endl
@@ -528,15 +528,15 @@ void OrbitApp::LoadSymbolsFile() {
     outfile.close();
   }
 
-  std::wfstream infile(ws2s(fileName));
+  std::wfstream infile(fileName);
   if (!infile.fail()) {
     std::wstring line;
     while (std::getline(infile, line)) {
       if (StartsWith(line, L"//")) continue;
 
       std::wstring dir = line;
-      if (Path::DirExists(dir)) {
-        m_SymbolLocations.push_back(dir);
+      if (Path::DirExists(ws2s(dir))) {
+        m_SymbolLocations.push_back(ws2s(dir));
       }
     }
   }
@@ -544,18 +544,18 @@ void OrbitApp::LoadSymbolsFile() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ListSessions() {
-  std::vector<std::wstring> sessionFileNames =
-      Path::ListFiles(Path::GetPresetPath(), L".opr");
+  std::vector<std::string> sessionFileNames =
+      Path::ListFiles(Path::GetPresetPath(), ".opr");
   std::vector<std::shared_ptr<Session> > sessions;
-  for (std::wstring& fileName : sessionFileNames) {
+  for (std::string& fileName : sessionFileNames) {
     std::shared_ptr<Session> session = std::make_shared<Session>();
 
-    std::ifstream file(ws2s(fileName), std::ios::binary);
+    std::ifstream file(fileName, std::ios::binary);
     if (!file.fail()) {
       cereal::BinaryInputArchive archive(file);
       archive(*session);
       file.close();
-      session->m_FileName = fileName;
+      session->m_FileName = s2ws(fileName);
       sessions.push_back(session);
     }
   }
@@ -849,15 +849,15 @@ void OrbitApp::OnOpenPdb(const std::wstring a_FileName) {
   Capture::GTargetProcess = std::make_shared<Process>();
   std::shared_ptr<Module> mod = std::make_shared<Module>();
 
-  mod->m_FullName = ws2s(a_FileName);
-  mod->m_Name = ws2s(Path::GetFileName(a_FileName));
-  mod->m_Directory = ws2s(Path::GetDirectory(a_FileName));
+  std::string file_name = ws2s(a_FileName);
+  mod->m_FullName = file_name;
+  mod->m_Name = Path::GetFileName(file_name);
+  mod->m_Directory = Path::GetDirectory(file_name);
   mod->m_PdbName = mod->m_FullName;
   mod->m_FoundPdb = true;
   mod->LoadDebugInfo();
 
-  Capture::GTargetProcess->m_Name =
-      ws2s(Path::StripExtension(s2ws(mod->m_Name)));
+  Capture::GTargetProcess->m_Name = Path::StripExtension(mod->m_Name);
   Capture::GTargetProcess->AddModule(mod);
 
   m_ModulesDataView->SetProcess(Capture::GTargetProcess);
@@ -882,9 +882,12 @@ std::wstring OrbitApp::GetCaptureFileName() {
   assert(Capture::GTargetProcess);
   time_t timestamp =
       std::chrono::system_clock::to_time_t(Capture::GCaptureTimePoint);
-  std::wstring timestamp_string = s2ws(OrbitUtils::FormatTime(timestamp));
-  return Path::StripExtension(s2ws(Capture::GTargetProcess->GetName())) + L"_" +
-         timestamp_string + L".orbit";
+  std::string timestamp_string = OrbitUtils::FormatTime(timestamp);
+  std::string result =
+      Path::StripExtension(Capture::GTargetProcess->GetName()) + "_" +
+      timestamp_string + ".orbit";
+
+  return s2ws(result);
 }
 
 //-----------------------------------------------------------------------------
@@ -914,17 +917,19 @@ void OrbitApp::OnSaveSession(const std::wstring a_FileName) {
 //-----------------------------------------------------------------------------
 void OrbitApp::OnLoadSession(const std::wstring a_FileName) {
   std::shared_ptr<Session> session = std::make_shared<Session>();
+  std::string file_name = ws2s(a_FileName);
 
-  std::wstring fileName = Path::GetDirectory(a_FileName) == L""
-                              ? Path::GetPresetPath() + a_FileName
-                              : a_FileName;
+  if (Path::GetDirectory(file_name).empty()) {
+    file_name = Path::GetPresetPath() + file_name;
+  }
 
-  std::ifstream file(ws2s(fileName));
+  std::ifstream file(file_name);
   if (!file.fail()) {
     cereal::BinaryInputArchive archive(file);
     archive(*session);
-    if (SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
-      session->m_FileName = fileName;
+    if (SelectProcess(
+        s2ws(Path::GetFileName(ws2s(session->m_ProcessFullPath))))) {
+      session->m_FileName = s2ws(file_name);
       Capture::LoadSession(session);
       Capture::GPresetToLoad = L"";
     }
@@ -1121,13 +1126,12 @@ void OrbitApp::LoadModules() {
 bool OrbitApp::LoadRemoteModuleLocally(
     std::shared_ptr<struct Module>& a_Module) {
   std::string debugName = a_Module->m_Name + ".debug";
-  std::wstring debugNameW = s2ws(debugName);
   for (const auto& dir : m_SymbolLocations) {
     // TODO: check that build-id in debug file
     //       matches build-id in executable.
-    std::wstring fileName = dir + debugNameW;
+    std::string fileName = dir + debugName;
     if (Path::FileExists(fileName)) {
-      a_Module->m_PdbName = ws2s(fileName);
+      a_Module->m_PdbName = fileName;
       PRINT_VAR(fileName);
       GLoadPdbAsync(a_Module);
       return true;
@@ -1203,13 +1207,13 @@ bool OrbitApp::GetSamplingEnabled() { return GParams.m_TrackSamplingEvents; }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnMiniDump(const Message& a_Message) {
-  std::wstring dumpPath = Path::GetDumpPath();
-  std::wstring o_File = dumpPath + L"a_received.dmp";
-  std::ofstream out(ws2s(o_File), std::ios::binary);
+  std::string dumpPath = Path::GetDumpPath();
+  std::string o_File = dumpPath + "a_received.dmp";
+  std::ofstream out(o_File, std::ios::binary);
   out.write(a_Message.m_Data, a_Message.m_Size);
   out.close();
 
-  MiniDump miniDump(o_File);
+  MiniDump miniDump(s2ws(o_File));
   std::shared_ptr<Process> process = miniDump.ToOrbitProcess();
   process->SetID((DWORD)a_Message.GetHeader().m_GenericHeader.m_Address);
   GOrbitApp->m_ProcessesDataView->SetRemoteProcess(process);

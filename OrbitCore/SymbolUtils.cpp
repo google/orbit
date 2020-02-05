@@ -57,7 +57,7 @@ void SymUtils::ListModules(
     std::shared_ptr<Module> module = std::make_shared<Module>();
     module->m_Name = ws2s(ModuleNameBuffer);
     module->m_FullName = ws2s(ModuleFullNameBuffer);
-    module->m_Directory = ws2s(Path::GetDirectory(s2ws(module->m_FullName)));
+    module->m_Directory = Path::GetDirectory(module->m_FullName);
     module->m_AddressStart = (DWORD64)moduleInfo.lpBaseOfDll;
     module->m_AddressEnd =
         (DWORD64)moduleInfo.lpBaseOfDll + moduleInfo.SizeOfImage;
@@ -66,7 +66,7 @@ void SymUtils::ListModules(
     std::string filePath = module->m_FullName;
     Replace(filePath, ".exe", ".pdb");
     Replace(filePath, ".dll", ".pdb");
-    if (Path::FileExists(s2ws(filePath))) {
+    if (Path::FileExists(filePath)) {
       module->m_FoundPdb = true;
       module->m_PdbSize = Path::FileSize(filePath);
       module->m_PdbName = filePath;

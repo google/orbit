@@ -194,7 +194,7 @@ bool OrbitCodeEditor::loadCode(std::string a_Msg) {
 
 //-----------------------------------------------------------------------------
 void OrbitCodeEditor::loadFileMap() {
-  QFile file(QString::fromStdWString(Path::GetFileMappingFileName()));
+  QFile file(QString::fromStdString(Path::GetFileMappingFileName()));
   bool success = file.open(QFile::ReadWrite | QFile::Text);
   if (success) {
     QTextStream ReadFile(&file);
@@ -336,8 +336,8 @@ void OrbitCodeEditor::keyPressEvent(QKeyEvent* e) {
 
 //-----------------------------------------------------------------------------
 void OrbitCodeEditor::saveFileMap() {
-  std::wstring fileName = Path::GetFileMappingFileName();
-  std::wofstream outFile(ws2s(fileName));
+  std::string fileName = Path::GetFileMappingFileName();
+  std::wofstream outFile(fileName);
   if (!outFile.fail()) {
     outFile << document()->toPlainText().toStdWString();
     outFile.close();
@@ -392,7 +392,7 @@ void OrbitCodeEditor::highlightCurrentLine() {
       m_SelectedText.Add(word);
     }
 
-    for (int i = 0; i < m_SelectedText.Size(); ++i) {
+    for (size_t i = 0; i < m_SelectedText.Size(); ++i) {
       std::wstring selectedWord = m_SelectedText.Data()[i];
       HighlightWord(selectedWord, m_SelectedColors[i], extraSelections);
     }

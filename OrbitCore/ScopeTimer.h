@@ -47,7 +47,7 @@ class Timer {
     return ElapsedSeconds();
   }
 
-  static inline int GetCurrentDepthTLS() { return CurrentDepth; }
+  static inline size_t GetCurrentDepthTLS() { return CurrentDepth; }
   static inline void ClearThreadDepthTLS() { CurrentDepth = 0; }
 
   static const int Version = 0;

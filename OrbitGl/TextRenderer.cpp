@@ -47,7 +47,7 @@ void TextRenderer::Init() {
   int atlasSize = 2 * 1024;
   m_Atlas = texture_atlas_new(atlasSize, atlasSize, 1);
 
-  const auto exePath = ws2s(Path::GetExecutablePath());
+  const auto exePath = Path::GetExecutablePath();
   const auto fontFileName = exePath + "fonts/Vera.ttf";
 
   static float fsize = GParams.m_FontSize;

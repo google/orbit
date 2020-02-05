@@ -89,11 +89,11 @@ void Capture::Init() {
 //-----------------------------------------------------------------------------
 bool Capture::Inject(bool a_WaitForConnection) {
   Injection inject;
-  std::wstring dllName = Path::GetDllPath(GTargetProcess->GetIs64Bit());
+  std::string dllName = Path::GetDllPath(GTargetProcess->GetIs64Bit());
 
   GTcpServer->Disconnect();
 
-  GInjected = inject.Inject(dllName.c_str(), *GTargetProcess, "OrbitInit");
+  GInjected = inject.Inject(s2ws(dllName), *GTargetProcess, "OrbitInit");
   if (GInjected) {
     ORBIT_LOG(absl::StrFormat("Injected in %s",
                               GTargetProcess->GetName().c_str()));
@@ -118,11 +118,11 @@ bool Capture::Inject(bool a_WaitForConnection) {
 //-----------------------------------------------------------------------------
 bool Capture::InjectRemote() {
   Injection inject;
-  std::wstring dllName = Path::GetDllPath(GTargetProcess->GetIs64Bit());
+  std::string dllName = Path::GetDllPath(GTargetProcess->GetIs64Bit());
   GTcpServer->Disconnect();
 
   GInjected =
-      inject.Inject(dllName.c_str(), *GTargetProcess, "OrbitInitRemote");
+      inject.Inject(s2ws(dllName), *GTargetProcess, "OrbitInitRemote");
 
   if (GInjected) {
     ORBIT_LOG(absl::StrFormat("Injected in %s",
@@ -570,7 +570,7 @@ bool Capture::IsTrackingEvents() {
 #else
   static bool yieldEvents = false;
   if (yieldEvents && IsOtherInstanceRunning() && GTargetProcess) {
-    if (Contains(GTargetProcess->GetName(), L"Orbit.exe")) {
+    if (Contains(GTargetProcess->GetName(), "Orbit.exe")) {
       return false;
     }
   }

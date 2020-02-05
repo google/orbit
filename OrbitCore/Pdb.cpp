@@ -45,7 +45,7 @@ Pdb::Pdb(const wchar_t* a_PdbName)
       m_DiaSession(nullptr),
       m_DiaGlobalSymbol(nullptr),
       m_DiaDataSource(nullptr) {
-  m_Name = Path::GetFileName(m_FileName);
+  m_Name = s2ws(Path::GetFileName(ws2s(m_FileName)));
   memset(&m_ModuleInfo, 0, sizeof(IMAGEHLP_MODULE64));
   m_ModuleInfo.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
   m_LoadTimer = new Timer();
@@ -176,7 +176,7 @@ void Pdb::PrintGlobals() const {
 
 //-----------------------------------------------------------------------------
 std::wstring Pdb::GetCachedName() {
-  std::string pdbName = ws2s(Path::GetFileName(m_FileName));
+  std::string pdbName = Path::GetFileName(ws2s(m_FileName));
   std::string fileName = GuidToString(m_ModuleInfo.PdbSig70) + "-" +
                          ToHexString(m_ModuleInfo.PdbAge) + "_" + pdbName;
   fileName += ".bin";
@@ -419,9 +419,9 @@ void ShowSymbolInfo(IMAGEHLP_MODULE64& ModuleInfo) {
 //-----------------------------------------------------------------------------
 bool Pdb::LoadLinuxDebugSymbols(const wchar_t* a_PdbName) {
   SCOPE_TIMER_LOG("LoadLinuxDebugSymbols");
-  std::string external = ws2s(Path::GetExternalPath());
+  std::string external = Path::GetExternalPath();
   std::string tmp =
-      ws2s(Path::GetTmpPath()) + "cmd_" + OrbitUtils::GetTimeStamp() + ".txt";
+      Path::GetTmpPath() + "cmd_" + OrbitUtils::GetTimeStamp() + ".txt";
   std::string nmCommand = external + std::string("llvm\\llvm-nm.exe ") +
                           ws2s(a_PdbName) /*+ std::string(" -n")*/;
 
@@ -441,7 +441,7 @@ bool Pdb::LoadLinuxDebugSymbols(const wchar_t* a_PdbName) {
       func.m_Name = symbol;
       func.m_Address = std::stoull(address, nullptr, 16);
       func.m_PrettyName = symbol;
-      func.m_Module = ws2s(Path::GetFileName(a_PdbName));
+      func.m_Module = Path::GetFileName(ws2s(a_PdbName));
       func.m_Pdb = this;
       this->AddFunction(func);
       ++numAddedFunctions;
@@ -463,11 +463,11 @@ bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
 
   std::string nameStr = ws2s(a_PdbName);
 
-  std::wstring extension = ToLower(Path::GetExtension(a_PdbName));
-  if (extension == L".dll") {
+  std::string extension = ToLower(Path::GetExtension(nameStr));
+  if (extension == ".dll") {
     SCOPE_TIMER_LOG("LoadDll Exports");
     ParseDll(nameStr.c_str());
-  } else if (extension == L".debug") {
+  } else if (extension == ".debug") {
     LoadLinuxDebugSymbols(a_PdbName);
   } else {
     LoadPdbDia();
@@ -519,7 +519,7 @@ bool Pdb::LoadPdbDia() {
 void Pdb::LoadPdbAsync(const wchar_t* a_PdbName,
                        std::function<void()> a_CompletionCallback) {
   m_FileName = a_PdbName;
-  m_Name = Path::GetFileName(m_FileName);
+  m_Name = s2ws(Path::GetFileName(ws2s(m_FileName)));
 
   m_LoadingCompleteCallback = a_CompletionCallback;
   m_LoadingThread =
@@ -583,7 +583,7 @@ void Pdb::ApplyPresets() {
   SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ApplyPresets - %s", m_Name.c_str()));
 
   if (Capture::GSessionPresets) {
-    std::wstring pdbName = Path::GetFileName(m_Name);
+    std::wstring pdbName = s2ws(Path::GetFileName(ws2s(m_Name)));
 
     auto it = Capture::GSessionPresets->m_Modules.find(pdbName);
     if (it != Capture::GSessionPresets->m_Modules.end()) {
@@ -744,9 +744,9 @@ void Pdb::ProcessData() {
 
 //-----------------------------------------------------------------------------
 void Pdb::Save() {
-  std::wstring fullName = Path::GetCachePath() + GetCachedName();
+  std::string fullName = Path::GetCachePath() + ws2s(GetCachedName());
 
-  SCOPE_TIMER_LOG(absl::StrFormat("Saving %s", ws2s(fullName).c_str()));
+  SCOPE_TIMER_LOG(absl::StrFormat("Saving %s", fullName.c_str()));
 
   // ofstream os( fullName, std::ios::binary );
   // cereal::BinaryOutputArchive Ar(os);

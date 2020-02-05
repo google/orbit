@@ -102,7 +102,7 @@ bool Injection::Inject(const std::wstring& a_DllName, const Process& a_Process,
   }
 
   // Get handle of injected dll
-  std::string dllName = ws2s(Path::GetDllName(a_Process.GetIs64Bit()));
+  std::string dllName = Path::GetDllName(a_Process.GetIs64Bit());
   HMODULE remoteModuleHandle =
       GetRemoteModuleHandle(m_InjectedProcessHandle, dllName.c_str());
   for (int i = 0; i < 10 && !remoteModuleHandle; ++i) {

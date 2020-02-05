@@ -69,17 +69,16 @@ ORBIT_SERIALIZE(Params, 16) {
 //-----------------------------------------------------------------------------
 void Params::Save() {
   GCoreApp->SendToUiNow(L"UpdateProcessParams");
-  std::wstring fileName = Path::GetParamsFileName();
-  SCOPE_TIMER_LOG(absl::StrFormat("Saving params in %s",
-                                  ws2s(fileName).c_str()));
-  std::ofstream file(ws2s(fileName));
+  std::string fileName = Path::GetParamsFileName();
+  SCOPE_TIMER_LOG(absl::StrFormat("Saving params in %s", fileName.c_str()));
+  std::ofstream file(fileName);
   cereal::XMLOutputArchive archive(file);
   archive(cereal::make_nvp("Params", *this));
 }
 
 //-----------------------------------------------------------------------------
 void Params::Load() {
-  std::ifstream file(ws2s(Path::GetParamsFileName()));
+  std::ifstream file(Path::GetParamsFileName());
   if (!file.fail()) {
     cereal::XMLInputArchive archive(file);
     archive(*this);
