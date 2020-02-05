@@ -11,6 +11,7 @@
 #include "SamplingProfiler.h"
 #include "ScopeTimer.h"
 #include "TcpForward.h"
+#include "absl/strings/str_format.h"
 
 #ifdef _WIN32
 
@@ -61,7 +62,8 @@ void* Injection::RemoteWrite(const char* a_Data, int a_NumBytes) {
 //-----------------------------------------------------------------------------
 bool Injection::Inject(const std::wstring& a_DllName, const Process& a_Process,
                        const std::string& ProcName) {
-  SCOPE_TIMER_LOG(Format(L"Injecting in %s", a_Process.GetName().c_str()));
+  SCOPE_TIMER_LOG(absl::StrFormat("Injecting in %s",
+                                  a_Process.GetName().c_str()));
 
   m_InjectedProcessID = a_Process.GetID();
   m_InjectedProcessHandle =

@@ -28,6 +28,7 @@
 #include "Tcp.h"
 #include "TcpServer.h"
 #include "Utils.h"
+#include "absl/strings/str_format.h"
 
 std::shared_ptr<Pdb> GPdbDbg;
 
@@ -417,7 +418,7 @@ void ShowSymbolInfo(IMAGEHLP_MODULE64& ModuleInfo) {
 
 //-----------------------------------------------------------------------------
 bool Pdb::LoadLinuxDebugSymbols(const wchar_t* a_PdbName) {
-  SCOPE_TIMER_LOG(L"LoadLinuxDebugSymbols");
+  SCOPE_TIMER_LOG("LoadLinuxDebugSymbols");
   std::string external = ws2s(Path::GetExternalPath());
   std::string tmp =
       ws2s(Path::GetTmpPath()) + "cmd_" + OrbitUtils::GetTimeStamp() + ".txt";
@@ -452,7 +453,7 @@ bool Pdb::LoadLinuxDebugSymbols(const wchar_t* a_PdbName) {
 
 //-----------------------------------------------------------------------------
 bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
-  SCOPE_TIMER_LOG(L"LOAD PDB");
+  SCOPE_TIMER_LOG("LOAD PDB");
 
   m_IsLoading = true;
   m_LoadTimer->Start();
@@ -464,7 +465,7 @@ bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
 
   std::wstring extension = ToLower(Path::GetExtension(a_PdbName));
   if (extension == L".dll") {
-    SCOPE_TIMER_LOG(L"LoadDll Exports");
+    SCOPE_TIMER_LOG("LoadDll Exports");
     ParseDll(nameStr.c_str());
   } else if (extension == L".debug") {
     LoadLinuxDebugSymbols(a_PdbName);
@@ -531,7 +532,7 @@ void Pdb::PopulateFunctionMap() {
   m_IsPopulatingFunctionMap = true;
 
   SCOPE_TIMER_LOG(
-      Format(L"Pdb::PopulateFunctionMap for %s", m_FileName.c_str()));
+      absl::StrFormat("Pdb::PopulateFunctionMap for %s", m_FileName.c_str()));
 
   for (Function& Function : m_Functions) {
     m_FunctionMap.insert(std::make_pair(Function.m_Address, &Function));
@@ -544,16 +545,16 @@ void Pdb::PopulateFunctionMap() {
 void Pdb::PopulateStringFunctionMap() {
   m_IsPopulatingFunctionStringMap = true;
 
-  SCOPE_TIMER_LOG(
-      Format(L"Pdb::PopulateStringFunctionMap for %s", m_FileName.c_str()));
+  SCOPE_TIMER_LOG(absl::StrFormat("Pdb::PopulateStringFunctionMap for %s",
+                                  m_FileName.c_str()));
 
   {
-    SCOPE_TIMER_LOG(L"Reserving map");
+    SCOPE_TIMER_LOG("Reserving map");
     m_StringFunctionMap.reserve(unsigned(1.5f * (float)m_Functions.size()));
   }
 
   {
-    SCOPE_TIMER_LOG(L"Hash");
+    SCOPE_TIMER_LOG("Hash");
 
     if (m_Functions.size() > 1000) {
       oqpi_tk::parallel_for_each(
@@ -567,7 +568,7 @@ void Pdb::PopulateStringFunctionMap() {
   }
 
   {
-    SCOPE_TIMER_LOG(L"Map inserts");
+    SCOPE_TIMER_LOG("Map inserts");
 
     for (Function& Function : m_Functions) {
       m_StringFunctionMap[Function.m_NameHash] = &Function;
@@ -579,7 +580,7 @@ void Pdb::PopulateStringFunctionMap() {
 
 //-----------------------------------------------------------------------------
 void Pdb::ApplyPresets() {
-  SCOPE_TIMER_LOG(Format(L"Pdb::ApplyPresets - %s", m_Name.c_str()));
+  SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ApplyPresets - %s", m_Name.c_str()));
 
   if (Capture::GSessionPresets) {
     std::wstring pdbName = Path::GetFileName(m_Name);
@@ -699,7 +700,7 @@ std::shared_ptr<OrbitDiaSymbol> Pdb::GetDiaSymbolFromId(ULONG a_Id) {
 
 //-----------------------------------------------------------------------------
 void Pdb::ProcessData() {
-  SCOPE_TIMER_LOG(Format(L"Pdb::ProcessData for %s", m_Name.c_str()));
+  SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ProcessData for %s", m_Name.c_str()));
 
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
@@ -715,7 +716,7 @@ void Pdb::ProcessData() {
   }
 
   if (GParams.m_FindFileAndLineInfo) {
-    SCOPE_TIMER_LOG(L"Find File and Line info");
+    SCOPE_TIMER_LOG("Find File and Line info");
     for (Function& func : m_Functions) {
       func.FindFile();
     }
@@ -745,7 +746,7 @@ void Pdb::ProcessData() {
 void Pdb::Save() {
   std::wstring fullName = Path::GetCachePath() + GetCachedName();
 
-  SCOPE_TIMER_LOG(Format(L"Saving %s", fullName.c_str()));
+  SCOPE_TIMER_LOG(absl::StrFormat("Saving %s", ws2s(fullName).c_str()));
 
   // ofstream os( fullName, std::ios::binary );
   // cereal::BinaryOutputArchive Ar(os);

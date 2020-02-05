@@ -17,7 +17,7 @@
 void SymUtils::ListModules(
     HANDLE a_ProcessHandle,
     std::map<DWORD64, std::shared_ptr<Module> >& o_ModuleMap) {
-  SCOPE_TIMER_LOG(L"SymUtils::ListModules");
+  SCOPE_TIMER_LOG("SymUtils::ListModules");
 
   const DWORD ModuleArraySize = 1024;
   DWORD NumModules = 0;
