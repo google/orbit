@@ -50,14 +50,14 @@ class Process {
   }
   void AddThreadId(DWORD a_ThreadId) { m_ThreadIds.insert(a_ThreadId); }
   void RemoveThreadId(DWORD a_ThreadId) { m_ThreadIds.erase(a_ThreadId); };
-  void SetThreadName(DWORD a_ThreadId, std::wstring a_Name) {
+  void SetThreadName(DWORD a_ThreadId, std::string a_Name) {
     m_ThreadNames[a_ThreadId] = a_Name;
   }
-  std::wstring GetThreadNameFromTID(DWORD a_ThreadId) {
+  std::string GetThreadNameFromTID(DWORD a_ThreadId) {
     return m_ThreadNames[a_ThreadId];
   }
   void AddModule(std::shared_ptr<Module>& a_Module);
-  void FindPdbs(const std::vector<std::wstring>& a_SearchLocations);
+  void FindPdbs(const std::vector<std::string>& a_SearchLocations);
   void FillModuleDebugInfo(ModuleDebugInfo& a_ModuleDebugInfo);
 
   static bool IsElevated(HANDLE a_Process);
@@ -72,11 +72,10 @@ class Process {
   std::map<std::string, std::shared_ptr<Module> >& GetNameToModulesMap() {
     return m_NameToModuleMap;
   }
-  std::shared_ptr<Module> FindModule(const std::wstring& a_ModuleName);
+  std::shared_ptr<Module> FindModule(const std::string& a_ModuleName);
 
-  // TODO: Replace these with std::string
-  const std::wstring GetName() const { return s2ws(m_Name); }
-  const std::wstring GetFullName() const { return s2ws(m_FullName); }
+  const std::string GetName() const { return m_Name; }
+  const std::string GetFullName() const { return m_FullName; }
   DWORD GetID() const { return m_ID; }
   double GetCpuUsage() const { return m_CpuUsage; }
   HANDLE GetHandle() const { return m_Handle; }
@@ -156,7 +155,7 @@ class Process {
   std::map<std::string, std::shared_ptr<Module> > m_NameToModuleMap;
   std::vector<std::shared_ptr<Thread> > m_Threads;
   std::unordered_set<uint32_t> m_ThreadIds;
-  std::map<uint32_t, std::wstring> m_ThreadNames;
+  std::map<uint32_t, std::string> m_ThreadNames;
 
   std::map<uint64_t, std::shared_ptr<LinuxSymbol> > m_Symbols;
 

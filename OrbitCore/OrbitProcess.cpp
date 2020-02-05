@@ -79,7 +79,7 @@ void Process::LoadDebugInfo() {
     // SymInit(m_Handle);
 
     // Load module information
-    /*wstring symbolPath = Path::GetDirectory(this->GetFullName()).c_str();
+    /*string symbolPath = Path::GetDirectory(this->GetFullName()).c_str();
     SymSetSearchPath(m_Handle, symbolPath.c_str());*/
 
     // List threads
@@ -218,8 +218,9 @@ void Process::SortThreadsById() {
 }
 
 //-----------------------------------------------------------------------------
-std::shared_ptr<Module> Process::FindModule(const std::wstring& a_ModuleName) {
-  std::wstring moduleName = ToLower(Path::GetFileNameNoExt(a_ModuleName));
+std::shared_ptr<Module> Process::FindModule(const std::string& module_name) {
+  std::wstring moduleName =
+      ToLower(Path::GetFileNameNoExt(s2ws(module_name)));
 
   for (auto& it : m_Modules) {
     std::shared_ptr<Module>& module = it.second;
@@ -338,15 +339,15 @@ void Process::AddModule(std::shared_ptr<Module>& a_Module) {
 }
 
 //-----------------------------------------------------------------------------
-void Process::FindPdbs(const std::vector<std::wstring>& a_SearchLocations) {
+void Process::FindPdbs(const std::vector<std::string>& a_SearchLocations) {
 #ifdef _WIN32
-  std::unordered_map<std::wstring, std::vector<std::wstring> > nameToPaths;
+  std::unordered_map<std::string, std::vector<std::string> > nameToPaths;
 
   // Populate list of all available pdb files
-  for (const std::wstring& dir : a_SearchLocations) {
-    std::vector<std::wstring> pdbFiles = Path::ListFiles(dir, L".pdb");
-    for (const std::wstring& pdb : pdbFiles) {
-      std::wstring pdbLower = Path::GetFileName(ToLower(pdb));
+  for (const std::string& dir : a_SearchLocations) {
+    std::vector<std::string> pdbFiles = Path::ListFiles(dir, ".pdb");
+    for (const std::string& pdb : pdbFiles) {
+      std::string pdbLower = Path::GetFileName(ToLower(pdb));
       nameToPaths[pdbLower].push_back(pdb);
     }
   }
@@ -356,12 +357,12 @@ void Process::FindPdbs(const std::vector<std::wstring>& a_SearchLocations) {
     std::shared_ptr<Module> module = modulePair.second;
 
     if (!module->m_FoundPdb) {
-      std::wstring moduleName = ToLower(s2ws(module->m_Name));
-      std::wstring pdbName = Path::StripExtension(moduleName) + L".pdb";
+      std::string moduleName = ToLower(s2ws(module->m_Name));
+      std::string pdbName = Path::StripExtension(moduleName) + ".pdb";
 
-      const std::vector<std::wstring>& pdbs = nameToPaths[pdbName];
+      const std::vector<std::string>& pdbs = nameToPaths[pdbName];
 
-      for (const std::wstring& pdb : pdbs) {
+      for (const std::string& pdb : pdbs) {
         module->m_PdbName = ws2s(pdb);
         module->m_FoundPdb = true;
         module->LoadDebugInfo();
@@ -504,7 +505,7 @@ void Process::FindCoreFunctions() {
     oqpi_tk::parallel_for( "FindAllocFreeFunctions", (int32_t)m_Functions.size(), [&]( int32_t a_BlockIndex, int32_t a_ElementIndex )
     {
         Function* func = m_Functions[a_ElementIndex];
-        const std::wstring & name = func->Lower();
+        const std::string & name = func->Lower();
 
         if( Contains( name, L"operator new" ) || Contains( name, L"FMallocBinned::Malloc" ) )
         {
