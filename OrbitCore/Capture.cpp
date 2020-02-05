@@ -28,6 +28,7 @@
 #include "TcpServer.h"
 #include "TestRemoteMessages.h"
 #include "TimerManager.h"
+#include "absl/strings/str_format.h"
 
 #ifdef _WIN32
 #include "EventTracer.h"
@@ -163,7 +164,7 @@ bool Capture::Connect() {
 
 //-----------------------------------------------------------------------------
 bool Capture::StartCapture() {
-  SCOPE_TIMER_LOG(L"Capture::StartCapture");
+  SCOPE_TIMER_LOG("Capture::StartCapture");
 
   if (GTargetProcess->GetName().size() == 0) return false;
 
@@ -407,7 +408,7 @@ void Capture::StartSampling() {
 #ifdef WIN32
   if (!GIsSampling && Capture::IsTrackingEvents() &&
       GTargetProcess->GetName().size()) {
-    SCOPE_TIMER_LOG(L"Capture::StartSampling");
+    SCOPE_TIMER_LOG("Capture::StartSampling");
 
     GCaptureTimer.Start();
     GCaptureTimePoint = std::chrono::system_clock::now();
@@ -482,7 +483,7 @@ void Capture::DisplayStats() {
 //-----------------------------------------------------------------------------
 void Capture::OpenCapture(const std::wstring& a_CaptureName) {
   LocalScopeTimer Timer(&GOpenCaptureTime);
-  SCOPE_TIMER_LOG(L"OpenCapture");
+  SCOPE_TIMER_LOG("OpenCapture");
 
   // TODO!
 }
@@ -542,13 +543,14 @@ void Capture::SaveSession(const std::wstring& a_FileName) {
     }
   }
 
-  std::wstring saveFileName = a_FileName;
+  std::string saveFileName = ws2s(a_FileName);
   if (!EndsWith(a_FileName, L".opr")) {
-    saveFileName += L".opr";
+    saveFileName += ".opr";
   }
 
-  SCOPE_TIMER_LOG(Format(L"Saving Orbit session in %s", saveFileName.c_str()));
-  std::ofstream file(ws2s(saveFileName), std::ios::binary);
+  SCOPE_TIMER_LOG(absl::StrFormat("Saving Orbit session in %s",
+                                  saveFileName.c_str()));
+  std::ofstream file(saveFileName, std::ios::binary);
   cereal::BinaryOutputArchive archive(file);
   archive(cereal::make_nvp("Session", session));
 }

@@ -9,7 +9,7 @@
 
 #define SCOPE_TIMER_LOG(msg) LocalScopeTimer UNIQUE_ID(msg)
 #define SCOPE_TIMER_FUNC SCOPE_TIMER_LOG(__FUNCTION__)
-extern thread_local int CurrentDepth;
+extern thread_local size_t CurrentDepth;
 
 //-----------------------------------------------------------------------------
 #pragma pack(push, 1)
@@ -109,15 +109,14 @@ class ScopeTimer {
 class LocalScopeTimer {
  public:
   LocalScopeTimer();
-  LocalScopeTimer(const std::wstring& a_Message);
-  LocalScopeTimer(const char* a_Message);
-  LocalScopeTimer(double* a_Millis);
+  LocalScopeTimer(const std::string& message);
+  LocalScopeTimer(double* millis);
   ~LocalScopeTimer();
 
  protected:
-  Timer m_Timer;
-  double* m_Millis;
-  std::wstring m_Msg;
+  Timer timer_;
+  double* millis_;
+  std::string message_;
 };
 
 //-----------------------------------------------------------------------------
