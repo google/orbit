@@ -10,6 +10,7 @@
 #include "OrbitType.h"
 #include "PrintVar.h"
 #include "Serialization.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 CallStack::CallStack(CallStackPOD a_CS) : CallStack() {
@@ -33,8 +34,8 @@ void CallStack::Print() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring CallStack::GetString() {
-  std::wstring callstackString;
+std::string CallStack::GetString() {
+  std::string callstackString;
 
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
   for (uint32_t i = 0; i < m_Depth; ++i) {
@@ -43,9 +44,9 @@ std::wstring CallStack::GetString() {
         Capture::GTargetProcess->GetFunctionFromAddress(addr, false);
 
     if (func) {
-      callstackString += s2ws(func->PrettyName()) + L"\n";
+      callstackString += func->PrettyName() + "\n";
     } else {
-      callstackString += Format(L"%I64x\n", addr);
+      callstackString += absl::StrFormat("%" PRIx64 "\n", addr);
     }
   }
 

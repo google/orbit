@@ -140,7 +140,7 @@ bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
   m_Name = Path::GetFileName(m_FileName);
 
   {
-    SCOPE_TIMER_LOG(L"nm");
+    SCOPE_TIMER_LOG("nm");
     // nm
     // TODO: If we need linenumber information at some point, we need to find an
     // alternative, as "nm -l" is super slow.
@@ -167,7 +167,7 @@ bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
   ProcessData();
 
   {
-    SCOPE_TIMER_LOG(L"objdump -tT");
+    SCOPE_TIMER_LOG("objdump -tT");
     // find functions that can receive uprobes
     std::string objdumpCommand =
         std::string("objdump -tT ") + ws2s(m_FileName) +
@@ -200,7 +200,7 @@ void Pdb::LoadPdbAsync(const wchar_t* a_PdbName,
 
 //-----------------------------------------------------------------------------
 void Pdb::ProcessData() {
-  SCOPE_TIMER_LOG(L"ProcessData");
+  SCOPE_TIMER_LOG("ProcessData");
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
   auto& functions = Capture::GTargetProcess->GetFunctions();
@@ -215,7 +215,7 @@ void Pdb::ProcessData() {
   }
 
   if (GParams.m_FindFileAndLineInfo) {
-    SCOPE_TIMER_LOG(L"Find File and Line info");
+    SCOPE_TIMER_LOG("Find File and Line info");
     for (Function& func : m_Functions) {
       func.FindFile();
     }
@@ -244,7 +244,7 @@ void Pdb::ProcessData() {
 void Pdb::PopulateFunctionMap() {
   m_IsPopulatingFunctionMap = true;
 
-  SCOPE_TIMER_LOG(L"Pdb::PopulateFunctionMap");
+  SCOPE_TIMER_LOG("Pdb::PopulateFunctionMap");
 
   uint64_t baseAddress = (uint64_t)GetHModule();
   bool rvaAddresses = false;
@@ -272,19 +272,19 @@ void Pdb::PopulateStringFunctionMap() {
   m_IsPopulatingFunctionStringMap = true;
 
   {
-    // SCOPE_TIMER_LOG( L"Reserving map" );
+    // SCOPE_TIMER_LOG("Reserving map");
     m_StringFunctionMap.reserve(unsigned(1.5f * (float)m_Functions.size()));
   }
 
   {
-    // SCOPE_TIMER_LOG( L"Hash" );
+    // SCOPE_TIMER_LOG("Hash");
     for (Function& Function : m_Functions) {
       Function.Hash();
     }
   }
 
   {
-    // SCOPE_TIMER_LOG( L"Map inserts" );
+    // SCOPE_TIMER_LOG("Map inserts");
 
     for (Function& Function : m_Functions) {
       m_StringFunctionMap[Function.m_NameHash] = &Function;

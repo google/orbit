@@ -8,6 +8,7 @@
 #include "Capture.h"
 #include "Log.h"
 #include "OrbitProcess.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 MemoryTracker::MemoryTracker()
@@ -57,7 +58,7 @@ void MemoryTracker::DumpReport() {
   }
 
   if (m_NumAllocatedBytes) {
-    ORBIT_VIZ(Format(L"NumLiveBytes: %llu\n", NumLiveBytes));
+    ORBIT_VIZ(absl::StrFormat("NumLiveBytes: %llu\n", NumLiveBytes));
   }
 
   for (auto rit = bytesToCallstack.rbegin(); rit != bytesToCallstack.rend();
@@ -67,13 +68,13 @@ void MemoryTracker::DumpReport() {
 
     DWORD64 numBytes = rit->first;
     DWORD64 cid = id;
-    std::wstring msg =
-        Format(L"Callstack[%llu] allocated %llu bytes\n", cid, numBytes);
+    std::string msg = absl::StrFormat("Callstack[%llu] allocated %llu bytes\n",
+                                      cid, numBytes);
     ORBIT_VIZ(msg);
     if (callstack) {
       ORBIT_VIZ(callstack->GetString());
     }
-    ORBIT_VIZ(L"\n\n");
+    ORBIT_VIZ("\n\n");
   }
 }
 

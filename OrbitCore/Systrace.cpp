@@ -109,7 +109,7 @@ void Systrace::UpdateMinMax(const Timer& a_Timer) {
 
 //-----------------------------------------------------------------------------
 Systrace::Systrace(const char* a_FilePath, uint64_t a_TimeOffsetNs) {
-  SCOPE_TIMER_LOG(L"Systrace Parsing");
+  SCOPE_TIMER_LOG("Systrace Parsing");
   m_Name = a_FilePath;
   std::ifstream infile(a_FilePath);
   std::string line;
@@ -153,14 +153,14 @@ Systrace::Systrace(const char* a_FilePath, uint64_t a_TimeOffsetNs) {
   }
 
   {
-    SCOPE_TIMER_LOG(L"Function Map");
+    SCOPE_TIMER_LOG("Function Map");
     for (auto& function : m_Functions) {
       m_FunctionMap[function.m_Address] = &function;
     }
   }
 
   {
-    SCOPE_TIMER_LOG(L"Update Timers");
+    SCOPE_TIMER_LOG("Update Timers");
     for (auto& timer : m_Timers) {
       m_FunctionMap[timer.m_FunctionAddress]->m_Stats->Update(timer);
     }

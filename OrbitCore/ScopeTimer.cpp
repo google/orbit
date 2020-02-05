@@ -6,11 +6,11 @@
 
 #include "Log.h"
 #include "TimerManager.h"
+#include "absl/strings/str_format.h"
 
-thread_local int CurrentDepth = 0;
-thread_local int CurrentDepthLocal = 0;
+thread_local size_t CurrentDepth = 0;
+thread_local size_t CurrentDepthLocal = 0;
 
-//-----------------------------------------------------------------------------
 void Timer::Start() {
   m_TID = GetCurrentThreadId();
   m_Depth = CurrentDepth++;
@@ -18,71 +18,59 @@ void Timer::Start() {
   m_Start = OrbitTicks();
 }
 
-//-----------------------------------------------------------------------------
 void Timer::Stop() {
   m_End = OrbitTicks();
   --CurrentDepth;
 }
 
-//-----------------------------------------------------------------------------
 ScopeTimer::ScopeTimer(const char* a_Name) { m_Timer.Start(); }
 
-//-----------------------------------------------------------------------------
 ScopeTimer::~ScopeTimer() { m_Timer.Stop(); }
 
-//-----------------------------------------------------------------------------
-LocalScopeTimer::LocalScopeTimer() : m_Millis(nullptr) { ++CurrentDepthLocal; }
+LocalScopeTimer::LocalScopeTimer() : millis_(nullptr) { ++CurrentDepthLocal; }
 
-//-----------------------------------------------------------------------------
-LocalScopeTimer::LocalScopeTimer(double* a_Millis) : m_Millis(a_Millis) {
+LocalScopeTimer::LocalScopeTimer(double* millis) : millis_(millis) {
   ++CurrentDepthLocal;
-  m_Timer.Start();
+  timer_.Start();
 }
 
-//-----------------------------------------------------------------------------
-LocalScopeTimer::LocalScopeTimer(const std::wstring& a_Msg)
-    : m_Millis(nullptr), m_Msg(a_Msg) {
-  std::wstring tabs;
-  for (int i = 0; i < CurrentDepthLocal; ++i) {
-    tabs += L"  ";
+LocalScopeTimer::LocalScopeTimer(const std::string& message)
+    : millis_(nullptr), message_(message) {
+  std::string tabs;
+  for (size_t i = 0; i < CurrentDepthLocal; ++i) {
+    tabs += "  ";
   }
-  PRINT(Format(L"%lsStarting %ls...\n", tabs.c_str(), m_Msg.c_str()));
+  PRINT(
+      absl::StrFormat("%sStarting %s...\n", tabs.c_str(), message_.c_str()));
 
   ++CurrentDepthLocal;
-  m_Timer.Start();
+  timer_.Start();
 }
 
-//-----------------------------------------------------------------------------
-LocalScopeTimer::LocalScopeTimer(const char* a_Message)
-    : LocalScopeTimer(s2ws(a_Message)) {}
-
-//-----------------------------------------------------------------------------
 LocalScopeTimer::~LocalScopeTimer() {
-  m_Timer.Stop();
+  timer_.Stop();
   --CurrentDepthLocal;
 
-  if (m_Millis) {
-    *m_Millis = m_Timer.ElapsedMillis();
+  if (millis_ != nullptr) {
+    *millis_ = timer_.ElapsedMillis();
   }
 
-  if (m_Msg.length() > 0) {
-    std::wstring tabs;
-    for (int i = 0; i < CurrentDepthLocal; ++i) {
-      tabs += L"  ";
+  if (!message_.empty()) {
+    std::string tabs;
+    for (size_t i = 0; i < CurrentDepthLocal; ++i) {
+      tabs += "  ";
     }
 
-    PRINT(Format(L"%ls%ls took %f ms.\n", tabs.c_str(), m_Msg.c_str(),
-                 m_Timer.ElapsedMillis()));
+    PRINT(absl::StrFormat("%s%s took %f ms.\n", tabs.c_str(),
+                          message_.c_str(), timer_.ElapsedMillis()));
   }
 }
 
-//-----------------------------------------------------------------------------
 void ConditionalScopeTimer::Start(const char* a_Name) {
   m_Timer.Start();
   m_Active = true;
 }
 
-//-----------------------------------------------------------------------------
 ConditionalScopeTimer::~ConditionalScopeTimer() {
   if (m_Active) {
     m_Timer.Stop();

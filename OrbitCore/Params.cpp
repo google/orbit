@@ -11,6 +11,7 @@
 #include "CoreApp.h"
 #include "ScopeTimer.h"
 #include "Serialization.h"
+#include "absl/strings/str_format.h"
 
 Params GParams;
 
@@ -69,7 +70,8 @@ ORBIT_SERIALIZE(Params, 16) {
 void Params::Save() {
   GCoreApp->SendToUiNow(L"UpdateProcessParams");
   std::wstring fileName = Path::GetParamsFileName();
-  SCOPE_TIMER_LOG(Format(L"Saving params in %s", fileName.c_str()));
+  SCOPE_TIMER_LOG(absl::StrFormat("Saving params in %s",
+                                  ws2s(fileName).c_str()));
   std::ofstream file(ws2s(fileName));
   cereal::XMLOutputArchive archive(file);
   archive(cereal::make_nvp("Params", *this));

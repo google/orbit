@@ -39,7 +39,7 @@ struct CallStack {
     return m_Hash;
   }
   void Print();
-  std::wstring GetString();
+  std::string GetString();
   void Clear() {
     m_Data.clear();
     m_Hash = m_Depth = m_ThreadId = 0;

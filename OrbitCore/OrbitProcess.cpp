@@ -97,7 +97,7 @@ void Process::SetID(DWORD a_ID) {
 
 //-----------------------------------------------------------------------------
 void Process::ListModules() {
-  SCOPE_TIMER_LOG(L"ListModules");
+  SCOPE_TIMER_LOG("ListModules");
 
   ClearTransients();
 
@@ -497,7 +497,7 @@ DWORD64 Process::GetRaiseExceptionAddress() {
 //-----------------------------------------------------------------------------
 void Process::FindCoreFunctions() {
 #if 0
-    SCOPE_TIMER_LOG(L"FindCoreFunctions");
+    SCOPE_TIMER_LOG("FindCoreFunctions");
 
     const auto prio = oqpi::task_priority::normal;
 
