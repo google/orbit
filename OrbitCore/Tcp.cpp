@@ -28,8 +28,7 @@ void tcp_server::Disconnect() {
   }
 }
 
-void tcp_server::RegisterConnection(
-    std::shared_ptr<TcpConnection> connection) {
+void tcp_server::RegisterConnection(std::shared_ptr<TcpConnection> connection) {
   PRINT_FUNC;
   connection_ = connection;
 }

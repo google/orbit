@@ -7,8 +7,6 @@
 #include <fstream>
 #include <ostream>
 
-#include "absl/strings/str_format.h"
-
 #include "BpfTrace.h"
 #include "Core.h"
 #include "CoreApp.h"
@@ -28,6 +26,7 @@
 #include "TcpServer.h"
 #include "TestRemoteMessages.h"
 #include "TimerManager.h"
+#include "absl/strings/str_format.h"
 
 #ifdef _WIN32
 #include "EventTracer.h"
@@ -105,9 +104,8 @@ bool Capture::Inject(bool a_WaitForConnection) {
   if (a_WaitForConnection) {
     int numTries = 50;
     while (!GTcpServer->HasConnection() && numTries-- > 0) {
-      ORBIT_LOG(
-          absl::StrFormat("Waiting for connection on port %i",
-                          Capture::GCapturePort));
+      ORBIT_LOG(absl::StrFormat("Waiting for connection on port %i",
+                                Capture::GCapturePort));
       Sleep(100);
     }
 

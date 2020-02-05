@@ -5,8 +5,8 @@
 
 #include <sstream>
 
-#include "absl/strings/str_format.h"
 #include "Utils.h"
+#include "absl/strings/str_format.h"
 
 #if __linux__
 #define FUNCTION_NAME __PRETTY_FUNCTION__

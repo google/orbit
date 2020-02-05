@@ -51,8 +51,9 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
 
  private:
   TcpConnection(asio::io_service& io_service)
-      : socket_(io_service), wrapped_socket_(&socket_), num_bytes_received_(0) {
-  }
+      : socket_(io_service),
+        wrapped_socket_(&socket_),
+        num_bytes_received_(0) {}
   // handle_write() is responsible for any further actions
   // for this client connection.
   void handle_write(const asio::error_code& /*error*/,
@@ -136,9 +137,9 @@ class shared_const_buffer {
   const asio::const_buffer* begin() const { return &buffer_; }
   const asio::const_buffer* end() const { return &buffer_ + 1; }
 
-  std::shared_ptr<std::vector<char> > Data() { return data_; };
+  std::shared_ptr<std::vector<char>> Data() { return data_; };
 
  private:
-  std::shared_ptr<std::vector<char> > data_;
+  std::shared_ptr<std::vector<char>> data_;
   asio::const_buffer buffer_;
 };

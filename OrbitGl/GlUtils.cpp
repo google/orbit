@@ -4,11 +4,10 @@
 
 #include "GlUtils.h"
 
-#include "absl/strings/str_format.h"
-
 #include "Core.h"
 #include "Log.h"
 #include "OpenGl.h"
+#include "absl/strings/str_format.h"
 #include "freetype-gl.h"
 
 void CheckGlError() {

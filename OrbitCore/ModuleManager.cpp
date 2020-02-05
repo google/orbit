@@ -4,13 +4,13 @@
 
 #include "ModuleManager.h"
 
-#include "absl/strings/str_format.h"
 #include "Capture.h"
 #include "CoreApp.h"
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
 #include "Tcp.h"
 #include "TcpServer.h"
+#include "absl/strings/str_format.h"
 
 ModuleManager GModuleManager;
 
@@ -48,8 +48,8 @@ void ModuleManager::OnReceiveMessage(const Message& a_Msg) {
     } else if (dataType == DataTransferHeader::Code) {
       Function* func = Capture::GTargetProcess->GetFunctionFromAddress(
           header.m_Address, true);
-      std::string name = func ? func->PrettyName() :
-          absl::StrFormat("0x%" PRIx64, header.m_Address);
+      std::string name = func ? func->PrettyName()
+                              : absl::StrFormat("0x%" PRIx64, header.m_Address);
 
       GCoreApp->Disassemble(name, header.m_Address, a_Msg.GetData(),
                             a_Msg.m_Size);

@@ -4,8 +4,6 @@
 
 #include "CallStackDataView.h"
 
-#include "absl/strings/str_format.h"
-
 #include "App.h"
 #include "Callstack.h"
 #include "Capture.h"
@@ -13,6 +11,7 @@
 #include "OrbitProcess.h"
 #include "Pdb.h"
 #include "SamplingProfiler.h"
+#include "absl/strings/str_format.h"
 
 //----------------------------------------------------------------------------
 CallStackDataView::CallStackDataView() : m_CallStack(nullptr) {}

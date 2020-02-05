@@ -7,14 +7,10 @@
 #include <string>
 #include <vector>
 
-#include "absl/strings/str_format.h"
-
-#include "Core.h"
-#include "VariableTracing.h"
-
 #include "App.h"
 #include "Capture.h"
 #include "Card.h"
+#include "Core.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "Log.h"
@@ -24,6 +20,8 @@
 #include "TcpServer.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
+#include "VariableTracing.h"
+#include "absl/strings/str_format.h"
 
 RingBuffer<float, 512> GDeltaTimeBuffer;
 

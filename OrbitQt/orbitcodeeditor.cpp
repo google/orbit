@@ -55,13 +55,12 @@
 #include <QtWidgets>
 #include <fstream>
 
-#include "absl/strings/str_format.h"
-
 #include "../OrbitCore/LogInterface.h"
 #include "../OrbitCore/Path.h"
 #include "../OrbitCore/PrintVar.h"
 #include "../OrbitCore/Utils.h"
 #include "../OrbitGl/App.h"
+#include "absl/strings/str_format.h"
 
 OrbitCodeEditor* OrbitCodeEditor::GFileMapEditor;
 QWidget* OrbitCodeEditor::GFileMapWidget;
@@ -181,8 +180,7 @@ bool OrbitCodeEditor::loadCode(std::string a_Msg) {
       gotoLine(lineNumber);
     } else {
       std::string msg = absl::StrFormat("Could not find %s (%s)\n",
-                                        tokens[1].c_str(),
-                                        tokens[2].c_str());
+                                        tokens[1].c_str(), tokens[2].c_str());
       msg +=
           "Please modify FileMapping.txt shown below if the source code is "
           "available at another location.";

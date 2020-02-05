@@ -70,14 +70,13 @@ std::vector<std::string> TcpServer::GetStats() {
   stats.push_back(VAR_TO_ANSI(m_NumReceivedMessages));
   stats.push_back(VAR_TO_ANSI(m_NumMessagesPerSecond));
 
-  std::string bytesRcv =
-      "Capture::GNumBytesReceiced = " +
-      GetPrettySize(m_TcpServer->GetNumBytesReceived()) + "\n";
+  std::string bytesRcv = "Capture::GNumBytesReceiced = " +
+                         GetPrettySize(m_TcpServer->GetNumBytesReceived()) +
+                         "\n";
   stats.push_back(bytesRcv);
   std::string bitRate =
-      "Capture::Bitrate = " + GetPrettySize((ULONG64)m_BytesPerSecond) +
-      "/s" + " ( " + GetPrettyBitRate(static_cast<ULONG64>(m_BytesPerSecond)) +
-      " )\n";
+      "Capture::Bitrate = " + GetPrettySize((ULONG64)m_BytesPerSecond) + "/s" +
+      " ( " + GetPrettyBitRate(static_cast<ULONG64>(m_BytesPerSecond)) + " )\n";
 
   stats.push_back(bitRate);
   return stats;

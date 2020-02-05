@@ -28,8 +28,6 @@
 #include <sstream>
 #include <string>
 
-#include "absl/strings/str_format.h"
-
 #include "Callstack.h"
 #include "Capture.h"
 #include "ConnectionManager.h"
@@ -42,6 +40,7 @@
 #include "ScopeTimer.h"
 #include "TcpClient.h"
 #include "Utils.h"
+#include "absl/strings/str_format.h"
 
 namespace LinuxUtils {
 
@@ -93,8 +92,8 @@ std::string ReadMaps(pid_t a_PID) {
 
 //-----------------------------------------------------------------------------
 uint64_t GetTracePointID(const char* a_Group, const char* a_Event) {
-  std::string cmd =
-      absl::StrFormat("cat /sys/kernel/debug/tracing/events/%s/%s/id", a_Group, a_Event);
+  std::string cmd = absl::StrFormat(
+      "cat /sys/kernel/debug/tracing/events/%s/%s/id", a_Group, a_Event);
   std::string result = ExecuteCommand(cmd.c_str());
   trim(result);
   return std::stoull(result);

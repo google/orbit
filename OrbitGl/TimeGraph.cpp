@@ -6,8 +6,6 @@
 
 #include <algorithm>
 
-#include "absl/strings/str_format.h"
-
 #include "App.h"
 #include "Batcher.h"
 #include "Capture.h"
@@ -27,6 +25,7 @@
 #include "ThreadTrack.h"
 #include "TimerManager.h"
 #include "Utils.h"
+#include "absl/strings/str_format.h"
 
 #ifdef _WIN32
 #include "EventTracer.h"
@@ -573,9 +572,8 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
               if (func) {
                 std::string extraInfo = GetExtraInfo(timer);
                 name = func->PrettyName().c_str();
-                std::string text = absl::StrFormat("%s %s %s", name,
-                                                   extraInfo.c_str(),
-                                                   time.c_str());
+                std::string text = absl::StrFormat(
+                    "%s %s %s", name, extraInfo.c_str(), time.c_str());
 
                 textBox.SetText(text);
               } else if (!SystraceManager::Get().IsEmpty()) {
@@ -587,9 +585,8 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
                 auto it = Capture::GZoneNames.find(timer.m_FunctionAddress);
                 if (it != Capture::GZoneNames.end()) {
                   name = it->second.c_str();
-                  std::string text = absl::StrFormat("%s %s",
-                                                     name,
-                                                     time.c_str());
+                  std::string text =
+                      absl::StrFormat("%s %s", name, time.c_str());
                   textBox.SetText(text);
                 }
               }

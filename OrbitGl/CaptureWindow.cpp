@@ -4,8 +4,6 @@
 
 #include "CaptureWindow.h"
 
-#include "absl/strings/str_format.h"
-
 #include "../OrbitPlugin/OrbitSDK.h"
 #include "App.h"
 #include "Capture.h"
@@ -17,6 +15,7 @@
 #include "TcpClient.h"
 #include "TcpServer.h"
 #include "TimerManager.h"
+#include "absl/strings/str_format.h"
 
 #ifdef _WIN32
 #include "SymbolUtils.h"
@@ -273,9 +272,9 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
     if (!textBox->GetTimer().IsType(Timer::CORE_ACTIVITY)) {
       Function* func =
           Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
-      m_ToolTip = s2ws(absl::StrFormat("%s %s",
-                                       func ? func->PrettyName().c_str() : "",
-                                       textBox->GetText().c_str()));
+      m_ToolTip =
+          s2ws(absl::StrFormat("%s %s", func ? func->PrettyName().c_str() : "",
+                               textBox->GetText().c_str()));
       GOrbitApp->SendToUiAsync(L"tooltip:" + m_ToolTip);
       NeedsRedraw();
     }
@@ -762,8 +761,8 @@ void CaptureWindow::DrawStatus() {
   LeftY += s_IncY;
 
   if (Capture::GInjected) {
-    std::string injectStr = absl::StrFormat(" %s",
-                                            Capture::GInjectedProcess.c_str());
+    std::string injectStr =
+        absl::StrFormat(" %s", Capture::GInjectedProcess.c_str());
     m_ProcessX = m_TextRenderer.AddText2D(injectStr.c_str(), PosX, PosY,
                                           Z_VALUE_TEXT_UI, s_Color, -1, true);
     PosY += s_IncY;

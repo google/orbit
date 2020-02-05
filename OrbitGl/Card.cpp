@@ -4,10 +4,9 @@
 
 #include "Card.h"
 
-#include "absl/strings/str_format.h"
-
 #include "GlCanvas.h"
 #include "ImGuiOrbit.h"
+#include "absl/strings/str_format.h"
 
 CardContainer GCardContainer;
 
@@ -143,11 +142,10 @@ void FloatGraphCard::Draw(GlCanvas* a_Canvas) {
 
   Color col(255, 255, 255, 255);
 
-  std::string cardValue =
-      absl::StrFormat("%s: %s  min(%s) max(%s)", m_Name.c_str(),
-                      std::to_string(m_Data.Latest()).c_str(),
-                      std::to_string(m_Min).c_str(),
-                      std::to_string(m_Max).c_str());
+  std::string cardValue = absl::StrFormat(
+      "%s: %s  min(%s) max(%s)", m_Name.c_str(),
+      std::to_string(m_Data.Latest()).c_str(), std::to_string(m_Min).c_str(),
+      std::to_string(m_Max).c_str());
   a_Canvas->GetTextRenderer().AddText2D(cardValue.c_str(), (int)m_Pos[0],
                                         (int)m_Pos[1], GlCanvas::Z_VALUE_TEXT,
                                         col, -1.f, false, false);

@@ -12,8 +12,6 @@
 #include <QTimer>
 #include <QToolTip>
 
-#include "absl/strings/str_format.h"
-
 #include "../OrbitCore/Path.h"
 #include "../OrbitCore/PrintVar.h"
 #include "../OrbitCore/Utils.h"
@@ -23,6 +21,7 @@
 #include "../OrbitGl/SamplingReport.h"
 #include "../OrbitPlugin/OrbitSDK.h"
 #include "../external/concurrentqueue/concurrentqueue.h"
+#include "absl/strings/str_format.h"
 #include "licensedialog.h"
 #include "orbitdiffdialog.h"
 #include "orbitdisassemblydialog.h"

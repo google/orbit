@@ -125,11 +125,12 @@ std::wstring LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
       value = GetPrettyTime(stats->m_MaxMs);
       break;
     case LiveFunction::ADDRESS:
-      value = function.m_Pdb
-                  ? absl::StrFormat("0x%llx", function.m_Address +
-                                    reinterpret_cast<DWORD64>(
-                                        function.m_Pdb->GetHModule()))
-                  : "";
+      value =
+          function.m_Pdb
+              ? absl::StrFormat("0x%llx", function.m_Address +
+                                              reinterpret_cast<DWORD64>(
+                                                  function.m_Pdb->GetHModule()))
+              : "";
       break;
     case LiveFunction::MODULE:
       value = function.m_Pdb ? ws2s(function.m_Pdb->GetName()) : "";

@@ -4,11 +4,10 @@
 
 #include "Track.h"
 
-#include "absl/strings/str_format.h"
-
 #include "Capture.h"
 #include "GlCanvas.h"
 #include "TimeGraphLayout.h"
+#include "absl/strings/str_format.h"
 
 float TEXT_Z = -0.004f;
 float TRACK_Z = -0.005f;

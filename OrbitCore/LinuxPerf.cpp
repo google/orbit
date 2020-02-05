@@ -5,8 +5,6 @@
 #include <fstream>
 #include <iostream>
 
-#include "absl/strings/str_format.h"
-
 #include "Callstack.h"
 #include "Capture.h"
 #include "ConnectionManager.h"
@@ -21,6 +19,7 @@
 #include "ScopeTimer.h"
 #include "TcpServer.h"
 #include "Utils.h"
+#include "absl/strings/str_format.h"
 
 #if __linux__
 #include <asm/unistd.h>

@@ -4,7 +4,6 @@
 
 #include "FunctionDataView.h"
 
-#include "absl/strings/str_format.h"
 #include "App.h"
 #include "Capture.h"
 #include "Core.h"
@@ -13,6 +12,7 @@
 #include "OrbitType.h"
 #include "Pdb.h"
 #include "RuleEditor.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 FunctionsDataView::FunctionsDataView() {
