@@ -44,7 +44,7 @@ BpfTrace::BpfTrace(Callback a_Callback) {
       CommandCallback(a_Buffer);
   };
 
-  m_ScriptFileName = ws2s(Path::GetBasePath()) + "orbit.bt";
+  m_ScriptFileName = Path::GetBasePath() + "orbit.bt";
 #endif
 }
 
@@ -197,9 +197,9 @@ void BpfTrace::CommandCallbackWithCallstacks(const std::string& a_Line) {
     std::string module = Replace(moduleRaw.substr(1), ")\n", "");
 
     // TODO: this is copy&paste from LinuxPerf.cpp
-    std::wstring moduleName = ToLower(Path::GetFileName(s2ws(module)));
+    std::string moduleName = ToLower(Path::GetFileName(module));
     std::shared_ptr<Module> moduleFromName =
-        Capture::GTargetProcess->GetModuleFromName(ws2s(moduleName));
+        Capture::GTargetProcess->GetModuleFromName(moduleName);
 
     if (moduleFromName) {
       uint64_t new_address = moduleFromName->ValidateAddress(address);

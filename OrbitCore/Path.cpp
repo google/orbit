@@ -18,14 +18,12 @@
 #include <sys/stat.h>
 #endif
 
-std::wstring Path::m_BasePath;
-bool Path::m_IsPackaged;
+std::string Path::base_path_;
+bool Path::is_packaged_;
 
-//-----------------------------------------------------------------------------
 void Path::Init() { GetBasePath(); }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetExecutableName() {
+std::string Path::GetExecutableName() {
 #ifdef _WIN32
   WCHAR cwBuffer[2048] = {0};
   LPWSTR pszBuffer = cwBuffer;
@@ -41,50 +39,47 @@ std::wstring Path::GetExecutableName() {
   exeFullName = buffer;
 
   std::replace(exeFullName.begin(), exeFullName.end(), '\\', '/');
-  return exeFullName;
+  return ws2s(exeFullName);
 #else
   char result[PATH_MAX];
   ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
   std::string fullPath = std::string(result, (count > 0) ? count : 0);
-  return s2ws(fullPath);
+  return fullPath;
 #endif
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetExecutablePath() {
-  std::wstring fullPath = GetExecutableName();
-  std::wstring path = fullPath.substr(0, fullPath.find_last_of(L"/")) + L"/";
+std::string Path::GetExecutablePath() {
+  std::string fullPath = GetExecutableName();
+  std::string path = fullPath.substr(0, fullPath.find_last_of("/")) + "/";
   return path;
 }
 
-//-----------------------------------------------------------------------------
-bool Path::FileExists(const std::wstring& a_File) {
-  std::ifstream f(ws2s(a_File).c_str());
+bool Path::FileExists(const std::string& file) {
+  // TODO: use stat here
+  std::ifstream f(file.c_str());
   return f.good();
 }
 
-//-----------------------------------------------------------------------------
-uint64_t Path::FileSize(const std::string& a_File) {
+uint64_t Path::FileSize(const std::string& file) {
   struct stat stat_buf;
-  std::string filename = a_File;
-  int rc = stat(filename.c_str(), &stat_buf);
+  int rc = stat(file.c_str(), &stat_buf);
   return rc == 0 ? stat_buf.st_size : -1;
 }
 
-//-----------------------------------------------------------------------------
-bool Path::DirExists(const std::wstring& a_Dir) {
+bool Path::DirExists(const std::string& dir) {
 #if _WIN32
-  DWORD ftyp = GetFileAttributesA(ws2s(a_Dir).c_str());
+  DWORD ftyp = GetFileAttributesA(dir.c_str());
   if (ftyp == INVALID_FILE_ATTRIBUTES) return false;
 
   if (ftyp & FILE_ATTRIBUTE_DIRECTORY) return true;
 
   return false;
 #else
+  // TODO: also use stat here?
   DIR* pDir;
   bool exists = false;
-  pDir = opendir(ws2s(a_Dir).c_str());
-  if (pDir != NULL) {
+  pDir = opendir(dir.c_str());
+  if (pDir != nullptr) {
     exists = true;
     (void)closedir(pDir);
   }
@@ -93,123 +88,97 @@ bool Path::DirExists(const std::wstring& a_Dir) {
 #endif
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetBasePath() {
-  if (m_BasePath.size() > 0) return m_BasePath;
+std::string Path::GetBasePath() {
+  if (!base_path_.empty()) {
+    return base_path_;
+  }
 
-  std::wstring exePath = GetExecutablePath();
-  m_BasePath = exePath.substr(0, exePath.find(L"bin/"));
-  m_IsPackaged = DirExists(GetBasePath() + L"text");
+  std::string exePath = GetExecutablePath();
+  base_path_ = exePath.substr(0, exePath.find("bin/"));
+  is_packaged_ = DirExists(GetBasePath() + "text");
 
-  return m_BasePath;
+  return base_path_;
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetOrbitAppPdb() {
-  return GetBasePath() + std::wstring(L"bin/Win32/Debug/OrbitApp.pdb");
+std::string Path::GetOrbitAppPdb() {
+  return GetBasePath() + std::string("bin/Win32/Debug/OrbitApp.pdb");
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetDllPath(bool a_Is64Bit) {
-  std::wstring basePath = GetBasePath();
+std::string Path::GetDllPath(bool a_Is64Bit) {
+  std::string basePath = GetBasePath();
 
   return basePath + GetDllName(a_Is64Bit);
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetDllName(bool a_Is64Bit) {
-  return a_Is64Bit ? L"Orbit64.dll" : L"Orbit32.dll";
+std::string Path::GetDllName(bool a_Is64Bit) {
+  return a_Is64Bit ? "Orbit64.dll" : "Orbit32.dll";
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetParamsFileName() {
-  std::wstring paramsDir = Path::GetAppDataPath() + L"config/";
-  _mkdir(ws2s(paramsDir).c_str());
-  return paramsDir + L"config.xml";
+std::string Path::GetParamsFileName() {
+  std::string paramsDir = Path::GetAppDataPath() + "config/";
+  _mkdir(paramsDir.c_str());
+  return paramsDir + "config.xml";
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetFileMappingFileName() {
-  std::wstring paramsDir = Path::GetAppDataPath() + L"config/";
-  _mkdir(ws2s(paramsDir).c_str());
-  return paramsDir + std::wstring(L"FileMapping.txt");
+std::string Path::GetFileMappingFileName() {
+  std::string paramsDir = Path::GetAppDataPath() + "config/";
+  _mkdir(paramsDir.c_str());
+  return paramsDir + std::string("FileMapping.txt");
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetSymbolsFileName() {
-  std::wstring paramsDir = Path::GetAppDataPath() + L"config/";
-  _mkdir(ws2s(paramsDir).c_str());
-  return paramsDir + std::wstring(L"Symbols.txt");
+std::string Path::GetSymbolsFileName() {
+  std::string paramsDir = Path::GetAppDataPath() + "config/";
+  _mkdir(paramsDir.c_str());
+  return paramsDir + std::string("Symbols.txt");
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetLicenseName() {
-  std::wstring appDataDir = Path::GetAppDataPath();
-  _mkdir(ws2s(appDataDir).c_str());
-  return appDataDir + std::wstring(L"user.txt");
+std::string Path::GetLicenseName() {
+  std::string appDataDir = Path::GetAppDataPath();
+  _mkdir(appDataDir.c_str());
+  return appDataDir + std::string("user.txt");
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetCachePath() {
-  std::wstring cacheDir = Path::GetAppDataPath() + L"cache/";
-  _mkdir(ws2s(cacheDir).c_str());
+std::string Path::GetCachePath() {
+  std::string cacheDir = Path::GetAppDataPath() + "cache/";
+  _mkdir(cacheDir.c_str());
   return cacheDir;
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetPresetPath() {
-  std::wstring presetDir = Path::GetAppDataPath() + L"presets/";
-  _mkdir(ws2s(presetDir).c_str());
+std::string Path::GetPresetPath() {
+  std::string presetDir = Path::GetAppDataPath() + "presets/";
+  _mkdir(presetDir.c_str());
   return presetDir;
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetPluginPath() {
-  std::wstring presetDir = Path::GetAppDataPath() + L"plugins/";
-  _mkdir(ws2s(presetDir).c_str());
+std::string Path::GetPluginPath() {
+  std::string presetDir = Path::GetAppDataPath() + "plugins/";
+  _mkdir(presetDir.c_str());
   return presetDir;
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetCapturePath() {
-  std::wstring captureDir = Path::GetAppDataPath() + L"output/";
-  _mkdir(ws2s(captureDir).c_str());
+std::string Path::GetCapturePath() {
+  std::string captureDir = Path::GetAppDataPath() + "output/";
+  _mkdir(captureDir.c_str());
   return captureDir;
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetDumpPath() {
-  std::wstring captureDir = Path::GetAppDataPath() + L"dumps/";
-  _mkdir(ws2s(captureDir).c_str());
+std::string Path::GetDumpPath() {
+  std::string captureDir = Path::GetAppDataPath() + "dumps/";
+  _mkdir(captureDir.c_str());
   return captureDir;
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetTmpPath() {
-  std::wstring captureDir = Path::GetAppDataPath() + L"temp/";
-  _mkdir(ws2s(captureDir).c_str());
+std::string Path::GetTmpPath() {
+  std::string captureDir = Path::GetAppDataPath() + "temp/";
+  _mkdir(captureDir.c_str());
   return captureDir;
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetFileName(const std::wstring& a_FullName) {
-  std::wstring FullName = a_FullName;
-  std::replace(FullName.begin(), FullName.end(), '\\', '/');
-  auto index = FullName.find_last_of(L"/");
-  if (index != std::wstring::npos) {
-    std::wstring FileName = FullName.substr(FullName.find_last_of(L"/") + 1);
-    return FileName;
-  }
-
-  return a_FullName;
-}
-
-//-----------------------------------------------------------------------------
 std::string Path::GetFileName(const std::string& a_FullName) {
   std::string FullName = a_FullName;
   std::replace(FullName.begin(), FullName.end(), '\\', '/');
   auto index = FullName.find_last_of("/");
-  if (index != std::wstring::npos) {
+  if (index != std::string::npos) {
     std::string FileName = FullName.substr(FullName.find_last_of("/") + 1);
     return FileName;
   }
@@ -217,43 +186,38 @@ std::string Path::GetFileName(const std::string& a_FullName) {
   return a_FullName;
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetFileNameNoExt(const std::wstring& a_FullName) {
+std::string Path::GetFileNameNoExt(const std::string& a_FullName) {
   return StripExtension(GetFileName(a_FullName));
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::StripExtension(const std::wstring& a_FullName) {
-  size_t index = a_FullName.find_last_of(L".");
-  if (index != std::wstring::npos) return a_FullName.substr(0, index);
+std::string Path::StripExtension(const std::string& a_FullName) {
+  size_t index = a_FullName.find_last_of(".");
+  if (index != std::string::npos) return a_FullName.substr(0, index);
   return a_FullName;
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetExtension(const std::wstring& a_FullName) {
+std::string Path::GetExtension(const std::string& a_FullName) {
   // returns ".ext" (includes point)
-  size_t index = a_FullName.find_last_of(L".");
-  if (index != std::wstring::npos)
+  size_t index = a_FullName.find_last_of(".");
+  if (index != std::string::npos)
     return a_FullName.substr(index, a_FullName.length());
-  return L"";
+  return "";
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetDirectory(const std::wstring& a_FullName) {
-  std::wstring FullName = a_FullName;
+std::string Path::GetDirectory(const std::string& a_FullName) {
+  std::string FullName = a_FullName;
   std::replace(FullName.begin(), FullName.end(), '\\', '/');
-  auto index = FullName.find_last_of(L"/");
+  auto index = FullName.find_last_of("/");
   if (index != std::string::npos) {
-    std::wstring FileName = FullName.substr(0, FullName.find_last_of(L"/") + 1);
+    std::string FileName = FullName.substr(0, FullName.find_last_of("/") + 1);
     return FileName;
   }
 
-  return L"";
+  return "";
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetParentDirectory(std::wstring a_Directory) {
-  if (a_Directory.size() < 1) return L"";
+std::string Path::GetParentDirectory(std::string a_Directory) {
+  if (a_Directory.size() < 1) return "";
   std::replace(a_Directory.begin(), a_Directory.end(), '\\', '/');
   wchar_t lastChar = a_Directory.c_str()[a_Directory.size() - 1];
   if (lastChar == '/') a_Directory.erase(a_Directory.size() - 1);
@@ -261,19 +225,17 @@ std::wstring Path::GetParentDirectory(std::wstring a_Directory) {
   return GetDirectory(a_Directory);
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetProgramFilesPath() {
+std::string Path::GetProgramFilesPath() {
 #ifdef WIN32
-  TCHAR pf[MAX_PATH] = {0};
-  SHGetSpecialFolderPath(0, pf, CSIDL_PROGRAM_FILES, FALSE);
-  return std::wstring(pf) + L"\\OrbitProfiler\\";
+  char pf[MAX_PATH] = {0};
+  SHGetSpecialFolderPathA(0, pf, CSIDL_PROGRAM_FILES, FALSE);
+  return std::string(pf) + "\\OrbitProfiler\\";
 #else
-  return L"TodoLinux";
+  return "TodoLinux";
 #endif
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetAppDataPath() {
+std::string Path::GetAppDataPath() {
 #ifdef WIN32
   std::string appData = GetEnvVar("APPDATA");
 #else
@@ -281,17 +243,17 @@ std::wstring Path::GetAppDataPath() {
 #endif
   std::string path = appData + "\\OrbitProfiler\\";
   _mkdir(path.c_str());
-  return s2ws(path);
+  return path;
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetMainDrive() { return s2ws(GetEnvVar("SystemDrive")); }
+std::string Path::GetMainDrive() {
+  return GetEnvVar("SystemDrive");
+}
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetSourceRoot() {
-  std::wstring currentDir = GetExecutablePath();
+std::string Path::GetSourceRoot() {
+  std::string currentDir = GetExecutablePath();
   const int numIterations = 10;
-  const std::wstring fileName = L"bootstrap-orbit";
+  const std::string fileName = "bootstrap-orbit";
 
   for (int i = 0; i < numIterations; ++i) {
     if (ContainsFile(currentDir, fileName)) {
@@ -301,33 +263,29 @@ std::wstring Path::GetSourceRoot() {
     currentDir = GetParentDirectory(currentDir);
   }
 
-  return L"";
+  return "";
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetExternalPath() {
-  if (m_IsPackaged)
-    return GetExecutablePath() + L"external/";
+std::string Path::GetExternalPath() {
+  if (is_packaged_)
+    return GetExecutablePath() + "external/";
   else
-    return GetSourceRoot() + L"external/";
+    return GetSourceRoot() + "external/";
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Path::GetHome() {
+std::string Path::GetHome() {
   std::string home = GetEnvVar("HOME") + "//";
-  return s2ws(home);
+  return home;
 }
 
-//-----------------------------------------------------------------------------
-bool Path::ContainsFile(const std::wstring a_Dir, const std::wstring a_File) {
+bool Path::ContainsFile(const std::string a_Dir, const std::string a_File) {
   auto fileList = ListFiles(a_Dir, a_File);
-  for (const std::wstring& file : fileList) {
+  for (const std::string& file : fileList) {
     if (Contains(file, a_File)) return true;
   }
   return false;
 }
 
-//-----------------------------------------------------------------------------
 void Path::Dump() {
   PRINT_VAR(GetExecutableName());
   PRINT_VAR(GetExecutablePath());
@@ -353,28 +311,26 @@ void Path::Dump() {
   PRINT_VAR(GetSourceRoot());
 }
 
-//-----------------------------------------------------------------------------
-bool Path::IsSourceFile(const std::wstring& a_File) {
-  std::wstring ext = Path::GetExtension(a_File);
-  return ext == L".c" || ext == L".cpp" || ext == L".h" || ext == L".hpp" ||
-         ext == L".inl" || ext == L".cxx";
+bool Path::IsSourceFile(const std::string& a_File) {
+  std::string ext = Path::GetExtension(a_File);
+  return ext == ".c" || ext == ".cpp" || ext == ".h" || ext == ".hpp" ||
+         ext == ".inl" || ext == ".cxx";
 }
 
-//-----------------------------------------------------------------------------
-std::vector<std::wstring> Path::ListFiles(
-    const std::wstring& a_Dir,
-    std::function<bool(const std::wstring&)> a_Filter) {
-  std::vector<std::wstring> files;
+std::vector<std::string> Path::ListFiles(
+    const std::string& a_Dir,
+    std::function<bool(const std::string&)> a_Filter) {
+  std::vector<std::string> files;
 
 #ifdef _WIN32
-  std::wstring pattern(a_Dir);
-  pattern.append(L"\\*");
-  WIN32_FIND_DATA data;
-  HANDLE hFind;
-  if ((hFind = FindFirstFile(pattern.c_str(), &data)) != INVALID_HANDLE_VALUE) {
+  std::string pattern(a_Dir);
+  pattern.append("\\*");
+  WIN32_FIND_DATAA data;
+  HANDLE hFind = FindFirstFileA(pattern.c_str(), &data);
+  if (hFind != INVALID_HANDLE_VALUE) {
     do {
       files.push_back(data.cFileName);
-    } while (FindNextFile(hFind, &data) != 0);
+    } while (FindNextFileA(hFind, &data) != 0);
     FindClose(hFind);
   }
 #endif
@@ -382,10 +338,9 @@ std::vector<std::wstring> Path::ListFiles(
   return files;
 }
 
-//-----------------------------------------------------------------------------
-std::vector<std::wstring> Path::ListFiles(const std::wstring& a_Dir,
-                                          const std::wstring& a_Filter) {
-  return ListFiles(a_Dir, [&](const std::wstring& a_Name) {
+std::vector<std::string> Path::ListFiles(const std::string& a_Dir,
+                                          const std::string& a_Filter) {
+  return ListFiles(a_Dir, [&](const std::string& a_Name) {
     return Contains(a_Name, a_Filter);
   });
 }

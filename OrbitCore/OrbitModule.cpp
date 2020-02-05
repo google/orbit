@@ -47,8 +47,8 @@ std::wstring Module::GetPrettyName() {
 
 //-----------------------------------------------------------------------------
 bool Module::IsDll() const {
-  return ToLower(Path::GetExtension(s2ws(m_FullName))) ==
-             std::wstring(L".dll") ||
+  return ToLower(Path::GetExtension(m_FullName)) ==
+             std::string(".dll") ||
          Contains(m_Name, ".so");
 }
 
@@ -112,22 +112,23 @@ std::wstring FindSymbols(const std::wstring& a_ModuleFullPath) {
   // TODO: .debug file might not have same name as module, we should check
   //       for unique identifier in the symbols file...
 
-  std::wstring dir = Path::GetDirectory(a_ModuleFullPath);
-  std::vector<std::wstring> symbolDirectories = {L"~/", Path::GetHome(), dir,
-                                                 dir + L"debug_symbols/"};
-  std::wstring file = Path::StripExtension(Path::GetFileName(a_ModuleFullPath));
+  std::string module_path = ws2s(a_ModuleFullPath);
+  std::string dir = Path::GetDirectory(module_path);
+  std::vector<std::string> symbolDirectories = {"~/", Path::GetHome(), dir,
+                                                dir + "debug_symbols/"};
+  std::string file = Path::StripExtension(Path::GetFileName(module_path));
 
   for (auto& symbolDirectory : symbolDirectories) {
-    std::wstring debugFile = symbolDirectory + file + L".debug";
+    std::string debugFile = symbolDirectory + file + ".debug";
     if (Path::FileExists(debugFile)) {
       PRINT_VAR(debugFile);
-      return debugFile;
+      return s2ws(debugFile);
     }
 
-    debugFile = symbolDirectory + file + L".elf.debug";
+    debugFile = symbolDirectory + file + ".elf.debug";
     if (Path::FileExists(debugFile)) {
       PRINT_VAR(debugFile);
-      return debugFile;
+      return s2ws(debugFile);
     }
   }
 
@@ -137,7 +138,7 @@ std::wstring FindSymbols(const std::wstring& a_ModuleFullPath) {
 //-----------------------------------------------------------------------------
 bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
   m_FileName = FindSymbols(a_PdbName);
-  m_Name = Path::GetFileName(m_FileName);
+  m_Name = s2ws(Path::GetFileName(ws2s(m_FileName)));
 
   {
     SCOPE_TIMER_LOG("nm");
@@ -157,7 +158,7 @@ bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
         func.m_Name = tokens[2];
         func.m_Address = std::stoull(tokens[0], nullptr, 16);
         func.m_PrettyName = LinuxUtils::Demangle(tokens[2].c_str());
-        func.m_Module = ws2s(Path::GetFileName(a_PdbName));
+        func.m_Module = Path::GetFileName(ws2s(a_PdbName));
         func.m_Pdb = this;
         this->AddFunction(func);
       }

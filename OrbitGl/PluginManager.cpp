@@ -13,13 +13,14 @@ PluginManager GPluginManager;
 //-----------------------------------------------------------------------------
 void PluginManager::Initialize() {
 #ifdef _WIN32
-  std::wstring dir = Path::GetPluginPath();
-  std::vector<std::wstring> plugins = Path::ListFiles(dir, L".dll");
+  std::string dir = Path::GetPluginPath();
+  std::vector<std::string> plugins = Path::ListFiles(dir, ".dll");
 
-  for (std::wstring& file : plugins) {
-    HMODULE module = LoadLibrary(file.c_str());
+  for (std::string& file : plugins) {
+    HMODULE module = LoadLibraryA(file.c_str());
     using function = Orbit::Plugin*();
-    function* func = (function*)GetProcAddress(module, "CreateOrbitPlugin");
+    function* func = reinterpret_cast<function*>(
+        GetProcAddress(module, "CreateOrbitPlugin"));
     if (func) {
       Orbit::Plugin* newPlugin = func();
       static int count = 0;

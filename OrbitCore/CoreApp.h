@@ -54,7 +54,7 @@ class CoreApp {
   virtual void StartRemoteCaptureBufferingThread() {}
   virtual void StopRemoteCaptureBufferingThread() {}
 
-  std::vector<std::wstring> m_SymbolLocations;
+  std::vector<std::string> m_SymbolLocations;
 };
 
 extern CoreApp* GCoreApp;

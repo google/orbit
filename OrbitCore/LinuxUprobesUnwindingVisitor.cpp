@@ -194,9 +194,9 @@ void LinuxUprobesUnwindingVisitor::HandleCallstack(
   cs.m_ThreadId = tid;
   for (const auto& frame : frames) {
     // TODO: Avoid repeating symbol resolution by caching already seen PCs.
-    std::wstring moduleName = ToLower(Path::GetFileName(s2ws(frame.map_name)));
+    std::string moduleName = ToLower(Path::GetFileName(frame.map_name));
     std::shared_ptr<Module> moduleFromName =
-        Capture::GTargetProcess->GetModuleFromName(ws2s(moduleName));
+        Capture::GTargetProcess->GetModuleFromName(moduleName);
 
     uint64_t address = frame.pc;
     if (moduleFromName) {

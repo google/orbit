@@ -137,9 +137,8 @@ void ListModules(pid_t a_PID,
         if (end > module->m_AddressEnd) module->m_AddressEnd = end;
 
         module->m_FullName = moduleName;
-        module->m_Name = ws2s(Path::GetFileName(s2ws(module->m_FullName)));
-        module->m_Directory =
-            ws2s(Path::GetDirectory(s2ws(module->m_FullName)));
+        module->m_Name = Path::GetFileName(module->m_FullName);
+        module->m_Directory = Path::GetDirectory(module->m_FullName);
         module->m_PdbSize = Path::FileSize(moduleName);
         auto prettyName = module->GetPrettyName();
         modules[moduleName] = module;

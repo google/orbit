@@ -154,7 +154,7 @@ void Process::EnumerateThreads() {
             std::shared_ptr<Thread> thread = std::make_shared<Thread>();
             thread->m_Handle = thandle;
             thread->m_TID = te.th32ThreadID;
-            m_ThreadNames[thread->m_TID] = GetThreadName(thandle);
+            m_ThreadNames[thread->m_TID] = ws2s(GetThreadName(thandle));
             m_Threads.push_back(thread);
           }
         }
@@ -219,12 +219,11 @@ void Process::SortThreadsById() {
 
 //-----------------------------------------------------------------------------
 std::shared_ptr<Module> Process::FindModule(const std::string& module_name) {
-  std::wstring moduleName =
-      ToLower(Path::GetFileNameNoExt(s2ws(module_name)));
+  std::string moduleName = ToLower(Path::GetFileNameNoExt(module_name));
 
   for (auto& it : m_Modules) {
     std::shared_ptr<Module>& module = it.second;
-    if (ToLower(Path::GetFileNameNoExt(s2ws(module->m_Name))) == moduleName) {
+    if (ToLower(Path::GetFileNameNoExt(module->m_Name)) == moduleName) {
       return module;
     }
   }
@@ -357,13 +356,13 @@ void Process::FindPdbs(const std::vector<std::string>& a_SearchLocations) {
     std::shared_ptr<Module> module = modulePair.second;
 
     if (!module->m_FoundPdb) {
-      std::string moduleName = ToLower(s2ws(module->m_Name));
+      std::string moduleName = ToLower(module->m_Name);
       std::string pdbName = Path::StripExtension(moduleName) + ".pdb";
 
       const std::vector<std::string>& pdbs = nameToPaths[pdbName];
 
       for (const std::string& pdb : pdbs) {
-        module->m_PdbName = ws2s(pdb);
+        module->m_PdbName = pdb;
         module->m_FoundPdb = true;
         module->LoadDebugInfo();
 

@@ -134,8 +134,8 @@ void Debugger::DebuggerThread(const std::wstring& a_ProcessName,
   si.cb = sizeof(si);
   ZeroMemory(&pi, sizeof(pi));
 
-  std::wstring dir =
-      a_WorkingDir.size() ? a_WorkingDir : Path::GetDirectory(a_ProcessName);
+  std::wstring dir = a_WorkingDir.size() ?
+      a_WorkingDir : s2ws(Path::GetDirectory(ws2s(a_ProcessName)));
   std::wstring args = a_ProcessName + L" " + a_Args;
   TCHAR commandline[MAX_PATH + 1];
   int numChars = (int)std::min((size_t)MAX_PATH, args.size());

@@ -121,9 +121,9 @@ void LinuxPerf::HandleLine(const std::string& a_Line) {
       return;
     }
 
-    std::wstring moduleName = ToLower(Path::GetFileName(s2ws(module)));
+    std::string moduleName = ToLower(Path::GetFileName(module));
     std::shared_ptr<Module> moduleFromName =
-        Capture::GTargetProcess->GetModuleFromName(ws2s(moduleName));
+        Capture::GTargetProcess->GetModuleFromName(moduleName);
 
     if (moduleFromName) {
       uint64_t new_address = moduleFromName->ValidateAddress(address);
