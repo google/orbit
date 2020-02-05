@@ -58,7 +58,7 @@ std::wstring ProcessesDataView::GetValue(int row, int col) {
       value = std::to_wstring((long)process.GetID());
       break;
     case PDV_ProcessName:
-      value = process.GetName();
+      value = s2ws(process.GetName());
       if (process.IsElevated()) {
         value += L"*";
       }
@@ -82,7 +82,7 @@ std::wstring ProcessesDataView::GetValue(int row, int col) {
 //-----------------------------------------------------------------------------
 std::wstring ProcessesDataView::GetToolTip(int a_Row, int a_Column) {
   const Process& process = *GetProcess(a_Row);
-  return process.GetFullName();
+  return s2ws(process.GetFullName());
 }
 
 //-----------------------------------------------------------------------------
@@ -230,7 +230,7 @@ void ProcessesDataView::ClearSelectedProcess() {
 bool ProcessesDataView::SelectProcess(const std::wstring& a_ProcessName) {
   for (uint32_t i = 0; i < GetNumElements(); ++i) {
     Process& process = *GetProcess(i);
-    if (process.GetFullName().find(a_ProcessName) != std::string::npos) {
+    if (process.GetFullName().find(ws2s(a_ProcessName)) != std::string::npos) {
       OnSelect(i);
       Capture::GPresetToLoad = L"";
       return true;
@@ -266,7 +266,7 @@ void ProcessesDataView::OnFilter(const std::wstring& a_Filter) {
 
   for (uint32_t i = 0; i < processes.size(); ++i) {
     const Process& process = *processes[i];
-    std::wstring name = ToLower(process.GetName());
+    std::wstring name = s2ws(ToLower(process.GetName()));
     std::wstring type = process.GetIs64Bit() ? L"64" : L"32";
 
     bool match = true;

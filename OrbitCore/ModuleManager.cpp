@@ -92,7 +92,8 @@ void ModuleManager::DequeueAndLoad() {
     std::wstring pdbName = m_ModulesQueue.back();
     m_ModulesQueue.pop_back();
 
-    module = Capture::GTargetProcess->FindModule(Path::GetFileName(pdbName));
+    module = Capture::GTargetProcess->FindModule(
+        ws2s(Path::GetFileName(pdbName)));
     if (module) {
       GPdbDbg = module->m_Pdb;
       if (module->m_PdbName == "") {

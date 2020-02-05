@@ -96,9 +96,9 @@ bool Capture::Inject(bool a_WaitForConnection) {
   GInjected = inject.Inject(dllName.c_str(), *GTargetProcess, "OrbitInit");
   if (GInjected) {
     ORBIT_LOG(absl::StrFormat("Injected in %s",
-                              ws2s(GTargetProcess->GetName()).c_str()));
-    GInjectedProcessW = GTargetProcess->GetName();
-    GInjectedProcess = ws2s(GInjectedProcessW);
+                              GTargetProcess->GetName().c_str()));
+    GInjectedProcess = GTargetProcess->GetName();
+    GInjectedProcessW = s2ws(GInjectedProcess);
   }
 
   if (a_WaitForConnection) {
@@ -126,9 +126,9 @@ bool Capture::InjectRemote() {
 
   if (GInjected) {
     ORBIT_LOG(absl::StrFormat("Injected in %s",
-                              ws2s(GTargetProcess->GetName()).c_str()));
-    GInjectedProcessW = GTargetProcess->GetName();
-    GInjectedProcess = ws2s(GInjectedProcessW);
+                              GTargetProcess->GetName().c_str()));
+    GInjectedProcess = GTargetProcess->GetName();
+    GInjectedProcessW = s2ws(GInjectedProcess);
   }
 
   return GInjected;
@@ -525,7 +525,7 @@ void Capture::LoadSession(const std::shared_ptr<Session>& a_Session) {
 //-----------------------------------------------------------------------------
 void Capture::SaveSession(const std::wstring& a_FileName) {
   Session session;
-  session.m_ProcessFullPath = GTargetProcess->GetFullName();
+  session.m_ProcessFullPath = s2ws(GTargetProcess->GetFullName());
 
   GCoreApp->SendToUiNow(L"UpdateProcessParams");
 

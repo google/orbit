@@ -156,8 +156,10 @@ void TcpServer::Receive(const Message& a_Message) {
       break;
     }
     case Msg_ThreadInfo: {
+      // TODO: get rid of wchar_t
       std::wstring threadName((wchar_t*)a_Message.GetData());
-      Capture::GTargetProcess->SetThreadName(a_Message.m_ThreadId, threadName);
+      Capture::GTargetProcess->SetThreadName(a_Message.m_ThreadId,
+                                             ws2s(threadName));
       PRINT_VAR(threadName);
       break;
     }

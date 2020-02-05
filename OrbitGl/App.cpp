@@ -352,7 +352,7 @@ void OrbitApp::LoadSystrace(const std::string& a_FileName) {
   }
 
   for (const auto& pair : systrace->GetThreadNames()) {
-    Capture::GTargetProcess->SetThreadName(pair.first, s2ws(pair.second));
+    Capture::GTargetProcess->SetThreadName(pair.first, pair.second);
   }
 
   SystraceManager::Get().Add(systrace);
@@ -378,7 +378,7 @@ void OrbitApp::AppendSystrace(const std::string& a_FileName,
   }
 
   for (const auto& pair : systrace->GetThreadNames()) {
-    Capture::GTargetProcess->SetThreadName(pair.first, s2ws(pair.second));
+    Capture::GTargetProcess->SetThreadName(pair.first, pair.second);
   }
 
   SystraceManager::Get().Add(systrace);
@@ -682,7 +682,7 @@ void OrbitApp::MainTick() {
 
   if (Capture::GProcessToInject != L"") {
     std::cout << "Injecting into "
-              << ws2s(Capture::GTargetProcess->GetFullName()) << std::endl;
+              << Capture::GTargetProcess->GetFullName() << std::endl;
     std::cout << "Orbit host: " << ws2s(Capture::GCaptureHost) << std::endl;
     GOrbitApp->SelectProcess(Capture::GProcessToInject);
     Capture::InjectRemote();
@@ -883,7 +883,7 @@ std::wstring OrbitApp::GetCaptureFileName() {
   time_t timestamp =
       std::chrono::system_clock::to_time_t(Capture::GCaptureTimePoint);
   std::wstring timestamp_string = s2ws(OrbitUtils::FormatTime(timestamp));
-  return Path::StripExtension(Capture::GTargetProcess->GetName()) + L"_" +
+  return Path::StripExtension(s2ws(Capture::GTargetProcess->GetName())) + L"_" +
          timestamp_string + L".orbit";
 }
 

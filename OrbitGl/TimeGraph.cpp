@@ -745,7 +745,7 @@ void TimeGraph::DrawThreadTracks(bool a_Picking) {
     std::shared_ptr<ThreadTrack> track = GetThreadTrack(threadId);
     if (track->GetName().empty()) {
       std::string threadName =
-          ws2s(Capture::GTargetProcess->GetThreadNameFromTID(threadId));
+          Capture::GTargetProcess->GetThreadNameFromTID(threadId);
       track->SetName(threadName);
     }
 
