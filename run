@@ -1,2 +1,3 @@
 #!/bin/bash
-./build/OrbitQt/Orbit
+cd build/OrbitQt/
+./Orbit
