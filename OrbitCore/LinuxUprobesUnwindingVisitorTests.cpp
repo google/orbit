@@ -5,18 +5,6 @@
 
 #include "LinuxUprobesUnwindingVisitor.h"
 
-namespace {
-Timer MakeTestTimer(pid_t tid, uint64_t begin_timestamp, uint64_t end_timestamp,
-                    uint64_t function_address) {
-  Timer timer;
-  timer.m_TID = tid;
-  timer.m_Start = begin_timestamp;
-  timer.m_End = end_timestamp;
-  timer.m_FunctionAddress = function_address;
-  return timer;
-}
-}  // namespace
-
 TEST(UprobesTimerManager, OneUprobe) {
   constexpr pid_t tid = 42;
   bool process_uretprobes_res;
@@ -27,7 +15,7 @@ TEST(UprobesTimerManager, OneUprobe) {
 
   process_uretprobes_res =
       timer_manager.ProcessUretprobes(tid, 2, &processed_timer);
-  EXPECT_TRUE(process_uretprobes_res);
+  ASSERT_TRUE(process_uretprobes_res);
   EXPECT_EQ(processed_timer.m_TID, tid);
   EXPECT_EQ(processed_timer.m_Start, 1);
   EXPECT_EQ(processed_timer.m_End, 2);
@@ -47,7 +35,7 @@ TEST(UprobesTimerManager, TwoNestedUprobesAndAnotherUprobe) {
 
   process_uretprobes_res =
       timer_manager.ProcessUretprobes(tid, 3, &processed_timer);
-  EXPECT_TRUE(process_uretprobes_res);
+  ASSERT_TRUE(process_uretprobes_res);
   EXPECT_EQ(processed_timer.m_TID, tid);
   EXPECT_EQ(processed_timer.m_Start, 2);
   EXPECT_EQ(processed_timer.m_End, 3);
@@ -56,7 +44,7 @@ TEST(UprobesTimerManager, TwoNestedUprobesAndAnotherUprobe) {
 
   process_uretprobes_res =
       timer_manager.ProcessUretprobes(tid, 4, &processed_timer);
-  EXPECT_TRUE(process_uretprobes_res);
+  ASSERT_TRUE(process_uretprobes_res);
   EXPECT_EQ(processed_timer.m_TID, tid);
   EXPECT_EQ(processed_timer.m_Start, 1);
   EXPECT_EQ(processed_timer.m_End, 4);
@@ -67,7 +55,7 @@ TEST(UprobesTimerManager, TwoNestedUprobesAndAnotherUprobe) {
 
   process_uretprobes_res =
       timer_manager.ProcessUretprobes(tid, 6, &processed_timer);
-  EXPECT_TRUE(process_uretprobes_res);
+  ASSERT_TRUE(process_uretprobes_res);
   EXPECT_EQ(processed_timer.m_TID, tid);
   EXPECT_EQ(processed_timer.m_Start, 5);
   EXPECT_EQ(processed_timer.m_End, 6);
@@ -88,7 +76,7 @@ TEST(UprobesTimerManager, TwoUprobesDifferentThreads) {
 
   process_uretprobes_res =
       timer_manager.ProcessUretprobes(tid, 3, &processed_timer);
-  EXPECT_TRUE(process_uretprobes_res);
+  ASSERT_TRUE(process_uretprobes_res);
   EXPECT_EQ(processed_timer.m_TID, tid);
   EXPECT_EQ(processed_timer.m_Start, 1);
   EXPECT_EQ(processed_timer.m_End, 3);
@@ -97,14 +85,12 @@ TEST(UprobesTimerManager, TwoUprobesDifferentThreads) {
 
   process_uretprobes_res =
       timer_manager.ProcessUretprobes(tid2, 4, &processed_timer);
-  EXPECT_TRUE(process_uretprobes_res);
+  ASSERT_TRUE(process_uretprobes_res);
   EXPECT_EQ(processed_timer.m_TID, tid2);
   EXPECT_EQ(processed_timer.m_Start, 2);
   EXPECT_EQ(processed_timer.m_End, 4);
   EXPECT_EQ(processed_timer.m_Depth, 0);
   EXPECT_EQ(processed_timer.m_FunctionAddress, 200);
-
-  timer_manager.ProcessUprobes(tid, 1, 100);
 }
 
 TEST(UprobesTimerManager, OnlyRetprobe) {
@@ -115,7 +101,7 @@ TEST(UprobesTimerManager, OnlyRetprobe) {
 
   process_uretprobes_res =
       timer_manager.ProcessUretprobes(tid, 2, &processed_timer);
-  EXPECT_FALSE(process_uretprobes_res);
+  ASSERT_FALSE(process_uretprobes_res);
 }
 
 namespace {
