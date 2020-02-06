@@ -153,7 +153,7 @@ void BpfTrace::CommandCallback(const std::string& a_Line) {
       Timer& timer = timers.back();
       uint64_t nanos = std::stoull(timestamp);
       timer.m_End = nanos;
-      GCoreApp->ProcessTimer(&timer, functionAddress);
+      GCoreApp->ProcessTimer(timer, functionAddress);
       timers.pop_back();
     }
   }
@@ -255,7 +255,7 @@ void BpfTrace::CommandCallbackWithCallstacks(const std::string& a_Line) {
       Timer& timer = timers.back();
       uint64_t nanos = std::stoull(timestamp);
       timer.m_End = nanos;
-      GCoreApp->ProcessTimer(&timer, functionAddress);
+      GCoreApp->ProcessTimer(timer, functionAddress);
       timers.pop_back();
     }
     return;

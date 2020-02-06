@@ -244,13 +244,14 @@ void OrbitApp::ProcessBufferedCaptureData() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::ProcessTimer(Timer* a_Timer, const std::string& a_FunctionName) {
+void OrbitApp::ProcessTimer(const Timer& a_Timer,
+                            const std::string& a_FunctionName) {
   if (ConnectionManager::Get().IsService()) {
     ScopeLock lock(m_TimerMutex);
-    m_TimerBuffer.push_back(*a_Timer);
+    m_TimerBuffer.push_back(a_Timer);
   } else {
-    GCurrentTimeGraph->ProcessTimer(*a_Timer);
-    ++Capture::GFunctionCountMap[a_Timer->m_FunctionAddress];
+    GCurrentTimeGraph->ProcessTimer(a_Timer);
+    ++Capture::GFunctionCountMap[a_Timer.m_FunctionAddress];
   }
 }
 

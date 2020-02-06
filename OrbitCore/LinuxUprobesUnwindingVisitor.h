@@ -20,6 +20,26 @@
 // uretprobes we can then rebuild the missing part by joining together the parts
 // on the stack of callstacks associated with that thread.
 
+class UprobesTimerManager {
+ public:
+  UprobesTimerManager() = default;
+
+  UprobesTimerManager(const UprobesTimerManager&) = delete;
+  UprobesTimerManager& operator=(const UprobesTimerManager&) = delete;
+
+  UprobesTimerManager(UprobesTimerManager&&) = default;
+  UprobesTimerManager& operator=(UprobesTimerManager&&) = default;
+
+  void ProcessUprobes(pid_t tid, uint64_t begin_timestamp,
+                      uint64_t function_address);
+  // TODO: use std::optional once we switch to C++17.
+  bool ProcessUretprobes(pid_t tid, uint64_t end_timestamp, Timer* timer);
+
+ private:
+  // This map keeps the stack of the dynamically-instrumented functions entered.
+  std::unordered_map<pid_t, std::vector<Timer>> tid_timer_stacks_{};
+};
+
 class UprobesCallstackManager {
  public:
   UprobesCallstackManager() = default;
@@ -72,12 +92,12 @@ class LinuxUprobesUnwindingVisitor : public LinuxPerfEventVisitor {
 
  private:
   pid_t pid_;
-  // This map keeps the stack of the dynamically-instrumented functions entered.
-  std::unordered_map<pid_t, std::vector<Timer>> tid_timer_stacks_{};
+  UprobesTimerManager timer_manager_{};
 
   LibunwindstackUnwinder unwinder_{};
   UprobesCallstackManager callstack_manager_{};
 
+  static void HandleTimer(const Timer& timer);
   static void HandleCallstack(
       pid_t tid, uint64_t timestamp,
       const std::vector<unwindstack::FrameData>& frames);

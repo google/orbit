@@ -73,7 +73,8 @@ class OrbitApp : public CoreApp {
   virtual void Disassemble(const std::string& a_FunctionName,
                            DWORD64 a_VirtualAddress, const char* a_MachineCode,
                            size_t a_Size);
-  virtual void ProcessTimer(Timer* a_Timer, const std::string& a_FunctionName);
+  virtual void ProcessTimer(const Timer& a_Timer,
+                            const std::string& a_FunctionName);
   virtual void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack);
   virtual void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack);
   virtual void ProcessCallStack(CallStack& a_CallStack);
