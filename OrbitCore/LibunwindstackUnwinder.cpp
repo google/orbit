@@ -55,10 +55,6 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
     PRINT("LibunwindstackUnwinder::Unwind: unwinding error: %s at %#016lx\n",
           LibunwindstackErrorString(unwinder.LastErrorCode()).c_str(),
           unwinder.LastErrorAddress());
-    for (const unwindstack::FrameData& frame : unwinder.frames()) {
-      PRINT(unwinder.FormatFrame(frame) + "\n");
-    }
-    PRINT("\n");
     return {};
   }
 
