@@ -284,7 +284,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
 //-----------------------------------------------------------------------------
 void CaptureWindow::FindCode(DWORD64 address) {
 #ifdef _WIN32
-  SCOPE_TIMER_LOG(L"FindCode");
+  SCOPE_TIMER_LOG("FindCode");
 
   LineInfo lineInfo;
 
