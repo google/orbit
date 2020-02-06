@@ -22,7 +22,7 @@ void BpfTraceVisitor::visit(LinuxUretprobeEvent* a_Event) {
     Timer& timer = timers.back();
     timer.m_End = a_Event->Timestamp();
     GCoreApp->ProcessTimer(
-        &timer, std::to_string(a_Event->GetFunction()->GetVirtualAddress()));
+        timer, std::to_string(a_Event->GetFunction()->GetVirtualAddress()));
     timers.pop_back();
   }
 }
@@ -44,7 +44,7 @@ void BpfTraceVisitor::visit(LinuxUretprobeEventWithStack* a_Event) {
     Timer& timer = timers.back();
     timer.m_End = a_Event->Timestamp();
     GCoreApp->ProcessTimer(
-        &timer, std::to_string(a_Event->GetFunction()->GetVirtualAddress()));
+        timer, std::to_string(a_Event->GetFunction()->GetVirtualAddress()));
     timers.pop_back();
   }
 }

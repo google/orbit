@@ -97,6 +97,12 @@ void LinuxEventTracerThread::Run(
     LinuxPerfUtils::start_capturing(fd);
   }
 
+  constexpr uint64_t EVENT_COUNT_WINDOW_S = 5;
+  uint64_t event_count_window_begin_ns = 0;
+  uint64_t sched_switch_count = 0;
+  uint64_t sample_count = 0;
+  uint64_t uprobes_count = 0;
+
   bool new_events = false;
 
   while (!(*a_ExitRequested)) {
@@ -165,6 +171,8 @@ void LinuxEventTracerThread::Run(
               context_switch.m_ProcessorNumber = event.CPU();
               GCoreApp->ProcessContextSwitch(context_switch);
             }
+
+            ++sched_switch_count;
           } break;
 
           // system-wide profiling
@@ -194,6 +202,8 @@ void LinuxEventTracerThread::Run(
               context_switch.m_ProcessorNumber = event.CPU();
               GCoreApp->ProcessContextSwitch(context_switch);
             }
+
+            ++sched_switch_count;
           } break;
 
           case PERF_RECORD_FORK: {
@@ -233,6 +243,8 @@ void LinuxEventTracerThread::Run(
                   std::make_unique<LinuxUprobeEventWithStack>(
                       std::move(sample)));
 
+              ++uprobes_count;
+
             } else if (is_uretprobes) {
               auto sample =
                   ring_buffer.ConsumeRecord<LinuxUretprobeEventWithStack>(
@@ -243,11 +255,15 @@ void LinuxEventTracerThread::Run(
                   std::make_unique<LinuxUretprobeEventWithStack>(
                       std::move(sample)));
 
+              ++uprobes_count;
+
             } else {
               auto sample =
                   ring_buffer.ConsumeRecord<LinuxStackSampleEvent>(header);
               uprobe_event_processor.Push(
                   std::make_unique<LinuxStackSampleEvent>(std::move(sample)));
+
+              ++sample_count;
             }
           } break;
 
@@ -260,6 +276,26 @@ void LinuxEventTracerThread::Run(
             PRINT("Unexpected perf_event_header::type: %u\n", header.type);
             ring_buffer.SkipRecord(header);
           } break;
+        }
+
+        if (event_count_window_begin_ns == 0) {
+          event_count_window_begin_ns = OrbitTicks(CLOCK_MONOTONIC);
+        } else if (event_count_window_begin_ns +
+                       EVENT_COUNT_WINDOW_S * 1'000'000'000 <
+                   OrbitTicks(CLOCK_MONOTONIC)) {
+          PRINT(
+              "Events per second (last %lu s): "
+              "sched switches: %lu; "
+              "samples: %lu; "
+              "u(ret)probes: %lu\n",
+              EVENT_COUNT_WINDOW_S,
+              sched_switch_count / EVENT_COUNT_WINDOW_S,
+              sample_count / EVENT_COUNT_WINDOW_S,
+              uprobes_count / EVENT_COUNT_WINDOW_S);
+          sched_switch_count = 0;
+          sample_count = 0;
+          uprobes_count = 0;
+          event_count_window_begin_ns = OrbitTicks(CLOCK_MONOTONIC);
         }
       }
     }

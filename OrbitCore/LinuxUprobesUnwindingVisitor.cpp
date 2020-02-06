@@ -8,6 +8,34 @@
 #include "OrbitProcess.h"
 #include "Path.h"
 
+void UprobesTimerManager::ProcessUprobes(pid_t tid, uint64_t begin_timestamp,
+                                         uint64_t function_address) {
+  std::vector<Timer>& tid_timer_stack = tid_timer_stacks_[tid];
+  Timer timer;
+  timer.m_TID = tid;
+  timer.m_Start = begin_timestamp;
+  timer.m_Depth = static_cast<uint8_t>(tid_timer_stack.size());
+  timer.m_FunctionAddress = function_address;
+  tid_timer_stack.push_back(timer);
+}
+
+bool UprobesTimerManager::ProcessUretprobes(pid_t tid, uint64_t end_timestamp,
+                                            Timer* timer) {
+  std::vector<Timer>& tid_timer_stack = tid_timer_stacks_[tid];
+
+  if (!tid_timer_stack.empty()) {
+    *timer = tid_timer_stack.back();
+    tid_timer_stack.pop_back();
+    timer->m_End = end_timestamp;
+    if (tid_timer_stack.empty()) {
+      tid_timer_stacks_.erase(tid);
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
 std::vector<unwindstack::FrameData>
 UprobesCallstackManager::JoinCallstackWithPreviousUprobesCallstacks(
     const std::vector<unwindstack::FrameData>& this_callstack,
@@ -117,12 +145,8 @@ void LinuxUprobesUnwindingVisitor::visit(LinuxStackSampleEvent* event) {
 }
 
 void LinuxUprobesUnwindingVisitor::visit(LinuxUprobeEventWithStack* event) {
-  Timer timer;
-  timer.m_TID = event->TID();
-  timer.m_Start = event->Timestamp();
-  timer.m_Depth = static_cast<uint8_t>(tid_timer_stacks_[event->TID()].size());
-  timer.m_FunctionAddress = event->GetFunction()->GetVirtualAddress();
-  tid_timer_stacks_[event->TID()].push_back(timer);
+  timer_manager_.ProcessUprobes(event->TID(), event->Timestamp(),
+                                event->GetFunction()->GetVirtualAddress());
 
   const std::vector<unwindstack::FrameData>& callstack = unwinder_.Unwind(
       event->Registers(), event->StackDump(), event->StackSize());
@@ -138,24 +162,17 @@ void LinuxUprobesUnwindingVisitor::visit(LinuxUprobeEventWithStack* event) {
 }
 
 void LinuxUprobesUnwindingVisitor::visit(LinuxUretprobeEventWithStack* event) {
-  std::vector<Timer>& timers = tid_timer_stacks_[event->TID()];
-
-  if (!timers.empty()) {
-    Timer& timer = timers.back();
-    timer.m_End = event->Timestamp();
-    GCoreApp->ProcessTimer(
-        &timer, std::to_string(event->GetFunction()->GetVirtualAddress()));
-    timers.pop_back();
-    if (timers.empty()) {
-      tid_timer_stacks_.erase(event->TID());
-    }
+  Timer timer;
+  if (timer_manager_.ProcessUretprobes(event->TID(), event->Timestamp(),
+                                       &timer)) {
+    HandleTimer(timer);
   }
 
   const std::vector<unwindstack::FrameData>& callstack = unwinder_.Unwind(
       event->Registers(), event->StackDump(), event->StackSize());
   const std::vector<unwindstack::FrameData>& full_callstack =
       callstack_manager_.ProcessUretprobesCallstack(event->TID(), callstack);
-  // Remove this if we do now want a callstack at the return of an instrumented
+  // Remove this if we do not want a callstack at the return of an instrumented
   // function.
   if (!full_callstack.empty()) {
     HandleCallstack(event->TID(), event->Timestamp(), full_callstack);
@@ -164,6 +181,10 @@ void LinuxUprobesUnwindingVisitor::visit(LinuxUretprobeEventWithStack* event) {
 
 void LinuxUprobesUnwindingVisitor::visit(LinuxMapsEvent* event) {
   unwinder_.SetMaps(event->Maps());
+}
+
+void LinuxUprobesUnwindingVisitor::HandleTimer(const Timer& timer) {
+  GCoreApp->ProcessTimer(timer, std::to_string(timer.m_FunctionAddress));
 }
 
 void LinuxUprobesUnwindingVisitor::HandleCallstack(
