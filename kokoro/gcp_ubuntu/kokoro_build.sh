@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Fail on any error.
-set -e
+#set -e
 
 # Display commands being run.
 # WARNING: please only enable 'set -x' if necessary for debugging, and be very
