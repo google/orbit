@@ -18,3 +18,6 @@ set -e
 # in the job configuration.
 cd ${KOKORO_ARTIFACTS_DIR}/github/orbitprofiler
 ./bootstrap-orbit.sh
+external_ip=$(curl -s -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip)
+echo "INSTANCE_EXTERNAL_IP=${external_ip}"
+sleep 7200;
