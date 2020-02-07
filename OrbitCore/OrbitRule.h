@@ -19,11 +19,3 @@ class Rule {
   bool m_TrackReturnValue;
   std::vector<std::shared_ptr<Variable>> m_TrackedVariables;
 };
-
-class OrbitRule {
-  std::wstring m_FunctionName;
-  std::vector<std::wstring> m_Variables;
-
-  bool m_TrackArguments;
-  bool m_TrackReturnValue;
-};

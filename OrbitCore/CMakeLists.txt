@@ -97,7 +97,6 @@ target_sources(
           OrbitLib.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
-          OrbitRule.cpp
           OrbitSession.cpp
           OrbitThread.cpp
           OrbitType.cpp
