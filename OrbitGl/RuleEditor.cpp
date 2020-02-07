@@ -62,8 +62,7 @@ std::shared_ptr<Variable> RuleEditorWindow::GetLastVariable(
 
     for (size_t i = tokens[0] == "this" ? 1 : 0;
          var && type && i < tokens.size(); ++i) {
-      std::wstring varName = s2ws(tokens[i]);
-      std::shared_ptr<Variable> child = var->FindImmediateChild(varName);
+      std::shared_ptr<Variable> child = var->FindImmediateChild(tokens[i]);
       if (child) {
         var = child;
       }
@@ -99,7 +98,7 @@ void RuleEditorWindow::RefreshAutoComplete(const std::string& a_Line) {
       std::string currentWord = GetCurrentWord(a_Line);
       for (auto& pair : type->m_DataMembers) {
         Variable& var = pair.second;
-        std::string varName = ws2s(var.m_Name);
+        const std::string& varName = var.m_Name;
 
         if (Contains(varName, currentWord)) {
           m_AutoComplete.push_back(varName);
@@ -426,7 +425,7 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size) {
   }
 
   if (m_LastVariable) {
-    std::string typeName = ws2s(m_LastVariable->GetTypeName());
+    const std::string& typeName = m_LastVariable->GetTypeName();
     ImGui::Text("Type: %s\nLength: %i\nOffset:%i", typeName.c_str(),
                 (int)m_LastVariable->m_Size, (int)m_LastVariable->m_Address);
   }
@@ -607,7 +606,7 @@ void RuleEditor::OnReceiveMessage(const Message& a_Message) {
 void RuleEditor::ProcessVariable(const std::shared_ptr<Variable> a_Variable,
                                  char* a_Data) {
   if (a_Variable->m_Size == 4) {
-    GCardContainer.Update(ws2s(a_Variable->m_Name), *((float*)a_Data));
+    GCardContainer.Update(a_Variable->m_Name, *((float*)a_Data));
   }
 }
 

@@ -23,7 +23,7 @@ struct DiaParser {
   static std::wstring GetSymbolType(IDiaSymbol*);
   static std::wstring GetName(IDiaSymbol*);
 
-  std::wstring GetBasicType(DWORD a_BaseType);
+  std::string GetBasicType(uint32_t a_BaseType);
   ULONGLONG GetSize(IDiaSymbol*);
   DWORD GetSymbolID(IDiaSymbol*);
   DWORD GetTypeID(IDiaSymbol*);

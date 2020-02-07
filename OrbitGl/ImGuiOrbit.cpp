@@ -643,7 +643,7 @@ void WatchWindow::Draw(const char* title, bool* p_opened) {
                                                // here we add vertical spacing
                                                // to make the tree lines equal
                                                // high.
-      ImGui::Text("%s", ws2s(var.m_Name).c_str());
+      ImGui::Text("%s", var.m_Name.c_str());
       ImGui::NextColumn();
       ImGui::AlignFirstTextHeightToWidgets();
 

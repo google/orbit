@@ -8,6 +8,7 @@
 #include "BaseTypes.h"
 #include "SerializationMacros.h"
 #include "Utils.h"
+#include "absl/strings/str_format.h"
 
 class Pdb;
 class Type;
@@ -59,12 +60,13 @@ class Variable {
   };
 
   Variable();
-  std::wstring ToString() const {
-    return Format(L"%s %s [%I64u] Size: %lu", m_Type.c_str(), m_Name.c_str(),
-                  m_Address, m_Size);
+  std::string ToString() const {
+    return absl::StrFormat("%s %s [%" PRIu64 "] Size: %lu", m_Type.c_str(),
+                           m_Name.c_str(), m_Address, m_Size);
   }
-  inline const std::wstring& FilterString();
-  void SetType(const std::wstring& a_Type);
+
+  inline const std::string& FilterString();
+  void SetType(const std::string& a_Type);
   void SendValue();
   void SyncValue();
   void ReceiveValue(const Message& a_Msg);
@@ -76,7 +78,7 @@ class Variable {
   void Populate();
   const Type* GetType() const;
   Type* GetType();
-  std::wstring GetTypeName() const;
+  std::string GetTypeName() const;
   Variable::BasicType GetBasicType();
   void UpdateTypeFromString() { m_BasicType = TypeFromString(m_Type); }
   bool IsBasicType() const { return m_BasicType != Invalid; }
@@ -87,9 +89,9 @@ class Variable {
   bool HasChildren() const { return m_Children.size() > 0; }
 
   static std::shared_ptr<Variable> FindVariable(
-      std::shared_ptr<Variable> a_Variable, const std::wstring& a_Name);
-  std::shared_ptr<Variable> FindImmediateChild(const std::wstring& a_Name);
-  static Variable::BasicType TypeFromString(const std::wstring& a_String);
+      std::shared_ptr<Variable> a_Variable, const std::string& a_Name);
+  std::shared_ptr<Variable> FindImmediateChild(const std::string& a_Name);
+  static Variable::BasicType TypeFromString(const std::string& a_String);
 
   //-------------------------------------------------------------------------
   template <typename T>
@@ -131,12 +133,12 @@ class Variable {
     wchar_t m_WChar;
   };
 
-  std::wstring m_Name;
-  std::wstring m_PrettyTypeName;
-  std::wstring m_Type;
-  std::wstring m_Function;
-  std::wstring m_File;
-  std::wstring m_FilterString;
+  std::string m_Name;
+  std::string m_PrettyTypeName;
+  std::string m_Type;
+  std::string m_Function;
+  std::string m_File;
+  std::string m_FilterString;
 
   uint64_t m_Address = 0;
   uint64_t m_BaseOffset = 0;
@@ -157,16 +159,15 @@ class Variable {
 
   std::vector<char> m_RawData;
   std::string m_String;
-  std::wstring m_WideString;
 
   ORBIT_SERIALIZABLE;
 };
 
 //-----------------------------------------------------------------------------
-inline const std::wstring& Variable::FilterString() {
+inline const std::string& Variable::FilterString() {
   if (m_FilterString.size() == 0) {
     m_FilterString =
-        ToLower(m_Name) + L" " + ToLower(m_File) + L" " + ToLower(m_Type);
+        ToLower(m_Name) + " " + ToLower(m_File) + " " + ToLower(m_Type);
   }
 
   return m_FilterString;

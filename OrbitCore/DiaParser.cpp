@@ -547,30 +547,47 @@ void DiaParser::PrintGlobalSymbol(IDiaSymbol* pSymbol) {
   }
 }
 
-std::wstring DiaParser::GetBasicType(DWORD a_BaseType) {
-  static std::unordered_map<DWORD, std::wstring> BasicTypeMap;
-  if (BasicTypeMap.size() == 0) {
-    BasicTypeMap[btNoType] = L"btNoType  ";
-    BasicTypeMap[btVoid] = L"void";
-    BasicTypeMap[btChar] = L"char";
-    BasicTypeMap[btWChar] = L"wchar_t";
-    BasicTypeMap[btInt] = L"int";
-    BasicTypeMap[btUInt] = L"unsigned __int32";
-    BasicTypeMap[btFloat] = L"float";
-    BasicTypeMap[btBCD] = L"btBCD";
-    BasicTypeMap[btBool] = L"bool";
-    BasicTypeMap[btLong] = L"long";
-    BasicTypeMap[btULong] = L"unsigned long";
-    BasicTypeMap[btCurrency] = L"btCurrency";
-    BasicTypeMap[btDate] = L"btDate";
-    BasicTypeMap[btVariant] = L"btVariant";
-    BasicTypeMap[btComplex] = L"btComplex";
-    BasicTypeMap[btBit] = L"btBit";
-    BasicTypeMap[btBSTR] = L"btBSTR";
-    BasicTypeMap[btHresult] = L"btHresult";
+std::string DiaParser::GetBasicType(uint32_t base_type) {
+  switch(base_type) {
+    case btNoType:
+      return "btNoType  ";
+    case btVoid:
+      return "void";
+    case btChar:
+      return "char";
+    case btWChar:
+      return "wchar_t";
+    case btInt:
+      return "int";
+    case btUInt:
+      return "unsigned __int32";
+    case btFloat:
+      return "float";
+    case btBCD:
+      return "btBCD";
+    case btBool:
+      return "bool";
+    case btLong:
+      return "long";
+    case btULong:
+      return "unsigned long";
+    case btCurrency:
+      return "btCurrency";
+    case btDate:
+      return "btDate";
+    case btVariant:
+      return "btVariant";
+    case btComplex:
+      return "btComplex";
+    case btBit:
+      return "btBit";
+    case btBSTR:
+      return "btBSTR";
+    case btHresult:
+      return "btHresult";
   }
 
-  return BasicTypeMap[a_BaseType];
+  return "unknown";
 }
 
 void DiaParser::OrbitAddGlobalSymbol(IDiaSymbol* pSymbol) {
@@ -620,17 +637,17 @@ void DiaParser::OrbitAddGlobalSymbol(IDiaSymbol* pSymbol) {
     if (pSymbol->get_name(&bstrName) == S_OK) {
       if (pSymbol->get_undecoratedName(&bstrUndname) == S_OK) {
         // LOGF(L"%s(%s)\n", bstrName, bstrUndname);
-        Var.m_Name = bstrUndname;
+        Var.m_Name = ws2s(bstrUndname);
         SysFreeString(bstrUndname);
       } else {
         // LOGF(L"%s\n", bstrName);
-        Var.m_Name = bstrName;
+        Var.m_Name = ws2s(bstrName);
       }
 
       SysFreeString(bstrName);
     }
 
-    if (Contains(Var.m_Name, L"GOutput")) {
+    if (Contains(Var.m_Name, "GOutput")) {
       static volatile bool found = false;
       found = true;
     }
@@ -642,7 +659,7 @@ void DiaParser::OrbitAddGlobalSymbol(IDiaSymbol* pSymbol) {
     if (pSymbol->get_type(&globalType.m_Symbol) == S_OK) {
       BSTR bstrTypeName;
       if (globalType.m_Symbol->get_name(&bstrTypeName) == S_OK) {
-        Var.SetType(bstrTypeName);
+        Var.SetType(ws2s(bstrTypeName));
       }
 
       DWORD baseType;
@@ -668,7 +685,7 @@ void DiaParser::OrbitAddGlobalSymbol(IDiaSymbol* pSymbol) {
 
     BSTR bstrFile;
     if (pSymbol->get_sourceFileName(&bstrFile) == S_OK) {
-      Var.m_File = bstrFile;
+      Var.m_File = ws2s(bstrFile);
     }
 
     // Var.SetType( ws2s(szTypeName) );
@@ -1927,11 +1944,11 @@ void DiaParser::GetData(IDiaSymbol* pSymbol, Type* a_OrbitType) {
       LONG lOffset;
       if (pSymbol->get_offset(&lOffset) == S_OK) {
         Variable member;
-        member.m_Name = GetName(pSymbol);
+        member.m_Name = ws2s(GetName(pSymbol));
         member.m_Size = (ULONG)GetSize(pSymbol);
         member.m_TypeIndex = GetTypeID(pSymbol);
-        member.m_Type = GetSymbolType(pSymbol);
-        member.m_PrettyTypeName = GetData(pSymbol);
+        member.m_Type = ws2s(GetSymbolType(pSymbol));
+        member.m_PrettyTypeName = ws2s(GetData(pSymbol));
         member.m_Pdb = a_OrbitType->m_Pdb;
         a_OrbitType->m_DataMembers[lOffset] = member;
         LOGF(L"this+0x%X", lOffset);

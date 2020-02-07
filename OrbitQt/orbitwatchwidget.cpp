@@ -202,23 +202,23 @@ QtProperty* OrbitWatchWidget::AddProp(QtProperty* a_Parent,
                                       const Variable* a_Variable) {
   QtAbstractPropertyManager* manager = GetManager(a_Variable);
   QtProperty* newProperty = nullptr;
-  std::wstring typeName = a_Variable->m_Type == L"" ? a_Variable->GetTypeName()
+  std::string typeName = a_Variable->m_Type.empty() ? a_Variable->GetTypeName()
                                                     : a_Variable->m_Type;
 
   if (a_Variable->m_Children.size()) {
     newProperty =
-        groupManager->addProperty(QString::fromStdWString(a_Variable->m_Name));
+        groupManager->addProperty(QString::fromStdString(a_Variable->m_Name));
 
     for (std::shared_ptr<Variable> member : a_Variable->m_Children) {
       QtProperty* prop = AddProp(newProperty, member.get());
       newProperty->addSubProperty(prop);
     }
 
-    newProperty->setPropertyType(QString::fromStdWString(typeName));
+    newProperty->setPropertyType(QString::fromStdString(typeName));
   } else {
     newProperty =
-        manager->addProperty(QString::fromStdWString(a_Variable->m_Name));
-    newProperty->setPropertyType(QString::fromStdWString(typeName));
+        manager->addProperty(QString::fromStdString(a_Variable->m_Name));
+    newProperty->setPropertyType(QString::fromStdString(typeName));
     newProperty->SetUserData((void*)a_Variable);
 
     AddToMap(a_Variable, newProperty);

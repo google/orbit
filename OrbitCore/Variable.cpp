@@ -17,16 +17,13 @@
 #include "DiaParser.h"
 #endif
 
-//-----------------------------------------------------------------------------
 Variable::Variable() { m_SyncTimer = new Timer(); }
 
-//-----------------------------------------------------------------------------
-void Variable::SetType(const std::wstring& a_Type) {
+void Variable::SetType(const std::string& a_Type) {
   m_Type = a_Type;
   m_BasicType = TypeFromString(a_Type);
 }
 
-//-----------------------------------------------------------------------------
 void Variable::SendValue() {
   if (Capture::Connect()) {
     Message msg(Msg_SetData);
@@ -38,7 +35,6 @@ void Variable::SendValue() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void Variable::SyncValue() {
   if (Capture::Connect()) {
     Message msg(Msg_GetData);
@@ -51,7 +47,6 @@ void Variable::SyncValue() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void Variable::ReceiveValue(const Message& a_Msg) {
   m_SyncTimer->Stop();
   ORBIT_LOGV(m_SyncTimer->ElapsedMillis());
@@ -69,7 +64,6 @@ void Variable::ReceiveValue(const Message& a_Msg) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void Variable::UpdateFromRaw(const std::vector<char>& a_RawData,
                              DWORD64 a_BaseAddress) {
   for (std::shared_ptr<Variable>& var : m_Children) {
@@ -87,17 +81,15 @@ void Variable::UpdateFromRaw(const std::vector<char>& a_RawData,
   }
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Indent(int a_Indent) {
-  std::wstring str;
+std::string Indent(int a_Indent) {
+  std::string str;
   str.reserve(a_Indent);
   for (int i = 0; i < a_Indent; ++i) {
-    str += L" ";
+    str += " ";
   }
   return str;
 }
 
-//-----------------------------------------------------------------------------
 int MaxOffsetWidth(DWORD64 a_Size) {
   DWORD64 size = a_Size;
   int count = 1;
@@ -108,31 +100,29 @@ int MaxOffsetWidth(DWORD64 a_Size) {
   return count;
 }
 
-//-----------------------------------------------------------------------------
 void Variable::Print() {
-  ORBIT_VIZ(L"\n\nClass hierarchy:\n");
+  ORBIT_VIZ("\n\nClass hierarchy:\n");
   PrintHierarchy();
 
   DWORD64 address = 0;
-  std::wstring typeName = GetTypeName();
-  ORBIT_VIZ(Format(L"\n%s size(%i)\n", typeName.c_str(), m_Size));
+  std::string typeName = GetTypeName();
+  ORBIT_VIZ(Format("\n%s size(%i)\n", typeName.c_str(), m_Size));
   Print(1, address, m_Size);
 }
 
-//-----------------------------------------------------------------------------
 void Variable::Print(int a_Indent, DWORD64& a_ByteCounter,
                      DWORD64 a_TotalSize) {
-  std::wstring indent = Indent(a_Indent);
+  std::string indent = Indent(a_Indent);
   int width = MaxOffsetWidth(a_TotalSize);
 
   if (a_ByteCounter != m_Address) {
     int padding = int(m_Address - a_ByteCounter);
-    ORBIT_VIZ(Format(L"[%-*i]%s<alignment member> (size=%i)\n", width,
+    ORBIT_VIZ(Format("[%-*i]%s<alignment member> (size=%i)\n", width,
                      (int)a_ByteCounter, indent.c_str(), padding));
     a_ByteCounter = m_Address;
   }
 
-  ORBIT_VIZ(Format(L"[%-*i]%s%s (%s)\n", width, (int)m_Address, indent.c_str(),
+  ORBIT_VIZ(Format("[%-*i]%s%s (%s)\n", width, (int)m_Address, indent.c_str(),
                    m_Name.c_str(), GetTypeName().c_str()));
 
   if (!HasChildren()) {
@@ -144,12 +134,11 @@ void Variable::Print(int a_Indent, DWORD64& a_ByteCounter,
   }
 }
 
-//-----------------------------------------------------------------------------
 void Variable::PrintHierarchy(int a_Indent) {
   if (Type* type = GetType()) {
     type->LoadDiaInfo();
     ORBIT_VIZ(
-        Format(L"%s%s\n", Indent(a_Indent).c_str(), GetTypeName().c_str()));
+        Format("%s%s\n", Indent(a_Indent).c_str(), GetTypeName().c_str()));
 
     for (std::shared_ptr<Variable> var : m_Children) {
       if (var->m_IsParent) {
@@ -159,7 +148,6 @@ void Variable::PrintHierarchy(int a_Indent) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void Variable::PrintDetails() {
 #ifdef _WIN32
   if (Type* type = GetType()) {
@@ -173,7 +161,6 @@ void Variable::PrintDetails() {
 #endif
 }
 
-//-----------------------------------------------------------------------------
 void Variable::Populate() {
   if (!m_Populated) {
     if (Type* type = GetType()) {
@@ -190,9 +177,8 @@ void Variable::Populate() {
   }
 }
 
-//-----------------------------------------------------------------------------
 std::shared_ptr<Variable> Variable::FindVariable(
-    std::shared_ptr<Variable> a_Variable, const std::wstring& a_Name) {
+    std::shared_ptr<Variable> a_Variable, const std::string& a_Name) {
   if (a_Variable->m_Name == a_Name) {
     return a_Variable;
   }
@@ -206,9 +192,8 @@ std::shared_ptr<Variable> Variable::FindVariable(
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 std::shared_ptr<Variable> Variable::FindImmediateChild(
-    const std::wstring& a_Name) {
+    const std::string& a_Name) {
   for (std::shared_ptr<Variable> var : m_Children) {
     if (var->m_Name == a_Name) {
       return var;
@@ -218,7 +203,6 @@ std::shared_ptr<Variable> Variable::FindImmediateChild(
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 const Type* Variable::GetType() const {
 #ifdef _WIN32
   return m_Pdb ? m_Pdb->GetTypePtrFromId(m_TypeIndex) : nullptr;
@@ -227,7 +211,6 @@ const Type* Variable::GetType() const {
 #endif
 }
 
-//-----------------------------------------------------------------------------
 Type* Variable::GetType() {
 #ifdef _WIN32
   return m_Pdb ? m_Pdb->GetTypePtrFromId(m_TypeIndex) : nullptr;
@@ -236,60 +219,55 @@ Type* Variable::GetType() {
 #endif
 }
 
-//-----------------------------------------------------------------------------
-std::wstring Variable::GetTypeName() const {
+std::string Variable::GetTypeName() const {
   const Type* type = GetType();
-  std::wstring typeName = type ? s2ws(type->GetName()) : L"";
-  return !typeName.empty() ? typeName : m_Type;
+  std::string typeName = type ? type->GetName() : "";
+  return (typeName != "") ? typeName : m_Type;
 }
 
-//-----------------------------------------------------------------------------
 Variable::BasicType Variable::GetBasicType() {
   // TODO: split assignation and get...
   const Type* type = GetType();
-  Variable::BasicType basicType =
-      type && !type->m_Name.empty()
-          ? Variable::TypeFromString(s2ws(type->m_Name))
-          : Variable::TypeFromString(m_Type);
+  Variable::BasicType basicType = type && type->m_Name != ""
+                                      ? Variable::TypeFromString(type->m_Name)
+                                      : Variable::TypeFromString(m_Type);
   m_BasicType = basicType;
   return m_BasicType;
 }
 
-//-----------------------------------------------------------------------------
-Variable::BasicType Variable::TypeFromString(const std::wstring& a_String) {
-  static std::map<std::wstring, BasicType> TypeMap;
+Variable::BasicType Variable::TypeFromString(const std::string& a_String) {
+  static std::map<std::string, BasicType> TypeMap;
   if (TypeMap.size() == 0) {
-    TypeMap[L"int"] = Variable::Int;
-    TypeMap[L"unsigned int"] = Variable::UInt;
-    TypeMap[L"__int8"] = Variable::Int8;
-    TypeMap[L"unsigned __int8"] = Variable::UInt8;
-    TypeMap[L"__int16"] = Variable::Int16;
-    TypeMap[L"unsigned __int16"] = Variable::UInt16;
-    TypeMap[L"__int32"] = Variable::Int32;
-    TypeMap[L"unsigned __int32"] = Variable::UInt32;
-    TypeMap[L"__int64"] = Variable::Int64;
-    TypeMap[L"unsigned __int64"] = Variable::UInt64;
-    TypeMap[L"bool"] = Variable::Bool;
-    TypeMap[L"char"] = Variable::Char;
-    TypeMap[L"signed char"] = Variable::SChar;
-    TypeMap[L"unsigned char"] = Variable::UChar;
-    TypeMap[L"short"] = Variable::Short;
-    TypeMap[L"unsigned short"] = Variable::UShort;
-    TypeMap[L"long"] = Variable::Long;
-    TypeMap[L"unsigned long"] = Variable::ULong;
-    TypeMap[L"long long"] = Variable::LongLong;
-    TypeMap[L"unsigned long long"] = Variable::ULongLong;
-    TypeMap[L"enum"] = Variable::Enum;
-    TypeMap[L"float"] = Variable::Float;
-    TypeMap[L"double"] = Variable::Double;
-    TypeMap[L"long double"] = Variable::LDouble;
-    TypeMap[L"wchar_t"] = Variable::WChar;
+    TypeMap["int"] = Variable::Int;
+    TypeMap["unsigned int"] = Variable::UInt;
+    TypeMap["__int8"] = Variable::Int8;
+    TypeMap["unsigned __int8"] = Variable::UInt8;
+    TypeMap["__int16"] = Variable::Int16;
+    TypeMap["unsigned __int16"] = Variable::UInt16;
+    TypeMap["__int32"] = Variable::Int32;
+    TypeMap["unsigned __int32"] = Variable::UInt32;
+    TypeMap["__int64"] = Variable::Int64;
+    TypeMap["unsigned __int64"] = Variable::UInt64;
+    TypeMap["bool"] = Variable::Bool;
+    TypeMap["char"] = Variable::Char;
+    TypeMap["signed char"] = Variable::SChar;
+    TypeMap["unsigned char"] = Variable::UChar;
+    TypeMap["short"] = Variable::Short;
+    TypeMap["unsigned short"] = Variable::UShort;
+    TypeMap["long"] = Variable::Long;
+    TypeMap["unsigned long"] = Variable::ULong;
+    TypeMap["long long"] = Variable::LongLong;
+    TypeMap["unsigned long long"] = Variable::ULongLong;
+    TypeMap["enum"] = Variable::Enum;
+    TypeMap["float"] = Variable::Float;
+    TypeMap["double"] = Variable::Double;
+    TypeMap["long double"] = Variable::LDouble;
+    TypeMap["wchar_t"] = Variable::WChar;
   }
 
   return TypeMap[a_String];
 }
 
-//-----------------------------------------------------------------------------
 void Variable::SetDouble(double a_Value) {
   switch (m_BasicType) {
     case Variable::Double:
@@ -303,7 +281,6 @@ void Variable::SetDouble(double a_Value) {
   }
 }
 
-//-----------------------------------------------------------------------------
 ORBIT_SERIALIZE_WSTRING(Variable, 0) {
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_Type);

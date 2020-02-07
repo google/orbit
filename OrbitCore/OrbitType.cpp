@@ -193,7 +193,7 @@ int Type::GetOffset(const std::string& a_Member) {
 
   for (auto& pair : m_DataMembersFull) {
     Variable& var = pair.second;
-    if (ws2s(var.m_Name) == a_Member) {
+    if (var.m_Name == a_Member) {
       return pair.first;
     }
   }
@@ -206,7 +206,7 @@ Variable* Type::FindImmediateChild(const std::string& a_Name) {
 
   for (auto& pair : m_DataMembers) {
     Variable& var = pair.second;
-    if (ws2s(var.m_Name) == a_Name) {
+    if (var.m_Name == a_Name) {
       Type* type = var.GetType();
       type->LoadDiaInfo();
       return &var;
@@ -231,7 +231,7 @@ void Type::OutputPadding() const {
     idealNextOffset = offset + memberType.m_Length;
     if (memberType.m_Length > 0 && nextOffset > idealNextOffset) {
       Variable paddingMember;
-      paddingMember.m_Name = L"padding";
+      paddingMember.m_Name = "padding";
       paddingMember.m_TypeIndex = 0xFFFFFFFF;
       paddingMember.m_Size = ULONG(nextOffset - idealNextOffset);
       m_DataMembers[(ULONG)idealNextOffset] = paddingMember;
@@ -308,7 +308,7 @@ std::shared_ptr<Variable> Type::GenerateVariable(DWORD64 a_Address,
   var->m_Pdb = this->m_Pdb;
   var->m_Address = a_Address;
   var->m_TypeIndex = m_Id;
-  var->m_Name = s2ws(a_Name != nullptr ? *a_Name : this->m_Name);
+  var->m_Name = a_Name != nullptr ? *a_Name : this->m_Name;
   var->m_Size = (ULONG)this->m_Length;
 
   // Parents
@@ -334,7 +334,7 @@ std::shared_ptr<Variable> Type::GenerateVariable(DWORD64 a_Address,
     if (!type) continue;
 
     if (type && type->HasMembers()) {
-      std::string name = ws2s(member.m_Name);
+      std::string name = member.m_Name;
       var->AddChild(
           type->GenerateVariable(a_Address + memberOffset, &name));
     } else {
