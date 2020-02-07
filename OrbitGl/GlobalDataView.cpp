@@ -184,7 +184,8 @@ void GlobalsDataView::OnAddToWatch(std::vector<int>& a_Items) {
 
     Type* type = variable.GetType();
     if (type && type->HasMembers()) {
-      var = type->GenerateVariable(variable.m_Address, &variable.m_Name);
+      std::string name = ws2s(variable.m_Name);
+      var = type->GenerateVariable(variable.m_Address, &name);
       var->Print();
     } else {
       var = std::make_shared<Variable>(variable);

@@ -10,9 +10,9 @@ OrbitUnreal GOrbitUnreal;
 
 //-----------------------------------------------------------------------------
 void OrbitUnreal::OnTypeAdded(Type* a_Type) {
-  if (a_Type->m_Name == L"FNameEntry") {
+  if (a_Type->m_Name == "FNameEntry") {
     m_FnameEntryType = a_Type;
-  } else if (a_Type->m_Name == L"UObject") {
+  } else if (a_Type->m_Name == "UObject") {
     m_UObjectType = a_Type;
   }
 }
@@ -39,11 +39,11 @@ bool OrbitUnreal::GenerateUnrealInfo() {
   OrbitUnrealInfo info;
   info.m_GetDisplayNameEntryAddress =
       GOrbitUnreal.m_GetDisplayNameEntryFunc->GetVirtualAddress();
-  info.m_EntryIndexOffset = m_FnameEntryType->GetOffset(L"Index");
-  info.m_UobjectNameOffset = m_UObjectType->GetOffset(L"Name");
-  info.m_EntryNameOffset = m_FnameEntryType->GetOffset(L"AnsiName");
+  info.m_EntryIndexOffset = m_FnameEntryType->GetOffset("Index");
+  info.m_UobjectNameOffset = m_UObjectType->GetOffset("Name");
+  info.m_EntryNameOffset = m_FnameEntryType->GetOffset("AnsiName");
   if (info.m_EntryNameOffset == -1) {
-    info.m_EntryNameOffset = m_FnameEntryType->GetOffset(L"WideName");
+    info.m_EntryNameOffset = m_FnameEntryType->GetOffset("WideName");
   }
 
   if (info.m_EntryNameOffset == -1 || info.m_EntryIndexOffset == -1 ||
