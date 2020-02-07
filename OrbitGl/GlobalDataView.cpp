@@ -11,6 +11,7 @@
 #include "OrbitProcess.h"
 #include "OrbitType.h"
 #include "Pdb.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 GlobalsDataView::GlobalsDataView() {
@@ -67,14 +68,14 @@ std::wstring GlobalsDataView::GetValue(int a_Row, int a_Column) {
 
   const Variable& variable = GetVariable(a_Row);
 
-  std::wstring value;
+  std::string value;
 
   switch (s_HeaderMap[a_Column]) {
     case Variable::INDEX:
-      value = Format(L"%d", a_Row);
+      value = absl::StrFormat("%d", a_Row);
       break;
     case Variable::SELECTED:
-      value = variable.m_Selected ? L"*" : L"";
+      value = variable.m_Selected ? "*" : "";
       break;
     case Variable::NAME:
       value = variable.m_Name;
@@ -86,22 +87,22 @@ std::wstring GlobalsDataView::GetValue(int a_Row, int a_Column) {
       value = variable.m_File;
       break;
     case Variable::MODULE:
-      value = variable.m_Pdb->GetName();
+      value = ws2s(variable.m_Pdb->GetName());
       break;
     /*case Variable::MODBASE:
         value = wxString::Format("0x%I64x", function.m_ModBase);  break;*/
     case Variable::ADDRESS:
-      value = Format(L"0x%llx", variable.m_Address);
+      value = absl::StrFormat("0x%llx", variable.m_Address);
       break;
     case Variable::LINE:
-      value = Format(L"%i", variable.m_Line);
+      value = absl::StrFormat("%i", variable.m_Line);
       break;
     default:
       break;
       ;
   }
 
-  return value;
+  return s2ws(value);
 }
 
 //-----------------------------------------------------------------------------
@@ -184,8 +185,7 @@ void GlobalsDataView::OnAddToWatch(std::vector<int>& a_Items) {
 
     Type* type = variable.GetType();
     if (type && type->HasMembers()) {
-      std::string name = ws2s(variable.m_Name);
-      var = type->GenerateVariable(variable.m_Address, &name);
+      var = type->GenerateVariable(variable.m_Address, &variable.m_Name);
       var->Print();
     } else {
       var = std::make_shared<Variable>(variable);
@@ -216,20 +216,20 @@ void GlobalsDataView::ParallelFilter() {
   std::vector<std::vector<int> > indicesArray;
   indicesArray.resize(numWorkers);
 
-  oqpi_tk::parallel_for("FunctionsDataViewParallelFor", (int)globals.size(),
-                        [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
-                          std::vector<int>& result = indicesArray[a_BlockIndex];
-                          const std::wstring& name =
-                              globals[a_ElementIndex]->FilterString();
+  oqpi_tk::parallel_for(
+      "FunctionsDataViewParallelFor", (int)globals.size(),
+      [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
+        std::vector<int>& result = indicesArray[a_BlockIndex];
+        const std::string& name = globals[a_ElementIndex]->FilterString();
 
-                          for (std::wstring& filterToken : m_FilterTokens) {
-                            if (name.find(filterToken) == std::wstring::npos) {
-                              return;
-                            }
-                          }
+        for (std::wstring& filterToken : m_FilterTokens) {
+          if (name.find(ws2s(filterToken)) == std::string::npos) {
+            return;
+          }
+        }
 
-                          result.push_back(a_ElementIndex);
-                        });
+        result.push_back(a_ElementIndex);
+      });
 
   std::set<int> indicesSet;
   for (std::vector<int>& results : indicesArray) {

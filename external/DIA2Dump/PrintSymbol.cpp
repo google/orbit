@@ -604,29 +604,29 @@ void PrintGlobalSymbol(IDiaSymbol* pSymbol)
     }
 }
 
-std::wstring GetBasicType(DWORD a_BaseType)
+std::string GetBasicType(DWORD a_BaseType)
 {
-    static std::unordered_map<DWORD, std::wstring> BasicTypeMap;
+    static std::unordered_map<DWORD, std::string> BasicTypeMap;
     if (BasicTypeMap.size() == 0)
     {
-        BasicTypeMap[btNoType]  = L"btNoType  ";
-        BasicTypeMap[btVoid]    = L"void";
-        BasicTypeMap[btChar]    = L"char";
-        BasicTypeMap[btWChar]   = L"wchar_t";
-        BasicTypeMap[btInt]     = L"int";
-        BasicTypeMap[btUInt]    = L"unsigned __int32";
-        BasicTypeMap[btFloat]   = L"float";
-        BasicTypeMap[btBCD]     = L"btBCD";
-        BasicTypeMap[btBool]    = L"bool";
-        BasicTypeMap[btLong]    = L"long";
-        BasicTypeMap[btULong]   = L"unsigned long";
-        BasicTypeMap[btCurrency]= L"btCurrency";
-        BasicTypeMap[btDate]    = L"btDate";
-        BasicTypeMap[btVariant] = L"btVariant";
-        BasicTypeMap[btComplex] = L"btComplex";
-        BasicTypeMap[btBit]     = L"btBit";
-        BasicTypeMap[btBSTR]    = L"btBSTR";
-        BasicTypeMap[btHresult] = L"btHresult";
+        BasicTypeMap[btNoType]  = "btNoType  ";
+        BasicTypeMap[btVoid]    = "void";
+        BasicTypeMap[btChar]    = "char";
+        BasicTypeMap[btWChar]   = "wchar_t";
+        BasicTypeMap[btInt]     = "int";
+        BasicTypeMap[btUInt]    = "unsigned __int32";
+        BasicTypeMap[btFloat]   = "float";
+        BasicTypeMap[btBCD]     = "btBCD";
+        BasicTypeMap[btBool]    = "bool";
+        BasicTypeMap[btLong]    = "long";
+        BasicTypeMap[btULong]   = "unsigned long";
+        BasicTypeMap[btCurrency]= "btCurrency";
+        BasicTypeMap[btDate]    = "btDate";
+        BasicTypeMap[btVariant] = "btVariant";
+        BasicTypeMap[btComplex] = "btComplex";
+        BasicTypeMap[btBit]     = "btBit";
+        BasicTypeMap[btBSTR]    = "btBSTR";
+        BasicTypeMap[btHresult] = "btHresult";
     }
 
     return BasicTypeMap[a_BaseType];
@@ -684,13 +684,13 @@ void OrbitAddGlobalSymbol(IDiaSymbol* pSymbol)
             if (pSymbol->get_undecoratedName(&bstrUndname) == S_OK)
             {
                 //LOGF(L"%s(%s)\n", bstrName, bstrUndname);
-                Var.m_Name = bstrUndname;
+                Var.m_Name = ws2s(bstrUndname);
                 SysFreeString(bstrUndname);
             }
             else
             {
                 //LOGF(L"%s\n", bstrName);
-                Var.m_Name = bstrName;
+                Var.m_Name = ws2s(bstrName);
             }
 
             SysFreeString(bstrName);
@@ -705,7 +705,7 @@ void OrbitAddGlobalSymbol(IDiaSymbol* pSymbol)
             BSTR bstrTypeName;
             if (globalType.m_Symbol->get_name(&bstrTypeName) == S_OK)
             {
-                Var.SetType(bstrTypeName);
+                Var.SetType(ws2s(bstrTypeName));
             }
 
             DWORD baseType;
@@ -736,7 +736,7 @@ void OrbitAddGlobalSymbol(IDiaSymbol* pSymbol)
         BSTR bstrFile;
         if (pSymbol->get_sourceFileName(&bstrFile) == S_OK)
         {
-            Var.m_File = bstrFile;
+            Var.m_File = ws2s(bstrFile);
         }
 
         //Var.SetType( ws2s(szTypeName) );
@@ -2018,11 +2018,11 @@ void GetData( IDiaSymbol* pSymbol, Type* a_OrbitType )
         if( pSymbol->get_offset( &lOffset ) == S_OK )
         {
             Variable member;
-            member.m_Name = GetName( pSymbol );
+            member.m_Name = ws2s(GetName( pSymbol ));
             member.m_Size = (ULONG)GetSize( pSymbol );
             member.m_TypeIndex = GetTypeID( pSymbol );
-            member.m_Type = GetSymbolType( pSymbol );
-            member.m_PrettyTypeName = GetData( pSymbol );
+            member.m_Type = ws2s(GetSymbolType( pSymbol ));
+            member.m_PrettyTypeName = ws2s(GetData( pSymbol ));
             member.m_Pdb = a_OrbitType->m_Pdb;
             a_OrbitType->m_DataMembers[lOffset] = member;
             LOGF( L"this+0x%X", lOffset );
