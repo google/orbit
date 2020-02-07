@@ -85,7 +85,7 @@ void Function::PreHook() {
   // Unreal
   if (Capture::GUnrealSupported) {
     Type* parent = GetParentType();
-    if (parent && parent->IsA(L"UObject")) {
+    if (parent && parent->IsA("UObject")) {
       m_OrbitType = Function::UNREAL_ACTOR;
     }
   }

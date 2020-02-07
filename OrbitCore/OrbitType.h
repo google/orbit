@@ -16,16 +16,14 @@
 #include "Variable.h"
 #include "cvconst.h"
 
-//-----------------------------------------------------------------------------
 struct Parent {
   Parent() : m_TypeId(0), m_BaseOffset(0) {}
   Parent(ULONG Id, LONG Offset) : m_TypeId(Id), m_BaseOffset(Offset) {}
   ULONG m_TypeId;
   LONG m_BaseOffset;
-  std::wstring m_Name;
+  std::string m_Name;
 };
 
-//-----------------------------------------------------------------------------
 class Type {
  public:
   Type() {}
@@ -51,8 +49,8 @@ class Type {
   void AddParent(IDiaSymbol* a_Parent);
   const std::map<ULONG, Variable>& GetFullVariableMap() const;
   Pdb* GetPdb() const { return m_Pdb; }
-  const std::wstring& GetName() const { return m_Name; }
-  const std::wstring& GetNameLower() {
+  const std::string& GetName() const { return m_Name; }
+  const std::string& GetNameLower() {
     if (m_NameLower.size() == 0) {
       m_NameLower = ToLower(m_Name);
     }
@@ -63,14 +61,14 @@ class Type {
   std::shared_ptr<OrbitDiaSymbol> GetDiaSymbol();
 #endif
 
-  bool IsA(const std::wstring& a_TypeName);
-  int GetOffset(const std::wstring& a_Member);
+  bool IsA(const std::string& a_TypeName);
+  int GetOffset(const std::string& a_Member);
   bool HasMembers() const { return m_DataMembers.size() > 0; }
-  Variable* FindImmediateChild(const std::wstring& a_Name);
+  Variable* FindImmediateChild(const std::string& a_Name);
 
   std::shared_ptr<Variable> GetTemplateVariable();
   std::shared_ptr<Variable> GenerateVariable(
-      DWORD64 a_Address, const std::wstring* a_Name = nullptr);
+      DWORD64 a_Address, const std::string* a_Name = nullptr);
 
  protected:
   void GenerateDataLayout() const;
@@ -86,8 +84,8 @@ class Type {
   ULONG m_Id = 0;
   ULONG m_UnmodifiedId = 0;
   ULONG m_PointedTypeId = 0;
-  std::wstring m_Name;
-  std::wstring m_NameLower;
+  std::string m_Name;
+  std::string m_NameLower;
   uint64_t m_Length = 0;
   int m_NumVariables = 0;
   int m_NumFunctions = 0;

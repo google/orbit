@@ -239,17 +239,18 @@ Type* Variable::GetType() {
 //-----------------------------------------------------------------------------
 std::wstring Variable::GetTypeName() const {
   const Type* type = GetType();
-  std::wstring typeName = type ? type->GetName() : L"";
-  return (typeName != L"") ? typeName : m_Type;
+  std::wstring typeName = type ? s2ws(type->GetName()) : L"";
+  return !typeName.empty() ? typeName : m_Type;
 }
 
 //-----------------------------------------------------------------------------
 Variable::BasicType Variable::GetBasicType() {
   // TODO: split assignation and get...
   const Type* type = GetType();
-  Variable::BasicType basicType = type && type->m_Name != L""
-                                      ? Variable::TypeFromString(type->m_Name)
-                                      : Variable::TypeFromString(m_Type);
+  Variable::BasicType basicType =
+      type && !type->m_Name.empty()
+          ? Variable::TypeFromString(s2ws(type->m_Name))
+          : Variable::TypeFromString(m_Type);
   m_BasicType = basicType;
   return m_BasicType;
 }

@@ -13,6 +13,7 @@
 #include "OrbitProcess.h"
 #include "OrbitType.h"
 #include "Pdb.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 TypesDataView::TypesDataView() {
@@ -87,11 +88,11 @@ std::wstring TypesDataView::GetValue(int a_Row, int a_Column) {
 
   Type& type = GetType(a_Row);
 
-  std::wstring value;
+  std::string value;
 
   switch (s_HeaderMap[a_Column]) {
     case Type::INDEX:
-      value = Format(L"%d", a_Row);
+      value = absl::StrFormat("%d", a_Row);
       break;
     case Type::SELECTED:
       value = type.m_Selected;
@@ -100,34 +101,34 @@ std::wstring TypesDataView::GetValue(int a_Row, int a_Column) {
       value = type.GetName();
       break;
     case Type::LENGTH:
-      value = Format(L"%d", (int)type.m_Length);
+      value = absl::StrFormat("%d", type.m_Length);
       break;
     case Type::TYPE_ID:
-      value = Format(L"%lu", (int)type.m_Id);
+      value = absl::StrFormat("%lu", type.m_Id);
       break;
     case Type::TYPE_ID_UNMODIFIED:
-      value = Format(L"%lu", (int)type.m_UnmodifiedId);
+      value = absl::StrFormat("%lu", type.m_UnmodifiedId);
       break;
     case Type::NUM_VARIABLES:
-      value = Format(L"%d", type.m_NumVariables);
+      value = absl::StrFormat("%d", type.m_NumVariables);
       break;
     case Type::NUM_FUNCTIONS:
-      value = Format(L"%d", type.m_NumFunctions);
+      value = absl::StrFormat("%d", type.m_NumFunctions);
       break;
     case Type::NUM_BASE_CLASSES:
-      value = Format(L"%d", type.m_NumBaseClasses);
+      value = absl::StrFormat("%d", type.m_NumBaseClasses);
       break;
     case Type::BASE_OFFSET:
-      value = Format(L"%d", type.m_BaseOffset);
+      value = absl::StrFormat("%d", type.m_BaseOffset);
       break;
     case Type::MODULE:
-      value = type.m_Pdb->GetName();
+      value = ws2s(type.m_Pdb->GetName());
       break;
     default:
       break;
   }
 
-  return value;
+  return s2ws(value);
 }
 
 //-----------------------------------------------------------------------------
@@ -149,20 +150,20 @@ void TypesDataView::ParallelFilter(const std::wstring& a_Filter) {
   std::vector<std::vector<int> > indicesArray;
   indicesArray.resize(numWorkers);
 
-  oqpi_tk::parallel_for("TypesDataViewParallelFor", (int)types.size(),
-                        [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
-                          std::vector<int>& result = indicesArray[a_BlockIndex];
-                          const std::wstring& name =
-                              types[a_ElementIndex]->GetNameLower();
+  oqpi_tk::parallel_for(
+      "TypesDataViewParallelFor", (int)types.size(),
+      [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
+        std::vector<int>& result = indicesArray[a_BlockIndex];
+        const std::string& name = types[a_ElementIndex]->GetNameLower();
 
-                          for (std::wstring& filterToken : m_FilterTokens) {
-                            if (name.find(filterToken) == std::wstring::npos) {
-                              return;
-                            }
-                          }
+        for (std::wstring& filterToken : m_FilterTokens) {
+          if (name.find(ws2s(filterToken)) == std::string::npos) {
+            return;
+          }
+        }
 
-                          result.push_back(a_ElementIndex);
-                        });
+        result.push_back(a_ElementIndex);
+      });
 
   std::set<int> indicesSet;
   for (std::vector<int>& results : indicesArray) {

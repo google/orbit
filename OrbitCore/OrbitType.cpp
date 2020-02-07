@@ -25,7 +25,6 @@
 #include "SymbolUtils.h"
 #endif
 
-//-----------------------------------------------------------------------------
 void Type::LoadDiaInfo() {
 #ifdef _WIN32
   if (!m_DiaInfoLoaded) {
@@ -42,7 +41,6 @@ void Type::LoadDiaInfo() {
 #endif
 }
 
-//-----------------------------------------------------------------------------
 void Type::GenerateDiaHierarchy() {
 #ifdef _WIN32
   if (m_HierarchyGenerated) return;
@@ -66,7 +64,6 @@ void Type::GenerateDiaHierarchy() {
 #endif
 }
 
-//-----------------------------------------------------------------------------
 void Type::AddParent(IDiaSymbol* a_Parent) {
 #ifdef _WIN32
   LONG offset;
@@ -83,7 +80,7 @@ void Type::AddParent(IDiaSymbol* a_Parent) {
 
         Parent parent;
         parent.m_BaseOffset = offset;
-        parent.m_Name = VAR_TO_STR(typeId);
+        parent.m_Name = ws2s(VAR_TO_STR(typeId));
         parent.m_TypeId = typeId;
         m_ParentTypes[typeId] = parent;
       }
@@ -92,7 +89,6 @@ void Type::AddParent(IDiaSymbol* a_Parent) {
 #endif
 }
 
-//-----------------------------------------------------------------------------
 void Type::GenerateDiaHierarchy(IDiaSymbol* a_DiaSymbol) {
 #ifdef _WIN32
   DWORD dwSymTag;
@@ -123,7 +119,6 @@ void Type::GenerateDiaHierarchy(IDiaSymbol* a_DiaSymbol) {
 #endif
 }
 
-//-----------------------------------------------------------------------------
 void Type::GenerateDataLayout() const {
   if (m_Hierarchy.size() == 0) {
     GenerateHierarchy(m_Hierarchy);
@@ -139,7 +134,6 @@ void Type::GenerateDataLayout() const {
   }
 }
 
-//-----------------------------------------------------------------------------
 void Type::ListDataMembers(ULONG a_BaseOffset,
                            std::map<ULONG, Variable>& o_DataMembersFull) const {
   for (auto& pair : m_DataMembers) {
@@ -156,14 +150,12 @@ void Type::ListDataMembers(ULONG a_BaseOffset,
   }
 }
 
-//-----------------------------------------------------------------------------
 const std::map<ULONG, Variable>& Type::GetFullVariableMap() const {
   GenerateDataLayout();
   return m_DataMembersFull;
 }
 
 #ifdef _WIN32
-//-----------------------------------------------------------------------------
 std::shared_ptr<OrbitDiaSymbol> Type::GetDiaSymbol() {
   if (!m_Pdb) {
     return std::make_shared<OrbitDiaSymbol>();
@@ -178,8 +170,7 @@ std::shared_ptr<OrbitDiaSymbol> Type::GetDiaSymbol() {
 }
 #endif
 
-//-----------------------------------------------------------------------------
-bool Type::IsA(const std::wstring& a_TypeName) {
+bool Type::IsA(const std::string& a_TypeName) {
   GenerateDiaHierarchy();
 
   if (m_Name == a_TypeName) {
@@ -197,13 +188,12 @@ bool Type::IsA(const std::wstring& a_TypeName) {
   return false;
 }
 
-//-----------------------------------------------------------------------------
-int Type::GetOffset(const std::wstring& a_Member) {
+int Type::GetOffset(const std::string& a_Member) {
   LoadDiaInfo();
 
   for (auto& pair : m_DataMembersFull) {
     Variable& var = pair.second;
-    if (var.m_Name == a_Member) {
+    if (ws2s(var.m_Name) == a_Member) {
       return pair.first;
     }
   }
@@ -211,13 +201,12 @@ int Type::GetOffset(const std::wstring& a_Member) {
   return -1;
 }
 
-//-----------------------------------------------------------------------------
-Variable* Type::FindImmediateChild(const std::wstring& a_Name) {
+Variable* Type::FindImmediateChild(const std::string& a_Name) {
   LoadDiaInfo();
 
   for (auto& pair : m_DataMembers) {
     Variable& var = pair.second;
-    if (var.m_Name == a_Name) {
+    if (ws2s(var.m_Name) == a_Name) {
       Type* type = var.GetType();
       type->LoadDiaInfo();
       return &var;
@@ -227,7 +216,6 @@ Variable* Type::FindImmediateChild(const std::wstring& a_Name) {
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 void Type::OutputPadding() const {
   ULONG64 nextOffset = 0;
   ULONG64 idealNextOffset = 0;
@@ -253,7 +241,6 @@ void Type::OutputPadding() const {
   }
 }
 
-//-----------------------------------------------------------------------------
 void Type::GenerateHierarchy(std::map<ULONG, Parent>& a_Hierarchy,
                              int a_Offset) const {
   for (auto it : m_ParentTypes) {
@@ -279,7 +266,6 @@ void Type::GenerateHierarchy(std::map<ULONG, Parent>& a_Hierarchy,
   }
 }
 
-//-----------------------------------------------------------------------------
 unsigned long long Type::Hash() {
 #ifdef _WIN32
   if (m_Hash == 0) {
@@ -304,7 +290,6 @@ unsigned long long Type::Hash() {
 #endif
 }
 
-//-----------------------------------------------------------------------------
 std::shared_ptr<Variable> Type::GetTemplateVariable() {
   if (m_TemplateVariable == nullptr) {
     m_TemplateVariable = GenerateVariable(0);
@@ -313,9 +298,8 @@ std::shared_ptr<Variable> Type::GetTemplateVariable() {
   return m_TemplateVariable;
 }
 
-//-----------------------------------------------------------------------------
 std::shared_ptr<Variable> Type::GenerateVariable(DWORD64 a_Address,
-                                                 const std::wstring* a_Name) {
+                                                 const std::string* a_Name) {
   LoadDiaInfo();
 
   std::shared_ptr<Variable> var = std::make_shared<Variable>();
@@ -324,7 +308,7 @@ std::shared_ptr<Variable> Type::GenerateVariable(DWORD64 a_Address,
   var->m_Pdb = this->m_Pdb;
   var->m_Address = a_Address;
   var->m_TypeIndex = m_Id;
-  var->m_Name = a_Name ? *a_Name : this->m_Name;
+  var->m_Name = s2ws(a_Name != nullptr ? *a_Name : this->m_Name);
   var->m_Size = (ULONG)this->m_Length;
 
   // Parents
@@ -350,8 +334,9 @@ std::shared_ptr<Variable> Type::GenerateVariable(DWORD64 a_Address,
     if (!type) continue;
 
     if (type && type->HasMembers()) {
+      std::string name = ws2s(member.m_Name);
       var->AddChild(
-          type->GenerateVariable(a_Address + memberOffset, &member.m_Name));
+          type->GenerateVariable(a_Address + memberOffset, &name));
     } else {
       std::shared_ptr<Variable> newMember = std::make_shared<Variable>(member);
       newMember->m_Address = a_Address + memberOffset;

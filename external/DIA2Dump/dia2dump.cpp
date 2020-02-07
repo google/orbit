@@ -929,11 +929,11 @@ bool DumpTypes(IDiaSymbol *pGlobal)
         BSTR bstrName;
         if( pSymbol->get_name( &bstrName ) != S_OK )
         {
-            orbitType.m_Name = L"???";
+            orbitType.m_Name = "???";
         }
         else
         {
-            orbitType.m_Name = bstrName;
+            orbitType.m_Name = ws2s(bstrName);
             SysFreeString( bstrName );
         }
 

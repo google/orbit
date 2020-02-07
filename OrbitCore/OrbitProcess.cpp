@@ -322,7 +322,7 @@ void Process::ClearWatchedVariables() { m_WatchedVariables.clear(); }
 
 //-----------------------------------------------------------------------------
 void Process::AddType(Type& a_Type) {
-  bool isPtr = a_Type.m_Name.find(L"Pointer to") != std::string::npos;
+  bool isPtr = a_Type.m_Name.find("Pointer to") != std::string::npos;
   if (!isPtr) {
     unsigned long long typeHash = a_Type.Hash();
     auto it = m_UniqueTypeHash.insert(typeHash);
