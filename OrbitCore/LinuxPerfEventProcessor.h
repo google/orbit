@@ -69,8 +69,8 @@ class PerfEventQueue {
       fd_event_queues_{};
 };
 
-// This class receives perf_event_open open events coming from several ring
-// buffers and processes them in order according to their timestamps.
+// This class receives perf_event_open events coming from several ring buffers
+// and processes them in order according to their timestamps.
 // Its implementation builds on the assumption that we never expect events with
 // a timestamp older than PROCESSING_DELAY_MS to be added. By not processing
 // events that are not older than this delay, we will never process events out

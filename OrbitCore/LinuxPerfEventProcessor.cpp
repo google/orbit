@@ -18,6 +18,8 @@ void PerfEventQueue::PushEvent(int origin_fd,
     std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>> event_queue =
         fd_event_queues_.at(origin_fd);
     assert(!event_queue->empty());
+    // Fundamental assumption: events from the same file descriptor come already
+    // in order.
     assert(event->Timestamp() >= event_queue->front()->Timestamp());
     event_queue->push(std::move(event));
   } else {
