@@ -197,5 +197,5 @@ void TimerManager::Add(const Message& a_Message) {
 
 //-----------------------------------------------------------------------------
 void TimerManager::Add(const ContextSwitch& a_CS) {
-  m_ContextSwitchAddedCallback(a_CS);
+  if (m_ContextSwitchAddedCallback) m_ContextSwitchAddedCallback(a_CS);
 }
