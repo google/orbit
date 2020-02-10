@@ -12,16 +12,8 @@
 
 #include "Profiling.h"
 
-void LinuxPerfEventProcessor::PushEvent(int origin_fd,
-                                        std::unique_ptr<LinuxPerfEvent> event) {
-#ifndef NDEBUG
-  if (last_processed_timestamp_ > 0 &&
-      event->Timestamp() <
-          last_processed_timestamp_ - PROCESSING_DELAY_MS * 1'000'000) {
-    PRINT("Error: processed an event out of order.\n");
-  }
-#endif
-
+void PerfEventQueue::PushEvent(int origin_fd,
+                               std::unique_ptr<LinuxPerfEvent> event) {
   if (fd_event_queues_.count(origin_fd) > 0) {
     std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>> event_queue =
         fd_event_queues_.at(origin_fd);
@@ -37,15 +29,13 @@ void LinuxPerfEventProcessor::PushEvent(int origin_fd,
   }
 }
 
-bool LinuxPerfEventProcessor::HasEvent() {
-  return !event_queues_queue_.empty();
-}
+bool PerfEventQueue::HasEvent() { return !event_queues_queue_.empty(); }
 
-LinuxPerfEvent* LinuxPerfEventProcessor::TopEvent() {
+LinuxPerfEvent* PerfEventQueue::TopEvent() {
   return event_queues_queue_.top().second->front().get();
 }
 
-std::unique_ptr<LinuxPerfEvent> LinuxPerfEventProcessor::PopEvent() {
+std::unique_ptr<LinuxPerfEvent> PerfEventQueue::PopEvent() {
   std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>>>
       top_fd_queue = event_queues_queue_.top();
   event_queues_queue_.pop();
@@ -66,9 +56,21 @@ std::unique_ptr<LinuxPerfEvent> LinuxPerfEventProcessor::PopEvent() {
   return top_event;
 }
 
+void LinuxPerfEventProcessor::AddEvent(int origin_fd,
+                                       std::unique_ptr<LinuxPerfEvent> event) {
+#ifndef NDEBUG
+  if (last_processed_timestamp_ > 0 &&
+      event->Timestamp() <
+          last_processed_timestamp_ - PROCESSING_DELAY_MS * 1'000'000) {
+    PRINT("Error: processed an event out of order.\n");
+  }
+#endif
+  event_queue_.PushEvent(origin_fd, std::move(event));
+}
+
 void LinuxPerfEventProcessor::ProcessAllEvents() {
-  while (HasEvent()) {
-    std::unique_ptr<LinuxPerfEvent> event = PopEvent();
+  while (event_queue_.HasEvent()) {
+    std::unique_ptr<LinuxPerfEvent> event = event_queue_.PopEvent();
     event->accept(visitor_.get());
 #ifndef NDEBUG
     last_processed_timestamp_ = event->Timestamp();
@@ -79,8 +81,8 @@ void LinuxPerfEventProcessor::ProcessAllEvents() {
 void LinuxPerfEventProcessor::ProcessOldEvents() {
   uint64_t max_timestamp = OrbitTicks(CLOCK_MONOTONIC);
 
-  while (HasEvent()) {
-    LinuxPerfEvent* event = TopEvent();
+  while (event_queue_.HasEvent()) {
+    LinuxPerfEvent* event = event_queue_.TopEvent();
 
     // Do not read the most recent events as out-of-order events could arrive.
     if (event->Timestamp() + PROCESSING_DELAY_MS * 1'000'000 >= max_timestamp) {
@@ -91,6 +93,6 @@ void LinuxPerfEventProcessor::ProcessOldEvents() {
 #ifndef NDEBUG
     last_processed_timestamp_ = event->Timestamp();
 #endif
-    PopEvent();
+    event_queue_.PopEvent();
   }
 }
