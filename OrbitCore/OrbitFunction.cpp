@@ -104,7 +104,7 @@ DWORD64 Function::GetVirtualAddress() const {
 //-----------------------------------------------------------------------------
 std::wstring Function::GetModuleName() {
   if (m_Pdb) {
-    return m_Pdb->GetName();
+    return s2ws(m_Pdb->GetName());
   } else {
     std::shared_ptr<Module> module =
         Capture::GTargetProcess->GetModuleFromAddress(m_Address);

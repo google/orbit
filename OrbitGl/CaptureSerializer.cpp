@@ -130,7 +130,7 @@ void CaptureSerializer::Load(const std::wstring a_FileName) {
     // functions
     std::shared_ptr<Module> module = std::make_shared<Module>();
     Capture::GTargetProcess->AddModule(module);
-    module->m_Pdb = std::make_shared<Pdb>(a_FileName.c_str());
+    module->m_Pdb = std::make_shared<Pdb>(ws2s(a_FileName).c_str());
     archive(module->m_Pdb->GetFunctions());
     module->m_Pdb->ProcessData();
     GPdbDbg = module->m_Pdb;

@@ -17,7 +17,7 @@ class Pdb;
 struct Module {
   Module();
 
-  std::wstring GetPrettyName();
+  std::string GetPrettyName();
   bool IsDll() const;
   bool LoadDebugInfo();
   bool ContainsAddress(uint64_t a_Address) {

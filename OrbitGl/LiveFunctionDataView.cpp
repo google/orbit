@@ -133,7 +133,7 @@ std::wstring LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
               : "";
       break;
     case LiveFunction::MODULE:
-      value = function.m_Pdb ? ws2s(function.m_Pdb->GetName()) : "";
+      value = function.m_Pdb ? function.m_Pdb->GetName() : "";
       break;
     default:
       break;

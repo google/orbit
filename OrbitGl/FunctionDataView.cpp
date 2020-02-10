@@ -96,7 +96,7 @@ std::wstring FunctionsDataView::GetValue(int a_Row, int a_Column) {
       value = function.m_File;
       break;
     case Function::MODULE:
-      value = function.m_Pdb ? ws2s(function.m_Pdb->GetName()) : "";
+      value = function.m_Pdb ? function.m_Pdb->GetName() : "";
       break;
     case Function::LINE:
       value = absl::StrFormat("%i", function.m_Line);
@@ -246,12 +246,12 @@ void FunctionsDataView::OnFilter(const std::wstring& a_Filter) {
   std::vector<Function*>& functions = Capture::GTargetProcess->GetFunctions();
   for (int i = 0; i < (int)functions.size(); ++i) {
     Function* function = functions[i];
-    std::wstring name = s2ws(function->Lower()) + function->m_Pdb->GetName();
+    std::string name = function->Lower() + function->m_Pdb->GetName();
 
     bool match = true;
 
     for (std::wstring& filterToken : tokens) {
-      if (name.find(filterToken) == std::string::npos) {
+      if (name.find(ws2s(filterToken)) == std::string::npos) {
         match = false;
         break;
       }

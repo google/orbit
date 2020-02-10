@@ -392,7 +392,7 @@ void Process::FillModuleDebugInfo(ModuleDebugInfo& a_ModuleDebugInfo) {
   if (module) {
     PRINT_VAR(module->m_FullName);
     module->LoadDebugInfo();
-    std::wstring moduleName = s2ws(module->m_FullName);
+    const std::string& moduleName = module->m_FullName;
     module->m_Pdb->LoadPdb(moduleName.c_str());
     a_ModuleDebugInfo.m_Functions = module->m_Pdb->GetFunctions();
   } else {

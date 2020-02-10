@@ -15,7 +15,7 @@
 ModuleManager GModuleManager;
 
 //-----------------------------------------------------------------------------
-ModuleManager::ModuleManager() { GPdbDbg = std::make_shared<Pdb>(L""); }
+ModuleManager::ModuleManager() { GPdbDbg = std::make_shared<Pdb>(); }
 
 //-----------------------------------------------------------------------------
 ModuleManager::~ModuleManager() {}
@@ -63,8 +63,8 @@ void ModuleManager::LoadPdbAsync(const std::shared_ptr<Module>& a_Module,
   if (!a_Module->GetLoaded()) {
     bool loadExports = a_Module->IsDll() && !a_Module->m_FoundPdb;
     if (a_Module->m_FoundPdb || loadExports) {
-      std::wstring pdbName =
-          loadExports ? s2ws(a_Module->m_FullName) : s2ws(a_Module->m_PdbName);
+      const std::string& pdbName =
+          loadExports ? a_Module->m_FullName : a_Module->m_PdbName;
       m_UserCompletionCallback = a_CompletionCallback;
 
       GPdbDbg = a_Module->m_Pdb;
@@ -89,18 +89,17 @@ void ModuleManager::DequeueAndLoad() {
   std::shared_ptr<Module> module = nullptr;
 
   while (module == nullptr && !m_ModulesQueue.empty()) {
-    std::wstring pdbName = m_ModulesQueue.back();
+    std::string pdbName = ws2s(m_ModulesQueue.back());
     m_ModulesQueue.pop_back();
 
-    module = Capture::GTargetProcess->FindModule(
-        Path::GetFileName(ws2s(pdbName)));
+    module = Capture::GTargetProcess->FindModule(Path::GetFileName(pdbName));
     if (module) {
       GPdbDbg = module->m_Pdb;
-      if (module->m_PdbName == "") {
+      if (module->m_PdbName.empty()) {
         module->m_PdbName = module->m_FullName;
       }
 
-      pdbName = s2ws(module->m_PdbName);
+      pdbName = module->m_PdbName;
       GPdbDbg->LoadPdbAsync(pdbName.c_str(), [&]() { this->OnPdbLoaded(); });
       return;
     }
