@@ -28,6 +28,8 @@ fi
 # Build vcpkg
 cd external/vcpkg
 
+patch -p1 -i ../../contrib/patches/vcpkg-qt5-disable-glib.diff
+
 if [ -f "vcpkg" ]; then
   echo "Orbit: found vcpkg"
 else
