@@ -191,12 +191,12 @@ void ModulesDataView::OnFilter(const std::wstring& a_Filter) {
 
   for (int i = 0; i < (int)m_Modules.size(); ++i) {
     std::shared_ptr<Module>& module = m_Modules[i];
-    std::wstring name = ToLower(module->GetPrettyName());
+    std::string name = ToLower(module->GetPrettyName());
 
     bool match = true;
 
     for (std::wstring& filterToken : tokens) {
-      if (name.find(filterToken) == std::string::npos) {
+      if (name.find(ws2s(filterToken)) == std::string::npos) {
         match = false;
         break;
       }

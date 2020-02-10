@@ -87,7 +87,7 @@ std::wstring GlobalsDataView::GetValue(int a_Row, int a_Column) {
       value = variable.m_File;
       break;
     case Variable::MODULE:
-      value = ws2s(variable.m_Pdb->GetName());
+      value = variable.m_Pdb->GetName();
       break;
     /*case Variable::MODBASE:
         value = wxString::Format("0x%I64x", function.m_ModBase);  break;*/

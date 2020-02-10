@@ -20,18 +20,20 @@ struct IDiaDataSource;
 
 class Pdb {
  public:
-  Pdb(const wchar_t* a_PdbName = L"");
+  explicit Pdb(const char* pdb_name = "");
+  Pdb(const Pdb&) = delete;
+  Pdb& operator=(const Pdb&) = delete;
   ~Pdb();
 
   void Init();
 
-  virtual bool LoadPdb(const wchar_t* a_PdbName);
-  virtual void LoadPdbAsync(const wchar_t* a_PdbName,
+  virtual bool LoadPdb(const char* a_PdbName);
+  virtual void LoadPdbAsync(const char* a_PdbName,
                             std::function<void()> a_CompletionCallback);
 
   bool LoadDataFromPdb();
   bool LoadPdbDia();
-  bool LoadLinuxDebugSymbols(const wchar_t* a_PdbName);
+  bool LoadLinuxDebugSymbols(const char* a_PdbName);
   void Update();
   void AddFunction(Function& a_Function);
   void CheckOrbitFunction(Function& a_Function);
@@ -42,8 +44,8 @@ class Pdb {
   void AddArgumentRegister(const std::string& a_Reg,
                            const std::string& a_Function);
 
-  const std::wstring& GetName() const { return m_Name; }
-  const std::wstring& GetFileName() const { return m_FileName; }
+  const std::string& GetName() const { return m_Name; }
+  const std::string& GetFileName() const { return m_FileName; }
   std::vector<Function>& GetFunctions() { return m_Functions; }
   std::vector<Type>& GetTypes() { return m_Types; }
   std::vector<Variable>& GetGlobals() { return m_Globals; }
@@ -71,8 +73,8 @@ class Pdb {
   void SetLoadTime(float a_LoadTime) { m_LastLoadTime = a_LoadTime; }
   float GetLoadTime() { return m_LastLoadTime; }
 
-  std::wstring GetCachedName();
-  std::wstring GetCachedKey();
+  std::string GetCachedName();
+  std::string GetCachedKey();
   bool Load(const std::string& a_CachedPdb);
   void Save();
 
@@ -112,8 +114,8 @@ class Pdb {
   std::map<std::string, std::vector<std::string> > m_RegFunctionsMap;
 
   // Data
-  std::wstring m_Name;
-  std::wstring m_FileName;
+  std::string m_Name;
+  std::string m_FileName;
   std::vector<Function> m_Functions;
   std::vector<Type> m_Types;
   std::vector<Variable> m_Globals;
@@ -132,17 +134,15 @@ class Pdb {
 #else
 class Pdb {
  public:
-  // TODO: these constructors seem to be not usefull
-  Pdb(const wchar_t* a_PdbName) {}
-  Pdb(const char* a_PdbName) {}
-  Pdb() {}
-  ~Pdb() {}
+  Pdb() = default;
+  Pdb(const Pdb&) = delete;
+  Pdb& operator=(const Pdb&) = delete;
 
   void Init() {}
 
-  virtual bool LoadPdb(const wchar_t* a_PdbName);
-  virtual void LoadPdbAsync(const wchar_t* a_PdbName,
-                            std::function<void()> a_CompletionCallback);
+  virtual bool LoadPdb(const char* pdb_name);
+  virtual void LoadPdbAsync(const char* pdb_name,
+                            std::function<void()> completion_callback);
 
   bool LoadDataFromPdb() { return LoadPdb(m_Name.c_str()); }
   bool LoadPdbDia() { return false; }
@@ -156,8 +156,8 @@ class Pdb {
   void AddArgumentRegister(const std::string& a_Reg,
                            const std::string& a_Function) {}
 
-  const std::wstring& GetName() const { return m_Name; }
-  const std::wstring& GetFileName() const { return m_FileName; }
+  const std::string& GetName() const { return m_Name; }
+  const std::string& GetFileName() const { return m_FileName; }
   std::vector<Function>& GetFunctions() { return m_Functions; }
   std::vector<Type>& GetTypes() { return m_Types; }
   std::vector<Variable>& GetGlobals() { return m_Globals; }
@@ -186,8 +186,8 @@ class Pdb {
   void SetLoadTime(float a_LoadTime) { m_LastLoadTime = a_LoadTime; }
   float GetLoadTime() { return m_LastLoadTime; }
 
-  std::wstring GetCachedName();
-  std::wstring GetCachedKey();
+  std::string GetCachedName();
+  std::string GetCachedKey();
   bool Load(const std::string& a_CachedPdb);
   void Save();
 
@@ -217,8 +217,8 @@ class Pdb {
   std::map<std::string, std::vector<std::string> > m_RegFunctionsMap;
 
   // Data
-  std::wstring m_Name;
-  std::wstring m_FileName;
+  std::string m_Name;
+  std::string m_FileName;
   std::vector<Function> m_Functions;
   std::vector<Type> m_Types;
   std::vector<Variable> m_Globals;

@@ -95,8 +95,8 @@ bool Capture::Inject(bool a_WaitForConnection) {
 
   GInjected = inject.Inject(s2ws(dllName), *GTargetProcess, "OrbitInit");
   if (GInjected) {
-    ORBIT_LOG(absl::StrFormat("Injected in %s",
-                              GTargetProcess->GetName().c_str()));
+    ORBIT_LOG(
+        absl::StrFormat("Injected in %s", GTargetProcess->GetName().c_str()));
     GInjectedProcess = GTargetProcess->GetName();
     GInjectedProcessW = s2ws(GInjectedProcess);
   }
@@ -121,12 +121,11 @@ bool Capture::InjectRemote() {
   std::string dllName = Path::GetDllPath(GTargetProcess->GetIs64Bit());
   GTcpServer->Disconnect();
 
-  GInjected =
-      inject.Inject(s2ws(dllName), *GTargetProcess, "OrbitInitRemote");
+  GInjected = inject.Inject(s2ws(dllName), *GTargetProcess, "OrbitInitRemote");
 
   if (GInjected) {
-    ORBIT_LOG(absl::StrFormat("Injected in %s",
-                              GTargetProcess->GetName().c_str()));
+    ORBIT_LOG(
+        absl::StrFormat("Injected in %s", GTargetProcess->GetName().c_str()));
     GInjectedProcess = GTargetProcess->GetName();
     GInjectedProcessW = s2ws(GInjectedProcess);
   }
@@ -535,8 +534,8 @@ void Capture::SaveSession(const std::wstring& a_FileName) {
 
   for (Function* func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {
-      session.m_Modules[func->m_Pdb->GetName()].m_FunctionHashes.push_back(
-          func->Hash());
+      session.m_Modules[s2ws(func->m_Pdb->GetName())]
+          .m_FunctionHashes.push_back(func->Hash());
     }
   }
 
@@ -545,8 +544,8 @@ void Capture::SaveSession(const std::wstring& a_FileName) {
     saveFileName += ".opr";
   }
 
-  SCOPE_TIMER_LOG(absl::StrFormat("Saving Orbit session in %s",
-                                  saveFileName.c_str()));
+  SCOPE_TIMER_LOG(
+      absl::StrFormat("Saving Orbit session in %s", saveFileName.c_str()));
   std::ofstream file(saveFileName, std::ios::binary);
   cereal::BinaryOutputArchive archive(file);
   archive(cereal::make_nvp("Session", session));

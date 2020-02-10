@@ -122,7 +122,7 @@ std::wstring TypesDataView::GetValue(int a_Row, int a_Column) {
       value = absl::StrFormat("%d", type.m_BaseOffset);
       break;
     case Type::MODULE:
-      value = ws2s(type.m_Pdb->GetName());
+      value = type.m_Pdb->GetName();
       break;
     default:
       break;

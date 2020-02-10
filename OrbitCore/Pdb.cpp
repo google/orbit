@@ -33,8 +33,8 @@
 std::shared_ptr<Pdb> GPdbDbg;
 
 //-----------------------------------------------------------------------------
-Pdb::Pdb(const wchar_t* a_PdbName)
-    : m_FileName(a_PdbName),
+Pdb::Pdb(const char* pdb_name)
+    : m_FileName(pdb_name),
       m_MainModule(0),
       m_LastLoadTime(0),
       m_LoadedFromCache(false),
@@ -45,7 +45,7 @@ Pdb::Pdb(const wchar_t* a_PdbName)
       m_DiaSession(nullptr),
       m_DiaGlobalSymbol(nullptr),
       m_DiaDataSource(nullptr) {
-  m_Name = s2ws(Path::GetFileName(ws2s(m_FileName)));
+  m_Name = Path::GetFileName(m_FileName);
   memset(&m_ModuleInfo, 0, sizeof(IMAGEHLP_MODULE64));
   m_ModuleInfo.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
   m_LoadTimer = new Timer();
@@ -141,7 +141,7 @@ void Pdb::Clear() {
   m_Globals.clear();
   m_TypeMap.clear();
   m_FunctionMap.clear();
-  m_FileName = L"";
+  m_FileName = "";
 }
 
 //-----------------------------------------------------------------------------
@@ -175,18 +175,18 @@ void Pdb::PrintGlobals() const {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring Pdb::GetCachedName() {
-  std::string pdbName = Path::GetFileName(ws2s(m_FileName));
+std::string Pdb::GetCachedName() {
+  std::string pdbName = Path::GetFileName(m_FileName);
   std::string fileName = GuidToString(m_ModuleInfo.PdbSig70) + "-" +
                          ToHexString(m_ModuleInfo.PdbAge) + "_" + pdbName;
   fileName += ".bin";
-  return s2ws(fileName);
+  return fileName;
 }
 
 //-----------------------------------------------------------------------------
-std::wstring Pdb::GetCachedKey() {
-  std::wstring cachedName = GetCachedName();
-  std::wstring cachedKey = cachedName.substr(0, cachedName.find_first_of('_'));
+std::string Pdb::GetCachedKey() {
+  std::string cachedName = GetCachedName();
+  std::string cachedKey = cachedName.substr(0, cachedName.find_first_of('_'));
   return cachedKey;
 }
 
@@ -417,13 +417,13 @@ void ShowSymbolInfo(IMAGEHLP_MODULE64& ModuleInfo) {
 }
 
 //-----------------------------------------------------------------------------
-bool Pdb::LoadLinuxDebugSymbols(const wchar_t* a_PdbName) {
+bool Pdb::LoadLinuxDebugSymbols(const char* a_PdbName) {
   SCOPE_TIMER_LOG("LoadLinuxDebugSymbols");
   std::string external = Path::GetExternalPath();
   std::string tmp =
       Path::GetTmpPath() + "cmd_" + OrbitUtils::GetTimeStamp() + ".txt";
   std::string nmCommand = external + std::string("llvm\\llvm-nm.exe ") +
-                          ws2s(a_PdbName) /*+ std::string(" -n")*/;
+                          a_PdbName /*+ std::string(" -n")*/;
 
   const char* tmpname = tmp.data();
   std::string cmd = nmCommand + " > " + tmpname;
@@ -441,7 +441,7 @@ bool Pdb::LoadLinuxDebugSymbols(const wchar_t* a_PdbName) {
       func.m_Name = symbol;
       func.m_Address = std::stoull(address, nullptr, 16);
       func.m_PrettyName = symbol;
-      func.m_Module = Path::GetFileName(ws2s(a_PdbName));
+      func.m_Module = Path::GetFileName(a_PdbName);
       func.m_Pdb = this;
       this->AddFunction(func);
       ++numAddedFunctions;
@@ -452,16 +452,16 @@ bool Pdb::LoadLinuxDebugSymbols(const wchar_t* a_PdbName) {
 }
 
 //-----------------------------------------------------------------------------
-bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
+bool Pdb::LoadPdb(const char* a_PdbName) {
   SCOPE_TIMER_LOG("LOAD PDB");
 
   m_IsLoading = true;
   m_LoadTimer->Start();
 
-  std::string msg = "pdb:" + ws2s(a_PdbName);
+  std::string msg = "pdb:" + std::string(a_PdbName);
   GTcpServer->SendToUiAsync(msg);
 
-  std::string nameStr = ws2s(a_PdbName);
+  std::string nameStr = a_PdbName;
 
   std::string extension = ToLower(Path::GetExtension(nameStr));
   if (extension == ".dll") {
@@ -475,7 +475,7 @@ bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
 
   ShowSymbolInfo(m_ModuleInfo);
   ProcessData();
-  GParams.AddToPdbHistory(ws2s(a_PdbName).c_str());
+  GParams.AddToPdbHistory(a_PdbName);
 
   m_FinishedLoading = true;
   m_IsLoading = false;
@@ -487,8 +487,8 @@ bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
 bool Pdb::LoadDataFromPdb() {
   DiaManager diaManager;
   IDiaDataSource** dataSource = (IDiaDataSource**)&m_DiaDataSource;
-  if (!diaManager.LoadDataFromPdb(m_FileName.c_str(), dataSource, &m_DiaSession,
-                                  &m_DiaGlobalSymbol)) {
+  if (!diaManager.LoadDataFromPdb(s2ws(m_FileName).c_str(), dataSource,
+                                  &m_DiaSession, &m_DiaGlobalSymbol)) {
     return false;
   }
 
@@ -516,10 +516,10 @@ bool Pdb::LoadPdbDia() {
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::LoadPdbAsync(const wchar_t* a_PdbName,
+void Pdb::LoadPdbAsync(const char* a_PdbName,
                        std::function<void()> a_CompletionCallback) {
   m_FileName = a_PdbName;
-  m_Name = s2ws(Path::GetFileName(ws2s(m_FileName)));
+  m_Name = Path::GetFileName(m_FileName);
 
   m_LoadingCompleteCallback = a_CompletionCallback;
   m_LoadingThread =
@@ -583,9 +583,9 @@ void Pdb::ApplyPresets() {
   SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ApplyPresets - %s", m_Name.c_str()));
 
   if (Capture::GSessionPresets) {
-    std::wstring pdbName = s2ws(Path::GetFileName(ws2s(m_Name)));
+    std::string pdbName = Path::GetFileName(m_Name);
 
-    auto it = Capture::GSessionPresets->m_Modules.find(pdbName);
+    auto it = Capture::GSessionPresets->m_Modules.find(s2ws(pdbName));
     if (it != Capture::GSessionPresets->m_Modules.end()) {
       SessionModule& a_Module = it->second;
 
@@ -744,7 +744,7 @@ void Pdb::ProcessData() {
 
 //-----------------------------------------------------------------------------
 void Pdb::Save() {
-  std::string fullName = Path::GetCachePath() + ws2s(GetCachedName());
+  std::string fullName = Path::GetCachePath() + GetCachedName();
 
   SCOPE_TIMER_LOG(absl::StrFormat("Saving %s", fullName.c_str()));
 

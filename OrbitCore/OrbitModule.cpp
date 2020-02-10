@@ -25,7 +25,7 @@
 Module::Module() { m_Pdb = std::make_shared<Pdb>(); }
 
 //-----------------------------------------------------------------------------
-std::wstring Module::GetPrettyName() {
+std::string Module::GetPrettyName() {
   if (m_PrettyName.size() == 0) {
 #ifdef WIN32
     m_PrettyName =
@@ -42,7 +42,7 @@ std::wstring Module::GetPrettyName() {
 #endif
   }
 
-  return s2ws(m_PrettyName);
+  return m_PrettyName;
 }
 
 //-----------------------------------------------------------------------------
@@ -107,12 +107,11 @@ Function* Pdb::FunctionFromName(const std::string& a_Name) {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring FindSymbols(const std::wstring& a_ModuleFullPath) {
+std::string FindSymbols(const std::string& module_path) {
   // Look for .debug files associated with passed in module name
   // TODO: .debug file might not have same name as module, we should check
   //       for unique identifier in the symbols file...
 
-  std::string module_path = ws2s(a_ModuleFullPath);
   std::string dir = Path::GetDirectory(module_path);
   std::vector<std::string> symbolDirectories = {"~/", Path::GetHome(), dir,
                                                 dir + "debug_symbols/"};
@@ -122,23 +121,23 @@ std::wstring FindSymbols(const std::wstring& a_ModuleFullPath) {
     std::string debugFile = symbolDirectory + file + ".debug";
     if (Path::FileExists(debugFile)) {
       PRINT_VAR(debugFile);
-      return s2ws(debugFile);
+      return debugFile;
     }
 
     debugFile = symbolDirectory + file + ".elf.debug";
     if (Path::FileExists(debugFile)) {
       PRINT_VAR(debugFile);
-      return s2ws(debugFile);
+      return debugFile;
     }
   }
 
-  return a_ModuleFullPath;
+  return module_path;
 }
 
 //-----------------------------------------------------------------------------
-bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
+bool Pdb::LoadPdb(const char* a_PdbName) {
   m_FileName = FindSymbols(a_PdbName);
-  m_Name = s2ws(Path::GetFileName(ws2s(m_FileName)));
+  m_Name = Path::GetFileName(m_FileName);
 
   {
     SCOPE_TIMER_LOG("nm");
@@ -146,7 +145,7 @@ bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
     // TODO: If we need linenumber information at some point, we need to find an
     // alternative, as "nm -l" is super slow.
     std::string nmCommand =
-        std::string("nm ") + ws2s(m_FileName) + std::string(" -n");
+        std::string("nm ") + m_FileName + std::string(" -n");
     std::string nmResult = LinuxUtils::ExecuteCommand(nmCommand.c_str());
     std::stringstream nmStream(nmResult);
     std::string line;
@@ -158,7 +157,7 @@ bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
         func.m_Name = tokens[2];
         func.m_Address = std::stoull(tokens[0], nullptr, 16);
         func.m_PrettyName = LinuxUtils::Demangle(tokens[2].c_str());
-        func.m_Module = Path::GetFileName(ws2s(a_PdbName));
+        func.m_Module = Path::GetFileName(a_PdbName);
         func.m_Pdb = this;
         this->AddFunction(func);
       }
@@ -171,7 +170,7 @@ bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
     SCOPE_TIMER_LOG("objdump -tT");
     // find functions that can receive uprobes
     std::string objdumpCommand =
-        std::string("objdump -tT ") + ws2s(m_FileName) +
+        std::string("objdump -tT ") + m_FileName +
         std::string(" | grep \"F .text\" | grep -oE '[^[:space:]]+$'");
     std::string objdumpResult =
         LinuxUtils::ExecuteCommand(objdumpCommand.c_str());
@@ -182,7 +181,7 @@ bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
 
       Function* func = FunctionFromName(demangled);
       if (func && func->m_Probe.empty()) {
-        std::string probe = ws2s(m_FileName) + std::string(":") + mangled;
+        std::string probe = m_FileName + std::string(":") + mangled;
         func->m_Probe = probe;
       }
     }
@@ -192,7 +191,7 @@ bool Pdb::LoadPdb(const wchar_t* a_PdbName) {
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::LoadPdbAsync(const wchar_t* a_PdbName,
+void Pdb::LoadPdbAsync(const char* a_PdbName,
                        std::function<void()> a_CompletionCallback) {
   m_LoadingCompleteCallback = a_CompletionCallback;
   LoadPdb(a_PdbName);
