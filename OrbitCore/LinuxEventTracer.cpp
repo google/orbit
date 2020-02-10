@@ -252,8 +252,10 @@ void LinuxEventTracerThread::Run(
             // There was a call to mmap with PROT_EXEC, hence refresh the maps.
             // This should happen rarely.
             ring_buffer.SkipRecord(header);
-            uprobe_event_processor.Push(std::make_unique<LinuxMapsEvent>(
-                OrbitTicks(CLOCK_MONOTONIC), LinuxUtils::ReadMaps(pid_)));
+            uprobe_event_processor.PushEvent(
+                fd,
+                std::make_unique<LinuxMapsEvent>(OrbitTicks(CLOCK_MONOTONIC),
+                                                 LinuxUtils::ReadMaps(pid_)));
           } break;
 
           case PERF_RECORD_SAMPLE: {
@@ -261,9 +263,9 @@ void LinuxEventTracerThread::Run(
               auto sample =
                   ring_buffer.ConsumeRecord<LinuxUprobeEventWithStack>(header);
               sample.SetFunction(uprobe_fds_to_function.at(fd));
-              uprobe_event_processor.Push(
-                  std::make_unique<LinuxUprobeEventWithStack>(
-                      std::move(sample)));
+              uprobe_event_processor.PushEvent(
+                  fd, std::make_unique<LinuxUprobeEventWithStack>(
+                          std::move(sample)));
 
               ++uprobes_count;
 
@@ -272,16 +274,17 @@ void LinuxEventTracerThread::Run(
                   ring_buffer.ConsumeRecord<LinuxUretprobeEventWithStack>(
                       header);
               sample.SetFunction(uretprobe_fds_to_function.at(fd));
-              uprobe_event_processor.Push(
-                  std::make_unique<LinuxUretprobeEventWithStack>(
-                      std::move(sample)));
+              uprobe_event_processor.PushEvent(
+                  fd, std::make_unique<LinuxUretprobeEventWithStack>(
+                          std::move(sample)));
 
               ++uprobes_count;
 
             } else {
               auto sample =
                   ring_buffer.ConsumeRecord<LinuxStackSampleEvent>(header);
-              uprobe_event_processor.Push(
+              uprobe_event_processor.PushEvent(
+                  fd,
                   std::make_unique<LinuxStackSampleEvent>(std::move(sample)));
 
               ++sample_count;

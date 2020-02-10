@@ -16,13 +16,17 @@
 #include "LinuxPerfEventVisitor.h"
 #include "PrintVar.h"
 
-// A comparator used for the priority queue, such that pop/top will
-// always return the oldest event in the queue.
-class TimestampReverseCompare {
- public:
-  bool operator()(const std::unique_ptr<LinuxPerfEvent>& lhs,
-                  const std::unique_ptr<LinuxPerfEvent>& rhs) {
-    return lhs->Timestamp() > rhs->Timestamp();
+// Comparator for the priority queue: pop will return the queue associated with
+// the file descriptor from which the oldest event still to process originated.
+struct QueueFrontTimestampReverseCompare {
+  bool operator()(
+      const std::pair<
+          int, std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>>>&
+          lhs,
+      const std::pair<
+          int, std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>>>&
+          rhs) {
+    return lhs.second->front()->Timestamp() > rhs.second->front()->Timestamp();
   }
 };
 
@@ -46,23 +50,40 @@ class LinuxPerfEventProcessor {
       std::unique_ptr<LinuxPerfEventVisitor> visitor)
       : visitor_(std::move(visitor)) {}
 
-  void Push(std::unique_ptr<LinuxPerfEvent> event);
+  void PushEvent(int origin_fd, std::unique_ptr<LinuxPerfEvent> event);
 
   void ProcessAllEvents();
 
   void ProcessOldEvents();
 
  private:
-  // TODO: Inserting into this buffer is logarithmic in its size. However, all
-  //  events within one ring buffer are already sorted. We could instead
-  //  implement a priority queue of ring buffers and be logarithmic in the
-  //  number of buffers. This would require moving a ring buffer down the heap
-  //  once an event has been processed, by removing-and-readding or with a
-  //  custom priority queue.
-  std::priority_queue<std::unique_ptr<LinuxPerfEvent>,
-                      std::vector<std::unique_ptr<LinuxPerfEvent>>,
-                      TimestampReverseCompare>
-      event_queue_;
+  bool HasEvent();
+  LinuxPerfEvent* TopEvent();
+  std::unique_ptr<LinuxPerfEvent> PopEvent();
+
+  // Instead of keeping a single priority queue with all the events to process,
+  // on which push/pop operations would be logarithmic in the number of events,
+  // we leverage the fact that events coming from the same perf_event_open ring
+  // buffer are already sorted. We then keep a priority queue of queues, where
+  // the events in each queue come from the same file descriptor. Whenever an
+  // event is removed from a queue, we need to move such queue down the priority
+  // queue. As std::priority_queue does not support decreasing the priority of
+  // an element, we achieve this by removing and re-inserting.
+  // In order to be able to add an event to a queue, we also need to maintain
+  // the association between a queue and its file descriptor. This is what the
+  // map is for.
+  // TODO: Implement a custom priority queue that supports decreasing the
+  //  priority.
+  std::priority_queue<
+      std::pair<int,
+                std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>>>,
+      std::vector<std::pair<
+          int, std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>>>>,
+      QueueFrontTimestampReverseCompare>
+      event_queues_queue_{};
+  std::unordered_map<
+      int, std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>>>
+      fd_event_queues_{};
 
   std::unique_ptr<LinuxPerfEventVisitor> visitor_;
 
