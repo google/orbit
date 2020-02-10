@@ -345,9 +345,6 @@ void Capture::SendFunctionHooks() {
     GTcpServer->Send(Msg_OrbitUnrealInfo, info);
   }
 
-  // Send argument tracking info
-  SendDataTrackingInfo();
-
   // Send all hooks by type
   for (int i = 0; i < Function::NUM_TYPES; ++i) {
     std::vector<DWORD64>& addresses = GSelectedAddressesByType[i];
