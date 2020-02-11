@@ -12,7 +12,7 @@ class Injection {
  public:
   Injection();
 
-  bool Inject(const std::wstring& a_Dll, const Process& a_Process,
+  bool Inject(const std::string& a_Dll, const Process& a_Process,
               const std::string& ProcName);
   DWORD GetProcessID() const { return m_InjectedProcessID; }
   HANDLE GetProcessHandle() const { return m_InjectedProcessHandle; }
@@ -30,9 +30,8 @@ class Injection {
 #endif
 
  protected:
-  void* RemoteWrite(const char* a_Data, int a_NumBytes);
-  void* RemoteWrite(const std::string& a_String);
-  void* RemoteWrite(const std::wstring& a_String);
+  void* RemoteWrite(const char* data, size_t size);
+  void* RemoteWrite(const std::string& str);
 
  private:
   DWORD m_InjectedProcessID;
