@@ -7,8 +7,12 @@
 #include <capstone/capstone.h>
 #include <capstone/platform.h>
 
-#define LOG(str) \
-  { m_String += s2ws(str); }
+#define LOGF(format, ...) { \
+  std::string log = absl::StrFormat(format, __VA_ARGS__); \
+  m_String += s2ws(log); \
+}
+
+#define LOG(str) { m_String += s2ws(str); }
 
 //-----------------------------------------------------------------------------
 void Disassembler::LogHex(const unsigned char* str, size_t len) {

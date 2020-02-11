@@ -120,7 +120,7 @@ bool Injection::Inject(const std::wstring& a_DllName, const Process& a_Process,
   // Remote write the host and port number
   std::string hostString = ws2s(Capture::GCaptureHost + L":" +
                                 std::to_wstring(Capture::GCapturePort));
-  ORBIT_LOG(Format("Capture port: %i", Capture::GCapturePort));
+  ORBIT_LOG(absl::StrFormat("Capture port: %i", Capture::GCapturePort));
   void* hostStringAddress = RemoteWrite(hostString);
   PRINT_VAR(hostString);
   if (hostStringAddress == nullptr) {

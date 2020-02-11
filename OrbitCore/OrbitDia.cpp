@@ -8,9 +8,10 @@
 
 #include "Core.h"
 #include "Log.h"
+#include "absl/strings/str_format.h"
 #include "dia2dump.h"
 
-#define StringRef char*
+#define StringRef const char*
 
 //-----------------------------------------------------------------------------
 template <typename ArgType>
@@ -77,7 +78,7 @@ void DumpDIAValue(std::ostream& OS, int Indent, StringRef Name,
 void OrbitDia::DiaDump(IDiaSymbol* Symbol, std::ostream& OS, int Indent) {
   if (Symbol == nullptr) return;
 
-  OS << Format("\n\nDia details:\nthis: 0x%p", Symbol);
+  OS << absl::StrFormat("\n\nDia details:\nthis: 0x%p", Symbol);
   RAW_METHOD_DUMP(OS, get_access)
   RAW_METHOD_DUMP(OS, get_addressOffset)
   RAW_METHOD_DUMP(OS, get_addressSection)
