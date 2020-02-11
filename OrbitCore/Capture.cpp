@@ -93,7 +93,7 @@ bool Capture::Inject(bool a_WaitForConnection) {
 
   GTcpServer->Disconnect();
 
-  GInjected = inject.Inject(s2ws(dllName), *GTargetProcess, "OrbitInit");
+  GInjected = inject.Inject(dllName, *GTargetProcess, "OrbitInit");
   if (GInjected) {
     ORBIT_LOG(
         absl::StrFormat("Injected in %s", GTargetProcess->GetName().c_str()));
@@ -121,7 +121,7 @@ bool Capture::InjectRemote() {
   std::string dllName = Path::GetDllPath(GTargetProcess->GetIs64Bit());
   GTcpServer->Disconnect();
 
-  GInjected = inject.Inject(s2ws(dllName), *GTargetProcess, "OrbitInitRemote");
+  GInjected = inject.Inject(dllName, *GTargetProcess, "OrbitInitRemote");
 
   if (GInjected) {
     ORBIT_LOG(
