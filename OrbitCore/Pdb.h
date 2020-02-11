@@ -16,6 +16,11 @@ struct IDiaSymbol;
 struct IDiaSession;
 struct IDiaDataSource;
 
+// TODO: Create a common interface with 2 implementations for Linux and Windows
+// or separate this class into 2 differently named ones. It will hopefully
+// let us remove ifdefs from here and have implementation separated in different
+// .cpp files.
+
 #ifdef _WIN32
 
 class Pdb {
