@@ -61,7 +61,9 @@ void TcpServer::Start(unsigned short a_Port) {
 //-----------------------------------------------------------------------------
 void TcpServer::ResetStats() {
   m_NumReceivedMessages = 0;
-  if (m_TcpServer) m_TcpServer->ResetStats();
+  if (m_TcpServer != nullptr) {
+    m_TcpServer->ResetStats();
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -84,7 +86,7 @@ std::vector<std::string> TcpServer::GetStats() {
 
 //-----------------------------------------------------------------------------
 TcpSocket* TcpServer::GetSocket() {
-  return m_TcpServer ? m_TcpServer->GetSocket() : nullptr;
+  return m_TcpServer != nullptr ? m_TcpServer->GetSocket() : nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -235,11 +237,15 @@ bool TcpServer::IsLocalConnection() {
 //-----------------------------------------------------------------------------
 void TcpServer::Disconnect() {
   PRINT_FUNC;
-  m_TcpServer->Disconnect();
+  if (m_TcpServer != nullptr) {
+    m_TcpServer->Disconnect();
+  }
 }
 
 //-----------------------------------------------------------------------------
-bool TcpServer::HasConnection() { return m_TcpServer->HasConnection(); }
+bool TcpServer::HasConnection() { 
+  return m_TcpServer != nullptr && m_TcpServer->HasConnection();
+}
 
 //-----------------------------------------------------------------------------
 void TcpServer::ServerThread() {
