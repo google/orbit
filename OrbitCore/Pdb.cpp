@@ -585,7 +585,7 @@ void Pdb::ApplyPresets() {
   if (Capture::GSessionPresets) {
     std::string pdbName = Path::GetFileName(m_Name);
 
-    auto it = Capture::GSessionPresets->m_Modules.find(s2ws(pdbName));
+    auto it = Capture::GSessionPresets->m_Modules.find(pdbName);
     if (it != Capture::GSessionPresets->m_Modules.end()) {
       SessionModule& a_Module = it->second;
 

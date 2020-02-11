@@ -8,14 +8,14 @@
 
 //-----------------------------------------------------------------------------
 struct SessionModule {
-  std::wstring m_Name;
+  std::string m_Name;
   std::vector<uint64_t> m_FunctionHashes;
   std::vector<std::wstring> m_WatchedVariables;
 
   template <class Archive>
-  void serialize(Archive& a_Archive, std::uint32_t const a_Version) {
-    a_Archive(CEREAL_NVP(m_Name), CEREAL_NVP(m_FunctionHashes),
-              CEREAL_NVP(m_WatchedVariables));
+  void serialize(Archive& archive, uint32_t version) {
+    archive(CEREAL_NVP(m_Name), CEREAL_NVP(m_FunctionHashes),
+            CEREAL_NVP(m_WatchedVariables));
   }
 };
 
@@ -27,9 +27,9 @@ class Session {
 
   ORBIT_SERIALIZABLE;
 
-  std::wstring m_FileName;
-  std::wstring m_ProcessFullPath;
-  std::wstring m_WorkingDirectory;
-  std::wstring m_Arguments;
-  std::map<std::wstring, SessionModule> m_Modules;
+  std::string m_FileName;
+  std::string m_ProcessFullPath;
+  std::string m_WorkingDirectory;
+  std::string m_Arguments;
+  std::map<std::string, SessionModule> m_Modules;
 };

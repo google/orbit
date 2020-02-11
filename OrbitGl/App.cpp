@@ -556,7 +556,7 @@ void OrbitApp::ListSessions() {
       cereal::BinaryInputArchive archive(file);
       archive(*session);
       file.close();
-      session->m_FileName = s2ws(fileName);
+      session->m_FileName = fileName;
       sessions.push_back(session);
     }
   }
@@ -893,7 +893,8 @@ std::wstring OrbitApp::GetCaptureFileName() {
 
 //-----------------------------------------------------------------------------
 std::wstring OrbitApp::GetSessionFileName() {
-  return Capture::GSessionPresets ? Capture::GSessionPresets->m_FileName : L"";
+  return s2ws(Capture::GSessionPresets ?
+              Capture::GSessionPresets->m_FileName : "");
 }
 
 //-----------------------------------------------------------------------------
@@ -929,8 +930,8 @@ void OrbitApp::OnLoadSession(const std::wstring a_FileName) {
     cereal::BinaryInputArchive archive(file);
     archive(*session);
     if (SelectProcess(
-        s2ws(Path::GetFileName(ws2s(session->m_ProcessFullPath))))) {
-      session->m_FileName = s2ws(file_name);
+        s2ws(Path::GetFileName(session->m_ProcessFullPath)))) {
+      session->m_FileName = file_name;
       Capture::LoadSession(session);
       Capture::GPresetToLoad = L"";
     }
