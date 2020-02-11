@@ -49,10 +49,10 @@ std::wstring SessionsDataView::GetValue(int row, int col) {
 
   switch (col) {
     case SDV_SessionName:
-      value = Path::GetFileName(ws2s(session->m_FileName));
+      value = Path::GetFileName(session->m_FileName);
       break;
     case SDV_ProcessName:
-      value = Path::GetFileName(ws2s(session->m_ProcessFullPath));
+      value = Path::GetFileName(session->m_ProcessFullPath);
       break;
       /*case SDV_LastUsed:
           value = "LastUsed"; break;*/
@@ -67,7 +67,7 @@ std::wstring SessionsDataView::GetValue(int row, int col) {
 //-----------------------------------------------------------------------------
 std::wstring SessionsDataView::GetToolTip(int a_Row, int a_Column) {
   const Session& session = *GetSession(a_Row);
-  return session.m_FileName;
+  return s2ws(session.m_FileName);
 }
 
 //-----------------------------------------------------------------------------
@@ -124,7 +124,7 @@ void SessionsDataView::OnContextMenu(const std::wstring& a_Action,
     for (int index : a_ItemIndices) {
       const std::shared_ptr<Session>& session = GetSession(index);
       if (GOrbitApp->SelectProcess(
-              s2ws(Path::GetFileName(ws2s(session->m_ProcessFullPath))))) {
+              s2ws(Path::GetFileName(session->m_ProcessFullPath)))) {
         Capture::LoadSession(session);
       }
     }
@@ -143,9 +143,8 @@ void SessionsDataView::OnFilter(const std::wstring& a_Filter) {
 
   for (uint32_t i = 0; i < m_Sessions.size(); ++i) {
     const Session& session = *m_Sessions[i];
-    std::wstring name =
-        s2ws(Path::GetFileName(ToLower(ws2s(session.m_FileName))));
-    std::wstring path = ToLower(session.m_ProcessFullPath);
+    std::wstring name = s2ws(Path::GetFileName(ToLower(session.m_FileName)));
+    std::wstring path = s2ws(ToLower(session.m_ProcessFullPath));
 
     bool match = true;
 

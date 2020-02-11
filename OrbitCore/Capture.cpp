@@ -503,16 +503,16 @@ void Capture::LoadSession(const std::shared_ptr<Session>& a_Session) {
   for (auto& it : a_Session->m_Modules) {
     SessionModule& module = it.second;
     ORBIT_LOG_DEBUG(module.m_Name);
-    modulesToLoad.push_back(it.first);
+    modulesToLoad.push_back(s2ws(it.first));
   }
 
   if (GLoadPdbAsync) {
     GLoadPdbAsync(modulesToLoad);
   }
 
-  GParams.m_ProcessPath = ws2s(a_Session->m_ProcessFullPath);
-  GParams.m_Arguments = ws2s(a_Session->m_Arguments);
-  GParams.m_WorkingDirectory = ws2s(a_Session->m_WorkingDirectory);
+  GParams.m_ProcessPath = a_Session->m_ProcessFullPath;
+  GParams.m_Arguments = a_Session->m_Arguments;
+  GParams.m_WorkingDirectory = a_Session->m_WorkingDirectory;
 
   GCoreApp->SendToUiNow(L"SetProcessParams");
 }
@@ -520,17 +520,17 @@ void Capture::LoadSession(const std::shared_ptr<Session>& a_Session) {
 //-----------------------------------------------------------------------------
 void Capture::SaveSession(const std::wstring& a_FileName) {
   Session session;
-  session.m_ProcessFullPath = s2ws(GTargetProcess->GetFullName());
+  session.m_ProcessFullPath = GTargetProcess->GetFullName();
 
   GCoreApp->SendToUiNow(L"UpdateProcessParams");
 
-  session.m_ProcessFullPath = s2ws(GParams.m_ProcessPath);
-  session.m_Arguments = s2ws(GParams.m_Arguments);
-  session.m_WorkingDirectory = s2ws(GParams.m_WorkingDirectory);
+  session.m_ProcessFullPath = GParams.m_ProcessPath;
+  session.m_Arguments = GParams.m_Arguments;
+  session.m_WorkingDirectory = GParams.m_WorkingDirectory;
 
   for (Function* func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {
-      session.m_Modules[s2ws(func->m_Pdb->GetName())]
+      session.m_Modules[func->m_Pdb->GetName()]
           .m_FunctionHashes.push_back(func->Hash());
     }
   }
