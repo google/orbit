@@ -107,10 +107,10 @@ class tcp_server : public std::enable_shared_from_this<tcp_server> {
 };
 
 //-----------------------------------------------------------------------------
-class shared_const_buffer {
+class SharedConstBuffer {
  public:
-  shared_const_buffer() {}
-  explicit shared_const_buffer(const Message& message, const void* payload)
+  SharedConstBuffer() {}
+  explicit SharedConstBuffer(const Message& message, const void* payload)
       : data_(new std::vector<char>()) {
     data_->resize(sizeof(Message) + message.m_Size + 4);
     memcpy(data_->data(), &message, sizeof(Message));
@@ -126,7 +126,7 @@ class shared_const_buffer {
     buffer_ = asio::buffer(*data_);
   }
 
-  explicit shared_const_buffer(TcpPacket& packet) {
+  explicit SharedConstBuffer(TcpPacket& packet) {
     data_ = packet.Data();
     buffer_ = asio::buffer(*data_);
   }
