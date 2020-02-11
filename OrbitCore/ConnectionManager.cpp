@@ -303,8 +303,6 @@ void ConnectionManager::RemoteThread() {
     // PRINT_VAR(GTcpServer->HasConnection());
     // if (GTcpServer->HasConnection())
     {
-      std::string msg("Hello from remote instance");
-      GTcpServer->Send(msg);
       SendProcesses(GTcpServer);
     }
 

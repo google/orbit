@@ -111,7 +111,6 @@ void TcpEntity::SendData() {
 
 //-----------------------------------------------------------------------------
 void TcpEntity::Callback(const Message& a_Message) {
-  PRINT_FUNC;
   MessageType type = a_Message.GetType();
   // Non main thread
   std::vector<MsgCallback>& callbacks = m_Callbacks[type];
