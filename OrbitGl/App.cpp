@@ -1239,7 +1239,6 @@ void OrbitApp::OnRemoteProcessList(const Message& a_Message) {
       std::make_shared<ProcessList>();
   remoteProcessList->SetRemote(true);
   inputAr(*remoteProcessList);
-  PRINT_VAR("remoteProcessList");
   GOrbitApp->m_ProcessesDataView->SetRemoteProcessList(remoteProcessList);
 }
 
