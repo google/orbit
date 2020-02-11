@@ -83,7 +83,9 @@ std::vector<std::string> TcpServer::GetStats() {
 }
 
 //-----------------------------------------------------------------------------
-TcpSocket* TcpServer::GetSocket() { return m_TcpServer->GetSocket(); }
+TcpSocket* TcpServer::GetSocket() {
+  return m_TcpServer ? m_TcpServer->GetSocket() : nullptr;
+}
 
 //-----------------------------------------------------------------------------
 void TcpServer::Receive(const Message& a_Message) {
