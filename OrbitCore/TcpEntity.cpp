@@ -101,7 +101,7 @@ void TcpEntity::SendData() {
       --m_NumQueuedEntries;
       TcpSocket* socket = GetSocket();
       if (socket && socket->m_Socket && socket->m_Socket->is_open()) {
-        asio::write(*socket->m_Socket, shared_const_buffer(buffer));
+        asio::write(*socket->m_Socket, SharedConstBuffer(buffer));
       } else {
         ORBIT_ERROR;
       }
