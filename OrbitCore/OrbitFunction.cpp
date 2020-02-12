@@ -241,8 +241,8 @@ bool FunctionParam::InRegister(int a_Index) { return a_Index < 4; }
 
 //-----------------------------------------------------------------------------
 bool FunctionParam::IsFloat() {
-  return (m_Type.find(TEXT("float")) != std::wstring::npos ||
-          m_Type.find(TEXT("double")) != std::wstring::npos);
+  return (m_Type.find("float") != std::string::npos ||
+          m_Type.find("double") != std::string::npos);
 }
 
 //-----------------------------------------------------------------------------
