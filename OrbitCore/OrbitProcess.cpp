@@ -154,7 +154,7 @@ void Process::EnumerateThreads() {
             std::shared_ptr<Thread> thread = std::make_shared<Thread>();
             thread->m_Handle = thandle;
             thread->m_TID = te.th32ThreadID;
-            m_ThreadNames[thread->m_TID] = ws2s(GetThreadName(thandle));
+            m_ThreadNames[thread->m_TID] = GetThreadName(thandle);
             m_Threads.push_back(thread);
           }
         }

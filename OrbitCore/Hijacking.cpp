@@ -80,7 +80,7 @@ struct ThreadLocalData {
     }
   }
 
-  std::wstring m_ThreadName;
+  std::string m_ThreadName;
   std::vector<ReturnAddress> m_ReturnAdresses;
   std::vector<Timer> m_Timers;
   std::vector<const Context*> m_Contexts;
