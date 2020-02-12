@@ -93,7 +93,7 @@ bool Capture::Inject(bool a_WaitForConnection) {
 
   GTcpServer->Disconnect();
 
-  GInjected = inject.Inject(s2ws(dllName), *GTargetProcess, "OrbitInit");
+  GInjected = inject.Inject(dllName, *GTargetProcess, "OrbitInit");
   if (GInjected) {
     ORBIT_LOG(
         absl::StrFormat("Injected in %s", GTargetProcess->GetName().c_str()));
@@ -121,7 +121,7 @@ bool Capture::InjectRemote() {
   std::string dllName = Path::GetDllPath(GTargetProcess->GetIs64Bit());
   GTcpServer->Disconnect();
 
-  GInjected = inject.Inject(s2ws(dllName), *GTargetProcess, "OrbitInitRemote");
+  GInjected = inject.Inject(dllName, *GTargetProcess, "OrbitInitRemote");
 
   if (GInjected) {
     ORBIT_LOG(
@@ -484,7 +484,6 @@ void Capture::OpenCapture(const std::wstring& a_CaptureName) {
 //-----------------------------------------------------------------------------
 bool Capture::IsOtherInstanceRunning() {
 #ifdef _WIN32
-  printf("test Capture::IsOtherInstanceRunning() \n");
   DWORD procID = 0;
   HANDLE procHandle = Injection::GetTargetProcessHandle(ORBIT_EXE_NAME, procID);
   PRINT_FUNC;
@@ -504,16 +503,16 @@ void Capture::LoadSession(const std::shared_ptr<Session>& a_Session) {
   for (auto& it : a_Session->m_Modules) {
     SessionModule& module = it.second;
     ORBIT_LOG_DEBUG(module.m_Name);
-    modulesToLoad.push_back(it.first);
+    modulesToLoad.push_back(s2ws(it.first));
   }
 
   if (GLoadPdbAsync) {
     GLoadPdbAsync(modulesToLoad);
   }
 
-  GParams.m_ProcessPath = ws2s(a_Session->m_ProcessFullPath);
-  GParams.m_Arguments = ws2s(a_Session->m_Arguments);
-  GParams.m_WorkingDirectory = ws2s(a_Session->m_WorkingDirectory);
+  GParams.m_ProcessPath = a_Session->m_ProcessFullPath;
+  GParams.m_Arguments = a_Session->m_Arguments;
+  GParams.m_WorkingDirectory = a_Session->m_WorkingDirectory;
 
   GCoreApp->SendToUiNow(L"SetProcessParams");
 }
@@ -521,17 +520,17 @@ void Capture::LoadSession(const std::shared_ptr<Session>& a_Session) {
 //-----------------------------------------------------------------------------
 void Capture::SaveSession(const std::wstring& a_FileName) {
   Session session;
-  session.m_ProcessFullPath = s2ws(GTargetProcess->GetFullName());
+  session.m_ProcessFullPath = GTargetProcess->GetFullName();
 
   GCoreApp->SendToUiNow(L"UpdateProcessParams");
 
-  session.m_ProcessFullPath = s2ws(GParams.m_ProcessPath);
-  session.m_Arguments = s2ws(GParams.m_Arguments);
-  session.m_WorkingDirectory = s2ws(GParams.m_WorkingDirectory);
+  session.m_ProcessFullPath = GParams.m_ProcessPath;
+  session.m_Arguments = GParams.m_Arguments;
+  session.m_WorkingDirectory = GParams.m_WorkingDirectory;
 
   for (Function* func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {
-      session.m_Modules[s2ws(func->m_Pdb->GetName())]
+      session.m_Modules[func->m_Pdb->GetName()]
           .m_FunctionHashes.push_back(func->Hash());
     }
   }

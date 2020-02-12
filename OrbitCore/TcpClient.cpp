@@ -96,7 +96,6 @@ void TcpClient::ClientThread() {
 
 //-----------------------------------------------------------------------------
 void TcpClient::ReadMessage() {
-  OutputDebugStringW(L"ReadMessage\n");
   asio::async_read(
       *m_TcpSocket->m_Socket, asio::buffer(&m_Message, sizeof(Message)),
 

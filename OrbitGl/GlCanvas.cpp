@@ -69,6 +69,8 @@ GlCanvas::GlCanvas() {
   m_MinWheelDelta = INT_MAX;
   m_MaxWheelDelta = INT_MIN;
   m_WheelMomentum = 0.f;
+  m_DeltaTime = 0.0f;
+  m_DeltaTimeMs = 0;
   m_MouseRatio = 0.0;
   m_DrawUI = true;
   m_ImguiActive = false;

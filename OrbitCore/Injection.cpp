@@ -25,22 +25,15 @@ Injection::Injection()
     : m_InjectedProcessID(0), m_InjectedProcessHandle(nullptr) {}
 
 //-----------------------------------------------------------------------------
-void* Injection::RemoteWrite(const std::string& a_String) {
-  return RemoteWrite((const char*)a_String.data(),
-                     (int)(a_String.size() + 1) * sizeof(a_String[0]));
+void* Injection::RemoteWrite(const std::string& str) {
+  return RemoteWrite(str.c_str(), str.size() + 1);
 }
 
 //-----------------------------------------------------------------------------
-void* Injection::RemoteWrite(const std::wstring& a_String) {
-  return RemoteWrite((const char*)a_String.data(),
-                     (int)(a_String.size() + 1) * sizeof(a_String[0]));
-}
-
-//-----------------------------------------------------------------------------
-void* Injection::RemoteWrite(const char* a_Data, int a_NumBytes) {
+void* Injection::RemoteWrite(const char* data, size_t size) {
   // Allocate
   LPVOID targetBaseAddress =
-      VirtualAllocEx(m_InjectedProcessHandle, (LPVOID)0, (size_t)a_NumBytes,
+      VirtualAllocEx(m_InjectedProcessHandle, nullptr, size,
                      MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
   if (targetBaseAddress == nullptr) {
     PRINT_VAR("VirtualAllocEx failed");
@@ -50,7 +43,7 @@ void* Injection::RemoteWrite(const char* a_Data, int a_NumBytes) {
 
   // Write
   if (!WriteProcessMemory(m_InjectedProcessHandle, targetBaseAddress,
-                          (LPCVOID)a_Data, (size_t)a_NumBytes, 0)) {
+                          static_cast<LPCVOID>(data), size, 0)) {
     PRINT_VAR("WriteProcessMemory failed");
     PRINT_VAR(GetLastError());
     return nullptr;
@@ -60,7 +53,7 @@ void* Injection::RemoteWrite(const char* a_Data, int a_NumBytes) {
 }
 
 //-----------------------------------------------------------------------------
-bool Injection::Inject(const std::wstring& a_DllName, const Process& a_Process,
+bool Injection::Inject(const std::string& a_DllName, const Process& a_Process,
                        const std::string& ProcName) {
   SCOPE_TIMER_LOG(absl::StrFormat("Injecting in %s",
                                   a_Process.GetName().c_str()));
@@ -118,8 +111,8 @@ bool Injection::Inject(const std::wstring& a_DllName, const Process& a_Process,
   }
 
   // Remote write the host and port number
-  std::string hostString = ws2s(Capture::GCaptureHost + L":" +
-                                std::to_wstring(Capture::GCapturePort));
+  std::string hostString = ws2s(Capture::GCaptureHost) + ":" +
+                                std::to_string(Capture::GCapturePort);
   ORBIT_LOG(absl::StrFormat("Capture port: %i", Capture::GCapturePort));
   void* hostStringAddress = RemoteWrite(hostString);
   PRINT_VAR(hostString);
@@ -155,14 +148,14 @@ HMODULE GetModule(HANDLE pHandle) {
 
   if (EnumProcessModules(pHandle, hMods, sizeof(hMods), &cbNeeded)) {
     for (i = 0; i < (cbNeeded / sizeof(HMODULE)); i++) {
-      TCHAR szModName[MAX_PATH];
-      if (GetModuleFileNameEx(pHandle, hMods[i], szModName,
-                              sizeof(szModName) / sizeof(TCHAR))) {
-        std::wstring wstrModName = szModName;
+      char szModName[MAX_PATH];
+      if (GetModuleFileNameExA(pHandle, hMods[i], szModName,
+                               sizeof(szModName) / sizeof(TCHAR))) {
+        std::string strModName = szModName;
         // you will need to change this to the name of the exe of the foreign
         // process
-        std::wstring wstrModContain = L"OrbitApp.exe";
-        if (wstrModName.find(wstrModContain) != std::string::npos) {
+        std::string strModContain = "OrbitApp.exe";
+        if (strModName.find(strModContain) != std::string::npos) {
           CloseHandle(pHandle);
           return hMods[i];
         }
@@ -249,8 +242,8 @@ HMODULE WINAPI Injection::GetRemoteModuleHandle(HANDLE hProcess,
   HMODULE* ModuleArray = NULL;
   DWORD ModuleArraySize = 100;
   DWORD NumModules = 0;
-  TCHAR lpModuleNameCopy[MAX_PATH] = {0};
-  TCHAR ModuleNameBuffer[MAX_PATH] = {0};
+  char lpModuleNameCopy[MAX_PATH] = {0};
+  char ModuleNameBuffer[MAX_PATH] = {0};
 
   /* Make sure we didn't get a NULL pointer for the module name */
   if (lpModuleName == NULL) goto GRMH_FAIL_JMP;
@@ -310,12 +303,12 @@ HMODULE WINAPI Injection::GetRemoteModuleHandle(HANDLE hProcess,
    * looking for */
   for (DWORD i = 0; i <= NumModules; ++i) {
     /* Get the module's name */
-    ::GetModuleBaseName(hProcess, ModuleArray[i], ModuleNameBuffer,
-                        sizeof(ModuleNameBuffer));
+    ::GetModuleBaseNameA(hProcess, ModuleArray[i], ModuleNameBuffer,
+                         sizeof(ModuleNameBuffer));
 
-    std::wstring ModuleNameWS(ModuleNameBuffer);
-    std::transform(ModuleNameWS.begin(), ModuleNameWS.end(),
-                   ModuleNameWS.begin(), ::tolower);
+    std::string ModuleName(ModuleNameBuffer);
+    std::transform(ModuleName.begin(), ModuleName.end(),
+                   ModuleName.begin(), ::tolower);
 
     /* Convert ModuleNameBuffer to all lowercase so the comparison isn't case
      * sensitive */
@@ -328,7 +321,7 @@ HMODULE WINAPI Injection::GetRemoteModuleHandle(HANDLE hProcess,
 
     /* Does the name match? */
     // if (strstr(ModuleNameBuffer, lpModuleNameCopy) != NULL)
-    if (ModuleNameWS.find(lpModuleNameCopy) != std::string::npos) {
+    if (ModuleName.find(lpModuleNameCopy) != std::string::npos) {
       /* Make a temporary variable to hold return value*/
       HMODULE TempReturn = ModuleArray[i];
 
@@ -751,7 +744,7 @@ GRPA_FAIL_JMP:
 #else
 
 Injection::Injection() {}
-bool Injection::Inject(const std::wstring& a_DllName, const Process& a_Process,
+bool Injection::Inject(const std::string& a_DllName, const Process& a_Process,
                        const std::string& ProcName) {
   return false;
 }

@@ -589,7 +589,10 @@ void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas) {
   // / h);
 
   // Setup time step
-  io.DeltaTime = a_Canvas->GetDeltaTimeSeconds();
+  // TODO: Does this make sense?
+  if (a_Canvas->GetDeltaTimeSeconds() > 0) {
+    io.DeltaTime = a_Canvas->GetDeltaTimeSeconds();
+  }
 
   // Setup inputs
   io.MousePos = ImVec2(
