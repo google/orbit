@@ -17,8 +17,7 @@
 #include "PrintVar.h"
 
 LinuxPerfRingBuffer::LinuxPerfRingBuffer(int a_PerfFileDescriptor) {
-  m_FileDescriptor = a_PerfFileDescriptor;
-  void* mmap_ret = mmap_mapping(m_FileDescriptor);
+  void* mmap_ret = mmap_mapping(a_PerfFileDescriptor);
 
   // The first page, just before the ring buffer, is the metadata page.
   m_Metadata = reinterpret_cast<perf_event_mmap_page*>(mmap_ret);
@@ -41,7 +40,6 @@ LinuxPerfRingBuffer::LinuxPerfRingBuffer(LinuxPerfRingBuffer&& other) noexcept {
   m_Buffer = std::exchange(other.m_Buffer, nullptr);
   m_BufferLength = std::exchange(other.m_BufferLength, 0);
   m_BufferLengthExponent = std::exchange(other.m_BufferLengthExponent, 0);
-  m_FileDescriptor = std::exchange(other.m_FileDescriptor, -1);
 }
 
 LinuxPerfRingBuffer& LinuxPerfRingBuffer::operator=(
@@ -51,7 +49,6 @@ LinuxPerfRingBuffer& LinuxPerfRingBuffer::operator=(
     std::swap(m_Buffer, other.m_Buffer);
     std::swap(m_BufferLength, other.m_BufferLength);
     std::swap(m_BufferLengthExponent, other.m_BufferLengthExponent);
-    std::swap(m_FileDescriptor, other.m_FileDescriptor);
   }
   return *this;
 }

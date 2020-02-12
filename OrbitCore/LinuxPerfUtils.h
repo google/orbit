@@ -108,10 +108,12 @@ inline void stop_capturing(uint32_t a_FileDescriptor) {
 int32_t task_event_open(int32_t cpu);
 
 // perf_event_open for context switches.
-int32_t context_switch_open(pid_t pid, int32_t cpu);
+int32_t pid_context_switch_open(pid_t pid);
+
+int32_t cpu_context_switch_open(int32_t cpu);
 
 // perf_event_open for stack sampling.
-int32_t stack_sample_event_open(pid_t pid, uint64_t period_ns);
+int32_t sample_mmap_task_event_open(pid_t pid, uint64_t period_ns);
 
 // perf_event_open for uprobes.
 bool supports_perf_event_uprobes();

@@ -31,7 +31,7 @@ class LinuxEventTracerThread {
   LinuxEventTracerThread(LinuxEventTracerThread&&) = default;
   LinuxEventTracerThread& operator=(LinuxEventTracerThread&&) = default;
 
-  void Run(const std::shared_ptr<std::atomic<bool>>& a_ExitRequested);
+  void Run(const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
  private:
   // Number of records to read consecutively from a perf_event_open ring buffer

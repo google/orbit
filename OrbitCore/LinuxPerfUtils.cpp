@@ -70,23 +70,35 @@ int32_t LinuxPerfUtils::task_event_open(int32_t cpu) {
   return generic_event_open(&pe, -1, cpu);
 }
 
-int32_t LinuxPerfUtils::context_switch_open(pid_t pid, int32_t cpu) {
+int32_t LinuxPerfUtils::pid_context_switch_open(pid_t pid) {
   perf_event_attr pe = generic_event_attr();
   pe.type = PERF_TYPE_SOFTWARE;
   pe.config = PERF_COUNT_SW_DUMMY;
   pe.context_switch = 1;
 
-  return generic_event_open(&pe, pid, cpu);
+  return generic_event_open(&pe, pid, -1);
 }
 
-int32_t LinuxPerfUtils::stack_sample_event_open(pid_t pid, uint64_t period_ns) {
+int32_t LinuxPerfUtils::cpu_context_switch_open(int32_t cpu) {
+  perf_event_attr pe = generic_event_attr();
+  pe.type = PERF_TYPE_SOFTWARE;
+  pe.config = PERF_COUNT_SW_DUMMY;
+  pe.context_switch = 1;
+
+  return generic_event_open(&pe, -1, cpu);
+}
+
+int32_t LinuxPerfUtils::sample_mmap_task_event_open(pid_t pid,
+                                                    uint64_t period_ns) {
   perf_event_attr pe = generic_event_attr();
   pe.type = PERF_TYPE_SOFTWARE;
   pe.config = PERF_COUNT_SW_CPU_CLOCK;
   pe.sample_period = period_ns;
   pe.sample_type |= PERF_SAMPLE_STACK_USER | PERF_SAMPLE_REGS_USER;
-  pe.task = 1;
+  // Also record mmaps, ...
   pe.mmap = 1;
+  // ... forks, and termination.
+  pe.task = 1;
 
   return generic_event_open(&pe, pid, -1);
 }
