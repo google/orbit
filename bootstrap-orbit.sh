@@ -52,16 +52,11 @@ if [ $? -ne 0 ]; then
   exit 3
 fi
 
-# CMake
 cd ../..
-if [ ! -d build/ ]; then
-  mkdir build
-fi
 
-cd build
-if [ ! -f toolchain.cmake ]; then
-  cp ../contrib/toolchains/toolchain-linux-default-release.cmake toolchain.cmake
+# Build
+if [[ $(uname -a) == *"yeti"* ]]; then
+  ./build_gamelet.sh
+else
+  ./build.sh
 fi
-
-cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -G Ninja .. || exit 4
-cmake --build .
