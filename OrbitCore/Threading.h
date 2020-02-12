@@ -26,6 +26,8 @@
 using oqpi_tk = oqpi::default_helpers;
 #endif
 
+#include "Utils.h"
+
 // Typedefs
 typedef std::recursive_mutex Mutex;
 typedef std::lock_guard<std::recursive_mutex> ScopeLock;
@@ -57,13 +59,13 @@ inline void SetCurrentThreadName(const wchar_t* a_ThreadName) {
 }
 
 //-----------------------------------------------------------------------------
-inline std::wstring GetThreadName(HANDLE a_Thread) {
-  std::wstring name;
+inline std::string GetThreadName(HANDLE a_Thread) {
+  std::string name;
   PWSTR data = nullptr;
   HRESULT hr = GetThreadDescription(a_Thread, &data);
 
   if (SUCCEEDED(hr)) {
-    name = data;
+    name = ws2s(data);
     LocalFree(data);
   }
 
@@ -71,7 +73,7 @@ inline std::wstring GetThreadName(HANDLE a_Thread) {
 }
 
 //-----------------------------------------------------------------------------
-inline std::wstring GetCurrentThreadName() {
+inline std::string GetCurrentThreadName() {
   return GetThreadName(GetCurrentThread());
 }
 
