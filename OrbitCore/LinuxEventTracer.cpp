@@ -27,14 +27,15 @@
 
 // TODO: Refactor this huge method.
 void LinuxEventTracerThread::Run(
-    const std::shared_ptr<std::atomic<bool>>& a_ExitRequested) {
+    const std::shared_ptr<std::atomic<bool>>& exit_requested) {
   if (!ComputeSamplingPeriodNs()) {
     return;
   }
 
   LoadNumCpus();
 
-  std::vector<int32_t> fds;
+  std::unordered_map<int32_t, LinuxPerfRingBuffer> fds_to_ring_buffer;
+  std::unordered_map<pid_t, int32_t> threads_to_fd;
   std::unordered_map<int32_t, Function*> uprobe_fds_to_function;
   std::unordered_map<int32_t, Function*> uretprobe_fds_to_function;
 
@@ -42,12 +43,17 @@ void LinuxEventTracerThread::Run(
     if (GParams.m_SystemWideScheduling) {
       // perf_event_open for all cpus to keep track of process spawning.
       for (int32_t cpu = 0; cpu < num_cpus_; cpu++) {
-        fds.push_back(LinuxPerfUtils::context_switch_open(-1, cpu));
+        int32_t context_switch_fd =
+            LinuxPerfUtils::cpu_context_switch_open(cpu);
+        fds_to_ring_buffer.emplace(context_switch_fd,
+                                   LinuxPerfRingBuffer{context_switch_fd});
       }
     } else {
       // perf_event_open for all cpus and the PID to keep track of process
       // spawning.
-      fds.push_back(LinuxPerfUtils::context_switch_open(pid_, -1));
+      int32_t context_switch_fd = LinuxPerfUtils::pid_context_switch_open(pid_);
+      fds_to_ring_buffer.emplace(context_switch_fd,
+                                 LinuxPerfRingBuffer{context_switch_fd});
     }
   }
 
@@ -59,88 +65,93 @@ void LinuxEventTracerThread::Run(
     for (const auto& function : instrumented_functions_) {
       for (int32_t cpu = 0; cpu < num_cpus_; cpu++) {
         int uprobe_fd = LinuxPerfUtils::uprobe_stack_event_open(
-            function->m_Pdb->GetFileName().c_str(), function->m_Address,
-            -1, cpu);
-        fds.push_back(uprobe_fd);
-        uprobe_fds_to_function[uprobe_fd] = function;
+            function->m_Pdb->GetFileName().c_str(), function->m_Address, -1,
+            cpu);
+        fds_to_ring_buffer.emplace(uprobe_fd, LinuxPerfRingBuffer{uprobe_fd});
+        uprobe_fds_to_function.emplace(uprobe_fd, function);
 
         int uretprobe_fd = LinuxPerfUtils::uretprobe_stack_event_open(
-            function->m_Pdb->GetFileName().c_str(), function->m_Address,
-            -1, cpu);
-        fds.push_back(uretprobe_fd);
-        uretprobe_fds_to_function[uretprobe_fd] = function;
+            function->m_Pdb->GetFileName().c_str(), function->m_Address, -1,
+            cpu);
+        fds_to_ring_buffer.emplace(uretprobe_fd,
+                                   LinuxPerfRingBuffer{uretprobe_fd});
+        uretprobe_fds_to_function.emplace(uretprobe_fd, function);
       }
     }
   }
 
-  // TODO(b/148209993): Sample based on CPU and filter by pid.
+  // TODO(b/148209993): Consider sampling based on CPU and filter by pid.
   for (pid_t tid : LinuxUtils::ListThreads(pid_)) {
     // Keep threads in sync.
     Capture::GTargetProcess->AddThreadId(tid);
 
     if (!GParams.m_SampleWithPerf) {
-      fds.push_back(
-          LinuxPerfUtils::stack_sample_event_open(tid, sampling_period_ns_));
+      int sampling_fd =
+          LinuxPerfUtils::sample_mmap_task_event_open(tid, sampling_period_ns_);
+      fds_to_ring_buffer.emplace(sampling_fd, LinuxPerfRingBuffer{sampling_fd});
+      threads_to_fd.emplace(tid, sampling_fd);
     }
   }
 
-  // TODO: New threads might spawn here before forks can be recorded.
+  // TODO: New threads might spawn here before forks are started to be recorded.
+  //  Consider also polling threads regularly.
 
-  // Create the perf_event_open ring buffers.
-  std::vector<LinuxPerfRingBuffer> ring_buffers;
-  ring_buffers.reserve(fds.size());
-  for (int32_t fd : fds) {
-    ring_buffers.emplace_back(fd);
-  }
-  // Start capturing.
-  for (int32_t fd : fds) {
-    LinuxPerfUtils::start_capturing(fd);
+  // Start recording events.
+  for (const auto& fd_to_ring_buffer : fds_to_ring_buffer) {
+    LinuxPerfUtils::start_capturing(fd_to_ring_buffer.first);
   }
 
+  // Record and periodically print basic statistics on the number events.
   constexpr uint64_t EVENT_COUNT_WINDOW_S = 5;
   uint64_t event_count_window_begin_ns = 0;
   uint64_t sched_switch_count = 0;
   uint64_t sample_count = 0;
   uint64_t uprobes_count = 0;
 
-  bool new_events = false;
+  bool last_iteration_saw_events = false;
 
-  while (!(*a_ExitRequested)) {
+  while (!(*exit_requested)) {
     // If there was nothing new in the last iteration:
     // Lets sleep a bit, so that we are not constantly reading from the
     // buffers and thus wasting cpu time. 10 ms are still small enough to
     // not have our buffers overflow and therefore lose events.
-    if (!new_events) {
+    if (!last_iteration_saw_events) {
       OrbitSleepMs(10);
     }
 
-    new_events = false;
-    pid_t new_thread = -1;
+    last_iteration_saw_events = false;
 
-    // Read from all ring buffers, create events and store them in the
-    // event_queue. In order to ensure that no buffer is read constantly while
-    // others overflow, we schedule the reading using round-robin like
-    // scheduling.
-    for (LinuxPerfRingBuffer& ring_buffer : ring_buffers) {
-      if (*a_ExitRequested || new_thread >= 0) {
+    std::vector<std::pair<int32_t, LinuxPerfRingBuffer>>
+        fds_to_ring_buffer_to_add;
+    std::vector<int32_t> fds_to_remove;
+
+    // Read and process events from all ring buffers. In order to ensure that no
+    // buffer is read constantly while others overflow, we schedule the reading
+    // using round-robin like scheduling.
+    for (auto& fd_to_ring_buffer : fds_to_ring_buffer) {
+      if (*exit_requested) {
         break;
       }
 
-      bool is_uprobes =
-          uprobe_fds_to_function.count(ring_buffer.FileDescriptor()) > 0;
-      bool is_uretprobes =
-          uretprobe_fds_to_function.count(ring_buffer.FileDescriptor()) > 0;
+      const int32_t& fd = fd_to_ring_buffer.first;
+      LinuxPerfRingBuffer& ring_buffer = fd_to_ring_buffer.second;
 
-      uint32_t read_from_this_buffer = 0;
-      // Read up to ROUND_ROBIN_BATCH_SIZE (5) new events
+      bool is_uprobes = uprobe_fds_to_function.count(fd) > 0;
+      bool is_uretprobes = uretprobe_fds_to_function.count(fd) > 0;
+
+      int32_t read_from_this_buffer = 0;
+      // Read up to ROUND_ROBIN_BATCH_SIZE (5) new events.
+      // TODO: Some event types (e.g., stack samples) have a much longer
+      //  processing time but are less frequent than others (e.g., context
+      //  switches). Take this into account in our scheduling algorithm.
       while (ring_buffer.HasNewData() &&
              read_from_this_buffer < ROUND_ROBIN_BATCH_SIZE) {
-        if (*a_ExitRequested || new_thread >= 0) {
+        if (*exit_requested) {
           break;
         }
 
         read_from_this_buffer++;
-        new_events = true;
+        last_iteration_saw_events = true;
         perf_event_header header{};
         ring_buffer.ReadHeader(&header);
 
@@ -211,17 +222,29 @@ void LinuxEventTracerThread::Run(
 
             if (fork.PID() == pid_) {
               // A new thread of the sampled process was spawned.
-              new_thread = fork.TID();
-              // Do not add a new ring buffer to ring_buffers here as we are
-              // already iterating over ring_buffers.
+              int32_t sample_fd = LinuxPerfUtils::sample_mmap_task_event_open(
+                  fork.TID(), sampling_period_ns_);
+              LinuxPerfUtils::start_capturing(sample_fd);
+              // Do not add a new ring buffer to fds_to_ring_buffer here as we
+              // are already iterating over fds_to_ring_buffer.
+              fds_to_ring_buffer_to_add.emplace_back(
+                  sample_fd, LinuxPerfRingBuffer{sample_fd});
+              threads_to_fd.emplace(fork.TID(), sample_fd);
             }
           } break;
 
           case PERF_RECORD_EXIT: {
             auto exit = ring_buffer.ConsumeRecord<LinuxForkEvent>(header);
             if (exit.PID() == pid_) {
-              // TODO: stop event recording, close ring buffer, close file
-              //  descriptor.
+              if (threads_to_fd.count(exit.TID()) > 0) {
+                int32_t sample_fd = threads_to_fd.at(exit.TID());
+                LinuxPerfUtils::stop_capturing(sample_fd);
+                close(sample_fd);
+                // Do not remove the ring buffer from fds_to_ring_buffer here as
+                // we are already iterating over fds_to_ring_buffer.
+                fds_to_remove.push_back(sample_fd);
+                threads_to_fd.erase(sample_fd);
+              }
             }
           } break;
 
@@ -237,8 +260,7 @@ void LinuxEventTracerThread::Run(
             if (is_uprobes) {
               auto sample =
                   ring_buffer.ConsumeRecord<LinuxUprobeEventWithStack>(header);
-              sample.SetFunction(
-                  uprobe_fds_to_function.at(ring_buffer.FileDescriptor()));
+              sample.SetFunction(uprobe_fds_to_function.at(fd));
               uprobe_event_processor.Push(
                   std::make_unique<LinuxUprobeEventWithStack>(
                       std::move(sample)));
@@ -249,8 +271,7 @@ void LinuxEventTracerThread::Run(
               auto sample =
                   ring_buffer.ConsumeRecord<LinuxUretprobeEventWithStack>(
                       header);
-              sample.SetFunction(
-                  uretprobe_fds_to_function.at(ring_buffer.FileDescriptor()));
+              sample.SetFunction(uretprobe_fds_to_function.at(fd));
               uprobe_event_processor.Push(
                   std::make_unique<LinuxUretprobeEventWithStack>(
                       std::move(sample)));
@@ -288,8 +309,7 @@ void LinuxEventTracerThread::Run(
               "sched switches: %lu; "
               "samples: %lu; "
               "u(ret)probes: %lu\n",
-              EVENT_COUNT_WINDOW_S,
-              sched_switch_count / EVENT_COUNT_WINDOW_S,
+              EVENT_COUNT_WINDOW_S, sched_switch_count / EVENT_COUNT_WINDOW_S,
               sample_count / EVENT_COUNT_WINDOW_S,
               uprobes_count / EVENT_COUNT_WINDOW_S);
           sched_switch_count = 0;
@@ -300,28 +320,25 @@ void LinuxEventTracerThread::Run(
       }
     }
 
-    if (new_thread >= 0) {
-      int32_t fd = LinuxPerfUtils::stack_sample_event_open(new_thread,
-                                                           sampling_period_ns_);
-      fds.push_back(fd);
-      ring_buffers.emplace_back(fd);
-      LinuxPerfUtils::start_capturing(fd);
-    }
-
     uprobe_event_processor.ProcessOldEvents();
+
+    for (auto& fd_to_ring_buffer_to_add : fds_to_ring_buffer_to_add) {
+      fds_to_ring_buffer.emplace(std::move(fd_to_ring_buffer_to_add));
+    }
+    for (int32_t fd_to_remove : fds_to_remove) {
+      fds_to_ring_buffer.erase(fd_to_remove);
+    }
   }
 
   uprobe_event_processor.ProcessAllEvents();
 
-  // stop capturing
-  for (int32_t fd : fds) {
+  // Stop recording and close the file descriptors.
+  for (auto& fd_to_ring_buffer : fds_to_ring_buffer) {
+    const int32_t& fd = fd_to_ring_buffer.first;
     LinuxPerfUtils::stop_capturing(fd);
-  }
-
-  ring_buffers.clear();
-  for (int32_t fd : fds) {
     close(fd);
   }
+  fds_to_ring_buffer.clear();
 }
 
 bool LinuxEventTracerThread::ComputeSamplingPeriodNs() {
