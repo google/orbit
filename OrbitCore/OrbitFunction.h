@@ -22,18 +22,18 @@ class Pdb;
 //-----------------------------------------------------------------------------
 struct FunctionParam {
   FunctionParam();
-  std::wstring m_Name;
-  std::wstring m_ParamType;
-  std::wstring m_Type;
-  std::wstring m_Address;
+  std::string m_Name;
+  std::string m_ParamType;
+  std::string m_Type;
+  std::string m_Address;
 
 #ifdef _WIN32
   SYMBOL_INFO m_SymbolInfo;
 #endif
 
   bool InRegister(int a_Index);
-  bool IsPointer() { return m_Type.find(L"*") != std::wstring::npos; }
-  bool IsRef() { return m_Type.find(L"&") != std::wstring::npos; }
+  bool IsPointer() { return m_Type.find("*") != std::string::npos; }
+  bool IsRef() { return m_Type.find("&") != std::string::npos; }
   bool IsFloat();
 };
 
