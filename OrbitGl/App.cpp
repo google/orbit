@@ -627,7 +627,7 @@ void OrbitApp::Disassemble(const std::string& a_FunctionName,
                            size_t a_Size) {
 #ifdef _WIN32
   Disassembler disasm;
-  disasm.LOGF("asm: /* %s */\n", a_FunctionName.c_str());
+  disasm.LOGF(absl::StrFormat("asm: /* %s */\n", a_FunctionName.c_str()));
   const unsigned char* code = (const unsigned char*)a_MachineCode;
   disasm.Disassemble(code, a_Size, a_VirtualAddress,
                      Capture::GTargetProcess->GetIs64Bit());

@@ -17,6 +17,7 @@
 #include "OrbitLib.h"
 #include "OrbitType.h"
 #include "Tcp.h"
+#include "absl/strings/str_format.h"
 
 std::unique_ptr<TcpClient> GTcpClient;
 
@@ -200,9 +201,9 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::wstring dbgMsg =
-            s2ws(Format("Hooking function at address: %p\n", address));
-        OutputDebugStringW(dbgMsg.c_str());
+        std::string dbgMsg =
+            absl::StrFormat("Hooking function at address: %p\n", address);
+        OutputDebugStringA(dbgMsg.c_str());
         Hijacking::CreateHook(address);
         GTcpClient->Send(Msg_NumInstalledHooks, i + 1);
       }
@@ -217,7 +218,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
         std::string dbgMsg =
-            Format("Hooking zone function at address: %p\n", address);
+            absl::StrFormat("Hooking zone function at address: %p\n", address);
         OutputDebugStringA(dbgMsg.c_str());
         Hijacking::CreateZoneStartHook(address);
       }
@@ -232,7 +233,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
         std::string dbgMsg =
-            Format("Hooking zone function at address: %p\n", address);
+            absl::StrFormat("Hooking zone function at address: %p\n", address);
         OutputDebugStringA(dbgMsg.c_str());
         Hijacking::CreateZoneStopHook(address);
       }
@@ -246,7 +247,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::string dbgMsg = Format(
+        std::string dbgMsg = absl::StrFormat(
             "Hooking OutputDebugString function at address: %p\n", address);
         OutputDebugStringA(dbgMsg.c_str());
         Hijacking::CreateOutputDebugStringHook(address);
@@ -261,8 +262,8 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::string dbgMsg =
-            Format("Hooking Unreal Actor function at address: %p\n", address);
+        std::string dbgMsg = absl::StrFormat(
+            "Hooking Unreal Actor function at address: %p\n", address);
         OutputDebugStringA(dbgMsg.c_str());
         Hijacking::CreateUnrealActorHook(address);
       }
@@ -276,8 +277,8 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::string dbgMsg =
-            Format("Hooking OrbitSendData function at address: %p\n", address);
+        std::string dbgMsg = absl::StrFormat(
+            "Hooking OrbitSendData function at address: %p\n", address);
         OutputDebugStringA(dbgMsg.c_str());
         Hijacking::CreateSendDataHook(address);
       }
@@ -292,7 +293,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
         std::string dbgMsg =
-            Format("Hooking Alloc function at address: %p\n", address);
+            absl::StrFormat("Hooking Alloc function at address: %p\n", address);
         OutputDebugStringA(dbgMsg.c_str());
         Hijacking::CreateAllocHook(address);
       }
@@ -307,7 +308,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
         std::string dbgMsg =
-            Format("Hooking Free function at address: %p\n", address);
+            absl::StrFormat("Hooking Free function at address: %p\n", address);
         OutputDebugStringA(dbgMsg.c_str());
         Hijacking::CreateFreeHook(address);
       }
@@ -322,7 +323,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       // for( int i = 0; i < numAddresses; ++i )
       //{
       //    void* address = (void*)addresses[i];
-      //    std::string dbgMsg = Format( "Hooking Realloc function at address:
+      //    std::string dbgMsg = absl::StrFormat( "Hooking Realloc function at address:
       //    %p\n", address ); OutputDebugStringA( dbgMsg.c_str() );
       //    //Hijacking::CreateReallocHook( address ); TODO
       //}
@@ -346,9 +347,9 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::wstring dbgMsg =
-            s2ws(Format("Callstack tracking for address: %p\n", address));
-        OutputDebugStringW(dbgMsg.c_str());
+        std::string dbgMsg =
+            absl::StrFormat("Callstack tracking for address: %p\n", address);
+        OutputDebugStringA(dbgMsg.c_str());
         Hijacking::TrackCallstack(addresses[i]);
       }
       break;

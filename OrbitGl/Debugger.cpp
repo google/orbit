@@ -188,27 +188,27 @@ void Debugger::DebuggerThread(const std::wstring& a_ProcessName,
         detach = true;
       } break;
 
-      case CREATE_THREAD_DEBUG_EVENT: {
+      case CREATE_THREAD_DEBUG_EVENT:
+        // Thread 0xc (Id: 7920) created at: 0x77b15e58
         strEventMessage =
-            Format("Thread 0x%x (Id: %d) created at: 0x%x",
-                   debug_event.u.CreateThread.hThread, debug_event.dwThreadId,
-                   debug_event.u.CreateThread
-                       .lpStartAddress);  // Thread 0xc (Id: 7920) created at:
-                                          // 0x77b15e58
+            absl::StrFormat("Thread 0x%x (Id: %d) created at: 0x%x",
+                            debug_event.u.CreateThread.hThread,
+                            debug_event.dwThreadId,
+                            debug_event.u.CreateThread.lpStartAddress);
 
         break;
-      }
       case EXIT_THREAD_DEBUG_EVENT:
-
+        // The thread 2760 exited with code: 0
         strEventMessage =
-            Format("The thread %d exited with code: %d", debug_event.dwThreadId,
-                   debug_event.u.ExitThread
-                       .dwExitCode);  // The thread 2760 exited with code: 0
+            absl::StrFormat("The thread %d exited with code: %d",
+                            debug_event.dwThreadId,
+                            debug_event.u.ExitThread.dwExitCode);
 
         break;
 
       case EXIT_PROCESS_DEBUG_EVENT:
-        strEventMessage = Format("0x%x", debug_event.u.ExitProcess.dwExitCode);
+        strEventMessage =
+            absl::StrFormat("0x%x", debug_event.u.ExitProcess.dwExitCode);
         bContinueDebugging = false;
         break;
 
@@ -218,8 +218,10 @@ void Debugger::DebuggerThread(const std::wstring& a_ProcessName,
         DllNameMap.insert(
             std::make_pair(debug_event.u.LoadDll.lpBaseOfDll, strEventMessage));
 
-        strEventMessage += Format("%x", debug_event.u.LoadDll.lpBaseOfDll);
-      } break;
+        strEventMessage +=
+            absl::StrFormat("%x", debug_event.u.LoadDll.lpBaseOfDll);
+        break;
+      }
 
       case UNLOAD_DLL_DEBUG_EVENT:
         strEventMessage = DllNameMap[debug_event.u.UnloadDll.lpBaseOfDll];
@@ -259,9 +261,10 @@ void Debugger::DebuggerThread(const std::wstring& a_ProcessName,
           default:
             if (exception.dwFirstChance == 1) {
               strEventMessage =
-                  Format("First chance exception at %x, exception-code: 0x%08x",
-                         exception.ExceptionRecord.ExceptionAddress,
-                         exception.ExceptionRecord.ExceptionCode);
+                  absl::StrFormat("First chance exception at %x, "
+                                  "exception-code: 0x%08x",
+                                  exception.ExceptionRecord.ExceptionAddress,
+                                  exception.ExceptionRecord.ExceptionCode);
             }
             // else
             // { Let the OS handle }

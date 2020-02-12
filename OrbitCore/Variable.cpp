@@ -106,7 +106,7 @@ void Variable::Print() {
 
   DWORD64 address = 0;
   std::string typeName = GetTypeName();
-  ORBIT_VIZ(Format("\n%s size(%i)\n", typeName.c_str(), m_Size));
+  ORBIT_VIZ(absl::StrFormat("\n%s size(%i)\n", typeName.c_str(), m_Size));
   Print(1, address, m_Size);
 }
 
@@ -117,13 +117,14 @@ void Variable::Print(int a_Indent, DWORD64& a_ByteCounter,
 
   if (a_ByteCounter != m_Address) {
     int padding = int(m_Address - a_ByteCounter);
-    ORBIT_VIZ(Format("[%-*i]%s<alignment member> (size=%i)\n", width,
-                     (int)a_ByteCounter, indent.c_str(), padding));
+    ORBIT_VIZ(absl::StrFormat("[%-*" PRId64 "]%s<alignment member> (size=%i)\n",
+                              width, a_ByteCounter, indent.c_str(), padding));
     a_ByteCounter = m_Address;
   }
 
-  ORBIT_VIZ(Format("[%-*i]%s%s (%s)\n", width, (int)m_Address, indent.c_str(),
-                   m_Name.c_str(), GetTypeName().c_str()));
+  ORBIT_VIZ(absl::StrFormat("[%-*" PRId64 "]%s%s (%s)\n", width, m_Address,
+                            indent.c_str(), m_Name.c_str(),
+                            GetTypeName().c_str()));
 
   if (!HasChildren()) {
     a_ByteCounter += m_Size;
@@ -137,8 +138,8 @@ void Variable::Print(int a_Indent, DWORD64& a_ByteCounter,
 void Variable::PrintHierarchy(int a_Indent) {
   if (Type* type = GetType()) {
     type->LoadDiaInfo();
-    ORBIT_VIZ(
-        Format("%s%s\n", Indent(a_Indent).c_str(), GetTypeName().c_str()));
+    ORBIT_VIZ(absl::StrFormat("%s%s\n", Indent(a_Indent).c_str(),
+                              GetTypeName().c_str()));
 
     for (std::shared_ptr<Variable> var : m_Children) {
       if (var->m_IsParent) {

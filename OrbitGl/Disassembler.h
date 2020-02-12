@@ -16,13 +16,7 @@ class Disassembler {
                    DWORD64 a_Address, bool a_Is64Bit);
   const std::wstring& GetResult() { return m_String; }
 
-  template <typename... Args>
-  void LOGF(const char* format, Args... args) {
-    std::string log = Format(format, std::forward<Args>(args)...);
-    m_String += s2ws(log);
-  }
-
-  void LOGF(const char* format) { m_String += s2ws(format); }
+  void LOGF(const std::string& format) { m_String += s2ws(format); }
 
   void LogHex(const unsigned char* str, size_t len);
 
