@@ -1,10 +1,10 @@
 #!/bin/bash
 
-if [ ! -d build/ ]; then
-  mkdir build
+if [ ! -d build-release ]; then
+  mkdir build-release
 fi
 
-cd build
+cd build-release
 if [ ! -f toolchain.cmake ]; then
   cp ../contrib/toolchains/toolchain-linux-default-release.cmake toolchain.cmake
 fi

@@ -56,7 +56,9 @@ cd ../..
 
 # Build
 if [[ $(uname -a) == *"yeti"* ]]; then
-  ./build_gamelet.sh
+  ./build_gamelet-debug.sh
+  ./build_gamelet-release.sh
 else
-  ./build.sh
+  ./build-debug.sh
+  ./build-release.sh
 fi
