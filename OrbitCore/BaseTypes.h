@@ -15,6 +15,8 @@
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
 
@@ -46,7 +48,12 @@ inline void SetCurrentThreadName(const wchar_t*) {}
 #define USHORT unsigned short
 #define UCHAR unsigned char
 inline void Sleep(int millis) { usleep((float)millis * 1000.f); }
-#define GetCurrentThreadId pthread_self
+
+inline pid_t GetCurrentThreadId() {
+  thread_local pid_t current_tid = syscall(__NR_gettid);
+  return current_tid;
+}
+
 typedef struct _M128A {
   uint64_t Low;
   uint64_t High;
