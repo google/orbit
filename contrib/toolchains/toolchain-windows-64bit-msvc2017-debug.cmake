@@ -1,7 +1,6 @@
 set(CMAKE_BUILD_TYPE "Debug")
-set(MSVC_DIA_SDK_DIR
-    "C:/Program Files (x86)/Microsoft Visual Studio/2017/Professional/DIA SDK"
-    CACHE PATH "The DIA SDK path" FORCE)
+include(${CMAKE_CURRENT_LIST_DIR}/find_dia_sdk_path.cmake)
+find_dia_sdk_path("2017")
 
 string(APPEND CMAKE_CXX_FLAGS " /W4")
 string(APPEND CMAKE_CXX_FLAGS " /wd4100")
