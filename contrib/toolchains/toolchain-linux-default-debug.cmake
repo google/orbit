@@ -14,7 +14,7 @@ add_compile_options(
   -Wdouble-promotion
   -Wformat=2
   -Wnull-dereference
-  -Wimplicit-fallthrough
+#  -Wimplicit-fallthrough  # This option is not supported on gamelets.
   -Wmissing-include-dirs
   -Wshift-overflow
   -Wswitch-enum
