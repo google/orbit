@@ -5,8 +5,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS
     ON
     CACHE BOOL "generate compile_commands.json" FORCE)
 
-set(VCPKG_TARGET_TRIPLET "x64-linux-mixed" CACHE STRING "vcpkg target triplet")
-
 add_compile_options(
   -Wpedantic
   -Wall
