@@ -30,15 +30,14 @@ TcpEntity::~TcpEntity() {}
 //-----------------------------------------------------------------------------
 void TcpEntity::Start() {
   PRINT_FUNC;
+  m_ExitRequested = false;
   m_SenderThread = new std::thread([&]() { SendData(); });
 }
 
 //-----------------------------------------------------------------------------
 void TcpEntity::Stop() {
   PRINT_FUNC;
-  if (!m_ExitRequested) {
-    m_ExitRequested = true;
-  }
+  m_ExitRequested = true;
 
   m_ConditionVariable.signal();
   if (m_SenderThread != nullptr) {
