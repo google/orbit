@@ -1,21 +1,19 @@
-set(MSVC_DIA_SDK_DIR
-    "$ENV{VSINSTALLDIR}DIA SDK"
-    CACHE PATH "Path to the DIA SDK")
-
-if(IS_DIRECTORY ${MSVC_DIA_SDK_DIR})
+if(CMAKE_VS_PLATFORM_NAME STREQUAL "x64")
+  set(DIA_PLATFORM_NAME "amd64")
+else()
   set(DIA_PLATFORM_NAME "")
-
-  if(CMAKE_VS_PLATFORM_NAME STREQUAL "x64")
-    set(DIA_PLATFORM_NAME "amd64")
-  endif()
-
-  find_library(
-    DIASDK_LIB
-    NAMES diaguids.lib
-    HINTS "${MSVC_DIA_SDK_DIR}/lib/${DIA_PLATFORM_NAME}")
-  find_path(DIASDK_INC dia2.h HINTS "${MSVC_DIA_SDK_DIR}/include")
-
 endif()
+
+find_library(
+  DIASDK_LIB
+  NAMES diaguids.lib
+  PATH_SUFFIXES "lib/${DIA_PLATFORM_NAME}"
+  HINTS "$ENV{VSINSTALLDIR}/DIA SDK" "${CMAKE_GENERATOR_INSTANCE}/DIA SDK")
+
+find_path(
+  DIASDK_INC dia2.h
+  PATH_SUFFIXES "include/"
+  HINTS "$ENV{VSINSTALLDIR}/DIA SDK" "${CMAKE_GENERATOR_INSTANCE}/DIA SDK")
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(DIASDK DEFAULT_MSG DIASDK_LIB DIASDK_INC)

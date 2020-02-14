@@ -1,7 +1,6 @@
-set(CMAKE_BUILD_TYPE "Debug")
-set(MSVC_DIA_SDK_DIR
-    "C:/Program Files (x86)/Microsoft Visual Studio/2017/Professional/DIA SDK"
-    CACHE PATH "The DIA SDK path" FORCE)
+set(CMAKE_BUILD_TYPE
+    "Release"
+    CACHE STRING "build type" FORCE)
 
 string(APPEND CMAKE_CXX_FLAGS " /W4")
 string(APPEND CMAKE_CXX_FLAGS " /wd4100")
@@ -9,9 +8,6 @@ string(APPEND CMAKE_CXX_FLAGS " /wd4245")
 string(APPEND CMAKE_CXX_FLAGS " /wd4244")
 string(APPEND CMAKE_CXX_FLAGS " /wd4481")
 string(APPEND CMAKE_CXX_FLAGS " /wd4201")
-string(APPEND CMAKE_CXX_FLAGS " /EHsc")
-string(APPEND CMAKE_CXX_FLAGS " /MP")
-string(APPEND CMAKE_C_FLAGS " /MP")
 
 # This include expects your build directory to be a direct subdirectory of the
 # project root.
