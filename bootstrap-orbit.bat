@@ -26,14 +26,14 @@ copy "external\vcpkg\buildtrees\breakpad\src\f427f61ed3-fe83a49e5d\src\processor
 
 :: CMake build
 mkdir build_release_x86
-copy "contrib\toolchains\toolchain-windows-32bit-msvc2017-release.cmake" "build_release_x86\toolchain.cmake" /y
+copy "contrib\toolchains\toolchain-windows-32bit-msvc-release.cmake" "build_release_x86\toolchain.cmake" /y
 cd build_release_x86
 cmake -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" -G "Visual Studio 15 2017" ..
 cmake --build . --target ALL_BUILD --config Release
 cd ..
 
 mkdir build_release_x64
-copy "contrib\toolchains\toolchain-windows-64bit-msvc2017-release.cmake" "build_release_x64\toolchain.cmake" /y
+copy "contrib\toolchains\toolchain-windows-64bit-msvc-release.cmake" "build_release_x64\toolchain.cmake" /y
 cd build_release_x64
 cmake -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" -G "Visual Studio 15 2017 Win64" ..
 cmake --build . --target ALL_BUILD --config Release
