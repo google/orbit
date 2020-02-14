@@ -7,10 +7,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS
     ON
     CACHE BOOL "generate compile_commands.json" FORCE)
 
-set(VCPKG_TARGET_TRIPLET
-    "x64-linux-mixed"
-    CACHE STRING "vcpkg target triplet")
-
 string(APPEND CMAKE_EXE_LINKER_FLAGS " -fuse-ld=lld")
 string(APPEND CMAKE_MODULE_LINKER_FLAGS " -fuse-ld=lld")
 string(APPEND CMAKE_SHARED_LINKER_FLAGS " -fuse-ld=lld")

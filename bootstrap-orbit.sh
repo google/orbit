@@ -9,7 +9,7 @@ fi
 sudo apt-get update
 sudo apt-get install -y build-essential ninja-build bison flex
 sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev
-sudo apt-get install -y linux-tools-common
+sudo apt-get install -y linux-tools-common qt5-default
 
 # Dev dependencies:
 # - cmake >= 3.15
@@ -28,8 +28,6 @@ fi
 # Build vcpkg
 cd external/vcpkg
 
-patch -p1 -i ../../contrib/patches/vcpkg-qt5-disable-glib.diff
-
 if [ -f "vcpkg" ]; then
   echo "Orbit: found vcpkg"
 else
@@ -42,9 +40,8 @@ else
 fi
 
 ## Build dependencies
-./vcpkg install --overlay-triplets=../../contrib/vcpkg/triplets \
-  --triplet x64-linux-mixed abseil freetype freetype-gl breakpad \
-  capstone asio cereal imgui freeglut glew curl qt5-base gtest
+./vcpkg install abseil freetype freetype-gl breakpad \
+  capstone asio cereal imgui freeglut glew curl gtest
 
 if [ $? -ne 0 ]; then
   echo -n "Orbit: Could not install all the dependencies. "
