@@ -6,7 +6,7 @@
 // Author: Florian Kuebler
 //-----------------------------------
 
-#include "LinuxPerfEventProcessor.h"
+#include "LinuxPerfEventProcessor2.h"
 
 #include <queue>
 
@@ -58,8 +58,8 @@ std::unique_ptr<LinuxPerfEvent> PerfEventQueue::PopEvent() {
   return top_event;
 }
 
-void LinuxPerfEventProcessor::AddEvent(int origin_fd,
-                                       std::unique_ptr<LinuxPerfEvent> event) {
+void LinuxPerfEventProcessor2::AddEvent(int origin_fd,
+                                        std::unique_ptr<LinuxPerfEvent> event) {
 #ifndef NDEBUG
   if (last_processed_timestamp_ > 0 &&
       event->Timestamp() <
@@ -70,7 +70,7 @@ void LinuxPerfEventProcessor::AddEvent(int origin_fd,
   event_queue_.PushEvent(origin_fd, std::move(event));
 }
 
-void LinuxPerfEventProcessor::ProcessAllEvents() {
+void LinuxPerfEventProcessor2::ProcessAllEvents() {
   while (event_queue_.HasEvent()) {
     std::unique_ptr<LinuxPerfEvent> event = event_queue_.PopEvent();
     event->accept(visitor_.get());
@@ -80,7 +80,7 @@ void LinuxPerfEventProcessor::ProcessAllEvents() {
   }
 }
 
-void LinuxPerfEventProcessor::ProcessOldEvents() {
+void LinuxPerfEventProcessor2::ProcessOldEvents() {
   uint64_t max_timestamp = OrbitTicks(CLOCK_MONOTONIC);
 
   while (event_queue_.HasEvent()) {

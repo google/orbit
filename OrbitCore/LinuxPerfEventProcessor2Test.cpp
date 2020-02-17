@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "LinuxPerfEventProcessor.h"
+#include "LinuxPerfEventProcessor2.h"
 
 namespace {
 class TestEvent : public LinuxPerfEvent {
