@@ -9,7 +9,7 @@ class TestEvent : public LinuxPerfEvent {
 
   uint64_t Timestamp() const override { return timestamp_; }
 
-  void accept(LinuxPerfEventVisitor* a_Visitor) override {}
+  void accept(LinuxPerfEventVisitor* visitor) override {}
 
  private:
   uint64_t timestamp_;
