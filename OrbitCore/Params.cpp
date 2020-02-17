@@ -30,7 +30,6 @@ Params::Params()
       m_AutoReleasePdb(false),
       m_BpftraceCallstacks(false),
       m_SystemWideScheduling(true),
-      m_UseBpftrace(false),
       m_SampleWithPerf(false),
       m_MaxNumTimers(1000000),
       m_FontSize(14.f),
@@ -63,7 +62,6 @@ ORBIT_SERIALIZE(Params, 16) {
   ORBIT_NVP_VAL(13, m_ProcessFilter);
   ORBIT_NVP_VAL(14, m_BpftraceCallstacks);
   ORBIT_NVP_VAL(15, m_SystemWideScheduling);
-  ORBIT_NVP_VAL(16, m_UseBpftrace);
 }
 
 //-----------------------------------------------------------------------------

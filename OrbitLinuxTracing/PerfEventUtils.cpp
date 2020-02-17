@@ -1,22 +1,13 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
-
-//-----------------------------------
-// Author: Florian Kuebler
-//-----------------------------------
-
-#include "LinuxPerfUtils.h"
+#include "PerfEventUtils.h"
 
 #include <linux/perf_event.h>
-#include <linux/version.h>
 
 #include <cerrno>
+#include <cstring>
 
-#include "LinuxUtils.h"
-#include "PrintVar.h"
+#include "Logging.h"
 
-namespace LinuxPerfUtils {
+namespace LinuxTracing {
 namespace {
 perf_event_attr generic_event_attr() {
   perf_event_attr pe{};
@@ -41,7 +32,7 @@ perf_event_attr generic_event_attr() {
 int32_t generic_event_open(perf_event_attr* attr, pid_t pid, int32_t cpu) {
   int32_t fd = perf_event_open(attr, pid, cpu, -1, 0);
   if (fd == -1) {
-    PRINT("perf_event_open error: %s\n", strerror(errno));
+    ERROR("perf_event_open: %s", strerror(errno));
   }
   return fd;
 }
@@ -59,9 +50,8 @@ perf_event_attr uprobe_event_attr(const char* module,
   return pe;
 }
 }  // namespace
-}  // namespace LinuxPerfUtils
 
-int32_t LinuxPerfUtils::task_event_open(int32_t cpu) {
+int32_t task_event_open(int32_t cpu) {
   perf_event_attr pe = generic_event_attr();
   pe.type = PERF_TYPE_SOFTWARE;
   pe.config = PERF_COUNT_SW_DUMMY;
@@ -70,7 +60,7 @@ int32_t LinuxPerfUtils::task_event_open(int32_t cpu) {
   return generic_event_open(&pe, -1, cpu);
 }
 
-int32_t LinuxPerfUtils::pid_context_switch_open(pid_t pid) {
+int32_t pid_context_switch_event_open(pid_t pid) {
   perf_event_attr pe = generic_event_attr();
   pe.type = PERF_TYPE_SOFTWARE;
   pe.config = PERF_COUNT_SW_DUMMY;
@@ -79,7 +69,7 @@ int32_t LinuxPerfUtils::pid_context_switch_open(pid_t pid) {
   return generic_event_open(&pe, pid, -1);
 }
 
-int32_t LinuxPerfUtils::cpu_context_switch_open(int32_t cpu) {
+int32_t cpu_context_switch_event_open(int32_t cpu) {
   perf_event_attr pe = generic_event_attr();
   pe.type = PERF_TYPE_SOFTWARE;
   pe.config = PERF_COUNT_SW_DUMMY;
@@ -88,8 +78,7 @@ int32_t LinuxPerfUtils::cpu_context_switch_open(int32_t cpu) {
   return generic_event_open(&pe, -1, cpu);
 }
 
-int32_t LinuxPerfUtils::sample_mmap_task_event_open(pid_t pid,
-                                                    uint64_t period_ns) {
+int32_t sample_mmap_task_event_open(pid_t pid, uint64_t period_ns) {
   perf_event_attr pe = generic_event_attr();
   pe.type = PERF_TYPE_SOFTWARE;
   pe.config = PERF_COUNT_SW_CPU_CLOCK;
@@ -103,22 +92,16 @@ int32_t LinuxPerfUtils::sample_mmap_task_event_open(pid_t pid,
   return generic_event_open(&pe, pid, -1);
 }
 
-bool LinuxPerfUtils::supports_perf_event_uprobes() {
-  return LinuxUtils::GetKernelVersion() >= KERNEL_VERSION(4, 17, 0);
-}
-
-int32_t LinuxPerfUtils::uprobe_event_open(const char* module,
-                                          uint64_t function_offset, pid_t pid,
-                                          int32_t cpu) {
+int32_t uprobe_event_open(const char* module, uint64_t function_offset,
+                          pid_t pid, int32_t cpu) {
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config = 0;
 
   return generic_event_open(&pe, pid, cpu);
 }
 
-int32_t LinuxPerfUtils::uprobe_stack_event_open(const char* module,
-                                                uint64_t function_offset,
-                                                pid_t pid, int32_t cpu) {
+int32_t uprobe_stack_event_open(const char* module, uint64_t function_offset,
+                                pid_t pid, int32_t cpu) {
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config = 0;
   pe.sample_type |= PERF_SAMPLE_STACK_USER | PERF_SAMPLE_REGS_USER;
@@ -126,21 +109,21 @@ int32_t LinuxPerfUtils::uprobe_stack_event_open(const char* module,
   return generic_event_open(&pe, pid, cpu);
 }
 
-int32_t LinuxPerfUtils::uretprobe_event_open(const char* module,
-                                             uint64_t function_offset,
-                                             pid_t pid, int32_t cpu) {
+int32_t uretprobe_event_open(const char* module, uint64_t function_offset,
+                             pid_t pid, int32_t cpu) {
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config = 1;  // Set bit 0 of config for uretprobe.
 
   return generic_event_open(&pe, pid, cpu);
 }
 
-int32_t LinuxPerfUtils::uretprobe_stack_event_open(const char* module,
-                                                   uint64_t function_offset,
-                                                   pid_t pid, int32_t cpu) {
+int32_t uretprobe_stack_event_open(const char* module, uint64_t function_offset,
+                                   pid_t pid, int32_t cpu) {
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config = 1;  // Set bit 0 of config for uretprobe.
   pe.sample_type |= PERF_SAMPLE_STACK_USER | PERF_SAMPLE_REGS_USER;
 
   return generic_event_open(&pe, pid, cpu);
 }
+
+}  // namespace LinuxTracing

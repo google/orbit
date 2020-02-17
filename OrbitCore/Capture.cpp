@@ -7,7 +7,6 @@
 #include <fstream>
 #include <ostream>
 
-#include "BpfTrace.h"
 #include "Core.h"
 #include "CoreApp.h"
 #include "EventBuffer.h"
@@ -328,9 +327,6 @@ void Capture::SendFunctionHooks() {
                      (void*)selectedFunctionsData.data(),
                      selectedFunctionsData.size());
 
-    BpfTrace bpfTrace;
-    PRINT_VAR(bpfTrace.GetBpfScript());
-    GTcpClient->Send(Msg_BpfScript, bpfTrace.GetBpfScript());
     GTcpClient->Send(Msg_StartCapture);
   } else
     // TODO: Why is this? This seems to be unnecessary.

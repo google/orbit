@@ -27,7 +27,6 @@
 #include <stdexcept>
 #include <string>
 
-#include "BpfTrace.h"
 #include "LinuxUtils.h"
 #endif
 

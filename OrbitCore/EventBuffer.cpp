@@ -88,21 +88,19 @@ void EventTracer::Start(uint32_t a_PID) {
   }
 
   if (GParams.m_TrackContextSwitches || !GParams.m_SampleWithPerf) {
-    m_EventTracer = std::make_shared<LinuxEventTracer>(a_PID);
-
-    std::vector<Function*> selected_functions;
-    selected_functions.reserve(Capture::GSelectedFunctionsMap.size());
-    for (const auto& function : Capture::GSelectedFunctionsMap) {
-      selected_functions.push_back(function.second);
-    }
-    m_EventTracer->SetInstrumentedFunctions(selected_functions);
-
-    m_EventTracer->Start();
+    m_LinuxTracer = std::make_shared<LinuxTracingHandler>(
+        GCoreApp, Capture::GTargetProcess.get(),
+        &Capture::GSelectedFunctionsMap, &Capture::GNumContextSwitches);
+    m_LinuxTracer->Start();
   }
 }
 
 //-----------------------------------------------------------------------------
 void EventTracer::Stop() {
+  if (m_LinuxTracer) {
+    m_LinuxTracer->Stop();
+  }
+
   if (m_Perf) {
     m_Perf->Stop();
   }
@@ -110,10 +108,6 @@ void EventTracer::Stop() {
   if (Capture::GSamplingProfiler) {
     Capture::GSamplingProfiler->StopCapture();
     Capture::GSamplingProfiler->ProcessSamples();
-  }
-
-  if (m_EventTracer) {
-    m_EventTracer->Stop();
   }
 }
 

@@ -1,20 +1,15 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
-
-//-----------------------------------
-// Author: Florian Kuebler
-//-----------------------------------
-
-#ifndef ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_2_H_
-#define ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_2_H_
+#ifndef ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_2_H_
+#define ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_2_H_
 
 #include <ctime>
+#include <memory>
 #include <queue>
 
-#include "LinuxPerfEvent.h"
-#include "LinuxPerfEventVisitor.h"
-#include "PrintVar.h"
+#include "PerfEvent.h"
+#include "PerfEventVisitor.h"
+#include "absl/container/flat_hash_map.h"
+
+namespace LinuxTracing {
 
 // This class implements a data structure that holds a large number of different
 // perf_event_open records coming from multiple ring buffers, and allows reading
@@ -35,10 +30,10 @@
 //  priority.
 class PerfEventQueue {
  public:
-  void PushEvent(int origin_fd, std::unique_ptr<LinuxPerfEvent> event);
+  void PushEvent(int origin_fd, std::unique_ptr<PerfEvent> event);
   bool HasEvent();
-  LinuxPerfEvent* TopEvent();
-  std::unique_ptr<LinuxPerfEvent> PopEvent();
+  PerfEvent* TopEvent();
+  std::unique_ptr<PerfEvent> PopEvent();
 
  private:
   // Comparator for the priority queue: pop will return the queue associated
@@ -47,10 +42,9 @@ class PerfEventQueue {
   struct QueueFrontTimestampReverseCompare {
     bool operator()(
         const std::pair<
-            int, std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>>>&
-            lhs,
+            int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>& lhs,
         const std::pair<
-            int, std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>>>&
+            int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>&
             rhs) {
       return lhs.second->front()->Timestamp() >
              rhs.second->front()->Timestamp();
@@ -58,14 +52,13 @@ class PerfEventQueue {
   };
 
   std::priority_queue<
-      std::pair<int,
-                std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>>>,
+      std::pair<int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>,
       std::vector<std::pair<
-          int, std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>>>>,
+          int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>>,
       QueueFrontTimestampReverseCompare>
       event_queues_queue_{};
-  std::unordered_map<
-      int, std::shared_ptr<std::queue<std::unique_ptr<LinuxPerfEvent>>>>
+  absl::flat_hash_map<int,
+                      std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>
       fd_event_queues_{};
 };
 
@@ -75,7 +68,7 @@ class PerfEventQueue {
 // a timestamp older than PROCESSING_DELAY_MS to be added. By not processing
 // events that are not older than this delay, we will never process events out
 // of order.
-class LinuxPerfEventProcessor2 {
+class PerfEventProcessor2 {
  public:
   // Do not process events that are more recent than 0.1 seconds. There could be
   // events coming out of order as they are read from different perf_event_open
@@ -83,11 +76,10 @@ class LinuxPerfEventProcessor2 {
   // order.
   static constexpr uint64_t PROCESSING_DELAY_MS = 100;
 
-  explicit LinuxPerfEventProcessor2(
-      std::unique_ptr<LinuxPerfEventVisitor> visitor)
+  explicit PerfEventProcessor2(std::unique_ptr<PerfEventVisitor> visitor)
       : visitor_(std::move(visitor)) {}
 
-  void AddEvent(int origin_fd, std::unique_ptr<LinuxPerfEvent> event);
+  void AddEvent(int origin_fd, std::unique_ptr<PerfEvent> event);
 
   void ProcessAllEvents();
 
@@ -95,11 +87,13 @@ class LinuxPerfEventProcessor2 {
 
  private:
   PerfEventQueue event_queue_;
-  std::unique_ptr<LinuxPerfEventVisitor> visitor_;
+  std::unique_ptr<PerfEventVisitor> visitor_;
 
 #ifndef NDEBUG
   uint64_t last_processed_timestamp_ = 0;
 #endif
 };
 
-#endif  // ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_2_H_
+}  // namespace LinuxTracing
+
+#endif  // ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_2_H_

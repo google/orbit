@@ -12,7 +12,6 @@ add_library(OrbitCore STATIC)
 target_sources(
   OrbitCore
   PUBLIC BaseTypes.h
-         BpfTrace.h
          BlockChain.h
          Callstack.h
          CallstackTypes.h
@@ -77,8 +76,7 @@ target_sources(
 
 target_sources(
   OrbitCore
-  PRIVATE BpfTrace.cpp
-          Callstack.cpp
+  PRIVATE Callstack.cpp
           Capture.cpp
           ContextSwitch.cpp
           Core.cpp
@@ -154,33 +152,15 @@ if(WIN32)
 else()
   target_sources(
     OrbitCore
-    PUBLIC BpfTraceVisitor.h
-           BpfTrace.h
-           LibunwindstackUnwinder.h
-           LinuxEventTracer.h
-           LinuxPerfEvent.h
-           LinuxPerfEventProcessor.h
-           LinuxPerfEventProcessor2.h
-           LinuxPerfEventVisitor.h
-           LinuxPerfRingBuffer.h
-           LinuxPerfUtils.h
-           LinuxUprobesUnwindingVisitor.h
+    PUBLIC LinuxTracingHandler.h
            LinuxUtils.h)
 
   # TODO: Compile ElfFile.cpp for all platforms once we have llvm support on Windows.
   target_sources(
     OrbitCore
-    PRIVATE BpfTraceVisitor.cpp
-	        ElfFile.cpp
-            LibunwindstackUnwinder.cpp
-            LinuxEventTracer.cpp
-            LinuxUtils.cpp
-            LinuxPerfEvent.cpp
-            LinuxPerfEventProcessor.cpp
-            LinuxPerfEventProcessor2.cpp
-            LinuxPerfRingBuffer.cpp
-            LinuxPerfUtils.cpp
-            LinuxUprobesUnwindingVisitor.cpp)
+    PRIVATE ElfFile.cpp
+            LinuxTracingHandler.cpp
+            LinuxUtils.cpp)
 endif()
 
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
@@ -208,7 +188,10 @@ if(WIN32)
   target_compile_definitions(OrbitCore PUBLIC -DNTDDI_VERSION=0x06030000)
 else()
   target_link_libraries(OrbitCore PRIVATE ${llvm_libs})
-  target_link_libraries(OrbitCore PUBLIC unwindstack::unwindstack)
+  target_link_libraries(
+    OrbitCore
+    PUBLIC OrbitLinuxTracing
+           unwindstack::unwindstack)
 endif()
 
 target_compile_definitions(OrbitCore PUBLIC WIN32_LEAN_AND_MEAN)
@@ -228,8 +211,6 @@ if(NOT WIN32)
   # TODO: Enable ElfFileTests.cpp for all platforms once we have llvm support on Windows.
   target_sources(OrbitCoreTests
     PRIVATE ElfFileTests.cpp
-            LinuxPerfEventProcessor2Test.cpp
-            LinuxUprobesUnwindingVisitorTest.cpp
             OrbitModuleTest.cpp)
   target_link_libraries(OrbitCoreTests PRIVATE  ${llvm_libs})
 endif()

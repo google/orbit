@@ -1,13 +1,5 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
-
-//-----------------------------------
-// Author: Florian Kuebler
-//-----------------------------------
-
-#ifndef ORBIT_CORE_LINUX_PERF_UTILS_H_
-#define ORBIT_CORE_LINUX_PERF_UTILS_H_
+#ifndef ORBIT_LINUX_TRACING_LINUX_PERF_UTILS_H_
+#define ORBIT_LINUX_TRACING_LINUX_PERF_UTILS_H_
 
 #include <asm/perf_regs.h>
 #include <asm/unistd.h>
@@ -21,12 +13,12 @@
 #include <cstdint>
 #include <ctime>
 
-inline int32_t perf_event_open(struct perf_event_attr* attr, pid_t pid,
-                               int32_t cpu, int32_t group_fd, uint64_t flags) {
+inline int perf_event_open(struct perf_event_attr* attr, pid_t pid, int cpu,
+                           int group_fd, unsigned long flags) {
   return syscall(__NR_perf_event_open, attr, pid, cpu, group_fd, flags);
 }
 
-namespace LinuxPerfUtils {
+namespace LinuxTracing {
 
 // This must be in sync with the struct perf_sample_id defined below.
 static constexpr uint64_t SAMPLE_TYPE_BASIC_FLAGS =
@@ -95,29 +87,27 @@ struct perf_sample_stack_user {
   uint64_t dyn_size; /* if PERF_SAMPLE_STACK_USER && size != 0 */
 };
 
-inline void start_capturing(uint32_t a_FileDescriptor) {
-  ioctl(a_FileDescriptor, PERF_EVENT_IOC_RESET, 0);
-  ioctl(a_FileDescriptor, PERF_EVENT_IOC_ENABLE, 0);
+inline void perf_event_enable(int file_descriptor) {
+  ioctl(file_descriptor, PERF_EVENT_IOC_RESET, 0);
+  ioctl(file_descriptor, PERF_EVENT_IOC_ENABLE, 0);
 }
 
-inline void stop_capturing(uint32_t a_FileDescriptor) {
-  ioctl(a_FileDescriptor, PERF_EVENT_IOC_DISABLE, 0);
+inline void perf_event_disable(int file_descriptor) {
+  ioctl(file_descriptor, PERF_EVENT_IOC_DISABLE, 0);
 }
 
 // perf_event_open for fork and exit.
 int32_t task_event_open(int32_t cpu);
 
 // perf_event_open for context switches.
-int32_t pid_context_switch_open(pid_t pid);
+int32_t pid_context_switch_event_open(pid_t pid);
 
-int32_t cpu_context_switch_open(int32_t cpu);
+int32_t cpu_context_switch_event_open(int32_t cpu);
 
 // perf_event_open for stack sampling.
 int32_t sample_mmap_task_event_open(pid_t pid, uint64_t period_ns);
 
 // perf_event_open for uprobes.
-bool supports_perf_event_uprobes();
-
 int32_t uprobe_event_open(const char* module, uint64_t function_offset,
                           pid_t pid, int32_t cpu);
 
@@ -129,6 +119,6 @@ int32_t uretprobe_event_open(const char* module, uint64_t function_offset,
 
 int32_t uretprobe_stack_event_open(const char* module, uint64_t function_offset,
                                    pid_t pid, int32_t cpu);
-}  // namespace LinuxPerfUtils
+}  // namespace LinuxTracing
 
-#endif  // ORBIT_CORE_LINUX_PERF_UTILS_H_
+#endif  // ORBIT_LINUX_TRACING_LINUX_PERF_UTILS_H_

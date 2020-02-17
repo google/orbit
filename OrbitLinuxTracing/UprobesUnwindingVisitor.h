@@ -1,12 +1,16 @@
-#ifndef ORBIT_CORE_LINUX_UPROBES_UNWINDING_VISITOR_H_
-#define ORBIT_CORE_LINUX_UPROBES_UNWINDING_VISITOR_H_
+#ifndef ORBIT_LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_
+#define ORBIT_LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_
+
+#include <OrbitLinuxTracing/TracerListener.h>
 
 #include "LibunwindstackUnwinder.h"
-#include "LinuxPerfEvent.h"
-#include "LinuxPerfEventVisitor.h"
-#include "ScopeTimer.h"
+#include "PerfEvent.h"
+#include "PerfEventVisitor.h"
+#include "absl/container/flat_hash_map.h"
 
-// LinuxUprobesUnwindingVisitor visitor processes stack samples and
+namespace LinuxTracing {
+
+// UprobesUnwindingVisitor visitor processes stack samples and
 // uprobes/uretprobes records (as well as memory maps changes, to keep necessary
 // unwinding information up-to-date), assuming they come in order.
 // The reason for processing both in the same visitor is that, when entering a
@@ -19,26 +23,6 @@
 // of instrumented functions. When we have a callstack broken because of
 // uretprobes we can then rebuild the missing part by joining together the parts
 // on the stack of callstacks associated with that thread.
-
-class UprobesTimerManager {
- public:
-  UprobesTimerManager() = default;
-
-  UprobesTimerManager(const UprobesTimerManager&) = delete;
-  UprobesTimerManager& operator=(const UprobesTimerManager&) = delete;
-
-  UprobesTimerManager(UprobesTimerManager&&) = default;
-  UprobesTimerManager& operator=(UprobesTimerManager&&) = default;
-
-  void ProcessUprobes(pid_t tid, uint64_t begin_timestamp,
-                      uint64_t function_address);
-  // TODO: use std::optional once we switch to C++17.
-  bool ProcessUretprobes(pid_t tid, uint64_t end_timestamp, Timer* timer);
-
- private:
-  // This map keeps the stack of the dynamically-instrumented functions entered.
-  std::unordered_map<pid_t, std::vector<Timer>> tid_timer_stacks_{};
-};
 
 class UprobesCallstackManager {
  public:
@@ -60,7 +44,7 @@ class UprobesCallstackManager {
  private:
   // This map keeps, for every thread, the stack of callstacks collected when
   // entering a uprobes-instrumented function.
-  std::unordered_map<pid_t, std::vector<std::vector<unwindstack::FrameData>>>
+  absl::flat_hash_map<pid_t, std::vector<std::vector<unwindstack::FrameData>>>
       tid_uprobes_callstacks_stacks_{};
 
   static std::vector<unwindstack::FrameData>
@@ -70,37 +54,35 @@ class UprobesCallstackManager {
           previous_callstacks);
 };
 
-class LinuxUprobesUnwindingVisitor : public LinuxPerfEventVisitor {
+class UprobesUnwindingVisitor : public PerfEventVisitor {
  public:
-  explicit LinuxUprobesUnwindingVisitor(pid_t pid, const std::string& maps)
-      : pid_{pid} {
-    unwinder_.SetMaps(maps);
+  explicit UprobesUnwindingVisitor(const std::string& initial_maps) {
+    unwinder_.SetMaps(initial_maps);
   }
 
-  LinuxUprobesUnwindingVisitor(const LinuxUprobesUnwindingVisitor&) = delete;
-  LinuxUprobesUnwindingVisitor& operator=(const LinuxUprobesUnwindingVisitor&) =
-      delete;
+  UprobesUnwindingVisitor(const UprobesUnwindingVisitor&) = delete;
+  UprobesUnwindingVisitor& operator=(const UprobesUnwindingVisitor&) = delete;
 
-  LinuxUprobesUnwindingVisitor(LinuxUprobesUnwindingVisitor&&) = default;
-  LinuxUprobesUnwindingVisitor& operator=(LinuxUprobesUnwindingVisitor&&) =
-      default;
+  UprobesUnwindingVisitor(UprobesUnwindingVisitor&&) = default;
+  UprobesUnwindingVisitor& operator=(UprobesUnwindingVisitor&&) = default;
 
-  void visit(LinuxStackSampleEvent* event) override;
-  void visit(LinuxUprobeEventWithStack* event) override;
-  void visit(LinuxUretprobeEventWithStack* event) override;
-  void visit(LinuxMapsEvent* event) override;
+  void SetListener(TracerListener* listener) { listener_ = listener; }
+
+  void visit(StackSamplePerfEvent* event) override;
+  void visit(UprobePerfEventWithStack* event) override;
+  void visit(UretprobePerfEventWithStack* event) override;
+  void visit(MapsPerfEvent* event) override;
 
  private:
-  pid_t pid_;
-  UprobesTimerManager timer_manager_{};
-
   LibunwindstackUnwinder unwinder_{};
   UprobesCallstackManager callstack_manager_{};
 
-  static void HandleTimer(const Timer& timer);
-  static void HandleCallstack(
-      pid_t tid, uint64_t timestamp,
-      const std::vector<unwindstack::FrameData>& frames);
+  TracerListener* listener_ = nullptr;
+
+  static std::vector<CallstackFrame> CallstackFramesFromLibunwindstackFrames(
+      const std::vector<unwindstack::FrameData>& libunwindstack_frames);
 };
 
-#endif  // ORBIT_CORE_LINUX_UPROBES_UNWINDING_VISITOR_H_
+}  // namespace LinuxTracing
+
+#endif  // ORBIT_LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_

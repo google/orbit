@@ -1,12 +1,16 @@
 #include "LibunwindstackUnwinder.h"
 
-#include "PrintVar.h"
+#include <array>
+
+#include "Logging.h"
+
+namespace LinuxTracing {
 
 bool LibunwindstackUnwinder::SetMaps(const std::string& maps_buffer) {
   maps_ = std::make_unique<unwindstack::BufferMaps>(maps_buffer.c_str());
 
   if (!maps_->Parse()) {
-    PRINT("LibunwindstackUnwinder::SetMaps: failed to parse maps\n");
+    ERROR("LibunwindstackUnwinder::SetMaps: failed to parse maps");
     maps_ = nullptr;
     return false;
   }
@@ -14,7 +18,7 @@ bool LibunwindstackUnwinder::SetMaps(const std::string& maps_buffer) {
   return true;
 }
 
-const std::array<int, unwindstack::X86_64_REG_LAST>
+const std::array<size_t, unwindstack::X86_64_REG_LAST>
     LibunwindstackUnwinder::UNWINDSTACK_REGS_TO_PERF_REGS{
         PERF_REG_X86_AX,  PERF_REG_X86_DX,  PERF_REG_X86_CX,  PERF_REG_X86_BX,
         PERF_REG_X86_SI,  PERF_REG_X86_DI,  PERF_REG_X86_BP,  PERF_REG_X86_SP,
@@ -27,12 +31,13 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
     const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
     const char* stack_dump, uint64_t stack_dump_size) {
   if (!maps_) {
-    PRINT("LibunwindstackUnwinder::Unwind: maps not set\n");
+    ERROR("LibunwindstackUnwinder::Unwind: maps not set");
     return {};
   }
 
   unwindstack::RegsX86_64 regs{};
-  for (int perf_reg = 0; perf_reg < unwindstack::X86_64_REG_LAST; ++perf_reg) {
+  for (size_t perf_reg = 0; perf_reg < unwindstack::X86_64_REG_LAST;
+       ++perf_reg) {
     regs[perf_reg] = perf_regs.at(UNWINDSTACK_REGS_TO_PERF_REGS[perf_reg]);
   }
 
@@ -47,12 +52,13 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
   // later.
   unwinder.Unwind();
 
-  // Samples that fall into a function dynamically-instrumented with uretprobes
-  // often result in unwinding errors when hitting the trampoline inserted by
-  // the uretprobe. Do not treat them as errors as we need those callstacks.
+  // Samples that fall inside a function dynamically-instrumented with
+  // uretprobes often result in unwinding errors when hitting the trampoline
+  // inserted by the uretprobe. Do not treat them as errors as we need those
+  // callstacks.
   if (unwinder.LastErrorCode() != 0 &&
       unwinder.frames().back().map_name != "[uprobes]") {
-    PRINT("LibunwindstackUnwinder::Unwind: unwinding error: %s at %#016lx\n",
+    ERROR("LibunwindstackUnwinder::Unwind: %s at %#016lx",
           LibunwindstackErrorString(unwinder.LastErrorCode()).c_str(),
           unwinder.LastErrorAddress());
     return {};
@@ -60,3 +66,5 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
 
   return unwinder.frames();
 }
+
+}  // namespace LinuxTracing

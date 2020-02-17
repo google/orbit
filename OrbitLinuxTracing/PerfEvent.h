@@ -1,20 +1,15 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
+#ifndef ORBIT_LINUX_TRACING_PERF_EVENT_H_
+#define ORBIT_LINUX_TRACING_PERF_EVENT_H_
 
-//-----------------------------------
-// Author: Florian Kuebler
-//-----------------------------------
+#include <OrbitLinuxTracing/Function.h>
 
-#pragma once
+#include <array>
 
-#include "LinuxPerfUtils.h"
-#include "OrbitFunction.h"
-#include "PrintVar.h"
+#include "PerfEventUtils.h"
 
-using namespace LinuxPerfUtils;
+namespace LinuxTracing {
 
-class LinuxPerfEventVisitor;
+class PerfEventVisitor;
 
 // This base class will be used in order to do processing of
 // different perf events using the visitor pattern.
@@ -26,10 +21,10 @@ class LinuxPerfEventVisitor;
 // As the perf_event_open ring buffer is 8-byte aligned, this field
 // might also need to be extended with dummy bytes at the end of the record.
 
-class LinuxPerfEvent {
+class PerfEvent {
  public:
   virtual uint64_t Timestamp() const = 0;
-  virtual void accept(LinuxPerfEventVisitor* visitor) = 0;
+  virtual void accept(PerfEventVisitor* visitor) = 0;
 };
 
 struct __attribute__((__packed__)) perf_context_switch_event {
@@ -37,7 +32,7 @@ struct __attribute__((__packed__)) perf_context_switch_event {
   perf_sample_id sample_id;
 };
 
-class LinuxContextSwitchEvent : public LinuxPerfEvent {
+class ContextSwitchPerfEvent : public PerfEvent {
  public:
   perf_context_switch_event ring_buffer_data{};
 
@@ -45,7 +40,7 @@ class LinuxContextSwitchEvent : public LinuxPerfEvent {
     return ring_buffer_data.sample_id.time;
   }
 
-  void accept(LinuxPerfEventVisitor* visitor) override;
+  void accept(PerfEventVisitor* visitor) override;
 
   pid_t PID() const { return ring_buffer_data.sample_id.pid; }
   pid_t TID() const { return ring_buffer_data.sample_id.tid; }
@@ -63,7 +58,7 @@ struct __attribute__((__packed__)) perf_context_switch_cpu_wide_event {
   perf_sample_id sample_id;
 };
 
-class LinuxSystemWideContextSwitchEvent : public LinuxPerfEvent {
+class SystemWideContextSwitchPerfEvent : public PerfEvent {
  public:
   perf_context_switch_cpu_wide_event ring_buffer_data{};
 
@@ -71,7 +66,7 @@ class LinuxSystemWideContextSwitchEvent : public LinuxPerfEvent {
     return ring_buffer_data.sample_id.time;
   }
 
-  void accept(LinuxPerfEventVisitor* visitor) override;
+  void accept(PerfEventVisitor* visitor) override;
 
   pid_t PrevPID() const {
     return IsSwitchOut() ? ring_buffer_data.sample_id.pid
@@ -110,13 +105,13 @@ struct __attribute__((__packed__)) perf_fork_exit_event {
   struct perf_sample_id sample_id;
 };
 
-class LinuxForkEvent : public LinuxPerfEvent {
+class ForkPerfEvent : public PerfEvent {
  public:
   perf_fork_exit_event ring_buffer_data{};
 
   uint64_t Timestamp() const override { return ring_buffer_data.time; }
 
-  void accept(LinuxPerfEventVisitor* visitor) override;
+  void accept(PerfEventVisitor* visitor) override;
 
   pid_t PID() const { return ring_buffer_data.pid; }
   pid_t ParentPID() const { return ring_buffer_data.ppid; }
@@ -124,13 +119,13 @@ class LinuxForkEvent : public LinuxPerfEvent {
   pid_t ParentTID() const { return ring_buffer_data.ptid; }
 };
 
-class LinuxExitEvent : public LinuxPerfEvent {
+class ExitPerfEvent : public PerfEvent {
  public:
   perf_fork_exit_event ring_buffer_data{};
 
   uint64_t Timestamp() const override { return ring_buffer_data.time; }
 
-  void accept(LinuxPerfEventVisitor* visitor) override;
+  void accept(PerfEventVisitor* visitor) override;
 
   pid_t PID() const { return ring_buffer_data.pid; }
   pid_t ParentPID() const { return ring_buffer_data.ppid; }
@@ -145,7 +140,7 @@ struct __attribute__((__packed__)) perf_lost_event {
   struct perf_sample_id sample_id;
 };
 
-class LinuxPerfLostEvent : public LinuxPerfEvent {
+class LostPerfEvent : public PerfEvent {
  public:
   perf_lost_event ring_buffer_data{};
 
@@ -153,13 +148,13 @@ class LinuxPerfLostEvent : public LinuxPerfEvent {
     return ring_buffer_data.sample_id.time;
   }
 
-  void accept(LinuxPerfEventVisitor* visitor) override;
+  void accept(PerfEventVisitor* visitor) override;
 
   uint64_t Lost() const { return ring_buffer_data.lost; }
 };
 
 template <typename perf_record_data_t>
-class LinuxPerfEventRecord : public LinuxPerfEvent {
+class SamplePerfEvent : public PerfEvent {
  public:
   perf_record_data_t ring_buffer_data;
 
@@ -218,8 +213,7 @@ perf_sample_regs_user_all_to_register_array(
 }
 }  // namespace
 
-class LinuxStackSampleEvent
-    : public LinuxPerfEventRecord<perf_record_with_stack> {
+class StackSamplePerfEvent : public SamplePerfEvent<perf_record_with_stack> {
  public:
   std::array<uint64_t, PERF_REG_X86_64_MAX> Registers() const {
     return perf_sample_regs_user_all_to_register_array(
@@ -229,46 +223,26 @@ class LinuxStackSampleEvent
   const char* StackDump() const { return ring_buffer_data.stack_data.data; }
   uint64_t StackSize() const { return ring_buffer_data.stack_data.dyn_size; }
 
-  void accept(LinuxPerfEventVisitor* visitor) override;
+  void accept(PerfEventVisitor* visitor) override;
 };
 
 template <typename perf_record_data_t>
-class AbstractLinuxUprobeEvent
-    : public LinuxPerfEventRecord<perf_record_data_t> {
+class AbstractUprobePerfEvent : public SamplePerfEvent<perf_record_data_t> {
  public:
-  Function* GetFunction() const { return function_; }
-  void SetFunction(Function* function) { function_ = function; }
+  const Function* GetFunction() const { return function_; }
+  void SetFunction(const Function* function) { function_ = function; }
 
  private:
-  Function* function_ = nullptr;
+  const Function* function_ = nullptr;
 };
 
-class LinuxUprobeEvent : public AbstractLinuxUprobeEvent<perf_empty_record> {
+class UprobePerfEvent : public AbstractUprobePerfEvent<perf_empty_record> {
  public:
-  void accept(LinuxPerfEventVisitor* visitor) override;
+  void accept(PerfEventVisitor* visitor) override;
 };
 
-class LinuxUprobeEventWithStack
-    : public AbstractLinuxUprobeEvent<perf_record_with_stack> {
- public:
-  std::array<uint64_t, PERF_REG_X86_64_MAX> Registers() const {
-    return perf_sample_regs_user_all_to_register_array(
-        ring_buffer_data.register_data);
-  }
-
-  const char* StackDump() const { return ring_buffer_data.stack_data.data; }
-  uint64_t StackSize() const { return ring_buffer_data.stack_data.dyn_size; }
-
-  void accept(LinuxPerfEventVisitor* visitor) override;
-};
-
-class LinuxUretprobeEvent : public AbstractLinuxUprobeEvent<perf_empty_record> {
- public:
-  void accept(LinuxPerfEventVisitor* visitor) override;
-};
-
-class LinuxUretprobeEventWithStack
-    : public AbstractLinuxUprobeEvent<perf_record_with_stack> {
+class UprobePerfEventWithStack
+    : public AbstractUprobePerfEvent<perf_record_with_stack> {
  public:
   std::array<uint64_t, PERF_REG_X86_64_MAX> Registers() const {
     return perf_sample_regs_user_all_to_register_array(
@@ -278,23 +252,46 @@ class LinuxUretprobeEventWithStack
   const char* StackDump() const { return ring_buffer_data.stack_data.data; }
   uint64_t StackSize() const { return ring_buffer_data.stack_data.dyn_size; }
 
-  void accept(LinuxPerfEventVisitor* visitor) override;
+  void accept(PerfEventVisitor* visitor) override;
+};
+
+class UretprobePerfEvent : public AbstractUprobePerfEvent<perf_empty_record> {
+ public:
+  void accept(PerfEventVisitor* visitor) override;
+};
+
+class UretprobePerfEventWithStack
+    : public AbstractUprobePerfEvent<perf_record_with_stack> {
+ public:
+  std::array<uint64_t, PERF_REG_X86_64_MAX> Registers() const {
+    return perf_sample_regs_user_all_to_register_array(
+        ring_buffer_data.register_data);
+  }
+
+  const char* StackDump() const { return ring_buffer_data.stack_data.data; }
+  uint64_t StackSize() const { return ring_buffer_data.stack_data.dyn_size; }
+
+  void accept(PerfEventVisitor* visitor) override;
 };
 
 // This carries a snapshot of /proc/<pid>/maps and does not reflect a
 // perf_event_open event, but we want it to be part of the same hierarchy.
-class LinuxMapsEvent : public LinuxPerfEvent {
+class MapsPerfEvent : public PerfEvent {
  public:
-  LinuxMapsEvent(uint64_t timestamp, std::string maps)
+  MapsPerfEvent(uint64_t timestamp, std::string maps)
       : timestamp_{timestamp}, maps_{std::move(maps)} {}
 
   uint64_t Timestamp() const override { return timestamp_; }
 
   const std::string& Maps() const { return maps_; }
 
-  void accept(LinuxPerfEventVisitor* visitor) override;
+  void accept(PerfEventVisitor* visitor) override;
 
  private:
   uint64_t timestamp_;
   std::string maps_;
 };
+
+}  // namespace LinuxTracing
+
+#endif  // ORBIT_LINUX_TRACING_PERF_EVENT_H_

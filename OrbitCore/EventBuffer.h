@@ -9,7 +9,7 @@
 #include "SerializationMacros.h"
 
 #ifdef __linux
-#include "LinuxEventTracer.h"
+#include "LinuxTracingHandler.h"
 #include "LinuxUtils.h"
 #endif
 
@@ -91,7 +91,7 @@ struct EventTracer {
   void Start(uint32_t a_PID);
   void Stop();
   std::shared_ptr<LinuxPerf> m_Perf;
-  std::shared_ptr<LinuxEventTracer> m_EventTracer;
+  std::shared_ptr<LinuxTracingHandler> m_LinuxTracer;
 };
 
 extern EventTracer GEventTracer;
