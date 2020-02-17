@@ -5,8 +5,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS
     ON
     CACHE BOOL "generate compile_commands.json" FORCE)
 
-set(VCPKG_TARGET_TRIPLET "x64-linux-mixed" CACHE STRING "vcpkg target triplet")
-
 add_compile_options(
   -Wpedantic
   -Wall
@@ -14,7 +12,7 @@ add_compile_options(
   -Wdouble-promotion
   -Wformat=2
   -Wnull-dereference
-  -Wimplicit-fallthrough
+#  -Wimplicit-fallthrough  # This option is not supported on gamelets.
   -Wmissing-include-dirs
   -Wshift-overflow
   -Wswitch-enum

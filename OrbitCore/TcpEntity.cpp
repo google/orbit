@@ -30,15 +30,14 @@ TcpEntity::~TcpEntity() {}
 //-----------------------------------------------------------------------------
 void TcpEntity::Start() {
   PRINT_FUNC;
+  m_ExitRequested = false;
   m_SenderThread = new std::thread([&]() { SendData(); });
 }
 
 //-----------------------------------------------------------------------------
 void TcpEntity::Stop() {
   PRINT_FUNC;
-  if (!m_ExitRequested) {
-    m_ExitRequested = true;
-  }
+  m_ExitRequested = true;
 
   m_ConditionVariable.signal();
   if (m_SenderThread != nullptr) {
@@ -101,7 +100,7 @@ void TcpEntity::SendData() {
       --m_NumQueuedEntries;
       TcpSocket* socket = GetSocket();
       if (socket && socket->m_Socket && socket->m_Socket->is_open()) {
-        asio::write(*socket->m_Socket, shared_const_buffer(buffer));
+        asio::write(*socket->m_Socket, SharedConstBuffer(buffer));
       } else {
         ORBIT_ERROR;
       }

@@ -144,9 +144,6 @@ void SamplingProfiler::AddCallStack(CallStack& a_CallStack) {
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddHashedCallStack(CallstackEvent& a_CallStack) {
-  if (m_State != Sampling) {
-    PRINT("Error: Callstacks can only be added while sampling.\n");
-  }
   if (!HasCallStack(a_CallStack.m_Id)) {
     PRINT(
         "Error: Callstacks can only be added by hash when they are already "

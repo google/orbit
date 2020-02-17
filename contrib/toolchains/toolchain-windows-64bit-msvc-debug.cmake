@@ -1,7 +1,6 @@
-set(CMAKE_BUILD_TYPE "Debug")
-set(MSVC_DIA_SDK_DIR
-    "C:/Program Files (x86)/Microsoft Visual Studio/2019/Professional/DIA SDK"
-    CACHE PATH "The DIA SDK path" FORCE)
+set(CMAKE_BUILD_TYPE
+    "Debug"
+    CACHE STRING "build type" FORCE)
 
 add_compile_options(
   /W4
