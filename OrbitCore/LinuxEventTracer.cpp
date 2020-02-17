@@ -14,7 +14,7 @@
 #include "ContextSwitch.h"
 #include "CoreApp.h"
 #include "LinuxPerfEvent.h"
-#include "LinuxPerfEventProcessor.h"
+#include "LinuxPerfEventProcessor2.h"
 #include "LinuxPerfRingBuffer.h"
 #include "LinuxPerfUtils.h"
 #include "LinuxUprobesUnwindingVisitor.h"
@@ -57,7 +57,7 @@ void LinuxEventTracerThread::Run(
     }
   }
 
-  LinuxPerfEventProcessor uprobe_event_processor{
+  LinuxPerfEventProcessor2 uprobe_event_processor{
       std::make_unique<LinuxUprobesUnwindingVisitor>(
           pid_, LinuxUtils::ReadMaps(pid_))};
 

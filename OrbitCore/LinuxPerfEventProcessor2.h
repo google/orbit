@@ -6,8 +6,8 @@
 // Author: Florian Kuebler
 //-----------------------------------
 
-#ifndef ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_H_
-#define ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_H_
+#ifndef ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_2_H_
+#define ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_2_H_
 
 #include <ctime>
 #include <queue>
@@ -75,7 +75,7 @@ class PerfEventQueue {
 // a timestamp older than PROCESSING_DELAY_MS to be added. By not processing
 // events that are not older than this delay, we will never process events out
 // of order.
-class LinuxPerfEventProcessor {
+class LinuxPerfEventProcessor2 {
  public:
   // Do not process events that are more recent than 0.1 seconds. There could be
   // events coming out of order as they are read from different perf_event_open
@@ -83,7 +83,7 @@ class LinuxPerfEventProcessor {
   // order.
   static constexpr uint64_t PROCESSING_DELAY_MS = 100;
 
-  explicit LinuxPerfEventProcessor(
+  explicit LinuxPerfEventProcessor2(
       std::unique_ptr<LinuxPerfEventVisitor> visitor)
       : visitor_(std::move(visitor)) {}
 
@@ -102,4 +102,4 @@ class LinuxPerfEventProcessor {
 #endif
 };
 
-#endif  // ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_H_
+#endif  // ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_2_H_

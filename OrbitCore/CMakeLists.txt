@@ -153,7 +153,7 @@ else()
            LibunwindstackUnwinder.h
            LinuxEventTracer.h
            LinuxPerfEvent.h
-           LinuxPerfEventProcessor.h
+          LinuxPerfEventProcessor2.h
            LinuxPerfEventVisitor.h
            LinuxPerfRingBuffer.h
            LinuxPerfUtils.h
@@ -167,7 +167,7 @@ else()
             LinuxEventTracer.cpp
             LinuxUtils.cpp
             LinuxPerfEvent.cpp
-            LinuxPerfEventProcessor.cpp
+          LinuxPerfEventProcessor2.cpp
             LinuxPerfRingBuffer.cpp
             LinuxPerfUtils.cpp
             LinuxUprobesUnwindingVisitor.cpp)
@@ -214,7 +214,7 @@ target_sources(OrbitCoreTests
 
 if(NOT WIN32)
   target_sources(OrbitCoreTests
-    PRIVATE LinuxPerfEventProcessorTest.cpp
+    PRIVATE LinuxPerfEventProcessor2Test.cpp
           LinuxUprobesUnwindingVisitorTest.cpp)
 endif()
 
