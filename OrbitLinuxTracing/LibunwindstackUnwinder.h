@@ -1,15 +1,15 @@
-#ifndef ORBIT_CORE_LIBUNWINDSTACK_UNWINDER_H_
-#define ORBIT_CORE_LIBUNWINDSTACK_UNWINDER_H_
+#ifndef ORBIT_LINUX_TRACING_LIBUNWINDSTACK_UNWINDER_H_
+#define ORBIT_LINUX_TRACING_LIBUNWINDSTACK_UNWINDER_H_
 
 #include <asm/perf_regs.h>
+#include <unwindstack/MachineX86_64.h>
+#include <unwindstack/RegsX86_64.h>
+#include <unwindstack/Unwinder.h>
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
-#include "unwindstack/MachineX86_64.h"
-#include "unwindstack/RegsX86_64.h"
-#include "unwindstack/Unwinder.h"
+namespace LinuxTracing {
 
 class LibunwindstackUnwinder {
  public:
@@ -24,7 +24,7 @@ class LibunwindstackUnwinder {
 
   static constexpr size_t MAX_FRAMES = 1024;  // This is arbitrary.
 
-  static const std::array<int, unwindstack::X86_64_REG_LAST>
+  static const std::array<size_t, unwindstack::X86_64_REG_LAST>
       UNWINDSTACK_REGS_TO_PERF_REGS;
 
   static std::string LibunwindstackErrorString(
@@ -37,5 +37,6 @@ class LibunwindstackUnwinder {
     return ERROR_NAMES[error_code];
   }
 };
+}  // namespace LinuxTracing
 
-#endif  // ORBIT_CORE_LIBUNWINDSTACK_UNWINDER_H_
+#endif  // ORBIT_LINUX_TRACING_LIBUNWINDSTACK_UNWINDER_H_

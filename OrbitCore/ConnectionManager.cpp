@@ -4,7 +4,6 @@
 
 #include "ConnectionManager.h"
 
-#include "BpfTrace.h"
 #include "Capture.h"
 #include "ContextSwitch.h"
 #include "CoreApp.h"
@@ -34,7 +33,6 @@
 //-----------------------------------------------------------------------------
 ConnectionManager::ConnectionManager()
     : m_ExitRequested(false), m_IsService(false) {
-  m_BpfTrace = std::make_shared<BpfTrace>();
 }
 
 //-----------------------------------------------------------------------------
@@ -117,18 +115,12 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
 void ConnectionManager::StartCaptureAsRemote() {
   PRINT_FUNC;
   Capture::StartCapture();
-  if (GParams.m_UseBpftrace) {
-    // TODO: Either we remove BpfTrace soon, or we should use it from a single
-    //  code location (the other one is in App.cpp)
-    m_BpfTrace->Start();
-  }
   GCoreApp->StartRemoteCaptureBufferingThread();
 }
 
 //-----------------------------------------------------------------------------
 void ConnectionManager::StopCaptureAsRemote() {
   PRINT_FUNC;
-  m_BpfTrace->Stop();
   Capture::StopCapture();
   GCoreApp->StopRemoteCaptureBufferingThread();
 }
@@ -138,10 +130,6 @@ void ConnectionManager::Stop() { m_ExitRequested = true; }
 
 //-----------------------------------------------------------------------------
 void ConnectionManager::SetupServerCallbacks() {
-  GTcpServer->AddMainThreadCallback(Msg_BpfScript, [=](const Message& a_Msg) {
-    m_BpfTrace->SetBpfScript(a_Msg.GetData());
-  });
-
   GTcpServer->AddMainThreadCallback(
       Msg_RemoteSelectedFunctionsMap,
       [=](const Message& a_Msg) { SetSelectedFunctionsOnRemote(a_Msg); });

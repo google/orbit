@@ -1,21 +1,23 @@
 #include <gtest/gtest.h>
 
-#include "LinuxPerfEventProcessor2.h"
+#include "PerfEventProcessor2.h"
+
+namespace LinuxTracing {
 
 namespace {
-class TestEvent : public LinuxPerfEvent {
+class TestEvent : public PerfEvent {
  public:
   explicit TestEvent(uint64_t timestamp) : timestamp_(timestamp) {}
 
   uint64_t Timestamp() const override { return timestamp_; }
 
-  void accept(LinuxPerfEventVisitor* visitor) override {}
+  void accept(PerfEventVisitor* visitor) override {}
 
  private:
   uint64_t timestamp_;
 };
 
-std::unique_ptr<LinuxPerfEvent> MakeTestEvent(uint64_t timestamp) {
+std::unique_ptr<PerfEvent> MakeTestEvent(uint64_t timestamp) {
   return std::make_unique<TestEvent>(timestamp);
 }
 }  // namespace
@@ -103,3 +105,5 @@ TEST(PerfEventQueue, MultipleFd) {
 
   EXPECT_FALSE(event_queue.HasEvent());
 }
+
+}  // namespace LinuxTracing

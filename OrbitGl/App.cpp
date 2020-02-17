@@ -13,7 +13,6 @@
 #include <fstream>
 #include <thread>
 
-#include "BpfTrace.h"
 #include "CallStackDataView.h"
 #include "Callstack.h"
 #include "Capture.h"
@@ -67,8 +66,6 @@
 #include "EventTracer.h"
 #else
 #include "LinuxPerf.h"
-#include "LinuxPerfUtils.h"
-#include "LinuxUtils.h"
 #endif
 
 class OrbitApp* GOrbitApp;
@@ -416,10 +413,6 @@ bool OrbitApp::Init() {
   GOrbitApp->LoadFileMapping();
   GOrbitApp->LoadSymbolsFile();
   OrbitVersion::CheckForUpdate();
-
-#if __linux__
-  PRINT_VAR(LinuxPerfUtils::supports_perf_event_uprobes());
-#endif
 
   return true;
 }
@@ -1004,18 +997,7 @@ void OrbitApp::AddUiMessageCallback(
 
 //-----------------------------------------------------------------------------
 void OrbitApp::StartCapture() {
-#ifdef WIN32
   Capture::StartCapture();
-#else
-  if (Capture::StartCapture() && !Capture::IsRemote()) {
-    // TODO: Either we remove BpfTrace soon, or we should use it from a
-    //  single code location (the other one is in ConnectionManager.h/.cpp)
-    if (GParams.m_UseBpftrace) {
-      m_BpfTrace = std::make_shared<BpfTrace>();
-      m_BpfTrace->Start();
-    }
-  }
-#endif
 
   if (m_NeedsThawing) {
 #ifdef _WIN32
@@ -1028,12 +1010,6 @@ void OrbitApp::StartCapture() {
 //-----------------------------------------------------------------------------
 void OrbitApp::StopCapture() {
   Capture::StopCapture();
-
-#ifdef __linux__
-  if (m_BpfTrace) {
-    m_BpfTrace->Stop();
-  }
-#endif
 
   FireRefreshCallbacks();
 }

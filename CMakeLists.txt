@@ -73,6 +73,8 @@ else()
   # available for Windows.
   add_library(OrbitAsm INTERFACE)
   target_include_directories(OrbitAsm INTERFACE OrbitAsm/)
+
+  add_subdirectory(OrbitLinuxTracing)
 endif()
 
 add_subdirectory(OrbitCore)

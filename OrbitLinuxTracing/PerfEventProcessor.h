@@ -1,27 +1,21 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
-
-//-----------------------------------
-// Author: Florian Kuebler
-//-----------------------------------
-
-#ifndef ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_H_
-#define ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_H_
+#ifndef ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_H_
+#define ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_H_
 
 #include <ctime>
+#include <memory>
 #include <queue>
 
-#include "LinuxPerfEvent.h"
-#include "LinuxPerfEventVisitor.h"
-#include "PrintVar.h"
+#include "PerfEvent.h"
+#include "PerfEventVisitor.h"
+
+namespace LinuxTracing {
 
 // A comparator used for the priority queue, such that pop/top will
 // always return the oldest event in the queue.
 class TimestampReverseCompare {
  public:
-  bool operator()(const std::unique_ptr<LinuxPerfEvent>& lhs,
-                  const std::unique_ptr<LinuxPerfEvent>& rhs) {
+  bool operator()(const std::unique_ptr<PerfEvent>& lhs,
+                  const std::unique_ptr<PerfEvent>& rhs) {
     return lhs->Timestamp() > rhs->Timestamp();
   }
 };
@@ -34,7 +28,7 @@ class TimestampReverseCompare {
 // a timestamp older than PROCESSING_DELAY_MS to be added. By not processing
 // events that are not older than this delay, we will never process events out
 // of order.
-class LinuxPerfEventProcessor {
+class PerfEventProcessor {
  public:
   // Do not process events that are more recent than 0.1 seconds. There could be
   // events coming out of order as they are read from different perf_event_open
@@ -42,11 +36,10 @@ class LinuxPerfEventProcessor {
   // order.
   static constexpr uint64_t PROCESSING_DELAY_MS = 100;
 
-  explicit LinuxPerfEventProcessor(
-      std::unique_ptr<LinuxPerfEventVisitor> visitor)
+  explicit PerfEventProcessor(std::unique_ptr<PerfEventVisitor> visitor)
       : visitor_(std::move(visitor)) {}
 
-  void AddEvent(int origin_fd, std::unique_ptr<LinuxPerfEvent> event);
+  void AddEvent(int origin_fd, std::unique_ptr<PerfEvent> event);
 
   void ProcessAllEvents();
 
@@ -59,16 +52,18 @@ class LinuxPerfEventProcessor {
   //  number of buffers. This would require moving a ring buffer down the heap
   //  once an event has been processed, by removing-and-readding or with a
   //  custom priority queue.
-  std::priority_queue<std::unique_ptr<LinuxPerfEvent>,
-                      std::vector<std::unique_ptr<LinuxPerfEvent>>,
+  std::priority_queue<std::unique_ptr<PerfEvent>,
+                      std::vector<std::unique_ptr<PerfEvent>>,
                       TimestampReverseCompare>
       event_queue_;
 
-  std::unique_ptr<LinuxPerfEventVisitor> visitor_;
+  std::unique_ptr<PerfEventVisitor> visitor_;
 
 #ifndef NDEBUG
   uint64_t last_processed_timestamp_ = 0;
 #endif
 };
 
-#endif  // ORBIT_CORE_LINUX_PERF_EVENT_PROCESSOR_H_
+}  // namespace LinuxTracing
+
+#endif  // ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_H_

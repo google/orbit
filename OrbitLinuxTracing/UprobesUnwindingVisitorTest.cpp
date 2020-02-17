@@ -3,106 +3,9 @@
 
 #include <utility>
 
-#include "LinuxUprobesUnwindingVisitor.h"
+#include "UprobesUnwindingVisitor.h"
 
-TEST(UprobesTimerManager, OneUprobe) {
-  constexpr pid_t tid = 42;
-  bool process_uretprobes_res;
-  Timer processed_timer;
-  UprobesTimerManager timer_manager;
-
-  timer_manager.ProcessUprobes(tid, 1, 100);
-
-  process_uretprobes_res =
-      timer_manager.ProcessUretprobes(tid, 2, &processed_timer);
-  ASSERT_TRUE(process_uretprobes_res);
-  EXPECT_EQ(processed_timer.m_TID, tid);
-  EXPECT_EQ(processed_timer.m_Start, 1);
-  EXPECT_EQ(processed_timer.m_End, 2);
-  EXPECT_EQ(processed_timer.m_Depth, 0);
-  EXPECT_EQ(processed_timer.m_FunctionAddress, 100);
-}
-
-TEST(UprobesTimerManager, TwoNestedUprobesAndAnotherUprobe) {
-  constexpr pid_t tid = 42;
-  bool process_uretprobes_res;
-  Timer processed_timer;
-  UprobesTimerManager timer_manager;
-
-  timer_manager.ProcessUprobes(tid, 1, 100);
-
-  timer_manager.ProcessUprobes(tid, 2, 200);
-
-  process_uretprobes_res =
-      timer_manager.ProcessUretprobes(tid, 3, &processed_timer);
-  ASSERT_TRUE(process_uretprobes_res);
-  EXPECT_EQ(processed_timer.m_TID, tid);
-  EXPECT_EQ(processed_timer.m_Start, 2);
-  EXPECT_EQ(processed_timer.m_End, 3);
-  EXPECT_EQ(processed_timer.m_Depth, 1);
-  EXPECT_EQ(processed_timer.m_FunctionAddress, 200);
-
-  process_uretprobes_res =
-      timer_manager.ProcessUretprobes(tid, 4, &processed_timer);
-  ASSERT_TRUE(process_uretprobes_res);
-  EXPECT_EQ(processed_timer.m_TID, tid);
-  EXPECT_EQ(processed_timer.m_Start, 1);
-  EXPECT_EQ(processed_timer.m_End, 4);
-  EXPECT_EQ(processed_timer.m_Depth, 0);
-  EXPECT_EQ(processed_timer.m_FunctionAddress, 100);
-
-  timer_manager.ProcessUprobes(tid, 5, 300);
-
-  process_uretprobes_res =
-      timer_manager.ProcessUretprobes(tid, 6, &processed_timer);
-  ASSERT_TRUE(process_uretprobes_res);
-  EXPECT_EQ(processed_timer.m_TID, tid);
-  EXPECT_EQ(processed_timer.m_Start, 5);
-  EXPECT_EQ(processed_timer.m_End, 6);
-  EXPECT_EQ(processed_timer.m_Depth, 0);
-  EXPECT_EQ(processed_timer.m_FunctionAddress, 300);
-}
-
-TEST(UprobesTimerManager, TwoUprobesDifferentThreads) {
-  constexpr pid_t tid = 42;
-  constexpr pid_t tid2 = 111;
-  bool process_uretprobes_res;
-  Timer processed_timer;
-  UprobesTimerManager timer_manager;
-
-  timer_manager.ProcessUprobes(tid, 1, 100);
-
-  timer_manager.ProcessUprobes(tid2, 2, 200);
-
-  process_uretprobes_res =
-      timer_manager.ProcessUretprobes(tid, 3, &processed_timer);
-  ASSERT_TRUE(process_uretprobes_res);
-  EXPECT_EQ(processed_timer.m_TID, tid);
-  EXPECT_EQ(processed_timer.m_Start, 1);
-  EXPECT_EQ(processed_timer.m_End, 3);
-  EXPECT_EQ(processed_timer.m_Depth, 0);
-  EXPECT_EQ(processed_timer.m_FunctionAddress, 100);
-
-  process_uretprobes_res =
-      timer_manager.ProcessUretprobes(tid2, 4, &processed_timer);
-  ASSERT_TRUE(process_uretprobes_res);
-  EXPECT_EQ(processed_timer.m_TID, tid2);
-  EXPECT_EQ(processed_timer.m_Start, 2);
-  EXPECT_EQ(processed_timer.m_End, 4);
-  EXPECT_EQ(processed_timer.m_Depth, 0);
-  EXPECT_EQ(processed_timer.m_FunctionAddress, 200);
-}
-
-TEST(UprobesTimerManager, OnlyRetprobe) {
-  constexpr pid_t tid = 42;
-  bool process_uretprobes_res;
-  Timer processed_timer;
-  UprobesTimerManager timer_manager;
-
-  process_uretprobes_res =
-      timer_manager.ProcessUretprobes(tid, 2, &processed_timer);
-  ASSERT_FALSE(process_uretprobes_res);
-}
+namespace LinuxTracing {
 
 namespace {
 unwindstack::FrameData MakeTestFrame(std::string function_name) {
@@ -393,3 +296,5 @@ TEST(UprobesCallstackManager, UnwindingErrorOnStack) {
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
 }
+
+}  // namespace LinuxTracing
