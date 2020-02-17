@@ -29,7 +29,7 @@ class LinuxPerfEventVisitor;
 class LinuxPerfEvent {
  public:
   virtual uint64_t Timestamp() const = 0;
-  virtual void accept(LinuxPerfEventVisitor* a_Visitor) = 0;
+  virtual void accept(LinuxPerfEventVisitor* visitor) = 0;
 };
 
 struct __attribute__((__packed__)) perf_context_switch_event {
@@ -45,7 +45,7 @@ class LinuxContextSwitchEvent : public LinuxPerfEvent {
     return ring_buffer_data.sample_id.time;
   }
 
-  void accept(LinuxPerfEventVisitor* a_Visitor) override;
+  void accept(LinuxPerfEventVisitor* visitor) override;
 
   pid_t PID() const { return ring_buffer_data.sample_id.pid; }
   pid_t TID() const { return ring_buffer_data.sample_id.tid; }
@@ -71,7 +71,7 @@ class LinuxSystemWideContextSwitchEvent : public LinuxPerfEvent {
     return ring_buffer_data.sample_id.time;
   }
 
-  void accept(LinuxPerfEventVisitor* a_Visitor) override;
+  void accept(LinuxPerfEventVisitor* visitor) override;
 
   pid_t PrevPID() const {
     return IsSwitchOut() ? ring_buffer_data.sample_id.pid
@@ -116,7 +116,7 @@ class LinuxForkEvent : public LinuxPerfEvent {
 
   uint64_t Timestamp() const override { return ring_buffer_data.time; }
 
-  void accept(LinuxPerfEventVisitor* a_Visitor) override;
+  void accept(LinuxPerfEventVisitor* visitor) override;
 
   pid_t PID() const { return ring_buffer_data.pid; }
   pid_t ParentPID() const { return ring_buffer_data.ppid; }
@@ -130,7 +130,7 @@ class LinuxExitEvent : public LinuxPerfEvent {
 
   uint64_t Timestamp() const override { return ring_buffer_data.time; }
 
-  void accept(LinuxPerfEventVisitor* a_Visitor) override;
+  void accept(LinuxPerfEventVisitor* visitor) override;
 
   pid_t PID() const { return ring_buffer_data.pid; }
   pid_t ParentPID() const { return ring_buffer_data.ppid; }
@@ -153,7 +153,7 @@ class LinuxPerfLostEvent : public LinuxPerfEvent {
     return ring_buffer_data.sample_id.time;
   }
 
-  void accept(LinuxPerfEventVisitor* a_Visitor) override;
+  void accept(LinuxPerfEventVisitor* visitor) override;
 
   uint64_t Lost() const { return ring_buffer_data.lost; }
 };
