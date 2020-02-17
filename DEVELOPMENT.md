@@ -96,7 +96,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -G Ninja ..
 ninja # or cmake --build .
 ```
 
-Finally, `build_ggp_release/OrbitService/OrbitService` can by copied over
+Finally, `build_ggp_release/OrbitService/OrbitService` can be copied over
 to the instance:
 ```bash
 ggp ssh put OrbitService/OrbitService .
