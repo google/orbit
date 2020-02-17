@@ -14,6 +14,7 @@
 #include "ContextSwitch.h"
 #include "CoreApp.h"
 #include "LinuxPerfEvent.h"
+#include "LinuxPerfEventProcessor.h"
 #include "LinuxPerfEventProcessor2.h"
 #include "LinuxPerfRingBuffer.h"
 #include "LinuxPerfUtils.h"
@@ -57,6 +58,9 @@ void LinuxEventTracerThread::Run(
     }
   }
 
+  // Switch between LinuxPerfEventProcessor and LinuxPerfEventProcessor2 here.
+  // LinuxPerfEventProcessor2 is supposedly faster but assumes that events from
+  // the same perf_event_open ring buffer are already sorted.
   LinuxPerfEventProcessor2 uprobe_event_processor{
       std::make_unique<LinuxUprobesUnwindingVisitor>(
           pid_, LinuxUtils::ReadMaps(pid_))};
