@@ -73,8 +73,9 @@ style.
 
 ## Cross-Compiling for GGP
 
-_Note:_ This was only tested on Linux. But cross compilation on Windows
-should work as well.
+_Note:_ This was only tested on Linux. Cross compilation on Windows
+is currently not supported. There are some issues with cross-compiling
+openssl.
 
 _Note:_ Cross compiling the UI is not supported.
 
