@@ -70,3 +70,39 @@ or directly.
 A `.clang-format` file which defines our specific code style lives in the
 top level directory of the repository. The style is identical to the Google
 style.
+
+## Cross-Compiling for GGP
+
+_Note:_ This was only tested on Linux. But cross compilation on Windows
+should work as well.
+
+_Note:_ Cross compiling the UI is not supported.
+
+First we need to cross compile all the dependencies:
+```bash
+cd external/vcpkg
+./vcpkg --overlay-triplets=../../contrib/vcpkg/triplets/ \
+  --triplet x64-linux-ggp install abseil freetype freetype-gl breakpad \
+  capstone asio cereal imgui freeglut glew curl gtest
+cd ../../
+```
+
+In a second step, we can compile Orbit itself:
+```bash
+mkdir build_ggp_release
+cd build_ggp_release
+cp ../contrib/toolchains/toolchain-linux-ggp-release.cmake toolchain.cmake
+cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -G Ninja ..
+ninja # or cmake --build .
+```
+
+Finally, `build_ggp_release/OrbitService/OrbitService` can by copied over
+to the instance:
+```bash
+ggp ssh put OrbitService/OrbitService .
+```
+
+Some dependencies still need to be installed on the instance:
+```bash
+sudo apt install libglu1-mesa libxi6 libxmu6
+```
