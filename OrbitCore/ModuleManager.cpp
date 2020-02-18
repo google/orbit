@@ -69,7 +69,8 @@ void ModuleManager::LoadPdbAsync(const std::shared_ptr<Module>& a_Module,
 
       GPdbDbg = a_Module->m_Pdb;
       if (GPdbDbg) {
-        GPdbDbg->SetMainModule((HMODULE)a_Module->m_AddressStart);
+        // This function should probably be called something like SetBaseAddress
+        GPdbDbg->SetMainModule(a_Module->m_AddressStart);
         GPdbDbg->LoadPdbAsync(pdbName.c_str(), [&]() { this->OnPdbLoaded(); });
       }
     }

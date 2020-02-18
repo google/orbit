@@ -19,7 +19,7 @@ void OrbitUnreal::OnTypeAdded(Type* a_Type) {
 
 //-----------------------------------------------------------------------------
 void OrbitUnreal::OnFunctionAdded(Function* a_Function) {
-  if (a_Function->m_PrettyName == "FName::GetDisplayNameEntry") {
+  if (a_Function->PrettyName() == "FName::GetDisplayNameEntry") {
     m_GetDisplayNameEntryFunc = a_Function;
   }
 }

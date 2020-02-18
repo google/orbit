@@ -83,9 +83,9 @@ uint64_t Systrace::ProcessFunctionName(const std::string& a_String) {
     const std::string& function = tokens.back();
     uint64_t hash = ProcessString(function);
     Function func;
-    func.m_Address = hash;
-    func.m_Name = func.m_PrettyName = function;
-    func.m_PrettyNameLower = ToLower(func.m_Name);
+    func.SetAddress(hash);
+    func.SetName(function);
+    func.SetPrettyName(function);
     m_Functions.push_back(func);
     return hash;
   }
@@ -155,14 +155,15 @@ Systrace::Systrace(const char* a_FilePath, uint64_t a_TimeOffsetNs) {
   {
     SCOPE_TIMER_LOG("Function Map");
     for (auto& function : m_Functions) {
-      m_FunctionMap[function.m_Address] = &function;
+      // TODO: Should this be an absolute address of a function?
+      m_FunctionMap[function.Address()] = &function;
     }
   }
 
   {
     SCOPE_TIMER_LOG("Update Timers");
     for (auto& timer : m_Timers) {
-      m_FunctionMap[timer.m_FunctionAddress]->m_Stats->Update(timer);
+      m_FunctionMap[timer.m_FunctionAddress]->UpdateStats(timer);
     }
   }
 }

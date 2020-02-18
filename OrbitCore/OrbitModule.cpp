@@ -55,7 +55,7 @@ bool Module::IsDll() const {
 //-----------------------------------------------------------------------------
 bool Module::LoadDebugInfo() {
   assert(m_Pdb);
-  m_Pdb->SetMainModule((HMODULE)m_AddressStart);
+  m_Pdb->SetMainModule(m_AddressStart);
 
   PRINT_VAR(m_FoundPdb);
   if (m_FoundPdb) {
@@ -153,12 +153,10 @@ bool Pdb::LoadPdb(const char* a_PdbName) {
       std::vector<std::string> tokens = Tokenize(line, " \t");
       if (tokens.size() > 2)  // nm
       {
-        Function func;
-        func.m_Name = tokens[2];
-        func.m_Address = std::stoull(tokens[0], nullptr, 16);
-        func.m_PrettyName = LinuxUtils::Demangle(tokens[2].c_str());
-        func.m_Module = Path::GetFileName(a_PdbName);
-        func.m_Pdb = this;
+        const auto& name = tokens[2];
+        Function func(name, Path::GetFileName(a_PdbName),
+                      std::stoull(tokens[0], nullptr, 16), 0, this);
+        func.SetPrettyName(LinuxUtils::Demangle(name.c_str()));
         this->AddFunction(func);
       }
     }
@@ -180,9 +178,9 @@ bool Pdb::LoadPdb(const char* a_PdbName) {
       std::string demangled = LinuxUtils::Demangle(mangled.c_str());
 
       Function* func = FunctionFromName(demangled);
-      if (func && func->m_Probe.empty()) {
+      if (func && func->Probe().empty()) {
         std::string probe = m_FileName + std::string(":") + mangled;
-        func->m_Probe = probe;
+        func->SetProbe(probe);
       }
     }
   }
@@ -209,7 +207,7 @@ void Pdb::ProcessData() {
   functions.reserve(functions.size() + m_Functions.size());
 
   for (Function& func : m_Functions) {
-    func.m_Pdb = this;
+    func.SetPdb(this);
     functions.push_back(&func);
     GOrbitUnreal.OnFunctionAdded(&func);
   }
@@ -242,56 +240,25 @@ void Pdb::ProcessData() {
 
 //-----------------------------------------------------------------------------
 void Pdb::PopulateFunctionMap() {
-  m_IsPopulatingFunctionMap = true;
-
   SCOPE_TIMER_LOG("Pdb::PopulateFunctionMap");
-
-  uint64_t baseAddress = (uint64_t)GetHModule();
-  bool rvaAddresses = false;
-
-  // It seems nm can return addresses as VA or RVA
-  // TODO: investigate, use simple test to detect RVA
   for (Function& function : m_Functions) {
-    if (function.m_Address > 0 && function.m_Address < baseAddress) {
-      rvaAddresses = true;
-      break;
-    }
+    m_FunctionMap.insert(std::make_pair(function.Address(), &function));
   }
-
-  for (Function& Function : m_Functions) {
-    uint64_t RVA = rvaAddresses ? Function.m_Address
-                                : Function.m_Address - (uint64_t)GetHModule();
-    m_FunctionMap.insert(std::make_pair(RVA, &Function));
-  }
-
-  m_IsPopulatingFunctionMap = false;
 }
 
 //-----------------------------------------------------------------------------
 void Pdb::PopulateStringFunctionMap() {
-  m_IsPopulatingFunctionStringMap = true;
-
   {
     // SCOPE_TIMER_LOG("Reserving map");
     m_StringFunctionMap.reserve(unsigned(1.5f * (float)m_Functions.size()));
   }
 
   {
-    // SCOPE_TIMER_LOG("Hash");
-    for (Function& Function : m_Functions) {
-      Function.Hash();
-    }
-  }
-
-  {
     // SCOPE_TIMER_LOG("Map inserts");
-
     for (Function& Function : m_Functions) {
-      m_StringFunctionMap[Function.m_NameHash] = &Function;
+      m_StringFunctionMap[Function.Hash()] = &Function;
     }
   }
-
-  m_IsPopulatingFunctionStringMap = false;
 }
 
 //-----------------------------------------------------------------------------

@@ -54,13 +54,13 @@ class Pdb {
   std::vector<Function>& GetFunctions() { return m_Functions; }
   std::vector<Type>& GetTypes() { return m_Types; }
   std::vector<Variable>& GetGlobals() { return m_Globals; }
-  HMODULE GetHModule() { return m_MainModule; }
+  uint64_t GetHModule() const { return m_MainModule; }
   Type& GetTypeFromId(ULONG a_Id) { return m_TypeMap[a_Id]; }
   Type* GetTypePtrFromId(ULONG a_ID);
 
   GUID GetGuid();
 
-  void SetMainModule(HMODULE a_Module) { m_MainModule = a_Module; }
+  void SetMainModule(uint64_t a_Module) { m_MainModule = a_Module; }
 
   void Print() const;
   void PrintGlobals() const;
@@ -111,7 +111,7 @@ class Pdb {
   std::atomic<bool> m_IsPopulatingFunctionMap;
   std::atomic<bool> m_IsPopulatingFunctionStringMap;
   std::function<void()> m_LoadingCompleteCallback;
-  HMODULE m_MainModule;
+  uint64_t m_MainModule;
   float m_LastLoadTime;
   bool m_LoadedFromCache;
   std::vector<Variable> m_WatchedVariables;
@@ -166,13 +166,13 @@ class Pdb {
   std::vector<Function>& GetFunctions() { return m_Functions; }
   std::vector<Type>& GetTypes() { return m_Types; }
   std::vector<Variable>& GetGlobals() { return m_Globals; }
-  HMODULE GetHModule() { return m_MainModule; }
+  uint64_t GetHModule() const { return m_MainModule; }
   Type& GetTypeFromId(ULONG a_Id) { return m_TypeMap[a_Id]; }
   Type* GetTypePtrFromId(ULONG a_ID);
 
   GUID GetGuid();
 
-  void SetMainModule(HMODULE a_Module) { m_MainModule = a_Module; }
+  void SetMainModule(uint64_t a_Module) { m_MainModule = a_Module; }
 
   void Print() const;
   void PrintGlobals() const;
@@ -212,10 +212,8 @@ class Pdb {
   std::unique_ptr<std::thread> m_LoadingThread;
   std::atomic<bool> m_FinishedLoading;
   std::atomic<bool> m_IsLoading;
-  std::atomic<bool> m_IsPopulatingFunctionMap;
-  std::atomic<bool> m_IsPopulatingFunctionStringMap;
   std::function<void()> m_LoadingCompleteCallback;
-  HMODULE m_MainModule = 0;
+  uint64_t m_MainModule = 0;
   float m_LastLoadTime = 0;
   std::vector<Variable> m_WatchedVariables;
   std::set<std::string> m_ArgumentRegisters;

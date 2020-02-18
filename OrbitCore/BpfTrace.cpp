@@ -75,21 +75,21 @@ std::string BpfTrace::GetBpfScript() {
 
   for (Function* func : Capture::GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {
-      auto virtual_address = static_cast<uint64_t>(func->GetVirtualAddress());
-      Capture::GSelectedFunctionsMap[func->m_Address] = func;
+      auto virtual_address = func->GetVirtualAddress();
+      Capture::GSelectedFunctionsMap[virtual_address] = func;
 
       if (GParams.m_BpftraceCallstacks) {
-        ss << "   uprobe:" << func->m_Probe << R"({ printf("b )"
+        ss << "   uprobe:" << func->Probe() << R"({ printf("b )"
            << std::to_string(virtual_address)
            << R"( %u %lld\n%s\n\nd\n\n", tid, nsecs, ustack(perf)); })"
            << std::endl;
       } else {
-        ss << "   uprobe:" << func->m_Probe << R"({ printf("b )"
+        ss << "   uprobe:" << func->Probe() << R"({ printf("b )"
            << std::to_string(virtual_address)
            << R"( %u %lld\n", tid, nsecs); })" << std::endl;
       }
 
-      ss << "uretprobe:" << func->m_Probe << R"({ printf("e )"
+      ss << "uretprobe:" << func->Probe() << R"({ printf("e )"
          << std::to_string(virtual_address) << R"( %u %lld\n", tid, nsecs); })"
          << std::endl;
     }

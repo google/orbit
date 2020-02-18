@@ -227,11 +227,9 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
   if (a_Timer.m_FunctionAddress > 0) {
     Function* func = Capture::GTargetProcess->GetFunctionFromAddress(
         a_Timer.m_FunctionAddress);
-    if (func) {
+    if (func != nullptr) {
       ++Capture::GFunctionCountMap[a_Timer.m_FunctionAddress];
-      if (func->m_Stats) {
-        func->m_Stats->Update(a_Timer);
-      }
+      func->UpdateStats(a_Timer);
     }
   }
 

@@ -65,7 +65,7 @@ void CaptureSerializer::Save(T& a_Archive) {
       Function* func = pair.second;
       if (func) {
         functions.push_back(*func);
-        functions.back().m_Address = func->GetVirtualAddress();
+        functions.back().SetAddress(func->Address());
       }
     }
 
@@ -136,7 +136,7 @@ void CaptureSerializer::Load(const std::wstring a_FileName) {
     GPdbDbg = module->m_Pdb;
     Capture::GSelectedFunctionsMap.clear();
     for (Function& func : module->m_Pdb->GetFunctions()) {
-      Capture::GSelectedFunctionsMap[func.m_Address] = &func;
+      Capture::GSelectedFunctionsMap[func.GetVirtualAddress()] = &func;
     }
     Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 

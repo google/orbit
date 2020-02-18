@@ -77,19 +77,19 @@ void TestRemoteMessages::Run() {
                    moduleData.size());
 
   Function function;
-  function.m_Name = "m_Name";
-  function.m_PrettyName = "m_PrettyName";
-  function.m_PrettyNameLower = "m_PrettyNameLower";
-  function.m_Module = "m_Module";
-  function.m_File = "m_File";
-  function.m_Probe = "m_Probe";
-  function.m_Address = 1;
-  function.m_ModBase = 2;
-  function.m_Size = 3;
-  function.m_Id = 4;
-  function.m_ParentId = 5;
-  function.m_Line = 6;
-  function.m_CallConv = 7;
+  function.SetName("m_Name");
+  function.SetPrettyName("m_PrettyName");
+  // This will initialize m_PrettyLowerName to Lower(pretty_name_)
+  function.Lower();
+  function.SetModule("m_Module");
+  function.SetFile("m_File");
+  function.SetProbe("m_Probe");
+  function.SetAddress(1);
+  function.SetSize(3);
+  function.SetId(4);
+  function.SetParentId(5);
+  function.SetLine(6);
+  function.SetCallingConvention(7);
 
   std::string functionData = SerializeObjectHumanReadable(function);
   GTcpClient->Send(Msg_RemoteFunctions, (void*)functionData.data(),
@@ -122,6 +122,6 @@ void TestRemoteMessages::SetupMessageHandlers() {
     cereal::JSONInputArchive inputAr(buffer);
     Function function;
     inputAr(function);
-    PRINT_VAR(function.m_Name);
+    PRINT_VAR(function.Name());
   });
 }

@@ -845,26 +845,26 @@ bool DumpAllFunctions( IDiaSymbol *pGlobal )
 
         if( pSymbol->get_relativeVirtualAddress( &dwRVA ) == S_OK )
         {
-            Func.m_Address = dwRVA;
+            Func.SetAddress(dwRVA);
         }
 
         if( pSymbol->get_name( &bstrName ) == S_OK )
         {
-            Func.m_PrettyName = ws2s(bstrName);
+            Func.SetPrettyName(ws2s(bstrName));
             SysFreeString( bstrName );
         }
 
         DWORD indexID;
         if( pSymbol->get_symIndexId( &indexID ) == S_OK )
         {
-            Func.m_Id = indexID;
+            Func.SetId(indexID);
         }
 
         //get_lengthProlog
         ULONGLONG length;
         if( pSymbol->get_length( &length ) == S_OK )
         {
-            Func.m_Size = (ULONG)length;
+            Func.SetSize((ULONG)length);
         }
 
         OrbitDiaSymbol pFuncType;
@@ -872,7 +872,7 @@ bool DumpAllFunctions( IDiaSymbol *pGlobal )
         {
             if( pFuncType->get_callingConvention( &callingConv ) == S_OK )
             {
-                Func.m_CallConv = callingConv;
+                Func.SetCallingConvention(callingConv);
             }
         }
 
@@ -882,18 +882,19 @@ bool DumpAllFunctions( IDiaSymbol *pGlobal )
         {
             if( classParentSym.m_Symbol->get_symIndexId( &classParentId ) == S_OK )
             {
-                Func.m_ParentId = classParentId;
+                Func.SetParentId(classParentId);
             }
         }
 
 		BSTR bstrFile;
 		if (pSymbol->get_sourceFileName(&bstrFile) == S_OK)
 		{
-			Func.m_File = ws2s(bstrFile);
+			Func.SetFile(ws2s(bstrFile));
 			SysFreeString( bstrName );
 		}
 
-        if( Func.m_PrettyName.size() && Func.m_PrettyName[0] != TEXT( '`' ) )
+        const std::string& pretty_name = Func.PrettyName();
+        if (pretty_name[0] != '`')
         {
 			GPdbDbg->AddFunction(Func);
         }

@@ -18,8 +18,8 @@
 #endif
 
 class Pdb;
+class Type;
 
-//-----------------------------------------------------------------------------
 struct FunctionParam {
   FunctionParam();
   std::string m_Name;
@@ -37,7 +37,6 @@ struct FunctionParam {
   bool IsFloat();
 };
 
-//-----------------------------------------------------------------------------
 struct Argument {
   Argument() { memset(this, 0, sizeof(*this)); }
   DWORD m_Index;
@@ -46,7 +45,6 @@ struct Argument {
   DWORD m_NumBytes;
 };
 
-//-----------------------------------------------------------------------------
 struct FunctionArgInfo {
   FunctionArgInfo() : m_NumStackBytes(0), m_ArgDataSize(0) {}
   int m_NumStackBytes;
@@ -54,57 +52,8 @@ struct FunctionArgInfo {
   std::vector<Argument> m_Args;
 };
 
-//-----------------------------------------------------------------------------
 class Function {
  public:
-  Function();
-  ~Function();
-
-  void Print();
-  void SetAsMainFrameFunction();
-  void AddParameter(const FunctionParam& a_Param) {
-    m_Params.push_back(a_Param);
-  }
-  const std::string& PrettyName();
-  inline const std::string& Lower() {
-    if (m_PrettyNameLower.size() == 0)
-      m_PrettyNameLower = ToLower(m_PrettyName);
-    return m_PrettyNameLower;
-  }
-  static const TCHAR* GetCallingConventionString(int a_CallConv);
-  void ProcessArgumentInfo();
-  bool IsMemberFunction();
-  unsigned long long Hash() {
-    if (m_NameHash == 0) {
-      m_NameHash = StringHash(m_PrettyName);
-    }
-    return m_NameHash;
-  }
-  bool Hookable();
-  void Select();
-  void PreHook();
-  void UnSelect();
-  void ToggleSelect() { /*if( Hookable() )*/
-    m_Selected = !m_Selected;
-  }
-  bool IsSelected() const { return m_Selected; }
-  DWORD64 GetVirtualAddress() const;
-  bool IsOrbitFunc() { return m_OrbitType != OrbitType::NONE; }
-  bool IsOrbitZone() {
-    return m_OrbitType == ORBIT_TIMER_START || m_OrbitType == ORBIT_TIMER_STOP;
-  }
-  bool IsOrbitStart() { return m_OrbitType == ORBIT_TIMER_START; }
-  bool IsOrbitStop() { return m_OrbitType == ORBIT_TIMER_STOP; }
-  bool IsRealloc() { return m_OrbitType == REALLOC; }
-  bool IsAlloc() { return m_OrbitType == ALLOC; }
-  bool IsFree() { return m_OrbitType == FREE; }
-  bool IsMemoryFunc() { return IsFree() || IsAlloc() || IsRealloc(); }
-  std::wstring GetModuleName();
-  class Type* GetParentType();
-  void ResetStats();
-  void GetDisassembly();
-  void FindFile();
-
   enum MemberID {
     NAME,
     ADDRESS,
@@ -132,29 +81,103 @@ class Function {
     NUM_TYPES
   };
 
+  Function();
+  Function(const std::string& name, const std::string& module,
+           uint64_t address, uint64_t size, Pdb* pdb);
+
+  void Print();
+  void SetAsMainFrameFunction();
+  void AddParameter(const FunctionParam& param) {
+    params_.push_back(param);
+  }
+
+  // TODO: It looks like most setters are used by TestRemoteMessages::Run()
+  // only. Move these to a constructor?
+  void SetName(const std::string& name) { name_ = name; }
+  void SetPrettyName(const std::string& pretty_name) {
+    pretty_name_ = pretty_name;
+  }
+  void SetAddress(uint64_t address) { address_ = address; }
+  void SetModule(const std::string& module) { module_ = module; }
+  void SetFile(const std::string& file) { file_ = file; }
+  void SetProbe(const std::string& probe) { probe_ = probe; }
+  void SetId(uint32_t id) { id_ = id; }
+  void SetParentId(uint32_t parent_id) { parent_id_ = parent_id; }
+  void SetSize(uint64_t size) { size_ = size; }
+  void SetLine(uint32_t line) { line_ = line; }
+  void SetCallingConvention(int calling_convention) {
+    calling_convention_ = calling_convention;
+  }
+  void SetOrbitType(OrbitType type) { type_ = type; }
+  void SetPdb(Pdb* pdb) { pdb_ = pdb; }
+
+  const std::string& Name() const { return name_; }
+  const std::string& PrettyName() const;
+  const std::string& Lower() {
+    if (pretty_name_lower_.size() == 0) {
+      pretty_name_lower_ = ToLower(pretty_name_);
+    }
+    return pretty_name_lower_;
+  }
+  OrbitType GetOrbitType() const { return type_; }
+  uint32_t Line() const { return line_; }
+  uint64_t Size() const { return size_; }
+  const std::string& Probe() const { return probe_; }
+  int CallingConvention() const { return calling_convention_; }
+  const Pdb* GetPdb() const { return pdb_; }
+  const FunctionStats* Stats() const { return stats_.get(); }
+  const char* GetCallingConventionString();
+  void ProcessArgumentInfo();
+  bool IsMemberFunction();
+  uint64_t Hash() const { return StringHash(pretty_name_); }
+  void UpdateStats(const Timer& timer);
+  bool Hookable();
+  void Select();
+  void PreHook();
+  void UnSelect();
+  void ToggleSelect() { /*if( Hookable() )*/
+    selected_ = !selected_;
+  }
+  bool IsSelected() const { return selected_; }
+  // Calculates and returns the absolute address of the function.
+  uint64_t GetVirtualAddress() const;
+  uint64_t Address() const { return address_; }
+  const std::string& File() const { return file_; }
+  bool IsOrbitFunc() const { return type_ != OrbitType::NONE; }
+  bool IsOrbitZone() const {
+    return type_ == ORBIT_TIMER_START || type_ == ORBIT_TIMER_STOP;
+  }
+  bool IsOrbitStart() const { return type_ == ORBIT_TIMER_START; }
+  bool IsOrbitStop() const { return type_ == ORBIT_TIMER_STOP; }
+  bool IsRealloc() const { return type_ == REALLOC; }
+  bool IsAlloc() const { return type_ == ALLOC; }
+  bool IsFree() const { return type_ == FREE; }
+  bool IsMemoryFunc() const { return IsFree() || IsAlloc() || IsRealloc(); }
+  std::string GetModuleName() const ;
+  Type* GetParentType();
+  void ResetStats();
+  void GetDisassembly();
+  void FindFile();
+
   ORBIT_SERIALIZABLE;
-
- public:  // TODO...
-  std::string m_Name;
-  std::string m_PrettyName;
-  std::string m_PrettyNameLower;
-  std::string m_Module;
-  std::string m_File;
-  std::string m_Probe;
-  uint64_t m_Address = 0;
-  uint64_t m_ModBase = 0;
-  uint32_t m_Size = 0;
-  uint32_t m_Id = 0;
-  uint32_t m_ParentId = 0;
-  int m_Line = 0;
-  int m_CallConv = -1;
-  std::vector<FunctionParam> m_Params;
-  std::vector<Argument> m_ArgInfo;
-  Pdb* m_Pdb = nullptr;
-  uint64_t m_NameHash = 0;
-  OrbitType m_OrbitType = NONE;
-  std::shared_ptr<FunctionStats> m_Stats;
-
- protected:
-  bool m_Selected = false;
+ private:
+  std::string name_;
+  std::string pretty_name_;
+  std::string pretty_name_lower_;
+  std::string module_;
+  std::string file_;
+  std::string probe_;
+  uint64_t address_ = 0;
+  uint64_t size_ = 0;
+  uint32_t id_ = 0;
+  uint32_t parent_id_ = 0;
+  uint32_t line_ = 0;
+  int calling_convention_ = -1;
+  std::vector<FunctionParam> params_;
+  std::vector<Argument> arguments_;
+  Pdb* pdb_ = nullptr;
+  uint64_t name_hash_ = 0;
+  OrbitType type_ = NONE;
+  std::shared_ptr<FunctionStats> stats_;
+  bool selected_ = false;
 };

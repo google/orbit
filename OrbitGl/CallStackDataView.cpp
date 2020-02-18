@@ -57,19 +57,19 @@ std::wstring CallStackDataView::GetValue(int a_Row, int a_Column) {
       value = absl::StrFormat("0x%llx", function.GetVirtualAddress());
       break;
     case Function::FILE:
-      value = function.m_File;
+      value = function.File();
       break;
     case Function::MODULE:
-      value = ws2s(function.GetModuleName());
+      value = function.GetModuleName();
       break;
     case Function::LINE:
-      value = absl::StrFormat("%i", function.m_Line);
+      value = absl::StrFormat("%i", function.Line());
       break;
     case Function::SIZE:
-      value = absl::StrFormat("%lu", function.m_Size);
+      value = absl::StrFormat("%lu", function.Size());
       break;
     case Function::CALL_CONV:
-      value = ws2s(Function::GetCallingConventionString(function.m_CallConv));
+      value = function.GetCallingConventionString();
       break;
     default:
       break;
@@ -87,7 +87,7 @@ void CallStackDataView::OnFilter(const std::wstring& a_Filter) {
 
   for (int i = 0; i < (int)m_CallStack->m_Depth; ++i) {
     const Function& function = GetFunction(i);
-    std::wstring name = ToLower(s2ws(function.m_PrettyName));
+    std::wstring name = ToLower(s2ws(function.PrettyName()));
     bool match = true;
 
     for (std::wstring& filterToken : tokens) {
@@ -122,14 +122,13 @@ Function& CallStackDataView::GetFunction(unsigned int a_Row) {
       if (func) {
         return *func;
       } else if (Capture::GSamplingProfiler) {
-        dummy.m_PrettyName =
-            ws2s(Capture::GSamplingProfiler->GetSymbolFromAddress(addr));
-        dummy.m_Address = addr;
+        dummy.SetPrettyName(
+            ws2s(Capture::GSamplingProfiler->GetSymbolFromAddress(addr)));
+        dummy.SetAddress(addr);
         return dummy;
       }
     }
   }
 
-  dummy.m_PrettyName = "";
   return dummy;
 }
