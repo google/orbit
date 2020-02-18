@@ -109,7 +109,8 @@ target_link_libraries(
          freetype
          imgui::imgui
          GLUT::GLUT
-         capstone::capstone)
+         capstone::capstone
+         gte::gte)
 
 if(NOT WIN32)
   target_link_libraries(OrbitGl PRIVATE X11::X11 X11::Xi X11::Xxf86vm
