@@ -2,9 +2,9 @@
 
 #include <QFileDialog>
 
-#include "../OrbitCore/Diff.h"
-#include "../OrbitCore/Params.h"
-#include "../OrbitCore/Path.h"
+#include "Diff.h"
+#include "Params.h"
+#include "Path.h"
 #include "ui_orbitdiffdialog.h"
 
 OrbitDiffDialog::OrbitDiffDialog(QWidget* parent)

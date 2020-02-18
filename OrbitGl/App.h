@@ -9,11 +9,11 @@
 #include <queue>
 #include <string>
 
-#include "../OrbitCore/CoreApp.h"
-#include "../OrbitCore/CrashHandler.h"
-#include "../OrbitCore/Message.h"
 #include "DataViewTypes.h"
-#include "Threading.h"
+#include "OrbitCore/CoreApp.h"
+#include "OrbitCore/CrashHandler.h"
+#include "OrbitCore/Message.h"
+#include "OrbitCore/Threading.h"
 
 struct CallStack;
 struct ContextSwitch;

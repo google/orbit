@@ -4,7 +4,7 @@
 #pragma once
 
 #include "FunctionDataView.h"
-#include "OrbitType.h"
+#include "OrbitCore/OrbitType.h"
 
 struct CallStack;
 

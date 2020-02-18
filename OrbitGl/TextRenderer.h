@@ -6,7 +6,7 @@
 #include <map>
 
 #include "OpenGl.h"
-#include "Platform.h"
+#include "OrbitCore/Platform.h"
 #include "TextBox.h"
 #include "freetype-gl.h"
 #include "mat4.h"

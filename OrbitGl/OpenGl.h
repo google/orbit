@@ -15,7 +15,7 @@
 #include <GL/glu.h>
 #include <freetype-gl.h>
 
-#include "Core.h"
+#include "OrbitCore/Core.h"
 
 // clang-format off
 #include <GL/gl.h>

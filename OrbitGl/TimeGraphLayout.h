@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "CallstackTypes.h"
+#include "OrbitCore/CallstackTypes.h"
 #include "CoreMath.h"
 #include "ThreadTrackMap.h"
 

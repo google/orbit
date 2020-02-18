@@ -9,9 +9,9 @@
 #include <fstream>
 #include <iostream>
 
-#include "..\OrbitCore\OrbitLib.h"
-#include "..\OrbitCore\PrintVar.h"
-#include "..\OrbitCore\TcpClient.h"
+#include "OrbitLib.h"
+#include "PrintVar.h"
+#include "TcpClient.h"
 
 extern "C" {
 __declspec(dllexport) void __cdecl OrbitInit(void* a_Host) {

@@ -6,12 +6,12 @@
 #include <unordered_map>
 
 #include "Batcher.h"
-#include "BlockChain.h"
-#include "ContextSwitch.h"
-#include "Core.h"
-#include "EventBuffer.h"
 #include "Geometry.h"
-#include "MemoryTracker.h"
+#include "OrbitCore/BlockChain.h"
+#include "OrbitCore/ContextSwitch.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/EventBuffer.h"
+#include "OrbitCore/MemoryTracker.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "ThreadTrack.h"

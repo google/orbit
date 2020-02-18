@@ -4,7 +4,7 @@
 #pragma once
 
 #include "DataView.h"
-#include "OrbitType.h"
+#include "OrbitCore/OrbitType.h"
 
 class GlobalsDataView : public DataView {
  public:

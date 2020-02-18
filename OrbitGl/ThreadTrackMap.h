@@ -6,7 +6,7 @@
 #include <memory>
 #include <unordered_map>
 
-#include "CallstackTypes.h"
+#include "OrbitCore/CallstackTypes.h"
 
 class ThreadTrack;
 

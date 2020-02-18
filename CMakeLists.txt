@@ -78,6 +78,7 @@ add_subdirectory(OrbitCore)
 add_subdirectory(OrbitGl)
 add_subdirectory(OrbitService)
 add_subdirectory(OrbitTest)
+add_subdirectory(OrbitPlugin)
 
 if(TARGET Qt5::Core)
   add_subdirectory(OrbitQt)

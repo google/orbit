@@ -1,7 +1,12 @@
 #pragma once
-#include "../external/imgui/imgui.h"
-#include "../external/imgui/imgui_internal.h"
-#include "OrbitSdk.h"
+#include "imgui.h"
+#include "OrbitSDK.h"
+
+#ifdef _WIN32
+#define ORBIT_EXPORT declspec(dllexport)
+#else
+#define ORBIT_EXPORT
+#endif
 
 //-----------------------------------------------------------------------------
 class UserPlugin : public Orbit::Plugin {
@@ -17,7 +22,9 @@ class UserPlugin : public Orbit::Plugin {
 };
 
 extern "C" {
-__declspec(dllexport) void* __cdecl CreateOrbitPlugin() {
+ORBIT_EXPORT void* CreateOrbitPlugin() {
   return new UserPlugin();
 }
 }
+
+#undef ORBIT_EXPORT

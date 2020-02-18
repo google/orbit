@@ -2,7 +2,7 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 #pragma once
-#include "BlockChain.h"
+#include "OrbitCore/BlockChain.h"
 #include "CoreMath.h"
 
 class TextBox;

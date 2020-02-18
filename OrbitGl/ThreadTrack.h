@@ -6,10 +6,10 @@
 #include <map>
 #include <memory>
 
-#include "BlockChain.h"
-#include "CallstackTypes.h"
+#include "OrbitCore/BlockChain.h"
+#include "OrbitCore/CallstackTypes.h"
+#include "OrbitCore/Threading.h"
 #include "TextBox.h"
-#include "Threading.h"
 #include "Track.h"
 
 class TextRenderer;

@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../OrbitPlugin/OrbitUserData.h"
+#include "OrbitUserData.h"
 #include "Message.h"
 #include "TcpForward.h"
 #include "Threading.h"

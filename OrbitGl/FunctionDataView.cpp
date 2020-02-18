@@ -5,12 +5,12 @@
 #include "FunctionDataView.h"
 
 #include "App.h"
-#include "Capture.h"
-#include "Core.h"
-#include "Log.h"
-#include "OrbitProcess.h"
-#include "OrbitType.h"
-#include "Pdb.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/Log.h"
+#include "OrbitCore/OrbitProcess.h"
+#include "OrbitCore/OrbitType.h"
+#include "OrbitCore/Pdb.h"
 #include "RuleEditor.h"
 #include "absl/strings/str_format.h"
 

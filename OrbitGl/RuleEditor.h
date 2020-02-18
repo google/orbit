@@ -7,7 +7,7 @@
 
 #include "GlCanvas.h"
 #include "ImGuiOrbit.h"
-#include "OrbitRule.h"
+#include "OrbitCore/OrbitRule.h"
 
 class Function;
 class OrbitType;

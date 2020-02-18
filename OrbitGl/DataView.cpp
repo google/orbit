@@ -8,7 +8,7 @@
 
 #include "App.h"
 #include "CallStackDataView.h"
-#include "Core.h"
+#include "OrbitCore/Core.h"
 #include "FunctionDataView.h"
 #include "GlobalDataView.h"
 #include "LiveFunctionDataView.h"

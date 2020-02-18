@@ -3,15 +3,15 @@
 //-----------------------------------
 
 #include "UserPlugin.h"
-
-#include "../OrbitCore/Platform.h"
+#include "Platform.h"
+#include <iostream>
 
 //-----------------------------------------------------------------------------
 void UserPlugin::Draw(ImGuiContext* a_ImguiContext, int a_Width, int a_Height) {
   ImGui::SetCurrentContext(a_ImguiContext);
 
   if (ImGui::Button("Plugin Test Button!!")) {
-    OutputDebugString("Plugin button!\n");
+    std::cout << "Plugin button!\n";
   }
 }
 

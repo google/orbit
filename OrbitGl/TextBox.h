@@ -4,7 +4,7 @@
 #pragma once
 
 #include "CoreMath.h"
-#include "ScopeTimer.h"
+#include "OrbitCore/ScopeTimer.h"
 
 class TextRenderer;
 

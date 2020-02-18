@@ -3,71 +3,74 @@ cmake_minimum_required(VERSION 3.15)
 project(OrbitCore)
 add_library(OrbitCore STATIC)
 
+set(HEADERS include/OrbitCore)
+
 target_sources(
   OrbitCore
-  PUBLIC BaseTypes.h
-         BpfTrace.h
-         BlockChain.h
-         Callstack.h
-         CallstackTypes.h
-         Capture.h
-         Context.h
-         ContextSwitch.h
-         ConnectionManager.h
-         Core.h
-         CoreApp.h
-         CrashHandler.h
-         Diff.h
-         EventBuffer.h
-         EventClasses.h
-         FunctionStats.h
-         Hashing.h
-         Injection.h
-         LinuxCallstackEvent.h
-         LinuxPerf.h
-         Log.h
-         LogInterface.h
-         MemoryTracker.h
-         Message.h
-         MiniDump.h
-         ModuleManager.h
-         ModuleManager.h
-         OrbitAsio.h
-         OrbitDbgHelp.h
-         OrbitFunction.h
-         OrbitLib.h
-         OrbitModule.h
-         OrbitProcess.h
-         OrbitRule.h
-         OrbitSession.h
-         OrbitThread.h
-         OrbitType.h
-         OrbitUnreal.h
-         Params.h
-         Path.h
-         Pdb.h
-         PrintVar.h
-         ProcessUtils.h
-         Profiling.h
-         RingBuffer.h
-         SamplingProfiler.h
-         ScopeTimer.h
-         Serialization.h
-         SerializationMacros.h
-         Systrace.h
-         Tcp.h
-         TcpClient.h
-         TcpEntity.h
-         TcpServer.h
-         TcpForward.h
-         TestRemoteMessages.h
-         Threading.h
-         TimerManager.h
-         TypeInfoStructs.h
-         Utils.h
-         Variable.h
-         VariableTracing.h
-         Version.h)
+  PUBLIC ${HEADERS}/BaseTypes.h
+         ${HEADERS}/BpfTrace.h
+         ${HEADERS}/BlockChain.h
+         ${HEADERS}/Callstack.h
+         ${HEADERS}/CallstackTypes.h
+         ${HEADERS}/Capture.h
+         ${HEADERS}/Context.h
+         ${HEADERS}/ContextSwitch.h
+         ${HEADERS}/ConnectionManager.h
+         ${HEADERS}/Core.h
+         ${HEADERS}/CoreApp.h
+         ${HEADERS}/CrashHandler.h
+         ${HEADERS}/Diff.h
+         ${HEADERS}/EventBuffer.h
+         ${HEADERS}/EventClasses.h
+         ${HEADERS}/FunctionStats.h
+         ${HEADERS}/Hashing.h
+         ${HEADERS}/Injection.h
+         ${HEADERS}/LinuxCallstackEvent.h
+         ${HEADERS}/LinuxPerf.h
+         ${HEADERS}/Log.h
+         ${HEADERS}/LogInterface.h
+         ${HEADERS}/MemoryTracker.h
+         ${HEADERS}/Message.h
+         ${HEADERS}/MiniDump.h
+         ${HEADERS}/ModuleManager.h
+         ${HEADERS}/ModuleManager.h
+         ${HEADERS}/OrbitAsio.h
+         ${HEADERS}/OrbitDbgHelp.h
+         ${HEADERS}/OrbitFunction.h
+         ${HEADERS}/OrbitLib.h
+         ${HEADERS}/OrbitModule.h
+         ${HEADERS}/OrbitProcess.h
+         ${HEADERS}/OrbitRule.h
+         ${HEADERS}/OrbitSession.h
+         ${HEADERS}/OrbitThread.h
+         ${HEADERS}/OrbitType.h
+         ${HEADERS}/OrbitUnreal.h
+         ${HEADERS}/OrbitUserData.h
+         ${HEADERS}/Params.h
+         ${HEADERS}/Path.h
+         ${HEADERS}/Pdb.h
+         ${HEADERS}/PrintVar.h
+         ${HEADERS}/ProcessUtils.h
+         ${HEADERS}/Profiling.h
+         ${HEADERS}/RingBuffer.h
+         ${HEADERS}/SamplingProfiler.h
+         ${HEADERS}/ScopeTimer.h
+         ${HEADERS}/Serialization.h
+         ${HEADERS}/SerializationMacros.h
+         ${HEADERS}/Systrace.h
+         ${HEADERS}/Tcp.h
+         ${HEADERS}/TcpClient.h
+         ${HEADERS}/TcpEntity.h
+         ${HEADERS}/TcpServer.h
+         ${HEADERS}/TcpForward.h
+         ${HEADERS}/TestRemoteMessages.h
+         ${HEADERS}/Threading.h
+         ${HEADERS}/TimerManager.h
+         ${HEADERS}/TypeInfoStructs.h
+         ${HEADERS}/Utils.h
+         ${HEADERS}/Variable.h
+         ${HEADERS}/VariableTracing.h
+         ${HEADERS}/Version.h)
 
 target_sources(
   OrbitCore
@@ -123,15 +126,15 @@ target_sources(
 if(WIN32)
   target_sources(
     OrbitCore
-    PUBLIC DiaManager.h
-           DiaParser.h
-           EventCallbacks.h
-           EventGuid.h
-           EventTracer.h
-           EventUtils.h
-           Hijacking.h
-           OrbitDia.h
-           SymbolUtils.h)
+    PUBLIC ${HEADERS}/DiaManager.h
+           ${HEADERS}/DiaParser.h
+           ${HEADERS}/EventCallbacks.h
+           ${HEADERS}/EventGuid.h
+           ${HEADERS}/EventTracer.h
+           ${HEADERS}/EventUtils.h
+           ${HEADERS}/Hijacking.h
+           ${HEADERS}/OrbitDia.h
+           ${HEADERS}/SymbolUtils.h)
 
   target_sources(
     OrbitCore
@@ -148,17 +151,17 @@ if(WIN32)
 else()
   target_sources(
     OrbitCore
-    PUBLIC BpfTraceVisitor.h
-           BpfTrace.h
-           LibunwindstackUnwinder.h
-           LinuxEventTracer.h
-           LinuxPerfEvent.h
-           LinuxPerfEventProcessor.h
-           LinuxPerfEventVisitor.h
-           LinuxPerfRingBuffer.h
-           LinuxPerfUtils.h
-           LinuxUprobesUnwindingVisitor.h
-           LinuxUtils.h)
+    PUBLIC ${HEADERS}/BpfTraceVisitor.h
+           ${HEADERS}/BpfTrace.h
+           ${HEADERS}/LibunwindstackUnwinder.h
+           ${HEADERS}/LinuxEventTracer.h
+           ${HEADERS}/LinuxPerfEvent.h
+           ${HEADERS}/LinuxPerfEventProcessor.h
+           ${HEADERS}/LinuxPerfEventVisitor.h
+           ${HEADERS}/LinuxPerfRingBuffer.h
+           ${HEADERS}/LinuxPerfUtils.h
+           ${HEADERS}/LinuxUprobesUnwindingVisitor.h
+           ${HEADERS}/LinuxUtils.h)
 
   target_sources(
     OrbitCore
@@ -173,7 +176,8 @@ else()
             LinuxUprobesUnwindingVisitor.cpp)
 endif()
 
-target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(OrbitCore PUBLIC include/)
+target_include_directories(OrbitCore PRIVATE include/OrbitCore/)
 
 target_link_libraries(
   OrbitCore
@@ -209,12 +213,10 @@ target_compile_features(OrbitCore PUBLIC cxx_std_11)
 
 add_executable(OrbitCoreTests)
 
-target_sources(OrbitCoreTests
-  PRIVATE RingBufferTests.cpp)
+target_sources(OrbitCoreTests PRIVATE RingBufferTests.cpp)
 
 if(NOT WIN32)
-  target_sources(OrbitCoreTests
-    PRIVATE LinuxUprobesUnwindingVisitorTests.cpp)
+  target_sources(OrbitCoreTests PRIVATE LinuxUprobesUnwindingVisitorTests.cpp)
 endif()
 
 target_link_libraries(OrbitCoreTests PRIVATE OrbitCore GTest::GTest GTest::Main)

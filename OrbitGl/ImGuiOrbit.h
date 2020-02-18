@@ -14,8 +14,8 @@
 #include <map>
 #include <string>
 
-#include "OrbitType.h"
-#include "ProcessUtils.h"
+#include "OrbitCore/OrbitType.h"
+#include "OrbitCore/ProcessUtils.h"
 #include "imgui.h"
 
 class GlCanvas;

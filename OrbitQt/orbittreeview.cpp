@@ -13,8 +13,8 @@
 #include <QSignalMapper>
 #include <set>
 
-#include "../OrbitGl/App.h"
-#include "../OrbitGl/DataView.h"
+#include "App.h"
+#include "DataView.h"
 #include "orbitglwidget.h"
 
 //-----------------------------------------------------------------------------
