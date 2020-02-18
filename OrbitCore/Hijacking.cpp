@@ -8,8 +8,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../external/minhook/src/buffer.h"
-#include "../external/minhook/src/trampoline.h"
 #include "Callstack.h"
 #include "Context.h"
 #include "Core.h"
@@ -21,6 +19,8 @@
 #include "ScopeTimer.h"
 #include "TcpClient.h"
 #include "TimerManager.h"
+#include "buffer.h"
+#include "trampoline.h"
 
 // clang-format off
 #include "Hijacking.h"
