@@ -303,9 +303,9 @@ void Capture::SendFunctionHooks() {
   for (Function* func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected() || func->IsOrbitFunc()) {
       func->PreHook();
-      DWORD64 address = func->GetVirtualAddress();
-      GSelectedAddressesByType[func->m_OrbitType].push_back(address);
-      GSelectedFunctionsMap[(ULONG64)address] = func;
+      uint64_t address = func->GetVirtualAddress();
+      GSelectedAddressesByType[func->GetOrbitType()].push_back(address);
+      GSelectedFunctionsMap[address] = func;
       func->ResetStats();
       GFunctionCountMap[address] = 0;
     }
@@ -320,7 +320,7 @@ void Capture::SendFunctionHooks() {
   if (Capture::IsRemote()) {
     std::vector<std::string> selectedFunctions;
     for (auto& pair : GSelectedFunctionsMap) {
-      PRINT("Send Selected Function: %s\n", pair.second->m_PrettyName.c_str());
+      PRINT("Send Selected Function: %s\n", pair.second->PrettyName().c_str());
       selectedFunctions.push_back(std::to_string(pair.first));
     }
 
@@ -363,8 +363,7 @@ void Capture::SendDataTrackingInfo() {
     Function* func = rule->m_Function;
     Message msg(Msg_ArgTracking);
     ArgTrackingHeader& header = msg.m_Header.m_ArgTrackingHeader;
-    ULONG64 address =
-        (ULONG64)func->m_Pdb->GetHModule() + (ULONG64)func->m_Address;
+    uint64_t address = func->GetVirtualAddress();
     header.m_Function = address;
     header.m_NumArgs = (int)rule->m_TrackedVariables.size();
 
@@ -530,7 +529,7 @@ void Capture::SaveSession(const std::wstring& a_FileName) {
 
   for (Function* func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {
-      session.m_Modules[func->m_Pdb->GetName()]
+      session.m_Modules[func->GetPdb()->GetName()]
           .m_FunctionHashes.push_back(func->Hash());
     }
   }

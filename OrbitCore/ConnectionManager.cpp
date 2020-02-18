@@ -105,7 +105,7 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
     if (!function)
       PRINT("received invalid address");
     else {
-      PRINT("Received Selected Function: %s\n", function->m_PrettyName.c_str());
+      PRINT("Received Selected Function: %s\n", function->PrettyName().c_str());
       // this also adds the function to the map.
       function->Select();
     }

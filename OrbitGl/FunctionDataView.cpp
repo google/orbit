@@ -93,19 +93,19 @@ std::wstring FunctionsDataView::GetValue(int a_Row, int a_Column) {
       value = absl::StrFormat("0x%llx", function.GetVirtualAddress());
       break;
     case Function::FILE:
-      value = function.m_File;
+      value = function.File();
       break;
     case Function::MODULE:
-      value = function.m_Pdb ? function.m_Pdb->GetName() : "";
+      value = function.GetPdb() != nullptr ? function.GetPdb()->GetName() : "";
       break;
     case Function::LINE:
-      value = absl::StrFormat("%i", function.m_Line);
+      value = absl::StrFormat("%i", function.Line());
       break;
     case Function::SIZE:
-      value = absl::StrFormat("%lu", function.m_Size);
+      value = absl::StrFormat("%lu", function.Size());
       break;
     case Function::CALL_CONV:
-      value = ws2s(Function::GetCallingConventionString(function.m_CallConv));
+      value = function.GetCallingConventionString();
       break;
     default:
       break;
@@ -140,28 +140,28 @@ void FunctionsDataView::OnSort(int a_Column, bool a_Toggle) {
 
   switch (MemberID) {
     case Function::NAME:
-      sorter = ORBIT_FUNC_SORT(m_PrettyName);
+      sorter = ORBIT_FUNC_SORT(PrettyName());
       break;
     case Function::ADDRESS:
-      sorter = ORBIT_FUNC_SORT(m_Address);
+      sorter = ORBIT_FUNC_SORT(Address());
       break;
     case Function::MODULE:
-      sorter = ORBIT_FUNC_SORT(m_Pdb->GetName());
+      sorter = ORBIT_FUNC_SORT(GetPdb()->GetName());
       break;
     case Function::FILE:
-      sorter = ORBIT_FUNC_SORT(m_File);
+      sorter = ORBIT_FUNC_SORT(File());
       break;
     case Function::LINE:
-      sorter = ORBIT_FUNC_SORT(m_Line);
+      sorter = ORBIT_FUNC_SORT(Line());
       break;
     case Function::SIZE:
-      sorter = ORBIT_FUNC_SORT(m_Size);
+      sorter = ORBIT_FUNC_SORT(Size());
       break;
     case Function::SELECTED:
       sorter = ORBIT_FUNC_SORT(IsSelected());
       break;
     case Function::CALL_CONV:
-      sorter = ORBIT_FUNC_SORT(m_CallConv);
+      sorter = ORBIT_FUNC_SORT(CallingConvention());
       break;
     default:
       break;
@@ -246,7 +246,7 @@ void FunctionsDataView::OnFilter(const std::wstring& a_Filter) {
   std::vector<Function*>& functions = Capture::GTargetProcess->GetFunctions();
   for (int i = 0; i < (int)functions.size(); ++i) {
     Function* function = functions[i];
-    std::string name = function->Lower() + function->m_Pdb->GetName();
+    std::string name = function->Lower() + function->GetPdb()->GetName();
 
     bool match = true;
 
@@ -285,7 +285,7 @@ void FunctionsDataView::ParallelFilter() {
       [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
         std::vector<int>& result = indicesArray[a_BlockIndex];
         const std::wstring& name = s2ws(functions[a_ElementIndex]->Lower());
-        const std::wstring& file = s2ws(functions[a_ElementIndex]->m_File);
+        const std::wstring& file = s2ws(functions[a_ElementIndex]->File());
 
         for (std::wstring& filterToken : m_FilterTokens) {
           if (name.find(filterToken) == std::wstring::npos &&

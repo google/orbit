@@ -1513,11 +1513,11 @@ void ParseDll(const char* a_FileName)
         {
             exportent i = *it;
             Function func;
-            func.m_Name = i.symbolName;
-            func.m_PrettyName = func.m_Name;
-            func.m_Address = i.symRVA;
-            func.m_Module = i.moduleName;
-            func.m_Pdb = GPdbDbg.get();
+            func.SetName(i.symbolName);
+            func.SetPrettyName(i.symbolName);
+            func.SetAddress(i.symRVA);
+            func.SetModule(i.moduleName);
+            func.SetPdb(GPdbDbg.get());
             GPdbDbg->AddFunction( func );
         }
 

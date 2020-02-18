@@ -74,17 +74,17 @@ void Pdb::AddFunction(Function& a_Function) {
 
 //-----------------------------------------------------------------------------
 void Pdb::CheckOrbitFunction(Function& a_Function) {
-  const std::string& name = a_Function.m_PrettyName;
+  const std::string& name = a_Function.PrettyName();
   if (name == "OrbitStart") {
-    a_Function.m_OrbitType = Function::ORBIT_TIMER_START;
+    a_Function.SetOrbitType(Function::ORBIT_TIMER_START);
   } else if (name == "OrbitStop") {
-    a_Function.m_OrbitType = Function::ORBIT_TIMER_STOP;
+    a_Function.SetOrbitType(Function::ORBIT_TIMER_STOP);
   } else if (name == "OrbitLog") {
-    a_Function.m_OrbitType = Function::ORBIT_LOG;
+    a_Function.SetOrbitType(Function::ORBIT_LOG);
   } else if (name == "OutputDebugStringA") {
-    a_Function.m_OrbitType = Function::ORBIT_OUTPUT_DEBUG_STRING;
+    a_Function.SetOrbitType(Function::ORBIT_OUTPUT_DEBUG_STRING);
   } else if (name == "OrbitSendData") {
-    a_Function.m_OrbitType = Function::ORBIT_DATA;
+    a_Function.SetOrbitType(Function::ORBIT_DATA);
   }
 }
 
@@ -438,11 +438,11 @@ bool Pdb::LoadLinuxDebugSymbols(const char* a_PdbName) {
       const std::string& address = tokens[0];
       const std::string& symbol = tokens[2];
       Function func;
-      func.m_Name = symbol;
-      func.m_Address = std::stoull(address, nullptr, 16);
-      func.m_PrettyName = symbol;
-      func.m_Module = Path::GetFileName(a_PdbName);
-      func.m_Pdb = this;
+      func.SetName(symbol);
+      func.SetAddress(std::stoull(address, nullptr, 16));
+      func.SetPrettyName(symbol);
+      func.SetModule(Path::GetFileName(a_PdbName));
+      func.SetPdb(this);
       this->AddFunction(func);
       ++numAddedFunctions;
     }
@@ -535,7 +535,7 @@ void Pdb::PopulateFunctionMap() {
       absl::StrFormat("Pdb::PopulateFunctionMap for %s", m_FileName.c_str()));
 
   for (Function& Function : m_Functions) {
-    m_FunctionMap.insert(std::make_pair(Function.m_Address, &Function));
+    m_FunctionMap.insert(std::make_pair(Function.Address(), &Function));
   }
 
   m_IsPopulatingFunctionMap = false;
@@ -571,7 +571,7 @@ void Pdb::PopulateStringFunctionMap() {
     SCOPE_TIMER_LOG("Map inserts");
 
     for (Function& Function : m_Functions) {
-      m_StringFunctionMap[Function.m_NameHash] = &Function;
+      m_StringFunctionMap[Function.Hash()] = &Function;
     }
   }
 
@@ -710,7 +710,7 @@ void Pdb::ProcessData() {
   functions.reserve(functions.size() + m_Functions.size());
 
   for (Function& func : m_Functions) {
-    func.m_Pdb = this;
+    func.SetPdb(this);
     functions.push_back(&func);
     GOrbitUnreal.OnFunctionAdded(&func);
   }

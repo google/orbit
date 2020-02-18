@@ -95,7 +95,7 @@ std::wstring LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
   }
 
   Function& function = GetFunction(a_Row);
-  std::shared_ptr<FunctionStats> stats = function.m_Stats;
+  const FunctionStats* stats = function.Stats();
 
   std::string value;
 
@@ -125,15 +125,10 @@ std::wstring LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
       value = GetPrettyTime(stats->m_MaxMs);
       break;
     case LiveFunction::ADDRESS:
-      value =
-          function.m_Pdb
-              ? absl::StrFormat("0x%llx", function.m_Address +
-                                              reinterpret_cast<DWORD64>(
-                                                  function.m_Pdb->GetHModule()))
-              : "";
+      value = absl::StrFormat("0x%llx", function.GetVirtualAddress());
       break;
     case LiveFunction::MODULE:
-      value = function.m_Pdb ? function.m_Pdb->GetName() : "";
+      value = function.GetPdb() != nullptr ? function.GetPdb()->GetName() : "";
       break;
     default:
       break;
@@ -150,8 +145,8 @@ std::wstring LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
   }
 #define ORBIT_STAT_SORT(Member)                                           \
   [&](int a, int b) {                                                     \
-    return OrbitUtils::Compare(functions[a]->m_Stats->Member,             \
-                               functions[b]->m_Stats->Member, ascending); \
+    return OrbitUtils::Compare(functions[a]->Stats()->Member,             \
+                               functions[b]->Stats()->Member, ascending); \
   }
 
 //-----------------------------------------------------------------------------
@@ -168,7 +163,7 @@ void LiveFunctionsDataView::OnSort(int a_Column, bool a_Toggle) {
 
   switch (MemberID) {
     case LiveFunction::NAME:
-      sorter = ORBIT_FUNC_SORT(m_PrettyName);
+      sorter = ORBIT_FUNC_SORT(PrettyName());
       break;
     case LiveFunction::COUNT:
       ascending = false;
@@ -187,10 +182,10 @@ void LiveFunctionsDataView::OnSort(int a_Column, bool a_Toggle) {
       sorter = ORBIT_STAT_SORT(m_MaxMs);
       break;
     case LiveFunction::ADDRESS:
-      sorter = ORBIT_FUNC_SORT(m_Address);
+      sorter = ORBIT_FUNC_SORT(Address());
       break;
     case LiveFunction::MODULE:
-      sorter = ORBIT_FUNC_SORT(m_Pdb->GetName());
+      sorter = ORBIT_FUNC_SORT(GetPdb()->GetName());
       break;
     case LiveFunction::SELECTED:
       sorter = ORBIT_FUNC_SORT(IsSelected());
@@ -239,15 +234,12 @@ void LiveFunctionsDataView::OnFilter(const std::wstring& a_Filter) {
   for (uint32_t i = 0; i < (uint32_t)m_Functions.size(); ++i) {
     const Function* function = m_Functions[i];
     if (function) {
-      std::wstring name = ToLower(s2ws(function->m_PrettyName));
-      // std::string file = ToLower( function.m_File );
+      std::wstring name = ToLower(s2ws(function->PrettyName()));
 
       bool match = true;
 
       for (std::wstring& filterToken : tokens) {
-        if( !( name.find( filterToken ) != std::wstring::npos/* ||
-                       file.find( filterToken ) != std::string::npos*/ ) )
-                {
+        if (name.find( filterToken ) == std::wstring::npos) {
           match = false;
           break;
         }
