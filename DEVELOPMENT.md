@@ -97,6 +97,9 @@ cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -G Ninja ..
 ninja # or cmake --build .
 ```
 
+_Note:_ There is also a script `bootstrap-orbit-ggp.sh` which is performing
+these steps.
+
 Finally, `build_ggp_release/OrbitService/OrbitService` can be copied over
 to the instance:
 ```bash
