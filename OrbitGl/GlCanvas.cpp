@@ -8,19 +8,19 @@
 #include <vector>
 
 #include "App.h"
-#include "Capture.h"
 #include "Card.h"
-#include "Core.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
-#include "Log.h"
 #include "OpenGl.h"
-#include "Pdb.h"
-#include "SamplingProfiler.h"
-#include "TcpServer.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/Log.h"
+#include "OrbitCore/Pdb.h"
+#include "OrbitCore/SamplingProfiler.h"
+#include "OrbitCore/TcpServer.h"
+#include "OrbitCore/VariableTracing.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
-#include "VariableTracing.h"
 #include "absl/strings/str_format.h"
 
 RingBuffer<float, 512> GDeltaTimeBuffer;

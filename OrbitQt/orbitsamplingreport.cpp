@@ -6,7 +6,7 @@
 
 #include <cassert>
 
-#include "../OrbitGl/SamplingReport.h"
+#include "OrbitGl/SamplingReport.h"
 #include "orbitdataviewpanel.h"
 #include "orbittreeview.h"
 #include "ui_orbitsamplingreport.h"

@@ -4,9 +4,9 @@
 
 #include "GlUtils.h"
 
-#include "Core.h"
-#include "Log.h"
 #include "OpenGl.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/Log.h"
 #include "absl/strings/str_format.h"
 #include "freetype-gl.h"
 

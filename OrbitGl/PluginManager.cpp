@@ -4,9 +4,9 @@
 
 #include "PluginManager.h"
 
-#include "../OrbitPlugin/OrbitSDK.h"
-#include "Core.h"
-#include "TcpServer.h"
+#include "OrbitCore/OrbitSDK.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/TcpServer.h"
 
 PluginManager GPluginManager;
 

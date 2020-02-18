@@ -5,8 +5,8 @@
 
 #include <unordered_map>
 
-#include "../OrbitCore/RingBuffer.h"
-#include "../OrbitCore/Threading.h"
+#include "OrbitCore/RingBuffer.h"
+#include "OrbitCore/Threading.h"
 #include "CoreMath.h"
 #include "ImGuiOrbit.h"
 

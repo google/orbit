@@ -4,7 +4,7 @@
 #pragma once
 
 #include "DataView.h"
-#include "ProcessUtils.h"
+#include "OrbitCore/ProcessUtils.h"
 
 class ProcessesDataView : public DataView {
  public:

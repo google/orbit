@@ -35,12 +35,14 @@ target_sources(
          ${HEADERS}/ModuleManager.h
          ${HEADERS}/ModuleManager.h
          ${HEADERS}/OrbitAsio.h
+         ${HEADERS}/OrbitData.h
          ${HEADERS}/OrbitDbgHelp.h
          ${HEADERS}/OrbitFunction.h
          ${HEADERS}/OrbitLib.h
          ${HEADERS}/OrbitModule.h
          ${HEADERS}/OrbitProcess.h
          ${HEADERS}/OrbitRule.h
+         ${HEADERS}/OrbitSDK.h
          ${HEADERS}/OrbitSession.h
          ${HEADERS}/OrbitThread.h
          ${HEADERS}/OrbitType.h

@@ -4,8 +4,8 @@
 
 #include "Track.h"
 
-#include "Capture.h"
 #include "GlCanvas.h"
+#include "OrbitCore/Capture.h"
 #include "TimeGraphLayout.h"
 #include "absl/strings/str_format.h"
 

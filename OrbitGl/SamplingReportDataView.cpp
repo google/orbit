@@ -8,10 +8,10 @@
 
 #include "App.h"
 #include "CallStackDataView.h"
-#include "Capture.h"
-#include "Core.h"
-#include "OrbitModule.h"
-#include "OrbitType.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/OrbitModule.h"
+#include "OrbitCore/OrbitType.h"
 #include "SamplingReport.h"
 
 //-----------------------------------------------------------------------------

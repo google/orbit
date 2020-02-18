@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "DataView.h"
-#include "OrbitType.h"
+#include "OrbitCore/OrbitType.h"
 
 class TypesDataView : public DataView {
  public:

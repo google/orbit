@@ -6,7 +6,7 @@
 #include <QFontDatabase>
 #include <QStyleFactory>
 
-#include "../OrbitGl/App.h"
+#include "OrbitGl/App.h"
 #include "orbitmainwindow.h"
 
 int main(int argc, char* argv[]) {

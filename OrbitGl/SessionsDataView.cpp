@@ -5,13 +5,13 @@
 #include "SessionsDataView.h"
 
 #include "App.h"
-#include "Callstack.h"
-#include "Capture.h"
-#include "Core.h"
 #include "ModuleDataView.h"
-#include "OrbitSession.h"
-#include "OrbitType.h"
-#include "Pdb.h"
+#include "OrbitCore/Callstack.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/OrbitType.h"
+#include "OrbitCore/Pdb.h"
+#include "OrbitCore/OrbitSession.h"
 
 //-----------------------------------------------------------------------------
 SessionsDataView::SessionsDataView() {

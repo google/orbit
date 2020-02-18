@@ -55,11 +55,11 @@
 #include <QtWidgets>
 #include <fstream>
 
-#include "../OrbitCore/LogInterface.h"
-#include "../OrbitCore/Path.h"
-#include "../OrbitCore/PrintVar.h"
-#include "../OrbitCore/Utils.h"
-#include "../OrbitGl/App.h"
+#include "OrbitCore/LogInterface.h"
+#include "OrbitCore/Path.h"
+#include "OrbitCore/PrintVar.h"
+#include "OrbitCore/Utils.h"
+#include "OrbitGl/App.h"
 #include "absl/strings/str_format.h"
 
 OrbitCodeEditor* OrbitCodeEditor::GFileMapEditor;

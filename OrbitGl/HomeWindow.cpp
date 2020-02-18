@@ -5,7 +5,7 @@
 #include "HomeWindow.h"
 
 #include "App.h"
-#include "Log.h"
+#include "OrbitCore/Log.h"
 
 //-----------------------------------------------------------------------------
 HomeWindow::HomeWindow() {

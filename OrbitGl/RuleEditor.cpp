@@ -4,17 +4,17 @@
 
 #include "RuleEditor.h"
 
-#include "../OrbitPlugin/OrbitSDK.h"
 #include "App.h"
-#include "Capture.h"
 #include "Card.h"
-#include "Context.h"
-#include "Core.h"
-#include "Log.h"
-#include "OrbitFunction.h"
-#include "OrbitType.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/Context.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/Log.h"
+#include "OrbitCore/OrbitFunction.h"
+#include "OrbitCore/OrbitSDK.h"
+#include "OrbitCore/OrbitType.h"
 #include "PluginManager.h"
-#include "TcpServer.h"
+#include "OrbitCore/TcpServer.h"
 
 //-----------------------------------------------------------------------------
 RuleEditorWindow::RuleEditorWindow(Function* a_Function)

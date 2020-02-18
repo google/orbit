@@ -4,8 +4,8 @@
 #pragma once
 
 #include "DataView.h"
-#include "OrbitType.h"
-#include "ProcessUtils.h"
+#include "OrbitCore/OrbitType.h"
+#include "OrbitCore/ProcessUtils.h"
 
 class ModulesDataView : public DataView {
  public:

@@ -14,14 +14,14 @@
 
 #include <imgui.h>
 
-#include "Capture.h"
-#include "Core.h"
 #include "GlCanvas.h"
 #include "Images.h"
-#include "Message.h"
 #include "OpenGl.h"
-#include "Params.h"
-#include "Pdb.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/Message.h"
+#include "OrbitCore/Params.h"
+#include "OrbitCore/Pdb.h"
 
 // Data
 struct GLFWwindow {};

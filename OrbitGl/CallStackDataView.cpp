@@ -5,12 +5,12 @@
 #include "CallStackDataView.h"
 
 #include "App.h"
-#include "Callstack.h"
-#include "Capture.h"
-#include "Core.h"
-#include "OrbitProcess.h"
-#include "Pdb.h"
-#include "SamplingProfiler.h"
+#include "OrbitCore/Callstack.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/OrbitProcess.h"
+#include "OrbitCore/Pdb.h"
+#include "OrbitCore/SamplingProfiler.h"
 #include "absl/strings/str_format.h"
 
 //----------------------------------------------------------------------------

@@ -3,10 +3,10 @@
 #include <chrono>
 
 #include "App.h"
-#include "Callstack.h"
-#include "Capture.h"
-#include "SamplingProfiler.h"
-#include "TcpServer.h"
+#include "OrbitCore/Callstack.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/SamplingProfiler.h"
+#include "OrbitCore/TcpServer.h"
 
 std::vector<float> LogDataView::s_HeaderRatios;
 

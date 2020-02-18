@@ -2,9 +2,9 @@
 
 #include <iostream>
 
-#include "App.h"
-#include "Core.h"
-#include "DataView.h"
+#include "OrbitCore/Core.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/DataView.h"
 
 //-----------------------------------------------------------------------------
 OrbitService::OrbitService() {

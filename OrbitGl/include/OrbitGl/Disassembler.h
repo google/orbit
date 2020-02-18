@@ -5,8 +5,8 @@
 
 #include <string>
 
-#include "BaseTypes.h"
-#include "Utils.h"
+#include "OrbitCore/BaseTypes.h"
+#include "OrbitCore/Utils.h"
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------

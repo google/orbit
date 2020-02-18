@@ -5,7 +5,7 @@
 #include "SamplingReport.h"
 
 #include "CallStackDataView.h"
-#include "SamplingProfiler.h"
+#include "OrbitCore/SamplingProfiler.h"
 #include "SamplingReportDataView.h"
 
 //-----------------------------------------------------------------------------

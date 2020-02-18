@@ -6,8 +6,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "OrbitType.h"
-#include "SerializationMacros.h"
+#include "OrbitCore/OrbitType.h"
+#include "OrbitCore/SerializationMacros.h"
 
 //-----------------------------------------------------------------------------
 class CaptureSerializer {

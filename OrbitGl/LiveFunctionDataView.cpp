@@ -5,12 +5,12 @@
 #include "LiveFunctionDataView.h"
 
 #include "App.h"
-#include "Capture.h"
-#include "Core.h"
-#include "FunctionStats.h"
-#include "Log.h"
-#include "OrbitType.h"
-#include "Pdb.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/FunctionStats.h"
+#include "OrbitCore/Log.h"
+#include "OrbitCore/OrbitType.h"
+#include "OrbitCore/Pdb.h"
 
 //-----------------------------------------------------------------------------
 namespace LiveFunction {

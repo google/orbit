@@ -3,7 +3,7 @@
 //-----------------------------------
 
 // clang-format off
-#include "OrbitAsio.h"
+#include "OrbitCore/OrbitAsio.h"
 // clang-format on
 
 #include "App.h"
@@ -13,62 +13,62 @@
 #include <fstream>
 #include <thread>
 
-#include "BpfTrace.h"
+#include "OrbitCore/BpfTrace.h"
 #include "CallStackDataView.h"
-#include "Callstack.h"
-#include "Capture.h"
+#include "OrbitCore/Callstack.h"
+#include "OrbitCore/Capture.h"
 #include "CaptureSerializer.h"
 #include "CaptureWindow.h"
-#include "ConnectionManager.h"
+#include "OrbitCore/ConnectionManager.h"
 #include "Debugger.h"
-#include "DiaManager.h"
+#include "OrbitCore/DiaManager.h"
 #include "FunctionDataView.h"
 #include "GlCanvas.h"
 #include "GlobalDataView.h"
 #include "ImGuiOrbit.h"
-#include "Injection.h"
-#include "LinuxCallstackEvent.h"
+#include "OrbitCore/Injection.h"
+#include "OrbitCore/LinuxCallstackEvent.h"
 #include "LiveFunctionDataView.h"
-#include "Log.h"
+#include "OrbitCore/Log.h"
 #include "LogDataView.h"
-#include "MiniDump.h"
+#include "OrbitCore/MiniDump.h"
 #include "ModuleDataView.h"
-#include "ModuleManager.h"
+#include "OrbitCore/ModuleManager.h"
 #include "OrbitAsm.h"
-#include "OrbitSession.h"
-#include "Params.h"
-#include "Pdb.h"
+#include "OrbitCore/OrbitSession.h"
+#include "OrbitCore/Params.h"
+#include "OrbitCore/Pdb.h"
 #include "PluginManager.h"
-#include "PrintVar.h"
+#include "OrbitCore/PrintVar.h"
 #include "ProcessDataView.h"
 #include "RuleEditor.h"
-#include "SamplingProfiler.h"
+#include "OrbitCore/SamplingProfiler.h"
 #include "SamplingReport.h"
-#include "ScopeTimer.h"
-#include "Serialization.h"
+#include "OrbitCore/ScopeTimer.h"
+#include "OrbitCore/Serialization.h"
 #include "SessionsDataView.h"
-#include "Systrace.h"
-#include "Tcp.h"
-#include "TcpClient.h"
-#include "TcpServer.h"
-#include "TestRemoteMessages.h"
+#include "OrbitCore/Systrace.h"
+#include "OrbitCore/Tcp.h"
+#include "OrbitCore/TcpClient.h"
+#include "OrbitCore/TcpServer.h"
+#include "OrbitCore/TestRemoteMessages.h"
 #include "TextRenderer.h"
-#include "TimerManager.h"
+#include "OrbitCore/TimerManager.h"
 #include "TypeDataView.h"
-#include "Utils.h"
-#include "Version.h"
+#include "OrbitCore/Utils.h"
+#include "OrbitCore/Version.h"
 #include "curl/curl.h"
 
 #define GLUT_DISABLE_ATEXIT_HACK
 #include "GL/freeglut.h"
 
 #ifdef _WIN32
-#include "Disassembler.h"
-#include "EventTracer.h"
+#include "OrbitCore/Disassembler.h"
+#include "OrbitCore/EventTracer.h"
 #else
-#include "LinuxPerf.h"
-#include "LinuxPerfUtils.h"
-#include "LinuxUtils.h"
+#include "OrbitCore/LinuxPerf.h"
+#include "OrbitCore/LinuxPerfUtils.h"
+#include "OrbitCore/LinuxUtils.h"
 #endif
 
 class OrbitApp* GOrbitApp;
@@ -682,8 +682,8 @@ void OrbitApp::MainTick() {
   }
 
   if (Capture::GProcessToInject != L"") {
-    std::cout << "Injecting into "
-              << Capture::GTargetProcess->GetFullName() << std::endl;
+    std::cout << "Injecting into " << Capture::GTargetProcess->GetFullName()
+              << std::endl;
     std::cout << "Orbit host: " << ws2s(Capture::GCaptureHost) << std::endl;
     GOrbitApp->SelectProcess(Capture::GProcessToInject);
     Capture::InjectRemote();
@@ -893,8 +893,8 @@ std::wstring OrbitApp::GetCaptureFileName() {
 
 //-----------------------------------------------------------------------------
 std::wstring OrbitApp::GetSessionFileName() {
-  return s2ws(Capture::GSessionPresets ?
-              Capture::GSessionPresets->m_FileName : "");
+  return s2ws(Capture::GSessionPresets ? Capture::GSessionPresets->m_FileName
+                                       : "");
 }
 
 //-----------------------------------------------------------------------------
@@ -929,8 +929,7 @@ void OrbitApp::OnLoadSession(const std::wstring a_FileName) {
   if (!file.fail()) {
     cereal::BinaryInputArchive archive(file);
     archive(*session);
-    if (SelectProcess(
-        s2ws(Path::GetFileName(session->m_ProcessFullPath)))) {
+    if (SelectProcess(s2ws(Path::GetFileName(session->m_ProcessFullPath)))) {
       session->m_FileName = file_name;
       Capture::LoadSession(session);
       Capture::GPresetToLoad = L"";

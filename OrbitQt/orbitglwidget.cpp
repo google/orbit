@@ -11,8 +11,8 @@
 #include <QOpenGLDebugMessage>
 #include <QSignalMapper>
 
-#include "../OrbitCore/PrintVar.h"
-#include "../OrbitCore/Utils.h"
+#include "OrbitCore/PrintVar.h"
+#include "OrbitCore/Utils.h"
 #include "orbitmainwindow.h"
 
 #define ORBIT_DEBUG_OPEN_GL 0

@@ -3,7 +3,7 @@
 
 #include <utility>
 
-#include "LinuxUprobesUnwindingVisitor.h"
+#include "OrbitCore/LinuxUprobesUnwindingVisitor.h"
 
 TEST(UprobesTimerManager, OneUprobe) {
   constexpr pid_t tid = 42;

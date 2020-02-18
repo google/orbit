@@ -4,10 +4,10 @@
 
 #include "TextBox.h"
 
-#include "Capture.h"
 #include "GlCanvas.h"
 #include "OpenGl.h"
-#include "Params.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/Params.h"
 #include "TextRenderer.h"
 #include "absl/strings/str_format.h"
 

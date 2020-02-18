@@ -4,17 +4,17 @@
 
 #include "CaptureWindow.h"
 
-#include "../OrbitPlugin/OrbitSDK.h"
 #include "App.h"
-#include "Capture.h"
-#include "EventTracer.h"
 #include "GlUtils.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/EventTracer.h"
+#include "OrbitCore/OrbitSDK.h"
+#include "OrbitCore/Serialization.h"
+#include "OrbitCore/Systrace.h"
+#include "OrbitCore/TcpClient.h"
+#include "OrbitCore/TcpServer.h"
+#include "OrbitCore/TimerManager.h"
 #include "PluginManager.h"
-#include "Serialization.h"
-#include "Systrace.h"
-#include "TcpClient.h"
-#include "TcpServer.h"
-#include "TimerManager.h"
 #include "absl/strings/str_format.h"
 
 #ifdef _WIN32
@@ -27,8 +27,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "BpfTrace.h"
-#include "LinuxUtils.h"
+#include "OrbitCore/BpfTrace.h"
+#include "OrbitCore/LinuxUtils.h"
 #endif
 
 //-----------------------------------------------------------------------------

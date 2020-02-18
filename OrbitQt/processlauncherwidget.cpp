@@ -3,8 +3,8 @@
 #include <QFileDialog>
 #include <QLineEdit>
 
-#include "App.h"
-#include "Params.h"
+#include "OrbitGl/App.h"
+#include "OrbitCore/Params.h"
 #include "ui_processlauncherwidget.h"
 
 ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)

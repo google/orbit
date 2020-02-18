@@ -4,8 +4,8 @@
 #pragma once
 
 #include "DataView.h"
-#include "Message.h"
-#include "Threading.h"
+#include "OrbitCore/Message.h"
+#include "OrbitCore/Threading.h"
 
 struct CallStack;
 

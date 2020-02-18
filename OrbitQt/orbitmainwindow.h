@@ -8,7 +8,7 @@
 #include <memory>
 #include <thread>
 
-#include "DataViewTypes.h"
+#include "OrbitGl/DataViewTypes.h"
 
 namespace Ui {
 class OrbitMainWindow;

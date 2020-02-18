@@ -5,8 +5,8 @@
 #include "ModuleDataView.h"
 
 #include "App.h"
-#include "Core.h"
-#include "OrbitModule.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/OrbitModule.h"
 
 //-----------------------------------------------------------------------------
 ModulesDataView::ModulesDataView() {

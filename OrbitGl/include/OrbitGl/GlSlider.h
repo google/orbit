@@ -5,7 +5,7 @@
 
 #include <functional>
 
-#include "Params.h"
+#include "OrbitCore/Params.h"
 #include "PickingManager.h"
 #include "TextBox.h"
 

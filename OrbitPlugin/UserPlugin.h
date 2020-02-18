@@ -1,6 +1,6 @@
 #pragma once
+#include "OrbitCore/OrbitSDK.h"
 #include "imgui.h"
-#include "OrbitSDK.h"
 
 #ifdef _WIN32
 #define ORBIT_EXPORT declspec(dllexport)
@@ -22,9 +22,7 @@ class UserPlugin : public Orbit::Plugin {
 };
 
 extern "C" {
-ORBIT_EXPORT void* CreateOrbitPlugin() {
-  return new UserPlugin();
-}
+ORBIT_EXPORT void* CreateOrbitPlugin() { return new UserPlugin(); }
 }
 
 #undef ORBIT_EXPORT

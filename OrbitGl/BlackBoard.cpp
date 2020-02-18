@@ -5,12 +5,12 @@
 #include "BlackBoard.h"
 
 #include "App.h"
-#include "Capture.h"
 #include "Card.h"
-#include "Context.h"
-#include "Log.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/Context.h"
+#include "OrbitCore/Log.h"
+#include "OrbitCore/TcpServer.h"
 #include "RuleEditor.h"
-#include "TcpServer.h"
 
 //-----------------------------------------------------------------------------
 BlackBoard::BlackBoard() : GlCanvas() {}

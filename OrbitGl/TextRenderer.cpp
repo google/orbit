@@ -5,10 +5,10 @@
 #include "TextRenderer.h"
 
 #include "App.h"
-#include "Core.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
-#include "Params.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/Params.h"
 #include "shader.h"
 #include "vertex-buffer.h"
 

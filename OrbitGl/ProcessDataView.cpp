@@ -5,13 +5,13 @@
 #include "ProcessDataView.h"
 
 #include "App.h"
-#include "Callstack.h"
-#include "Capture.h"
 #include "ModuleDataView.h"
-#include "OrbitType.h"
-#include "Params.h"
-#include "Pdb.h"
-#include "TcpClient.h"
+#include "OrbitCore/Callstack.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/OrbitType.h"
+#include "OrbitCore/Params.h"
+#include "OrbitCore/Pdb.h"
+#include "OrbitCore/TcpClient.h"
 
 //-----------------------------------------------------------------------------
 ProcessesDataView::ProcessesDataView() {

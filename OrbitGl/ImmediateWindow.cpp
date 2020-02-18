@@ -4,7 +4,7 @@
 
 #include "ImmediateWindow.h"
 
-#include "Log.h"
+#include "OrbitCore/Log.h"
 
 //-----------------------------------------------------------------------------
 ImmediateWindow::ImmediateWindow() {

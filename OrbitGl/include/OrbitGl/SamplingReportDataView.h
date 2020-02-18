@@ -4,9 +4,9 @@
 #pragma once
 
 #include "DataView.h"
-#include "OrbitType.h"
-#include "ProcessUtils.h"
-#include "SamplingProfiler.h"
+#include "OrbitCore/OrbitType.h"
+#include "OrbitCore/ProcessUtils.h"
+#include "OrbitCore/SamplingProfiler.h"
 
 class SamplingReportDataView : public DataView {
  public:

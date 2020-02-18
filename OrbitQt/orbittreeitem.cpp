@@ -2,7 +2,7 @@
 
 #include <QStringList>
 
-#include "../OrbitCore/Utils.h"
+#include "OrbitCore/Utils.h"
 
 OrbitTreeItem::OrbitTreeItem(const QList<QVariant>& data,
                              OrbitTreeItem* parent) {

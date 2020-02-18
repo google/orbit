@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <utility>
 
-#include "RingBuffer.h"
+#include "OrbitCore/RingBuffer.h"
 
 TEST(RingBuffer, Add) {
   RingBuffer<uint64_t, 5> ring_buffer;

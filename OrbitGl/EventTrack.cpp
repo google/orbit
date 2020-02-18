@@ -4,7 +4,7 @@
 
 #include "EventTrack.h"
 
-#include "Capture.h"
+#include "OrbitCore/Capture.h"
 #include "GlCanvas.h"
 
 //-----------------------------------------------------------------------------

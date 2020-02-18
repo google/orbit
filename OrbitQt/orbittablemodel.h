@@ -6,7 +6,7 @@
 #include <QAbstractTableModel>
 #include <memory>
 
-#include "../OrbitGl/DataView.h"
+#include "OrbitGl/DataView.h"
 
 //-----------------------------------------------------------------------------
 class OrbitTableModel : public QAbstractTableModel {

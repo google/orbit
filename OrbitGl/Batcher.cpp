@@ -3,7 +3,7 @@
 //-----------------------------------
 #include "Batcher.h"
 
-#include "Core.h"
+#include "OrbitCore/Core.h"
 
 //-----------------------------------------------------------------------------
 TextBox* Batcher::GetTextBox(PickingID a_ID) {

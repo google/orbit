@@ -3,54 +3,56 @@ cmake_minimum_required(VERSION 3.15)
 project(OrbitGl CXX)
 add_library(OrbitGl STATIC)
 
+set(HEADERS include/OrbitGl)
+
 target_sources(
   OrbitGl
-  PUBLIC App.h
-         Batcher.h
-         BlackBoard.h
-         CallStackDataView.h
-         CaptureSerializer.h
-         CaptureWindow.h
-         Card.h
-         CoreMath.h
-         DataView.h
-         DataViewTypes.h
-         Debugger.h
-         Disassembler.h
-         EventTrack.h
-         FunctionDataView.h
-         Geometry.h
-         GlCanvas.h
-         GlobalDataView.h
-         GlPanel.h
-         GlSlider.h
-         GlUtils.h
-         HomeWindow.h
-         Images.h
-         ImGuiOrbit.h
-         ImmediateWindow.h
-         LiveFunctionDataView.h
-         LogDataView.h
-         mat4.h
-         ModuleDataView.h
-         OpenGl.h
-         PickingManager.h
-         PluginCanvas.h
-         PluginManager.h
-         ProcessDataView.h
-         RuleEditor.h
-         SamplingReport.h
-         SamplingReportDataView.h
-         SessionsDataView.h
-         shader.h
-         TextBox.h
-         TextRenderer.h
-         ThreadTrack.h
-         ThreadTrackMap.h
-         TimeGraph.h
-         TimeGraphLayout.h
-         Track.h
-         TypeDataView.h)
+  PUBLIC ${HEADERS}/App.h
+         ${HEADERS}/Batcher.h
+         ${HEADERS}/BlackBoard.h
+         ${HEADERS}/CallStackDataView.h
+         ${HEADERS}/CaptureSerializer.h
+         ${HEADERS}/CaptureWindow.h
+         ${HEADERS}/Card.h
+         ${HEADERS}/CoreMath.h
+         ${HEADERS}/DataView.h
+         ${HEADERS}/DataViewTypes.h
+         ${HEADERS}/Debugger.h
+         ${HEADERS}/Disassembler.h
+         ${HEADERS}/EventTrack.h
+         ${HEADERS}/FunctionDataView.h
+         ${HEADERS}/Geometry.h
+         ${HEADERS}/GlCanvas.h
+         ${HEADERS}/GlobalDataView.h
+         ${HEADERS}/GlPanel.h
+         ${HEADERS}/GlSlider.h
+         ${HEADERS}/GlUtils.h
+         ${HEADERS}/HomeWindow.h
+         ${HEADERS}/Images.h
+         ${HEADERS}/ImGuiOrbit.h
+         ${HEADERS}/ImmediateWindow.h
+         ${HEADERS}/LiveFunctionDataView.h
+         ${HEADERS}/LogDataView.h
+         ${HEADERS}/mat4.h
+         ${HEADERS}/ModuleDataView.h
+         ${HEADERS}/OpenGl.h
+         ${HEADERS}/PickingManager.h
+         ${HEADERS}/PluginCanvas.h
+         ${HEADERS}/PluginManager.h
+         ${HEADERS}/ProcessDataView.h
+         ${HEADERS}/RuleEditor.h
+         ${HEADERS}/SamplingReport.h
+         ${HEADERS}/SamplingReportDataView.h
+         ${HEADERS}/SessionsDataView.h
+         ${HEADERS}/shader.h
+         ${HEADERS}/TextBox.h
+         ${HEADERS}/TextRenderer.h
+         ${HEADERS}/ThreadTrack.h
+         ${HEADERS}/ThreadTrackMap.h
+         ${HEADERS}/TimeGraph.h
+         ${HEADERS}/TimeGraphLayout.h
+         ${HEADERS}/Track.h
+         ${HEADERS}/TypeDataView.h)
 
 target_sources(
   OrbitGl
@@ -95,7 +97,8 @@ target_sources(
           ThreadTrack.cpp
           TypeDataView.cpp)
 
-target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(OrbitGl PUBLIC include/)
+target_include_directories(OrbitGl PRIVATE include/OrbitGl/)
 
 target_link_libraries(
   OrbitGl

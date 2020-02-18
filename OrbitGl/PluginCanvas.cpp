@@ -4,7 +4,7 @@
 
 #include "PluginCanvas.h"
 
-#include "OrbitSDK.h"
+#include "OrbitCore/OrbitSDK.h"
 
 //-----------------------------------------------------------------------------
 PluginCanvas::PluginCanvas(Orbit::Plugin* a_Plugin)

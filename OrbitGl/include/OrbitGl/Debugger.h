@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "Message.h"
+#include "OrbitCore/Message.h"
 
 class Debugger {
  public:

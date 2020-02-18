@@ -4,11 +4,11 @@
 #include <QLabel>
 #include <QScrollArea>
 
-#include "../OrbitCore/OrbitType.h"
-#include "../OrbitCore/Pdb.h"
-#include "../OrbitCore/PrintVar.h"
-#include "../OrbitCore/Variable.h"
-#include "../OrbitGl/App.h"
+#include "OrbitCore/OrbitType.h"
+#include "OrbitCore/Pdb.h"
+#include "OrbitCore/PrintVar.h"
+#include "OrbitCore/Variable.h"
+#include "OrbitGl/App.h"
 #include "qtpropertybrowser/qtbuttonpropertybrowser.h"
 #include "qtpropertybrowser/qteditorfactory.h"
 #include "qtpropertybrowser/qtgroupboxpropertybrowser.h"

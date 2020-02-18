@@ -1,7 +1,7 @@
 #include "TimeGraphLayout.h"
 
-#include "Capture.h"
-#include "Params.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/Params.h"
 #include "ThreadTrack.h"
 
 //-----------------------------------------------------------------------------

@@ -7,12 +7,12 @@
 #include <algorithm>
 
 #include "App.h"
-#include "Capture.h"
-#include "Core.h"
-#include "OrbitDia.h"
-#include "OrbitProcess.h"
-#include "OrbitType.h"
-#include "Pdb.h"
+#include "OrbitCore/Capture.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/OrbitDia.h"
+#include "OrbitCore/OrbitProcess.h"
+#include "OrbitCore/OrbitType.h"
+#include "OrbitCore/Pdb.h"
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
