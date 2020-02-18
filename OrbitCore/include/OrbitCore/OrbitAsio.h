@@ -5,8 +5,6 @@
 
 #include "asio.hpp"
 
-using namespace asio::ip;
-
 //-----------------------------------------------------------------------------
 class TcpService {
  public:
@@ -19,7 +17,7 @@ class TcpService {
 class TcpSocket {
  public:
   TcpSocket() : m_Socket(nullptr) {}
-  TcpSocket(tcp::socket* a_Socket) : m_Socket(a_Socket){};
+  TcpSocket(asio::ip::tcp::socket* a_Socket) : m_Socket(a_Socket){};
   ~TcpSocket();
-  tcp::socket* m_Socket;
+  asio::ip::tcp::socket* m_Socket;
 };
