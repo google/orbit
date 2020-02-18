@@ -34,7 +34,7 @@
 #include "OrbitCore/MiniDump.h"
 #include "ModuleDataView.h"
 #include "OrbitCore/ModuleManager.h"
-#include "OrbitAsm.h"
+#include "OrbitAsm/OrbitAsm.h"
 #include "OrbitCore/OrbitSession.h"
 #include "OrbitCore/Params.h"
 #include "OrbitCore/Pdb.h"

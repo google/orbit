@@ -71,7 +71,7 @@ else()
   # Hack: Some parts on linux depend on headers in OrbitAsm, but OrbitAsm is not
   # available for Windows.
   add_library(OrbitAsm INTERFACE)
-  target_include_directories(OrbitAsm INTERFACE OrbitAsm/)
+  target_include_directories(OrbitAsm INTERFACE OrbitAsm/include)
 endif()
 
 add_subdirectory(OrbitCore)
