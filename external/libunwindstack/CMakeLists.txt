@@ -18,11 +18,11 @@ target_include_directories(unwindstack PUBLIC overrides/)
 # with-cpp") set(CMAKE_ASM_FLAGS "${CFLAGS} -x assembler-with-cpp")
 
 target_include_directories(
-  unwindstack
+  unwindstack SYSTEM
   PUBLIC ${UNWINDSTACK_ROOT}/include
          ${ANDROID_BASE_ROOT}/include
          ${ANDROID_CORE_ROOT}/include
-         #${ANDROID_CORE_ROOT}/demangle/include
+         # ${ANDROID_CORE_ROOT}/demangle/include
          ${ANDROID_CORE_ROOT}/liblog/include
          ${ANDROID_CORE_ROOT}/libprocinfo/include)
 
