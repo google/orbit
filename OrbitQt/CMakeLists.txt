@@ -77,6 +77,8 @@ if(WIN32)
     OrbitQt
     PROPERTIES LINK_FLAGS
                "/MANIFESTUAC:\"level='requireAdministrator' /SUBSYSTEM:WINDOWS")
+  set_target_properties(OrbitQt PROPERTIES WIN32_EXECUTABLE ON)
+  target_sources(OrbitQt PRIVATE orbit.rc)
 endif()
 
 set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
