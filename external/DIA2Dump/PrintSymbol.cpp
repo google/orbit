@@ -17,11 +17,11 @@
 #include "PrintSymbol.h"
 #include <map>
 
-#include "../../OrbitCore/Core.h"
-#include "../../OrbitCore/Log.h"
-#include "../../OrbitCore/Utils.h"
-#include "../../OrbitCore/OrbitType.h"
-#include "../../OrbitCore/Pdb.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/Log.h"
+#include "OrbitCore/Utils.h"
+#include "OrbitCore/OrbitType.h"
+#include "OrbitCore/Pdb.h"
 
 VizLogger    GMainLog;
 OrbitLogger* GLog = &GMainLog;

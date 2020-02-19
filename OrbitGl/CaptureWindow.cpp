@@ -17,8 +17,9 @@
 #include "PluginManager.h"
 #include "absl/strings/str_format.h"
 
+
 #ifdef _WIN32
-#include "SymbolUtils.h"
+#include "OrbitCore/SymbolUtils.h"
 #else
 #include <array>
 #include <cstdio>
@@ -29,6 +30,7 @@
 
 #include "OrbitCore/BpfTrace.h"
 #include "OrbitCore/LinuxUtils.h"
+
 #endif
 
 //-----------------------------------------------------------------------------

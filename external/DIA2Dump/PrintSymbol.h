@@ -1,3 +1,8 @@
+#pragma once
+
+#include <OrbitCore/Log.h>
+#include <OrbitCore/DiaManager.h>
+
 inline int myDebugBreak( int ){
     DebugBreak();
     return 0;

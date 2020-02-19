@@ -13,7 +13,7 @@
 #include "Core.h"
 #include "Message.h"
 #include "MinHook.h"
-#include "OrbitAsm.h"
+#include "OrbitAsm/OrbitAsm.h"
 #include "OrbitLib.h"
 #include "OrbitType.h"
 #include "ScopeTimer.h"

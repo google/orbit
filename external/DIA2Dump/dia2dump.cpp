@@ -14,9 +14,11 @@
 #include "PrintSymbol.h"
 #include "Callback.h"
 
-#include "../../../OrbitCore/OrbitDia.h"
-#include "../../../OrbitCore/ScopeTimer.h"
-#include "../../../OrbitGl/App.h"
+#include "OrbitCore/OrbitDia.h"
+#include "OrbitCore/ScopeTimer.h"
+#include "OrbitCore/OrbitFunction.h"
+#include "OrbitCore/Pdb.h"
+#include "OrbitGl/App.h"
 
 #pragma warning (disable : 4100)
 

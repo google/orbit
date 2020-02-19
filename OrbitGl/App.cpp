@@ -63,7 +63,7 @@
 #include "GL/freeglut.h"
 
 #ifdef _WIN32
-#include "OrbitCore/Disassembler.h"
+#include "OrbitGl/Disassembler.h"
 #include "OrbitCore/EventTracer.h"
 #else
 #include "OrbitCore/LinuxPerf.h"

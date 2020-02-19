@@ -13,6 +13,9 @@ target_sources(
           ${DIR}/src/trampoline.c)
 target_sources(minhook PUBLIC ${DIR}/include/MinHook.h)
 
-target_include_directories(minhook SYSTEM PUBLIC ${DIR}/include ${DIR})
+target_include_directories(minhook SYSTEM PUBLIC ${DIR}/include ${DIR}/src/)
 
 add_library(minhook::minhook ALIAS minhook)
+
+#HACK: minhook depends on OrbitASM. So we add an include path.
+target_include_directories(minhook PUBLIC OrbitAsm/include/)

@@ -27,7 +27,7 @@
  */
 
 #include <windows.h>
-#include "../../../OrbitAsm/OrbitAsmC.h"
+#include "OrbitAsm/OrbitAsmC.h"
 #include <stdio.h>
 #include <assert.h>
 

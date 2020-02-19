@@ -3,7 +3,7 @@
 #include "imgui.h"
 
 #ifdef _WIN32
-#define ORBIT_EXPORT declspec(dllexport)
+#define ORBIT_EXPORT __declspec(dllexport)
 #else
 #define ORBIT_EXPORT
 #endif

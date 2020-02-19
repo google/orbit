@@ -8,6 +8,7 @@
 
 #include "Core.h"
 #include "Log.h"
+#include "DiaManager.h"
 #include "absl/strings/str_format.h"
 #include "dia2dump.h"
 

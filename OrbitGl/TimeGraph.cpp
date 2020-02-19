@@ -20,15 +20,16 @@
 #include "OrbitCore/SamplingProfiler.h"
 #include "OrbitCore/Systrace.h"
 #include "OrbitCore/TimerManager.h"
+#include "OrbitCore/Utils.h"
 #include "PickingManager.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "ThreadTrack.h"
-#include "OrbitCore/Utils.h"
 #include "absl/strings/str_format.h"
 
+
 #ifdef _WIN32
-#include "EventTracer.h"
+#include "OrbitCore/EventTracer.h"
 #endif
 
 TimeGraph* GCurrentTimeGraph = nullptr;

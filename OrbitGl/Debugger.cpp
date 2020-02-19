@@ -11,11 +11,12 @@
 #include <string>
 #include <thread>
 
-#include "App.h"
-#include "Core.h"
-#include "OrbitDbgHelp.h"
-#include "Params.h"
-#include "TcpServer.h"
+#include "OrbitCore/Core.h"
+#include "OrbitCore/OrbitDbgHelp.h"
+#include "OrbitCore/Params.h"
+#include "OrbitCore/TcpServer.h"
+#include "OrbitGl/App.h"
+
 
 //-----------------------------------------------------------------------------
 Debugger::Debugger() : m_LoopReady(false) {}
@@ -134,8 +135,9 @@ void Debugger::DebuggerThread(const std::wstring& a_ProcessName,
   si.cb = sizeof(si);
   ZeroMemory(&pi, sizeof(pi));
 
-  std::wstring dir = a_WorkingDir.size() ?
-      a_WorkingDir : s2ws(Path::GetDirectory(ws2s(a_ProcessName)));
+  std::wstring dir = a_WorkingDir.size()
+                         ? a_WorkingDir
+                         : s2ws(Path::GetDirectory(ws2s(a_ProcessName)));
   std::wstring args = a_ProcessName + L" " + a_Args;
   TCHAR commandline[MAX_PATH + 1];
   int numChars = (int)std::min((size_t)MAX_PATH, args.size());
@@ -190,19 +192,17 @@ void Debugger::DebuggerThread(const std::wstring& a_ProcessName,
 
       case CREATE_THREAD_DEBUG_EVENT:
         // Thread 0xc (Id: 7920) created at: 0x77b15e58
-        strEventMessage =
-            absl::StrFormat("Thread 0x%x (Id: %d) created at: 0x%x",
-                            debug_event.u.CreateThread.hThread,
-                            debug_event.dwThreadId,
-                            debug_event.u.CreateThread.lpStartAddress);
+        strEventMessage = absl::StrFormat(
+            "Thread 0x%x (Id: %d) created at: 0x%x",
+            debug_event.u.CreateThread.hThread, debug_event.dwThreadId,
+            debug_event.u.CreateThread.lpStartAddress);
 
         break;
       case EXIT_THREAD_DEBUG_EVENT:
         // The thread 2760 exited with code: 0
-        strEventMessage =
-            absl::StrFormat("The thread %d exited with code: %d",
-                            debug_event.dwThreadId,
-                            debug_event.u.ExitThread.dwExitCode);
+        strEventMessage = absl::StrFormat("The thread %d exited with code: %d",
+                                          debug_event.dwThreadId,
+                                          debug_event.u.ExitThread.dwExitCode);
 
         break;
 
@@ -260,11 +260,11 @@ void Debugger::DebuggerThread(const std::wstring& a_ProcessName,
 
           default:
             if (exception.dwFirstChance == 1) {
-              strEventMessage =
-                  absl::StrFormat("First chance exception at %x, "
-                                  "exception-code: 0x%08x",
-                                  exception.ExceptionRecord.ExceptionAddress,
-                                  exception.ExceptionRecord.ExceptionCode);
+              strEventMessage = absl::StrFormat(
+                  "First chance exception at %x, "
+                  "exception-code: 0x%08x",
+                  exception.ExceptionRecord.ExceptionAddress,
+                  exception.ExceptionRecord.ExceptionCode);
             }
             // else
             // { Let the OS handle }
