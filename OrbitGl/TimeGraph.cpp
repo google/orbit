@@ -259,6 +259,12 @@ uint32_t TimeGraph::GetNumTimers() const {
 }
 
 //-----------------------------------------------------------------------------
+uint32_t TimeGraph::GetNumCores() const {
+  ScopeLock lock(m_Mutex);
+  return m_CoreUtilizationMap.size();
+}
+
+//-----------------------------------------------------------------------------
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& pair : m_ThreadTracks) {
@@ -739,6 +745,7 @@ void TimeGraph::Draw(bool a_Picking) {
 
 //-----------------------------------------------------------------------------
 void TimeGraph::DrawThreadTracks(bool a_Picking) {
+  m_Layout.SetNumCores(GetNumCores());
   const std::vector<ThreadID>& sortedThreadIds = m_Layout.GetSortedThreadIds();
   for (uint32_t i = 0; i < sortedThreadIds.size(); ++i) {
     ThreadID threadId = sortedThreadIds[i];

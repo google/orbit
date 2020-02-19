@@ -15,6 +15,7 @@
 #include "CoreApp.h"
 #include "LinuxPerfEvent.h"
 #include "LinuxPerfEventProcessor.h"
+#include "LinuxPerfEventProcessor2.h"
 #include "LinuxPerfRingBuffer.h"
 #include "LinuxPerfUtils.h"
 #include "LinuxUprobesUnwindingVisitor.h"
@@ -57,7 +58,10 @@ void LinuxEventTracerThread::Run(
     }
   }
 
-  LinuxPerfEventProcessor uprobe_event_processor{
+  // Switch between LinuxPerfEventProcessor and LinuxPerfEventProcessor2 here.
+  // LinuxPerfEventProcessor2 is supposedly faster but assumes that events from
+  // the same perf_event_open ring buffer are already sorted.
+  LinuxPerfEventProcessor2 uprobe_event_processor{
       std::make_unique<LinuxUprobesUnwindingVisitor>(
           pid_, LinuxUtils::ReadMaps(pid_))};
 
@@ -252,8 +256,10 @@ void LinuxEventTracerThread::Run(
             // There was a call to mmap with PROT_EXEC, hence refresh the maps.
             // This should happen rarely.
             ring_buffer.SkipRecord(header);
-            uprobe_event_processor.Push(std::make_unique<LinuxMapsEvent>(
-                OrbitTicks(CLOCK_MONOTONIC), LinuxUtils::ReadMaps(pid_)));
+            uprobe_event_processor.AddEvent(
+                fd,
+                std::make_unique<LinuxMapsEvent>(OrbitTicks(CLOCK_MONOTONIC),
+                                                 LinuxUtils::ReadMaps(pid_)));
           } break;
 
           case PERF_RECORD_SAMPLE: {
@@ -261,9 +267,9 @@ void LinuxEventTracerThread::Run(
               auto sample =
                   ring_buffer.ConsumeRecord<LinuxUprobeEventWithStack>(header);
               sample.SetFunction(uprobe_fds_to_function.at(fd));
-              uprobe_event_processor.Push(
-                  std::make_unique<LinuxUprobeEventWithStack>(
-                      std::move(sample)));
+              uprobe_event_processor.AddEvent(
+                  fd, std::make_unique<LinuxUprobeEventWithStack>(
+                          std::move(sample)));
 
               ++uprobes_count;
 
@@ -272,16 +278,17 @@ void LinuxEventTracerThread::Run(
                   ring_buffer.ConsumeRecord<LinuxUretprobeEventWithStack>(
                       header);
               sample.SetFunction(uretprobe_fds_to_function.at(fd));
-              uprobe_event_processor.Push(
-                  std::make_unique<LinuxUretprobeEventWithStack>(
-                      std::move(sample)));
+              uprobe_event_processor.AddEvent(
+                  fd, std::make_unique<LinuxUretprobeEventWithStack>(
+                          std::move(sample)));
 
               ++uprobes_count;
 
             } else {
               auto sample =
                   ring_buffer.ConsumeRecord<LinuxStackSampleEvent>(header);
-              uprobe_event_processor.Push(
+              uprobe_event_processor.AddEvent(
+                  fd,
                   std::make_unique<LinuxStackSampleEvent>(std::move(sample)));
 
               ++sample_count;

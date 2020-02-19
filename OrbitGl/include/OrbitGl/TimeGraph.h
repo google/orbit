@@ -93,6 +93,7 @@ class TimeGraph {
   }
   Batcher& GetBatcher() { return m_Batcher; }
   uint32_t GetNumTimers() const;
+  uint32_t GetNumCores() const;
   std::vector<std::shared_ptr<TimerChain> > GetAllTimerChains() const;
   double GetMarginRatio() const { return m_MarginRatio; }
 

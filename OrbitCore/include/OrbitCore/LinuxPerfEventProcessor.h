@@ -46,7 +46,7 @@ class LinuxPerfEventProcessor {
       std::unique_ptr<LinuxPerfEventVisitor> visitor)
       : visitor_(std::move(visitor)) {}
 
-  void Push(std::unique_ptr<LinuxPerfEvent> event);
+  void AddEvent(int origin_fd, std::unique_ptr<LinuxPerfEvent> event);
 
   void ProcessAllEvents();
 

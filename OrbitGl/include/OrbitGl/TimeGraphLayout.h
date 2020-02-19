@@ -38,6 +38,8 @@ class TimeGraphLayout {
     return m_SortedThreadIds;
   }
 
+  void SetNumCores(int a_NumCores) { m_NumCores = a_NumCores; }
+
  protected:
   void SortTracksByPosition(const ThreadTrackMap& a_ThreadTracks);
 

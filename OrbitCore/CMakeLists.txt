@@ -159,6 +159,7 @@ else()
            ${HEADERS}/LinuxEventTracer.h
            ${HEADERS}/LinuxPerfEvent.h
            ${HEADERS}/LinuxPerfEventProcessor.h
+           ${HEADERS}/LinuxPerfEventProcessor2.h
            ${HEADERS}/LinuxPerfEventVisitor.h
            ${HEADERS}/LinuxPerfRingBuffer.h
            ${HEADERS}/LinuxPerfUtils.h
@@ -173,6 +174,7 @@ else()
             LinuxUtils.cpp
             LinuxPerfEvent.cpp
             LinuxPerfEventProcessor.cpp
+            LinuxPerfEventProcessor2.cpp
             LinuxPerfRingBuffer.cpp
             LinuxPerfUtils.cpp
             LinuxUprobesUnwindingVisitor.cpp)
@@ -215,10 +217,13 @@ target_compile_features(OrbitCore PUBLIC cxx_std_11)
 
 add_executable(OrbitCoreTests)
 
-target_sources(OrbitCoreTests PRIVATE RingBufferTests.cpp)
+target_sources(OrbitCoreTests
+  PRIVATE RingBufferTest.cpp)
 
 if(NOT WIN32)
-  target_sources(OrbitCoreTests PRIVATE LinuxUprobesUnwindingVisitorTests.cpp)
+  target_sources(OrbitCoreTests
+    PRIVATE LinuxPerfEventProcessor2Test.cpp
+            LinuxUprobesUnwindingVisitorTest.cpp)
 endif()
 
 target_link_libraries(OrbitCoreTests PRIVATE OrbitCore GTest::GTest GTest::Main)

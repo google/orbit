@@ -12,7 +12,8 @@
 
 #include "Profiling.h"
 
-void LinuxPerfEventProcessor::Push(std::unique_ptr<LinuxPerfEvent> event) {
+void LinuxPerfEventProcessor::AddEvent(int origin_fd,
+                                       std::unique_ptr<LinuxPerfEvent> event) {
 #ifndef NDEBUG
   if (last_processed_timestamp_ > 0 &&
       event->Timestamp() <
