@@ -300,9 +300,7 @@ void ConnectionManager::ConnectionThread() {
 //-----------------------------------------------------------------------------
 void ConnectionManager::RemoteThread() {
   while (!m_ExitRequested) {
-    // PRINT_VAR(GTcpServer->HasConnection());
-    // if (GTcpServer->HasConnection())
-    {
+    if (GTcpServer && GTcpServer->HasConnection()) {
       SendProcesses(GTcpServer);
     }
 
