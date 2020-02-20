@@ -138,6 +138,7 @@ std::string FindSymbols(const std::string& module_path) {
 bool Pdb::LoadPdb(const char* a_PdbName) {
   m_FileName = FindSymbols(a_PdbName);
   m_Name = Path::GetFileName(m_FileName);
+  m_LoadedModuleName = a_PdbName;
 
   {
     SCOPE_TIMER_LOG("nm");

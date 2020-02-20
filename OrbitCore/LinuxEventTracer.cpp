@@ -69,13 +69,13 @@ void LinuxEventTracerThread::Run(
     for (const auto& function : instrumented_functions_) {
       for (int32_t cpu = 0; cpu < num_cpus_; cpu++) {
         int uprobe_fd = LinuxPerfUtils::uprobe_stack_event_open(
-            function->GetPdb()->GetFileName().c_str(), function->Address(), -1,
+            function->GetPdb()->GetLoadedModuleName().c_str(), function->Address(), -1,
             cpu);
         fds_to_ring_buffer.emplace(uprobe_fd, LinuxPerfRingBuffer{uprobe_fd});
         uprobe_fds_to_function.emplace(uprobe_fd, function);
 
         int uretprobe_fd = LinuxPerfUtils::uretprobe_stack_event_open(
-            function->GetPdb()->GetFileName().c_str(), function->Address(), -1,
+            function->GetPdb()->GetLoadedModuleName().c_str(), function->Address(), -1,
             cpu);
         fds_to_ring_buffer.emplace(uretprobe_fd,
                                    LinuxPerfRingBuffer{uretprobe_fd});

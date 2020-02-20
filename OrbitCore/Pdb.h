@@ -163,6 +163,7 @@ class Pdb {
 
   const std::string& GetName() const { return m_Name; }
   const std::string& GetFileName() const { return m_FileName; }
+  const std::string& GetLoadedModuleName() const { return m_LoadedModuleName; }
   std::vector<Function>& GetFunctions() { return m_Functions; }
   std::vector<Type>& GetTypes() { return m_Types; }
   std::vector<Variable>& GetGlobals() { return m_Globals; }
@@ -222,6 +223,7 @@ class Pdb {
   // Data
   std::string m_Name;
   std::string m_FileName;
+  std::string m_LoadedModuleName;
   std::vector<Function> m_Functions;
   std::vector<Type> m_Types;
   std::vector<Variable> m_Globals;
