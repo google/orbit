@@ -3,5 +3,5 @@
 :: in the job configuration
 cd %KOKORO_ARTIFACTS_DIR%\github\orbitprofiler
 
-call bootstrap-orbit.bat
+call bootstrap-ci-orbit.bat
 exit %ERRORLEVEL%
