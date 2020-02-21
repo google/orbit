@@ -60,8 +60,8 @@ void ProcessLauncherWidget::on_LaunchButton_clicked() {
   QString process = ui->ProcessComboBox->lineEdit()->text();
   QString workingDir = ui->WorkingDirComboBox->lineEdit()->text();
   QString args = ui->ArgumentsComboBox->lineEdit()->text();
-  GOrbitApp->OnLaunchProcess(process.toStdWString(), workingDir.toStdWString(),
-                             args.toStdWString());
+  GOrbitApp->OnLaunchProcess(process.toStdString(), workingDir.toStdString(),
+                             args.toStdString());
 }
 
 void ProcessLauncherWidget::on_checkBoxPause_clicked(bool checked) {

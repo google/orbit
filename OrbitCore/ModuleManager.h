@@ -17,7 +17,7 @@ class ModuleManager {
   void OnReceiveMessage(const Message& a_Msg);
   void LoadPdbAsync(const std::shared_ptr<Module>& a_Module,
                     std::function<void()> a_CompletionCallback);
-  void LoadPdbAsync(const std::vector<std::wstring> a_Modules,
+  void LoadPdbAsync(const std::vector<std::string> a_Modules,
                     std::function<void()> a_CompletionCallback);
 
  protected:
@@ -28,7 +28,7 @@ class ModuleManager {
 
  protected:
   std::function<void()> m_UserCompletionCallback;
-  std::vector<std::wstring> m_ModulesQueue;
+  std::vector<std::string> m_ModulesQueue;
 };
 
 extern ModuleManager GModuleManager;

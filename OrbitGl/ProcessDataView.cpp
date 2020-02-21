@@ -232,7 +232,7 @@ bool ProcessesDataView::SelectProcess(const std::wstring& a_ProcessName) {
     Process& process = *GetProcess(i);
     if (process.GetFullName().find(ws2s(a_ProcessName)) != std::string::npos) {
       OnSelect(i);
-      Capture::GPresetToLoad = L"";
+      Capture::GPresetToLoad = "";
       return true;
     }
   }
@@ -248,7 +248,7 @@ std::shared_ptr<Process> ProcessesDataView::SelectProcess(DWORD a_ProcessId) {
     Process& process = *GetProcess(i);
     if (process.GetID() == a_ProcessId) {
       OnSelect(i);
-      Capture::GPresetToLoad = L"";
+      Capture::GPresetToLoad = "";
       return m_SelectedProcess;
     }
   }

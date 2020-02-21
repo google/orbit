@@ -14,16 +14,16 @@ class Debugger {
   Debugger();
   ~Debugger();
 
-  void LaunchProcess(const std::wstring& a_ProcessName,
-                     const std::wstring& a_WorkingDir,
-                     const std::wstring& a_Args);
+  void LaunchProcess(const std::string& process_name,
+                     const std::string& working_dir,
+                     const std::string& args);
   void MainTick();
   void SendThawMessage();
 
  protected:
-  void DebuggerThread(const std::wstring& a_ProcessName,
-                      const std::wstring& a_WorkingDir,
-                      const std::wstring& a_Args);
+  void DebuggerThread(const std::string& process_name,
+                      const std::string& working_dir,
+                      const std::string& args);
 
  private:
   OrbitWaitLoop m_WaitLoop;

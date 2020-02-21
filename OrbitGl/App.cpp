@@ -110,7 +110,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
   for (const std::string& arg : a_Args) {
     if (Contains(arg, "gamelet:")) {
       std::string address = Replace(arg, "gamelet:", "");
-      Capture::GCaptureHost = s2ws(address);
+      Capture::GCaptureHost = address;
 
       GTcpClient = std::make_unique<TcpClient>();
       GTcpClient->AddMainThreadCallback(
@@ -131,14 +131,12 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
     } else if (Contains(arg, "preset:")) {
       std::vector<std::string> vec = Tokenize(arg, ":");
       if (vec.size() > 1) {
-        std::string& preset = vec[1];
-        Capture::GPresetToLoad = s2ws(preset);
+        Capture::GPresetToLoad = vec[1];
       }
     } else if (Contains(arg, "inject:")) {
       std::vector<std::string> vec = Tokenize(arg, ":");
       if (vec.size() > 1) {
-        std::string& preset = vec[1];
-        Capture::GProcessToInject = s2ws(preset);
+        Capture::GProcessToInject = vec[1];
       }
     } else if (Contains(arg, "systrace:")) {
       m_PostInitArguments.push_back(arg);
@@ -164,7 +162,7 @@ void GetDesktopResolution(int& horizontal, int& vertical) {
 }
 
 //-----------------------------------------------------------------------------
-void GLoadPdbAsync(const std::vector<std::wstring>& a_Modules) {
+void GLoadPdbAsync(const std::vector<std::string>& a_Modules) {
   GModuleManager.LoadPdbAsync(a_Modules, []() { GOrbitApp->OnPdbLoaded(); });
 }
 
@@ -677,14 +675,14 @@ void OrbitApp::MainTick() {
   GTcpServer->MainThreadTick();
 #endif
 
-  if (Capture::GPresetToLoad != L"") {
+  if (!Capture::GPresetToLoad.empty()) {
     GOrbitApp->OnLoadSession(Capture::GPresetToLoad);
   }
 
-  if (Capture::GProcessToInject != L"") {
+  if (!Capture::GProcessToInject.empty()) {
     std::cout << "Injecting into "
               << Capture::GTargetProcess->GetFullName() << std::endl;
-    std::cout << "Orbit host: " << ws2s(Capture::GCaptureHost) << std::endl;
+    std::cout << "Orbit host: " << Capture::GCaptureHost << std::endl;
     GOrbitApp->SelectProcess(Capture::GProcessToInject);
     Capture::InjectRemote();
     exit(0);
@@ -846,11 +844,10 @@ void OrbitApp::GetDisassembly(DWORD64 a_Address, DWORD a_NumBytesBelow,
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnOpenPdb(const std::wstring a_FileName) {
+void OrbitApp::OnOpenPdb(const std::string& file_name) {
   Capture::GTargetProcess = std::make_shared<Process>();
   std::shared_ptr<Module> mod = std::make_shared<Module>();
 
-  std::string file_name = ws2s(a_FileName);
   mod->m_FullName = file_name;
   mod->m_Name = Path::GetFileName(file_name);
   mod->m_Directory = Path::GetDirectory(file_name);
@@ -870,11 +867,11 @@ void OrbitApp::OnOpenPdb(const std::wstring a_FileName) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnLaunchProcess(const std::wstring a_ProcessName,
-                               const std::wstring a_WorkingDir,
-                               const std::wstring a_Args) {
+void OrbitApp::OnLaunchProcess(const std::string& process_name,
+                               const std::string& working_dir,
+                               const std::string& args) {
 #ifdef _WIN32
-  m_Debugger->LaunchProcess(a_ProcessName, a_WorkingDir, a_Args);
+  m_Debugger->LaunchProcess(process_name, working_dir, args);
 #endif
 }
 
@@ -892,9 +889,8 @@ std::wstring OrbitApp::GetCaptureFileName() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring OrbitApp::GetSessionFileName() {
-  return s2ws(Capture::GSessionPresets ?
-              Capture::GSessionPresets->m_FileName : "");
+std::string OrbitApp::GetSessionFileName() {
+  return Capture::GSessionPresets ? Capture::GSessionPresets->m_FileName : "";
 }
 
 //-----------------------------------------------------------------------------
@@ -910,30 +906,29 @@ void OrbitApp::SetClipboard(const std::wstring& a_Text) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnSaveSession(const std::wstring a_FileName) {
-  Capture::SaveSession(a_FileName);
+void OrbitApp::OnSaveSession(const std::string& file_name) {
+  Capture::SaveSession(file_name);
   ListSessions();
   Refresh(DataViewType::SESSIONS);
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnLoadSession(const std::wstring a_FileName) {
+void OrbitApp::OnLoadSession(const std::string& file_name) {
   std::shared_ptr<Session> session = std::make_shared<Session>();
-  std::string file_name = ws2s(a_FileName);
+  std::string file_path = file_name;
 
   if (Path::GetDirectory(file_name).empty()) {
-    file_name = Path::GetPresetPath() + file_name;
+    file_path = Path::GetPresetPath() + file_name;
   }
 
-  std::ifstream file(file_name);
+  std::ifstream file(file_path);
   if (!file.fail()) {
     cereal::BinaryInputArchive archive(file);
     archive(*session);
-    if (SelectProcess(
-        s2ws(Path::GetFileName(session->m_ProcessFullPath)))) {
-      session->m_FileName = file_name;
+    if (SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
+      session->m_FileName = file_path;
       Capture::LoadSession(session);
-      Capture::GPresetToLoad = L"";
+      Capture::GPresetToLoad = "";
     }
 
     file.close();
@@ -941,14 +936,14 @@ void OrbitApp::OnLoadSession(const std::wstring a_FileName) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnSaveCapture(const std::wstring a_FileName) {
+void OrbitApp::OnSaveCapture(const std::string& file_name) {
   CaptureSerializer ar;
   ar.m_TimeGraph = GCurrentTimeGraph;
-  ar.Save(a_FileName);
+  ar.Save(s2ws(file_name));
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnLoadCapture(const std::wstring a_FileName) {
+void OrbitApp::OnLoadCapture(const std::string& file_name) {
   StopCapture();
   Capture::ClearCaptureData();
   GCurrentTimeGraph->Clear();
@@ -958,7 +953,7 @@ void OrbitApp::OnLoadCapture(const std::wstring a_FileName) {
 
   CaptureSerializer ar;
   ar.m_TimeGraph = GCurrentTimeGraph;
-  ar.Load(a_FileName);
+  ar.Load(s2ws(file_name));
   StopCapture();
   DoZoom = true;  // TODO: remove global, review logic
 }
@@ -1062,9 +1057,9 @@ void OrbitApp::Unregister(DataView* a_Model) {
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::SelectProcess(const std::wstring& a_Process) {
+bool OrbitApp::SelectProcess(const std::string& a_Process) {
   if (m_ProcessesDataView) {
-    return m_ProcessesDataView->SelectProcess(a_Process);
+    return m_ProcessesDataView->SelectProcess(s2ws(a_Process));
   }
 
   return false;

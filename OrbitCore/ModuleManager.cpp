@@ -78,7 +78,7 @@ void ModuleManager::LoadPdbAsync(const std::shared_ptr<Module>& a_Module,
 }
 
 //-----------------------------------------------------------------------------
-void ModuleManager::LoadPdbAsync(const std::vector<std::wstring> a_Modules,
+void ModuleManager::LoadPdbAsync(const std::vector<std::string> a_Modules,
                                  std::function<void()> a_CompletionCallback) {
   m_UserCompletionCallback = a_CompletionCallback;
   m_ModulesQueue = a_Modules;
@@ -90,7 +90,7 @@ void ModuleManager::DequeueAndLoad() {
   std::shared_ptr<Module> module = nullptr;
 
   while (module == nullptr && !m_ModulesQueue.empty()) {
-    std::string pdbName = ws2s(m_ModulesQueue.back());
+    std::string pdbName = m_ModulesQueue.back();
     m_ModulesQueue.pop_back();
 
     module = Capture::GTargetProcess->FindModule(Path::GetFileName(pdbName));

@@ -456,8 +456,8 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {}
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionSave_Session_triggered() {
-  std::wstring sessionName = GOrbitApp->GetSessionFileName();
-  if (sessionName != L"") {
+  std::string sessionName = GOrbitApp->GetSessionFileName();
+  if (!sessionName.empty()) {
     GOrbitApp->OnSaveSession(sessionName);
   } else {
     on_actionSave_Session_As_triggered();
@@ -470,7 +470,7 @@ void OrbitMainWindow::on_actionOpen_Session_triggered() {
       this, "Select a file to open...", Path::GetPresetPath().c_str(),
       "*.opr");
   for (auto& file : list) {
-    GOrbitApp->OnLoadSession(file.toStdWString());
+    GOrbitApp->OnLoadSession(file.toStdString());
     break;
   }
 }
@@ -480,7 +480,7 @@ void OrbitMainWindow::on_actionOpen_PDB_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Select a pdb file to open...", "", "*.pdb");
   for (auto& file : list) {
-    GOrbitApp->OnOpenPdb(file.toStdWString());
+    GOrbitApp->OnOpenPdb(file.toStdString());
     break;
   }
 }
@@ -513,7 +513,7 @@ void OrbitMainWindow::on_actionSave_Session_As_triggered() {
   QString file = QFileDialog::getSaveFileName(
       this, "Specify a file to save...", Path::GetPresetPath().c_str(),
       "*.opr");
-  GOrbitApp->OnSaveSession(file.toStdWString());
+  GOrbitApp->OnSaveSession(file.toStdString());
 }
 
 //-----------------------------------------------------------------------------
@@ -529,7 +529,7 @@ void OrbitMainWindow::on_actionLaunch_Process_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Select an executable to launch...", "", "*.exe");
   for (auto& file : list) {
-    GOrbitApp->OnLaunchProcess(file.toStdWString(), TEXT(""), TEXT(""));
+    GOrbitApp->OnLaunchProcess(file.toStdString(), "", "");
     break;
   }
 }
@@ -560,7 +560,7 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
       this, "Save capture...",
       (Path::GetCapturePath() + ws2s(GOrbitApp->GetCaptureFileName())).c_str(),
       "*.orbit");
-  GOrbitApp->OnSaveCapture(file.toStdWString());
+  GOrbitApp->OnSaveCapture(file.toStdString());
 }
 
 //-----------------------------------------------------------------------------
@@ -568,7 +568,7 @@ void OrbitMainWindow::on_actionOpen_Capture_2_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Open capture...", Path::GetCapturePath().c_str(), "*.orbit");
   for (auto& file : list) {
-    GOrbitApp->OnLoadCapture(file.toStdWString());
+    GOrbitApp->OnLoadCapture(file.toStdString());
     SetTitle(file.toStdString());
     ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
     break;
