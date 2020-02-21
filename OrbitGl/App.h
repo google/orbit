@@ -36,18 +36,18 @@ class OrbitApp : public CoreApp {
   void CheckDebugger();
 
   std::wstring GetCaptureFileName();
-  std::wstring GetSessionFileName();
+  std::string GetSessionFileName();
   std::wstring GetSaveFile(const std::wstring& a_Extension);
   void SetClipboard(const std::wstring& a_Text);
-  void OnSaveSession(const std::wstring a_FileName);
-  void OnLoadSession(const std::wstring a_FileName);
-  void OnSaveCapture(const std::wstring a_FileName);
-  void OnLoadCapture(const std::wstring a_FileName);
-  void OnOpenPdb(const std::wstring a_FileName);
-  void OnLaunchProcess(const std::wstring a_ProcessName,
-                       const std::wstring a_WorkingDir,
-                       const std::wstring a_Args);
-  void Inject(const std::wstring a_FileName);
+  void OnSaveSession(const std::string& file_name);
+  void OnLoadSession(const std::string& file_name);
+  void OnSaveCapture(const std::string& file_name);
+  void OnLoadCapture(const std::string& file_name);
+  void OnOpenPdb(const std::string& file_name);
+  void OnLaunchProcess(const std::string& process_name,
+                       const std::string& working_dir,
+                       const std::string& args);
+  void Inject(const std::string& file_name);
   virtual void StartCapture();
   virtual void StopCapture();
   virtual void StartRemoteCaptureBufferingThread();
@@ -98,7 +98,7 @@ class OrbitApp : public CoreApp {
   void RegisterRuleEditor(class RuleEditor* a_RuleEditor);
 
   void Unregister(class DataView* a_Model);
-  bool SelectProcess(const std::wstring& a_Process);
+  bool SelectProcess(const std::string& a_Process);
   bool SelectProcess(uint32_t a_ProcessID);
   bool Inject(unsigned long a_ProcessId);
   static void AddSamplingReport(

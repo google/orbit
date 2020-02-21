@@ -35,10 +35,10 @@ struct Capture {
   static void Update();
   static void DisplayStats();
   static void TestHooks();
-  static void OpenCapture(const std::wstring& a_CaptureName);
+  static void OpenCapture(const std::string& a_CaptureName);
   static bool IsOtherInstanceRunning();
   static void LoadSession(const std::shared_ptr<Session>& a_Session);
-  static void SaveSession(const std::wstring& a_FileName);
+  static void SaveSession(const std::string& a_FileName);
   static void NewSamplingProfiler();
   static bool IsTrackingEvents();
   static bool
@@ -50,7 +50,7 @@ struct Capture {
   static void CheckForUnrealSupport();
   static void PreSave();
 
-  typedef void (*LoadPdbAsyncFunc)(const std::vector<std::wstring>& a_Modules);
+  typedef void (*LoadPdbAsyncFunc)(const std::vector<std::string>& a_Modules);
   static void SetLoadPdbAsyncFunc(LoadPdbAsyncFunc a_Func) {
     GLoadPdbAsync = a_Func;
   }
@@ -60,12 +60,11 @@ struct Capture {
   static bool GInjected;
   static bool GIsConnected;
   static std::string GInjectedProcess;
-  static std::wstring GInjectedProcessW;
   static double GOpenCaptureTime;
   static int GCapturePort;
-  static std::wstring GCaptureHost;
-  static std::wstring GPresetToLoad;  // TODO: allow multiple presets
-  static std::wstring GProcessToInject;
+  static std::string GCaptureHost;
+  static std::string GPresetToLoad;  // TODO: allow multiple presets
+  static std::string GProcessToInject;
   static bool GIsSampling;
   static bool GIsTesting;
   static uint32_t GNumSamples;

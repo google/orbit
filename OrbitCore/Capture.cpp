@@ -37,7 +37,6 @@ std::shared_ptr<Pdb> GPdbDbg;
 bool Capture::GInjected = false;
 bool Capture::GIsConnected = false;
 std::string Capture::GInjectedProcess;
-std::wstring Capture::GInjectedProcessW;
 double Capture::GOpenCaptureTime;
 bool Capture::GIsSampling = false;
 bool Capture::GIsTesting = false;
@@ -52,9 +51,9 @@ ULONG64 Capture::GNumContextSwitches;
 ULONG64 Capture::GNumLinuxEvents;
 ULONG64 Capture::GNumProfileEvents;
 int Capture::GCapturePort = 0;
-std::wstring Capture::GCaptureHost = L"localhost";
-std::wstring Capture::GPresetToLoad = L"";
-std::wstring Capture::GProcessToInject = L"";
+std::string Capture::GCaptureHost = "localhost";
+std::string Capture::GPresetToLoad = "";
+std::string Capture::GProcessToInject = "";
 
 std::map<ULONG64, Function*> Capture::GSelectedFunctionsMap;
 std::map<ULONG64, Function*> Capture::GVisibleFunctionsMap;
@@ -98,7 +97,6 @@ bool Capture::Inject(bool a_WaitForConnection) {
     ORBIT_LOG(
         absl::StrFormat("Injected in %s", GTargetProcess->GetName().c_str()));
     GInjectedProcess = GTargetProcess->GetName();
-    GInjectedProcessW = s2ws(GInjectedProcess);
   }
 
   if (a_WaitForConnection) {
@@ -127,7 +125,6 @@ bool Capture::InjectRemote() {
     ORBIT_LOG(
         absl::StrFormat("Injected in %s", GTargetProcess->GetName().c_str()));
     GInjectedProcess = GTargetProcess->GetName();
-    GInjectedProcessW = s2ws(GInjectedProcess);
   }
 
   return GInjected;
@@ -473,7 +470,7 @@ void Capture::DisplayStats() {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::OpenCapture(const std::wstring& a_CaptureName) {
+void Capture::OpenCapture(const std::string& a_CaptureName) {
   LocalScopeTimer Timer(&GOpenCaptureTime);
   SCOPE_TIMER_LOG("OpenCapture");
 
@@ -498,11 +495,11 @@ bool Capture::IsOtherInstanceRunning() {
 void Capture::LoadSession(const std::shared_ptr<Session>& a_Session) {
   GSessionPresets = a_Session;
 
-  std::vector<std::wstring> modulesToLoad;
+  std::vector<std::string> modulesToLoad;
   for (auto& it : a_Session->m_Modules) {
     SessionModule& module = it.second;
     ORBIT_LOG_DEBUG(module.m_Name);
-    modulesToLoad.push_back(s2ws(it.first));
+    modulesToLoad.push_back(it.first);
   }
 
   if (GLoadPdbAsync) {
@@ -517,7 +514,7 @@ void Capture::LoadSession(const std::shared_ptr<Session>& a_Session) {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::SaveSession(const std::wstring& a_FileName) {
+void Capture::SaveSession(const std::string& a_FileName) {
   Session session;
   session.m_ProcessFullPath = GTargetProcess->GetFullName();
 
@@ -534,8 +531,8 @@ void Capture::SaveSession(const std::wstring& a_FileName) {
     }
   }
 
-  std::string saveFileName = ws2s(a_FileName);
-  if (!EndsWith(a_FileName, L".opr")) {
+  std::string saveFileName = a_FileName;
+  if (!EndsWith(a_FileName, ".opr")) {
     saveFileName += ".opr";
   }
 

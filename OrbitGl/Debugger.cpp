@@ -24,11 +24,11 @@ Debugger::Debugger() : m_LoopReady(false) {}
 Debugger::~Debugger() {}
 
 //-----------------------------------------------------------------------------
-void Debugger::LaunchProcess(const std::wstring& a_ProcessName,
-                             const std::wstring& a_WorkingDir,
-                             const std::wstring& a_Args) {
-  std::thread t(&Debugger::DebuggerThread, this, a_ProcessName, a_WorkingDir,
-                a_Args);
+void Debugger::LaunchProcess(const std::string& process_name,
+                             const std::string& working_dir,
+                             const std::string& args) {
+  std::thread t(&Debugger::DebuggerThread, this, process_name, working_dir,
+                args);
   t.detach();
 }
 
@@ -123,28 +123,29 @@ HANDLE hProcess = 0;
 void* startAddress = 0;
 
 //-----------------------------------------------------------------------------
-void Debugger::DebuggerThread(const std::wstring& a_ProcessName,
-                              const std::wstring& a_WorkingDir,
-                              const std::wstring& a_Args) {
+void Debugger::DebuggerThread(const std::string& process_name,
+                              const std::string& working_dir,
+                              const std::string& args) {
   SetCurrentThreadName(L"Debugger");
 
-  STARTUPINFO si;
+  STARTUPINFOA si;
   PROCESS_INFORMATION pi;
   ZeroMemory(&si, sizeof(si));
   si.cb = sizeof(si);
   ZeroMemory(&pi, sizeof(pi));
 
-  std::wstring dir = a_WorkingDir.size() ?
-      a_WorkingDir : s2ws(Path::GetDirectory(ws2s(a_ProcessName)));
-  std::wstring args = a_ProcessName + L" " + a_Args;
-  TCHAR commandline[MAX_PATH + 1];
-  int numChars = (int)std::min((size_t)MAX_PATH, args.size());
-  memcpy(commandline, args.c_str(), numChars * sizeof(TCHAR));
-  commandline[numChars] = 0;
+  std::string dir = !working_dir.empty() ?  working_dir :
+      Path::GetDirectory(process_name);
+  std::string command_line_str = process_name + " " + args;
+  // TODO: commandline is limited to MAX_PATH, should it
+  // just report a error if command_line_str length is > MAX_PATH?
+  char commandline[MAX_PATH + 1];
+  strncpy(commandline, command_line_str.c_str(), MAX_PATH);
+  commandline[MAX_PATH] = 0;
 
   bool success =
-      CreateProcess(a_ProcessName.c_str(), commandline, NULL, NULL, FALSE,
-                    DEBUG_ONLY_THIS_PROCESS, NULL, dir.c_str(), &si, &pi) != 0;
+      CreateProcessA(process_name.c_str(), commandline, NULL, NULL, FALSE,
+                     DEBUG_ONLY_THIS_PROCESS, NULL, dir.c_str(), &si, &pi) != 0;
 
   UNUSED(success);
 
