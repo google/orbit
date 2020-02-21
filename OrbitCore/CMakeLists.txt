@@ -224,7 +224,8 @@ target_sources(OrbitCoreTests
 if(NOT WIN32)
   target_sources(OrbitCoreTests
     PRIVATE LinuxPerfEventProcessor2Test.cpp
-            LinuxUprobesUnwindingVisitorTest.cpp)
+            LinuxUprobesUnwindingVisitorTest.cpp
+            OrbitModuleTest.cpp)
 endif()
 
 target_link_libraries(OrbitCoreTests

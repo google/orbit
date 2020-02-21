@@ -145,12 +145,13 @@ class Pdb {
 
   void Init() {}
 
-  virtual bool LoadPdb(const char* pdb_name);
+  virtual bool LoadPdb(const char* file_name);
   virtual void LoadPdbAsync(const char* pdb_name,
                             std::function<void()> completion_callback);
 
   bool LoadDataFromPdb() { return LoadPdb(m_Name.c_str()); }
   bool LoadPdbDia() { return false; }
+  bool LoadFunctions(const char* file_name);
   void Update() {}
   void AddFunction(Function& a_Function) { m_Functions.push_back(a_Function); }
   void CheckOrbitFunction(Function& a_Function) {}
