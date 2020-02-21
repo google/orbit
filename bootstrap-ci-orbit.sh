@@ -19,7 +19,9 @@ cp /vcpkg/vcpkg vcpkg
 mkdir buildtrees
 cp -a /vcpkg/buildtrees/freetype-gl buildtrees/freetype-gl
 cd ../..
-sleep 1000000
+# Some of the build artefacts remember the absolute path where they were build
+# so we ln it here.
+sudo ln -s /tmpfs/src/github/orbitprofiler /binary/
 
 # Build
 ./build-release.sh
