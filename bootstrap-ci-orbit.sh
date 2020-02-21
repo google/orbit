@@ -19,6 +19,7 @@ cp /vcpkg/vcpkg vcpkg
 mkdir buildtrees
 cp -a /vcpkg/buildtrees/freetype-gl buildtrees/freetype-gl
 cd ../..
+sleep 1000000
 
 # Build
 ./build-release.sh
