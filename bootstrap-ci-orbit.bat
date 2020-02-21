@@ -9,7 +9,6 @@ set ORBIT_WINSDK_VERSION="10.0.18362.0"
 call git submodule update --init
 :: Copy vcpkg stuff instead of building it.
 robocopy C:\vcpkg\scripts external\vcpkg\scripts /s /e /njh /njs /ndl /nc /ns /NFL
-robocopy C:\vcpkg\packages external\vcpkg\packages /s /e /njh /njs /ndl /nc /ns /NFL
 robocopy C:\vcpkg\installed external\vcpkg\installed /s /e /njh /njs /ndl /nc /ns /NFL
 robocopy C:\vcpkg\downloads external\vcpkg\downloads /s /e /njh /njs /ndl /nc /ns /NFL
 mkdir external\vcpkg\buildtrees
