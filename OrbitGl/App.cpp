@@ -954,6 +954,7 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
   CaptureSerializer ar;
   ar.m_TimeGraph = GCurrentTimeGraph;
   ar.Load(s2ws(file_name));
+  m_ModulesDataView->SetProcess(Capture::GTargetProcess);
   StopCapture();
   DoZoom = true;  // TODO: remove global, review logic
 }

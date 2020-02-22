@@ -33,7 +33,10 @@ SamplingProfiler::SamplingProfiler(const std::shared_ptr<Process>& a_Process,
 }
 
 //-----------------------------------------------------------------------------
-SamplingProfiler::SamplingProfiler() { m_State = SamplingState::Idle; }
+SamplingProfiler::SamplingProfiler() { 
+	m_Process = std::make_shared<Process>();
+	m_State = SamplingState::Idle; 
+}
 
 //-----------------------------------------------------------------------------
 SamplingProfiler::~SamplingProfiler() {}
