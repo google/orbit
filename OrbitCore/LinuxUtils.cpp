@@ -121,7 +121,12 @@ void ListModules(pid_t a_PID,
   for (const std::string& line : result) {
     std::vector<std::string> tokens = Tokenize(line);
     if (tokens.size() == 6) {
-      std::string& moduleName = tokens[5];
+      const std::string& moduleName = tokens[5];
+      const std::string& permission = tokens[1];
+
+      // Only keep address ranges that are executable.
+      if (!Contains(permission, "x"))
+        continue;
 
       auto addresses = Tokenize(tokens[0], "-");
       if (addresses.size() == 2) {
