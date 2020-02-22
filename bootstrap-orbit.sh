@@ -9,7 +9,7 @@ fi
 sudo apt-get update
 sudo apt-get install -y build-essential ninja-build bison flex
 sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev
-sudo apt-get install -y linux-tools-common qt5-default
+sudo apt-get install -y linux-tools-common qt5-default llvm-8-dev
 
 # Dev dependencies:
 # - cmake >= 3.15
