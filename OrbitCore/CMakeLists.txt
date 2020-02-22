@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
+llvm_map_components_to_libnames(llvm_libs core support object)
+
+include_directories(${LLVM_INCLUDE_DIRS})
+
 project(OrbitCore)
 add_library(OrbitCore STATIC)
 
@@ -80,6 +84,7 @@ target_sources(
           CrashHandler.cpp
           ConnectionManager.cpp
           Diff.cpp
+          ElfFile.cpp
           EventBuffer.cpp
           FunctionStats.cpp
           Injection.cpp
@@ -186,7 +191,8 @@ target_link_libraries(
          CURL::libcurl
          oqpi::oqpi
          asio::asio
-         absl::str_format)
+         absl::str_format
+         ${llvm_libs})
 
 if(WIN32)
   target_link_libraries(
@@ -212,7 +218,8 @@ target_compile_features(OrbitCore PUBLIC cxx_std_11)
 add_executable(OrbitCoreTests)
 
 target_sources(OrbitCoreTests
-  PRIVATE RingBufferTest.cpp)
+  PRIVATE RingBufferTest.cpp
+          ElfFileTests.cpp)
 
 if(NOT WIN32)
   target_sources(OrbitCoreTests
@@ -220,4 +227,9 @@ if(NOT WIN32)
             LinuxUprobesUnwindingVisitorTest.cpp)
 endif()
 
-target_link_libraries(OrbitCoreTests PRIVATE OrbitCore GTest::GTest GTest::Main)
+target_link_libraries(OrbitCoreTests
+  PRIVATE OrbitCore GTest::GTest GTest::Main ${llvm_libs})
+
+add_custom_command(TARGET OrbitCoreTests POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/testdata
+  $<TARGET_FILE_DIR:OrbitCoreTests>/testdata)

@@ -82,7 +82,9 @@ class Function {
   };
 
   Function();
-  Function(const std::string& name, const std::string& module,
+  // TODO: remove references to Pdb from the function, it likely just needs
+  // the module base address.
+  Function(const std::string& name, const std::string& file,
            uint64_t address, uint64_t size, Pdb* pdb);
 
   void Print();

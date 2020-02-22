@@ -28,9 +28,9 @@
 
 Function::Function() { ResetStats(); }
 
-Function::Function(const std::string& name, const std::string& module,
+Function::Function(const std::string& name, const std::string& file,
                    uint64_t address, uint64_t size, Pdb* pdb)
-  : name_(name), pretty_name_(name), module_(module), address_(address),
+  : name_(name), pretty_name_(name), file_(file), address_(address),
     size_(size), pdb_(pdb) {
   ResetStats();
 }
