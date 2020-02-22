@@ -91,7 +91,6 @@ TcpSocket* TcpServer::GetSocket() {
 
 //-----------------------------------------------------------------------------
 void TcpServer::Receive(const Message& a_Message) {
-  PRINT_FUNC;
   const Message::Header& MessageHeader = a_Message.GetHeader();
   ++m_NumReceivedMessages;
 

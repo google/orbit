@@ -61,7 +61,6 @@ void tcp_server::handle_accept(std::shared_ptr<TcpConnection> new_connection,
 }
 
 void TcpConnection::ReadMessage() {
-  PRINT_FUNC;
   asio::async_read(socket_, asio::buffer(&message_, sizeof(Message)),
                    [this](asio::error_code ec, std::size_t /*length*/) {
                      if (!ec) {
