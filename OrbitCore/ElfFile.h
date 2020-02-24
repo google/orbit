@@ -31,6 +31,9 @@ class ElfFile {
   // available. This should be the case for all loadable elf-files.
   virtual uint64_t GetLoadBias() const = 0;
   virtual bool IsAddressInTextSection(uint64_t address) const = 0;
+  virtual bool HasSymtab() const = 0;
+  virtual std::string GetBuildId() const = 0;
+  virtual std::string GetFilePath() const = 0;
 
   static std::unique_ptr<ElfFile> Create(const std::string& file_path);
 };
