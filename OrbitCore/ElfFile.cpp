@@ -20,6 +20,7 @@ class ElfFileImpl : public ElfFile {
       llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
   bool GetFunctions(Pdb* pdb, std::vector<Function>* functions) const override;
+  absl::optional<uint64_t> GetLoadBias() const override;
   bool IsAddressInTextSection(uint64_t address) const override;
 
  private:
@@ -102,6 +103,38 @@ bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
   }
 
   return function_added;
+}
+
+template <typename ElfT>
+absl::optional<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
+  const llvm::object::ELFFile<ElfT>* elf_file = object_file_->getELFFile();
+
+  uint64_t min_vaddr = UINT64_MAX;
+  bool pt_load_found = false;
+  llvm::Expected<typename ElfT::PhdrRange> range = elf_file->program_headers();
+
+  if (!range) {
+    PRINT(absl::StrFormat("No program headers found in %s\n", file_path_));
+    return {};
+  }
+
+  for (const typename ElfT::Phdr& phdr : range.get()) {
+    if (phdr.p_type != llvm::ELF::PT_LOAD) {
+      continue;
+    }
+    pt_load_found = true;
+
+    if (min_vaddr > phdr.p_vaddr) {
+      min_vaddr = phdr.p_vaddr;
+    }
+  }
+
+  if (!pt_load_found) {
+    PRINT(absl::StrFormat("No PT_LOAD program headers found in %s\n",
+                          file_path_));
+    return {};
+  }
+  return min_vaddr;
 }
 
 }  // namespace

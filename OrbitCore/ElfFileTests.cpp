@@ -45,3 +45,29 @@ TEST(ElfFile, IsAddressInTextSection) {
   EXPECT_TRUE(elf_file->IsAddressInTextSection(0x11C0));
   EXPECT_FALSE(elf_file->IsAddressInTextSection(0x11C1));
 }
+
+TEST(ElfFile, CalculateLoadBias) {
+  const std::string executable_path = Path::GetExecutablePath();
+  const std::string test_elf_file_dynamic =
+      executable_path + "/testdata/hello_world_elf";
+
+  auto elf_file_dynamic = ElfFile::Create(test_elf_file_dynamic.c_str());
+  ASSERT_NE(elf_file_dynamic, nullptr);
+  EXPECT_EQ(elf_file_dynamic->GetLoadBias(), 0x0);
+
+  const std::string test_elf_file_static =
+      executable_path + "/testdata/hello_world_static_elf";
+  auto elf_file_static = ElfFile::Create(test_elf_file_static.c_str());
+  ASSERT_NE(elf_file_static, nullptr);
+  EXPECT_EQ(elf_file_static->GetLoadBias(), 0x400000);
+}
+
+TEST(ElfFile, CalculateLoadBiasNoProgramHeaders) {
+  const std::string executable_path = Path::GetExecutablePath();
+  const std::string test_elf_file =
+      executable_path + "/testdata/hello_world_elf_no_program_headers";
+  auto elf_file = ElfFile::Create(test_elf_file.c_str());
+
+  ASSERT_NE(elf_file, nullptr);
+  EXPECT_TRUE(!elf_file->GetLoadBias().has_value());
+}
