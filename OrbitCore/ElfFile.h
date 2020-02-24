@@ -10,19 +10,11 @@
 
 class ElfFile {
  public:
+  ElfFile() = default;
+
+  virtual bool GetFunctions(Pdb* pdb,
+                            std::vector<Function>* functions) const = 0;
+  virtual bool IsAddressInTextSection(uint64_t address) const = 0;
+
   static std::unique_ptr<ElfFile> Create(const std::string& file_path);
-  bool GetFunctions(Pdb* pdb, std::vector<Function>* functions) const;
-  bool IsAddressInTextSection(uint64_t address) const;
-
- private:
-  explicit ElfFile(const std::string& file_path) : file_path_(file_path) {}
-  ElfFile() = delete;
-  ElfFile(const ElfFile&) = delete;
-  ElfFile& operator=(const ElfFile&) = delete;
-
-  bool Load();
-
-  const std::string file_path_;
-  llvm::object::OwningBinary<llvm::object::ObjectFile> file_;
-  std::unique_ptr<llvm::object::SectionRef> text_section_;
 };
