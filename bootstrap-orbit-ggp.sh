@@ -25,7 +25,7 @@ fi
 ## Build dependencies
 ./vcpkg --overlay-triplets=../../contrib/vcpkg/triplets/ \
   --triplet x64-linux-ggp install abseil freetype freetype-gl breakpad \
-  capstone asio cereal imgui freeglut glew curl gtest
+  capstone asio cereal imgui freeglut glew curl gtest llvm
 
 if [ $? -ne 0 ]; then
   echo -n "Orbit: Could not install all the dependencies. "
