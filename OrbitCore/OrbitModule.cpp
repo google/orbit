@@ -7,6 +7,7 @@
 #include <string>
 
 #include "Core.h"
+#include "ElfFile.h"
 #include "Pdb.h"
 #include "Serialization.h"
 #include "absl/strings/str_format.h"
@@ -134,57 +135,38 @@ std::string FindSymbols(const std::string& module_path) {
   return module_path;
 }
 
-//-----------------------------------------------------------------------------
-bool Pdb::LoadPdb(const char* a_PdbName) {
-  m_FileName = FindSymbols(a_PdbName);
+bool Pdb::LoadFunctions(const char* file_name) {
+  m_FileName = FindSymbols(file_name);
   m_Name = Path::GetFileName(m_FileName);
-  m_LoadedModuleName = a_PdbName;
+  m_LoadedModuleName = file_name;
 
-  {
-    SCOPE_TIMER_LOG("nm");
-    // nm
-    // TODO: If we need linenumber information at some point, we need to find an
-    // alternative, as "nm -l" is super slow.
-    std::string nmCommand =
-        std::string("nm ") + m_FileName + std::string(" -n");
-    std::string nmResult = LinuxUtils::ExecuteCommand(nmCommand.c_str());
-    std::stringstream nmStream(nmResult);
-    std::string line;
-    while (std::getline(nmStream, line, '\n')) {
-      std::vector<std::string> tokens = Tokenize(line, " \t");
-      if (tokens.size() > 2)  // nm
-      {
-        const auto& name = tokens[2];
-        Function func(name, Path::GetFileName(a_PdbName),
-                      std::stoull(tokens[0], nullptr, 16), 0, this);
-        func.SetPrettyName(LinuxUtils::Demangle(name.c_str()));
-        this->AddFunction(func);
-      }
+  auto elf_file = ElfFile::Create(m_FileName);
+  if (elf_file == nullptr || !elf_file->GetFunctions(this, &m_Functions)) {
+    PRINT(absl::StrFormat("Unable to load functions from \"%s\"", m_FileName));
+    return false;
+  }
+
+  // For uprobes we need a function to be in the .text segment (why?)
+  // TODO: Shouldn't m_Functions be limited to the list of functions referencing
+  // .text segment?
+  for (auto& function : m_Functions) {
+    // Check if function is in .text segment
+    if (!elf_file->IsAddressInTextSection(function.Address())) {
+      continue;
     }
+
+    function.SetProbe(m_FileName + ":" + function.Name());
+  }
+
+  return true;
+}
+
+bool Pdb::LoadPdb(const char* file_name) {
+  if (!LoadFunctions(file_name)) {
+    return false;
   }
 
   ProcessData();
-
-  {
-    SCOPE_TIMER_LOG("objdump -tT");
-    // find functions that can receive uprobes
-    std::string objdumpCommand =
-        std::string("objdump -tT ") + m_FileName +
-        std::string(" | grep \"F .text\" | grep -oE '[^[:space:]]+$'");
-    std::string objdumpResult =
-        LinuxUtils::ExecuteCommand(objdumpCommand.c_str());
-    std::stringstream objdumpStream(objdumpResult);
-    std::string mangled;
-    while (std::getline(objdumpStream, mangled, '\n')) {
-      std::string demangled = LinuxUtils::Demangle(mangled.c_str());
-
-      Function* func = FunctionFromName(demangled);
-      if (func && func->Probe().empty()) {
-        std::string probe = m_FileName + std::string(":") + mangled;
-        func->SetProbe(probe);
-      }
-    }
-  }
 
   return true;
 }

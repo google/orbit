@@ -229,7 +229,8 @@ if(NOT WIN32)
   target_sources(OrbitCoreTests
     PRIVATE ElfFileTests.cpp
             LinuxPerfEventProcessor2Test.cpp
-            LinuxUprobesUnwindingVisitorTest.cpp)
+            LinuxUprobesUnwindingVisitorTest.cpp
+            OrbitModuleTest.cpp)
   target_link_libraries(OrbitCoreTests PRIVATE  ${llvm_libs})
 endif()
 
