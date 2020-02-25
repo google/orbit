@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
 
-llvm_map_components_to_libnames(llvm_libs core support object)
+if(NOT WIN32)
+  llvm_map_components_to_libnames(llvm_libs core support object)
 
-include_directories(${LLVM_INCLUDE_DIRS})
+  include_directories(${LLVM_INCLUDE_DIRS})
+endif()
 
 project(OrbitCore)
 add_library(OrbitCore STATIC)
@@ -84,7 +86,6 @@ target_sources(
           CrashHandler.cpp
           ConnectionManager.cpp
           Diff.cpp
-          ElfFile.cpp
           EventBuffer.cpp
           FunctionStats.cpp
           Injection.cpp
@@ -166,9 +167,11 @@ else()
            LinuxUprobesUnwindingVisitor.h
            LinuxUtils.h)
 
+  # TODO: Compile ElfFile.cpp for all platforms once we have llvm support on Windows.
   target_sources(
     OrbitCore
     PRIVATE BpfTraceVisitor.cpp
+	        ElfFile.cpp
             LibunwindstackUnwinder.cpp
             LinuxEventTracer.cpp
             LinuxUtils.cpp
@@ -204,6 +207,7 @@ if(WIN32)
   target_compile_definitions(OrbitCore PUBLIC -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitCore PUBLIC -DNTDDI_VERSION=0x06030000)
 else()
+  target_link_libraries(OrbitCore PRIVATE ${llvm_libs})
   target_link_libraries(OrbitCore PUBLIC unwindstack::unwindstack)
 endif()
 
@@ -218,17 +222,19 @@ target_compile_features(OrbitCore PUBLIC cxx_std_11)
 add_executable(OrbitCoreTests)
 
 target_sources(OrbitCoreTests
-  PRIVATE RingBufferTest.cpp
-          ElfFileTests.cpp)
+  PRIVATE RingBufferTest.cpp)
 
 if(NOT WIN32)
+  # TODO: Enable ElfFileTests.cpp for all platforms once we have llvm support on Windows.
   target_sources(OrbitCoreTests
-    PRIVATE LinuxPerfEventProcessor2Test.cpp
+    PRIVATE ElfFileTests.cpp
+            LinuxPerfEventProcessor2Test.cpp
             LinuxUprobesUnwindingVisitorTest.cpp)
+  target_link_libraries(OrbitCoreTests PRIVATE  ${llvm_libs})
 endif()
 
 target_link_libraries(OrbitCoreTests
-  PRIVATE OrbitCore GTest::GTest GTest::Main ${llvm_libs})
+  PRIVATE OrbitCore GTest::GTest GTest::Main)
 
 add_custom_command(TARGET OrbitCoreTests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/testdata
