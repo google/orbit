@@ -22,9 +22,9 @@ if exist "vcpkg.exe" (
 
 :: Build dynamic dependencies
 set VCPKG_DEFAULT_TRIPLET=x86-windows
-vcpkg install abseil freeglut glew freetype freetype-gl curl breakpad capstone asio cereal imgui qt5-base gtest llvm
+vcpkg install abseil freeglut glew freetype freetype-gl curl breakpad capstone asio cereal imgui qt5-base gtest
 set VCPKG_DEFAULT_TRIPLET=x64-windows
-vcpkg install abseil freeglut glew freetype freetype-gl curl breakpad capstone asio cereal imgui qt5-base gtest llvm
+vcpkg install abseil freeglut glew freetype freetype-gl curl breakpad capstone asio cereal imgui qt5-base gtest
 
 cd ..\..
 

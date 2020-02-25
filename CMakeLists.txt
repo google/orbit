@@ -12,6 +12,7 @@ if(NOT WIN32)
   find_package(X11 REQUIRED)
   find_package(OpenSSL REQUIRED)
   find_package(unwindstack REQUIRED)
+  find_package(LLVM CONFIG REQUIRED)
 endif()
 
 find_package(Threads REQUIRED)
@@ -30,7 +31,6 @@ find_package(capstone REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(Qt5 CONFIG COMPONENTS Core Widgets)
 find_package(absl CONFIG REQUIRED)
-find_package(LLVM CONFIG REQUIRED)
 
 # Hack for freelgut: freeglut accidentally links against libxrandr when the
 # headers of libxrandr are installed on the current system. Hopefully this will
