@@ -22,6 +22,19 @@
 #define VAR_TO_CHAR(var) VarToStr(#var, var).c_str()
 #define VAR_TO_ANSI(var) VarToAnsi(#var, var).c_str()
 
+#define FATAL(...) { \
+  PRINT("FATAL: "); \
+  PRINT_FUNC; \
+  PRINT(__VA_ARGS__); \
+  PRINT("\n"); \
+  abort(); \
+}
+
+#define CHECK(assertion) {\
+  if (__builtin_expect(!(assertion), false)) {\
+    FATAL(#assertion);\
+  }
+
 //-----------------------------------------------------------------------------
 inline void PrintVar(const char* a_VarName, const std::wstring& a_Value,
                      bool a_SameLine = false) {
