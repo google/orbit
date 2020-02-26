@@ -7,13 +7,13 @@
 #include <string>
 
 #include "Core.h"
-#include "ElfFile.h"
 #include "Pdb.h"
 #include "Serialization.h"
 #include "absl/strings/str_format.h"
 
 #ifndef WIN32
 #include "Capture.h"
+#include "ElfFile.h"
 #include "LinuxUtils.h"
 #include "OrbitProcess.h"
 #include "OrbitUnreal.h"
