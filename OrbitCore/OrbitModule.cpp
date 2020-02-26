@@ -158,12 +158,27 @@ std::unique_ptr<ElfFile> FindSymbols(const std::string& module_path) {
 bool Pdb::LoadFunctions(const char* file_name) {
   m_LoadedModuleName = file_name;
   std::unique_ptr<ElfFile> elf_file = FindSymbols(file_name);
+
+  if (elf_file == nullptr) {
+    PRINT(absl::StrFormat("Unable to load elf-file \"%s\"", file_name));
+    return false;
+  }
+
   m_FileName = elf_file->GetFilePath();
   m_Name = Path::GetFileName(m_FileName);
 
-  if (elf_file == nullptr || !elf_file->GetFunctions(this, &m_Functions)) {
-    PRINT(
-        absl::StrFormat("Unable to load functions from \"%s\"\n", m_FileName));
+  auto load_bias = elf_file->GetLoadBias();
+  if (!load_bias) {
+    PRINT(absl::StrFormat("Unable to get load_bias \"%s\" "
+                          "(does the file have PT_LOAD program headers?)",
+                          m_FileName));
+    return false;
+  }
+
+  load_bias_ = load_bias.value();
+
+  if (!elf_file->GetFunctions(this, &m_Functions)) {
+    PRINT(absl::StrFormat("Unable to load functions from \"%s\"", m_FileName));
     return false;
   }
 
@@ -267,23 +282,26 @@ void Pdb::PopulateStringFunctionMap() {
 
 //-----------------------------------------------------------------------------
 Function* Pdb::GetFunctionFromExactAddress(uint64_t a_Address) {
-  uint64_t RVA = a_Address - (uint64_t)GetHModule();
-  auto iter = m_FunctionMap.find(RVA);
-  return (iter != m_FunctionMap.end()) ? iter->second : nullptr;
+  uint64_t function_address = a_Address - (uint64_t)GetHModule() + load_bias_;
+  auto it = m_FunctionMap.find(function_address);
+  return (it != m_FunctionMap.end()) ? it->second : nullptr;
 }
 
 //-----------------------------------------------------------------------------
 Function* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
-  uint64_t RVA = a_Address - (uint64_t)GetHModule();
-
-  auto it = m_FunctionMap.upper_bound(RVA);
-  if (!m_FunctionMap.empty() && it != m_FunctionMap.begin()) {
-    --it;
-    Function* func = it->second;
-    return func;
+  if (m_FunctionMap.empty()) {
+    return nullptr;
   }
 
-  return nullptr;
+  uint64_t relative_address = a_Address - (uint64_t)GetHModule() + load_bias_;
+  auto it = m_FunctionMap.upper_bound(relative_address);
+
+  if (it == m_FunctionMap.begin()) {
+    return nullptr;
+  }
+
+  --it;
+  return it->second;
 }
 
 #endif
@@ -293,4 +311,5 @@ ORBIT_SERIALIZE(ModuleDebugInfo, 0) {
   ORBIT_NVP_VAL(0, m_Pid);
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_Functions);
+  ORBIT_NVP_VAL(0, load_bias);
 }

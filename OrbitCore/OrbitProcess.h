@@ -85,7 +85,7 @@ class Process {
   void SetIsRemote(bool val) { m_IsRemote = val; }
   void SetCpuUsage(float a_Usage) { m_CpuUsage = a_Usage; }
 
-  Function* GetFunctionFromAddress(DWORD64 a_Address, bool a_IsExact = true);
+  Function* GetFunctionFromAddress(uint64_t address, bool a_IsExact = true);
   std::shared_ptr<Module> GetModuleFromAddress(DWORD64 a_Address);
   std::shared_ptr<Module> GetModuleFromName(const std::string& a_Name);
 

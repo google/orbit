@@ -55,12 +55,14 @@ class Pdb {
   std::vector<Type>& GetTypes() { return m_Types; }
   std::vector<Variable>& GetGlobals() { return m_Globals; }
   uint64_t GetHModule() const { return m_MainModule; }
+  uint64_t GetLoadBias() const { return load_bias_; }
   Type& GetTypeFromId(ULONG a_Id) { return m_TypeMap[a_Id]; }
   Type* GetTypePtrFromId(ULONG a_ID);
 
   GUID GetGuid();
 
   void SetMainModule(uint64_t a_Module) { m_MainModule = a_Module; }
+  void SetLoadBias(uint64_t load_bias) { load_bias_ = load_bias; }
 
   void Print() const;
   void PrintGlobals() const;
@@ -112,6 +114,7 @@ class Pdb {
   std::atomic<bool> m_IsPopulatingFunctionStringMap;
   std::function<void()> m_LoadingCompleteCallback;
   uint64_t m_MainModule;
+  uint64_t load_bias_ = 0;
   float m_LastLoadTime;
   bool m_LoadedFromCache;
   std::vector<Variable> m_WatchedVariables;
@@ -170,12 +173,14 @@ class Pdb {
   std::vector<Type>& GetTypes() { return m_Types; }
   std::vector<Variable>& GetGlobals() { return m_Globals; }
   uint64_t GetHModule() const { return m_MainModule; }
+  uint64_t GetLoadBias() const { return load_bias_; }
   Type& GetTypeFromId(ULONG a_Id) { return m_TypeMap[a_Id]; }
   Type* GetTypePtrFromId(ULONG a_ID);
 
   GUID GetGuid();
 
   void SetMainModule(uint64_t a_Module) { m_MainModule = a_Module; }
+  void SetLoadBias(uint64_t load_bias) { load_bias_ = load_bias; }
 
   void Print() const;
   void PrintGlobals() const;
@@ -217,6 +222,7 @@ class Pdb {
   std::atomic<bool> m_IsLoading;
   std::function<void()> m_LoadingCompleteCallback;
   uint64_t m_MainModule = 0;
+  uint64_t load_bias_ = 0;
   float m_LastLoadTime = 0;
   std::vector<Variable> m_WatchedVariables;
   std::set<std::string> m_ArgumentRegisters;
