@@ -140,7 +140,6 @@ class Pdb {
 class Pdb {
  public:
   Pdb() = default;
-  ~Pdb();
   Pdb(const Pdb&) = delete;
   Pdb& operator=(const Pdb&) = delete;
 

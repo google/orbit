@@ -136,11 +136,6 @@ std::string FindSymbols(const std::string& module_path) {
   return module_path;
 }
 
-Pdb::~Pdb()
-{
-  PRINT_FUNC;
-}
-
 bool Pdb::LoadFunctions(const char* file_name) {
   m_FileName = FindSymbols(file_name);
   m_Name = Path::GetFileName(m_FileName);
