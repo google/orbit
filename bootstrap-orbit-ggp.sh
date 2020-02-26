@@ -22,6 +22,8 @@ else
   fi
 fi
 
+patch -p1 -N -i ../../contrib/patches/vcpkg_llvm_enable_rtti.patch
+
 ## Build dependencies
 ./vcpkg --overlay-triplets=../../contrib/vcpkg/triplets/ \
   --triplet x64-linux-ggp install abseil freetype freetype-gl breakpad \
