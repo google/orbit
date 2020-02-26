@@ -31,7 +31,6 @@ typedef unsigned long DWORD;
 typedef DWORD64 IntervalType;
 typedef DWORD64 EpochType;
 typedef int64_t __int64;
-#define _mkdir(x)
 #define TCHAR wchar_t
 #define MAX_PATH PATH_MAX
 #define HANDLE void*
