@@ -19,7 +19,7 @@ void LinuxTracingHandler::Start() {
   for (const auto& function : *selected_function_map_) {
     selected_functions.emplace_back(
         function.second->GetPdb()->GetLoadedModuleName(),
-        function.second->Address(), function.second->GetVirtualAddress());
+        function.second->Offset(), function.second->GetVirtualAddress());
   }
 
   tracer_ = std::make_unique<LinuxTracing::Tracer>(pid, sampling_frequency,
