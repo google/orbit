@@ -232,24 +232,31 @@ std::shared_ptr<Module> Process::FindModule(const std::string& module_name) {
 }
 
 //-----------------------------------------------------------------------------
-Function* Process::GetFunctionFromAddress(DWORD64 a_Address, bool a_IsExact) {
-  DWORD64 address = (DWORD64)a_Address;
-  auto it = m_Modules.upper_bound(address);
-  if (!m_Modules.empty() && it != m_Modules.begin()) {
-    --it;
-    std::shared_ptr<Module>& module = it->second;
-    if (address < module->m_AddressEnd) {
-      if (module->m_Pdb != nullptr) {
-        if (a_IsExact) {
-          return module->m_Pdb->GetFunctionFromExactAddress(a_Address);
-        } else {
-          return module->m_Pdb->GetFunctionFromProgramCounter(a_Address);
-        }
-      }
-    }
+Function* Process::GetFunctionFromAddress(uint64_t address, bool a_IsExact) {
+  if (m_Modules.empty()) {
+    return nullptr;
   }
 
-  return nullptr;
+  auto it = m_Modules.upper_bound(address);
+  if (it == m_Modules.begin()) {
+    return nullptr;
+  }
+
+  --it;
+  std::shared_ptr<Module>& module = it->second;
+  if (address >= module->m_AddressEnd) {
+    return nullptr;
+  }
+
+  if (module->m_Pdb == nullptr) {
+    return nullptr;
+  }
+
+  if (a_IsExact) {
+    return module->m_Pdb->GetFunctionFromExactAddress(address);
+  } else {
+    return module->m_Pdb->GetFunctionFromProgramCounter(address);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -395,6 +402,7 @@ void Process::FillModuleDebugInfo(ModuleDebugInfo& a_ModuleDebugInfo) {
     const std::string& moduleName = module->m_FullName;
     module->m_Pdb->LoadPdb(moduleName.c_str());
     a_ModuleDebugInfo.m_Functions = module->m_Pdb->GetFunctions();
+    a_ModuleDebugInfo.load_bias = module->m_Pdb->GetLoadBias();
   } else {
     PRINT_VAR(a_ModuleDebugInfo.m_Name);
     for (auto& pair : m_NameToModuleMap) {

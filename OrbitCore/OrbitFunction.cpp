@@ -28,15 +28,17 @@
 
 Function::Function() { ResetStats(); }
 
-Function::Function(const std::string& name, const std::string& file,
-                   uint64_t address, uint64_t size, Pdb* pdb)
-  : name_(name), pretty_name_(name), file_(file), address_(address),
-    size_(size), pdb_(pdb) {
+Function::Function(std::string_view name, std::string_view pretty_name,
+                   std::string_view file, uint64_t address, uint64_t size,
+                   uint64_t load_bias, Pdb* pdb)
+  : name_(name), pretty_name_(pretty_name), file_(file), address_(address),
+    size_(size), load_bias_(load_bias), pdb_(pdb) {
+  CHECK(pdb != nullptr);
   ResetStats();
 }
 
 void Function::SetAsMainFrameFunction() {
-  Capture::GMainFrameFunction = pdb_->GetHModule() + address_;
+  Capture::GMainFrameFunction = GetVirtualAddress();
   selected_ = true;
 }
 
@@ -71,6 +73,10 @@ bool Function::Hookable() {
 void Function::Select() {
   if (Hookable()) {
     selected_ = true;
+    PRINT("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64
+          ", load_bias_= 0x%" PRIx64 ", base_address=0x%" PRIx64 ")\n",
+          pretty_name_.c_str(), GetVirtualAddress(), address_,
+          load_bias_, pdb_->GetHModule());
     Capture::GSelectedFunctionsMap[GetVirtualAddress()] = this;
   }
 }
@@ -96,7 +102,11 @@ void Function::PreHook() {
 }
 
 uint64_t Function::GetVirtualAddress() const {
-  return address_ + (pdb_ != nullptr ? pdb_->GetHModule() : 0);
+  return address_ + (pdb_ != nullptr ? pdb_->GetHModule() : 0) - load_bias_;
+}
+
+uint64_t Function::Offset() const {
+  return address_ - load_bias_;
 }
 
 std::string Function::GetModuleName() const {
@@ -213,6 +223,7 @@ ORBIT_SERIALIZE(Function, 2) {
   ORBIT_NVP_VAL(0, pretty_name_);
   ORBIT_NVP_VAL(0, address_);
   ORBIT_NVP_VAL(0, size_);
+  ORBIT_NVP_VAL(0, load_bias_);
   ORBIT_NVP_VAL(0, module_);
   ORBIT_NVP_VAL(0, file_);
   ORBIT_NVP_VAL(0, line_);

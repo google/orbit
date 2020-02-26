@@ -57,5 +57,6 @@ struct ModuleDebugInfo {
   uint32_t m_Pid = 0;
   std::string m_Name;
   std::vector<Function> m_Functions;
+  uint64_t load_bias;
   ORBIT_SERIALIZABLE;
 };

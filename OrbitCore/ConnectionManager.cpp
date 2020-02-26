@@ -102,7 +102,7 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
     Function* function =
         Capture::GTargetProcess->GetFunctionFromAddress(address);
     if (!function)
-      PRINT("Received invalid address %x\n");
+      PRINT("Received invalid address %x\n", address);
     else {
       PRINT("Received Selected Function: %s\n", function->PrettyName().c_str());
       // this also adds the function to the map.

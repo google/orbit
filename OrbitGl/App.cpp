@@ -1272,6 +1272,7 @@ void OrbitApp::OnRemoteModuleDebugInfo(const Message& a_Message) {
 
     if (module) {
       module->LoadDebugInfo();  // To allocate m_Pdb - TODO: clean that up
+      module->m_Pdb->SetLoadBias(moduleInfo.load_bias);
 
       for (auto& function : moduleInfo.m_Functions) {
         // Add function to pdb

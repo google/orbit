@@ -603,7 +603,7 @@ void Pdb::ApplyPresets() {
 
 //-----------------------------------------------------------------------------
 Function* Pdb::GetFunctionFromExactAddress(uint64_t a_Address) {
-  uint64_t address = a_Address - (uint64_t)GetHModule();
+  uint64_t address = a_Address - (uint64_t)GetHModule() + load_bias_;
 
   if (m_FunctionMap.find(address) != m_FunctionMap.end()) {
     return m_FunctionMap[address];
@@ -614,7 +614,7 @@ Function* Pdb::GetFunctionFromExactAddress(uint64_t a_Address) {
 
 //-----------------------------------------------------------------------------
 Function* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
-  uint64_t address = a_Address - (uint64_t)GetHModule();
+  uint64_t address = a_Address - (uint64_t)GetHModule() + load_bias_;
 
   auto it = m_FunctionMap.upper_bound(address);
   if (!m_FunctionMap.empty() && it != m_FunctionMap.begin()) {

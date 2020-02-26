@@ -1,11 +1,11 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "OrbitFunction.h"
 #include "Pdb.h"
-#include "absl/types/optional.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Object/ObjectFile.h"
 
@@ -30,7 +30,7 @@ class ElfFile {
   //
   // This method returns load bias for the elf-file if program headers are
   // available. This should be the case for all loadable elf-files.
-  virtual uint64_t GetLoadBias() const = 0;
+  virtual std::optional<uint64_t> GetLoadBias() const = 0;
   virtual bool IsAddressInTextSection(uint64_t address) const = 0;
   virtual bool HasSymtab() const = 0;
   virtual std::string GetBuildId() const = 0;

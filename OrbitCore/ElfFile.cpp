@@ -1,14 +1,14 @@
 #include "ElfFile.h"
 
+#include <string_view>
 #include <vector>
 
-#include "LinuxUtils.h"
 #include "OrbitFunction.h"
 #include "Path.h"
 #include "PrintVar.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
-#include "absl/strings/string_view.h"
+#include "llvm/Demangle/Demangle.h"
 #include "llvm/Object/ELFObjectFile.h"
 #include "llvm/Object/ObjectFile.h"
 
@@ -18,11 +18,11 @@ template <typename ElfT>
 class ElfFileImpl : public ElfFile {
  public:
   ElfFileImpl(
-      absl::string_view file_path,
+      std::string_view file_path,
       llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
   bool GetFunctions(Pdb* pdb, std::vector<Function>* functions) const override;
-  uint64_t GetLoadBias() const override;
+  std::optional<uint64_t> GetLoadBias() const override;
   bool IsAddressInTextSection(uint64_t address) const override;
   bool HasSymtab() const override;
   std::string GetBuildId() const override;
@@ -41,7 +41,7 @@ class ElfFileImpl : public ElfFile {
 
 template <typename ElfT>
 ElfFileImpl<ElfT>::ElfFileImpl(
-    absl::string_view file_path,
+    std::string_view file_path,
     llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary)
     : file_path_(file_path),
       owning_binary_(std::move(owning_binary)),
@@ -119,7 +119,13 @@ bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
     return false;
   }
   bool function_added = false;
-  uint64_t load_bias = GetLoadBias();
+
+  std::optional<uint64_t> load_bias_optional = GetLoadBias();
+  if (!load_bias_optional) {
+    return false;
+  }
+
+  uint64_t load_bias = load_bias_optional.value();
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
     if ((symbol_ref.getFlags() & llvm::object::BasicSymbolRef::SF_Undefined) !=
@@ -128,10 +134,7 @@ bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
     }
 
     std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
-
-#if __linux__
-    name = LinuxUtils::Demangle(name.c_str());
-#endif
+    std::string pretty_name = llvm::demangle(name);
 
     // Unknown type - skip and generate a warning
     if (!symbol_ref.getType()) {
@@ -147,9 +150,10 @@ bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
       continue;
     }
 
-    uint64_t address = symbol_ref.getValue() - load_bias;
-    functions->emplace_back(name, Path::GetFileName(file_path_), address,
-                            symbol_ref.getSize(), pdb);
+    functions->emplace_back(name, pretty_name, Path::GetFileName(file_path_),
+                            symbol_ref.getValue(), symbol_ref.getSize(),
+                            load_bias, pdb);
+
     function_added = true;
   }
 
@@ -157,7 +161,7 @@ bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
 }
 
 template <typename ElfT>
-uint64_t ElfFileImpl<ElfT>::GetLoadBias() const {
+std::optional<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
   const llvm::object::ELFFile<ElfT>* elf_file = object_file_->getELFFile();
 
   uint64_t min_vaddr = UINT64_MAX;

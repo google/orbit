@@ -4,6 +4,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "BaseTypes.h"
@@ -83,9 +84,10 @@ class Function {
 
   Function();
   // TODO: remove references to Pdb from the function, it likely just needs
-  // the module base address.
-  Function(const std::string& name, const std::string& file,
-           uint64_t address, uint64_t size, Pdb* pdb);
+  // the module base address and load_bias.
+  Function(std::string_view name, std::string_view pretty_name,
+           std::string_view file, uint64_t address, uint64_t size,
+           uint64_t load_bias, Pdb* pdb);
 
   void Print();
   void SetAsMainFrameFunction();
@@ -144,6 +146,7 @@ class Function {
   // Calculates and returns the absolute address of the function.
   uint64_t GetVirtualAddress() const;
   uint64_t Address() const { return address_; }
+  uint64_t Offset() const;
   const std::string& File() const { return file_; }
   bool IsOrbitFunc() const { return type_ != OrbitType::NONE; }
   bool IsOrbitZone() const {
@@ -171,6 +174,7 @@ class Function {
   std::string probe_;
   uint64_t address_ = 0;
   uint64_t size_ = 0;
+  uint64_t load_bias_ = 0;
   uint32_t id_ = 0;
   uint32_t parent_id_ = 0;
   uint32_t line_ = 0;
