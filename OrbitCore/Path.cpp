@@ -88,6 +88,16 @@ bool Path::DirExists(const std::string& dir) {
 #endif
 }
 
+void Path::MakeDir(const std::string& a_Directory)
+{
+  // TODO: Use std::filesystem::create_directory once when we have c++ 17.
+#if _WIN32
+  _mkdir(a_Directory.c_str());
+#else
+  mkdir(a_Directory.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+#endif
+}
+
 std::string Path::GetBasePath() {
   if (!base_path_.empty()) {
     return base_path_;
@@ -116,61 +126,61 @@ std::string Path::GetDllName(bool a_Is64Bit) {
 
 std::string Path::GetParamsFileName() {
   std::string paramsDir = Path::GetAppDataPath() + "config/";
-  _mkdir(paramsDir.c_str());
+  Path::MakeDir(paramsDir);
   return paramsDir + "config.xml";
 }
 
 std::string Path::GetFileMappingFileName() {
   std::string paramsDir = Path::GetAppDataPath() + "config/";
-  _mkdir(paramsDir.c_str());
+  Path::MakeDir(paramsDir);
   return paramsDir + std::string("FileMapping.txt");
 }
 
 std::string Path::GetSymbolsFileName() {
   std::string paramsDir = Path::GetAppDataPath() + "config/";
-  _mkdir(paramsDir.c_str());
+  Path::MakeDir(paramsDir);
   return paramsDir + std::string("Symbols.txt");
 }
 
 std::string Path::GetLicenseName() {
   std::string appDataDir = Path::GetAppDataPath();
-  _mkdir(appDataDir.c_str());
+  Path::MakeDir(appDataDir);
   return appDataDir + std::string("user.txt");
 }
 
 std::string Path::GetCachePath() {
   std::string cacheDir = Path::GetAppDataPath() + "cache/";
-  _mkdir(cacheDir.c_str());
+  Path::MakeDir(cacheDir);
   return cacheDir;
 }
 
 std::string Path::GetPresetPath() {
   std::string presetDir = Path::GetAppDataPath() + "presets/";
-  _mkdir(presetDir.c_str());
+  Path::MakeDir(presetDir);
   return presetDir;
 }
 
 std::string Path::GetPluginPath() {
   std::string presetDir = Path::GetAppDataPath() + "plugins/";
-  _mkdir(presetDir.c_str());
+  Path::MakeDir(presetDir);
   return presetDir;
 }
 
 std::string Path::GetCapturePath() {
   std::string captureDir = Path::GetAppDataPath() + "output/";
-  _mkdir(captureDir.c_str());
+  Path::MakeDir(captureDir);
   return captureDir;
 }
 
 std::string Path::GetDumpPath() {
   std::string captureDir = Path::GetAppDataPath() + "dumps/";
-  _mkdir(captureDir.c_str());
+  Path::MakeDir(captureDir);
   return captureDir;
 }
 
 std::string Path::GetTmpPath() {
   std::string captureDir = Path::GetAppDataPath() + "temp/";
-  _mkdir(captureDir.c_str());
+  Path::MakeDir(captureDir);
   return captureDir;
 }
 
@@ -238,11 +248,11 @@ std::string Path::GetProgramFilesPath() {
 std::string Path::GetAppDataPath() {
 #ifdef WIN32
   std::string appData = GetEnvVar("APPDATA");
-#else
-  std::string appData = GetEnvVar("XDG_DATA_DIRS");
-#endif
   std::string path = appData + "\\OrbitProfiler\\";
-  _mkdir(path.c_str());
+#else
+  std::string path = Path::GetHome() + ".orbitprofiler/";
+#endif
+  Path::MakeDir(path);
   return path;
 }
 
@@ -274,7 +284,7 @@ std::string Path::GetExternalPath() {
 }
 
 std::string Path::GetHome() {
-  std::string home = GetEnvVar("HOME") + "//";
+  std::string home = GetEnvVar("HOME") + "/";
   return home;
 }
 

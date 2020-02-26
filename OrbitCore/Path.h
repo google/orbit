@@ -45,6 +45,7 @@ class Path {
   static bool FileExists(const std::string& a_File);
   static uint64_t FileSize(const std::string& a_File);
   static bool DirExists(const std::string& a_Dir);
+  static void MakeDir(const std::string& a_Directory);
   static bool IsSourceFile(const std::string& a_File);
   static bool IsPackaged() { return is_packaged_; }
 
