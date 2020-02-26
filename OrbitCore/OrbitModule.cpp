@@ -115,7 +115,8 @@ std::string FindSymbols(const std::string& module_path) {
 
   std::string dir = Path::GetDirectory(module_path);
   std::vector<std::string> symbolDirectories = {"~/", Path::GetHome(), dir,
-                                                dir + "debug_symbols/"};
+                                                dir + "debug_symbols/", "/home/cloudcast/"};
+
   std::string file = Path::StripExtension(Path::GetFileName(module_path));
 
   for (auto& symbolDirectory : symbolDirectories) {
@@ -133,6 +134,11 @@ std::string FindSymbols(const std::string& module_path) {
   }
 
   return module_path;
+}
+
+Pdb::~Pdb()
+{
+  PRINT_FUNC;
 }
 
 bool Pdb::LoadFunctions(const char* file_name) {
@@ -162,6 +168,7 @@ bool Pdb::LoadFunctions(const char* file_name) {
 }
 
 bool Pdb::LoadPdb(const char* file_name) {
+  m_FileName = file_name;
   if (!LoadFunctions(file_name)) {
     return false;
   }

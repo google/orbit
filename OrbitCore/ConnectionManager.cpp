@@ -98,12 +98,13 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
   }
 
   // Select the received functions:
-  for (const std::string& address : selectedFunctions) {
-    PRINT_VAR(address);
+  for (const std::string& address_str : selectedFunctions) {
+    uint64_t address = std::stoll(address_str);
+    PRINT("Select address %x\n", address);
     Function* function =
-        Capture::GTargetProcess->GetFunctionFromAddress(std::stoll(address));
+        Capture::GTargetProcess->GetFunctionFromAddress(address);
     if (!function)
-      PRINT("received invalid address");
+      PRINT("Received invalid address %x\n");
     else {
       PRINT("Received Selected Function: %s\n", function->PrettyName().c_str());
       // this also adds the function to the map.

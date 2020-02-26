@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "LinuxUtils.h"
 #include "OrbitFunction.h"
 #include "Path.h"
 #include "PrintVar.h"
@@ -20,7 +21,7 @@ class ElfFileImpl : public ElfFile {
       llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
   bool GetFunctions(Pdb* pdb, std::vector<Function>* functions) const override;
-  absl::optional<uint64_t> GetLoadBias() const override;
+  uint64_t GetLoadBias() const override;
   bool IsAddressInTextSection(uint64_t address) const override;
 
  private:
@@ -73,6 +74,7 @@ template <typename ElfT>
 bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
                                      std::vector<Function>* functions) const {
   bool function_added = false;
+  uint64_t load_bias = GetLoadBias();
 
   // TODO: we should probably check if .symtab is available before doing this.
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
@@ -82,6 +84,10 @@ bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
     }
 
     std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
+
+#if __linux__
+    name = LinuxUtils::Demangle(name.c_str());
+#endif
 
     // Unknown type - skip and generate a warning
     if (!symbol_ref.getType()) {
@@ -97,8 +103,9 @@ bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
       continue;
     }
 
+    uint64_t address = symbol_ref.getValue() - load_bias;
     functions->emplace_back(name, Path::GetFileName(file_path_),
-                            symbol_ref.getValue(), symbol_ref.getSize(), pdb);
+                            address, symbol_ref.getSize(), pdb);
     function_added = true;
   }
 
@@ -106,7 +113,7 @@ bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
 }
 
 template <typename ElfT>
-absl::optional<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
+uint64_t ElfFileImpl<ElfT>::GetLoadBias() const {
   const llvm::object::ELFFile<ElfT>* elf_file = object_file_->getELFFile();
 
   uint64_t min_vaddr = UINT64_MAX;

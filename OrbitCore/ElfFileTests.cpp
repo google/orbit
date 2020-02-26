@@ -69,5 +69,5 @@ TEST(ElfFile, CalculateLoadBiasNoProgramHeaders) {
   auto elf_file = ElfFile::Create(test_elf_file.c_str());
 
   ASSERT_NE(elf_file, nullptr);
-  EXPECT_TRUE(!elf_file->GetLoadBias().has_value());
+  EXPECT_TRUE(elf_file->GetLoadBias()==0);
 }

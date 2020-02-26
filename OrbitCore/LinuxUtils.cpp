@@ -124,10 +124,6 @@ void ListModules(pid_t a_PID,
       const std::string& moduleName = tokens[5];
       const std::string& permission = tokens[1];
 
-      // Only keep address ranges that are executable.
-      if (!Contains(permission, "x"))
-        continue;
-
       auto addresses = Tokenize(tokens[0], "-");
       if (addresses.size() == 2) {
         auto iter = modules.find(moduleName);
@@ -145,7 +141,6 @@ void ListModules(pid_t a_PID,
         module->m_Name = Path::GetFileName(module->m_FullName);
         module->m_Directory = Path::GetDirectory(module->m_FullName);
         module->m_PdbSize = Path::FileSize(moduleName);
-        auto prettyName = module->GetPrettyName();
         modules[moduleName] = module;
       }
     }
@@ -153,6 +148,7 @@ void ListModules(pid_t a_PID,
 
   for (auto& iter : modules) {
     auto module = iter.second;
+    module->GetPrettyName();
     o_ModuleMap[module->m_AddressStart] = module;
   }
 }
