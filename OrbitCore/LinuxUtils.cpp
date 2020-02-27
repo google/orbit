@@ -122,7 +122,6 @@ void ListModules(pid_t a_PID,
     std::vector<std::string> tokens = Tokenize(line);
     if (tokens.size() == 6) {
       const std::string& moduleName = tokens[5];
-      const std::string& permission = tokens[1];
 
       auto addresses = Tokenize(tokens[0], "-");
       if (addresses.size() == 2) {

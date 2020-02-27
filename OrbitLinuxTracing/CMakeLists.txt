@@ -4,6 +4,8 @@ project(OrbitLinuxTracing)
 
 add_library(OrbitLinuxTracing STATIC)
 
+target_compile_options(OrbitLinuxTracing PRIVATE ${STRICT_COMPILE_FLAGS})
+
 target_compile_features(OrbitLinuxTracing PUBLIC cxx_std_17)
 
 target_include_directories(OrbitLinuxTracing PUBLIC

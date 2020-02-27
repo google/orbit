@@ -9,6 +9,8 @@ endif()
 project(OrbitCore)
 add_library(OrbitCore STATIC)
 
+target_compile_options(OrbitCore PRIVATE ${STRICT_COMPILE_FLAGS})
+
 target_sources(
   OrbitCore
   PUBLIC BaseTypes.h

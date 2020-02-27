@@ -12,6 +12,7 @@
 class ElfFile {
  public:
   ElfFile() = default;
+  virtual ~ElfFile() = default;
 
   virtual bool GetFunctions(Pdb* pdb,
                             std::vector<Function>* functions) const = 0;

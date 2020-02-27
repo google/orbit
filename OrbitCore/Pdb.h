@@ -28,7 +28,7 @@ class Pdb {
   explicit Pdb(const char* pdb_name = "");
   Pdb(const Pdb&) = delete;
   Pdb& operator=(const Pdb&) = delete;
-  ~Pdb();
+  virtual ~Pdb();
 
   void Init();
 
@@ -142,6 +142,7 @@ class Pdb {
   Pdb() = default;
   Pdb(const Pdb&) = delete;
   Pdb& operator=(const Pdb&) = delete;
+  virtual ~Pdb() = default;
 
   void Init() {}
 
