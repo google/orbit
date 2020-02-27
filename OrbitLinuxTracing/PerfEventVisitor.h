@@ -8,6 +8,7 @@ namespace LinuxTracing {
 // Keep this class in sync with the hierarchy of PerfEvent in PerfEvent.h.
 class PerfEventVisitor {
  public:
+  virtual ~PerfEventVisitor() = default;
   virtual void visit(LostPerfEvent* event) {}
   virtual void visit(ForkPerfEvent* event) {}
   virtual void visit(ExitPerfEvent* event) {}

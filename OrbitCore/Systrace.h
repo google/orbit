@@ -44,9 +44,6 @@ class Systrace {
   std::vector<Function> m_Functions;
   std::unordered_map<uint64_t, Function*> m_FunctionMap;
 
-  DWORD m_ThreadCount = 0;
-  DWORD m_StringCount = 0;
-
   std::string m_Name;
 
   uint64_t m_TimeOffsetNs = 0;
@@ -70,3 +67,4 @@ class SystraceManager {
   std::vector<std::shared_ptr<Systrace>> m_Systraces;
   uint32_t m_ThreadCount = 0;
 };
+

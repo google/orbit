@@ -4,6 +4,11 @@ set(CMAKE_TOOLCHAIN_FILE
     "${CMAKE_CURRENT_LIST_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake"
     CACHE STRING "Default CMake toolchain file")
 
+if(NOT WIN32)
+  # These flags do not work on Windows.
+  set(STRICT_COMPILE_FLAGS -Werror=all)
+endif()
+
 project(Orbit C CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")

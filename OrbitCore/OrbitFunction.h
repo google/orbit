@@ -178,7 +178,6 @@ class Function {
   std::vector<FunctionParam> params_;
   std::vector<Argument> arguments_;
   Pdb* pdb_ = nullptr;
-  uint64_t name_hash_ = 0;
   OrbitType type_ = NONE;
   std::shared_ptr<FunctionStats> stats_;
   bool selected_ = false;

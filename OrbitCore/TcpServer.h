@@ -15,6 +15,7 @@ class TcpServer : public TcpEntity {
   TcpServer();
   ~TcpServer();
 
+  using TcpEntity::Start;
   void Start(unsigned short a_Port);
 
   void Receive(const Message& a_Message);

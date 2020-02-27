@@ -23,6 +23,7 @@ class PerfEventVisitor;
 
 class PerfEvent {
  public:
+  virtual ~PerfEvent() = default;
   virtual uint64_t Timestamp() const = 0;
   virtual void accept(PerfEventVisitor* visitor) = 0;
 };

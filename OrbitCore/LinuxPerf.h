@@ -25,7 +25,6 @@ class LinuxPerf {
 
  private:
   uint32_t m_PID = 0;
-  uint32_t m_ForkedPID = 0;
   uint32_t m_Frequency = 1000;
 
   std::shared_ptr<std::thread> m_Thread;
