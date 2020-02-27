@@ -1125,7 +1125,7 @@ void OrbitApp::LoadRemoteModules() {
     }
   }
 
-  std::string moduleData = SerializeObjectHumanReadable(modules);
+  std::string moduleData = SerializeObjectBinary(modules);
   GTcpClient->Send(Msg_RemoteModuleDebugInfo, (void*)moduleData.data(),
                    moduleData.size());
 }
@@ -1218,7 +1218,7 @@ void OrbitApp::OnRemoteProcessList(const Message& a_Message) {
 //-----------------------------------------------------------------------------
 void OrbitApp::OnRemoteModuleDebugInfo(const Message& a_Message) {
   std::istringstream buffer(std::string(a_Message.m_Data, a_Message.m_Size));
-  cereal::JSONInputArchive inputAr(buffer);
+  cereal::BinaryInputArchive inputAr(buffer);
   std::vector<ModuleDebugInfo> remoteModuleDebugInfo;
   inputAr(remoteModuleDebugInfo);
 

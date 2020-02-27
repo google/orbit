@@ -152,7 +152,7 @@ void ConnectionManager::SetupServerCallbacks() {
         std::vector<std::string> modules;
 
         std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
-        cereal::JSONInputArchive inputAr(buffer);
+        cereal::BinaryInputArchive inputAr(buffer);
         inputAr(modules);
 
         for (std::string& module : modules) {
@@ -163,8 +163,7 @@ void ConnectionManager::SetupServerCallbacks() {
         }
 
         // Send data back
-        std::string messageData =
-            SerializeObjectHumanReadable(remoteModuleDebugInfo);
+        std::string messageData = SerializeObjectBinary(remoteModuleDebugInfo);
         GTcpServer->Send(Msg_RemoteModuleDebugInfo, (void*)messageData.data(),
                          messageData.size());
       });
