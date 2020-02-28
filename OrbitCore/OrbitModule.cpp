@@ -48,8 +48,7 @@ std::string Module::GetPrettyName() {
 
 //-----------------------------------------------------------------------------
 bool Module::IsDll() const {
-  return ToLower(Path::GetExtension(m_FullName)) ==
-             std::string(".dll") ||
+  return ToLower(Path::GetExtension(m_FullName)) == std::string(".dll") ||
          Contains(m_Name, ".so");
 }
 
@@ -108,42 +107,63 @@ Function* Pdb::FunctionFromName(const std::string& a_Name) {
 }
 
 //-----------------------------------------------------------------------------
-std::string FindSymbols(const std::string& module_path) {
+std::unique_ptr<ElfFile> FindSymbols(const std::string& module_path) {
+  std::unique_ptr<ElfFile> module_elf_file = ElfFile::Create(module_path);
+  if (module_elf_file == nullptr) {
+    PRINT(absl::StrFormat("Unable to load module (object file) from \"%s\"\n",
+                          module_path));
+    return nullptr;
+  }
+
+  if (module_elf_file->HasSymtab()) {
+    return module_elf_file;
+  }
+
   // Look for .debug files associated with passed in module name
-  // TODO: .debug file might not have same name as module, we should check
-  //       for unique identifier in the symbols file...
+  // TODO: .debug file might not have same name as module, maybe there is a good
+  //       way of searching files based on buildId
 
   std::string dir = Path::GetDirectory(module_path);
-  std::vector<std::string> symbolDirectories = {"~/", Path::GetHome(), dir,
-                                                dir + "debug_symbols/", "/home/cloudcast/"};
-
   std::string file = Path::StripExtension(Path::GetFileName(module_path));
 
-  for (auto& symbolDirectory : symbolDirectories) {
-    std::string debugFile = symbolDirectory + file + ".debug";
-    if (Path::FileExists(debugFile)) {
-      PRINT_VAR(debugFile);
-      return debugFile;
-    }
+  std::vector<std::string> search_directories = {
+      dir, dir + "debug_symbols/", Path::GetHome(), "/home/cloudcast/"};
+  std::vector<std::string> symbol_file_extensions = {".debug", ".elf.debug"};
 
-    debugFile = symbolDirectory + file + ".elf.debug";
-    if (Path::FileExists(debugFile)) {
-      PRINT_VAR(debugFile);
-      return debugFile;
+  std::vector<std::string> search_file_paths;
+  for (const auto& directory : search_directories) {
+    for (const auto& file_extension : symbol_file_extensions) {
+      search_file_paths.emplace_back(directory + file + file_extension);
     }
   }
 
-  return module_path;
+  for (const auto& symbols_file_path : search_file_paths) {
+    if (!Path::FileExists(symbols_file_path)) continue;
+
+    std::unique_ptr<ElfFile> symbols_file = ElfFile::Create(symbols_file_path);
+    if (symbols_file == nullptr) continue;
+
+    if (!symbols_file->HasSymtab()) continue;
+
+    std::string module_build_id = module_elf_file->GetBuildId();
+    if (module_build_id != "" &&
+        module_build_id == symbols_file->GetBuildId()) {
+      return symbols_file;
+    }
+  }
+
+  return nullptr;
 }
 
 bool Pdb::LoadFunctions(const char* file_name) {
-  m_FileName = FindSymbols(file_name);
-  m_Name = Path::GetFileName(m_FileName);
   m_LoadedModuleName = file_name;
+  std::unique_ptr<ElfFile> elf_file = FindSymbols(file_name);
+  m_FileName = elf_file->GetFilePath();
+  m_Name = Path::GetFileName(m_FileName);
 
-  auto elf_file = ElfFile::Create(m_FileName);
   if (elf_file == nullptr || !elf_file->GetFunctions(this, &m_Functions)) {
-    PRINT(absl::StrFormat("Unable to load functions from \"%s\"", m_FileName));
+    PRINT(
+        absl::StrFormat("Unable to load functions from \"%s\"\n", m_FileName));
     return false;
   }
 
@@ -163,7 +183,6 @@ bool Pdb::LoadFunctions(const char* file_name) {
 }
 
 bool Pdb::LoadPdb(const char* file_name) {
-  m_FileName = file_name;
   if (!LoadFunctions(file_name)) {
     return false;
   }

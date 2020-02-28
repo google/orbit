@@ -1,0 +1,12 @@
+diff --git a/ports/llvm/portfile.cmake b/ports/llvm/portfile.cmake
+index 61f45654c..1c7404e1e 100644
+--- a/ports/llvm/portfile.cmake
++++ b/ports/llvm/portfile.cmake
+@@ -59,6 +59,7 @@ vcpkg_configure_cmake(
+         -DLLVM_ABI_BREAKING_CHECKS=FORCE_OFF
+         -DLLVM_TOOLS_INSTALL_DIR=tools/llvm
+         -DLLVM_PARALLEL_LINK_JOBS=1
++        -DLLVM_ENABLE_RTTI=1
+ )
+ 
+ vcpkg_install_cmake()
