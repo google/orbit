@@ -6,6 +6,7 @@
 #include "OrbitFunction.h"
 #include "Path.h"
 #include "PrintVar.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "llvm/Object/ELFObjectFile.h"
@@ -23,35 +24,75 @@ class ElfFileImpl : public ElfFile {
   bool GetFunctions(Pdb* pdb, std::vector<Function>* functions) const override;
   uint64_t GetLoadBias() const override;
   bool IsAddressInTextSection(uint64_t address) const override;
+  bool HasSymtab() const override;
+  std::string GetBuildId() const override;
+  std::string GetFilePath() const override;
 
  private:
-  void FindTextSection();
+  void InitSections();
 
   const std::string file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
   llvm::object::ELFObjectFile<ElfT>* object_file_;
-  std::unique_ptr<llvm::object::SectionRef> text_section_;
+  std::unique_ptr<typename ElfT::Shdr> text_section_;
+  std::string build_id_;
+  bool has_symtab_section_;
 };
 
 template <typename ElfT>
 ElfFileImpl<ElfT>::ElfFileImpl(
     absl::string_view file_path,
     llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary)
-    : file_path_(file_path), owning_binary_(std::move(owning_binary)) {
+    : file_path_(file_path),
+      owning_binary_(std::move(owning_binary)),
+      has_symtab_section_(false) {
   object_file_ = llvm::dyn_cast<llvm::object::ELFObjectFile<ElfT>>(
       owning_binary_.getBinary());
-  FindTextSection();
+  InitSections();
 }
 
 template <typename ElfT>
-void ElfFileImpl<ElfT>::FindTextSection() {
-  // Find the .text section
-  for (llvm::object::SectionRef section : object_file_->sections()) {
-    llvm::StringRef name;
-    section.getName(name);
+void ElfFileImpl<ElfT>::InitSections() {
+  const llvm::object::ELFFile<ElfT>* elf_file = object_file_->getELFFile();
+
+  llvm::Expected<typename ElfT::ShdrRange> sections_or_err =
+      elf_file->sections();
+  if (!sections_or_err) {
+    PRINT("Unable to load sections\n");
+    return;
+  }
+
+  for (const typename ElfT::Shdr& section : sections_or_err.get()) {
+    llvm::Expected<llvm::StringRef> name_or_error =
+        elf_file->getSectionName(&section);
+    if (!name_or_error) {
+      PRINT("Unable to get section name\n");
+      continue;
+    }
+    llvm::StringRef name = name_or_error.get();
+
     if (name.str() == ".text") {
-      text_section_ = std::make_unique<llvm::object::SectionRef>(section);
-      break;
+      text_section_ = std::make_unique<typename ElfT::Shdr>(section);
+    }
+
+    if (name.str() == ".symtab") {
+      has_symtab_section_ = true;
+    }
+
+    if (name.str() == ".note.gnu.build-id" &&
+        section.sh_type == llvm::ELF::SHT_NOTE) {
+      llvm::Error error = llvm::Error::success();
+      for (const typename ElfT::Note& note : elf_file->notes(section, error)) {
+        if (note.getType() != llvm::ELF::NT_GNU_BUILD_ID) continue;
+
+        llvm::ArrayRef<uint8_t> desc = note.getDesc();
+        for (const uint8_t& byte : desc) {
+          absl::StrAppend(&build_id_, absl::Hex(byte, absl::kZeroPad2));
+        }
+      }
+      if (error) {
+        PRINT("Error while reading elf notes\n");
+      }
     }
   }
 }
@@ -63,9 +104,8 @@ bool ElfFileImpl<ElfT>::IsAddressInTextSection(uint64_t address) const {
     return false;
   }
 
-  uint64_t section_begin_address = text_section_->getAddress();
-  uint64_t section_end_address =
-      section_begin_address + text_section_->getSize();
+  uint64_t section_begin_address = text_section_->sh_addr;
+  uint64_t section_end_address = section_begin_address + text_section_->sh_size;
 
   return (address >= section_begin_address) && (address < section_end_address);
 }
@@ -73,10 +113,14 @@ bool ElfFileImpl<ElfT>::IsAddressInTextSection(uint64_t address) const {
 template <typename ElfT>
 bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
                                      std::vector<Function>* functions) const {
+  // TODO: if we want to use other sections than .symtab in the future for
+  //       example .dynsym, than we have to change this.
+  if (!has_symtab_section_) {
+    return false;
+  }
   bool function_added = false;
   uint64_t load_bias = GetLoadBias();
 
-  // TODO: we should probably check if .symtab is available before doing this.
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
     if ((symbol_ref.getFlags() & llvm::object::BasicSymbolRef::SF_Undefined) !=
         0) {
@@ -104,8 +148,8 @@ bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
     }
 
     uint64_t address = symbol_ref.getValue() - load_bias;
-    functions->emplace_back(name, Path::GetFileName(file_path_),
-                            address, symbol_ref.getSize(), pdb);
+    functions->emplace_back(name, Path::GetFileName(file_path_), address,
+                            symbol_ref.getSize(), pdb);
     function_added = true;
   }
 
@@ -142,6 +186,21 @@ uint64_t ElfFileImpl<ElfT>::GetLoadBias() const {
     return {};
   }
   return min_vaddr;
+}
+
+template <typename ElfT>
+bool ElfFileImpl<ElfT>::HasSymtab() const {
+  return has_symtab_section_;
+}
+
+template <typename ElfT>
+std::string ElfFileImpl<ElfT>::GetBuildId() const {
+  return build_id_;
+}
+
+template <typename ElfT>
+std::string ElfFileImpl<ElfT>::GetFilePath() const {
+  return file_path_;
 }
 
 }  // namespace
