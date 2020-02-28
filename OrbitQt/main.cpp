@@ -10,6 +10,11 @@
 #include "orbitmainwindow.h"
 
 int main(int argc, char* argv[]) {
+
+#if __linux__
+  QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+#endif
+
   QApplication a(argc, argv);
 
   a.setStyle(QStyleFactory::create("Fusion"));
