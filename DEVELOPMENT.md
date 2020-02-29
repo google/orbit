@@ -1,51 +1,47 @@
 # Getting started with development
 
+## Platforms
+
+Windows 10 and Linux are supported.
+
+## Compilers
+
+To build Orbit you need a compiler capable of C++17. The following ones should be fine.
+You should prefer clang over GCC, since most of the developers build with clang by default.
+
+* GCC 8 and above on Linux
+* Clang 7 and above on Linux
+* MSVC 2017, 2019 and above on Windows
+
 ## Building Orbit
 
-Orbit relies on CMake as its meta build system in a fairly recent version
-(3.15 at least). This won't be available on most stable Linux distributions.
+Orbit relies on `conan` as its package manager.  Conan is written in Python3,
+so make sure you have either Conan installed or at least have Python3 installed.
 
-One way to install a recent version of CMake is via Python's pip. This
-script should install CMake on debian-based distributions. For other
-flavors you might need to adjust the commands to your package manager:
+The `bootstrap-orbit.{sh,bat}` will try to install `conan` via `pip3` if not
+installed and reachable via `PATH`. Afterwards it calls `build.{sh,bat}` which
+will compile Orbit for you.
 
-```bash
-# Put ~/.local/bin into your PATH with high precedence (high means BEFORE /usr/bin).
-sudo apt install python3-pip
-pip3 install --user --upgrade pip
-which pip # Should point to ~/.local/bin/pip
-pip install --user cmake
-which cmake # Should point to ~/.local/bin/cmake
-cmake --version # Should output 3.15.2 or higher
-```
+On Linux, `python3` should be preinstalled anyway, but you might need to install
+pip (package name: `python3-pip`).
 
-On Windows, this should work as well. But installing via the Qt Installer or
-via the Windows Installer from cmake.org are also viable options.
-
-Check out the `bootstrap-orbit.{sh, bat}` file for a general description on how
-to install dependencies and on how to set up a `build/`-directory.
+On Windows, one option to install Python is via the Visual Studio Installer.
+Alternatively you can download prebuilts from [python.org](https://www.python.org/)
+(In both cases verify that `pip3.exe` is in the path, otherwise the bootstrap
+script will not be able to install conan for you.)
 
 ## Dependencies
 
-All our 3rd party dependencies are either included via git submodules or they are
-managed by vcpkg. But there are several dependencies vcpkg needs to build our
-dependencies from source. This especially applies to Linux where it is expected
-to have several libraries or tools to be provided by the system. Check out
-`bootstrap-orbit.sh` for more information.
+All our third party library and dependencies are either included via
+git submodules or they are managed by conan.
 
-On Windows you need to provide a Visual Studio installation with the DIA SDK
-installed.
+There are some exceptions. On Linux, we rely by default on the distribution's Qt5
+and Mesa installation. This can be changed by modifying the conan package options
+`system_qt` and `system_mesa`.
 
-Under Linux we use a custom triplet for vcpkg. This triplet takes care to build
-some dependencies dynamically and some statically. (At the moment qt5 is built
-dynamically while all the rest is built statically. Check
-`contrib/vcpkg/triplets/x64-linux-mixed.cmake` to be sure if this information
-is still up to date.) When calling `vcpkg` manually be sure to specify the
-correct triplet (`--triplet x64-linux-mixed`) and you have to point `vcpkg` to
-the triplet location directory
-(`--overlay-triplets=$PROJECT_ROOT/contrib/vcpkg/triplets/`). You can check out
-the `bootstrap-orbit.sh` file on how it is done.
-
+The simplest way to do that is to change the default values of these two options.
+Check out `conanfile.py`. There is a python dictionary called `default_options`
+defined in the python class `OrbitConan`.
 
 ## Consistent code styling
 
@@ -79,34 +75,26 @@ openssl.
 
 _Note:_ Cross compiling the UI is not supported.
 
-First we need to cross compile all the dependencies:
-```bash
-cd external/vcpkg
-./vcpkg --overlay-triplets=../../contrib/vcpkg/triplets/ \
-  --triplet x64-linux-ggp install abseil freetype freetype-gl breakpad \
-  capstone asio cereal imgui freeglut glew curl gtest
-cd ../../
-```
+_Note:_ Since the GGP SDK is not publicly available, this only works inside
+of Google, at least for now.
 
-In a second step, we can compile Orbit itself:
-```bash
-mkdir build_ggp_release
-cd build_ggp_release
-cp ../contrib/toolchains/toolchain-linux-ggp-release.cmake toolchain.cmake
-cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -G Ninja ..
-ninja # or cmake --build .
-```
+Call the script `bootstrap-orbit-ggp.sh` which creates a package out of the GGP
+SDK (you do not need to have the SDK installed), and compiles Orbit against
+the toolchain from the GGP SDK package.
 
-_Note:_ There is also a script `bootstrap-orbit-ggp.sh` which is performing
-these steps.
-
-Finally, `build_ggp_release/OrbitService/OrbitService` can be copied over
+Finally, `build_ggp_release/package/bin/OrbitService` can be copied over
 to the instance:
 ```bash
-ggp ssh put OrbitService/OrbitService .
+ggp ssh put build_ggp_release/package/bin/OrbitService
 ```
 
-Some dependencies still need to be installed on the instance:
+Some libraries still need to be installed on the instance:
 ```bash
 sudo apt install libglu1-mesa libxi6 libxmu6
+```
+
+before the service can be started with:
+```bash
+ggp ssh shell
+> sudo /mnt/developer/OrbitService
 ```
