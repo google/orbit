@@ -7,9 +7,9 @@
 #include "Pdb.h"
 
 TEST(OrbitModule, LoadPdb) {
-  std::string executable_path = Path::GetExecutablePath();
+  const std::string executable_path = Path::GetExecutablePath();
   // This is a simple executable that prints "Hello Earh!"
-  std::string file_path = executable_path + "/testdata/hello_world_elf";
+  const std::string file_path = executable_path + "testdata/hello_world_elf";
 
   Pdb pdb;
   ASSERT_TRUE(pdb.LoadFunctions(file_path.c_str()));
@@ -50,8 +50,8 @@ TEST(OrbitModule, LoadPdb) {
 }
 
 TEST(OrbitModule, LoadPdbSeparateSymbols) {
-  std::string executable_path = Path::GetExecutablePath();
-  std::string file_path = executable_path + "testdata/no_symbols_elf";
+  const std::string executable_path = Path::GetExecutablePath();
+  const std::string file_path = executable_path + "testdata/no_symbols_elf";
 
   Pdb pdb;
   ASSERT_TRUE(pdb.LoadFunctions(file_path.c_str()));
@@ -63,3 +63,54 @@ TEST(OrbitModule, LoadPdbSeparateSymbols) {
   EXPECT_EQ(pdb.GetFileName(), symbols_path);
   EXPECT_EQ(pdb.GetName(), symbols_file_name);
 }
+
+TEST(OrbitModule, GetFunctionFromExactAddress) {
+  const std::string executable_path = Path::GetExecutablePath();
+  const std::string file_path =
+      executable_path + "testdata/hello_world_static_elf";
+
+  Pdb pdb;
+  ASSERT_TRUE(pdb.LoadFunctions(file_path.c_str()));
+  pdb.PopulateFunctionMap();
+  pdb.PopulateStringFunctionMap();
+  pdb.SetMainModule(0x400000);
+  const std::vector<Function>& functions = pdb.GetFunctions();
+
+  ASSERT_EQ(functions.size(), 1125);
+
+  constexpr const uint64_t __free_start_addr = 0x41b840;
+  constexpr const uint64_t __free_pc_addr = 0x41b854;
+  const Function* function = pdb.GetFunctionFromExactAddress(__free_start_addr);
+  ASSERT_NE(function, nullptr);
+  EXPECT_EQ(function->Name(), "__free");
+
+  EXPECT_EQ(pdb.GetFunctionFromExactAddress(__free_pc_addr), nullptr);
+}
+
+TEST(OrbitModule, GetFunctionFromProgramCounter) {
+  const std::string executable_path = Path::GetExecutablePath();
+  const std::string file_path =
+      executable_path + "testdata/hello_world_static_elf";
+
+  Pdb pdb;
+  ASSERT_TRUE(pdb.LoadFunctions(file_path.c_str()));
+  pdb.PopulateFunctionMap();
+  pdb.PopulateStringFunctionMap();
+  pdb.SetMainModule(0x400000);
+  const std::vector<Function>& functions = pdb.GetFunctions();
+
+  ASSERT_EQ(functions.size(), 1125);
+
+  constexpr const uint64_t __free_start_addr = 0x41b840;
+  constexpr const uint64_t __free_pc_addr = 0x41b854;
+
+  const Function* function =
+      pdb.GetFunctionFromProgramCounter(__free_start_addr);
+  ASSERT_NE(function, nullptr);
+  EXPECT_EQ(function->Name(), "__free");
+
+  function = pdb.GetFunctionFromProgramCounter(__free_pc_addr);
+  ASSERT_NE(function, nullptr);
+  EXPECT_EQ(function->Name(), "__free");
+}
+
