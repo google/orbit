@@ -1,0 +1,13 @@
+diff --git a/crypto/rand/rand_unix.c b/crypto/rand/rand_unix.c
+index 69efcdeed7..4046005d54 100644
+--- a/crypto/rand/rand_unix.c
++++ b/crypto/rand/rand_unix.c
+@@ -317,7 +317,7 @@ static ssize_t syscall_random(void *buf, size_t buflen)
+      * - Linux since 3.17 with glibc 2.25
+      * - FreeBSD since 12.0 (1200061)
+      */
+-#  if defined(__GNUC__) && __GNUC__>=2 && defined(__ELF__) && !defined(__hpux)
++#  if defined(__GNUC__) && __GNUC__>=2 && defined(__ELF__) && !defined(__hpux) && !defined(GLIBC224)
+     extern int getentropy(void *buffer, size_t length) __attribute__((weak));
+ 
+     if (getentropy != NULL)
