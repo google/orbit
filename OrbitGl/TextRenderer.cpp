@@ -10,7 +10,7 @@
 #include "GlUtils.h"
 #include "Params.h"
 #include "shader.h"
-#include "vertex-buffer.h"
+#include "freetype-gl/vertex-buffer.h"
 
 //-----------------------------------------------------------------------------
 typedef struct {

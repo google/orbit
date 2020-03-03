@@ -43,8 +43,7 @@ target_sources(OrbitLinuxTracing PRIVATE
         Utils.h)
 
 target_link_libraries(OrbitLinuxTracing PUBLIC
-        absl::flat_hash_map
-        absl::str_format
+        abseil::abseil
         unwindstack::unwindstack)
 
 add_executable(OrbitLinuxTracingTests)

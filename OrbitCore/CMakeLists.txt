@@ -1,11 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
 
-if(NOT WIN32)
-  llvm_map_components_to_libnames(llvm_libs core support object)
-
-  include_directories(${LLVM_INCLUDE_DIRS})
-endif()
-
 project(OrbitCore)
 add_library(OrbitCore STATIC)
 
@@ -169,22 +163,22 @@ target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(
   OrbitCore
-  PUBLIC cereal
+  PUBLIC cereal::cereal
          xxHash::xxHash
          concurrentqueue::concurrentqueue
          multicore::multicore
-         CURL::libcurl
+         CURL::CURL
          oqpi::oqpi
          asio::asio
-         absl::str_format
-         ${llvm_libs})
+         abseil::abseil
+         llvm_object::llvm_object)
 
 if(WIN32)
   target_link_libraries(
     OrbitCore
     PRIVATE minhook::minhook DIA2Dump::DIA2Dump
-            unofficial::breakpad::libbreakpad
-            unofficial::breakpad::libbreakpad_client OrbitAsm)
+            breakpad::breakpad
+            OrbitAsm)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib peparse::peparse)
   target_compile_definitions(OrbitCore PUBLIC -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitCore PUBLIC -DNTDDI_VERSION=0x06030000)
@@ -217,9 +211,15 @@ if(NOT WIN32)
   target_link_libraries(OrbitCoreTests PRIVATE  ${llvm_libs})
 endif()
 
-target_link_libraries(OrbitCoreTests
-  PRIVATE OrbitCore GTest::GTest GTest::Main)
+target_link_libraries(
+  OrbitCoreTests
+  PRIVATE OrbitCore
+          GTest::Main
+          llvm_object::llvm_object
+          abseil::abseil)
 
 add_custom_command(TARGET OrbitCoreTests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/testdata
   $<TARGET_FILE_DIR:OrbitCoreTests>/testdata)
+
+add_test(NAME OrbitCore COMMAND OrbitCoreTests)
