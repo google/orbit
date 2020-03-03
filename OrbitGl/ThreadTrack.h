@@ -21,7 +21,6 @@ typedef BlockChain<TextBox, 4 * 1024> TimerChain;
 class ThreadTrack : public Track {
  public:
   ThreadTrack(TimeGraph* a_TimeGraph, uint32_t a_ThreadID);
-  ~ThreadTrack() {}
 
   // Pickable
   void Draw(GlCanvas* a_Canvas, bool a_Picking) override;

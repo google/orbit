@@ -2,6 +2,8 @@ project(OrbitService)
 
 add_executable(OrbitService)
 
+target_compile_options(OrbitService PRIVATE ${STRICT_COMPILE_FLAGS})
+
 target_sources(OrbitService PRIVATE main.cpp OrbitService.cpp)
 target_sources(OrbitService PUBLIC OrbitService.h)
 

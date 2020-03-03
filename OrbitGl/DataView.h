@@ -17,7 +17,7 @@ class DataView {
         m_SelectedIndex(-1),
         m_Type(INVALID) {}
 
-  ~DataView();
+  virtual ~DataView();
 
   static DataView* Create(DataViewType a_Type);
 
