@@ -1,61 +1,51 @@
 #!/bin/bash
 
-# Install required dependencies
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+echo "Installing required system dependencies..."
 sudo add-apt-repository universe
 if [ $? -ne 0 ]; then
   sudo apt-get install -y software-properties-common
   sudo add-apt-repository universe
 fi
+
 sudo apt-get update
-sudo apt-get install -y build-essential ninja-build bison flex
+sudo apt-get install -y build-essential
 sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev
-sudo apt-get install -y linux-tools-common qt5-default llvm-8-dev
+sudo apt-get install -y linux-tools-common qt5-default python3-pip
 
-# Dev dependencies:
-# - cmake >= 3.15
-# - ninja (optional)
-# - bison (for compiling qt5)
-# - flex (for compiling qt5)
+echo "Checking if conan is available..."
+which conan >/dev/null
+if [ $? -ne 0 ]; then
+  echo "Couldn't find conan. Trying to install via pip..."
+  pip3 install --user conan || exit $?
 
-# Load Submodules (vcpkg, libunwindstack)
-git submodule update --init --recursive
+  which conan >/dev/null
+  if [ $? -ne 0 ]; then
+    echo "Could not find conan in the path, although the installation reported success."
+    echo "Probably conan was installed into a directory which is not in the PATH."
+    echo "Please ensure conan is reachable via the PATH and call this script again."
+    echo "Hint: Probably you have to add $HOME/.local/bin to your path variable."
+    echo "      If you use bash, you can call 'export PATH=\$HOME/.local/bin:\$PATH'"
+    echo "      to do that. Add this line to your .bashrc file, to make this change"
+    echo "      persistent."
+    exit 1
+  fi
+else
+  echo "Found conan. Skipping installation..."
+fi
+
+
+echo "Loading submodules (libunwindstack, lzma)..."
+(cd $DIR && git submodule update --init --recursive)
 
 if [ $? -ne 0 ]; then
   echo "Orbit: Could not update/initialize all the submodules. Exiting..."
   exit 1
 fi
 
-# Build vcpkg
-cd external/vcpkg
+echo "Installing conan configuration (profiles, settings, etc.)..."
+conan config install $DIR/contrib/conan/config || exit $?
 
-if [ -f "vcpkg" ]; then
-  echo "Orbit: found vcpkg"
-else
-  echo "Orbit: compiling vcpkg"
-  ./bootstrap-vcpkg.sh
-  if [ $? -ne 0 ]; then
-    echo "Orbit: Could not bootstrap vcpkg. Exiting..."
-    exit 2
-  fi
-fi
+exec $DIR/build.sh "$@"
 
-## Build dependencies
-./vcpkg install abseil freetype freetype-gl breakpad \
-  capstone asio cereal imgui freeglut glew curl gtest
-
-if [ $? -ne 0 ]; then
-  echo -n "Orbit: Could not install all the dependencies. "
-  echo "Check for vcpkg error messages. Exiting..."
-  exit 3
-fi
-
-cd ../..
-
-# Build
-if [[ $(uname -a) == *"yeti"* ]]; then
-  ./build_gamelet-debug.sh
-  ./build_gamelet-release.sh
-else
-  ./build-debug.sh
-  ./build-release.sh
-fi

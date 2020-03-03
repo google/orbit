@@ -1,52 +1,34 @@
 #!/bin/bash
 
-# Load Submodules (vcpkg, libunwindstack)
-git submodule update --init --recursive
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+which conan >/dev/null
+if [ $? -ne 0 ]; then
+        sudo pip3 install conan
+fi
+
+# Load Submodules (libunwindstack)
+(cd $DIR && git submodule update --init --recursive)
 
 if [ $? -ne 0 ]; then
   echo "Orbit: Could not update/initialize all the submodules. Exiting..."
   exit 1
 fi
 
-# Build vcpkg
-cd external/vcpkg
+unset GGP_SDK_PATH
 
-if [ -f "vcpkg" ]; then
-  echo "Orbit: found vcpkg"
-else
-  echo "Orbit: compiling vcpkg"
-  ./bootstrap-vcpkg.sh
-  if [ $? -ne 0 ]; then
-    echo "Orbit: Could not bootstrap vcpkg. Exiting..."
-    exit 2
-  fi
-fi
+conan config install $DIR/contrib/conan/config || exit $?
 
-patch -p1 -N -i ../../contrib/patches/vcpkg_llvm_enable_rtti.patch
-
-## Build dependencies
-./vcpkg --overlay-triplets=../../contrib/vcpkg/triplets/ \
-  --triplet x64-linux-ggp install abseil freetype freetype-gl breakpad \
-  capstone asio cereal imgui freeglut glew curl gtest llvm
-
+# Install Stadia GGP SDK
+conan search ggp_sdk | grep orbitdeps/stable > /dev/null
 if [ $? -ne 0 ]; then
-  echo -n "Orbit: Could not install all the dependencies. "
-  echo "Check for vcpkg error messages. Exiting..."
-  exit 3
+  if [ ! -d $DIR/contrib/conan/recipes/ggp_sdk ]; then
+    git clone sso://user/hebecker/conan-ggp_sdk $DIR/contrib/conan/recipes/ggp_sdk || exit $?
+  fi
+  conan export $DIR/contrib/conan/recipes/ggp_sdk orbitdeps/stable || exit $?
+else
+  echo "ggp_sdk seems to be installed already. Skipping installation step..."
 fi
 
-cd ../..
-
-## Build
-if [ ! -d build_ggp_release ]; then
-  mkdir build_ggp_release
-fi
-
-cd build_ggp_release/
-
-if [ ! -f toolchain.cmake ]; then
-  cp ../contrib/toolchains/toolchain-linux-ggp-release.cmake toolchain.cmake
-fi
-
-cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -G Ninja ..
-ninja
+$DIR/build.sh ggp_release ggp_debug

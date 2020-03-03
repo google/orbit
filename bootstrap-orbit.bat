@@ -1,58 +1,42 @@
 @echo off
 
-:: Possible values are 141 for Visual Studio 2017 or 142 for Visual Studio 2019
-set ORBIT_VS_VERSION=141
-:: We require a specific version of the Winsdk to avoid anything random being picked up.
-:: This is appended to the toolchain files for vcpkg and Orbit itself below.
-set ORBIT_WINSDK_VERSION="10.0.18362.0"
+SET REPO_ROOT=%~dp0
 
-:: Build vcpkg
-call git submodule update --init
-cd external/vcpkg
+setlocal
+cd %REPO_ROOT%
+call git submodule update --init --recursive
+if ERRORLEVEL 1 exit /b 1
+endlocal
 
-if exist "vcpkg.exe" (
-    echo found vcpkg.exe
+where /q conan
+if ERRORLEVEL 1 (
+    echo "Conan not found. Trying to install it via python-pip..."
+
+	where /q pip3
+    if ERRORLEVEL 1 (
+        echo "It seems you don't have Python3 installed (pip3.exe not found)."
+        echo "Please install Python or make it available in the path."
+        echo "Alternatively you could also just install conan manually and make"
+        echo "it available in the path."
+        exit /B 1
+    )
+
+    pip3 install conan
+    if ERRORLEVEL 1 exit /b 1
+
+    where /q conan
+    if ERRORLEVEL 1 (
+        echo "It seems we installed conan sucessfully, but it is not available"
+        echo "in the path. Please ensure that your Python user-executable folder is"
+        echo "in the path and call this script again."
+        echo "You can call 'pip3 show -f conan' to figure out where conan.exe was placed."
+        exit /B 2
+    )
 ) else (
-    echo set^(VCPKG_PLATFORM_TOOLSET v%ORBIT_VS_VERSION%^) >> triplets\x86-windows.cmake
-    echo set^(VCPKG_PLATFORM_TOOLSET v%ORBIT_VS_VERSION%^) >> triplets\x64-windows.cmake
-    echo set^(CMAKE_SYSTEM_VERSION %ORBIT_WINSDK_VERSION%^) >> triplets\x86-windows.cmake
-    echo set^(CMAKE_SYSTEM_VERSION %ORBIT_WINSDK_VERSION%^) >> triplets\x64-windows.cmake
-    call ./bootstrap-vcpkg.bat
+    echo "Conan found. Installation skipped."
 )
 
-:: Build dynamic dependencies
-set VCPKG_DEFAULT_TRIPLET=x86-windows
-vcpkg install abseil freeglut glew freetype freetype-gl curl breakpad capstone asio cereal imgui qt5-base gtest
-set VCPKG_DEFAULT_TRIPLET=x64-windows
-vcpkg install abseil freeglut glew freetype freetype-gl curl breakpad capstone asio cereal imgui qt5-base gtest
+conan config install %REPO_ROOT%\contrib\conan\config
+if ERRORLEVEL 1 exit /b 1
 
-cd ..\..
-
-:: Fix breakpad missing file
-copy "external\vcpkg\buildtrees\breakpad\src\f427f61ed3-fe83a49e5d\src\processor\linked_ptr.h" "external\vcpkg\installed\x86-windows\include\google_breakpad\processor\linked_ptr.h" /y
-copy "external\vcpkg\buildtrees\breakpad\src\f427f61ed3-fe83a49e5d\src\processor\linked_ptr.h" "external\vcpkg\installed\x64-windows\include\google_breakpad\processor\linked_ptr.h" /y
-
-:: CMake build
-mkdir build_release_x86
-copy "contrib\toolchains\toolchain-windows-32bit-msvc-release.cmake" "build_release_x86\toolchain.cmake" /y
-echo set^(CMAKE_SYSTEM_VERSION %ORBIT_WINSDK_VERSION%^) >> build_release_x86\toolchain.cmake
-cd build_release_x86
-if %ORBIT_VS_VERSION% EQU 141 (
-    cmake -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" -G "Visual Studio 15 2017 Win32" ..
-) else (
-    cmake -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" -G "Visual Studio 16 2019" -A Win32 ..
-)
-cmake --build . --target ALL_BUILD --config Release
-cd ..
-
-mkdir build_release_x64
-copy "contrib\toolchains\toolchain-windows-64bit-msvc-release.cmake" "build_release_x64\toolchain.cmake" /y
-echo set^(CMAKE_SYSTEM_VERSION %ORBIT_WINSDK_VERSION%^) >> build_release_x64\toolchain.cmake
-cd build_release_x64
-if %ORBIT_VS_VERSION% EQU 141 (
-    cmake -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" -G "Visual Studio 15 2017 Win64" ..
-) else (
-    cmake -DCMAKE_TOOLCHAIN_FILE="toolchain.cmake" -G "Visual Studio 16 2019" -A x64 ..
-)
-cmake --build . --target ALL_BUILD --config Release
-cd ..
+call build.bat %*
