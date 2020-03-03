@@ -1,0 +1,4 @@
+sources:
+  "20190808":
+    url: "https://github.com/abseil/abseil-cpp/archive/aa844899c937bde5d2b24f276b59997e5b668bde.zip"
+    sha256: "f1a959a2144f0482b9bd61e67a9897df02234fff6edf82294579a4276f2f4b97"
