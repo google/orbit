@@ -1,0 +1,14 @@
+[settings]
+os=Windows
+os_build=Windows
+arch=x86
+arch_build=x86_64
+compiler=Visual Studio
+compiler.version=15
+build_type=Debug
+[options]
+OrbitProfiler:system_qt=False
+[build_requires]
+cmake/3.16.4@
+[env]
+CONAN_CMAKE_SYSTEM_VERSION=10.0.18362.0
