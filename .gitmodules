@@ -1,6 +1,3 @@
-[submodule "external/vcpkg"]
-	path = external/vcpkg
-	url = https://github.com/Microsoft/vcpkg.git
 [submodule "external/libunwindstack/android-core"]
 	path = external/libunwindstack/android-core
 	url = https://android.googlesource.com/platform/system/core.git
