@@ -8,7 +8,7 @@
 #include "OpenGl.h"
 #include "Platform.h"
 #include "TextBox.h"
-#include "freetype-gl.h"
+#include "freetype-gl/freetype-gl.h"
 #include "mat4.h"
 
 namespace ftgl {

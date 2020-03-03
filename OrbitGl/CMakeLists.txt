@@ -104,15 +104,17 @@ target_link_libraries(
   PUBLIC OrbitCore
          OrbitAsm
          freetype-gl::freetype-gl
-         OpenGL::GL
-         freetype
+         OpenGL::GLU
+         freetype::freetype
          imgui::imgui
-         GLUT::GLUT
-         capstone::capstone)
+         freeglut::freeglut
+         capstone::capstone
+         glew::glew)
+
+if(TARGET OpenGL::GLX)
+  target_link_libraries(OrbitGl PUBLIC OpenGL::GLX)
+endif()
 
 if(NOT WIN32)
-  target_link_libraries(OrbitGl PRIVATE X11::X11 X11::Xi X11::Xxf86vm
-                                        GLEW::glew_s)
-else()
-  target_link_libraries(OrbitGl PRIVATE GLEW::glew)
+  target_link_libraries(OrbitGl PRIVATE X11::X11 X11::Xi X11::Xxf86vm)
 endif()

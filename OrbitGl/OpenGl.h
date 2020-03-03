@@ -13,7 +13,7 @@
 
 #include <GL/glew.h>
 #include <GL/glu.h>
-#include <freetype-gl.h>
+#include <freetype-gl/freetype-gl.h>
 
 #include "Core.h"
 

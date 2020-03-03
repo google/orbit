@@ -8,7 +8,7 @@
 #include "Log.h"
 #include "OpenGl.h"
 #include "absl/strings/str_format.h"
-#include "freetype-gl.h"
+#include "freetype-gl/freetype-gl.h"
 
 void CheckGlError() {
   GLenum errCode = glGetError();
