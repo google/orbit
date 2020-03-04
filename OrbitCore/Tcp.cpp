@@ -21,11 +21,7 @@ tcp_server::tcp_server(asio::io_service& io_service, unsigned short port)
 
 void tcp_server::Disconnect() {
   PRINT_FUNC;
-  if (connection_ != nullptr) {
-    Message msg(Msg_Unload, 0, nullptr);
-    GTcpServer->Send(msg);
-    connection_ = nullptr;
-  }
+  connection_ = nullptr;
 }
 
 void tcp_server::RegisterConnection(std::shared_ptr<TcpConnection> connection) {
@@ -73,49 +69,6 @@ void TcpConnection::ReadMessage() {
                    }
 
   );
-}
-
-void TcpConnection::ReadWebsocketMask() {
-  asio::async_read(socket_,
-                   asio::buffer(&web_socket_mask_, sizeof(web_socket_mask_)),
-                   [this](asio::error_code ec, std::size_t /*length*/) {
-                     if (!ec) {
-                       ReadWebsocketPayload();
-                     } else {
-                       PRINT_VAR(ec.message());
-                       socket_.close();
-                     }
-                   }
-
-  );
-}
-
-void TcpConnection::ReadWebsocketPayload() {
-  payload_.resize(web_socket_payload_length_ + 1);
-  payload_[web_socket_payload_length_] = 0;
-  asio::async_read(socket_,
-                   asio::buffer(payload_.data(), web_socket_payload_length_),
-                   [this](asio::error_code ec, std::size_t /*length*/) {
-                     if (!ec) {
-                       DecodeWebsocketPayload();
-                     } else {
-                       PRINT_VAR(ec.message());
-                       socket_.close();
-                     }
-                   }
-
-  );
-}
-
-void TcpConnection::DecodeWebsocketPayload() {
-  uint8_t* mask = reinterpret_cast<uint8_t*>(&web_socket_mask_);
-  for (size_t i = 0; i < web_socket_payload_length_; ++i) {
-    payload_[i] = payload_[i] ^ mask[i % 4];
-  }
-
-  std::string cmd = payload_.data();
-  PRINT_VAR(cmd);
-  GTcpServer->SendToUiAsync(cmd);
 }
 
 void TcpConnection::ResetStats() { num_bytes_received_ = 0; }

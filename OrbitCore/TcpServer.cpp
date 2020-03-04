@@ -237,7 +237,9 @@ bool TcpServer::IsLocalConnection() {
 //-----------------------------------------------------------------------------
 void TcpServer::Disconnect() {
   PRINT_FUNC;
-  if (m_TcpServer != nullptr) {
+  if (m_TcpServer != nullptr && m_TcpServer->HasConnection()) {
+    Message msg(Msg_Unload, 0, nullptr);
+    Send(msg);
     m_TcpServer->Disconnect();
   }
 }
