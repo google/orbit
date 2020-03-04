@@ -30,6 +30,7 @@ class OrbitConan(ConanFile):
         self.requires("gtest/1.8.1@bincrafters/stable")
         self.requires("libcurl/7.66.0")
         self.requires("llvm_object/9.0.1@orbitdeps/stable")
+        self.requires("lzma_sdk/cb0b018@{}".format(self._orbit_channel))
         self.requires("openssl/1.1.1d@{}".format(self._orbit_channel))
         self.requires("zlib/1.2.11@conan/stable")
 

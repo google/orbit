@@ -78,5 +78,5 @@ elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES x86)
   target_sources(unwindstack PRIVATE ${UNWINDSTACK_ROOT}/AsmGetRegsX86.S)
 endif()
 
-target_link_libraries(unwindstack PRIVATE lzma)
+target_link_libraries(unwindstack PRIVATE lzma_sdk::lzma_sdk)
 add_library(unwindstack::unwindstack ALIAS unwindstack)
