@@ -9,6 +9,7 @@
 #include <queue>
 #include <string>
 
+#include "../OrbitCore/ContextSwitch.h"
 #include "../OrbitCore/CoreApp.h"
 #include "../OrbitCore/CrashHandler.h"
 #include "../OrbitCore/Message.h"
@@ -16,7 +17,6 @@
 #include "Threading.h"
 
 struct CallStack;
-struct ContextSwitch;
 class Process;
 
 //-----------------------------------------------------------------------------

@@ -9,8 +9,7 @@ compiler.version=7.0
 compiler.libcxx=libc++
 build_type=Debug
 [options]
-OrbitProfiler:with_qt=False
-OrbitProfiler:system_mesa=True
+OrbitProfiler:with_gui=False
 OrbitProfiler:ggp=True
 [build_requires]
 cmake/3.16.4@
