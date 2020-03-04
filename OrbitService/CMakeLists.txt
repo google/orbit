@@ -13,7 +13,7 @@ endif()
 
 target_include_directories(OrbitService PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(OrbitService PRIVATE OrbitGl OrbitCore)
+target_link_libraries(OrbitService PRIVATE OrbitNoGl OrbitCore)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   # Administrator privileges
