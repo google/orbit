@@ -41,9 +41,6 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
 
   bool IsWebsocket() { return !web_socket_key_.empty(); }
   void ReadWebsocketHandshake();
-  void ReadWebsocketMask();
-  void ReadWebsocketPayload();
-  void DecodeWebsocketPayload();
   uint64_t GetNumBytesReceived() { return num_bytes_received_; }
 
   void ResetStats();
@@ -68,8 +65,6 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
   std::vector<char> payload_;
   asio::streambuf stream_buf_;
   std::string web_socket_key_;
-  unsigned int web_socket_payload_length_;
-  unsigned int web_socket_mask_;
   uint64_t num_bytes_received_;
 };
 
