@@ -1,14 +1,14 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.12)
 
-project(lzma C)
+project(lzma_sdk C)
 
-add_library(lzma STATIC)
+add_library(lzma_sdk STATIC)
 
-target_include_directories(lzma PUBLIC lzma/C/)
-target_compile_definitions(lzma PUBLIC -D_7ZIP_ST)
+target_include_directories(lzma_sdk PUBLIC lzma/C/)
+target_compile_definitions(lzma_sdk PUBLIC -D_7ZIP_ST)
 
 target_sources(
-  lzma
+  lzma_sdk
   PRIVATE lzma/C/7zAlloc.c
           lzma/C/7zArcIn.c
           lzma/C/7zBuf.c
@@ -46,5 +46,3 @@ target_sources(
           lzma/C/XzDec.c
           lzma/C/XzEnc.c
           lzma/C/XzIn.c)
-
-add_library(lzma::lzma ALIAS lzma)
