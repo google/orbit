@@ -587,10 +587,6 @@ void RuleEditor::OnReceiveMessage(const Message& a_Message) {
     int offset = 0;
     const char* maxAddress = a_Message.GetData() + a_Message.m_Size;
     for (const std::shared_ptr<Variable> var : rule->m_TrackedVariables) {
-      Argument arg;
-      var->m_Address;
-      var->m_Size;
-
       char* data = (char*)argData + offset;
       if (data + var->m_Size > maxAddress) {
         break;

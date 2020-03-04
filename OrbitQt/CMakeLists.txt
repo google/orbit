@@ -2,6 +2,8 @@ project(OrbitQt CXX)
 
 add_executable(OrbitQt)
 
+target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
+
 target_sources(
   OrbitQt
   PRIVATE licensedialog.h

@@ -14,7 +14,7 @@ class TimeGraph;
 class Track : public Pickable {
  public:
   Track();
-  ~Track() {}
+  virtual ~Track() = default;
 
   // Pickable
   void Draw(GlCanvas* a_Canvas, bool a_Picking) override;

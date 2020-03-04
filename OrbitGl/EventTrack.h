@@ -15,7 +15,6 @@ class TimeGraph;
 class EventTrack : public Pickable {
  public:
   EventTrack(TimeGraph* a_TimeGraph);
-  ~EventTrack() {}
 
   void Draw(GlCanvas* a_Canvas, bool a_Picking) override;
   void OnPick(int a_X, int a_Y) override;

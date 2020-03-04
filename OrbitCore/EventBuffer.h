@@ -85,11 +85,13 @@ class EventBuffer {
 };
 
 #ifdef __linux
-struct EventTracer {
+class EventTracer {
+ public:
   EventBuffer& GetEventBuffer() { return m_EventBuffer; }
   EventBuffer m_EventBuffer;
   void Start(uint32_t a_PID);
   void Stop();
+ private:
   std::shared_ptr<LinuxPerf> m_Perf;
   std::shared_ptr<LinuxTracingHandler> m_LinuxTracer;
 };
