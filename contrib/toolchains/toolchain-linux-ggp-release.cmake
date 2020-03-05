@@ -9,8 +9,3 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS
 set(VCPKG_TARGET_TRIPLET
     "x64-linux-ggp"
     CACHE STRING "vcpkg's target triplet" FORCE)
-
-include($ENV{GGP_SDK_PATH}/cmake/ggp.cmake)
-
-include(
-  ${CMAKE_CURRENT_LIST_DIR}/../external/vcpkg/scripts/buildsystems/vcpkg.cmake)

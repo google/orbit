@@ -42,7 +42,3 @@ add_compile_options(
   -Wstack-protector
   -fcolor-diagnostics
   -fno-omit-frame-pointer)
-
-include(
-  "${CMAKE_CURRENT_LIST_DIR}/../external/vcpkg/scripts/buildsystems/vcpkg.cmake"
-)
