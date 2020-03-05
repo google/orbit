@@ -187,7 +187,7 @@ else()
   target_link_libraries(
     OrbitCore
     PUBLIC OrbitLinuxTracing
-           unwindstack::unwindstack)
+           libunwindstack::libunwindstack)
 endif()
 
 target_compile_definitions(OrbitCore PUBLIC WIN32_LEAN_AND_MEAN)
