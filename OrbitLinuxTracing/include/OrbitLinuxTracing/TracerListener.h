@@ -13,8 +13,7 @@ class TracerListener {
   virtual void OnContextSwitchOut(
       const ContextSwitchOut& context_switch_out) = 0;
   virtual void OnCallstack(const Callstack& callstack) = 0;
-  virtual void OnFunctionBegin(const FunctionBegin& function_begin) = 0;
-  virtual void OnFunctionEnd(const FunctionEnd& function_end) = 0;
+  virtual void OnFunctionCall(const FunctionCall& function_call) = 0;
 };
 
 }  // namespace LinuxTracing

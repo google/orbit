@@ -15,10 +15,10 @@ class PerfEventVisitor {
   virtual void visit(ContextSwitchPerfEvent* event) {}
   virtual void visit(SystemWideContextSwitchPerfEvent* event) {}
   virtual void visit(StackSamplePerfEvent* event) {}
-  virtual void visit(UprobePerfEvent* event) {}
-  virtual void visit(UprobePerfEventWithStack* event) {}
-  virtual void visit(UretprobePerfEvent* event) {}
-  virtual void visit(UretprobePerfEventWithStack* event) {}
+  virtual void visit(UprobesPerfEvent* event) {}
+  virtual void visit(UprobesWithStackPerfEvent* event) {}
+  virtual void visit(UretprobesPerfEvent* event) {}
+  virtual void visit(UretprobesWithStackPerfEvent* event) {}
   virtual void visit(MapsPerfEvent* event) {}
 };
 

@@ -101,35 +101,13 @@ void LinuxTracingHandler::OnCallstack(
   core_app_->ProcessSamplingCallStack(callstack_event);
 }
 
-void LinuxTracingHandler::OnFunctionBegin(
-    const LinuxTracing::FunctionBegin& function_begin) {
-  auto& tid_timer_stack = tid_timer_stacks_[function_begin.GetTid()];
+void LinuxTracingHandler::OnFunctionCall(
+    const LinuxTracing::FunctionCall& function_call) {
   Timer timer;
-  timer.m_TID = function_begin.GetTid();
-  timer.m_Start = function_begin.GetTimestampNs();
-  timer.m_Depth = static_cast<uint8_t>(tid_timer_stack.size());
-  timer.m_FunctionAddress = function_begin.GetVirtualAddress();
-  tid_timer_stack.push(timer);
-}
-
-void LinuxTracingHandler::OnFunctionEnd(
-    const LinuxTracing::FunctionEnd& function_end) {
-  if (tid_timer_stacks_.count(function_end.GetTid()) > 0) {
-    auto& timer_stack = tid_timer_stacks_.at(function_end.GetTid());
-
-    // This is because we erase the stack for this thread as soon as it becomes
-    // empty.
-    assert(!timer_stack.empty());
-
-    if (!timer_stack.empty()) {
-      Timer timer = timer_stack.top();
-      timer_stack.pop();
-      if (timer_stack.empty()) {
-        tid_timer_stacks_.erase(function_end.GetTid());
-      }
-
-      timer.m_End = function_end.GetTimestampNs();
-      core_app_->ProcessTimer(timer, std::to_string(timer.m_FunctionAddress));
-    }
-  }
+  timer.m_TID = function_call.GetTid();
+  timer.m_Start = function_call.GetBeginTimestampNs();
+  timer.m_End = function_call.GetEndTimestampNs();
+  timer.m_Depth = static_cast<uint8_t>(function_call.GetDepth());
+  timer.m_FunctionAddress = function_call.GetVirtualAddress();
+  core_app_->ProcessTimer(timer, std::to_string(timer.m_FunctionAddress));
 }

@@ -228,7 +228,7 @@ class StackSamplePerfEvent : public SamplePerfEvent<perf_record_with_stack> {
 };
 
 template <typename perf_record_data_t>
-class AbstractUprobePerfEvent : public SamplePerfEvent<perf_record_data_t> {
+class AbstractUprobesPerfEvent : public SamplePerfEvent<perf_record_data_t> {
  public:
   const Function* GetFunction() const { return function_; }
   void SetFunction(const Function* function) { function_ = function; }
@@ -237,13 +237,13 @@ class AbstractUprobePerfEvent : public SamplePerfEvent<perf_record_data_t> {
   const Function* function_ = nullptr;
 };
 
-class UprobePerfEvent : public AbstractUprobePerfEvent<perf_empty_record> {
+class UprobesPerfEvent : public AbstractUprobesPerfEvent<perf_empty_record> {
  public:
   void accept(PerfEventVisitor* visitor) override;
 };
 
-class UprobePerfEventWithStack
-    : public AbstractUprobePerfEvent<perf_record_with_stack> {
+class UprobesWithStackPerfEvent
+    : public AbstractUprobesPerfEvent<perf_record_with_stack> {
  public:
   std::array<uint64_t, PERF_REG_X86_64_MAX> Registers() const {
     return perf_sample_regs_user_all_to_register_array(
@@ -256,13 +256,13 @@ class UprobePerfEventWithStack
   void accept(PerfEventVisitor* visitor) override;
 };
 
-class UretprobePerfEvent : public AbstractUprobePerfEvent<perf_empty_record> {
+class UretprobesPerfEvent : public AbstractUprobesPerfEvent<perf_empty_record> {
  public:
   void accept(PerfEventVisitor* visitor) override;
 };
 
-class UretprobePerfEventWithStack
-    : public AbstractUprobePerfEvent<perf_record_with_stack> {
+class UretprobesWithStackPerfEvent
+    : public AbstractUprobesPerfEvent<perf_record_with_stack> {
  public:
   std::array<uint64_t, PERF_REG_X86_64_MAX> Registers() const {
     return perf_sample_regs_user_all_to_register_array(
