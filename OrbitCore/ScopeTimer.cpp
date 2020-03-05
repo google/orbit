@@ -23,7 +23,7 @@ void Timer::Stop() {
   --CurrentDepth;
 }
 
-ScopeTimer::ScopeTimer(const char* a_Name) { m_Timer.Start(); }
+ScopeTimer::ScopeTimer(const char*) { m_Timer.Start(); }
 
 ScopeTimer::~ScopeTimer() { m_Timer.Stop(); }
 
@@ -65,7 +65,7 @@ LocalScopeTimer::~LocalScopeTimer() {
   }
 }
 
-void ConditionalScopeTimer::Start(const char* a_Name) {
+void ConditionalScopeTimer::Start(const char*) {
   m_Timer.Start();
   m_Active = true;
 }

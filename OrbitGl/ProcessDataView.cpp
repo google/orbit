@@ -80,7 +80,7 @@ std::wstring ProcessesDataView::GetValue(int row, int col) {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring ProcessesDataView::GetToolTip(int a_Row, int a_Column) {
+std::wstring ProcessesDataView::GetToolTip(int a_Row, int /*a_Column*/) {
   const Process& process = *GetProcess(a_Row);
   return s2ws(process.GetFullName());
 }

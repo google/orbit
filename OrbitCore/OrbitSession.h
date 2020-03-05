@@ -13,7 +13,7 @@ struct SessionModule {
   std::vector<std::wstring> m_WatchedVariables;
 
   template <class Archive>
-  void serialize(Archive& archive, uint32_t version) {
+  void serialize(Archive& archive, uint32_t /*version*/) {
     archive(CEREAL_NVP(m_Name), CEREAL_NVP(m_FunctionHashes),
             CEREAL_NVP(m_WatchedVariables));
   }

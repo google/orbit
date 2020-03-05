@@ -129,7 +129,7 @@ const char* Orbit_ImGui_GetClipboardText() {
   return nullptr;  // return glfwGetClipboardString(g_Window);
 }
 
-void Orbit_ImGui_SetClipboardText(const char* text) {
+void Orbit_ImGui_SetClipboardText(const char*) {
   // TODO
 }
 

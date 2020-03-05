@@ -176,6 +176,8 @@ void TypesDataView::ParallelFilter(const std::wstring& a_Filter) {
   for (int i : indicesSet) {
     m_Indices.push_back(i);
   }
+#else
+  UNUSED(a_Filter);
 #endif
 }
 

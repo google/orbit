@@ -340,6 +340,9 @@ std::vector<std::string> Path::ListFiles(
     } while (FindNextFileA(hFind, &data) != 0);
     FindClose(hFind);
   }
+#else
+  UNUSED(a_Dir);
+  UNUSED(a_Filter);
 #endif
 
   return files;

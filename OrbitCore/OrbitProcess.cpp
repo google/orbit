@@ -308,13 +308,16 @@ bool Process::LineInfoFromAddress(DWORD64 a_Address, LineInfo& o_LineInfo) {
   if (module && module->m_Pdb) {
     return module->m_Pdb->LineInfoFromAddress(a_Address, o_LineInfo);
   }
+#else
+  UNUSED(a_Address);
+  UNUSED(o_LineInfo);
 #endif
 
   return false;
 }
 
 //-----------------------------------------------------------------------------
-void Process::LoadSession(const Session& a_Session) {}
+void Process::LoadSession(const Session&) {}
 
 //-----------------------------------------------------------------------------
 void Process::SaveSession() {}
@@ -387,6 +390,8 @@ void Process::FindPdbs(const std::vector<std::string>& a_SearchLocations) {
       }
     }
   }
+#else
+  UNUSED(a_SearchLocations);
 #endif
 }
 
@@ -415,8 +420,8 @@ void Process::FillModuleDebugInfo(ModuleDebugInfo& a_ModuleDebugInfo) {
 
 //-----------------------------------------------------------------------------
 bool Process::IsElevated(HANDLE a_Process) {
-  bool fRet = false;
 #ifdef _WIN32
+  bool fRet = false;
   HANDLE hToken = NULL;
   if (OpenProcessToken(a_Process, TOKEN_QUERY, &hToken)) {
     TOKEN_ELEVATION Elevation;
@@ -429,9 +434,11 @@ bool Process::IsElevated(HANDLE a_Process) {
   if (hToken) {
     CloseHandle(hToken);
   }
-
-#endif
   return fRet;
+#else
+  UNUSED(a_Process);
+  return false;
+#endif
 }
 
 #ifdef _WIN32

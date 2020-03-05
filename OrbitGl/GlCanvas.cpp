@@ -118,8 +118,8 @@ void GlCanvas::Initialize() {
 }
 
 //-----------------------------------------------------------------------------
-void GlCanvas::MouseMoved(int a_X, int a_Y, bool a_Left, bool a_Right,
-                          bool a_Middle) {
+void GlCanvas::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
+                          bool /*a_Middle*/) {
   int mousex = a_X;
   int mousey = a_Y;
 

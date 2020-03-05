@@ -86,6 +86,8 @@ void Type::AddParent(IDiaSymbol* a_Parent) {
       }
     }
   }
+#else
+  UNUSED(a_Parent);
 #endif
 }
 
@@ -116,6 +118,8 @@ void Type::GenerateDiaHierarchy(IDiaSymbol* a_DiaSymbol) {
     Type& type = m_Pdb->GetTypeFromId(parent.m_TypeId);
     type.GenerateDiaHierarchy();
   }
+#else
+  UNUSED(a_DiaSymbol);
 #endif
 }
 
@@ -343,6 +347,9 @@ std::shared_ptr<Variable> Type::GenerateVariable(DWORD64 a_Address,
       var->AddChild(newMember);
     }
   }
+#else
+  UNUSED(a_Address);
+  UNUSED(a_Name);
 #endif
 
   return var;

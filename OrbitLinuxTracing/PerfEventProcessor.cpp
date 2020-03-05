@@ -8,7 +8,7 @@
 
 namespace LinuxTracing {
 
-void PerfEventProcessor::AddEvent(int origin_fd,
+void PerfEventProcessor::AddEvent(int /*origin_fd*/,
                                   std::unique_ptr<PerfEvent> event) {
 #ifndef NDEBUG
   if (last_processed_timestamp_ > 0 &&

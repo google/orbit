@@ -97,8 +97,8 @@ void CaptureWindow::UpdateWheelMomentum(float a_DeltaTime) {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool a_Right,
-                               bool a_Middle) {
+void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
+                               bool /*a_Middle*/) {
   int mousex = a_X;
   int mousey = a_Y;
 
@@ -304,6 +304,8 @@ void CaptureWindow::FindCode(DWORD64 address) {
           Format(L"code^%s^%i", lineInfo.m_File.c_str(), lineInfo.m_Line));
     }
   }
+#else
+  UNUSED(address);
 #endif
 }
 
@@ -584,7 +586,7 @@ std::vector<std::wstring> CaptureWindow::GetContextMenu() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::OnContextMenu(const std::wstring& a_Action,
-                                  int a_MenuIndex) {
+                                  int /*a_MenuIndex*/) {
   if (Capture::GSelectedTextBox) {
     if (a_Action == GOTO_SOURCE) {
       GOrbitApp->GoToCode(
@@ -641,7 +643,7 @@ void CaptureWindow::Draw() {
     Vec2 size(sizex, m_WorldHeight);
 
     std::string time = GetPrettyTime(micros * 0.001);
-    TextBox box(pos, size, time, &m_TextRenderer, Color(0, 128, 0, 128));
+    TextBox box(pos, size, time, Color(0, 128, 0, 128));
     box.SetTextY(m_SelectStop[1]);
     box.Draw(m_TextRenderer, -FLT_MAX, true, true);
   }

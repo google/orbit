@@ -302,7 +302,7 @@ float GCoeffWidth = 2.f;
 float GCoeffHeight = 3.f;
 
 //-----------------------------------------------------------
-void RuleEditorWindow::DrawPopup(ImVec2 pos, ImVec2 size, bool& isFocused) {
+void RuleEditorWindow::DrawPopup(ImVec2 pos, ImVec2 /*size*/, bool& isFocused) {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 
   ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar |
@@ -558,9 +558,8 @@ void RuleEditor::RenderUI() {
 }
 
 //-----------------------------------------------------------------------------
-void DemoPosition(const SavedContext32& a_Context, void* a_Data,
-                  int a_NumBytes) {
-  float* pos = (float*)a_Data;
+void DemoPosition(const SavedContext32&, void* a_Data, int /*a_NumBytes*/) {
+  float* pos = static_cast<float*>(a_Data);
   GCardContainer.Update("posX", pos[0]);
   GCardContainer.Update("posY", pos[1]);
 

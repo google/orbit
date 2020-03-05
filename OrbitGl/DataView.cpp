@@ -89,7 +89,7 @@ const std::wstring DV_COPY_SELECTION = L"Copy Selection";
 const std::wstring DV_EXPORT_TO_CSV = L"Export to CSV";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> DataView::GetContextMenu(int a_Index) {
+std::vector<std::wstring> DataView::GetContextMenu(int /*a_Index*/) {
   static std::vector<std::wstring> menu = {DV_COPY_SELECTION, DV_EXPORT_TO_CSV};
   return menu;
 }

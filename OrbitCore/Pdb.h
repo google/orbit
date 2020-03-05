@@ -160,13 +160,13 @@ class Pdb {
   bool LoadFunctions(const char* file_name);
   void Update() {}
   void AddFunction(Function& a_Function) { m_Functions.push_back(a_Function); }
-  void CheckOrbitFunction(Function& a_Function) {}
-  void AddType(const Type& a_Type) {}
-  void AddGlobal(const Variable& a_Global) {}
-  void PrintFunction(Function& a_Func) {}
-  void OnReceiveMessage(const Message& a_Msg) {}
-  void AddArgumentRegister(const std::string& a_Reg,
-                           const std::string& a_Function) {}
+  void CheckOrbitFunction(Function&) {}
+  void AddType(const Type&) {}
+  void AddGlobal(const Variable&) {}
+  void PrintFunction(Function&) {}
+  void OnReceiveMessage(const Message&) {}
+  void AddArgumentRegister(const std::string&,
+                           const std::string&) {}
 
   const std::string& GetName() const { return m_Name; }
   const std::string& GetFileName() const { return m_FileName; }
@@ -209,7 +209,7 @@ class Pdb {
   bool IsLoading() const { return m_IsLoading; }
 
   template <class Archive>
-  void serialize(Archive& ar, std::uint32_t const version) {}
+  void serialize(Archive&, uint32_t /*version*/) {}
 
   IDiaSymbol* GetDiaSymbolFromId(ULONG a_Id);
   void ProcessData();

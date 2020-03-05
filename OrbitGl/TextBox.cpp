@@ -24,8 +24,7 @@ TextBox::TextBox()
 
 //-----------------------------------------------------------------------------
 TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size,
-                 const std::string& a_Text, TextRenderer* a_Renderer,
-                 const Color& a_Color)
+                 const std::string& a_Text, const Color& a_Color)
     : m_Pos(a_Pos),
       m_Size(a_Size),
       m_Text(a_Text),
@@ -37,8 +36,7 @@ TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size,
 }
 
 //-----------------------------------------------------------------------------
-TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size,
-                 TextRenderer* a_Renderer, const Color& a_Color)
+TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size, const Color& a_Color)
     : m_Pos(a_Pos),
       m_Size(a_Size),
       m_Color(a_Color),

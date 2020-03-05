@@ -27,7 +27,7 @@ double GThreadUsageSamplePeriodMs = 200.0;
 
 //-----------------------------------------------------------------------------
 SamplingProfiler::SamplingProfiler(const std::shared_ptr<Process>& a_Process,
-                                   bool a_ETW) {
+                                   bool) {
   m_Process = a_Process;
   m_State = SamplingState::Idle;
 }
@@ -522,6 +522,8 @@ void SamplingProfiler::GetThreadCallstack(Thread* a_Thread) {
     frame.m_Callstack.m_ThreadId = a_Thread->m_TID;
     AddCallStack(frame.m_Callstack);
   }
+#else
+  UNUSED(a_Thread);
 #endif
 }
 

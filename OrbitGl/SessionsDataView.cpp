@@ -65,7 +65,7 @@ std::wstring SessionsDataView::GetValue(int row, int col) {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring SessionsDataView::GetToolTip(int a_Row, int a_Column) {
+std::wstring SessionsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
   const Session& session = *GetSession(a_Row);
   return s2ws(session.m_FileName);
 }
