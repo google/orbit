@@ -47,8 +47,8 @@ void TracerThread::Run(
         fds_to_ring_buffer.emplace(uprobe_fd, PerfEventRingBuffer{uprobe_fd});
         uprobe_fds_to_function.emplace(uprobe_fd, &function);
 
-        int uretprobe_fd = uretprobe_stack_event_open(
-            function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
+        int uretprobe_fd = uretprobe_event_open(function.BinaryPath().c_str(),
+                                                function.FileOffset(), -1, cpu);
         fds_to_ring_buffer.emplace(uretprobe_fd,
                                    PerfEventRingBuffer{uretprobe_fd});
         uretprobe_fds_to_function.emplace(uretprobe_fd, &function);
@@ -236,12 +236,10 @@ void TracerThread::Run(
 
             } else if (is_uretprobes) {
               auto sample =
-                  ring_buffer.ConsumeRecord<UretprobesWithStackPerfEvent>(
-                      header);
+                  ring_buffer.ConsumeRecord<UretprobesPerfEvent>(header);
               sample.SetFunction(uretprobe_fds_to_function.at(fd));
               uprobes_event_processor.AddEvent(
-                  fd, std::make_unique<UretprobesWithStackPerfEvent>(
-                          std::move(sample)));
+                  fd, std::make_unique<UretprobesPerfEvent>(std::move(sample)));
 
               ++uprobes_count;
 
