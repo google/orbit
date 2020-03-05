@@ -71,6 +71,7 @@ class UprobesCallstackManager {
       pid_t tid, const std::vector<unwindstack::FrameData>& callstack);
   std::vector<unwindstack::FrameData> ProcessUretprobesCallstack(
       pid_t tid, const std::vector<unwindstack::FrameData>& callstack);
+  void ProcessUretprobesWithoutCallstack(pid_t tid);
 
  private:
   // This map keeps, for every thread, the stack of callstacks collected when
@@ -101,6 +102,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
 
   void visit(StackSamplePerfEvent* event) override;
   void visit(UprobesWithStackPerfEvent* event) override;
+  void visit(UretprobesPerfEvent* event) override;
   void visit(UretprobesWithStackPerfEvent* event) override;
   void visit(MapsPerfEvent* event) override;
 

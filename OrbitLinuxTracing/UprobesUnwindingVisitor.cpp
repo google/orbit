@@ -134,6 +134,17 @@ UprobesCallstackManager::ProcessUretprobesCallstack(
   return full_callstack;
 }
 
+void UprobesCallstackManager::ProcessUretprobesWithoutCallstack(pid_t tid) {
+  std::vector<std::vector<unwindstack::FrameData>>& previous_callstacks =
+      tid_uprobes_callstacks_stacks_[tid];
+  if (!previous_callstacks.empty()) {
+    previous_callstacks.pop_back();
+  }
+  if (previous_callstacks.empty()) {
+    tid_uprobes_callstacks_stacks_.erase(tid);
+  }
+}
+
 void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   const std::vector<unwindstack::FrameData>& callstack = unwinder_.Unwind(
       event->Registers(), event->StackDump(), event->StackSize());
@@ -169,6 +180,19 @@ void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
       listener_->OnCallstack(returned_callstack);
     }
   }
+}
+
+void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
+  std::optional<FunctionCall> function_call =
+      function_call_manager_.ProcessUretprobes(event->TID(),
+                                               event->Timestamp());
+  if (function_call.has_value()) {
+    if (listener_ != nullptr) {
+      listener_->OnFunctionCall(function_call.value());
+    }
+  }
+
+  callstack_manager_.ProcessUretprobesWithoutCallstack(event->TID());
 }
 
 void UprobesUnwindingVisitor::visit(UretprobesWithStackPerfEvent* event) {
