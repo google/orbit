@@ -6,6 +6,7 @@
 #include <fstream>
 #include <thread>
 
+#include "Logging.h"
 #include "absl/strings/str_format.h"
 
 namespace LinuxTracing {
