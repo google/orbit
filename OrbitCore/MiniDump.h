@@ -15,7 +15,7 @@ class Process;
 //-----------------------------------------------------------------------------
 class MiniDump {
  public:
-  MiniDump(std::wstring a_FileName);
+  MiniDump(const std::wstring& a_FileName);
   ~MiniDump();
 
   std::shared_ptr<Process> ToOrbitProcess();

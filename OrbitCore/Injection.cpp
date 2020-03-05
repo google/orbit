@@ -744,12 +744,12 @@ GRPA_FAIL_JMP:
 #else
 
 Injection::Injection() {}
-bool Injection::Inject(const std::string& a_DllName, const Process& a_Process,
-                       const std::string& ProcName) {
+bool Injection::Inject(const std::string& /*dll_name*/, const Process&,
+                       const std::string& /*proc_name*/) {
   return false;
 }
-HANDLE Injection::GetTargetProcessHandle(const std::string& a_Target,
-                                         DWORD& o_ProcessID) {
+HANDLE Injection::GetTargetProcessHandle(const std::string& /*a_Target*/,
+                                         DWORD& /*o_ProcessID*/) {
   return 0;
 }
 

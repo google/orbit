@@ -30,7 +30,7 @@ class ProcessesDataView : public DataView {
   }
   void Refresh();
   void UpdateModuleDataView(std::shared_ptr<Process> a_Process);
-  void SetIsRemote(bool a_Value) { m_IsRemote = true; }
+  void SetIsRemote(bool a_Value) { m_IsRemote = a_Value; }
 
   std::shared_ptr<Process> GetSelectedProcess() const {
     return m_SelectedProcess;

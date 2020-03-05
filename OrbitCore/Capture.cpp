@@ -461,7 +461,7 @@ void Capture::DisplayStats() {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::OpenCapture(const std::string& a_CaptureName) {
+void Capture::OpenCapture(const std::string&) {
   LocalScopeTimer Timer(&GOpenCaptureTime);
   SCOPE_TIMER_LOG("OpenCapture");
 

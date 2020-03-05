@@ -22,8 +22,8 @@
 std::unique_ptr<TcpClient> GTcpClient;
 
 #ifdef __linux__
-inline bool IsBadWritePtr(void* addr, int) { return false; }
-inline bool IsBadReadPtr(void* addr, int) { return false; }
+inline bool IsBadWritePtr(void*, int) { return false; }
+inline bool IsBadReadPtr(void*, int) { return false; }
 #endif
 
 //-----------------------------------------------------------------------------
@@ -98,8 +98,7 @@ void TcpClient::ClientThread() {
 void TcpClient::ReadMessage() {
   asio::async_read(
       *m_TcpSocket->m_Socket, asio::buffer(&m_Message, sizeof(Message)),
-
-      [this](const asio::error_code& ec, std::size_t ReadMessageLength) {
+      [this](const asio::error_code& ec, size_t) {
         if (!ec) {
           ReadPayload();
         } else {

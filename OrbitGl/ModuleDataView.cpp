@@ -240,7 +240,8 @@ const std::shared_ptr<Module>& ModulesDataView::GetModule(
 }
 
 //-----------------------------------------------------------------------------
-bool ModulesDataView::GetDisplayColor(int a_Row, int a_Column, unsigned char& r,
+bool ModulesDataView::GetDisplayColor(int a_Row, int /*a_Column*/,
+                                      unsigned char& r,
                                       unsigned char& g, unsigned char& b) {
   if (GetModule(a_Row)->GetLoaded()) {
     static unsigned char R = 42;

@@ -88,7 +88,8 @@ bool ProcessUtils::Is64Bit(HANDLE hProcess) {
       return true;
     }
   }
-
+#else
+  UNUSED(hProcess);
 #endif
   return false;
 }

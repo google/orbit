@@ -17,7 +17,7 @@
 using namespace google_breakpad;
 
 //-----------------------------------------------------------------------------
-MiniDump::MiniDump(std::wstring a_FileName) {
+MiniDump::MiniDump(const std::wstring& a_FileName) {
   m_MiniDump = new google_breakpad::Minidump(ws2s(a_FileName));
   m_MiniDump->Read();
 }
@@ -69,7 +69,7 @@ std::shared_ptr<Process> MiniDump::ToOrbitProcess() {
 
 #else
 
-MiniDump::MiniDump(std::wstring a_FileName) {}
+MiniDump::MiniDump(const std::wstring&) {}
 MiniDump::~MiniDump() {}
 std::shared_ptr<Process> MiniDump::ToOrbitProcess() { return nullptr; }
 

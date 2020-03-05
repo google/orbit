@@ -175,6 +175,9 @@ void GetDesktopResolution(int& horizontal, int& vertical) {
   // (horizontal, vertical)
   horizontal = desktop.right;
   vertical = desktop.bottom;
+#else
+  UNUSED(horizontal);
+  UNUSED(vertical);
 #endif
 }
 
@@ -184,8 +187,7 @@ void GLoadPdbAsync(const std::vector<std::string>& a_Modules) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::ProcessTimer(const Timer& a_Timer,
-                            const std::string& a_FunctionName) {
+void OrbitApp::ProcessTimer(const Timer& a_Timer, const std::string&) {
   CHECK(!ConnectionManager::Get().IsService());
 #ifndef NOGL
   GCurrentTimeGraph->ProcessTimer(a_Timer);
@@ -534,6 +536,8 @@ void OrbitApp::AddWatchedVariable(Variable* a_Variable) {
   for (WatchCallback& callback : m_AddToWatchCallbacks) {
     callback(a_Variable);
   }
+#else
+  UNUSED(a_Variable);
 #endif
 }
 
@@ -567,6 +571,11 @@ void OrbitApp::Disassemble(const std::string& a_FunctionName,
   disasm.Disassemble(code, a_Size, a_VirtualAddress,
                      Capture::GTargetProcess->GetIs64Bit());
   SendToUiAsync(disasm.GetResult());
+#else
+  UNUSED(a_FunctionName);
+  UNUSED(a_VirtualAddress);
+  UNUSED(a_MachineCode);
+  UNUSED(a_Size);
 #endif
 }
 
@@ -827,6 +836,10 @@ void OrbitApp::OnLaunchProcess(const std::string& process_name,
                                const std::string& args) {
 #ifdef _WIN32
   m_Debugger->LaunchProcess(process_name, working_dir, args);
+#else
+  UNUSED(process_name);
+  UNUSED(working_dir);
+  UNUSED(args);
 #endif
 }
 

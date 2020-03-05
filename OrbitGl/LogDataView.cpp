@@ -76,7 +76,7 @@ std::wstring LogDataView::GetValue(int a_Row, int a_Column) {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring LogDataView::GetToolTip(int a_Row, int a_Column) {
+std::wstring LogDataView::GetToolTip(int /*row*/, int /*column*/) {
   return std::wstring();
 }
 

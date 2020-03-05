@@ -60,7 +60,7 @@ GlPanel::~GlPanel() {}
 void GlPanel::Initialize() {}
 
 //-----------------------------------------------------------------------------
-void GlPanel::Resize(int a_Width, int a_Height) {}
+void GlPanel::Resize(int /*a_Width*/, int /*a_Height*/) {}
 
 //-----------------------------------------------------------------------------
-void GlPanel::Render(int a_Width, int a_Height) {}
+void GlPanel::Render(int /*a_Width*/, int /*a_Height*/) {}

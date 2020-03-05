@@ -104,8 +104,8 @@ void HomeWindow::RenderUI() {
 void HomeWindow::RenderProcessUI() {}
 
 //-----------------------------------------------------------------------------
-void HomeWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
-                            bool a_Alt) {
+void HomeWindow::KeyPressed(unsigned int a_KeyCode, bool /*a_Ctrl*/,
+                            bool a_Shift, bool a_Alt) {
   ScopeImguiContext state(m_ImGuiContext);
 
   if (!m_ImguiActive) {

@@ -162,7 +162,7 @@ void TextRenderer::DrawOutline(vertex_buffer_t* a_Buffer) {
 //-----------------------------------------------------------------------------
 void TextRenderer::AddTextInternal(texture_font_t* font, const char* text,
                                    const vec4& color, vec2* pen,
-                                   float a_MaxSize, float a_Z, bool a_Static) {
+                                   float a_MaxSize, float a_Z, bool) {
   size_t i;
   float r = color.red, g = color.green, b = color.blue, a = color.alpha;
   float textZ = a_Z;

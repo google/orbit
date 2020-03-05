@@ -61,7 +61,7 @@ class CounterStreamBuffer : public std::streambuf {
   void Reset() { m_Size = 0; }
 
  private:
-  int_type overflow(int_type C) { return m_Size++; }
+  int_type overflow(int_type) { return m_Size++; }
   int_type m_Size = 0;
 };
 extern CounterStreamBuffer GStreamCounter;

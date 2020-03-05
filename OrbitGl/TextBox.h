@@ -13,12 +13,9 @@ class TextBox {
  public:
   TextBox();
   TextBox(const Vec2& a_Pos, const Vec2& a_Size, const std::string& a_Text,
-          TextRenderer* a_Renderer,
           const Color& a_Color = Color(128, 128, 128, 128));
 
-  TextBox(const Vec2& a_Pos, const Vec2& a_Size, TextRenderer* a_Renderer,
-          const Color& a_Color = Color(128, 128, 128, 128));
-
+  TextBox(const Vec2& a_Pos, const Vec2& a_Size, const Color& a_Color);
   TextBox(const Vec2& a_Pos, const Vec2& a_Size);
 
   ~TextBox();

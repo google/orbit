@@ -35,7 +35,7 @@ std::map<int, std::string>& Card::GetTypeMap() {
 }
 
 //-----------------------------------------------------------------------------
-void Card::Draw(GlCanvas* a_Canvas) {
+void Card::Draw(GlCanvas*) {
   if (!m_Active) return;
 
   glColor4ub(m_Color[0], m_Color[1], m_Color[2], m_Color[3]);
@@ -48,7 +48,7 @@ void Card::Draw(GlCanvas* a_Canvas) {
 }
 
 //-----------------------------------------------------------------------------
-void Card::DrawImGui(GlCanvas* a_Canvas) {}
+void Card::DrawImGui(GlCanvas*) {}
 
 //-----------------------------------------------------------------------------
 CardContainer::CardContainer() {}
@@ -75,13 +75,13 @@ void CardContainer::Update(const std::string& a_Name, float a_Value) {
 }
 
 //-----------------------------------------------------------------------------
-void CardContainer::Update(const std::string& a_Name, double a_Value) {
+void CardContainer::Update(const std::string& /*a_Name*/, double /*a_Value*/) {
   ScopeLock lock(m_Mutex);
   // m_DoubleCards[a_Name].Update(a_Value);
 }
 
 //-----------------------------------------------------------------------------
-void CardContainer::Update(const std::string& a_Name, int a_Value) {
+void CardContainer::Update(const std::string& /*a_Name*/, int /*a_Value*/) {
   ScopeLock lock(m_Mutex);
   // m_IntCards[a_Name].Update(a_Value);
 }
@@ -152,7 +152,7 @@ void FloatGraphCard::Draw(GlCanvas* a_Canvas) {
 }
 
 //-----------------------------------------------------------------------------
-void FloatGraphCard::DrawImGui(GlCanvas* a_Canvas) {
+void FloatGraphCard::DrawImGui(GlCanvas*) {
   UpdateMinMax();
 
   bool p_opened = true;
@@ -186,7 +186,7 @@ void FloatGraphCard::UpdateMinMax() {
 }
 
 //-----------------------------------------------------------------------------
-void Vector2DGraphCard::DrawImGui(GlCanvas* a_Canvas) {
+void Vector2DGraphCard::DrawImGui(GlCanvas*) {
   m_Min = ImVec2(FLT_MAX, FLT_MAX);
   m_Max = ImVec2(-FLT_MAX, -FLT_MAX);
   for (ImVec2 p : m_Points) {

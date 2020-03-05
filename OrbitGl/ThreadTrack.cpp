@@ -46,8 +46,7 @@ void ThreadTrack::OnDrag(int a_X, int a_Y) { Track::OnDrag(a_X, a_Y); }
 //-----------------------------------------------------------------------------
 void ThreadTrack::OnTimer(const Timer& a_Timer) {
   UpdateDepth(a_Timer.m_Depth + 1);
-  TextBox textBox(Vec2(0, 0), Vec2(0, 0), "", m_TextRenderer,
-                  Color(255, 0, 0, 255));
+  TextBox textBox(Vec2(0, 0), Vec2(0, 0), "", Color(255, 0, 0, 255));
   textBox.SetTimer(a_Timer);
 
   std::shared_ptr<TimerChain> timerChain = m_Timers[a_Timer.m_Depth];
