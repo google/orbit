@@ -2,27 +2,20 @@ cmake_minimum_required(VERSION 3.15)
 
 project(unwindstack CXX C ASM)
 
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(TARGETS)
+
 add_library(unwindstack STATIC)
 
 set(ANDROID_CORE_ROOT "${CMAKE_CURRENT_LIST_DIR}/android-core")
 set(UNWINDSTACK_ROOT "${ANDROID_CORE_ROOT}/libunwindstack")
 set(ANDROID_BASE_ROOT "${ANDROID_CORE_ROOT}/base")
 
-# Contains Android's or libunwindstack's files that we want to replace because
-# they cause building issues on gamelets or that would cause too many additional
-# Android dependencies.
-target_include_directories(unwindstack PUBLIC overrides/)
-
-# set_source_files_properties(ASM_GET_REGS
-# ${UNWINDSTACK_ROOT}/AsmGetRegsX86_64.S PROPERTIES COMPILE_FLAGS "-x assembler-
-# with-cpp") set(CMAKE_ASM_FLAGS "${CFLAGS} -x assembler-with-cpp")
-
 target_include_directories(
   unwindstack
   PUBLIC ${UNWINDSTACK_ROOT}/include
          ${ANDROID_BASE_ROOT}/include
          ${ANDROID_CORE_ROOT}/include
-         #${ANDROID_CORE_ROOT}/demangle/include
          ${ANDROID_CORE_ROOT}/liblog/include
          ${ANDROID_CORE_ROOT}/libprocinfo/include)
 
@@ -40,8 +33,7 @@ target_sources(
           # ${ANDROID_BASE_ROOT}/liblog_symbols.cpp
           # ${ANDROID_BASE_ROOT}/logging.cpp
           ${ANDROID_BASE_ROOT}/stringprintf.cpp
-          # ${ANDROID_BASE_ROOT}/strings.cpp
-          overrides/strings.cpp
+          ${ANDROID_BASE_ROOT}/strings.cpp
           ${ANDROID_BASE_ROOT}/threads.cpp
           # ${ANDROID_CORE_ROOT}/liblog/properties.cpp
           ${UNWINDSTACK_ROOT}/ArmExidx.cpp
@@ -49,8 +41,7 @@ target_sources(
           ${UNWINDSTACK_ROOT}/DwarfEhFrameWithHdr.cpp
           ${UNWINDSTACK_ROOT}/DwarfMemory.cpp
           ${UNWINDSTACK_ROOT}/DwarfOp.cpp
-          # ${UNWINDSTACK_ROOT}/DwarfSection.cpp
-          overrides/DwarfSection.cpp
+          ${UNWINDSTACK_ROOT}/DwarfSection.cpp
           ${UNWINDSTACK_ROOT}/Elf.cpp
           ${UNWINDSTACK_ROOT}/ElfInterface.cpp
           ${UNWINDSTACK_ROOT}/ElfInterfaceArm.cpp
@@ -78,5 +69,6 @@ elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES x86)
   target_sources(unwindstack PRIVATE ${UNWINDSTACK_ROOT}/AsmGetRegsX86.S)
 endif()
 
-target_link_libraries(unwindstack PRIVATE lzma_sdk::lzma_sdk)
-add_library(unwindstack::unwindstack ALIAS unwindstack)
+target_link_libraries(unwindstack PRIVATE CONAN_PKG::lzma_sdk)
+
+target_compile_features(unwindstack PUBLIC cxx_std_17)

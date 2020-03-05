@@ -1,3 +1,0 @@
-[submodule "external/libunwindstack/android-core"]
-	path = external/libunwindstack/android-core
-	url = https://android.googlesource.com/platform/system/core.git
