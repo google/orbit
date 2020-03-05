@@ -11,7 +11,7 @@ struct ContextSwitch;
 class CaptureWindow : public GlCanvas {
  public:
   CaptureWindow();
-  virtual ~CaptureWindow();
+  ~CaptureWindow() override;
 
   void ZoomAll();
   void Zoom(int a_Delta);
@@ -59,8 +59,8 @@ class CaptureWindow : public GlCanvas {
   void ToggleSampling();
   void OnCaptureStarted();
   float GetTopBarTextY();
-  virtual std::vector<std::wstring> GetContextMenu();
-  virtual void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex);
+  std::vector<std::wstring> GetContextMenu() override;
+  void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex) override;
   void UpdateVerticalSlider();
   void SendProcess();
 

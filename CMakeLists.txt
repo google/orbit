@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.15)
 
 if(NOT WIN32)
   # These flags do not work on Windows.
-  set(STRICT_COMPILE_FLAGS -Werror=all)
+  set(STRICT_COMPILE_FLAGS -Werror=all
+                           -Werror=inconsistent-missing-override
+                           -Werror=float-conversion)
 endif()
 
 project(Orbit C CXX)

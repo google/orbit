@@ -46,7 +46,7 @@ inline void SetCurrentThreadName(const wchar_t*) {}
 #define TEXT(x) L##x
 #define USHORT unsigned short
 #define UCHAR unsigned char
-inline void Sleep(int millis) { usleep((float)millis * 1000.f); }
+inline void Sleep(int millis) { usleep(millis * 1000); }
 
 inline pid_t GetCurrentThreadId() {
   thread_local pid_t current_tid = syscall(__NR_gettid);

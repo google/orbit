@@ -11,22 +11,22 @@ class ModulesDataView : public DataView {
  public:
   ModulesDataView();
 
-  virtual const std::vector<std::wstring>& GetColumnHeaders() override;
-  virtual const std::vector<float>& GetColumnHeadersRatios() override;
-  virtual std::vector<std::wstring> GetContextMenu(int a_Index) override;
-  virtual std::wstring GetValue(int a_Row, int a_Column) override;
+  const std::vector<std::wstring>& GetColumnHeaders() override;
+  const std::vector<float>& GetColumnHeadersRatios() override;
+  std::vector<std::wstring> GetContextMenu(int a_Index) override;
+  std::wstring GetValue(int a_Row, int a_Column) override;
   ;
 
-  virtual void OnFilter(const std::wstring& a_Filter) override;
-  virtual void OnSort(int a_Column, bool a_Toggle = true) override;
-  virtual void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
-                             std::vector<int>& a_ItemIndices) override;
-  virtual void OnTimer() override;
-  virtual bool WantsDisplayColor() override { return true; }
-  virtual bool GetDisplayColor(int /*a_Row*/, int /*a_Column*/,
-                               unsigned char& /*r*/, unsigned char& /*g*/,
-                               unsigned char& /*b*/);
-  virtual std::wstring GetLabel() override { return L"Modules"; }
+  void OnFilter(const std::wstring& a_Filter) override;
+  void OnSort(int a_Column, bool a_Toggle = true) override;
+  void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
+                     std::vector<int>& a_ItemIndices) override;
+  void OnTimer() override;
+  bool WantsDisplayColor() override { return true; }
+  bool GetDisplayColor(int /*a_Row*/, int /*a_Column*/,
+                       unsigned char& /*r*/, unsigned char& /*g*/,
+                       unsigned char& /*b*/) override;
+  std::wstring GetLabel() override { return L"Modules"; }
 
   void SetProcess(std::shared_ptr<Process> a_Process);
 

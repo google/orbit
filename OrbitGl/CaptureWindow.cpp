@@ -427,7 +427,8 @@ void CaptureWindow::Zoom(int a_Delta) {
 void CaptureWindow::Pan(float a_Ratio) {
   double refTime =
       (TickType)m_TimeGraph.GetTime((double)m_MousePosX / (double)getWidth());
-  m_TimeGraph.PanTime(m_MousePosX, m_MousePosX + a_Ratio * getWidth(),
+  m_TimeGraph.PanTime(m_MousePosX,
+                      m_MousePosX + static_cast<int>(a_Ratio * getWidth()),
                       getWidth(), refTime);
   UpdateSceneBox();
   NeedsUpdate();
@@ -693,7 +694,8 @@ void CaptureWindow::DrawScreenSpace() {
     double width = stop - start;
     double maxStart = timeSpan - width;
     double ratio =
-        Capture::IsCapturing() ? 1.0 : maxStart ? start / maxStart : 0.0;
+        Capture::IsCapturing() ? 1 :
+          (maxStart != 0 ? start / maxStart : 0);
 
     m_Slider.SetSliderRatio((float)ratio);
     m_Slider.SetSliderWidthRatio(float(width / timeSpan));

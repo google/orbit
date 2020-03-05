@@ -14,11 +14,11 @@
 class GlCanvas : public GlPanel {
  public:
   GlCanvas();
-  virtual ~GlCanvas();
+  ~GlCanvas() override;
 
-  virtual void Initialize();
-  virtual void Resize(int a_Width, int a_Height);
-  virtual void Render(int a_Width, int a_Height);
+  void Initialize() override;
+  void Resize(int a_Width, int a_Height) override;
+  void Render(int a_Width, int a_Height) override;
   virtual void PostRender() {}
 
   int getWidth() const;
@@ -37,20 +37,20 @@ class GlCanvas : public GlPanel {
   float ScreenToworldWidth(int a_Width) const;
 
   // events
-  virtual void MouseMoved(int a_X, int a_Y, bool a_Left, bool a_Right,
-                          bool a_Middle);
-  virtual void LeftDown(int a_X, int a_Y);
-  virtual void MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl);
-  virtual void LeftUp();
-  virtual void LeftDoubleClick();
-  virtual void RightDown(int a_X, int a_Y);
-  virtual bool RightUp();
+  void MouseMoved(int a_X, int a_Y, bool a_Left, bool a_Right,
+                  bool a_Middle) override;
+  void LeftDown(int a_X, int a_Y) override;
+  void MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) override;
+  void LeftUp() override;
+  void LeftDoubleClick() override;
+  void RightDown(int a_X, int a_Y) override;
+  bool RightUp() override;
   virtual void mouseLeftWindow();
-  virtual void CharEvent(unsigned int a_Char);
-  virtual void KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
-                          bool a_Alt);
-  virtual void KeyReleased(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
-                           bool a_Alt);
+  void CharEvent(unsigned int a_Char) override;
+  void KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
+                  bool a_Alt) override;
+  void KeyReleased(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
+                   bool a_Alt) override;
   virtual void UpdateSpecialKeys(bool a_Ctrl, bool a_Shift, bool a_Alt);
   virtual bool ControlPressed();
   virtual bool ShiftPressed();
