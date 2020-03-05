@@ -8,7 +8,7 @@
 class GlPanel {
  public:
   GlPanel();
-  ~GlPanel();
+  virtual ~GlPanel();
 
   enum Type { CAPTURE, IMMEDIATE, VISUALIZE, RULE_EDITOR, PLUGIN, DEBUG };
 

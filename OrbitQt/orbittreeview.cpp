@@ -154,7 +154,8 @@ void OrbitTreeView::resizeEvent(QResizeEvent* event) {
     for (size_t i = 0; i < columnRatios.size(); ++i) {
       float ratio = columnRatios[i];
       if (ratio > 0.f) {
-        header()->resizeSection((int)i, headerSize.width() * ratio);
+        header()->resizeSection(i,
+                                static_cast<int>(headerSize.width() * ratio));
       }
     }
   }

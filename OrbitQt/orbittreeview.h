@@ -13,7 +13,7 @@ class OrbitTreeView : public QTreeView {
   Q_OBJECT
  public:
   explicit OrbitTreeView(QWidget* parent = 0);
-  virtual ~OrbitTreeView();
+  ~OrbitTreeView() override;
   void Initialize(DataViewType a_Type);
   void SetDataModel(std::shared_ptr<DataView> a_Model);
   void OnFilter(const QString& a_Filter);
@@ -21,14 +21,14 @@ class OrbitTreeView : public QTreeView {
   void Refresh();
   void Link(OrbitTreeView* a_Link);
   void SetGlWidget(OrbitGLWidget* a_Link);
-  void resizeEvent(QResizeEvent* event);
-  void keyPressEvent(QKeyEvent* event);
+  void resizeEvent(QResizeEvent* event) override;
+  void keyPressEvent(QKeyEvent* event) override;
   OrbitTableModel* GetModel() { return m_Model; }
   std::wstring GetLabel();
 
  protected:
-  virtual void drawRow(QPainter* painter, const QStyleOptionViewItem& options,
-                       const QModelIndex& index) const override;
+  void drawRow(QPainter* painter, const QStyleOptionViewItem& options,
+               const QModelIndex& index) const override;
   void SetLabel();
 
  signals:

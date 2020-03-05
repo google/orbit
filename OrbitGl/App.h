@@ -50,8 +50,8 @@ class OrbitApp : public CoreApp {
   void Inject(const std::string& file_name);
   virtual void StartCapture();
   virtual void StopCapture();
-  virtual void StartRemoteCaptureBufferingThread();
-  virtual void StopRemoteCaptureBufferingThread();
+  void StartRemoteCaptureBufferingThread() override;
+  void StopRemoteCaptureBufferingThread() override;
   void ToggleCapture();
   void OnDisconnect();
   void OnPdbLoaded();
@@ -70,17 +70,17 @@ class OrbitApp : public CoreApp {
   void UpdateVariable(Variable* a_Variable) override;
   void ClearWatchedVariables();
   void RefreshWatch();
-  virtual void Disassemble(const std::string& a_FunctionName,
+  void Disassemble(const std::string& a_FunctionName,
                            DWORD64 a_VirtualAddress, const char* a_MachineCode,
-                           size_t a_Size);
-  virtual void ProcessTimer(const Timer& a_Timer,
-                            const std::string& a_FunctionName);
-  virtual void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack);
-  virtual void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack);
-  virtual void ProcessCallStack(CallStack& a_CallStack);
-  virtual void ProcessContextSwitch(const ContextSwitch& a_ContextSwitch);
-  virtual void AddSymbol(uint64_t a_Address, const std::string& a_Module,
-                         const std::string& a_Name);
+                           size_t a_Size) override;
+  void ProcessTimer(const Timer& a_Timer,
+                    const std::string& a_FunctionName) override;
+  void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) override;
+  void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) override;
+  void ProcessCallStack(CallStack& a_CallStack) override;
+  void ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) override;
+  void AddSymbol(uint64_t a_Address, const std::string& a_Module,
+                 const std::string& a_Name) override;
   void ProcessBufferedCaptureData();
 
   int* GetScreenRes() { return m_ScreenRes; }
@@ -180,16 +180,16 @@ class OrbitApp : public CoreApp {
   bool GetTrackContextSwitches();
 
   void EnableUnrealSupport(bool a_Value);
-  virtual bool GetUnrealSupportEnabled() override;
+  bool GetUnrealSupportEnabled() override;
 
   void EnableSampling(bool a_Value);
-  virtual bool GetSamplingEnabled() override;
+  bool GetSamplingEnabled() override;
 
   void EnableUnsafeHooking(bool a_Value);
-  virtual bool GetUnsafeHookingEnabled() override;
+  bool GetUnsafeHookingEnabled() override;
 
   void EnableOutputDebugString(bool a_Value);
-  virtual bool GetOutputDebugStringEnabled() override;
+  bool GetOutputDebugStringEnabled() override;
 
   void RequestThaw() { m_NeedsThawing = true; }
   void OnMiniDump(const Message& a_Message);
@@ -204,8 +204,8 @@ class OrbitApp : public CoreApp {
   bool HasTcpServer() const { return !IsRemote(); }
 
   RuleEditor* GetRuleEditor() { return m_RuleEditor; }
-  virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*
-  GetRules();
+  const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >* GetRules()
+      override;
 
  private:
   std::vector<std::string> m_Arguments;
