@@ -35,7 +35,3 @@ add_compile_options(
   -Wdisabled-optimization
   -Wstack-protector
   -fno-omit-frame-pointer)
-
-include(
-  "${CMAKE_CURRENT_LIST_DIR}/../external/vcpkg/scripts/buildsystems/vcpkg.cmake"
-)
