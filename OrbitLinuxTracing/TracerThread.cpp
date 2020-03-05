@@ -226,21 +226,21 @@ void TracerThread::Run(
           case PERF_RECORD_SAMPLE: {
             if (is_uprobes) {
               auto sample =
-                  ring_buffer.ConsumeRecord<UprobePerfEventWithStack>(header);
+                  ring_buffer.ConsumeRecord<UprobesWithStackPerfEvent>(header);
               sample.SetFunction(uprobe_fds_to_function.at(fd));
               uprobes_event_processor.AddEvent(
-                  fd, std::make_unique<UprobePerfEventWithStack>(
+                  fd, std::make_unique<UprobesWithStackPerfEvent>(
                           std::move(sample)));
 
               ++uprobes_count;
 
             } else if (is_uretprobes) {
               auto sample =
-                  ring_buffer.ConsumeRecord<UretprobePerfEventWithStack>(
+                  ring_buffer.ConsumeRecord<UretprobesWithStackPerfEvent>(
                       header);
               sample.SetFunction(uretprobe_fds_to_function.at(fd));
               uprobes_event_processor.AddEvent(
-                  fd, std::make_unique<UretprobePerfEventWithStack>(
+                  fd, std::make_unique<UretprobesWithStackPerfEvent>(
                           std::move(sample)));
 
               ++uprobes_count;

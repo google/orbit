@@ -1,7 +1,10 @@
 #ifndef ORBIT_LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_
 #define ORBIT_LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_
 
+#include <OrbitLinuxTracing/Events.h>
 #include <OrbitLinuxTracing/TracerListener.h>
+
+#include <stack>
 
 #include "LibunwindstackUnwinder.h"
 #include "PerfEvent.h"
@@ -23,6 +26,34 @@ namespace LinuxTracing {
 // of instrumented functions. When we have a callstack broken because of
 // uretprobes we can then rebuild the missing part by joining together the parts
 // on the stack of callstacks associated with that thread.
+// TODO: Make this more robust to losing uprobes or uretprobes events (loss of
+//  uretprobes events should be rare if they don't come with a stack sample).
+//  Start by passing the function_address to ProcessUretprobes as well and for a
+//  comparison against the address of the uprobe on the stack.
+
+class UprobesFunctionCallManager {
+ public:
+  UprobesFunctionCallManager() = default;
+
+  UprobesFunctionCallManager(const UprobesFunctionCallManager&) = delete;
+  UprobesFunctionCallManager& operator=(const UprobesFunctionCallManager&) =
+      delete;
+
+  UprobesFunctionCallManager(UprobesFunctionCallManager&&) = default;
+  UprobesFunctionCallManager& operator=(UprobesFunctionCallManager&&) = default;
+
+  void ProcessUprobes(pid_t tid, uint64_t function_address,
+                      uint64_t begin_timestamp);
+  std::optional<FunctionCall> ProcessUretprobes(pid_t tid,
+                                                uint64_t end_timestamp);
+
+ private:
+  // This map keeps the stack of the dynamically-instrumented functions entered.
+  absl::flat_hash_map<pid_t,
+                      std::stack<std::pair<uint64_t, uint64_t>,
+                                 std::vector<std::pair<uint64_t, uint64_t>>>>
+      tid_timer_stacks_{};
+};
 
 class UprobesCallstackManager {
  public:
@@ -69,11 +100,12 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
   void visit(StackSamplePerfEvent* event) override;
-  void visit(UprobePerfEventWithStack* event) override;
-  void visit(UretprobePerfEventWithStack* event) override;
+  void visit(UprobesWithStackPerfEvent* event) override;
+  void visit(UretprobesWithStackPerfEvent* event) override;
   void visit(MapsPerfEvent* event) override;
 
  private:
+  UprobesFunctionCallManager function_call_manager_{};
   LibunwindstackUnwinder unwinder_{};
   UprobesCallstackManager callstack_manager_{};
 

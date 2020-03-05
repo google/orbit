@@ -21,7 +21,7 @@ class LinuxTracingHandler : LinuxTracing::TracerListener {
         selected_function_map_{selected_function_map},
         num_context_switches_{num_context_switches} {}
 
-  ~LinuxTracingHandler() = default;
+  ~LinuxTracingHandler() override = default;
   LinuxTracingHandler(const LinuxTracingHandler&) = delete;
   LinuxTracingHandler& operator=(const LinuxTracingHandler&) = delete;
   LinuxTracingHandler(LinuxTracingHandler&&) = default;
@@ -37,9 +37,7 @@ class LinuxTracingHandler : LinuxTracing::TracerListener {
   void OnContextSwitchOut(
       const LinuxTracing::ContextSwitchOut& context_switch_out) override;
   void OnCallstack(const LinuxTracing::Callstack& callstack) override;
-  void OnFunctionBegin(
-      const LinuxTracing::FunctionBegin& function_begin) override;
-  void OnFunctionEnd(const LinuxTracing::FunctionEnd& function_end) override;
+  void OnFunctionCall(const LinuxTracing::FunctionCall& function_call) override;
 
  private:
   CoreApp* core_app_;
@@ -48,8 +46,6 @@ class LinuxTracingHandler : LinuxTracing::TracerListener {
   ULONG64* num_context_switches_;
 
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
-  absl::flat_hash_map<pid_t, std::stack<Timer, std::vector<Timer>>>
-      tid_timer_stacks_{};
 };
 
 #endif  // ORBIT_CORE_LINUX_TRACING_HANDLER_H_

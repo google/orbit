@@ -75,34 +75,28 @@ class Callstack {
   uint64_t timestamp_ns_;
 };
 
-class FunctionEvent {
+class FunctionCall {
  public:
-  pid_t GetTid() const { return tid_; }
-  uint64_t GetVirtualAddress() const { return virtual_address_; }
-  uint64_t GetTimestampNs() const { return timestamp_ns_; }
-
- protected:
-  FunctionEvent(pid_t tid, uint64_t virtual_address, uint64_t timestamp_ns)
+  FunctionCall(pid_t tid, uint64_t virtual_address, uint64_t begin_timestamp_ns,
+               uint64_t end_timestamp_ns, uint32_t depth)
       : tid_(tid),
         virtual_address_(virtual_address),
-        timestamp_ns_(timestamp_ns) {}
+        begin_timestamp_ns_(begin_timestamp_ns),
+        end_timestamp_ns_(end_timestamp_ns),
+        depth_{depth} {}
+
+  pid_t GetTid() const { return tid_; }
+  uint64_t GetVirtualAddress() const { return virtual_address_; }
+  uint64_t GetBeginTimestampNs() const { return begin_timestamp_ns_; }
+  uint64_t GetEndTimestampNs() const { return end_timestamp_ns_; }
+  uint32_t GetDepth() const { return depth_; }
 
  private:
   pid_t tid_;
   uint64_t virtual_address_;
-  uint64_t timestamp_ns_;
-};
-
-class FunctionBegin : public FunctionEvent {
- public:
-  FunctionBegin(pid_t tid, uint64_t virtual_address, uint64_t timestamp_ns)
-      : FunctionEvent(tid, virtual_address, timestamp_ns) {}
-};
-
-class FunctionEnd : public FunctionEvent {
- public:
-  FunctionEnd(pid_t tid, uint64_t virtual_address, uint64_t timestamp_ns)
-      : FunctionEvent(tid, virtual_address, timestamp_ns) {}
+  uint64_t begin_timestamp_ns_;
+  uint64_t end_timestamp_ns_;
+  uint32_t depth_;
 };
 
 }  // namespace LinuxTracing

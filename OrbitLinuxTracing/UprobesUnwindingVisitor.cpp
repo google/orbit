@@ -2,6 +2,40 @@
 
 namespace LinuxTracing {
 
+void UprobesFunctionCallManager::ProcessUprobes(pid_t tid,
+                                                uint64_t function_address,
+                                                uint64_t begin_timestamp) {
+  auto& tid_timer_stack = tid_timer_stacks_[tid];
+  tid_timer_stack.emplace(function_address, begin_timestamp);
+}
+
+std::optional<FunctionCall> UprobesFunctionCallManager::ProcessUretprobes(
+    pid_t tid, uint64_t end_timestamp) {
+  if (tid_timer_stacks_.count(tid)) {
+    auto& tid_timer_stack = tid_timer_stacks_.at(tid);
+
+    // This is because we erase the stack for this thread as soon as it becomes
+    // empty.
+    assert(!tid_timer_stack.empty());
+
+    if (!tid_timer_stack.empty()) {
+      auto function_call = std::make_optional<FunctionCall>(
+          tid, tid_timer_stack.top().first, tid_timer_stack.top().second,
+          end_timestamp, tid_timer_stack.size() - 1);
+      tid_timer_stack.pop();
+      if (tid_timer_stack.empty()) {
+        tid_timer_stacks_.erase(tid);
+      }
+      return function_call;
+
+    } else {
+      return std::optional<FunctionCall>{};
+    }
+  } else {
+    return std::optional<FunctionCall>{};
+  }
+}
+
 std::vector<unwindstack::FrameData>
 UprobesCallstackManager::JoinCallstackWithPreviousUprobesCallstacks(
     const std::vector<unwindstack::FrameData>& this_callstack,
@@ -115,12 +149,9 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   }
 }
 
-void UprobesUnwindingVisitor::visit(UprobePerfEventWithStack* event) {
-  FunctionBegin function_begin{
-      event->TID(), event->GetFunction()->VirtualAddress(), event->Timestamp()};
-  if (listener_ != nullptr) {
-    listener_->OnFunctionBegin(function_begin);
-  }
+void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
+  function_call_manager_.ProcessUprobes(
+      event->TID(), event->GetFunction()->VirtualAddress(), event->Timestamp());
 
   const std::vector<unwindstack::FrameData>& callstack = unwinder_.Unwind(
       event->Registers(), event->StackDump(), event->StackSize());
@@ -140,11 +171,14 @@ void UprobesUnwindingVisitor::visit(UprobePerfEventWithStack* event) {
   }
 }
 
-void UprobesUnwindingVisitor::visit(UretprobePerfEventWithStack* event) {
-  FunctionEnd function_end{event->TID(), event->GetFunction()->VirtualAddress(),
-                           event->Timestamp()};
-  if (listener_ != nullptr) {
-    listener_->OnFunctionEnd(function_end);
+void UprobesUnwindingVisitor::visit(UretprobesWithStackPerfEvent* event) {
+  std::optional<FunctionCall> function_call =
+      function_call_manager_.ProcessUretprobes(event->TID(),
+                                               event->Timestamp());
+  if (function_call.has_value()) {
+    if (listener_ != nullptr) {
+      listener_->OnFunctionCall(function_call.value());
+    }
   }
 
   const std::vector<unwindstack::FrameData>& callstack = unwinder_.Unwind(
@@ -152,7 +186,7 @@ void UprobesUnwindingVisitor::visit(UretprobePerfEventWithStack* event) {
   const std::vector<unwindstack::FrameData>& full_callstack =
       callstack_manager_.ProcessUretprobesCallstack(event->TID(), callstack);
   // Remove this if we do not want a callstack at the return of an instrumented
-  // function.
+  // function even when available.
   if (!full_callstack.empty()) {
     if (listener_ != nullptr) {
       Callstack returned_callstack{
