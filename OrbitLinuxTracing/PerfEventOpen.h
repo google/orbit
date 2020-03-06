@@ -65,7 +65,7 @@ static constexpr uint64_t SAMPLE_REGS_USER_ALL =
 // But the size the kernel actually returns is smaller, because the maximum size
 // of the entire record the kernel is willing to return is (1u << 16u) - 8.
 // If we want the size we pass to coincide with the size we get, we need to pass
-// a lower value. For the current layout of perf_event_sample, the maximum
+// a lower value. For the current layout of perf_event_stack_sample, the maximum
 // size is 65312, but let's leave some extra room.
 // TODO: As this amount of memory has to be copied from the ring buffer for each
 //  sample, this constant should be a parameters and should be made available in

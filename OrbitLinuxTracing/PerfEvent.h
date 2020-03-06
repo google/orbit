@@ -174,7 +174,7 @@ perf_sample_regs_user_all_to_register_array(
 }
 }  // namespace
 
-class StackSamplePerfEvent : public SamplePerfEvent<perf_event_sample> {
+class StackSamplePerfEvent : public SamplePerfEvent<perf_event_stack_sample> {
  public:
   void Accept(PerfEventVisitor* visitor) override;
 
@@ -197,7 +197,7 @@ class AbstractUprobesPerfEvent : public SamplePerfEvent<perf_record_t> {
 };
 
 class UprobesWithStackPerfEvent
-    : public AbstractUprobesPerfEvent<perf_event_sample> {
+    : public AbstractUprobesPerfEvent<perf_event_stack_sample> {
  public:
   void Accept(PerfEventVisitor* visitor) override;
 
@@ -209,7 +209,8 @@ class UprobesWithStackPerfEvent
   uint64_t GetStackSize() const { return ring_buffer_record.stack.dyn_size; }
 };
 
-class UretprobesPerfEvent : public AbstractUprobesPerfEvent<perf_event_empty> {
+class UretprobesPerfEvent
+    : public AbstractUprobesPerfEvent<perf_event_empty_sample> {
  public:
   void Accept(PerfEventVisitor* visitor) override;
 };

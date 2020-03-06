@@ -18,7 +18,7 @@ void PerfEventQueue::PushEvent(int origin_fd,
     assert(!event_queue->empty());
     // Fundamental assumption: events from the same file descriptor come already
     // in order.
-    assert(event->GetTimestamp() >= event_queue->front()->Timestamp());
+    assert(event->GetTimestamp() >= event_queue->front()->GetTimestamp());
     event_queue->push(std::move(event));
   } else {
     auto event_queue =
@@ -60,7 +60,7 @@ void PerfEventProcessor2::AddEvent(int origin_fd,
                                    std::unique_ptr<PerfEvent> event) {
 #ifndef NDEBUG
   if (last_processed_timestamp_ > 0 &&
-      event->Timestamp() <
+      event->GetTimestamp() <
           last_processed_timestamp_ - PROCESSING_DELAY_MS * 1'000'000) {
     ERROR("Processed an event out of order");
   }
@@ -73,7 +73,7 @@ void PerfEventProcessor2::ProcessAllEvents() {
     std::unique_ptr<PerfEvent> event = event_queue_.PopEvent();
     event->Accept(visitor_.get());
 #ifndef NDEBUG
-    last_processed_timestamp_ = event->Timestamp();
+    last_processed_timestamp_ = event->GetTimestamp();
 #endif
   }
 }
@@ -92,7 +92,7 @@ void PerfEventProcessor2::ProcessOldEvents() {
 
     event->Accept(visitor_.get());
 #ifndef NDEBUG
-    last_processed_timestamp_ = event->Timestamp();
+    last_processed_timestamp_ = event->GetTimestamp();
 #endif
     event_queue_.PopEvent();
   }
