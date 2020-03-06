@@ -26,19 +26,11 @@ void StackSamplePerfEvent::accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 
-void UprobesPerfEvent::accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
-
 void UprobesWithStackPerfEvent::accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 
 void UretprobesPerfEvent::accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
-
-void UretprobesWithStackPerfEvent::accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 

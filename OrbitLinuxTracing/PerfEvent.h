@@ -237,11 +237,6 @@ class AbstractUprobesPerfEvent : public SamplePerfEvent<perf_record_data_t> {
   const Function* function_ = nullptr;
 };
 
-class UprobesPerfEvent : public AbstractUprobesPerfEvent<perf_empty_record> {
- public:
-  void accept(PerfEventVisitor* visitor) override;
-};
-
 class UprobesWithStackPerfEvent
     : public AbstractUprobesPerfEvent<perf_record_with_stack> {
  public:
@@ -258,20 +253,6 @@ class UprobesWithStackPerfEvent
 
 class UretprobesPerfEvent : public AbstractUprobesPerfEvent<perf_empty_record> {
  public:
-  void accept(PerfEventVisitor* visitor) override;
-};
-
-class UretprobesWithStackPerfEvent
-    : public AbstractUprobesPerfEvent<perf_record_with_stack> {
- public:
-  std::array<uint64_t, PERF_REG_X86_64_MAX> Registers() const {
-    return perf_sample_regs_user_all_to_register_array(
-        ring_buffer_data.register_data);
-  }
-
-  const char* StackDump() const { return ring_buffer_data.stack_data.data; }
-  uint64_t StackSize() const { return ring_buffer_data.stack_data.dyn_size; }
-
   void accept(PerfEventVisitor* visitor) override;
 };
 

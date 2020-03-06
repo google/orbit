@@ -28,7 +28,7 @@ namespace LinuxTracing {
 // on the stack of callstacks associated with that thread.
 // TODO: Make this more robust to losing uprobes or uretprobes events (loss of
 //  uretprobes events should be rare if they don't come with a stack sample).
-//  Start by passing the function_address to ProcessUretprobes as well and for a
+//  Start by passing the function_address to ProcessUretprobes as well for a
 //  comparison against the address of the uprobe on the stack.
 
 class UprobesFunctionCallManager {
@@ -48,10 +48,16 @@ class UprobesFunctionCallManager {
                                                 uint64_t end_timestamp);
 
  private:
+  struct OpenUprobes {
+    OpenUprobes(uint64_t function_address, uint64_t begin_timestamp)
+        : function_address(function_address),
+          begin_timestamp(begin_timestamp) {}
+    uint64_t function_address;
+    uint64_t begin_timestamp;
+  };
+
   // This map keeps the stack of the dynamically-instrumented functions entered.
-  absl::flat_hash_map<pid_t,
-                      std::stack<std::pair<uint64_t, uint64_t>,
-                                 std::vector<std::pair<uint64_t, uint64_t>>>>
+  absl::flat_hash_map<pid_t, std::stack<OpenUprobes, std::vector<OpenUprobes>>>
       tid_timer_stacks_{};
 };
 
@@ -69,9 +75,7 @@ class UprobesCallstackManager {
       pid_t tid, const std::vector<unwindstack::FrameData>& callstack);
   std::vector<unwindstack::FrameData> ProcessSampledCallstack(
       pid_t tid, const std::vector<unwindstack::FrameData>& callstack);
-  std::vector<unwindstack::FrameData> ProcessUretprobesCallstack(
-      pid_t tid, const std::vector<unwindstack::FrameData>& callstack);
-  void ProcessUretprobesWithoutCallstack(pid_t tid);
+  void ProcessUretprobes(pid_t tid);
 
  private:
   // This map keeps, for every thread, the stack of callstacks collected when
@@ -103,7 +107,6 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void visit(StackSamplePerfEvent* event) override;
   void visit(UprobesWithStackPerfEvent* event) override;
   void visit(UretprobesPerfEvent* event) override;
-  void visit(UretprobesWithStackPerfEvent* event) override;
   void visit(MapsPerfEvent* event) override;
 
  private:
