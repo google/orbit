@@ -5,185 +5,145 @@
 
 #include <array>
 
-#include "PerfEventUtils.h"
+#include "PerfEventRecords.h"
 
 namespace LinuxTracing {
 
 class PerfEventVisitor;
 
-// This base class will be used in order to do processing of
-// different perf events using the visitor pattern.
-// The data of the perf events will be copied from the ring buffer
-// via memcpy directly into the concrete subclass (depending on the
-// event type).
-// The target of the memcpy will be a field "ring_buffer_data" that
-// must be present for the subclass at compile time.
-// As the perf_event_open ring buffer is 8-byte aligned, this field
-// might also need to be extended with dummy bytes at the end of the record.
+// This base class is used to do processing of different perf_event_open events
+// using the visitor pattern. To avoid unnecessary copies, the data of the
+// perf_event_open records will be copied from the ring buffer directly into the
+// concrete subclass (depending on the event type), in general into a
+// "ring_buffer_record" field.
 
 class PerfEvent {
  public:
   virtual ~PerfEvent() = default;
-  virtual uint64_t Timestamp() const = 0;
-  virtual void accept(PerfEventVisitor* visitor) = 0;
-};
-
-struct __attribute__((__packed__)) perf_context_switch_event {
-  perf_event_header header;
-  perf_sample_id sample_id;
+  virtual uint64_t GetTimestamp() const = 0;
+  virtual void Accept(PerfEventVisitor* visitor) = 0;
 };
 
 class ContextSwitchPerfEvent : public PerfEvent {
  public:
-  perf_context_switch_event ring_buffer_data{};
+  perf_event_context_switch ring_buffer_record;
 
-  uint64_t Timestamp() const override {
-    return ring_buffer_data.sample_id.time;
+  uint64_t GetTimestamp() const override {
+    return ring_buffer_record.sample_id.time;
   }
 
-  void accept(PerfEventVisitor* visitor) override;
+  void Accept(PerfEventVisitor* visitor) override;
 
-  pid_t PID() const { return ring_buffer_data.sample_id.pid; }
-  pid_t TID() const { return ring_buffer_data.sample_id.tid; }
-  uint32_t CPU() const { return ring_buffer_data.sample_id.cpu; }
+  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
+
+  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
+
   bool IsSwitchOut() const {
-    return ring_buffer_data.header.misc & PERF_RECORD_MISC_SWITCH_OUT;
+    return ring_buffer_record.header.misc & PERF_RECORD_MISC_SWITCH_OUT;
   }
   bool IsSwitchIn() const { return !IsSwitchOut(); }
-};
 
-struct __attribute__((__packed__)) perf_context_switch_cpu_wide_event {
-  perf_event_header header;
-  uint32_t next_prev_pid;
-  uint32_t next_prev_tid;
-  perf_sample_id sample_id;
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
 class SystemWideContextSwitchPerfEvent : public PerfEvent {
  public:
-  perf_context_switch_cpu_wide_event ring_buffer_data{};
+  perf_event_context_switch_cpu_wide ring_buffer_record;
 
-  uint64_t Timestamp() const override {
-    return ring_buffer_data.sample_id.time;
+  uint64_t GetTimestamp() const override {
+    return ring_buffer_record.sample_id.time;
   }
 
-  void accept(PerfEventVisitor* visitor) override;
+  void Accept(PerfEventVisitor* visitor) override;
 
-  pid_t PrevPID() const {
-    return IsSwitchOut() ? ring_buffer_data.sample_id.pid
-                         : ring_buffer_data.next_prev_pid;
+  pid_t GetPrevPid() const {
+    return IsSwitchOut() ? ring_buffer_record.sample_id.pid
+                         : ring_buffer_record.next_prev_pid;
   }
 
-  pid_t PrevTID() const {
-    return IsSwitchOut() ? ring_buffer_data.sample_id.tid
-                         : ring_buffer_data.next_prev_tid;
+  pid_t GetPrevTid() const {
+    return IsSwitchOut() ? ring_buffer_record.sample_id.tid
+                         : ring_buffer_record.next_prev_tid;
   }
 
-  pid_t NextPID() const {
-    return IsSwitchOut() ? ring_buffer_data.next_prev_pid
-                         : ring_buffer_data.sample_id.pid;
+  pid_t GetNextPid() const {
+    return IsSwitchOut() ? ring_buffer_record.next_prev_pid
+                         : ring_buffer_record.sample_id.pid;
   }
 
-  pid_t NextTID() const {
-    return IsSwitchOut() ? ring_buffer_data.next_prev_tid
-                         : ring_buffer_data.sample_id.tid;
+  pid_t GetNextTid() const {
+    return IsSwitchOut() ? ring_buffer_record.next_prev_tid
+                         : ring_buffer_record.sample_id.tid;
   }
 
   bool IsSwitchOut() const {
-    return ring_buffer_data.header.misc & PERF_RECORD_MISC_SWITCH_OUT;
+    return ring_buffer_record.header.misc & PERF_RECORD_MISC_SWITCH_OUT;
   }
 
   bool IsSwitchIn() const { return !IsSwitchOut(); }
 
-  uint32_t CPU() const { return ring_buffer_data.sample_id.cpu; }
-};
-
-struct __attribute__((__packed__)) perf_fork_exit_event {
-  struct perf_event_header header;
-  uint32_t pid, ppid;
-  uint32_t tid, ptid;
-  uint64_t time;
-  struct perf_sample_id sample_id;
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
 class ForkPerfEvent : public PerfEvent {
  public:
-  perf_fork_exit_event ring_buffer_data{};
+  perf_event_fork_exit ring_buffer_record;
 
-  uint64_t Timestamp() const override { return ring_buffer_data.time; }
+  uint64_t GetTimestamp() const override { return ring_buffer_record.time; }
 
-  void accept(PerfEventVisitor* visitor) override;
+  void Accept(PerfEventVisitor* visitor) override;
 
-  pid_t PID() const { return ring_buffer_data.pid; }
-  pid_t ParentPID() const { return ring_buffer_data.ppid; }
-  pid_t TID() const { return ring_buffer_data.tid; }
-  pid_t ParentTID() const { return ring_buffer_data.ptid; }
+  pid_t GetPid() const { return ring_buffer_record.pid; }
+  pid_t GetParentPid() const { return ring_buffer_record.ppid; }
+  pid_t GetTid() const { return ring_buffer_record.tid; }
+  pid_t GetParentTid() const { return ring_buffer_record.ptid; }
 };
 
 class ExitPerfEvent : public PerfEvent {
  public:
-  perf_fork_exit_event ring_buffer_data{};
+  perf_event_fork_exit ring_buffer_record;
 
-  uint64_t Timestamp() const override { return ring_buffer_data.time; }
+  uint64_t GetTimestamp() const override { return ring_buffer_record.time; }
 
-  void accept(PerfEventVisitor* visitor) override;
+  void Accept(PerfEventVisitor* visitor) override;
 
-  pid_t PID() const { return ring_buffer_data.pid; }
-  pid_t ParentPID() const { return ring_buffer_data.ppid; }
-  pid_t TID() const { return ring_buffer_data.tid; }
-  pid_t ParentTID() const { return ring_buffer_data.ptid; }
-};
-
-struct __attribute__((__packed__)) perf_lost_event {
-  struct perf_event_header header;
-  uint64_t id;
-  uint64_t lost;
-  struct perf_sample_id sample_id;
+  pid_t GetPid() const { return ring_buffer_record.pid; }
+  pid_t GetParentPid() const { return ring_buffer_record.ppid; }
+  pid_t GetTid() const { return ring_buffer_record.tid; }
+  pid_t GetParentTid() const { return ring_buffer_record.ptid; }
 };
 
 class LostPerfEvent : public PerfEvent {
  public:
-  perf_lost_event ring_buffer_data{};
+  perf_event_lost ring_buffer_record;
 
-  uint64_t Timestamp() const override {
-    return ring_buffer_data.sample_id.time;
+  uint64_t GetTimestamp() const override {
+    return ring_buffer_record.sample_id.time;
   }
 
-  void accept(PerfEventVisitor* visitor) override;
+  void Accept(PerfEventVisitor* visitor) override;
 
-  uint64_t Lost() const { return ring_buffer_data.lost; }
+  uint64_t GetNumLost() const { return ring_buffer_record.lost; }
 };
 
-template <typename perf_record_data_t>
+template <typename perf_record_t>
 class SamplePerfEvent : public PerfEvent {
  public:
-  perf_record_data_t ring_buffer_data;
+  perf_record_t ring_buffer_record;
 
-  uint64_t Timestamp() const override {
-    return ring_buffer_data.basic_sample_data.time;
+  uint64_t GetTimestamp() const override {
+    return ring_buffer_record.sample_id.time;
   }
 
-  pid_t PID() const { return ring_buffer_data.basic_sample_data.pid; }
-  pid_t TID() const { return ring_buffer_data.basic_sample_data.tid; }
-  uint32_t CPU() const { return ring_buffer_data.basic_sample_data.cpu; }
-};
-
-struct __attribute__((__packed__)) perf_empty_record {
-  perf_event_header header;
-  perf_sample_id basic_sample_data;
-};
-
-struct __attribute__((__packed__)) perf_record_with_stack {
-  perf_event_header header;
-  perf_sample_id basic_sample_data;
-  perf_sample_regs_user_all register_data;
-  perf_sample_stack_user stack_data;
+  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
+  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
 namespace {
 std::array<uint64_t, PERF_REG_X86_64_MAX>
 perf_sample_regs_user_all_to_register_array(
-    const perf_sample_regs_user_all& regs) {
+    const perf_event_sample_regs_user_all& regs) {
   std::array<uint64_t, PERF_REG_X86_64_MAX> registers{};
   registers[PERF_REG_X86_AX] = regs.ax;
   registers[PERF_REG_X86_BX] = regs.bx;
@@ -214,21 +174,20 @@ perf_sample_regs_user_all_to_register_array(
 }
 }  // namespace
 
-class StackSamplePerfEvent : public SamplePerfEvent<perf_record_with_stack> {
+class StackSamplePerfEvent : public SamplePerfEvent<perf_event_sample> {
  public:
-  std::array<uint64_t, PERF_REG_X86_64_MAX> Registers() const {
-    return perf_sample_regs_user_all_to_register_array(
-        ring_buffer_data.register_data);
+  void Accept(PerfEventVisitor* visitor) override;
+
+  std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
+    return perf_sample_regs_user_all_to_register_array(ring_buffer_record.regs);
   }
 
-  const char* StackDump() const { return ring_buffer_data.stack_data.data; }
-  uint64_t StackSize() const { return ring_buffer_data.stack_data.dyn_size; }
-
-  void accept(PerfEventVisitor* visitor) override;
+  const char* GetStackData() const { return ring_buffer_record.stack.data; }
+  uint64_t GetStackSize() const { return ring_buffer_record.stack.dyn_size; }
 };
 
-template <typename perf_record_data_t>
-class AbstractUprobesPerfEvent : public SamplePerfEvent<perf_record_data_t> {
+template <typename perf_record_t>
+class AbstractUprobesPerfEvent : public SamplePerfEvent<perf_record_t> {
  public:
   const Function* GetFunction() const { return function_; }
   void SetFunction(const Function* function) { function_ = function; }
@@ -238,22 +197,21 @@ class AbstractUprobesPerfEvent : public SamplePerfEvent<perf_record_data_t> {
 };
 
 class UprobesWithStackPerfEvent
-    : public AbstractUprobesPerfEvent<perf_record_with_stack> {
+    : public AbstractUprobesPerfEvent<perf_event_sample> {
  public:
-  std::array<uint64_t, PERF_REG_X86_64_MAX> Registers() const {
-    return perf_sample_regs_user_all_to_register_array(
-        ring_buffer_data.register_data);
+  void Accept(PerfEventVisitor* visitor) override;
+
+  std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
+    return perf_sample_regs_user_all_to_register_array(ring_buffer_record.regs);
   }
 
-  const char* StackDump() const { return ring_buffer_data.stack_data.data; }
-  uint64_t StackSize() const { return ring_buffer_data.stack_data.dyn_size; }
-
-  void accept(PerfEventVisitor* visitor) override;
+  const char* GetStackData() const { return ring_buffer_record.stack.data; }
+  uint64_t GetStackSize() const { return ring_buffer_record.stack.dyn_size; }
 };
 
-class UretprobesPerfEvent : public AbstractUprobesPerfEvent<perf_empty_record> {
+class UretprobesPerfEvent : public AbstractUprobesPerfEvent<perf_event_empty> {
  public:
-  void accept(PerfEventVisitor* visitor) override;
+  void Accept(PerfEventVisitor* visitor) override;
 };
 
 // This carries a snapshot of /proc/<pid>/maps and does not reflect a
@@ -263,11 +221,11 @@ class MapsPerfEvent : public PerfEvent {
   MapsPerfEvent(uint64_t timestamp, std::string maps)
       : timestamp_{timestamp}, maps_{std::move(maps)} {}
 
-  uint64_t Timestamp() const override { return timestamp_; }
+  uint64_t GetTimestamp() const override { return timestamp_; }
 
-  const std::string& Maps() const { return maps_; }
+  void Accept(PerfEventVisitor* visitor) override;
 
-  void accept(PerfEventVisitor* visitor) override;
+  const std::string& GetMaps() const { return maps_; }
 
  private:
   uint64_t timestamp_;

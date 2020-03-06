@@ -23,7 +23,7 @@ void PerfEventProcessor::AddEvent(int origin_fd,
 void PerfEventProcessor::ProcessAllEvents() {
   while (!event_queue_.empty()) {
     PerfEvent* event = event_queue_.top().get();
-    event->accept(visitor_.get());
+    event->Accept(visitor_.get());
 
 #ifndef NDEBUG
     last_processed_timestamp_ = event->Timestamp();
@@ -40,10 +40,11 @@ void PerfEventProcessor::ProcessOldEvents() {
     PerfEvent* event = event_queue_.top().get();
 
     // Do not read the most recent events are out-of-order events could arrive.
-    if (event->Timestamp() + PROCESSING_DELAY_MS * 1'000'000 >= max_timestamp) {
+    if (event->GetTimestamp() + PROCESSING_DELAY_MS * 1'000'000 >=
+        max_timestamp) {
       break;
     }
-    event->accept(visitor_.get());
+    event->Accept(visitor_.get());
 
 #ifndef NDEBUG
     last_processed_timestamp_ = event->Timestamp();

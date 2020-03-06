@@ -1,0 +1,94 @@
+#ifndef ORBIT_LINUX_TRACING_LINUX_PERF_UTILS_H_
+#define ORBIT_LINUX_TRACING_LINUX_PERF_UTILS_H_
+
+#include <asm/perf_regs.h>
+#include <asm/unistd.h>
+#include <linux/perf_event.h>
+#include <linux/version.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+
+#include <cerrno>
+#include <cstdint>
+#include <ctime>
+
+#include "Logging.h"
+
+inline int perf_event_open(struct perf_event_attr* attr, pid_t pid, int cpu,
+                           int group_fd, unsigned long flags) {
+  return syscall(__NR_perf_event_open, attr, pid, cpu, group_fd, flags);
+}
+
+namespace LinuxTracing {
+
+inline void perf_event_reset(int file_descriptor) {
+  ioctl(file_descriptor, PERF_EVENT_IOC_RESET, 0);
+}
+
+inline void perf_event_enable(int file_descriptor) {
+  ioctl(file_descriptor, PERF_EVENT_IOC_ENABLE, 0);
+}
+
+inline void perf_event_reset_and_enable(int file_descriptor) {
+  perf_event_reset(file_descriptor);
+  perf_event_enable(file_descriptor);
+}
+
+inline void perf_event_disable(int file_descriptor) {
+  ioctl(file_descriptor, PERF_EVENT_IOC_DISABLE, 0);
+}
+
+// This must be in sync with struct perf_event_sample_id_tid_time_cpu in
+// PerfEventRecords.h.
+static constexpr uint64_t SAMPLE_TYPE_TID_TIME_CPU =
+    PERF_SAMPLE_TID | PERF_SAMPLE_TIME | PERF_SAMPLE_CPU;
+
+// Sample all registers: they might all be necessary for DWARF-based stack
+// unwinding.
+// This must be in sync with struct perf_event_sample_regs_user_all in
+// PerfEventRecords.h.
+static constexpr uint64_t SAMPLE_REGS_USER_ALL =
+    (1lu << PERF_REG_X86_AX) | (1lu << PERF_REG_X86_BX) |
+    (1lu << PERF_REG_X86_CX) | (1lu << PERF_REG_X86_DX) |
+    (1lu << PERF_REG_X86_SI) | (1lu << PERF_REG_X86_DI) |
+    (1lu << PERF_REG_X86_BP) | (1lu << PERF_REG_X86_SP) |
+    (1lu << PERF_REG_X86_IP) | (1lu << PERF_REG_X86_FLAGS) |
+    (1lu << PERF_REG_X86_CS) | (1lu << PERF_REG_X86_SS) |
+    (1lu << PERF_REG_X86_R8) | (1lu << PERF_REG_X86_R9) |
+    (1lu << PERF_REG_X86_R10) | (1lu << PERF_REG_X86_R11) |
+    (1lu << PERF_REG_X86_R12) | (1lu << PERF_REG_X86_R13) |
+    (1lu << PERF_REG_X86_R14) | (1lu << PERF_REG_X86_R15);
+
+// Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
+// because the kernel stores this in a short and because of alignment reasons.
+// But the size the kernel actually returns is smaller, because the maximum size
+// of the entire record the kernel is willing to return is (1u << 16u) - 8.
+// If we want the size we pass to coincide with the size we get, we need to pass
+// a lower value. For the current layout of perf_event_sample, the maximum
+// size is 65312, but let's leave some extra room.
+// TODO: As this amount of memory has to be copied from the ring buffer for each
+//  sample, this constant should be a parameters and should be made available in
+//  some setting.
+static constexpr uint16_t SAMPLE_STACK_USER_SIZE = 65000;
+
+// perf_event_open for context switches.
+int context_switch_event_open(pid_t pid, int32_t cpu);
+
+// perf_event_open for stack sampling, while collecting task (fork and exit) and
+// mmap records in the same buffer.
+int sample_mmap_task_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
+
+// perf_event_open for uprobes and uretprobes.
+int uprobes_stack_event_open(const char* module, uint64_t function_offset,
+                             pid_t pid, int32_t cpu);
+
+int uretprobes_event_open(const char* module, uint64_t function_offset,
+                          pid_t pid, int32_t cpu);
+
+// Create the ring buffer to use perf_event_open in sampled mode.
+void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length);
+
+}  // namespace LinuxTracing
+
+#endif  // ORBIT_LINUX_TRACING_LINUX_PERF_UTILS_H_

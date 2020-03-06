@@ -5,11 +5,13 @@
 
 #include <cassert>
 
-#include "PerfEventUtils.h"
+#include "PerfEventOpen.h"
+
+namespace LinuxTracing {
 
 class PerfEventRingBuffer {
  public:
-  explicit PerfEventRingBuffer(int perf_event_file_descriptor);
+  explicit PerfEventRingBuffer(int perf_event_fd);
   ~PerfEventRingBuffer();
 
   PerfEventRingBuffer(PerfEventRingBuffer&&) noexcept;
@@ -27,7 +29,7 @@ class PerfEventRingBuffer {
     LinuxPerfEvent record;
 
     // perf_event_header::size contains the size of the entire record.
-    // This must be the same as the size of the ring_buffer_data field,
+    // This must be the same as the size of the ring_buffer_record field,
     // in which we want to copy the data.
     // If the sizes are not the same, the memory layout defined in
     // PerfEvent.h does not match the one found in the ring buffer.
@@ -35,7 +37,7 @@ class PerfEventRingBuffer {
            "Incorrect layout of the perf ring buffer data.");
 
     // Copy the data from the ringbuffer into the placeholer in that class.
-    auto* dest = reinterpret_cast<uint8_t*>(&record.ring_buffer_data);
+    auto* dest = reinterpret_cast<uint8_t*>(&record.ring_buffer_record);
     Read(dest, header.size);
 
     SkipRecord(header);
@@ -59,8 +61,8 @@ class PerfEventRingBuffer {
   uint32_t ring_buffer_size_exponent_ = 0;
 
   void Read(uint8_t* destination, uint64_t count);
-
-  void* mmap_mapping(int32_t file_descriptor);
 };
+
+}  // namespace LinuxTracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_RING_BUFFER_H_

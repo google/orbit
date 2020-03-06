@@ -122,50 +122,53 @@ void UprobesCallstackManager::ProcessUretprobes(pid_t tid) {
 
 void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   const std::vector<unwindstack::FrameData>& callstack = unwinder_.Unwind(
-      event->Registers(), event->StackDump(), event->StackSize());
+      event->GetRegisters(), event->GetStackData(), event->GetStackSize());
   const std::vector<unwindstack::FrameData>& full_callstack =
-      callstack_manager_.ProcessSampledCallstack(event->TID(), callstack);
+      callstack_manager_.ProcessSampledCallstack(event->GetTid(), callstack);
   if (!full_callstack.empty() && listener_ != nullptr) {
     Callstack returned_callstack{
-        event->TID(), CallstackFramesFromLibunwindstackFrames(full_callstack),
-        event->Timestamp()};
+        event->GetTid(),
+        CallstackFramesFromLibunwindstackFrames(full_callstack),
+        event->GetTimestamp()};
     listener_->OnCallstack(returned_callstack);
   }
 }
 
 void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
-  function_call_manager_.ProcessUprobes(
-      event->TID(), event->GetFunction()->VirtualAddress(), event->Timestamp());
+  function_call_manager_.ProcessUprobes(event->GetTid(),
+                                        event->GetFunction()->VirtualAddress(),
+                                        event->GetTimestamp());
 
   const std::vector<unwindstack::FrameData>& callstack = unwinder_.Unwind(
-      event->Registers(), event->StackDump(), event->StackSize());
+      event->GetRegisters(), event->GetStackData(), event->GetStackSize());
   const std::vector<unwindstack::FrameData>& full_callstack =
-      callstack_manager_.ProcessUprobesCallstack(event->TID(), callstack);
+      callstack_manager_.ProcessUprobesCallstack(event->GetTid(), callstack);
 
   // TODO: Callstacks at the beginning and/or end of a dynamically-instrumented
   //  function could alter the statistics of time-based callstack sampling.
   //  Consider not/conditionally adding these callstacks to the trace.
   if (!full_callstack.empty() && listener_ != nullptr) {
     Callstack returned_callstack{
-        event->TID(), CallstackFramesFromLibunwindstackFrames(full_callstack),
-        event->Timestamp()};
+        event->GetTid(),
+        CallstackFramesFromLibunwindstackFrames(full_callstack),
+        event->GetTimestamp()};
     listener_->OnCallstack(returned_callstack);
   }
 }
 
 void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
   std::optional<FunctionCall> function_call =
-      function_call_manager_.ProcessUretprobes(event->TID(),
-                                               event->Timestamp());
+      function_call_manager_.ProcessUretprobes(event->GetTid(),
+                                               event->GetTimestamp());
   if (function_call.has_value() && listener_ != nullptr) {
     listener_->OnFunctionCall(function_call.value());
   }
 
-  callstack_manager_.ProcessUretprobes(event->TID());
+  callstack_manager_.ProcessUretprobes(event->GetTid());
 }
 
 void UprobesUnwindingVisitor::visit(MapsPerfEvent* event) {
-  unwinder_.SetMaps(event->Maps());
+  unwinder_.SetMaps(event->GetMaps());
 }
 
 std::vector<CallstackFrame>

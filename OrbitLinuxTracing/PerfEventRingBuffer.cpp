@@ -8,10 +8,12 @@
 #include <utility>
 
 #include "Logging.h"
-#include "PerfEventUtils.h"
+#include "PerfEventOpen.h"
 
-PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_file_descriptor) {
-  void* mmap_ret = mmap_mapping(perf_event_file_descriptor);
+namespace LinuxTracing {
+
+PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd) {
+  void* mmap_ret = perf_event_open_mmap_ring_buffer(perf_event_fd, MMAP_LENGTH);
 
   // The first page, just before the ring buffer, is the metadata page.
   metadata_ = reinterpret_cast<perf_event_mmap_page*>(mmap_ret);
@@ -114,15 +116,4 @@ void PerfEventRingBuffer::Read(uint8_t* destination, uint64_t count) {
   }
 }
 
-void* PerfEventRingBuffer::mmap_mapping(int32_t file_descriptor) {
-  // http://man7.org/linux/man-pages/man2/mmap.2.html
-  // Use mmap to get access to the ring buffer.
-  assert(__builtin_popcount(MMAP_LENGTH - getpagesize()) == 1);
-  void* mmap_ret = mmap(nullptr, MMAP_LENGTH, PROT_READ | PROT_WRITE,
-                        MAP_SHARED, file_descriptor, 0);
-  if (mmap_ret == reinterpret_cast<void*>(-1)) {
-    ERROR("mmap: %s", strerror(errno));
-  }
-
-  return mmap_ret;
-}
+}  // namespace LinuxTracing

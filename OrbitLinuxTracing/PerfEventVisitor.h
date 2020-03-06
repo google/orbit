@@ -9,7 +9,6 @@ namespace LinuxTracing {
 class PerfEventVisitor {
  public:
   virtual ~PerfEventVisitor() = default;
-  virtual void visit(LostPerfEvent* event) {}
   virtual void visit(ForkPerfEvent* event) {}
   virtual void visit(ExitPerfEvent* event) {}
   virtual void visit(ContextSwitchPerfEvent* event) {}
@@ -17,6 +16,7 @@ class PerfEventVisitor {
   virtual void visit(StackSamplePerfEvent* event) {}
   virtual void visit(UprobesWithStackPerfEvent* event) {}
   virtual void visit(UretprobesPerfEvent* event) {}
+  virtual void visit(LostPerfEvent* event) {}
   virtual void visit(MapsPerfEvent* event) {}
 };
 
