@@ -13,10 +13,10 @@ namespace LinuxTracing {
 // TODO: Refactor this huge method.
 void TracerThread::Run(
     const std::shared_ptr<std::atomic<bool>>& exit_requested) {
-  absl::flat_hash_map<int32_t, PerfEventRingBuffer> fds_to_ring_buffer;
-  absl::flat_hash_map<pid_t, int32_t> threads_to_fd;
-  absl::flat_hash_map<int32_t, const Function*> uprobe_fds_to_function;
-  absl::flat_hash_map<int32_t, const Function*> uretprobe_fds_to_function;
+  absl::flat_hash_map<int, PerfEventRingBuffer> fds_to_ring_buffer;
+  absl::flat_hash_map<pid_t, int> threads_to_fd;
+  absl::flat_hash_map<int, const Function*> uprobe_fds_to_function;
+  absl::flat_hash_map<int, const Function*> uretprobe_fds_to_function;
 
   // perf_event_open refers to cores as "CPUs".
   int32_t num_cpus = GetNumCores();
@@ -24,9 +24,13 @@ void TracerThread::Run(
   if (trace_context_switches_) {
     // Record context switches from all cores for all processes.
     for (int32_t cpu = 0; cpu < num_cpus; cpu++) {
-      int32_t context_switch_fd = context_switch_event_open(-1, cpu);
-      fds_to_ring_buffer.emplace(context_switch_fd,
-                                 PerfEventRingBuffer{context_switch_fd});
+      int context_switch_fd = context_switch_event_open(-1, cpu);
+      PerfEventRingBuffer context_switch_ring_buffer{context_switch_fd,
+                                                     SMALL_RING_BUFFER_SIZE_KB};
+      if (context_switch_ring_buffer.IsOpen()) {
+        fds_to_ring_buffer.emplace(context_switch_fd,
+                                   std::move(context_switch_ring_buffer));
+      }
     }
   }
 
@@ -44,14 +48,22 @@ void TracerThread::Run(
       for (int32_t cpu = 0; cpu < num_cpus; cpu++) {
         int uprobe_fd = uprobes_stack_event_open(
             function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
-        fds_to_ring_buffer.emplace(uprobe_fd, PerfEventRingBuffer{uprobe_fd});
-        uprobe_fds_to_function.emplace(uprobe_fd, &function);
+        PerfEventRingBuffer uprobe_ring_buffer{uprobe_fd,
+                                               BIG_RING_BUFFER_SIZE_KB};
+        if (uprobe_ring_buffer.IsOpen()) {
+          fds_to_ring_buffer.emplace(uprobe_fd, std::move(uprobe_ring_buffer));
+          uprobe_fds_to_function.emplace(uprobe_fd, &function);
+        }
 
         int uretprobe_fd = uretprobes_event_open(
             function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
-        fds_to_ring_buffer.emplace(uretprobe_fd,
-                                   PerfEventRingBuffer{uretprobe_fd});
-        uretprobe_fds_to_function.emplace(uretprobe_fd, &function);
+        PerfEventRingBuffer uretprobe_ring_buffer{uretprobe_fd,
+                                                  SMALL_RING_BUFFER_SIZE_KB};
+        if (uretprobe_ring_buffer.IsOpen()) {
+          fds_to_ring_buffer.emplace(uretprobe_fd,
+                                     std::move(uretprobe_ring_buffer));
+          uretprobe_fds_to_function.emplace(uretprobe_fd, &function);
+        }
       }
     }
   }
@@ -66,8 +78,13 @@ void TracerThread::Run(
     if (trace_callstacks_) {
       int sampling_fd =
           sample_mmap_task_event_open(sampling_period_ns_, tid, -1);
-      fds_to_ring_buffer.emplace(sampling_fd, PerfEventRingBuffer{sampling_fd});
-      threads_to_fd.emplace(tid, sampling_fd);
+      PerfEventRingBuffer sampling_ring_buffer{sampling_fd,
+                                               BIG_RING_BUFFER_SIZE_KB};
+      if (sampling_ring_buffer.IsOpen()) {
+        fds_to_ring_buffer.emplace(sampling_fd,
+                                   std::move(sampling_ring_buffer));
+        threads_to_fd.emplace(tid, sampling_fd);
+      }
     }
   }
 
@@ -99,9 +116,8 @@ void TracerThread::Run(
 
     last_iteration_saw_events = false;
 
-    std::vector<std::pair<int32_t, PerfEventRingBuffer>>
-        fds_to_ring_buffer_to_add;
-    std::vector<int32_t> fds_to_remove;
+    std::vector<std::pair<int, PerfEventRingBuffer>> fds_to_ring_buffer_to_add;
+    std::vector<int> fds_to_remove;
 
     // Read and process events from all ring buffers. In order to ensure that no
     // buffer is read constantly while others overflow, we schedule the reading
@@ -111,26 +127,28 @@ void TracerThread::Run(
         break;
       }
 
-      const int32_t& fd = fd_to_ring_buffer.first;
+      const int& fd = fd_to_ring_buffer.first;
       PerfEventRingBuffer& ring_buffer = fd_to_ring_buffer.second;
 
       bool is_uprobes = uprobe_fds_to_function.count(fd) > 0;
       bool is_uretprobes = uretprobe_fds_to_function.count(fd) > 0;
 
-      int32_t read_from_this_buffer = 0;
-      // Read up to ROUND_ROBIN_BATCH_SIZE (5) new events.
+      // Read up to ROUND_ROBIN_POLLING_BATCH_SIZE (5) new events.
       // TODO: Some event types (e.g., stack samples) have a much longer
       //  processing time but are less frequent than others (e.g., context
       //  switches). Take this into account in our scheduling algorithm.
-      while (ring_buffer.HasNewData() &&
-             read_from_this_buffer < ROUND_ROBIN_BATCH_SIZE) {
+      for (int32_t read_from_this_buffer = 0;
+           read_from_this_buffer < ROUND_ROBIN_POLLING_BATCH_SIZE;
+           ++read_from_this_buffer) {
         if (*exit_requested) {
           break;
         }
+        if (!ring_buffer.HasNewData()) {
+          break;
+        }
 
-        read_from_this_buffer++;
         last_iteration_saw_events = true;
-        perf_event_header header{};
+        perf_event_header header;
         ring_buffer.ReadHeader(&header);
 
         // perf_event_header::type contains the type of record, e.g.,
@@ -139,20 +157,18 @@ void TracerThread::Run(
         switch (header.type) {
           // non system-wide profiling:
           case PERF_RECORD_SWITCH: {
-            auto event =
-                ring_buffer.ConsumeRecord<ContextSwitchPerfEvent>(header);
-            if (event.IsSwitchOut()) {
-              ContextSwitchOut context_switch_out{
-                  event.GetTid(), static_cast<uint16_t>(event.GetCpu()),
-                  event.GetTimestamp()};
-              if (listener_ != nullptr) {
+            ContextSwitchPerfEvent event;
+            ring_buffer.ConsumeRecord(header, &event.ring_buffer_record);
+            if (listener_ != nullptr) {
+              if (event.IsSwitchOut()) {
+                ContextSwitchOut context_switch_out{
+                    event.GetTid(), static_cast<uint16_t>(event.GetCpu()),
+                    event.GetTimestamp()};
                 listener_->OnContextSwitchOut(context_switch_out);
-              }
-            } else {
-              ContextSwitchIn context_switch_in{
-                  event.GetTid(), static_cast<uint16_t>(event.GetCpu()),
-                  event.GetTimestamp()};
-              if (listener_ != nullptr) {
+              } else {
+                ContextSwitchIn context_switch_in{
+                    event.GetTid(), static_cast<uint16_t>(event.GetCpu()),
+                    event.GetTimestamp()};
                 listener_->OnContextSwitchIn(context_switch_in);
               }
             }
@@ -161,22 +177,20 @@ void TracerThread::Run(
 
           // system-wide profiling
           case PERF_RECORD_SWITCH_CPU_WIDE: {
-            auto event =
-                ring_buffer.ConsumeRecord<SystemWideContextSwitchPerfEvent>(
-                    header);
-            if (event.GetPrevTid() != 0) {
-              ContextSwitchOut context_switch_out{
-                  event.GetPrevTid(), static_cast<uint16_t>(event.GetCpu()),
-                  event.GetTimestamp()};
-              if (listener_ != nullptr) {
+            SystemWideContextSwitchPerfEvent event;
+            ring_buffer.ConsumeRecord(header, &event.ring_buffer_record);
+
+            if (listener_ != nullptr) {
+              if (event.GetPrevTid() != 0) {
+                ContextSwitchOut context_switch_out{
+                    event.GetPrevTid(), static_cast<uint16_t>(event.GetCpu()),
+                    event.GetTimestamp()};
                 listener_->OnContextSwitchOut(context_switch_out);
               }
-            }
-            if (event.GetNextTid() != 0) {
-              ContextSwitchIn context_switch_in{
-                  event.GetNextTid(), static_cast<uint16_t>(event.GetCpu()),
-                  event.GetTimestamp()};
-              if (listener_ != nullptr) {
+              if (event.GetNextTid() != 0) {
+                ContextSwitchIn context_switch_in{
+                    event.GetNextTid(), static_cast<uint16_t>(event.GetCpu()),
+                    event.GetTimestamp()};
                 listener_->OnContextSwitchIn(context_switch_in);
               }
             }
@@ -185,26 +199,33 @@ void TracerThread::Run(
           } break;
 
           case PERF_RECORD_FORK: {
-            auto fork = ring_buffer.ConsumeRecord<ForkPerfEvent>(header);
+            ForkPerfEvent event;
+            ring_buffer.ConsumeRecord(header, &event.ring_buffer_record);
 
-            if (fork.GetPid() == pid_) {
+            if (event.GetPid() == pid_) {
               // A new thread of the sampled process was spawned.
-              int32_t sample_fd = sample_mmap_task_event_open(
-                  sampling_period_ns_, fork.GetTid(), -1);
-              perf_event_enable(sample_fd);
-              // Do not add a new ring buffer to fds_to_ring_buffer here as we
-              // are already iterating over fds_to_ring_buffer.
-              fds_to_ring_buffer_to_add.emplace_back(
-                  sample_fd, PerfEventRingBuffer{sample_fd});
-              threads_to_fd.emplace(fork.GetTid(), sample_fd);
+              int sampling_fd = sample_mmap_task_event_open(sampling_period_ns_,
+                                                            event.GetTid(), -1);
+              perf_event_enable(sampling_fd);
+              PerfEventRingBuffer sampling_ring_buffer{sampling_fd,
+                                                       BIG_RING_BUFFER_SIZE_KB};
+              if (sampling_ring_buffer.IsOpen()) {
+                // Do not add a new ring buffer to fds_to_ring_buffer here as we
+                // are already iterating over fds_to_ring_buffer.
+                fds_to_ring_buffer_to_add.emplace_back(
+                    sampling_fd, std::move(sampling_ring_buffer));
+                threads_to_fd.emplace(event.GetTid(), sampling_fd);
+              }
             }
           } break;
 
           case PERF_RECORD_EXIT: {
-            auto exit = ring_buffer.ConsumeRecord<ForkPerfEvent>(header);
-            if (exit.GetPid() == pid_) {
-              if (threads_to_fd.count(exit.GetTid()) > 0) {
-                int32_t sample_fd = threads_to_fd.at(exit.GetTid());
+            ExitPerfEvent event;
+            ring_buffer.ConsumeRecord(header, &event.ring_buffer_record);
+
+            if (event.GetPid() == pid_) {
+              if (threads_to_fd.count(event.GetTid()) > 0) {
+                int sample_fd = threads_to_fd.at(event.GetTid());
                 perf_event_disable(sample_fd);
                 close(sample_fd);
                 // Do not remove the ring buffer from fds_to_ring_buffer here as
@@ -226,38 +247,34 @@ void TracerThread::Run(
 
           case PERF_RECORD_SAMPLE: {
             if (is_uprobes) {
-              auto sample =
-                  ring_buffer.ConsumeRecord<UprobesWithStackPerfEvent>(header);
-              sample.SetFunction(uprobe_fds_to_function.at(fd));
-              uprobes_event_processor.AddEvent(
-                  fd, std::make_unique<UprobesWithStackPerfEvent>(
-                          std::move(sample)));
+              auto event = std::make_unique<UprobesWithStackPerfEvent>();
+              ring_buffer.ConsumeRecord(header, &event->ring_buffer_record);
+              event->SetFunction(uprobe_fds_to_function.at(fd));
+              uprobes_event_processor.AddEvent(fd, std::move(event));
 
               ++uprobes_count;
 
             } else if (is_uretprobes) {
-              auto sample =
-                  ring_buffer.ConsumeRecord<UretprobesPerfEvent>(header);
-              sample.SetFunction(uretprobe_fds_to_function.at(fd));
-              uprobes_event_processor.AddEvent(
-                  fd, std::make_unique<UretprobesPerfEvent>(std::move(sample)));
+              auto event = std::make_unique<UretprobesPerfEvent>();
+              ring_buffer.ConsumeRecord(header, &event->ring_buffer_record);
+              event->SetFunction(uretprobe_fds_to_function.at(fd));
+              uprobes_event_processor.AddEvent(fd, std::move(event));
 
               ++uprobes_count;
 
             } else {
-              auto sample =
-                  ring_buffer.ConsumeRecord<StackSamplePerfEvent>(header);
-              uprobes_event_processor.AddEvent(
-                  fd,
-                  std::make_unique<StackSamplePerfEvent>(std::move(sample)));
+              auto event = std::make_unique<StackSamplePerfEvent>();
+              ring_buffer.ConsumeRecord(header, &event->ring_buffer_record);
+              uprobes_event_processor.AddEvent(fd, std::move(event));
 
               ++sample_count;
             }
           } break;
 
           case PERF_RECORD_LOST: {
-            auto lost = ring_buffer.ConsumeRecord<LostPerfEvent>(header);
-            LOG("Lost %lu events", lost.GetNumLost());
+            LostPerfEvent event;
+            ring_buffer.ConsumeRecord(header, &event.ring_buffer_record);
+            LOG("Lost %lu events", event.GetNumLost());
           } break;
 
           default: {
@@ -291,7 +308,7 @@ void TracerThread::Run(
     for (auto& fd_to_ring_buffer_to_add : fds_to_ring_buffer_to_add) {
       fds_to_ring_buffer.emplace(std::move(fd_to_ring_buffer_to_add));
     }
-    for (int32_t fd_to_remove : fds_to_remove) {
+    for (int fd_to_remove : fds_to_remove) {
       fds_to_ring_buffer.erase(fd_to_remove);
     }
   }
@@ -300,7 +317,7 @@ void TracerThread::Run(
 
   // Stop recording and close the file descriptors.
   for (auto& fd_to_ring_buffer : fds_to_ring_buffer) {
-    const int32_t& fd = fd_to_ring_buffer.first;
+    const int& fd = fd_to_ring_buffer.first;
     perf_event_disable(fd);
     close(fd);
   }

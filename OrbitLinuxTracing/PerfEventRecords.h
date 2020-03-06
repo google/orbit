@@ -14,11 +14,6 @@ struct __attribute__((__packed__)) perf_event_sample_id_tid_time_cpu {
   uint32_t cpu, res; /* if PERF_SAMPLE_CPU */
 };
 
-struct __attribute__((__packed__)) perf_event_empty {
-  perf_event_header header;
-  perf_event_sample_id_tid_time_cpu sample_id;
-};
-
 struct __attribute__((__packed__)) perf_event_context_switch {
   perf_event_header header;
   perf_event_sample_id_tid_time_cpu sample_id;
@@ -71,7 +66,12 @@ struct __attribute__((__packed__)) perf_event_sample_stack_user {
   uint64_t dyn_size; /* if PERF_SAMPLE_STACK_USER && size != 0 */
 };
 
-struct __attribute__((__packed__)) perf_event_sample {
+struct __attribute__((__packed__)) perf_event_empty_sample {
+  perf_event_header header;
+  perf_event_sample_id_tid_time_cpu sample_id;
+};
+
+struct __attribute__((__packed__)) perf_event_stack_sample {
   perf_event_header header;
   perf_event_sample_id_tid_time_cpu sample_id;
   perf_event_sample_regs_user_all regs;
