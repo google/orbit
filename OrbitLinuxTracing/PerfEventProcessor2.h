@@ -46,8 +46,8 @@ class PerfEventQueue {
         const std::pair<
             int, std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>>>&
             rhs) {
-      return lhs.second->front()->Timestamp() >
-             rhs.second->front()->Timestamp();
+      return lhs.second->front()->GetTimestamp() >
+             rhs.second->front()->GetTimestamp();
     }
   };
 

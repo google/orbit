@@ -16,7 +16,7 @@ class TimestampReverseCompare {
  public:
   bool operator()(const std::unique_ptr<PerfEvent>& lhs,
                   const std::unique_ptr<PerfEvent>& rhs) {
-    return lhs->Timestamp() > rhs->Timestamp();
+    return lhs->GetTimestamp() > rhs->GetTimestamp();
   }
 };
 

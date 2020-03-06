@@ -9,9 +9,9 @@ class TestEvent : public PerfEvent {
  public:
   explicit TestEvent(uint64_t timestamp) : timestamp_(timestamp) {}
 
-  uint64_t Timestamp() const override { return timestamp_; }
+  uint64_t GetTimestamp() const override { return timestamp_; }
 
-  void accept(PerfEventVisitor* visitor) override {}
+  void Accept(PerfEventVisitor* visitor) override {}
 
  private:
   uint64_t timestamp_;
@@ -35,20 +35,20 @@ TEST(PerfEventQueue, SingleFd) {
 
   ASSERT_TRUE(event_queue.HasEvent());
   expected_timestamp = 100;
-  EXPECT_EQ(event_queue.TopEvent()->Timestamp(), expected_timestamp);
-  EXPECT_EQ(event_queue.PopEvent()->Timestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), expected_timestamp);
 
   event_queue.PushEvent(origin_fd, MakeTestEvent(102));
 
   ASSERT_TRUE(event_queue.HasEvent());
   expected_timestamp = 101;
-  EXPECT_EQ(event_queue.TopEvent()->Timestamp(), expected_timestamp);
-  EXPECT_EQ(event_queue.PopEvent()->Timestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), expected_timestamp);
 
   ASSERT_TRUE(event_queue.HasEvent());
   expected_timestamp = 102;
-  EXPECT_EQ(event_queue.TopEvent()->Timestamp(), expected_timestamp);
-  EXPECT_EQ(event_queue.PopEvent()->Timestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), expected_timestamp);
 
   EXPECT_FALSE(event_queue.HasEvent());
 
@@ -56,8 +56,8 @@ TEST(PerfEventQueue, SingleFd) {
 
   ASSERT_TRUE(event_queue.HasEvent());
   expected_timestamp = 103;
-  EXPECT_EQ(event_queue.TopEvent()->Timestamp(), expected_timestamp);
-  EXPECT_EQ(event_queue.PopEvent()->Timestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), expected_timestamp);
 
   EXPECT_FALSE(event_queue.HasEvent());
 }
@@ -76,13 +76,13 @@ TEST(PerfEventQueue, MultipleFd) {
 
   ASSERT_TRUE(event_queue.HasEvent());
   expected_timestamp = 101;
-  EXPECT_EQ(event_queue.TopEvent()->Timestamp(), expected_timestamp);
-  EXPECT_EQ(event_queue.PopEvent()->Timestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), expected_timestamp);
 
   ASSERT_TRUE(event_queue.HasEvent());
   expected_timestamp = 102;
-  EXPECT_EQ(event_queue.TopEvent()->Timestamp(), expected_timestamp);
-  EXPECT_EQ(event_queue.PopEvent()->Timestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), expected_timestamp);
 
   event_queue.PushEvent(33, MakeTestEvent(100));
 
@@ -90,18 +90,18 @@ TEST(PerfEventQueue, MultipleFd) {
 
   ASSERT_TRUE(event_queue.HasEvent());
   expected_timestamp = 100;
-  EXPECT_EQ(event_queue.TopEvent()->Timestamp(), expected_timestamp);
-  EXPECT_EQ(event_queue.PopEvent()->Timestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), expected_timestamp);
 
   ASSERT_TRUE(event_queue.HasEvent());
   expected_timestamp = 103;
-  EXPECT_EQ(event_queue.TopEvent()->Timestamp(), expected_timestamp);
-  EXPECT_EQ(event_queue.PopEvent()->Timestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), expected_timestamp);
 
   ASSERT_TRUE(event_queue.HasEvent());
   expected_timestamp = 104;
-  EXPECT_EQ(event_queue.TopEvent()->Timestamp(), expected_timestamp);
-  EXPECT_EQ(event_queue.PopEvent()->Timestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.TopEvent()->GetTimestamp(), expected_timestamp);
+  EXPECT_EQ(event_queue.PopEvent()->GetTimestamp(), expected_timestamp);
 
   EXPECT_FALSE(event_queue.HasEvent());
 }

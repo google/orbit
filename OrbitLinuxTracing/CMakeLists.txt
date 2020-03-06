@@ -26,14 +26,15 @@ target_sources(OrbitLinuxTracing PRIVATE
         Logging.h
         PerfEvent.cpp
         PerfEvent.h
+        PerfEventOpen.cpp
+        PerfEventOpen.h
         PerfEventProcessor.cpp
         PerfEventProcessor.h
         PerfEventProcessor2.cpp
         PerfEventProcessor2.h
+        PerfEventRecords.h
         PerfEventRingBuffer.cpp
         PerfEventRingBuffer.h
-        PerfEventUtils.cpp
-        PerfEventUtils.h
         PerfEventVisitor.h
         Tracer.cpp
         TracerThread.cpp
