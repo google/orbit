@@ -30,11 +30,19 @@
   abort(); \
 }
 
+#if __linux__
 #define CHECK(assertion) {\
   if (__builtin_expect(!(assertion), false)) {\
     FATAL(#assertion);\
   }\
 }
+#else
+#define CHECK(assertion) {\
+  if (!(assertion)) {\
+    FATAL(#assertion);\
+  }\
+}
+#endif
 
 //-----------------------------------------------------------------------------
 inline void PrintVar(const char* a_VarName, const std::wstring& a_Value,
