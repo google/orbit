@@ -18,6 +18,8 @@ function create_conan_profile {
 
   if [ "$profile" == "default_debug" ]; then
     conan profile update settings.build_type=Debug $profile
+  elif [ "$profile" == "default_relwithdebinfo" ]; then
+    conan profile update settings.build_type=RelWithDebInfo $profile
   else
     conan profile update settings.build_type=Release $profile
   fi
@@ -32,7 +34,7 @@ function conan_profile_exists {
 
 
 for profile in ${profiles[@]}; do
-  if [ "$profile" == "default_release" -o "$profile" == "default_debug" ]; then
+  if [ "$profile" == "default_release" -o "$profile" == "default_debug" -o "$profile" == "default_relwithdebinfo" ]; then
     conan_profile_exists "$profile" || create_conan_profile "$profile"
   fi
 
