@@ -41,8 +41,8 @@ void CaptureSerializer::Save(const std::wstring a_FileName) {
   m_CaptureName = ws2s(a_FileName);
   std::ofstream myfile(m_CaptureName, std::ios::binary);
   if (!myfile.fail()) {
-    SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in %s",
-                                    ws2s(a_FileName).c_str()));
+    SCOPE_TIMER_LOG(
+        absl::StrFormat("Saving capture in %s", ws2s(a_FileName).c_str()));
     cereal::BinaryOutputArchive archive(myfile);
     Save(archive);
     myfile.close();
@@ -116,8 +116,8 @@ void CaptureSerializer::Save(T& a_Archive) {
 
 //-----------------------------------------------------------------------------
 void CaptureSerializer::Load(const std::wstring a_FileName) {
-  SCOPE_TIMER_LOG(absl::StrFormat("Loading capture %s",
-                                  ws2s(a_FileName).c_str()));
+  SCOPE_TIMER_LOG(
+      absl::StrFormat("Loading capture %s", ws2s(a_FileName).c_str()));
 
 #ifdef _WIN32
   // Binary

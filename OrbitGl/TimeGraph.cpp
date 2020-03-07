@@ -361,8 +361,10 @@ float TimeGraph::GetWorldFromUs(double a_Micros) const {
 
 //-----------------------------------------------------------------------------
 TickType TimeGraph::GetTickFromWorld(float a_WorldX) {
-  double ratio = m_WorldWidth != 0 ?
-      static_cast<double>((a_WorldX - m_WorldStartX) / m_WorldWidth) : 0;
+  double ratio =
+      m_WorldWidth != 0
+          ? static_cast<double>((a_WorldX - m_WorldStartX) / m_WorldWidth)
+          : 0;
   double timeStamp = GetTime(ratio);
 
   return m_SessionMinCounter + TicksFromMicroseconds(timeStamp);

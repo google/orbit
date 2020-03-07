@@ -91,9 +91,7 @@ class Function {
 
   void Print();
   void SetAsMainFrameFunction();
-  void AddParameter(const FunctionParam& param) {
-    params_.push_back(param);
-  }
+  void AddParameter(const FunctionParam& param) { params_.push_back(param); }
 
   // TODO: It looks like most setters are used by TestRemoteMessages::Run()
   // only. Move these to a constructor?
@@ -158,13 +156,14 @@ class Function {
   bool IsAlloc() const { return type_ == ALLOC; }
   bool IsFree() const { return type_ == FREE; }
   bool IsMemoryFunc() const { return IsFree() || IsAlloc() || IsRealloc(); }
-  std::string GetModuleName() const ;
+  std::string GetModuleName() const;
   Type* GetParentType();
   void ResetStats();
   void GetDisassembly();
   void FindFile();
 
   ORBIT_SERIALIZABLE;
+
  private:
   std::string name_;
   std::string pretty_name_;

@@ -322,8 +322,8 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       // for( int i = 0; i < numAddresses; ++i )
       //{
       //    void* address = (void*)addresses[i];
-      //    std::string dbgMsg = absl::StrFormat( "Hooking Realloc function at address:
-      //    %p\n", address ); OutputDebugStringA( dbgMsg.c_str() );
+      //    std::string dbgMsg = absl::StrFormat( "Hooking Realloc function at
+      //    address: %p\n", address ); OutputDebugStringA( dbgMsg.c_str() );
       //    //Hijacking::CreateReallocHook( address ); TODO
       //}
 

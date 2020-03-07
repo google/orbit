@@ -67,4 +67,3 @@ class SystraceManager {
   std::vector<std::shared_ptr<Systrace>> m_Systraces;
   uint32_t m_ThreadCount = 0;
 };
-

@@ -153,7 +153,9 @@ class Pdb {
   virtual void LoadPdbAsync(const char* pdb_name,
                             std::function<void()> completion_callback);
 
-  bool LoadDataFromPdb() { return true; } // This shouldn't do anything on Linux.
+  bool LoadDataFromPdb() {
+    return true;
+  }  // This shouldn't do anything on Linux.
   bool LoadPdbDia() { return false; }
   bool LoadFunctions(const char* file_name);
   void Update() {}

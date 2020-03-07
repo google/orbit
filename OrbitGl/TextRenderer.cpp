@@ -9,8 +9,8 @@
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "Params.h"
-#include "shader.h"
 #include "freetype-gl/vertex-buffer.h"
+#include "shader.h"
 
 //-----------------------------------------------------------------------------
 typedef struct {

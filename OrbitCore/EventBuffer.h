@@ -91,6 +91,7 @@ class EventTracer {
   EventBuffer m_EventBuffer;
   void Start(uint32_t a_PID);
   void Stop();
+
  private:
   std::shared_ptr<LinuxPerf> m_Perf;
   std::shared_ptr<LinuxTracingHandler> m_LinuxTracer;

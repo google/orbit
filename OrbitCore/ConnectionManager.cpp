@@ -32,8 +32,7 @@
 
 //-----------------------------------------------------------------------------
 ConnectionManager::ConnectionManager()
-    : m_ExitRequested(false), m_IsService(false) {
-}
+    : m_ExitRequested(false), m_IsService(false) {}
 
 //-----------------------------------------------------------------------------
 ConnectionManager::~ConnectionManager() { TerminateThread(); }

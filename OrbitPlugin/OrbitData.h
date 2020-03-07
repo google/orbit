@@ -3,8 +3,8 @@
 //-----------------------------------
 #pragma once
 
-#include <cstring>
 #include <cstdint>
+#include <cstring>
 
 #pragma pack(push, 8)
 

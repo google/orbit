@@ -701,8 +701,8 @@ void OrbitApp::MainTick() {
   }
 
   if (!Capture::GProcessToInject.empty()) {
-    std::cout << "Injecting into "
-              << Capture::GTargetProcess->GetFullName() << std::endl;
+    std::cout << "Injecting into " << Capture::GTargetProcess->GetFullName()
+              << std::endl;
     std::cout << "Orbit host: " << Capture::GCaptureHost << std::endl;
     GOrbitApp->SelectProcess(Capture::GProcessToInject);
     Capture::InjectRemote();

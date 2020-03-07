@@ -113,4 +113,3 @@ TEST(OrbitModule, GetFunctionFromProgramCounter) {
   ASSERT_NE(function, nullptr);
   EXPECT_EQ(function->Name(), "__free");
 }
-

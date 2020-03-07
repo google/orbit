@@ -55,8 +55,8 @@ void* Injection::RemoteWrite(const char* data, size_t size) {
 //-----------------------------------------------------------------------------
 bool Injection::Inject(const std::string& a_DllName, const Process& a_Process,
                        const std::string& ProcName) {
-  SCOPE_TIMER_LOG(absl::StrFormat("Injecting in %s",
-                                  a_Process.GetName().c_str()));
+  SCOPE_TIMER_LOG(
+      absl::StrFormat("Injecting in %s", a_Process.GetName().c_str()));
 
   m_InjectedProcessID = a_Process.GetID();
   m_InjectedProcessHandle =
@@ -111,8 +111,8 @@ bool Injection::Inject(const std::string& a_DllName, const Process& a_Process,
   }
 
   // Remote write the host and port number
-  std::string hostString = Capture::GCaptureHost + ":" +
-                                std::to_string(Capture::GCapturePort);
+  std::string hostString =
+      Capture::GCaptureHost + ":" + std::to_string(Capture::GCapturePort);
   ORBIT_LOG(absl::StrFormat("Capture port: %i", Capture::GCapturePort));
   void* hostStringAddress = RemoteWrite(hostString);
   PRINT_VAR(hostString);
@@ -307,8 +307,8 @@ HMODULE WINAPI Injection::GetRemoteModuleHandle(HANDLE hProcess,
                          sizeof(ModuleNameBuffer));
 
     std::string ModuleName(ModuleNameBuffer);
-    std::transform(ModuleName.begin(), ModuleName.end(),
-                   ModuleName.begin(), ::tolower);
+    std::transform(ModuleName.begin(), ModuleName.end(), ModuleName.begin(),
+                   ::tolower);
 
     /* Convert ModuleNameBuffer to all lowercase so the comparison isn't case
      * sensitive */

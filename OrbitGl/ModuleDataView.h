@@ -23,9 +23,8 @@ class ModulesDataView : public DataView {
                      std::vector<int>& a_ItemIndices) override;
   void OnTimer() override;
   bool WantsDisplayColor() override { return true; }
-  bool GetDisplayColor(int /*a_Row*/, int /*a_Column*/,
-                       unsigned char& /*r*/, unsigned char& /*g*/,
-                       unsigned char& /*b*/) override;
+  bool GetDisplayColor(int /*a_Row*/, int /*a_Column*/, unsigned char& /*r*/,
+                       unsigned char& /*g*/, unsigned char& /*b*/) override;
   std::wstring GetLabel() override { return L"Modules"; }
 
   void SetProcess(std::shared_ptr<Process> a_Process);

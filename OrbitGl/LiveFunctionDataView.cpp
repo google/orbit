@@ -239,7 +239,7 @@ void LiveFunctionsDataView::OnFilter(const std::wstring& a_Filter) {
       bool match = true;
 
       for (std::wstring& filterToken : tokens) {
-        if (name.find( filterToken ) == std::wstring::npos) {
+        if (name.find(filterToken) == std::wstring::npos) {
           match = false;
           break;
         }

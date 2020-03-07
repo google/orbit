@@ -54,11 +54,10 @@ class Path {
       std::function<bool(const std::string&)> a_Filter =
           [](const std::string&) { return true; });
   static std::vector<std::string> ListFiles(const std::string& a_Dir,
-                                             const std::string& a_Filter);
+                                            const std::string& a_Filter);
   static bool ContainsFile(const std::string a_Dir, const std::string a_File);
 
  private:
   static std::string base_path_;
   static bool is_packaged_;
 };
-

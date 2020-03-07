@@ -694,8 +694,7 @@ void CaptureWindow::DrawScreenSpace() {
     double width = stop - start;
     double maxStart = timeSpan - width;
     double ratio =
-        Capture::IsCapturing() ? 1 :
-          (maxStart != 0 ? start / maxStart : 0);
+        Capture::IsCapturing() ? 1 : (maxStart != 0 ? start / maxStart : 0);
 
     m_Slider.SetSliderRatio((float)ratio);
     m_Slider.SetSliderWidthRatio(float(width / timeSpan));

@@ -169,9 +169,10 @@ bool Pdb::LoadFunctions(const char* file_name) {
 
   auto load_bias = elf_file->GetLoadBias();
   if (!load_bias) {
-    PRINT(absl::StrFormat("Unable to get load_bias \"%s\" "
-                          "(does the file have PT_LOAD program headers?)",
-                          m_FileName));
+    PRINT(
+        absl::StrFormat("Unable to get load_bias \"%s\" "
+                        "(does the file have PT_LOAD program headers?)",
+                        m_FileName));
     return false;
   }
 

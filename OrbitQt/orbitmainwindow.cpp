@@ -467,8 +467,7 @@ void OrbitMainWindow::on_actionSave_Session_triggered() {
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionOpen_Session_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
-      this, "Select a file to open...", Path::GetPresetPath().c_str(),
-      "*.opr");
+      this, "Select a file to open...", Path::GetPresetPath().c_str(), "*.opr");
   for (auto& file : list) {
     GOrbitApp->OnLoadSession(file.toStdString());
     break;
@@ -510,9 +509,9 @@ void OrbitMainWindow::on_actionToogleDevMode_toggled(bool a_Toggle) {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionSave_Session_As_triggered() {
-  QString file = QFileDialog::getSaveFileName(
-      this, "Specify a file to save...", Path::GetPresetPath().c_str(),
-      "*.opr");
+  QString file =
+      QFileDialog::getSaveFileName(this, "Specify a file to save...",
+                                   Path::GetPresetPath().c_str(), "*.opr");
   GOrbitApp->OnSaveSession(file.toStdString());
 }
 

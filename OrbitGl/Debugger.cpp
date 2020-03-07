@@ -134,8 +134,8 @@ void Debugger::DebuggerThread(const std::string& process_name,
   si.cb = sizeof(si);
   ZeroMemory(&pi, sizeof(pi));
 
-  std::string dir = !working_dir.empty() ?  working_dir :
-      Path::GetDirectory(process_name);
+  std::string dir =
+      !working_dir.empty() ? working_dir : Path::GetDirectory(process_name);
   std::string command_line_str = process_name + " " + args;
   // TODO: commandline is limited to MAX_PATH, should it
   // just report a error if command_line_str length is > MAX_PATH?
@@ -191,19 +191,17 @@ void Debugger::DebuggerThread(const std::string& process_name,
 
       case CREATE_THREAD_DEBUG_EVENT:
         // Thread 0xc (Id: 7920) created at: 0x77b15e58
-        strEventMessage =
-            absl::StrFormat("Thread 0x%x (Id: %d) created at: 0x%x",
-                            debug_event.u.CreateThread.hThread,
-                            debug_event.dwThreadId,
-                            debug_event.u.CreateThread.lpStartAddress);
+        strEventMessage = absl::StrFormat(
+            "Thread 0x%x (Id: %d) created at: 0x%x",
+            debug_event.u.CreateThread.hThread, debug_event.dwThreadId,
+            debug_event.u.CreateThread.lpStartAddress);
 
         break;
       case EXIT_THREAD_DEBUG_EVENT:
         // The thread 2760 exited with code: 0
-        strEventMessage =
-            absl::StrFormat("The thread %d exited with code: %d",
-                            debug_event.dwThreadId,
-                            debug_event.u.ExitThread.dwExitCode);
+        strEventMessage = absl::StrFormat("The thread %d exited with code: %d",
+                                          debug_event.dwThreadId,
+                                          debug_event.u.ExitThread.dwExitCode);
 
         break;
 
@@ -261,11 +259,11 @@ void Debugger::DebuggerThread(const std::string& process_name,
 
           default:
             if (exception.dwFirstChance == 1) {
-              strEventMessage =
-                  absl::StrFormat("First chance exception at %x, "
-                                  "exception-code: 0x%08x",
-                                  exception.ExceptionRecord.ExceptionAddress,
-                                  exception.ExceptionRecord.ExceptionCode);
+              strEventMessage = absl::StrFormat(
+                  "First chance exception at %x, "
+                  "exception-code: 0x%08x",
+                  exception.ExceptionRecord.ExceptionAddress,
+                  exception.ExceptionRecord.ExceptionCode);
             }
             // else
             // { Let the OS handle }

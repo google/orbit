@@ -335,8 +335,7 @@ std::shared_ptr<Variable> Type::GenerateVariable(DWORD64 a_Address,
 
     if (type && type->HasMembers()) {
       std::string name = member.m_Name;
-      var->AddChild(
-          type->GenerateVariable(a_Address + memberOffset, &name));
+      var->AddChild(type->GenerateVariable(a_Address + memberOffset, &name));
     } else {
       std::shared_ptr<Variable> newMember = std::make_shared<Variable>(member);
       newMember->m_Address = a_Address + memberOffset;

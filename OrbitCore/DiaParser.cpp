@@ -548,7 +548,7 @@ void DiaParser::PrintGlobalSymbol(IDiaSymbol* pSymbol) {
 }
 
 std::string DiaParser::GetBasicType(uint32_t base_type) {
-  switch(base_type) {
+  switch (base_type) {
     case btNoType:
       return "btNoType  ";
     case btVoid:

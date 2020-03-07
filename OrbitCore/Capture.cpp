@@ -522,8 +522,8 @@ void Capture::SaveSession(const std::string& a_FileName) {
 
   for (Function* func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {
-      session.m_Modules[func->GetPdb()->GetName()]
-          .m_FunctionHashes.push_back(func->Hash());
+      session.m_Modules[func->GetPdb()->GetName()].m_FunctionHashes.push_back(
+          func->Hash());
     }
   }
 
