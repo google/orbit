@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.15)
 
-if(NOT WIN32)
-  # These flags do not work on Windows.
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=inconsistent-missing-override
+                           -Werror=float-conversion)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion)
 endif()
 
