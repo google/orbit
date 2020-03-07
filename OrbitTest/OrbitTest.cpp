@@ -7,9 +7,6 @@
 #include <sstream>
 #include <thread>
 
-static const uint32_t NUM_THREADS = 10;
-static const uint32_t NUM_RECURSIVE_CALLS = 10;
-
 #if __linux__
 #define NO_INLINE __attribute__((noinline))
 #else
@@ -31,20 +28,27 @@ void SetThreadName(const std::string& a_Name) {
 }
 
 //-----------------------------------------------------------------------------
-OrbitTest::OrbitTest() {}
+OrbitTest::OrbitTest(uint32_t num_threads, uint32_t recurse_depth,
+                     uint32_t sleep_us)
+    : num_threads_(num_threads),
+      recurse_depth_(recurse_depth),
+      sleep_us_(sleep_us) {}
 
 //-----------------------------------------------------------------------------
 OrbitTest::~OrbitTest() {
   m_ExitRequested = true;
 
-  for (uint32_t i = 0; i < NUM_THREADS; ++i) {
+  for (uint32_t i = 0; i < num_threads_; ++i) {
     m_Threads[i]->join();
   }
 }
 
 //-----------------------------------------------------------------------------
 void OrbitTest::Start() {
-  for (uint32_t i = 0; i < NUM_THREADS; ++i) {
+  std::cout << "Starting OrbitTest num_threads: " << num_threads_
+            << " recurse_depth: " << recurse_depth_
+            << " sleep_us: " << sleep_us_ << std::endl;
+  for (uint32_t i = 0; i < num_threads_; ++i) {
     auto thread = std::make_shared<std::thread>(&OrbitTest::Loop, this);
     m_Threads.push_back(thread);
   }
@@ -53,16 +57,35 @@ void OrbitTest::Start() {
 //-----------------------------------------------------------------------------
 void OrbitTest::Loop() {
   SetThreadName(std::string("OrbitThread_") + std::to_string(GetThreadID()));
-
+  uint32_t count = 0;
   while (!m_ExitRequested) {
-    TestFunc();
+    ((++count) & 1) == 0 ? TestFunc() : TestFunc2();
   }
 }
+
 //-----------------------------------------------------------------------------
 void NO_INLINE OrbitTest::TestFunc(uint32_t a_Depth) {
-  if (a_Depth == NUM_RECURSIVE_CALLS) return;
-
+  if (a_Depth == recurse_depth_) return;
   TestFunc(a_Depth + 1);
+  std::this_thread::sleep_for(std::chrono::microseconds(sleep_us_));
+}
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+//-----------------------------------------------------------------------------
+void NO_INLINE OrbitTest::TestFunc2(uint32_t a_Depth) {
+  if (a_Depth == recurse_depth_) return;
+  TestFunc(a_Depth + 1);
+  BusyWork(sleep_us_);
+}
+
+//-----------------------------------------------------------------------------
+void NO_INLINE OrbitTest::BusyWork(uint64_t microseconds) {
+  static volatile uint32_t count;
+  auto start = std::chrono::system_clock::now();
+  while (true) {
+    auto end = std::chrono::system_clock::now();
+    uint64_t us =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start)
+            .count();
+    if (us > microseconds) break;
+  }
 }
