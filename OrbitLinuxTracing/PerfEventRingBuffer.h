@@ -21,6 +21,7 @@ class PerfEventRingBuffer {
   PerfEventRingBuffer& operator=(const PerfEventRingBuffer&) = delete;
 
   bool IsOpen() const { return ring_buffer_ != nullptr; }
+  int GetFileDescriptor() const { return file_descriptor_; }
 
   bool HasNewData();
   void ReadHeader(perf_event_header* header);
@@ -35,6 +36,7 @@ class PerfEventRingBuffer {
   // The buffer length needs to be a power of 2, hence we can use shifting for
   // division.
   uint32_t ring_buffer_size_log2_ = 0;
+  int file_descriptor_ = -1;
 
   void ReadAtTail(uint8_t* dest, uint64_t count);
   void ReadAtOffsetFromTail(uint8_t* dest, uint64_t offset_from_tail,
