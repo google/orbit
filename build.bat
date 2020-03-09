@@ -39,9 +39,6 @@ for /L %%i in (1,1,%argCount%) do (
 
     call conan build -bf build_!profile!/ !REPO_ROOT!
     if !errorlevel! neq 0 exit /b !errorlevel!
-
-    call conan package -bf build_!profile!/ !REPO_ROOT!
-    if !errorlevel! neq 0 exit /b !errorlevel!
 )
 
 EXIT /B 0
