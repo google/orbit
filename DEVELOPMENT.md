@@ -66,6 +66,142 @@ A `.clang-format` file which defines our specific code style lives in the
 top level directory of the repository. The style is identical to the Google
 style.
 
+## FAQ
+
+### What's the difference between `bootstrap-orbit.{sh,bat}` and `build.{sh,bat}`?
+
+`bootstrap-orbit.{sh,bat}` performs all the tasks which have to be done once per developer machine.
+This includes:
+* Installing system dependencies
+* Installing conan if necessary.
+
+Afterwards `bootstrap-orbit.{sh,bat}` calls `build.{sh,bat}`.
+
+`build.{sh,bat}` on the other hand performs all the tasks which have to be done
+once per build configuration. It creates a build directory, named after the
+given conan profile, installs the conan-managed dependencies into this build folder,
+calls `cmake` for build configuration and starts the build.
+
+Whenever the dependencies change you have to call `build.{sh,bat}` again.
+A dependency change might be introduced by a pull from upstream or by a switch
+to a different branch.
+
+`build.{sh,bat}` can initialize as many build configurations as you like from the
+same invocation. Just pass conan profile names as command line arguments. Example for Linux:
+```bash
+./build.sh clang7_debug gcc9_release clang9_relwithdebinfo ggp_release
+# is equivalent to
+./build.sh clang7_debug
+./build.sh gcc9_release
+./build.sh clang9_relwithdebinfo
+./build.sh ggp_release
+```
+
+### Calling `build.{sh,bat}` after every one-line-change takes forever! What should I do?
+
+`build.{sh,bat}` is not meant for incremental builds. It should be called only once to initialize
+a build directory. (Check out the previous section for more information on what `build.{sh,bat}`
+does.)
+
+For incremental builds, switch to the build directory and ask cmake to run the build:
+```bash
+cd <build_folder>/
+cmake --build . # On Linux
+cmake --build . --config {Release,RelWithDebInfo,Debug} # On Windows
+```
+
+Alternatively, you can also just call `make` on Linux. Check out the next section on how to
+enable building with `ninja`.
+
+### How do I enable `ninja` for my build?
+
+> **Note:** Linux only for now! On Windows you have to use MSBuild.
+
+If you want to use `ninja`, you cannot rely on the `build.sh` script, which automatically
+initializes your build with `make` and that cannot be changed easily later on.
+So create a build directory from scratch, install the conan-managed dependencies
+and invoke `cmake` manually. Here is how it works:
+
+Let's assume you want to build Orbit in debug mode with `clang-9`:
+```bash
+mkdir build_clang9_debug # Create a build directory; should not exist before.
+cd build_clang9_debug/
+conan install -pr clang9_debug ../ # Install conan-managed dependencies
+cp ../contrib/toolchains/toolchain-linux-clang9-debug.cmake toolchain.cmake # Copy the cmake toolchain file, which matches the conan profile.
+cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -G Ninja ../
+ninja
+```
+
+> ### Note:
+> Please be aware that it is your responsibility to ensure that the conan profile is compatible
+> with the toolchain parameters cmake uses. In this example clang9 in debug mode is used in both cases.
+
+#### Another example without toolchain files:
+You can also manually pass the toolchain options to cmake via the command line:
+```bash
+mkdir build_clang9_debug # Create a build directory; should not exist before.
+cd build_clang9_debug/
+conan install -pr clang9_debug ../ # Install conan-managed dependencies
+cmake -DCMAKE_CXX_COMPILER=clang++-9 -DCMAKE_C_COMPILER=clang-9 -DCMAKE_BUILD_TYPE=Debug -G Ninja ../
+ninja
+```
+
+### How do I integrate with CLion?
+
+In CLion, the IDE itself manages your build configurations, which is incompatible with our `build.{sh,bat}`
+script. That means, you have to manually install conan dependencies into CLion's build directories
+and you have to manually verify that the directory's build configuration matches the used conan profile
+in terms of compiler, standard library, build type, target platform, etc.
+
+```bash
+cd build_directory_created_by_clion/
+conan install -pr matching_conan_profile ..
+```
+
+After that, you can trigger a rerun of `cmake` from CLion and it will now be able to pick up all the missing
+dependencies.
+
+This process can be automated by the [CLion Conan Extension](https://plugins.jetbrains.com/plugin/11956-conan).
+
+After installing the extension, it will take care of installing conan dependencies into your
+CLion build directories, whenever necessary. The only task left to you is to create a mapping
+between CLion build configurations and conan profiles. Check out
+[this blog post](https://blog.jetbrains.com/clion/2019/05/getting-started-with-the-conan-clion-plugin)
+on how to do it.
+
+### How do I integrate conan with Visual Studio?
+
+Visual Studio has this concept of having multiple build configurations in the same build directory.
+This concept is not very wide-spread on buildsystems coming from the Unix world. Both CMake and
+Conan have support for it, but some of our dependencies currently do not support it.
+
+That means, **currently you can't have debug and release builds in the same build folder!**
+Please ensure that Visual Studio is set to the build configuration which matches your build-
+folder's conan profile. Non-matching build configurations will result in a lot of linker errors.
+
+There is a (Conan Extension for Visual Studio)[https://marketplace.visualstudio.com/items?itemName=conan-io.conan-vs-extension],
+which is currently under development, but should be able to help you, when you develop on
+Visual Studio.
+
+### The build worked fine, but when I try to call cmake manually I get `cmake not found!`
+
+Conan installs cmake as a build dependency automatically, but won't make it available in the PATH.
+
+If you want to use conan's cmake installation, you can use the `virtualenv` generator to create
+a virtual environment which has `cmake` in its PATH:
+
+```bash
+cd my_build_folder/
+conan install -pr my_conan_profile -g virtualenv ../
+source ./activate.sh # On Linux (bash) or on Windows in git-bash
+.\activate.bat # On Windows in cmd
+.\activate.ps1 # On Windows in powershell
+cmake ... # CMake from conan is now available
+```
+
+There is also a `deactivate.{sh,bat,ps1}` which make your shell leave the virtual environment.
+
+
 ## Cross-Compiling for GGP
 
 _Note:_ This was only tested on Linux. Cross compilation on Windows
