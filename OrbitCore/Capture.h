@@ -54,6 +54,16 @@ struct Capture {
   static void SetLoadPdbAsyncFunc(LoadPdbAsyncFunc a_Func) {
     GLoadPdbAsync = a_Func;
   }
+
+  typedef void (*SamplingDoneCallback)(
+      std::shared_ptr<SamplingProfiler>& sampling_profiler,
+      void* user_data);
+  static void SetSamplingDoneCallback(SamplingDoneCallback callback,
+                                      void* user_data) {
+    sampling_done_callback_ = callback;
+    sampling_done_callback_user_data_ = user_data;
+  }
+
   static void TestRemoteMessages();
   static class TcpEntity* GetMainTcpEntity();
 
@@ -83,8 +93,6 @@ struct Capture {
   static std::shared_ptr<Session> GSessionPresets;
   static std::shared_ptr<CallStack> GSelectedCallstack;
   static void (*GClearCaptureDataFunc)();
-  static void (*GSamplingDoneCallback)(
-      std::shared_ptr<SamplingProfiler>& a_SamplingProfiler);
   static std::map<ULONG64, Function*> GSelectedFunctionsMap;
   static std::map<ULONG64, Function*> GVisibleFunctionsMap;
   static std::unordered_map<ULONG64, ULONG64> GFunctionCountMap;
@@ -98,4 +106,7 @@ struct Capture {
   static Mutex GCallstackMutex;
   static LoadPdbAsyncFunc GLoadPdbAsync;
   static bool GUnrealSupported;
+ private:
+  static SamplingDoneCallback sampling_done_callback_;
+  static void* sampling_done_callback_user_data_;
 };

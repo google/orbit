@@ -100,9 +100,12 @@ class OrbitApp : public CoreApp {
   bool SelectProcess(uint32_t a_ProcessID);
   bool Inject(unsigned long a_ProcessId);
   static void AddSamplingReport(
-      std::shared_ptr<class SamplingProfiler>& a_SamplingProfiler);
+      std::shared_ptr<class SamplingProfiler>& sampling_profiler,
+      void* app_ptr);
+
   static void AddSelectionReport(
       std::shared_ptr<SamplingProfiler>& a_SamplingProfiler);
+
   void GoToCode(DWORD64 a_Address);
   void GoToCallstack();
   void GoToCapture();

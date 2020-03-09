@@ -73,10 +73,14 @@ std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
 std::shared_ptr<Session> Capture::GSessionPresets = nullptr;
 
 void (*Capture::GClearCaptureDataFunc)();
-void (*Capture::GSamplingDoneCallback)(
-    std::shared_ptr<SamplingProfiler>& a_SamplingProfiler);
 std::vector<std::shared_ptr<SamplingProfiler> > GOldSamplingProfilers;
 bool Capture::GUnrealSupported = false;
+
+// The user_data pointer is provided by caller when registering capture
+// callback. It is then passed to the callback and can be used to store context
+// such as a pointer to a class.
+Capture::SamplingDoneCallback Capture::sampling_done_callback_ = nullptr;
+void* Capture::sampling_done_callback_user_data_ = nullptr;
 
 //-----------------------------------------------------------------------------
 void Capture::Init() {
@@ -439,8 +443,9 @@ void Capture::Update() {
 #endif
 
     if (GSamplingProfiler->GetState() == SamplingProfiler::DoneProcessing) {
-      if (GSamplingDoneCallback) {
-        GSamplingDoneCallback(GSamplingProfiler);
+      if (sampling_done_callback_ != nullptr) {
+        sampling_done_callback_(GSamplingProfiler,
+                                sampling_done_callback_user_data_);
       }
       GIsSampling = false;
     }

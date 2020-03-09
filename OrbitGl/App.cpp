@@ -414,7 +414,7 @@ bool OrbitApp::Init() {
 
   GModuleManager.Init();
   Capture::Init();
-  Capture::GSamplingDoneCallback = &OrbitApp::AddSamplingReport;
+  Capture::SetSamplingDoneCallback(&OrbitApp::AddSamplingReport, GOrbitApp);
   Capture::SetLoadPdbAsyncFunc(GLoadPdbAsync);
 
 #ifdef _WIN32
@@ -819,11 +819,11 @@ void OrbitApp::NeedsRedraw() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::AddSamplingReport(
-    std::shared_ptr<SamplingProfiler>& a_SamplingProfiler) {
-  auto report = std::make_shared<SamplingReport>(a_SamplingProfiler);
+    std::shared_ptr<SamplingProfiler>& sampling_profiler, void* app_ptr) {
+  OrbitApp* app = static_cast<OrbitApp*>(app_ptr);
+  auto report = std::make_shared<SamplingReport>(sampling_profiler);
 
-  for (SamplingReportCallback& callback :
-       GOrbitApp->m_SamplingReportsCallbacks) {
+  for (SamplingReportCallback& callback : app->m_SamplingReportsCallbacks) {
     callback(report);
   }
 }
