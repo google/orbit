@@ -8,6 +8,17 @@
 #include "Utils.h"
 #include "absl/container/flat_hash_map.h"
 
+namespace {
+// Unlike std::make_unique, calls new without parentheses, causing the object
+// to be default-initialized instead of value-initialized.
+// This can prevent useless memory initialization.
+// Standard version coming in C++20.
+template<class T>
+inline std::unique_ptr<T> make_unique_for_overwrite() {
+  return std::unique_ptr<T>(new T);
+}
+}
+
 namespace LinuxTracing {
 
 // TODO: Refactor this huge method.
@@ -247,7 +258,7 @@ void TracerThread::Run(
 
           case PERF_RECORD_SAMPLE: {
             if (is_uprobes) {
-              auto event = std::make_unique<UprobesWithStackPerfEvent>();
+              auto event = make_unique_for_overwrite<UprobesWithStackPerfEvent>();
               ring_buffer.ConsumeRecord(header, &event->ring_buffer_record);
               event->SetFunction(uprobe_fds_to_function.at(fd));
               uprobes_event_processor.AddEvent(fd, std::move(event));
@@ -255,7 +266,7 @@ void TracerThread::Run(
               ++uprobes_count;
 
             } else if (is_uretprobes) {
-              auto event = std::make_unique<UretprobesPerfEvent>();
+              auto event = make_unique_for_overwrite<UretprobesPerfEvent>();
               ring_buffer.ConsumeRecord(header, &event->ring_buffer_record);
               event->SetFunction(uretprobe_fds_to_function.at(fd));
               uprobes_event_processor.AddEvent(fd, std::move(event));
@@ -263,7 +274,7 @@ void TracerThread::Run(
               ++uprobes_count;
 
             } else {
-              auto event = std::make_unique<StackSamplePerfEvent>();
+              auto event = make_unique_for_overwrite<StackSamplePerfEvent>();
               ring_buffer.ConsumeRecord(header, &event->ring_buffer_record);
               uprobes_event_processor.AddEvent(fd, std::move(event));
 
