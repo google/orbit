@@ -22,6 +22,11 @@ class PerfEvent {
   virtual ~PerfEvent() = default;
   virtual uint64_t GetTimestamp() const = 0;
   virtual void Accept(PerfEventVisitor* visitor) = 0;
+  void SetFileDescriptor(int fd) { file_descriptor_ = fd; }
+  int GetFileDescriptor() const { return file_descriptor_; }
+
+ private:
+  int file_descriptor_ = -1;
 };
 
 class ContextSwitchPerfEvent : public PerfEvent {
