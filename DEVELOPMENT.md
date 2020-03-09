@@ -32,8 +32,7 @@ script will not be able to install conan for you.)
 
 ## Dependencies
 
-All our third party library and dependencies are either included via
-git submodules or they are managed by conan.
+All our third-party libraries and dependencies are managed by conan.
 
 There are some exceptions. On Linux, we rely by default on the distribution's Qt5
 and Mesa installation. This can be changed by modifying the conan package options
