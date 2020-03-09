@@ -48,7 +48,6 @@ class CoreApp {
   GetRules() {
     return nullptr;
   }
-  virtual void SendRemoteProcess(uint32_t /*a_PID*/) {}
   virtual void RefreshCaptureView() {}
 
   virtual void StartRemoteCaptureBufferingThread() {}

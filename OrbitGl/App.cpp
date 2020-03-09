@@ -583,17 +583,6 @@ void OrbitApp::SetRemoteProcess(std::shared_ptr<Process> a_Process) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::SendRemoteProcess(uint32_t a_PID) {
-  std::shared_ptr<Process> process = m_ProcessesDataView->SelectProcess(a_PID);
-
-  if (process) {
-    std::string processData = SerializeObjectHumanReadable(*process);
-    GTcpServer->Send(Msg_RemoteProcess, (void*)processData.data(),
-                     processData.size());
-  }
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::RefreshCaptureView() {
   NeedsRedraw();
   GOrbitApp->FireRefreshCallbacks();
@@ -1167,9 +1156,12 @@ void OrbitApp::LoadRemoteModules() {
     }
   }
 
-  std::string moduleData = SerializeObjectBinary(modules);
-  GTcpClient->Send(Msg_RemoteModuleDebugInfo, (void*)moduleData.data(),
-                   moduleData.size());
+  std::string module_data = SerializeObjectBinary(modules);
+  Message msg(Msg_RemoteModuleDebugInfo, module_data.size() + 1,
+              module_data.data());
+  msg.m_Header.m_GenericHeader.m_Address =
+      m_ProcessesDataView->GetSelectedProcess()->GetID();
+  GTcpClient->Send(msg);
 }
 
 //-----------------------------------------------------------------------------

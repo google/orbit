@@ -331,10 +331,10 @@ void Capture::SendFunctionHooks() {
                      (void*)selectedFunctionsData.data(),
                      selectedFunctionsData.size());
 
-    GTcpClient->Send(Msg_StartCapture);
-  } else
-    // TODO: Why is this? This seems to be unnecessary.
-    GTcpServer->Send(Msg_StartCapture);
+    Message msg(Msg_StartCapture);
+    msg.m_Header.m_GenericHeader.m_Address = GTargetProcess->GetID();
+    GTcpClient->Send(msg);
+  }
 
   // Unreal
   if (Capture::GUnrealSupported) {
