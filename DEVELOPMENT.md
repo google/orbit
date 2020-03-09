@@ -223,11 +223,6 @@ to the instance:
 ggp ssh put build_ggp_release/package/bin/OrbitService
 ```
 
-Some libraries still need to be installed on the instance:
-```bash
-sudo apt install libglu1-mesa libxi6 libxmu6
-```
-
 before the service can be started with:
 ```bash
 ggp ssh shell
