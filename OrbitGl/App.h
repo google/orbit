@@ -9,10 +9,11 @@
 #include <queue>
 #include <string>
 
-#include "../OrbitCore/ContextSwitch.h"
-#include "../OrbitCore/CoreApp.h"
-#include "../OrbitCore/CrashHandler.h"
-#include "../OrbitCore/Message.h"
+#include "ContextSwitch.h"
+#include "CoreApp.h"
+#include "CrashHandler.h"
+#include "Message.h"
+
 #include "DataViewTypes.h"
 #include "Threading.h"
 
@@ -62,7 +63,6 @@ class OrbitApp : public CoreApp {
   void AppendSystrace(const std::string& a_FileName, uint64_t a_TimeOffset);
   void ListSessions();
   void SetRemoteProcess(std::shared_ptr<Process> a_Process);
-  void SendRemoteProcess(uint32_t a_PID) override;
   void RefreshCaptureView() override;
   void RequestRemoteModules(const std::vector<std::string> a_Modules);
   void AddWatchedVariable(Variable* a_Variable);

@@ -32,6 +32,10 @@ class ProcessesDataView : public DataView {
   void UpdateModuleDataView(std::shared_ptr<Process> a_Process);
   void SetIsRemote(bool a_Value) { m_IsRemote = true; }
 
+  std::shared_ptr<Process> GetSelectedProcess() const {
+    return m_SelectedProcess;
+  }
+
   // void SetSelectedProcessCtrl(SelectedProcessPanel* a_Panel ) {
   // m_SelectedProcessPanel = a_Panel; }
 

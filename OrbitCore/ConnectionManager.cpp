@@ -111,8 +111,14 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
 }
 
 //-----------------------------------------------------------------------------
-void ConnectionManager::StartCaptureAsRemote() {
+void ConnectionManager::StartCaptureAsRemote(uint32_t pid) {
   PRINT_FUNC;
+  std::shared_ptr<Process> process = process_list_.GetProcess(pid);
+  if (!process) {
+    PRINT("Process not found (pid=%d)\n", pid);
+    return;
+  }
+  Capture::SetTargetProcess(process);
   Capture::StartCapture();
   GCoreApp->StartRemoteCaptureBufferingThread();
 }
@@ -131,33 +137,49 @@ void ConnectionManager::Stop() { m_ExitRequested = true; }
 void ConnectionManager::SetupServerCallbacks() {
   GTcpServer->AddMainThreadCallback(
       Msg_RemoteSelectedFunctionsMap,
-      [=](const Message& a_Msg) { SetSelectedFunctionsOnRemote(a_Msg); });
+      [this](const Message& a_Msg) { SetSelectedFunctionsOnRemote(a_Msg); });
 
   GTcpServer->AddMainThreadCallback(
-      Msg_StartCapture, [=](const Message& a_Msg) { StartCaptureAsRemote(); });
-
-  GTcpServer->AddMainThreadCallback(
-      Msg_StopCapture, [=](const Message& a_Msg) { StopCaptureAsRemote(); });
-
-  GTcpServer->AddMainThreadCallback(
-      Msg_RemoteProcessRequest, [=](const Message& a_Msg) {
-        uint32_t pid = (uint32_t)a_Msg.m_Header.m_GenericHeader.m_Address;
-        GCoreApp->SendRemoteProcess(pid);
+      Msg_StartCapture, [this](const Message& msg) {
+        uint32_t pid = static_cast<uint32_t>(
+            msg.m_Header.m_GenericHeader.m_Address);
+        StartCaptureAsRemote(pid);
       });
 
   GTcpServer->AddMainThreadCallback(
-      Msg_RemoteModuleDebugInfo, [=](const Message& a_Msg) {
+      Msg_StopCapture, [this](const Message&) { StopCaptureAsRemote(); });
+
+  GTcpServer->AddMainThreadCallback(
+      Msg_RemoteProcessRequest, [this](const Message& msg) {
+        uint32_t pid = static_cast<uint32_t>(
+            msg.m_Header.m_GenericHeader.m_Address);
+
+        SendRemoteProcess(GTcpServer, pid);
+      });
+
+  GTcpServer->AddMainThreadCallback(
+      Msg_RemoteModuleDebugInfo, [=](const Message& msg) {
+        uint32_t pid = static_cast<uint32_t>(
+            msg.m_Header.m_GenericHeader.m_Address);
+
+        PRINT("RemoteModuleDebugInfo pid=%d\n", pid);
+        std::shared_ptr<Process> process = process_list_.GetProcess(pid);
+        if (!process) {
+          PRINT("Process not found (pid=%d)\n", pid);
+          return;
+        }
+
         std::vector<ModuleDebugInfo> remoteModuleDebugInfo;
         std::vector<std::string> modules;
 
-        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        std::istringstream buffer(std::string(msg.m_Data, msg.m_Size));
         cereal::BinaryInputArchive inputAr(buffer);
         inputAr(modules);
 
         for (std::string& module : modules) {
           ModuleDebugInfo moduleDebugInfo;
           moduleDebugInfo.m_Name = module;
-          Capture::GTargetProcess->FillModuleDebugInfo(moduleDebugInfo);
+          process->FillModuleDebugInfo(moduleDebugInfo);
           remoteModuleDebugInfo.push_back(moduleDebugInfo);
         }
 
@@ -260,13 +282,25 @@ void ConnectionManager::SetupClientCallbacks() {
 }
 
 //-----------------------------------------------------------------------------
-void ConnectionManager::SendProcesses(TcpEntity* a_TcpEntity) {
-  ProcessList processList;
-  processList.Refresh();
-  processList.UpdateCpuTimes();
-  std::string processData = SerializeObjectHumanReadable(processList);
-  a_TcpEntity->Send(Msg_RemoteProcessList, (void*)processData.data(),
-                    processData.size());
+void ConnectionManager::SendProcesses(TcpEntity* tcp_entity) {
+  process_list_.Refresh();
+  process_list_.UpdateCpuTimes();
+  std::string process_data = SerializeObjectHumanReadable(process_list_);
+  tcp_entity->Send(Msg_RemoteProcessList, process_data.data(),
+                   process_data.size());
+}
+
+void ConnectionManager::SendRemoteProcess(TcpEntity* tcp_entity, uint32_t pid) {
+  std::shared_ptr<Process> process = process_list_.GetProcess(pid);
+  // TODO: remove this - pid should be part of every message,
+  // and all the messages should to be as stateless as possible.
+  Capture::SetTargetProcess(process);
+  process->ListModules();
+  if (process) {
+    std::string process_data = SerializeObjectHumanReadable(*process);
+    tcp_entity->Send(Msg_RemoteProcess, process_data.data(),
+                     process_data.size());
+  }
 }
 
 //-----------------------------------------------------------------------------
