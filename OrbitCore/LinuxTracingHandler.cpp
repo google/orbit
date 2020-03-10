@@ -73,16 +73,7 @@ void LinuxTracingHandler::OnCallstack(
   cs.m_ThreadId = callstack.GetTid();
 
   for (const auto& frame : callstack.GetFrames()) {
-    // TODO: Avoid repeating symbol resolution by caching already seen PCs.
-    //  If this validation of PC is even necessary, that is.
     uint64_t address = frame.GetPc();
-
-    std::string module_name = ToLower(Path::GetFileName(frame.GetMapName()));
-    std::shared_ptr<Module> module =
-        target_process_->GetModuleFromName(module_name);
-    if (module) {
-      address = module->ValidateAddress(address);
-    }
 
     if (!frame.GetFunctionName().empty() &&
         !target_process_->HasSymbol(address)) {
