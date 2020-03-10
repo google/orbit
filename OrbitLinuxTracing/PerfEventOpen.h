@@ -91,9 +91,11 @@ static constexpr uint16_t SAMPLE_STACK_USER_SIZE = 65000;
 // perf_event_open for context switches.
 int context_switch_event_open(pid_t pid, int32_t cpu);
 
-// perf_event_open for stack sampling, while collecting task (fork and exit) and
-// mmap records in the same buffer.
-int sample_mmap_task_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
+// perf_event_open for task (fork and exit) and mmap records in the same buffer.
+int mmap_task_event_open(pid_t pid, int32_t cpu);
+
+// perf_event_open for stack sampling.
+int sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
 
 // perf_event_open for uprobes and uretprobes.
 int uprobes_stack_event_open(const char* module, uint64_t function_offset,
