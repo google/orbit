@@ -25,8 +25,8 @@ void TracerThread::Run(
       PerfEventRingBuffer context_switch_ring_buffer{context_switch_fd,
                                                      SMALL_RING_BUFFER_SIZE_KB};
       if (context_switch_ring_buffer.IsOpen()) {
-        fds_to_ring_buffer_.emplace(context_switch_fd,
-                                    std::move(context_switch_ring_buffer));
+        tracing_fds_.push_back(context_switch_fd);
+        ring_buffers_.push_back(std::move(context_switch_ring_buffer));
       }
     }
   }
@@ -35,8 +35,8 @@ void TracerThread::Run(
       std::make_unique<UprobesUnwindingVisitor>(ReadMaps(pid_));
   uprobes_unwinding_visitor->SetListener(listener_);
   // Switch between PerfEventProcessor and PerfEventProcessor2 here.
-  // PerfEventProcessor2 is supposedly faster but assumes that events from
-  // the same perf_event_open ring buffer are already sorted.
+  // PerfEventProcessor2 is supposedly faster but assumes that events from the
+  // same perf_event_open ring buffer are already sorted.
   uprobes_event_processor_ = std::make_shared<PerfEventProcessor2>(
       std::move(uprobes_unwinding_visitor));
 
@@ -48,51 +48,52 @@ void TracerThread::Run(
         PerfEventRingBuffer uprobes_ring_buffer{uprobes_fd,
                                                 BIG_RING_BUFFER_SIZE_KB};
         if (uprobes_ring_buffer.IsOpen()) {
-          fds_to_ring_buffer_.emplace(uprobes_fd,
-                                      std::move(uprobes_ring_buffer));
+          tracing_fds_.push_back(uprobes_fd);
+          ring_buffers_.push_back(std::move(uprobes_ring_buffer));
           uprobes_fds_to_function_.emplace(uprobes_fd, &function);
         }
 
         int uretprobes_fd = uretprobes_event_open(
             function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
+        tracing_fds_.push_back(uretprobes_fd);
 
         // Redirect uretprobes to the uprobes ring buffer to reduce number of
         // ring buffers and to coalesce closely related events.
         perf_event_redirect(uretprobes_fd, uprobes_fd);
-
-        // Track uretprobes fds separately as they map to a uprobes ring buffer.
-        uretprobes_fds_.push_back(uretprobes_fd);
       }
     }
   }
 
-  // TODO(b/148209993): Consider sampling based on CPU and filter by pid.
-  for (pid_t tid : ListThreads(pid_)) {
-    // Keep threads in sync.
-    listener_->OnTid(tid);
+  for (int32_t cpu = 0; cpu < num_cpus; cpu++) {
+    int mmap_task_fd = mmap_task_event_open(-1, cpu);
+    PerfEventRingBuffer mmap_task_ring_buffer{mmap_task_fd,
+                                              SMALL_RING_BUFFER_SIZE_KB};
+    if (mmap_task_ring_buffer.IsOpen()) {
+      tracing_fds_.push_back(mmap_task_fd);
+      ring_buffers_.push_back(std::move(mmap_task_ring_buffer));
+    }
+  }
 
-    if (trace_callstacks_) {
-      int sampling_fd =
-          sample_mmap_task_event_open(sampling_period_ns_, tid, -1);
+  if (trace_callstacks_) {
+    for (int32_t cpu = 0; cpu < num_cpus; cpu++) {
+      int sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
       PerfEventRingBuffer sampling_ring_buffer{sampling_fd,
                                                BIG_RING_BUFFER_SIZE_KB};
       if (sampling_ring_buffer.IsOpen()) {
-        fds_to_ring_buffer_.emplace(sampling_fd,
-                                    std::move(sampling_ring_buffer));
-        threads_to_fd_.emplace(tid, sampling_fd);
+        tracing_fds_.push_back(sampling_fd);
+        ring_buffers_.push_back(std::move(sampling_ring_buffer));
       }
     }
   }
 
-  // TODO: New threads might spawn here before forks are started to be recorded.
-  //  Consider also polling threads regularly.
-
   // Start recording events.
-  for (const auto& fd_to_ring_buffer : fds_to_ring_buffer_) {
-    perf_event_enable(fd_to_ring_buffer.first);
+  for (int fd : tracing_fds_) {
+    perf_event_enable(fd);
   }
-  for (int uretprobes_fd : uretprobes_fds_) {
-    perf_event_enable(uretprobes_fd);
+
+  for (pid_t tid : ListThreads(pid_)) {
+    // Keep threads in sync.
+    listener_->OnTid(tid);
   }
 
   stats_.Reset();
@@ -103,25 +104,21 @@ void TracerThread::Run(
 
   while (!(*exit_requested)) {
     // Sleep if there was no new event in the last iteration so that we are not
-    // constantly polling.  Don't sleep so long that ring buffers overflow.
+    // constantly polling. Don't sleep so long that ring buffers overflow.
     // TODO: Refine this sleeping pattern, possibly using exponential backoff.
     if (!last_iteration_saw_events) {
       usleep(IDLE_TIME_ON_EMPTY_RING_BUFFERS_US);
     }
 
     last_iteration_saw_events = false;
-    fds_to_remove_.clear();
 
     // Read and process events from all ring buffers. In order to ensure that no
     // buffer is read constantly while others overflow, we schedule the reading
     // using round-robin like scheduling.
-    for (auto& fd_to_ring_buffer : fds_to_ring_buffer_) {
+    for (PerfEventRingBuffer& ring_buffer : ring_buffers_) {
       if (*exit_requested) {
         break;
       }
-
-      const int& fd = fd_to_ring_buffer.first;
-      PerfEventRingBuffer& ring_buffer = fd_to_ring_buffer.second;
 
       // Read up to ROUND_ROBIN_POLLING_BATCH_SIZE (5) new events.
       // TODO: Some event types (e.g., stack samples) have a much longer
@@ -143,12 +140,14 @@ void TracerThread::Run(
 
         // perf_event_header::type contains the type of record, e.g.,
         // PERF_RECORD_SAMPLE, PERF_RECORD_MMAP, etc., defined in enum
-        // perf_event_type in perf_event.h.
+        // perf_event_type in linux/perf_event.h.
         switch (header.type) {
-          case PERF_RECORD_SWITCH:  // non system-wide profiling:
+          case PERF_RECORD_SWITCH:
+            // Note: as we are recording context switches on CPUs and not on
+            // threads, we don't expect this type of record.
             ProcessContextSwitchEvent(header, &ring_buffer);
             break;
-          case PERF_RECORD_SWITCH_CPU_WIDE:  // system-wide profiling
+          case PERF_RECORD_SWITCH_CPU_WIDE:
             ProcessContextSwitchCpuWideEvent(header, &ring_buffer);
             break;
           case PERF_RECORD_FORK:
@@ -176,16 +175,6 @@ void TracerThread::Run(
         PrintStatsIfTimerElapsed();
       }
     }
-
-    // Add new ring buffers.
-    for (auto& fd_to_ring_buffer_to_add : fds_to_ring_buffer_to_add_) {
-      fds_to_ring_buffer_.emplace(std::move(fd_to_ring_buffer_to_add));
-    }
-
-    // Erase old ring buffers.
-    for (int fd_to_remove : fds_to_remove_) {
-      fds_to_ring_buffer_.erase(fd_to_remove);
-    }
   }
 
   // Finish processing all deferred events.
@@ -193,17 +182,17 @@ void TracerThread::Run(
   deferred_events_thread.join();
   uprobes_event_processor_->ProcessAllEvents();
 
-  // Stop recording and close the file descriptors.
-  for (auto& fd_to_ring_buffer : fds_to_ring_buffer_) {
-    const int& fd = fd_to_ring_buffer.first;
+  // Stop recording.
+  for (int fd : tracing_fds_) {
     perf_event_disable(fd);
-    close(fd);
   }
-  fds_to_ring_buffer_.clear();
 
-  for (int uretprobes_fd : uretprobes_fds_) {
-    perf_event_disable(uretprobes_fd);
-    close(uretprobes_fd);
+  // Close the ring buffers.
+  ring_buffers_.clear();
+
+  // Close the file descriptors.
+  for (int fd : tracing_fds_) {
+    close(fd);
   }
 }
 
@@ -248,21 +237,12 @@ void TracerThread::ProcessForkEvent(const perf_event_header& header,
   ForkPerfEvent event;
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
 
-  if (event.GetPid() == pid_) {
-    // A new thread of the sampled process was spawned.
-    int sampling_fd =
-        sample_mmap_task_event_open(sampling_period_ns_, event.GetTid(), -1);
-    perf_event_enable(sampling_fd);
-    PerfEventRingBuffer sampling_ring_buffer{sampling_fd,
-                                             BIG_RING_BUFFER_SIZE_KB};
-    if (sampling_ring_buffer.IsOpen()) {
-      // Do not add a new ring buffer to fds_to_ring_buffer here as we
-      // are already iterating over fds_to_ring_buffer.
-      fds_to_ring_buffer_to_add_.emplace_back(sampling_fd,
-                                              std::move(sampling_ring_buffer));
-      threads_to_fd_.emplace(event.GetTid(), sampling_fd);
-    }
+  if (event.GetPid() != pid_) {
+    return;
   }
+
+  // A new thread of the sampled process was spawned.
+  listener_->OnTid(event.GetTid());
 }
 
 void TracerThread::ProcessExitEvent(const perf_event_header& header,
@@ -270,22 +250,37 @@ void TracerThread::ProcessExitEvent(const perf_event_header& header,
   ExitPerfEvent event;
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
 
-  if (event.GetPid() == pid_) {
-    if (threads_to_fd_.count(event.GetTid()) > 0) {
-      int sample_fd = threads_to_fd_.at(event.GetTid());
-      perf_event_disable(sample_fd);
-      close(sample_fd);
-      fds_to_remove_.push_back(sample_fd);
-      threads_to_fd_.erase(sample_fd);
-    }
+  if (event.GetPid() != pid_) {
+    return;
   }
+
+  // Nothing to do.
 }
 
 void TracerThread::ProcessMmapEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
+  // Mmap records have the following layout:
+  // struct {
+  //   struct perf_event_header header;
+  //   u32    pid, tid;
+  //   u64    addr;
+  //   u64    len;
+  //   u64    pgoff;
+  //   char   filename[];
+  //   struct sample_id sample_id; /* if sample_id_all */
+  // };
+  // Because of filename, the layout is not fixed.
+
+  pid_t pid;
+  ring_buffer->ReadValueAtOffset(&pid, sizeof(perf_event_header));
+  ring_buffer->SkipRecord(header);
+
+  if (pid != pid_) {
+    return;
+  }
+
   // There was a call to mmap with PROT_EXEC, hence refresh the maps.
   // This should happen rarely.
-  ring_buffer->SkipRecord(header);
   int fd = ring_buffer->GetFileDescriptor();
   auto event =
       std::make_unique<MapsPerfEvent>(MonotonicTimestampNs(), ReadMaps(pid_));
@@ -301,6 +296,20 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   bool is_uretprobe = is_probe && (header.size == size_of_uretprobe);
   bool is_uprobe = is_probe && !is_uretprobe;
 
+  pid_t pid;
+  if (is_uretprobe) {
+    ring_buffer->ReadValueAtOffset(
+        &pid, offsetof(perf_event_empty_sample, sample_id.pid));
+  } else {
+    ring_buffer->ReadValueAtOffset(
+        &pid, offsetof(perf_event_stack_sample, sample_id.pid));
+  }
+
+  if (pid != pid_) {
+    ring_buffer->SkipRecord(header);
+    return;
+  }
+
   if (is_uprobe) {
     auto event =
         ConsumeSamplePerfEvent<UprobesWithStackPerfEvent>(ring_buffer, header);
@@ -308,6 +317,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
+
   } else if (is_uretprobe) {
     auto event = make_unique_for_overwrite<UretprobesPerfEvent>();
     ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
@@ -315,6 +325,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
+
   } else {
     auto event =
         ConsumeSamplePerfEvent<StackSamplePerfEvent>(ring_buffer, header);
@@ -346,9 +357,8 @@ std::vector<std::unique_ptr<PerfEvent>> TracerThread::ConsumeDeferredEvents() {
 void TracerThread::ProcessDeferredEvents() {
   bool should_exit = false;
   while (!should_exit) {
-    // When "should_exit" becomes true, we know that we have stopped
-    // generating deferred events. The last iteration will consume all
-    // remaining events.
+    // When "should_exit" becomes true, we know that we have stopped generating
+    // deferred events. The last iteration will consume all remaining events.
     should_exit = stop_deferred_thread_;
     std::vector<std::unique_ptr<PerfEvent>> events = ConsumeDeferredEvents();
     if (events.empty()) {
@@ -366,12 +376,9 @@ void TracerThread::ProcessDeferredEvents() {
 }
 
 void TracerThread::Reset() {
-  fds_to_ring_buffer_.clear();
-  fds_to_ring_buffer_to_add_.clear();
-  uretprobes_fds_.clear();
-  threads_to_fd_.clear();
+  tracing_fds_.clear();
+  ring_buffers_.clear();
   uprobes_fds_to_function_.clear();
-  fds_to_remove_.clear();
   deferred_events_.clear();
   stop_deferred_thread_ = false;
 }

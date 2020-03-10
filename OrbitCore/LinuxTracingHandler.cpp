@@ -42,6 +42,7 @@ void LinuxTracingHandler::Stop() {
 }
 
 void LinuxTracingHandler::OnTid(pid_t tid) {
+  // This doesn't seem to be of any use at the moment.
   target_process_->AddThreadId(tid);
 }
 
