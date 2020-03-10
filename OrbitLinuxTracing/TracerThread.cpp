@@ -3,17 +3,6 @@
 #include "Logging.h"
 #include "UprobesUnwindingVisitor.h"
 
-namespace {
-// Unlike std::make_unique, calls new without parentheses, causing the object
-// to be default-initialized instead of value-initialized.
-// This can prevent useless memory initialization.
-// Standard version coming in C++20.
-template<class T>
-inline std::unique_ptr<T> make_unique_for_overwrite() {
-  return std::unique_ptr<T>(new T);
-}
-}
-
 namespace LinuxTracing {
 
 // TODO: Refactor this huge method.
@@ -226,7 +215,6 @@ void TracerThread::ProcessContextSwitchEvent(const perf_event_header& header,
                                              PerfEventRingBuffer* ring_buffer) {
   ContextSwitchPerfEvent event;
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
-  ++stats_.sched_switch_count;
   pid_t tid = event.GetTid();
   uint16_t cpu = static_cast<uint16_t>(event.GetCpu());
   uint64_t time = event.GetTimestamp();
@@ -236,23 +224,23 @@ void TracerThread::ProcessContextSwitchEvent(const perf_event_header& header,
   } else {
     listener_->OnContextSwitchIn(ContextSwitchIn(tid, cpu, time));
   }
+
+  ++stats_.sched_switch_count;
 }
 
 void TracerThread::ProcessContextSwitchCpuWideEvent(
     const perf_event_header& header, PerfEventRingBuffer* ring_buffer) {
   SystemWideContextSwitchPerfEvent event;
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
+  uint16_t cpu = static_cast<uint16_t>(event.GetCpu());
+  uint64_t time = event.GetTimestamp();
 
   if (event.GetPrevTid() != 0) {
-    ContextSwitchOut context_switch_out{event.GetPrevTid(),
-                                        static_cast<uint16_t>(event.GetCpu()),
-                                        event.GetTimestamp()};
+    ContextSwitchOut context_switch_out{event.GetPrevTid(), cpu, time};
     listener_->OnContextSwitchOut(context_switch_out);
   }
   if (event.GetNextTid() != 0) {
-    ContextSwitchIn context_switch_in{event.GetNextTid(),
-                                      static_cast<uint16_t>(event.GetCpu()),
-                                      event.GetTimestamp()};
+    ContextSwitchIn context_switch_in{event.GetNextTid(), cpu, time};
     listener_->OnContextSwitchIn(context_switch_in);
   }
 
@@ -318,8 +306,8 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   bool is_uprobe = is_probe && !is_uretprobe;
 
   if (is_uprobe) {
-    auto event = make_unique_for_overwrite<UprobesWithStackPerfEvent>();
-    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
+    auto event =
+        ConsumeSamplePerfEvent<UprobesWithStackPerfEvent>(ring_buffer, header);
     event->SetFunction(uprobe_fds_to_function_.at(fd));
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
@@ -332,8 +320,8 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
   } else {
-    auto event = make_unique_for_overwrite<StackSamplePerfEvent>();
-    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
+    auto event =
+        ConsumeSamplePerfEvent<StackSamplePerfEvent>(ring_buffer, header);
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;

@@ -28,6 +28,19 @@ class PerfEventRingBuffer {
   void SkipRecord(const perf_event_header& header);
   void ConsumeRecord(const perf_event_header& header, void* record);
 
+  template <typename T>
+  void ReadValueAtOffset(T* value, uint64_t offset) {
+    ReadAtOffsetFromTail(reinterpret_cast<uint8_t*>(value), offset, sizeof(T));
+  }
+
+  void ReadRawAtOffset(uint8_t* dest, uint64_t offset, uint64_t count) {
+    ReadAtOffsetFromTail(dest, offset, count);
+  }
+
+  void ReadRawAtOffset(char* dest, uint64_t offset, uint64_t count) {
+    ReadAtOffsetFromTail(reinterpret_cast<uint8_t*>(dest), offset, count);
+  }
+
  private:
   uint64_t mmap_length_ = 0;
   perf_event_mmap_page* metadata_page_ = nullptr;
@@ -38,7 +51,10 @@ class PerfEventRingBuffer {
   uint32_t ring_buffer_size_log2_ = 0;
   int file_descriptor_ = -1;
 
-  void ReadAtTail(uint8_t* dest, uint64_t count);
+  void ReadAtTail(uint8_t* dest, uint64_t count) {
+    return ReadAtOffsetFromTail(dest, 0, count);
+  }
+
   void ReadAtOffsetFromTail(uint8_t* dest, uint64_t offset_from_tail,
                             uint64_t count);
 };
