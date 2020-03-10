@@ -39,7 +39,6 @@ endif()
 
 if(NOT WIN32)
   find_package(OpenSSL CONFIG REQUIRED)
-  find_package(unwindstack REQUIRED)
 endif()
 
 find_package(Threads REQUIRED)
@@ -66,7 +65,9 @@ endif()
 find_package(abseil CONFIG REQUIRED)
 find_package(llvm_object CONFIG REQUIRED)
 
-find_package(lzma REQUIRED)
+if(NOT WIN32)
+  find_package(libunwindstack CONFIG REQUIRED)
+endif()
 find_package(asio CONFIG REQUIRED)
 find_package(GTest REQUIRED)
 

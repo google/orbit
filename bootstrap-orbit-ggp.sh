@@ -8,14 +8,6 @@ if [ $? -ne 0 ]; then
         sudo pip3 install conan
 fi
 
-# Load Submodules (libunwindstack)
-(cd $DIR && git submodule update --init --recursive)
-
-if [ $? -ne 0 ]; then
-  echo "Orbit: Could not update/initialize all the submodules. Exiting..."
-  exit 1
-fi
-
 unset GGP_SDK_PATH
 
 conan config install $DIR/contrib/conan/config || exit $?

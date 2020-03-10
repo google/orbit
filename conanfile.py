@@ -31,6 +31,8 @@ class OrbitConan(ConanFile):
         self.requires("libcurl/7.66.0")
         self.requires("llvm_object/9.0.1@orbitdeps/stable")
         self.requires("openssl/1.1.1d@{}".format(self._orbit_channel))
+        if self.settings.os != "Windows":
+            self.requires("libunwindstack/80a734f14@{}".format(self._orbit_channel))
         self.requires("zlib/1.2.11@conan/stable")
 
         if self.settings.os == "Windows":

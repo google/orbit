@@ -2,12 +2,6 @@
 
 SET REPO_ROOT=%~dp0
 
-setlocal
-cd %REPO_ROOT%
-call git submodule update --init --recursive
-if ERRORLEVEL 1 exit /b 1
-endlocal
-
 where /q conan
 if ERRORLEVEL 1 (
     echo "Conan not found. Trying to install it via python-pip..."
