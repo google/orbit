@@ -10,7 +10,7 @@ set -e
 #  the credentials being printed in build logs.
 #  Additionally, recursive invocation with credentials as command-line
 #  parameters, will print the full command, with credentials, in the build logs.
-# set -x
+set -x
 
 
 # Code under repo is checked out to ${KOKORO_ARTIFACTS_DIR}/github.
