@@ -59,3 +59,5 @@ target_link_libraries(OrbitLinuxTracingTests PRIVATE
         OrbitLinuxTracing
         GTest::GTest
         GTest::Main)
+
+add_test(NAME OrbitLinuxTracing COMMAND OrbitLinuxTracingTests)
