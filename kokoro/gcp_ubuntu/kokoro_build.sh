@@ -17,7 +17,12 @@ set -e
 # The final directory name in this path is determined by the scm name specified
 # in the job configuration.
 cd ${KOKORO_ARTIFACTS_DIR}/github/orbitprofiler
-./bootstrap-ci-orbit.sh
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../" >/dev/null 2>&1 && pwd )"
+echo "Installing conan configuration (profiles, settings, etc.)..."
+conan config install $DIR/contrib/conan/config || exit $?
+
+exec $DIR/build.sh clang7_release
 
 # Uncomment the three lines below to print the external ip into the log and
 # keep the vm alive for two hours. This is useful to debug build failures that
