@@ -43,25 +43,25 @@ void TracerThread::Run(
   if (trace_instrumented_functions_) {
     for (const auto& function : instrumented_functions_) {
       for (int32_t cpu = 0; cpu < num_cpus; cpu++) {
-        int uprobe_fd = uprobes_stack_event_open(
+        int uprobes_fd = uprobes_stack_event_open(
             function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
-        PerfEventRingBuffer uprobe_ring_buffer{uprobe_fd,
-                                               BIG_RING_BUFFER_SIZE_KB};
-        if (uprobe_ring_buffer.IsOpen()) {
-          fds_to_ring_buffer_.emplace(uprobe_fd, std::move(uprobe_ring_buffer));
-          uprobe_fds_to_function_.emplace(uprobe_fd, &function);
+        PerfEventRingBuffer uprobes_ring_buffer{uprobes_fd,
+                                                BIG_RING_BUFFER_SIZE_KB};
+        if (uprobes_ring_buffer.IsOpen()) {
+          fds_to_ring_buffer_.emplace(uprobes_fd,
+                                      std::move(uprobes_ring_buffer));
+          uprobes_fds_to_function_.emplace(uprobes_fd, &function);
         }
 
-        int uretprobe_fd = uretprobes_event_open(
+        int uretprobes_fd = uretprobes_event_open(
             function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
 
-        // Redirect uretprobes to uprobe ring buffer to reduce number of ring
-        // buffers and to coalesce closely related events.
-        perf_event_redirect(uretprobe_fd, uprobe_fd);
-        perf_event_enable(uretprobe_fd);
+        // Redirect uretprobes to the uprobes ring buffer to reduce number of
+        // ring buffers and to coalesce closely related events.
+        perf_event_redirect(uretprobes_fd, uprobes_fd);
 
-        // Track uretprobe fds separately as they map to a uprobe ring buffer.
-        uret_probes_fds_.push_back(uretprobe_fd);
+        // Track uretprobes fds separately as they map to a uprobes ring buffer.
+        uretprobes_fds_.push_back(uretprobes_fd);
       }
     }
   }
@@ -90,6 +90,9 @@ void TracerThread::Run(
   // Start recording events.
   for (const auto& fd_to_ring_buffer : fds_to_ring_buffer_) {
     perf_event_enable(fd_to_ring_buffer.first);
+  }
+  for (int uretprobes_fd : uretprobes_fds_) {
+    perf_event_enable(uretprobes_fd);
   }
 
   stats_.Reset();
@@ -198,9 +201,9 @@ void TracerThread::Run(
   }
   fds_to_ring_buffer_.clear();
 
-  for (int uret_probe_fd : uret_probes_fds_) {
-    perf_event_disable(uret_probe_fd);
-    close(uret_probe_fd);
+  for (int uretprobes_fd : uretprobes_fds_) {
+    perf_event_disable(uretprobes_fd);
+    close(uretprobes_fd);
   }
 }
 
@@ -293,7 +296,7 @@ void TracerThread::ProcessMmapEvent(const perf_event_header& header,
 void TracerThread::ProcessSampleEvent(const perf_event_header& header,
                                       PerfEventRingBuffer* ring_buffer) {
   int fd = ring_buffer->GetFileDescriptor();
-  bool is_probe = uprobe_fds_to_function_.count(fd) > 0;
+  bool is_probe = uprobes_fds_to_function_.count(fd) > 0;
   constexpr size_t size_of_uretprobe = sizeof(perf_event_empty_sample);
   bool is_uretprobe = is_probe && (header.size == size_of_uretprobe);
   bool is_uprobe = is_probe && !is_uretprobe;
@@ -301,14 +304,14 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   if (is_uprobe) {
     auto event =
         ConsumeSamplePerfEvent<UprobesWithStackPerfEvent>(ring_buffer, header);
-    event->SetFunction(uprobe_fds_to_function_.at(fd));
+    event->SetFunction(uprobes_fds_to_function_.at(fd));
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
   } else if (is_uretprobe) {
     auto event = make_unique_for_overwrite<UretprobesPerfEvent>();
     ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    event->SetFunction(uprobe_fds_to_function_.at(fd));
+    event->SetFunction(uprobes_fds_to_function_.at(fd));
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
@@ -365,9 +368,9 @@ void TracerThread::ProcessDeferredEvents() {
 void TracerThread::Reset() {
   fds_to_ring_buffer_.clear();
   fds_to_ring_buffer_to_add_.clear();
-  uret_probes_fds_.clear();
+  uretprobes_fds_.clear();
   threads_to_fd_.clear();
-  uprobe_fds_to_function_.clear();
+  uprobes_fds_to_function_.clear();
   fds_to_remove_.clear();
   deferred_events_.clear();
   stop_deferred_thread_ = false;

@@ -93,11 +93,11 @@ class TracerThread {
   bool trace_instrumented_functions_ = true;
 
   absl::flat_hash_map<int, PerfEventRingBuffer> fds_to_ring_buffer_;
-  std::vector<std::pair<int, PerfEventRingBuffer>> fds_to_ring_buffer_to_add_;
   absl::flat_hash_map<pid_t, int> threads_to_fd_;
-  absl::flat_hash_map<int, const Function*> uprobe_fds_to_function_;
+  absl::flat_hash_map<int, const Function*> uprobes_fds_to_function_;
+  std::vector<std::pair<int, PerfEventRingBuffer>> fds_to_ring_buffer_to_add_;
   std::vector<int> fds_to_remove_;
-  std::vector<int> uret_probes_fds_;
+  std::vector<int> uretprobes_fds_;
 
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
