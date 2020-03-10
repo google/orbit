@@ -1,5 +1,5 @@
-#ifndef ORBIT_LINUX_TRACING_LINUX_PERF_UTILS_H_
-#define ORBIT_LINUX_TRACING_LINUX_PERF_UTILS_H_
+#ifndef ORBIT_LINUX_TRACING_PERF_EVENT_OPEN_H_
+#define ORBIT_LINUX_TRACING_PERF_EVENT_OPEN_H_
 
 #include <asm/perf_regs.h>
 #include <asm/unistd.h>
@@ -91,4 +91,4 @@ void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length);
 
 }  // namespace LinuxTracing
 
-#endif  // ORBIT_LINUX_TRACING_LINUX_PERF_UTILS_H_
+#endif  // ORBIT_LINUX_TRACING_PERF_EVENT_OPEN_H_
