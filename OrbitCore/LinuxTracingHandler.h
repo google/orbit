@@ -11,7 +11,7 @@
 
 class LinuxTracingHandler : LinuxTracing::TracerListener {
  public:
-  static constexpr double DEFAULT_SAMPLING_FREQUENCY = 99.0;
+  static constexpr double DEFAULT_SAMPLING_FREQUENCY = 1000.0;
 
   LinuxTracingHandler(CoreApp* core_app, Process* target_process,
                       std::map<ULONG64, Function*>* selected_function_map,
