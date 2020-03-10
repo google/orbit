@@ -23,6 +23,7 @@ target_sources(OrbitLinuxTracing PUBLIC
 target_sources(OrbitLinuxTracing PRIVATE
         LibunwindstackUnwinder.cpp
         LibunwindstackUnwinder.h
+        MakeUniqueForOverwrite.h
         Logging.h
         PerfEvent.cpp
         PerfEvent.h

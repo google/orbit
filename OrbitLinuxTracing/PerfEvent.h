@@ -4,7 +4,9 @@
 #include <OrbitLinuxTracing/Function.h>
 
 #include <array>
+#include <memory>
 
+#include "MakeUniqueForOverwrite.h"
 #include "PerfEventRecords.h"
 
 namespace LinuxTracing {
@@ -131,9 +133,31 @@ class LostPerfEvent : public PerfEvent {
   uint64_t GetNumLost() const { return ring_buffer_record.lost; }
 };
 
+struct __attribute__((__packed__)) dynamically_sized_perf_event_stack_sample {
+  struct __attribute__((__packed__))
+  dynamically_sized_perf_event_sample_stack_user {
+    uint64_t dyn_size;
+    std::unique_ptr<char[]> data;
+
+    explicit dynamically_sized_perf_event_sample_stack_user(uint64_t dyn_size)
+        : dyn_size{dyn_size},
+          data{make_unique_for_overwrite<char[]>(dyn_size)} {}
+  };
+
+  perf_event_header header;
+  perf_event_sample_id_tid_time_cpu sample_id;
+  perf_event_sample_regs_user_all regs;
+  dynamically_sized_perf_event_sample_stack_user stack;
+
+  explicit dynamically_sized_perf_event_stack_sample(uint64_t dyn_size)
+      : stack{dyn_size} {}
+};
+
 class SamplePerfEvent : public PerfEvent {
  public:
-  perf_event_stack_sample ring_buffer_record;
+  dynamically_sized_perf_event_stack_sample ring_buffer_record;
+
+  explicit SamplePerfEvent(uint64_t dyn_size) : ring_buffer_record{dyn_size} {}
 
   uint64_t GetTimestamp() const override {
     return ring_buffer_record.sample_id.time;
@@ -148,7 +172,9 @@ class SamplePerfEvent : public PerfEvent {
         ring_buffer_record.regs);
   }
 
-  const char* GetStackData() const { return ring_buffer_record.stack.data; }
+  const char* GetStackData() const {
+    return ring_buffer_record.stack.data.get();
+  }
   uint64_t GetStackSize() const { return ring_buffer_record.stack.dyn_size; }
 
  private:
@@ -187,6 +213,9 @@ class SamplePerfEvent : public PerfEvent {
 
 class StackSamplePerfEvent : public SamplePerfEvent {
  public:
+  explicit StackSamplePerfEvent(uint64_t dyn_size)
+      : SamplePerfEvent{dyn_size} {}
+
   void Accept(PerfEventVisitor* visitor) override;
 };
 
@@ -202,6 +231,9 @@ class AbstractUprobesPerfEvent {
 class UprobesWithStackPerfEvent : public SamplePerfEvent,
                                   public AbstractUprobesPerfEvent {
  public:
+  explicit UprobesWithStackPerfEvent(uint64_t dyn_size)
+      : SamplePerfEvent{dyn_size} {}
+
   void Accept(PerfEventVisitor* visitor) override;
 };
 

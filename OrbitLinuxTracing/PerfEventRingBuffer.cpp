@@ -85,32 +85,27 @@ bool PerfEventRingBuffer::HasNewData() {
 }
 
 void PerfEventRingBuffer::ReadHeader(perf_event_header* header) {
-  assert(IsOpen());
   ReadAtTail(reinterpret_cast<uint8_t*>(header), sizeof(perf_event_header));
   assert(header->type != 0);
   assert(metadata_page_->data_tail + header->size <= metadata_page_->data_head);
 }
 
 void PerfEventRingBuffer::SkipRecord(const perf_event_header& header) {
-  assert(IsOpen());
   // Write back how far we read from the buffer.
   metadata_page_->data_tail += header.size;
 }
 
 void PerfEventRingBuffer::ConsumeRecord(const perf_event_header& header,
                                         void* record) {
-  assert(IsOpen());
   ReadAtTail(static_cast<uint8_t*>(record), header.size);
   SkipRecord(header);
-}
-
-void PerfEventRingBuffer::ReadAtTail(uint8_t* dest, uint64_t count) {
-  return ReadAtOffsetFromTail(dest, 0, count);
 }
 
 void PerfEventRingBuffer::ReadAtOffsetFromTail(uint8_t* dest,
                                                uint64_t offset_from_tail,
                                                uint64_t count) {
+  assert(IsOpen());
+
   if (offset_from_tail + count >
       metadata_page_->data_head - metadata_page_->data_tail) {
     ERROR("Reading more data than it is available from the ring buffer");
