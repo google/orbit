@@ -23,11 +23,17 @@ inline int perf_event_open(struct perf_event_attr* attr, pid_t pid, int cpu,
 namespace LinuxTracing {
 
 inline void perf_event_reset(int file_descriptor) {
-  ioctl(file_descriptor, PERF_EVENT_IOC_RESET, 0);
+  int ret = ioctl(file_descriptor, PERF_EVENT_IOC_RESET, 0);
+  if (ret != 0) {
+    ERROR("PERF_EVENT_IOC_RESET: %d", ret);
+  }
 }
 
 inline void perf_event_enable(int file_descriptor) {
-  ioctl(file_descriptor, PERF_EVENT_IOC_ENABLE, 0);
+  int ret = ioctl(file_descriptor, PERF_EVENT_IOC_ENABLE, 0);
+  if (ret != 0) {
+    ERROR("PERF_EVENT_IOC_ENABLE: %d", ret);
+  }
 }
 
 inline void perf_event_reset_and_enable(int file_descriptor) {
@@ -36,7 +42,17 @@ inline void perf_event_reset_and_enable(int file_descriptor) {
 }
 
 inline void perf_event_disable(int file_descriptor) {
-  ioctl(file_descriptor, PERF_EVENT_IOC_DISABLE, 0);
+  int ret = ioctl(file_descriptor, PERF_EVENT_IOC_DISABLE, 0);
+  if (ret != 0) {
+    ERROR("PERF_EVENT_IOC_DISABLE: %d", ret);
+  }
+}
+
+inline void perf_event_redirect(int from_fd, int to_fd) {
+  int ret = ioctl(from_fd, PERF_EVENT_IOC_SET_OUTPUT, to_fd);
+  if (ret != 0) {
+    ERROR("PERF_EVENT_IOC_SET_OUTPUT: %d\n", ret);
+  }
 }
 
 // This must be in sync with struct perf_event_sample_id_tid_time_cpu in
