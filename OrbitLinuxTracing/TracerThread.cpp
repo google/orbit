@@ -113,7 +113,6 @@ void TracerThread::Run(
     }
 
     last_iteration_saw_events = false;
-    new_threads_.clear();
     fds_to_remove_.clear();
 
     // Read and process events from all ring buffers. In order to ensure that no
@@ -301,7 +300,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
                                       PerfEventRingBuffer* ring_buffer) {
   int fd = ring_buffer->GetFileDescriptor();
   bool is_probe = uprobe_fds_to_function_.count(fd) > 0;
-  constexpr uint32_t size_of_uretprobe = sizeof(perf_event_empty_sample);
+  constexpr size_t size_of_uretprobe = sizeof(perf_event_empty_sample);
   bool is_uretprobe = is_probe && (header.size == size_of_uretprobe);
   bool is_uprobe = is_probe && !is_uretprobe;
 
@@ -376,7 +375,6 @@ void TracerThread::Reset() {
   threads_to_fd_.clear();
   uprobe_fds_to_function_.clear();
   fds_to_remove_.clear();
-  new_threads_.clear();
   deferred_events_.clear();
   stop_deferred_thread_ = false;
 }

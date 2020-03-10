@@ -32,8 +32,8 @@ class TracerThread {
 
   TracerThread(const TracerThread&) = delete;
   TracerThread& operator=(const TracerThread&) = delete;
-  TracerThread(TracerThread&&) = default;
-  TracerThread& operator=(TracerThread&&) = default;
+  TracerThread(TracerThread&&) = delete;
+  TracerThread& operator=(TracerThread&&) = delete;
 
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
@@ -98,7 +98,6 @@ class TracerThread {
   absl::flat_hash_map<int, const Function*> uprobe_fds_to_function_;
   std::vector<int> fds_to_remove_;
   std::vector<int> uret_probes_fds_;
-  std::vector<pid_t> new_threads_;
 
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
