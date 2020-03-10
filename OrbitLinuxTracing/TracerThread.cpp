@@ -9,7 +9,7 @@ namespace LinuxTracing {
 void TracerThread::Run(
     const std::shared_ptr<std::atomic<bool>>& exit_requested) {
   if (listener_ == nullptr) {
-    ERROR("No listener set to TracerThread, aborting trace.");
+    ERROR("No listener set to TracerThread, aborting trace");
     return;
   }
 
@@ -57,14 +57,8 @@ void TracerThread::Run(
 
         // Redirect uretprobes to uprobe ring buffer to reduce number of ring
         // buffers and to coalesce closely related events.
-        int ret = ioctl(uretprobe_fd, PERF_EVENT_IOC_SET_OUTPUT, uprobe_fd);
-        if (ret != 0) {
-          ERROR("PERF_EVENT_IOC_SET_OUTPUT error: %i.\n", ret);
-        }
-        ret = ioctl(uretprobe_fd, PERF_EVENT_IOC_ENABLE);
-        if (ret != 0) {
-          ERROR("PERF_EVENT_IOC_ENABLE error: %i.\n", ret);
-        }
+        perf_event_redirect(uretprobe_fd, uprobe_fd);
+        perf_event_enable(uretprobe_fd);
 
         // Track uretprobe fds separately as they map to a uprobe ring buffer.
         uret_probes_fds_.push_back(uretprobe_fd);
