@@ -1,11 +1,10 @@
 #include "PerfEventOpen.h"
 
+#include <OrbitBase/Logging.h>
 #include <linux/perf_event.h>
 
 #include <cerrno>
 #include <cstring>
-
-#include "Logging.h"
 
 namespace LinuxTracing {
 namespace {

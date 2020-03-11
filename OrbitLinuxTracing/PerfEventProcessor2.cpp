@@ -1,10 +1,11 @@
 #include "PerfEventProcessor2.h"
 
+#include <OrbitBase/Logging.h>
+
 #include <cassert>
 #include <memory>
 #include <queue>
 
-#include "Logging.h"
 #include "PerfEvent.h"
 #include "Utils.h"
 

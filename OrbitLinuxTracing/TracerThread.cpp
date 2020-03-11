@@ -1,8 +1,9 @@
 #include "TracerThread.h"
 
+#include <OrbitBase/Logging.h>
+
 #include <thread>
 
-#include "Logging.h"
 #include "UprobesUnwindingVisitor.h"
 
 namespace LinuxTracing {

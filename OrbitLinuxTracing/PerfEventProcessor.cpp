@@ -1,8 +1,9 @@
 #include "PerfEventProcessor.h"
 
+#include <OrbitBase/Logging.h>
+
 #include <queue>
 
-#include "Logging.h"
 #include "Utils.h"
 
 namespace LinuxTracing {
