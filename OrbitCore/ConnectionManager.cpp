@@ -9,7 +9,7 @@
 #include "CoreApp.h"
 #include "EventBuffer.h"
 #include "LinuxCallstackEvent.h"
-#include "LinuxPerf.h"
+#include "LinuxSymbol.h"
 #include "OrbitFunction.h"
 #include "OrbitModule.h"
 #include "Params.h"
@@ -196,12 +196,10 @@ void ConnectionManager::SetupClientCallbacks() {
     PRINT_VAR(a_Msg.m_Size);
     std::string msgStr(a_Msg.m_Data, a_Msg.m_Size);
     std::istringstream buffer(msgStr);
-    LinuxPerf perf(0);
 
     Capture::NewSamplingProfiler();
     Capture::GSamplingProfiler->StartCapture();
     Capture::GSamplingProfiler->SetIsLinuxPerf(true);
-    perf.LoadPerfData(buffer);
     Capture::GSamplingProfiler->StopCapture();
     Capture::GSamplingProfiler->ProcessSamples();
     GCoreApp->RefreshCaptureView();

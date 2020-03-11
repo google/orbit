@@ -76,8 +76,6 @@
 #ifdef _WIN32
 #include "Disassembler.h"
 #include "EventTracer.h"
-#else
-#include "LinuxPerf.h"
 #endif
 
 class OrbitApp* GOrbitApp;

@@ -25,7 +25,7 @@ target_sources(
          Hashing.h
          Injection.h
          LinuxCallstackEvent.h
-         LinuxPerf.h
+         LinuxSymbol.h
          Log.h
          LogInterface.h
          MemoryTracker.h
@@ -84,7 +84,6 @@ target_sources(
           FunctionStats.cpp
           Injection.cpp
           LinuxCallstackEvent.cpp
-          LinuxPerf.cpp
           Log.cpp
           LogInterface.cpp
           MemoryTracker.cpp

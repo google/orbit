@@ -30,7 +30,6 @@ Params::Params()
       m_AutoReleasePdb(false),
       m_BpftraceCallstacks(false),
       m_SystemWideScheduling(true),
-      m_SampleWithPerf(false),
       m_MaxNumTimers(1000000),
       m_FontSize(14.f),
       m_Port(44766),

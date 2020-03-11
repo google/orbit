@@ -190,7 +190,6 @@ bool Capture::StartCapture() {
     GEventTracer.Start(GTargetProcess->GetID());
 #endif
   } else if (Capture::IsRemote()) {
-    LinuxPerf perf(0);
     Capture::NewSamplingProfiler();
     Capture::GSamplingProfiler->SetIsLinuxPerf(true);
     Capture::GSamplingProfiler->StartCapture();

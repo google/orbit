@@ -12,7 +12,6 @@
 #include <vector>
 
 #include "BaseTypes.h"
-#include "LinuxPerf.h"
 
 struct Module;
 

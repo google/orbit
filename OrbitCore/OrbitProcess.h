@@ -11,7 +11,7 @@
 
 #include "BaseTypes.h"
 #include "DiaManager.h"
-#include "LinuxPerf.h"
+#include "LinuxSymbol.h"
 #include "ScopeTimer.h"
 #include "SerializationMacros.h"
 #include "Threading.h"
