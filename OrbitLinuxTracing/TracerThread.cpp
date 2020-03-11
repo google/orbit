@@ -267,20 +267,7 @@ void TracerThread::ProcessExitEvent(const perf_event_header& header,
 
 void TracerThread::ProcessMmapEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
-  // Mmap records have the following layout:
-  // struct {
-  //   struct perf_event_header header;
-  //   u32    pid, tid;
-  //   u64    addr;
-  //   u64    len;
-  //   u64    pgoff;
-  //   char   filename[];
-  //   struct sample_id sample_id; /* if sample_id_all */
-  // };
-  // Because of filename, the layout is not fixed.
-
-  pid_t pid;
-  ring_buffer->ReadValueAtOffset(&pid, sizeof(perf_event_header));
+  pid_t pid = ReadMmapRecordPid(ring_buffer);
   ring_buffer->SkipRecord(header);
 
   if (pid != pid_) {
@@ -306,11 +293,9 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
 
   pid_t pid;
   if (is_uretprobe) {
-    ring_buffer->ReadValueAtOffset(
-        &pid, offsetof(perf_event_empty_sample, sample_id.pid));
+    pid = ReadUretprobesRecordPid(ring_buffer);
   } else {
-    ring_buffer->ReadValueAtOffset(
-        &pid, offsetof(perf_event_stack_sample, sample_id.pid));
+    pid = ReadSampleRecordPid(ring_buffer);
   }
 
   if (pid != pid_) {
