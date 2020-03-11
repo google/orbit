@@ -1,6 +1,6 @@
+#include <OrbitBase/Logging.h>
 #include <OrbitLinuxTracing/Tracer.h>
 
-#include "Logging.h"
 #include "TracerThread.h"
 
 namespace LinuxTracing {

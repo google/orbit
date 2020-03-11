@@ -1,5 +1,6 @@
 #include "PerfEventRingBuffer.h"
 
+#include <OrbitBase/Logging.h>
 #include <linux/perf_event.h>
 #include <sys/mman.h>
 
@@ -7,7 +8,6 @@
 #include <cstring>
 #include <utility>
 
-#include "Logging.h"
 #include "PerfEventOpen.h"
 
 namespace LinuxTracing {

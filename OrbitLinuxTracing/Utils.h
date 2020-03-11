@@ -1,6 +1,7 @@
 #ifndef ORBIT_LINUX_TRACING_UTILS_H_
 #define ORBIT_LINUX_TRACING_UTILS_H_
 
+#include <OrbitBase/Logging.h>
 #include <unistd.h>
 
 #include <optional>

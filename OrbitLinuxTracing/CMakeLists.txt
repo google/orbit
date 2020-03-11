@@ -24,7 +24,6 @@ target_sources(OrbitLinuxTracing PRIVATE
         LibunwindstackUnwinder.cpp
         LibunwindstackUnwinder.h
         MakeUniqueForOverwrite.h
-        Logging.h
         PerfEvent.cpp
         PerfEvent.h
         PerfEventOpen.cpp
@@ -47,6 +46,7 @@ target_sources(OrbitLinuxTracing PRIVATE
         Utils.cpp)
 
 target_link_libraries(OrbitLinuxTracing PUBLIC
+        OrbitBase
         abseil::abseil
         libunwindstack::libunwindstack)
 

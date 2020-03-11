@@ -1,8 +1,8 @@
 #include "LibunwindstackUnwinder.h"
 
-#include <array>
+#include <OrbitBase/Logging.h>
 
-#include "Logging.h"
+#include <array>
 
 namespace LinuxTracing {
 
