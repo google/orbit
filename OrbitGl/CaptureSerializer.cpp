@@ -152,7 +152,7 @@ void CaptureSerializer::Load(const std::wstring a_FileName) {
     // Sampling profiler
     archive(Capture::GSamplingProfiler);
     Capture::GSamplingProfiler->SortByThreadUsage();
-    GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler);
+    GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler, GOrbitApp);
     Capture::GSamplingProfiler->SetLoadedFromFile(true);
 
     // Event buffer
