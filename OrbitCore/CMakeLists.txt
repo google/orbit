@@ -222,4 +222,4 @@ add_custom_command(TARGET OrbitCoreTests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/testdata
   $<TARGET_FILE_DIR:OrbitCoreTests>/testdata)
 
-add_test(NAME OrbitCore COMMAND OrbitCoreTests)
+register_test(OrbitCoreTests)

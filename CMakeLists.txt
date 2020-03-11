@@ -10,6 +10,8 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 project(Orbit C CXX)
+
+include(cmake/tests.cmake)
 enable_testing()
 
 option(WITH_GUI "Setting this option will enable the Qt-based UI client." ON)
