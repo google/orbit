@@ -82,27 +82,16 @@ void EventTracer::Start(uint32_t a_PID) {
   Capture::NewSamplingProfiler();
   Capture::GSamplingProfiler->StartCapture();
 
-  if (GParams.m_SampleWithPerf) {
-    m_Perf = std::make_shared<LinuxPerf>(a_PID);
-    m_Perf->Start();
-  }
-
-  if (GParams.m_TrackContextSwitches || !GParams.m_SampleWithPerf) {
-    m_LinuxTracer = std::make_shared<LinuxTracingHandler>(
-        GCoreApp, Capture::GTargetProcess.get(),
-        &Capture::GSelectedFunctionsMap, &Capture::GNumContextSwitches);
-    m_LinuxTracer->Start();
-  }
+  m_LinuxTracer = std::make_shared<LinuxTracingHandler>(
+      GCoreApp, Capture::GTargetProcess.get(),
+      &Capture::GSelectedFunctionsMap, &Capture::GNumContextSwitches);
+  m_LinuxTracer->Start();
 }
 
 //-----------------------------------------------------------------------------
 void EventTracer::Stop() {
   if (m_LinuxTracer) {
     m_LinuxTracer->Stop();
-  }
-
-  if (m_Perf) {
-    m_Perf->Stop();
   }
 
   if (Capture::GSamplingProfiler) {

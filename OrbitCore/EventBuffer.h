@@ -93,7 +93,6 @@ class EventTracer {
   void Stop();
 
  private:
-  std::shared_ptr<LinuxPerf> m_Perf;
   std::shared_ptr<LinuxTracingHandler> m_LinuxTracer;
 };
 

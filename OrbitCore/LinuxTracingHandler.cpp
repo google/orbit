@@ -3,7 +3,9 @@
 #include <functional>
 #include <optional>
 
+#include "Callstack.h"
 #include "ContextSwitch.h"
+#include "LinuxCallstackEvent.h"
 #include "OrbitModule.h"
 #include "Params.h"
 #include "Path.h"
@@ -28,7 +30,7 @@ void LinuxTracingHandler::Start() {
   tracer_->SetListener(this);
 
   tracer_->SetTraceContextSwitches(GParams.m_TrackContextSwitches);
-  tracer_->SetTraceCallstacks(!GParams.m_SampleWithPerf);
+  tracer_->SetTraceCallstacks(true);
   tracer_->SetTraceInstrumentedFunctions(true);
 
   tracer_->Start();
