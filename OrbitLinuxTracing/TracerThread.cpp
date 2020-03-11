@@ -16,11 +16,19 @@ void TracerThread::Run(
   Reset();
 
   // perf_event_open refers to cores as "CPUs".
-  int32_t num_cpus = GetNumCores();
+  std::vector<int32_t> all_cpus;
+  for (int32_t cpu = 0; cpu < GetNumCores(); ++cpu) {
+    all_cpus.push_back(cpu);
+  }
+
+  std::vector<int32_t> cpuset_cpus = GetCpusetCpus(pid_);
+  if (cpuset_cpus.empty()) {
+    cpuset_cpus = all_cpus;
+  }
 
   if (trace_context_switches_) {
     // Record context switches from all cores for all processes.
-    for (int32_t cpu = 0; cpu < num_cpus; cpu++) {
+    for (int32_t cpu : all_cpus) {
       int context_switch_fd = context_switch_event_open(-1, cpu);
       PerfEventRingBuffer context_switch_ring_buffer{context_switch_fd,
                                                      SMALL_RING_BUFFER_SIZE_KB};
@@ -42,7 +50,7 @@ void TracerThread::Run(
 
   if (trace_instrumented_functions_) {
     for (const auto& function : instrumented_functions_) {
-      for (int32_t cpu = 0; cpu < num_cpus; cpu++) {
+      for (int32_t cpu : cpuset_cpus) {
         int uprobes_fd = uprobes_stack_event_open(
             function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
         PerfEventRingBuffer uprobes_ring_buffer{uprobes_fd,
@@ -64,7 +72,7 @@ void TracerThread::Run(
     }
   }
 
-  for (int32_t cpu = 0; cpu < num_cpus; cpu++) {
+  for (int32_t cpu : cpuset_cpus) {
     int mmap_task_fd = mmap_task_event_open(-1, cpu);
     PerfEventRingBuffer mmap_task_ring_buffer{mmap_task_fd,
                                               SMALL_RING_BUFFER_SIZE_KB};
@@ -75,7 +83,7 @@ void TracerThread::Run(
   }
 
   if (trace_callstacks_) {
-    for (int32_t cpu = 0; cpu < num_cpus; cpu++) {
+    for (int32_t cpu : cpuset_cpus) {
       int sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
       PerfEventRingBuffer sampling_ring_buffer{sampling_fd,
                                                BIG_RING_BUFFER_SIZE_KB};

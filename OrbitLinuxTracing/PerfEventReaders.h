@@ -9,7 +9,7 @@ namespace LinuxTracing {
 // Helper functions for reads from a perf_event_open ring buffer that require
 // more complex operations than simply copying an entire perf_event_open record.
 
-template<typename SamplePerfEventT>
+template <typename SamplePerfEventT>
 inline std::unique_ptr<SamplePerfEventT> ConsumeSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   // Data in the ring buffer has the layout of perf_event_stack_sample, but we
@@ -30,6 +30,6 @@ inline std::unique_ptr<SamplePerfEventT> ConsumeSamplePerfEvent(
   return event;
 }
 
-}
+}  // namespace LinuxTracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_READERS_H_
