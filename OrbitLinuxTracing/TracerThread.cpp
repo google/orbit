@@ -1,5 +1,7 @@
 #include "TracerThread.h"
 
+#include <thread>
+
 #include "Logging.h"
 #include "UprobesUnwindingVisitor.h"
 
@@ -16,18 +18,23 @@ void TracerThread::Run(
   Reset();
 
   // perf_event_open refers to cores as "CPUs".
+
+  // Record context switches from all cores for all processes.
   std::vector<int32_t> all_cpus;
   for (int32_t cpu = 0; cpu < GetNumCores(); ++cpu) {
     all_cpus.push_back(cpu);
   }
 
+  // Record calls to dynamically instrumented functions and sample only on cores
+  // in this process's cgroup's cpuset, as these are the only cores the process
+  // will be scheduled on.
   std::vector<int32_t> cpuset_cpus = GetCpusetCpus(pid_);
   if (cpuset_cpus.empty()) {
+    ERROR("Could not read cpuset");
     cpuset_cpus = all_cpus;
   }
 
   if (trace_context_switches_) {
-    // Record context switches from all cores for all processes.
     for (int32_t cpu : all_cpus) {
       int context_switch_fd = context_switch_event_open(-1, cpu);
       PerfEventRingBuffer context_switch_ring_buffer{context_switch_fd,
@@ -153,6 +160,9 @@ void TracerThread::Run(
           case PERF_RECORD_SWITCH:
             // Note: as we are recording context switches on CPUs and not on
             // threads, we don't expect this type of record.
+            ERROR(
+                "Unexpected PERF_RECORD_SWITCH (only "
+                "PERF_RECORD_SWITCH_CPU_WIDE are expected)");
             ProcessContextSwitchEvent(header, &ring_buffer);
             break;
           case PERF_RECORD_SWITCH_CPU_WIDE:
@@ -276,10 +286,9 @@ void TracerThread::ProcessMmapEvent(const perf_event_header& header,
 
   // There was a call to mmap with PROT_EXEC, hence refresh the maps.
   // This should happen rarely.
-  int fd = ring_buffer->GetFileDescriptor();
   auto event =
       std::make_unique<MapsPerfEvent>(MonotonicTimestampNs(), ReadMaps(pid_));
-  event->SetOriginFileDescriptor(fd);
+  event->SetOriginFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
 }
 
