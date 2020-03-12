@@ -135,6 +135,28 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
 }
 
 void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
+  // We are seeing that on thread migration, uprobe events can sometimes be
+  // duplicated. The idea of the workaround is that for a given thread's
+  // sequence of u(ret)probe events, two consecutive uprobe events must be
+  // associated with decreasing stack pointers (nested function calls, stack
+  // grows by decreasing stack pointer).  If an extra uprobe event is generated,
+  // then the second uprobe event will be associated with a stack pointer that
+  // is greater or equal to the previous stack pointer, and that's not normal.
+  // In that situation, we discard the second uprobe event.
+
+  // Duplicate uprobe detection.
+  uint64_t uprobe_sp = event->GetRegisters()[PERF_REG_X86_SP];
+  std::vector<uint64_t>& uprobe_sps = uprobe_sp_per_thread_[event->GetTid()];
+  if (!uprobe_sps.empty()) {
+    uint64_t last_uprobe_sp = uprobe_sps.back();
+    uprobe_sps.pop_back();
+    if (uprobe_sp >= last_uprobe_sp) {
+      ERROR("MISSING URETPROBE OR DUPLICATE UPROBE DETECTED");
+      return;
+    }
+  }
+  uprobe_sps.push_back(uprobe_sp);
+
   function_call_manager_.ProcessUprobes(event->GetTid(),
                                         event->GetFunction()->VirtualAddress(),
                                         event->GetTimestamp());
@@ -157,6 +179,12 @@ void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
 }
 
 void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
+  // Duplicate uprobe detection.
+  std::vector<uint64_t>& uprobe_sps = uprobe_sp_per_thread_[event->GetTid()];
+  if (!uprobe_sps.empty()) {
+    uprobe_sps.pop_back();
+  }
+
   std::optional<FunctionCall> function_call =
       function_call_manager_.ProcessUretprobes(event->GetTid(),
                                                event->GetTimestamp());
