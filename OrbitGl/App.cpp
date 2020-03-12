@@ -1242,8 +1242,8 @@ void OrbitApp::OnRemoteProcessList(const Message& a_Message) {
   cereal::JSONInputArchive inputAr(buffer);
   std::shared_ptr<ProcessList> remoteProcessList =
       std::make_shared<ProcessList>();
-  remoteProcessList->SetRemote(true);
   inputAr(*remoteProcessList);
+  remoteProcessList->SetRemote(true);
   GOrbitApp->m_ProcessesDataView->SetRemoteProcessList(remoteProcessList);
 }
 
