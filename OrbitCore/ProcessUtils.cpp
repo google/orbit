@@ -277,9 +277,9 @@ bool ProcessList::Contains(uint32_t a_PID) const {
 }
 
 //-----------------------------------------------------------------------------
-void ProcessList::SetRemote(bool a_Value) {
+void ProcessList::SetRemote(bool value) {
   for (std::shared_ptr<Process>& process : m_Processes) {
-    process->SetIsRemote(true);
+    process->SetIsRemote(value);
   }
 }
 

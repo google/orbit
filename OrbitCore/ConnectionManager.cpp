@@ -169,6 +169,8 @@ void ConnectionManager::SetupServerCallbacks() {
           return;
         }
 
+        Capture::SetTargetProcess(process);
+
         std::vector<ModuleDebugInfo> remoteModuleDebugInfo;
         std::vector<std::string> modules;
 
