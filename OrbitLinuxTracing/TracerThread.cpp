@@ -11,10 +11,7 @@ namespace LinuxTracing {
 // TODO: Refactor this huge method.
 void TracerThread::Run(
     const std::shared_ptr<std::atomic<bool>>& exit_requested) {
-  if (listener_ == nullptr) {
-    ERROR("No listener set to TracerThread, aborting trace");
-    return;
-  }
+  FAIL_IF(listener_ == nullptr, "No listener set");
 
   Reset();
 
