@@ -37,7 +37,7 @@ inline pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer) {
 inline pid_t ReadUretprobesRecordPid(PerfEventRingBuffer* ring_buffer) {
   pid_t pid;
   ring_buffer->ReadValueAtOffset(
-        &pid, offsetof(perf_event_empty_sample, sample_id.pid));
+      &pid, offsetof(perf_event_empty_sample, sample_id.pid));
   return pid;
 }
 
