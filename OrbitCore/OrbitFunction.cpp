@@ -4,6 +4,8 @@
 
 #include "OrbitFunction.h"
 
+#include <OrbitBase/Logging.h>
+
 #include <map>
 
 #include "Capture.h"
