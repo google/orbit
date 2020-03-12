@@ -3,6 +3,8 @@
 //-----------------------------------
 #pragma once
 
+#include <set>
+
 #include "BlockChain.h"
 #include "Callstack.h"
 #include "Core.h"
@@ -12,8 +14,6 @@
 #include "LinuxTracingHandler.h"
 #include "LinuxUtils.h"
 #endif
-
-#include <set>
 
 //-----------------------------------------------------------------------------
 struct CallstackEvent {

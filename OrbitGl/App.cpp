@@ -277,11 +277,12 @@ void OrbitApp::ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) {
       ScopeLock lock(m_SamplingCallstackMutex);
       m_SamplingCallstackBuffer.push_back(a_CallStack);
     }
+  } else {
+    Capture::GSamplingProfiler->AddCallStack(a_CallStack.m_CS);
+    GEventTracer.GetEventBuffer().AddCallstackEvent(
+        a_CallStack.m_time, a_CallStack.m_CS.m_Hash,
+        a_CallStack.m_CS.m_ThreadId);
   }
-
-  Capture::GSamplingProfiler->AddCallStack(a_CallStack.m_CS);
-  GEventTracer.GetEventBuffer().AddCallstackEvent(
-      a_CallStack.m_time, a_CallStack.m_CS.m_Hash, a_CallStack.m_CS.m_ThreadId);
 }
 
 //-----------------------------------------------------------------------------
@@ -289,10 +290,11 @@ void OrbitApp::ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) {
   if (ConnectionManager::Get().IsService()) {
     ScopeLock lock(m_HashedSamplingCallstackMutex);
     m_HashedSamplingCallstackBuffer.push_back(a_CallStack);
+  } else {
+    Capture::GSamplingProfiler->AddHashedCallStack(a_CallStack);
+    GEventTracer.GetEventBuffer().AddCallstackEvent(
+        a_CallStack.m_Time, a_CallStack.m_Id, a_CallStack.m_TID);
   }
-  Capture::GSamplingProfiler->AddHashedCallStack(a_CallStack);
-  GEventTracer.GetEventBuffer().AddCallstackEvent(
-      a_CallStack.m_Time, a_CallStack.m_Id, a_CallStack.m_TID);
 }
 
 //-----------------------------------------------------------------------------
