@@ -15,6 +15,7 @@
 #include "ScopeTimer.h"
 #include "SerializationMacros.h"
 #include "Threading.h"
+#include "absl/container/flat_hash_map.h"
 
 #ifdef __linux__
 #include "LinuxUtils.h"
@@ -97,7 +98,7 @@ class Process {
   }
   void AddSymbol(uint64_t a_Address, std::shared_ptr<LinuxSymbol> a_Symbol);
   bool HasSymbol(uint64_t a_Address) const {
-    return m_Symbols.find(a_Address) != m_Symbols.end();
+    return m_Symbols.count(a_Address) > 0;
   }
 
   bool LineInfoFromAddress(DWORD64 a_Address, struct LineInfo& o_LineInfo);
@@ -157,7 +158,7 @@ class Process {
   std::unordered_set<uint32_t> m_ThreadIds;
   std::map<uint32_t, std::string> m_ThreadNames;
 
-  std::map<uint64_t, std::shared_ptr<LinuxSymbol> > m_Symbols;
+  absl::flat_hash_map<uint64_t, std::shared_ptr<LinuxSymbol> > m_Symbols;
 
   // Transients
   std::vector<Function*> m_Functions;
