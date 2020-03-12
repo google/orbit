@@ -1,10 +1,11 @@
 #ifndef ORBIT_LINUX_TRACING_UTILS_H_
 #define ORBIT_LINUX_TRACING_UTILS_H_
 
+#include <OrbitBase/Logging.h>
+
 #include <fstream>
 #include <thread>
 
-#include "Logging.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 

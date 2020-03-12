@@ -18,7 +18,7 @@ std::optional<FunctionCall> UprobesFunctionCallManager::ProcessUretprobes(
   auto& tid_timer_stack = tid_timer_stacks_.at(tid);
 
   // As we erase the stack for this thread as soon as it becomes empty.
-  assert(!tid_timer_stack.empty());
+  CHECK(!tid_timer_stack.empty());
 
   auto function_call = std::make_optional<FunctionCall>(
       tid, tid_timer_stack.top().function_address,
@@ -121,11 +121,12 @@ void UprobesCallstackManager::ProcessUretprobes(pid_t tid) {
 }
 
 void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
+  CHECK(listener_ != nullptr);
   const std::vector<unwindstack::FrameData>& callstack = unwinder_.Unwind(
       event->GetRegisters(), event->GetStackData(), event->GetStackSize());
   const std::vector<unwindstack::FrameData>& full_callstack =
       callstack_manager_.ProcessSampledCallstack(event->GetTid(), callstack);
-  if (!full_callstack.empty() && listener_ != nullptr) {
+  if (!full_callstack.empty()) {
     Callstack returned_callstack{
         event->GetTid(),
         CallstackFramesFromLibunwindstackFrames(full_callstack),
@@ -135,6 +136,8 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
 }
 
 void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
+  CHECK(listener_ != nullptr);
+
   // We are seeing that on thread migration, uprobe events can sometimes be
   // duplicated. The idea of the workaround is that for a given thread's
   // sequence of u(ret)probe events, two consecutive uprobe events must be
@@ -169,7 +172,7 @@ void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
   // TODO: Callstacks at the beginning and/or end of a dynamically-instrumented
   //  function could alter the statistics of time-based callstack sampling.
   //  Consider not/conditionally adding these callstacks to the trace.
-  if (!full_callstack.empty() && listener_ != nullptr) {
+  if (!full_callstack.empty()) {
     Callstack returned_callstack{
         event->GetTid(),
         CallstackFramesFromLibunwindstackFrames(full_callstack),
@@ -179,6 +182,8 @@ void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
 }
 
 void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
+  CHECK(listener_ != nullptr);
+
   // Duplicate uprobe detection.
   std::vector<uint64_t>& uprobe_sps = uprobe_sps_per_thread_[event->GetTid()];
   if (!uprobe_sps.empty()) {
@@ -188,7 +193,7 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
   std::optional<FunctionCall> function_call =
       function_call_manager_.ProcessUretprobes(event->GetTid(),
                                                event->GetTimestamp());
-  if (function_call.has_value() && listener_ != nullptr) {
+  if (function_call.has_value()) {
     listener_->OnFunctionCall(function_call.value());
   }
 

@@ -2,7 +2,6 @@
 
 #include <OrbitBase/Logging.h>
 
-#include <cassert>
 #include <memory>
 #include <queue>
 
@@ -16,10 +15,10 @@ void PerfEventQueue::PushEvent(int origin_fd,
   if (fd_event_queues_.count(origin_fd) > 0) {
     std::shared_ptr<std::queue<std::unique_ptr<PerfEvent>>> event_queue =
         fd_event_queues_.at(origin_fd);
-    assert(!event_queue->empty());
+    CHECK(!event_queue->empty());
     // Fundamental assumption: events from the same file descriptor come already
     // in order.
-    assert(event->GetTimestamp() >= event_queue->front()->GetTimestamp());
+    CHECK(event->GetTimestamp() >= event_queue->front()->GetTimestamp());
     event_queue->push(std::move(event));
   } else {
     auto event_queue =
