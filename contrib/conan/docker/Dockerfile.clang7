@@ -1,0 +1,10 @@
+FROM conanio/clang7:latest
+
+RUN sudo apt-get -qq update \
+    && sudo apt-get install -y --no-install-recommends \
+    libglu1-mesa-dev \
+    mesa-common-dev \
+    libxmu-dev \
+    libxi-dev \
+    qt5-default \
+    jq 
