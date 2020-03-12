@@ -4,6 +4,8 @@
 
 #include "OrbitProcess.h"
 
+#include <utility>
+
 #include "Core.h"
 #include "Injection.h"
 #include "OrbitModule.h"
@@ -285,7 +287,7 @@ std::shared_ptr<Module> Process::GetModuleFromName(const std::string& a_Name) {
 //-----------------------------------------------------------------------------
 void Process::AddSymbol(uint64_t a_Address,
                         std::shared_ptr<LinuxSymbol> a_Symbol) {
-  m_Symbols[a_Address] = a_Symbol;
+  m_Symbols[a_Address] = std::move(a_Symbol);
 }
 
 #ifdef _WIN32
