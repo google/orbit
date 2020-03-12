@@ -146,7 +146,7 @@ void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
 
   // Duplicate uprobe detection.
   uint64_t uprobe_sp = event->GetRegisters()[PERF_REG_X86_SP];
-  std::vector<uint64_t>& uprobe_sps = uprobe_sp_per_thread_[event->GetTid()];
+  std::vector<uint64_t>& uprobe_sps = uprobe_sps_per_thread_[event->GetTid()];
   if (!uprobe_sps.empty()) {
     uint64_t last_uprobe_sp = uprobe_sps.back();
     uprobe_sps.pop_back();
@@ -180,7 +180,7 @@ void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
 
 void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
   // Duplicate uprobe detection.
-  std::vector<uint64_t>& uprobe_sps = uprobe_sp_per_thread_[event->GetTid()];
+  std::vector<uint64_t>& uprobe_sps = uprobe_sps_per_thread_[event->GetTid()];
   if (!uprobe_sps.empty()) {
     uprobe_sps.pop_back();
   }
