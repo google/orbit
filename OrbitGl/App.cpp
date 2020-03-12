@@ -329,7 +329,7 @@ void OrbitApp::AddSymbol(uint64_t a_Address, const std::string& a_Module,
     symbol.m_Module = a_Module;
     symbol.m_Name = a_Name;
     symbol.m_Address = a_Address;
-    std::string messageData = SerializeObjectHumanReadable(symbol);
+    std::string messageData = SerializeObjectBinary(symbol);
     GTcpServer->Send(Msg_RemoteSymbol, (void*)messageData.c_str(),
                      messageData.size());
   }
