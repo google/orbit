@@ -82,7 +82,7 @@ void TracerThread::Run(
   for (int32_t cpu : cpuset_cpus) {
     int mmap_task_fd = mmap_task_event_open(-1, cpu);
     PerfEventRingBuffer mmap_task_ring_buffer{mmap_task_fd,
-                                              SMALL_RING_BUFFER_SIZE_KB};
+                                              BIG_RING_BUFFER_SIZE_KB};
     if (mmap_task_ring_buffer.IsOpen()) {
       tracing_fds_.push_back(mmap_task_fd);
       ring_buffers_.push_back(std::move(mmap_task_ring_buffer));
