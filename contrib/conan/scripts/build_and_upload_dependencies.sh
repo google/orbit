@@ -31,8 +31,6 @@ if [ "$0" == "/mnt/contrib/conan/scripts/build_and_upload_dependencies.sh" -o $(
   conan user -r bintray hebecker -p $BINTRAY_API_KEY || exit $?
 
   if [ $(uname -s) == "Linux" ]; then
-    sudo apt-get update -q -q || exit $?
-    sudo apt-get install -q -q -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev qt5-default jq || exit $?
     PROFILES=( default_{release,debug,relwithdebinfo} )
   else # Windows
     PROFILES=( msvc{2017,2019}_{debug,release,relwithdebinfo}_{x64,x86} )
@@ -41,7 +39,7 @@ if [ "$0" == "/mnt/contrib/conan/scripts/build_and_upload_dependencies.sh" -o $(
   for profile in ${PROFILES[@]}; do
     conan_profile_exists "$profile" || create_conan_profile "$profile"
 
-    PACKAGES=$(conan info -pr $profile $REPO_ROOT -j | grep build_id | jq '.[] | select(.is_ref) | select(.binary != "Download" and .binary != "Cache") | .reference + ":" + .id' | grep -v 'llvm/' | grep -v 'ggp_sdk/' | tr -d '"')
+    PACKAGES=$(conan info -pr $profile $REPO_ROOT -j 2>/dev/null | grep build_id | jq '.[] | select(.is_ref) | select(.binary != "Download" and .binary != "Cache") | .reference + ":" + .id' | grep -v 'llvm/' | grep -v 'ggp_sdk/' | tr -d '"')
     if [ $(echo -n "$PACKAGES" | wc -l) -eq 0 ]; then
       echo "No binary packages are missing or outdated. Skipping this configuration."
     else
@@ -58,6 +56,6 @@ else
   CONTAINERS=( gcc8 gcc9 clang7 clang8 clang9 )
 
   for container in ${CONTAINERS[@]}; do
-    docker run --rm -it -v $REPO_ROOT:/mnt -e BINTRAY_API_KEY conanio/$container:latest /mnt/contrib/conan/scripts/build_and_upload_dependencies.sh
+    docker run --rm -it -v $REPO_ROOT:/mnt -e BINTRAY_API_KEY hebecker/$container:latest /mnt/contrib/conan/scripts/build_and_upload_dependencies.sh
   done
 fi
