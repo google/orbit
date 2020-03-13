@@ -61,36 +61,6 @@ std::vector<std::string> ListModules(pid_t a_PID) {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<pid_t> ListThreads(pid_t a_PID) {
-  std::vector<pid_t> threads;
-  std::string result =
-      ExecuteCommand(absl::StrFormat("ls /proc/%u/task", a_PID).c_str());
-
-  std::stringstream ss(result);
-  std::string line;
-  while (std::getline(ss, line, '\n')) {
-    threads.push_back(std::stol(line));
-  }
-
-  return threads;
-}
-
-//-----------------------------------------------------------------------------
-std::string ReadMaps(pid_t a_PID) {
-  std::ifstream maps_file{"/proc/" + std::to_string(a_PID) + "/maps"};
-  if (!maps_file) {
-    return "";
-  }
-
-  std::string maps_buffer;
-  std::string maps_line;
-  while (std::getline(maps_file, maps_line)) {
-    maps_buffer.append(maps_line).append("\n");
-  }
-  return maps_buffer;
-}
-
-//-----------------------------------------------------------------------------
 uint64_t GetTracePointID(const char* a_Group, const char* a_Event) {
   std::string cmd = absl::StrFormat(
       "cat /sys/kernel/debug/tracing/events/%s/%s/id", a_Group, a_Event);
