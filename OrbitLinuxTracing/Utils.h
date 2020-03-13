@@ -14,7 +14,7 @@ inline uint64_t MonotonicTimestampNs() {
   return 1'000'000'000llu * ts.tv_sec + ts.tv_nsec;
 }
 
-std::string ExecuteCommand(const std::string& cmd);
+std::optional<std::string> ExecuteCommand(const std::string& cmd);
 
 std::optional<std::string> ReadFile(std::string_view filename);
 

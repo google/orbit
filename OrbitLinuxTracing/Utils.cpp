@@ -33,11 +33,12 @@ std::string ReadMaps(pid_t pid) {
   }
 }
 
-std::string ExecuteCommand(const std::string& cmd) {
+std::optional<std::string> ExecuteCommand(const std::string& cmd) {
   std::unique_ptr<FILE, decltype(&pclose)> pipe{popen(cmd.c_str(), "r"),
                                                 pclose};
   if (!pipe) {
     ERROR("Could not open pipe for \"%s\"", cmd.c_str());
+    return std::optional<std::string>{};
   }
 
   std::array<char, 128> buffer;
@@ -50,9 +51,13 @@ std::string ExecuteCommand(const std::string& cmd) {
 
 std::vector<pid_t> ListThreads(pid_t pid) {
   std::vector<pid_t> threads;
-  std::string result = ExecuteCommand(absl::StrFormat("ls /proc/%d/task", pid));
+  std::optional<std::string> tasks =
+      ExecuteCommand(absl::StrFormat("ls /proc/%d/task", pid));
+  if (!tasks.has_value()) {
+    return {};
+  }
 
-  std::stringstream ss(result);
+  std::stringstream ss(tasks.value());
   std::string line;
   while (std::getline(ss, line, '\n')) {
     threads.push_back(std::stol(line));
@@ -62,15 +67,15 @@ std::vector<pid_t> ListThreads(pid_t pid) {
 }
 
 int GetNumCores() {
-  int num_cores = static_cast<int>(std::thread::hardware_concurrency());
+  int hw_conc = static_cast<int>(std::thread::hardware_concurrency());
   // Some compilers do not support std::thread::hardware_concurrency().
-  if (num_cores != 0) {
-    return num_cores;
+  if (hw_conc != 0) {
+    return hw_conc;
   }
 
-  std::string num_cores_str = ExecuteCommand("nproc");
-  if (!num_cores_str.empty()) {
-    return std::stoi(num_cores_str);
+  std::optional<std::string> nproc_str = ExecuteCommand("nproc");
+  if (nproc_str.has_value() && !nproc_str.value().empty()) {
+    return std::stoi(nproc_str.value());
   }
 
   return 1;
