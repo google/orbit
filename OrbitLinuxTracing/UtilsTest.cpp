@@ -5,6 +5,16 @@
 
 namespace LinuxTracing {
 
+TEST(ReadFile, ProcPidCommOfOrbitLinuxTracingTests) {
+  std::string filename = absl::StrFormat("/proc/%d/comm", getpid());
+  std::optional<std::string> returned_comm = ReadFile(filename);
+  // Comm values have a size limit of 15 characters.
+  std::string expected_comm =
+      std::string{"OrbitLinuxTracingTests"}.substr(0, 15).append("\n");
+  ASSERT_TRUE(returned_comm.has_value());
+  EXPECT_EQ(returned_comm.value(), expected_comm);
+}
+
 TEST(ExtractCpusetFromCgroup, NoCpuset) {
   std::string cgroup_content =
       "11:memory:/groupname/foo\n"
