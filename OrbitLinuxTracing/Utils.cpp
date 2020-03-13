@@ -12,7 +12,7 @@
 namespace LinuxTracing {
 
 std::optional<std::string> ReadFile(std::string_view filename) {
-  std::ifstream file(std::string{filename}, std::ios::in | std::ios::binary);
+  std::ifstream file{std::string{filename}, std::ios::in | std::ios::binary};
   if (!file) {
     ERROR("Could not open \"%s\"", std::string{filename}.c_str());
     return std::optional<std::string>{};
@@ -34,8 +34,8 @@ std::string ReadMaps(pid_t pid) {
 }
 
 std::string ExecuteCommand(const std::string& cmd) {
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
-                                                pclose);
+  std::unique_ptr<FILE, decltype(&pclose)> pipe{popen(cmd.c_str(), "r"),
+                                                pclose};
   if (!pipe) {
     ERROR("Could not open pipe for \"%s\"", cmd.c_str());
   }
