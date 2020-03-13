@@ -1,6 +1,7 @@
 #ifndef ORBIT_LINUX_TRACING_PERF_EVENT_OPEN_H_
 #define ORBIT_LINUX_TRACING_PERF_EVENT_OPEN_H_
 
+#include <OrbitBase/Logging.h>
 #include <asm/perf_regs.h>
 #include <asm/unistd.h>
 #include <linux/perf_event.h>
@@ -12,8 +13,6 @@
 #include <cerrno>
 #include <cstdint>
 #include <ctime>
-
-#include "Logging.h"
 
 inline int perf_event_open(struct perf_event_attr* attr, pid_t pid, int cpu,
                            int group_fd, unsigned long flags) {
@@ -91,9 +90,11 @@ static constexpr uint16_t SAMPLE_STACK_USER_SIZE = 65000;
 // perf_event_open for context switches.
 int context_switch_event_open(pid_t pid, int32_t cpu);
 
-// perf_event_open for stack sampling, while collecting task (fork and exit) and
-// mmap records in the same buffer.
-int sample_mmap_task_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
+// perf_event_open for task (fork and exit) and mmap records in the same buffer.
+int mmap_task_event_open(pid_t pid, int32_t cpu);
+
+// perf_event_open for stack sampling.
+int sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
 
 // perf_event_open for uprobes and uretprobes.
 int uprobes_stack_event_open(const char* module, uint64_t function_offset,

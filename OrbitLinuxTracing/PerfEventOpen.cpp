@@ -1,11 +1,10 @@
 #include "PerfEventOpen.h"
 
+#include <OrbitBase/Logging.h>
 #include <linux/perf_event.h>
 
 #include <cerrno>
 #include <cstring>
-
-#include "Logging.h"
 
 namespace LinuxTracing {
 namespace {
@@ -60,16 +59,22 @@ int context_switch_event_open(pid_t pid, int32_t cpu) {
   return generic_event_open(&pe, pid, cpu);
 }
 
-int sample_mmap_task_event_open(uint64_t period_ns, pid_t pid, int32_t cpu) {
+int mmap_task_event_open(pid_t pid, int32_t cpu) {
+  perf_event_attr pe = generic_event_attr();
+  pe.type = PERF_TYPE_SOFTWARE;
+  pe.config = PERF_COUNT_SW_DUMMY;
+  pe.mmap = 1;
+  pe.task = 1;
+
+  return generic_event_open(&pe, pid, cpu);
+}
+
+int sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu) {
   perf_event_attr pe = generic_event_attr();
   pe.type = PERF_TYPE_SOFTWARE;
   pe.config = PERF_COUNT_SW_CPU_CLOCK;
   pe.sample_period = period_ns;
   pe.sample_type |= PERF_SAMPLE_STACK_USER | PERF_SAMPLE_REGS_USER;
-  // Also record mmaps, ...
-  pe.mmap = 1;
-  // ... forks, and termination.
-  pe.task = 1;
 
   return generic_event_open(&pe, pid, cpu);
 }

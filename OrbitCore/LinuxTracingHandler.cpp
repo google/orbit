@@ -42,6 +42,10 @@ void LinuxTracingHandler::Stop() {
 }
 
 void LinuxTracingHandler::OnTid(pid_t tid) {
+  // TODO: This doesn't seem to be of any use at the moment: it has the effect
+  //  of adding the tid to Process::m_ThreadIds in OrbitProcess.h, but that
+  //  field is never actually used. Investigate whether m_ThreadIds should be
+  //  used or if this call should be removed.
   target_process_->AddThreadId(tid);
 }
 

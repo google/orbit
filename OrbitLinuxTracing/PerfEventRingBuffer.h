@@ -3,8 +3,6 @@
 
 #include <linux/perf_event.h>
 
-#include <cassert>
-
 #include "PerfEventOpen.h"
 
 namespace LinuxTracing {

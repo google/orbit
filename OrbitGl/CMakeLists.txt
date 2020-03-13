@@ -110,6 +110,7 @@ if(WITH_GUI)
            imgui::imgui
            freeglut::freeglut
            capstone::capstone
+           gte::gte
            glew::glew)
 else()
   # Don't build this target by default. It will not compile in a WITH_GUI=OFF
@@ -179,6 +180,6 @@ get_target_property(INT_INC OrbitGl INTERFACE_INCLUDE_DIRECTORIES)
 set_target_properties(OrbitNoGl PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
                                            "${INT_INC}")
 
-target_link_libraries(OrbitNoGl PUBLIC OrbitCore OrbitAsm capstone::capstone)
+target_link_libraries(OrbitNoGl PUBLIC OrbitCore OrbitAsm capstone::capstone gte::gte)
 
 target_compile_definitions(OrbitNoGl PUBLIC NOGL)

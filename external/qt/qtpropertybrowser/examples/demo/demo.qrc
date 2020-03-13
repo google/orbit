@@ -1,8 +1,0 @@
-<RCC version="1.0">
-    <qresource prefix="/demo">
-        <file>images/up.png</file>
-        <file>images/down.png</file>
-        <file>images/right.png</file>
-        <file>images/left.png</file>
-    </qresource>
-</RCC>

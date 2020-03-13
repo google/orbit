@@ -1,8 +1,8 @@
 #include "LibunwindstackUnwinder.h"
 
-#include <array>
+#include <OrbitBase/Logging.h>
 
-#include "Logging.h"
+#include <array>
 
 namespace LinuxTracing {
 
@@ -10,7 +10,7 @@ bool LibunwindstackUnwinder::SetMaps(const std::string& maps_buffer) {
   maps_ = std::make_unique<unwindstack::BufferMaps>(maps_buffer.c_str());
 
   if (!maps_->Parse()) {
-    ERROR("LibunwindstackUnwinder::SetMaps: failed to parse maps");
+    ERROR("Failed to parse maps");
     maps_ = nullptr;
     return false;
   }
@@ -31,7 +31,7 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
     const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
     const char* stack_dump, uint64_t stack_dump_size) {
   if (!maps_) {
-    ERROR("LibunwindstackUnwinder::Unwind: maps not set");
+    ERROR("Maps not set");
     return {};
   }
 
@@ -58,7 +58,7 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
   // callstacks.
   if (unwinder.LastErrorCode() != 0 &&
       unwinder.frames().back().map_name != "[uprobes]") {
-    ERROR("LibunwindstackUnwinder::Unwind: %s at %#016lx",
+    ERROR("%s at %#016lx",
           LibunwindstackErrorString(unwinder.LastErrorCode()).c_str(),
           unwinder.LastErrorAddress());
     return {};

@@ -1,13 +1,12 @@
 #include "PerfEventRingBuffer.h"
 
+#include <OrbitBase/Logging.h>
 #include <linux/perf_event.h>
 #include <sys/mman.h>
 
-#include <cassert>
 #include <cstring>
 #include <utility>
 
-#include "Logging.h"
 #include "PerfEventOpen.h"
 #include "Utils.h"
 
@@ -47,11 +46,11 @@ PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb) {
 
   // The first page, just before the ring buffer, is the metadata page.
   metadata_page_ = reinterpret_cast<perf_event_mmap_page*>(mmap_address);
-  assert(metadata_page_->data_size == ring_buffer_size_);
+  CHECK(metadata_page_->data_size == ring_buffer_size_);
 
   ring_buffer_ =
       reinterpret_cast<char*>(mmap_address) + metadata_page_->data_offset;
-  assert(metadata_page_->data_offset == getpagesize());
+  CHECK(metadata_page_->data_offset == getpagesize());
 }
 
 PerfEventRingBuffer::PerfEventRingBuffer(PerfEventRingBuffer&& o) noexcept {
@@ -86,17 +85,17 @@ PerfEventRingBuffer::~PerfEventRingBuffer() {
 }
 
 bool PerfEventRingBuffer::HasNewData() {
-  assert(IsOpen());
+  DCHECK(IsOpen());
   uint64_t head = ReadRingBufferHead(metadata_page_);
-  assert((metadata_page_->data_tail == head) ||
+  DCHECK((metadata_page_->data_tail == head) ||
          (head >= metadata_page_->data_tail + sizeof(perf_event_header)));
   return head > metadata_page_->data_tail;
 }
 
 void PerfEventRingBuffer::ReadHeader(perf_event_header* header) {
   ReadAtTail(reinterpret_cast<uint8_t*>(header), sizeof(perf_event_header));
-  assert(header->type != 0);
-  assert(metadata_page_->data_tail + header->size <=
+  DCHECK(header->type != 0);
+  DCHECK(metadata_page_->data_tail + header->size <=
          ReadRingBufferHead(metadata_page_));
 }
 
@@ -115,7 +114,7 @@ void PerfEventRingBuffer::ConsumeRecord(const perf_event_header& header,
 void PerfEventRingBuffer::ReadAtOffsetFromTail(uint8_t* dest,
                                                uint64_t offset_from_tail,
                                                uint64_t count) {
-  assert(IsOpen());
+  DCHECK(IsOpen());
 
   uint64_t head = ReadRingBufferHead(metadata_page_);
   if (offset_from_tail + count > head - metadata_page_->data_tail) {
@@ -151,7 +150,7 @@ void PerfEventRingBuffer::ReadAtOffsetFromTail(uint8_t* dest,
     memcpy(dest + (ring_buffer_size_ - index_mod_size), ring_buffer_,
            count - (ring_buffer_size_ - index_mod_size));
   } else {
-    assert(false);  // Control shouldn't reach here.
+    FATAL("Control shouldn't reach here");
   }
 }
 
