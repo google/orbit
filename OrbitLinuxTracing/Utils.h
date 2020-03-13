@@ -26,6 +26,27 @@ int GetNumCores();
 
 std::vector<int> GetCpusetCpus(pid_t pid);
 
+#if defined(__x86_64__)
+
+#define READ_ONCE(x) (*(volatile typeof(x)*)&x)
+#define WRITE_ONCE(x, v) (*(volatile typeof(x)*)&x) = (v)
+#define barrier() asm volatile("" ::: "memory")
+
+#define smp_store_release(p, v) \
+  do {                          \
+    barrier();                  \
+    WRITE_ONCE(*p, v);          \
+  } while (0)
+
+#define smp_load_acquire(p)          \
+  ({                                 \
+    typeof(*p) ___p = READ_ONCE(*p); \
+    barrier();                       \
+    ___p;                            \
+  })
+
+#endif
+
 }  // namespace LinuxTracing
 
 #endif  // ORBIT_LINUX_TRACING_UTILS_H_
