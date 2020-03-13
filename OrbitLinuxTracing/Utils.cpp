@@ -76,18 +76,18 @@ int GetNumCores() {
   return 1;
 }
 
-// Read the cpuset entry in /proc/<pid>/cgroup.
-static std::optional<std::string> GetCgroupCpuset(pid_t pid) {
+// Read /proc/<pid>/cgroup.
+static std::optional<std::string> ReadCgroupContent(pid_t pid) {
   std::string cgroup_filename = absl::StrFormat("/proc/%d/cgroup", pid);
-  std::optional<std::string> cgroup_content_opt = ReadFile(cgroup_filename);
+  return ReadFile(cgroup_filename);
+}
 
-  if (!cgroup_content_opt.has_value()) {
-    return std::optional<std::string>{};
-  }
-  std::istringstream cgroup_content{cgroup_content_opt.value()};
-
+// Extract the cpuset entry from the content of /proc/<pid>/cgroup.
+std::optional<std::string> ExtractCpusetFromCgroup(
+    const std::string& cgroup_content) {
+  std::istringstream cgroup_content_ss{cgroup_content};
   std::string cgroup_line;
-  while (std::getline(cgroup_content, cgroup_line)) {
+  while (std::getline(cgroup_content_ss, cgroup_line)) {
     if (cgroup_line.find("cpuset:") != std::string::npos ||
         cgroup_line.find("cpuset,") != std::string::npos) {
       // For example "8:cpuset:/" or "8:cpuset:/game", but potentially also
@@ -99,7 +99,8 @@ static std::optional<std::string> GetCgroupCpuset(pid_t pid) {
   return std::optional<std::string>{};
 }
 
-static std::optional<std::string> GetCpusetCpusString(
+// Read /sys/fs/cgroup/cpuset/<cgroup>/cpuset.cpus.
+static std::optional<std::string> ReadCpusetCpusContent(
     const std::string& cgroup_cpuset) {
   std::string cpuset_cpus_filename =
       absl::StrFormat("/sys/fs/cgroup/cpuset%s/cpuset.cpus",
@@ -107,11 +108,11 @@ static std::optional<std::string> GetCpusetCpusString(
   return ReadFile(cpuset_cpus_filename);
 }
 
-static std::vector<int> ParseCpusetCpus(
-    const std::string& cpuset_cpus_content) {
+std::vector<int> ParseCpusetCpus(const std::string& cpuset_cpus_content) {
   std::vector<int> cpuset_cpus{};
-  // Example of format: 0-2,7,12-14
-  for (const auto& range : absl::StrSplit(cpuset_cpus_content, ',')) {
+  // Example of format: "0-2,7,12-14".
+  for (const auto& range :
+       absl::StrSplit(cpuset_cpus_content, ',', absl::SkipEmpty())) {
     std::vector<std::string> values = absl::StrSplit(range, '-');
     if (values.size() == 1) {
       int cpu = std::stoi(values[0]);
@@ -130,15 +131,21 @@ static std::vector<int> ParseCpusetCpus(
 // An empty result indicates an error, as trying to start a process with an
 // empty cpuset fails with message "cgroup change of group failed".
 std::vector<int> GetCpusetCpus(pid_t pid) {
+  std::optional<std::string> cgroup_content_opt = ReadCgroupContent(pid);
+  if (!cgroup_content_opt.has_value()) {
+    return {};
+  }
+
   // For example "/" or "/game".
-  std::optional<std::string> cgroup_cpuset_opt = GetCgroupCpuset(pid);
+  std::optional<std::string> cgroup_cpuset_opt =
+      ExtractCpusetFromCgroup(cgroup_content_opt.value());
   if (!cgroup_cpuset_opt.has_value()) {
     return {};
   }
 
   // For example "0-2,7,12-14".
   std::optional<std::string> cpuset_cpus_content_opt =
-      GetCpusetCpusString(cgroup_cpuset_opt.value());
+      ReadCpusetCpusContent(cgroup_cpuset_opt.value());
   if (!cpuset_cpus_content_opt.has_value()) {
     return {};
   }
