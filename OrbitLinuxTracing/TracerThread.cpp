@@ -87,12 +87,14 @@ void TracerThread::Run(
   // TODO: New threads might spawn here before forks are started to be recorded.
   //  Consider also polling threads regularly.
 
-  // Start recording events.
-  for (const auto& fd_to_ring_buffer : fds_to_ring_buffer_) {
-    perf_event_enable(fd_to_ring_buffer.first);
-  }
+  // Start recording events.  Uretprobes need to be enabled first as we support
+  // having uretprobes without associated uprobes, but not the opposite.
   for (int uretprobes_fd : uretprobes_fds_) {
     perf_event_enable(uretprobes_fd);
+  }
+
+  for (const auto& fd_to_ring_buffer : fds_to_ring_buffer_) {
+    perf_event_enable(fd_to_ring_buffer.first);
   }
 
   stats_.Reset();
