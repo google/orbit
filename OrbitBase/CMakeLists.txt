@@ -28,4 +28,4 @@ target_link_libraries(OrbitBaseTests PRIVATE
         GTest::Main)
 endif()
 
-add_test(NAME OrbitBase COMMAND OrbitBaseTests)
+#add_test(NAME OrbitBase COMMAND OrbitBaseTests)
