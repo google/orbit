@@ -9,8 +9,17 @@
 
 #include "Logging.h"
 #include "PerfEventOpen.h"
+#include "Utils.h"
 
 namespace LinuxTracing {
+
+static inline uint64_t ReadRingBufferHead(perf_event_mmap_page* base) {
+  return smp_load_acquire(&base->data_head);
+}
+
+static inline void WriteRingBufferTail(perf_event_mmap_page* base, uint64_t tail) {
+  smp_store_release(&base->data_tail, tail);
+}
 
 PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb) {
   if (perf_event_fd < 0) {
@@ -78,21 +87,23 @@ PerfEventRingBuffer::~PerfEventRingBuffer() {
 
 bool PerfEventRingBuffer::HasNewData() {
   assert(IsOpen());
-  assert(metadata_page_->data_tail == metadata_page_->data_head ||
-         metadata_page_->data_head >=
-             metadata_page_->data_tail + sizeof(perf_event_header));
-  return metadata_page_->data_head > metadata_page_->data_tail;
+  uint64_t head = ReadRingBufferHead(metadata_page_);
+  assert((metadata_page_->data_tail == head) ||
+         (head >= metadata_page_->data_tail + sizeof(perf_event_header)));
+  return head > metadata_page_->data_tail;
 }
 
 void PerfEventRingBuffer::ReadHeader(perf_event_header* header) {
   ReadAtTail(reinterpret_cast<uint8_t*>(header), sizeof(perf_event_header));
   assert(header->type != 0);
-  assert(metadata_page_->data_tail + header->size <= metadata_page_->data_head);
+  assert(metadata_page_->data_tail + header->size <=
+         ReadRingBufferHead(metadata_page_));
 }
 
 void PerfEventRingBuffer::SkipRecord(const perf_event_header& header) {
   // Write back how far we read from the buffer.
-  metadata_page_->data_tail += header.size;
+  uint64_t new_tail = metadata_page_->data_tail + header.size;
+  WriteRingBufferTail(metadata_page_, new_tail);
 }
 
 void PerfEventRingBuffer::ConsumeRecord(const perf_event_header& header,
@@ -106,13 +117,12 @@ void PerfEventRingBuffer::ReadAtOffsetFromTail(uint8_t* dest,
                                                uint64_t count) {
   assert(IsOpen());
 
-  if (offset_from_tail + count >
-      metadata_page_->data_head - metadata_page_->data_tail) {
+  uint64_t head = ReadRingBufferHead(metadata_page_);
+  if (offset_from_tail + count > head - metadata_page_->data_tail) {
     ERROR("Reading more data than it is available from the ring buffer");
   } else if (offset_from_tail + count > ring_buffer_size_) {
     ERROR("Reading more than the size of the ring buffer");
-  } else if (metadata_page_->data_head >
-             metadata_page_->data_tail + ring_buffer_size_) {
+  } else if (head > metadata_page_->data_tail + ring_buffer_size_) {
     // If mmap has been called with PROT_WRITE and
     // perf_event_mmap_page::data_tail is used properly, this should not happen,
     // as the kernel would not overwrite unread data.
