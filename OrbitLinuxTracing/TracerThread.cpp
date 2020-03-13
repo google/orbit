@@ -58,6 +58,13 @@ void TracerThread::Run(
   if (trace_instrumented_functions_) {
     for (const auto& function : instrumented_functions_) {
       for (int32_t cpu : cpuset_cpus) {
+        // Add uretprobes_fd to tracing_fds_ before uprobes_fd. As we support
+        // having uretprobes without associated uprobes, but not the opposite,
+        // this way the uretprobe is enabled before the uprobe.
+        int uretprobes_fd = uretprobes_event_open(
+            function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
+        tracing_fds_.push_back(uretprobes_fd);
+
         int uprobes_fd = uprobes_stack_event_open(
             function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
         PerfEventRingBuffer uprobes_ring_buffer{uprobes_fd,
@@ -67,10 +74,6 @@ void TracerThread::Run(
           ring_buffers_.push_back(std::move(uprobes_ring_buffer));
           uprobes_fds_to_function_.emplace(uprobes_fd, &function);
         }
-
-        int uretprobes_fd = uretprobes_event_open(
-            function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
-        tracing_fds_.push_back(uretprobes_fd);
 
         // Redirect uretprobes to the uprobes ring buffer to reduce number of
         // ring buffers and to coalesce closely related events.
