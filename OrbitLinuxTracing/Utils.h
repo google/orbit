@@ -24,6 +24,11 @@ std::vector<pid_t> ListThreads(pid_t pid);
 
 int GetNumCores();
 
+std::optional<std::string> ExtractCpusetFromCgroup(
+    const std::string& cgroup_content);
+
+std::vector<int> ParseCpusetCpus(const std::string& cpuset_cpus_content);
+
 std::vector<int> GetCpusetCpus(pid_t pid);
 
 #if defined(__x86_64__)

@@ -57,7 +57,8 @@ add_executable(OrbitLinuxTracingTests)
 if (NOT WIN32)
     target_sources(OrbitLinuxTracingTests PRIVATE
             PerfEventProcessor2Test.cpp
-            UprobesUnwindingVisitorTest.cpp)
+            UprobesUnwindingVisitorTest.cpp
+            UtilsTest.cpp)
 endif ()
 
 target_link_libraries(OrbitLinuxTracingTests PRIVATE
