@@ -1,5 +1,10 @@
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
+#include <sys/syscall.h>
+
+#include <condition_variable>
+#include <mutex>
+#include <thread>
 
 #include "Utils.h"
 
@@ -22,6 +27,35 @@ TEST(ExecuteCommand, EchoHelloWorld) {
   std::string expected_result = string_to_echo + "\n";
   ASSERT_TRUE(returned_result.has_value());
   EXPECT_EQ(returned_result.value(), expected_result);
+}
+
+TEST(ListThreads, OrbitLinuxTracingTestsMainAndAnother) {
+  pid_t main_tid = syscall(SYS_gettid);
+  pid_t thread_tid = -1;
+  std::vector<pid_t> returned_tids{};
+
+  std::mutex mutex;
+  std::condition_variable cv_list;
+  std::thread thread{[&] {
+    thread_tid = syscall(SYS_gettid);
+    {
+      std::unique_lock<std::mutex> lock(mutex);
+      while (returned_tids.empty()) {
+        cv_list.wait(lock);
+      }
+    }
+  }};
+
+  {
+    std::unique_lock<std::mutex> lock(mutex);
+    returned_tids = ListThreads(getpid());
+    cv_list.notify_one();
+  }
+  thread.join();
+
+  std::vector<pid_t> expected_tids{main_tid, thread_tid};
+  std::sort(expected_tids.begin(), expected_tids.end());
+  EXPECT_THAT(returned_tids, ::testing::ElementsAreArray(expected_tids));
 }
 
 TEST(ExtractCpusetFromCgroup, NoCpuset) {
