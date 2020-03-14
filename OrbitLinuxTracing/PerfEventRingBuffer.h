@@ -3,13 +3,16 @@
 
 #include <linux/perf_event.h>
 
+#include <string>
+
 #include "PerfEventOpen.h"
 
 namespace LinuxTracing {
 
 class PerfEventRingBuffer {
  public:
-  explicit PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb);
+  explicit PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb,
+                               std::string name);
   ~PerfEventRingBuffer();
 
   PerfEventRingBuffer(PerfEventRingBuffer&&) noexcept;
@@ -20,6 +23,7 @@ class PerfEventRingBuffer {
 
   bool IsOpen() const { return ring_buffer_ != nullptr; }
   int GetFileDescriptor() const { return file_descriptor_; }
+  const std::string& GetName() const { return name_; }
 
   bool HasNewData();
   void ReadHeader(perf_event_header* header);
@@ -48,6 +52,7 @@ class PerfEventRingBuffer {
   // division.
   uint32_t ring_buffer_size_log2_ = 0;
   int file_descriptor_ = -1;
+  std::string name_;
 
   void ReadAtTail(uint8_t* dest, uint64_t count) {
     return ReadAtOffsetFromTail(dest, 0, count);

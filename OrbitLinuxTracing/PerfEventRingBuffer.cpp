@@ -16,16 +16,19 @@ static inline uint64_t ReadRingBufferHead(perf_event_mmap_page* base) {
   return smp_load_acquire(&base->data_head);
 }
 
-static inline void WriteRingBufferTail(perf_event_mmap_page* base, uint64_t tail) {
+static inline void WriteRingBufferTail(perf_event_mmap_page* base,
+                                       uint64_t tail) {
   smp_store_release(&base->data_tail, tail);
 }
 
-PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb) {
+PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb,
+                                         std::string name) {
   if (perf_event_fd < 0) {
     return;
   }
 
   file_descriptor_ = perf_event_fd;
+  name_ = name;
 
   // The size of a perf_event_open ring buffer is required to be a power of two
   // memory pages (from perf_event_open's manpage: "The mmap size should be
@@ -60,6 +63,7 @@ PerfEventRingBuffer::PerfEventRingBuffer(PerfEventRingBuffer&& o) noexcept {
   std::swap(ring_buffer_size_, o.ring_buffer_size_);
   std::swap(ring_buffer_size_log2_, o.ring_buffer_size_log2_);
   std::swap(file_descriptor_, o.file_descriptor_);
+  std::swap(name_, o.name_);
 }
 
 PerfEventRingBuffer& PerfEventRingBuffer::operator=(
@@ -71,6 +75,7 @@ PerfEventRingBuffer& PerfEventRingBuffer::operator=(
     std::swap(ring_buffer_size_, o.ring_buffer_size_);
     std::swap(ring_buffer_size_log2_, o.ring_buffer_size_log2_);
     std::swap(file_descriptor_, o.file_descriptor_);
+    std::swap(name_, o.name_);
   }
   return *this;
 }

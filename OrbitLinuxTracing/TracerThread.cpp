@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "UprobesUnwindingVisitor.h"
+#include "absl/strings/str_format.h"
 
 namespace LinuxTracing {
 
@@ -35,8 +36,9 @@ void TracerThread::Run(
   if (trace_context_switches_) {
     for (int32_t cpu : all_cpus) {
       int context_switch_fd = context_switch_event_open(-1, cpu);
-      PerfEventRingBuffer context_switch_ring_buffer{context_switch_fd,
-                                                     SMALL_RING_BUFFER_SIZE_KB};
+      std::string buffer_name = absl::StrFormat("context_switch_%u", cpu);
+      PerfEventRingBuffer context_switch_ring_buffer{
+          context_switch_fd, SMALL_RING_BUFFER_SIZE_KB, buffer_name};
       if (context_switch_ring_buffer.IsOpen()) {
         tracing_fds_.push_back(context_switch_fd);
         ring_buffers_.push_back(std::move(context_switch_ring_buffer));
@@ -65,8 +67,10 @@ void TracerThread::Run(
 
         int uprobes_fd = uprobes_stack_event_open(
             function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
-        PerfEventRingBuffer uprobes_ring_buffer{uprobes_fd,
-                                                BIG_RING_BUFFER_SIZE_KB};
+        std::string buffer_name = absl::StrFormat(
+            "uprobe_retprobe_%#016lx_%u", function.VirtualAddress(), cpu);
+        PerfEventRingBuffer uprobes_ring_buffer{
+            uprobes_fd, BIG_RING_BUFFER_SIZE_KB, buffer_name};
         if (uprobes_ring_buffer.IsOpen()) {
           tracing_fds_.push_back(uprobes_fd);
           ring_buffers_.push_back(std::move(uprobes_ring_buffer));
@@ -82,8 +86,9 @@ void TracerThread::Run(
 
   for (int32_t cpu : cpuset_cpus) {
     int mmap_task_fd = mmap_task_event_open(-1, cpu);
-    PerfEventRingBuffer mmap_task_ring_buffer{mmap_task_fd,
-                                              BIG_RING_BUFFER_SIZE_KB};
+    std::string buffer_name = absl::StrFormat("mmap_task_%u", cpu);
+    PerfEventRingBuffer mmap_task_ring_buffer{
+        mmap_task_fd, BIG_RING_BUFFER_SIZE_KB, buffer_name};
     if (mmap_task_ring_buffer.IsOpen()) {
       tracing_fds_.push_back(mmap_task_fd);
       ring_buffers_.push_back(std::move(mmap_task_ring_buffer));
@@ -93,8 +98,9 @@ void TracerThread::Run(
   if (trace_callstacks_) {
     for (int32_t cpu : cpuset_cpus) {
       int sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
-      PerfEventRingBuffer sampling_ring_buffer{sampling_fd,
-                                               BIG_RING_BUFFER_SIZE_KB};
+      std::string buffer_name = absl::StrFormat("sampling_%u", cpu);
+      PerfEventRingBuffer sampling_ring_buffer{
+          sampling_fd, BIG_RING_BUFFER_SIZE_KB, buffer_name};
       if (sampling_ring_buffer.IsOpen()) {
         tracing_fds_.push_back(sampling_fd);
         ring_buffers_.push_back(std::move(sampling_ring_buffer));
@@ -342,7 +348,8 @@ void TracerThread::ProcessLostEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
   LostPerfEvent event;
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
-  LOG("Lost %lu events", event.GetNumLost());
+  LOG("Lost %lu events in buffer %s", event.GetNumLost(),
+      ring_buffer->GetName().c_str());
 }
 
 void TracerThread::DeferEvent(std::unique_ptr<PerfEvent> event) {
