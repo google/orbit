@@ -141,8 +141,8 @@ void ConnectionManager::SetupServerCallbacks() {
 
   GTcpServer->AddMainThreadCallback(
       Msg_StartCapture, [this](const Message& msg) {
-        uint32_t pid = static_cast<uint32_t>(
-            msg.m_Header.m_GenericHeader.m_Address);
+        uint32_t pid =
+            static_cast<uint32_t>(msg.m_Header.m_GenericHeader.m_Address);
         StartCaptureAsRemote(pid);
       });
 
@@ -151,16 +151,16 @@ void ConnectionManager::SetupServerCallbacks() {
 
   GTcpServer->AddMainThreadCallback(
       Msg_RemoteProcessRequest, [this](const Message& msg) {
-        uint32_t pid = static_cast<uint32_t>(
-            msg.m_Header.m_GenericHeader.m_Address);
+        uint32_t pid =
+            static_cast<uint32_t>(msg.m_Header.m_GenericHeader.m_Address);
 
         SendRemoteProcess(GTcpServer, pid);
       });
 
   GTcpServer->AddMainThreadCallback(
       Msg_RemoteModuleDebugInfo, [=](const Message& msg) {
-        uint32_t pid = static_cast<uint32_t>(
-            msg.m_Header.m_GenericHeader.m_Address);
+        uint32_t pid =
+            static_cast<uint32_t>(msg.m_Header.m_GenericHeader.m_Address);
 
         PRINT("RemoteModuleDebugInfo pid=%d\n", pid);
         std::shared_ptr<Process> process = process_list_.GetProcess(pid);

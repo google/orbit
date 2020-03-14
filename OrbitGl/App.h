@@ -12,9 +12,8 @@
 #include "ContextSwitch.h"
 #include "CoreApp.h"
 #include "CrashHandler.h"
-#include "Message.h"
-
 #include "DataViewTypes.h"
+#include "Message.h"
 #include "Threading.h"
 
 struct CallStack;

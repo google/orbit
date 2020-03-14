@@ -83,8 +83,8 @@ void EventTracer::Start(uint32_t a_PID) {
   Capture::GSamplingProfiler->StartCapture();
 
   m_LinuxTracer = std::make_shared<LinuxTracingHandler>(
-      GCoreApp, Capture::GTargetProcess.get(),
-      &Capture::GSelectedFunctionsMap, &Capture::GNumContextSwitches);
+      GCoreApp, Capture::GTargetProcess.get(), &Capture::GSelectedFunctionsMap,
+      &Capture::GNumContextSwitches);
   m_LinuxTracer->Start();
 }
 

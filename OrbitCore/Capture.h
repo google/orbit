@@ -56,8 +56,7 @@ struct Capture {
   }
 
   typedef void (*SamplingDoneCallback)(
-      std::shared_ptr<SamplingProfiler>& sampling_profiler,
-      void* user_data);
+      std::shared_ptr<SamplingProfiler>& sampling_profiler, void* user_data);
   static void SetSamplingDoneCallback(SamplingDoneCallback callback,
                                       void* user_data) {
     sampling_done_callback_ = callback;
@@ -106,6 +105,7 @@ struct Capture {
   static Mutex GCallstackMutex;
   static LoadPdbAsyncFunc GLoadPdbAsync;
   static bool GUnrealSupported;
+
  private:
   static SamplingDoneCallback sampling_done_callback_;
   static void* sampling_done_callback_user_data_;

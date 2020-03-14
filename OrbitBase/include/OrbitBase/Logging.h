@@ -39,11 +39,11 @@
 #define UNLIKELY(cond) (!!(cond))
 #endif
 
-#define FAIL_IF(assertion, format, ...)  \
-  do {                                   \
-    if (UNLIKELY(assertion)) {           \
-      FATAL(format, ##__VA_ARGS__);      \
-    }                                    \
+#define FAIL_IF(assertion, format, ...) \
+  do {                                  \
+    if (UNLIKELY(assertion)) {          \
+      FATAL(format, ##__VA_ARGS__);     \
+    }                                   \
   } while (0)
 
 #define CHECK(assertion)                \
