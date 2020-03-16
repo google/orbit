@@ -35,7 +35,6 @@ class OrbitApp : public CoreApp {
   std::string GetVersion();
   void CheckForUpdate();
   void CheckDebugger();
-  void SetupIntrospection();
 
   std::wstring GetCaptureFileName();
   std::string GetSessionFileName();
@@ -51,8 +50,6 @@ class OrbitApp : public CoreApp {
   void Inject(const std::string& file_name);
   virtual void StartCapture();
   virtual void StopCapture();
-  void StartRemoteCaptureBufferingThread() override;
-  void StopRemoteCaptureBufferingThread() override;
   void ToggleCapture();
   void OnDisconnect();
   void OnPdbLoaded();
@@ -80,8 +77,7 @@ class OrbitApp : public CoreApp {
   void ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) override;
   void AddSymbol(uint64_t a_Address, const std::string& a_Module,
                  const std::string& a_Name) override;
-  void AddKeyAndString(uint64_t key, const std::string_view str) override;
-  void ProcessBufferedCaptureData();
+  void AddKeyAndString(uint64_t key, std::string_view str) override;
 
   int* GetScreenRes() { return m_ScreenRes; }
 
@@ -262,7 +258,6 @@ class OrbitApp : public CoreApp {
   std::queue<std::shared_ptr<struct Module> > m_ModulesToLoad;
   std::vector<std::string> m_PostInitArguments;
 
-  class EventTracer* m_EventTracer = nullptr;
   class Debugger* m_Debugger = nullptr;
   int m_NumTicks = 0;
 

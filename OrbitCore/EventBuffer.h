@@ -11,7 +11,6 @@
 #include "SerializationMacros.h"
 
 #ifdef __linux
-#include "LinuxTracingHandler.h"
 #include "LinuxUtils.h"
 #endif
 
@@ -84,17 +83,3 @@ class EventBuffer {
   std::atomic<long long> m_MinTime;
 };
 
-#ifdef __linux
-class EventTracer {
- public:
-  EventBuffer& GetEventBuffer() { return m_EventBuffer; }
-  EventBuffer m_EventBuffer;
-  void Start(uint32_t a_PID);
-  void Stop();
-
- private:
-  std::shared_ptr<LinuxTracingHandler> m_LinuxTracer;
-};
-
-extern EventTracer GEventTracer;
-#endif

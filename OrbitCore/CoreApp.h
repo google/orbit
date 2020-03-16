@@ -44,15 +44,12 @@ class CoreApp {
   virtual void AddSymbol(uint64_t /*a_Address*/,
                          const std::string& /*a_Module*/,
                          const std::string& /*a_Name*/) {}
-  virtual void AddKeyAndString(uint64_t key, const std::string_view str) {}
+  virtual void AddKeyAndString(uint64_t key, std::string_view str) {}
   virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*
   GetRules() {
     return nullptr;
   }
   virtual void RefreshCaptureView() {}
-
-  virtual void StartRemoteCaptureBufferingThread() {}
-  virtual void StopRemoteCaptureBufferingThread() {}
 
   std::vector<std::string> m_SymbolLocations;
 };

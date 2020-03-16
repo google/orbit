@@ -10,6 +10,8 @@
 #include "Serialization.h"
 
 #ifdef __linux
+#include "EventTracer.h"
+#include "LinuxTracingHandler.h"
 EventTracer GEventTracer;
 #endif
 
@@ -78,13 +80,13 @@ ORBIT_SERIALIZE(CallstackEvent, 0) {
 #ifdef __linux
 
 //-----------------------------------------------------------------------------
-void EventTracer::Start(uint32_t a_PID) {
+void EventTracer::Start(uint32_t a_PID, LinuxTracingSession* session) {
   Capture::NewSamplingProfiler();
   Capture::GSamplingProfiler->StartCapture();
 
   m_LinuxTracer = std::make_shared<LinuxTracingHandler>(
-      GCoreApp, Capture::GTargetProcess.get(), &Capture::GSelectedFunctionsMap,
-      &Capture::GNumContextSwitches);
+      Capture::GSamplingProfiler.get(), session, Capture::GTargetProcess.get(),
+      &Capture::GSelectedFunctionsMap, &Capture::GNumContextSwitches);
   m_LinuxTracer->Start();
 }
 

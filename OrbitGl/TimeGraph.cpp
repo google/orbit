@@ -27,10 +27,7 @@
 #include "TimerManager.h"
 #include "Utils.h"
 #include "absl/strings/str_format.h"
-
-#ifdef _WIN32
 #include "EventTracer.h"
-#endif
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 

@@ -10,8 +10,10 @@
 #include "Core.h"
 #include "CoreApp.h"
 #include "EventBuffer.h"
+#include "EventTracer.h"
 #include "Injection.h"
 #include "Log.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitRule.h"
 #include "OrbitSession.h"
 #include "OrbitUnreal.h"
@@ -27,9 +29,7 @@
 #include "TimerManager.h"
 #include "absl/strings/str_format.h"
 
-#ifdef _WIN32
-#include "EventTracer.h"
-#else
+#ifndef _WIN32
 std::shared_ptr<Pdb> GPdbDbg;
 #endif
 
@@ -46,7 +46,7 @@ uint32_t Capture::GNumInstalledHooks;
 bool Capture::GHasContextSwitches;
 Timer Capture::GTestTimer;
 ULONG64 Capture::GMainFrameFunction;
-ULONG64 Capture::GNumContextSwitches;
+uint64_t Capture::GNumContextSwitches;
 ULONG64 Capture::GNumLinuxEvents;
 ULONG64 Capture::GNumProfileEvents;
 int Capture::GCapturePort = 0;
@@ -54,8 +54,8 @@ std::string Capture::GCaptureHost = "localhost";
 std::string Capture::GPresetToLoad = "";
 std::string Capture::GProcessToInject = "";
 
-std::map<ULONG64, Function*> Capture::GSelectedFunctionsMap;
-std::map<ULONG64, Function*> Capture::GVisibleFunctionsMap;
+std::map<uint64_t, Function*> Capture::GSelectedFunctionsMap;
+std::map<uint64_t, Function*> Capture::GVisibleFunctionsMap;
 std::unordered_map<ULONG64, ULONG64> Capture::GFunctionCountMap;
 std::shared_ptr<CallStack> Capture::GSelectedCallstack;
 std::vector<ULONG64> Capture::GSelectedAddressesByType[Function::NUM_TYPES];
@@ -159,7 +159,7 @@ bool Capture::Connect() {
 }
 
 //-----------------------------------------------------------------------------
-bool Capture::StartCapture() {
+bool Capture::StartCapture(LinuxTracingSession* session) {
   SCOPE_TIMER_LOG("Capture::StartCapture");
 
   if (GTargetProcess->GetName().size() == 0) return false;
@@ -187,7 +187,8 @@ bool Capture::StartCapture() {
 #ifdef WIN32
     GEventTracer.Start();
 #else
-    GEventTracer.Start(GTargetProcess->GetID());
+    CHECK(session != nullptr);
+    GEventTracer.Start(GTargetProcess->GetID(), session);
 #endif
   } else if (Capture::IsRemote()) {
     Capture::NewSamplingProfiler();
@@ -221,16 +222,6 @@ void Capture::StopCapture() {
   TcpEntity* tcpEntity = Capture::GetMainTcpEntity();
   tcpEntity->Send(Msg_StopCapture);
   GTimerManager->StopRecording();
-}
-
-//-----------------------------------------------------------------------------
-void Capture::ToggleRecording() {
-  if (GTimerManager) {
-    if (GTimerManager->m_IsRecording)
-      StopCapture();
-    else
-      StartCapture();
-  }
 }
 
 //-----------------------------------------------------------------------------
