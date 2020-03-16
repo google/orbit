@@ -235,8 +235,12 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
 
   if (!a_Timer.IsType(Timer::THREAD_ACTIVITY) &&
       !a_Timer.IsType(Timer::CORE_ACTIVITY)) {
-    GetThreadTrack(a_Timer.m_TID)->OnTimer(a_Timer);
+    std::shared_ptr<ThreadTrack> track = GetThreadTrack(a_Timer.m_TID);
+    track->OnTimer(a_Timer);
     ++m_ThreadCountMap[a_Timer.m_TID];
+    if( a_Timer.m_Type == Timer::INTROSPECTION ) {
+      track->SetColor(Color(87, 166, 74, 255));
+    }
   } else {
     // Use thead 0 as container for scheduling events.
     GetThreadTrack(0)->OnTimer(a_Timer);
@@ -582,7 +586,10 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
                     "%s %s %s", name, extraInfo.c_str(), time.c_str());
 
                 textBox.SetText(text);
-              } else if (!SystraceManager::Get().IsEmpty()) {
+              } else if( timer.m_Type == Timer::INTROSPECTION) {
+                textBox.SetText(timer.EncodedString());
+              }
+               else if (!SystraceManager::Get().IsEmpty()) {
                 textBox.SetText(SystraceManager::Get().GetFunctionName(
                     timer.m_FunctionAddress));
               } else if (!Capture::IsCapturing()) {

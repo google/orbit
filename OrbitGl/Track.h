@@ -38,6 +38,7 @@ class Track : public Pickable {
   void SetSize(float a_SizeX, float a_SizeY);
   void SetID(uint32_t a_ID) { m_ID = a_ID; }
   uint32_t GetID() const { return m_ID; }
+  void SetColor(Color a_Color) { m_Color = a_Color; }
 
  protected:
   GlCanvas* m_Canvas;
@@ -50,4 +51,5 @@ class Track : public Pickable {
   bool m_Moving;
   std::string m_Name;
   uint32_t m_ID;
+  Color m_Color;
 };
