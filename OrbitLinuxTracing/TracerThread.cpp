@@ -34,6 +34,9 @@ void TracerThread::Run(
     cpuset_cpus = all_cpus;
   }
 
+  bool perf_event_open_errors = false;
+  bool uprobes_event_open_errors = false;
+
   if (trace_context_switches_) {
     for (int32_t cpu : all_cpus) {
       int context_switch_fd = context_switch_event_open(-1, cpu);
@@ -43,6 +46,8 @@ void TracerThread::Run(
       if (context_switch_ring_buffer.IsOpen()) {
         tracing_fds_.push_back(context_switch_fd);
         ring_buffers_.push_back(std::move(context_switch_ring_buffer));
+      } else {
+        perf_event_open_errors = true;
       }
     }
   }
@@ -72,9 +77,12 @@ void TracerThread::Run(
             uprobes_fd, BIG_RING_BUFFER_SIZE_KB, buffer_name};
         if (uprobes_ring_buffer.IsOpen()) {
           function_uprobes_fds.push_back(uprobes_fd);
-          function_uprobes_ring_buffers.push_back(std::move(uprobes_ring_buffer));
+          function_uprobes_ring_buffers.push_back(
+              std::move(uprobes_ring_buffer));
         } else {
           function_uprobes_open_error = true;
+          perf_event_open_errors = true;
+          uprobes_event_open_errors = true;
           break;
         }
 
@@ -84,6 +92,8 @@ void TracerThread::Run(
           function_uretprobes_fds.push_back(uretprobes_fd);
         } else {
           function_uprobes_open_error = true;
+          perf_event_open_errors = true;
+          uprobes_event_open_errors = true;
           break;
         }
 
@@ -130,6 +140,8 @@ void TracerThread::Run(
     if (mmap_task_ring_buffer.IsOpen()) {
       tracing_fds_.push_back(mmap_task_fd);
       ring_buffers_.push_back(std::move(mmap_task_ring_buffer));
+    } else {
+      perf_event_open_errors = true;
     }
   }
 
@@ -142,8 +154,18 @@ void TracerThread::Run(
       if (sampling_ring_buffer.IsOpen()) {
         tracing_fds_.push_back(sampling_fd);
         ring_buffers_.push_back(std::move(sampling_ring_buffer));
+      } else {
+        perf_event_open_errors = true;
       }
     }
+  }
+
+  if (uprobes_event_open_errors) {
+    LOG("There were errors with perf_event_open, including for uprobes: did "
+        "you forget to run as root?");
+  } else if (perf_event_open_errors) {
+    LOG("There were errors with perf_event_open: did you forget to run as root "
+        "or to set /proc/sys/kernel/perf_event_paranoid to -1?");
   }
 
   // Start recording events.
