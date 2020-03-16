@@ -5,11 +5,11 @@
 
 #include "Callstack.h"
 #include "ContextSwitch.h"
-#include "LinuxCallstackEvent.h"
 #include "OrbitModule.h"
 #include "Params.h"
 #include "Path.h"
 #include "Pdb.h"
+#include "TcpServer.h"
 
 void LinuxTracingHandler::Start() {
   pid_t pid = target_process_->GetID();
@@ -49,6 +49,23 @@ void LinuxTracingHandler::OnTid(pid_t tid) {
   target_process_->AddThreadId(tid);
 }
 
+void LinuxTracingHandler::ProcessCallstackEvent(LinuxCallstackEvent&& event) {
+  CallStack cs = event.m_CS;
+  if (sampling_profiler_->HasCallStack(cs.Hash())) {
+    CallstackEvent hashed_callstack;
+    hashed_callstack.m_Id = cs.m_Hash;
+    hashed_callstack.m_TID = cs.m_ThreadId;
+    hashed_callstack.m_Time = event.m_time;
+
+    session_->RecordHashedCallstack(std::move(hashed_callstack));
+  } else {
+    session_->RecordCallstack(std::move(event));
+  }
+
+  // TODO: Is this needed for the case when the call stack already cached?
+  sampling_profiler_->AddCallStack(cs);
+}
+
 void LinuxTracingHandler::OnContextSwitchIn(
     const LinuxTracing::ContextSwitchIn& context_switch_in) {
   ++(*num_context_switches_);
@@ -58,7 +75,8 @@ void LinuxTracingHandler::OnContextSwitchIn(
   context_switch.m_Time = context_switch_in.GetTimestampNs();
   context_switch.m_ProcessorIndex = context_switch_in.GetCore();
   context_switch.m_ProcessorNumber = context_switch_in.GetCore();
-  core_app_->ProcessContextSwitch(context_switch);
+
+  session_->RecordContextSwitch(std::move(context_switch));
 }
 
 void LinuxTracingHandler::OnContextSwitchOut(
@@ -70,7 +88,8 @@ void LinuxTracingHandler::OnContextSwitchOut(
   context_switch.m_Time = context_switch_out.GetTimestampNs();
   context_switch.m_ProcessorIndex = context_switch_out.GetCore();
   context_switch.m_ProcessorNumber = context_switch_out.GetCore();
-  core_app_->ProcessContextSwitch(context_switch);
+
+  session_->RecordContextSwitch(std::move(context_switch));
 }
 
 void LinuxTracingHandler::OnCallstack(
@@ -86,7 +105,18 @@ void LinuxTracingHandler::OnCallstack(
       std::string symbol_name = absl::StrFormat(
           "%s+%#x", LinuxUtils::Demangle(frame.GetFunctionName().c_str()),
           frame.GetFunctionOffset());
-      core_app_->AddSymbol(address, frame.GetMapName(), symbol_name);
+      std::shared_ptr<LinuxSymbol> symbol = std::make_shared<LinuxSymbol>();
+      symbol->m_Module = frame.GetMapName();
+      symbol->m_Name = symbol_name;
+      symbol->m_Address = address;
+
+      // TODO: Move this out of here...
+      std::string message_data = SerializeObjectBinary(*symbol);
+      GTcpServer->Send(Msg_RemoteSymbol, message_data.c_str(),
+                       message_data.size());
+
+
+      target_process_->AddSymbol(address, symbol);
     }
 
     cs.m_Data.push_back(address);
@@ -94,8 +124,7 @@ void LinuxTracingHandler::OnCallstack(
 
   cs.m_Depth = cs.m_Data.size();
 
-  LinuxCallstackEvent callstack_event{"", callstack.GetTimestampNs(), 1, cs};
-  core_app_->ProcessSamplingCallStack(callstack_event);
+  ProcessCallstackEvent({"", callstack.GetTimestampNs(), 1, cs});
 }
 
 void LinuxTracingHandler::OnFunctionCall(
@@ -106,5 +135,6 @@ void LinuxTracingHandler::OnFunctionCall(
   timer.m_End = function_call.GetEndTimestampNs();
   timer.m_Depth = static_cast<uint8_t>(function_call.GetDepth());
   timer.m_FunctionAddress = function_call.GetVirtualAddress();
-  core_app_->ProcessTimer(timer, std::to_string(timer.m_FunctionAddress));
+
+  session_->RecordTimer(std::move(timer));
 }

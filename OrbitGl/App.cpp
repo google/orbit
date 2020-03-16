@@ -13,7 +13,9 @@
 #include <fstream>
 #include <thread>
 
-#include <OrbitBase/Tracing.h>
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Tracing.h"
+
 #include "CallStackDataView.h"
 #include "Callstack.h"
 #include "Capture.h"
@@ -24,6 +26,7 @@
 #include "ConnectionManager.h"
 #include "Debugger.h"
 #include "DiaManager.h"
+#include "EventTracer.h"
 #include "FunctionDataView.h"
 #ifndef NOGL
 #include "GlCanvas.h"
@@ -79,7 +82,6 @@
 
 #ifdef _WIN32
 #include "Disassembler.h"
-#include "EventTracer.h"
 #endif
 
 #if __linux__
@@ -181,116 +183,23 @@ void GLoadPdbAsync(const std::vector<std::string>& a_Modules) {
   GModuleManager.LoadPdbAsync(a_Modules, []() { GOrbitApp->OnPdbLoaded(); });
 }
 
-// TODO: find a better name
-//-----------------------------------------------------------------------------
-void OrbitApp::StartRemoteCaptureBufferingThread() {
-  PRINT_FUNC;
-  m_TimerBuffer.clear();
-  m_SamplingCallstackBuffer.clear();
-  m_HashedSamplingCallstackBuffer.clear();
-  m_ContextSwitchBuffer.clear();
-  m_MessageBufferThread = std::make_shared<std::thread>(
-      &OrbitApp::ProcessBufferedCaptureData, this);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::StopRemoteCaptureBufferingThread() {
-  PRINT_FUNC;
-  if (m_MessageBufferThread) {
-    m_MessageBufferThread->join();
-    m_MessageBufferThread = nullptr;
-  }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::ProcessBufferedCaptureData() {
-  while (Capture::IsCapturing()) {
-    OrbitSleepMs(20);
-
-    // timers:
-    {
-      ScopeLock lock(m_TimerMutex);
-      if (!m_TimerBuffer.empty()) {
-        Message Msg(Msg_RemoteTimers);
-        Msg.m_Size = uint32_t(sizeof(Timer) * m_TimerBuffer.size());
-        GTcpServer->Send(Msg, (void*)m_TimerBuffer.data());
-        m_TimerBuffer.clear();
-      }
-    }
-
-    // sampling callstacks
-    {
-      ScopeLock lock(m_SamplingCallstackMutex);
-      if (!m_SamplingCallstackBuffer.empty()) {
-        std::string messageData =
-            SerializeObjectBinary(m_SamplingCallstackBuffer);
-        GTcpServer->Send(Msg_SamplingCallstacks, messageData.c_str(),
-                         messageData.size());
-        m_SamplingCallstackBuffer.clear();
-      }
-    }
-
-    // hashed sampling callstacks
-    {
-      ScopeLock lock(m_HashedSamplingCallstackMutex);
-      if (!m_HashedSamplingCallstackBuffer.empty()) {
-        std::string messageData =
-            SerializeObjectBinary(m_HashedSamplingCallstackBuffer);
-        GTcpServer->Send(Msg_SamplingHashedCallstacks, messageData.c_str(),
-                         messageData.size());
-        m_HashedSamplingCallstackBuffer.clear();
-      }
-    }
-
-    // context switches
-    {
-      ScopeLock lock(m_ContextSwitchMutex);
-      if (!m_ContextSwitchBuffer.empty()) {
-        Message Msg(Msg_RemoteContextSwitches);
-        Msg.m_Size =
-            uint32_t(sizeof(ContextSwitch) * m_ContextSwitchBuffer.size());
-        GTcpServer->Send(Msg, (void*)m_ContextSwitchBuffer.data());
-        m_ContextSwitchBuffer.clear();
-      }
-    }
-  }
-}
-
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessTimer(const Timer& a_Timer,
                             const std::string& a_FunctionName) {
-  if (ConnectionManager::Get().IsService()) {
-    ScopeLock lock(m_TimerMutex);
-    m_TimerBuffer.push_back(a_Timer);
-  } else {
+  CHECK(!ConnectionManager::Get().IsService());
 #ifndef NOGL
-    GCurrentTimeGraph->ProcessTimer(a_Timer);
+  GCurrentTimeGraph->ProcessTimer(a_Timer);
 #endif
-    ++Capture::GFunctionCountMap[a_Timer.m_FunctionAddress];
-  }
+  ++Capture::GFunctionCountMap[a_Timer.m_FunctionAddress];
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) {
-  if (ConnectionManager::Get().IsService()) {
-    // only send the callstack hash, if we know the callstack
-    if (Capture::GSamplingProfiler->HasCallStack(a_CallStack.m_CS.Hash())) {
-      CallstackEvent hashed_call_stack;
-      hashed_call_stack.m_Id = a_CallStack.m_CS.m_Hash;
-      hashed_call_stack.m_TID = a_CallStack.m_CS.m_ThreadId;
-      hashed_call_stack.m_Time = a_CallStack.m_time;
+  CHECK(!ConnectionManager::Get().IsService());
 
-      ProcessHashedSamplingCallStack(hashed_call_stack);
-    } else {
-      ScopeLock lock(m_SamplingCallstackMutex);
-      m_SamplingCallstackBuffer.push_back(a_CallStack);
-    }
-  } else {
-    Capture::GSamplingProfiler->AddCallStack(a_CallStack.m_CS);
-    GEventTracer.GetEventBuffer().AddCallstackEvent(
-        a_CallStack.m_time, a_CallStack.m_CS.m_Hash,
-        a_CallStack.m_CS.m_ThreadId);
-  }
+  Capture::GSamplingProfiler->AddCallStack(a_CallStack.m_CS);
+  GEventTracer.GetEventBuffer().AddCallstackEvent(
+      a_CallStack.m_time, a_CallStack.m_CS.m_Hash, a_CallStack.m_CS.m_ThreadId);
 }
 
 //-----------------------------------------------------------------------------
@@ -332,23 +241,18 @@ void OrbitApp::ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) {
 //-----------------------------------------------------------------------------
 void OrbitApp::AddSymbol(uint64_t a_Address, const std::string& a_Module,
                          const std::string& a_Name) {
-  if (ConnectionManager::Get().IsService()) {
-    LinuxSymbol symbol;
-    symbol.m_Module = a_Module;
-    symbol.m_Name = a_Name;
-    symbol.m_Address = a_Address;
-    std::string messageData = SerializeObjectBinary(symbol);
-    GTcpServer->Send(Msg_RemoteSymbol, (void*)messageData.c_str(),
-                     messageData.size());
-  }
+  // This should not be called for the service - make sure it doesn't
+  CHECK(!ConnectionManager::Get().IsService());
+
   auto symbol = std::make_shared<LinuxSymbol>();
   symbol->m_Name = a_Name;
   symbol->m_Module = a_Module;
   Capture::GTargetProcess->AddSymbol(a_Address, symbol);
 }
 //-----------------------------------------------------------------------------
-void OrbitApp::AddKeyAndString(uint64_t key, const std::string_view str) {
-  if (ConnectionManager::Get().IsService()) {
+void OrbitApp::AddKeyAndString(uint64_t key, std::string_view str) {
+  CHECK (!ConnectionManager::Get().IsService());
+  {
     KeyAndString key_and_string;
     key_and_string.key = key;
     key_and_string.str = str;
@@ -358,9 +262,9 @@ void OrbitApp::AddKeyAndString(uint64_t key, const std::string_view str) {
                        message_data.size());
       string_manager_->Add(key, str);
     }
-  } else {
-    string_manager_->Add(key, str);
   }
+
+  string_manager_->Add(key, str);
 }
 
 //-----------------------------------------------------------------------------
@@ -463,8 +367,6 @@ bool OrbitApp::Init() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit() {
-  SetupIntrospection();
-
   string_manager_ = std::make_shared<StringManager>();
 #ifndef NOGL
   GCurrentTimeGraph->SetStringManager(string_manager_);
@@ -502,17 +404,6 @@ void OrbitApp::PostInit() {
   } else {
     ConnectionManager::Get().InitAsService();
   }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::SetupIntrospection() {
-#if __linux__ && ORBIT_TRACING_ENABLED
-  // Setup introspection handler.
-  if (GOrbitApp->GetHeadless()) {
-    auto handler = std::make_unique<orbit::introspection::Handler>();
-    LinuxTracing::SetOrbitTracingHandler(std::move(handler));
-  }
-#endif  // ORBIT_TRACING_ENABLED
 }
 
 //-----------------------------------------------------------------------------
@@ -1072,7 +963,9 @@ void OrbitApp::AddUiMessageCallback(
 
 //-----------------------------------------------------------------------------
 void OrbitApp::StartCapture() {
-  Capture::StartCapture();
+  // Tracing session is only needed when StartCapture is
+  // running on the service side
+  Capture::StartCapture(nullptr /* tracing_session */);
 
   if (m_NeedsThawing) {
 #ifdef _WIN32

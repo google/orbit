@@ -8,9 +8,11 @@
 #include "ContextSwitch.h"
 #include "CoreApp.h"
 #include "EventBuffer.h"
+#include "Introspection.h"
 #include "KeyAndString.h"
 #include "LinuxCallstackEvent.h"
 #include "LinuxSymbol.h"
+#include "OrbitBase/Tracing.h"
 #include "OrbitFunction.h"
 #include "OrbitModule.h"
 #include "Params.h"
@@ -24,6 +26,7 @@
 
 #if __linux__
 #include "LinuxUtils.h"
+#include "OrbitLinuxTracing/OrbitTracing.h"
 #endif
 
 #include <fstream>
@@ -31,50 +34,48 @@
 #include <sstream>
 #include <streambuf>
 
-//-----------------------------------------------------------------------------
 ConnectionManager::ConnectionManager()
-    : m_ExitRequested(false), m_IsService(false) {}
+    : exit_requested_(false), is_service_(false) {}
 
-//-----------------------------------------------------------------------------
-ConnectionManager::~ConnectionManager() { TerminateThread(); }
+ConnectionManager::~ConnectionManager() {
+  StopThread();
+  StopCaptureAsRemote();
+}
 
-//-----------------------------------------------------------------------------
-void ConnectionManager::TerminateThread() {
-  if (m_Thread) {
-    m_ExitRequested = true;
-    m_Thread->join();
-    m_Thread = nullptr;
+void ConnectionManager::StopThread() {
+  if (thread_ != nullptr) {
+    exit_requested_ = true;
+    thread_->join();
+    thread_ = nullptr;
   }
 }
 
-//-----------------------------------------------------------------------------
 ConnectionManager& ConnectionManager::Get() {
   static ConnectionManager instance;
   return instance;
 }
 
-//-----------------------------------------------------------------------------
-void ConnectionManager::ConnectToRemote(std::string a_RemoteAddress) {
-  m_RemoteAddress = a_RemoteAddress;
-  TerminateThread();
+void ConnectionManager::ConnectToRemote(std::string remote_address) {
+  remote_address_ = remote_address;
+  StopThread();
   SetupClientCallbacks();
-  m_Thread =
-      std::make_unique<std::thread>(&ConnectionManager::ConnectionThread, this);
+  thread_ = std::make_unique<std::thread>(
+      &ConnectionManager::ConnectionThreadWorker, this);
 }
 
-//-----------------------------------------------------------------------------
 void ConnectionManager::InitAsService() {
 #if __linux__
   GParams.m_TrackContextSwitches = true;
 #endif
 
-  m_IsService = true;
+  is_service_ = true;
+  string_manager_ = std::make_shared<StringManager>();
+  SetupIntrospection();
   SetupServerCallbacks();
-  m_Thread =
-      std::make_unique<std::thread>(&ConnectionManager::RemoteThread, this);
+  thread_ = std::make_unique<std::thread>(
+      &ConnectionManager::RemoteThreadWorker, this);
 }
 
-//-----------------------------------------------------------------------------
 void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
   PRINT_FUNC;
   const char* a_Data = a_Msg.GetData();
@@ -111,7 +112,49 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
   }
 }
 
-//-----------------------------------------------------------------------------
+void ConnectionManager::ServerCaptureThreadWorker() {
+  while (Capture::IsCapturing()) {
+    OrbitSleepMs(20);
+
+    std::vector<Timer> timers;
+    if (tracing_session_.ReadAllTimers(&timers)) {
+      Message Msg(Msg_RemoteTimers);
+      GTcpServer->Send(Msg, timers);
+    }
+
+    std::vector<LinuxCallstackEvent> callstacks;
+    if (tracing_session_.ReadAllCallstacks(&callstacks)) {
+        std::string message_data = SerializeObjectBinary(callstacks);
+        GTcpServer->Send(Msg_SamplingCallstacks, message_data.c_str(),
+                         message_data.size());
+
+    }
+
+    std::vector<CallstackEvent> hashed_callstacks;
+    if (tracing_session_.ReadAllHashedCallstacks(&hashed_callstacks)) {
+      std::string message_data = SerializeObjectBinary(hashed_callstacks);
+      GTcpServer->Send(Msg_SamplingHashedCallstacks, message_data.c_str(),
+                       message_data.size());
+    }
+
+    std::vector<ContextSwitch> context_switches;
+    if (tracing_session_.ReadAllContextSwitches(&context_switches)) {
+        Message Msg(Msg_RemoteContextSwitches);
+        GTcpServer->Send(Msg, context_switches);
+    }
+  }
+}
+
+void ConnectionManager::SetupIntrospection() {
+#if __linux__ && ORBIT_TRACING_ENABLED
+  // Setup introspection handler.
+  auto handler = std::make_unique<orbit::introspection::Handler>(
+      string_manager_, &tracing_session_);
+  LinuxTracing::SetOrbitTracingHandler(std::move(handler));
+#endif  // ORBIT_TRACING_ENABLED
+}
+
+
 void ConnectionManager::StartCaptureAsRemote(uint32_t pid) {
   PRINT_FUNC;
   std::shared_ptr<Process> process = process_list_.GetProcess(pid);
@@ -120,21 +163,24 @@ void ConnectionManager::StartCaptureAsRemote(uint32_t pid) {
     return;
   }
   Capture::SetTargetProcess(process);
-  Capture::StartCapture();
-  GCoreApp->StartRemoteCaptureBufferingThread();
+  tracing_session_.Reset();
+  Capture::StartCapture(&tracing_session_);
+  server_capture_thread_ = std::make_unique<std::thread>(
+      &ConnectionManager::ServerCaptureThreadWorker, this);
 }
 
-//-----------------------------------------------------------------------------
 void ConnectionManager::StopCaptureAsRemote() {
   PRINT_FUNC;
+  // The thread checks Capture::IsCapturing() and exits main loop
+  // when it is false. StopCapture should be called before joining
+  // the thread.
   Capture::StopCapture();
-  GCoreApp->StopRemoteCaptureBufferingThread();
+  server_capture_thread_->join();
+  server_capture_thread_ = nullptr;
 }
 
-//-----------------------------------------------------------------------------
-void ConnectionManager::Stop() { m_ExitRequested = true; }
+void ConnectionManager::Stop() { exit_requested_ = true; }
 
-//-----------------------------------------------------------------------------
 void ConnectionManager::SetupServerCallbacks() {
   GTcpServer->AddMainThreadCallback(
       Msg_RemoteSelectedFunctionsMap,
@@ -193,7 +239,6 @@ void ConnectionManager::SetupServerCallbacks() {
       });
 }
 
-//-----------------------------------------------------------------------------
 void ConnectionManager::SetupClientCallbacks() {
   GTcpClient->AddMainThreadCallback(Msg_RemotePerf, [=](const Message& a_Msg) {
     PRINT_VAR(a_Msg.m_Size);
@@ -290,7 +335,6 @@ void ConnectionManager::SetupClientCallbacks() {
       });
 }
 
-//-----------------------------------------------------------------------------
 void ConnectionManager::SendProcesses(TcpEntity* tcp_entity) {
   process_list_.Refresh();
   process_list_.UpdateCpuTimes();
@@ -312,11 +356,10 @@ void ConnectionManager::SendRemoteProcess(TcpEntity* tcp_entity, uint32_t pid) {
   }
 }
 
-//-----------------------------------------------------------------------------
-void ConnectionManager::ConnectionThread() {
-  while (!m_ExitRequested) {
+void ConnectionManager::ConnectionThreadWorker() {
+  while (!exit_requested_) {
     if (!GTcpClient->IsValid()) {
-      GTcpClient->Connect(m_RemoteAddress);
+      GTcpClient->Connect(remote_address_);
       GTcpClient->Start();
     } else {
       // std::string msg("Hello from dev machine");
@@ -327,9 +370,8 @@ void ConnectionManager::ConnectionThread() {
   }
 }
 
-//-----------------------------------------------------------------------------
-void ConnectionManager::RemoteThread() {
-  while (!m_ExitRequested) {
+void ConnectionManager::RemoteThreadWorker() {
+  while (!exit_requested_) {
     if (GTcpServer && GTcpServer->HasConnection()) {
       SendProcesses(GTcpServer);
     }

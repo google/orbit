@@ -6,6 +6,7 @@
 #include <chrono>
 #include <string>
 
+#include "LinuxTracingSession.h"
 #include "CallstackTypes.h"
 #include "OrbitType.h"
 #include "Threading.h"
@@ -22,9 +23,8 @@ struct Capture {
   static bool Connect();
   static bool InjectRemote();
   static void SetTargetProcess(const std::shared_ptr<Process>& a_Process);
-  static bool StartCapture();
+  static bool StartCapture(LinuxTracingSession* session);
   static void StopCapture();
-  static void ToggleRecording();
   static void ClearCaptureData();
   static void PreFunctionHooks();
   static void SendFunctionHooks();
@@ -84,7 +84,7 @@ struct Capture {
 
   static Timer GTestTimer;
   static ULONG64 GMainFrameFunction;
-  static ULONG64 GNumContextSwitches;
+  static uint64_t GNumContextSwitches;
   static ULONG64 GNumLinuxEvents;
   static ULONG64 GNumProfileEvents;
   static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
@@ -92,8 +92,8 @@ struct Capture {
   static std::shared_ptr<Session> GSessionPresets;
   static std::shared_ptr<CallStack> GSelectedCallstack;
   static void (*GClearCaptureDataFunc)();
-  static std::map<ULONG64, Function*> GSelectedFunctionsMap;
-  static std::map<ULONG64, Function*> GVisibleFunctionsMap;
+  static std::map<uint64_t, Function*> GSelectedFunctionsMap;
+  static std::map<uint64_t, Function*> GVisibleFunctionsMap;
   static std::unordered_map<ULONG64, ULONG64> GFunctionCountMap;
   static std::vector<ULONG64> GSelectedAddressesByType[Function::NUM_TYPES];
   static std::unordered_map<DWORD64, std::shared_ptr<CallStack> > GCallstacks;

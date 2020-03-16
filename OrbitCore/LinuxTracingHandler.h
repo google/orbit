@@ -4,22 +4,28 @@
 #include <OrbitLinuxTracing/Tracer.h>
 #include <OrbitLinuxTracing/TracerListener.h>
 
-#include "CoreApp.h"
+#include "ContextSwitch.h"
+#include "LinuxCallstackEvent.h"
+#include "LinuxTracingSession.h"
 #include "OrbitProcess.h"
+#include "SamplingProfiler.h"
 #include "ScopeTimer.h"
-#include "absl/container/flat_hash_map.h"
+#include "absl/synchronization/mutex.h"
 
 class LinuxTracingHandler : LinuxTracing::TracerListener {
  public:
   static constexpr double DEFAULT_SAMPLING_FREQUENCY = 1000.0;
 
-  LinuxTracingHandler(CoreApp* core_app, Process* target_process,
-                      std::map<ULONG64, Function*>* selected_function_map,
-                      ULONG64* num_context_switches)
-      : core_app_{core_app},
-        target_process_{target_process},
-        selected_function_map_{selected_function_map},
-        num_context_switches_{num_context_switches} {}
+  LinuxTracingHandler(SamplingProfiler* sampling_profiler,
+                      LinuxTracingSession* session,
+                      Process* target_process,
+                      std::map<uint64_t, Function*>* selected_function_map,
+                      uint64_t* num_context_switches)
+      : sampling_profiler_(sampling_profiler),
+        session_(session),
+        target_process_(target_process),
+        selected_function_map_(selected_function_map),
+        num_context_switches_(num_context_switches) {}
 
   ~LinuxTracingHandler() override = default;
   LinuxTracingHandler(const LinuxTracingHandler&) = delete;
@@ -40,10 +46,13 @@ class LinuxTracingHandler : LinuxTracing::TracerListener {
   void OnFunctionCall(const LinuxTracing::FunctionCall& function_call) override;
 
  private:
-  CoreApp* core_app_;
+  void ProcessCallstackEvent(LinuxCallstackEvent&& event);
+
+  SamplingProfiler* sampling_profiler_;
+  LinuxTracingSession* session_;
   Process* target_process_;
-  std::map<ULONG64, Function*>* selected_function_map_;
-  ULONG64* num_context_switches_;
+  std::map<uint64_t, Function*>* selected_function_map_;
+  uint64_t* num_context_switches_;
 
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
 };
