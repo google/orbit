@@ -58,14 +58,12 @@ void TracerThread::Run(
 
   if (trace_instrumented_functions_) {
     for (const auto& function : instrumented_functions_) {
-      for (int32_t cpu : cpuset_cpus) {
-        // Add uretprobes_fd to tracing_fds_ before uprobes_fd. As we support
-        // having uretprobes without associated uprobes, but not the opposite,
-        // this way the uretprobe is enabled before the uprobe.
-        int uretprobes_fd = uretprobes_event_open(
-            function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
-        tracing_fds_.push_back(uretprobes_fd);
+      std::vector<int> function_uprobes_fds;
+      std::vector<int> function_uretprobes_fds;
+      std::vector<PerfEventRingBuffer> function_uprobes_ring_buffers;
+      bool function_uprobes_open_error = false;
 
+      for (int32_t cpu : cpuset_cpus) {
         int uprobes_fd = uprobes_stack_event_open(
             function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
         std::string buffer_name = absl::StrFormat(
@@ -73,14 +71,53 @@ void TracerThread::Run(
         PerfEventRingBuffer uprobes_ring_buffer{
             uprobes_fd, BIG_RING_BUFFER_SIZE_KB, buffer_name};
         if (uprobes_ring_buffer.IsOpen()) {
-          tracing_fds_.push_back(uprobes_fd);
-          ring_buffers_.push_back(std::move(uprobes_ring_buffer));
-          uprobes_fds_to_function_.emplace(uprobes_fd, &function);
+          function_uprobes_fds.push_back(uprobes_fd);
+          function_uprobes_ring_buffers.push_back(std::move(uprobes_ring_buffer));
+        } else {
+          function_uprobes_open_error = true;
+          break;
+        }
+
+        int uretprobes_fd = uretprobes_event_open(
+            function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
+        if (uretprobes_fd >= 0) {
+          function_uretprobes_fds.push_back(uretprobes_fd);
+        } else {
+          function_uprobes_open_error = true;
+          break;
         }
 
         // Redirect uretprobes to the uprobes ring buffer to reduce number of
         // ring buffers and to coalesce closely related events.
         perf_event_redirect(uretprobes_fd, uprobes_fd);
+      }
+
+      if (function_uprobes_open_error) {
+        ERROR("Opening u(ret)probes for function at %#016lx",
+              function.VirtualAddress());
+        function_uprobes_ring_buffers.clear();
+        for (int uprobes_fd : function_uprobes_fds) {
+          close(uprobes_fd);
+        }
+        for (int uretprobes_fd : function_uretprobes_fds) {
+          close(uretprobes_fd);
+        }
+      } else {
+        // Add function_uretprobes_fds to tracing_fds_ before
+        // function_uprobes_fds. As we support having uretprobes without
+        // associated uprobes, but not the opposite, this way the uretprobe is
+        // enabled before the uprobe.
+        tracing_fds_.insert(tracing_fds_.end(), function_uretprobes_fds.begin(),
+                            function_uretprobes_fds.end());
+        tracing_fds_.insert(tracing_fds_.end(), function_uprobes_fds.begin(),
+                            function_uprobes_fds.end());
+        for (PerfEventRingBuffer& uprobes_ring_buffer :
+             function_uprobes_ring_buffers) {
+          ring_buffers_.emplace_back(std::move(uprobes_ring_buffer));
+        }
+        for (int uprobes_fd : function_uprobes_fds) {
+          uprobes_fds_to_function_.emplace(uprobes_fd, &function);
+        }
       }
     }
   }
