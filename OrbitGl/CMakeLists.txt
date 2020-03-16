@@ -118,7 +118,7 @@ else()
   set_target_properties(OrbitGl PROPERTIES EXCLUDE_FROM_ALL ON)
 endif()
 
-if(TARGET OpenGL::GLX AND WITH_GUI)
+if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL AND WITH_GUI)
   target_link_libraries(OrbitGl PUBLIC OpenGL::GLX)
 endif()
 
