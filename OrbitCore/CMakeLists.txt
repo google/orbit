@@ -162,7 +162,8 @@ target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(
   OrbitCore
-  PUBLIC cereal::cereal
+  PUBLIC OrbitBase
+         cereal::cereal
          xxHash::xxHash
          concurrentqueue::concurrentqueue
          multicore::multicore
