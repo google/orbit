@@ -13,6 +13,8 @@
 #include <fstream>
 #include <thread>
 
+#include <OrbitBase/Tracing.h>
+#include <OrbitLinuxTracing/OrbitTracing.h>
 #include "CallStackDataView.h"
 #include "Callstack.h"
 #include "Capture.h"
@@ -32,6 +34,7 @@
 #include "ImGuiOrbit.h"
 #endif
 #include "Injection.h"
+#include "Introspection.h"
 #include "LinuxCallstackEvent.h"
 #include "LiveFunctionDataView.h"
 #include "Log.h"
@@ -439,6 +442,13 @@ bool OrbitApp::Init() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit() {
+  // Setup introspection handler.
+  bool is_service = GOrbitApp->GetHeadless();
+  if(is_service) {
+    auto handler = std::make_unique<orbit::introspection::Handler>();
+    LinuxTracing::SetOrbitTracingHandler(std::move(handler));
+  }
+
   if (HasTcpServer()) {
     GTcpServer->AddCallback(Msg_MiniDump, [=](const Message& a_Msg) {
       GOrbitApp->OnMiniDump(a_Msg);
@@ -674,6 +684,7 @@ Timer GMainTimer;
 
 //-----------------------------------------------------------------------------
 void OrbitApp::MainTick() {
+  ORBIT_SCOPE_FUNC;
   TRACE_VAR(GMainTimer.QueryMillis());
 
   if (GTcpServer) GTcpServer->ProcessMainThreadCallbacks();

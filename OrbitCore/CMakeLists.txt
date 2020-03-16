@@ -24,6 +24,7 @@ target_sources(
          FunctionStats.h
          Hashing.h
          Injection.h
+         Introspection.h
          LinuxCallstackEvent.h
          LinuxSymbol.h
          Log.h
@@ -83,6 +84,7 @@ target_sources(
           EventBuffer.cpp
           FunctionStats.cpp
           Injection.cpp
+          Introspection.cpp
           LinuxCallstackEvent.cpp
           Log.cpp
           LogInterface.cpp
