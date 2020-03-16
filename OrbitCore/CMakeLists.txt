@@ -27,6 +27,7 @@ target_sources(
          Introspection.h
          LinuxCallstackEvent.h
          LinuxSymbol.h
+         LinuxTracingSession.h
          Log.h
          LogInterface.h
          MemoryTracker.h
@@ -87,6 +88,7 @@ target_sources(
           Injection.cpp
           Introspection.cpp
           LinuxCallstackEvent.cpp
+          LinuxTracingSession.cpp
           Log.cpp
           LogInterface.cpp
           MemoryTracker.cpp
@@ -207,6 +209,7 @@ add_executable(OrbitCoreTests)
 target_sources(OrbitCoreTests PRIVATE
     RingBufferTest.cpp
     StringManagerTest.cpp
+    LinuxTracingSessionTests.cpp
 )
 
 if(NOT WIN32)
