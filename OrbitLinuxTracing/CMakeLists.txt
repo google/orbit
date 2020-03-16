@@ -17,6 +17,7 @@ target_include_directories(OrbitLinuxTracing PRIVATE
 target_sources(OrbitLinuxTracing PUBLIC
         include/OrbitLinuxTracing/Events.h
         include/OrbitLinuxTracing/Function.h
+        include/OrbitLinuxTracing/OrbitTracing.h
         include/OrbitLinuxTracing/Tracer.h
         include/OrbitLinuxTracing/TracerListener.h)
 
@@ -24,6 +25,7 @@ target_sources(OrbitLinuxTracing PRIVATE
         LibunwindstackUnwinder.cpp
         LibunwindstackUnwinder.h
         MakeUniqueForOverwrite.h
+        OrbitTracing.cpp
         PerfEvent.cpp
         PerfEvent.h
         PerfEventOpen.cpp
