@@ -21,7 +21,7 @@ inline void clock_gettime(uint32_t, struct timespec* spec) {
 #endif
 
 //-----------------------------------------------------------------------------
-inline TickType OrbitTicks(uint32_t a_Clock = 0 /*CLOCK_REALTIME*/) {
+inline TickType OrbitTicks(uint32_t a_Clock = 1 /*CLOCK_MONOTONIC*/) {
   timespec ts;
   clock_gettime(a_Clock, &ts);
   return 1000000000ll * ts.tv_sec + ts.tv_nsec;
