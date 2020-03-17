@@ -284,9 +284,9 @@ void ProcessList::SetRemote(bool value) {
 }
 
 //-----------------------------------------------------------------------------
-std::shared_ptr<Process> ProcessList::GetProcess(uint32_t a_PID) {
+std::shared_ptr<Process> ProcessList::GetProcess(uint32_t pid) const {
   std::shared_ptr<Process> result = nullptr;
-  auto iter = m_ProcessesMap.find(a_PID);
+  auto iter = m_ProcessesMap.find(pid);
   if (iter != m_ProcessesMap.end()) result = iter->second;
   return result;
 }

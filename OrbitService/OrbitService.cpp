@@ -2,28 +2,27 @@
 
 #include <iostream>
 
-#include "App.h"
+#include "Capture.h"
+#include "ConnectionManager.h"
 #include "Core.h"
-#include "DataView.h"
+#include "TimerManager.h"
+#include "TcpServer.h"
 
-//-----------------------------------------------------------------------------
 OrbitService::OrbitService() {
-  OrbitApp::Init();
-  GOrbitApp->SetHeadless(true);
-  GOrbitApp->SetCommandLineArguments({"headless"});
-  GOrbitApp->PostInit();
+  // TODO: these should be a private fields.
+  GTimerManager = std::make_unique<TimerManager>();
+  GTcpServer = new TcpServer();
+  Capture::Init();
 
-  DataView::Create(DataViewType::PROCESSES);
-  DataView::Create(DataViewType::MODULES);
+  GTcpServer->Start(Capture::GCapturePort);
+  ConnectionManager::Get().InitAsService();
 }
 
-//-----------------------------------------------------------------------------
-OrbitService::~OrbitService() {}
-
-//-----------------------------------------------------------------------------
 void OrbitService::Run() {
-  while (!m_ExitRequested) {
-    OrbitApp::MainTick();
+  while (!exit_requested_) {
+    GTcpServer->ProcessMainThreadCallbacks();
+    Capture::Update();
     Sleep(16);
   }
 }
+

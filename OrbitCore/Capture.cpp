@@ -196,10 +196,12 @@ bool Capture::StartCapture(LinuxTracingSession* session) {
     Capture::GSamplingProfiler->StartCapture();
   }
 
-  GCoreApp->SendToUiNow(L"startcapture");
+  if (GCoreApp != nullptr) {
+    GCoreApp->SendToUiNow(L"startcapture");
 
-  if (GSelectedFunctionsMap.size() > 0) {
-    GCoreApp->SendToUiNow(L"gotolive");
+    if (GSelectedFunctionsMap.size() > 0) {
+      GCoreApp->SendToUiNow(L"gotolive");
+    }
   }
 
   return true;
@@ -605,7 +607,7 @@ std::shared_ptr<CallStack> Capture::GetCallstack(CallstackID a_ID) {
 
 //-----------------------------------------------------------------------------
 void Capture::CheckForUnrealSupport() {
-  GUnrealSupported =
+  GUnrealSupported = GCoreApp != nullptr &&
       GCoreApp->GetUnrealSupportEnabled() && GOrbitUnreal.HasFnameInfo();
 }
 
