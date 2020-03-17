@@ -263,8 +263,6 @@ class OrbitApp : public CoreApp {
   std::queue<std::shared_ptr<struct Module> > m_ModulesToLoad;
   std::vector<std::string> m_PostInitArguments;
 
-  absl::flat_hash_map<uint64_t, std::string> key_to_string_;
-
   class EventTracer* m_EventTracer = nullptr;
   class Debugger* m_Debugger = nullptr;
   int m_NumTicks = 0;
