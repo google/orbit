@@ -34,6 +34,7 @@ class OrbitApp : public CoreApp {
   std::string GetVersion();
   void CheckForUpdate();
   void CheckDebugger();
+  void SetupIntrospection();
 
   std::wstring GetCaptureFileName();
   std::string GetSessionFileName();

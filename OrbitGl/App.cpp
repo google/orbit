@@ -445,15 +445,7 @@ bool OrbitApp::Init() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit() {
-#if ORBIT_TRACING_ENABLED
-  // Setup introspection handler.
-  bool is_service = GOrbitApp->GetHeadless();
-  if (is_service) {
-    auto handler = std::make_unique<orbit::introspection::Handler>();
-    LinuxTracing::SetOrbitTracingHandler(std::move(handler));
-  }
-#endif  // ORBIT_TRACING_ENABLED
-
+  SetupIntrospection();
   if (HasTcpServer()) {
     GTcpServer->AddCallback(Msg_MiniDump, [=](const Message& a_Msg) {
       GOrbitApp->OnMiniDump(a_Msg);
@@ -486,6 +478,17 @@ void OrbitApp::PostInit() {
   } else {
     ConnectionManager::Get().InitAsService();
   }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::SetupIntrospection() {
+#if __linux__ && ORBIT_TRACING_ENABLED
+  // Setup introspection handler.
+  if (GOrbitApp->GetHeadless()) {
+    auto handler = std::make_unique<orbit::introspection::Handler>();
+    LinuxTracing::SetOrbitTracingHandler(std::move(handler));
+  }
+#endif  // ORBIT_TRACING_ENABLED
 }
 
 //-----------------------------------------------------------------------------
