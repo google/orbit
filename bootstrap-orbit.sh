@@ -12,7 +12,8 @@ fi
 sudo apt-get update
 sudo apt-get install -y build-essential
 sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev
-sudo apt-get install -y linux-tools-common qt5-default python3-pip
+sudo apt-get install -y qt5-default
+sudo apt-get install -y python3-pip
 
 echo "Checking if conan is available..."
 which conan >/dev/null
