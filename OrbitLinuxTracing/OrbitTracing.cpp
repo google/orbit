@@ -1,5 +1,7 @@
 #include <OrbitLinuxTracing/OrbitTracing.h>
 
+#if ORBIT_TRACING_ENABLED
+
 namespace orbit {
 namespace tracing {
 
@@ -15,3 +17,5 @@ void SetOrbitTracingHandler(std::unique_ptr<orbit::tracing::Handler> handler) {
 }
 
 }  // namespace OrbitLinuxTracing
+
+#endif  // ORBIT_TRACING_ENABLED

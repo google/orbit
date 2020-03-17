@@ -1,5 +1,7 @@
 #include "Introspection.h"
 
+#if ORBIT_TRACING_ENABLED
+
 #include <memory>
 #include <vector>
 
@@ -33,3 +35,5 @@ void Handler::Track(const char* name, float) {}
 
 }  // namespace introspection
 }  // namespace orbit
+
+#endif  // ORBIT_TRACING_ENABLED
