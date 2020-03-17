@@ -1,12 +1,15 @@
 #pragma once
+
 #include <vector>
+
+#include "ProcessUtils.h"
+
 class OrbitService {
  public:
   OrbitService();
-  ~OrbitService();
-
   void Run();
 
  private:
-  bool m_ExitRequested = false;
+  // TODO: where is this set?
+  bool exit_requested_ = false;
 };

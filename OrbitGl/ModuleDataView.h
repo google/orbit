@@ -15,7 +15,6 @@ class ModulesDataView : public DataView {
   const std::vector<float>& GetColumnHeadersRatios() override;
   std::vector<std::wstring> GetContextMenu(int a_Index) override;
   std::wstring GetValue(int a_Row, int a_Column) override;
-  ;
 
   void OnFilter(const std::wstring& a_Filter) override;
   void OnSort(int a_Column, bool a_Toggle = true) override;

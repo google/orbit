@@ -23,8 +23,9 @@ struct ProcessList {
   void SortByCPU();
   void UpdateCpuTimes();
   void SetRemote(bool a_Value);
-  bool Contains(uint32_t a_PID) const;
-  std::shared_ptr<Process> GetProcess(uint32_t a_PID);
+  bool Contains(uint32_t pid) const;
+  std::shared_ptr<Process> GetProcess(uint32_t pid) const;
+// TODO: make these private - do not access directly
   std::vector<std::shared_ptr<Process> > m_Processes;
   std::unordered_map<uint32_t, std::shared_ptr<Process> > m_ProcessesMap;
 
