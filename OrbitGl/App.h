@@ -16,6 +16,8 @@
 #include "Message.h"
 #include "Threading.h"
 
+#include "absl/container/flat_hash_map.h"
+
 struct CallStack;
 class Process;
 
@@ -79,6 +81,7 @@ class OrbitApp : public CoreApp {
   void ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) override;
   void AddSymbol(uint64_t a_Address, const std::string& a_Module,
                  const std::string& a_Name) override;
+  void AddKeyAndString(uint64_t key, const std::string& str) override;
   void ProcessBufferedCaptureData();
 
   int* GetScreenRes() { return m_ScreenRes; }
@@ -259,6 +262,8 @@ class OrbitApp : public CoreApp {
 
   std::queue<std::shared_ptr<struct Module> > m_ModulesToLoad;
   std::vector<std::string> m_PostInitArguments;
+
+  absl::flat_hash_map<uint64_t, std::string> key_to_string_;
 
   class EventTracer* m_EventTracer = nullptr;
   class Debugger* m_Debugger = nullptr;

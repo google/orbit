@@ -56,6 +56,7 @@ target_sources(
          ScopeTimer.h
          Serialization.h
          SerializationMacros.h
+         StringManager.h
          Systrace.h
          Tcp.h
          TcpClient.h
@@ -108,6 +109,7 @@ target_sources(
           Profiling.cpp
           SamplingProfiler.cpp
           ScopeTimer.cpp
+          StringManager.cpp
           Systrace.cpp
           Tcp.cpp
           Tcp.cpp

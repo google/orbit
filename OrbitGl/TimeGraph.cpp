@@ -19,6 +19,7 @@
 #include "Pdb.h"
 #include "PickingManager.h"
 #include "SamplingProfiler.h"
+#include "StringManager.h"
 #include "Systrace.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
@@ -588,7 +589,7 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
 
                 textBox.SetText(text);
               } else if( timer.m_Type == Timer::INTROSPECTION) {
-                textBox.SetText(timer.EncodedString());
+                textBox.SetText(GStringManager->Get(timer.m_UserData[0]));
               }
                else if (!SystraceManager::Get().IsEmpty()) {
                 textBox.SetText(SystraceManager::Get().GetFunctionName(

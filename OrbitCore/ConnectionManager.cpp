@@ -8,6 +8,7 @@
 #include "ContextSwitch.h"
 #include "CoreApp.h"
 #include "EventBuffer.h"
+#include "KeyAndString.h"
 #include "LinuxCallstackEvent.h"
 #include "LinuxSymbol.h"
 #include "OrbitFunction.h"
@@ -225,6 +226,14 @@ void ConnectionManager::SetupClientCallbacks() {
       GTimerManager->Add(timers[i]);
     }
   });
+
+  GTcpClient->AddCallback(Msg_KeyAndString, [=](const Message& a_Msg) {
+    KeyAndString key_and_string;
+    std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+    cereal::BinaryInputArchive inputAr(buffer);
+    inputAr(key_and_string);
+    GCoreApp->AddKeyAndString(key_and_string.key, key_and_string.str);
+   });
 
   GTcpClient->AddCallback(Msg_RemoteCallStack, [=](const Message& a_Msg) {
     CallStack stack;
