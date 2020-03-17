@@ -5,9 +5,21 @@
 #include <memory>
 #include <vector>
 
+#include <OrbitBase/Tracing.h>
 #include "CoreApp.h"
 #include "PrintVar.h"
 #include "Utils.h"
+
+#ifdef _WIN32
+namespace orbit {
+namespace tracing {
+
+// Instanciate tracing handler. On Linux, see OrbitTracing.cpp.
+std::unique_ptr<Handler> GHandler;
+
+}  // namespace tracing
+}  // namespace orbit
+#endif
 
 namespace orbit {
 namespace introspection {
