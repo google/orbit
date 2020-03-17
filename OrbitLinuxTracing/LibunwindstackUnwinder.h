@@ -13,15 +13,20 @@ namespace LinuxTracing {
 
 class LibunwindstackUnwinder {
  public:
-  bool SetMaps(const std::string& maps_buffer);
+  static std::unique_ptr<unwindstack::BufferMaps> ParseMaps(
+      const std::string& maps_buffer);
 
   std::vector<unwindstack::FrameData> Unwind(
+      unwindstack::Maps* maps,
+      const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
+      const char* stack_dump, uint64_t stack_dump_size);
+
+  std::vector<unwindstack::FrameData> Unwind(
+      const std::string& maps_buffer,
       const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
       const char* stack_dump, uint64_t stack_dump_size);
 
  private:
-  std::unique_ptr<unwindstack::BufferMaps> maps_{nullptr};
-
   static constexpr size_t MAX_FRAMES = 1024;  // This is arbitrary.
 
   static const std::array<size_t, unwindstack::X86_64_REG_LAST>

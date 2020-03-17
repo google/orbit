@@ -35,9 +35,8 @@ namespace LinuxTracing {
 
 class UprobesUnwindingVisitor : public PerfEventVisitor {
  public:
-  explicit UprobesUnwindingVisitor(const std::string& initial_maps) {
-    unwinder_.SetMaps(initial_maps);
-  }
+  explicit UprobesUnwindingVisitor(const std::string& initial_maps)
+      : callstack_manager_{&unwinder_, initial_maps} {}
 
   UprobesUnwindingVisitor(const UprobesUnwindingVisitor&) = delete;
   UprobesUnwindingVisitor& operator=(const UprobesUnwindingVisitor&) = delete;
@@ -55,7 +54,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
  private:
   UprobesFunctionCallManager function_call_manager_{};
   LibunwindstackUnwinder unwinder_{};
-  UprobesCallstackManager callstack_manager_{};
+  UprobesCallstackManager<LibunwindstackUnwinder> callstack_manager_;
 
   TracerListener* listener_ = nullptr;
 

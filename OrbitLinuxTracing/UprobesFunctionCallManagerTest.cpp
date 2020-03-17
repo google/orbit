@@ -1,8 +1,6 @@
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
-#include <utility>
-
 #include "UprobesFunctionCallManager.h"
 
 namespace LinuxTracing {

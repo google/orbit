@@ -4,10 +4,8 @@ namespace LinuxTracing {
 
 void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
-  const std::vector<unwindstack::FrameData>& callstack = unwinder_.Unwind(
-      event->GetRegisters(), event->GetStackData(), event->GetStackSize());
   const std::vector<unwindstack::FrameData>& full_callstack =
-      callstack_manager_.ProcessSampledCallstack(event->GetTid(), callstack);
+      callstack_manager_.ProcessSampledCallstack(event->GetTid(), *event);
   if (!full_callstack.empty()) {
     Callstack returned_callstack{
         event->GetTid(),
@@ -46,21 +44,10 @@ void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
                                         event->GetFunction()->VirtualAddress(),
                                         event->GetTimestamp());
 
-  const std::vector<unwindstack::FrameData>& callstack = unwinder_.Unwind(
-      event->GetRegisters(), event->GetStackData(), event->GetStackSize());
-  const std::vector<unwindstack::FrameData>& full_callstack =
-      callstack_manager_.ProcessUprobesCallstack(event->GetTid(), callstack);
-
-  // TODO: Callstacks at the beginning and/or end of a dynamically-instrumented
-  //  function could alter the statistics of time-based callstack sampling.
-  //  Consider not/conditionally adding these callstacks to the trace.
-  if (!full_callstack.empty()) {
-    Callstack returned_callstack{
-        event->GetTid(),
-        CallstackFramesFromLibunwindstackFrames(full_callstack),
-        event->GetTimestamp()};
-    listener_->OnCallstack(returned_callstack);
-  }
+  // Careful: UprobesWithStackPerfEvent* event ends up being moved from
+  // LateUnwindCallstack's constructor.
+  callstack_manager_.ProcessUprobesCallstack(event->GetTid(),
+                                             std::move(*event));
 }
 
 void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
@@ -83,7 +70,7 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
 }
 
 void UprobesUnwindingVisitor::visit(MapsPerfEvent* event) {
-  unwinder_.SetMaps(event->GetMaps());
+  callstack_manager_.ProcessMaps(event->GetMaps());
 }
 
 std::vector<CallstackFrame>

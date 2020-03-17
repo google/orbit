@@ -25,6 +25,10 @@ std::vector<unwindstack::FrameData> MakeTestCallstack(
   return callstack;
 }
 
+std::vector<unwindstack::FrameData> MakeTestUnwindingErrorCallstack() {
+  return MakeTestCallstack({});
+}
+
 unwindstack::FrameData MakeTestUprobesFrame() {
   unwindstack::FrameData uprobes_frame{};
   uprobes_frame.function_name = "uprobes";
@@ -52,21 +56,87 @@ TestCallstackToStringPairVector(
   }
   return vector;
 }
+
+class TestUnwinder {
+ public:
+  static std::unique_ptr<unwindstack::BufferMaps> ParseMaps(
+      const std::string& maps_buffer) {
+    auto maps = std::make_unique<unwindstack::BufferMaps>("");
+    maps->Parse();
+    return maps;
+  }
+
+  std::vector<unwindstack::FrameData> Unwind(
+      unwindstack::Maps* maps,
+      const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
+      const char* stack_dump, uint64_t stack_dump_size) {
+    return stack_dump_sizes_to_callstack.at(stack_dump_size);
+  }
+
+  std::vector<unwindstack::FrameData> Unwind(
+      const std::string& maps_buffer,
+      const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
+      const char* stack_dump, uint64_t stack_dump_size) {
+    return stack_dump_sizes_to_callstack.at(stack_dump_size);
+  }
+
+  uint64_t GetNextStackDumpSize() {
+    ++next_stack_dump_size_;
+    return next_stack_dump_size_;
+  }
+
+  void RegisterStackDumpSizeToCallstack(
+      uint64_t stack_dump_size, std::vector<unwindstack::FrameData> callstack) {
+    stack_dump_sizes_to_callstack.emplace(
+        std::make_pair(stack_dump_size, std::move(callstack)));
+  }
+
+ private:
+  // Hack for testing: use stack_dump_size as an id to get the desired callstack
+  // as the result of unwinding.
+  absl::flat_hash_map<uint64_t, std::vector<unwindstack::FrameData>>
+      stack_dump_sizes_to_callstack{};
+  uint64_t next_stack_dump_size_ = 0;
+};
+
+UprobesWithStackPerfEvent MakeTestUprobesWithStackAndRegisterOnTestUnwinder(
+    const std::vector<unwindstack::FrameData>& unwound_cs,
+    TestUnwinder* unwinder) {
+  UprobesWithStackPerfEvent event =
+      UprobesWithStackPerfEvent{unwinder->GetNextStackDumpSize()};
+  unwinder->RegisterStackDumpSizeToCallstack(event.GetStackSize(), unwound_cs);
+  return event;
+}
+
+StackSamplePerfEvent MakeTestStackSampleAndRegisterOnTestUnwinder(
+    const std::vector<unwindstack::FrameData>& unwound_cs,
+    TestUnwinder* unwinder) {
+  StackSamplePerfEvent event =
+      StackSamplePerfEvent{unwinder->GetNextStackDumpSize()};
+  unwinder->RegisterStackDumpSizeToCallstack(event.GetStackSize(), unwound_cs);
+  return event;
+}
 }  // namespace
 
 TEST(UprobesCallstackManager, NoUprobes) {
   constexpr pid_t tid = 42;
+  TestUnwinder unwinder{};
+  UprobesCallstackManager<TestUnwinder> callstack_manager{&unwinder, ""};
   std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
-  UprobesCallstackManager callstack_manager{};
+  StackSamplePerfEvent sample_event{0};
 
   unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "beta"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
 
   unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "gamma"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
@@ -74,63 +144,51 @@ TEST(UprobesCallstackManager, NoUprobes) {
 
 TEST(UprobesCallstackManager, OneUprobe) {
   constexpr pid_t tid = 42;
+  TestUnwinder unwinder{};
+  UprobesCallstackManager<TestUnwinder> callstack_manager{&unwinder, ""};
   std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
-  UprobesCallstackManager callstack_manager{};
+  StackSamplePerfEvent sample_event{0};
+  UprobesWithStackPerfEvent uprobes_event{0};
 
   unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
 
   // Uprobes corresponding to the function FUNCTION being called.
-  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
-  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
-              ::testing::ElementsAreArray(
-                  TestCallstackToStringPairVector(expected_cs)));
+  unwound_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
 
   unwound_cs = MakeTestUprobesCallstack({"FUNCTION"});
   expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
 
   unwound_cs = MakeTestUprobesCallstack({"FUNCTION", "beta"});
   expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION", "beta"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
 
   // Uretprobes corresponding to FUNCTION returning.
   callstack_manager.ProcessUretprobes(tid);
-}
-
-TEST(UprobesCallstackManager, OneUprobeNoCallstackOnUretprobe) {
-  constexpr pid_t tid = 42;
-  std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
-  UprobesCallstackManager callstack_manager{};
-  // FUNCTION is called.
-  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
-  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
-              ::testing::ElementsAreArray(
-                  TestCallstackToStringPairVector(expected_cs)));
-
-  unwound_cs = MakeTestUprobesCallstack({"FUNCTION", "beta"});
-  expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION", "beta"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
-  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
-              ::testing::ElementsAreArray(
-                  TestCallstackToStringPairVector(expected_cs)));
-
-  // FUNCTION returns.
-  callstack_manager.ProcessUretprobes(tid);
 
   unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "gamma"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
@@ -138,19 +196,23 @@ TEST(UprobesCallstackManager, OneUprobeNoCallstackOnUretprobe) {
 
 TEST(UprobesCallstackManager, DifferentThread) {
   constexpr pid_t tid = 42;
+  TestUnwinder unwinder{};
+  UprobesCallstackManager<TestUnwinder> callstack_manager{&unwinder, ""};
   std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
-  UprobesCallstackManager callstack_manager{};
+  StackSamplePerfEvent sample_event{0};
+  UprobesWithStackPerfEvent uprobes_event{0};
 
   // FUNCTION is called.
-  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
-  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
-              ::testing::ElementsAreArray(
-                  TestCallstackToStringPairVector(expected_cs)));
+  unwound_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
 
   // Sample from another thread.
   unwound_cs = expected_cs = MakeTestCallstack({"thread", "omega"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(111, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(111, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
@@ -161,41 +223,47 @@ TEST(UprobesCallstackManager, DifferentThread) {
 
 TEST(UprobesCallstackManager, TwoNestedUprobesAndAnotherUprobe) {
   constexpr pid_t tid = 42;
+  TestUnwinder unwinder{};
+  UprobesCallstackManager<TestUnwinder> callstack_manager{&unwinder, ""};
   std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
-  UprobesCallstackManager callstack_manager{};
+  StackSamplePerfEvent sample_event{0};
+  UprobesWithStackPerfEvent uprobes_event{0};
 
   unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
 
   // FOO is called.
-  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "FOO"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
-  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
-              ::testing::ElementsAreArray(
-                  TestCallstackToStringPairVector(expected_cs)));
+  unwound_cs = MakeTestCallstack({"main", "alpha", "FOO"});
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
 
   unwound_cs = MakeTestUprobesCallstack({"FOO"});
   expected_cs = MakeTestCallstack({"main", "alpha", "FOO"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
 
   // BAR is called.
   unwound_cs = MakeTestUprobesCallstack({"FOO", "beta", "BAR"});
-  expected_cs = MakeTestCallstack({"main", "alpha", "FOO", "beta", "BAR"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
-  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
-              ::testing::ElementsAreArray(
-                  TestCallstackToStringPairVector(expected_cs)));
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
 
   unwound_cs = MakeTestUprobesCallstack({"BAR", "gamma"});
   expected_cs =
       MakeTestCallstack({"main", "alpha", "FOO", "beta", "BAR", "gamma"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
@@ -205,7 +273,9 @@ TEST(UprobesCallstackManager, TwoNestedUprobesAndAnotherUprobe) {
 
   unwound_cs = MakeTestUprobesCallstack({"FOO", "delta"});
   expected_cs = MakeTestCallstack({"main", "alpha", "FOO", "delta"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
@@ -214,28 +284,33 @@ TEST(UprobesCallstackManager, TwoNestedUprobesAndAnotherUprobe) {
   callstack_manager.ProcessUretprobes(tid);
 
   unwound_cs = expected_cs = MakeTestCallstack({"main"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
 
   // FUNCTION is called.
-  unwound_cs = expected_cs = MakeTestCallstack({"main", "epsilon", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
-  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
-              ::testing::ElementsAreArray(
-                  TestCallstackToStringPairVector(expected_cs)));
+  unwound_cs = MakeTestCallstack({"main", "epsilon", "FUNCTION"});
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
 
   unwound_cs = MakeTestUprobesCallstack({"FUNCTION"});
   expected_cs = MakeTestCallstack({"main", "epsilon", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
 
   unwound_cs = MakeTestUprobesCallstack({"FUNCTION", "zeta"});
   expected_cs = MakeTestCallstack({"main", "epsilon", "FUNCTION", "zeta"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
@@ -244,7 +319,9 @@ TEST(UprobesCallstackManager, TwoNestedUprobesAndAnotherUprobe) {
   callstack_manager.ProcessUretprobes(tid);
 
   unwound_cs = expected_cs = MakeTestCallstack({"main"});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
@@ -252,19 +329,23 @@ TEST(UprobesCallstackManager, TwoNestedUprobesAndAnotherUprobe) {
 
 TEST(UprobesCallstackManager, UnwindingError) {
   constexpr pid_t tid = 42;
+  TestUnwinder unwinder{};
+  UprobesCallstackManager<TestUnwinder> callstack_manager{&unwinder, ""};
   std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
-  UprobesCallstackManager callstack_manager{};
+  StackSamplePerfEvent sample_event{0};
+  UprobesWithStackPerfEvent uprobes_event{0};
 
   // FUNCTION is called.
-  unwound_cs = expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
-  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
-              ::testing::ElementsAreArray(
-                  TestCallstackToStringPairVector(expected_cs)));
+  unwound_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
 
   // Unwind error.
-  unwound_cs = expected_cs = MakeTestCallstack({});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  unwound_cs = expected_cs = MakeTestUnwindingErrorCallstack();
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
@@ -275,22 +356,90 @@ TEST(UprobesCallstackManager, UnwindingError) {
 
 TEST(UprobesCallstackManager, UnwindingErrorOnStack) {
   constexpr pid_t tid = 42;
+  TestUnwinder unwinder{};
+  UprobesCallstackManager<TestUnwinder> callstack_manager{&unwinder, ""};
   std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
-  UprobesCallstackManager callstack_manager{};
+  StackSamplePerfEvent sample_event{0};
+  UprobesWithStackPerfEvent uprobes_event{0};
 
   // FUNCTION is called and this uprobes has an unwind error.
-  unwound_cs = expected_cs = MakeTestCallstack({});
-  processed_cs = callstack_manager.ProcessUprobesCallstack(tid, unwound_cs);
+  unwound_cs = MakeTestUnwindingErrorCallstack();
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
+
+  unwound_cs = MakeTestUprobesCallstack({"FUNCTION", "beta"});
+  expected_cs = MakeTestUnwindingErrorCallstack();
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
 
-  unwound_cs = MakeTestUprobesCallstack({"FUNCTION", "beta"});
-  expected_cs = MakeTestCallstack({});
-  processed_cs = callstack_manager.ProcessSampledCallstack(tid, unwound_cs);
+  // FUNCTION returns.
+  callstack_manager.ProcessUretprobes(tid);
+}
+
+TEST(UprobesCallstackManager, UnwindingErrorOnStackThenValid) {
+  constexpr pid_t tid = 42;
+  TestUnwinder unwinder{};
+  UprobesCallstackManager<TestUnwinder> callstack_manager{&unwinder, ""};
+  std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
+  StackSamplePerfEvent sample_event{0};
+  UprobesWithStackPerfEvent uprobes_event{0};
+
+  // FUNCTION is called.
+  unwound_cs = MakeTestCallstack({"main", "alpha", "FUNCTION"});
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
+
+  // FOO is called and this uprobes has an unwind error.
+  unwound_cs = MakeTestUnwindingErrorCallstack();
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
+
+  unwound_cs = MakeTestUprobesCallstack({"FOO", "gamma"});
+  expected_cs = MakeTestUnwindingErrorCallstack();
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
   EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
+
+  // FOO returns.
+  callstack_manager.ProcessUretprobes(tid);
+
+  unwound_cs = MakeTestUprobesCallstack({"FUNCTION", "beta"});
+  expected_cs = MakeTestCallstack({"main", "alpha", "FUNCTION", "beta"});
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
+
+  // BAR is called.
+  unwound_cs = MakeTestUprobesCallstack({"FUNCTION", "beta", "BAR"});
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
+
+  unwound_cs = MakeTestUprobesCallstack({"BAR", "delta"});
+  expected_cs =
+      MakeTestCallstack({"main", "alpha", "FUNCTION", "beta", "BAR", "delta"});
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
+
+  // BAR returns.
+  callstack_manager.ProcessUretprobes(tid);
 
   // FUNCTION returns.
   callstack_manager.ProcessUretprobes(tid);

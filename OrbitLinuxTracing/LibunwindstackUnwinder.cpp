@@ -6,16 +6,13 @@
 
 namespace LinuxTracing {
 
-bool LibunwindstackUnwinder::SetMaps(const std::string& maps_buffer) {
-  maps_ = std::make_unique<unwindstack::BufferMaps>(maps_buffer.c_str());
-
-  if (!maps_->Parse()) {
-    ERROR("Failed to parse maps");
-    maps_ = nullptr;
-    return false;
+std::unique_ptr<unwindstack::BufferMaps> LibunwindstackUnwinder::ParseMaps(
+    const std::string& maps_buffer) {
+  auto maps = std::make_unique<unwindstack::BufferMaps>(maps_buffer.c_str());
+  if (!maps->Parse()) {
+    return nullptr;
   }
-
-  return true;
+  return maps;
 }
 
 const std::array<size_t, unwindstack::X86_64_REG_LAST>
@@ -28,13 +25,9 @@ const std::array<size_t, unwindstack::X86_64_REG_LAST>
     };
 
 std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
+    unwindstack::Maps* maps,
     const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
     const char* stack_dump, uint64_t stack_dump_size) {
-  if (!maps_) {
-    ERROR("Maps not set");
-    return {};
-  }
-
   unwindstack::RegsX86_64 regs{};
   for (size_t perf_reg = 0; perf_reg < unwindstack::X86_64_REG_LAST;
        ++perf_reg) {
@@ -47,7 +40,7 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
           regs[unwindstack::X86_64_REG_RSP],
           regs[unwindstack::X86_64_REG_RSP] + stack_dump_size);
 
-  unwindstack::Unwinder unwinder{MAX_FRAMES, maps_.get(), &regs, memory};
+  unwindstack::Unwinder unwinder{MAX_FRAMES, maps, &regs, memory};
   // Careful: regs are modified. Use regs.Clone() if you need to reuse regs
   // later.
   unwinder.Unwind();
@@ -65,6 +58,19 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
   }
 
   return unwinder.frames();
+}
+
+std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
+    const std::string& maps_buffer,
+    const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
+    const char* stack_dump, uint64_t stack_dump_size) {
+  std::unique_ptr<unwindstack::BufferMaps> maps = ParseMaps(maps_buffer);
+  if (maps == nullptr) {
+    ERROR("Failed to parse maps");
+    return {};
+  }
+
+  return Unwind(maps.get(), perf_regs, stack_dump, stack_dump_size);
 }
 
 }  // namespace LinuxTracing
