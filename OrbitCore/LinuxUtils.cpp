@@ -4,6 +4,7 @@
 
 #include "LinuxUtils.h"
 
+#include <absl/strings/str_split.h>
 #include <asm/unistd.h>
 #include <cxxabi.h>
 #include <dirent.h>
@@ -21,6 +22,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <charconv>
 #include <cstdlib>
 #include <fstream>
 #include <iomanip>
@@ -32,6 +34,7 @@
 #include "Callstack.h"
 #include "Capture.h"
 #include "ConnectionManager.h"
+#include "ElfFile.h"
 #include "EventBuffer.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitModule.h"
@@ -88,41 +91,64 @@ std::string ExecuteCommand(const char* a_Cmd) {
 }
 
 //-----------------------------------------------------------------------------
-void ListModules(pid_t a_PID,
-                 std::map<uint64_t, std::shared_ptr<Module>>& o_ModuleMap) {
-  std::map<std::string, std::shared_ptr<Module>> modules;
-  std::vector<std::string> result = ListModules(a_PID);
+void ListModules(pid_t pid,
+                 std::map<uint64_t, std::shared_ptr<Module>>* module_map) {
+  struct AddressRange {
+    uint64_t start_address;
+    uint64_t end_address;
+  };
+
+  std::map<std::string, AddressRange> address_map;
+  std::vector<std::string> result = ListModules(pid);
+
   for (const std::string& line : result) {
-    std::vector<std::string> tokens = Tokenize(line);
-    if (tokens.size() == 6) {
-      const std::string& moduleName = tokens[5];
+    std::vector<std::string> tokens =
+        absl::StrSplit(line, " ", absl::SkipEmpty());
 
-      auto addresses = Tokenize(tokens[0], "-");
-      if (addresses.size() == 2) {
-        auto iter = modules.find(moduleName);
-        std::shared_ptr<Module> module =
-            (iter == modules.end()) ? std::make_shared<Module>() : iter->second;
+    // tokens[4] is the inode column. If inode equals 0, then the memory is not
+    // mapped to a file (might be heap, stack or something else)
+    if (tokens.size() != 6 || tokens[4] == "0") continue;
 
-        uint64_t start = std::stoull(addresses[0], nullptr, 16);
-        uint64_t end = std::stoull(addresses[1], nullptr, 16);
+    const std::string& module_name = tokens[5];
 
-        if (module->m_AddressStart == 0 || start < module->m_AddressStart)
-          module->m_AddressStart = start;
-        if (end > module->m_AddressEnd) module->m_AddressEnd = end;
+    std::vector<std::string> addresses = absl::StrSplit(tokens[0], "-");
+    if (addresses.size() != 2) continue;
 
-        module->m_FullName = moduleName;
-        module->m_Name = Path::GetFileName(module->m_FullName);
-        module->m_Directory = Path::GetDirectory(module->m_FullName);
-        module->m_PdbSize = Path::FileSize(moduleName);
-        modules[moduleName] = module;
-      }
+    uint64_t start = std::stoull(addresses[0], nullptr, 16);
+    uint64_t end = std::stoull(addresses[1], nullptr, 16);
+
+    auto iter = address_map.find(module_name);
+    if (iter == address_map.end()) {
+      address_map[module_name] = {start, end};
+    } else {
+      AddressRange& address_range = iter->second;
+      address_range.start_address =
+          std::min(address_range.start_address, start);
+      address_range.end_address = std::max(address_range.end_address, end);
     }
   }
 
-  for (auto& iter : modules) {
-    auto module = iter.second;
-    module->GetPrettyName();
-    o_ModuleMap[module->m_AddressStart] = module;
+  for (const auto& [module_name, address_range] : address_map) {
+    module_map->insert_or_assign(
+        address_range.start_address,
+        std::make_shared<Module>(module_name, address_range.start_address,
+                                 address_range.end_address));
+
+    std::shared_ptr<Module> module = (*module_map)[address_range.start_address];
+
+    // This filters out entries which are inaccessible
+    if (module->m_PdbSize == 0) continue;
+
+    std::unique_ptr<ElfFile> elf_file = ElfFile::Create(module->m_FullName);
+    if (!elf_file) {
+      ERROR("Unable to create an elf file for module %s",
+            module->m_FullName.c_str());
+      continue;
+    }
+
+    if (elf_file->GetBuildId().empty()) continue;
+
+    module->m_DebugSignature = elf_file->GetBuildId();
   }
 }
 

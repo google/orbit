@@ -52,6 +52,16 @@ Pdb::Pdb(const char* pdb_name)
 }
 
 //-----------------------------------------------------------------------------
+Pdb::Pdb(uint64_t module_address, uint64_t load_bias,
+         const std::string& file_name, const std::string& module_file_name)
+    : m_MainModule(module_address),
+      load_bias_(load_bias),
+      m_FileName(std::move(file_name)),
+      m_LoadedModuleName(std::move(module_file_name)) {
+  m_Name = Path::GetFileName(m_FileName);
+}
+
+//-----------------------------------------------------------------------------
 Pdb::~Pdb() {
   if (m_DiaSession) {
     m_DiaSession->Release();
@@ -67,9 +77,10 @@ Pdb::~Pdb() {
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::AddFunction(Function& a_Function) {
-  CheckOrbitFunction(a_Function);
-  m_Functions.push_back(a_Function);
+void Pdb::AddFunction(const Function& function) {
+  m_Functions.push_back(function);
+  m_Functions.back().SetPdb(this);
+  CheckOrbitFunction(m_Functions.back());
 }
 
 //-----------------------------------------------------------------------------
@@ -700,6 +711,8 @@ std::shared_ptr<OrbitDiaSymbol> Pdb::GetDiaSymbolFromId(ULONG a_Id) {
 
 //-----------------------------------------------------------------------------
 void Pdb::ProcessData() {
+  if (!Capture::GTargetProcess) return;
+
   SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ProcessData for %s", m_Name.c_str()));
 
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());

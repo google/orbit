@@ -23,8 +23,8 @@ void StreamCommandOutput(const char* a_Cmd,
                          bool* a_ExitRequested);
 std::vector<std::string> ListModules(pid_t a_PID);
 uint64_t GetTracePointID(const char* a_Group, const char* a_Event);
-void ListModules(pid_t a_PID,
-                 std::map<uint64_t, std::shared_ptr<Module> >& o_ModuleMap);
+void ListModules(pid_t pid,
+                 std::map<uint64_t, std::shared_ptr<Module> >* module_map);
 std::unordered_map<uint32_t, float> GetCpuUtilization();
 bool Is64Bit(pid_t a_PID);
 void DumpClocks();

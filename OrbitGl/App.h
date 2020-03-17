@@ -15,6 +15,7 @@
 #include "DataViewTypes.h"
 #include "Message.h"
 #include "StringManager.h"
+#include "SymbolHelper.h"
 #include "Threading.h"
 
 struct CallStack;
@@ -172,7 +173,6 @@ class OrbitApp : public CoreApp {
   void EnqueueModuleToLoad(const std::shared_ptr<struct Module>& a_Module);
   void LoadModules();
   void LoadRemoteModules();
-  bool LoadRemoteModuleLocally(std::shared_ptr<struct Module>& a_Module);
   bool IsLoading();
   void SetTrackContextSwitches(bool a_Value);
   bool GetTrackContextSwitches();
@@ -261,6 +261,8 @@ class OrbitApp : public CoreApp {
   int m_NumTicks = 0;
 
   std::shared_ptr<StringManager> string_manager_ = nullptr;
+
+  const SymbolHelper symbolHelper;
 #ifdef _WIN32
   CrashHandler m_CrashHandler;
 #else

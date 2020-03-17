@@ -210,6 +210,13 @@ script again or you can manually update your conan config:
 conan config install contrib/conan/configs/[windows,linux]
 ```
 
+### How can I use separate debugging symbols for Linux binaries?
+
+Orbit supports loading symbols from your workstation. Simply add directories that contain debugging symbols to the `SymbolPaths.txt` file. This file can be found at
+* Windows: `C:\Users\<user>\AppData\Roaming\OrbitProfiler\config\SymbolPaths.txt`
+* Linux: `~/orbitprofiler/config/SymbolPaths.txt`
+
+The symbols file must named in one of three ways. The same fname as the binary (`game.elf`), the same name plus the `.debug` extension (`game.elf.debug`) or the same name but the `.debug` extension instead of the original one (`game.debug`). To make sure the binary and symbols file have been produced in the same build, Orbit checks that they have a matching build id.
 
 ## Cross-Compiling for GGP
 

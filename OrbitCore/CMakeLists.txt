@@ -58,6 +58,7 @@ target_sources(
          Serialization.h
          SerializationMacros.h
          StringManager.h
+         SymbolHelper.h
          Systrace.h
          Tcp.h
          TcpClient.h
@@ -113,6 +114,7 @@ target_sources(
           SamplingProfiler.cpp
           ScopeTimer.cpp
           StringManager.cpp
+          SymbolHelper.cpp
           Systrace.cpp
           Tcp.cpp
           Tcp.cpp
@@ -209,6 +211,7 @@ target_sources(OrbitCoreTests PRIVATE
     RingBufferTest.cpp
     StringManagerTest.cpp
     LinuxTracingSessionTests.cpp
+    SymbolHelperTests.cpp
 )
 
 if(NOT WIN32)

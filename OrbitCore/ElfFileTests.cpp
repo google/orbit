@@ -6,7 +6,7 @@
 #include "ElfFile.h"
 #include "Path.h"
 
-TEST(ElfFile, GetFunctions) {
+TEST(ElfFile, LoadFunctions) {
   std::string executable_path = Path::GetExecutablePath();
   std::string test_elf_file = executable_path + "/testdata/hello_world_elf";
 
@@ -14,8 +14,8 @@ TEST(ElfFile, GetFunctions) {
   ASSERT_NE(elf_file, nullptr);
 
   Pdb pdb;
-  std::vector<Function> functions;
-  ASSERT_TRUE(elf_file->GetFunctions(&pdb, &functions));
+  ASSERT_TRUE(elf_file->LoadFunctions(&pdb));
+  std::vector<Function>& functions = pdb.GetFunctions();
   EXPECT_EQ(functions.size(), 10);
   const Function* function = &functions[0];
 

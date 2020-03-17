@@ -239,7 +239,7 @@ void OrbitApp::AddSymbol(uint64_t a_Address, const std::string& a_Module,
 }
 //-----------------------------------------------------------------------------
 void OrbitApp::AddKeyAndString(uint64_t key, std::string_view str) {
-  CHECK (!ConnectionManager::Get().IsService());
+  CHECK(!ConnectionManager::Get().IsService());
   {
     KeyAndString key_and_string;
     key_and_string.key = key;
@@ -435,36 +435,7 @@ void OrbitApp::LoadFileMapping() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadSymbolsFile() {
-  m_SymbolLocations.clear();
-
-  std::string fileName = Path::GetSymbolsFileName();
-  if (!Path::FileExists(fileName)) {
-    std::ofstream outfile(fileName);
-    outfile << "//-------------------" << std::endl
-            << "// Orbit Symbol Locations" << std::endl
-            << "//-------------------" << std::endl
-            << "// Orbit will scan the specified directories for pdb files."
-            << std::endl
-            << "// Enter one directory per line, like so:" << std::endl
-            << "// \"D:\\MyApp\\Release\"" << std::endl
-            << "// \"D:\\MySymbolServer\\" << std::endl
-            << std::endl;
-
-    outfile.close();
-  }
-
-  std::wfstream infile(fileName);
-  if (!infile.fail()) {
-    std::wstring line;
-    while (std::getline(infile, line)) {
-      if (StartsWith(line, L"//")) continue;
-
-      std::wstring dir = line;
-      if (Path::DirExists(ws2s(dir))) {
-        m_SymbolLocations.push_back(ws2s(dir));
-      }
-    }
-  }
+  m_SymbolLocations = symbolHelper.GetSymbolsFileDirectories();
 }
 
 //-----------------------------------------------------------------------------
@@ -705,9 +676,7 @@ void OrbitApp::RegisterRuleEditor(RuleEditor* a_RuleEditor) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::NeedsRedraw() {
-  m_CaptureWindow->NeedsUpdate();
-}
+void OrbitApp::NeedsRedraw() { m_CaptureWindow->NeedsUpdate(); }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::AddSamplingReport(
@@ -1022,49 +991,58 @@ void OrbitApp::LoadModules() {
   if (m_ModulesToLoad.size() > 0) {
     if (Capture::IsRemote()) {
       LoadRemoteModules();
-    } else {
+      return;
+    }
+#ifdef _WIN32
+    std::shared_ptr<Module> module = std::move(m_ModulesToLoad.front());
+    m_ModulesToLoad.pop();
+    GLoadPdbAsync(module);
+#else
+    while (!m_ModulesToLoad.empty()) {
       std::shared_ptr<Module> module = m_ModulesToLoad.front();
       m_ModulesToLoad.pop();
-      GLoadPdbAsync(module);
-    }
-  }
-}
 
-//-----------------------------------------------------------------------------
-bool OrbitApp::LoadRemoteModuleLocally(
-    std::shared_ptr<struct Module>& a_Module) {
-  std::string debugName = a_Module->m_Name + ".debug";
-  for (const auto& dir : m_SymbolLocations) {
-    // TODO: check that build-id in debug file
-    //       matches build-id in executable.
-    std::string fileName = dir + debugName;
-    if (Path::FileExists(fileName)) {
-      a_Module->m_PdbName = fileName;
-      PRINT_VAR(fileName);
-      GLoadPdbAsync(a_Module);
-      return true;
+      if (symbolHelper.LoadSymbolsIncludedInBinary(module)) continue;
+      if (symbolHelper.LoadSymbolsUsingSymbolsFile(module)) continue;
+
+      ERROR("Could not load symbols for module %s", module->m_Name.c_str());
     }
+    GOrbitApp->FireRefreshCallbacks();
+#endif
   }
-  return false;
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules() {
-  std::vector<std::string> modules;
+  std::vector<ModuleDebugInfo> module_infos;
+
   while (!m_ModulesToLoad.empty()) {
-    auto module = m_ModulesToLoad.front();
+    std::shared_ptr<Module> module = std::move(m_ModulesToLoad.front());
     m_ModulesToLoad.pop();
-    if (!LoadRemoteModuleLocally(module)) {
-      modules.push_back(module->m_Name);
+
+    ModuleDebugInfo module_info;
+    module_info.m_Name = module->m_Name;
+
+    if (symbolHelper.LoadSymbolsUsingSymbolsFile(module)) {
+      symbolHelper.FillDebugInfoFromModule(module, module_info);
+      LOG("Loaded %lu function symbols locally for %s",
+          module_info.m_Functions.size(), module_info.m_Name.c_str());
+    } else {
+      LOG("Did not find local symbols for module %s",
+          module_info.m_Name.c_str());
     }
+    module_infos.emplace_back(module_info);
   }
 
-  std::string module_data = SerializeObjectBinary(modules);
+  // Send modules to the collector
+  std::string module_data = SerializeObjectBinary(module_infos);
   Message msg(Msg_RemoteModuleDebugInfo, module_data.size() + 1,
               module_data.data());
   msg.m_Header.m_GenericHeader.m_Address =
       m_ProcessesDataView->GetSelectedProcess()->GetID();
   GTcpClient->Send(msg);
+
+  GOrbitApp->FireRefreshCallbacks();
 }
 
 //-----------------------------------------------------------------------------
@@ -1156,26 +1134,25 @@ void OrbitApp::OnRemoteProcessList(const Message& a_Message) {
 void OrbitApp::OnRemoteModuleDebugInfo(const Message& a_Message) {
   std::istringstream buffer(std::string(a_Message.m_Data, a_Message.m_Size));
   cereal::BinaryInputArchive inputAr(buffer);
-  std::vector<ModuleDebugInfo> remoteModuleDebugInfo;
-  inputAr(remoteModuleDebugInfo);
+  std::vector<ModuleDebugInfo> remote_module_debug_infos;
+  inputAr(remote_module_debug_infos);
 
-  for (auto& moduleInfo : remoteModuleDebugInfo) {
-    // Get module from name
-    std::string name = ToLower(moduleInfo.m_Name);
+  for (const ModuleDebugInfo& module_info : remote_module_debug_infos) {
     std::shared_ptr<Module> module =
-        Capture::GTargetProcess->GetModuleFromName(name);
+        Capture::GTargetProcess->GetModuleFromName(module_info.m_Name);
 
-    if (module) {
-      module->LoadDebugInfo();  // To allocate m_Pdb - TODO: clean that up
-      module->m_Pdb->SetLoadBias(moduleInfo.load_bias);
+    if (!module) {
+      ERROR("Could not find module %s", module_info.m_Name.c_str());
+      continue;
+    }
 
-      for (auto& function : moduleInfo.m_Functions) {
-        // Add function to pdb
-        module->m_Pdb->AddFunction(function);
-      }
-
-      module->m_Pdb->ProcessData();
-      module->SetLoaded(true);
+    if (module_info.m_Functions.empty()) {
+      ERROR("Remote did not send any symbols for module %s",
+            module_info.m_Name.c_str());
+    } else {
+      symbolHelper.LoadSymbolsFromDebugInfo(module, module_info);
+      LOG("Received %lu function symbols from remote collector for module %s",
+          module_info.m_Functions.size(), module_info.m_Name.c_str());
     }
   }
 

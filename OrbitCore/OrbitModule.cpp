@@ -4,9 +4,11 @@
 
 #include "OrbitModule.h"
 
+#include <cinttypes>
 #include <string>
 
 #include "Core.h"
+#include "OrbitBase/Logging.h"
 #include "Pdb.h"
 #include "Serialization.h"
 #include "absl/strings/str_format.h"
@@ -23,7 +25,27 @@
 #endif
 
 //-----------------------------------------------------------------------------
-Module::Module() { m_Pdb = std::make_shared<Pdb>(); }
+Module::Module(const std::string& file_name, uint64_t address_start,
+               uint64_t address_end) {
+  if (!Path::FileExists(file_name)) {
+    FATAL("Could not create module from file path \"%s\": file does not exist",
+          file_name.c_str());
+  }
+
+  m_FullName = file_name;
+  m_Name = Path::GetFileName(file_name);
+  m_Directory = Path::GetDirectory(file_name);
+  m_PdbSize = Path::FileSize(file_name);
+
+  m_AddressStart = address_start;
+  m_AddressEnd = address_end;
+
+  m_PrettyName = m_FullName;
+  m_AddressRange = absl::StrFormat("[%016" PRIx64 " - %016" PRIx64 "]",
+                                   m_AddressStart, m_AddressEnd);
+
+  m_FoundPdb = true;  // necessary, because it toggles "Load Symbols" option
+}
 
 //-----------------------------------------------------------------------------
 std::string Module::GetPrettyName() {
@@ -38,8 +60,6 @@ std::string Module::GetPrettyName() {
     m_PrettyName = m_FullName;
     m_AddressRange =
         absl::StrFormat("[%016llx - %016llx]", m_AddressStart, m_AddressEnd);
-    m_PdbName = m_FullName;
-    m_FoundPdb = true;
 #endif
   }
 
@@ -58,11 +78,10 @@ bool Module::LoadDebugInfo() {
   m_Pdb->SetMainModule(m_AddressStart);
 
   PRINT_VAR(m_FoundPdb);
-  if (m_FoundPdb) {
-    return m_Pdb->LoadDataFromPdb();
-  }
+  if (!m_FoundPdb) return false;
 
-  return false;
+  m_Loaded = m_Pdb->LoadDataFromPdb();
+  return m_Loaded;
 }
 
 //-----------------------------------------------------------------------------
@@ -107,105 +126,18 @@ Function* Pdb::FunctionFromName(const std::string& a_Name) {
 }
 
 //-----------------------------------------------------------------------------
-std::unique_ptr<ElfFile> FindSymbols(const std::string& module_path) {
-  std::unique_ptr<ElfFile> module_elf_file = ElfFile::Create(module_path);
-  if (module_elf_file == nullptr) {
-    PRINT(absl::StrFormat("Unable to load module (object file) from \"%s\"\n",
-                          module_path));
-    return nullptr;
-  }
-
-  if (module_elf_file->HasSymtab()) {
-    return module_elf_file;
-  }
-
-  // Look for .debug files associated with passed in module name
-  // TODO: .debug file might not have same name as module, maybe there is a good
-  //       way of searching files based on buildId
-
-  std::string dir = Path::GetDirectory(module_path);
-  std::string file = Path::StripExtension(Path::GetFileName(module_path));
-
-  std::vector<std::string> search_directories = {
-      dir, dir + "debug_symbols/", Path::GetHome(), "/home/cloudcast/"};
-  std::vector<std::string> symbol_file_extensions = {".debug", ".elf.debug"};
-
-  std::vector<std::string> search_file_paths;
-  for (const auto& directory : search_directories) {
-    for (const auto& file_extension : symbol_file_extensions) {
-      search_file_paths.emplace_back(directory + file + file_extension);
-    }
-  }
-
-  for (const auto& symbols_file_path : search_file_paths) {
-    if (!Path::FileExists(symbols_file_path)) continue;
-
-    std::unique_ptr<ElfFile> symbols_file = ElfFile::Create(symbols_file_path);
-    if (symbols_file == nullptr) continue;
-
-    if (!symbols_file->HasSymtab()) continue;
-
-    std::string module_build_id = module_elf_file->GetBuildId();
-    if (module_build_id != "" &&
-        module_build_id == symbols_file->GetBuildId()) {
-      return symbols_file;
-    }
-  }
-
-  return nullptr;
-}
-
-bool Pdb::LoadFunctions(const char* file_name) {
-  m_LoadedModuleName = file_name;
-  std::unique_ptr<ElfFile> elf_file = FindSymbols(file_name);
-
-  if (elf_file == nullptr) {
-    PRINT(absl::StrFormat("Unable to load elf-file \"%s\"", file_name));
-    return false;
-  }
-
-  m_FileName = elf_file->GetFilePath();
+Pdb::Pdb(uint64_t module_address, uint64_t load_bias,
+         const std::string& file_name, const std::string& module_file_name)
+    : m_MainModule(module_address),
+      load_bias_(load_bias),
+      m_FileName(std::move(file_name)),
+      m_LoadedModuleName(std::move(module_file_name)) {
   m_Name = Path::GetFileName(m_FileName);
-
-  auto load_bias = elf_file->GetLoadBias();
-  if (!load_bias) {
-    PRINT(
-        absl::StrFormat("Unable to get load_bias \"%s\" "
-                        "(does the file have PT_LOAD program headers?)",
-                        m_FileName));
-    return false;
-  }
-
-  load_bias_ = load_bias.value();
-
-  if (!elf_file->GetFunctions(this, &m_Functions)) {
-    PRINT(absl::StrFormat("Unable to load functions from \"%s\"", m_FileName));
-    return false;
-  }
-
-  // For uprobes we need a function to be in the .text segment (why?)
-  // TODO: Shouldn't m_Functions be limited to the list of functions referencing
-  // .text segment?
-  for (auto& function : m_Functions) {
-    // Check if function is in .text segment
-    if (!elf_file->IsAddressInTextSection(function.Address())) {
-      continue;
-    }
-
-    function.SetProbe(m_FileName + ":" + function.Name());
-  }
-
-  return true;
 }
 
-bool Pdb::LoadPdb(const char* file_name) {
-  if (!LoadFunctions(file_name)) {
-    return false;
-  }
-
-  ProcessData();
-
-  return true;
+void Pdb::AddFunction(const Function& function) {
+  m_Functions.push_back(function);
+  m_Functions.back().SetPdb(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -218,6 +150,8 @@ void Pdb::LoadPdbAsync(const char* a_PdbName,
 
 //-----------------------------------------------------------------------------
 void Pdb::ProcessData() {
+  if (!Capture::GTargetProcess) return;
+
   SCOPE_TIMER_LOG("ProcessData");
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
@@ -309,8 +243,8 @@ Function* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
 
 //-----------------------------------------------------------------------------
 ORBIT_SERIALIZE(ModuleDebugInfo, 0) {
-  ORBIT_NVP_VAL(0, m_Pid);
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_Functions);
   ORBIT_NVP_VAL(0, load_bias);
+  ORBIT_NVP_VAL(0, m_PdbName);
 }
