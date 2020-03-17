@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#define ORBIT_TRACING_ENABLED 1
+#define ORBIT_TRACING_ENABLED 0
 
 #if ORBIT_TRACING_ENABLED
 
@@ -58,6 +58,6 @@ struct Scope {
 #define ORBIT_END
 #define ORBIT_TRACK(var)
 
-#endif
+#endif  // ORBIT_TRACING_ENABLED
 
 #endif  // ORBIT_TRACING_TRACING_H_

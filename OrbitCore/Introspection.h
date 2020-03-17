@@ -4,6 +4,8 @@
 #include <OrbitBase/Tracing.h>
 #include "ScopeTimer.h"
 
+#if ORBIT_TRACING_ENABLED
+
 namespace orbit {
 namespace introspection {
 
@@ -21,5 +23,7 @@ struct Scope {
 
 }  // namespace introspection
 }  // namespace orbit
+
+#endif  // ORBIT_TRACING_ENABLED
 
 #endif  // ORBIT_CORE_INTROSPECTION_H_

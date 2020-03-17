@@ -442,12 +442,14 @@ bool OrbitApp::Init() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit() {
+#if ORBIT_TRACING_ENABLED
   // Setup introspection handler.
   bool is_service = GOrbitApp->GetHeadless();
-  if(is_service) {
+  if (is_service) {
     auto handler = std::make_unique<orbit::introspection::Handler>();
     LinuxTracing::SetOrbitTracingHandler(std::move(handler));
   }
+#endif  // ORBIT_TRACING_ENABLED
 
   if (HasTcpServer()) {
     GTcpServer->AddCallback(Msg_MiniDump, [=](const Message& a_Msg) {
