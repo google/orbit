@@ -16,6 +16,6 @@ void SetOrbitTracingHandler(std::unique_ptr<orbit::tracing::Handler> handler) {
   orbit::tracing::GHandler = std::move(handler);
 }
 
-}  // namespace OrbitLinuxTracing
+}  // namespace LinuxTracing
 
 #endif  // ORBIT_TRACING_ENABLED
