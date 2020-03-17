@@ -3,20 +3,51 @@
 
 #include <utility>
 
+#include "OrbitModule.h"
 #include "Path.h"
 #include "Pdb.h"
+#include "SymbolHelper.h"
 
-TEST(OrbitModule, LoadPdb) {
-  const std::string executable_path = Path::GetExecutablePath();
-  // This is a simple executable that prints "Hello Earh!"
-  const std::string file_path = executable_path + "testdata/hello_world_elf";
+const std::string executable_directory =
+    Path::GetExecutablePath() + "testdata/";
 
-  Pdb pdb;
-  ASSERT_TRUE(pdb.LoadFunctions(file_path.c_str()));
+TEST(OrbitModule, Constructor) {
+  const std::string executable_name = "hello_world_elf";
+  const std::string file_path = executable_directory + executable_name;
+  const uint64_t executable_size = 16616;
 
-  EXPECT_EQ(pdb.GetLoadedModuleName(), file_path);
-  EXPECT_EQ(pdb.GetFileName(), file_path);
-  EXPECT_EQ(pdb.GetName(), "hello_world_elf");
+  uint64_t address_start = 0x700;  // sample test data
+  uint64_t address_end = 0x1000;
+
+  Module module(file_path, address_start, address_end);
+
+  EXPECT_EQ(module.m_FullName, file_path);
+  EXPECT_EQ(module.m_Name, executable_name);
+  EXPECT_EQ(module.m_Directory, executable_directory);
+  EXPECT_EQ(module.m_PdbSize, executable_size);
+
+  EXPECT_EQ(module.m_AddressStart, address_start);
+  EXPECT_EQ(module.m_AddressEnd, address_end);
+
+  EXPECT_EQ(module.m_PrettyName, file_path);
+  EXPECT_EQ(module.m_AddressRange, "[0000000000000700 - 0000000000001000]");
+
+  EXPECT_TRUE(module.m_FoundPdb);
+
+  EXPECT_EQ(module.m_Pdb, nullptr);
+  EXPECT_EQ(module.m_PdbName, "");
+  EXPECT_FALSE(module.GetLoaded());
+}
+
+TEST(OrbitModule, LoadFunctions) {
+  const std::string executable_name = "hello_world_elf";
+  const std::string file_path = executable_directory + executable_name;
+
+  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
+
+  SymbolHelper symbolHelper;
+  ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
+  Pdb& pdb = *module->m_Pdb;
 
   // Check functions
   const std::vector<Function>& functions = pdb.GetFunctions();
@@ -49,31 +80,18 @@ TEST(OrbitModule, LoadPdb) {
   EXPECT_EQ(function->Probe(), file_path + ":main");
 }
 
-TEST(OrbitModule, LoadPdbSeparateSymbols) {
-  const std::string executable_path = Path::GetExecutablePath();
-  const std::string file_path = executable_path + "testdata/no_symbols_elf";
-
-  Pdb pdb;
-  ASSERT_TRUE(pdb.LoadFunctions(file_path.c_str()));
-
-  std::string symbols_file_name = "no_symbols_elf.debug";
-  std::string symbols_path = executable_path + "testdata/" + symbols_file_name;
-
-  EXPECT_EQ(pdb.GetLoadedModuleName(), file_path);
-  EXPECT_EQ(pdb.GetFileName(), symbols_path);
-  EXPECT_EQ(pdb.GetName(), symbols_file_name);
-}
-
 TEST(OrbitModule, GetFunctionFromExactAddress) {
-  const std::string executable_path = Path::GetExecutablePath();
-  const std::string file_path =
-      executable_path + "testdata/hello_world_static_elf";
+  const std::string file_path = executable_directory + "hello_world_static_elf";
 
-  Pdb pdb;
-  ASSERT_TRUE(pdb.LoadFunctions(file_path.c_str()));
+  std::shared_ptr<Module> module =
+      std::make_shared<Module>(file_path, 0x400000, 0);
+
+  SymbolHelper symbolHelper;
+  ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
+  Pdb& pdb = *module->m_Pdb;
+
   pdb.PopulateFunctionMap();
   pdb.PopulateStringFunctionMap();
-  pdb.SetMainModule(0x400000);
   const std::vector<Function>& functions = pdb.GetFunctions();
 
   ASSERT_EQ(functions.size(), 1125);
@@ -88,15 +106,19 @@ TEST(OrbitModule, GetFunctionFromExactAddress) {
 }
 
 TEST(OrbitModule, GetFunctionFromProgramCounter) {
-  const std::string executable_path = Path::GetExecutablePath();
-  const std::string file_path =
-      executable_path + "testdata/hello_world_static_elf";
+  const std::string file_path = executable_directory + "hello_world_static_elf";
 
-  Pdb pdb;
-  ASSERT_TRUE(pdb.LoadFunctions(file_path.c_str()));
+  std::shared_ptr<Module> module =
+      std::make_shared<Module>(file_path, 0x400000, 0);
+
+  SymbolHelper symbolHelper;
+
+  ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
+  Pdb& pdb = *module->m_Pdb;
+
   pdb.PopulateFunctionMap();
   pdb.PopulateStringFunctionMap();
-  pdb.SetMainModule(0x400000);
+
   const std::vector<Function>& functions = pdb.GetFunctions();
 
   ASSERT_EQ(functions.size(), 1125);

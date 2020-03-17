@@ -59,7 +59,6 @@ class Process {
   }
   void AddModule(std::shared_ptr<Module>& a_Module);
   void FindPdbs(const std::vector<std::string>& a_SearchLocations);
-  void FillModuleDebugInfo(ModuleDebugInfo& a_ModuleDebugInfo);
 
   static bool IsElevated(HANDLE a_Process);
 

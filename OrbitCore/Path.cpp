@@ -138,7 +138,7 @@ std::string Path::GetFileMappingFileName() {
 std::string Path::GetSymbolsFileName() {
   std::string paramsDir = Path::GetAppDataPath() + "config/";
   Path::MakeDir(paramsDir);
-  return paramsDir + std::string("Symbols.txt");
+  return paramsDir + std::string("SymbolPaths.txt");
 }
 
 std::string Path::GetLicenseName() {

@@ -15,7 +15,9 @@ class Pdb;
 
 //-----------------------------------------------------------------------------
 struct Module {
-  Module();
+  Module(){};
+  Module(const std::string& file_name, uint64_t address_start,
+         uint64_t address_end);
 
   std::string GetPrettyName();
   bool IsDll() const;
@@ -27,20 +29,22 @@ struct Module {
   void SetLoaded(bool a_Value);
   bool GetLoaded() { return m_Loaded; }
 
-  std::string m_Name;
-  std::string m_FullName;
-  std::string m_PdbName;
-  std::string m_Directory;
+  std::string m_Name;       // name of the file (without path)
+  std::string m_FullName;   // full filename (including path)
+  std::string m_PdbName;    // full filename of symbols file
+  std::string m_Directory;  // path of the module, without name of the file
   std::string m_PrettyName;
   std::string m_AddressRange;
-  std::string m_DebugSignature;
+
+  std::string m_DebugSignature;  // gnu build id on linux
   HMODULE m_ModuleHandle = 0;
   uint64_t m_AddressStart = 0;
   uint64_t m_AddressEnd = 0;
   uint64_t m_EntryPoint = 0;
   bool m_FoundPdb = false;
   bool m_Selected = false;
-  uint64_t m_PdbSize = 0;
+
+  uint64_t m_PdbSize = 0;  // Size in bytes; windows: pdb, linux: module
 
   mutable std::shared_ptr<Pdb> m_Pdb;
 
@@ -54,9 +58,9 @@ struct Module {
 
 //-----------------------------------------------------------------------------
 struct ModuleDebugInfo {
-  uint32_t m_Pid = 0;
   std::string m_Name;
   std::vector<Function> m_Functions;
   uint64_t load_bias;
+  std::string m_PdbName;
   ORBIT_SERIALIZABLE;
 };

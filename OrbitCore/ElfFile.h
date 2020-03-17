@@ -14,8 +14,7 @@ class ElfFile {
   ElfFile() = default;
   virtual ~ElfFile() = default;
 
-  virtual bool GetFunctions(Pdb* pdb,
-                            std::vector<Function>* functions) const = 0;
+  virtual bool LoadFunctions(Pdb* pdb) const = 0;
   // Background and some terminology
   // When an elf file is loaded to memory it has its load segments
   // (segments of PT_LOAD type from program headers) mapped to some

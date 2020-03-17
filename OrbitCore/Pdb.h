@@ -26,6 +26,8 @@ struct IDiaDataSource;
 class Pdb {
  public:
   explicit Pdb(const char* pdb_name = "");
+  Pdb(uint64_t module_address, uint64_t load_bias, const std::string& file_name,
+      const std::string& module_file_name);
   Pdb(const Pdb&) = delete;
   Pdb& operator=(const Pdb&) = delete;
   virtual ~Pdb();
@@ -40,7 +42,7 @@ class Pdb {
   bool LoadPdbDia();
   bool LoadLinuxDebugSymbols(const char* a_PdbName);
   void Update();
-  void AddFunction(Function& a_Function);
+  void AddFunction(const Function& function);
   void CheckOrbitFunction(Function& a_Function);
   void AddType(const Type& a_Type);
   void AddGlobal(const Variable& a_Global);
@@ -51,6 +53,7 @@ class Pdb {
 
   const std::string& GetName() const { return m_Name; }
   const std::string& GetFileName() const { return m_FileName; }
+  const std::string& GetLoadedModuleName() const { return m_LoadedModuleName; }
   std::vector<Function>& GetFunctions() { return m_Functions; }
   std::vector<Type>& GetTypes() { return m_Types; }
   std::vector<Variable>& GetGlobals() { return m_Globals; }
@@ -124,6 +127,7 @@ class Pdb {
   // Data
   std::string m_Name;
   std::string m_FileName;
+  std::string m_LoadedModuleName;
   std::vector<Function> m_Functions;
   std::vector<Type> m_Types;
   std::vector<Variable> m_Globals;
@@ -134,22 +138,26 @@ class Pdb {
   Timer* m_LoadTimer;
 
   // DIA
-  IDiaSession* m_DiaSession;
-  IDiaSymbol* m_DiaGlobalSymbol;
-  IDiaDataSource* m_DiaDataSource;
+  IDiaSession* m_DiaSession = nullptr;
+  IDiaSymbol* m_DiaGlobalSymbol = nullptr;
+  IDiaDataSource* m_DiaDataSource = nullptr;
 };
 
 #else
 class Pdb {
  public:
   Pdb() = default;
+  Pdb(uint64_t module_address, uint64_t load_bias, const std::string& file_name,
+      const std::string& module_file_name);
   Pdb(const Pdb&) = delete;
   Pdb& operator=(const Pdb&) = delete;
   virtual ~Pdb() = default;
 
   void Init() {}
 
-  virtual bool LoadPdb(const char* file_name);
+  bool LoadPdb(const char* file_name) {
+    return false;  // Should not do anything on linux
+  }
   virtual void LoadPdbAsync(const char* pdb_name,
                             std::function<void()> completion_callback);
 
@@ -157,16 +165,14 @@ class Pdb {
     return true;
   }  // This shouldn't do anything on Linux.
   bool LoadPdbDia() { return false; }
-  bool LoadFunctions(const char* file_name);
   void Update() {}
-  void AddFunction(Function& a_Function) { m_Functions.push_back(a_Function); }
+  void AddFunction(const Function& function);
   void CheckOrbitFunction(Function&) {}
   void AddType(const Type&) {}
   void AddGlobal(const Variable&) {}
   void PrintFunction(Function&) {}
   void OnReceiveMessage(const Message&) {}
-  void AddArgumentRegister(const std::string&,
-                           const std::string&) {}
+  void AddArgumentRegister(const std::string&, const std::string&) {}
 
   const std::string& GetName() const { return m_Name; }
   const std::string& GetFileName() const { return m_FileName; }
@@ -231,9 +237,9 @@ class Pdb {
   std::map<std::string, std::vector<std::string> > m_RegFunctionsMap;
 
   // Data
-  std::string m_Name;
-  std::string m_FileName;
-  std::string m_LoadedModuleName;
+  std::string m_Name;              // name of the file containing the symbols
+  std::string m_FileName;          // full path of file containing the symbols
+  std::string m_LoadedModuleName;  // full path of the module
   std::vector<Function> m_Functions;
   std::vector<Type> m_Types;
   std::vector<Variable> m_Globals;

@@ -21,7 +21,7 @@ class ElfFileImpl : public ElfFile {
       std::string_view file_path,
       llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
-  bool GetFunctions(Pdb* pdb, std::vector<Function>* functions) const override;
+  bool LoadFunctions(Pdb* pdb) const override;
   std::optional<uint64_t> GetLoadBias() const override;
   bool IsAddressInTextSection(uint64_t address) const override;
   bool HasSymtab() const override;
@@ -111,8 +111,7 @@ bool ElfFileImpl<ElfT>::IsAddressInTextSection(uint64_t address) const {
 }
 
 template <typename ElfT>
-bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
-                                     std::vector<Function>* functions) const {
+bool ElfFileImpl<ElfT>::LoadFunctions(Pdb* pdb) const {
   // TODO: if we want to use other sections than .symtab in the future for
   //       example .dynsym, than we have to change this.
   if (!has_symtab_section_) {
@@ -150,10 +149,18 @@ bool ElfFileImpl<ElfT>::GetFunctions(Pdb* pdb,
       continue;
     }
 
-    functions->emplace_back(name, pretty_name, Path::GetFileName(file_path_),
-                            symbol_ref.getValue(), symbol_ref.getSize(),
-                            load_bias, pdb);
+    Function function(name, pretty_name, Path::GetFileName(file_path_),
+                      symbol_ref.getValue(), symbol_ref.getSize(), load_bias,
+                      pdb);
 
+    // For uprobes we need a function to be in the .text segment (why?)
+    // TODO: Shouldn't m_Functions be limited to the list of functions
+    // referencing .text segment?
+    if (IsAddressInTextSection(function.Address())) {
+      function.SetProbe(file_path_ + ":" + function.Name());
+    }
+
+    pdb->AddFunction(function);
     function_added = true;
   }
 
