@@ -239,7 +239,8 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
     track->OnTimer(a_Timer);
     ++m_ThreadCountMap[a_Timer.m_TID];
     if( a_Timer.m_Type == Timer::INTROSPECTION ) {
-      track->SetColor(Color(87, 166, 74, 255));
+      const Color kGreenIntrospection(87, 166, 74, 255);
+      track->SetColor(kGreenIntrospection);
     }
   } else {
     // Use thead 0 as container for scheduling events.

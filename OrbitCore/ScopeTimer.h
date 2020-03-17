@@ -69,6 +69,8 @@ class Timer {
   bool IsType(Type a_Type) const { return m_Type == a_Type; }
   bool IsCoreActivity() const { return m_Type == CORE_ACTIVITY; }
 
+  // TODO: implement better mechanism to associate strings to timers.  In the
+  //       mean time, m_UserData can hold (sizeof(m_UserData)-1) characters.
   char* EncodedString(){ return reinterpret_cast<char*>(&m_UserData); }
   const char* EncodedString() const { return reinterpret_cast<const char*>(&m_UserData); }
   void EncodeString(const char* msg) { strncpy(EncodedString(), msg, sizeof(m_UserData)-1); }
