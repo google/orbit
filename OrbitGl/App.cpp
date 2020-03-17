@@ -14,7 +14,6 @@
 #include <thread>
 
 #include <OrbitBase/Tracing.h>
-#include <OrbitLinuxTracing/OrbitTracing.h>
 #include "CallStackDataView.h"
 #include "Callstack.h"
 #include "Capture.h"
@@ -79,6 +78,10 @@
 #ifdef _WIN32
 #include "Disassembler.h"
 #include "EventTracer.h"
+#endif
+
+#if __linux__
+#include <OrbitLinuxTracing/OrbitTracing.h>
 #endif
 
 class OrbitApp* GOrbitApp;
