@@ -12,6 +12,16 @@
 
 namespace LinuxTracing {
 
+// Use memory barriers when accessing data_tail and data_head.
+// The kernel, as the producer, writes to "data_head" and reads from
+// "data_tail". We, as consumer, write to "data_tail" and read from
+// "data_head". We must make sure that we protect access to those
+// shared variables by using acquire and release fences.
+//
+// https://preshing.com/20130922/acquire-and-release-fences/
+// https://www.kernel.org/doc/Documentation/circular-buffers.txt
+// https://github.com/torvalds/linux/blob/master/tools/memory-model/Documentation/recipes.txt
+
 static inline uint64_t ReadRingBufferHead(perf_event_mmap_page* base) {
   return smp_load_acquire(&base->data_head);
 }
