@@ -700,7 +700,7 @@ int OrbitApp::OnExit() {
 
   GParams.Save();
   GTimerManager = nullptr;
-  GStringManager = nullptr;
+
   if (GOrbitApp->HasTcpServer()) {
     GTcpServer->Stop();
   }
