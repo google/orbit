@@ -347,24 +347,21 @@ void OrbitApp::AddSymbol(uint64_t a_Address, const std::string& a_Module,
   Capture::GTargetProcess->AddSymbol(a_Address, symbol);
 }
 //-----------------------------------------------------------------------------
-void OrbitApp::AddKeyAndString(uint64_t key, const std::string& str) {
+void OrbitApp::AddKeyAndString(uint64_t key, const std::string_view str) {
   if (ConnectionManager::Get().IsService()) {
     KeyAndString key_and_string;
     key_and_string.key = key;
     key_and_string.str = str;
-    if (GStringManager->Exists(key)) {
+    if (!GStringManager->Exists(key)) {
       std::string message_data = SerializeObjectBinary(key_and_string);
       GTcpServer->Send(Msg_KeyAndString, (void*)message_data.c_str(),
                        message_data.size());
       GStringManager->Add(key, str);
     }
+  } else {
+    GStringManager->Add(key, str);
   }
-  auto key_and_string = std::make_shared<KeyAndString>();
-  key_and_string->key = key;
-  key_and_string->str = str;
-  GStringManager->Add(key, str);
 }
-
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadSystrace(const std::string& a_FileName) {

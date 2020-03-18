@@ -79,7 +79,7 @@ class OrbitApp : public CoreApp {
   void ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) override;
   void AddSymbol(uint64_t a_Address, const std::string& a_Module,
                  const std::string& a_Name) override;
-  void AddKeyAndString(uint64_t key, const std::string& str) override;
+  void AddKeyAndString(uint64_t key, const std::string_view str) override;
   void ProcessBufferedCaptureData();
 
   int* GetScreenRes() { return m_ScreenRes; }
