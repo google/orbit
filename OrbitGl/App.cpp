@@ -352,14 +352,14 @@ void OrbitApp::AddKeyAndString(uint64_t key, const std::string_view str) {
     KeyAndString key_and_string;
     key_and_string.key = key;
     key_and_string.str = str;
-    if (!GStringManager->Exists(key)) {
+    if (!string_manager_->Exists(key)) {
       std::string message_data = SerializeObjectBinary(key_and_string);
       GTcpServer->Send(Msg_KeyAndString, (void*)message_data.c_str(),
                        message_data.size());
-      GStringManager->Add(key, str);
+      string_manager_->Add(key, str);
     }
   } else {
-    GStringManager->Add(key, str);
+    string_manager_->Add(key, str);
   }
 }
 
@@ -432,7 +432,6 @@ bool OrbitApp::Init() {
   GOrbitApp = new OrbitApp();
   GCoreApp = GOrbitApp;
   GTimerManager = std::make_unique<TimerManager>();
-  GStringManager = std::make_unique<StringManager>();
   GTcpServer = new TcpServer();
 
   Path::Init();
@@ -465,6 +464,12 @@ bool OrbitApp::Init() {
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit() {
   SetupIntrospection();
+
+  string_manager_ = std::make_shared<StringManager>();
+#ifndef NOGL
+  GCurrentTimeGraph->SetStringManager(string_manager_);
+#endif
+
   if (HasTcpServer()) {
     GTcpServer->AddCallback(Msg_MiniDump, [=](const Message& a_Msg) {
       GOrbitApp->OnMiniDump(a_Msg);

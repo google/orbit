@@ -14,6 +14,7 @@
 #include "CrashHandler.h"
 #include "DataViewTypes.h"
 #include "Message.h"
+#include "StringManager.h"
 #include "Threading.h"
 
 struct CallStack;
@@ -264,6 +265,8 @@ class OrbitApp : public CoreApp {
   class EventTracer* m_EventTracer = nullptr;
   class Debugger* m_Debugger = nullptr;
   int m_NumTicks = 0;
+
+  std::shared_ptr<StringManager> string_manager_ = nullptr;
 #ifdef _WIN32
   CrashHandler m_CrashHandler;
 #else

@@ -1,7 +1,5 @@
 #include "StringManager.h"
 
-std::unique_ptr<StringManager> GStringManager;
-
 StringManager::StringManager() {}
 StringManager::~StringManager() {}
 

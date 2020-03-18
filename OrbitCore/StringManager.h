@@ -19,6 +19,4 @@ private:
   std::mutex mutex_;
 };
 
-extern std::unique_ptr<StringManager> GStringManager;
-
 #endif

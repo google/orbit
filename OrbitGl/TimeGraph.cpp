@@ -38,6 +38,11 @@ TimeGraph* GCurrentTimeGraph = nullptr;
 TimeGraph::TimeGraph() { m_LastThreadReorder.Start(); }
 
 //-----------------------------------------------------------------------------
+void TimeGraph::SetStringManager(std::shared_ptr<StringManager> str_manager) {
+  string_manager_ = str_manager;
+}
+
+//-----------------------------------------------------------------------------
 void TimeGraph::SetCanvas(GlCanvas* a_Canvas) {
   m_Canvas = a_Canvas;
   m_TextRenderer->SetCanvas(a_Canvas);
@@ -588,8 +593,8 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
                     "%s %s %s", name, extraInfo.c_str(), time.c_str());
 
                 textBox.SetText(text);
-              } else if( timer.m_Type == Timer::INTROSPECTION) {
-                textBox.SetText(GStringManager->Get(
+              } else if( timer.m_Type == Timer::INTROSPECTION && string_manager_) {
+                textBox.SetText(string_manager_->Get(
                     timer.m_UserData[0]).value_or(""));
               }
                else if (!SystraceManager::Get().IsEmpty()) {
