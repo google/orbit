@@ -38,7 +38,7 @@ else
 fi
 
 echo "Installing conan configuration (profiles, settings, etc.)..."
-conan config install $DIR/contrib/conan/config || exit $?
+conan config install $DIR/contrib/conan/configs/linux || exit $?
 
 exec $DIR/build.sh "$@"
 
