@@ -30,7 +30,7 @@ if ERRORLEVEL 1 (
     echo "Conan found. Installation skipped."
 )
 
-conan config install %REPO_ROOT%\contrib\conan\config
+conan config install %REPO_ROOT%\contrib\conan\configs\windows
 if ERRORLEVEL 1 exit /b 1
 
 call build.bat %*

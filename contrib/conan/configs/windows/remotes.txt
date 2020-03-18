@@ -1,0 +1,3 @@
+bintray https://api.bintray.com/conan/hebecker/orbitdeps True 
+conan-center https://conan.bintray.com True 
+bincrafters https://api.bintray.com/conan/bincrafters/public-conan True 

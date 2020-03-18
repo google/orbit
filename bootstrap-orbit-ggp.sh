@@ -10,7 +10,7 @@ fi
 
 unset GGP_SDK_PATH
 
-conan config install $DIR/contrib/conan/config || exit $?
+conan config install $DIR/contrib/conan/configs/linux || exit $?
 
 # Install Stadia GGP SDK
 conan search ggp_sdk | grep orbitdeps/stable > /dev/null
