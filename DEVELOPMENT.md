@@ -204,23 +204,21 @@ There is also a `deactivate.{sh,bat,ps1}` which make your shell leave the virtua
 
 ## Cross-Compiling for GGP
 
-_Note:_ This was only tested on Linux. Cross compilation on Windows
-is currently not supported. There are some issues with cross-compiling
-openssl.
+Cross compilation is supported on Windows and Linux host systems.
 
 _Note:_ Cross compiling the UI is not supported.
 
 _Note:_ Since the GGP SDK is not publicly available, this only works inside
 of Google, at least for now.
 
-Call the script `bootstrap-orbit-ggp.sh` which creates a package out of the GGP
-SDK (you do not need to have the SDK installed), and compiles Orbit against
-the toolchain from the GGP SDK package.
+Call the script `bootstrap-orbit-ggp.{sh,bat}` which creates a package out of the GGP
+SDK (you do not need to have the SDK installed for this to work, but you will need it
+for deployment), and compiles Orbit against the toolchain from the GGP SDK package.
 
 Finally, `build_ggp_release/package/bin/OrbitService` can be copied over
 to the instance:
 ```bash
-ggp ssh put build_ggp_release/package/bin/OrbitService
+ggp ssh put build_ggp_release/package/bin/OrbitService /mnt/developer/
 ```
 
 before the service can be started with:
