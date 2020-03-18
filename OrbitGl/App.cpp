@@ -34,6 +34,7 @@
 #endif
 #include "Injection.h"
 #include "Introspection.h"
+#include "KeyAndString.h"
 #include "LinuxCallstackEvent.h"
 #include "LiveFunctionDataView.h"
 #include "Log.h"
@@ -56,6 +57,7 @@
 #include "ScopeTimer.h"
 #include "Serialization.h"
 #include "SessionsDataView.h"
+#include "StringManager.h"
 #include "Systrace.h"
 #include "Tcp.h"
 #include "TcpClient.h"
@@ -344,6 +346,22 @@ void OrbitApp::AddSymbol(uint64_t a_Address, const std::string& a_Module,
   symbol->m_Module = a_Module;
   Capture::GTargetProcess->AddSymbol(a_Address, symbol);
 }
+//-----------------------------------------------------------------------------
+void OrbitApp::AddKeyAndString(uint64_t key, const std::string_view str) {
+  if (ConnectionManager::Get().IsService()) {
+    KeyAndString key_and_string;
+    key_and_string.key = key;
+    key_and_string.str = str;
+    if (!string_manager_->Exists(key)) {
+      std::string message_data = SerializeObjectBinary(key_and_string);
+      GTcpServer->Send(Msg_KeyAndString, (void*)message_data.c_str(),
+                       message_data.size());
+      string_manager_->Add(key, str);
+    }
+  } else {
+    string_manager_->Add(key, str);
+  }
+}
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadSystrace(const std::string& a_FileName) {
@@ -446,6 +464,12 @@ bool OrbitApp::Init() {
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit() {
   SetupIntrospection();
+
+  string_manager_ = std::make_shared<StringManager>();
+#ifndef NOGL
+  GCurrentTimeGraph->SetStringManager(string_manager_);
+#endif
+
   if (HasTcpServer()) {
     GTcpServer->AddCallback(Msg_MiniDump, [=](const Message& a_Msg) {
       GOrbitApp->OnMiniDump(a_Msg);
@@ -676,6 +700,7 @@ int OrbitApp::OnExit() {
 
   GParams.Save();
   GTimerManager = nullptr;
+
   if (GOrbitApp->HasTcpServer()) {
     GTcpServer->Stop();
   }

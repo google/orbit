@@ -44,6 +44,7 @@ class CoreApp {
   virtual void AddSymbol(uint64_t /*a_Address*/,
                          const std::string& /*a_Module*/,
                          const std::string& /*a_Name*/) {}
+  virtual void AddKeyAndString(uint64_t key, const std::string_view str) {}
   virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*
   GetRules() {
     return nullptr;

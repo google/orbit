@@ -19,6 +19,7 @@
 #include "Pdb.h"
 #include "PickingManager.h"
 #include "SamplingProfiler.h"
+#include "StringManager.h"
 #include "Systrace.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
@@ -35,6 +36,11 @@ TimeGraph* GCurrentTimeGraph = nullptr;
 
 //-----------------------------------------------------------------------------
 TimeGraph::TimeGraph() { m_LastThreadReorder.Start(); }
+
+//-----------------------------------------------------------------------------
+void TimeGraph::SetStringManager(std::shared_ptr<StringManager> str_manager) {
+  string_manager_ = str_manager;
+}
 
 //-----------------------------------------------------------------------------
 void TimeGraph::SetCanvas(GlCanvas* a_Canvas) {
@@ -587,8 +593,9 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
                     "%s %s %s", name, extraInfo.c_str(), time.c_str());
 
                 textBox.SetText(text);
-              } else if( timer.m_Type == Timer::INTROSPECTION) {
-                textBox.SetText(timer.EncodedString());
+              } else if( timer.m_Type == Timer::INTROSPECTION && string_manager_) {
+                textBox.SetText(string_manager_->Get(
+                    timer.m_UserData[0]).value_or(""));
               }
                else if (!SystraceManager::Get().IsEmpty()) {
                 textBox.SetText(SystraceManager::Get().GetFunctionName(

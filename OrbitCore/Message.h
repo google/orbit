@@ -68,6 +68,7 @@ enum MessageType : int16_t {
   Msg_RemoteContextSwitches,
   Msg_SamplingCallstacks,
   Msg_SamplingHashedCallstacks,
+  Msg_KeyAndString,
 };
 
 //-----------------------------------------------------------------------------

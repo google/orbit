@@ -12,6 +12,7 @@
 #include "EventBuffer.h"
 #include "Geometry.h"
 #include "MemoryTracker.h"
+#include "StringManager.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "ThreadTrack.h"
@@ -86,6 +87,7 @@ class TimeGraph {
     m_TextRenderer = a_TextRenderer;
   }
   TextRenderer* GetTextRenderer() { return m_TextRenderer; }
+  void SetStringManager(std::shared_ptr<StringManager> str_manager);
   void SetCanvas(GlCanvas* a_Canvas);
   void SetFontSize(int a_FontSize);
   void SetSystrace(std::shared_ptr<Systrace> a_Systrace) {
@@ -164,6 +166,8 @@ class TimeGraph {
   ThreadTrackMap m_ThreadTracks;
   double m_MarginRatio = 0.1;
   std::string m_ThreadFilter;
+
+  std::shared_ptr<StringManager> string_manager_;
 };
 
 extern TimeGraph* GCurrentTimeGraph;

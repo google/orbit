@@ -56,6 +56,7 @@ target_sources(
          ScopeTimer.h
          Serialization.h
          SerializationMacros.h
+         StringManager.h
          Systrace.h
          Tcp.h
          TcpClient.h
@@ -108,6 +109,7 @@ target_sources(
           Profiling.cpp
           SamplingProfiler.cpp
           ScopeTimer.cpp
+          StringManager.cpp
           Systrace.cpp
           Tcp.cpp
           Tcp.cpp
@@ -202,8 +204,10 @@ target_compile_features(OrbitCore PUBLIC cxx_std_11)
 
 add_executable(OrbitCoreTests)
 
-target_sources(OrbitCoreTests
-  PRIVATE RingBufferTest.cpp)
+target_sources(OrbitCoreTests PRIVATE
+    RingBufferTest.cpp
+    StringManagerTest.cpp
+)
 
 if(NOT WIN32)
   # TODO: Enable ElfFileTests.cpp for all platforms once we have llvm support on Windows.

@@ -35,8 +35,12 @@ void Handler::End() {
   Scope& scope = scopes.back();
   scope.timer_.Stop();
   scope.timer_.m_Type = Timer::INTROSPECTION;
-  scope.timer_.EncodeString(scope.name_.c_str());
   scope.timer_.m_Depth = scopes.size() - 1;
+
+  uint64_t hash = StringHash(scope.name_);
+  GCoreApp->AddKeyAndString(hash, scope.name_);
+  scope.timer_.m_UserData[0] = hash;
+
   GCoreApp->ProcessTimer(scope.timer_, scope.name_);
   scopes.pop_back();
 }

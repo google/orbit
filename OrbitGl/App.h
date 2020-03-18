@@ -14,6 +14,7 @@
 #include "CrashHandler.h"
 #include "DataViewTypes.h"
 #include "Message.h"
+#include "StringManager.h"
 #include "Threading.h"
 
 struct CallStack;
@@ -79,6 +80,7 @@ class OrbitApp : public CoreApp {
   void ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) override;
   void AddSymbol(uint64_t a_Address, const std::string& a_Module,
                  const std::string& a_Name) override;
+  void AddKeyAndString(uint64_t key, const std::string_view str) override;
   void ProcessBufferedCaptureData();
 
   int* GetScreenRes() { return m_ScreenRes; }
@@ -263,6 +265,8 @@ class OrbitApp : public CoreApp {
   class EventTracer* m_EventTracer = nullptr;
   class Debugger* m_Debugger = nullptr;
   int m_NumTicks = 0;
+
+  std::shared_ptr<StringManager> string_manager_ = nullptr;
 #ifdef _WIN32
   CrashHandler m_CrashHandler;
 #else
