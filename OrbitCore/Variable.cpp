@@ -30,8 +30,7 @@ void Variable::SendValue() {
     msg.m_Header.m_DataTransferHeader.m_Address =
         (ULONG64)GPdbDbg->GetHModule() + (ULONG64)m_Address;
     msg.m_Header.m_DataTransferHeader.m_Type = DataTransferHeader::Data;
-    msg.m_Size = m_Size;
-    GTcpServer->Send(msg, (void*)&m_Data);
+    GTcpServer->Send(msg, &m_Data, m_Size);
   }
 }
 

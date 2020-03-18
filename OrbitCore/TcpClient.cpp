@@ -183,7 +183,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
         memcpy(buffer.data(), (void*)header.m_Address, a_Message.m_Size);
       }
 
-      Send(msg, (void*)buffer.data());
+      Send(msg, buffer);
       break;
     }
     case Msg_NewSession:

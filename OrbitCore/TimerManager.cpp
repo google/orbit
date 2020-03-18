@@ -146,8 +146,9 @@ void TimerManager::ConsumeTimers() {
 void TimerManager::SendTimers() {
   SetCurrentThreadName(L"OrbitSendTimers");
 
-  const size_t numTimers = 4096;
-  Timer Timers[numTimers];
+  constexpr size_t numTimers = 4096;
+
+  Timer timers[numTimers];
 
   while (!m_ExitRequested) {
     Message Msg(Msg_Timer);
@@ -157,12 +158,11 @@ void TimerManager::SendTimers() {
       m_ConditionVariable.wait();
     }
 
-    size_t numDequeued = m_LockFreeQueue.try_dequeue_bulk(Timers, numTimers);
+    size_t numDequeued = m_LockFreeQueue.try_dequeue_bulk(timers, numTimers);
     m_NumQueuedEntries -= (int)numDequeued;
     m_NumQueuedTimers -= (int)numDequeued;
-    Msg.m_Size = (int)numDequeued * sizeof(Timer);
 
-    GTcpClient->Send(Msg, (void*)Timers);
+    GTcpClient->Send(Msg, timers, numDequeued * sizeof(Timer));
 
     int numEntries = m_NumQueuedEntries;
     GTcpClient->Send(Msg_NumQueuedEntries, numEntries);

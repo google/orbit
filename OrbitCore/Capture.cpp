@@ -354,7 +354,7 @@ void Capture::SendDataTrackingInfo() {
     ArgTrackingHeader& header = msg.m_Header.m_ArgTrackingHeader;
     uint64_t address = func->GetVirtualAddress();
     header.m_Function = address;
-    header.m_NumArgs = (int)rule->m_TrackedVariables.size();
+    header.m_NumArgs = rule->m_TrackedVariables.size();
 
     // TODO: Argument tracking was hijacked by data tracking
     //       We should separate both concepts and revive argument
@@ -367,9 +367,7 @@ void Capture::SendDataTrackingInfo() {
       args.push_back(arg);
     }
 
-    msg.m_Size = (int)args.size() * sizeof(Argument);
-
-    GTcpServer->Send(msg, (void*)args.data());
+    GTcpServer->Send(msg, args);
   }
 }
 
