@@ -59,12 +59,13 @@ class TcpEntity {
     Message msg(a_Type);
     SendMsg(msg, nullptr);
   }
-  inline void Send(Message& a_Message, void* a_Data);
+
   inline void Send(Message& a_Message);
   inline void Send(const std::string& a_String);
   inline void Send(OrbitLogEntry& a_Entry);
   inline void Send(Orbit::UserData& a_Entry);
-  inline void Send(MessageType a_Type, const void* a_Data, size_t a_Size);
+  inline void Send(MessageType type, const void* data, size_t size);
+  inline void Send(Message& message, const void* data, size_t size);
 
   template <class T>
   void Send(Message& a_Message, const std::vector<T>& a_Vector);
@@ -74,6 +75,11 @@ class TcpEntity {
   void Send(Message& a_Message, const T& a_Item);
   template <class T>
   void Send(MessageType a_Type, const T& a_Item);
+
+  // Explicitly remove pointer variant of the method
+  template <typename T>
+  void Send(Message&, T* const&) = delete;
+
   inline void Send(MessageType a_Type, const std::string& a_Item);
 
   typedef std::function<void(const Message&)> MsgCallback;
@@ -111,11 +117,6 @@ class TcpEntity {
 };
 
 //-----------------------------------------------------------------------------
-void TcpEntity::Send(Message& a_Message, void* a_Data) {
-  SendMsg(a_Message, a_Data);
-}
-
-//-----------------------------------------------------------------------------
 inline void TcpEntity::Send(Message& a_Message) {
   SendMsg(a_Message, a_Message.m_Data);
 }
@@ -123,7 +124,7 @@ inline void TcpEntity::Send(Message& a_Message) {
 //-----------------------------------------------------------------------------
 inline void TcpEntity::Send(MessageType a_Type, const std::string& a_String) {
   Message msg(a_Type, (uint32_t)(a_String.size() + 1) * sizeof(a_String[0]));
-  Send(msg, (void*)a_String.data());
+  SendMsg(msg, a_String.data());
 }
 
 //-----------------------------------------------------------------------------
@@ -143,7 +144,7 @@ void TcpEntity::Send(OrbitLogEntry& a_Entry) {
          a_Entry.GetStringSize());
 
   Message msg(Msg_OrbitLog, entrySize);
-  Send(msg, (void*)buffer);
+  SendMsg(msg, buffer);
 
   if (needsAlloc) {
     delete buffer;
@@ -163,7 +164,7 @@ void TcpEntity::Send(Orbit::UserData& a_UserData) {
   memcpy(buffer + sizeof(Orbit::UserData), a_UserData.m_Data,
          a_UserData.m_NumBytes);
 
-  Send(msg, (void*)buffer);
+  SendMsg(msg, buffer);
 
   if (needsAlloc) {
     delete buffer;
@@ -174,7 +175,7 @@ void TcpEntity::Send(Orbit::UserData& a_UserData) {
 template <class T>
 void TcpEntity::Send(Message& a_Message, const std::vector<T>& a_Vector) {
   a_Message.m_Size = (uint32_t)a_Vector.size() * sizeof(T);
-  SendMsg(a_Message, (void*)a_Vector.data());
+  SendMsg(a_Message, a_Vector.data());
 }
 
 //-----------------------------------------------------------------------------
@@ -188,7 +189,7 @@ void TcpEntity::Send(MessageType a_Type, const std::vector<T>& a_Vector) {
 template <class T>
 void TcpEntity::Send(Message& a_Message, const T& a_Item) {
   a_Message.m_Size = (uint32_t)sizeof(T);
-  SendMsg(a_Message, (void*)&a_Item);
+  SendMsg(a_Message, &a_Item);
 }
 
 //-----------------------------------------------------------------------------
@@ -198,9 +199,13 @@ void TcpEntity::Send(MessageType a_Type, const T& a_Item) {
   Send(msg, a_Item);
 }
 
-//-----------------------------------------------------------------------------
-void TcpEntity::Send(MessageType a_Type, const void* a_Data, size_t a_Size) {
-  Message msg(a_Type);
-  msg.m_Size = (uint32_t)a_Size;
-  SendMsg(msg, a_Data);
+void TcpEntity::Send(MessageType type, const void* data, size_t size) {
+  Message msg(type);
+  msg.m_Size = size;
+  SendMsg(msg, data);
+}
+
+void TcpEntity::Send(Message& message, const void* data, size_t size) {
+  message.m_Size = size;
+  SendMsg(message, data);
 }
