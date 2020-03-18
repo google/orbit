@@ -589,7 +589,8 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
 
                 textBox.SetText(text);
               } else if( timer.m_Type == Timer::INTROSPECTION) {
-                textBox.SetText(GStringManager->Get(timer.m_UserData[0]));
+                textBox.SetText(GStringManager->Get(
+                    timer.m_UserData[0]).value_or());
               }
                else if (!SystraceManager::Get().IsEmpty()) {
                 textBox.SetText(SystraceManager::Get().GetFunctionName(

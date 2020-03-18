@@ -12,13 +12,13 @@ void StringManager::Add(uint64_t key, const std::string_view str) {
   }
 }
 
-std::string StringManager::Get(uint64_t key) {
+std::optional<std::string> StringManager::Get(uint64_t key) {
   std::lock_guard<std::mutex> lock(mutex_);
   auto it = key_to_string_.find(key);
   if (it != key_to_string_.end()) {
     return it->second;
   } else {
-    return "";
+    return std::optional<std::string>{};
   }
 }
 
