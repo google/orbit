@@ -2,6 +2,7 @@ from conans import ConanFile, CMake, tools
 from conans.errors import ConanInvalidConfiguration
 import os
 
+
 class OrbitConan(ConanFile):
     name = "OrbitProfiler"
     version = "0.0.1"
@@ -9,7 +10,7 @@ class OrbitConan(ConanFile):
     url = "https://github.com/pierricgimmig/orbitprofiler.git"
     description = "C/C++ Performance Profiler"
     settings = "os", "compiler", "build_type", "arch"
-    generators = [ "cmake_find_package_multi", "cmake" ]
+    generators = ["cmake_find_package_multi", "cmake"]
     options = {"system_mesa": [True, False],
                "system_qt": [True, False], "with_gui": [True, False]}
     default_options = {"system_mesa": True,
@@ -32,7 +33,8 @@ class OrbitConan(ConanFile):
         self.requires("llvm_object/9.0.1@orbitdeps/stable")
         self.requires("openssl/1.1.1d@{}".format(self._orbit_channel))
         if self.settings.os != "Windows":
-            self.requires("libunwindstack/80a734f14@{}".format(self._orbit_channel))
+            self.requires(
+                "libunwindstack/80a734f14@{}".format(self._orbit_channel))
         self.requires("zlib/1.2.11@conan/stable")
 
         if self.settings.os == "Windows":
@@ -85,10 +87,12 @@ class OrbitConan(ConanFile):
         if self.options.with_gui:
             for path in self.deps_cpp_info["freetype-gl"].resdirs:
                 self.copy("Vera.ttf", src=path, dst="{}/fonts/".format(dest))
-                self.copy("Vera.ttf", src=path, dst="{}/fonts/".format("OrbitQt/"))
-                self.copy("v3f-t2f-c4f.*", src=path, dst="{}/shaders/".format(dest))
-                self.copy("v3f-t2f-c4f.*", src=path, dst="{}/shaders/".format("OrbitQt/"))
-
+                self.copy("Vera.ttf", src=path,
+                          dst="{}/fonts/".format("OrbitQt/"))
+                self.copy("v3f-t2f-c4f.*", src=path,
+                          dst="{}/shaders/".format(dest))
+                self.copy("v3f-t2f-c4f.*", src=path,
+                          dst="{}/shaders/".format("OrbitQt/"))
 
     def package(self):
         self.copy("*", src="bin/dri", dst="bin/dri", symlinks=True)
