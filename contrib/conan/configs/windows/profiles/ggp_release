@@ -10,7 +10,6 @@ compiler.libcxx=libc++
 build_type=Release
 [options]
 OrbitProfiler:with_gui=False
-OrbitProfiler:ggp=True
 [build_requires]
 cmake/3.16.4@
 ggp_sdk/1.43.0.14282@orbitdeps/stable

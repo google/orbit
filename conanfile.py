@@ -10,9 +10,9 @@ class OrbitConan(ConanFile):
     description = "C/C++ Performance Profiler"
     settings = "os", "compiler", "build_type", "arch"
     generators = [ "cmake_find_package_multi", "cmake" ]
-    options = {"system_mesa": [True, False], "ggp": [True, False],
+    options = {"system_mesa": [True, False],
                "system_qt": [True, False], "with_gui": [True, False]}
-    default_options = {"system_mesa": True, "ggp": False,
+    default_options = {"system_mesa": True,
                        "system_qt": True, "with_gui": True}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "external/*", "LICENSE"
@@ -75,7 +75,7 @@ class OrbitConan(ConanFile):
         cmake.definitions["WITH_GUI"] = "ON" if self.options.with_gui else "OFF"
         cmake.configure()
         cmake.build()
-        if not self.options.ggp:
+        if not tools.cross_building(self.settings, skip_x64_x86=True) and self.settings.get_safe("os.platform") != "GGP":
             cmake.test()
 
     def imports(self):
