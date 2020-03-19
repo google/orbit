@@ -21,7 +21,8 @@ echo "Installing conan configuration (profiles, settings, etc.)..."
 conan config install $DIR/contrib/conan/config || exit $?
 
 cd ${KOKORO_ARTIFACTS_DIR}/github/orbitprofiler
-exec $DIR/build.sh clang7_release
+$DIR/build.sh clang7_release || exit $?
+conan package -bf $DIR/build_clang7_release/ $DIR
 
 # Uncomment the three lines below to print the external ip into the log and
 # keep the vm alive for two hours. This is useful to debug build failures that
