@@ -160,15 +160,6 @@ bool Is64Bit(pid_t a_PID) {
 }
 
 //-----------------------------------------------------------------------------
-std::string Demangle(const char* name) {
-  int status = 0;
-  std::unique_ptr<char, void (*)(void*)> res{
-      abi::__cxa_demangle(name, NULL, NULL, &status), std::free};
-
-  return (status == 0) ? res.get() : name;
-}
-
-//-----------------------------------------------------------------------------
 double GetSecondsFromNanos(uint64_t a_Nanos) {
   return 0.000000001 * (double)a_Nanos;
 }

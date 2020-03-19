@@ -27,7 +27,6 @@ void ListModules(pid_t a_PID,
                  std::map<uint64_t, std::shared_ptr<Module> >& o_ModuleMap);
 std::unordered_map<uint32_t, float> GetCpuUtilization();
 bool Is64Bit(pid_t a_PID);
-std::string Demangle(const char* a_Symbol);
 void DumpClocks();
 std::string GetKernelVersionStr();
 uint32_t GetKernelVersion();

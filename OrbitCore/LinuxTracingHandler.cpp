@@ -10,6 +10,7 @@
 #include "Path.h"
 #include "Pdb.h"
 #include "TcpServer.h"
+#include "llvm/Demangle/Demangle.h"
 
 void LinuxTracingHandler::Start() {
   pid_t pid = target_process_->GetID();
@@ -103,7 +104,7 @@ void LinuxTracingHandler::OnCallstack(
     if (!frame.GetFunctionName().empty() &&
         !target_process_->HasSymbol(address)) {
       std::string symbol_name = absl::StrFormat(
-          "%s+%#x", LinuxUtils::Demangle(frame.GetFunctionName().c_str()),
+          "%s+%#x", llvm::demangle(frame.GetFunctionName()),
           frame.GetFunctionOffset());
       std::shared_ptr<LinuxSymbol> symbol = std::make_shared<LinuxSymbol>();
       symbol->m_Module = frame.GetMapName();
