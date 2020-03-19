@@ -48,13 +48,9 @@ A more in-depth video can be found here:
 www.telescopp.com
 
 **Building**
-1. Install [Qt](https://doc.qt.io/qt-5/gettingstarted.html) if not already installed
-2. Set a **QTDIR** environment variable to point to your Qt installation directory (ex. C:\Qt\5.12.1\msvc2017_64)
-3. Run **bootstrap-orbit.bat**
-
-Your freshly compiled version of Orbit should start automatically.  The CMake generated Visual Studio solution is found in **build/x64/OrbitQt/OrbitQt.sln**.  Once the solution has been generated, you can use Visual Studio to build Orbit.  Alternatively, you can continue to use bootstrap-orbit.bat.
-
-NOTE: The initial build will take a bit of time as [vcpkg](https://github.com/microsoft/vcpkg) will be compiled and used to clone and build most of Orbit's external dependencies.  Subsequent builds will be much faster.
+Please have a look at the first three sections of our
+[development documentation](DEVELOPMENT.md). It describes how building Orbit
+works and what Compiler, Platforms, and Tools are supported and needed.
 
 **Workflow**
 1. Select a process in the list of currently running processes in the "Home" tab
