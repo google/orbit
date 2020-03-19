@@ -108,6 +108,8 @@ class TracerThread {
     uint64_t sched_switch_count = 0;
     uint64_t sample_count = 0;
     uint64_t uprobes_count = 0;
+    uint64_t lost_count = 0;
+    absl::flat_hash_map<PerfEventRingBuffer*, uint64_t> lost_count_per_buffer{};
   };
 
   EventStats stats_;

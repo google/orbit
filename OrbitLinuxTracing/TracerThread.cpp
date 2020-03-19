@@ -413,8 +413,8 @@ void TracerThread::ProcessLostEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
   LostPerfEvent event;
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
-  LOG("Lost %lu events in buffer %s", event.GetNumLost(),
-      ring_buffer->GetName().c_str());
+  stats_.lost_count += event.GetNumLost();
+  stats_.lost_count_per_buffer[ring_buffer] += event.GetNumLost();
 }
 
 void TracerThread::DeferEvent(std::unique_ptr<PerfEvent> event) {
@@ -463,15 +463,17 @@ void TracerThread::PrintStatsIfTimerElapsed() {
 
   if (stats_.event_count_begin_ns + EVENT_COUNT_WINDOW_S * 1'000'000'000 <
       MonotonicTimestampNs()) {
-    double actual_windows_ns =
+    double actual_window_s =
         (MonotonicTimestampNs() - stats_.event_count_begin_ns) / 1e9;
-    LOG("Events per second (last %.1f s): "
-        "sched switches: %.0f; "
-        "samples: %.0f; "
-        "u(ret)probes: %.0f",
-        actual_windows_ns, stats_.sched_switch_count / actual_windows_ns,
-        stats_.sample_count / actual_windows_ns,
-        stats_.uprobes_count / actual_windows_ns);
+    LOG("Events per second (last %.1f s):", actual_window_s);
+    LOG("  sched switches: %.0f", stats_.sched_switch_count / actual_window_s);
+    LOG("  samples: %.0f", stats_.sample_count / actual_window_s);
+    LOG("  u(ret)probes: %.0f", stats_.uprobes_count / actual_window_s);
+    LOG("  lost: %.0f, of which:", stats_.lost_count / actual_window_s);
+    for (const auto& lost_from_buffer : stats_.lost_count_per_buffer) {
+      LOG("    from %s: %.0f", lost_from_buffer.first->GetName().c_str(),
+          lost_from_buffer.second / actual_window_s);
+    }
     stats_.Reset();
   }
 }
