@@ -186,12 +186,18 @@ void TracerThread::Run(
 
   while (!(*exit_requested)) {
     ORBIT_SCOPE("Tracer Iteration");
-    // Sleep if there was no new event in the last iteration so that we are not
-    // constantly polling. Don't sleep so long that ring buffers overflow.
-    // TODO: Refine this sleeping pattern, possibly using exponential backoff.
+
     if (!last_iteration_saw_events) {
-      ORBIT_SCOPE("Sleep");
-      usleep(IDLE_TIME_ON_EMPTY_RING_BUFFERS_US);
+      // Periodically print event statistics.
+      PrintStatsIfTimerElapsed();
+
+      // Sleep if there was no new event in the last iteration so that we are
+      // not constantly polling. Don't sleep so long that ring buffers overflow.
+      // TODO: Refine this sleeping pattern, possibly using exponential backoff.
+      {
+        ORBIT_SCOPE("Sleep");
+        usleep(IDLE_TIME_ON_EMPTY_RING_BUFFERS_US);
+      }
     }
 
     last_iteration_saw_events = false;
@@ -257,9 +263,6 @@ void TracerThread::Run(
             ring_buffer.SkipRecord(header);
             break;
         }
-
-        // Periodically print event statistics.
-        PrintStatsIfTimerElapsed();
       }
     }
   }
@@ -460,13 +463,15 @@ void TracerThread::PrintStatsIfTimerElapsed() {
 
   if (stats_.event_count_begin_ns + EVENT_COUNT_WINDOW_S * 1'000'000'000 <
       MonotonicTimestampNs()) {
-    LOG("Events per second (last %lu s): "
-        "sched switches: %lu; "
-        "samples: %lu; "
-        "u(ret)probes: %lu",
-        EVENT_COUNT_WINDOW_S, stats_.sched_switch_count / EVENT_COUNT_WINDOW_S,
-        stats_.sample_count / EVENT_COUNT_WINDOW_S,
-        stats_.uprobes_count / EVENT_COUNT_WINDOW_S);
+    double actual_windows_ns =
+        (MonotonicTimestampNs() - stats_.event_count_begin_ns) / 1e9;
+    LOG("Events per second (last %.1f s): "
+        "sched switches: %.0f; "
+        "samples: %.0f; "
+        "u(ret)probes: %.0f",
+        actual_windows_ns, stats_.sched_switch_count / actual_windows_ns,
+        stats_.sample_count / actual_windows_ns,
+        stats_.uprobes_count / actual_windows_ns);
     stats_.Reset();
   }
 }
