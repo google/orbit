@@ -155,27 +155,30 @@ struct __attribute__((__packed__)) dynamically_sized_perf_event_stack_sample {
 
 class SamplePerfEvent : public PerfEvent {
  public:
-  dynamically_sized_perf_event_stack_sample ring_buffer_record;
+  std::unique_ptr<dynamically_sized_perf_event_stack_sample> ring_buffer_record;
 
-  explicit SamplePerfEvent(uint64_t dyn_size) : ring_buffer_record{dyn_size} {}
+  explicit SamplePerfEvent(uint64_t dyn_size)
+      : ring_buffer_record{
+            std::make_unique<dynamically_sized_perf_event_stack_sample>(
+                dyn_size)} {}
 
   uint64_t GetTimestamp() const override {
-    return ring_buffer_record.sample_id.time;
+    return ring_buffer_record->sample_id.time;
   }
 
-  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
-  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+  pid_t GetPid() const { return ring_buffer_record->sample_id.pid; }
+  pid_t GetTid() const { return ring_buffer_record->sample_id.tid; }
+  uint32_t GetCpu() const { return ring_buffer_record->sample_id.cpu; }
 
   std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
     return perf_event_sample_regs_user_all_to_register_array(
-        ring_buffer_record.regs);
+        ring_buffer_record->regs);
   }
 
   const char* GetStackData() const {
-    return ring_buffer_record.stack.data.get();
+    return ring_buffer_record->stack.data.get();
   }
-  uint64_t GetStackSize() const { return ring_buffer_record.stack.dyn_size; }
+  uint64_t GetStackSize() const { return ring_buffer_record->stack.dyn_size; }
 
  private:
   static std::array<uint64_t, PERF_REG_X86_64_MAX>

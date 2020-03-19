@@ -9,6 +9,8 @@
 #include "LibunwindstackUnwinder.h"
 #include "PerfEvent.h"
 #include "PerfEventVisitor.h"
+#include "UprobesCallstackManager.h"
+#include "UprobesFunctionCallManager.h"
 #include "absl/container/flat_hash_map.h"
 
 namespace LinuxTracing {
@@ -31,70 +33,10 @@ namespace LinuxTracing {
 //  Start by passing the function_address to ProcessUretprobes as well for a
 //  comparison against the address of the uprobe on the stack.
 
-class UprobesFunctionCallManager {
- public:
-  UprobesFunctionCallManager() = default;
-
-  UprobesFunctionCallManager(const UprobesFunctionCallManager&) = delete;
-  UprobesFunctionCallManager& operator=(const UprobesFunctionCallManager&) =
-      delete;
-
-  UprobesFunctionCallManager(UprobesFunctionCallManager&&) = default;
-  UprobesFunctionCallManager& operator=(UprobesFunctionCallManager&&) = default;
-
-  void ProcessUprobes(pid_t tid, uint64_t function_address,
-                      uint64_t begin_timestamp);
-  std::optional<FunctionCall> ProcessUretprobes(pid_t tid,
-                                                uint64_t end_timestamp);
-
- private:
-  struct OpenUprobes {
-    OpenUprobes(uint64_t function_address, uint64_t begin_timestamp)
-        : function_address(function_address),
-          begin_timestamp(begin_timestamp) {}
-    uint64_t function_address;
-    uint64_t begin_timestamp;
-  };
-
-  // This map keeps the stack of the dynamically-instrumented functions entered.
-  absl::flat_hash_map<pid_t, std::stack<OpenUprobes, std::vector<OpenUprobes>>>
-      tid_timer_stacks_{};
-};
-
-class UprobesCallstackManager {
- public:
-  UprobesCallstackManager() = default;
-
-  UprobesCallstackManager(const UprobesCallstackManager&) = delete;
-  UprobesCallstackManager& operator=(const UprobesCallstackManager&) = delete;
-
-  UprobesCallstackManager(UprobesCallstackManager&&) = default;
-  UprobesCallstackManager& operator=(UprobesCallstackManager&&) = default;
-
-  std::vector<unwindstack::FrameData> ProcessUprobesCallstack(
-      pid_t tid, const std::vector<unwindstack::FrameData>& callstack);
-  std::vector<unwindstack::FrameData> ProcessSampledCallstack(
-      pid_t tid, const std::vector<unwindstack::FrameData>& callstack);
-  void ProcessUretprobes(pid_t tid);
-
- private:
-  // This map keeps, for every thread, the stack of callstacks collected when
-  // entering a uprobes-instrumented function.
-  absl::flat_hash_map<pid_t, std::vector<std::vector<unwindstack::FrameData>>>
-      tid_uprobes_callstacks_stacks_{};
-
-  static std::vector<unwindstack::FrameData>
-  JoinCallstackWithPreviousUprobesCallstacks(
-      const std::vector<unwindstack::FrameData>& this_callstack,
-      const std::vector<std::vector<unwindstack::FrameData>>&
-          previous_callstacks);
-};
-
 class UprobesUnwindingVisitor : public PerfEventVisitor {
  public:
-  explicit UprobesUnwindingVisitor(const std::string& initial_maps) {
-    unwinder_.SetMaps(initial_maps);
-  }
+  explicit UprobesUnwindingVisitor(const std::string& initial_maps)
+      : callstack_manager_{&unwinder_, initial_maps} {}
 
   UprobesUnwindingVisitor(const UprobesUnwindingVisitor&) = delete;
   UprobesUnwindingVisitor& operator=(const UprobesUnwindingVisitor&) = delete;
@@ -112,7 +54,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
  private:
   UprobesFunctionCallManager function_call_manager_{};
   LibunwindstackUnwinder unwinder_{};
-  UprobesCallstackManager callstack_manager_{};
+  UprobesCallstackManager<LibunwindstackUnwinder> callstack_manager_;
 
   TracerListener* listener_ = nullptr;
 

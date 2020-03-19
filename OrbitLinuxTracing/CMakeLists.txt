@@ -42,6 +42,8 @@ target_sources(OrbitLinuxTracing PRIVATE
         Tracer.cpp
         TracerThread.cpp
         TracerThread.h
+        UprobesCallstackManager.h
+        UprobesFunctionCallManager.h
         UprobesUnwindingVisitor.cpp
         UprobesUnwindingVisitor.h
         Utils.h
@@ -57,7 +59,8 @@ add_executable(OrbitLinuxTracingTests)
 if (NOT WIN32)
     target_sources(OrbitLinuxTracingTests PRIVATE
             PerfEventProcessor2Test.cpp
-            UprobesUnwindingVisitorTest.cpp
+            UprobesCallstackManagerTest.cpp
+            UprobesFunctionCallManagerTest.cpp
             UtilsTest.cpp)
 endif ()
 
