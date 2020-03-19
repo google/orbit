@@ -201,6 +201,15 @@ cmake ... # CMake from conan is now available
 
 There is also a `deactivate.{sh,bat,ps1}` which make your shell leave the virtual environment.
 
+### `ERROR: .../orbitprofiler/conanfile.py: 'options.ggp' doesn't exist` ?!?
+
+This message or a similar one indicates that your build profiles are
+outdated and need to be updated. You can either just call the bootstrap
+script again or you can manually update your conan config:
+```bash
+conan config install contrib/conan/configs/[windows,linux]
+```
+
 
 ## Cross-Compiling for GGP
 
