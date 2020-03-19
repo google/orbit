@@ -1,7 +1,7 @@
 :: Code under repo is checked out to %KOKORO_ARTIFACTS_DIR%\github.
 :: The final directory name in this path is determined by the scm name specified
 :: in the job configuration
-SET REPO_ROOT=%~dp0
+SET REPO_ROOT=%KOKORO_ARTIFACTS_DIR%\github\orbitprofiler
 
 conan config install %REPO_ROOT%\contrib\conan\config
 if %errorlevel% neq 0 exit /b %errorlevel%
