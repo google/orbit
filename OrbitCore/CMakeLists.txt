@@ -83,6 +83,7 @@ target_sources(
           CrashHandler.cpp
           ConnectionManager.cpp
           Diff.cpp
+          ElfFile.cpp
           EventBuffer.cpp
           FunctionStats.cpp
           Injection.cpp
@@ -156,11 +157,9 @@ else()
     PUBLIC LinuxTracingHandler.h
            LinuxUtils.h)
 
-  # TODO: Compile ElfFile.cpp for all platforms once we have llvm support on Windows.
   target_sources(
     OrbitCore
-    PRIVATE ElfFile.cpp
-            LinuxTracingHandler.cpp
+    PRIVATE LinuxTracingHandler.cpp
             LinuxUtils.cpp)
 endif()
 
@@ -189,7 +188,6 @@ if(WIN32)
   target_compile_definitions(OrbitCore PUBLIC -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitCore PUBLIC -DNTDDI_VERSION=0x06030000)
 else()
-  target_link_libraries(OrbitCore PRIVATE ${llvm_libs})
   target_link_libraries(
     OrbitCore
     PUBLIC OrbitLinuxTracing
@@ -207,17 +205,14 @@ target_compile_features(OrbitCore PUBLIC cxx_std_11)
 add_executable(OrbitCoreTests)
 
 target_sources(OrbitCoreTests PRIVATE
+    ElfFileTests.cpp
     RingBufferTest.cpp
     StringManagerTest.cpp
     LinuxTracingSessionTests.cpp
 )
 
 if(NOT WIN32)
-  # TODO: Enable ElfFileTests.cpp for all platforms once we have llvm support on Windows.
-  target_sources(OrbitCoreTests
-    PRIVATE ElfFileTests.cpp
-            OrbitModuleTest.cpp)
-  target_link_libraries(OrbitCoreTests PRIVATE  ${llvm_libs})
+  target_sources(OrbitCoreTests PRIVATE OrbitModuleTest.cpp)
 endif()
 
 target_link_libraries(
