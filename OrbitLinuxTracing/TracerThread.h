@@ -78,9 +78,11 @@ class TracerThread {
   // Number of records to read consecutively from a perf_event_open ring buffer
   // before switching to another one.
   static constexpr int32_t ROUND_ROBIN_POLLING_BATCH_SIZE = 5;
+
   static constexpr uint64_t SMALL_RING_BUFFER_SIZE_KB = 256;
   static constexpr uint64_t BIG_RING_BUFFER_SIZE_KB = 2048;
-  static constexpr uint32_t IDLE_TIME_ON_EMPTY_RING_BUFFERS_US = 1000;
+
+  static constexpr uint32_t IDLE_TIME_ON_EMPTY_RING_BUFFERS_US = 100;
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_DEFERRED_EVENTS_US = 1000;
 
   pid_t pid_;
