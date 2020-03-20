@@ -99,87 +99,23 @@ target_sources(
 
 target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-if(WITH_GUI)
-  target_link_libraries(
-    OrbitGl
-    PUBLIC OrbitCore
-           OrbitAsm
-           freetype-gl::freetype-gl
-           OpenGL::GLU
-           freetype::freetype
-           imgui::imgui
-           freeglut::freeglut
-           capstone::capstone
-           gte::gte
-           glew::glew)
-else()
-  # Don't build this target by default. It will not compile in a WITH_GUI=OFF
-  # setup.
-  set_target_properties(OrbitGl PROPERTIES EXCLUDE_FROM_ALL ON)
-endif()
+target_link_libraries(
+  OrbitGl
+  PUBLIC OrbitCore
+         OrbitAsm
+         freetype-gl::freetype-gl
+         OpenGL::GLU
+         freetype::freetype
+         imgui::imgui
+         freeglut::freeglut
+         capstone::capstone
+         gte::gte
+         glew::glew)
 
-if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL AND WITH_GUI)
+if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL)
   target_link_libraries(OrbitGl PUBLIC OpenGL::GLX)
 endif()
 
-if(NOT WIN32 AND WITH_GUI)
+if(NOT WIN32)
   target_link_libraries(OrbitGl PRIVATE X11::X11 X11::Xi X11::Xxf86vm)
 endif()
-
-
-# OrbitNoGl:
-# This target is a temporary solution to build OrbitService
-# without a dependency to OpenGl.
-# According to my tests, this does not affect the behaviour
-# of the collector, but I might be wrong.
-# I tested the following things:
-# - Starting the collector
-# - Connecting with the GUI
-# - Listing processes
-# - Sampling a process
-# - Load debug symbols
-# - Hook a function
-# - Verify that hooked function appears.
-add_library(OrbitNoGl STATIC)
-
-
-get_target_property(PRIV_SOURCES OrbitGl SOURCES)
-list(
-  REMOVE_ITEM
-  PRIV_SOURCES
-  shader.cpp
-  EventTrack.cpp
-  BlackBoard.cpp
-  CaptureSerializer.cpp
-  CaptureWindow.cpp
-  Card.cpp
-  PickingManager.cpp
-  GlUtils.cpp
-  ImmediateWindow.cpp
-  GlPanel.cpp
-  GlCanvas.cpp
-  HomeWindow.cpp
-  ImGuiOrbit.cpp
-  GlSlider.cpp
-  TextRenderer.cpp
-  TextBox.cpp
-  Track.cpp
-  RuleEditor.cpp
-  PluginCanvas.cpp
-  TimeGraph.cpp
-  ThreadTrack.cpp)
-target_sources(OrbitNoGl PRIVATE "${PRIV_SOURCES}")
-
-get_target_property(PUB_SOURCES OrbitGl INTERFACE_SOURCES)
-target_sources(OrbitNoGl PUBLIC "${PUB_SOURCES}")
-
-get_target_property(PUB_INC OrbitGl INCLUDE_DIRECTORIES)
-set_target_properties(OrbitNoGl PROPERTIES INCLUDE_DIRECTORIES "${PUB_INC}")
-
-get_target_property(INT_INC OrbitGl INTERFACE_INCLUDE_DIRECTORIES)
-set_target_properties(OrbitNoGl PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
-                                           "${INT_INC}")
-
-target_link_libraries(OrbitNoGl PUBLIC OrbitCore OrbitAsm capstone::capstone gte::gte)
-
-target_compile_definitions(OrbitNoGl PUBLIC NOGL)
