@@ -50,6 +50,10 @@ class ContextSwitchPerfEvent : public PerfEvent {
   }
   bool IsSwitchIn() const { return !IsSwitchOut(); }
 
+  uint64_t GetStreamId() const {
+    return ring_buffer_record.sample_id.stream_id;
+  }
+
   uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
@@ -89,6 +93,10 @@ class SystemWideContextSwitchPerfEvent : public PerfEvent {
 
   bool IsSwitchIn() const { return !IsSwitchOut(); }
 
+  uint64_t GetStreamId() const {
+    return ring_buffer_record.sample_id.stream_id;
+  }
+
   uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
@@ -104,6 +112,12 @@ class ForkPerfEvent : public PerfEvent {
   pid_t GetParentPid() const { return ring_buffer_record.ppid; }
   pid_t GetTid() const { return ring_buffer_record.tid; }
   pid_t GetParentTid() const { return ring_buffer_record.ptid; }
+
+  uint64_t GetStreamId() const {
+    return ring_buffer_record.sample_id.stream_id;
+  }
+
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
 class ExitPerfEvent : public PerfEvent {
@@ -118,6 +132,12 @@ class ExitPerfEvent : public PerfEvent {
   pid_t GetParentPid() const { return ring_buffer_record.ppid; }
   pid_t GetTid() const { return ring_buffer_record.tid; }
   pid_t GetParentTid() const { return ring_buffer_record.ptid; }
+
+  uint64_t GetStreamId() const {
+    return ring_buffer_record.sample_id.stream_id;
+  }
+
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
 class LostPerfEvent : public PerfEvent {
@@ -131,6 +151,12 @@ class LostPerfEvent : public PerfEvent {
   void Accept(PerfEventVisitor* visitor) override;
 
   uint64_t GetNumLost() const { return ring_buffer_record.lost; }
+
+  uint64_t GetStreamId() const {
+    return ring_buffer_record.sample_id.stream_id;
+  }
+
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
 struct __attribute__((__packed__)) dynamically_sized_perf_event_stack_sample {
@@ -145,7 +171,7 @@ struct __attribute__((__packed__)) dynamically_sized_perf_event_stack_sample {
   };
 
   perf_event_header header;
-  perf_event_sample_id_tid_time_cpu sample_id;
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
   perf_event_sample_regs_user_all regs;
   dynamically_sized_perf_event_sample_stack_user stack;
 
@@ -168,6 +194,11 @@ class SamplePerfEvent : public PerfEvent {
 
   pid_t GetPid() const { return ring_buffer_record->sample_id.pid; }
   pid_t GetTid() const { return ring_buffer_record->sample_id.tid; }
+
+  uint64_t GetStreamId() const {
+    return ring_buffer_record->sample_id.stream_id;
+  }
+
   uint32_t GetCpu() const { return ring_buffer_record->sample_id.cpu; }
 
   std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
@@ -252,6 +283,11 @@ class UretprobesPerfEvent : public PerfEvent, public AbstractUprobesPerfEvent {
 
   pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
   pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
+
+  uint64_t GetStreamId() const {
+    return ring_buffer_record.sample_id.stream_id;
+  }
+
   uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
