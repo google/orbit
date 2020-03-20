@@ -32,7 +32,7 @@ bool TracerThread::OpenRingBufferForGpuTracepoint(
 
   std::string buffer_name =
       absl::StrFormat("%s:%s_%i", tracepoint_category, tracepoint_name, cpu);
-  PerfEventRingBuffer ring_buffer{fd, SMALL_RING_BUFFER_SIZE_KB, buffer_name};
+  PerfEventRingBuffer ring_buffer{fd, GPU_TRACING_RING_BUFFER_SIZE_KB, buffer_name};
   if (!ring_buffer.IsOpen()) {
     return false;
   }
@@ -124,7 +124,7 @@ void TracerThread::Run(
       int context_switch_fd = context_switch_event_open(-1, cpu);
       std::string buffer_name = absl::StrFormat("context_switch_%u", cpu);
       PerfEventRingBuffer context_switch_ring_buffer{
-          context_switch_fd, SMALL_RING_BUFFER_SIZE_KB, buffer_name};
+          context_switch_fd, CONTEXT_SWITCHES_RING_BUFFER_SIZE_KB, buffer_name};
       if (context_switch_ring_buffer.IsOpen()) {
         tracing_fds_.push_back(context_switch_fd);
         ring_buffers_.push_back(std::move(context_switch_ring_buffer));
@@ -223,8 +223,8 @@ void TracerThread::Run(
           int ring_buffer_fd = uprobes_fd;
           std::string buffer_name =
               absl::StrFormat("uprobes_uretprobes_%u", cpu);
-          ring_buffers_.emplace_back(ring_buffer_fd, BIG_RING_BUFFER_SIZE_KB,
-                                     buffer_name);
+          ring_buffers_.emplace_back(ring_buffer_fd,
+                                     UPROBES_RING_BUFFER_SIZE_KB, buffer_name);
           uprobes_ring_buffer_fds_per_cpu[cpu] = ring_buffer_fd;
           uprobes_fds_.emplace(ring_buffer_fd);
           // Must be called after the ring buffer has been opened.
@@ -238,7 +238,7 @@ void TracerThread::Run(
     int mmap_task_fd = mmap_task_event_open(-1, cpu);
     std::string buffer_name = absl::StrFormat("mmap_task_%u", cpu);
     PerfEventRingBuffer mmap_task_ring_buffer{
-        mmap_task_fd, BIG_RING_BUFFER_SIZE_KB, buffer_name};
+        mmap_task_fd, MMAP_TASK_RING_BUFFER_SIZE_KB, buffer_name};
     if (mmap_task_ring_buffer.IsOpen()) {
       tracing_fds_.push_back(mmap_task_fd);
       ring_buffers_.push_back(std::move(mmap_task_ring_buffer));
@@ -252,7 +252,7 @@ void TracerThread::Run(
       int sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
       std::string buffer_name = absl::StrFormat("sampling_%u", cpu);
       PerfEventRingBuffer sampling_ring_buffer{
-          sampling_fd, BIG_RING_BUFFER_SIZE_KB, buffer_name};
+          sampling_fd, SAMPLING_RING_BUFFER_SIZE_KB, buffer_name};
       if (sampling_ring_buffer.IsOpen()) {
         tracing_fds_.push_back(sampling_fd);
         ring_buffers_.push_back(std::move(sampling_ring_buffer));
