@@ -103,9 +103,9 @@ void LinuxTracingHandler::OnCallstack(
 
     if (!frame.GetFunctionName().empty() &&
         !target_process_->HasSymbol(address)) {
-      std::string symbol_name = absl::StrFormat(
-          "%s+%#x", llvm::demangle(frame.GetFunctionName()),
-          frame.GetFunctionOffset());
+      std::string symbol_name =
+          absl::StrFormat("%s+%#x", llvm::demangle(frame.GetFunctionName()),
+                          frame.GetFunctionOffset());
       std::shared_ptr<LinuxSymbol> symbol = std::make_shared<LinuxSymbol>();
       symbol->m_Module = frame.GetMapName();
       symbol->m_Name = symbol_name;
@@ -115,7 +115,6 @@ void LinuxTracingHandler::OnCallstack(
       std::string message_data = SerializeObjectBinary(*symbol);
       GTcpServer->Send(Msg_RemoteSymbol, message_data.c_str(),
                        message_data.size());
-
 
       target_process_->AddSymbol(address, symbol);
     }

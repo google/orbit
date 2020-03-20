@@ -28,7 +28,7 @@ perf_event_attr generic_event_attr() {
   pe.sample_stack_user = SAMPLE_STACK_USER_SIZE;
   pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
 
-  pe.sample_type = SAMPLE_TYPE_TID_TIME_CPU;
+  pe.sample_type = SAMPLE_TYPE_TID_TIME_STREAMID_CPU;
 
   return pe;
 }

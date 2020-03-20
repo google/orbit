@@ -54,10 +54,11 @@ inline void perf_event_redirect(int from_fd, int to_fd) {
   }
 }
 
-// This must be in sync with struct perf_event_sample_id_tid_time_cpu in
-// PerfEventRecords.h.
-static constexpr uint64_t SAMPLE_TYPE_TID_TIME_CPU =
-    PERF_SAMPLE_TID | PERF_SAMPLE_TIME | PERF_SAMPLE_CPU;
+// This must be in sync with struct perf_event_sample_id_tid_time_streamid_cpu
+// in PerfEventRecords.h.
+static constexpr uint64_t SAMPLE_TYPE_TID_TIME_STREAMID_CPU =
+    PERF_SAMPLE_TID | PERF_SAMPLE_TIME | PERF_SAMPLE_STREAM_ID |
+    PERF_SAMPLE_CPU;
 
 // Sample all registers: they might all be necessary for DWARF-based stack
 // unwinding.
