@@ -12,6 +12,7 @@
 
 #include <cerrno>
 #include <cstdint>
+#include <cstring>
 #include <ctime>
 
 inline int perf_event_open(struct perf_event_attr* attr, pid_t pid, int cpu,
@@ -24,14 +25,14 @@ namespace LinuxTracing {
 inline void perf_event_reset(int file_descriptor) {
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_RESET, 0);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_RESET: %d", ret);
+    ERROR("PERF_EVENT_IOC_RESET: %s", strerror(errno));
   }
 }
 
 inline void perf_event_enable(int file_descriptor) {
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_ENABLE, 0);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_ENABLE: %d", ret);
+    ERROR("PERF_EVENT_IOC_ENABLE: %s", strerror(errno));
   }
 }
 
@@ -43,15 +44,25 @@ inline void perf_event_reset_and_enable(int file_descriptor) {
 inline void perf_event_disable(int file_descriptor) {
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_DISABLE, 0);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_DISABLE: %d", ret);
+    ERROR("PERF_EVENT_IOC_DISABLE: %s", strerror(errno));
   }
 }
 
 inline void perf_event_redirect(int from_fd, int to_fd) {
   int ret = ioctl(from_fd, PERF_EVENT_IOC_SET_OUTPUT, to_fd);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_SET_OUTPUT: %d\n", ret);
+    ERROR("PERF_EVENT_IOC_SET_OUTPUT: %s", strerror(errno));
   }
+}
+
+inline uint64_t perf_event_get_id(int file_descriptor) {
+  uint64_t id;
+  int ret = ioctl(file_descriptor, PERF_EVENT_IOC_ID, &id);
+  if (ret != 0) {
+    ERROR("PERF_EVENT_IOC_ID: %s", strerror(errno));
+    return 0;
+  }
+  return id;
 }
 
 // This must be in sync with struct perf_event_sample_id_tid_time_streamid_cpu
