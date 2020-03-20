@@ -29,16 +29,20 @@ void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
 
   // Duplicate uprobe detection.
   uint64_t uprobe_sp = event->GetRegisters()[PERF_REG_X86_SP];
-  std::vector<uint64_t>& uprobe_sps = uprobe_sps_per_thread_[event->GetTid()];
-  if (!uprobe_sps.empty()) {
-    uint64_t last_uprobe_sp = uprobe_sps.back();
-    uprobe_sps.pop_back();
-    if (uprobe_sp >= last_uprobe_sp) {
+  uint64_t uprobe_ip = event->GetRegisters()[PERF_REG_X86_IP];
+  std::vector<std::pair<uint64_t, uint64_t>>& uprobe_sps_ips =
+      uprobe_sps_ips_per_thread_[event->GetTid()];
+  if (!uprobe_sps_ips.empty()) {
+    uint64_t last_uprobe_sp = uprobe_sps_ips.back().first;
+    uint64_t last_uprobe_ip = uprobe_sps_ips.back().second;
+    uprobe_sps_ips.pop_back();
+    if ((uprobe_sp > last_uprobe_sp) ||
+        (uprobe_sp == last_uprobe_sp && uprobe_ip == last_uprobe_ip)) {
       ERROR("MISSING URETPROBE OR DUPLICATE UPROBE DETECTED");
       return;
     }
   }
-  uprobe_sps.push_back(uprobe_sp);
+  uprobe_sps_ips.emplace_back(uprobe_sp, uprobe_ip);
 
   function_call_manager_.ProcessUprobes(event->GetTid(),
                                         event->GetFunction()->VirtualAddress(),
@@ -54,9 +58,10 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
   CHECK(listener_ != nullptr);
 
   // Duplicate uprobe detection.
-  std::vector<uint64_t>& uprobe_sps = uprobe_sps_per_thread_[event->GetTid()];
-  if (!uprobe_sps.empty()) {
-    uprobe_sps.pop_back();
+  std::vector<std::pair<uint64_t, uint64_t>>& uprobe_sps_ips =
+      uprobe_sps_ips_per_thread_[event->GetTid()];
+  if (!uprobe_sps_ips.empty()) {
+    uprobe_sps_ips.pop_back();
   }
 
   std::optional<FunctionCall> function_call =
