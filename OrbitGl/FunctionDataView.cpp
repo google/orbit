@@ -11,9 +11,7 @@
 #include "OrbitProcess.h"
 #include "OrbitType.h"
 #include "Pdb.h"
-#ifndef NOGL
 #include "RuleEditor.h"
-#endif
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------

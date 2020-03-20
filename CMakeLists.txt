@@ -104,11 +104,11 @@ endif()
 
 add_subdirectory(OrbitBase)
 add_subdirectory(OrbitCore)
-add_subdirectory(OrbitGl)
 add_subdirectory(OrbitService)
 add_subdirectory(OrbitTest)
 
 if(WITH_GUI)
+  add_subdirectory(OrbitGl)
   add_subdirectory(OrbitQt)
 endif()
 
