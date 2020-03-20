@@ -144,71 +144,91 @@ void TracerThread::Run(
       std::move(uprobes_unwinding_visitor));
 
   if (trace_instrumented_functions_) {
+    absl::flat_hash_map<int32_t, int> uprobes_ring_buffer_fds_per_cpu;
+
     for (const auto& function : instrumented_functions_) {
-      std::vector<int> function_uprobes_fds;
-      std::vector<int> function_uretprobes_fds;
-      std::vector<PerfEventRingBuffer> function_uprobes_ring_buffers;
+      absl::flat_hash_map<int32_t, int> function_uprobes_fds_per_cpu;
+      absl::flat_hash_map<int32_t, int> function_uretprobes_fds_per_cpu;
       bool function_uprobes_open_error = false;
 
       for (int32_t cpu : cpuset_cpus) {
         int uprobes_fd = uprobes_stack_event_open(
             function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
-        std::string buffer_name = absl::StrFormat(
-            "uprobe_retprobe_%#016lx_%u", function.VirtualAddress(), cpu);
-        PerfEventRingBuffer uprobes_ring_buffer{
-            uprobes_fd, BIG_RING_BUFFER_SIZE_KB, buffer_name};
-        if (uprobes_ring_buffer.IsOpen()) {
-          function_uprobes_fds.push_back(uprobes_fd);
-          function_uprobes_ring_buffers.push_back(
-              std::move(uprobes_ring_buffer));
-        } else {
+        if (uprobes_fd < 0) {
           function_uprobes_open_error = true;
-          perf_event_open_errors = true;
-          uprobes_event_open_errors = true;
           break;
         }
+        function_uprobes_fds_per_cpu.emplace(cpu, uprobes_fd);
 
         int uretprobes_fd = uretprobes_event_open(
             function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
-        if (uretprobes_fd >= 0) {
-          function_uretprobes_fds.push_back(uretprobes_fd);
-        } else {
+        if (uretprobes_fd < 0) {
           function_uprobes_open_error = true;
-          perf_event_open_errors = true;
-          uprobes_event_open_errors = true;
           break;
         }
-
-        // Redirect uretprobes to the uprobes ring buffer to reduce number of
-        // ring buffers and to coalesce closely related events.
-        perf_event_redirect(uretprobes_fd, uprobes_fd);
+        function_uretprobes_fds_per_cpu.emplace(cpu, uretprobes_fd);
       }
 
       if (function_uprobes_open_error) {
+        perf_event_open_errors = true;
+        uprobes_event_open_errors = true;
         ERROR("Opening u(ret)probes for function at %#016lx",
               function.VirtualAddress());
-        function_uprobes_ring_buffers.clear();
-        for (int uprobes_fd : function_uprobes_fds) {
-          close(uprobes_fd);
+        for (const auto& uprobes_fd : function_uprobes_fds_per_cpu) {
+          close(uprobes_fd.second);
         }
-        for (int uretprobes_fd : function_uretprobes_fds) {
-          close(uretprobes_fd);
+        for (const auto& uretprobes_fd : function_uretprobes_fds_per_cpu) {
+          close(uretprobes_fd.second);
         }
-      } else {
-        // Add function_uretprobes_fds to tracing_fds_ before
-        // function_uprobes_fds. As we support having uretprobes without
-        // associated uprobes, but not the opposite, this way the uretprobe is
-        // enabled before the uprobe.
-        tracing_fds_.insert(tracing_fds_.end(), function_uretprobes_fds.begin(),
-                            function_uretprobes_fds.end());
-        tracing_fds_.insert(tracing_fds_.end(), function_uprobes_fds.begin(),
-                            function_uprobes_fds.end());
-        for (PerfEventRingBuffer& uprobes_ring_buffer :
-             function_uprobes_ring_buffers) {
-          ring_buffers_.emplace_back(std::move(uprobes_ring_buffer));
-        }
-        for (int uprobes_fd : function_uprobes_fds) {
-          uprobes_fds_to_function_.emplace(uprobes_fd, &function);
+        continue;
+      }
+
+      // Add function_uretprobes_fds_per_cpu to tracing_fds_ before
+      // function_uprobes_fds_per_cpu. As we support having uretprobes without
+      // associated uprobes, but not the opposite, this way the uretprobe is
+      // enabled before the uprobe.
+      for (const auto& uretprobes_fd : function_uretprobes_fds_per_cpu) {
+        tracing_fds_.push_back(uretprobes_fd.second);
+      }
+      for (const auto& uprobes_fd : function_uprobes_fds_per_cpu) {
+        tracing_fds_.push_back(uprobes_fd.second);
+      }
+
+      // Record the association between the stream_id and the function.
+      for (const auto& uprobes_fd : function_uprobes_fds_per_cpu) {
+        uprobes_ids_to_function_.emplace(perf_event_get_id(uprobes_fd.second),
+                                         &function);
+      }
+      for (const auto& uretprobes_fd : function_uretprobes_fds_per_cpu) {
+        uprobes_ids_to_function_.emplace(
+            perf_event_get_id(uretprobes_fd.second), &function);
+      }
+
+      // Redirect all uprobes and uretprobes on the same cpu to a single ring
+      // buffer to reduce the number of ring buffers.
+      for (int32_t cpu : cpuset_cpus) {
+        int uprobes_fd = function_uprobes_fds_per_cpu.at(cpu);
+        int uretprobes_fd = function_uretprobes_fds_per_cpu.at(cpu);
+        if (uprobes_ring_buffer_fds_per_cpu.contains(cpu)) {
+          // Redirect to the already opened ring buffer.
+          int ring_buffer_fd = uprobes_ring_buffer_fds_per_cpu.at(cpu);
+          perf_event_redirect(uprobes_fd, ring_buffer_fd);
+          perf_event_redirect(uretprobes_fd, ring_buffer_fd);
+        } else {
+          // No ring buffer has yet been created for this cpu, as this is the
+          // first uprobes to have been opened successfully. Hence, create a
+          // ring buffer for this cpu associated to uprobes_fd and redirect the
+          // uretprobes to it. The other uprobes and uretprobes for this cpu
+          // will be redirected to this ring buffer.
+          int ring_buffer_fd = uprobes_fd;
+          std::string buffer_name =
+              absl::StrFormat("uprobes_uretprobes_%u", cpu);
+          ring_buffers_.emplace_back(ring_buffer_fd, BIG_RING_BUFFER_SIZE_KB,
+                                     buffer_name);
+          uprobes_ring_buffer_fds_per_cpu[cpu] = ring_buffer_fd;
+          uprobes_fds_.emplace(ring_buffer_fd);
+          // Must be called after the ring buffer has been opened.
+          perf_event_redirect(uretprobes_fd, ring_buffer_fd);
         }
       }
     }
@@ -459,7 +479,7 @@ void TracerThread::ProcessMmapEvent(const perf_event_header& header,
 void TracerThread::ProcessSampleEvent(const perf_event_header& header,
                                       PerfEventRingBuffer* ring_buffer) {
   int fd = ring_buffer->GetFileDescriptor();
-  bool is_probe = uprobes_fds_to_function_.contains(fd);
+  bool is_probe = uprobes_fds_.contains(fd);
   bool is_gpu_event = gpu_tracing_fds_.contains(fd);
 
   // An event can never be a probe and a GPU event.
@@ -487,7 +507,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   if (is_uprobe) {
     auto event =
         ConsumeSamplePerfEvent<UprobesWithStackPerfEvent>(ring_buffer, header);
-    event->SetFunction(uprobes_fds_to_function_.at(fd));
+    event->SetFunction(uprobes_ids_to_function_.at(event->GetStreamId()));
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
@@ -495,7 +515,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   } else if (is_uretprobe) {
     auto event = make_unique_for_overwrite<UretprobesPerfEvent>();
     ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    event->SetFunction(uprobes_fds_to_function_.at(fd));
+    event->SetFunction(uprobes_ids_to_function_.at(event->GetStreamId()));
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
@@ -556,7 +576,8 @@ void TracerThread::ProcessDeferredEvents() {
 void TracerThread::Reset() {
   tracing_fds_.clear();
   ring_buffers_.clear();
-  uprobes_fds_to_function_.clear();
+  uprobes_fds_.clear();
+  uprobes_ids_to_function_.clear();
   gpu_tracing_fds_.clear();
   deferred_events_.clear();
   stop_deferred_thread_ = false;
