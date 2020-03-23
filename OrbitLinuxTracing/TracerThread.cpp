@@ -10,6 +10,57 @@
 
 namespace LinuxTracing {
 
+bool TracerThread::OpenRingBufferForGpuTracepoint(
+    const char* tracepoint_category, const char* tracepoint_name, int32_t cpu) {
+  int fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
+  if (fd == -1) {
+    return false;
+  }
+  std::string buffer_name =
+      absl::StrFormat("%s:%s events", tracepoint_category, tracepoint_name);
+  PerfEventRingBuffer ring_buffer{fd, SMALL_RING_BUFFER_SIZE_KB, buffer_name};
+  if (!ring_buffer.IsOpen()) {
+    return false;
+  }
+  ring_buffers_.push_back(std::move(ring_buffer));
+
+  gpu_tracing_fds_.emplace(fd);
+  tracing_fds_.push_back(fd);
+
+  return true;
+}
+
+// This method enables events for GPU event tracing. We trace three events that
+// correspond to the following GPU driver events:
+// - A GPU job (command buffer submission) is scheduled by the application. This
+//   is tracked by the event "amdgpu_cs_ioctl".
+// - A GPU job is scheduled to run on the hardware. This is tracked by the event
+//   "amdgpu_sched_run_job".
+// - A GPU job is finished by the hardware. This is tracked by the corresponding
+//   DMA fence being signaled and is tracked by the event "dma_fence_signaled.
+// A single job execution thus correponds to three events, one of each type
+// above, that share the same timeline, context, and seqno.
+// We have to record events system-wide (per CPU) to ensure we record all
+// relevant events.
+// This method returns true on success, otherwise false.
+bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
+  for (int32_t cpu : cpus) {
+    if (!OpenRingBufferForGpuTracepoint("amdgpu", "amdgpu_cs_ioctl", cpu)) {
+      return false;
+    }
+    if (!OpenRingBufferForGpuTracepoint("amdgpu", "amdgpu_sched_run_job",
+                                        cpu)) {
+      return false;
+    }
+    if (!OpenRingBufferForGpuTracepoint("dma_fence", "dma_fence_signaled",
+                                        cpu)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // TODO: Refactor this huge method.
 void TracerThread::Run(
     const std::shared_ptr<std::atomic<bool>>& exit_requested) {
@@ -158,6 +209,11 @@ void TracerThread::Run(
         perf_event_open_errors = true;
       }
     }
+  }
+
+  if (trace_gpu_driver_events_) {
+    // We want to trace all GPU activity, hence we pass 'all_cpus' here.
+    perf_event_open_errors = !OpenGpuTracepoints(all_cpus);
   }
 
   if (uprobes_event_open_errors) {
@@ -368,6 +424,11 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
                                       PerfEventRingBuffer* ring_buffer) {
   int fd = ring_buffer->GetFileDescriptor();
   bool is_probe = uprobes_fds_to_function_.count(fd) > 0;
+  bool is_gpu_event = gpu_tracing_fds_.count(fd) > 0;
+
+  // An event can never be a probe and a GPU event.
+  assert(!(is_probe && is_gpu_event));
+
   constexpr size_t size_of_uretprobe = sizeof(perf_event_empty_sample);
   bool is_uretprobe = is_probe && (header.size == size_of_uretprobe);
   bool is_uprobe = is_probe && !is_uretprobe;
@@ -379,7 +440,10 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     pid = ReadSampleRecordPid(ring_buffer);
   }
 
-  if (pid != pid_) {
+  // We skip this sample if it is not an event of the currently selected
+  // process, unless it is a GPU tracepoint event as we want to have
+  // visibility into all GPU activity across the system.
+  if (pid != pid_ && !is_gpu_event) {
     ring_buffer->SkipRecord(header);
     return;
   }
@@ -400,6 +464,8 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
 
+  } else if (is_gpu_event) {
+    LOG("Received GPU event");
   } else {
     auto event =
         ConsumeSamplePerfEvent<StackSamplePerfEvent>(ring_buffer, header);
@@ -453,6 +519,7 @@ void TracerThread::ProcessDeferredEvents() {
 void TracerThread::Reset() {
   tracing_fds_.clear();
   ring_buffers_.clear();
+  gpu_tracing_fds_.clear();
   uprobes_fds_to_function_.clear();
   deferred_events_.clear();
   stop_deferred_thread_ = false;

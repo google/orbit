@@ -20,6 +20,7 @@
 #include "PerfEventRingBuffer.h"
 #include "Utils.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 
 namespace LinuxTracing {
 
@@ -53,6 +54,11 @@ class TracerThread {
   void Run(const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
  private:
+  bool OpenRingBufferForGpuTracepoint(const char* tracepoint_category,
+                                      const char* tracepoint_name, int32_t cpu);
+
+  bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
+
   void ProcessContextSwitchEvent(const perf_event_header& header,
                                  PerfEventRingBuffer* ring_buffer);
   void ProcessContextSwitchCpuWideEvent(const perf_event_header& header,
@@ -94,10 +100,12 @@ class TracerThread {
   bool trace_context_switches_ = true;
   bool trace_callstacks_ = true;
   bool trace_instrumented_functions_ = true;
+  bool trace_gpu_driver_events_ = false;
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
   absl::flat_hash_map<int, const Function*> uprobes_fds_to_function_;
+  absl::flat_hash_set<int> gpu_tracing_fds_;
 
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
