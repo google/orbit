@@ -463,7 +463,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   bool is_gpu_event = gpu_tracing_fds_.contains(fd);
 
   // An event can never be a probe and a GPU event.
-  assert(!(is_probe && is_gpu_event));
+  CHECK(!(is_probe && is_gpu_event));
 
   constexpr size_t size_of_uretprobe = sizeof(perf_event_empty_sample);
   bool is_uretprobe = is_probe && (header.size == size_of_uretprobe);
