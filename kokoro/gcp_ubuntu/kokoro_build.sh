@@ -18,7 +18,7 @@ set -e
 # in the job configuration.
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../" >/dev/null 2>&1 && pwd )"
 echo "Installing conan configuration (profiles, settings, etc.)..."
-conan config install $DIR/contrib/conan/config || exit $?
+conan config install $DIR/contrib/conan/configs/linux || exit $?
 
 cd ${KOKORO_ARTIFACTS_DIR}/github/orbitprofiler
 $DIR/build.sh clang7_release || exit $?

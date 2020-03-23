@@ -3,7 +3,7 @@
 :: in the job configuration
 SET REPO_ROOT=%KOKORO_ARTIFACTS_DIR%\github\orbitprofiler
 
-conan config install %REPO_ROOT%\contrib\conan\config
+conan config install %REPO_ROOT%\contrib\conan\configs\windows
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 cd %KOKORO_ARTIFACTS_DIR%\github\orbitprofiler
