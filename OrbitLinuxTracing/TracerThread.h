@@ -54,10 +54,12 @@ class TracerThread {
   void Run(const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
  private:
-  bool OpenRingBufferForGpuTracepoint(const char* tracepoint_category,
-                                      const char* tracepoint_name, int32_t cpu);
+  bool OpenRingBufferForGpuTracepoint(
+      const char* tracepoint_category, const char* tracepoint_name, int32_t cpu,
+      std::vector<PerfEventRingBuffer>* ring_buffers);
 
   bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
+  void CleanupGpuTracepoints();
 
   void ProcessContextSwitchEvent(const perf_event_header& header,
                                  PerfEventRingBuffer* ring_buffer);
@@ -118,6 +120,7 @@ class TracerThread {
     uint64_t sched_switch_count = 0;
     uint64_t sample_count = 0;
     uint64_t uprobes_count = 0;
+    uint64_t gpu_events_count = 0;
     uint64_t lost_count = 0;
     absl::flat_hash_map<PerfEventRingBuffer*, uint64_t> lost_count_per_buffer{};
   };
