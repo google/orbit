@@ -8,6 +8,7 @@
 
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
+#include "absl/strings/numbers.h"
 
 namespace LinuxTracing {
 
@@ -156,6 +157,25 @@ std::vector<int> GetCpusetCpus(pid_t pid) {
   }
 
   return ParseCpusetCpus(cpuset_cpus_content_opt.value());
+}
+
+int GetTracepointId(const char* tracepoint_category,
+                    const char* tracepoint_name) {
+  std::string filename =
+      absl::StrFormat("/sys/kernel/debug/tracing/events/%s/%s/id",
+                      tracepoint_category, tracepoint_name);
+
+  std::optional<std::string> file_content = ReadFile(filename);
+  if (!file_content.has_value()) {
+    return -1;
+  }
+  int tp_id = -1;
+  if (!absl::SimpleAtoi(file_content.value(), &tp_id)) {
+    ERROR("Error parsing tracepoint id for: %s:%s", tracepoint_category,
+          tracepoint_name);
+    return -1;
+  }
+  return tp_id;
 }
 
 }  // namespace LinuxTracing

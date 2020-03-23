@@ -1,10 +1,15 @@
 #include "PerfEventOpen.h"
 
 #include <OrbitBase/Logging.h>
+#include <OrbitLinuxTracing/Function.h>
 #include <linux/perf_event.h>
 
 #include <cerrno>
 #include <cstring>
+#include <fstream>
+
+#include "absl/strings/numbers.h"
+#include "Utils.h"
 
 namespace LinuxTracing {
 namespace {
@@ -114,6 +119,17 @@ void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length) {
   }
 
   return mmap_ret;
+}
+
+int tracepoint_event_open(const char* tracepoint_category,
+                          const char* tracepoint_name, pid_t pid, int32_t cpu) {
+  int tp_id = GetTracepointId(tracepoint_category, tracepoint_name);
+  perf_event_attr pe = generic_event_attr();
+  pe.type = PERF_TYPE_TRACEPOINT;
+  pe.config = tp_id;
+  pe.sample_type |= PERF_SAMPLE_RAW;
+
+  return generic_event_open(&pe, pid, cpu);
 }
 
 }  // namespace LinuxTracing

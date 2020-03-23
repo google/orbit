@@ -106,6 +106,13 @@ int uretprobes_event_open(const char* module, uint64_t function_offset,
 // Create the ring buffer to use perf_event_open in sampled mode.
 void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length);
 
+// perf_event_open for tracepoint events. This opens a perf event for the
+// tracepoint given by the category (for example, "sched") and the name
+// (for example, "sched_waking"). Returns the file descriptor for the
+// perf event or -1 in case of any errors.
+int tracepoint_event_open(const char* tracepoint_category,
+                          const char* tracepoint_name, pid_t pid, int32_t cpu);
+
 }  // namespace LinuxTracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_OPEN_H_

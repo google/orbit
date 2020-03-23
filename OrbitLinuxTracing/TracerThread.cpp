@@ -10,6 +10,88 @@
 
 namespace LinuxTracing {
 
+namespace {
+
+void CloseFileDescriptors(const std::vector<int>& fds) {
+  for (int fd : fds) {
+    close(fd);
+  }
+}
+
+}  // namespace
+
+bool TracerThread::OpenRingBufferForGpuTracepoint(
+    const char* tracepoint_category, const char* tracepoint_name, int32_t cpu,
+    std::vector<int>* gpu_tracing_fds,
+    std::vector<PerfEventRingBuffer>* ring_buffers) {
+  int fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
+  if (fd == -1) {
+    return false;
+  }
+  gpu_tracing_fds->push_back(fd);
+
+  std::string buffer_name =
+      absl::StrFormat("%s:%s_%i", tracepoint_category, tracepoint_name, cpu);
+  PerfEventRingBuffer ring_buffer{fd, SMALL_RING_BUFFER_SIZE_KB, buffer_name};
+  if (!ring_buffer.IsOpen()) {
+    return false;
+  }
+  ring_buffers->push_back(std::move(ring_buffer));
+
+  return true;
+}
+
+// This method enables events for GPU event tracing. We trace three events that
+// correspond to the following GPU driver events:
+// - A GPU job (command buffer submission) is scheduled by the application. This
+//   is tracked by the event "amdgpu_cs_ioctl".
+// - A GPU job is scheduled to run on the hardware. This is tracked by the event
+//   "amdgpu_sched_run_job".
+// - A GPU job is finished by the hardware. This is tracked by the corresponding
+//   DMA fence being signaled and is tracked by the event "dma_fence_signaled".
+// A single job execution thus correponds to three events, one of each type
+// above, that share the same timeline, context, and seqno.
+// We have to record events system-wide (per CPU) to ensure we record all
+// relevant events.
+// This method returns true on success, otherwise false.
+bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
+  std::vector<PerfEventRingBuffer> ring_buffers;
+  std::vector<int> gpu_tracing_fds;
+  for (int32_t cpu : cpus) {
+    if (!OpenRingBufferForGpuTracepoint(
+            "amdgpu", "amdgpu_cs_ioctl", cpu,
+            &gpu_tracing_fds, &ring_buffers)) {
+      CloseFileDescriptors(gpu_tracing_fds);
+      return false;
+    }
+    if (!OpenRingBufferForGpuTracepoint(
+            "amdgpu", "amdgpu_sched_run_job", cpu,
+            &gpu_tracing_fds, &ring_buffers)) {
+      CloseFileDescriptors(gpu_tracing_fds);
+      return false;
+    }
+    if (!OpenRingBufferForGpuTracepoint(
+            "dma_fence", "dma_fence_signaled", cpu,
+            &gpu_tracing_fds, &ring_buffers)) {
+      CloseFileDescriptors(gpu_tracing_fds);
+      return false;
+    }
+  }
+
+  // Since all tracepoints could successfully be opened, we can now
+  // commit all file descriptors and ring buffers to the TracerThread
+  // members.
+  for (int fd : gpu_tracing_fds) {
+    gpu_tracing_fds_.emplace(fd);
+    tracing_fds_.push_back(fd);
+  }
+  for (PerfEventRingBuffer& buffer : ring_buffers) {
+    ring_buffers_.emplace_back(std::move(buffer));
+  }
+
+  return true;
+}
+
 // TODO: Refactor this huge method.
 void TracerThread::Run(
     const std::shared_ptr<std::atomic<bool>>& exit_requested) {
@@ -158,6 +240,16 @@ void TracerThread::Run(
         perf_event_open_errors = true;
       }
     }
+  }
+
+  bool gpu_event_open_errors = false;
+  if (trace_gpu_driver_events_) {
+    // We want to trace all GPU activity, hence we pass 'all_cpus' here.
+    gpu_event_open_errors = !OpenGpuTracepoints(all_cpus);
+  }
+
+  if (gpu_event_open_errors) {
+    LOG("There were errors opening GPU tracepoint events.");
   }
 
   if (uprobes_event_open_errors) {
@@ -367,7 +459,12 @@ void TracerThread::ProcessMmapEvent(const perf_event_header& header,
 void TracerThread::ProcessSampleEvent(const perf_event_header& header,
                                       PerfEventRingBuffer* ring_buffer) {
   int fd = ring_buffer->GetFileDescriptor();
-  bool is_probe = uprobes_fds_to_function_.count(fd) > 0;
+  bool is_probe = uprobes_fds_to_function_.contains(fd);
+  bool is_gpu_event = gpu_tracing_fds_.contains(fd);
+
+  // An event can never be a probe and a GPU event.
+  assert(!(is_probe && is_gpu_event));
+
   constexpr size_t size_of_uretprobe = sizeof(perf_event_empty_sample);
   bool is_uretprobe = is_probe && (header.size == size_of_uretprobe);
   bool is_uprobe = is_probe && !is_uretprobe;
@@ -379,7 +476,10 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     pid = ReadSampleRecordPid(ring_buffer);
   }
 
-  if (pid != pid_) {
+  // We skip this sample if it is not an event of the currently selected
+  // process, unless it is a GPU tracepoint event as we want to have
+  // visibility into all GPU activity across the system.
+  if (pid != pid_ && !is_gpu_event) {
     ring_buffer->SkipRecord(header);
     return;
   }
@@ -400,6 +500,9 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
 
+  } else if (is_gpu_event) {
+    LOG("Received GPU event.");
+    ++stats_.gpu_events_count;
   } else {
     auto event =
         ConsumeSamplePerfEvent<StackSamplePerfEvent>(ring_buffer, header);
@@ -454,6 +557,7 @@ void TracerThread::Reset() {
   tracing_fds_.clear();
   ring_buffers_.clear();
   uprobes_fds_to_function_.clear();
+  gpu_tracing_fds_.clear();
   deferred_events_.clear();
   stop_deferred_thread_ = false;
 }
@@ -469,6 +573,7 @@ void TracerThread::PrintStatsIfTimerElapsed() {
     LOG("  sched switches: %.0f", stats_.sched_switch_count / actual_window_s);
     LOG("  samples: %.0f", stats_.sample_count / actual_window_s);
     LOG("  u(ret)probes: %.0f", stats_.uprobes_count / actual_window_s);
+    LOG("  gpu events: %.0f", stats_.gpu_events_count / actual_window_s);
     LOG("  lost: %.0f, of which:", stats_.lost_count / actual_window_s);
     for (const auto& lost_from_buffer : stats_.lost_count_per_buffer) {
       LOG("    from %s: %.0f", lost_from_buffer.first->GetName().c_str(),
