@@ -2,6 +2,7 @@
 #define ORBIT_LINUX_TRACING_PERF_EVENT_OPEN_H_
 
 #include <OrbitBase/Logging.h>
+#include <OrbitBase/SafeStrerror.h>
 #include <asm/perf_regs.h>
 #include <asm/unistd.h>
 #include <linux/perf_event.h>
@@ -25,14 +26,14 @@ namespace LinuxTracing {
 inline void perf_event_reset(int file_descriptor) {
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_RESET, 0);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_RESET: %s", strerror(errno));
+    ERROR("PERF_EVENT_IOC_RESET: %s", SafeStrerror(errno));
   }
 }
 
 inline void perf_event_enable(int file_descriptor) {
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_ENABLE, 0);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_ENABLE: %s", strerror(errno));
+    ERROR("PERF_EVENT_IOC_ENABLE: %s", SafeStrerror(errno));
   }
 }
 
@@ -44,14 +45,14 @@ inline void perf_event_reset_and_enable(int file_descriptor) {
 inline void perf_event_disable(int file_descriptor) {
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_DISABLE, 0);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_DISABLE: %s", strerror(errno));
+    ERROR("PERF_EVENT_IOC_DISABLE: %s", SafeStrerror(errno));
   }
 }
 
 inline void perf_event_redirect(int from_fd, int to_fd) {
   int ret = ioctl(from_fd, PERF_EVENT_IOC_SET_OUTPUT, to_fd);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_SET_OUTPUT: %s", strerror(errno));
+    ERROR("PERF_EVENT_IOC_SET_OUTPUT: %s", SafeStrerror(errno));
   }
 }
 
@@ -59,7 +60,7 @@ inline uint64_t perf_event_get_id(int file_descriptor) {
   uint64_t id;
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_ID, &id);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_ID: %s", strerror(errno));
+    ERROR("PERF_EVENT_IOC_ID: %s", SafeStrerror(errno));
     return 0;
   }
   return id;

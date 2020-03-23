@@ -2,17 +2,26 @@ cmake_minimum_required(VERSION 3.15)
 
 project(OrbitBase)
 
-add_library(OrbitBase INTERFACE)
+add_library(OrbitBase STATIC)
 
-target_compile_features(OrbitBase INTERFACE cxx_std_17)
+target_compile_options(OrbitBase PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_include_directories(OrbitBase INTERFACE
+target_compile_features(OrbitBase PUBLIC cxx_std_17)
+
+target_include_directories(OrbitBase PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
-target_sources(OrbitBase INTERFACE
-        include/OrbitBase/Logging.h)
+target_include_directories(OrbitBase PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR})
 
-target_link_libraries(OrbitBase INTERFACE
+target_sources(OrbitBase PRIVATE
+        include/OrbitBase/Logging.h
+        include/OrbitBase/SafeStrerror.h)
+
+target_sources(OrbitBase PRIVATE
+        SafeStrerror.cpp)
+
+target_link_libraries(OrbitBase PUBLIC
         abseil::abseil
         std::filesystem)
 
