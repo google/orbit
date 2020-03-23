@@ -56,6 +56,7 @@ class TracerThread {
  private:
   bool OpenRingBufferForGpuTracepoint(
       const char* tracepoint_category, const char* tracepoint_name, int32_t cpu,
+      std::vector<int>* gpu_tracing_fds,
       std::vector<PerfEventRingBuffer>* ring_buffers);
 
   bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
@@ -102,7 +103,7 @@ class TracerThread {
   bool trace_context_switches_ = true;
   bool trace_callstacks_ = true;
   bool trace_instrumented_functions_ = true;
-  bool trace_gpu_driver_events_ = true;
+  bool trace_gpu_driver_events_ = false;
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
