@@ -1,10 +1,10 @@
 #include "PerfEventRingBuffer.h"
 
 #include <OrbitBase/Logging.h>
+#include <OrbitBase/SafeStrerror.h>
 #include <linux/perf_event.h>
 #include <sys/mman.h>
 
-#include <cstring>
 #include <utility>
 
 #include "PerfEventOpen.h"
@@ -94,7 +94,7 @@ PerfEventRingBuffer::~PerfEventRingBuffer() {
   if (metadata_page_ != nullptr) {
     int munmap_ret = munmap(metadata_page_, mmap_length_);
     if (munmap_ret != 0) {
-      ERROR("munmap: %s", strerror(errno));
+      ERROR("munmap: %s", SafeStrerror(errno));
     }
   }
 }

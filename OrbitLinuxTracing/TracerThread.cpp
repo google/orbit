@@ -32,7 +32,8 @@ bool TracerThread::OpenRingBufferForGpuTracepoint(
 
   std::string buffer_name =
       absl::StrFormat("%s:%s_%i", tracepoint_category, tracepoint_name, cpu);
-  PerfEventRingBuffer ring_buffer{fd, GPU_TRACING_RING_BUFFER_SIZE_KB, buffer_name};
+  PerfEventRingBuffer ring_buffer{fd, GPU_TRACING_RING_BUFFER_SIZE_KB,
+                                  buffer_name};
   if (!ring_buffer.IsOpen()) {
     return false;
   }
@@ -58,29 +59,25 @@ bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
   std::vector<PerfEventRingBuffer> ring_buffers;
   std::vector<int> gpu_tracing_fds;
   for (int32_t cpu : cpus) {
-    if (!OpenRingBufferForGpuTracepoint(
-            "amdgpu", "amdgpu_cs_ioctl", cpu,
-            &gpu_tracing_fds, &ring_buffers)) {
+    if (!OpenRingBufferForGpuTracepoint("amdgpu", "amdgpu_cs_ioctl", cpu,
+                                        &gpu_tracing_fds, &ring_buffers)) {
       CloseFileDescriptors(gpu_tracing_fds);
       return false;
     }
-    if (!OpenRingBufferForGpuTracepoint(
-            "amdgpu", "amdgpu_sched_run_job", cpu,
-            &gpu_tracing_fds, &ring_buffers)) {
+    if (!OpenRingBufferForGpuTracepoint("amdgpu", "amdgpu_sched_run_job", cpu,
+                                        &gpu_tracing_fds, &ring_buffers)) {
       CloseFileDescriptors(gpu_tracing_fds);
       return false;
     }
-    if (!OpenRingBufferForGpuTracepoint(
-            "dma_fence", "dma_fence_signaled", cpu,
-            &gpu_tracing_fds, &ring_buffers)) {
+    if (!OpenRingBufferForGpuTracepoint("dma_fence", "dma_fence_signaled", cpu,
+                                        &gpu_tracing_fds, &ring_buffers)) {
       CloseFileDescriptors(gpu_tracing_fds);
       return false;
     }
   }
 
-  // Since all tracepoints could successfully be opened, we can now
-  // commit all file descriptors and ring buffers to the TracerThread
-  // members.
+  // Since all tracepoints could successfully be opened, we can now commit all
+  // file descriptors and ring buffers to the TracerThread members.
   for (int fd : gpu_tracing_fds) {
     gpu_tracing_fds_.emplace(fd);
     tracing_fds_.push_back(fd);

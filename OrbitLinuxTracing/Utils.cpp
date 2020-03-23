@@ -6,9 +6,9 @@
 #include <fstream>
 #include <thread>
 
+#include "absl/strings/numbers.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
-#include "absl/strings/numbers.h"
 
 namespace LinuxTracing {
 

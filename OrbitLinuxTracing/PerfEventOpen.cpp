@@ -1,14 +1,12 @@
 #include "PerfEventOpen.h"
 
 #include <OrbitBase/Logging.h>
+#include <OrbitBase/SafeStrerror.h>
 #include <OrbitLinuxTracing/Function.h>
 #include <linux/perf_event.h>
 
 #include <cerrno>
-#include <cstring>
-#include <fstream>
 
-#include "absl/strings/numbers.h"
 #include "Utils.h"
 
 namespace LinuxTracing {
@@ -36,7 +34,7 @@ perf_event_attr generic_event_attr() {
 int generic_event_open(perf_event_attr* attr, pid_t pid, int32_t cpu) {
   int fd = perf_event_open(attr, pid, cpu, -1, 0);
   if (fd == -1) {
-    ERROR("perf_event_open: %s", strerror(errno));
+    ERROR("perf_event_open: %s", SafeStrerror(errno));
   }
   return fd;
 }
@@ -114,7 +112,7 @@ void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length) {
   void* mmap_ret =
       mmap(nullptr, mmap_length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (mmap_ret == reinterpret_cast<void*>(-1)) {
-    ERROR("mmap: %s", strerror(errno));
+    ERROR("mmap: %s", SafeStrerror(errno));
     return nullptr;
   }
 
