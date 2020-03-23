@@ -8,7 +8,7 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 
 REM We replace the default remotes by our internal artifactory server
 REM which acts as a secure source for prebuilt dependencies.
-copy /Y %REPO_ROOT%\kokoro\conan\config\remotes.json %USERPROFILE%\.conan\remotes.json
+copy /Y %REPO_ROOT%\kokoro\conan\config\remotes.json C:\cygwin64\home\kbuilder\.conan\remotes.json
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 set CONAN_REVISIONS_ENABLED=1
