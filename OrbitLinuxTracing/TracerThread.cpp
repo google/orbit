@@ -37,7 +37,7 @@ bool TracerThread::OpenRingBufferForGpuTracepoint(
 // - A GPU job is scheduled to run on the hardware. This is tracked by the event
 //   "amdgpu_sched_run_job".
 // - A GPU job is finished by the hardware. This is tracked by the corresponding
-//   DMA fence being signaled and is tracked by the event "dma_fence_signaled.
+//   DMA fence being signaled and is tracked by the event "dma_fence_signaled".
 // A single job execution thus correponds to three events, one of each type
 // above, that share the same timeline, context, and seqno.
 // We have to record events system-wide (per CPU) to ensure we record all
