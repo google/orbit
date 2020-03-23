@@ -137,6 +137,8 @@ chmod -v 4775 /usr/bin/OrbitService
 """)
 
             self.run("chmod +x {}/DEBIAN/postinst".format(basedir))
+            self.run("chmod 755 {}/DEBIAN".format(basedir))
+            self.run("chmod 755 {}/".format(basedir))
             self.run("dpkg-deb -b --root-owner-group {}".format(basedir))
             self.run("dpkg --contents {}.deb".format(basedir))
             shutil.rmtree(basedir)
