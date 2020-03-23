@@ -18,31 +18,36 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
 void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
   CHECK(listener_ != nullptr);
 
-  // We are seeing that on thread migration, uprobe events can sometimes be
-  // duplicated. The idea of the workaround is that for a given thread's
-  // sequence of u(ret)probe events, two consecutive uprobe events must be
-  // associated with decreasing stack pointers (nested function calls, stack
-  // grows by decreasing stack pointer).  If an extra uprobe event is generated,
-  // then the second uprobe event will be associated with a stack pointer that
-  // is greater or equal to the previous stack pointer, and that's not normal.
-  // In that situation, we discard the second uprobe event.
+  // We are seeing that, on thread migration, uprobe events can sometimes be
+  // duplicated: the duplicate uprobe event will have the same stack pointer and
+  // instruction pointer as the previous uprobe, but different cpu. In that
+  // situation, we discard the second uprobe event.
+  // We also discard a uprobe event in the general case of strictly-increasing
+  // stack pointers, as for a given thread's sequence of u(ret)probe events, two
+  // consecutive uprobe events must be associated with non-increasing stack
+  // pointers (the stack grows towards lower addresses).
 
   // Duplicate uprobe detection.
   uint64_t uprobe_sp = event->GetRegisters()[PERF_REG_X86_SP];
   uint64_t uprobe_ip = event->GetRegisters()[PERF_REG_X86_IP];
-  std::vector<std::pair<uint64_t, uint64_t>>& uprobe_sps_ips =
-      uprobe_sps_ips_per_thread_[event->GetTid()];
-  if (!uprobe_sps_ips.empty()) {
-    uint64_t last_uprobe_sp = uprobe_sps_ips.back().first;
-    uint64_t last_uprobe_ip = uprobe_sps_ips.back().second;
-    uprobe_sps_ips.pop_back();
-    if ((uprobe_sp > last_uprobe_sp) ||
-        (uprobe_sp == last_uprobe_sp && uprobe_ip == last_uprobe_ip)) {
-      ERROR("MISSING URETPROBE OR DUPLICATE UPROBE DETECTED");
+  uint32_t uprobe_cpu = event->GetCpu();
+  std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>& uprobe_sps_ips_cpus =
+      uprobe_sps_ips_cpus_per_thread_[event->GetTid()];
+  if (!uprobe_sps_ips_cpus.empty()) {
+    uint64_t last_uprobe_sp = std::get<0>(uprobe_sps_ips_cpus.back());
+    uint64_t last_uprobe_ip = std::get<1>(uprobe_sps_ips_cpus.back());
+    uint32_t last_uprobe_cpu = std::get<2>(uprobe_sps_ips_cpus.back());
+    uprobe_sps_ips_cpus.pop_back();
+    if (uprobe_sp > last_uprobe_sp) {
+      ERROR("MISSING URETPROBE OR DUPLICATE UPROBE");
+      return;
+    } else if (uprobe_sp == last_uprobe_sp && uprobe_ip == last_uprobe_ip &&
+               uprobe_cpu != last_uprobe_cpu) {
+      ERROR("Duplicate uprobe on thread migration");
       return;
     }
   }
-  uprobe_sps_ips.emplace_back(uprobe_sp, uprobe_ip);
+  uprobe_sps_ips_cpus.emplace_back(uprobe_sp, uprobe_ip, uprobe_cpu);
 
   function_call_manager_.ProcessUprobes(event->GetTid(),
                                         event->GetFunction()->VirtualAddress(),
@@ -58,10 +63,10 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
   CHECK(listener_ != nullptr);
 
   // Duplicate uprobe detection.
-  std::vector<std::pair<uint64_t, uint64_t>>& uprobe_sps_ips =
-      uprobe_sps_ips_per_thread_[event->GetTid()];
-  if (!uprobe_sps_ips.empty()) {
-    uprobe_sps_ips.pop_back();
+  std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>& uprobe_sps_ips_cpus =
+      uprobe_sps_ips_cpus_per_thread_[event->GetTid()];
+  if (!uprobe_sps_ips_cpus.empty()) {
+    uprobe_sps_ips_cpus.pop_back();
   }
 
   std::optional<FunctionCall> function_call =
