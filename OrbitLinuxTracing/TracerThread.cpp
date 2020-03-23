@@ -17,7 +17,7 @@ bool TracerThread::OpenRingBufferForGpuTracepoint(
     return false;
   }
   std::string buffer_name =
-      absl::StrFormat("%s:%s events", tracepoint_category, tracepoint_name);
+      absl::StrFormat("%s:%s_%i", tracepoint_category, tracepoint_name, cpu);
   PerfEventRingBuffer ring_buffer{fd, SMALL_RING_BUFFER_SIZE_KB, buffer_name};
   if (!ring_buffer.IsOpen()) {
     return false;
@@ -423,8 +423,8 @@ void TracerThread::ProcessMmapEvent(const perf_event_header& header,
 void TracerThread::ProcessSampleEvent(const perf_event_header& header,
                                       PerfEventRingBuffer* ring_buffer) {
   int fd = ring_buffer->GetFileDescriptor();
-  bool is_probe = uprobes_fds_to_function_.count(fd) > 0;
-  bool is_gpu_event = gpu_tracing_fds_.count(fd) > 0;
+  bool is_probe = uprobes_fds_to_function_.contains(fd);
+  bool is_gpu_event = gpu_tracing_fds_.contains(fd);
 
   // An event can never be a probe and a GPU event.
   assert(!(is_probe && is_gpu_event));
@@ -519,8 +519,8 @@ void TracerThread::ProcessDeferredEvents() {
 void TracerThread::Reset() {
   tracing_fds_.clear();
   ring_buffers_.clear();
-  gpu_tracing_fds_.clear();
   uprobes_fds_to_function_.clear();
+  gpu_tracing_fds_.clear();
   deferred_events_.clear();
   stop_deferred_thread_ = false;
 }
