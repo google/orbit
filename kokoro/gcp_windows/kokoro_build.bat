@@ -6,6 +6,13 @@ SET REPO_ROOT=%KOKORO_ARTIFACTS_DIR%\github\orbitprofiler
 conan config install %REPO_ROOT%\contrib\conan\configs\windows
 if %errorlevel% neq 0 exit /b %errorlevel%
 
+REM We replace the default remotes by our internal artifactory server
+REM which acts as a secure source for prebuilt dependencies.
+copy /Y %REPO_ROOT%\kokoro\conan\config\remotes.json %USERPROFILE%\.conan\remotes.json
+if %errorlevel% neq 0 exit /b %errorlevel%
+
+set CONAN_REVISIONS_ENABLED=1
+
 cd %KOKORO_ARTIFACTS_DIR%\github\orbitprofiler
 call build.bat msvc2019_release_x64
 IF ERRORLEVEL 1 exit %ERRORLEVEL%
