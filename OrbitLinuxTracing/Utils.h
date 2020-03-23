@@ -52,6 +52,12 @@ std::vector<int> GetCpusetCpus(pid_t pid);
 
 #endif
 
+// Looks up the tracepoint id for the given category (example: "sched")
+// and name (example: "sched_waking"). Returns the tracepoint id or
+// -1 in case of any errors.
+int GetTracepointId(const char* tracepoint_category,
+                    const char* tracepoint_name);
+
 }  // namespace LinuxTracing
 
 #endif  // ORBIT_LINUX_TRACING_UTILS_H_

@@ -1,6 +1,7 @@
 #include "PerfEventOpen.h"
 
 #include <OrbitBase/Logging.h>
+#include <OrbitLinuxTracing/Function.h>
 #include <linux/perf_event.h>
 
 #include <cerrno>
@@ -8,6 +9,7 @@
 #include <fstream>
 
 #include "absl/strings/numbers.h"
+#include "Utils.h"
 
 namespace LinuxTracing {
 namespace {
@@ -119,28 +121,11 @@ void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length) {
   return mmap_ret;
 }
 
-int get_tracepoint_id(const char* tracepoint_category,
-                      const char* tracepoint_name) {
-  std::string filename =
-      absl::StrFormat("/sys/kernel/debug/tracing/events/%s/%s/id",
-                      tracepoint_category, tracepoint_name);
-  std::ifstream id_file{filename};
-  int tp_id = -1;
-  std::string line;
-  if (!std::getline(id_file, line) || !absl::SimpleAtoi(line, &tp_id)) {
-    ERROR("Error looking up tracepoint id for: %s:%s", tracepoint_category,
-          tracepoint_name);
-    return -1;
-  }
-  return tp_id;
-}
-
 int tracepoint_event_open(const char* tracepoint_category,
                           const char* tracepoint_name, pid_t pid, int32_t cpu) {
-  int tp_id = get_tracepoint_id(tracepoint_category, tracepoint_name);
+  int tp_id = GetTracepointId(tracepoint_category, tracepoint_name);
   perf_event_attr pe = generic_event_attr();
   pe.type = PERF_TYPE_TRACEPOINT;
-  pe.size = sizeof(struct perf_event_attr);
   pe.config = tp_id;
   pe.sample_type |= PERF_SAMPLE_RAW;
 
