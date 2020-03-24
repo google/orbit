@@ -89,6 +89,25 @@ bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
   return true;
 }
 
+bool TracerThread::InitGpuTracepointEventProcessor() {
+  int amdgpu_cs_ioctl_id = GetTracepointId("amdgpu", "amdgpu_cs_ioctl");
+  if (amdgpu_cs_ioctl_id == -1) {
+    return false;
+  }
+  int amdgpu_sched_run_job_id = GetTracepointId("amdgpu", "amdgpu_sched_run_job");
+  if (amdgpu_sched_run_job_id == -1) {
+    return false;
+  }
+  int dma_fence_signaled_id = GetTracepointId("dma_fence", "dma_fence_signaled");
+  if (dma_fence_signaled_id == -1) {
+    return false;
+  }
+  gpu_event_processor_
+      = std::make_shared<GpuTracepointEventProcessor>(
+          amdgpu_cs_ioctl_id, amdgpu_sched_run_job_id, dma_fence_signaled_id);
+  return true;
+}
+
 // TODO: Refactor this huge method.
 void TracerThread::Run(
     const std::shared_ptr<std::atomic<bool>>& exit_requested) {
@@ -139,6 +158,10 @@ void TracerThread::Run(
   // same perf_event_open ring buffer are already sorted.
   uprobes_event_processor_ = std::make_shared<PerfEventProcessor2>(
       std::move(uprobes_unwinding_visitor));
+
+  if (!InitGpuTracepointEventProcessor()) {
+    ERROR("Failed to initialize GPU tracepoint event processor.");
+  }
 
   if (trace_instrumented_functions_) {
     absl::flat_hash_map<int32_t, int> uprobes_ring_buffer_fds_per_cpu;
@@ -518,8 +541,8 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     ++stats_.uprobes_count;
 
   } else if (is_gpu_event) {
-    int32_t common_type = ReadTracepointCommonType(ring_buffer);
-    LOG("Received GPU event with common type: %d", common_type);
+    auto event = ConsumeSampleRaw(ring_buffer, header);
+    gpu_event_processor_->PushEvent(event);
     ++stats_.gpu_events_count;
   } else {
     auto event =

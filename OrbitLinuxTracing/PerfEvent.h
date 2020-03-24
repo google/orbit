@@ -309,6 +309,14 @@ class MapsPerfEvent : public PerfEvent {
   std::string maps_;
 };
 
+class PerfEventSampleRaw {
+ public:
+  perf_event_sample_raw ring_buffer_record;
+  std::vector<uint8_t> data;
+  explicit PerfEventSampleRaw(uint32_t size)
+      : data(size) {}
+};
+
 }  // namespace LinuxTracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_H_

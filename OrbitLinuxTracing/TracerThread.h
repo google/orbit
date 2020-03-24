@@ -13,6 +13,7 @@
 #include <regex>
 #include <vector>
 
+#include "GpuTracepointEventProcessor.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventProcessor2.h"
@@ -60,7 +61,7 @@ class TracerThread {
       std::vector<PerfEventRingBuffer>* ring_buffers);
 
   bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
-  void CleanupGpuTracepoints();
+  bool InitGpuTracepointEventProcessor();
 
   void ProcessContextSwitchEvent(const perf_event_header& header,
                                  PerfEventRingBuffer* ring_buffer);
@@ -106,7 +107,7 @@ class TracerThread {
   bool trace_context_switches_ = true;
   bool trace_callstacks_ = true;
   bool trace_instrumented_functions_ = true;
-  bool trace_gpu_driver_events_ = false;
+  bool trace_gpu_driver_events_ = true;
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
@@ -118,6 +119,7 @@ class TracerThread {
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
   std::mutex deferred_events_mutex_;
   std::shared_ptr<PerfEventProcessor2> uprobes_event_processor_;
+  std::shared_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
 
   struct EventStats {
     void Reset() { *this = EventStats(); }
