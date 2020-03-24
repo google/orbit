@@ -501,7 +501,8 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     ++stats_.uprobes_count;
 
   } else if (is_gpu_event) {
-    LOG("Received GPU event.");
+    int32_t common_type = ReadTracepointCommonType(ring_buffer);
+    LOG("Received GPU event with common type: %d", common_type);
     ++stats_.gpu_events_count;
   } else {
     auto event =
