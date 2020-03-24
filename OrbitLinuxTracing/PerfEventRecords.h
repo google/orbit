@@ -96,7 +96,7 @@ struct __attribute__((__packed__)) perf_event_lost {
 // here.
 struct __attribute__((__packed__)) perf_event_tracepoint {
   perf_event_header header;
-  perf_event_sample_id_tid_time_cpu sample_id;
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
   uint32_t size;
   uint16_t common_type;
 };
