@@ -6,6 +6,7 @@
 
 namespace LinuxTracing {
 
+<<<<<<< HEAD
 pid_t ReadMmapRecordPid(PerfEventRingBuffer* ring_buffer) {
   // Mmap records have the following layout:
   // struct {
