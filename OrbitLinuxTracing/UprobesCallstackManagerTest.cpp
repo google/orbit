@@ -354,7 +354,7 @@ TEST(UprobesCallstackManager, UnwindingError) {
   callstack_manager.ProcessUretprobes(tid);
 }
 
-TEST(UprobesCallstackManager, UnwindingErrorOnStack) {
+TEST(UprobesCallstackManager, UnwindingErrorOnTopOfStack) {
   constexpr pid_t tid = 42;
   TestUnwinder unwinder{};
   UprobesCallstackManager<TestUnwinder> callstack_manager{&unwinder, ""};
@@ -362,13 +362,19 @@ TEST(UprobesCallstackManager, UnwindingErrorOnStack) {
   StackSamplePerfEvent sample_event{0};
   UprobesWithStackPerfEvent uprobes_event{0};
 
-  // FUNCTION is called and this uprobes has an unwind error.
+  // FOO is called.
+  unwound_cs = MakeTestCallstack({"main", "alpha", "FOO"});
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
+
+  // BAR is called and this uprobes has an unwind error.
   unwound_cs = MakeTestUnwindingErrorCallstack();
   uprobes_event =
       MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
   callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
 
-  unwound_cs = MakeTestUprobesCallstack({"FUNCTION", "beta"});
+  unwound_cs = MakeTestUprobesCallstack({"FOO", "gamma"});
   expected_cs = MakeTestUnwindingErrorCallstack();
   sample_event =
       MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
@@ -377,7 +383,46 @@ TEST(UprobesCallstackManager, UnwindingErrorOnStack) {
               ::testing::ElementsAreArray(
                   TestCallstackToStringPairVector(expected_cs)));
 
-  // FUNCTION returns.
+  // BAR returns.
+  callstack_manager.ProcessUretprobes(tid);
+
+  // FOO returns.
+  callstack_manager.ProcessUretprobes(tid);
+}
+
+TEST(UprobesCallstackManager, UnwindingErrorNotOnTopOfStack) {
+  constexpr pid_t tid = 42;
+  TestUnwinder unwinder{};
+  UprobesCallstackManager<TestUnwinder> callstack_manager{&unwinder, ""};
+  std::vector<unwindstack::FrameData> unwound_cs, expected_cs, processed_cs;
+  StackSamplePerfEvent sample_event{0};
+  UprobesWithStackPerfEvent uprobes_event{0};
+
+  // FOO is called and this uprobes has an unwind error.
+  unwound_cs = MakeTestUnwindingErrorCallstack();
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
+
+  // BAR is called.
+  unwound_cs = MakeTestUprobesCallstack({"FOO", "beta", "BAR"});
+  uprobes_event =
+      MakeTestUprobesWithStackAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  callstack_manager.ProcessUprobesCallstack(tid, std::move(uprobes_event));
+
+  unwound_cs = MakeTestUprobesCallstack({"BAR", "gamma"});
+  expected_cs = MakeTestUnwindingErrorCallstack();
+  sample_event =
+      MakeTestStackSampleAndRegisterOnTestUnwinder(unwound_cs, &unwinder);
+  processed_cs = callstack_manager.ProcessSampledCallstack(tid, sample_event);
+  EXPECT_THAT(TestCallstackToStringPairVector(processed_cs),
+              ::testing::ElementsAreArray(
+                  TestCallstackToStringPairVector(expected_cs)));
+
+  // BAR returns.
+  callstack_manager.ProcessUretprobes(tid);
+
+  // FOO returns.
   callstack_manager.ProcessUretprobes(tid);
 }
 

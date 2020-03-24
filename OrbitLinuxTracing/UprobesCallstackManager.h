@@ -118,8 +118,7 @@ class UprobesCallstackManager {
         late_unwind_callstack.SetCallstack(callstack);
       }
       if (!late_unwind_callstack.IsCallstackValid()) {
-        // There is an unwinding error on the stack, no point in unwinding
-        // more.
+        // There is an unwinding error on the stack, no point in unwinding more.
         break;
       }
     }
@@ -141,11 +140,9 @@ class UprobesCallstackManager {
 
     std::vector<LateUnwindCallstack>& previous_callstacks =
         tid_uprobes_callstacks_stacks_[tid];
-    for (auto previous_callstack = previous_callstacks.rbegin();
-         previous_callstack != previous_callstacks.rend();
-         ++previous_callstack) {
-      CHECK(previous_callstack->IsUnwound());
-      if (!previous_callstack->IsCallstackValid()) {
+    for (const LateUnwindCallstack& previous_callstack : previous_callstacks) {
+      CHECK(previous_callstack.IsUnwound());
+      if (!previous_callstack.IsCallstackValid()) {
         // A previous callstack was an unwinding failure, hence unfortunately
         // this is a failure as well.
         return {};
