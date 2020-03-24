@@ -416,16 +416,14 @@ void TracerThread::ProcessContextSwitchCpuWideEvent(
     const perf_event_header& header, PerfEventRingBuffer* ring_buffer) {
   SystemWideContextSwitchPerfEvent event;
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
+  pid_t tid = event.GetTid();
   uint16_t cpu = static_cast<uint16_t>(event.GetCpu());
   uint64_t time = event.GetTimestamp();
 
-  if (event.GetPrevTid() != 0) {
-    ContextSwitchOut context_switch_out{event.GetPrevTid(), cpu, time};
-    listener_->OnContextSwitchOut(context_switch_out);
-  }
-  if (event.GetNextTid() != 0) {
-    ContextSwitchIn context_switch_in{event.GetNextTid(), cpu, time};
-    listener_->OnContextSwitchIn(context_switch_in);
+  if (event.IsSwitchOut()) {
+    listener_->OnContextSwitchOut(ContextSwitchOut(tid, cpu, time));
+  } else {
+    listener_->OnContextSwitchIn(ContextSwitchIn(tid, cpu, time));
   }
 
   ++stats_.sched_switch_count;
