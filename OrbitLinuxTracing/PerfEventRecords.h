@@ -86,23 +86,11 @@ struct __attribute__((__packed__)) perf_event_lost {
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
 };
 
-// Tracepoints are perf samples, so they start with the same layout as a regular
-// perf sample, that is, with the header and the common fields like sample_id,
-// tid, timestamp, etc. The next field is the size of the rest of the tracepoint
-// record and the common type. The common type is the same as the tracepoint id
-// and we use it to identify the events and how to handle them. The actual
-// record is thus larger than the size of this struct but since it is dynamic
-// and depends on the type of the tracepoint, we only hardcode the common part
-// here.
-struct __attribute__((__packed__)) perf_event_tracepoint_common {
+struct __attribute__((__packed__)) perf_event_sample_raw {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   uint32_t size;
-  // The rest of the struct is a char[size], but all tracepoints record the
-  // tracepoint id in the first two bytes. Since we need to identify the
-  // type of the tracepoint before we can determine which event to handle, we
-  // add this common field here for easier access.
-  uint16_t common_type;
+  // The rest of the sample is a char[size] that we read dynamically
 };
 
 }  // namespace LinuxTracing
