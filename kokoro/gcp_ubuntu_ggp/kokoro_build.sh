@@ -32,6 +32,20 @@ conan install -u -pr $profile -if build_$profile/ --build outdated -o debian_pac
 conan build -bf build_$profile/ $DIR
 conan package -bf $DIR/build_$profile/ $DIR
 
+rm -rf ~/.gnupg/
+rm -rf /dev/shm/signing.gpg
+mkdir -p ~/.gnupg
+chmod 700 ~/.gnupg
+echo "allow-loopback-pinentry" > ~/.gnupg/gpg-agent.conf
+
+GPG_OPTIONS="--pinentry-mode loopback --batch --no-tty --yes --no-default-keyring --keyring /dev/shm/signing.gpg --passphrase-file /tmpfs/src/keystore/74938_SigningPrivateGpgKeyPassword"
+
+gpg $GPG_OPTIONS --import /tmpfs/src/keystore/74938_SigningPrivateGpg
+
+for deb in build_ggp_relwithdebinfo/package/*.deb; do
+    gpg $GPG_OPTIONS --output "$deb.asc" --detach-sign "$deb"
+done
+
 # Uncomment the three lines below to print the external ip into the log and
 # keep the vm alive for two hours. This is useful to debug build failures that
 # can not be resolved by looking into sponge alone. Also comment out the
