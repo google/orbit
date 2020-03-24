@@ -442,6 +442,7 @@ void TracerThread::ProcessContextSwitchCpuWideEvent(
   pid_t tid = event.GetTid();
   uint16_t cpu = static_cast<uint16_t>(event.GetCpu());
   uint64_t time = event.GetTimestamp();
+  
   if (event.IsSwitchOut()) {
     listener_->OnContextSwitchOut(ContextSwitchOut(tid, cpu, time));
   } else {
