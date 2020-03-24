@@ -8,7 +8,7 @@ namespace LinuxTracing {
 
 namespace {
 
-// Format is based on the content the the event's format file:
+// Format is based on the content of the event's format file:
 // /sys/kernel/debug/tracing/events/<category>/<name>/format
 struct __attribute__((__packed__)) perf_event_amdgpu_cs_ioctl {
   uint16_t common_type;
