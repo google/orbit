@@ -1,5 +1,9 @@
 #include "GpuTracepointEventProcessor.h"
 
+#include <string>
+#include <tuple>
+#include <vector>
+
 namespace LinuxTracing {
 
 namespace {
