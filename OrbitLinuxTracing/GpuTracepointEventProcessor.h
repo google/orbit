@@ -35,20 +35,25 @@ class GpuTracepointEventProcessor {
     std::memcpy(&data_loc_data[0],
                 reinterpret_cast<const char*>(tracepoint_data)
                 + data_loc_offset, data_loc_size);
+
+    // While the string should be null terminated here, we make sure that it
+    // actually is by adding a zero in the last position. In the case of
+    // expected behavior, this is a no-op.
+    data_loc_data[data_loc_data.size()-1] = 0;
     return std::string(&data_loc_data[0]);
   }
 
   int ComputeDepthForEvent(const std::string& timeline,
     uint64_t start_timestamp, uint64_t end_timestamp);
-  
+
   void CreateGpuExecutionEventIfComplete(const Key& key);
-  
+
   int amdgpu_cs_ioctl_id_ = 0;
   int amdgpu_sched_run_job_id_ = 0;
   int dma_fence_signaled_id_ = 0;
 
   TracerListener* listener_;
-  
+
   struct AmdgpuCsIoctlEvent {
     uint64_t timestamp_ns;
     uint32_t context;
@@ -74,10 +79,10 @@ class GpuTracepointEventProcessor {
   };
   absl::flat_hash_map<Key, DmaFenceSignaledEvent>
       dma_fence_signaled_events_;
-  
+
   absl::flat_hash_map<std::string, uint64_t>
       timeline_to_latest_dma_signal_;
-  
+
   absl::flat_hash_map<std::string, std::vector<uint64_t>>
       timeline_to_latest_timestamp_per_depth_;
 };

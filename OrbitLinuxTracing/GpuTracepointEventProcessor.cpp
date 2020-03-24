@@ -70,6 +70,10 @@ int GpuTracepointEventProcessor::ComputeDepthForEvent(
       return d;
     }
   }
+
+  // Note that this vector only grows in size until a certain maximum depth is
+  // reached. Since there are only O(10s) events per frame created, the depth
+  // is not likely to grow to a very large size.
   vec.push_back(end_timestamp);
   return static_cast<int>(vec.size());
 }
@@ -130,6 +134,14 @@ void GpuTracepointEventProcessor::PushEvent(
   int tp_id =
       static_cast<int>(*reinterpret_cast<const uint16_t*>(&sample->data[0]));
 
+  // Handle the three different types of events that we can get from the GPU
+  // driver tracepoints we are tracing. We allow for the possibility that these
+  // events arrive out-of-order (which is something we have actually observed)
+  // with the following approach: We record all three types of events in
+  // different maps. Whenever a new event arrives, we add it to the
+  // corresponding map and then try to create a complete GPU execution event.
+  // This event is only be created when all three types of GPU events have been
+  // received.
   if (tp_id == amdgpu_cs_ioctl_id_) {
     const perf_event_amdgpu_cs_ioctl* tracepoint_data =
         reinterpret_cast<const perf_event_amdgpu_cs_ioctl*>(&sample->data[0]);
