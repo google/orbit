@@ -24,7 +24,7 @@ class OrbitConan(ConanFile):
     def _version(self):
         if not self.version:
             buf = StringIO()
-            self.run("git describe --always --dirty --tags", output=buf)
+            self.run("git describe --always --tags", output=buf)
             self.version = buf.getvalue().strip()[1:]
 
         return self.version

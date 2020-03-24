@@ -42,7 +42,7 @@ GPG_OPTIONS="--pinentry-mode loopback --batch --no-tty --yes --no-default-keyrin
 
 gpg $GPG_OPTIONS --import /tmpfs/src/keystore/74938_SigningPrivateGpg
 
-for deb in build_ggp_relwithdebinfo/package/*.deb; do
+for deb in $DIR/build_$profile/package/*.deb; do
     gpg $GPG_OPTIONS --output "$deb.asc" --detach-sign "$deb"
 done
 
@@ -51,6 +51,6 @@ done
 # can not be resolved by looking into sponge alone. Also comment out the
 # "set -e" at the top of this file (otherwise a failed build will exit this
 # script immediately).
-external_ip=$(curl -s -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip)
-echo "INSTANCE_EXTERNAL_IP=${external_ip}"
-sleep 7200;
+# external_ip=$(curl -s -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip)
+# echo "INSTANCE_EXTERNAL_IP=${external_ip}"
+# sleep 7200;
