@@ -541,6 +541,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     ++stats_.uprobes_count;
 
   } else if (is_gpu_event) {
+    // TODO: Consider deferring events.
     auto event = ConsumeSampleRaw(ring_buffer, header);
     gpu_event_processor_->PushEvent(event);
     ++stats_.gpu_events_count;

@@ -141,7 +141,6 @@ void GpuTracepointEventProcessor::PushEvent(
   // corresponding map and then try to create a complete GPU execution event.
   // This event is only be created when all three types of GPU events have been
   // received.
-
   if (tp_id == amdgpu_cs_ioctl_id_) {
     const perf_event_amdgpu_cs_ioctl* tracepoint_data =
         reinterpret_cast<const perf_event_amdgpu_cs_ioctl*>(&sample->data[0]);
