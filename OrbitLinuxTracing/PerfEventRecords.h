@@ -99,7 +99,7 @@ struct __attribute__((__packed__)) perf_event_tracepoint_common {
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   uint32_t size;
   // The rest of the struct is a char[size], but all tracepoints record the
-  // tracepoint id in the first two types. Since we need to identify the
+  // tracepoint id in the first two bytes. Since we need to identify the
   // type of the tracepoint before we can determine which event to handle, we
   // add this common field here for easier access.
   uint16_t common_type;
