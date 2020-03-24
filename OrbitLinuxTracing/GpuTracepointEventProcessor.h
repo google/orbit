@@ -83,9 +83,6 @@ class GpuTracepointEventProcessor {
   absl::flat_hash_map<std::string, uint64_t>
       timeline_to_latest_dma_signal_;
 
-  absl::flat_hash_map<std::string, uint64_t>
-      timeline_to_latest_dma_signal_;
-
   absl::flat_hash_map<std::string, std::vector<uint64_t>>
       timeline_to_latest_timestamp_per_depth_;
 };
