@@ -148,6 +148,7 @@ void GpuTracepointEventProcessor::PushEvent(
     const perf_event_amdgpu_sched_run_job* tracepoint_data =
         reinterpret_cast<const perf_event_amdgpu_sched_run_job*>(
             &sample->data[0]);
+
     uint32_t context = tracepoint_data->context;
     uint32_t seqno = tracepoint_data->seqno;
     std::string timeline = ExtractTimelineString(tracepoint_data);
@@ -161,6 +162,7 @@ void GpuTracepointEventProcessor::PushEvent(
     const perf_event_dma_fence_signaled* tracepoint_data =
         reinterpret_cast<const perf_event_dma_fence_signaled*>(
             &sample->data[0]);
+
     uint32_t context = tracepoint_data->context;
     uint32_t seqno = tracepoint_data->seqno;
     std::string timeline = ExtractTimelineString(tracepoint_data);
