@@ -94,10 +94,14 @@ struct __attribute__((__packed__)) perf_event_lost {
 // record is thus larger than the size of this struct but since it is dynamic
 // and depends on the type of the tracepoint, we only hardcode the common part
 // here.
-struct __attribute__((__packed__)) perf_event_tracepoint {
+struct __attribute__((__packed__)) perf_event_tracepoint_common {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   uint32_t size;
+  // The rest of the struct is a char[size], but all tracepoints record the
+  // tracepoint id in the first two types. Since we need to identify the
+  // type of the tracepoint before we can determine which event to handle, we
+  // add this common field here for easier access.
   uint16_t common_type;
 };
 
