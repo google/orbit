@@ -22,7 +22,6 @@ struct __attribute__((__packed__)) perf_event_amdgpu_cs_ioctl {
   uint64_t dma_fence;  // This is an address.
   uint64_t ring_name;  // This is an address.
   uint32_t num_ibs;
-
 };
 
 struct __attribute__((__packed__)) perf_event_amdgpu_sched_run_job {
