@@ -17,6 +17,8 @@ pid_t ReadUretprobesRecordPid(PerfEventRingBuffer* ring_buffer);
 std::unique_ptr<PerfEventSampleRaw> ConsumeSampleRaw(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
+uint16_t ReadTracepointCommonType(PerfEventRingBuffer* ring_buffer);
+
 template <typename SamplePerfEventT>
 inline std::unique_ptr<SamplePerfEventT> ConsumeSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
