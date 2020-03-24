@@ -90,7 +90,7 @@ struct __attribute__((__packed__)) perf_event_lost {
 // perf sample, that is, with the header and the common fields like sample_id,
 // tid, timestamp, etc. The next field is the size of the rest of the tracepoint
 // record and the common type. The common type is the same as the tracepoint id
-// and we use it to identify the end events and how to handle them. The actual
+// and we use it to identify the events and how to handle them. The actual
 // record is thus larger than the size of this struct but since it is dynamic
 // and depends on the type of the tracepoint, we only hardcode the common part
 // here.
