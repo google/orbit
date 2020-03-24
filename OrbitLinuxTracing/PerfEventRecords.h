@@ -90,7 +90,7 @@ struct __attribute__((__packed__)) perf_event_sample_raw {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   uint32_t size;
-  // The rest of the sample is a char[size] that we read dynamically.
+  // The rest of the sample is a char[size] that we read dynamically
 };
 
 }  // namespace LinuxTracing
