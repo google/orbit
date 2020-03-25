@@ -23,6 +23,8 @@ Track::Track() {
   m_Moving = false;
   m_Canvas = nullptr;
 
+  display_name_only_ = false;
+
   unsigned char alpha = 255;
   unsigned char grey = 60;
   m_Color = Color(grey, grey, grey, alpha);
