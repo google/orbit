@@ -128,6 +128,10 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
 
   listener_->OnGpuJob(gpu_job);
 
+  // We need to update the timestamp when the last GPU job so far seen
+  // finishes on this timeline.
+  it->second = std::max(it->second, dma_it->second.timestamp_ns);
+
   amdgpu_cs_ioctl_events_.erase(key);
   amdgpu_sched_run_job_events_.erase(key);
   dma_fence_signaled_events_.erase(key);

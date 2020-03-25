@@ -9,6 +9,7 @@
 #include "App.h"
 #include "Batcher.h"
 #include "Capture.h"
+#include "EventTracer.h"
 #include "EventTrack.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
@@ -27,7 +28,6 @@
 #include "TimerManager.h"
 #include "Utils.h"
 #include "absl/strings/str_format.h"
-#include "EventTracer.h"
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
@@ -239,9 +239,13 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
   if (!a_Timer.IsType(Timer::THREAD_ACTIVITY) &&
       !a_Timer.IsType(Timer::CORE_ACTIVITY)) {
     std::shared_ptr<ThreadTrack> track = GetThreadTrack(a_Timer.m_TID);
+    if (a_Timer.m_Type == Timer::GPU_ACTIVITY) {
+      track->SetName(string_manager_->Get(a_Timer.m_UserData[1]).value_or(""));
+    }
+
     track->OnTimer(a_Timer);
     ++m_ThreadCountMap[a_Timer.m_TID];
-    if( a_Timer.m_Type == Timer::INTROSPECTION ) {
+    if (a_Timer.m_Type == Timer::INTROSPECTION) {
       const Color kGreenIntrospection(87, 166, 74, 255);
       track->SetColor(kGreenIntrospection);
     }
@@ -458,6 +462,8 @@ inline std::string GetExtraInfo(const Timer& a_Timer) {
 
 //-----------------------------------------------------------------------------
 void TimeGraph::UpdatePrimitives(bool a_Picking) {
+  CHECK(string_manager_);
+
   m_Batcher.Reset();
   m_VisibleTextBoxes.clear();
   m_TextRendererStatic.Clear();
@@ -546,6 +552,29 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
           Color grey(g, g, g, 255);
           static Color selectionColor(0, 128, 255, 255);
           Color col = GetThreadColor(timer.m_TID);
+
+          // We disambiguate the different types of GPU activity based on the
+          // string that is displayed on their timeslice.
+          if (timer.m_Type == Timer::GPU_ACTIVITY) {
+            constexpr const char* kSwQueueString = "sw queue";
+            constexpr const char* kHwQueueString = "hw queue";
+            constexpr const char* kHwExecutionString = "hw execution";
+            float coeff = 1.0f;
+            std::string gpu_stage =
+                string_manager_->Get(timer.m_UserData[0]).value_or("");
+            if (gpu_stage == kSwQueueString) {
+              coeff = 0.5f;
+            } else if (gpu_stage == kHwQueueString) {
+              coeff = 0.75f;
+            } else if (gpu_stage == kHwExecutionString) {
+              coeff = 1.0f;
+            }
+
+            col[0] = coeff * col[0];
+            col[1] = coeff * col[1];
+            col[2] = coeff * col[2];
+          }
+
           col = isSelected
                     ? selectionColor
                     : isSameThreadIdAsSelected ? col : isInactive ? grey : col;
@@ -590,11 +619,13 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
                     "%s %s %s", name, extraInfo.c_str(), time.c_str());
 
                 textBox.SetText(text);
-              } else if( timer.m_Type == Timer::INTROSPECTION && string_manager_) {
-                textBox.SetText(string_manager_->Get(
-                    timer.m_UserData[0]).value_or(""));
-              }
-               else if (!SystraceManager::Get().IsEmpty()) {
+              } else if (timer.m_Type == Timer::INTROSPECTION) {
+                textBox.SetText(
+                    string_manager_->Get(timer.m_UserData[0]).value_or(""));
+              } else if (timer.m_Type == Timer::GPU_ACTIVITY) {
+                textBox.SetText(
+                    string_manager_->Get(timer.m_UserData[0]).value_or(""));
+              } else if (!SystraceManager::Get().IsEmpty()) {
                 textBox.SetText(SystraceManager::Get().GetFunctionName(
                     timer.m_FunctionAddress));
               } else if (!Capture::IsCapturing()) {
