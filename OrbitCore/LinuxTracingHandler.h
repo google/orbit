@@ -43,6 +43,7 @@ class LinuxTracingHandler : LinuxTracing::TracerListener {
       const LinuxTracing::ContextSwitchOut& context_switch_out) override;
   void OnCallstack(const LinuxTracing::Callstack& callstack) override;
   void OnFunctionCall(const LinuxTracing::FunctionCall& function_call) override;
+  void OnGpuJob(const LinuxTracing::GpuJob& gpu_job) override;
 
  private:
   void ProcessCallstackEvent(LinuxCallstackEvent&& event);
@@ -54,6 +55,11 @@ class LinuxTracingHandler : LinuxTracing::TracerListener {
   uint64_t* num_context_switches_;
 
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
+
+  // HACK
+  pid_t TimelineToThreadId(std::string timeline);
+  absl::flat_hash_map<std::string, pid_t> timeline_to_thread_id_;
+  pid_t current_timeline_thread_id = 100000;
 };
 
 #endif  // ORBIT_CORE_LINUX_TRACING_HANDLER_H_

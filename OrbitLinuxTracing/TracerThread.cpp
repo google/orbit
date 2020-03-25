@@ -105,6 +105,7 @@ bool TracerThread::InitGpuTracepointEventProcessor() {
   gpu_event_processor_
       = std::make_shared<GpuTracepointEventProcessor>(
           amdgpu_cs_ioctl_id, amdgpu_sched_run_job_id, dma_fence_signaled_id);
+  gpu_event_processor_->SetListener(listener_);
   return true;
 }
 

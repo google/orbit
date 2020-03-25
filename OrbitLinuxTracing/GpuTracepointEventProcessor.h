@@ -55,6 +55,7 @@ class GpuTracepointEventProcessor {
   TracerListener* listener_;
 
   struct AmdgpuCsIoctlEvent {
+    pid_t tid;
     uint64_t timestamp_ns;
     uint32_t context;
     uint32_t seqno;

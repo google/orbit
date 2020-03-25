@@ -4,6 +4,8 @@
 #include <tuple>
 #include <vector>
 
+#include "OrbitLinuxTracing/Events.h"
+
 namespace LinuxTracing {
 
 namespace {
@@ -61,7 +63,7 @@ int GpuTracepointEventProcessor::ComputeDepthForEvent(
   std::vector<uint64_t>& vec = it->second;
 
   for (int d = 0; d < vec.size(); ++d) {
-    // We add a small slack on each row of the GPU track timeline to
+    // We add a small amount of slack on each row of the GPU track timeline to
     // make sure events don't get too crowded.
     constexpr uint64_t slack_ns = 5 * 1000000;
     if (start_timestamp >= (vec[d] + slack_ns)) {
@@ -71,7 +73,7 @@ int GpuTracepointEventProcessor::ComputeDepthForEvent(
   }
 
   // Note that this vector only grows in size until a certain maximum depth is
-  // reached. Since there are only O(10s) events per frame created, the depth
+  // reached. Since there are only O(10) events per frame created, the depth
   // is not likely to grow to a very large size.
   vec.push_back(end_timestamp);
   return static_cast<int>(vec.size());
@@ -93,6 +95,7 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
   }
 
   std::string timeline = cs_it->second.timeline;
+  pid_t tid = cs_it->second.tid;
 
   // We assume that GPU jobs (command buffer submissions) immediately
   // start running on the hardware when they are scheduled by the
@@ -113,13 +116,17 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
 
   int depth = ComputeDepthForEvent(timeline, cs_it->second.timestamp_ns,
                                    dma_it->second.timestamp_ns);
+  GpuJob gpu_job(tid,
+                 cs_it->second.context,
+                 cs_it->second.seqno,
+                 cs_it->second.timeline,
+                 depth,
+                 cs_it->second.timestamp_ns,
+                 sched_it->second.timestamp_ns,
+                 hw_start_time,
+                 dma_it->second.timestamp_ns);
 
-  // TODO: Remove debug output and send the actual event to the listener.
-  LOG("GPU event complete: %d, %d, %s\n",
-      std::get<0>(key), std::get<1>(key), std::get<2>(key).c_str());
-
-  // GpuExecutionEvent gpu_event();
-  // listener_->OnGpuExecutionEvent(gpu_event);
+  listener_->OnGpuJob(gpu_job);
 
   amdgpu_cs_ioctl_events_.erase(key);
   amdgpu_sched_run_job_events_.erase(key);
@@ -128,7 +135,7 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
 
 void GpuTracepointEventProcessor::PushEvent(
     const std::unique_ptr<PerfEventSampleRaw>& sample) {
-  uint32_t tid = sample->ring_buffer_record.sample_id.tid;
+  pid_t tid = sample->ring_buffer_record.sample_id.tid;
   uint64_t timestamp_ns = sample->ring_buffer_record.sample_id.time;
   int tp_id =
       static_cast<int>(*reinterpret_cast<const uint16_t*>(&sample->data[0]));
@@ -149,7 +156,7 @@ void GpuTracepointEventProcessor::PushEvent(
     uint32_t seqno = tracepoint_data->seqno;
     std::string timeline = ExtractTimelineString(tracepoint_data);
 
-    AmdgpuCsIoctlEvent event{timestamp_ns, context, seqno, timeline};
+    AmdgpuCsIoctlEvent event{tid, timestamp_ns, context, seqno, timeline};
     Key key = std::make_tuple(context, seqno, timeline);
 
     amdgpu_cs_ioctl_events_.emplace(key, event);
@@ -186,6 +193,10 @@ void GpuTracepointEventProcessor::PushEvent(
   } else {
     CHECK(false);
   }
+}
+
+void GpuTracepointEventProcessor::SetListener(TracerListener* listener) {
+  listener_ = listener;
 }
 
 }  // namespace LinuxTracing
