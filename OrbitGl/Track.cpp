@@ -66,7 +66,12 @@ void Track::Draw(GlCanvas* a_Canvas, bool a_Picking) {
   glVertex3f(x0, y1, TRACK_Z);
   glEnd();
 
-  std::string name = absl::StrFormat("%s [%u]", m_Name.c_str(), m_ID);
+  std::string name;
+  if (display_name_only_) {
+    name = absl::StrFormat("%s", m_Name.c_str());
+  } else {
+    name = absl::StrFormat("%s [%u]", m_Name.c_str(), m_ID);
+  }
   a_Canvas->AddText(name.c_str(), x0, y1, TEXT_Z, Color(255, 255, 255, 255));
 
   m_Canvas = a_Canvas;
