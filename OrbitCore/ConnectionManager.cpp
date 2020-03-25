@@ -70,6 +70,7 @@ void ConnectionManager::InitAsService() {
 
   is_service_ = true;
   string_manager_ = std::make_shared<StringManager>();
+  tracing_session_.SetStringManager(string_manager_);
   SetupIntrospection();
   SetupServerCallbacks();
   thread_ = std::make_unique<std::thread>(
@@ -150,7 +151,7 @@ void ConnectionManager::SetupIntrospection() {
 #if __linux__ && ORBIT_TRACING_ENABLED
   // Setup introspection handler.
   auto handler = std::make_unique<orbit::introspection::Handler>(
-      string_manager_, &tracing_session_);
+      &tracing_session_);
   LinuxTracing::SetOrbitTracingHandler(std::move(handler));
 #endif  // ORBIT_TRACING_ENABLED
 }
