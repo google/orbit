@@ -8,10 +8,9 @@
 #include "SamplingProfiler.h"
 #include "TcpServer.h"
 
-std::vector<float> LogDataView::s_HeaderRatios;
-
 //-----------------------------------------------------------------------------
 LogDataView::LogDataView() {
+  InitColumnsIfNeeded();
   GOrbitApp->RegisterOutputLog(this);
   GTcpServer->AddCallback(Msg_OrbitLog, [=](const Message& a_Msg) {
     this->OnReceiveMessage(a_Msg);
@@ -20,17 +19,30 @@ LogDataView::LogDataView() {
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& LogDataView::GetColumnHeaders() {
-  static std::vector<std::wstring> Columns;
-  if (Columns.size() == 0) {
-    Columns.push_back(L"Log");
+std::vector<std::wstring> LogDataView::s_Headers;
+std::vector<float> LogDataView::s_HeaderRatios;
+std::vector<DataView::SortingOrder> LogDataView::s_InitialOrders;
+
+//-----------------------------------------------------------------------------
+void LogDataView::InitColumnsIfNeeded() {
+  if (s_Headers.empty()) {
+    s_Headers.emplace_back(L"Log");
     s_HeaderRatios.push_back(0.7f);
-    Columns.push_back(L"Time");
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Time");
     s_HeaderRatios.push_back(0.15f);
-    Columns.push_back(L"ThreadId");
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"ThreadId");
     s_HeaderRatios.push_back(0.15f);
+    s_InitialOrders.push_back(AscendingOrder);
   }
-  return Columns;
+}
+
+//-----------------------------------------------------------------------------
+const std::vector<std::wstring>& LogDataView::GetColumnHeaders() {
+  return s_Headers;
 }
 
 //-----------------------------------------------------------------------------

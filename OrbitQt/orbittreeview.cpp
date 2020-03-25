@@ -13,6 +13,7 @@
 #include <QScrollBar>
 #include <QSignalMapper>
 #include <set>
+#include <utility>
 
 #include "../OrbitGl/App.h"
 #include "../OrbitGl/DataView.h"
@@ -62,6 +63,16 @@ void OrbitTreeView::Initialize(DataViewType a_Type) {
   setModel(m_Model);
   header()->resizeSections(QHeaderView::ResizeToContents);
 
+  if (!m_Model->IsSortingAllowed()) {
+    // Don't do setSortingEnabled(m_Model->IsSortingAllowed()); as with true it
+    // forces a sort by the first column.
+    setSortingEnabled(false);
+  } else {
+    std::pair<int, Qt::SortOrder> column_and_order =
+        m_Model->GetDefaultSortingColumnAndOrder();
+    sortByColumn(column_and_order.first, column_and_order.second);
+  }
+
   if (m_Model->GetUpdatePeriodMs() > 0) {
     m_Timer = new QTimer(this);
     connect(m_Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
@@ -84,7 +95,7 @@ void OrbitTreeView::Initialize(DataViewType a_Type) {
 //-----------------------------------------------------------------------------
 void OrbitTreeView::SetDataModel(std::shared_ptr<DataView> a_Model) {
   m_Model = new OrbitTableModel();
-  m_Model->SetDataView(a_Model);
+  m_Model->SetDataView(std::move(a_Model));
   setModel(m_Model);
 }
 
@@ -194,7 +205,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
     std::vector<std::wstring> menu =
         m_Model->GetDataView()->GetContextMenu(index.row());
 
-    if (menu.size() > 0) {
+    if (!menu.empty()) {
       QMenu contextMenu(tr("ContextMenu"), this);
       GContextMenu = &contextMenu;
       QSignalMapper signalMapper(this);
@@ -226,7 +237,7 @@ void OrbitTreeView::OnMenuClicked(int a_Index) {
   }
 
   std::vector<int> indices(selection.begin(), selection.end());
-  if (indices.size()) {
+  if (!indices.empty()) {
     const std::vector<std::wstring>& menu =
         m_Model->GetDataView()->GetContextMenu(indices[0]);
     m_Model->GetDataView()->OnContextMenu(menu[a_Index], a_Index, indices);

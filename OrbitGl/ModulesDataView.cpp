@@ -2,7 +2,7 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#include "ModuleDataView.h"
+#include "ModulesDataView.h"
 
 #include "App.h"
 #include "Core.h"
@@ -10,40 +10,69 @@
 
 //-----------------------------------------------------------------------------
 ModulesDataView::ModulesDataView() {
-  m_SortingToggles.resize(MDV_NumColumns, false);
+  InitColumnsIfNeeded();
+  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
+                         s_InitialOrders.end());
 
   GOrbitApp->RegisterModulesDataView(this);
 }
 
 //-----------------------------------------------------------------------------
+std::vector<std::wstring> ModulesDataView::s_Headers;
 std::vector<float> ModulesDataView::s_HeaderRatios;
+std::vector<DataView::SortingOrder> ModulesDataView::s_InitialOrders;
+
+//-----------------------------------------------------------------------------
+void ModulesDataView::InitColumnsIfNeeded() {
+  if (s_Headers.empty()) {
+    s_Headers.emplace_back(L"Index");
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Name");
+    s_HeaderRatios.push_back(0.2f);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Path");
+    s_HeaderRatios.push_back(0.3f);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Address Range");
+    s_HeaderRatios.push_back(0.15f);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Debug info");
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Pdb Size");
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Loaded");
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+  }
+}
 
 //-----------------------------------------------------------------------------
 const std::vector<std::wstring>& ModulesDataView::GetColumnHeaders() {
-  static std::vector<std::wstring> Columns;
-  if (Columns.size() == 0) {
-    Columns.push_back(L"Index");
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Name");
-    s_HeaderRatios.push_back(0.2f);
-    Columns.push_back(L"Path");
-    s_HeaderRatios.push_back(0.3f);
-    Columns.push_back(L"Address Range");
-    s_HeaderRatios.push_back(0.15f);
-    Columns.push_back(L"Debug info");
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Pdb Size");
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Loaded");
-    s_HeaderRatios.push_back(0);
-  }
-  return Columns;
+  return s_Headers;
 }
 
 //-----------------------------------------------------------------------------
 const std::vector<float>& ModulesDataView::GetColumnHeadersRatios() {
   return s_HeaderRatios;
 }
+
+//-----------------------------------------------------------------------------
+const std::vector<DataView::SortingOrder>&
+ModulesDataView::GetColumnInitialOrders() {
+  return s_InitialOrders;
+}
+
+//-----------------------------------------------------------------------------
+int ModulesDataView::GetDefaultSortingColumn() { return MDV_PdbSize; }
 
 //-----------------------------------------------------------------------------
 std::wstring ModulesDataView::GetValue(int row, int col) {
@@ -87,14 +116,15 @@ std::wstring ModulesDataView::GetValue(int row, int col) {
   }
 
 //-----------------------------------------------------------------------------
-void ModulesDataView::OnSort(int a_Column, bool a_Toggle) {
-  MdvColumn mdvColumn = MdvColumn(a_Column);
+void ModulesDataView::OnSort(int a_Column,
+                             std::optional<SortingOrder> a_NewOrder) {
+  auto mdvColumn = static_cast<MdvColumn>(a_Column);
 
-  if (a_Toggle) {
-    m_SortingToggles[mdvColumn] = !m_SortingToggles[mdvColumn];
+  if (a_NewOrder.has_value()) {
+    m_SortingOrders[mdvColumn] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingToggles[mdvColumn];
+  bool ascending = m_SortingOrders[mdvColumn] == AscendingOrder;
   std::function<bool(int a, int b)> sorter = nullptr;
 
   switch (mdvColumn) {
@@ -210,7 +240,7 @@ void ModulesDataView::OnFilter(const std::wstring& a_Filter) {
   m_Indices = indices;
 
   if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, false);
+    OnSort(m_LastSortedColumn, {});
   }
 }
 
@@ -230,7 +260,9 @@ void ModulesDataView::SetProcess(std::shared_ptr<Process> a_Process) {
     m_Indices[i] = i;
   }
 
-  OnSort(MDV_PdbSize, false);
+  if (m_LastSortedColumn != -1) {
+    OnSort(m_LastSortedColumn, {});
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -241,8 +273,8 @@ const std::shared_ptr<Module>& ModulesDataView::GetModule(
 
 //-----------------------------------------------------------------------------
 bool ModulesDataView::GetDisplayColor(int a_Row, int /*a_Column*/,
-                                      unsigned char& r,
-                                      unsigned char& g, unsigned char& b) {
+                                      unsigned char& r, unsigned char& g,
+                                      unsigned char& b) {
   if (GetModule(a_Row)->GetLoaded()) {
     static unsigned char R = 42;
     static unsigned char G = 218;

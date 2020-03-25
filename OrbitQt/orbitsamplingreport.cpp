@@ -44,7 +44,7 @@ void OrbitSamplingReport::Initialize(std::shared_ptr<SamplingReport> a_Report) {
 
   m_SamplingReport->SetUiRefreshFunc([&]() { this->Refresh(); });
 
-  for (std::shared_ptr<class DataView> report : a_Report->GetThreadReports()) {
+  for (std::shared_ptr<DataView> report : a_Report->GetThreadReports()) {
     // OrbitDataViewPanel *treeView = new OrbitDataViewPanel();
     QWidget* tab = new QWidget();
     tab->setObjectName(QStringLiteral("tab"));
@@ -53,6 +53,18 @@ void OrbitSamplingReport::Initialize(std::shared_ptr<SamplingReport> a_Report) {
     gridLayout_2->setObjectName(QStringLiteral("gridLayout_2"));
     OrbitDataViewPanel* treeView = new OrbitDataViewPanel(tab);
     treeView->SetDataModel(report);
+
+    if (!report->IsSortingAllowed()) {
+      treeView->GetTreeView()->setSortingEnabled(false);
+    } else {
+      int column = report->GetDefaultSortingColumn();
+      Qt::SortOrder order =
+          report->GetColumnInitialOrders()[column] == DataView::AscendingOrder
+              ? Qt::AscendingOrder
+              : Qt::DescendingOrder;
+      treeView->GetTreeView()->sortByColumn(column, order);
+    }
+
     treeView->setObjectName(QStringLiteral("treeView"));
     gridLayout_2->addWidget(treeView, 0, 0, 1, 1);
     treeView->GetTreeView()->setSelectionMode(OrbitTreeView::ExtendedSelection);

@@ -17,53 +17,88 @@
 //-----------------------------------------------------------------------------
 SamplingReportDataView::SamplingReportDataView()
     : m_CallstackDataView(nullptr) {
-  m_SortingToggles.resize(SamplingColumn::NumColumns, false);
+  InitColumnsIfNeeded();
+  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
+                         s_InitialOrders.end());
 }
 
 //-----------------------------------------------------------------------------
+std::vector<std::wstring> SamplingReportDataView::s_Headers;
 std::vector<int> SamplingReportDataView::s_HeaderMap;
 std::vector<float> SamplingReportDataView::s_HeaderRatios;
+std::vector<DataView::SortingOrder> SamplingReportDataView::s_InitialOrders;
+
+//-----------------------------------------------------------------------------
+void SamplingReportDataView::InitColumnsIfNeeded() {
+  if (s_Headers.empty()) {
+    s_Headers.emplace_back(L"Hooked");
+    s_HeaderMap.push_back(SamplingColumn::Toggle);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Index");
+    s_HeaderMap.push_back(SamplingColumn::Index);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Name");
+    s_HeaderMap.push_back(SamplingColumn::FunctionName);
+    s_HeaderRatios.push_back(0.6f);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Exclusive");
+    s_HeaderMap.push_back(SamplingColumn::Exclusive);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Inclusive");
+    s_HeaderMap.push_back(SamplingColumn::Inclusive);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Module");
+    s_HeaderMap.push_back(SamplingColumn::ModuleName);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"File");
+    s_HeaderMap.push_back(SamplingColumn::SourceFile);
+    s_HeaderRatios.push_back(0.2f);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Line");
+    s_HeaderMap.push_back(SamplingColumn::SourceLine);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Address");
+    s_HeaderMap.push_back(SamplingColumn::Address);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+  }
+}
 
 //-----------------------------------------------------------------------------
 const std::vector<std::wstring>& SamplingReportDataView::GetColumnHeaders() {
-  static std::vector<std::wstring> Columns;
-
-  if (s_HeaderMap.size() == 0) {
-    Columns.push_back(L"Selected");
-    s_HeaderMap.push_back(SamplingColumn::Toggle);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Index");
-    s_HeaderMap.push_back(SamplingColumn::Index);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Name");
-    s_HeaderMap.push_back(SamplingColumn::FunctionName);
-    s_HeaderRatios.push_back(0.6f);
-    Columns.push_back(L"Exclusive");
-    s_HeaderMap.push_back(SamplingColumn::Exclusive);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Inclusive");
-    s_HeaderMap.push_back(SamplingColumn::Inclusive);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Module");
-    s_HeaderMap.push_back(SamplingColumn::ModuleName);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"File");
-    s_HeaderMap.push_back(SamplingColumn::SourceFile);
-    s_HeaderRatios.push_back(0.2f);
-    Columns.push_back(L"Line");
-    s_HeaderMap.push_back(SamplingColumn::SourceLine);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Address");
-    s_HeaderMap.push_back(SamplingColumn::Address);
-    s_HeaderRatios.push_back(0);
-  }
-
-  return Columns;
+  return s_Headers;
 }
 
 //-----------------------------------------------------------------------------
 const std::vector<float>& SamplingReportDataView::GetColumnHeadersRatios() {
   return s_HeaderRatios;
+}
+
+//-----------------------------------------------------------------------------
+const std::vector<DataView::SortingOrder>&
+SamplingReportDataView::GetColumnInitialOrders() {
+  return s_InitialOrders;
+}
+
+//-----------------------------------------------------------------------------
+int SamplingReportDataView::GetDefaultSortingColumn() {
+  return std::distance(s_HeaderMap.begin(),
+                       std::find(s_HeaderMap.begin(), s_HeaderMap.end(),
+                                 SamplingColumn::Inclusive));
 }
 
 //-----------------------------------------------------------------------------
@@ -115,15 +150,16 @@ std::wstring SamplingReportDataView::GetValue(int a_Row, int a_Column) {
   }
 
 //-----------------------------------------------------------------------------
-void SamplingReportDataView::OnSort(int a_Column, bool a_Toggle) {
+void SamplingReportDataView::OnSort(int a_Column,
+                                    std::optional<SortingOrder> a_NewOrder) {
   std::vector<SampledFunction>& functions = m_Functions;
-  SamplingColumn column = SamplingColumn(s_HeaderMap[a_Column]);
+  auto column = static_cast<SamplingColumn>(s_HeaderMap[a_Column]);
 
-  if (a_Toggle) {
-    m_SortingToggles[column] = !m_SortingToggles[column];
+  if (a_NewOrder.has_value()) {
+    m_SortingOrders[column] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingToggles[column];
+  bool ascending = m_SortingOrders[column] == AscendingOrder;
   std::function<bool(int a, int b)> sorter = nullptr;
 
   switch (column) {
@@ -294,7 +330,7 @@ void SamplingReportDataView::OnFilter(const std::wstring& a_Filter) {
   m_Indices = indices;
 
   if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, false);
+    OnSort(m_LastSortedColumn, {});
   }
 }
 

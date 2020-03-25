@@ -5,6 +5,7 @@
 
 #include <QAbstractTableModel>
 #include <memory>
+#include <utility>
 
 #include "../OrbitGl/DataView.h"
 
@@ -12,9 +13,9 @@
 class OrbitTableModel : public QAbstractTableModel {
   Q_OBJECT
  public:
-  explicit OrbitTableModel(DataViewType a_Type, QObject* parent = 0);
-  explicit OrbitTableModel(QObject* parent = 0);
-  virtual ~OrbitTableModel();
+  explicit OrbitTableModel(DataViewType a_Type, QObject* parent = nullptr);
+  explicit OrbitTableModel(QObject* parent = nullptr);
+  ~OrbitTableModel() override;
 
   int columnCount(const QModelIndex& parent = QModelIndex()) const override;
   int rowCount(const QModelIndex& parent = QModelIndex()) const override;
@@ -30,7 +31,11 @@ class OrbitTableModel : public QAbstractTableModel {
     return createIndex(a_Row, a_Column);
   }
   std::shared_ptr<DataView> GetDataView() { return m_DataView; }
-  void SetDataView(std::shared_ptr<DataView> a_Model) { m_DataView = a_Model; }
+  void SetDataView(std::shared_ptr<DataView> a_Model) {
+    m_DataView = std::move(a_Model);
+  }
+  bool IsSortingAllowed() { return GetDataView()->IsSortingAllowed(); }
+  std::pair<int, Qt::SortOrder> GetDefaultSortingColumnAndOrder();
 
   void OnTimer();
   void OnFilter(const QString& a_Filter);

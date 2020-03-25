@@ -12,19 +12,21 @@ class SamplingReportDataView : public DataView {
  public:
   SamplingReportDataView();
 
-  virtual const std::vector<std::wstring>& GetColumnHeaders() override;
-  virtual const std::vector<float>& GetColumnHeadersRatios() override;
-  virtual std::vector<std::wstring> GetContextMenu(int a_Index) override;
-  virtual std::wstring GetValue(int a_Row, int a_Column) override;
-  virtual const std::wstring& GetName() override { return m_Name; }
+  const std::vector<std::wstring>& GetColumnHeaders() override;
+  const std::vector<float>& GetColumnHeadersRatios() override;
+  const std::vector<SortingOrder>& GetColumnInitialOrders() override;
+  int GetDefaultSortingColumn() override;
+  std::vector<std::wstring> GetContextMenu(int a_Index) override;
+  std::wstring GetValue(int a_Row, int a_Column) override;
+  const std::wstring& GetName() override { return m_Name; }
 
   void OnFilter(const std::wstring& a_Filter) override;
-  void OnSort(int a_Column, bool a_Toggle = true) override;
+  void OnSort(int a_Column, std::optional<SortingOrder> a_NewOrder) override;
   void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
                      std::vector<int>& a_ItemIndices) override;
   void OnSelect(int a_Index) override;
 
-  virtual void LinkDataView(DataView* a_DataView) override;
+  void LinkDataView(DataView* a_DataView) override;
   void SetSamplingProfiler(std::shared_ptr<SamplingProfiler>& a_Profiler) {
     m_SamplingProfiler = a_Profiler;
   }
@@ -52,7 +54,6 @@ class SamplingReportDataView : public DataView {
   const SampledFunction& GetFunction(unsigned int a_Row) const;
   SampledFunction& GetFunction(unsigned int a_Row);
 
- protected:
   std::vector<SampledFunction> m_Functions;
   ThreadID m_TID;
   std::wstring m_Name;
@@ -60,6 +61,9 @@ class SamplingReportDataView : public DataView {
   class CallStackDataView* m_CallstackDataView;
   SamplingReport* m_SamplingReport;
 
+  static void InitColumnsIfNeeded();
+  static std::vector<std::wstring> s_Headers;
   static std::vector<int> s_HeaderMap;
   static std::vector<float> s_HeaderRatios;
+  static std::vector<SortingOrder> s_InitialOrders;
 };

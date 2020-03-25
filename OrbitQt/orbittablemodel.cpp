@@ -24,7 +24,9 @@ OrbitTableModel::OrbitTableModel(DataViewType a_Type, QObject* parent)
 
 //-----------------------------------------------------------------------------
 OrbitTableModel::OrbitTableModel(QObject* parent)
-    : QAbstractTableModel(parent), m_DataView(nullptr) {}
+    : QAbstractTableModel(parent),
+      m_DataView(nullptr),
+      m_AlternateRowColor(true) {}
 
 //-----------------------------------------------------------------------------
 OrbitTableModel::~OrbitTableModel() {}
@@ -50,10 +52,18 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation,
           section < (int)m_DataView->GetColumnHeaders().size()) {
         std::wstring str = m_DataView->GetColumnHeaders()[section];
         return QString::fromStdWString(str);
-      } else if (orientation == Qt::Vertical)
+      } else if (orientation == Qt::Vertical) {
         return section;
-      else
+      } else {
         return QVariant();
+      }
+
+    case Qt::InitialSortOrderRole:
+      return m_DataView->GetColumnInitialOrders()[section] ==
+                     DataView::AscendingOrder
+                 ? Qt::AscendingOrder
+                 : Qt::DescendingOrder;
+
     default:
       break;
   }
@@ -65,10 +75,10 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation,
 QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
   if (role == Qt::DisplayRole) {
     return QVariant(QString::fromStdWString(
-        m_DataView->GetValue(index.row(), index.column()).c_str()));
+        m_DataView->GetValue(index.row(), index.column())));
   } else if (role == Qt::BackgroundRole) {
     if (m_AlternateRowColor) {
-      if (index.row() & 1)
+      if (index.row() % 2 == 1)
         return QColor(60, 60, 60);
       else
         return QColor(45, 45, 48);
@@ -91,8 +101,28 @@ QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTableModel::sort(int column, Qt::SortOrder /*order*/) {
-  m_DataView->OnSort(column, true);
+void OrbitTableModel::sort(int column, Qt::SortOrder order) {
+  // On Linux, the arrows for ascending/descending are reversed, e.g. ascending
+  // has an arrow pointing down, which is unexpected. This is because of some
+  // Linux UI guideline, it is not the case on Windows.
+  m_DataView->OnSort(column, order == Qt::AscendingOrder
+                                 ? DataView::AscendingOrder
+                                 : DataView::DescendingOrder);
+}
+
+//-----------------------------------------------------------------------------
+std::pair<int, Qt::SortOrder>
+OrbitTableModel::GetDefaultSortingColumnAndOrder() {
+  if (!IsSortingAllowed()) {
+    return std::make_pair(-1, Qt::AscendingOrder);
+  }
+
+  int column = m_DataView->GetDefaultSortingColumn();
+  Qt::SortOrder order =
+      m_DataView->GetColumnInitialOrders()[column] == DataView::AscendingOrder
+          ? Qt::AscendingOrder
+          : Qt::DescendingOrder;
+  return std::make_pair(column, order);
 }
 
 //-----------------------------------------------------------------------------

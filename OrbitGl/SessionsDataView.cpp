@@ -8,37 +8,55 @@
 #include "Callstack.h"
 #include "Capture.h"
 #include "Core.h"
-#include "ModuleDataView.h"
+#include "ModulesDataView.h"
 #include "OrbitSession.h"
 #include "OrbitType.h"
 #include "Pdb.h"
 
 //-----------------------------------------------------------------------------
 SessionsDataView::SessionsDataView() {
-  m_SortingToggles.resize(SDV_NumColumns, false);
+  InitColumnsIfNeeded();
+  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
+                         s_InitialOrders.end());
   GOrbitApp->RegisterSessionsDataView(this);
 }
 
 //-----------------------------------------------------------------------------
+std::vector<std::wstring> SessionsDataView::s_Headers;
 std::vector<float> SessionsDataView::s_HeaderRatios;
+std::vector<DataView::SortingOrder> SessionsDataView::s_InitialOrders;
+
+//-----------------------------------------------------------------------------
+void SessionsDataView::InitColumnsIfNeeded() {
+  if (s_Headers.empty()) {
+    s_Headers.emplace_back(L"Session");
+    s_HeaderRatios.push_back(0.5);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Process");
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    // s_Headers.emplace_back(L"LastUsed");
+    // s_HeaderRatios.push_back(0);
+    // s_InitialOrders.push_back(DescendingOrder);
+  }
+}
 
 //-----------------------------------------------------------------------------
 const std::vector<std::wstring>& SessionsDataView::GetColumnHeaders() {
-  static std::vector<std::wstring> Columns;
-  if (Columns.size() == 0) {
-    Columns.push_back(L"Session");
-    s_HeaderRatios.push_back(0.5);
-    Columns.push_back(L"Process");
-    s_HeaderRatios.push_back(0);
-    // Columns.push_back( L"LastUsed" ); s_HeaderRatios.push_back( 0 );
-  };
-
-  return Columns;
+  return s_Headers;
 }
 
 //-----------------------------------------------------------------------------
 const std::vector<float>& SessionsDataView::GetColumnHeadersRatios() {
   return s_HeaderRatios;
+}
+
+//-----------------------------------------------------------------------------
+const std::vector<DataView::SortingOrder>&
+SessionsDataView::GetColumnInitialOrders() {
+  return s_InitialOrders;
 }
 
 //-----------------------------------------------------------------------------
@@ -78,14 +96,15 @@ std::wstring SessionsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
   }
 
 //-----------------------------------------------------------------------------
-void SessionsDataView::OnSort(int a_Column, bool a_Toggle) {
-  SdvColumn pdvColumn = SdvColumn(a_Column);
+void SessionsDataView::OnSort(int a_Column,
+                              std::optional<SortingOrder> a_NewOrder) {
+  auto pdvColumn = static_cast<SdvColumn>(a_Column);
 
-  if (a_Toggle) {
-    m_SortingToggles[pdvColumn] = !m_SortingToggles[pdvColumn];
+  if (a_NewOrder.has_value()) {
+    m_SortingOrders[pdvColumn] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingToggles[pdvColumn];
+  bool ascending = m_SortingOrders[pdvColumn] == AscendingOrder;
   std::function<bool(int a, int b)> sorter = nullptr;
 
   switch (pdvColumn) {
@@ -164,7 +183,7 @@ void SessionsDataView::OnFilter(const std::wstring& a_Filter) {
   m_Indices = indices;
 
   if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, false);
+    OnSort(m_LastSortedColumn, {});
   }
 }
 
@@ -176,7 +195,7 @@ void SessionsDataView::OnDataChanged() {
   }
 
   if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, false);
+    OnSort(m_LastSortedColumn, {});
   }
 }
 
