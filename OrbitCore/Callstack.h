@@ -9,24 +9,30 @@
 #include "ScopeTimer.h"
 #include "SerializationMacros.h"
 
-//-----------------------------------------------------------------------------
-struct CallStackPOD {
-  CallStackPOD() { memset(this, 0, sizeof(CallStackPOD)); }
-  static CallStackPOD Walk(DWORD64 a_Rip, DWORD64 a_Rsp);
+class CallStackPOD {
+ public:
+  CallStackPOD() { memset(this, 0, sizeof(*this)); }
+  static CallStackPOD Walk(uint64_t ip, uint64_t sp);
   size_t GetSizeInBytes() {
-    return offsetof(CallStackPOD, m_Data) + m_Depth * sizeof(m_Data[0]);
+    return offsetof(CallStackPOD, data_) + depth_ * sizeof(data_[0]);
   }
 
-  inline CallstackID Hash() {
-    m_Hash = XXH64(&m_Data[0], m_Depth * sizeof(DWORD64), 0xca1157ac);
-    return m_Hash;
+  void CalculateHash() {
+    hash_ = XXH64(&data_[0], depth_ * sizeof(data_[0]), 0xca1157ac);
   }
 
+  CallstackID Hash() const { return hash_; }
+
+  ThreadID ThreadId() const { return thread_id_; }
+  size_t Depth() const { return depth_; }
+  const uint64_t* Data() const { return data_; }
+
+ private:
   // Callstack needs to be POD
-  CallstackID m_Hash;
-  int m_Depth;
-  ThreadID m_ThreadId;
-  DWORD64 m_Data[ORBIT_STACK_SIZE];  // Needs to be last member
+  CallstackID hash_;
+  size_t depth_;
+  ThreadID thread_id_;
+  uint64_t data_[ORBIT_STACK_SIZE];  // Needs to be last member
 };
 
 //-----------------------------------------------------------------------------
@@ -93,8 +99,8 @@ inline CallStack GetCallstackRtl() {
 
 #ifndef _WIN64
 //-----------------------------------------------------------------------------
-inline CallStack GetCallstack(DWORD64 a_ProgramCounter,
-                              DWORD64 a_AddressOfReturnAddress) {
+inline CallStack GetCallstack(uint64_t a_ProgramCounter,
+                              uint64_t a_AddressOfReturnAddress) {
   unsigned int depth = 0;
 
   SetLastError(0);
@@ -135,8 +141,8 @@ inline CallStack GetCallstack(DWORD64 a_ProgramCounter,
 }
 
 //-----------------------------------------------------------------------------
-inline CallStackPOD GetCallstackManual(DWORD64 a_ProgramCounter,
-                                       DWORD64 a_AddressOfReturnAddress) {
+inline CallStackPOD GetCallstackManual(uint64_t a_ProgramCounter,
+                                       uint64_t a_AddressOfReturnAddress) {
   CallStackPOD CS;
 
   CS.m_Data[CS.m_Depth++] = a_ProgramCounter;
