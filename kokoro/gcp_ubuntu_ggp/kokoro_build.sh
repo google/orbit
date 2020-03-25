@@ -27,6 +27,11 @@ cp -v $DIR/kokoro/conan/config/remotes.json ~/.conan/remotes.json
 export CONAN_REVISIONS_ENABLED=1
 profile=ggp_relwithdebinfo
 
+# This variable is picked up by the `conan package` call.
+# The current public key from keystore will be embedded into
+# the install_signed_package.sh script.
+export ORBIT_SIGNING_PUBLIC_KEY_FILE="/tmpfs/src/keystore/74938_SigningPublicGpg"
+
 cd ${KOKORO_ARTIFACTS_DIR}/github/orbitprofiler
 conan install -u -pr $profile -if build_$profile/ --build outdated -o debian_packaging=True $DIR
 conan build -bf build_$profile/ $DIR

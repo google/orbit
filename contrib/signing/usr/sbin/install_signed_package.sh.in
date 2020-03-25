@@ -1,0 +1,49 @@
+#!/bin/bash
+
+if [ $(id -u) != 0 ]; then
+    echo "You have to run this a root!"
+    exit 1
+fi
+
+show_help() {
+        echo "$0 filename.deb"
+}
+
+if [ $# -ne 1 ]; then
+        echo "You have to provide the path to a debian package!"
+        show_help
+        exit 2
+fi
+
+if [ ! -f $1 ]; then
+        echo "The given debian package has to be a regular file!"
+        show_help
+        exit 3
+fi
+
+if [ ! -f $1.asc ]; then
+        echo "Signature $1.asc not found or not a regular file!"
+        show_help
+        exit 3
+fi
+
+umask 077 # Create files and directories with root-only access
+
+DIR="$(mktemp -d)"
+cp -v "$1" "$1.asc" "$DIR/" || exit $?
+
+FILENAME="$(basename -- "$1")"
+
+cleanup() {
+  rm -v -rf "$DIR"
+}
+
+base64 -d > "$DIR/$FILENAME.keyring" <<EOF
+@PUBLIC_KEY_BASE64@
+EOF
+
+echo "Note: A warning about a non-certified public key is expected and can be ignored!"
+gpg --no-default-keyring --keyring "$DIR/$FILENAME.keyring" --verify \
+        "$DIR/$FILENAME.asc" "$DIR/$FILENAME" && \
+        dpkg -i "$DIR/$FILENAME"
+cleanup
