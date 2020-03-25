@@ -562,7 +562,11 @@ unsigned long long SampledFunction::Hash() {
 }
 
 //-----------------------------------------------------------------------------
-bool SampledFunction::GetSelected() const {
+bool SampledFunction::GetSelected() {
+  if (m_Function == nullptr) {
+    m_Function =
+        Capture::GTargetProcess->GetFunctionFromAddress(m_Address, false);
+  }
   return m_Function ? m_Function->IsSelected() : false;
 }
 

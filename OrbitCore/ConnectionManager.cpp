@@ -93,7 +93,8 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
 
   Capture::GSelectedFunctionsMap.clear();
   for (Function* function : prevSelectedFuncs) {
-    function->UnSelect();
+    if (function)
+      function->UnSelect();
   }
 
   // Select the received functions:

@@ -17,7 +17,7 @@ class Thread;
 struct SampledFunction {
   SampledFunction() {}
   unsigned long long Hash();
-  bool GetSelected() const;
+  bool GetSelected();
   std::wstring m_Name;
   std::wstring m_Module;
   std::wstring m_File;

@@ -68,13 +68,13 @@ const std::vector<float>& SamplingReportDataView::GetColumnHeadersRatios() {
 
 //-----------------------------------------------------------------------------
 std::wstring SamplingReportDataView::GetValue(int a_Row, int a_Column) {
-  const SampledFunction& func = GetFunction(a_Row);
+  SampledFunction& func = GetFunction(a_Row);
 
   std::wstring value;
 
   switch (s_HeaderMap[a_Column]) {
     case SamplingColumn::Toggle:
-      value = func.m_Function && func.m_Function->IsSelected() ? L"X" : L"-";
+      value = func.GetSelected() ? L"X" : L"-";
       break;
     case SamplingColumn::Index:
       value = Format(L"%d", a_Row);
@@ -116,7 +116,7 @@ std::wstring SamplingReportDataView::GetValue(int a_Row, int a_Column) {
 
 //-----------------------------------------------------------------------------
 void SamplingReportDataView::OnSort(int a_Column, bool a_Toggle) {
-  const std::vector<SampledFunction>& functions = m_Functions;
+  std::vector<SampledFunction>& functions = m_Functions;
   SamplingColumn column = SamplingColumn(s_HeaderMap[a_Column]);
 
   if (a_Toggle) {
