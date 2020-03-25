@@ -159,7 +159,7 @@ void LinuxTracingHandler::OnGpuJob(
   timer_user_to_sched.m_End = gpu_job.GetAmdgpuSchedRunJobTimeNs();
   timer_user_to_sched.m_Depth = gpu_job.GetDepth();
 
-  const std::string sw_queue("sw queue");
+  constexpr const char* sw_queue = "sw queue";
   uint64_t hash = StringHash(sw_queue);
   session_->SendKeyAndString(hash, sw_queue);
   timer_user_to_sched.m_UserData[0] = hash;
@@ -177,7 +177,7 @@ void LinuxTracingHandler::OnGpuJob(
   timer_sched_to_start.m_End = gpu_job.GetGpuHardwareStartTimeNs();
   timer_sched_to_start.m_Depth = gpu_job.GetDepth();
 
-  const std::string hw_queue("hw queue");
+  constexpr const char* hw_queue = "hw queue";
   hash = StringHash(hw_queue);
   session_->SendKeyAndString(hash, hw_queue);
 
@@ -193,7 +193,7 @@ void LinuxTracingHandler::OnGpuJob(
   timer_start_to_finish.m_End = gpu_job.GetDmaFenceSignaledTimeNs();
   timer_start_to_finish.m_Depth = gpu_job.GetDepth();
 
-  const std::string hw_execution("hw execution");
+  constexpr const char* hw_execution = "hw execution";
   hash = StringHash(hw_execution);
   session_->SendKeyAndString(hash, hw_execution);
   timer_start_to_finish.m_UserData[0] = hash;
