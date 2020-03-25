@@ -239,6 +239,10 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
   if (!a_Timer.IsType(Timer::THREAD_ACTIVITY) &&
       !a_Timer.IsType(Timer::CORE_ACTIVITY)) {
     std::shared_ptr<ThreadTrack> track = GetThreadTrack(a_Timer.m_TID);
+    if ( a_Timer.m_Type == Timer::GPU_ACTIVITY) {
+      track->SetName(string_manager_->Get(a_Timer.m_UserData[1]).value_or(""));
+    }
+
     track->OnTimer(a_Timer);
     ++m_ThreadCountMap[a_Timer.m_TID];
     if( a_Timer.m_Type == Timer::INTROSPECTION ) {
