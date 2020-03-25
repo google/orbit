@@ -462,6 +462,8 @@ inline std::string GetExtraInfo(const Timer& a_Timer) {
 
 //-----------------------------------------------------------------------------
 void TimeGraph::UpdatePrimitives(bool a_Picking) {
+  CHECK(string_manager_);
+
   m_Batcher.Reset();
   m_VisibleTextBoxes.clear();
   m_TextRendererStatic.Clear();
@@ -554,13 +556,17 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
           // We disambiguate the different types of GPU activity based on the
           // string that is displayed on their timeslice.
           if (timer.m_Type == Timer::GPU_ACTIVITY) {
+            constexpr const char* kSwQueueString = "sw queue";
+            constexpr const char* kHwQueueString = "hw queue";
+            constexpr const char* kHwExecutionString = "hw execution";
             float coeff = 1.0f;
-            std::string gpu_stage = string_manager_->Get(timer.m_UserData[0]).value_or("");
-            if (gpu_stage == "sw queue") {
+            std::string gpu_stage =
+                string_manager_->Get(timer.m_UserData[0]).value_or("");
+            if (gpu_stage == kSwQueueString) {
               coeff = 0.5f;
-            } else if (gpu_stage == "hw queue") {
+            } else if (gpu_stage == kHwQueueString) {
               coeff = 0.75f;
-            } else if (gpu_stage == "hw execution") {
+            } else if (gpu_stage == kHwExecutionString) {
               coeff = 1.0f;
             }
 
@@ -613,10 +619,10 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
                     "%s %s %s", name, extraInfo.c_str(), time.c_str());
 
                 textBox.SetText(text);
-              } else if( timer.m_Type == Timer::INTROSPECTION && string_manager_) {
+              } else if( timer.m_Type == Timer::INTROSPECTION) {
                 textBox.SetText(string_manager_->Get(
                     timer.m_UserData[0]).value_or(""));
-              } else if ( timer.m_Type == Timer::GPU_ACTIVITY && string_manager_) {
+              } else if ( timer.m_Type == Timer::GPU_ACTIVITY) {
                 textBox.SetText(string_manager_->Get(
                     timer.m_UserData[0]).value_or(""));
               } else if (!SystraceManager::Get().IsEmpty()) {
