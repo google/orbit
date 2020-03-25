@@ -2,7 +2,7 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#include "TypeDataView.h"
+#include "TypesDataView.h"
 
 #include <algorithm>
 
@@ -17,8 +17,9 @@
 
 //-----------------------------------------------------------------------------
 TypesDataView::TypesDataView() {
-  m_SortingToggles.resize(Type::NUM_EXPOSED_MEMBERS, false);
-  m_SortingToggles[Type::SELECTED] = true;
+  InitColumnsIfNeeded();
+  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
+                         s_InitialOrders.end());
   OnDataChanged();
 
   GOrbitApp->RegisterTypesDataView(this);
@@ -34,52 +35,80 @@ void TypesDataView::OnDataChanged() {
 }
 
 //-----------------------------------------------------------------------------
+std::vector<std::wstring> TypesDataView::s_Headers;
 std::vector<int> TypesDataView::s_HeaderMap;
 std::vector<float> TypesDataView::s_HeaderRatios;
+std::vector<DataView::SortingOrder> TypesDataView::s_InitialOrders;
+
+//-----------------------------------------------------------------------------
+void TypesDataView::InitColumnsIfNeeded() {
+  if (s_Headers.empty()) {
+    s_Headers.emplace_back(L"Index");
+    s_HeaderMap.push_back(Type::INDEX);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Type");
+    s_HeaderMap.push_back(Type::NAME);
+    s_HeaderRatios.push_back(0.5f);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Length");
+    s_HeaderMap.push_back(Type::LENGTH);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"TypeId");
+    s_HeaderMap.push_back(Type::TYPE_ID);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"UnModifiedId");
+    s_HeaderMap.push_back(Type::TYPE_ID_UNMODIFIED);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"NumVariables");
+    s_HeaderMap.push_back(Type::NUM_VARIABLES);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"NumFunctions");
+    s_HeaderMap.push_back(Type::NUM_FUNCTIONS);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"NumBaseClasses");
+    s_HeaderMap.push_back(Type::NUM_BASE_CLASSES);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"BaseOffset");
+    s_HeaderMap.push_back(Type::BASE_OFFSET);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Module");
+    s_HeaderMap.push_back(Type::MODULE);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+  }
+}
 
 //-----------------------------------------------------------------------------
 const std::vector<std::wstring>& TypesDataView::GetColumnHeaders() {
-  static std::vector<std::wstring> Columns;
-
-  if (s_HeaderMap.size() == 0) {
-    Columns.push_back(L"Index");
-    s_HeaderMap.push_back(Type::INDEX);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Type");
-    s_HeaderMap.push_back(Type::NAME);
-    s_HeaderRatios.push_back(0.5f);
-    Columns.push_back(L"Length");
-    s_HeaderMap.push_back(Type::LENGTH);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"TypeId");
-    s_HeaderMap.push_back(Type::TYPE_ID);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"UnModifiedId");
-    s_HeaderMap.push_back(Type::TYPE_ID_UNMODIFIED);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"NumVariables");
-    s_HeaderMap.push_back(Type::NUM_VARIABLES);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"NumFunctions");
-    s_HeaderMap.push_back(Type::NUM_FUNCTIONS);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"NumBaseClasses");
-    s_HeaderMap.push_back(Type::NUM_BASE_CLASSES);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"BaseOffset");
-    s_HeaderMap.push_back(Type::BASE_OFFSET);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Module");
-    s_HeaderMap.push_back(Type::MODULE);
-    s_HeaderRatios.push_back(0);
-  }
-
-  return Columns;
+  return s_Headers;
 }
 
 //-----------------------------------------------------------------------------
 const std::vector<float>& TypesDataView::GetColumnHeadersRatios() {
   return s_HeaderRatios;
+}
+
+//-----------------------------------------------------------------------------
+const std::vector<DataView::SortingOrder>&
+TypesDataView::GetColumnInitialOrders() {
+  return s_InitialOrders;
 }
 
 //-----------------------------------------------------------------------------
@@ -136,7 +165,7 @@ void TypesDataView::OnFilter(const std::wstring& a_Filter) {
   ParallelFilter(a_Filter);
 
   if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, false);
+    OnSort(m_LastSortedColumn, {});
   }
 }
 
@@ -188,16 +217,16 @@ void TypesDataView::ParallelFilter(const std::wstring& a_Filter) {
   }
 
 //-----------------------------------------------------------------------------
-void TypesDataView::OnSort(int a_Column, bool a_Toggle) {
+void TypesDataView::OnSort(int a_Column,
+                           std::optional<SortingOrder> a_NewOrder) {
   const std::vector<Type*>& types = Capture::GTargetProcess->GetTypes();
-  auto MemberID = Type::MemberID(s_HeaderMap[a_Column]);
+  auto MemberID = static_cast<Type::MemberID>(s_HeaderMap[a_Column]);
 
-  if (a_Toggle) {
-    m_SortingToggles[MemberID] = !m_SortingToggles[MemberID];
+  if (a_NewOrder.has_value()) {
+    m_SortingOrders[MemberID] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingToggles[MemberID];
-
+  bool ascending = m_SortingOrders[MemberID] == AscendingOrder;
   std::function<bool(int a, int b)> sorter = nullptr;
 
   switch (MemberID) {

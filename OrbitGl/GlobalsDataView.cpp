@@ -2,7 +2,7 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#include "GlobalDataView.h"
+#include "GlobalsDataView.h"
 
 #include "App.h"
 #include "Capture.h"
@@ -15,51 +15,74 @@
 
 //-----------------------------------------------------------------------------
 GlobalsDataView::GlobalsDataView() {
-  m_SortingToggles.resize(Variable::NUM_EXPOSED_MEMBERS, false);
-  m_SortingToggles[Variable::SELECTED] = true;
+  InitColumnsIfNeeded();
+  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
+                         s_InitialOrders.end());
   OnDataChanged();
 
   GOrbitApp->RegisterGlobalsDataView(this);
 }
 
 //-----------------------------------------------------------------------------
+std::vector<std::wstring> GlobalsDataView::s_Headers;
 std::vector<int> GlobalsDataView::s_HeaderMap;
 std::vector<float> GlobalsDataView::s_HeaderRatios;
+std::vector<DataView::SortingOrder> GlobalsDataView::s_InitialOrders;
+
+//-----------------------------------------------------------------------------
+void GlobalsDataView::InitColumnsIfNeeded() {
+  if (s_Headers.empty()) {
+    s_Headers.emplace_back(L"Index");
+    s_HeaderMap.push_back(Variable::INDEX);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Variable");
+    s_HeaderMap.push_back(Variable::NAME);
+    s_HeaderRatios.push_back(0.5f);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Type");
+    s_HeaderMap.push_back(Variable::TYPE);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Address");
+    s_HeaderMap.push_back(Variable::ADDRESS);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"File");
+    s_HeaderMap.push_back(Variable::FILE);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Line");
+    s_HeaderMap.push_back(Variable::LINE);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Module");
+    s_HeaderMap.push_back(Variable::MODULE);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+  }
+}
 
 //-----------------------------------------------------------------------------
 const std::vector<std::wstring>& GlobalsDataView::GetColumnHeaders() {
-  static std::vector<std::wstring> Columns;
-
-  if (s_HeaderMap.size() == 0) {
-    Columns.push_back(L"Index");
-    s_HeaderMap.push_back(Variable::INDEX);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Variable");
-    s_HeaderMap.push_back(Variable::NAME);
-    s_HeaderRatios.push_back(0.5f);
-    Columns.push_back(L"Type");
-    s_HeaderMap.push_back(Variable::TYPE);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Address");
-    s_HeaderMap.push_back(Variable::ADDRESS);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"File");
-    s_HeaderMap.push_back(Variable::FILE);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Line");
-    s_HeaderMap.push_back(Variable::LINE);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Module");
-    s_HeaderMap.push_back(Variable::MODULE);
-    s_HeaderRatios.push_back(0);
-  }
-
-  return Columns;
+  return s_Headers;
 }
 
 //-----------------------------------------------------------------------------
 const std::vector<float>& GlobalsDataView::GetColumnHeadersRatios() {
   return s_HeaderRatios;
+}
+
+//-----------------------------------------------------------------------------
+const std::vector<DataView::SortingOrder>&
+GlobalsDataView::GetColumnInitialOrders() {
+  return s_InitialOrders;
 }
 
 //-----------------------------------------------------------------------------
@@ -113,19 +136,20 @@ std::wstring GlobalsDataView::GetValue(int a_Row, int a_Column) {
   }
 
 //-----------------------------------------------------------------------------
-void GlobalsDataView::OnSort(int a_Column, bool a_Toggle) {
+void GlobalsDataView::OnSort(int a_Column,
+                             std::optional<SortingOrder> a_NewOrder) {
   const std::vector<Variable*>& functions =
       Capture::GTargetProcess->GetGlobals();
-  auto MemberID = Variable::MemberID(s_HeaderMap[a_Column]);
+  auto memberId = static_cast<Variable::MemberID>(s_HeaderMap[a_Column]);
 
-  if (a_Toggle) {
-    m_SortingToggles[MemberID] = !m_SortingToggles[MemberID];
+  if (a_NewOrder.has_value()) {
+    m_SortingOrders[memberId] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingToggles[MemberID];
+  bool ascending = m_SortingOrders[memberId] == AscendingOrder;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (MemberID) {
+  switch (memberId) {
     case Variable::NAME:
       sorter = ORBIT_FUNC_SORT(m_Name);
       break;
@@ -203,7 +227,7 @@ void GlobalsDataView::OnFilter(const std::wstring& a_Filter) {
   ParallelFilter();
 
   if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, false);
+    OnSort(m_LastSortedColumn, {});
   }
 }
 

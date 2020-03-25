@@ -13,13 +13,13 @@ struct CallStack;
 class LogDataView : public DataView {
  public:
   LogDataView();
-  virtual const std::vector<std::wstring>& GetColumnHeaders() override;
+  const std::vector<std::wstring>& GetColumnHeaders() override;
   const std::vector<float>& GetColumnHeadersRatios() override;
-  virtual std::vector<std::wstring> GetContextMenu(int a_Index) override;
-  virtual std::wstring GetValue(int a_Row, int a_Column) override;
-  virtual std::wstring GetToolTip(int a_Row, int a_Column) override;
-  virtual bool ScrollToBottom() override;
-  virtual bool SkipTimer() override;
+  std::vector<std::wstring> GetContextMenu(int a_Index) override;
+  std::wstring GetValue(int a_Row, int a_Column) override;
+  std::wstring GetToolTip(int a_Row, int a_Column) override;
+  bool ScrollToBottom() override;
+  bool SkipTimer() override;
 
   void OnDataChanged() override;
   void OnFilter(const std::wstring& a_Filter) override;
@@ -36,5 +36,9 @@ class LogDataView : public DataView {
   std::vector<OrbitLogEntry> m_Entries;
   Mutex m_Mutex;
   std::shared_ptr<CallStack> m_SelectedCallstack;
+
+  static void InitColumnsIfNeeded();
+  static std::vector<std::wstring> s_Headers;
   static std::vector<float> s_HeaderRatios;
+  static std::vector<SortingOrder> s_InitialOrders;
 };

@@ -3,6 +3,7 @@
 //-----------------------------------
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -11,6 +12,11 @@
 //-----------------------------------------------------------------------------
 class DataView {
  public:
+  enum SortingOrder {
+    AscendingOrder = 0,
+    DescendingOrder = 1,
+  };
+
   DataView()
       : m_LastSortedColumn(-1),
         m_UpdatePeriodMs(-1),
@@ -24,6 +30,9 @@ class DataView {
   virtual void SetAsMainInstance() {}
   virtual const std::vector<std::wstring>& GetColumnHeaders();
   virtual const std::vector<float>& GetColumnHeadersRatios();
+  virtual bool IsSortingAllowed() { return true; }
+  virtual const std::vector<SortingOrder>& GetColumnInitialOrders();
+  virtual int GetDefaultSortingColumn() { return 0; }
   virtual std::vector<std::wstring> GetContextMenu(int a_Index);
   virtual size_t GetNumElements() { return m_Indices.size(); }
   virtual std::wstring GetValue(int /*a_Row*/, int /*a_Column*/) { return L""; }
@@ -35,7 +44,8 @@ class DataView {
     OnFilter(a_Filter);
   }
   virtual void OnFilter(const std::wstring& /*a_Filter*/) {}
-  virtual void OnSort(int /*a_Column*/, bool /*a_Toggle*/ = true) {}
+  virtual void OnSort(int /*a_Column*/,
+                      std::optional<SortingOrder> /*a_NewOrder*/) {}
   virtual void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
                              std::vector<int>& a_ItemIndices);
   virtual void OnItemActivated() {}
@@ -66,7 +76,7 @@ class DataView {
 
  protected:
   std::vector<uint32_t> m_Indices;
-  std::vector<bool> m_SortingToggles;
+  std::vector<SortingOrder> m_SortingOrders;
   int m_LastSortedColumn;
   std::wstring m_Filter;
   int m_UpdatePeriodMs;

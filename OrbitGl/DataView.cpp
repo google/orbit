@@ -9,19 +9,19 @@
 #include "App.h"
 #include "CallStackDataView.h"
 #include "Core.h"
-#include "FunctionDataView.h"
-#include "GlobalDataView.h"
-#include "LiveFunctionDataView.h"
+#include "FunctionsDataView.h"
+#include "GlobalsDataView.h"
+#include "LiveFunctionsDataView.h"
 #include "Log.h"
 #include "LogDataView.h"
-#include "ModuleDataView.h"
+#include "ModulesDataView.h"
 #include "OrbitType.h"
 #include "Params.h"
 #include "Pdb.h"
-#include "ProcessDataView.h"
+#include "ProcessesDataView.h"
 #include "SamplingReportDataView.h"
 #include "SessionsDataView.h"
-#include "TypeDataView.h"
+#include "TypesDataView.h"
 
 //-----------------------------------------------------------------------------
 DataView::~DataView() {
@@ -80,8 +80,15 @@ const std::vector<std::wstring>& DataView::GetColumnHeaders() {
 
 //-----------------------------------------------------------------------------
 const std::vector<float>& DataView::GetColumnHeadersRatios() {
-  static std::vector<float> empty;
-  return empty;
+  static std::vector<float> ratios = {0.0};
+  return ratios;
+}
+
+//-----------------------------------------------------------------------------
+const std::vector<DataView::SortingOrder>& DataView::GetColumnInitialOrders() {
+  static std::vector<DataView::SortingOrder> orders = {
+      DataView::AscendingOrder};
+  return orders;
 }
 
 //-----------------------------------------------------------------------------

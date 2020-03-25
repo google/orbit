@@ -2,7 +2,7 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#include "FunctionDataView.h"
+#include "FunctionsDataView.h"
 
 #include "App.h"
 #include "Capture.h"
@@ -16,55 +16,89 @@
 
 //-----------------------------------------------------------------------------
 FunctionsDataView::FunctionsDataView() {
+  InitColumnsIfNeeded();
+  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
+                         s_InitialOrders.end());
   GOrbitApp->RegisterFunctionsDataView(this);
-  m_SortingToggles.resize(Function::NUM_EXPOSED_MEMBERS, false);
-  m_SortingToggles[Function::SELECTED] = true;
 }
 
 //-----------------------------------------------------------------------------
+std::vector<std::wstring> FunctionsDataView::s_Headers;
 std::vector<int> FunctionsDataView::s_HeaderMap;
 std::vector<float> FunctionsDataView::s_HeaderRatios;
+std::vector<DataView::SortingOrder> FunctionsDataView::s_InitialOrders;
+
+//-----------------------------------------------------------------------------
+void FunctionsDataView::InitColumnsIfNeeded() {
+  if (s_Headers.empty()) {
+    s_Headers.emplace_back(L"Hooked");
+    s_HeaderMap.push_back(Function::SELECTED);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Index");
+    s_HeaderMap.push_back(Function::INDEX);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Function");
+    s_HeaderMap.push_back(Function::NAME);
+    s_HeaderRatios.push_back(0.5f);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Size");
+    s_HeaderMap.push_back(Function::SIZE);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"File");
+    s_HeaderMap.push_back(Function::FILE);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Line");
+    s_HeaderMap.push_back(Function::LINE);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Module");
+    s_HeaderMap.push_back(Function::MODULE);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Address");
+    s_HeaderMap.push_back(Function::ADDRESS);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Conv");
+    s_HeaderMap.push_back(Function::CALL_CONV);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+  }
+}
 
 //-----------------------------------------------------------------------------
 const std::vector<std::wstring>& FunctionsDataView::GetColumnHeaders() {
-  static std::vector<std::wstring> Columns;
-
-  if (s_HeaderMap.size() == 0) {
-    Columns.push_back(L"Hooked");
-    s_HeaderMap.push_back(Function::SELECTED);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Index");
-    s_HeaderMap.push_back(Function::INDEX);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Function");
-    s_HeaderMap.push_back(Function::NAME);
-    s_HeaderRatios.push_back(0.5f);
-    Columns.push_back(L"Size");
-    s_HeaderMap.push_back(Function::SIZE);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"File");
-    s_HeaderMap.push_back(Function::FILE);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Line");
-    s_HeaderMap.push_back(Function::LINE);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Module");
-    s_HeaderMap.push_back(Function::MODULE);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Address");
-    s_HeaderMap.push_back(Function::ADDRESS);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Conv");
-    s_HeaderMap.push_back(Function::CALL_CONV);
-    s_HeaderRatios.push_back(0);
-  }
-
-  return Columns;
+  return s_Headers;
 }
 
 //-----------------------------------------------------------------------------
 const std::vector<float>& FunctionsDataView::GetColumnHeadersRatios() {
   return s_HeaderRatios;
+}
+
+//-----------------------------------------------------------------------------
+const std::vector<DataView::SortingOrder>&
+FunctionsDataView::GetColumnInitialOrders() {
+  return s_InitialOrders;
+}
+
+//-----------------------------------------------------------------------------
+int FunctionsDataView::GetDefaultSortingColumn() {
+  return std::distance(
+      s_HeaderMap.begin(),
+      std::find(s_HeaderMap.begin(), s_HeaderMap.end(), Function::ADDRESS));
 }
 
 //-----------------------------------------------------------------------------
@@ -122,23 +156,24 @@ std::wstring FunctionsDataView::GetValue(int a_Row, int a_Column) {
   }
 
 //-----------------------------------------------------------------------------
-void FunctionsDataView::OnSort(int a_Column, bool a_Toggle) {
-  if (!SortAllowed()) {
+void FunctionsDataView::OnSort(int a_Column,
+                               std::optional<SortingOrder> a_NewOrder) {
+  if (!IsSortingAllowed()) {
     return;
   }
 
   const std::vector<Function*>& functions =
       Capture::GTargetProcess->GetFunctions();
-  auto MemberID = Function::MemberID(s_HeaderMap[a_Column]);
+  auto memberId = static_cast<Function::MemberID>(s_HeaderMap[a_Column]);
 
-  if (a_Toggle) {
-    m_SortingToggles[MemberID] = !m_SortingToggles[MemberID];
+  if (a_NewOrder.has_value()) {
+    m_SortingOrders[memberId] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingToggles[MemberID];
+  bool ascending = m_SortingOrders[memberId] == AscendingOrder;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (MemberID) {
+  switch (memberId) {
     case Function::NAME:
       sorter = ORBIT_FUNC_SORT(PrettyName());
       break;
@@ -265,7 +300,7 @@ void FunctionsDataView::OnFilter(const std::wstring& a_Filter) {
   m_Indices = indices;
 
   if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, false);
+    OnSort(m_LastSortedColumn, {});
   }
 #endif
 }
@@ -322,7 +357,7 @@ void FunctionsDataView::OnDataChanged() {
   }
 
   if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, false);
+    OnSort(m_LastSortedColumn, {});
   }
 }
 

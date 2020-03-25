@@ -3,7 +3,7 @@
 //-----------------------------------
 #pragma once
 
-#include "FunctionDataView.h"
+#include "FunctionsDataView.h"
 #include "OrbitType.h"
 
 struct CallStack;
@@ -12,9 +12,9 @@ struct CallStack;
 class CallStackDataView : public FunctionsDataView {
  public:
   CallStackDataView();
+  bool IsSortingAllowed() override { return false; }
   void SetAsMainInstance() override;
   size_t GetNumElements() override;
-  bool SortAllowed() override { return false; }
   void OnDataChanged() override;
   std::wstring GetValue(int a_Row, int a_Column) override;
   void OnFilter(const std::wstring& a_Filter) override;
