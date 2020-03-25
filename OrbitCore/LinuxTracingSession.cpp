@@ -27,7 +27,7 @@ void LinuxTracingSession::RecordHashedCallstack(
 }
 
 void LinuxTracingSession::SetStringManager(
-    std::shared_ptr<StringManager>& string_manager) {
+    std::shared_ptr<StringManager> string_manager) {
   string_manager_ = string_manager;
 }
 
@@ -41,6 +41,8 @@ void LinuxTracingSession::SendKeyAndString(
   if (!string_manager_->Exists(key)) {
     std::string message_data = SerializeObjectBinary(key_and_string);
     // TODO: Remove networking from here.
+    // TODO: Pass GTcpServer as an arg to constructor to reduce number
+    // of usages of globals.
     GTcpServer->Send(Msg_KeyAndString, message_data.c_str(),
                      message_data.size());
     string_manager_->Add(key, str);

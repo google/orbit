@@ -4,7 +4,7 @@
 #include <tuple>
 #include <vector>
 
-#include "OrbitLinuxTracing/Events.h"
+#include <OrbitLinuxTracing/Events.h>
 
 namespace LinuxTracing {
 

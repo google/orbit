@@ -14,7 +14,7 @@ namespace introspection {
 
 class Handler : public orbit::tracing::Handler {
  public:
-  Handler(LinuxTracingSession* tracing_session);
+  explicit Handler(LinuxTracingSession* tracing_session);
 
   void Begin(const char* name) final;
   void End() final;

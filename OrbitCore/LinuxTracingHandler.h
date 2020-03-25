@@ -56,11 +56,11 @@ class LinuxTracingHandler : LinuxTracing::TracerListener {
 
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
 
-  pid_t TimelineToThreadId(std::string timeline);
+  pid_t TimelineToThreadId(const std::string_view timeline);
   absl::flat_hash_map<std::string, pid_t> timeline_to_thread_id_;
   // TODO: This is a hack to reuse thread tracks in the UI to show GPU events.
   // This needs to be fixed.
-  pid_t current_timeline_thread_id = 100000;
+  pid_t current_timeline_thread_id_ = 100000;
 };
 
 #endif  // ORBIT_CORE_LINUX_TRACING_HANDLER_H_

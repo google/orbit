@@ -27,7 +27,7 @@ namespace introspection {
 thread_local std::vector<Scope> scopes;
 
 Handler::Handler(LinuxTracingSession* tracing_session)
-    :  tracing_session_(tracing_session) {}
+    : tracing_session_(tracing_session) {}
 
 void Handler::Begin(const char* name) {
   scopes.emplace_back(Scope{Timer(), name});

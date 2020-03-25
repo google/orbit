@@ -22,7 +22,7 @@ class LinuxTracingSession {
   void RecordCallstack(LinuxCallstackEvent&& event);
   void RecordHashedCallstack(CallstackEvent&& event);
 
-  void SetStringManager(std::shared_ptr<StringManager>& string_manager);
+  void SetStringManager(std::shared_ptr<StringManager> string_manager);
   void SendKeyAndString(uint64_t hash, const std::string& name);
 
   // These move the content of corresponding buffer to
