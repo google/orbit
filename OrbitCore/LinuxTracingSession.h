@@ -6,6 +6,7 @@
 #include "LinuxCallstackEvent.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
+#include "TcpServer.h"
 
 #include "absl/synchronization/mutex.h"
 
@@ -13,7 +14,7 @@
 // and provides thread-safe access and record functions.
 class LinuxTracingSession {
  public:
-  LinuxTracingSession() = default;
+  explicit LinuxTracingSession(TcpServer* tcp_server);
   LinuxTracingSession(const LinuxTracingSession&) = delete;
   LinuxTracingSession& operator=(const LinuxTracingSession&) = delete;
 
@@ -49,6 +50,7 @@ class LinuxTracingSession {
   absl::Mutex hashed_callstack_buffer_mutex_;
   std::vector<CallstackEvent> hashed_callstack_buffer_;
 
+  TcpServer* tcp_server_;
   std::shared_ptr<StringManager> string_manager_;
 };
 

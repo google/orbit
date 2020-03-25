@@ -5,6 +5,9 @@
 #include "KeyAndString.h"
 #include "TcpServer.h"
 
+LinuxTracingSession::LinuxTracingSession(TcpServer* tcp_server)
+    : tcp_server_(tcp_server) {}
+
 void LinuxTracingSession::RecordContextSwitch(ContextSwitch&& context_switch) {
   absl::MutexLock lock(&context_switch_buffer_mutex_);
   context_switch_buffer_.push_back(std::move(context_switch));
@@ -41,9 +44,7 @@ void LinuxTracingSession::SendKeyAndString(
   if (!string_manager_->Exists(key)) {
     std::string message_data = SerializeObjectBinary(key_and_string);
     // TODO: Remove networking from here.
-    // TODO: Pass GTcpServer as an arg to constructor to reduce number
-    // of usages of globals.
-    GTcpServer->Send(Msg_KeyAndString, message_data.c_str(),
+    tcp_server_->Send(Msg_KeyAndString, message_data.c_str(),
                      message_data.size());
     string_manager_->Add(key, str);
   }
