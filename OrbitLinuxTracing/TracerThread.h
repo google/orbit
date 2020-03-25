@@ -107,7 +107,7 @@ class TracerThread {
   bool trace_context_switches_ = true;
   bool trace_callstacks_ = true;
   bool trace_instrumented_functions_ = true;
-  bool trace_gpu_driver_events_ = true;
+  bool trace_gpu_driver_events_ = false;;
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
