@@ -9,6 +9,7 @@
 #include "App.h"
 #include "Batcher.h"
 #include "Capture.h"
+#include "EventTracer.h"
 #include "EventTrack.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
@@ -27,7 +28,6 @@
 #include "TimerManager.h"
 #include "Utils.h"
 #include "absl/strings/str_format.h"
-#include "EventTracer.h"
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
@@ -239,13 +239,13 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
   if (!a_Timer.IsType(Timer::THREAD_ACTIVITY) &&
       !a_Timer.IsType(Timer::CORE_ACTIVITY)) {
     std::shared_ptr<ThreadTrack> track = GetThreadTrack(a_Timer.m_TID);
-    if ( a_Timer.m_Type == Timer::GPU_ACTIVITY) {
+    if (a_Timer.m_Type == Timer::GPU_ACTIVITY) {
       track->SetName(string_manager_->Get(a_Timer.m_UserData[1]).value_or(""));
     }
 
     track->OnTimer(a_Timer);
     ++m_ThreadCountMap[a_Timer.m_TID];
-    if( a_Timer.m_Type == Timer::INTROSPECTION ) {
+    if (a_Timer.m_Type == Timer::INTROSPECTION) {
       const Color kGreenIntrospection(87, 166, 74, 255);
       track->SetColor(kGreenIntrospection);
     }
@@ -619,12 +619,12 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
                     "%s %s %s", name, extraInfo.c_str(), time.c_str());
 
                 textBox.SetText(text);
-              } else if( timer.m_Type == Timer::INTROSPECTION) {
-                textBox.SetText(string_manager_->Get(
-                    timer.m_UserData[0]).value_or(""));
-              } else if ( timer.m_Type == Timer::GPU_ACTIVITY) {
-                textBox.SetText(string_manager_->Get(
-                    timer.m_UserData[0]).value_or(""));
+              } else if (timer.m_Type == Timer::INTROSPECTION) {
+                textBox.SetText(
+                    string_manager_->Get(timer.m_UserData[0]).value_or(""));
+              } else if (timer.m_Type == Timer::GPU_ACTIVITY) {
+                textBox.SetText(
+                    string_manager_->Get(timer.m_UserData[0]).value_or(""));
               } else if (!SystraceManager::Get().IsEmpty()) {
                 textBox.SetText(SystraceManager::Get().GetFunctionName(
                     timer.m_FunctionAddress));
