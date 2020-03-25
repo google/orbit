@@ -99,6 +99,68 @@ class FunctionCall {
   uint32_t depth_;
 };
 
+class GpuJob {
+ public:
+  GpuJob(pid_t tid,
+         uint32_t context, uint32_t seqno, std::string timeline,
+         int32_t depth,
+         uint64_t amdgpu_cs_ioctl_time_ns,
+         uint64_t amdgpu_sched_run_job_time_ns,
+         uint64_t gpu_hardware_start_time_ns,
+         uint64_t dma_fence_signaled_time_ns)
+      : tid_(tid),
+        seqno_(seqno), context_(context), timeline_(timeline),
+        depth_(depth),
+        amdgpu_cs_ioctl_time_ns_(amdgpu_cs_ioctl_time_ns),
+        amdgpu_sched_run_job_time_ns_(amdgpu_sched_run_job_time_ns),
+        gpu_hardware_start_time_ns_(gpu_hardware_start_time_ns),
+        dma_fence_signaled_time_ns_(dma_fence_signaled_time_ns)
+  {}
+
+  pid_t GetTid() const { return tid_; }
+
+  uint32_t GetContext() const { return context_; }
+  uint32_t GetSeqno() const { return seqno_; }
+  std::string GetTimeline() const { return timeline_; }
+
+  int32_t GetDepth() const { return depth_; }
+
+  uint64_t GetAmdgpuCsIoctlTimeNs() const {
+    return amdgpu_cs_ioctl_time_ns_;
+  }
+
+  uint64_t GetAmdgpuSchedRunJobTimeNs() const {
+    return amdgpu_sched_run_job_time_ns_;
+  }
+
+  uint64_t GetGpuHardwareStartTimeNs() const {
+    return gpu_hardware_start_time_ns_;
+  }
+
+  uint64_t GetDmaFenceSignaledTimeNs() const {
+    return dma_fence_signaled_time_ns_;
+  }
+
+ private:
+  pid_t tid_;
+
+  uint32_t context_;
+  uint32_t seqno_;
+  std::string timeline_;
+  int32_t depth_;
+
+  uint64_t amdgpu_cs_ioctl_time_ns_;
+  uint64_t amdgpu_sched_run_job_time_ns_;
+  // We do not have an explicit event for the following timestamp. We
+  // assume that, when the GPU queue corresponding to timeline is
+  // not executing a job, that this job starts exactly when it is
+  // scheduled by the driver. Otherwise, we assume it starts exactly
+  // when the previous job has signaled that it is done. Since we do
+  // not have an explicit signal here, this is the best we can do.
+  uint64_t gpu_hardware_start_time_ns_;
+  uint64_t dma_fence_signaled_time_ns_;
+};
+
 }  // namespace LinuxTracing
 
 #endif  // ORBIT_LINUX_TRACING_EVENTS_H_

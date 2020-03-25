@@ -138,3 +138,67 @@ void LinuxTracingHandler::OnFunctionCall(
 
   session_->RecordTimer(std::move(timer));
 }
+
+pid_t LinuxTracingHandler::TimelineToThreadId(const std::string_view timeline) {
+  auto it = timeline_to_thread_id_.find(timeline);
+  if (it != timeline_to_thread_id_.end()) {
+    return it->second;
+  }
+  pid_t new_id = current_timeline_thread_id_;
+  current_timeline_thread_id_++;
+
+  timeline_to_thread_id_.emplace(timeline, new_id);
+  return new_id;
+}
+
+void LinuxTracingHandler::OnGpuJob(
+    const LinuxTracing::GpuJob& gpu_job) {
+  Timer timer_user_to_sched;
+  timer_user_to_sched.m_TID = TimelineToThreadId(gpu_job.GetTimeline());
+  timer_user_to_sched.m_Start = gpu_job.GetAmdgpuCsIoctlTimeNs();
+  timer_user_to_sched.m_End = gpu_job.GetAmdgpuSchedRunJobTimeNs();
+  timer_user_to_sched.m_Depth = gpu_job.GetDepth();
+
+  constexpr const char* sw_queue = "sw queue";
+  uint64_t hash = StringHash(sw_queue);
+  session_->SendKeyAndString(hash, sw_queue);
+  timer_user_to_sched.m_UserData[0] = hash;
+
+  uint64_t timeline_hash = StringHash(gpu_job.GetTimeline());
+  session_->SendKeyAndString(timeline_hash, gpu_job.GetTimeline());
+  timer_user_to_sched.m_UserData[1] = timeline_hash;
+
+  timer_user_to_sched.m_Type = Timer::GPU_ACTIVITY;
+  session_->RecordTimer(std::move(timer_user_to_sched));
+
+  Timer timer_sched_to_start;
+  timer_sched_to_start.m_TID = TimelineToThreadId(gpu_job.GetTimeline());
+  timer_sched_to_start.m_Start = gpu_job.GetAmdgpuSchedRunJobTimeNs();
+  timer_sched_to_start.m_End = gpu_job.GetGpuHardwareStartTimeNs();
+  timer_sched_to_start.m_Depth = gpu_job.GetDepth();
+
+  constexpr const char* hw_queue = "hw queue";
+  hash = StringHash(hw_queue);
+  session_->SendKeyAndString(hash, hw_queue);
+
+  timer_sched_to_start.m_UserData[0] = hash;
+  timer_sched_to_start.m_UserData[1] = timeline_hash;
+
+  timer_sched_to_start.m_Type = Timer::GPU_ACTIVITY;
+  session_->RecordTimer(std::move(timer_sched_to_start));
+
+  Timer timer_start_to_finish;
+  timer_start_to_finish.m_TID = TimelineToThreadId(gpu_job.GetTimeline());
+  timer_start_to_finish.m_Start = gpu_job.GetGpuHardwareStartTimeNs();
+  timer_start_to_finish.m_End = gpu_job.GetDmaFenceSignaledTimeNs();
+  timer_start_to_finish.m_Depth = gpu_job.GetDepth();
+
+  constexpr const char* hw_execution = "hw execution";
+  hash = StringHash(hw_execution);
+  session_->SendKeyAndString(hash, hw_execution);
+  timer_start_to_finish.m_UserData[0] = hash;
+  timer_start_to_finish.m_UserData[1] = timeline_hash;
+
+  timer_start_to_finish.m_Type = Timer::GPU_ACTIVITY;
+  session_->RecordTimer(std::move(timer_start_to_finish));
+}

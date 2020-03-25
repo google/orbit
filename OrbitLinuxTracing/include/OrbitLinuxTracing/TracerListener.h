@@ -14,6 +14,7 @@ class TracerListener {
       const ContextSwitchOut& context_switch_out) = 0;
   virtual void OnCallstack(const Callstack& callstack) = 0;
   virtual void OnFunctionCall(const FunctionCall& function_call) = 0;
+  virtual void OnGpuJob(const GpuJob& gpu_job) = 0;
 };
 
 }  // namespace LinuxTracing

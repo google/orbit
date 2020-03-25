@@ -5,6 +5,8 @@
 #include "EventBuffer.h"
 #include "LinuxCallstackEvent.h"
 #include "ScopeTimer.h"
+#include "StringManager.h"
+#include "TcpServer.h"
 
 #include "absl/synchronization/mutex.h"
 
@@ -12,7 +14,7 @@
 // and provides thread-safe access and record functions.
 class LinuxTracingSession {
  public:
-  LinuxTracingSession() = default;
+  explicit LinuxTracingSession(TcpServer* tcp_server);
   LinuxTracingSession(const LinuxTracingSession&) = delete;
   LinuxTracingSession& operator=(const LinuxTracingSession&) = delete;
 
@@ -20,6 +22,9 @@ class LinuxTracingSession {
   void RecordTimer(Timer&& timer);
   void RecordCallstack(LinuxCallstackEvent&& event);
   void RecordHashedCallstack(CallstackEvent&& event);
+
+  void SetStringManager(std::shared_ptr<StringManager> string_manager);
+  void SendKeyAndString(uint64_t hash, const std::string& name);
 
   // These move the content of corresponding buffer to
   // the output vector. They return true if the buffer
@@ -44,6 +49,9 @@ class LinuxTracingSession {
 
   absl::Mutex hashed_callstack_buffer_mutex_;
   std::vector<CallstackEvent> hashed_callstack_buffer_;
+
+  TcpServer* tcp_server_;
+  std::shared_ptr<StringManager> string_manager_;
 };
 
 #endif  // ORBIT_CORE_LINUX_TRACING_SESSION_H_

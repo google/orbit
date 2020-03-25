@@ -6,7 +6,7 @@
 #include <utility>
 
 TEST(LinuxTracingSession, Empty) {
-  LinuxTracingSession session;
+  LinuxTracingSession session(nullptr);
 
   std::vector<ContextSwitch> context_switches;
   EXPECT_FALSE(session.ReadAllContextSwitches(&context_switches));
@@ -26,7 +26,7 @@ TEST(LinuxTracingSession, Empty) {
 }
 
 TEST(LinuxTracingSession, ContextSwitches) {
-  LinuxTracingSession session;
+  LinuxTracingSession session(nullptr);
 
   {
     ContextSwitch context_switch;
@@ -92,7 +92,7 @@ TEST(LinuxTracingSession, ContextSwitches) {
 }
 
 TEST(LinuxTracingSession, Timers) {
-  LinuxTracingSession session;
+  LinuxTracingSession session(nullptr);
 
   {
     Timer timer;
@@ -194,7 +194,7 @@ TEST(LinuxTracingSession, Timers) {
 }
 
 TEST(LinuxTracingSession, Callstacks) {
-  LinuxTracingSession session;
+  LinuxTracingSession session(nullptr);
 
   {
     LinuxCallstackEvent event;
@@ -269,7 +269,7 @@ TEST(LinuxTracingSession, Callstacks) {
 }
 
 TEST(LinuxTracingSession, HashedCallstacks) {
-  LinuxTracingSession session;
+  LinuxTracingSession session(nullptr);
 
   session.RecordHashedCallstack(CallstackEvent(11, 12, 13));
   session.RecordHashedCallstack(CallstackEvent(21, 22, 23));
@@ -302,7 +302,7 @@ TEST(LinuxTracingSession, HashedCallstacks) {
 }
 
 TEST(LinuxTracingSession, Reset) {
-  LinuxTracingSession session;
+  LinuxTracingSession session(nullptr);
 
   {
     ContextSwitch context_switch;

@@ -62,6 +62,7 @@ class Timer {
     ALLOC,
     FREE,
     INTROSPECTION,
+    GPU_ACTIVITY,
   };
 
   Type GetType() const { return m_Type; }

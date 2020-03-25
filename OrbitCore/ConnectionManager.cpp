@@ -35,7 +35,9 @@
 #include <streambuf>
 
 ConnectionManager::ConnectionManager()
-    : exit_requested_(false), is_service_(false) {}
+    : exit_requested_(false),
+      is_service_(false),
+      tracing_session_(GTcpServer) {}
 
 ConnectionManager::~ConnectionManager() {
   StopThread();
@@ -70,6 +72,7 @@ void ConnectionManager::InitAsService() {
 
   is_service_ = true;
   string_manager_ = std::make_shared<StringManager>();
+  tracing_session_.SetStringManager(string_manager_);
   SetupIntrospection();
   SetupServerCallbacks();
   thread_ = std::make_unique<std::thread>(
@@ -93,8 +96,7 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
 
   Capture::GSelectedFunctionsMap.clear();
   for (Function* function : prevSelectedFuncs) {
-    if (function)
-      function->UnSelect();
+    if (function) function->UnSelect();
   }
 
   // Select the received functions:
@@ -125,10 +127,9 @@ void ConnectionManager::ServerCaptureThreadWorker() {
 
     std::vector<LinuxCallstackEvent> callstacks;
     if (tracing_session_.ReadAllCallstacks(&callstacks)) {
-        std::string message_data = SerializeObjectBinary(callstacks);
-        GTcpServer->Send(Msg_SamplingCallstacks, message_data.c_str(),
-                         message_data.size());
-
+      std::string message_data = SerializeObjectBinary(callstacks);
+      GTcpServer->Send(Msg_SamplingCallstacks, message_data.c_str(),
+                       message_data.size());
     }
 
     std::vector<CallstackEvent> hashed_callstacks;
@@ -140,8 +141,8 @@ void ConnectionManager::ServerCaptureThreadWorker() {
 
     std::vector<ContextSwitch> context_switches;
     if (tracing_session_.ReadAllContextSwitches(&context_switches)) {
-        Message Msg(Msg_RemoteContextSwitches);
-        GTcpServer->Send(Msg, context_switches);
+      Message Msg(Msg_RemoteContextSwitches);
+      GTcpServer->Send(Msg, context_switches);
     }
   }
 }
@@ -149,12 +150,11 @@ void ConnectionManager::ServerCaptureThreadWorker() {
 void ConnectionManager::SetupIntrospection() {
 #if __linux__ && ORBIT_TRACING_ENABLED
   // Setup introspection handler.
-  auto handler = std::make_unique<orbit::introspection::Handler>(
-      string_manager_, &tracing_session_);
+  auto handler =
+      std::make_unique<orbit::introspection::Handler>(&tracing_session_);
   LinuxTracing::SetOrbitTracingHandler(std::move(handler));
 #endif  // ORBIT_TRACING_ENABLED
 }
-
 
 void ConnectionManager::StartCaptureAsRemote(uint32_t pid) {
   PRINT_FUNC;
@@ -279,7 +279,7 @@ void ConnectionManager::SetupClientCallbacks() {
     cereal::BinaryInputArchive inputAr(buffer);
     inputAr(key_and_string);
     GCoreApp->AddKeyAndString(key_and_string.key, key_and_string.str);
-   });
+  });
 
   GTcpClient->AddCallback(Msg_RemoteCallStack, [=](const Message& a_Msg) {
     CallStack stack;
