@@ -71,10 +71,10 @@ void PerfEventProcessor2::AddEvent(int origin_fd,
 void PerfEventProcessor2::ProcessAllEvents() {
   while (event_queue_.HasEvent()) {
     std::unique_ptr<PerfEvent> event = event_queue_.PopEvent();
-    event->Accept(visitor_.get());
 #ifndef NDEBUG
     last_processed_timestamp_ = event->GetTimestamp();
 #endif
+    event->Accept(visitor_.get());
   }
 }
 
@@ -90,10 +90,10 @@ void PerfEventProcessor2::ProcessOldEvents() {
       break;
     }
 
-    event->Accept(visitor_.get());
 #ifndef NDEBUG
     last_processed_timestamp_ = event->GetTimestamp();
 #endif
+    event->Accept(visitor_.get());
     event_queue_.PopEvent();
   }
 }
