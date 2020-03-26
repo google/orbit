@@ -77,7 +77,7 @@ void Track::Draw(GlCanvas* a_Canvas, bool a_Picking) {
       track_label = absl::StrFormat("[%u]", m_ID);
       break;
     case NAME_ONLY:
-      track_label = absl::StrFormat("%s", m_Name, m_ID);
+      track_label = absl::StrFormat("%s", m_Name);
       break;
     case EMPTY:
       track_label = "";
