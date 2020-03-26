@@ -31,8 +31,16 @@ class Track : public Pickable {
     return m_Moving ? m_MousePos[1] - m_MousePos[0] : Vec2(0, 0);
   }
   void SetName(const std::string& a_Name) { m_Name = a_Name; }
-  void SetDisplayNameOnly(bool display_name_only) {
-    display_name_only_ = display_name_only;
+
+  enum LabelDisplayMode {
+    NAME_AND_TID,
+    TID_ONLY,
+    NAME_ONLY,
+    EMPTY
+  };
+
+  void SetLabelDisplayMode(LabelDisplayMode label_display_mode) {
+    label_display_mode_ = label_display_mode;
   }
 
   const std::string& GetName() const { return m_Name; }
@@ -55,6 +63,6 @@ class Track : public Pickable {
   bool m_Moving;
   std::string m_Name;
   uint32_t m_ID;
-  bool display_name_only_;
+  LabelDisplayMode label_display_mode_;
   Color m_Color;
 };
