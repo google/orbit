@@ -5,6 +5,7 @@
 #include "TimeGraph.h"
 
 #include <algorithm>
+#include <OrbitBase/Logging.h>
 
 #include "App.h"
 #include "Batcher.h"
