@@ -24,12 +24,10 @@ void PerfEventProcessor::AddEvent(int /*origin_fd*/,
 void PerfEventProcessor::ProcessAllEvents() {
   while (!event_queue_.empty()) {
     PerfEvent* event = event_queue_.top().get();
-    event->Accept(visitor_.get());
-
 #ifndef NDEBUG
     last_processed_timestamp_ = event->GetTimestamp();
 #endif
-
+    event->Accept(visitor_.get());
     event_queue_.pop();
   }
 }
@@ -45,12 +43,11 @@ void PerfEventProcessor::ProcessOldEvents() {
         max_timestamp) {
       break;
     }
-    event->Accept(visitor_.get());
 
 #ifndef NDEBUG
     last_processed_timestamp_ = event->GetTimestamp();
 #endif
-
+    event->Accept(visitor_.get());
     event_queue_.pop();
   }
 }
