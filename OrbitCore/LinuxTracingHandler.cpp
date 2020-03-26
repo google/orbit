@@ -155,6 +155,7 @@ void LinuxTracingHandler::OnGpuJob(
     const LinuxTracing::GpuJob& gpu_job) {
   Timer timer_user_to_sched;
   timer_user_to_sched.m_TID = TimelineToThreadId(gpu_job.GetTimeline());
+  timer_user_to_sched.m_SubmitTID = gpu_job.GetTid();
   timer_user_to_sched.m_Start = gpu_job.GetAmdgpuCsIoctlTimeNs();
   timer_user_to_sched.m_End = gpu_job.GetAmdgpuSchedRunJobTimeNs();
   timer_user_to_sched.m_Depth = gpu_job.GetDepth();
@@ -173,6 +174,7 @@ void LinuxTracingHandler::OnGpuJob(
 
   Timer timer_sched_to_start;
   timer_sched_to_start.m_TID = TimelineToThreadId(gpu_job.GetTimeline());
+  timer_sched_to_start.m_SubmitTID = gpu_job.GetTid();
   timer_sched_to_start.m_Start = gpu_job.GetAmdgpuSchedRunJobTimeNs();
   timer_sched_to_start.m_End = gpu_job.GetGpuHardwareStartTimeNs();
   timer_sched_to_start.m_Depth = gpu_job.GetDepth();
@@ -189,6 +191,7 @@ void LinuxTracingHandler::OnGpuJob(
 
   Timer timer_start_to_finish;
   timer_start_to_finish.m_TID = TimelineToThreadId(gpu_job.GetTimeline());
+  timer_start_to_finish.m_SubmitTID = gpu_job.GetTid();
   timer_start_to_finish.m_Start = gpu_job.GetGpuHardwareStartTimeNs();
   timer_start_to_finish.m_End = gpu_job.GetDmaFenceSignaledTimeNs();
   timer_start_to_finish.m_Depth = gpu_job.GetDepth();

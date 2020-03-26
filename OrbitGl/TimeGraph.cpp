@@ -559,6 +559,10 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
           // We disambiguate the different types of GPU activity based on the
           // string that is displayed on their timeslice.
           if (timer.m_Type == Timer::GPU_ACTIVITY) {
+            // We color code the timeslices for GPU activity using the color
+            // of the CPU thread track that submitted the job.
+            col = GetThreadColor(timer.m_SubmitTID);
+
             constexpr const char* kSwQueueString = "sw queue";
             constexpr const char* kHwQueueString = "hw queue";
             constexpr const char* kHwExecutionString = "hw execution";
