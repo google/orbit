@@ -145,12 +145,12 @@ inline CallStackPOD GetCallstackManual(uint64_t a_ProgramCounter,
                                        uint64_t a_AddressOfReturnAddress) {
   CallStackPOD CS;
 
-  CS.m_Data[CS.m_Depth++] = a_ProgramCounter;
+  CS.data_[CS.depth_++] = a_ProgramCounter;
 
   DWORD* Ebp = (DWORD*)((DWORD)a_AddressOfReturnAddress - 4);
   DWORD returnAddress = *(Ebp + 1);
 
-  while (returnAddress && CS.m_Depth < ORBIT_STACK_SIZE) {
+  while (returnAddress && CS.depth_ < ORBIT_STACK_SIZE) {
     CS.m_Data[CS.m_Depth++] = returnAddress;
     Ebp = reinterpret_cast<DWORD*>(*Ebp);
     returnAddress = Ebp ? *(Ebp + 1) : NULL;

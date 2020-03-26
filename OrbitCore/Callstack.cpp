@@ -119,7 +119,7 @@ __declspec(noinline) CallStackPOD CallStackPOD::Walk(uint64_t a_Rip,
 
   RtlZeroMemory(&UnwindHistoryTable, sizeof(UNWIND_HISTORY_TABLE));
 
-  callstack.m_Data[callstack.m_Depth++] = a_Rip;
+  callstack.data_[callstack.depth_++] = a_Rip;
 
   for (ULONG Frame = 0;; Frame++) {
     RuntimeFunction =
@@ -143,8 +143,8 @@ __declspec(noinline) CallStackPOD CallStackPOD::Walk(uint64_t a_Rip,
 
     if (!Context.Rip) break;
 
-    if (callstack.m_Depth < ORBIT_STACK_SIZE) {
-      callstack.m_Data[callstack.m_Depth++] = Context.Rip;
+    if (callstack.depth_ < ORBIT_STACK_SIZE) {
+      callstack.data_[callstack.depth_++] = Context.Rip;
     }
   }
 

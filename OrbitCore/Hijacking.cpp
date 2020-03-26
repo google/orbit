@@ -173,13 +173,13 @@ __forceinline CallstackID Hijacking::SendCallstack(
 
     // Send callstack once (*per thread* for now, we should have a concurrent
     // set or hashmap...)
-    if (TlsData->m_SentCallstacks.find(cs.m_Hash) ==
+    if (TlsData->m_SentCallstacks.find(cs.Hash()) ==
         TlsData->m_SentCallstacks.end()) {
-      TlsData->m_SentCallstacks.insert(cs.m_Hash);
+      TlsData->m_SentCallstacks.insert(cs.Hash());
       GTcpClient->Send(Msg_Callstack, (void*)&cs, cs.GetSizeInBytes());
     }
 
-    return cs.m_Hash;
+    return cs.Hash();
   }
 
   // return 0;
