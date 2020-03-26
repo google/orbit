@@ -428,41 +428,6 @@ void ShowSymbolInfo(IMAGEHLP_MODULE64& ModuleInfo) {
 }
 
 //-----------------------------------------------------------------------------
-bool Pdb::LoadLinuxDebugSymbols(const char* a_PdbName) {
-  SCOPE_TIMER_LOG("LoadLinuxDebugSymbols");
-  std::string external = Path::GetExternalPath();
-  std::string tmp =
-      Path::GetTmpPath() + "cmd_" + OrbitUtils::GetTimeStamp() + ".txt";
-  std::string nmCommand = external + std::string("llvm\\llvm-nm.exe ") +
-                          a_PdbName /*+ std::string(" -n")*/;
-
-  const char* tmpname = tmp.data();
-  std::string cmd = nmCommand + " > " + tmpname;
-  std::system(cmd.c_str());
-  std::ifstream file(tmpname, std::ios::in | std::ios::binary);
-  std::string result;
-  std::string line;
-  int numAddedFunctions = 0;
-  while (std::getline(file, line)) {
-    std::vector<std::string> tokens = Tokenize(line);
-    if (tokens.size() == 3) {
-      const std::string& address = tokens[0];
-      const std::string& symbol = tokens[2];
-      Function func;
-      func.SetName(symbol);
-      func.SetAddress(std::stoull(address, nullptr, 16));
-      func.SetPrettyName(symbol);
-      func.SetModule(Path::GetFileName(a_PdbName));
-      func.SetPdb(this);
-      this->AddFunction(func);
-      ++numAddedFunctions;
-    }
-  }
-  remove(tmpname);
-  return numAddedFunctions > 0;
-}
-
-//-----------------------------------------------------------------------------
 bool Pdb::LoadPdb(const char* a_PdbName) {
   SCOPE_TIMER_LOG("LOAD PDB");
 
@@ -478,8 +443,6 @@ bool Pdb::LoadPdb(const char* a_PdbName) {
   if (extension == ".dll") {
     SCOPE_TIMER_LOG("LoadDll Exports");
     ParseDll(nameStr.c_str());
-  } else if (extension == ".debug") {
-    LoadLinuxDebugSymbols(a_PdbName);
   } else {
     LoadPdbDia();
   }

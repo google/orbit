@@ -341,7 +341,6 @@ bool OrbitApp::Init() {
   GParams.Load();
   GFontSize = GParams.m_FontSize;
   GOrbitApp->LoadFileMapping();
-  GOrbitApp->LoadSymbolsFile();
   OrbitVersion::CheckForUpdate();
 
   return true;
@@ -431,11 +430,6 @@ void OrbitApp::LoadFileMapping() {
       }
     }
   }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::LoadSymbolsFile() {
-  m_SymbolLocations = symbolHelper.GetSymbolsFileDirectories();
 }
 
 //-----------------------------------------------------------------------------

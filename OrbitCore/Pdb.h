@@ -40,7 +40,6 @@ class Pdb {
 
   bool LoadDataFromPdb();
   bool LoadPdbDia();
-  bool LoadLinuxDebugSymbols(const char* a_PdbName);
   void Update();
   void AddFunction(const Function& function);
   void CheckOrbitFunction(Function& a_Function);
