@@ -92,6 +92,13 @@ Color ThreadTrack::GetColor(ThreadID a_TID) {
       Color(248, 101, 22, a)    // orange
   };
 
+  // This is a GPU thread track.
+  constexpr ThreadID kMinGpuThreadId = 100000;
+  if (a_TID >= kMinGpuThreadId) {
+    const Color gray(100, 100, 100, 255);
+    return gray;
+  }
+
   return s_ThreadColors[a_TID % s_ThreadColors.size()];
 }
 
