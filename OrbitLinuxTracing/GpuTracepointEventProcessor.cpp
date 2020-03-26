@@ -65,7 +65,7 @@ int GpuTracepointEventProcessor::ComputeDepthForEvent(
   for (int d = 0; d < vec.size(); ++d) {
     // We add a small amount of slack on each row of the GPU track timeline to
     // make sure events don't get too crowded.
-    constexpr uint64_t slack_ns = 5 * 1000000;
+    constexpr uint64_t slack_ns = 1 * 1000000;
     if (start_timestamp >= (vec[d] + slack_ns)) {
       vec[d] = end_timestamp;
       return d;
@@ -76,7 +76,7 @@ int GpuTracepointEventProcessor::ComputeDepthForEvent(
   // reached. Since there are only O(10) events per frame created, the depth
   // is not likely to grow to a very large size.
   vec.push_back(end_timestamp);
-  return static_cast<int>(vec.size());
+  return static_cast<int>(vec.size() - 1);
 }
 
 void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
