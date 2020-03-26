@@ -443,11 +443,14 @@ void TracerThread::ProcessContextSwitchCpuWideEvent(
   pid_t tid = event.GetTid();
   uint16_t cpu = static_cast<uint16_t>(event.GetCpu());
   uint64_t time = event.GetTimestamp();
-  
-  if (event.IsSwitchOut()) {
-    listener_->OnContextSwitchOut(ContextSwitchOut(tid, cpu, time));
-  } else {
-    listener_->OnContextSwitchIn(ContextSwitchIn(tid, cpu, time));
+
+  // Switches with pid/tid 0 are associated with idle state, discard them.
+  if (tid != 0) {
+    if (event.IsSwitchOut()) {
+      listener_->OnContextSwitchOut(ContextSwitchOut(tid, cpu, time));
+    } else {
+      listener_->OnContextSwitchIn(ContextSwitchIn(tid, cpu, time));
+    }
   }
 
   ++stats_.sched_switch_count;
