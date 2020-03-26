@@ -14,11 +14,11 @@
 
 //-----------------------------------------------------------------------------
 CallStack::CallStack(CallStackPOD a_CS) : CallStack() {
-  m_Hash = a_CS.m_Hash;
-  m_ThreadId = a_CS.m_ThreadId;
-  m_Depth = a_CS.m_Depth;
-  m_Data.resize(a_CS.m_Depth);
-  memcpy(m_Data.data(), a_CS.m_Data, a_CS.m_Depth * sizeof(a_CS.m_Data[0]));
+  m_Hash = a_CS.Hash();
+  m_ThreadId = a_CS.ThreadId();
+  m_Depth = a_CS.Depth();
+  m_Data.resize(m_Depth);
+  memcpy(m_Data.data(), a_CS.Data(), m_Depth * sizeof(m_Data[0]));
 }
 
 //-----------------------------------------------------------------------------
@@ -99,8 +99,8 @@ StackFrame::StackFrame(HANDLE a_Thread) {
 }
 
 //-----------------------------------------------------------------------------
-__declspec(noinline) CallStackPOD CallStackPOD::Walk(DWORD64 a_Rip,
-                                                     DWORD64 a_Rsp) {
+__declspec(noinline) CallStackPOD CallStackPOD::Walk(uint64_t a_Rip,
+                                                     uint64_t a_Rsp) {
   CallStackPOD callstack;
 
 #ifdef _WIN64
@@ -148,11 +148,12 @@ __declspec(noinline) CallStackPOD CallStackPOD::Walk(DWORD64 a_Rip,
     }
   }
 
+  callstack.CalculateHash();
+
 #else
   callstack = GetCallstackManual(a_Rip, a_Rsp);
 #endif
 
-  callstack.Hash();
   return callstack;
 }
 

@@ -166,8 +166,9 @@ __forceinline CallstackID Hijacking::SendCallstack(
   )*/
   {
     SetOriginalReturnAddresses();
-    CallStackPOD cs = CallStackPOD::Walk((DWORD64)a_OriginalFunctionAddress,
-                                         (DWORD64)a_ReturnAddressLocation);
+    CallStackPOD cs = CallStackPOD::Walk(
+        reinterpret_cast<uint64_t>(a_OriginalFunctionAddress),
+        reinterpret_cast<uint64_t>(a_ReturnAddressLocation));
     SetOverridenReturnAddresses();
 
     // Send callstack once (*per thread* for now, we should have a concurrent

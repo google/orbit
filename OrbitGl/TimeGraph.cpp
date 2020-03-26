@@ -15,6 +15,7 @@
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "Log.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitType.h"
 #include "OrbitUnreal.h"
 #include "Params.h"
