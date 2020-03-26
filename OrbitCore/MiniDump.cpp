@@ -9,6 +9,7 @@
 #include "Core.h"
 #include "CoreApp.h"
 #include "OrbitProcess.h"
+#include "SymbolHelper.h"
 
 #ifdef _WIN32
 
@@ -60,7 +61,8 @@ std::shared_ptr<Process> MiniDump::ToOrbitProcess() {
       process->AddModule(mod);
     }
 
-    process->FindPdbs(GCoreApp->m_SymbolLocations);
+    SymbolHelper symbolHelper;
+    process->FindPdbs(symbolHelper.GetSymbolsFileDirectories());
     return process;
   }
 

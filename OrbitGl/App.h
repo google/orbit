@@ -57,7 +57,6 @@ class OrbitApp : public CoreApp {
   void LogMsg(const std::wstring& a_Msg) override;
   void SetCallStack(std::shared_ptr<CallStack> a_CallStack);
   void LoadFileMapping();
-  void LoadSymbolsFile();
   void LoadSystrace(const std::string& a_FileName);
   void AppendSystrace(const std::string& a_FileName, uint64_t a_TimeOffset);
   void ListSessions();

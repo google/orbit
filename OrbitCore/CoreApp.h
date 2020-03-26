@@ -50,8 +50,6 @@ class CoreApp {
     return nullptr;
   }
   virtual void RefreshCaptureView() {}
-
-  std::vector<std::string> m_SymbolLocations;
 };
 
 extern CoreApp* GCoreApp;
