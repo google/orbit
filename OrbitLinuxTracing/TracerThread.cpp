@@ -7,6 +7,10 @@
 
 #include "UprobesUnwindingVisitor.h"
 #include "absl/strings/str_format.h"
+#include "absl/flags/flag.h"
+
+ABSL_FLAG(bool, trace_gpu_driver_events, false,
+          "Enables tracing of GPU driver tracepoint events");
 
 namespace LinuxTracing {
 
@@ -284,7 +288,7 @@ void TracerThread::Run(
   }
 
   bool gpu_event_open_errors = false;
-  if (trace_gpu_driver_events_) {
+  if (absl::GetFlag(FLAGS_trace_gpu_driver_events)) {
     // We want to trace all GPU activity, hence we pass 'all_cpus' here.
     gpu_event_open_errors = !OpenGpuTracepoints(all_cpus);
   }
