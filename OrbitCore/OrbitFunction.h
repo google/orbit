@@ -135,7 +135,6 @@ class Function {
   void UpdateStats(const Timer& timer);
   bool Hookable();
   void Select();
-  void PreHook();
   void UnSelect();
   void ToggleSelect() { /*if( Hookable() )*/
     selected_ = !selected_;

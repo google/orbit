@@ -93,21 +93,6 @@ void Function::UnSelect() {
   Capture::GSelectedFunctionsMap.erase(GetVirtualAddress());
 }
 
-void Function::PreHook() {
-  // Unreal
-  if (Capture::GUnrealSupported) {
-    class Type* parent = GetParentType();
-    if (parent != nullptr && parent->IsA("UObject")) {
-      type_ = Function::UNREAL_ACTOR;
-    }
-  }
-
-  // MemFunc
-  if (IsMemoryFunc()) {
-    // if( this->IsMemberFunction() )
-  }
-}
-
 uint64_t Function::GetVirtualAddress() const {
   return address_ + (pdb_ != nullptr ? pdb_->GetHModule() : 0) - load_bias_;
 }

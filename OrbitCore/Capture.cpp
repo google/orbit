@@ -39,7 +39,6 @@ std::string Capture::GInjectedProcess;
 double Capture::GOpenCaptureTime;
 bool Capture::GIsSampling = false;
 bool Capture::GIsTesting = false;
-uint32_t Capture::GNumSamples = 0;
 uint32_t Capture::GNumSamplingTicks = 0;
 uint32_t Capture::GFunctionIndex = -1;
 uint32_t Capture::GNumInstalledHooks;
@@ -294,7 +293,14 @@ void Capture::SendFunctionHooks() {
 
   for (Function* func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected() || func->IsOrbitFunc()) {
-      func->PreHook();
+      // Unreal
+      if (GUnrealSupported) {
+        class Type* parent = func->GetParentType();
+        if (parent != nullptr && parent->IsA("UObject")) {
+          func->SetOrbitType(Function::UNREAL_ACTOR);
+        }
+      }
+
       uint64_t address = func->GetVirtualAddress();
       GSelectedAddressesByType[func->GetOrbitType()].push_back(address);
       GSelectedFunctionsMap[address] = func;
@@ -329,7 +335,7 @@ void Capture::SendFunctionHooks() {
   }
 
   // Unreal
-  if (Capture::GUnrealSupported) {
+  if (GUnrealSupported) {
     const OrbitUnrealInfo& info = GOrbitUnreal.GetUnrealInfo();
     GTcpServer->Send(Msg_OrbitUnrealInfo, info);
   }
