@@ -6,6 +6,7 @@
 
 #include <asm/unistd.h>
 #include <cxxabi.h>
+#include <dirent.h>
 #include <linux/perf_event.h>
 #include <linux/types.h>
 #include <linux/version.h>
@@ -32,6 +33,7 @@
 #include "Capture.h"
 #include "ConnectionManager.h"
 #include "EventBuffer.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
 #include "Path.h"
@@ -41,6 +43,7 @@
 #include "TcpClient.h"
 #include "Utils.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/strip.h"
 
 namespace LinuxUtils {
 
@@ -238,6 +241,42 @@ uint32_t GetKernelVersion() {
 //-----------------------------------------------------------------------------
 bool IsKernelOlderThan(const char* a_Version) {
   return GetKernelVersion() < GetVersion(a_Version);
+}
+
+//-----------------------------------------------------------------------------
+std::string GetProcessDir(pid_t process_id) {
+  return "/proc/" + std::to_string(process_id) + "/";
+}
+
+//-----------------------------------------------------------------------------
+std::map<uint32_t, std::string> GetThreadNames(pid_t process_id) {
+  std::string threads_dir = GetProcessDir(process_id) + "task/";
+  std::map<uint32_t, std::string> thread_ids_to_name;
+  struct dirent* dir_entry = nullptr;
+  DIR* dir = nullptr;
+
+  dir = opendir(threads_dir.c_str());
+  if (dir == nullptr) {
+    ERROR("Couldn't open %s\n", threads_dir.c_str());
+    return thread_ids_to_name;
+  }
+
+  while ((dir_entry = readdir(dir))) {
+    if (dir_entry->d_type == DT_DIR) {
+      if (IsNumber(dir_entry->d_name)) {
+          std::string thread_file = threads_dir + dir_entry->d_name + "/comm";
+          std::string thread_name = FileToString(thread_file);
+          if(!thread_name.empty()) {
+            pid_t tid = static_cast<pid_t>(std::stoul(dir_entry->d_name));
+            absl::StripTrailingAsciiWhitespace(&thread_name);
+            thread_ids_to_name[tid] = thread_name;
+          }
+      }
+    }
+  }
+
+  closedir(dir);
+  return thread_ids_to_name;
 }
 
 }  // namespace LinuxUtils

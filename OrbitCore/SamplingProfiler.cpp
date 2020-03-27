@@ -46,7 +46,10 @@ void SamplingProfiler::StartCapture() {
   Capture::GNumSamples = 0;
   Capture::GNumSamplingTicks = 0;
   Capture::GIsSampling = true;
-  m_Process->EnumerateThreads();
+
+  if (!m_Process->GetIsRemote()) {
+    m_Process->EnumerateThreads();
+  }
 
   m_SamplingTimer.Start();
   m_ThreadUsageTimer.Start();

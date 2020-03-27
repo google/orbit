@@ -350,6 +350,7 @@ void ConnectionManager::SendRemoteProcess(TcpEntity* tcp_entity, uint32_t pid) {
   // and all the messages should to be as stateless as possible.
   Capture::SetTargetProcess(process);
   process->ListModules();
+  process->EnumerateThreads();
   if (process) {
     std::string process_data = SerializeObjectHumanReadable(*process);
     tcp_entity->Send(Msg_RemoteProcess, process_data.data(),
