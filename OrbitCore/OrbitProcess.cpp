@@ -170,6 +170,8 @@ void Process::EnumerateThreads() {
   for (std::shared_ptr<Thread>& thread : m_Threads) {
     m_ThreadIds.insert(thread->m_TID);
   }
+#else
+  m_ThreadNames = LinuxUtils::GetThreadNames(m_ID);
 #endif
 }
 
@@ -532,7 +534,7 @@ void Process::FindCoreFunctions() {
         {
             func->Select();
             func->m_OrbitType = Function::FREE;
-        } 
+        }
         else if( Contains( name, L"realloc" ) )
         {
             func->Select();
@@ -543,7 +545,7 @@ void Process::FindCoreFunctions() {
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(Process, 1) {
+ORBIT_SERIALIZE(Process, 2) {
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_FullName);
   ORBIT_NVP_VAL(0, m_ID);
@@ -556,4 +558,5 @@ ORBIT_SERIALIZE(Process, 1) {
   ORBIT_NVP_VAL(0, m_NameToModuleMap);
   ORBIT_NVP_VAL(0, m_ThreadIds);
   ORBIT_NVP_VAL(1, m_Modules);
+  ORBIT_NVP_VAL(2, m_ThreadNames);
 }
