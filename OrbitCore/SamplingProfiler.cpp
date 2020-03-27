@@ -43,7 +43,6 @@ SamplingProfiler::~SamplingProfiler() {}
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::StartCapture() {
-  Capture::GNumSamples = 0;
   Capture::GNumSamplingTicks = 0;
   Capture::GIsSampling = true;
   m_Process->EnumerateThreads();
@@ -80,7 +79,6 @@ void SamplingProfiler::SampleThreadsAsync() {
         SetThreadPriority(thread->m_Handle, prev_priority);
 
         ResumeThread(thread->m_Handle);
-        ++Capture::GNumSamples;
       }
     }
 
