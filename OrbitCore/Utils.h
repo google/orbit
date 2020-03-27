@@ -12,8 +12,8 @@
 #include <cctype>
 #include <cinttypes>
 #include <codecvt>
-#include <functional>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -153,14 +153,15 @@ inline std::vector<std::wstring> Tokenize(std::wstring a_String,
 inline bool IsDigit(const char value) { return std::isdigit(value); }
 
 //-----------------------------------------------------------------------------
-inline bool IsNumber(const std::string_view value) {
+inline bool IsAllDigits(const std::string_view value) {
   return std::all_of(value.begin(), value.end(), IsDigit);
 }
 
 //-----------------------------------------------------------------------------
-inline std::string FileToString(const std::string& a_FileName) {
+inline std::string FileToString(const std::string_view a_FileName) {
+  std::string file_name(a_FileName);
   std::stringstream buffer;
-  std::ifstream inFile(a_FileName);
+  std::ifstream inFile(file_name);
   if (!inFile.fail()) {
     buffer << inFile.rdbuf();
     inFile.close();

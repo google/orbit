@@ -31,6 +31,7 @@
 #include <streambuf>
 
 #include "absl/strings/str_format.h"
+#include "absl/strings/strip.h"
 
 // Is64BitProcess function taken from Very Sleepy
 #ifdef _WIN64
@@ -180,28 +181,27 @@ void ProcessList::Refresh() {
   }
 
   while ((de_DirEntity = readdir(dir_proc))) {
-    if (de_DirEntity->d_type == DT_DIR) {
-      if (IsNumber(de_DirEntity->d_name)) {
-        int pid = atoi(de_DirEntity->d_name);
-        auto iter = m_ProcessesMap.find(pid);
-        std::shared_ptr<Process> process = nullptr;
-        if (iter == m_ProcessesMap.end()) {
-          process = std::make_shared<Process>();
-          std::string dir =
-              absl::StrFormat("%s%s/", PROC_DIRECTORY, de_DirEntity->d_name);
-          std::string comm = FileToString(dir + "comm");
-          std::string cmdline = FileToString(dir + "cmdline");
-          process->m_Name = RTrim(comm);
-          std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
-          process->m_FullName = cmdline;
-          process->SetID(pid);
-          m_ProcessesMap[pid] = process;
-        } else {
-          process = iter->second;
-        }
-
-        m_Processes.push_back(process);
+    if (de_DirEntity->d_type == DT_DIR && IsAllDigits(de_DirEntity->d_name)) {
+      int pid = atoi(de_DirEntity->d_name);
+      auto iter = m_ProcessesMap.find(pid);
+      std::shared_ptr<Process> process = nullptr;
+      if (iter == m_ProcessesMap.end()) {
+        process = std::make_shared<Process>();
+        std::string dir =
+            absl::StrFormat("%s%s/", PROC_DIRECTORY, de_DirEntity->d_name);
+        process->m_Name = FileToString(dir + "comm");
+        absl::StripTrailingAsciiWhitespace(
+            &process->m_Name);  // Remove new line character.
+        std::string cmdline = FileToString(dir + "cmdline");
+        std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
+        process->m_FullName = cmdline;
+        process->SetID(pid);
+        m_ProcessesMap[pid] = process;
+      } else {
+        process = iter->second;
       }
+
+      m_Processes.push_back(process);
     }
   }
   closedir(dir_proc);
