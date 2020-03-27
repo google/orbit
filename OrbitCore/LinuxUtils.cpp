@@ -42,6 +42,7 @@
 #include "ScopeTimer.h"
 #include "TcpClient.h"
 #include "Utils.h"
+#include "absl/strings/numbers.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/strip.h"
 
@@ -262,15 +263,13 @@ std::map<uint32_t, std::string> GetThreadNames(pid_t process_id) {
   }
 
   while ((dir_entry = readdir(dir))) {
-    if (dir_entry->d_type == DT_DIR) {
-      if (IsNumber(dir_entry->d_name)) {
-          std::string thread_file = threads_dir + dir_entry->d_name + "/comm";
-          std::string thread_name = FileToString(thread_file);
-          if(!thread_name.empty()) {
-            pid_t tid = static_cast<pid_t>(std::stoul(dir_entry->d_name));
-            absl::StripTrailingAsciiWhitespace(&thread_name);
-            thread_ids_to_name[tid] = thread_name;
-          }
+    if (dir_entry->d_type == DT_DIR && IsAllDigits(dir_entry->d_name)) {
+      std::string thread_file = threads_dir + dir_entry->d_name + "/comm";
+      std::string thread_name = FileToString(thread_file);
+      absl::StripTrailingAsciiWhitespace(&thread_name);  // Remove new-line.
+      pid_t tid = 0;
+      if (!thread_name.empty() && absl::SimpleAtoi(dir_entry->d_name, &tid)) {
+        thread_ids_to_name[tid] = thread_name;
       }
     }
   }
