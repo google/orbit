@@ -24,3 +24,7 @@ bool StringManager::Exists(uint64_t key) {
   std::lock_guard<std::mutex> lock(mutex_);
   return key_to_string_.count(key) > 0;
 }
+void StringManager::Clear() {
+  std::lock_guard<std::mutex> lock(mutex_);
+  key_to_string_.clear();
+}

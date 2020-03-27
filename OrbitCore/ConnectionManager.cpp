@@ -165,6 +165,7 @@ void ConnectionManager::StartCaptureAsRemote(uint32_t pid) {
   }
   Capture::SetTargetProcess(process);
   tracing_session_.Reset();
+  string_manager_->Clear();
   Capture::StartCapture(&tracing_session_);
   server_capture_thread_ = std::make_unique<std::thread>(
       &ConnectionManager::ServerCaptureThreadWorker, this);
