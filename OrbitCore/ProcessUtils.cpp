@@ -45,13 +45,6 @@ Wow64SuspendThread_t* fn_Wow64SuspendThread =
                                           "Wow64SuspendThread");
 #endif
 
-int IsNumeric(const char* ccharptr_CharacterList) {
-  for (; *ccharptr_CharacterList; ccharptr_CharacterList++)
-    if (*ccharptr_CharacterList < '0' || *ccharptr_CharacterList > '9')
-      return 0;  // false
-  return 1;      // true
-}
-
 //-----------------------------------------------------------------------------
 bool ProcessUtils::Is64Bit(HANDLE hProcess) {
 #ifdef _WIN32
@@ -101,17 +94,6 @@ ProcessList::ProcessList() {}
 void ProcessList::Clear() {
   m_Processes.clear();
   m_ProcessesMap.clear();
-}
-
-//-----------------------------------------------------------------------------
-static std::string FileToString(const std::string& a_FileName) {
-  std::stringstream buffer;
-  std::ifstream inFile(a_FileName);
-  if (!inFile.fail()) {
-    buffer << inFile.rdbuf();
-    inFile.close();
-  }
-  return buffer.str();
 }
 
 //-----------------------------------------------------------------------------
@@ -199,7 +181,7 @@ void ProcessList::Refresh() {
 
   while ((de_DirEntity = readdir(dir_proc))) {
     if (de_DirEntity->d_type == DT_DIR) {
-      if (IsNumeric(de_DirEntity->d_name)) {
+      if (IsNumber(de_DirEntity->d_name)) {
         int pid = atoi(de_DirEntity->d_name);
         auto iter = m_ProcessesMap.find(pid);
         std::shared_ptr<Process> process = nullptr;

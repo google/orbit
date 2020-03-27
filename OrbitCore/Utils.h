@@ -9,14 +9,17 @@
 #include <xxhash.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cinttypes>
 #include <codecvt>
 #include <functional>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -144,6 +147,25 @@ inline std::vector<std::wstring> Tokenize(std::wstring a_String,
   }
 
   return tokens;
+}
+
+//-----------------------------------------------------------------------------
+inline bool IsDigit(const char value) { return std::isdigit(value); }
+
+//-----------------------------------------------------------------------------
+inline bool IsNumber(const std::string_view value) {
+  return std::all_of(value.begin(), value.end(), IsDigit);
+}
+
+//-----------------------------------------------------------------------------
+inline std::string FileToString(const std::string& a_FileName) {
+  std::stringstream buffer;
+  std::ifstream inFile(a_FileName);
+  if (!inFile.fail()) {
+    buffer << inFile.rdbuf();
+    inFile.close();
+  }
+  return buffer.str();
 }
 
 //-----------------------------------------------------------------------------
