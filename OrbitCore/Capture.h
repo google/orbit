@@ -36,7 +36,6 @@ class Capture {
   static void Update();
   static void DisplayStats();
   static void TestHooks();
-  static void OpenCapture(const std::string& a_CaptureName);
   static bool IsOtherInstanceRunning();
   static void LoadSession(const std::shared_ptr<Session>& a_Session);
   static void SaveSession(const std::string& a_FileName);
@@ -69,16 +68,13 @@ class Capture {
   static class TcpEntity* GetMainTcpEntity();
 
   static bool GInjected;
-  static bool GIsConnected;
   static std::string GInjectedProcess;
-  static double GOpenCaptureTime;
   static int GCapturePort;
   static std::string GCaptureHost;
   static std::string GPresetToLoad;  // TODO: allow multiple presets
   static std::string GProcessToInject;
   static bool GIsSampling;
   static bool GIsTesting;
-  static uint32_t GNumSamplingTicks;
   static uint32_t GFunctionIndex;
   static uint32_t GNumInstalledHooks;
   static bool GHasContextSwitches;
