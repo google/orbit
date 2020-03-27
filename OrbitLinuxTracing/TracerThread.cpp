@@ -9,6 +9,8 @@
 #include "absl/strings/str_format.h"
 #include "absl/flags/flag.h"
 
+// TODO: This is a temporary feature flag. Remove this once we enable this
+// globally or have a tracer configuration that is passed to TracerThread.
 ABSL_FLAG(bool, trace_gpu_driver_events, false,
           "Enables tracing of GPU driver tracepoint events");
 
