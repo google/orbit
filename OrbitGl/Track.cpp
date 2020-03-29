@@ -9,9 +9,6 @@
 #include "TimeGraphLayout.h"
 #include "absl/strings/str_format.h"
 
-float TEXT_Z = -0.004f;
-float TRACK_Z = -0.1f;
-
 //-----------------------------------------------------------------------------
 Track::Track() {
   m_ID = 0;
@@ -49,11 +46,16 @@ void Track::Draw(GlCanvas* a_Canvas, bool a_Picking) {
     glColor4ub(0, 128, 255, 128);
   }
 
+  const TimeGraphLayout& layout = m_TimeGraph->GetLayout();
+  float track_z = layout.GetTrackZ();
+  float text_z = layout.GetTextZ();
+  float label_offset = layout.GetTrackLabelOffset();
+
   glBegin(GL_QUADS);
-  glVertex3f(x0, y0, TRACK_Z);
-  glVertex3f(x1, y0, TRACK_Z);
-  glVertex3f(x1, y1, TRACK_Z);
-  glVertex3f(x0, y1, TRACK_Z);
+  glVertex3f(x0, y0, track_z);
+  glVertex3f(x1, y0, track_z);
+  glVertex3f(x1, y1, track_z);
+  glVertex3f(x0, y1, track_z);
   glEnd();
 
   if (a_Canvas->GetPickingManager().GetPicked() == this)
@@ -62,10 +64,10 @@ void Track::Draw(GlCanvas* a_Canvas, bool a_Picking) {
     glColor4ubv(&m_Color[0]);
 
   glBegin(GL_LINES);
-  glVertex3f(x0, y0, TRACK_Z);
-  glVertex3f(x1, y0, TRACK_Z);
-  glVertex3f(x1, y1, TRACK_Z);
-  glVertex3f(x0, y1, TRACK_Z);
+  glVertex3f(x0, y0, track_z);
+  glVertex3f(x1, y0, track_z);
+  glVertex3f(x1, y1, track_z);
+  glVertex3f(x0, y1, track_z);
   glEnd();
 
   std::string track_label;
@@ -83,9 +85,8 @@ void Track::Draw(GlCanvas* a_Canvas, bool a_Picking) {
       track_label = "";
   }
 
-  float label_offset = m_TimeGraph->GetLayout().GetTrackLabelOffset();
   a_Canvas->AddText(track_label.c_str(), x0, y1 + label_offset + m_Size[1],
-                    TEXT_Z, Color(255, 255, 255, 255));
+                    text_z, Color(255, 255, 255, 255));
 
   m_Canvas = a_Canvas;
 }

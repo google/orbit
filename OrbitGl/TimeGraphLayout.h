@@ -33,6 +33,8 @@ class TimeGraphLayout {
   float GetSpaceBetweenTracksAndThread() const {
     return m_SpaceBetweenTracksAndThread;
   }
+  float GetTextZ() const { return m_TextZ; }
+  float GetTrackZ() const { return m_TrackZ; }
   void CalculateOffsets(const ThreadTrackMap& a_ThreadTracks);
   void Reset();
   void SetDrawProperties(bool value) { m_DrawProperties = value; }
@@ -68,6 +70,9 @@ class TimeGraphLayout {
   float m_SpaceBetweenTracks;
   float m_SpaceBetweenTracksAndThread;
   float m_SpaceBetweenThreadBlocks;
+
+  float m_TextZ;
+  float m_TrackZ;
 
   int m_NumTracks;
 

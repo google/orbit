@@ -23,6 +23,8 @@ TimeGraphLayout::TimeGraphLayout() {
   m_SpaceBetweenThreadBlocks = 30.f;
   m_TrackLabelOffset = 6.f;
   m_SliderWidth = 15.f;
+  m_TextZ = -0.02f;
+  m_TrackZ = -0.1f;
 };
 
 //-----------------------------------------------------------------------------
@@ -169,23 +171,20 @@ void TimeGraphLayout::SetSortedThreadIds(
 void TimeGraphLayout::Reset() { m_DrawFileIO = false; }
 
 //-----------------------------------------------------------------------------
-#define FLOAT_SLIDER(x)                     \
-  if (ImGui::SliderFloat(#x, &x, 0, 100)) { \
-    needs_redraw = true;                    \
-  }
-
-//-----------------------------------------------------------------------------
 #define FLOAT_SLIDER_MIN_MAX(x, min, max)     \
   if (ImGui::SliderFloat(#x, &x, min, max)) { \
     needs_redraw = true;                      \
   }
 
 //-----------------------------------------------------------------------------
+#define FLOAT_SLIDER(x) FLOAT_SLIDER_MIN_MAX(x, 0, 100.f)
+
+//-----------------------------------------------------------------------------
 bool TimeGraphLayout::DrawProperties() {
   ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
   ImVec2 size(400, 400);
-  ImGui::Begin("Layout Properties", &m_DrawProperties, size, 1.f, 0);
 
+  ImGui::Begin("Layout Properties", &m_DrawProperties, size, 1.f, 0);
   bool needs_redraw = false;
   FLOAT_SLIDER(m_TrackLabelOffset);
   FLOAT_SLIDER(m_TextBoxHeight);
@@ -197,8 +196,10 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(m_SpaceBetweenTracksAndThread);
   FLOAT_SLIDER(m_SpaceBetweenThreadBlocks);
   FLOAT_SLIDER(m_SliderWidth);
-  FLOAT_SLIDER_MIN_MAX(m_TrackBottomMargin, 0, 20);
-
+  FLOAT_SLIDER_MIN_MAX(m_TrackBottomMargin, 0, 20.f);
+  FLOAT_SLIDER_MIN_MAX(m_TextZ, -1.f, 1.f);
+  FLOAT_SLIDER_MIN_MAX(m_TrackZ, -1.f, 1.f);
   ImGui::End();
+
   return needs_redraw;
 }
