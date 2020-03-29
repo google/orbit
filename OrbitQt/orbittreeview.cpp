@@ -160,6 +160,10 @@ void OrbitTreeView::resizeEvent(QResizeEvent* event) {
     }
   }
 
+  // Apply initial column ratio only on first resize to allow user to resize
+  // columns manually.
+  m_AutoResize = false;
+
   QTreeView::resizeEvent(event);
 }
 
