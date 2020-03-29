@@ -43,7 +43,6 @@ SamplingProfiler::~SamplingProfiler() {}
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::StartCapture() {
-  Capture::GNumSamplingTicks = 0;
   Capture::GIsSampling = true;
 
   if (!m_Process->GetIsRemote()) {
@@ -70,8 +69,6 @@ void SamplingProfiler::SampleThreadsAsync() {
       GetThreadsUsage();
       m_ThreadUsageTimer.Start();
     }
-
-    ++Capture::GNumSamplingTicks;
 
     for (const auto& thread : m_Process->GetThreads()) {
       DWORD result = SuspendThread(thread->m_Handle);

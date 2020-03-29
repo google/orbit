@@ -34,12 +34,9 @@ std::shared_ptr<Pdb> GPdbDbg;
 #endif
 
 bool Capture::GInjected = false;
-bool Capture::GIsConnected = false;
 std::string Capture::GInjectedProcess;
-double Capture::GOpenCaptureTime;
 bool Capture::GIsSampling = false;
 bool Capture::GIsTesting = false;
-uint32_t Capture::GNumSamplingTicks = 0;
 uint32_t Capture::GFunctionIndex = -1;
 uint32_t Capture::GNumInstalledHooks;
 bool Capture::GHasContextSwitches;
@@ -464,14 +461,6 @@ void Capture::DisplayStats() {
   if (GSamplingProfiler) {
     TRACE_VAR(GSamplingProfiler->GetNumSamples());
   }
-}
-
-//-----------------------------------------------------------------------------
-void Capture::OpenCapture(const std::string&) {
-  LocalScopeTimer Timer(&GOpenCaptureTime);
-  SCOPE_TIMER_LOG("OpenCapture");
-
-  // TODO!
 }
 
 //-----------------------------------------------------------------------------
