@@ -1,6 +1,7 @@
 #include "TimeGraphLayout.h"
 
 #include "Capture.h"
+#include "ImGuiOrbit.h"
 #include "Params.h"
 #include "ThreadTrack.h"
 
@@ -14,11 +15,14 @@ TimeGraphLayout::TimeGraphLayout() {
   m_TextBoxHeight = 20.f;
   m_CoresHeight = 5.f;
   m_EventTrackHeight = 10.f;
+  m_TrackBottomMargin = 5.f;
   m_SpaceBetweenCores = 2.f;
-  m_SpaceBetweenCoresAndThread = 10.f;
+  m_SpaceBetweenCoresAndThread = 30.f;
   m_SpaceBetweenTracks = 2.f;
-  m_SpaceBetweenTracksAndThread = 2.f;
-  m_SpaceBetweenThreadBlocks = 10.f;
+  m_SpaceBetweenTracksAndThread = 5.f;
+  m_SpaceBetweenThreadBlocks = 30.f;
+  m_TrackLabelOffset = 6.f;
+  m_SliderWidth = 15.f;
 };
 
 //-----------------------------------------------------------------------------
@@ -77,7 +81,8 @@ void TimeGraphLayout::CalculateOffsets(const ThreadTrackMap& a_ThreadTracks) {
   m_NumTracks = 1;
   if (m_DrawFileIO) ++m_NumTracks;
 
-  if (!Capture::IsCapturing()) {
+  // TODO: Fix SortTrackByPosition messing up the normal thread sorting.
+  if (false && !Capture::IsCapturing()) {
     SortTracksByPosition(a_ThreadTracks);
   }
 
@@ -162,3 +167,38 @@ void TimeGraphLayout::SetSortedThreadIds(
 
 //-----------------------------------------------------------------------------
 void TimeGraphLayout::Reset() { m_DrawFileIO = false; }
+
+//-----------------------------------------------------------------------------
+#define FLOAT_SLIDER(x)                     \
+  if (ImGui::SliderFloat(#x, &x, 0, 100)) { \
+    needs_redraw = true;                    \
+  }
+
+//-----------------------------------------------------------------------------
+#define FLOAT_SLIDER_MIN_MAX(x, min, max)     \
+  if (ImGui::SliderFloat(#x, &x, min, max)) { \
+    needs_redraw = true;                      \
+  }
+
+//-----------------------------------------------------------------------------
+bool TimeGraphLayout::DrawProperties() {
+  ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+  ImVec2 size(400, 400);
+  ImGui::Begin("Layout Properties", &m_DrawProperties, size, 1.f, 0);
+
+  bool needs_redraw = false;
+  FLOAT_SLIDER(m_TrackLabelOffset);
+  FLOAT_SLIDER(m_TextBoxHeight);
+  FLOAT_SLIDER(m_CoresHeight);
+  FLOAT_SLIDER(m_EventTrackHeight);
+  FLOAT_SLIDER(m_SpaceBetweenCores);
+  FLOAT_SLIDER(m_SpaceBetweenCoresAndThread);
+  FLOAT_SLIDER(m_SpaceBetweenTracks);
+  FLOAT_SLIDER(m_SpaceBetweenTracksAndThread);
+  FLOAT_SLIDER(m_SpaceBetweenThreadBlocks);
+  FLOAT_SLIDER(m_SliderWidth);
+  FLOAT_SLIDER_MIN_MAX(m_TrackBottomMargin, 0, 20);
+
+  ImGui::End();
+  return needs_redraw;
+}
