@@ -298,7 +298,11 @@ void OrbitMainWindow::OnNewSamplingReport(
   m_OrbitSamplingReport = new OrbitSamplingReport(m_SamplingTab);
   m_OrbitSamplingReport->Initialize(a_SamplingReport);
   m_SamplingLayout->addWidget(m_OrbitSamplingReport, 0, 0, 1, 1);
-  ui->RightTabWidget->setCurrentWidget(m_SamplingTab);
+
+  // Automatically switch to sampling tab if not already in live tab.
+  if( ui->RightTabWidget->currentWidget() != ui->LiveTab) {
+    ui->RightTabWidget->setCurrentWidget(m_SamplingTab);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -358,7 +362,7 @@ void OrbitMainWindow::OnReceiveMessage(const std::wstring& a_Message) {
     ui->RightTabWidget->setCurrentWidget(ui->CallStackTab);
   } else if (StartsWith(a_Message, L"startcapture")) {
     SetTitle("");
-  } else if (StartsWith(a_Message, L"gototlive")) {
+  } else if (StartsWith(a_Message, L"gotolive")) {
     ui->RightTabWidget->setCurrentWidget(ui->LiveTab);
   } else if (StartsWith(a_Message, L"gotocapture")) {
     ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
