@@ -27,11 +27,15 @@ class TimeGraphLayout {
   float GetTextBoxHeight() const { return m_TextBoxHeight; }
   float GetTextCoresHeight() const { return m_CoresHeight; }
   float GetEventTrackHeight() const { return m_EventTrackHeight; }
+  float GetTrackBottomMargin() const { return m_TrackBottomMargin; }
+  float GetTrackLabelOffset() const { return m_TrackLabelOffset; }
+  float GetSliderWidth() const { return m_SliderWidth; }
   float GetSpaceBetweenTracksAndThread() const {
     return m_SpaceBetweenTracksAndThread;
   }
   void CalculateOffsets(const ThreadTrackMap& a_ThreadTracks);
   void Reset();
+  void SetDrawProperties(bool value) { m_DrawProperties = value; }
 
   void SetSortedThreadIds(const std::vector<ThreadID>& a_SortedThreadIds);
   const std::vector<ThreadID>& GetSortedThreadIds() const {
@@ -39,6 +43,7 @@ class TimeGraphLayout {
   }
 
   void SetNumCores(int a_NumCores) { m_NumCores = a_NumCores; }
+  bool DrawProperties();
 
  protected:
   void SortTracksByPosition(const ThreadTrackMap& a_ThreadTracks);
@@ -54,6 +59,9 @@ class TimeGraphLayout {
   float m_TextBoxHeight;
   float m_CoresHeight;
   float m_EventTrackHeight;
+  float m_TrackBottomMargin;
+  float m_TrackLabelOffset;
+  float m_SliderWidth;
 
   float m_SpaceBetweenCores;
   float m_SpaceBetweenCoresAndThread;
@@ -68,4 +76,5 @@ class TimeGraphLayout {
   std::vector<ThreadID> m_SortedThreadIds;
 
   ThreadTrackMap* m_ThreadTrackMap;
+  bool m_DrawProperties = false;
 };

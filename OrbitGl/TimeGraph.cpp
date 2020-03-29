@@ -423,9 +423,8 @@ void TimeGraph::SelectLeft(const TextBox* a_TextBox) {
   double currentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
   m_RefTimeUs = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_Start);
 
-  double ratio = m_MarginRatio;
-  double minTimeUs = m_RefTimeUs - ratio * currentTimeWindowUs;
-  double maxTimeUs = m_RefTimeUs + (1 - ratio) * currentTimeWindowUs;
+  double minTimeUs = m_RefTimeUs;
+  double maxTimeUs = m_RefTimeUs + currentTimeWindowUs;
 
   SetMinMax(minTimeUs, maxTimeUs);
 }
@@ -486,7 +485,7 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
   UpdateThreadIds();
 
   double span = m_MaxTimeUs - m_MinTimeUs;
-  TickType rawStart = GetTickFromUs(m_MinTimeUs + m_MarginRatio * span);
+  TickType rawStart = GetTickFromUs(m_MinTimeUs);
   TickType rawStop = GetTickFromUs(m_MaxTimeUs);
 
   unsigned int TextBoxID = 0;
@@ -857,7 +856,10 @@ void TimeGraph::UpdateThreadIds() {
     std::vector<std::pair<ThreadID, uint32_t>> sortedThreads =
         OrbitUtils::ReverseValueSort(m_ThreadCountMap);
     for (auto& pair : sortedThreads) {
-      sortedThreadIds.push_back(pair.first);
+      // Scheduling information is held in thread "0", show it last.
+      // TODO: Make a proper "SchedTrack" instead of hack.
+      if(pair.first != 0)
+        sortedThreadIds.push_back(pair.first);
     }
 
     // Then show threads sorted by number of events
@@ -868,6 +870,9 @@ void TimeGraph::UpdateThreadIds() {
         sortedThreadIds.push_back(pair.first);
       }
     }
+
+    // Scheduling information is held in thread "0", show it last.
+    sortedThreadIds.push_back(0);
 
     // Filter thread ids if needed
     if (!m_ThreadFilter.empty()) {
@@ -1069,7 +1074,7 @@ bool TimeGraph::IsVisible(const Timer& a_Timer) {
   double end = MicroSecondsFromTicks(m_SessionMinCounter, a_Timer.m_End);
 
   double span = m_MaxTimeUs - m_MinTimeUs;
-  double startUs = m_MinTimeUs + m_MarginRatio * span;
+  double startUs = m_MinTimeUs;
 
   if (startUs > end || m_MaxTimeUs < start) {
     return false;

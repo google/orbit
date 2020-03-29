@@ -24,7 +24,8 @@ class GlSlider : public Pickable {
   void SetSliderWidthRatio(float a_Ratio);  // [0,1]
   void SetCanvas(GlCanvas* a_Canvas) { m_Canvas = a_Canvas; }
   Color GetBarColor() const { return m_SliderColor; }
-  float GetPixelHeight() const { return GParams.m_FontSize * 1.5f; }
+  void SetPixelHeight(float height) { m_PixelHeight = height; }
+  float GetPixelHeight() const { return m_PixelHeight; }
   void SetVertical() { m_Vertical = true; }
 
   typedef std::function<void(float)> DragCallback;

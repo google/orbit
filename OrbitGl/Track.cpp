@@ -10,7 +10,7 @@
 #include "absl/strings/str_format.h"
 
 float TEXT_Z = -0.004f;
-float TRACK_Z = -0.005f;
+float TRACK_Z = -0.1f;
 
 //-----------------------------------------------------------------------------
 Track::Track() {
@@ -69,7 +69,7 @@ void Track::Draw(GlCanvas* a_Canvas, bool a_Picking) {
   glEnd();
 
   std::string track_label;
-  switch(label_display_mode_) {
+  switch (label_display_mode_) {
     case NAME_AND_TID:
       track_label = absl::StrFormat("%s [%u]", m_Name, m_ID);
       break;
@@ -83,8 +83,9 @@ void Track::Draw(GlCanvas* a_Canvas, bool a_Picking) {
       track_label = "";
   }
 
-  a_Canvas->AddText(track_label.c_str(),
-                    x0, y1, TEXT_Z, Color(255, 255, 255, 255));
+  float label_offset = m_TimeGraph->GetLayout().GetTrackLabelOffset();
+  a_Canvas->AddText(track_label.c_str(), x0, y1 + label_offset + m_Size[1],
+                    TEXT_Z, Color(255, 255, 255, 255));
 
   m_Canvas = a_Canvas;
 }
