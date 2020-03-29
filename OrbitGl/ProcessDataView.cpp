@@ -62,9 +62,6 @@ std::wstring ProcessesDataView::GetValue(int row, int col) {
       if (process.IsElevated()) {
         value += L"*";
       }
-      if (process.GetIsRemote()) {
-        value += L"[REMOTE]";
-      }
       break;
     case PDV_CPU:
       value = Format(L"%.1f", process.GetCpuUsage());
