@@ -19,13 +19,6 @@ perf_event_attr generic_event_attr() {
   pe.clockid = CLOCK_MONOTONIC;
   pe.sample_id_all = 1;  // Also include timestamps for lost events.
   pe.disabled = 1;
-
-  // We can set these even if we do not do sampling, as without the
-  // PERF_SAMPLE_STACK_USER or PERF_SAMPLE_REGS_USER flags being set in
-  // perf_event_attr::sample_type they will not be used anyways.
-  pe.sample_stack_user = SAMPLE_STACK_USER_SIZE;
-  pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
-
   pe.sample_type = SAMPLE_TYPE_TID_TIME_STREAMID_CPU;
 
   return pe;
@@ -77,7 +70,24 @@ int sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu) {
   pe.type = PERF_TYPE_SOFTWARE;
   pe.config = PERF_COUNT_SW_CPU_CLOCK;
   pe.sample_period = period_ns;
-  pe.sample_type |= PERF_SAMPLE_STACK_USER | PERF_SAMPLE_REGS_USER;
+  pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
+  pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  pe.sample_stack_user = SAMPLE_STACK_USER_SIZE;
+
+  return generic_event_open(&pe, pid, cpu);
+}
+
+int uprobes_retaddr_event_open(const char* module, uint64_t function_offset,
+                               pid_t pid, int32_t cpu) {
+  perf_event_attr pe = uprobe_event_attr(module, function_offset);
+  pe.config = 0;
+  pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
+  pe.sample_regs_user = SAMPLE_REGS_USER_SP_IP;
+
+  // Only get the very top of the stack, where the return address has been
+  // pushed. We record it as it is about to be hijacked by the installation of
+  // the uretprobe.
+  pe.sample_stack_user = SAMPLE_STACK_USER_SIZE_8BYTES;
 
   return generic_event_open(&pe, pid, cpu);
 }
@@ -86,7 +96,9 @@ int uprobes_stack_event_open(const char* module, uint64_t function_offset,
                              pid_t pid, int32_t cpu) {
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config = 0;
-  pe.sample_type |= PERF_SAMPLE_STACK_USER | PERF_SAMPLE_REGS_USER;
+  pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
+  pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  pe.sample_stack_user = SAMPLE_STACK_USER_SIZE;
 
   return generic_event_open(&pe, pid, cpu);
 }

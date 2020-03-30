@@ -199,6 +199,8 @@ class SamplePerfEvent : public PerfEvent {
     return ring_buffer_record->sample_id.time;
   }
 
+  void Accept(PerfEventVisitor* visitor) override;
+
   pid_t GetPid() const { return ring_buffer_record->sample_id.pid; }
   pid_t GetTid() const { return ring_buffer_record->sample_id.tid; }
 
@@ -216,6 +218,7 @@ class SamplePerfEvent : public PerfEvent {
   const char* GetStackData() const {
     return ring_buffer_record->stack.data.get();
   }
+  char* GetStackData() { return ring_buffer_record->stack.data.get(); }
   uint64_t GetStackSize() const { return ring_buffer_record->stack.dyn_size; }
 
  private:
@@ -252,14 +255,6 @@ class SamplePerfEvent : public PerfEvent {
   }
 };
 
-class StackSamplePerfEvent : public SamplePerfEvent {
- public:
-  explicit StackSamplePerfEvent(uint64_t dyn_size)
-      : SamplePerfEvent{dyn_size} {}
-
-  void Accept(PerfEventVisitor* visitor) override;
-};
-
 class AbstractUprobesPerfEvent {
  public:
   const Function* GetFunction() const { return function_; }
@@ -269,13 +264,34 @@ class AbstractUprobesPerfEvent {
   const Function* function_ = nullptr;
 };
 
-class UprobesWithStackPerfEvent : public SamplePerfEvent,
-                                  public AbstractUprobesPerfEvent {
+class UprobesPerfEvent : public PerfEvent, public AbstractUprobesPerfEvent {
  public:
-  explicit UprobesWithStackPerfEvent(uint64_t dyn_size)
-      : SamplePerfEvent{dyn_size} {}
+  perf_event_sp_ip_8bytes_sample ring_buffer_record;
+
+  uint64_t GetTimestamp() const override {
+    return ring_buffer_record.sample_id.time;
+  }
 
   void Accept(PerfEventVisitor* visitor) override;
+
+  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
+  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
+
+  uint64_t GetStreamId() const {
+    return ring_buffer_record.sample_id.stream_id;
+  }
+
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+
+  // Get the stack pointer.
+  uint64_t GetSp() const { return ring_buffer_record.regs.sp; }
+
+  // Get the instruction pointer.
+  uint64_t GetIp() const { return ring_buffer_record.regs.ip; }
+
+  uint64_t GetReturnAddress() const {
+    return ring_buffer_record.stack.top8bytes;
+  }
 };
 
 class UretprobesPerfEvent : public PerfEvent, public AbstractUprobesPerfEvent {

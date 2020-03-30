@@ -36,7 +36,7 @@ struct __attribute__((__packed__)) perf_event_fork_exit {
 };
 
 // This struct must be in sync with the SAMPLE_REGS_USER_ALL in
-// PerfEventOpen.h,
+// PerfEventOpen.h.
 struct __attribute__((__packed__)) perf_event_sample_regs_user_all {
   uint64_t abi;
   uint64_t ax;
@@ -61,10 +61,24 @@ struct __attribute__((__packed__)) perf_event_sample_regs_user_all {
   uint64_t r15;
 };
 
+// This struct must be in sync with the SAMPLE_REGS_USER_SP_IP in
+// PerfEventOpen.h.
+struct __attribute__((__packed__)) perf_event_sample_regs_user_sp_ip {
+  uint64_t abi;
+  uint64_t sp;
+  uint64_t ip;
+};
+
 struct __attribute__((__packed__)) perf_event_sample_stack_user {
   uint64_t size;                     /* if PERF_SAMPLE_STACK_USER */
   char data[SAMPLE_STACK_USER_SIZE]; /* if PERF_SAMPLE_STACK_USER */
   uint64_t dyn_size; /* if PERF_SAMPLE_STACK_USER && size != 0 */
+};
+
+struct __attribute__((__packed__)) perf_event_sample_stack_user_8bytes {
+  uint64_t size;
+  uint64_t top8bytes;
+  uint64_t dyn_size;
 };
 
 struct __attribute__((__packed__)) perf_event_empty_sample {
@@ -79,6 +93,13 @@ struct __attribute__((__packed__)) perf_event_stack_sample {
   perf_event_sample_stack_user stack;
 };
 
+struct __attribute__((__packed__)) perf_event_sp_ip_8bytes_sample {
+  perf_event_header header;
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  perf_event_sample_regs_user_sp_ip regs;
+  perf_event_sample_stack_user_8bytes stack;
+};
+
 struct __attribute__((__packed__)) perf_event_lost {
   perf_event_header header;
   uint64_t id;
@@ -90,7 +111,7 @@ struct __attribute__((__packed__)) perf_event_sample_raw {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   uint32_t size;
-  // The rest of the sample is a char[size] that we read dynamically
+  // The rest of the sample is a char[size] that we read dynamically.
 };
 
 }  // namespace LinuxTracing

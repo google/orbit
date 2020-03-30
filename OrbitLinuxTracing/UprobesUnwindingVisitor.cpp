@@ -2,10 +2,20 @@
 
 namespace LinuxTracing {
 
-void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
+void UprobesUnwindingVisitor::visit(SamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
+
+  if (current_maps_ == nullptr) {
+    return;
+  }
+
+  return_address_manager_.PatchSample(
+      event->GetTid(), event->GetRegisters()[PERF_REG_X86_SP],
+      event->GetStackData(), event->GetStackSize());
+
   const std::vector<unwindstack::FrameData>& full_callstack =
-      callstack_manager_.ProcessSampledCallstack(event->GetTid(), *event);
+      unwinder_.Unwind(current_maps_.get(), event->GetRegisters(),
+                       event->GetStackData(), event->GetStackSize());
   if (!full_callstack.empty()) {
     Callstack returned_callstack{
         event->GetTid(),
@@ -15,7 +25,7 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   }
 }
 
-void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
+void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
   CHECK(listener_ != nullptr);
 
   // We are seeing that, on thread migration, uprobe events can sometimes be
@@ -28,8 +38,8 @@ void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
   // pointers (the stack grows towards lower addresses).
 
   // Duplicate uprobe detection.
-  uint64_t uprobe_sp = event->GetRegisters()[PERF_REG_X86_SP];
-  uint64_t uprobe_ip = event->GetRegisters()[PERF_REG_X86_IP];
+  uint64_t uprobe_sp = event->GetSp();
+  uint64_t uprobe_ip = event->GetIp();
   uint32_t uprobe_cpu = event->GetCpu();
   std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>& uprobe_sps_ips_cpus =
       uprobe_sps_ips_cpus_per_thread_[event->GetTid()];
@@ -53,10 +63,8 @@ void UprobesUnwindingVisitor::visit(UprobesWithStackPerfEvent* event) {
                                         event->GetFunction()->VirtualAddress(),
                                         event->GetTimestamp());
 
-  // Careful: UprobesWithStackPerfEvent* event ends up being moved from
-  // LateUnwindCallstack's constructor.
-  callstack_manager_.ProcessUprobesCallstack(event->GetTid(),
-                                             std::move(*event));
+  return_address_manager_.ProcessUprobes(event->GetTid(), event->GetSp(),
+                                         event->GetReturnAddress());
 }
 
 void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
@@ -76,11 +84,11 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
     listener_->OnFunctionCall(function_call.value());
   }
 
-  callstack_manager_.ProcessUretprobes(event->GetTid());
+  return_address_manager_.ProcessUretprobes(event->GetTid());
 }
 
 void UprobesUnwindingVisitor::visit(MapsPerfEvent* event) {
-  callstack_manager_.ProcessMaps(event->GetMaps());
+  current_maps_ = LibunwindstackUnwinder::ParseMaps(event->GetMaps());
 }
 
 std::vector<CallstackFrame>

@@ -90,7 +90,7 @@ class TracerThread {
   static constexpr int32_t ROUND_ROBIN_POLLING_BATCH_SIZE = 5;
 
   static constexpr uint64_t CONTEXT_SWITCHES_RING_BUFFER_SIZE_KB = 256;
-  static constexpr uint64_t UPROBES_RING_BUFFER_SIZE_KB = 32 * 1024;
+  static constexpr uint64_t UPROBES_RING_BUFFER_SIZE_KB = 2 * 1024;
   static constexpr uint64_t MMAP_TASK_RING_BUFFER_SIZE_KB = 64;
   static constexpr uint64_t SAMPLING_RING_BUFFER_SIZE_KB = 2 * 1024;
   static constexpr uint64_t GPU_TRACING_RING_BUFFER_SIZE_KB = 256;
@@ -110,7 +110,6 @@ class TracerThread {
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
-  absl::flat_hash_set<int> uprobes_fds_;
   absl::flat_hash_map<uint64_t, const Function*> uprobes_ids_to_function_;
   absl::flat_hash_set<int> gpu_tracing_fds_;
 
