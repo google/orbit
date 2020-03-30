@@ -52,6 +52,10 @@ class TracerThread {
     trace_instrumented_functions_ = trace_instrumented_functions;
   }
 
+  void SetTraceGpuDriver(bool trace_gpu_driver) {
+    trace_gpu_driver_ = trace_gpu_driver;
+  }
+
   void Run(const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
  private:
@@ -112,6 +116,7 @@ class TracerThread {
   bool trace_context_switches_ = true;
   bool trace_callstacks_ = true;
   bool trace_instrumented_functions_ = true;
+  bool trace_gpu_driver_ = true;
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;

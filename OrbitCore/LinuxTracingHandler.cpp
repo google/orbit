@@ -7,7 +7,13 @@
 #include "OrbitModule.h"
 #include "Params.h"
 #include "TcpServer.h"
+#include "absl/flags/flag.h"
 #include "llvm/Demangle/Demangle.h"
+
+// TODO: This is a temporary feature flag. Remove this once we enable this
+//  globally.
+ABSL_FLAG(bool, trace_gpu_driver, false,
+          "Enables tracing of GPU driver tracepoint events");
 
 void LinuxTracingHandler::Start() {
   pid_t pid = target_process_->GetID();
@@ -30,6 +36,7 @@ void LinuxTracingHandler::Start() {
   tracer_->SetTraceContextSwitches(GParams.m_TrackContextSwitches);
   tracer_->SetTraceCallstacks(true);
   tracer_->SetTraceInstrumentedFunctions(true);
+  tracer_->SetTraceGpuDriver(absl::GetFlag(FLAGS_trace_gpu_driver));
 
   tracer_->Start();
 }
