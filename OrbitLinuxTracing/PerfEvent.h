@@ -320,8 +320,7 @@ class PerfEventSampleRaw {
  public:
   perf_event_sample_raw ring_buffer_record;
   std::vector<uint8_t> data;
-  explicit PerfEventSampleRaw(uint32_t size)
-      : data(size) {}
+  explicit PerfEventSampleRaw(uint32_t size) : data(size) {}
 };
 
 }  // namespace LinuxTracing

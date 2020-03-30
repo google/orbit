@@ -56,7 +56,7 @@ class LinuxTracingHandler : LinuxTracing::TracerListener {
 
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
 
-  pid_t TimelineToThreadId(const std::string_view timeline);
+  pid_t TimelineToThreadId(std::string_view timeline);
   absl::flat_hash_map<std::string, pid_t> timeline_to_thread_id_;
   // TODO: This is a hack to reuse thread tracks in the UI to show GPU events.
   // This needs to be fixed.

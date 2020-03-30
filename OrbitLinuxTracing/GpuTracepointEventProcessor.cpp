@@ -1,10 +1,10 @@
 #include "GpuTracepointEventProcessor.h"
 
+#include <OrbitLinuxTracing/Events.h>
+
 #include <string>
 #include <tuple>
 #include <vector>
-
-#include <OrbitLinuxTracing/Events.h>
 
 namespace LinuxTracing {
 
@@ -53,8 +53,8 @@ struct __attribute__((__packed__)) perf_event_dma_fence_signaled {
 }  // namespace
 
 int GpuTracepointEventProcessor::ComputeDepthForEvent(
-    const std::string& timeline,
-    uint64_t start_timestamp, uint64_t end_timestamp) {
+    const std::string& timeline, uint64_t start_timestamp,
+    uint64_t end_timestamp) {
   if (timeline_to_latest_timestamp_per_depth_.count(timeline) == 0) {
     std::vector<uint64_t> vec;
     timeline_to_latest_timestamp_per_depth_.emplace(timeline, vec);
@@ -105,8 +105,8 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
   // at the timestamp of scheduling the current job, we push the start
   // time for starting on the hardware back.
   if (timeline_to_latest_dma_signal_.count(timeline) == 0) {
-    timeline_to_latest_dma_signal_.emplace(
-        timeline, dma_it->second.timestamp_ns);
+    timeline_to_latest_dma_signal_.emplace(timeline,
+                                           dma_it->second.timestamp_ns);
   }
   auto it = timeline_to_latest_dma_signal_.find(timeline);
   uint64_t hw_start_time = sched_it->second.timestamp_ns;
@@ -116,14 +116,9 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
 
   int depth = ComputeDepthForEvent(timeline, cs_it->second.timestamp_ns,
                                    dma_it->second.timestamp_ns);
-  GpuJob gpu_job(tid,
-                 cs_it->second.context,
-                 cs_it->second.seqno,
-                 cs_it->second.timeline,
-                 depth,
-                 cs_it->second.timestamp_ns,
-                 sched_it->second.timestamp_ns,
-                 hw_start_time,
+  GpuJob gpu_job(tid, cs_it->second.context, cs_it->second.seqno,
+                 cs_it->second.timeline, depth, cs_it->second.timestamp_ns,
+                 sched_it->second.timestamp_ns, hw_start_time,
                  dma_it->second.timestamp_ns);
 
   listener_->OnGpuJob(gpu_job);

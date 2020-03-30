@@ -1,14 +1,11 @@
 #include "LinuxTracingHandler.h"
 
 #include <functional>
-#include <optional>
 
 #include "Callstack.h"
 #include "ContextSwitch.h"
 #include "OrbitModule.h"
 #include "Params.h"
-#include "Path.h"
-#include "Pdb.h"
 #include "TcpServer.h"
 #include "llvm/Demangle/Demangle.h"
 
@@ -139,7 +136,7 @@ void LinuxTracingHandler::OnFunctionCall(
   session_->RecordTimer(std::move(timer));
 }
 
-pid_t LinuxTracingHandler::TimelineToThreadId(const std::string_view timeline) {
+pid_t LinuxTracingHandler::TimelineToThreadId(std::string_view timeline) {
   auto it = timeline_to_thread_id_.find(timeline);
   if (it != timeline_to_thread_id_.end()) {
     return it->second;
@@ -151,8 +148,7 @@ pid_t LinuxTracingHandler::TimelineToThreadId(const std::string_view timeline) {
   return new_id;
 }
 
-void LinuxTracingHandler::OnGpuJob(
-    const LinuxTracing::GpuJob& gpu_job) {
+void LinuxTracingHandler::OnGpuJob(const LinuxTracing::GpuJob& gpu_job) {
   Timer timer_user_to_sched;
   timer_user_to_sched.m_TID = TimelineToThreadId(gpu_job.GetTimeline());
   timer_user_to_sched.m_SubmitTID = gpu_job.GetTid();
