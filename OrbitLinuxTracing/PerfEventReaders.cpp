@@ -32,11 +32,24 @@ pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer) {
   return pid;
 }
 
-pid_t ReadUretprobesRecordPid(PerfEventRingBuffer* ring_buffer) {
-  pid_t pid;
+std::unique_ptr<SamplePerfEvent> ConsumeSamplePerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  // Data in the ring buffer has the layout of perf_event_stack_sample, but we
+  // copy it into dynamically_sized_perf_event_stack_sample.
+  uint64_t dyn_size;
   ring_buffer->ReadValueAtOffset(
-      &pid, offsetof(perf_event_empty_sample, sample_id.pid));
-  return pid;
+      &dyn_size, offsetof(perf_event_stack_sample, stack.dyn_size));
+  auto event = std::make_unique<SamplePerfEvent>(dyn_size);
+  event->ring_buffer_record->header = header;
+  ring_buffer->ReadValueAtOffset(&event->ring_buffer_record->sample_id,
+                                 offsetof(perf_event_stack_sample, sample_id));
+  ring_buffer->ReadValueAtOffset(&event->ring_buffer_record->regs,
+                                 offsetof(perf_event_stack_sample, regs));
+  ring_buffer->ReadRawAtOffset(event->ring_buffer_record->stack.data.get(),
+                               offsetof(perf_event_stack_sample, stack.data),
+                               dyn_size);
+  ring_buffer->SkipRecord(header);
+  return event;
 }
 
 std::unique_ptr<PerfEventSampleRaw> ConsumeSampleRaw(

@@ -13,8 +13,8 @@ class PerfEventVisitor {
   virtual void visit(ExitPerfEvent*) {}
   virtual void visit(ContextSwitchPerfEvent*) {}
   virtual void visit(SystemWideContextSwitchPerfEvent*) {}
-  virtual void visit(StackSamplePerfEvent*) {}
-  virtual void visit(UprobesWithStackPerfEvent*) {}
+  virtual void visit(SamplePerfEvent*) {}
+  virtual void visit(UprobesPerfEvent*) {}
   virtual void visit(UretprobesPerfEvent*) {}
   virtual void visit(LostPerfEvent*) {}
   virtual void visit(MapsPerfEvent*) {}

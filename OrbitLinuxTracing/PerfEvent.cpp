@@ -20,11 +20,11 @@ void SystemWideContextSwitchPerfEvent::Accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 
-void StackSamplePerfEvent::Accept(PerfEventVisitor* visitor) {
+void SamplePerfEvent::Accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 
-void UprobesWithStackPerfEvent::Accept(PerfEventVisitor* visitor) {
+void UprobesPerfEvent::Accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 

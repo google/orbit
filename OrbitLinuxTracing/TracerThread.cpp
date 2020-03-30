@@ -180,7 +180,7 @@ void TracerThread::Run(
       bool function_uprobes_open_error = false;
 
       for (int32_t cpu : cpuset_cpus) {
-        int uprobes_fd = uprobes_stack_event_open(
+        int uprobes_fd = uprobes_retaddr_event_open(
             function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
         if (uprobes_fd < 0) {
           function_uprobes_open_error = true;
@@ -254,7 +254,6 @@ void TracerThread::Run(
           ring_buffers_.emplace_back(ring_buffer_fd,
                                      UPROBES_RING_BUFFER_SIZE_KB, buffer_name);
           uprobes_ring_buffer_fds_per_cpu[cpu] = ring_buffer_fd;
-          uprobes_fds_.emplace(ring_buffer_fd);
           // Must be called after the ring buffer has been opened.
           perf_event_redirect(uretprobes_fd, ring_buffer_fd);
         }
@@ -508,34 +507,21 @@ void TracerThread::ProcessMmapEvent(const perf_event_header& header,
 void TracerThread::ProcessSampleEvent(const perf_event_header& header,
                                       PerfEventRingBuffer* ring_buffer) {
   int fd = ring_buffer->GetFileDescriptor();
-  bool is_probe = uprobes_fds_.contains(fd);
   bool is_gpu_event = gpu_tracing_fds_.contains(fd);
 
-  // An event can never be a probe and a GPU event.
-  CHECK(!(is_probe && is_gpu_event));
+  constexpr size_t size_of_uprobes = sizeof(perf_event_sp_ip_8bytes_sample);
+  bool is_uprobe = !is_gpu_event && (header.size == size_of_uprobes);
 
-  constexpr size_t size_of_uretprobe = sizeof(perf_event_empty_sample);
-  bool is_uretprobe = is_probe && (header.size == size_of_uretprobe);
-  bool is_uprobe = is_probe && !is_uretprobe;
-
-  pid_t pid;
-  if (is_uretprobe) {
-    pid = ReadUretprobesRecordPid(ring_buffer);
-  } else {
-    pid = ReadSampleRecordPid(ring_buffer);
-  }
-
-  // We skip this sample if it is not an event of the currently selected
-  // process, unless it is a GPU tracepoint event as we want to have
-  // visibility into all GPU activity across the system.
-  if (pid != pid_ && !is_gpu_event) {
-    ring_buffer->SkipRecord(header);
-    return;
-  }
+  constexpr size_t size_of_uretprobes = sizeof(perf_event_empty_sample);
+  bool is_uretprobe = !is_gpu_event && (header.size == size_of_uretprobes);
+  CHECK(is_gpu_event + is_uprobe + is_uretprobe <= 1);
 
   if (is_uprobe) {
-    auto event =
-        ConsumeSamplePerfEvent<UprobesWithStackPerfEvent>(ring_buffer, header);
+    auto event = make_unique_for_overwrite<UprobesPerfEvent>();
+    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
+    if (event->GetPid() != pid_) {
+      return;
+    }
     event->SetFunction(uprobes_ids_to_function_.at(event->GetStreamId()));
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
@@ -544,6 +530,9 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   } else if (is_uretprobe) {
     auto event = make_unique_for_overwrite<UretprobesPerfEvent>();
     ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
+    if (event->GetPid() != pid_) {
+      return;
+    }
     event->SetFunction(uprobes_ids_to_function_.at(event->GetStreamId()));
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
@@ -552,11 +541,18 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   } else if (is_gpu_event) {
     // TODO: Consider deferring events.
     auto event = ConsumeSampleRaw(ring_buffer, header);
+    // Do not filter GPU tracepoint events based on pid as we want to have
+    // visibility into all GPU activity across the system.
     gpu_event_processor_->PushEvent(event);
     ++stats_.gpu_events_count;
+
   } else {
-    auto event =
-        ConsumeSamplePerfEvent<StackSamplePerfEvent>(ring_buffer, header);
+    pid_t pid = ReadSampleRecordPid(ring_buffer);
+    if (pid != pid_) {
+      ring_buffer->SkipRecord(header);
+      return;
+    }
+    auto event = ConsumeSamplePerfEvent(ring_buffer, header);
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
@@ -607,7 +603,6 @@ void TracerThread::ProcessDeferredEvents() {
 void TracerThread::Reset() {
   tracing_fds_.clear();
   ring_buffers_.clear();
-  uprobes_fds_.clear();
   uprobes_ids_to_function_.clear();
   gpu_tracing_fds_.clear();
   deferred_events_.clear();

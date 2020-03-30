@@ -88,6 +88,11 @@ static constexpr uint64_t SAMPLE_REGS_USER_ALL =
     (1lu << PERF_REG_X86_R12) | (1lu << PERF_REG_X86_R13) |
     (1lu << PERF_REG_X86_R14) | (1lu << PERF_REG_X86_R15);
 
+// This must be in sync with struct perf_event_sample_regs_user_sp_ip in
+// PerfEventRecords.h.
+static constexpr uint64_t SAMPLE_REGS_USER_SP_IP =
+    (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP);
+
 // Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
 // because the kernel stores this in a short and because of alignment reasons.
 // But the size the kernel actually returns is smaller, because the maximum size
@@ -100,6 +105,9 @@ static constexpr uint64_t SAMPLE_REGS_USER_ALL =
 //  some setting.
 static constexpr uint16_t SAMPLE_STACK_USER_SIZE = 65000;
 
+static_assert(sizeof(void*) == 8);
+static constexpr uint16_t SAMPLE_STACK_USER_SIZE_8BYTES = 8;
+
 // perf_event_open for context switches.
 int context_switch_event_open(pid_t pid, int32_t cpu);
 
@@ -110,6 +118,9 @@ int mmap_task_event_open(pid_t pid, int32_t cpu);
 int sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
 
 // perf_event_open for uprobes and uretprobes.
+int uprobes_retaddr_event_open(const char* module, uint64_t function_offset,
+                               pid_t pid, int32_t cpu);
+
 int uprobes_stack_event_open(const char* module, uint64_t function_offset,
                              pid_t pid, int32_t cpu);
 
