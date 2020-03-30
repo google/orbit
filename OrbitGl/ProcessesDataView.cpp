@@ -158,20 +158,20 @@ void ProcessesDataView::OnSort(int a_Column,
 //-----------------------------------------------------------------------------
 void ProcessesDataView::OnSelect(int a_Index) {
   m_SelectedProcess = GetProcess(a_Index);
+  if (!m_IsRemote) {
+    m_SelectedProcess->ListModules();
+  } else if (m_SelectedProcess->GetModules().size() == 0) {
+    Message msg(Msg_RemoteProcessRequest);
+    msg.m_Header.m_GenericHeader.m_Address = m_SelectedProcess->GetID();
+    GTcpClient->Send(msg);
+  }
+
   UpdateModuleDataView(m_SelectedProcess);
 }
 
 void ProcessesDataView::UpdateModuleDataView(
     std::shared_ptr<Process> a_Process) {
   if (m_ModulesDataView) {
-    if (!m_IsRemote) {
-      a_Process->ListModules();
-    } else if (a_Process->GetModules().size() == 0) {
-      Message msg(Msg_RemoteProcessRequest);
-      msg.m_Header.m_GenericHeader.m_Address = a_Process->GetID();
-      GTcpClient->Send(msg);
-    }
-
     m_ModulesDataView->SetProcess(a_Process);
     Capture::SetTargetProcess(a_Process);
     GOrbitApp->FireRefreshCallbacks();
