@@ -65,4 +65,5 @@ class Track : public Pickable {
   uint32_t m_ID;
   LabelDisplayMode label_display_mode_;
   Color m_Color;
+  bool m_PickingEnabled = false;
 };

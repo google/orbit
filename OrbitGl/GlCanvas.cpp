@@ -379,7 +379,6 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y,
   // TRACE_VAR( GDeltaTimeBuffer.Size() );
   // TRACE_VAR( GDeltaTimeBuffer[0] );
   // TRACE_VAR( GDeltaTimeBuffer[512] );
-  // TRACE_VAR( Capture::GOpenCaptureTime );
   // TRACE_VAR( Capture::GNumContextSwitches );
 
   if (m_WorldWidth <= 0) m_WorldWidth = 1.f;

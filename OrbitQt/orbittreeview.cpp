@@ -4,6 +4,7 @@
 
 #include "orbittreeview.h"
 
+#include <QApplication>
 #include <QFontDatabase>
 #include <QHeaderView>
 #include <QKeyEvent>
@@ -160,10 +161,6 @@ void OrbitTreeView::resizeEvent(QResizeEvent* event) {
     }
   }
 
-  // Apply initial column ratio only on first resize to allow user to resize
-  // columns manually.
-  m_AutoResize = false;
-
   QTreeView::resizeEvent(event);
 }
 
@@ -272,9 +269,7 @@ std::wstring OrbitTreeView::GetLabel() {
 //-----------------------------------------------------------------------------
 void OrbitTreeView::columnResized(int /*column*/, int /*oldSize*/,
                                   int /*newSize*/) {
-#ifdef _WIN32
-  if ((GetKeyState(VK_LBUTTON) & 0x100) != 0) {
+  if (QApplication::mouseButtons() == Qt::LeftButton) {
     m_AutoResize = false;
   }
-#endif
 }

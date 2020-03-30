@@ -23,6 +23,10 @@ ThreadTrack::ThreadTrack(TimeGraph* a_TimeGraph, uint32_t a_ThreadID) {
 
 //-----------------------------------------------------------------------------
 void ThreadTrack::Draw(GlCanvas* a_Canvas, bool a_Picking) {
+  // Scheduling information is held in thread "0", don't draw as threadtrack.
+  // TODO: Make a proper "SchedTrack" instead of hack.
+  if (m_ID == 0) return;
+
   TimeGraphLayout& layout = m_TimeGraph->GetLayout();
   float threadOffset = layout.GetThreadBlockStart(m_ID);
   float trackHeight = GetHeight();

@@ -105,6 +105,9 @@ void Track::SetSize(float a_SizeX, float a_SizeY) {
 
 //-----------------------------------------------------------------------------
 void Track::OnPick(int a_X, int a_Y) {
+  if (!m_PickingEnabled)
+    return;
+
   Vec2& mousePos = m_MousePos[0];
   m_Canvas->ScreenToWorld(a_X, a_Y, mousePos[0], mousePos[1]);
   m_PickingOffset = mousePos - m_Pos;
@@ -114,6 +117,9 @@ void Track::OnPick(int a_X, int a_Y) {
 
 //-----------------------------------------------------------------------------
 void Track::OnRelease() {
+  if (!m_PickingEnabled)
+    return;
+
   m_Picked = false;
   m_Moving = false;
   m_TimeGraph->NeedsUpdate();
@@ -121,6 +127,9 @@ void Track::OnRelease() {
 
 //-----------------------------------------------------------------------------
 void Track::OnDrag(int a_X, int a_Y) {
+  if (!m_PickingEnabled)
+    return;
+
   m_Moving = true;
   float x = 0.f;
   m_Canvas->ScreenToWorld(a_X, a_Y, x, m_Pos[1]);
