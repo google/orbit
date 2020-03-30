@@ -6,8 +6,8 @@
 #include <thread>
 
 #include "UprobesUnwindingVisitor.h"
-#include "absl/strings/str_format.h"
 #include "absl/flags/flag.h"
+#include "absl/strings/str_format.h"
 
 // TODO: This is a temporary feature flag. Remove this once we enable this
 // globally or have a tracer configuration that is passed to TracerThread.
@@ -62,8 +62,8 @@ bool TracerThread::OpenRingBufferForGpuTracepoint(
 // relevant events.
 // This method returns true on success, otherwise false.
 bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
-  std::vector<PerfEventRingBuffer> ring_buffers;
   std::vector<int> gpu_tracing_fds;
+  std::vector<PerfEventRingBuffer> ring_buffers;
   for (int32_t cpu : cpus) {
     if (!OpenRingBufferForGpuTracepoint("amdgpu", "amdgpu_cs_ioctl", cpu,
                                         &gpu_tracing_fds, &ring_buffers)) {
@@ -100,17 +100,18 @@ bool TracerThread::InitGpuTracepointEventProcessor() {
   if (amdgpu_cs_ioctl_id == -1) {
     return false;
   }
-  int amdgpu_sched_run_job_id = GetTracepointId("amdgpu", "amdgpu_sched_run_job");
+  int amdgpu_sched_run_job_id =
+      GetTracepointId("amdgpu", "amdgpu_sched_run_job");
   if (amdgpu_sched_run_job_id == -1) {
     return false;
   }
-  int dma_fence_signaled_id = GetTracepointId("dma_fence", "dma_fence_signaled");
+  int dma_fence_signaled_id =
+      GetTracepointId("dma_fence", "dma_fence_signaled");
   if (dma_fence_signaled_id == -1) {
     return false;
   }
-  gpu_event_processor_
-      = std::make_shared<GpuTracepointEventProcessor>(
-          amdgpu_cs_ioctl_id, amdgpu_sched_run_job_id, dma_fence_signaled_id);
+  gpu_event_processor_ = std::make_shared<GpuTracepointEventProcessor>(
+      amdgpu_cs_ioctl_id, amdgpu_sched_run_job_id, dma_fence_signaled_id);
   gpu_event_processor_->SetListener(listener_);
   return true;
 }

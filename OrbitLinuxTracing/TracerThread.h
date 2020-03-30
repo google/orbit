@@ -55,7 +55,7 @@ class TracerThread {
   void Run(const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
  private:
-  bool OpenRingBufferForGpuTracepoint(
+  static bool OpenRingBufferForGpuTracepoint(
       const char* tracepoint_category, const char* tracepoint_name, int32_t cpu,
       std::vector<int>* gpu_tracing_fds,
       std::vector<PerfEventRingBuffer>* ring_buffers);

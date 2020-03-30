@@ -38,7 +38,7 @@ PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb,
   }
 
   file_descriptor_ = perf_event_fd;
-  name_ = name;
+  name_ = std::move(name);
 
   // The size of a perf_event_open ring buffer is required to be a power of two
   // memory pages (from perf_event_open's manpage: "The mmap size should be
