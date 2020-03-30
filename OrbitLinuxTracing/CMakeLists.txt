@@ -63,6 +63,7 @@ if (NOT WIN32)
     target_sources(OrbitLinuxTracingTests PRIVATE
             PerfEventProcessor2Test.cpp
             UprobesFunctionCallManagerTest.cpp
+            UprobesReturnAddressManagerTest.cpp
             UtilsTest.cpp)
 endif ()
 
