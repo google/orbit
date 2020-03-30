@@ -223,10 +223,10 @@ void TypesDataView::OnSort(int a_Column,
   auto MemberID = static_cast<Type::MemberID>(s_HeaderMap[a_Column]);
 
   if (a_NewOrder.has_value()) {
-    m_SortingOrders[MemberID] = a_NewOrder.value();
+    m_SortingOrders[a_Column] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingOrders[MemberID] == AscendingOrder;
+  bool ascending = m_SortingOrders[a_Column] == AscendingOrder;
   std::function<bool(int a, int b)> sorter = nullptr;
 
   switch (MemberID) {
