@@ -698,12 +698,14 @@ void CaptureWindow::DrawScreenSpace() {
     double ratio =
         Capture::IsCapturing() ? 1 : (maxStart != 0 ? start / maxStart : 0);
 
+    m_Slider.SetPixelHeight(m_TimeGraph.GetLayout().GetSliderWidth());
     m_Slider.SetSliderRatio((float)ratio);
     m_Slider.SetSliderWidthRatio(float(width / timeSpan));
     m_Slider.Draw(this, m_Picking);
 
     float verticalRatio = m_WorldHeight / m_TimeGraph.GetThreadTotalHeight();
     if (verticalRatio < 1.f) {
+      m_VerticalSlider.SetPixelHeight(m_TimeGraph.GetLayout().GetSliderWidth());
       m_VerticalSlider.SetSliderWidthRatio(verticalRatio);
       m_VerticalSlider.Draw(this, m_Picking);
     }
@@ -748,7 +750,7 @@ float CaptureWindow::GetTopBarTextY() {
 //-----------------------------------------------------------------------------
 void CaptureWindow::DrawStatus() {
   float iconSize = m_Slider.GetPixelHeight();
-  int s_PosX = (int)iconSize;
+  int s_PosX = 0;
   float s_PosY = GetTopBarTextY();
   static int s_IncY = 20;
 
@@ -758,7 +760,7 @@ void CaptureWindow::DrawStatus() {
   int PosY = (int)s_PosY;
   int LeftY = (int)s_PosY;
 
-  m_TextRenderer.AddText2D(" press 'H'", s_PosX, LeftY, Z_VALUE_TEXT_UI,
+  m_TextRenderer.AddText2D(" Press 'H' for help", s_PosX, LeftY, Z_VALUE_TEXT_UI,
                            s_Color);
   LeftY += s_IncY;
 
@@ -783,6 +785,10 @@ void CaptureWindow::RenderUI() {
   Orbit_ImGui_NewFrame(this);
 
   if (m_DrawStats) {
+    if (m_TimeGraph.GetLayout().DrawProperties()) {
+      NeedsUpdate();
+    }
+
     m_StatsWindow.Clear();
 
     m_StatsWindow.AddLine(VAR_TO_ANSI(m_Width));
@@ -1045,9 +1051,8 @@ void CaptureWindow::RenderBar() {
   float h = (float)getHeight();
   float y = h - barHeight;
   float timerX = getWidth() / 2.f;
-  DrawTexturedSquare(GTextureInjected, size, m_ProcessX - size, y);
+
   DrawTexturedSquare(GTextureTimer, size, timerX, y);
-  DrawTexturedSquare(GTextureHelp, size, 0, y);
 
   if (Capture::IsCapturing()) {
     DrawTexturedSquare(GTextureRecord, size, timerX - size, y);
