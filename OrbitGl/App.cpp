@@ -489,11 +489,6 @@ void OrbitApp::ListSessions() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::SetRemoteProcess(std::shared_ptr<Process> a_Process) {
-  m_ProcessesDataView->SetRemoteProcess(a_Process);
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::RefreshCaptureView() {
   NeedsRedraw();
   GOrbitApp->FireRefreshCallbacks();

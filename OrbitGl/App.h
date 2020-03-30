@@ -60,7 +60,6 @@ class OrbitApp : public CoreApp {
   void LoadSystrace(const std::string& a_FileName);
   void AppendSystrace(const std::string& a_FileName, uint64_t a_TimeOffset);
   void ListSessions();
-  void SetRemoteProcess(std::shared_ptr<Process> a_Process);
   void RefreshCaptureView() override;
   void RequestRemoteModules(const std::vector<std::string> a_Modules);
   void AddWatchedVariable(Variable* a_Variable);
