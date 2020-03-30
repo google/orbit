@@ -17,81 +17,195 @@ ABSL_FLAG(bool, trace_gpu_driver_events, false,
 namespace LinuxTracing {
 
 namespace {
-
 void CloseFileDescriptors(const std::vector<int>& fds) {
   for (int fd : fds) {
     close(fd);
   }
 }
-
 }  // namespace
 
-bool TracerThread::OpenRingBufferForGpuTracepoint(
-    const char* tracepoint_category, const char* tracepoint_name, int32_t cpu,
-    std::vector<int>* gpu_tracing_fds,
-    std::vector<PerfEventRingBuffer>* ring_buffers) {
-  int fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
-  if (fd == -1) {
-    return false;
+bool TracerThread::OpenContextSwitches(const std::vector<int32_t>& cpus) {
+  std::vector<int> context_switch_tracing_fds;
+  std::vector<PerfEventRingBuffer> context_switch_ring_buffers;
+  for (int32_t cpu : cpus) {
+    int context_switch_fd = context_switch_event_open(-1, cpu);
+    std::string buffer_name = absl::StrFormat("context_switch_%d", cpu);
+    PerfEventRingBuffer context_switch_ring_buffer{
+        context_switch_fd, CONTEXT_SWITCHES_RING_BUFFER_SIZE_KB, buffer_name};
+    if (context_switch_ring_buffer.IsOpen()) {
+      context_switch_tracing_fds.push_back(context_switch_fd);
+      context_switch_ring_buffers.push_back(
+          std::move(context_switch_ring_buffer));
+    } else {
+      ERROR("Opening context switch events for cpu %d", cpu);
+      CloseFileDescriptors(context_switch_tracing_fds);
+      return false;
+    }
   }
-  gpu_tracing_fds->push_back(fd);
 
-  std::string buffer_name =
-      absl::StrFormat("%s:%s_%i", tracepoint_category, tracepoint_name, cpu);
-  PerfEventRingBuffer ring_buffer{fd, GPU_TRACING_RING_BUFFER_SIZE_KB,
-                                  buffer_name};
-  if (!ring_buffer.IsOpen()) {
-    return false;
+  for (int fd : context_switch_tracing_fds) {
+    tracing_fds_.push_back(fd);
   }
-  ring_buffers->push_back(std::move(ring_buffer));
-
+  for (PerfEventRingBuffer& buffer : context_switch_ring_buffers) {
+    ring_buffers_.emplace_back(std::move(buffer));
+  }
   return true;
 }
 
-// This method enables events for GPU event tracing. We trace three events that
-// correspond to the following GPU driver events:
-// - A GPU job (command buffer submission) is scheduled by the application. This
-//   is tracked by the event "amdgpu_cs_ioctl".
-// - A GPU job is scheduled to run on the hardware. This is tracked by the event
-//   "amdgpu_sched_run_job".
-// - A GPU job is finished by the hardware. This is tracked by the corresponding
-//   DMA fence being signaled and is tracked by the event "dma_fence_signaled".
-// A single job execution thus correponds to three events, one of each type
-// above, that share the same timeline, context, and seqno.
-// We have to record events system-wide (per CPU) to ensure we record all
-// relevant events.
-// This method returns true on success, otherwise false.
-bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
-  std::vector<int> gpu_tracing_fds;
-  std::vector<PerfEventRingBuffer> ring_buffers;
+void TracerThread::InitUprobesEventProcessor() {
+  auto uprobes_unwinding_visitor =
+      std::make_unique<UprobesUnwindingVisitor>(ReadMaps(pid_));
+  uprobes_unwinding_visitor->SetListener(listener_);
+  // Switch between PerfEventProcessor and PerfEventProcessor2 here.
+  // PerfEventProcessor2 is supposedly faster but assumes that events from the
+  // same perf_event_open ring buffer are already sorted.
+  uprobes_event_processor_ = std::make_shared<PerfEventProcessor2>(
+      std::move(uprobes_unwinding_visitor));
+}
+
+bool TracerThread::OpenUprobes(const std::vector<int32_t>& cpus) {
+  bool uprobes_event_open_errors = false;
+  absl::flat_hash_map<int32_t, int> uprobes_ring_buffer_fds_per_cpu;
+
+  for (const auto& function : instrumented_functions_) {
+    absl::flat_hash_map<int32_t, int> function_uprobes_fds_per_cpu;
+    absl::flat_hash_map<int32_t, int> function_uretprobes_fds_per_cpu;
+    bool function_uprobes_open_error = false;
+
+    for (int32_t cpu : cpus) {
+      int uprobes_fd = uprobes_retaddr_event_open(
+          function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
+      if (uprobes_fd < 0) {
+        function_uprobes_open_error = true;
+        break;
+      }
+      function_uprobes_fds_per_cpu.emplace(cpu, uprobes_fd);
+
+      int uretprobes_fd = uretprobes_event_open(
+          function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
+      if (uretprobes_fd < 0) {
+        function_uprobes_open_error = true;
+        break;
+      }
+      function_uretprobes_fds_per_cpu.emplace(cpu, uretprobes_fd);
+    }
+
+    if (function_uprobes_open_error) {
+      ERROR("Opening u(ret)probes for function at %#016lx",
+            function.VirtualAddress());
+      uprobes_event_open_errors = true;
+      for (const auto& uprobes_fd : function_uprobes_fds_per_cpu) {
+        close(uprobes_fd.second);
+      }
+      for (const auto& uretprobes_fd : function_uretprobes_fds_per_cpu) {
+        close(uretprobes_fd.second);
+      }
+      continue;
+    }
+
+    // Add function_uretprobes_fds_per_cpu to tracing_fds_ before
+    // function_uprobes_fds_per_cpu. As we support having uretprobes without
+    // associated uprobes, but not the opposite, this way the uretprobe is
+    // enabled before the uprobe.
+    for (const auto& uretprobes_fd : function_uretprobes_fds_per_cpu) {
+      tracing_fds_.push_back(uretprobes_fd.second);
+    }
+    for (const auto& uprobes_fd : function_uprobes_fds_per_cpu) {
+      tracing_fds_.push_back(uprobes_fd.second);
+    }
+
+    // Record the association between the stream_id and the function.
+    for (const auto& uprobes_fd : function_uprobes_fds_per_cpu) {
+      uprobes_ids_to_function_.emplace(perf_event_get_id(uprobes_fd.second),
+                                       &function);
+    }
+    for (const auto& uretprobes_fd : function_uretprobes_fds_per_cpu) {
+      uprobes_ids_to_function_.emplace(
+          perf_event_get_id(uretprobes_fd.second), &function);
+    }
+
+    // Redirect all uprobes and uretprobes on the same cpu to a single ring
+    // buffer to reduce the number of ring buffers.
+    for (int32_t cpu : cpus) {
+      int uprobes_fd = function_uprobes_fds_per_cpu.at(cpu);
+      int uretprobes_fd = function_uretprobes_fds_per_cpu.at(cpu);
+      if (uprobes_ring_buffer_fds_per_cpu.contains(cpu)) {
+        // Redirect to the already opened ring buffer.
+        int ring_buffer_fd = uprobes_ring_buffer_fds_per_cpu.at(cpu);
+        perf_event_redirect(uprobes_fd, ring_buffer_fd);
+        perf_event_redirect(uretprobes_fd, ring_buffer_fd);
+      } else {
+        // No ring buffer has yet been created for this cpu, as this is the
+        // first uprobes to have been opened successfully. Hence, create a
+        // ring buffer for this cpu associated to uprobes_fd and redirect the
+        // uretprobes to it. The other uprobes and uretprobes for this cpu
+        // will be redirected to this ring buffer.
+        int ring_buffer_fd = uprobes_fd;
+        std::string buffer_name =
+            absl::StrFormat("uprobes_uretprobes_%u", cpu);
+        ring_buffers_.emplace_back(ring_buffer_fd,
+                                   UPROBES_RING_BUFFER_SIZE_KB, buffer_name);
+        uprobes_ring_buffer_fds_per_cpu[cpu] = ring_buffer_fd;
+        // Must be called after the ring buffer has been opened.
+        perf_event_redirect(uretprobes_fd, ring_buffer_fd);
+      }
+    }
+  }
+
+  return !uprobes_event_open_errors;
+}
+
+bool TracerThread::OpenMmapTask(const std::vector<int32_t>& cpus) {
+  std::vector<int> mmap_task_tracing_fds;
+  std::vector<PerfEventRingBuffer> mmap_task_ring_buffers;
   for (int32_t cpu : cpus) {
-    if (!OpenRingBufferForGpuTracepoint("amdgpu", "amdgpu_cs_ioctl", cpu,
-                                        &gpu_tracing_fds, &ring_buffers)) {
-      CloseFileDescriptors(gpu_tracing_fds);
-      return false;
-    }
-    if (!OpenRingBufferForGpuTracepoint("amdgpu", "amdgpu_sched_run_job", cpu,
-                                        &gpu_tracing_fds, &ring_buffers)) {
-      CloseFileDescriptors(gpu_tracing_fds);
-      return false;
-    }
-    if (!OpenRingBufferForGpuTracepoint("dma_fence", "dma_fence_signaled", cpu,
-                                        &gpu_tracing_fds, &ring_buffers)) {
-      CloseFileDescriptors(gpu_tracing_fds);
+    int mmap_task_fd = mmap_task_event_open(-1, cpu);
+    std::string buffer_name = absl::StrFormat("mmap_task_%d", cpu);
+    PerfEventRingBuffer mmap_task_ring_buffer{
+        mmap_task_fd, MMAP_TASK_RING_BUFFER_SIZE_KB, buffer_name};
+    if (mmap_task_ring_buffer.IsOpen()) {
+      mmap_task_tracing_fds.push_back(mmap_task_fd);
+      mmap_task_ring_buffers.push_back(std::move(mmap_task_ring_buffer));
+    } else {
+      ERROR("Opening mmap, fork, and exit events for cpu %d", cpu);
+      CloseFileDescriptors(mmap_task_tracing_fds);
       return false;
     }
   }
 
-  // Since all tracepoints could successfully be opened, we can now commit all
-  // file descriptors and ring buffers to the TracerThread members.
-  for (int fd : gpu_tracing_fds) {
-    gpu_tracing_fds_.emplace(fd);
+  for (int fd : mmap_task_tracing_fds) {
     tracing_fds_.push_back(fd);
   }
-  for (PerfEventRingBuffer& buffer : ring_buffers) {
+  for (PerfEventRingBuffer& buffer : mmap_task_ring_buffers) {
     ring_buffers_.emplace_back(std::move(buffer));
   }
+  return true;
+}
 
+bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
+  std::vector<int> sampling_tracing_fds;
+  std::vector<PerfEventRingBuffer> sampling_ring_buffers;
+  for (int32_t cpu : cpus) {
+    int sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
+    std::string buffer_name = absl::StrFormat("sampling_%d", cpu);
+    PerfEventRingBuffer sampling_ring_buffer{
+        sampling_fd, SAMPLING_RING_BUFFER_SIZE_KB, buffer_name};
+    if (sampling_ring_buffer.IsOpen()) {
+      sampling_tracing_fds.push_back(sampling_fd);
+      sampling_ring_buffers.push_back(std::move(sampling_ring_buffer));
+    } else {
+      ERROR("Opening sampling for cpu %d", cpu);
+      CloseFileDescriptors(sampling_tracing_fds);
+      return false;
+    }
+  }
+
+  for (int fd : sampling_tracing_fds) {
+    tracing_fds_.push_back(fd);
+  }
+  for (PerfEventRingBuffer& buffer : sampling_ring_buffers) {
+    ring_buffers_.emplace_back(std::move(buffer));
+  }
   return true;
 }
 
@@ -116,7 +230,75 @@ bool TracerThread::InitGpuTracepointEventProcessor() {
   return true;
 }
 
-// TODO: Refactor this huge method.
+bool TracerThread::OpenRingBufferForGpuTracepoint(
+    const char* tracepoint_category, const char* tracepoint_name, int32_t cpu,
+    std::vector<int>* gpu_tracing_fds,
+    std::vector<PerfEventRingBuffer>* gpu_ring_buffers) {
+  int fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
+  if (fd == -1) {
+    return false;
+  }
+  gpu_tracing_fds->push_back(fd);
+
+  std::string buffer_name =
+      absl::StrFormat("%s:%s_%i", tracepoint_category, tracepoint_name, cpu);
+  PerfEventRingBuffer ring_buffer{fd, GPU_TRACING_RING_BUFFER_SIZE_KB,
+                                  buffer_name};
+  if (!ring_buffer.IsOpen()) {
+    return false;
+  }
+  gpu_ring_buffers->push_back(std::move(ring_buffer));
+
+  return true;
+}
+
+// This method enables events for GPU event tracing. We trace three events that
+// correspond to the following GPU driver events:
+// - A GPU job (command buffer submission) is scheduled by the application. This
+//   is tracked by the event "amdgpu_cs_ioctl".
+// - A GPU job is scheduled to run on the hardware. This is tracked by the event
+//   "amdgpu_sched_run_job".
+// - A GPU job is finished by the hardware. This is tracked by the corresponding
+//   DMA fence being signaled and is tracked by the event "dma_fence_signaled".
+// A single job execution thus correponds to three events, one of each type
+// above, that share the same timeline, context, and seqno.
+// We have to record events system-wide (per CPU) to ensure we record all
+// relevant events.
+// This method returns true on success, otherwise false.
+bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
+  std::vector<int> gpu_tracing_fds;
+  std::vector<PerfEventRingBuffer> gpu_ring_buffers;
+  for (int32_t cpu : cpus) {
+    if (!OpenRingBufferForGpuTracepoint("amdgpu", "amdgpu_cs_ioctl", cpu,
+                                        &gpu_tracing_fds, &gpu_ring_buffers)) {
+      CloseFileDescriptors(gpu_tracing_fds);
+      return false;
+    }
+    if (!OpenRingBufferForGpuTracepoint("amdgpu", "amdgpu_sched_run_job", cpu,
+                                        &gpu_tracing_fds, &gpu_ring_buffers)) {
+      CloseFileDescriptors(gpu_tracing_fds);
+      return false;
+    }
+    if (!OpenRingBufferForGpuTracepoint("dma_fence", "dma_fence_signaled", cpu,
+                                        &gpu_tracing_fds, &gpu_ring_buffers)) {
+      CloseFileDescriptors(gpu_tracing_fds);
+      return false;
+    }
+  }
+
+  // Since all tracepoints could successfully be opened, we can now commit all
+  // file descriptors and ring buffers to the TracerThread members.
+  for (int fd : gpu_tracing_fds) {
+    gpu_tracing_fds_.emplace(fd);
+    tracing_fds_.push_back(fd);
+  }
+  for (PerfEventRingBuffer& buffer : gpu_ring_buffers) {
+    ring_buffers_.emplace_back(std::move(buffer));
+  }
+
+  return true;
+}
+
 void TracerThread::Run(
     const std::shared_ptr<std::atomic<bool>>& exit_requested) {
   FAIL_IF(listener_ == nullptr, "No listener set");
@@ -141,152 +323,27 @@ void TracerThread::Run(
   }
 
   bool perf_event_open_errors = false;
-  bool uprobes_event_open_errors = false;
 
   if (trace_context_switches_) {
-    for (int32_t cpu : all_cpus) {
-      int context_switch_fd = context_switch_event_open(-1, cpu);
-      std::string buffer_name = absl::StrFormat("context_switch_%u", cpu);
-      PerfEventRingBuffer context_switch_ring_buffer{
-          context_switch_fd, CONTEXT_SWITCHES_RING_BUFFER_SIZE_KB, buffer_name};
-      if (context_switch_ring_buffer.IsOpen()) {
-        tracing_fds_.push_back(context_switch_fd);
-        ring_buffers_.push_back(std::move(context_switch_ring_buffer));
-      } else {
-        perf_event_open_errors = true;
-      }
-    }
+    perf_event_open_errors |= !OpenContextSwitches(all_cpus);
   }
 
-  auto uprobes_unwinding_visitor =
-      std::make_unique<UprobesUnwindingVisitor>(ReadMaps(pid_));
-  uprobes_unwinding_visitor->SetListener(listener_);
-  // Switch between PerfEventProcessor and PerfEventProcessor2 here.
-  // PerfEventProcessor2 is supposedly faster but assumes that events from the
-  // same perf_event_open ring buffer are already sorted.
-  uprobes_event_processor_ = std::make_shared<PerfEventProcessor2>(
-      std::move(uprobes_unwinding_visitor));
+  InitUprobesEventProcessor();
 
-  if (!InitGpuTracepointEventProcessor()) {
-    ERROR("Failed to initialize GPU tracepoint event processor.");
-  }
-
+  bool uprobes_event_open_errors = false;
   if (trace_instrumented_functions_) {
-    absl::flat_hash_map<int32_t, int> uprobes_ring_buffer_fds_per_cpu;
-
-    for (const auto& function : instrumented_functions_) {
-      absl::flat_hash_map<int32_t, int> function_uprobes_fds_per_cpu;
-      absl::flat_hash_map<int32_t, int> function_uretprobes_fds_per_cpu;
-      bool function_uprobes_open_error = false;
-
-      for (int32_t cpu : cpuset_cpus) {
-        int uprobes_fd = uprobes_retaddr_event_open(
-            function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
-        if (uprobes_fd < 0) {
-          function_uprobes_open_error = true;
-          break;
-        }
-        function_uprobes_fds_per_cpu.emplace(cpu, uprobes_fd);
-
-        int uretprobes_fd = uretprobes_event_open(
-            function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
-        if (uretprobes_fd < 0) {
-          function_uprobes_open_error = true;
-          break;
-        }
-        function_uretprobes_fds_per_cpu.emplace(cpu, uretprobes_fd);
-      }
-
-      if (function_uprobes_open_error) {
-        perf_event_open_errors = true;
-        uprobes_event_open_errors = true;
-        ERROR("Opening u(ret)probes for function at %#016lx",
-              function.VirtualAddress());
-        for (const auto& uprobes_fd : function_uprobes_fds_per_cpu) {
-          close(uprobes_fd.second);
-        }
-        for (const auto& uretprobes_fd : function_uretprobes_fds_per_cpu) {
-          close(uretprobes_fd.second);
-        }
-        continue;
-      }
-
-      // Add function_uretprobes_fds_per_cpu to tracing_fds_ before
-      // function_uprobes_fds_per_cpu. As we support having uretprobes without
-      // associated uprobes, but not the opposite, this way the uretprobe is
-      // enabled before the uprobe.
-      for (const auto& uretprobes_fd : function_uretprobes_fds_per_cpu) {
-        tracing_fds_.push_back(uretprobes_fd.second);
-      }
-      for (const auto& uprobes_fd : function_uprobes_fds_per_cpu) {
-        tracing_fds_.push_back(uprobes_fd.second);
-      }
-
-      // Record the association between the stream_id and the function.
-      for (const auto& uprobes_fd : function_uprobes_fds_per_cpu) {
-        uprobes_ids_to_function_.emplace(perf_event_get_id(uprobes_fd.second),
-                                         &function);
-      }
-      for (const auto& uretprobes_fd : function_uretprobes_fds_per_cpu) {
-        uprobes_ids_to_function_.emplace(
-            perf_event_get_id(uretprobes_fd.second), &function);
-      }
-
-      // Redirect all uprobes and uretprobes on the same cpu to a single ring
-      // buffer to reduce the number of ring buffers.
-      for (int32_t cpu : cpuset_cpus) {
-        int uprobes_fd = function_uprobes_fds_per_cpu.at(cpu);
-        int uretprobes_fd = function_uretprobes_fds_per_cpu.at(cpu);
-        if (uprobes_ring_buffer_fds_per_cpu.contains(cpu)) {
-          // Redirect to the already opened ring buffer.
-          int ring_buffer_fd = uprobes_ring_buffer_fds_per_cpu.at(cpu);
-          perf_event_redirect(uprobes_fd, ring_buffer_fd);
-          perf_event_redirect(uretprobes_fd, ring_buffer_fd);
-        } else {
-          // No ring buffer has yet been created for this cpu, as this is the
-          // first uprobes to have been opened successfully. Hence, create a
-          // ring buffer for this cpu associated to uprobes_fd and redirect the
-          // uretprobes to it. The other uprobes and uretprobes for this cpu
-          // will be redirected to this ring buffer.
-          int ring_buffer_fd = uprobes_fd;
-          std::string buffer_name =
-              absl::StrFormat("uprobes_uretprobes_%u", cpu);
-          ring_buffers_.emplace_back(ring_buffer_fd,
-                                     UPROBES_RING_BUFFER_SIZE_KB, buffer_name);
-          uprobes_ring_buffer_fds_per_cpu[cpu] = ring_buffer_fd;
-          // Must be called after the ring buffer has been opened.
-          perf_event_redirect(uretprobes_fd, ring_buffer_fd);
-        }
-      }
-    }
+    uprobes_event_open_errors = !OpenUprobes(cpuset_cpus);
+    perf_event_open_errors |= uprobes_event_open_errors;
   }
 
-  for (int32_t cpu : cpuset_cpus) {
-    int mmap_task_fd = mmap_task_event_open(-1, cpu);
-    std::string buffer_name = absl::StrFormat("mmap_task_%u", cpu);
-    PerfEventRingBuffer mmap_task_ring_buffer{
-        mmap_task_fd, MMAP_TASK_RING_BUFFER_SIZE_KB, buffer_name};
-    if (mmap_task_ring_buffer.IsOpen()) {
-      tracing_fds_.push_back(mmap_task_fd);
-      ring_buffers_.push_back(std::move(mmap_task_ring_buffer));
-    } else {
-      perf_event_open_errors = true;
-    }
-  }
+  perf_event_open_errors |= !OpenMmapTask(cpuset_cpus);
 
   if (trace_callstacks_) {
-    for (int32_t cpu : cpuset_cpus) {
-      int sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
-      std::string buffer_name = absl::StrFormat("sampling_%u", cpu);
-      PerfEventRingBuffer sampling_ring_buffer{
-          sampling_fd, SAMPLING_RING_BUFFER_SIZE_KB, buffer_name};
-      if (sampling_ring_buffer.IsOpen()) {
-        tracing_fds_.push_back(sampling_fd);
-        ring_buffers_.push_back(std::move(sampling_ring_buffer));
-      } else {
-        perf_event_open_errors = true;
-      }
-    }
+    perf_event_open_errors |= !OpenSampling(cpuset_cpus);
+  }
+
+  if (!InitGpuTracepointEventProcessor()) {
+    ERROR("Failed to initialize GPU tracepoint event processor");
   }
 
   bool gpu_event_open_errors = false;
@@ -296,7 +353,7 @@ void TracerThread::Run(
   }
 
   if (gpu_event_open_errors) {
-    LOG("There were errors opening GPU tracepoint events.");
+    LOG("There were errors opening GPU tracepoint events");
   }
 
   if (uprobes_event_open_errors) {
