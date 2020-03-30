@@ -6,13 +6,7 @@
 #include <thread>
 
 #include "UprobesUnwindingVisitor.h"
-#include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
-
-// TODO: This is a temporary feature flag. Remove this once we enable this
-// globally or have a tracer configuration that is passed to TracerThread.
-ABSL_FLAG(bool, trace_gpu_driver_events, false,
-          "Enables tracing of GPU driver tracepoint events");
 
 namespace LinuxTracing {
 
@@ -81,8 +75,8 @@ bool TracerThread::OpenUprobes(const std::vector<int32_t>& cpus) {
       }
       function_uprobes_fds_per_cpu.emplace(cpu, uprobes_fd);
 
-      int uretprobes_fd = uretprobes_event_open(
-          function.BinaryPath().c_str(), function.FileOffset(), -1, cpu);
+      int uretprobes_fd = uretprobes_event_open(function.BinaryPath().c_str(),
+                                                function.FileOffset(), -1, cpu);
       if (uretprobes_fd < 0) {
         function_uprobes_open_error = true;
         break;
@@ -120,8 +114,8 @@ bool TracerThread::OpenUprobes(const std::vector<int32_t>& cpus) {
                                        &function);
     }
     for (const auto& uretprobes_fd : function_uretprobes_fds_per_cpu) {
-      uprobes_ids_to_function_.emplace(
-          perf_event_get_id(uretprobes_fd.second), &function);
+      uprobes_ids_to_function_.emplace(perf_event_get_id(uretprobes_fd.second),
+                                       &function);
     }
 
     // Redirect all uprobes and uretprobes on the same cpu to a single ring
@@ -141,10 +135,9 @@ bool TracerThread::OpenUprobes(const std::vector<int32_t>& cpus) {
         // uretprobes to it. The other uprobes and uretprobes for this cpu
         // will be redirected to this ring buffer.
         int ring_buffer_fd = uprobes_fd;
-        std::string buffer_name =
-            absl::StrFormat("uprobes_uretprobes_%u", cpu);
-        ring_buffers_.emplace_back(ring_buffer_fd,
-                                   UPROBES_RING_BUFFER_SIZE_KB, buffer_name);
+        std::string buffer_name = absl::StrFormat("uprobes_uretprobes_%u", cpu);
+        ring_buffers_.emplace_back(ring_buffer_fd, UPROBES_RING_BUFFER_SIZE_KB,
+                                   buffer_name);
         uprobes_ring_buffer_fds_per_cpu[cpu] = ring_buffer_fd;
         // Must be called after the ring buffer has been opened.
         perf_event_redirect(uretprobes_fd, ring_buffer_fd);
@@ -347,7 +340,7 @@ void TracerThread::Run(
   }
 
   bool gpu_event_open_errors = false;
-  if (absl::GetFlag(FLAGS_trace_gpu_driver_events)) {
+  if (trace_gpu_driver_) {
     // We want to trace all GPU activity, hence we pass 'all_cpus' here.
     gpu_event_open_errors = !OpenGpuTracepoints(all_cpus);
   }

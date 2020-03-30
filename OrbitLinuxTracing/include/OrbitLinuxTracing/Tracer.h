@@ -43,12 +43,16 @@ class Tracer {
     trace_instrumented_functions_ = trace_instrumented_functions;
   }
 
+  void SetTraceGpuDriver(bool trace_gpu_driver) {
+    trace_gpu_driver_ = trace_gpu_driver;
+  }
+
   void Start() {
     *exit_requested_ = false;
     thread_ = std::make_shared<std::thread>(
         &Tracer::Run, pid_, sampling_period_ns_, instrumented_functions_,
         listener_, trace_context_switches_, trace_callstacks_,
-        trace_instrumented_functions_, exit_requested_);
+        trace_instrumented_functions_, trace_gpu_driver_, exit_requested_);
     thread_->detach();
   }
 
@@ -64,6 +68,7 @@ class Tracer {
   bool trace_context_switches_ = true;
   bool trace_callstacks_ = true;
   bool trace_instrumented_functions_ = true;
+  bool trace_gpu_driver_ = true;
 
   // exit_requested_ must outlive this object because it is used by thread_.
   // The control block of shared_ptr is thread safe (i.e., reference counting
@@ -76,6 +81,7 @@ class Tracer {
                   const std::vector<Function>& instrumented_functions,
                   TracerListener* listener, bool trace_context_switches,
                   bool trace_callstacks, bool trace_instrumented_functions,
+                  bool trace_gpu_driver,
                   const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
   static std::optional<uint64_t> ComputeSamplingPeriodNs(
