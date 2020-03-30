@@ -20,10 +20,10 @@ target_sources(
          Debugger.h
          Disassembler.h
          EventTrack.h
-         FunctionDataView.h
+         FunctionsDataView.h
          Geometry.h
          GlCanvas.h
-         GlobalDataView.h
+         GlobalsDataView.h
          GlPanel.h
          GlSlider.h
          GlUtils.h
@@ -31,15 +31,15 @@ target_sources(
          Images.h
          ImGuiOrbit.h
          ImmediateWindow.h
-         LiveFunctionDataView.h
+         LiveFunctionsDataView.h
          LogDataView.h
          mat4.h
-         ModuleDataView.h
+         ModulesDataView.h
          OpenGl.h
          PickingManager.h
          PluginCanvas.h
          PluginManager.h
-         ProcessDataView.h
+         ProcessesDataView.h
          RuleEditor.h
          SamplingReport.h
          SamplingReportDataView.h
@@ -52,7 +52,7 @@ target_sources(
          TimeGraph.h
          TimeGraphLayout.h
          Track.h
-         TypeDataView.h)
+         TypesDataView.h)
 
 target_sources(
   OrbitGl
@@ -69,22 +69,22 @@ target_sources(
           Debugger.cpp
           Disassembler.cpp
           EventTrack.cpp
-          FunctionDataView.cpp
+          FunctionsDataView.cpp
           GlCanvas.cpp
-          GlobalDataView.cpp
+          GlobalsDataView.cpp
           GlPanel.cpp
           GlSlider.cpp
           GlUtils.cpp
           HomeWindow.cpp
           ImGuiOrbit.cpp
           ImmediateWindow.cpp
-          LiveFunctionDataView.cpp
+          LiveFunctionsDataView.cpp
           LogDataView.cpp
-          ModuleDataView.cpp
+          ModulesDataView.cpp
           PickingManager.cpp
           PluginCanvas.cpp
           PluginManager.cpp
-          ProcessDataView.cpp
+          ProcessesDataView.cpp
           RuleEditor.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp
@@ -95,7 +95,7 @@ target_sources(
           TimeGraphLayout.cpp
           Track.cpp
           ThreadTrack.cpp
-          TypeDataView.cpp)
+          TypesDataView.cpp)
 
 target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

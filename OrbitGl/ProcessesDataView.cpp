@@ -2,12 +2,12 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#include "ProcessDataView.h"
+#include "ProcessesDataView.h"
 
 #include "App.h"
 #include "Callstack.h"
 #include "Capture.h"
-#include "ModuleDataView.h"
+#include "ModulesDataView.h"
 #include "OrbitType.h"
 #include "Params.h"
 #include "Pdb.h"
@@ -15,7 +15,10 @@
 
 //-----------------------------------------------------------------------------
 ProcessesDataView::ProcessesDataView() {
-  m_SortingToggles.resize(PDV_NumColumns, false);
+  InitColumnsIfNeeded();
+  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
+                         s_InitialOrders.end());
+
   UpdateProcessList();
   m_UpdatePeriodMs = 1000;
   m_IsRemote = false;
@@ -24,29 +27,49 @@ ProcessesDataView::ProcessesDataView() {
 }
 
 //-----------------------------------------------------------------------------
+std::vector<std::wstring> ProcessesDataView::s_Headers;
 std::vector<float> ProcessesDataView::s_HeaderRatios;
+std::vector<DataView::SortingOrder> ProcessesDataView::s_InitialOrders;
+
+//-----------------------------------------------------------------------------
+void ProcessesDataView::InitColumnsIfNeeded() {
+  if (s_Headers.empty()) {
+    s_Headers.emplace_back(L"PID");
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Name");
+    s_HeaderRatios.push_back(0.5f);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"CPU");
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Type");
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+  }
+}
 
 //-----------------------------------------------------------------------------
 const std::vector<std::wstring>& ProcessesDataView::GetColumnHeaders() {
-  static std::vector<std::wstring> Columns;
-  if (Columns.size() == 0) {
-    Columns.push_back(L"PID");
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Name");
-    s_HeaderRatios.push_back(0.5f);
-    Columns.push_back(L"CPU");
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Type");
-    s_HeaderRatios.push_back(0);
-  };
-
-  return Columns;
+  return s_Headers;
 }
 
 //-----------------------------------------------------------------------------
 const std::vector<float>& ProcessesDataView::GetColumnHeadersRatios() {
   return s_HeaderRatios;
 }
+
+//-----------------------------------------------------------------------------
+const std::vector<DataView::SortingOrder>&
+ProcessesDataView::GetColumnInitialOrders() {
+  return s_InitialOrders;
+}
+
+//-----------------------------------------------------------------------------
+int ProcessesDataView::GetDefaultSortingColumn() { return PDV_CPU; }
 
 //-----------------------------------------------------------------------------
 std::wstring ProcessesDataView::GetValue(int row, int col) {
@@ -90,20 +113,21 @@ std::wstring ProcessesDataView::GetToolTip(int a_Row, int /*a_Column*/) {
   }
 
 //-----------------------------------------------------------------------------
-void ProcessesDataView::OnSort(int a_Column, bool a_Toggle) {
+void ProcessesDataView::OnSort(int a_Column,
+                               std::optional<SortingOrder> a_NewOrder) {
   if (a_Column == -1) {
     a_Column = PdvColumn::PDV_CPU;
   }
 
   const std::vector<std::shared_ptr<Process>>& processes =
       m_ProcessList.m_Processes;
-  PdvColumn pdvColumn = PdvColumn(a_Column);
+  auto pdvColumn = static_cast<PdvColumn>(a_Column);
 
-  if (a_Toggle) {
-    m_SortingToggles[pdvColumn] = !m_SortingToggles[pdvColumn];
+  if (a_NewOrder.has_value()) {
+    m_SortingOrders[pdvColumn] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingToggles[pdvColumn];
+  bool ascending = m_SortingOrders[pdvColumn] == AscendingOrder;
   std::function<bool(int a, int b)> sorter = nullptr;
 
   switch (pdvColumn) {
@@ -114,7 +138,6 @@ void ProcessesDataView::OnSort(int a_Column, bool a_Toggle) {
       sorter = ORBIT_PROC_SORT(GetName());
       break;
     case PDV_CPU:
-      ascending = false;
       sorter = ORBIT_PROC_SORT(GetCpuUsage());
       break;
     case PDV_Type:
@@ -183,7 +206,7 @@ void ProcessesDataView::Refresh() {
       m_ProcessList.UpdateCpuTimes();
     }
     UpdateProcessList();
-    OnSort(m_LastSortedColumn, false);
+    OnSort(m_LastSortedColumn, {});
     OnFilter(m_Filter);
     SetSelectedItem();
 
@@ -284,7 +307,7 @@ void ProcessesDataView::OnFilter(const std::wstring& a_Filter) {
   m_Indices = indices;
 
   if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, false);
+    OnSort(m_LastSortedColumn, {});
   }
 }
 
@@ -303,7 +326,7 @@ void ProcessesDataView::SetRemoteProcessList(
   m_IsRemote = true;
   m_ProcessList = *a_RemoteProcessList;
   UpdateProcessList();
-  OnSort(m_LastSortedColumn, false);
+  OnSort(m_LastSortedColumn, {});
   OnFilter(m_Filter);
   SetSelectedItem();
 }

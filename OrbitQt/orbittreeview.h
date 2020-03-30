@@ -12,7 +12,7 @@
 class OrbitTreeView : public QTreeView {
   Q_OBJECT
  public:
-  explicit OrbitTreeView(QWidget* parent = 0);
+  explicit OrbitTreeView(QWidget* parent = nullptr);
   ~OrbitTreeView() override;
   void Initialize(DataViewType a_Type);
   void SetDataModel(std::shared_ptr<DataView> a_Model);
@@ -29,7 +29,6 @@ class OrbitTreeView : public QTreeView {
  protected:
   void drawRow(QPainter* painter, const QStyleOptionViewItem& options,
                const QModelIndex& index) const override;
-  void SetLabel();
 
  signals:
 

@@ -2,7 +2,7 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
-#include "LiveFunctionDataView.h"
+#include "LiveFunctionsDataView.h"
 
 #include "App.h"
 #include "Capture.h"
@@ -31,8 +31,10 @@ enum Columns {
 
 //-----------------------------------------------------------------------------
 LiveFunctionsDataView::LiveFunctionsDataView() {
+  InitColumnsIfNeeded();
+  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
+                         s_InitialOrders.end());
   GOrbitApp->RegisterLiveFunctionsDataView(this);
-  m_SortingToggles.resize(LiveFunction::NUM_EXPOSED_MEMBERS, false);
   m_UpdatePeriodMs = 300;
   m_LastSortedColumn = 3; /*Count*/
   GetColumnHeaders();
@@ -40,52 +42,87 @@ LiveFunctionsDataView::LiveFunctionsDataView() {
 }
 
 //-----------------------------------------------------------------------------
+std::vector<std::wstring> LiveFunctionsDataView::s_Headers;
 std::vector<int> LiveFunctionsDataView::s_HeaderMap;
 std::vector<float> LiveFunctionsDataView::s_HeaderRatios;
+std::vector<DataView::SortingOrder> LiveFunctionsDataView::s_InitialOrders;
+
+//-----------------------------------------------------------------------------
+void LiveFunctionsDataView::InitColumnsIfNeeded() {
+  if (s_Headers.empty()) {
+    s_Headers.emplace_back(L"Hooked");
+    s_HeaderMap.push_back(LiveFunction::SELECTED);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Index");
+    s_HeaderMap.push_back(LiveFunction::INDEX);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Function");
+    s_HeaderMap.push_back(LiveFunction::NAME);
+    s_HeaderRatios.push_back(0.5f);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Count");
+    s_HeaderMap.push_back(LiveFunction::COUNT);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Total");
+    s_HeaderMap.push_back(LiveFunction::TIME_TOTAL);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Avg");
+    s_HeaderMap.push_back(LiveFunction::TIME_AVG);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Min");
+    s_HeaderMap.push_back(LiveFunction::TIME_MIN);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Max");
+    s_HeaderMap.push_back(LiveFunction::TIME_MAX);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(DescendingOrder);
+
+    s_Headers.emplace_back(L"Module");
+    s_HeaderMap.push_back(LiveFunction::MODULE);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+
+    s_Headers.emplace_back(L"Address");
+    s_HeaderMap.push_back(LiveFunction::ADDRESS);
+    s_HeaderRatios.push_back(0);
+    s_InitialOrders.push_back(AscendingOrder);
+  }
+}
 
 //-----------------------------------------------------------------------------
 const std::vector<std::wstring>& LiveFunctionsDataView::GetColumnHeaders() {
-  static std::vector<std::wstring> Columns;
-
-  if (s_HeaderMap.size() == 0) {
-    Columns.push_back(L"selected");
-    s_HeaderMap.push_back(LiveFunction::SELECTED);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Index");
-    s_HeaderMap.push_back(LiveFunction::INDEX);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Function");
-    s_HeaderMap.push_back(LiveFunction::NAME);
-    s_HeaderRatios.push_back(0.5f);
-    Columns.push_back(L"Count");
-    s_HeaderMap.push_back(LiveFunction::COUNT);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Total");
-    s_HeaderMap.push_back(LiveFunction::TIME_TOTAL);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Avg");
-    s_HeaderMap.push_back(LiveFunction::TIME_AVG);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Min");
-    s_HeaderMap.push_back(LiveFunction::TIME_MIN);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Max");
-    s_HeaderMap.push_back(LiveFunction::TIME_MAX);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Module");
-    s_HeaderMap.push_back(LiveFunction::MODULE);
-    s_HeaderRatios.push_back(0);
-    Columns.push_back(L"Address");
-    s_HeaderMap.push_back(LiveFunction::ADDRESS);
-    s_HeaderRatios.push_back(0);
-  }
-
-  return Columns;
+  return s_Headers;
 }
 
 //-----------------------------------------------------------------------------
 const std::vector<float>& LiveFunctionsDataView::GetColumnHeadersRatios() {
   return s_HeaderRatios;
+}
+
+//-----------------------------------------------------------------------------
+const std::vector<DataView::SortingOrder>&
+LiveFunctionsDataView::GetColumnInitialOrders() {
+  return s_InitialOrders;
+}
+
+//-----------------------------------------------------------------------------
+int LiveFunctionsDataView::GetDefaultSortingColumn() {
+  return std::distance(
+      s_HeaderMap.begin(),
+      std::find(s_HeaderMap.begin(), s_HeaderMap.end(), LiveFunction::COUNT));
 }
 
 //-----------------------------------------------------------------------------
@@ -150,18 +187,19 @@ std::wstring LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
   }
 
 //-----------------------------------------------------------------------------
-void LiveFunctionsDataView::OnSort(int a_Column, bool a_Toggle) {
+void LiveFunctionsDataView::OnSort(int a_Column,
+                                   std::optional<SortingOrder> a_NewOrder) {
   const std::vector<Function*>& functions = m_Functions;
-  auto MemberID = LiveFunction::Columns(s_HeaderMap[a_Column]);
+  auto memberId = static_cast<LiveFunction::Columns>(s_HeaderMap[a_Column]);
 
-  if (a_Toggle) {
-    m_SortingToggles[MemberID] = !m_SortingToggles[MemberID];
+  if (a_NewOrder.has_value()) {
+    m_SortingOrders[a_Column] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingToggles[MemberID];
+  bool ascending = m_SortingOrders[a_Column] == AscendingOrder;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (MemberID) {
+  switch (memberId) {
     case LiveFunction::NAME:
       sorter = ORBIT_FUNC_SORT(PrettyName());
       break;
@@ -202,7 +240,7 @@ void LiveFunctionsDataView::OnSort(int a_Column, bool a_Toggle) {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring TOGGLE_SELECT = L"Toggle Select";
+std::wstring TOGGLE_SELECT = L"Toggle Hook";
 
 //-----------------------------------------------------------------------------
 std::vector<std::wstring> LiveFunctionsDataView::GetContextMenu(int a_Index) {
@@ -254,7 +292,7 @@ void LiveFunctionsDataView::OnFilter(const std::wstring& a_Filter) {
   m_Indices = indices;
 
   if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, false);
+    OnSort(m_LastSortedColumn, {});
   }
 
   // Filter drawn textboxes
@@ -288,7 +326,7 @@ void LiveFunctionsDataView::OnDataChanged() {
 //-----------------------------------------------------------------------------
 void LiveFunctionsDataView::OnTimer() {
   if (Capture::IsCapturing()) {
-    OnSort(m_LastSortedColumn, false);
+    OnSort(m_LastSortedColumn, {});
   }
 }
 
