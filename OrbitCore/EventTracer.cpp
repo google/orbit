@@ -152,8 +152,7 @@ void EventTracer::Start() {
     return;
   }
 
-  std::thread* thread = new std::thread([&]() { EventTracerThread(); });
-  thread->detach();
+  thread_ = std::thread{[this]() { EventTracerThread(); }};
 }
 
 //-----------------------------------------------------------------------------
@@ -173,6 +172,10 @@ void EventTracer::Stop() {
 
 //-----------------------------------------------------------------------------
 void EventTracer::CleanupTrace() {
+  if (thread_.joinable()) {
+    thread_.join();
+  }
+
   if (ControlTrace(m_TraceHandle, KERNEL_LOGGER_NAME, m_SessionProperties,
                    EVENT_TRACE_CONTROL_STOP) != ERROR_SUCCESS) {
     PrintLastError();

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <functional>
+#include <thread>
 #include <unordered_map>
 
 #include "Core.h"
@@ -48,10 +49,12 @@ class TcpServer : public TcpEntity {
 
  protected:
   class TcpSocket* GetSocket() override final;
-  void ServerThread();
 
  private:
   class tcp_server* m_TcpServer = nullptr;
+  std::thread serverThread_;
+  void ServerThread();
+
   StrCallback m_UiCallback;
   moodycamel::ConcurrentQueue<std::wstring> m_UiLockFreeQueue;
 
