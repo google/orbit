@@ -13,6 +13,7 @@
 #include "Core.h"
 #include "Log.h"
 #include "OrbitAsio.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitProcess.h"
 #include "OrbitUnreal.h"
 #include "SamplingProfiler.h"
@@ -39,7 +40,16 @@ TcpServer::TcpServer() : m_TcpServer(nullptr) {
 }
 
 //-----------------------------------------------------------------------------
-TcpServer::~TcpServer() { delete m_TcpServer; }
+TcpServer::~TcpServer() {
+  if (serverThread_.joinable()) {
+    CHECK(m_TcpService);
+    CHECK(m_TcpService->m_IoService);
+    m_TcpService->m_IoService->stop();
+    serverThread_.join();
+  }
+
+  delete m_TcpServer;
+}
 
 //-----------------------------------------------------------------------------
 void TcpServer::Start(unsigned short a_Port) {
@@ -51,8 +61,7 @@ void TcpServer::Start(unsigned short a_Port) {
 
   PRINT_VAR(a_Port);
 
-  std::thread t([&]() { this->ServerThread(); });
-  t.detach();
+  serverThread_ = std::thread{[this]() { ServerThread(); }};
 
   m_StatTimer.Start();
   m_IsValid = true;
@@ -253,5 +262,7 @@ bool TcpServer::HasConnection() {
 void TcpServer::ServerThread() {
   PRINT_FUNC;
   SetCurrentThreadName(L"TcpServer");
+  CHECK(m_TcpService);
+  CHECK(m_TcpService->m_IoService);
   m_TcpService->m_IoService->run();
 }

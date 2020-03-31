@@ -47,8 +47,8 @@ class ConnectionManager {
   LinuxTracingSession tracing_session_;
   std::shared_ptr<StringManager> string_manager_;
 
-  std::unique_ptr<std::thread> thread_;
-  std::unique_ptr<std::thread> server_capture_thread_;
+  std::thread thread_;
+  std::thread server_capture_thread_;
   std::string remote_address_;
   std::atomic<bool> exit_requested_;
   bool is_service_;

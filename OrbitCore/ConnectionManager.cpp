@@ -47,10 +47,9 @@ ConnectionManager::~ConnectionManager() {
 }
 
 void ConnectionManager::StopThread() {
-  if (thread_ != nullptr) {
+  if (thread_.joinable()) {
     exit_requested_ = true;
-    thread_->join();
-    thread_ = nullptr;
+    thread_.join();
   }
 }
 
@@ -63,8 +62,7 @@ void ConnectionManager::ConnectToRemote(std::string remote_address) {
   remote_address_ = remote_address;
   StopThread();
   SetupClientCallbacks();
-  thread_ = std::make_unique<std::thread>(
-      &ConnectionManager::ConnectionThreadWorker, this);
+  thread_ = std::thread{[this]() { ConnectionThreadWorker(); }};
 }
 
 void ConnectionManager::InitAsService() {
@@ -77,8 +75,7 @@ void ConnectionManager::InitAsService() {
   tracing_session_.SetStringManager(string_manager_);
   SetupIntrospection();
   SetupServerCallbacks();
-  thread_ = std::make_unique<std::thread>(
-      &ConnectionManager::RemoteThreadWorker, this);
+  thread_ = std::thread{[this]() { RemoteThreadWorker(); }};
 }
 
 void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
@@ -169,8 +166,8 @@ void ConnectionManager::StartCaptureAsRemote(uint32_t pid) {
   tracing_session_.Reset();
   string_manager_->Clear();
   Capture::StartCapture(&tracing_session_);
-  server_capture_thread_ = std::make_unique<std::thread>(
-      &ConnectionManager::ServerCaptureThreadWorker, this);
+  server_capture_thread_ =
+      std::thread{[this]() { ServerCaptureThreadWorker(); }};
 }
 
 void ConnectionManager::StopCaptureAsRemote() {
@@ -179,8 +176,9 @@ void ConnectionManager::StopCaptureAsRemote() {
   // when it is false. StopCapture should be called before joining
   // the thread.
   Capture::StopCapture();
-  server_capture_thread_->join();
-  server_capture_thread_ = nullptr;
+  if (server_capture_thread_.joinable()) {
+    server_capture_thread_.join();
+  }
 }
 
 void ConnectionManager::Stop() { exit_requested_ = true; }

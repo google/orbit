@@ -3,6 +3,8 @@
 //-----------------------------------
 #pragma once
 
+#include <thread>
+
 #ifdef _WIN32
 
 #include <evntrace.h>
@@ -35,6 +37,9 @@ class EventTracer {
   std::atomic<bool> m_IsTracing;
   _EVENT_TRACE_PROPERTIES* m_SessionProperties;
   EventBuffer m_EventBuffer;
+
+ private:
+  std::thread thread_;
 };
 
 extern EventTracer GEventTracer;
@@ -52,6 +57,7 @@ class EventTracer {
  private:
   // TODO: Fix circular dependencies in header files.
   std::shared_ptr<class LinuxTracingHandler> m_LinuxTracer;
+  std::thread thread_;
 };
 
 extern EventTracer GEventTracer;
