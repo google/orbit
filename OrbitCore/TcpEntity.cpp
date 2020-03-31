@@ -11,6 +11,7 @@
 #include "Core.h"
 #include "Log.h"
 #include "Tcp.h"
+#include "OrbitBase/Logging.h"
 
 //-----------------------------------------------------------------------------
 TcpEntity::TcpEntity()
@@ -25,23 +26,25 @@ TcpEntity::TcpEntity()
 }
 
 //-----------------------------------------------------------------------------
-TcpEntity::~TcpEntity() {}
+TcpEntity::~TcpEntity() { Stop(); }
 
 //-----------------------------------------------------------------------------
 void TcpEntity::Start() {
   PRINT_FUNC;
   m_ExitRequested = false;
-  m_SenderThread = new std::thread([&]() { SendData(); });
+
+  CHECK(!senderThread_.joinable());
+  senderThread_ = std::thread{[this]() { SendData(); }};
 }
 
 //-----------------------------------------------------------------------------
 void TcpEntity::Stop() {
   PRINT_FUNC;
   m_ExitRequested = true;
-
   m_ConditionVariable.signal();
-  if (m_SenderThread != nullptr) {
-    m_SenderThread->join();
+
+  if (senderThread_.joinable()) {
+    senderThread_.join();
   }
 
   if (m_TcpSocket && m_TcpSocket->m_Socket) {
