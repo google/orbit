@@ -3,6 +3,7 @@
 //-----------------------------------
 #pragma once
 
+#include <thread>
 #include <vector>
 
 #include "TcpEntity.h"
@@ -15,6 +16,7 @@ class TcpClient : public TcpEntity {
 
   void Connect(const std::string& a_Host);
   void Start() override;
+  void Stop() override;
 
  protected:
   void ClientThread();
@@ -28,6 +30,7 @@ class TcpClient : public TcpEntity {
  private:
   Message m_Message;
   std::vector<char> m_Payload;
+  std::thread workerThread_;
 };
 
 extern std::unique_ptr<TcpClient> GTcpClient;

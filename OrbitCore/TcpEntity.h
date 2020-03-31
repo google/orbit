@@ -4,6 +4,7 @@
 #pragma once
 
 #include <atomic>
+#include <thread>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -51,7 +52,7 @@ class TcpEntity {
   virtual ~TcpEntity();
 
   virtual void Start();
-  void Stop();
+  virtual void Stop();
   void FlushSendQueue();
 
   // Note: All Send methods can be called concurrently from multiple threads
@@ -101,7 +102,7 @@ class TcpEntity {
  protected:
   TcpService* m_TcpService;
   TcpSocket* m_TcpSocket;
-  std::thread* m_SenderThread = nullptr;
+  std::thread senderThread_;
   AutoResetEvent m_ConditionVariable;
   LockFreeQueue<TcpPacket> m_SendQueue;
   std::atomic<uint32_t> m_NumQueuedEntries;

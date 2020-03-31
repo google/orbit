@@ -18,6 +18,7 @@
 #include "OrbitType.h"
 #include "Tcp.h"
 #include "absl/strings/str_format.h"
+#include "OrbitBase/Logging.h"
 
 std::unique_ptr<TcpClient> GTcpClient;
 
@@ -70,14 +71,25 @@ void TcpClient::Connect(const std::string& a_Host) {
   m_IsValid = true;
 }
 
+void TcpClient::Stop() {
+  if (workerThread_.joinable()) {
+    CHECK(m_TcpService);
+    CHECK(m_TcpService->m_IoService);
+    m_TcpService->m_IoService->stop();
+    workerThread_.join();
+  }
+
+  TcpEntity::Stop();
+}
+
 //-----------------------------------------------------------------------------
 void TcpClient::Start() {
   TcpEntity::Start();
 
   PRINT_FUNC;
   OutputDebugStringW(L"TcpClient::Start()\n");
-  std::thread t([&]() { this->ClientThread(); });
-  t.detach();
+  CHECK(!workerThread_.joinable());
+  workerThread_ = std::thread{[this]() { ClientThread(); }};
 
   std::string msg("Hello from TcpClient");
   this->Send(msg);
@@ -96,15 +108,15 @@ void TcpClient::ClientThread() {
 
 //-----------------------------------------------------------------------------
 void TcpClient::ReadMessage() {
-  asio::async_read(
-      *m_TcpSocket->m_Socket, asio::buffer(&m_Message, sizeof(Message)),
-      [this](const asio::error_code& ec, size_t) {
-        if (!ec) {
-          ReadPayload();
-        } else {
-          OnError(ec);
-        }
-      });
+  asio::async_read(*m_TcpSocket->m_Socket,
+                   asio::buffer(&m_Message, sizeof(Message)),
+                   [this](const asio::error_code& ec, size_t) {
+                     if (!ec) {
+                       ReadPayload();
+                     } else {
+                       OnError(ec);
+                     }
+                   });
 }
 
 //-----------------------------------------------------------------------------
