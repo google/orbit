@@ -322,7 +322,7 @@ void TracerThread::Run(
     perf_event_open_errors |= !OpenContextSwitches(all_cpus);
   }
 
-  InitUprobesEventProcessor();
+  perf_event_open_errors |= !OpenMmapTask(cpuset_cpus);
 
   bool uprobes_event_open_errors = false;
   if (trace_instrumented_functions_) {
@@ -330,11 +330,15 @@ void TracerThread::Run(
     perf_event_open_errors |= uprobes_event_open_errors;
   }
 
-  perf_event_open_errors |= !OpenMmapTask(cpuset_cpus);
-
   if (trace_callstacks_) {
     perf_event_open_errors |= !OpenSampling(cpuset_cpus);
   }
+
+  // This takes an initial snapshot of the maps. Call it after OpenUprobes, as
+  // calling perf_event_open for uprobes (just calling it, it is not necessary
+  // to enable the file descriptor) causes a new [uprobes] map entry, and we
+  // want to catch it.
+  InitUprobesEventProcessor();
 
   if (!InitGpuTracepointEventProcessor()) {
     ERROR("Failed to initialize GPU tracepoint event processor");
