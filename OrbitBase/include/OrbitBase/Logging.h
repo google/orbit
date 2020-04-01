@@ -23,6 +23,10 @@
             ##__VA_ARGS__);                                            \
   } while (0)
 
+#if defined(_WIN32) && defined(ERROR)
+#undef ERROR
+#endif
+
 #define ERROR(format, ...) LOG("Error: " format, ##__VA_ARGS__)
 
 #define FATAL(format, ...)                \
