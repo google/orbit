@@ -48,4 +48,4 @@ if ERRORLEVEL 1 (
   echo "ggp_sdk seems to be installed already. Skipping installation step..."
 )
 
-call build.bat ggp_release ggp_debug
+call build.bat ggp_release
