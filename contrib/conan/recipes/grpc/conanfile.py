@@ -38,6 +38,7 @@ class grpcConan(ConanFile):
     )
 
     build_requires = (
+        "protoc_installer/3.9.1@bincrafters/stable",
         "grpc_codegen/{}@orbitdeps/stable".format(version),
     )
 
@@ -47,6 +48,8 @@ class grpcConan(ConanFile):
             compiler_version = int(str(self.settings.compiler.version))
             if compiler_version < 14:
                 raise ConanInvalidConfiguration("gRPC can only be built with Visual Studio 2015 or higher.")
+
+        self.options["abseil"].cxx_standard = 17
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
