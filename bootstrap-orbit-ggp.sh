@@ -23,4 +23,4 @@ else
   echo "ggp_sdk seems to be installed already. Skipping installation step..."
 fi
 
-$DIR/build.sh ggp_release ggp_debug
+$DIR/build.sh ggp_release

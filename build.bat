@@ -11,9 +11,8 @@ for %%x in (%*) do (
 )
 
 if %argCount% == 0 (
-    set /a argCount=2
-    set argVec[1]=default_release_x86
-    set argVec[2]=default_release_x64
+    set /a argCount=1
+    set argVec[1]=default_release
 )
 
 
@@ -21,6 +20,7 @@ for /L %%i in (1,1,%argCount%) do (
     set profile=!argVec[%%i]!
 
     set defaultprofile=NO
+    if "!profile!" == "default_release" set defaultprofile=YES
     if "!profile!" == "default_release_x86" set defaultprofile=YES
     if "!profile!" == "default_release_x64" set defaultprofile=YES
 
