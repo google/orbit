@@ -8,6 +8,7 @@ compiler.version=16
 build_type=Debug
 [options]
 OrbitProfiler:system_qt=False
+OrbitProfiler:with_gui=False
 [build_requires]
 cmake/3.16.4@
 [env]

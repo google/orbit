@@ -68,6 +68,10 @@ class OrbitConan(ConanFile):
             raise ConanInvalidConfiguration(
                 "Debian packaging is only supported for GGP builds!")
 
+        if self.options.with_gui and self.settings.arch == "x86":
+            raise ConanInvalidConfiguration(
+                "We don't actively support building the UI for 32bit platforms. Please remove this check in conanfile.py if you still want to do so!")
+
         self.options["abseil"].cxx_standard = 17
         if self.options.with_gui:
             self.options["glew"].system_mesa = self.options.system_mesa
