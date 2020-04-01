@@ -4,6 +4,7 @@
 
 #include "OrbitProcess.h"
 
+#include <OrbitBase/Logging.h>
 #include <absl/strings/ascii.h>
 
 #include <utility>
@@ -268,15 +269,23 @@ Function* Process::GetFunctionFromAddress(uint64_t address, bool a_IsExact) {
 
 //-----------------------------------------------------------------------------
 std::shared_ptr<Module> Process::GetModuleFromAddress(DWORD64 a_Address) {
-  DWORD64 address = (DWORD64)a_Address;
-  auto it = m_Modules.upper_bound(address);
-  if (!m_Modules.empty() && it != m_Modules.begin()) {
-    --it;
-    std::shared_ptr<Module> module = it->second;
-    return module;
+  if (m_Modules.empty()) {
+    return nullptr;
   }
 
-  return nullptr;
+  auto module_it = m_Modules.upper_bound(a_Address);
+  if (module_it == m_Modules.begin()) {
+    return nullptr;
+  }
+
+  --module_it;
+  std::shared_ptr<Module> module = module_it->second;
+  CHECK(a_Address >= module->m_AddressStart);
+  if (a_Address >= module->m_AddressEnd) {
+    return nullptr;
+  }
+
+  return module;
 }
 
 //-----------------------------------------------------------------------------
