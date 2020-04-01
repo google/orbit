@@ -47,8 +47,6 @@ std::vector<std::string> ReadSymbolsFile() {
   return directories;
 }
 
-}  // namespace
-
 bool LoadFromElfFile(std::shared_ptr<Module> module,
                      const std::unique_ptr<ElfFile>& elf_file) {
   auto load_bias = elf_file->GetLoadBias();
@@ -78,7 +76,7 @@ bool LoadFromElfFile(std::shared_ptr<Module> module,
 }
 
 bool FindAndLoadSymbols(std::shared_ptr<Module> module,
-                        const std::vector<std::string> search_directories) {
+                        const std::vector<std::string>& search_directories) {
   FAIL_IF(module->m_DebugSignature.empty(), "build id is empty of module %s",
           module->m_Name.c_str());
   std::string name_without_extension = Path::StripExtension(module->m_Name);
@@ -106,6 +104,21 @@ bool FindAndLoadSymbols(std::shared_ptr<Module> module,
   return false;
 }
 
+bool CheckModuleHasBuildId(std::shared_ptr<Module> module) {
+  if (module->m_DebugSignature.empty()) {
+    ERROR(
+        "Symbol loading from a separate file is not supported for module "
+        "\"%s\", because it does not contain a build id. This likely means "
+        "the build id has been turned off manually.",
+        module->m_Name.c_str());
+    return false;
+  } else {
+    return true;
+  }
+}
+
+}  // namespace
+
 SymbolHelper::SymbolHelper()
     : collector_symbol_directories_{"/home/cloudcast/",
                                     "/home/cloudcast/debug_symbols/",
@@ -131,6 +144,8 @@ bool SymbolHelper::LoadSymbolsIncludedInBinary(
 bool SymbolHelper::LoadSymbolsCollector(std::shared_ptr<Module> module) const {
   if (LoadSymbolsIncludedInBinary(module)) return true;
 
+  if (!CheckModuleHasBuildId(module)) return false;
+
   std::vector<std::string> search_directories = collector_symbol_directories_;
   search_directories.emplace_back(Path::GetDirectory(module->m_FullName));
 
@@ -139,6 +154,8 @@ bool SymbolHelper::LoadSymbolsCollector(std::shared_ptr<Module> module) const {
 
 bool SymbolHelper::LoadSymbolsUsingSymbolsFile(
     std::shared_ptr<Module> module) const {
+  if (!CheckModuleHasBuildId(module)) return false;
+
   return FindAndLoadSymbols(module, symbols_file_directories_);
 }
 
