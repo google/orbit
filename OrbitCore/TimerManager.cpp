@@ -5,6 +5,7 @@
 #include "TimerManager.h"
 
 #include "Message.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitLib.h"
 #include "Params.h"
 #include "TcpClient.h"
@@ -34,7 +35,7 @@ TimerManager::TimerManager(bool a_IsClient)
 
   if (m_IsClient) {
     GTcpClient->Start();
-    m_ConsumerThread = new std::thread([&]() { SendTimers(); });
+    consumerThread_ = std::thread{[this]() { SendTimers(); }};
   }
 }
 
@@ -47,9 +48,8 @@ void TimerManager::StartRecording() {
     return;
   }
 
-  if (!m_ConsumerThread) {
-    m_ConsumerThread = new std::thread([&]() { ConsumeTimers(); });
-  }
+  CHECK(!consumerThread_.joinable());
+  consumerThread_ = std::thread{[this]() { ConsumeTimers(); }};
 
   m_IsRecording = true;
 }
@@ -105,8 +105,8 @@ void TimerManager::Stop() {
   m_ExitRequested = true;
   m_ConditionVariable.signal();
 
-  if (m_ConsumerThread) {
-    m_ConsumerThread->join();
+  if (consumerThread_.joinable()) {
+    consumerThread_.join();
   }
 }
 

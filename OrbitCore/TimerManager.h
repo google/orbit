@@ -6,6 +6,7 @@
 #include <atomic>
 #include <map>
 #include <memory>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -59,7 +60,7 @@ class TimerManager {
   int m_ThreadCounter;
   LockFreeQueue<Timer> m_LockFreeQueue;
   LockFreeQueue<Message> m_LockFreeMessageQueue;
-  std::thread* m_ConsumerThread = nullptr;
+  std::thread consumerThread_;
   bool m_IsClient = false;
 
   typedef std::function<void(Timer&)> TimerAddedCallback;
