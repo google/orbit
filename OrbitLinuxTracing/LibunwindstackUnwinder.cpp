@@ -51,9 +51,11 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
   // those callstacks.
   if (unwinder.LastErrorCode() != 0 &&
       unwinder.frames().back().map_name != "[uprobes]") {
+#ifndef NDEBUG
     ERROR("%s at %#016lx",
           LibunwindstackErrorString(unwinder.LastErrorCode()).c_str(),
           unwinder.LastErrorAddress());
+#endif
     return {};
   }
 

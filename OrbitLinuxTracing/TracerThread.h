@@ -130,17 +130,29 @@ class TracerThread {
   std::shared_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
 
   struct EventStats {
-    void Reset() { *this = EventStats(); }
-    uint64_t event_count_begin_ns = MonotonicTimestampNs();
+    void Reset() {
+      event_count_begin_ns = MonotonicTimestampNs();
+      sched_switch_count = 0;
+      sample_count = 0;
+      uprobes_count = 0;
+      lost_count = 0;
+      lost_count_per_buffer.clear();
+      *unwind_error_count = 0;
+    }
+
+    uint64_t event_count_begin_ns = 0;
     uint64_t sched_switch_count = 0;
     uint64_t sample_count = 0;
     uint64_t uprobes_count = 0;
     uint64_t gpu_events_count = 0;
     uint64_t lost_count = 0;
     absl::flat_hash_map<PerfEventRingBuffer*, uint64_t> lost_count_per_buffer{};
+    std::shared_ptr<std::atomic<uint64_t>> unwind_error_count =
+        std::make_unique<std::atomic<uint64_t>>(0);
   };
 
-  EventStats stats_;
+  static constexpr uint64_t EVENT_STATS_WINDOW_S = 5;
+  EventStats stats_{};
 };
 
 }  // namespace LinuxTracing

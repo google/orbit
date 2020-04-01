@@ -50,6 +50,7 @@ void TracerThread::InitUprobesEventProcessor() {
   auto uprobes_unwinding_visitor =
       std::make_unique<UprobesUnwindingVisitor>(ReadMaps(pid_));
   uprobes_unwinding_visitor->SetListener(listener_);
+  uprobes_unwinding_visitor->SetUnwindErrorCounter(stats_.unwind_error_count);
   // Switch between PerfEventProcessor and PerfEventProcessor2 here.
   // PerfEventProcessor2 is supposedly faster but assumes that events from the
   // same perf_event_open ring buffer are already sorted.
@@ -660,22 +661,31 @@ void TracerThread::Reset() {
 }
 
 void TracerThread::PrintStatsIfTimerElapsed() {
-  constexpr uint64_t EVENT_COUNT_WINDOW_S = 5;
-
-  if (stats_.event_count_begin_ns + EVENT_COUNT_WINDOW_S * 1'000'000'000 <
+  constexpr uint64_t NS_PER_SECOND = 1'000'000'000;
+  if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND <
       MonotonicTimestampNs()) {
-    double actual_window_s =
-        (MonotonicTimestampNs() - stats_.event_count_begin_ns) / 1e9;
+    double actual_window_s = static_cast<double>(MonotonicTimestampNs() -
+                                                 stats_.event_count_begin_ns) /
+                             NS_PER_SECOND;
     LOG("Events per second (last %.1f s):", actual_window_s);
     LOG("  sched switches: %.0f", stats_.sched_switch_count / actual_window_s);
     LOG("  samples: %.0f", stats_.sample_count / actual_window_s);
     LOG("  u(ret)probes: %.0f", stats_.uprobes_count / actual_window_s);
     LOG("  gpu events: %.0f", stats_.gpu_events_count / actual_window_s);
-    LOG("  lost: %.0f, of which:", stats_.lost_count / actual_window_s);
-    for (const auto& lost_from_buffer : stats_.lost_count_per_buffer) {
-      LOG("    from %s: %.0f", lost_from_buffer.first->GetName().c_str(),
-          lost_from_buffer.second / actual_window_s);
+
+    if (stats_.lost_count_per_buffer.empty()) {
+      LOG("  lost: %.0f", stats_.lost_count / actual_window_s);
+    } else {
+      LOG("  lost: %.0f, of which:", stats_.lost_count / actual_window_s);
+      for (const auto& lost_from_buffer : stats_.lost_count_per_buffer) {
+        LOG("    from %s: %.0f", lost_from_buffer.first->GetName().c_str(),
+            lost_from_buffer.second / actual_window_s);
+      }
     }
+
+    uint64_t unwind_error_count = *stats_.unwind_error_count;
+    LOG("  unwind errors: %.0f (%.1f%%)", unwind_error_count / actual_window_s,
+        100.0 * unwind_error_count / stats_.sample_count);
     stats_.Reset();
   }
 }

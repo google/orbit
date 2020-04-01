@@ -22,6 +22,8 @@ void UprobesUnwindingVisitor::visit(SamplePerfEvent* event) {
         CallstackFramesFromLibunwindstackFrames(full_callstack),
         event->GetTimestamp()};
     listener_->OnCallstack(returned_callstack);
+  } else if (unwind_error_counter_ != nullptr) {
+    ++(*unwind_error_counter_);
   }
 }
 
