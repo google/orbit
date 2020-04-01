@@ -5,6 +5,7 @@
 #include <OrbitLinuxTracing/TracerListener.h>
 
 #include <stack>
+#include <utility>
 
 #include "LibunwindstackUnwinder.h"
 #include "PerfEvent.h"
@@ -43,6 +44,10 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   UprobesUnwindingVisitor& operator=(UprobesUnwindingVisitor&&) = default;
 
   void SetListener(TracerListener* listener) { listener_ = listener; }
+  void SetUnwindErrorCounter(
+      std::shared_ptr<std::atomic<uint64_t>> unwind_error_counter) {
+    unwind_error_counter_ = std::move(unwind_error_counter);
+  }
 
   void visit(SamplePerfEvent* event) override;
   void visit(UprobesPerfEvent* event) override;
@@ -56,6 +61,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   LibunwindstackUnwinder unwinder_{};
 
   TracerListener* listener_ = nullptr;
+  std::shared_ptr<std::atomic<uint64_t>> unwind_error_counter_ = nullptr;
 
   static std::vector<CallstackFrame> CallstackFramesFromLibunwindstackFrames(
       const std::vector<unwindstack::FrameData>& libunwindstack_frames);
