@@ -48,8 +48,9 @@ void TimerManager::StartRecording() {
     return;
   }
 
-  CHECK(!consumerThread_.joinable());
-  consumerThread_ = std::thread{[this]() { ConsumeTimers(); }};
+  if (!consumerThread_.joinable()) {
+    consumerThread_ = std::thread{[this]() { ConsumeTimers(); }};
+  }
 
   m_IsRecording = true;
 }
