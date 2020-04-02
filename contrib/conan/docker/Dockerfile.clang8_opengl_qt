@@ -1,4 +1,4 @@
-FROM conanio/clang9:latest
+FROM conanio/clang8:latest
 
 RUN sudo apt-get -qq update \
     && sudo apt-get install -y --no-install-recommends \
@@ -7,4 +7,5 @@ RUN sudo apt-get -qq update \
     libxmu-dev \
     libxi-dev \
     qt5-default \
-    jq 
+    jq \
+    && sudo rm -rf /var/lib/apt/lists/*

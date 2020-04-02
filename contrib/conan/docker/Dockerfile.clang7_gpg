@@ -4,4 +4,6 @@ RUN sudo apt-get -qq update \
     && sudo apt-get install -y --no-install-recommends \
     jq \
     libtinfo5 \
+    gpg \
+    gpg-agent \
     && sudo rm -rf /var/lib/apt/lists/*
