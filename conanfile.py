@@ -104,6 +104,7 @@ class OrbitConan(ConanFile):
         dest = os.getenv("CONAN_IMPORT_PATH", "bin")
         self.copy("*.dll", src="@bindirs", dst=dest)
         self.copy("*.so*", src="@libdirs", dst=dest)
+        self.copy("crashpad_handler.exe", src="@bindirs", dst=dest, root_package="crashpad")
         if self.options.with_gui:
             for path in self.deps_cpp_info["freetype-gl"].resdirs:
                 self.copy("Vera.ttf", src=path, dst="{}/fonts/".format(dest))
