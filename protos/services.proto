@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+message ProcessInfo {
+  uint32 pid = 1;
+  string name = 2;
+  double cpu_usage = 3;
+}
+
+message GetProcessListRequest {
+}
+
+message GetProcessListReply {
+  repeated ProcessInfo processes = 1;
+}
+
+service ProcessService {
+  rpc GetProcessList(GetProcessListRequest) returns (GetProcessListReply) {}
+}

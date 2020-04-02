@@ -23,7 +23,7 @@ set(CMAKE_CXX_STANDARD 17)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
+conan_basic_setup(TARGETS)
 
 if (NOT WIN32)
   # Make all executables position independent on Linux
@@ -65,6 +65,9 @@ find_package(xxHash REQUIRED)
 find_package(multicore REQUIRED)
 find_package(concurrentqueue REQUIRED)
 find_package(gte REQUIRED)
+find_package(Protobuf CONFIG REQUIRED)
+find_package(gRPC CONFIG REQUIRED)
+
 
 if(WITH_GUI)
   find_package(freetype CONFIG REQUIRED)
@@ -121,6 +124,7 @@ add_subdirectory(OrbitBase)
 add_subdirectory(OrbitCore)
 add_subdirectory(OrbitService)
 add_subdirectory(OrbitTest)
+add_subdirectory(protos)
 
 if(WITH_GUI)
   add_subdirectory(OrbitGl)
