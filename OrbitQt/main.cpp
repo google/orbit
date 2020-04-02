@@ -8,10 +8,15 @@
 
 #include "../OrbitGl/App.h"
 #include "orbitmainwindow.h"
+#include "CrashHandler.h"
+#include "Path.h"
 
 int main(int argc, char* argv[]) {
 #if __linux__
   QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+#endif
+#ifdef _WIN32
+  CrashHandler m_CrashHandler(s2ws(Path::GetDumpPath().c_str()));
 #endif
 
   QApplication a(argc, argv);

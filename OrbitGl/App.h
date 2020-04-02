@@ -11,7 +11,6 @@
 
 #include "ContextSwitch.h"
 #include "CoreApp.h"
-#include "CrashHandler.h"
 #include "DataViewTypes.h"
 #include "Message.h"
 #include "StringManager.h"
@@ -262,9 +261,7 @@ class OrbitApp : public CoreApp {
   std::shared_ptr<StringManager> string_manager_ = nullptr;
 
   const SymbolHelper symbolHelper;
-#ifdef _WIN32
-  CrashHandler m_CrashHandler;
-#else
+#ifndef _WIN32
   std::shared_ptr<class BpfTrace> m_BpfTrace;
 #endif
 };
