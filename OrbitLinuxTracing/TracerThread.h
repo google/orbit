@@ -138,6 +138,7 @@ class TracerThread {
       lost_count = 0;
       lost_count_per_buffer.clear();
       *unwind_error_count = 0;
+      *discarded_samples_in_uretprobes_count = 0;
     }
 
     uint64_t event_count_begin_ns = 0;
@@ -149,6 +150,9 @@ class TracerThread {
     absl::flat_hash_map<PerfEventRingBuffer*, uint64_t> lost_count_per_buffer{};
     std::shared_ptr<std::atomic<uint64_t>> unwind_error_count =
         std::make_unique<std::atomic<uint64_t>>(0);
+    std::shared_ptr<std::atomic<uint64_t>>
+        discarded_samples_in_uretprobes_count =
+            std::make_unique<std::atomic<uint64_t>>(0);
   };
 
   static constexpr uint64_t EVENT_STATS_WINDOW_S = 5;
