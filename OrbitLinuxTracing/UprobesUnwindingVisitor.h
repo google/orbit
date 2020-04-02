@@ -44,9 +44,14 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   UprobesUnwindingVisitor& operator=(UprobesUnwindingVisitor&&) = default;
 
   void SetListener(TracerListener* listener) { listener_ = listener; }
-  void SetUnwindErrorCounter(
-      std::shared_ptr<std::atomic<uint64_t>> unwind_error_counter) {
+
+  void SetUnwindErrorsAndDiscardedSamplesCounters(
+      std::shared_ptr<std::atomic<uint64_t>> unwind_error_counter,
+      std::shared_ptr<std::atomic<uint64_t>>
+          discarded_samples_in_uretprobes_counter) {
     unwind_error_counter_ = std::move(unwind_error_counter);
+    discarded_samples_in_uretprobes_counter_ =
+        std::move(discarded_samples_in_uretprobes_counter);
   }
 
   void visit(SamplePerfEvent* event) override;
@@ -62,6 +67,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
 
   TracerListener* listener_ = nullptr;
   std::shared_ptr<std::atomic<uint64_t>> unwind_error_counter_ = nullptr;
+  std::shared_ptr<std::atomic<uint64_t>>
+      discarded_samples_in_uretprobes_counter_ = nullptr;
 
   static std::vector<CallstackFrame> CallstackFramesFromLibunwindstackFrames(
       const std::vector<unwindstack::FrameData>& libunwindstack_frames);

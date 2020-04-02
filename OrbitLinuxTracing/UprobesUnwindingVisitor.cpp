@@ -16,18 +16,27 @@ void UprobesUnwindingVisitor::visit(SamplePerfEvent* event) {
   const std::vector<unwindstack::FrameData>& full_callstack =
       unwinder_.Unwind(current_maps_.get(), event->GetRegisters(),
                        event->GetStackData(), event->GetStackSize());
+
+  if (full_callstack.empty()) {
+    if (unwind_error_counter_ != nullptr) {
+      ++(*unwind_error_counter_);
+    }
+    return;
+  }
+
   // Some samples can actually fall inside u(ret)probes code. Discard them,
   // because when they are unwound successfully the result is wrong.
-  if (!full_callstack.empty() &&
-      full_callstack.front().map_name != "[uprobes]") {
-    Callstack returned_callstack{
-        event->GetTid(),
-        CallstackFramesFromLibunwindstackFrames(full_callstack),
-        event->GetTimestamp()};
-    listener_->OnCallstack(returned_callstack);
-  } else if (full_callstack.empty() && unwind_error_counter_ != nullptr) {
-    ++(*unwind_error_counter_);
+  if (full_callstack.front().map_name == "[uprobes]") {
+    if (discarded_samples_in_uretprobes_counter_ != nullptr) {
+      ++(*discarded_samples_in_uretprobes_counter_);
+    }
+    return;
   }
+
+  Callstack returned_callstack{
+      event->GetTid(), CallstackFramesFromLibunwindstackFrames(full_callstack),
+      event->GetTimestamp()};
+  listener_->OnCallstack(returned_callstack);
 }
 
 void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
