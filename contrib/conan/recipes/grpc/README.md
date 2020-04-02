@@ -17,6 +17,13 @@
    find_package(gRPC CONFIG REQUIRED)
    ```
 
+   Make sure you also include your conan build config properly and you
+   pass the `TARGETS` option along:
+   ```cmake
+   include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)                               
+   conan_basic_setup(TARGETS)
+   ```
+
 4. Add your `.proto`-files as `PRVIATE` source files to your cmake-targets and
    call `grpc_helper` on this target. Example:
    ```cmake
