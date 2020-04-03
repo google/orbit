@@ -160,7 +160,7 @@ void ProcessesDataView::OnSelect(int a_Index) {
   m_SelectedProcess = GetProcess(a_Index);
   if (!m_IsRemote) {
     m_SelectedProcess->ListModules();
-  } else if (m_SelectedProcess->GetModules().size() == 0) {
+  } else {
     Message msg(Msg_RemoteProcessRequest);
     msg.m_Header.m_GenericHeader.m_Address = m_SelectedProcess->GetID();
     GTcpClient->Send(msg);
