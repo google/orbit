@@ -72,7 +72,10 @@ void TcpClient::Connect(const std::string& a_Host) {
 }
 
 void TcpClient::Stop() {
-  if (workerThread_.joinable()) {
+  const bool inWorkerThread = std::this_thread::get_id()
+          == workerThread_.get_id();
+
+  if (!inWorkerThread && workerThread_.joinable()) {
     CHECK(m_TcpService);
     CHECK(m_TcpService->m_IoService);
     m_TcpService->m_IoService->stop();

@@ -382,6 +382,7 @@ void ConnectionManager::SendRemoteProcess(TcpEntity* tcp_entity, uint32_t pid) {
 void ConnectionManager::ConnectionThreadWorker() {
   while (!exit_requested_) {
     if (!GTcpClient->IsValid()) {
+      GTcpClient->Stop();
       GTcpClient->Connect(remote_address_);
       GTcpClient->Start();
     } else {
