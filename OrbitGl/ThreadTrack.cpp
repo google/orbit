@@ -98,7 +98,7 @@ Color ThreadTrack::GetColor(ThreadID a_TID) {
   };
 
   // This is a GPU thread track.
-  constexpr ThreadID kMinGpuThreadId = 100000;
+  constexpr ThreadID kMinGpuThreadId = 1'000'000'000;
   if (a_TID >= kMinGpuThreadId) {
     const Color gray(100, 100, 100, 255);
     return gray;
