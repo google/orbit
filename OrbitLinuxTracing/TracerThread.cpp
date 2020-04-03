@@ -317,6 +317,10 @@ void TracerThread::Run(
     cpuset_cpus = all_cpus;
   }
 
+  // As we open two perf_event_open file descriptors (uprobe and uretprobe) per
+  // cpu per instrumented function, increase the maximum number of open files.
+  SetMaxOpenFilesSoftLimit(GetMaxOpenFilesHardLimit());
+
   bool perf_event_open_errors = false;
 
   if (trace_context_switches_) {

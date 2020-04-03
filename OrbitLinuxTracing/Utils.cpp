@@ -2,6 +2,9 @@
 #define ORBIT_LINUX_TRACING_UTILS_H_
 
 #include <OrbitBase/Logging.h>
+#include <OrbitBase/SafeStrerror.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 
 #include <fstream>
 #include <thread>
@@ -176,6 +179,30 @@ int GetTracepointId(const char* tracepoint_category,
     return -1;
   }
   return tp_id;
+}
+
+uint64_t GetMaxOpenFilesHardLimit() {
+  rlimit limit;
+  int ret = getrlimit(RLIMIT_NOFILE, &limit);
+  if (ret != 0) {
+    ERROR("getrlimit: %s", SafeStrerror(errno));
+    return 0;
+  }
+  return limit.rlim_max;
+}
+
+bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit) {
+  uint64_t hard_limit = GetMaxOpenFilesHardLimit();
+  if (hard_limit == 0) {
+    return false;
+  }
+  rlimit limit{soft_limit, hard_limit};
+  int ret = setrlimit(RLIMIT_NOFILE, &limit);
+  if (ret != 0) {
+    ERROR("setrlimit: %s", SafeStrerror(errno));
+    return false;
+  }
+  return true;
 }
 
 }  // namespace LinuxTracing
