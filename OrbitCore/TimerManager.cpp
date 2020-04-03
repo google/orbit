@@ -44,6 +44,8 @@ TimerManager::~TimerManager() {}
 
 //-----------------------------------------------------------------------------
 void TimerManager::StartRecording() {
+  CHECK(!m_IsClient);
+
   if (m_IsRecording) {
     return;
   }
@@ -57,15 +59,20 @@ void TimerManager::StartRecording() {
 
 //-----------------------------------------------------------------------------
 void TimerManager::StopRecording() {
+  CHECK(!m_IsClient);
   m_IsRecording = false;
   FlushQueue();
 }
 
 //-----------------------------------------------------------------------------
-void TimerManager::StartClient() { m_IsRecording = true; }
+void TimerManager::StartClient() {
+  CHECK(m_IsClient);
+  m_IsRecording = true;
+}
 
 //-----------------------------------------------------------------------------
 void TimerManager::StopClient() {
+  CHECK(m_IsClient);
   m_IsRecording = false;
   GTimerManager->FlushQueue();
 
