@@ -4,6 +4,7 @@
 
 #include "Path.h"
 
+#include <filesystem>
 #include <fstream>
 
 #include "PrintVar.h"
@@ -321,36 +322,27 @@ void Path::Dump() {
 bool Path::IsSourceFile(const std::string& a_File) {
   std::string ext = Path::GetExtension(a_File);
   return ext == ".c" || ext == ".cpp" || ext == ".h" || ext == ".hpp" ||
-         ext == ".inl" || ext == ".cxx";
+         ext == ".inl" || ext == ".cxx" || ext == ".cc";
 }
 
 std::vector<std::string> Path::ListFiles(
-    const std::string& a_Dir,
-    std::function<bool(const std::string&)> a_Filter) {
+    const std::string& directory,
+    std::function<bool(const std::string&)> filter) {
   std::vector<std::string> files;
 
-#ifdef _WIN32
-  std::string pattern(a_Dir);
-  pattern.append("\\*");
-  WIN32_FIND_DATAA data;
-  HANDLE hFind = FindFirstFileA(pattern.c_str(), &data);
-  if (hFind != INVALID_HANDLE_VALUE) {
-    do {
-      files.push_back(data.cFileName);
-    } while (FindNextFileA(hFind, &data) != 0);
-    FindClose(hFind);
+  for (const auto& file : std::filesystem::directory_iterator(directory)) {
+    if (std::filesystem::is_regular_file(file)) {
+      std::string path = file.path();
+      if (filter(path)) files.push_back(path);
+    }
   }
-#else
-  UNUSED(a_Dir);
-  UNUSED(a_Filter);
-#endif
 
   return files;
 }
 
-std::vector<std::string> Path::ListFiles(const std::string& a_Dir,
-                                         const std::string& a_Filter) {
-  return ListFiles(a_Dir, [&](const std::string& a_Name) {
-    return Contains(a_Name, a_Filter);
+std::vector<std::string> Path::ListFiles(const std::string& directory,
+                                         const std::string& filter) {
+  return ListFiles(directory, [&](const std::string& file_name) {
+    return Contains(file_name, filter);
   });
 }
