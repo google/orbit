@@ -39,7 +39,7 @@
 ConnectionManager::ConnectionManager()
     : exit_requested_(false),
       is_service_(false),
-      tracing_session_(GTcpServer) {}
+      tracing_session_(GTcpServer.get()) {}
 
 ConnectionManager::~ConnectionManager() {
   StopThread();
@@ -203,7 +203,7 @@ void ConnectionManager::SetupServerCallbacks() {
         uint32_t pid =
             static_cast<uint32_t>(msg.m_Header.m_GenericHeader.m_Address);
 
-        SendRemoteProcess(GTcpServer, pid);
+        SendRemoteProcess(GTcpServer.get(), pid);
       });
 
   GTcpServer->AddMainThreadCallback(
@@ -397,7 +397,7 @@ void ConnectionManager::ConnectionThreadWorker() {
 void ConnectionManager::RemoteThreadWorker() {
   while (!exit_requested_) {
     if (GTcpServer && GTcpServer->HasConnection()) {
-      SendProcesses(GTcpServer);
+      SendProcesses(GTcpServer.get());
     }
 
     Sleep(2000);

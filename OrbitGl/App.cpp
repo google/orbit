@@ -76,7 +76,7 @@
 #include <OrbitLinuxTracing/OrbitTracing.h>
 #endif
 
-class OrbitApp* GOrbitApp;
+std::unique_ptr<OrbitApp> GOrbitApp;
 float GFontSize;
 bool DoZoom = false;
 
@@ -94,7 +94,6 @@ OrbitApp::~OrbitApp() {
   oqpi_tk::stop_scheduler();
   delete m_Debugger;
 #endif
-  GOrbitApp = nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -315,16 +314,19 @@ void OrbitApp::AppendSystrace(const std::string& a_FileName,
 
 //-----------------------------------------------------------------------------
 bool OrbitApp::Init() {
-  GOrbitApp = new OrbitApp();
-  GCoreApp = GOrbitApp;
+  GOrbitApp = std::make_unique<OrbitApp>();
+  GCoreApp = GOrbitApp.get();
   GTimerManager = std::make_unique<TimerManager>();
-  GTcpServer = new TcpServer();
+  GTcpServer = std::make_unique<TcpServer>();
 
   Path::Init();
 
   GModuleManager.Init();
   Capture::Init();
-  Capture::SetSamplingDoneCallback(&OrbitApp::AddSamplingReport, GOrbitApp);
+
+  // TODO(antonrohr) clean this up (it casts GOrbitApp* to void*)
+  Capture::SetSamplingDoneCallback(&OrbitApp::AddSamplingReport,
+                                   GOrbitApp.get());
   Capture::SetLoadPdbAsyncFunc(GLoadPdbAsync);
 
 #ifdef _WIN32
@@ -536,8 +538,9 @@ int OrbitApp::OnExit() {
   if (GOrbitApp->HasTcpServer()) {
     GTcpServer->Stop();
   }
-  delete GTcpServer;
-  delete GOrbitApp;
+
+  GCoreApp = nullptr;
+  GOrbitApp = nullptr;
   Orbit_ImGui_Shutdown();
   return 0;
 }
