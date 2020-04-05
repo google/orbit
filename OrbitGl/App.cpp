@@ -535,6 +535,9 @@ int OrbitApp::OnExit() {
   GParams.Save();
   GTimerManager = nullptr;
 
+  ConnectionManager::Get().Stop();
+  GTcpClient->Stop();
+
   if (GOrbitApp->HasTcpServer()) {
     GTcpServer->Stop();
   }
