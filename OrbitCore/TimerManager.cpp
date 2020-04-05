@@ -40,7 +40,7 @@ TimerManager::TimerManager(bool a_IsClient)
 }
 
 //-----------------------------------------------------------------------------
-TimerManager::~TimerManager() {}
+TimerManager::~TimerManager() { Stop(); }
 
 //-----------------------------------------------------------------------------
 void TimerManager::StartRecording() {

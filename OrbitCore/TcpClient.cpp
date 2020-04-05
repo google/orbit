@@ -34,7 +34,7 @@ TcpClient::TcpClient() {}
 TcpClient::TcpClient(const std::string& a_Host) { Connect(a_Host); }
 
 //-----------------------------------------------------------------------------
-TcpClient::~TcpClient() {}
+TcpClient::~TcpClient() { Stop(); }
 
 //-----------------------------------------------------------------------------
 void TcpClient::Connect(const std::string& a_Host) {
@@ -72,8 +72,8 @@ void TcpClient::Connect(const std::string& a_Host) {
 }
 
 void TcpClient::Stop() {
-  const bool inWorkerThread = std::this_thread::get_id()
-          == workerThread_.get_id();
+  const bool inWorkerThread =
+      std::this_thread::get_id() == workerThread_.get_id();
 
   if (!inWorkerThread && workerThread_.joinable()) {
     CHECK(m_TcpService);

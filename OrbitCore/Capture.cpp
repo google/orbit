@@ -210,7 +210,10 @@ void Capture::StopCapture() {
   } else if (Capture::IsRemote()) {
     Capture::GSamplingProfiler->StopCapture();
     Capture::GSamplingProfiler->ProcessSamples();
-    GCoreApp->RefreshCaptureView();
+
+    if (GCoreApp != nullptr) {
+      GCoreApp->RefreshCaptureView();
+    }
   }
 
   if (!GInjected) {
@@ -219,7 +222,9 @@ void Capture::StopCapture() {
 
   TcpEntity* tcpEntity = Capture::GetMainTcpEntity();
   tcpEntity->Send(Msg_StopCapture);
-  GTimerManager->StopRecording();
+  if (GTimerManager) {
+    GTimerManager->StopRecording();
+  }
 }
 
 //-----------------------------------------------------------------------------
