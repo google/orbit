@@ -270,4 +270,4 @@ class OrbitApp : public CoreApp {
 };
 
 //-----------------------------------------------------------------------------
-extern class OrbitApp* GOrbitApp;
+extern std::unique_ptr<OrbitApp> GOrbitApp;

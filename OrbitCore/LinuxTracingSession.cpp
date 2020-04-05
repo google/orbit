@@ -34,8 +34,8 @@ void LinuxTracingSession::SetStringManager(
   string_manager_ = string_manager;
 }
 
-void LinuxTracingSession::SendKeyAndString(
-    uint64_t key, const std::string& str) {
+void LinuxTracingSession::SendKeyAndString(uint64_t key,
+                                           const std::string& str) {
   KeyAndString key_and_string;
   key_and_string.key = key;
   key_and_string.str = str;
@@ -45,7 +45,7 @@ void LinuxTracingSession::SendKeyAndString(
     std::string message_data = SerializeObjectBinary(key_and_string);
     // TODO: Remove networking from here.
     tcp_server_->Send(Msg_KeyAndString, message_data.c_str(),
-                     message_data.size());
+                      message_data.size());
     string_manager_->Add(key, str);
   }
 }
