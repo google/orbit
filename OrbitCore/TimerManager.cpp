@@ -72,7 +72,7 @@ void TimerManager::StartClient() {
 
 //-----------------------------------------------------------------------------
 void TimerManager::StopClient() {
-  CHECK(m_IsClient);
+  if (!m_IsClient) return;
   m_IsRecording = false;
   GTimerManager->FlushQueue();
 
