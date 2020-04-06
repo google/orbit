@@ -16,7 +16,8 @@ extern thread_local size_t CurrentDepth;
 class Timer {
  public:
   Timer()
-      : m_TID(0),
+      : m_PID(0),
+        m_TID(0),
         m_Depth(0),
         m_SessionID(-1),
         m_Type(NONE),
@@ -74,6 +75,7 @@ class Timer {
  public:
   // Needs to have to exact same layout in win32/x64, debug/release
 
+  uint32_t m_PID;
   // Thread ID. For timers that represent CPU activity, this is the
   // thread id, for GPU activity, this is an artificial thread id
   // that is larger than any CPU thread id and is in 1:1 relation to
@@ -92,17 +94,6 @@ class Timer {
   uint32_t m_SubmitTID;
 };
 #pragma pack(pop)
-// static_assert(sizeof(Timer) == 56);
-// static_assert(offsetof(Timer, m_TID) == 0);
-// static_assert(offsetof(Timer, m_Depth) == 4);
-// static_assert(offsetof(Timer, m_SessionID) == 5);
-// static_assert(offsetof(Timer, m_Type) == 6);
-// static_assert(offsetof(Timer, m_Processor) == 7);
-// static_assert(offsetof(Timer, m_CallstackHash) == 8);
-// static_assert(offsetof(Timer, m_FunctionAddress) == 16);
-// static_assert(offsetof(Timer, m_UserData) == 24);
-// static_assert(offsetof(Timer, m_Start) == 40);
-// static_assert(offsetof(Timer, m_End) == 48);
 
 //-----------------------------------------------------------------------------
 class ScopeTimer {

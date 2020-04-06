@@ -76,6 +76,7 @@ void LinuxTracingHandler::OnContextSwitchIn(
   ++(*num_context_switches_);
 
   ContextSwitch context_switch(ContextSwitch::In);
+  context_switch.m_ProcessId = context_switch_in.GetPid();
   context_switch.m_ThreadId = context_switch_in.GetTid();
   context_switch.m_Time = context_switch_in.GetTimestampNs();
   context_switch.m_ProcessorIndex = context_switch_in.GetCore();
@@ -89,6 +90,7 @@ void LinuxTracingHandler::OnContextSwitchOut(
   ++(*num_context_switches_);
 
   ContextSwitch context_switch(ContextSwitch::Out);
+  context_switch.m_ProcessId = context_switch_out.GetPid();
   context_switch.m_ThreadId = context_switch_out.GetTid();
   context_switch.m_Time = context_switch_out.GetTimestampNs();
   context_switch.m_ProcessorIndex = context_switch_out.GetCore();
