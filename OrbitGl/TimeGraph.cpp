@@ -4,8 +4,9 @@
 
 #include "TimeGraph.h"
 
-#include <algorithm>
 #include <OrbitBase/Logging.h>
+
+#include <algorithm>
 
 #include "App.h"
 #include "Batcher.h"
@@ -305,6 +306,7 @@ void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
           // When a context switch out is caused by a thread exiting, the
           // perf_event_open event has pid and tid set to -1: hence, use pid and
           // tid from the context switch in.
+          timer.m_PID = lastCS.m_ProcessId;
           timer.m_TID = lastCS.m_ThreadId;
           timer.m_Processor = static_cast<int8_t>(lastCS.m_ProcessorIndex);
           timer.m_SessionID = Message::GSessionID;
@@ -329,6 +331,7 @@ void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
           // When a context switch out is caused by a thread exiting, the
           // perf_event_open event has pid and tid set to -1: hence, use pid and
           // tid from the context switch in.
+          timer.m_PID = lastCS.m_ProcessId;
           timer.m_TID = lastCS.m_ThreadId;
           timer.m_SessionID = Message::GSessionID;
           timer.SetType(Timer::THREAD_ACTIVITY);
@@ -545,6 +548,10 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
 
           bool isContextSwitch = timer.IsType(Timer::THREAD_ACTIVITY);
           bool isVisibleWidth = NormalizedLength * m_Canvas->getWidth() > 1;
+          bool isSameProcessIdAsTarget =
+              isCore && Capture::GTargetProcess != nullptr
+                  ? timer.m_PID == Capture::GTargetProcess->GetID()
+                  : true;
           bool isSameThreadIdAsSelected =
               isCore && (timer.m_TID == Capture::GSelectedThreadId);
           bool isInactive =
@@ -587,9 +594,13 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
             col[2] = coeff * col[2];
           }
 
-          col = isSelected
-                    ? selectionColor
-                    : isSameThreadIdAsSelected ? col : isInactive ? grey : col;
+          if (isSelected) {
+            col = selectionColor;
+          } else if (!isSameThreadIdAsSelected &&
+                     (isInactive || !isSameProcessIdAsTarget)) {
+            col = grey;
+          }
+
           textBox.SetColor(col[0], col[1], col[2]);
           static int oddAlpha = 210;
           if (!(timer.m_Depth & 0x1)) {
@@ -864,8 +875,7 @@ void TimeGraph::UpdateThreadIds() {
     for (auto& pair : sortedThreads) {
       // Scheduling information is held in thread "0", show it last.
       // TODO: Make a proper "SchedTrack" instead of hack.
-      if(pair.first != 0)
-        sortedThreadIds.push_back(pair.first);
+      if (pair.first != 0) sortedThreadIds.push_back(pair.first);
     }
 
     // Then show threads sorted by number of events
