@@ -327,8 +327,14 @@ void OrbitGLWidget::keyReleaseEvent(QKeyEvent* event) {
 //-----------------------------------------------------------------------------
 void OrbitGLWidget::wheelEvent(QWheelEvent* event) {
   if (m_OrbitPanel) {
-    m_OrbitPanel->MouseWheelMoved(event->x(), event->y(), event->delta() / 8,
-                                  event->modifiers() & Qt::ControlModifier);
+    if (event->orientation() == Qt::Vertical) {
+      m_OrbitPanel->MouseWheelMoved(event->x(), event->y(), event->delta() / 8,
+                                    event->modifiers() & Qt::ControlModifier);
+    } else {
+      m_OrbitPanel->MouseWheelMovedHorizontally(
+          event->x(), event->y(), event->delta() / 8,
+          event->modifiers() & Qt::ControlModifier);
+    }
   }
 
   update();

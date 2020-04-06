@@ -38,6 +38,10 @@ class GlPanel {
   virtual void LeftDoubleClick() {}
   virtual void MouseWheelMoved(int /*a_X*/, int /*a_Y*/, int /*a_Delta*/,
                                bool /*a_Ctrl*/) {}
+  virtual void MouseWheelMovedHorizontally(int a_X, int a_Y, int a_Delta,
+                                           bool a_Ctrl) {
+    MouseWheelMoved(a_X, a_Y, a_Delta, a_Ctrl);
+  }
   virtual void CharEvent(unsigned int /*a_Char*/) {}
   virtual void KeyPressed(unsigned int /*a_KeyCode*/, bool /*a_Ctrl*/,
                           bool /*a_Shift*/, bool /*a_Alt*/) {}

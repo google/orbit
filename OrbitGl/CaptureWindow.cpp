@@ -440,8 +440,8 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
                                     bool a_Ctrl) {
   if (a_Delta == 0) return;
 
-  // Zoom
-  int delta = -a_Delta / abs(a_Delta);
+  // Normalize and invert sign, so that delta < 0 is zoom in.
+  int delta = a_Delta < 0 ? 1 : -1;
 
   if (delta < m_MinWheelDelta) m_MinWheelDelta = delta;
   if (delta > m_MaxWheelDelta) m_MaxWheelDelta = delta;
@@ -473,11 +473,30 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
     UpdateSceneBox();
   }
 
+  // Use the original sign of a_Delta here.
   Orbit_ImGui_ScrollCallback(this, -delta);
 
   m_CanHover = true;
 
   NeedsUpdate();
+}
+
+//-----------------------------------------------------------------------------
+void CaptureWindow::MouseWheelMovedHorizontally(int /*a_X*/, int /*a_Y*/,
+                                                int a_Delta, bool /*a_Ctrl*/) {
+  if (a_Delta == 0) return;
+
+  // Normalize and invert sign, so that delta < 0 is left.
+  int delta = a_Delta < 0 ? 1 : -1;
+
+  if (delta < 0) {
+    Pan(0.1f);
+  } else {
+    Pan(-0.1f);
+  }
+
+  // Use the original sign of a_Delta here.
+  Orbit_ImGui_ScrollCallback(this, -delta);
 }
 
 //-----------------------------------------------------------------------------

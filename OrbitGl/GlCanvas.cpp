@@ -162,10 +162,8 @@ void GlCanvas::LeftDown(int a_X, int a_Y) {
 
 //-----------------------------------------------------------------------------
 void GlCanvas::MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) {
-  // Zoom
-  int delta =
-      -a_Delta /
-      abs(a_Delta);  //-event.GetWheelRotation() / event.GetWheelDelta();
+  // Normalize and invert sign, so that delta < 0 is zoom in.
+  int delta = a_Delta < 0 ? 1 : -1;
 
   if (delta < m_MinWheelDelta) m_MinWheelDelta = delta;
   if (delta > m_MaxWheelDelta) m_MaxWheelDelta = delta;
@@ -193,6 +191,7 @@ void GlCanvas::MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) {
     UpdateSceneBox();
   }
 
+  // Use the original sign of a_Delta here.
   Orbit_ImGui_ScrollCallback(this, -delta);
 
   NeedsRedraw();
