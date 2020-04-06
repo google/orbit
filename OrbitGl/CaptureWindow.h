@@ -33,6 +33,8 @@ class CaptureWindow : public GlCanvas {
   void MiddleDown(int a_X, int a_Y) override;
   void MiddleUp(int a_X, int a_Y) override;
   void MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) override;
+  void MouseWheelMovedHorizontally(int a_X, int a_Y, int a_Delta,
+                                   bool a_Ctrl) override;
   void KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
                   bool a_Alt) override;
   void OnTimer() override;
