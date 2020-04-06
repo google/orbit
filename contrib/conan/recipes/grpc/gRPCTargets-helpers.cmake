@@ -42,11 +42,11 @@ function(grpc_helper)
           ${target_name} PUBLIC gRPC::grpc++_reflection gRPC::grpc++_unsecure
                                 protobuf::libprotobuf)
         target_sources(${target_name} PRIVATE "${proto_cpp}" "${grpc_cpp}")
-        target_sources(${target_name} PUBLIC "${proto_h}" "${grpc_h}")
 
       endif()
 
       target_link_libraries(${ARGV0} PUBLIC ${target_name})
+      add_dependencies(${ARGV0} ${target_name})
     endif()
   endforeach()
 
