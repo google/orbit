@@ -49,7 +49,6 @@ class OrbitConan(ConanFile):
         self.requires("zlib/1.2.11@conan/stable")
 
         if self.settings.os == "Windows":
-            self.requires("breakpad/216cea7b@{}".format(self._orbit_channel))
             self.requires("crashpad/20191009@bincrafters/stable")
 
         if self.options.with_gui:

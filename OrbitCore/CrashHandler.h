@@ -3,8 +3,8 @@
 //-----------------------------------
 #pragma once
 
-#include <string>
 #include <atomic>
+#include <string>
 
 #ifdef _WIN32
 #include <client/crashpad_client.h>
@@ -12,13 +12,13 @@
 
 class CrashHandler {
  public:
-  CrashHandler(const std::wstring& dump_path);
-  void SendMiniDump();
+  explicit CrashHandler(const std::string& dump_path,
+                        const std::string& handler_path);
+  void DumpWithoutCrash();
 
  private:
-  inline static std::atomic<bool> is_init_{false};
+  inline static bool is_init_{false};
 #ifdef _WIN32
   crashpad::CrashpadClient crashpad_client_;
 #endif
-  void Init(const std::wstring& dump_path);
 };
