@@ -514,6 +514,8 @@ void TracerThread::ProcessContextSwitchCpuWideEvent(
   if (tid != 0) {
     // TODO: Consider deferring context switches.
     if (event.IsSwitchOut()) {
+      // Careful: when a switch out is caused by the thread exiting, pid and tid
+      // have value -1.
       listener_->OnContextSwitchOut(ContextSwitchOut(tid, cpu, time));
     } else {
       listener_->OnContextSwitchIn(ContextSwitchIn(tid, cpu, time));
