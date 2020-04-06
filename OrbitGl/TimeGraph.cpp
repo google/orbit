@@ -302,8 +302,11 @@ void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
           Timer timer;
           timer.m_Start = lastCS.m_Time;
           timer.m_End = a_CS.m_Time;
-          timer.m_TID = a_CS.m_ThreadId;
-          timer.m_Processor = (int8_t)a_CS.m_ProcessorIndex;
+          // When a context switch out is caused by a thread exiting, the
+          // perf_event_open event has pid and tid set to -1: hence, use pid and
+          // tid from the context switch in.
+          timer.m_TID = lastCS.m_ThreadId;
+          timer.m_Processor = static_cast<int8_t>(lastCS.m_ProcessorIndex);
           timer.m_SessionID = Message::GSessionID;
           timer.SetType(Timer::CORE_ACTIVITY);
 
@@ -323,7 +326,10 @@ void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
           Timer timer;
           timer.m_Start = lastCS.m_Time;
           timer.m_End = a_CS.m_Time;
-          timer.m_TID = a_CS.m_ThreadId;
+          // When a context switch out is caused by a thread exiting, the
+          // perf_event_open event has pid and tid set to -1: hence, use pid and
+          // tid from the context switch in.
+          timer.m_TID = lastCS.m_ThreadId;
           timer.m_SessionID = Message::GSessionID;
           timer.SetType(Timer::THREAD_ACTIVITY);
 
