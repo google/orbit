@@ -27,9 +27,11 @@ class ConnectionManager {
   void ConnectToRemote(std::string a_RemoteAddress);
   void SetSelectedFunctionsOnRemote(const Message& a_Msg);
   bool IsService() const { return is_service_; }
+  bool IsClient() const { return !is_service_; }
   void StartCaptureAsRemote(uint32_t pid);
   void StopCaptureAsRemote();
   void Stop();
+  const ProcessList& GetProcessList() { return process_list_; }
 
  private:
   void ConnectionThreadWorker();

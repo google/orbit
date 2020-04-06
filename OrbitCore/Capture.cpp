@@ -22,12 +22,14 @@
 #include "Pdb.h"
 #include "SamplingProfiler.h"
 #include "Serialization.h"
+#include "SymbolsManager.h"
 #include "TcpClient.h"
 #include "TcpForward.h"
 #include "TcpServer.h"
 #include "TestRemoteMessages.h"
 #include "TimerManager.h"
 #include "absl/strings/str_format.h"
+#include "CoreApp.h"
 
 #ifndef _WIN32
 std::shared_ptr<Pdb> GPdbDbg;
@@ -478,25 +480,17 @@ bool Capture::IsOtherInstanceRunning() {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::LoadSession(const std::shared_ptr<Session>& a_Session) {
-  GSessionPresets = a_Session;
+void Capture::LoadSession(const std::shared_ptr<Session>& session) {
+  GSessionPresets = session;
+  Capture::GPresetToLoad = "";
 
-  std::vector<std::string> modulesToLoad;
-  for (auto& it : a_Session->m_Modules) {
-    SessionModule& module = it.second;
-    ORBIT_LOG_DEBUG(module.m_Name);
-    modulesToLoad.push_back(it.first);
+  if (GCoreApp->SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
+    orbit::SymbolsManager::Get().LoadSymbols(session, Capture::GTargetProcess);
+    GParams.m_ProcessPath = session->m_ProcessFullPath;
+    GParams.m_Arguments = session->m_Arguments;
+    GParams.m_WorkingDirectory = session->m_WorkingDirectory;
+    GCoreApp->SendToUiNow(L"SetProcessParams");
   }
-
-  if (GLoadPdbAsync) {
-    GLoadPdbAsync(modulesToLoad);
-  }
-
-  GParams.m_ProcessPath = a_Session->m_ProcessFullPath;
-  GParams.m_Arguments = a_Session->m_Arguments;
-  GParams.m_WorkingDirectory = a_Session->m_WorkingDirectory;
-
-  GCoreApp->SendToUiNow(L"SetProcessParams");
 }
 
 //-----------------------------------------------------------------------------
@@ -512,7 +506,7 @@ void Capture::SaveSession(const std::string& a_FileName) {
 
   for (Function* func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {
-      session.m_Modules[func->GetPdb()->GetName()].m_FunctionHashes.push_back(
+      session.m_Modules[func->GetPdb()->GetLoadedModuleName()].m_FunctionHashes.push_back(
           func->Hash());
     }
   }

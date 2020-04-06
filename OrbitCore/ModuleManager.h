@@ -23,7 +23,6 @@ class ModuleManager {
  protected:
   void DequeueAndLoad();
   void OnPdbLoaded();
-  void ApplyPresets(std::shared_ptr<Pdb>& a_Pdb);
   void AddPdb(const std::shared_ptr<Pdb>& a_Pdb);
 
  protected:

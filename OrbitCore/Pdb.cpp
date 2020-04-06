@@ -553,29 +553,6 @@ void Pdb::PopulateStringFunctionMap() {
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::ApplyPresets() {
-  SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ApplyPresets - %s", m_Name.c_str()));
-
-  if (Capture::GSessionPresets) {
-    std::string pdbName = Path::GetFileName(m_Name);
-
-    auto it = Capture::GSessionPresets->m_Modules.find(pdbName);
-    if (it != Capture::GSessionPresets->m_Modules.end()) {
-      SessionModule& a_Module = it->second;
-
-      for (uint64_t hash : a_Module.m_FunctionHashes) {
-        PRINT_VAR(hash);
-        auto fit = m_StringFunctionMap.find(hash);
-        if (fit != m_StringFunctionMap.end()) {
-          Function* function = fit->second;
-          function->Select();
-        }
-      }
-    }
-  }
-}
-
-//-----------------------------------------------------------------------------
 Function* Pdb::GetFunctionFromExactAddress(uint64_t a_Address) {
   uint64_t address = a_Address - (uint64_t)GetHModule() + load_bias_;
 

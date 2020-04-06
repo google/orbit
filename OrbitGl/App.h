@@ -93,7 +93,7 @@ class OrbitApp : public CoreApp {
   void RegisterRuleEditor(class RuleEditor* a_RuleEditor);
 
   void Unregister(class DataView* a_Model);
-  bool SelectProcess(const std::string& a_Process);
+  bool SelectProcess(const std::string& a_Process) override;
   bool SelectProcess(uint32_t a_ProcessID);
   bool Inject(unsigned long a_ProcessId);
   static void AddSamplingReport(
@@ -193,6 +193,7 @@ class OrbitApp : public CoreApp {
   void OnRemoteProcess(const Message& a_Message);
   void OnRemoteProcessList(const Message& a_Message);
   void OnRemoteModuleDebugInfo(const Message& a_Message);
+  void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) override;
   void LaunchRuleEditor(class Function* a_Function);
   void SetHeadless(bool a_Headless) { m_Headless = a_Headless; }
   bool GetHeadless() const { return m_Headless; }
@@ -253,7 +254,7 @@ class OrbitApp : public CoreApp {
   std::wstring m_User;
   std::wstring m_License;
 
-  std::queue<std::shared_ptr<struct Module> > m_ModulesToLoad;
+  std::vector<std::shared_ptr<struct Module> > m_ModulesToLoad;
   std::vector<std::string> m_PostInitArguments;
 
   class Debugger* m_Debugger = nullptr;

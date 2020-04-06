@@ -14,6 +14,7 @@
 #include <windows.h>
 #endif
 
+class ModuleDebugInfo;
 class Timer;
 class LinuxCallstackEvent;
 struct CallStack;
@@ -45,6 +46,8 @@ class CoreApp {
                          const std::string& /*a_Module*/,
                          const std::string& /*a_Name*/) {}
   virtual void AddKeyAndString(uint64_t key, std::string_view str) {}
+  virtual bool SelectProcess(const std::string& a_Process) { return false; }
+  virtual void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&){}
   virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*
   GetRules() {
     return nullptr;

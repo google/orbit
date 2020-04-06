@@ -242,9 +242,29 @@ Function* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
 #endif
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(ModuleDebugInfo, 0) {
+void Pdb::ApplyPresets(const Session& session) {
+  SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ApplyPresets - %s", m_Name.c_str()));
+
+  std::string module_name = m_LoadedModuleName;
+  auto it = session.m_Modules.find(module_name);
+  if (it != session.m_Modules.end()) {
+    const SessionModule& session_module = it->second;
+
+    for (uint64_t hash : session_module.m_FunctionHashes) {
+      auto fit = m_StringFunctionMap.find(hash);
+      if (fit != m_StringFunctionMap.end()) {
+        Function* function = fit->second;
+        function->Select();
+      }
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+ORBIT_SERIALIZE(ModuleDebugInfo, 1) {
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_Functions);
   ORBIT_NVP_VAL(0, load_bias);
   ORBIT_NVP_VAL(0, m_PdbName);
+  ORBIT_NVP_VAL(1, m_PID);
 }
