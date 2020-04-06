@@ -10,6 +10,11 @@
 #include "absl/flags/flag.h"
 #include "llvm/Demangle/Demangle.h"
 
+// TODO: Remove this flag once we enable specifying the sampling frequency or
+//  period in the client.
+ABSL_FLAG(uint16_t, sampling_frequency, 1000,
+          "Frequency of callstack sampling in samples per second");
+
 // TODO: This is a temporary feature flag. Remove this once we enable this
 //  globally.
 ABSL_FLAG(bool, trace_gpu_driver, false,
@@ -18,7 +23,7 @@ ABSL_FLAG(bool, trace_gpu_driver, false,
 void LinuxTracingHandler::Start() {
   pid_t pid = target_process_->GetID();
 
-  double sampling_frequency = DEFAULT_SAMPLING_FREQUENCY;
+  double sampling_frequency = absl::GetFlag(FLAGS_sampling_frequency);
 
   std::vector<LinuxTracing::Function> selected_functions;
   selected_functions.reserve(selected_function_map_->size());
