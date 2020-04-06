@@ -188,7 +188,6 @@ class OrbitApp : public CoreApp {
   bool GetOutputDebugStringEnabled() override;
 
   void RequestThaw() { m_NeedsThawing = true; }
-  void OnMiniDump(const Message& a_Message);
   void OnRemoteProcess(const Message& a_Message);
   void OnRemoteProcessList(const Message& a_Message);
   void OnRemoteModuleDebugInfo(const Message& a_Message);

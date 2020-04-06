@@ -4,7 +4,7 @@ add_library(OrbitDll SHARED OrbitDll.cpp OrbitDll.h)
 
 target_link_libraries(
   OrbitDll
-  PUBLIC OrbitCore OrbitAsm minhook::minhook breakpad::breakpad)
+  PUBLIC OrbitCore OrbitAsm minhook::minhook)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(ORBIT_DLL_NAME "Orbit64")

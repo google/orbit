@@ -36,7 +36,6 @@
 #include "LiveFunctionsDataView.h"
 #include "Log.h"
 #include "LogDataView.h"
-#include "MiniDump.h"
 #include "ModulesDataView.h"
 #include "ModuleManager.h"
 #include "OrbitAsm.h"
@@ -352,9 +351,6 @@ void OrbitApp::PostInit() {
   GCurrentTimeGraph->SetStringManager(string_manager_);
 
   if (HasTcpServer()) {
-    GTcpServer->AddCallback(Msg_MiniDump, [=](const Message& a_Msg) {
-      GOrbitApp->OnMiniDump(a_Msg);
-    });
     GTcpServer->Start(Capture::GCapturePort);
   }
 
@@ -1087,20 +1083,6 @@ void OrbitApp::EnableSampling(bool a_Value) {
 
 //-----------------------------------------------------------------------------
 bool OrbitApp::GetSamplingEnabled() { return GParams.m_TrackSamplingEvents; }
-
-//-----------------------------------------------------------------------------
-void OrbitApp::OnMiniDump(const Message& a_Message) {
-  std::string dumpPath = Path::GetDumpPath();
-  std::string o_File = dumpPath + "a_received.dmp";
-  std::ofstream out(o_File, std::ios::binary);
-  out.write(a_Message.m_Data, a_Message.m_Size);
-  out.close();
-
-  MiniDump miniDump(s2ws(o_File));
-  std::shared_ptr<Process> process = miniDump.ToOrbitProcess();
-  process->SetID((DWORD)a_Message.GetHeader().m_GenericHeader.m_Address);
-  GOrbitApp->m_ProcessesDataView->SetRemoteProcess(process);
-}
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnRemoteProcess(const Message& a_Message) {
