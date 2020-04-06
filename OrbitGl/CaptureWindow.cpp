@@ -579,8 +579,10 @@ std::vector<std::wstring> CaptureWindow::GetContextMenu() {
   static std::vector<std::wstring> menu = {GOTO_CALLSTACK, GOTO_SOURCE};
   static std::vector<std::wstring> emptyMenu;
   TextBox* selection = Capture::GSelectedTextBox;
-  return selection && !selection->GetTimer().IsCoreActivity() ? menu
-                                                              : emptyMenu;
+  return selection != nullptr && !selection->GetTimer().IsCoreActivity() &&
+                 selection->GetTimer().m_Type != Timer::GPU_ACTIVITY
+             ? menu
+             : emptyMenu;
 }
 
 //-----------------------------------------------------------------------------
