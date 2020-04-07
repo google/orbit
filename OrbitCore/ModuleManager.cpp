@@ -122,7 +122,8 @@ void ModuleManager::OnPdbLoaded() {
 
 #ifdef _WIN32
   // Apply presets on last pdb
-  pdb->ApplyPresets(Capture::GSessionPresets.get());
+  if (Capture::GSessionPresets != nullptr)
+    lastPdb->ApplyPresets(*Capture::GSessionPresets);
 #endif
 
   if (m_ModulesQueue.empty()) {

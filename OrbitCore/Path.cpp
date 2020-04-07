@@ -332,7 +332,7 @@ std::vector<std::string> Path::ListFiles(
 
   for (const auto& file : std::filesystem::directory_iterator(directory)) {
     if (std::filesystem::is_regular_file(file)) {
-      std::string path = file.path();
+      std::string path(file.path().string());
       if (filter(path)) files.push_back(path);
     }
   }

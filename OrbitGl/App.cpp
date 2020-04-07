@@ -987,9 +987,9 @@ void OrbitApp::LoadModules() {
       return;
     }
 #ifdef _WIN32
-    std::shared_ptr<Module> module = std::move(m_ModulesToLoad.front());
-    m_ModulesToLoad.pop();
+  for (std::shared_ptr<Module> module : m_ModulesToLoad) {
     GLoadPdbAsync(module);
+  }
 #else
     for (std::shared_ptr<Module> module : m_ModulesToLoad) {
       if (symbolHelper.LoadSymbolsIncludedInBinary(module)) continue;
@@ -1003,7 +1003,7 @@ void OrbitApp::LoadModules() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules() {
-  orbit::SymbolsManager::Get().Load(m_ModulesToLoad, Capture::GTargetProcess);
+  orbit::SymbolsManager::Get().LoadSymbols(m_ModulesToLoad, Capture::GTargetProcess);
   m_ModulesToLoad.clear();
   GOrbitApp->FireRefreshCallbacks();
 }
