@@ -22,12 +22,14 @@
 #include "Pdb.h"
 #include "SamplingProfiler.h"
 #include "Serialization.h"
+#include "SymbolsManager.h"
 #include "TcpClient.h"
 #include "TcpForward.h"
 #include "TcpServer.h"
 #include "TestRemoteMessages.h"
 #include "TimerManager.h"
 #include "absl/strings/str_format.h"
+#include "CoreApp.h"
 
 #ifndef _WIN32
 std::shared_ptr<Pdb> GPdbDbg;
@@ -138,7 +140,6 @@ void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
     GTargetProcess = a_Process;
     GSamplingProfiler = std::make_shared<SamplingProfiler>(a_Process);
     GSelectedFunctionsMap.clear();
-    GSessionPresets = nullptr;
     GOrbitUnreal.Clear();
     GTargetProcess->LoadDebugInfo();
     GTargetProcess->ClearWatchedVariables();
@@ -485,25 +486,9 @@ bool Capture::IsOtherInstanceRunning() {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::LoadSession(const std::shared_ptr<Session>& a_Session) {
-  GSessionPresets = a_Session;
-
-  std::vector<std::string> modulesToLoad;
-  for (auto& it : a_Session->m_Modules) {
-    SessionModule& module = it.second;
-    ORBIT_LOG_DEBUG(module.m_Name);
-    modulesToLoad.push_back(it.first);
-  }
-
-  if (GLoadPdbAsync) {
-    GLoadPdbAsync(modulesToLoad);
-  }
-
-  GParams.m_ProcessPath = a_Session->m_ProcessFullPath;
-  GParams.m_Arguments = a_Session->m_Arguments;
-  GParams.m_WorkingDirectory = a_Session->m_WorkingDirectory;
-
-  GCoreApp->SendToUiNow(L"SetProcessParams");
+void Capture::LoadSession(const std::shared_ptr<Session>& session) {
+  GSessionPresets = session;
+  Capture::GPresetToLoad = "";
 }
 
 //-----------------------------------------------------------------------------
@@ -512,14 +497,12 @@ void Capture::SaveSession(const std::string& a_FileName) {
   session.m_ProcessFullPath = GTargetProcess->GetFullName();
 
   GCoreApp->SendToUiNow(L"UpdateProcessParams");
-
-  session.m_ProcessFullPath = GParams.m_ProcessPath;
   session.m_Arguments = GParams.m_Arguments;
   session.m_WorkingDirectory = GParams.m_WorkingDirectory;
 
   for (Function* func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {
-      session.m_Modules[func->GetPdb()->GetName()].m_FunctionHashes.push_back(
+      session.m_Modules[func->GetPdb()->GetLoadedModuleName()].m_FunctionHashes.push_back(
           func->Hash());
     }
   }

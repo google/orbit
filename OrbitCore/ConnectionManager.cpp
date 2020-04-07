@@ -21,6 +21,7 @@
 #include "SamplingProfiler.h"
 #include "Serialization.h"
 #include "SymbolHelper.h"
+#include "SymbolsManager.h"
 #include "TcpClient.h"
 #include "TcpServer.h"
 #include "TestRemoteMessages.h"
@@ -73,6 +74,7 @@ void ConnectionManager::InitAsService() {
   is_service_ = true;
   string_manager_ = std::make_shared<StringManager>();
   tracing_session_.SetStringManager(string_manager_);
+  orbit::SymbolsManager::Get().Init();
   SetupIntrospection();
   SetupServerCallbacks();
   thread_ = std::thread{[this]() { RemoteThreadWorker(); }};
@@ -204,60 +206,6 @@ void ConnectionManager::SetupServerCallbacks() {
             static_cast<uint32_t>(msg.m_Header.m_GenericHeader.m_Address);
 
         SendRemoteProcess(GTcpServer.get(), pid);
-      });
-
-  GTcpServer->AddMainThreadCallback(
-      Msg_RemoteModuleDebugInfo, [=](const Message& msg) {
-        uint32_t pid =
-            static_cast<uint32_t>(msg.m_Header.m_GenericHeader.m_Address);
-
-        std::shared_ptr<Process> process = process_list_.GetProcess(pid);
-        if (!process) {
-          ERROR("Process not found (pid=%d)", pid);
-          return;
-        }
-
-        Capture::SetTargetProcess(process);
-
-        std::vector<ModuleDebugInfo> module_infos;
-        std::istringstream buffer(std::string(msg.m_Data, msg.m_Size));
-        cereal::BinaryInputArchive inputAr(buffer);
-        inputAr(module_infos);
-
-        std::vector<ModuleDebugInfo> module_infos_send_back;
-
-        for (auto& module_info : module_infos) {
-          std::shared_ptr<Module> module =
-              process->GetModuleFromName(module_info.m_Name);
-          if (!module) {
-            ERROR("Unable to find module %s", module_info.m_Name.c_str());
-            continue;
-          }
-          const SymbolHelper symbolHelper;
-          if (!module_info.m_Functions.empty()) {
-            LOG("Received %lu function symbols from local machine for "
-                "module %s",
-                module_info.m_Functions.size(), module_info.m_Name.c_str());
-            symbolHelper.LoadSymbolsFromDebugInfo(module, module_info);
-            continue;
-          }
-
-          if (symbolHelper.LoadSymbolsCollector(module)) {
-            symbolHelper.FillDebugInfoFromModule(module, module_info);
-            LOG("Loaded %lu function symbols for module %s",
-                module_info.m_Functions.size(), module_info.m_Name.c_str());
-          } else {
-            ERROR("Unable to load symbols of module %s",
-                  module->m_Name.c_str());
-          }
-
-          module_infos_send_back.emplace_back(module_info);
-        }
-
-        // Send data back
-        std::string message_data =
-            SerializeObjectBinary(module_infos_send_back);
-        GTcpServer->Send(Msg_RemoteModuleDebugInfo, message_data);
       });
 }
 

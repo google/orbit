@@ -14,11 +14,13 @@
 #include <windows.h>
 #endif
 
+class ModuleDebugInfo;
 class Timer;
 class LinuxCallstackEvent;
 struct CallStack;
 struct ContextSwitch;
 struct CallstackEvent;
+class Session;
 
 class CoreApp {
  public:
@@ -45,6 +47,9 @@ class CoreApp {
                          const std::string& /*a_Module*/,
                          const std::string& /*a_Name*/) {}
   virtual void AddKeyAndString(uint64_t key, std::string_view str) {}
+  virtual bool SelectProcess(const std::string& a_Process) { return false; }
+  virtual void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) {}
+  virtual void ApplySession(std::shared_ptr<Session> session) {};
   virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*
   GetRules() {
     return nullptr;

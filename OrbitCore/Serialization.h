@@ -84,7 +84,7 @@ struct ScopeCounter {
 };
 
 //-----------------------------------------------------------------------------
-template <class T>
+template <typename T>
 inline std::string SerializeObjectHumanReadable(T& a_Object) {
   std::stringstream ss;
   {
@@ -95,7 +95,7 @@ inline std::string SerializeObjectHumanReadable(T& a_Object) {
 }
 
 //-----------------------------------------------------------------------------
-template <class T>
+template <typename T>
 inline std::string SerializeObjectBinary(T& a_Object) {
   std::stringstream ss;
   {
@@ -103,6 +103,14 @@ inline std::string SerializeObjectBinary(T& a_Object) {
     archive(a_Object);
   }
   return ss.str();
+}
+
+//-----------------------------------------------------------------------------
+template <typename T>
+inline void DeserializeObjectBinary(const char* data, size_t size, T& object) {
+  std::istringstream buffer(std::string(data, size));
+  cereal::BinaryInputArchive inputAr(buffer);
+  inputAr(object);
 }
 
 #define ORBIT_SIZE_SCOPE(x) ScopeCounter counter(x)
