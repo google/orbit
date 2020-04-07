@@ -458,6 +458,18 @@ void TracerThread::Run(
           case PERF_RECORD_LOST:
             ProcessLostEvent(header, &ring_buffer);
             break;
+          case PERF_RECORD_THROTTLE:
+            // We don't use throttle/unthrottle events, but log them separately
+            // from the default 'Unexpected perf_event_header::type' case.
+            LOG("PERF_RECORD_THROTTLE in ring buffer '%s'",
+                ring_buffer.GetName().c_str());
+            ring_buffer.SkipRecord(header);
+            break;
+          case PERF_RECORD_UNTHROTTLE:
+            LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s'",
+                ring_buffer.GetName().c_str());
+            ring_buffer.SkipRecord(header);
+            break;
           default:
             ERROR("Unexpected perf_event_header::type in ring buffer '%s': %u",
                   ring_buffer.GetName().c_str(), header.type);
