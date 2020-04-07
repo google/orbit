@@ -579,7 +579,14 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
 
   constexpr size_t size_of_uretprobes = sizeof(perf_event_empty_sample);
   bool is_uretprobe = !is_gpu_event && (header.size == size_of_uretprobes);
-  CHECK(is_gpu_event + is_uprobe + is_uretprobe <= 1);
+
+  constexpr size_t size_of_sample = sizeof(perf_event_stack_sample);
+  bool is_sample = !is_gpu_event && (header.size == size_of_sample);
+
+  static_assert(size_of_uprobes != size_of_uretprobes &&
+                size_of_uprobes != size_of_sample &&
+                size_of_uretprobes != size_of_sample);
+  CHECK(is_gpu_event + is_uprobe + is_uretprobe + is_sample <= 1);
 
   if (is_uprobe) {
     auto event = make_unique_for_overwrite<UprobesPerfEvent>();
@@ -611,7 +618,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     gpu_event_processor_->PushEvent(event);
     ++stats_.gpu_events_count;
 
-  } else {
+  } else if (is_sample) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
     if (pid != pid_) {
       ring_buffer->SkipRecord(header);
@@ -621,6 +628,17 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
+
+  } else {
+    // Except for GPU driver events, which have variable size and are determined
+    // with gpu_tracing_fds_.contains(fd), skip PERF_RECORD_SAMPLEs with an
+    // unknown size. Samples to skip are normally time-based samples with
+    // abi == PERF_SAMPLE_REGS_ABI_NONE and no registers, and with size == 0 and
+    // no stack. Usually, these samples have pid == tid == 0, but that's not
+    // always the case: for example, when a process exits while tracing, we
+    // might get a sample with pid and tid != 0 but still with
+    // abi == PERF_SAMPLE_REGS_ABI_NONE and size == 0.
+    ring_buffer->SkipRecord(header);
   }
 }
 
