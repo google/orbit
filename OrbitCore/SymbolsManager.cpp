@@ -10,9 +10,9 @@
 
 namespace orbit {
 
-SymbolsManager::SymbolsManager(
-    std::shared_ptr<TransactionManager> transaction_manager) {
-  transaction_manager_ = transaction_manager;
+SymbolsManager::SymbolsManager(std::shared_ptr<CoreApp> core_app) {
+  core_app_ = core_app;
+  transaction_manager_ = core_app_->GetTransactionManger();
   auto on_response = [this](const Message& msg) { HandleResponse(msg); };
   auto on_request = [this](const Message& msg) { HandleRequest(msg); };
   transaction_manager_->RegisterTransactionHandler(
@@ -110,9 +110,9 @@ void SymbolsManager::HandleRequest(const Message& message) {
     }
 
     // Load debug information.
-    const SymbolHelper symbolHelper;
-    if (symbolHelper.LoadSymbolsCollector(module)) {
-      symbolHelper.FillDebugInfoFromModule(module, module_info);
+    const SymbolHelper symbol_helper;
+    if (symbol_helper.LoadSymbolsCollector(module)) {
+      symbol_helper.FillDebugInfoFromModule(module, module_info);
       LOG("Loaded %lu function symbols for module %s",
           module_info.m_Functions.size(), module_name.c_str());
     } else {
@@ -139,7 +139,7 @@ void SymbolsManager::HandleResponse(const Message& message) {
 
 void SymbolsManager::FinalizeTransaction() {
   // Apply session.
-  GCoreApp->ApplySession(session_);
+  core_app_->ApplySession(session_);
 
   // Clear.
   session_ = nullptr;

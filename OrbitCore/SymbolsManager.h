@@ -10,6 +10,8 @@
 #include "OrbitSession.h"
 #include "TransactionManager.h"
 
+class CoreApp;
+
 namespace orbit {
 
 // The role of the SymbolsManager is to load debug symbol information either
@@ -18,7 +20,7 @@ namespace orbit {
 
 class SymbolsManager {
  public:
-  SymbolsManager(std::shared_ptr<TransactionManager> transaction_manager);
+  SymbolsManager(std::shared_ptr<CoreApp> core_app);
 
   void LoadSymbols(std::shared_ptr<Session> session,
                    std::shared_ptr<Process> process);
@@ -38,6 +40,7 @@ class SymbolsManager {
   bool SingleThreadRequests() const;
 
   std::shared_ptr<TransactionManager> transaction_manager_;
+  std::shared_ptr<CoreApp> core_app_ = nullptr;
   std::shared_ptr<Session> session_ = nullptr;
   std::atomic<bool> request_in_flight_ = false;
 };

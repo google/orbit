@@ -994,13 +994,15 @@ void OrbitApp::LoadModules() {
   }
 #else
     for (std::shared_ptr<Module> module : m_ModulesToLoad) {
-      if (symbolHelper.LoadSymbolsIncludedInBinary(module)) continue;
-      if (symbolHelper.LoadSymbolsUsingSymbolsFile(module)) continue;
+      if (symbol_helper_.LoadSymbolsIncludedInBinary(module)) continue;
+      if (symbol_helper_.LoadSymbolsUsingSymbolsFile(module)) continue;
       ERROR("Could not load symbols for module %s", module->m_Name.c_str());
     }
     GOrbitApp->FireRefreshCallbacks();
 #endif
   }
+
+  m_ModulesToLoad.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -1108,10 +1110,9 @@ void OrbitApp::OnRemoteProcessList(const Message& a_Message) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnRemoteModuleDebugInfo(const Message& a_Message) {
-  std::istringstream buffer(std::string(a_Message.m_Data, a_Message.m_Size));
-  cereal::BinaryInputArchive inputAr(buffer);
   std::vector<ModuleDebugInfo> remote_module_debug_infos;
-  inputAr(remote_module_debug_infos);
+  DeserializeObjectBinary(a_Message.GetData(), a_Message.GetSize(),
+                          remote_module_debug_infos);
   OnRemoteModuleDebugInfo(remote_module_debug_infos);
 }
 
@@ -1131,7 +1132,7 @@ void OrbitApp::OnRemoteModuleDebugInfo(
       ERROR("Remote did not send any symbols for module %s",
             module_info.m_Name.c_str());
     } else {
-      symbolHelper.LoadSymbolsFromDebugInfo(module, module_info);
+      symbol_helper_.LoadSymbolsFromDebugInfo(module, module_info);
       LOG("Received %lu function symbols from remote collector for module %s",
           module_info.m_Functions.size(), module_info.m_Name.c_str());
     }

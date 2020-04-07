@@ -71,6 +71,10 @@ class TransactionManager {
   TransactionManager& operator=(const TransactionManager&) = delete;
   TransactionManager(TransactionManager&&) = delete;
   TransactionManager& operator=(TransactionManager&&) = delete;
+  template <typename T>
+  void EnqueueRequest(MessageType type, const T* object) = delete;
+  template <typename T>
+  void SendResponse(MessageType type, const T* object) = delete;
 
   void EnqueueRequestInternal(MessageType type, std::string&& object);
   void InitiateTransaction(std::shared_ptr<Transaction> transaction);

@@ -10,5 +10,5 @@ void CoreApp::InitializeManagers()
 {
   transaction_manager_ =
       std::make_shared<orbit::TransactionManager>(GTcpClient, GTcpServer);
-  symbols_manager_ = std::make_shared<orbit::SymbolsManager>(transaction_manager_);
+  symbols_manager_ = std::make_shared<orbit::SymbolsManager>(GCoreApp);
 }
