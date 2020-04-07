@@ -36,7 +36,6 @@
 #include "LiveFunctionsDataView.h"
 #include "Log.h"
 #include "LogDataView.h"
-#include "MiniDump.h"
 #include "ModulesDataView.h"
 #include "ModuleManager.h"
 #include "OrbitAsm.h"
@@ -78,7 +77,7 @@
 #include <OrbitLinuxTracing/OrbitTracing.h>
 #endif
 
-class OrbitApp* GOrbitApp;
+std::unique_ptr<OrbitApp> GOrbitApp;
 float GFontSize;
 bool DoZoom = false;
 
@@ -96,7 +95,6 @@ OrbitApp::~OrbitApp() {
   oqpi_tk::stop_scheduler();
   delete m_Debugger;
 #endif
-  GOrbitApp = nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -313,16 +311,19 @@ void OrbitApp::AppendSystrace(const std::string& a_FileName,
 
 //-----------------------------------------------------------------------------
 bool OrbitApp::Init() {
-  GOrbitApp = new OrbitApp();
-  GCoreApp = GOrbitApp;
+  GOrbitApp = std::make_unique<OrbitApp>();
+  GCoreApp = GOrbitApp.get();
   GTimerManager = std::make_unique<TimerManager>();
-  GTcpServer = new TcpServer();
+  GTcpServer = std::make_unique<TcpServer>();
 
   Path::Init();
 
   GModuleManager.Init();
   Capture::Init();
-  Capture::SetSamplingDoneCallback(&OrbitApp::AddSamplingReport, GOrbitApp);
+
+  // TODO(antonrohr) clean this up (it casts GOrbitApp* to void*)
+  Capture::SetSamplingDoneCallback(&OrbitApp::AddSamplingReport,
+                                   GOrbitApp.get());
   Capture::SetLoadPdbAsyncFunc(GLoadPdbAsync);
 
 #ifdef _WIN32
@@ -350,9 +351,6 @@ void OrbitApp::PostInit() {
   GCurrentTimeGraph->SetStringManager(string_manager_);
 
   if (HasTcpServer()) {
-    GTcpServer->AddCallback(Msg_MiniDump, [=](const Message& a_Msg) {
-      GOrbitApp->OnMiniDump(a_Msg);
-    });
     GTcpServer->Start(Capture::GCapturePort);
   }
 
@@ -533,11 +531,15 @@ int OrbitApp::OnExit() {
   GParams.Save();
   GTimerManager = nullptr;
 
+  ConnectionManager::Get().Stop();
+  GTcpClient->Stop();
+
   if (GOrbitApp->HasTcpServer()) {
     GTcpServer->Stop();
   }
-  delete GTcpServer;
-  delete GOrbitApp;
+
+  GCoreApp = nullptr;
+  GOrbitApp = nullptr;
   Orbit_ImGui_Shutdown();
   return 0;
 }
@@ -1054,20 +1056,6 @@ void OrbitApp::EnableSampling(bool a_Value) {
 
 //-----------------------------------------------------------------------------
 bool OrbitApp::GetSamplingEnabled() { return GParams.m_TrackSamplingEvents; }
-
-//-----------------------------------------------------------------------------
-void OrbitApp::OnMiniDump(const Message& a_Message) {
-  std::string dumpPath = Path::GetDumpPath();
-  std::string o_File = dumpPath + "a_received.dmp";
-  std::ofstream out(o_File, std::ios::binary);
-  out.write(a_Message.m_Data, a_Message.m_Size);
-  out.close();
-
-  MiniDump miniDump(s2ws(o_File));
-  std::shared_ptr<Process> process = miniDump.ToOrbitProcess();
-  process->SetID((DWORD)a_Message.GetHeader().m_GenericHeader.m_Address);
-  GOrbitApp->m_ProcessesDataView->SetRemoteProcess(process);
-}
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnRemoteProcess(const Message& a_Message) {

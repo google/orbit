@@ -32,7 +32,6 @@ target_sources(
          LogInterface.h
          MemoryTracker.h
          Message.h
-         MiniDump.h
          ModuleManager.h
          ModuleManager.h
          OrbitAsio.h
@@ -99,7 +98,6 @@ target_sources(
           MemoryTracker.cpp
           Message.cpp
           ModuleManager.cpp
-          MiniDump.cpp
           ModuleManager.cpp
           OrbitAsio.cpp
           OrbitFunction.cpp
@@ -189,7 +187,7 @@ if(WIN32)
   target_link_libraries(
     OrbitCore
     PRIVATE minhook::minhook DIA2Dump::DIA2Dump
-            breakpad::breakpad
+            crashpad::crashpad
             OrbitAsm)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib peparse::peparse)
   target_compile_definitions(OrbitCore PUBLIC -D_WIN32_WINNT=0x0700)

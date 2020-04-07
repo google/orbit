@@ -3,10 +3,13 @@
 //-----------------------------------
 
 #include <QApplication>
+#include <QDir>
 #include <QFontDatabase>
 #include <QStyleFactory>
 
 #include "../OrbitGl/App.h"
+#include "CrashHandler.h"
+#include "Path.h"
 #include "orbitmainwindow.h"
 
 int main(int argc, char* argv[]) {
@@ -15,6 +18,14 @@ int main(int argc, char* argv[]) {
 #endif
 
   QApplication a(argc, argv);
+
+#ifdef _WIN32
+  std::string dump_path = Path::GetDumpPath();
+  std::string handler_path = QDir(QCoreApplication::applicationDirPath())
+                                 .absoluteFilePath("crashpad_handler.exe")
+                                 .toStdString();
+  CrashHandler m_CrashHandler(dump_path, handler_path);
+#endif
 
   a.setStyle(QStyleFactory::create("Fusion"));
 

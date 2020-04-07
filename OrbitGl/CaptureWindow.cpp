@@ -48,11 +48,10 @@ CaptureWindow::CaptureWindow() {
   m_WorldMaxY = 0;
   m_ProcessX = 0;
 
-  GTimerManager->m_TimerAddedCallbacks.push_back(
-      [=](Timer& a_Timer) { this->OnTimerAdded(a_Timer); });
-  GTimerManager->m_ContextSwitchAddedCallback = [=](const ContextSwitch& a_CS) {
-    this->OnContextSwitchAdded(a_CS);
-  };
+  GTimerManager->m_TimerAddedCallbacks.emplace_back(
+      [this](Timer& a_Timer) { this->OnTimerAdded(a_Timer); });
+  GTimerManager->m_ContextSwitchAddedCallback =
+      [this](const ContextSwitch& a_CS) { this->OnContextSwitchAdded(a_CS); };
 
   m_HoverDelayMs = 300;
   m_CanHover = false;
@@ -580,8 +579,10 @@ std::vector<std::wstring> CaptureWindow::GetContextMenu() {
   static std::vector<std::wstring> menu = {GOTO_CALLSTACK, GOTO_SOURCE};
   static std::vector<std::wstring> emptyMenu;
   TextBox* selection = Capture::GSelectedTextBox;
-  return selection && !selection->GetTimer().IsCoreActivity() ? menu
-                                                              : emptyMenu;
+  return selection != nullptr && !selection->GetTimer().IsCoreActivity() &&
+                 selection->GetTimer().m_Type != Timer::GPU_ACTIVITY
+             ? menu
+             : emptyMenu;
 }
 
 //-----------------------------------------------------------------------------
@@ -760,8 +761,8 @@ void CaptureWindow::DrawStatus() {
   int PosY = (int)s_PosY;
   int LeftY = (int)s_PosY;
 
-  m_TextRenderer.AddText2D(" Press 'H' for help", s_PosX, LeftY, Z_VALUE_TEXT_UI,
-                           s_Color);
+  m_TextRenderer.AddText2D(" Press 'H' for help", s_PosX, LeftY,
+                           Z_VALUE_TEXT_UI, s_Color);
   LeftY += s_IncY;
 
   if (Capture::GInjected) {

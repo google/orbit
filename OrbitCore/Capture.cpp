@@ -212,7 +212,10 @@ void Capture::StopCapture() {
   } else if (Capture::IsRemote()) {
     Capture::GSamplingProfiler->StopCapture();
     Capture::GSamplingProfiler->ProcessSamples();
-    GCoreApp->RefreshCaptureView();
+
+    if (GCoreApp != nullptr) {
+      GCoreApp->RefreshCaptureView();
+    }
   }
 
   if (!GInjected) {
@@ -221,7 +224,9 @@ void Capture::StopCapture() {
 
   TcpEntity* tcpEntity = Capture::GetMainTcpEntity();
   tcpEntity->Send(Msg_StopCapture);
-  GTimerManager->StopRecording();
+  if (GTimerManager) {
+    GTimerManager->StopRecording();
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -424,8 +429,10 @@ bool Capture::IsCapturing() {
 
 //-----------------------------------------------------------------------------
 TcpEntity* Capture::GetMainTcpEntity() {
-  return Capture::IsRemote() ? (TcpEntity*)GTcpClient.get()
-                             : (TcpEntity*)GTcpServer;
+  if (Capture::IsRemote()) {
+    return GTcpClient.get();
+  }
+  return GTcpServer.get();
 }
 
 //-----------------------------------------------------------------------------
@@ -595,7 +602,8 @@ std::shared_ptr<CallStack> Capture::GetCallstack(CallstackID a_ID) {
 //-----------------------------------------------------------------------------
 void Capture::CheckForUnrealSupport() {
   GUnrealSupported = GCoreApp != nullptr &&
-      GCoreApp->GetUnrealSupportEnabled() && GOrbitUnreal.HasFnameInfo();
+                     GCoreApp->GetUnrealSupportEnabled() &&
+                     GOrbitUnreal.HasFnameInfo();
 }
 
 //-----------------------------------------------------------------------------

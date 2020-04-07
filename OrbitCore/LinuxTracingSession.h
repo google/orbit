@@ -7,7 +7,6 @@
 #include "ScopeTimer.h"
 #include "StringManager.h"
 #include "TcpServer.h"
-
 #include "absl/synchronization/mutex.h"
 
 // This class stores information about tracing session

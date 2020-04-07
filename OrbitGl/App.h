@@ -11,7 +11,6 @@
 
 #include "ContextSwitch.h"
 #include "CoreApp.h"
-#include "CrashHandler.h"
 #include "DataViewTypes.h"
 #include "Message.h"
 #include "StringManager.h"
@@ -189,7 +188,6 @@ class OrbitApp : public CoreApp {
   bool GetOutputDebugStringEnabled() override;
 
   void RequestThaw() { m_NeedsThawing = true; }
-  void OnMiniDump(const Message& a_Message);
   void OnRemoteProcess(const Message& a_Message);
   void OnRemoteProcessList(const Message& a_Message);
   void OnRemoteModuleDebugInfo(const Message& a_Message);
@@ -263,12 +261,10 @@ class OrbitApp : public CoreApp {
   std::shared_ptr<StringManager> string_manager_ = nullptr;
 
   const SymbolHelper symbolHelper;
-#ifdef _WIN32
-  CrashHandler m_CrashHandler;
-#else
+#ifndef _WIN32
   std::shared_ptr<class BpfTrace> m_BpfTrace;
 #endif
 };
 
 //-----------------------------------------------------------------------------
-extern class OrbitApp* GOrbitApp;
+extern std::unique_ptr<OrbitApp> GOrbitApp;

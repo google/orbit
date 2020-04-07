@@ -51,10 +51,6 @@ void Orbit::Init(const std::string& a_Host) {
 //-----------------------------------------------------------------------------
 void Orbit::InitRemote(const std::string& a_Host) {
   Init(a_Host);
-
-#ifdef _WIN32
-  CrashHandler::SendMiniDump();
-#endif
 }
 
 //-----------------------------------------------------------------------------
