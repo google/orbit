@@ -8,6 +8,7 @@
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
 #include "OrbitSession.h"
+#include "TransactionManager.h"
 
 namespace orbit {
 
@@ -17,8 +18,7 @@ namespace orbit {
 
 class SymbolsManager {
  public:
-  static SymbolsManager& Get();
-  void Init();
+  SymbolsManager(std::shared_ptr<TransactionManager> transaction_manager);
 
   void LoadSymbols(std::shared_ptr<Session> session,
                    std::shared_ptr<Process> process);
@@ -37,6 +37,7 @@ class SymbolsManager {
   void FinalizeTransaction();
   bool SingleThreadRequests() const;
 
+  std::shared_ptr<TransactionManager> transaction_manager_;
   std::shared_ptr<Session> session_ = nullptr;
   std::atomic<bool> request_in_flight_ = false;
 };

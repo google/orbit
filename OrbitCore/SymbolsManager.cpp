@@ -10,15 +10,12 @@
 
 namespace orbit {
 
-SymbolsManager& SymbolsManager::Get() {
-  static SymbolsManager symbols_manager;
-  return symbols_manager;
-}
-
-void SymbolsManager::Init() {
+SymbolsManager::SymbolsManager(
+    std::shared_ptr<TransactionManager> transaction_manager) {
+  transaction_manager_ = transaction_manager;
   auto on_response = [this](const Message& msg) { HandleResponse(msg); };
   auto on_request = [this](const Message& msg) { HandleRequest(msg); };
-  TransactionManager::Get().RegisterTransactionHandler(
+  transaction_manager_->RegisterTransactionHandler(
       {on_request, on_response, Msg_DebugSymbols, "Debug Symbols"});
 }
 
@@ -84,7 +81,7 @@ void SymbolsManager::LoadSymbols(
   }
 
   // Send request to service for modules that were not found locally.
-  TransactionManager::EnqueueRequest(Msg_DebugSymbols, remote_module_infos);
+  transaction_manager_->EnqueueRequest(Msg_DebugSymbols, remote_module_infos);
 }
 
 void SymbolsManager::HandleRequest(const Message& message) {
@@ -92,7 +89,7 @@ void SymbolsManager::HandleRequest(const Message& message) {
 
   // Deserialize request message.
   std::vector<ModuleDebugInfo> module_infos;
-  TransactionManager::ReceiveRequest(message, &module_infos);
+  transaction_manager_->ReceiveRequest(message, &module_infos);
 
   for (auto& module_info : module_infos) {
     // Find process.
@@ -124,7 +121,7 @@ void SymbolsManager::HandleRequest(const Message& message) {
   }
 
   // Send response to the client.
-  TransactionManager::SendResponse(message.GetType(), module_infos);
+  transaction_manager_->SendResponse(message.GetType(), module_infos);
 }
 
 void SymbolsManager::HandleResponse(const Message& message) {
@@ -132,7 +129,7 @@ void SymbolsManager::HandleResponse(const Message& message) {
 
   // Deserialize response message.
   std::vector<ModuleDebugInfo> infos;
-  TransactionManager::ReceiveResponse(message, &infos);
+  transaction_manager_->ReceiveResponse(message, &infos);
 
   // Notify app of new debug symbols.
   GCoreApp->OnRemoteModuleDebugInfo(infos);

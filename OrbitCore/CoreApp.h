@@ -9,6 +9,8 @@
 #include <vector>
 
 #include "BaseTypes.h"
+#include "SymbolsManager.h"
+#include "TransactionManager.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -24,6 +26,7 @@ class Session;
 
 class CoreApp {
  public:
+  virtual void InitializeManagers();
   virtual void SendToUiAsync(const std::wstring& /*a_Msg*/) {}
   virtual void SendToUiNow(const std::wstring& /*a_Msg*/) {}
   virtual bool GetUnrealSupportEnabled() { return false; }
@@ -55,6 +58,18 @@ class CoreApp {
     return nullptr;
   }
   virtual void RefreshCaptureView() {}
+
+  // Managers
+  std::shared_ptr<orbit::TransactionManager> GetTransactionManger() {
+    return transaction_manager_;
+  }
+  std::shared_ptr<orbit::SymbolsManager> GetSymbolsManager() {
+    return symbols_manager_;
+  }
+
+  private:
+    std::shared_ptr<orbit::TransactionManager> transaction_manager_ = nullptr;
+    std::shared_ptr<orbit::SymbolsManager> symbols_manager_ = nullptr;
 };
 
-extern CoreApp* GCoreApp;
+extern std::shared_ptr<CoreApp> GCoreApp;

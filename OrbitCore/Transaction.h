@@ -10,16 +10,15 @@
 namespace orbit {
 
 struct TransactionHandler {
-  MessageType GetType() const { return message_type; }
   typedef std::function<void(const Message&)> Callback;
   Callback request_handler = nullptr;
   Callback response_handler = nullptr;
-  MessageType message_type = Msg_Invalid;
+  MessageType type = Msg_Invalid;
   std::string description;
 };
 
 struct Transaction {
-  MessageType message_type = Msg_Invalid;
+  MessageType type = Msg_Invalid;
   std::string payload;
   uint32_t id = 0;
   uint64_t start_time = 0;

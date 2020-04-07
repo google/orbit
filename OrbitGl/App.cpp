@@ -77,7 +77,7 @@
 #include <OrbitLinuxTracing/OrbitTracing.h>
 #endif
 
-std::unique_ptr<OrbitApp> GOrbitApp;
+std::shared_ptr<OrbitApp> GOrbitApp;
 float GFontSize;
 bool DoZoom = false;
 
@@ -117,7 +117,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
       std::string address = Replace(arg, "gamelet:", "");
       Capture::GCaptureHost = address;
 
-      GTcpClient = std::make_unique<TcpClient>();
+      GTcpClient = std::make_shared<TcpClient>();
       GTcpClient->AddMainThreadCallback(
           Msg_RemoteProcess,
           [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcess(a_Msg); });
@@ -311,10 +311,10 @@ void OrbitApp::AppendSystrace(const std::string& a_FileName,
 
 //-----------------------------------------------------------------------------
 bool OrbitApp::Init() {
-  GOrbitApp = std::make_unique<OrbitApp>();
-  GCoreApp = GOrbitApp.get();
+  GOrbitApp = std::make_shared<OrbitApp>();
+  GCoreApp = GOrbitApp;
   GTimerManager = std::make_unique<TimerManager>();
-  GTcpServer = std::make_unique<TcpServer>();
+  GTcpServer = std::make_shared<TcpServer>();
 
   Path::Init();
 
@@ -378,7 +378,7 @@ void OrbitApp::PostInit() {
     ConnectionManager::Get().InitAsService();
   }
 
-  orbit::SymbolsManager::Get().Init();
+  GOrbitApp->InitializeManagers();
 }
 
 //-----------------------------------------------------------------------------
@@ -554,7 +554,9 @@ void OrbitApp::MainTick() {
 
   if (GTcpServer) GTcpServer->ProcessMainThreadCallbacks();
   if (GTcpClient) GTcpClient->ProcessMainThreadCallbacks();
-  orbit::TransactionManager::Get().Tick();
+
+  // Tick Transaction manager only from client (OrbitApp is client only);
+  GOrbitApp->GetTransactionManger()->Tick();
 
   GMainTimer.Reset();
   Capture::Update();
@@ -1003,7 +1005,7 @@ void OrbitApp::LoadModules() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules() {
-  orbit::SymbolsManager::Get().LoadSymbols(m_ModulesToLoad,
+  GetSymbolsManager()->LoadSymbols(m_ModulesToLoad,
                                            Capture::GTargetProcess);
   m_ModulesToLoad.clear();
   GOrbitApp->FireRefreshCallbacks();
@@ -1071,7 +1073,7 @@ void OrbitApp::OnRemoteProcess(const Message& a_Message) {
   // Trigger session loading if needed.
   std::shared_ptr<Session> session = Capture::GSessionPresets;
   if (session){
-      orbit::SymbolsManager::Get().LoadSymbols(session, remoteProcess);
+      GetSymbolsManager()->LoadSymbols(session, remoteProcess);
       GParams.m_ProcessPath = session->m_ProcessFullPath;
       GParams.m_Arguments = session->m_Arguments;
       GParams.m_WorkingDirectory = session->m_WorkingDirectory;
