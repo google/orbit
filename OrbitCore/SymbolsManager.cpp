@@ -44,6 +44,12 @@ void SymbolsManager::LoadSymbols(
     return;
   }
 
+  // TODO: the only reason "request_in_flight_" is needed is to make sure we
+  // don't override the "sessions_" memeber variable which will be used when
+  // the transaction response arrives.  Implementing transaction IDs will allow
+  // us to keep a map of id-to-session and eliminate the need for this check.
+  // Also, note that LoadSymbols is expected to be called from a single thread.
+  CHECK(SingleThreadRequests());
   if (request_in_flight_) {
     ERROR("Module request already in flight, cancelling.");
     return;
@@ -60,10 +66,9 @@ void SymbolsManager::LoadSymbols(
     module_info.m_PID = process->GetID();
 
     // Try to load modules from local machine.
-    const SymbolHelper symbolHelper;
-    if (symbolHelper.LoadSymbolsUsingSymbolsFile(module)) {
-      symbolHelper.FillDebugInfoFromModule(module, module_info);
-      module_infos_.emplace_back(std::move(module_info));
+    const SymbolHelper symbol_helper;
+    if (symbol_helper.LoadSymbolsUsingSymbolsFile(module)) {
+      symbol_helper.FillDebugInfoFromModule(module, module_info);
       size_t num_functions = module_info.m_Functions.size();
       LOG("Loaded %lu function symbols locally for %s", num_functions, name);
     } else {
@@ -74,7 +79,7 @@ void SymbolsManager::LoadSymbols(
 
   // Don't request anything from service if we found all modules locally.
   if (remote_module_infos.empty()) {
-    ProcessModuleInfos();
+    FinalizeTransaction();
     return;
   }
 
@@ -129,22 +134,24 @@ void SymbolsManager::HandleResponse(const Message& message) {
   std::vector<ModuleDebugInfo> infos;
   TransactionManager::ReceiveResponse(message, &infos);
 
-  // Append new debug information to our initial list and process them.
-  module_infos_.insert(module_infos_.end(), infos.begin(), infos.end());
-  ProcessModuleInfos();
+  // Notify app of new debug symbols.
+  GCoreApp->OnRemoteModuleDebugInfo(infos);
+
+  FinalizeTransaction();
 }
 
-void SymbolsManager::ProcessModuleInfos() {
-  // Notify app of new debug symbols.
-  GCoreApp->OnRemoteModuleDebugInfo(module_infos_);
-
+void SymbolsManager::FinalizeTransaction() {
   // Apply session.
   GCoreApp->ApplySession(session_);
 
   // Clear.
-  module_infos_.clear();
   session_ = nullptr;
   request_in_flight_ = false;
+}
+
+bool SymbolsManager::SingleThreadRequests() const {
+  static pid_t thread_id = GetCurrentThreadId();
+  return thread_id == GetCurrentThreadId();
 }
 
 }  // namespace orbit

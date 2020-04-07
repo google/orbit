@@ -34,9 +34,9 @@ class SymbolsManager {
 
   void HandleRequest(const Message& message);
   void HandleResponse(const Message& message);
-  void ProcessModuleInfos();
+  void FinalizeTransaction();
+  bool SingleThreadRequests() const;
 
-  std::vector<ModuleDebugInfo> module_infos_;
   std::shared_ptr<Session> session_ = nullptr;
   std::atomic<bool> request_in_flight_ = false;
 };
