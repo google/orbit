@@ -133,14 +133,15 @@ void PerfEventRingBuffer::ReadAtOffsetFromTail(uint8_t* dest,
 
   uint64_t head = ReadRingBufferHead(metadata_page_);
   if (offset_from_tail + count > head - metadata_page_->data_tail) {
-    ERROR("Reading more data than it is available from the ring buffer");
+    ERROR("Reading more data than it is available from ring buffer '%s'",
+          name_.c_str());
   } else if (offset_from_tail + count > ring_buffer_size_) {
-    ERROR("Reading more than the size of the ring buffer");
+    ERROR("Reading more than the size of ring buffer '%s'", name_.c_str());
   } else if (head > metadata_page_->data_tail + ring_buffer_size_) {
     // If mmap has been called with PROT_WRITE and
     // perf_event_mmap_page::data_tail is used properly, this should not happen,
     // as the kernel would not overwrite unread data.
-    ERROR("Too slow reading from the ring buffer");
+    ERROR("Too slow reading from ring buffer '%s'", name_.c_str());
   }
 
   const uint64_t index = metadata_page_->data_tail + offset_from_tail;
