@@ -101,7 +101,7 @@ class TracerThread {
   static constexpr uint64_t CONTEXT_SWITCHES_RING_BUFFER_SIZE_KB = 256;
   static constexpr uint64_t UPROBES_RING_BUFFER_SIZE_KB = 2 * 1024;
   static constexpr uint64_t MMAP_TASK_RING_BUFFER_SIZE_KB = 64;
-  static constexpr uint64_t SAMPLING_RING_BUFFER_SIZE_KB = 2 * 1024;
+  static constexpr uint64_t SAMPLING_RING_BUFFER_SIZE_KB = 8 * 1024;
   static constexpr uint64_t GPU_TRACING_RING_BUFFER_SIZE_KB = 256;
 
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_RING_BUFFERS_US = 100;
