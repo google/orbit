@@ -50,7 +50,6 @@ void SymbolsManager::LoadSymbols(
   }
 
   request_in_flight_ = true;
-  modules_ = modules;
   std::vector<ModuleDebugInfo> remote_module_infos;
 
   for (std::shared_ptr<Module> module : modules) {
@@ -139,16 +138,11 @@ void SymbolsManager::ProcessModuleInfos() {
   // Notify app of new debug symbols.
   GCoreApp->OnRemoteModuleDebugInfo(module_infos_);
 
-  // Apply user presets if needed.
-  if (session_ != nullptr) {
-    for (auto& module : modules_) {
-      if (module->m_Pdb != nullptr) module->m_Pdb->ApplyPresets(*session_);
-    }
-  }
+  // Apply session.
+  GCoreApp->ApplySession(session_);
 
   // Clear.
   module_infos_.clear();
-  modules_.clear();
   session_ = nullptr;
   request_in_flight_ = false;
 }

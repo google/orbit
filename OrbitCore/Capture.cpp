@@ -140,7 +140,6 @@ void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
     GTargetProcess = a_Process;
     GSamplingProfiler = std::make_shared<SamplingProfiler>(a_Process);
     GSelectedFunctionsMap.clear();
-    GSessionPresets = nullptr;
     GOrbitUnreal.Clear();
     GTargetProcess->LoadDebugInfo();
     GTargetProcess->ClearWatchedVariables();
@@ -490,14 +489,6 @@ bool Capture::IsOtherInstanceRunning() {
 void Capture::LoadSession(const std::shared_ptr<Session>& session) {
   GSessionPresets = session;
   Capture::GPresetToLoad = "";
-
-  if (GCoreApp->SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
-    orbit::SymbolsManager::Get().LoadSymbols(session, Capture::GTargetProcess);
-    GParams.m_ProcessPath = session->m_ProcessFullPath;
-    GParams.m_Arguments = session->m_Arguments;
-    GParams.m_WorkingDirectory = session->m_WorkingDirectory;
-    GCoreApp->SendToUiNow(L"SetProcessParams");
-  }
 }
 
 //-----------------------------------------------------------------------------
@@ -506,8 +497,6 @@ void Capture::SaveSession(const std::string& a_FileName) {
   session.m_ProcessFullPath = GTargetProcess->GetFullName();
 
   GCoreApp->SendToUiNow(L"UpdateProcessParams");
-
-  session.m_ProcessFullPath = GParams.m_ProcessPath;
   session.m_Arguments = GParams.m_Arguments;
   session.m_WorkingDirectory = GParams.m_WorkingDirectory;
 

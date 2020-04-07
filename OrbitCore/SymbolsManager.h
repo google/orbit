@@ -38,7 +38,6 @@ class SymbolsManager {
 
   std::vector<ModuleDebugInfo> module_infos_;
   std::shared_ptr<Session> session_ = nullptr;
-  std::vector<std::shared_ptr<Module>> modules_;
   std::atomic<bool> request_in_flight_ = false;
 };
 

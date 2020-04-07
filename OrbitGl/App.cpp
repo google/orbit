@@ -1003,7 +1003,8 @@ void OrbitApp::LoadModules() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules() {
-  orbit::SymbolsManager::Get().LoadSymbols(m_ModulesToLoad, Capture::GTargetProcess);
+  orbit::SymbolsManager::Get().LoadSymbols(m_ModulesToLoad,
+                                           Capture::GTargetProcess);
   m_ModulesToLoad.clear();
   GOrbitApp->FireRefreshCallbacks();
 }
@@ -1066,6 +1067,30 @@ void OrbitApp::OnRemoteProcess(const Message& a_Message) {
   remoteProcess->SetIsRemote(true);
   PRINT_VAR(remoteProcess->GetName());
   GOrbitApp->m_ProcessesDataView->SetRemoteProcess(remoteProcess);
+
+  // Trigger session loading if needed.
+  std::shared_ptr<Session> session = Capture::GSessionPresets;
+  if (session){
+      orbit::SymbolsManager::Get().LoadSymbols(session, remoteProcess);
+      GParams.m_ProcessPath = session->m_ProcessFullPath;
+      GParams.m_Arguments = session->m_Arguments;
+      GParams.m_WorkingDirectory = session->m_WorkingDirectory;
+      GCoreApp->SendToUiNow(L"SetProcessParams");
+      Capture::GSessionPresets = nullptr;
+    }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::ApplySession(std::shared_ptr<Session> session) {
+  if (session != nullptr) {
+    for (auto& pair : session->m_Modules) {
+      const std::string& name = pair.first;
+      SessionModule& session_module = pair.second;
+      std::shared_ptr<Module> module =
+          Capture::GTargetProcess->GetModuleFromName(Path::GetFileName(name));
+      if (module && module->m_Pdb) module->m_Pdb->ApplyPresets(*session);
+    }
+  }
 }
 
 //-----------------------------------------------------------------------------

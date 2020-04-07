@@ -192,6 +192,7 @@ class OrbitApp : public CoreApp {
   void OnRemoteProcessList(const Message& a_Message);
   void OnRemoteModuleDebugInfo(const Message& a_Message);
   void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) override;
+  void ApplySession(std::shared_ptr<Session> session) override;
   void LaunchRuleEditor(class Function* a_Function);
   void SetHeadless(bool a_Headless) { m_Headless = a_Headless; }
   bool GetHeadless() const { return m_Headless; }
