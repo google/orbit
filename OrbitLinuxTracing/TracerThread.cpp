@@ -435,8 +435,9 @@ void TracerThread::Run(
             // Note: as we are recording context switches on CPUs and not on
             // threads, we don't expect this type of record.
             ERROR(
-                "Unexpected PERF_RECORD_SWITCH (only "
-                "PERF_RECORD_SWITCH_CPU_WIDE are expected)");
+                "Unexpected PERF_RECORD_SWITCH in ring buffer '%s' (only "
+                "PERF_RECORD_SWITCH_CPU_WIDE are expected)",
+                ring_buffer.GetName().c_str());
             ProcessContextSwitchEvent(header, &ring_buffer);
             break;
           case PERF_RECORD_SWITCH_CPU_WIDE:
@@ -458,7 +459,8 @@ void TracerThread::Run(
             ProcessLostEvent(header, &ring_buffer);
             break;
           default:
-            ERROR("Unexpected perf_event_header::type: %u", header.type);
+            ERROR("Unexpected perf_event_header::type in ring buffer '%s': %u",
+                  ring_buffer.GetName().c_str(), header.type);
             ring_buffer.SkipRecord(header);
             break;
         }
