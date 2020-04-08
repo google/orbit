@@ -77,7 +77,7 @@
 #include <OrbitLinuxTracing/OrbitTracing.h>
 #endif
 
-std::unique_ptr<OrbitApp> GOrbitApp;
+std::shared_ptr<OrbitApp> GOrbitApp;
 float GFontSize;
 bool DoZoom = false;
 
@@ -117,7 +117,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
       std::string address = Replace(arg, "gamelet:", "");
       Capture::GCaptureHost = address;
 
-      GTcpClient = std::make_unique<TcpClient>();
+      GTcpClient = std::make_shared<TcpClient>();
       GTcpClient->AddMainThreadCallback(
           Msg_RemoteProcess,
           [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcess(a_Msg); });
@@ -311,10 +311,10 @@ void OrbitApp::AppendSystrace(const std::string& a_FileName,
 
 //-----------------------------------------------------------------------------
 bool OrbitApp::Init() {
-  GOrbitApp = std::make_unique<OrbitApp>();
-  GCoreApp = GOrbitApp.get();
+  GOrbitApp = std::make_shared<OrbitApp>();
+  GCoreApp = GOrbitApp;
   GTimerManager = std::make_unique<TimerManager>();
-  GTcpServer = std::make_unique<TcpServer>();
+  GTcpServer = std::make_shared<TcpServer>();
 
   Path::Init();
 
@@ -378,7 +378,7 @@ void OrbitApp::PostInit() {
     ConnectionManager::Get().InitAsService();
   }
 
-  orbit::SymbolsManager::Get().Init();
+  GOrbitApp->InitializeManagers();
 }
 
 //-----------------------------------------------------------------------------
@@ -554,7 +554,9 @@ void OrbitApp::MainTick() {
 
   if (GTcpServer) GTcpServer->ProcessMainThreadCallbacks();
   if (GTcpClient) GTcpClient->ProcessMainThreadCallbacks();
-  orbit::TransactionManager::Get().Tick();
+
+  // Tick Transaction manager only from client (OrbitApp is client only);
+  GOrbitApp->GetTransactionManager()->Tick();
 
   GMainTimer.Reset();
   Capture::Update();
@@ -992,18 +994,20 @@ void OrbitApp::LoadModules() {
   }
 #else
     for (std::shared_ptr<Module> module : m_ModulesToLoad) {
-      if (symbolHelper.LoadSymbolsIncludedInBinary(module)) continue;
-      if (symbolHelper.LoadSymbolsUsingSymbolsFile(module)) continue;
+      if (symbol_helper_.LoadSymbolsIncludedInBinary(module)) continue;
+      if (symbol_helper_.LoadSymbolsUsingSymbolsFile(module)) continue;
       ERROR("Could not load symbols for module %s", module->m_Name.c_str());
     }
     GOrbitApp->FireRefreshCallbacks();
 #endif
   }
+
+  m_ModulesToLoad.clear();
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules() {
-  orbit::SymbolsManager::Get().LoadSymbols(m_ModulesToLoad,
+  GetSymbolsManager()->LoadSymbols(m_ModulesToLoad,
                                            Capture::GTargetProcess);
   m_ModulesToLoad.clear();
   GOrbitApp->FireRefreshCallbacks();
@@ -1071,7 +1075,7 @@ void OrbitApp::OnRemoteProcess(const Message& a_Message) {
   // Trigger session loading if needed.
   std::shared_ptr<Session> session = Capture::GSessionPresets;
   if (session){
-      orbit::SymbolsManager::Get().LoadSymbols(session, remoteProcess);
+      GetSymbolsManager()->LoadSymbols(session, remoteProcess);
       GParams.m_ProcessPath = session->m_ProcessFullPath;
       GParams.m_Arguments = session->m_Arguments;
       GParams.m_WorkingDirectory = session->m_WorkingDirectory;
@@ -1106,10 +1110,9 @@ void OrbitApp::OnRemoteProcessList(const Message& a_Message) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnRemoteModuleDebugInfo(const Message& a_Message) {
-  std::istringstream buffer(std::string(a_Message.m_Data, a_Message.m_Size));
-  cereal::BinaryInputArchive inputAr(buffer);
   std::vector<ModuleDebugInfo> remote_module_debug_infos;
-  inputAr(remote_module_debug_infos);
+  DeserializeObjectBinary(a_Message.GetData(), a_Message.GetSize(),
+                          remote_module_debug_infos);
   OnRemoteModuleDebugInfo(remote_module_debug_infos);
 }
 
@@ -1129,7 +1132,7 @@ void OrbitApp::OnRemoteModuleDebugInfo(
       ERROR("Remote did not send any symbols for module %s",
             module_info.m_Name.c_str());
     } else {
-      symbolHelper.LoadSymbolsFromDebugInfo(module, module_info);
+      symbol_helper_.LoadSymbolsFromDebugInfo(module, module_info);
       LOG("Received %lu function symbols from remote collector for module %s",
           module_info.m_Functions.size(), module_info.m_Name.c_str());
     }

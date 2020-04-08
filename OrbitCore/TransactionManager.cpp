@@ -7,24 +7,22 @@
 
 namespace orbit {
 
-TransactionManager::TransactionManager() {
+TransactionManager::TransactionManager(std::shared_ptr<TcpClient> client,
+                                       std::shared_ptr<TcpServer> server) {
+  client_ = client;
+  server_ = server;
   on_request_ = [this](const Message& msg) { HandleRequest(msg); };
   on_response_ = [this](const Message& msg) { HandleResponse(msg); };
 }
 
-TransactionManager& TransactionManager::Get() {
-  static TransactionManager manager;
-  return manager;
-}
-
 void TransactionManager::RegisterTransactionHandler(
     const TransactionHandler& handler) {
-  MessageType type = handler.GetType();
-  CHECK(!HasHandler(type));
+  CHECK(!HasHandler(handler.type));
   absl::MutexLock lock(&mutex_);
+  MessageType type = handler.type;
   transaction_handlers_[type] = std::make_shared<TransactionHandler>(handler);
-  if (GTcpClient) GTcpClient->AddMainThreadCallback(type, on_response_);
-  if (GTcpServer) GTcpServer->AddMainThreadCallback(type, on_request_);
+  if (server_) server_->AddMainThreadCallback(handler.type, on_request_);
+  if (client_) client_->AddMainThreadCallback(handler.type, on_response_);
 }
 
 void TransactionManager::Tick() {
@@ -55,7 +53,7 @@ void TransactionManager::EnqueueRequestInternal(MessageType type,
                                                 std::string&& object) {
   absl::MutexLock lock(&mutex_);
   auto transaction = std::make_shared<Transaction>();
-  transaction->message_type = type;
+  transaction->type = type;
   transaction->payload = std::move(object);
   transaction_queue_.push(transaction);
 }
@@ -63,7 +61,7 @@ void TransactionManager::EnqueueRequestInternal(MessageType type,
 void TransactionManager::InitiateTransaction(
     std::shared_ptr<Transaction> transaction) {
   transaction->start_time = OrbitTicks();
-  SendRequestInternal(transaction->message_type, transaction->payload);
+  SendRequestInternal(transaction->type, transaction->payload);
 }
 
 void TransactionManager::SendRequestInternal(MessageType type,
@@ -72,7 +70,7 @@ void TransactionManager::SendRequestInternal(MessageType type,
   std::shared_ptr<TransactionHandler> handler = GetHandler(type);
   const char* desc = handler->description.c_str();
   LOG("Sending transaction request: %s [%lu bytes]", desc, object.size());
-  GTcpClient->Send(type, object);
+  client_->Send(type, object);
 }
 
 void TransactionManager::ReceiveRequestInternal(const Message& message) {
@@ -88,7 +86,7 @@ void TransactionManager::SendResponseInternal(MessageType type,
   std::shared_ptr<TransactionHandler> handler = GetHandler(type);
   const char* desc = handler->description.c_str();
   LOG("Sending transaction response: %s [%lu bytes]", desc, object.size());
-  GTcpServer->Send(type, object);
+  server_->Send(type, object);
 }
 
 void TransactionManager::ReceiveResponseInternal(const Message& message) {
@@ -100,7 +98,7 @@ void TransactionManager::ReceiveResponseInternal(const Message& message) {
 
 void TransactionManager::OnTransactionCompleted(
     std::shared_ptr<Transaction> transaction) {
-  MessageType type = transaction->message_type;
+  MessageType type = transaction->type;
   std::shared_ptr<TransactionHandler> handler = GetHandler(type);
   LOG("Transaction %s complete.", handler->description.c_str());
 }

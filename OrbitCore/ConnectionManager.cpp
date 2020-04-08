@@ -74,7 +74,6 @@ void ConnectionManager::InitAsService() {
   is_service_ = true;
   string_manager_ = std::make_shared<StringManager>();
   tracing_session_.SetStringManager(string_manager_);
-  orbit::SymbolsManager::Get().Init();
   SetupIntrospection();
   SetupServerCallbacks();
   thread_ = std::thread{[this]() { RemoteThreadWorker(); }};

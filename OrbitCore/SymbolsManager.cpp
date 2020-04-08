@@ -10,15 +10,12 @@
 
 namespace orbit {
 
-SymbolsManager& SymbolsManager::Get() {
-  static SymbolsManager symbols_manager;
-  return symbols_manager;
-}
-
-void SymbolsManager::Init() {
+SymbolsManager::SymbolsManager(std::shared_ptr<CoreApp> core_app) {
+  core_app_ = core_app;
+  transaction_manager_ = core_app_->GetTransactionManager();
   auto on_response = [this](const Message& msg) { HandleResponse(msg); };
   auto on_request = [this](const Message& msg) { HandleRequest(msg); };
-  TransactionManager::Get().RegisterTransactionHandler(
+  transaction_manager_->RegisterTransactionHandler(
       {on_request, on_response, Msg_DebugSymbols, "Debug Symbols"});
 }
 
@@ -44,6 +41,12 @@ void SymbolsManager::LoadSymbols(
     return;
   }
 
+  // TODO: the only reason "request_in_flight_" is needed is to make sure we
+  // don't override the "sessions_" memeber variable which will be used when
+  // the transaction response arrives.  Implementing transaction IDs will allow
+  // us to keep a map of id-to-session and eliminate the need for this check.
+  // Also, note that LoadSymbols is expected to be called from a single thread.
+  CHECK(SingleThreadRequests());
   if (request_in_flight_) {
     ERROR("Module request already in flight, cancelling.");
     return;
@@ -60,10 +63,9 @@ void SymbolsManager::LoadSymbols(
     module_info.m_PID = process->GetID();
 
     // Try to load modules from local machine.
-    const SymbolHelper symbolHelper;
-    if (symbolHelper.LoadSymbolsUsingSymbolsFile(module)) {
-      symbolHelper.FillDebugInfoFromModule(module, module_info);
-      module_infos_.emplace_back(std::move(module_info));
+    const SymbolHelper symbol_helper;
+    if (symbol_helper.LoadSymbolsUsingSymbolsFile(module)) {
+      symbol_helper.FillDebugInfoFromModule(module, module_info);
       size_t num_functions = module_info.m_Functions.size();
       LOG("Loaded %lu function symbols locally for %s", num_functions, name);
     } else {
@@ -74,12 +76,12 @@ void SymbolsManager::LoadSymbols(
 
   // Don't request anything from service if we found all modules locally.
   if (remote_module_infos.empty()) {
-    ProcessModuleInfos();
+    FinalizeTransaction();
     return;
   }
 
   // Send request to service for modules that were not found locally.
-  TransactionManager::EnqueueRequest(Msg_DebugSymbols, remote_module_infos);
+  transaction_manager_->EnqueueRequest(Msg_DebugSymbols, remote_module_infos);
 }
 
 void SymbolsManager::HandleRequest(const Message& message) {
@@ -87,7 +89,7 @@ void SymbolsManager::HandleRequest(const Message& message) {
 
   // Deserialize request message.
   std::vector<ModuleDebugInfo> module_infos;
-  TransactionManager::ReceiveRequest(message, &module_infos);
+  transaction_manager_->ReceiveRequest(message, &module_infos);
 
   for (auto& module_info : module_infos) {
     // Find process.
@@ -108,9 +110,9 @@ void SymbolsManager::HandleRequest(const Message& message) {
     }
 
     // Load debug information.
-    const SymbolHelper symbolHelper;
-    if (symbolHelper.LoadSymbolsCollector(module)) {
-      symbolHelper.FillDebugInfoFromModule(module, module_info);
+    const SymbolHelper symbol_helper;
+    if (symbol_helper.LoadSymbolsCollector(module)) {
+      symbol_helper.FillDebugInfoFromModule(module, module_info);
       LOG("Loaded %lu function symbols for module %s",
           module_info.m_Functions.size(), module_name.c_str());
     } else {
@@ -119,7 +121,7 @@ void SymbolsManager::HandleRequest(const Message& message) {
   }
 
   // Send response to the client.
-  TransactionManager::SendResponse(message.GetType(), module_infos);
+  transaction_manager_->SendResponse(message.GetType(), module_infos);
 }
 
 void SymbolsManager::HandleResponse(const Message& message) {
@@ -127,24 +129,26 @@ void SymbolsManager::HandleResponse(const Message& message) {
 
   // Deserialize response message.
   std::vector<ModuleDebugInfo> infos;
-  TransactionManager::ReceiveResponse(message, &infos);
+  transaction_manager_->ReceiveResponse(message, &infos);
 
-  // Append new debug information to our initial list and process them.
-  module_infos_.insert(module_infos_.end(), infos.begin(), infos.end());
-  ProcessModuleInfos();
+  // Notify app of new debug symbols.
+  GCoreApp->OnRemoteModuleDebugInfo(infos);
+
+  FinalizeTransaction();
 }
 
-void SymbolsManager::ProcessModuleInfos() {
-  // Notify app of new debug symbols.
-  GCoreApp->OnRemoteModuleDebugInfo(module_infos_);
-
+void SymbolsManager::FinalizeTransaction() {
   // Apply session.
-  GCoreApp->ApplySession(session_);
+  core_app_->ApplySession(session_);
 
   // Clear.
-  module_infos_.clear();
   session_ = nullptr;
   request_in_flight_ = false;
+}
+
+bool SymbolsManager::SingleThreadRequests() const {
+  static pid_t thread_id = GetCurrentThreadId();
+  return thread_id == GetCurrentThreadId();
 }
 
 }  // namespace orbit

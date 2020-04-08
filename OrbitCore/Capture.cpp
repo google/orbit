@@ -488,7 +488,7 @@ bool Capture::IsOtherInstanceRunning() {
 //-----------------------------------------------------------------------------
 void Capture::LoadSession(const std::shared_ptr<Session>& session) {
   GSessionPresets = session;
-  Capture::GPresetToLoad = "";
+  GPresetToLoad = "";
 }
 
 //-----------------------------------------------------------------------------

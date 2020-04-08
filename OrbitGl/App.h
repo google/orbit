@@ -261,11 +261,11 @@ class OrbitApp : public CoreApp {
 
   std::shared_ptr<StringManager> string_manager_ = nullptr;
 
-  const SymbolHelper symbolHelper;
+  const SymbolHelper symbol_helper_;
 #ifndef _WIN32
   std::shared_ptr<class BpfTrace> m_BpfTrace;
 #endif
 };
 
 //-----------------------------------------------------------------------------
-extern std::unique_ptr<OrbitApp> GOrbitApp;
+extern std::shared_ptr<OrbitApp> GOrbitApp;

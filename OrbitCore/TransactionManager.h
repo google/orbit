@@ -6,6 +6,8 @@
 
 #include "Message.h"
 #include "Serialization.h"
+#include "TcpClient.h"
+#include "TcpServer.h"
 #include "Transaction.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
@@ -34,39 +36,45 @@ namespace orbit {
 
 class TransactionManager {
  public:
-  static TransactionManager& Get();
+  TransactionManager() = default;
+  TransactionManager(std::shared_ptr<TcpClient> client,
+                     std::shared_ptr<TcpServer> server);
+
   void RegisterTransactionHandler(const TransactionHandler& handler);
 
   template <typename T>
-  inline static void EnqueueRequest(MessageType type, const T& object) {
-    Get().EnqueueRequestInternal(type, SerializeObjectBinary(object));
+  void EnqueueRequest(MessageType type, const T& object) {
+    EnqueueRequestInternal(type, SerializeObjectBinary(object));
   }
 
   template <typename T>
-  inline static void ReceiveRequest(const Message& message, T* object) {
+  void ReceiveRequest(const Message& message, T* object) {
     DeserializeObjectBinary(message.GetData(), message.GetSize(), *object);
-    Get().ReceiveRequestInternal(message);
+    ReceiveRequestInternal(message);
   }
 
   template <typename T>
-  inline static void SendResponse(MessageType type, const T& object) {
-    Get().SendResponseInternal(type, SerializeObjectBinary(object));
+  void SendResponse(MessageType type, const T& object) {
+    SendResponseInternal(type, SerializeObjectBinary(object));
   }
 
   template <typename T>
-  inline static void ReceiveResponse(const Message& message, T* object) {
+  void ReceiveResponse(const Message& message, T* object) {
     DeserializeObjectBinary(message.GetData(), message.GetSize(), *object);
-    Get().ReceiveResponseInternal(message);
+    ReceiveResponseInternal(message);
   }
 
   void Tick();
 
  private:
-  TransactionManager();
   TransactionManager(const TransactionManager&) = delete;
   TransactionManager& operator=(const TransactionManager&) = delete;
   TransactionManager(TransactionManager&&) = delete;
   TransactionManager& operator=(TransactionManager&&) = delete;
+  template <typename T>
+  void EnqueueRequest(MessageType type, const T* object) = delete;
+  template <typename T>
+  void SendResponse(MessageType type, const T* object) = delete;
 
   void EnqueueRequestInternal(MessageType type, std::string&& object);
   void InitiateTransaction(std::shared_ptr<Transaction> transaction);
@@ -86,6 +94,8 @@ class TransactionManager {
   typedef std::function<void(const Message&)> Callback;
   Callback on_response_;
   Callback on_request_;
+  std::shared_ptr<TcpClient> client_ = nullptr;
+  std::shared_ptr<TcpServer> server_ = nullptr;
   std::queue<std::shared_ptr<Transaction>> transaction_queue_;
   std::shared_ptr<Transaction> current_transaction_ = nullptr;
   absl::flat_hash_map<MessageType, std::shared_ptr<TransactionHandler>>
