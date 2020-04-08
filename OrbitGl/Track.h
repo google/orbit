@@ -32,12 +32,7 @@ class Track : public Pickable {
   }
   void SetName(const std::string& a_Name) { m_Name = a_Name; }
 
-  enum LabelDisplayMode {
-    NAME_AND_TID,
-    TID_ONLY,
-    NAME_ONLY,
-    EMPTY
-  };
+  enum LabelDisplayMode { NAME_AND_TID, TID_ONLY, NAME_ONLY, EMPTY };
 
   void SetLabelDisplayMode(LabelDisplayMode label_display_mode) {
     label_display_mode_ = label_display_mode;

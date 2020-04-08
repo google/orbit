@@ -40,7 +40,7 @@ class OrbitTreeView : public QTreeView {
   void OnTimer();
   void OnClicked(const QModelIndex& index);
   void ShowContextMenu(const QPoint& pos);
-  void OnMenuClicked(int a_Index);
+  void OnMenuClicked(const std::wstring& a_Action, int a_MenuIndex);
   void OnRangeChanged(int a_Min, int a_Max);
 
  private:
