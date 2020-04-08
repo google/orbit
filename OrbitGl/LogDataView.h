@@ -25,7 +25,7 @@ class LogDataView : public DataView {
   void OnDataChanged() override;
   void OnFilter(const std::wstring& a_Filter) override;
   void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
-                     std::vector<int>& a_ItemIndices) override;
+                     const std::vector<int>& a_ItemIndices) override;
 
   void Add(const OrbitLogEntry& a_Msg);
   const OrbitLogEntry& GetEntry(unsigned int a_Row) const;

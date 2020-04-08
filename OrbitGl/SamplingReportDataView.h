@@ -24,7 +24,7 @@ class SamplingReportDataView : public DataView {
   void OnFilter(const std::wstring& a_Filter) override;
   void OnSort(int a_Column, std::optional<SortingOrder> a_NewOrder) override;
   void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
-                     std::vector<int>& a_ItemIndices) override;
+                     const std::vector<int>& a_ItemIndices) override;
   void OnSelect(int a_Index) override;
 
   void LinkDataView(DataView* a_DataView) override;

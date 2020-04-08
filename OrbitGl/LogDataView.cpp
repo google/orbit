@@ -151,7 +151,7 @@ std::vector<std::wstring> LogDataView::GetContextMenu(
 
 //-----------------------------------------------------------------------------
 void LogDataView::OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
-                                std::vector<int>& a_ItemIndices) {
+                                const std::vector<int>& a_ItemIndices) {
   if (m_SelectedCallstack && (int)m_SelectedCallstack->m_Depth > a_MenuIndex) {
     GOrbitApp->GoToCode(m_SelectedCallstack->m_Data[a_MenuIndex]);
   } else {

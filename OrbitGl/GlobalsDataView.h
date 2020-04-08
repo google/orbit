@@ -21,9 +21,9 @@ class GlobalsDataView : public DataView {
   void ParallelFilter();
   void OnSort(int a_Column, std::optional<SortingOrder> a_NewOrder) override;
   void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
-                     std::vector<int>& a_ItemIndices) override;
+                     const std::vector<int>& a_ItemIndices) override;
   void OnDataChanged() override;
-  void OnAddToWatch(std::vector<int>& a_Items);
+  void OnAddToWatch(const std::vector<int>& a_Items);
 
  protected:
   Variable& GetVariable(unsigned int a_Row) const;

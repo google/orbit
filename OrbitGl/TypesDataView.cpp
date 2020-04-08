@@ -284,7 +284,7 @@ std::vector<std::wstring> TypesDataView::GetContextMenu(
 }
 
 //-----------------------------------------------------------------------------
-void TypesDataView::OnProp(std::vector<int>& a_Items) {
+void TypesDataView::OnProp(const std::vector<int>& a_Items) {
   for (auto& item : a_Items) {
     Type& type = GetType(item);
     std::shared_ptr<Variable> var = type.GetTemplateVariable();
@@ -294,7 +294,7 @@ void TypesDataView::OnProp(std::vector<int>& a_Items) {
 }
 
 //-----------------------------------------------------------------------------
-void TypesDataView::OnView(std::vector<int>& a_Items) {
+void TypesDataView::OnView(const std::vector<int>& a_Items) {
   for (auto& item : a_Items) {
     Type& type = GetType(item);
     std::shared_ptr<Variable> var = type.GetTemplateVariable();
@@ -308,14 +308,14 @@ void TypesDataView::OnView(std::vector<int>& a_Items) {
 }
 
 //-----------------------------------------------------------------------------
-void TypesDataView::OnClip(std::vector<int>& a_Items) {
+void TypesDataView::OnClip(const std::vector<int>& a_Items) {
   UNUSED(a_Items);
   GOrbitApp->SendToUiAsync(L"output");
 }
 
 //-----------------------------------------------------------------------------
 void TypesDataView::OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
-                                  std::vector<int>& a_ItemIndices) {
+                                  const std::vector<int>& a_ItemIndices) {
   if (a_Action == TYPES_SUMMARY) {
     OnProp(a_ItemIndices);
   } else if (a_Action == TYPES_DETAILS) {

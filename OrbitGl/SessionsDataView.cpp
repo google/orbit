@@ -139,7 +139,7 @@ std::vector<std::wstring> SessionsDataView::GetContextMenu(
 //-----------------------------------------------------------------------------
 void SessionsDataView::OnContextMenu(const std::wstring& a_Action,
                                      int a_MenuIndex,
-                                     std::vector<int>& a_ItemIndices) {
+                                     const std::vector<int>& a_ItemIndices) {
   if (a_Action == SESSIONS_LOAD) {
     for (int index : a_ItemIndices) {
       const std::shared_ptr<Session>& session = GetSession(index);

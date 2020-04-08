@@ -245,7 +245,7 @@ std::vector<std::wstring> FunctionsDataView::GetContextMenu(
 //-----------------------------------------------------------------------------
 void FunctionsDataView::OnContextMenu(const std::wstring& a_Action,
                                       int a_MenuIndex,
-                                      std::vector<int>& a_ItemIndices) {
+                                      const std::vector<int>& a_ItemIndices) {
   if (a_Action == MENU_ACTION_SELECT) {
     for (int i : a_ItemIndices) {
       Function& function = GetFunction(i);

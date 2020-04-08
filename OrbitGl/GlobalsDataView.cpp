@@ -193,7 +193,7 @@ std::vector<std::wstring> GlobalsDataView::GetContextMenu(
 //-----------------------------------------------------------------------------
 void GlobalsDataView::OnContextMenu(const std::wstring& a_Action,
                                     int a_MenuIndex,
-                                    std::vector<int>& a_ItemIndices) {
+                                    const std::vector<int>& a_ItemIndices) {
   if (a_Action == TYPES_MENU_WATCH) {
     OnAddToWatch(a_ItemIndices);
   } else {
@@ -202,7 +202,7 @@ void GlobalsDataView::OnContextMenu(const std::wstring& a_Action,
 }
 
 //-----------------------------------------------------------------------------
-void GlobalsDataView::OnAddToWatch(std::vector<int>& a_Items) {
+void GlobalsDataView::OnAddToWatch(const std::vector<int>& a_Items) {
   for (auto& item : a_Items) {
     Variable& variable = GetVariable(item);
     variable.Populate();
