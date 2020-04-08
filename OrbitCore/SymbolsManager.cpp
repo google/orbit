@@ -132,7 +132,7 @@ void SymbolsManager::HandleResponse(const Message& message) {
   transaction_manager_->ReceiveResponse(message, &infos);
 
   // Notify app of new debug symbols.
-  GCoreApp->OnRemoteModuleDebugInfo(infos);
+  core_app_->OnRemoteModuleDebugInfo(infos);
 
   FinalizeTransaction();
 }
