@@ -35,4 +35,7 @@ class LiveFunctionsDataView : public DataView {
   static std::vector<int> s_HeaderMap;
   static std::vector<float> s_HeaderRatios;
   static std::vector<SortingOrder> s_InitialOrders;
+
+  static const std::wstring MENU_ACTION_SELECT;
+  static const std::wstring MENU_ACTION_UNSELECT;
 };
