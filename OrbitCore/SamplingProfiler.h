@@ -80,8 +80,8 @@ struct SortedCallstackReport {
 //-----------------------------------------------------------------------------
 class SamplingProfiler {
  public:
-  SamplingProfiler(const std::shared_ptr<Process>& a_Process,
-                   bool a_ETW = false);
+  explicit SamplingProfiler(const std::shared_ptr<Process>& a_Process,
+                            bool a_ETW = false);
   SamplingProfiler();
   ~SamplingProfiler();
 

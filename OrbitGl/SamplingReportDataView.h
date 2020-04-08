@@ -28,15 +28,12 @@ class SamplingReportDataView : public DataView {
   void OnSelect(int a_Index) override;
 
   void LinkDataView(DataView* a_DataView) override;
-  void SetSamplingProfiler(std::shared_ptr<SamplingProfiler>& a_Profiler) {
-    m_SamplingProfiler = a_Profiler;
-  }
   void SetSamplingReport(class SamplingReport* a_SamplingReport) {
     m_SamplingReport = a_SamplingReport;
   }
   void SetSampledFunctions(const std::vector<SampledFunction>& a_Functions);
   void SetThreadID(ThreadID a_TID);
-  std::vector<SampledFunction>& GetFunctions() { return m_Functions; }
+  std::vector<SampledFunction>& GetSampledFunctions() { return m_Functions; }
 
   enum SamplingColumn {
     Toggle,
@@ -52,19 +49,27 @@ class SamplingReportDataView : public DataView {
   };
 
  protected:
-  const SampledFunction& GetFunction(unsigned int a_Row) const;
-  SampledFunction& GetFunction(unsigned int a_Row);
+  const SampledFunction& GetSampledFunction(unsigned int a_Row) const;
+  SampledFunction& GetSampledFunction(unsigned int a_Row);
+  std::vector<Function*> GetFunctionsFromIndices(
+      const std::vector<int>& a_Indices);
+  std::vector<std::shared_ptr<Module>> GetModulesFromIndices(
+      const std::vector<int>& a_Indices);
 
   std::vector<SampledFunction> m_Functions;
-  ThreadID m_TID;
+  ThreadID m_TID = -1;
   std::wstring m_Name;
-  std::shared_ptr<SamplingProfiler> m_SamplingProfiler;
   class CallStackDataView* m_CallstackDataView;
-  SamplingReport* m_SamplingReport;
+  SamplingReport* m_SamplingReport = nullptr;
 
   static void InitColumnsIfNeeded();
   static std::vector<std::wstring> s_Headers;
   static std::vector<int> s_HeaderMap;
   static std::vector<float> s_HeaderRatios;
   static std::vector<SortingOrder> s_InitialOrders;
+
+  static const std::wstring MENU_ACTION_SELECT;
+  static const std::wstring MENU_ACTION_UNSELECT;
+  static const std::wstring MENU_ACTION_MODULES_LOAD;
+  static const std::wstring MENU_ACTION_DISASSEMBLY;
 };

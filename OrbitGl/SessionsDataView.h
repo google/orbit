@@ -45,4 +45,6 @@ class SessionsDataView : public DataView {
   static std::vector<std::wstring> s_Headers;
   static std::vector<float> s_HeaderRatios;
   static std::vector<SortingOrder> s_InitialOrders;
+
+  static const std::wstring MENU_ACTION_SESSIONS_LOAD;
 };
