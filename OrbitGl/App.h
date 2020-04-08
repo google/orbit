@@ -8,6 +8,7 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include <utility>
 
 #include "ContextSwitch.h"
 #include "CoreApp.h"
@@ -60,7 +61,7 @@ class OrbitApp : public CoreApp {
   void AppendSystrace(const std::string& a_FileName, uint64_t a_TimeOffset);
   void ListSessions();
   void RefreshCaptureView() override;
-  void RequestRemoteModules(const std::vector<std::string> a_Modules);
+  void RequestRemoteModules(const std::vector<std::string>& a_Modules);
   void AddWatchedVariable(Variable* a_Variable);
   void UpdateVariable(Variable* a_Variable) override;
   void ClearWatchedVariables();
@@ -111,28 +112,28 @@ class OrbitApp : public CoreApp {
   // Callbacks
   typedef std::function<void(DataViewType a_Type)> RefreshCallback;
   void AddRefreshCallback(RefreshCallback a_Callback) {
-    m_RefreshCallbacks.push_back(a_Callback);
+    m_RefreshCallbacks.emplace_back(std::move(a_Callback));
   }
   typedef std::function<void(std::shared_ptr<class SamplingReport>)>
       SamplingReportCallback;
   void AddSamplingReoprtCallback(SamplingReportCallback a_Callback) {
-    m_SamplingReportsCallbacks.push_back(a_Callback);
+    m_SamplingReportsCallbacks.emplace_back(std::move(a_Callback));
   }
   void AddSelectionReportCallback(SamplingReportCallback a_Callback) {
-    m_SelectionReportCallbacks.push_back(a_Callback);
+    m_SelectionReportCallbacks.emplace_back(std::move(a_Callback));
   }
   typedef std::function<void(Variable* a_Variable)> WatchCallback;
   void AddWatchCallback(WatchCallback a_Callback) {
-    m_AddToWatchCallbacks.push_back(a_Callback);
+    m_AddToWatchCallbacks.emplace_back(std::move(a_Callback));
   }
   typedef std::function<void(const std::wstring& a_Extension,
                              std::wstring& o_Variable)>
       SaveFileCallback;
   void SetSaveFileCallback(SaveFileCallback a_Callback) {
-    m_SaveFileCallback = a_Callback;
+    m_SaveFileCallback = std::move(a_Callback);
   }
   void AddUpdateWatchCallback(WatchCallback a_Callback) {
-    m_UpdateWatchCallbacks.push_back(a_Callback);
+    m_UpdateWatchCallbacks.emplace_back(std::move(a_Callback));
   }
   void FireRefreshCallbacks(DataViewType a_Type = DataViewType::ALL);
   void Refresh(DataViewType a_Type = DataViewType::ALL) {
@@ -145,14 +146,14 @@ class OrbitApp : public CoreApp {
                                      const std::wstring& a_Filter)>
       FindFileCallback;
   void SetFindFileCallback(FindFileCallback a_Callback) {
-    m_FindFileCallback = a_Callback;
+    m_FindFileCallback = std::move(a_Callback);
   }
   std::wstring FindFile(const std::wstring& a_Caption,
                         const std::wstring& a_Dir,
                         const std::wstring& a_Filter);
   typedef std::function<void(const std::wstring&)> ClipboardCallback;
   void SetClipboardCallback(ClipboardCallback a_Callback) {
-    m_ClipboardCallback = a_Callback;
+    m_ClipboardCallback = std::move(a_Callback);
   }
 
   void SetCommandLineArguments(const std::vector<std::string>& a_Args);

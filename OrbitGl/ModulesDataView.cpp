@@ -158,24 +158,40 @@ void ModulesDataView::OnSort(int a_Column,
 }
 
 //-----------------------------------------------------------------------------
-const std::wstring MODULES_LOAD = L"Load Symbols";
-const std::wstring DLL_FIND_PDB = L"Find Pdb";
-const std::wstring DLL_EXPORTS = L"Load Symbols";
+const std::wstring ModulesDataView::MENU_ACTION_MODULES_LOAD = L"Load Symbols";
+const std::wstring ModulesDataView::MENU_ACTION_DLL_FIND_PDB = L"Find Pdb";
+const std::wstring ModulesDataView::MENU_ACTION_DLL_EXPORTS = L"Load Symbols";
 
 //-----------------------------------------------------------------------------
 std::vector<std::wstring> ModulesDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
-  std::vector<std::wstring> menu;
-
-  std::shared_ptr<Module> module = GetModule(a_ClickedIndex);
-  if (!module->GetLoaded()) {
-    if (module->m_FoundPdb) {
-      menu = {MODULES_LOAD};
-    } else if (module->IsDll()) {
-      menu = {DLL_EXPORTS, DLL_FIND_PDB};
+  bool enable_load = false;
+  bool enable_dll = false;
+  if (a_SelectedIndices.size() == 1) {
+    std::shared_ptr<Module> module = GetModule(a_SelectedIndices[0]);
+    if (!module->GetLoaded()) {
+      if (module->m_FoundPdb) {
+        enable_load = true;
+      } else if (module->IsDll()) {
+        enable_dll = true;
+      }
+    }
+  } else {
+    for (int index : a_SelectedIndices) {
+      std::shared_ptr<Module> module = GetModule(index);
+      if (!module->GetLoaded() && module->m_FoundPdb) {
+        enable_load = true;
+      }
     }
   }
 
+  std::vector<std::wstring> menu;
+  if (enable_load) {
+    menu.emplace_back(MENU_ACTION_MODULES_LOAD);
+  }
+  if (enable_dll) {
+    Append(menu, {MENU_ACTION_DLL_FIND_PDB, MENU_ACTION_DLL_EXPORTS});
+  }
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
@@ -184,8 +200,7 @@ std::vector<std::wstring> ModulesDataView::GetContextMenu(
 void ModulesDataView::OnContextMenu(const std::wstring& a_Action,
                                     int a_MenuIndex,
                                     const std::vector<int>& a_ItemIndices) {
-  PRINT_VAR(a_Action);
-  if (a_Action == MODULES_LOAD) {
+  if (a_Action == MENU_ACTION_MODULES_LOAD) {
     for (int index : a_ItemIndices) {
       const std::shared_ptr<Module>& module = GetModule(index);
 
@@ -204,9 +219,12 @@ void ModulesDataView::OnContextMenu(const std::wstring& a_Action,
     }
 
     GOrbitApp->LoadModules();
-  } else if (a_Action == DLL_FIND_PDB) {
+  } else if (a_Action == MENU_ACTION_DLL_FIND_PDB) {
     std::wstring FileName =
         GOrbitApp->FindFile(L"Find Pdb File", L"", L"*.pdb");
+    // TODO: the result is unused, should this action be removed?
+  } else if (a_Action == MENU_ACTION_DLL_EXPORTS) {
+    // TODO: this action is unused, should it be removed?
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }
