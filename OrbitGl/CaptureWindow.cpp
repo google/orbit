@@ -750,7 +750,6 @@ float CaptureWindow::GetTopBarTextY() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::DrawStatus() {
-  float iconSize = m_Slider.GetPixelHeight();
   int s_PosX = 0;
   float s_PosY = GetTopBarTextY();
   static int s_IncY = 20;

@@ -154,7 +154,7 @@ class Pdb {
 
   void Init() {}
 
-  bool LoadPdb(const char* file_name) {
+  bool LoadPdb(const char* /*file_name*/) {
     return false;  // Should not do anything on linux
   }
   virtual void LoadPdbAsync(const char* pdb_name,
