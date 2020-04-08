@@ -3,6 +3,8 @@
 //-----------------------------------
 #pragma once
 
+#include <utility>
+
 #include "FunctionsDataView.h"
 #include "OrbitType.h"
 
@@ -19,7 +21,7 @@ class CallStackDataView : public FunctionsDataView {
   std::wstring GetValue(int a_Row, int a_Column) override;
   void OnFilter(const std::wstring& a_Filter) override;
   void SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
-    m_CallStack = a_CallStack;
+    m_CallStack = std::move(a_CallStack);
     OnDataChanged();
   }
 

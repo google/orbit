@@ -300,7 +300,7 @@ void OrbitMainWindow::OnNewSamplingReport(
   m_SamplingLayout->addWidget(m_OrbitSamplingReport, 0, 0, 1, 1);
 
   // Automatically switch to sampling tab if not already in live tab.
-  if( ui->RightTabWidget->currentWidget() != ui->LiveTab) {
+  if (ui->RightTabWidget->currentWidget() != ui->LiveTab) {
     ui->RightTabWidget->setCurrentWidget(m_SamplingTab);
   }
 }
