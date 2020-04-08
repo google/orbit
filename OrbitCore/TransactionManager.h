@@ -36,8 +36,7 @@ namespace orbit {
 
 class TransactionManager {
  public:
-  TransactionManager(std::shared_ptr<TcpClient> client,
-                     std::shared_ptr<TcpServer> server);
+  TransactionManager(TcpClient* client,TcpServer* server);
 
   void RegisterTransactionHandler(const TransactionHandler& handler);
 
@@ -94,8 +93,8 @@ class TransactionManager {
   typedef std::function<void(const Message&)> Callback;
   Callback on_response_;
   Callback on_request_;
-  std::shared_ptr<TcpClient> client_ = nullptr;
-  std::shared_ptr<TcpServer> server_ = nullptr;
+  TcpClient* client_ = nullptr;
+  TcpServer* server_ = nullptr;
   std::queue<std::shared_ptr<Transaction>> transaction_queue_;
   std::shared_ptr<Transaction> current_transaction_ = nullptr;
   absl::flat_hash_map<MessageType, std::shared_ptr<TransactionHandler>>

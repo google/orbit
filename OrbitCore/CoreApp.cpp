@@ -4,11 +4,10 @@
 #include "CoreApp.h"
 #include "TcpClient.h"
 
-std::shared_ptr<CoreApp> GCoreApp;
+CoreApp* GCoreApp;
 
-void CoreApp::InitializeManagers()
-{
-  transaction_manager_ =
-      std::make_shared<orbit::TransactionManager>(GTcpClient, GTcpServer);
-  symbols_manager_ = std::make_shared<orbit::SymbolsManager>(GCoreApp);
+void CoreApp::InitializeManagers() {
+  transaction_manager_ = std::make_unique<orbit::TransactionManager>(
+    GTcpClient.get(), GTcpServer.get());
+  symbols_manager_ = std::make_unique<orbit::SymbolsManager>(GCoreApp);
 }

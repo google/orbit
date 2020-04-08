@@ -7,8 +7,7 @@
 
 namespace orbit {
 
-TransactionManager::TransactionManager(std::shared_ptr<TcpClient> client,
-                                       std::shared_ptr<TcpServer> server) {
+TransactionManager::TransactionManager(TcpClient* client, TcpServer* server) {
   client_ = client;
   server_ = server;
   on_request_ = [this](const Message& msg) { HandleRequest(msg); };

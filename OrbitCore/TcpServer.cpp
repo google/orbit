@@ -21,7 +21,7 @@
 #include "TimerManager.h"
 #include "VariableTracing.h"
 
-std::shared_ptr<TcpServer> GTcpServer;
+std::unique_ptr<TcpServer> GTcpServer;
 
 //-----------------------------------------------------------------------------
 TcpServer::TcpServer() : m_TcpServer(nullptr) {

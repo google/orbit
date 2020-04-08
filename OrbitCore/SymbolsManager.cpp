@@ -10,7 +10,7 @@
 
 namespace orbit {
 
-SymbolsManager::SymbolsManager(std::shared_ptr<CoreApp> core_app) {
+SymbolsManager::SymbolsManager(CoreApp* core_app) {
   core_app_ = core_app;
   transaction_manager_ = core_app_->GetTransactionManager();
   auto on_response = [this](const Message& msg) { HandleResponse(msg); };

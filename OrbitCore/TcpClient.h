@@ -33,4 +33,4 @@ class TcpClient : public TcpEntity {
   std::thread workerThread_;
 };
 
-extern std::shared_ptr<TcpClient> GTcpClient;
+extern std::unique_ptr<TcpClient> GTcpClient;

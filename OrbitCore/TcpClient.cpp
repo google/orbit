@@ -20,7 +20,7 @@
 #include "absl/strings/str_format.h"
 #include "OrbitBase/Logging.h"
 
-std::shared_ptr<TcpClient> GTcpClient;
+std::unique_ptr<TcpClient> GTcpClient;
 
 #ifdef __linux__
 inline bool IsBadWritePtr(void*, int) { return false; }

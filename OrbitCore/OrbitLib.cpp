@@ -39,7 +39,7 @@ void Orbit::Init(const std::string& a_Host) {
 
   GTimerManager = nullptr;
   GHost = a_Host;
-  GTcpClient = std::make_shared<TcpClient>(a_Host);
+  GTcpClient = std::make_unique<TcpClient>(a_Host);
 
   if (GTcpClient->IsValid()) {
     GTimerManager = std::make_unique<TimerManager>(true);

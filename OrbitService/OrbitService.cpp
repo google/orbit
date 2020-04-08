@@ -12,13 +12,14 @@
 OrbitService::OrbitService() {
   // TODO: these should be a private fields.
   GTimerManager = std::make_unique<TimerManager>();
-  GTcpServer = std::make_shared<TcpServer>();
+  GTcpServer = std::make_unique<TcpServer>();
   Capture::Init();
 
   GTcpServer->Start(Capture::GCapturePort);
   ConnectionManager::Get().InitAsService();
 
-  GCoreApp = std::make_shared<CoreApp>();
+  core_app_ = std::make_unique<CoreApp>();
+  GCoreApp = core_app_.get();
   GCoreApp->InitializeManagers();
 }
 
@@ -28,4 +29,6 @@ void OrbitService::Run() {
     Capture::Update();
     Sleep(16);
   }
+
+  GCoreApp = nullptr;
 }

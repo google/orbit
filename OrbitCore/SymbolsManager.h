@@ -20,7 +20,7 @@ namespace orbit {
 
 class SymbolsManager {
  public:
-  SymbolsManager(std::shared_ptr<CoreApp> core_app);
+  SymbolsManager(CoreApp* core_app);
 
   void LoadSymbols(std::shared_ptr<Session> session,
                    std::shared_ptr<Process> process);
@@ -39,8 +39,8 @@ class SymbolsManager {
   void FinalizeTransaction();
   bool SingleThreadRequests() const;
 
-  std::shared_ptr<TransactionManager> transaction_manager_;
-  std::shared_ptr<CoreApp> core_app_ = nullptr;
+  CoreApp* core_app_ = nullptr;
+  TransactionManager* transaction_manager_;
   std::shared_ptr<Session> session_ = nullptr;
   std::atomic<bool> request_in_flight_ = false;
 };

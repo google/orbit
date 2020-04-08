@@ -72,4 +72,4 @@ class TcpServer : public TcpEntity {
   ULONG64 m_NumMessagesFromPreviousSession;
 };
 
-extern std::shared_ptr<TcpServer> GTcpServer;
+extern std::unique_ptr<TcpServer> GTcpServer;

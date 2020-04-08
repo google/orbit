@@ -60,16 +60,14 @@ class CoreApp {
   virtual void RefreshCaptureView() {}
 
   // Managers
-  std::shared_ptr<orbit::TransactionManager> GetTransactionManager() {
-    return transaction_manager_;
+  orbit::TransactionManager* GetTransactionManager() {
+    return transaction_manager_.get();
   }
-  std::shared_ptr<orbit::SymbolsManager> GetSymbolsManager() {
-    return symbols_manager_;
-  }
+  orbit::SymbolsManager* GetSymbolsManager(){return symbols_manager_.get(); }
 
-  private:
-    std::shared_ptr<orbit::TransactionManager> transaction_manager_ = nullptr;
-    std::shared_ptr<orbit::SymbolsManager> symbols_manager_ = nullptr;
+ private:
+  std::unique_ptr<orbit::TransactionManager> transaction_manager_ = nullptr;
+  std::unique_ptr<orbit::SymbolsManager> symbols_manager_ = nullptr;
 };
 
-extern std::shared_ptr<CoreApp> GCoreApp;
+extern CoreApp* GCoreApp;

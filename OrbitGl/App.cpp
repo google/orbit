@@ -77,7 +77,7 @@
 #include <OrbitLinuxTracing/OrbitTracing.h>
 #endif
 
-std::shared_ptr<OrbitApp> GOrbitApp;
+std::unique_ptr<OrbitApp> GOrbitApp;
 float GFontSize;
 bool DoZoom = false;
 
@@ -117,7 +117,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
       std::string address = Replace(arg, "gamelet:", "");
       Capture::GCaptureHost = address;
 
-      GTcpClient = std::make_shared<TcpClient>();
+      GTcpClient = std::make_unique<TcpClient>();
       GTcpClient->AddMainThreadCallback(
           Msg_RemoteProcess,
           [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcess(a_Msg); });
@@ -311,10 +311,10 @@ void OrbitApp::AppendSystrace(const std::string& a_FileName,
 
 //-----------------------------------------------------------------------------
 bool OrbitApp::Init() {
-  GOrbitApp = std::make_shared<OrbitApp>();
-  GCoreApp = GOrbitApp;
+  GOrbitApp = std::make_unique<OrbitApp>();
+  GCoreApp = GOrbitApp.get();
   GTimerManager = std::make_unique<TimerManager>();
-  GTcpServer = std::make_shared<TcpServer>();
+  GTcpServer = std::make_unique<TcpServer>();
 
   Path::Init();
 

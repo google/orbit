@@ -268,4 +268,4 @@ class OrbitApp : public CoreApp {
 };
 
 //-----------------------------------------------------------------------------
-extern std::shared_ptr<OrbitApp> GOrbitApp;
+extern std::unique_ptr<OrbitApp> GOrbitApp;
