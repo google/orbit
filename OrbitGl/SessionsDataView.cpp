@@ -126,12 +126,13 @@ void SessionsDataView::OnSort(int a_Column,
 }
 
 //-----------------------------------------------------------------------------
-std::wstring SESSIONS_LOAD = L"Load Session";
+const std::wstring SessionsDataView::MENU_ACTION_SESSIONS_LOAD =
+    L"Load Session";
 
 //-----------------------------------------------------------------------------
 std::vector<std::wstring> SessionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
-  std::vector<std::wstring> menu = {SESSIONS_LOAD};
+  std::vector<std::wstring> menu = {MENU_ACTION_SESSIONS_LOAD};
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
@@ -140,7 +141,7 @@ std::vector<std::wstring> SessionsDataView::GetContextMenu(
 void SessionsDataView::OnContextMenu(const std::wstring& a_Action,
                                      int a_MenuIndex,
                                      const std::vector<int>& a_ItemIndices) {
-  if (a_Action == SESSIONS_LOAD) {
+  if (a_Action == MENU_ACTION_SESSIONS_LOAD) {
     for (int index : a_ItemIndices) {
       const std::shared_ptr<Session>& session = GetSession(index);
       if (GOrbitApp->SelectProcess(
@@ -161,7 +162,7 @@ void SessionsDataView::OnFilter(const std::wstring& a_Filter) {
 
   std::vector<std::wstring> tokens = Tokenize(ToLower(a_Filter));
 
-  for (uint32_t i = 0; i < m_Sessions.size(); ++i) {
+  for (size_t i = 0; i < m_Sessions.size(); ++i) {
     const Session& session = *m_Sessions[i];
     std::wstring name = s2ws(Path::GetFileName(ToLower(session.m_FileName)));
     std::wstring path = s2ws(ToLower(session.m_ProcessFullPath));
@@ -191,7 +192,7 @@ void SessionsDataView::OnFilter(const std::wstring& a_Filter) {
 //-----------------------------------------------------------------------------
 void SessionsDataView::OnDataChanged() {
   m_Indices.resize(m_Sessions.size());
-  for (uint32_t i = 0; i < m_Sessions.size(); ++i) {
+  for (size_t i = 0; i < m_Sessions.size(); ++i) {
     m_Indices[i] = i;
   }
 

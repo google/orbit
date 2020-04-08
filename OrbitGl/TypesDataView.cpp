@@ -272,13 +272,13 @@ void TypesDataView::OnSort(int a_Column,
 }
 
 //-----------------------------------------------------------------------------
-std::wstring TYPES_SUMMARY = L"Summary";
-std::wstring TYPES_DETAILS = L"Details";
+const std::wstring TypesDataView::MENU_ACTION_SUMMARY = L"Summary";
+const std::wstring TypesDataView::MENU_ACTION_DETAILS = L"Details";
 
 //-----------------------------------------------------------------------------
 std::vector<std::wstring> TypesDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
-  std::vector<std::wstring> menu = {TYPES_SUMMARY, TYPES_DETAILS};
+  std::vector<std::wstring> menu = {MENU_ACTION_SUMMARY, MENU_ACTION_DETAILS};
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
@@ -316,9 +316,9 @@ void TypesDataView::OnClip(const std::vector<int>& a_Items) {
 //-----------------------------------------------------------------------------
 void TypesDataView::OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
                                   const std::vector<int>& a_ItemIndices) {
-  if (a_Action == TYPES_SUMMARY) {
+  if (a_Action == MENU_ACTION_SUMMARY) {
     OnProp(a_ItemIndices);
-  } else if (a_Action == TYPES_DETAILS) {
+  } else if (a_Action == MENU_ACTION_DETAILS) {
     OnView(a_ItemIndices);
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);

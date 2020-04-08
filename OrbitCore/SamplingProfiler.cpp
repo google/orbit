@@ -480,7 +480,7 @@ void SamplingProfiler::OutputStats() {
           100.f * ((float)numOccurences) / (float)threadSampleData.m_NumSamples;
 
       SampledFunction function;
-      function.m_Name = m_AddressToSymbol[address].c_str();
+      function.m_Name = m_AddressToSymbol[address];
       function.m_Inclusive = prct;
       function.m_Exclusive = 0.f;
       auto it = threadSampleData.m_ExclusiveCount.find(address);

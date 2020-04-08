@@ -4,6 +4,8 @@
 
 #include "SamplingReport.h"
 
+#include <utility>
+
 #include "CallStackDataView.h"
 #include "SamplingProfiler.h"
 #include "SamplingReportDataView.h"
@@ -11,7 +13,7 @@
 //-----------------------------------------------------------------------------
 SamplingReport::SamplingReport(
     std::shared_ptr<class SamplingProfiler> a_SamplingProfiler) {
-  m_Profiler = a_SamplingProfiler;
+  m_Profiler = std::move(a_SamplingProfiler);
   m_SelectedAddress = 0;
   m_CallstackDataView = nullptr;
   m_SelectedSortedCallstackReport = nullptr;
@@ -28,13 +30,12 @@ void SamplingReport::FillReport() {
   for (ThreadSampleData* threadSampleData : sampleData) {
     ThreadID tid = threadSampleData->m_TID;
 
-    if (tid == 0 && m_Profiler->GetGenerateSummary() == false) continue;
+    if (tid == 0 && !m_Profiler->GetGenerateSummary()) continue;
 
     std::shared_ptr<SamplingReportDataView> threadReport =
         std::make_shared<SamplingReportDataView>();
     threadReport->SetSampledFunctions(threadSampleData->m_SampleReport);
     threadReport->SetThreadID(tid);
-    threadReport->SetSamplingProfiler(m_Profiler);
     threadReport->SetSamplingReport(this);
     m_ThreadReports.push_back(threadReport);
   }

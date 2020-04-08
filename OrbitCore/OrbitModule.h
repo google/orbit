@@ -27,7 +27,7 @@ struct Module {
   }
   uint64_t ValidateAddress(uint64_t a_Address);
   void SetLoaded(bool a_Value);
-  bool GetLoaded() { return m_Loaded; }
+  bool GetLoaded() const { return m_Loaded; }
 
   std::string m_Name;       // name of the file (without path)
   std::string m_FullName;   // full filename (including path)
