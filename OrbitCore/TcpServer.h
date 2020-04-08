@@ -48,7 +48,7 @@ class TcpServer : public TcpEntity {
   std::vector<std::string> GetStats();
 
  protected:
-  class TcpSocket* GetSocket() override final;
+  class TcpSocket* GetSocket() final;
 
  private:
   class tcp_server* m_TcpServer = nullptr;

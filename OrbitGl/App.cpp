@@ -12,6 +12,7 @@
 #include <cmath>
 #include <fstream>
 #include <thread>
+#include <utility>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
@@ -416,7 +417,7 @@ void OrbitApp::LoadFileMapping() {
         m_FileMapping[ToLower(tokens[0])] = ToLower(tokens[1]);
       } else {
         std::vector<std::wstring> validTokens;
-        for (std::wstring token : Tokenize(line, L"\"//")) {
+        for (const std::wstring& token : Tokenize(line, L"\"//")) {
           if (!IsBlank(token)) {
             validTokens.push_back(token);
           }
@@ -861,7 +862,7 @@ void OrbitApp::OnDisconnect() { GTcpServer->Send(Msg_Unload); }
 void OrbitApp::OnPdbLoaded() {
   FireRefreshCallbacks();
 
-  if (m_ModulesToLoad.size() == 0) {
+  if (m_ModulesToLoad.empty()) {
     SendToUiAsync(L"pdbloaded");
   } else {
     LoadModules();
@@ -961,7 +962,7 @@ bool OrbitApp::Inject(unsigned long a_ProcessId) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
-  m_CallStackDataView->SetCallStack(a_CallStack);
+  m_CallStackDataView->SetCallStack(std::move(a_CallStack));
   FireRefreshCallbacks(DataViewType::CALLSTACK);
 }
 
@@ -984,7 +985,7 @@ void OrbitApp::EnqueueModuleToLoad(const std::shared_ptr<Module>& a_Module) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadModules() {
-  if (m_ModulesToLoad.size() > 0) {
+  if (!m_ModulesToLoad.empty()) {
     if (Capture::IsRemote()) {
       LoadRemoteModules();
       return;
