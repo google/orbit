@@ -147,7 +147,7 @@ void SymbolsManager::FinalizeTransaction() {
 }
 
 bool SymbolsManager::SingleThreadRequests() const {
-  static pid_t thread_id = GetCurrentThreadId();
+  static uint32_t thread_id = GetCurrentThreadId();
   return thread_id == GetCurrentThreadId();
 }
 
