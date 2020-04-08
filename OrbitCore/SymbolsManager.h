@@ -28,7 +28,7 @@ class SymbolsManager {
                    std::shared_ptr<Process> process);
 
  private:
-  SymbolsManager() = default;
+  SymbolsManager() = delete;
   SymbolsManager(const SymbolsManager&) = delete;
   SymbolsManager& operator=(const SymbolsManager&) = delete;
   SymbolsManager(SymbolsManager&&) = delete;

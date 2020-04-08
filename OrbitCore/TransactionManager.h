@@ -36,7 +36,6 @@ namespace orbit {
 
 class TransactionManager {
  public:
-  TransactionManager() = default;
   TransactionManager(std::shared_ptr<TcpClient> client,
                      std::shared_ptr<TcpServer> server);
 
@@ -67,6 +66,7 @@ class TransactionManager {
   void Tick();
 
  private:
+  TransactionManager() = delete;
   TransactionManager(const TransactionManager&) = delete;
   TransactionManager& operator=(const TransactionManager&) = delete;
   TransactionManager(TransactionManager&&) = delete;
