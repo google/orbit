@@ -487,8 +487,10 @@ bool Capture::IsOtherInstanceRunning() {
 
 //-----------------------------------------------------------------------------
 void Capture::LoadSession(const std::shared_ptr<Session>& session) {
-  GSessionPresets = session;
-  GPresetToLoad = "";
+  if (GCoreApp->SelectProcess(
+              Path::GetFileName(session->m_ProcessFullPath))) {
+    GSessionPresets = session;
+  }
 }
 
 //-----------------------------------------------------------------------------

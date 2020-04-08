@@ -142,10 +142,7 @@ void SessionsDataView::OnContextMenu(const std::wstring& a_Action,
   if (a_Action == SESSIONS_LOAD) {
     for (int index : a_ItemIndices) {
       const std::shared_ptr<Session>& session = GetSession(index);
-      if (GOrbitApp->SelectProcess(
-              Path::GetFileName(session->m_ProcessFullPath))) {
-        Capture::LoadSession(session);
-      }
+      Capture::LoadSession(session);
     }
 
     GOrbitApp->LoadModules();

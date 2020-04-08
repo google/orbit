@@ -564,10 +564,6 @@ void OrbitApp::MainTick() {
   GTcpServer->MainThreadTick();
 #endif
 
-  if (!Capture::GPresetToLoad.empty()) {
-    GOrbitApp->OnLoadSession(Capture::GPresetToLoad);
-  }
-
   if (!Capture::GProcessToInject.empty()) {
     std::cout << "Injecting into " << Capture::GTargetProcess->GetFullName()
               << std::endl;
@@ -1106,6 +1102,12 @@ void OrbitApp::OnRemoteProcessList(const Message& a_Message) {
   inputAr(*remoteProcessList);
   remoteProcessList->SetRemote(true);
   GOrbitApp->m_ProcessesDataView->SetRemoteProcessList(remoteProcessList);
+
+  // Trigger session loading if needed.
+  if (!Capture::GPresetToLoad.empty()) {
+    GOrbitApp->OnLoadSession(Capture::GPresetToLoad);
+    Capture::GPresetToLoad = "";
+  }
 }
 
 //-----------------------------------------------------------------------------
