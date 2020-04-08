@@ -79,7 +79,6 @@ void NO_INLINE OrbitTest::TestFunc2(uint32_t a_Depth) {
 
 //-----------------------------------------------------------------------------
 void NO_INLINE OrbitTest::BusyWork(uint64_t microseconds) {
-  static volatile uint32_t count;
   auto start = std::chrono::system_clock::now();
   while (true) {
     auto end = std::chrono::system_clock::now();

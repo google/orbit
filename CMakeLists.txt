@@ -1,16 +1,17 @@
 cmake_minimum_required(VERSION 3.15)
 
+project(Orbit C CXX)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion
                            -Werror=inconsistent-missing-override
-                           -Werror=unused-parameter)
+                           -Werror=unused-parameter
+                           -Werror=unused-variable)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion)
 endif()
-
-project(Orbit C CXX)
 
 include(cmake/tests.cmake)
 enable_testing()

@@ -493,7 +493,6 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
 
   UpdateThreadIds();
 
-  double span = m_MaxTimeUs - m_MinTimeUs;
   TickType rawStart = GetTickFromUs(m_MinTimeUs);
   TickType rawStop = GetTickFromUs(m_MaxTimeUs);
 
@@ -589,9 +588,9 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
               coeff = 1.0f;
             }
 
-            col[0] = coeff * col[0];
-            col[1] = coeff * col[1];
-            col[2] = coeff * col[2];
+            col[0] = static_cast<uint8_t>(coeff * col[0]);
+            col[1] = static_cast<uint8_t>(coeff * col[1]);
+            col[2] = static_cast<uint8_t>(coeff * col[2]);
           }
 
           if (isSelected) {
@@ -1089,7 +1088,6 @@ bool TimeGraph::IsVisible(const Timer& a_Timer) {
   double start = MicroSecondsFromTicks(m_SessionMinCounter, a_Timer.m_Start);
   double end = MicroSecondsFromTicks(m_SessionMinCounter, a_Timer.m_End);
 
-  double span = m_MaxTimeUs - m_MinTimeUs;
   double startUs = m_MinTimeUs;
 
   if (startUs > end || m_MaxTimeUs < start) {
