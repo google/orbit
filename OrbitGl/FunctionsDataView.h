@@ -34,4 +34,11 @@ class FunctionsDataView : public DataView {
   static std::vector<int> s_HeaderMap;
   static std::vector<float> s_HeaderRatios;
   static std::vector<SortingOrder> s_InitialOrders;
+
+  static const std::wstring MENU_ACTION_SELECT;
+  static const std::wstring MENU_ACTION_UNSELECT;
+  static const std::wstring MENU_ACTION_VIEW;
+  static const std::wstring MENU_ACTION_DISASSEMBLY;
+  static const std::wstring MENU_ACTION_CREATE_RULE;
+  static const std::wstring MENU_ACTION_SET_AS_FRAME;
 };

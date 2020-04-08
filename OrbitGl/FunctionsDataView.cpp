@@ -210,21 +210,35 @@ void FunctionsDataView::OnSort(int a_Column,
 }
 
 //-----------------------------------------------------------------------------
-std::wstring FUN_SELECT = L"Hook";
-std::wstring FUN_UNSELECT = L"UnHook";
-std::wstring FUN_VIEW = L"Visualize";
-std::wstring FUN_DISASSEMBLY = L"Go To Disassembly";
-std::wstring FUN_CREATE_RULE = L"Create Rule";
-std::wstring FUN_SET_AS_FRAME = L"Set As Main Frame";
+const std::wstring FunctionsDataView::MENU_ACTION_SELECT = L"Hook";
+const std::wstring FunctionsDataView::MENU_ACTION_UNSELECT = L"Unhook";
+const std::wstring FunctionsDataView::MENU_ACTION_VIEW = L"Visualize";
+const std::wstring FunctionsDataView::MENU_ACTION_DISASSEMBLY =
+    L"Go to Disassembly";
+const std::wstring FunctionsDataView::MENU_ACTION_CREATE_RULE = L"Create Rule";
+const std::wstring FunctionsDataView::MENU_ACTION_SET_AS_FRAME =
+    L"Set as Main Frame";
 
 //-----------------------------------------------------------------------------
 std::vector<std::wstring> FunctionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
-  std::vector<std::wstring> menu = {FUN_SELECT, FUN_UNSELECT, FUN_VIEW,
-                                    FUN_DISASSEMBLY, FUN_CREATE_RULE};
+  bool enable_select = false;
+  bool enable_unselect = false;
+  for (int index : a_SelectedIndices) {
+    const Function& function = GetFunction(index);
+    enable_select |= !function.IsSelected();
+    enable_unselect |= function.IsSelected();
+  }
 
+  bool enable_create_rule = a_SelectedIndices.size() == 1;
+
+  std::vector<std::wstring> menu;
+  if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
+  if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
+  Append(menu, {MENU_ACTION_VIEW, MENU_ACTION_DISASSEMBLY});
+  if (enable_create_rule) menu.emplace_back(MENU_ACTION_CREATE_RULE);
+  // TODO: MENU_ACTION_SET_AS_FRAME is never shown, should it be removed?
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
-
   return menu;
 }
 
@@ -232,37 +246,38 @@ std::vector<std::wstring> FunctionsDataView::GetContextMenu(
 void FunctionsDataView::OnContextMenu(const std::wstring& a_Action,
                                       int a_MenuIndex,
                                       std::vector<int>& a_ItemIndices) {
-  if (a_Action == FUN_SELECT) {
+  if (a_Action == MENU_ACTION_SELECT) {
     for (int i : a_ItemIndices) {
-      Function& func = GetFunction(i);
-      func.Select();
+      Function& function = GetFunction(i);
+      function.Select();
     }
-  } else if (a_Action == FUN_UNSELECT) {
+  } else if (a_Action == MENU_ACTION_UNSELECT) {
     for (int i : a_ItemIndices) {
       Function& func = GetFunction(i);
       func.UnSelect();
     }
-  } else if (a_Action == FUN_VIEW) {
+  } else if (a_Action == MENU_ACTION_VIEW) {
     for (int i : a_ItemIndices) {
-      GetFunction(i).Print();
+      Function& function = GetFunction(i);
+      function.Print();
     }
 
     GOrbitApp->SendToUiNow(L"output");
-  } else if (a_Action == FUN_DISASSEMBLY) {
+  } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
+    // TODO: does this action work or should we hide it?
     for (int i : a_ItemIndices) {
-      Function& func = GetFunction(i);
-      func.GetDisassembly();
+      Function& function = GetFunction(i);
+      function.GetDisassembly();
     }
-  } else if (a_Action == FUN_CREATE_RULE) {
-    for (int i : a_ItemIndices) {
-      Function& func = GetFunction(i);
-      GOrbitApp->LaunchRuleEditor(&func);
-      break;
+  } else if (a_Action == MENU_ACTION_CREATE_RULE) {
+    if (a_ItemIndices.size() == 1) {
+      Function& function = GetFunction(0);
+      GOrbitApp->LaunchRuleEditor(&function);
     }
-  } else if (a_Action == FUN_SET_AS_FRAME) {
-    for (int i : a_ItemIndices) {
-      GetFunction(i).SetAsMainFrameFunction();
-      break;
+  } else if (a_Action == MENU_ACTION_SET_AS_FRAME) {
+    if (a_ItemIndices.size() == 1) {
+      Function& function = GetFunction(0);
+      function.SetAsMainFrameFunction();
     }
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
@@ -353,7 +368,7 @@ void FunctionsDataView::OnDataChanged() {
 
   size_t numFunctions = Capture::GTargetProcess->GetFunctions().size();
   m_Indices.resize(numFunctions);
-  for (uint32_t i = 0; i < numFunctions; ++i) {
+  for (size_t i = 0; i < numFunctions; ++i) {
     m_Indices[i] = i;
   }
 
