@@ -105,7 +105,7 @@ std::vector<std::wstring> DataView::GetContextMenu(
 
 //-----------------------------------------------------------------------------
 void DataView::OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
-                             std::vector<int>& a_ItemIndices) {
+                             const std::vector<int>& a_ItemIndices) {
   UNUSED(a_MenuIndex);
 
   if (a_Action == MENU_ACTION_EXPORT_TO_CSV) {
@@ -144,7 +144,7 @@ void DataView::ExportCSV(const std::wstring& a_FileName) {
 }
 
 //-----------------------------------------------------------------------------
-void DataView::CopySelection(std::vector<int>& selection) {
+void DataView::CopySelection(const std::vector<int>& selection) {
   std::wstring clipboard;
   const std::vector<std::wstring>& headers = GetColumnHeaders();
 

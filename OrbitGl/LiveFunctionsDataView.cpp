@@ -251,9 +251,9 @@ std::vector<std::wstring> LiveFunctionsDataView::GetContextMenu(
 }
 
 //-----------------------------------------------------------------------------
-void LiveFunctionsDataView::OnContextMenu(const std::wstring& a_Action,
-                                          int a_MenuIndex,
-                                          std::vector<int>& a_ItemIndices) {
+void LiveFunctionsDataView::OnContextMenu(
+    const std::wstring& a_Action, int a_MenuIndex,
+    const std::vector<int>& a_ItemIndices) {
   if (a_Action == TOGGLE_SELECT) {
     for (int i : a_ItemIndices) {
       Function& func = GetFunction(i);

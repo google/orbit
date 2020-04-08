@@ -48,7 +48,7 @@ class DataView {
   virtual void OnSort(int /*a_Column*/,
                       std::optional<SortingOrder> /*a_NewOrder*/) {}
   virtual void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
-                             std::vector<int>& a_ItemIndices);
+                             const std::vector<int>& a_ItemIndices);
   virtual void OnItemActivated() {}
   virtual void OnSelect(int /*a_Index*/) {}
   virtual int GetSelectedIndex() { return m_SelectedIndex; }
@@ -70,7 +70,7 @@ class DataView {
   virtual bool ScrollToBottom() { return false; }
   virtual bool SkipTimer() { return false; }
   virtual void ExportCSV(const std::wstring& a_FileName);
-  virtual void CopySelection(std::vector<int>& selection);
+  virtual void CopySelection(const std::vector<int>& selection);
 
   int GetUpdatePeriodMs() const { return m_UpdatePeriodMs; }
   DataViewType GetType() const { return m_Type; }

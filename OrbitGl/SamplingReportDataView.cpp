@@ -214,9 +214,9 @@ std::vector<std::wstring> SamplingReportDataView::GetContextMenu(
 }
 
 //-----------------------------------------------------------------------------
-void SamplingReportDataView::OnContextMenu(const std::wstring& a_Action,
-                                           int a_MenuIndex,
-                                           std::vector<int>& a_ItemIndices) {
+void SamplingReportDataView::OnContextMenu(
+    const std::wstring& a_Action, int a_MenuIndex,
+    const std::vector<int>& a_ItemIndices) {
   if (a_Action == MODULES_LOAD) {
     if (Capture::GTargetProcess) {
       std::set<std::wstring> moduleNames;

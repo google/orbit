@@ -183,7 +183,7 @@ std::vector<std::wstring> ModulesDataView::GetContextMenu(
 //-----------------------------------------------------------------------------
 void ModulesDataView::OnContextMenu(const std::wstring& a_Action,
                                     int a_MenuIndex,
-                                    std::vector<int>& a_ItemIndices) {
+                                    const std::vector<int>& a_ItemIndices) {
   PRINT_VAR(a_Action);
   if (a_Action == MODULES_LOAD) {
     for (int index : a_ItemIndices) {
