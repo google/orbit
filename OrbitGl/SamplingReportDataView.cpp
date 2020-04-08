@@ -205,10 +205,11 @@ std::wstring MODULES_LOAD = L"Load Symbols";
 std::wstring MODULES_DIS = L"Go To Disassembly";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> SamplingReportDataView::GetContextMenu(int a_Index) {
+std::vector<std::wstring> SamplingReportDataView::GetContextMenu(
+    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   std::vector<std::wstring> menu = {SELECT, DESELECT, MODULES_LOAD,
                                     MODULES_DIS};
-  Append(menu, DataView::GetContextMenu(a_Index));
+  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
 

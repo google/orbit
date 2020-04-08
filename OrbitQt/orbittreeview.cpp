@@ -202,9 +202,18 @@ QMenu* GContextMenu;
 void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
   QModelIndex index = this->indexAt(pos);
   if (index.isValid()) {
-    std::vector<std::wstring> menu =
-        m_Model->GetDataView()->GetContextMenu(index.row());
+    int clicked_index = index.row();
 
+    QModelIndexList selection_list = selectionModel()->selectedIndexes();
+    std::set<int> selection_set;
+    for (QModelIndex& selected_index : selection_list) {
+      selection_set.insert(selected_index.row());
+    }
+    std::vector<int> selected_indices(selection_set.begin(),
+                                      selection_set.end());
+
+    std::vector<std::wstring> menu =
+        m_Model->GetDataView()->GetContextMenu(clicked_index, selected_indices);
     if (!menu.empty()) {
       QMenu contextMenu(tr("ContextMenu"), this);
       GContextMenu = &contextMenu;

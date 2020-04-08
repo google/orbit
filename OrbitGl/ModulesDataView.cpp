@@ -163,10 +163,11 @@ const std::wstring DLL_FIND_PDB = L"Find Pdb";
 const std::wstring DLL_EXPORTS = L"Load Symbols";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> ModulesDataView::GetContextMenu(int a_Index) {
+std::vector<std::wstring> ModulesDataView::GetContextMenu(
+    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   std::vector<std::wstring> menu;
 
-  std::shared_ptr<Module> module = GetModule(a_Index);
+  std::shared_ptr<Module> module = GetModule(a_ClickedIndex);
   if (!module->GetLoaded()) {
     if (module->m_FoundPdb) {
       menu = {MODULES_LOAD};
@@ -175,7 +176,7 @@ std::vector<std::wstring> ModulesDataView::GetContextMenu(int a_Index) {
     }
   }
 
-  Append(menu, DataView::GetContextMenu(a_Index));
+  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
 

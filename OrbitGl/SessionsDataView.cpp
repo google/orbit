@@ -129,9 +129,10 @@ void SessionsDataView::OnSort(int a_Column,
 std::wstring SESSIONS_LOAD = L"Load Session";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> SessionsDataView::GetContextMenu(int a_Index) {
+std::vector<std::wstring> SessionsDataView::GetContextMenu(
+    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   std::vector<std::wstring> menu = {SESSIONS_LOAD};
-  Append(menu, DataView::GetContextMenu(a_Index));
+  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
 
