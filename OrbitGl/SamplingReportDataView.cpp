@@ -200,14 +200,14 @@ void SamplingReportDataView::OnSort(int a_Column,
 
 //-----------------------------------------------------------------------------
 std::wstring SELECT = L"Hook";
-std::wstring DESELECT = L"Unhook";
+std::wstring UNSELECT = L"Unhook";
 std::wstring MODULES_LOAD = L"Load Symbols";
 std::wstring MODULES_DIS = L"Go To Disassembly";
 
 //-----------------------------------------------------------------------------
 std::vector<std::wstring> SamplingReportDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
-  std::vector<std::wstring> menu = {SELECT, DESELECT, MODULES_LOAD,
+  std::vector<std::wstring> menu = {SELECT, UNSELECT, MODULES_LOAD,
                                     MODULES_DIS};
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
@@ -236,8 +236,8 @@ void SamplingReportDataView::OnContextMenu(
 
       GOrbitApp->LoadModules();
     }
-  } else if (a_Action == DESELECT || a_Action == SELECT) {
-    bool unhook = a_Action == DESELECT;
+  } else if (a_Action == UNSELECT || a_Action == SELECT) {
+    bool unhook = a_Action == UNSELECT;
 
     if (Capture::GTargetProcess) {
       for (size_t i = 0; i < a_ItemIndices.size(); ++i) {

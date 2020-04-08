@@ -240,12 +240,23 @@ void LiveFunctionsDataView::OnSort(int a_Column,
 }
 
 //-----------------------------------------------------------------------------
-std::wstring TOGGLE_SELECT = L"Toggle Hook";
+const std::wstring LiveFunctionsDataView::MENU_ACTION_SELECT = L"Hook";
+const std::wstring LiveFunctionsDataView::MENU_ACTION_UNSELECT = L"Unhook";
 
 //-----------------------------------------------------------------------------
 std::vector<std::wstring> LiveFunctionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
-  std::vector<std::wstring> menu = {TOGGLE_SELECT};
+  bool enable_select = false;
+  bool enable_unselect = false;
+  for (int index : a_SelectedIndices) {
+    const Function& function = GetFunction(index);
+    enable_select |= !function.IsSelected();
+    enable_unselect |= function.IsSelected();
+  }
+
+  std::vector<std::wstring> menu;
+  if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
+  if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
@@ -254,10 +265,15 @@ std::vector<std::wstring> LiveFunctionsDataView::GetContextMenu(
 void LiveFunctionsDataView::OnContextMenu(
     const std::wstring& a_Action, int a_MenuIndex,
     const std::vector<int>& a_ItemIndices) {
-  if (a_Action == TOGGLE_SELECT) {
+  if (a_Action == MENU_ACTION_SELECT) {
     for (int i : a_ItemIndices) {
-      Function& func = GetFunction(i);
-      func.ToggleSelect();
+      Function& function = GetFunction(i);
+      function.Select();
+    }
+  } else if (a_Action == MENU_ACTION_UNSELECT) {
+    for (int i : a_ItemIndices) {
+      Function& function = GetFunction(i);
+      function.UnSelect();
     }
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
@@ -270,9 +286,9 @@ void LiveFunctionsDataView::OnFilter(const std::wstring& a_Filter) {
 
   std::vector<std::wstring> tokens = Tokenize(ToLower(a_Filter));
 
-  for (uint32_t i = 0; i < (uint32_t)m_Functions.size(); ++i) {
+  for (size_t i = 0; i < m_Functions.size(); ++i) {
     const Function* function = m_Functions[i];
-    if (function) {
+    if (function != nullptr) {
       std::wstring name = ToLower(s2ws(function->PrettyName()));
 
       bool match = true;
@@ -310,7 +326,7 @@ void LiveFunctionsDataView::OnFilter(const std::wstring& a_Filter) {
 void LiveFunctionsDataView::OnDataChanged() {
   size_t numFunctions = Capture::GFunctionCountMap.size();
   m_Indices.resize(numFunctions);
-  for (uint32_t i = 0; i < numFunctions; ++i) {
+  for (size_t i = 0; i < numFunctions; ++i) {
     m_Indices[i] = i;
   }
 

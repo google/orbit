@@ -112,8 +112,6 @@ std::wstring GlobalsDataView::GetValue(int a_Row, int a_Column) {
     case Variable::MODULE:
       value = variable.m_Pdb->GetName();
       break;
-    /*case Variable::MODBASE:
-        value = wxString::Format("0x%I64x", function.m_ModBase);  break;*/
     case Variable::ADDRESS:
       value = absl::StrFormat("0x%llx", variable.m_Address);
       break;
@@ -122,7 +120,6 @@ std::wstring GlobalsDataView::GetValue(int a_Row, int a_Column) {
       break;
     default:
       break;
-      ;
   }
 
   return s2ws(value);
@@ -180,12 +177,13 @@ void GlobalsDataView::OnSort(int a_Column,
 }
 
 //-----------------------------------------------------------------------------
-std::wstring TYPES_MENU_WATCH = L"Add to watch";
+const std::wstring GlobalsDataView::MENU_ACTION_TYPES_MENU_WATCH =
+    L"Add to watch";
 
 //-----------------------------------------------------------------------------
 std::vector<std::wstring> GlobalsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
-  std::vector<std::wstring> menu = {TYPES_MENU_WATCH};
+  std::vector<std::wstring> menu = {MENU_ACTION_TYPES_MENU_WATCH};
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
@@ -194,7 +192,7 @@ std::vector<std::wstring> GlobalsDataView::GetContextMenu(
 void GlobalsDataView::OnContextMenu(const std::wstring& a_Action,
                                     int a_MenuIndex,
                                     const std::vector<int>& a_ItemIndices) {
-  if (a_Action == TYPES_MENU_WATCH) {
+  if (a_Action == MENU_ACTION_TYPES_MENU_WATCH) {
     OnAddToWatch(a_ItemIndices);
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
@@ -274,7 +272,7 @@ void GlobalsDataView::ParallelFilter() {
 void GlobalsDataView::OnDataChanged() {
   size_t numGlobals = Capture::GTargetProcess->GetGlobals().size();
   m_Indices.resize(numGlobals);
-  for (uint32_t i = 0; i < numGlobals; ++i) {
+  for (size_t i = 0; i < numGlobals; ++i) {
     m_Indices[i] = i;
   }
 }

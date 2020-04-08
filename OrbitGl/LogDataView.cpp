@@ -102,7 +102,7 @@ bool LogDataView::SkipTimer() { return !Capture::IsCapturing(); }
 void LogDataView::OnDataChanged() {
   ScopeLock lock(m_Mutex);
   m_Indices.resize(m_Entries.size());
-  for (uint32_t i = 0; i < m_Entries.size(); ++i) {
+  for (size_t i = 0; i < m_Entries.size(); ++i) {
     m_Indices[i] = i;
   }
 }
@@ -112,14 +112,14 @@ void LogDataView::OnFilter(const std::wstring& a_Filter) {
   std::vector<std::string> tokens = Tokenize(ToLower(ws2s(a_Filter)));
   std::vector<uint32_t> indices;
 
-  for (uint32_t i = 0; i < m_Entries.size(); ++i) {
+  for (size_t i = 0; i < m_Entries.size(); ++i) {
     const OrbitLogEntry& entry = m_Entries[i];
     std::string text = ToLower(entry.m_Text);
 
     bool match = true;
 
     for (std::string& filterToken : tokens) {
-      if (!(text.find(filterToken) != std::wstring::npos)) {
+      if (text.find(filterToken) == std::wstring::npos) {
         match = false;
         break;
       }
