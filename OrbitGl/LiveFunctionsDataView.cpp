@@ -243,9 +243,10 @@ void LiveFunctionsDataView::OnSort(int a_Column,
 std::wstring TOGGLE_SELECT = L"Toggle Hook";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> LiveFunctionsDataView::GetContextMenu(int a_Index) {
+std::vector<std::wstring> LiveFunctionsDataView::GetContextMenu(
+    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   std::vector<std::wstring> menu = {TOGGLE_SELECT};
-  Append(menu, DataView::GetContextMenu(a_Index));
+  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
 

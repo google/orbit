@@ -218,11 +218,12 @@ std::wstring FUN_CREATE_RULE = L"Create Rule";
 std::wstring FUN_SET_AS_FRAME = L"Set As Main Frame";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> FunctionsDataView::GetContextMenu(int a_Index) {
+std::vector<std::wstring> FunctionsDataView::GetContextMenu(
+    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   std::vector<std::wstring> menu = {FUN_SELECT, FUN_UNSELECT, FUN_VIEW,
                                     FUN_DISASSEMBLY, FUN_CREATE_RULE};
 
-  Append(menu, DataView::GetContextMenu(a_Index));
+  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
 
   return menu;
 }

@@ -92,12 +92,14 @@ const std::vector<DataView::SortingOrder>& DataView::GetColumnInitialOrders() {
 }
 
 //-----------------------------------------------------------------------------
-const std::wstring DV_COPY_SELECTION = L"Copy Selection";
-const std::wstring DV_EXPORT_TO_CSV = L"Export to CSV";
+const std::wstring DataView::MENU_ACTION_COPY_SELECTION = L"Copy Selection";
+const std::wstring DataView::MENU_ACTION_EXPORT_TO_CSV = L"Export to CSV";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> DataView::GetContextMenu(int /*a_Index*/) {
-  static std::vector<std::wstring> menu = {DV_COPY_SELECTION, DV_EXPORT_TO_CSV};
+std::vector<std::wstring> DataView::GetContextMenu(
+    int /*a_ClickedIndex*/, const std::vector<int>& /*a_SelectedIndices*/) {
+  static std::vector<std::wstring> menu = {MENU_ACTION_COPY_SELECTION,
+                                           MENU_ACTION_EXPORT_TO_CSV};
   return menu;
 }
 
@@ -106,9 +108,9 @@ void DataView::OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
                              std::vector<int>& a_ItemIndices) {
   UNUSED(a_MenuIndex);
 
-  if (a_Action == DV_EXPORT_TO_CSV) {
+  if (a_Action == MENU_ACTION_EXPORT_TO_CSV) {
     ExportCSV(GOrbitApp->GetSaveFile(L".csv"));
-  } else if (a_Action == DV_COPY_SELECTION) {
+  } else if (a_Action == MENU_ACTION_COPY_SELECTION) {
     CopySelection(a_ItemIndices);
   }
 }

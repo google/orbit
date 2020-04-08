@@ -15,7 +15,8 @@ class SessionsDataView : public DataView {
   const std::vector<std::wstring>& GetColumnHeaders() override;
   const std::vector<float>& GetColumnHeadersRatios() override;
   const std::vector<SortingOrder>& GetColumnInitialOrders() override;
-  std::vector<std::wstring> GetContextMenu(int a_Index) override;
+  std::vector<std::wstring> GetContextMenu(
+      int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
   std::wstring GetValue(int a_Row, int a_Column) override;
   std::wstring GetToolTip(int a_Row, int a_Column) override;
   std::wstring GetLabel() override { return L"Sessions"; }

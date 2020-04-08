@@ -134,8 +134,9 @@ void LogDataView::OnFilter(const std::wstring& a_Filter) {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> LogDataView::GetContextMenu(int a_Index) {
-  const OrbitLogEntry& entry = LogDataView::GetEntry(a_Index);
+std::vector<std::wstring> LogDataView::GetContextMenu(
+    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
+  const OrbitLogEntry& entry = LogDataView::GetEntry(a_ClickedIndex);
   m_SelectedCallstack = Capture::GetCallstack(entry.m_CallstackHash);
   std::vector<std::wstring> menu;
   if (m_SelectedCallstack) {
@@ -144,7 +145,7 @@ std::vector<std::wstring> LogDataView::GetContextMenu(int a_Index) {
       menu.push_back(Capture::GSamplingProfiler->GetSymbolFromAddress(addr));
     }
   }
-  Append(menu, DataView::GetContextMenu(a_Index));
+  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
 

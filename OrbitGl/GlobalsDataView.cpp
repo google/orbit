@@ -183,9 +183,10 @@ void GlobalsDataView::OnSort(int a_Column,
 std::wstring TYPES_MENU_WATCH = L"Add to watch";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> GlobalsDataView::GetContextMenu(int a_Index) {
+std::vector<std::wstring> GlobalsDataView::GetContextMenu(
+    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   std::vector<std::wstring> menu = {TYPES_MENU_WATCH};
-  Append(menu, DataView::GetContextMenu(a_Index));
+  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
 

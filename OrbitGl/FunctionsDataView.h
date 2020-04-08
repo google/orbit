@@ -14,7 +14,8 @@ class FunctionsDataView : public DataView {
   const std::vector<float>& GetColumnHeadersRatios() override;
   const std::vector<SortingOrder>& GetColumnInitialOrders() override;
   int GetDefaultSortingColumn() override;
-  std::vector<std::wstring> GetContextMenu(int a_Index) override;
+  std::vector<std::wstring> GetContextMenu(
+      int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
   std::wstring GetValue(int a_Row, int a_Column) override;
   void OnFilter(const std::wstring& a_Filter) override;
   void ParallelFilter();

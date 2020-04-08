@@ -276,9 +276,10 @@ std::wstring TYPES_SUMMARY = L"Summary";
 std::wstring TYPES_DETAILS = L"Details";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> TypesDataView::GetContextMenu(int a_Index) {
+std::vector<std::wstring> TypesDataView::GetContextMenu(
+    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   std::vector<std::wstring> menu = {TYPES_SUMMARY, TYPES_DETAILS};
-  Append(menu, DataView::GetContextMenu(a_Index));
+  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
 

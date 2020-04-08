@@ -33,7 +33,8 @@ class DataView {
   virtual bool IsSortingAllowed() { return true; }
   virtual const std::vector<SortingOrder>& GetColumnInitialOrders();
   virtual int GetDefaultSortingColumn() { return 0; }
-  virtual std::vector<std::wstring> GetContextMenu(int a_Index);
+  virtual std::vector<std::wstring> GetContextMenu(
+      int a_ClickedIndex, const std::vector<int>& a_SelectedIndices);
   virtual size_t GetNumElements() { return m_Indices.size(); }
   virtual std::wstring GetValue(int /*a_Row*/, int /*a_Column*/) { return L""; }
   virtual std::wstring GetToolTip(int /*a_Row*/, int /*a_Column*/) {
@@ -82,4 +83,7 @@ class DataView {
   int m_UpdatePeriodMs;
   int m_SelectedIndex;
   DataViewType m_Type;
+
+  static const std::wstring MENU_ACTION_COPY_SELECTION;
+  static const std::wstring MENU_ACTION_EXPORT_TO_CSV;
 };
