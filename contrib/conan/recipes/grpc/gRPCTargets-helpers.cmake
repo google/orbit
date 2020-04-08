@@ -34,7 +34,8 @@ function(grpc_helper)
             "${bin_dir}" -I ${src_folder}
             --plugin=protoc-gen-grpc="${_HELPER_GRPC_CPP_PLUGIN}"
             "${src_filepath}"
-          DEPENDS "${source_filepath}" "${bin_dir}")
+          MAIN_DEPENDENCY "${src_filepath}"
+          DEPENDS "${bin_dir}")
 
         add_library(${target_name} OBJECT)
         target_include_directories(${target_name} PUBLIC ${bin_dir})
