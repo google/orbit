@@ -9,7 +9,6 @@
 #include "Capture.h"
 #include "Core.h"
 #include "OrbitProcess.h"
-#include "Pdb.h"
 #include "SamplingProfiler.h"
 #include "absl/strings/str_format.h"
 
@@ -28,7 +27,7 @@ size_t CallStackDataView::GetNumElements() { return m_Indices.size(); }
 void CallStackDataView::OnDataChanged() {
   size_t numFunctions = m_CallStack ? m_CallStack->m_Depth : 0;
   m_Indices.resize(numFunctions);
-  for (uint32_t i = 0; i < numFunctions; ++i) {
+  for (size_t i = 0; i < numFunctions; ++i) {
     m_Indices[i] = i;
   }
 }
@@ -91,9 +90,7 @@ void CallStackDataView::OnFilter(const std::wstring& a_Filter) {
     bool match = true;
 
     for (std::wstring& filterToken : tokens) {
-      if( !( name.find( filterToken ) != std::wstring::npos/* ||
-                   file.find( filterToken ) != std::string::npos*/ ) )
-            {
+      if (name.find(filterToken) == std::wstring::npos) {
         match = false;
         break;
       }

@@ -292,7 +292,7 @@ void Function::Print() {
   ORBIT_VIZV(address_);
   ORBIT_VIZV(selected_);
 
-  if (params_.size()) {
+  if (!params_.empty()) {
     ORBIT_VIZ("\nParams:");
     for (auto& var : params_) {
       ORBIT_VIZV(var.m_Name);
