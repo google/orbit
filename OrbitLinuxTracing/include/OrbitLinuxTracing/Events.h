@@ -109,8 +109,8 @@ class GpuJob {
          uint64_t gpu_hardware_start_time_ns,
          uint64_t dma_fence_signaled_time_ns)
       : tid_(tid),
-        seqno_(seqno),
         context_(context),
+        seqno_(seqno),
         timeline_(std::move(timeline)),
         depth_(depth),
         amdgpu_cs_ioctl_time_ns_(amdgpu_cs_ioctl_time_ns),

@@ -49,7 +49,7 @@ class CoreApp {
   virtual void AddSymbol(uint64_t /*a_Address*/,
                          const std::string& /*a_Module*/,
                          const std::string& /*a_Name*/) {}
-  virtual void AddKeyAndString(uint64_t key, std::string_view str) {}
+  virtual void AddKeyAndString(uint64_t /*key*/, std::string_view /*str*/) {}
   virtual void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) {}
   virtual void ApplySession(std::shared_ptr<Session> session) {};
   virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*

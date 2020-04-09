@@ -80,7 +80,7 @@ ORBIT_SERIALIZE(CallstackEvent, 0) {
 #ifdef __linux
 
 //-----------------------------------------------------------------------------
-void EventTracer::Start(uint32_t a_PID, LinuxTracingSession* session) {
+void EventTracer::Start(uint32_t /*pid*/, LinuxTracingSession* session) {
   Capture::NewSamplingProfiler();
   Capture::GSamplingProfiler->StartCapture();
 

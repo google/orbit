@@ -38,9 +38,9 @@
 #include <streambuf>
 
 ConnectionManager::ConnectionManager()
-    : exit_requested_(false),
-      is_service_(false),
-      tracing_session_(GTcpServer.get()) {}
+    : tracing_session_(GTcpServer.get()),
+      exit_requested_(false),
+      is_service_(false) {}
 
 ConnectionManager::~ConnectionManager() {
   StopThread();
