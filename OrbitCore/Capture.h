@@ -89,7 +89,7 @@ class Capture {
   static std::shared_ptr<Session> GSessionPresets;
   static std::shared_ptr<CallStack> GSelectedCallstack;
   static void (*GClearCaptureDataFunc)();
-  static std::vector<std::shared_ptr<Function>> GSelectedFunctions_;
+  static std::vector<std::shared_ptr<Function>> GSelectedFunctions;
   static std::map<uint64_t, Function*> GSelectedFunctionsMap;
   static std::map<uint64_t, Function*> GVisibleFunctionsMap;
   static std::unordered_map<ULONG64, ULONG64> GFunctionCountMap;

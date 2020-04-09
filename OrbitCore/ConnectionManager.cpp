@@ -84,7 +84,7 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
   const char* a_Data = a_Msg.GetData();
   size_t a_Size = a_Msg.m_Size;
 
-  DeserializeObjectBinary(a_Data, a_Size, Capture::GSelectedFunctions_);
+  DeserializeObjectBinary(a_Data, a_Size, Capture::GSelectedFunctions);
 
   // Unselect the all currently selected functions:
   for (auto& pair : Capture::GSelectedFunctionsMap) {
@@ -94,7 +94,7 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
   Capture::GSelectedFunctionsMap.clear();
 
   // Select the received functions:
-  for (std::shared_ptr<Function> function : Capture::GSelectedFunctions_) {
+  for (std::shared_ptr<Function> function : Capture::GSelectedFunctions) {
     // this also adds the function to the map.
     function->Select();
     Capture::GSelectedFunctionsMap[function->GetVirtualAddress()] = function.get();

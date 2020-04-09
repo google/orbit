@@ -52,7 +52,7 @@ std::string Capture::GCaptureHost = "localhost";
 std::string Capture::GPresetToLoad = "";
 std::string Capture::GProcessToInject = "";
 
-std::vector<std::shared_ptr<Function>> Capture::GSelectedFunctions_;
+std::vector<std::shared_ptr<Function>> Capture::GSelectedFunctions;
 std::map<uint64_t, Function*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, Function*> Capture::GVisibleFunctionsMap;
 std::unordered_map<ULONG64, ULONG64> Capture::GFunctionCountMap;
@@ -306,14 +306,14 @@ void Capture::SendFunctionHooks() {
   PreFunctionHooks();
 
   // TODO: this method is used for different purposes on the client and service,
-  //       clean up and split functionality clearly.  On the service, we don't 
-  //       gather selected functions because the client has already sent us the 
+  //       clean up and split functionality clearly.  On the service, we don't
+  //       gather selected functions because the client has already sent us the
   //       functions to selected.  They are in GSelectedFunctions.
   if (ConnectionManager::Get().IsClient()) {
-    GSelectedFunctions_ = GetSelectedFunctions();
+    GSelectedFunctions = GetSelectedFunctions();
   }
 
-  for (auto& func : GSelectedFunctions_) {
+  for (auto& func : GSelectedFunctions) {
     uint64_t address = func->GetVirtualAddress();
     GSelectedAddressesByType[func->GetOrbitType()].push_back(address);
     GSelectedFunctionsMap[address] = func.get();
@@ -328,12 +328,12 @@ void Capture::SendFunctionHooks() {
   }
 
   if (Capture::IsRemote()) {
-    for (auto& function : GSelectedFunctions_) {
+    for (auto& function : GSelectedFunctions) {
       LOG("Send Selected Function: %s\n", function->PrettyName().c_str());
     }
 
     std::string selectedFunctionsData =
-        SerializeObjectBinary(GSelectedFunctions_);
+        SerializeObjectBinary(GSelectedFunctions);
     GTcpClient->Send(Msg_RemoteSelectedFunctionsMap,
                      (void*)selectedFunctionsData.data(),
                      selectedFunctionsData.size());
