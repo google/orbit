@@ -181,13 +181,13 @@ target_link_libraries(
          oqpi::oqpi
          asio::asio
          abseil::abseil
-         llvm_object::llvm_object)
+         llvm_object::llvm_object
+  PRIVATE crashpad::crashpad)
 
 if(WIN32)
   target_link_libraries(
     OrbitCore
     PRIVATE minhook::minhook DIA2Dump::DIA2Dump
-            crashpad::crashpad
             OrbitAsm)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib peparse::peparse)
   target_compile_definitions(OrbitCore PUBLIC -D_WIN32_WINNT=0x0700)

@@ -23,13 +23,16 @@ int main(int argc, char* argv[]) {
 
   QApplication a(argc, argv);
 
+  const std::string dump_path = Path::GetDumpPath();
 #ifdef _WIN32
-  std::string dump_path = Path::GetDumpPath();
-  std::string handler_path = QDir(QCoreApplication::applicationDirPath())
-                                 .absoluteFilePath("crashpad_handler.exe")
-                                 .toStdString();
-  CrashHandler m_CrashHandler(dump_path, handler_path);
+  const char* handler_name = "crashpad_handler.exe";
+#else
+  const char* handler_name = "crashpad_handler";
 #endif
+  const std::string handler_path = QDir(QCoreApplication::applicationDirPath())
+                                 .absoluteFilePath(handler_name)
+                                 .toStdString();
+  const CrashHandler crash_handler(dump_path, handler_path);
 
   a.setStyle(QStyleFactory::create("Fusion"));
 
