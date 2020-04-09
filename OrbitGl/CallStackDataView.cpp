@@ -29,7 +29,7 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
     return "";
   }
 
-  Function& function = GetFunctionOrDummy(a_Row);
+  Function& function = GetFunctionOrDummy(m_Indices[a_Row]);
 
   std::string value;
 
@@ -106,11 +106,12 @@ void CallStackDataView::OnDataChanged() {
 
 //-----------------------------------------------------------------------------
 Function* CallStackDataView::GetFunction(int a_Row) {
-  if (m_CallStack != nullptr && a_Row < m_CallStack->m_Depth &&
+  int index = m_Indices[a_Row];
+  if (m_CallStack != nullptr && index < m_CallStack->m_Depth &&
       Capture::GTargetProcess != nullptr) {
     ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
-    uint64_t address = m_CallStack->m_Data[a_Row];
+    uint64_t address = m_CallStack->m_Data[index];
     Function* function =
         Capture::GTargetProcess->GetFunctionFromAddress(address, false);
     return function;
@@ -119,16 +120,16 @@ Function* CallStackDataView::GetFunction(int a_Row) {
 }
 
 //-----------------------------------------------------------------------------
-Function& CallStackDataView::GetFunctionOrDummy(int a_Row) {
-  Function* function = GetFunction(a_Row);
+Function& CallStackDataView::GetFunctionOrDummy(int a_IndexInCallstack) {
+  Function* function = GetFunction(a_IndexInCallstack);
   if (function != nullptr) {
     return *function;
   }
 
   static Function dummy;
-  if (m_CallStack != nullptr && a_Row < m_CallStack->m_Depth &&
+  if (m_CallStack != nullptr && a_IndexInCallstack < m_CallStack->m_Depth &&
       Capture::GSamplingProfiler != nullptr) {
-    uint64_t address = m_CallStack->m_Data[a_Row];
+    uint64_t address = m_CallStack->m_Data[a_IndexInCallstack];
     dummy.SetPrettyName(
         ws2s(Capture::GSamplingProfiler->GetSymbolFromAddress(address)));
     dummy.SetAddress(address);
