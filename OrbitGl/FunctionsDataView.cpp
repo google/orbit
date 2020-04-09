@@ -271,12 +271,12 @@ void FunctionsDataView::OnContextMenu(const std::string& a_Action,
     }
   } else if (a_Action == MENU_ACTION_CREATE_RULE) {
     if (a_ItemIndices.size() == 1) {
-      Function& function = GetFunction(0);
+      Function& function = GetFunction(a_ItemIndices[0]);
       GOrbitApp->LaunchRuleEditor(&function);
     }
   } else if (a_Action == MENU_ACTION_SET_AS_FRAME) {
     if (a_ItemIndices.size() == 1) {
-      Function& function = GetFunction(0);
+      Function& function = GetFunction(a_ItemIndices[0]);
       function.SetAsMainFrameFunction();
     }
   } else {
