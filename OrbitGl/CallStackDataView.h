@@ -27,7 +27,7 @@ class CallStackDataView : public FunctionsDataView {
 
  protected:
   Function* GetFunction(int a_Row) override;
-  Function& GetFunctionOrDummy(int a_Row);
+  Function& GetFunctionOrDummy(int a_IndexInCallstack);
 
   std::shared_ptr<CallStack> m_CallStack;
 };
