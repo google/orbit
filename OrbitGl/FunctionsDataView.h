@@ -25,7 +25,7 @@ class FunctionsDataView : public DataView {
   void OnDataChanged() override;
 
  protected:
-  virtual Function& GetFunction(unsigned int a_Row);
+  virtual Function* GetFunction(int a_Row);
 
   std::vector<std::string> m_FilterTokens;
 
