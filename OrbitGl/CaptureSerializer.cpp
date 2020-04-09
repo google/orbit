@@ -131,12 +131,13 @@ void CaptureSerializer::Load(const std::wstring a_FileName) {
     std::shared_ptr<Module> module = std::make_shared<Module>();
     Capture::GTargetProcess->AddModule(module);
     module->m_Pdb = std::make_shared<Pdb>(ws2s(a_FileName).c_str());
-    archive(module->m_Pdb->GetFunctions());
+    std::vector<std::shared_ptr<Function>> functions = module->m_Pdb->GetFunctions();
+    archive(functions);
     module->m_Pdb->ProcessData();
     GPdbDbg = module->m_Pdb;
     Capture::GSelectedFunctionsMap.clear();
-    for (Function& func : module->m_Pdb->GetFunctions()) {
-      Capture::GSelectedFunctionsMap[func.GetVirtualAddress()] = &func;
+    for (auto& func : module->m_Pdb->GetFunctions()) {
+      Capture::GSelectedFunctionsMap[func->GetVirtualAddress()] = func.get();
     }
     Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 

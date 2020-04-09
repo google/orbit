@@ -308,7 +308,7 @@ void FunctionsDataView::OnFilter(const std::wstring& a_Filter) {
 //-----------------------------------------------------------------------------
 void FunctionsDataView::ParallelFilter() {
 #ifdef _WIN32
-  std::vector<Function*>& functions = Capture::GTargetProcess->GetFunctions();
+  const std::vector<std::shared_ptr<Function>>& functions = Capture::GTargetProcess->GetFunctions();
   const auto prio = oqpi::task_priority::normal;
   auto numWorkers = oqpi_tk::scheduler().workersCount(prio);
   // int numWorkers = oqpi::thread::hardware_concurrency();

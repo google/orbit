@@ -77,10 +77,11 @@ Pdb::~Pdb() {
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::AddFunction(const Function& function) {
-  m_Functions.push_back(function);
-  m_Functions.back().SetPdb(this);
-  CheckOrbitFunction(m_Functions.back());
+void Pdb::AddFunction(const std::shared_ptr<Function>& function)
+{
+  functions_.push_back(function);
+  functions_.back()->SetPdb(this);
+  CheckOrbitFunction(*functions_.back());
 }
 
 //-----------------------------------------------------------------------------
@@ -147,7 +148,7 @@ void Pdb::PrintFunction(Function& a_Function) { a_Function.Print(); }
 
 //-----------------------------------------------------------------------------
 void Pdb::Clear() {
-  m_Functions.clear();
+  functions_.clear();
   m_Types.clear();
   m_Globals.clear();
   m_TypeMap.clear();
@@ -158,7 +159,7 @@ void Pdb::Clear() {
 //-----------------------------------------------------------------------------
 void Pdb::Reserve() {
   const int size = 8 * 1024;
-  m_Functions.reserve(size);
+  functions_.reserve(size);
   m_Types.reserve(size);
   m_Globals.reserve(size);
 }
@@ -236,7 +237,7 @@ void Pdb::Update() {
 void Pdb::SendStatusToUi() {
   std::wstring status = Format(
       L"status:Parsing %s\nFunctions: %i\nTypes: %i\nGlobals: %i\n",
-      m_Name.c_str(), m_Functions.size(), m_Types.size(), m_Globals.size());
+      m_Name.c_str(), functions_.size(), m_Types.size(), m_Globals.size());
 
   if (m_IsPopulatingFunctionMap) {
     status += L"PopulatingFunctionMap\n";
@@ -508,8 +509,8 @@ void Pdb::PopulateFunctionMap() {
   SCOPE_TIMER_LOG(
       absl::StrFormat("Pdb::PopulateFunctionMap for %s", m_FileName.c_str()));
 
-  for (Function& Function : m_Functions) {
-    m_FunctionMap.insert(std::make_pair(Function.Address(), &Function));
+  for (auto& function : functions_) {
+    m_FunctionMap.insert(std::make_pair(function->Address(), function.get()));
   }
 
   m_IsPopulatingFunctionMap = false;
@@ -524,19 +525,19 @@ void Pdb::PopulateStringFunctionMap() {
 
   {
     SCOPE_TIMER_LOG("Reserving map");
-    m_StringFunctionMap.reserve(unsigned(1.5f * (float)m_Functions.size()));
+    m_StringFunctionMap.reserve(unsigned(1.5f * (float)functions_.size()));
   }
 
   {
     SCOPE_TIMER_LOG("Hash");
 
-    if (m_Functions.size() > 1000) {
+    if (functions_.size() > 1000) {
       oqpi_tk::parallel_for_each(
-          "StringMap", m_Functions,
-          [](Function& a_Function) { a_Function.Hash(); });
+          "StringMap", functions_,
+          [](std::shared_ptr<Function>& a_Function) { a_Function->Hash(); });
     } else {
-      for (Function& Function : m_Functions) {
-        Function.Hash();
+      for (std::shared_ptr<Function>& function : functions_) {
+        function->Hash();
       }
     }
   }
@@ -544,8 +545,8 @@ void Pdb::PopulateStringFunctionMap() {
   {
     SCOPE_TIMER_LOG("Map inserts");
 
-    for (Function& Function : m_Functions) {
-      m_StringFunctionMap[Function.Hash()] = &Function;
+    for (std::shared_ptr<Function>& function : functions_) {
+      m_StringFunctionMap[function->Hash()] = function.get();
     }
   }
 
@@ -657,21 +658,18 @@ void Pdb::ProcessData() {
 
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
-  auto& functions = Capture::GTargetProcess->GetFunctions();
   auto& globals = Capture::GTargetProcess->GetGlobals();
 
-  functions.reserve(functions.size() + m_Functions.size());
-
-  for (Function& func : m_Functions) {
-    func.SetPdb(this);
-    functions.push_back(&func);
-    GOrbitUnreal.OnFunctionAdded(&func);
+  for (auto& func : functions_) {
+    func->SetPdb(this);
+    Capture::GTargetProcess->AddFunction(func);
+    GOrbitUnreal.OnFunctionAdded(func.get());
   }
 
   if (GParams.m_FindFileAndLineInfo) {
     SCOPE_TIMER_LOG("Find File and Line info");
-    for (Function& func : m_Functions) {
-      func.FindFile();
+    for (auto& func : functions_) {
+      func->FindFile();
     }
   }
 
