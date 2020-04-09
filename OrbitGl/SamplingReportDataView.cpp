@@ -14,6 +14,7 @@
 #include "OrbitModule.h"
 #include "OrbitType.h"
 #include "SamplingReport.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 SamplingReportDataView::SamplingReportDataView()
@@ -24,7 +25,7 @@ SamplingReportDataView::SamplingReportDataView()
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> SamplingReportDataView::s_Headers;
+std::vector<std::string> SamplingReportDataView::s_Headers;
 std::vector<int> SamplingReportDataView::s_HeaderMap;
 std::vector<float> SamplingReportDataView::s_HeaderRatios;
 std::vector<DataView::SortingOrder> SamplingReportDataView::s_InitialOrders;
@@ -32,47 +33,47 @@ std::vector<DataView::SortingOrder> SamplingReportDataView::s_InitialOrders;
 //-----------------------------------------------------------------------------
 void SamplingReportDataView::InitColumnsIfNeeded() {
   if (s_Headers.empty()) {
-    s_Headers.emplace_back(L"Hooked");
+    s_Headers.emplace_back("Hooked");
     s_HeaderMap.push_back(SamplingColumn::Toggle);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Index");
+    s_Headers.emplace_back("Index");
     s_HeaderMap.push_back(SamplingColumn::Index);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Name");
+    s_Headers.emplace_back("Name");
     s_HeaderMap.push_back(SamplingColumn::FunctionName);
     s_HeaderRatios.push_back(0.6f);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Exclusive");
+    s_Headers.emplace_back("Exclusive");
     s_HeaderMap.push_back(SamplingColumn::Exclusive);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Inclusive");
+    s_Headers.emplace_back("Inclusive");
     s_HeaderMap.push_back(SamplingColumn::Inclusive);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Module");
+    s_Headers.emplace_back("Module");
     s_HeaderMap.push_back(SamplingColumn::ModuleName);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"File");
+    s_Headers.emplace_back("File");
     s_HeaderMap.push_back(SamplingColumn::SourceFile);
     s_HeaderRatios.push_back(0.2f);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Line");
+    s_Headers.emplace_back("Line");
     s_HeaderMap.push_back(SamplingColumn::SourceLine);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Address");
+    s_Headers.emplace_back("Address");
     s_HeaderMap.push_back(SamplingColumn::Address);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
@@ -80,7 +81,7 @@ void SamplingReportDataView::InitColumnsIfNeeded() {
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& SamplingReportDataView::GetColumnHeaders() {
+const std::vector<std::string>& SamplingReportDataView::GetColumnHeaders() {
   return s_Headers;
 }
 
@@ -103,38 +104,38 @@ int SamplingReportDataView::GetDefaultSortingColumn() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring SamplingReportDataView::GetValue(int a_Row, int a_Column) {
+std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
   SampledFunction& func = GetSampledFunction(a_Row);
 
-  std::wstring value;
+  std::string value;
 
   switch (s_HeaderMap[a_Column]) {
     case SamplingColumn::Toggle:
-      value = func.GetSelected() ? L"X" : L"-";
+      value = func.GetSelected() ? "X" : "-";
       break;
     case SamplingColumn::Index:
-      value = Format(L"%d", a_Row);
+      value = absl::StrFormat("%d", a_Row);
       break;
     case SamplingColumn::FunctionName:
-      value = func.m_Name;
+      value = ws2s(func.m_Name);
       break;
     case SamplingColumn::Exclusive:
-      value = Format(L"%.2f", func.m_Exclusive);
+      value = absl::StrFormat("%.2f", func.m_Exclusive);
       break;
     case SamplingColumn::Inclusive:
-      value = Format(L"%.2f", func.m_Inclusive);
+      value = absl::StrFormat("%.2f", func.m_Inclusive);
       break;
     case SamplingColumn::ModuleName:
-      value = func.m_Module;
+      value = ws2s(func.m_Module);
       break;
     case SamplingColumn::SourceFile:
-      value = func.m_File;
+      value = ws2s(func.m_File);
       break;
     case SamplingColumn::SourceLine:
-      value = func.m_Line > 0 ? Format(L"%d", func.m_Line) : L"";
+      value = func.m_Line > 0 ? absl::StrFormat("%d", func.m_Line) : "";
       break;
     case SamplingColumn::Address:
-      value = Format(L"0x%llx", func.m_Address);
+      value = absl::StrFormat("0x%llx", func.m_Address);
       break;
     default:
       break;
@@ -228,15 +229,15 @@ SamplingReportDataView::GetModulesFromIndices(
     const std::vector<int>& a_Indices) {
   std::vector<std::shared_ptr<Module>> modules;
   if (Capture::GTargetProcess != nullptr) {
-    std::set<std::wstring> module_names;
+    std::set<std::string> module_names;
     for (int index : a_Indices) {
       SampledFunction& sampled_function = GetSampledFunction(index);
-      module_names.emplace(sampled_function.m_Module);
+      module_names.emplace(ws2s(sampled_function.m_Module));
     }
 
     auto& module_map = Capture::GTargetProcess->GetNameToModulesMap();
-    for (const std::wstring& module_name : module_names) {
-      auto module_it = module_map.find(ws2s(ToLower(module_name)));
+    for (const std::string& module_name : module_names) {
+      auto module_it = module_map.find(ToLower(module_name));
       if (module_it != module_map.end()) {
         modules.push_back(module_it->second);
       }
@@ -246,15 +247,15 @@ SamplingReportDataView::GetModulesFromIndices(
 }
 
 //-----------------------------------------------------------------------------
-const std::wstring SamplingReportDataView::MENU_ACTION_SELECT = L"Hook";
-const std::wstring SamplingReportDataView::MENU_ACTION_UNSELECT = L"Unhook";
-const std::wstring SamplingReportDataView::MENU_ACTION_MODULES_LOAD =
-    L"Load Symbols";
-const std::wstring SamplingReportDataView::MENU_ACTION_DISASSEMBLY =
-    L"Go to Disassembly";
+const std::string SamplingReportDataView::MENU_ACTION_SELECT = "Hook";
+const std::string SamplingReportDataView::MENU_ACTION_UNSELECT = "Unhook";
+const std::string SamplingReportDataView::MENU_ACTION_MODULES_LOAD =
+    "Load Symbols";
+const std::string SamplingReportDataView::MENU_ACTION_DISASSEMBLY =
+    "Go to Disassembly";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> SamplingReportDataView::GetContextMenu(
+std::vector<std::string> SamplingReportDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
   bool enable_unselect = false;
@@ -270,7 +271,7 @@ std::vector<std::wstring> SamplingReportDataView::GetContextMenu(
     }
   }
 
-  std::vector<std::wstring> menu;
+  std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
   if (enable_load) menu.emplace_back(MENU_ACTION_MODULES_LOAD);
@@ -281,7 +282,7 @@ std::vector<std::wstring> SamplingReportDataView::GetContextMenu(
 
 //-----------------------------------------------------------------------------
 void SamplingReportDataView::OnContextMenu(
-    const std::wstring& a_Action, int a_MenuIndex,
+    const std::string& a_Action, int a_MenuIndex,
     const std::vector<int>& a_ItemIndices) {
   if (a_Action == MENU_ACTION_SELECT) {
     for (Function* function : GetFunctionsFromIndices(a_ItemIndices)) {
@@ -339,28 +340,28 @@ void SamplingReportDataView::SetSampledFunctions(
 void SamplingReportDataView::SetThreadID(ThreadID a_TID) {
   m_TID = a_TID;
   if (a_TID == 0) {
-    m_Name = L"All";
+    m_Name = "All";
   } else {
-    m_Name = Format(L"%d", m_TID);
+    m_Name = absl::StrFormat("%d", m_TID);
   }
 }
 
 //-----------------------------------------------------------------------------
-void SamplingReportDataView::OnFilter(const std::wstring& a_Filter) {
+void SamplingReportDataView::OnFilter(const std::string& a_Filter) {
   std::vector<uint32_t> indices;
 
-  std::vector<std::wstring> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
 
   for (size_t i = 0; i < m_Functions.size(); ++i) {
     SampledFunction& func = m_Functions[i];
-    std::wstring name = ToLower(func.m_Name);
-    std::wstring module = ToLower(func.m_Module);
+    std::string name = ToLower(ws2s(func.m_Name));
+    std::string module = ToLower(ws2s(func.m_Module));
 
     bool match = true;
 
-    for (std::wstring& filterToken : tokens) {
-      if (!(name.find(filterToken) != std::wstring::npos ||
-            module.find(filterToken) != std::wstring::npos)) {
+    for (std::string& filterToken : tokens) {
+      if (!(name.find(filterToken) != std::string::npos ||
+            module.find(filterToken) != std::string::npos)) {
         match = false;
         break;
       }

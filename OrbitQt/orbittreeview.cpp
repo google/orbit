@@ -212,7 +212,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
     std::vector<int> selected_indices(selection_set.begin(),
                                       selection_set.end());
 
-    std::vector<std::wstring> menu =
+    std::vector<std::string> menu =
         m_Model->GetDataView()->GetContextMenu(clicked_index, selected_indices);
     if (!menu.empty()) {
       QMenu contextMenu(tr("ContextMenu"), this);
@@ -221,7 +221,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
 
       for (int i = 0; i < (int)menu.size(); ++i) {
         actions.push_back(
-            std::make_unique<QAction>(QString::fromStdWString(menu[i])));
+            std::make_unique<QAction>(QString::fromStdString(menu[i])));
         connect(actions[i].get(), &QAction::triggered,
                 [this, &menu, i] { OnMenuClicked(menu[i], i); });
         contextMenu.addAction(actions[i].get());
@@ -234,7 +234,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTreeView::OnMenuClicked(const std::wstring& a_Action,
+void OrbitTreeView::OnMenuClicked(const std::string& a_Action,
                                   int a_MenuIndex) {
   QModelIndexList selection_list = selectionModel()->selectedIndexes();
   std::set<int> selection_set;
@@ -273,12 +273,11 @@ void OrbitTreeView::OnRangeChanged(int /*a_Min*/, int a_Max) {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring OrbitTreeView::GetLabel() {
-  if (m_Model && m_Model->GetDataView()) {
+std::string OrbitTreeView::GetLabel() {
+  if (m_Model != nullptr && m_Model->GetDataView() != nullptr) {
     return m_Model->GetDataView()->GetLabel();
   }
-
-  return L"";
+  return "";
 }
 
 //-----------------------------------------------------------------------------

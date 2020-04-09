@@ -25,9 +25,9 @@ void OrbitDataViewPanel::Initialize(DataViewType a_Type,
     ui->treeView->GetModel()->GetDataView()->SetAsMainInstance();
   }
 
-  std::wstring label = ui->treeView->GetLabel();
-  if (label != L"") {
-    this->ui->label->setText(QString::fromStdWString(label));
+  std::string label = ui->treeView->GetLabel();
+  if (!label.empty()) {
+    this->ui->label->setText(QString::fromStdString(label));
     this->ui->label->show();
   }
 }

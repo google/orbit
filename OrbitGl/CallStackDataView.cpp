@@ -33,9 +33,9 @@ void CallStackDataView::OnDataChanged() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring CallStackDataView::GetValue(int a_Row, int a_Column) {
+std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
   if (a_Row >= (int)GetNumElements()) {
-    return L"";
+    return "";
   }
 
   Function& function = GetFunction(a_Row);
@@ -74,23 +74,23 @@ std::wstring CallStackDataView::GetValue(int a_Row, int a_Column) {
       break;
   }
 
-  return s2ws(value);
+  return value;
 }
 
 //-----------------------------------------------------------------------------
-void CallStackDataView::OnFilter(const std::wstring& a_Filter) {
+void CallStackDataView::OnFilter(const std::string& a_Filter) {
   if (!m_CallStack) return;
 
   std::vector<uint32_t> indices;
-  std::vector<std::wstring> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
 
   for (int i = 0; i < (int)m_CallStack->m_Depth; ++i) {
     const Function& function = GetFunction(i);
-    std::wstring name = ToLower(s2ws(function.PrettyName()));
+    std::string name = ToLower(function.PrettyName());
     bool match = true;
 
-    for (std::wstring& filterToken : tokens) {
-      if (name.find(filterToken) == std::wstring::npos) {
+    for (std::string& filterToken : tokens) {
+      if (name.find(filterToken) == std::string::npos) {
         match = false;
         break;
       }

@@ -12,18 +12,18 @@ class SamplingReportDataView : public DataView {
  public:
   SamplingReportDataView();
 
-  const std::vector<std::wstring>& GetColumnHeaders() override;
+  const std::vector<std::string>& GetColumnHeaders() override;
   const std::vector<float>& GetColumnHeadersRatios() override;
   const std::vector<SortingOrder>& GetColumnInitialOrders() override;
   int GetDefaultSortingColumn() override;
-  std::vector<std::wstring> GetContextMenu(
+  std::vector<std::string> GetContextMenu(
       int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
-  std::wstring GetValue(int a_Row, int a_Column) override;
-  const std::wstring& GetName() override { return m_Name; }
+  std::string GetValue(int a_Row, int a_Column) override;
+  const std::string& GetName() override { return m_Name; }
 
-  void OnFilter(const std::wstring& a_Filter) override;
+  void OnFilter(const std::string& a_Filter) override;
   void OnSort(int a_Column, std::optional<SortingOrder> a_NewOrder) override;
-  void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
+  void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                      const std::vector<int>& a_ItemIndices) override;
   void OnSelect(int a_Index) override;
 
@@ -58,18 +58,18 @@ class SamplingReportDataView : public DataView {
 
   std::vector<SampledFunction> m_Functions;
   ThreadID m_TID = -1;
-  std::wstring m_Name;
+  std::string m_Name;
   class CallStackDataView* m_CallstackDataView;
   SamplingReport* m_SamplingReport = nullptr;
 
   static void InitColumnsIfNeeded();
-  static std::vector<std::wstring> s_Headers;
+  static std::vector<std::string> s_Headers;
   static std::vector<int> s_HeaderMap;
   static std::vector<float> s_HeaderRatios;
   static std::vector<SortingOrder> s_InitialOrders;
 
-  static const std::wstring MENU_ACTION_SELECT;
-  static const std::wstring MENU_ACTION_UNSELECT;
-  static const std::wstring MENU_ACTION_MODULES_LOAD;
-  static const std::wstring MENU_ACTION_DISASSEMBLY;
+  static const std::string MENU_ACTION_SELECT;
+  static const std::string MENU_ACTION_UNSELECT;
+  static const std::string MENU_ACTION_MODULES_LOAD;
+  static const std::string MENU_ACTION_DISASSEMBLY;
 };

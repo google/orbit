@@ -936,7 +936,7 @@ void OrbitApp::Unregister(DataView* a_Model) {
 //-----------------------------------------------------------------------------
 bool OrbitApp::SelectProcess(const std::string& a_Process) {
   if (m_ProcessesDataView) {
-    return m_ProcessesDataView->SelectProcess(s2ws(a_Process));
+    return m_ProcessesDataView->SelectProcess(a_Process);
   }
 
   return false;
