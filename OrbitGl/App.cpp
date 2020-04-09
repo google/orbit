@@ -1092,7 +1092,6 @@ void OrbitApp::ApplySession(std::shared_ptr<Session> session) {
   if (session != nullptr) {
     for (auto& pair : session->m_Modules) {
       const std::string& name = pair.first;
-      SessionModule& session_module = pair.second;
       std::shared_ptr<Module> module =
           Capture::GTargetProcess->GetModuleFromName(Path::GetFileName(name));
       if (module && module->m_Pdb) module->m_Pdb->ApplyPresets(*session);

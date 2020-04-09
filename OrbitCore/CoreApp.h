@@ -16,7 +16,7 @@
 #include <windows.h>
 #endif
 
-class ModuleDebugInfo;
+struct ModuleDebugInfo;
 class Timer;
 class LinuxCallstackEvent;
 struct CallStack;
@@ -26,6 +26,7 @@ class Session;
 
 class CoreApp {
  public:
+  virtual ~CoreApp() = default;
   virtual void InitializeManagers();
   virtual void SendToUiAsync(const std::wstring& /*a_Msg*/) {}
   virtual void SendToUiNow(const std::wstring& /*a_Msg*/) {}
@@ -51,7 +52,7 @@ class CoreApp {
                          const std::string& /*a_Name*/) {}
   virtual void AddKeyAndString(uint64_t /*key*/, std::string_view /*str*/) {}
   virtual void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) {}
-  virtual void ApplySession(std::shared_ptr<Session> session) {};
+  virtual void ApplySession(std::shared_ptr<Session> /*session*/) {};
   virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*
   GetRules() {
     return nullptr;

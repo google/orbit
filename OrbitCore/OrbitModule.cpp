@@ -157,7 +157,6 @@ void Pdb::ProcessData() {
   SCOPE_TIMER_LOG("ProcessData");
   ScopeLock lock(process->GetDataMutex());
 
-  auto& functions = process->GetFunctions();
   auto& globals = process->GetGlobals();
 
   for (auto& func : functions_) {
