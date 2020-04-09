@@ -815,8 +815,15 @@ void OrbitApp::OnLoadSession(const std::string& file_name) {
     cereal::BinaryInputArchive archive(file);
     archive(*session);
     session->m_FileName = file_path;
-    Capture::LoadSession(session);
+    LoadSession(session);
     file.close();
+  }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::LoadSession(const std::shared_ptr<Session>& session) {
+  if(SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
+    Capture::GSessionPresets = session;
   }
 }
 
@@ -1090,6 +1097,8 @@ void OrbitApp::ApplySession(std::shared_ptr<Session> session) {
           Capture::GTargetProcess->GetModuleFromName(Path::GetFileName(name));
       if (module && module->m_Pdb) module->m_Pdb->ApplyPresets(*session);
     }
+
+    FireRefreshCallbacks();
   }
 }
 

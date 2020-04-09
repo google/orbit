@@ -38,7 +38,6 @@ class Capture {
   static void DisplayStats();
   static void TestHooks();
   static bool IsOtherInstanceRunning();
-  static void LoadSession(const std::shared_ptr<Session>& a_Session);
   static void SaveSession(const std::string& a_FileName);
   static void NewSamplingProfiler();
   static bool IsTrackingEvents();

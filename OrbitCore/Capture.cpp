@@ -492,13 +492,6 @@ bool Capture::IsOtherInstanceRunning() {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::LoadSession(const std::shared_ptr<Session>& session) {
-  if (GCoreApp->SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
-    GSessionPresets = session;
-  }
-}
-
-//-----------------------------------------------------------------------------
 void Capture::SaveSession(const std::string& a_FileName) {
   Session session;
   session.m_ProcessFullPath = GTargetProcess->GetFullName();
