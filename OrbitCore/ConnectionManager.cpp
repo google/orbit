@@ -86,14 +86,8 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
 
   DeserializeObjectBinary(a_Data, a_Size, Capture::GSelectedFunctions);
 
-  // Unselect the all currently selected functions:
-  for (auto& pair : Capture::GSelectedFunctionsMap) {
-    Function* function = pair.second;
-    if (function) function->UnSelect();
-  }
-  Capture::GSelectedFunctionsMap.clear();
-
   // Select the received functions:
+  Capture::GSelectedFunctionsMap.clear();
   for (std::shared_ptr<Function> function : Capture::GSelectedFunctions) {
     // this also adds the function to the map.
     function->Select();
