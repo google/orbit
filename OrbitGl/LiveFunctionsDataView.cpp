@@ -42,7 +42,7 @@ LiveFunctionsDataView::LiveFunctionsDataView() {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> LiveFunctionsDataView::s_Headers;
+std::vector<std::string> LiveFunctionsDataView::s_Headers;
 std::vector<int> LiveFunctionsDataView::s_HeaderMap;
 std::vector<float> LiveFunctionsDataView::s_HeaderRatios;
 std::vector<DataView::SortingOrder> LiveFunctionsDataView::s_InitialOrders;
@@ -50,52 +50,52 @@ std::vector<DataView::SortingOrder> LiveFunctionsDataView::s_InitialOrders;
 //-----------------------------------------------------------------------------
 void LiveFunctionsDataView::InitColumnsIfNeeded() {
   if (s_Headers.empty()) {
-    s_Headers.emplace_back(L"Hooked");
+    s_Headers.emplace_back("Hooked");
     s_HeaderMap.push_back(LiveFunction::SELECTED);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Index");
+    s_Headers.emplace_back("Index");
     s_HeaderMap.push_back(LiveFunction::INDEX);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Function");
+    s_Headers.emplace_back("Function");
     s_HeaderMap.push_back(LiveFunction::NAME);
     s_HeaderRatios.push_back(0.5f);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Count");
+    s_Headers.emplace_back("Count");
     s_HeaderMap.push_back(LiveFunction::COUNT);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Total");
+    s_Headers.emplace_back("Total");
     s_HeaderMap.push_back(LiveFunction::TIME_TOTAL);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Avg");
+    s_Headers.emplace_back("Avg");
     s_HeaderMap.push_back(LiveFunction::TIME_AVG);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Min");
+    s_Headers.emplace_back("Min");
     s_HeaderMap.push_back(LiveFunction::TIME_MIN);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Max");
+    s_Headers.emplace_back("Max");
     s_HeaderMap.push_back(LiveFunction::TIME_MAX);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Module");
+    s_Headers.emplace_back("Module");
     s_HeaderMap.push_back(LiveFunction::MODULE);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Address");
+    s_Headers.emplace_back("Address");
     s_HeaderMap.push_back(LiveFunction::ADDRESS);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
@@ -103,7 +103,7 @@ void LiveFunctionsDataView::InitColumnsIfNeeded() {
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& LiveFunctionsDataView::GetColumnHeaders() {
+const std::vector<std::string>& LiveFunctionsDataView::GetColumnHeaders() {
   return s_Headers;
 }
 
@@ -126,9 +126,9 @@ int LiveFunctionsDataView::GetDefaultSortingColumn() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
+std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
   if (a_Row >= (int)GetNumElements()) {
-    return L"";
+    return "";
   }
 
   Function& function = GetFunction(a_Row);
@@ -171,7 +171,7 @@ std::wstring LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
       break;
   }
 
-  return s2ws(value);
+  return value;
 }
 
 //-----------------------------------------------------------------------------
@@ -240,11 +240,11 @@ void LiveFunctionsDataView::OnSort(int a_Column,
 }
 
 //-----------------------------------------------------------------------------
-const std::wstring LiveFunctionsDataView::MENU_ACTION_SELECT = L"Hook";
-const std::wstring LiveFunctionsDataView::MENU_ACTION_UNSELECT = L"Unhook";
+const std::string LiveFunctionsDataView::MENU_ACTION_SELECT = "Hook";
+const std::string LiveFunctionsDataView::MENU_ACTION_UNSELECT = "Unhook";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> LiveFunctionsDataView::GetContextMenu(
+std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
   bool enable_unselect = false;
@@ -254,7 +254,7 @@ std::vector<std::wstring> LiveFunctionsDataView::GetContextMenu(
     enable_unselect |= function.IsSelected();
   }
 
-  std::vector<std::wstring> menu;
+  std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
@@ -263,7 +263,7 @@ std::vector<std::wstring> LiveFunctionsDataView::GetContextMenu(
 
 //-----------------------------------------------------------------------------
 void LiveFunctionsDataView::OnContextMenu(
-    const std::wstring& a_Action, int a_MenuIndex,
+    const std::string& a_Action, int a_MenuIndex,
     const std::vector<int>& a_ItemIndices) {
   if (a_Action == MENU_ACTION_SELECT) {
     for (int i : a_ItemIndices) {
@@ -281,20 +281,20 @@ void LiveFunctionsDataView::OnContextMenu(
 }
 
 //-----------------------------------------------------------------------------
-void LiveFunctionsDataView::OnFilter(const std::wstring& a_Filter) {
+void LiveFunctionsDataView::OnFilter(const std::string& a_Filter) {
   std::vector<uint32_t> indices;
 
-  std::vector<std::wstring> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
 
   for (size_t i = 0; i < m_Functions.size(); ++i) {
     const Function* function = m_Functions[i];
     if (function != nullptr) {
-      std::wstring name = ToLower(s2ws(function->PrettyName()));
+      std::string name = ToLower(function->PrettyName());
 
       bool match = true;
 
-      for (std::wstring& filterToken : tokens) {
-        if (name.find(filterToken) == std::wstring::npos) {
+      for (std::string& filterToken : tokens) {
+        if (name.find(filterToken) == std::string::npos) {
           match = false;
           break;
         }

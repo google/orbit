@@ -35,7 +35,7 @@ void TypesDataView::OnDataChanged() {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> TypesDataView::s_Headers;
+std::vector<std::string> TypesDataView::s_Headers;
 std::vector<int> TypesDataView::s_HeaderMap;
 std::vector<float> TypesDataView::s_HeaderRatios;
 std::vector<DataView::SortingOrder> TypesDataView::s_InitialOrders;
@@ -43,52 +43,52 @@ std::vector<DataView::SortingOrder> TypesDataView::s_InitialOrders;
 //-----------------------------------------------------------------------------
 void TypesDataView::InitColumnsIfNeeded() {
   if (s_Headers.empty()) {
-    s_Headers.emplace_back(L"Index");
+    s_Headers.emplace_back("Index");
     s_HeaderMap.push_back(Type::INDEX);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Type");
+    s_Headers.emplace_back("Type");
     s_HeaderMap.push_back(Type::NAME);
     s_HeaderRatios.push_back(0.5f);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Length");
+    s_Headers.emplace_back("Length");
     s_HeaderMap.push_back(Type::LENGTH);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"TypeId");
+    s_Headers.emplace_back("TypeId");
     s_HeaderMap.push_back(Type::TYPE_ID);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"UnModifiedId");
+    s_Headers.emplace_back("UnModifiedId");
     s_HeaderMap.push_back(Type::TYPE_ID_UNMODIFIED);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"NumVariables");
+    s_Headers.emplace_back("NumVariables");
     s_HeaderMap.push_back(Type::NUM_VARIABLES);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"NumFunctions");
+    s_Headers.emplace_back("NumFunctions");
     s_HeaderMap.push_back(Type::NUM_FUNCTIONS);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"NumBaseClasses");
+    s_Headers.emplace_back("NumBaseClasses");
     s_HeaderMap.push_back(Type::NUM_BASE_CLASSES);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"BaseOffset");
+    s_Headers.emplace_back("BaseOffset");
     s_HeaderMap.push_back(Type::BASE_OFFSET);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Module");
+    s_Headers.emplace_back("Module");
     s_HeaderMap.push_back(Type::MODULE);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
@@ -96,7 +96,7 @@ void TypesDataView::InitColumnsIfNeeded() {
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& TypesDataView::GetColumnHeaders() {
+const std::vector<std::string>& TypesDataView::GetColumnHeaders() {
   return s_Headers;
 }
 
@@ -112,7 +112,7 @@ TypesDataView::GetColumnInitialOrders() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring TypesDataView::GetValue(int a_Row, int a_Column) {
+std::string TypesDataView::GetValue(int a_Row, int a_Column) {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
   Type& type = GetType(a_Row);
@@ -124,7 +124,7 @@ std::wstring TypesDataView::GetValue(int a_Row, int a_Column) {
       value = absl::StrFormat("%d", a_Row);
       break;
     case Type::SELECTED:
-      value = type.m_Selected;
+      value = type.m_Selected ? "X" : "-";
       break;
     case Type::NAME:
       value = type.GetName();
@@ -157,11 +157,11 @@ std::wstring TypesDataView::GetValue(int a_Row, int a_Column) {
       break;
   }
 
-  return s2ws(value);
+  return value;
 }
 
 //-----------------------------------------------------------------------------
-void TypesDataView::OnFilter(const std::wstring& a_Filter) {
+void TypesDataView::OnFilter(const std::string& a_Filter) {
   ParallelFilter(a_Filter);
 
   if (m_LastSortedColumn != -1) {
@@ -170,7 +170,7 @@ void TypesDataView::OnFilter(const std::wstring& a_Filter) {
 }
 
 //-----------------------------------------------------------------------------
-void TypesDataView::ParallelFilter(const std::wstring& a_Filter) {
+void TypesDataView::ParallelFilter(const std::string& a_Filter) {
 #ifdef _WIN32
   m_FilterTokens = Tokenize(ToLower(a_Filter));
   std::vector<Type*>& types = Capture::GTargetProcess->GetTypes();
@@ -179,20 +179,20 @@ void TypesDataView::ParallelFilter(const std::wstring& a_Filter) {
   std::vector<std::vector<int> > indicesArray;
   indicesArray.resize(numWorkers);
 
-  oqpi_tk::parallel_for(
-      "TypesDataViewParallelFor", (int)types.size(),
-      [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
-        std::vector<int>& result = indicesArray[a_BlockIndex];
-        const std::string& name = types[a_ElementIndex]->GetNameLower();
+  oqpi_tk::parallel_for("TypesDataViewParallelFor", (int)types.size(),
+                        [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
+                          std::vector<int>& result = indicesArray[a_BlockIndex];
+                          const std::string& name =
+                              types[a_ElementIndex]->GetNameLower();
 
-        for (std::wstring& filterToken : m_FilterTokens) {
-          if (name.find(ws2s(filterToken)) == std::string::npos) {
-            return;
-          }
-        }
+                          for (std::string& filterToken : m_FilterTokens) {
+                            if (name.find(filterToken) == std::string::npos) {
+                              return;
+                            }
+                          }
 
-        result.push_back(a_ElementIndex);
-      });
+                          result.push_back(a_ElementIndex);
+                        });
 
   std::set<int> indicesSet;
   for (std::vector<int>& results : indicesArray) {
@@ -272,13 +272,13 @@ void TypesDataView::OnSort(int a_Column,
 }
 
 //-----------------------------------------------------------------------------
-const std::wstring TypesDataView::MENU_ACTION_SUMMARY = L"Summary";
-const std::wstring TypesDataView::MENU_ACTION_DETAILS = L"Details";
+const std::string TypesDataView::MENU_ACTION_SUMMARY = "Summary";
+const std::string TypesDataView::MENU_ACTION_DETAILS = "Details";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> TypesDataView::GetContextMenu(
+std::vector<std::string> TypesDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
-  std::vector<std::wstring> menu = {MENU_ACTION_SUMMARY, MENU_ACTION_DETAILS};
+  std::vector<std::string> menu = {MENU_ACTION_SUMMARY, MENU_ACTION_DETAILS};
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
@@ -314,7 +314,7 @@ void TypesDataView::OnClip(const std::vector<int>& a_Items) {
 }
 
 //-----------------------------------------------------------------------------
-void TypesDataView::OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
+void TypesDataView::OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                                   const std::vector<int>& a_ItemIndices) {
   if (a_Action == MENU_ACTION_SUMMARY) {
     OnProp(a_ItemIndices);

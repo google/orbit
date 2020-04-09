@@ -9,20 +9,20 @@
 class ProcessesDataView : public DataView {
  public:
   ProcessesDataView();
-  const std::vector<std::wstring>& GetColumnHeaders() override;
+  const std::vector<std::string>& GetColumnHeaders() override;
   const std::vector<float>& GetColumnHeadersRatios() override;
   const std::vector<SortingOrder>& GetColumnInitialOrders() override;
   int GetDefaultSortingColumn() override;
-  std::wstring GetValue(int a_Row, int a_Column) override;
-  std::wstring GetToolTip(int a_Row, int a_Column) override;
-  std::wstring GetLabel() override { return L"Processes"; }
+  std::string GetValue(int a_Row, int a_Column) override;
+  std::string GetToolTip(int a_Row, int a_Column) override;
+  std::string GetLabel() override { return "Processes"; }
 
-  void OnFilter(const std::wstring& a_Filter) override;
+  void OnFilter(const std::string& a_Filter) override;
   void OnSort(int a_Column, std::optional<SortingOrder> a_NewOrder) override;
   void OnSelect(int a_Index) override;
   void OnTimer() override;
   void SetSelectedItem();
-  bool SelectProcess(const std::wstring& a_ProcessName);
+  bool SelectProcess(const std::string& a_ProcessName);
   std::shared_ptr<Process> SelectProcess(DWORD a_ProcessId);
   void UpdateProcessList();
   void SetRemoteProcessList(std::shared_ptr<ProcessList> a_RemoteProcessList);
@@ -60,7 +60,7 @@ class ProcessesDataView : public DataView {
   bool m_IsRemote;
 
   static void InitColumnsIfNeeded();
-  static std::vector<std::wstring> s_Headers;
+  static std::vector<std::string> s_Headers;
   static std::vector<float> s_HeaderRatios;
   static std::vector<SortingOrder> s_InitialOrders;
 };

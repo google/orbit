@@ -18,8 +18,8 @@ class CallStackDataView : public FunctionsDataView {
   void SetAsMainInstance() override;
   size_t GetNumElements() override;
   void OnDataChanged() override;
-  std::wstring GetValue(int a_Row, int a_Column) override;
-  void OnFilter(const std::wstring& a_Filter) override;
+  std::string GetValue(int a_Row, int a_Column) override;
+  void OnFilter(const std::string& a_Filter) override;
   void SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
     m_CallStack = std::move(a_CallStack);
     OnDataChanged();

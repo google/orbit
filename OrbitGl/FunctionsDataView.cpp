@@ -23,7 +23,7 @@ FunctionsDataView::FunctionsDataView() {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> FunctionsDataView::s_Headers;
+std::vector<std::string> FunctionsDataView::s_Headers;
 std::vector<int> FunctionsDataView::s_HeaderMap;
 std::vector<float> FunctionsDataView::s_HeaderRatios;
 std::vector<DataView::SortingOrder> FunctionsDataView::s_InitialOrders;
@@ -31,47 +31,47 @@ std::vector<DataView::SortingOrder> FunctionsDataView::s_InitialOrders;
 //-----------------------------------------------------------------------------
 void FunctionsDataView::InitColumnsIfNeeded() {
   if (s_Headers.empty()) {
-    s_Headers.emplace_back(L"Hooked");
+    s_Headers.emplace_back("Hooked");
     s_HeaderMap.push_back(Function::SELECTED);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Index");
+    s_Headers.emplace_back("Index");
     s_HeaderMap.push_back(Function::INDEX);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Function");
+    s_Headers.emplace_back("Function");
     s_HeaderMap.push_back(Function::NAME);
     s_HeaderRatios.push_back(0.5f);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Size");
+    s_Headers.emplace_back("Size");
     s_HeaderMap.push_back(Function::SIZE);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"File");
+    s_Headers.emplace_back("File");
     s_HeaderMap.push_back(Function::FILE);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Line");
+    s_Headers.emplace_back("Line");
     s_HeaderMap.push_back(Function::LINE);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Module");
+    s_Headers.emplace_back("Module");
     s_HeaderMap.push_back(Function::MODULE);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Address");
+    s_Headers.emplace_back("Address");
     s_HeaderMap.push_back(Function::ADDRESS);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Conv");
+    s_Headers.emplace_back("Conv");
     s_HeaderMap.push_back(Function::CALL_CONV);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
@@ -79,7 +79,7 @@ void FunctionsDataView::InitColumnsIfNeeded() {
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& FunctionsDataView::GetColumnHeaders() {
+const std::vector<std::string>& FunctionsDataView::GetColumnHeaders() {
   return s_Headers;
 }
 
@@ -102,11 +102,11 @@ int FunctionsDataView::GetDefaultSortingColumn() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring FunctionsDataView::GetValue(int a_Row, int a_Column) {
+std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
   if (a_Row >= (int)GetNumElements()) {
-    return L"";
+    return "";
   }
 
   Function& function = GetFunction(a_Row);
@@ -145,7 +145,7 @@ std::wstring FunctionsDataView::GetValue(int a_Row, int a_Column) {
       break;
   }
 
-  return s2ws(value);
+  return value;
 }
 
 //-----------------------------------------------------------------------------
@@ -210,17 +210,17 @@ void FunctionsDataView::OnSort(int a_Column,
 }
 
 //-----------------------------------------------------------------------------
-const std::wstring FunctionsDataView::MENU_ACTION_SELECT = L"Hook";
-const std::wstring FunctionsDataView::MENU_ACTION_UNSELECT = L"Unhook";
-const std::wstring FunctionsDataView::MENU_ACTION_VIEW = L"Visualize";
-const std::wstring FunctionsDataView::MENU_ACTION_DISASSEMBLY =
-    L"Go to Disassembly";
-const std::wstring FunctionsDataView::MENU_ACTION_CREATE_RULE = L"Create Rule";
-const std::wstring FunctionsDataView::MENU_ACTION_SET_AS_FRAME =
-    L"Set as Main Frame";
+const std::string FunctionsDataView::MENU_ACTION_SELECT = "Hook";
+const std::string FunctionsDataView::MENU_ACTION_UNSELECT = "Unhook";
+const std::string FunctionsDataView::MENU_ACTION_VIEW = "Visualize";
+const std::string FunctionsDataView::MENU_ACTION_DISASSEMBLY =
+    "Go to Disassembly";
+const std::string FunctionsDataView::MENU_ACTION_CREATE_RULE = "Create Rule";
+const std::string FunctionsDataView::MENU_ACTION_SET_AS_FRAME =
+    "Set as Main Frame";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> FunctionsDataView::GetContextMenu(
+std::vector<std::string> FunctionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
   bool enable_unselect = false;
@@ -232,7 +232,7 @@ std::vector<std::wstring> FunctionsDataView::GetContextMenu(
 
   bool enable_create_rule = a_SelectedIndices.size() == 1;
 
-  std::vector<std::wstring> menu;
+  std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
   Append(menu, {MENU_ACTION_VIEW, MENU_ACTION_DISASSEMBLY});
@@ -243,7 +243,7 @@ std::vector<std::wstring> FunctionsDataView::GetContextMenu(
 }
 
 //-----------------------------------------------------------------------------
-void FunctionsDataView::OnContextMenu(const std::wstring& a_Action,
+void FunctionsDataView::OnContextMenu(const std::string& a_Action,
                                       int a_MenuIndex,
                                       const std::vector<int>& a_ItemIndices) {
   if (a_Action == MENU_ACTION_SELECT) {
@@ -285,7 +285,7 @@ void FunctionsDataView::OnContextMenu(const std::wstring& a_Action,
 }
 
 //-----------------------------------------------------------------------------
-void FunctionsDataView::OnFilter(const std::wstring& a_Filter) {
+void FunctionsDataView::OnFilter(const std::string& a_Filter) {
   m_FilterTokens = Tokenize(ToLower(a_Filter));
 
 #ifdef WIN32
@@ -293,7 +293,7 @@ void FunctionsDataView::OnFilter(const std::wstring& a_Filter) {
 #else
   // TODO: port parallel filtering
   std::vector<uint32_t> indices;
-  std::vector<std::wstring> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
   std::vector<Function*>& functions = Capture::GTargetProcess->GetFunctions();
   for (int i = 0; i < (int)functions.size(); ++i) {
     Function* function = functions[i];
@@ -301,8 +301,8 @@ void FunctionsDataView::OnFilter(const std::wstring& a_Filter) {
 
     bool match = true;
 
-    for (std::wstring& filterToken : tokens) {
-      if (name.find(ws2s(filterToken)) == std::string::npos) {
+    for (std::string& filterToken : tokens) {
+      if (name.find(filterToken) == std::string::npos) {
         match = false;
         break;
       }
@@ -335,12 +335,12 @@ void FunctionsDataView::ParallelFilter() {
       "FunctionsDataViewParallelFor", (int)functions.size(),
       [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
         std::vector<int>& result = indicesArray[a_BlockIndex];
-        const std::wstring& name = s2ws(functions[a_ElementIndex]->Lower());
-        const std::wstring& file = s2ws(functions[a_ElementIndex]->File());
+        const std::string& name = functions[a_ElementIndex]->Lower();
+        const std::string& file = functions[a_ElementIndex]->File();
 
-        for (std::wstring& filterToken : m_FilterTokens) {
-          if (name.find(filterToken) == std::wstring::npos &&
-              file.find(filterToken) == std::wstring::npos) {
+        for (std::string& filterToken : m_FilterTokens) {
+          if (name.find(filterToken) == std::string::npos &&
+              file.find(filterToken) == std::string::npos) {
             return;
           }
         }
