@@ -27,10 +27,11 @@ void LinuxTracingHandler::Start() {
 
   std::vector<LinuxTracing::Function> selected_functions;
   selected_functions.reserve(selected_function_map_->size());
-  for (const auto& function : *selected_function_map_) {
+  for (const auto& pair : *selected_function_map_) {
+    const auto& function = pair.second;
     selected_functions.emplace_back(
-        function.second->GetPdb()->GetLoadedModuleName(),
-        function.second->Offset(), function.second->GetVirtualAddress());
+        function->GetLoadedModuleName(),
+        function->Offset(), function->GetVirtualAddress());
   }
 
   tracer_ = std::make_unique<LinuxTracing::Tracer>(pid, sampling_frequency,

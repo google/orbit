@@ -7,6 +7,7 @@
 #include <fstream>
 #include <ostream>
 
+#include "ConnectionManager.h"
 #include "Core.h"
 #include "CoreApp.h"
 #include "EventBuffer.h"
@@ -29,7 +30,6 @@
 #include "TestRemoteMessages.h"
 #include "TimerManager.h"
 #include "absl/strings/str_format.h"
-#include "CoreApp.h"
 
 #ifndef _WIN32
 std::shared_ptr<Pdb> GPdbDbg;
@@ -52,12 +52,13 @@ std::string Capture::GCaptureHost = "localhost";
 std::string Capture::GPresetToLoad = "";
 std::string Capture::GProcessToInject = "";
 
+std::vector<std::shared_ptr<Function>> Capture::GSelectedFunctions_;
 std::map<uint64_t, Function*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, Function*> Capture::GVisibleFunctionsMap;
 std::unordered_map<ULONG64, ULONG64> Capture::GFunctionCountMap;
 std::shared_ptr<CallStack> Capture::GSelectedCallstack;
 std::vector<ULONG64> Capture::GSelectedAddressesByType[Function::NUM_TYPES];
-std::unordered_map<DWORD64, std::shared_ptr<CallStack> > Capture::GCallstacks;
+std::unordered_map<DWORD64, std::shared_ptr<CallStack>> Capture::GCallstacks;
 Mutex Capture::GCallstackMutex;
 std::unordered_map<DWORD64, std::string> Capture::GZoneNames;
 TextBox* Capture::GSelectedTextBox;
@@ -71,7 +72,7 @@ std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
 std::shared_ptr<Session> Capture::GSessionPresets = nullptr;
 
 void (*Capture::GClearCaptureDataFunc)();
-std::vector<std::shared_ptr<SamplingProfiler> > GOldSamplingProfilers;
+std::vector<std::shared_ptr<SamplingProfiler>> GOldSamplingProfilers;
 bool Capture::GUnrealSupported = false;
 
 // The user_data pointer is provided by caller when registering capture
@@ -290,26 +291,34 @@ void Capture::PreFunctionHooks() {
   CheckForUnrealSupport();
 }
 
+std::vector<std::shared_ptr<Function>> Capture::GetSelectedFunctions() {
+  std::vector<std::shared_ptr<Function>> selected_functions;
+  for (auto& func : GTargetProcess->GetFunctions()) {
+    if (func->IsSelected() || func->IsOrbitFunc()) {
+      selected_functions.push_back(func);
+    }
+  }
+  return selected_functions;
+}
+
 //-----------------------------------------------------------------------------
 void Capture::SendFunctionHooks() {
   PreFunctionHooks();
 
-  for (Function* func : GTargetProcess->GetFunctions()) {
-    if (func->IsSelected() || func->IsOrbitFunc()) {
-      // Unreal
-      if (GUnrealSupported) {
-        class Type* parent = func->GetParentType();
-        if (parent != nullptr && parent->IsA("UObject")) {
-          func->SetOrbitType(Function::UNREAL_ACTOR);
-        }
-      }
+  // TODO: this method is used for different purposes on the client and service,
+  //       clean up and split functionality clearly.  On the service, we don't 
+  //       gather selected functions because the client has already sent us the 
+  //       functions to selected.  They are in GSelectedFunctions.
+  if (ConnectionManager::Get().IsClient()) {
+    GSelectedFunctions_ = GetSelectedFunctions();
+  }
 
-      uint64_t address = func->GetVirtualAddress();
-      GSelectedAddressesByType[func->GetOrbitType()].push_back(address);
-      GSelectedFunctionsMap[address] = func;
-      func->ResetStats();
-      GFunctionCountMap[address] = 0;
-    }
+  for (auto& func : GSelectedFunctions_) {
+    uint64_t address = func->GetVirtualAddress();
+    GSelectedAddressesByType[func->GetOrbitType()].push_back(address);
+    GSelectedFunctionsMap[address] = func.get();
+    func->ResetStats();
+    GFunctionCountMap[address] = 0;
   }
 
   GVisibleFunctionsMap = GSelectedFunctionsMap;
@@ -319,15 +328,12 @@ void Capture::SendFunctionHooks() {
   }
 
   if (Capture::IsRemote()) {
-    std::vector<std::string> selectedFunctions;
-    for (auto& pair : GSelectedFunctionsMap) {
-      PRINT("Send Selected Function: %s\n", pair.second->PrettyName().c_str());
-      selectedFunctions.push_back(std::to_string(pair.first));
+    for (auto& function : GSelectedFunctions_) {
+      LOG("Send Selected Function: %s\n", function->PrettyName().c_str());
     }
 
     std::string selectedFunctionsData =
-        SerializeObjectHumanReadable(selectedFunctions);
-    PRINT_VAR(selectedFunctionsData);
+        SerializeObjectBinary(GSelectedFunctions_);
     GTcpClient->Send(Msg_RemoteSelectedFunctionsMap,
                      (void*)selectedFunctionsData.data(),
                      selectedFunctionsData.size());
@@ -487,8 +493,7 @@ bool Capture::IsOtherInstanceRunning() {
 
 //-----------------------------------------------------------------------------
 void Capture::LoadSession(const std::shared_ptr<Session>& session) {
-  if (GCoreApp->SelectProcess(
-              Path::GetFileName(session->m_ProcessFullPath))) {
+  if (GCoreApp->SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
     GSessionPresets = session;
   }
 }
@@ -502,10 +507,10 @@ void Capture::SaveSession(const std::string& a_FileName) {
   session.m_Arguments = GParams.m_Arguments;
   session.m_WorkingDirectory = GParams.m_WorkingDirectory;
 
-  for (Function* func : GTargetProcess->GetFunctions()) {
+  for (auto& func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {
-      session.m_Modules[func->GetPdb()->GetLoadedModuleName()].m_FunctionHashes.push_back(
-          func->Hash());
+      session.m_Modules[func->GetPdb()->GetLoadedModuleName()]
+          .m_FunctionHashes.push_back(func->Hash());
     }
   }
 

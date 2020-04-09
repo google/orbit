@@ -59,7 +59,7 @@ struct Module {
 //-----------------------------------------------------------------------------
 struct ModuleDebugInfo {
   std::string m_Name;
-  std::vector<Function> m_Functions;
+  std::vector<std::shared_ptr<Function>> m_Functions;
   uint64_t load_bias;
   std::string m_PdbName;
   uint32_t m_PID;

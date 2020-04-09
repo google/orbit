@@ -83,35 +83,21 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
   PRINT_FUNC;
   const char* a_Data = a_Msg.GetData();
   size_t a_Size = a_Msg.m_Size;
-  std::istringstream buffer(std::string(a_Data, a_Size));
-  cereal::JSONInputArchive inputAr(buffer);
-  std::vector<std::string> selectedFunctions;
-  inputAr(selectedFunctions);
+
+  DeserializeObjectBinary(a_Data, a_Size, Capture::GSelectedFunctions_);
 
   // Unselect the all currently selected functions:
-  std::vector<Function*> prevSelectedFuncs;
   for (auto& pair : Capture::GSelectedFunctionsMap) {
-    prevSelectedFuncs.push_back(pair.second);
-  }
-
-  Capture::GSelectedFunctionsMap.clear();
-  for (Function* function : prevSelectedFuncs) {
+    Function* function = pair.second;
     if (function) function->UnSelect();
   }
+  Capture::GSelectedFunctionsMap.clear();
 
   // Select the received functions:
-  for (const std::string& address_str : selectedFunctions) {
-    uint64_t address = std::stoll(address_str);
-    PRINT("Select address %x\n", address);
-    Function* function =
-        Capture::GTargetProcess->GetFunctionFromAddress(address);
-    if (!function)
-      PRINT("Received invalid address %x\n", address);
-    else {
-      PRINT("Received Selected Function: %s\n", function->PrettyName().c_str());
-      // this also adds the function to the map.
-      function->Select();
-    }
+  for (std::shared_ptr<Function> function : Capture::GSelectedFunctions_) {
+    // this also adds the function to the map.
+    function->Select();
+    Capture::GSelectedFunctionsMap[function->GetVirtualAddress()] = function.get();
   }
 }
 

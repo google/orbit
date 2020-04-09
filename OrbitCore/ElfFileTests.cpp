@@ -15,9 +15,9 @@ TEST(ElfFile, LoadFunctions) {
 
   Pdb pdb;
   ASSERT_TRUE(elf_file->LoadFunctions(&pdb));
-  std::vector<Function>& functions = pdb.GetFunctions();
+  const std::vector<std::shared_ptr<Function>>& functions = pdb.GetFunctions();
   EXPECT_EQ(functions.size(), 10);
-  const Function* function = &functions[0];
+  const Function* function = functions[0].get();
 
   EXPECT_EQ(function->Name(), "deregister_tm_clones");
   EXPECT_EQ(function->PrettyName(), "deregister_tm_clones");
@@ -25,7 +25,7 @@ TEST(ElfFile, LoadFunctions) {
   EXPECT_EQ(function->Size(), 0);
   EXPECT_EQ(function->GetPdb(), &pdb);
 
-  function = &functions[9];
+  function = functions[9].get();
   EXPECT_EQ(function->Name(), "main");
   EXPECT_EQ(function->PrettyName(), "main");
   EXPECT_EQ(function->Address(), 0x1135);

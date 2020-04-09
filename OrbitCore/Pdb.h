@@ -177,7 +177,8 @@ class Pdb {
   const std::string& GetName() const { return m_Name; }
   const std::string& GetFileName() const { return m_FileName; }
   const std::string& GetLoadedModuleName() const { return m_LoadedModuleName; }
-  std::vector<Function>& GetFunctions() { return m_Functions; }
+  const std::vector<std::shared_ptr<Function>>& GetFunctions() { return functions_; }
+  void AddFunction(const std::shared_ptr<Function>& function);
   std::vector<Type>& GetTypes() { return m_Types; }
   std::vector<Variable>& GetGlobals() { return m_Globals; }
   uint64_t GetHModule() const { return m_MainModule; }
@@ -240,7 +241,7 @@ class Pdb {
   std::string m_Name;              // name of the file containing the symbols
   std::string m_FileName;          // full path of file containing the symbols
   std::string m_LoadedModuleName;  // full path of the module
-  std::vector<Function> m_Functions;
+  std::vector<std::shared_ptr<Function>> functions_;
   std::vector<Type> m_Types;
   std::vector<Variable> m_Globals;
   std::unordered_map<ULONG, Type> m_TypeMap;

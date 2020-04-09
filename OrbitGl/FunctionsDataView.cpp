@@ -162,7 +162,7 @@ void FunctionsDataView::OnSort(int a_Column,
     return;
   }
 
-  const std::vector<Function*>& functions =
+  const std::vector<std::shared_ptr<Function>>& functions =
       Capture::GTargetProcess->GetFunctions();
   auto memberId = static_cast<Function::MemberID>(s_HeaderMap[a_Column]);
 
@@ -278,9 +278,9 @@ void FunctionsDataView::OnFilter(const std::wstring& a_Filter) {
   // TODO: port parallel filtering
   std::vector<uint32_t> indices;
   std::vector<std::wstring> tokens = Tokenize(ToLower(a_Filter));
-  std::vector<Function*>& functions = Capture::GTargetProcess->GetFunctions();
+  const std::vector<std::shared_ptr<Function>>& functions = Capture::GTargetProcess->GetFunctions();
   for (int i = 0; i < (int)functions.size(); ++i) {
-    Function* function = functions[i];
+    auto& function = functions[i];
     std::string name = function->Lower() + function->GetPdb()->GetName();
 
     bool match = true;
@@ -363,6 +363,7 @@ void FunctionsDataView::OnDataChanged() {
 
 //-----------------------------------------------------------------------------
 Function& FunctionsDataView::GetFunction(unsigned int a_Row) {
-  std::vector<Function*>& functions = Capture::GTargetProcess->GetFunctions();
+  const std::vector<std::shared_ptr<Function>>& functions =
+      Capture::GTargetProcess->GetFunctions();
   return *functions[m_Indices[a_Row]];
 }
