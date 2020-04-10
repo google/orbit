@@ -73,7 +73,7 @@ void OrbitSamplingReport::Initialize(std::shared_ptr<SamplingReport> a_Report) {
 
     treeView->Link(ui->CallstackTreeView);
 
-    QString threadName = QString::fromStdWString(report->GetName());
+    QString threadName = QString::fromStdString(report->GetName());
     ui->tabWidget->addTab(tab, threadName);
   }
 }

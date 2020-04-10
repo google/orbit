@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 #include <QTimer>
 #include <QToolTip>
+#include <utility>
 
 #include "../OrbitCore/Path.h"
 #include "../OrbitCore/PrintVar.h"
@@ -62,11 +63,11 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget* parent)
       [this](DataViewType a_Type) { this->OnRefreshDataViewPanels(a_Type); });
   GOrbitApp->AddSamplingReoprtCallback(
       [this](std::shared_ptr<SamplingReport> a_Report) {
-        this->OnNewSamplingReport(a_Report);
+        this->OnNewSamplingReport(std::move(a_Report));
       });
   GOrbitApp->AddSelectionReportCallback(
       [this](std::shared_ptr<SamplingReport> a_Report) {
-        this->OnNewSelection(a_Report);
+        this->OnNewSelection(std::move(a_Report));
       });
   GOrbitApp->AddUiMessageCallback([this](const std::wstring& a_Message) {
     this->OnReceiveMessage(a_Message);
@@ -300,7 +301,7 @@ void OrbitMainWindow::OnNewSamplingReport(
   m_SamplingLayout->addWidget(m_OrbitSamplingReport, 0, 0, 1, 1);
 
   // Automatically switch to sampling tab if not already in live tab.
-  if( ui->RightTabWidget->currentWidget() != ui->LiveTab) {
+  if (ui->RightTabWidget->currentWidget() != ui->LiveTab) {
     ui->RightTabWidget->setCurrentWidget(m_SamplingTab);
   }
 }

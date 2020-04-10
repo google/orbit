@@ -50,8 +50,8 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation,
     case Qt::DisplayRole:
       if (orientation == Qt::Horizontal &&
           section < (int)m_DataView->GetColumnHeaders().size()) {
-        std::wstring str = m_DataView->GetColumnHeaders()[section];
-        return QString::fromStdWString(str);
+        std::string header = m_DataView->GetColumnHeaders()[section];
+        return QString::fromStdString(header);
       } else if (orientation == Qt::Vertical) {
         return section;
       } else {
@@ -74,8 +74,8 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation,
 //-----------------------------------------------------------------------------
 QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
   if (role == Qt::DisplayRole) {
-    return QVariant(QString::fromStdWString(
-        m_DataView->GetValue(index.row(), index.column())));
+    std::string value = m_DataView->GetValue(index.row(), index.column());
+    return QVariant(QString::fromStdString(value));
   } else if (role == Qt::BackgroundRole) {
     if (m_AlternateRowColor) {
       if (index.row() % 2 == 1)
@@ -93,8 +93,8 @@ QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
       }
     }
   } else if (role == Qt::ToolTipRole) {
-    return QString::fromStdWString(
-        m_DataView->GetToolTip(index.row(), index.column()));
+    std::string tooltip = m_DataView->GetToolTip(index.row(), index.column());
+    return QString::fromStdString(tooltip);
   }
 
   return QVariant();
@@ -130,7 +130,7 @@ void OrbitTableModel::OnTimer() { m_DataView->OnTimer(); }
 
 //-----------------------------------------------------------------------------
 void OrbitTableModel::OnFilter(const QString& a_Filter) {
-  m_DataView->SetFilter(a_Filter.toStdWString());
+  m_DataView->SetFilter(a_Filter.toStdString());
 }
 
 //-----------------------------------------------------------------------------

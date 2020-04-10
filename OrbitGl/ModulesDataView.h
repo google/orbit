@@ -11,22 +11,23 @@ class ModulesDataView : public DataView {
  public:
   ModulesDataView();
 
-  const std::vector<std::wstring>& GetColumnHeaders() override;
+  const std::vector<std::string>& GetColumnHeaders() override;
   const std::vector<float>& GetColumnHeadersRatios() override;
   const std::vector<SortingOrder>& GetColumnInitialOrders() override;
   int GetDefaultSortingColumn() override;
-  std::vector<std::wstring> GetContextMenu(int a_Index) override;
-  std::wstring GetValue(int a_Row, int a_Column) override;
+  std::vector<std::string> GetContextMenu(
+      int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
+  std::string GetValue(int a_Row, int a_Column) override;
 
-  void OnFilter(const std::wstring& a_Filter) override;
+  void OnFilter(const std::string& a_Filter) override;
   void OnSort(int a_Column, std::optional<SortingOrder> a_NewOrder) override;
-  void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
-                     std::vector<int>& a_ItemIndices) override;
+  void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
+                     const std::vector<int>& a_ItemIndices) override;
   void OnTimer() override;
   bool WantsDisplayColor() override { return true; }
   bool GetDisplayColor(int /*a_Row*/, int /*a_Column*/, unsigned char& /*r*/,
                        unsigned char& /*g*/, unsigned char& /*b*/) override;
-  std::wstring GetLabel() override { return L"Modules"; }
+  std::string GetLabel() override { return "Modules"; }
 
   void SetProcess(std::shared_ptr<Process> a_Process);
 
@@ -48,7 +49,11 @@ class ModulesDataView : public DataView {
   std::vector<std::shared_ptr<Module> > m_Modules;
 
   static void InitColumnsIfNeeded();
-  static std::vector<std::wstring> s_Headers;
+  static std::vector<std::string> s_Headers;
   static std::vector<float> s_HeaderRatios;
   static std::vector<SortingOrder> s_InitialOrders;
+
+  static const std::string MENU_ACTION_MODULES_LOAD;
+  static const std::string MENU_ACTION_DLL_FIND_PDB;
+  static const std::string MENU_ACTION_DLL_EXPORTS;
 };

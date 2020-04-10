@@ -22,29 +22,29 @@ SessionsDataView::SessionsDataView() {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> SessionsDataView::s_Headers;
+std::vector<std::string> SessionsDataView::s_Headers;
 std::vector<float> SessionsDataView::s_HeaderRatios;
 std::vector<DataView::SortingOrder> SessionsDataView::s_InitialOrders;
 
 //-----------------------------------------------------------------------------
 void SessionsDataView::InitColumnsIfNeeded() {
   if (s_Headers.empty()) {
-    s_Headers.emplace_back(L"Session");
+    s_Headers.emplace_back("Session");
     s_HeaderRatios.push_back(0.5);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Process");
+    s_Headers.emplace_back("Process");
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    // s_Headers.emplace_back(L"LastUsed");
+    // s_Headers.emplace_back("LastUsed");
     // s_HeaderRatios.push_back(0);
     // s_InitialOrders.push_back(DescendingOrder);
   }
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& SessionsDataView::GetColumnHeaders() {
+const std::vector<std::string>& SessionsDataView::GetColumnHeaders() {
   return s_Headers;
 }
 
@@ -60,7 +60,7 @@ SessionsDataView::GetColumnInitialOrders() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring SessionsDataView::GetValue(int row, int col) {
+std::string SessionsDataView::GetValue(int row, int col) {
   std::string value;
 
   const std::shared_ptr<Session>& session = GetSession(row);
@@ -72,20 +72,21 @@ std::wstring SessionsDataView::GetValue(int row, int col) {
     case SDV_ProcessName:
       value = Path::GetFileName(session->m_ProcessFullPath);
       break;
-      /*case SDV_LastUsed:
-          value = "LastUsed"; break;*/
+      //    case SDV_LastUsed:
+      //        value = "LastUsed";
+      //        break;
       break;
     default:
       break;
   }
 
-  return s2ws(value);
+  return value;
 }
 
 //-----------------------------------------------------------------------------
-std::wstring SessionsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
+std::string SessionsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
   const Session& session = *GetSession(a_Row);
-  return s2ws(session.m_FileName);
+  return session.m_FileName;
 }
 
 //-----------------------------------------------------------------------------
@@ -126,20 +127,21 @@ void SessionsDataView::OnSort(int a_Column,
 }
 
 //-----------------------------------------------------------------------------
-std::wstring SESSIONS_LOAD = L"Load Session";
+const std::string SessionsDataView::MENU_ACTION_SESSIONS_LOAD = "Load Session";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> SessionsDataView::GetContextMenu(int a_Index) {
-  std::vector<std::wstring> menu = {SESSIONS_LOAD};
-  Append(menu, DataView::GetContextMenu(a_Index));
+std::vector<std::string> SessionsDataView::GetContextMenu(
+    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
+  std::vector<std::string> menu = {MENU_ACTION_SESSIONS_LOAD};
+  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
 
 //-----------------------------------------------------------------------------
-void SessionsDataView::OnContextMenu(const std::wstring& a_Action,
+void SessionsDataView::OnContextMenu(const std::string& a_Action,
                                      int a_MenuIndex,
-                                     std::vector<int>& a_ItemIndices) {
-  if (a_Action == SESSIONS_LOAD) {
+                                     const std::vector<int>& a_ItemIndices) {
+  if (a_Action == MENU_ACTION_SESSIONS_LOAD) {
     for (int index : a_ItemIndices) {
       const std::shared_ptr<Session>& session = GetSession(index);
       GOrbitApp->LoadSession(session);
@@ -152,21 +154,21 @@ void SessionsDataView::OnContextMenu(const std::wstring& a_Action,
 }
 
 //-----------------------------------------------------------------------------
-void SessionsDataView::OnFilter(const std::wstring& a_Filter) {
+void SessionsDataView::OnFilter(const std::string& a_Filter) {
   std::vector<uint32_t> indices;
 
-  std::vector<std::wstring> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
 
-  for (uint32_t i = 0; i < m_Sessions.size(); ++i) {
+  for (size_t i = 0; i < m_Sessions.size(); ++i) {
     const Session& session = *m_Sessions[i];
-    std::wstring name = s2ws(Path::GetFileName(ToLower(session.m_FileName)));
-    std::wstring path = s2ws(ToLower(session.m_ProcessFullPath));
+    std::string name = Path::GetFileName(ToLower(session.m_FileName));
+    std::string path = ToLower(session.m_ProcessFullPath);
 
     bool match = true;
 
-    for (std::wstring& filterToken : tokens) {
-      if (!(name.find(filterToken) != std::wstring::npos ||
-            path.find(filterToken) != std::wstring::npos)) {
+    for (std::string& filterToken : tokens) {
+      if (!(name.find(filterToken) != std::string::npos ||
+            path.find(filterToken) != std::string::npos)) {
         match = false;
         break;
       }
@@ -187,7 +189,7 @@ void SessionsDataView::OnFilter(const std::wstring& a_Filter) {
 //-----------------------------------------------------------------------------
 void SessionsDataView::OnDataChanged() {
   m_Indices.resize(m_Sessions.size());
-  for (uint32_t i = 0; i < m_Sessions.size(); ++i) {
+  for (size_t i = 0; i < m_Sessions.size(); ++i) {
     m_Indices[i] = i;
   }
 

@@ -24,7 +24,7 @@ GlobalsDataView::GlobalsDataView() {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> GlobalsDataView::s_Headers;
+std::vector<std::string> GlobalsDataView::s_Headers;
 std::vector<int> GlobalsDataView::s_HeaderMap;
 std::vector<float> GlobalsDataView::s_HeaderRatios;
 std::vector<DataView::SortingOrder> GlobalsDataView::s_InitialOrders;
@@ -32,37 +32,37 @@ std::vector<DataView::SortingOrder> GlobalsDataView::s_InitialOrders;
 //-----------------------------------------------------------------------------
 void GlobalsDataView::InitColumnsIfNeeded() {
   if (s_Headers.empty()) {
-    s_Headers.emplace_back(L"Index");
+    s_Headers.emplace_back("Index");
     s_HeaderMap.push_back(Variable::INDEX);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Variable");
+    s_Headers.emplace_back("Variable");
     s_HeaderMap.push_back(Variable::NAME);
     s_HeaderRatios.push_back(0.5f);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Type");
+    s_Headers.emplace_back("Type");
     s_HeaderMap.push_back(Variable::TYPE);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Address");
+    s_Headers.emplace_back("Address");
     s_HeaderMap.push_back(Variable::ADDRESS);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"File");
+    s_Headers.emplace_back("File");
     s_HeaderMap.push_back(Variable::FILE);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Line");
+    s_Headers.emplace_back("Line");
     s_HeaderMap.push_back(Variable::LINE);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Module");
+    s_Headers.emplace_back("Module");
     s_HeaderMap.push_back(Variable::MODULE);
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
@@ -70,7 +70,7 @@ void GlobalsDataView::InitColumnsIfNeeded() {
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& GlobalsDataView::GetColumnHeaders() {
+const std::vector<std::string>& GlobalsDataView::GetColumnHeaders() {
   return s_Headers;
 }
 
@@ -86,7 +86,7 @@ GlobalsDataView::GetColumnInitialOrders() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring GlobalsDataView::GetValue(int a_Row, int a_Column) {
+std::string GlobalsDataView::GetValue(int a_Row, int a_Column) {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
   const Variable& variable = GetVariable(a_Row);
@@ -112,8 +112,6 @@ std::wstring GlobalsDataView::GetValue(int a_Row, int a_Column) {
     case Variable::MODULE:
       value = variable.m_Pdb->GetName();
       break;
-    /*case Variable::MODBASE:
-        value = wxString::Format("0x%I64x", function.m_ModBase);  break;*/
     case Variable::ADDRESS:
       value = absl::StrFormat("0x%llx", variable.m_Address);
       break;
@@ -122,10 +120,9 @@ std::wstring GlobalsDataView::GetValue(int a_Row, int a_Column) {
       break;
     default:
       break;
-      ;
   }
 
-  return s2ws(value);
+  return value;
 }
 
 //-----------------------------------------------------------------------------
@@ -180,20 +177,22 @@ void GlobalsDataView::OnSort(int a_Column,
 }
 
 //-----------------------------------------------------------------------------
-std::wstring TYPES_MENU_WATCH = L"Add to watch";
+const std::string GlobalsDataView::MENU_ACTION_TYPES_MENU_WATCH =
+    "Add to watch";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> GlobalsDataView::GetContextMenu(int a_Index) {
-  std::vector<std::wstring> menu = {TYPES_MENU_WATCH};
-  Append(menu, DataView::GetContextMenu(a_Index));
+std::vector<std::string> GlobalsDataView::GetContextMenu(
+    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
+  std::vector<std::string> menu = {MENU_ACTION_TYPES_MENU_WATCH};
+  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
 
 //-----------------------------------------------------------------------------
-void GlobalsDataView::OnContextMenu(const std::wstring& a_Action,
+void GlobalsDataView::OnContextMenu(const std::string& a_Action,
                                     int a_MenuIndex,
-                                    std::vector<int>& a_ItemIndices) {
-  if (a_Action == TYPES_MENU_WATCH) {
+                                    const std::vector<int>& a_ItemIndices) {
+  if (a_Action == MENU_ACTION_TYPES_MENU_WATCH) {
     OnAddToWatch(a_ItemIndices);
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
@@ -201,7 +200,7 @@ void GlobalsDataView::OnContextMenu(const std::wstring& a_Action,
 }
 
 //-----------------------------------------------------------------------------
-void GlobalsDataView::OnAddToWatch(std::vector<int>& a_Items) {
+void GlobalsDataView::OnAddToWatch(const std::vector<int>& a_Items) {
   for (auto& item : a_Items) {
     Variable& variable = GetVariable(item);
     variable.Populate();
@@ -221,7 +220,7 @@ void GlobalsDataView::OnAddToWatch(std::vector<int>& a_Items) {
 }
 
 //-----------------------------------------------------------------------------
-void GlobalsDataView::OnFilter(const std::wstring& a_Filter) {
+void GlobalsDataView::OnFilter(const std::string& a_Filter) {
   m_FilterTokens = Tokenize(ToLower(a_Filter));
 
   ParallelFilter();
@@ -240,20 +239,20 @@ void GlobalsDataView::ParallelFilter() {
   std::vector<std::vector<int> > indicesArray;
   indicesArray.resize(numWorkers);
 
-  oqpi_tk::parallel_for(
-      "FunctionsDataViewParallelFor", (int)globals.size(),
-      [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
-        std::vector<int>& result = indicesArray[a_BlockIndex];
-        const std::string& name = globals[a_ElementIndex]->FilterString();
+  oqpi_tk::parallel_for("FunctionsDataViewParallelFor", (int)globals.size(),
+                        [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
+                          std::vector<int>& result = indicesArray[a_BlockIndex];
+                          const std::string& name =
+                              globals[a_ElementIndex]->FilterString();
 
-        for (std::wstring& filterToken : m_FilterTokens) {
-          if (name.find(ws2s(filterToken)) == std::string::npos) {
-            return;
-          }
-        }
+                          for (std::string& filterToken : m_FilterTokens) {
+                            if (name.find(filterToken) == std::string::npos) {
+                              return;
+                            }
+                          }
 
-        result.push_back(a_ElementIndex);
-      });
+                          result.push_back(a_ElementIndex);
+                        });
 
   std::set<int> indicesSet;
   for (std::vector<int>& results : indicesArray) {
@@ -273,7 +272,7 @@ void GlobalsDataView::ParallelFilter() {
 void GlobalsDataView::OnDataChanged() {
   size_t numGlobals = Capture::GTargetProcess->GetGlobals().size();
   m_Indices.resize(numGlobals);
-  for (uint32_t i = 0; i < numGlobals; ++i) {
+  for (size_t i = 0; i < numGlobals; ++i) {
     m_Indices[i] = i;
   }
 }

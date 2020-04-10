@@ -7,6 +7,7 @@
 #include "Capture.h"
 #include "SamplingProfiler.h"
 #include "TcpServer.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 LogDataView::LogDataView() {
@@ -19,29 +20,29 @@ LogDataView::LogDataView() {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> LogDataView::s_Headers;
+std::vector<std::string> LogDataView::s_Headers;
 std::vector<float> LogDataView::s_HeaderRatios;
 std::vector<DataView::SortingOrder> LogDataView::s_InitialOrders;
 
 //-----------------------------------------------------------------------------
 void LogDataView::InitColumnsIfNeeded() {
   if (s_Headers.empty()) {
-    s_Headers.emplace_back(L"Log");
+    s_Headers.emplace_back("Log");
     s_HeaderRatios.push_back(0.7f);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Time");
+    s_Headers.emplace_back("Time");
     s_HeaderRatios.push_back(0.15f);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"ThreadId");
+    s_Headers.emplace_back("ThreadId");
     s_HeaderRatios.push_back(0.15f);
     s_InitialOrders.push_back(AscendingOrder);
   }
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& LogDataView::GetColumnHeaders() {
+const std::vector<std::string>& LogDataView::GetColumnHeaders() {
   return s_Headers;
 }
 
@@ -51,9 +52,9 @@ const std::vector<float>& LogDataView::GetColumnHeadersRatios() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring LogDataView::GetValue(int a_Row, int a_Column) {
+std::string LogDataView::GetValue(int a_Row, int a_Column) {
   const OrbitLogEntry& entry = GetEntry(a_Row);
-  std::wstring value;
+  std::string value;
 
   switch (a_Column) {
     case LDV_Time: {
@@ -68,17 +69,16 @@ std::wstring LogDataView::GetValue(int a_Row, int a_Column) {
 #else
       now_tm = *std::localtime(&now_c);
 #endif
-      TCHAR buffer[256];
-      wcsftime(buffer, sizeof(buffer), L"%H:%M:%S", &now_tm);
-
+      char buffer[256];
+      strftime(buffer, sizeof(buffer), "%H:%M:%S", &now_tm);
       value = buffer;
       break;
     }
     case LDV_Message:
-      value = s2ws(entry.m_Text);
+      value = entry.m_Text;
       break;
     case LDV_ThreadId:
-      value = Format(L"%u", entry.m_ThreadId);
+      value = absl::StrFormat("%u", entry.m_ThreadId);
       break;
     default:
       break;
@@ -88,9 +88,7 @@ std::wstring LogDataView::GetValue(int a_Row, int a_Column) {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring LogDataView::GetToolTip(int /*row*/, int /*column*/) {
-  return std::wstring();
-}
+std::string LogDataView::GetToolTip(int /*row*/, int /*column*/) { return ""; }
 
 //-----------------------------------------------------------------------------
 bool LogDataView::ScrollToBottom() { return true; }
@@ -102,24 +100,24 @@ bool LogDataView::SkipTimer() { return !Capture::IsCapturing(); }
 void LogDataView::OnDataChanged() {
   ScopeLock lock(m_Mutex);
   m_Indices.resize(m_Entries.size());
-  for (uint32_t i = 0; i < m_Entries.size(); ++i) {
+  for (size_t i = 0; i < m_Entries.size(); ++i) {
     m_Indices[i] = i;
   }
 }
 
 //-----------------------------------------------------------------------------
-void LogDataView::OnFilter(const std::wstring& a_Filter) {
-  std::vector<std::string> tokens = Tokenize(ToLower(ws2s(a_Filter)));
+void LogDataView::OnFilter(const std::string& a_Filter) {
+  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
   std::vector<uint32_t> indices;
 
-  for (uint32_t i = 0; i < m_Entries.size(); ++i) {
+  for (size_t i = 0; i < m_Entries.size(); ++i) {
     const OrbitLogEntry& entry = m_Entries[i];
     std::string text = ToLower(entry.m_Text);
 
     bool match = true;
 
     for (std::string& filterToken : tokens) {
-      if (!(text.find(filterToken) != std::wstring::npos)) {
+      if (text.find(filterToken) == std::string::npos) {
         match = false;
         break;
       }
@@ -134,23 +132,25 @@ void LogDataView::OnFilter(const std::wstring& a_Filter) {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> LogDataView::GetContextMenu(int a_Index) {
-  const OrbitLogEntry& entry = LogDataView::GetEntry(a_Index);
+std::vector<std::string> LogDataView::GetContextMenu(
+    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
+  const OrbitLogEntry& entry = LogDataView::GetEntry(a_ClickedIndex);
   m_SelectedCallstack = Capture::GetCallstack(entry.m_CallstackHash);
-  std::vector<std::wstring> menu;
+  std::vector<std::string> menu;
   if (m_SelectedCallstack) {
     for (uint32_t i = 0; i < m_SelectedCallstack->m_Depth; ++i) {
       DWORD64 addr = m_SelectedCallstack->m_Data[i];
-      menu.push_back(Capture::GSamplingProfiler->GetSymbolFromAddress(addr));
+      menu.push_back(
+          ws2s(Capture::GSamplingProfiler->GetSymbolFromAddress(addr)));
     }
   }
-  Append(menu, DataView::GetContextMenu(a_Index));
+  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
 
 //-----------------------------------------------------------------------------
-void LogDataView::OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
-                                std::vector<int>& a_ItemIndices) {
+void LogDataView::OnContextMenu(const std::string& a_Action, int a_MenuIndex,
+                                const std::vector<int>& a_ItemIndices) {
   if (m_SelectedCallstack && (int)m_SelectedCallstack->m_Depth > a_MenuIndex) {
     GOrbitApp->GoToCode(m_SelectedCallstack->m_Data[a_MenuIndex]);
   } else {

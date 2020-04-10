@@ -73,8 +73,8 @@ DataView* DataView::Create(DataViewType a_Type) {
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& DataView::GetColumnHeaders() {
-  static std::vector<std::wstring> columns = {L"Invalid Header"};
+const std::vector<std::string>& DataView::GetColumnHeaders() {
+  static std::vector<std::string> columns = {"Invalid Header"};
   return columns;
 }
 
@@ -92,36 +92,38 @@ const std::vector<DataView::SortingOrder>& DataView::GetColumnInitialOrders() {
 }
 
 //-----------------------------------------------------------------------------
-const std::wstring DV_COPY_SELECTION = L"Copy Selection";
-const std::wstring DV_EXPORT_TO_CSV = L"Export to CSV";
+const std::string DataView::MENU_ACTION_COPY_SELECTION = "Copy Selection";
+const std::string DataView::MENU_ACTION_EXPORT_TO_CSV = "Export to CSV";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> DataView::GetContextMenu(int /*a_Index*/) {
-  static std::vector<std::wstring> menu = {DV_COPY_SELECTION, DV_EXPORT_TO_CSV};
+std::vector<std::string> DataView::GetContextMenu(
+    int /*a_ClickedIndex*/, const std::vector<int>& /*a_SelectedIndices*/) {
+  static std::vector<std::string> menu = {MENU_ACTION_COPY_SELECTION,
+                                          MENU_ACTION_EXPORT_TO_CSV};
   return menu;
 }
 
 //-----------------------------------------------------------------------------
-void DataView::OnContextMenu(const std::wstring& a_Action, int a_MenuIndex,
-                             std::vector<int>& a_ItemIndices) {
+void DataView::OnContextMenu(const std::string& a_Action, int a_MenuIndex,
+                             const std::vector<int>& a_ItemIndices) {
   UNUSED(a_MenuIndex);
 
-  if (a_Action == DV_EXPORT_TO_CSV) {
-    ExportCSV(GOrbitApp->GetSaveFile(L".csv"));
-  } else if (a_Action == DV_COPY_SELECTION) {
+  if (a_Action == MENU_ACTION_EXPORT_TO_CSV) {
+    ExportCSV(ws2s(GOrbitApp->GetSaveFile(L".csv")));
+  } else if (a_Action == MENU_ACTION_COPY_SELECTION) {
     CopySelection(a_ItemIndices);
   }
 }
 
 //-----------------------------------------------------------------------------
-void DataView::ExportCSV(const std::wstring& a_FileName) {
-  std::ofstream out(ws2s(a_FileName));
+void DataView::ExportCSV(const std::string& a_FileName) {
+  std::ofstream out(a_FileName);
   if (out.fail()) return;
 
-  const std::vector<std::wstring>& headers = GetColumnHeaders();
+  const std::vector<std::string>& headers = GetColumnHeaders();
 
   for (size_t i = 0; i < headers.size(); ++i) {
-    out << ws2s(headers[i]);
+    out << headers[i];
     if (i < headers.size() - 1) out << ", ";
   }
 
@@ -131,8 +133,10 @@ void DataView::ExportCSV(const std::wstring& a_FileName) {
   size_t numElements = GetNumElements();
   for (size_t i = 0; i < numElements; ++i) {
     for (size_t j = 0; j < numColumns; ++j) {
-      out << ws2s(GetValue((int)i, (int)j));
-      if (j < numColumns - 1) out << ", ";
+      out << GetValue((int)i, (int)j);
+      if (j < numColumns - 1) {
+        out << ", ";
+      }
     }
 
     out << "\n";
@@ -142,16 +146,16 @@ void DataView::ExportCSV(const std::wstring& a_FileName) {
 }
 
 //-----------------------------------------------------------------------------
-void DataView::CopySelection(std::vector<int>& selection) {
-  std::wstring clipboard;
-  const std::vector<std::wstring>& headers = GetColumnHeaders();
+void DataView::CopySelection(const std::vector<int>& selection) {
+  std::string clipboard;
+  const std::vector<std::string>& headers = GetColumnHeaders();
 
   for (size_t i = 0; i < headers.size(); ++i) {
     clipboard += headers[i];
-    if (i < headers.size() - 1) clipboard += L", ";
+    if (i < headers.size() - 1) clipboard += ", ";
   }
 
-  clipboard += L"\n";
+  clipboard += "\n";
 
   size_t numColumns = headers.size();
   size_t numElements = GetNumElements();
@@ -159,12 +163,12 @@ void DataView::CopySelection(std::vector<int>& selection) {
     if (i < numElements) {
       for (size_t j = 0; j < numColumns; ++j) {
         clipboard += GetValue((int)i, (int)j);
-        if (j < numColumns - 1) clipboard += L", ";
+        if (j < numColumns - 1) clipboard += ", ";
       }
 
-      clipboard += L"\n";
+      clipboard += "\n";
     }
   }
 
-  GOrbitApp->SetClipboard(clipboard);
+  GOrbitApp->SetClipboard(s2ws(clipboard));
 }

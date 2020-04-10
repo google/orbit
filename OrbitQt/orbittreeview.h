@@ -24,7 +24,7 @@ class OrbitTreeView : public QTreeView {
   void resizeEvent(QResizeEvent* event) override;
   void keyPressEvent(QKeyEvent* event) override;
   OrbitTableModel* GetModel() { return m_Model; }
-  std::wstring GetLabel();
+  std::string GetLabel();
 
  protected:
   void drawRow(QPainter* painter, const QStyleOptionViewItem& options,
@@ -40,7 +40,7 @@ class OrbitTreeView : public QTreeView {
   void OnTimer();
   void OnClicked(const QModelIndex& index);
   void ShowContextMenu(const QPoint& pos);
-  void OnMenuClicked(int a_Index);
+  void OnMenuClicked(const std::string& a_Action, int a_MenuIndex);
   void OnRangeChanged(int a_Min, int a_Max);
 
  private:

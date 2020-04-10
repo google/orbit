@@ -18,45 +18,45 @@ ModulesDataView::ModulesDataView() {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> ModulesDataView::s_Headers;
+std::vector<std::string> ModulesDataView::s_Headers;
 std::vector<float> ModulesDataView::s_HeaderRatios;
 std::vector<DataView::SortingOrder> ModulesDataView::s_InitialOrders;
 
 //-----------------------------------------------------------------------------
 void ModulesDataView::InitColumnsIfNeeded() {
   if (s_Headers.empty()) {
-    s_Headers.emplace_back(L"Index");
+    s_Headers.emplace_back("Index");
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Name");
+    s_Headers.emplace_back("Name");
     s_HeaderRatios.push_back(0.2f);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Path");
+    s_Headers.emplace_back("Path");
     s_HeaderRatios.push_back(0.3f);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Address Range");
+    s_Headers.emplace_back("Address Range");
     s_HeaderRatios.push_back(0.15f);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Debug info");
+    s_Headers.emplace_back("Debug info");
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Pdb Size");
+    s_Headers.emplace_back("Pdb Size");
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Loaded");
+    s_Headers.emplace_back("Loaded");
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
   }
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& ModulesDataView::GetColumnHeaders() {
+const std::vector<std::string>& ModulesDataView::GetColumnHeaders() {
   return s_Headers;
 }
 
@@ -75,7 +75,7 @@ ModulesDataView::GetColumnInitialOrders() {
 int ModulesDataView::GetDefaultSortingColumn() { return MDV_PdbSize; }
 
 //-----------------------------------------------------------------------------
-std::wstring ModulesDataView::GetValue(int row, int col) {
+std::string ModulesDataView::GetValue(int row, int col) {
   const std::shared_ptr<Module>& module = GetModule(row);
   std::string value;
 
@@ -105,7 +105,7 @@ std::wstring ModulesDataView::GetValue(int row, int col) {
       break;
   }
 
-  return s2ws(value);
+  return value;
 }
 
 //-----------------------------------------------------------------------------
@@ -158,33 +158,49 @@ void ModulesDataView::OnSort(int a_Column,
 }
 
 //-----------------------------------------------------------------------------
-const std::wstring MODULES_LOAD = L"Load Symbols";
-const std::wstring DLL_FIND_PDB = L"Find Pdb";
-const std::wstring DLL_EXPORTS = L"Load Symbols";
+const std::string ModulesDataView::MENU_ACTION_MODULES_LOAD = "Load Symbols";
+const std::string ModulesDataView::MENU_ACTION_DLL_FIND_PDB = "Find Pdb";
+const std::string ModulesDataView::MENU_ACTION_DLL_EXPORTS = "Load Symbols";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> ModulesDataView::GetContextMenu(int a_Index) {
-  std::vector<std::wstring> menu;
-
-  std::shared_ptr<Module> module = GetModule(a_Index);
-  if (!module->GetLoaded()) {
-    if (module->m_FoundPdb) {
-      menu = {MODULES_LOAD};
-    } else if (module->IsDll()) {
-      menu = {DLL_EXPORTS, DLL_FIND_PDB};
+std::vector<std::string> ModulesDataView::GetContextMenu(
+    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
+  bool enable_load = false;
+  bool enable_dll = false;
+  if (a_SelectedIndices.size() == 1) {
+    std::shared_ptr<Module> module = GetModule(a_SelectedIndices[0]);
+    if (!module->GetLoaded()) {
+      if (module->m_FoundPdb) {
+        enable_load = true;
+      } else if (module->IsDll()) {
+        enable_dll = true;
+      }
+    }
+  } else {
+    for (int index : a_SelectedIndices) {
+      std::shared_ptr<Module> module = GetModule(index);
+      if (!module->GetLoaded() && module->m_FoundPdb) {
+        enable_load = true;
+      }
     }
   }
 
-  Append(menu, DataView::GetContextMenu(a_Index));
+  std::vector<std::string> menu;
+  if (enable_load) {
+    menu.emplace_back(MENU_ACTION_MODULES_LOAD);
+  }
+  if (enable_dll) {
+    Append(menu, {MENU_ACTION_DLL_FIND_PDB, MENU_ACTION_DLL_EXPORTS});
+  }
+  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
 
 //-----------------------------------------------------------------------------
-void ModulesDataView::OnContextMenu(const std::wstring& a_Action,
+void ModulesDataView::OnContextMenu(const std::string& a_Action,
                                     int a_MenuIndex,
-                                    std::vector<int>& a_ItemIndices) {
-  PRINT_VAR(a_Action);
-  if (a_Action == MODULES_LOAD) {
+                                    const std::vector<int>& a_ItemIndices) {
+  if (a_Action == MENU_ACTION_MODULES_LOAD) {
     for (int index : a_ItemIndices) {
       const std::shared_ptr<Module>& module = GetModule(index);
 
@@ -203,9 +219,12 @@ void ModulesDataView::OnContextMenu(const std::wstring& a_Action,
     }
 
     GOrbitApp->LoadModules();
-  } else if (a_Action == DLL_FIND_PDB) {
-    std::wstring FileName =
-        GOrbitApp->FindFile(L"Find Pdb File", L"", L"*.pdb");
+  } else if (a_Action == MENU_ACTION_DLL_FIND_PDB) {
+    std::string FileName =
+        ws2s(GOrbitApp->FindFile(L"Find Pdb File", L"", L"*.pdb"));
+    // TODO: the result is unused, should this action be removed?
+  } else if (a_Action == MENU_ACTION_DLL_EXPORTS) {
+    // TODO: this action is unused, should it be removed?
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }
@@ -215,9 +234,9 @@ void ModulesDataView::OnContextMenu(const std::wstring& a_Action,
 void ModulesDataView::OnTimer() {}
 
 //-----------------------------------------------------------------------------
-void ModulesDataView::OnFilter(const std::wstring& a_Filter) {
+void ModulesDataView::OnFilter(const std::string& a_Filter) {
   std::vector<uint32_t> indices;
-  std::vector<std::wstring> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
 
   for (int i = 0; i < (int)m_Modules.size(); ++i) {
     std::shared_ptr<Module>& module = m_Modules[i];
@@ -225,8 +244,8 @@ void ModulesDataView::OnFilter(const std::wstring& a_Filter) {
 
     bool match = true;
 
-    for (std::wstring& filterToken : tokens) {
-      if (name.find(ws2s(filterToken)) == std::string::npos) {
+    for (std::string& filterToken : tokens) {
+      if (name.find(filterToken) == std::string::npos) {
         match = false;
         break;
       }

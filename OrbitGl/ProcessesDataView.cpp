@@ -12,6 +12,7 @@
 #include "Params.h"
 #include "Pdb.h"
 #include "TcpClient.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 ProcessesDataView::ProcessesDataView() {
@@ -27,33 +28,33 @@ ProcessesDataView::ProcessesDataView() {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> ProcessesDataView::s_Headers;
+std::vector<std::string> ProcessesDataView::s_Headers;
 std::vector<float> ProcessesDataView::s_HeaderRatios;
 std::vector<DataView::SortingOrder> ProcessesDataView::s_InitialOrders;
 
 //-----------------------------------------------------------------------------
 void ProcessesDataView::InitColumnsIfNeeded() {
   if (s_Headers.empty()) {
-    s_Headers.emplace_back(L"PID");
+    s_Headers.emplace_back("PID");
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"Name");
+    s_Headers.emplace_back("Name");
     s_HeaderRatios.push_back(0.5f);
     s_InitialOrders.push_back(AscendingOrder);
 
-    s_Headers.emplace_back(L"CPU");
+    s_Headers.emplace_back("CPU");
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(DescendingOrder);
 
-    s_Headers.emplace_back(L"Type");
+    s_Headers.emplace_back("Type");
     s_HeaderRatios.push_back(0);
     s_InitialOrders.push_back(AscendingOrder);
   }
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::wstring>& ProcessesDataView::GetColumnHeaders() {
+const std::vector<std::string>& ProcessesDataView::GetColumnHeaders() {
   return s_Headers;
 }
 
@@ -72,25 +73,25 @@ ProcessesDataView::GetColumnInitialOrders() {
 int ProcessesDataView::GetDefaultSortingColumn() { return PDV_CPU; }
 
 //-----------------------------------------------------------------------------
-std::wstring ProcessesDataView::GetValue(int row, int col) {
+std::string ProcessesDataView::GetValue(int row, int col) {
   const Process& process = *GetProcess(row);
-  std::wstring value;
+  std::string value;
 
   switch (col) {
     case PDV_ProcessID:
-      value = std::to_wstring((long)process.GetID());
+      value = std::to_string((long)process.GetID());
       break;
     case PDV_ProcessName:
-      value = s2ws(process.GetName());
+      value = process.GetName();
       if (process.IsElevated()) {
-        value += L"*";
+        value += "*";
       }
       break;
     case PDV_CPU:
-      value = Format(L"%.1f", process.GetCpuUsage());
+      value = absl::StrFormat("%.1f", process.GetCpuUsage());
       break;
     case PDV_Type:
-      value = process.GetIs64Bit() ? L"64 bit" : L"32 bit";
+      value = process.GetIs64Bit() ? "64 bit" : "32 bit";
       break;
     default:
       break;
@@ -100,9 +101,9 @@ std::wstring ProcessesDataView::GetValue(int row, int col) {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring ProcessesDataView::GetToolTip(int a_Row, int /*a_Column*/) {
+std::string ProcessesDataView::GetToolTip(int a_Row, int /*a_Column*/) {
   const Process& process = *GetProcess(a_Row);
-  return s2ws(process.GetFullName());
+  return process.GetFullName();
 }
 
 //-----------------------------------------------------------------------------
@@ -196,7 +197,7 @@ void ProcessesDataView::Refresh() {
       m_ProcessList.Clear();
       m_ProcessList.m_Processes.push_back(m_RemoteProcess);
       UpdateProcessList();
-      SetFilter(L"");
+      SetFilter("");
       SelectProcess(m_RemoteProcess->GetID());
       SetSelectedItem();
     }
@@ -215,7 +216,7 @@ void ProcessesDataView::Refresh() {
     }
   }
 
-  GParams.m_ProcessFilter = ws2s(m_Filter);
+  GParams.m_ProcessFilter = m_Filter;
 }
 
 //-----------------------------------------------------------------------------
@@ -247,10 +248,10 @@ void ProcessesDataView::ClearSelectedProcess() {
 }
 
 //-----------------------------------------------------------------------------
-bool ProcessesDataView::SelectProcess(const std::wstring& a_ProcessName) {
-  for (uint32_t i = 0; i < GetNumElements(); ++i) {
+bool ProcessesDataView::SelectProcess(const std::string& a_ProcessName) {
+  for (size_t i = 0; i < GetNumElements(); ++i) {
     Process& process = *GetProcess(i);
-    if (process.GetFullName().find(ws2s(a_ProcessName)) != std::string::npos) {
+    if (process.GetFullName().find(a_ProcessName) != std::string::npos) {
       OnSelect(i);
       Capture::GPresetToLoad = "";
       return true;
@@ -264,7 +265,7 @@ bool ProcessesDataView::SelectProcess(const std::wstring& a_ProcessName) {
 std::shared_ptr<Process> ProcessesDataView::SelectProcess(DWORD a_ProcessId) {
   Refresh();
 
-  for (uint32_t i = 0; i < GetNumElements(); ++i) {
+  for (size_t i = 0; i < GetNumElements(); ++i) {
     Process& process = *GetProcess(i);
     if (process.GetID() == a_ProcessId) {
       OnSelect(i);
@@ -277,23 +278,23 @@ std::shared_ptr<Process> ProcessesDataView::SelectProcess(DWORD a_ProcessId) {
 }
 
 //-----------------------------------------------------------------------------
-void ProcessesDataView::OnFilter(const std::wstring& a_Filter) {
+void ProcessesDataView::OnFilter(const std::string& a_Filter) {
   std::vector<uint32_t> indices;
   const std::vector<std::shared_ptr<Process>>& processes =
       m_ProcessList.m_Processes;
 
-  std::vector<std::wstring> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
 
-  for (uint32_t i = 0; i < processes.size(); ++i) {
+  for (size_t i = 0; i < processes.size(); ++i) {
     const Process& process = *processes[i];
-    std::wstring name = s2ws(ToLower(process.GetName()));
-    std::wstring type = process.GetIs64Bit() ? L"64" : L"32";
+    std::string name = ToLower(process.GetName());
+    std::string type = process.GetIs64Bit() ? "64" : "32";
 
     bool match = true;
 
-    for (std::wstring& filterToken : tokens) {
-      if (!(name.find(filterToken) != std::wstring::npos ||
-            type.find(filterToken) != std::wstring::npos)) {
+    for (std::string& filterToken : tokens) {
+      if (!(name.find(filterToken) != std::string::npos ||
+            type.find(filterToken) != std::string::npos)) {
         match = false;
         break;
       }
@@ -315,7 +316,7 @@ void ProcessesDataView::OnFilter(const std::wstring& a_Filter) {
 void ProcessesDataView::UpdateProcessList() {
   size_t numProcesses = m_ProcessList.m_Processes.size();
   m_Indices.resize(numProcesses);
-  for (uint32_t i = 0; i < numProcesses; ++i) {
+  for (size_t i = 0; i < numProcesses; ++i) {
     m_Indices[i] = i;
   }
 }
