@@ -86,6 +86,17 @@ struct __attribute__((__packed__)) perf_event_empty_sample {
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
 };
 
+// This struct must be in sync with the SAMPLE_REGS_URET_PROBE in
+// PerfEventOpen.h.
+struct __attribute__((__packed__)) perf_event_uretprobe {
+  perf_event_header header;
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  uint64_t abi;
+  uint64_t ax;
+  uint64_t sp;
+  uint64_t ip;
+};
+
 struct __attribute__((__packed__)) perf_event_stack_sample {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;

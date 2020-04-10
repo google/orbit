@@ -296,7 +296,7 @@ class UprobesPerfEvent : public PerfEvent, public AbstractUprobesPerfEvent {
 
 class UretprobesPerfEvent : public PerfEvent, public AbstractUprobesPerfEvent {
  public:
-  perf_event_empty_sample ring_buffer_record;
+  perf_event_uretprobe ring_buffer_record;
 
   uint64_t GetTimestamp() const override {
     return ring_buffer_record.sample_id.time;
@@ -306,6 +306,9 @@ class UretprobesPerfEvent : public PerfEvent, public AbstractUprobesPerfEvent {
 
   pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
   pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
+
+  // Get AX register which typically holds return value.
+  uint64_t GetAx() const { return ring_buffer_record.ax; }
 
   uint64_t GetStreamId() const {
     return ring_buffer_record.sample_id.stream_id;
