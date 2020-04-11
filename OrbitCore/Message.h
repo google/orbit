@@ -70,6 +70,7 @@ enum MessageType : int16_t {
   Msg_SamplingHashedCallstacks,
   Msg_KeyAndString,
   Msg_DebugSymbols,
+  Msg_MemoryTransfer,
 };
 
 //-----------------------------------------------------------------------------

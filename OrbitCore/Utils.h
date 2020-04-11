@@ -601,6 +601,10 @@ inline std::wstring GetTimeStampW() { return s2ws(GetTimeStamp()); }
 std::string FormatTime(const time_t& rawtime);
 }  // namespace OrbitUtils
 
+//-----------------------------------------------------------------------------
+bool ReadProcessMemory(uint32_t pid, uint64_t address, byte* buffer,
+                       uint64_t size, size_t* num_bytes_read);
+
 #define CONCAT_(x, y) x##y
 #define CONCAT(x, y) CONCAT_(x, y)
 #define UNIQUE_VAR CONCAT(Unique, __LINE__)

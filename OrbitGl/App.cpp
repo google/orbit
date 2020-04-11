@@ -25,6 +25,7 @@
 #include "ConnectionManager.h"
 #include "Debugger.h"
 #include "DiaManager.h"
+#include "Disassembler.h"
 #include "EventTracer.h"
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
@@ -69,10 +70,6 @@
 
 #define GLUT_DISABLE_ATEXIT_HACK
 #include "GL/freeglut.h"
-
-#ifdef _WIN32
-#include "Disassembler.h"
-#endif
 
 #if __linux__
 #include <OrbitLinuxTracing/OrbitTracing.h>
@@ -499,19 +496,12 @@ void OrbitApp::RefreshWatch() {
 void OrbitApp::Disassemble(const std::string& a_FunctionName,
                            DWORD64 a_VirtualAddress, const char* a_MachineCode,
                            size_t a_Size) {
-#ifdef _WIN32
   Disassembler disasm;
   disasm.LOGF(absl::StrFormat("asm: /* %s */\n", a_FunctionName.c_str()));
   const unsigned char* code = (const unsigned char*)a_MachineCode;
   disasm.Disassemble(code, a_Size, a_VirtualAddress,
                      Capture::GTargetProcess->GetIs64Bit());
   SendToUiAsync(disasm.GetResult());
-#else
-  UNUSED(a_FunctionName);
-  UNUSED(a_VirtualAddress);
-  UNUSED(a_MachineCode);
-  UNUSED(a_Size);
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -561,9 +551,7 @@ void OrbitApp::MainTick() {
 
   GMainTimer.Reset();
   Capture::Update();
-#ifdef WIN32
   GTcpServer->MainThreadTick();
-#endif
 
   if (!Capture::GProcessToInject.empty()) {
     std::cout << "Injecting into " << Capture::GTargetProcess->GetFullName()
@@ -823,7 +811,7 @@ void OrbitApp::OnLoadSession(const std::string& file_name) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadSession(const std::shared_ptr<Session>& session) {
-  if(SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
+  if (SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
     Capture::GSessionPresets = session;
   }
 }
@@ -993,9 +981,9 @@ void OrbitApp::LoadModules() {
       return;
     }
 #ifdef _WIN32
-  for (std::shared_ptr<Module> module : m_ModulesToLoad) {
-    GLoadPdbAsync(module);
-  }
+    for (std::shared_ptr<Module> module : m_ModulesToLoad) {
+      GLoadPdbAsync(module);
+    }
 #else
     for (std::shared_ptr<Module> module : m_ModulesToLoad) {
       if (symbol_helper_.LoadSymbolsIncludedInBinary(module)) continue;
@@ -1011,8 +999,7 @@ void OrbitApp::LoadModules() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules() {
-  GetSymbolsManager()->LoadSymbols(m_ModulesToLoad,
-                                           Capture::GTargetProcess);
+  GetSymbolsManager()->LoadSymbols(m_ModulesToLoad, Capture::GTargetProcess);
   m_ModulesToLoad.clear();
   GOrbitApp->FireRefreshCallbacks();
 }
@@ -1078,14 +1065,14 @@ void OrbitApp::OnRemoteProcess(const Message& a_Message) {
 
   // Trigger session loading if needed.
   std::shared_ptr<Session> session = Capture::GSessionPresets;
-  if (session){
-      GetSymbolsManager()->LoadSymbols(session, remoteProcess);
-      GParams.m_ProcessPath = session->m_ProcessFullPath;
-      GParams.m_Arguments = session->m_Arguments;
-      GParams.m_WorkingDirectory = session->m_WorkingDirectory;
-      GCoreApp->SendToUiNow(L"SetProcessParams");
-      Capture::GSessionPresets = nullptr;
-    }
+  if (session) {
+    GetSymbolsManager()->LoadSymbols(session, remoteProcess);
+    GParams.m_ProcessPath = session->m_ProcessFullPath;
+    GParams.m_Arguments = session->m_Arguments;
+    GParams.m_WorkingDirectory = session->m_WorkingDirectory;
+    GCoreApp->SendToUiNow(L"SetProcessParams");
+    Capture::GSessionPresets = nullptr;
+  }
 }
 
 //-----------------------------------------------------------------------------
