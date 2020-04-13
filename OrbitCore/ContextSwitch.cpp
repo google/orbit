@@ -6,6 +6,10 @@
 
 #include "Serialization.h"
 
+// Context switches are sent as raw bytes, make sure it's the same size
+// on every platform.
+static_assert(sizeof(ContextSwitch) == 20);
+
 //-----------------------------------------------------------------------------
 ContextSwitch::ContextSwitch(SwitchType a_Type)
     : m_ProcessId(0),
