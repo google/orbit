@@ -320,7 +320,7 @@ bool ReadProcessMemory(uint32_t pid, uint64_t address, byte* buffer,
 #if _WIN32
   HANDLE h_process = reinterpret_cast<HANDLE>(pid);
   BOOL res = ReadProcessMemory(h_process, reinterpret_cast<void*>(address),
-                               buffer, size, &num_bytes_read);
+                               buffer, size, num_bytes_read);
   return res == TRUE;
 #else
   iovec local_iov[] = {{buffer, size}};
