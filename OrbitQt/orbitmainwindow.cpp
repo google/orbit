@@ -42,7 +42,8 @@ OrbitMainWindow* GMainWindow;
 extern QMenu* GContextMenu;
 
 //-----------------------------------------------------------------------------
-OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget* parent)
+OrbitMainWindow::OrbitMainWindow(const std::vector<std::string>& arguments,
+                                 QApplication* a_App, QWidget* parent)
     : QMainWindow(parent),
       m_App(a_App),
       ui(new Ui::OrbitMainWindow),
@@ -87,7 +88,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget* parent)
   GOrbitApp->SetClipboardCallback(
       [this](const std::wstring& a_Text) { this->OnSetClipboard(a_Text); });
 
-  ParseCommandlineArguments();
+  ParseCommandlineArguments(arguments);
 
   ui->DebugGLWidget->Initialize(GlPanel::DEBUG, this);
   ui->CaptureGLWidget->Initialize(GlPanel::CAPTURE, this);
@@ -168,19 +169,16 @@ OrbitMainWindow::~OrbitMainWindow() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::ParseCommandlineArguments() {
-  std::vector<std::string> args;
-  for (QString arg : QCoreApplication::arguments()) {
-    std::string argStr = arg.toStdString();
-    args.push_back(argStr);
-
-    if (absl::StrContains(argStr, "inject:")) {
+void OrbitMainWindow::ParseCommandlineArguments(
+    const std::vector<std::string>& arguments) {
+  for (const std::string& argument : arguments) {
+    if (absl::StrContains(argument, "inject:")) {
       m_Headless = true;
-    } else if (argStr == "dev") {
+    } else if (argument == "dev") {
       m_IsDev = true;
     }
   }
-  GOrbitApp->SetCommandLineArguments(args);
+  GOrbitApp->SetCommandLineArguments(arguments);
 }
 
 //-----------------------------------------------------------------------------

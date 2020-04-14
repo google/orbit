@@ -150,6 +150,8 @@ class OrbitApp : public CoreApp {
   }
 
   void SetCommandLineArguments(const std::vector<std::string>& a_Args);
+
+  // TODO(antonrohr) check whether this is still used
   const std::vector<std::string>& GetCommandLineArguments() {
     return m_Arguments;
   }
