@@ -1,0 +1,22 @@
+--- a/crashpad/util/BUILD.gn	2020-04-22 20:02:56.937547710 +0000
++++ b/crashpad/util/BUILD.gn	2020-04-22 20:14:14.443421318 +0000
+@@ -285,8 +285,8 @@
+         deps += [ "//third_party/boringssl" ]
+       } else {
+         libs = [
+-          "crypto",
+           "ssl",
++          "crypto",
+         ]
+       }
+     }
+@@ -535,8 +535,8 @@
+         deps += [ "//third_party/boringssl" ]
+       } else {
+         libs = [
+-          "crypto",
+           "ssl",
++          "crypto",
+         ]
+       }
+     }
