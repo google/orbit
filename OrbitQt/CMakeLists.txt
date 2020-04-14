@@ -15,6 +15,7 @@ target_sources(
           orbitglwidgetwithheader.h
           orbitmainwindow.h
           orbitsamplingreport.h
+          OrbitStartupWindow.h
           orbittablemodel.h
           orbittreeitem.h
           orbittreemodel.h
@@ -41,6 +42,7 @@ target_sources(
           orbitglwidgetwithheader.cpp
           orbitmainwindow.cpp
           orbitsamplingreport.cpp
+          OrbitStartupWindow.cpp
           orbittablemodel.cpp
           orbittreeitem.cpp
           orbittreemodel.cpp
