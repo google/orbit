@@ -69,6 +69,7 @@ enum MessageType : int16_t {
   Msg_SamplingCallstacks,
   Msg_SamplingHashedCallstacks,
   Msg_KeyAndString,
+  Msg_DebugSymbols,
 };
 
 //-----------------------------------------------------------------------------
@@ -119,6 +120,7 @@ class Message {
   const Header& GetHeader() const { return m_Header; }
   const char* GetData() const { return m_Data; }
   char* GetData() { return m_Data; }
+  uint32_t GetSize() const { return m_Size; }
   static void Dump();
 
  public:

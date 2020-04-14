@@ -9,19 +9,25 @@
 #include <vector>
 
 #include "BaseTypes.h"
+#include "SymbolsManager.h"
+#include "TransactionManager.h"
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
+struct ModuleDebugInfo;
 class Timer;
 class LinuxCallstackEvent;
 struct CallStack;
 struct ContextSwitch;
 struct CallstackEvent;
+class Session;
 
 class CoreApp {
  public:
+  virtual ~CoreApp() = default;
+  virtual void InitializeManagers();
   virtual void SendToUiAsync(const std::wstring& /*a_Msg*/) {}
   virtual void SendToUiNow(const std::wstring& /*a_Msg*/) {}
   virtual bool GetUnrealSupportEnabled() { return false; }
@@ -45,11 +51,23 @@ class CoreApp {
                          const std::string& /*a_Module*/,
                          const std::string& /*a_Name*/) {}
   virtual void AddKeyAndString(uint64_t /*key*/, std::string_view /*str*/) {}
+  virtual void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) {}
+  virtual void ApplySession(std::shared_ptr<Session>) {};
   virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*
   GetRules() {
     return nullptr;
   }
   virtual void RefreshCaptureView() {}
+
+  // Managers
+  orbit::TransactionManager* GetTransactionManager() {
+    return transaction_manager_.get();
+  }
+  orbit::SymbolsManager* GetSymbolsManager(){return symbols_manager_.get(); }
+
+ private:
+  std::unique_ptr<orbit::TransactionManager> transaction_manager_ = nullptr;
+  std::unique_ptr<orbit::SymbolsManager> symbols_manager_ = nullptr;
 };
 
 extern CoreApp* GCoreApp;

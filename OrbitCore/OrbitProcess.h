@@ -105,7 +105,13 @@ class Process {
   void LoadSession(const Session& a_Session);
   void SaveSession();
 
-  std::vector<Function*>& GetFunctions() { return m_Functions; }
+  void AddFunction(const std::shared_ptr<Function>& function) {
+    m_Functions.push_back(function);
+  }
+  const std::vector<std::shared_ptr<Function>>& GetFunctions() const {
+    return m_Functions;
+  }
+
   std::vector<Type*>& GetTypes() { return m_Types; }
   std::vector<Variable*>& GetGlobals() { return m_Globals; }
   std::vector<std::shared_ptr<Thread> >& GetThreads() { return m_Threads; }
@@ -160,7 +166,7 @@ class Process {
   absl::flat_hash_map<uint64_t, std::shared_ptr<LinuxSymbol> > m_Symbols;
 
   // Transients
-  std::vector<Function*> m_Functions;
+  std::vector<std::shared_ptr<Function>> m_Functions;
   std::vector<Type*> m_Types;
   std::vector<Variable*> m_Globals;
   std::vector<std::shared_ptr<Variable> > m_WatchedVariables;

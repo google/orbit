@@ -50,10 +50,10 @@ TEST(OrbitModule, LoadFunctions) {
   Pdb& pdb = *module->m_Pdb;
 
   // Check functions
-  const std::vector<Function>& functions = pdb.GetFunctions();
+  const std::vector<std::shared_ptr<Function>>& functions = pdb.GetFunctions();
 
   EXPECT_EQ(functions.size(), 10);
-  const Function* function = &functions[0];
+  const Function* function = functions[0].get();
 
   EXPECT_EQ(function->Name(), "deregister_tm_clones");
   EXPECT_EQ(function->PrettyName(), "deregister_tm_clones");
@@ -63,7 +63,7 @@ TEST(OrbitModule, LoadFunctions) {
   EXPECT_EQ(function->Probe(), file_path + ":deregister_tm_clones");
 
   // This function points to .init section and should not have a Probe
-  function = &functions[4];
+  function = functions[4].get();
   EXPECT_EQ(function->Name(), "_init");
   EXPECT_EQ(function->PrettyName(), "_init");
   EXPECT_EQ(function->Address(), 0x1000);
@@ -71,7 +71,7 @@ TEST(OrbitModule, LoadFunctions) {
   EXPECT_EQ(function->GetPdb(), &pdb);
   EXPECT_EQ(function->Probe(), "");
 
-  function = &functions[9];
+  function = functions[9].get();
   EXPECT_EQ(function->Name(), "main");
   EXPECT_EQ(function->PrettyName(), "main");
   EXPECT_EQ(function->Address(), 0x1135);
@@ -92,7 +92,7 @@ TEST(OrbitModule, GetFunctionFromExactAddress) {
 
   pdb.PopulateFunctionMap();
   pdb.PopulateStringFunctionMap();
-  const std::vector<Function>& functions = pdb.GetFunctions();
+  const std::vector<std::shared_ptr<Function>>& functions = pdb.GetFunctions();
 
   ASSERT_EQ(functions.size(), 1125);
 
@@ -119,7 +119,7 @@ TEST(OrbitModule, GetFunctionFromProgramCounter) {
   pdb.PopulateFunctionMap();
   pdb.PopulateStringFunctionMap();
 
-  const std::vector<Function>& functions = pdb.GetFunctions();
+  const std::vector<std::shared_ptr<Function>>& functions = pdb.GetFunctions();
 
   ASSERT_EQ(functions.size(), 1125);
 

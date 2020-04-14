@@ -10,6 +10,7 @@
 #include "Core.h"
 #include "OrbitBase/Logging.h"
 #include "Pdb.h"
+#include "ScopeTimer.h"
 #include "Serialization.h"
 #include "absl/strings/str_format.h"
 
@@ -135,9 +136,9 @@ Pdb::Pdb(uint64_t module_address, uint64_t load_bias,
   m_Name = Path::GetFileName(m_FileName);
 }
 
-void Pdb::AddFunction(const Function& function) {
-  m_Functions.push_back(function);
-  m_Functions.back().SetPdb(this);
+void Pdb::AddFunction(const std::shared_ptr<Function>& function) {
+  functions_.push_back(function);
+  functions_.back()->SetPdb(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -150,26 +151,24 @@ void Pdb::LoadPdbAsync(const char* a_PdbName,
 
 //-----------------------------------------------------------------------------
 void Pdb::ProcessData() {
-  if (!Capture::GTargetProcess) return;
+  std::shared_ptr<Process> process = Capture::GTargetProcess;
+  if (process == nullptr) return;
 
   SCOPE_TIMER_LOG("ProcessData");
-  ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
+  ScopeLock lock(process->GetDataMutex());
 
-  auto& functions = Capture::GTargetProcess->GetFunctions();
-  auto& globals = Capture::GTargetProcess->GetGlobals();
+  auto& globals = process->GetGlobals();
 
-  functions.reserve(functions.size() + m_Functions.size());
-
-  for (Function& func : m_Functions) {
-    func.SetPdb(this);
-    functions.push_back(&func);
-    GOrbitUnreal.OnFunctionAdded(&func);
+  for (auto& func : functions_) {
+    func->SetPdb(this);
+    process->AddFunction(func);
+    GOrbitUnreal.OnFunctionAdded(func.get());
   }
 
   if (GParams.m_FindFileAndLineInfo) {
     SCOPE_TIMER_LOG("Find File and Line info");
-    for (Function& func : m_Functions) {
-      func.FindFile();
+    for (auto& func : functions_) {
+      func->FindFile();
     }
   }
 
@@ -195,8 +194,8 @@ void Pdb::ProcessData() {
 //-----------------------------------------------------------------------------
 void Pdb::PopulateFunctionMap() {
   SCOPE_TIMER_LOG("Pdb::PopulateFunctionMap");
-  for (Function& function : m_Functions) {
-    m_FunctionMap.insert(std::make_pair(function.Address(), &function));
+  for (auto& function : functions_) {
+    m_FunctionMap.insert(std::make_pair(function->Address(), function.get()));
   }
 }
 
@@ -204,13 +203,13 @@ void Pdb::PopulateFunctionMap() {
 void Pdb::PopulateStringFunctionMap() {
   {
     // SCOPE_TIMER_LOG("Reserving map");
-    m_StringFunctionMap.reserve(unsigned(1.5f * (float)m_Functions.size()));
+    m_StringFunctionMap.reserve(unsigned(1.5f * (float)functions_.size()));
   }
 
   {
     // SCOPE_TIMER_LOG("Map inserts");
-    for (Function& Function : m_Functions) {
-      m_StringFunctionMap[Function.Hash()] = &Function;
+    for (auto& function : functions_) {
+      m_StringFunctionMap[function->Hash()] = function.get();
     }
   }
 }
@@ -242,9 +241,29 @@ Function* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
 #endif
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(ModuleDebugInfo, 0) {
+void Pdb::ApplyPresets(const Session& session) {
+  SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ApplyPresets - %s", m_Name.c_str()));
+
+  std::string module_name = m_LoadedModuleName;
+  auto it = session.m_Modules.find(module_name);
+  if (it != session.m_Modules.end()) {
+    const SessionModule& session_module = it->second;
+
+    for (uint64_t hash : session_module.m_FunctionHashes) {
+      auto fit = m_StringFunctionMap.find(hash);
+      if (fit != m_StringFunctionMap.end()) {
+        Function* function = fit->second;
+        function->Select();
+      }
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+ORBIT_SERIALIZE(ModuleDebugInfo, 2) {
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_Functions);
   ORBIT_NVP_VAL(0, load_bias);
   ORBIT_NVP_VAL(0, m_PdbName);
+  ORBIT_NVP_VAL(1, m_PID);
 }

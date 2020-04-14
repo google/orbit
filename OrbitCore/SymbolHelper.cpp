@@ -165,7 +165,7 @@ void SymbolHelper::LoadSymbolsFromDebugInfo(
       std::make_shared<Pdb>(module->m_AddressStart, module_info.load_bias,
                             module_info.m_PdbName, module->m_FullName);
 
-  for (const Function& function : module_info.m_Functions) {
+  for (const auto& function : module_info.m_Functions) {
     module->m_Pdb->AddFunction(function);
   }
   module->m_Pdb->ProcessData();

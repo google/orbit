@@ -166,7 +166,7 @@ void FunctionsDataView::OnSort(int a_Column,
     return;
   }
 
-  const std::vector<Function*>& functions =
+  const std::vector<std::shared_ptr<Function>>& functions =
       Capture::GTargetProcess->GetFunctions();
   auto memberId = static_cast<Function::MemberID>(s_HeaderMap[a_Column]);
 
@@ -311,9 +311,10 @@ void FunctionsDataView::OnFilter(const std::string& a_Filter) {
   // TODO: port parallel filtering
   std::vector<uint32_t> indices;
   std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
-  std::vector<Function*>& functions = Capture::GTargetProcess->GetFunctions();
+  const std::vector<std::shared_ptr<Function>>& functions =
+      Capture::GTargetProcess->GetFunctions();
   for (int i = 0; i < (int)functions.size(); ++i) {
-    Function* function = functions[i];
+    auto& function = functions[i];
     std::string name = function->Lower() + function->GetPdb()->GetName();
 
     bool match = true;
@@ -341,7 +342,7 @@ void FunctionsDataView::OnFilter(const std::string& a_Filter) {
 //-----------------------------------------------------------------------------
 void FunctionsDataView::ParallelFilter() {
 #ifdef _WIN32
-  std::vector<Function*>& functions = Capture::GTargetProcess->GetFunctions();
+  const std::vector<std::shared_ptr<Function>>& functions = Capture::GTargetProcess->GetFunctions();
   const auto prio = oqpi::task_priority::normal;
   auto numWorkers = oqpi_tk::scheduler().workersCount(prio);
   // int numWorkers = oqpi::thread::hardware_concurrency();
@@ -397,6 +398,7 @@ void FunctionsDataView::OnDataChanged() {
 //-----------------------------------------------------------------------------
 Function* FunctionsDataView::GetFunction(int a_Row) {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
-  std::vector<Function*>& functions = Capture::GTargetProcess->GetFunctions();
-  return functions[m_Indices[a_Row]];
+  const std::vector<std::shared_ptr<Function>>& functions =
+      Capture::GTargetProcess->GetFunctions();
+  return functions[m_Indices[a_Row]].get();
 }

@@ -27,6 +27,7 @@ class Capture {
   static bool StartCapture(LinuxTracingSession* session);
   static void StopCapture();
   static void ClearCaptureData();
+  static std::vector<std::shared_ptr<Function>> GetSelectedFunctions();
   static void PreFunctionHooks();
   static void SendFunctionHooks();
   static void SendDataTrackingInfo();
@@ -37,7 +38,6 @@ class Capture {
   static void DisplayStats();
   static void TestHooks();
   static bool IsOtherInstanceRunning();
-  static void LoadSession(const std::shared_ptr<Session>& a_Session);
   static void SaveSession(const std::string& a_FileName);
   static void NewSamplingProfiler();
   static bool IsTrackingEvents();
@@ -89,6 +89,7 @@ class Capture {
   static std::shared_ptr<Session> GSessionPresets;
   static std::shared_ptr<CallStack> GSelectedCallstack;
   static void (*GClearCaptureDataFunc)();
+  static std::vector<std::shared_ptr<Function>> GSelectedFunctions;
   static std::map<uint64_t, Function*> GSelectedFunctionsMap;
   static std::map<uint64_t, Function*> GVisibleFunctionsMap;
   static std::unordered_map<ULONG64, ULONG64> GFunctionCountMap;

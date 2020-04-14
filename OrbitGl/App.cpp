@@ -53,6 +53,7 @@
 #include "Serialization.h"
 #include "SessionsDataView.h"
 #include "StringManager.h"
+#include "SymbolsManager.h"
 #include "Systrace.h"
 #include "Tcp.h"
 #include "TcpClient.h"
@@ -60,6 +61,7 @@
 #include "TestRemoteMessages.h"
 #include "TextRenderer.h"
 #include "TimerManager.h"
+#include "TransactionManager.h"
 #include "TypesDataView.h"
 #include "Utils.h"
 #include "Version.h"
@@ -123,10 +125,6 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
       GTcpClient->AddMainThreadCallback(
           Msg_RemoteProcessList,
           [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcessList(a_Msg); });
-      GTcpClient->AddMainThreadCallback(
-          Msg_RemoteModuleDebugInfo, [=](const Message& a_Msg) {
-            GOrbitApp->OnRemoteModuleDebugInfo(a_Msg);
-          });
       ConnectionManager::Get().ConnectToRemote(address);
       m_ProcessesDataView->SetIsRemote(true);
       SetIsRemote(true);
@@ -380,6 +378,8 @@ void OrbitApp::PostInit() {
   } else {
     ConnectionManager::Get().InitAsService();
   }
+
+  GOrbitApp->InitializeManagers();
 }
 
 //-----------------------------------------------------------------------------
@@ -556,15 +556,14 @@ void OrbitApp::MainTick() {
   if (GTcpServer) GTcpServer->ProcessMainThreadCallbacks();
   if (GTcpClient) GTcpClient->ProcessMainThreadCallbacks();
 
+  // Tick Transaction manager only from client (OrbitApp is client only);
+  GOrbitApp->GetTransactionManager()->Tick();
+
   GMainTimer.Reset();
   Capture::Update();
 #ifdef WIN32
   GTcpServer->MainThreadTick();
 #endif
-
-  if (!Capture::GPresetToLoad.empty()) {
-    GOrbitApp->OnLoadSession(Capture::GPresetToLoad);
-  }
 
   if (!Capture::GProcessToInject.empty()) {
     std::cout << "Injecting into " << Capture::GTargetProcess->GetFullName()
@@ -816,13 +815,16 @@ void OrbitApp::OnLoadSession(const std::string& file_name) {
   if (!file.fail()) {
     cereal::BinaryInputArchive archive(file);
     archive(*session);
-    if (SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
-      session->m_FileName = file_path;
-      Capture::LoadSession(session);
-      Capture::GPresetToLoad = "";
-    }
-
+    session->m_FileName = file_path;
+    LoadSession(session);
     file.close();
+  }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::LoadSession(const std::shared_ptr<Session>& session) {
+  if(SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
+    Capture::GSessionPresets = session;
   }
 }
 
@@ -980,7 +982,7 @@ void OrbitApp::SendToUiNow(const std::wstring& a_Msg) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::EnqueueModuleToLoad(const std::shared_ptr<Module>& a_Module) {
-  m_ModulesToLoad.push(a_Module);
+  m_ModulesToLoad.push_back(a_Module);
 }
 
 //-----------------------------------------------------------------------------
@@ -991,54 +993,27 @@ void OrbitApp::LoadModules() {
       return;
     }
 #ifdef _WIN32
-    std::shared_ptr<Module> module = std::move(m_ModulesToLoad.front());
-    m_ModulesToLoad.pop();
+  for (std::shared_ptr<Module> module : m_ModulesToLoad) {
     GLoadPdbAsync(module);
+  }
 #else
-    while (!m_ModulesToLoad.empty()) {
-      std::shared_ptr<Module> module = m_ModulesToLoad.front();
-      m_ModulesToLoad.pop();
-
-      if (symbolHelper.LoadSymbolsIncludedInBinary(module)) continue;
-      if (symbolHelper.LoadSymbolsUsingSymbolsFile(module)) continue;
-
+    for (std::shared_ptr<Module> module : m_ModulesToLoad) {
+      if (symbol_helper_.LoadSymbolsIncludedInBinary(module)) continue;
+      if (symbol_helper_.LoadSymbolsUsingSymbolsFile(module)) continue;
       ERROR("Could not load symbols for module %s", module->m_Name.c_str());
     }
     GOrbitApp->FireRefreshCallbacks();
 #endif
   }
+
+  m_ModulesToLoad.clear();
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules() {
-  std::vector<ModuleDebugInfo> module_infos;
-
-  while (!m_ModulesToLoad.empty()) {
-    std::shared_ptr<Module> module = std::move(m_ModulesToLoad.front());
-    m_ModulesToLoad.pop();
-
-    ModuleDebugInfo module_info;
-    module_info.m_Name = module->m_Name;
-
-    if (symbolHelper.LoadSymbolsUsingSymbolsFile(module)) {
-      symbolHelper.FillDebugInfoFromModule(module, module_info);
-      LOG("Loaded %lu function symbols locally for %s",
-          module_info.m_Functions.size(), module_info.m_Name.c_str());
-    } else {
-      LOG("Did not find local symbols for module %s",
-          module_info.m_Name.c_str());
-    }
-    module_infos.emplace_back(module_info);
-  }
-
-  // Send modules to the collector
-  std::string module_data = SerializeObjectBinary(module_infos);
-  Message msg(Msg_RemoteModuleDebugInfo, module_data.size() + 1,
-              module_data.data());
-  msg.m_Header.m_GenericHeader.m_Address =
-      m_ProcessesDataView->GetSelectedProcess()->GetID();
-  GTcpClient->Send(msg);
-
+  GetSymbolsManager()->LoadSymbols(m_ModulesToLoad,
+                                           Capture::GTargetProcess);
+  m_ModulesToLoad.clear();
   GOrbitApp->FireRefreshCallbacks();
 }
 
@@ -1100,6 +1075,31 @@ void OrbitApp::OnRemoteProcess(const Message& a_Message) {
   remoteProcess->SetIsRemote(true);
   PRINT_VAR(remoteProcess->GetName());
   GOrbitApp->m_ProcessesDataView->SetRemoteProcess(remoteProcess);
+
+  // Trigger session loading if needed.
+  std::shared_ptr<Session> session = Capture::GSessionPresets;
+  if (session){
+      GetSymbolsManager()->LoadSymbols(session, remoteProcess);
+      GParams.m_ProcessPath = session->m_ProcessFullPath;
+      GParams.m_Arguments = session->m_Arguments;
+      GParams.m_WorkingDirectory = session->m_WorkingDirectory;
+      GCoreApp->SendToUiNow(L"SetProcessParams");
+      Capture::GSessionPresets = nullptr;
+    }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::ApplySession(std::shared_ptr<Session> session) {
+  if (session != nullptr) {
+    for (auto& pair : session->m_Modules) {
+      const std::string& name = pair.first;
+      std::shared_ptr<Module> module =
+          Capture::GTargetProcess->GetModuleFromName(Path::GetFileName(name));
+      if (module && module->m_Pdb) module->m_Pdb->ApplyPresets(*session);
+    }
+
+    FireRefreshCallbacks();
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -1111,15 +1111,25 @@ void OrbitApp::OnRemoteProcessList(const Message& a_Message) {
   inputAr(*remoteProcessList);
   remoteProcessList->SetRemote(true);
   GOrbitApp->m_ProcessesDataView->SetRemoteProcessList(remoteProcessList);
+
+  // Trigger session loading if needed.
+  if (!Capture::GPresetToLoad.empty()) {
+    GOrbitApp->OnLoadSession(Capture::GPresetToLoad);
+    Capture::GPresetToLoad = "";
+  }
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnRemoteModuleDebugInfo(const Message& a_Message) {
-  std::istringstream buffer(std::string(a_Message.m_Data, a_Message.m_Size));
-  cereal::BinaryInputArchive inputAr(buffer);
   std::vector<ModuleDebugInfo> remote_module_debug_infos;
-  inputAr(remote_module_debug_infos);
+  DeserializeObjectBinary(a_Message.GetData(), a_Message.GetSize(),
+                          remote_module_debug_infos);
+  OnRemoteModuleDebugInfo(remote_module_debug_infos);
+}
 
+//-----------------------------------------------------------------------------
+void OrbitApp::OnRemoteModuleDebugInfo(
+    const std::vector<ModuleDebugInfo>& remote_module_debug_infos) {
   for (const ModuleDebugInfo& module_info : remote_module_debug_infos) {
     std::shared_ptr<Module> module =
         Capture::GTargetProcess->GetModuleFromName(module_info.m_Name);
@@ -1133,7 +1143,7 @@ void OrbitApp::OnRemoteModuleDebugInfo(const Message& a_Message) {
       ERROR("Remote did not send any symbols for module %s",
             module_info.m_Name.c_str());
     } else {
-      symbolHelper.LoadSymbolsFromDebugInfo(module, module_info);
+      symbol_helper_.LoadSymbolsFromDebugInfo(module, module_info);
       LOG("Received %lu function symbols from remote collector for module %s",
           module_info.m_Functions.size(), module_info.m_Name.c_str());
     }

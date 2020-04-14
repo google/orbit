@@ -5,6 +5,7 @@
 #include "Capture.h"
 #include "ConnectionManager.h"
 #include "Core.h"
+#include "CoreApp.h"
 #include "TcpServer.h"
 #include "TimerManager.h"
 
@@ -16,6 +17,10 @@ OrbitService::OrbitService() {
 
   GTcpServer->Start(Capture::GCapturePort);
   ConnectionManager::Get().InitAsService();
+
+  core_app_ = std::make_unique<CoreApp>();
+  GCoreApp = core_app_.get();
+  GCoreApp->InitializeManagers();
 }
 
 void OrbitService::Run() {
@@ -24,4 +29,6 @@ void OrbitService::Run() {
     Capture::Update();
     Sleep(16);
   }
+
+  GCoreApp = nullptr;
 }

@@ -103,8 +103,8 @@ TEST(SymbolHelper, LoadSymbolsFromDebugInfo) {
   module_info.m_Name = executable_name;
   module_info.m_PdbName = "path/symbols_file_name";
   module_info.load_bias = 0x400;
-  Function function;
-  function.SetName("function name");
+  auto function = std::make_shared<Function>();
+  function->SetName("function name");
   module_info.m_Functions = {function};
 
   std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0x40, 0);
@@ -121,7 +121,7 @@ TEST(SymbolHelper, LoadSymbolsFromDebugInfo) {
   EXPECT_EQ(pdb.GetName(), "symbols_file_name");
   EXPECT_EQ(pdb.GetHModule(), 0x40);
   EXPECT_EQ(pdb.GetLoadBias(), 0x400);
-  EXPECT_EQ(pdb.GetFunctions()[0].Name(), "function name");
+  EXPECT_EQ(pdb.GetFunctions()[0]->Name(), "function name");
 }
 
 TEST(SymbolHelper, FillDebugInfoFromModule) {

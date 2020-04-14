@@ -58,6 +58,7 @@ target_sources(
          SerializationMacros.h
          StringManager.h
          SymbolHelper.h
+         SymbolsManager.h
          Systrace.h
          Tcp.h
          TcpClient.h
@@ -67,6 +68,8 @@ target_sources(
          TestRemoteMessages.h
          Threading.h
          TimerManager.h
+         Transaction.h
+         TransactionManager.h
          TypeInfoStructs.h
          Utils.h
          Variable.h
@@ -113,6 +116,7 @@ target_sources(
           ScopeTimer.cpp
           StringManager.cpp
           SymbolHelper.cpp
+          SymbolsManager.cpp
           Systrace.cpp
           Tcp.cpp
           Tcp.cpp
@@ -121,6 +125,7 @@ target_sources(
           TcpServer.cpp
           TestRemoteMessages.cpp
           TimerManager.cpp
+          TransactionManager.cpp
           Utils.cpp
           Variable.cpp
           VariableTracing.cpp

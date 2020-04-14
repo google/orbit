@@ -111,7 +111,7 @@ class Function {
     calling_convention_ = calling_convention;
   }
   void SetOrbitType(OrbitType type) { type_ = type; }
-  void SetPdb(Pdb* pdb) { pdb_ = pdb; }
+  void SetPdb(Pdb* pdb);
 
   const std::string& Name() const { return name_; }
   const std::string& PrettyName() const;
@@ -156,6 +156,7 @@ class Function {
   bool IsFree() const { return type_ == FREE; }
   bool IsMemoryFunc() const { return IsFree() || IsAlloc() || IsRealloc(); }
   std::string GetModuleName() const;
+  const std::string& GetLoadedModuleName() const { return loaded_module_name_; }
   Type* GetParentType();
   void ResetStats();
   void GetDisassembly();
@@ -167,12 +168,14 @@ class Function {
   std::string name_;
   std::string pretty_name_;
   std::string pretty_name_lower_;
+  std::string loaded_module_name_;
   std::string module_;
   std::string file_;
   std::string probe_;
   uint64_t address_ = 0;
   uint64_t size_ = 0;
   uint64_t load_bias_ = 0;
+  uint64_t module_base_address_ = 0;
   uint32_t id_ = 0;
   uint32_t parent_id_ = 0;
   uint32_t line_ = 0;

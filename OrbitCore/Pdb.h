@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "OrbitDbgHelp.h"
+#include "OrbitSession.h"
 #include "OrbitType.h"
 #include "Variable.h"
 
@@ -41,7 +42,7 @@ class Pdb {
   bool LoadDataFromPdb();
   bool LoadPdbDia();
   void Update();
-  void AddFunction(const Function& function);
+  void AddFunction(const std::shared_ptr<Function>& function);
   void CheckOrbitFunction(Function& a_Function);
   void AddType(const Type& a_Type);
   void AddGlobal(const Variable& a_Global);
@@ -53,7 +54,9 @@ class Pdb {
   const std::string& GetName() const { return m_Name; }
   const std::string& GetFileName() const { return m_FileName; }
   const std::string& GetLoadedModuleName() const { return m_LoadedModuleName; }
-  std::vector<Function>& GetFunctions() { return m_Functions; }
+  const std::vector<std::shared_ptr<Function>>& GetFunctions() {
+    return functions_;
+  }
   std::vector<Type>& GetTypes() { return m_Types; }
   std::vector<Variable>& GetGlobals() { return m_Globals; }
   uint64_t GetHModule() const { return m_MainModule; }
@@ -72,7 +75,7 @@ class Pdb {
   void PopulateStringFunctionMap();
   void Clear();
   void Reserve();
-  void ApplyPresets();
+  void ApplyPresets(const Session& session);
 
   Function* GetFunctionFromExactAddress(uint64_t a_Address);
   Function* GetFunctionFromProgramCounter(uint64_t a_Address);
@@ -127,7 +130,7 @@ class Pdb {
   std::string m_Name;
   std::string m_FileName;
   std::string m_LoadedModuleName;
-  std::vector<Function> m_Functions;
+  std::vector<std::shared_ptr<Function>> functions_;
   std::vector<Type> m_Types;
   std::vector<Variable> m_Globals;
   IMAGEHLP_MODULE64 m_ModuleInfo;
@@ -165,7 +168,6 @@ class Pdb {
   }  // This shouldn't do anything on Linux.
   bool LoadPdbDia() { return false; }
   void Update() {}
-  void AddFunction(const Function& function);
   void CheckOrbitFunction(Function&) {}
   void AddType(const Type&) {}
   void AddGlobal(const Variable&) {}
@@ -176,7 +178,8 @@ class Pdb {
   const std::string& GetName() const { return m_Name; }
   const std::string& GetFileName() const { return m_FileName; }
   const std::string& GetLoadedModuleName() const { return m_LoadedModuleName; }
-  std::vector<Function>& GetFunctions() { return m_Functions; }
+  const std::vector<std::shared_ptr<Function>>& GetFunctions() { return functions_; }
+  void AddFunction(const std::shared_ptr<Function>& function);
   std::vector<Type>& GetTypes() { return m_Types; }
   std::vector<Variable>& GetGlobals() { return m_Globals; }
   uint64_t GetHModule() const { return m_MainModule; }
@@ -195,7 +198,7 @@ class Pdb {
   void PopulateStringFunctionMap();
   void Clear();
   void Reserve();
-  void ApplyPresets();
+  void ApplyPresets(const Session& session);
 
   Function* GetFunctionFromExactAddress(uint64_t a_Address);
   Function* GetFunctionFromProgramCounter(uint64_t a_Address);
@@ -239,7 +242,7 @@ class Pdb {
   std::string m_Name;              // name of the file containing the symbols
   std::string m_FileName;          // full path of file containing the symbols
   std::string m_LoadedModuleName;  // full path of the module
-  std::vector<Function> m_Functions;
+  std::vector<std::shared_ptr<Function>> functions_;
   std::vector<Type> m_Types;
   std::vector<Variable> m_Globals;
   std::unordered_map<ULONG, Type> m_TypeMap;
