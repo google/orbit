@@ -2,6 +2,7 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 #include "CoreApp.h"
+#include "TcpClient.h"
 
 #include "Capture.h"
 #include "ConnectionManager.h"

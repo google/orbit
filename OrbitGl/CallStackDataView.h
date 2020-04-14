@@ -17,16 +17,17 @@ class CallStackDataView : public FunctionsDataView {
   bool IsSortingAllowed() override { return false; }
   void SetAsMainInstance() override;
   size_t GetNumElements() override;
-  void OnDataChanged() override;
   std::string GetValue(int a_Row, int a_Column) override;
   void OnFilter(const std::string& a_Filter) override;
+  void OnDataChanged() override;
   void SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
     m_CallStack = std::move(a_CallStack);
     OnDataChanged();
   }
 
  protected:
-  Function& GetFunction(unsigned int a_Row) override;
+  Function* GetFunction(int a_Row) override;
+  Function& GetFunctionOrDummy(int a_IndexInCallstack);
 
   std::shared_ptr<CallStack> m_CallStack;
 };

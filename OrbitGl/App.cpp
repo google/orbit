@@ -811,7 +811,7 @@ void OrbitApp::OnLoadSession(const std::string& file_name) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadSession(const std::shared_ptr<Session>& session) {
-  if (SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
+  if(SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
     Capture::GSessionPresets = session;
   }
 }
@@ -981,9 +981,9 @@ void OrbitApp::LoadModules() {
       return;
     }
 #ifdef _WIN32
-    for (std::shared_ptr<Module> module : m_ModulesToLoad) {
-      GLoadPdbAsync(module);
-    }
+  for (std::shared_ptr<Module> module : m_ModulesToLoad) {
+    GLoadPdbAsync(module);
+  }
 #else
     for (std::shared_ptr<Module> module : m_ModulesToLoad) {
       if (symbol_helper_.LoadSymbolsIncludedInBinary(module)) continue;
@@ -999,7 +999,8 @@ void OrbitApp::LoadModules() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules() {
-  GetSymbolsManager()->LoadSymbols(m_ModulesToLoad, Capture::GTargetProcess);
+  GetSymbolsManager()->LoadSymbols(m_ModulesToLoad,
+                                           Capture::GTargetProcess);
   m_ModulesToLoad.clear();
   GOrbitApp->FireRefreshCallbacks();
 }
@@ -1065,14 +1066,14 @@ void OrbitApp::OnRemoteProcess(const Message& a_Message) {
 
   // Trigger session loading if needed.
   std::shared_ptr<Session> session = Capture::GSessionPresets;
-  if (session) {
-    GetSymbolsManager()->LoadSymbols(session, remoteProcess);
-    GParams.m_ProcessPath = session->m_ProcessFullPath;
-    GParams.m_Arguments = session->m_Arguments;
-    GParams.m_WorkingDirectory = session->m_WorkingDirectory;
-    GCoreApp->SendToUiNow(L"SetProcessParams");
-    Capture::GSessionPresets = nullptr;
-  }
+  if (session){
+      GetSymbolsManager()->LoadSymbols(session, remoteProcess);
+      GParams.m_ProcessPath = session->m_ProcessFullPath;
+      GParams.m_Arguments = session->m_Arguments;
+      GParams.m_WorkingDirectory = session->m_WorkingDirectory;
+      GCoreApp->SendToUiNow(L"SetProcessParams");
+      Capture::GSessionPresets = nullptr;
+    }
 }
 
 //-----------------------------------------------------------------------------
