@@ -27,13 +27,13 @@ class SymbolsManager {
   void LoadSymbols(const std::vector<std::shared_ptr<Module>>& modules,
                    std::shared_ptr<Process> process);
 
- private:
   SymbolsManager() = delete;
   SymbolsManager(const SymbolsManager&) = delete;
   SymbolsManager& operator=(const SymbolsManager&) = delete;
   SymbolsManager(SymbolsManager&&) = delete;
   SymbolsManager& operator=(SymbolsManager&&) = delete;
 
+private:
   void HandleRequest(const Message& message);
   void HandleResponse(const Message& message);
   void FinalizeTransaction();
