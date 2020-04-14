@@ -109,7 +109,10 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
     return "";
   }
 
-  Function& function = GetFunction(a_Row);
+  Function* function = GetFunction(a_Row);
+  if (function == nullptr) {
+    return "";
+  }
 
   std::string value;
 
@@ -118,28 +121,29 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
       value = absl::StrFormat("%d", a_Row);
       break;
     case Function::SELECTED:
-      value = function.IsSelected() ? "X" : "-";
+      value = function->IsSelected() ? "X" : "-";
       break;
     case Function::NAME:
-      value = function.PrettyName();
+      value = function->PrettyName();
       break;
     case Function::ADDRESS:
-      value = absl::StrFormat("0x%llx", function.GetVirtualAddress());
+      value = absl::StrFormat("0x%llx", function->GetVirtualAddress());
       break;
     case Function::FILE:
-      value = function.File();
+      value = function->File();
       break;
     case Function::MODULE:
-      value = function.GetPdb() != nullptr ? function.GetPdb()->GetName() : "";
+      value =
+          function->GetPdb() != nullptr ? function->GetPdb()->GetName() : "";
       break;
     case Function::LINE:
-      value = absl::StrFormat("%i", function.Line());
+      value = absl::StrFormat("%i", function->Line());
       break;
     case Function::SIZE:
-      value = absl::StrFormat("%lu", function.Size());
+      value = absl::StrFormat("%lu", function->Size());
       break;
     case Function::CALL_CONV:
-      value = function.GetCallingConventionString();
+      value = function->GetCallingConventionString();
       break;
     default:
       break;
@@ -224,18 +228,27 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
   bool enable_unselect = false;
+  bool enable_view_disassembly = false;
   for (int index : a_SelectedIndices) {
-    const Function& function = GetFunction(index);
-    enable_select |= !function.IsSelected();
-    enable_unselect |= function.IsSelected();
+    const Function* function = GetFunction(index);
+    if (function == nullptr) continue;
+    enable_select |= !function->IsSelected();
+    enable_unselect |= function->IsSelected();
+    enable_view_disassembly = true;
   }
 
-  bool enable_create_rule = a_SelectedIndices.size() == 1;
+  bool enable_create_rule = false;
+  if (a_SelectedIndices.size() == 1 &&
+      GetFunction(a_SelectedIndices[0]) != nullptr) {
+    enable_create_rule = true;
+  }
 
   std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
-  Append(menu, {MENU_ACTION_VIEW, MENU_ACTION_DISASSEMBLY});
+  if (enable_view_disassembly) {
+    Append(menu, {MENU_ACTION_VIEW, MENU_ACTION_DISASSEMBLY});
+  }
   if (enable_create_rule) menu.emplace_back(MENU_ACTION_CREATE_RULE);
   // TODO: MENU_ACTION_SET_AS_FRAME is never shown, should it be removed?
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
@@ -246,39 +259,43 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
 void FunctionsDataView::OnContextMenu(const std::string& a_Action,
                                       int a_MenuIndex,
                                       const std::vector<int>& a_ItemIndices) {
+  std::vector<Function*> functions;
+  for (int i : a_ItemIndices) {
+    Function* function = GetFunction(i);
+    if (function != nullptr) {
+      functions.push_back(function);
+    }
+  }
+
   if (a_Action == MENU_ACTION_SELECT) {
-    for (int i : a_ItemIndices) {
-      Function& function = GetFunction(i);
-      function.Select();
+    for (Function* function : functions) {
+      function->Select();
     }
   } else if (a_Action == MENU_ACTION_UNSELECT) {
-    for (int i : a_ItemIndices) {
-      Function& func = GetFunction(i);
-      func.UnSelect();
+    for (Function* function : functions) {
+      function->UnSelect();
     }
   } else if (a_Action == MENU_ACTION_VIEW) {
-    for (int i : a_ItemIndices) {
-      Function& function = GetFunction(i);
-      function.Print();
+    for (Function* function : functions) {
+      function->Print();
     }
 
     GOrbitApp->SendToUiNow(L"output");
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
     // TODO: does this action work or should we hide it?
-    for (int i : a_ItemIndices) {
-      Function& function = GetFunction(i);
-      function.GetDisassembly();
+    for (Function* function : functions) {
+      function->GetDisassembly();
     }
   } else if (a_Action == MENU_ACTION_CREATE_RULE) {
-    if (a_ItemIndices.size() == 1) {
-      Function& function = GetFunction(0);
-      GOrbitApp->LaunchRuleEditor(&function);
+    if (functions.size() != 1) {
+      return;
     }
+    GOrbitApp->LaunchRuleEditor(functions[0]);
   } else if (a_Action == MENU_ACTION_SET_AS_FRAME) {
-    if (a_ItemIndices.size() == 1) {
-      Function& function = GetFunction(0);
-      function.SetAsMainFrameFunction();
+    if (functions.size() != 1) {
+      return;
     }
+    functions[0]->SetAsMainFrameFunction();
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }
@@ -379,8 +396,9 @@ void FunctionsDataView::OnDataChanged() {
 }
 
 //-----------------------------------------------------------------------------
-Function& FunctionsDataView::GetFunction(unsigned int a_Row) {
+Function* FunctionsDataView::GetFunction(int a_Row) {
+  ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
   const std::vector<std::shared_ptr<Function>>& functions =
       Capture::GTargetProcess->GetFunctions();
-  return *functions[m_Indices[a_Row]];
+  return functions[m_Indices[a_Row]].get();
 }
