@@ -1,9 +1,8 @@
 #ifndef ORBIT_CORE_INTROSPECTION_H_
 #define ORBIT_CORE_INTROSPECTION_H_
 
-#include "OrbitBase/Tracing.h"
-
 #include "LinuxTracingSession.h"
+#include "OrbitBase/Tracing.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
 

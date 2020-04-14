@@ -116,7 +116,7 @@ class Function {
   const std::string& Name() const { return name_; }
   const std::string& PrettyName() const;
   const std::string& Lower() {
-    if (pretty_name_lower_.size() == 0) {
+    if (pretty_name_lower_.empty()) {
       pretty_name_lower_ = ToLower(pretty_name_);
     }
     return pretty_name_lower_;

@@ -9,6 +9,7 @@
 #include "CallStackDataView.h"
 #include "SamplingProfiler.h"
 #include "SamplingReportDataView.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 SamplingReport::SamplingReport(
@@ -17,11 +18,9 @@ SamplingReport::SamplingReport(
   m_SelectedAddress = 0;
   m_CallstackDataView = nullptr;
   m_SelectedSortedCallstackReport = nullptr;
+  m_SelectedAddressCallstackIndex = 0;
   FillReport();
 }
-
-//-----------------------------------------------------------------------------
-SamplingReport::~SamplingReport() { m_ThreadReports.clear(); }
 
 //-----------------------------------------------------------------------------
 void SamplingReport::FillReport() {
@@ -39,9 +38,6 @@ void SamplingReport::FillReport() {
     threadReport->SetSamplingReport(this);
     m_ThreadReports.push_back(threadReport);
   }
-
-  static int cnt = 0;
-  std::string panelName = "samplingReport" + std::to_string(cnt++);
 }
 
 //-----------------------------------------------------------------------------
@@ -83,21 +79,21 @@ void SamplingReport::DecrementCallstackIndex() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring SamplingReport::GetSelectedCallstackString() {
+std::string SamplingReport::GetSelectedCallstackString() {
   if (m_SelectedSortedCallstackReport) {
     int numOccurances = m_SelectedSortedCallstackReport
                             ->m_CallStacks[m_SelectedAddressCallstackIndex]
                             .m_Count;
     int totalCallstacks = m_SelectedSortedCallstackReport->m_NumCallStacksTotal;
 
-    return Format(
-        L"%i of %i unique callstacks.  [%i/%i total callstacks](%.2f%%)",
+    return absl::StrFormat(
+        "%i of %i unique callstacks.  [%i/%i total callstacks](%.2f%%)",
         m_SelectedAddressCallstackIndex + 1,
         m_SelectedSortedCallstackReport->m_CallStacks.size(), numOccurances,
         totalCallstacks, 100.f * (float)numOccurances / (float)totalCallstacks);
   }
 
-  return L"Callstacks";
+  return "Callstacks";
 }
 
 //-----------------------------------------------------------------------------

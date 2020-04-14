@@ -8,9 +8,9 @@
 #include "Core.h"
 
 #define ORBIT_LOG(msg) GLogger.Log(OrbitLog::Global, msg)
-#define ORBIT_LOGV(var) GLogger.Log(OrbitLog::Global, #var, var);
+#define ORBIT_LOGV(var) GLogger.Log(OrbitLog::Global, #var, var)
 #define ORBIT_VIZ(msg) GLogger.Logf(OrbitLog::Viz, msg)
-#define ORBIT_VIZV(var) GLogger.Log(OrbitLog::Viz, #var, var);
+#define ORBIT_VIZV(var) GLogger.Log(OrbitLog::Viz, #var, var)
 #define ORBIT_LOG_DEBUG(msg) GLogger.Log(OrbitLog::Debug, msg)
 #define ORBIT_PRINTF(msg) GLogger.Logf(OrbitLog::Viz, msg)
 #define ORBIT_LOG_PDB(msg)
@@ -22,12 +22,12 @@ class OrbitLog {
   enum Type { Global, Debug, Pdb, Viz, NumLogTypes };
 
   void Log(const std::string& a_String) {
-    m_Entries.push_back(a_String.c_str());
+    m_Entries.push_back(a_String);
   }
-  void Log(const char* a_String) { m_Entries.push_back(a_String); }
+  void Log(const char* a_String) { m_Entries.emplace_back(a_String); }
   void Log(const wchar_t* a_String) { Log(ws2s(a_String)); }
   void Logf(const std::string& a_String) {
-    if (m_Entries.size() == 0)
+    if (m_Entries.empty())
       m_Entries.push_back(a_String);
     else
       m_Entries[0] += a_String;

@@ -227,6 +227,7 @@ void OrbitApp::AddSymbol(uint64_t a_Address, const std::string& a_Module,
   CHECK(!ConnectionManager::Get().IsService());
 
   auto symbol = std::make_shared<LinuxSymbol>();
+  symbol->m_Address = a_Address;
   symbol->m_Name = a_Name;
   symbol->m_Module = a_Module;
   Capture::GTargetProcess->AddSymbol(a_Address, symbol);
@@ -396,25 +397,26 @@ void OrbitApp::LoadFileMapping() {
             << std::endl
             << "// \"D:\\NoAccess\\File.cpp\" \"C:\\Available\\\"" << std::endl
             << std::endl
-            << "\"D:\\NoAccess\" \"C:\\Avalaible\"" << std::endl;
+            << "\"D:\\NoAccess\" \"C:\\Available\"" << std::endl;
 
     outfile.close();
   }
 
   std::wfstream infile(fileName);
   if (!infile.fail()) {
-    std::wstring line;
-    while (std::getline(infile, line)) {
-      if (StartsWith(line, L"//")) continue;
+    std::wstring wline;
+    while (std::getline(infile, wline)) {
+      std::string line = ws2s(wline);
+      if (StartsWith(line, "//")) continue;
 
-      bool containsQuotes = Contains(line, L"\"");
+      bool containsQuotes = Contains(line, "\"");
 
-      std::vector<std::wstring> tokens = Tokenize(line);
+      std::vector<std::string> tokens = Tokenize(line);
       if (tokens.size() == 2 && !containsQuotes) {
         m_FileMapping[ToLower(tokens[0])] = ToLower(tokens[1]);
       } else {
-        std::vector<std::wstring> validTokens;
-        for (const std::wstring& token : Tokenize(line, L"\"//")) {
+        std::vector<std::string> validTokens;
+        for (const std::string& token : Tokenize(line, "\"//")) {
           if (!IsBlank(token)) {
             validTokens.push_back(token);
           }

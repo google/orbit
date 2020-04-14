@@ -3,15 +3,15 @@
 //-----------------------------------
 #pragma once
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
 #include <xxhash.h>
 
 #include <algorithm>
 #include <cctype>
 #include <cinttypes>
 #include <codecvt>
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <functional>
 #include <iomanip>

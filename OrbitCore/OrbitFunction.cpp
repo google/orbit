@@ -150,7 +150,7 @@ void Function::FindFile() {
 #ifdef _WIN32
   LineInfo lineInfo;
   SymUtils::GetLineInfo(GetVirtualAddress(), lineInfo);
-  if (lineInfo.m_File != L"") file_ = ws2s(lineInfo.m_File);
+  if (lineInfo.m_File != "") file_ = lineInfo.m_File;
   file_ = ToLower(file_);
   line_ = lineInfo.m_Line;
 #endif

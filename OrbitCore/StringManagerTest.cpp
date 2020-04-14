@@ -1,6 +1,6 @@
-#include "StringManager.h"
-
 #include <gtest/gtest.h>
+
+#include "StringManager.h"
 
 TEST(StringManager, Exists) {
   StringManager string_manager;

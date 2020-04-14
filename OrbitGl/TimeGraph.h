@@ -65,7 +65,7 @@ class TimeGraph {
                double a_InitialTime);
   double GetTime(double a_Ratio);
   double GetTimeIntervalMicro(double a_Ratio);
-  void Select(const Vec2& a_WorldStart, const Vec2 a_WorldStop);
+  void Select(const Vec2& a_WorldStart, const Vec2& a_WorldStop);
   void Select(const TextBox* a_TextBox) { SelectRight(a_TextBox); }
   void SelectLeft(const TextBox* a_TextBox);
   void SelectRight(const TextBox* a_TextBox);

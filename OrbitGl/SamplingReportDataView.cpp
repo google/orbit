@@ -117,7 +117,7 @@ std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
       value = absl::StrFormat("%d", a_Row);
       break;
     case SamplingColumn::FunctionName:
-      value = ws2s(func.m_Name);
+      value = func.m_Name;
       break;
     case SamplingColumn::Exclusive:
       value = absl::StrFormat("%.2f", func.m_Exclusive);
@@ -126,16 +126,16 @@ std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
       value = absl::StrFormat("%.2f", func.m_Inclusive);
       break;
     case SamplingColumn::ModuleName:
-      value = ws2s(func.m_Module);
+      value = func.m_Module;
       break;
     case SamplingColumn::SourceFile:
-      value = ws2s(func.m_File);
+      value = func.m_File;
       break;
     case SamplingColumn::SourceLine:
       value = func.m_Line > 0 ? absl::StrFormat("%d", func.m_Line) : "";
       break;
     case SamplingColumn::Address:
-      value = absl::StrFormat("0x%llx", func.m_Address);
+      value = absl::StrFormat("%#llx", func.m_Address);
       break;
     default:
       break;
@@ -232,7 +232,7 @@ SamplingReportDataView::GetModulesFromIndices(
     std::set<std::string> module_names;
     for (int index : a_Indices) {
       SampledFunction& sampled_function = GetSampledFunction(index);
-      module_names.emplace(ws2s(sampled_function.m_Module));
+      module_names.emplace(sampled_function.m_Module);
     }
 
     auto& module_map = Capture::GTargetProcess->GetNameToModulesMap();
@@ -345,8 +345,8 @@ void SamplingReportDataView::OnFilter(const std::string& a_Filter) {
 
   for (size_t i = 0; i < m_Functions.size(); ++i) {
     SampledFunction& func = m_Functions[i];
-    std::string name = ToLower(ws2s(func.m_Name));
-    std::string module = ToLower(ws2s(func.m_Module));
+    std::string name = ToLower(func.m_Name);
+    std::string module = ToLower(func.m_Module);
 
     bool match = true;
 

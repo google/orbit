@@ -292,15 +292,15 @@ void CaptureWindow::FindCode(DWORD64 address) {
     --lineInfo.m_Line;
 
     // File mapping
-    const std::map<std::wstring, std::wstring>& fileMap =
+    const std::map<std::string, std::string>& fileMap =
         GOrbitApp->GetFileMapping();
     for (const auto& pair : fileMap) {
       ReplaceStringInPlace(lineInfo.m_File, pair.first, pair.second);
     }
 
     if (lineInfo.m_Address != 0) {
-      GOrbitApp->SendToUiAsync(
-          Format(L"code^%s^%i", lineInfo.m_File.c_str(), lineInfo.m_Line));
+      GOrbitApp->SendToUiAsync(Format(
+          L"code^%s^%i", s2ws(lineInfo.m_File).c_str(), lineInfo.m_Line));
     }
   }
 #else

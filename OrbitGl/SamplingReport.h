@@ -6,13 +6,14 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 //-----------------------------------------------------------------------------
 class SamplingReport {
  public:
-  SamplingReport(std::shared_ptr<class SamplingProfiler> a_SamplingProfiler);
-  ~SamplingReport();
+  explicit SamplingReport(
+      std::shared_ptr<class SamplingProfiler> a_SamplingProfiler);
 
   void FillReport();
   std::shared_ptr<class SamplingProfiler> GetProfiler() const {
@@ -28,9 +29,9 @@ class SamplingReport {
   void OnCallstackIndexChanged(int a_Index);
   void IncrementCallstackIndex();
   void DecrementCallstackIndex();
-  std::wstring GetSelectedCallstackString();
+  std::string GetSelectedCallstackString();
   void SetUiRefreshFunc(std::function<void()> a_Func) {
-    m_UiRefreshFunc = a_Func;
+    m_UiRefreshFunc = std::move(a_Func);
   }
   bool HasCallstacks() const {
     return m_SelectedSortedCallstackReport != nullptr;

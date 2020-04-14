@@ -13,8 +13,8 @@ class CallStackPOD {
  public:
   CallStackPOD() { memset(this, 0, sizeof(*this)); }
   static CallStackPOD Walk(uint64_t ip, uint64_t sp);
-  static inline CallStackPOD GetCallstackManual(uint64_t a_ProgramCounter,
-                                       uint64_t a_AddressOfReturnAddress);
+  static inline CallStackPOD GetCallstackManual(
+      uint64_t a_ProgramCounter, uint64_t a_AddressOfReturnAddress);
   size_t GetSizeInBytes() {
     return offsetof(CallStackPOD, data_) + depth_ * sizeof(data_[0]);
   }
@@ -143,8 +143,8 @@ inline CallStack GetCallstack(uint64_t a_ProgramCounter,
 }
 
 //-----------------------------------------------------------------------------
-inline CallStackPOD CallStackPOD::GetCallstackManual(uint64_t a_ProgramCounter,
-                                       uint64_t a_AddressOfReturnAddress) {
+inline CallStackPOD CallStackPOD::GetCallstackManual(
+    uint64_t a_ProgramCounter, uint64_t a_AddressOfReturnAddress) {
   CallStackPOD CS;
 
   CS.data_[CS.depth_++] = a_ProgramCounter;

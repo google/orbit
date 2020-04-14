@@ -5,29 +5,26 @@
 #include "CrashHandler.h"
 
 #include "Core.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitDbgHelp.h"
 #include "ScopeTimer.h"
 #include "TcpClient.h"
 
-#include "OrbitBase/Logging.h"
-
-
 namespace {
-  template<typename StringType = base::FilePath::StringType>
-  struct StringTypeConverter {
-    StringType operator() (const std::string& source_string) const {
-      return StringType(source_string);
-    }
-  };
+template <typename StringType = base::FilePath::StringType>
+struct StringTypeConverter {
+  StringType operator()(const std::string& source_string) const {
+    return StringType(source_string);
+  }
+};
 
-  template<>
-  struct StringTypeConverter<std::wstring> {
-    std::wstring operator() (const std::string& source_string) const {
-      return s2ws(source_string);
-    }
-  };
-} // namespace
-
+template <>
+struct StringTypeConverter<std::wstring> {
+  std::wstring operator()(const std::string& source_string) const {
+    return s2ws(source_string);
+  }
+};
+}  // namespace
 
 //-----------------------------------------------------------------------------
 CrashHandler::CrashHandler(const std::string& dump_path,

@@ -44,7 +44,7 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
       value = function.PrettyName();
       break;
     case Function::ADDRESS:
-      value = absl::StrFormat("0x%llx", function.GetVirtualAddress());
+      value = absl::StrFormat("%#llx", function.GetVirtualAddress());
       break;
     case Function::FILE:
       value = function.File();
@@ -107,7 +107,8 @@ void CallStackDataView::OnDataChanged() {
 //-----------------------------------------------------------------------------
 Function* CallStackDataView::GetFunction(int a_Row) {
   int index = m_Indices[a_Row];
-  if (m_CallStack != nullptr && index < static_cast<int>(m_CallStack->m_Depth) &&
+  if (m_CallStack != nullptr &&
+      index < static_cast<int>(m_CallStack->m_Depth) &&
       Capture::GTargetProcess != nullptr) {
     ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
@@ -127,11 +128,12 @@ Function& CallStackDataView::GetFunctionOrDummy(int a_IndexInCallstack) {
   }
 
   static Function dummy;
-  if (m_CallStack != nullptr && a_IndexInCallstack < static_cast<int>(m_CallStack->m_Depth) &&
+  if (m_CallStack != nullptr &&
+      a_IndexInCallstack < static_cast<int>(m_CallStack->m_Depth) &&
       Capture::GSamplingProfiler != nullptr) {
     uint64_t address = m_CallStack->m_Data[a_IndexInCallstack];
     dummy.SetPrettyName(
-        ws2s(Capture::GSamplingProfiler->GetSymbolFromAddress(address)));
+        Capture::GSamplingProfiler->GetSymbolFromAddress(address));
     dummy.SetAddress(address);
   }
   return dummy;

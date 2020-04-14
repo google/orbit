@@ -140,8 +140,7 @@ std::vector<std::string> LogDataView::GetContextMenu(
   if (m_SelectedCallstack) {
     for (uint32_t i = 0; i < m_SelectedCallstack->m_Depth; ++i) {
       DWORD64 addr = m_SelectedCallstack->m_Data[i];
-      menu.push_back(
-          ws2s(Capture::GSamplingProfiler->GetSymbolFromAddress(addr)));
+      menu.push_back(Capture::GSamplingProfiler->GetSymbolFromAddress(addr));
     }
   }
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));

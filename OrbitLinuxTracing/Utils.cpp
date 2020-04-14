@@ -4,7 +4,6 @@
 #include <OrbitBase/Logging.h>
 #include <OrbitBase/SafeStrerror.h>
 #include <sys/resource.h>
-#include <sys/time.h>
 
 #include <fstream>
 #include <thread>

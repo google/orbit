@@ -7,6 +7,7 @@
 #include <OrbitBase/Logging.h>
 
 #include <algorithm>
+#include <utility>
 
 #include "App.h"
 #include "Batcher.h"
@@ -16,11 +17,9 @@
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "Log.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitType.h"
 #include "OrbitUnreal.h"
 #include "Params.h"
-#include "Pdb.h"
 #include "PickingManager.h"
 #include "SamplingProfiler.h"
 #include "StringManager.h"
@@ -100,7 +99,7 @@ TimeGraph::TimeGraph() { m_LastThreadReorder.Start(); }
 
 //-----------------------------------------------------------------------------
 void TimeGraph::SetStringManager(std::shared_ptr<StringManager> str_manager) {
-  string_manager_ = str_manager;
+  string_manager_ = std::move(str_manager);
 }
 
 //-----------------------------------------------------------------------------
@@ -470,7 +469,7 @@ void TimeGraph::GetWorldMinMax(float& a_Min, float& a_Max) const {
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::Select(const Vec2& a_WorldStart, const Vec2 a_WorldStop) {
+void TimeGraph::Select(const Vec2& a_WorldStart, const Vec2& a_WorldStop) {
   float x0 = std::min(a_WorldStart[0], a_WorldStop[0]);
   float x1 = std::max(a_WorldStart[0], a_WorldStop[0]);
 
@@ -623,7 +622,7 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
               isCore && (timer.m_TID == Capture::GSelectedThreadId);
           bool isInactive =
               (!isContextSwitch && timer.m_FunctionAddress &&
-               (Capture::GVisibleFunctionsMap.size() &&
+               (!Capture::GVisibleFunctionsMap.empty() &&
                 Capture::GVisibleFunctionsMap[timer.m_FunctionAddress] ==
                     nullptr)) ||
               (Capture::GSelectedThreadId != 0 && isCore &&
@@ -668,7 +667,7 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
             colors[0] = colors[1];
             m_Batcher.AddBox(box, colors, PickingID::BOX, &textBox);
 
-            if (!isContextSwitch && textBox.GetText().size() == 0) {
+            if (!isContextSwitch && textBox.GetText().empty()) {
               double elapsedMillis = ((double)elapsed) * 0.001;
               std::string time = GetPrettyTime(elapsedMillis);
               Function* func =
@@ -815,7 +814,7 @@ void TimeGraph::SelectEvents(float a_WorldStart, float a_WorldEnd,
   samplingProfiler->SetGenerateSummary(a_TID == 0);
 
   for (CallstackEvent& event : m_SelectedCallstackEvents) {
-    const std::shared_ptr<CallStack> callstack =
+    std::shared_ptr<CallStack> callstack =
         Capture::GSamplingProfiler->GetCallStack(event.m_Id);
     if (callstack) {
       callstack->m_ThreadId = event.m_TID;
@@ -853,9 +852,7 @@ void TimeGraph::Draw(bool a_Picking) {
 void TimeGraph::DrawThreadTracks(bool a_Picking) {
   m_Layout.SetNumCores(GetNumCores());
   const std::vector<ThreadID>& sortedThreadIds = m_Layout.GetSortedThreadIds();
-  for (uint32_t i = 0; i < sortedThreadIds.size(); ++i) {
-    ThreadID threadId = sortedThreadIds[i];
-
+  for (ThreadID threadId : sortedThreadIds) {
     std::shared_ptr<ThreadTrack> track = GetThreadTrack(threadId);
     if (track->GetName().empty()) {
       std::string threadName =
