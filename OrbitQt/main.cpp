@@ -26,13 +26,17 @@ int main(int argc, char* argv[]) {
   const std::string dump_path = Path::GetDumpPath();
 #ifdef _WIN32
   const char* handler_name = "crashpad_handler.exe";
+  const std::string crash_server_url =
+      "https://clients2.google.com/cr/staging_report";
 #else
   const char* handler_name = "crashpad_handler";
+  const std::string crash_server_url =
+      "http://clients2.google.com/cr/staging_report";
 #endif
   const std::string handler_path = QDir(QCoreApplication::applicationDirPath())
-                                 .absoluteFilePath(handler_name)
-                                 .toStdString();
-  const CrashHandler crash_handler(dump_path, handler_path);
+                                       .absoluteFilePath(handler_name)
+                                       .toStdString();
+  const CrashHandler crash_handler(dump_path, handler_path, crash_server_url);
 
   a.setStyle(QStyleFactory::create("Fusion"));
 
