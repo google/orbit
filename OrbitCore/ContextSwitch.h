@@ -9,16 +9,16 @@
 #pragma pack(push, 1)
 struct ContextSwitch {
  public:
-  enum SwitchType { In, Out, Invalid };
+  enum SwitchType : uint8_t { In, Out, Invalid };
   explicit ContextSwitch(SwitchType a_Type = Invalid);
   ~ContextSwitch();
 
+  uint64_t m_Time;
   uint32_t m_ProcessId;
   uint32_t m_ThreadId;
-  SwitchType m_Type;
-  uint64_t m_Time;
   uint16_t m_ProcessorIndex;
   uint8_t m_ProcessorNumber;
+  SwitchType m_Type;
 
   // TODO: The distinction between m_ProcessorIndex and m_ProcessorNumber is
   //  Windows-specific. Consider removing m_ProcessorNumber.
