@@ -3,9 +3,9 @@
 //-----------------------------------
 #pragma once
 
-#include <string>
-
 #include <client/crashpad_client.h>
+
+#include <string>
 
 class CrashHandler {
  public:

@@ -6,8 +6,8 @@
 #include <chrono>
 #include <string>
 
-#include "LinuxTracingSession.h"
 #include "CallstackTypes.h"
+#include "LinuxTracingSession.h"
 #include "OrbitType.h"
 #include "Threading.h"
 

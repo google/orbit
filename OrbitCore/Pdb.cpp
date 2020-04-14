@@ -617,7 +617,7 @@ bool Pdb::LineInfoFromAddress(uint64_t a_Address, LineInfo& o_LineInfo) {
         if (SUCCEEDED(sourceFile->get_fileName(&fileName))) {
           fileNameW = std::wstring(fileName);
           o_LineInfo.m_Address = a_Address;
-          o_LineInfo.m_File = fileName;
+          o_LineInfo.m_File = ws2s(fileName);
           o_LineInfo.m_Line = 0;
 
           SysFreeString(fileName);

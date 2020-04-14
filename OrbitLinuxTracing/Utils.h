@@ -4,6 +4,7 @@
 #include <OrbitBase/Logging.h>
 #include <unistd.h>
 
+#include <ctime>
 #include <optional>
 
 namespace LinuxTracing {

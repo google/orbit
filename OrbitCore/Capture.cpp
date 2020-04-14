@@ -527,7 +527,7 @@ void Capture::NewSamplingProfiler() {
   }
 
   Capture::GSamplingProfiler =
-      std::make_shared<SamplingProfiler>(Capture::GTargetProcess, true);
+      std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
 }
 
 //-----------------------------------------------------------------------------

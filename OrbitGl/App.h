@@ -163,7 +163,7 @@ class OrbitApp : public CoreApp {
   void SendToUiNow(const std::wstring& a_Msg) override;
   void NeedsRedraw();
 
-  const std::map<std::wstring, std::wstring>& GetFileMapping() {
+  const std::map<std::string, std::string>& GetFileMapping() {
     return m_FileMapping;
   }
 
@@ -235,7 +235,7 @@ class OrbitApp : public CoreApp {
   bool m_UnrealEnabled = false;
 
   std::vector<std::shared_ptr<class SamplingReport> > m_SamplingReports;
-  std::map<std::wstring, std::wstring> m_FileMapping;
+  std::map<std::string, std::string> m_FileMapping;
   std::vector<std::string> m_SymbolDirectories;
   std::function<void(const std::wstring&)> m_UiCallback;
 

@@ -26,20 +26,14 @@
 double GThreadUsageSamplePeriodMs = 200.0;
 
 //-----------------------------------------------------------------------------
-SamplingProfiler::SamplingProfiler(const std::shared_ptr<Process>& a_Process,
-                                   bool) {
+SamplingProfiler::SamplingProfiler(const std::shared_ptr<Process>& a_Process) {
   m_Process = a_Process;
   m_State = SamplingState::Idle;
 }
 
 //-----------------------------------------------------------------------------
-SamplingProfiler::SamplingProfiler() {
-  m_Process = std::make_shared<Process>();
-  m_State = SamplingState::Idle;
-}
-
-//-----------------------------------------------------------------------------
-SamplingProfiler::~SamplingProfiler() {}
+SamplingProfiler::SamplingProfiler()
+    : SamplingProfiler{std::make_shared<Process>()} {}
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::StartCapture() {
@@ -125,8 +119,8 @@ void SamplingProfiler::FireDoneProcessingCallbacks() {
 }
 
 //-----------------------------------------------------------------------------
-std::multimap<int, CallstackID> SamplingProfiler::GetCallStacksFromAddress(
-    uint64_t a_Addr, ThreadID a_TID, int& o_NumCallstacks) {
+std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
+    uint64_t a_Addr, ThreadID a_TID, int* o_NumCallstacks) {
   std::set<CallstackID>& callstacks = m_FunctionToCallstacks[a_Addr];
   return m_ThreadSampleData[a_TID].SortCallstacks(callstacks, o_NumCallstacks);
 }
@@ -168,10 +162,10 @@ SamplingProfiler::GetSortedCallstacksFromAddress(uint64_t a_Addr,
   std::shared_ptr<SortedCallstackReport> report =
       std::make_shared<SortedCallstackReport>();
   std::multimap<int, CallstackID> multiMap =
-      GetCallStacksFromAddress(a_Addr, a_TID, report->m_NumCallStacksTotal);
-  int numUniqueCallstacks = (int)multiMap.size();
+      GetCallstacksFromAddress(a_Addr, a_TID, &report->m_NumCallStacksTotal);
+  size_t numUniqueCallstacks = multiMap.size();
   report->m_CallStacks.resize(numUniqueCallstacks);
-  int index = numUniqueCallstacks;
+  size_t index = numUniqueCallstacks;
 
   for (auto& pair : multiMap) {
     CallstackCount& callstack = report->m_CallStacks[--index];
@@ -326,9 +320,9 @@ void SamplingProfiler::ProcessSamples() {
 void ThreadSampleData::ComputeAverageThreadUsage() {
   m_AverageThreadUsage = 0.f;
 
-  if (m_ThreadUsage.size() > 0) {
-    for (float ThreadUsage : m_ThreadUsage) {
-      m_AverageThreadUsage += ThreadUsage;
+  if (!m_ThreadUsage.empty()) {
+    for (float thread_usage : m_ThreadUsage) {
+      m_AverageThreadUsage += thread_usage;
     }
 
     m_AverageThreadUsage /= (float)m_ThreadUsage.size();
@@ -337,7 +331,7 @@ void ThreadSampleData::ComputeAverageThreadUsage() {
 
 //-----------------------------------------------------------------------------
 std::multimap<int, CallstackID> ThreadSampleData::SortCallstacks(
-    const std::set<CallstackID>& a_CallStacks, int& o_TotalCallStacks) {
+    const std::set<CallstackID>& a_CallStacks, int* o_TotalCallStacks) {
   std::multimap<int, CallstackID> sortedCallstacks;
   int numCallstacks = 0;
   for (CallstackID id : a_CallStacks) {
@@ -349,7 +343,7 @@ std::multimap<int, CallstackID> ThreadSampleData::SortCallstacks(
     }
   }
 
-  o_TotalCallStacks = numCallstacks;
+  *o_TotalCallStacks = numCallstacks;
   return sortedCallstacks;
 }
 
@@ -359,7 +353,7 @@ void SamplingProfiler::ProcessAddresses() {
   for (const auto& it : m_UniqueCallstacks) {
     CallstackID rawCallstackId = it.first;
     const std::shared_ptr<CallStack> callstack = it.second;
-    CallStack ResolvedCallstack = *callstack;
+    CallStack resolved_callstack = *callstack;
 
     for (uint32_t i = 0; i < callstack->m_Depth; ++i) {
       uint64_t addr = callstack->m_Data[i];
@@ -371,16 +365,16 @@ void SamplingProfiler::ProcessAddresses() {
       auto addrIt = m_ExactAddresses.find(addr);
       if (addrIt != m_ExactAddresses.end()) {
         const uint64_t& functionAddr = addrIt->second;
-        ResolvedCallstack.m_Data[i] = functionAddr;
+        resolved_callstack.m_Data[i] = functionAddr;
         m_FunctionToCallstacks[functionAddr].insert(rawCallstackId);
       }
     }
 
-    CallstackID resolvedCallstackId = ResolvedCallstack.Hash();
+    CallstackID resolvedCallstackId = resolved_callstack.Hash();
     if (m_UniqueResolvedCallstacks.find(resolvedCallstackId) ==
         m_UniqueResolvedCallstacks.end()) {
       m_UniqueResolvedCallstacks[resolvedCallstackId] =
-          std::make_shared<CallStack>(ResolvedCallstack);
+          std::make_shared<CallStack>(resolved_callstack);
     }
 
     m_RawToResolvedMap[rawCallstackId] = resolvedCallstackId;
@@ -391,7 +385,6 @@ void SamplingProfiler::ProcessAddresses() {
 void SamplingProfiler::AddAddress(uint64_t a_Address) {
   ScopeLock lock(m_Mutex);
 #ifdef _WIN32
-
   if (!m_IsLinuxPerf) {
     unsigned char buffer[1024];
     memset(buffer, 0, 1024);
@@ -424,15 +417,15 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
 
     m_ExactAddresses[a_Address] =
         symbol_info->Address ? symbol_info->Address : a_Address;
-    m_AddressToSymbol[(uint64_t)a_Address] = symName;
-    m_AddressToSymbol[symbol_info->Address] = symName;
+    m_AddressToSymbol[(uint64_t)a_Address] = ws2s(symName);
+    m_AddressToSymbol[symbol_info->Address] = ws2s(symName);
 
     LineInfo lineInfo;
     if (SymUtils::GetLineInfo(a_Address, lineInfo)) {
       uint64_t hash = StringHash(lineInfo.m_File);
       lineInfo.m_FileNameHash = hash;
       m_FileNames[hash] = lineInfo.m_File;
-      lineInfo.m_File = L"";
+      lineInfo.m_File = "";
       m_AddressToLineInfo[a_Address] = lineInfo;
     }
   } else
@@ -456,15 +449,15 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
     } else {
       symbolName = symbol->m_Name;
     }
-    m_AddressToSymbol[(uint64_t)a_Address] = s2ws(symbolName);
+    m_AddressToSymbol[(uint64_t)a_Address] = symbolName;
   }
 }
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::OutputStats() {
-  for (auto& dataIt : m_ThreadSampleData) {
-    ThreadID threadID = dataIt.first;
-    ThreadSampleData& threadSampleData = dataIt.second;
+  for (auto& data : m_ThreadSampleData) {
+    ThreadID threadID = data.first;
+    ThreadSampleData& threadSampleData = data.second;
     std::vector<SampledFunction>& sampleReport =
         threadSampleData.m_SampleReport;
 
@@ -474,14 +467,14 @@ void SamplingProfiler::OutputStats() {
     for (std::multimap<unsigned int, uint64_t>::reverse_iterator sortedIt =
              threadSampleData.m_AddressCountSorted.rbegin();
          sortedIt != threadSampleData.m_AddressCountSorted.rend(); ++sortedIt) {
-      int numOccurences = sortedIt->first;
+      unsigned int numOccurences = sortedIt->first;
       uint64_t address = sortedIt->second;
-      float prct =
-          100.f * ((float)numOccurences) / (float)threadSampleData.m_NumSamples;
+      float inclusive_percent =
+          100.f * (float)numOccurences / (float)threadSampleData.m_NumSamples;
 
       SampledFunction function;
       function.m_Name = m_AddressToSymbol[address];
-      function.m_Inclusive = prct;
+      function.m_Inclusive = inclusive_percent;
       function.m_Exclusive = 0.f;
       auto it = threadSampleData.m_ExclusiveCount.find(address);
       if (it != threadSampleData.m_ExclusiveCount.end()) {
@@ -491,7 +484,7 @@ void SamplingProfiler::OutputStats() {
       function.m_Address = address;
 
       std::shared_ptr<Module> module = m_Process->GetModuleFromAddress(address);
-      function.m_Module = module ? s2ws(module->m_Name) : L"unknown module";
+      function.m_Module = module ? module->m_Name : "unknown module";
 
       const LineInfo& lineInfo = m_AddressToLineInfo[address];
       function.m_Line = lineInfo.m_Line;
@@ -526,7 +519,7 @@ void SamplingProfiler::GetThreadCallstack(Thread* a_Thread) {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring SamplingProfiler::GetSymbolFromAddress(uint64_t a_Address) {
+std::string SamplingProfiler::GetSymbolFromAddress(uint64_t a_Address) {
   ScopeLock lock(m_Mutex);
 
   auto it = m_AddressToSymbol.find(a_Address);
@@ -540,23 +533,7 @@ std::wstring SamplingProfiler::GetSymbolFromAddress(uint64_t a_Address) {
     }
   }
 
-  return L"UnknownSymbol";
-}
-
-//-----------------------------------------------------------------------------
-unsigned long long SampledFunction::Hash() {
-  if (m_Hash == 0) {
-    XXH64_state_t xxHashState;
-    XXH64_reset(&xxHashState, 0x123456789ABCDEFF);
-
-    XXH64_update(&xxHashState, m_Name.data(), m_Name.size());
-    XXH64_update(&xxHashState, m_File.data(), m_File.size());
-    XXH64_update(&xxHashState, &m_Address, sizeof(m_Address));
-
-    m_Hash = XXH64_digest(&xxHashState);
-  }
-
-  return m_Hash;
+  return "UnknownSymbol";
 }
 
 //-----------------------------------------------------------------------------
@@ -577,8 +554,7 @@ ORBIT_SERIALIZE_WSTRING(SampledFunction, 0) {
   ORBIT_NVP_VAL(0, m_Inclusive);
   ORBIT_NVP_VAL(0, m_Line);
   ORBIT_NVP_VAL(0, m_Address);
-  ORBIT_NVP_VAL(0, m_Hash);
-  // Function*   m_Function;
+  // Function* m_Function;
 }
 
 //-----------------------------------------------------------------------------
@@ -594,8 +570,8 @@ ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 1) {
   ORBIT_NVP_DEBUG(0, m_AddressToSymbol);
   ORBIT_NVP_DEBUG(0, m_AddressToLineInfo);
   ORBIT_NVP_DEBUG(1, m_FileNames);
-  /*ORBIT_NVP_VAL( 0, m_Callbacks );
-  ORBIT_NVP_VAL( 0, m_SortedThreadSampleData );*/
+  // ORBIT_NVP_VAL( 0, m_Callbacks );
+  // ORBIT_NVP_VAL( 0, m_SortedThreadSampleData );
 }
 
 //-----------------------------------------------------------------------------

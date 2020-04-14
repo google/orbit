@@ -15,26 +15,26 @@ class Thread;
 
 //-----------------------------------------------------------------------------
 struct SampledFunction {
-  SampledFunction() {}
-  unsigned long long Hash();
+  SampledFunction() = default;
+
   bool GetSelected();
-  std::wstring m_Name;
-  std::wstring m_Module;
-  std::wstring m_File;
+  std::string m_Name;
+  std::string m_Module;
+  std::string m_File;
   float m_Exclusive = 0;
   float m_Inclusive = 0;
   int m_Line = 0;
   uint64_t m_Address = 0;
-  uint64_t m_Hash = 0;
-  Function* m_Function = 0;
+  Function* m_Function = nullptr;
 
   ORBIT_SERIALIZABLE;
 };
 
 //-----------------------------------------------------------------------------
 struct LineInfo {
-  LineInfo() {}
-  std::wstring m_File;
+  LineInfo() = default;
+
+  std::string m_File;
   uint32_t m_Line = 0;
   uint64_t m_Address = 0;
   uint64_t m_FileNameHash = 0;
@@ -47,7 +47,7 @@ struct ThreadSampleData {
   ThreadSampleData() { m_ThreadUsage.push_back(0); }
   void ComputeAverageThreadUsage();
   std::multimap<int, CallstackID> SortCallstacks(
-      const std::set<CallstackID>& a_CallStacks, int& o_TotalCallStacks);
+      const std::set<CallstackID>& a_CallStacks, int* o_TotalCallStacks);
   std::unordered_map<CallstackID, unsigned int> m_CallstackCount;
   std::unordered_map<uint64_t, unsigned int> m_AddressCount;
   std::unordered_map<uint64_t, unsigned int> m_ExclusiveCount;
@@ -63,27 +63,28 @@ struct ThreadSampleData {
 
 //-----------------------------------------------------------------------------
 struct CallstackCount {
-  CallstackCount() {}
+  CallstackCount() = default;
+
   int m_Count = 0;
-  CallstackID m_CallstackId;
+  CallstackID m_CallstackId = 0;
+
   ORBIT_SERIALIZABLE;
 };
 
 //-----------------------------------------------------------------------------
 struct SortedCallstackReport {
-  SortedCallstackReport() {}
+  SortedCallstackReport() = default;
   int m_NumCallStacksTotal = 0;
   std::vector<CallstackCount> m_CallStacks;
+
   ORBIT_SERIALIZABLE;
 };
 
 //-----------------------------------------------------------------------------
 class SamplingProfiler {
  public:
-  explicit SamplingProfiler(const std::shared_ptr<Process>& a_Process,
-                            bool a_ETW = false);
+  explicit SamplingProfiler(const std::shared_ptr<Process>& a_Process);
   SamplingProfiler();
-  ~SamplingProfiler();
 
   void StartCapture();
   void StopCapture();
@@ -97,19 +98,19 @@ class SamplingProfiler {
   void AddHashedCallStack(CallstackEvent& a_CallStack);
   void AddUniqueCallStack(CallStack& a_CallStack);
 
-  const std::shared_ptr<CallStack> GetCallStack(CallstackID a_ID) {
+  std::shared_ptr<CallStack> GetCallStack(CallstackID a_ID) {
     ScopeLock lock(m_Mutex);
     return m_UniqueCallstacks[a_ID];
   }
 
-  inline bool HasCallStack(CallstackID a_ID) {
+  bool HasCallStack(CallstackID a_ID) {
     ScopeLock lock(m_Mutex);
     auto it = m_UniqueCallstacks.find(a_ID);
     return it != m_UniqueCallstacks.end();
   }
 
-  std::multimap<int, CallstackID> GetCallStacksFromAddress(
-      uint64_t a_Addr, ThreadID a_TID, int& o_NumCallstacks);
+  std::multimap<int, CallstackID> GetCallstacksFromAddress(
+      uint64_t a_Addr, ThreadID a_TID, int* o_NumCallstacks);
   std::shared_ptr<SortedCallstackReport> GetSortedCallstacksFromAddress(
       uint64_t a_Addr, ThreadID a_TID);
 
@@ -129,11 +130,9 @@ class SamplingProfiler {
   void SetIsLinuxPerf(bool a_Value = true) { m_IsLinuxPerf = a_Value; }
 
   typedef std::function<void()> ProcessingDoneCallback;
-  void AddCallback(ProcessingDoneCallback a_Callback) {
+  void AddCallback(const ProcessingDoneCallback& a_Callback) {
     m_Callbacks.push_back(a_Callback);
   }
-  void SetSelectedFunctions(
-      std::unordered_map<uint64_t, SampledFunction>& a_SelectedFunctions);
   void SetGenerateSummary(bool a_Value) { m_GenerateSummary = a_Value; }
   bool GetGenerateSummary() const { return m_GenerateSummary; }
   void SortByThreadUsage();
@@ -145,7 +144,7 @@ class SamplingProfiler {
   void ProcessSamplesAsync();
   void AddAddress(uint64_t a_Address);
 
-  std::wstring GetSymbolFromAddress(uint64_t a_Address);
+  std::string GetSymbolFromAddress(uint64_t a_Address);
   const ThreadSampleData& GetSummary() { return m_ThreadSampleData[0]; }
 
   ORBIT_SERIALIZABLE;
@@ -181,9 +180,9 @@ class SamplingProfiler {
   std::unordered_map<CallstackID, CallstackID> m_RawToResolvedMap;
   std::unordered_map<uint64_t, std::set<CallstackID>> m_FunctionToCallstacks;
   std::unordered_map<uint64_t, uint64_t> m_ExactAddresses;
-  std::unordered_map<uint64_t, std::wstring> m_AddressToSymbol;
+  std::unordered_map<uint64_t, std::string> m_AddressToSymbol;
   std::unordered_map<uint64_t, LineInfo> m_AddressToLineInfo;
-  std::unordered_map<uint64_t, std::wstring> m_FileNames;
+  std::unordered_map<uint64_t, std::string> m_FileNames;
   std::vector<ProcessingDoneCallback> m_Callbacks;
   std::vector<ThreadSampleData*> m_SortedThreadSampleData;
 };

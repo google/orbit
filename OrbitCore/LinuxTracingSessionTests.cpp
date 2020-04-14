@@ -1,9 +1,9 @@
-#include "LinuxTracingSession.h"
-
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
 #include <utility>
+
+#include "LinuxTracingSession.h"
 
 TEST(LinuxTracingSession, Empty) {
   LinuxTracingSession session(nullptr);

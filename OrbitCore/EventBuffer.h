@@ -82,4 +82,3 @@ class EventBuffer {
   std::atomic<long long> m_MaxTime;
   std::atomic<long long> m_MinTime;
 };
-
