@@ -4,11 +4,15 @@
 
 #include "CrashHandler.h"
 
+#include "client/crash_report_database.h"
+#include "client/settings.h"
+
 #include "Core.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitDbgHelp.h"
 #include "ScopeTimer.h"
 #include "TcpClient.h"
+#include "Version.h"
 
 namespace {
 template <typename StringType = base::FilePath::StringType>
@@ -28,20 +32,34 @@ struct StringTypeConverter<std::wstring> {
 
 //-----------------------------------------------------------------------------
 CrashHandler::CrashHandler(const std::string& dump_path,
-                           const std::string& handler_path) {
+                           const std::string& handler_path,
+                           const std::string& crash_server_url) {
   CHECK(!is_init_);
   is_init_ = true;
 
   // Creates a new CrashpadClient instance that directs crashes to crashpad
-  // handler. Minidump files will be written to dump_path.
+  // handler. Minidump files will be written to dump_path and sent to
+  // crash_server.
 
   const base::FilePath dump_file_path(StringTypeConverter<>()(dump_path));
   const base::FilePath handler_file_path(StringTypeConverter<>()(handler_path));
 
+  std::map<std::string, std::string> annotations = {
+      {"product", "OrbitProfiler"}, {"version", OrbitVersion::GetVersion()}};
+
+  std::vector<std::string> arguments = {"--no-rate-limit"};
+
+  // allow dumps submission to collection server
+  std::unique_ptr<crashpad::CrashReportDatabase> crash_report_db =
+      crashpad::CrashReportDatabase::Initialize(dump_file_path);
+  if (crash_report_db != nullptr && crash_report_db->GetSettings() != nullptr) {
+    crash_report_db->GetSettings()->SetUploadsEnabled(true);
+  }
+
   crashpad_client_.StartHandler(handler_file_path,
                                 /*database=*/dump_file_path,
-                                /*metrics_dir=*/dump_file_path, /*url=*/{},
-                                /*annotations=*/{}, /*arguments=*/{},
+                                /*metrics_dir=*/dump_file_path,
+                                crash_server_url, annotations, arguments,
                                 /*restartable=*/true,
                                 /*asynchronous_start=*/false);
 }
