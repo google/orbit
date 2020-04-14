@@ -114,6 +114,8 @@ class CrashpadConan(ConanFile):
         return " ".join(args)
 
     def build(self):
+        tools.patch(patch_file="patches/openssl_lib_order.patch")
+
         BUILD_gn = 'crashpad/third_party/mini_chromium/mini_chromium/build/BUILD.gn'
         tools.replace_in_file(BUILD_gn, 'cc = "clang"', 'cc = "{}"'.format(os.environ.get('CC', 'cc')))
         tools.replace_in_file(BUILD_gn, 'cxx = "clang++"', 'cxx = "{}"'.format(os.environ.get('CXX', 'c++')))
