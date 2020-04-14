@@ -6,7 +6,7 @@ import re
 
 class CrashpadConan(ConanFile):
     name = "crashpad"
-    version = "20191009"
+    version = "20191105"
     description = "Crashpad is a crash-reporting system."
     license = "Apache-2.0"
     homepage = "https://github.com/chromium/crashpad.git"
@@ -18,7 +18,7 @@ class CrashpadConan(ConanFile):
     exports = [ "patches/*", "LICENSE.md" ]
     short_paths = True
 
-    _commit_id = "fe52a01df1e9c8a5fe8b92872d4bf8689d0cd3b4"
+    _commit_id = "1b60c8172c783040b86c3c6960aba4df73990bc5"
     _source_dir = "crashpad"
     _build_name = "out/Conan"
     _build_dir = os.path.join(_source_dir, _build_name)
@@ -37,6 +37,7 @@ class CrashpadConan(ConanFile):
             self.build_requires("depot_tools_installer/20190909@bincrafters/stable")
         else:
             self.build_requires("depot_tools_installer/20200207@bincrafters/stable")
+            self.build_requires("openssl/1.1.1d@orbitdeps/stable")
         self.build_requires("ninja/1.9.0")
 
     def _mangle_spec_for_gclient(self, solutions):
@@ -129,14 +130,20 @@ class CrashpadConan(ConanFile):
             return '"{}"'.format(x)
 
         ldflags = list(map(quote, os.environ.get('LDFLAGS', '').split(' ')))
-        tools.replace_in_file(BUILD_gn, 'ldflags = []', 'ldflags = [ {} ]'.format(", ".join(ldflags)))
 
         cflags = list(map(quote, os.environ.get('CFLAGS', '').split(' ')))
-        cflags.append('"-std=c99"')
-        tools.replace_in_file(BUILD_gn, 'cflags_c = [ "-std=c99" ]', 'cflags_c = [ {} ]'.format(", ".join(cflags)))
+        cflags.append('"-std=c11"')
 
         cxxflags = list(map(quote, os.environ.get('CXXFLAGS', '').split(' ')))
         cxxflags.append('"-std=c++14"')
+
+        if "openssl" in self.deps_cpp_info.deps:
+            openssl_info = self.deps_cpp_info["openssl"]
+            ldflags.append('"-L{}"'.format(openssl_info.lib_paths[0]))
+            cxxflags.append('"-I{}"'.format(openssl_info.include_paths[0]))
+
+        tools.replace_in_file(BUILD_gn, 'ldflags = []', 'ldflags = [ {} ]'.format(", ".join(ldflags)))
+        tools.replace_in_file(BUILD_gn, 'cflags_c = [ "-std=c11" ]', 'cflags_c = [ {} ]'.format(", ".join(cflags)))
         tools.replace_in_file(BUILD_gn, 'cflags_cc = [ "-std=c++14" ]', 'cflags_cc = [ {} ]'.format(", ".join(cxxflags)))
 
         with tools.chdir(self._source_dir):
