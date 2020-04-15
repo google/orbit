@@ -19,7 +19,7 @@ TEST(UprobesFunctionCallManager, OneUprobe) {
   EXPECT_EQ(processed_function_call.value().GetBeginTimestampNs(), 1);
   EXPECT_EQ(processed_function_call.value().GetEndTimestampNs(), 2);
   EXPECT_EQ(processed_function_call.value().GetDepth(), 0);
-  EXPECT_EQ(processed_function_call.value().GetReturnValue(), 3);
+  EXPECT_EQ(processed_function_call.value().GetIntegerReturnValue(), 3);
 }
 
 TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
@@ -38,7 +38,7 @@ TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
   EXPECT_EQ(processed_function_call.value().GetBeginTimestampNs(), 2);
   EXPECT_EQ(processed_function_call.value().GetEndTimestampNs(), 3);
   EXPECT_EQ(processed_function_call.value().GetDepth(), 1);
-  EXPECT_EQ(processed_function_call.value().GetReturnValue(), 4);
+  EXPECT_EQ(processed_function_call.value().GetIntegerReturnValue(), 4);
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid, 4, 5);
   ASSERT_TRUE(processed_function_call.has_value());
@@ -47,7 +47,7 @@ TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
   EXPECT_EQ(processed_function_call.value().GetBeginTimestampNs(), 1);
   EXPECT_EQ(processed_function_call.value().GetEndTimestampNs(), 4);
   EXPECT_EQ(processed_function_call.value().GetDepth(), 0);
-  EXPECT_EQ(processed_function_call.value().GetReturnValue(), 5);
+  EXPECT_EQ(processed_function_call.value().GetIntegerReturnValue(), 5);
 
   function_call_manager.ProcessUprobes(tid, 300, 5);
 
@@ -58,7 +58,7 @@ TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
   EXPECT_EQ(processed_function_call.value().GetBeginTimestampNs(), 5);
   EXPECT_EQ(processed_function_call.value().GetEndTimestampNs(), 6);
   EXPECT_EQ(processed_function_call.value().GetDepth(), 0);
-  EXPECT_EQ(processed_function_call.value().GetReturnValue(), 7);
+  EXPECT_EQ(processed_function_call.value().GetIntegerReturnValue(), 7);
 }
 
 TEST(UprobesFunctionCallManager, TwoUprobesDifferentThreads) {
@@ -78,7 +78,7 @@ TEST(UprobesFunctionCallManager, TwoUprobesDifferentThreads) {
   EXPECT_EQ(processed_function_call.value().GetBeginTimestampNs(), 1);
   EXPECT_EQ(processed_function_call.value().GetEndTimestampNs(), 3);
   EXPECT_EQ(processed_function_call.value().GetDepth(), 0);
-  EXPECT_EQ(processed_function_call.value().GetReturnValue(), 4);
+  EXPECT_EQ(processed_function_call.value().GetIntegerReturnValue(), 4);
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid2, 4, 5);
   ASSERT_TRUE(processed_function_call.has_value());
@@ -87,7 +87,7 @@ TEST(UprobesFunctionCallManager, TwoUprobesDifferentThreads) {
   EXPECT_EQ(processed_function_call.value().GetBeginTimestampNs(), 2);
   EXPECT_EQ(processed_function_call.value().GetEndTimestampNs(), 4);
   EXPECT_EQ(processed_function_call.value().GetDepth(), 0);
-  EXPECT_EQ(processed_function_call.value().GetReturnValue(), 5);
+  EXPECT_EQ(processed_function_call.value().GetIntegerReturnValue(), 5);
 }
 
 TEST(UprobesFunctionCallManager, OnlyUretprobe) {

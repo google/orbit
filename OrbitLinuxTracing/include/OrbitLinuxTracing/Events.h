@@ -92,7 +92,7 @@ class FunctionCall {
   uint64_t GetBeginTimestampNs() const { return begin_timestamp_ns_; }
   uint64_t GetEndTimestampNs() const { return end_timestamp_ns_; }
   uint32_t GetDepth() const { return depth_; }
-  uint64_t GetReturnValue() const { return return_value_; }
+  uint64_t GetIntegerReturnValue() const { return return_value_; }
 
  private:
   pid_t tid_;

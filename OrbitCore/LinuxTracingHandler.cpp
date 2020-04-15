@@ -146,7 +146,7 @@ void LinuxTracingHandler::OnFunctionCall(
   timer.m_End = function_call.GetEndTimestampNs();
   timer.m_Depth = static_cast<uint8_t>(function_call.GetDepth());
   timer.m_FunctionAddress = function_call.GetVirtualAddress();
-  timer.m_UserData[0] = function_call.GetReturnValue();
+  timer.m_UserData[0] = function_call.GetIntegerReturnValue();
 
   session_->RecordTimer(std::move(timer));
 }

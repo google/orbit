@@ -61,6 +61,14 @@ struct __attribute__((__packed__)) perf_event_sample_regs_user_all {
   uint64_t r15;
 };
 
+// This struct must be in sync with the SAMPLE_REGS_USER_AX in
+// PerfEventOpen.h.
+struct __attribute__((__packed__)) perf_event_sample_regs_user_ax
+{
+  uint64_t abi;
+  uint64_t ax;
+};
+
 // This struct must be in sync with the SAMPLE_REGS_USER_SP_IP in
 // PerfEventOpen.h.
 struct __attribute__((__packed__)) perf_event_sample_regs_user_sp_ip {
@@ -86,15 +94,10 @@ struct __attribute__((__packed__)) perf_event_empty_sample {
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
 };
 
-// This struct must be in sync with the SAMPLE_REGS_URET_PROBE in
-// PerfEventOpen.h.
-struct __attribute__((__packed__)) perf_event_uretprobe {
+struct __attribute__((__packed__)) perf_event_ax {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  uint64_t abi;
-  uint64_t ax;
-  uint64_t sp;
-  uint64_t ip;
+  perf_event_sample_regs_user_ax regs;
 };
 
 struct __attribute__((__packed__)) perf_event_stack_sample {
