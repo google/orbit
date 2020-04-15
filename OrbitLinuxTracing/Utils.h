@@ -62,6 +62,11 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit);
 
 #endif
 
+inline size_t GetPageSize() {
+  // POSIX guarantees the result to be greater or equal than 1.
+  // So we can safely cast here.
+  return static_cast<size_t>(sysconf(_SC_PAGESIZE));
+}
 }  // namespace LinuxTracing
 
 #endif  // ORBIT_LINUX_TRACING_UTILS_H_
