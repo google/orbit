@@ -144,7 +144,7 @@ void SymbolsManager::FinalizeTransaction(std::shared_ptr<Session> session) {
 }
 
 bool SymbolsManager::SingleThreadRequests() const {
-  static uint32_t thread_id = GetCurrentThreadId();
+  static const auto thread_id = GetCurrentThreadId();
   return thread_id == GetCurrentThreadId();
 }
 

@@ -1,4 +1,5 @@
 #include "UprobesUnwindingVisitor.h"
+#include "OrbitBase/Logging.h"
 
 namespace LinuxTracing {
 
@@ -93,7 +94,8 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
 
   std::optional<FunctionCall> function_call =
       function_call_manager_.ProcessUretprobes(event->GetTid(),
-                                               event->GetTimestamp());
+                                               event->GetTimestamp(),
+                                               event->GetAx());
   if (function_call.has_value()) {
     listener_->OnFunctionCall(function_call.value());
   }

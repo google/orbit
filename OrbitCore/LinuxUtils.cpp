@@ -174,7 +174,7 @@ std::unordered_map<uint32_t, float> GetCpuUtilization() {
     auto tokens = Tokenize(line, ",");
     if (tokens.size() > 8) {
       uint32_t pid = atoi(tokens[0].c_str());
-      float cpu = atof(tokens[8].c_str());
+      const auto cpu = static_cast<float>(atof(tokens[8].c_str()));
       processMap[pid] = cpu;
     }
   }

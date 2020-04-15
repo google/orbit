@@ -1060,9 +1060,7 @@ void DrawTexturedSquare(GLuint a_TextureId, float a_Size, float a_X,
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::RenderBar() {
-  extern GLuint GTextureInjected;
   extern GLuint GTextureTimer;
-  extern GLuint GTextureHelp;
   extern GLuint GTextureRecord;
 
   float barHeight = m_Slider.GetPixelHeight();

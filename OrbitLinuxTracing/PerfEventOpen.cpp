@@ -108,13 +108,16 @@ int uretprobes_event_open(const char* module, uint64_t function_offset,
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config = 1;  // Set bit 0 of config for uretprobe.
 
+  pe.sample_type |= PERF_SAMPLE_REGS_USER;
+  pe.sample_regs_user = SAMPLE_REGS_USER_AX;
+
   return generic_event_open(&pe, pid, cpu);
 }
 
 void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length) {
   // The size of the ring buffer excluding the metadata page must be a power of
   // two number of pages.
-  if (mmap_length < getpagesize() ||
+  if (mmap_length < static_cast<size_t>(getpagesize()) ||
       __builtin_popcountl(mmap_length - getpagesize()) != 1) {
     ERROR("mmap length for perf_event_open not 1+2^n pages: %lu", mmap_length);
     return nullptr;
