@@ -999,8 +999,8 @@ void OrbitApp::LoadModules() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules() {
-  GetSymbolsManager()->LoadSymbols(m_ModulesToLoad,
-                                           Capture::GTargetProcess);
+  GetSymbolsManager()->LoadSymbols(m_ModulesToLoad, Capture::GTargetProcess,
+                                   nullptr /*session*/);
   m_ModulesToLoad.clear();
   GOrbitApp->FireRefreshCallbacks();
 }

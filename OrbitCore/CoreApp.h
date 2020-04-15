@@ -77,7 +77,7 @@ class CoreApp {
   // Transactions
   void SetupMemoryTransaction();
   typedef std::function<void(std::vector<byte>&)> memory_callback;
-  absl::flat_hash_map<uint64_t, memory_callback> memory_callbacks_;
+  absl::flat_hash_map<uint32_t, memory_callback> memory_callbacks_;
   absl::Mutex transaction_mutex_;
 
   std::unique_ptr<orbit::TransactionManager> transaction_manager_ = nullptr;

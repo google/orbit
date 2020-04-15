@@ -48,13 +48,15 @@ std::shared_ptr<Transaction> TransactionManager::PopTransaction() {
   return transaction;
 }
 
-void TransactionManager::EnqueueRequestInternal(MessageType type,
+uint32_t TransactionManager::EnqueueRequestInternal(MessageType type,
                                                 std::string&& object) {
   absl::MutexLock lock(&mutex_);
   auto transaction = std::make_shared<Transaction>();
   transaction->type = type;
   transaction->payload = std::move(object);
+  transaction->id = request_counter_++;
   transaction_queue_.push(transaction);
+  return transaction->id;
 }
 
 void TransactionManager::InitiateTransaction(
@@ -122,7 +124,8 @@ void TransactionManager::HandleRequest(const Message& message) {
 void TransactionManager::HandleResponse(const Message& message) {
   CHECK(ConnectionManager::Get().IsClient());
   CHECK(current_transaction_);
-  GetHandler(message.GetType())->response_handler(message);
+  uint32_t id = current_transaction_->id;
+  GetHandler(message.GetType())->response_handler(message, id);
   current_transaction_->end_time = OrbitTicks();
   current_transaction_->completed = true;
 }

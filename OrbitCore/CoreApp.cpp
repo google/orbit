@@ -25,13 +25,10 @@ void CoreApp::GetRemoteMemory(
     uint32_t pid, uint64_t address, uint64_t size,
     std::function<void(std::vector<byte>&)> callback) {
   absl::MutexLock lock(&transaction_mutex_);
-  if (memory_callbacks_.find(address) != memory_callbacks_.end()) {
-    ERROR("Memory request already in flight for address 0x%lx", address);
-    return;
-  }
-  memory_callbacks_[address] = callback;
   std::tuple<uint32_t, uint64_t, uint64_t> pid_address_size(pid, address, size);
-  transaction_manager_->EnqueueRequest(Msg_MemoryTransfer, pid_address_size);
+  uint32_t id = transaction_manager_->EnqueueRequest(Msg_MemoryTransfer,
+                                                     pid_address_size);
+  memory_callbacks_[id] = callback;
 }
 
 void CoreApp::SetupMemoryTransaction() {
@@ -44,12 +41,8 @@ void CoreApp::SetupMemoryTransaction() {
     uint64_t address = std::get<1>(pid_address_size);
     uint64_t size = std::get<2>(pid_address_size);
 
-    // Prepare response.
-    std::pair<uint64_t, std::vector<byte>> address_bytes(address, {});
-    std::vector<byte>& bytes = address_bytes.second;
-    bytes.resize(size);
-
     // read target process memory
+    std::vector<byte> bytes(size);
     uint64_t num_bytes_read = 0;
     if (!ReadProcessMemory(pid, address, bytes.data(), size, &num_bytes_read)) {
       ERROR("ReadProcessMemory error attempting to read 0x%lx", address);
@@ -57,17 +50,16 @@ void CoreApp::SetupMemoryTransaction() {
     bytes.resize(num_bytes_read);
 
     // Send response.
-    transaction_manager_->SendResponse(msg.GetType(), address_bytes);
+    transaction_manager_->SendResponse(msg.GetType(), bytes);
   };
 
-  auto on_response = [this](const Message& msg) {
+  auto on_response = [this](const Message& msg, uint32_t id) {
     CHECK(IsClient());
-    std::pair<uint64_t, std::vector<byte>> address_bytes;
-    transaction_manager_->ReceiveResponse(msg, &address_bytes);
-    uint64_t address = address_bytes.first;
+    std::vector<byte> bytes;
+    transaction_manager_->ReceiveResponse(msg, &bytes);
     absl::MutexLock lock(&transaction_mutex_);
-    memory_callbacks_[address](address_bytes.second);
-    memory_callbacks_.erase(address);
+    memory_callbacks_[id](bytes);
+    memory_callbacks_.erase(id);
   };
 
   transaction_manager_->RegisterTransactionHandler(

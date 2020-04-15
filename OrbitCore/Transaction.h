@@ -10,9 +10,10 @@
 namespace orbit {
 
 struct TransactionHandler {
-  typedef std::function<void(const Message&)> Callback;
-  Callback request_handler = nullptr;
-  Callback response_handler = nullptr;
+  typedef std::function<void(const Message&)> RequestHandler;
+  typedef std::function<void(const Message&, uint32_t /*id*/)> ResponseHandler;
+  RequestHandler request_handler = nullptr;
+  ResponseHandler response_handler = nullptr;
   MessageType type = Msg_Invalid;
   std::string description;
 };
