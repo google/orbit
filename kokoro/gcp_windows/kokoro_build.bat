@@ -35,9 +35,8 @@ ren bin Orbit
 zip -r Orbit.zip Orbit
 
 :: Uploading prebuilt packages of our dependencies
+set /P ACCESS_TOKEN=<%KOKORO_ARTIFACTS_DIR%\keystore\74938_orbitprofiler_artifactory_access_token
 if EXIST %KOKORO_ARTIFACTS_DIR%\keystore\74938_orbitprofiler_artifactory_access_token (
-  set /p ACCESS_TOKEN=<%KOKORO_ARTIFACTS_DIR%\keystore\74938_orbitprofiler_artifactory_access_token
-
   call conan user -r artifactory -p "%ACCESS_TOKEN%" kokoro
   if %errorlevel% neq 0 exit /b %errorlevel%
 
