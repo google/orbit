@@ -29,6 +29,10 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 call conan package -bf %REPO_ROOT%\build\ %REPO_ROOT%
 if %errorlevel% neq 0 exit /b %errorlevel%
 
+:: Package build artifacts into a zip for integration in the installer.
+cd %REPO_ROOT%\build\package
+ren bin Orbit
+zip -r Orbit.zip Orbit
 
 :: Uploading prebuilt packages of our dependencies
 if EXIST %KOKORO_ARTIFACTS_DIR%\keystore\74938_orbitprofiler_artifactory_access_token (
