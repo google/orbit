@@ -53,7 +53,9 @@ if [ "$0" == "$SCRIPT" ]; then
   fi
 
   # Package the Debian package and the signature into a zip for integration in the installer.
+  cd "${DIR}/build/package"
   zip a -r OrbitProfiler*.deb OrbitProfiler*.deb.asc Collector.zip
+  cd -
 
   # Uncomment the three lines below to print the external ip into the log and
   # keep the vm alive for two hours. This is useful to debug build failures that
