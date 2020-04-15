@@ -181,8 +181,8 @@ target_link_libraries(
          oqpi::oqpi
          asio::asio
          abseil::abseil
-         llvm_object::llvm_object
-  PRIVATE crashpad::crashpad)
+         llvm_object::llvm_object 
+         crashpad::crashpad)
 
 if(WIN32)
   target_link_libraries(
