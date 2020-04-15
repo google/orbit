@@ -233,7 +233,7 @@ void SamplingProfiler::Print() {
       PRINT_VAR((void*)callstack->m_Hash);
       PRINT_VAR(callstack->m_Depth);
       for (uint32_t i = 0; i < callstack->m_Depth; ++i) {
-        PRINT("%s\n", m_AddressToSymbol[callstack->m_Data[i]].c_str());
+        PRINT("%s\n", m_AddressToName[callstack->m_Data[i]].c_str());
       }
     }
   }
@@ -269,7 +269,7 @@ void SamplingProfiler::ProcessSamples() {
     }
   }
 
-  ProcessAddresses();
+  ResolveCallstacks();
 
   for (auto& dataIt : m_ThreadSampleData) {
     ThreadSampleData& threadSampleData = dataIt.second;
@@ -281,16 +281,18 @@ void SamplingProfiler::ProcessSamples() {
       const CallstackID callstackID = stackCountIt.first;
       const unsigned int callstackCount = stackCountIt.second;
 
-      CallstackID resolvedCallstackID = m_RawToResolvedMap[callstackID];
-      std::shared_ptr<CallStack>& callstack =
+      CallstackID resolvedCallstackID =
+          m_OriginalCallstackToResolvedCallstack[callstackID];
+      std::shared_ptr<CallStack>& resolvedCallstack =
           m_UniqueResolvedCallstacks[resolvedCallstackID];
 
       // exclusive stat
-      threadSampleData.m_ExclusiveCount[callstack->m_Data[0]] += callstackCount;
+      threadSampleData.m_ExclusiveCount[resolvedCallstack->m_Data[0]] +=
+          callstackCount;
 
       std::set<uint64_t> uniqueAddresses;
-      for (uint32_t i = 0; i < callstack->m_Depth; ++i) {
-        uniqueAddresses.insert(callstack->m_Data[i]);
+      for (uint32_t i = 0; i < resolvedCallstack->m_Depth; ++i) {
+        uniqueAddresses.insert(resolvedCallstack->m_Data[i]);
       }
 
       for (uint64_t address : uniqueAddresses) {
@@ -309,7 +311,7 @@ void SamplingProfiler::ProcessSamples() {
 
   SortByThreadUsage();
 
-  OutputStats();
+  FillThreadSampleDataSampleReports();
 
   m_NumSamples = m_Callstacks.size();
   m_Callstacks.clear();
@@ -348,22 +350,25 @@ std::multimap<int, CallstackID> ThreadSampleData::SortCallstacks(
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::ProcessAddresses() {
+void SamplingProfiler::ResolveCallstacks() {
   ScopeLock lock(m_Mutex);
   for (const auto& it : m_UniqueCallstacks) {
     CallstackID rawCallstackId = it.first;
     const std::shared_ptr<CallStack> callstack = it.second;
+    // A "resolved callstack" is a callstack where every address is replaced by
+    // the start address of the function (if known).
     CallStack resolved_callstack = *callstack;
 
     for (uint32_t i = 0; i < callstack->m_Depth; ++i) {
       uint64_t addr = callstack->m_Data[i];
 
-      if (m_ExactAddresses.find(addr) == m_ExactAddresses.end()) {
+      if (m_ExactAddressToFunctionAddress.find(addr) ==
+          m_ExactAddressToFunctionAddress.end()) {
         AddAddress(addr);
       }
 
-      auto addrIt = m_ExactAddresses.find(addr);
-      if (addrIt != m_ExactAddresses.end()) {
+      auto addrIt = m_ExactAddressToFunctionAddress.find(addr);
+      if (addrIt != m_ExactAddressToFunctionAddress.end()) {
         const uint64_t& functionAddr = addrIt->second;
         resolved_callstack.m_Data[i] = functionAddr;
         m_FunctionToCallstacks[functionAddr].insert(rawCallstackId);
@@ -377,7 +382,8 @@ void SamplingProfiler::ProcessAddresses() {
           std::make_shared<CallStack>(resolved_callstack);
     }
 
-    m_RawToResolvedMap[rawCallstackId] = resolvedCallstackId;
+    m_OriginalCallstackToResolvedCallstack[rawCallstackId] =
+        resolvedCallstackId;
   }
 }
 
@@ -415,10 +421,10 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
       }
     }
 
-    m_ExactAddresses[a_Address] =
+    m_ExactAddressToFunctionAddress[a_Address] =
         symbol_info->Address ? symbol_info->Address : a_Address;
-    m_AddressToSymbol[(uint64_t)a_Address] = ws2s(symName);
-    m_AddressToSymbol[symbol_info->Address] = ws2s(symName);
+    m_AddressToName[a_Address] = ws2s(symName);
+    m_AddressToName[symbol_info->Address] = ws2s(symName);
 
     LineInfo lineInfo;
     if (SymUtils::GetLineInfo(a_Address, lineInfo)) {
@@ -431,30 +437,59 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
   } else
 #endif
   {
-    // TODO: find function start address
-    m_ExactAddresses[a_Address] =
-        /*symbol_info->Address ? symbol_info->Address :*/ a_Address;
     std::shared_ptr<LinuxSymbol> symbol =
         m_Process->LinuxSymbolFromAddress(a_Address);
-    std::string symbolName = "???";
 
-    if (symbol == nullptr || Contains(symbol->m_Name, "[unknown]")) {
-      Function* function = m_Process->GetFunctionFromAddress(a_Address, false);
-      if (function) {
-        symbolName = function->PrettyName();
-        if (symbol) {
-          symbol->m_Name = symbolName;
-        }
+    Function* function = m_Process->GetFunctionFromAddress(a_Address, false);
+
+    // Find the start address of the function this address falls inside. (In the
+    // Windows code in the if branch, symbol_info->Address already contains the
+    // function's start address, but it's not the case here.) Use the Function
+    // returned by Process::GetFunctionFromAddress, and when this fails (e.g.,
+    // the module containing the function has not been loaded) exploit (for now)
+    // the fact that we are sending the name of the symbol in the format
+    // <function_name>+0x<offset>.
+    // SamplingProfiler relies heavily on the association between address and
+    // function address held by m_ExactAddressToFunctionAddress, otherwise each
+    // address is considered a different function.
+    uint64_t functionAddress = a_Address;
+
+    if (function != nullptr) {
+      functionAddress = function->GetVirtualAddress();
+    } else if (symbol != nullptr &&
+               symbol->m_Name.find("+0x") != std::string::npos) {
+      std::string offsetStr =
+          symbol->m_Name.substr(symbol->m_Name.find("+0x") + 1);
+      uint64_t offset = strtoull(offsetStr.c_str(), nullptr, 16);
+      functionAddress -= offset;
+    }
+    m_ExactAddressToFunctionAddress[a_Address] = functionAddress;
+
+    std::string addressName = "???";
+    if (symbol == nullptr) {
+      if (function != nullptr) {
+        addressName = function->PrettyName();
+      }
+    } else if (Contains(symbol->m_Name, "[unknown]")) {
+      if (function != nullptr) {
+        addressName = function->PrettyName();
+        symbol->m_Name = function->PrettyName();
       }
     } else {
-      symbolName = symbol->m_Name;
+      addressName = symbol->m_Name;
     }
-    m_AddressToSymbol[(uint64_t)a_Address] = symbolName;
+    m_AddressToName[a_Address] = addressName;
+
+    std::string functionName = addressName;
+    if (functionName.find("+0x") != std::string::npos) {
+      functionName = functionName.substr(0, functionName.find("+0x"));
+    }
+    m_AddressToName[functionAddress] = functionName;
   }
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::OutputStats() {
+void SamplingProfiler::FillThreadSampleDataSampleReports() {
   for (auto& data : m_ThreadSampleData) {
     ThreadID threadID = data.first;
     ThreadSampleData& threadSampleData = data.second;
@@ -464,8 +499,7 @@ void SamplingProfiler::OutputStats() {
     ORBIT_LOGV(threadID);
     ORBIT_LOGV(threadSampleData.m_NumSamples);
 
-    for (std::multimap<unsigned int, uint64_t>::reverse_iterator sortedIt =
-             threadSampleData.m_AddressCountSorted.rbegin();
+    for (auto sortedIt = threadSampleData.m_AddressCountSorted.rbegin();
          sortedIt != threadSampleData.m_AddressCountSorted.rend(); ++sortedIt) {
       unsigned int numOccurences = sortedIt->first;
       uint64_t address = sortedIt->second;
@@ -473,7 +507,7 @@ void SamplingProfiler::OutputStats() {
           100.f * (float)numOccurences / (float)threadSampleData.m_NumSamples;
 
       SampledFunction function;
-      function.m_Name = m_AddressToSymbol[address];
+      function.m_Name = m_AddressToName[address];
       function.m_Inclusive = inclusive_percent;
       function.m_Exclusive = 0.f;
       auto it = threadSampleData.m_ExclusiveCount.find(address);
@@ -522,13 +556,13 @@ void SamplingProfiler::GetThreadCallstack(Thread* a_Thread) {
 std::string SamplingProfiler::GetSymbolFromAddress(uint64_t a_Address) {
   ScopeLock lock(m_Mutex);
 
-  auto it = m_AddressToSymbol.find(a_Address);
-  if (it != m_AddressToSymbol.end()) {
+  auto it = m_AddressToName.find(a_Address);
+  if (it != m_AddressToName.end()) {
     return it->second;
   } else if (!m_LoadedFromFile) {
     AddAddress(a_Address);
-    it = m_AddressToSymbol.find(a_Address);
-    if (it != m_AddressToSymbol.end()) {
+    it = m_AddressToName.find(a_Address);
+    if (it != m_AddressToName.end()) {
       return it->second;
     }
   }
@@ -564,10 +598,10 @@ ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 1) {
   ORBIT_NVP_DEBUG(0, m_ThreadSampleData);
   ORBIT_NVP_DEBUG(0, m_UniqueCallstacks);
   ORBIT_NVP_DEBUG(0, m_UniqueResolvedCallstacks);
-  ORBIT_NVP_DEBUG(0, m_RawToResolvedMap);
+  ORBIT_NVP_DEBUG(0, m_OriginalCallstackToResolvedCallstack);
   ORBIT_NVP_DEBUG(0, m_FunctionToCallstacks);
-  ORBIT_NVP_DEBUG(0, m_ExactAddresses);
-  ORBIT_NVP_DEBUG(0, m_AddressToSymbol);
+  ORBIT_NVP_DEBUG(0, m_ExactAddressToFunctionAddress);
+  ORBIT_NVP_DEBUG(0, m_AddressToName);
   ORBIT_NVP_DEBUG(0, m_AddressToLineInfo);
   ORBIT_NVP_DEBUG(1, m_FileNames);
   // ORBIT_NVP_VAL( 0, m_Callbacks );

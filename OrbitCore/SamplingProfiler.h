@@ -154,8 +154,8 @@ class SamplingProfiler {
   void SampleThreadsAsync();
   void GetThreadCallstack(Thread* a_Thread);
   void GetThreadsUsage();
-  void ProcessAddresses();
-  void OutputStats();
+  void ResolveCallstacks();
+  void FillThreadSampleDataSampleReports();
 
  protected:
   std::shared_ptr<Process> m_Process;
@@ -177,10 +177,11 @@ class SamplingProfiler {
       m_UniqueCallstacks;
   std::unordered_map<CallstackID, std::shared_ptr<CallStack>>
       m_UniqueResolvedCallstacks;
-  std::unordered_map<CallstackID, CallstackID> m_RawToResolvedMap;
+  std::unordered_map<CallstackID, CallstackID>
+      m_OriginalCallstackToResolvedCallstack;
   std::unordered_map<uint64_t, std::set<CallstackID>> m_FunctionToCallstacks;
-  std::unordered_map<uint64_t, uint64_t> m_ExactAddresses;
-  std::unordered_map<uint64_t, std::string> m_AddressToSymbol;
+  std::unordered_map<uint64_t, uint64_t> m_ExactAddressToFunctionAddress;
+  std::unordered_map<uint64_t, std::string> m_AddressToName;
   std::unordered_map<uint64_t, LineInfo> m_AddressToLineInfo;
   std::unordered_map<uint64_t, std::string> m_FileNames;
   std::vector<ProcessingDoneCallback> m_Callbacks;
