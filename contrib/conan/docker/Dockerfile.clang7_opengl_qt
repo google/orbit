@@ -52,6 +52,7 @@ RUN dpkg --add-architecture i386 \
        qt5-default \
        jq \
        python2.7 \
+       zip \
     && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-7 100 \
     && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-7 100 \
     && update-alternatives --install /usr/bin/cc cc /usr/bin/clang-7 100 \

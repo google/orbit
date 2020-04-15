@@ -8,4 +8,5 @@ RUN sudo apt-get -qq update \
     libxi-dev \
     qt5-default \
     jq \
-    python2.7
+    python2.7 \
+    zip

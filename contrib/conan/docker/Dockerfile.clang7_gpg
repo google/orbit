@@ -7,4 +7,5 @@ RUN sudo apt-get -qq update \
     gpg \
     gpg-agent \
     python2.7 \
+    zip \
     && sudo rm -rf /var/lib/apt/lists/*

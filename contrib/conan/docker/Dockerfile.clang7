@@ -5,4 +5,5 @@ RUN sudo apt-get -qq update \
     jq \
     libtinfo5 \
     python2.7 \
+    zip \
     && sudo rm -rf /var/lib/apt/lists/*
