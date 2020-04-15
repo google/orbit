@@ -54,7 +54,7 @@ if [ "$0" == "$SCRIPT" ]; then
 
   # Package the Debian package and the signature into a zip for integration in the installer.
   cd "${DIR}/build/package"
-  zip a -r OrbitProfiler*.deb OrbitProfiler*.deb.asc Collector.zip
+  zip Collector.zip -r OrbitProfiler*.deb OrbitProfiler*.deb.asc
   cd -
 
   # Uncomment the three lines below to print the external ip into the log and
