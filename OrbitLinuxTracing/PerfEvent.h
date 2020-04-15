@@ -166,9 +166,8 @@ class LostPerfEvent : public PerfEvent {
   uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
-struct __attribute__((__packed__)) dynamically_sized_perf_event_stack_sample {
-  struct __attribute__((__packed__))
-  dynamically_sized_perf_event_sample_stack_user {
+struct dynamically_sized_perf_event_stack_sample {
+  struct dynamically_sized_perf_event_sample_stack_user {
     uint64_t dyn_size;
     std::unique_ptr<char[]> data;
 
