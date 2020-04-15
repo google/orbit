@@ -11,6 +11,8 @@
 #include "BaseTypes.h"
 #include "SymbolsManager.h"
 #include "TransactionManager.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/synchronization/mutex.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -59,15 +61,30 @@ class CoreApp {
   }
   virtual void RefreshCaptureView() {}
 
+  void GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
+                       std::function<void(std::vector<byte>&)> callback);
+
   // Managers
   orbit::TransactionManager* GetTransactionManager() {
     return transaction_manager_.get();
   }
-  orbit::SymbolsManager* GetSymbolsManager(){return symbols_manager_.get(); }
+  orbit::SymbolsManager* GetSymbolsManager() { return symbols_manager_.get(); }
+
+  bool IsClient() const { return is_client_; }
+  bool IsService() const { return is_service_; }
 
  private:
+  // Transactions
+  void SetupMemoryTransaction();
+  typedef std::function<void(std::vector<byte>&)> memory_callback;
+  absl::flat_hash_map<uint32_t, memory_callback> memory_callbacks_;
+  absl::Mutex transaction_mutex_;
+
   std::unique_ptr<orbit::TransactionManager> transaction_manager_ = nullptr;
   std::unique_ptr<orbit::SymbolsManager> symbols_manager_ = nullptr;
+
+  bool is_client_;
+  bool is_service_;
 };
 
 extern CoreApp* GCoreApp;

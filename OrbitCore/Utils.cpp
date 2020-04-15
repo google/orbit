@@ -10,13 +10,16 @@
 #include <AtlBase.h>
 #include <atlconv.h>
 // clang-format on
+#else
+#include <sys/uio.h>
 #endif
 
 #include <time.h>
-
 #include <algorithm>
 #include <mutex>
 #include <thread>
+
+#include "absl/base/attributes.h"
 
 #ifdef _WIN32
 //-----------------------------------------------------------------------------
@@ -309,4 +312,21 @@ std::string OrbitUtils::FormatTime(const time_t& rawtime) {
   strftime(buffer, 80, "%Y_%m_%d_%H_%M_%S", time_info);
 
   return std::string(buffer);
+}
+
+//-----------------------------------------------------------------------------
+bool ReadProcessMemory(uint32_t pid, uint64_t address, byte* buffer,
+                       uint64_t size, size_t* num_bytes_read) {
+#if _WIN32
+  HANDLE h_process = reinterpret_cast<HANDLE>(pid);
+  BOOL res = ReadProcessMemory(h_process, reinterpret_cast<void*>(address),
+                               buffer, size, num_bytes_read);
+  return res == TRUE;
+#else
+  iovec local_iov[] = {{buffer, size}};
+  iovec remote_iov[] = {{reinterpret_cast<void*>(address), size}};
+  *num_bytes_read = process_vm_readv(pid, local_iov, ABSL_ARRAYSIZE(local_iov),
+                                     remote_iov, ABSL_ARRAYSIZE(remote_iov), 0);
+  return *num_bytes_read == size;
+#endif
 }

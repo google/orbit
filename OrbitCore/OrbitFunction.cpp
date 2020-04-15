@@ -11,6 +11,7 @@
 #include "Capture.h"
 #include "ConnectionManager.h"
 #include "Core.h"
+#include "CoreApp.h"
 #include "Log.h"
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
@@ -137,27 +138,12 @@ void Function::UpdateStats(const Timer& timer) {
   }
 }
 
-void Function::GetDisassembly() {
-  if (pdb_ && Capture::Connect()) {
-    Message msg(Msg_GetData);
-    uint64_t address = module_base_address_ + address_;
-    msg.m_Header.m_DataTransferHeader.m_Address = address;
-    msg.m_Header.m_DataTransferHeader.m_Type = DataTransferHeader::Code;
-    uint64_t size = size_;
-
-    // dll
-    if (size_ == 0) {
-      std::shared_ptr<Module> module =
-          Capture::GTargetProcess->GetModuleFromAddress(address);
-      if (module) {
-        uint64_t maxSize = module->m_AddressEnd - address;
-        size = std::min(GParams.m_NumBytesAssembly, maxSize);
-      }
-    }
-
-    msg.m_Size = size;
-    GTcpServer->Send(msg);
-  }
+void Function::GetDisassembly(uint32_t pid) {
+  GCoreApp->GetRemoteMemory(
+      pid, GetVirtualAddress(), Size(), [this](std::vector<byte>& data) {
+        GCoreApp->Disassemble(pretty_name_, GetVirtualAddress(),
+                              (const char*)data.data(), data.size());
+      });
 }
 
 void Function::FindFile() {
