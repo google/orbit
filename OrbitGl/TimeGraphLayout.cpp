@@ -155,7 +155,7 @@ float TimeGraphLayout::GetTotalHeight() {
   if (m_SortedThreadIds.size() > 0) {
     ThreadID threadId = m_SortedThreadIds.back();
     float offset = GetThreadOffset(threadId, m_ThreadDepths[threadId]);
-    return fabs(offset - m_WorldY) + m_TextBoxHeight;
+    return std::abs(offset - m_WorldY) + m_TextBoxHeight;
   }
 
   return GetThreadStart();
