@@ -52,6 +52,9 @@ if [ "$0" == "$SCRIPT" ]; then
     echo "No access token available. Won't upload packages."
   fi
 
+  # Package the Debian package and the signature into a zip for integration in the installer.
+  zip a -r OrbitProfiler*.deb OrbitProfiler*.deb.asc Collector.zip
+
   # Uncomment the three lines below to print the external ip into the log and
   # keep the vm alive for two hours. This is useful to debug build failures that
   # can not be resolved by looking into sponge alone. Also comment out the
