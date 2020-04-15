@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#include "Log.h"
+#include "OrbitBase/Logging.h"
 
 #ifdef _WIN32
 #include <tlhelp32.h>
@@ -46,7 +46,6 @@ Wow64SuspendThread_t* fn_Wow64SuspendThread =
                                           "Wow64SuspendThread");
 #endif
 
-//-----------------------------------------------------------------------------
 bool ProcessUtils::Is64Bit(HANDLE hProcess) {
 #ifdef _WIN32
   // https://github.com/VerySleepy/verysleepy/blob/master/src/utils/osutils.cpp
@@ -88,22 +87,17 @@ bool ProcessUtils::Is64Bit(HANDLE hProcess) {
   return false;
 }
 
-//-----------------------------------------------------------------------------
-ProcessList::ProcessList() {}
-
-//-----------------------------------------------------------------------------
 void ProcessList::Clear() {
-  m_Processes.clear();
-  m_ProcessesMap.clear();
+  processes_.clear();
+  processes_map_.clear();
 }
 
-//-----------------------------------------------------------------------------
 void ProcessList::Refresh() {
 #ifdef _WIN32
-  m_Processes.clear();
+  processes_.clear();
   std::unordered_map<uint32_t, std::shared_ptr<Process> > previousProcessesMap =
-      m_ProcessesMap;
-  m_ProcessesMap.clear();
+      processes_map_;
+  processes_map_.clear();
 
   HANDLE snapshot = CreateToolhelp32Snapshot(
       TH32CS_SNAPPROCESS | TH32CS_SNAPMODULE /*| TH32CS_SNAPTHREAD*/, 0);
@@ -133,17 +127,12 @@ void ProcessList::Refresh() {
       auto it = previousProcessesMap.find(processinfo.th32ProcessID);
       if (it != previousProcessesMap.end()) {
         // Add existing process
-        m_Processes.push_back(it->second);
+        processes_.push_back(it->second);
       } else {
         // Process was not there previously
         auto process = std::make_shared<Process>();
         process->m_Name = ws2s(processinfo.szExeFile);
         process->SetID(processinfo.th32ProcessID);
-
-        /*TCHAR fullPath[1024];
-        uint32_t pathSize = 1024;
-        QueryFullProcessImageName( process->GetHandle(), 0, fullPath, &pathSize
-        );*/
 
         // Full path
         HANDLE moduleSnapshot = CreateToolhelp32Snapshot(
@@ -152,25 +141,27 @@ void ProcessList::Refresh() {
           MODULEENTRY32 moduleEntry;
           moduleEntry.dwSize = sizeof(MODULEENTRY32);
           BOOL res = Module32First(moduleSnapshot, &moduleEntry);
-          if (!res) {
-            ORBIT_ERROR;
+          if (res) {
+            process->m_FullName = ws2s(moduleEntry.szExePath);
+          } else {
+            ERROR("Call to Module32First failed for %s (pid=%d)",
+                  process->m_Name.c_str(), processinfo.th32ProcessID);
           }
-          process->m_FullName = ws2s(moduleEntry.szExePath);
 
           CloseHandle(moduleSnapshot);
         }
 
-        m_Processes.push_back(process);
+        processes_.push_back(process);
       }
 
-      m_ProcessesMap[processinfo.th32ProcessID] = m_Processes.back();
+      processes_map_[processinfo.th32ProcessID] = processes_.back();
 
     } while (Process32Next(snapshot, &processinfo));
   }
   CloseHandle(snapshot);
 
 #else
-  m_Processes.clear();
+  processes_.clear();
   struct dirent* de_DirEntity = NULL;
   DIR* dir_proc = NULL;
 
@@ -183,9 +174,9 @@ void ProcessList::Refresh() {
   while ((de_DirEntity = readdir(dir_proc))) {
     if (de_DirEntity->d_type == DT_DIR && IsAllDigits(de_DirEntity->d_name)) {
       int pid = atoi(de_DirEntity->d_name);
-      auto iter = m_ProcessesMap.find(pid);
+      auto iter = processes_map_.find(pid);
       std::shared_ptr<Process> process = nullptr;
-      if (iter == m_ProcessesMap.end()) {
+      if (iter == processes_map_.end()) {
         process = std::make_shared<Process>();
         std::string dir =
             absl::StrFormat("%s%s/", PROC_DIRECTORY, de_DirEntity->d_name);
@@ -196,86 +187,96 @@ void ProcessList::Refresh() {
         std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
         process->m_FullName = cmdline;
         process->SetID(pid);
-        m_ProcessesMap[pid] = process;
+        processes_map_[pid] = process;
       } else {
         process = iter->second;
       }
 
-      m_Processes.push_back(process);
+      processes_.push_back(process);
     }
   }
   closedir(dir_proc);
 #endif
 }
 
-//-----------------------------------------------------------------------------
 void ProcessList::SortByID() {
-  std::sort(m_Processes.begin(), m_Processes.end(),
+  std::sort(processes_.begin(), processes_.end(),
             [](std::shared_ptr<Process>& a_P1, std::shared_ptr<Process>& a_P2) {
               return a_P1->GetID() < a_P2->GetID();
             });
 }
 
-//-----------------------------------------------------------------------------
 void ProcessList::SortByName() {
-  std::sort(m_Processes.begin(), m_Processes.end(),
+  std::sort(processes_.begin(), processes_.end(),
             [](std::shared_ptr<Process>& a_P1, std::shared_ptr<Process>& a_P2) {
               return a_P1->m_Name < a_P2->m_Name;
             });
 }
 
-//-----------------------------------------------------------------------------
 void ProcessList::SortByCPU() {
-  std::sort(m_Processes.begin(), m_Processes.end(),
+  std::sort(processes_.begin(), processes_.end(),
             [](std::shared_ptr<Process>& a_P1, std::shared_ptr<Process>& a_P2) {
               return a_P1->GetCpuUsage() < a_P2->GetCpuUsage();
             });
 }
 
-//-----------------------------------------------------------------------------
 void ProcessList::UpdateCpuTimes() {
 #ifdef WIN32
-  for (std::shared_ptr<Process>& process : m_Processes) {
+  for (std::shared_ptr<Process>& process : processes_) {
     process->UpdateCpuTime();
   }
 #else
   std::unordered_map<uint32_t, float> processMap =
       LinuxUtils::GetCpuUtilization();
-  for (std::shared_ptr<Process>& process : m_Processes) {
+  for (std::shared_ptr<Process>& process : processes_) {
     uint32_t pid = process->GetID();
     process->SetCpuUsage(processMap[pid]);
   }
 #endif
 }
 
-//-----------------------------------------------------------------------------
-bool ProcessList::Contains(uint32_t a_PID) const {
-  for (const std::shared_ptr<Process>& process : m_Processes) {
-    if (process->GetID() == a_PID) {
-      return true;
-    }
-  }
-
-  return false;
+bool ProcessList::Contains(uint32_t pid) const {
+  return processes_map_.find(pid) != processes_map_.end();
 }
 
-//-----------------------------------------------------------------------------
 void ProcessList::SetRemote(bool value) {
-  for (std::shared_ptr<Process>& process : m_Processes) {
+  for (std::shared_ptr<Process>& process : processes_) {
     process->SetIsRemote(value);
   }
 }
 
-//-----------------------------------------------------------------------------
 std::shared_ptr<Process> ProcessList::GetProcess(uint32_t pid) const {
-  std::shared_ptr<Process> result = nullptr;
-  auto iter = m_ProcessesMap.find(pid);
-  if (iter != m_ProcessesMap.end()) result = iter->second;
-  return result;
+  auto iter = processes_map_.find(pid);
+  if (iter != processes_map_.end()) {
+    return iter->second;
+  }
+
+  return nullptr;
 }
 
-//-----------------------------------------------------------------------------
+const std::vector<std::shared_ptr<Process>>& ProcessList::GetProcesses() const {
+  return processes_;
+}
+
+size_t ProcessList::Size() const {
+  return processes_.size();
+}
+
+void ProcessList::AddProcess(std::shared_ptr<Process> process) {
+  uint32_t pid = process->GetID();
+  auto it = processes_map_.find(pid);
+
+  if (it != processes_map_.end()) {
+    // Process with this pid already in the list - do nothing..
+    ERROR("ProcessList already contains process with pid=%d - ignoring", pid);
+    return;
+  }
+
+  processes_.push_back(process);
+  processes_map_[pid] = process;
+}
+
 ORBIT_SERIALIZE(ProcessList, 0) {
-  ORBIT_NVP_VAL(0, m_Processes);
-  ORBIT_NVP_VAL(0, m_ProcessesMap);
+  ORBIT_NVP_VAL(0, processes_);
+  ORBIT_NVP_VAL(0, processes_map_);
 }

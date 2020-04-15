@@ -121,7 +121,7 @@ void ProcessesDataView::OnSort(int a_Column,
   }
 
   const std::vector<std::shared_ptr<Process>>& processes =
-      m_ProcessList.m_Processes;
+      m_ProcessList.GetProcesses();
   auto pdvColumn = static_cast<PdvColumn>(a_Column);
 
   if (a_NewOrder.has_value()) {
@@ -190,12 +190,12 @@ void ProcessesDataView::Refresh() {
 
   if (m_RemoteProcess) {
     std::shared_ptr<Process> CurrentRemoteProcess =
-        m_ProcessList.m_Processes.size() == 1 ? m_ProcessList.m_Processes[0]
-                                              : nullptr;
+        m_ProcessList.Size() == 1 ? m_ProcessList.GetProcesses()[0]
+                                  : nullptr;
 
     if (m_RemoteProcess != CurrentRemoteProcess) {
       m_ProcessList.Clear();
-      m_ProcessList.m_Processes.push_back(m_RemoteProcess);
+      m_ProcessList.AddProcess(m_RemoteProcess);
       UpdateProcessList();
       SetFilter("");
       SelectProcess(m_RemoteProcess->GetID());
@@ -281,7 +281,7 @@ std::shared_ptr<Process> ProcessesDataView::SelectProcess(DWORD a_ProcessId) {
 void ProcessesDataView::OnFilter(const std::string& a_Filter) {
   std::vector<uint32_t> indices;
   const std::vector<std::shared_ptr<Process>>& processes =
-      m_ProcessList.m_Processes;
+      m_ProcessList.GetProcesses();
 
   std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
 
@@ -314,7 +314,7 @@ void ProcessesDataView::OnFilter(const std::string& a_Filter) {
 
 //-----------------------------------------------------------------------------
 void ProcessesDataView::UpdateProcessList() {
-  size_t numProcesses = m_ProcessList.m_Processes.size();
+  size_t numProcesses = m_ProcessList.Size();
   m_Indices.resize(numProcesses);
   for (size_t i = 0; i < numProcesses; ++i) {
     m_Indices[i] = i;
@@ -347,5 +347,5 @@ void ProcessesDataView::SetRemoteProcess(std::shared_ptr<Process> a_Process) {
 //-----------------------------------------------------------------------------
 std::shared_ptr<Process> ProcessesDataView::GetProcess(
     unsigned int a_Row) const {
-  return m_ProcessList.m_Processes[m_Indices[a_Row]];
+  return m_ProcessList.GetProcesses()[m_Indices[a_Row]];
 }
