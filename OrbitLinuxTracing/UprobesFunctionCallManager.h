@@ -30,7 +30,8 @@ class UprobesFunctionCallManager {
   }
 
   std::optional<FunctionCall> ProcessUretprobes(pid_t tid,
-                                                uint64_t end_timestamp) {
+                                                uint64_t end_timestamp,
+                                                uint64_t return_value) {
     if (!tid_uprobes_stacks_.contains(tid)) {
       return std::optional<FunctionCall>{};
     }
@@ -43,7 +44,7 @@ class UprobesFunctionCallManager {
     auto function_call = std::make_optional<FunctionCall>(
         tid, tid_uprobes_stack.top().function_address,
         tid_uprobes_stack.top().begin_timestamp, end_timestamp,
-        tid_uprobes_stack.size() - 1);
+        tid_uprobes_stack.size() - 1, return_value);
     tid_uprobes_stack.pop();
     if (tid_uprobes_stack.empty()) {
       tid_uprobes_stacks_.erase(tid);

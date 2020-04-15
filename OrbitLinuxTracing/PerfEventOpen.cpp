@@ -108,6 +108,9 @@ int uretprobes_event_open(const char* module, uint64_t function_offset,
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config = 1;  // Set bit 0 of config for uretprobe.
 
+  pe.sample_type |= PERF_SAMPLE_REGS_USER;
+  pe.sample_regs_user = SAMPLE_REGS_USER_AX;
+
   return generic_event_open(&pe, pid, cpu);
 }
 

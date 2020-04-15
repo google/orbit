@@ -11,8 +11,12 @@
 #include "CrashHandler.h"
 #include "Path.h"
 #include "orbitmainwindow.h"
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
 
 int main(int argc, char* argv[]) {
+  absl::SetProgramUsageMessage("CPU Profiler");
+  absl::ParseCommandLine(argc, argv);
 #if __linux__
   QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
 #endif

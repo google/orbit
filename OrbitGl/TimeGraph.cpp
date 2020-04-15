@@ -31,7 +31,10 @@
 #include "TimerManager.h"
 #include "Utils.h"
 #include "absl/strings/str_format.h"
+#include "absl/flags/flag.h"
 
+// TODO: Remove this flag once we have a way to toggle the display return values
+ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 TimeGraph* GCurrentTimeGraph = nullptr;
 
 //-----------------------------------------------------------------------------
@@ -462,11 +465,15 @@ void TimeGraph::SelectRight(const TextBox* a_TextBox) {
 void TimeGraph::NeedsUpdate() { m_NeedsUpdatePrimitives = true; }
 
 //-----------------------------------------------------------------------------
-inline std::string GetExtraInfo(const Timer& a_Timer) {
+std::string GetExtraInfo(const Timer& a_Timer) {
   std::string info;
+  static bool show_return_value = absl::GetFlag(FLAGS_show_return_values);
   if (!Capture::IsCapturing() && a_Timer.GetType() == Timer::UNREAL_OBJECT) {
     info =
         "[" + ws2s(GOrbitUnreal.GetObjectNames()[a_Timer.m_UserData[0]]) + "]";
+  }
+  else if (show_return_value && (a_Timer.GetType() == Timer::NONE)) {
+    info = absl::StrFormat("[%lu]", a_Timer.m_UserData[0]);
   }
   return info;
 }
