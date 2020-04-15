@@ -119,7 +119,6 @@ void SymbolsManager::HandleRequest(const Message& message) {
 
 void SymbolsManager::HandleResponse(const Message& message, uint32_t id) {
   CHECK(ConnectionManager::Get().IsClient());
-  UNUSED(id);
 
   // Deserialize response message.
   std::vector<ModuleDebugInfo> infos;
