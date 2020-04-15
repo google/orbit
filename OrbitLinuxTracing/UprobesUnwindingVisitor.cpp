@@ -1,5 +1,6 @@
 #include "UprobesUnwindingVisitor.h"
 #include "OrbitBase/Logging.h"
+
 namespace LinuxTracing {
 
 void UprobesUnwindingVisitor::visit(SamplePerfEvent* event) {
