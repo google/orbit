@@ -254,7 +254,7 @@ void DrawWindow(State& state, ImVec2& popupPos, ImVec2& popupSize,
         // This means that enter was pressed whilst a
         // the popup was open and we had an 'active' item.
         // So we copy the entry to the input buffer here
-        const char* entry = nullptr;  // ENTRIES[state.activeIdx];
+        const char* entry = "";  // ENTRIES[state.activeIdx];
         const size_t length = strlen(entry);
 
         memmove(inputBuf, entry, length + 1);
