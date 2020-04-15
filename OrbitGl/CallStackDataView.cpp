@@ -107,7 +107,7 @@ void CallStackDataView::OnDataChanged() {
 //-----------------------------------------------------------------------------
 Function* CallStackDataView::GetFunction(int a_Row) {
   int index = m_Indices[a_Row];
-  if (m_CallStack != nullptr && index < m_CallStack->m_Depth &&
+  if (m_CallStack != nullptr && index < static_cast<int>(m_CallStack->m_Depth) &&
       Capture::GTargetProcess != nullptr) {
     ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
@@ -127,7 +127,7 @@ Function& CallStackDataView::GetFunctionOrDummy(int a_IndexInCallstack) {
   }
 
   static Function dummy;
-  if (m_CallStack != nullptr && a_IndexInCallstack < m_CallStack->m_Depth &&
+  if (m_CallStack != nullptr && a_IndexInCallstack < static_cast<int>(m_CallStack->m_Depth) &&
       Capture::GSamplingProfiler != nullptr) {
     uint64_t address = m_CallStack->m_Data[a_IndexInCallstack];
     dummy.SetPrettyName(
