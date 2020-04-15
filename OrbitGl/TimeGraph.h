@@ -28,7 +28,6 @@ class TimeGraph {
   void Draw(bool a_Picking = false);
   void DrawThreadTracks(bool a_Picking = false);
   void DrawMainFrame(TextBox& a_Box);
-  void DrawEvents(bool a_Picking = false);
   void DrawTime();
   void DrawLineBuffer(bool a_Picking);
   void DrawBoxBuffer(bool a_Picking);
@@ -104,7 +103,6 @@ class TimeGraph {
   const MemoryTracker& GetMemoryTracker() const { return m_MemTracker; }
   const TimeGraphLayout& GetLayout() const { return m_Layout; }
   TimeGraphLayout& GetLayout() { return m_Layout; }
-  Color GetThreadColor(ThreadID a_TID) const;
 
   void OnLeft();
   void OnRight();
@@ -116,6 +114,9 @@ class TimeGraph {
   ThreadTrackMap GetThreadTracksCopy() const;
 
  private:
+  Color GetEventTrackColor(Timer timer);
+  Color GetTimesliceColor(Timer timer);
+
   TextRenderer m_TextRendererStatic;
   TextRenderer* m_TextRenderer = nullptr;
   GlCanvas* m_Canvas = nullptr;
@@ -140,8 +141,6 @@ class TimeGraph {
   unsigned char m_TrackAlpha = 255;
 
   TimeGraphLayout m_Layout;
-  std::map<ThreadID, class EventTrack*>
-      m_EventTracks;  // TODO: put in ThreadTrack
 
   std::map<DWORD /*ThreadId*/, std::map<long long, ContextSwitch> >
       m_ContextSwitchesMap;
