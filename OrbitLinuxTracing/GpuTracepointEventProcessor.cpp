@@ -62,7 +62,7 @@ int GpuTracepointEventProcessor::ComputeDepthForEvent(
   auto it = timeline_to_latest_timestamp_per_depth_.find(timeline);
   std::vector<uint64_t>& vec = it->second;
 
-  for (int d = 0; d < vec.size(); ++d) {
+  for (size_t d = 0; d < vec.size(); ++d) {
     // We add a small amount of slack on each row of the GPU track timeline to
     // make sure events don't get too crowded.
     constexpr uint64_t slack_ns = 1 * 1000000;

@@ -43,13 +43,14 @@ PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb,
   // The size of a perf_event_open ring buffer is required to be a power of two
   // memory pages (from perf_event_open's manpage: "The mmap size should be
   // 1+2^n pages"), otherwise mmap on the file descriptor fails.
-  if (1024 * size_kb < getpagesize() || __builtin_popcountl(size_kb) != 1) {
+  if (1024 * size_kb < static_cast<size_t>(getpagesize()) ||
+      __builtin_popcountl(size_kb) != 1) {
     return;
   }
 
   ring_buffer_size_ = 1024 * size_kb;
   ring_buffer_size_log2_ = __builtin_ffsl(ring_buffer_size_) - 1;
-  mmap_length_ = getpagesize() + ring_buffer_size_;
+  mmap_length_ = static_cast<size_t>(getpagesize()) + ring_buffer_size_;
 
   void* mmap_address =
       perf_event_open_mmap_ring_buffer(perf_event_fd, mmap_length_);
@@ -63,7 +64,7 @@ PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb,
 
   ring_buffer_ =
       reinterpret_cast<char*>(mmap_address) + metadata_page_->data_offset;
-  CHECK(metadata_page_->data_offset == getpagesize());
+  CHECK(metadata_page_->data_offset == static_cast<size_t>(getpagesize()));
 }
 
 PerfEventRingBuffer::PerfEventRingBuffer(PerfEventRingBuffer&& o) noexcept {
