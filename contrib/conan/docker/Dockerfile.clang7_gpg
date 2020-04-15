@@ -6,4 +6,5 @@ RUN sudo apt-get -qq update \
     libtinfo5 \
     gpg \
     gpg-agent \
+    python2.7 \
     && sudo rm -rf /var/lib/apt/lists/*

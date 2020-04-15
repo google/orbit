@@ -10,6 +10,8 @@ ENV LLVM_VERSION=7.0 \
     PYENV_ROOT=/opt/pyenv \
     PATH=/opt/pyenv/shims:${PATH}
 
+ADD sources.list.clang7 /etc/apt/sources.list
+
 RUN dpkg --add-architecture i386 \
     && apt-get -qq update \
     && apt-get install -y --no-install-recommends \
@@ -49,6 +51,7 @@ RUN dpkg --add-architecture i386 \
        libxi-dev \
        qt5-default \
        jq \
+       python2.7 \
     && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-7 100 \
     && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-7 100 \
     && update-alternatives --install /usr/bin/cc cc /usr/bin/clang-7 100 \
