@@ -159,7 +159,7 @@ class Function {
   const std::string& GetLoadedModuleName() const { return loaded_module_name_; }
   Type* GetParentType();
   void ResetStats();
-  void GetDisassembly();
+  void GetDisassembly(uint32_t pid);
   void FindFile();
 
   ORBIT_SERIALIZABLE;

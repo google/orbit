@@ -138,9 +138,9 @@ void Function::UpdateStats(const Timer& timer) {
   }
 }
 
-void Function::GetDisassembly() {
+void Function::GetDisassembly(uint32_t pid) {
   GCoreApp->GetRemoteMemory(
-      GetVirtualAddress(), Size(), [this](std::vector<byte>& data) {
+      pid, GetVirtualAddress(), Size(), [this](std::vector<byte>& data) {
         GCoreApp->Disassemble(pretty_name_, GetVirtualAddress(),
                               (const char*)data.data(), data.size());
       });

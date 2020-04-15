@@ -61,7 +61,7 @@ class CoreApp {
   }
   virtual void RefreshCaptureView() {}
 
-  void GetRemoteMemory(uint64_t address, uint64_t size,
+  void GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
                        std::function<void(std::vector<byte>&)> callback);
 
   // Managers

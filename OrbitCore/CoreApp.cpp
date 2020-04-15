@@ -2,7 +2,6 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 #include "CoreApp.h"
-#include "TcpClient.h"
 
 #include "Capture.h"
 #include "ConnectionManager.h"
@@ -23,7 +22,7 @@ void CoreApp::InitializeManagers() {
 }
 
 void CoreApp::GetRemoteMemory(
-    uint64_t address, uint64_t size,
+    uint32_t pid, uint64_t address, uint64_t size,
     std::function<void(std::vector<byte>&)> callback) {
   absl::MutexLock lock(&transaction_mutex_);
   if (memory_callbacks_.find(address) != memory_callbacks_.end()) {
@@ -31,27 +30,28 @@ void CoreApp::GetRemoteMemory(
     return;
   }
   memory_callbacks_[address] = callback;
-  std::pair<uint64_t, uint64_t> address_size(address, size);
-  transaction_manager_->EnqueueRequest(Msg_MemoryTransfer, address_size);
+  std::tuple<uint32_t, uint64_t, uint64_t> pid_address_size(pid, address, size);
+  transaction_manager_->EnqueueRequest(Msg_MemoryTransfer, pid_address_size);
 }
 
 void CoreApp::SetupMemoryTransaction() {
   auto on_request = [this](const Message& msg) {
     // Receive request.
     CHECK(IsService());
-    std::pair<uint64_t, uint64_t> address_size;
-    transaction_manager_->ReceiveRequest(msg, &address_size);
-    uint64_t address = address_size.first;
-    uint64_t size = address_size.second;
+    std::tuple<uint32_t, uint64_t, uint64_t> pid_address_size;
+    transaction_manager_->ReceiveRequest(msg, &pid_address_size);
+    uint32_t pid = std::get<0>(pid_address_size);
+    uint64_t address = std::get<1>(pid_address_size);
+    uint64_t size = std::get<2>(pid_address_size);
+
+    // Prepare response.
     std::pair<uint64_t, std::vector<byte>> address_bytes(address, {});
     std::vector<byte>& bytes = address_bytes.second;
     bytes.resize(size);
 
     // read target process memory
     uint64_t num_bytes_read = 0;
-    uint32_t pid = Capture::GTargetProcess->GetID();  // TODO: remove globals.
-    if (ReadProcessMemory(pid, address, bytes.data(), size, &num_bytes_read) ==
-        false) {
+    if (!ReadProcessMemory(pid, address, bytes.data(), size, &num_bytes_read)) {
       ERROR("ReadProcessMemory error attempting to read 0x%lx", address);
     }
     bytes.resize(num_bytes_read);
