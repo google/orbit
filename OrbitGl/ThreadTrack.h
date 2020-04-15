@@ -33,9 +33,6 @@ class ThreadTrack : public Track {
   std::vector<std::shared_ptr<TimerChain>> GetTimers();
   uint32_t GetDepth() const { return m_Depth; }
 
-  Color GetColor() const;
-  static Color GetColor(ThreadID a_TID);
-
   uint32_t GetNumTimers() const { return m_NumTimers; }
   TickType GetMinTime() const { return m_MinTime; }
   TickType GetMaxTime() const { return m_MaxTime; }
@@ -52,6 +49,8 @@ class ThreadTrack : public Track {
 
   bool GetVisible() const { return m_Visible; }
   void SetVisible(bool value) { m_Visible = value; }
+
+  void SetEventTrackColor(Color color);
 
  protected:
   inline void UpdateDepth(uint32_t a_Depth) {

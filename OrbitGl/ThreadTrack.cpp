@@ -83,31 +83,6 @@ std::vector<std::shared_ptr<TimerChain>> ThreadTrack::GetTimers() {
 }
 
 //-----------------------------------------------------------------------------
-Color ThreadTrack::GetColor() const { return GetColor(m_ThreadID); }
-
-//-----------------------------------------------------------------------------
-Color ThreadTrack::GetColor(ThreadID a_TID) {
-  static unsigned char a = 255;
-  static std::vector<Color> s_ThreadColors{
-      Color(231, 68, 53, a),    // red
-      Color(43, 145, 175, a),   // blue
-      Color(185, 117, 181, a),  // purple
-      Color(87, 166, 74, a),    // green
-      Color(215, 171, 105, a),  // beige
-      Color(248, 101, 22, a)    // orange
-  };
-
-  // This is a GPU thread track.
-  constexpr ThreadID kMinGpuThreadId = 1'000'000'000;
-  if (a_TID >= kMinGpuThreadId) {
-    const Color gray(100, 100, 100, 255);
-    return gray;
-  }
-
-  return s_ThreadColors[a_TID % s_ThreadColors.size()];
-}
-
-//-----------------------------------------------------------------------------
 const TextBox* ThreadTrack::GetFirstAfterTime(TickType a_Tick,
                                               uint32_t a_Depth) const {
   std::shared_ptr<TimerChain> textBoxes = GetTimers(a_Depth);
@@ -190,4 +165,9 @@ std::vector<std::shared_ptr<TimerChain>> ThreadTrack::GetAllChains() const {
     chains.push_back(pair.second);
   }
   return chains;
+}
+
+//-----------------------------------------------------------------------------
+void ThreadTrack::SetEventTrackColor(Color color) {
+  m_EventTrack->SetColor(color);
 }

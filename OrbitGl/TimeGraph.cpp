@@ -37,6 +37,64 @@
 ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 TimeGraph* GCurrentTimeGraph = nullptr;
 
+namespace {
+
+Color GetThreadColor(ThreadID a_TID) {
+  static unsigned char a = 255;
+  static std::vector<Color> s_ThreadColors{
+      Color(231, 68, 53, a),    // red
+      Color(43, 145, 175, a),   // blue
+      Color(185, 117, 181, a),  // purple
+      Color(87, 166, 74, a),    // green
+      Color(215, 171, 105, a),  // beige
+      Color(248, 101, 22, a)    // orange
+  };
+  return s_ThreadColors[a_TID % s_ThreadColors.size()];
+}
+
+}  // namespace
+
+Color TimeGraph::GetEventTrackColor(Timer timer) {
+  if (timer.m_Type == Timer::GPU_ACTIVITY) {
+    const Color kGray(100, 100, 100, 255);
+    return kGray;
+  } else {
+    return GetThreadColor(timer.m_TID);
+  }
+}
+
+Color TimeGraph::GetTimesliceColor(Timer timer) {
+  if (timer.m_Type == Timer::GPU_ACTIVITY) {
+    // We color code the timeslices for GPU activity using the color
+    // of the CPU thread track that submitted the job.
+    Color col = GetThreadColor(timer.m_SubmitTID);
+
+    // We disambiguate the different types of GPU activity based on the
+    // string that is displayed on their timeslice.
+    constexpr const char* kSwQueueString = "sw queue";
+    constexpr const char* kHwQueueString = "hw queue";
+    constexpr const char* kHwExecutionString = "hw execution";
+    float coeff = 1.0f;
+    std::string gpu_stage =
+        string_manager_->Get(timer.m_UserData[0]).value_or("");
+    if (gpu_stage == kSwQueueString) {
+      coeff = 0.5f;
+    } else if (gpu_stage == kHwQueueString) {
+      coeff = 0.75f;
+    } else if (gpu_stage == kHwExecutionString) {
+      coeff = 1.0f;
+    }
+
+    col[0] = static_cast<uint8_t>(coeff * col[0]);
+    col[1] = static_cast<uint8_t>(coeff * col[1]);
+    col[2] = static_cast<uint8_t>(coeff * col[2]);
+
+    return col;
+  } else {
+    return GetThreadColor(timer.m_TID);
+  }
+}
+
 //-----------------------------------------------------------------------------
 TimeGraph::TimeGraph() { m_LastThreadReorder.Start(); }
 
@@ -242,20 +300,23 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
     }
   }
 
+  std::shared_ptr<ThreadTrack> track = GetThreadTrack(a_Timer.m_TID);
+  track->SetEventTrackColor(GetEventTrackColor(a_Timer));
+
+  if (a_Timer.m_Type == Timer::GPU_ACTIVITY) {
+    track->SetName(string_manager_->Get(a_Timer.m_UserData[1]).value_or(""));
+    track->SetLabelDisplayMode(Track::NAME_ONLY);
+    track->SetEventTrackColor(GetEventTrackColor(a_Timer));
+  }
+  if (a_Timer.m_Type == Timer::INTROSPECTION) {
+    const Color kGreenIntrospection(87, 166, 74, 255);
+    track->SetColor(kGreenIntrospection);
+  }
+
   if (!a_Timer.IsType(Timer::THREAD_ACTIVITY) &&
       !a_Timer.IsType(Timer::CORE_ACTIVITY)) {
-    std::shared_ptr<ThreadTrack> track = GetThreadTrack(a_Timer.m_TID);
-    if (a_Timer.m_Type == Timer::GPU_ACTIVITY) {
-      track->SetName(string_manager_->Get(a_Timer.m_UserData[1]).value_or(""));
-      track->SetLabelDisplayMode(Track::NAME_ONLY);
-    }
-
     track->OnTimer(a_Timer);
     ++m_ThreadCountMap[a_Timer.m_TID];
-    if (a_Timer.m_Type == Timer::INTROSPECTION) {
-      const Color kGreenIntrospection(87, 166, 74, 255);
-      track->SetColor(kGreenIntrospection);
-    }
   } else {
     // Use thead 0 as container for scheduling events.
     GetThreadTrack(0)->OnTimer(a_Timer);
@@ -572,33 +633,8 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
           const unsigned char g = 100;
           Color grey(g, g, g, 255);
           static Color selectionColor(0, 128, 255, 255);
-          Color col = GetThreadColor(timer.m_TID);
 
-          // We disambiguate the different types of GPU activity based on the
-          // string that is displayed on their timeslice.
-          if (timer.m_Type == Timer::GPU_ACTIVITY) {
-            // We color code the timeslices for GPU activity using the color
-            // of the CPU thread track that submitted the job.
-            col = GetThreadColor(timer.m_SubmitTID);
-
-            constexpr const char* kSwQueueString = "sw queue";
-            constexpr const char* kHwQueueString = "hw queue";
-            constexpr const char* kHwExecutionString = "hw execution";
-            float coeff = 1.0f;
-            std::string gpu_stage =
-                string_manager_->Get(timer.m_UserData[0]).value_or("");
-            if (gpu_stage == kSwQueueString) {
-              coeff = 0.5f;
-            } else if (gpu_stage == kHwQueueString) {
-              coeff = 0.75f;
-            } else if (gpu_stage == kHwExecutionString) {
-              coeff = 1.0f;
-            }
-
-            col[0] = static_cast<uint8_t>(coeff * col[0]);
-            col[1] = static_cast<uint8_t>(coeff * col[1]);
-            col[2] = static_cast<uint8_t>(coeff * col[2]);
-          }
+          Color col = GetTimesliceColor(timer);
 
           if (isSelected) {
             col = selectionColor;
@@ -809,7 +845,6 @@ void TimeGraph::Draw(bool a_Picking) {
 
   DrawThreadTracks(a_Picking);
   DrawBuffered(a_Picking);
-  DrawEvents(a_Picking);
 
   m_NeedsRedraw = false;
 }
@@ -918,11 +953,6 @@ void TimeGraph::UpdateThreadIds() {
 
   ScopeLock lock(m_Mutex);
   m_Layout.CalculateOffsets(m_ThreadTracks);
-}
-
-//-----------------------------------------------------------------------------
-Color TimeGraph::GetThreadColor(ThreadID a_TID) const {
-  return ThreadTrack::GetColor(a_TID);
 }
 
 //----------------------------------------------------------------------------
@@ -1042,29 +1072,6 @@ void TimeGraph::DrawLineBuffer(bool a_Picking) {
 
     lineBlock = lineBlock->m_Next;
     colorBlock = colorBlock->m_Next;
-  }
-}
-
-//-----------------------------------------------------------------------------
-void TimeGraph::DrawEvents(bool a_Picking) {
-  // Draw track background
-  float x0 = GetWorldFromTick(m_SessionMinCounter);
-  float x1 = GetWorldFromTick(m_SessionMaxCounter);
-  float sizeX = x1 - x0;
-
-  for (uint32_t i = 0; i < m_Layout.GetSortedThreadIds().size(); ++i) {
-    ThreadID threadId = m_Layout.GetSortedThreadIds()[i];
-    float y0 = m_Layout.GetSamplingTrackOffset(threadId);
-
-    if (y0 == -1.f) continue;
-
-    EventTrack* eventTrack = m_EventTracks[threadId];
-
-    if (eventTrack) {
-      eventTrack->SetPos(x0, y0);
-      eventTrack->SetSize(sizeX, m_Layout.GetEventTrackHeight());
-      eventTrack->Draw(m_Canvas, a_Picking);
-    }
   }
 }
 

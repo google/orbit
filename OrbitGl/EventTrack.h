@@ -25,6 +25,7 @@ class EventTrack : public Pickable {
   void SetTimeGraph(TimeGraph* a_TimeGraph) { m_TimeGraph = a_TimeGraph; }
   void SetPos(float a_X, float a_Y);
   void SetSize(float a_SizeX, float a_SizeY);
+  void SetColor(Color color) { m_Color = color; }
   void SelectEvents();
 
  protected:
@@ -36,4 +37,5 @@ class EventTrack : public Pickable {
   Vec2 m_Size;
   Vec2 m_MousePos[2];
   bool m_Picked;
+  Color m_Color;
 };

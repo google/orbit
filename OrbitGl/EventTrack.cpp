@@ -15,7 +15,7 @@ EventTrack::EventTrack(TimeGraph* a_TimeGraph) : m_TimeGraph(a_TimeGraph) {
 
 //-----------------------------------------------------------------------------
 void EventTrack::Draw(GlCanvas* a_Canvas, bool a_Picking) {
-  Color col = m_TimeGraph->GetThreadColor(m_ThreadId);
+  Color col = m_Color;
 
   a_Picking ? PickingManager::SetPickingColor(
                   a_Canvas->GetPickingManager().CreatePickableId(this))
