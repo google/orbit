@@ -591,7 +591,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   constexpr size_t size_of_uprobes = sizeof(perf_event_sp_ip_8bytes_sample);
   bool is_uprobe = !is_gpu_event && (header.size == size_of_uprobes);
 
-  constexpr size_t size_of_uretprobes = sizeof(perf_event_ax);
+  constexpr size_t size_of_uretprobes = sizeof(perf_event_ax_sample);
   bool is_uretprobe = !is_gpu_event && (header.size == size_of_uretprobes);
 
   constexpr size_t size_of_sample = sizeof(perf_event_stack_sample);

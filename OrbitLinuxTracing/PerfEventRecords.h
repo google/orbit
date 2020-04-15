@@ -94,12 +94,6 @@ struct __attribute__((__packed__)) perf_event_empty_sample {
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
 };
 
-struct __attribute__((__packed__)) perf_event_ax {
-  perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  perf_event_sample_regs_user_ax regs;
-};
-
 struct __attribute__((__packed__)) perf_event_stack_sample {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
@@ -112,6 +106,12 @@ struct __attribute__((__packed__)) perf_event_sp_ip_8bytes_sample {
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   perf_event_sample_regs_user_sp_ip regs;
   perf_event_sample_stack_user_8bytes stack;
+};
+
+struct __attribute__((__packed__)) perf_event_ax_sample {
+  perf_event_header header;
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  perf_event_sample_regs_user_ax regs;
 };
 
 struct __attribute__((__packed__)) perf_event_lost {
