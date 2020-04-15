@@ -37,6 +37,7 @@ class CrashpadConan(ConanFile):
             self.build_requires("depot_tools_installer/20190909@bincrafters/stable")
         else:
             self.build_requires("depot_tools_installer/20200207@bincrafters/stable")
+        self.build_requires("ninja/1.9.0")
 
     def _mangle_spec_for_gclient(self, solutions):
         return json.dumps(solutions)          \
