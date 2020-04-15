@@ -7,4 +7,5 @@ RUN sudo apt-get -qq update \
     libxmu-dev \
     libxi-dev \
     qt5-default \
-    jq 
+    jq \
+    python2.7
