@@ -116,7 +116,7 @@ void LinuxTracingHandler::OnCallstack(
     if (!frame.GetFunctionName().empty() &&
         !target_process_->HasSymbol(address)) {
       std::string symbol_name =
-          absl::StrFormat("%s+%#x", llvm::demangle(frame.GetFunctionName()),
+          absl::StrFormat("%s+%#lx", llvm::demangle(frame.GetFunctionName()),
                           frame.GetFunctionOffset());
       std::shared_ptr<LinuxSymbol> symbol = std::make_shared<LinuxSymbol>();
       symbol->m_Module = frame.GetMapName();
