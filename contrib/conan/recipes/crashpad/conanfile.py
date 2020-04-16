@@ -87,8 +87,12 @@ class CrashpadConan(ConanFile):
         raise ConanInvalidConfiguration("your architecture (%s) is not supported" % arch)
 
     def _setup_args_gn(self):
+        os_map = { 'Windows': 'win', 'Linux': 'linux' } # Maps conan os identifiers to GN os identifiers
+        target_os = os_map[str(self.settings.os)]
         args = ["is_debug=%s" % ("true" if self.settings.build_type == "Debug" else "false"),
-                "target_cpu=\\\"%s\\\"" % self._get_target_cpu()]
+                "target_cpu=\\\"%s\\\"" % self._get_target_cpu(),
+                "target_os=\\\"{}\\\"".format(target_os),
+                "target_sysroot=\\\"{}\\\"".format(os.environ.get('sysroot', '')) ]
 
         if self.settings.os == "Macos" and self.settings.get_safe("os.version"):
             args += [ "mac_deployment_target=\\\"%s\\\"" % self.settings.os.version ]
@@ -100,6 +104,32 @@ class CrashpadConan(ConanFile):
         return " ".join(args)
 
     def build(self):
+        BUILD_gn = 'crashpad/third_party/mini_chromium/mini_chromium/build/BUILD.gn'
+        tools.replace_in_file(BUILD_gn, 'cc = "clang"', 'cc = "{}"'.format(os.environ.get('CC', 'cc')))
+        tools.replace_in_file(BUILD_gn, 'cxx = "clang++"', 'cxx = "{}"'.format(os.environ.get('CXX', 'c++')))
+
+        if self.settings.os != "Windows" and self.settings.compiler == "gcc":
+            tools.replace_in_file(BUILD_gn, '"-Werror",', '"-Wno-multichar",')
+            tools.replace_in_file(BUILD_gn, '"-Wheader-hygiene",', '')
+            tools.replace_in_file(BUILD_gn, '"-Wnewline-eof",', '')
+            tools.replace_in_file(BUILD_gn, '"-Wstring-conversion",', '')
+            tools.replace_in_file(BUILD_gn, '"-Wexit-time-destructors"', '')
+            tools.replace_in_file(BUILD_gn, '"-fobjc-call-cxx-cdtors",', '')
+
+        def quote(x):
+            return '"{}"'.format(x)
+
+        ldflags = list(map(quote, os.environ.get('LDFLAGS', '').split(' ')))
+        tools.replace_in_file(BUILD_gn, 'ldflags = []', 'ldflags = [ {} ]'.format(", ".join(ldflags)))
+
+        cflags = list(map(quote, os.environ.get('CFLAGS', '').split(' ')))
+        cflags.append('"-std=c99"')
+        tools.replace_in_file(BUILD_gn, 'cflags_c = [ "-std=c99" ]', 'cflags_c = [ {} ]'.format(", ".join(cflags)))
+
+        cxxflags = list(map(quote, os.environ.get('CXXFLAGS', '').split(' ')))
+        cxxflags.append('"-std=c++14"')
+        tools.replace_in_file(BUILD_gn, 'cflags_cc = [ "-std=c++14" ]', 'cflags_cc = [ {} ]'.format(", ".join(cxxflags)))
+
         with tools.chdir(self._source_dir):
             self.run('gn gen %s --args="%s"' % (self._build_name, self._setup_args_gn()), run_environment=True)
             self.run("ninja -j%d -C %s" % (tools.cpu_count(), self._build_name), run_environment=True)
