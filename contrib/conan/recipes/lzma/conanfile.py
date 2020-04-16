@@ -11,6 +11,12 @@ class LzmasdkConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = "cmake"
     exports_sources = "CMakeLists.txt"
+    options = {"fPIC" : [True, False]}
+    default_options = {"fPIC": True}
+
+    def config_options(self):
+        if self.settings.os == "Windows":
+            del self.options.fPIC
 
     def source(self):
         self.run("git clone https://android.googlesource.com/platform/external/lzma")
