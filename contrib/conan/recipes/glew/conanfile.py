@@ -14,9 +14,13 @@ class GlewConan(ConanFile):
                        "vs16-release-fix.patch","cmake-adjustments.diff"]
     generators = "cmake"
     settings = "os", "arch", "build_type", "compiler"
-    options = {"shared": [True, False], "system_mesa": [True, False]}
-    default_options = {"shared": False, "system_mesa": True}
+    options = {"shared": [True, False], "system_mesa": [True, False], "fPIC": [True, False]}
+    default_options = {"shared": False, "system_mesa": True, "fPIC": True}
     _source_subfolder = "_source_subfolder"
+
+    def config_options(self):
+        if self.settings.os == "Windows":
+            del self.options.fPIC
 
     def requirements(self):
         if self.settings.os == 'Linux' and not self.options.system_mesa:
