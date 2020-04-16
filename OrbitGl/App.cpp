@@ -494,8 +494,8 @@ void OrbitApp::RefreshWatch() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::Disassemble(const std::string& a_FunctionName,
-                           DWORD64 a_VirtualAddress, const char* a_MachineCode,
-                           size_t a_Size) {
+                           uint64_t a_VirtualAddress,
+                           const uint8_t* a_MachineCode, size_t a_Size) {
   Disassembler disasm;
   disasm.LOGF(absl::StrFormat("asm: /* %s */\n", a_FunctionName.c_str()));
   const unsigned char* code = (const unsigned char*)a_MachineCode;
@@ -695,27 +695,6 @@ void OrbitApp::GoToCallstack() { SendToUiNow(L"gotocallstack"); }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::GoToCapture() { SendToUiNow(L"gotocapture"); }
-
-//-----------------------------------------------------------------------------
-void OrbitApp::GetDisassembly(DWORD64 a_Address, DWORD a_NumBytesBelow,
-                              DWORD a_NumBytes) {
-  std::shared_ptr<Module> module =
-      Capture::GTargetProcess->GetModuleFromAddress(a_Address);
-  if (module && module->m_Pdb && Capture::Connect()) {
-    Message msg(Msg_GetData);
-    ULONG64 address = (ULONG64)a_Address - a_NumBytesBelow;
-    if (address < module->m_AddressStart) address = module->m_AddressStart;
-
-    DWORD64 endAddress = address + a_NumBytes;
-    if (endAddress > module->m_AddressEnd) endAddress = module->m_AddressEnd;
-
-    msg.m_Header.m_DataTransferHeader.m_Address = address;
-    msg.m_Header.m_DataTransferHeader.m_Type = DataTransferHeader::Code;
-
-    msg.m_Size = (int)a_NumBytes;
-    GTcpServer->Send(msg);
-  }
-}
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnOpenPdb(const std::string& file_name) {

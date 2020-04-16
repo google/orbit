@@ -66,8 +66,8 @@ class OrbitApp : public CoreApp {
   void UpdateVariable(Variable* a_Variable) override;
   void ClearWatchedVariables();
   void RefreshWatch();
-  void Disassemble(const std::string& a_FunctionName, DWORD64 a_VirtualAddress,
-                   const char* a_MachineCode, size_t a_Size) override;
+  void Disassemble(const std::string& a_FunctionName, uint64_t a_VirtualAddress,
+                   const uint8_t* a_MachineCode, size_t a_Size) override;
   void ProcessTimer(const Timer& a_Timer,
                     const std::string& a_FunctionName) override;
   void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) override;
@@ -106,8 +106,6 @@ class OrbitApp : public CoreApp {
   void GoToCode(DWORD64 a_Address);
   void GoToCallstack();
   void GoToCapture();
-  void GetDisassembly(DWORD64 a_Address, DWORD a_NumBytesBelow,
-                      DWORD a_NumBytes);
 
   // Callbacks
   typedef std::function<void(DataViewType a_Type)> RefreshCallback;

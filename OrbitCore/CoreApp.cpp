@@ -23,7 +23,7 @@ void CoreApp::InitializeManagers() {
 
 void CoreApp::GetRemoteMemory(
     uint32_t pid, uint64_t address, uint64_t size,
-    std::function<void(std::vector<byte>&)> callback) {
+    std::function<void(std::vector<uint8_t>&)> callback) {
   absl::MutexLock lock(&transaction_mutex_);
   std::tuple<uint32_t, uint64_t, uint64_t> pid_address_size(pid, address, size);
   uint32_t id = transaction_manager_->EnqueueRequest(Msg_MemoryTransfer,
@@ -42,7 +42,7 @@ void CoreApp::SetupMemoryTransaction() {
     uint64_t size = std::get<2>(pid_address_size);
 
     // read target process memory
-    std::vector<byte> bytes(size);
+    std::vector<uint8_t> bytes(size);
     uint64_t num_bytes_read = 0;
     if (!ReadProcessMemory(pid, address, bytes.data(), size, &num_bytes_read)) {
       ERROR("ReadProcessMemory error attempting to read 0x%lx", address);
@@ -55,7 +55,7 @@ void CoreApp::SetupMemoryTransaction() {
 
   auto on_response = [this](const Message& msg, uint32_t id) {
     CHECK(IsClient());
-    std::vector<byte> bytes;
+    std::vector<uint8_t> bytes;
     transaction_manager_->ReceiveResponse(msg, &bytes);
     absl::MutexLock lock(&transaction_mutex_);
     memory_callbacks_[id](bytes);
