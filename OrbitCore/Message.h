@@ -61,7 +61,7 @@ enum MessageType : int16_t {
   Msg_RemoteModuleDebugInfo,
   Msg_RemoteTimers,
   Msg_RemoteCallStack,
-  Msg_RemoteSymbol,
+  Msg_RemoteLinuxAddressInfo,
   Msg_SamplingCallstack,
   Msg_TimerCallstack,
   Msg_RemoteSelectedFunctionsMap,

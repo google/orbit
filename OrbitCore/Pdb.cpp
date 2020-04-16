@@ -77,8 +77,7 @@ Pdb::~Pdb() {
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::AddFunction(const std::shared_ptr<Function>& function)
-{
+void Pdb::AddFunction(const std::shared_ptr<Function>& function) {
   functions_.push_back(function);
   functions_.back()->SetPdb(this);
   CheckOrbitFunction(*functions_.back());

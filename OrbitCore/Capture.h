@@ -94,7 +94,7 @@ class Capture {
   static std::map<uint64_t, Function*> GVisibleFunctionsMap;
   static std::unordered_map<ULONG64, ULONG64> GFunctionCountMap;
   static std::vector<ULONG64> GSelectedAddressesByType[Function::NUM_TYPES];
-  static std::unordered_map<DWORD64, std::shared_ptr<CallStack> > GCallstacks;
+  static std::unordered_map<DWORD64, std::shared_ptr<CallStack>> GCallstacks;
   static std::unordered_map<DWORD64, std::string> GZoneNames;
   static class TextBox* GSelectedTextBox;
   static ThreadID GSelectedThreadId;

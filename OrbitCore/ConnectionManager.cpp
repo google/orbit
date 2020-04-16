@@ -10,8 +10,8 @@
 #include "EventBuffer.h"
 #include "Introspection.h"
 #include "KeyAndString.h"
+#include "LinuxAddressInfo.h"
 #include "LinuxCallstackEvent.h"
-#include "LinuxSymbol.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitFunction.h"
@@ -91,7 +91,8 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
   for (std::shared_ptr<Function> function : Capture::GSelectedFunctions) {
     // this also adds the function to the map.
     function->Select();
-    Capture::GSelectedFunctionsMap[function->GetVirtualAddress()] = function.get();
+    Capture::GSelectedFunctionsMap[function->GetVirtualAddress()] =
+        function.get();
   }
 }
 
@@ -238,14 +239,15 @@ void ConnectionManager::SetupClientCallbacks() {
     GCoreApp->ProcessCallStack(stack);
   });
 
-  GTcpClient->AddCallback(Msg_RemoteSymbol, [=](const Message& a_Msg) {
-    LinuxSymbol symbol;
-    std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
-    cereal::BinaryInputArchive inputAr(buffer);
-    inputAr(symbol);
+  GTcpClient->AddCallback(
+      Msg_RemoteLinuxAddressInfo, [=](const Message& a_Msg) {
+        LinuxAddressInfo address_info;
+        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        cereal::BinaryInputArchive inputAr(buffer);
+        inputAr(address_info);
 
-    GCoreApp->AddSymbol(symbol.m_Address, symbol.m_Module, symbol.m_Name);
-  });
+        GCoreApp->AddAddressInfo(address_info);
+      });
 
   GTcpClient->AddCallback(Msg_RemoteContextSwitches, [=](const Message& a_Msg) {
     uint32_t num_context_switches =

@@ -74,8 +74,7 @@ class OrbitApp : public CoreApp {
   void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) override;
   void ProcessCallStack(CallStack& a_CallStack) override;
   void ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) override;
-  void AddSymbol(uint64_t a_Address, const std::string& a_Module,
-                 const std::string& a_Name) override;
+  void AddAddressInfo(LinuxAddressInfo address_info) override;
   void AddKeyAndString(uint64_t key, std::string_view str) override;
 
   int* GetScreenRes() { return m_ScreenRes; }

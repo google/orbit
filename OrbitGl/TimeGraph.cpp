@@ -29,8 +29,8 @@
 #include "ThreadTrack.h"
 #include "TimerManager.h"
 #include "Utils.h"
-#include "absl/strings/str_format.h"
 #include "absl/flags/flag.h"
+#include "absl/strings/str_format.h"
 
 // TODO: Remove this flag once we have a way to toggle the display return values
 ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
@@ -531,8 +531,7 @@ std::string GetExtraInfo(const Timer& a_Timer) {
   if (!Capture::IsCapturing() && a_Timer.GetType() == Timer::UNREAL_OBJECT) {
     info =
         "[" + ws2s(GOrbitUnreal.GetObjectNames()[a_Timer.m_UserData[0]]) + "]";
-  }
-  else if (show_return_value && (a_Timer.GetType() == Timer::NONE)) {
+  } else if (show_return_value && (a_Timer.GetType() == Timer::NONE)) {
     info = absl::StrFormat("[%lu]", a_Timer.m_UserData[0]);
   }
   return info;

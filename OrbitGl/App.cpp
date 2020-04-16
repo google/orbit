@@ -221,16 +221,11 @@ void OrbitApp::ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::AddSymbol(uint64_t a_Address, const std::string& a_Module,
-                         const std::string& a_Name) {
+void OrbitApp::AddAddressInfo(LinuxAddressInfo address_info) {
   // This should not be called for the service - make sure it doesn't
   CHECK(!ConnectionManager::Get().IsService());
 
-  auto symbol = std::make_shared<LinuxSymbol>();
-  symbol->m_Address = a_Address;
-  symbol->m_Name = a_Name;
-  symbol->m_Module = a_Module;
-  Capture::GTargetProcess->AddSymbol(a_Address, symbol);
+  Capture::GTargetProcess->AddAddressInfo(std::move(address_info));
 }
 //-----------------------------------------------------------------------------
 void OrbitApp::AddKeyAndString(uint64_t key, std::string_view str) {
@@ -792,7 +787,7 @@ void OrbitApp::OnLoadSession(const std::string& file_name) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadSession(const std::shared_ptr<Session>& session) {
-  if(SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
+  if (SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
     Capture::GSessionPresets = session;
   }
 }
@@ -962,9 +957,9 @@ void OrbitApp::LoadModules() {
       return;
     }
 #ifdef _WIN32
-  for (std::shared_ptr<Module> module : m_ModulesToLoad) {
-    GLoadPdbAsync(module);
-  }
+    for (std::shared_ptr<Module> module : m_ModulesToLoad) {
+      GLoadPdbAsync(module);
+    }
 #else
     for (std::shared_ptr<Module> module : m_ModulesToLoad) {
       if (symbol_helper_.LoadSymbolsIncludedInBinary(module)) continue;
@@ -1046,14 +1041,14 @@ void OrbitApp::OnRemoteProcess(const Message& a_Message) {
 
   // Trigger session loading if needed.
   std::shared_ptr<Session> session = Capture::GSessionPresets;
-  if (session){
-      GetSymbolsManager()->LoadSymbols(session, remoteProcess);
-      GParams.m_ProcessPath = session->m_ProcessFullPath;
-      GParams.m_Arguments = session->m_Arguments;
-      GParams.m_WorkingDirectory = session->m_WorkingDirectory;
-      GCoreApp->SendToUiNow(L"SetProcessParams");
-      Capture::GSessionPresets = nullptr;
-    }
+  if (session) {
+    GetSymbolsManager()->LoadSymbols(session, remoteProcess);
+    GParams.m_ProcessPath = session->m_ProcessFullPath;
+    GParams.m_Arguments = session->m_Arguments;
+    GParams.m_WorkingDirectory = session->m_WorkingDirectory;
+    GCoreApp->SendToUiNow(L"SetProcessParams");
+    Capture::GSessionPresets = nullptr;
+  }
 }
 
 //-----------------------------------------------------------------------------

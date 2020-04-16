@@ -13,8 +13,8 @@
 class CaptureSerializer {
  public:
   CaptureSerializer();
-  void Save(const std::wstring a_FileName);
-  void Load(const std::wstring a_FileName);
+  void Save(const std::wstring& a_FileName);
+  void Load(const std::wstring& a_FileName);
 
   template <class T>
   void Save(T& a_Archive);

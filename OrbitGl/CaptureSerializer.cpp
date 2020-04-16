@@ -27,7 +27,7 @@ CaptureSerializer::CaptureSerializer() {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureSerializer::Save(const std::wstring a_FileName) {
+void CaptureSerializer::Save(const std::wstring& a_FileName) {
   Capture::PreSave();
 
   std::basic_ostream<char> Stream(&GStreamCounter);
@@ -101,7 +101,7 @@ void CaptureSerializer::Save(T& a_Archive) {
 
   // Timers
   int numWrites = 0;
-  std::vector<std::shared_ptr<TimerChain> > chains =
+  std::vector<std::shared_ptr<TimerChain>> chains =
       m_TimeGraph->GetAllTimerChains();
   for (const std::shared_ptr<TimerChain>& chain : chains) {
     for (const TextBox& box : *chain) {
@@ -115,7 +115,7 @@ void CaptureSerializer::Save(T& a_Archive) {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureSerializer::Load(const std::wstring a_FileName) {
+void CaptureSerializer::Load(const std::wstring& a_FileName) {
   SCOPE_TIMER_LOG(
       absl::StrFormat("Loading capture %s", ws2s(a_FileName).c_str()));
 
@@ -131,7 +131,8 @@ void CaptureSerializer::Load(const std::wstring a_FileName) {
     std::shared_ptr<Module> module = std::make_shared<Module>();
     Capture::GTargetProcess->AddModule(module);
     module->m_Pdb = std::make_shared<Pdb>(ws2s(a_FileName).c_str());
-    std::vector<std::shared_ptr<Function>> functions = module->m_Pdb->GetFunctions();
+    std::vector<std::shared_ptr<Function>> functions =
+        module->m_Pdb->GetFunctions();
     archive(functions);
     module->m_Pdb->ProcessData();
     GPdbDbg = module->m_Pdb;

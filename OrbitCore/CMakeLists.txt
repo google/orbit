@@ -25,8 +25,8 @@ target_sources(
          Hashing.h
          Injection.h
          Introspection.h
+         LinuxAddressInfo.h
          LinuxCallstackEvent.h
-         LinuxSymbol.h
          LinuxTracingSession.h
          Log.h
          LogInterface.h

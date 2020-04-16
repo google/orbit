@@ -9,20 +9,18 @@
 #include "SerializationMacros.h"
 
 //-----------------------------------------------------------------------------
-struct LinuxSymbol {
-  std::string m_Module;
-  std::string m_Name;
-  std::string m_File;
-  uint32_t m_Line = 0;
-  uint64_t m_Address = 0;
+struct LinuxAddressInfo {
+  uint64_t address = 0;
+  std::string module_name;
+  std::string function_name;
+  uint64_t offset_in_function = 0;
 
   ORBIT_SERIALIZABLE;
 };
 
-ORBIT_SERIALIZE(LinuxSymbol, 0) {
-  ORBIT_NVP_VAL(0, m_Module);
-  ORBIT_NVP_VAL(0, m_Name);
-  ORBIT_NVP_VAL(0, m_File);
-  ORBIT_NVP_VAL(0, m_Line);
-  ORBIT_NVP_VAL(0, m_Address);
+ORBIT_SERIALIZE(LinuxAddressInfo, 0) {
+  ORBIT_NVP_VAL(0, module_name);
+  ORBIT_NVP_VAL(0, function_name);
+  ORBIT_NVP_VAL(0, address);
+  ORBIT_NVP_VAL(0, offset_in_function);
 }

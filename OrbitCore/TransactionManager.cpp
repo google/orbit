@@ -49,7 +49,7 @@ std::shared_ptr<Transaction> TransactionManager::PopTransaction() {
 }
 
 uint32_t TransactionManager::EnqueueRequestInternal(MessageType type,
-                                                std::string&& object) {
+                                                    std::string&& object) {
   absl::MutexLock lock(&mutex_);
   auto transaction = std::make_shared<Transaction>();
   transaction->type = type;
