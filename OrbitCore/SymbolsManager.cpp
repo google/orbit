@@ -65,7 +65,7 @@ void SymbolsManager::LoadSymbols(
 
   // Don't request anything from service if we found all modules locally.
   if (remote_module_infos.empty()) {
-    FinalizeTransaction(session);
+    FinalizeTransaction(session.get());
     return;
   }
 
@@ -132,13 +132,13 @@ void SymbolsManager::HandleResponse(const Message& message, uint32_t id) {
   std::shared_ptr<Session> session = id_sessions_[id];
   id_sessions_.erase(id);
   mutex_.Unlock();
-  FinalizeTransaction(session);
+  FinalizeTransaction(session.get());
 }
 
-void SymbolsManager::FinalizeTransaction(std::shared_ptr<Session> session) {
+void SymbolsManager::FinalizeTransaction(Session* session) {
   // Apply session.
   if(session != nullptr) {
-    core_app_->ApplySession(session);
+    core_app_->ApplySession(*session);
   }
 }
 

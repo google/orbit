@@ -55,7 +55,7 @@ class CoreApp {
                          const std::string& /*a_Name*/) {}
   virtual void AddKeyAndString(uint64_t /*key*/, std::string_view /*str*/) {}
   virtual void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) {}
-  virtual void ApplySession(std::shared_ptr<Session>) {};
+  virtual void ApplySession(const Session&) {};
   virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*
   GetRules() {
     return nullptr;

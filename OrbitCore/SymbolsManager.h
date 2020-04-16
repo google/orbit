@@ -27,7 +27,8 @@ class SymbolsManager {
   void LoadSymbols(std::shared_ptr<Session> session,
                    std::shared_ptr<Process> process);
   void LoadSymbols(const std::vector<std::shared_ptr<Module>>& modules,
-                   std::shared_ptr<Process> process, std::shared_ptr<Session> session);
+                   std::shared_ptr<Process> process,
+                   std::shared_ptr<Session> session = nullptr);
 
   SymbolsManager() = delete;
   SymbolsManager(const SymbolsManager&) = delete;
@@ -38,7 +39,7 @@ class SymbolsManager {
 private:
   void HandleRequest(const Message& message);
   void HandleResponse(const Message& message, uint32_t id);
-  void FinalizeTransaction(std::shared_ptr<Session> session);
+  void FinalizeTransaction(Session* session);
   bool SingleThreadRequests() const;
 
   CoreApp* core_app_ = nullptr;
