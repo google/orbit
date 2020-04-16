@@ -62,8 +62,7 @@ bool InitDataSource(IDiaDataSource** a_DiaDataSource) {
     ORBIT_VIZ("CoCreateInstance Failed : ");
     ORBIT_VIZ(dllFullPath);
     ORBIT_VIZ("\n");
-    std::wstring msg = Format(L"HRESULT = %08X\n", hr);
-    ORBIT_VIZ(msg);
+    ORBIT_VIZ(absl::StrFormat("HRESULT = %08x\n", hr));
 
     return false;
   }
@@ -90,9 +89,7 @@ bool DiaManager::LoadDataFromPdb(const wchar_t* a_FileName,
       hr = (*a_DiaDataSource)->loadDataFromPdb(a_FileName);
 
       if (FAILED(hr)) {
-        std::wstring msg =
-            Format(L"loadDataFromPdb failed - HRESULT = %08X\n", hr);
-        ORBIT_VIZ(msg);
+        ORBIT_VIZ(absl::StrFormat("loadDataFromPdb failed - HRESULT = %08X\n", hr));
         return false;
       }
     } else {
@@ -125,8 +122,7 @@ bool DiaManager::LoadDataFromPdb(const wchar_t* a_FileName,
     hr = (*a_DiaDataSource)->openSession(a_Session);
 
     if (FAILED(hr)) {
-      std::wstring msg = Format(L"openSession failed - HRESULT = %08X\n", hr);
-      ORBIT_VIZ(msg);
+      ORBIT_VIZ(absl::StrFormat("openSession failed - HRESULT = %08X\n", hr));
       return false;
     }
 
@@ -134,7 +130,7 @@ bool DiaManager::LoadDataFromPdb(const wchar_t* a_FileName,
     hr = (*a_Session)->get_globalScope(a_GlobalSymbol);
 
     if (hr != S_OK) {
-      ORBIT_VIZ(L"get_globalScope failed\n");
+      ORBIT_VIZ("get_globalScope failed\n");
       return false;
     }
 

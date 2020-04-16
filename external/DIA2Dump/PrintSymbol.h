@@ -88,7 +88,7 @@ struct VizLogger : public OrbitLogger
 {
     void Log( const std::wstring & a_Log ) override
     {
-        ORBIT_PRINTF( a_Log );
+        ORBIT_PRINTF(ws2s(a_Log));
     }
 };
 extern VizLogger GMainLog;
