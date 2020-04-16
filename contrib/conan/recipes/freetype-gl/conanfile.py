@@ -9,10 +9,15 @@ class FreetypeglConan(ConanFile):
     description = "freetype-gl is a small library for displaying Unicode in OpenGL"
     topics = ("freetype", "opengl", "unicode", "fonts")
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False]}
-    default_options = {"shared": False}
+    options = {"shared": [True, False], "fPIC" : [True, False]}
+    default_options = {"shared": False, "fPIC": True}
     generators = "cmake", "cmake_find_package_multi"
     requires = "glew/2.1.0@orbitdeps/stable", "freetype/2.10.0@bincrafters/stable", "zlib/1.2.11@conan/stable"
+
+    def config_options(self):
+        if self.settings.os == "Windows":
+            del self.options.fPIC
+
 
     def source(self):
         self.run("git clone https://github.com/rougier/freetype-gl.git")
