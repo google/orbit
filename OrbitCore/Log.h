@@ -35,12 +35,6 @@ class OrbitLog {
   void Clear() { m_Entries.clear(); }
   std::vector<std::string>& GetEntries() { return m_Entries; }
 
-  template <typename... Args>
-  inline void LOGF(const wchar_t* const _Format, Args&&... args) {
-    std::wstring log = Format(_Format, std::forward<Args>(args)...);
-    Log(log.c_str());
-  }
-
  protected:
   std::vector<std::string> m_Entries;
 };
@@ -53,17 +47,9 @@ class Logger {
     m_Logs[a_Type].Log(a_String);
   }
 
-  void Log(OrbitLog::Type a_Type, const std::wstring& a_String) {
-    Log(a_Type, ws2s(a_String));
-  }
-
   void Logf(OrbitLog::Type a_Type, const std::string& a_String) {
     ScopeLock lock(m_Mutexes[a_Type]);
     m_Logs[a_Type].Logf(a_String);
-  }
-
-  void Logf(OrbitLog::Type a_Type, const std::wstring& a_String) {
-    Logf(a_Type, ws2s(a_String));
   }
 
   void Log(OrbitLog::Type a_Type, const char* a_String) {
@@ -82,13 +68,6 @@ class Logger {
                   const T& a_Value) {
     std::stringstream l_StringStream;
     l_StringStream << a_VarName << " = " << a_Value << std::endl;
-    Log(a_Type, l_StringStream.str().c_str());
-  }
-
-  inline void Log(OrbitLog::Type a_Type, const char* a_VarName,
-                  const std::wstring& a_Value) {
-    std::stringstream l_StringStream;
-    l_StringStream << a_VarName << " = " << ws2s(a_Value) << std::endl;
     Log(a_Type, l_StringStream.str().c_str());
   }
 
