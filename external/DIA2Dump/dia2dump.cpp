@@ -104,11 +104,11 @@ bool LoadDataFromPdb(
 
     if( FAILED( hr ) )
     {
-        GCoreApp->LogMsg( Format( L"CoCreateInstance failed - HRESULT = %08X\n", hr ) );
+        LOGF(L"CoCreateInstance failed - HRESULT = %08X\n", hr);
 
         // try loading dll by hand
         HMODULE msDiaModule = LoadLibrary(L"msdia140.dll");
-        
+
         if( msDiaModule == NULL )
             return false;
 

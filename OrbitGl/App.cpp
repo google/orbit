@@ -872,9 +872,6 @@ void OrbitApp::OnPdbLoaded() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::LogMsg(const std::wstring& a_Msg) { ORBIT_LOG(a_Msg); }
-
-//-----------------------------------------------------------------------------
 void OrbitApp::FireRefreshCallbacks(DataViewType a_Type) {
   for (DataView* panel : m_Panels) {
     if (a_Type == DataViewType::ALL || a_Type == panel->GetType()) {

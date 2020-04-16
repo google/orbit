@@ -67,7 +67,7 @@ void GetTypeInformation( class Type* a_Type, std::shared_ptr<OrbitDiaSymbol> pSy
 
 template<class T> void PrintGeneric( T t ){
   IDiaPropertyStorage* pPropertyStorage;
-  
+
   if(t->QueryInterface( __uuidof(IDiaPropertyStorage), (void **)&pPropertyStorage ) == S_OK){
     PrintPropertyStorage(pPropertyStorage);
     pPropertyStorage->Release();
@@ -88,7 +88,7 @@ struct VizLogger : public OrbitLogger
 {
     void Log( const std::wstring & a_Log ) override
     {
-        ORBIT_PRINTF( a_Log );
+        ORBIT_PRINTF( ws2s(a_Log) );
     }
 };
 extern VizLogger GMainLog;
