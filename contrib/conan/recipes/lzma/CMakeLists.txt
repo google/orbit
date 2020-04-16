@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.12)
 
 project(lzma_sdk C)
 
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(TARGETS)
+
 add_library(lzma_sdk STATIC)
 
 target_include_directories(lzma_sdk PUBLIC lzma/C/)
