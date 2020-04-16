@@ -387,13 +387,14 @@ void ShowSymbolInfo(IMAGEHLP_MODULE64& ModuleInfo) {
 
   // Loaded image name
   if (wcslen(ModuleInfo.LoadedImageName) > 0) {
-    ORBIT_LOG(
-        absl::StrFormat("Loaded image name: %s \n", ws2s(ModuleInfo.LoadedImageName)));
+    ORBIT_LOG(absl::StrFormat("Loaded image name: %s \n",
+                              ws2s(ModuleInfo.LoadedImageName)));
   }
 
   // Loaded PDB name
   if (wcslen(ModuleInfo.LoadedPdbName) > 0) {
-    ORBIT_LOG(absl::StrFormat("PDB file name: %s \n", ws2s(ModuleInfo.LoadedPdbName)));
+    ORBIT_LOG(absl::StrFormat("PDB file name: %s \n",
+                              ws2s(ModuleInfo.LoadedPdbName)));
   }
 
   // Is debug information unmatched ?
@@ -405,26 +406,27 @@ void ShowSymbolInfo(IMAGEHLP_MODULE64& ModuleInfo) {
 
   // Line numbers available ?
   ORBIT_LOG(absl::StrFormat("Line numbers: %s \n", ModuleInfo.LineNumbers
-                                                  ? "Available"
-												  : "Not available"));
+                                                       ? "Available"
+                                                       : "Not available"));
 
   // Global symbols available ?
   ORBIT_LOG(absl::StrFormat("Global symbols: %s \n", ModuleInfo.GlobalSymbols
-                                                    ? "Available"
-                                                    : "Not available" ));
+                                                         ? "Available"
+                                                         : "Not available"));
 
   // Type information available ?
   ORBIT_LOG(absl::StrFormat("Type information: %s \n", ModuleInfo.TypeInfo
-                                                      ? "Available"
-                                                      : "Not available"));
+                                                           ? "Available"
+                                                           : "Not available"));
 
   // Source indexing available ?
   ORBIT_LOG(absl::StrFormat("Source indexing: %s \n",
-                   ModuleInfo.SourceIndexed ? "Yes" : "No"));
+                            ModuleInfo.SourceIndexed ? "Yes" : "No"));
 
   // Public symbols available ?
-  ORBIT_LOG(absl::StrFormat("Public symbols: %s \n",
-                   ModuleInfo.Publics ? "Available" : "Not available"));
+  ORBIT_LOG(absl::StrFormat("Public symbols: %s \n", ModuleInfo.Publics
+                                                         ? "Available"
+                                                         : "Not available"));
 }
 
 //-----------------------------------------------------------------------------

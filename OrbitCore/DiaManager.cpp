@@ -89,7 +89,8 @@ bool DiaManager::LoadDataFromPdb(const wchar_t* a_FileName,
       hr = (*a_DiaDataSource)->loadDataFromPdb(a_FileName);
 
       if (FAILED(hr)) {
-        ORBIT_VIZ(absl::StrFormat("loadDataFromPdb failed - HRESULT = %08X\n", hr));
+        ORBIT_VIZ(
+            absl::StrFormat("loadDataFromPdb failed - HRESULT = %08X\n", hr));
         return false;
       }
     } else {
