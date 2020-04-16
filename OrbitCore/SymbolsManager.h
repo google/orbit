@@ -40,7 +40,6 @@ private:
   void HandleRequest(const Message& message);
   void HandleResponse(const Message& message, uint32_t id);
   void FinalizeTransaction(Session* session);
-  bool SingleThreadRequests() const;
 
   CoreApp* core_app_ = nullptr;
   TransactionManager* transaction_manager_;

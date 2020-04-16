@@ -142,9 +142,4 @@ void SymbolsManager::FinalizeTransaction(Session* session) {
   }
 }
 
-bool SymbolsManager::SingleThreadRequests() const {
-  static const auto thread_id = GetCurrentThreadId();
-  return thread_id == GetCurrentThreadId();
-}
-
 }  // namespace orbit
