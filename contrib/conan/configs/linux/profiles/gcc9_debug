@@ -13,3 +13,5 @@ cmake/3.16.4@
 [env]
 CC=gcc-9
 CXX=g++-9
+CFLAGS= -fno-omit-frame-pointer
+CXXFLAGS= -fno-omit-frame-pointer

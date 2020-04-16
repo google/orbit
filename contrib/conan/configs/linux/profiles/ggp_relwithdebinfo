@@ -15,3 +15,5 @@ cmake/3.16.4@
 ggp_sdk/1.43.0.14282@orbitdeps/stable
 
 [env]
+CFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer
+CXXFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer
