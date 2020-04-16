@@ -1,8 +1,0 @@
-Package: install-signed-packages
-Version: @VERSION@
-Section: development
-Priority: optional
-Architecture: any
-Maintainer: OrbitProfiler Team <orbitprofiler-eng@google.com>
-Description: Allows the installation of signed packages without root permissions
-Installed-Size: `du -ks . | cut -f 1`

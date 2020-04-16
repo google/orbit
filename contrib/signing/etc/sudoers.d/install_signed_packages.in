@@ -1,1 +1,0 @@
-%sudo ALL= NOPASSWD:/usr/sbin/install_signed_package.sh *
