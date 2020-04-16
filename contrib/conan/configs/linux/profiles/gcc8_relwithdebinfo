@@ -11,3 +11,5 @@ build_type=RelWithDebInfo
 [build_requires]
 cmake/3.16.4@
 [env]
+CC=gcc-8
+CXX=g++-8
