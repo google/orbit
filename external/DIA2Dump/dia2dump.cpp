@@ -102,9 +102,8 @@ bool LoadDataFromPdb(
 
     hr = CoCreateInstance( __uuidof( DiaSource ), NULL, CLSCTX_INPROC_SERVER, __uuidof( IDiaDataSource ), (void **)ppSource );
 
-    if( FAILED( hr ) )
-    {
-        GCoreApp->LogMsg( Format( L"CoCreateInstance failed - HRESULT = %08X\n", hr ) );
+    if (FAILED(hr)){
+        ORBIT_LOG(absl::StrFormat("CoCreateInstance failed - HRESULT = %08X\n", hr));
 
         // try loading dll by hand
         HMODULE msDiaModule = LoadLibrary(L"msdia140.dll");

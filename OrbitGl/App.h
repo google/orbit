@@ -54,7 +54,6 @@ class OrbitApp : public CoreApp {
   void ToggleCapture();
   void OnDisconnect();
   void OnPdbLoaded();
-  void LogMsg(const std::wstring& a_Msg) override;
   void SetCallStack(std::shared_ptr<CallStack> a_CallStack);
   void LoadFileMapping();
   void LoadSystrace(const std::string& a_FileName);

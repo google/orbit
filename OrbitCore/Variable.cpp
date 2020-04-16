@@ -156,7 +156,7 @@ void Variable::PrintDetails() {
     std::shared_ptr<OrbitDiaSymbol> diaSymbol = type->GetDiaSymbol();
     parser.PrintTypeInDetail(diaSymbol ? diaSymbol->m_Symbol : nullptr, 0);
     ORBIT_VIZ("\n\nDetails:\n");
-    ORBIT_VIZ(parser.m_Log);
+    ORBIT_VIZ(ws2s(parser.m_Log));
   }
 #endif
 }

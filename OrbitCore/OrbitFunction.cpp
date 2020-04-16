@@ -275,7 +275,7 @@ void Function::Print() {
 
     DiaParser parser;
     parser.PrintFunctionType(diaSymbol->m_Symbol);
-    ORBIT_VIZ(parser.m_Log);
+    ORBIT_VIZ(ws2s(parser.m_Log));
   }
 
   LineInfo lineInfo;
