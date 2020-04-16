@@ -14,10 +14,12 @@ class OrbitConan(ConanFile):
     generators = ["cmake_find_package_multi", "cmake"]
     options = {"system_mesa": [True, False],
                "system_qt": [True, False], "with_gui": [True, False],
-               "debian_packaging": [True, False]}
+               "debian_packaging": [True, False],
+               "fPIC": [True, False]}
     default_options = {"system_mesa": True,
                        "system_qt": True, "with_gui": True,
-                       "debian_packaging": False}
+                       "debian_packaging": False,
+                       "fPIC": True}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "external/*", "LICENSE"
 
@@ -28,6 +30,12 @@ class OrbitConan(ConanFile):
             self.version = buf.getvalue().strip()[1:]
 
         return self.version
+
+
+    def config_options(self):
+        if self.settings.os == "Windows":
+            del self.options.fPIC
+
 
     def requirements(self):
         if self.settings.os != "Windows" and self.options.with_gui and not self.options.system_qt and self.options.system_mesa:
@@ -66,6 +74,10 @@ class OrbitConan(ConanFile):
         if self.options.debian_packaging and (self.settings.get_safe("os.platform") != "GGP" or tools.detected_os() != "Linux"):
             raise ConanInvalidConfiguration(
                 "Debian packaging is only supported for GGP builds!")
+
+        if self.settings.os != "Windows" and not self.options.fPIC:
+            raise ConanInvalidConfiguration("We only support compiling with fPIC enabled!")
+
 
         if self.options.with_gui and self.settings.arch == "x86":
             raise ConanInvalidConfiguration(
