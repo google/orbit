@@ -9,6 +9,8 @@
 #include "OrbitProcess.h"
 #include "OrbitSession.h"
 #include "TransactionManager.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/synchronization/mutex.h"
 
 class CoreApp;
 
@@ -25,7 +27,8 @@ class SymbolsManager {
   void LoadSymbols(std::shared_ptr<Session> session,
                    std::shared_ptr<Process> process);
   void LoadSymbols(const std::vector<std::shared_ptr<Module>>& modules,
-                   std::shared_ptr<Process> process);
+                   std::shared_ptr<Process> process,
+                   std::shared_ptr<Session> session = nullptr);
 
   SymbolsManager() = delete;
   SymbolsManager(const SymbolsManager&) = delete;
@@ -35,14 +38,13 @@ class SymbolsManager {
 
 private:
   void HandleRequest(const Message& message);
-  void HandleResponse(const Message& message);
-  void FinalizeTransaction();
-  bool SingleThreadRequests() const;
+  void HandleResponse(const Message& message, uint32_t id);
+  void FinalizeTransaction(Session* session);
 
   CoreApp* core_app_ = nullptr;
   TransactionManager* transaction_manager_;
-  std::shared_ptr<Session> session_ = nullptr;
-  std::atomic<bool> request_in_flight_ = false;
+  absl::flat_hash_map<uint32_t, std::shared_ptr<Session>> id_sessions_;
+  absl::Mutex mutex_;
 };
 
 }  // namespace orbit

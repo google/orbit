@@ -13,15 +13,16 @@ namespace orbit {
 SymbolsManager::SymbolsManager(CoreApp* core_app) {
   core_app_ = core_app;
   transaction_manager_ = core_app_->GetTransactionManager();
-  auto on_response = [this](const Message& msg) { HandleResponse(msg); };
   auto on_request = [this](const Message& msg) { HandleRequest(msg); };
+  auto on_response = [this](const Message& msg, uint32_t id) {
+    HandleResponse(msg, id);
+  };
   transaction_manager_->RegisterTransactionHandler(
       {on_request, on_response, Msg_DebugSymbols, "Debug Symbols"});
 }
 
 void SymbolsManager::LoadSymbols(std::shared_ptr<Session> session,
                                  std::shared_ptr<Process> process) {
-  session_ = session;
   std::vector<std::shared_ptr<Module>> modules;
   for (auto& pair : session->m_Modules) {
     const std::string& file_name = Path::GetFileName(pair.first);
@@ -30,29 +31,17 @@ void SymbolsManager::LoadSymbols(std::shared_ptr<Session> session,
       modules.emplace_back(module);
     }
   }
-  LoadSymbols(modules, process);
+  LoadSymbols(modules, process, session);
 }
 
 void SymbolsManager::LoadSymbols(
     const std::vector<std::shared_ptr<Module>>& modules,
-    std::shared_ptr<Process> process) {
+    std::shared_ptr<Process> process, std::shared_ptr<Session> session) {
   if (modules.empty()) {
     ERROR("No module to load, cancelling.");
     return;
   }
 
-  // TODO: the only reason "request_in_flight_" is needed is to make sure we
-  // don't override the "sessions_" memeber variable which will be used when
-  // the transaction response arrives.  Implementing transaction IDs will allow
-  // us to keep a map of id-to-session and eliminate the need for this check.
-  // Also, note that LoadSymbols is expected to be called from a single thread.
-  CHECK(SingleThreadRequests());
-  if (request_in_flight_) {
-    ERROR("Module request already in flight, cancelling.");
-    return;
-  }
-
-  request_in_flight_ = true;
   std::vector<ModuleDebugInfo> remote_module_infos;
 
   for (std::shared_ptr<Module> module : modules) {
@@ -76,12 +65,16 @@ void SymbolsManager::LoadSymbols(
 
   // Don't request anything from service if we found all modules locally.
   if (remote_module_infos.empty()) {
-    FinalizeTransaction();
+    FinalizeTransaction(session.get());
     return;
   }
 
   // Send request to service for modules that were not found locally.
-  transaction_manager_->EnqueueRequest(Msg_DebugSymbols, remote_module_infos);
+  uint32_t id = transaction_manager_->EnqueueRequest(Msg_DebugSymbols,
+                                                     remote_module_infos);
+
+  absl::MutexLock lock(&mutex_);
+  id_sessions_[id] = session;
 }
 
 void SymbolsManager::HandleRequest(const Message& message) {
@@ -124,7 +117,7 @@ void SymbolsManager::HandleRequest(const Message& message) {
   transaction_manager_->SendResponse(message.GetType(), module_infos);
 }
 
-void SymbolsManager::HandleResponse(const Message& message) {
+void SymbolsManager::HandleResponse(const Message& message, uint32_t id) {
   CHECK(ConnectionManager::Get().IsClient());
 
   // Deserialize response message.
@@ -134,21 +127,19 @@ void SymbolsManager::HandleResponse(const Message& message) {
   // Notify app of new debug symbols.
   core_app_->OnRemoteModuleDebugInfo(infos);
 
-  FinalizeTransaction();
+  // Finalize transaction.
+  mutex_.Lock();
+  std::shared_ptr<Session> session = id_sessions_[id];
+  id_sessions_.erase(id);
+  mutex_.Unlock();
+  FinalizeTransaction(session.get());
 }
 
-void SymbolsManager::FinalizeTransaction() {
+void SymbolsManager::FinalizeTransaction(Session* session) {
   // Apply session.
-  core_app_->ApplySession(session_);
-
-  // Clear.
-  session_ = nullptr;
-  request_in_flight_ = false;
-}
-
-bool SymbolsManager::SingleThreadRequests() const {
-  static const auto thread_id = GetCurrentThreadId();
-  return thread_id == GetCurrentThreadId();
+  if(session != nullptr) {
+    core_app_->ApplySession(*session);
+  }
 }
 
 }  // namespace orbit

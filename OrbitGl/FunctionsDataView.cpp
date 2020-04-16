@@ -282,9 +282,9 @@ void FunctionsDataView::OnContextMenu(const std::string& a_Action,
 
     GOrbitApp->SendToUiNow(L"output");
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
-    // TODO: does this action work or should we hide it?
+    uint32_t pid = Capture::GTargetProcess->GetID();
     for (Function* function : functions) {
-      function->GetDisassembly();
+      function->GetDisassembly(pid);
     }
   } else if (a_Action == MENU_ACTION_CREATE_RULE) {
     if (functions.size() != 1) {

@@ -17,7 +17,7 @@
   { m_String += s2ws(str); }
 
 //-----------------------------------------------------------------------------
-void Disassembler::LogHex(const unsigned char* str, size_t len) {
+void Disassembler::LogHex(const uint8_t* str, size_t len) {
   const unsigned char* c;
 
   LOGF("%s", "Code: ");
@@ -28,7 +28,7 @@ void Disassembler::LogHex(const unsigned char* str, size_t len) {
 }
 
 //-----------------------------------------------------------------------------
-void Disassembler::Disassemble(const unsigned char* a_MachineCode,
+void Disassembler::Disassemble(const uint8_t* a_MachineCode,
                                size_t a_Size, DWORD64 a_Address,
                                bool a_Is64Bit) {
   std::wstring disAsm;

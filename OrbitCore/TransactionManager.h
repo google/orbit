@@ -41,8 +41,8 @@ class TransactionManager {
   void RegisterTransactionHandler(const TransactionHandler& handler);
 
   template <typename T>
-  void EnqueueRequest(MessageType type, const T& object) {
-    EnqueueRequestInternal(type, SerializeObjectBinary(object));
+  uint32_t EnqueueRequest(MessageType type, const T& object) {
+    return EnqueueRequestInternal(type, SerializeObjectBinary(object));
   }
 
   template <typename T>
@@ -75,7 +75,7 @@ class TransactionManager {
   template <typename T>
   void SendResponse(MessageType type, const T* object) = delete;
 
-  void EnqueueRequestInternal(MessageType type, std::string&& object);
+  uint32_t EnqueueRequestInternal(MessageType type, std::string&& object);
   void InitiateTransaction(std::shared_ptr<Transaction> transaction);
   void SendRequestInternal(MessageType type, const std::string& object);
   void ReceiveRequestInternal(const Message& message);
@@ -100,6 +100,7 @@ class TransactionManager {
   absl::flat_hash_map<MessageType, std::shared_ptr<TransactionHandler>>
       transaction_handlers_;
   mutable absl::Mutex mutex_;
+  uint32_t request_counter_ = 0;
 };
 
 }  // namespace orbit

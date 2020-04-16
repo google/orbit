@@ -251,8 +251,6 @@ const std::string SamplingReportDataView::MENU_ACTION_SELECT = "Hook";
 const std::string SamplingReportDataView::MENU_ACTION_UNSELECT = "Unhook";
 const std::string SamplingReportDataView::MENU_ACTION_MODULES_LOAD =
     "Load Symbols";
-const std::string SamplingReportDataView::MENU_ACTION_DISASSEMBLY =
-    "Go to Disassembly";
 
 //-----------------------------------------------------------------------------
 std::vector<std::string> SamplingReportDataView::GetContextMenu(
@@ -275,7 +273,6 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
   if (enable_load) menu.emplace_back(MENU_ACTION_MODULES_LOAD);
-  Append(menu, {MENU_ACTION_DISASSEMBLY});
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
@@ -298,12 +295,6 @@ void SamplingReportDataView::OnContextMenu(
         GOrbitApp->EnqueueModuleToLoad(module);
       }
       GOrbitApp->LoadModules();
-    }
-  } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
-    // TODO: does this action work or should we hide it?
-    for (int i : a_ItemIndices) {
-      SampledFunction& sampled_function = GetSampledFunction(i);
-      GOrbitApp->GetDisassembly(sampled_function.m_Address, 200, 400);
     }
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);

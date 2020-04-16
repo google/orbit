@@ -25,6 +25,7 @@
 #include "ConnectionManager.h"
 #include "Debugger.h"
 #include "DiaManager.h"
+#include "Disassembler.h"
 #include "EventTracer.h"
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
@@ -69,10 +70,6 @@
 
 #define GLUT_DISABLE_ATEXIT_HACK
 #include "GL/freeglut.h"
-
-#ifdef _WIN32
-#include "Disassembler.h"
-#endif
 
 #if __linux__
 #include <OrbitLinuxTracing/OrbitTracing.h>
@@ -497,21 +494,14 @@ void OrbitApp::RefreshWatch() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::Disassemble(const std::string& a_FunctionName,
-                           DWORD64 a_VirtualAddress, const char* a_MachineCode,
-                           size_t a_Size) {
-#ifdef _WIN32
+                           uint64_t a_VirtualAddress,
+                           const uint8_t* a_MachineCode, size_t a_Size) {
   Disassembler disasm;
   disasm.LOGF(absl::StrFormat("asm: /* %s */\n", a_FunctionName.c_str()));
   const unsigned char* code = (const unsigned char*)a_MachineCode;
   disasm.Disassemble(code, a_Size, a_VirtualAddress,
                      Capture::GTargetProcess->GetIs64Bit());
   SendToUiAsync(disasm.GetResult());
-#else
-  UNUSED(a_FunctionName);
-  UNUSED(a_VirtualAddress);
-  UNUSED(a_MachineCode);
-  UNUSED(a_Size);
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -561,9 +551,7 @@ void OrbitApp::MainTick() {
 
   GMainTimer.Reset();
   Capture::Update();
-#ifdef WIN32
   GTcpServer->MainThreadTick();
-#endif
 
   if (!Capture::GProcessToInject.empty()) {
     std::cout << "Injecting into " << Capture::GTargetProcess->GetFullName()
@@ -707,27 +695,6 @@ void OrbitApp::GoToCallstack() { SendToUiNow(L"gotocallstack"); }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::GoToCapture() { SendToUiNow(L"gotocapture"); }
-
-//-----------------------------------------------------------------------------
-void OrbitApp::GetDisassembly(DWORD64 a_Address, DWORD a_NumBytesBelow,
-                              DWORD a_NumBytes) {
-  std::shared_ptr<Module> module =
-      Capture::GTargetProcess->GetModuleFromAddress(a_Address);
-  if (module && module->m_Pdb && Capture::Connect()) {
-    Message msg(Msg_GetData);
-    ULONG64 address = (ULONG64)a_Address - a_NumBytesBelow;
-    if (address < module->m_AddressStart) address = module->m_AddressStart;
-
-    DWORD64 endAddress = address + a_NumBytes;
-    if (endAddress > module->m_AddressEnd) endAddress = module->m_AddressEnd;
-
-    msg.m_Header.m_DataTransferHeader.m_Address = address;
-    msg.m_Header.m_DataTransferHeader.m_Type = DataTransferHeader::Code;
-
-    msg.m_Size = (int)a_NumBytes;
-    GTcpServer->Send(msg);
-  }
-}
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnOpenPdb(const std::string& file_name) {
@@ -1011,8 +978,7 @@ void OrbitApp::LoadModules() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules() {
-  GetSymbolsManager()->LoadSymbols(m_ModulesToLoad,
-                                           Capture::GTargetProcess);
+  GetSymbolsManager()->LoadSymbols(m_ModulesToLoad, Capture::GTargetProcess);
   m_ModulesToLoad.clear();
   GOrbitApp->FireRefreshCallbacks();
 }
@@ -1089,17 +1055,15 @@ void OrbitApp::OnRemoteProcess(const Message& a_Message) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::ApplySession(std::shared_ptr<Session> session) {
-  if (session != nullptr) {
-    for (auto& pair : session->m_Modules) {
-      const std::string& name = pair.first;
-      std::shared_ptr<Module> module =
-          Capture::GTargetProcess->GetModuleFromName(Path::GetFileName(name));
-      if (module && module->m_Pdb) module->m_Pdb->ApplyPresets(*session);
-    }
-
-    FireRefreshCallbacks();
+void OrbitApp::ApplySession(const Session& session) {
+  for (const auto& pair : session.m_Modules) {
+    const std::string& name = pair.first;
+    std::shared_ptr<Module> module =
+        Capture::GTargetProcess->GetModuleFromName(Path::GetFileName(name));
+    if (module && module->m_Pdb) module->m_Pdb->ApplyPresets(session);
   }
+
+  FireRefreshCallbacks();
 }
 
 //-----------------------------------------------------------------------------
