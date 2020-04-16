@@ -36,7 +36,7 @@ namespace orbit {
 
 class TransactionManager {
  public:
-  TransactionManager(TcpClient* client,TcpServer* server);
+  TransactionManager(TcpClient* client, TcpServer* server);
 
   void RegisterTransactionHandler(const TransactionHandler& handler);
 

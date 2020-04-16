@@ -95,7 +95,7 @@ void ProcessList::Clear() {
 void ProcessList::Refresh() {
 #ifdef _WIN32
   processes_.clear();
-  std::unordered_map<uint32_t, std::shared_ptr<Process> > previousProcessesMap =
+  std::unordered_map<uint32_t, std::shared_ptr<Process>> previousProcessesMap =
       processes_map_;
   processes_map_.clear();
 
@@ -258,9 +258,7 @@ const std::vector<std::shared_ptr<Process>>& ProcessList::GetProcesses() const {
   return processes_;
 }
 
-size_t ProcessList::Size() const {
-  return processes_.size();
-}
+size_t ProcessList::Size() const { return processes_.size(); }
 
 void ProcessList::AddProcess(std::shared_ptr<Process> process) {
   uint32_t pid = process->GetID();

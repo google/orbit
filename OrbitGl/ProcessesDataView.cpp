@@ -190,8 +190,7 @@ void ProcessesDataView::Refresh() {
 
   if (m_RemoteProcess) {
     std::shared_ptr<Process> CurrentRemoteProcess =
-        m_ProcessList.Size() == 1 ? m_ProcessList.GetProcesses()[0]
-                                  : nullptr;
+        m_ProcessList.Size() == 1 ? m_ProcessList.GetProcesses()[0] : nullptr;
 
     if (m_RemoteProcess != CurrentRemoteProcess) {
       m_ProcessList.Clear();

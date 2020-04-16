@@ -36,7 +36,7 @@ class SymbolsManager {
   SymbolsManager(SymbolsManager&&) = delete;
   SymbolsManager& operator=(SymbolsManager&&) = delete;
 
-private:
+ private:
   void HandleRequest(const Message& message);
   void HandleResponse(const Message& message, uint32_t id);
   void FinalizeTransaction(Session* session);

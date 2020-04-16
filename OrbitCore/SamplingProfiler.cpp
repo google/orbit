@@ -437,8 +437,7 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
   } else
 #endif
   {
-    std::shared_ptr<LinuxSymbol> symbol =
-        m_Process->LinuxSymbolFromAddress(a_Address);
+    LinuxAddressInfo* address_info = m_Process->GetLinuxAddressInfo(a_Address);
 
     Function* function = m_Process->GetFunctionFromAddress(a_Address, false);
 
@@ -446,45 +445,36 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
     // Windows code in the if branch, symbol_info->Address already contains the
     // function's start address, but it's not the case here.) Use the Function
     // returned by Process::GetFunctionFromAddress, and when this fails (e.g.,
-    // the module containing the function has not been loaded) exploit (for now)
-    // the fact that we are sending the name of the symbol in the format
-    // <function_name>+0x<offset>.
+    // the module containing the function has not been loaded) use (for now)
+    // the LinuxAddressInfo that is collected for every address in a callstack.
     // SamplingProfiler relies heavily on the association between address and
     // function address held by m_ExactAddressToFunctionAddress, otherwise each
     // address is considered a different function.
-    uint64_t functionAddress = a_Address;
-
+    uint64_t function_address;
     if (function != nullptr) {
-      functionAddress = function->GetVirtualAddress();
-    } else if (symbol != nullptr &&
-               symbol->m_Name.find("+0x") != std::string::npos) {
-      std::string offsetStr =
-          symbol->m_Name.substr(symbol->m_Name.find("+0x") + 1);
-      uint64_t offset = strtoull(offsetStr.c_str(), nullptr, 16);
-      functionAddress -= offset;
+      function_address = function->GetVirtualAddress();
+    } else if (address_info != nullptr) {
+      function_address = a_Address - address_info->offset_in_function;
+    } else {
+      function_address = a_Address;
     }
-    m_ExactAddressToFunctionAddress[a_Address] = functionAddress;
+    m_ExactAddressToFunctionAddress[a_Address] = function_address;
 
-    std::string addressName = "???";
-    if (symbol == nullptr) {
+    std::string function_name = "???";
+    if (address_info == nullptr) {
       if (function != nullptr) {
-        addressName = function->PrettyName();
+        function_name = function->PrettyName();
       }
-    } else if (Contains(symbol->m_Name, "[unknown]")) {
+    } else if (Contains(address_info->function_name, "[unknown]")) {
       if (function != nullptr) {
-        addressName = function->PrettyName();
-        symbol->m_Name = function->PrettyName();
+        function_name = function->PrettyName();
+        address_info->function_name = function->PrettyName();
       }
     } else {
-      addressName = symbol->m_Name;
+      function_name = address_info->function_name;
     }
-    m_AddressToName[a_Address] = addressName;
-
-    std::string functionName = addressName;
-    if (functionName.find("+0x") != std::string::npos) {
-      functionName = functionName.substr(0, functionName.find("+0x"));
-    }
-    m_AddressToName[functionAddress] = functionName;
+    m_AddressToName[a_Address] = function_name;
+    m_AddressToName[function_address] = function_name;
   }
 }
 

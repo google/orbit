@@ -137,7 +137,7 @@ void SymbolsManager::HandleResponse(const Message& message, uint32_t id) {
 
 void SymbolsManager::FinalizeTransaction(Session* session) {
   // Apply session.
-  if(session != nullptr) {
+  if (session != nullptr) {
     core_app_->ApplySession(*session);
   }
 }

@@ -299,9 +299,9 @@ std::shared_ptr<Module> Process::GetModuleFromName(const std::string& a_Name) {
 }
 
 //-----------------------------------------------------------------------------
-void Process::AddSymbol(uint64_t a_Address,
-                        std::shared_ptr<LinuxSymbol> a_Symbol) {
-  m_Symbols[a_Address] = std::move(a_Symbol);
+void Process::AddAddressInfo(LinuxAddressInfo address_info) {
+  uint64_t address = address_info.address;
+  m_AddressInfos[address] = std::move(address_info);
 }
 
 #ifdef _WIN32

@@ -29,9 +29,9 @@ void LinuxTracingHandler::Start() {
   selected_functions.reserve(selected_function_map_->size());
   for (const auto& pair : *selected_function_map_) {
     const auto& function = pair.second;
-    selected_functions.emplace_back(
-        function->GetLoadedModuleName(),
-        function->Offset(), function->GetVirtualAddress());
+    selected_functions.emplace_back(function->GetLoadedModuleName(),
+                                    function->Offset(),
+                                    function->GetVirtualAddress());
   }
 
   tracer_ = std::make_unique<LinuxTracing::Tracer>(pid, sampling_frequency,
@@ -114,21 +114,19 @@ void LinuxTracingHandler::OnCallstack(
     uint64_t address = frame.GetPc();
 
     if (!frame.GetFunctionName().empty() &&
-        !target_process_->HasSymbol(address)) {
-      std::string symbol_name =
-          absl::StrFormat("%s+%#lx", llvm::demangle(frame.GetFunctionName()),
-                          frame.GetFunctionOffset());
-      std::shared_ptr<LinuxSymbol> symbol = std::make_shared<LinuxSymbol>();
-      symbol->m_Module = frame.GetMapName();
-      symbol->m_Name = symbol_name;
-      symbol->m_Address = address;
+        !target_process_->HasAddressInfo(address)) {
+      LinuxAddressInfo address_info;
+      address_info.address = address;
+      address_info.module_name = frame.GetMapName();
+      address_info.function_name = llvm::demangle(frame.GetFunctionName());
+      address_info.offset_in_function = frame.GetFunctionOffset();
 
       // TODO: Move this out of here...
-      std::string message_data = SerializeObjectBinary(*symbol);
-      GTcpServer->Send(Msg_RemoteSymbol, message_data.c_str(),
+      std::string message_data = SerializeObjectBinary(address_info);
+      GTcpServer->Send(Msg_RemoteLinuxAddressInfo, message_data.c_str(),
                        message_data.size());
 
-      target_process_->AddSymbol(address, symbol);
+      target_process_->AddAddressInfo(std::move(address_info));
     }
 
     cs.m_Data.push_back(address);

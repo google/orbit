@@ -11,7 +11,7 @@
 
 #include "BaseTypes.h"
 #include "DiaManager.h"
-#include "LinuxSymbol.h"
+#include "LinuxAddressInfo.h"
 #include "ScopeTimer.h"
 #include "SerializationMacros.h"
 #include "Threading.h"
@@ -66,10 +66,10 @@ class Process {
   static bool SetPrivilege(LPCTSTR a_Name, bool a_Enable);
 #endif
 
-  std::map<uint64_t, std::shared_ptr<Module> >& GetModules() {
+  std::map<uint64_t, std::shared_ptr<Module>>& GetModules() {
     return m_Modules;
   }
-  std::map<std::string, std::shared_ptr<Module> >& GetNameToModulesMap() {
+  std::map<std::string, std::shared_ptr<Module>>& GetNameToModulesMap() {
     return m_NameToModuleMap;
   }
   std::shared_ptr<Module> FindModule(const std::string& a_ModuleName);
@@ -92,12 +92,16 @@ class Process {
 #ifdef _WIN32
   std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress(DWORD64 a_Address);
 #endif
-  std::shared_ptr<LinuxSymbol> LinuxSymbolFromAddress(uint64_t a_Address) {
-    return m_Symbols[a_Address];
+  LinuxAddressInfo* GetLinuxAddressInfo(uint64_t a_Address) {
+    if (m_AddressInfos.contains(a_Address)) {
+      return &m_AddressInfos.at(a_Address);
+    } else {
+      return nullptr;
+    }
   }
-  void AddSymbol(uint64_t a_Address, std::shared_ptr<LinuxSymbol> a_Symbol);
-  bool HasSymbol(uint64_t a_Address) const {
-    return m_Symbols.count(a_Address) > 0;
+  void AddAddressInfo(LinuxAddressInfo address_info);
+  bool HasAddressInfo(uint64_t address) const {
+    return m_AddressInfos.contains(address);
   }
 
   bool LineInfoFromAddress(DWORD64 a_Address, struct LineInfo& o_LineInfo);
@@ -114,12 +118,12 @@ class Process {
 
   std::vector<Type*>& GetTypes() { return m_Types; }
   std::vector<Variable*>& GetGlobals() { return m_Globals; }
-  std::vector<std::shared_ptr<Thread> >& GetThreads() { return m_Threads; }
+  std::vector<std::shared_ptr<Thread>>& GetThreads() { return m_Threads; }
 
   void AddWatchedVariable(std::shared_ptr<Variable> a_Variable) {
     m_WatchedVariables.push_back(a_Variable);
   }
-  const std::vector<std::shared_ptr<Variable> >& GetWatchedVariables() {
+  const std::vector<std::shared_ptr<Variable>>& GetWatchedVariables() {
     return m_WatchedVariables;
   }
   void RefreshWatchedVariables();
@@ -157,19 +161,19 @@ class Process {
   bool m_IsRemote;
   Mutex m_DataMutex;
 
-  std::map<uint64_t, std::shared_ptr<Module> > m_Modules;
-  std::map<std::string, std::shared_ptr<Module> > m_NameToModuleMap;
-  std::vector<std::shared_ptr<Thread> > m_Threads;
+  std::map<uint64_t, std::shared_ptr<Module>> m_Modules;
+  std::map<std::string, std::shared_ptr<Module>> m_NameToModuleMap;
+  std::vector<std::shared_ptr<Thread>> m_Threads;
   std::unordered_set<uint32_t> m_ThreadIds;
   std::map<uint32_t, std::string> m_ThreadNames;
 
-  absl::flat_hash_map<uint64_t, std::shared_ptr<LinuxSymbol> > m_Symbols;
+  absl::flat_hash_map<uint64_t, LinuxAddressInfo> m_AddressInfos;
 
   // Transients
   std::vector<std::shared_ptr<Function>> m_Functions;
   std::vector<Type*> m_Types;
   std::vector<Variable*> m_Globals;
-  std::vector<std::shared_ptr<Variable> > m_WatchedVariables;
+  std::vector<std::shared_ptr<Variable>> m_WatchedVariables;
 
   std::unordered_set<uint64_t> m_UniqueTypeHash;
 

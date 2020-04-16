@@ -124,7 +124,7 @@ class Pdb {
   bool m_LoadedFromCache;
   std::vector<Variable> m_WatchedVariables;
   std::set<std::string> m_ArgumentRegisters;
-  std::map<std::string, std::vector<std::string> > m_RegFunctionsMap;
+  std::map<std::string, std::vector<std::string>> m_RegFunctionsMap;
 
   // Data
   std::string m_Name;
@@ -178,7 +178,9 @@ class Pdb {
   const std::string& GetName() const { return m_Name; }
   const std::string& GetFileName() const { return m_FileName; }
   const std::string& GetLoadedModuleName() const { return m_LoadedModuleName; }
-  const std::vector<std::shared_ptr<Function>>& GetFunctions() { return functions_; }
+  const std::vector<std::shared_ptr<Function>>& GetFunctions() {
+    return functions_;
+  }
   void AddFunction(const std::shared_ptr<Function>& function);
   std::vector<Type>& GetTypes() { return m_Types; }
   std::vector<Variable>& GetGlobals() { return m_Globals; }
@@ -236,7 +238,7 @@ class Pdb {
   float m_LastLoadTime = 0;
   std::vector<Variable> m_WatchedVariables;
   std::set<std::string> m_ArgumentRegisters;
-  std::map<std::string, std::vector<std::string> > m_RegFunctionsMap;
+  std::map<std::string, std::vector<std::string>> m_RegFunctionsMap;
 
   // Data
   std::string m_Name;              // name of the file containing the symbols

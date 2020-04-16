@@ -21,9 +21,7 @@ class OrbitLog {
  public:
   enum Type { Global, Debug, Pdb, Viz, NumLogTypes };
 
-  void Log(const std::string& a_String) {
-    m_Entries.push_back(a_String);
-  }
+  void Log(const std::string& a_String) { m_Entries.push_back(a_String); }
   void Log(const char* a_String) { m_Entries.emplace_back(a_String); }
   void Log(const wchar_t* a_String) { Log(ws2s(a_String)); }
   void Logf(const std::string& a_String) {

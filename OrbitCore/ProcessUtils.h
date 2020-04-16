@@ -32,10 +32,10 @@ class ProcessList {
   void AddProcess(std::shared_ptr<Process> process);
 
   ORBIT_SERIALIZABLE;
+
  private:
   std::vector<std::shared_ptr<Process>> processes_;
   std::unordered_map<uint32_t, std::shared_ptr<Process>> processes_map_;
-
 };
 
 #endif  // ORBIT_CORE_PROCESS_UTILS_H_
