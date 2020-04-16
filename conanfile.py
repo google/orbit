@@ -147,13 +147,6 @@ chmod -v 4775 /usr/bin/OrbitService
             self.run("dpkg --contents {}.deb".format(basedir))
             shutil.rmtree(basedir)
 
-            basedir = "{}/install-signed-package-{}".format(self.package_folder, self._version())
-            self.run("cmake -D DESTDIR=\"{0}\" -D SRCDIR=\"{1}/contrib/signing\" -D VERSION=\"{2}\" -P \"{1}/contrib/signing/gen.cmake\"".format(basedir, self.source_folder, self._version()))
-            self.run("chmod g-s {}/DEBIAN".format(basedir))
-            self.run("chmod g-s {}/".format(basedir))
-            self.run("dpkg-deb -b --root-owner-group {}".format(basedir))
-            self.run("dpkg --contents {}.deb".format(basedir))
-
         self.copy("*", src="bin/dri", dst="bin/dri", symlinks=True)
         self.copy("*", src="bin/fonts", dst="bin/fonts", symlinks=True)
         self.copy("*", src="bin/shaders", dst="bin/shaders", symlinks=True)
