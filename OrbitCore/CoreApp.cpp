@@ -41,7 +41,7 @@ void CoreApp::SetupMemoryTransaction() {
     uint64_t address = std::get<1>(pid_address_size);
     uint64_t size = std::get<2>(pid_address_size);
 
-    // read target process memory
+    // Read target process memory.
     std::vector<uint8_t> bytes(size);
     uint64_t num_bytes_read = 0;
     if (!ReadProcessMemory(pid, address, bytes.data(), size, &num_bytes_read)) {
