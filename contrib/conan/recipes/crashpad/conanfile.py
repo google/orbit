@@ -13,8 +13,8 @@ class CrashpadConan(ConanFile):
     url = "https://github.com/bincrafters/conan-crashpad"
     topics = ("conan", "crash-reporting", "logging", "minidump", "crash")
     settings = "os", "compiler", "build_type", "arch"
-    options = {'linktime_optimization': [True, False]}
-    default_options = {"linktime_optimization": False}
+    options = {'linktime_optimization': [True, False], 'fPIC': [True, False]}
+    default_options = {"linktime_optimization": False, 'fPIC': True}
     exports = [ "patches/*", "LICENSE.md" ]
     short_paths = True
 
@@ -53,10 +53,17 @@ class CrashpadConan(ConanFile):
         }]
         return "solutions=%s" % self._mangle_spec_for_gclient(solutions)
 
+    def config_options(self):
+        if self.settings.os == "Windows":
+            del self.options.fPIC
+
     def configure(self):
         # It's not a C project, but libcxx is hardcoded in the project
         del self.settings.compiler.libcxx
         del self.settings.compiler.cppstd
+
+        if self.settings.os != "Windows" and not self.options.fPIC:
+            raise ConanInvalidConfiguration("We only support compiling with fPIC enabled!")
 
     def source(self):
         self.run("gclient config --spec=\"%s\"" % self._make_spec(), run_environment=True)
