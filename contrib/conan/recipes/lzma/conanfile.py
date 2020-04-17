@@ -1,9 +1,10 @@
 from conans import ConanFile, CMake, tools
+import os
 
 
 class LzmasdkConan(ConanFile):
     name = "lzma_sdk"
-    version = "cb0b018"
+    version = "19.00"
     license = "MIT"
     author = "Henning Becker <henning.becker@gmail.com>"
     homepage = "https://www.7-zip.org/sdk.html"
@@ -13,15 +14,18 @@ class LzmasdkConan(ConanFile):
     exports_sources = "CMakeLists.txt"
     options = {"fPIC" : [True, False]}
     default_options = {"fPIC": True}
+    build_requires = "cmake/[>3.15]"
 
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
     def source(self):
-        self.run("git clone https://android.googlesource.com/platform/external/lzma")
-        self.run("git checkout --detach {}".format(self.version), cwd="lzma/")
-
+        tools.download("https://www.7-zip.org/a/lzma1900.7z", sha256='00f569e624b3d9ed89cf8d40136662c4c5207eaceb92a70b1044c77f84234bad', filename='lzma.7z')
+        os.mkdir("lzma")
+        with tools.chdir("./lzma/"):
+            self.run("cmake -E tar x ../lzma.7z")
+        os.remove("lzma.7z")
 
     def build(self):
         cmake = CMake(self)
