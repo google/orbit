@@ -690,7 +690,7 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
                 textBox.SetText(text);
               } else if (timer.m_Type == Timer::GPU_ACTIVITY) {
                 std::string text = absl::StrFormat(
-                    "%s; submitter tid: %d  %s",
+                    "%s; submitter: %d  %s",
                     string_manager_->Get(timer.m_UserData[0]).value_or(""),
                     timer.m_SubmitTID,
                     time.c_str());
