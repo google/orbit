@@ -11,8 +11,8 @@ class OrbitVisualizer : public QMainWindow {
   Q_OBJECT
 
  public:
-  explicit OrbitVisualizer(QWidget* parent = 0);
-  ~OrbitVisualizer();
+  explicit OrbitVisualizer(QWidget* parent = nullptr);
+  ~OrbitVisualizer() override;
 
   void Initialize(class OrbitMainWindow* a_MainWindow);
 

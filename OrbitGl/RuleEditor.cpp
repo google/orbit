@@ -598,7 +598,7 @@ void RuleEditor::OnReceiveMessage(const Message& a_Message) {
 }
 
 //-----------------------------------------------------------------------------
-void RuleEditor::ProcessVariable(const std::shared_ptr<Variable> a_Variable,
+void RuleEditor::ProcessVariable(const std::shared_ptr<Variable>& a_Variable,
                                  char* a_Data) {
   if (a_Variable->m_Size == 4) {
     GCardContainer.Update(a_Variable->m_Name, *((float*)a_Data));

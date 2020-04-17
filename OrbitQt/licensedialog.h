@@ -11,8 +11,8 @@ class LicenseDialog : public QDialog {
   Q_OBJECT
 
  public:
-  explicit LicenseDialog(QWidget* parent = 0);
-  ~LicenseDialog();
+  explicit LicenseDialog(QWidget* parent = nullptr);
+  ~LicenseDialog() override;
 
   std::wstring GetLicense();
 

@@ -6,7 +6,7 @@
 class OrbitTreeItem {
  public:
   explicit OrbitTreeItem(const QList<QVariant>& data,
-                         OrbitTreeItem* parentItem = 0);
+                         OrbitTreeItem* parentItem = nullptr);
   ~OrbitTreeItem();
 
   void appendChild(OrbitTreeItem* child);

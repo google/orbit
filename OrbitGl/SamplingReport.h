@@ -9,17 +9,18 @@
 #include <utility>
 #include <vector>
 
-//-----------------------------------------------------------------------------
+#include "SamplingProfiler.h"
+#include "SamplingReportDataView.h"
+
 class SamplingReport {
  public:
   explicit SamplingReport(
       std::shared_ptr<class SamplingProfiler> a_SamplingProfiler);
 
   void FillReport();
-  std::shared_ptr<class SamplingProfiler> GetProfiler() const {
-    return m_Profiler;
-  }
-  const std::vector<std::shared_ptr<class DataView> >& GetThreadReports() {
+  std::shared_ptr<SamplingProfiler> GetProfiler() const { return m_Profiler; }
+  const std::vector<std::shared_ptr<SamplingReportDataView>>&
+  GetThreadReports() {
     return m_ThreadReports;
   }
   void SetCallstackDataView(class CallStackDataView* a_DataView) {
@@ -39,10 +40,10 @@ class SamplingReport {
 
  protected:
   std::shared_ptr<class SamplingProfiler> m_Profiler;
-  std::vector<std::shared_ptr<class DataView> > m_ThreadReports;
+  std::vector<std::shared_ptr<SamplingReportDataView>> m_ThreadReports;
   CallStackDataView* m_CallstackDataView;
 
-  unsigned long long m_SelectedAddress;
+  uint64_t m_SelectedAddress;
   std::shared_ptr<struct SortedCallstackReport> m_SelectedSortedCallstackReport;
   int m_SelectedAddressCallstackIndex;
   std::function<void()> m_UiRefreshFunc;

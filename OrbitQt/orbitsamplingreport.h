@@ -14,8 +14,8 @@ class OrbitSamplingReport : public QWidget {
   Q_OBJECT
 
  public:
-  explicit OrbitSamplingReport(QWidget* parent = 0);
-  ~OrbitSamplingReport();
+  explicit OrbitSamplingReport(QWidget* parent = nullptr);
+  ~OrbitSamplingReport() override;
 
   void Initialize(std::shared_ptr<class SamplingReport> a_Report);
 

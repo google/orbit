@@ -9,7 +9,6 @@
 #include "Utils.h"
 #include "absl/strings/str_format.h"
 
-//-----------------------------------------------------------------------------
 class Disassembler {
  public:
   void Disassemble(const uint8_t* machine_code, size_t size,

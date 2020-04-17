@@ -10,7 +10,6 @@
 
 struct CallStack;
 
-//-----------------------------------------------------------------------------
 class CallStackDataView : public FunctionsDataView {
  public:
   CallStackDataView();

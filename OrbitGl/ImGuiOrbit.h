@@ -42,7 +42,7 @@ void SetupImGuiStyle(bool bStyleDark_, float alpha_);
 extern ImFont* GOrbitImguiFont;
 
 struct ScopeImguiContext {
-  ScopeImguiContext(ImGuiContext* a_State) : m_ImGuiContext(nullptr) {
+  explicit ScopeImguiContext(ImGuiContext* a_State) : m_ImGuiContext(nullptr) {
     ImGuiContext* state = (ImGuiContext*)ImGui::GetCurrentContext();
     if (state != a_State) {
       m_ImGuiContext = state;
@@ -84,7 +84,7 @@ struct DebugWindow {
     // ScrollToBottom = true;
   }
 
-  void Draw(const char* title, bool* p_opened = NULL) {
+  void Draw(const char* title, bool* p_opened = nullptr) {
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImGui::Begin(title, p_opened);
     if (ImGui::Button("Clear")) Clear();
@@ -100,13 +100,13 @@ struct DebugWindow {
     if (Filter.IsActive()) {
       const char* buf_begin = Buf.begin();
       const char* line = buf_begin;
-      for (int line_no = 0; line != NULL; line_no++) {
+      for (int line_no = 0; line != nullptr; line_no++) {
         const char* line_end = (line_no < LineOffsets.Size)
                                    ? buf_begin + LineOffsets[line_no]
-                                   : NULL;
+                                   : nullptr;
         if (Filter.PassFilter(line, line_end))
           ImGui::TextUnformatted(line, line_end);
-        line = line_end && line_end[1] ? line_end + 1 : NULL;
+        line = line_end && line_end[1] ? line_end + 1 : nullptr;
       }
     } else {
       ImGui::TextUnformatted(Buf.begin());
@@ -139,7 +139,7 @@ class LogWindow {
   bool m_Open = false;
 
   void Draw(const char* title, const std::vector<std::string>& lines,
-            bool* p_opened = NULL) {
+            bool* p_opened = nullptr) {
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
     ImGui::Begin(title, p_opened);
 
@@ -204,7 +204,7 @@ struct VizWindow {
     // WindowFlags |= ImGuiWindowFlags_MenuBar;
   }
 
-  void Draw(const char* title, bool* p_opened = NULL,
+  void Draw(const char* title, bool* p_opened = nullptr,
             ImVec2* a_Size = nullptr) {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 
@@ -234,13 +234,13 @@ struct VizWindow {
     if (Filter.IsActive()) {
       const char* buf_begin = Buf.begin();
       const char* line = buf_begin;
-      for (int line_no = 0; line != NULL; line_no++) {
+      for (int line_no = 0; line != nullptr; line_no++) {
         const char* line_end = (line_no < LineOffsets.Size)
                                    ? buf_begin + LineOffsets[line_no]
-                                   : NULL;
+                                   : nullptr;
         if (Filter.PassFilter(line, line_end))
           ImGui::TextUnformatted(line, line_end);
-        line = line_end && line_end[1] ? line_end + 1 : NULL;
+        line = line_end && line_end[1] ? line_end + 1 : nullptr;
       }
     } else {
       ImGui::TextUnformatted(Buf.begin());
@@ -268,5 +268,6 @@ struct OutputWindow {
   }
   void AddLine(const std::string& a_String);
   void AddLog(const char* fmt, ...);
-  void Draw(const char* title, bool* p_opened = NULL, ImVec2* a_Size = nullptr);
+  void Draw(const char* title, bool* p_opened = nullptr,
+            ImVec2* a_Size = nullptr);
 };

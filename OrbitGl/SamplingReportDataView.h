@@ -19,7 +19,7 @@ class SamplingReportDataView : public DataView {
   std::vector<std::string> GetContextMenu(
       int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
   std::string GetValue(int a_Row, int a_Column) override;
-  const std::string& GetName() override { return m_Name; }
+  const std::string& GetName() { return m_Name; }
 
   void OnFilter(const std::string& a_Filter) override;
   void OnSort(int a_Column, std::optional<SortingOrder> a_NewOrder) override;

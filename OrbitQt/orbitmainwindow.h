@@ -18,8 +18,8 @@ class OrbitMainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
-  explicit OrbitMainWindow(QApplication* a_App, QWidget* parent = 0);
-  ~OrbitMainWindow();
+  explicit OrbitMainWindow(QApplication* a_App, QWidget* parent = nullptr);
+  ~OrbitMainWindow() override;
 
   void RegisterGlWidget(class OrbitGLWidget* a_GlWidget) {
     m_GlWidgets.push_back(a_GlWidget);

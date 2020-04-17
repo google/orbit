@@ -7,13 +7,12 @@
 #include <QFontDatabase>
 #include <QStyleFactory>
 
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
-
 #include "../OrbitGl/App.h"
 #include "CrashHandler.h"
 #include "Path.h"
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
 #include "orbitmainwindow.h"
 
 // TODO: Remove this flag once we have a dialog with user

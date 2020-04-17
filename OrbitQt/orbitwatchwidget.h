@@ -18,8 +18,8 @@ class OrbitWatchWidget : public QWidget {
   Q_OBJECT
 
  public:
-  explicit OrbitWatchWidget(QWidget* parent = 0);
-  ~OrbitWatchWidget();
+  explicit OrbitWatchWidget(QWidget* parent = nullptr);
+  ~OrbitWatchWidget() override;
 
   void SetupPropertyBrowser();
   void AddToWatch(const Variable* a_Variable);
