@@ -169,5 +169,6 @@ std::vector<std::shared_ptr<TimerChain>> ThreadTrack::GetAllChains() const {
 
 //-----------------------------------------------------------------------------
 void ThreadTrack::SetEventTrackColor(Color color) {
+  ScopeLock lock(m_Mutex);
   m_EventTrack->SetColor(color);
 }

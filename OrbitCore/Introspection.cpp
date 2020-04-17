@@ -50,9 +50,9 @@ void Handler::End() {
   scopes.pop_back();
 }
 
-void Handler::Track(const char* name, int) {}
+void Handler::Track(const char*, int) {}
 
-void Handler::Track(const char* name, float) {}
+void Handler::Track(const char*, float) {}
 
 }  // namespace introspection
 }  // namespace orbit
