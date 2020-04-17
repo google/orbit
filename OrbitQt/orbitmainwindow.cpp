@@ -382,15 +382,6 @@ void OrbitMainWindow::OnReceiveMessage(const std::wstring& a_Message) {
     m_OutputDialog->SetStatus(Replace(ws2s(a_Message), "status:", ""));
   } else if (StartsWith(a_Message, L"log:")) {
     m_OutputDialog->AddLog(Replace(a_Message, L"log:", L""));
-  } else if (a_Message == L"Update") {
-    std::string title = "Orbit Profiler";
-
-    title += " | Version " + GOrbitApp->GetVersion();
-    std::string msg = absl::StrFormat(
-        "A new version (%s) is available at <a "
-        "href='www.telescopp.com/update'>telescopp.com/update</a>",
-        OrbitVersion::s_LatestVersion.c_str());
-    QMessageBox::about(this, title.c_str(), msg.c_str());
   } else if (StartsWith(a_Message, L"asm:")) {
     OpenDisassembly(a_Message);
   } else if (StartsWith(a_Message, L"RuleEditor")) {
