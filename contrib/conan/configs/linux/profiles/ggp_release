@@ -7,6 +7,7 @@ arch_build=x86_64
 compiler=clang
 compiler.version=7.0
 compiler.libcxx=libc++
+compiler.fpo=False
 build_type=Release
 [options]
 OrbitProfiler:with_gui=False

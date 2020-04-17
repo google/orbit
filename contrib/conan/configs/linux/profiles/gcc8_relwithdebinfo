@@ -4,8 +4,9 @@ os_build=Linux
 arch=x86_64
 arch_build=x86_64
 compiler=gcc
-compiler.version=9
+compiler.version=8
 compiler.libcxx=libstdc++11
+compiler.fpo=False
 build_type=RelWithDebInfo
 [options]
 [build_requires]
