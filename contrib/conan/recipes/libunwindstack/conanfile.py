@@ -10,7 +10,7 @@ class LibunwindstackConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = "cmake"
     exports_sources = ["CMakeLists.txt", "overrides/file.cpp"]
-    requires = ["lzma_sdk/cb0b018@orbitdeps/stable"]
+    requires = ["lzma_sdk/19.00@orbitdeps/stable"]
     options = {"fPIC" : [True, False]}
     default_options = {"fPIC": True}
 
@@ -19,7 +19,7 @@ class LibunwindstackConan(ConanFile):
             del self.options.fPIC
 
     def source(self):
-        self.run("git clone https://android.googlesource.com/platform/system/core.git android-core")
+        self.run("git clone https://github.com/aosp-mirror/platform_system_core.git android-core")
         self.run("git checkout --detach {}".format(self.version), cwd="android-core/")
 
     def build(self):
