@@ -334,7 +334,6 @@ bool OrbitApp::Init() {
   GParams.Load();
   GFontSize = GParams.m_FontSize;
   GOrbitApp->LoadFileMapping();
-  OrbitVersion::CheckForUpdate();
 
   return true;
 }
@@ -562,7 +561,6 @@ void OrbitApp::MainTick() {
 #ifdef _WIN32
   GOrbitApp->m_Debugger->MainTick();
 #endif
-  GOrbitApp->CheckForUpdate();
 
   ++GOrbitApp->m_NumTicks;
 
@@ -571,14 +569,6 @@ void OrbitApp::MainTick() {
     GOrbitApp->m_CaptureWindow->ZoomAll();
     GOrbitApp->NeedsRedraw();
     DoZoom = false;
-  }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::CheckForUpdate() {
-  if (!m_HasPromptedForUpdate && OrbitVersion::s_NeedsUpdate) {
-    SendToUiNow(L"Update");
-    m_HasPromptedForUpdate = true;
   }
 }
 

@@ -9,10 +9,5 @@
 class OrbitVersion {
  public:
   static std::string GetVersion();
-  static void CheckForUpdate();
-  static void CheckForUpdateThread();
   static bool IsDev();
-
-  static bool s_NeedsUpdate;
-  static std::string s_LatestVersion;
 };
