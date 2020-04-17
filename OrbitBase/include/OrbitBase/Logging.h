@@ -11,16 +11,17 @@
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
 
-#define LOG(format, ...)                                               \
-  do {                                                                 \
-    std::string file_and_line__ = absl::StrFormat(                     \
-        "%s:%d", std::filesystem::path(__FILE__).filename().c_str(),   \
-        __LINE__);                                                     \
-    if (file_and_line__.size() > 28)                                   \
-      file_and_line__ =                                                \
-          "..." + file_and_line__.substr(file_and_line__.size() - 25); \
-    fprintf(stderr, "[%28s] " format "\n", file_and_line__.c_str(),    \
-            ##__VA_ARGS__);                                            \
+#define LOG(format, ...)                                                      \
+  do {                                                                        \
+    std::string file__ = std::filesystem::path(__FILE__).filename().string(); \
+    std::string file_and_line__ =                                             \
+        absl::StrFormat("%s:%d", file__.c_str(), __LINE__);                   \
+    if (file_and_line__.size() > 28)                                          \
+      file_and_line__ =                                                       \
+          "..." + file_and_line__.substr(file_and_line__.size() - 25);        \
+    std::string formatted_log__ = absl::StrFormat(                            \
+        "[%28s] " format "\n", file_and_line__.c_str(), ##__VA_ARGS__);       \
+    PLATFORM_LOG(formatted_log__.c_str());                                    \
   } while (0)
 
 #if defined(_WIN32) && defined(ERROR)
@@ -64,6 +65,20 @@
 #define DCHECK(assertion) \
   do {                    \
   } while (0 && (assertion))
+#endif
+
+// Internal.
+#if _WIN32
+#define PLATFORM_LOG(message)       \
+  do {                              \
+    fprintf(stderr, "%s", message); \
+    OutputDebugStringA(message);    \
+  } while (0)
+#else
+#define PLATFORM_LOG(message)   \
+  do {                          \
+    fprintf(stderr, "%s", log); \
+  } while (0)
 #endif
 
 #ifdef __clang__
