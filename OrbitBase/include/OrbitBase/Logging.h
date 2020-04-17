@@ -68,7 +68,7 @@
 #endif
 
 // Internal.
-#if _WIN32
+#if defined(_WIN32)
 #define PLATFORM_LOG(message)       \
   do {                              \
     fprintf(stderr, "%s", message); \
