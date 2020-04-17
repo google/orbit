@@ -19,7 +19,7 @@ class LibunwindstackConan(ConanFile):
             del self.options.fPIC
 
     def source(self):
-        self.run("git clone https://github.com/aosp-mirror/platform_system_core.git android-core")
+        self.run("git clone https://android.googlesource.com/platform/system/core.git android-core")
         self.run("git checkout --detach {}".format(self.version), cwd="android-core/")
 
     def build(self):
