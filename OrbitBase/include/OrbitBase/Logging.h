@@ -75,9 +75,9 @@
     OutputDebugStringA(message);    \
   } while (0)
 #else
-#define PLATFORM_LOG(message)   \
-  do {                          \
-    fprintf(stderr, "%s", log); \
+#define PLATFORM_LOG(message)       \
+  do {                              \
+    fprintf(stderr, "%s", message); \
   } while (0)
 #endif
 
