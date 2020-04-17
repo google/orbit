@@ -25,6 +25,7 @@ target_sources(
           processlauncherwidget.h
           resource.h
           showincludesdialog.h
+          GgpClient.h
           GgpInstance.h
           GgpInstanceItemModel.h)
 
@@ -49,6 +50,7 @@ target_sources(
           outputdialog.cpp
           processlauncherwidget.cpp
           showincludesdialog.cpp
+          GgpClient.cpp
           GgpInstance.cpp
           GgpInstanceItemModel.cpp)
 
