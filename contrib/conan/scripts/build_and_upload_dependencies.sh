@@ -1,47 +1,38 @@
 #!/bin/bash
 
-function create_conan_profile {
-  local profile="$1"
-  conan profile new --detect $profile
-  conan profile update settings.compiler.libcxx=libstdc++11 $profile
-
-  if [ "$profile" == "default_debug" ]; then
-    conan profile update settings.build_type=Debug $profile
-  elif [ "$profile" == "default_relwithdebinfo" ]; then
-    conan profile update settings.build_type=RelWithDebInfo $profile
-  else
-    conan profile update settings.build_type=Release $profile
-  fi
-
-  sed -i -e 's|\[build_requires\]|[build_requires]\ncmake/3.16.4@|' $HOME/.conan/profiles/$profile
-}
-
 function conan_profile_exists {
   conan profile show $profile >/dev/null 2>&1
   return $?
 }
 
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../" >/dev/null 2>&1 && pwd )"
 
-if [ "$0" == "/mnt/contrib/conan/scripts/build_and_upload_dependencies.sh" -o $(uname -s) != "Linux" ]; then
+# Path to script inside the docker container
+SCRIPT="/mnt/contrib/conan/scripts/build_and_upload_dependencies.sh"
 
-  conan config install $REPO_ROOT/contrib/conan/config || exit $?
+if [ "$1" ]; then
+  if [ $(uname -s) == "Linux" ]; then
+    conan config install $REPO_ROOT/contrib/conan/configs/linux || exit $?
+  else
+    conan config install $REPO_ROOT/contrib/conan/configs/windows || exit $?
+  fi
   conan user -r bintray hebecker -p $BINTRAY_API_KEY || exit $?
 
-  if [ $(uname -s) == "Linux" ]; then
-    PROFILES=( default_{release,debug,relwithdebinfo} )
-  else # Windows
-    PROFILES=( msvc{2017,2019}_{debug,release,relwithdebinfo}_{x64,x86} )
-  fi
+  for profile in $@; do
+    conan_profile_exists "$profile" || exit 128
+    echo "Checking profile $profile..."
 
-  for profile in ${PROFILES[@]}; do
-    conan_profile_exists "$profile" || create_conan_profile "$profile"
+    PACKAGES=$(conan info -pr $profile $REPO_ROOT -j 2>/dev/null \
+               | grep build_id \
+               | jq '.[] | select(.is_ref) | select(.binary != "Download" and .binary != "Cache") | .reference + ":" + .id' \
+               | grep -v 'llvm/' \
+               | grep -v 'ggp_sdk/' \
+               | tr -d '"')
 
-    PACKAGES=$(conan info -pr $profile $REPO_ROOT -j 2>/dev/null | grep build_id | jq '.[] | select(.is_ref) | select(.binary != "Download" and .binary != "Cache") | .reference + ":" + .id' | grep -v 'llvm/' | grep -v 'ggp_sdk/' | tr -d '"')
-    if [ $(echo -n "$PACKAGES" | wc -l) -eq 0 ]; then
-      echo "No binary packages are missing or outdated. Skipping this configuration."
+    if [ $(echo -n "$PACKAGES" | wc -c) -eq 0 ]; then
+      echo -n "No binary packages are missing or outdated for profile $profile."
+      echo " Skipping this configuration."
     else
       echo -e "The following binary packages need to be uploaded:\n$PACKAGES"
 
@@ -53,9 +44,18 @@ if [ "$0" == "/mnt/contrib/conan/scripts/build_and_upload_dependencies.sh" -o $(
     fi
   done
 else
-  CONTAINERS=( gcc8 gcc9 clang7 clang8 clang9 )
+  if [ $(uname -s) == "Linux" ]; then
+    PROFILES=( {clang{7,8,9},gcc{8,9},ggp}_{release,relwithdebinfo,debug} )
 
-  for container in ${CONTAINERS[@]}; do
-    docker run --rm -it -v $REPO_ROOT:/mnt -e BINTRAY_API_KEY hebecker/$container:latest /mnt/contrib/conan/scripts/build_and_upload_dependencies.sh
-  done
+    for profile in ${PROFILES[@]}; do
+      docker run --rm -it -v $REPO_ROOT:/mnt -e BINTRAY_API_KEY \
+             gcr.io/orbitprofiler/$profile:latest $SCRIPT $profile || exit $?
+    done
+  else # Windows
+    PROFILES=( msvc{2017,2019}_{release,relwithdebinfo,debug}_{,x86} )
+
+    for profile in ${PROFILES[@]}; do
+      $0 $profile || exit $?
+    done
+  fi
 fi
