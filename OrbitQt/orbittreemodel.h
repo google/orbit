@@ -10,8 +10,8 @@ class OrbitTreeModel : public QAbstractItemModel {
   Q_OBJECT
 
  public:
-  explicit OrbitTreeModel(const QString& data, QObject* parent = 0);
-  ~OrbitTreeModel();
+  explicit OrbitTreeModel(const QString& data, QObject* parent = nullptr);
+  ~OrbitTreeModel() override;
 
   QVariant data(const QModelIndex& index, int role) const override;
   Qt::ItemFlags flags(const QModelIndex& index) const override;

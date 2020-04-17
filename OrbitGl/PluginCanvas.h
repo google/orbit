@@ -11,10 +11,8 @@ class Plugin;
 
 class PluginCanvas : public GlCanvas {
  public:
-  PluginCanvas(Orbit::Plugin* a_Plugin);
-  virtual ~PluginCanvas();
-
-  void OnReceiveMessage(const Message& a_Message);
+  explicit PluginCanvas(Orbit::Plugin* a_Plugin);
+  ~PluginCanvas() override;
 
   void OnTimer() override;
   void ZoomAll();

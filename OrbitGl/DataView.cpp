@@ -86,8 +86,7 @@ const std::vector<float>& DataView::GetColumnHeadersRatios() {
 
 //-----------------------------------------------------------------------------
 const std::vector<DataView::SortingOrder>& DataView::GetColumnInitialOrders() {
-  static std::vector<DataView::SortingOrder> orders = {
-      DataView::AscendingOrder};
+  static std::vector<DataView::SortingOrder> orders = {AscendingOrder};
   return orders;
 }
 

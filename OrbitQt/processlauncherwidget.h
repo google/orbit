@@ -11,8 +11,8 @@ class ProcessLauncherWidget : public QWidget {
   Q_OBJECT
 
  public:
-  explicit ProcessLauncherWidget(QWidget* parent = 0);
-  ~ProcessLauncherWidget();
+  explicit ProcessLauncherWidget(QWidget* parent = nullptr);
+  ~ProcessLauncherWidget() override;
 
   void SetProcessParams();
   void UpdateProcessParams();

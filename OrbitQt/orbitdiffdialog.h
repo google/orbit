@@ -11,8 +11,8 @@ class OrbitDiffDialog : public QDialog {
   Q_OBJECT
 
  public:
-  explicit OrbitDiffDialog(QWidget* parent = 0);
-  ~OrbitDiffDialog();
+  explicit OrbitDiffDialog(QWidget* parent = nullptr);
+  ~OrbitDiffDialog() override;
 
  private slots:
   void on_pushButton_clicked();

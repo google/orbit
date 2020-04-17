@@ -74,7 +74,7 @@ class OrbitCodeEditor : public QPlainTextEdit {
   Q_OBJECT
 
  public:
-  OrbitCodeEditor(QWidget* parent = 0);
+  explicit OrbitCodeEditor(QWidget* parent = nullptr);
 
   void lineNumberAreaPaintEvent(QPaintEvent* event);
   int lineNumberAreaWidth();
@@ -132,7 +132,7 @@ class OrbitCodeEditor : public QPlainTextEdit {
 
 class LineNumberArea : public QWidget {
  public:
-  LineNumberArea(OrbitCodeEditor* editor) : QWidget(editor) {
+  explicit LineNumberArea(OrbitCodeEditor* editor) : QWidget(editor) {
     codeEditor = editor;
   }
 
@@ -154,7 +154,7 @@ class Highlighter : public QSyntaxHighlighter {
   Q_OBJECT
 
  public:
-  Highlighter(QTextDocument* parent = 0);
+  explicit Highlighter(QTextDocument* parent = nullptr);
 
  protected:
   void highlightBlock(const QString& text) Q_DECL_OVERRIDE;

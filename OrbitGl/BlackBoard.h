@@ -8,9 +8,7 @@
 class BlackBoard : public GlCanvas {
  public:
   BlackBoard();
-  virtual ~BlackBoard();
-
-  void OnReceiveMessage(const Message& a_Message);
+  ~BlackBoard() override;
 
   void OnTimer() override;
   void ZoomAll();

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <utility>
 
 #include "Batcher.h"
 #include "BlockChain.h"
@@ -28,7 +29,6 @@ class TimeGraph {
   void Draw(bool a_Picking = false);
   void DrawThreadTracks(bool a_Picking = false);
   void DrawMainFrame(TextBox& a_Box);
-  void DrawTime();
   void DrawLineBuffer(bool a_Picking);
   void DrawBoxBuffer(bool a_Picking);
   void DrawBuffered(bool a_Picking);
@@ -44,7 +44,6 @@ class TimeGraph {
   void ProcessTimer(const Timer& a_Timer);
   void UpdateThreadDepth(int a_ThreadId, int a_Depth);
   void UpdateMaxTimeStamp(TickType a_Time);
-  void AddContextSwitch();
 
   float GetThreadTotalHeight();
   float GetTextBoxHeight() const { return m_Layout.GetTextBoxHeight(); }
@@ -90,7 +89,7 @@ class TimeGraph {
   void SetCanvas(GlCanvas* a_Canvas);
   void SetFontSize(int a_FontSize);
   void SetSystrace(std::shared_ptr<Systrace> a_Systrace) {
-    m_Systrace = a_Systrace;
+    m_Systrace = std::move(a_Systrace);
   }
   Batcher& GetBatcher() { return m_Batcher; }
   uint32_t GetNumTimers() const;

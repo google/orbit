@@ -9,7 +9,6 @@
 
 #include "DataViewTypes.h"
 
-//-----------------------------------------------------------------------------
 class DataView {
  public:
   enum SortingOrder {
@@ -57,10 +56,6 @@ class DataView {
                                unsigned char& /*r*/, unsigned char& /*g*/,
                                unsigned char& /*b*/) {
     return false;
-  }
-  virtual const std::string& GetName() {
-    static std::string no_name{"noname"};
-    return no_name;
   }
   virtual std::string GetLabel() { return ""; }
   virtual void SetGlPanel(class GlPanel* /*a_GlPanel*/) {}

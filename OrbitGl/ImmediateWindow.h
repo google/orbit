@@ -8,7 +8,7 @@
 class ImmediateWindow : public GlCanvas {
  public:
   ImmediateWindow();
-  virtual ~ImmediateWindow();
+  ~ImmediateWindow() override;
 
   void Draw() override;
   void RenderUI() override;

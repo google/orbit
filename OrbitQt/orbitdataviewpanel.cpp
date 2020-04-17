@@ -4,6 +4,8 @@
 
 #include "orbitdataviewpanel.h"
 
+#include <utility>
+
 #include "ui_orbitdataviewpanel.h"
 
 //-----------------------------------------------------------------------------
@@ -45,11 +47,11 @@ void OrbitDataViewPanel::Refresh() { ui->treeView->Refresh(); }
 
 //-----------------------------------------------------------------------------
 void OrbitDataViewPanel::SetDataModel(std::shared_ptr<DataView> a_Model) {
-  ui->treeView->SetDataModel(a_Model);
+  ui->treeView->SetDataModel(std::move(a_Model));
 }
 
 //-----------------------------------------------------------------------------
-void OrbitDataViewPanel::SetFilter(QString a_Filter) {
+void OrbitDataViewPanel::SetFilter(const QString& a_Filter) {
   ui->FilterLineEdit->setText(a_Filter);
   ui->treeView->OnFilter(a_Filter);
 }

@@ -8,7 +8,7 @@
 class HomeWindow : public GlCanvas {
  public:
   HomeWindow();
-  virtual ~HomeWindow();
+  ~HomeWindow() override;
 
   void VariableTracingCallback(std::vector<std::string>& a_Entries);
   void Draw() override;

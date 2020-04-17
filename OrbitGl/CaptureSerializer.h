@@ -9,7 +9,6 @@
 #include "OrbitType.h"
 #include "SerializationMacros.h"
 
-//-----------------------------------------------------------------------------
 class CaptureSerializer {
  public:
   CaptureSerializer();

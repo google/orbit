@@ -64,7 +64,7 @@ class RuleEditorWindow {
 class RuleEditor : public GlCanvas {
  public:
   RuleEditor();
-  virtual ~RuleEditor();
+  ~RuleEditor() override;
 
   void OnReceiveMessage(const Message& a_Message);
   std::unordered_map<DWORD64, std::shared_ptr<Rule>>& GetRules() {
@@ -76,7 +76,7 @@ class RuleEditor : public GlCanvas {
   void KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
                   bool a_Alt) override;
   void RenderUI() override;
-  void ProcessVariable(const std::shared_ptr<Variable> a_Variable,
+  void ProcessVariable(const std::shared_ptr<Variable>& a_Variable,
                        char* a_Data);
 
   RuleEditorWindow m_Window;

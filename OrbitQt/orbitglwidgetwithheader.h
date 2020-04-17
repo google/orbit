@@ -13,8 +13,8 @@ class OrbitGlWidgetWithHeader : public QWidget {
   Q_OBJECT
 
  public:
-  explicit OrbitGlWidgetWithHeader(QWidget* parent = 0);
-  ~OrbitGlWidgetWithHeader();
+  explicit OrbitGlWidgetWithHeader(QWidget* parent = nullptr);
+  ~OrbitGlWidgetWithHeader() override;
 
   class OrbitTreeView* GetTreeView();
   class OrbitGLWidget* GetGLWidget();

@@ -14,8 +14,8 @@ class ShowIncludesDialog : public QDialog {
   Q_OBJECT
 
  public:
-  explicit ShowIncludesDialog(QWidget* parent = 0);
-  ~ShowIncludesDialog();
+  explicit ShowIncludesDialog(QWidget* parent = nullptr);
+  ~ShowIncludesDialog() override;
 
  public slots:
   void onCustomContextMenu(const QPoint& point);

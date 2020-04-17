@@ -4406,13 +4406,18 @@ void QtRectFPropertyManagerPrivate::setConstraint(QtProperty* property,
                                                   const QRectF& constraint,
                                                   const QRectF& val) {
   const bool isNull = constraint.isNull();
-  const qreal left = isNull ? std::numeric_limits<qreal>::min() : constraint.left();
-  const qreal right = isNull ? std::numeric_limits<qreal>::max() : constraint.left() + constraint.width();
-  const qreal top = isNull ? std::numeric_limits<qreal>::min() : constraint.top();
-  const qreal bottom =
-      isNull ? std::numeric_limits<qreal>::max() : constraint.top() + constraint.height();
-  const qreal width = isNull ? std::numeric_limits<qreal>::max() : constraint.width();
-  const qreal height = isNull ? std::numeric_limits<qreal>::max() : constraint.height();
+  const qreal left =
+      isNull ? std::numeric_limits<qreal>::min() : constraint.left();
+  const qreal right = isNull ? std::numeric_limits<qreal>::max()
+                             : constraint.left() + constraint.width();
+  const qreal top =
+      isNull ? std::numeric_limits<qreal>::min() : constraint.top();
+  const qreal bottom = isNull ? std::numeric_limits<qreal>::max()
+                              : constraint.top() + constraint.height();
+  const qreal width =
+      isNull ? std::numeric_limits<qreal>::max() : constraint.width();
+  const qreal height =
+      isNull ? std::numeric_limits<qreal>::max() : constraint.height();
 
   m_doublePropertyManager->setRange(m_propertyToX[property], left, right);
   m_doublePropertyManager->setRange(m_propertyToY[property], top, bottom);
