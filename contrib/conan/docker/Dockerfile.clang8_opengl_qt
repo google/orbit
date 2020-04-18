@@ -1,7 +1,10 @@
 FROM conanio/clang8:latest
 
+ADD sources.list.disco /etc/apt/sources.list
+
 RUN sudo apt-get -qq update \
     && sudo apt-get install -y --no-install-recommends \
+    libstdc++-9-dev \
     libglu1-mesa-dev \
     mesa-common-dev \
     libxmu-dev \
