@@ -10,7 +10,7 @@ ENV LLVM_VERSION=7.0 \
     PYENV_ROOT=/opt/pyenv \
     PATH=/opt/pyenv/shims:${PATH}
 
-ADD sources.list.clang7 /etc/apt/sources.list
+ADD sources.list.disco /etc/apt/sources.list
 
 RUN dpkg --add-architecture i386 \
     && apt-get -qq update \
