@@ -74,7 +74,6 @@ if(WITH_GUI)
   find_package(imgui CONFIG REQUIRED)
 endif()
 
-find_package(CURL CONFIG REQUIRED)
 find_package(oqpi REQUIRED)
 find_package(capstone CONFIG REQUIRED)
 if(WITH_GUI)

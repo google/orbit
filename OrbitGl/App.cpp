@@ -66,7 +66,6 @@
 #include "TypesDataView.h"
 #include "Utils.h"
 #include "Version.h"
-#include "curl/curl.h"
 
 #define GLUT_DISABLE_ATEXIT_HACK
 #include "GL/freeglut.h"

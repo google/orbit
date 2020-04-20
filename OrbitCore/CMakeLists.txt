@@ -177,7 +177,6 @@ target_link_libraries(
          xxHash::xxHash
          concurrentqueue::concurrentqueue
          multicore::multicore
-         CURL::CURL
          oqpi::oqpi
          asio::asio
          abseil::abseil
