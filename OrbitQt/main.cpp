@@ -7,12 +7,18 @@
 #include <QFontDatabase>
 #include <QStyleFactory>
 
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
+
 #include "../OrbitGl/App.h"
 #include "CrashHandler.h"
 #include "Path.h"
 #include "orbitmainwindow.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
+
+// TODO: Remove this flag once we have a dialog with user
+ABSL_FLAG(bool, upload_dumps_to_server, false,
+          "Upload dumps to collection server when crashes");
 
 int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage("CPU Profiler");
@@ -34,7 +40,8 @@ int main(int argc, char* argv[]) {
                                        .toStdString();
   const std::string crash_server_url =
       "https://clients2.google.com/cr/staging_report";
-  const CrashHandler crash_handler(dump_path, handler_path, crash_server_url);
+  const CrashHandler crash_handler(dump_path, handler_path, crash_server_url,
+                                   absl::GetFlag(FLAGS_upload_dumps_to_server));
 
   a.setStyle(QStyleFactory::create("Fusion"));
 
