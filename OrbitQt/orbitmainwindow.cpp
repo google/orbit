@@ -174,10 +174,7 @@ void OrbitMainWindow::ParseCommandlineArguments() {
     std::string argStr = arg.toStdString();
     args.push_back(argStr);
 
-    if (Contains(argStr, "headless")) {
-      m_Headless = true;
-      this->menuBar()->hide();
-    } else if (Contains(argStr, "inject:")) {
+    if (absl::StrContains(argStr, "inject:")) {
       m_Headless = true;
     } else if (argStr == "dev") {
       m_IsDev = true;

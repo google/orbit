@@ -111,7 +111,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
   m_Arguments = a_Args;
 
   for (const std::string& arg : a_Args) {
-    if (Contains(arg, "gamelet:")) {
+    if (absl::StrContains(arg, "gamelet:")) {
       std::string address = Replace(arg, "gamelet:", "");
       Capture::GCaptureHost = address;
 
@@ -125,19 +125,19 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
       ConnectionManager::Get().ConnectToRemote(address);
       m_ProcessesDataView->SetIsRemote(true);
       SetIsRemote(true);
-    } else if (Contains(arg, "headless")) {
+    } else if (absl::StrContains(arg, "headless")) {
       SetHeadless(true);
-    } else if (Contains(arg, "preset:")) {
+    } else if (absl::StrContains(arg, "preset:")) {
       std::vector<std::string> vec = Tokenize(arg, ":");
       if (vec.size() > 1) {
         Capture::GPresetToLoad = vec[1];
       }
-    } else if (Contains(arg, "inject:")) {
+    } else if (absl::StrContains(arg, "inject:")) {
       std::vector<std::string> vec = Tokenize(arg, ":");
       if (vec.size() > 1) {
         Capture::GProcessToInject = vec[1];
       }
-    } else if (Contains(arg, "systrace:")) {
+    } else if (absl::StrContains(arg, "systrace:")) {
       m_PostInitArguments.push_back(arg);
     }
   }
@@ -348,7 +348,7 @@ void OrbitApp::PostInit() {
   }
 
   for (std::string& arg : m_PostInitArguments) {
-    if (Contains(arg, "systrace:")) {
+    if (absl::StrContains(arg, "systrace:")) {
       std::string command = Replace(arg, "systrace:", "");
       auto tokens = Tokenize(command, ",");
       if (!tokens.empty()) {
@@ -401,9 +401,9 @@ void OrbitApp::LoadFileMapping() {
     std::wstring wline;
     while (std::getline(infile, wline)) {
       std::string line = ws2s(wline);
-      if (StartsWith(line, "//")) continue;
+      if (absl::StartsWith(line, "//")) continue;
 
-      bool containsQuotes = Contains(line, "\"");
+      bool containsQuotes = absl::StrContains(line, "\"");
 
       std::vector<std::string> tokens = Tokenize(line);
       if (tokens.size() == 2 && !containsQuotes) {

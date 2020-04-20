@@ -23,7 +23,7 @@ class OrbitTreeModel : public QAbstractItemModel {
   int rowCount(const QModelIndex& parent = QModelIndex()) const override;
   int columnCount(const QModelIndex& parent = QModelIndex()) const override;
 
-  void Filter(const std::wstring& a_Filter);
+  void Filter(const std::string& a_Filter);
 
  private:
   void setupModelData(const QStringList& lines, OrbitTreeItem* parent);

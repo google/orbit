@@ -465,7 +465,7 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
       if (function != nullptr) {
         function_name = function->PrettyName();
       }
-    } else if (Contains(address_info->function_name, "[unknown]")) {
+    } else if (absl::StrContains(address_info->function_name, "[unknown]")) {
       if (function != nullptr) {
         function_name = function->PrettyName();
         address_info->function_name = function->PrettyName();

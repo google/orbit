@@ -36,7 +36,7 @@ std::vector<std::string> ReadSymbolsFile() {
   if (!infile.fail()) {
     std::string line;
     while (std::getline(infile, line)) {
-      if (StartsWith(line, "//") || line == "") continue;
+      if (absl::StartsWith(line, "//") || line == "") continue;
 
       std::string dir = line;
       if (Path::DirExists(dir)) {
