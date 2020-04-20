@@ -21,16 +21,10 @@ class TcpServer : public TcpEntity {
 
   void Receive(const Message& a_Message);
 
-  void SendToUiAsync(const std::wstring& a_Message);
-  void SendToUiNow(const std::wstring& a_Message);
-  void SendToUiAsync(const std::string& a_Message) {
-    SendToUiAsync(s2ws(a_Message));
-  }
-  void SendToUiNow(const std::string& a_Message) {
-    SendToUiNow(s2ws(a_Message));
-  }
+  void SendToUiAsync(const std::string& a_Message);
+  void SendToUiNow(const std::string& a_Message);
 
-  typedef std::function<void(const std::wstring&)> StrCallback;
+  typedef std::function<void(const std::string&)> StrCallback;
 
   void SetUiCallback(StrCallback a_Callback) { m_UiCallback = a_Callback; }
   void MainThreadTick();
@@ -56,7 +50,7 @@ class TcpServer : public TcpEntity {
   void ServerThread();
 
   StrCallback m_UiCallback;
-  moodycamel::ConcurrentQueue<std::wstring> m_UiLockFreeQueue;
+  moodycamel::ConcurrentQueue<std::string> m_UiLockFreeQueue;
 
   Timer m_StatTimer;
   ULONG64 m_LastNumMessages;

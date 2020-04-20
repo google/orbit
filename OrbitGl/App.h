@@ -134,8 +134,7 @@ class OrbitApp : public CoreApp {
   void Refresh(DataViewType a_Type = DataViewType::ALL) {
     FireRefreshCallbacks(a_Type);
   }
-  void AddUiMessageCallback(
-      std::function<void(const std::wstring&)> a_Callback);
+  void AddUiMessageCallback(std::function<void(const std::string&)> a_Callback);
   typedef std::function<std::wstring(const std::wstring& a_Caption,
                                      const std::wstring& a_Dir,
                                      const std::wstring& a_Filter)>
@@ -156,8 +155,8 @@ class OrbitApp : public CoreApp {
     return m_Arguments;
   }
 
-  void SendToUiAsync(const std::wstring& a_Msg) override;
-  void SendToUiNow(const std::wstring& a_Msg) override;
+  void SendToUiAsync(const std::string& message) override;
+  void SendToUiNow(const std::string& message) override;
   void NeedsRedraw();
 
   const std::map<std::string, std::string>& GetFileMapping() {
@@ -234,7 +233,7 @@ class OrbitApp : public CoreApp {
   std::vector<std::shared_ptr<class SamplingReport> > m_SamplingReports;
   std::map<std::string, std::string> m_FileMapping;
   std::vector<std::string> m_SymbolDirectories;
-  std::function<void(const std::wstring&)> m_UiCallback;
+  std::function<void(const std::string&)> m_UiCallback;
 
   // buffering data to send large messages instead of small ones:
   std::shared_ptr<std::thread> m_MessageBufferThread = nullptr;

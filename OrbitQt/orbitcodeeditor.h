@@ -83,7 +83,7 @@ class OrbitCodeEditor : public QPlainTextEdit {
   void saveFileMap();
   void gotoLine(int a_Line);
   void OnTimer();
-  void SetText(const std::wstring& a_Text);
+  void SetText(const std::string& a_Text);
   void HighlightWord(const std::wstring& a_Text, const QColor& a_Color,
                      QList<QTextEdit::ExtraSelection>& extraSelections);
 

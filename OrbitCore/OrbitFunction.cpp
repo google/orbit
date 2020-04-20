@@ -69,7 +69,7 @@ bool Function::Hookable() {
     // Functions that loop back to first 5 bytes of instructions will explode as
     // the IP lands in the middle of the relative jump instruction...
     // Ideally, we would detect such a loop back and not allow hooking.
-    if (file_.find(".asm") != std::wstring::npos) {
+    if (file_.find(".asm") != std::string::npos) {
       return false;
     }
 

@@ -23,7 +23,8 @@ void OutputDialog::SetStatus(const std::string& a_Status) {
 }
 
 //-----------------------------------------------------------------------------
-void OutputDialog::AddLog(const std::wstring& a_Log) {
-  std::wstring log = ui->OutputTextEdit->toPlainText().toStdWString() + a_Log;
-  ui->OutputTextEdit->setPlainText(QString::fromWCharArray(log.c_str()));
+void OutputDialog::AddLog(const std::string& a_Log) {
+  QString log =
+      ui->OutputTextEdit->toPlainText() + QString::fromStdString(a_Log);
+  ui->OutputTextEdit->setPlainText(log);
 }

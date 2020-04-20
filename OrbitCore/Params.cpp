@@ -65,7 +65,7 @@ ORBIT_SERIALIZE(Params, 16) {
 
 //-----------------------------------------------------------------------------
 void Params::Save() {
-  GCoreApp->SendToUiNow(L"UpdateProcessParams");
+  GCoreApp->SendToUiNow("UpdateProcessParams");
   std::string fileName = Path::GetParamsFileName();
   SCOPE_TIMER_LOG(absl::StrFormat("Saving params in %s", fileName.c_str()));
   std::ofstream file(fileName);
