@@ -1,7 +1,8 @@
 //-----------------------------------
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
-#pragma once
+#ifndef ORBIT_CORE_CRASH_HANDLER_H_
+#define ORBIT_CORE_CRASH_HANDLER_H_
 
 #include <client/crashpad_client.h>
 
@@ -18,3 +19,5 @@ class CrashHandler {
   inline static bool is_init_{false};
   crashpad::CrashpadClient crashpad_client_;
 };
+
+#endif  // ORBIT_CORE_CRASH_HANDLER_H_
