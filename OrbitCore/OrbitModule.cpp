@@ -70,7 +70,7 @@ std::string Module::GetPrettyName() {
 //-----------------------------------------------------------------------------
 bool Module::IsDll() const {
   return ToLower(Path::GetExtension(m_FullName)) == std::string(".dll") ||
-         Contains(m_Name, ".so");
+         absl::StrContains(m_Name, ".so");
 }
 
 //-----------------------------------------------------------------------------

@@ -508,7 +508,7 @@ void Capture::SaveSession(const std::string& a_FileName) {
   }
 
   std::string saveFileName = a_FileName;
-  if (!EndsWith(a_FileName, ".opr")) {
+  if (!absl::EndsWith(a_FileName, ".opr")) {
     saveFileName += ".opr";
   }
 

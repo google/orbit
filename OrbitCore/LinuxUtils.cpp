@@ -186,7 +186,7 @@ std::unordered_map<uint32_t, float> GetCpuUtilization() {
 bool Is64Bit(pid_t a_PID) {
   std::string result =
       ExecuteCommand(absl::StrFormat("file -L /proc/%u/exe", a_PID).c_str());
-  return Contains(result, "64-bit");
+  return absl::StrContains(result, "64-bit");
 }
 
 //-----------------------------------------------------------------------------

@@ -51,14 +51,14 @@ void OrbitTreeItem::SetParentsVisible(bool a_Visible) {
   }
 }
 
-void OrbitTreeItem::Filter(const std::wstring& a_Filter) {
+void OrbitTreeItem::Filter(const std::string& a_Filter) {
   SetVisibleRecursive(false);
   SetMatchRecursive(false);
   FilterRecursive(a_Filter);
 }
 
-void OrbitTreeItem::FilterRecursive(const std::wstring& a_Filter) {
-  if (a_Filter != L"" && this->Contains(a_Filter)) {
+void OrbitTreeItem::FilterRecursive(const std::string& a_Filter) {
+  if (!a_Filter.empty() && this->Contains(a_Filter)) {
     m_IsVisible = true;
     m_MatchesFilter = true;
     SetParentsVisible(true);
@@ -69,10 +69,10 @@ void OrbitTreeItem::FilterRecursive(const std::wstring& a_Filter) {
   }
 }
 
-bool OrbitTreeItem::Contains(const std::wstring& a_Filter) {
+bool OrbitTreeItem::Contains(const std::string& a_Filter) {
   for (QVariant& variant : m_itemData) {
-    std::wstring str = variant.toString().toStdWString();
-    if (::Contains(str, a_Filter)) {
+    std::string str = variant.toString().toStdString();
+    if (absl::StrContains(str, a_Filter)) {
       return true;
     }
   }

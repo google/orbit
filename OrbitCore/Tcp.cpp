@@ -91,7 +91,7 @@ void TcpConnection::handle_request_line(asio::error_code ec,
     std::string str(asio::buffers_begin(bufs),
                     asio::buffers_begin(bufs) + bytes_transferred);
 
-    if (Contains(str, "Sec-WebSocket-Key:")) {
+    if (absl::StrContains(str, "Sec-WebSocket-Key:")) {
       std::vector<std::string> tokens = Tokenize(str, " ");
       web_socket_key_ = tokens[1];
       ReplaceStringInPlace(web_socket_key_, "\r\n", "");

@@ -942,7 +942,7 @@ void TimeGraph::UpdateThreadIds() {
         std::shared_ptr<ThreadTrack> track = GetThreadTrack(tid);
 
         for (auto& filter : filters) {
-          if (track && Contains(track->GetName(), filter)) {
+          if (track && absl::StrContains(track->GetName(), filter)) {
             filteredThreadIds.push_back(tid);
           }
         }

@@ -164,7 +164,7 @@ void iterate(const QModelIndex& index, const QAbstractItemModel* model,
 }
 
 void ShowIncludesDialog::on_lineEdit_2_textChanged(const QString& arg1) {
-  std::wstring filter = arg1.toStdWString();
+  std::string filter = arg1.toStdString();
   m_TreeModel->Filter(filter);
 
   ui->treeView->collapseAll();

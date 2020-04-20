@@ -78,7 +78,7 @@ std::string RuleEditorWindow::GetCurrentWord(const std::string a_Chain) {
   std::vector<std::string> tokens = Tokenize(a_Chain, ".->");
   if (tokens.size() > 0) {
     std::string lastWord = tokens[tokens.size() - 1];
-    if (EndsWith(a_Chain, lastWord.c_str())) {
+    if (absl::EndsWith(a_Chain, lastWord.c_str())) {
       return lastWord;
     }
   }
@@ -100,7 +100,7 @@ void RuleEditorWindow::RefreshAutoComplete(const std::string& a_Line) {
         Variable& var = pair.second;
         const std::string& varName = var.m_Name;
 
-        if (Contains(varName, currentWord)) {
+        if (absl::StrContains(varName, currentWord)) {
           m_AutoComplete.push_back(varName);
           m_MaxTextWidth =
               std::max(m_MaxTextWidth, ImGui::CalcTextSize(varName.c_str()).x);

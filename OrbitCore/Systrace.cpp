@@ -9,28 +9,30 @@
 
 //-----------------------------------------------------------------------------
 bool ShouldIgnore(const std::string& line) {
-  return StartsWith(line, "#") || Contains(line, "<script class=") ||
-         Contains(line, "</script>") || Contains(line, "<!-- ");
+  return absl::StartsWith(line, "#") ||
+         absl::StrContains(line, "<script class=") ||
+         absl::StrContains(line, "</script>") ||
+         absl::StrContains(line, "<!-- ");
 }
 
 //-----------------------------------------------------------------------------
 bool IsBegin(const std::string& line) {
-  return Contains(line, "tracing_mark_write: B");
+  return absl::StrContains(line, "tracing_mark_write: B");
 }
 
 //-----------------------------------------------------------------------------
 bool IsEnd(const std::string& line) {
-  return Contains(line, "tracing_mark_write: E");
+  return absl::StrContains(line, "tracing_mark_write: E");
 }
 
 //-----------------------------------------------------------------------------
 bool IsTraceBegin(const std::string& line) {
-  return Contains(line, "<!-- BEGIN TRACE -->");
+  return absl::StrContains(line, "<!-- BEGIN TRACE -->");
 }
 
 //-----------------------------------------------------------------------------
 bool IsTraceEnd(const std::string& line) {
-  return Contains(line, "<!-- END TRACE -->");
+  return absl::StrContains(line, "<!-- END TRACE -->");
 }
 
 //-----------------------------------------------------------------------------

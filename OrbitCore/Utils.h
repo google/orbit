@@ -25,6 +25,7 @@
 
 #include "BaseTypes.h"
 #include "Platform.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
@@ -97,15 +98,6 @@ inline void Fill(T& a_Array, U& a_Value) {
 }
 
 //-----------------------------------------------------------------------------
-template <typename... Args>
-std::wstring Format(const wchar_t* format, Args... args) {
-  const size_t size = 4096;
-  wchar_t buf[size];
-  swprintf(buf, size, format, args...);
-  return std::wstring(buf);
-}
-
-//-----------------------------------------------------------------------------
 template <class T>
 inline T ToLower(const T& a_Str) {
   T str = a_Str;
@@ -170,78 +162,16 @@ inline std::string FileToString(const std::string_view a_FileName) {
 }
 
 //-----------------------------------------------------------------------------
-template <class U>
-inline bool Contains(const std::string& a_String, const U& a_SubString,
-                     bool a_MatchCase = true) {
-  std::string str(a_String);
-  std::string substr(a_SubString);
-
-  if (!a_MatchCase) {
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-    std::transform(substr.begin(), substr.end(), substr.begin(), ::tolower);
-  }
-
-  return str.find(substr) != std::string::npos;
-}
-
-//-----------------------------------------------------------------------------
-template <class U>
-inline bool Contains(const std::wstring& a_String, const U& a_SubString,
-                     bool a_MatchCase = false) {
-  std::wstring str(a_String);
-  std::wstring substr(a_SubString);
-
-  if (!a_MatchCase) {
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-    std::transform(substr.begin(), substr.end(), substr.begin(), ::tolower);
-  }
-
-  return str.find(substr) != std::wstring::npos;
-}
-
-//-----------------------------------------------------------------------------
 template <class T>
 inline void Append(std::vector<T>& a_Dest, const std::vector<T>& a_Source) {
   a_Dest.insert(std::end(a_Dest), std::begin(a_Source), std::end(a_Source));
 }
 
 //-----------------------------------------------------------------------------
-inline bool StartsWith(const std::string& a_String, const char* a_Prefix) {
-  return a_String.compare(0, strlen(a_Prefix), a_Prefix) == 0;
-}
-
-//-----------------------------------------------------------------------------
-inline bool StartsWith(const std::wstring& a_String, const wchar_t* a_Prefix) {
-  return a_String.compare(0, wcslen(a_Prefix), a_Prefix) == 0;
-}
-
-//-----------------------------------------------------------------------------
-inline bool EndsWith(const std::string& a_String, const char* a_Suffix) {
-  size_t strLen = a_String.size();
-  size_t len = strlen(a_Suffix);
-  if (len <= strLen) {
-    return a_String.compare(strLen - len, len, a_Suffix) == 0;
-  }
-
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-inline bool EndsWith(const std::wstring& a_String, const wchar_t* a_Suffix) {
-  size_t strLen = a_String.size();
-  size_t len = wcslen(a_Suffix);
-  if (len <= strLen) {
-    return a_String.compare(strLen - len, len, a_Suffix) == 0;
-  }
-
-  return false;
-}
-
-//-----------------------------------------------------------------------------
 inline void RemoveTrailingNewLine(std::string& a_String) {
-  if (EndsWith(a_String, "\n")) {
+  if (absl::EndsWith(a_String, "\n")) {
     a_String.pop_back();
-  } else if (EndsWith(a_String, "\r\n")) {
+  } else if (absl::EndsWith(a_String, "\r\n")) {
     a_String.pop_back();
     a_String.pop_back();
   }

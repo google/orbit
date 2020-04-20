@@ -141,7 +141,7 @@ void OrbitTreeModel::setupModelData(const QStringList& lines,
   }
 }
 
-void OrbitTreeModel::Filter(const std::wstring& a_Filter) {
+void OrbitTreeModel::Filter(const std::string& a_Filter) {
   if (rootItem) {
     rootItem->Filter(a_Filter);
   }

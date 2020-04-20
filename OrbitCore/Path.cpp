@@ -289,7 +289,7 @@ std::string Path::GetHome() {
 bool Path::ContainsFile(const std::string a_Dir, const std::string a_File) {
   auto fileList = ListFiles(a_Dir, a_File);
   for (const std::string& file : fileList) {
-    if (Contains(file, a_File)) return true;
+    if (absl::StrContains(file, a_File)) return true;
   }
   return false;
 }
@@ -343,6 +343,6 @@ std::vector<std::string> Path::ListFiles(
 std::vector<std::string> Path::ListFiles(const std::string& directory,
                                          const std::string& filter) {
   return ListFiles(directory, [&](const std::string& file_name) {
-    return Contains(file_name, filter);
+    return absl::StrContains(file_name, filter);
   });
 }
