@@ -647,7 +647,7 @@ void DiaParser::OrbitAddGlobalSymbol(IDiaSymbol* pSymbol) {
       SysFreeString(bstrName);
     }
 
-    if (Contains(Var.m_Name, "GOutput")) {
+    if (absl::StrContains(Var.m_Name, "GOutput")) {
       static volatile bool found = false;
       found = true;
     }

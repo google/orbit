@@ -394,7 +394,7 @@ void Process::FindPdbs(const std::vector<std::string>& a_SearchLocations) {
 
         std::string signature = GuidToString(module->m_Pdb->GetGuid());
 
-        if (Contains(module->m_DebugSignature, signature)) {
+        if (absl::StrContains(module->m_DebugSignature, signature)) {
           // Found matching pdb
           module->m_PdbSize = Path::FileSize(module->m_PdbName);
           break;

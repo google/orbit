@@ -405,9 +405,9 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
                    symbol_info);
     }
 
-    std::wstring symName = symbol_info->Name;
-    if (symName == L"") {
-      symName = Format(L"%I64x", a_Address);
+    std::string symName = ws2s(symbol_info->Name);
+    if (symName.empty()) {
+      symName = absl::StrFormat("%" PRIx64, a_Address);
       PRINT_VAR(GetLastErrorAsString());
 
       std::shared_ptr<OrbitDiaSymbol> symbol =
@@ -415,7 +415,7 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
       if (symbol->m_Symbol) {
         BSTR bstrName;
         if (symbol->m_Symbol->get_name(&bstrName) == S_OK) {
-          symName = bstrName;
+          symName = ws2s(bstrName);
           SysFreeString(bstrName);
         }
       }
@@ -423,8 +423,8 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
 
     m_ExactAddressToFunctionAddress[a_Address] =
         symbol_info->Address ? symbol_info->Address : a_Address;
-    m_AddressToName[a_Address] = ws2s(symName);
-    m_AddressToName[symbol_info->Address] = ws2s(symName);
+    m_AddressToName[a_Address] = symName;
+    m_AddressToName[symbol_info->Address] = symName;
 
     LineInfo lineInfo;
     if (SymUtils::GetLineInfo(a_Address, lineInfo)) {

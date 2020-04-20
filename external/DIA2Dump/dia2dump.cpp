@@ -10,7 +10,7 @@
 // Debug Interface Access SDK API.
 //
 
-#include "Dia2Dump.h"
+#include "dia2dump.h"
 
 #include "../../../OrbitCore/OrbitDia.h"
 #include "../../../OrbitCore/ScopeTimer.h"

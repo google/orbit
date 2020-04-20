@@ -52,10 +52,10 @@ void Debugger::SendThawMessage() {
 //-----------------------------------------------------------------------------
 std::string GetFileNameFromHandle(HANDLE hFile) {
   bool bSuccess = false;
-  TCHAR pszFilename[MAX_PATH + 1];
+  char pszFilename[MAX_PATH + 1];
   HANDLE hFileMap;
 
-  std::wstring strFilename;
+  std::string strFilename;
 
   // Get the file size.
   DWORD dwFileSizeHi = 0;
@@ -73,31 +73,31 @@ std::string GetFileNameFromHandle(HANDLE hFile) {
     void* pMem = MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 1);
 
     if (pMem) {
-      if (GetMappedFileName(GetCurrentProcess(), pMem, pszFilename, MAX_PATH)) {
+      if (GetMappedFileNameA(GetCurrentProcess(), pMem, pszFilename, MAX_PATH)) {
         // Translate path with device name to drive letters.
-        TCHAR szTemp[BUFSIZE];
+        char szTemp[BUFSIZE];
         szTemp[0] = '\0';
 
-        if (GetLogicalDriveStrings(BUFSIZE - 1, szTemp)) {
-          TCHAR szName[MAX_PATH];
-          TCHAR szDrive[3] = TEXT(" :");
+        if (GetLogicalDriveStringsA(BUFSIZE - 1, szTemp)) {
+          char szName[MAX_PATH];
+          char szDrive[3] = " :";
           BOOL bFound = FALSE;
-          TCHAR* p = szTemp;
+          char* p = szTemp;
 
           do {
             // Copy the drive letter to the template string
-            *szDrive = *p;
+            szDrive[0] = p[0];
 
             // Look up each device name
-            if (QueryDosDevice(szDrive, szName, MAX_PATH)) {
-              size_t uNameLen = _tcslen(szName);
+            if (QueryDosDeviceA(szDrive, szName, MAX_PATH)) {
+              size_t uNameLen = std::strlen(szName);
 
               if (uNameLen < MAX_PATH) {
-                bFound = _tcsnicmp(pszFilename, szName, uNameLen) == 0;
+                bFound = std::strncmp(pszFilename, szName, uNameLen) == 0;
 
                 if (bFound) {
                   strFilename =
-                      Format(L"%s%s", szDrive, pszFilename + uNameLen);
+                      absl::StrFormat("%s%s", szDrive, pszFilename + uNameLen);
                 }
               }
             }
@@ -115,7 +115,7 @@ std::string GetFileNameFromHandle(HANDLE hFile) {
     CloseHandle(hFileMap);
   }
 
-  return ws2s(strFilename);
+  return strFilename;
 }
 
 HANDLE GMainThreadHandle = 0;
