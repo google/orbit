@@ -108,6 +108,8 @@ class CrashpadConan(ConanFile):
         if self.settings.os == "Windows" and self.settings.get_safe("compiler.runtime"):
             crt = str(self.settings.compiler.runtime)
             args += [ "dynamic_crt=%s" % ("true" if crt.startswith("MD") else "false") ]
+        if self.settings.os == "Linux":
+            args += [ "crashpad_use_boringssl_for_http_transport_socket=true"]
         return " ".join(args)
 
     def build(self):
