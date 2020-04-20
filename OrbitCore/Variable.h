@@ -16,18 +16,6 @@ class Message;
 
 class Variable {
  public:
-  enum MemberID {
-    NAME,
-    TYPE,
-    ADDRESS,
-    FILE,
-    MODULE,
-    LINE,
-    SELECTED,
-    INDEX,
-    NUM_EXPOSED_MEMBERS
-  };
-
   enum BasicType {
     Invalid,
     Int,

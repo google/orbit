@@ -692,8 +692,7 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
                 std::string text = absl::StrFormat(
                     "%s; submitter: %d  %s",
                     string_manager_->Get(timer.m_UserData[0]).value_or(""),
-                    timer.m_SubmitTID,
-                    time.c_str());
+                    timer.m_SubmitTID, time.c_str());
                 textBox.SetText(text);
               } else if (!SystraceManager::Get().IsEmpty()) {
                 textBox.SetText(SystraceManager::Get().GetFunctionName(

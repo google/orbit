@@ -8,7 +8,6 @@
 #include "Callstack.h"
 #include "Capture.h"
 #include "Core.h"
-#include "OrbitProcess.h"
 #include "SamplingProfiler.h"
 #include "absl/strings/str_format.h"
 
@@ -31,41 +30,28 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
 
   Function& function = GetFunctionOrDummy(m_Indices[a_Row]);
 
-  std::string value;
-
-  switch (s_HeaderMap[a_Column]) {
-    case Function::INDEX:
-      value = absl::StrFormat("%d", a_Row);
-      break;
-    case Function::SELECTED:
-      value = function.IsSelected() ? "X" : "-";
-      break;
-    case Function::NAME:
-      value = function.PrettyName();
-      break;
-    case Function::ADDRESS:
-      value = absl::StrFormat("%#llx", function.GetVirtualAddress());
-      break;
-    case Function::FILE:
-      value = function.File();
-      break;
-    case Function::MODULE:
-      value = function.GetModuleName();
-      break;
-    case Function::LINE:
-      value = absl::StrFormat("%i", function.Line());
-      break;
-    case Function::SIZE:
-      value = absl::StrFormat("%lu", function.Size());
-      break;
-    case Function::CALL_CONV:
-      value = function.GetCallingConventionString();
-      break;
+  switch (a_Column) {
+    case COLUMN_SELECTED:
+      return function.IsSelected() ? "X" : "-";
+    case COLUMN_INDEX:
+      return absl::StrFormat("%d", a_Row);
+    case COLUMN_NAME:
+      return function.PrettyName();
+    case COLUMN_SIZE:
+      return absl::StrFormat("%lu", function.Size());
+    case COLUMN_FILE:
+      return function.File();
+    case COLUMN_LINE:
+      return absl::StrFormat("%i", function.Line());
+    case COLUMN_MODULE:
+      return function.GetModuleName();
+    case COLUMN_ADDRESS:
+      return absl::StrFormat("%#llx", function.GetVirtualAddress());
+    case COLUMN_CALL_CONV:
+      return function.GetCallingConventionString();
     default:
-      break;
+      return "";
   }
-
-  return value;
 }
 
 //-----------------------------------------------------------------------------

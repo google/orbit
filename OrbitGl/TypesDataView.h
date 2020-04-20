@@ -12,9 +12,8 @@ class TypesDataView : public DataView {
  public:
   TypesDataView();
 
-  const std::vector<std::string>& GetColumnHeaders() override;
-  const std::vector<float>& GetColumnHeadersRatios() override;
-  const std::vector<SortingOrder>& GetColumnInitialOrders() override;
+  const std::vector<Column>& GetColumns() override;
+  int GetDefaultSortingColumn() override { return COLUMN_NAME; }
   std::vector<std::string> GetContextMenu(
       int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
   std::string GetValue(int a_Row, int a_Column) override;
@@ -35,11 +34,19 @@ class TypesDataView : public DataView {
 
   std::vector<std::string> m_FilterTokens;
 
-  static void InitColumnsIfNeeded();
-  static std::vector<std::string> s_Headers;
-  static std::vector<int> s_HeaderMap;
-  static std::vector<float> s_HeaderRatios;
-  static std::vector<SortingOrder> s_InitialOrders;
+  enum ColumnIndex {
+    COLUMN_INDEX,
+    COLUMN_NAME,
+    COLUMN_LENGTH,
+    COLUMN_TYPE_ID,
+    COLUMN_TYPE_ID_UNMOD,
+    COLUMN_NUM_VARIABLES,
+    COLUMN_NUM_FUNCTIONS,
+    COLUMN_NUM_BASE_CLASSES,
+    COLUMN_BASE_OFFSET,
+    COLUMN_MODULE,
+    COLUMN_NUM
+  };
 
   static const std::string MENU_ACTION_SUMMARY;
   static const std::string MENU_ACTION_DETAILS;

@@ -11,7 +11,7 @@
 
 //-----------------------------------------------------------------------------
 LogDataView::LogDataView() {
-  InitColumnsIfNeeded();
+  InitSortingOrders();
   GOrbitApp->RegisterOutputLog(this);
   GTcpServer->AddCallback(Msg_OrbitLog, [=](const Message& a_Msg) {
     this->OnReceiveMessage(a_Msg);
@@ -20,35 +20,16 @@ LogDataView::LogDataView() {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::string> LogDataView::s_Headers;
-std::vector<float> LogDataView::s_HeaderRatios;
-std::vector<DataView::SortingOrder> LogDataView::s_InitialOrders;
-
-//-----------------------------------------------------------------------------
-void LogDataView::InitColumnsIfNeeded() {
-  if (s_Headers.empty()) {
-    s_Headers.emplace_back("Log");
-    s_HeaderRatios.push_back(0.7f);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Time");
-    s_HeaderRatios.push_back(0.15f);
-    s_InitialOrders.push_back(DescendingOrder);
-
-    s_Headers.emplace_back("ThreadId");
-    s_HeaderRatios.push_back(0.15f);
-    s_InitialOrders.push_back(AscendingOrder);
-  }
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<std::string>& LogDataView::GetColumnHeaders() {
-  return s_Headers;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<float>& LogDataView::GetColumnHeadersRatios() {
-  return s_HeaderRatios;
+const std::vector<DataView::Column>& LogDataView::GetColumns() {
+  static const std::vector<Column> columns = [] {
+    std::vector<Column> columns;
+    columns.resize(COLUMN_NUM);
+    columns[COLUMN_MESSAGE] = {"Log", .7f, SortingOrder::Ascending};
+    columns[COLUMN_TIME] = {"Time", .15f, SortingOrder::Descending};
+    columns[COLUMN_THREAD_ID] = {"ThreadId", .15f, SortingOrder::Ascending};
+    return columns;
+  }();
+  return columns;
 }
 
 //-----------------------------------------------------------------------------
@@ -57,7 +38,10 @@ std::string LogDataView::GetValue(int a_Row, int a_Column) {
   std::string value;
 
   switch (a_Column) {
-    case LDV_Time: {
+    case COLUMN_MESSAGE:
+      return entry.m_Text;
+
+    case COLUMN_TIME: {
       TickType micros = (TickType)MicroSecondsFromTicks(
           Capture::GCaptureTimer.m_Start, entry.m_Time);
       std::chrono::system_clock::time_point sysTime =
@@ -71,20 +55,14 @@ std::string LogDataView::GetValue(int a_Row, int a_Column) {
 #endif
       char buffer[256];
       strftime(buffer, sizeof(buffer), "%H:%M:%S", &now_tm);
-      value = buffer;
-      break;
+      return buffer;
     }
-    case LDV_Message:
-      value = entry.m_Text;
-      break;
-    case LDV_ThreadId:
-      value = absl::StrFormat("%u", entry.m_ThreadId);
-      break;
-    default:
-      break;
-  }
 
-  return value;
+    case COLUMN_THREAD_ID:
+      return absl::StrFormat("%u", entry.m_ThreadId);
+    default:
+      return "";
+  }
 }
 
 //-----------------------------------------------------------------------------

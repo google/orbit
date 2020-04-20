@@ -19,129 +19,54 @@
 //-----------------------------------------------------------------------------
 SamplingReportDataView::SamplingReportDataView()
     : m_CallstackDataView(nullptr) {
-  InitColumnsIfNeeded();
-  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
-                         s_InitialOrders.end());
+  InitSortingOrders();
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::string> SamplingReportDataView::s_Headers;
-std::vector<int> SamplingReportDataView::s_HeaderMap;
-std::vector<float> SamplingReportDataView::s_HeaderRatios;
-std::vector<DataView::SortingOrder> SamplingReportDataView::s_InitialOrders;
-
-//-----------------------------------------------------------------------------
-void SamplingReportDataView::InitColumnsIfNeeded() {
-  if (s_Headers.empty()) {
-    s_Headers.emplace_back("Hooked");
-    s_HeaderMap.push_back(SamplingColumn::Toggle);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(DescendingOrder);
-
-    s_Headers.emplace_back("Index");
-    s_HeaderMap.push_back(SamplingColumn::Index);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Name");
-    s_HeaderMap.push_back(SamplingColumn::FunctionName);
-    s_HeaderRatios.push_back(0.6f);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Exclusive");
-    s_HeaderMap.push_back(SamplingColumn::Exclusive);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(DescendingOrder);
-
-    s_Headers.emplace_back("Inclusive");
-    s_HeaderMap.push_back(SamplingColumn::Inclusive);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(DescendingOrder);
-
-    s_Headers.emplace_back("Module");
-    s_HeaderMap.push_back(SamplingColumn::ModuleName);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("File");
-    s_HeaderMap.push_back(SamplingColumn::SourceFile);
-    s_HeaderRatios.push_back(0.2f);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Line");
-    s_HeaderMap.push_back(SamplingColumn::SourceLine);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Address");
-    s_HeaderMap.push_back(SamplingColumn::Address);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-  }
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<std::string>& SamplingReportDataView::GetColumnHeaders() {
-  return s_Headers;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<float>& SamplingReportDataView::GetColumnHeadersRatios() {
-  return s_HeaderRatios;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<DataView::SortingOrder>&
-SamplingReportDataView::GetColumnInitialOrders() {
-  return s_InitialOrders;
-}
-
-//-----------------------------------------------------------------------------
-int SamplingReportDataView::GetDefaultSortingColumn() {
-  return std::distance(s_HeaderMap.begin(),
-                       std::find(s_HeaderMap.begin(), s_HeaderMap.end(),
-                                 SamplingColumn::Inclusive));
+const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
+  static const std::vector<Column> columns = [] {
+    std::vector<Column> columns;
+    columns.resize(COLUMN_NUM);
+    columns[COLUMN_SELECTED] = {"Hooked", .0f, SortingOrder::Descending};
+    columns[COLUMN_INDEX] = {"Index", .0f, SortingOrder::Ascending};
+    columns[COLUMN_FUNCTION_NAME] = {"Name", .6f, SortingOrder::Ascending};
+    columns[COLUMN_EXCLUSIVE] = {"Exclusive", .0f, SortingOrder::Descending};
+    columns[COLUMN_INCLUSIVE] = {"Inclusive", .0f, SortingOrder::Descending};
+    columns[COLUMN_MODULE_NAME] = {"Module", .0f, SortingOrder::Ascending};
+    columns[COLUMN_FILE] = {"File", .2f, SortingOrder::Ascending};
+    columns[COLUMN_LINE] = {"Line", .0f, SortingOrder::Ascending};
+    columns[COLUMN_ADDRESS] = {"Address", .0f, SortingOrder::Ascending};
+    return columns;
+  }();
+  return columns;
 }
 
 //-----------------------------------------------------------------------------
 std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
   SampledFunction& func = GetSampledFunction(a_Row);
 
-  std::string value;
-
-  switch (s_HeaderMap[a_Column]) {
-    case SamplingColumn::Toggle:
-      value = func.GetSelected() ? "X" : "-";
-      break;
-    case SamplingColumn::Index:
-      value = absl::StrFormat("%d", a_Row);
-      break;
-    case SamplingColumn::FunctionName:
-      value = func.m_Name;
-      break;
-    case SamplingColumn::Exclusive:
-      value = absl::StrFormat("%.2f", func.m_Exclusive);
-      break;
-    case SamplingColumn::Inclusive:
-      value = absl::StrFormat("%.2f", func.m_Inclusive);
-      break;
-    case SamplingColumn::ModuleName:
-      value = func.m_Module;
-      break;
-    case SamplingColumn::SourceFile:
-      value = func.m_File;
-      break;
-    case SamplingColumn::SourceLine:
-      value = func.m_Line > 0 ? absl::StrFormat("%d", func.m_Line) : "";
-      break;
-    case SamplingColumn::Address:
-      value = absl::StrFormat("%#llx", func.m_Address);
-      break;
+  switch (a_Column) {
+    case COLUMN_SELECTED:
+      return func.GetSelected() ? "X" : "-";
+    case COLUMN_INDEX:
+      return absl::StrFormat("%d", a_Row);
+    case COLUMN_FUNCTION_NAME:
+      return func.m_Name;
+    case COLUMN_EXCLUSIVE:
+      return absl::StrFormat("%.2f", func.m_Exclusive);
+    case COLUMN_INCLUSIVE:
+      return absl::StrFormat("%.2f", func.m_Inclusive);
+    case COLUMN_MODULE_NAME:
+      return func.m_Module;
+    case COLUMN_FILE:
+      return func.m_File;
+    case COLUMN_LINE:
+      return func.m_Line > 0 ? absl::StrFormat("%d", func.m_Line) : "";
+    case COLUMN_ADDRESS:
+      return absl::StrFormat("%#llx", func.m_Address);
     default:
-      break;
+      return "";
   }
-
-  return value;
 }
 
 //-----------------------------------------------------------------------------
@@ -155,38 +80,37 @@ std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
 void SamplingReportDataView::OnSort(int a_Column,
                                     std::optional<SortingOrder> a_NewOrder) {
   std::vector<SampledFunction>& functions = m_Functions;
-  auto column = static_cast<SamplingColumn>(s_HeaderMap[a_Column]);
 
   if (a_NewOrder.has_value()) {
-    m_SortingOrders[column] = a_NewOrder.value();
+    m_SortingOrders[a_Column] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingOrders[column] == AscendingOrder;
+  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (column) {
-    case SamplingColumn::Toggle:
+  switch (a_Column) {
+    case COLUMN_SELECTED:
       sorter = ORBIT_PROC_SORT(GetSelected());
       break;
-    case SamplingColumn::FunctionName:
+    case COLUMN_FUNCTION_NAME:
       sorter = ORBIT_PROC_SORT(m_Name);
       break;
-    case SamplingColumn::Exclusive:
+    case COLUMN_EXCLUSIVE:
       sorter = ORBIT_PROC_SORT(m_Exclusive);
       break;
-    case SamplingColumn::Inclusive:
+    case COLUMN_INCLUSIVE:
       sorter = ORBIT_PROC_SORT(m_Inclusive);
       break;
-    case SamplingColumn::ModuleName:
+    case COLUMN_MODULE_NAME:
       sorter = ORBIT_PROC_SORT(m_Module);
       break;
-    case SamplingColumn::SourceFile:
+    case COLUMN_FILE:
       sorter = ORBIT_PROC_SORT(m_File);
       break;
-    case SamplingColumn::SourceLine:
+    case COLUMN_LINE:
       sorter = ORBIT_PROC_SORT(m_Line);
       break;
-    case SamplingColumn::Address:
+    case COLUMN_ADDRESS:
       sorter = ORBIT_PROC_SORT(m_Address);
       break;
     default:
