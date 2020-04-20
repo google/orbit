@@ -8,16 +8,12 @@
 
 #include "App.h"
 #include "CallStackDataView.h"
-#include "Core.h"
 #include "FunctionsDataView.h"
 #include "GlobalsDataView.h"
 #include "LiveFunctionsDataView.h"
-#include "Log.h"
 #include "LogDataView.h"
 #include "ModulesDataView.h"
 #include "OrbitType.h"
-#include "Params.h"
-#include "Pdb.h"
 #include "ProcessesDataView.h"
 #include "SamplingReportDataView.h"
 #include "SessionsDataView.h"
@@ -73,21 +69,11 @@ DataView* DataView::Create(DataViewType a_Type) {
 }
 
 //-----------------------------------------------------------------------------
-const std::vector<std::string>& DataView::GetColumnHeaders() {
-  static std::vector<std::string> columns = {"Invalid Header"};
-  return columns;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<float>& DataView::GetColumnHeadersRatios() {
-  static std::vector<float> ratios = {0.0};
-  return ratios;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<DataView::SortingOrder>& DataView::GetColumnInitialOrders() {
-  static std::vector<DataView::SortingOrder> orders = {AscendingOrder};
-  return orders;
+void DataView::InitSortingOrders() {
+  m_SortingOrders.clear();
+  for (const auto& column : GetColumns()) {
+    m_SortingOrders.push_back(column.initial_order);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -119,25 +105,19 @@ void DataView::ExportCSV(const std::string& a_FileName) {
   std::ofstream out(a_FileName);
   if (out.fail()) return;
 
-  const std::vector<std::string>& headers = GetColumnHeaders();
-
-  for (size_t i = 0; i < headers.size(); ++i) {
-    out << headers[i];
-    if (i < headers.size() - 1) out << ", ";
+  size_t numColumns = GetColumns().size();
+  for (size_t i = 0; i < numColumns; ++i) {
+    out << GetColumns()[i].header;
+    if (i < numColumns - 1) out << ", ";
   }
-
   out << "\n";
 
-  size_t numColumns = headers.size();
   size_t numElements = GetNumElements();
   for (size_t i = 0; i < numElements; ++i) {
     for (size_t j = 0; j < numColumns; ++j) {
       out << GetValue((int)i, (int)j);
-      if (j < numColumns - 1) {
-        out << ", ";
-      }
+      if (j < numColumns - 1) out << ", ";
     }
-
     out << "\n";
   }
 
@@ -147,16 +127,13 @@ void DataView::ExportCSV(const std::string& a_FileName) {
 //-----------------------------------------------------------------------------
 void DataView::CopySelection(const std::vector<int>& selection) {
   std::string clipboard;
-  const std::vector<std::string>& headers = GetColumnHeaders();
-
-  for (size_t i = 0; i < headers.size(); ++i) {
-    clipboard += headers[i];
-    if (i < headers.size() - 1) clipboard += ", ";
+  size_t numColumns = GetColumns().size();
+  for (size_t i = 0; i < numColumns; ++i) {
+    clipboard += GetColumns()[i].header;
+    if (i < numColumns - 1) clipboard += ", ";
   }
-
   clipboard += "\n";
 
-  size_t numColumns = headers.size();
   size_t numElements = GetNumElements();
   for (size_t i : selection) {
     if (i < numElements) {
@@ -164,7 +141,6 @@ void DataView::CopySelection(const std::vector<int>& selection) {
         clipboard += GetValue((int)i, (int)j);
         if (j < numColumns - 1) clipboard += ", ";
       }
-
       clipboard += "\n";
     }
   }

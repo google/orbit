@@ -16,89 +16,27 @@
 
 //-----------------------------------------------------------------------------
 FunctionsDataView::FunctionsDataView() {
-  InitColumnsIfNeeded();
-  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
-                         s_InitialOrders.end());
+  InitSortingOrders();
   GOrbitApp->RegisterFunctionsDataView(this);
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::string> FunctionsDataView::s_Headers;
-std::vector<int> FunctionsDataView::s_HeaderMap;
-std::vector<float> FunctionsDataView::s_HeaderRatios;
-std::vector<DataView::SortingOrder> FunctionsDataView::s_InitialOrders;
-
-//-----------------------------------------------------------------------------
-void FunctionsDataView::InitColumnsIfNeeded() {
-  if (s_Headers.empty()) {
-    s_Headers.emplace_back("Hooked");
-    s_HeaderMap.push_back(Function::SELECTED);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(DescendingOrder);
-
-    s_Headers.emplace_back("Index");
-    s_HeaderMap.push_back(Function::INDEX);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Function");
-    s_HeaderMap.push_back(Function::NAME);
-    s_HeaderRatios.push_back(0.5f);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Size");
-    s_HeaderMap.push_back(Function::SIZE);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("File");
-    s_HeaderMap.push_back(Function::FILE);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Line");
-    s_HeaderMap.push_back(Function::LINE);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Module");
-    s_HeaderMap.push_back(Function::MODULE);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Address");
-    s_HeaderMap.push_back(Function::ADDRESS);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Conv");
-    s_HeaderMap.push_back(Function::CALL_CONV);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-  }
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<std::string>& FunctionsDataView::GetColumnHeaders() {
-  return s_Headers;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<float>& FunctionsDataView::GetColumnHeadersRatios() {
-  return s_HeaderRatios;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<DataView::SortingOrder>&
-FunctionsDataView::GetColumnInitialOrders() {
-  return s_InitialOrders;
-}
-
-//-----------------------------------------------------------------------------
-int FunctionsDataView::GetDefaultSortingColumn() {
-  return std::distance(
-      s_HeaderMap.begin(),
-      std::find(s_HeaderMap.begin(), s_HeaderMap.end(), Function::ADDRESS));
+const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
+  static const std::vector<Column> columns = [] {
+    std::vector<Column> columns;
+    columns.resize(COLUMN_NUM);
+    columns[COLUMN_SELECTED] = {"Hooked", .0f, SortingOrder::Descending};
+    columns[COLUMN_INDEX] = {"Index", .0f, SortingOrder::Ascending};
+    columns[COLUMN_NAME] = {"Function", .5f, SortingOrder::Ascending};
+    columns[COLUMN_SIZE] = {"Size", .0f, SortingOrder::Ascending};
+    columns[COLUMN_FILE] = {"File", .0f, SortingOrder::Ascending};
+    columns[COLUMN_LINE] = {"Line", .0f, SortingOrder::Ascending};
+    columns[COLUMN_MODULE] = {"Module", .0f, SortingOrder::Ascending};
+    columns[COLUMN_ADDRESS] = {"Address", .0f, SortingOrder::Ascending};
+    columns[COLUMN_CALL_CONV] = {"Call conv", .0f, SortingOrder::Ascending};
+    return columns;
+  }();
+  return columns;
 }
 
 //-----------------------------------------------------------------------------
@@ -116,33 +54,33 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
 
   std::string value;
 
-  switch (s_HeaderMap[a_Column]) {
-    case Function::INDEX:
-      value = absl::StrFormat("%d", a_Row);
-      break;
-    case Function::SELECTED:
+  switch (a_Column) {
+    case COLUMN_SELECTED:
       value = function->IsSelected() ? "X" : "-";
       break;
-    case Function::NAME:
+    case COLUMN_INDEX:
+      value = absl::StrFormat("%d", a_Row);
+      break;
+    case COLUMN_NAME:
       value = function->PrettyName();
       break;
-    case Function::ADDRESS:
-      value = absl::StrFormat("0x%llx", function->GetVirtualAddress());
+    case COLUMN_SIZE:
+      value = absl::StrFormat("%lu", function->Size());
       break;
-    case Function::FILE:
+    case COLUMN_FILE:
       value = function->File();
       break;
-    case Function::MODULE:
+    case COLUMN_LINE:
+      value = absl::StrFormat("%i", function->Line());
+      break;
+    case COLUMN_MODULE:
       value =
           function->GetPdb() != nullptr ? function->GetPdb()->GetName() : "";
       break;
-    case Function::LINE:
-      value = absl::StrFormat("%i", function->Line());
+    case COLUMN_ADDRESS:
+      value = absl::StrFormat("0x%llx", function->GetVirtualAddress());
       break;
-    case Function::SIZE:
-      value = absl::StrFormat("%lu", function->Size());
-      break;
-    case Function::CALL_CONV:
+    case COLUMN_CALL_CONV:
       value = function->GetCallingConventionString();
       break;
     default:
@@ -168,38 +106,37 @@ void FunctionsDataView::OnSort(int a_Column,
 
   const std::vector<std::shared_ptr<Function>>& functions =
       Capture::GTargetProcess->GetFunctions();
-  auto memberId = static_cast<Function::MemberID>(s_HeaderMap[a_Column]);
 
   if (a_NewOrder.has_value()) {
     m_SortingOrders[a_Column] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingOrders[a_Column] == AscendingOrder;
+  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (memberId) {
-    case Function::NAME:
-      sorter = ORBIT_FUNC_SORT(PrettyName());
-      break;
-    case Function::ADDRESS:
-      sorter = ORBIT_FUNC_SORT(Address());
-      break;
-    case Function::MODULE:
-      sorter = ORBIT_FUNC_SORT(GetPdb()->GetName());
-      break;
-    case Function::FILE:
-      sorter = ORBIT_FUNC_SORT(File());
-      break;
-    case Function::LINE:
-      sorter = ORBIT_FUNC_SORT(Line());
-      break;
-    case Function::SIZE:
-      sorter = ORBIT_FUNC_SORT(Size());
-      break;
-    case Function::SELECTED:
+  switch (a_Column) {
+    case COLUMN_SELECTED:
       sorter = ORBIT_FUNC_SORT(IsSelected());
       break;
-    case Function::CALL_CONV:
+    case COLUMN_NAME:
+      sorter = ORBIT_FUNC_SORT(PrettyName());
+      break;
+    case COLUMN_SIZE:
+      sorter = ORBIT_FUNC_SORT(Size());
+      break;
+    case COLUMN_FILE:
+      sorter = ORBIT_FUNC_SORT(File());
+      break;
+    case COLUMN_LINE:
+      sorter = ORBIT_FUNC_SORT(Line());
+      break;
+    case COLUMN_MODULE:
+      sorter = ORBIT_FUNC_SORT(GetPdb()->GetName());
+      break;
+    case COLUMN_ADDRESS:
+      sorter = ORBIT_FUNC_SORT(Address());
+      break;
+    case COLUMN_CALL_CONV:
       sorter = ORBIT_FUNC_SORT(CallingConvention());
       break;
     default:

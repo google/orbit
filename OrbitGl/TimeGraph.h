@@ -137,7 +137,6 @@ class TimeGraph {
   double m_ZoomValue = 0;
   double m_MouseRatio = 0;
   unsigned int m_MainFrameCounter = 0;
-  unsigned char m_TrackAlpha = 255;
 
   TimeGraphLayout m_Layout;
 

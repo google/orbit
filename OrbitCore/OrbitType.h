@@ -28,21 +28,6 @@ class Type {
  public:
   Type() {}
 
-  enum MemberID {
-    NAME,
-    LENGTH,
-    TYPE_ID,
-    TYPE_ID_UNMODIFIED,
-    NUM_VARIABLES,
-    NUM_FUNCTIONS,
-    NUM_BASE_CLASSES,
-    BASE_OFFSET,
-    MODULE,
-    SELECTED,
-    INDEX,
-    NUM_EXPOSED_MEMBERS
-  };
-
   void LoadDiaInfo();
   void GenerateDiaHierarchy();
   void GenerateDiaHierarchy(struct IDiaSymbol* a_DiaSymbol);
@@ -51,7 +36,7 @@ class Type {
   Pdb* GetPdb() const { return m_Pdb; }
   const std::string& GetName() const { return m_Name; }
   const std::string& GetNameLower() {
-    if (m_NameLower.size() == 0) {
+    if (m_NameLower.empty()) {
       m_NameLower = ToLower(m_Name);
     }
     return m_NameLower;
@@ -63,7 +48,7 @@ class Type {
 
   bool IsA(const std::string& a_TypeName);
   int GetOffset(const std::string& a_Member);
-  bool HasMembers() const { return m_DataMembers.size() > 0; }
+  bool HasMembers() const { return !m_DataMembers.empty(); }
   Variable* FindImmediateChild(const std::string& a_Name);
 
   std::shared_ptr<Variable> GetTemplateVariable();

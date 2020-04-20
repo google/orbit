@@ -58,10 +58,10 @@ void OrbitSamplingReport::Initialize(std::shared_ptr<SamplingReport> a_Report) {
       treeView->GetTreeView()->setSortingEnabled(false);
     } else {
       int column = report->GetDefaultSortingColumn();
-      Qt::SortOrder order =
-          report->GetColumnInitialOrders()[column] == DataView::AscendingOrder
-              ? Qt::AscendingOrder
-              : Qt::DescendingOrder;
+      Qt::SortOrder order = report->GetColumns()[column].initial_order ==
+                                    DataView::SortingOrder::Ascending
+                                ? Qt::AscendingOrder
+                                : Qt::DescendingOrder;
       treeView->GetTreeView()->sortByColumn(column, order);
     }
 

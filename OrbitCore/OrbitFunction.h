@@ -55,19 +55,6 @@ struct FunctionArgInfo {
 
 class Function {
  public:
-  enum MemberID {
-    NAME,
-    ADDRESS,
-    MODULE,
-    FILE,
-    LINE,
-    SELECTED,
-    INDEX,
-    SIZE,
-    CALL_CONV,
-    NUM_EXPOSED_MEMBERS
-  };
-
   enum OrbitType {
     NONE,
     ORBIT_TIMER_START,
@@ -127,7 +114,7 @@ class Function {
   const std::string& Probe() const { return probe_; }
   int CallingConvention() const { return calling_convention_; }
   const Pdb* GetPdb() const { return pdb_; }
-  const FunctionStats* Stats() const { return stats_.get(); }
+  const FunctionStats& Stats() const { return *stats_; }
   const char* GetCallingConventionString();
   void ProcessArgumentInfo();
   bool IsMemberFunction();

@@ -4,6 +4,8 @@
 
 #include "ProcessesDataView.h"
 
+#include <utility>
+
 #include "App.h"
 #include "Callstack.h"
 #include "Capture.h"
@@ -16,9 +18,7 @@
 
 //-----------------------------------------------------------------------------
 ProcessesDataView::ProcessesDataView() {
-  InitColumnsIfNeeded();
-  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
-                         s_InitialOrders.end());
+  InitSortingOrders();
 
   UpdateProcessList();
   m_UpdatePeriodMs = 1000;
@@ -28,76 +28,35 @@ ProcessesDataView::ProcessesDataView() {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::string> ProcessesDataView::s_Headers;
-std::vector<float> ProcessesDataView::s_HeaderRatios;
-std::vector<DataView::SortingOrder> ProcessesDataView::s_InitialOrders;
-
-//-----------------------------------------------------------------------------
-void ProcessesDataView::InitColumnsIfNeeded() {
-  if (s_Headers.empty()) {
-    s_Headers.emplace_back("PID");
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Name");
-    s_HeaderRatios.push_back(0.5f);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("CPU");
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(DescendingOrder);
-
-    s_Headers.emplace_back("Type");
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-  }
+const std::vector<DataView::Column>& ProcessesDataView::GetColumns() {
+  static const std::vector<Column> columns = [] {
+    std::vector<Column> columns;
+    columns.resize(COLUMN_NUM);
+    columns[COLUMN_PID] = {"PID", .0f, SortingOrder::Ascending};
+    columns[COLUMN_NAME] = {"Name", .5f, SortingOrder::Ascending};
+    columns[COLUMN_CPU] = {"CPU", .0f, SortingOrder::Descending};
+    columns[COLUMN_TYPE] = {"Type", .0f, SortingOrder::Ascending};
+    return columns;
+  }();
+  return columns;
 }
-
-//-----------------------------------------------------------------------------
-const std::vector<std::string>& ProcessesDataView::GetColumnHeaders() {
-  return s_Headers;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<float>& ProcessesDataView::GetColumnHeadersRatios() {
-  return s_HeaderRatios;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<DataView::SortingOrder>&
-ProcessesDataView::GetColumnInitialOrders() {
-  return s_InitialOrders;
-}
-
-//-----------------------------------------------------------------------------
-int ProcessesDataView::GetDefaultSortingColumn() { return PDV_CPU; }
 
 //-----------------------------------------------------------------------------
 std::string ProcessesDataView::GetValue(int row, int col) {
   const Process& process = *GetProcess(row);
-  std::string value;
 
   switch (col) {
-    case PDV_ProcessID:
-      value = std::to_string((long)process.GetID());
-      break;
-    case PDV_ProcessName:
-      value = process.GetName();
-      if (process.IsElevated()) {
-        value += "*";
-      }
-      break;
-    case PDV_CPU:
-      value = absl::StrFormat("%.1f", process.GetCpuUsage());
-      break;
-    case PDV_Type:
-      value = process.GetIs64Bit() ? "64 bit" : "32 bit";
-      break;
+    case COLUMN_PID:
+      return std::to_string((long)process.GetID());
+    case COLUMN_NAME:
+      return process.GetName() + (process.IsElevated() ? "*" : "");
+    case COLUMN_CPU:
+      return absl::StrFormat("%.1f", process.GetCpuUsage());
+    case COLUMN_TYPE:
+      return process.GetIs64Bit() ? "64 bit" : "32 bit";
     default:
-      break;
+      return "";
   }
-
-  return value;
 }
 
 //-----------------------------------------------------------------------------
@@ -116,32 +75,27 @@ std::string ProcessesDataView::GetToolTip(int a_Row, int /*a_Column*/) {
 //-----------------------------------------------------------------------------
 void ProcessesDataView::OnSort(int a_Column,
                                std::optional<SortingOrder> a_NewOrder) {
-  if (a_Column == -1) {
-    a_Column = PdvColumn::PDV_CPU;
-  }
-
   const std::vector<std::shared_ptr<Process>>& processes =
       m_ProcessList.GetProcesses();
-  auto pdvColumn = static_cast<PdvColumn>(a_Column);
 
   if (a_NewOrder.has_value()) {
-    m_SortingOrders[pdvColumn] = a_NewOrder.value();
+    m_SortingOrders[a_Column] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingOrders[pdvColumn] == AscendingOrder;
+  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (pdvColumn) {
-    case PDV_ProcessID:
+  switch (a_Column) {
+    case COLUMN_PID:
       sorter = ORBIT_PROC_SORT(GetID());
       break;
-    case PDV_ProcessName:
+    case COLUMN_NAME:
       sorter = ORBIT_PROC_SORT(GetName());
       break;
-    case PDV_CPU:
+    case COLUMN_CPU:
       sorter = ORBIT_PROC_SORT(GetCpuUsage());
       break;
-    case PDV_Type:
+    case COLUMN_TYPE:
       sorter = ORBIT_PROC_SORT(GetIs64Bit());
       break;
     default:
@@ -171,7 +125,7 @@ void ProcessesDataView::OnSelect(int a_Index) {
 }
 
 void ProcessesDataView::UpdateModuleDataView(
-    std::shared_ptr<Process> a_Process) {
+    const std::shared_ptr<Process>& a_Process) {
   if (m_ModulesDataView) {
     m_ModulesDataView->SetProcess(a_Process);
     Capture::SetTargetProcess(a_Process);
@@ -321,10 +275,9 @@ void ProcessesDataView::UpdateProcessList() {
 }
 
 //-----------------------------------------------------------------------------
-void ProcessesDataView::SetRemoteProcessList(
-    std::shared_ptr<ProcessList> a_RemoteProcessList) {
+void ProcessesDataView::SetRemoteProcessList(ProcessList a_RemoteProcessList) {
   m_IsRemote = true;
-  m_ProcessList = *a_RemoteProcessList;
+  m_ProcessList = std::move(a_RemoteProcessList);
   UpdateProcessList();
   OnSort(m_LastSortedColumn, {});
   OnFilter(m_Filter);
@@ -332,7 +285,8 @@ void ProcessesDataView::SetRemoteProcessList(
 }
 
 //-----------------------------------------------------------------------------
-void ProcessesDataView::SetRemoteProcess(std::shared_ptr<Process> a_Process) {
+void ProcessesDataView::SetRemoteProcess(
+    const std::shared_ptr<Process>& a_Process) {
   std::shared_ptr<Process> targetProcess =
       m_ProcessList.GetProcess(a_Process->GetID());
   if (targetProcess) {

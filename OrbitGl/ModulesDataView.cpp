@@ -10,102 +10,50 @@
 
 //-----------------------------------------------------------------------------
 ModulesDataView::ModulesDataView() {
-  InitColumnsIfNeeded();
-  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
-                         s_InitialOrders.end());
-
+  InitSortingOrders();
   GOrbitApp->RegisterModulesDataView(this);
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::string> ModulesDataView::s_Headers;
-std::vector<float> ModulesDataView::s_HeaderRatios;
-std::vector<DataView::SortingOrder> ModulesDataView::s_InitialOrders;
-
-//-----------------------------------------------------------------------------
-void ModulesDataView::InitColumnsIfNeeded() {
-  if (s_Headers.empty()) {
-    s_Headers.emplace_back("Index");
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Name");
-    s_HeaderRatios.push_back(0.2f);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Path");
-    s_HeaderRatios.push_back(0.3f);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Address Range");
-    s_HeaderRatios.push_back(0.15f);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Debug info");
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(DescendingOrder);
-
-    s_Headers.emplace_back("Pdb Size");
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(DescendingOrder);
-
-    s_Headers.emplace_back("Loaded");
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(DescendingOrder);
-  }
+const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
+  static const std::vector<Column> columns = [] {
+    std::vector<Column> columns;
+    columns.resize(COLUMN_NUM);
+    columns[COLUMN_INDEX] = {"Index", .0f, SortingOrder::Ascending};
+    columns[COLUMN_NAME] = {"Name", .2f, SortingOrder::Ascending};
+    columns[COLUMN_PATH] = {"Path", .3f, SortingOrder::Ascending};
+    columns[COLUMN_ADDRESS_RANGE] = {"Address Range", .15f,
+                                     SortingOrder::Ascending};
+    columns[COLUMN_HAS_PDB] = {"Debug info", .0f, SortingOrder::Descending};
+    columns[COLUMN_PDB_SIZE] = {"Pdb Size", .0f, SortingOrder::Descending};
+    columns[COLUMN_LOADED] = {"Loaded", .0f, SortingOrder::Descending};
+    return columns;
+  }();
+  return columns;
 }
-
-//-----------------------------------------------------------------------------
-const std::vector<std::string>& ModulesDataView::GetColumnHeaders() {
-  return s_Headers;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<float>& ModulesDataView::GetColumnHeadersRatios() {
-  return s_HeaderRatios;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<DataView::SortingOrder>&
-ModulesDataView::GetColumnInitialOrders() {
-  return s_InitialOrders;
-}
-
-//-----------------------------------------------------------------------------
-int ModulesDataView::GetDefaultSortingColumn() { return MDV_PdbSize; }
 
 //-----------------------------------------------------------------------------
 std::string ModulesDataView::GetValue(int row, int col) {
   const std::shared_ptr<Module>& module = GetModule(row);
-  std::string value;
 
   switch (col) {
-    case MDV_Index:
-      value = std::to_string((long)row);
-      break;
-    case MDV_ModuleName:
-      value = module->m_Name;
-      break;
-    case MDV_Path:
-      value = module->m_FullName;
-      break;
-    case MDV_AddressRange:
-      value = module->m_AddressRange;
-      break;
-    case MDV_HasPdb:
-      value = module->m_FoundPdb ? "*" : "";
-      break;
-    case MDV_PdbSize:
-      value = module->m_FoundPdb ? GetPrettySize(module->m_PdbSize) : "";
-      break;
-    case MDV_Loaded:
-      value = module->GetLoaded() ? "*" : "";
-      break;
+    case COLUMN_INDEX:
+      return std::to_string(row);
+    case COLUMN_NAME:
+      return module->m_Name;
+    case COLUMN_PATH:
+      return module->m_FullName;
+    case COLUMN_ADDRESS_RANGE:
+      return module->m_AddressRange;
+    case COLUMN_HAS_PDB:
+      return module->m_FoundPdb ? "*" : "";
+    case COLUMN_PDB_SIZE:
+      return module->m_FoundPdb ? GetPrettySize(module->m_PdbSize) : "";
+    case COLUMN_LOADED:
+      return module->GetLoaded() ? "*" : "";
     default:
-      break;
+      return "";
   }
-
-  return value;
 }
 
 //-----------------------------------------------------------------------------
@@ -118,32 +66,30 @@ std::string ModulesDataView::GetValue(int row, int col) {
 //-----------------------------------------------------------------------------
 void ModulesDataView::OnSort(int a_Column,
                              std::optional<SortingOrder> a_NewOrder) {
-  auto mdvColumn = static_cast<MdvColumn>(a_Column);
-
   if (a_NewOrder.has_value()) {
-    m_SortingOrders[mdvColumn] = a_NewOrder.value();
+    m_SortingOrders[a_Column] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingOrders[mdvColumn] == AscendingOrder;
+  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (mdvColumn) {
-    case MDV_ModuleName:
+  switch (a_Column) {
+    case COLUMN_NAME:
       sorter = ORBIT_PROC_SORT(m_Name);
       break;
-    case MDV_Path:
+    case COLUMN_PATH:
       sorter = ORBIT_PROC_SORT(m_FullName);
       break;
-    case MDV_AddressRange:
+    case COLUMN_ADDRESS_RANGE:
       sorter = ORBIT_PROC_SORT(m_AddressStart);
       break;
-    case MDV_HasPdb:
+    case COLUMN_HAS_PDB:
       sorter = ORBIT_PROC_SORT(m_FoundPdb);
       break;
-    case MDV_PdbSize:
+    case COLUMN_PDB_SIZE:
       sorter = ORBIT_PROC_SORT(m_PdbSize);
       break;
-    case MDV_Loaded:
+    case COLUMN_LOADED:
       sorter = ORBIT_PROC_SORT(GetLoaded());
       break;
     default:
@@ -264,7 +210,7 @@ void ModulesDataView::OnFilter(const std::string& a_Filter) {
 }
 
 //-----------------------------------------------------------------------------
-void ModulesDataView::SetProcess(std::shared_ptr<Process> a_Process) {
+void ModulesDataView::SetProcess(const std::shared_ptr<Process>& a_Process) {
   m_Modules.clear();
   m_Process = a_Process;
 

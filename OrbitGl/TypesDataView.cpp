@@ -17,9 +17,7 @@
 
 //-----------------------------------------------------------------------------
 TypesDataView::TypesDataView() {
-  InitColumnsIfNeeded();
-  m_SortingOrders.insert(m_SortingOrders.end(), s_InitialOrders.begin(),
-                         s_InitialOrders.end());
+  InitSortingOrders();
   OnDataChanged();
 
   GOrbitApp->RegisterTypesDataView(this);
@@ -35,129 +33,57 @@ void TypesDataView::OnDataChanged() {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::string> TypesDataView::s_Headers;
-std::vector<int> TypesDataView::s_HeaderMap;
-std::vector<float> TypesDataView::s_HeaderRatios;
-std::vector<DataView::SortingOrder> TypesDataView::s_InitialOrders;
-
-//-----------------------------------------------------------------------------
-void TypesDataView::InitColumnsIfNeeded() {
-  if (s_Headers.empty()) {
-    s_Headers.emplace_back("Index");
-    s_HeaderMap.push_back(Type::INDEX);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Type");
-    s_HeaderMap.push_back(Type::NAME);
-    s_HeaderRatios.push_back(0.5f);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Length");
-    s_HeaderMap.push_back(Type::LENGTH);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("TypeId");
-    s_HeaderMap.push_back(Type::TYPE_ID);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("UnModifiedId");
-    s_HeaderMap.push_back(Type::TYPE_ID_UNMODIFIED);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("NumVariables");
-    s_HeaderMap.push_back(Type::NUM_VARIABLES);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("NumFunctions");
-    s_HeaderMap.push_back(Type::NUM_FUNCTIONS);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("NumBaseClasses");
-    s_HeaderMap.push_back(Type::NUM_BASE_CLASSES);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("BaseOffset");
-    s_HeaderMap.push_back(Type::BASE_OFFSET);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-
-    s_Headers.emplace_back("Module");
-    s_HeaderMap.push_back(Type::MODULE);
-    s_HeaderRatios.push_back(0);
-    s_InitialOrders.push_back(AscendingOrder);
-  }
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<std::string>& TypesDataView::GetColumnHeaders() {
-  return s_Headers;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<float>& TypesDataView::GetColumnHeadersRatios() {
-  return s_HeaderRatios;
-}
-
-//-----------------------------------------------------------------------------
-const std::vector<DataView::SortingOrder>&
-TypesDataView::GetColumnInitialOrders() {
-  return s_InitialOrders;
+const std::vector<DataView::Column>& TypesDataView::GetColumns() {
+  static const std::vector<Column> columns = [] {
+    std::vector<Column> columns;
+    columns.resize(COLUMN_NUM);
+    columns[COLUMN_INDEX] = {"Index", .0f, SortingOrder::Ascending};
+    columns[COLUMN_NAME] = {"Type", .5f, SortingOrder::Ascending};
+    columns[COLUMN_LENGTH] = {"Length", .0f, SortingOrder::Ascending};
+    columns[COLUMN_TYPE_ID] = {"Type Id", .0f, SortingOrder::Ascending};
+    columns[COLUMN_TYPE_ID_UNMOD] = {"Unmodified Id", .0f,
+                                     SortingOrder::Ascending};
+    columns[COLUMN_NUM_VARIABLES] = {"Num Variables", .0f,
+                                     SortingOrder::Ascending};
+    columns[COLUMN_NUM_FUNCTIONS] = {"Num Functions", .0f,
+                                     SortingOrder::Ascending};
+    columns[COLUMN_NUM_BASE_CLASSES] = {"Num Base Classes", .0f,
+                                        SortingOrder::Ascending};
+    columns[COLUMN_BASE_OFFSET] = {"Base Offset", .0f, SortingOrder::Ascending};
+    columns[COLUMN_MODULE] = {"Module", .0f, SortingOrder::Ascending};
+    return columns;
+  }();
+  return columns;
 }
 
 //-----------------------------------------------------------------------------
 std::string TypesDataView::GetValue(int a_Row, int a_Column) {
-  ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
-
   Type& type = GetType(a_Row);
 
-  std::string value;
-
-  switch (s_HeaderMap[a_Column]) {
-    case Type::INDEX:
-      value = absl::StrFormat("%d", a_Row);
-      break;
-    case Type::SELECTED:
-      value = type.m_Selected ? "X" : "-";
-      break;
-    case Type::NAME:
-      value = type.GetName();
-      break;
-    case Type::LENGTH:
-      value = absl::StrFormat("%d", type.m_Length);
-      break;
-    case Type::TYPE_ID:
-      value = absl::StrFormat("%lu", type.m_Id);
-      break;
-    case Type::TYPE_ID_UNMODIFIED:
-      value = absl::StrFormat("%lu", type.m_UnmodifiedId);
-      break;
-    case Type::NUM_VARIABLES:
-      value = absl::StrFormat("%d", type.m_NumVariables);
-      break;
-    case Type::NUM_FUNCTIONS:
-      value = absl::StrFormat("%d", type.m_NumFunctions);
-      break;
-    case Type::NUM_BASE_CLASSES:
-      value = absl::StrFormat("%d", type.m_NumBaseClasses);
-      break;
-    case Type::BASE_OFFSET:
-      value = absl::StrFormat("%d", type.m_BaseOffset);
-      break;
-    case Type::MODULE:
-      value = type.m_Pdb->GetName();
-      break;
+  switch (a_Column) {
+    case COLUMN_INDEX:
+      return absl::StrFormat("%d", a_Row);
+    case COLUMN_NAME:
+      return type.GetName();
+    case COLUMN_LENGTH:
+      return absl::StrFormat("%d", type.m_Length);
+    case COLUMN_TYPE_ID:
+      return absl::StrFormat("%lu", type.m_Id);
+    case COLUMN_TYPE_ID_UNMOD:
+      return absl::StrFormat("%lu", type.m_UnmodifiedId);
+    case COLUMN_NUM_VARIABLES:
+      return absl::StrFormat("%d", type.m_NumVariables);
+    case COLUMN_NUM_FUNCTIONS:
+      return absl::StrFormat("%d", type.m_NumFunctions);
+    case COLUMN_NUM_BASE_CLASSES:
+      return absl::StrFormat("%d", type.m_NumBaseClasses);
+    case COLUMN_BASE_OFFSET:
+      return absl::StrFormat("%d", type.m_BaseOffset);
+    case COLUMN_MODULE:
+      return type.m_Pdb->GetName();
     default:
-      break;
+      return "";
   }
-
-  return value;
 }
 
 //-----------------------------------------------------------------------------
@@ -220,45 +146,41 @@ void TypesDataView::ParallelFilter(const std::string& a_Filter) {
 void TypesDataView::OnSort(int a_Column,
                            std::optional<SortingOrder> a_NewOrder) {
   const std::vector<Type*>& types = Capture::GTargetProcess->GetTypes();
-  auto MemberID = static_cast<Type::MemberID>(s_HeaderMap[a_Column]);
 
   if (a_NewOrder.has_value()) {
     m_SortingOrders[a_Column] = a_NewOrder.value();
   }
 
-  bool ascending = m_SortingOrders[a_Column] == AscendingOrder;
+  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (MemberID) {
-    case Type::NAME:
+  switch (a_Column) {
+    case COLUMN_NAME:
       sorter = ORBIT_TYPE_SORT(m_Name);
       break;
-    case Type::LENGTH:
+    case COLUMN_LENGTH:
       sorter = ORBIT_TYPE_SORT(m_Length);
       break;
-    case Type::TYPE_ID:
+    case COLUMN_TYPE_ID:
       sorter = ORBIT_TYPE_SORT(m_Id);
       break;
-    case Type::TYPE_ID_UNMODIFIED:
+    case COLUMN_TYPE_ID_UNMOD:
       sorter = ORBIT_TYPE_SORT(m_UnmodifiedId);
       break;
-    case Type::NUM_VARIABLES:
+    case COLUMN_NUM_VARIABLES:
       sorter = ORBIT_TYPE_SORT(m_NumVariables);
       break;
-    case Type::NUM_FUNCTIONS:
+    case COLUMN_NUM_FUNCTIONS:
       sorter = ORBIT_TYPE_SORT(m_NumFunctions);
       break;
-    case Type::NUM_BASE_CLASSES:
+    case COLUMN_NUM_BASE_CLASSES:
       sorter = ORBIT_TYPE_SORT(m_NumBaseClasses);
       break;
-    case Type::BASE_OFFSET:
+    case COLUMN_BASE_OFFSET:
       sorter = ORBIT_TYPE_SORT(m_BaseOffset);
       break;
-    case Type::MODULE:
+    case COLUMN_MODULE:
       sorter = ORBIT_TYPE_SORT(m_Pdb->GetName());
-      break;
-    case Type::SELECTED:
-      sorter = ORBIT_TYPE_SORT(m_Selected);
       break;
     default:
       break;
@@ -327,6 +249,7 @@ void TypesDataView::OnContextMenu(const std::string& a_Action, int a_MenuIndex,
 
 //-----------------------------------------------------------------------------
 Type& TypesDataView::GetType(unsigned int a_Row) const {
+  ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
   std::vector<Type*>& types = Capture::GTargetProcess->GetTypes();
   return *types[m_Indices[a_Row]];
 }

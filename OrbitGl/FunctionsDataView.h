@@ -10,10 +10,8 @@ class FunctionsDataView : public DataView {
  public:
   FunctionsDataView();
 
-  const std::vector<std::string>& GetColumnHeaders() override;
-  const std::vector<float>& GetColumnHeadersRatios() override;
-  const std::vector<SortingOrder>& GetColumnInitialOrders() override;
-  int GetDefaultSortingColumn() override;
+  const std::vector<Column>& GetColumns() override;
+  int GetDefaultSortingColumn() override { return COLUMN_ADDRESS; };
   std::vector<std::string> GetContextMenu(
       int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
   std::string GetValue(int a_Row, int a_Column) override;
@@ -29,11 +27,18 @@ class FunctionsDataView : public DataView {
 
   std::vector<std::string> m_FilterTokens;
 
-  static void InitColumnsIfNeeded();
-  static std::vector<std::string> s_Headers;
-  static std::vector<int> s_HeaderMap;
-  static std::vector<float> s_HeaderRatios;
-  static std::vector<SortingOrder> s_InitialOrders;
+  enum ColumnIndex {
+    COLUMN_SELECTED,
+    COLUMN_INDEX,
+    COLUMN_NAME,
+    COLUMN_SIZE,
+    COLUMN_FILE,
+    COLUMN_LINE,
+    COLUMN_MODULE,
+    COLUMN_ADDRESS,
+    COLUMN_CALL_CONV,
+    COLUMN_NUM
+  };
 
   static const std::string MENU_ACTION_SELECT;
   static const std::string MENU_ACTION_UNSELECT;

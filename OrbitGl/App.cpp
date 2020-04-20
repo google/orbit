@@ -1053,11 +1053,11 @@ void OrbitApp::ApplySession(const Session& session) {
 void OrbitApp::OnRemoteProcessList(const Message& a_Message) {
   std::istringstream buffer(std::string(a_Message.m_Data, a_Message.m_Size));
   cereal::JSONInputArchive inputAr(buffer);
-  std::shared_ptr<ProcessList> remoteProcessList =
-      std::make_shared<ProcessList>();
-  inputAr(*remoteProcessList);
-  remoteProcessList->SetRemote(true);
-  GOrbitApp->m_ProcessesDataView->SetRemoteProcessList(remoteProcessList);
+  ProcessList remoteProcessList;
+  inputAr(remoteProcessList);
+  remoteProcessList.SetRemote(true);
+  GOrbitApp->m_ProcessesDataView->SetRemoteProcessList(
+      std::move(remoteProcessList));
 
   // Trigger session loading if needed.
   if (!Capture::GPresetToLoad.empty()) {
