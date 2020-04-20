@@ -15,7 +15,7 @@ class OrbitDisassemblyDialog : public QDialog {
   explicit OrbitDisassemblyDialog(QWidget* parent = 0);
   ~OrbitDisassemblyDialog();
 
-  void SetText(const std::wstring& a_Text);
+  void SetText(const std::string& a_Text);
 
  private:
   Ui::OrbitDisassemblyDialog* ui;

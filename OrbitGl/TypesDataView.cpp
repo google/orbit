@@ -289,7 +289,7 @@ void TypesDataView::OnProp(const std::vector<int>& a_Items) {
     Type& type = GetType(item);
     std::shared_ptr<Variable> var = type.GetTemplateVariable();
     var->Print();
-    GOrbitApp->SendToUiNow(L"output");
+    GOrbitApp->SendToUiNow("output");
   }
 }
 
@@ -303,14 +303,14 @@ void TypesDataView::OnView(const std::vector<int>& a_Items) {
     std::shared_ptr<OrbitDiaSymbol> diaSymbol = type.GetDiaSymbol();
     OrbitDia::DiaDump(diaSymbol ? diaSymbol->m_Symbol : nullptr);
 #endif
-    GOrbitApp->SendToUiNow(L"output");
+    GOrbitApp->SendToUiNow("output");
   }
 }
 
 //-----------------------------------------------------------------------------
 void TypesDataView::OnClip(const std::vector<int>& a_Items) {
   UNUSED(a_Items);
-  GOrbitApp->SendToUiAsync(L"output");
+  GOrbitApp->SendToUiAsync("output");
 }
 
 //-----------------------------------------------------------------------------

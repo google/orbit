@@ -234,15 +234,15 @@ void Pdb::Update() {
 
 //-----------------------------------------------------------------------------
 void Pdb::SendStatusToUi() {
-  std::wstring status = Format(
-      L"status:Parsing %s\nFunctions: %i\nTypes: %i\nGlobals: %i\n",
-      m_Name.c_str(), functions_.size(), m_Types.size(), m_Globals.size());
+  std::string status = absl::StrFormat(
+      "status:Parsing %s\nFunctions: %i\nTypes: %i\nGlobals: %i\n",
+      m_Name, functions_.size(), m_Types.size(), m_Globals.size());
 
   if (m_IsPopulatingFunctionMap) {
-    status += L"PopulatingFunctionMap\n";
+    status += "PopulatingFunctionMap\n";
   }
   if (m_IsPopulatingFunctionStringMap) {
-    status += L"PopulatingFunctionStringMap\n";
+    status += "PopulatingFunctionStringMap\n";
   }
 
   int numPoints = 10;
@@ -251,7 +251,7 @@ void Pdb::SendStatusToUi() {
                        (float)period * (float)numPoints);
   if (progress > numPoints) progress = numPoints;
   for (int i = 0; i <= progress; ++i) {
-    status += L".";
+    status += ".";
   }
 
   GTcpServer->SendToUiNow(status);

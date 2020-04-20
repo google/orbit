@@ -32,7 +32,7 @@ class OrbitMainWindow : public QMainWindow {
   void CreateSelectionTab();
   void CreatePluginTabs();
   void OnNewSelection(std::shared_ptr<class SamplingReport> a_SamplingReport);
-  void OnReceiveMessage(const std::wstring& a_Message);
+  void OnReceiveMessage(const std::string& message);
   void OnAddToWatch(const class Variable* a_Variable);
   void OnGetSaveFileName(const std::wstring& a_Extension,
                          std::wstring& a_FileName);
@@ -44,7 +44,7 @@ class OrbitMainWindow : public QMainWindow {
   std::wstring FindFile(const std::wstring& a_Caption,
                         const std::wstring& a_Dir,
                         const std::wstring& a_Filter);
-  void OpenDisassembly(const std::wstring& a_String);
+  void OpenDisassembly(const std::string& a_String);
   void SetTitle(const std::string& a_Title);
 
  private slots:

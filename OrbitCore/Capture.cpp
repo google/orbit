@@ -195,10 +195,10 @@ bool Capture::StartCapture(LinuxTracingSession* session) {
   }
 
   if (GCoreApp != nullptr) {
-    GCoreApp->SendToUiNow(L"startcapture");
+    GCoreApp->SendToUiNow("startcapture");
 
     if (GSelectedFunctionsMap.size() > 0) {
-      GCoreApp->SendToUiNow(L"gotolive");
+      GCoreApp->SendToUiNow("gotolive");
     }
   }
 
@@ -496,7 +496,7 @@ void Capture::SaveSession(const std::string& a_FileName) {
   Session session;
   session.m_ProcessFullPath = GTargetProcess->GetFullName();
 
-  GCoreApp->SendToUiNow(L"UpdateProcessParams");
+  GCoreApp->SendToUiNow("UpdateProcessParams");
   session.m_Arguments = GParams.m_Arguments;
   session.m_WorkingDirectory = GParams.m_WorkingDirectory;
 

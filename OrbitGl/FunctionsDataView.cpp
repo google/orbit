@@ -280,7 +280,7 @@ void FunctionsDataView::OnContextMenu(const std::string& a_Action,
       function->Print();
     }
 
-    GOrbitApp->SendToUiNow(L"output");
+    GOrbitApp->SendToUiNow("output");
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
     uint32_t pid = Capture::GTargetProcess->GetID();
     for (Function* function : functions) {

@@ -270,10 +270,9 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
     if (!textBox->GetTimer().IsType(Timer::CORE_ACTIVITY)) {
       Function* func =
           Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
-      m_ToolTip =
-          s2ws(absl::StrFormat("%s %s", func ? func->PrettyName().c_str() : "",
-                               textBox->GetText().c_str()));
-      GOrbitApp->SendToUiAsync(L"tooltip:" + m_ToolTip);
+      m_ToolTip = absl::StrFormat("%s %s", func ? func->PrettyName() : "",
+                                  textBox->GetText());
+      GOrbitApp->SendToUiAsync("tooltip:" + m_ToolTip);
       NeedsRedraw();
     }
   }
@@ -299,8 +298,8 @@ void CaptureWindow::FindCode(DWORD64 address) {
     }
 
     if (lineInfo.m_Address != 0) {
-      GOrbitApp->SendToUiAsync(Format(
-          L"code^%s^%i", s2ws(lineInfo.m_File).c_str(), lineInfo.m_Line));
+      GOrbitApp->SendToUiAsync(absl::StrFormat(
+          "code^%s^%i", lineInfo.m_File, lineInfo.m_Line));
     }
   }
 #else

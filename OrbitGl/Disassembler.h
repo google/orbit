@@ -12,14 +12,14 @@
 //-----------------------------------------------------------------------------
 class Disassembler {
  public:
-  void Disassemble(const uint8_t* a_MachineCode, size_t a_Size,
-                   DWORD64 a_Address, bool a_Is64Bit);
-  const std::wstring& GetResult() { return m_String; }
+  void Disassemble(const uint8_t* machine_code, size_t size,
+                   uint64_t address, bool is_64bit);
+  const std::string& GetResult() const { return result_; }
 
-  void LOGF(const std::string& format) { m_String += s2ws(format); }
+  void LOGF(const std::string& format) { result_ += format; }
 
   void LogHex(const uint8_t* str, size_t len);
 
- public:
-  std::wstring m_String;
+ private:
+  std::string result_;
 };

@@ -240,8 +240,8 @@ void OrbitCodeEditor::OnTimer() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitCodeEditor::SetText(const std::wstring& a_Text) {
-  this->document()->setPlainText(QString::fromStdWString(a_Text));
+void OrbitCodeEditor::SetText(const std::string& a_Text) {
+  this->document()->setPlainText(QString::fromStdString(a_Text));
 }
 
 //-----------------------------------------------------------------------------

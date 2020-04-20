@@ -674,14 +674,14 @@ void OrbitApp::AddSelectionReport(
 //-----------------------------------------------------------------------------
 void OrbitApp::GoToCode(DWORD64 a_Address) {
   m_CaptureWindow->FindCode(a_Address);
-  SendToUiNow(L"gotocode");
+  SendToUiNow("gotocode");
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::GoToCallstack() { SendToUiNow(L"gotocallstack"); }
+void OrbitApp::GoToCallstack() { SendToUiNow("gotocallstack"); }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::GoToCapture() { SendToUiNow(L"gotocapture"); }
+void OrbitApp::GoToCapture() { SendToUiNow("gotocapture"); }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnOpenPdb(const std::string& file_name) {
@@ -819,7 +819,7 @@ void OrbitApp::OnPdbLoaded() {
   FireRefreshCallbacks();
 
   if (m_ModulesToLoad.empty()) {
-    SendToUiAsync(L"pdbloaded");
+    SendToUiAsync("pdbloaded");
   } else {
     LoadModules();
   }
@@ -841,7 +841,7 @@ void OrbitApp::FireRefreshCallbacks(DataViewType a_Type) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::AddUiMessageCallback(
-    std::function<void(const std::wstring&)> a_Callback) {
+    std::function<void(const std::string&)> a_Callback) {
   GTcpServer->SetUiCallback(a_Callback);
   m_UiCallback = a_Callback;
 }
@@ -920,14 +920,14 @@ void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::SendToUiAsync(const std::wstring& a_Msg) {
-  GTcpServer->SendToUiAsync(a_Msg);
+void OrbitApp::SendToUiAsync(const std::string& message) {
+  GTcpServer->SendToUiAsync(message);
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::SendToUiNow(const std::wstring& a_Msg) {
+void OrbitApp::SendToUiNow(const std::string& message) {
   if (m_UiCallback) {
-    m_UiCallback(a_Msg);
+    m_UiCallback(message);
   }
 }
 
@@ -1033,7 +1033,7 @@ void OrbitApp::OnRemoteProcess(const Message& a_Message) {
     GParams.m_ProcessPath = session->m_ProcessFullPath;
     GParams.m_Arguments = session->m_Arguments;
     GParams.m_WorkingDirectory = session->m_WorkingDirectory;
-    GCoreApp->SendToUiNow(L"SetProcessParams");
+    GCoreApp->SendToUiNow("SetProcessParams");
     Capture::GSessionPresets = nullptr;
   }
 }
@@ -1103,5 +1103,5 @@ void OrbitApp::OnRemoteModuleDebugInfo(
 //-----------------------------------------------------------------------------
 void OrbitApp::LaunchRuleEditor(Function* a_Function) {
   m_RuleEditor->m_Window.Launch(a_Function);
-  SendToUiNow(TEXT("RuleEditor"));
+  SendToUiNow("RuleEditor");
 }
