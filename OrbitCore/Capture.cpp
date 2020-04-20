@@ -537,7 +537,7 @@ bool Capture::IsTrackingEvents() {
 #else
   static bool yieldEvents = false;
   if (yieldEvents && IsOtherInstanceRunning() && GTargetProcess) {
-    if (Contains(GTargetProcess->GetName(), "Orbit.exe")) {
+    if (absl::StrContains(GTargetProcess->GetName(), "Orbit.exe")) {
       return false;
     }
   }
