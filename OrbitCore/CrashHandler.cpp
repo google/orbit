@@ -33,7 +33,8 @@ struct StringTypeConverter<std::wstring> {
 //-----------------------------------------------------------------------------
 CrashHandler::CrashHandler(const std::string& dump_path,
                            const std::string& handler_path,
-                           const std::string& crash_server_url) {
+                           const std::string& crash_server_url,
+                           bool is_upload_enabled) {
   CHECK(!is_init_);
   is_init_ = true;
 
@@ -44,16 +45,16 @@ CrashHandler::CrashHandler(const std::string& dump_path,
   const base::FilePath dump_file_path(StringTypeConverter<>()(dump_path));
   const base::FilePath handler_file_path(StringTypeConverter<>()(handler_path));
 
-  std::map<std::string, std::string> annotations = {
+  const std::map<std::string, std::string> annotations = {
       {"product", "OrbitProfiler"}, {"version", OrbitVersion::GetVersion()}};
 
-  std::vector<std::string> arguments = {"--no-rate-limit"};
+  const std::vector<std::string> arguments = {"--no-rate-limit"};
 
-  // allow dumps submission to collection server
+  // set user preferences for dumps submission to collection server
   std::unique_ptr<crashpad::CrashReportDatabase> crash_report_db =
       crashpad::CrashReportDatabase::Initialize(dump_file_path);
   if (crash_report_db != nullptr && crash_report_db->GetSettings() != nullptr) {
-    crash_report_db->GetSettings()->SetUploadsEnabled(true);
+    crash_report_db->GetSettings()->SetUploadsEnabled(is_upload_enabled);
   }
 
   crashpad_client_.StartHandler(handler_file_path,
