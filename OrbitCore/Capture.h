@@ -20,11 +20,15 @@ struct CallStack;
 class Capture {
  public:
   static void Init();
-  static bool Inject(bool a_WaitForConnection = true);
-  static bool Connect();
-  static bool InjectRemote();
+  static bool Inject(std::string_view remote_address);
+  static bool Connect(std::string_view remote_address);
+  static bool InjectRemote(std::string_view remote_address);
   static void SetTargetProcess(const std::shared_ptr<Process>& a_Process);
-  static bool StartCapture(LinuxTracingSession* session);
+  // TODO: This method needs to be split into 2, the server side and the
+  // client-side. session here is only used by the server side and
+  // remote_address is only used by the client-side.
+  static bool StartCapture(LinuxTracingSession* session,
+                           std::string_view remote_address);
   static void StopCapture();
   static void ClearCaptureData();
   static std::vector<std::shared_ptr<Function>> GetSelectedFunctions();
@@ -37,7 +41,6 @@ class Capture {
   static void Update();
   static void DisplayStats();
   static void TestHooks();
-  static bool IsOtherInstanceRunning();
   static void SaveSession(const std::string& a_FileName);
   static void NewSamplingProfiler();
   static bool IsTrackingEvents();
@@ -69,8 +72,6 @@ class Capture {
 
   static bool GInjected;
   static std::string GInjectedProcess;
-  static int GCapturePort;
-  static std::string GCaptureHost;
   static std::string GPresetToLoad;  // TODO: allow multiple presets
   static std::string GProcessToInject;
   static bool GIsSampling;

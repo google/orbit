@@ -12,8 +12,8 @@ class Injection {
  public:
   Injection();
 
-  bool Inject(const std::string& a_Dll, const Process& a_Process,
-              const std::string& ProcName);
+  bool Inject(std::string_view a_RemoteAddress, const std::string& a_Dll,
+              const Process& a_Process, const std::string& ProcName);
   DWORD GetProcessID() const { return m_InjectedProcessID; }
   HANDLE GetProcessHandle() const { return m_InjectedProcessHandle; }
 

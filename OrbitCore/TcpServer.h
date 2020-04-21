@@ -16,8 +16,7 @@ class TcpServer : public TcpEntity {
   TcpServer();
   ~TcpServer();
 
-  using TcpEntity::Start;
-  void Start(unsigned short a_Port);
+  void StartServer(uint16_t port);
 
   void Receive(const Message& a_Message);
 
@@ -37,6 +36,8 @@ class TcpServer : public TcpEntity {
   class tcp_server* GetServer() {
     return m_TcpServer;
   }
+
+  uint16_t GetPort() const { return m_Port; }
 
   void ResetStats();
   std::vector<std::string> GetStats();
@@ -64,6 +65,8 @@ class TcpServer : public TcpEntity {
   uint32_t m_NumTargetFlushedEntries;
   uint32_t m_NumTargetFlushedTcpPackets;
   ULONG64 m_NumMessagesFromPreviousSession;
+
+  uint16_t m_Port;
 };
 
 extern std::unique_ptr<TcpServer> GTcpServer;

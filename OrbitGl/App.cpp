@@ -111,8 +111,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
 
   for (const std::string& arg : a_Args) {
     if (absl::StrContains(arg, "gamelet:")) {
-      std::string address = Replace(arg, "gamelet:", "");
-      Capture::GCaptureHost = address;
+      remote_address_ = Replace(arg, "gamelet:", "");
 
       GTcpClient = std::make_unique<TcpClient>();
       GTcpClient->AddMainThreadCallback(
@@ -121,7 +120,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
       GTcpClient->AddMainThreadCallback(
           Msg_RemoteProcessList,
           [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcessList(a_Msg); });
-      ConnectionManager::Get().ConnectToRemote(address);
+      ConnectionManager::Get().ConnectToRemote(remote_address_);
       m_ProcessesDataView->SetIsRemote(true);
       SetIsRemote(true);
     } else if (absl::StrContains(arg, "headless")) {
@@ -326,10 +325,6 @@ bool OrbitApp::Init() {
 
   GPluginManager.Initialize();
 
-  if (Capture::IsOtherInstanceRunning()) {
-    ++Capture::GCapturePort;
-  }
-
   GParams.Load();
   GFontSize = GParams.m_FontSize;
   GOrbitApp->LoadFileMapping();
@@ -339,12 +334,11 @@ bool OrbitApp::Init() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit() {
+  // We do not run tcp server on the client anymore
+  CHECK(!HasTcpServer());
+
   string_manager_ = std::make_shared<StringManager>();
   GCurrentTimeGraph->SetStringManager(string_manager_);
-
-  if (HasTcpServer()) {
-    GTcpServer->Start(Capture::GCapturePort);
-  }
 
   for (std::string& arg : m_PostInitArguments) {
     if (absl::StrContains(arg, "systrace:")) {
@@ -487,7 +481,9 @@ void OrbitApp::ClearWatchedVariables() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::RefreshWatch() {
-  Capture::GTargetProcess->RefreshWatchedVariables();
+  if (Capture::Connect(remote_address_)) {
+    Capture::GTargetProcess->RefreshWatchedVariables();
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -537,6 +533,7 @@ int OrbitApp::OnExit() {
 Timer GMainTimer;
 
 //-----------------------------------------------------------------------------
+// TODO: make it non-static
 void OrbitApp::MainTick() {
   ORBIT_SCOPE_FUNC;
   TRACE_VAR(GMainTimer.QueryMillis());
@@ -554,9 +551,9 @@ void OrbitApp::MainTick() {
   if (!Capture::GProcessToInject.empty()) {
     std::cout << "Injecting into " << Capture::GTargetProcess->GetFullPath()
               << std::endl;
-    std::cout << "Orbit host: " << Capture::GCaptureHost << std::endl;
+    std::cout << "Orbit host: " << GOrbitApp->remote_address_ << std::endl;
     GOrbitApp->SelectProcess(Capture::GProcessToInject);
-    Capture::InjectRemote();
+    Capture::InjectRemote(GOrbitApp->remote_address_);
     exit(0);
   }
 
@@ -858,7 +855,7 @@ void OrbitApp::AddUiMessageCallback(
 void OrbitApp::StartCapture() {
   // Tracing session is only needed when StartCapture is
   // running on the service side
-  Capture::StartCapture(nullptr /* tracing_session */);
+  Capture::StartCapture(nullptr /* tracing_session */, remote_address_);
 
   if (m_NeedsThawing) {
 #ifdef _WIN32
@@ -915,7 +912,7 @@ bool OrbitApp::SelectProcess(uint32_t a_ProcessID) {
 //-----------------------------------------------------------------------------
 bool OrbitApp::Inject(unsigned long a_ProcessId) {
   if (SelectProcess(a_ProcessId)) {
-    return Capture::Inject();
+    return Capture::Inject(remote_address_);
   }
 
   return false;

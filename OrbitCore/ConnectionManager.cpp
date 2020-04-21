@@ -147,7 +147,9 @@ void ConnectionManager::StartCaptureAsRemote(uint32_t pid) {
   Capture::SetTargetProcess(process);
   tracing_session_.Reset();
   string_manager_->Clear();
-  Capture::StartCapture(&tracing_session_);
+  // The remote address is only used when StartCapture is called
+  // from the client side. It is not used for the server side code.
+  Capture::StartCapture(&tracing_session_, "" /* remote_address */);
   server_capture_thread_ =
       std::thread{[this]() { ServerCaptureThreadWorker(); }};
 }
