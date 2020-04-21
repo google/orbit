@@ -79,10 +79,10 @@ float GFontSize;
 bool DoZoom = false;
 
 //-----------------------------------------------------------------------------
-OrbitApp::OrbitApp() {
-  m_Debugger = nullptr;
+OrbitApp::OrbitApp(ApplicationOptions&& options)
+    : options_(std::move(options)) {
 #ifdef _WIN32
-  m_Debugger = new Debugger();
+  m_Debugger = std::make_unique<Debugger>();
 #endif
 }
 
@@ -90,7 +90,6 @@ OrbitApp::OrbitApp() {
 OrbitApp::~OrbitApp() {
 #ifdef _WIN32
   oqpi_tk::stop_scheduler();
-  delete m_Debugger;
 #endif
 }
 
@@ -110,20 +109,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
   m_Arguments = a_Args;
 
   for (const std::string& arg : a_Args) {
-    if (absl::StrContains(arg, "gamelet:")) {
-      remote_address_ = Replace(arg, "gamelet:", "");
-
-      GTcpClient = std::make_unique<TcpClient>();
-      GTcpClient->AddMainThreadCallback(
-          Msg_RemoteProcess,
-          [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcess(a_Msg); });
-      GTcpClient->AddMainThreadCallback(
-          Msg_RemoteProcessList,
-          [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcessList(a_Msg); });
-      ConnectionManager::Get().ConnectToRemote(remote_address_);
-      m_ProcessesDataView->SetIsRemote(true);
-      SetIsRemote(true);
-    } else if (absl::StrContains(arg, "preset:")) {
+    if (absl::StrContains(arg, "preset:")) {
       std::vector<std::string> vec = Tokenize(arg, ":");
       if (vec.size() > 1) {
         Capture::GPresetToLoad = vec[1];
@@ -300,9 +286,10 @@ void OrbitApp::AppendSystrace(const std::string& a_FileName,
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::Init() {
-  GOrbitApp = std::make_unique<OrbitApp>();
+bool OrbitApp::Init(ApplicationOptions&& options) {
+  GOrbitApp = std::make_unique<OrbitApp>(std::move(options));
   GCoreApp = GOrbitApp.get();
+
   GTimerManager = std::make_unique<TimerManager>();
   GTcpServer = std::make_unique<TcpServer>();
 
@@ -332,8 +319,18 @@ bool OrbitApp::Init() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit() {
-  // We do not run tcp server on the client anymore
-  CHECK(!HasTcpServer());
+  if (!options_.asio_server_address.empty()) {
+    GTcpClient = std::make_unique<TcpClient>();
+    GTcpClient->AddMainThreadCallback(
+        Msg_RemoteProcess,
+        [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcess(a_Msg); });
+    GTcpClient->AddMainThreadCallback(
+        Msg_RemoteProcessList,
+        [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcessList(a_Msg); });
+    ConnectionManager::Get().ConnectToRemote(options_.asio_server_address);
+    m_ProcessesDataView->SetIsRemote(true);
+    SetIsRemote(true);
+  }
 
   string_manager_ = std::make_shared<StringManager>();
   GCurrentTimeGraph->SetStringManager(string_manager_);
@@ -472,7 +469,7 @@ void OrbitApp::ClearWatchedVariables() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::RefreshWatch() {
-  if (Capture::Connect(remote_address_)) {
+  if (Capture::Connect(options_.asio_server_address)) {
     Capture::GTargetProcess->RefreshWatchedVariables();
   }
 }
@@ -533,7 +530,14 @@ void OrbitApp::MainTick() {
   if (GTcpClient) GTcpClient->ProcessMainThreadCallbacks();
 
   // Tick Transaction manager only from client (OrbitApp is client only);
-  GOrbitApp->GetTransactionManager()->Tick();
+  auto transaction_manager = GOrbitApp->GetTransactionManager();
+
+  // Note that MainTick could be called before OrbitApp::PostInit() was complete
+  // in which case translaction namager is not yet initialized - check that it
+  // is not null before calling it.
+  if (transaction_manager != nullptr) {
+    transaction_manager->Tick();
+  }
 
   GMainTimer.Reset();
   Capture::Update();
@@ -542,9 +546,10 @@ void OrbitApp::MainTick() {
   if (!Capture::GProcessToInject.empty()) {
     std::cout << "Injecting into " << Capture::GTargetProcess->GetFullPath()
               << std::endl;
-    std::cout << "Orbit host: " << GOrbitApp->remote_address_ << std::endl;
+    std::cout << "Orbit host: " << GOrbitApp->options_.asio_server_address
+              << std::endl;
     GOrbitApp->SelectProcess(Capture::GProcessToInject);
-    Capture::InjectRemote(GOrbitApp->remote_address_);
+    Capture::InjectRemote(GOrbitApp->options_.asio_server_address);
     exit(0);
   }
 
@@ -839,7 +844,8 @@ void OrbitApp::AddUiMessageCallback(
 void OrbitApp::StartCapture() {
   // Tracing session is only needed when StartCapture is
   // running on the service side
-  Capture::StartCapture(nullptr /* tracing_session */, remote_address_);
+  Capture::StartCapture(nullptr /* tracing_session */,
+                        options_.asio_server_address);
 
   if (m_NeedsThawing) {
 #ifdef _WIN32
@@ -896,7 +902,7 @@ bool OrbitApp::SelectProcess(uint32_t a_ProcessID) {
 //-----------------------------------------------------------------------------
 bool OrbitApp::Inject(unsigned long a_ProcessId) {
   if (SelectProcess(a_ProcessId)) {
-    return Capture::Inject(remote_address_);
+    return Capture::Inject(options_.asio_server_address);
   }
 
   return false;
