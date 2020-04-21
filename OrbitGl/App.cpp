@@ -123,8 +123,6 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
       ConnectionManager::Get().ConnectToRemote(remote_address_);
       m_ProcessesDataView->SetIsRemote(true);
       SetIsRemote(true);
-    } else if (absl::StrContains(arg, "headless")) {
-      SetHeadless(true);
     } else if (absl::StrContains(arg, "preset:")) {
       std::vector<std::string> vec = Tokenize(arg, ":");
       if (vec.size() > 1) {
@@ -355,14 +353,10 @@ void OrbitApp::PostInit() {
     }
   }
 
-  if (!GOrbitApp->GetHeadless()) {
-    int my_argc = 0;
-    glutInit(&my_argc, NULL);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    GetDesktopResolution(GOrbitApp->m_ScreenRes[0], GOrbitApp->m_ScreenRes[1]);
-  } else {
-    ConnectionManager::Get().InitAsService();
-  }
+  int my_argc = 0;
+  glutInit(&my_argc, NULL);
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+  GetDesktopResolution(GOrbitApp->m_ScreenRes[0], GOrbitApp->m_ScreenRes[1]);
 
   GOrbitApp->InitializeManagers();
 }

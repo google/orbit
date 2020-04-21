@@ -191,8 +191,6 @@ class OrbitApp : public CoreApp {
   void ApplySession(const Session& session) override;
   void LoadSession(const std::shared_ptr<Session>& session);
   void LaunchRuleEditor(class Function* a_Function);
-  void SetHeadless(bool a_Headless) { m_Headless = a_Headless; }
-  bool GetHeadless() const { return m_Headless; }
   void SetIsRemote(bool a_IsRemote) { m_IsRemote = a_IsRemote; }
   bool IsRemote() const { return m_IsRemote; }
   bool HasTcpServer() const { return !IsRemote(); }
@@ -212,7 +210,6 @@ class OrbitApp : public CoreApp {
   FindFileCallback m_FindFileCallback;
   SaveFileCallback m_SaveFileCallback;
   ClipboardCallback m_ClipboardCallback;
-  bool m_Headless = false;
   bool m_IsRemote = false;
   std::string remote_address_;
 
