@@ -10,6 +10,7 @@
 #include <string>
 #include <utility>
 
+#include "ApplicationOptions.h"
 #include "ContextSwitch.h"
 #include "CoreApp.h"
 #include "DataViewTypes.h"
@@ -18,16 +19,20 @@
 #include "SymbolHelper.h"
 #include "Threading.h"
 
+#if defined(_WIN32)
+#include "Debugger.h"
+#endif
+
 struct CallStack;
 class Process;
 
 //-----------------------------------------------------------------------------
 class OrbitApp : public CoreApp {
  public:
-  OrbitApp();
-  virtual ~OrbitApp();
+  explicit OrbitApp(ApplicationOptions&& options);
+  ~OrbitApp() override;
 
-  static bool Init();
+  static bool Init(ApplicationOptions&& options);
   void PostInit();
   static int OnExit();
   static void MainTick();
@@ -48,8 +53,8 @@ class OrbitApp : public CoreApp {
   void OnLaunchProcess(const std::string& process_name,
                        const std::string& working_dir, const std::string& args);
   void Inject(const std::string& file_name);
-  virtual void StartCapture();
-  virtual void StopCapture();
+  void StartCapture();
+  void StopCapture();
   void ToggleCapture();
   void OnDisconnect();
   void OnPdbLoaded();
@@ -200,6 +205,8 @@ class OrbitApp : public CoreApp {
       override;
 
  private:
+  ApplicationOptions options_;
+
   std::vector<std::string> m_Arguments;
   std::vector<RefreshCallback> m_RefreshCallbacks;
   std::vector<WatchCallback> m_AddToWatchCallbacks;
@@ -211,7 +218,6 @@ class OrbitApp : public CoreApp {
   SaveFileCallback m_SaveFileCallback;
   ClipboardCallback m_ClipboardCallback;
   bool m_IsRemote = false;
-  std::string remote_address_;
 
   ProcessesDataView* m_ProcessesDataView = nullptr;
   ModulesDataView* m_ModulesDataView = nullptr;
@@ -251,13 +257,14 @@ class OrbitApp : public CoreApp {
   std::vector<std::shared_ptr<struct Module> > m_ModulesToLoad;
   std::vector<std::string> m_PostInitArguments;
 
-  class Debugger* m_Debugger = nullptr;
   int m_NumTicks = 0;
 
   std::shared_ptr<StringManager> string_manager_ = nullptr;
 
   const SymbolHelper symbol_helper_;
-#ifndef _WIN32
+#if defined(_WIN32)
+  std::unique_ptr<Debugger> m_Debugger;
+#else
   std::shared_ptr<class BpfTrace> m_BpfTrace;
 #endif
 };
