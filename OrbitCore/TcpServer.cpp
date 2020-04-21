@@ -52,8 +52,8 @@ TcpServer::~TcpServer() {
 }
 
 //-----------------------------------------------------------------------------
-void TcpServer::Start(unsigned short a_Port) {
-  TcpEntity::Start();
+void TcpServer::StartServer(uint16_t a_Port) {
+  Start();
 
   PRINT_FUNC;
   m_TcpService = new TcpService();
@@ -65,6 +65,7 @@ void TcpServer::Start(unsigned short a_Port) {
 
   m_StatTimer.Start();
   m_IsValid = true;
+  m_Port = a_Port;
 }
 
 //-----------------------------------------------------------------------------

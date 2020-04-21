@@ -213,6 +213,7 @@ class OrbitApp : public CoreApp {
   ClipboardCallback m_ClipboardCallback;
   bool m_Headless = false;
   bool m_IsRemote = false;
+  std::string remote_address_;
 
   ProcessesDataView* m_ProcessesDataView = nullptr;
   ModulesDataView* m_ModulesDataView = nullptr;
