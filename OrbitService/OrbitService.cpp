@@ -9,13 +9,16 @@
 #include "TcpServer.h"
 #include "TimerManager.h"
 
+// TODO: we should probably make it configurable
+constexpr uint32_t kAsioServerPort = 44766;
+
 OrbitService::OrbitService() {
   // TODO: these should be a private fields.
   GTimerManager = std::make_unique<TimerManager>();
   GTcpServer = std::make_unique<TcpServer>();
   Capture::Init();
 
-  GTcpServer->Start(Capture::GCapturePort);
+  GTcpServer->StartServer(kAsioServerPort);
   ConnectionManager::Get().InitAsService();
 
   core_app_ = std::make_unique<CoreApp>();

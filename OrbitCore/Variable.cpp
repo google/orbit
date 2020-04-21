@@ -25,7 +25,7 @@ void Variable::SetType(const std::string& a_Type) {
 }
 
 void Variable::SendValue() {
-  if (Capture::Connect()) {
+  if (Capture::GInjected) {
     Message msg(Msg_SetData);
     msg.m_Header.m_DataTransferHeader.m_Address =
         (ULONG64)GPdbDbg->GetHModule() + (ULONG64)m_Address;
@@ -35,7 +35,7 @@ void Variable::SendValue() {
 }
 
 void Variable::SyncValue() {
-  if (Capture::Connect()) {
+  if (Capture::GInjected) {
     Message msg(Msg_GetData);
     ULONG64 address = (ULONG64)m_Pdb->GetHModule() + (ULONG64)m_Address;
     msg.m_Header.m_DataTransferHeader.m_Address = address;
