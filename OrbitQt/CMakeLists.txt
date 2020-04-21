@@ -24,7 +24,8 @@ target_sources(
           outputdialog.h
           processlauncherwidget.h
           resource.h
-          showincludesdialog.h)
+          showincludesdialog.h
+          GgpInstance.h)
 
 target_sources(
   OrbitQt
@@ -46,7 +47,8 @@ target_sources(
           orbitwatchwidget.cpp
           outputdialog.cpp
           processlauncherwidget.cpp
-          showincludesdialog.cpp)
+          showincludesdialog.cpp
+          GgpInstance.cpp)
 
 target_sources(
   OrbitQt
@@ -98,3 +100,24 @@ set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
 set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
 strip_symbols(OrbitQt)
+
+# OrbitQtTests
+add_executable(OrbitQtTests)
+
+target_sources(
+  OrbitQtTests
+  PRIVATE GgpInstanceTests.cpp
+          GgpInstance.cpp
+)
+
+target_link_libraries(
+  OrbitQtTests
+  PRIVATE GTest::Main
+          Qt5::Core
+          Qt5::Widgets
+)
+
+set_target_properties(OrbitQtTests PROPERTIES AUTOMOC ON)
+set_target_properties(OrbitQtTests PROPERTIES AUTOUIC ON)
+
+register_test(OrbitQtTests)
