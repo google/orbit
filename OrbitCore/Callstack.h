@@ -39,8 +39,8 @@ class CallStackPOD {
 
 //-----------------------------------------------------------------------------
 struct CallStack {
-  CallStack() {}
-  CallStack(CallStackPOD a_CS);
+  CallStack() = default;
+  explicit CallStack(CallStackPOD a_CS);
   inline CallstackID Hash() {
     if (m_Hash != 0) return m_Hash;
     m_Hash = XXH64(m_Data.data(), m_Depth * sizeof(uint64_t), 0xca1157ac);

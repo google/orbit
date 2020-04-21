@@ -27,45 +27,31 @@ DataView::~DataView() {
 }
 
 //-----------------------------------------------------------------------------
-DataView* DataView::Create(DataViewType a_Type) {
-  DataView* model = nullptr;
+std::unique_ptr<DataView> DataView::Create(DataViewType a_Type) {
   switch (a_Type) {
     case DataViewType::FUNCTIONS:
-      model = new FunctionsDataView();
-      break;
+      return std::make_unique<FunctionsDataView>();
     case DataViewType::TYPES:
-      model = new TypesDataView();
-      break;
-    case DataViewType::LIVEFUNCTIONS:
-      model = new LiveFunctionsDataView();
-      break;
+      return std::make_unique<TypesDataView>();
+    case DataViewType::LIVE_FUNCTIONS:
+      return std::make_unique<LiveFunctionsDataView>();
     case DataViewType::CALLSTACK:
-      model = new CallStackDataView();
-      break;
+      return std::make_unique<CallStackDataView>();
     case DataViewType::GLOBALS:
-      model = new GlobalsDataView();
-      break;
+      return std::make_unique<GlobalsDataView>();
     case DataViewType::MODULES:
-      model = new ModulesDataView();
-      break;
+      return std::make_unique<ModulesDataView>();
     case DataViewType::SAMPLING:
-      model = new SamplingReportDataView();
-      break;
+      return std::make_unique<SamplingReportDataView>();
     case DataViewType::PROCESSES:
-      model = new ProcessesDataView();
-      break;
+      return std::make_unique<ProcessesDataView>();
     case DataViewType::SESSIONS:
-      model = new SessionsDataView();
-      break;
+      return std::make_unique<SessionsDataView>();
     case DataViewType::LOG:
-      model = new LogDataView();
-      break;
+      return std::make_unique<LogDataView>();
     default:
-      break;
+      return nullptr;
   }
-
-  model->m_Type = a_Type;
-  return model;
 }
 
 //-----------------------------------------------------------------------------

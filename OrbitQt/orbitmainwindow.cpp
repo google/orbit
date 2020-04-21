@@ -95,7 +95,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget* parent)
 
   ui->ModulesList->Initialize(DataViewType::MODULES);
   ui->FunctionsList->Initialize(DataViewType::FUNCTIONS);
-  ui->LiveFunctionsList->Initialize(DataViewType::LIVEFUNCTIONS);
+  ui->LiveFunctionsList->Initialize(DataViewType::LIVE_FUNCTIONS);
   ui->CallStackView->Initialize(DataViewType::CALLSTACK);
   ui->TypesList->Initialize(DataViewType::TYPES);
   ui->GlobalsList->Initialize(DataViewType::GLOBALS);
@@ -238,7 +238,7 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
     case DataViewType::FUNCTIONS:
       ui->FunctionsList->Refresh();
       break;
-    case DataViewType::LIVEFUNCTIONS:
+    case DataViewType::LIVE_FUNCTIONS:
       ui->LiveFunctionsList->Refresh();
       break;
     case DataViewType::TYPES:

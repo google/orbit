@@ -508,7 +508,7 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
       function.m_Address = address;
 
       std::shared_ptr<Module> module = m_Process->GetModuleFromAddress(address);
-      function.m_Module = module ? module->m_Name : "unknown module";
+      function.m_Module = module ? module->m_Name : "???";
 
       const LineInfo& lineInfo = m_AddressToLineInfo[address];
       function.m_Line = lineInfo.m_Line;

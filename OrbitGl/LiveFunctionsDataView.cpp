@@ -13,7 +13,8 @@
 #include "Pdb.h"
 
 //-----------------------------------------------------------------------------
-LiveFunctionsDataView::LiveFunctionsDataView() {
+LiveFunctionsDataView::LiveFunctionsDataView()
+    : DataView(DataViewType::LIVE_FUNCTIONS) {
   InitSortingOrders();
   GOrbitApp->RegisterLiveFunctionsDataView(this);
   m_UpdatePeriodMs = 300;

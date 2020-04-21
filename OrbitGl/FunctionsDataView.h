@@ -11,7 +11,7 @@ class FunctionsDataView : public DataView {
   FunctionsDataView();
 
   const std::vector<Column>& GetColumns() override;
-  int GetDefaultSortingColumn() override { return COLUMN_ADDRESS; };
+  int GetDefaultSortingColumn() override { return COLUMN_ADDRESS; }
   std::vector<std::string> GetContextMenu(
       int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
   std::string GetValue(int a_Row, int a_Column) override;
@@ -23,7 +23,7 @@ class FunctionsDataView : public DataView {
   void OnDataChanged() override;
 
  protected:
-  virtual Function* GetFunction(int a_Row);
+  Function& GetFunction(int a_Row) const;
 
   std::vector<std::string> m_FilterTokens;
 

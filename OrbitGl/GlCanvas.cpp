@@ -40,7 +40,7 @@ void ClearCaptureData() {
     GCurrentTimeGraph->Clear();
   }
 
-  GOrbitApp->FireRefreshCallbacks(DataViewType::LIVEFUNCTIONS);
+  GOrbitApp->FireRefreshCallbacks(DataViewType::LIVE_FUNCTIONS);
 }
 
 //-----------------------------------------------------------------------------

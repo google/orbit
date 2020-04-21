@@ -6,7 +6,7 @@
 //-----------------------------------------------------------------------------
 enum DataViewType {
   FUNCTIONS,
-  LIVEFUNCTIONS,
+  LIVE_FUNCTIONS,
   CALLSTACK,
   TYPES,
   GLOBALS,

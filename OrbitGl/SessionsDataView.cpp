@@ -14,7 +14,7 @@
 #include "Pdb.h"
 
 //-----------------------------------------------------------------------------
-SessionsDataView::SessionsDataView() {
+SessionsDataView::SessionsDataView() : DataView(DataViewType::SESSIONS) {
   InitSortingOrders();
   GOrbitApp->RegisterSessionsDataView(this);
 }

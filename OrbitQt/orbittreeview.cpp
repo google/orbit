@@ -80,7 +80,7 @@ void OrbitTreeView::Initialize(DataViewType a_Type) {
   }
 
   if (a_Type == DataViewType::FUNCTIONS ||
-      a_Type == DataViewType::LIVEFUNCTIONS ||
+      a_Type == DataViewType::LIVE_FUNCTIONS ||
       a_Type == DataViewType::CALLSTACK || a_Type == DataViewType::MODULES ||
       a_Type == DataViewType::GLOBALS) {
     setSelectionMode(ExtendedSelection);
@@ -139,7 +139,7 @@ void OrbitTreeView::OnClicked(const QModelIndex& index) {
 void OrbitTreeView::Refresh() {
   QModelIndexList list = selectionModel()->selectedIndexes();
 
-  if (this->m_Model->GetDataView()->GetType() == DataViewType::LIVEFUNCTIONS) {
+  if (this->m_Model->GetDataView()->GetType() == DataViewType::LIVE_FUNCTIONS) {
     m_Model->layoutAboutToBeChanged();
     m_Model->layoutChanged();
     return;

@@ -268,7 +268,7 @@ Function* Process::GetFunctionFromAddress(uint64_t address, bool a_IsExact) {
 }
 
 //-----------------------------------------------------------------------------
-std::shared_ptr<Module> Process::GetModuleFromAddress(DWORD64 a_Address) {
+std::shared_ptr<Module> Process::GetModuleFromAddress(uint64_t a_Address) {
   if (m_Modules.empty()) {
     return nullptr;
   }

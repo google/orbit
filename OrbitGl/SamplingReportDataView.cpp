@@ -18,7 +18,7 @@
 
 //-----------------------------------------------------------------------------
 SamplingReportDataView::SamplingReportDataView()
-    : m_CallstackDataView(nullptr) {
+    : DataView(DataViewType::SAMPLING), m_CallstackDataView(nullptr) {
   InitSortingOrders();
 }
 
@@ -29,11 +29,11 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
     columns.resize(COLUMN_NUM);
     columns[COLUMN_SELECTED] = {"Hooked", .0f, SortingOrder::Descending};
     columns[COLUMN_INDEX] = {"Index", .0f, SortingOrder::Ascending};
-    columns[COLUMN_FUNCTION_NAME] = {"Name", .6f, SortingOrder::Ascending};
+    columns[COLUMN_FUNCTION_NAME] = {"Name", .5f, SortingOrder::Ascending};
     columns[COLUMN_EXCLUSIVE] = {"Exclusive", .0f, SortingOrder::Descending};
     columns[COLUMN_INCLUSIVE] = {"Inclusive", .0f, SortingOrder::Descending};
     columns[COLUMN_MODULE_NAME] = {"Module", .0f, SortingOrder::Ascending};
-    columns[COLUMN_FILE] = {"File", .2f, SortingOrder::Ascending};
+    columns[COLUMN_FILE] = {"File", .0f, SortingOrder::Ascending};
     columns[COLUMN_LINE] = {"Line", .0f, SortingOrder::Ascending};
     columns[COLUMN_ADDRESS] = {"Address", .0f, SortingOrder::Ascending};
     return columns;
