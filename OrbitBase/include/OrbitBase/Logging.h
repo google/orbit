@@ -4,6 +4,10 @@
 #include <cstdio>
 #include <filesystem>
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 #include "absl/strings/str_format.h"
 
 #ifdef __clang__
