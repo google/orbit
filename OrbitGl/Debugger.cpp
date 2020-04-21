@@ -73,7 +73,8 @@ std::string GetFileNameFromHandle(HANDLE hFile) {
     void* pMem = MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 1);
 
     if (pMem) {
-      if (GetMappedFileNameA(GetCurrentProcess(), pMem, pszFilename, MAX_PATH)) {
+      if (GetMappedFileNameA(GetCurrentProcess(), pMem, pszFilename,
+                             MAX_PATH)) {
         // Translate path with device name to drive letters.
         char szTemp[BUFSIZE];
         szTemp[0] = '\0';

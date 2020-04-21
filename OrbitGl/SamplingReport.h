@@ -14,8 +14,7 @@
 
 class SamplingReport {
  public:
-  explicit SamplingReport(
-      std::shared_ptr<class SamplingProfiler> a_SamplingProfiler);
+  explicit SamplingReport(std::shared_ptr<SamplingProfiler> a_SamplingProfiler);
 
   void FillReport();
   std::shared_ptr<SamplingProfiler> GetProfiler() const { return m_Profiler; }
@@ -39,12 +38,12 @@ class SamplingReport {
   }
 
  protected:
-  std::shared_ptr<class SamplingProfiler> m_Profiler;
+  std::shared_ptr<SamplingProfiler> m_Profiler;
   std::vector<std::shared_ptr<SamplingReportDataView>> m_ThreadReports;
   CallStackDataView* m_CallstackDataView;
 
   uint64_t m_SelectedAddress;
-  std::shared_ptr<struct SortedCallstackReport> m_SelectedSortedCallstackReport;
+  std::shared_ptr<SortedCallstackReport> m_SelectedSortedCallstackReport;
   int m_SelectedAddressCallstackIndex;
   std::function<void()> m_UiRefreshFunc;
 };

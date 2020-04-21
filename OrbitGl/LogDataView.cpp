@@ -10,7 +10,7 @@
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
-LogDataView::LogDataView() {
+LogDataView::LogDataView() : DataView(DataViewType::LOG) {
   InitSortingOrders();
   GOrbitApp->RegisterOutputLog(this);
   GTcpServer->AddCallback(Msg_OrbitLog, [=](const Message& a_Msg) {
@@ -117,7 +117,7 @@ std::vector<std::string> LogDataView::GetContextMenu(
   std::vector<std::string> menu;
   if (m_SelectedCallstack) {
     for (uint32_t i = 0; i < m_SelectedCallstack->m_Depth; ++i) {
-      DWORD64 addr = m_SelectedCallstack->m_Data[i];
+      uint64_t addr = m_SelectedCallstack->m_Data[i];
       menu.push_back(Capture::GSamplingProfiler->GetSymbolFromAddress(addr));
     }
   }

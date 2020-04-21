@@ -28,9 +28,8 @@ void Disassembler::LogHex(const uint8_t* str, size_t len) {
 }
 
 //-----------------------------------------------------------------------------
-void Disassembler::Disassemble(const uint8_t* machine_code,
-                               size_t size, uint64_t address,
-                               bool is_64bit) {
+void Disassembler::Disassemble(const uint8_t* machine_code, size_t size,
+                               uint64_t address, bool is_64bit) {
   csh handle = 0;
   cs_arch arch = CS_ARCH_X86;
   cs_insn* insn = nullptr;
@@ -55,7 +54,6 @@ void Disassembler::Disassemble(const uint8_t* machine_code,
     for (j = 0; j < count; j++) {
       LOGF("0x%" PRIx64 ":\t%-12s %s\n", insn[j].address, insn[j].mnemonic,
            insn[j].op_str);
-
     }
 
     // print out the next offset, after the last insn

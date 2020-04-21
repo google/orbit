@@ -15,7 +15,7 @@
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
-FunctionsDataView::FunctionsDataView() {
+FunctionsDataView::FunctionsDataView() : DataView(DataViewType::FUNCTIONS) {
   InitSortingOrders();
   GOrbitApp->RegisterFunctionsDataView(this);
 }
@@ -47,47 +47,30 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
     return "";
   }
 
-  Function* function = GetFunction(a_Row);
-  if (function == nullptr) {
-    return "";
-  }
-
-  std::string value;
+  Function& function = GetFunction(a_Row);
 
   switch (a_Column) {
     case COLUMN_SELECTED:
-      value = function->IsSelected() ? "X" : "-";
-      break;
+      return function.IsSelected() ? "X" : "-";
     case COLUMN_INDEX:
-      value = absl::StrFormat("%d", a_Row);
-      break;
+      return absl::StrFormat("%d", a_Row);
     case COLUMN_NAME:
-      value = function->PrettyName();
-      break;
+      return function.PrettyName();
     case COLUMN_SIZE:
-      value = absl::StrFormat("%lu", function->Size());
-      break;
+      return absl::StrFormat("%lu", function.Size());
     case COLUMN_FILE:
-      value = function->File();
-      break;
+      return function.File();
     case COLUMN_LINE:
-      value = absl::StrFormat("%i", function->Line());
-      break;
+      return absl::StrFormat("%i", function.Line());
     case COLUMN_MODULE:
-      value =
-          function->GetPdb() != nullptr ? function->GetPdb()->GetName() : "";
-      break;
+      return function.GetPdb() != nullptr ? function.GetPdb()->GetName() : "";
     case COLUMN_ADDRESS:
-      value = absl::StrFormat("0x%llx", function->GetVirtualAddress());
-      break;
+      return absl::StrFormat("0x%llx", function.GetVirtualAddress());
     case COLUMN_CALL_CONV:
-      value = function->GetCallingConventionString();
-      break;
+      return function.GetCallingConventionString();
     default:
-      break;
+      return "";
   }
-
-  return value;
 }
 
 //-----------------------------------------------------------------------------
@@ -165,27 +148,21 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
   bool enable_unselect = false;
-  bool enable_view_disassembly = false;
   for (int index : a_SelectedIndices) {
-    const Function* function = GetFunction(index);
-    if (function == nullptr) continue;
-    enable_select |= !function->IsSelected();
-    enable_unselect |= function->IsSelected();
-    enable_view_disassembly = true;
+    const Function& function = GetFunction(index);
+    enable_select |= !function.IsSelected();
+    enable_unselect |= function.IsSelected();
   }
 
   bool enable_create_rule = false;
-  if (a_SelectedIndices.size() == 1 &&
-      GetFunction(a_SelectedIndices[0]) != nullptr) {
+  if (a_SelectedIndices.size() == 1) {
     enable_create_rule = true;
   }
 
   std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
-  if (enable_view_disassembly) {
-    Append(menu, {MENU_ACTION_VIEW, MENU_ACTION_DISASSEMBLY});
-  }
+  Append(menu, {MENU_ACTION_VIEW, MENU_ACTION_DISASSEMBLY});
   if (enable_create_rule) menu.emplace_back(MENU_ACTION_CREATE_RULE);
   // TODO: MENU_ACTION_SET_AS_FRAME is never shown, should it be removed?
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
@@ -196,43 +173,35 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
 void FunctionsDataView::OnContextMenu(const std::string& a_Action,
                                       int a_MenuIndex,
                                       const std::vector<int>& a_ItemIndices) {
-  std::vector<Function*> functions;
-  for (int i : a_ItemIndices) {
-    Function* function = GetFunction(i);
-    if (function != nullptr) {
-      functions.push_back(function);
-    }
-  }
-
   if (a_Action == MENU_ACTION_SELECT) {
-    for (Function* function : functions) {
-      function->Select();
+    for (int i : a_ItemIndices) {
+      GetFunction(i).Select();
     }
   } else if (a_Action == MENU_ACTION_UNSELECT) {
-    for (Function* function : functions) {
-      function->UnSelect();
+    for (int i : a_ItemIndices) {
+      GetFunction(i).UnSelect();
     }
   } else if (a_Action == MENU_ACTION_VIEW) {
-    for (Function* function : functions) {
-      function->Print();
+    for (int i : a_ItemIndices) {
+      GetFunction(i).Print();
     }
 
     GOrbitApp->SendToUiNow("output");
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
     uint32_t pid = Capture::GTargetProcess->GetID();
-    for (Function* function : functions) {
-      function->GetDisassembly(pid);
+    for (int i : a_ItemIndices) {
+      GetFunction(i).GetDisassembly(pid);
     }
   } else if (a_Action == MENU_ACTION_CREATE_RULE) {
-    if (functions.size() != 1) {
+    if (a_ItemIndices.size() != 1) {
       return;
     }
-    GOrbitApp->LaunchRuleEditor(functions[0]);
+    GOrbitApp->LaunchRuleEditor(&GetFunction(a_ItemIndices[0]));
   } else if (a_Action == MENU_ACTION_SET_AS_FRAME) {
-    if (functions.size() != 1) {
+    if (a_ItemIndices.size() != 1) {
       return;
     }
-    functions[0]->SetAsMainFrameFunction();
+    GetFunction(a_ItemIndices[0]).SetAsMainFrameFunction();
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }
@@ -334,9 +303,9 @@ void FunctionsDataView::OnDataChanged() {
 }
 
 //-----------------------------------------------------------------------------
-Function* FunctionsDataView::GetFunction(int a_Row) {
+Function& FunctionsDataView::GetFunction(int a_Row) const {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
   const std::vector<std::shared_ptr<Function>>& functions =
       Capture::GTargetProcess->GetFunctions();
-  return functions[m_Indices[a_Row]].get();
+  return *functions[m_Indices[a_Row]];
 }

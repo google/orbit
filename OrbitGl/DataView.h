@@ -3,6 +3,7 @@
 //-----------------------------------
 #pragma once
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -28,15 +29,15 @@ class DataView {
     SortingOrder initial_order;
   };
 
-  DataView()
+  explicit DataView(DataViewType type)
       : m_LastSortedColumn(-1),
         m_UpdatePeriodMs(-1),
         m_SelectedIndex(-1),
-        m_Type(INVALID) {}
+        m_Type(type) {}
 
   virtual ~DataView();
 
-  static DataView* Create(DataViewType a_Type);
+  static std::unique_ptr<DataView> Create(DataViewType a_Type);
 
   virtual void SetAsMainInstance() {}
   virtual const std::vector<Column>& GetColumns() = 0;

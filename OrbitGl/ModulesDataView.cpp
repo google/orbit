@@ -9,7 +9,7 @@
 #include "OrbitModule.h"
 
 //-----------------------------------------------------------------------------
-ModulesDataView::ModulesDataView() {
+ModulesDataView::ModulesDataView() : DataView(DataViewType::MODULES) {
   InitSortingOrders();
   GOrbitApp->RegisterModulesDataView(this);
 }

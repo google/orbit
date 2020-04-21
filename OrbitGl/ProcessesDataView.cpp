@@ -17,7 +17,7 @@
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
-ProcessesDataView::ProcessesDataView() {
+ProcessesDataView::ProcessesDataView() : DataView(DataViewType::PROCESSES) {
   InitSortingOrders();
 
   UpdateProcessList();

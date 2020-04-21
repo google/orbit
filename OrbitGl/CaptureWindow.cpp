@@ -298,8 +298,8 @@ void CaptureWindow::FindCode(DWORD64 address) {
     }
 
     if (lineInfo.m_Address != 0) {
-      GOrbitApp->SendToUiAsync(absl::StrFormat(
-          "code^%s^%i", lineInfo.m_File, lineInfo.m_Line));
+      GOrbitApp->SendToUiAsync(
+          absl::StrFormat("code^%s^%i", lineInfo.m_File, lineInfo.m_Line));
     }
   }
 #else

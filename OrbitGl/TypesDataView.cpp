@@ -16,7 +16,7 @@
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
-TypesDataView::TypesDataView() {
+TypesDataView::TypesDataView() : DataView(DataViewType::TYPES) {
   InitSortingOrders();
   OnDataChanged();
 

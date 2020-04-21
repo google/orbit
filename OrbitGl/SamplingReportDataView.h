@@ -3,6 +3,7 @@
 //-----------------------------------
 #pragma once
 
+#include "CallStackDataView.h"
 #include "DataView.h"
 #include "OrbitType.h"
 #include "ProcessUtils.h"
@@ -44,7 +45,7 @@ class SamplingReportDataView : public DataView {
   std::vector<SampledFunction> m_Functions;
   ThreadID m_TID = -1;
   std::string m_Name;
-  class CallStackDataView* m_CallstackDataView;
+  CallStackDataView* m_CallstackDataView;
   SamplingReport* m_SamplingReport = nullptr;
 
   enum COLUMN_INDEX {

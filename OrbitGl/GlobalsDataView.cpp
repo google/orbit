@@ -14,7 +14,7 @@
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
-GlobalsDataView::GlobalsDataView() {
+GlobalsDataView::GlobalsDataView() : DataView(DataViewType::GLOBALS) {
   InitSortingOrders();
   OnDataChanged();
   GOrbitApp->RegisterGlobalsDataView(this);
