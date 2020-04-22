@@ -30,6 +30,6 @@ inline void PrintLastError() { PRINT_VAR(GetLastErrorAsString()); }
 #define PRINT_FUNC
 #define VAR_TO_STR(var)
 
-#endif  // #if !defined(NO_PRINT_VAR)
+#endif  // !defined(NO_PRINT_VAR)
 
 #endif  // ORBIT_CORE_PRINT_VAR_H_
