@@ -85,7 +85,7 @@ void Process::LoadDebugInfo() {
     // SymInit(m_Handle);
 
     // Load module information
-    /*string symbolPath = Path::GetDirectory(this->GetFullName()).c_str();
+    /*string symbolPath = Path::GetDirectory(this->GetFullPath()).c_str();
     SymSetSearchPath(m_Handle, symbolPath.c_str());*/
 
     // List threads
@@ -534,9 +534,10 @@ void Process::FindCoreFunctions() {
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(Process, 2) {
+ORBIT_SERIALIZE(Process, 3) {
   ORBIT_NVP_VAL(0, m_Name);
-  ORBIT_NVP_VAL(0, m_FullName);
+  ORBIT_NVP_VAL(3, m_FullPath);
+  ORBIT_NVP_VAL(3, m_CmdLine);
   ORBIT_NVP_VAL(0, m_ID);
   ORBIT_NVP_VAL(0, m_IsElevated);
   ORBIT_NVP_VAL(0, m_CpuUsage);
