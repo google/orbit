@@ -1,8 +1,6 @@
 #ifndef ORBIT_CORE_PRINT_VAR_H_
 #define ORBIT_CORE_PRINT_VAR_H_
 
-#if !defined(NO_PRINT_VAR)
-
 #include <sstream>
 
 #include "OrbitBase/Logging.h"
@@ -23,13 +21,5 @@ inline std::string VariableToString(const char* name, const T& value) {
 
 //-----------------------------------------------------------------------------
 inline void PrintLastError() { PRINT_VAR(GetLastErrorAsString()); }
-
-#else
-
-#define PRINT_VAR(var)
-#define PRINT_FUNC
-#define VAR_TO_STR(var)
-
-#endif  // !defined(NO_PRINT_VAR)
 
 #endif  // ORBIT_CORE_PRINT_VAR_H_

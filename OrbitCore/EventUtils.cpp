@@ -105,7 +105,7 @@ void EventUtils::OutputDebugEvent(PEVENT_RECORD pEvent) {
     TimeStamp = pEvent->EventHeader.TimeStamp.QuadPart;
     Nanoseconds = (TimeStamp % 10000000) * 100;
 
-    LOG(L"%02d/%02d/%02d %02d:%02d:%02d.%I64u", stLocal.wMonth, stLocal.wDay,
+    LOG("%02d/%02d/%02d %02d:%02d:%02d.%I64u", stLocal.wMonth, stLocal.wDay,
         stLocal.wYear, stLocal.wHour, stLocal.wMinute, stLocal.wSecond,
         Nanoseconds);
 

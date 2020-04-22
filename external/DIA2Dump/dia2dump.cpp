@@ -12,7 +12,6 @@
 
 #include "dia2dump.h"
 
-#define NO_PRINT_VAR
 #include "../../../OrbitCore/OrbitDia.h"
 #include "../../../OrbitCore/ScopeTimer.h"
 #include "../../../OrbitGl/App.h"
