@@ -80,7 +80,7 @@ void Type::AddParent(IDiaSymbol* a_Parent) {
 
         Parent parent;
         parent.m_BaseOffset = offset;
-        parent.m_Name = ws2s(VAR_TO_STR(typeId));
+        parent.m_Name = VAR_TO_STR(typeId);
         parent.m_TypeId = typeId;
         m_ParentTypes[typeId] = parent;
       }

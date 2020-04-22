@@ -58,7 +58,7 @@ void ElfFileImpl<ElfT>::InitSections() {
   llvm::Expected<typename ElfT::ShdrRange> sections_or_err =
       elf_file->sections();
   if (!sections_or_err) {
-    PRINT("Unable to load sections\n");
+    LOG("Unable to load sections");
     return;
   }
 
@@ -66,7 +66,7 @@ void ElfFileImpl<ElfT>::InitSections() {
     llvm::Expected<llvm::StringRef> name_or_error =
         elf_file->getSectionName(&section);
     if (!name_or_error) {
-      PRINT("Unable to get section name\n");
+      LOG("Unable to get section name");
       continue;
     }
     llvm::StringRef name = name_or_error.get();
@@ -91,7 +91,7 @@ void ElfFileImpl<ElfT>::InitSections() {
         }
       }
       if (error) {
-        PRINT("Error while reading elf notes\n");
+        LOG("Error while reading elf notes");
       }
     }
   }
@@ -100,7 +100,7 @@ void ElfFileImpl<ElfT>::InitSections() {
 template <typename ElfT>
 bool ElfFileImpl<ElfT>::IsAddressInTextSection(uint64_t address) const {
   if (!text_section_) {
-    PRINT(".text section was not found\n");
+    LOG(".text section was not found");
     return false;
   }
 
