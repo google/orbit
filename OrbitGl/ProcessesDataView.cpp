@@ -61,8 +61,7 @@ std::string ProcessesDataView::GetValue(int row, int col) {
 
 //-----------------------------------------------------------------------------
 std::string ProcessesDataView::GetToolTip(int a_Row, int /*a_Column*/) {
-  const Process& process = *GetProcess(a_Row);
-  return process.GetFullName();
+  return GetProcess(a_Row)->GetCmdLine();
 }
 
 //-----------------------------------------------------------------------------
@@ -204,7 +203,7 @@ void ProcessesDataView::ClearSelectedProcess() {
 bool ProcessesDataView::SelectProcess(const std::string& a_ProcessName) {
   for (size_t i = 0; i < GetNumElements(); ++i) {
     Process& process = *GetProcess(i);
-    if (process.GetFullName().find(a_ProcessName) != std::string::npos) {
+    if (process.GetFullPath().find(a_ProcessName) != std::string::npos) {
       OnSelect(i);
       Capture::GPresetToLoad = "";
       return true;

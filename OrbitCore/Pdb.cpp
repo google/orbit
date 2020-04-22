@@ -52,8 +52,8 @@ Pdb::Pdb(const char* pdb_name)
 }
 
 //-----------------------------------------------------------------------------
-Pdb::Pdb(uint64_t module_address, uint64_t load_bias,
-         const std::string& file_name, const std::string& module_file_name)
+Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
+         std::string module_file_name)
     : m_MainModule(module_address),
       load_bias_(load_bias),
       m_FileName(std::move(file_name)),

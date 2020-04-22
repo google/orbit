@@ -27,8 +27,8 @@ struct IDiaDataSource;
 class Pdb {
  public:
   explicit Pdb(const char* pdb_name = "");
-  Pdb(uint64_t module_address, uint64_t load_bias, const std::string& file_name,
-      const std::string& module_file_name);
+  Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
+      std::string module_file_name);
   Pdb(const Pdb&) = delete;
   Pdb& operator=(const Pdb&) = delete;
   virtual ~Pdb();
@@ -149,8 +149,8 @@ class Pdb {
 class Pdb {
  public:
   Pdb() = default;
-  Pdb(uint64_t module_address, uint64_t load_bias, const std::string& file_name,
-      const std::string& module_file_name);
+  Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
+      std::string module_file_name);
   Pdb(const Pdb&) = delete;
   Pdb& operator=(const Pdb&) = delete;
   virtual ~Pdb() = default;

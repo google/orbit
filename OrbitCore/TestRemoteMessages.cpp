@@ -40,7 +40,8 @@ std::string SerializeObject(T& a_Object) {
 void TestRemoteMessages::Run() {
   Process process;
   process.m_Name = "process.m_Name";
-  process.m_FullName = "process.m_FullName";
+  process.m_FullPath = "process.m_FullPath";
+  process.m_CmdLine = "process.m_CmdLine";
   process.SetID(22);
   process.m_Is64Bit = true;
   process.m_DebugInfoLoaded = true;

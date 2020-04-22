@@ -494,7 +494,7 @@ bool Capture::IsOtherInstanceRunning() {
 //-----------------------------------------------------------------------------
 void Capture::SaveSession(const std::string& a_FileName) {
   Session session;
-  session.m_ProcessFullPath = GTargetProcess->GetFullName();
+  session.m_ProcessFullPath = GTargetProcess->GetFullPath();
 
   GCoreApp->SendToUiNow("UpdateProcessParams");
   session.m_Arguments = GParams.m_Arguments;

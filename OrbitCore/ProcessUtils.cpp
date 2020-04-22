@@ -142,7 +142,8 @@ void ProcessList::Refresh() {
           moduleEntry.dwSize = sizeof(MODULEENTRY32);
           BOOL res = Module32First(moduleSnapshot, &moduleEntry);
           if (res) {
-            process->m_FullName = ws2s(moduleEntry.szExePath);
+            process->m_FullPath = ws2s(moduleEntry.szExePath);
+            process->m_CmdLine = process->m_FullPath; // TODO: Append arguments.
           } else {
             ERROR("Call to Module32First failed for %s (pid=%d)",
                   process->m_Name.c_str(), processinfo.th32ProcessID);
@@ -162,11 +163,11 @@ void ProcessList::Refresh() {
 
 #else
   processes_.clear();
-  struct dirent* de_DirEntity = NULL;
-  DIR* dir_proc = NULL;
+  struct dirent* de_DirEntity = nullptr;
+  DIR* dir_proc = nullptr;
 
   dir_proc = opendir(PROC_DIRECTORY);
-  if (dir_proc == NULL) {
+  if (dir_proc == nullptr) {
     perror("Couldn't open the " PROC_DIRECTORY " directory");
     return;
   }
@@ -183,9 +184,15 @@ void ProcessList::Refresh() {
         process->m_Name = FileToString(dir + "comm");
         absl::StripTrailingAsciiWhitespace(
             &process->m_Name);  // Remove new line character.
+
+        // "The command-line arguments appear [...] as a set of strings
+        // separated by null bytes ('\0')".
         std::string cmdline = FileToString(dir + "cmdline");
+        process->m_FullPath = cmdline.substr(0, cmdline.find('\0'));
+
         std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
-        process->m_FullName = cmdline;
+        process->m_CmdLine = cmdline;
+
         process->SetID(pid);
         processes_map_[pid] = process;
       } else {

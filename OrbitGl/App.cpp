@@ -549,7 +549,7 @@ void OrbitApp::MainTick() {
   GTcpServer->MainThreadTick();
 
   if (!Capture::GProcessToInject.empty()) {
-    std::cout << "Injecting into " << Capture::GTargetProcess->GetFullName()
+    std::cout << "Injecting into " << Capture::GTargetProcess->GetFullPath()
               << std::endl;
     std::cout << "Orbit host: " << Capture::GCaptureHost << std::endl;
     GOrbitApp->SelectProcess(Capture::GProcessToInject);
