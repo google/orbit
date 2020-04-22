@@ -737,10 +737,9 @@ std::string OrbitApp::GetSessionFileName() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring OrbitApp::GetSaveFile(const std::wstring& a_Extension) {
-  std::wstring fileName;
-  if (m_SaveFileCallback) m_SaveFileCallback(a_Extension, fileName);
-  return fileName;
+std::string OrbitApp::GetSaveFile(const std::string& extension) {
+  if (!m_SaveFileCallback) return "";
+  return m_SaveFileCallback(extension);
 }
 
 //-----------------------------------------------------------------------------
