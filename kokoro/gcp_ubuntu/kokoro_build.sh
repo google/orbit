@@ -15,7 +15,7 @@ if [ "$0" == "$SCRIPT" ]; then
   conan config set general.revisions_enabled=True
   conan config set general.parallel_download=8
 
-  CONAN_PROFILE="clang7_release"
+  CONAN_PROFILE="clang7_relwithdebinfo"
 
   # Building Orbit
   conan install -u -pr ${CONAN_PROFILE} -if "${DIR}/build/" \
