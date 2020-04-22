@@ -18,8 +18,8 @@ You should prefer clang over GCC, since most of the developers build with clang 
 Orbit relies on `conan` as its package manager.  Conan is written in Python3,
 so make sure you have either Conan installed or at least have Python3 installed.
 
-The `bootstrap-orbit.{sh,bat}` will try to install `conan` via `pip3` if not
-installed and reachable via `PATH`. Afterwards it calls `build.{sh,bat}` which
+The `bootstrap-orbit.{sh,ps1}` will try to install `conan` via `pip3` if not
+installed and reachable via `PATH`. Afterwards it calls `build.{sh,ps1}` which
 will compile Orbit for you.
 
 On Linux, `python3` should be preinstalled anyway, but you might need to install
@@ -68,25 +68,25 @@ style.
 
 ## FAQ
 
-### What's the difference between `bootstrap-orbit.{sh,bat}` and `build.{sh,bat}`?
+### What's the difference between `bootstrap-orbit.{sh,ps1}` and `build.{sh,ps1}`?
 
-`bootstrap-orbit.{sh,bat}` performs all the tasks which have to be done once per developer machine.
+`bootstrap-orbit.{sh,ps1}` performs all the tasks which have to be done once per developer machine.
 This includes:
 * Installing system dependencies
 * Installing conan if necessary.
 
-Afterwards `bootstrap-orbit.{sh,bat}` calls `build.{sh,bat}`.
+Afterwards `bootstrap-orbit.{sh,ps1}` calls `build.{sh,ps1}`.
 
-`build.{sh,bat}` on the other hand performs all the tasks which have to be done
+`build.{sh,ps1}` on the other hand performs all the tasks which have to be done
 once per build configuration. It creates a build directory, named after the
 given conan profile, installs the conan-managed dependencies into this build folder,
 calls `cmake` for build configuration and starts the build.
 
-Whenever the dependencies change you have to call `build.{sh,bat}` again.
+Whenever the dependencies change you have to call `build.{sh,ps1}` again.
 A dependency change might be introduced by a pull from upstream or by a switch
 to a different branch.
 
-`build.{sh,bat}` can initialize as many build configurations as you like from the
+`build.{sh,ps1}` can initialize as many build configurations as you like from the
 same invocation. Just pass conan profile names as command line arguments. Example for Linux:
 ```bash
 ./build.sh clang7_debug gcc9_release clang9_relwithdebinfo ggp_release
@@ -97,10 +97,10 @@ same invocation. Just pass conan profile names as command line arguments. Exampl
 ./build.sh ggp_release
 ```
 
-### Calling `build.{sh,bat}` after every one-line-change takes forever! What should I do?
+### Calling `build.{sh,ps1}` after every one-line-change takes forever! What should I do?
 
-`build.{sh,bat}` is not meant for incremental builds. It should be called only once to initialize
-a build directory. (Check out the previous section for more information on what `build.{sh,bat}`
+`build.{sh,ps1}` is not meant for incremental builds. It should be called only once to initialize
+a build directory. (Check out the previous section for more information on what `build.{sh,ps1}`
 does.)
 
 For incremental builds, switch to the build directory and ask cmake to run the build:
@@ -148,7 +148,7 @@ ninja
 
 ### How do I integrate with CLion?
 
-In CLion, the IDE itself manages your build configurations, which is incompatible with our `build.{sh,bat}`
+In CLion, the IDE itself manages your build configurations, which is incompatible with our `build.{sh,ps1}`
 script. That means, you have to manually install conan dependencies into CLion's build directories
 and you have to manually verify that the directory's build configuration matches the used conan profile
 in terms of compiler, standard library, build type, target platform, etc.
@@ -227,7 +227,7 @@ _Note:_ Cross compiling the UI is not supported.
 _Note:_ Since the GGP SDK is not publicly available, this only works inside
 of Google, at least for now.
 
-Call the script `bootstrap-orbit-ggp.{sh,bat}` which creates a package out of the GGP
+Call the script `bootstrap-orbit-ggp.{sh,ps1}` which creates a package out of the GGP
 SDK (you do not need to have the SDK installed for this to work, but you will need it
 for deployment), and compiles Orbit against the toolchain from the GGP SDK package.
 
