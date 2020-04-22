@@ -53,7 +53,7 @@ class ThreadTrack : public Track {
   void SetEventTrackColor(Color color);
 
  protected:
-  inline void UpdateDepth(uint32_t a_Depth) {
+  void UpdateDepth(uint32_t a_Depth) {
     if (a_Depth > m_Depth) m_Depth = a_Depth;
   }
   std::shared_ptr<TimerChain> GetTimers(uint32_t a_Depth) const;
@@ -61,7 +61,7 @@ class ThreadTrack : public Track {
  protected:
   TextRenderer* m_TextRenderer = nullptr;
   std::shared_ptr<EventTrack> m_EventTrack;
-  uint32_t m_Depth = 1;
+  uint32_t m_Depth = 0;
   ThreadID m_ThreadID;
   bool m_Visible = true;
 

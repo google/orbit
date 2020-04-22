@@ -317,8 +317,13 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
     track->OnTimer(a_Timer);
     ++m_ThreadCountMap[a_Timer.m_TID];
   } else {
-    // Use thead 0 as container for scheduling events.
-    GetThreadTrack(0)->OnTimer(a_Timer);
+    // Use thread 0 as container for scheduling events.
+    const std::shared_ptr<ThreadTrack>& track0 = GetThreadTrack(0);
+    std::string process_name = Capture::GTargetProcess->GetName();
+    track0->SetName(process_name + " (all threads)");
+    track0->SetLabelDisplayMode(Track::NAME_ONLY);
+    track0->SetEventTrackColor(GetThreadColor(0));
+    track0->OnTimer(a_Timer);
     ++m_ThreadCountMap[0];
   }
 }
@@ -757,23 +762,35 @@ void TimeGraph::UpdateEvents() {
   Color white(255, 255, 255, 255);
   Fill(lineColor, white);
 
-  for (auto& pair : GEventTracer.GetEventBuffer().GetCallstacks()) {
-    ThreadID threadID = pair.first;
-    std::map<long long, CallstackEvent>& callstacks = pair.second;
+  float threadZeroOffset = m_Layout.GetSamplingTrackOffset(0);
+
+  for (auto& thread_callstacks :
+       GEventTracer.GetEventBuffer().GetCallstacks()) {
+    ThreadID threadID = thread_callstacks.first;
+    std::map<long long, CallstackEvent>& callstacks = thread_callstacks.second;
 
     // Sampling Events
-    float ThreadOffset = (float)m_Layout.GetSamplingTrackOffset(threadID);
-    if (ThreadOffset != -1.f) {
-      for (auto& callstackPair : callstacks) {
-        unsigned long long time = callstackPair.first;
+    float threadOffset = m_Layout.GetSamplingTrackOffset(threadID);
+    if (threadOffset != -1.f) {
+      for (auto& time_callstack : callstacks) {
+        long long time = time_callstack.first;
 
         if (time > rawMin && time < rawMax) {
           float x = GetWorldFromTick(time);
           Line line;
-          line.m_Beg = Vec3(x, ThreadOffset, GlCanvas::Z_VALUE_EVENT);
-          line.m_End = Vec3(x, ThreadOffset - m_Layout.GetEventTrackHeight(),
+          line.m_Beg = Vec3(x, threadOffset, GlCanvas::Z_VALUE_EVENT);
+          line.m_End = Vec3(x, threadOffset - m_Layout.GetEventTrackHeight(),
                             GlCanvas::Z_VALUE_EVENT);
           m_Batcher.AddLine(line, lineColor, PickingID::EVENT);
+
+          // Also draw all callstacks on the thread 0 track, which allows
+          // selecting callstacks from all threads.
+          Line line0;
+          line0.m_Beg = Vec3(x, threadZeroOffset, GlCanvas::Z_VALUE_EVENT);
+          line0.m_End =
+              Vec3(x, threadZeroOffset - m_Layout.GetEventTrackHeight(),
+                   GlCanvas::Z_VALUE_EVENT);
+          m_Batcher.AddLine(line0, lineColor, PickingID::EVENT);
         }
       }
     }
@@ -781,17 +798,28 @@ void TimeGraph::UpdateEvents() {
 
   // Draw selected events
   Color selectedColor[2];
-  Color col(0, 255, 0, 255);
-  Fill(selectedColor, col);
-  for (CallstackEvent& event : m_SelectedCallstackEvents) {
-    float x = GetWorldFromTick(event.m_Time);
-    float ThreadOffset = (float)m_Layout.GetSamplingTrackOffset(event.m_TID);
+  Color green(0, 255, 0, 255);
+  Fill(selectedColor, green);
+  for (CallstackEvent& callstack : m_SelectedCallstackEvents) {
+    long long time = callstack.m_Time;
 
-    Line line;
-    line.m_Beg = Vec3(x, ThreadOffset, GlCanvas::Z_VALUE_EVENT);
-    line.m_End = Vec3(x, ThreadOffset - m_Layout.GetEventTrackHeight(),
-                      GlCanvas::Z_VALUE_TEXT);
-    m_Batcher.AddLine(line, selectedColor, PickingID::EVENT);
+    if (time > rawMin && time < rawMax) {
+      float x = GetWorldFromTick(time);
+      float threadOffset = m_Layout.GetSamplingTrackOffset(callstack.m_TID);
+
+      Line line;
+      line.m_Beg = Vec3(x, threadOffset, GlCanvas::Z_VALUE_EVENT);
+      line.m_End = Vec3(x, threadOffset - m_Layout.GetEventTrackHeight(),
+                        GlCanvas::Z_VALUE_TEXT);
+      m_Batcher.AddLine(line, selectedColor, PickingID::EVENT);
+
+      // Also draw selected callstacks on the thread 0 track.
+      Line line0;
+      line0.m_Beg = Vec3(x, threadZeroOffset, GlCanvas::Z_VALUE_EVENT);
+      line0.m_End = Vec3(x, threadZeroOffset - m_Layout.GetEventTrackHeight(),
+                         GlCanvas::Z_VALUE_EVENT);
+      m_Batcher.AddLine(line0, selectedColor, PickingID::EVENT);
+    }
   }
 }
 
@@ -912,12 +940,17 @@ void TimeGraph::UpdateThreadIds() {
   if (!Capture::IsCapturing() || m_LastThreadReorder.QueryMillis() > 1000.0) {
     std::vector<ThreadID> sortedThreadIds;
 
+    // Thread "0" holds scheduling information and is used to select callstacks
+    // from all threads, show it at the top.
+    sortedThreadIds.push_back(0);
+
     // Show threads with instrumented functions first
     std::vector<std::pair<ThreadID, uint32_t>> sortedThreads =
         OrbitUtils::ReverseValueSort(m_ThreadCountMap);
     for (auto& pair : sortedThreads) {
-      // Scheduling information is held in thread "0", show it last.
-      // TODO: Make a proper "SchedTrack" instead of hack.
+      // Scheduling information is held in thread "0", which is handled
+      // separately.
+      // TODO: Make a proper "SchedTrack" instead of a hack.
       if (pair.first != 0) sortedThreadIds.push_back(pair.first);
     }
 
@@ -929,9 +962,6 @@ void TimeGraph::UpdateThreadIds() {
         sortedThreadIds.push_back(pair.first);
       }
     }
-
-    // Scheduling information is held in thread "0", show it last.
-    sortedThreadIds.push_back(0);
 
     // Filter thread ids if needed
     if (!m_ThreadFilter.empty()) {
