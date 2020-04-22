@@ -81,8 +81,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget* parent)
   GOrbitApp->AddWatchCallback(
       [this](const Variable* a_Variable) { this->OnAddToWatch(a_Variable); });
   GOrbitApp->SetSaveFileCallback(
-      [this](const std::wstring& a_Ext, std::wstring& o_FileName) {
-        this->OnGetSaveFileName(a_Ext, o_FileName);
+      [this](const std::string& extension) {
+        return this->OnGetSaveFileName(extension);
       });
   GOrbitApp->SetClipboardCallback(
       [this](const std::wstring& a_Text) { this->OnSetClipboard(a_Text); });
@@ -398,11 +398,13 @@ void OrbitMainWindow::OnAddToWatch(const class Variable* a_Variable) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::OnGetSaveFileName(const std::wstring& a_Extension,
-                                        std::wstring& o_FileName) {
-  QString file = QFileDialog::getSaveFileName(
-      this, "Specify a file to save...", nullptr, ws2s(a_Extension).c_str());
-  o_FileName = file.toStdWString();
+std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {
+  std::string filename = QFileDialog::getSaveFileName(
+      this, "Specify a file to save...", nullptr, extension.c_str()).toStdString();
+  if (!filename.empty() && !absl::EndsWith(filename, extension)) {
+    filename += extension;
+  }
+  return filename;
 }
 
 //-----------------------------------------------------------------------------
@@ -506,7 +508,10 @@ void OrbitMainWindow::on_actionSave_Session_As_triggered() {
   QString file =
       QFileDialog::getSaveFileName(this, "Specify a file to save...",
                                    Path::GetPresetPath().c_str(), "*.opr");
-  GOrbitApp->OnSaveSession(file.toStdString());
+  if (!file.isEmpty()) {
+    printf("filename: %s\n", file.toStdString().c_str());
+    GOrbitApp->OnSaveSession(file.toStdString());
+  }
 }
 
 //-----------------------------------------------------------------------------

@@ -80,7 +80,10 @@ void DataView::OnContextMenu(const std::string& a_Action, int a_MenuIndex,
   UNUSED(a_MenuIndex);
 
   if (a_Action == MENU_ACTION_EXPORT_TO_CSV) {
-    ExportCSV(ws2s(GOrbitApp->GetSaveFile(L".csv")));
+    std::string save_file = GOrbitApp->GetSaveFile(".csv");
+    if (!save_file.empty()) {
+      ExportCSV(save_file);
+    }
   } else if (a_Action == MENU_ACTION_COPY_SELECTION) {
     CopySelection(a_ItemIndices);
   }

@@ -34,8 +34,7 @@ class OrbitMainWindow : public QMainWindow {
   void OnNewSelection(std::shared_ptr<class SamplingReport> a_SamplingReport);
   void OnReceiveMessage(const std::string& message);
   void OnAddToWatch(const class Variable* a_Variable);
-  void OnGetSaveFileName(const std::wstring& a_Extension,
-                         std::wstring& a_FileName);
+  std::string OnGetSaveFileName(const std::string& extension);
   void OnSetClipboard(const std::wstring& a_Text);
   void ParseCommandlineArguments();
   bool IsHeadless() { return m_Headless; }

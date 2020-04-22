@@ -38,7 +38,7 @@ class OrbitApp : public CoreApp {
 
   std::wstring GetCaptureFileName();
   std::string GetSessionFileName();
-  std::wstring GetSaveFile(const std::wstring& a_Extension);
+  std::string GetSaveFile(const std::string& extension);
   void SetClipboard(const std::wstring& a_Text);
   void OnSaveSession(const std::string& file_name);
   void OnLoadSession(const std::string& file_name);
@@ -121,8 +121,7 @@ class OrbitApp : public CoreApp {
   void AddWatchCallback(WatchCallback a_Callback) {
     m_AddToWatchCallbacks.emplace_back(std::move(a_Callback));
   }
-  typedef std::function<void(const std::wstring& a_Extension,
-                             std::wstring& o_Variable)>
+  typedef std::function<std::string(const std::string& a_Extension)>
       SaveFileCallback;
   void SetSaveFileCallback(SaveFileCallback a_Callback) {
     m_SaveFileCallback = std::move(a_Callback);
