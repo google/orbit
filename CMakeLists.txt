@@ -83,6 +83,7 @@ if(WITH_GUI)
 endif()
 find_package(abseil CONFIG REQUIRED)
 find_package(llvm_object CONFIG REQUIRED)
+find_package(Outcome CONFIG REQUIRED)
 
 if(NOT WIN32)
   find_package(libunwindstack CONFIG REQUIRED)

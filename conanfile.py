@@ -50,6 +50,7 @@ class OrbitConan(ConanFile):
         self.requires("gtest/1.8.1@bincrafters/stable")
         self.requires("llvm_object/9.0.1@orbitdeps/stable")
         self.requires("openssl/1.1.1d@{}".format(self._orbit_channel))
+        self.requires("Outcome/3dae433e@orbitdeps/stable")
         if self.settings.os != "Windows":
             self.requires(
                 "libunwindstack/80a734f14@{}".format(self._orbit_channel))
