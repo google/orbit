@@ -58,7 +58,7 @@ void ElfFileImpl<ElfT>::InitSections() {
   llvm::Expected<typename ElfT::ShdrRange> sections_or_err =
       elf_file->sections();
   if (!sections_or_err) {
-    PRINT("Unable to load sections\n");
+    LOG("Unable to load sections");
     return;
   }
 
@@ -66,7 +66,7 @@ void ElfFileImpl<ElfT>::InitSections() {
     llvm::Expected<llvm::StringRef> name_or_error =
         elf_file->getSectionName(&section);
     if (!name_or_error) {
-      PRINT("Unable to get section name\n");
+      LOG("Unable to get section name");
       continue;
     }
     llvm::StringRef name = name_or_error.get();
@@ -91,7 +91,7 @@ void ElfFileImpl<ElfT>::InitSections() {
         }
       }
       if (error) {
-        PRINT("Error while reading elf notes\n");
+        LOG("Error while reading elf notes");
       }
     }
   }
@@ -100,7 +100,7 @@ void ElfFileImpl<ElfT>::InitSections() {
 template <typename ElfT>
 bool ElfFileImpl<ElfT>::IsAddressInTextSection(uint64_t address) const {
   if (!text_section_) {
-    PRINT(".text section was not found\n");
+    LOG(".text section was not found");
     return false;
   }
 
@@ -137,10 +137,8 @@ bool ElfFileImpl<ElfT>::LoadFunctions(Pdb* pdb) const {
 
     // Unknown type - skip and generate a warning
     if (!symbol_ref.getType()) {
-      PRINT(
-          absl::StrFormat("WARNING: Type is not set for symbol \"%s\" in "
-                          "\"%s\", skipping.",
-                          name, file_path_));
+      LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.",
+          name.c_str(), file_path_.c_str());
       continue;
     }
 
@@ -176,7 +174,7 @@ std::optional<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
   llvm::Expected<typename ElfT::PhdrRange> range = elf_file->program_headers();
 
   if (!range) {
-    PRINT(absl::StrFormat("No program headers found in %s\n", file_path_));
+    LOG("No program headers found in %s\n", file_path_);
     return {};
   }
 
@@ -192,8 +190,7 @@ std::optional<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
   }
 
   if (!pt_load_found) {
-    PRINT(absl::StrFormat("No PT_LOAD program headers found in %s\n",
-                          file_path_));
+    LOG("No PT_LOAD program headers found in %s", file_path_);
     return {};
   }
   return min_vaddr;

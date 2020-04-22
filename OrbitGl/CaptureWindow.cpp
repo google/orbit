@@ -809,15 +809,15 @@ void CaptureWindow::RenderUI() {
 
     m_StatsWindow.Clear();
 
-    m_StatsWindow.AddLine(VAR_TO_ANSI(m_Width));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(m_Height));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(m_DesiredWorldHeight));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(m_DesiredWorldWidth));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(m_WorldHeight));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(m_WorldWidth));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(m_WorldTopLeftX));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(m_WorldTopLeftY));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(m_WorldMinWidth));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_Width));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_Height));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_DesiredWorldHeight));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_DesiredWorldWidth));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_WorldHeight));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_WorldWidth));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_WorldTopLeftX));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_WorldTopLeftY));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_WorldMinWidth));
 
     /*
             m_StatsWindow.AddLog( VAR_TO_CHAR(
@@ -837,15 +837,15 @@ void CaptureWindow::RenderUI() {
        Capture::GNumTimersAtOnce ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
        Capture::GNumTargetQueuedEntries ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
        m_MousePosX ) ); m_StatsWindow.AddLog( VAR_TO_CHAR( m_MousePosY ) );*/
-    m_StatsWindow.AddLine(VAR_TO_ANSI(Capture::GNumContextSwitches));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(Capture::GNumLinuxEvents));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(Capture::GNumProfileEvents));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(Capture::GNumInstalledHooks));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(Capture::GSelectedFunctionsMap.size()));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(Capture::GVisibleFunctionsMap.size()));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(m_TimeGraph.GetNumDrawnTextBoxes()));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(m_TimeGraph.GetNumTimers()));
-    m_StatsWindow.AddLine(VAR_TO_ANSI(m_TimeGraph.GetThreadTotalHeight()));
+    m_StatsWindow.AddLine(VAR_TO_STR(Capture::GNumContextSwitches));
+    m_StatsWindow.AddLine(VAR_TO_STR(Capture::GNumLinuxEvents));
+    m_StatsWindow.AddLine(VAR_TO_STR(Capture::GNumProfileEvents));
+    m_StatsWindow.AddLine(VAR_TO_STR(Capture::GNumInstalledHooks));
+    m_StatsWindow.AddLine(VAR_TO_STR(Capture::GSelectedFunctionsMap.size()));
+    m_StatsWindow.AddLine(VAR_TO_STR(Capture::GVisibleFunctionsMap.size()));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_TimeGraph.GetNumDrawnTextBoxes()));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_TimeGraph.GetNumTimers()));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_TimeGraph.GetThreadTotalHeight()));
 
 #ifdef WIN32
     for (std::string& line : GTcpServer->GetStats()) {
@@ -853,12 +853,12 @@ void CaptureWindow::RenderUI() {
     }
 
     bool hasConnection = GTcpServer->HasConnection();
-    m_StatsWindow.AddLine(VAR_TO_ANSI(hasConnection));
+    m_StatsWindow.AddLine(VAR_TO_STR(hasConnection));
 #else
     m_StatsWindow.AddLine(
-        VAR_TO_ANSI(GEventTracer.GetEventBuffer().GetCallstacks().size()));
+        VAR_TO_STR(GEventTracer.GetEventBuffer().GetCallstacks().size()));
     m_StatsWindow.AddLine(
-        VAR_TO_ANSI(GEventTracer.GetEventBuffer().GetNumEvents()));
+        VAR_TO_STR(GEventTracer.GetEventBuffer().GetNumEvents()));
 #endif
 
     m_StatsWindow.Draw("Capture Stats", &m_DrawStats);
@@ -1016,15 +1016,15 @@ void CaptureWindow::RenderMemTracker() {
 
   const MemoryTracker& memTracker = m_TimeGraph.GetMemoryTracker();
   if (memTracker.NumAllocatedBytes() == 0) {
-    std::string str = VAR_TO_ANSI(memTracker.NumAllocatedBytes()) +
+    std::string str = VAR_TO_STR(memTracker.NumAllocatedBytes()) +
                       std::string("            ");
     ImGui::Text("%s", str.c_str());
-    ImGui::Text("%s", VAR_TO_ANSI(memTracker.NumFreedBytes()));
-    ImGui::Text("%s", VAR_TO_ANSI(memTracker.NumLiveBytes()));
+    ImGui::Text("%s", VAR_TO_STR(memTracker.NumFreedBytes()).c_str());
+    ImGui::Text("%s", VAR_TO_STR(memTracker.NumLiveBytes()).c_str());
   } else {
-    ImGui::Text("%s", VAR_TO_ANSI(memTracker.NumAllocatedBytes()));
-    ImGui::Text("%s", VAR_TO_ANSI(memTracker.NumFreedBytes()));
-    ImGui::Text("%s", VAR_TO_ANSI(memTracker.NumLiveBytes()));
+    ImGui::Text("%s", VAR_TO_STR(memTracker.NumAllocatedBytes()).c_str());
+    ImGui::Text("%s", VAR_TO_STR(memTracker.NumFreedBytes()).c_str());
+    ImGui::Text("%s", VAR_TO_STR(memTracker.NumLiveBytes()).c_str());
   }
 
   ImGui::End();

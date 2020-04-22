@@ -58,10 +58,6 @@ typedef struct _M128A {
   uint64_t High;
 } M128A;
 
-inline void OutputDebugStringA(const char* msg) { std::cout << msg; }
-
-inline void OutputDebugStringW(const wchar_t* wmsg) { std::wcout << wmsg; }
-
 #define vsnprintf_s vsnprintf
 #define _vsnwprintf_s vswprintf
 

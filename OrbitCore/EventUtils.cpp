@@ -61,7 +61,7 @@ void EventUtils::OutputDebugEvent(PEVENT_RECORD pEvent) {
     status = GetEventInformation(pEvent, pInfo);
 
     if (ERROR_SUCCESS != status) {
-      PRINT(L"GetEventInformation failed with %lu\n", status);
+      LOG("GetEventInformation failed with %lu", status);
       goto cleanup;
     }
 
@@ -74,22 +74,21 @@ void EventUtils::OutputDebugEvent(PEVENT_RECORD pEvent) {
       HRESULT hr = StringFromCLSID(pInfo->EventGuid, &pwsEventGuid);
 
       if (FAILED(hr)) {
-        PRINT(L"StringFromCLSID failed with 0x%x\n", hr);
+        LOG("StringFromCLSID failed with 0x%x", hr);
         status = hr;
         goto cleanup;
       }
 
-      PRINT(L"\nEvent GUID: %s\n", pwsEventGuid);
+      LOG("\nEvent GUID: %s", pwsEventGuid);
       CoTaskMemFree(pwsEventGuid);
       pwsEventGuid = NULL;
 
-      PRINT(L"Event version: %d\n",
-            pEvent->EventHeader.EventDescriptor.Version);
-      PRINT(L"Event type: %d\n", pEvent->EventHeader.EventDescriptor.Opcode);
+      LOG("Event version: %d", pEvent->EventHeader.EventDescriptor.Version);
+      LOG("Event type: %d", pEvent->EventHeader.EventDescriptor.Opcode);
     } else if (DecodingSourceXMLFile ==
                pInfo->DecodingSource)  // Instrumentation manifest
     {
-      PRINT(L"Event ID: %d\n", pInfo->EventDescriptor.Id);
+      LOG("Event ID: %d", pInfo->EventDescriptor.Id);
     } else  // Not handling the WPP case
     {
       goto cleanup;
@@ -106,9 +105,9 @@ void EventUtils::OutputDebugEvent(PEVENT_RECORD pEvent) {
     TimeStamp = pEvent->EventHeader.TimeStamp.QuadPart;
     Nanoseconds = (TimeStamp % 10000000) * 100;
 
-    PRINT(L"%02d/%02d/%02d %02d:%02d:%02d.%I64u\n", stLocal.wMonth,
-          stLocal.wDay, stLocal.wYear, stLocal.wHour, stLocal.wMinute,
-          stLocal.wSecond, Nanoseconds);
+    LOG("%02d/%02d/%02d %02d:%02d:%02d.%I64u", stLocal.wMonth, stLocal.wDay,
+        stLocal.wYear, stLocal.wHour, stLocal.wMinute, stLocal.wSecond,
+        Nanoseconds);
 
     // If the event contains event-specific data use TDH to extract
     // the event data. For this example, to extract the data, the event
@@ -138,7 +137,7 @@ void EventUtils::OutputDebugEvent(PEVENT_RECORD pEvent) {
       pUserData = PrintProperties(pEvent, pInfo, PointerSize, i, pUserData,
                                   pEndOfUserData);
       if (NULL == pUserData) {
-        PRINT(L"Printing top level properties failed.\n");
+        LOG("Printing top level properties failed.");
         goto cleanup;
       }
     }
@@ -174,7 +173,7 @@ PBYTE PrintProperties(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo,
 
   status = GetPropertyLength(pEvent, pInfo, i, &PropertyLength);
   if (ERROR_SUCCESS != status) {
-    PRINT(L"GetPropertyLength failed.\n");
+    LOG("GetPropertyLength failed.");
     pUserData = NULL;
     goto cleanup;
   }
@@ -198,7 +197,7 @@ PBYTE PrintProperties(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo,
         pUserData = PrintProperties(pEvent, pInfo, PointerSize, j, pUserData,
                                     pEndOfUserData);
         if (NULL == pUserData) {
-          PRINT(L"Printing the members of the structure failed.\n");
+          LOG("Printing the members of the structure failed.");
           pUserData = NULL;
           goto cleanup;
         }
@@ -214,7 +213,7 @@ PBYTE PrintProperties(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo,
           pInfo->DecodingSource, pMapInfo);
 
       if (ERROR_SUCCESS != status) {
-        PRINT(L"GetMapInfo failed\n");
+        LOG("GetMapInfo failed");
         pUserData = NULL;
         goto cleanup;
       }
@@ -236,8 +235,8 @@ PBYTE PrintProperties(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo,
 
         pFormattedData = (LPWSTR)malloc(FormattedDataSize);
         if (pFormattedData == NULL) {
-          PRINT(L"Failed to allocate memory for formatted data (size=%lu).\n",
-                FormattedDataSize);
+          LOG("Failed to allocate memory for formatted data (size=%lu).",
+              FormattedDataSize);
           status = ERROR_OUTOFMEMORY;
           pUserData = NULL;
           goto cleanup;
@@ -254,14 +253,14 @@ PBYTE PrintProperties(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo,
       }
 
       if (ERROR_SUCCESS == status) {
-        PRINT(L"%s: %s\n",
-              (PWCHAR)((PBYTE)(pInfo) +
-                       pInfo->EventPropertyInfoArray[i].NameOffset),
-              pFormattedData);
+        LOG("%s: %s",
+            (PWCHAR)((PBYTE)(pInfo) +
+                     pInfo->EventPropertyInfoArray[i].NameOffset),
+            pFormattedData);
 
         pUserData += UserDataConsumed;
       } else {
-        PRINT(L"TdhFormatProperty failed with %lu.\n", status);
+        LOG("TdhFormatProperty failed with %lu.", status);
         pUserData = NULL;
         goto cleanup;
       }
@@ -338,9 +337,9 @@ DWORD GetPropertyLength(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo, USHORT i,
                      PropertyStruct) {
         *PropertyLength = pInfo->EventPropertyInfoArray[i].length;
       } else {
-        PRINT(L"Unexpected length of 0 for intype %d and outtype %d\n",
-              pInfo->EventPropertyInfoArray[i].nonStructType.InType,
-              pInfo->EventPropertyInfoArray[i].nonStructType.OutType);
+        LOG("Unexpected length of 0 for intype %d and outtype %d",
+            pInfo->EventPropertyInfoArray[i].nonStructType.InType,
+            pInfo->EventPropertyInfoArray[i].nonStructType.OutType);
 
         status = ERROR_EVT_INVALID_EVENT_DATA;
         goto cleanup;
@@ -401,7 +400,7 @@ DWORD GetMapInfo(PEVENT_RECORD pEvent, LPWSTR pMapName, DWORD DecodingSource,
   if (ERROR_INSUFFICIENT_BUFFER == status) {
     pMapInfo = (PEVENT_MAP_INFO)malloc(MapSize);
     if (pMapInfo == NULL) {
-      PRINT(L"Failed to allocate memory for map info (size=%lu).\n", MapSize);
+      LOG("Failed to allocate memory for map info (size=%lu).", MapSize);
       status = ERROR_OUTOFMEMORY;
       goto cleanup;
     }
@@ -419,7 +418,7 @@ DWORD GetMapInfo(PEVENT_RECORD pEvent, LPWSTR pMapName, DWORD DecodingSource,
     if (ERROR_NOT_FOUND == status) {
       status = ERROR_SUCCESS;  // This case is okay.
     } else {
-      PRINT(L"TdhGetEventMapInformation failed with 0x%x.\n", status);
+      LOG("TdhGetEventMapInformation failed with 0x%x.", status);
     }
   }
 
@@ -460,8 +459,7 @@ DWORD GetEventInformation(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO& pInfo) {
   if (ERROR_INSUFFICIENT_BUFFER == status) {
     pInfo = (TRACE_EVENT_INFO*)malloc(BufferSize);
     if (pInfo == NULL) {
-      PRINT(L"Failed to allocate memory for event info (size=%lu).\n",
-            BufferSize);
+      LOG("Failed to allocate memory for event info (size=%lu).", BufferSize);
       status = ERROR_OUTOFMEMORY;
       goto cleanup;
     }
@@ -472,7 +470,7 @@ DWORD GetEventInformation(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO& pInfo) {
   }
 
   if (ERROR_SUCCESS != status) {
-    PRINT(L"TdhGetEventInformation failed with 0x%x.\n", status);
+    LOG("TdhGetEventInformation failed with 0x%x.", status);
   }
 
 cleanup:

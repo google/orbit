@@ -838,7 +838,6 @@ bool DumpAllFunctions(IDiaSymbol* pGlobal) {
   HRESULT res = pGlobal->findChildren(SymTagFunction, NULL, nsNone,
                                       &pEnumSymbols.m_Symbol);
   if (FAILED(res)) {
-    PRINT_VAR(res);
     PrintLastError();
     return false;
   }

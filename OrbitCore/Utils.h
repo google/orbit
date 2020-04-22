@@ -540,3 +540,9 @@ bool ReadProcessMemory(uint32_t pid, uint64_t address, byte* buffer,
 #define UNIQUE_VAR CONCAT(Unique, __LINE__)
 #define UNIQUE_ID CONCAT(Id_, __LINE__)
 #define UNUSED(x) (void)(x)
+
+#if __linux__
+#define FUNCTION_NAME __PRETTY_FUNCTION__
+#else
+#define FUNCTION_NAME __FUNCTION__
+#endif

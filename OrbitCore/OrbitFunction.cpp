@@ -83,10 +83,10 @@ bool Function::Hookable() {
 void Function::Select() {
   if (Hookable()) {
     selected_ = true;
-    PRINT("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64
-          ", load_bias_= 0x%" PRIx64 ", base_address=0x%" PRIx64 ")\n",
-          pretty_name_.c_str(), GetVirtualAddress(), address_, load_bias_,
-          module_base_address_);
+    LOG("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64
+        ", load_bias_= 0x%" PRIx64 ", base_address=0x%" PRIx64 ")",
+        pretty_name_.c_str(), GetVirtualAddress(), address_, load_bias_,
+        module_base_address_);
     Capture::GSelectedFunctionsMap[GetVirtualAddress()] = this;
   }
 }

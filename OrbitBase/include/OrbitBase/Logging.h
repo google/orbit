@@ -4,6 +4,10 @@
 #include <cstdio>
 #include <filesystem>
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 #include "absl/strings/str_format.h"
 
 #ifdef __clang__
@@ -75,10 +79,7 @@
     OutputDebugStringA(message);    \
   } while (0)
 #else
-#define PLATFORM_LOG(message)       \
-  do {                              \
-    fprintf(stderr, "%s", message); \
-  } while (0)
+#define PLATFORM_LOG(message) fprintf(stderr, "%s", message)
 #endif
 
 #ifdef __clang__
