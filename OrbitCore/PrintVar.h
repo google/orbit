@@ -5,9 +5,9 @@
 
 #include <sstream>
 
-#include "absl/strings/str_format.h"
 #include "OrbitBase/Logging.h"
 #include "Utils.h"
+#include "absl/strings/str_format.h"
 
 #define PRINT_VAR(var) LOG("%s", VAR_TO_STR(var).c_str())
 #define PRINT_FUNC LOG("%s tid:%u", FUNCTION_NAME, GetCurrentThreadId())

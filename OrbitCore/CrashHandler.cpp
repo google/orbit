@@ -4,15 +4,14 @@
 
 #include "CrashHandler.h"
 
-#include "client/crash_report_database.h"
-#include "client/settings.h"
-
 #include "Core.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitDbgHelp.h"
 #include "ScopeTimer.h"
 #include "TcpClient.h"
 #include "Version.h"
+#include "client/crash_report_database.h"
+#include "client/settings.h"
 
 namespace {
 template <typename StringType = base::FilePath::StringType>

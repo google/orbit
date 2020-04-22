@@ -61,7 +61,7 @@ LocalScopeTimer::~LocalScopeTimer() {
     }
 
     LOG("%s%s took %f ms.", tabs.c_str(), message_.c_str(),
-           timer_.ElapsedMillis());
+        timer_.ElapsedMillis());
   }
 }
 

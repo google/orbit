@@ -73,13 +73,13 @@
 
 // Internal.
 #if defined(_WIN32)
-#define PLATFORM_LOG(message)     \
+#define PLATFORM_LOG(message)       \
   do {                              \
     fprintf(stderr, "%s", message); \
     OutputDebugStringA(message);    \
   } while (0)
 #else
-#define PLATFORM_LOG(message)     \
+#define PLATFORM_LOG(message)       \
   do {                              \
     fprintf(stderr, "%s", message); \
   } while (0)

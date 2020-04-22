@@ -83,8 +83,7 @@ void EventUtils::OutputDebugEvent(PEVENT_RECORD pEvent) {
       CoTaskMemFree(pwsEventGuid);
       pwsEventGuid = NULL;
 
-      LOG("Event version: %d",
-            pEvent->EventHeader.EventDescriptor.Version);
+      LOG("Event version: %d", pEvent->EventHeader.EventDescriptor.Version);
       LOG("Event type: %d", pEvent->EventHeader.EventDescriptor.Opcode);
     } else if (DecodingSourceXMLFile ==
                pInfo->DecodingSource)  // Instrumentation manifest
@@ -106,9 +105,9 @@ void EventUtils::OutputDebugEvent(PEVENT_RECORD pEvent) {
     TimeStamp = pEvent->EventHeader.TimeStamp.QuadPart;
     Nanoseconds = (TimeStamp % 10000000) * 100;
 
-    LOG(L"%02d/%02d/%02d %02d:%02d:%02d.%I64u", stLocal.wMonth,
-          stLocal.wDay, stLocal.wYear, stLocal.wHour, stLocal.wMinute,
-          stLocal.wSecond, Nanoseconds);
+    LOG(L"%02d/%02d/%02d %02d:%02d:%02d.%I64u", stLocal.wMonth, stLocal.wDay,
+        stLocal.wYear, stLocal.wHour, stLocal.wMinute, stLocal.wSecond,
+        Nanoseconds);
 
     // If the event contains event-specific data use TDH to extract
     // the event data. For this example, to extract the data, the event
@@ -237,7 +236,7 @@ PBYTE PrintProperties(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo,
         pFormattedData = (LPWSTR)malloc(FormattedDataSize);
         if (pFormattedData == NULL) {
           LOG("Failed to allocate memory for formatted data (size=%lu).",
-                FormattedDataSize);
+              FormattedDataSize);
           status = ERROR_OUTOFMEMORY;
           pUserData = NULL;
           goto cleanup;
@@ -255,9 +254,9 @@ PBYTE PrintProperties(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo,
 
       if (ERROR_SUCCESS == status) {
         LOG("%s: %s",
-              (PWCHAR)((PBYTE)(pInfo) +
-                       pInfo->EventPropertyInfoArray[i].NameOffset),
-              pFormattedData);
+            (PWCHAR)((PBYTE)(pInfo) +
+                     pInfo->EventPropertyInfoArray[i].NameOffset),
+            pFormattedData);
 
         pUserData += UserDataConsumed;
       } else {
@@ -339,8 +338,8 @@ DWORD GetPropertyLength(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo, USHORT i,
         *PropertyLength = pInfo->EventPropertyInfoArray[i].length;
       } else {
         LOG("Unexpected length of 0 for intype %d and outtype %d",
-              pInfo->EventPropertyInfoArray[i].nonStructType.InType,
-              pInfo->EventPropertyInfoArray[i].nonStructType.OutType);
+            pInfo->EventPropertyInfoArray[i].nonStructType.InType,
+            pInfo->EventPropertyInfoArray[i].nonStructType.OutType);
 
         status = ERROR_EVT_INVALID_EVENT_DATA;
         goto cleanup;
@@ -460,8 +459,7 @@ DWORD GetEventInformation(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO& pInfo) {
   if (ERROR_INSUFFICIENT_BUFFER == status) {
     pInfo = (TRACE_EVENT_INFO*)malloc(BufferSize);
     if (pInfo == NULL) {
-      LOG("Failed to allocate memory for event info (size=%lu).",
-            BufferSize);
+      LOG("Failed to allocate memory for event info (size=%lu).", BufferSize);
       status = ERROR_OUTOFMEMORY;
       goto cleanup;
     }

@@ -85,7 +85,8 @@ class FunctionCall {
         virtual_address_(virtual_address),
         begin_timestamp_ns_(begin_timestamp_ns),
         end_timestamp_ns_(end_timestamp_ns),
-        depth_{depth}, return_value_(return_value) {}
+        depth_{depth},
+        return_value_(return_value) {}
 
   pid_t GetTid() const { return tid_; }
   uint64_t GetVirtualAddress() const { return virtual_address_; }
