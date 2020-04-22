@@ -15,6 +15,13 @@
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
 
+#define PRINT(msg) PLATFORM_PRINT(msg)
+
+#define PRINTF(format, ...)                                \
+  do {                                                     \
+    PRINT(absl::StrFormat(format, ##__VA_ARGS__).c_str()); \
+  } while (0)
+
 #define LOG(format, ...)                                                      \
   do {                                                                        \
     std::string file__ = std::filesystem::path(__FILE__).filename().string(); \
@@ -25,7 +32,7 @@
           "..." + file_and_line__.substr(file_and_line__.size() - 25);        \
     std::string formatted_log__ = absl::StrFormat(                            \
         "[%28s] " format "\n", file_and_line__.c_str(), ##__VA_ARGS__);       \
-    PLATFORM_LOG(formatted_log__.c_str());                                    \
+    PRINT(formatted_log__.c_str());                                    \
   } while (0)
 
 #if defined(_WIN32) && defined(ERROR)
@@ -73,13 +80,13 @@
 
 // Internal.
 #if defined(_WIN32)
-#define PLATFORM_LOG(message)       \
+#define PLATFORM_PRINT(message)     \
   do {                              \
     fprintf(stderr, "%s", message); \
     OutputDebugStringA(message);    \
   } while (0)
 #else
-#define PLATFORM_LOG(message)       \
+#define PLATFORM_PRINT(message)     \
   do {                              \
     fprintf(stderr, "%s", message); \
   } while (0)

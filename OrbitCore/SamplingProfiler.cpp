@@ -140,9 +140,7 @@ void SamplingProfiler::AddCallStack(CallStack& a_CallStack) {
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddHashedCallStack(CallstackEvent& a_CallStack) {
   if (!HasCallStack(a_CallStack.m_Id)) {
-    PRINT(
-        "Error: Callstacks can only be added by hash when they are already "
-        "present.\n");
+    LOG("Error: Callstacks can only be added by hash when already present.");
   }
   ScopeLock lock(m_Mutex);
   m_Callstacks.push_back(a_CallStack);
@@ -233,7 +231,7 @@ void SamplingProfiler::Print() {
       PRINT_VAR((void*)callstack->m_Hash);
       PRINT_VAR(callstack->m_Depth);
       for (uint32_t i = 0; i < callstack->m_Depth; ++i) {
-        PRINT("%s\n", m_AddressToName[callstack->m_Data[i]].c_str());
+        PRINTF("%s\n", m_AddressToName[callstack->m_Data[i]].c_str());
       }
     }
   }

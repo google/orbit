@@ -141,7 +141,7 @@ void ConnectionManager::StartCaptureAsRemote(uint32_t pid) {
   PRINT_FUNC;
   std::shared_ptr<Process> process = process_list_.GetProcess(pid);
   if (!process) {
-    PRINT("Process not found (pid=%d)\n", pid);
+    LOG("Process not found (pid=%d)", pid);
     return;
   }
   Capture::SetTargetProcess(process);

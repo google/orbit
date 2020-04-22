@@ -137,10 +137,8 @@ bool ElfFileImpl<ElfT>::LoadFunctions(Pdb* pdb) const {
 
     // Unknown type - skip and generate a warning
     if (!symbol_ref.getType()) {
-      PRINT(
-          absl::StrFormat("WARNING: Type is not set for symbol \"%s\" in "
-                          "\"%s\", skipping.",
-                          name, file_path_));
+      LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.",
+          name.c_str(), file_path_.c_str());
       continue;
     }
 
@@ -176,7 +174,7 @@ std::optional<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
   llvm::Expected<typename ElfT::PhdrRange> range = elf_file->program_headers();
 
   if (!range) {
-    PRINT(absl::StrFormat("No program headers found in %s\n", file_path_));
+    LOG("No program headers found in %s\n", file_path_);
     return {};
   }
 
@@ -192,8 +190,7 @@ std::optional<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
   }
 
   if (!pt_load_found) {
-    PRINT(absl::StrFormat("No PT_LOAD program headers found in %s\n",
-                          file_path_));
+    LOG("No PT_LOAD program headers found in %s", file_path_);
     return {};
   }
   return min_vaddr;
