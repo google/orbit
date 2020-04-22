@@ -13,6 +13,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
                            -Werror=float-conversion)
 endif()
 
+include(cmake/strip.cmake)
 include(cmake/tests.cmake)
 enable_testing()
 

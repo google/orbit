@@ -162,12 +162,15 @@ chmod -v 4775 /usr/bin/OrbitService
         self.copy("*", src="bin/fonts", dst="bin/fonts", symlinks=True)
         self.copy("*", src="bin/shaders", dst="bin/shaders", symlinks=True)
         self.copy("*.so*", src="bin/", dst="bin", symlinks=True)
-        if self.settings.os == "Windows":
-            self.copy("*.dll", src="bin/", dst="bin", symlinks=True)
+        self.copy("*.dll", src="bin/", dst="bin", symlinks=True)
         self.copy("Orbit", src="bin/", dst="bin")
         self.copy("Orbit.exe", src="bin/", dst="bin")
         self.copy("Orbit.pdb", src="bin/", dst="bin")
-        self.copy("OrbitService*", src="bin/", dst="bin")
+        self.copy("Orbit.debug", src="bin/", dst="bin")
+        self.copy("OrbitService", src="bin/", dst="bin")
+        self.copy("OrbitService.exe", src="bin/", dst="bin")
+        self.copy("OrbitService.pdb", src="bin/", dst="bin")
+        self.copy("OrbitService.debug", src="bin/", dst="bin")
 
     def deploy(self):
         self.copy("*", src="bin", dst="bin")

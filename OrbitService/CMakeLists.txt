@@ -22,3 +22,5 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     PROPERTIES LINK_FLAGS
                "/MANIFESTUAC:\"level='requireAdministrator' /SUBSYSTEM:WINDOWS")
 endif()
+
+strip_symbols(OrbitService)
