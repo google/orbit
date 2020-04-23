@@ -5,6 +5,7 @@
 
 #include "DataView.h"
 #include "OrbitProcess.h"
+#include "process.pb.h"
 
 class ProcessesDataView final : public DataView {
  public:
@@ -20,9 +21,8 @@ class ProcessesDataView final : public DataView {
 
   void OnSelect(int index) override;
   bool SelectProcess(const std::string& process_name);
-  std::shared_ptr<Process> SelectProcess(uint32_t process_id);
-  void SetProcessList(
-      const std::vector<std::shared_ptr<Process>>& process_list);
+  bool SelectProcess(uint32_t process_id);
+  void SetProcessList(std::vector<ProcessInfo>&& process_list);
   uint32_t GetSelectedProcessId() const;
 
  protected:
@@ -32,11 +32,11 @@ class ProcessesDataView final : public DataView {
  private:
   void UpdateProcessList();
   void SetSelectedItem();
-  std::shared_ptr<Process> GetProcess(uint32_t row) const;
 
-  std::vector<std::shared_ptr<Process>> process_list_;
+  const ProcessInfo& GetProcess(uint32_t row) const;
+
+  std::vector<ProcessInfo> process_list_;
   uint32_t selected_process_id_;
-
   std::function<void(uint32_t)> selection_listener_;
 
   enum ColumnIndex {
