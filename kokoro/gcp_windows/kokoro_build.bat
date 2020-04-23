@@ -1,22 +1,16 @@
+@echo off
+REM Copyright (c) 2020 The Orbit Authors. All rights reserved.
+REM Use of this source code is governed by a BSD-style license that can be
+REM found in the LICENSE file.
+
 :: Code under repo is checked out to %KOKORO_ARTIFACTS_DIR%\github.
 :: The final directory name in this path is determined by the scm name specified
 :: in the job configuration
-@echo off
 
 SET REPO_ROOT=%KOKORO_ARTIFACTS_DIR%\github\orbitprofiler
 
-conan config install %REPO_ROOT%\contrib\conan\configs\windows
-if %errorlevel% neq 0 exit /b %errorlevel%
-
-REM We replace the default remotes by our internal artifactory server
-REM which acts as a secure source for prebuilt dependencies.
-copy /Y %REPO_ROOT%\kokoro\conan\config\remotes.json %HOME%\.conan\remotes.json
-if %errorlevel% neq 0 exit /b %errorlevel%
-
-conan config set general.revisions_enabled=True
-if %errorlevel% neq 0 exit /b %errorlevel%
-
-conan config set general.parallel_download=8
+:: Install conan config
+call powershell "& %REPO_ROOT%\contrib\conan\configs\install.ps1"
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 :: Building conan
