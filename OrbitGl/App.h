@@ -18,6 +18,7 @@
 #include "StringManager.h"
 #include "SymbolHelper.h"
 #include "Threading.h"
+#include "grpcpp/grpcpp.h"
 
 #if defined(_WIN32)
 #include "Debugger.h"
@@ -259,7 +260,8 @@ class OrbitApp : public CoreApp {
 
   int m_NumTicks = 0;
 
-  std::shared_ptr<StringManager> string_manager_ = nullptr;
+  std::shared_ptr<StringManager> string_manager_;
+  std::shared_ptr<grpc::Channel> grpc_channel_;
 
   const SymbolHelper symbol_helper_;
 #if defined(_WIN32)

@@ -332,6 +332,15 @@ void OrbitApp::PostInit() {
     SetIsRemote(true);
   }
 
+  if (!options_.grpc_server_address.empty()) {
+    grpc_channel_ = grpc::CreateChannel(options_.grpc_server_address,
+                                        grpc::InsecureChannelCredentials());
+    if (!grpc_channel_) {
+      ERROR("Unable to create GRPC channel to %s",
+            options_.grpc_server_address);
+    }
+  }
+
   string_manager_ = std::make_shared<StringManager>();
   GCurrentTimeGraph->SetStringManager(string_manager_);
 
