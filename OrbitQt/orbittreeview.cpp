@@ -21,10 +21,7 @@
 
 //-----------------------------------------------------------------------------
 OrbitTreeView::OrbitTreeView(QWidget* parent)
-    : QTreeView(parent),
-      m_Model(nullptr),
-      m_Timer(nullptr),
-      m_AutoResize(true) {
+    : QTreeView(parent), auto_resize_(true) {
   header()->setSortIndicatorShown(true);
   header()->setSectionsClickable(true);
 
@@ -47,91 +44,84 @@ OrbitTreeView::OrbitTreeView(QWidget* parent)
   connect(this, SIGNAL(clicked(const QModelIndex)), this,
           SLOT(OnClicked(const QModelIndex)));
 
-  connect(this->verticalScrollBar(), SIGNAL(rangeChanged(int, int)), this,
+  connect(verticalScrollBar(), SIGNAL(rangeChanged(int, int)), this,
           SLOT(OnRangeChanged(int, int)));
 }
 
 //-----------------------------------------------------------------------------
-OrbitTreeView::~OrbitTreeView() {
-  delete m_Model;
-  delete m_Timer;
-}
-
-//-----------------------------------------------------------------------------
-void OrbitTreeView::Initialize(DataViewType a_Type) {
-  m_Model = new OrbitTableModel(a_Type);
-  setModel(m_Model);
+void OrbitTreeView::Initialize(DataViewType type) {
+  model_ = std::make_unique<OrbitTableModel>(type);
+  setModel(model_.get());
   header()->resizeSections(QHeaderView::ResizeToContents);
 
-  if (!m_Model->IsSortingAllowed()) {
-    // Don't do setSortingEnabled(m_Model->IsSortingAllowed()); as with true it
+  if (!model_->IsSortingAllowed()) {
+    // Don't do setSortingEnabled(model_->IsSortingAllowed()); as with true it
     // forces a sort by the first column.
     setSortingEnabled(false);
   } else {
     std::pair<int, Qt::SortOrder> column_and_order =
-        m_Model->GetDefaultSortingColumnAndOrder();
+        model_->GetDefaultSortingColumnAndOrder();
     sortByColumn(column_and_order.first, column_and_order.second);
   }
 
-  if (m_Model->GetUpdatePeriodMs() > 0) {
-    m_Timer = new QTimer(this);
-    connect(m_Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
-    m_Timer->start(m_Model->GetUpdatePeriodMs());
+  if (model_->GetUpdatePeriodMs() > 0) {
+    timer_ = std::make_unique<QTimer>();
+    connect(timer_.get(), SIGNAL(timeout()), this, SLOT(OnTimer()));
+    timer_->start(model_->GetUpdatePeriodMs());
   }
 
-  if (a_Type == DataViewType::FUNCTIONS ||
-      a_Type == DataViewType::LIVE_FUNCTIONS ||
-      a_Type == DataViewType::CALLSTACK || a_Type == DataViewType::MODULES ||
-      a_Type == DataViewType::GLOBALS) {
+  if (type == DataViewType::FUNCTIONS || type == DataViewType::LIVE_FUNCTIONS ||
+      type == DataViewType::CALLSTACK || type == DataViewType::MODULES ||
+      type == DataViewType::GLOBALS) {
     setSelectionMode(ExtendedSelection);
   }
 
-  if (a_Type == DataViewType::LOG) {
+  if (type == DataViewType::LOG) {
     const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    this->setFont(fixedFont);
+    setFont(fixedFont);
   }
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTreeView::SetDataModel(std::shared_ptr<DataView> a_Model) {
-  m_Model = new OrbitTableModel();
-  m_Model->SetDataView(std::move(a_Model));
-  setModel(m_Model);
+void OrbitTreeView::SetDataModel(std::shared_ptr<DataView> data_view) {
+  model_ = std::make_unique<OrbitTableModel>();
+  model_->SetDataView(std::move(data_view));
+  setModel(model_.get());
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTreeView::OnSort(int a_Section, Qt::SortOrder a_Order) {
-  m_Model->sort(a_Section, a_Order);
+void OrbitTreeView::OnSort(int section, Qt::SortOrder order) {
+  model_->sort(section, order);
   Refresh();
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTreeView::OnFilter(const QString& a_Filter) {
-  m_Model->OnFilter(a_Filter);
+void OrbitTreeView::OnFilter(const QString& filter) {
+  model_->OnFilter(filter);
   Refresh();
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTreeView::Select(int a_Row) {
-  QModelIndex idx = m_Model->CreateIndex(a_Row, 0);
-  m_Model->OnClicked(idx);
+void OrbitTreeView::Select(int row) {
+  QModelIndex idx = model_->CreateIndex(row, 0);
+  model_->OnClicked(idx);
   Refresh();
 }
 
 //-----------------------------------------------------------------------------
 void OrbitTreeView::OnTimer() {
-  if (this->isVisible() && !m_Model->GetDataView()->SkipTimer()) {
-    m_Model->OnTimer();
+  if (isVisible() && !model_->GetDataView()->SkipTimer()) {
+    model_->OnTimer();
     Refresh();
   }
 }
 
 //-----------------------------------------------------------------------------
 void OrbitTreeView::OnClicked(const QModelIndex& index) {
-  m_Model->OnClicked(index);
+  model_->OnClicked(index);
 
-  for (OrbitTreeView* treeView : m_Links) {
-    treeView->Refresh();
+  for (OrbitTreeView* tree_view : links_) {
+    tree_view->Refresh();
   }
 }
 
@@ -139,19 +129,19 @@ void OrbitTreeView::OnClicked(const QModelIndex& index) {
 void OrbitTreeView::Refresh() {
   QModelIndexList list = selectionModel()->selectedIndexes();
 
-  if (this->m_Model->GetDataView()->GetType() == DataViewType::LIVE_FUNCTIONS) {
-    m_Model->layoutAboutToBeChanged();
-    m_Model->layoutChanged();
+  if (model_->GetDataView()->GetType() == DataViewType::LIVE_FUNCTIONS) {
+    model_->layoutAboutToBeChanged();
+    model_->layoutChanged();
     return;
   }
 
   reset();
 
   // Re-select previous selection
-  int selected = m_Model->GetSelectedIndex();
+  int selected = model_->GetSelectedIndex();
   if (selected >= 0) {
     QItemSelectionModel* selection = selectionModel();
-    QModelIndex idx = m_Model->CreateIndex(selected, 0);
+    QModelIndex idx = model_->CreateIndex(selected, 0);
     selection->select(
         idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
   }
@@ -159,10 +149,10 @@ void OrbitTreeView::Refresh() {
 
 //-----------------------------------------------------------------------------
 void OrbitTreeView::resizeEvent(QResizeEvent* event) {
-  if (m_AutoResize && m_Model && m_Model->GetDataView()) {
+  if (auto_resize_ && model_ && model_->GetDataView()) {
     QSize headerSize = size();
-    for (size_t i = 0; i < m_Model->GetDataView()->GetColumns().size(); ++i) {
-      float ratio = m_Model->GetDataView()->GetColumns()[i].ratio;
+    for (size_t i = 0; i < model_->GetDataView()->GetColumns().size(); ++i) {
+      float ratio = model_->GetDataView()->GetColumns()[i].ratio;
       if (ratio > 0.f) {
         header()->resizeSection(i,
                                 static_cast<int>(headerSize.width() * ratio));
@@ -174,16 +164,16 @@ void OrbitTreeView::resizeEvent(QResizeEvent* event) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTreeView::Link(OrbitTreeView* a_Link) {
-  m_Links.push_back(a_Link);
+void OrbitTreeView::Link(OrbitTreeView* link) {
+  links_.push_back(link);
 
-  std::shared_ptr<DataView> dataView = a_Link->GetModel()->GetDataView();
-  m_Model->GetDataView()->LinkDataView(dataView.get());
+  std::shared_ptr<DataView> dataView = link->GetModel()->GetDataView();
+  model_->GetDataView()->LinkDataView(dataView.get());
 }
 
 //-----------------------------------------------------------------------------
 void OrbitTreeView::SetGlWidget(OrbitGLWidget* a_GlWidget) {
-  this->m_Model->GetDataView()->SetGlPanel(a_GlWidget->GetPanel());
+  model_->GetDataView()->SetGlPanel(a_GlWidget->GetPanel());
 }
 
 //-----------------------------------------------------------------------------
@@ -198,7 +188,7 @@ QMenu* GContextMenu;
 
 //-----------------------------------------------------------------------------
 void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
-  QModelIndex index = this->indexAt(pos);
+  QModelIndex index = indexAt(pos);
   if (index.isValid()) {
     int clicked_index = index.row();
 
@@ -211,7 +201,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
                                       selection_set.end());
 
     std::vector<std::string> menu =
-        m_Model->GetDataView()->GetContextMenu(clicked_index, selected_indices);
+        model_->GetDataView()->GetContextMenu(clicked_index, selected_indices);
     if (!menu.empty()) {
       QMenu contextMenu(tr("ContextMenu"), this);
       GContextMenu = &contextMenu;
@@ -242,7 +232,7 @@ void OrbitTreeView::OnMenuClicked(const std::string& a_Action,
 
   std::vector<int> indices(selection_set.begin(), selection_set.end());
   if (!indices.empty()) {
-    m_Model->GetDataView()->OnContextMenu(a_Action, a_MenuIndex, indices);
+    model_->GetDataView()->OnContextMenu(a_Action, a_MenuIndex, indices);
   }
 }
 
@@ -256,7 +246,7 @@ void OrbitTreeView::keyPressEvent(QKeyEvent* event) {
     }
 
     std::vector<int> items(selection.begin(), selection.end());
-    this->m_Model->GetDataView()->CopySelection(items);
+    model_->GetDataView()->CopySelection(items);
   } else {
     QTreeView::keyPressEvent(event);
   }
@@ -264,7 +254,7 @@ void OrbitTreeView::keyPressEvent(QKeyEvent* event) {
 
 //-----------------------------------------------------------------------------
 void OrbitTreeView::OnRangeChanged(int /*a_Min*/, int a_Max) {
-  std::shared_ptr<DataView> DataView = m_Model->GetDataView();
+  std::shared_ptr<DataView> DataView = model_->GetDataView();
   if (DataView->ScrollToBottom()) {
     verticalScrollBar()->setValue(a_Max);
   }
@@ -272,8 +262,8 @@ void OrbitTreeView::OnRangeChanged(int /*a_Min*/, int a_Max) {
 
 //-----------------------------------------------------------------------------
 std::string OrbitTreeView::GetLabel() {
-  if (m_Model != nullptr && m_Model->GetDataView() != nullptr) {
-    return m_Model->GetDataView()->GetLabel();
+  if (model_ != nullptr && model_->GetDataView() != nullptr) {
+    return model_->GetDataView()->GetLabel();
   }
   return "";
 }
@@ -282,6 +272,6 @@ std::string OrbitTreeView::GetLabel() {
 void OrbitTreeView::columnResized(int /*column*/, int /*oldSize*/,
                                   int /*newSize*/) {
   if (QApplication::mouseButtons() == Qt::LeftButton) {
-    m_AutoResize = false;
+    auto_resize_ = false;
   }
 }
