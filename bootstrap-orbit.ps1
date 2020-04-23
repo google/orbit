@@ -1,3 +1,7 @@
+# Copyright (c) 2020 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 $conan = Get-Command -ErrorAction Ignore conan
 
 if (!$conan) {
@@ -33,10 +37,7 @@ You can call 'pip3 show -f conan' to figure out where conan.exe was placed.
 }
 
 # Install conan config
-$result = Start-Process -FilePath $conan.Path -ArgumentList "config","install","$PSScriptRoot\contrib\conan\configs\windows" -Wait -NoNewWindow -ErrorAction Stop -PassThru
-if ($result.ExitCode -ne 0) {
-  Throw "Error while installing conan config."
-}
+& "$PSScriptRoot\contrib\conan\configs\install.ps1"
 
 # Start build
 if ($args) {
