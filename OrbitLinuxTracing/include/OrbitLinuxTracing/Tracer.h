@@ -39,6 +39,10 @@ class Tracer {
     trace_callstacks_ = trace_callstacks;
   }
 
+  void SetTraceFPCallstacks(bool trace_fp_callstacks) {
+    trace_fp_callstacks_ = trace_fp_callstacks;
+  }
+
   void SetTraceInstrumentedFunctions(bool trace_instrumented_functions) {
     trace_instrumented_functions_ = trace_instrumented_functions;
   }
@@ -52,7 +56,8 @@ class Tracer {
     thread_ = std::make_shared<std::thread>(
         &Tracer::Run, pid_, sampling_period_ns_, instrumented_functions_,
         listener_, trace_context_switches_, trace_callstacks_,
-        trace_instrumented_functions_, trace_gpu_driver_, exit_requested_);
+        trace_fp_callstacks_, trace_instrumented_functions_,
+        trace_gpu_driver_, exit_requested_);
     thread_->detach();
   }
 
@@ -67,6 +72,9 @@ class Tracer {
 
   bool trace_context_switches_ = true;
   bool trace_callstacks_ = true;
+  // if trace_callstacks_ and trace_fp_callstacks_, use frame pointers for
+  // unwinding
+  bool trace_fp_callstacks_ = false;
   bool trace_instrumented_functions_ = true;
   bool trace_gpu_driver_ = true;
 
@@ -80,8 +88,8 @@ class Tracer {
   static void Run(pid_t pid, uint64_t sampling_period_ns,
                   const std::vector<Function>& instrumented_functions,
                   TracerListener* listener, bool trace_context_switches,
-                  bool trace_callstacks, bool trace_instrumented_functions,
-                  bool trace_gpu_driver,
+                  bool trace_callstacks, bool trace_fp_callstacks,
+                  bool trace_instrumented_functions, bool trace_gpu_driver,
                   const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
   static std::optional<uint64_t> ComputeSamplingPeriodNs(

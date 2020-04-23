@@ -23,13 +23,14 @@ Tracer::Tracer(pid_t pid, double sampling_frequency,
 void Tracer::Run(pid_t pid, uint64_t sampling_period_ns,
                  const std::vector<Function>& instrumented_functions,
                  TracerListener* listener, bool trace_context_switches,
-                 bool trace_callstacks, bool trace_instrumented_functions,
-                 bool trace_gpu_driver,
+                 bool trace_callstacks, bool trace_fp_callstacks,
+                 bool trace_instrumented_functions, bool trace_gpu_driver,
                  const std::shared_ptr<std::atomic<bool>>& exit_requested) {
   TracerThread session{pid, sampling_period_ns, instrumented_functions};
   session.SetListener(listener);
   session.SetTraceContextSwitches(trace_context_switches);
   session.SetTraceCallstacks(trace_callstacks);
+  session.SetTraceFPCallstacks(trace_fp_callstacks);
   session.SetTraceInstrumentedFunctions(trace_instrumented_functions);
   session.SetTraceGpuDriver(trace_gpu_driver);
   session.Run(exit_requested);
