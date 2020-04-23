@@ -31,7 +31,6 @@ class Path {
   static std::string GetAppDataPath();
   static std::string GetMainDrive();
   static std::string GetSourceRoot();
-  static std::string GetExternalPath();
   static std::string GetHome();
   static void Dump();
 
@@ -56,7 +55,6 @@ class Path {
       });
   static std::vector<std::string> ListFiles(const std::string& directory,
                                             const std::string& filter);
-  static bool ContainsFile(const std::string a_Dir, const std::string a_File);
 
  private:
   static std::string base_path_;

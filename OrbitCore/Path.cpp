@@ -259,39 +259,14 @@ std::string Path::GetAppDataPath() {
 std::string Path::GetMainDrive() { return GetEnvVar("SystemDrive"); }
 
 std::string Path::GetSourceRoot() {
-  std::string currentDir = GetExecutablePath();
-  const int numIterations = 10;
-  const std::string fileName = "bootstrap-orbit";
-
-  for (int i = 0; i < numIterations; ++i) {
-    if (ContainsFile(currentDir, fileName)) {
-      return currentDir;
-    }
-
-    currentDir = GetParentDirectory(currentDir);
-  }
-
-  return "";
-}
-
-std::string Path::GetExternalPath() {
-  if (is_packaged_)
-    return GetExecutablePath() + "external/";
-  else
-    return GetSourceRoot() + "external/";
+  // Assuming current file in <src_path>/OrbitCore
+  std::string current_dir = GetDirectory(__FILE__);
+  return GetParentDirectory(current_dir);
 }
 
 std::string Path::GetHome() {
   std::string home = GetEnvVar("HOME") + "/";
   return home;
-}
-
-bool Path::ContainsFile(const std::string a_Dir, const std::string a_File) {
-  auto fileList = ListFiles(a_Dir, a_File);
-  for (const std::string& file : fileList) {
-    if (absl::StrContains(file, a_File)) return true;
-  }
-  return false;
 }
 
 void Path::Dump() {
