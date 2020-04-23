@@ -24,10 +24,6 @@ void SamplePerfEvent::Accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 
-void SampleFPPerfEvent::Accept(PerfEventVisitor* visitor) {
-  visitor->visit(this);
-}
-
 void UprobesPerfEvent::Accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }

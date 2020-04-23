@@ -55,7 +55,6 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   }
 
   void visit(SamplePerfEvent* event) override;
-  void visit(SampleFPPerfEvent* event) override;
   void visit(UprobesPerfEvent* event) override;
   void visit(UretprobesPerfEvent* event) override;
   void visit(MapsPerfEvent* event) override;
@@ -73,9 +72,6 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
 
   static std::vector<CallstackFrame> CallstackFramesFromLibunwindstackFrames(
       const std::vector<unwindstack::FrameData>& libunwindstack_frames);
-
-  static std::vector<CallstackFrame> CallstackFramesFromInstructionPointers(
-      const uint64_t* frames, uint64_t size);
 
   absl::flat_hash_map<pid_t,
                       std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>>

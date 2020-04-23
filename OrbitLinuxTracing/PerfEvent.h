@@ -185,58 +185,6 @@ struct dynamically_sized_perf_event_stack_sample {
       : stack{dyn_size} {}
 };
 
-struct dynamically_sized_perf_event_call_chain_sample {
-  struct dynamically_sized_perf_event_call_chain {
-    uint64_t dyn_size;
-    std::unique_ptr<uint64_t[]> data;
-
-    explicit dynamically_sized_perf_event_call_chain(uint64_t dyn_size)
-        : dyn_size{dyn_size},
-          data{make_unique_for_overwrite<uint64_t[]>(dyn_size)} {}
-  };
-
-  perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  dynamically_sized_perf_event_call_chain call_chain;
-
-  explicit dynamically_sized_perf_event_call_chain_sample(uint64_t dyn_size)
-      : call_chain{dyn_size} {}
-};
-
-class SampleFPPerfEvent : public PerfEvent {
- public:
-  std::unique_ptr<dynamically_sized_perf_event_call_chain_sample>
-      ring_buffer_record;
-
-  explicit SampleFPPerfEvent(uint64_t dyn_size)
-      : ring_buffer_record{
-            std::make_unique<dynamically_sized_perf_event_call_chain_sample>(
-                dyn_size)} {}
-
-  uint64_t GetTimestamp() const override {
-    return ring_buffer_record->sample_id.time;
-  }
-
-  void Accept(PerfEventVisitor* visitor) override;
-
-  pid_t GetPid() const { return ring_buffer_record->sample_id.pid; }
-  pid_t GetTid() const { return ring_buffer_record->sample_id.tid; }
-
-  uint64_t GetStreamId() const {
-    return ring_buffer_record->sample_id.stream_id;
-  }
-
-  uint32_t GetCpu() const { return ring_buffer_record->sample_id.cpu; }
-
-  const uint64_t* GetCallChain() const {
-    return ring_buffer_record->call_chain.data.get();
-  }
-
-  uint64_t GetCallChainSize() const {
-    return ring_buffer_record->call_chain.dyn_size;
-  }
-};
-
 class SamplePerfEvent : public PerfEvent {
  public:
   std::unique_ptr<dynamically_sized_perf_event_stack_sample> ring_buffer_record;
