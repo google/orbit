@@ -213,6 +213,7 @@ target_sources(OrbitCoreTests PRIVATE
     RingBufferTest.cpp
     StringManagerTest.cpp
     LinuxTracingSessionTests.cpp
+    PathTest.cpp
     SymbolHelperTests.cpp
 )
 
