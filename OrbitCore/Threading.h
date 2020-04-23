@@ -50,17 +50,28 @@ typedef struct tagTHREADNAME_INFO {
 
 //-----------------------------------------------------------------------------
 inline void SetThreadName(HANDLE a_Thread, const wchar_t* a_ThreadName) {
+#ifdef NTDDI_WIN10_19H1 // Means at least WinSDK version 10.0.18362.0
   SetThreadDescription(a_Thread, a_ThreadName);
+#else
+  (void) a_Thread;
+  (void) a_ThreadName;
+#endif
 }
 
 //-----------------------------------------------------------------------------
 inline void SetCurrentThreadName(const wchar_t* a_ThreadName) {
+#ifdef NTDDI_WIN10_19H1 // Means at least WinSDK version 10.0.18362.0
   SetThreadDescription(GetCurrentThread(), a_ThreadName);
+#else
+  (void) a_ThreadName;
+#endif
 }
 
 //-----------------------------------------------------------------------------
 inline std::string GetThreadName(HANDLE a_Thread) {
   std::string name;
+
+#ifdef NTDDI_WIN10_19H1 // Means at least WinSDK version 10.0.18362.0
   PWSTR data = nullptr;
   HRESULT hr = GetThreadDescription(a_Thread, &data);
 
@@ -68,6 +79,7 @@ inline std::string GetThreadName(HANDLE a_Thread) {
     name = ws2s(data);
     LocalFree(data);
   }
+#endif
 
   return name;
 }
