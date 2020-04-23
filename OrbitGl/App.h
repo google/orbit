@@ -23,6 +23,8 @@
 #include "LogDataView.h"
 #include "Message.h"
 #include "ModulesDataView.h"
+#include "OrbitBase/MainThreadExecutor.h"
+#include "ProcessListManager.h"
 #include "ProcessMemoryClient.h"
 #include "ProcessesDataView.h"
 #include "RuleEditor.h"
@@ -206,7 +208,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   void RequestThaw() { m_NeedsThawing = true; }
   void OnRemoteProcess(const Message& a_Message);
-  void OnRemoteProcessList(const Message& a_Message);
   void OnRemoteModuleDebugInfo(const Message& a_Message);
   void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) override;
   void ApplySession(const Session& session) override;
@@ -286,6 +287,9 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   std::shared_ptr<StringManager> string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
+
+  std::unique_ptr<MainThreadExecutor> main_thread_executor_;
+  std::unique_ptr<ProcessListManager> process_list_manager_;
 
   const SymbolHelper symbol_helper_;
 #if defined(_WIN32)
