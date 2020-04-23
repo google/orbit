@@ -15,7 +15,6 @@
 
 //-----------------------------------------------------------------------------
 GlobalsDataView::GlobalsDataView() : DataView(DataViewType::GLOBALS) {
-  InitSortingOrders();
   OnDataChanged();
   GOrbitApp->RegisterGlobalsDataView(this);
 }
@@ -71,19 +70,14 @@ std::string GlobalsDataView::GetValue(int a_Row, int a_Column) {
   }
 
 //-----------------------------------------------------------------------------
-void GlobalsDataView::OnSort(int a_Column,
-                             std::optional<SortingOrder> a_NewOrder) {
+void GlobalsDataView::DoSort() {
+  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
+  std::function<bool(int a, int b)> sorter = nullptr;
+
   const std::vector<Variable*>& functions =
       Capture::GTargetProcess->GetGlobals();
 
-  if (a_NewOrder.has_value()) {
-    m_SortingOrders[a_Column] = a_NewOrder.value();
-  }
-
-  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
-  std::function<bool(int a, int b)> sorter = nullptr;
-
-  switch (a_Column) {
+  switch (m_SortingColumn) {
     case COLUMN_NAME:
       sorter = ORBIT_FUNC_SORT(m_Name);
       break;
@@ -107,10 +101,8 @@ void GlobalsDataView::OnSort(int a_Column,
   }
 
   if (sorter) {
-    std::sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
   }
-
-  m_LastSortedColumn = a_Column;
 }
 
 //-----------------------------------------------------------------------------
@@ -130,14 +122,14 @@ void GlobalsDataView::OnContextMenu(const std::string& a_Action,
                                     int a_MenuIndex,
                                     const std::vector<int>& a_ItemIndices) {
   if (a_Action == MENU_ACTION_TYPES_MENU_WATCH) {
-    OnAddToWatch(a_ItemIndices);
+    AddToWatch(a_ItemIndices);
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }
 }
 
 //-----------------------------------------------------------------------------
-void GlobalsDataView::OnAddToWatch(const std::vector<int>& a_Items) {
+void GlobalsDataView::AddToWatch(const std::vector<int>& a_Items) {
   for (auto& item : a_Items) {
     Variable& variable = GetVariable(item);
     variable.Populate();
@@ -157,14 +149,14 @@ void GlobalsDataView::OnAddToWatch(const std::vector<int>& a_Items) {
 }
 
 //-----------------------------------------------------------------------------
-void GlobalsDataView::OnFilter(const std::string& a_Filter) {
-  m_FilterTokens = Tokenize(ToLower(a_Filter));
+void GlobalsDataView::DoFilter() {
+  m_FilterTokens = Tokenize(ToLower(m_Filter));
 
+  // TODO: This only performs work on Windows. It is currently not an issue as
+  //  globals are not supported elsewhere.
   ParallelFilter();
 
-  if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, {});
-  }
+  OnSort(m_SortingColumn, {});
 }
 
 //-----------------------------------------------------------------------------
@@ -212,6 +204,8 @@ void GlobalsDataView::OnDataChanged() {
   for (size_t i = 0; i < numGlobals; ++i) {
     m_Indices[i] = i;
   }
+
+  DataView::OnDataChanged();
 }
 
 //-----------------------------------------------------------------------------

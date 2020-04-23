@@ -60,6 +60,42 @@ void DataView::InitSortingOrders() {
   for (const auto& column : GetColumns()) {
     m_SortingOrders.push_back(column.initial_order);
   }
+
+  m_SortingColumn = GetDefaultSortingColumn();
+}
+
+//-----------------------------------------------------------------------------
+void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
+  if (column < 0) {
+    return;
+  }
+
+  if (!IsSortingAllowed()) {
+    return;
+  }
+
+  if (m_SortingOrders.empty()) {
+    InitSortingOrders();
+  }
+
+  m_SortingColumn = column;
+  if (new_order.has_value()) {
+    m_SortingOrders[column] = new_order.value();
+  }
+
+  DoSort();
+}
+
+//-----------------------------------------------------------------------------
+void DataView::OnFilter(const std::string& filter) {
+  m_Filter = filter;
+  DoFilter();
+}
+
+//-----------------------------------------------------------------------------
+void DataView::OnDataChanged() {
+  OnSort(m_SortingColumn, std::optional<SortingOrder>{});
+  OnFilter(m_Filter);
 }
 
 //-----------------------------------------------------------------------------

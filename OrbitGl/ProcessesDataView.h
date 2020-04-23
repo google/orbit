@@ -16,8 +16,6 @@ class ProcessesDataView : public DataView {
   std::string GetToolTip(int a_Row, int a_Column) override;
   std::string GetLabel() override { return "Processes"; }
 
-  void OnFilter(const std::string& a_Filter) override;
-  void OnSort(int a_Column, std::optional<SortingOrder> a_NewOrder) override;
   void OnSelect(int a_Index) override;
   void OnTimer() override;
   void SetSelectedItem();
@@ -34,6 +32,8 @@ class ProcessesDataView : public DataView {
   void SetIsRemote(bool a_Value) { m_IsRemote = a_Value; }
 
  protected:
+  void DoSort() override;
+  void DoFilter() override;
   std::shared_ptr<Process> GetProcess(unsigned int a_Row) const;
   void ClearSelectedProcess();
 
