@@ -23,8 +23,10 @@ ABSL_FLAG(bool, upload_dumps_to_server, false,
 
 ABSL_FLAG(std::string, remote, "",
           "Connect to the specified remote on startup");
-
-constexpr const uint16_t kDefaultAsioPort = 44766;
+ABSL_FLAG(uint16_t, asio_port, 44766,
+          "The service Asio tcp_server port (use default velue if unsure)");
+ABSL_FLAG(uint16_t, grpc_port, 44844,
+          "The service GRPC server port (use default velue if unsure)");
 
 // TODO: remove this once we deprecated legacy parameters
 static void ParseLegacyCommandLine(int argc, char* argv[],
@@ -32,9 +34,11 @@ static void ParseLegacyCommandLine(int argc, char* argv[],
   for (size_t i = 0; i < static_cast<size_t>(argc); ++i) {
     const char* arg = argv[i];
     if (absl::StartsWith(arg, "gamelet:")) {
-      std::cerr << "WARNING: the 'gamelet:<host>:<port>' option is deprecated, "
-                   "please use '-remote <host>' instead."
+      std::cerr << "ERROR: the 'gamelet:<host>:<port>' option is deprecated "
+                   "and will be removed soon, please use -remote <host> "
+                   "instead."
                 << std::endl;
+
       options->asio_server_address = arg + std::strlen("gamelet:");
     }
   }
@@ -67,13 +71,23 @@ int main(int argc, char* argv[]) {
 
   ParseLegacyCommandLine(argc, argv, &options);
   std::string remote = absl::GetFlag(FLAGS_remote);
+  uint16_t asio_port = absl::GetFlag(FLAGS_asio_port);
+  uint16_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
+
   if (!remote.empty()) {
     // Append default port only if the user has not specified one
-    if (!absl::StrContains(remote, ":")) {
-      remote = absl::StrFormat("%s:%d", remote, kDefaultAsioPort);
+    if (absl::StrContains(remote, ":")) {
+      // TODO: Replace this with grpc_address once everything migrated to grpc
+      std::cerr << "Seems like you specified port in your remote address, "
+                   "since the service currently listening on 2 different ports "
+                   "please use --asio_port/--grpc_port options to specify "
+                   "corresponding ports and remove port from --remote."
+                << std::endl;
+      return -1;
     }
 
-    options.asio_server_address = remote;
+    options.asio_server_address = absl::StrFormat("%s:%i", remote, asio_port);
+    options.grpc_server_address = absl::StrFormat("%s:%i", remote, grpc_port);
   }
 
   app.setStyle(QStyleFactory::create("Fusion"));
@@ -105,13 +119,17 @@ int main(int argc, char* argv[]) {
 
 #ifdef __linux__
     options.asio_server_address =
-        absl::StrFormat("%s:%d", ip_address, kDefaultAsioPort);
+        absl::StrFormat("%s:%d", ip_address, asio_port);
+    options.grpc_server_address =
+        absl::StrFormat("%s:%d", ip_address, grpc_port);
 #else
     // TODO(antonrohr) remove this ifdef as soon as the collector works on
     // windows
     if (ip_address != "127.0.0.1") {
       options.asio_server_address =
-          absl::StrFormat("%s:%d", ip_address, kDefaultAsioPort);
+          absl::StrFormat("%s:%d", ip_address, asio_port);
+      options.grpc_server_address =
+          absl::StrFormat("%s:%d", ip_address, grpc_port);
     }
 #endif
   }

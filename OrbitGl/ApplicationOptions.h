@@ -13,6 +13,8 @@
 struct ApplicationOptions {
   // The host and port of the collection service
   std::string asio_server_address;
+  // GRPC connection string
+  std::string grpc_server_address;
 };
 
 #endif  // ORIBIT_GL_APPLICATION_OPTIONS_H_
