@@ -17,16 +17,17 @@ class LiveFunctionsDataView : public DataView {
       int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
   std::string GetValue(int a_Row, int a_Column) override;
 
-  void OnFilter(const std::string& a_Filter) override;
-  void OnSort(int a_Column, std::optional<SortingOrder> a_NewOrder) override;
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                      const std::vector<int>& a_ItemIndices) override;
   void OnDataChanged() override;
   void OnTimer() override;
 
  protected:
-  std::vector<Function*> m_Functions;
+  void DoFilter() override;
+  void DoSort() override;
   Function& GetFunction(unsigned int a_Row) const;
+
+  std::vector<Function*> m_Functions;
 
   enum ColumnIndex {
     COLUMN_SELECTED,

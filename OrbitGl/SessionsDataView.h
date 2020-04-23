@@ -22,14 +22,14 @@ class SessionsDataView : public DataView {
   std::string GetLabel() override { return "Sessions"; }
 
   void OnDataChanged() override;
-  void OnFilter(const std::string& a_Filter) override;
-  void OnSort(int a_Column, std::optional<SortingOrder> a_NewOrder) override;
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                      const std::vector<int>& a_ItemIndices) override;
 
   void SetSessions(const std::vector<std::shared_ptr<Session> >& a_Sessions);
 
  protected:
+  void DoSort() override;
+  void DoFilter() override;
   const std::shared_ptr<Session>& GetSession(unsigned int a_Row) const;
 
   std::vector<std::shared_ptr<Session> > m_Sessions;

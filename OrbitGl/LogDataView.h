@@ -24,15 +24,17 @@ class LogDataView : public DataView {
   bool SkipTimer() override;
 
   void OnDataChanged() override;
-  void OnFilter(const std::string& a_Filter) override;
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                      const std::vector<int>& a_ItemIndices) override;
 
   void Add(const OrbitLogEntry& a_Msg);
-  const OrbitLogEntry& GetEntry(unsigned int a_Row) const;
   void OnReceiveMessage(const Message& a_Msg);
 
  protected:
+  // TODO: DoSort() override;
+  void DoFilter() override;
+  const OrbitLogEntry& GetEntry(unsigned int a_Row) const;
+
   std::vector<OrbitLogEntry> m_Entries;
   Mutex m_Mutex;
   std::shared_ptr<CallStack> m_SelectedCallstack;

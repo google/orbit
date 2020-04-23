@@ -17,8 +17,6 @@ class ModulesDataView : public DataView {
       int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
   std::string GetValue(int a_Row, int a_Column) override;
 
-  void OnFilter(const std::string& a_Filter) override;
-  void OnSort(int a_Column, std::optional<SortingOrder> a_NewOrder) override;
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                      const std::vector<int>& a_ItemIndices) override;
   void OnTimer() override;
@@ -30,6 +28,8 @@ class ModulesDataView : public DataView {
   void SetProcess(const std::shared_ptr<Process>& a_Process);
 
  protected:
+  void DoSort() override;
+  void DoFilter() override;
   const std::shared_ptr<Module>& GetModule(unsigned int a_Row) const;
 
   std::shared_ptr<Process> m_Process;

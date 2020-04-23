@@ -11,7 +11,6 @@
 
 //-----------------------------------------------------------------------------
 LogDataView::LogDataView() : DataView(DataViewType::LOG) {
-  InitSortingOrders();
   GOrbitApp->RegisterOutputLog(this);
   GTcpServer->AddCallback(Msg_OrbitLog, [=](const Message& a_Msg) {
     this->OnReceiveMessage(a_Msg);
@@ -81,11 +80,13 @@ void LogDataView::OnDataChanged() {
   for (size_t i = 0; i < m_Entries.size(); ++i) {
     m_Indices[i] = i;
   }
+
+  DataView::OnDataChanged();
 }
 
 //-----------------------------------------------------------------------------
-void LogDataView::OnFilter(const std::string& a_Filter) {
-  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
+void LogDataView::DoFilter() {
+  std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
   std::vector<uint32_t> indices;
 
   for (size_t i = 0; i < m_Entries.size(); ++i) {

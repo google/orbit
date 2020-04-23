@@ -18,8 +18,6 @@
 
 //-----------------------------------------------------------------------------
 ProcessesDataView::ProcessesDataView() : DataView(DataViewType::PROCESSES) {
-  InitSortingOrders();
-
   UpdateProcessList();
   m_UpdatePeriodMs = 1000;
   m_IsRemote = false;
@@ -72,19 +70,14 @@ std::string ProcessesDataView::GetToolTip(int a_Row, int /*a_Column*/) {
   }
 
 //-----------------------------------------------------------------------------
-void ProcessesDataView::OnSort(int a_Column,
-                               std::optional<SortingOrder> a_NewOrder) {
+void ProcessesDataView::DoSort() {
+  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
+  std::function<bool(int a, int b)> sorter = nullptr;
+
   const std::vector<std::shared_ptr<Process>>& processes =
       m_ProcessList.GetProcesses();
 
-  if (a_NewOrder.has_value()) {
-    m_SortingOrders[a_Column] = a_NewOrder.value();
-  }
-
-  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
-  std::function<bool(int a, int b)> sorter = nullptr;
-
-  switch (a_Column) {
+  switch (m_SortingColumn) {
     case COLUMN_PID:
       sorter = ORBIT_PROC_SORT(GetID());
       break;
@@ -102,10 +95,9 @@ void ProcessesDataView::OnSort(int a_Column,
   }
 
   if (sorter) {
-    std::sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
   }
 
-  m_LastSortedColumn = a_Column;
   SetSelectedItem();
 }
 
@@ -149,7 +141,7 @@ void ProcessesDataView::Refresh() {
       m_ProcessList.Clear();
       m_ProcessList.AddProcess(m_RemoteProcess);
       UpdateProcessList();
-      SetFilter("");
+      OnFilter("");
       SelectProcess(m_RemoteProcess->GetID());
       SetSelectedItem();
     }
@@ -159,7 +151,7 @@ void ProcessesDataView::Refresh() {
       m_ProcessList.UpdateCpuTimes();
     }
     UpdateProcessList();
-    OnSort(m_LastSortedColumn, {});
+    OnSort(m_SortingColumn, {});
     OnFilter(m_Filter);
     SetSelectedItem();
 
@@ -230,12 +222,12 @@ std::shared_ptr<Process> ProcessesDataView::SelectProcess(DWORD a_ProcessId) {
 }
 
 //-----------------------------------------------------------------------------
-void ProcessesDataView::OnFilter(const std::string& a_Filter) {
+void ProcessesDataView::DoFilter() {
   std::vector<uint32_t> indices;
   const std::vector<std::shared_ptr<Process>>& processes =
       m_ProcessList.GetProcesses();
 
-  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
 
   for (size_t i = 0; i < processes.size(); ++i) {
     const Process& process = *processes[i];
@@ -259,9 +251,7 @@ void ProcessesDataView::OnFilter(const std::string& a_Filter) {
 
   m_Indices = indices;
 
-  if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, {});
-  }
+  OnSort(m_SortingColumn, {});
 }
 
 //-----------------------------------------------------------------------------
@@ -278,7 +268,7 @@ void ProcessesDataView::SetRemoteProcessList(ProcessList a_RemoteProcessList) {
   m_IsRemote = true;
   m_ProcessList = std::move(a_RemoteProcessList);
   UpdateProcessList();
-  OnSort(m_LastSortedColumn, {});
+  OnSort(m_SortingColumn, {});
   OnFilter(m_Filter);
   SetSelectedItem();
 }

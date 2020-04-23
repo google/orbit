@@ -125,7 +125,7 @@ void OrbitTableModel::OnTimer() { m_DataView->OnTimer(); }
 
 //-----------------------------------------------------------------------------
 void OrbitTableModel::OnFilter(const QString& a_Filter) {
-  m_DataView->SetFilter(a_Filter.toStdString());
+  m_DataView->OnFilter(a_Filter.toStdString());
 }
 
 //-----------------------------------------------------------------------------

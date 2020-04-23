@@ -168,11 +168,11 @@ void CallStackDataView::OnContextMenu(const std::string& a_Action,
 }
 
 //-----------------------------------------------------------------------------
-void CallStackDataView::OnFilter(const std::string& a_Filter) {
+void CallStackDataView::DoFilter() {
   if (!m_CallStack) return;
 
   std::vector<uint32_t> indices;
-  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
 
   for (int i = 0; i < (int)m_CallStack->m_Depth; ++i) {
     CallStackDataViewFrame frame = GetFrameFromIndex(i);
@@ -203,6 +203,8 @@ void CallStackDataView::OnDataChanged() {
   for (size_t i = 0; i < numFunctions; ++i) {
     m_Indices[i] = i;
   }
+
+  DataView::OnDataChanged();
 }
 
 //-----------------------------------------------------------------------------

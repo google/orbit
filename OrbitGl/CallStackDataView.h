@@ -22,7 +22,7 @@ class CallStackDataView : public DataView {
   std::vector<std::string> GetContextMenu(
       int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
   std::string GetValue(int a_Row, int a_Column) override;
-  void OnFilter(const std::string& a_Filter) override;
+
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                      const std::vector<int>& a_ItemIndices) override;
   void OnDataChanged() override;
@@ -32,6 +32,8 @@ class CallStackDataView : public DataView {
   }
 
  protected:
+  void DoFilter() override;
+
   std::shared_ptr<CallStack> m_CallStack;
 
   struct CallStackDataViewFrame {
