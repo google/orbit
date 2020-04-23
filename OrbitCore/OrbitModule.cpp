@@ -29,7 +29,7 @@
 Module::Module(const std::string& file_name, uint64_t address_start,
                uint64_t address_end) {
   if (!Path::FileExists(file_name)) {
-    FATAL("Could not create module from file path \"%s\": file does not exist",
+    ERROR("Creating Module from path \"%s\": file does not exist",
           file_name.c_str());
   }
 

@@ -143,7 +143,8 @@ void ProcessList::Refresh() {
           BOOL res = Module32First(moduleSnapshot, &moduleEntry);
           if (res) {
             process->m_FullPath = ws2s(moduleEntry.szExePath);
-            process->m_CmdLine = process->m_FullPath; // TODO: Append arguments.
+            process->m_CmdLine =
+                process->m_FullPath;  // TODO: Append arguments.
           } else {
             ERROR("Call to Module32First failed for %s (pid=%d)",
                   process->m_Name.c_str(), processinfo.th32ProcessID);
