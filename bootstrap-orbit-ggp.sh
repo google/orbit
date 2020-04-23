@@ -1,26 +1,15 @@
 #!/bin/bash
-
+#
+# Copyright (c) 2020 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-which conan >/dev/null
-if [ $? -ne 0 ]; then
-        sudo pip3 install conan
-fi
+"${DIR}/bootstrap-orbit.sh" ggp_release
 
-unset GGP_SDK_PATH
-
-conan config install $DIR/contrib/conan/configs/linux || exit $?
-
-# Install Stadia GGP SDK
-conan search ggp_sdk | grep orbitdeps/stable > /dev/null
-if [ $? -ne 0 ]; then
-  if [ ! -d $DIR/contrib/conan/recipes/ggp_sdk ]; then
-    git clone sso://user/hebecker/conan-ggp_sdk $DIR/contrib/conan/recipes/ggp_sdk || exit $?
-  fi
-  conan export $DIR/contrib/conan/recipes/ggp_sdk orbitdeps/stable || exit $?
-else
-  echo "ggp_sdk seems to be installed already. Skipping installation step..."
-fi
-
-$DIR/build.sh ggp_release
+echo ''
+echo '----------------------------------------------------------------------------------------'
+echo '- By the way: "bootstrap-orbit-ggp.sh" is not needed anymore and will be removed soon. -'
+echo '- Please use "bootstrap-orbit.sh ggp_release" instead.                                 -'
+echo '----------------------------------------------------------------------------------------'
