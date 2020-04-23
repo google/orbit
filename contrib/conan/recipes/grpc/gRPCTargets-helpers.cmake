@@ -43,6 +43,8 @@ function(grpc_helper)
           ${target_name} PUBLIC gRPC::grpc++_reflection gRPC::grpc++_unsecure
                                 protobuf::libprotobuf)
         target_sources(${target_name} PRIVATE "${proto_cpp}" "${grpc_cpp}")
+        target_compile_definitions(${target_name} PRIVATE -D_WIN32_WINNT=0x0700)
+        target_compile_definitions(${target_name} PRIVATE -DNTDDI_VERSION=0x06030000)
 
       endif()
 
