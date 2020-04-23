@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Copyright (c) 2020 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -38,7 +42,7 @@ else
 fi
 
 echo "Installing conan configuration (profiles, settings, etc.)..."
-conan config install $DIR/contrib/conan/configs/linux || exit $?
+$DIR/contrib/conan/configs/install.sh || exit $?
 
 exec $DIR/build.sh "$@"
 
