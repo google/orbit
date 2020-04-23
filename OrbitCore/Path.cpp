@@ -56,15 +56,15 @@ std::string Path::GetExecutablePath() {
 }
 
 bool Path::FileExists(const std::string& file) {
-  // TODO: use stat here
-  std::ifstream f(file.c_str());
-  return f.good();
+  struct stat statbuf;
+  int ret = stat(file.c_str(), &statbuf);
+  return ret == 0;
 }
 
 uint64_t Path::FileSize(const std::string& file) {
   struct stat stat_buf;
-  int rc = stat(file.c_str(), &stat_buf);
-  return rc == 0 ? stat_buf.st_size : -1;
+  int ret = stat(file.c_str(), &stat_buf);
+  return ret == 0 ? stat_buf.st_size : 0;
 }
 
 bool Path::DirExists(const std::string& dir) {
