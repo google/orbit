@@ -90,6 +90,7 @@ target_sources(
           PickingManager.cpp
           PluginCanvas.cpp
           PluginManager.cpp
+          ProcessListManager.cpp
           ProcessesDataView.cpp
           RuleEditor.cpp
           SamplingReport.cpp
@@ -110,6 +111,7 @@ target_link_libraries(
   OrbitGl
   PUBLIC OrbitCore
          OrbitAsm
+         OrbitProtos
          freetype-gl::freetype-gl
          OpenGL::GLU
          freetype::freetype
