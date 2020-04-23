@@ -446,7 +446,7 @@ bool Process::SetPrivilege(LPCTSTR a_Name, bool a_Enable) {
   LUID luid;
   if (!LookupPrivilegeValue(NULL, a_Name, &luid)) {
     ORBIT_ERROR;
-    PRINT("LookupPrivilegeValue error: ");
+    LOG("LookupPrivilegeValue error: ");
     PRINT_VAR(GetLastErrorAsString());
     return false;
   }
@@ -458,13 +458,13 @@ bool Process::SetPrivilege(LPCTSTR a_Name, bool a_Enable) {
   if (!AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES),
                              (PTOKEN_PRIVILEGES)NULL, (PDWORD)NULL)) {
     ORBIT_ERROR;
-    PRINT("AdjustTokenPrivileges error: ");
+    LOG("AdjustTokenPrivileges error: ");
     PRINT_VAR(GetLastErrorAsString());
     return false;
   }
 
   if (GetLastError() == ERROR_NOT_ALL_ASSIGNED) {
-    PRINT("The token does not have the specified privilege. \n");
+    LOG("The token does not have the specified privilege.");
     return false;
   }
 

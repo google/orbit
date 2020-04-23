@@ -52,7 +52,7 @@ class CoreApp {
   virtual void AddAddressInfo(LinuxAddressInfo /*address_info*/) {}
   virtual void AddKeyAndString(uint64_t /*key*/, std::string_view /*str*/) {}
   virtual void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) {}
-  virtual void ApplySession(const Session&){}
+  virtual void ApplySession(const Session&) {}
   virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*
   GetRules() {
     return nullptr;

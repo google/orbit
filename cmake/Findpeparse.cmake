@@ -13,6 +13,6 @@ target_include_directories(peparse SYSTEM PUBLIC ${DIR})
 target_link_libraries(
   peparse PUBLIC multicore::multicore concurrentqueue::concurrentqueue
                  oqpi::oqpi xxHash::xxHash cereal::cereal)
-target_include_directories(peparse PRIVATE "OrbitCore/")
+target_include_directories(peparse PRIVATE "OrbitCore/" "OrbitBase/include/")
 
 add_library(peparse::peparse ALIAS peparse)

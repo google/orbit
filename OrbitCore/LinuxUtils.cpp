@@ -255,7 +255,7 @@ uint32_t GetVersion(const std::string& a_Version) {
   std::vector<std::string> v = Tokenize(a_Version, ".");
   if (v.size() == 3)
     return KERNEL_VERSION(std::stoi(v[0]), std::stoi(v[1]), std::stoi(v[2]));
-  PRINT("Error: GetVersion: Invalid argument\n");
+  LOG("Error: GetVersion: Invalid argument");
   return 0;
 }
 

@@ -140,9 +140,7 @@ void SamplingProfiler::AddCallStack(CallStack& a_CallStack) {
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddHashedCallStack(CallstackEvent& a_CallStack) {
   if (!HasCallStack(a_CallStack.m_Id)) {
-    PRINT(
-        "Error: Callstacks can only be added by hash when they are already "
-        "present.\n");
+    LOG("Error: Callstacks can only be added by hash when already present.");
   }
   ScopeLock lock(m_Mutex);
   m_Callstacks.push_back(a_CallStack);
@@ -233,7 +231,7 @@ void SamplingProfiler::Print() {
       PRINT_VAR((void*)callstack->m_Hash);
       PRINT_VAR(callstack->m_Depth);
       for (uint32_t i = 0; i < callstack->m_Depth; ++i) {
-        PRINT("%s\n", m_AddressToName[callstack->m_Data[i]].c_str());
+        LOG("%s", m_AddressToName[callstack->m_Data[i]].c_str());
       }
     }
   }
@@ -255,7 +253,7 @@ void SamplingProfiler::ProcessSamples() {
   // Unique call stacks and per thread data
   for (const CallstackEvent& callstack : m_Callstacks) {
     if (!HasCallStack(callstack.m_Id)) {
-      PRINT("Error: Processed unknown callstack!\n");
+      LOG("Error: Processed unknown callstack!");
     }
 
     ThreadSampleData& threadSampleData = m_ThreadSampleData[callstack.m_TID];

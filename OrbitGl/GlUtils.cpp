@@ -7,6 +7,7 @@
 #include "Core.h"
 #include "Log.h"
 #include "OpenGl.h"
+#include "OrbitBase/Logging.h"
 #include "absl/strings/str_format.h"
 #include "freetype-gl/freetype-gl.h"
 
@@ -15,8 +16,7 @@ void CheckGlError() {
   const char* errString;
   if (errCode != GL_NO_ERROR) {
     errString = reinterpret_cast<const char*>(gluErrorString(errCode));
-    ORBIT_LOG(absl::StrFormat("OpenGL ERROR : %s\n", errString));
-    PRINT(absl::StrFormat("OpenGL ERROR : %s\n", errString));
+    LOG("OpenGL ERROR : %s", errString);
   }
 }
 

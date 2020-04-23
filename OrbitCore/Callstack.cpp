@@ -28,8 +28,8 @@ void CallStack::Print() {
   PRINT_VAR(m_ThreadId);
 
   for (uint32_t i = 0; i < m_Depth; ++i) {
-    std::string address = ws2s(VAR_TO_STR((void*)m_Data[i]));
-    PRINT_VAR_INL(address);
+    std::string address = VAR_TO_STR((void*)m_Data[i]);
+    PRINT_VAR(address);
   }
 }
 

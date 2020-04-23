@@ -90,7 +90,6 @@ void TcpClient::Start() {
   TcpEntity::Start();
 
   PRINT_FUNC;
-  OutputDebugStringW(L"TcpClient::Start()\n");
   CHECK(!workerThread_.joinable());
   workerThread_ = std::thread{[this]() { ClientThread(); }};
 
@@ -103,10 +102,10 @@ void TcpClient::Start() {
 //-----------------------------------------------------------------------------
 void TcpClient::ClientThread() {
   SetCurrentThreadName(L"OrbitTcpClient");
-  OutputDebugStringW(L"io_service started...\n");
+  LOG("io_service started...");
   asio::io_service::work work(*m_TcpService->m_IoService);
   m_TcpService->m_IoService->run();
-  OutputDebugStringW(L"io_service ended...\n");
+  LOG("io_service ended...");
 }
 
 //-----------------------------------------------------------------------------
@@ -160,7 +159,7 @@ void TcpClient::OnError(const std::error_code& ec) {
   }
 
   PRINT_VAR(ec.message().c_str());
-  OutputDebugStringW(L"Closing socket\n");
+  LOG("Closing socket");
   m_IsValid = false;
   Stop();
 }
@@ -214,9 +213,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::string dbgMsg =
-            absl::StrFormat("Hooking function at address: %p\n", address);
-        OutputDebugStringA(dbgMsg.c_str());
+        LOG("Hooking function at address: %p", address);
         Hijacking::CreateHook(address);
         GTcpClient->Send(Msg_NumInstalledHooks, i + 1);
       }
@@ -230,9 +227,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::string dbgMsg =
-            absl::StrFormat("Hooking zone function at address: %p\n", address);
-        OutputDebugStringA(dbgMsg.c_str());
+        LOG("Hooking zone function at address: %p", address);
         Hijacking::CreateZoneStartHook(address);
       }
 
@@ -245,9 +240,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::string dbgMsg =
-            absl::StrFormat("Hooking zone function at address: %p\n", address);
-        OutputDebugStringA(dbgMsg.c_str());
+        LOG("Hooking zone function at address: %p", address);
         Hijacking::CreateZoneStopHook(address);
       }
 
@@ -260,9 +253,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::string dbgMsg = absl::StrFormat(
-            "Hooking OutputDebugString function at address: %p\n", address);
-        OutputDebugStringA(dbgMsg.c_str());
+        LOG("Hooking OutputDebugString function at address: %p", address);
         Hijacking::CreateOutputDebugStringHook(address);
       }
 
@@ -275,9 +266,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::string dbgMsg = absl::StrFormat(
-            "Hooking Unreal Actor function at address: %p\n", address);
-        OutputDebugStringA(dbgMsg.c_str());
+        LOG("Hooking Unreal Actor function at address: %p", address);
         Hijacking::CreateUnrealActorHook(address);
       }
 
@@ -290,9 +279,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::string dbgMsg = absl::StrFormat(
-            "Hooking OrbitSendData function at address: %p\n", address);
-        OutputDebugStringA(dbgMsg.c_str());
+        LOG("Hooking OrbitSendData function at address: %p", address);
         Hijacking::CreateSendDataHook(address);
       }
 
@@ -305,9 +292,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::string dbgMsg =
-            absl::StrFormat("Hooking Alloc function at address: %p\n", address);
-        OutputDebugStringA(dbgMsg.c_str());
+        LOG("Hooking Alloc function at address: %p", address);
         Hijacking::CreateAllocHook(address);
       }
 
@@ -320,9 +305,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::string dbgMsg =
-            absl::StrFormat("Hooking Free function at address: %p\n", address);
-        OutputDebugStringA(dbgMsg.c_str());
+        LOG("Hooking Free function at address: %p", address);
         Hijacking::CreateFreeHook(address);
       }
 
@@ -360,9 +343,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       uint32_t numAddresses = (uint32_t)a_Message.m_Size / sizeof(ULONG64);
       for (uint32_t i = 0; i < numAddresses; ++i) {
         void* address = (void*)addresses[i];
-        std::string dbgMsg =
-            absl::StrFormat("Callstack tracking for address: %p\n", address);
-        OutputDebugStringA(dbgMsg.c_str());
+        LOG("Callstack tracking for address: %p", address);
         Hijacking::TrackCallstack(addresses[i]);
       }
       break;

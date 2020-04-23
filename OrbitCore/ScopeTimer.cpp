@@ -40,7 +40,7 @@ LocalScopeTimer::LocalScopeTimer(const std::string& message)
   for (size_t i = 0; i < CurrentDepthLocal; ++i) {
     tabs += "  ";
   }
-  PRINT(absl::StrFormat("%sStarting %s...\n", tabs.c_str(), message_.c_str()));
+  LOG("%sStarting %s...", tabs.c_str(), message_.c_str());
 
   ++CurrentDepthLocal;
   timer_.Start();
@@ -60,8 +60,8 @@ LocalScopeTimer::~LocalScopeTimer() {
       tabs += "  ";
     }
 
-    PRINT(absl::StrFormat("%s%s took %f ms.\n", tabs.c_str(), message_.c_str(),
-                          timer_.ElapsedMillis()));
+    LOG("%s%s took %f ms.", tabs.c_str(), message_.c_str(),
+        timer_.ElapsedMillis());
   }
 }
 

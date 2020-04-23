@@ -82,7 +82,7 @@ void Orbit::Start() {
     GTimerManager->StartClient();
     GIsCaptureEnabled = true;
   } else {
-    PRINT("GTimerManager not created yet");
+    LOG("GTimerManager not created yet");
   }
 }
 

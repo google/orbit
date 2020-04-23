@@ -17,7 +17,7 @@ EventTracer GEventTracer;
 
 //-----------------------------------------------------------------------------
 void EventBuffer::Print() {
-  PRINT("Orbit Callstack Events:");
+  LOG("Orbit Callstack Events:");
 
   size_t numCallstacks = 0;
   for (auto& pair : m_CallstackEvents) {
