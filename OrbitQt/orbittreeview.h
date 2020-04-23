@@ -5,6 +5,7 @@
 
 #include <QTimer>
 #include <QTreeView>
+#include <memory>
 
 #include "orbitglwidget.h"
 #include "orbittablemodel.h"
@@ -13,7 +14,6 @@ class OrbitTreeView : public QTreeView {
   Q_OBJECT
  public:
   explicit OrbitTreeView(QWidget* parent = nullptr);
-  ~OrbitTreeView() override;
   void Initialize(DataViewType a_Type);
   void SetDataModel(std::shared_ptr<DataView> a_Model);
   void OnFilter(const QString& a_Filter);
@@ -23,7 +23,7 @@ class OrbitTreeView : public QTreeView {
   void SetGlWidget(OrbitGLWidget* a_Link);
   void resizeEvent(QResizeEvent* event) override;
   void keyPressEvent(QKeyEvent* event) override;
-  OrbitTableModel* GetModel() { return m_Model; }
+  OrbitTableModel* GetModel() { return model_.get(); }
   std::string GetLabel();
 
  protected:
@@ -44,8 +44,8 @@ class OrbitTreeView : public QTreeView {
   void OnRangeChanged(int a_Min, int a_Max);
 
  private:
-  OrbitTableModel* m_Model;
-  QTimer* m_Timer;
-  std::vector<OrbitTreeView*> m_Links;
-  bool m_AutoResize;
+  std::unique_ptr<OrbitTableModel> model_;
+  std::unique_ptr<QTimer> timer_;
+  std::vector<OrbitTreeView*> links_;
+  bool auto_resize_;
 };
