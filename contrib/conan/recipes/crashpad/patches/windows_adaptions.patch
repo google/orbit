@@ -2,7 +2,7 @@ diff --git a/build/BUILD.gn b/build/BUILD.gn
 index d8dc6cd..4f55b5f 100644
 --- a/build/BUILD.gn
 +++ b/build/BUILD.gn
-@@ -44,10 +44,23 @@ if (mini_chromium_is_mac) {
+@@ -39,10 +39,23 @@ if (mini_chromium_is_mac) {
      # win_sdk\bin\SetEnv.cmd inside this path will be used to configure the
      # Windows toolchain.
      win_toolchain_path = "<autodetect>"
@@ -26,7 +26,7 @@ index d8dc6cd..4f55b5f 100644
  }
  
  config("release") {
-@@ -69,7 +82,6 @@ config("release") {
+@@ -64,7 +77,6 @@ config("release") {
      }
    } else if (mini_chromium_is_win) {
      cflags = [
@@ -34,7 +34,7 @@ index d8dc6cd..4f55b5f 100644
        "/O2",
        "/Ob2",  # Both explicit and auto inlining.
        "/Oy-",  # Disable omitting frame pointers, must be after /O2.
-@@ -78,10 +90,20 @@ config("release") {
+@@ -73,10 +85,20 @@ config("release") {
      ]
      ldflags = [
        "/OPT:ICF",
