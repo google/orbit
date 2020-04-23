@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Copyright (c) 2020 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
 
 # Fail on any error.
 set -e
@@ -10,10 +14,7 @@ if [ "$0" == "$SCRIPT" ]; then
   # We are inside the docker container
 
   echo "Installing conan configuration (profiles, settings, etc.)..."
-  conan config install "${DIR}/contrib/conan/configs/linux"
-  cp -v "${DIR}/kokoro/conan/config/remotes.json" ~/.conan/remotes.json
-  conan config set general.revisions_enabled=True
-  conan config set general.parallel_download=8
+  ${DIR}/contrib/conan/configs/install.sh || exit $?
 
   CONAN_PROFILE="clang7_relwithdebinfo"
 
