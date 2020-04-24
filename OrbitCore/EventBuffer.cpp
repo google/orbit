@@ -21,7 +21,7 @@ void EventBuffer::Print() {
 
   size_t numCallstacks = 0;
   for (auto& pair : m_CallstackEvents) {
-    std::map<long long, CallstackEvent>& callstacks = pair.second;
+    std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
     numCallstacks += callstacks.size();
   }
 
@@ -29,7 +29,7 @@ void EventBuffer::Print() {
 
   for (auto& pair : m_CallstackEvents) {
     ThreadID threadID = pair.first;
-    std::map<long long, CallstackEvent>& callstacks = pair.second;
+    std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
     PRINT_VAR(threadID);
     PRINT_VAR(callstacks.size());
   }
@@ -37,16 +37,16 @@ void EventBuffer::Print() {
 
 //-----------------------------------------------------------------------------
 std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
-    long long a_TimeBegin, long long a_TimeEnd, ThreadID a_ThreadId /*= 0*/) {
+    uint64_t a_TimeBegin, uint64_t a_TimeEnd, ThreadID a_ThreadId /*= 0*/) {
   std::vector<CallstackEvent> callstackEvents;
   for (auto& pair : m_CallstackEvents) {
     ThreadID threadID = pair.first;
-    std::map<long long, CallstackEvent>& callstacks = pair.second;
+    std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
 
     if (a_ThreadId == 0 || threadID == a_ThreadId) {
       for (auto it = callstacks.lower_bound(a_TimeBegin);
            it != callstacks.end(); ++it) {
-        long long time = it->first;
+        uint64_t time = it->first;
         if (time < a_TimeEnd) {
           callstackEvents.push_back(it->second);
         }
@@ -61,11 +61,11 @@ std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
 ORBIT_SERIALIZE(EventBuffer, 0) {
   ORBIT_NVP_VAL(0, m_CallstackEvents);
 
-  long long maxTime = m_MaxTime;
+  uint64_t maxTime = m_MaxTime;
   ORBIT_NVP_VAL(0, maxTime);
   m_MaxTime = maxTime;
 
-  long long minTime = m_MinTime;
+  uint64_t minTime = m_MinTime;
   ORBIT_NVP_VAL(0, minTime);
   m_MinTime = minTime;
 }

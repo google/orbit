@@ -32,10 +32,10 @@
 
 //-----------------------------------------------------------------------------
 CaptureWindow::CaptureWindow() {
-  GCurrentTimeGraph = &m_TimeGraph;
-  m_TimeGraph.SetTextRenderer(&m_TextRenderer);
-  m_TimeGraph.SetPickingManager(&m_PickingManager);
-  m_TimeGraph.SetCanvas(this);
+  GCurrentTimeGraph = &time_graph_;
+  time_graph_.SetTextRenderer(&m_TextRenderer);
+  time_graph_.SetPickingManager(&m_PickingManager);
+  time_graph_.SetCanvas(this);
   m_DrawUI = false;
   m_DrawHelp = false;
   m_DrawFilter = false;
@@ -71,7 +71,7 @@ CaptureWindow::CaptureWindow() {
 
 //-----------------------------------------------------------------------------
 CaptureWindow::~CaptureWindow() {
-  if (GCurrentTimeGraph == &m_TimeGraph) GCurrentTimeGraph = nullptr;
+  if (GCurrentTimeGraph == &time_graph_) GCurrentTimeGraph = nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -79,7 +79,7 @@ void CaptureWindow::OnTimer() { GlCanvas::OnTimer(); }
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::ZoomAll() {
-  m_TimeGraph.ZoomAll();
+  time_graph_.ZoomAll();
   m_WorldTopLeftY = m_WorldMaxY;
   ResetHoverTimer();
   NeedsUpdate();
@@ -91,7 +91,7 @@ void CaptureWindow::UpdateWheelMomentum(float a_DeltaTime) {
 
   bool zoomWidth = true;  // TODO: !wxGetKeyState(WXK_CONTROL);
   if (zoomWidth && m_WheelMomentum != 0.f) {
-    m_TimeGraph.ZoomTime(m_WheelMomentum, m_MouseRatio);
+    time_graph_.ZoomTime(m_WheelMomentum, m_MouseRatio);
   }
 }
 
@@ -115,7 +115,7 @@ void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
     float worldMin;
     float worldMax;
 
-    m_TimeGraph.GetWorldMinMax(worldMin, worldMax);
+    time_graph_.GetWorldMinMax(worldMin, worldMax);
 
     m_WorldTopLeftX =
         m_WorldClickX - (float)mousex / (float)getWidth() * m_WorldWidth;
@@ -125,10 +125,10 @@ void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
     m_WorldTopLeftX = clamp(m_WorldTopLeftX, worldMin, worldMax - m_WorldWidth);
     m_WorldTopLeftY =
         clamp(m_WorldTopLeftY,
-              m_WorldHeight - m_TimeGraph.GetThreadTotalHeight(), m_WorldMaxY);
+              m_WorldHeight - time_graph_.GetThreadTotalHeight(), m_WorldMaxY);
     UpdateSceneBox();
 
-    m_TimeGraph.PanTime(m_ScreenClickX, a_X, getWidth(),
+    time_graph_.PanTime(m_ScreenClickX, a_X, getWidth(),
                         (double)m_RefTimeClick);
     UpdateVerticalSlider();
     NeedsUpdate();
@@ -136,7 +136,7 @@ void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
 
   if (m_IsSelecting) {
     m_SelectStop = Vec2(worldx, worldy);
-    m_TimeStop = m_TimeGraph.GetTickFromWorld(worldx);
+    m_TimeStop = time_graph_.GetTickFromWorld(worldx);
   }
 
   if (a_Left) {
@@ -155,7 +155,7 @@ void CaptureWindow::LeftDown(int a_X, int a_Y) {
   m_ScreenClickX = a_X;
   m_ScreenClickY = a_Y;
   m_RefTimeClick =
-      (TickType)m_TimeGraph.GetTime((double)a_X / (double)getWidth());
+      (TickType)time_graph_.GetTime((double)a_X / (double)getWidth());
 
   m_IsSelecting = false;
 
@@ -209,7 +209,7 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
   switch (type) {
     case PickingID::BOX: {
       void** textBoxPtr =
-          m_TimeGraph.GetBatcher().GetBoxBuffer().m_UserData.SlowAt(id);
+          time_graph_.GetBatcher().GetBoxBuffer().m_UserData.SlowAt(id);
       if (textBoxPtr) {
         TextBox* textBox = (TextBox*)*textBoxPtr;
         SelectTextBox(textBox);
@@ -218,7 +218,7 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
     }
     case PickingID::LINE: {
       void** textBoxPtr =
-          m_TimeGraph.GetBatcher().GetLineBuffer().m_UserData.SlowAt(id);
+          time_graph_.GetBatcher().GetLineBuffer().m_UserData.SlowAt(id);
       if (textBoxPtr) {
         TextBox* textBox = (TextBox*)*textBoxPtr;
         SelectTextBox(textBox);
@@ -233,6 +233,7 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::SelectTextBox(class TextBox* a_TextBox) {
+  if (a_TextBox == nullptr) return;
   Capture::GSelectedTextBox = a_TextBox;
   Capture::GSelectedThreadId = a_TextBox->GetTimer().m_TID;
   Capture::GSelectedCallstack =
@@ -252,7 +253,7 @@ void CaptureWindow::SelectTextBox(class TextBox* a_TextBox) {
   FindCode(address);
 
   if (m_DoubleClicking && a_TextBox) {
-    m_TimeGraph.Zoom(a_TextBox);
+    time_graph_.Zoom(a_TextBox);
   }
 }
 
@@ -265,7 +266,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
 
   PickingID pickId = *((PickingID*)(&pixels[0]));
 
-  TextBox* textBox = m_TimeGraph.GetBatcher().GetTextBox(pickId);
+  TextBox* textBox = time_graph_.GetBatcher().GetTextBox(pickId);
   if (textBox) {
     if (!textBox->GetTimer().IsType(Timer::CORE_ACTIVITY)) {
       Function* func =
@@ -315,7 +316,7 @@ void CaptureWindow::PreRender() {
     NeedsRedraw();
   }
 
-  m_NeedsRedraw = m_NeedsRedraw || m_TimeGraph.IsRedrawNeeded();
+  m_NeedsRedraw = m_NeedsRedraw || time_graph_.IsRedrawNeeded();
 }
 
 //-----------------------------------------------------------------------------
@@ -357,7 +358,7 @@ void CaptureWindow::RightDown(int a_X, int a_Y) {
   m_IsSelecting = true;
   m_SelectStart = Vec2(m_WorldClickX, m_WorldClickY);
   m_SelectStop = m_SelectStart;
-  m_TimeStart = m_TimeGraph.GetTickFromWorld(m_WorldClickX);
+  m_TimeStart = time_graph_.GetTickFromWorld(m_WorldClickX);
   m_TimeStop = m_TimeStart;
 }
 
@@ -369,11 +370,11 @@ bool CaptureWindow::RightUp() {
     float maxWorld = std::max(m_SelectStop[0], m_SelectStart[0]);
 
     double newMin =
-        m_TimeGraph.GetTime((minWorld - m_WorldTopLeftX) / m_WorldWidth);
+        time_graph_.GetTime((minWorld - m_WorldTopLeftX) / m_WorldWidth);
     double newMax =
-        m_TimeGraph.GetTime((maxWorld - m_WorldTopLeftX) / m_WorldWidth);
+        time_graph_.GetTime((maxWorld - m_WorldTopLeftX) / m_WorldWidth);
 
-    m_TimeGraph.SetMinMax(newMin, newMax);
+    time_graph_.SetMinMax(newMin, newMax);
     m_SelectStart = m_SelectStop;
   }
 
@@ -399,7 +400,6 @@ void CaptureWindow::MiddleUp(int a_X, int a_Y) {
   m_IsSelecting = false;
 
   m_SelectStop = Vec2(worldx, worldy);
-  // m_TimeGraph.SelectEvents( m_SelectStart[0], m_SelectStop[0], -1 );
 
   NeedsRedraw();
 }
@@ -416,7 +416,7 @@ void CaptureWindow::Zoom(int a_Delta) {
   ScreenToWorld(m_MousePosX, m_MousePosY, worldx, worldy);
   m_MouseRatio = (double)m_MousePosX / (double)getWidth();
 
-  m_TimeGraph.ZoomTime((float)a_Delta, m_MouseRatio);
+  time_graph_.ZoomTime((float)a_Delta, m_MouseRatio);
   m_WheelMomentum =
       a_Delta * m_WheelMomentum < 0 ? 0.f : m_WheelMomentum + (float)a_Delta;
 
@@ -426,8 +426,8 @@ void CaptureWindow::Zoom(int a_Delta) {
 //-----------------------------------------------------------------------------
 void CaptureWindow::Pan(float a_Ratio) {
   double refTime =
-      (TickType)m_TimeGraph.GetTime((double)m_MousePosX / (double)getWidth());
-  m_TimeGraph.PanTime(m_MousePosX,
+      (TickType)time_graph_.GetTime((double)m_MousePosX / (double)getWidth());
+  time_graph_.PanTime(m_MousePosX,
                       m_MousePosX + static_cast<int>(a_Ratio * getWidth()),
                       getWidth(), refTime);
   UpdateSceneBox();
@@ -457,7 +457,7 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
   bool zoomWidth = !a_Ctrl;
 
   if (zoomWidth) {
-    m_TimeGraph.ZoomTime((float)delta, m_MouseRatio);
+    time_graph_.ZoomTime((float)delta, m_MouseRatio);
     m_WheelMomentum =
         delta * m_WheelMomentum < 0 ? 0.f : m_WheelMomentum + (float)delta;
   } else {
@@ -465,7 +465,7 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
     m_DesiredWorldHeight += delta * zoomInc;
 
     float worldMin, worldMax;
-    m_TimeGraph.GetWorldMinMax(worldMin, worldMax);
+    time_graph_.GetWorldMinMax(worldMin, worldMax);
     m_WorldTopLeftX = clamp(m_WorldTopLeftX, worldMin, worldMax - m_WorldWidth);
     m_WorldTopLeftY = clamp(m_WorldTopLeftY, -FLT_MAX, m_WorldMaxY);
 
@@ -564,16 +564,16 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
         SendProcess();
         break;
       case 18:  // Left
-        m_TimeGraph.OnLeft();
+        time_graph_.OnLeft();
         break;
       case 20:  // Right
-        m_TimeGraph.OnRight();
+        time_graph_.OnRight();
         break;
       case 19:  // Up
-        m_TimeGraph.OnUp();
+        time_graph_.OnUp();
         break;
       case 21:  // Down
-        m_TimeGraph.OnDown();
+        time_graph_.OnDown();
         break;
     }
   }
@@ -629,7 +629,7 @@ void CaptureWindow::ToggleSampling() {
 void CaptureWindow::OnCaptureStarted() {
   m_DesiredWorldWidth = (float)m_Width;
   m_DesiredWorldHeight = (float)m_Height;
-  m_TimeGraph.ZoomAll();
+  time_graph_.ZoomAll();
   NeedsRedraw();
 }
 
@@ -647,14 +647,14 @@ void CaptureWindow::Draw() {
     ZoomAll();
   }
 
-  m_TimeGraph.Draw(m_Picking);
+  time_graph_.Draw(m_Picking);
 
   if (m_SelectStart[0] != m_SelectStop[0]) {
     TickType minTime = std::min(m_TimeStart, m_TimeStop);
     TickType maxTime = std::max(m_TimeStart, m_TimeStop);
 
-    float from = m_TimeGraph.GetWorldFromTick(minTime);
-    float to = m_TimeGraph.GetWorldFromTick(maxTime);
+    float from = time_graph_.GetWorldFromTick(minTime);
+    float to = time_graph_.GetWorldFromTick(maxTime);
 
     double micros = MicroSecondsFromTicks(minTime, maxTime);
     float sizex = to - from;
@@ -682,7 +682,7 @@ void CaptureWindow::Draw() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::DrawScreenSpace() {
-  double timeSpan = m_TimeGraph.GetSessionTimeSpanUs();
+  double timeSpan = time_graph_.GetSessionTimeSpanUs();
 
   Color col = m_Slider.GetBarColor();
   float height = m_Slider.GetPixelHeight();
@@ -699,7 +699,7 @@ void CaptureWindow::DrawScreenSpace() {
   glEnd();
 
   // Time bar
-  if (m_TimeGraph.GetSessionTimeSpanUs() > 0) {
+  if (time_graph_.GetSessionTimeSpanUs() > 0) {
     glColor4ub(70, 70, 70, 200);
     glBegin(GL_QUADS);
     glVertex3f(0, height, z);
@@ -710,21 +710,21 @@ void CaptureWindow::DrawScreenSpace() {
   }
 
   if (timeSpan > 0) {
-    double start = m_TimeGraph.GetMinTimeUs();
-    double stop = m_TimeGraph.GetMaxTimeUs();
+    double start = time_graph_.GetMinTimeUs();
+    double stop = time_graph_.GetMaxTimeUs();
     double width = stop - start;
     double maxStart = timeSpan - width;
     double ratio =
         Capture::IsCapturing() ? 1 : (maxStart != 0 ? start / maxStart : 0);
 
-    m_Slider.SetPixelHeight(m_TimeGraph.GetLayout().GetSliderWidth());
+    m_Slider.SetPixelHeight(time_graph_.GetLayout().GetSliderWidth());
     m_Slider.SetSliderRatio((float)ratio);
     m_Slider.SetSliderWidthRatio(float(width / timeSpan));
     m_Slider.Draw(this, m_Picking);
 
-    float verticalRatio = m_WorldHeight / m_TimeGraph.GetThreadTotalHeight();
+    float verticalRatio = m_WorldHeight / time_graph_.GetThreadTotalHeight();
     if (verticalRatio < 1.f) {
-      m_VerticalSlider.SetPixelHeight(m_TimeGraph.GetLayout().GetSliderWidth());
+      m_VerticalSlider.SetPixelHeight(time_graph_.GetLayout().GetSliderWidth());
       m_VerticalSlider.SetSliderWidthRatio(verticalRatio);
       m_VerticalSlider.Draw(this, m_Picking);
     }
@@ -733,14 +733,14 @@ void CaptureWindow::DrawScreenSpace() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::OnDrag(float a_Ratio) {
-  m_TimeGraph.OnDrag(a_Ratio);
+  time_graph_.OnDrag(a_Ratio);
   NeedsUpdate();
 }
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::OnVerticalDrag(float a_Ratio) {
   float min = m_WorldMaxY;
-  float max = m_WorldHeight - m_TimeGraph.GetThreadTotalHeight();
+  float max = m_WorldHeight - time_graph_.GetThreadTotalHeight();
   float range = max - min;
   m_WorldTopLeftY = min + a_Ratio * range;
   NeedsUpdate();
@@ -749,14 +749,14 @@ void CaptureWindow::OnVerticalDrag(float a_Ratio) {
 //-----------------------------------------------------------------------------
 void CaptureWindow::UpdateVerticalSlider() {
   float min = m_WorldMaxY;
-  float max = m_WorldHeight - m_TimeGraph.GetThreadTotalHeight();
+  float max = m_WorldHeight - time_graph_.GetThreadTotalHeight();
   float ratio = (m_WorldTopLeftY - min) / (max - min);
   m_VerticalSlider.SetSliderRatio(ratio);
 }
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::NeedsUpdate() {
-  m_TimeGraph.NeedsUpdate();
+  time_graph_.NeedsUpdate();
   m_NeedsRedraw = true;
 }
 
@@ -803,7 +803,7 @@ void CaptureWindow::RenderUI() {
   Orbit_ImGui_NewFrame(this);
 
   if (m_DrawStats) {
-    if (m_TimeGraph.GetLayout().DrawProperties()) {
+    if (time_graph_.GetLayout().DrawProperties()) {
       NeedsUpdate();
     }
 
@@ -818,6 +818,8 @@ void CaptureWindow::RenderUI() {
     m_StatsWindow.AddLine(VAR_TO_STR(m_WorldTopLeftX));
     m_StatsWindow.AddLine(VAR_TO_STR(m_WorldTopLeftY));
     m_StatsWindow.AddLine(VAR_TO_STR(m_WorldMinWidth));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_MouseX));
+    m_StatsWindow.AddLine(VAR_TO_STR(m_MouseY));
 
     /*
             m_StatsWindow.AddLog( VAR_TO_CHAR(
@@ -832,7 +834,7 @@ void CaptureWindow::RenderUI() {
        VAR_TO_CHAR( GTimerManager->m_NumQueuedTimers) ); m_StatsWindow.AddLog(
        VAR_TO_CHAR( m_SelectStart[0] ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
        m_SelectStop[0] ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
-       m_TimeGraph.m_CurrentTimeWindow ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
+       time_graph_.m_CurrentTimeWindow ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
        Capture::GMaxTimersAtOnce ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
        Capture::GNumTimersAtOnce ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
        Capture::GNumTargetQueuedEntries ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
@@ -843,9 +845,9 @@ void CaptureWindow::RenderUI() {
     m_StatsWindow.AddLine(VAR_TO_STR(Capture::GNumInstalledHooks));
     m_StatsWindow.AddLine(VAR_TO_STR(Capture::GSelectedFunctionsMap.size()));
     m_StatsWindow.AddLine(VAR_TO_STR(Capture::GVisibleFunctionsMap.size()));
-    m_StatsWindow.AddLine(VAR_TO_STR(m_TimeGraph.GetNumDrawnTextBoxes()));
-    m_StatsWindow.AddLine(VAR_TO_STR(m_TimeGraph.GetNumTimers()));
-    m_StatsWindow.AddLine(VAR_TO_STR(m_TimeGraph.GetThreadTotalHeight()));
+    m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetNumDrawnTextBoxes()));
+    m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetNumTimers()));
+    m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetThreadTotalHeight()));
 
 #ifdef WIN32
     for (std::string& line : GTcpServer->GetStats()) {
@@ -893,7 +895,7 @@ void CaptureWindow::RenderUI() {
 //-----------------------------------------------------------------------------
 void CaptureWindow::RenderText() {
   if (!m_Picking) {
-    m_TimeGraph.DrawText();
+    time_graph_.DrawText();
   }
 }
 
@@ -1014,7 +1016,7 @@ void CaptureWindow::RenderMemTracker() {
 
   ImGui::Text("=== Memory Tracker ===");
 
-  const MemoryTracker& memTracker = m_TimeGraph.GetMemoryTracker();
+  const MemoryTracker& memTracker = time_graph_.GetMemoryTracker();
   if (memTracker.NumAllocatedBytes() == 0) {
     std::string str = VAR_TO_STR(memTracker.NumAllocatedBytes()) +
                       std::string("            ");
@@ -1074,7 +1076,7 @@ void CaptureWindow::RenderBar() {
     DrawTexturedSquare(GTextureRecord, size, timerX - size, y);
   }
 
-  double timeSpan = m_TimeGraph.GetSessionTimeSpanUs();
+  double timeSpan = time_graph_.GetSessionTimeSpanUs();
   timerX += size;
   m_TextRenderer.AddText2D(
       absl::StrFormat("%s", GetPrettyTime(timeSpan * 0.001).c_str()).c_str(),
@@ -1082,7 +1084,7 @@ void CaptureWindow::RenderBar() {
       Color(255, 255, 255, 255));
 
   /*m_TextRenderer.AddText2D(Format("%s",
-     GetPrettyTime(m_TimeGraph.GetCurrentTimeSpanUs()*0.001).c_str()).c_str() ,
+     GetPrettyTime(time_graph_.GetCurrentTimeSpanUs()*0.001).c_str()).c_str() ,
      timerX , 100 , GlCanvas::Z_VALUE_TEXT_UI , Color(255, 255, 255, 255));*/
 }
 
@@ -1118,12 +1120,12 @@ inline double GetIncrementMs(double a_MilliSeconds) {
 void CaptureWindow::RenderTimeBar() {
   static int numTimePoints = 10;
 
-  if (m_TimeGraph.GetSessionTimeSpanUs() > 0) {
-    double millis = m_TimeGraph.GetCurrentTimeSpanUs() * 0.001;
+  if (time_graph_.GetSessionTimeSpanUs() > 0) {
+    double millis = time_graph_.GetCurrentTimeSpanUs() * 0.001;
     double incr = millis / float(numTimePoints - 1);
     double unit = GetIncrementMs(incr);
     double normInc = (double((int)((incr + unit) / unit))) * unit;
-    double startMs = m_TimeGraph.GetMinTimeUs() * 0.001;
+    double startMs = time_graph_.GetMinTimeUs() * 0.001;
     double normStartUs = 1000.0 * (double(int(startMs / normInc))) * normInc;
 
     static int pixelMargin = 2;
@@ -1140,7 +1142,7 @@ void CaptureWindow::RenderTimeBar() {
 
       double currentMillis = currentMicros * 0.001;
       std::string text = GetPrettyTime(currentMillis);
-      float worldX = m_TimeGraph.GetWorldFromUs(currentMicros);
+      float worldX = time_graph_.GetWorldFromUs(currentMicros);
       m_TextRenderer.AddText(text.c_str(), worldX + xMargin, worldY,
                              GlCanvas::Z_VALUE_TEXT_UI,
                              Color(255, 255, 255, 255));
@@ -1156,12 +1158,12 @@ void CaptureWindow::RenderTimeBar() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::OnTimerAdded(Timer& a_Timer) {
-  m_TimeGraph.ProcessTimer(a_Timer);
+  time_graph_.ProcessTimer(a_Timer);
 }
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::OnContextSwitchAdded(const ContextSwitch& a_CS) {
-  m_TimeGraph.AddContextSwitch(a_CS);
+  time_graph_.AddContextSwitch(a_CS);
 }
 
 //-----------------------------------------------------------------------------
