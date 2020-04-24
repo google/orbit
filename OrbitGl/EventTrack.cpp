@@ -149,6 +149,6 @@ void EventTrack::SelectEvents() {
   Vec2& from = m_MousePos[0];
   Vec2& to = m_MousePos[1];
 
-  selected_callstack_events_ = time_graph_->SelectEvents(from[0], to[0],
-                                                      m_ThreadId);
+  selected_callstack_events_ =
+      time_graph_->SelectEvents(from[0], to[0], m_ThreadId);
 }

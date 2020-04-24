@@ -29,7 +29,7 @@ class TimeGraphLayout {
   void SetDrawProperties(bool value) { m_DrawProperties = value; }
   void SetNumCores(int a_NumCores) { m_NumCores = a_NumCores; }
   bool DrawProperties();
-  bool GetDrawTrackBackground() const { return m_DrawTrackBackground;  }
+  bool GetDrawTrackBackground() const { return m_DrawTrackBackground; }
 
  protected:
   int m_NumCores;
@@ -56,4 +56,4 @@ class TimeGraphLayout {
   bool m_DrawTrackBackground = true;
 };
 
-#endif // ORBIT_GL_TIME_GRAPH_LAYOUT_H_
+#endif  // ORBIT_GL_TIME_GRAPH_LAYOUT_H_

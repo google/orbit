@@ -2,9 +2,7 @@
 
 #include "GlCanvas.h"
 
-GraphTrack::GraphTrack(TimeGraph* time_graph) {
-    SetTimeGraph(time_graph);
-}
+GraphTrack::GraphTrack(TimeGraph* time_graph) { SetTimeGraph(time_graph); }
 
 void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
   UNUSED(picking);
@@ -82,8 +80,7 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
   }
 }
 
-void GraphTrack::OnDrag(int /*x*/, int /*y*/) {
-}
+void GraphTrack::OnDrag(int /*x*/, int /*y*/) {}
 
 void GraphTrack::AddTimer(const Timer& timer) {
   double value = *((double*)(&timer.m_UserData[0]));
@@ -92,14 +89,14 @@ void GraphTrack::AddTimer(const Timer& timer) {
   if (value < min_) min_ = value;
   value_range_ = max_ - min_;
 
- if (value_range_ > 0) inv_value_range_ = 1.0 / value_range_;
+  if (value_range_ > 0) inv_value_range_ = 1.0 / value_range_;
 }
 
 //-----------------------------------------------------------------------------
 float GraphTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
   float height = layout.GetTextBoxHeight() +
-         layout.GetSpaceBetweenTracksAndThread() +
-         layout.GetEventTrackHeight() + layout.GetTrackBottomMargin();
+                 layout.GetSpaceBetweenTracksAndThread() +
+                 layout.GetEventTrackHeight() + layout.GetTrackBottomMargin();
   return height;
 }
