@@ -41,7 +41,7 @@ class OrbitApp : public CoreApp {
   std::string GetSaveFile(const std::string& extension);
   void SetClipboard(const std::wstring& a_Text);
   void OnSaveSession(const std::string& file_name);
-  void OnLoadSession(const std::string& file_name);
+  bool OnLoadSession(const std::string& file_name);
   void OnSaveCapture(const std::string& file_name);
   void OnLoadCapture(const std::string& file_name);
   void OnOpenPdb(const std::string& file_name);
