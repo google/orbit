@@ -36,7 +36,6 @@ void ThreadTrack::Draw(GlCanvas* a_Canvas, bool a_Picking) {
   // TODO: Make a proper "SchedTrack" instead of hack.
   if (m_ID == 0) return;
 
-  TimeGraphLayout& layout = time_graph_->GetLayout();
   float trackHeight = GetHeight();
   float trackWidth = a_Canvas->GetWorldWidth();
 

@@ -169,7 +169,7 @@ void TimeGraph::ZoomAll() {
     if (m_MinTimeUs < 0) m_MinTimeUs = 0;
 
     NeedsUpdate();
-    UpdatePrimitives(false);
+    UpdatePrimitives();
   }
 }
 
@@ -511,7 +511,7 @@ void TimeGraph::SelectRight(const TextBox* a_TextBox) {
 void TimeGraph::NeedsUpdate() { m_NeedsUpdatePrimitives = true; }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::UpdatePrimitives(bool a_Picking) {
+void TimeGraph::UpdatePrimitives() {
   CHECK(string_manager_);
 
   m_Batcher.Reset();
@@ -535,7 +535,7 @@ void TimeGraph::UpdatePrimitives(bool a_Picking) {
     track->UpdatePrimitives(min_tick, max_tick);
     current_y -= (track->GetHeight() + m_Layout.GetSpaceBetweenTracks());
   }
-  
+
   min_y_ = current_y;
   m_NeedsUpdatePrimitives = false;
   m_NeedsRedraw = true;
@@ -586,7 +586,7 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
 //-----------------------------------------------------------------------------
 void TimeGraph::Draw(bool a_Picking) {
   if ((!a_Picking && m_NeedsUpdatePrimitives) || a_Picking) {
-    UpdatePrimitives(a_Picking);
+    UpdatePrimitives();
   }
 
   DrawTracks(a_Picking);
@@ -651,7 +651,7 @@ void TimeGraph::SortTracks() {
   // Reorder threads once every second when capturing
   if (!Capture::IsCapturing() || m_LastThreadReorder.QueryMillis() > 1000.0) {
     sorted_tracks_.clear();
-    
+
     // Sched track is currently held as thread 0, TODO: make it it's own track.
     sorted_tracks_.emplace_back(GetOrCreateThreadTrack(0));
 

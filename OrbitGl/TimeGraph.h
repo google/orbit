@@ -35,7 +35,7 @@ class TimeGraph {
   void DrawText();
 
   void NeedsUpdate();
-  void UpdatePrimitives(bool a_Picking);
+  void UpdatePrimitives();
   void SortTracks();
   std::vector<CallstackEvent> SelectEvents(float a_WorldStart, float a_WorldEnd,
                                            ThreadID a_TID);

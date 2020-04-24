@@ -1,7 +1,7 @@
 #include "SchedulerTrack.h"
 #include "TimeGraph.h"
 
-void SchedulerTrack::Draw(GlCanvas* a_Canvas, bool a_Picking) {
+void SchedulerTrack::Draw(GlCanvas* /*a_Canvas*/, bool /*a_Picking*/) {
   // Do nothing.
 }
 
