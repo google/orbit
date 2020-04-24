@@ -53,9 +53,9 @@ class Track : public Pickable {
   bool GetVisible() const { return m_Visible; }
   void SetVisible(bool value) { m_Visible = value; }
 
-  uint32_t GetNumTimers() const { return m_NumTimers; }
-  TickType GetMinTime() const { return m_MinTime; }
-  TickType GetMaxTime() const { return m_MaxTime; }
+  uint32_t GetNumTimers() const { return num_timers_; }
+  TickType GetMinTime() const { return min_time_; }
+  TickType GetMaxTime() const { return max_time_; }
 
   virtual std::vector<std::shared_ptr<TimerChain>> GetTimers() { return {}; }
   virtual std::vector<std::shared_ptr<TimerChain>> GetAllChains() { return {}; }
@@ -98,9 +98,9 @@ class Track : public Pickable {
   LabelDisplayMode label_display_mode_;
   Color m_Color;
   bool m_Visible = true;
-  std::atomic<uint32_t> m_NumTimers;
-  std::atomic<TickType> m_MinTime;
-  std::atomic<TickType> m_MaxTime;
+  std::atomic<uint32_t> num_timers_;
+  std::atomic<TickType> min_time_;
+  std::atomic<TickType> max_time_;
   bool m_PickingEnabled = false;
   Type type_ = kUnknown;
   std::vector<std::shared_ptr<Track>> children_;
