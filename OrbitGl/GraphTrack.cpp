@@ -61,14 +61,14 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
 
   auto it = values_.lower_bound(min_ns);
   if (it == values_.end()) return;
-  uint64_t last_time = it->first;
+  uint64_t previous_time = it->first;
   double last_normalized_value = (it->second - min_) * inv_value_range_;
   for (++it; it != values_.end(); ++it) {
-    if (last_time > max_ns) break;
+    if (previous_time > max_ns) break;
     uint64_t time = it->first;
     double normalized_value = (it->second - min_) * inv_value_range_;
     float base_y = m_Pos[1] - m_Size[1];
-    float x0 = time_graph_->GetWorldFromTick(last_time);
+    float x0 = time_graph_->GetWorldFromTick(previous_time);
     float x1 = time_graph_->GetWorldFromTick(time);
     float y0 = base_y + static_cast<float>(last_normalized_value) * m_Size[1];
     float y1 = base_y + static_cast<float>(normalized_value) * m_Size[1];
@@ -77,7 +77,7 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
     line.m_End = Vec3(x1, y1, text_z);
     time_graph_->GetBatcher().AddLine(line, colors, PickingID::LINE, nullptr);
 
-    last_time = time;
+    previous_time = time;
     last_normalized_value = normalized_value;
   }
 }
