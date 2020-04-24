@@ -15,12 +15,11 @@
 class TextRenderer;
 class EventTrack;
 
-typedef BlockChain<TextBox, 4 * 1024> TimerChain;
-
 //-----------------------------------------------------------------------------
 class ThreadTrack : public Track {
  public:
   ThreadTrack(TimeGraph* a_TimeGraph, uint32_t a_ThreadID);
+  ~ThreadTrack() override = default;
 
   // Pickable
   void Draw(GlCanvas* a_Canvas, bool a_Picking) override;
@@ -28,11 +27,15 @@ class ThreadTrack : public Track {
   void OnTimer(const Timer& a_Timer);
 
   // Track
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) override;
+  Type GetType() const override { return kThreadTrack; }
   float GetHeight() const override;
 
-  std::vector<std::shared_ptr<TimerChain>> GetTimers();
+  std::vector<std::shared_ptr<TimerChain>> GetTimers() override;
   uint32_t GetDepth() const { return m_Depth; }
 
+  Color GetColor() const;
+  static Color GetColor(ThreadID a_TID);
   uint32_t GetNumTimers() const { return m_NumTimers; }
   TickType GetMinTime() const { return m_MinTime; }
   TickType GetMaxTime() const { return m_MaxTime; }
@@ -45,10 +48,7 @@ class ThreadTrack : public Track {
   const TextBox* GetUp(TextBox* a_TextBox) const;
   const TextBox* GetDown(TextBox* a_TextBox) const;
 
-  std::vector<std::shared_ptr<TimerChain>> GetAllChains() const;
-
-  bool GetVisible() const { return m_Visible; }
-  void SetVisible(bool value) { m_Visible = value; }
+  std::vector<std::shared_ptr<TimerChain>> GetAllChains() override ;
 
   void SetEventTrackColor(Color color);
 
@@ -63,11 +63,7 @@ class ThreadTrack : public Track {
   std::shared_ptr<EventTrack> m_EventTrack;
   uint32_t m_Depth = 0;
   ThreadID m_ThreadID;
-  bool m_Visible = true;
 
-  std::atomic<uint32_t> m_NumTimers;
-  std::atomic<TickType> m_MinTime;
-  std::atomic<TickType> m_MaxTime;
   mutable Mutex m_Mutex;
 
   std::map<int, std::shared_ptr<TimerChain>> m_Timers;

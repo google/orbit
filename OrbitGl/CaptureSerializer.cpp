@@ -52,7 +52,7 @@ void CaptureSerializer::Save(const std::wstring& a_FileName) {
 //-----------------------------------------------------------------------------
 template <class T>
 void CaptureSerializer::Save(T& a_Archive) {
-  m_NumTimers = m_TimeGraph->GetNumTimers();
+  m_NumTimers = time_graph_->GetNumTimers();
 
   // Header
   a_Archive(cereal::make_nvp("Capture", *this));
@@ -102,7 +102,7 @@ void CaptureSerializer::Save(T& a_Archive) {
   // Timers
   int numWrites = 0;
   std::vector<std::shared_ptr<TimerChain>> chains =
-      m_TimeGraph->GetAllTimerChains();
+      time_graph_->GetAllTimerChains();
   for (const std::shared_ptr<TimerChain>& chain : chains) {
     for (const TextBox& box : *chain) {
       a_Archive(cereal::binary_data((char*)&box.GetTimer(), sizeof(Timer)));
@@ -163,7 +163,7 @@ void CaptureSerializer::Load(const std::wstring& a_FileName) {
     // Timers
     Timer timer;
     while (file.read((char*)&timer, sizeof(Timer))) {
-      m_TimeGraph->ProcessTimer(timer);
+      time_graph_->ProcessTimer(timer);
     }
 
     GOrbitApp->FireRefreshCallbacks();

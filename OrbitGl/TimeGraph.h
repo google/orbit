@@ -17,8 +17,8 @@
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "ThreadTrack.h"
-#include "ThreadTrackMap.h"
 #include "TimeGraphLayout.h"
+#include "absl/container/flat_hash_map.h"
 
 class Systrace;
 
@@ -27,7 +27,7 @@ class TimeGraph {
   TimeGraph();
 
   void Draw(bool a_Picking = false);
-  void DrawThreadTracks(bool a_Picking = false);
+  void DrawTracks(bool a_Picking = false);
   void DrawMainFrame(TextBox& a_Box);
   void DrawLineBuffer(bool a_Picking);
   void DrawBoxBuffer(bool a_Picking);
@@ -35,11 +35,10 @@ class TimeGraph {
   void DrawText();
 
   void NeedsUpdate();
-  void UpdatePrimitives(bool a_Picking);
-
-  void UpdateThreadIds();
-  void UpdateEvents();
-  void SelectEvents(float a_WorldStart, float a_WorldEnd, ThreadID a_TID);
+  void UpdatePrimitives();
+  void SortTracks();
+  std::vector<CallstackEvent> SelectEvents(float a_WorldStart, float a_WorldEnd,
+                                           ThreadID a_TID);
 
   void ProcessTimer(const Timer& a_Timer);
   void UpdateThreadDepth(int a_ThreadId, int a_Depth);
@@ -52,6 +51,8 @@ class TimeGraph {
   float GetWorldFromUs(double a_Micros) const;
   TickType GetTickFromWorld(float a_WorldX);
   TickType GetTickFromUs(double a_MicroSeconds) const;
+  double GetUsFromTick(TickType time) const;
+  double GetTimeWindowUs() const { return m_TimeWindowUs; }
   void GetWorldMinMax(float& a_Min, float& a_Max) const;
   bool UpdateSessionMinMaxCounter();
 
@@ -64,7 +65,6 @@ class TimeGraph {
                double a_InitialTime);
   double GetTime(double a_Ratio);
   double GetTimeIntervalMicro(double a_Ratio);
-  void Select(const Vec2& a_WorldStart, const Vec2& a_WorldStop);
   void Select(const TextBox* a_TextBox) { SelectRight(a_TextBox); }
   void SelectLeft(const TextBox* a_TextBox);
   void SelectRight(const TextBox* a_TextBox);
@@ -84,9 +84,10 @@ class TimeGraph {
   void SetTextRenderer(TextRenderer* a_TextRenderer) {
     m_TextRenderer = a_TextRenderer;
   }
-  TextRenderer* GetTextRenderer() { return m_TextRenderer; }
+  TextRenderer* GetTextRenderer() { return &m_TextRendererStatic; }
   void SetStringManager(std::shared_ptr<StringManager> str_manager);
   void SetCanvas(GlCanvas* a_Canvas);
+  GlCanvas* GetCanvas() { return m_Canvas; }
   void SetFontSize(int a_FontSize);
   void SetSystrace(std::shared_ptr<Systrace> a_Systrace) {
     m_Systrace = std::move(a_Systrace);
@@ -94,7 +95,7 @@ class TimeGraph {
   Batcher& GetBatcher() { return m_Batcher; }
   uint32_t GetNumTimers() const;
   uint32_t GetNumCores() const;
-  std::vector<std::shared_ptr<TimerChain> > GetAllTimerChains() const;
+  std::vector<std::shared_ptr<TimerChain>> GetAllTimerChains() const;
 
   void OnDrag(float a_Ratio);
   double GetMinTimeUs() const { return m_MinTimeUs; }
@@ -108,14 +109,15 @@ class TimeGraph {
   void OnUp();
   void OnDown();
 
- protected:
-  std::shared_ptr<ThreadTrack> GetThreadTrack(ThreadID a_TID);
-  ThreadTrackMap GetThreadTracksCopy() const;
-
- private:
   Color GetEventTrackColor(Timer timer);
   Color GetTimesliceColor(Timer timer);
+  StringManager* GetStringManager() { return string_manager_.get(); }
 
+ protected:
+  void AddTrack(std::unique_ptr<Track> track);
+  std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(ThreadID a_TID);
+
+ private:
   TextRenderer m_TextRendererStatic;
   TextRenderer* m_TextRenderer = nullptr;
   GlCanvas* m_Canvas = nullptr;
@@ -132,6 +134,7 @@ class TimeGraph {
   double m_TimeWindowUs = 0;
   float m_WorldStartX = 0;
   float m_WorldWidth = 0;
+  float min_y_ = 0;
   int m_Margin = 0;
 
   double m_ZoomValue = 0;
@@ -140,18 +143,16 @@ class TimeGraph {
 
   TimeGraphLayout m_Layout;
 
-  std::map<DWORD /*ThreadId*/, std::map<long long, ContextSwitch> >
+  std::map<DWORD /*ThreadId*/, std::map<long long, ContextSwitch>>
       m_ContextSwitchesMap;
-  std::map<DWORD /*CoreId*/, std::map<long long, ContextSwitch> >
+  std::map<DWORD /*CoreId*/, std::map<long long, ContextSwitch>>
       m_CoreUtilizationMap;
 
   std::map<ThreadID, uint32_t> m_ThreadCountMap;
 
-  std::vector<CallstackEvent> m_SelectedCallstackEvents;
   bool m_NeedsUpdatePrimitives = false;
   bool m_DrawText = true;
   bool m_NeedsRedraw = false;
-  std::vector<TextBox*> m_VisibleTextBoxes;
   Batcher m_Batcher;
   PickingManager* m_PickingManager = nullptr;
   Timer m_LastThreadReorder;
@@ -159,7 +160,9 @@ class TimeGraph {
   std::shared_ptr<Systrace> m_Systrace;
 
   mutable Mutex m_Mutex;
-  ThreadTrackMap m_ThreadTracks;
+  std::vector<std::shared_ptr<Track>> tracks_;
+  std::unordered_map<ThreadID, std::shared_ptr<ThreadTrack>> thread_tracks_;
+  std::vector<std::shared_ptr<Track>> sorted_tracks_;
   std::string m_ThreadFilter;
 
   std::shared_ptr<StringManager> string_manager_;

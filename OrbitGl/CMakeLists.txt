@@ -27,6 +27,7 @@ target_sources(
          GlPanel.h
          GlSlider.h
          GlUtils.h
+         GraphTrack.h
          HomeWindow.h
          Images.h
          ImGuiOrbit.h
@@ -43,12 +44,12 @@ target_sources(
          RuleEditor.h
          SamplingReport.h
          SamplingReportDataView.h
+         SchedulerTrack.h
          SessionsDataView.h
          shader.h
          TextBox.h
          TextRenderer.h
          ThreadTrack.h
-         ThreadTrackMap.h
          TimeGraph.h
          TimeGraphLayout.h
          Track.h
@@ -75,6 +76,7 @@ target_sources(
           GlPanel.cpp
           GlSlider.cpp
           GlUtils.cpp
+          GraphTrack.cpp
           HomeWindow.cpp
           ImGuiOrbit.cpp
           ImmediateWindow.cpp
@@ -88,6 +90,7 @@ target_sources(
           RuleEditor.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp
+          SchedulerTrack.cpp
           SessionsDataView.cpp
           TextBox.cpp
           TextRenderer.cpp
