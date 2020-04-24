@@ -600,9 +600,11 @@ void TimeGraph::DrawTracks(bool a_Picking) {
   m_Layout.SetNumCores(GetNumCores());
   for (auto& track : sorted_tracks_) {
     if (track->GetName().empty()) {
+      if( track->GetType() == Track::kThreadTrack) {
       std::string threadName =
           Capture::GTargetProcess->GetThreadNameFromTID(track->GetID());
-      track->SetName(threadName);
+        track->SetName(threadName);
+      }
     }
 
     track->Draw(m_Canvas, a_Picking);

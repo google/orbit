@@ -95,9 +95,9 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   }
 
   // Draw selected events
+  const Color kGreenSelection(0, 255, 0, 255);
   Color selectedColor[2];
-  Color green(0, 255, 0, 255);
-  Fill(selectedColor, green);
+  Fill(selectedColor, kGreenSelection);
   for (CallstackEvent& event : selected_callstack_events_) {
     float x = time_graph_->GetWorldFromTick(event.m_Time);
     Line line;

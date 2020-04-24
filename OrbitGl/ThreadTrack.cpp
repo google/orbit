@@ -79,11 +79,11 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   double m_TimeWindowUs = time_graph_->GetTimeWindowUs();
   float m_WorldStartX = canvas->GetWorldTopLeftX();
   float m_WorldWidth = canvas->GetWorldWidth();
-  double invTimeWindow = 1.0 / m_TimeWindowUs;
+  double inv_time_window = 1.0 / m_TimeWindowUs;
 
   std::vector<std::shared_ptr<TimerChain>> depthChain = GetTimers();
   for (auto& textBoxes : depthChain) {
-    if (textBoxes == nullptr) break;
+    if (textBoxes == nullptr) continue;
 
     for (TextBox& textBox : *textBoxes) {
       const Timer& timer = textBox.GetTimer();
@@ -93,8 +93,8 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
         double end = time_graph_->GetUsFromTick(timer.m_End);
         double elapsed = end - start;
 
-        double NormalizedStart = start * invTimeWindow;
-        double NormalizedLength = elapsed * invTimeWindow;
+        double normalized_start = start * inv_time_window;
+        double normalized_length = elapsed * inv_time_window;
 
         bool isCore = timer.IsType(Timer::CORE_ACTIVITY);
 
@@ -111,8 +111,8 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
                                   : m_Layout.GetTextCoresHeight();
 
         float WorldTimerStartX =
-            float(m_WorldStartX + NormalizedStart * m_WorldWidth);
-        float WorldTimerWidth = float(NormalizedLength * m_WorldWidth);
+            float(m_WorldStartX + normalized_start * m_WorldWidth);
+        float WorldTimerWidth = float(normalized_length * m_WorldWidth);
 
         Vec2 pos(WorldTimerStartX, y_offset);
         Vec2 size(WorldTimerWidth, boxHeight);
@@ -128,7 +128,7 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
         }
 
         bool isContextSwitch = timer.IsType(Timer::THREAD_ACTIVITY);
-        bool isVisibleWidth = NormalizedLength * canvas->getWidth() > 1;
+        bool isVisibleWidth = normalized_length * canvas->getWidth() > 1;
         bool isSameProcessIdAsTarget =
             isCore && Capture::GTargetProcess != nullptr
                 ? timer.m_PID == Capture::GTargetProcess->GetID()

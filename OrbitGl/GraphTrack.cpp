@@ -10,7 +10,6 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
   UNUSED(picking);
 
   TimeGraphLayout& layout = time_graph_->GetLayout();
-  //float trackHeight = GetHeight();
   float trackWidth = canvas->GetWorldWidth();
 
   m_Pos[0] = canvas->GetWorldTopLeftX();
@@ -23,7 +22,8 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
   float y1 = y0 - m_Size[1];
 
   if (m_Picked) {
-    glColor4ub(0, 128, 255, 128);
+    const Color kPickedColor(0, 128, 255, 128);
+    glColor4ubv(&kPickedColor[0]);
   }
 
   float track_z = layout.GetTrackZ();
@@ -38,8 +38,9 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
   glVertex3f(x0, y1, track_z);
   glEnd();
 
-  if (canvas->GetPickingManager().GetPicked() == this)
+  if (canvas->GetPickingManager().GetPicked() == this) {
     glColor4ub(255, 255, 255, 255);
+  }
 
   glBegin(GL_LINES);
   glVertex3f(x0, y0, track_z);
@@ -81,9 +82,7 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
   }
 }
 
-void GraphTrack::OnDrag(int x, int y) {
-  UNUSED(x);
-  UNUSED(y);
+void GraphTrack::OnDrag(int /*x*/, int /*y*/) {
 }
 
 void GraphTrack::AddTimer(const Timer& timer) {
