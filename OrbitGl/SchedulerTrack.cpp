@@ -1,4 +1,5 @@
 #include "SchedulerTrack.h"
+
 #include "TimeGraph.h"
 
 void SchedulerTrack::Draw(GlCanvas* canvas, bool picking) {

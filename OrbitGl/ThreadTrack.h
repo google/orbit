@@ -47,7 +47,7 @@ class ThreadTrack : public Track {
   const TextBox* GetUp(TextBox* textbox) const;
   const TextBox* GetDown(TextBox* textbox) const;
 
-  std::vector<std::shared_ptr<TimerChain>> GetAllChains() override ;
+  std::vector<std::shared_ptr<TimerChain>> GetAllChains() override;
 
   void SetEventTrackColor(Color color);
 

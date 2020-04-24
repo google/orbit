@@ -550,7 +550,7 @@ void TimeGraph::UpdatePrimitives() {
 //-----------------------------------------------------------------------------
 std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
                                                     float a_WorldEnd,
-                             ThreadID a_TID) {
+                                                    ThreadID a_TID) {
   if (a_WorldStart > a_WorldEnd) {
     std::swap(a_WorldEnd, a_WorldStart);
   }
@@ -606,9 +606,9 @@ void TimeGraph::DrawTracks(bool a_Picking) {
   m_Layout.SetNumCores(GetNumCores());
   for (auto& track : sorted_tracks_) {
     if (track->GetName().empty()) {
-      if( track->GetType() == Track::kThreadTrack) {
-      std::string threadName =
-          Capture::GTargetProcess->GetThreadNameFromTID(track->GetID());
+      if (track->GetType() == Track::kThreadTrack) {
+        std::string threadName =
+            Capture::GTargetProcess->GetThreadNameFromTID(track->GetID());
         track->SetName(threadName);
       }
     }

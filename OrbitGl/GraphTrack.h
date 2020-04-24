@@ -1,10 +1,10 @@
 #ifndef ORBIT_GL_GRAPH_TRACK_H
 #define ORBIT_GL_GRAPH_TRACK_H
 
+#include <limits>
+
 #include "ScopeTimer.h"
 #include "Track.h"
-
-#include <limits>
 
 class TimeGraph;
 

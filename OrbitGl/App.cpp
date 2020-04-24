@@ -503,7 +503,7 @@ void OrbitApp::Disassemble(const std::string& a_FunctionName,
 }
 
 //-----------------------------------------------------------------------------
-const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*
+const std::unordered_map<DWORD64, std::shared_ptr<class Rule>>*
 OrbitApp::GetRules() {
   return &m_RuleEditor->GetRules();
 }

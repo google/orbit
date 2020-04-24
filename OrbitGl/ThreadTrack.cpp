@@ -8,7 +8,6 @@
 #include "OrbitUnreal.h"
 #include "Systrace.h"
 #include "TimeGraph.h"
-
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
@@ -61,7 +60,6 @@ std::string GetExtraInfo(const Timer& timer) {
 
 //-----------------------------------------------------------------------------
 void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
-
   event_track_->UpdatePrimitives(min_tick, max_tick);
   Batcher* batcher = &time_graph_->GetBatcher();
   TextRenderer* text_renderer = time_graph_->GetTextRenderer();
@@ -102,8 +100,8 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           y_offset = layout.GetCoreOffset(timer.m_Processor);
         }
 
-        float box_height = !is_core ? layout.GetTextBoxHeight()
-                                  : layout.GetTextCoresHeight();
+        float box_height =
+            !is_core ? layout.GetTextBoxHeight() : layout.GetTextCoresHeight();
 
         float world_timer_start_x =
             float(world_start_x + normalized_start * world_width);
@@ -159,7 +157,7 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
         }
 
         float z = is_inactive ? GlCanvas::Z_VALUE_BOX_INACTIVE
-                             : GlCanvas::Z_VALUE_BOX_ACTIVE;
+                              : GlCanvas::Z_VALUE_BOX_ACTIVE;
 
         if (is_visible_width) {
           Box box;

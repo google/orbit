@@ -24,7 +24,6 @@ typedef BlockChain<TextBox, 4 * 1024> TimerChain;
 //-----------------------------------------------------------------------------
 class Track : public Pickable {
  public:
-
   enum Type {
     kThreadTrack,
     kEventTrack,
