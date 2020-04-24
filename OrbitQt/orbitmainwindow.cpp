@@ -42,7 +42,8 @@ OrbitMainWindow* GMainWindow;
 extern QMenu* GContextMenu;
 
 //-----------------------------------------------------------------------------
-OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget* parent)
+OrbitMainWindow::OrbitMainWindow(const std::vector<std::string>& arguments,
+                                 QApplication* a_App, QWidget* parent)
     : QMainWindow(parent),
       m_App(a_App),
       ui(new Ui::OrbitMainWindow),
@@ -80,14 +81,13 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App, QWidget* parent)
   });
   GOrbitApp->AddWatchCallback(
       [this](const Variable* a_Variable) { this->OnAddToWatch(a_Variable); });
-  GOrbitApp->SetSaveFileCallback(
-      [this](const std::string& extension) {
-        return this->OnGetSaveFileName(extension);
-      });
+  GOrbitApp->SetSaveFileCallback([this](const std::string& extension) {
+    return this->OnGetSaveFileName(extension);
+  });
   GOrbitApp->SetClipboardCallback(
       [this](const std::wstring& a_Text) { this->OnSetClipboard(a_Text); });
 
-  ParseCommandlineArguments();
+  ParseCommandlineArguments(arguments);
 
   ui->DebugGLWidget->Initialize(GlPanel::DEBUG, this);
   ui->CaptureGLWidget->Initialize(GlPanel::CAPTURE, this);
@@ -168,19 +168,16 @@ OrbitMainWindow::~OrbitMainWindow() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::ParseCommandlineArguments() {
-  std::vector<std::string> args;
-  for (QString arg : QCoreApplication::arguments()) {
-    std::string argStr = arg.toStdString();
-    args.push_back(argStr);
-
-    if (absl::StrContains(argStr, "inject:")) {
+void OrbitMainWindow::ParseCommandlineArguments(
+    const std::vector<std::string>& arguments) {
+  for (const std::string& argument : arguments) {
+    if (absl::StrContains(argument, "inject:")) {
       m_Headless = true;
-    } else if (argStr == "dev") {
+    } else if (argument == "dev") {
       m_IsDev = true;
     }
   }
-  GOrbitApp->SetCommandLineArguments(args);
+  GOrbitApp->SetCommandLineArguments(arguments);
 }
 
 //-----------------------------------------------------------------------------
@@ -399,8 +396,10 @@ void OrbitMainWindow::OnAddToWatch(const class Variable* a_Variable) {
 
 //-----------------------------------------------------------------------------
 std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {
-  std::string filename = QFileDialog::getSaveFileName(
-      this, "Specify a file to save...", nullptr, extension.c_str()).toStdString();
+  std::string filename =
+      QFileDialog::getSaveFileName(this, "Specify a file to save...", nullptr,
+                                   extension.c_str())
+          .toStdString();
   if (!filename.empty() && !absl::EndsWith(filename, extension)) {
     filename += extension;
   }
@@ -464,8 +463,15 @@ void OrbitMainWindow::on_actionSave_Session_triggered() {
 void OrbitMainWindow::on_actionOpen_Session_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Select a file to open...", Path::GetPresetPath().c_str(), "*.opr");
-  for (auto& file : list) {
-    GOrbitApp->OnLoadSession(file.toStdString());
+  for (const auto& file : list) {
+    bool loaded = GOrbitApp->OnLoadSession(file.toStdString());
+    if (!loaded) {
+      QMessageBox::critical(
+          this, "Error loading session",
+          absl::StrFormat("Could not load session from \"%s\".",
+                          file.toStdString())
+              .c_str());
+    }
     break;
   }
 }

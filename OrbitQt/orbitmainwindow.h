@@ -18,7 +18,8 @@ class OrbitMainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
-  explicit OrbitMainWindow(QApplication* a_App, QWidget* parent = nullptr);
+  explicit OrbitMainWindow(const std::vector<std::string>& arguments,
+                           QApplication* a_App, QWidget* parent = nullptr);
   ~OrbitMainWindow() override;
 
   void RegisterGlWidget(class OrbitGLWidget* a_GlWidget) {
@@ -36,7 +37,7 @@ class OrbitMainWindow : public QMainWindow {
   void OnAddToWatch(const class Variable* a_Variable);
   std::string OnGetSaveFileName(const std::string& extension);
   void OnSetClipboard(const std::wstring& a_Text);
-  void ParseCommandlineArguments();
+  void ParseCommandlineArguments(const std::vector<std::string>& arguments);
   bool IsHeadless() { return m_Headless; }
   void PostInit();
   bool HideTab(QTabWidget* a_TabWidget, const char* a_TabName);

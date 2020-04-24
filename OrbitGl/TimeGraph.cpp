@@ -314,8 +314,14 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
     track->OnTimer(a_Timer);
     ++m_ThreadCountMap[a_Timer.m_TID];
   } else {
-    // Use thead 0 as container for scheduling events.
-    GetOrCreateThreadTrack(0)->OnTimer(a_Timer);
+    // Use thead 0 as container for scheduling events.  TODO: most of this
+    // should be done once.
+    const std::shared_ptr<ThreadTrack>& track0 = GetOrCreateThreadTrack(0);
+    std::string process_name = Capture::GTargetProcess->GetName();
+    track0->SetName(process_name + " (all threads)");
+    track0->SetLabelDisplayMode(Track::NAME_ONLY);
+    track0->SetEventTrackColor(GetThreadColor(0));
+    track0->OnTimer(a_Timer);
     ++m_ThreadCountMap[0];
   }
 }
@@ -659,12 +665,17 @@ void TimeGraph::SortTracks() {
 
     std::vector<ThreadID> sortedThreadIds;
 
+    // Thread "0" holds scheduling information and is used to select callstacks
+    // from all threads, show it at the top.
+    sortedThreadIds.push_back(0);
+
     // Show threads with instrumented functions first
     std::vector<std::pair<ThreadID, uint32_t>> sortedThreads =
         OrbitUtils::ReverseValueSort(m_ThreadCountMap);
     for (auto& pair : sortedThreads) {
-      // Scheduling information is held in thread "0", show it last.
-      // TODO: Make a proper "SchedTrack" instead of hack.
+      // Scheduling information is held in thread "0", which is handled
+      // separately.
+      // TODO: Make a proper "SchedTrack" instead of a hack.
       if (pair.first != 0) sortedThreadIds.push_back(pair.first);
     }
 

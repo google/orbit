@@ -32,10 +32,6 @@ ThreadTrack::ThreadTrack(TimeGraph* a_TimeGraph, uint32_t a_ThreadID) {
 
 //-----------------------------------------------------------------------------
 void ThreadTrack::Draw(GlCanvas* a_Canvas, bool a_Picking) {
-  // Scheduling information is held in thread "0", don't draw as threadtrack.
-  // TODO: Make a proper "SchedTrack" instead of hack.
-  if (m_ID == 0) return;
-
   float trackHeight = GetHeight();
   float trackWidth = a_Canvas->GetWorldWidth();
 
@@ -258,7 +254,10 @@ void ThreadTrack::OnDrag(int a_X, int a_Y) { Track::OnDrag(a_X, a_Y); }
 
 //-----------------------------------------------------------------------------
 void ThreadTrack::OnTimer(const Timer& a_Timer) {
-  UpdateDepth(a_Timer.m_Depth + 1);
+  if (a_Timer.m_Type != Timer::CORE_ACTIVITY) {
+    UpdateDepth(a_Timer.m_Depth + 1);
+  }
+
   TextBox textBox(Vec2(0, 0), Vec2(0, 0), "", Color(255, 0, 0, 255));
   textBox.SetTimer(a_Timer);
 

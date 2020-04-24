@@ -16,7 +16,7 @@ TimeGraphLayout::TimeGraphLayout() {
   m_SpaceBetweenCoresAndThread = 30.f;
   m_SpaceBetweenTracks = 20.f;
   m_SpaceBetweenTracksAndThread = 5.f;
-  m_SpaceBetweenThreadBlocks = 30.f;
+  m_SpaceBetweenThreadBlocks = 35.f;
   m_TrackLabelOffset = 6.f;
   m_SliderWidth = 15.f;
   m_TextZ = -0.02f;

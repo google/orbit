@@ -15,6 +15,7 @@ target_sources(
           orbitglwidgetwithheader.h
           orbitmainwindow.h
           orbitsamplingreport.h
+          OrbitStartupWindow.h
           orbittablemodel.h
           orbittreeitem.h
           orbittreemodel.h
@@ -24,7 +25,10 @@ target_sources(
           outputdialog.h
           processlauncherwidget.h
           resource.h
-          showincludesdialog.h)
+          showincludesdialog.h
+          GgpClient.h
+          GgpInstance.h
+          GgpInstanceItemModel.h)
 
 target_sources(
   OrbitQt
@@ -38,6 +42,7 @@ target_sources(
           orbitglwidgetwithheader.cpp
           orbitmainwindow.cpp
           orbitsamplingreport.cpp
+          OrbitStartupWindow.cpp
           orbittablemodel.cpp
           orbittreeitem.cpp
           orbittreemodel.cpp
@@ -46,7 +51,10 @@ target_sources(
           orbitwatchwidget.cpp
           outputdialog.cpp
           processlauncherwidget.cpp
-          showincludesdialog.cpp)
+          showincludesdialog.cpp
+          GgpClient.cpp
+          GgpInstance.cpp
+          GgpInstanceItemModel.cpp)
 
 target_sources(
   OrbitQt
@@ -98,3 +106,27 @@ set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
 set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
 strip_symbols(OrbitQt)
+
+# OrbitQtTests
+add_executable(OrbitQtTests)
+
+target_sources(
+  OrbitQtTests
+  PRIVATE GgpInstanceTests.cpp
+          GgpInstance.cpp
+          GgpInstanceItemModelTests.cpp
+          GgpInstanceItemModel.cpp
+)
+
+target_link_libraries(
+  OrbitQtTests
+  PRIVATE OrbitBase
+          GTest::Main
+          Qt5::Core
+          Qt5::Widgets
+)
+
+set_target_properties(OrbitQtTests PROPERTIES AUTOMOC ON)
+set_target_properties(OrbitQtTests PROPERTIES AUTOUIC ON)
+
+register_test(OrbitQtTests)

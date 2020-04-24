@@ -16,7 +16,8 @@
 
 //-----------------------------------------------------------------------------
 struct CallstackEvent {
-  CallstackEvent(uint64_t a_Time = 0, CallstackID a_Id = 0, ThreadID a_TID = 0)
+  explicit CallstackEvent(uint64_t a_Time = 0, CallstackID a_Id = 0,
+                          ThreadID a_TID = 0)
       : m_Time(a_Time), m_Id(a_Id), m_TID(a_TID) {}
   long long m_Time;
   CallstackID m_Id;
