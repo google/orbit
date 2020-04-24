@@ -81,10 +81,9 @@ OrbitMainWindow::OrbitMainWindow(const std::vector<std::string>& arguments,
   });
   GOrbitApp->AddWatchCallback(
       [this](const Variable* a_Variable) { this->OnAddToWatch(a_Variable); });
-  GOrbitApp->SetSaveFileCallback(
-      [this](const std::string& extension) {
-        return this->OnGetSaveFileName(extension);
-      });
+  GOrbitApp->SetSaveFileCallback([this](const std::string& extension) {
+    return this->OnGetSaveFileName(extension);
+  });
   GOrbitApp->SetClipboardCallback(
       [this](const std::wstring& a_Text) { this->OnSetClipboard(a_Text); });
 
@@ -397,8 +396,10 @@ void OrbitMainWindow::OnAddToWatch(const class Variable* a_Variable) {
 
 //-----------------------------------------------------------------------------
 std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {
-  std::string filename = QFileDialog::getSaveFileName(
-      this, "Specify a file to save...", nullptr, extension.c_str()).toStdString();
+  std::string filename =
+      QFileDialog::getSaveFileName(this, "Specify a file to save...", nullptr,
+                                   extension.c_str())
+          .toStdString();
   if (!filename.empty() && !absl::EndsWith(filename, extension)) {
     filename += extension;
   }
@@ -462,8 +463,15 @@ void OrbitMainWindow::on_actionSave_Session_triggered() {
 void OrbitMainWindow::on_actionOpen_Session_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Select a file to open...", Path::GetPresetPath().c_str(), "*.opr");
-  for (auto& file : list) {
-    GOrbitApp->OnLoadSession(file.toStdString());
+  for (const auto& file : list) {
+    bool loaded = GOrbitApp->OnLoadSession(file.toStdString());
+    if (!loaded) {
+      QMessageBox::critical(
+          this, "Error loading session",
+          absl::StrFormat("Could not load session from \"%s\".",
+                          file.toStdString())
+              .c_str());
+    }
     break;
   }
 }

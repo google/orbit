@@ -427,17 +427,20 @@ void OrbitApp::LoadFileMapping() {
 void OrbitApp::ListSessions() {
   std::vector<std::string> sessionFileNames =
       Path::ListFiles(Path::GetPresetPath(), ".opr");
-  std::vector<std::shared_ptr<Session> > sessions;
+  std::vector<std::shared_ptr<Session>> sessions;
   for (std::string& fileName : sessionFileNames) {
-    std::shared_ptr<Session> session = std::make_shared<Session>();
-
     std::ifstream file(fileName, std::ios::binary);
     if (!file.fail()) {
-      cereal::BinaryInputArchive archive(file);
-      archive(*session);
-      file.close();
-      session->m_FileName = fileName;
-      sessions.push_back(session);
+      try {
+        auto session = std::make_shared<Session>();
+        cereal::BinaryInputArchive archive(file);
+        archive(*session);
+        file.close();
+        session->m_FileName = fileName;
+        sessions.push_back(session);
+      } catch (std::exception& e) {
+        ERROR("Loading session from \"%s\": %s", fileName.c_str(), e.what());
+      }
     }
   }
 
@@ -755,8 +758,7 @@ void OrbitApp::OnSaveSession(const std::string& file_name) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnLoadSession(const std::string& file_name) {
-  std::shared_ptr<Session> session = std::make_shared<Session>();
+bool OrbitApp::OnLoadSession(const std::string& file_name) {
   std::string file_path = file_name;
 
   if (Path::GetDirectory(file_name).empty()) {
@@ -765,12 +767,20 @@ void OrbitApp::OnLoadSession(const std::string& file_name) {
 
   std::ifstream file(file_path);
   if (!file.fail()) {
-    cereal::BinaryInputArchive archive(file);
-    archive(*session);
-    session->m_FileName = file_path;
-    LoadSession(session);
-    file.close();
+    try {
+      auto session = std::make_shared<Session>();
+      cereal::BinaryInputArchive archive(file);
+      archive(*session);
+      file.close();
+      session->m_FileName = file_path;
+      LoadSession(session);
+      return true;
+    } catch (std::exception& e) {
+      ERROR("Loading session from \"%s\": %s", file_path.c_str(), e.what());
+    }
   }
+
+  return false;
 }
 
 //-----------------------------------------------------------------------------
