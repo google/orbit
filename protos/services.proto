@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+import "process.proto";
+
+message GetProcessListRequest {
+}
+
+message GetProcessListReply {
+  repeated ProcessInfo processes = 1;
+}
+
+service ProcessService {
+  rpc GetProcessList(GetProcessListRequest) returns (GetProcessListReply) {}
+}

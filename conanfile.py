@@ -22,6 +22,8 @@ class OrbitConan(ConanFile):
                        "fPIC": True}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "external/*", "LICENSE"
+    build_requires = ('grpc_codegen/1.27.3@orbitdeps/stable',
+                      'protoc_installer/3.9.1@bincrafters/stable')
 
     def _version(self):
         if not self.version:
@@ -47,6 +49,7 @@ class OrbitConan(ConanFile):
         self.requires("bzip2/1.0.8@conan/stable")
         self.requires("capstone/4.0.1@{}".format(self._orbit_channel))
         self.requires("cereal/1.3.0@{}".format(self._orbit_channel))
+        self.requires('grpc/1.27.3@orbitdeps/stable')
         self.requires("gtest/1.8.1@bincrafters/stable")
         self.requires("llvm_object/9.0.1@orbitdeps/stable")
         self.requires("openssl/1.1.1d@{}".format(self._orbit_channel))
