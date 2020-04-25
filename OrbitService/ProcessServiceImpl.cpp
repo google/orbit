@@ -1,0 +1,29 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "ProcessServiceImpl.h"
+
+#include <memory>
+#include <string>
+
+using grpc::Status;
+using grpc::ServerContext;
+
+Status ProcessServiceImpl::GetProcessList(ServerContext*,
+                                        const GetProcessListRequest*,
+                                        GetProcessListReply* reply) {
+  process_list_.Refresh();
+  for (const std::shared_ptr<Process> process : process_list_.GetProcesses()) {
+    ProcessInfo* process_info = reply->add_processes();
+    process_info->set_pid(process->GetID());
+    process_info->set_name(process->GetName());
+    process_info->set_cpu_usage(process->GetCpuUsage());
+    process_info->set_full_path(process->GetFullPath());
+    process_info->set_command_line(process->GetCmdLine());
+    process_info->set_is_64_bit(process->GetIs64Bit());
+  }
+
+  return Status::OK;
+}
+

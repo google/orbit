@@ -8,7 +8,11 @@ add_executable(OrbitService)
 
 target_compile_options(OrbitService PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_sources(OrbitService PRIVATE main.cpp OrbitService.cpp)
+target_sources(OrbitService PRIVATE main.cpp
+                                    OrbitService.cpp
+                                    OrbitGrpcServer.cpp
+                                    ProcessServiceImpl.cpp)
+
 target_sources(OrbitService PUBLIC OrbitService.h)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -17,7 +21,8 @@ endif()
 
 target_include_directories(OrbitService PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(OrbitService PRIVATE OrbitCore)
+target_link_libraries(OrbitService PRIVATE OrbitCore
+                                           OrbitProtos)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   # Administrator privileges
