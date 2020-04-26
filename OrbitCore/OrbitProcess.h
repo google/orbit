@@ -34,7 +34,7 @@ struct IDiaSymbol;
 class Process {
  public:
   Process();
-  Process(DWORD a_ID);
+  explicit Process(uint32_t a_ID);
   ~Process();
 
   void Init();
@@ -74,10 +74,13 @@ class Process {
   }
   std::shared_ptr<Module> FindModule(const std::string& a_ModuleName);
 
+  void SetName(std::string_view name) { m_Name = name; }
   const std::string& GetName() const { return m_Name; }
+  void SetFullPath(std::string_view full_path) { m_FullPath = full_path; }
   const std::string& GetFullPath() const { return m_FullPath; }
+  void SetCmdLine(std::string_view cmd_line) { m_CmdLine = cmd_line; }
   const std::string& GetCmdLine() const { return m_CmdLine; }
-  DWORD GetID() const { return m_ID; }
+  uint32_t GetID() const { return m_ID; }
   double GetCpuUsage() const { return m_CpuUsage; }
   HANDLE GetHandle() const { return m_Handle; }
   bool GetIs64Bit() const { return m_Is64Bit; }
@@ -91,7 +94,7 @@ class Process {
   std::shared_ptr<Module> GetModuleFromName(const std::string& a_Name);
 
 #ifdef _WIN32
-  std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress(DWORD64 a_Address);
+  std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress(uint64_t a_Address);
 #endif
   LinuxAddressInfo* GetLinuxAddressInfo(uint64_t a_Address) {
     if (m_AddressInfos.contains(a_Address)) {
@@ -105,7 +108,7 @@ class Process {
     return m_AddressInfos.contains(address);
   }
 
-  bool LineInfoFromAddress(DWORD64 a_Address, struct LineInfo& o_LineInfo);
+  bool LineInfoFromAddress(uint64_t a_Address, struct LineInfo& o_LineInfo);
 
   void LoadSession(const Session& a_Session);
   void SaveSession();
@@ -131,28 +134,27 @@ class Process {
   void ClearWatchedVariables();
 
   void AddType(Type& a_Type);
-  void SetID(DWORD a_ID);
+  void SetID(uint32_t id);
 
   Mutex& GetDataMutex() { return m_DataMutex; }
 
-  DWORD64 GetOutputDebugStringAddress();
-  DWORD64 GetRaiseExceptionAddress();
+  uint64_t GetOutputDebugStringAddress();
+  uint64_t GetRaiseExceptionAddress();
 
   void FindCoreFunctions();
+
+  ORBIT_SERIALIZABLE;
+
+ private:
+  void ClearTransients();
+
+  uint32_t m_ID;
+  HANDLE m_Handle;
+  bool m_IsElevated;
 
   std::string m_Name;
   std::string m_FullPath;
   std::string m_CmdLine;
-
-  ORBIT_SERIALIZABLE;
-
- protected:
-  void ClearTransients();
-
- private:
-  DWORD m_ID;
-  HANDLE m_Handle;
-  bool m_IsElevated;
 
   FILETIME m_LastUserTime;
   FILETIME m_LastKernTime;
