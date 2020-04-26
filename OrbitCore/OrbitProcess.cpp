@@ -41,8 +41,8 @@ Process::Process() {
 }
 
 //-----------------------------------------------------------------------------
-Process::Process(DWORD a_ID) {
-  m_ID = a_ID;
+Process::Process(uint32_t id) {
+  m_ID = id;
   m_Handle = 0;
   m_Is64Bit = false;
   m_CpuUsage = 0;
@@ -96,8 +96,8 @@ void Process::LoadDebugInfo() {
 }
 
 //-----------------------------------------------------------------------------
-void Process::SetID(DWORD a_ID) {
-  m_ID = a_ID;
+void Process::SetID(uint32_t id) {
+  m_ID = id;
   Init();
 }
 
@@ -316,7 +316,7 @@ std::shared_ptr<OrbitDiaSymbol> Process::SymbolFromAddress(DWORD64 a_Address) {
 #endif
 
 //-----------------------------------------------------------------------------
-bool Process::LineInfoFromAddress(DWORD64 a_Address, LineInfo& o_LineInfo) {
+bool Process::LineInfoFromAddress(uint64_t a_Address, LineInfo& o_LineInfo) {
 #ifdef _WIN32
   std::shared_ptr<Module> module = GetModuleFromAddress(a_Address);
   if (module && module->m_Pdb) {
@@ -473,14 +473,14 @@ bool Process::SetPrivilege(LPCTSTR a_Name, bool a_Enable) {
 #endif
 
 //-----------------------------------------------------------------------------
-DWORD64 Process::GetOutputDebugStringAddress() {
+uint64_t Process::GetOutputDebugStringAddress() {
 #ifdef _WIN32
   auto it = m_NameToModuleMap.find("kernelbase.dll");
   if (it != m_NameToModuleMap.end()) {
     std::shared_ptr<Module> module = it->second;
     auto remoteAddr = Injection::GetRemoteProcAddress(
         GetHandle(), module->m_ModuleHandle, "OutputDebugStringA");
-    return (DWORD64)remoteAddr;
+    return reinterpret_cast<uintptr_t>(remoteAddr);
   }
 
 #endif
@@ -488,14 +488,14 @@ DWORD64 Process::GetOutputDebugStringAddress() {
 }
 
 //-----------------------------------------------------------------------------
-DWORD64 Process::GetRaiseExceptionAddress() {
+uint64_t Process::GetRaiseExceptionAddress() {
 #ifdef _WIN32
   auto it = m_NameToModuleMap.find("kernelbase.dll");
   if (it != m_NameToModuleMap.end()) {
     std::shared_ptr<Module> module = it->second;
     auto remoteAddr = Injection::GetRemoteProcAddress(
         GetHandle(), module->m_ModuleHandle, "RaiseException");
-    return (DWORD64)remoteAddr;
+    return reinterpret_cast<uintptr_t>(remoteAddr);
   }
 #endif
 
