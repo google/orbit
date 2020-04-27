@@ -578,13 +578,15 @@ void RuleEditor::OnReceiveMessage(const Message& a_Message) {
     int ContextSize = Capture::GTargetProcess->GetIs64Bit()
                           ? sizeof(SavedContext64)
                           : sizeof(SavedContext32);
-    void* argData = (void*)(a_Message.GetData() + ContextSize);
+    const void* argData =
+        static_cast<const uint8_t*>(a_Message.GetData()) + ContextSize;
 
     DWORD64 address = a_Message.m_Header.m_GenericHeader.m_Address;
 
     std::shared_ptr<Rule> rule = m_Rules[address];
     int offset = 0;
-    const char* maxAddress = a_Message.GetData() + a_Message.m_Size;
+    const char* maxAddress =
+        static_cast<const char*>(a_Message.GetData()) + a_Message.m_Size;
     for (const std::shared_ptr<Variable> var : rule->m_TrackedVariables) {
       char* data = (char*)argData + offset;
       if (data + var->m_Size > maxAddress) {

@@ -117,7 +117,7 @@ void TcpServer::Receive(const Message& a_Message) {
 
   switch (a_Message.GetType()) {
     case Msg_String: {
-      const char* msg = a_Message.GetData();
+      const char* msg = static_cast<const char*>(a_Message.GetData());
       std::cout << msg << std::endl;
       PRINT_VAR(msg);
       break;
@@ -172,7 +172,7 @@ void TcpServer::Receive(const Message& a_Message) {
       break;
     }
     case Msg_ThreadInfo: {
-      std::string threadName(a_Message.GetData());
+      std::string threadName = a_Message.GetDataAsString();
       Capture::GTargetProcess->SetThreadName(a_Message.m_ThreadId, threadName);
       PRINT_VAR(threadName);
       break;

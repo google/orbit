@@ -119,7 +119,7 @@ class TcpEntity {
 
 //-----------------------------------------------------------------------------
 inline void TcpEntity::Send(Message& a_Message) {
-  SendMsg(a_Message, a_Message.m_Data);
+  SendMsg(a_Message, a_Message.GetData());
 }
 
 //-----------------------------------------------------------------------------

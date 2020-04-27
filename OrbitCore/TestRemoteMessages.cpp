@@ -101,7 +101,7 @@ void TestRemoteMessages::Run() {
 void TestRemoteMessages::SetupMessageHandlers() {
   GTcpServer->AddCallback(Msg_RemoteProcess, [=](const Message& a_Msg) {
     PRINT_VAR(a_Msg.m_Size);
-    std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+    std::istringstream buffer(a_Msg.GetDataAsString());
     cereal::JSONInputArchive inputAr(buffer);
     Process process;
     inputAr(process);
@@ -110,7 +110,7 @@ void TestRemoteMessages::SetupMessageHandlers() {
 
   GTcpServer->AddCallback(Msg_RemoteModule, [=](const Message& a_Msg) {
     PRINT_VAR(a_Msg.m_Size);
-    std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+    std::istringstream buffer(a_Msg.GetDataAsString());
     cereal::JSONInputArchive inputAr(buffer);
     Module module;
     inputAr(module);
@@ -119,7 +119,7 @@ void TestRemoteMessages::SetupMessageHandlers() {
 
   GTcpServer->AddCallback(Msg_RemoteFunctions, [=](const Message& a_Msg) {
     PRINT_VAR(a_Msg.m_Size);
-    std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+    std::istringstream buffer(a_Msg.GetDataAsString());
     cereal::JSONInputArchive inputAr(buffer);
     Function function;
     inputAr(function);

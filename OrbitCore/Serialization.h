@@ -107,8 +107,8 @@ inline std::string SerializeObjectBinary(T& a_Object) {
 
 //-----------------------------------------------------------------------------
 template <typename T>
-inline void DeserializeObjectBinary(const char* data, size_t size, T& object) {
-  std::istringstream buffer(std::string(data, size));
+inline void DeserializeObjectBinary(const void* data, size_t size, T& object) {
+  std::istringstream buffer(std::string(static_cast<const char*>(data), size));
   cereal::BinaryInputArchive inputAr(buffer);
   inputAr(object);
 }
