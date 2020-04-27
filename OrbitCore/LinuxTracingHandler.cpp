@@ -12,7 +12,7 @@
 
 // TODO: Remove this flag once we enable specifying the sampling frequency or
 //  period in the client.
-ABSL_FLAG(uint16_t, sampling_frequency, 1000,
+ABSL_FLAG(uint16_t, sampling_rate, 1000,
           "Frequency of callstack sampling in samples per second");
 
 // TODO: This is a temporary feature flag. Remove this once we enable this
@@ -23,7 +23,7 @@ ABSL_FLAG(bool, trace_gpu_driver, false,
 void LinuxTracingHandler::Start() {
   pid_t pid = target_process_->GetID();
 
-  double sampling_frequency = absl::GetFlag(FLAGS_sampling_frequency);
+  double sampling_rate = absl::GetFlag(FLAGS_sampling_rate);
 
   std::vector<LinuxTracing::Function> selected_functions;
   selected_functions.reserve(selected_function_map_->size());
@@ -34,7 +34,7 @@ void LinuxTracingHandler::Start() {
                                     function->GetVirtualAddress());
   }
 
-  tracer_ = std::make_unique<LinuxTracing::Tracer>(pid, sampling_frequency,
+  tracer_ = std::make_unique<LinuxTracing::Tracer>(pid, sampling_rate,
                                                    selected_functions);
 
   tracer_->SetListener(this);
