@@ -16,12 +16,14 @@ target_include_directories(OrbitGgp PUBLIC
 target_sources(OrbitGgp PUBLIC
           include/OrbitGgp/GgpClient.h
           include/OrbitGgp/GgpInstance.h
-          include/OrbitGgp/GgpInstanceItemModel.h)
+          include/OrbitGgp/GgpInstanceItemModel.h
+          include/OrbitGgp/GgpSshInfo.h)
 
 target_sources(OrbitGgp PRIVATE
           GgpClient.cpp
           GgpInstance.cpp
-          GgpInstanceItemModel.cpp)
+          GgpInstanceItemModel.cpp
+          GgpSshInfo.cpp)
 
 target_link_libraries(
   OrbitGgp
@@ -38,6 +40,7 @@ add_executable(OrbitGgpTests)
 target_sources(OrbitGgpTests PRIVATE 
           GgpInstanceTests.cpp
           GgpInstanceItemModelTests.cpp
+          GgpSshInfoTests.cpp
 )
 
 target_link_libraries(OrbitGgpTests PRIVATE 
