@@ -54,7 +54,7 @@ class Batcher {
 
   void AddBox(const Box& a_Box, const Color* colors,
               PickingID::Type picking_type, void* user_data = nullptr);
-  void AddBox(const Box& a_Box, const Color color, PickingID::Type picking_type,
+  void AddBox(const Box& a_Box, Color color, PickingID::Type picking_type,
               void* user_data = nullptr);
   void AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
                     PickingID::Type picking_type, void* user_data = nullptr);

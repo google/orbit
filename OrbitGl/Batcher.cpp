@@ -51,7 +51,7 @@ void Batcher::AddBox(const Box& a_Box, const Color* colors,
   box_buffer_.m_UserData.push_back(user_data);
 }
 
-void Batcher::AddBox(const Box& a_Box, const Color color,
+void Batcher::AddBox(const Box& a_Box, Color color,
                      PickingID::Type picking_type, void* user_data) {
   Color colors[4];
   Fill(colors, color);
@@ -83,8 +83,9 @@ TextBox* Batcher::GetTextBox(PickingID a_ID) {
 void Batcher::GetBoxGradientColors(Color color, Color* colors) {
   const float kGradientCoeff = 0.94f;
   Vec3 dark = Vec3(color[0], color[1], color[2]) * kGradientCoeff;
-  colors[0] = Color((unsigned char)dark[0], (unsigned char)dark[1],
-                    (unsigned char)dark[2], (unsigned char)color[3]);
+  colors[0] =
+      Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
+            static_cast<uint8_t>(dark[2]), color[3]);
   colors[1] = colors[0];
   colors[2] = color;
   colors[3] = color;

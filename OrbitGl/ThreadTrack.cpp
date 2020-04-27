@@ -70,7 +70,7 @@ inline Color GetTimerColor(const Timer& timer, TimeGraph* time_graph,
   }
 
   Color color = time_graph->GetTimesliceColor(timer);
-  const uint8_t kOddAlpha = 210;
+  constexpr uint8_t kOddAlpha = 210;
   if (!(timer.m_Depth & 0x1)) {
     color[3] = kOddAlpha;
   }
@@ -90,7 +90,7 @@ inline float GetYFromDepth(const TimeGraphLayout& layout, float track_y,
 void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
                                    float min_x, TextBox* text_box) {
   if (text_box->GetText().empty()) {
-    double elapsed_millis = ((double)elapsed_us) * 0.001;
+    double elapsed_millis = elapsed_us * 0.001;
     std::string time = GetPrettyTime(elapsed_millis);
     Function* func = Capture::GSelectedFunctionsMap[timer.m_FunctionAddress];
 
