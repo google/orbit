@@ -4,6 +4,11 @@
 
 #include "SessionsDataView.h"
 
+#include <OrbitBase/Logging.h>
+#include <OrbitBase/SafeStrerror.h>
+
+#include <cstdio>
+
 #include "App.h"
 #include "Callstack.h"
 #include "Capture.h"
@@ -12,6 +17,7 @@
 #include "OrbitSession.h"
 #include "OrbitType.h"
 #include "Pdb.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 SessionsDataView::SessionsDataView() : DataView(DataViewType::SESSIONS) {
@@ -79,12 +85,17 @@ void SessionsDataView::DoSort() {
 }
 
 //-----------------------------------------------------------------------------
-const std::string SessionsDataView::MENU_ACTION_SESSIONS_LOAD = "Load Session";
+const std::string SessionsDataView::MENU_ACTION_LOAD = "Load Session";
+const std::string SessionsDataView::MENU_ACTION_DELETE = "Delete Session";
 
 //-----------------------------------------------------------------------------
 std::vector<std::string> SessionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
-  std::vector<std::string> menu = {MENU_ACTION_SESSIONS_LOAD};
+  std::vector<std::string> menu;
+  // Note that the UI already enforces a single selection.
+  if (a_SelectedIndices.size() == 1) {
+    Append(menu, {MENU_ACTION_LOAD, MENU_ACTION_DELETE});
+  }
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
@@ -93,13 +104,33 @@ std::vector<std::string> SessionsDataView::GetContextMenu(
 void SessionsDataView::OnContextMenu(const std::string& a_Action,
                                      int a_MenuIndex,
                                      const std::vector<int>& a_ItemIndices) {
-  if (a_Action == MENU_ACTION_SESSIONS_LOAD) {
-    for (int index : a_ItemIndices) {
-      const std::shared_ptr<Session>& session = GetSession(index);
-      GOrbitApp->LoadSession(session);
+  if (a_Action == MENU_ACTION_LOAD) {
+    if (a_ItemIndices.size() != 1) {
+      return;
+    }
+    const std::shared_ptr<Session>& session = GetSession(a_ItemIndices[0]);
+    GOrbitApp->LoadSession(session);
+    GOrbitApp->LoadModules();
+
+  } else if (a_Action == MENU_ACTION_DELETE) {
+    if (a_ItemIndices.size() != 1) {
+      return;
+    }
+    int row = a_ItemIndices[0];
+    const std::shared_ptr<Session>& session = GetSession(row);
+    const std::string& filename = session->m_FileName;
+    int ret = remove(filename.c_str());
+    if (ret == 0) {
+      m_Sessions.erase(m_Sessions.begin() + m_Indices[row]);
+      OnDataChanged();
+    } else {
+      ERROR("Deleting session \"%s\": %s", filename, SafeStrerror(errno));
+      std::string message = "error:";
+      message += "Error deleting session\n";
+      message += absl::StrFormat("Could not delete session \"%s\".", filename);
+      GOrbitApp->SendToUiNow(message);
     }
 
-    GOrbitApp->LoadModules();
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }

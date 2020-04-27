@@ -32,9 +32,10 @@ class SessionsDataView : public DataView {
   void DoFilter() override;
   const std::shared_ptr<Session>& GetSession(unsigned int a_Row) const;
 
-  std::vector<std::shared_ptr<Session> > m_Sessions;
+  std::vector<std::shared_ptr<Session>> m_Sessions;
 
   enum ColumnIndex { COLUMN_SESSION_NAME, COLUMN_PROCESS_NAME, COLUMN_NUM };
 
-  static const std::string MENU_ACTION_SESSIONS_LOAD;
+  static const std::string MENU_ACTION_LOAD;
+  static const std::string MENU_ACTION_DELETE;
 };
