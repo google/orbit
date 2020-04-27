@@ -1023,7 +1023,7 @@ bool OrbitApp::GetSamplingEnabled() { return GParams.m_TrackSamplingEvents; }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnRemoteProcess(const Message& a_Message) {
-  std::istringstream buffer(std::string(a_Message.m_Data, a_Message.m_Size));
+  std::istringstream buffer(a_Message.GetDataAsString());
   cereal::JSONInputArchive inputAr(buffer);
   std::shared_ptr<Process> remoteProcess = std::make_shared<Process>();
   inputAr(*remoteProcess);
@@ -1057,7 +1057,7 @@ void OrbitApp::ApplySession(const Session& session) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnRemoteProcessList(const Message& a_Message) {
-  std::istringstream buffer(std::string(a_Message.m_Data, a_Message.m_Size));
+  std::istringstream buffer(a_Message.GetDataAsString());
   cereal::JSONInputArchive inputAr(buffer);
   ProcessList remoteProcessList;
   inputAr(remoteProcessList);

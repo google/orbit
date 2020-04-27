@@ -158,7 +158,8 @@ void LogDataView::OnReceiveMessage(const Message& a_Msg) {
     entry.m_Time = msgEntry->m_Time;
     entry.m_CallstackHash = msgEntry->m_CallstackHash;
     entry.m_ThreadId = msgEntry->m_ThreadId;
-    const char* log = a_Msg.GetData() + OrbitLogEntry::GetSizeWithoutString();
+    const char* log = static_cast<const char*>(a_Msg.GetData()) +
+                      OrbitLogEntry::GetSizeWithoutString();
     entry.m_Text = log;
     RemoveTrailingNewLine(entry.m_Text);
     Add(entry);

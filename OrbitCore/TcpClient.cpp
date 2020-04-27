@@ -173,7 +173,7 @@ void TcpClient::DecodeMessage(Message& a_Message) {
 
   switch (a_Message.GetType()) {
     case Msg_String: {
-      char* msg = a_Message.GetData();
+      std::string msg = a_Message.GetDataAsString();
       std::cout << msg << std::endl;
       PRINT_VAR(msg);
       break;

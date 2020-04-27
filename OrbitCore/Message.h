@@ -119,9 +119,12 @@ class Message {
 
   MessageType GetType() const { return m_Type; }
   const Header& GetHeader() const { return m_Header; }
-  const char* GetData() const { return m_Data; }
-  char* GetData() { return m_Data; }
+  const void* GetData() const { return m_Data; }
+  void* GetData() { return m_Data; }
   uint32_t GetSize() const { return m_Size; }
+  std::string GetDataAsString() const {
+    return std::string(static_cast<const char*>(m_Data), m_Size);
+  }
   static void Dump();
 
  public:
@@ -130,7 +133,7 @@ class Message {
   uint32_t m_Size;
   uint32_t m_SessionID;
   uint32_t m_ThreadId;
-  char* m_Data;
+  void* m_Data;
 #ifdef WIN32
 #ifndef _WIN64
   char* m_Padding;  // Make sure Message is same size on both Win32 and x64
