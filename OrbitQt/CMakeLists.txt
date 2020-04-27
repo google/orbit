@@ -25,10 +25,7 @@ target_sources(
           outputdialog.h
           processlauncherwidget.h
           resource.h
-          showincludesdialog.h
-          GgpClient.h
-          GgpInstance.h
-          GgpInstanceItemModel.h)
+          showincludesdialog.h)
 
 target_sources(
   OrbitQt
@@ -51,10 +48,7 @@ target_sources(
           orbitwatchwidget.cpp
           outputdialog.cpp
           processlauncherwidget.cpp
-          showincludesdialog.cpp
-          GgpClient.cpp
-          GgpInstance.cpp
-          GgpInstanceItemModel.cpp)
+          showincludesdialog.cpp)
 
 target_sources(
   OrbitQt
@@ -79,7 +73,7 @@ target_sources(
 
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(OrbitQt PRIVATE OrbitCore OrbitGl Qt5::Widgets Qt5::Core)
+target_link_libraries(OrbitQt PRIVATE OrbitCore OrbitGl OrbitGgp Qt5::Widgets Qt5::Core)
 
 if(WIN32)
   # Administrator privileges
@@ -107,26 +101,3 @@ set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
 strip_symbols(OrbitQt)
 
-# OrbitQtTests
-add_executable(OrbitQtTests)
-
-target_sources(
-  OrbitQtTests
-  PRIVATE GgpInstanceTests.cpp
-          GgpInstance.cpp
-          GgpInstanceItemModelTests.cpp
-          GgpInstanceItemModel.cpp
-)
-
-target_link_libraries(
-  OrbitQtTests
-  PRIVATE OrbitBase
-          GTest::Main
-          Qt5::Core
-          Qt5::Widgets
-)
-
-set_target_properties(OrbitQtTests PROPERTIES AUTOMOC ON)
-set_target_properties(OrbitQtTests PROPERTIES AUTOUIC ON)
-
-register_test(OrbitQtTests)

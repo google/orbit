@@ -127,6 +127,7 @@ add_subdirectory(OrbitTest)
 if(WITH_GUI)
   add_subdirectory(OrbitGl)
   add_subdirectory(OrbitQt)
+  add_subdirectory(OrbitGgp)
 endif()
 
 if(WIN32)

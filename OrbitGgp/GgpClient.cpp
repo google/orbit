@@ -1,4 +1,8 @@
-#include "GgpClient.h"
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "OrbitGgp/GgpClient.h"
 
 #include <QDebug>
 #include <QEventLoop>
@@ -6,8 +10,8 @@
 #include <QProcess>
 #include <QTimer>
 
-#include "GgpInstance.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGgp/GgpInstance.h"
 
 const int InstanceRequestTimeoutInMilliseconds = 10'000;
 
