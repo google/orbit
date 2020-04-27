@@ -13,7 +13,62 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/GgpInstance.h"
 
-const int InstanceRequestTimeoutInMilliseconds = 10'000;
+namespace {
+constexpr int kDefaultTimeoutInMs = 10'000;
+
+void RunProcessWithTimeout(
+    const QString& program, const QStringList& arguments,
+    const std::function<void(GgpClient::ResultOrQString<QByteArray>)>& callback,
+    int timeout_in_ms = kDefaultTimeoutInMs) {
+  const auto process = QPointer{new QProcess{}};
+  process->setProgram(program);
+  process->setArguments(arguments);
+
+  const auto timeout_timer = QPointer{new QTimer{}};
+
+  QObject::connect(
+      timeout_timer, &QTimer::timeout, timeout_timer,
+      [process, timeout_timer, callback, timeout_in_ms]() {
+        QString error_message =
+            QString{"Process request timed out after %1ms"}.arg(timeout_in_ms);
+        callback(outcome::failure(error_message));
+        process->terminate();
+        process->waitForFinished();
+        if (process != nullptr) process->deleteLater();
+
+        timeout_timer->deleteLater();
+      });
+
+  QObject::connect(
+      process,
+      static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(
+          &QProcess::finished),
+      process,
+      [process, timeout_timer, callback](
+          const int exit_code, const QProcess::ExitStatus exit_status) {
+        if (exit_status != QProcess::NormalExit || exit_code != 0) {
+          callback(outcome::failure(
+              QString{"Ggp list instances request failed with error: %1 (exit "
+                      "code: %2)"}
+                  .arg(process->errorString())
+                  .arg(exit_code)));
+          return;
+        }
+
+        callback(outcome::success(process->readAllStandardOutput()));
+
+        process->deleteLater();
+        if (timeout_timer != nullptr) {
+          timeout_timer->stop();
+          timeout_timer->deleteLater();
+        }
+      });
+
+  process->start(QIODevice::ReadOnly);
+  timeout_timer->start(timeout_in_ms);
+}
+
+}  // namespace
 
 GgpClient::ResultOrQString<GgpClient> GgpClient::Create() {
   QProcess ggp_process{};
@@ -47,55 +102,15 @@ void GgpClient::GetInstancesAsync(
         callback) {
   CHECK(callback);
 
-  const auto ggp_process = QPointer{new QProcess{}};
-  ggp_process->setProgram("ggp");
-  ggp_process->setArguments({"instance", "list", "-s"});
-
-  const auto timeout_timer = QPointer{new QTimer{}};
-  QObject::connect(
-      timeout_timer, &QTimer::timeout, timeout_timer,
-      [ggp_process, timeout_timer, callback, this]() {
-        callback(QString("Ggp list instances request timed out after %1 ms.")
-                     .arg(InstanceRequestTimeoutInMilliseconds));
-
-        ggp_process->terminate();
-        ggp_process->waitForFinished();
+  number_of_requests_running_++;
+  RunProcessWithTimeout(
+      "ggp", {"instance", "list", "-s"},
+      [callback, this](ResultOrQString<QByteArray> result) {
         number_of_requests_running_--;
-
-        if (ggp_process != nullptr) ggp_process->deleteLater();
-
-        timeout_timer->deleteLater();
-      });
-
-  QObject::connect(
-      ggp_process,
-      static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(
-          &QProcess::finished),
-      ggp_process,
-      [callback, ggp_process, timeout_timer, this](
-          const int exit_code, const QProcess::ExitStatus exit_status) {
-        if (exit_status != QProcess::NormalExit || exit_code != 0) {
-          callback(
-              QString{"Ggp list instances request failed with error: %1 (exit "
-                      "code: %2)"}
-                  .arg(ggp_process->errorString())
-                  .arg(exit_code));
+        if (!result) {
+          callback(result.error());
           return;
         }
-
-        number_of_requests_running_--;
-
-        const QByteArray jsonData = ggp_process->readAllStandardOutput();
-        callback(GgpInstance::GetListFromJson(jsonData));
-        ggp_process->deleteLater();
-
-        if (timeout_timer != nullptr) {
-          timeout_timer->stop();
-          timeout_timer->deleteLater();
-        }
+        callback(GgpInstance::GetListFromJson(result.value()));
       });
-
-  number_of_requests_running_++;
-  ggp_process->start(QIODevice::ReadOnly);
-  timeout_timer->start(InstanceRequestTimeoutInMilliseconds);
 }
