@@ -15,5 +15,12 @@ struct Line {
 
 //-----------------------------------------------------------------------------
 struct Box {
-  Vec3 m_Vertices[4];
+  Box() = default;
+  Box(Vec2 pos, Vec2 size, float z) {
+    vertices_[0] = Vec3(pos[0], pos[1], z);
+    vertices_[1] = Vec3(pos[0], pos[1] + size[1], z);
+    vertices_[2] = Vec3(pos[0] + size[0], pos[1] + size[1], z);
+    vertices_[3] = Vec3(pos[0] + size[0], pos[1], z);
+  }
+  Vec3 vertices_[4];
 };
