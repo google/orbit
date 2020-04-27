@@ -58,19 +58,6 @@ std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
 }
 
 //-----------------------------------------------------------------------------
-void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash, ThreadID thread_id) {
-  ScopeLock lock(m_Mutex);
-  std::map<uint64_t, CallstackEvent>& event_map = m_CallstackEvents[thread_id];
-  event_map[time] = CallstackEvent(time, cs_hash, thread_id);
-
-  // Add all callstack events to "thread 0".
-  std::map<uint64_t, CallstackEvent>& event_map_0 = m_CallstackEvents[0];
-  event_map_0[time] = CallstackEvent(time, cs_hash, 0);
-
-  RegisterTime(time);
-}
-
-//-----------------------------------------------------------------------------
 ORBIT_SERIALIZE(EventBuffer, 0) {
   ORBIT_NVP_VAL(0, m_CallstackEvents);
 

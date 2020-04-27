@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------------
 TimeGraphLayout::TimeGraphLayout() {
   m_NumCores = 0;
+  m_WorldY = 0.f;
   m_TextBoxHeight = 20.f;
   m_CoresHeight = 5.f;
   m_EventTrackHeight = 10.f;
@@ -21,6 +22,28 @@ TimeGraphLayout::TimeGraphLayout() {
   m_TextZ = -0.02f;
   m_TrackZ = -0.1f;
 };
+
+//-----------------------------------------------------------------------------
+float TimeGraphLayout::GetThreadStart() {
+  if (Capture::GHasContextSwitches) {
+    return m_WorldY - m_NumCores * m_CoresHeight -
+           std::max(m_NumCores - 1, 0) * m_SpaceBetweenCores -
+           m_SpaceBetweenCoresAndThread;
+  }
+
+  return m_WorldY;
+}
+
+//-----------------------------------------------------------------------------
+float TimeGraphLayout::GetCoreOffset(int a_CoreId) const {
+  if (Capture::GHasContextSwitches) {
+    float coreOffset = m_WorldY - m_CoresHeight -
+                       a_CoreId * (m_CoresHeight + m_SpaceBetweenCores);
+    return coreOffset;
+  }
+
+  return 0.f;
+}
 
 //-----------------------------------------------------------------------------
 #define FLOAT_SLIDER_MIN_MAX(x, min, max)     \

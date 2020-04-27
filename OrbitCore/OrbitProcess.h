@@ -77,7 +77,7 @@ class Process {
   const std::string& GetName() const { return m_Name; }
   const std::string& GetFullPath() const { return m_FullPath; }
   const std::string& GetCmdLine() const { return m_CmdLine; }
-  uint32_t GetID() const { return m_ID; }
+  DWORD GetID() const { return m_ID; }
   double GetCpuUsage() const { return m_CpuUsage; }
   HANDLE GetHandle() const { return m_Handle; }
   bool GetIs64Bit() const { return m_Is64Bit; }

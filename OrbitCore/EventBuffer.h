@@ -67,8 +67,13 @@ class EventBuffer {
   }
 
   //-----------------------------------------------------------------------------
-  void AddCallstackEvent(uint64_t time, CallstackID cs_hash,
-                         ThreadID thread_id);
+  void AddCallstackEvent(uint64_t a_Time, CallstackID a_CSHash,
+                         ThreadID a_TID) {
+    ScopeLock lock(m_Mutex);
+    std::map<uint64_t, CallstackEvent>& threadMap = m_CallstackEvents[a_TID];
+    threadMap[a_Time] = CallstackEvent(a_Time, a_CSHash, a_TID);
+    RegisterTime(a_Time);
+  }
 
   ORBIT_SERIALIZABLE;
 

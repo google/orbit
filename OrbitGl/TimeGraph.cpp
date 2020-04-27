@@ -373,7 +373,6 @@ void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
           timer.m_PID = lastCS.m_ProcessId;
           timer.m_TID = lastCS.m_ThreadId;
           timer.m_Processor = static_cast<int8_t>(lastCS.m_ProcessorIndex);
-          timer.m_Depth = timer.m_Processor;
           timer.m_SessionID = Message::GSessionID;
           timer.SetType(Timer::CORE_ACTIVITY);
 
@@ -419,6 +418,13 @@ void TimeGraph::UpdateMaxTimeStamp(TickType a_Time) {
     m_SessionMaxCounter = a_Time;
   }
 };
+
+//-----------------------------------------------------------------------------
+void TimeGraph::UpdateThreadDepth(int a_ThreadId, int a_Depth) {
+  if (a_Depth > m_ThreadDepths[a_ThreadId]) {
+    m_ThreadDepths[a_ThreadId] = a_Depth;
+  }
+}
 
 //-----------------------------------------------------------------------------
 float TimeGraph::GetThreadTotalHeight() { return std::abs(min_y_); }
@@ -653,6 +659,9 @@ void TimeGraph::SortTracks() {
   // Reorder threads once every second when capturing
   if (!Capture::IsCapturing() || m_LastThreadReorder.QueryMillis() > 1000.0) {
     sorted_tracks_.clear();
+
+    // Sched track is currently held as thread 0, TODO: make it it's own track.
+    sorted_tracks_.emplace_back(GetOrCreateThreadTrack(0));
 
     std::vector<ThreadID> sortedThreadIds;
 

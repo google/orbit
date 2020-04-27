@@ -32,7 +32,6 @@ class ThreadTrack : public Track {
 
   std::vector<std::shared_ptr<TimerChain>> GetTimers() override;
   uint32_t GetDepth() const { return depth_; }
-  std::string GetExtraInfo(const Timer& timer);
 
   Color GetColor() const;
   static Color GetColor(ThreadID a_TID);
@@ -57,10 +56,6 @@ class ThreadTrack : public Track {
     if (depth > depth_) depth_ = depth;
   }
   std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
-
- private:
-  void SetTimesliceText(const Timer& timer, double elapsed_us,
-                        float min_x, TextBox* text_box);
 
  protected:
   TextRenderer* text_renderer_ = nullptr;
