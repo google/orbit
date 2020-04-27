@@ -72,25 +72,20 @@ void EventTrack::Draw(GlCanvas* a_Canvas, bool a_Picking) {
 void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   Batcher* batcher = &time_graph_->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
-
-  Color lineColor[2];
-  Color white(255, 255, 255, 255);
-  Fill(lineColor, white);
+  float z = GlCanvas::Z_VALUE_EVENT;
+  float track_height = layout.GetEventTrackHeight();
 
   ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
   std::map<uint64_t, CallstackEvent>& callstacks =
       GEventTracer.GetEventBuffer().GetCallstacks()[m_ThreadId];
 
   // Sampling Events
+  const Color kWhite(255, 255, 255, 255);
   for (auto& pair : callstacks) {
     uint64_t time = pair.first;
     if (time > min_tick && time < max_tick) {
-      float x = time_graph_->GetWorldFromTick(time);
-      Line line;
-      line.m_Beg = Vec3(x, m_Pos[1], GlCanvas::Z_VALUE_EVENT);
-      line.m_End = Vec3(x, m_Pos[1] - layout.GetEventTrackHeight(),
-                        GlCanvas::Z_VALUE_EVENT);
-      batcher->AddLine(line, lineColor, PickingID::EVENT);
+      Vec2 pos(time_graph_->GetWorldFromTick(time), m_Pos[1]);
+      batcher->AddVerticalLine(pos, -track_height, z, kWhite, PickingID::EVENT);
     }
   }
 
@@ -99,12 +94,9 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   Color selectedColor[2];
   Fill(selectedColor, kGreenSelection);
   for (CallstackEvent& event : selected_callstack_events_) {
-    float x = time_graph_->GetWorldFromTick(event.m_Time);
-    Line line;
-    line.m_Beg = Vec3(x, m_Pos[1], GlCanvas::Z_VALUE_EVENT);
-    line.m_End = Vec3(x, m_Pos[1] - layout.GetEventTrackHeight(),
-                      GlCanvas::Z_VALUE_TEXT);
-    batcher->AddLine(line, selectedColor, PickingID::EVENT);
+    Vec2 pos(time_graph_->GetWorldFromTick(event.m_Time), m_Pos[1]);
+    batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection,
+                             PickingID::EVENT);
   }
 }
 

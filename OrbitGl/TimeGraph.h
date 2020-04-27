@@ -41,7 +41,6 @@ class TimeGraph {
                                            ThreadID a_TID);
 
   void ProcessTimer(const Timer& a_Timer);
-  void UpdateThreadDepth(int a_ThreadId, int a_Depth);
   void UpdateMaxTimeStamp(TickType a_Time);
 
   float GetThreadTotalHeight();
@@ -129,7 +128,6 @@ class TimeGraph {
   double m_MaxTimeUs = 0;
   TickType m_SessionMinCounter = 0;
   TickType m_SessionMaxCounter = 0;
-  std::map<ThreadID, int> m_ThreadDepths;
   std::map<ThreadID, uint32_t> m_EventCount;
   double m_TimeWindowUs = 0;
   float m_WorldStartX = 0;

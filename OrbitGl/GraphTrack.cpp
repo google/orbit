@@ -47,9 +47,7 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
   glVertex3f(x0, y1, track_z);
   glEnd();
 
-  Color col(0, 128, 255, 128);
-  Color colors[2];
-  Fill(colors, col);
+  const Color kLineColor(0, 128, 255, 128);
 
   // Current time window
   uint64_t min_ns = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
@@ -70,10 +68,8 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
     float x1 = time_graph_->GetWorldFromTick(time);
     float y0 = base_y + static_cast<float>(last_normalized_value) * m_Size[1];
     float y1 = base_y + static_cast<float>(normalized_value) * m_Size[1];
-    Line line;
-    line.m_Beg = Vec3(x0, y0, text_z);
-    line.m_End = Vec3(x1, y1, text_z);
-    time_graph_->GetBatcher().AddLine(line, colors, PickingID::LINE, nullptr);
+    time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y1), text_z,
+                                      kLineColor, PickingID::LINE, nullptr);
 
     previous_time = time;
     last_normalized_value = normalized_value;
