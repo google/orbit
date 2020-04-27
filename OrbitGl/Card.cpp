@@ -91,7 +91,7 @@ void CardContainer::Draw(GlCanvas* a_Canvas) {
   if (!m_Active) return;
 
   static float Margin = 10.f;
-  float YPos = (float)a_Canvas->getHeight();
+  float YPos = a_Canvas->getHeight();
 
   for (auto& it : m_FloatCards) {
     FloatGraphCard& card = *it.second;
@@ -146,9 +146,9 @@ void FloatGraphCard::Draw(GlCanvas* a_Canvas) {
       "%s: %s  min(%s) max(%s)", m_Name.c_str(),
       std::to_string(m_Data.Latest()).c_str(), std::to_string(m_Min).c_str(),
       std::to_string(m_Max).c_str());
-  a_Canvas->GetTextRenderer().AddText2D(cardValue.c_str(), (int)m_Pos[0],
-                                        (int)m_Pos[1], GlCanvas::Z_VALUE_TEXT,
-                                        col, -1.f, false, false);
+  a_Canvas->GetTextRenderer().AddText2D(
+      cardValue.c_str(), static_cast<int>(m_Pos[0]), static_cast<int>(m_Pos[1]),
+      GlCanvas::Z_VALUE_TEXT, col, -1.f, false, false);
 }
 
 //-----------------------------------------------------------------------------
@@ -165,7 +165,7 @@ void FloatGraphCard::DrawImGui(GlCanvas*) {
                     ImGuiWindowFlags_HorizontalScrollbar);
   if (copy) ImGui::LogToClipboard();
 
-  ImGui::PlotLines("Lines", (float*)&m_Data, m_Data.Size(),
+  ImGui::PlotLines("Lines", reinterpret_cast<float*>(&m_Data), m_Data.Size(),
                    m_Data.GetCurrentIndex(), "avg 0.0", m_Min, m_Max,
                    ImVec2(0, 80));
 

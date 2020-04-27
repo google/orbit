@@ -42,7 +42,7 @@ const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
 std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
-  if (a_Row >= (int)GetNumElements()) {
+  if (a_Row >= static_cast<int>(GetNumElements())) {
     return "";
   }
 
@@ -206,7 +206,7 @@ void FunctionsDataView::DoFilter() {
   std::vector<uint32_t> indices;
   const std::vector<std::shared_ptr<Function>>& functions =
       Capture::GTargetProcess->GetFunctions();
-  for (int i = 0; i < (int)functions.size(); ++i) {
+  for (size_t i = 0; i < functions.size(); ++i) {
     auto& function = functions[i];
     std::string name = function->Lower() + function->GetPdb()->GetName();
 
@@ -242,7 +242,7 @@ void FunctionsDataView::ParallelFilter() {
   indicesArray.resize(numWorkers);
 
   oqpi_tk::parallel_for(
-      "FunctionsDataViewParallelFor", (int)functions.size(),
+      "FunctionsDataViewParallelFor", functions.size(),
       [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
         std::vector<int>& result = indicesArray[a_BlockIndex];
         const std::string& name = functions[a_ElementIndex]->Lower();

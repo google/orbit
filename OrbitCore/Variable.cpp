@@ -28,7 +28,7 @@ void Variable::SendValue() {
   if (Capture::GInjected) {
     Message msg(Msg_SetData);
     msg.m_Header.m_DataTransferHeader.m_Address =
-        (ULONG64)GPdbDbg->GetHModule() + (ULONG64)m_Address;
+        GPdbDbg->GetHModule() + m_Address;
     msg.m_Header.m_DataTransferHeader.m_Type = DataTransferHeader::Data;
     GTcpServer->Send(msg, &m_Data, m_Size);
   }
@@ -37,7 +37,7 @@ void Variable::SendValue() {
 void Variable::SyncValue() {
   if (Capture::GInjected) {
     Message msg(Msg_GetData);
-    ULONG64 address = (ULONG64)m_Pdb->GetHModule() + (ULONG64)m_Address;
+    ULONG64 address = m_Pdb->GetHModule() + m_Address;
     msg.m_Header.m_DataTransferHeader.m_Address = address;
     msg.m_Header.m_DataTransferHeader.m_Type = DataTransferHeader::Data;
     msg.m_Size = m_Size;
@@ -274,7 +274,7 @@ void Variable::SetDouble(double a_Value) {
       m_Double = a_Value;
       break;
     case Variable::Float:
-      m_Float = (float)a_Value;
+      m_Float = static_cast<float>(a_Value);
       break;
     default:
       break;

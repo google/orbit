@@ -184,7 +184,7 @@ void OrbitApp::ProcessCallStack(CallStack& a_CallStack) {
     // Send full callstack once
     if (!Capture::GetCallstack(a_CallStack.Hash())) {
       std::string messageData = SerializeObjectHumanReadable(a_CallStack);
-      GTcpServer->Send(Msg_RemoteCallStack, (void*)messageData.c_str(),
+      GTcpServer->Send(Msg_RemoteCallStack, messageData.c_str(),
                        messageData.size());
     }
   }
@@ -218,7 +218,7 @@ void OrbitApp::AddKeyAndString(uint64_t key, std::string_view str) {
     key_and_string.str = str;
     if (!string_manager_->Exists(key)) {
       std::string message_data = SerializeObjectBinary(key_and_string);
-      GTcpServer->Send(Msg_KeyAndString, (void*)message_data.c_str(),
+      GTcpServer->Send(Msg_KeyAndString, message_data.c_str(),
                        message_data.size());
       string_manager_->Add(key, str);
     }
@@ -483,8 +483,7 @@ void OrbitApp::Disassemble(const std::string& a_FunctionName,
                            const uint8_t* a_MachineCode, size_t a_Size) {
   Disassembler disasm;
   disasm.LOGF(absl::StrFormat("asm: /* %s */\n", a_FunctionName.c_str()));
-  const unsigned char* code = (const unsigned char*)a_MachineCode;
-  disasm.Disassemble(code, a_Size, a_VirtualAddress,
+  disasm.Disassemble(a_MachineCode, a_Size, a_VirtualAddress,
                      Capture::GTargetProcess->GetIs64Bit());
   SendToUiAsync(disasm.GetResult());
 }

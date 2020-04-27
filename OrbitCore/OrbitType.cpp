@@ -221,11 +221,11 @@ Variable* Type::FindImmediateChild(const std::string& a_Name) {
 }
 
 void Type::OutputPadding() const {
-  ULONG64 nextOffset = 0;
-  ULONG64 idealNextOffset = 0;
+  uint64_t nextOffset = 0;
+  uint64_t idealNextOffset = 0;
 
   for (auto& pair : m_DataMembersFull) {
-    ULONG64 offset = pair.first;
+    uint64_t offset = pair.first;
     const Variable& member = pair.second;
     const Type& memberType = m_Pdb->GetTypeFromId(member.m_TypeIndex);
 
@@ -238,9 +238,8 @@ void Type::OutputPadding() const {
       paddingMember.m_Name = "padding";
       paddingMember.m_TypeIndex = 0xFFFFFFFF;
       paddingMember.m_Size = ULONG(nextOffset - idealNextOffset);
-      m_DataMembers[(ULONG)idealNextOffset] = paddingMember;
-      m_DataMembersFull[(ULONG)idealNextOffset] =
-          m_DataMembers[(ULONG)idealNextOffset];
+      m_DataMembers[idealNextOffset] = paddingMember;
+      m_DataMembersFull[idealNextOffset] = m_DataMembers[idealNextOffset];
     }
   }
 }

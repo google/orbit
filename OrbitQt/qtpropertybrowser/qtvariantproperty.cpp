@@ -1880,7 +1880,7 @@ void QtVariantPropertyManager::setAttribute(QtProperty* property,
   if (!attrType) return;
 
   if (attrType != attributeType(propertyType(property), attribute) &&
-      !value.canConvert((QVariant::Type)attrType))
+      !value.canConvert(static_cast<QVariant::Type>(attrType)))
     return;
 
   QtProperty* internProp = propertyToWrappedProperty()->value(property, 0);
@@ -1921,11 +1921,9 @@ void QtVariantPropertyManager::setAttribute(QtProperty* property,
     if (attribute == d_ptr->m_regExpAttribute)
       stringManager->setRegExp(internProp, qVariantValue<QRegExp>(value));
     if (attribute == d_ptr->m_echoModeAttribute)
-      stringManager->setEchoMode(internProp,
-                                 (EchoMode)qVariantValue<int>(value));
+      stringManager->setEchoMode(internProp, qVariantValue<EchoMode>(value));
     if (attribute == d_ptr->m_readOnlyAttribute)
-      stringManager->setReadOnly(internProp,
-                                 (EchoMode)qVariantValue<bool>(value));
+      stringManager->setReadOnly(internProp, qVariantValue<EchoMode>(value));
     return;
   } else if (QtDatePropertyManager* dateManager =
                  qobject_cast<QtDatePropertyManager*>(manager)) {

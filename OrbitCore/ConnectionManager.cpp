@@ -252,9 +252,9 @@ void ConnectionManager::SetupClientCallbacks() {
       });
 
   GTcpClient->AddCallback(Msg_RemoteContextSwitches, [=](const Message& a_Msg) {
-    uint32_t num_context_switches =
-        (uint32_t)a_Msg.m_Size / sizeof(ContextSwitch);
-    ContextSwitch* context_switches = (ContextSwitch*)a_Msg.GetData();
+    uint32_t num_context_switches = a_Msg.m_Size / sizeof(ContextSwitch);
+    const ContextSwitch* context_switches =
+        static_cast<const ContextSwitch*>(a_Msg.GetData());
     for (uint32_t i = 0; i < num_context_switches; i++) {
       GCoreApp->ProcessContextSwitch(context_switches[i]);
     }

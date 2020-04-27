@@ -33,7 +33,7 @@ GlPanel* GlPanel::Create(Type a_Type, void* a_UserData) {
       panel = new HomeWindow();
       break;
     case PLUGIN:
-      panel = new PluginCanvas((Orbit::Plugin*)a_UserData);
+      panel = new PluginCanvas(static_cast<Orbit::Plugin*>(a_UserData));
 
       break;
   }

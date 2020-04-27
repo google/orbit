@@ -84,7 +84,7 @@ class Process {
   double GetCpuUsage() const { return m_CpuUsage; }
   HANDLE GetHandle() const { return m_Handle; }
   bool GetIs64Bit() const { return m_Is64Bit; }
-  uint32_t NumModules() const { return (uint32_t)m_Modules.size(); }
+  size_t NumModules() const { return m_Modules.size(); }
   bool GetIsRemote() const { return m_IsRemote; }
   void SetIsRemote(bool val) { m_IsRemote = val; }
   void SetCpuUsage(float a_Usage) { m_CpuUsage = a_Usage; }

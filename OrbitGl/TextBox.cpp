@@ -68,7 +68,7 @@ void TextBox::Update() {
 //-----------------------------------------------------------------------------
 float TextBox::GetScreenSize(const TextRenderer& a_TextRenderer) {
   float worldWidth = a_TextRenderer.GetSceneBox().m_Size[0];
-  float screenSize = (float)a_TextRenderer.GetCanvas()->getWidth();
+  float screenSize = a_TextRenderer.GetCanvas()->getWidth();
 
   return (m_Size[0] / worldWidth) * screenSize;
 }
@@ -103,9 +103,9 @@ void TextBox::Draw(TextRenderer& a_TextRenderer, float a_MinX, bool a_Visible,
   if (!a_IsPicking) {
     glColor4ubv(&col[0]);
   } else {
-    GLubyte* color = (GLubyte*)&a_ID;
+    GLubyte* color = reinterpret_cast<GLubyte*>(&a_ID);
     color[3] = 255;
-    glColor4ubv((GLubyte*)&a_ID);
+    glColor4ubv(color);
   }
 
   if (a_Visible) {

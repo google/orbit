@@ -79,7 +79,7 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
 void GraphTrack::OnDrag(int /*x*/, int /*y*/) {}
 
 void GraphTrack::AddTimer(const Timer& timer) {
-  double value = *((double*)(&timer.m_UserData[0]));
+  double value = *reinterpret_cast<const double*>(&timer.m_UserData[0]);
   values_[timer.m_Start] = value;
   if (value > max_) max_ = value;
   if (value < min_) min_ = value;

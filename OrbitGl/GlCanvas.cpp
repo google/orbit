@@ -110,8 +110,9 @@ void GlCanvas::Initialize() {
       ORBIT_LOGV(glewGetErrorString(err));
       exit(EXIT_FAILURE);
     }
-    std::string glew =
-        absl::StrFormat("Using GLEW %s\n", (char*)glewGetString(GLEW_VERSION));
+    std::string glew = absl::StrFormat(
+        "Using GLEW %s\n",
+        reinterpret_cast<const char*>(glewGetString(GLEW_VERSION)));
     PRINT_VAR(glew);
     firstInit = false;
   }
@@ -134,9 +135,9 @@ void GlCanvas::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
   // Pan
   if (a_Left && !m_ImguiActive) {
     m_WorldTopLeftX =
-        m_WorldClickX - (float)mousex / (float)getWidth() * m_WorldWidth;
-    m_WorldTopLeftY =
-        m_WorldClickY + (float)mousey / (float)getHeight() * m_WorldHeight;
+        m_WorldClickX - static_cast<float>(mousex) / getWidth() * m_WorldWidth;
+    m_WorldTopLeftY = m_WorldClickY +
+                      static_cast<float>(mousey) / getHeight() * m_WorldHeight;
     UpdateSceneBox();
   }
 
@@ -168,26 +169,26 @@ void GlCanvas::MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) {
   if (delta < m_MinWheelDelta) m_MinWheelDelta = delta;
   if (delta > m_MaxWheelDelta) m_MaxWheelDelta = delta;
 
-  float mousex = (float)a_X;
-  float mousey = (float)a_Y;
+  float mousex = a_X;
+  float mousey = a_Y;
 
   float worldx;
   float worldy;
 
   ScreenToWorld(a_X, a_Y, worldx, worldy);
-  m_MouseRatio = (double)mousex / (double)getWidth();
+  m_MouseRatio = mousex / getWidth();
 
   static float zoomRatio = 0.1f;
   bool zoomWidth = !a_Ctrl;
 
   if (zoomWidth) {
-    m_WheelMomentum =
-        delta * m_WheelMomentum < 0 ? 0.f : m_WheelMomentum + (float)delta;
+    m_WheelMomentum = delta * m_WheelMomentum < 0
+                          ? 0.f
+                          : static_cast<float>(m_WheelMomentum + delta);
   } else {
     float zoomInc = zoomRatio * m_DesiredWorldHeight;
     m_DesiredWorldHeight += delta * zoomInc;
-    m_WorldTopLeftY =
-        worldy + (float)mousey / (float)getHeight() * m_DesiredWorldHeight;
+    m_WorldTopLeftY = worldy + mousey / getHeight() * m_DesiredWorldHeight;
     UpdateSceneBox();
   }
 
@@ -288,7 +289,7 @@ void GlCanvas::UpdateWheelMomentum(float a_DeltaTime) {
 //-----------------------------------------------------------------------------
 void GlCanvas::OnTimer() {
   m_UpdateTimer.Stop();
-  m_DeltaTime = (float)m_UpdateTimer.ElapsedSeconds();
+  m_DeltaTime = m_UpdateTimer.ElapsedSeconds();
   m_DeltaTimeMs = m_UpdateTimer.ElapsedMillis();
   m_UpdateTimer.Start();
   UpdateWheelMomentum(m_DeltaTime);
@@ -311,7 +312,7 @@ void GlCanvas::prepare3DViewport(int topleft_x, int topleft_y,
   glLoadIdentity();
 
   float ratio_w_h =
-      (float)(bottomrigth_x - topleft_x) / (float)(bottomrigth_y - topleft_y);
+      static_cast<float>(bottomrigth_x - topleft_x) / bottomrigth_y - topleft_y;
   gluPerspective(45 /*view angle*/, ratio_w_h, 0.1 /*clip close*/,
                  200 /*clip far*/);
   glMatrixMode(GL_MODELVIEW);
@@ -401,36 +402,36 @@ void GlCanvas::prepareScreenSpaceViewport() {
 
 //-----------------------------------------------------------------------------
 void GlCanvas::ScreenToWorld(int x, int y, float& wx, float& wy) const {
-  wx = m_WorldTopLeftX + ((float)x / (float)getWidth()) * m_WorldWidth;
-  wy = m_WorldTopLeftY - ((float)y / (float)getHeight()) * m_WorldHeight;
+  wx = m_WorldTopLeftX + (static_cast<float>(x) / getWidth()) * m_WorldWidth;
+  wy = m_WorldTopLeftY - (static_cast<float>(y) / getHeight()) * m_WorldHeight;
 }
 
 //-----------------------------------------------------------------------------
 void GlCanvas::WorldToScreen(float wx, float wy, int& x, int& y) const {
-  x = (int)((wx - m_WorldTopLeftX) / m_WorldWidth) * getWidth();
+  x = static_cast<int>((wx - m_WorldTopLeftX) / m_WorldWidth) * getWidth();
 
   float bottomY = m_WorldTopLeftY - m_WorldHeight;
-  y = (int)((1.f - ((wy - bottomY) / m_WorldHeight)) * getHeight());
+  y = static_cast<int>((1.f - ((wy - bottomY) / m_WorldHeight)) * getHeight());
 }
 
 //-----------------------------------------------------------------------------
 int GlCanvas::WorldToScreenHeight(float a_Height) const {
-  return (int)((a_Height / m_WorldHeight) * (float)getHeight());
+  return static_cast<int>((a_Height / m_WorldHeight) * getHeight());
 }
 
 //-----------------------------------------------------------------------------
 float GlCanvas::ScreenToWorldHeight(int a_Height) const {
-  return ((float)a_Height / (float)getHeight()) * m_WorldHeight;
+  return (static_cast<float>(a_Height) / getHeight()) * m_WorldHeight;
 }
 
 //-----------------------------------------------------------------------------
 float GlCanvas::ScreenToworldWidth(int a_Width) const {
-  return ((float)a_Width / (float)getWidth()) * m_WorldWidth;
+  return (static_cast<float>(a_Width) / getWidth()) * m_WorldWidth;
 }
 
 //-----------------------------------------------------------------------------
 void GlCanvas::drawSquareGrid(float size, float delta) {
-  int halfIncrements = ((int)(size * 0.5f / delta));
+  int halfIncrements = static_cast<int>(size * 0.5f / delta);
   float halfSize = delta * halfIncrements;
 
   glBegin(GL_LINES);
@@ -571,16 +572,16 @@ void GlCanvas::UpdateSceneBox() {
 
 //-----------------------------------------------------------------------------
 Vec2 GlCanvas::ToScreenSpace(const Vec2& a_Point) {
-  float x = (a_Point[0] / m_WorldMinWidth) * (float)m_Width;
-  float y = (a_Point[1] / m_WorldHeight) * (float)m_Height;
+  float x = (a_Point[0] / m_WorldMinWidth) * m_Width;
+  float y = (a_Point[1] / m_WorldHeight) * m_Height;
 
   return Vec2(x, y);
 }
 
 //-----------------------------------------------------------------------------
 Vec2 GlCanvas::ToWorldSpace(const Vec2& a_Point) {
-  float x = (a_Point[0] / (float)m_Width) * m_WorldMinWidth;
-  float y = (a_Point[1] / (float)m_Height) * m_WorldHeight;
+  float x = (a_Point[0] / m_Width) * m_WorldMinWidth;
+  float y = (a_Point[1] / m_Height) * m_WorldHeight;
 
   return Vec2(x, y);
 }

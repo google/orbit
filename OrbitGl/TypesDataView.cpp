@@ -23,9 +23,9 @@ TypesDataView::TypesDataView() : DataView(DataViewType::TYPES) {
 
 //-----------------------------------------------------------------------------
 void TypesDataView::OnDataChanged() {
-  int numTypes = (int)Capture::GTargetProcess->GetTypes().size();
+  size_t numTypes = Capture::GTargetProcess->GetTypes().size();
   m_Indices.resize(numTypes);
-  for (int i = 0; i < numTypes; ++i) {
+  for (size_t i = 0; i < numTypes; ++i) {
     m_Indices[i] = i;
   }
 

@@ -64,12 +64,15 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   // Handle cases of screen coordinates != from framebuffer coordinates (e.g.
   // retina displays)
   ImGuiIO& io = ImGui::GetIO();
-  int fb_width = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
-  int fb_height = (int)(io.DisplaySize.y * io.DisplayFramebufferScale.y);
+  int fb_width =
+      static_cast<int>(io.DisplaySize.x * io.DisplayFramebufferScale.x);
+  int fb_height =
+      static_cast<int>(io.DisplaySize.y * io.DisplayFramebufferScale.y);
   draw_data->ScaleClipRects(io.DisplayFramebufferScale);
 
   // Setup viewport, orthographic projection matrix
-  glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
+  glViewport(0, 0, static_cast<GLsizei>(fb_width),
+             static_cast<GLsizei>(fb_height));
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
@@ -79,37 +82,38 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   glLoadIdentity();
 
 // Render command lists
-#define OFFSETOF(TYPE, ELEMENT) ((size_t) & (((TYPE*)0)->ELEMENT))
   for (int n = 0; n < draw_data->CmdListsCount; n++) {
     const ImDrawList* cmd_list = draw_data->CmdLists[n];
-    const unsigned char* vtx_buffer =
-        (const unsigned char*)&cmd_list->VtxBuffer.front();
+    const uint8_t* vtx_buffer =
+        reinterpret_cast<const uint8_t*>(&cmd_list->VtxBuffer.front());
     const ImDrawIdx* idx_buffer = &cmd_list->IdxBuffer.front();
     glVertexPointer(2, GL_FLOAT, sizeof(ImDrawVert),
-                    (void*)(vtx_buffer + OFFSETOF(ImDrawVert, pos)));
+                    vtx_buffer + offsetof(ImDrawVert, pos));
     glTexCoordPointer(2, GL_FLOAT, sizeof(ImDrawVert),
-                      (void*)(vtx_buffer + OFFSETOF(ImDrawVert, uv)));
+                      vtx_buffer + offsetof(ImDrawVert, uv));
     glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(ImDrawVert),
-                   (void*)(vtx_buffer + OFFSETOF(ImDrawVert, col)));
+                   vtx_buffer + offsetof(ImDrawVert, col));
 
     for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.size(); cmd_i++) {
       const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
       if (pcmd->UserCallback) {
         pcmd->UserCallback(cmd_list, pcmd);
       } else {
-        glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
-        glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w),
-                  (int)(pcmd->ClipRect.z - pcmd->ClipRect.x),
-                  (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
+        glBindTexture(
+            GL_TEXTURE_2D,
+            static_cast<GLuint>(reinterpret_cast<intptr_t>(pcmd->TextureId)));
+        glScissor(static_cast<int>(pcmd->ClipRect.x),
+                  static_cast<int>(fb_height - pcmd->ClipRect.w),
+                  static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x),
+                  static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y));
         glDrawElements(
-            GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
+            GL_TRIANGLES, static_cast<GLsizei>(pcmd->ElemCount),
             sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
             idx_buffer);
       }
       idx_buffer += pcmd->ElemCount;
     }
   }
-#undef OFFSETOF
 
   // Restore modified state
   glDisableClientState(GL_COLOR_ARRAY);
@@ -121,8 +125,9 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   glPopAttrib();
-  glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2],
-             (GLsizei)last_viewport[3]);
+  glViewport(last_viewport[0], last_viewport[1],
+             static_cast<GLsizei>(last_viewport[2]),
+             static_cast<GLsizei>(last_viewport[3]));
 }
 
 const char* Orbit_ImGui_GetClipboardText() {
@@ -143,8 +148,7 @@ void Orbit_ImGui_MouseButtonCallback(GlCanvas* a_GlCanvas, int button,
 
 void Orbit_ImGui_ScrollCallback(GlCanvas* a_GlCanvas, int scroll) {
   ScopeImguiContext state(a_GlCanvas->GetImGuiContext());
-  g_MouseWheel +=
-      (float)scroll;  // Use fractional mouse wheel, 1.0 unit 5 lines.
+  g_MouseWheel += scroll;  // Use fractional mouse wheel, 1.0 unit 5 lines.
 }
 
 void Orbit_ImGui_KeyCallback(GlCanvas* a_Canvas, int key, bool down) {
@@ -161,7 +165,7 @@ void Orbit_ImGui_KeyCallback(GlCanvas* a_Canvas, int key, bool down) {
 void Orbit_ImGui_CharCallback(GlCanvas* a_GlCanvas, unsigned int c) {
   ScopeImguiContext state(a_GlCanvas->GetImGuiContext());
   ImGuiIO& io = ImGui::GetIO();
-  if (c > 0 && c < 0x10000) io.AddInputCharacter((unsigned short)c);
+  if (c > 0 && c < 0x10000) io.AddInputCharacter(static_cast<uint16_t>(c));
 }
 
 bool Orbit_ImGui_CreateDeviceObjects() {
@@ -577,14 +581,15 @@ void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas) {
   }
 
   // Store our identifier
-  io.Fonts->TexID = (void*)(intptr_t)g_FontTexture;
+  io.Fonts->TexID =
+      reinterpret_cast<void*>(static_cast<intptr_t>(g_FontTexture));
 
   // Setup display size (every frame to accommodate for window resizing)
   int w = a_Canvas->getWidth();
   int h = a_Canvas->getHeight();
   // int display_w;
   // int display_h;
-  io.DisplaySize = ImVec2((float)w, (float)h);
+  io.DisplaySize = ImVec2(w, h);
   // io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h
   // / h);
 
@@ -596,8 +601,8 @@ void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas) {
 
   // Setup inputs
   io.MousePos = ImVec2(
-      (float)a_Canvas->GetMousePosX(),
-      (float)a_Canvas
+      a_Canvas->GetMousePosX(),
+      a_Canvas
           ->GetMousePosY());  // Mouse position in screen coordinates (set to
                               // -1,-1 if no mouse / on another screen, etc.)
 
@@ -660,9 +665,9 @@ void WatchWindow::Draw(const char* title, bool* p_opened) {
         // case Variable::Int64:
         // case Variable::UInt64:
         case Variable::UInt: {
-          int val = (int)var.m_UInt;
+          int val = var.m_Int;
           ImGui::DragInt("##value", &var.m_Int, 1.f, 0, INT_MAX);
-          var.SetValue((unsigned int)val);
+          var.SetValue(val);
           break;
         }
         case Variable::Float: {

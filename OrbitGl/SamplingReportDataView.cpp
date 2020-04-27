@@ -225,7 +225,7 @@ void SamplingReportDataView::OnSelect(int a_Index) {
 //-----------------------------------------------------------------------------
 void SamplingReportDataView::LinkDataView(DataView* a_DataView) {
   if (a_DataView->GetType() == CALLSTACK) {
-    m_CallstackDataView = (CallStackDataView*)a_DataView;
+    m_CallstackDataView = static_cast<CallStackDataView*>(a_DataView);
     m_SamplingReport->SetCallstackDataView(m_CallstackDataView);
   }
 }

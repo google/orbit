@@ -45,8 +45,8 @@ class EventBuffer {
   std::vector<CallstackEvent> GetCallstackEvents(uint64_t a_TimeBegin,
                                                  uint64_t a_TimeEnd,
                                                  ThreadID a_ThreadId = 0);
-  long long GetMaxTime() const { return m_MaxTime; }
-  long long GetMinTime() const { return m_MinTime; }
+  uint64_t GetMaxTime() const { return m_MaxTime; }
+  uint64_t GetMinTime() const { return m_MinTime; }
   bool HasEvent() {
     ScopeLock lock(m_Mutex);
     return m_CallstackEvents.size() > 0;

@@ -90,8 +90,9 @@ std::vector<std::string> TcpServer::GetStats() {
   }
 
   std::string bitRate =
-      "Capture::Bitrate = " + GetPrettySize((ULONG64)m_BytesPerSecond) + "/s" +
-      " ( " + GetPrettyBitRate(static_cast<ULONG64>(m_BytesPerSecond)) + " )\n";
+      "Capture::Bitrate = " +
+      GetPrettySize(static_cast<uint64_t>(m_BytesPerSecond)) + "/s" + " ( " +
+      GetPrettyBitRate(static_cast<uint64_t>(m_BytesPerSecond)) + " )\n";
 
   stats.push_back(bitRate);
   return stats;
@@ -123,8 +124,8 @@ void TcpServer::Receive(const Message& a_Message) {
       break;
     }
     case Msg_Timer: {
-      uint32_t numTimers = (uint32_t)a_Message.m_Size / sizeof(Timer);
-      Timer* timers = (Timer*)a_Message.GetData();
+      uint32_t numTimers = a_Message.m_Size / sizeof(Timer);
+      const Timer* timers = static_cast<const Timer*>(a_Message.GetData());
       for (uint32_t i = 0; i < numTimers; ++i) {
         GTimerManager->Add(timers[i]);
       }
@@ -137,25 +138,31 @@ void TcpServer::Receive(const Message& a_Message) {
       break;
     }
     case Msg_NumQueuedEntries:
-      m_NumTargetQueuedEntries = *((uint32_t*)a_Message.GetData());
+      m_NumTargetQueuedEntries =
+          *static_cast<const uint32_t*>(a_Message.GetData());
       break;
     case Msg_NumFlushedEntries:
-      m_NumTargetFlushedEntries = *((uint32_t*)a_Message.GetData());
+      m_NumTargetFlushedEntries =
+          *static_cast<const uint32_t*>(a_Message.GetData());
       break;
     case Msg_NumFlushedItems:
-      m_NumTargetFlushedTcpPackets = *((uint32_t*)a_Message.GetData());
+      m_NumTargetFlushedTcpPackets =
+          *static_cast<const uint32_t*>(a_Message.GetData());
       break;
     case Msg_NumInstalledHooks:
-      Capture::GNumInstalledHooks = *((uint32_t*)a_Message.GetData());
+      Capture::GNumInstalledHooks =
+          *static_cast<const uint32_t*>(a_Message.GetData());
       break;
     case Msg_Callstack: {
-      CallStackPOD* callstackPOD = (CallStackPOD*)a_Message.GetData();
+      const CallStackPOD* callstackPOD =
+          static_cast<const CallStackPOD*>(a_Message.GetData());
       CallStack callstack(*callstackPOD);
       Capture::AddCallstack(callstack);
       break;
     }
     case Msg_OrbitZoneName: {
-      OrbitZoneName* zoneName = (OrbitZoneName*)a_Message.GetData();
+      const OrbitZoneName* zoneName =
+          static_cast<const OrbitZoneName*>(a_Message.GetData());
       Capture::RegisterZoneName(zoneName->m_Address, zoneName->m_Data);
       break;
     }
@@ -164,9 +171,9 @@ void TcpServer::Receive(const Message& a_Message) {
 
       std::wstring& objectName = GOrbitUnreal.GetObjectNames()[header.m_Ptr];
       if (header.m_WideStr) {
-        objectName = (wchar_t*)a_Message.GetData();
+        objectName = static_cast<const wchar_t*>(a_Message.GetData());
       } else {
-        objectName = s2ws((char*)a_Message.GetData());
+        objectName = s2ws(static_cast<const char*>(a_Message.GetData()));
       }
 
       break;
@@ -209,14 +216,13 @@ void TcpServer::MainThreadTick() {
   double elapsedTime = m_StatTimer.QueryMillis();
   if (elapsedTime > period) {
     m_NumMessagesPerSecond =
-        ((double)(m_NumReceivedMessages - m_LastNumMessages)) /
-        (elapsedTime * 0.001);
+        (m_NumReceivedMessages - m_LastNumMessages) / (elapsedTime * 0.001);
     m_LastNumMessages = m_NumReceivedMessages;
 
     uint64_t numBytesReceived =
         m_TcpServer ? m_TcpServer->GetNumBytesReceived() : 0;
     m_BytesPerSecond =
-        (double(numBytesReceived - m_LastNumBytes)) / (elapsedTime * 0.001);
+        (numBytesReceived - m_LastNumBytes) / (elapsedTime * 0.001);
     m_LastNumBytes = numBytesReceived;
     m_StatTimer.Reset();
   }

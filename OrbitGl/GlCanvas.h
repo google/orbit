@@ -77,8 +77,8 @@ class GlCanvas : public GlPanel {
   float GetMouseX() const { return m_MouseX; }
   float GetMouseY() const { return m_MouseY; }
 
-  float GetMousePosX() const { return (float)m_MousePosX; }
-  float GetMousePosY() const { return (float)m_MousePosY; }
+  float GetMousePosX() const { return m_MousePosX; }
+  float GetMousePosY() const { return m_MousePosY; }
 
   Vec2 ToScreenSpace(const Vec2& a_Point);
   Vec2 ToWorldSpace(const Vec2& a_Point);

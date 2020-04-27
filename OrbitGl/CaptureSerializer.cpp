@@ -105,7 +105,7 @@ void CaptureSerializer::Save(T& a_Archive) {
       time_graph_->GetAllTimerChains();
   for (const std::shared_ptr<TimerChain>& chain : chains) {
     for (const TextBox& box : *chain) {
-      a_Archive(cereal::binary_data((char*)&box.GetTimer(), sizeof(Timer)));
+      a_Archive(cereal::binary_data(&box.GetTimer(), sizeof(Timer)));
 
       if (++numWrites > m_NumTimers) {
         return;

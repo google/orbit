@@ -223,7 +223,7 @@ std::wstring OrbitMainWindow::FindFile(const std::wstring& a_Caption,
 void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
   if (a_Type == DataViewType::ALL) {
     for (int i = 0; i < DataViewType::ALL; ++i) {
-      UpdatePanel((DataViewType)i);
+      UpdatePanel(static_cast<DataViewType>(i));
     }
   } else {
     UpdatePanel(a_Type);
@@ -285,7 +285,7 @@ void OrbitMainWindow::CreatePluginTabs() {
     layout->addWidget(glWidget, 0, 0, 1, 1);
     ui->RightTabWidget->addTab(widget, plugin->GetName());
 
-    glWidget->Initialize(GlPanel::PLUGIN, this, (void*)plugin);
+    glWidget->Initialize(GlPanel::PLUGIN, this, plugin);
   }
 }
 

@@ -48,7 +48,7 @@ void ShowIncludesDialog::onCustomContextMenu(const QPoint& point) {
       QSignalMapper signalMapper(this);
       std::vector<QAction*> actions;
 
-      for (int i = 0; i < (int)GContextMenuShowIncludes.size(); ++i) {
+      for (size_t i = 0; i < GContextMenuShowIncludes.size(); ++i) {
         actions.push_back(
             new QAction(QString::fromStdWString(GContextMenuShowIncludes[i])));
         connect(actions[i], SIGNAL(triggered()), &signalMapper, SLOT(map()));

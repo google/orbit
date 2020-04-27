@@ -47,5 +47,5 @@ void PickingManager::Drag(int a_X, int a_Y) {
 
 //-----------------------------------------------------------------------------
 void PickingManager::SetPickingColor(PickingID a_ID) {
-  glColor4ubv((uint8_t*)&a_ID);
+  glColor4ubv(reinterpret_cast<const uint8_t*>(&a_ID));
 }

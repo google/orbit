@@ -69,11 +69,11 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
 TextBox* Batcher::GetTextBox(PickingID a_ID) {
   if (a_ID.m_Type == PickingID::BOX) {
     if (void** textBoxPtr = box_buffer_.m_UserData.SlowAt(a_ID.m_Id)) {
-      return (TextBox*)*textBoxPtr;
+      return static_cast<TextBox*>(*textBoxPtr);
     }
   } else if (a_ID.m_Type == PickingID::LINE) {
     if (void** textBoxPtr = line_buffer_.m_UserData.SlowAt(a_ID.m_Id)) {
-      return (TextBox*)*textBoxPtr;
+      return static_cast<TextBox*>(*textBoxPtr);
     }
   }
 

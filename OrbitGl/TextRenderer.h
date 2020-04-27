@@ -72,9 +72,9 @@ class TextRenderer {
 inline vec4 ColorToVec4(const Color& a_Col) {
   const float coeff = 1.f / 255.f;
   vec4 color;
-  color.r = (float)a_Col[0] * coeff;
-  color.g = (float)a_Col[1] * coeff;
-  color.b = (float)a_Col[2] * coeff;
-  color.a = (float)a_Col[3] * coeff;
+  color.r = a_Col[0] * coeff;
+  color.g = a_Col[1] * coeff;
+  color.b = a_Col[2] * coeff;
+  color.a = a_Col[3] * coeff;
   return color;
 }

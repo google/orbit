@@ -40,7 +40,7 @@ const std::vector<DataView::Column>& CallStackDataView::GetColumns() {
 
 //-----------------------------------------------------------------------------
 std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
-  if (a_Row >= (int)GetNumElements()) {
+  if (a_Row >= static_cast<int>(GetNumElements())) {
     return "";
   }
 
@@ -174,7 +174,7 @@ void CallStackDataView::DoFilter() {
   std::vector<uint32_t> indices;
   std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
 
-  for (int i = 0; i < (int)m_CallStack->m_Depth; ++i) {
+  for (size_t i = 0; i < m_CallStack->m_Depth; ++i) {
     CallStackDataViewFrame frame = GetFrameFromIndex(i);
     Function* function = frame.function;
     std::string name = ToLower(function != nullptr ? function->PrettyName()

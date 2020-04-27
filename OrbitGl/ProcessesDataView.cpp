@@ -45,7 +45,7 @@ std::string ProcessesDataView::GetValue(int row, int col) {
 
   switch (col) {
     case COLUMN_PID:
-      return std::to_string((long)process.GetID());
+      return std::to_string(process.GetID());
     case COLUMN_NAME:
       return process.GetName() + (process.IsElevated() ? "*" : "");
     case COLUMN_CPU:
@@ -168,7 +168,7 @@ void ProcessesDataView::SetSelectedItem() {
   int initialIndex = m_SelectedIndex;
   m_SelectedIndex = -1;
 
-  for (uint32_t i = 0; i < (uint32_t)GetNumElements(); ++i) {
+  for (size_t i = 0; i < GetNumElements(); ++i) {
     if (m_SelectedProcess &&
         GetProcess(i)->GetID() == m_SelectedProcess->GetID()) {
       m_SelectedIndex = i;

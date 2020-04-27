@@ -134,7 +134,7 @@ Systrace::Systrace(const char* a_FilePath, uint64_t a_TimeOffsetNs) {
         timer.m_Start = TicksFromMicroseconds(GetMicros(timestamp) +
                                               m_TimeOffsetNs * 0.001);
 
-        timer.m_Depth = (uint8_t)m_TimerStacks[threadName].size();
+        timer.m_Depth = static_cast<uint8_t>(m_TimerStacks[threadName].size());
         const std::string& function = GetFunction(line);
         timer.m_FunctionAddress = ProcessFunctionName(function);
         m_TimerStacks[threadName].push_back(timer);

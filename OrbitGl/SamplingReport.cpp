@@ -58,8 +58,8 @@ void SamplingReport::OnSelectAddress(uint64_t a_Address, ThreadID a_ThreadId) {
 
 //-----------------------------------------------------------------------------
 void SamplingReport::IncrementCallstackIndex() {
-  assert(HasCallstacks());
-  int maxIndex = (int)m_SelectedSortedCallstackReport->m_CallStacks.size() - 1;
+  DCHECK(HasCallstacks());
+  size_t maxIndex = m_SelectedSortedCallstackReport->m_CallStacks.size() - 1;
   if (++m_SelectedAddressCallstackIndex > maxIndex) {
     m_SelectedAddressCallstackIndex = 0;
   }
@@ -70,8 +70,8 @@ void SamplingReport::IncrementCallstackIndex() {
 //-----------------------------------------------------------------------------
 void SamplingReport::DecrementCallstackIndex() {
   assert(HasCallstacks());
-  int maxIndex = (int)m_SelectedSortedCallstackReport->m_CallStacks.size() - 1;
-  if (--m_SelectedAddressCallstackIndex < 0) {
+  size_t maxIndex = m_SelectedSortedCallstackReport->m_CallStacks.size() - 1;
+  if (m_SelectedAddressCallstackIndex == 0) {
     m_SelectedAddressCallstackIndex = maxIndex;
   }
 
@@ -90,16 +90,15 @@ std::string SamplingReport::GetSelectedCallstackString() {
         "%i of %i unique callstacks.  [%i/%i total callstacks](%.2f%%)",
         m_SelectedAddressCallstackIndex + 1,
         m_SelectedSortedCallstackReport->m_CallStacks.size(), numOccurances,
-        totalCallstacks, 100.f * (float)numOccurances / (float)totalCallstacks);
+        totalCallstacks, 100.f * numOccurances / totalCallstacks);
   }
 
   return "Callstacks";
 }
 
 //-----------------------------------------------------------------------------
-void SamplingReport::OnCallstackIndexChanged(int a_Index) {
-  if (a_Index >= 0 &&
-      a_Index < (int)m_SelectedSortedCallstackReport->m_CallStacks.size()) {
+void SamplingReport::OnCallstackIndexChanged(size_t a_Index) {
+  if (a_Index < m_SelectedSortedCallstackReport->m_CallStacks.size()) {
     CallstackCount& cs = m_SelectedSortedCallstackReport->m_CallStacks[a_Index];
     m_SelectedAddressCallstackIndex = a_Index;
     m_CallstackDataView->SetCallStack(

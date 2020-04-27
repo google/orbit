@@ -27,8 +27,8 @@ UserScopeTimer::UserScopeTimer(const char* a_Name) : m_Valid(false) {
 //-----------------------------------------------------------------------------
 UserScopeTimer::~UserScopeTimer() {
   if (m_Valid) {
-    ScopeTimer* Timer = (ScopeTimer*)m_Data;
-    Timer->~ScopeTimer();
+    ScopeTimer* timer = reinterpret_cast<ScopeTimer*>(m_Data);
+    timer->~ScopeTimer();
   }
 }
 
