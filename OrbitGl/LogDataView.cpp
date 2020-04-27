@@ -41,8 +41,8 @@ std::string LogDataView::GetValue(int a_Row, int a_Column) {
       return entry.m_Text;
 
     case COLUMN_TIME: {
-      TickType micros = (TickType)MicroSecondsFromTicks(
-          Capture::GCaptureTimer.m_Start, entry.m_Time);
+      TickType micros = static_cast<TickType>(
+          MicroSecondsFromTicks(Capture::GCaptureTimer.m_Start, entry.m_Time));
       std::chrono::system_clock::time_point sysTime =
           Capture::GCaptureTimePoint + std::chrono::microseconds(micros);
       std::time_t now_c = std::chrono::system_clock::to_time_t(sysTime);
@@ -129,7 +129,8 @@ std::vector<std::string> LogDataView::GetContextMenu(
 //-----------------------------------------------------------------------------
 void LogDataView::OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                                 const std::vector<int>& a_ItemIndices) {
-  if (m_SelectedCallstack && (int)m_SelectedCallstack->m_Depth > a_MenuIndex) {
+  if (m_SelectedCallstack &&
+      static_cast<int>(m_SelectedCallstack->m_Depth) > a_MenuIndex) {
     GOrbitApp->GoToCode(m_SelectedCallstack->m_Data[a_MenuIndex]);
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
@@ -154,7 +155,8 @@ void LogDataView::OnReceiveMessage(const Message& a_Msg) {
   assert(isLog);
   if (isLog) {
     OrbitLogEntry entry;
-    const OrbitLogEntry* msgEntry = (OrbitLogEntry*)(a_Msg.GetData());
+    const OrbitLogEntry* msgEntry =
+        static_cast<const OrbitLogEntry*>(a_Msg.GetData());
     entry.m_Time = msgEntry->m_Time;
     entry.m_CallstackHash = msgEntry->m_CallstackHash;
     entry.m_ThreadId = msgEntry->m_ThreadId;

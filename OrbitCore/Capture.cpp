@@ -58,7 +58,7 @@ std::shared_ptr<CallStack> Capture::GSelectedCallstack;
 std::vector<ULONG64> Capture::GSelectedAddressesByType[Function::NUM_TYPES];
 std::unordered_map<DWORD64, std::shared_ptr<CallStack>> Capture::GCallstacks;
 Mutex Capture::GCallstackMutex;
-std::unordered_map<DWORD64, std::string> Capture::GZoneNames;
+std::unordered_map<uint64_t, std::string> Capture::GZoneNames;
 TextBox* Capture::GSelectedTextBox;
 ThreadID Capture::GSelectedThreadId;
 Timer Capture::GCaptureTimer;
@@ -337,7 +337,7 @@ void Capture::SendFunctionHooks() {
     std::string selectedFunctionsData =
         SerializeObjectBinary(GSelectedFunctions);
     GTcpClient->Send(Msg_RemoteSelectedFunctionsMap,
-                     (void*)selectedFunctionsData.data(),
+                     selectedFunctionsData.data(),
                      selectedFunctionsData.size());
 
     Message msg(Msg_StartCapture);
@@ -355,7 +355,7 @@ void Capture::SendFunctionHooks() {
   for (int i = 0; i < Function::NUM_TYPES; ++i) {
     std::vector<DWORD64>& addresses = GSelectedAddressesByType[i];
     if (addresses.size()) {
-      MessageType msgType = GetMessageType((Function::OrbitType)i);
+      MessageType msgType = GetMessageType(static_cast<Function::OrbitType>(i));
       GTcpServer->Send(msgType, addresses);
     }
   }
@@ -379,7 +379,7 @@ void Capture::SendDataTrackingInfo() {
     std::vector<Argument> args;
     for (const std::shared_ptr<Variable> var : rule->m_TrackedVariables) {
       Argument arg;
-      arg.m_Offset = (DWORD)var->m_Address;
+      arg.m_Offset = var->m_Address;
       arg.m_NumBytes = var->m_Size;
       args.push_back(arg);
     }
@@ -546,7 +546,7 @@ bool Capture::IsLinuxData() {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::RegisterZoneName(DWORD64 a_ID, char* a_Name) {
+void Capture::RegisterZoneName(uint64_t a_ID, const char* a_Name) {
   GZoneNames[a_ID] = a_Name;
 }
 

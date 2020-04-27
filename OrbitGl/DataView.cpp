@@ -140,7 +140,7 @@ void DataView::ExportCSV(const std::string& a_FileName) {
   size_t numElements = GetNumElements();
   for (size_t i = 0; i < numElements; ++i) {
     for (size_t j = 0; j < numColumns; ++j) {
-      out << GetValue((int)i, (int)j);
+      out << GetValue(i, j);
       if (j < numColumns - 1) out << ", ";
     }
     out << "\n";
@@ -163,7 +163,7 @@ void DataView::CopySelection(const std::vector<int>& selection) {
   for (size_t i : selection) {
     if (i < numElements) {
       for (size_t j = 0; j < numColumns; ++j) {
-        clipboard += GetValue((int)i, (int)j);
+        clipboard += GetValue(i, j);
         if (j < numColumns - 1) clipboard += ", ";
       }
       clipboard += "\n";

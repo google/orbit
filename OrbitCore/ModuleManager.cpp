@@ -32,8 +32,7 @@ void ModuleManager::Init() {
 void ModuleManager::OnReceiveMessage(const Message& a_Msg) {
   if (a_Msg.GetType() == Msg_SetData) {
     const DataTransferHeader& header = a_Msg.GetHeader().m_DataTransferHeader;
-    ULONG64 address =
-        (ULONG64)header.m_Address - (ULONG64)GPdbDbg->GetHModule();
+    uint64_t address = header.m_Address - GPdbDbg->GetHModule();
     DataTransferHeader::DataType dataType = header.m_Type;
 
     if (dataType == DataTransferHeader::Data) {
@@ -128,7 +127,7 @@ void ModuleManager::AddPdb(const std::shared_ptr<Pdb>& a_Pdb) {
   std::map<uint64_t, std::shared_ptr<Module> >& modules =
       Capture::GTargetProcess->GetModules();
 
-  auto it = modules.find((DWORD64)a_Pdb->GetHModule());
+  auto it = modules.find(a_Pdb->GetHModule());
   if (it != modules.end()) {
     it->second->SetLoaded(true);
   }

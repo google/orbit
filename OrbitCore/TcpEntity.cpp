@@ -78,8 +78,8 @@ void TcpEntity::FlushSendQueue() {
 
     if (numDequeued == 0) break;
 
-    m_NumQueuedEntries -= (int)numDequeued;
-    m_NumFlushedItems += (int)numDequeued;
+    m_NumQueuedEntries -= numDequeued;
+    m_NumFlushedItems += numDequeued;
   }
 
   m_FlushRequested = false;

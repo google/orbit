@@ -118,9 +118,9 @@ void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
     time_graph_.GetWorldMinMax(worldMin, worldMax);
 
     m_WorldTopLeftX =
-        m_WorldClickX - (float)mousex / (float)getWidth() * m_WorldWidth;
-    m_WorldTopLeftY =
-        m_WorldClickY + (float)mousey / (float)getHeight() * m_WorldHeight;
+        m_WorldClickX - static_cast<float>(mousex) / getWidth() * m_WorldWidth;
+    m_WorldTopLeftY = m_WorldClickY +
+                      static_cast<float>(mousey) / getHeight() * m_WorldHeight;
 
     m_WorldTopLeftX = clamp(m_WorldTopLeftX, worldMin, worldMax - m_WorldWidth);
     m_WorldTopLeftY =
@@ -129,7 +129,7 @@ void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
     UpdateSceneBox();
 
     time_graph_.PanTime(m_ScreenClickX, a_X, getWidth(),
-                        (double)m_RefTimeClick);
+                        static_cast<double>(m_RefTimeClick));
     UpdateVerticalSlider();
     NeedsUpdate();
   }
@@ -154,8 +154,8 @@ void CaptureWindow::LeftDown(int a_X, int a_Y) {
   ScreenToWorld(a_X, a_Y, m_WorldClickX, m_WorldClickY);
   m_ScreenClickX = a_X;
   m_ScreenClickY = a_Y;
-  m_RefTimeClick =
-      (TickType)time_graph_.GetTime((double)a_X / (double)getWidth());
+  m_RefTimeClick = static_cast<TickType>(
+      time_graph_.GetTime(static_cast<double>(a_X) / getWidth()));
 
   m_IsSelecting = false;
 
@@ -187,11 +187,11 @@ void CaptureWindow::Pick() {
 //-----------------------------------------------------------------------------
 void CaptureWindow::Pick(int a_X, int a_Y) {
   // 4 bytes per pixel (RGBA), 1x1 bitmap
-  std::vector<unsigned char> pixels(1 * 1 * 4);
+  std::vector<uint8_t> pixels(1 * 1 * 4);
   glReadPixels(a_X, m_MainWindowHeight - a_Y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE,
                &pixels[0]);
 
-  PickingID pickId = PickingID::Get(*((uint32_t*)(&pixels[0])));
+  PickingID pickId = PickingID::Get(*reinterpret_cast<uint32_t*>(&pixels[0]));
 
   Capture::GSelectedTextBox = nullptr;
   Capture::GSelectedThreadId = 0;
@@ -211,7 +211,7 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
       void** textBoxPtr =
           time_graph_.GetBatcher().GetBoxBuffer().m_UserData.SlowAt(id);
       if (textBoxPtr) {
-        TextBox* textBox = (TextBox*)*textBoxPtr;
+        TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
         SelectTextBox(textBox);
       }
       break;
@@ -220,7 +220,7 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
       void** textBoxPtr =
           time_graph_.GetBatcher().GetLineBuffer().m_UserData.SlowAt(id);
       if (textBoxPtr) {
-        TextBox* textBox = (TextBox*)*textBoxPtr;
+        TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
         SelectTextBox(textBox);
       }
       break;
@@ -260,11 +260,11 @@ void CaptureWindow::SelectTextBox(class TextBox* a_TextBox) {
 //-----------------------------------------------------------------------------
 void CaptureWindow::Hover(int a_X, int a_Y) {
   // 4 bytes per pixel (RGBA), 1x1 bitmap
-  std::vector<unsigned char> pixels(1 * 1 * 4);
+  std::vector<uint8_t> pixels(1 * 1 * 4);
   glReadPixels(a_X, m_MainWindowHeight - a_Y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE,
                &pixels[0]);
 
-  PickingID pickId = *((PickingID*)(&pixels[0]));
+  PickingID pickId = *reinterpret_cast<PickingID*>(&pixels[0]);
 
   TextBox* textBox = time_graph_.GetBatcher().GetTextBox(pickId);
   if (textBox) {
@@ -414,11 +414,11 @@ void CaptureWindow::Zoom(int a_Delta) {
   float worldy;
 
   ScreenToWorld(m_MousePosX, m_MousePosY, worldx, worldy);
-  m_MouseRatio = (double)m_MousePosX / (double)getWidth();
+  m_MouseRatio = static_cast<double>(m_MousePosX) / getWidth();
 
-  time_graph_.ZoomTime((float)a_Delta, m_MouseRatio);
+  time_graph_.ZoomTime(a_Delta, m_MouseRatio);
   m_WheelMomentum =
-      a_Delta * m_WheelMomentum < 0 ? 0.f : m_WheelMomentum + (float)a_Delta;
+      a_Delta * m_WheelMomentum < 0 ? 0 : m_WheelMomentum + a_Delta;
 
   NeedsUpdate();
 }
@@ -426,7 +426,7 @@ void CaptureWindow::Zoom(int a_Delta) {
 //-----------------------------------------------------------------------------
 void CaptureWindow::Pan(float a_Ratio) {
   double refTime =
-      (TickType)time_graph_.GetTime((double)m_MousePosX / (double)getWidth());
+      time_graph_.GetTime(static_cast<double>(m_MousePosX) / getWidth());
   time_graph_.PanTime(m_MousePosX,
                       m_MousePosX + static_cast<int>(a_Ratio * getWidth()),
                       getWidth(), refTime);
@@ -445,21 +445,20 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
   if (delta < m_MinWheelDelta) m_MinWheelDelta = delta;
   if (delta > m_MaxWheelDelta) m_MaxWheelDelta = delta;
 
-  float mousex = (float)a_X;
+  float mousex = a_X;
 
   float worldx;
   float worldy;
 
   ScreenToWorld(a_X, a_Y, worldx, worldy);
-  m_MouseRatio = (double)mousex / (double)getWidth();
+  m_MouseRatio = static_cast<double>(mousex) / getWidth();
 
   static float zoomRatio = 0.1f;
   bool zoomWidth = !a_Ctrl;
 
   if (zoomWidth) {
-    time_graph_.ZoomTime((float)delta, m_MouseRatio);
-    m_WheelMomentum =
-        delta * m_WheelMomentum < 0 ? 0.f : m_WheelMomentum + (float)delta;
+    time_graph_.ZoomTime(delta, m_MouseRatio);
+    m_WheelMomentum = delta * m_WheelMomentum < 0 ? 0 : m_WheelMomentum + delta;
   } else {
     float zoomInc = zoomRatio * m_DesiredWorldHeight;
     m_DesiredWorldHeight += delta * zoomInc;
@@ -627,8 +626,8 @@ void CaptureWindow::ToggleSampling() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::OnCaptureStarted() {
-  m_DesiredWorldWidth = (float)m_Width;
-  m_DesiredWorldHeight = (float)m_Height;
+  m_DesiredWorldWidth = m_Width;
+  m_DesiredWorldHeight = m_Height;
   time_graph_.ZoomAll();
   NeedsRedraw();
 }
@@ -641,7 +640,8 @@ void CaptureWindow::ResetHoverTimer() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::Draw() {
-  m_WorldMaxY = 1.5f * ScreenToWorldHeight((int)m_Slider.GetPixelHeight());
+  m_WorldMaxY =
+      1.5f * ScreenToWorldHeight(static_cast<int>(m_Slider.GetPixelHeight()));
 
   if (Capture::IsCapturing()) {
     ZoomAll();
@@ -686,15 +686,15 @@ void CaptureWindow::DrawScreenSpace() {
 
   Color col = m_Slider.GetBarColor();
   float height = m_Slider.GetPixelHeight();
-  float canvasHeight = (float)getHeight();
+  float canvasHeight = getHeight();
   float z = GlCanvas::Z_VALUE_TEXT_UI_BG;
 
   // Top bar
   glColor4ubv(&col[0]);
   glBegin(GL_QUADS);
   glVertex3f(0, canvasHeight, z);
-  glVertex3f((float)getWidth(), canvasHeight, z);
-  glVertex3f((float)getWidth(), canvasHeight - height, z);
+  glVertex3f(getWidth(), canvasHeight, z);
+  glVertex3f(getWidth(), canvasHeight - height, z);
   glVertex3f(0, canvasHeight - height, z);
   glEnd();
 
@@ -703,8 +703,8 @@ void CaptureWindow::DrawScreenSpace() {
     glColor4ub(70, 70, 70, 200);
     glBegin(GL_QUADS);
     glVertex3f(0, height, z);
-    glVertex3f((float)getWidth(), height, z);
-    glVertex3f((float)getWidth(), 2 * height, z);
+    glVertex3f(getWidth(), height, z);
+    glVertex3f(getWidth(), 2 * height, z);
     glVertex3f(0, 2 * height, z);
     glEnd();
   }
@@ -718,8 +718,8 @@ void CaptureWindow::DrawScreenSpace() {
         Capture::IsCapturing() ? 1 : (maxStart != 0 ? start / maxStart : 0);
 
     m_Slider.SetPixelHeight(time_graph_.GetLayout().GetSliderWidth());
-    m_Slider.SetSliderRatio((float)ratio);
-    m_Slider.SetSliderWidthRatio(float(width / timeSpan));
+    m_Slider.SetSliderRatio(ratio);
+    m_Slider.SetSliderWidthRatio(width / timeSpan);
     m_Slider.Draw(this, m_Picking);
 
     float verticalRatio = m_WorldHeight / time_graph_.GetThreadTotalHeight();
@@ -763,20 +763,20 @@ void CaptureWindow::NeedsUpdate() {
 //-----------------------------------------------------------------------------
 float CaptureWindow::GetTopBarTextY() {
   return m_Slider.GetPixelHeight() * 0.5f +
-         (float)m_TextRenderer.GetStringHeight("FpjT_H") * 0.5f;
+         m_TextRenderer.GetStringHeight("FpjT_H") * 0.5f;
 }
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::DrawStatus() {
   int s_PosX = 0;
-  float s_PosY = GetTopBarTextY();
+  int s_PosY = static_cast<int>(GetTopBarTextY());
   static int s_IncY = 20;
 
   static Color s_Color(255, 255, 255, 255);
 
   int PosX = getWidth() - s_PosX;
-  int PosY = (int)s_PosY;
-  int LeftY = (int)s_PosY;
+  int PosY = s_PosY;
+  int LeftY = s_PosY;
 
   m_TextRenderer.AddText2D(" Press 'H' for help", s_PosX, LeftY,
                            Z_VALUE_TEXT_UI, s_Color);
@@ -901,8 +901,8 @@ void CaptureWindow::RenderText() {
 
 //-----------------------------------------------------------------------------
 void ColorToFloat(Color a_Color, float* o_Float) {
-  for (int i = 0; i < 4; ++i) {
-    o_Float[i] = (float)a_Color[i] / 255.f;
+  for (size_t i = 0; i < 4; ++i) {
+    o_Float[i] = a_Color[i] / 255.f;
   }
 }
 
@@ -937,27 +937,28 @@ void CaptureWindow::RenderHelpUi() {
   extern GLuint GTextureRecord;
   float size = m_Slider.GetPixelHeight();
 
-  ImGui::Image((void*)(DWORD64)GTextureInjected, ImVec2(size, size),
-               ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255),
-               ImColor(255, 255, 255, 128));
+  ImGui::Image(
+      reinterpret_cast<void*>(static_cast<uintptr_t>(GTextureInjected)),
+      ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1),
+      ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
   ImGui::SameLine();
   ImGui::Text("Injected in process");
 
-  ImGui::Image((void*)(DWORD64)GTextureTimer, ImVec2(size, size), ImVec2(0, 0),
-               ImVec2(1, 1), ImColor(255, 255, 255, 255),
-               ImColor(255, 255, 255, 128));
+  ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(GTextureTimer)),
+               ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1),
+               ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
   ImGui::SameLine();
   ImGui::Text("Capture time");
 
-  ImGui::Image((void*)(DWORD64)GTextureRecord, ImVec2(size, size), ImVec2(0, 0),
-               ImVec2(1, 1), ImColor(255, 255, 255, 255),
-               ImColor(255, 255, 255, 128));
+  ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(GTextureRecord)),
+               ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1),
+               ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
   ImGui::SameLine();
   ImGui::Text("Recording");
 
-  ImGui::Image((void*)(DWORD64)GTextureHelp, ImVec2(size, size), ImVec2(0, 0),
-               ImVec2(1, 1), ImColor(255, 255, 255, 255),
-               ImColor(255, 255, 255, 128));
+  ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(GTextureHelp)),
+               ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1),
+               ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
   ImGui::SameLine();
   ImGui::Text("Help");
 
@@ -1066,7 +1067,7 @@ void CaptureWindow::RenderBar() {
 
   float barHeight = m_Slider.GetPixelHeight();
   float size = barHeight;
-  float h = (float)getHeight();
+  float h = getHeight();
   float y = h - barHeight;
   float timerX = getWidth() / 2.f;
 
@@ -1080,8 +1081,8 @@ void CaptureWindow::RenderBar() {
   timerX += size;
   m_TextRenderer.AddText2D(
       absl::StrFormat("%s", GetPrettyTime(timeSpan * 0.001).c_str()).c_str(),
-      (int)timerX, (int)GetTopBarTextY(), GlCanvas::Z_VALUE_TEXT_UI,
-      Color(255, 255, 255, 255));
+      static_cast<int>(timerX), static_cast<int>(GetTopBarTextY()),
+      GlCanvas::Z_VALUE_TEXT_UI, Color(255, 255, 255, 255));
 
   /*m_TextRenderer.AddText2D(Format("%s",
      GetPrettyTime(time_graph_.GetCurrentTimeSpanUs()*0.001).c_str()).c_str() ,
@@ -1124,20 +1125,22 @@ void CaptureWindow::RenderTimeBar() {
     double millis = time_graph_.GetCurrentTimeSpanUs() * 0.001;
     double incr = millis / float(numTimePoints - 1);
     double unit = GetIncrementMs(incr);
-    double normInc = (double((int)((incr + unit) / unit))) * unit;
+    double normInc = static_cast<int>((incr + unit) / unit) * unit;
     double startMs = time_graph_.GetMinTimeUs() * 0.001;
-    double normStartUs = 1000.0 * (double(int(startMs / normInc))) * normInc;
+    double normStartUs = 1000.0 * static_cast<int>(startMs / normInc) * normInc;
 
     static int pixelMargin = 2;
-    int screenY = getHeight() - (int)m_Slider.GetPixelHeight() - pixelMargin;
+    int screenY =
+        getHeight() - static_cast<int>(m_Slider.GetPixelHeight()) - pixelMargin;
     float dummy, worldY;
     ScreenToWorld(0, screenY, dummy, worldY);
 
-    float height = ScreenToWorldHeight((int)GParams.m_FontSize + pixelMargin);
+    float height =
+        ScreenToWorldHeight(static_cast<int>(GParams.m_FontSize) + pixelMargin);
     float xMargin = ScreenToworldWidth(4);
 
     for (int i = 0; i < numTimePoints; ++i) {
-      double currentMicros = normStartUs + double(i) * 1000 * normInc;
+      double currentMicros = normStartUs + i * 1000 * normInc;
       if (currentMicros < 0) continue;
 
       double currentMillis = currentMicros * 0.001;
@@ -1172,7 +1175,6 @@ void CaptureWindow::SendProcess() {
     std::string processData =
         SerializeObjectHumanReadable(*Capture::GTargetProcess);
     PRINT_VAR(processData);
-    GTcpClient->Send(Msg_RemoteProcess, (void*)processData.data(),
-                     processData.size());
+    GTcpClient->Send(Msg_RemoteProcess, processData.data(), processData.size());
   }
 }

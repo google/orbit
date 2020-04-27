@@ -176,7 +176,7 @@ void ModulesDataView::DoFilter() {
   std::vector<uint32_t> indices;
   std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
 
-  for (int i = 0; i < (int)m_Modules.size(); ++i) {
+  for (size_t i = 0; i < m_Modules.size(); ++i) {
     std::shared_ptr<Module>& module = m_Modules[i];
     std::string name = ToLower(module->GetPrettyName());
 
@@ -209,9 +209,9 @@ void ModulesDataView::SetProcess(const std::shared_ptr<Process>& a_Process) {
     m_Modules.push_back(it.second);
   }
 
-  int numModules = (int)m_Modules.size();
+  size_t numModules = m_Modules.size();
   m_Indices.resize(numModules);
-  for (int i = 0; i < numModules; ++i) {
+  for (size_t i = 0; i < numModules; ++i) {
     m_Indices[i] = i;
   }
 

@@ -52,8 +52,7 @@ void TestRemoteMessages::Run() {
 
   std::string processData = SerializeObjectHumanReadable(process);
   PRINT_VAR(processData);
-  GTcpClient->Send(Msg_RemoteProcess, (void*)processData.data(),
-                   processData.size());
+  GTcpClient->Send(Msg_RemoteProcess, processData.data(), processData.size());
 
   Module module;
   module.m_Name = "module.m_Name";
@@ -63,7 +62,7 @@ void TestRemoteMessages::Run() {
   module.m_PrettyName = "module.m_PrettyName";
   module.m_AddressRange = "module.m_AddressRange";
   module.m_DebugSignature = "module.m_DebugSignature";
-  module.m_ModuleHandle = (HMODULE)1;
+  module.m_ModuleHandle = reinterpret_cast<HMODULE>(static_cast<uintptr_t>(1));
   module.m_AddressStart = 2;
   module.m_AddressEnd = 3;
   module.m_EntryPoint = 4;
@@ -74,8 +73,7 @@ void TestRemoteMessages::Run() {
   module.m_PdbSize = 110;
 
   std::string moduleData = SerializeObjectHumanReadable(module);
-  GTcpClient->Send(Msg_RemoteModule, (void*)moduleData.data(),
-                   moduleData.size());
+  GTcpClient->Send(Msg_RemoteModule, moduleData.data(), moduleData.size());
 
   Function function;
   function.SetName("m_Name");
@@ -93,7 +91,7 @@ void TestRemoteMessages::Run() {
   function.SetCallingConvention(7);
 
   std::string functionData = SerializeObjectHumanReadable(function);
-  GTcpClient->Send(Msg_RemoteFunctions, (void*)functionData.data(),
+  GTcpClient->Send(Msg_RemoteFunctions, functionData.data(),
                    functionData.size());
 }
 

@@ -981,7 +981,7 @@ void QtLineEditFactoryPrivate::slotEchoModeChanged(QtProperty* property,
   while (itEditor.hasNext()) {
     QLineEdit* editor = itEditor.next();
     editor->blockSignals(true);
-    editor->setEchoMode((EchoMode)echoMode);
+    editor->setEchoMode(static_cast<EchoMode>(echoMode));
     editor->blockSignals(false);
   }
 }
@@ -1070,7 +1070,7 @@ QWidget* QtLineEditFactory::createEditor(QtStringPropertyManager* manager,
                                          QtProperty* property,
                                          QWidget* parent) {
   QLineEdit* editor = d_ptr->createEditor(property, parent);
-  editor->setEchoMode((EchoMode)manager->echoMode(property));
+  editor->setEchoMode(static_cast<EchoMode>(manager->echoMode(property)));
   editor->setReadOnly(manager->isReadOnly(property));
   QRegExp regExp = manager->regExp(property);
   if (regExp.isValid()) {

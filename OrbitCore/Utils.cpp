@@ -318,7 +318,7 @@ std::string OrbitUtils::FormatTime(const time_t& rawtime) {
 bool ReadProcessMemory(uint32_t pid, uint64_t address, byte* buffer,
                        uint64_t size, size_t* num_bytes_read) {
 #if _WIN32
-  HANDLE h_process = reinterpret_cast<HANDLE>(pid);
+  HANDLE h_process = reinterpret_cast<HANDLE>(static_cast<uintptr_t>(pid));
   BOOL res = ReadProcessMemory(h_process, reinterpret_cast<void*>(address),
                                buffer, size, num_bytes_read);
   return res == TRUE;

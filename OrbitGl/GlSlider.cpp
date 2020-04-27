@@ -32,7 +32,8 @@ void GlSlider::SetSliderRatio(float a_Ratio)  // [0,1]
 //-----------------------------------------------------------------------------
 void GlSlider::SetSliderWidthRatio(float a_WidthRatio)  // [0,1]
 {
-  float minWidth = m_MinSliderPixelWidth / (float)m_Canvas->getWidth();
+  float minWidth =
+      m_MinSliderPixelWidth / static_cast<float>(m_Canvas->getWidth());
   m_Length = std::max(a_WidthRatio, minWidth);
 }
 
@@ -43,7 +44,7 @@ void GlSlider::OnPick(int a_X, int a_Y) {
 
 //-----------------------------------------------------------------------------
 void GlSlider::OnPickHorizontal(int a_X, int /*a_Y*/) {
-  float canvasWidth = (float)m_Canvas->getWidth();
+  float canvasWidth = m_Canvas->getWidth();
   float sliderWidth = m_Length * canvasWidth;
   float nonSliderWidth = canvasWidth - sliderWidth;
 
@@ -54,11 +55,11 @@ void GlSlider::OnPickHorizontal(int a_X, int /*a_Y*/) {
 
 //-----------------------------------------------------------------------------
 void GlSlider::OnPickVertical(int /*a_X*/, int a_Y) {
-  float canvasHeight = (float)m_Canvas->getHeight();
+  float canvasHeight = m_Canvas->getHeight();
   float sliderHeight = m_Length * canvasHeight;
   float nonSliderHeight = canvasHeight - sliderHeight;
 
-  float y = static_cast<float>(a_Y);
+  float y = a_Y;
   float sliderY = m_Ratio * nonSliderHeight;
   m_PickingRatio = (y - sliderY) / sliderHeight;
 }
@@ -70,12 +71,12 @@ void GlSlider::OnDrag(int a_X, int a_Y) {
 
 //-----------------------------------------------------------------------------
 void GlSlider::OnDragVertical(int /*a_X*/, int a_Y) {
-  float canvasHeight = (float)m_Canvas->getHeight();
+  float canvasHeight = m_Canvas->getHeight();
   float sliderHeight = m_Length * canvasHeight;
   float nonSliderHeight = canvasHeight - sliderHeight;
 
   float sliderTopHeight = m_PickingRatio * m_Length * canvasHeight;
-  float newY = (float)a_Y - sliderTopHeight;
+  float newY = static_cast<float>(a_Y) - sliderTopHeight;
   float ratio = newY / nonSliderHeight;
 
   m_Ratio = clamp(ratio, 0.f, 1.f);
@@ -87,12 +88,12 @@ void GlSlider::OnDragVertical(int /*a_X*/, int a_Y) {
 
 //-----------------------------------------------------------------------------
 void GlSlider::OnDragHorizontal(int a_X, int /*a_Y*/) {
-  float canvasWidth = (float)m_Canvas->getWidth();
+  float canvasWidth = m_Canvas->getWidth();
   float sliderWidth = m_Length * canvasWidth;
   float nonSliderWidth = canvasWidth - sliderWidth;
 
   float sliderLeftWidth = m_PickingRatio * m_Length * canvasWidth;
-  float newX = (float)a_X - sliderLeftWidth;
+  float newX = static_cast<float>(a_X) - sliderLeftWidth;
   float ratio = newX / nonSliderWidth;
 
   m_Ratio = clamp(ratio, 0.f, 1.f);
@@ -114,7 +115,7 @@ void GlSlider::DrawHorizontal(GlCanvas* a_Canvas, bool a_Picking) {
 
   static float y = 0;
 
-  float canvasWidth = (float)m_Canvas->getWidth();
+  float canvasWidth = m_Canvas->getWidth();
   float sliderWidth = m_Length * canvasWidth;
   float nonSliderWidth = canvasWidth - sliderWidth;
 
@@ -150,10 +151,9 @@ void GlSlider::DrawHorizontal(GlCanvas* a_Canvas, bool a_Picking) {
 void GlSlider::DrawVertical(GlCanvas* a_Canvas, bool a_Picking) {
   m_Canvas = a_Canvas;
 
-  static float offset = 0;
-  float x = (float)m_Canvas->getWidth() - GetPixelHeight() - offset;
+  float x = m_Canvas->getWidth() - GetPixelHeight();
 
-  float canvasHeight = (float)m_Canvas->getHeight();
+  float canvasHeight = m_Canvas->getHeight();
   float sliderHeight = m_Length * canvasHeight;
   float nonSliderHeight = canvasHeight - sliderHeight;
 

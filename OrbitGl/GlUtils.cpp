@@ -47,16 +47,16 @@ void OutputGlMatrices() {
   // ModelView
   GLfloat matrix[16];
   glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
-  mat4* modelView = (mat4*)&matrix[0];
+  mat4* modelView = reinterpret_cast<mat4*>(&matrix[0]);
   PRINT_VAR(*modelView);
 
   // Projection
   glGetFloatv(GL_PROJECTION_MATRIX, matrix);
-  mat4* projection = (mat4*)&matrix[0];
+  mat4* projection = reinterpret_cast<mat4*>(&matrix[0]);
   PRINT_VAR(*projection);
 
   // Texture
   glGetFloatv(GL_TEXTURE_MATRIX, matrix);
-  mat4* texture = (mat4*)&matrix[0];
+  mat4* texture = reinterpret_cast<mat4*>(&matrix[0]);
   PRINT_VAR(*texture);
 }

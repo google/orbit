@@ -42,7 +42,7 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
 
 //-----------------------------------------------------------------------------
 std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
-  if (a_Row >= (int)GetNumElements()) {
+  if (a_Row >= static_cast<int>(GetNumElements())) {
     return "";
   }
 
@@ -205,7 +205,7 @@ void LiveFunctionsDataView::DoFilter() {
 
   // Filter drawn textboxes
   Capture::GVisibleFunctionsMap.clear();
-  for (uint32_t i = 0; i < (uint32_t)m_Indices.size(); ++i) {
+  for (size_t i = 0; i < m_Indices.size(); ++i) {
     Function& func = GetFunction(i);
     Capture::GVisibleFunctionsMap[func.GetVirtualAddress()] = &func;
   }

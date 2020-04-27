@@ -48,7 +48,7 @@ class Capture {
   static bool IsRemote();
   // True if receiving data from Linux remote source
   static bool IsLinuxData();
-  static void RegisterZoneName(DWORD64 a_ID, char* a_Name);
+  static void RegisterZoneName(uint64_t a_ID, const char* a_Name);
   static void AddCallstack(CallStack& a_CallStack);
   static std::shared_ptr<CallStack> GetCallstack(CallstackID a_ID);
   static void CheckForUnrealSupport();
@@ -96,7 +96,7 @@ class Capture {
   static std::unordered_map<ULONG64, ULONG64> GFunctionCountMap;
   static std::vector<ULONG64> GSelectedAddressesByType[Function::NUM_TYPES];
   static std::unordered_map<DWORD64, std::shared_ptr<CallStack>> GCallstacks;
-  static std::unordered_map<DWORD64, std::string> GZoneNames;
+  static std::unordered_map<uint64_t, std::string> GZoneNames;
   static class TextBox* GSelectedTextBox;
   static ThreadID GSelectedThreadId;
   static Timer GCaptureTimer;

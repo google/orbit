@@ -84,7 +84,7 @@ class Variable {
   //-------------------------------------------------------------------------
   template <typename T>
   void SetValue(T a_Value) {
-    T& value = *((T*)&m_Data);
+    T& value = *static_cast<T*>(static_cast<void*>(&m_Data));
     if (value != a_Value) {
       value = a_Value;
       SendValue();

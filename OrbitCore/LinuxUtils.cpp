@@ -157,7 +157,7 @@ uint32_t GetPID(const char* a_Name) {
   std::string command = absl::StrFormat("ps -A | grep %s", a_Name);
   std::string result = ExecuteCommand(command.c_str());
   auto tokens = Tokenize(result);
-  if (!tokens.empty()) return (uint32_t)atoi(tokens[0].c_str());
+  if (!tokens.empty()) return static_cast<uint32_t>(atoi(tokens[0].c_str()));
   std::cout << "Could not find process " << a_Name;
   return 0;
 }
@@ -190,9 +190,7 @@ bool Is64Bit(pid_t a_PID) {
 }
 
 //-----------------------------------------------------------------------------
-double GetSecondsFromNanos(uint64_t a_Nanos) {
-  return 0.000000001 * (double)a_Nanos;
-}
+double GetSecondsFromNanos(uint64_t a_Nanos) { return 0.000000001 * a_Nanos; }
 
 //-----------------------------------------------------------------------------
 void DumpClocks() {

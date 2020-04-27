@@ -219,7 +219,8 @@ QtProperty* OrbitWatchWidget::AddProp(QtProperty* a_Parent,
     newProperty =
         manager->addProperty(QString::fromStdString(a_Variable->m_Name));
     newProperty->setPropertyType(QString::fromStdString(typeName));
-    newProperty->SetUserData((void*)a_Variable);
+    // TODO: Remove const_cast
+    newProperty->SetUserData(const_cast<Variable*>(a_Variable));
 
     AddToMap(a_Variable, newProperty);
 
@@ -255,7 +256,7 @@ void OrbitWatchWidget::UpdateProperty(const Variable* a_Variable) {
   QtProperty* prop = GetProperty(a_Variable);
 
   if (prop) {
-    if (prop->GetUserData() == (void*)a_Variable) {
+    if (prop->GetUserData() == a_Variable) {
       auto basicType = GetBasicType(a_Variable);
 
       switch (basicType) {

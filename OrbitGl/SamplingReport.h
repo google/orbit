@@ -26,7 +26,7 @@ class SamplingReport {
     m_CallstackDataView = a_DataView;
   }
   void OnSelectAddress(uint64_t a_Address, uint32_t a_ThreadId);
-  void OnCallstackIndexChanged(int a_Index);
+  void OnCallstackIndexChanged(size_t a_Index);
   void IncrementCallstackIndex();
   void DecrementCallstackIndex();
   std::string GetSelectedCallstackString();
@@ -44,6 +44,6 @@ class SamplingReport {
 
   uint64_t m_SelectedAddress;
   std::shared_ptr<SortedCallstackReport> m_SelectedSortedCallstackReport;
-  int m_SelectedAddressCallstackIndex;
+  size_t m_SelectedAddressCallstackIndex;
   std::function<void()> m_UiRefreshFunc;
 };

@@ -101,7 +101,9 @@ void SamplingProfiler::ReserveThreadData() {
 
 //-----------------------------------------------------------------------------
 float SamplingProfiler::GetSampleTime() {
-  return m_State == Sampling ? (float)m_SamplingTimer.QuerySeconds() : 0.f;
+  return m_State == Sampling
+             ? static_cast<float>(m_SamplingTimer.QuerySeconds())
+             : 0.f;
 }
 
 //-----------------------------------------------------------------------------
@@ -228,7 +230,7 @@ void SamplingProfiler::Print() {
   for (auto& pair : m_UniqueCallstacks) {
     std::shared_ptr<CallStack> callstack = pair.second;
     if (callstack) {
-      PRINT_VAR((void*)callstack->m_Hash);
+      PRINT_VAR(reinterpret_cast<void*>(callstack->m_Hash));
       PRINT_VAR(callstack->m_Depth);
       for (uint32_t i = 0; i < callstack->m_Depth; ++i) {
         LOG("%s", m_AddressToName[callstack->m_Data[i]].c_str());
@@ -325,7 +327,7 @@ void ThreadSampleData::ComputeAverageThreadUsage() {
       m_AverageThreadUsage += thread_usage;
     }
 
-    m_AverageThreadUsage /= (float)m_ThreadUsage.size();
+    m_AverageThreadUsage /= m_ThreadUsage.size();
   }
 }
 
@@ -492,7 +494,7 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
       unsigned int numOccurences = sortedIt->first;
       uint64_t address = sortedIt->second;
       float inclusive_percent =
-          100.f * (float)numOccurences / (float)threadSampleData.m_NumSamples;
+          100.f * numOccurences / threadSampleData.m_NumSamples;
 
       SampledFunction function;
       function.m_Name = m_AddressToName[address];
@@ -501,7 +503,7 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
       auto it = threadSampleData.m_ExclusiveCount.find(address);
       if (it != threadSampleData.m_ExclusiveCount.end()) {
         function.m_Exclusive =
-            100.f * (float)it->second / (float)threadSampleData.m_NumSamples;
+            100.f * it->second / threadSampleData.m_NumSamples;
       }
       function.m_Address = address;
 

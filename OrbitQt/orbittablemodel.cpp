@@ -30,12 +30,12 @@ OrbitTableModel::~OrbitTableModel() {}
 
 //-----------------------------------------------------------------------------
 int OrbitTableModel::columnCount(const QModelIndex& /*parent*/) const {
-  return (int)m_DataView->GetColumns().size();
+  return static_cast<int>(m_DataView->GetColumns().size());
 }
 
 //-----------------------------------------------------------------------------
 int OrbitTableModel::rowCount(const QModelIndex& /*parent*/) const {
-  return (int)m_DataView->GetNumElements();
+  return static_cast<int>(m_DataView->GetNumElements());
 }
 
 //-----------------------------------------------------------------------------
@@ -44,7 +44,7 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation,
   switch (role) {
     case Qt::DisplayRole:
       if (orientation == Qt::Horizontal &&
-          section < (int)m_DataView->GetColumns().size()) {
+          section < static_cast<int>(m_DataView->GetColumns().size())) {
         std::string header = m_DataView->GetColumns()[section].header;
         return QString::fromStdString(header);
       } else if (orientation == Qt::Vertical) {
@@ -130,7 +130,7 @@ void OrbitTableModel::OnFilter(const QString& a_Filter) {
 
 //-----------------------------------------------------------------------------
 void OrbitTableModel::OnClicked(const QModelIndex& index) {
-  if ((int)m_DataView->GetNumElements() > index.row()) {
+  if (static_cast<int>(m_DataView->GetNumElements()) > index.row()) {
     m_DataView->OnSelect(index.row());
   }
 }

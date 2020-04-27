@@ -151,9 +151,9 @@ bool TimeGraph::UpdateSessionMinMaxCounter() {
   m_Mutex.unlock();
 
   if (GEventTracer.GetEventBuffer().HasEvent()) {
-    m_SessionMinCounter = std::min((long long)m_SessionMinCounter,
+    m_SessionMinCounter = std::min(m_SessionMinCounter,
                                    GEventTracer.GetEventBuffer().GetMinTime());
-    m_SessionMaxCounter = std::max((long long)m_SessionMaxCounter,
+    m_SessionMaxCounter = std::max(m_SessionMaxCounter,
                                    GEventTracer.GetEventBuffer().GetMaxTime());
   }
 
@@ -237,9 +237,9 @@ void TimeGraph::PanTime(int a_InitialX, int a_CurrentX, int a_Width,
                         double a_InitialTime) {
   m_TimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
   double initialLocalTime =
-      (double)a_InitialX / (double)a_Width * m_TimeWindowUs;
+      static_cast<double>(a_InitialX) / a_Width * m_TimeWindowUs;
   double dt =
-      (double)(a_CurrentX - a_InitialX) / (double)a_Width * m_TimeWindowUs;
+      static_cast<double>(a_CurrentX - a_InitialX) / a_Width * m_TimeWindowUs;
   double currentTime = a_InitialTime - dt;
   m_MinTimeUs = clamp(currentTime - initialLocalTime, 0.0,
                       GetSessionTimeSpanUs() - m_TimeWindowUs);
@@ -645,7 +645,7 @@ void TimeGraph::SortTracks() {
     for (auto& pair : GEventTracer.GetEventBuffer().GetCallstacks()) {
       ThreadID threadID = pair.first;
       std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
-      m_EventCount[threadID] = (uint32_t)callstacks.size();
+      m_EventCount[threadID] = callstacks.size();
       GetOrCreateThreadTrack(threadID);
     }
   }
@@ -795,8 +795,7 @@ void TimeGraph::DrawBoxBuffer(bool a_Picking) {
   while (boxBlock) {
     if (int numElems = boxBlock->m_Size) {
       glVertexPointer(3, GL_FLOAT, sizeof(Vec3), boxBlock->m_Data);
-      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color),
-                     (void*)(colorBlock->m_Data));
+      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), colorBlock->m_Data);
       glDrawArrays(GL_QUADS, 0, numElems * 4);
     }
 
@@ -817,8 +816,7 @@ void TimeGraph::DrawLineBuffer(bool a_Picking) {
   while (lineBlock) {
     if (int numElems = lineBlock->m_Size) {
       glVertexPointer(3, GL_FLOAT, sizeof(Vec3), lineBlock->m_Data);
-      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color),
-                     (void*)(colorBlock->m_Data));
+      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), colorBlock->m_Data);
       glDrawArrays(GL_LINES, 0, numElems * 2);
     }
 
