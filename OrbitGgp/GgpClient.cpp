@@ -12,6 +12,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/GgpInstance.h"
+#include "OrbitGgp/GgpSshInfo.h"
 
 namespace {
 constexpr int kDefaultTimeoutInMs = 10'000;
@@ -112,5 +113,26 @@ void GgpClient::GetInstancesAsync(
           return;
         }
         callback(GgpInstance::GetListFromJson(result.value()));
+      });
+}
+
+void GgpClient::GetSshInformationAsync(
+    const GgpInstance& ggpInstance,
+    const std::function<void(ResultOrQString<GgpSshInfo>)>& callback) {
+  const QStringList arguments{"ssh", "init", "-s", "--instance",
+                              ggpInstance.id};
+  RunProcessWithTimeout(
+      "ggp", arguments, [callback](ResultOrQString<QByteArray> result) {
+        if (!result) {
+          callback(result.error());
+          return;
+        }
+
+        std::optional<GgpSshInfo> sshInfo =
+            GgpSshInfo::CreateFromJson(result.value());
+        if (!sshInfo) {
+          callback(QString{"Unable to get ssh info for instance"});
+        }
+        callback(sshInfo.value());
       });
 }

@@ -11,6 +11,7 @@
 #include <string>
 
 #include "GgpInstance.h"
+#include "GgpSshInfo.h"
 
 class GgpClient {
  public:
@@ -28,6 +29,9 @@ class GgpClient {
   void GetInstancesAsync(
       const std::function<void(ResultOrQString<QVector<GgpInstance>>)>&
           callback);
+  void GetSshInformationAsync(
+      const GgpInstance& ggpInstance,
+      const std::function<void(ResultOrQString<GgpSshInfo>)>& callback);
 
  private:
   GgpClient() = default;
