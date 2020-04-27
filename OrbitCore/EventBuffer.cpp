@@ -58,7 +58,8 @@ std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
 }
 
 //-----------------------------------------------------------------------------
-void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash, ThreadID thread_id) {
+void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash,
+                                    ThreadID thread_id) {
   ScopeLock lock(m_Mutex);
   std::map<uint64_t, CallstackEvent>& event_map = m_CallstackEvents[thread_id];
   event_map[time] = CallstackEvent(time, cs_hash, thread_id);

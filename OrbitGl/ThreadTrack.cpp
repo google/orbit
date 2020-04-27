@@ -90,36 +90,38 @@ inline float GetYFromDepth(const TimeGraphLayout& layout, float track_y,
 void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
                                    float min_x, TextBox* text_box) {
   if (text_box->GetText().empty()) {
-      double elapsed_millis = ((double)elapsed_us) * 0.001;
-      std::string time = GetPrettyTime(elapsed_millis);
-      Function* func = Capture::GSelectedFunctionsMap[timer.m_FunctionAddress];
+    double elapsed_millis = ((double)elapsed_us) * 0.001;
+    std::string time = GetPrettyTime(elapsed_millis);
+    Function* func = Capture::GSelectedFunctionsMap[timer.m_FunctionAddress];
 
-      text_box->SetElapsedTimeTextLength(time.length());
+    text_box->SetElapsedTimeTextLength(time.length());
 
-      const char* name = nullptr;
-      if (func) {
-        std::string extra_info = GetExtraInfo(timer);
-        name = func->PrettyName().c_str();
-        std::string text =
-            absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());
+    const char* name = nullptr;
+    if (func) {
+      std::string extra_info = GetExtraInfo(timer);
+      name = func->PrettyName().c_str();
+      std::string text =
+          absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());
 
-        text_box->SetText(text);
-      } else if (timer.m_Type == Timer::INTROSPECTION) {
-        std::string text = absl::StrFormat(
-            "%s %s",
-            time_graph_->GetStringManager()->Get(timer.m_UserData[0]).value_or(""),
-            time.c_str());
-        text_box->SetText(text);
-      } else if (timer.m_Type == Timer::GPU_ACTIVITY) {
-        std::string text = absl::StrFormat(
-            "%s; submitter: %d  %s",
-            time_graph_->GetStringManager()->Get(timer.m_UserData[0]).value_or(""),
-            timer.m_SubmitTID, time.c_str());
-        text_box->SetText(text);
-      } else if (!SystraceManager::Get().IsEmpty()) {
-        text_box->SetText(
-            SystraceManager::Get().GetFunctionName(timer.m_FunctionAddress));
-      }
+      text_box->SetText(text);
+    } else if (timer.m_Type == Timer::INTROSPECTION) {
+      std::string text = absl::StrFormat("%s %s",
+                                         time_graph_->GetStringManager()
+                                             ->Get(timer.m_UserData[0])
+                                             .value_or(""),
+                                         time.c_str());
+      text_box->SetText(text);
+    } else if (timer.m_Type == Timer::GPU_ACTIVITY) {
+      std::string text = absl::StrFormat("%s; submitter: %d  %s",
+                                         time_graph_->GetStringManager()
+                                             ->Get(timer.m_UserData[0])
+                                             .value_or(""),
+                                         timer.m_SubmitTID, time.c_str());
+      text_box->SetText(text);
+    } else if (!SystraceManager::Get().IsEmpty()) {
+      text_box->SetText(
+          SystraceManager::Get().GetFunctionName(timer.m_FunctionAddress));
+    }
   }
 
   const Color kTextWhite(255, 255, 255, 255);

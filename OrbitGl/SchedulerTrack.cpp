@@ -40,7 +40,7 @@ inline float GetYFromDepth(const TimeGraphLayout& layout, float track_y,
 
 void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   event_track_->UpdatePrimitives(min_tick, max_tick);
-  
+
   Batcher* batcher = &time_graph_->GetBatcher();
   GlCanvas* canvas = time_graph_->GetCanvas();
   const TimeGraphLayout& layout = time_graph_->GetLayout();

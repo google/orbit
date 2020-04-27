@@ -7,24 +7,23 @@
 
 void Batcher::AddLine(const Line& line, const Color* colors,
                       PickingID::Type picking_type, void* user_data) {
-  Color pickCol = PickingID::GetColor(picking_type, line_buffer_.m_Lines.size());
+  Color pickCol =
+      PickingID::GetColor(picking_type, line_buffer_.m_Lines.size());
   line_buffer_.m_Lines.push_back(line);
   line_buffer_.m_Colors.push_back(colors, 2);
   line_buffer_.m_PickingColors.push_back_n(pickCol, 2);
   line_buffer_.m_UserData.push_back(user_data);
 }
 
-void Batcher::AddLine(const Line& line, Color color, PickingID::Type picking_type,
-    void* user_data)
-{
+void Batcher::AddLine(const Line& line, Color color,
+                      PickingID::Type picking_type, void* user_data) {
   Color colors[2];
   Fill(colors, color);
   AddLine(line, colors, picking_type, user_data);
 }
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, Color color,
-                      PickingID::Type picking_type,
-                      void* user_data) {
+                      PickingID::Type picking_type, void* user_data) {
   Line line;
   Color colors[2];
   Fill(colors, color);
@@ -34,8 +33,7 @@ void Batcher::AddLine(Vec2 from, Vec2 to, float z, Color color,
 }
 
 void Batcher::AddVerticalLine(Vec2 pos, float size, float z, Color color,
-                              PickingID::Type picking_type,
-                              void* user_data) {
+                              PickingID::Type picking_type, void* user_data) {
   Line line;
   Color colors[2];
   Fill(colors, color);
@@ -53,9 +51,8 @@ void Batcher::AddBox(const Box& a_Box, const Color* colors,
   box_buffer_.m_UserData.push_back(user_data);
 }
 
-void Batcher::AddBox(const Box& a_Box, const Color color, PickingID::Type picking_type,
-    void* user_data)
-{
+void Batcher::AddBox(const Box& a_Box, const Color color,
+                     PickingID::Type picking_type, void* user_data) {
   Color colors[4];
   Fill(colors, color);
   AddBox(a_Box, colors, picking_type, user_data);

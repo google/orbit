@@ -59,8 +59,8 @@ class ThreadTrack : public Track {
   std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
 
  private:
-  void SetTimesliceText(const Timer& timer, double elapsed_us,
-                        float min_x, TextBox* text_box);
+  void SetTimesliceText(const Timer& timer, double elapsed_us, float min_x,
+                        TextBox* text_box);
 
  protected:
   TextRenderer* text_renderer_ = nullptr;

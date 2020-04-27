@@ -80,9 +80,7 @@ Capture::SamplingDoneCallback Capture::sampling_done_callback_ = nullptr;
 void* Capture::sampling_done_callback_user_data_ = nullptr;
 
 //-----------------------------------------------------------------------------
-void Capture::Init() {
-  GTargetProcess = std::make_shared<Process>();
-}
+void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 
 //-----------------------------------------------------------------------------
 bool Capture::Inject(std::string_view remote_address) {
