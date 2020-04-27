@@ -42,14 +42,14 @@ OrbitMainWindow* GMainWindow;
 extern QMenu* GContextMenu;
 
 //-----------------------------------------------------------------------------
-OrbitMainWindow::OrbitMainWindow(const std::vector<std::string>& arguments,
-                                 QApplication* a_App, QWidget* parent)
-    : QMainWindow(parent),
+OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
+                                 ApplicationOptions&& options)
+    : QMainWindow(nullptr),
       m_App(a_App),
       ui(new Ui::OrbitMainWindow),
       m_Headless(false),
       m_IsDev(false) {
-  OrbitApp::Init();
+  OrbitApp::Init(std::move(options));
 
   ui->setupUi(this);
   ui->ProcessesList->SetProcessParams();
@@ -87,7 +87,7 @@ OrbitMainWindow::OrbitMainWindow(const std::vector<std::string>& arguments,
   GOrbitApp->SetClipboardCallback(
       [this](const std::wstring& a_Text) { this->OnSetClipboard(a_Text); });
 
-  ParseCommandlineArguments(arguments);
+  ParseCommandlineArguments();
 
   ui->DebugGLWidget->Initialize(GlPanel::DEBUG, this);
   ui->CaptureGLWidget->Initialize(GlPanel::CAPTURE, this);
@@ -168,15 +168,19 @@ OrbitMainWindow::~OrbitMainWindow() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::ParseCommandlineArguments(
-    const std::vector<std::string>& arguments) {
-  for (const std::string& argument : arguments) {
+void OrbitMainWindow::ParseCommandlineArguments() {
+  std::vector<std::string> arguments;
+  for (const auto& qt_argument : QCoreApplication::arguments()) {
+    std::string argument = qt_argument.toStdString();
     if (absl::StrContains(argument, "inject:")) {
       m_Headless = true;
     } else if (argument == "dev") {
       m_IsDev = true;
     }
+
+    arguments.push_back(std::move(argument));
   }
+
   GOrbitApp->SetCommandLineArguments(arguments);
 }
 
