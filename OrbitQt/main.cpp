@@ -33,7 +33,7 @@ static void ParseLegacyCommandLine(int argc, char* argv[],
     const char* arg = argv[i];
     if (absl::StartsWith(arg, "gamelet:")) {
       std::cerr << "WARNING: the 'gamelet:<host>:<port>' option is deprecated, "
-                   "please use --gamelet <host> instead."
+                   "please use '-remote <host>' instead."
                 << std::endl;
       options->asio_server_address = arg + std::strlen("gamelet:");
     }
