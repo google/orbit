@@ -10,8 +10,6 @@ class TimeGraphLayout {
  public:
   TimeGraphLayout();
 
-  float GetCoreOffset(int a_CoreId) const;
-  float GetThreadStart();
   float GetTextBoxHeight() const { return m_TextBoxHeight; }
   float GetTextCoresHeight() const { return m_CoresHeight; }
   float GetEventTrackHeight() const { return m_EventTrackHeight; }
@@ -34,7 +32,6 @@ class TimeGraphLayout {
  protected:
   int m_NumCores;
 
-  float m_WorldY;
   float m_TextBoxHeight;
   float m_CoresHeight;
   float m_EventTrackHeight;

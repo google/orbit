@@ -10,6 +10,7 @@ class SchedulerTrack : public ThreadTrack {
   ~SchedulerTrack() override = default;
 
   void Draw(GlCanvas* a_Canvas, bool a_Picking) override;
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) override;
   Type GetType() const override { return kSchedulerTrack; }
   float GetHeight() const override;
 };
