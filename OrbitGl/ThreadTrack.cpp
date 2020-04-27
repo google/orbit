@@ -142,9 +142,6 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   GlCanvas* canvas = time_graph_->GetCanvas();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   const TextBox& scene_box = canvas->GetSceneBox();
-  const auto& target_process = Capture::GTargetProcess;
-  uint32_t target_pid = target_process ? target_process->GetID() : 0;
-  uint32_t selected_thread_id = Capture::GSelectedThreadId;
 
   float min_x = scene_box.GetPosX();
   float world_start_x = canvas->GetWorldTopLeftX();
