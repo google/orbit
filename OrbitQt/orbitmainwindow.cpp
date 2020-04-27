@@ -389,6 +389,13 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
     ui->ProcessesList->UpdateProcessParams();
   } else if (absl::StartsWith(a_Message, "SetProcessParams")) {
     ui->ProcessesList->SetProcessParams();
+  } else if (absl::StartsWith(a_Message, "error:")) {
+    std::string title_text = Replace(a_Message, "error:", "");
+    std::string title = title_text.substr(0, title_text.find('\n'));
+    std::string text = title_text.find('\n') != std::string::npos
+                           ? title_text.substr(title_text.find('\n'))
+                           : title;
+    QMessageBox::critical(this, title.c_str(), text.c_str());
   }
 }
 
