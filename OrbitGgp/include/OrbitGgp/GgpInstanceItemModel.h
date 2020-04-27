@@ -1,5 +1,9 @@
-#ifndef ORBITQT_GGP_INSTANCE_ITEM_MODEL_H_
-#define ORBITQT_GGP_INSTANCE_ITEM_MODEL_H_
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#ifndef ORBITGGP_GGP_INSTANCE_ITEM_MODEL_H_
+#define ORBITGGP_GGP_INSTANCE_ITEM_MODEL_H_
 
 #include <QAbstractItemModel>
 #include <QModelIndex>
@@ -31,4 +35,4 @@ class GgpInstanceItemModel : public QAbstractItemModel {
   QVector<GgpInstance> instances_;
 };
 
-#endif  // ORBITQT_GGP_INSTANCE_ITEM_MODEL_H_
+#endif  // ORBITGGP_GGP_INSTANCE_ITEM_MODEL_H_

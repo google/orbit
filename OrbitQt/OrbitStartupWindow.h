@@ -1,3 +1,7 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #ifndef ORBITQT_ORBIT_STARTUP_WINDOW_H_
 #define ORBITQT_ORBIT_STARTUP_WINDOW_H_
 
@@ -6,9 +10,9 @@
 #include <QWidget>
 #include <optional>
 
-#include "GgpClient.h"
-#include "GgpInstance.h"
-#include "GgpInstanceItemModel.h"
+#include "OrbitGgp/GgpClient.h"
+#include "OrbitGgp/GgpInstance.h"
+#include "OrbitGgp/GgpInstanceItemModel.h"
 
 class OrbitStartupWindow : public QDialog {
  public:

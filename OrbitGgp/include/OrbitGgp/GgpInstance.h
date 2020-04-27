@@ -1,10 +1,13 @@
-#ifndef ORBITQT_GPP_INSTANCE_H_
-#define ORBITQT_GPP_INSTANCE_H_
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#ifndef ORBITGGP_GPP_INSTANCE_H_
+#define ORBITGGP_GPP_INSTANCE_H_
 
 #include <QDateTime>
 #include <QMetaType>
 #include <QVector>
-#include <string>
 
 struct GgpInstance {
   QString display_name;
@@ -31,4 +34,4 @@ struct GgpInstance {
 
 Q_DECLARE_METATYPE(GgpInstance)
 
-#endif  // ORBITQT_GPP_INSTANCE_H_
+#endif  // ORBITGGP_GPP_INSTANCE_H_

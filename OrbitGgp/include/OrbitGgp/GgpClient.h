@@ -1,5 +1,9 @@
-#ifndef ORBITQT_GGP_CLIENT_H_
-#define ORBITQT_GGP_CLIENT_H_
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#ifndef ORBITGGP_GGP_CLIENT_H_
+#define ORBITGGP_GGP_CLIENT_H_
 
 #include <QVector>
 #include <functional>
@@ -32,4 +36,4 @@ class GgpClient {
   int number_of_requests_running_ = 0;
 };
 
-#endif  // ORBITQT_GGP_CLIENT_H_
+#endif  // ORBITGGP_GGP_CLIENT_H_

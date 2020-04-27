@@ -1,3 +1,7 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include "OrbitStartupWindow.h"
 
 #include <QAbstractItemView>
@@ -12,10 +16,10 @@
 #include <QTableView>
 #include <QVector>
 
-#include "GgpClient.h"
-#include "GgpInstance.h"
-#include "GgpInstanceItemModel.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGgp/GgpClient.h"
+#include "OrbitGgp/GgpInstance.h"
+#include "OrbitGgp/GgpInstanceItemModel.h"
 
 const GgpInstance localhost_placeholder_instance_ = {
     /* display_name */ "localhost",
