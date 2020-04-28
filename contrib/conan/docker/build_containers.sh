@@ -20,8 +20,26 @@ declare -A profile_to_dockerfile=( \
   ["gcc8_relwithdebinfo"]="gcc8" \
   ["gcc9_debug"]="gcc9" \
   ["gcc9_release"]="gcc9" \
-  ["gcc9_relwithdebinfo"]="gcc9" )
+  ["gcc9_relwithdebinfo"]="gcc9" \
+  ["msvc2017_release"]="msvc2017" \
+  ["msvc2017_relwithdebinfo"]="msvc2017" \
+  ["msvc2017_debug"]="msvc2017" \
+  ["msvc2017_release_x86"]="msvc2017" \
+  ["msvc2017_relwithdebinfo_x86"]="msvc2017" \
+  ["msvc2017_debug_x86"]="msvc2017" \
+  ["msvc2019_release"]="msvc2019" \
+  ["msvc2019_relwithdebinfo"]="msvc2019" \
+  ["msvc2019_debug"]="msvc2019" \
+  ["msvc2019_release_x86"]="msvc2019" \
+  ["msvc2019_relwithdebinfo_x86"]="msvc2019" \
+  ["msvc2019_debug_x86"]="msvc2019" )
 
-for profile in {clang{7,8,9},gcc{8,9},ggp}_{release,relwithdebinfo,debug}; do
-  docker build "${DIR}" -f "${DIR}/Dockerfile.${profile_to_dockerfile[$profile]}" -t gcr.io/orbitprofiler/$profile:latest || exit $?
-done
+if [ "$(uname -s)" == "Linux" ]; then
+  for profile in {clang{7,8,9},gcc{8,9},ggp}_{release,relwithdebinfo,debug}; do
+    docker build "${DIR}" -f "${DIR}/Dockerfile.${profile_to_dockerfile[$profile]}" -t gcr.io/orbitprofiler/$profile:latest || exit $?
+  done
+else
+  for profile in msvc{2017,2019}_{release,relwithdebinfo,debug}; do
+    docker build "${DIR}" -f "${DIR}/Dockerfile.${profile_to_dockerfile[$profile]}" -t gcr.io/orbitprofiler/$profile:latest || exit $?
+  done
+fi
