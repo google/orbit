@@ -32,7 +32,6 @@
 // To orderly shutdown the manager use following:
 //
 // manager.Shutdown();
-// manager.Wait();
 //
 class ProcessListManager {
  public:
@@ -42,8 +41,9 @@ class ProcessListManager {
   virtual void SetCallback(
       const std::function<void(std::vector<ProcessInfo>&&)>& listener) = 0;
   virtual void Start() = 0;
+  // Note that this method waits for the worker thread to stop, which could
+  // take up to refresh_timeout.
   virtual void Shutdown() = 0;
-  virtual void Wait() = 0;
 
   // Create ProcessListManager with specified duration
   static std::unique_ptr<ProcessListManager> Create(
