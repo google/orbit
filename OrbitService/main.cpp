@@ -7,7 +7,7 @@
 #include "absl/flags/usage.h"
 
 // TODO: Default it 127.0.0.1 once ssh tunneling is enabled.
-ABSL_FLAG(std::string, grpc_server_address, "0.0.0.0:44744",
+ABSL_FLAG(std::string, grpc_server_address, "0.0.0.0:44755",
           "Grpc server address");
 
 int main(int argc, char** argv) {
