@@ -25,7 +25,7 @@ ABSL_FLAG(std::string, remote, "",
           "Connect to the specified remote on startup");
 ABSL_FLAG(uint16_t, asio_port, 44766,
           "The service Asio tcp_server port (use default velue if unsure)");
-ABSL_FLAG(uint16_t, grpc_port, 44844,
+ABSL_FLAG(uint16_t, grpc_port, 44755,
           "The service GRPC server port (use default velue if unsure)");
 
 // TODO: remove this once we deprecated legacy parameters
