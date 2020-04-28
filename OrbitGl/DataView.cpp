@@ -60,6 +60,42 @@ void DataView::InitSortingOrders() {
   for (const auto& column : GetColumns()) {
     m_SortingOrders.push_back(column.initial_order);
   }
+
+  m_SortingColumn = GetDefaultSortingColumn();
+}
+
+//-----------------------------------------------------------------------------
+void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
+  if (column < 0) {
+    return;
+  }
+
+  if (!IsSortingAllowed()) {
+    return;
+  }
+
+  if (m_SortingOrders.empty()) {
+    InitSortingOrders();
+  }
+
+  m_SortingColumn = column;
+  if (new_order.has_value()) {
+    m_SortingOrders[column] = new_order.value();
+  }
+
+  DoSort();
+}
+
+//-----------------------------------------------------------------------------
+void DataView::OnFilter(const std::string& filter) {
+  m_Filter = filter;
+  DoFilter();
+}
+
+//-----------------------------------------------------------------------------
+void DataView::OnDataChanged() {
+  OnSort(m_SortingColumn, std::optional<SortingOrder>{});
+  OnFilter(m_Filter);
 }
 
 //-----------------------------------------------------------------------------
@@ -104,7 +140,7 @@ void DataView::ExportCSV(const std::string& a_FileName) {
   size_t numElements = GetNumElements();
   for (size_t i = 0; i < numElements; ++i) {
     for (size_t j = 0; j < numColumns; ++j) {
-      out << GetValue((int)i, (int)j);
+      out << GetValue(i, j);
       if (j < numColumns - 1) out << ", ";
     }
     out << "\n";
@@ -127,7 +163,7 @@ void DataView::CopySelection(const std::vector<int>& selection) {
   for (size_t i : selection) {
     if (i < numElements) {
       for (size_t j = 0; j < numColumns; ++j) {
-        clipboard += GetValue((int)i, (int)j);
+        clipboard += GetValue(i, j);
         if (j < numColumns - 1) clipboard += ", ";
       }
       clipboard += "\n";

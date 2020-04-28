@@ -1,6 +1,6 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 #pragma once
 
 #include <autoresetevent.h>
@@ -10,20 +10,19 @@
 #include <thread>
 
 // Moodycamel's concurrent queue
-#ifdef WIN32
+#ifdef _WIN32
 #pragma warning(push, 0)
 #endif
 #include <concurrentqueue.h>
-#ifdef WIN32
+#ifdef _WIN32
 #pragma warning(pop)
-#endif
 
 // HEA-L's oqpi
-#ifdef _WIN32
 #include <processthreadsapi.h>
 #define OQPI_USE_DEFAULT
 #include "oqpi.hpp"
 using oqpi_tk = oqpi::default_helpers;
+#include <Windows.h>
 #endif
 
 #include "Utils.h"
@@ -48,31 +47,77 @@ typedef struct tagTHREADNAME_INFO {
 } THREADNAME_INFO;
 #pragma pack(pop)
 
-//-----------------------------------------------------------------------------
-inline void SetThreadName(HANDLE a_Thread, const wchar_t* a_ThreadName) {
-  SetThreadDescription(a_Thread, a_ThreadName);
+inline void SetThreadNameFallback(HANDLE thread,
+                                  const std::string& threadName) {
+  THREADNAME_INFO info;
+  info.dwType = 0x1000;
+  info.szName = threadName.c_str();
+  info.dwThreadID = GetThreadId(thread);
+  info.dwFlags = 0;
+#pragma warning(push)
+#pragma warning(disable : 6320 6322)
+  __try {
+    RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR),
+                   (ULONG_PTR*)&info);
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+  }
+#pragma warning(pop)
 }
 
-//-----------------------------------------------------------------------------
-inline void SetCurrentThreadName(const wchar_t* a_ThreadName) {
-  SetThreadDescription(GetCurrentThread(), a_ThreadName);
+inline void SetThreadName(HANDLE thread, const wchar_t* threadName) {
+  using SetThreadDescriptionPtr = HRESULT(WINAPI*)(HANDLE, PCWSTR);
+  static auto const setThreadDescriptionPtr = []() -> SetThreadDescriptionPtr {
+    HMODULE kernel32 = LoadLibraryA("kernel32.dll");
+
+    SetThreadDescriptionPtr ptr = nullptr;
+    if (kernel32 != NULL) {
+      return reinterpret_cast<SetThreadDescriptionPtr>(
+          GetProcAddress(kernel32, "SetThreadDescription"));
+    } else {
+      return nullptr;
+    }
+  }();
+
+  if (setThreadDescriptionPtr != nullptr) {
+    (*setThreadDescriptionPtr)(thread, threadName);
+  } else {
+    SetThreadNameFallback(thread, ws2s(threadName));
+  }
 }
 
-//-----------------------------------------------------------------------------
-inline std::string GetThreadName(HANDLE a_Thread) {
+inline void SetCurrentThreadName(const wchar_t* threadName) {
+  SetThreadName(GetCurrentThread(), threadName);
+}
+
+inline std::string GetThreadName(HANDLE thread) {
   std::string name;
-  PWSTR data = nullptr;
-  HRESULT hr = GetThreadDescription(a_Thread, &data);
 
-  if (SUCCEEDED(hr)) {
-    name = ws2s(data);
-    LocalFree(data);
+  using GetThreadDescriptionPtr = HRESULT(WINAPI*)(HANDLE, PWSTR*);
+  static auto const getThreadDescriptionPtr = []() -> GetThreadDescriptionPtr {
+    HMODULE kernel32 = LoadLibraryA("kernel32.dll");
+
+    GetThreadDescriptionPtr ptr = nullptr;
+    if (kernel32 != NULL) {
+      return reinterpret_cast<GetThreadDescriptionPtr>(
+          GetProcAddress(kernel32, "GetThreadDescription"));
+    } else {
+      return nullptr;
+    }
+  }();
+
+  if (getThreadDescriptionPtr != nullptr) {
+    PWSTR data = nullptr;
+    HRESULT hr = (*getThreadDescriptionPtr)(thread, &data);
+
+    if (SUCCEEDED(hr)) {
+      name = ws2s(data);
+      LocalFree(data);
+    }
   }
 
   return name;
 }
 
-//-----------------------------------------------------------------------------
 inline std::string GetCurrentThreadName() {
   return GetThreadName(GetCurrentThread());
 }

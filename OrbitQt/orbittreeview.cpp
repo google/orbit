@@ -207,7 +207,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
       GContextMenu = &contextMenu;
       std::vector<std::unique_ptr<QAction>> actions;
 
-      for (int i = 0; i < (int)menu.size(); ++i) {
+      for (size_t i = 0; i < menu.size(); ++i) {
         actions.push_back(
             std::make_unique<QAction>(QString::fromStdString(menu[i])));
         connect(actions[i].get(), &QAction::triggered,

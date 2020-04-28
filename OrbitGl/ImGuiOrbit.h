@@ -43,7 +43,8 @@ extern ImFont* GOrbitImguiFont;
 
 struct ScopeImguiContext {
   explicit ScopeImguiContext(ImGuiContext* a_State) : m_ImGuiContext(nullptr) {
-    ImGuiContext* state = (ImGuiContext*)ImGui::GetCurrentContext();
+    ImGuiContext* state =
+        static_cast<ImGuiContext*>(ImGui::GetCurrentContext());
     if (state != a_State) {
       m_ImGuiContext = state;
       ImGui::SetCurrentContext(a_State);

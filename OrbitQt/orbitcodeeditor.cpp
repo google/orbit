@@ -411,8 +411,9 @@ void OrbitCodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event) {
   //![extraAreaPaintEvent_1]
   QTextBlock block = firstVisibleBlock();
   int blockNumber = block.blockNumber();
-  int top = (int)blockBoundingGeometry(block).translated(contentOffset()).top();
-  int bottom = top + (int)blockBoundingRect(block).height();
+  int top = static_cast<int>(
+      blockBoundingGeometry(block).translated(contentOffset()).top());
+  int bottom = top + static_cast<int>(blockBoundingRect(block).height());
   //![extraAreaPaintEvent_1]
 
   //![extraAreaPaintEvent_2]
@@ -426,7 +427,7 @@ void OrbitCodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event) {
 
     block = block.next();
     top = bottom;
-    bottom = top + (int)blockBoundingRect(block).height();
+    bottom = top + static_cast<int>(blockBoundingRect(block).height());
     ++blockNumber;
   }
 }

@@ -21,7 +21,7 @@ void FunctionStats::Update(const Timer& a_Timer) {
   ++m_Count;
   double elapsedMillis = a_Timer.ElapsedMillis();
   m_TotalTimeMs += elapsedMillis;
-  m_AverageTimeMs = m_TotalTimeMs / (double)m_Count;
+  m_AverageTimeMs = m_TotalTimeMs / static_cast<double>(m_Count);
   UpdateMax(m_MaxMs, elapsedMillis);
   UpdateMin(m_MinMs, elapsedMillis);
 }

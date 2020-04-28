@@ -4,6 +4,11 @@
 
 #include "SessionsDataView.h"
 
+#include <OrbitBase/Logging.h>
+#include <OrbitBase/SafeStrerror.h>
+
+#include <cstdio>
+
 #include "App.h"
 #include "Callstack.h"
 #include "Capture.h"
@@ -12,10 +17,10 @@
 #include "OrbitSession.h"
 #include "OrbitType.h"
 #include "Pdb.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 SessionsDataView::SessionsDataView() : DataView(DataViewType::SESSIONS) {
-  InitSortingOrders();
   GOrbitApp->RegisterSessionsDataView(this);
 }
 
@@ -59,16 +64,11 @@ std::string SessionsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
   }
 
 //-----------------------------------------------------------------------------
-void SessionsDataView::OnSort(int a_Column,
-                              std::optional<SortingOrder> a_NewOrder) {
-  if (a_NewOrder.has_value()) {
-    m_SortingOrders[a_Column] = a_NewOrder.value();
-  }
-
-  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
+void SessionsDataView::DoSort() {
+  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (a_Column) {
+  switch (m_SortingColumn) {
     case COLUMN_SESSION_NAME:
       sorter = ORBIT_SESSION_SORT(m_FileName);
       break;
@@ -80,19 +80,22 @@ void SessionsDataView::OnSort(int a_Column,
   }
 
   if (sorter) {
-    std::sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
   }
-
-  m_LastSortedColumn = a_Column;
 }
 
 //-----------------------------------------------------------------------------
-const std::string SessionsDataView::MENU_ACTION_SESSIONS_LOAD = "Load Session";
+const std::string SessionsDataView::MENU_ACTION_LOAD = "Load Session";
+const std::string SessionsDataView::MENU_ACTION_DELETE = "Delete Session";
 
 //-----------------------------------------------------------------------------
 std::vector<std::string> SessionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
-  std::vector<std::string> menu = {MENU_ACTION_SESSIONS_LOAD};
+  std::vector<std::string> menu;
+  // Note that the UI already enforces a single selection.
+  if (a_SelectedIndices.size() == 1) {
+    Append(menu, {MENU_ACTION_LOAD, MENU_ACTION_DELETE});
+  }
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
@@ -101,23 +104,43 @@ std::vector<std::string> SessionsDataView::GetContextMenu(
 void SessionsDataView::OnContextMenu(const std::string& a_Action,
                                      int a_MenuIndex,
                                      const std::vector<int>& a_ItemIndices) {
-  if (a_Action == MENU_ACTION_SESSIONS_LOAD) {
-    for (int index : a_ItemIndices) {
-      const std::shared_ptr<Session>& session = GetSession(index);
-      GOrbitApp->LoadSession(session);
+  if (a_Action == MENU_ACTION_LOAD) {
+    if (a_ItemIndices.size() != 1) {
+      return;
+    }
+    const std::shared_ptr<Session>& session = GetSession(a_ItemIndices[0]);
+    GOrbitApp->LoadSession(session);
+    GOrbitApp->LoadModules();
+
+  } else if (a_Action == MENU_ACTION_DELETE) {
+    if (a_ItemIndices.size() != 1) {
+      return;
+    }
+    int row = a_ItemIndices[0];
+    const std::shared_ptr<Session>& session = GetSession(row);
+    const std::string& filename = session->m_FileName;
+    int ret = remove(filename.c_str());
+    if (ret == 0) {
+      m_Sessions.erase(m_Sessions.begin() + m_Indices[row]);
+      OnDataChanged();
+    } else {
+      ERROR("Deleting session \"%s\": %s", filename, SafeStrerror(errno));
+      std::string message = "error:";
+      message += "Error deleting session\n";
+      message += absl::StrFormat("Could not delete session \"%s\".", filename);
+      GOrbitApp->SendToUiNow(message);
     }
 
-    GOrbitApp->LoadModules();
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }
 }
 
 //-----------------------------------------------------------------------------
-void SessionsDataView::OnFilter(const std::string& a_Filter) {
+void SessionsDataView::DoFilter() {
   std::vector<uint32_t> indices;
 
-  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
 
   for (size_t i = 0; i < m_Sessions.size(); ++i) {
     const Session& session = *m_Sessions[i];
@@ -141,9 +164,7 @@ void SessionsDataView::OnFilter(const std::string& a_Filter) {
 
   m_Indices = indices;
 
-  if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, {});
-  }
+  OnSort(m_SortingColumn, {});
 }
 
 //-----------------------------------------------------------------------------
@@ -153,9 +174,7 @@ void SessionsDataView::OnDataChanged() {
     m_Indices[i] = i;
   }
 
-  if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, {});
-  }
+  DataView::OnDataChanged();
 }
 
 //-----------------------------------------------------------------------------

@@ -11,7 +11,6 @@
 
 //-----------------------------------------------------------------------------
 LogDataView::LogDataView() : DataView(DataViewType::LOG) {
-  InitSortingOrders();
   GOrbitApp->RegisterOutputLog(this);
   GTcpServer->AddCallback(Msg_OrbitLog, [=](const Message& a_Msg) {
     this->OnReceiveMessage(a_Msg);
@@ -42,8 +41,8 @@ std::string LogDataView::GetValue(int a_Row, int a_Column) {
       return entry.m_Text;
 
     case COLUMN_TIME: {
-      TickType micros = (TickType)MicroSecondsFromTicks(
-          Capture::GCaptureTimer.m_Start, entry.m_Time);
+      TickType micros = static_cast<TickType>(
+          MicroSecondsFromTicks(Capture::GCaptureTimer.m_Start, entry.m_Time));
       std::chrono::system_clock::time_point sysTime =
           Capture::GCaptureTimePoint + std::chrono::microseconds(micros);
       std::time_t now_c = std::chrono::system_clock::to_time_t(sysTime);
@@ -81,11 +80,13 @@ void LogDataView::OnDataChanged() {
   for (size_t i = 0; i < m_Entries.size(); ++i) {
     m_Indices[i] = i;
   }
+
+  DataView::OnDataChanged();
 }
 
 //-----------------------------------------------------------------------------
-void LogDataView::OnFilter(const std::string& a_Filter) {
-  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
+void LogDataView::DoFilter() {
+  std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
   std::vector<uint32_t> indices;
 
   for (size_t i = 0; i < m_Entries.size(); ++i) {
@@ -128,7 +129,8 @@ std::vector<std::string> LogDataView::GetContextMenu(
 //-----------------------------------------------------------------------------
 void LogDataView::OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                                 const std::vector<int>& a_ItemIndices) {
-  if (m_SelectedCallstack && (int)m_SelectedCallstack->m_Depth > a_MenuIndex) {
+  if (m_SelectedCallstack &&
+      static_cast<int>(m_SelectedCallstack->m_Depth) > a_MenuIndex) {
     GOrbitApp->GoToCode(m_SelectedCallstack->m_Data[a_MenuIndex]);
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
@@ -153,11 +155,13 @@ void LogDataView::OnReceiveMessage(const Message& a_Msg) {
   assert(isLog);
   if (isLog) {
     OrbitLogEntry entry;
-    const OrbitLogEntry* msgEntry = (OrbitLogEntry*)(a_Msg.GetData());
+    const OrbitLogEntry* msgEntry =
+        static_cast<const OrbitLogEntry*>(a_Msg.GetData());
     entry.m_Time = msgEntry->m_Time;
     entry.m_CallstackHash = msgEntry->m_CallstackHash;
     entry.m_ThreadId = msgEntry->m_ThreadId;
-    const char* log = a_Msg.GetData() + OrbitLogEntry::GetSizeWithoutString();
+    const char* log = static_cast<const char*>(a_Msg.GetData()) +
+                      OrbitLogEntry::GetSizeWithoutString();
     entry.m_Text = log;
     RemoveTrailingNewLine(entry.m_Text);
     Add(entry);

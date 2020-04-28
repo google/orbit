@@ -47,8 +47,6 @@ ULONG64 Capture::GMainFrameFunction;
 uint64_t Capture::GNumContextSwitches;
 ULONG64 Capture::GNumLinuxEvents;
 ULONG64 Capture::GNumProfileEvents;
-int Capture::GCapturePort = 0;
-std::string Capture::GCaptureHost = "localhost";
 std::string Capture::GPresetToLoad = "";
 std::string Capture::GProcessToInject = "";
 
@@ -60,7 +58,7 @@ std::shared_ptr<CallStack> Capture::GSelectedCallstack;
 std::vector<ULONG64> Capture::GSelectedAddressesByType[Function::NUM_TYPES];
 std::unordered_map<DWORD64, std::shared_ptr<CallStack>> Capture::GCallstacks;
 Mutex Capture::GCallstackMutex;
-std::unordered_map<DWORD64, std::string> Capture::GZoneNames;
+std::unordered_map<uint64_t, std::string> Capture::GZoneNames;
 TextBox* Capture::GSelectedTextBox;
 ThreadID Capture::GSelectedThreadId;
 Timer Capture::GCaptureTimer;
@@ -82,46 +80,44 @@ Capture::SamplingDoneCallback Capture::sampling_done_callback_ = nullptr;
 void* Capture::sampling_done_callback_user_data_ = nullptr;
 
 //-----------------------------------------------------------------------------
-void Capture::Init() {
-  GTargetProcess = std::make_shared<Process>();
-  Capture::GCapturePort = GParams.m_Port;
-}
+void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 
 //-----------------------------------------------------------------------------
-bool Capture::Inject(bool a_WaitForConnection) {
+bool Capture::Inject(std::string_view remote_address) {
   Injection inject;
   std::string dllName = Path::GetDllPath(GTargetProcess->GetIs64Bit());
 
   GTcpServer->Disconnect();
 
-  GInjected = inject.Inject(dllName, *GTargetProcess, "OrbitInit");
+  GInjected =
+      inject.Inject(remote_address, dllName, *GTargetProcess, "OrbitInit");
   if (GInjected) {
     ORBIT_LOG(
         absl::StrFormat("Injected in %s", GTargetProcess->GetName().c_str()));
     GInjectedProcess = GTargetProcess->GetName();
   }
 
-  if (a_WaitForConnection) {
-    int numTries = 50;
-    while (!GTcpServer->HasConnection() && numTries-- > 0) {
-      ORBIT_LOG(absl::StrFormat("Waiting for connection on port %i",
-                                Capture::GCapturePort));
-      Sleep(100);
-    }
-
-    GInjected = GInjected && GTcpServer->HasConnection();
+  // Wait for connections
+  int numTries = 50;
+  while (!GTcpServer->HasConnection() && numTries-- > 0) {
+    ORBIT_LOG(absl::StrFormat("Waiting for connection on port %i",
+                              GTcpServer->GetPort()));
+    Sleep(100);
   }
+
+  GInjected = GInjected && GTcpServer->HasConnection();
 
   return GInjected;
 }
 
 //-----------------------------------------------------------------------------
-bool Capture::InjectRemote() {
+bool Capture::InjectRemote(std::string_view remote_address) {
   Injection inject;
   std::string dllName = Path::GetDllPath(GTargetProcess->GetIs64Bit());
   GTcpServer->Disconnect();
 
-  GInjected = inject.Inject(dllName, *GTargetProcess, "OrbitInitRemote");
+  GInjected = inject.Inject(remote_address, dllName, *GTargetProcess,
+                            "OrbitInitRemote");
 
   if (GInjected) {
     ORBIT_LOG(
@@ -141,6 +137,7 @@ void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
     GTargetProcess = a_Process;
     GSamplingProfiler = std::make_shared<SamplingProfiler>(a_Process);
     GSelectedFunctionsMap.clear();
+    GFunctionCountMap.clear();
     GOrbitUnreal.Clear();
     GTargetProcess->LoadDebugInfo();
     GTargetProcess->ClearWatchedVariables();
@@ -148,16 +145,20 @@ void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
 }
 
 //-----------------------------------------------------------------------------
-bool Capture::Connect() {
+bool Capture::Connect(std::string_view remote_address) {
   if (!GInjected) {
-    Inject();
+    Inject(remote_address);
   }
 
   return GInjected;
 }
 
 //-----------------------------------------------------------------------------
-bool Capture::StartCapture(LinuxTracingSession* session) {
+// TODO: This method is resposible for too many things. We probably want to
+// split the server side logic and client side logic into separate
+// methods/classes.
+bool Capture::StartCapture(LinuxTracingSession* session,
+                           std::string_view remote_address) {
   SCOPE_TIMER_LOG("Capture::StartCapture");
 
   if (GTargetProcess->GetName().size() == 0) return false;
@@ -167,7 +168,7 @@ bool Capture::StartCapture(LinuxTracingSession* session) {
 
 #ifdef WIN32
   if (!IsRemote()) {
-    if (!Connect()) {
+    if (!Connect(remote_address)) {
       return false;
     }
   }
@@ -187,6 +188,7 @@ bool Capture::StartCapture(LinuxTracingSession* session) {
 #else
     CHECK(session != nullptr);
     GEventTracer.Start(GTargetProcess->GetID(), session);
+    UNUSED(remote_address);
 #endif
   } else if (Capture::IsRemote()) {
     Capture::NewSamplingProfiler();
@@ -335,7 +337,7 @@ void Capture::SendFunctionHooks() {
     std::string selectedFunctionsData =
         SerializeObjectBinary(GSelectedFunctions);
     GTcpClient->Send(Msg_RemoteSelectedFunctionsMap,
-                     (void*)selectedFunctionsData.data(),
+                     selectedFunctionsData.data(),
                      selectedFunctionsData.size());
 
     Message msg(Msg_StartCapture);
@@ -353,7 +355,7 @@ void Capture::SendFunctionHooks() {
   for (int i = 0; i < Function::NUM_TYPES; ++i) {
     std::vector<DWORD64>& addresses = GSelectedAddressesByType[i];
     if (addresses.size()) {
-      MessageType msgType = GetMessageType((Function::OrbitType)i);
+      MessageType msgType = GetMessageType(static_cast<Function::OrbitType>(i));
       GTcpServer->Send(msgType, addresses);
     }
   }
@@ -377,7 +379,7 @@ void Capture::SendDataTrackingInfo() {
     std::vector<Argument> args;
     for (const std::shared_ptr<Variable> var : rule->m_TrackedVariables) {
       Argument arg;
-      arg.m_Offset = (DWORD)var->m_Address;
+      arg.m_Offset = var->m_Address;
       arg.m_NumBytes = var->m_Size;
       args.push_back(arg);
     }
@@ -478,20 +480,6 @@ void Capture::DisplayStats() {
 }
 
 //-----------------------------------------------------------------------------
-bool Capture::IsOtherInstanceRunning() {
-#ifdef _WIN32
-  DWORD procID = 0;
-  HANDLE procHandle = Injection::GetTargetProcessHandle(ORBIT_EXE_NAME, procID);
-  PRINT_FUNC;
-  bool otherInstanceFound = procHandle != NULL;
-  PRINT_VAR(otherInstanceFound);
-  return otherInstanceFound;
-#else
-  return false;
-#endif
-}
-
-//-----------------------------------------------------------------------------
 void Capture::SaveSession(const std::string& a_FileName) {
   Session session;
   session.m_ProcessFullPath = GTargetProcess->GetFullPath();
@@ -535,13 +523,6 @@ bool Capture::IsTrackingEvents() {
 #ifdef __linux
   return !IsRemote();
 #else
-  static bool yieldEvents = false;
-  if (yieldEvents && IsOtherInstanceRunning() && GTargetProcess) {
-    if (absl::StrContains(GTargetProcess->GetName(), "Orbit.exe")) {
-      return false;
-    }
-  }
-
   if (GTargetProcess->GetIsRemote() && !GTcpServer->IsLocalConnection()) {
     return false;
   }
@@ -565,7 +546,7 @@ bool Capture::IsLinuxData() {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::RegisterZoneName(DWORD64 a_ID, char* a_Name) {
+void Capture::RegisterZoneName(uint64_t a_ID, const char* a_Name) {
   GZoneNames[a_ID] = a_Name;
 }
 

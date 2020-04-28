@@ -36,10 +36,10 @@ void RuleEditorWindow::SetInputFromActiveIndex(ImGuiTextEditCallbackData* data,
   ReplaceStringInPlace(entry, GetCurrentWord(m_Text), "");
   m_Text += entry;
 
-  const size_t length = strlen(m_Text.c_str());
+  size_t length = strlen(m_Text.c_str());
   memmove(data->Buf, m_Text.c_str(), length + 1);
 
-  data->BufTextLen = (int)length;
+  data->BufTextLen = length;
   data->BufDirty = true;
 
   UpdateTextBuffer();
@@ -321,7 +321,7 @@ void RuleEditorWindow::DrawPopup(ImVec2 pos, ImVec2 /*size*/, bool& isFocused) {
   for (uint32_t i = 0; i < m_AutoComplete.size(); i++) {
     // Track if we're drawing the active index so we
     // can scroll to it if it has changed
-    bool isIndexActive = (size_t)m_State.m_ActiveIdx == i;
+    bool isIndexActive = static_cast<size_t>(m_State.m_ActiveIdx) == i;
 
     if (isIndexActive) {
       // Draw the currently 'active' item differently
@@ -426,8 +426,9 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size) {
 
   if (m_LastVariable) {
     const std::string& typeName = m_LastVariable->GetTypeName();
-    ImGui::Text("Type: %s\nLength: %i\nOffset:%i", typeName.c_str(),
-                (int)m_LastVariable->m_Size, (int)m_LastVariable->m_Address);
+    ImGui::Text("Type: %s\nLength: %" PRIu32 "\nOffset:%" PRIu64,
+                typeName.c_str(), m_LastVariable->m_Size,
+                m_LastVariable->m_Address);
   }
 
   size_t numOptions = GPluginManager.m_Plugins.size() + Card::NUM_CARD_TYPES;
@@ -450,15 +451,17 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size) {
   if (ImGui::BeginPopup("toggle")) {
     // Cards
     for (int i = 0; i < Card::NUM_CARD_TYPES; ++i) {
-      ImGui::MenuItem(typeMap[i].c_str(), "", (bool*)&m_PluginToggles[i]);
+      ImGui::MenuItem(typeMap[i].c_str(), "",
+                      reinterpret_cast<bool*>(&m_PluginToggles[i]));
     }
 
     ImGui::Separator();
 
     // Plugins
     for (size_t i = 0; i < plugins.size(); i++) {
-      ImGui::MenuItem(plugins[i]->GetName(), "",
-                      (bool*)&m_PluginToggles[Card::NUM_CARD_TYPES + i]);
+      ImGui::MenuItem(
+          plugins[i]->GetName(), "",
+          reinterpret_cast<bool*>(&m_PluginToggles[Card::NUM_CARD_TYPES + i]));
     }
 
     ImGui::EndPopup();
@@ -483,7 +486,7 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size) {
 
   ImGui::End();
 
-  m_Text = (char*)&m_TextBuffer[0];
+  m_Text = &m_TextBuffer[0];
 
   RefreshAutoComplete(m_Text);
 
@@ -578,15 +581,17 @@ void RuleEditor::OnReceiveMessage(const Message& a_Message) {
     int ContextSize = Capture::GTargetProcess->GetIs64Bit()
                           ? sizeof(SavedContext64)
                           : sizeof(SavedContext32);
-    void* argData = (void*)(a_Message.GetData() + ContextSize);
+    const char* argData =
+        static_cast<const char*>(a_Message.GetData()) + ContextSize;
 
     DWORD64 address = a_Message.m_Header.m_GenericHeader.m_Address;
 
     std::shared_ptr<Rule> rule = m_Rules[address];
     int offset = 0;
-    const char* maxAddress = a_Message.GetData() + a_Message.m_Size;
+    const char* maxAddress =
+        static_cast<const char*>(a_Message.GetData()) + a_Message.m_Size;
     for (const std::shared_ptr<Variable> var : rule->m_TrackedVariables) {
-      char* data = (char*)argData + offset;
+      const char* data = argData + offset;
       if (data + var->m_Size > maxAddress) {
         break;
       }
@@ -599,9 +604,10 @@ void RuleEditor::OnReceiveMessage(const Message& a_Message) {
 
 //-----------------------------------------------------------------------------
 void RuleEditor::ProcessVariable(const std::shared_ptr<Variable>& a_Variable,
-                                 char* a_Data) {
-  if (a_Variable->m_Size == 4) {
-    GCardContainer.Update(a_Variable->m_Name, *((float*)a_Data));
+                                 const void* a_Data) {
+  if (a_Variable->m_Size == sizeof(float)) {
+    GCardContainer.Update(a_Variable->m_Name,
+                          *static_cast<const float*>(a_Data));
   }
 }
 

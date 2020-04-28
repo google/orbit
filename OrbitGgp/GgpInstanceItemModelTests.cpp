@@ -1,11 +1,15 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include <gtest/gtest.h>
 
 #include <QAbstractItemModel>
 #include <QDateTime>
 #include <QVector>
 
-#include "GgpInstance.h"
-#include "GgpInstanceItemModel.h"
+#include "OrbitGgp/GgpInstance.h"
+#include "OrbitGgp/GgpInstanceItemModel.h"
 
 TEST(GgpInstanceItemModelTests, columnCount) {
   GgpInstanceItemModel model{};

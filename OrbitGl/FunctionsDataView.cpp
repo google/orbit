@@ -16,7 +16,6 @@
 
 //-----------------------------------------------------------------------------
 FunctionsDataView::FunctionsDataView() : DataView(DataViewType::FUNCTIONS) {
-  InitSortingOrders();
   GOrbitApp->RegisterFunctionsDataView(this);
 }
 
@@ -43,7 +42,7 @@ const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
 std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
-  if (a_Row >= (int)GetNumElements()) {
+  if (a_Row >= static_cast<int>(GetNumElements())) {
     return "";
   }
 
@@ -81,23 +80,14 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
   }
 
 //-----------------------------------------------------------------------------
-void FunctionsDataView::OnSort(int a_Column,
-                               std::optional<SortingOrder> a_NewOrder) {
-  if (!IsSortingAllowed()) {
-    return;
-  }
+void FunctionsDataView::DoSort() {
+  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
+  std::function<bool(int a, int b)> sorter = nullptr;
 
   const std::vector<std::shared_ptr<Function>>& functions =
       Capture::GTargetProcess->GetFunctions();
 
-  if (a_NewOrder.has_value()) {
-    m_SortingOrders[a_Column] = a_NewOrder.value();
-  }
-
-  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
-  std::function<bool(int a, int b)> sorter = nullptr;
-
-  switch (a_Column) {
+  switch (m_SortingColumn) {
     case COLUMN_SELECTED:
       sorter = ORBIT_FUNC_SORT(IsSelected());
       break;
@@ -127,10 +117,8 @@ void FunctionsDataView::OnSort(int a_Column,
   }
 
   if (sorter) {
-    std::sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
   }
-
-  m_LastSortedColumn = a_Column;
 }
 
 //-----------------------------------------------------------------------------
@@ -208,24 +196,23 @@ void FunctionsDataView::OnContextMenu(const std::string& a_Action,
 }
 
 //-----------------------------------------------------------------------------
-void FunctionsDataView::OnFilter(const std::string& a_Filter) {
-  m_FilterTokens = Tokenize(ToLower(a_Filter));
+void FunctionsDataView::DoFilter() {
+  m_FilterTokens = Tokenize(ToLower(m_Filter));
 
 #ifdef WIN32
   ParallelFilter();
 #else
   // TODO: port parallel filtering
   std::vector<uint32_t> indices;
-  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
   const std::vector<std::shared_ptr<Function>>& functions =
       Capture::GTargetProcess->GetFunctions();
-  for (int i = 0; i < (int)functions.size(); ++i) {
+  for (size_t i = 0; i < functions.size(); ++i) {
     auto& function = functions[i];
     std::string name = function->Lower() + function->GetPdb()->GetName();
 
     bool match = true;
 
-    for (std::string& filterToken : tokens) {
+    for (std::string& filterToken : m_FilterTokens) {
       if (name.find(filterToken) == std::string::npos) {
         match = false;
         break;
@@ -239,9 +226,7 @@ void FunctionsDataView::OnFilter(const std::string& a_Filter) {
 
   m_Indices = indices;
 
-  if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, {});
-  }
+  OnSort(m_SortingColumn, {});
 #endif
 }
 
@@ -257,7 +242,7 @@ void FunctionsDataView::ParallelFilter() {
   indicesArray.resize(numWorkers);
 
   oqpi_tk::parallel_for(
-      "FunctionsDataViewParallelFor", (int)functions.size(),
+      "FunctionsDataViewParallelFor", functions.size(),
       [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
         std::vector<int>& result = indicesArray[a_BlockIndex];
         const std::string& name = functions[a_ElementIndex]->Lower();
@@ -297,9 +282,7 @@ void FunctionsDataView::OnDataChanged() {
     m_Indices[i] = i;
   }
 
-  if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, {});
-  }
+  DataView::OnDataChanged();
 }
 
 //-----------------------------------------------------------------------------

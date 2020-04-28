@@ -16,7 +16,7 @@ namespace ftgl {
 #endif
 
 mat4* mat4_new(void) {
-  mat4* self = (mat4*)malloc(sizeof(mat4));
+  mat4* self = static_cast<mat4*>(malloc(sizeof(mat4)));
   return self;
 }
 
@@ -91,7 +91,7 @@ void mat4_set_perspective(mat4* self, float fovy, float aspect, float znear,
 
   if (znear == zfar) return;
 
-  h = (float)tan(fovy / 360.0 * M_PI) * znear;
+  h = static_cast<float>(tan(fovy / 360.0 * M_PI) * znear);
   w = h * aspect;
 
   mat4_set_frustum(self, -w, w, -h, h, znear, zfar);
@@ -122,9 +122,9 @@ void mat4_set_rotation(mat4* self, float angle, float x, float y, float z) {
 
   if (!self) return;
 
-  c = (float)cos(M_PI * angle / 180.0);
-  s = (float)sin(M_PI * angle / 180.0);
-  norm = (float)sqrt(x * x + y * y + z * z);
+  c = static_cast<float>(cos(M_PI * angle / 180.0));
+  s = static_cast<float>(sin(M_PI * angle / 180.0));
+  norm = sqrtf(x * x + y * y + z * z);
 
   x /= norm;
   y /= norm;

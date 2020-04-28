@@ -43,35 +43,31 @@ struct BoxBuffer {
 //-----------------------------------------------------------------------------
 class Batcher {
  public:
-  void AddLine(const Line& a_Line, Color* a_Colors, PickingID::Type a_Type,
-               void* a_UserData = nullptr) {
-    Color pickCol = PickingID::GetColor(a_Type, m_LineBuffer.m_Lines.size());
-    m_LineBuffer.m_Lines.push_back(a_Line);
-    m_LineBuffer.m_Colors.push_back(a_Colors, 2);
-    m_LineBuffer.m_PickingColors.push_back_n(pickCol, 2);
-    m_LineBuffer.m_UserData.push_back(a_UserData);
-  }
+  void AddLine(const Line& line, const Color* colors,
+               PickingID::Type picking_type, void* user_data = nullptr);
+  void AddLine(const Line& line, Color color, PickingID::Type picking_type,
+               void* user_data = nullptr);
+  void AddLine(Vec2 from, Vec2 to, float z, Color color,
+               PickingID::Type picking_type, void* user_data = nullptr);
+  void AddVerticalLine(Vec2 pos, float size, float z, Color color,
+                       PickingID::Type picking_type, void* user_data = nullptr);
 
-  void AddBox(const Box& a_Box, Color* a_Colors, PickingID::Type a_Type,
-              void* a_UserData = nullptr) {
-    Color pickCol = PickingID::GetColor(a_Type, m_BoxBuffer.m_Boxes.size());
-    m_BoxBuffer.m_Boxes.push_back(a_Box);
-    m_BoxBuffer.m_Colors.push_back(a_Colors, 4);
-    m_BoxBuffer.m_PickingColors.push_back_n(pickCol, 4);
-    m_BoxBuffer.m_UserData.push_back(a_UserData);
-  }
+  void AddBox(const Box& a_Box, const Color* colors,
+              PickingID::Type picking_type, void* user_data = nullptr);
+  void AddBox(const Box& a_Box, Color color, PickingID::Type picking_type,
+              void* user_data = nullptr);
+  void AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
+                    PickingID::Type picking_type, void* user_data = nullptr);
 
-  void Reset() {
-    m_LineBuffer.Reset();
-    m_BoxBuffer.Reset();
-  }
+  void GetBoxGradientColors(Color color, Color* colors);
+
+  void Reset();
 
   TextBox* GetTextBox(PickingID a_ID);
-
-  BoxBuffer& GetBoxBuffer() { return m_BoxBuffer; }
-  LineBuffer& GetLineBuffer() { return m_LineBuffer; }
+  BoxBuffer& GetBoxBuffer() { return box_buffer_; }
+  LineBuffer& GetLineBuffer() { return line_buffer_; }
 
  protected:
-  LineBuffer m_LineBuffer;
-  BoxBuffer m_BoxBuffer;
+  LineBuffer line_buffer_;
+  BoxBuffer box_buffer_;
 };

@@ -42,14 +42,14 @@ OrbitMainWindow* GMainWindow;
 extern QMenu* GContextMenu;
 
 //-----------------------------------------------------------------------------
-OrbitMainWindow::OrbitMainWindow(const std::vector<std::string>& arguments,
-                                 QApplication* a_App, QWidget* parent)
-    : QMainWindow(parent),
+OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
+                                 ApplicationOptions&& options)
+    : QMainWindow(nullptr),
       m_App(a_App),
       ui(new Ui::OrbitMainWindow),
       m_Headless(false),
       m_IsDev(false) {
-  OrbitApp::Init();
+  OrbitApp::Init(std::move(options));
 
   ui->setupUi(this);
   ui->ProcessesList->SetProcessParams();
@@ -87,7 +87,7 @@ OrbitMainWindow::OrbitMainWindow(const std::vector<std::string>& arguments,
   GOrbitApp->SetClipboardCallback(
       [this](const std::wstring& a_Text) { this->OnSetClipboard(a_Text); });
 
-  ParseCommandlineArguments(arguments);
+  ParseCommandlineArguments();
 
   ui->DebugGLWidget->Initialize(GlPanel::DEBUG, this);
   ui->CaptureGLWidget->Initialize(GlPanel::CAPTURE, this);
@@ -168,15 +168,19 @@ OrbitMainWindow::~OrbitMainWindow() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::ParseCommandlineArguments(
-    const std::vector<std::string>& arguments) {
-  for (const std::string& argument : arguments) {
+void OrbitMainWindow::ParseCommandlineArguments() {
+  std::vector<std::string> arguments;
+  for (const auto& qt_argument : QCoreApplication::arguments()) {
+    std::string argument = qt_argument.toStdString();
     if (absl::StrContains(argument, "inject:")) {
       m_Headless = true;
     } else if (argument == "dev") {
       m_IsDev = true;
     }
+
+    arguments.push_back(std::move(argument));
   }
+
   GOrbitApp->SetCommandLineArguments(arguments);
 }
 
@@ -219,7 +223,7 @@ std::wstring OrbitMainWindow::FindFile(const std::wstring& a_Caption,
 void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
   if (a_Type == DataViewType::ALL) {
     for (int i = 0; i < DataViewType::ALL; ++i) {
-      UpdatePanel((DataViewType)i);
+      UpdatePanel(static_cast<DataViewType>(i));
     }
   } else {
     UpdatePanel(a_Type);
@@ -281,7 +285,7 @@ void OrbitMainWindow::CreatePluginTabs() {
     layout->addWidget(glWidget, 0, 0, 1, 1);
     ui->RightTabWidget->addTab(widget, plugin->GetName());
 
-    glWidget->Initialize(GlPanel::PLUGIN, this, (void*)plugin);
+    glWidget->Initialize(GlPanel::PLUGIN, this, plugin);
   }
 }
 
@@ -385,6 +389,13 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
     ui->ProcessesList->UpdateProcessParams();
   } else if (absl::StartsWith(a_Message, "SetProcessParams")) {
     ui->ProcessesList->SetProcessParams();
+  } else if (absl::StartsWith(a_Message, "error:")) {
+    std::string title_text = Replace(a_Message, "error:", "");
+    std::string title = title_text.substr(0, title_text.find('\n'));
+    std::string text = title_text.find('\n') != std::string::npos
+                           ? title_text.substr(title_text.find('\n'))
+                           : title;
+    QMessageBox::critical(this, title.c_str(), text.c_str());
   }
 }
 

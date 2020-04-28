@@ -44,8 +44,8 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit);
 
 #if defined(__x86_64__)
 
-#define READ_ONCE(x) (*(volatile typeof(x)*)&x)
-#define WRITE_ONCE(x, v) (*(volatile typeof(x)*)&x) = (v)
+#define READ_ONCE(x) (*static_cast<volatile typeof(x)*>(&x))
+#define WRITE_ONCE(x, v) (*static_cast<volatile typeof(x)*>(&x)) = (v)
 #define barrier() asm volatile("" ::: "memory")
 
 #define smp_store_release(p, v) \

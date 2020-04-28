@@ -53,7 +53,8 @@ void* Injection::RemoteWrite(const char* data, size_t size) {
 }
 
 //-----------------------------------------------------------------------------
-bool Injection::Inject(const std::string& a_DllName, const Process& a_Process,
+bool Injection::Inject(std::string_view a_RemoteAddress,
+                       const std::string& a_DllName, const Process& a_Process,
                        const std::string& ProcName) {
   SCOPE_TIMER_LOG(
       absl::StrFormat("Injecting in %s", a_Process.GetName().c_str()));
@@ -111,11 +112,9 @@ bool Injection::Inject(const std::string& a_DllName, const Process& a_Process,
   }
 
   // Remote write the host and port number
-  std::string hostString =
-      Capture::GCaptureHost + ":" + std::to_string(Capture::GCapturePort);
-  ORBIT_LOG(absl::StrFormat("Capture port: %i", Capture::GCapturePort));
-  void* hostStringAddress = RemoteWrite(hostString);
-  PRINT_VAR(hostString);
+  ORBIT_LOG(absl::StrFormat("Capture remote address: %s", a_RemoteAddress));
+  void* hostStringAddress = RemoteWrite(std::string(a_RemoteAddress));
+  PRINT_VAR(a_RemoteAddress);
   if (hostStringAddress == nullptr) {
     return false;
   }
@@ -744,7 +743,8 @@ GRPA_FAIL_JMP:
 #else
 
 Injection::Injection() {}
-bool Injection::Inject(const std::string& /*dll_name*/, const Process&,
+bool Injection::Inject(std::string_view /*a_RemoteAddress*/,
+                       const std::string& /*dll_name*/, const Process&,
                        const std::string& /*proc_name*/) {
   return false;
 }

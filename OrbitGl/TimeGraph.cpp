@@ -151,9 +151,9 @@ bool TimeGraph::UpdateSessionMinMaxCounter() {
   m_Mutex.unlock();
 
   if (GEventTracer.GetEventBuffer().HasEvent()) {
-    m_SessionMinCounter = std::min((long long)m_SessionMinCounter,
+    m_SessionMinCounter = std::min(m_SessionMinCounter,
                                    GEventTracer.GetEventBuffer().GetMinTime());
-    m_SessionMaxCounter = std::max((long long)m_SessionMaxCounter,
+    m_SessionMaxCounter = std::max(m_SessionMaxCounter,
                                    GEventTracer.GetEventBuffer().GetMaxTime());
   }
 
@@ -237,9 +237,9 @@ void TimeGraph::PanTime(int a_InitialX, int a_CurrentX, int a_Width,
                         double a_InitialTime) {
   m_TimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
   double initialLocalTime =
-      (double)a_InitialX / (double)a_Width * m_TimeWindowUs;
+      static_cast<double>(a_InitialX) / a_Width * m_TimeWindowUs;
   double dt =
-      (double)(a_CurrentX - a_InitialX) / (double)a_Width * m_TimeWindowUs;
+      static_cast<double>(a_CurrentX - a_InitialX) / a_Width * m_TimeWindowUs;
   double currentTime = a_InitialTime - dt;
   m_MinTimeUs = clamp(currentTime - initialLocalTime, 0.0,
                       GetSessionTimeSpanUs() - m_TimeWindowUs);
@@ -373,6 +373,7 @@ void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
           timer.m_PID = lastCS.m_ProcessId;
           timer.m_TID = lastCS.m_ThreadId;
           timer.m_Processor = static_cast<int8_t>(lastCS.m_ProcessorIndex);
+          timer.m_Depth = timer.m_Processor;
           timer.m_SessionID = Message::GSessionID;
           timer.SetType(Timer::CORE_ACTIVITY);
 
@@ -418,13 +419,6 @@ void TimeGraph::UpdateMaxTimeStamp(TickType a_Time) {
     m_SessionMaxCounter = a_Time;
   }
 };
-
-//-----------------------------------------------------------------------------
-void TimeGraph::UpdateThreadDepth(int a_ThreadId, int a_Depth) {
-  if (a_Depth > m_ThreadDepths[a_ThreadId]) {
-    m_ThreadDepths[a_ThreadId] = a_Depth;
-  }
-}
 
 //-----------------------------------------------------------------------------
 float TimeGraph::GetThreadTotalHeight() { return std::abs(min_y_); }
@@ -651,7 +645,7 @@ void TimeGraph::SortTracks() {
     for (auto& pair : GEventTracer.GetEventBuffer().GetCallstacks()) {
       ThreadID threadID = pair.first;
       std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
-      m_EventCount[threadID] = (uint32_t)callstacks.size();
+      m_EventCount[threadID] = callstacks.size();
       GetOrCreateThreadTrack(threadID);
     }
   }
@@ -659,9 +653,6 @@ void TimeGraph::SortTracks() {
   // Reorder threads once every second when capturing
   if (!Capture::IsCapturing() || m_LastThreadReorder.QueryMillis() > 1000.0) {
     sorted_tracks_.clear();
-
-    // Sched track is currently held as thread 0, TODO: make it it's own track.
-    sorted_tracks_.emplace_back(GetOrCreateThreadTrack(0));
 
     std::vector<ThreadID> sortedThreadIds;
 
@@ -804,8 +795,7 @@ void TimeGraph::DrawBoxBuffer(bool a_Picking) {
   while (boxBlock) {
     if (int numElems = boxBlock->m_Size) {
       glVertexPointer(3, GL_FLOAT, sizeof(Vec3), boxBlock->m_Data);
-      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color),
-                     (void*)(colorBlock->m_Data));
+      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), colorBlock->m_Data);
       glDrawArrays(GL_QUADS, 0, numElems * 4);
     }
 
@@ -826,8 +816,7 @@ void TimeGraph::DrawLineBuffer(bool a_Picking) {
   while (lineBlock) {
     if (int numElems = lineBlock->m_Size) {
       glVertexPointer(3, GL_FLOAT, sizeof(Vec3), lineBlock->m_Data);
-      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color),
-                     (void*)(colorBlock->m_Data));
+      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), colorBlock->m_Data);
       glDrawArrays(GL_LINES, 0, numElems * 2);
     }
 

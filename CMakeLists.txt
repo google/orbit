@@ -1,3 +1,7 @@
+# Copyright (c) 2020 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 cmake_minimum_required(VERSION 3.15)
 
 project(Orbit C CXX)
@@ -6,11 +10,15 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion
                            -Werror=inconsistent-missing-override
+                           -Werror=old-style-cast
                            -Werror=unused-parameter
                            -Werror=unused-variable)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(STRICT_COMPILE_FLAGS -Werror=all
-                           -Werror=float-conversion)
+                           -Werror=float-conversion
+                           -Werror=old-style-cast
+                           -Werror=unused-parameter
+                           -Werror=unused-variable)
 endif()
 
 include(cmake/strip.cmake)
@@ -127,6 +135,7 @@ add_subdirectory(OrbitTest)
 if(WITH_GUI)
   add_subdirectory(OrbitGl)
   add_subdirectory(OrbitQt)
+  add_subdirectory(OrbitGgp)
 endif()
 
 if(WIN32)

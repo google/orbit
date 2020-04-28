@@ -77,7 +77,7 @@ class RuleEditor : public GlCanvas {
                   bool a_Alt) override;
   void RenderUI() override;
   void ProcessVariable(const std::shared_ptr<Variable>& a_Variable,
-                       char* a_Data);
+                       const void* a_Data);
 
   RuleEditorWindow m_Window;
   std::unordered_map<DWORD64, std::shared_ptr<Rule>> m_Rules;

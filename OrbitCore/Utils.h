@@ -33,7 +33,7 @@ inline std::string ws2s(const std::wstring& wstr) {
   std::string str;
   str.resize(wstr.size());
   for (std::size_t i = 0; i < str.size(); ++i) {
-    str[i] = (char)wstr[i];
+    str[i] = static_cast<char>(wstr[i]);
   }
 
   return str;
@@ -184,7 +184,7 @@ inline void ReplaceStringInPlace(std::string& subject,
   size_t pos = 0;
   while ((pos = subject.find(search, pos)) != std::string::npos) {
     subject.replace(pos, search.length(), replace);
-    pos += std::max(replace.length(), (size_t)1);
+    pos += std::max(replace.length(), static_cast<size_t>(1));
   }
 }
 
@@ -195,7 +195,7 @@ inline void ReplaceStringInPlace(std::wstring& subject,
   size_t pos = 0;
   while ((pos = subject.find(search, pos)) != std::wstring::npos) {
     subject.replace(pos, search.length(), replace);
-    pos += std::max(replace.length(), (size_t)1);
+    pos += std::max(replace.length(), static_cast<size_t>(1));
   }
 }
 
@@ -312,9 +312,9 @@ inline void OrbitSleepMs(uint64_t a_Ms) {
 //-----------------------------------------------------------------------------
 inline void PrintBuffer(const void* a_Buffer, uint32_t a_Size,
                         uint32_t a_Width = 16) {
-  unsigned char* buffer = (unsigned char*)a_Buffer;
+  const uint8_t* buffer = static_cast<const uint8_t*>(a_Buffer);
   for (size_t i = 0; i < a_Size; ++i) {
-    std::cout << std::hex << std::setfill('0') << std::setw(2) << (int)buffer[i]
+    std::cout << std::hex << std::setfill('0') << std::setw(2) << buffer[i]
               << " ";
 
     if ((i + 1) % a_Width == 0) {

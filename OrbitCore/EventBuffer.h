@@ -45,8 +45,8 @@ class EventBuffer {
   std::vector<CallstackEvent> GetCallstackEvents(uint64_t a_TimeBegin,
                                                  uint64_t a_TimeEnd,
                                                  ThreadID a_ThreadId = 0);
-  long long GetMaxTime() const { return m_MaxTime; }
-  long long GetMinTime() const { return m_MinTime; }
+  uint64_t GetMaxTime() const { return m_MaxTime; }
+  uint64_t GetMinTime() const { return m_MinTime; }
   bool HasEvent() {
     ScopeLock lock(m_Mutex);
     return m_CallstackEvents.size() > 0;
@@ -67,13 +67,8 @@ class EventBuffer {
   }
 
   //-----------------------------------------------------------------------------
-  void AddCallstackEvent(uint64_t a_Time, CallstackID a_CSHash,
-                         ThreadID a_TID) {
-    ScopeLock lock(m_Mutex);
-    std::map<uint64_t, CallstackEvent>& threadMap = m_CallstackEvents[a_TID];
-    threadMap[a_Time] = CallstackEvent(a_Time, a_CSHash, a_TID);
-    RegisterTime(a_Time);
-  }
+  void AddCallstackEvent(uint64_t time, CallstackID cs_hash,
+                         ThreadID thread_id);
 
   ORBIT_SERIALIZABLE;
 

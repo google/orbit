@@ -34,9 +34,9 @@ class TcpPacket {
   }
 
   void Dump() const {
-    std::cout << "TcpPacket [" << std::dec << (uint32_t)m_Data->size()
-              << " bytes]" << std::endl;
-    PrintBuffer(m_Data->data(), (uint32_t)m_Data->size());
+    std::cout << "TcpPacket [" << std::dec << m_Data->size() << " bytes]"
+              << std::endl;
+    PrintBuffer(m_Data->data(), m_Data->size());
   }
 
   std::shared_ptr<std::vector<char>> Data() { return m_Data; };
@@ -119,12 +119,12 @@ class TcpEntity {
 
 //-----------------------------------------------------------------------------
 inline void TcpEntity::Send(Message& a_Message) {
-  SendMsg(a_Message, a_Message.m_Data);
+  SendMsg(a_Message, a_Message.GetData());
 }
 
 //-----------------------------------------------------------------------------
 inline void TcpEntity::Send(MessageType a_Type, const std::string& a_String) {
-  Message msg(a_Type, (uint32_t)(a_String.size() + 1) * sizeof(a_String[0]));
+  Message msg(a_Type, (a_String.size() + 1) * sizeof(a_String[0]));
   SendMsg(msg, a_String.data());
 }
 
@@ -136,7 +136,7 @@ inline void TcpEntity::Send(const std::string& a_String) {
 //-----------------------------------------------------------------------------
 void TcpEntity::Send(OrbitLogEntry& a_Entry) {
   char stackBuffer[1024];
-  uint32_t entrySize = (uint32_t)a_Entry.GetBufferSize();
+  size_t entrySize = a_Entry.GetBufferSize();
   bool needsAlloc = entrySize > 1024;
   char* buffer = !needsAlloc ? stackBuffer : new char[entrySize];
 
@@ -175,7 +175,7 @@ void TcpEntity::Send(Orbit::UserData& a_UserData) {
 //-----------------------------------------------------------------------------
 template <class T>
 void TcpEntity::Send(Message& a_Message, const std::vector<T>& a_Vector) {
-  a_Message.m_Size = (uint32_t)a_Vector.size() * sizeof(T);
+  a_Message.m_Size = a_Vector.size() * sizeof(T);
   SendMsg(a_Message, a_Vector.data());
 }
 
@@ -189,7 +189,7 @@ void TcpEntity::Send(MessageType a_Type, const std::vector<T>& a_Vector) {
 //-----------------------------------------------------------------------------
 template <class T>
 void TcpEntity::Send(Message& a_Message, const T& a_Item) {
-  a_Message.m_Size = (uint32_t)sizeof(T);
+  a_Message.m_Size = sizeof(T);
   SendMsg(a_Message, &a_Item);
 }
 

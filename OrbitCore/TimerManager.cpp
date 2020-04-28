@@ -94,8 +94,8 @@ void TimerManager::FlushQueue() {
 
     if (numDequeued == 0) break;
 
-    m_NumQueuedEntries -= (int)numDequeued;
-    m_NumFlushedTimers += (int)numDequeued;
+    m_NumQueuedEntries -= numDequeued;
+    m_NumFlushedTimers += numDequeued;
 
     if (m_IsClient) {
       int numEntries = m_NumFlushedTimers;
@@ -167,8 +167,8 @@ void TimerManager::SendTimers() {
     }
 
     size_t numDequeued = m_LockFreeQueue.try_dequeue_bulk(timers, numTimers);
-    m_NumQueuedEntries -= (int)numDequeued;
-    m_NumQueuedTimers -= (int)numDequeued;
+    m_NumQueuedEntries -= numDequeued;
+    m_NumQueuedTimers -= numDequeued;
 
     GTcpClient->Send(Msg, timers, numDequeued * sizeof(Timer));
 

@@ -17,19 +17,19 @@
 
 //-----------------------------------------------------------------------------
 TypesDataView::TypesDataView() : DataView(DataViewType::TYPES) {
-  InitSortingOrders();
   OnDataChanged();
-
   GOrbitApp->RegisterTypesDataView(this);
 }
 
 //-----------------------------------------------------------------------------
 void TypesDataView::OnDataChanged() {
-  int numTypes = (int)Capture::GTargetProcess->GetTypes().size();
+  size_t numTypes = Capture::GTargetProcess->GetTypes().size();
   m_Indices.resize(numTypes);
-  for (int i = 0; i < numTypes; ++i) {
+  for (size_t i = 0; i < numTypes; ++i) {
     m_Indices[i] = i;
   }
+
+  DataView::OnDataChanged();
 }
 
 //-----------------------------------------------------------------------------
@@ -87,18 +87,19 @@ std::string TypesDataView::GetValue(int a_Row, int a_Column) {
 }
 
 //-----------------------------------------------------------------------------
-void TypesDataView::OnFilter(const std::string& a_Filter) {
-  ParallelFilter(a_Filter);
+void TypesDataView::DoFilter() {
+  m_FilterTokens = Tokenize(ToLower(m_Filter));
 
-  if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, {});
-  }
+  // TODO: This only performs work on Windows. It is currently not an issue as
+  //  globals are not supported elsewhere.
+  ParallelFilter();
+
+  OnSort(m_SortingColumn, {});
 }
 
 //-----------------------------------------------------------------------------
-void TypesDataView::ParallelFilter(const std::string& a_Filter) {
+void TypesDataView::ParallelFilter() {
 #ifdef _WIN32
-  m_FilterTokens = Tokenize(ToLower(a_Filter));
   std::vector<Type*>& types = Capture::GTargetProcess->GetTypes();
   const auto prio = oqpi::task_priority::normal;
   auto numWorkers = oqpi_tk::scheduler().workersCount(prio);
@@ -131,8 +132,6 @@ void TypesDataView::ParallelFilter(const std::string& a_Filter) {
   for (int i : indicesSet) {
     m_Indices.push_back(i);
   }
-#else
-  UNUSED(a_Filter);
 #endif
 }
 
@@ -143,18 +142,13 @@ void TypesDataView::ParallelFilter(const std::string& a_Filter) {
   }
 
 //-----------------------------------------------------------------------------
-void TypesDataView::OnSort(int a_Column,
-                           std::optional<SortingOrder> a_NewOrder) {
-  const std::vector<Type*>& types = Capture::GTargetProcess->GetTypes();
-
-  if (a_NewOrder.has_value()) {
-    m_SortingOrders[a_Column] = a_NewOrder.value();
-  }
-
-  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
+void TypesDataView::DoSort() {
+  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (a_Column) {
+  const std::vector<Type*>& types = Capture::GTargetProcess->GetTypes();
+
+  switch (m_SortingColumn) {
     case COLUMN_NAME:
       sorter = ORBIT_TYPE_SORT(m_Name);
       break;
@@ -189,8 +183,6 @@ void TypesDataView::OnSort(int a_Column,
   if (sorter) {
     std::sort(m_Indices.begin(), m_Indices.end(), sorter);
   }
-
-  m_LastSortedColumn = a_Column;
 }
 
 //-----------------------------------------------------------------------------

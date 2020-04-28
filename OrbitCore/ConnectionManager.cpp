@@ -81,7 +81,7 @@ void ConnectionManager::InitAsService() {
 
 void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
   PRINT_FUNC;
-  const char* a_Data = a_Msg.GetData();
+  const void* a_Data = a_Msg.GetData();
   size_t a_Size = a_Msg.m_Size;
 
   DeserializeObjectBinary(a_Data, a_Size, Capture::GSelectedFunctions);
@@ -147,7 +147,9 @@ void ConnectionManager::StartCaptureAsRemote(uint32_t pid) {
   Capture::SetTargetProcess(process);
   tracing_session_.Reset();
   string_manager_->Clear();
-  Capture::StartCapture(&tracing_session_);
+  // The remote address is only used when StartCapture is called
+  // from the client side. It is not used for the server side code.
+  Capture::StartCapture(&tracing_session_, "" /* remote_address */);
   server_capture_thread_ =
       std::thread{[this]() { ServerCaptureThreadWorker(); }};
 }
@@ -192,7 +194,7 @@ void ConnectionManager::SetupServerCallbacks() {
 void ConnectionManager::SetupClientCallbacks() {
   GTcpClient->AddMainThreadCallback(Msg_RemotePerf, [=](const Message& a_Msg) {
     PRINT_VAR(a_Msg.m_Size);
-    std::string msgStr(a_Msg.m_Data, a_Msg.m_Size);
+    std::string msgStr = a_Msg.GetDataAsString();
     std::istringstream buffer(msgStr);
 
     Capture::NewSamplingProfiler();
@@ -207,7 +209,7 @@ void ConnectionManager::SetupClientCallbacks() {
     // TODO: Send buffered callstacks.
     LinuxCallstackEvent data;
 
-    std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+    std::istringstream buffer(a_Msg.GetDataAsString());
     cereal::JSONInputArchive inputAr(buffer);
     inputAr(data);
 
@@ -215,8 +217,8 @@ void ConnectionManager::SetupClientCallbacks() {
   });
 
   GTcpClient->AddCallback(Msg_RemoteTimers, [=](const Message& a_Msg) {
-    uint32_t numTimers = (uint32_t)a_Msg.m_Size / sizeof(Timer);
-    Timer* timers = (Timer*)a_Msg.GetData();
+    uint32_t numTimers = a_Msg.m_Size / sizeof(Timer);
+    const Timer* timers = static_cast<const Timer*>(a_Msg.GetData());
     for (uint32_t i = 0; i < numTimers; ++i) {
       GTimerManager->Add(timers[i]);
     }
@@ -224,7 +226,7 @@ void ConnectionManager::SetupClientCallbacks() {
 
   GTcpClient->AddCallback(Msg_KeyAndString, [=](const Message& a_Msg) {
     KeyAndString key_and_string;
-    std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+    std::istringstream buffer(a_Msg.GetDataAsString());
     cereal::BinaryInputArchive inputAr(buffer);
     inputAr(key_and_string);
     GCoreApp->AddKeyAndString(key_and_string.key, key_and_string.str);
@@ -232,7 +234,7 @@ void ConnectionManager::SetupClientCallbacks() {
 
   GTcpClient->AddCallback(Msg_RemoteCallStack, [=](const Message& a_Msg) {
     CallStack stack;
-    std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+    std::istringstream buffer(a_Msg.GetDataAsString());
     cereal::JSONInputArchive inputAr(buffer);
     inputAr(stack);
 
@@ -242,7 +244,7 @@ void ConnectionManager::SetupClientCallbacks() {
   GTcpClient->AddCallback(
       Msg_RemoteLinuxAddressInfo, [=](const Message& a_Msg) {
         LinuxAddressInfo address_info;
-        std::istringstream buffer(std::string(a_Msg.m_Data, a_Msg.m_Size));
+        std::istringstream buffer(a_Msg.GetDataAsString());
         cereal::BinaryInputArchive inputAr(buffer);
         inputAr(address_info);
 
@@ -250,18 +252,16 @@ void ConnectionManager::SetupClientCallbacks() {
       });
 
   GTcpClient->AddCallback(Msg_RemoteContextSwitches, [=](const Message& a_Msg) {
-    uint32_t num_context_switches =
-        (uint32_t)a_Msg.m_Size / sizeof(ContextSwitch);
-    ContextSwitch* context_switches = (ContextSwitch*)a_Msg.GetData();
+    uint32_t num_context_switches = a_Msg.m_Size / sizeof(ContextSwitch);
+    const ContextSwitch* context_switches =
+        static_cast<const ContextSwitch*>(a_Msg.GetData());
     for (uint32_t i = 0; i < num_context_switches; i++) {
       GCoreApp->ProcessContextSwitch(context_switches[i]);
     }
   });
 
   GTcpClient->AddCallback(Msg_SamplingCallstacks, [=](const Message& a_Msg) {
-    const char* a_Data = a_Msg.GetData();
-    size_t a_Size = a_Msg.m_Size;
-    std::istringstream buffer(std::string(a_Data, a_Size));
+    std::istringstream buffer(a_Msg.GetDataAsString());
     cereal::BinaryInputArchive inputAr(buffer);
     std::vector<LinuxCallstackEvent> call_stacks;
     inputAr(call_stacks);
@@ -271,19 +271,17 @@ void ConnectionManager::SetupClientCallbacks() {
     }
   });
 
-  GTcpClient->AddCallback(
-      Msg_SamplingHashedCallstacks, [=](const Message& a_Msg) {
-        const char* a_Data = a_Msg.GetData();
-        size_t a_Size = a_Msg.m_Size;
-        std::istringstream buffer(std::string(a_Data, a_Size));
-        cereal::BinaryInputArchive inputAr(buffer);
-        std::vector<CallstackEvent> call_stacks;
-        inputAr(call_stacks);
+  GTcpClient->AddCallback(Msg_SamplingHashedCallstacks,
+                          [=](const Message& a_Msg) {
+                            std::istringstream buffer(a_Msg.GetDataAsString());
+                            cereal::BinaryInputArchive inputAr(buffer);
+                            std::vector<CallstackEvent> call_stacks;
+                            inputAr(call_stacks);
 
-        for (auto& cs : call_stacks) {
-          GCoreApp->ProcessHashedSamplingCallStack(cs);
-        }
-      });
+                            for (auto& cs : call_stacks) {
+                              GCoreApp->ProcessHashedSamplingCallStack(cs);
+                            }
+                          });
 }
 
 void ConnectionManager::SendProcesses(TcpEntity* tcp_entity) {

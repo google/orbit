@@ -1,9 +1,0 @@
-{
- "remotes": [
-  {
-   "name": "artifactory",
-   "url": "http://artifactory.internal/artifactory/api/conan/conan",
-   "verify_ssl": false
-  }
- ]
-}

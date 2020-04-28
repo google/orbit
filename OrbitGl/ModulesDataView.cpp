@@ -10,7 +10,6 @@
 
 //-----------------------------------------------------------------------------
 ModulesDataView::ModulesDataView() : DataView(DataViewType::MODULES) {
-  InitSortingOrders();
   GOrbitApp->RegisterModulesDataView(this);
 }
 
@@ -64,16 +63,11 @@ std::string ModulesDataView::GetValue(int row, int col) {
   }
 
 //-----------------------------------------------------------------------------
-void ModulesDataView::OnSort(int a_Column,
-                             std::optional<SortingOrder> a_NewOrder) {
-  if (a_NewOrder.has_value()) {
-    m_SortingOrders[a_Column] = a_NewOrder.value();
-  }
-
-  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
+void ModulesDataView::DoSort() {
+  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (a_Column) {
+  switch (m_SortingColumn) {
     case COLUMN_NAME:
       sorter = ORBIT_PROC_SORT(m_Name);
       break;
@@ -97,10 +91,8 @@ void ModulesDataView::OnSort(int a_Column,
   }
 
   if (sorter) {
-    std::sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
   }
-
-  m_LastSortedColumn = a_Column;
 }
 
 //-----------------------------------------------------------------------------
@@ -180,11 +172,11 @@ void ModulesDataView::OnContextMenu(const std::string& a_Action,
 void ModulesDataView::OnTimer() {}
 
 //-----------------------------------------------------------------------------
-void ModulesDataView::OnFilter(const std::string& a_Filter) {
+void ModulesDataView::DoFilter() {
   std::vector<uint32_t> indices;
-  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
 
-  for (int i = 0; i < (int)m_Modules.size(); ++i) {
+  for (size_t i = 0; i < m_Modules.size(); ++i) {
     std::shared_ptr<Module>& module = m_Modules[i];
     std::string name = ToLower(module->GetPrettyName());
 
@@ -204,9 +196,7 @@ void ModulesDataView::OnFilter(const std::string& a_Filter) {
 
   m_Indices = indices;
 
-  if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, {});
-  }
+  OnSort(m_SortingColumn, {});
 }
 
 //-----------------------------------------------------------------------------
@@ -219,15 +209,13 @@ void ModulesDataView::SetProcess(const std::shared_ptr<Process>& a_Process) {
     m_Modules.push_back(it.second);
   }
 
-  int numModules = (int)m_Modules.size();
+  size_t numModules = m_Modules.size();
   m_Indices.resize(numModules);
-  for (int i = 0; i < numModules; ++i) {
+  for (size_t i = 0; i < numModules; ++i) {
     m_Indices[i] = i;
   }
 
-  if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, {});
-  }
+  OnDataChanged();
 }
 
 //-----------------------------------------------------------------------------

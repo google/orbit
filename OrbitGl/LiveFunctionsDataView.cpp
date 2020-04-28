@@ -15,10 +15,8 @@
 //-----------------------------------------------------------------------------
 LiveFunctionsDataView::LiveFunctionsDataView()
     : DataView(DataViewType::LIVE_FUNCTIONS) {
-  InitSortingOrders();
   GOrbitApp->RegisterLiveFunctionsDataView(this);
   m_UpdatePeriodMs = 300;
-  m_LastSortedColumn = 3; /*Count*/
   OnDataChanged();
 }
 
@@ -44,7 +42,7 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
 
 //-----------------------------------------------------------------------------
 std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
-  if (a_Row >= (int)GetNumElements()) {
+  if (a_Row >= static_cast<int>(GetNumElements())) {
     return "";
   }
 
@@ -90,18 +88,13 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
   }
 
 //-----------------------------------------------------------------------------
-void LiveFunctionsDataView::OnSort(int a_Column,
-                                   std::optional<SortingOrder> a_NewOrder) {
-  const std::vector<Function*>& functions = m_Functions;
-
-  if (a_NewOrder.has_value()) {
-    m_SortingOrders[a_Column] = a_NewOrder.value();
-  }
-
-  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
+void LiveFunctionsDataView::DoSort() {
+  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (a_Column) {
+  const std::vector<Function*>& functions = m_Functions;
+
+  switch (m_SortingColumn) {
     case COLUMN_SELECTED:
       sorter = ORBIT_FUNC_SORT(IsSelected());
       break;
@@ -135,10 +128,8 @@ void LiveFunctionsDataView::OnSort(int a_Column,
   }
 
   if (sorter) {
-    std::sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
   }
-
-  m_LastSortedColumn = a_Column;
 }
 
 //-----------------------------------------------------------------------------
@@ -183,10 +174,10 @@ void LiveFunctionsDataView::OnContextMenu(
 }
 
 //-----------------------------------------------------------------------------
-void LiveFunctionsDataView::OnFilter(const std::string& a_Filter) {
+void LiveFunctionsDataView::DoFilter() {
   std::vector<uint32_t> indices;
 
-  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
 
   for (size_t i = 0; i < m_Functions.size(); ++i) {
     const Function* function = m_Functions[i];
@@ -210,13 +201,11 @@ void LiveFunctionsDataView::OnFilter(const std::string& a_Filter) {
 
   m_Indices = indices;
 
-  if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, {});
-  }
+  OnSort(m_SortingColumn, {});
 
   // Filter drawn textboxes
   Capture::GVisibleFunctionsMap.clear();
-  for (uint32_t i = 0; i < (uint32_t)m_Indices.size(); ++i) {
+  for (size_t i = 0; i < m_Indices.size(); ++i) {
     Function& func = GetFunction(i);
     Capture::GVisibleFunctionsMap[func.GetVirtualAddress()] = &func;
   }
@@ -239,13 +228,13 @@ void LiveFunctionsDataView::OnDataChanged() {
     m_Functions.push_back(func);
   }
 
-  OnFilter(m_Filter);
+  DataView::OnDataChanged();
 }
 
 //-----------------------------------------------------------------------------
 void LiveFunctionsDataView::OnTimer() {
   if (Capture::IsCapturing()) {
-    OnSort(m_LastSortedColumn, {});
+    OnSort(m_SortingColumn, {});
   }
 }
 

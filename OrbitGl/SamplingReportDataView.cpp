@@ -18,9 +18,7 @@
 
 //-----------------------------------------------------------------------------
 SamplingReportDataView::SamplingReportDataView()
-    : DataView(DataViewType::SAMPLING), m_CallstackDataView(nullptr) {
-  InitSortingOrders();
-}
+    : DataView(DataViewType::SAMPLING), m_CallstackDataView(nullptr) {}
 
 //-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
@@ -77,18 +75,13 @@ std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
   }
 
 //-----------------------------------------------------------------------------
-void SamplingReportDataView::OnSort(int a_Column,
-                                    std::optional<SortingOrder> a_NewOrder) {
-  std::vector<SampledFunction>& functions = m_Functions;
-
-  if (a_NewOrder.has_value()) {
-    m_SortingOrders[a_Column] = a_NewOrder.value();
-  }
-
-  bool ascending = m_SortingOrders[a_Column] == SortingOrder::Ascending;
+void SamplingReportDataView::DoSort() {
+  bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  switch (a_Column) {
+  std::vector<SampledFunction>& functions = m_Functions;
+
+  switch (m_SortingColumn) {
     case COLUMN_SELECTED:
       sorter = ORBIT_PROC_SORT(GetSelected());
       break;
@@ -118,10 +111,8 @@ void SamplingReportDataView::OnSort(int a_Column,
   }
 
   if (sorter) {
-    std::sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
   }
-
-  m_LastSortedColumn = a_Column;
 }
 
 //-----------------------------------------------------------------------------
@@ -234,7 +225,7 @@ void SamplingReportDataView::OnSelect(int a_Index) {
 //-----------------------------------------------------------------------------
 void SamplingReportDataView::LinkDataView(DataView* a_DataView) {
   if (a_DataView->GetType() == CALLSTACK) {
-    m_CallstackDataView = (CallStackDataView*)a_DataView;
+    m_CallstackDataView = static_cast<CallStackDataView*>(a_DataView);
     m_SamplingReport->SetCallstackDataView(m_CallstackDataView);
   }
 }
@@ -249,6 +240,8 @@ void SamplingReportDataView::SetSampledFunctions(
   for (size_t i = 0; i < numFunctions; ++i) {
     m_Indices[i] = i;
   }
+
+  OnDataChanged();
 }
 
 //-----------------------------------------------------------------------------
@@ -262,10 +255,10 @@ void SamplingReportDataView::SetThreadID(ThreadID a_TID) {
 }
 
 //-----------------------------------------------------------------------------
-void SamplingReportDataView::OnFilter(const std::string& a_Filter) {
+void SamplingReportDataView::DoFilter() {
   std::vector<uint32_t> indices;
 
-  std::vector<std::string> tokens = Tokenize(ToLower(a_Filter));
+  std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
 
   for (size_t i = 0; i < m_Functions.size(); ++i) {
     SampledFunction& func = m_Functions[i];
@@ -289,9 +282,7 @@ void SamplingReportDataView::OnFilter(const std::string& a_Filter) {
 
   m_Indices = indices;
 
-  if (m_LastSortedColumn != -1) {
-    OnSort(m_LastSortedColumn, {});
-  }
+  OnSort(m_SortingColumn, {});
 }
 
 //-----------------------------------------------------------------------------

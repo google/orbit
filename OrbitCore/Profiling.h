@@ -34,5 +34,5 @@ inline double MicroSecondsFromTicks(TickType a_Start, TickType a_End) {
 
 //-----------------------------------------------------------------------------
 inline TickType TicksFromMicroseconds(double a_Micros) {
-  return (TickType)(a_Micros * 1000);
+  return static_cast<TickType>(a_Micros * 1000);
 }

@@ -153,9 +153,15 @@ struct Context32 {
   char m_Stack[MaxStackBytes];  // Arguments passed on the stack
   int m_StackSize;
 
-#ifndef _WIN64
-  void* GetRet() const { return (void*)m_RET.m_Ptr; }
-  void* GetThis() const { return (void*)m_ECX; }
+#if !defined(_WIN64) && !defined(__LP64__)
+  // Defined only for 32bit platforms
+  void* GetRet() const {
+    return reinterpret_cast<void*>(static_cast<uintptr_t>(m_RET.m_Ptr));
+  }
+
+  void* GetThis() const {
+    return reinterpret_cast<void*>(static_cast<uintptr_t>(m_ECX));
+  }
 #endif
   static int GetFixedDataSize() { return sizeof(Context32) - StackDataSize; }
 };
@@ -192,7 +198,7 @@ struct SavedContext64 {
   EpilogContext64 m_EpilogContext;
 };
 
-#ifdef _WIN64
+#if defined(_WIN64) || defined(__LP64__)
 typedef Context64 Context;
 typedef EpilogContext64 EpilogContext;
 typedef SavedContext64 SavedContext;

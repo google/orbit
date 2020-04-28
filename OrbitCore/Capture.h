@@ -20,11 +20,15 @@ struct CallStack;
 class Capture {
  public:
   static void Init();
-  static bool Inject(bool a_WaitForConnection = true);
-  static bool Connect();
-  static bool InjectRemote();
+  static bool Inject(std::string_view remote_address);
+  static bool Connect(std::string_view remote_address);
+  static bool InjectRemote(std::string_view remote_address);
   static void SetTargetProcess(const std::shared_ptr<Process>& a_Process);
-  static bool StartCapture(LinuxTracingSession* session);
+  // TODO: This method needs to be split into 2, the server side and the
+  // client-side. session here is only used by the server side and
+  // remote_address is only used by the client-side.
+  static bool StartCapture(LinuxTracingSession* session,
+                           std::string_view remote_address);
   static void StopCapture();
   static void ClearCaptureData();
   static std::vector<std::shared_ptr<Function>> GetSelectedFunctions();
@@ -37,7 +41,6 @@ class Capture {
   static void Update();
   static void DisplayStats();
   static void TestHooks();
-  static bool IsOtherInstanceRunning();
   static void SaveSession(const std::string& a_FileName);
   static void NewSamplingProfiler();
   static bool IsTrackingEvents();
@@ -45,7 +48,7 @@ class Capture {
   static bool IsRemote();
   // True if receiving data from Linux remote source
   static bool IsLinuxData();
-  static void RegisterZoneName(DWORD64 a_ID, char* a_Name);
+  static void RegisterZoneName(uint64_t a_ID, const char* a_Name);
   static void AddCallstack(CallStack& a_CallStack);
   static std::shared_ptr<CallStack> GetCallstack(CallstackID a_ID);
   static void CheckForUnrealSupport();
@@ -69,8 +72,6 @@ class Capture {
 
   static bool GInjected;
   static std::string GInjectedProcess;
-  static int GCapturePort;
-  static std::string GCaptureHost;
   static std::string GPresetToLoad;  // TODO: allow multiple presets
   static std::string GProcessToInject;
   static bool GIsSampling;
@@ -95,7 +96,7 @@ class Capture {
   static std::unordered_map<ULONG64, ULONG64> GFunctionCountMap;
   static std::vector<ULONG64> GSelectedAddressesByType[Function::NUM_TYPES];
   static std::unordered_map<DWORD64, std::shared_ptr<CallStack>> GCallstacks;
-  static std::unordered_map<DWORD64, std::string> GZoneNames;
+  static std::unordered_map<uint64_t, std::string> GZoneNames;
   static class TextBox* GSelectedTextBox;
   static ThreadID GSelectedThreadId;
   static Timer GCaptureTimer;

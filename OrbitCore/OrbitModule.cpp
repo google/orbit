@@ -203,7 +203,7 @@ void Pdb::PopulateFunctionMap() {
 void Pdb::PopulateStringFunctionMap() {
   {
     // SCOPE_TIMER_LOG("Reserving map");
-    m_StringFunctionMap.reserve(unsigned(1.5f * (float)functions_.size()));
+    m_StringFunctionMap.reserve(static_cast<size_t>(1.5f * functions_.size()));
   }
 
   {
@@ -216,7 +216,7 @@ void Pdb::PopulateStringFunctionMap() {
 
 //-----------------------------------------------------------------------------
 Function* Pdb::GetFunctionFromExactAddress(uint64_t a_Address) {
-  uint64_t function_address = a_Address - (uint64_t)GetHModule() + load_bias_;
+  uint64_t function_address = a_Address - GetHModule() + load_bias_;
   auto it = m_FunctionMap.find(function_address);
   return (it != m_FunctionMap.end()) ? it->second : nullptr;
 }
@@ -227,7 +227,7 @@ Function* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
     return nullptr;
   }
 
-  uint64_t relative_address = a_Address - (uint64_t)GetHModule() + load_bias_;
+  uint64_t relative_address = a_Address - GetHModule() + load_bias_;
   auto it = m_FunctionMap.upper_bound(relative_address);
 
   if (it == m_FunctionMap.begin()) {

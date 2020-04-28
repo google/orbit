@@ -41,8 +41,11 @@ void PluginManager::Initialize() {
 //-----------------------------------------------------------------------------
 void PluginManager::OnReceiveUserData(const Message& a_Msg) {
   if (a_Msg.GetType() == Msg_UserData) {
-    Orbit::UserData* userData = (Orbit::UserData*)a_Msg.m_Data;
-    userData->m_Data = (char*)userData + sizeof(Orbit::UserData);
+    const Orbit::UserData* userData =
+        static_cast<const Orbit::UserData*>(a_Msg.m_Data);
+    // TODO: remove const_cast
+    const_cast<Orbit::UserData*>(userData)->m_Data = const_cast<uint8_t*>(
+        static_cast<const uint8_t*>(a_Msg.m_Data) + sizeof(Orbit::UserData));
 
     for (Orbit::Plugin* plugin : m_Plugins) {
       plugin->ReceiveUserData(userData);
@@ -53,8 +56,11 @@ void PluginManager::OnReceiveUserData(const Message& a_Msg) {
 //-----------------------------------------------------------------------------
 void PluginManager::OnReceiveOrbitData(const Message& a_Msg) {
   if (a_Msg.GetType() == Msg_OrbitData) {
-    Orbit::Data* orbitData = (Orbit::Data*)a_Msg.m_Data;
-    orbitData->m_Data = orbitData + sizeof(Orbit::Data);
+    const Orbit::Data* orbitData =
+        static_cast<const Orbit::Data*>(a_Msg.GetData());
+    // TODO: Remove const_cast
+    const_cast<Orbit::Data*>(orbitData)->m_Data = const_cast<uint8_t*>(
+        static_cast<const uint8_t*>(a_Msg.GetData()) + sizeof(Orbit::Data));
 
     for (Orbit::Plugin* plugin : m_Plugins) {
       plugin->ReceiveOrbitData(orbitData);

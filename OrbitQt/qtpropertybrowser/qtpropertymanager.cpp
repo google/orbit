@@ -475,7 +475,8 @@ void QtMetaEnumProvider::initLocale() {
     QLocale locale(language);
     if (locale.language() == language)
       nameToLanguage.insert(QLocale::languageToString(language), language);
-    language = (QLocale::Language)((uint)language + 1);  // ++language
+    language = static_cast<QLocale::Language>(static_cast<uint>(language) +
+                                              1);  // ++language
   }
 
   const QLocale system = QLocale::system();
@@ -1416,9 +1417,9 @@ QRegExp QtStringPropertyManager::regExp(const QtProperty* property) const {
     \reimp
 */
 EchoMode QtStringPropertyManager::echoMode(const QtProperty* property) const {
-  return (EchoMode)getData<int>(d_ptr->m_values,
-                                &QtStringPropertyManagerPrivate::Data::echoMode,
-                                property, 0);
+  return static_cast<EchoMode>(getData<int>(
+      d_ptr->m_values, &QtStringPropertyManagerPrivate::Data::echoMode,
+      property, 0));
 }
 
 /*!
@@ -1455,7 +1456,7 @@ QString QtStringPropertyManager::displayText(const QtProperty* property) const {
   if (it == d_ptr->m_values.constEnd()) return QString();
 
   QLineEdit edit;
-  edit.setEchoMode((EchoMode)it.value().echoMode);
+  edit.setEchoMode(static_cast<EchoMode>(it.value().echoMode));
   edit.setText(it.value().val);
   return edit.displayText();
 }
