@@ -718,8 +718,8 @@ void CaptureWindow::DrawScreenSpace() {
         Capture::IsCapturing() ? 1 : (maxStart != 0 ? start / maxStart : 0);
 
     m_Slider.SetPixelHeight(time_graph_.GetLayout().GetSliderWidth());
-    m_Slider.SetSliderRatio(ratio);
-    m_Slider.SetSliderWidthRatio(width / timeSpan);
+    m_Slider.SetSliderRatio(static_cast<float>(ratio));
+    m_Slider.SetSliderWidthRatio(static_cast<float>(width / timeSpan));
     m_Slider.Draw(this, m_Picking);
 
     float verticalRatio = m_WorldHeight / time_graph_.GetThreadTotalHeight();

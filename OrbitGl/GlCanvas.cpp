@@ -289,7 +289,7 @@ void GlCanvas::UpdateWheelMomentum(float a_DeltaTime) {
 //-----------------------------------------------------------------------------
 void GlCanvas::OnTimer() {
   m_UpdateTimer.Stop();
-  m_DeltaTime = m_UpdateTimer.ElapsedSeconds();
+  m_DeltaTime = static_cast<float>(m_UpdateTimer.ElapsedSeconds());
   m_DeltaTimeMs = m_UpdateTimer.ElapsedMillis();
   m_UpdateTimer.Start();
   UpdateWheelMomentum(m_DeltaTime);

@@ -91,7 +91,7 @@ void mat4_set_perspective(mat4* self, float fovy, float aspect, float znear,
 
   if (znear == zfar) return;
 
-  h = tanf(fovy / 360.0 * M_PI) * znear;
+  h = static_cast<float>(tan(fovy / 360.0 * M_PI) * znear);
   w = h * aspect;
 
   mat4_set_frustum(self, -w, w, -h, h, znear, zfar);
@@ -122,8 +122,8 @@ void mat4_set_rotation(mat4* self, float angle, float x, float y, float z) {
 
   if (!self) return;
 
-  c = cosf(M_PI * angle / 180.0);
-  s = sinf(M_PI * angle / 180.0);
+  c = static_cast<float>(cos(M_PI * angle / 180.0));
+  s = static_cast<float>(sin(M_PI * angle / 180.0));
   norm = sqrtf(x * x + y * y + z * z);
 
   x /= norm;

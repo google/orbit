@@ -64,8 +64,10 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
       double elapsed_us = end_us - start_us;
       double normalized_start = start_us * inv_time_window;
       double normalized_length = elapsed_us * inv_time_window;
-      float world_timer_width = normalized_length * world_width;
-      float world_timer_x = world_start_x + normalized_start * world_width;
+      float world_timer_width =
+          static_cast<float>(normalized_length * world_width);
+      float world_timer_x =
+          static_cast<float>(world_start_x + normalized_start * world_width);
       float world_timer_y = GetYFromDepth(layout, m_Pos[1], timer.m_Depth);
 
       bool is_visible_width = normalized_length * canvas->getWidth() > 1;
