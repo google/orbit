@@ -22,7 +22,6 @@ class ProcessListManagerImpl final : public ProcessListManager {
                        listener) override;
   void Start() override;
   void Shutdown() override;
-  void Wait() override;
 
  private:
   void WorkerFunction();
@@ -56,11 +55,9 @@ void ProcessListManagerImpl::Start() {
 }
 
 void ProcessListManagerImpl::Shutdown() {
-  absl::MutexLock lock(&shutdown_mutex_);
+  shutdown_mutex_.Lock();
   shutdown_initiated_ = true;
-}
-
-void ProcessListManagerImpl::Wait() {
+  shutdown_mutex_.Unlock();
   if (worker_thread_.joinable()) {
     worker_thread_.join();
   }
@@ -73,24 +70,25 @@ void ProcessListManagerImpl::WorkerFunction() {
     if (shutdown_mutex_.LockWhenWithTimeout(
             absl::Condition(IsTrue, &shutdown_initiated_), refresh_timeout_)) {
       // Shutdown was initiated we need to exit
+      shutdown_mutex_.Unlock();
       return;
     }
     shutdown_mutex_.Unlock();
 
     GetProcessListRequest request;
-    GetProcessListReply reply;
+    GetProcessListResponse response;
     grpc::ClientContext context;
 
     // Timeout expired - refresh the list
     grpc::Status status =
-        process_service_->GetProcessList(&context, request, &reply);
+        process_service_->GetProcessList(&context, request, &response);
     if (!status.ok()) {
       ERROR("Grpc call failed: %s", status.error_message());
       continue;
     }
 
-    std::vector<ProcessInfo> processes(reply.processes().begin(),
-                                       reply.processes().end());
+    std::vector<ProcessInfo> processes(response.processes().begin(),
+                                       response.processes().end());
 
     absl::MutexLock callback_lock(&callback_mutex_);
     callback_(std::move(processes));
