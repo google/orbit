@@ -5,10 +5,10 @@ import "process.proto";
 message GetProcessListRequest {
 }
 
-message GetProcessListReply {
+message GetProcessListResponse {
   repeated ProcessInfo processes = 1;
 }
 
 service ProcessService {
-  rpc GetProcessList(GetProcessListRequest) returns (GetProcessListReply) {}
+  rpc GetProcessList(GetProcessListRequest) returns (GetProcessListResponse) {}
 }
