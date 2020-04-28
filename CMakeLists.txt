@@ -15,7 +15,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
                            -Werror=unused-variable)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(STRICT_COMPILE_FLAGS -Werror=all
-                           -Werror=float-conversion)
+                           -Werror=float-conversion
+                           -Werror=old-style-cast
+                           -Werror=unused-parameter
+                           -Werror=unused-variable)
 endif()
 
 include(cmake/strip.cmake)
