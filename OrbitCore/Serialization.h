@@ -115,19 +115,20 @@ inline void DeserializeObjectBinary(const void* data, size_t size, T& object) {
 
 #define ORBIT_SIZE_SCOPE(x) ScopeCounter counter(x)
 
-#define ORBIT_NVP(v, x) \
-  if (a_Version >= v) a_Archive(cereal::make_nvp(#x, p.x))
+#define ORBIT_NVP_VAL(v, x)               \
+  do {                                    \
+    if (a_Version >= v) {                 \
+      a_Archive(cereal::make_nvp(#x, x)); \
+    }                                     \
+  } while (0)
 
-#define ORBIT_NVP_VAL(v, x)             \
-  if (a_Version >= v) {                 \
-    a_Archive(cereal::make_nvp(#x, x)); \
-  }
-
-#define ORBIT_NVP_DEBUG(v, x)           \
-  if (a_Version >= v) {                 \
-    ORBIT_SIZE_SCOPE(#x);               \
-    a_Archive(cereal::make_nvp(#x, x)); \
-  }
+#define ORBIT_NVP_DEBUG(v, x)             \
+  do {                                    \
+    if (a_Version >= v) {                 \
+      ORBIT_SIZE_SCOPE(#x);               \
+      a_Archive(cereal::make_nvp(#x, x)); \
+    }                                     \
+  } while (0)
 
 #define ORBIT_SERIALIZATION_TEMPLATE_INST_WSTRING(x)                           \
   template void x::serialize<cereal::BinaryOutputArchive>(                     \
