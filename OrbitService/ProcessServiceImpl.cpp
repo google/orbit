@@ -12,10 +12,10 @@ using grpc::ServerContext;
 
 Status ProcessServiceImpl::GetProcessList(ServerContext*,
                                         const GetProcessListRequest*,
-                                        GetProcessListReply* reply) {
+                                        GetProcessListResponse* response) {
   process_list_.Refresh();
   for (const std::shared_ptr<Process> process : process_list_.GetProcesses()) {
-    ProcessInfo* process_info = reply->add_processes();
+    ProcessInfo* process_info = response->add_processes();
     process_info->set_pid(process->GetID());
     process_info->set_name(process->GetName());
     process_info->set_cpu_usage(process->GetCpuUsage());

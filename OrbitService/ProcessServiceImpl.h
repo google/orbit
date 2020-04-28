@@ -15,7 +15,7 @@ class ProcessServiceImpl final : public ProcessService::Service {
  public:
   grpc::Status GetProcessList(grpc::ServerContext* context,
                               const GetProcessListRequest* request,
-                              GetProcessListReply* reply) override;
+                              GetProcessListResponse* response) override;
  private:
   ProcessList process_list_;
 };
