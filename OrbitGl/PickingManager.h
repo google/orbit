@@ -59,6 +59,7 @@ class PickingManager {
   bool IsDragging() const { return m_Picked && m_Picked->Draggable(); }
 
   static void SetPickingColor(PickingID a_ID);
+  Color ColorFromPickingID(PickingID id) const;
 
  protected:
   std::vector<Pickable*> m_Pickables;

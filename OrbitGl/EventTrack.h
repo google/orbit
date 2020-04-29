@@ -15,7 +15,7 @@ class EventTrack : public Track {
   explicit EventTrack(TimeGraph* a_TimeGraph);
   Type GetType() const override { return kEventTrack; }
 
-  void Draw(GlCanvas* a_Canvas, bool a_Picking) override;
+  void Draw(GlCanvas* canvas, bool picking) override;
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) override;
 
   void OnPick(int a_X, int a_Y) override;
@@ -29,6 +29,9 @@ class EventTrack : public Track {
   void SetPos(float a_X, float a_Y);
   void SetSize(float a_SizeX, float a_SizeY);
   void SetColor(Color color) { m_Color = color; }
+  void ClearSelectedEvents() { selected_callstack_events_.clear(); }
+
+ protected:
   void SelectEvents();
 
  protected:

@@ -8,6 +8,7 @@
 
 #include "BlockChain.h"
 #include "CallstackTypes.h"
+#include "EventTrack.h"
 #include "TextBox.h"
 #include "Threading.h"
 #include "Track.h"
@@ -51,6 +52,7 @@ class ThreadTrack : public Track {
   std::vector<std::shared_ptr<TimerChain>> GetAllChains() override;
 
   void SetEventTrackColor(Color color);
+  void ClearSelectedEvents() { event_track_->ClearSelectedEvents(); }
 
  protected:
   void UpdateDepth(uint32_t depth) {

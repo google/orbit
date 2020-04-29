@@ -16,29 +16,35 @@ EventTrack::EventTrack(TimeGraph* a_TimeGraph) : time_graph_(a_TimeGraph) {
 }
 
 //-----------------------------------------------------------------------------
-void EventTrack::Draw(GlCanvas* a_Canvas, bool a_Picking) {
-  Color col = m_Color;
+void EventTrack::Draw(GlCanvas* canvas, bool picking) {
+  PickingManager& picking_manager = canvas->GetPickingManager();
+  PickingID id = picking_manager.CreatePickableId(this);
 
-  a_Picking ? PickingManager::SetPickingColor(
-                  a_Canvas->GetPickingManager().CreatePickableId(this))
-            : glColor4ubv(&col[0]);
+  bool is_picked = canvas->GetPickingManager().GetPicked() == this;
+
+  Color color = !picking ? m_Color : picking_manager.ColorFromPickingID(id);
+  glColor4ubv(&color[0]);
 
   float x0 = m_Pos[0];
   float y0 = m_Pos[1];
   float x1 = x0 + m_Size[0];
   float y1 = y0 - m_Size[1];
 
+  constexpr float kNormalZ = -0.1f;
+  constexpr float kPickingZ = 0.1f;
+  float z = picking ? kPickingZ : kNormalZ;
+
   glBegin(GL_QUADS);
-  glVertex3f(x0, y0, -0.1f);
-  glVertex3f(x1, y0, -0.1f);
-  glVertex3f(x1, y1, -0.1f);
-  glVertex3f(x0, y1, -0.1f);
+  glVertex3f(x0, y0, z);
+  glVertex3f(x1, y0, z);
+  glVertex3f(x1, y1, z);
+  glVertex3f(x0, y1, z);
   glEnd();
 
-  if (a_Canvas->GetPickingManager().GetPicked() == this)
+  if (is_picked)
     glColor4ub(255, 255, 255, 255);
   else
-    glColor4ubv(&col[0]);
+    glColor4ubv(&color[0]);
 
   glBegin(GL_LINES);
   glVertex3f(x0, y0, -0.1f);
@@ -65,7 +71,7 @@ void EventTrack::Draw(GlCanvas* a_Canvas, bool a_Picking) {
     glEnd();
   }
 
-  m_Canvas = a_Canvas;
+  m_Canvas = canvas;
 }
 
 //-----------------------------------------------------------------------------

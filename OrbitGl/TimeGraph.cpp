@@ -552,6 +552,10 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
   TickType t0 = GetTickFromWorld(a_WorldStart);
   TickType t1 = GetTickFromWorld(a_WorldEnd);
 
+  for (auto& pair : thread_tracks_) {
+    pair.second->ClearSelectedEvents();
+  }
+
   std::vector<CallstackEvent> selected_callstack_events =
       GEventTracer.GetEventBuffer().GetCallstackEvents(t0, t1, a_TID);
 
