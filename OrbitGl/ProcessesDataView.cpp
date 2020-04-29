@@ -12,16 +12,11 @@
 #include "ModulesDataView.h"
 #include "OrbitType.h"
 #include "Params.h"
-#include "Pdb.h"
 #include "TcpClient.h"
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 ProcessesDataView::ProcessesDataView() : DataView(DataViewType::PROCESSES) {
-  UpdateProcessList();
-  m_UpdatePeriodMs = 1000;
-  m_IsRemote = false;
-
   GOrbitApp->RegisterProcessesDataView(this);
 }
 
@@ -58,8 +53,8 @@ std::string ProcessesDataView::GetValue(int row, int col) {
 }
 
 //-----------------------------------------------------------------------------
-std::string ProcessesDataView::GetToolTip(int a_Row, int /*a_Column*/) {
-  return GetProcess(a_Row)->GetCmdLine();
+std::string ProcessesDataView::GetToolTip(int row, int /*column*/) {
+  return GetProcess(row)->GetCmdLine();
 }
 
 //-----------------------------------------------------------------------------
@@ -74,8 +69,7 @@ void ProcessesDataView::DoSort() {
   bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  const std::vector<std::shared_ptr<Process>>& processes =
-      m_ProcessList.GetProcesses();
+  const std::vector<std::shared_ptr<Process>>& processes = process_list_;
 
   switch (m_SortingColumn) {
     case COLUMN_PID:
@@ -102,65 +96,28 @@ void ProcessesDataView::DoSort() {
 }
 
 //-----------------------------------------------------------------------------
-void ProcessesDataView::OnSelect(int a_Index) {
-  m_SelectedProcess = GetProcess(a_Index);
-  if (!m_IsRemote) {
-    m_SelectedProcess->ListModules();
-  } else {
+void ProcessesDataView::OnSelect(int index) {
+  std::shared_ptr<Process> selected_process = GetProcess(index);
+  selected_process_id_ = selected_process->GetID();
+
+  // TODO: move this out of ProcessDataView
+  {
     Message msg(Msg_RemoteProcessRequest);
-    msg.m_Header.m_GenericHeader.m_Address = m_SelectedProcess->GetID();
+    msg.m_Header.m_GenericHeader.m_Address = selected_process_id_;
     GTcpClient->Send(msg);
   }
 
-  UpdateModuleDataView(m_SelectedProcess);
+  SetSelectedItem();
+  UpdateModuleDataView(selected_process);
 }
 
 void ProcessesDataView::UpdateModuleDataView(
-    const std::shared_ptr<Process>& a_Process) {
-  if (m_ModulesDataView) {
-    m_ModulesDataView->SetProcess(a_Process);
-    Capture::SetTargetProcess(a_Process);
+    const std::shared_ptr<Process>& process) {
+  if (modules_data_view_) {
+    modules_data_view_->SetProcess(process);
+    Capture::SetTargetProcess(process);
     GOrbitApp->FireRefreshCallbacks();
   }
-}
-
-//-----------------------------------------------------------------------------
-void ProcessesDataView::OnTimer() { Refresh(); }
-
-//-----------------------------------------------------------------------------
-void ProcessesDataView::Refresh() {
-  if (Capture::IsCapturing()) {
-    return;
-  }
-
-  if (m_RemoteProcess) {
-    std::shared_ptr<Process> CurrentRemoteProcess =
-        m_ProcessList.Size() == 1 ? m_ProcessList.GetProcesses()[0] : nullptr;
-
-    if (m_RemoteProcess != CurrentRemoteProcess) {
-      m_ProcessList.Clear();
-      m_ProcessList.AddProcess(m_RemoteProcess);
-      UpdateProcessList();
-      OnFilter("");
-      SelectProcess(m_RemoteProcess->GetID());
-      SetSelectedItem();
-    }
-  } else {
-    if (!m_IsRemote) {
-      m_ProcessList.Refresh();
-      m_ProcessList.UpdateCpuTimes();
-    }
-    UpdateProcessList();
-    OnSort(m_SortingColumn, {});
-    OnFilter(m_Filter);
-    SetSelectedItem();
-
-    if (Capture::GTargetProcess && !Capture::IsCapturing()) {
-      Capture::GTargetProcess->UpdateThreadUsage();
-    }
-  }
-
-  GParams.m_ProcessFilter = m_Filter;
 }
 
 //-----------------------------------------------------------------------------
@@ -169,8 +126,7 @@ void ProcessesDataView::SetSelectedItem() {
   m_SelectedIndex = -1;
 
   for (size_t i = 0; i < GetNumElements(); ++i) {
-    if (m_SelectedProcess &&
-        GetProcess(i)->GetID() == m_SelectedProcess->GetID()) {
+    if (GetProcess(i)->GetID() == selected_process_id_) {
       m_SelectedIndex = i;
       return;
     }
@@ -185,17 +141,17 @@ void ProcessesDataView::SetSelectedItem() {
 void ProcessesDataView::ClearSelectedProcess() {
   std::shared_ptr<Process> process = std::make_shared<Process>();
   Capture::SetTargetProcess(process);
-  m_ModulesDataView->SetProcess(process);
-  m_SelectedProcess = process;
+  modules_data_view_->SetProcess(process);
+  selected_process_id_ = 0;
   GPdbDbg = nullptr;
   GOrbitApp->FireRefreshCallbacks();
 }
 
-//-----------------------------------------------------------------------------
-bool ProcessesDataView::SelectProcess(const std::string& a_ProcessName) {
+bool ProcessesDataView::SelectProcess(const std::string& process_name) {
   for (size_t i = 0; i < GetNumElements(); ++i) {
-    Process& process = *GetProcess(i);
-    if (process.GetFullPath().find(a_ProcessName) != std::string::npos) {
+    std::shared_ptr<Process> process = GetProcess(i);
+    // TODO: What if there are multiple processes with the same substring?
+    if (process->GetFullPath().find(process_name) != std::string::npos) {
       OnSelect(i);
       Capture::GPresetToLoad = "";
       return true;
@@ -206,15 +162,12 @@ bool ProcessesDataView::SelectProcess(const std::string& a_ProcessName) {
 }
 
 //-----------------------------------------------------------------------------
-std::shared_ptr<Process> ProcessesDataView::SelectProcess(DWORD a_ProcessId) {
-  Refresh();
-
+std::shared_ptr<Process> ProcessesDataView::SelectProcess(uint32_t process_id) {
   for (size_t i = 0; i < GetNumElements(); ++i) {
-    Process& process = *GetProcess(i);
-    if (process.GetID() == a_ProcessId) {
+    std::shared_ptr<Process> process = GetProcess(i);
+    if (process->GetID() == process_id) {
       OnSelect(i);
-      Capture::GPresetToLoad = "";
-      return m_SelectedProcess;
+      return process;
     }
   }
 
@@ -224,8 +177,7 @@ std::shared_ptr<Process> ProcessesDataView::SelectProcess(DWORD a_ProcessId) {
 //-----------------------------------------------------------------------------
 void ProcessesDataView::DoFilter() {
   std::vector<uint32_t> indices;
-  const std::vector<std::shared_ptr<Process>>& processes =
-      m_ProcessList.GetProcesses();
+  const std::vector<std::shared_ptr<Process>>& processes = process_list_;
 
   std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
 
@@ -256,7 +208,7 @@ void ProcessesDataView::DoFilter() {
 
 //-----------------------------------------------------------------------------
 void ProcessesDataView::UpdateProcessList() {
-  size_t numProcesses = m_ProcessList.Size();
+  size_t numProcesses = process_list_.size();
   m_Indices.resize(numProcesses);
   for (size_t i = 0; i < numProcesses; ++i) {
     m_Indices[i] = i;
@@ -264,9 +216,9 @@ void ProcessesDataView::UpdateProcessList() {
 }
 
 //-----------------------------------------------------------------------------
-void ProcessesDataView::SetRemoteProcessList(ProcessList a_RemoteProcessList) {
-  m_IsRemote = true;
-  m_ProcessList = std::move(a_RemoteProcessList);
+void ProcessesDataView::SetProcessList(
+    const std::vector<std::shared_ptr<Process>>& process_list) {
+  process_list_ = process_list;
   UpdateProcessList();
   OnSort(m_SortingColumn, {});
   OnFilter(m_Filter);
@@ -274,20 +226,27 @@ void ProcessesDataView::SetRemoteProcessList(ProcessList a_RemoteProcessList) {
 }
 
 //-----------------------------------------------------------------------------
-void ProcessesDataView::SetRemoteProcess(
-    const std::shared_ptr<Process>& a_Process) {
-  std::shared_ptr<Process> targetProcess =
-      m_ProcessList.GetProcess(a_Process->GetID());
-  if (targetProcess) {
-    m_SelectedProcess = a_Process;
-    UpdateModuleDataView(m_SelectedProcess);
+void ProcessesDataView::UpdateProcess(const std::shared_ptr<Process>& process) {
+  auto it =
+      std::find_if(process_list_.begin(), process_list_.end(),
+                   [&process](const std::shared_ptr<Process>& target_process) {
+                     return target_process->GetID() == process->GetID();
+                   });
+
+  if (it != process_list_.end()) {
+    *it = process;
   } else {
-    m_RemoteProcess = a_Process;
+    ERROR(
+        "Unable to update process \"%s\" with pid: %d, the process is not in "
+        "the process list.",
+        process->GetName(), process->GetID());
+  }
+
+  if (process->GetID() == selected_process_id_) {
+    UpdateModuleDataView(process);
   }
 }
 
-//-----------------------------------------------------------------------------
-std::shared_ptr<Process> ProcessesDataView::GetProcess(
-    unsigned int a_Row) const {
-  return m_ProcessList.GetProcesses()[m_Indices[a_Row]];
+std::shared_ptr<Process> ProcessesDataView::GetProcess(uint32_t row) const {
+  return process_list_[m_Indices[row]];
 }

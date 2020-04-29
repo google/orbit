@@ -254,6 +254,9 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
     case DataViewType::LOG:
       ui->OutputView->Refresh();
       break;
+    case DataViewType::PROCESSES:
+      ui->ProcessesList->Refresh();
+      break;
     case DataViewType::SESSIONS:
       ui->SessionList->Refresh();
       break;

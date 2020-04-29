@@ -302,7 +302,6 @@ void OrbitApp::PostInit() {
         Msg_RemoteProcessList,
         [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcessList(a_Msg); });
     ConnectionManager::Get().ConnectToRemote(options_.asio_server_address);
-    m_ProcessesDataView->SetIsRemote(true);
     SetIsRemote(true);
   }
 
@@ -1010,7 +1009,7 @@ void OrbitApp::OnRemoteProcess(const Message& a_Message) {
   inputAr(*remoteProcess);
   remoteProcess->SetIsRemote(true);
   PRINT_VAR(remoteProcess->GetName());
-  GOrbitApp->m_ProcessesDataView->SetRemoteProcess(remoteProcess);
+  GOrbitApp->m_ProcessesDataView->UpdateProcess(remoteProcess);
 
   // Trigger session loading if needed.
   std::shared_ptr<Session> session = Capture::GSessionPresets;
@@ -1043,14 +1042,16 @@ void OrbitApp::OnRemoteProcessList(const Message& a_Message) {
   ProcessList remoteProcessList;
   inputAr(remoteProcessList);
   remoteProcessList.SetRemote(true);
-  GOrbitApp->m_ProcessesDataView->SetRemoteProcessList(
-      std::move(remoteProcessList));
+  GOrbitApp->m_ProcessesDataView->SetProcessList(
+      remoteProcessList.GetProcesses());
 
   // Trigger session loading if needed.
   if (!Capture::GPresetToLoad.empty()) {
     GOrbitApp->OnLoadSession(Capture::GPresetToLoad);
     Capture::GPresetToLoad = "";
   }
+
+  FireRefreshCallbacks(DataViewType::PROCESSES);
 }
 
 //-----------------------------------------------------------------------------
