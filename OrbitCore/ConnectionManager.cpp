@@ -38,9 +38,7 @@
 #include <streambuf>
 
 ConnectionManager::ConnectionManager()
-    : tracing_session_(GTcpServer.get()),
-      exit_requested_(false),
-      is_service_(false) {}
+    : exit_requested_(false), is_service_(false) {}
 
 ConnectionManager::~ConnectionManager() {
   StopThread();
@@ -67,13 +65,11 @@ void ConnectionManager::ConnectToRemote(std::string remote_address) {
 }
 
 void ConnectionManager::InitAsService() {
-#if __linux__
+#ifdef __linux__
   GParams.m_TrackContextSwitches = true;
 #endif
 
   is_service_ = true;
-  string_manager_ = std::make_shared<StringManager>();
-  tracing_session_.SetStringManager(string_manager_);
   SetupIntrospection();
   SetupServerCallbacks();
   thread_ = std::thread{[this]() { RemoteThreadWorker(); }};
@@ -88,7 +84,8 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
 
   // Select the received functions:
   Capture::GSelectedFunctionsMap.clear();
-  for (std::shared_ptr<Function> function : Capture::GSelectedFunctions) {
+  for (const std::shared_ptr<Function>& function :
+       Capture::GSelectedFunctions) {
     // this also adds the function to the map.
     function->Select();
     Capture::GSelectedFunctionsMap[function->GetVirtualAddress()] =
@@ -97,72 +94,79 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
 }
 
 void ConnectionManager::ServerCaptureThreadWorker() {
-  while (Capture::IsCapturing()) {
+#ifdef __linux__
+  while (tracing_handler_.IsStarted()) {
     OrbitSleepMs(20);
 
     std::vector<Timer> timers;
-    if (tracing_session_.ReadAllTimers(&timers)) {
-      Message Msg(Msg_RemoteTimers);
+    if (tracing_buffer_.ReadAllTimers(&timers)) {
+      Message Msg(Msg_Timers);
       GTcpServer->Send(Msg, timers);
     }
 
     std::vector<LinuxCallstackEvent> callstacks;
-    if (tracing_session_.ReadAllCallstacks(&callstacks)) {
+    if (tracing_buffer_.ReadAllCallstacks(&callstacks)) {
       std::string message_data = SerializeObjectBinary(callstacks);
       GTcpServer->Send(Msg_SamplingCallstacks, message_data.c_str(),
                        message_data.size());
     }
 
     std::vector<CallstackEvent> hashed_callstacks;
-    if (tracing_session_.ReadAllHashedCallstacks(&hashed_callstacks)) {
+    if (tracing_buffer_.ReadAllHashedCallstacks(&hashed_callstacks)) {
       std::string message_data = SerializeObjectBinary(hashed_callstacks);
       GTcpServer->Send(Msg_SamplingHashedCallstacks, message_data.c_str(),
                        message_data.size());
     }
 
     std::vector<ContextSwitch> context_switches;
-    if (tracing_session_.ReadAllContextSwitches(&context_switches)) {
-      Message Msg(Msg_RemoteContextSwitches);
+    if (tracing_buffer_.ReadAllContextSwitches(&context_switches)) {
+      Message Msg(Msg_ContextSwitches);
       GTcpServer->Send(Msg, context_switches);
     }
+
+    std::vector<LinuxAddressInfo> address_infos;
+    if (tracing_buffer_.ReadAllAddressInfos(&address_infos)) {
+      std::string message_data = SerializeObjectBinary(address_infos);
+      GTcpServer->Send(Msg_LinuxAddressInfos, message_data.c_str(),
+                       message_data.size());
+    }
+
+    std::vector<KeyAndString> keys_and_strings;
+    if (tracing_buffer_.ReadAllKeysAndStrings(&keys_and_strings)) {
+      std::string message_data = SerializeObjectBinary(keys_and_strings);
+      GTcpServer->Send(Msg_KeysAndStrings, message_data.c_str(),
+                       message_data.size());
+    }
   }
+#endif
 }
 
 void ConnectionManager::SetupIntrospection() {
-#if __linux__ && ORBIT_TRACING_ENABLED
+#if defined(__linux__) && ORBIT_TRACING_ENABLED
   // Setup introspection handler.
   auto handler =
-      std::make_unique<orbit::introspection::Handler>(&tracing_session_);
+      std::make_unique<orbit::introspection::Handler>(&tracing_buffer_);
   LinuxTracing::SetOrbitTracingHandler(std::move(handler));
-#endif  // ORBIT_TRACING_ENABLED
+#endif
 }
 
 void ConnectionManager::StartCaptureAsRemote(uint32_t pid) {
+#ifdef __linux__
   PRINT_FUNC;
-  std::shared_ptr<Process> process = process_list_.GetProcess(pid);
-  if (!process) {
-    LOG("Process not found (pid=%d)", pid);
-    return;
-  }
-  Capture::SetTargetProcess(process);
-  tracing_session_.Reset();
-  string_manager_->Clear();
-  // The remote address is only used when StartCapture is called
-  // from the client side. It is not used for the server side code.
-  Capture::StartCapture(&tracing_session_, "" /* remote_address */);
+  tracing_handler_.Start(pid, Capture::GSelectedFunctionsMap);
   server_capture_thread_ =
       std::thread{[this]() { ServerCaptureThreadWorker(); }};
+#endif
 }
 
 void ConnectionManager::StopCaptureAsRemote() {
+#ifdef __linux__
   PRINT_FUNC;
-  // The thread checks Capture::IsCapturing() and exits main loop
-  // when it is false. StopCapture should be called before joining
-  // the thread.
-  Capture::StopCapture();
+  tracing_handler_.Stop();
   if (server_capture_thread_.joinable()) {
     server_capture_thread_.join();
   }
+#endif
 }
 
 void ConnectionManager::Stop() { exit_requested_ = true; }
@@ -205,18 +209,7 @@ void ConnectionManager::SetupClientCallbacks() {
     GCoreApp->RefreshCaptureView();
   });
 
-  GTcpClient->AddCallback(Msg_SamplingCallstack, [=](const Message& a_Msg) {
-    // TODO: Send buffered callstacks.
-    LinuxCallstackEvent data;
-
-    std::istringstream buffer(a_Msg.GetDataAsString());
-    cereal::JSONInputArchive inputAr(buffer);
-    inputAr(data);
-
-    GCoreApp->ProcessSamplingCallStack(data);
-  });
-
-  GTcpClient->AddCallback(Msg_RemoteTimers, [=](const Message& a_Msg) {
+  GTcpClient->AddCallback(Msg_Timers, [=](const Message& a_Msg) {
     uint32_t numTimers = a_Msg.m_Size / sizeof(Timer);
     const Timer* timers = static_cast<const Timer*>(a_Msg.GetData());
     for (uint32_t i = 0; i < numTimers; ++i) {
@@ -224,34 +217,25 @@ void ConnectionManager::SetupClientCallbacks() {
     }
   });
 
-  GTcpClient->AddCallback(Msg_KeyAndString, [=](const Message& a_Msg) {
-    KeyAndString key_and_string;
-    std::istringstream buffer(a_Msg.GetDataAsString());
-    cereal::BinaryInputArchive inputAr(buffer);
-    inputAr(key_and_string);
-    GCoreApp->AddKeyAndString(key_and_string.key, key_and_string.str);
+  GTcpClient->AddCallback(Msg_KeysAndStrings, [=](const Message& a_Msg) {
+    std::vector<KeyAndString> keys_and_strings;
+    DeserializeObjectBinary(a_Msg.GetDataAsString(), keys_and_strings);
+
+    for (const auto& key_and_string : keys_and_strings) {
+      GCoreApp->AddKeyAndString(key_and_string.key, key_and_string.str);
+    }
   });
 
-  GTcpClient->AddCallback(Msg_RemoteCallStack, [=](const Message& a_Msg) {
-    CallStack stack;
-    std::istringstream buffer(a_Msg.GetDataAsString());
-    cereal::JSONInputArchive inputAr(buffer);
-    inputAr(stack);
+  GTcpClient->AddCallback(Msg_LinuxAddressInfos, [=](const Message& a_Msg) {
+    std::vector<LinuxAddressInfo> address_infos;
+    DeserializeObjectBinary(a_Msg.GetDataAsString(), address_infos);
 
-    GCoreApp->ProcessCallStack(stack);
+    for (const auto& address_info : address_infos) {
+      GCoreApp->AddAddressInfo(address_info);
+    }
   });
 
-  GTcpClient->AddCallback(
-      Msg_RemoteLinuxAddressInfo, [=](const Message& a_Msg) {
-        LinuxAddressInfo address_info;
-        std::istringstream buffer(a_Msg.GetDataAsString());
-        cereal::BinaryInputArchive inputAr(buffer);
-        inputAr(address_info);
-
-        GCoreApp->AddAddressInfo(address_info);
-      });
-
-  GTcpClient->AddCallback(Msg_RemoteContextSwitches, [=](const Message& a_Msg) {
+  GTcpClient->AddCallback(Msg_ContextSwitches, [=](const Message& a_Msg) {
     uint32_t num_context_switches = a_Msg.m_Size / sizeof(ContextSwitch);
     const ContextSwitch* context_switches =
         static_cast<const ContextSwitch*>(a_Msg.GetData());
@@ -261,27 +245,23 @@ void ConnectionManager::SetupClientCallbacks() {
   });
 
   GTcpClient->AddCallback(Msg_SamplingCallstacks, [=](const Message& a_Msg) {
-    std::istringstream buffer(a_Msg.GetDataAsString());
-    cereal::BinaryInputArchive inputAr(buffer);
-    std::vector<LinuxCallstackEvent> call_stacks;
-    inputAr(call_stacks);
+    std::vector<LinuxCallstackEvent> callstacks;
+    DeserializeObjectBinary(a_Msg.GetDataAsString(), callstacks);
 
-    for (auto& cs : call_stacks) {
+    for (auto& cs : callstacks) {
       GCoreApp->ProcessSamplingCallStack(cs);
     }
   });
 
-  GTcpClient->AddCallback(Msg_SamplingHashedCallstacks,
-                          [=](const Message& a_Msg) {
-                            std::istringstream buffer(a_Msg.GetDataAsString());
-                            cereal::BinaryInputArchive inputAr(buffer);
-                            std::vector<CallstackEvent> call_stacks;
-                            inputAr(call_stacks);
+  GTcpClient->AddCallback(
+      Msg_SamplingHashedCallstacks, [=](const Message& a_Msg) {
+        std::vector<CallstackEvent> callstacks;
+        DeserializeObjectBinary(a_Msg.GetDataAsString(), callstacks);
 
-                            for (auto& cs : call_stacks) {
-                              GCoreApp->ProcessHashedSamplingCallStack(cs);
-                            }
-                          });
+        for (auto& cs : callstacks) {
+          GCoreApp->ProcessHashedSamplingCallStack(cs);
+        }
+      });
 }
 
 void ConnectionManager::SendProcesses(TcpEntity* tcp_entity) {
@@ -294,12 +274,12 @@ void ConnectionManager::SendProcesses(TcpEntity* tcp_entity) {
 
 void ConnectionManager::SendRemoteProcess(TcpEntity* tcp_entity, uint32_t pid) {
   std::shared_ptr<Process> process = process_list_.GetProcess(pid);
-  // TODO: remove this - pid should be part of every message,
-  // and all the messages should to be as stateless as possible.
-  Capture::SetTargetProcess(process);
-  process->ListModules();
-  process->EnumerateThreads();
   if (process) {
+    // TODO: remove this - pid should be part of every message,
+    // and all the messages should to be as stateless as possible.
+    Capture::SetTargetProcess(process);
+    process->ListModules();
+    process->EnumerateThreads();
     std::string process_data = SerializeObjectHumanReadable(*process);
     tcp_entity->Send(Msg_RemoteProcess, process_data.data(),
                      process_data.size());

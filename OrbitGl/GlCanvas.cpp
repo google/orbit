@@ -111,7 +111,7 @@ void GlCanvas::Initialize() {
       exit(EXIT_FAILURE);
     }
     std::string glew = absl::StrFormat(
-        "Using GLEW %s\n",
+        "Using GLEW %s",
         reinterpret_cast<const char*>(glewGetString(GLEW_VERSION)));
     PRINT_VAR(glew);
     firstInit = false;

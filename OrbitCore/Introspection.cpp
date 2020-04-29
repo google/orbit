@@ -11,23 +11,20 @@
 #include "Utils.h"
 
 #ifdef _WIN32
-namespace orbit {
-namespace tracing {
+namespace orbit::tracing {
 
-// Instanciate tracing handler. On Linux, see OrbitTracing.cpp.
+// Instantiate tracing handler. On Linux, see OrbitTracing.cpp.
 std::unique_ptr<Handler> GHandler;
 
-}  // namespace tracing
-}  // namespace orbit
+}  // namespace orbit::tracing
 #endif
 
-namespace orbit {
-namespace introspection {
+namespace orbit::introspection {
 
 thread_local std::vector<Scope> scopes;
 
-Handler::Handler(LinuxTracingSession* tracing_session)
-    : tracing_session_(tracing_session) {}
+Handler::Handler(LinuxTracingBuffer* tracing_buffer)
+    : tracing_buffer_(tracing_buffer) {}
 
 void Handler::Begin(const char* name) {
   scopes.emplace_back(Scope{Timer(), name});
@@ -42,10 +39,10 @@ void Handler::End() {
   scope.timer_.m_Depth = scopes.size() - 1;
 
   uint64_t hash = StringHash(scope.name_);
-  tracing_session_->SendKeyAndString(hash, scope.name_);
+  tracing_buffer_->RecordKeyAndString(hash, scope.name_);
   scope.timer_.m_UserData[0] = hash;
 
-  tracing_session_->RecordTimer(std::move(scope.timer_));
+  tracing_buffer_->RecordTimer(std::move(scope.timer_));
 
   scopes.pop_back();
 }
@@ -54,7 +51,6 @@ void Handler::Track(const char*, int) {}
 
 void Handler::Track(const char*, float) {}
 
-}  // namespace introspection
-}  // namespace orbit
+}  // namespace orbit::introspection
 
 #endif  // ORBIT_TRACING_ENABLED

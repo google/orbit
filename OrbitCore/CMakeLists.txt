@@ -31,7 +31,7 @@ target_sources(
          Introspection.h
          LinuxAddressInfo.h
          LinuxCallstackEvent.h
-         LinuxTracingSession.h
+         LinuxTracingBuffer.h
          Log.h
          LogInterface.h
          MemoryTracker.h
@@ -95,8 +95,7 @@ target_sources(
           FunctionStats.cpp
           Injection.cpp
           Introspection.cpp
-          LinuxCallstackEvent.cpp
-          LinuxTracingSession.cpp
+          LinuxTracingBuffer.cpp
           Log.cpp
           LogInterface.cpp
           MemoryTracker.cpp
@@ -214,7 +213,7 @@ add_executable(OrbitCoreTests)
 
 target_sources(OrbitCoreTests PRIVATE
     ElfFileTests.cpp
-    LinuxTracingSessionTests.cpp
+    LinuxTracingBufferTest.cpp
     PathTest.cpp
     RingBufferTest.cpp
     StringManagerTest.cpp

@@ -7,7 +7,7 @@
 #include <string>
 
 #include "CallstackTypes.h"
-#include "LinuxTracingSession.h"
+#include "LinuxTracingBuffer.h"
 #include "OrbitType.h"
 #include "Threading.h"
 
@@ -25,10 +25,8 @@ class Capture {
   static bool InjectRemote(std::string_view remote_address);
   static void SetTargetProcess(const std::shared_ptr<Process>& a_Process);
   // TODO: This method needs to be split into 2, the server side and the
-  // client-side. session here is only used by the server side and
-  // remote_address is only used by the client-side.
-  static bool StartCapture(LinuxTracingSession* session,
-                           std::string_view remote_address);
+  //  client-side. remote_address is only used by the client-side.
+  static bool StartCapture(std::string_view remote_address);
   static void StopCapture();
   static void ClearCaptureData();
   static std::vector<std::shared_ptr<Function>> GetSelectedFunctions();

@@ -2,13 +2,11 @@
 
 #if ORBIT_TRACING_ENABLED
 
-namespace orbit {
-namespace tracing {
+namespace orbit::tracing {
 
 std::unique_ptr<orbit::tracing::Handler> GHandler;
 
-}  // namespace tracing
-}  // namespace orbit
+}  // namespace orbit::tracing
 
 namespace LinuxTracing {
 

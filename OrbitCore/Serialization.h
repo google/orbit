@@ -61,14 +61,14 @@ class CounterStreamBuffer : public std::streambuf {
   void Reset() { m_Size = 0; }
 
  private:
-  int_type overflow(int_type) { return m_Size++; }
+  int_type overflow(int_type) override { return m_Size++; }
   int_type m_Size = 0;
 };
 extern CounterStreamBuffer GStreamCounter;
 
 //-----------------------------------------------------------------------------
 struct ScopeCounter {
-  ScopeCounter(const std::string& a_Msg) : m_Message(a_Msg) {
+  explicit ScopeCounter(const std::string& a_Msg) : m_Message(a_Msg) {
     m_SizeBegin = GStreamCounter.Size();
   }
 
@@ -113,6 +113,15 @@ inline void DeserializeObjectBinary(const void* data, size_t size, T& object) {
   inputAr(object);
 }
 
+//-----------------------------------------------------------------------------
+template <typename T>
+inline void DeserializeObjectBinary(const std::string& data, T& object) {
+  std::istringstream buffer(data);
+  cereal::BinaryInputArchive inputAr(buffer);
+  inputAr(object);
+}
+
+//-----------------------------------------------------------------------------
 #define ORBIT_SIZE_SCOPE(x) ScopeCounter counter(x)
 
 #define ORBIT_NVP_VAL(v, x)               \

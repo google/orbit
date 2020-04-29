@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "BaseTypes.h"
+#include "LinuxCallstackEvent.h"
 #include "SymbolsManager.h"
 #include "TransactionManager.h"
 #include "absl/container/flat_hash_map.h"
@@ -20,7 +21,6 @@
 
 struct ModuleDebugInfo;
 class Timer;
-class LinuxCallstackEvent;
 struct CallStack;
 struct ContextSwitch;
 struct CallstackEvent;
@@ -47,7 +47,6 @@ class CoreApp {
   virtual void ProcessSamplingCallStack(LinuxCallstackEvent& /*a_CS*/) {}
   virtual void ProcessHashedSamplingCallStack(CallstackEvent& /*a_CallStack*/) {
   }
-  virtual void ProcessCallStack(CallStack& /*a_CallStack*/) {}
   virtual void ProcessContextSwitch(const ContextSwitch& /*a_ContextSwitch*/) {}
   virtual void AddAddressInfo(LinuxAddressInfo /*address_info*/) {}
   virtual void AddKeyAndString(uint64_t /*key*/, std::string_view /*str*/) {}

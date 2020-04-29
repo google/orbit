@@ -22,17 +22,18 @@
 #define ORBIT_CONCAT_IND(x, y) (x##y)
 #define ORBIT_CONCAT(x, y) ORBIT_CONCAT_IND(x, y)
 #define ORBIT_UNIQUE(x) ORBIT_CONCAT(x, __COUNTER__)
-#define ORBIT_CALL(f)             \
-  if (orbit::tracing::GHandler) { \
-    orbit::tracing::GHandler->f;  \
-  }
+#define ORBIT_CALL(f)               \
+  do {                              \
+    if (orbit::tracing::GHandler) { \
+      orbit::tracing::GHandler->f;  \
+    }                               \
+  } while (0)
 
-namespace orbit {
-namespace tracing {
+namespace orbit::tracing {
 
 class Handler {
  public:
-  virtual ~Handler() {}
+  virtual ~Handler() = default;
   virtual void Begin(const char* name) = 0;
   virtual void End() = 0;
   virtual void Track(const char* name, int) = 0;
@@ -43,12 +44,11 @@ class Handler {
 extern std::unique_ptr<Handler> GHandler;
 
 struct Scope {
-  Scope(const char* name) { ORBIT_BEGIN(name); }
+  explicit Scope(const char* name) { ORBIT_BEGIN(name); }
   ~Scope() { ORBIT_END; }
 };
 
-}  // namespace tracing
-}  // namespace orbit
+}  // namespace orbit::tracing
 
 #else
 

@@ -38,12 +38,21 @@ class TransactionManager {
  public:
   TransactionManager(TcpClient* client, TcpServer* server);
 
+  TransactionManager() = delete;
+  TransactionManager(const TransactionManager&) = delete;
+  TransactionManager& operator=(const TransactionManager&) = delete;
+  TransactionManager(TransactionManager&&) = delete;
+  TransactionManager& operator=(TransactionManager&&) = delete;
+
   void RegisterTransactionHandler(const TransactionHandler& handler);
 
   template <typename T>
   uint32_t EnqueueRequest(MessageType type, const T& object) {
     return EnqueueRequestInternal(type, SerializeObjectBinary(object));
   }
+
+  template <typename T>
+  void EnqueueRequest(MessageType type, const T* object) = delete;
 
   template <typename T>
   void ReceiveRequest(const Message& message, T* object) {
@@ -57,6 +66,9 @@ class TransactionManager {
   }
 
   template <typename T>
+  void SendResponse(MessageType type, const T* object) = delete;
+
+  template <typename T>
   void ReceiveResponse(const Message& message, T* object) {
     DeserializeObjectBinary(message.GetData(), message.GetSize(), *object);
     ReceiveResponseInternal(message);
@@ -65,16 +77,6 @@ class TransactionManager {
   void Tick();
 
  private:
-  TransactionManager() = delete;
-  TransactionManager(const TransactionManager&) = delete;
-  TransactionManager& operator=(const TransactionManager&) = delete;
-  TransactionManager(TransactionManager&&) = delete;
-  TransactionManager& operator=(TransactionManager&&) = delete;
-  template <typename T>
-  void EnqueueRequest(MessageType type, const T* object) = delete;
-  template <typename T>
-  void SendResponse(MessageType type, const T* object) = delete;
-
   uint32_t EnqueueRequestInternal(MessageType type, std::string&& object);
   void InitiateTransaction(std::shared_ptr<Transaction> transaction);
   void SendRequestInternal(MessageType type, const std::string& object);

@@ -470,7 +470,7 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
         function_name = function->PrettyName();
         address_info->function_name = function->PrettyName();
       }
-    } else {
+    } else if (!address_info->function_name.empty()) {
       function_name = address_info->function_name;
     }
     m_AddressToName[a_Address] = function_name;

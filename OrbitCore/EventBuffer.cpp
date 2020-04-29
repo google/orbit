@@ -85,37 +85,13 @@ ORBIT_SERIALIZE(EventBuffer, 0) {
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(CallstackEvent, 0) {
-  ORBIT_NVP_VAL(0, m_Time);
+ORBIT_SERIALIZE(CallstackEvent, 1) {
+  ORBIT_NVP_VAL(1, m_Time);
   ORBIT_NVP_VAL(0, m_Id);
   ORBIT_NVP_VAL(0, m_TID);
 }
 
 #ifdef __linux
-
-//-----------------------------------------------------------------------------
-void EventTracer::Start(uint32_t /*pid*/, LinuxTracingSession* session) {
-  Capture::NewSamplingProfiler();
-  Capture::GSamplingProfiler->StartCapture();
-
-  m_LinuxTracer = std::make_shared<LinuxTracingHandler>(
-      Capture::GSamplingProfiler.get(), session, Capture::GTargetProcess.get(),
-      &Capture::GSelectedFunctionsMap, &Capture::GNumContextSwitches);
-  m_LinuxTracer->Start();
-}
-
-//-----------------------------------------------------------------------------
-void EventTracer::Stop() {
-  if (m_LinuxTracer) {
-    m_LinuxTracer->Stop();
-  }
-
-  if (Capture::GSamplingProfiler) {
-    Capture::GSamplingProfiler->StopCapture();
-    Capture::GSamplingProfiler->ProcessSamples();
-  }
-}
-
 //-----------------------------------------------------------------------------
 size_t EventBuffer::GetNumEvents() const {
   size_t numEvents = 0;
@@ -125,5 +101,4 @@ size_t EventBuffer::GetNumEvents() const {
 
   return numEvents;
 }
-
 #endif

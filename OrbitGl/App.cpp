@@ -161,9 +161,9 @@ void OrbitApp::ProcessTimer(const Timer& a_Timer, const std::string&) {
 void OrbitApp::ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) {
   CHECK(!ConnectionManager::Get().IsService());
 
-  Capture::GSamplingProfiler->AddCallStack(a_CallStack.m_CS);
+  Capture::GSamplingProfiler->AddCallStack(a_CallStack.callstack_);
   GEventTracer.GetEventBuffer().AddCallstackEvent(
-      a_CallStack.m_time, a_CallStack.m_CS.m_Hash, a_CallStack.m_CS.m_ThreadId);
+      a_CallStack.time_, a_CallStack.callstack_.m_Hash, a_CallStack.callstack_.m_ThreadId);
 }
 
 //-----------------------------------------------------------------------------
@@ -176,20 +176,6 @@ void OrbitApp::ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) {
     GEventTracer.GetEventBuffer().AddCallstackEvent(
         a_CallStack.m_Time, a_CallStack.m_Id, a_CallStack.m_TID);
   }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::ProcessCallStack(CallStack& a_CallStack) {
-  if (ConnectionManager::Get().IsService()) {
-    // Send full callstack once
-    if (!Capture::GetCallstack(a_CallStack.Hash())) {
-      std::string messageData = SerializeObjectHumanReadable(a_CallStack);
-      GTcpServer->Send(Msg_RemoteCallStack, messageData.c_str(),
-                       messageData.size());
-    }
-  }
-
-  Capture::AddCallstack(a_CallStack);
 }
 
 //-----------------------------------------------------------------------------
@@ -212,19 +198,7 @@ void OrbitApp::AddAddressInfo(LinuxAddressInfo address_info) {
 //-----------------------------------------------------------------------------
 void OrbitApp::AddKeyAndString(uint64_t key, std::string_view str) {
   CHECK(!ConnectionManager::Get().IsService());
-  {
-    KeyAndString key_and_string;
-    key_and_string.key = key;
-    key_and_string.str = str;
-    if (!string_manager_->Exists(key)) {
-      std::string message_data = SerializeObjectBinary(key_and_string);
-      GTcpServer->Send(Msg_KeyAndString, message_data.c_str(),
-                       message_data.size());
-      string_manager_->Add(key, str);
-    }
-  }
-
-  string_manager_->Add(key, str);
+  string_manager_->AddIfNotPresent(key, str);
 }
 
 //-----------------------------------------------------------------------------
@@ -862,8 +836,7 @@ void OrbitApp::AddUiMessageCallback(
 void OrbitApp::StartCapture() {
   // Tracing session is only needed when StartCapture is
   // running on the service side
-  Capture::StartCapture(nullptr /* tracing_session */,
-                        options_.asio_server_address);
+  Capture::StartCapture(options_.asio_server_address);
 
   if (m_NeedsThawing) {
 #ifdef _WIN32
