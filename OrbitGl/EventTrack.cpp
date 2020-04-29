@@ -20,8 +20,6 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
   PickingManager& picking_manager = canvas->GetPickingManager();
   PickingID id = picking_manager.CreatePickableId(this);
 
-  bool is_picked = canvas->GetPickingManager().GetPicked() == this;
-
   Color color = !picking ? m_Color : picking_manager.ColorFromPickingID(id);
   glColor4ubv(&color[0]);
 
@@ -41,7 +39,7 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
   glVertex3f(x0, y1, z);
   glEnd();
 
-  if (is_picked)
+  if (canvas->GetPickingManager().GetPicked() == this)
     glColor4ub(255, 255, 255, 255);
   else
     glColor4ubv(&color[0]);
