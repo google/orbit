@@ -4,44 +4,42 @@
 #pragma once
 
 #include "DataView.h"
-#include "ProcessUtils.h"
+#include "OrbitProcess.h"
 
-class ProcessesDataView : public DataView {
+class ProcessesDataView final : public DataView {
  public:
   ProcessesDataView();
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return COLUMN_CPU; }
-  std::string GetValue(int a_Row, int a_Column) override;
-  std::string GetToolTip(int a_Row, int a_Column) override;
+  std::string GetValue(int row, int column) override;
+  std::string GetToolTip(int row, int column) override;
   std::string GetLabel() override { return "Processes"; }
 
-  void OnSelect(int a_Index) override;
-  void OnTimer() override;
-  void SetSelectedItem();
-  bool SelectProcess(const std::string& a_ProcessName);
-  std::shared_ptr<Process> SelectProcess(DWORD a_ProcessId);
-  void UpdateProcessList();
-  void SetRemoteProcessList(ProcessList a_RemoteProcessList);
-  void SetRemoteProcess(const std::shared_ptr<Process>& a_Process);
-  void SetModulesDataView(class ModulesDataView* a_ModulesCtrl) {
-    m_ModulesDataView = a_ModulesCtrl;
+  void OnSelect(int index) override;
+  bool SelectProcess(const std::string& process_name);
+  std::shared_ptr<Process> SelectProcess(uint32_t process_id);
+  void SetProcessList(
+      const std::vector<std::shared_ptr<Process>>& process_list);
+  void UpdateProcess(const std::shared_ptr<Process>& process);
+  void SetModulesDataView(class ModulesDataView* modules_data_view) {
+    modules_data_view_ = modules_data_view;
   }
-  void Refresh();
-  void UpdateModuleDataView(const std::shared_ptr<Process>& a_Process);
-  void SetIsRemote(bool a_Value) { m_IsRemote = a_Value; }
+  void UpdateModuleDataView(const std::shared_ptr<Process>& process);
 
  protected:
   void DoSort() override;
   void DoFilter() override;
-  std::shared_ptr<Process> GetProcess(unsigned int a_Row) const;
+
+ private:
+  void UpdateProcessList();
+  void SetSelectedItem();
+  std::shared_ptr<Process> GetProcess(uint32_t row) const;
   void ClearSelectedProcess();
 
-  ProcessList m_ProcessList;
-  std::shared_ptr<Process> m_RemoteProcess;
-  ModulesDataView* m_ModulesDataView = nullptr;
-  std::shared_ptr<Process> m_SelectedProcess;
-  bool m_IsRemote;
+  std::vector<std::shared_ptr<Process>> process_list_;
+  ModulesDataView* modules_data_view_ = nullptr;
+  uint32_t selected_process_id_;
 
   enum ColumnIndex {
     COLUMN_PID,

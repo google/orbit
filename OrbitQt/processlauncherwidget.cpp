@@ -27,6 +27,8 @@ ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
 
 ProcessLauncherWidget::~ProcessLauncherWidget() { delete ui; }
 
+void ProcessLauncherWidget::Refresh() { ui->LiveProcessList->Refresh(); }
+
 void ProcessLauncherWidget::SetProcessParams() {
   if (GParams.m_ProcessPath != "") {
     ui->ProcessComboBox->lineEdit()->setText(GParams.m_ProcessPath.c_str());
