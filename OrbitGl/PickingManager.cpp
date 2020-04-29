@@ -49,3 +49,11 @@ void PickingManager::Drag(int a_X, int a_Y) {
 void PickingManager::SetPickingColor(PickingID a_ID) {
   glColor4ubv(reinterpret_cast<const uint8_t*>(&a_ID));
 }
+
+//-----------------------------------------------------------------------------
+Color PickingManager::ColorFromPickingID(PickingID id) const {
+  static_assert(sizeof(PickingID) == sizeof(Color),
+                "PickingID should be same size as Color");
+  const Color* color = reinterpret_cast<const Color*>(&id);
+  return *color;
+}
