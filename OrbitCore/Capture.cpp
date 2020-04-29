@@ -47,8 +47,8 @@ ULONG64 Capture::GMainFrameFunction;
 uint64_t Capture::GNumContextSwitches;
 ULONG64 Capture::GNumLinuxEvents;
 ULONG64 Capture::GNumProfileEvents;
-std::string Capture::GPresetToLoad = "";
-std::string Capture::GProcessToInject = "";
+std::string Capture::GPresetToLoad;
+std::string Capture::GProcessToInject;
 
 std::vector<std::shared_ptr<Function>> Capture::GSelectedFunctions;
 std::map<uint64_t, Function*> Capture::GSelectedFunctionsMap;
@@ -154,14 +154,12 @@ bool Capture::Connect(std::string_view remote_address) {
 }
 
 //-----------------------------------------------------------------------------
-// TODO: This method is resposible for too many things. We probably want to
-// split the server side logic and client side logic into separate
-// methods/classes.
-bool Capture::StartCapture(LinuxTracingSession* session,
-                           std::string_view remote_address) {
+// TODO: This method is resposible for too many things. We should split the
+//  server side logic and client side logic into separate methods/classes.
+bool Capture::StartCapture(std::string_view remote_address) {
   SCOPE_TIMER_LOG("Capture::StartCapture");
 
-  if (GTargetProcess->GetName().size() == 0) return false;
+  if (GTargetProcess->GetName().empty()) return false;
 
   GCaptureTimer.Start();
   GCaptureTimePoint = std::chrono::system_clock::now();
@@ -186,8 +184,6 @@ bool Capture::StartCapture(LinuxTracingSession* session,
 #ifdef WIN32
     GEventTracer.Start();
 #else
-    CHECK(session != nullptr);
-    GEventTracer.Start(GTargetProcess->GetID(), session);
     UNUSED(remote_address);
 #endif
   } else if (Capture::IsRemote()) {
@@ -199,7 +195,7 @@ bool Capture::StartCapture(LinuxTracingSession* session,
   if (GCoreApp != nullptr) {
     GCoreApp->SendToUiNow("startcapture");
 
-    if (GSelectedFunctionsMap.size() > 0) {
+    if (!GSelectedFunctionsMap.empty()) {
       GCoreApp->SendToUiNow("gotolive");
     }
   }
@@ -210,7 +206,9 @@ bool Capture::StartCapture(LinuxTracingSession* session,
 //-----------------------------------------------------------------------------
 void Capture::StopCapture() {
   if (IsTrackingEvents()) {
+#ifdef WIN32
     GEventTracer.Stop();
+#endif
   } else if (Capture::IsRemote()) {
     Capture::GSamplingProfiler->StopCapture();
     Capture::GSamplingProfiler->ProcessSamples();
@@ -249,7 +247,7 @@ void Capture::ClearCaptureData() {
 //-----------------------------------------------------------------------------
 MessageType GetMessageType(Function::OrbitType a_type) {
   static std::map<Function::OrbitType, MessageType> typeMap;
-  if (typeMap.size() == 0) {
+  if (typeMap.empty()) {
     typeMap[Function::NONE] = Msg_FunctionHook;
     typeMap[Function::ORBIT_TIMER_START] = Msg_FunctionHookZoneStart;
     typeMap[Function::ORBIT_TIMER_STOP] = Msg_FunctionHookZoneStop;
@@ -271,8 +269,8 @@ MessageType GetMessageType(Function::OrbitType a_type) {
 //-----------------------------------------------------------------------------
 void Capture::PreFunctionHooks() {
   // Clear selected functions
-  for (int i = 0; i < Function::NUM_TYPES; ++i) {
-    GSelectedAddressesByType[i].clear();
+  for (auto& selected_addresses : GSelectedAddressesByType) {
+    selected_addresses.clear();
   }
 
   // Clear current argument tracking data
@@ -331,7 +329,7 @@ void Capture::SendFunctionHooks() {
 
   if (Capture::IsRemote()) {
     for (auto& function : GSelectedFunctions) {
-      LOG("Send Selected Function: %s\n", function->PrettyName().c_str());
+      LOG("Send Selected Function: %s", function->PrettyName().c_str());
     }
 
     std::string selectedFunctionsData =
@@ -354,7 +352,7 @@ void Capture::SendFunctionHooks() {
   // Send all hooks by type
   for (int i = 0; i < Function::NUM_TYPES; ++i) {
     std::vector<DWORD64>& addresses = GSelectedAddressesByType[i];
-    if (addresses.size()) {
+    if (!addresses.empty()) {
       MessageType msgType = GetMessageType(static_cast<Function::OrbitType>(i));
       GTcpServer->Send(msgType, addresses);
     }
@@ -377,7 +375,7 @@ void Capture::SendDataTrackingInfo() {
     //       We should separate both concepts and revive argument
     //       tracking.
     std::vector<Argument> args;
-    for (const std::shared_ptr<Variable> var : rule->m_TrackedVariables) {
+    for (const std::shared_ptr<Variable>& var : rule->m_TrackedVariables) {
       Argument arg;
       arg.m_Offset = var->m_Address;
       arg.m_NumBytes = var->m_Size;
@@ -422,7 +420,9 @@ void Capture::StartSampling() {
 void Capture::StopSampling() {
   if (GIsSampling) {
     if (IsTrackingEvents()) {
+#ifdef WIN32
       GEventTracer.Stop();
+#endif
     }
 
     GTimerManager->StopRecording();

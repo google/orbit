@@ -25,7 +25,7 @@ class SessionsDataView : public DataView {
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                      const std::vector<int>& a_ItemIndices) override;
 
-  void SetSessions(const std::vector<std::shared_ptr<Session> >& a_Sessions);
+  void SetSessions(const std::vector<std::shared_ptr<Session>>& a_Sessions);
 
  protected:
   void DoSort() override;

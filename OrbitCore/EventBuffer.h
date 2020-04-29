@@ -16,12 +16,13 @@
 
 //-----------------------------------------------------------------------------
 struct CallstackEvent {
-  explicit CallstackEvent(uint64_t a_Time = 0, CallstackID a_Id = 0,
-                          ThreadID a_TID = 0)
+  CallstackEvent() = default;
+  CallstackEvent(uint64_t a_Time, CallstackID a_Id, ThreadID a_TID)
       : m_Time(a_Time), m_Id(a_Id), m_TID(a_TID) {}
-  long long m_Time;
-  CallstackID m_Id;
-  ThreadID m_TID;
+
+  uint64_t m_Time = 0;
+  CallstackID m_Id = 0;
+  ThreadID m_TID = 0;
 
   ORBIT_SERIALIZABLE;
 };
@@ -30,7 +31,6 @@ struct CallstackEvent {
 class EventBuffer {
  public:
   EventBuffer() : m_MaxTime(0), m_MinTime(LLONG_MAX) {}
-  ~EventBuffer() {}
 
   void Print();
   void Reset() {
@@ -49,7 +49,7 @@ class EventBuffer {
   uint64_t GetMinTime() const { return m_MinTime; }
   bool HasEvent() {
     ScopeLock lock(m_Mutex);
-    return m_CallstackEvents.size() > 0;
+    return !m_CallstackEvents.empty();
   }
   bool HasEvent(ThreadID a_TID) {
     ScopeLock lock(m_Mutex);

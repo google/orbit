@@ -22,7 +22,7 @@ namespace orbit {
 
 class SymbolsManager {
  public:
-  SymbolsManager(CoreApp* core_app);
+  explicit SymbolsManager(CoreApp* core_app);
 
   void LoadSymbols(std::shared_ptr<Session> session,
                    std::shared_ptr<Process> process);

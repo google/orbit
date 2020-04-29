@@ -9,20 +9,23 @@
 #include <thread>
 #include <vector>
 
-#include "LinuxTracingSession.h"
+#include "LinuxTracingBuffer.h"
 #include "Message.h"
 #include "ProcessUtils.h"
 #include "StringManager.h"
 #include "TcpEntity.h"
 
+#ifdef __linux__
+#include "LinuxTracingHandler.h"
+#endif
+
 // TODO: This class is used in both - client and server side,
-// this should probably be reworked and separated into 2 distinct classes
+//  it needs to be reworked and separated into 2 distinct classes
 class ConnectionManager {
  public:
   ConnectionManager();
   ~ConnectionManager();
   static ConnectionManager& Get();
-  void Init();
   void InitAsService();
   void ConnectToRemote(std::string a_RemoteAddress);
   void SetSelectedFunctionsOnRemote(const Message& a_Msg);
@@ -46,8 +49,10 @@ class ConnectionManager {
   void SendRemoteProcess(TcpEntity* tcp_entity, uint32_t pid);
 
   ProcessList process_list_;
-  LinuxTracingSession tracing_session_;
-  std::shared_ptr<StringManager> string_manager_;
+  LinuxTracingBuffer tracing_buffer_;
+#ifdef __linux__
+  LinuxTracingHandler tracing_handler_{&tracing_buffer_};
+#endif
 
   std::thread thread_;
   std::thread server_capture_thread_;

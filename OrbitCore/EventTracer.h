@@ -50,14 +50,9 @@ extern EventTracer GEventTracer;
 class EventTracer {
  public:
   EventBuffer& GetEventBuffer() { return m_EventBuffer; }
-  EventBuffer m_EventBuffer;
-  void Start(uint32_t a_PID, LinuxTracingSession* session);
-  void Stop();
 
  private:
-  // TODO: Fix circular dependencies in header files.
-  std::shared_ptr<class LinuxTracingHandler> m_LinuxTracer;
-  std::thread thread_;
+  EventBuffer m_EventBuffer;
 };
 
 extern EventTracer GEventTracer;

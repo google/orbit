@@ -1,19 +1,18 @@
 #ifndef ORBIT_CORE_INTROSPECTION_H_
 #define ORBIT_CORE_INTROSPECTION_H_
 
-#include "LinuxTracingSession.h"
+#include "LinuxTracingBuffer.h"
 #include "OrbitBase/Tracing.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
 
 #if ORBIT_TRACING_ENABLED
 
-namespace orbit {
-namespace introspection {
+namespace orbit::introspection {
 
 class Handler : public orbit::tracing::Handler {
  public:
-  explicit Handler(LinuxTracingSession* tracing_session);
+  explicit Handler(LinuxTracingBuffer* tracing_buffer);
 
   void Begin(const char* name) final;
   void End() final;
@@ -21,7 +20,7 @@ class Handler : public orbit::tracing::Handler {
   void Track(const char* name, float) final;
 
  private:
-  LinuxTracingSession* tracing_session_;
+  LinuxTracingBuffer* tracing_buffer_;
 };
 
 struct Scope {
@@ -29,8 +28,7 @@ struct Scope {
   std::string name_;
 };
 
-}  // namespace introspection
-}  // namespace orbit
+}  // namespace orbit::introspection
 
 #endif  // ORBIT_TRACING_ENABLED
 

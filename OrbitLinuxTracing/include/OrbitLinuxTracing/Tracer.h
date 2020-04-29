@@ -53,10 +53,19 @@ class Tracer {
         &Tracer::Run, pid_, sampling_period_ns_, instrumented_functions_,
         listener_, trace_context_switches_, trace_callstacks_,
         trace_instrumented_functions_, trace_gpu_driver_, exit_requested_);
-    thread_->detach();
   }
 
-  void Stop() { *exit_requested_ = true; }
+  bool IsTracing() {
+    return thread_ != nullptr && thread_->joinable();
+  }
+
+  void Stop() {
+    *exit_requested_ = true;
+    if (thread_ != nullptr && thread_->joinable()) {
+      thread_->join();
+    }
+    thread_.reset();
+  }
 
  private:
   pid_t pid_;

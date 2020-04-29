@@ -81,7 +81,7 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   glPushMatrix();
   glLoadIdentity();
 
-// Render command lists
+  // Render command lists
   for (int n = 0; n < draw_data->CmdListsCount; n++) {
     const ImDrawList* cmd_list = draw_data->CmdLists[n];
     const uint8_t* vtx_buffer =

@@ -2,12 +2,16 @@
 #define ORBIT_CORE_KEY_AND_STRING_H_
 
 #include <string>
+#include <utility>
 
 #include "Serialization.h"
 #include "SerializationMacros.h"
 
 struct KeyAndString {
-  uint64_t key;
+  KeyAndString() = default;
+  KeyAndString(uint64_t key, std::string str) : key(key), str(std::move(str)) {}
+
+  uint64_t key = 0;
   std::string str;
 
   ORBIT_SERIALIZABLE;
