@@ -20,17 +20,22 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
   PickingManager& picking_manager = canvas->GetPickingManager();
   PickingID id = picking_manager.CreatePickableId(this);
 
-  Color color = !picking ? m_Color : picking_manager.ColorFromPickingID(id);
+  constexpr float kNormalZ = -0.1f;
+  constexpr float kPickingZ = 0.1f;
+  float z = kNormalZ;
+  Color color = m_Color;
+
+  if (picking) {
+    z = kPickingZ;
+    color = picking_manager.ColorFromPickingID(id);
+  }
+
   glColor4ubv(&color[0]);
 
   float x0 = m_Pos[0];
   float y0 = m_Pos[1];
   float x1 = x0 + m_Size[0];
   float y1 = y0 - m_Size[1];
-
-  constexpr float kNormalZ = -0.1f;
-  constexpr float kPickingZ = 0.1f;
-  float z = picking ? kPickingZ : kNormalZ;
 
   glBegin(GL_QUADS);
   glVertex3f(x0, y0, z);
@@ -39,10 +44,11 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
   glVertex3f(x0, y1, z);
   glEnd();
 
-  if (canvas->GetPickingManager().GetPicked() == this)
+  if (canvas->GetPickingManager().GetPicked() == this) {
     glColor4ub(255, 255, 255, 255);
-  else
+  } else {
     glColor4ubv(&color[0]);
+  }
 
   glBegin(GL_LINES);
   glVertex3f(x0, y0, -0.1f);
