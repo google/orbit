@@ -136,11 +136,11 @@ else()
   target_include_directories(OrbitAsm INTERFACE OrbitAsm/)
 
   add_subdirectory(OrbitLinuxTracing)
+  add_subdirectory(OrbitService)
 endif()
 
 add_subdirectory(OrbitBase)
 add_subdirectory(OrbitCore)
-add_subdirectory(OrbitService)
 add_subdirectory(OrbitTest)
 add_subdirectory(protos)
 

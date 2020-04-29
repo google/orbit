@@ -26,8 +26,8 @@ OrbitService::OrbitService() {
   GCoreApp->InitializeManagers();
 }
 
-void OrbitService::Run() {
-  while (!exit_requested_) {
+void OrbitService::Run(std::atomic<bool>* exit_requested) {
+  while (!(*exit_requested)) {
     GTcpServer->ProcessMainThreadCallbacks();
     Capture::Update();
     Sleep(16);

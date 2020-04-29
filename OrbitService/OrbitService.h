@@ -9,10 +9,8 @@
 class OrbitService {
  public:
   OrbitService();
-  void Run();
+  void Run(std::atomic<bool>* exit_requested);
 
  private:
-  // TODO: where is this set?
-  bool exit_requested_ = false;
   std::unique_ptr<CoreApp> core_app_;
 };
