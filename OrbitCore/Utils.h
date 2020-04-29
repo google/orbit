@@ -301,15 +301,6 @@ inline uint64_t GetMicros(std::string a_TimeStamp) {
 }
 
 //-----------------------------------------------------------------------------
-inline void OrbitSleepMs(uint64_t a_Ms) {
-#if __linux__
-  usleep(a_Ms * 1000);
-#else
-  Sleep(a_Ms);
-#endif
-}
-
-//-----------------------------------------------------------------------------
 inline void PrintBuffer(const void* a_Buffer, uint32_t a_Size,
                         uint32_t a_Width = 16) {
   const uint8_t* buffer = static_cast<const uint8_t*>(a_Buffer);

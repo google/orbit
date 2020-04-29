@@ -96,7 +96,7 @@ void ConnectionManager::SetSelectedFunctionsOnRemote(const Message& a_Msg) {
 void ConnectionManager::ServerCaptureThreadWorker() {
 #ifdef __linux__
   while (tracing_handler_.IsStarted()) {
-    OrbitSleepMs(20);
+    Sleep(20);
 
     std::vector<Timer> timers;
     if (tracing_buffer_.ReadAllTimers(&timers)) {
