@@ -12,6 +12,7 @@
 #include "BaseTypes.h"
 #include "LinuxAddressInfo.h"
 #include "LinuxCallstackEvent.h"
+#include "ProcessMemoryClient.h"
 #include "SymbolsClient.h"
 #include "TransactionManager.h"
 #include "absl/container/flat_hash_map.h"
@@ -61,8 +62,11 @@ class CoreApp {
   }
   virtual void RefreshCaptureView() {}
 
+  using MemoryCallback = ProcessMemoryClient::ProcessMemoryCallback;
   void GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
-                       std::function<void(std::vector<byte>&)> callback);
+                       const MemoryCallback& callback) {
+    process_memory_client_->GetRemoteMemory(pid, address, size, callback);
+  }
 
  protected:
   orbit::TransactionManager* GetTransactionManager() {
@@ -71,14 +75,9 @@ class CoreApp {
   SymbolsClient* GetSymbolsClient() { return symbols_client_.get(); }
 
  private:
-  // Transactions
-  void SetupClientMemoryTransaction();
-  typedef std::function<void(std::vector<byte>&)> MemoryCallback;
-  absl::flat_hash_map<uint32_t, MemoryCallback> memory_callbacks_;
-  absl::Mutex transaction_mutex_;
-
   std::unique_ptr<orbit::TransactionManager> transaction_manager_ = nullptr;
   std::unique_ptr<SymbolsClient> symbols_client_ = nullptr;
+  std::unique_ptr<ProcessMemoryClient> process_memory_client_ = nullptr;
 };
 
 extern CoreApp* GCoreApp;

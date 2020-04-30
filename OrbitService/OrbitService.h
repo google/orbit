@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "CoreApp.h"
+#include "ProcessMemoryService.h"
 #include "ProcessUtils.h"
 #include "SymbolsService.h"
 
@@ -13,9 +14,8 @@ class OrbitService {
   void Run(std::atomic<bool>* exit_requested);
 
  private:
-  void SetupServiceMemoryTransaction();
-
   std::unique_ptr<CoreApp> core_app_;
   std::unique_ptr<orbit::TransactionManager> transaction_manager_;
   std::unique_ptr<SymbolsService> symbols_service_;
+  std::unique_ptr<ProcessMemoryService> process_memory_service_;
 };

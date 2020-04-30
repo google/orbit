@@ -139,11 +139,12 @@ void Function::UpdateStats(const Timer& timer) {
 }
 
 void Function::GetDisassembly(uint32_t pid) {
-  GCoreApp->GetRemoteMemory(
-      pid, GetVirtualAddress(), Size(), [this](std::vector<uint8_t>& data) {
-        GCoreApp->Disassemble(pretty_name_, GetVirtualAddress(), data.data(),
-                              data.size());
-      });
+  GCoreApp->GetRemoteMemory(pid, GetVirtualAddress(), Size(),
+                            [this](const std::vector<uint8_t>& data) {
+                              GCoreApp->Disassemble(pretty_name_,
+                                                    GetVirtualAddress(),
+                                                    data.data(), data.size());
+                            });
 }
 
 void Function::FindFile() {
