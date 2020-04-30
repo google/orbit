@@ -1,6 +1,5 @@
-#include <iostream>
-
 #include <csignal>
+#include <iostream>
 
 #include "OrbitGrpcServer.h"
 #include "OrbitService.h"

@@ -8,7 +8,6 @@
 #include <memory>
 #include <string>
 
-
 // Wrapper around GRPC server. This class takes care of regitering
 // all GRPC services.
 //
