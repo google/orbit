@@ -8,7 +8,7 @@
 
 class OrbitService {
  public:
-  OrbitService();
+  explicit OrbitService(uint16_t port);
   void Run(std::atomic<bool>* exit_requested);
 
  private:

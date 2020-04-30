@@ -8,6 +8,8 @@
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
 
+ABSL_FLAG(uint16_t, asio_port, 44766, "Asio TCP server port");
+
 // TODO: Default it 127.0.0.1 once ssh tunneling is enabled.
 ABSL_FLAG(std::string, grpc_server_address, "0.0.0.0:44755",
           "Grpc server address");
@@ -42,8 +44,9 @@ int main(int argc, char** argv) {
   std::cout << "Starting GRPC server at " << grpc_server_address << std::endl;
   grpc_server = OrbitGrpcServer::Create(grpc_server_address);
 
+  uint16_t asio_port = absl::GetFlag(FLAGS_asio_port);
   std::cout << "Starting OrbitService" << std::endl;
-  OrbitService service;
+  OrbitService service{asio_port};
   exit_requested = false;
   service.Run(&exit_requested);
 }
