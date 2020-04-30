@@ -63,22 +63,16 @@ class Track : public Pickable {
   Vec2 GetMoveDelta() const {
     return m_Moving ? m_MousePos[1] - m_MousePos[0] : Vec2(0, 0);
   }
-  void SetName(const std::string& a_Name) { m_Name = a_Name; }
+  void SetName(const std::string& name) { name_= name; }
+  const std::string& GetName() const { return name_; }
+  void SetLabel(const std::string& label) { label_ = label; }
+  const std::string& GetLabel() const { return label_; }
 
-  enum LabelDisplayMode { NAME_AND_TID, TID_ONLY, NAME_ONLY, EMPTY };
-
-  void SetLabelDisplayMode(LabelDisplayMode label_display_mode) {
-    label_display_mode_ = label_display_mode;
-  }
-
-  const std::string& GetName() const { return m_Name; }
   void SetTimeGraph(TimeGraph* timegraph) { time_graph_ = timegraph; }
   void SetPos(float a_X, float a_Y);
   void SetY(float y);
   Vec2 GetPos() const { return m_Pos; }
   void SetSize(float a_SizeX, float a_SizeY);
-  void SetID(uint32_t a_ID) { m_ID = a_ID; }
-  uint32_t GetID() const { return m_ID; }
   void SetColor(Color a_Color) { m_Color = a_Color; }
 
   void AddChild(std::shared_ptr<Track> track) { children_.emplace_back(track); }
@@ -92,9 +86,8 @@ class Track : public Pickable {
   Vec2 m_PickingOffset;
   bool m_Picked;
   bool m_Moving;
-  std::string m_Name;
-  uint32_t m_ID;
-  LabelDisplayMode label_display_mode_;
+  std::string name_;
+  std::string label_;
   Color m_Color;
   bool m_Visible = true;
   std::atomic<uint32_t> num_timers_;

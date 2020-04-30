@@ -23,8 +23,7 @@ class Timer {
         m_Type(NONE),
         m_Processor(-1),
         m_CallstackHash(0),
-        m_FunctionAddress(0),
-        m_SubmitTID(0) {
+        m_FunctionAddress(0) {
     m_UserData[0] = 0;
     m_UserData[1] = 0;
   }
@@ -76,10 +75,6 @@ class Timer {
   // Needs to have to exact same layout in win32/x64, debug/release
 
   uint32_t m_PID;
-  // Thread ID. For timers that represent CPU activity, this is the
-  // thread id, for GPU activity, this is an artificial thread id
-  // that is larger than any CPU thread id and is in 1:1 relation to
-  // GPU timelines (gfx, sdma, etc.).
   uint32_t m_TID;
   uint8_t m_Depth;
   uint8_t m_SessionID;
@@ -90,8 +85,6 @@ class Timer {
   uint64_t m_UserData[2];
   TickType m_Start;
   TickType m_End;
-  // GPU job submission came from this thread id.
-  uint32_t m_SubmitTID;
 };
 #pragma pack(pop)
 

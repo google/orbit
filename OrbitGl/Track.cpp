@@ -11,7 +11,6 @@
 
 //-----------------------------------------------------------------------------
 Track::Track() {
-  m_ID = 0;
   m_MousePos[0] = m_MousePos[1] = Vec2(0, 0);
   m_Pos = Vec2(0, 0);
   m_Size = Vec2(0, 0);
@@ -19,9 +18,6 @@ Track::Track() {
   m_Picked = false;
   m_Moving = false;
   m_Canvas = nullptr;
-
-  label_display_mode_ = NAME_AND_TID;
-
   unsigned char alpha = 255;
   unsigned char grey = 60;
   m_Color = Color(grey, grey, grey, alpha);
@@ -72,22 +68,7 @@ void Track::Draw(GlCanvas* a_Canvas, bool a_Picking) {
   glVertex3f(x0, y1, track_z);
   glEnd();
 
-  std::string track_label;
-  switch (label_display_mode_) {
-    case NAME_AND_TID:
-      track_label = absl::StrFormat("%s [%u]", m_Name, m_ID);
-      break;
-    case TID_ONLY:
-      track_label = absl::StrFormat("[%u]", m_ID);
-      break;
-    case NAME_ONLY:
-      track_label = absl::StrFormat("%s", m_Name);
-      break;
-    case EMPTY:
-      track_label = "";
-  }
-
-  a_Canvas->AddText(track_label.c_str(), x0, y1 + label_offset + m_Size[1],
+  a_Canvas->AddText(label_.c_str(), x0, y1 + label_offset + m_Size[1],
                     text_z, Color(255, 255, 255, 255));
 
   m_Canvas = a_Canvas;

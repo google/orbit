@@ -8,17 +8,20 @@
 
 #include "BlockChain.h"
 #include "CallstackTypes.h"
-#include "EventTrack.h"
+//#include "EventTrack.h"
+#include "StringManager.h"
 #include "TextBox.h"
 #include "Threading.h"
 #include "Track.h"
 
 class TextRenderer;
 
-class ThreadTrack : public Track {
+class GpuTrack : public Track {
  public:
-  ThreadTrack(TimeGraph* time_graph, uint32_t thread_id);
-  ~ThreadTrack() override = default;
+  GpuTrack(TimeGraph* time_graph,
+           std::shared_ptr<StringManager> string_manager,
+           std::string_view timeline);
+  ~GpuTrack() override = default;
 
   // Pickable
   void Draw(GlCanvas* canvas, bool picking) override;
@@ -27,7 +30,7 @@ class ThreadTrack : public Track {
 
   // Track
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) override;
-  Type GetType() const override { return kThreadTrack; }
+  Type GetType() const override { return kGpuTrack; }
   float GetHeight() const override;
 
   std::vector<std::shared_ptr<TimerChain>> GetTimers() override;
@@ -35,7 +38,6 @@ class ThreadTrack : public Track {
   std::string GetExtraInfo(const Timer& timer);
 
   Color GetColor() const;
-  static Color GetColor(ThreadID a_TID);
   uint32_t GetNumTimers() const { return num_timers_; }
   TickType GetMinTime() const { return min_time_; }
   TickType GetMaxTime() const { return max_time_; }
@@ -50,10 +52,8 @@ class ThreadTrack : public Track {
 
   std::vector<std::shared_ptr<TimerChain>> GetAllChains() override;
 
-  void SetEventTrackColor(Color color);
-  void ClearSelectedEvents() { event_track_->ClearSelectedEvents(); }
-
-  uint32_t GetThreadId() const { return thread_id_; }
+  //  void SetEventTrackColor(Color color);
+  //void ClearSelectedEvents() { event_track_->ClearSelectedEvents(); }
 
  protected:
   void UpdateDepth(uint32_t depth) {
@@ -62,14 +62,19 @@ class ThreadTrack : public Track {
   std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
 
  private:
+  Color GetTimerColor(const Timer& timer,
+                      bool is_selected, bool inactive) const;
   void SetTimesliceText(const Timer& timer, double elapsed_us, float min_x,
                         TextBox* text_box);
 
  protected:
   TextRenderer* text_renderer_ = nullptr;
-  std::shared_ptr<EventTrack> event_track_;
+  //  std::shared_ptr<EventTrack> event_track_;
   uint32_t depth_ = 0;
-  ThreadID thread_id_;
+  // This is the timeline/queue string, for example, "gfx".
+  std::string timeline_;
   mutable Mutex mutex_;
   std::map<int, std::shared_ptr<TimerChain>> timers_;
+
+  std::shared_ptr<StringManager> string_manager_;
 };

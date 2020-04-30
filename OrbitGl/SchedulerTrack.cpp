@@ -27,7 +27,7 @@ inline Color GetTimerColor(const Timer& timer, TimeGraph* time_graph,
   } else if (!same_tid && (inactive || !same_pid)) {
     return kInactiveColor;
   }
-  return time_graph->GetTimesliceColor(timer);
+  return time_graph->GetThreadColor(timer.m_TID);
 }
 
 inline float GetYFromDepth(const TimeGraphLayout& layout, float track_y,

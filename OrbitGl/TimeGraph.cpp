@@ -16,6 +16,7 @@
 #include "EventTrack.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
+#include "GpuTrack.h"
 #include "GraphTrack.h"
 #include "Log.h"
 #include "OrbitType.h"
@@ -36,9 +37,11 @@
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
-namespace {
+//-----------------------------------------------------------------------------
+TimeGraph::TimeGraph() { m_LastThreadReorder.Start(); }
 
-Color GetThreadColor(ThreadID a_TID) {
+//-----------------------------------------------------------------------------
+Color TimeGraph::GetThreadColor(ThreadID tid) const {
   static unsigned char a = 255;
   static std::vector<Color> s_ThreadColors{
       Color(231, 68, 53, a),    // red
@@ -48,54 +51,8 @@ Color GetThreadColor(ThreadID a_TID) {
       Color(215, 171, 105, a),  // beige
       Color(248, 101, 22, a)    // orange
   };
-  return s_ThreadColors[a_TID % s_ThreadColors.size()];
+  return s_ThreadColors[tid % s_ThreadColors.size()];
 }
-
-}  // namespace
-
-Color TimeGraph::GetEventTrackColor(Timer timer) {
-  if (timer.m_Type == Timer::GPU_ACTIVITY) {
-    const Color kGray(100, 100, 100, 255);
-    return kGray;
-  } else {
-    return GetThreadColor(timer.m_TID);
-  }
-}
-
-Color TimeGraph::GetTimesliceColor(Timer timer) {
-  if (timer.m_Type == Timer::GPU_ACTIVITY) {
-    // We color code the timeslices for GPU activity using the color
-    // of the CPU thread track that submitted the job.
-    Color col = GetThreadColor(timer.m_SubmitTID);
-
-    // We disambiguate the different types of GPU activity based on the
-    // string that is displayed on their timeslice.
-    constexpr const char* kSwQueueString = "sw queue";
-    constexpr const char* kHwQueueString = "hw queue";
-    constexpr const char* kHwExecutionString = "hw execution";
-    float coeff = 1.0f;
-    std::string gpu_stage =
-        string_manager_->Get(timer.m_UserData[0]).value_or("");
-    if (gpu_stage == kSwQueueString) {
-      coeff = 0.5f;
-    } else if (gpu_stage == kHwQueueString) {
-      coeff = 0.75f;
-    } else if (gpu_stage == kHwExecutionString) {
-      coeff = 1.0f;
-    }
-
-    col[0] = static_cast<uint8_t>(coeff * col[0]);
-    col[1] = static_cast<uint8_t>(coeff * col[1]);
-    col[2] = static_cast<uint8_t>(coeff * col[2]);
-
-    return col;
-  } else {
-    return GetThreadColor(timer.m_TID);
-  }
-}
-
-//-----------------------------------------------------------------------------
-TimeGraph::TimeGraph() { m_LastThreadReorder.Start(); }
 
 //-----------------------------------------------------------------------------
 void TimeGraph::SetStringManager(std::shared_ptr<StringManager> str_manager) {
@@ -298,31 +255,37 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
     }
   }
 
-  std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(a_Timer.m_TID);
   if (a_Timer.m_Type == Timer::GPU_ACTIVITY) {
-    track->SetName(string_manager_->Get(a_Timer.m_UserData[1]).value_or(""));
-    track->SetLabelDisplayMode(Track::NAME_ONLY);
-    track->SetEventTrackColor(GetEventTrackColor(a_Timer));
-  }
-  if (a_Timer.m_Type == Timer::INTROSPECTION) {
-    const Color kGreenIntrospection(87, 166, 74, 255);
-    track->SetColor(kGreenIntrospection);
-  }
-
-  if (!a_Timer.IsType(Timer::THREAD_ACTIVITY) &&
-      !a_Timer.IsType(Timer::CORE_ACTIVITY)) {
-    track->OnTimer(a_Timer);
-    ++m_ThreadCountMap[a_Timer.m_TID];
+    if (string_manager_->Contains(a_Timer.m_UserData[1])) {
+      std::string timeline = string_manager_->Get(a_Timer.m_UserData[1]).value_or("");
+      std::shared_ptr<GpuTrack> track = GetOrCreateGpuTrack(timeline);
+      track->SetName(timeline);
+      track->SetLabel(timeline);
+      track->OnTimer(a_Timer);
+      ++gpu_timeline_count_map_[timeline];
+    }
   } else {
-    // Use thead 0 as container for scheduling events.  TODO: most of this
-    // should be done once.
-    const std::shared_ptr<ThreadTrack>& track0 = GetOrCreateThreadTrack(0);
-    std::string process_name = Capture::GTargetProcess->GetName();
-    track0->SetName(process_name + " (all threads)");
-    track0->SetLabelDisplayMode(Track::NAME_ONLY);
-    track0->SetEventTrackColor(GetThreadColor(0));
-    track0->OnTimer(a_Timer);
-    ++m_ThreadCountMap[0];
+    std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(a_Timer.m_TID);
+    if (a_Timer.m_Type == Timer::INTROSPECTION) {
+      const Color kGreenIntrospection(87, 166, 74, 255);
+      track->SetColor(kGreenIntrospection);
+    }
+
+    if (!a_Timer.IsType(Timer::THREAD_ACTIVITY) &&
+        !a_Timer.IsType(Timer::CORE_ACTIVITY)) {
+      track->OnTimer(a_Timer);
+      ++m_ThreadCountMap[a_Timer.m_TID];
+    } else {
+      // Use thead 0 as container for scheduling events.  TODO: most of this
+      // should be done once.
+      const std::shared_ptr<ThreadTrack>& track0 = GetOrCreateThreadTrack(0);
+      std::string process_name = Capture::GTargetProcess->GetName();
+      track0->SetName(process_name);
+      track0->SetLabel(process_name + " (all threads)");
+      track0->SetEventTrackColor(GetThreadColor(0));
+      track0->OnTimer(a_Timer);
+      ++m_ThreadCountMap[0];
+    }
   }
 }
 
@@ -603,11 +566,15 @@ void TimeGraph::Draw(bool a_Picking) {
 void TimeGraph::DrawTracks(bool a_Picking) {
   m_Layout.SetNumCores(GetNumCores());
   for (auto& track : sorted_tracks_) {
-    if (track->GetName().empty()) {
+    if (track->GetLabel().empty()) {
       if (track->GetType() == Track::kThreadTrack) {
-        std::string threadName =
-            Capture::GTargetProcess->GetThreadNameFromTID(track->GetID());
-        track->SetName(threadName);
+        auto thread_track = std::dynamic_pointer_cast<ThreadTrack>(track);
+        uint32_t tid = thread_track->GetThreadId();
+        std::string thread_name =
+            Capture::GTargetProcess->GetThreadNameFromTID(tid);
+        track->SetName(thread_name);
+        std::string track_label = absl::StrFormat("%s [%u]", thread_name, tid);
+        track->SetLabel(track_label);
       }
     }
 
@@ -629,6 +596,18 @@ std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(ThreadID a_TID) {
     thread_tracks_[a_TID] = track;
     track->SetEventTrackColor(GetThreadColor(a_TID));
   }
+  return track;
+}
+
+std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(std::string_view timeline) {
+  ScopeLock lock(m_Mutex);
+  std::shared_ptr<GpuTrack> track = gpu_tracks_[std::string(timeline)];
+  if (track == nullptr) {
+    track = std::make_shared<GpuTrack>(this, string_manager_, timeline);
+    tracks_.emplace_back(track);
+    gpu_tracks_[std::string(timeline)] = track;
+  }
+
   return track;
 }
 
@@ -659,10 +638,6 @@ void TimeGraph::SortTracks() {
     sorted_tracks_.clear();
 
     std::vector<ThreadID> sortedThreadIds;
-
-    // Thread "0" holds scheduling information and is used to select callstacks
-    // from all threads, show it at the top.
-    sortedThreadIds.push_back(0);
 
     // Show threads with instrumented functions first
     std::vector<std::pair<ThreadID, uint32_t>> sortedThreads =
@@ -697,6 +672,13 @@ void TimeGraph::SortTracks() {
         }
       }
       sortedThreadIds = filteredThreadIds;
+    }
+
+    sorted_tracks_.emplace_back(GetOrCreateThreadTrack(0));
+
+    // Gpu Tracks.
+    for (auto timeline_and_track : gpu_tracks_) {
+      sorted_tracks_.emplace_back(timeline_and_track.second);
     }
 
     // Thread Tracks.
