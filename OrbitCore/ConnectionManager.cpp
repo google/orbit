@@ -18,10 +18,7 @@
 #include "OrbitModule.h"
 #include "Params.h"
 #include "ProcessUtils.h"
-#include "SamplingProfiler.h"
 #include "Serialization.h"
-#include "SymbolHelper.h"
-#include "SymbolsManager.h"
 #include "TcpClient.h"
 #include "TcpServer.h"
 #include "TestRemoteMessages.h"
@@ -32,9 +29,6 @@
 #include "OrbitLinuxTracing/OrbitTracing.h"
 #endif
 
-#include <fstream>
-#include <iostream>
-#include <sstream>
 #include <streambuf>
 
 ConnectionManager::ConnectionManager()

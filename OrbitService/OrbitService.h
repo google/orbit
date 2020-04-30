@@ -5,6 +5,7 @@
 
 #include "CoreApp.h"
 #include "ProcessUtils.h"
+#include "SymbolsService.h"
 
 class OrbitService {
  public:
@@ -12,5 +13,9 @@ class OrbitService {
   void Run(std::atomic<bool>* exit_requested);
 
  private:
+  void SetupServiceMemoryTransaction();
+
   std::unique_ptr<CoreApp> core_app_;
+  std::unique_ptr<orbit::TransactionManager> transaction_manager_;
+  std::unique_ptr<SymbolsService> symbols_service_;
 };

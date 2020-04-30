@@ -23,7 +23,6 @@
 #include "Pdb.h"
 #include "SamplingProfiler.h"
 #include "Serialization.h"
-#include "SymbolsManager.h"
 #include "TcpClient.h"
 #include "TcpForward.h"
 #include "TcpServer.h"

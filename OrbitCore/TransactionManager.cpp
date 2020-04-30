@@ -118,14 +118,22 @@ std::shared_ptr<TransactionHandler> TransactionManager::GetHandler(
 
 void TransactionManager::HandleRequest(const Message& message) {
   CHECK(ConnectionManager::Get().IsService());
-  GetHandler(message.GetType())->request_handler(message);
+  const TransactionHandler::RequestHandler& handler =
+      GetHandler(message.GetType())->request_handler;
+  if (handler) {
+    handler(message);
+  }
 }
 
 void TransactionManager::HandleResponse(const Message& message) {
   CHECK(ConnectionManager::Get().IsClient());
   CHECK(current_transaction_);
   uint32_t id = current_transaction_->id;
-  GetHandler(message.GetType())->response_handler(message, id);
+  const TransactionHandler::ResponseHandler& handler =
+      GetHandler(message.GetType())->response_handler;
+  if (handler) {
+    handler(message, id);
+  }
   current_transaction_->end_time = OrbitTicks();
   current_transaction_->completed = true;
 }

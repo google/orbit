@@ -54,7 +54,7 @@
 #include "Serialization.h"
 #include "SessionsDataView.h"
 #include "StringManager.h"
-#include "SymbolsManager.h"
+#include "SymbolsClient.h"
 #include "Systrace.h"
 #include "Tcp.h"
 #include "TcpClient.h"
@@ -341,7 +341,7 @@ void OrbitApp::PostInit() {
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
   GetDesktopResolution(GOrbitApp->m_ScreenRes[0], GOrbitApp->m_ScreenRes[1]);
 
-  GOrbitApp->InitializeManagers();
+  GOrbitApp->InitializeClientTransactions();
 }
 
 //-----------------------------------------------------------------------------
@@ -895,7 +895,7 @@ void OrbitApp::LoadModules() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules() {
-  GetSymbolsManager()->LoadSymbols(m_ModulesToLoad, Capture::GTargetProcess);
+  GetSymbolsClient()->LoadSymbolsFromModules(Capture::GTargetProcess.get(), m_ModulesToLoad, nullptr);
   m_ModulesToLoad.clear();
   GOrbitApp->FireRefreshCallbacks();
 }
@@ -1000,7 +1000,7 @@ void OrbitApp::OnRemoteProcess(const Message& a_Message) {
   // Trigger session loading if needed.
   std::shared_ptr<Session> session = Capture::GSessionPresets;
   if (session) {
-    GetSymbolsManager()->LoadSymbols(session, remote_process);
+    GetSymbolsClient()->LoadSymbolsFromSession(remote_process.get(), session);
     GParams.m_ProcessPath = session->m_ProcessFullPath;
     GParams.m_Arguments = session->m_Arguments;
     GParams.m_WorkingDirectory = session->m_WorkingDirectory;

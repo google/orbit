@@ -5,9 +5,9 @@
 #include "OrbitGrpcServer.h"
 
 #include "ProcessServiceImpl.h"
+#include "grpcpp/ext/proto_server_reflection_plugin.h"
 #include "grpcpp/grpcpp.h"
 #include "grpcpp/health_check_service_interface.h"
-#include "grpcpp/ext/proto_server_reflection_plugin.h"
 
 namespace {
 
@@ -21,6 +21,7 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
 
   void Shutdown() override;
   void Wait() override;
+
  private:
   ProcessServiceImpl process_service_;
   std::unique_ptr<grpc::Server> server_;
@@ -39,19 +40,14 @@ void OrbitGrpcServerImpl::Init(std::string_view server_address) {
   server_ = builder.BuildAndStart();
 };
 
-void OrbitGrpcServerImpl::Shutdown() {
-  server_->Shutdown();
-}
+void OrbitGrpcServerImpl::Shutdown() { server_->Shutdown(); }
 
-void OrbitGrpcServerImpl::Wait() {
-  server_->Wait();
-}
+void OrbitGrpcServerImpl::Wait() { server_->Wait(); }
 
 }  // namespace
 
 std::unique_ptr<OrbitGrpcServer> OrbitGrpcServer::Create(
     std::string_view server_address) {
-
   std::unique_ptr<OrbitGrpcServerImpl> server_impl =
       std::make_unique<OrbitGrpcServerImpl>();
 
@@ -59,4 +55,3 @@ std::unique_ptr<OrbitGrpcServer> OrbitGrpcServer::Create(
 
   return std::move(server_impl);
 }
-

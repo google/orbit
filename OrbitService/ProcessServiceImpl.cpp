@@ -7,12 +7,12 @@
 #include <memory>
 #include <string>
 
-using grpc::Status;
 using grpc::ServerContext;
+using grpc::Status;
 
 Status ProcessServiceImpl::GetProcessList(ServerContext*,
-                                        const GetProcessListRequest*,
-                                        GetProcessListResponse* response) {
+                                          const GetProcessListRequest*,
+                                          GetProcessListResponse* response) {
   process_list_.Refresh();
   for (const std::shared_ptr<Process> process : process_list_.GetProcesses()) {
     ProcessInfo* process_info = response->add_processes();
@@ -26,4 +26,3 @@ Status ProcessServiceImpl::GetProcessList(ServerContext*,
 
   return Status::OK;
 }
-
