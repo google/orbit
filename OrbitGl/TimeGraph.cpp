@@ -227,6 +227,11 @@ double TimeGraph::GetTimeIntervalMicro(double a_Ratio) {
 }
 
 //-----------------------------------------------------------------------------
+std::string TimeGraph::GetGpuTimeline(const Timer& timer) const {
+  return string_manager_->Get(timer.m_UserData[1]).value_or("");
+}
+
+//-----------------------------------------------------------------------------
 void TimeGraph::ProcessTimer(const Timer& a_Timer) {
   if (a_Timer.m_End > m_SessionMaxCounter) {
     m_SessionMaxCounter = a_Timer.m_End;
@@ -257,7 +262,7 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
 
   if (a_Timer.m_Type == Timer::GPU_ACTIVITY) {
     if (string_manager_->Contains(a_Timer.m_UserData[1])) {
-      std::string timeline = string_manager_->Get(a_Timer.m_UserData[1]).value_or("");
+      std::string timeline = GetGpuTimeline(a_Timer);
       std::shared_ptr<GpuTrack> track = GetOrCreateGpuTrack(timeline);
       track->SetName(timeline);
       track->SetLabel(timeline);
@@ -695,8 +700,12 @@ void TimeGraph::OnLeft() {
   TextBox* selection = Capture::GSelectedTextBox;
   if (selection) {
     const Timer& timer = selection->GetTimer();
-    const TextBox* left =
-        GetOrCreateThreadTrack(timer.m_TID)->GetLeft(selection);
+    const TextBox* left = nullptr;
+    if (timer.m_Type == Timer::GPU_ACTIVITY) {
+      left = GetOrCreateGpuTrack(GetGpuTimeline(timer))->GetLeft(selection);
+    } else {
+      left = GetOrCreateThreadTrack(timer.m_TID)->GetLeft(selection);
+    }
     if (left) {
       SelectLeft(left);
     }
@@ -709,8 +718,12 @@ void TimeGraph::OnRight() {
   TextBox* selection = Capture::GSelectedTextBox;
   if (selection) {
     const Timer& timer = selection->GetTimer();
-    const TextBox* right =
-        GetOrCreateThreadTrack(timer.m_TID)->GetRight(selection);
+    const TextBox* right = nullptr;
+    if (timer.m_Type == Timer::GPU_ACTIVITY) {
+      right = GetOrCreateGpuTrack(GetGpuTimeline(timer))->GetRight(selection);
+    } else {
+      right = GetOrCreateThreadTrack(timer.m_TID)->GetRight(selection);
+    }
     if (right) {
       SelectRight(right);
     }
@@ -723,7 +736,12 @@ void TimeGraph::OnUp() {
   TextBox* selection = Capture::GSelectedTextBox;
   if (selection) {
     const Timer& timer = selection->GetTimer();
-    const TextBox* up = GetOrCreateThreadTrack(timer.m_TID)->GetUp(selection);
+    const TextBox* up = nullptr;
+    if (timer.m_Type == Timer::GPU_ACTIVITY) {
+      up = GetOrCreateGpuTrack(GetGpuTimeline(timer))->GetUp(selection);
+    } else {
+      up = GetOrCreateThreadTrack(timer.m_TID)->GetUp(selection);
+    }
     if (up) {
       Select(up);
     }
@@ -736,8 +754,12 @@ void TimeGraph::OnDown() {
   TextBox* selection = Capture::GSelectedTextBox;
   if (selection) {
     const Timer& timer = selection->GetTimer();
-    const TextBox* down =
-        GetOrCreateThreadTrack(timer.m_TID)->GetDown(selection);
+    const TextBox* down = nullptr;
+    if (timer.m_Type == Timer::GPU_ACTIVITY) {
+      down = GetOrCreateGpuTrack(GetGpuTimeline(timer))->GetDown(selection);
+    } else {
+      down = GetOrCreateThreadTrack(timer.m_TID)->GetDown(selection);
+    }
     if (down) {
       Select(down);
     }
