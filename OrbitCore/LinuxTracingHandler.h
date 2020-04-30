@@ -49,11 +49,6 @@ class LinuxTracingHandler : LinuxTracing::TracerListener {
   absl::flat_hash_set<uint64_t> callstack_hashes_seen_;
   absl::Mutex callstack_hashes_seen_mutex_;
   StringManager string_manager_;
-
-  // TODO: Fix this hack that reuses thread tracks in the UI to show GPU events.
-  pid_t TimelineToThreadId(std::string_view timeline);
-  absl::flat_hash_map<std::string, pid_t> timeline_to_thread_id_;
-  pid_t current_timeline_thread_id_ = 1'000'000'000;
 };
 
 #endif  // ORBIT_CORE_LINUX_TRACING_HANDLER_H_
