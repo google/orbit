@@ -316,11 +316,13 @@ std::string OrbitUtils::FormatTime(const time_t& rawtime) {
 
 //-----------------------------------------------------------------------------
 bool ReadProcessMemory(uint32_t pid, uint64_t address, byte* buffer,
-                       uint64_t size, size_t* num_bytes_read) {
-#if _WIN32
+                       uint64_t size, uint64_t* num_bytes_read) {
+#ifdef _WIN32
   HANDLE h_process = reinterpret_cast<HANDLE>(static_cast<uintptr_t>(pid));
+  SIZE_T bytes_read;
   BOOL res = ReadProcessMemory(h_process, reinterpret_cast<void*>(address),
-                               buffer, size, num_bytes_read);
+                               buffer, size, &bytes_read);
+  if (num_bytes_read) *num_bytes_read = bytes_read;
   return res == TRUE;
 #else
   iovec local_iov[] = {{buffer, size}};
