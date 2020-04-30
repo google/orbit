@@ -11,7 +11,6 @@
 
 //-----------------------------------------------------------------------------
 LogDataView::LogDataView() : DataView(DataViewType::LOG) {
-  GOrbitApp->RegisterOutputLog(this);
   GTcpServer->AddCallback(Msg_OrbitLog, [=](const Message& a_Msg) {
     this->OnReceiveMessage(a_Msg);
   });

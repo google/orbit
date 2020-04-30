@@ -6,7 +6,7 @@
 
 #include <cassert>
 
-#include "../OrbitGl/SamplingReport.h"
+#include "SamplingReport.h"
 #include "orbitdataviewpanel.h"
 #include "orbittreeview.h"
 #include "ui_orbitsamplingreport.h"
@@ -28,37 +28,36 @@ OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
   sizes.append(5000);
   sizes.append(5000);
   ui->splitter->setSizes(sizes);
-
-  OrbitDataViewPanel* callStackView = ui->CallstackTreeView;
-  callStackView->Initialize(DataViewType::CALLSTACK, false);
 }
 
 //-----------------------------------------------------------------------------
 OrbitSamplingReport::~OrbitSamplingReport() { delete ui; }
 
 //-----------------------------------------------------------------------------
-void OrbitSamplingReport::Initialize(std::shared_ptr<SamplingReport> a_Report) {
-  m_SamplingReport = a_Report;
+void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
+                                     std::shared_ptr<SamplingReport> report) {
+  ui->CallstackTreeView->Initialize(
+      callstack_data_view, SelectionType::kExtended, FontType::kDefault, false);
+  m_SamplingReport = report;
 
-  if (!a_Report) return;
+  if (!report) return;
 
   m_SamplingReport->SetUiRefreshFunc([&]() { this->Refresh(); });
 
-  for (const std::shared_ptr<SamplingReportDataView>& report :
-       a_Report->GetThreadReports()) {
+  for (SamplingReportDataView& report : report->GetThreadReports()) {
     QWidget* tab = new QWidget();
     tab->setObjectName(QStringLiteral("tab"));
 
     QGridLayout* gridLayout_2 = new QGridLayout(tab);
     gridLayout_2->setObjectName(QStringLiteral("gridLayout_2"));
     OrbitDataViewPanel* treeView = new OrbitDataViewPanel(tab);
-    treeView->SetDataModel(report);
+    treeView->SetDataModel(&report);
 
-    if (!report->IsSortingAllowed()) {
+    if (report.IsSortingAllowed()) {
       treeView->GetTreeView()->setSortingEnabled(false);
     } else {
-      int column = report->GetDefaultSortingColumn();
-      Qt::SortOrder order = report->GetColumns()[column].initial_order ==
+      int column = report.GetDefaultSortingColumn();
+      Qt::SortOrder order = report.GetColumns()[column].initial_order ==
                                     DataView::SortingOrder::Ascending
                                 ? Qt::AscendingOrder
                                 : Qt::DescendingOrder;
@@ -73,7 +72,7 @@ void OrbitSamplingReport::Initialize(std::shared_ptr<SamplingReport> a_Report) {
 
     treeView->Link(ui->CallstackTreeView);
 
-    QString threadName = QString::fromStdString(report->GetName());
+    QString threadName = QString::fromStdString(report.GetName());
     ui->tabWidget->addTab(tab, threadName);
   }
 }

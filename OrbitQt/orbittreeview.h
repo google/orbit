@@ -9,13 +9,15 @@
 
 #include "orbitglwidget.h"
 #include "orbittablemodel.h"
+#include "types.h"
 
 class OrbitTreeView : public QTreeView {
   Q_OBJECT
  public:
   explicit OrbitTreeView(QWidget* parent = nullptr);
-  void Initialize(DataViewType a_Type);
-  void SetDataModel(std::shared_ptr<DataView> a_Model);
+  void Initialize(DataView* data_view, SelectionType selection_type,
+                  FontType font_type);
+  void SetDataModel(DataView* model);
   void OnFilter(const QString& a_Filter);
   void Select(int a_Row);
   void Refresh();

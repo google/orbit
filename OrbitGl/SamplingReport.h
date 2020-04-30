@@ -18,8 +18,7 @@ class SamplingReport {
 
   void FillReport();
   std::shared_ptr<SamplingProfiler> GetProfiler() const { return m_Profiler; }
-  const std::vector<std::shared_ptr<SamplingReportDataView>>&
-  GetThreadReports() {
+  std::vector<SamplingReportDataView>& GetThreadReports() {
     return m_ThreadReports;
   }
   void SetCallstackDataView(class CallStackDataView* a_DataView) {
@@ -39,7 +38,7 @@ class SamplingReport {
 
  protected:
   std::shared_ptr<SamplingProfiler> m_Profiler;
-  std::vector<std::shared_ptr<SamplingReportDataView>> m_ThreadReports;
+  std::vector<SamplingReportDataView> m_ThreadReports;
   CallStackDataView* m_CallstackDataView;
 
   uint64_t m_SelectedAddress;

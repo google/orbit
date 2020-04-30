@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "Core.h"
 #include "OpenGl.h"
 
 #ifdef __cplusplus

@@ -15,7 +15,6 @@
 //-----------------------------------------------------------------------------
 LiveFunctionsDataView::LiveFunctionsDataView()
     : DataView(DataViewType::LIVE_FUNCTIONS) {
-  GOrbitApp->RegisterLiveFunctionsDataView(this);
   m_UpdatePeriodMs = 300;
   OnDataChanged();
 }

@@ -4,7 +4,7 @@
 #include <QLineEdit>
 
 #include "../OrbitCore/Params.h"
-#include "../OrbitGl/App.h"
+#include "App.h"
 #include "ui_processlauncherwidget.h"
 
 ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
@@ -13,11 +13,6 @@ ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
   ui->ProcessComboBox->lineEdit()->setPlaceholderText("Process");
   ui->WorkingDirComboBox->lineEdit()->setPlaceholderText("Working Directory");
   ui->ArgumentsComboBox->lineEdit()->setPlaceholderText("Arguments");
-  ui->LiveProcessList->Initialize(DataViewType::PROCESSES);
-
-  if (GParams.m_ProcessFilter != "") {
-    ui->LiveProcessList->SetFilter(GParams.m_ProcessFilter.c_str());
-  }
 
   ui->gridLayout_2->setColumnStretch(0, 90);
   ui->checkBoxPause->setChecked(GParams.m_StartPaused);
@@ -26,6 +21,15 @@ ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
 }
 
 ProcessLauncherWidget::~ProcessLauncherWidget() { delete ui; }
+
+void ProcessLauncherWidget::SetDataView(DataView* data_view) {
+  ui->LiveProcessList->Initialize(data_view, SelectionType::kDefault,
+                                  FontType::kDefault);
+
+  if (GParams.m_ProcessFilter != "") {
+    ui->LiveProcessList->SetFilter(GParams.m_ProcessFilter.c_str());
+  }
+}
 
 void ProcessLauncherWidget::Refresh() { ui->LiveProcessList->Refresh(); }
 

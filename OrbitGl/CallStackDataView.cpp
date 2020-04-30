@@ -17,7 +17,6 @@ CallStackDataView::CallStackDataView()
 
 //-----------------------------------------------------------------------------
 void CallStackDataView::SetAsMainInstance() {
-  GOrbitApp->RegisterCallStackDataView(this);
 }
 
 //-----------------------------------------------------------------------------

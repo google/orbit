@@ -8,16 +8,11 @@
 #include <memory>
 
 //-----------------------------------------------------------------------------
-OrbitTableModel::OrbitTableModel(DataViewType a_Type, QObject* parent)
+OrbitTableModel::OrbitTableModel(DataView* data_view, bool alternate_row_color,
+                                 QObject* parent)
     : QAbstractTableModel(parent),
-      m_DataView(nullptr),
-      m_AlternateRowColor(true) {
-  m_DataView = DataView::Create(a_Type);
-
-  if (a_Type == DataViewType::LOG) {
-    m_AlternateRowColor = false;
-  }
-}
+      m_DataView(data_view),
+      m_AlternateRowColor(alternate_row_color) {}
 
 //-----------------------------------------------------------------------------
 OrbitTableModel::OrbitTableModel(QObject* parent)

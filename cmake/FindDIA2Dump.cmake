@@ -19,6 +19,8 @@ target_link_libraries(DIA2Dump PUBLIC DIASDK::DIASDK)
 target_link_libraries(
   DIA2Dump PUBLIC multicore::multicore concurrentqueue::concurrentqueue
                   oqpi::oqpi xxHash::xxHash cereal::cereal)
-target_include_directories(DIA2Dump PRIVATE "OrbitCore/" "OrbitBase/include/")
+target_include_directories(DIA2Dump PRIVATE "OrbitCore/"
+	                                    "OrbitBase/include/"
+					    "external/gte")
 
 add_library(DIA2Dump::DIA2Dump ALIAS DIA2Dump)

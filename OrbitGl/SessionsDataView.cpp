@@ -21,7 +21,6 @@
 
 //-----------------------------------------------------------------------------
 SessionsDataView::SessionsDataView() : DataView(DataViewType::SESSIONS) {
-  GOrbitApp->RegisterSessionsDataView(this);
 }
 
 //-----------------------------------------------------------------------------

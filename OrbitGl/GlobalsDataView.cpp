@@ -16,7 +16,6 @@
 //-----------------------------------------------------------------------------
 GlobalsDataView::GlobalsDataView() : DataView(DataViewType::GLOBALS) {
   OnDataChanged();
-  GOrbitApp->RegisterGlobalsDataView(this);
 }
 
 //-----------------------------------------------------------------------------

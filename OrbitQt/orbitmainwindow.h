@@ -9,7 +9,7 @@
 #include <thread>
 
 #include "ApplicationOptions.h"
-#include "DataViewTypes.h"
+#include "CallStackDataView.h"
 
 namespace Ui {
 class OrbitMainWindow;
@@ -28,11 +28,13 @@ class OrbitMainWindow : public QMainWindow {
   void OnRefreshDataViewPanels(DataViewType a_Type);
   void UpdatePanel(DataViewType a_Type);
   void OnNewSamplingReport(
-      std::shared_ptr<class SamplingReport> a_SamplingReport);
+      DataView* callstack_data_view,
+      std::shared_ptr<class SamplingReport> sampling_report);
   void CreateSamplingTab();
   void CreateSelectionTab();
   void CreatePluginTabs();
-  void OnNewSelection(std::shared_ptr<class SamplingReport> a_SamplingReport);
+  void OnNewSelection(DataView* callstack_data_view,
+                      std::shared_ptr<class SamplingReport> sampling_report);
   void OnReceiveMessage(const std::string& message);
   void OnAddToWatch(const class Variable* a_Variable);
   std::string OnGetSaveFileName(const std::string& extension);

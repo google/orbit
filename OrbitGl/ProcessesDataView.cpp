@@ -17,7 +17,6 @@
 
 //-----------------------------------------------------------------------------
 ProcessesDataView::ProcessesDataView() : DataView(DataViewType::PROCESSES) {
-  GOrbitApp->RegisterProcessesDataView(this);
 }
 
 //-----------------------------------------------------------------------------

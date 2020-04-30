@@ -7,13 +7,14 @@
 #include <memory>
 #include <utility>
 
-#include "../OrbitGl/DataView.h"
+#include "DataView.h"
 
 //-----------------------------------------------------------------------------
 class OrbitTableModel : public QAbstractTableModel {
   Q_OBJECT
  public:
-  explicit OrbitTableModel(DataViewType a_Type, QObject* parent = nullptr);
+  explicit OrbitTableModel(DataView* data_view, bool alternate_row_color = true,
+                           QObject* parent = nullptr);
   explicit OrbitTableModel(QObject* parent = nullptr);
   ~OrbitTableModel() override;
 
@@ -30,10 +31,8 @@ class OrbitTableModel : public QAbstractTableModel {
   QModelIndex CreateIndex(int a_Row, int a_Column) {
     return createIndex(a_Row, a_Column);
   }
-  std::shared_ptr<DataView> GetDataView() { return m_DataView; }
-  void SetDataView(std::shared_ptr<DataView> a_Model) {
-    m_DataView = std::move(a_Model);
-  }
+  DataView* GetDataView() { return m_DataView; }
+  void SetDataView(DataView* model) { m_DataView = model; }
   bool IsSortingAllowed() { return GetDataView()->IsSortingAllowed(); }
   std::pair<int, Qt::SortOrder> GetDefaultSortingColumnAndOrder();
 
@@ -42,6 +41,6 @@ class OrbitTableModel : public QAbstractTableModel {
   void OnClicked(const QModelIndex& index);
 
  protected:
-  std::shared_ptr<DataView> m_DataView;
+  DataView* m_DataView;
   bool m_AlternateRowColor;
 };

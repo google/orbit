@@ -4,7 +4,7 @@
 #pragma once
 
 //-----------------------------------------------------------------------------
-enum DataViewType {
+enum class DataViewType {
   FUNCTIONS,
   LIVE_FUNCTIONS,
   CALLSTACK,
@@ -13,7 +13,6 @@ enum DataViewType {
   PROCESSES,
   MODULES,
   SAMPLING,
-  PDB,
   SESSIONS,
   LOG,
   ALL,

@@ -10,7 +10,6 @@
 
 //-----------------------------------------------------------------------------
 ModulesDataView::ModulesDataView() : DataView(DataViewType::MODULES) {
-  GOrbitApp->RegisterModulesDataView(this);
 }
 
 //-----------------------------------------------------------------------------

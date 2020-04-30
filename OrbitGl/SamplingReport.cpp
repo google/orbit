@@ -31,12 +31,11 @@ void SamplingReport::FillReport() {
 
     if (tid == 0 && !m_Profiler->GetGenerateSummary()) continue;
 
-    std::shared_ptr<SamplingReportDataView> threadReport =
-        std::make_shared<SamplingReportDataView>();
-    threadReport->SetSampledFunctions(threadSampleData->m_SampleReport);
-    threadReport->SetThreadID(tid);
-    threadReport->SetSamplingReport(this);
-    m_ThreadReports.push_back(threadReport);
+    SamplingReportDataView threadReport;
+    threadReport.SetSampledFunctions(threadSampleData->m_SampleReport);
+    threadReport.SetThreadID(tid);
+    threadReport.SetSamplingReport(this);
+    m_ThreadReports.push_back(std::move(threadReport));
   }
 }
 
