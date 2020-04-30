@@ -1,14 +1,15 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
-#pragma once
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#ifndef ORBIT_GL_GPU_TRACK_H_
+#define ORBIT_GL_GPU_TRACK_H_
 
 #include <map>
 #include <memory>
 
 #include "BlockChain.h"
 #include "CallstackTypes.h"
-//#include "EventTrack.h"
 #include "StringManager.h"
 #include "TextBox.h"
 #include "Threading.h"
@@ -52,9 +53,6 @@ class GpuTrack : public Track {
 
   std::vector<std::shared_ptr<TimerChain>> GetAllChains() override;
 
-  //  void SetEventTrackColor(Color color);
-  //void ClearSelectedEvents() { event_track_->ClearSelectedEvents(); }
-
  protected:
   void UpdateDepth(uint32_t depth) {
     if (depth > depth_) depth_ = depth;
@@ -69,7 +67,6 @@ class GpuTrack : public Track {
 
  protected:
   TextRenderer* text_renderer_ = nullptr;
-  //  std::shared_ptr<EventTrack> event_track_;
   uint32_t depth_ = 0;
   // This is the timeline/queue string, for example, "gfx".
   std::string timeline_;
@@ -78,3 +75,5 @@ class GpuTrack : public Track {
 
   std::shared_ptr<StringManager> string_manager_;
 };
+
+#endif  // ORBIT_GL_GPU_TRACK_H_
