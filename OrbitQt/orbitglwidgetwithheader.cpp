@@ -4,6 +4,11 @@
 
 #include "orbitglwidgetwithheader.h"
 
+// This needs to be first because if it is not GL/glew.h
+// complains about being included after gl.h
+// clang-format off
+#include "OpenGl.h"
+// clang-format on
 #include "ui_orbitglwidgetwithheader.h"
 
 //-----------------------------------------------------------------------------

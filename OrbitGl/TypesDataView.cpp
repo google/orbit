@@ -18,7 +18,6 @@
 //-----------------------------------------------------------------------------
 TypesDataView::TypesDataView() : DataView(DataViewType::TYPES) {
   OnDataChanged();
-  GOrbitApp->RegisterTypesDataView(this);
 }
 
 //-----------------------------------------------------------------------------

@@ -6,6 +6,7 @@
 #include <QWidget>
 
 #include "orbittablemodel.h"
+#include "types.h"
 
 namespace Ui {
 class OrbitDataViewPanel;
@@ -18,10 +19,11 @@ class OrbitDataViewPanel : public QWidget {
   explicit OrbitDataViewPanel(QWidget* parent = nullptr);
   ~OrbitDataViewPanel() override;
 
-  void Initialize(DataViewType a_Type, bool a_MainInstance = true);
+  void Initialize(DataView* data_view, SelectionType selection_type,
+                  FontType font_type, bool is_main_instance = true);
   void Link(OrbitDataViewPanel* a_Panel);
   void Refresh();
-  void SetDataModel(std::shared_ptr<DataView> a_Model);
+  void SetDataModel(DataView* model);
   void SetFilter(const QString& a_Filter);
   void Select(int a_Row);
   class OrbitTreeView* GetTreeView();

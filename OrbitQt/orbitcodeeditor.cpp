@@ -48,6 +48,12 @@
 **
 ****************************************************************************/
 
+// This needs to be first because if it is not GL/glew.h
+// complains about being included after gl.h
+// clang-format off
+#include "OpenGl.h"
+// clang-format on
+
 #include "orbitcodeeditor.h"
 
 #include <QPushButton>
@@ -59,7 +65,7 @@
 #include "../OrbitCore/Path.h"
 #include "../OrbitCore/PrintVar.h"
 #include "../OrbitCore/Utils.h"
-#include "../OrbitGl/App.h"
+#include "App.h"
 #include "absl/strings/str_format.h"
 
 OrbitCodeEditor* OrbitCodeEditor::GFileMapEditor;

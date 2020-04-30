@@ -51,7 +51,11 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       m_IsDev(false) {
   OrbitApp::Init(std::move(options));
 
+  DataViewFactory* data_view_factory = GOrbitApp.get();
+
   ui->setupUi(this);
+  ui->ProcessesList->SetDataView(
+      data_view_factory->GetOrCreateDataView(DataViewType::PROCESSES));
   ui->ProcessesList->SetProcessParams();
 
   QList<int> sizes;
@@ -64,12 +68,14 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->AddRefreshCallback(
       [this](DataViewType a_Type) { this->OnRefreshDataViewPanels(a_Type); });
   GOrbitApp->AddSamplingReoprtCallback(
-      [this](std::shared_ptr<SamplingReport> a_Report) {
-        this->OnNewSamplingReport(std::move(a_Report));
+      [this](DataView* callstack_data_view,
+             std::shared_ptr<SamplingReport> report) {
+        this->OnNewSamplingReport(callstack_data_view, std::move(report));
       });
   GOrbitApp->AddSelectionReportCallback(
-      [this](std::shared_ptr<SamplingReport> a_Report) {
-        this->OnNewSelection(std::move(a_Report));
+      [this](DataView* callstack_data_view,
+             std::shared_ptr<SamplingReport> report) {
+        this->OnNewSelection(callstack_data_view, std::move(report));
       });
   GOrbitApp->AddUiMessageCallback([this](const std::string& a_Message) {
     this->OnReceiveMessage(a_Message);
@@ -93,14 +99,30 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->CaptureGLWidget->Initialize(GlPanel::CAPTURE, this);
   ui->VisualizeGLWidget->Initialize(GlPanel::VISUALIZE, this);
 
-  ui->ModulesList->Initialize(DataViewType::MODULES);
-  ui->FunctionsList->Initialize(DataViewType::FUNCTIONS);
-  ui->LiveFunctionsList->Initialize(DataViewType::LIVE_FUNCTIONS);
-  ui->CallStackView->Initialize(DataViewType::CALLSTACK);
-  ui->TypesList->Initialize(DataViewType::TYPES);
-  ui->GlobalsList->Initialize(DataViewType::GLOBALS);
-  ui->SessionList->Initialize(DataViewType::SESSIONS);
-  ui->OutputView->Initialize(DataViewType::LOG);
+  ui->ModulesList->Initialize(
+      data_view_factory->GetOrCreateDataView(DataViewType::MODULES),
+      SelectionType::kExtended, FontType::kDefault);
+  ui->FunctionsList->Initialize(
+      data_view_factory->GetOrCreateDataView(DataViewType::FUNCTIONS),
+      SelectionType::kExtended, FontType::kDefault);
+  ui->LiveFunctionsList->Initialize(
+      data_view_factory->GetOrCreateDataView(DataViewType::LIVE_FUNCTIONS),
+      SelectionType::kExtended, FontType::kDefault);
+  ui->CallStackView->Initialize(
+      data_view_factory->GetOrCreateDataView(DataViewType::CALLSTACK),
+      SelectionType::kExtended, FontType::kDefault);
+  ui->TypesList->Initialize(
+      data_view_factory->GetOrCreateDataView(DataViewType::TYPES),
+      SelectionType::kDefault, FontType::kDefault);
+  ui->GlobalsList->Initialize(
+      data_view_factory->GetOrCreateDataView(DataViewType::GLOBALS),
+      SelectionType::kDefault, FontType::kDefault);
+  ui->SessionList->Initialize(
+      data_view_factory->GetOrCreateDataView(DataViewType::SESSIONS),
+      SelectionType::kDefault, FontType::kDefault);
+  ui->OutputView->Initialize(
+      data_view_factory->GetOrCreateDataView(DataViewType::LOG),
+      SelectionType::kDefault, FontType::kFixed);
 
   SetupCodeView();
   SetupRuleEditor();
@@ -222,7 +244,7 @@ std::wstring OrbitMainWindow::FindFile(const std::wstring& a_Caption,
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
   if (a_Type == DataViewType::ALL) {
-    for (int i = 0; i < DataViewType::ALL; ++i) {
+    for (int i = 0; i < static_cast<int>(DataViewType::ALL); ++i) {
       UpdatePanel(static_cast<DataViewType>(i));
     }
   } else {
@@ -294,12 +316,13 @@ void OrbitMainWindow::CreatePluginTabs() {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnNewSamplingReport(
-    std::shared_ptr<SamplingReport> a_SamplingReport) {
+    DataView* callstack_data_view,
+    std::shared_ptr<SamplingReport> sampling_report) {
   m_SamplingLayout->removeWidget(m_OrbitSamplingReport);
   delete m_OrbitSamplingReport;
 
   m_OrbitSamplingReport = new OrbitSamplingReport(m_SamplingTab);
-  m_OrbitSamplingReport->Initialize(a_SamplingReport);
+  m_OrbitSamplingReport->Initialize(callstack_data_view, sampling_report);
   m_SamplingLayout->addWidget(m_OrbitSamplingReport, 0, 0, 1, 1);
 
   // Automatically switch to sampling tab if not already in live tab.
@@ -321,12 +344,13 @@ void OrbitMainWindow::CreateSelectionTab() {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnNewSelection(
-    std::shared_ptr<class SamplingReport> a_SamplingReport) {
+    DataView* callstack_data_view,
+    std::shared_ptr<class SamplingReport> sampling_report) {
   m_SelectionLayout->removeWidget(m_SelectionReport);
   delete m_SelectionReport;
 
   m_SelectionReport = new OrbitSamplingReport(m_SelectionTab);
-  m_SelectionReport->Initialize(a_SamplingReport);
+  m_SelectionReport->Initialize(callstack_data_view, sampling_report);
   m_SelectionLayout->addWidget(m_SelectionReport, 0, 0, 1, 1);
 
   ui->RightTabWidget->setCurrentWidget(m_SelectionTab);

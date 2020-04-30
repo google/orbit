@@ -11,13 +11,25 @@
 #include <utility>
 
 #include "ApplicationOptions.h"
+#include "CallStackDataView.h"
 #include "ContextSwitch.h"
 #include "CoreApp.h"
+#include "DataViewFactory.h"
 #include "DataViewTypes.h"
+#include "FunctionsDataView.h"
+#include "GlobalsDataView.h"
+#include "LiveFunctionsDataView.h"
+#include "LogDataView.h"
 #include "Message.h"
+#include "ModulesDataView.h"
+#include "ProcessesDataView.h"
+#include "RuleEditor.h"
+#include "SamplingReportDataView.h"
+#include "SessionsDataView.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
 #include "Threading.h"
+#include "TypesDataView.h"
 #include "grpcpp/grpcpp.h"
 
 #if defined(_WIN32)
@@ -28,7 +40,7 @@ struct CallStack;
 class Process;
 
 //-----------------------------------------------------------------------------
-class OrbitApp : public CoreApp {
+class OrbitApp final : public CoreApp, public DataViewFactory {
  public:
   explicit OrbitApp(ApplicationOptions&& options);
   ~OrbitApp() override;
@@ -82,17 +94,8 @@ class OrbitApp : public CoreApp {
 
   int* GetScreenRes() { return m_ScreenRes; }
 
-  void RegisterProcessesDataView(class ProcessesDataView* a_Processes);
-  void RegisterModulesDataView(class ModulesDataView* a_Modules);
-  void RegisterFunctionsDataView(class FunctionsDataView* a_Functions);
-  void RegisterLiveFunctionsDataView(class LiveFunctionsDataView* a_Functions);
-  void RegisterCallStackDataView(class CallStackDataView* a_Callstack);
-  void RegisterTypesDataView(class TypesDataView* a_Types);
-  void RegisterGlobalsDataView(class GlobalsDataView* a_Globals);
-  void RegisterSessionsDataView(class SessionsDataView* a_Sessions);
   void RegisterCaptureWindow(class CaptureWindow* a_Capture);
-  void RegisterOutputLog(class LogDataView* a_Log);
-  void RegisterRuleEditor(class RuleEditor* a_RuleEditor);
+  void RegisterRuleEditor(RuleEditor* a_RuleEditor);
 
   void Unregister(class DataView* a_Model);
   bool SelectProcess(const std::string& a_Process);
@@ -114,7 +117,7 @@ class OrbitApp : public CoreApp {
   void AddRefreshCallback(RefreshCallback a_Callback) {
     m_RefreshCallbacks.emplace_back(std::move(a_Callback));
   }
-  typedef std::function<void(std::shared_ptr<class SamplingReport>)>
+  typedef std::function<void(DataView*, std::shared_ptr<class SamplingReport>)>
       SamplingReportCallback;
   void AddSamplingReoprtCallback(SamplingReportCallback a_Callback) {
     m_SamplingReportsCallbacks.emplace_back(std::move(a_Callback));
@@ -204,6 +207,8 @@ class OrbitApp : public CoreApp {
   const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >* GetRules()
       override;
 
+  DataView* GetOrCreateDataView(DataViewType type) override;
+
  private:
   ApplicationOptions options_;
 
@@ -219,16 +224,17 @@ class OrbitApp : public CoreApp {
   ClipboardCallback m_ClipboardCallback;
   bool m_IsRemote = false;
 
-  ProcessesDataView* m_ProcessesDataView = nullptr;
-  ModulesDataView* m_ModulesDataView = nullptr;
-  FunctionsDataView* m_FunctionsDataView = nullptr;
-  LiveFunctionsDataView* m_LiveFunctionsDataView = nullptr;
-  CallStackDataView* m_CallStackDataView = nullptr;
-  TypesDataView* m_TypesDataView = nullptr;
-  GlobalsDataView* m_GlobalsDataView = nullptr;
-  SessionsDataView* m_SessionsDataView = nullptr;
+  std::unique_ptr<ProcessesDataView> m_ProcessesDataView;
+  std::unique_ptr<ModulesDataView> m_ModulesDataView;
+  std::unique_ptr<FunctionsDataView> m_FunctionsDataView;
+  std::unique_ptr<LiveFunctionsDataView> m_LiveFunctionsDataView;
+  std::unique_ptr<CallStackDataView> m_CallStackDataView;
+  std::unique_ptr<TypesDataView> m_TypesDataView;
+  std::unique_ptr<GlobalsDataView> m_GlobalsDataView;
+  std::unique_ptr<SessionsDataView> m_SessionsDataView;
+  std::unique_ptr<LogDataView> m_LogDataView;
+
   CaptureWindow* m_CaptureWindow = nullptr;
-  LogDataView* m_Log = nullptr;
   RuleEditor* m_RuleEditor = nullptr;
   int m_ScreenRes[2];
   bool m_HasPromptedForUpdate = false;

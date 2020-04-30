@@ -556,68 +556,9 @@ void OrbitApp::MainTick() {
 std::string OrbitApp::GetVersion() { return OrbitVersion::GetVersion(); }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::RegisterProcessesDataView(ProcessesDataView* a_Processes) {
-  assert(m_ProcessesDataView == nullptr);
-  m_ProcessesDataView = a_Processes;
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::RegisterModulesDataView(ModulesDataView* a_Modules) {
-  assert(m_ModulesDataView == nullptr);
-  assert(m_ProcessesDataView != nullptr);
-  m_ModulesDataView = a_Modules;
-  m_ProcessesDataView->SetModulesDataView(m_ModulesDataView);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::RegisterFunctionsDataView(FunctionsDataView* a_Functions) {
-  m_FunctionsDataView = a_Functions;
-  m_Panels.push_back(a_Functions);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::RegisterLiveFunctionsDataView(
-    LiveFunctionsDataView* a_Functions) {
-  m_LiveFunctionsDataView = a_Functions;
-  m_Panels.push_back(a_Functions);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::RegisterCallStackDataView(CallStackDataView* a_Callstack) {
-  assert(m_CallStackDataView == nullptr);
-  m_CallStackDataView = a_Callstack;
-  m_Panels.push_back(a_Callstack);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::RegisterTypesDataView(TypesDataView* a_Types) {
-  m_TypesDataView = a_Types;
-  m_Panels.push_back(a_Types);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::RegisterGlobalsDataView(GlobalsDataView* a_Globals) {
-  m_GlobalsDataView = a_Globals;
-  m_Panels.push_back(a_Globals);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::RegisterSessionsDataView(SessionsDataView* a_Sessions) {
-  m_SessionsDataView = a_Sessions;
-  m_Panels.push_back(a_Sessions);
-  ListSessions();
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::RegisterCaptureWindow(CaptureWindow* a_Capture) {
   assert(m_CaptureWindow == nullptr);
   m_CaptureWindow = a_Capture;
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::RegisterOutputLog(LogDataView* a_Log) {
-  assert(m_Log == nullptr);
-  m_Log = a_Log;
 }
 
 //-----------------------------------------------------------------------------
@@ -636,7 +577,7 @@ void OrbitApp::AddSamplingReport(
   auto report = std::make_shared<SamplingReport>(sampling_profiler);
 
   for (SamplingReportCallback& callback : app->m_SamplingReportsCallbacks) {
-    callback(report);
+    callback(app->GetOrCreateDataView(DataViewType::CALLSTACK), report);
   }
 }
 
@@ -647,7 +588,9 @@ void OrbitApp::AddSelectionReport(
 
   for (SamplingReportCallback& callback :
        GOrbitApp->m_SelectionReportCallbacks) {
-    callback(report);
+    DataView* callstack_data_view =
+        GOrbitApp->GetOrCreateDataView(DataViewType::CALLSTACK);
+    callback(callstack_data_view, report);
   }
 }
 
@@ -1092,4 +1035,88 @@ void OrbitApp::OnRemoteModuleDebugInfo(
 void OrbitApp::LaunchRuleEditor(Function* a_Function) {
   m_RuleEditor->m_Window.Launch(a_Function);
   SendToUiNow("RuleEditor");
+}
+
+DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
+  switch (type) {
+    case DataViewType::FUNCTIONS:
+      if (!m_FunctionsDataView) {
+        m_FunctionsDataView = std::make_unique<FunctionsDataView>();
+        m_Panels.push_back(m_FunctionsDataView.get());
+      }
+      return m_FunctionsDataView.get();
+
+    case DataViewType::TYPES:
+      if (!m_TypesDataView) {
+        m_TypesDataView = std::make_unique<TypesDataView>();
+        m_Panels.push_back(m_TypesDataView.get());
+      }
+      return m_TypesDataView.get();
+
+    case DataViewType::LIVE_FUNCTIONS:
+      if (!m_LiveFunctionsDataView) {
+        m_LiveFunctionsDataView = std::make_unique<LiveFunctionsDataView>();
+        m_Panels.push_back(m_LiveFunctionsDataView.get());
+      }
+      return m_LiveFunctionsDataView.get();
+
+    case DataViewType::CALLSTACK:
+      if (!m_CallStackDataView) {
+        m_CallStackDataView = std::make_unique<CallStackDataView>();
+        m_Panels.push_back(m_CallStackDataView.get());
+      }
+      return m_CallStackDataView.get();
+
+    case DataViewType::GLOBALS:
+      if (!m_GlobalsDataView) {
+        m_GlobalsDataView = std::make_unique<GlobalsDataView>();
+        m_Panels.push_back(m_GlobalsDataView.get());
+      }
+      return m_GlobalsDataView.get();
+
+    case DataViewType::MODULES:
+      if (!m_ModulesDataView) {
+        m_ModulesDataView = std::make_unique<ModulesDataView>();
+        m_Panels.push_back(m_ModulesDataView.get());
+      }
+      return m_ModulesDataView.get();
+
+    case DataViewType::PROCESSES:
+      if (!m_ProcessesDataView) {
+        m_ProcessesDataView = std::make_unique<ProcessesDataView>();
+        m_Panels.push_back(m_ProcessesDataView.get());
+        // TODO: Remove this after ProcessesDataView is untied from
+        // ModulesDataView
+        GetOrCreateDataView(DataViewType::MODULES);
+        m_ProcessesDataView->SetModulesDataView(m_ModulesDataView.get());
+      }
+      return m_ProcessesDataView.get();
+
+    case DataViewType::SESSIONS:
+      if (!m_SessionsDataView) {
+        m_SessionsDataView = std::make_unique<SessionsDataView>();
+        m_Panels.push_back(m_SessionsDataView.get());
+      }
+      return m_SessionsDataView.get();
+
+    case DataViewType::LOG:
+      if (!m_LogDataView) {
+        m_LogDataView = std::make_unique<LogDataView>();
+        m_Panels.push_back(m_LogDataView.get());
+      }
+      return m_LogDataView.get();
+
+    case DataViewType::SAMPLING:
+      FATAL(
+          "DataViewType::SAMPLING Data View construction is not supported by"
+          "the factory.");
+
+    case DataViewType::ALL:
+      FATAL("DataViewType::ALL should not be used with the factory.");
+
+    case DataViewType::INVALID:
+      FATAL("DataViewType::INVALID should not be used with the factory.");
+  }
+
+  FATAL("Unreachable");
 }

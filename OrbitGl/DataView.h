@@ -34,9 +34,7 @@ class DataView {
   explicit DataView(DataViewType type)
       : m_UpdatePeriodMs(-1), m_SelectedIndex(-1), m_Type(type) {}
 
-  virtual ~DataView();
-
-  static std::unique_ptr<DataView> Create(DataViewType a_Type);
+  virtual ~DataView() = default;
 
   virtual void SetAsMainInstance() {}
   virtual const std::vector<Column>& GetColumns() = 0;

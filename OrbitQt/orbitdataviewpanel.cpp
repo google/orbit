@@ -19,11 +19,12 @@ OrbitDataViewPanel::OrbitDataViewPanel(QWidget* parent)
 OrbitDataViewPanel::~OrbitDataViewPanel() { delete ui; }
 
 //-----------------------------------------------------------------------------
-void OrbitDataViewPanel::Initialize(DataViewType a_Type,
-                                    bool a_IsMainInstance) {
-  ui->treeView->Initialize(a_Type);
+void OrbitDataViewPanel::Initialize(DataView* data_view,
+                                    SelectionType selection_type,
+                                    FontType font_type, bool is_main_instance) {
+  ui->treeView->Initialize(data_view, selection_type, font_type);
 
-  if (a_IsMainInstance) {
+  if (is_main_instance) {
     ui->treeView->GetModel()->GetDataView()->SetAsMainInstance();
   }
 
@@ -46,8 +47,8 @@ void OrbitDataViewPanel::Link(OrbitDataViewPanel* a_Panel) {
 void OrbitDataViewPanel::Refresh() { ui->treeView->Refresh(); }
 
 //-----------------------------------------------------------------------------
-void OrbitDataViewPanel::SetDataModel(std::shared_ptr<DataView> a_Model) {
-  ui->treeView->SetDataModel(std::move(a_Model));
+void OrbitDataViewPanel::SetDataModel(DataView* model) {
+  ui->treeView->SetDataModel(model);
 }
 
 //-----------------------------------------------------------------------------

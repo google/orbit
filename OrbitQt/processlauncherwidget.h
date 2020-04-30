@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+#include "DataView.h"
+
 namespace Ui {
 class ProcessLauncherWidget;
 }
@@ -15,6 +17,7 @@ class ProcessLauncherWidget : public QWidget {
   ~ProcessLauncherWidget() override;
 
   void Refresh();
+  void SetDataView(DataView* data_view);
   void SetProcessParams();
   void UpdateProcessParams();
 

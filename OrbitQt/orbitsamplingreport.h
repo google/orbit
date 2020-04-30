@@ -6,6 +6,8 @@
 #include <QWidget>
 #include <memory>
 
+#include "CallStackDataView.h"
+
 namespace Ui {
 class OrbitSamplingReport;
 }
@@ -17,7 +19,8 @@ class OrbitSamplingReport : public QWidget {
   explicit OrbitSamplingReport(QWidget* parent = nullptr);
   ~OrbitSamplingReport() override;
 
-  void Initialize(std::shared_ptr<class SamplingReport> a_Report);
+  void Initialize(DataView* callstack_data_view,
+                  std::shared_ptr<class SamplingReport> report);
 
  protected:
   void Refresh();

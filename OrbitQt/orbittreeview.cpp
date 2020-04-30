@@ -2,6 +2,12 @@
 // Copyright Pierric Gimmig 2013-2017
 //-----------------------------------
 
+// This needs to be first because if it is not GL/glew.h
+// complains about being included after gl.h
+// clang-format off
+#include "OpenGl.h"
+// clang-format on
+
 #include "orbittreeview.h"
 
 #include <QApplication>
@@ -15,8 +21,8 @@
 #include <set>
 #include <utility>
 
-#include "../OrbitGl/App.h"
-#include "../OrbitGl/DataView.h"
+#include "App.h"
+#include "DataView.h"
 #include "orbitglwidget.h"
 
 //-----------------------------------------------------------------------------
@@ -49,8 +55,10 @@ OrbitTreeView::OrbitTreeView(QWidget* parent)
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTreeView::Initialize(DataViewType type) {
-  model_ = std::make_unique<OrbitTableModel>(type);
+void OrbitTreeView::Initialize(DataView* data_view,
+                               SelectionType selection_type,
+                               FontType font_type) {
+  model_ = std::make_unique<OrbitTableModel>(data_view);
   setModel(model_.get());
   header()->resizeSections(QHeaderView::ResizeToContents);
 
@@ -70,22 +78,20 @@ void OrbitTreeView::Initialize(DataViewType type) {
     timer_->start(model_->GetUpdatePeriodMs());
   }
 
-  if (type == DataViewType::FUNCTIONS || type == DataViewType::LIVE_FUNCTIONS ||
-      type == DataViewType::CALLSTACK || type == DataViewType::MODULES ||
-      type == DataViewType::GLOBALS) {
+  if (selection_type == SelectionType::kExtended) {
     setSelectionMode(ExtendedSelection);
   }
 
-  if (type == DataViewType::LOG) {
+  if (font_type == FontType::kFixed) {
     const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     setFont(fixedFont);
   }
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTreeView::SetDataModel(std::shared_ptr<DataView> data_view) {
+void OrbitTreeView::SetDataModel(DataView* data_view) {
   model_ = std::make_unique<OrbitTableModel>();
-  model_->SetDataView(std::move(data_view));
+  model_->SetDataView(data_view);
   setModel(model_.get());
 }
 
@@ -167,8 +173,8 @@ void OrbitTreeView::resizeEvent(QResizeEvent* event) {
 void OrbitTreeView::Link(OrbitTreeView* link) {
   links_.push_back(link);
 
-  std::shared_ptr<DataView> dataView = link->GetModel()->GetDataView();
-  model_->GetDataView()->LinkDataView(dataView.get());
+  DataView* data_view = link->GetModel()->GetDataView();
+  model_->GetDataView()->LinkDataView(data_view);
 }
 
 //-----------------------------------------------------------------------------
@@ -254,8 +260,8 @@ void OrbitTreeView::keyPressEvent(QKeyEvent* event) {
 
 //-----------------------------------------------------------------------------
 void OrbitTreeView::OnRangeChanged(int /*a_Min*/, int a_Max) {
-  std::shared_ptr<DataView> DataView = model_->GetDataView();
-  if (DataView->ScrollToBottom()) {
+  DataView* data_view = model_->GetDataView();
+  if (data_view->ScrollToBottom()) {
     verticalScrollBar()->setValue(a_Max);
   }
 }

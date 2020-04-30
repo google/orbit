@@ -20,41 +20,6 @@
 #include "TypesDataView.h"
 
 //-----------------------------------------------------------------------------
-DataView::~DataView() {
-  if (GOrbitApp) {
-    GOrbitApp->Unregister(this);
-  }
-}
-
-//-----------------------------------------------------------------------------
-std::unique_ptr<DataView> DataView::Create(DataViewType a_Type) {
-  switch (a_Type) {
-    case DataViewType::FUNCTIONS:
-      return std::make_unique<FunctionsDataView>();
-    case DataViewType::TYPES:
-      return std::make_unique<TypesDataView>();
-    case DataViewType::LIVE_FUNCTIONS:
-      return std::make_unique<LiveFunctionsDataView>();
-    case DataViewType::CALLSTACK:
-      return std::make_unique<CallStackDataView>();
-    case DataViewType::GLOBALS:
-      return std::make_unique<GlobalsDataView>();
-    case DataViewType::MODULES:
-      return std::make_unique<ModulesDataView>();
-    case DataViewType::SAMPLING:
-      return std::make_unique<SamplingReportDataView>();
-    case DataViewType::PROCESSES:
-      return std::make_unique<ProcessesDataView>();
-    case DataViewType::SESSIONS:
-      return std::make_unique<SessionsDataView>();
-    case DataViewType::LOG:
-      return std::make_unique<LogDataView>();
-    default:
-      return nullptr;
-  }
-}
-
-//-----------------------------------------------------------------------------
 void DataView::InitSortingOrders() {
   m_SortingOrders.clear();
   for (const auto& column : GetColumns()) {

@@ -16,7 +16,6 @@
 
 //-----------------------------------------------------------------------------
 FunctionsDataView::FunctionsDataView() : DataView(DataViewType::FUNCTIONS) {
-  GOrbitApp->RegisterFunctionsDataView(this);
 }
 
 //-----------------------------------------------------------------------------
