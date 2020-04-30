@@ -156,7 +156,7 @@ struct Context32 {
 #if !defined(_WIN64) && !defined(__LP64__)
   // Defined only for 32bit platforms
   void* GetRet() const {
-    return reinterpret_cast<void*>(static_cast<uintptr_t>(m_RET.m_Ptr));
+    return m_RET.m_Ptr;
   }
 
   void* GetThis() const {
