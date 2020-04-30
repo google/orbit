@@ -31,7 +31,7 @@ target_sources(
          GlPanel.h
          GlSlider.h
          GlUtils.h
-	 GpuTrack.h
+         GpuTrack.h
          GraphTrack.h
          HomeWindow.h
          Images.h
@@ -81,7 +81,7 @@ target_sources(
           GlPanel.cpp
           GlSlider.cpp
           GlUtils.cpp
-	  GpuTrack.cpp
+          GpuTrack.cpp
           GraphTrack.cpp
           HomeWindow.cpp
           ImGuiOrbit.cpp

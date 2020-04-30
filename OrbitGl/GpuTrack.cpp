@@ -3,7 +3,6 @@
 #include <limits>
 
 #include "Capture.h"
-//#include "EventTrack.h"
 #include "GlCanvas.h"
 #include "TimeGraph.h"
 #include "absl/flags/flag.h"
@@ -21,8 +20,6 @@ GpuTrack::GpuTrack(TimeGraph* time_graph,
   min_time_ = std::numeric_limits<TickType>::max();
   max_time_ = std::numeric_limits<TickType>::min();
 
-  //  event_track_ = std::make_shared<EventTrack>(time_graph);
-
   string_manager_ = string_manager;
 }
 
@@ -35,12 +32,6 @@ void GpuTrack::Draw(GlCanvas* canvas, bool picking) {
   SetSize(track_width, track_height);
 
   Track::Draw(canvas, picking);
-
-  // Event track
-  //  float event_track_height = time_graph_->GetLayout().GetEventTrackHeight();
-  //event_track_->SetPos(m_Pos[0], m_Pos[1]);
-  //event_track_->SetSize(track_width, event_track_height);
-  //event_track_->Draw(canvas, picking);
 }
 
 //-----------------------------------------------------------------------------
@@ -89,7 +80,7 @@ Color GpuTrack::GetTimerColor(const Timer& timer,
 //-----------------------------------------------------------------------------
 inline float GetYFromDepth(const TimeGraphLayout& layout, float track_y,
                            uint32_t depth) {
-  return track_y - //layout.GetEventTrackHeight() -
+  return track_y -
          layout.GetSpaceBetweenTracksAndThread() -
          layout.GetTextBoxHeight() * (depth + 1);
 }
@@ -128,8 +119,6 @@ void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
 
 //-----------------------------------------------------------------------------
 void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
-  //event_track_->UpdatePrimitives(min_tick, max_tick);
-
   Batcher* batcher = &time_graph_->GetBatcher();
   GlCanvas* canvas = time_graph_->GetCanvas();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
@@ -204,7 +193,6 @@ float GpuTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
   return layout.GetTextBoxHeight() * GetDepth() +
       layout.GetSpaceBetweenTracksAndThread() +
-      //layout.GetEventTrackHeight() +
       layout.GetTrackBottomMargin();
 }
 
@@ -304,8 +292,3 @@ std::vector<std::shared_ptr<TimerChain>> GpuTrack::GetAllChains() {
   }
   return chains;
 }
-
-//void GpuTrack::SetEventTrackColor(Color color) {
-//  ScopeLock lock(mutex_);
-//  event_track_->SetColor(color);
-//}
