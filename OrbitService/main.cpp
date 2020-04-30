@@ -49,4 +49,7 @@ int main(int argc, char** argv) {
   OrbitService service{asio_port};
   exit_requested = false;
   service.Run(&exit_requested);
+
+  grpc_server->Shutdown();
+  grpc_server->Wait();
 }
