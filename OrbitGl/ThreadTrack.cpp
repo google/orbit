@@ -111,16 +111,11 @@ void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
                                              .value_or(""),
                                          time.c_str());
       text_box->SetText(text);
-    } else if (timer.m_Type == Timer::GPU_ACTIVITY) {
-      std::string text = absl::StrFormat("%s; submitter: %d  %s",
-                                         time_graph_->GetStringManager()
-                                             ->Get(timer.m_UserData[0])
-                                             .value_or(""),
-                                         timer.m_TID, time.c_str());
-      text_box->SetText(text);
     } else if (!SystraceManager::Get().IsEmpty()) {
       text_box->SetText(
           SystraceManager::Get().GetFunctionName(timer.m_FunctionAddress));
+    } else {
+      CHECK(false);
     }
   }
 

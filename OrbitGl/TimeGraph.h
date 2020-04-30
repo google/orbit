@@ -114,6 +114,7 @@ class TimeGraph {
 
  protected:
   void AddTrack(std::unique_ptr<Track> track);
+  std::string GetGpuTimeline(const Timer& timer) const;
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(ThreadID a_TID);
   std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(std::string_view timeline);
 
