@@ -5,13 +5,10 @@
 #include "CoreApp.h"
 #include "TcpServer.h"
 
-// TODO: we should probably make it configurable
-constexpr uint32_t kAsioServerPort = 44766;
-
-OrbitService::OrbitService() {
+OrbitService::OrbitService(uint16_t port) {
   // TODO: These should be private fields.
   GTcpServer = std::make_unique<TcpServer>();
-  GTcpServer->StartServer(kAsioServerPort);
+  GTcpServer->StartServer(port);
 
   ConnectionManager::Get().InitAsService();
 

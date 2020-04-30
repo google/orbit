@@ -17,16 +17,16 @@
 #include "absl/flags/usage.h"
 #include "orbitmainwindow.h"
 
-// TODO: Remove this flag once we have a dialog with user
-ABSL_FLAG(bool, upload_dumps_to_server, false,
-          "Upload dumps to collection server when crashes");
-
 ABSL_FLAG(std::string, remote, "",
           "Connect to the specified remote on startup");
 ABSL_FLAG(uint16_t, asio_port, 44766,
-          "The service Asio tcp_server port (use default velue if unsure)");
+          "The service's Asio tcp_server port (use default value if unsure)");
 ABSL_FLAG(uint16_t, grpc_port, 44755,
-          "The service GRPC server port (use default velue if unsure)");
+          "The service's GRPC server port (use default value if unsure)");
+
+// TODO: Remove this flag once we have a dialog with user
+ABSL_FLAG(bool, upload_dumps_to_server, false,
+          "Upload dumps to collection server when crashes");
 
 // TODO: remove this once we deprecated legacy parameters
 static void ParseLegacyCommandLine(int argc, char* argv[],
