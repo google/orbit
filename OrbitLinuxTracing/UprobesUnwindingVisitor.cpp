@@ -41,6 +41,47 @@ void UprobesUnwindingVisitor::visit(SamplePerfEvent* event) {
   listener_->OnCallstack(returned_callstack);
 }
 
+void UprobesUnwindingVisitor::visit(SampleFPPerfEvent* event) {
+  CHECK(listener_ != nullptr);
+
+  if (current_maps_ == nullptr) {
+    return;
+  }
+
+  /* TODO(kuebler): handle the mapping/patching for uprobes
+    return_address_manager_.PatchSample(
+      event->GetTid(), event->GetRegisters()[PERF_REG_X86_SP],
+      event->GetStackData(), event->GetStackSize());
+
+  const std::vector<unwindstack::FrameData>& full_callstack =
+      unwinder_.Unwind(current_maps_.get(), event->GetRegisters(),
+                       event->GetStackData(), event->GetStackSize());
+
+  if (full_callstack.empty()) {
+    if (unwind_error_counter_ != nullptr) {
+      ++(*unwind_error_counter_);
+    }
+    return;
+  }
+
+  // Some samples can actually fall inside u(ret)probes code. Discard them,
+  // because when they are unwound successfully the result is wrong.
+  if (full_callstack.front().map_name == "[uprobes]") {
+    if (discarded_samples_in_uretprobes_counter_ != nullptr) {
+      ++(*discarded_samples_in_uretprobes_counter_);
+    }
+    return;
+  }*/
+
+  // TODO(kuebler): we only have the IP here, however, that should be sufficient
+  Callstack returned_callstack{
+      event->GetTid(),
+      CallstackFramesFromInstructionPointers(event->GetCallChain(),
+                                             event->GetCallChainSize()),
+      event->GetTimestamp()};
+  listener_->OnCallstack(returned_callstack);
+}
+
 void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
   CHECK(listener_ != nullptr);
 
@@ -68,7 +109,7 @@ void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
       ERROR("MISSING URETPROBE OR DUPLICATE UPROBE");
       return;
     } else if (uprobe_sp == last_uprobe_sp && uprobe_ip == last_uprobe_ip &&
-               uprobe_cpu != last_uprobe_cpu) {
+        uprobe_cpu != last_uprobe_cpu) {
       ERROR("Duplicate uprobe on thread migration");
       return;
     }
@@ -113,10 +154,26 @@ UprobesUnwindingVisitor::CallstackFramesFromLibunwindstackFrames(
   std::vector<CallstackFrame> callstack_frames;
   callstack_frames.reserve(libunwindstack_frames.size());
   for (const unwindstack::FrameData& libunwindstack_frame :
-       libunwindstack_frames) {
+      libunwindstack_frames) {
     callstack_frames.emplace_back(
         libunwindstack_frame.pc, libunwindstack_frame.function_name,
         libunwindstack_frame.function_offset, libunwindstack_frame.map_name);
+  }
+  return callstack_frames;
+}
+
+std::vector<CallstackFrame>
+UprobesUnwindingVisitor::CallstackFramesFromInstructionPointers(
+    const uint64_t* frames, uint64_t size) {
+  if (size == 0) {
+    return std::vector<CallstackFrame>();
+  }
+  std::vector<CallstackFrame> callstack_frames;
+  for (uint64_t i = 0; i < size; i++) {
+    callstack_frames.emplace_back(frames[i],
+                                  "",
+                                  CallstackFrame::kUnknownFunctionOffset,
+                                  "");
   }
   return callstack_frames;
 }

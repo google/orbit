@@ -53,6 +53,7 @@ class CallstackFrame {
   const std::string& GetFunctionName() const { return function_name_; }
   uint64_t GetFunctionOffset() const { return function_offset_; }
   const std::string& GetMapName() const { return map_name_; }
+  static constexpr uint64_t kUnknownFunctionOffset  = static_cast<uint64_t>(-1);
 
  private:
   uint64_t pc_;

@@ -5,6 +5,7 @@
 #include "Callstack.h"
 #include "ContextSwitch.h"
 #include "OrbitModule.h"
+#include "OrbitLinuxTracing/Events.h"
 #include "Params.h"
 #include "absl/flags/flag.h"
 #include "llvm/Demangle/Demangle.h"
@@ -43,6 +44,7 @@ void LinuxTracingHandler::Start(
 
   tracer_->SetTraceContextSwitches(GParams.m_TrackContextSwitches);
   tracer_->SetTraceCallstacks(true);
+  tracer_->SetTraceFPCallstacks(false);
   tracer_->SetTraceInstrumentedFunctions(true);
   tracer_->SetTraceGpuDriver(absl::GetFlag(FLAGS_trace_gpu_driver));
 
@@ -93,11 +95,12 @@ void LinuxTracingHandler::OnCallstack(
   CallStack cs;
   cs.m_ThreadId = callstack.GetTid();
 
+  uint64_t unknownOffset = LinuxTracing::CallstackFrame::kUnknownFunctionOffset;
   for (const auto& frame : callstack.GetFrames()) {
     uint64_t address = frame.GetPc();
     cs.m_Data.push_back(address);
 
-    {
+    if (frame.GetFunctionOffset() == unknownOffset) {
       absl::MutexLock lock{&addresses_seen_mutex_};
       if (!addresses_seen_.contains(address)) {
         LinuxAddressInfo address_info{address, frame.GetMapName(),

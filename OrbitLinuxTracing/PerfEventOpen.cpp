@@ -77,6 +77,20 @@ int sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu) {
   return generic_event_open(&pe, pid, cpu);
 }
 
+int sample_event_fp_open(uint64_t period_ns, pid_t pid, int32_t cpu) {
+  perf_event_attr pe = generic_event_attr();
+  pe.type = PERF_TYPE_SOFTWARE;
+  pe.config = PERF_COUNT_SW_CPU_CLOCK;
+  pe.sample_period = period_ns;
+  pe.sample_type |= PERF_SAMPLE_CALLCHAIN;
+  // TODO(kuebler): This shouldn't be a random constant
+  pe.sample_max_stack = 100;
+  pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  pe.sample_stack_user = SAMPLE_STACK_USER_SIZE;
+
+  return generic_event_open(&pe, pid, cpu);
+}
+
 int uprobes_retaddr_event_open(const char* module, uint64_t function_offset,
                                pid_t pid, int32_t cpu) {
   perf_event_attr pe = uprobe_event_attr(module, function_offset);

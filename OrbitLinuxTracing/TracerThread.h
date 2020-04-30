@@ -48,6 +48,10 @@ class TracerThread {
     trace_callstacks_ = trace_callstacks;
   }
 
+  void SetTraceFPCallstacks(bool trace_fp_callstacks) {
+    trace_fp_callstacks_ = trace_fp_callstacks;
+  }
+
   void SetTraceInstrumentedFunctions(bool trace_instrumented_functions) {
     trace_instrumented_functions_ = trace_instrumented_functions;
   }
@@ -64,6 +68,7 @@ class TracerThread {
   bool OpenUprobes(const std::vector<int32_t>& cpus);
   bool OpenMmapTask(const std::vector<int32_t>& cpus);
   bool OpenSampling(const std::vector<int32_t>& cpus);
+  bool OpenFPSampling(const std::vector<int32_t>& cpus);
 
   bool InitGpuTracepointEventProcessor();
   static bool OpenRingBufferForGpuTracepoint(
@@ -115,6 +120,7 @@ class TracerThread {
 
   bool trace_context_switches_ = true;
   bool trace_callstacks_ = true;
+  bool trace_fp_callstacks_ = false;
   bool trace_instrumented_functions_ = true;
   bool trace_gpu_driver_ = true;
 
@@ -122,6 +128,7 @@ class TracerThread {
   std::vector<PerfEventRingBuffer> ring_buffers_;
   absl::flat_hash_map<uint64_t, const Function*> uprobes_ids_to_function_;
   absl::flat_hash_set<int> gpu_tracing_fds_;
+  absl::flat_hash_set<int> fp_sampling_fds_;
 
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
