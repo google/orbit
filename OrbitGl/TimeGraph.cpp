@@ -227,8 +227,8 @@ double TimeGraph::GetTimeIntervalMicro(double a_Ratio) {
 }
 
 //-----------------------------------------------------------------------------
-std::string TimeGraph::GetGpuTimeline(const Timer& timer) const {
-  return string_manager_->Get(timer.m_UserData[1]).value_or("");
+uint64_t TimeGraph::GetGpuTimelineHash(const Timer& timer) const {
+  return timer.m_UserData[1];
 }
 
 //-----------------------------------------------------------------------------
@@ -261,14 +261,11 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
   }
 
   if (a_Timer.m_Type == Timer::GPU_ACTIVITY) {
-    if (string_manager_->Contains(a_Timer.m_UserData[1])) {
-      std::string timeline = GetGpuTimeline(a_Timer);
-      std::shared_ptr<GpuTrack> track = GetOrCreateGpuTrack(timeline);
-      track->SetName(timeline);
-      track->SetLabel(timeline);
-      track->OnTimer(a_Timer);
-      ++gpu_timeline_count_map_[timeline];
-    }
+    uint64_t timeline_hash = GetGpuTimelineHash(a_Timer);
+    std::shared_ptr<GpuTrack> track = GetOrCreateGpuTrack(timeline_hash);
+    track->SetName(string_manager_->Get(timeline_hash).value_or(""));
+    track->SetLabel(string_manager_->Get(timeline_hash).value_or(""));
+    track->OnTimer(a_Timer);
   } else {
     std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(a_Timer.m_TID);
     if (a_Timer.m_Type == Timer::INTROSPECTION) {
@@ -604,13 +601,13 @@ std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(ThreadID a_TID) {
   return track;
 }
 
-std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(std::string_view timeline) {
+std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   ScopeLock lock(m_Mutex);
-  std::shared_ptr<GpuTrack> track = gpu_tracks_[std::string(timeline)];
+  std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
-    track = std::make_shared<GpuTrack>(this, string_manager_, timeline);
+    track = std::make_shared<GpuTrack>(this, string_manager_, timeline_hash);
     tracks_.emplace_back(track);
-    gpu_tracks_[std::string(timeline)] = track;
+    gpu_tracks_[timeline_hash] = track;
   }
 
   return track;
@@ -702,7 +699,7 @@ void TimeGraph::OnLeft() {
     const Timer& timer = selection->GetTimer();
     const TextBox* left = nullptr;
     if (timer.m_Type == Timer::GPU_ACTIVITY) {
-      left = GetOrCreateGpuTrack(GetGpuTimeline(timer))->GetLeft(selection);
+      left = GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetLeft(selection);
     } else {
       left = GetOrCreateThreadTrack(timer.m_TID)->GetLeft(selection);
     }
@@ -720,7 +717,7 @@ void TimeGraph::OnRight() {
     const Timer& timer = selection->GetTimer();
     const TextBox* right = nullptr;
     if (timer.m_Type == Timer::GPU_ACTIVITY) {
-      right = GetOrCreateGpuTrack(GetGpuTimeline(timer))->GetRight(selection);
+      right = GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetRight(selection);
     } else {
       right = GetOrCreateThreadTrack(timer.m_TID)->GetRight(selection);
     }
@@ -738,7 +735,7 @@ void TimeGraph::OnUp() {
     const Timer& timer = selection->GetTimer();
     const TextBox* up = nullptr;
     if (timer.m_Type == Timer::GPU_ACTIVITY) {
-      up = GetOrCreateGpuTrack(GetGpuTimeline(timer))->GetUp(selection);
+      up = GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetUp(selection);
     } else {
       up = GetOrCreateThreadTrack(timer.m_TID)->GetUp(selection);
     }
@@ -756,7 +753,7 @@ void TimeGraph::OnDown() {
     const Timer& timer = selection->GetTimer();
     const TextBox* down = nullptr;
     if (timer.m_Type == Timer::GPU_ACTIVITY) {
-      down = GetOrCreateGpuTrack(GetGpuTimeline(timer))->GetDown(selection);
+      down = GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetDown(selection);
     } else {
       down = GetOrCreateThreadTrack(timer.m_TID)->GetDown(selection);
     }
