@@ -11,10 +11,10 @@
 //-----------------------------------------------------------------------------
 GpuTrack::GpuTrack(TimeGraph* time_graph,
                    std::shared_ptr<StringManager> string_manager,
-                   std::string_view timeline) {
+                   uint64_t timeline_hash) {
   time_graph_ = time_graph;
   text_renderer_ = time_graph->GetTextRenderer();
-  timeline_ = timeline;
+  timeline_hash_ = timeline_hash;
 
   num_timers_ = 0;
   min_time_ = std::numeric_limits<TickType>::max();
@@ -253,8 +253,8 @@ std::shared_ptr<TimerChain> GpuTrack::GetTimers(uint32_t depth) const {
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetLeft(TextBox* text_box) const {
   const Timer& timer = text_box->GetTimer();
-  std::string timeline = string_manager_->Get(timer.m_UserData[0]).value_or("");
-  if (timeline == timeline_) {
+  uint64_t timeline_hash = timer.m_UserData[0];;
+  if (timeline_hash == timeline_hash_) {
     std::shared_ptr<TimerChain> timers = GetTimers(timer.m_Depth);
     if (timers) return timers->GetElementBefore(text_box);
   }
@@ -264,8 +264,8 @@ const TextBox* GpuTrack::GetLeft(TextBox* text_box) const {
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetRight(TextBox* text_box) const {
   const Timer& timer = text_box->GetTimer();
-  std::string timeline = string_manager_->Get(timer.m_UserData[0]).value_or("");
-  if (timeline == timeline_) {
+  uint64_t timeline_hash = timer.m_UserData[0];;
+  if (timeline_hash == timeline_hash_) {
     std::shared_ptr<TimerChain> timers = GetTimers(timer.m_Depth);
     if (timers) return timers->GetElementAfter(text_box);
   }

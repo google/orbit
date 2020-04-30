@@ -21,7 +21,7 @@ class GpuTrack : public Track {
  public:
   GpuTrack(TimeGraph* time_graph,
            std::shared_ptr<StringManager> string_manager,
-           std::string_view timeline);
+           uint64_t timeline_hash);
   ~GpuTrack() override = default;
 
   // Pickable
@@ -68,8 +68,7 @@ class GpuTrack : public Track {
  protected:
   TextRenderer* text_renderer_ = nullptr;
   uint32_t depth_ = 0;
-  // This is the timeline/queue string, for example, "gfx".
-  std::string timeline_;
+  uint64_t timeline_hash_;
   mutable Mutex mutex_;
   std::map<int, std::shared_ptr<TimerChain>> timers_;
 
