@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORIBIT_GL_APPLICATION_OPTIONS_H_
-#define ORIBIT_GL_APPLICATION_OPTIONS_H_
+#ifndef ORBIT_GL_APPLICATION_OPTIONS_H_
+#define ORBIT_GL_APPLICATION_OPTIONS_H_
 
 #include <string>
 
@@ -17,4 +17,4 @@ struct ApplicationOptions {
   std::string grpc_server_address;
 };
 
-#endif  // ORIBIT_GL_APPLICATION_OPTIONS_H_
+#endif  // ORBIT_GL_APPLICATION_OPTIONS_H_
