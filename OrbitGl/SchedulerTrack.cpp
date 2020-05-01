@@ -54,6 +54,7 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
   for (std::shared_ptr<TimerChain>& timer_chain : chains_by_depth) {
+    if (timer_chain == nullptr) continue;
     for (TextBox& text_box : *timer_chain) {
       const Timer& timer = text_box.GetTimer();
       if (min_tick > timer.m_End || max_tick < timer.m_Start) continue;
