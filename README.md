@@ -14,6 +14,7 @@ Orbit combines sampling and dynamic instrumentation to optimize the profiling wo
 - Fast Debug Symbol Parsing
 - Context Switch Tracking
 - Disassembly View
+- Remote Profiling
 - User Sessions
 - Full Serialization of Captured Data
 - Tested on Unreal, Unity, Lumberyard, Qt, Doom3, PhysX, ...
