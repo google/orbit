@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORIBIT_SERIVICE_ORBIT_GRPC_SERVER_H_
-#define ORIBIT_SERIVICE_ORBIT_GRPC_SERVER_H_
+#ifndef ORBIT_SERIVICE_ORBIT_GRPC_SERVER_H_
+#define ORBIT_SERIVICE_ORBIT_GRPC_SERVER_H_
 
 #include <memory>
 #include <string>
@@ -30,4 +30,4 @@ class OrbitGrpcServer {
       std::string_view server_address);
 };
 
-#endif  // ORIBIT_SERIVICE_ORBIT_GRPC_SERVER_H_
+#endif  // ORBIT_SERIVICE_ORBIT_GRPC_SERVER_H_
