@@ -94,7 +94,6 @@ void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
 
     text_box->SetElapsedTimeTextLength(time.length());
 
-
     CHECK(timer.m_Type == Timer::GPU_ACTIVITY);
 
     std::string text = absl::StrFormat("%s; submitter: %d  %s",

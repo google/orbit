@@ -637,8 +637,6 @@ void TimeGraph::SortTracks() {
 
   // Reorder threads once every second when capturing
   if (!Capture::IsCapturing() || m_LastThreadReorder.QueryMillis() > 1000.0) {
-    sorted_tracks_.clear();
-
     std::vector<ThreadID> sortedThreadIds;
 
     // Show threads with instrumented functions first
@@ -676,6 +674,8 @@ void TimeGraph::SortTracks() {
       sortedThreadIds = filteredThreadIds;
     }
 
+    sorted_tracks_.clear();
+    // Scheduler track should appear at the top, so we insert it first here.
     sorted_tracks_.emplace_back(GetOrCreateThreadTrack(0));
 
     // Gpu Tracks.
