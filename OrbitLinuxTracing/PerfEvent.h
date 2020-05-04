@@ -185,36 +185,6 @@ struct dynamically_sized_perf_event_stack_sample {
       : stack{dyn_size} {}
 };
 
-class CallchainSamplePerfEvent : public PerfEvent {
- public:
-  perf_event_callchain_sample ring_buffer_record;
-  std::vector<uint64_t> ips;
-  explicit CallchainSamplePerfEvent(uint64_t nr) : ips(nr) {}
-
-  uint64_t GetTimestamp() const override {
-    return ring_buffer_record.sample_id.time;
-  }
-
-  void Accept(PerfEventVisitor* visitor) override;
-
-  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
-  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
-
-  uint64_t GetStreamId() const {
-    return ring_buffer_record.sample_id.stream_id;
-  }
-
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
-
-  const uint64_t* GetCallchain() const {
-    return ips.data();
-  }
-
-  uint64_t GetCallchainSize() const {
-    return ring_buffer_record.nr;
-  }
-};
-
 class SamplePerfEvent : public PerfEvent {
  public:
   std::unique_ptr<dynamically_sized_perf_event_stack_sample> ring_buffer_record;
@@ -281,6 +251,36 @@ class SamplePerfEvent : public PerfEvent {
     registers[PERF_REG_X86_R14] = regs.r14;
     registers[PERF_REG_X86_R15] = regs.r15;
     return registers;
+  }
+};
+
+class CallchainSamplePerfEvent : public PerfEvent {
+ public:
+  perf_event_callchain_sample ring_buffer_record;
+  std::vector<uint64_t> ips;
+  explicit CallchainSamplePerfEvent(uint64_t nr) : ips(nr) {}
+
+  uint64_t GetTimestamp() const override {
+    return ring_buffer_record.sample_id.time;
+  }
+
+  void Accept(PerfEventVisitor* visitor) override;
+
+  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
+  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
+
+  uint64_t GetStreamId() const {
+    return ring_buffer_record.sample_id.stream_id;
+  }
+
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+
+  const uint64_t* GetCallchain() const {
+    return ips.data();
+  }
+
+  uint64_t GetCallchainSize() const {
+    return ring_buffer_record.nr;
   }
 };
 

@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.15)
 
 project(OrbitLinuxTracing)
 
-add_library(OrbitLinuxTracing STATIC include/OrbitLinuxTracing/TracingOptions.h)
+add_library(OrbitLinuxTracing STATIC)
 
 target_compile_options(OrbitLinuxTracing PRIVATE ${STRICT_COMPILE_FLAGS})
 
@@ -23,7 +23,8 @@ target_sources(OrbitLinuxTracing PUBLIC
         include/OrbitLinuxTracing/Function.h
         include/OrbitLinuxTracing/OrbitTracing.h
         include/OrbitLinuxTracing/Tracer.h
-        include/OrbitLinuxTracing/TracerListener.h)
+        include/OrbitLinuxTracing/TracerListener.h
+        include/OrbitLinuxTracing/TracingOptions.h)
 
 target_sources(OrbitLinuxTracing PRIVATE
         GpuTracepointEventProcessor.h
