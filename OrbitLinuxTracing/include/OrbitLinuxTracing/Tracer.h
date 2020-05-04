@@ -33,23 +33,20 @@ class Tracer {
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
   void SetTraceContextSwitches(bool trace_context_switches) {
-    tracing_options_.trace_context_switches_ = trace_context_switches;
+    tracing_options_.trace_context_switches = trace_context_switches;
   }
 
-  void SetTraceCallstacks(bool trace_callstacks) {
-    tracing_options_.trace_callstacks_ = trace_callstacks;
-  }
-
-  void SetTraceUnwindingMethod(UnwindingMethod unwinding_method) {
-    tracing_options_.unwinding_method_ = unwinding_method;
+  void SetSamplingMethod(SamplingMethod sampling_method) {
+    tracing_options_.sampling_method = sampling_method;
   }
 
   void SetTraceInstrumentedFunctions(bool trace_instrumented_functions) {
-    tracing_options_.trace_instrumented_functions_ = trace_instrumented_functions;
+    tracing_options_.trace_instrumented_functions =
+        trace_instrumented_functions;
   }
 
   void SetTraceGpuDriver(bool trace_gpu_driver) {
-    tracing_options_.trace_gpu_driver_ = trace_gpu_driver;
+    tracing_options_.trace_gpu_driver = trace_gpu_driver;
   }
 
   void Start() {
@@ -59,9 +56,7 @@ class Tracer {
         listener_, tracing_options_, exit_requested_);
   }
 
-  bool IsTracing() {
-    return thread_ != nullptr && thread_->joinable();
-  }
+  bool IsTracing() { return thread_ != nullptr && thread_->joinable(); }
 
   void Stop() {
     *exit_requested_ = true;
@@ -88,7 +83,8 @@ class Tracer {
 
   static void Run(pid_t pid, uint64_t sampling_period_ns,
                   const std::vector<Function>& instrumented_functions,
-                  TracerListener* listener, TracingOptions tracing_options,
+                  TracerListener* listener,
+                  const TracingOptions& tracing_options,
                   const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
   static std::optional<uint64_t> ComputeSamplingPeriodNs(

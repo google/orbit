@@ -15,7 +15,7 @@ pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer);
 std::unique_ptr<SamplePerfEvent> ConsumeSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
-std::unique_ptr<SampleCallChainPerfEvent> ConsumeSampleCallChainPerfEvent(
+std::unique_ptr<SampleCallchainPerfEvent> ConsumeSampleCallChainPerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
 std::unique_ptr<PerfEventSampleRaw> ConsumeSampleRaw(

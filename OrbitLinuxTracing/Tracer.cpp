@@ -22,7 +22,8 @@ Tracer::Tracer(pid_t pid, double sampling_frequency,
 
 void Tracer::Run(pid_t pid, uint64_t sampling_period_ns,
                  const std::vector<Function>& instrumented_functions,
-                 TracerListener* listener, TracingOptions tracing_options,
+                 TracerListener* listener,
+                 const TracingOptions& tracing_options,
                  const std::shared_ptr<std::atomic<bool>>& exit_requested) {
   TracerThread session{pid, sampling_period_ns, instrumented_functions};
   session.SetListener(listener);

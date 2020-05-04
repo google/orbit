@@ -185,32 +185,31 @@ struct dynamically_sized_perf_event_stack_sample {
       : stack{dyn_size} {}
 };
 
-struct dynamically_sized_perf_event_call_chain_sample {
-  struct dynamically_sized_perf_event_call_chain {
-    uint64_t dyn_size;
-    std::unique_ptr<uint64_t[]> instruction_pointers;
+struct dynamically_sized_perf_event_callchain_sample {
+  struct dynamically_sized_perf_event_callchain {
+    uint64_t nr;
+    std::unique_ptr<uint64_t[]> ips;
 
-    explicit dynamically_sized_perf_event_call_chain(uint64_t dyn_size)
-        : dyn_size{dyn_size},
-          instruction_pointers{make_unique_for_overwrite<uint64_t[]>(dyn_size)} {}
+    explicit dynamically_sized_perf_event_callchain(uint64_t dyn_size)
+        : nr{dyn_size}, ips{make_unique_for_overwrite<uint64_t[]>(dyn_size)} {}
   };
 
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  dynamically_sized_perf_event_call_chain call_chain;
+  dynamically_sized_perf_event_callchain call_chain;
 
-  explicit dynamically_sized_perf_event_call_chain_sample(uint64_t dyn_size)
+  explicit dynamically_sized_perf_event_callchain_sample(uint64_t dyn_size)
       : call_chain{dyn_size} {}
 };
 
-class SampleCallChainPerfEvent : public PerfEvent {
+class SampleCallchainPerfEvent : public PerfEvent {
  public:
-  std::unique_ptr<dynamically_sized_perf_event_call_chain_sample>
+  std::unique_ptr<dynamically_sized_perf_event_callchain_sample>
       ring_buffer_record;
 
-  explicit SampleCallChainPerfEvent(uint64_t dyn_size)
+  explicit SampleCallchainPerfEvent(uint64_t dyn_size)
       : ring_buffer_record{
-            std::make_unique<dynamically_sized_perf_event_call_chain_sample>(
+            std::make_unique<dynamically_sized_perf_event_callchain_sample>(
                 dyn_size)} {}
 
   uint64_t GetTimestamp() const override {
@@ -229,11 +228,11 @@ class SampleCallChainPerfEvent : public PerfEvent {
   uint32_t GetCpu() const { return ring_buffer_record->sample_id.cpu; }
 
   const uint64_t* GetCallChain() const {
-    return ring_buffer_record->call_chain.instruction_pointers.get();
+    return ring_buffer_record->call_chain.ips.get();
   }
 
   uint64_t GetCallChainSize() const {
-    return ring_buffer_record->call_chain.dyn_size;
+    return ring_buffer_record->call_chain.nr;
   }
 };
 

@@ -41,7 +41,7 @@ class TracerThread {
 
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
-  void SetTracingOptions(TracingOptions tracing_options) {
+  void SetTracingOptions(const TracingOptions& tracing_options) {
     tracing_options_ = tracing_options;
   }
 
@@ -107,7 +107,7 @@ class TracerThread {
   std::vector<PerfEventRingBuffer> ring_buffers_;
   absl::flat_hash_map<uint64_t, const Function*> uprobes_ids_to_function_;
   absl::flat_hash_set<int> gpu_tracing_fds_;
-  absl::flat_hash_set<int> fp_sampling_fds_;
+  absl::flat_hash_set<int> frame_pointers_sampling_fds_;
 
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;

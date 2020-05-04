@@ -44,8 +44,7 @@ void LinuxTracingHandler::Start(
   tracer_->SetListener(this);
 
   tracer_->SetTraceContextSwitches(GParams.m_TrackContextSwitches);
-  tracer_->SetTraceCallstacks(true);
-  tracer_->SetTraceUnwindingMethod(LinuxTracing::kDwarf);
+  tracer_->SetSamplingMethod(LinuxTracing::kDwarf);
   tracer_->SetTraceInstrumentedFunctions(true);
   tracer_->SetTraceGpuDriver(absl::GetFlag(FLAGS_trace_gpu_driver));
 

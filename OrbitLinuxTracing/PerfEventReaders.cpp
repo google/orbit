@@ -52,25 +52,25 @@ std::unique_ptr<SamplePerfEvent> ConsumeSamplePerfEvent(
   return event;
 }
 
-std::unique_ptr<SampleCallChainPerfEvent> ConsumeSampleCallChainPerfEvent(
+std::unique_ptr<SampleCallchainPerfEvent> ConsumeSampleCallChainPerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   uint64_t dyn_size;
   ring_buffer->ReadValueAtOffset(
       &dyn_size, offsetof(perf_event_call_chain_sample, dyn_size));
-  auto event = std::make_unique<SampleCallChainPerfEvent>(dyn_size);
+  auto event = std::make_unique<SampleCallchainPerfEvent>(dyn_size);
   event->ring_buffer_record->header = header;
-  ring_buffer->ReadValueAtOffset(&event->ring_buffer_record->sample_id,
-                                 offsetof(perf_event_call_chain_sample,
-                                          sample_id));
+  ring_buffer->ReadValueAtOffset(
+      &event->ring_buffer_record->sample_id,
+      offsetof(perf_event_call_chain_sample, sample_id));
 
   // TODO(kuebler): we should have templated read methods
   uint64_t size_in_bytes = dyn_size * sizeof(uint64_t) / sizeof(char);
-  uint64_t
-      * ips = event->ring_buffer_record->call_chain.instruction_pointers.get();
+  uint64_t* ips = event->ring_buffer_record->call_chain.ips.get();
   ring_buffer->ReadRawAtOffset(
       reinterpret_cast<char*>(ips),
-      offsetof(perf_event_call_chain_sample, dyn_size)
-          + sizeof(perf_event_call_chain_sample::dyn_size), size_in_bytes);
+      offsetof(perf_event_call_chain_sample, dyn_size) +
+          sizeof(perf_event_call_chain_sample::dyn_size),
+      size_in_bytes);
   ring_buffer->SkipRecord(header);
   return event;
 }

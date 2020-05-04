@@ -122,7 +122,7 @@ int mmap_task_event_open(pid_t pid, int32_t cpu);
 int sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
 
 // perf_event_open for stack sampling using frame pointers.
-int sample_event_callchain_open(uint64_t period_ns, pid_t pid, int32_t cpu);
+int sample_callchain_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
 
 // perf_event_open for uprobes and uretprobes.
 int uprobes_retaddr_event_open(const char* module, uint64_t function_offset,

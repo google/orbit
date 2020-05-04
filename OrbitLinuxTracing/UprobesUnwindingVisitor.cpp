@@ -41,7 +41,7 @@ void UprobesUnwindingVisitor::visit(SamplePerfEvent* event) {
   listener_->OnCallstack(returned_callstack);
 }
 
-void UprobesUnwindingVisitor::visit(SampleCallChainPerfEvent* event) {
+void UprobesUnwindingVisitor::visit(SampleCallchainPerfEvent* event) {
   CHECK(listener_ != nullptr);
 
   if (current_maps_ == nullptr) {
@@ -50,7 +50,6 @@ void UprobesUnwindingVisitor::visit(SampleCallChainPerfEvent* event) {
 
   // TODO(kuebler): handle the mapping/patching for uprobes
 
-  // TODO(kuebler): we only have the IP here, however, that should be sufficient
   Callstack returned_callstack{
       event->GetTid(),
       CallstackFramesFromInstructionPointers(event->GetCallChain(),
@@ -86,7 +85,7 @@ void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
       ERROR("MISSING URETPROBE OR DUPLICATE UPROBE");
       return;
     } else if (uprobe_sp == last_uprobe_sp && uprobe_ip == last_uprobe_ip &&
-        uprobe_cpu != last_uprobe_cpu) {
+               uprobe_cpu != last_uprobe_cpu) {
       ERROR("Duplicate uprobe on thread migration");
       return;
     }
@@ -131,7 +130,7 @@ UprobesUnwindingVisitor::CallstackFramesFromLibunwindstackFrames(
   std::vector<CallstackFrame> callstack_frames;
   callstack_frames.reserve(libunwindstack_frames.size());
   for (const unwindstack::FrameData& libunwindstack_frame :
-      libunwindstack_frames) {
+       libunwindstack_frames) {
     callstack_frames.emplace_back(
         libunwindstack_frame.pc, libunwindstack_frame.function_name,
         libunwindstack_frame.function_offset, libunwindstack_frame.map_name);
@@ -147,10 +146,8 @@ UprobesUnwindingVisitor::CallstackFramesFromInstructionPointers(
   }
   std::vector<CallstackFrame> callstack_frames;
   for (uint64_t i = 0; i < size; i++) {
-    callstack_frames.emplace_back(frames[i],
-                                  "",
-                                  CallstackFrame::kUnknownFunctionOffset,
-                                  "");
+    callstack_frames.emplace_back(frames[i], "",
+                                  CallstackFrame::kUnknownFunctionOffset, "");
   }
   return callstack_frames;
 }

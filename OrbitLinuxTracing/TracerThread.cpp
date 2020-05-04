@@ -182,15 +182,15 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
   std::vector<PerfEventRingBuffer> sampling_ring_buffers;
   for (int32_t cpu : cpus) {
     int sampling_fd;
-    switch (tracing_options_.unwinding_method_) {
+    switch (tracing_options_.sampling_method) {
       case kFramePointers:
-        sampling_fd = sample_event_callchain_open(sampling_period_ns_,
-                                                  -1,
-                                                  cpu);
+        sampling_fd = sample_callchain_event_open(sampling_period_ns_, -1, cpu);
         break;
-      case kDwarf:sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
+      case kDwarf:
+        sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
         break;
-      case kUndefined:ERROR("Undefined Unwinding Method");
+      case kOff:
+        ERROR("Sampling is off");
         CloseFileDescriptors(sampling_tracing_fds);
         return false;
     }
@@ -209,8 +209,8 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
 
   for (int fd : sampling_tracing_fds) {
     tracing_fds_.push_back(fd);
-    if (tracing_options_.unwinding_method_ == kFramePointers) {
-      fp_sampling_fds_.emplace(fd);
+    if (tracing_options_.sampling_method == kFramePointers) {
+      frame_pointers_sampling_fds_.emplace(fd);
     }
   }
   for (PerfEventRingBuffer& buffer : sampling_ring_buffers) {
@@ -338,19 +338,19 @@ void TracerThread::Run(
 
   bool perf_event_open_errors = false;
 
-  if (tracing_options_.trace_context_switches_) {
+  if (tracing_options_.trace_context_switches) {
     perf_event_open_errors |= !OpenContextSwitches(all_cpus);
   }
 
   perf_event_open_errors |= !OpenMmapTask(cpuset_cpus);
 
   bool uprobes_event_open_errors = false;
-  if (tracing_options_.trace_instrumented_functions_) {
+  if (tracing_options_.trace_instrumented_functions) {
     uprobes_event_open_errors = !OpenUprobes(cpuset_cpus);
     perf_event_open_errors |= uprobes_event_open_errors;
   }
 
-  if (tracing_options_.trace_callstacks_) {
+  if (tracing_options_.sampling_method != SamplingMethod::kOff) {
     perf_event_open_errors |= !OpenSampling(cpuset_cpus);
   }
 
@@ -365,7 +365,7 @@ void TracerThread::Run(
   }
 
   bool gpu_event_open_errors = false;
-  if (tracing_options_.trace_gpu_driver_) {
+  if (tracing_options_.trace_gpu_driver) {
     // We want to trace all GPU activity, hence we pass 'all_cpus' here.
     gpu_event_open_errors = !OpenGpuTracepoints(all_cpus);
   }
@@ -456,18 +456,22 @@ void TracerThread::Run(
             ProcessContextSwitchEvent(header, &ring_buffer);
             break;
           case PERF_RECORD_SWITCH_CPU_WIDE:
-            ProcessContextSwitchCpuWideEvent(header,
-                                             &ring_buffer);
+            ProcessContextSwitchCpuWideEvent(header, &ring_buffer);
             break;
-          case PERF_RECORD_FORK:ProcessForkEvent(header, &ring_buffer);
+          case PERF_RECORD_FORK:
+            ProcessForkEvent(header, &ring_buffer);
             break;
-          case PERF_RECORD_EXIT:ProcessExitEvent(header, &ring_buffer);
+          case PERF_RECORD_EXIT:
+            ProcessExitEvent(header, &ring_buffer);
             break;
-          case PERF_RECORD_MMAP:ProcessMmapEvent(header, &ring_buffer);
+          case PERF_RECORD_MMAP:
+            ProcessMmapEvent(header, &ring_buffer);
             break;
-          case PERF_RECORD_SAMPLE:ProcessSampleEvent(header, &ring_buffer);
+          case PERF_RECORD_SAMPLE:
+            ProcessSampleEvent(header, &ring_buffer);
             break;
-          case PERF_RECORD_LOST:ProcessLostEvent(header, &ring_buffer);
+          case PERF_RECORD_LOST:
+            ProcessLostEvent(header, &ring_buffer);
             break;
           case PERF_RECORD_THROTTLE:
             // We don't use throttle/unthrottle events, but log them separately
@@ -476,15 +480,14 @@ void TracerThread::Run(
                 ring_buffer.GetName().c_str());
             ring_buffer.SkipRecord(header);
             break;
-          case PERF_RECORD_UNTHROTTLE:LOG(
-                "PERF_RECORD_UNTHROTTLE in ring buffer '%s'",
+          case PERF_RECORD_UNTHROTTLE:
+            LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s'",
                 ring_buffer.GetName().c_str());
             ring_buffer.SkipRecord(header);
             break;
-          default:ERROR(
-                "Unexpected perf_event_header::type in ring buffer '%s': %u",
-                ring_buffer.GetName().c_str(),
-                header.type);
+          default:
+            ERROR("Unexpected perf_event_header::type in ring buffer '%s': %u",
+                  ring_buffer.GetName().c_str(), header.type);
             ring_buffer.SkipRecord(header);
             break;
         }
@@ -599,25 +602,26 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
                                       PerfEventRingBuffer* ring_buffer) {
   int fd = ring_buffer->GetFileDescriptor();
   bool is_gpu_event = gpu_tracing_fds_.contains(fd);
-  bool is_sample_fp = fp_sampling_fds_.contains(fd);
+  bool is_frame_pointers_sample = frame_pointers_sampling_fds_.contains(fd);
 
   constexpr size_t size_of_uprobes = sizeof(perf_event_sp_ip_8bytes_sample);
-  bool is_uprobe =
-      !is_gpu_event && !is_sample_fp && (header.size == size_of_uprobes);
+  bool is_uprobe = !is_gpu_event && !is_frame_pointers_sample &&
+                   (header.size == size_of_uprobes);
 
   constexpr size_t size_of_uretprobes = sizeof(perf_event_ax_sample);
-  bool is_uretprobe =
-      !is_gpu_event && !is_sample_fp && (header.size == size_of_uretprobes);
+  bool is_uretprobe = !is_gpu_event && !is_frame_pointers_sample &&
+                      (header.size == size_of_uretprobes);
 
   constexpr size_t size_of_sample = sizeof(perf_event_stack_sample);
-  bool is_sample =
-      !is_gpu_event && !is_sample_fp && (header.size == size_of_sample);
+  bool is_sample = !is_gpu_event && !is_frame_pointers_sample &&
+                   (header.size == size_of_sample);
 
   static_assert(size_of_uprobes != size_of_uretprobes &&
-      size_of_uprobes != size_of_sample &&
-      size_of_uretprobes != size_of_sample);
-  CHECK(is_gpu_event + is_uprobe + is_uretprobe + is_sample + is_sample_fp <=
-      1);
+                size_of_uprobes != size_of_sample &&
+                size_of_uretprobes != size_of_sample);
+  CHECK(is_gpu_event + is_uprobe + is_uretprobe + is_sample +
+            is_frame_pointers_sample <=
+        1);
 
   if (is_uprobe) {
     auto event = make_unique_for_overwrite<UprobesPerfEvent>();
@@ -660,7 +664,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     DeferEvent(std::move(event));
     ++stats_.sample_count;
 
-  } else if (is_sample_fp) {
+  } else if (is_frame_pointers_sample) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
     if (pid != pid_) {
       ring_buffer->SkipRecord(header);
@@ -730,7 +734,7 @@ void TracerThread::Reset() {
   ring_buffers_.clear();
   uprobes_ids_to_function_.clear();
   gpu_tracing_fds_.clear();
-  fp_sampling_fds_.clear();
+  frame_pointers_sampling_fds_.clear();
 
   deferred_events_.clear();
   stop_deferred_thread_ = false;
@@ -741,8 +745,8 @@ void TracerThread::PrintStatsIfTimerElapsed() {
   if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND <
       MonotonicTimestampNs()) {
     double actual_window_s = static_cast<double>(MonotonicTimestampNs() -
-        stats_.event_count_begin_ns) /
-        NS_PER_SECOND;
+                                                 stats_.event_count_begin_ns) /
+                             NS_PER_SECOND;
     LOG("Events per second (last %.1f s):", actual_window_s);
     LOG("  sched switches: %.0f", stats_.sched_switch_count / actual_window_s);
     LOG("  samples: %.0f", stats_.sample_count / actual_window_s);
