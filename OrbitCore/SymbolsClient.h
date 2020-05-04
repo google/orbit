@@ -6,14 +6,13 @@
 #define ORBIT_CORE_SYMBOLS_CLIENT_H_
 
 #include "OrbitProcess.h"
-#include "TransactionManager.h"
+#include "TransactionClient.h"
 
 class CoreApp;
 
 class SymbolsClient {
  public:
-  SymbolsClient(CoreApp* core_app,
-                orbit::TransactionManager* transaction_manager);
+  SymbolsClient(CoreApp* core_app, TransactionClient* transaction_client);
 
   SymbolsClient() = delete;
   SymbolsClient(const SymbolsClient&) = delete;
@@ -28,11 +27,11 @@ class SymbolsClient {
                               const std::shared_ptr<Session>& session);
 
  private:
-  void HandleResponse(const Message& message, uint32_t id);
+  void HandleResponse(const Message& message, uint64_t id);
 
   CoreApp* core_app_ = nullptr;
-  orbit::TransactionManager* transaction_manager_;
-  absl::flat_hash_map<uint32_t, std::shared_ptr<Session>> id_sessions_;
+  TransactionClient* transaction_client_;
+  absl::flat_hash_map<uint64_t, std::shared_ptr<Session>> id_sessions_;
   absl::Mutex mutex_;
 };
 

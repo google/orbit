@@ -13,10 +13,9 @@ CoreApp* GCoreApp;
 void CoreApp::InitializeClientTransactions() {
   CHECK(ConnectionManager::Get().IsClient());
 
-  transaction_manager_ = std::make_unique<orbit::TransactionManager>(
-      GTcpClient.get(), GTcpServer.get());
+  transaction_client_ = std::make_unique<TransactionClient>(GTcpClient.get());
   symbols_client_ =
-      std::make_unique<SymbolsClient>(GCoreApp, transaction_manager_.get());
+      std::make_unique<SymbolsClient>(GCoreApp, transaction_client_.get());
   process_memory_client_ =
-      std::make_unique<ProcessMemoryClient>(transaction_manager_.get());
+      std::make_unique<ProcessMemoryClient>(transaction_client_.get());
 }

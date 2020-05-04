@@ -75,8 +75,8 @@ target_sources(
          TestRemoteMessages.h
          Threading.h
          TimerManager.h
-         Transaction.h
-         TransactionManager.h
+         TransactionClient.h
+         TransactionService.h
          TypeInfoStructs.h
          Utils.h
          Variable.h
@@ -134,7 +134,8 @@ target_sources(
           TcpServer.cpp
           TestRemoteMessages.cpp
           TimerManager.cpp
-          TransactionManager.cpp
+          TransactionClient.cpp
+          TransactionService.cpp
           Utils.cpp
           Variable.cpp
           VariableTracing.cpp

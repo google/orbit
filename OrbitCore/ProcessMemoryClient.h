@@ -5,13 +5,13 @@
 #ifndef ORBIT_CORE_PROCESS_MEMORY_CLIENT_H_
 #define ORBIT_CORE_PROCESS_MEMORY_CLIENT_H_
 
-#include "TransactionManager.h"
+#include "TransactionClient.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 
 class ProcessMemoryClient {
  public:
-  ProcessMemoryClient(orbit::TransactionManager* transaction_manager);
+  explicit ProcessMemoryClient(TransactionClient* transaction_client);
 
   ProcessMemoryClient() = delete;
   ProcessMemoryClient(const ProcessMemoryClient&) = delete;
@@ -26,11 +26,11 @@ class ProcessMemoryClient {
                        const ProcessMemoryCallback& callback);
 
  private:
-  void HandleResponse(const Message& message, uint32_t id);
+  void HandleResponse(const Message& message, uint64_t id);
 
-  orbit::TransactionManager* transaction_manager_;
+  TransactionClient* transaction_client_;
   absl::Mutex transaction_mutex_;
-  absl::flat_hash_map<uint32_t, ProcessMemoryCallback> callbacks_;
+  absl::flat_hash_map<uint64_t, ProcessMemoryCallback> callbacks_;
 };
 
 #endif  // ORBIT_CORE_PROCESS_MEMORY_CLIENT_H_

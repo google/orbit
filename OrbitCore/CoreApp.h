@@ -14,7 +14,6 @@
 #include "LinuxCallstackEvent.h"
 #include "ProcessMemoryClient.h"
 #include "SymbolsClient.h"
-#include "TransactionManager.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 
@@ -69,13 +68,13 @@ class CoreApp {
   }
 
  protected:
-  orbit::TransactionManager* GetTransactionManager() {
-    return transaction_manager_.get();
+  TransactionClient* GetTransactionClient() {
+    return transaction_client_.get();
   }
   SymbolsClient* GetSymbolsClient() { return symbols_client_.get(); }
 
  private:
-  std::unique_ptr<orbit::TransactionManager> transaction_manager_ = nullptr;
+  std::unique_ptr<TransactionClient> transaction_client_ = nullptr;
   std::unique_ptr<SymbolsClient> symbols_client_ = nullptr;
   std::unique_ptr<ProcessMemoryClient> process_memory_client_ = nullptr;
 };

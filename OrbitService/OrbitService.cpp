@@ -15,12 +15,11 @@ OrbitService::OrbitService(uint16_t port) {
   core_app_ = std::make_unique<CoreApp>();
   GCoreApp = core_app_.get();
 
-  transaction_manager_ = std::make_unique<orbit::TransactionManager>(
-      GTcpClient.get(), GTcpServer.get());
+  transaction_service_ = std::make_unique<TransactionService>(GTcpServer.get());
   symbols_service_ = std::make_unique<SymbolsService>(
-      &ConnectionManager::Get().GetProcessList(), transaction_manager_.get());
+      &ConnectionManager::Get().GetProcessList(), transaction_service_.get());
   process_memory_service_ =
-      std::make_unique<ProcessMemoryService>(transaction_manager_.get());
+      std::make_unique<ProcessMemoryService>(transaction_service_.get());
 }
 
 void OrbitService::Run(std::atomic<bool>* exit_requested) {

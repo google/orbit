@@ -13,17 +13,17 @@ ORBIT_SERIALIZE(ProcessMemoryRequest, 0) {
 }
 
 ProcessMemoryService::ProcessMemoryService(
-    orbit::TransactionManager* transaction_manager)
-    : transaction_manager_{transaction_manager} {
+    TransactionService* transaction_service)
+    : transaction_service_{transaction_service} {
   auto on_request = [this](const Message& msg) { HandleRequest(msg); };
-  transaction_manager_->RegisterTransactionHandler(
-      {on_request, nullptr, Msg_MemoryTransfer, "Memory Transfer"});
+  transaction_service_->RegisterTransactionRequestHandler(
+      {on_request, Msg_MemoryTransfer, "Memory Transfer"});
 }
 
 void ProcessMemoryService::HandleRequest(const Message& message) {
   // Receive request.
   ProcessMemoryRequest request;
-  transaction_manager_->ReceiveRequest(message, &request);
+  transaction_service_->ReceiveRequest(message, &request);
 
   // Read target process memory.
   std::vector<uint8_t> bytes(request.size);
@@ -35,5 +35,5 @@ void ProcessMemoryService::HandleRequest(const Message& message) {
   bytes.resize(num_bytes_read);
 
   // Send response to the client.
-  transaction_manager_->SendResponse(message.GetType(), bytes);
+  transaction_service_->SendResponse(message.GetType(), bytes);
 }

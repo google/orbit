@@ -8,7 +8,7 @@
 #include <cstdint>
 
 #include "SerializationMacros.h"
-#include "TransactionManager.h"
+#include "TransactionService.h"
 
 struct ProcessMemoryRequest {
   ProcessMemoryRequest() = default;
@@ -24,7 +24,7 @@ struct ProcessMemoryRequest {
 
 class ProcessMemoryService {
  public:
-  explicit ProcessMemoryService(orbit::TransactionManager* transaction_manager);
+  explicit ProcessMemoryService(TransactionService* transaction_service);
 
   ProcessMemoryService() = delete;
   ProcessMemoryService(const ProcessMemoryService&) = delete;
@@ -35,7 +35,7 @@ class ProcessMemoryService {
  private:
   void HandleRequest(const Message& message);
 
-  orbit::TransactionManager* transaction_manager_;
+  TransactionService* transaction_service_;
 };
 
 #endif  // ORBIT_CORE_PROCESS_MEMORY_SERVICE_H_
