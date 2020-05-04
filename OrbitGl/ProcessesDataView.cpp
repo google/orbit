@@ -12,7 +12,6 @@
 #include "ModulesDataView.h"
 #include "OrbitType.h"
 #include "Params.h"
-#include "TcpClient.h"
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
@@ -99,31 +98,19 @@ void ProcessesDataView::OnSelect(int index) {
   std::shared_ptr<Process> selected_process = GetProcess(index);
   selected_process_id_ = selected_process->GetID();
 
-  // TODO: move this out of ProcessDataView
-  {
-    Message msg(Msg_RemoteProcessRequest);
-    msg.m_Header.m_GenericHeader.m_Address = selected_process_id_;
-    GTcpClient->Send(msg);
-  }
-
   SetSelectedItem();
-  UpdateModuleDataView(selected_process);
+
+  if (selection_listener_) {
+    selection_listener_(selected_process_id_);
+  }
 }
 
-void ProcessesDataView::UpdateModuleDataView(
-    const std::shared_ptr<Process>& process) {
-  if (modules_data_view_) {
-    modules_data_view_->SetProcess(process);
-    Capture::SetTargetProcess(process);
-    GOrbitApp->FireRefreshCallbacks();
-  }
+uint32_t ProcessesDataView::GetSelectedProcessId() const {
+  return selected_process_id_;
 }
 
 //-----------------------------------------------------------------------------
 void ProcessesDataView::SetSelectedItem() {
-  int initialIndex = m_SelectedIndex;
-  m_SelectedIndex = -1;
-
   for (size_t i = 0; i < GetNumElements(); ++i) {
     if (GetProcess(i)->GetID() == selected_process_id_) {
       m_SelectedIndex = i;
@@ -131,19 +118,8 @@ void ProcessesDataView::SetSelectedItem() {
     }
   }
 
-  if (GParams.m_AutoReleasePdb && initialIndex != -1) {
-    ClearSelectedProcess();
-  }
-}
-
-//-----------------------------------------------------------------------------
-void ProcessesDataView::ClearSelectedProcess() {
-  std::shared_ptr<Process> process = std::make_shared<Process>();
-  Capture::SetTargetProcess(process);
-  modules_data_view_->SetProcess(process);
-  selected_process_id_ = 0;
-  GPdbDbg = nullptr;
-  GOrbitApp->FireRefreshCallbacks();
+  // This happens when selected process disappears from the list.
+  m_SelectedIndex = -1;
 }
 
 bool ProcessesDataView::SelectProcess(const std::string& process_name) {
@@ -224,28 +200,11 @@ void ProcessesDataView::SetProcessList(
   SetSelectedItem();
 }
 
-//-----------------------------------------------------------------------------
-void ProcessesDataView::UpdateProcess(const std::shared_ptr<Process>& process) {
-  auto it =
-      std::find_if(process_list_.begin(), process_list_.end(),
-                   [&process](const std::shared_ptr<Process>& target_process) {
-                     return target_process->GetID() == process->GetID();
-                   });
-
-  if (it != process_list_.end()) {
-    *it = process;
-  } else {
-    ERROR(
-        "Unable to update process \"%s\" with pid: %d, the process is not in "
-        "the process list.",
-        process->GetName(), process->GetID());
-  }
-
-  if (process->GetID() == selected_process_id_) {
-    UpdateModuleDataView(process);
-  }
-}
-
 std::shared_ptr<Process> ProcessesDataView::GetProcess(uint32_t row) const {
   return process_list_[m_Indices[row]];
+}
+
+void ProcessesDataView::SetSelectionListener(
+    const std::function<void(uint32_t)>& selection_listener) {
+  selection_listener_ = selection_listener;
 }

@@ -10,6 +10,8 @@ class ProcessesDataView final : public DataView {
  public:
   ProcessesDataView();
 
+  void SetSelectionListener(
+      const std::function<void(uint32_t)>& selection_listener);
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return COLUMN_CPU; }
   std::string GetValue(int row, int column) override;
@@ -21,11 +23,7 @@ class ProcessesDataView final : public DataView {
   std::shared_ptr<Process> SelectProcess(uint32_t process_id);
   void SetProcessList(
       const std::vector<std::shared_ptr<Process>>& process_list);
-  void UpdateProcess(const std::shared_ptr<Process>& process);
-  void SetModulesDataView(class ModulesDataView* modules_data_view) {
-    modules_data_view_ = modules_data_view;
-  }
-  void UpdateModuleDataView(const std::shared_ptr<Process>& process);
+  uint32_t GetSelectedProcessId() const;
 
  protected:
   void DoSort() override;
@@ -35,11 +33,11 @@ class ProcessesDataView final : public DataView {
   void UpdateProcessList();
   void SetSelectedItem();
   std::shared_ptr<Process> GetProcess(uint32_t row) const;
-  void ClearSelectedProcess();
 
   std::vector<std::shared_ptr<Process>> process_list_;
-  ModulesDataView* modules_data_view_ = nullptr;
   uint32_t selected_process_id_;
+
+  std::function<void(uint32_t)> selection_listener_;
 
   enum ColumnIndex {
     COLUMN_PID,

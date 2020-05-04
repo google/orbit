@@ -30,6 +30,7 @@
 #include "SymbolHelper.h"
 #include "Threading.h"
 #include "TypesDataView.h"
+#include "absl/container/flat_hash_map.h"
 #include "grpcpp/grpcpp.h"
 
 #if defined(_WIN32)
@@ -96,6 +97,8 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   void RegisterCaptureWindow(class CaptureWindow* a_Capture);
   void RegisterRuleEditor(RuleEditor* a_RuleEditor);
+
+  void OnProcessSelected(uint32_t pid);
 
   void Unregister(class DataView* a_Model);
   bool SelectProcess(const std::string& a_Process);
@@ -210,7 +213,14 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   DataView* GetOrCreateDataView(DataViewType type) override;
 
  private:
+  // TODO(dimitry): Move this to process manager
+  std::shared_ptr<Process> FindProcessByPid(uint32_t pid);
+  void UpdateProcess(const std::shared_ptr<Process>& process);
+
   ApplicationOptions options_;
+
+  absl::Mutex process_map_mutex_;
+  absl::flat_hash_map<uint32_t, std::shared_ptr<Process>> process_map_;
 
   std::vector<std::string> m_Arguments;
   std::vector<RefreshCallback> m_RefreshCallbacks;

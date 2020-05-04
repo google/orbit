@@ -946,19 +946,42 @@ void OrbitApp::EnableSampling(bool a_Value) {
 bool OrbitApp::GetSamplingEnabled() { return GParams.m_TrackSamplingEvents; }
 
 //-----------------------------------------------------------------------------
+
+void OrbitApp::OnProcessSelected(uint32_t pid) {
+  Message msg(Msg_RemoteProcessRequest);
+  msg.m_Header.m_GenericHeader.m_Address = pid;
+  GTcpClient->Send(msg);
+
+  std::shared_ptr<Process> process = FindProcessByPid(pid);
+
+  if (process) {
+    m_ModulesDataView->SetProcess(process);
+    Capture::SetTargetProcess(process);
+    FireRefreshCallbacks();
+  }
+}
+
 void OrbitApp::OnRemoteProcess(const Message& a_Message) {
   std::istringstream buffer(a_Message.GetDataAsString());
   cereal::JSONInputArchive inputAr(buffer);
-  std::shared_ptr<Process> remoteProcess = std::make_shared<Process>();
-  inputAr(*remoteProcess);
-  remoteProcess->SetIsRemote(true);
-  PRINT_VAR(remoteProcess->GetName());
-  GOrbitApp->m_ProcessesDataView->UpdateProcess(remoteProcess);
+  std::shared_ptr<Process> remote_process = std::make_shared<Process>();
+  inputAr(*remote_process);
+  remote_process->SetIsRemote(true);
+  PRINT_VAR(remote_process->GetName());
+
+  UpdateProcess(remote_process);
+
+  if (remote_process->GetID() == m_ProcessesDataView->GetSelectedProcessId()) {
+    m_ModulesDataView->SetProcess(remote_process);
+    // Is this needed?
+    Capture::SetTargetProcess(remote_process);
+    FireRefreshCallbacks();
+  }
 
   // Trigger session loading if needed.
   std::shared_ptr<Session> session = Capture::GSessionPresets;
   if (session) {
-    GetSymbolsManager()->LoadSymbols(session, remoteProcess);
+    GetSymbolsManager()->LoadSymbols(session, remote_process);
     GParams.m_ProcessPath = session->m_ProcessFullPath;
     GParams.m_Arguments = session->m_Arguments;
     GParams.m_WorkingDirectory = session->m_WorkingDirectory;
@@ -1004,6 +1027,21 @@ void OrbitApp::OnRemoteModuleDebugInfo(const Message& a_Message) {
   DeserializeObjectBinary(a_Message.GetData(), a_Message.GetSize(),
                           remote_module_debug_infos);
   OnRemoteModuleDebugInfo(remote_module_debug_infos);
+}
+
+std::shared_ptr<Process> OrbitApp::FindProcessByPid(uint32_t pid) {
+  absl::MutexLock lock(&process_map_mutex_);
+  auto it = process_map_.find(pid);
+  if (it == process_map_.end()) {
+    return nullptr;
+  }
+
+  return it->second;
+}
+
+void OrbitApp::UpdateProcess(const std::shared_ptr<Process>& process) {
+  absl::MutexLock lock(&process_map_mutex_);
+  process_map_.insert_or_assign(process->GetID(), process);
 }
 
 //-----------------------------------------------------------------------------
@@ -1084,11 +1122,9 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
     case DataViewType::PROCESSES:
       if (!m_ProcessesDataView) {
         m_ProcessesDataView = std::make_unique<ProcessesDataView>();
+        m_ProcessesDataView->SetSelectionListener(
+            [&](uint32_t pid) { OnProcessSelected(pid); });
         m_Panels.push_back(m_ProcessesDataView.get());
-        // TODO: Remove this after ProcessesDataView is untied from
-        // ModulesDataView
-        GetOrCreateDataView(DataViewType::MODULES);
-        m_ProcessesDataView->SetModulesDataView(m_ModulesDataView.get());
       }
       return m_ProcessesDataView.get();
 

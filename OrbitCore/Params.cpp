@@ -27,7 +27,6 @@ Params::Params()
       m_AllowUnsafeHooking(false),
       m_HookOutputDebugString(false),
       m_FindFileAndLineInfo(true),
-      m_AutoReleasePdb(false),
       m_BpftraceCallstacks(false),
       m_SystemWideScheduling(true),
       m_MaxNumTimers(1000000),
@@ -57,7 +56,6 @@ ORBIT_SERIALIZE(Params, 16) {
   ORBIT_NVP_VAL(10, m_Arguments);
   ORBIT_NVP_VAL(10, m_WorkingDirectory);
   ORBIT_NVP_VAL(11, m_FindFileAndLineInfo);
-  ORBIT_NVP_VAL(12, m_AutoReleasePdb);
   ORBIT_NVP_VAL(13, m_ProcessFilter);
   ORBIT_NVP_VAL(14, m_BpftraceCallstacks);
   ORBIT_NVP_VAL(15, m_SystemWideScheduling);
