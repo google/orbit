@@ -258,7 +258,8 @@ class CallchainSamplePerfEvent : public PerfEvent {
  public:
   perf_event_callchain_sample ring_buffer_record;
   std::vector<uint64_t> ips;
-  explicit CallchainSamplePerfEvent(uint64_t nr) : ips(nr) {}
+  explicit CallchainSamplePerfEvent(uint64_t callchain_size)
+      : ips(callchain_size) {}
 
   uint64_t GetTimestamp() const override {
     return ring_buffer_record.sample_id.time;
@@ -275,13 +276,9 @@ class CallchainSamplePerfEvent : public PerfEvent {
 
   uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 
-  const uint64_t* GetCallchain() const {
-    return ips.data();
-  }
+  const uint64_t* GetCallchain() const { return ips.data(); }
 
-  uint64_t GetCallchainSize() const {
-    return ring_buffer_record.nr;
-  }
+  uint64_t GetCallchainSize() const { return ring_buffer_record.nr; }
 };
 
 class AbstractUprobesPerfEvent {
