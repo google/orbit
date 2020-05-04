@@ -62,7 +62,6 @@
 #include "TestRemoteMessages.h"
 #include "TextRenderer.h"
 #include "TimerManager.h"
-#include "TransactionManager.h"
 #include "TypesDataView.h"
 #include "Utils.h"
 #include "Version.h"
@@ -519,7 +518,7 @@ void OrbitApp::MainTick() {
   if (GTcpClient) GTcpClient->ProcessMainThreadCallbacks();
 
   // Tick Transaction manager only from client (OrbitApp is client only);
-  auto transaction_manager = GOrbitApp->GetTransactionManager();
+  auto transaction_manager = GOrbitApp->GetTransactionClient();
 
   // Note that MainTick could be called before OrbitApp::PostInit() was complete
   // in which case translaction namager is not yet initialized - check that it
@@ -1080,7 +1079,7 @@ void OrbitApp::OnRemoteModuleDebugInfo(
             module_info.m_Name.c_str());
     } else {
       symbol_helper_.LoadSymbolsFromDebugInfo(module, module_info);
-      LOG("Received %lu function symbols from remote collector for module %s",
+      LOG("Received %lu function symbols from remote service for module %s",
           module_info.m_Functions.size(), module_info.m_Name.c_str());
     }
   }

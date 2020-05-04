@@ -6,12 +6,12 @@
 #define ORBIT_CORE_SYMBOLS_SERVICE_H_
 
 #include "ProcessUtils.h"
-#include "TransactionManager.h"
+#include "TransactionService.h"
 
 class SymbolsService {
  public:
   SymbolsService(const ProcessList* process_list,
-                 orbit::TransactionManager* transaction_manager);
+                 TransactionService* transaction_service);
 
   SymbolsService() = delete;
   SymbolsService(const SymbolsService&) = delete;
@@ -23,7 +23,7 @@ class SymbolsService {
   void HandleRequest(const Message& message);
 
   const ProcessList* process_list_;
-  orbit::TransactionManager* transaction_manager_;
+  TransactionService* transaction_service_;
 };
 
 #endif  // ORBIT_CORE_SYMBOLS_SERVICE_H_

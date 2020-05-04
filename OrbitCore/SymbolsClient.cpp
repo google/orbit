@@ -8,13 +8,13 @@
 #include "SymbolHelper.h"
 
 SymbolsClient::SymbolsClient(CoreApp* core_app,
-                             orbit::TransactionManager* transaction_manager)
-    : core_app_{core_app}, transaction_manager_{transaction_manager} {
-  auto on_response = [this](const Message& msg, uint32_t id) {
+                             TransactionClient* transaction_client)
+    : core_app_{core_app}, transaction_client_{transaction_client} {
+  auto on_response = [this](const Message& msg, uint64_t id) {
     HandleResponse(msg, id);
   };
-  transaction_manager_->RegisterTransactionHandler(
-      {nullptr, on_response, Msg_DebugSymbols, "Debug Symbols"});
+  transaction_client_->RegisterTransactionResponseHandler(
+      {on_response, Msg_DebugSymbols, "Debug Symbols"});
 }
 
 void SymbolsClient::LoadSymbolsFromModules(
@@ -55,8 +55,8 @@ void SymbolsClient::LoadSymbolsFromModules(
   }
 
   // Send request to service for modules that were not found locally.
-  uint32_t id = transaction_manager_->EnqueueRequest(Msg_DebugSymbols,
-                                                     remote_module_infos);
+  uint64_t id = transaction_client_->EnqueueRequest(Msg_DebugSymbols,
+                                                    remote_module_infos);
 
   absl::MutexLock lock(&mutex_);
   id_sessions_[id] = session;
@@ -75,10 +75,10 @@ void SymbolsClient::LoadSymbolsFromSession(
   LoadSymbolsFromModules(process, modules, session);
 }
 
-void SymbolsClient::HandleResponse(const Message& message, uint32_t id) {
+void SymbolsClient::HandleResponse(const Message& message, uint64_t id) {
   // Deserialize response message.
   std::vector<ModuleDebugInfo> infos;
-  transaction_manager_->ReceiveResponse(message, &infos);
+  transaction_client_->ReceiveResponse(message, &infos);
 
   // Notify app of new debug symbols.
   core_app_->OnRemoteModuleDebugInfo(infos);

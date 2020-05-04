@@ -8,17 +8,17 @@
 #include "SymbolHelper.h"
 
 SymbolsService::SymbolsService(const ProcessList* process_list,
-                               orbit::TransactionManager* transaction_manager)
-    : process_list_{process_list}, transaction_manager_{transaction_manager} {
+                               TransactionService* transaction_service)
+    : process_list_{process_list}, transaction_service_{transaction_service} {
   auto on_request = [this](const Message& msg) { HandleRequest(msg); };
-  transaction_manager_->RegisterTransactionHandler(
-      {on_request, nullptr, Msg_DebugSymbols, "Debug Symbols"});
+  transaction_service_->RegisterTransactionRequestHandler(
+      {on_request, Msg_DebugSymbols, "Debug Symbols"});
 }
 
 void SymbolsService::HandleRequest(const Message& message) {
   // Deserialize request message.
   std::vector<ModuleDebugInfo> module_infos;
-  transaction_manager_->ReceiveRequest(message, &module_infos);
+  transaction_service_->ReceiveRequest(message, &module_infos);
 
   for (auto& module_info : module_infos) {
     // Find process.
@@ -50,5 +50,5 @@ void SymbolsService::HandleRequest(const Message& message) {
   }
 
   // Send response to the client.
-  transaction_manager_->SendResponse(message.GetType(), module_infos);
+  transaction_service_->SendResponse(message.GetType(), module_infos);
 }

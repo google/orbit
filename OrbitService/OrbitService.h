@@ -7,6 +7,7 @@
 #include "ProcessMemoryService.h"
 #include "ProcessUtils.h"
 #include "SymbolsService.h"
+#include "TransactionService.h"
 
 class OrbitService {
  public:
@@ -15,7 +16,7 @@ class OrbitService {
 
  private:
   std::unique_ptr<CoreApp> core_app_;
-  std::unique_ptr<orbit::TransactionManager> transaction_manager_;
+  std::unique_ptr<TransactionService> transaction_service_;
   std::unique_ptr<SymbolsService> symbols_service_;
   std::unique_ptr<ProcessMemoryService> process_memory_service_;
 };
