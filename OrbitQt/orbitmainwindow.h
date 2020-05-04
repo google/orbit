@@ -90,6 +90,8 @@ class OrbitMainWindow : public QMainWindow {
 
   void on_actionRule_Editor_triggered();
 
+  void on_actionUploadDumpsToServer_triggered(bool checked);
+
  private:
   void StartMainTimer();
   void GetLicense();

@@ -961,6 +961,17 @@ void OrbitApp::OnProcessSelected(uint32_t pid) {
   }
 }
 
+//-----------------------------------------------------------------------------
+bool OrbitApp::GetUploadDumpsToServerEnabled() const {
+  return GParams.m_UploadDumpsToServer;
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::EnableUploadDumpsToServer(bool a_Value) {
+  GParams.m_UploadDumpsToServer = a_Value;
+}
+
+//-----------------------------------------------------------------------------
 void OrbitApp::OnRemoteProcess(const Message& a_Message) {
   std::istringstream buffer(a_Message.GetDataAsString());
   cereal::JSONInputArchive inputAr(buffer);

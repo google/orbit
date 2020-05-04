@@ -24,10 +24,6 @@ ABSL_FLAG(uint16_t, asio_port, 44766,
 ABSL_FLAG(uint16_t, grpc_port, 44755,
           "The service's GRPC server port (use default value if unsure)");
 
-// TODO: Remove this flag once we have a dialog with user
-ABSL_FLAG(bool, upload_dumps_to_server, false,
-          "Upload dumps to collection server when crashes");
-
 // TODO: remove this once we deprecated legacy parameters
 static void ParseLegacyCommandLine(int argc, char* argv[],
                                    ApplicationOptions* options) {
@@ -64,8 +60,7 @@ int main(int argc, char* argv[]) {
                                        .toStdString();
   const std::string crash_server_url =
       "https://clients2.google.com/cr/staging_report";
-  const CrashHandler crash_handler(dump_path, handler_path, crash_server_url,
-                                   absl::GetFlag(FLAGS_upload_dumps_to_server));
+  CrashHandler crash_handler(dump_path, handler_path, crash_server_url);
 
   ApplicationOptions options;
 
@@ -135,6 +130,7 @@ int main(int argc, char* argv[]) {
   }
 
   OrbitMainWindow w(&app, std::move(options));
+  crash_handler.SetUploadsEnabled(GOrbitApp->GetUploadDumpsToServerEnabled());
 
   if (!w.IsHeadless()) {
     w.showMaximized();

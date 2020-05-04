@@ -31,6 +31,7 @@ struct Params {
   bool m_BpftraceCallstacks;
   bool m_SystemWideScheduling;
   bool m_UseBpftrace;
+  bool m_UploadDumpsToServer;
   int m_MaxNumTimers;
   float m_FontSize;
   int m_Port;
