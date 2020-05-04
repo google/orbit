@@ -17,7 +17,7 @@ function conan_create_profile($profile) {
   (Get-Content $profile_path) -replace '\[build_requires\]', "[build_requires]`r`ncmake/3.16.4@" | Out-File -encoding ASCII $profile_path
 }
 
-$profiles = if ($args.Count) { $args } else { @("default_release") }
+$profiles = if ($args.Count) { $args } else { @("default_relwithdebinfo") }
 
 foreach ($profile in $profiles) {
 

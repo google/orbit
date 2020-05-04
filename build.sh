@@ -1,6 +1,6 @@
 #!/bin/bash
 
-default_profiles=( default_release )
+default_profiles=( default_relwithdebinfo )
 
 if [ "$#" -eq 0 ]; then
   profiles=( "${default_profiles[@]}" )
