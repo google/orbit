@@ -35,7 +35,7 @@ class OrbitApp : public CoreApp {
 
   static bool Init(ApplicationOptions&& options);
   void PostInit();
-  static int OnExit();
+  void OnExit();
   static void MainTick();
   void CheckLicense();
   void SetLicense(const std::wstring& a_License);

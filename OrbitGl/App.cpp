@@ -482,8 +482,10 @@ void OrbitApp::SetLicense(const std::wstring& a_License) {
 }
 
 //-----------------------------------------------------------------------------
-int OrbitApp::OnExit() {
-  if (GTimerManager && GTimerManager->m_IsRecording) GOrbitApp->StopCapture();
+void OrbitApp::OnExit() {
+  if (GTimerManager && GTimerManager->m_IsRecording) {
+    StopCapture();
+  }
 
   GParams.Save();
   GTimerManager = nullptr;
@@ -491,14 +493,13 @@ int OrbitApp::OnExit() {
   ConnectionManager::Get().Stop();
   GTcpClient->Stop();
 
-  if (GOrbitApp->HasTcpServer()) {
+  if (HasTcpServer()) {
     GTcpServer->Stop();
   }
 
   GCoreApp = nullptr;
   GOrbitApp = nullptr;
   Orbit_ImGui_Shutdown();
-  return 0;
 }
 
 //-----------------------------------------------------------------------------

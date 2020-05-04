@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
 
   int errorCode = app.exec();
 
-  OrbitApp::OnExit();
+  GOrbitApp->OnExit();
 
   return errorCode;
 }
