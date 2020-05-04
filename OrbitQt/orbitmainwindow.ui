@@ -283,6 +283,7 @@
     <addaction name="actionEnable_Unreal_Support"/>
     <addaction name="actionAllow_Unsafe_Hooking"/>
     <addaction name="actionOutputDebugString"/>
+    <addaction name="actionUploadDumpsToServer"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -418,6 +419,14 @@
    </property>
    <property name="text">
     <string>OutputDebugString</string>
+   </property>
+  </action>
+  <action name="actionUploadDumpsToServer">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Upload Dumps on Crash</string>
    </property>
   </action>
   <action name="actionRule_Editor">

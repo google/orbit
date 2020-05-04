@@ -37,6 +37,7 @@ class CoreApp {
   virtual bool GetUnsafeHookingEnabled() { return false; }
   virtual bool GetSamplingEnabled() { return false; }
   virtual bool GetOutputDebugStringEnabled() { return false; }
+  virtual bool GetUploadDumpsToServerEnabled() const { return false; }
   virtual void UpdateVariable(class Variable* /*a_Variable*/) {}
   virtual void Disassemble(const std::string& /*a_FunctionName*/,
                            uint64_t /*a_VirtualAddress*/,

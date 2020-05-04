@@ -149,6 +149,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->actionEnable_Sampling->setChecked(GOrbitApp->GetSamplingEnabled());
   ui->actionOutputDebugString->setChecked(
       GOrbitApp->GetOutputDebugStringEnabled());
+  ui->actionUploadDumpsToServer->setChecked(
+      GOrbitApp->GetUploadDumpsToServerEnabled());
 
   CreateSamplingTab();
   CreateSelectionTab();
@@ -665,3 +667,8 @@ void OrbitMainWindow::on_actionOutputDebugString_triggered(bool checked) {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionRule_Editor_triggered() { m_RuleEditor->show(); }
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionUploadDumpsToServer_triggered(bool checked) {
+  GOrbitApp->EnableUploadDumpsToServer(checked);
+}

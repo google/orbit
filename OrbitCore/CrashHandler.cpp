@@ -10,7 +10,6 @@
 #include "ScopeTimer.h"
 #include "TcpClient.h"
 #include "Version.h"
-#include "client/crash_report_database.h"
 #include "client/settings.h"
 
 namespace {
@@ -32,8 +31,7 @@ struct StringTypeConverter<std::wstring> {
 //-----------------------------------------------------------------------------
 CrashHandler::CrashHandler(const std::string& dump_path,
                            const std::string& handler_path,
-                           const std::string& crash_server_url,
-                           bool is_upload_enabled) {
+                           const std::string& crash_server_url) {
   CHECK(!is_init_);
   is_init_ = true;
 
@@ -49,12 +47,7 @@ CrashHandler::CrashHandler(const std::string& dump_path,
 
   const std::vector<std::string> arguments = {"--no-rate-limit"};
 
-  // set user preferences for dumps submission to collection server
-  std::unique_ptr<crashpad::CrashReportDatabase> crash_report_db =
-      crashpad::CrashReportDatabase::Initialize(dump_file_path);
-  if (crash_report_db != nullptr && crash_report_db->GetSettings() != nullptr) {
-    crash_report_db->GetSettings()->SetUploadsEnabled(is_upload_enabled);
-  }
+  crash_report_db_ = crashpad::CrashReportDatabase::Initialize(dump_file_path);
 
   crashpad_client_.StartHandler(handler_file_path,
                                 /*database=*/dump_file_path,
@@ -62,6 +55,17 @@ CrashHandler::CrashHandler(const std::string& dump_path,
                                 crash_server_url, annotations, arguments,
                                 /*restartable=*/true,
                                 /*asynchronous_start=*/false);
+}
+
+//-----------------------------------------------------------------------------
+void CrashHandler::SetUploadsEnabled(bool is_upload_enabled) {
+  // set user preferences for dumps submission to collection server
+  if (crash_report_db_ != nullptr) {
+    crashpad::Settings* db_settings = crash_report_db_->GetSettings();
+    if (db_settings != nullptr) {
+      db_settings->SetUploadsEnabled(is_upload_enabled);
+    }
+  }
 }
 
 //-----------------------------------------------------------------------------

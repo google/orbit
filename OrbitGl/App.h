@@ -194,6 +194,9 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void EnableOutputDebugString(bool a_Value);
   bool GetOutputDebugStringEnabled() override;
 
+  void EnableUploadDumpsToServer(bool a_Value);
+  bool GetUploadDumpsToServerEnabled() const override;
+
   void RequestThaw() { m_NeedsThawing = true; }
   void OnRemoteProcess(const Message& a_Message);
   void OnRemoteProcessList(const Message& a_Message);
