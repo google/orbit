@@ -83,8 +83,8 @@ int sample_callchain_event_open(uint64_t period_ns, pid_t pid, int32_t cpu) {
   pe.config = PERF_COUNT_SW_CPU_CLOCK;
   pe.sample_period = period_ns;
   pe.sample_type |= PERF_SAMPLE_CALLCHAIN;
-  // TODO(kuebler): This shouldn't be a random constant
-  pe.sample_max_stack = 100;
+  // TODO(kuebler): Read this from /proc/sys/kernel/perf_event_max_stack
+  pe.sample_max_stack = 127;
 
   return generic_event_open(&pe, pid, cpu);
 }
