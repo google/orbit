@@ -103,7 +103,7 @@ void LinuxTracingHandler::OnCallstack(
 
     // TODO(kuebler): This is mainly for clustering IPs to their functions.
     //  We should enable this also as a post-processing step.
-    if (frame.GetFunctionOffset() == unknownOffset) {
+    if (frame.GetFunctionOffset() != unknownOffset) {
       absl::MutexLock lock{&addresses_seen_mutex_};
       if (!addresses_seen_.contains(address)) {
         LinuxAddressInfo address_info{address, frame.GetMapName(),
