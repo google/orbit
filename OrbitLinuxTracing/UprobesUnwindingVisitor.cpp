@@ -52,8 +52,8 @@ void UprobesUnwindingVisitor::visit(SampleCallchainPerfEvent* event) {
 
   Callstack returned_callstack{
       event->GetTid(),
-      CallstackFramesFromInstructionPointers(event->GetCallChain(),
-                                             event->GetCallChainSize()),
+      CallstackFramesFromInstructionPointers(event->GetCallchain(),
+                                             event->GetCallchainSize()),
       event->GetTimestamp()};
   listener_->OnCallstack(returned_callstack);
 }

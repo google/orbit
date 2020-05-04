@@ -4,9 +4,9 @@
 
 #include "Callstack.h"
 #include "ContextSwitch.h"
-#include "OrbitModule.h"
 #include "OrbitLinuxTracing/Events.h"
 #include "OrbitLinuxTracing/TracingOptions.h"
+#include "OrbitModule.h"
 #include "Params.h"
 #include "absl/flags/flag.h"
 #include "llvm/Demangle/Demangle.h"
@@ -95,14 +95,14 @@ void LinuxTracingHandler::OnCallstack(
   CallStack cs;
   cs.m_ThreadId = callstack.GetTid();
 
-  uint64_t unknownOffset = LinuxTracing::CallstackFrame::kUnknownFunctionOffset;
   for (const auto& frame : callstack.GetFrames()) {
     uint64_t address = frame.GetPc();
     cs.m_Data.push_back(address);
 
     // TODO(kuebler): This is mainly for clustering IPs to their functions.
     //  We should enable this also as a post-processing step.
-    if (frame.GetFunctionOffset() != unknownOffset) {
+    if (frame.GetFunctionOffset() !=
+        LinuxTracing::CallstackFrame::kUnknownFunctionOffset) {
       absl::MutexLock lock{&addresses_seen_mutex_};
       if (!addresses_seen_.contains(address)) {
         LinuxAddressInfo address_info{address, frame.GetMapName(),

@@ -72,7 +72,10 @@ class Tracer {
   std::vector<Function> instrumented_functions_;
 
   TracerListener* listener_ = nullptr;
-  TracingOptions tracing_options_;
+  TracingOptions tracing_options_{.trace_context_switches = true,
+                                  .sampling_method = kDwarf,
+                                  .trace_instrumented_functions = true,
+                                  .trace_gpu_driver = true};
 
   // exit_requested_ must outlive this object because it is used by thread_.
   // The control block of shared_ptr is thread safe (i.e., reference counting

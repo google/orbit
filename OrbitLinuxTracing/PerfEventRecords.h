@@ -100,11 +100,11 @@ struct __attribute__((__packed__)) perf_event_stack_sample {
   perf_event_sample_stack_user stack;
 };
 
-struct __attribute__((__packed__)) perf_event_call_chain_sample {
+struct __attribute__((__packed__)) perf_event_callchain_sample {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  uint64_t dyn_size;
-  // The rest of the sample is a uint64_t[dyn_size] that we read dynamically.
+  uint64_t nr;
+  // The rest of the sample is a uint64_t[nr] that we read dynamically.
 };
 
 struct __attribute__((__packed__)) perf_event_sp_ip_8bytes_sample {

@@ -670,7 +670,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
       ring_buffer->SkipRecord(header);
       return;
     }
-    auto event = ConsumeSampleCallChainPerfEvent(ring_buffer, header);
+    auto event = ConsumeSampleCallchainPerfEvent(ring_buffer, header);
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
