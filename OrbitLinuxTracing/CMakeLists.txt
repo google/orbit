@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.15)
 
 project(OrbitLinuxTracing)
 
-add_library(OrbitLinuxTracing STATIC)
+add_library(OrbitLinuxTracing STATIC include/OrbitLinuxTracing/TracingOptions.h)
 
 target_compile_options(OrbitLinuxTracing PRIVATE ${STRICT_COMPILE_FLAGS})
 

@@ -182,10 +182,17 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
   std::vector<PerfEventRingBuffer> sampling_ring_buffers;
   for (int32_t cpu : cpus) {
     int sampling_fd;
-    if (trace_fp_callstacks_) {
-      sampling_fd = sample_event_fp_open(sampling_period_ns_, -1, cpu);
-    } else {
-      sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
+    switch (tracing_options_.unwinding_method_) {
+      case kFramePointers:
+        sampling_fd = sample_event_callchain_open(sampling_period_ns_,
+                                                  -1,
+                                                  cpu);
+        break;
+      case kDwarf:sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
+        break;
+      case kUndefined:ERROR("Undefined Unwinding Method");
+        CloseFileDescriptors(sampling_tracing_fds);
+        return false;
     }
     std::string buffer_name = absl::StrFormat("sampling_%d", cpu);
     PerfEventRingBuffer sampling_ring_buffer{
@@ -202,7 +209,7 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
 
   for (int fd : sampling_tracing_fds) {
     tracing_fds_.push_back(fd);
-    if (trace_fp_callstacks_) {
+    if (tracing_options_.unwinding_method_ == kFramePointers) {
       fp_sampling_fds_.emplace(fd);
     }
   }
@@ -331,19 +338,19 @@ void TracerThread::Run(
 
   bool perf_event_open_errors = false;
 
-  if (trace_context_switches_) {
+  if (tracing_options_.trace_context_switches_) {
     perf_event_open_errors |= !OpenContextSwitches(all_cpus);
   }
 
   perf_event_open_errors |= !OpenMmapTask(cpuset_cpus);
 
   bool uprobes_event_open_errors = false;
-  if (trace_instrumented_functions_) {
+  if (tracing_options_.trace_instrumented_functions_) {
     uprobes_event_open_errors = !OpenUprobes(cpuset_cpus);
     perf_event_open_errors |= uprobes_event_open_errors;
   }
 
-  if (trace_callstacks_) {
+  if (tracing_options_.trace_callstacks_) {
     perf_event_open_errors |= !OpenSampling(cpuset_cpus);
   }
 
@@ -358,7 +365,7 @@ void TracerThread::Run(
   }
 
   bool gpu_event_open_errors = false;
-  if (trace_gpu_driver_) {
+  if (tracing_options_.trace_gpu_driver_) {
     // We want to trace all GPU activity, hence we pass 'all_cpus' here.
     gpu_event_open_errors = !OpenGpuTracepoints(all_cpus);
   }
@@ -449,22 +456,18 @@ void TracerThread::Run(
             ProcessContextSwitchEvent(header, &ring_buffer);
             break;
           case PERF_RECORD_SWITCH_CPU_WIDE:
-            ProcessContextSwitchCpuWideEvent(header, &ring_buffer);
+            ProcessContextSwitchCpuWideEvent(header,
+                                             &ring_buffer);
             break;
-          case PERF_RECORD_FORK:
-            ProcessForkEvent(header, &ring_buffer);
+          case PERF_RECORD_FORK:ProcessForkEvent(header, &ring_buffer);
             break;
-          case PERF_RECORD_EXIT:
-            ProcessExitEvent(header, &ring_buffer);
+          case PERF_RECORD_EXIT:ProcessExitEvent(header, &ring_buffer);
             break;
-          case PERF_RECORD_MMAP:
-            ProcessMmapEvent(header, &ring_buffer);
+          case PERF_RECORD_MMAP:ProcessMmapEvent(header, &ring_buffer);
             break;
-          case PERF_RECORD_SAMPLE:
-            ProcessSampleEvent(header, &ring_buffer);
+          case PERF_RECORD_SAMPLE:ProcessSampleEvent(header, &ring_buffer);
             break;
-          case PERF_RECORD_LOST:
-            ProcessLostEvent(header, &ring_buffer);
+          case PERF_RECORD_LOST:ProcessLostEvent(header, &ring_buffer);
             break;
           case PERF_RECORD_THROTTLE:
             // We don't use throttle/unthrottle events, but log them separately
@@ -473,14 +476,15 @@ void TracerThread::Run(
                 ring_buffer.GetName().c_str());
             ring_buffer.SkipRecord(header);
             break;
-          case PERF_RECORD_UNTHROTTLE:
-            LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s'",
+          case PERF_RECORD_UNTHROTTLE:LOG(
+                "PERF_RECORD_UNTHROTTLE in ring buffer '%s'",
                 ring_buffer.GetName().c_str());
             ring_buffer.SkipRecord(header);
             break;
-          default:
-            ERROR("Unexpected perf_event_header::type in ring buffer '%s': %u",
-                  ring_buffer.GetName().c_str(), header.type);
+          default:ERROR(
+                "Unexpected perf_event_header::type in ring buffer '%s': %u",
+                ring_buffer.GetName().c_str(),
+                header.type);
             ring_buffer.SkipRecord(header);
             break;
         }
@@ -610,10 +614,10 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
       !is_gpu_event && !is_sample_fp && (header.size == size_of_sample);
 
   static_assert(size_of_uprobes != size_of_uretprobes &&
-                size_of_uprobes != size_of_sample &&
-                size_of_uretprobes != size_of_sample);
+      size_of_uprobes != size_of_sample &&
+      size_of_uretprobes != size_of_sample);
   CHECK(is_gpu_event + is_uprobe + is_uretprobe + is_sample + is_sample_fp <=
-        1);
+      1);
 
   if (is_uprobe) {
     auto event = make_unique_for_overwrite<UprobesPerfEvent>();
@@ -662,7 +666,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
       ring_buffer->SkipRecord(header);
       return;
     }
-    auto event = ConsumeSampleFPPerfEvent(ring_buffer, header);
+    auto event = ConsumeSampleCallChainPerfEvent(ring_buffer, header);
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
@@ -737,8 +741,8 @@ void TracerThread::PrintStatsIfTimerElapsed() {
   if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND <
       MonotonicTimestampNs()) {
     double actual_window_s = static_cast<double>(MonotonicTimestampNs() -
-                                                 stats_.event_count_begin_ns) /
-                             NS_PER_SECOND;
+        stats_.event_count_begin_ns) /
+        NS_PER_SECOND;
     LOG("Events per second (last %.1f s):", actual_window_s);
     LOG("  sched switches: %.0f", stats_.sched_switch_count / actual_window_s);
     LOG("  samples: %.0f", stats_.sample_count / actual_window_s);

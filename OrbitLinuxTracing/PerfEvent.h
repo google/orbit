@@ -188,11 +188,11 @@ struct dynamically_sized_perf_event_stack_sample {
 struct dynamically_sized_perf_event_call_chain_sample {
   struct dynamically_sized_perf_event_call_chain {
     uint64_t dyn_size;
-    std::unique_ptr<uint64_t[]> data;
+    std::unique_ptr<uint64_t[]> instruction_pointers;
 
     explicit dynamically_sized_perf_event_call_chain(uint64_t dyn_size)
         : dyn_size{dyn_size},
-          data{make_unique_for_overwrite<uint64_t[]>(dyn_size)} {}
+          instruction_pointers{make_unique_for_overwrite<uint64_t[]>(dyn_size)} {}
   };
 
   perf_event_header header;
@@ -203,12 +203,12 @@ struct dynamically_sized_perf_event_call_chain_sample {
       : call_chain{dyn_size} {}
 };
 
-class SampleFPPerfEvent : public PerfEvent {
+class SampleCallChainPerfEvent : public PerfEvent {
  public:
   std::unique_ptr<dynamically_sized_perf_event_call_chain_sample>
       ring_buffer_record;
 
-  explicit SampleFPPerfEvent(uint64_t dyn_size)
+  explicit SampleCallChainPerfEvent(uint64_t dyn_size)
       : ring_buffer_record{
             std::make_unique<dynamically_sized_perf_event_call_chain_sample>(
                 dyn_size)} {}
@@ -229,7 +229,7 @@ class SampleFPPerfEvent : public PerfEvent {
   uint32_t GetCpu() const { return ring_buffer_record->sample_id.cpu; }
 
   const uint64_t* GetCallChain() const {
-    return ring_buffer_record->call_chain.data.get();
+    return ring_buffer_record->call_chain.instruction_pointers.get();
   }
 
   uint64_t GetCallChainSize() const {

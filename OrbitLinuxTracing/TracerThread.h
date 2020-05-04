@@ -4,6 +4,7 @@
 #include <OrbitLinuxTracing/Events.h>
 #include <OrbitLinuxTracing/Function.h>
 #include <OrbitLinuxTracing/TracerListener.h>
+#include <OrbitLinuxTracing/TracingOptions.h>
 #include <linux/perf_event.h>
 
 #include <atomic>
@@ -40,24 +41,8 @@ class TracerThread {
 
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
-  void SetTraceContextSwitches(bool trace_context_switches) {
-    trace_context_switches_ = trace_context_switches;
-  }
-
-  void SetTraceCallstacks(bool trace_callstacks) {
-    trace_callstacks_ = trace_callstacks;
-  }
-
-  void SetTraceFPCallstacks(bool trace_fp_callstacks) {
-    trace_fp_callstacks_ = trace_fp_callstacks;
-  }
-
-  void SetTraceInstrumentedFunctions(bool trace_instrumented_functions) {
-    trace_instrumented_functions_ = trace_instrumented_functions;
-  }
-
-  void SetTraceGpuDriver(bool trace_gpu_driver) {
-    trace_gpu_driver_ = trace_gpu_driver;
+  void SetTracingOptions(TracingOptions tracing_options) {
+    tracing_options_ = tracing_options;
   }
 
   void Run(const std::shared_ptr<std::atomic<bool>>& exit_requested);
@@ -68,7 +53,6 @@ class TracerThread {
   bool OpenUprobes(const std::vector<int32_t>& cpus);
   bool OpenMmapTask(const std::vector<int32_t>& cpus);
   bool OpenSampling(const std::vector<int32_t>& cpus);
-  bool OpenFPSampling(const std::vector<int32_t>& cpus);
 
   bool InitGpuTracepointEventProcessor();
   static bool OpenRingBufferForGpuTracepoint(
@@ -117,12 +101,7 @@ class TracerThread {
   std::vector<Function> instrumented_functions_;
 
   TracerListener* listener_ = nullptr;
-
-  bool trace_context_switches_ = true;
-  bool trace_callstacks_ = true;
-  bool trace_fp_callstacks_ = false;
-  bool trace_instrumented_functions_ = true;
-  bool trace_gpu_driver_ = true;
+  TracingOptions tracing_options_;
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;

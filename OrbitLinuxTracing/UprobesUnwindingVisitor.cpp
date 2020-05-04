@@ -41,37 +41,14 @@ void UprobesUnwindingVisitor::visit(SamplePerfEvent* event) {
   listener_->OnCallstack(returned_callstack);
 }
 
-void UprobesUnwindingVisitor::visit(SampleFPPerfEvent* event) {
+void UprobesUnwindingVisitor::visit(SampleCallChainPerfEvent* event) {
   CHECK(listener_ != nullptr);
 
   if (current_maps_ == nullptr) {
     return;
   }
 
-  /* TODO(kuebler): handle the mapping/patching for uprobes
-    return_address_manager_.PatchSample(
-      event->GetTid(), event->GetRegisters()[PERF_REG_X86_SP],
-      event->GetStackData(), event->GetStackSize());
-
-  const std::vector<unwindstack::FrameData>& full_callstack =
-      unwinder_.Unwind(current_maps_.get(), event->GetRegisters(),
-                       event->GetStackData(), event->GetStackSize());
-
-  if (full_callstack.empty()) {
-    if (unwind_error_counter_ != nullptr) {
-      ++(*unwind_error_counter_);
-    }
-    return;
-  }
-
-  // Some samples can actually fall inside u(ret)probes code. Discard them,
-  // because when they are unwound successfully the result is wrong.
-  if (full_callstack.front().map_name == "[uprobes]") {
-    if (discarded_samples_in_uretprobes_counter_ != nullptr) {
-      ++(*discarded_samples_in_uretprobes_counter_);
-    }
-    return;
-  }*/
+  // TODO(kuebler): handle the mapping/patching for uprobes
 
   // TODO(kuebler): we only have the IP here, however, that should be sufficient
   Callstack returned_callstack{

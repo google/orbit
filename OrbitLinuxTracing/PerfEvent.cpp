@@ -24,7 +24,7 @@ void SamplePerfEvent::Accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 
-void SampleFPPerfEvent::Accept(PerfEventVisitor* visitor) {
+void SampleCallChainPerfEvent::Accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 
