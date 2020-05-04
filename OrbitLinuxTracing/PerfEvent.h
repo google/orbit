@@ -185,11 +185,11 @@ struct dynamically_sized_perf_event_stack_sample {
       : stack{dyn_size} {}
 };
 
-class SampleCallchainPerfEvent : public PerfEvent {
+class CallchainSamplePerfEvent : public PerfEvent {
  public:
   perf_event_callchain_sample ring_buffer_record;
   std::vector<uint64_t> ips;
-  explicit SampleCallchainPerfEvent(uint64_t nr) : ips(nr) {}
+  explicit CallchainSamplePerfEvent(uint64_t nr) : ips(nr) {}
 
   uint64_t GetTimestamp() const override {
     return ring_buffer_record.sample_id.time;

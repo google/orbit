@@ -41,7 +41,7 @@ void UprobesUnwindingVisitor::visit(SamplePerfEvent* event) {
   listener_->OnCallstack(returned_callstack);
 }
 
-void UprobesUnwindingVisitor::visit(SampleCallchainPerfEvent* event) {
+void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
 
   if (current_maps_ == nullptr) {
