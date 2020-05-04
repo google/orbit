@@ -184,7 +184,7 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
     int sampling_fd;
     switch (tracing_options_.sampling_method) {
       case kFramePointers:
-        sampling_fd = sample_callchain_event_open(sampling_period_ns_, -1, cpu);
+        sampling_fd = callchain_sample_event_open(sampling_period_ns_, -1, cpu);
         break;
       case kDwarf:
         sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
