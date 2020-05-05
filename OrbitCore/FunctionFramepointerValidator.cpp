@@ -72,6 +72,11 @@ bool FunctionFramepointerValidator::ValidatePrologue() {
 // and for hand written assembly, we accept wrong unwinding results.
 bool FunctionFramepointerValidator::ValidateEpilogue() {
   for (size_t i = 0; i < instructions_count_ - 1; i++) {
+    // "leave" is equivalent to "mov esp, ebp" "pop ebp"
+    if (instructions_[i].id == X86_INS_LEAVE) {
+      return true;
+    }
+
     if (!IsMovInstruction(instructions_[i])) {
       continue;
     }

@@ -29,10 +29,10 @@ class FunctionFramepointerValidator {
   bool Validate();
 
  private:
-  bool IsCallInstruction(const cs_insn& instruction);
-  bool IsMovInstruction(const cs_insn& instruction);
-  bool IsBasePointer(uint16_t reg);
-  bool IsStackPointer(uint16_t reg);
+  static bool IsCallInstruction(const cs_insn& instruction);
+  static bool IsMovInstruction(const cs_insn& instruction);
+  static bool IsBasePointer(uint16_t reg);
+  static bool IsStackPointer(uint16_t reg);
   bool IsLeafFunction();
   bool ValidatePrologue();
   bool ValidateEpilogue();
