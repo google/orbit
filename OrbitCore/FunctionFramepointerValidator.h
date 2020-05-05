@@ -23,8 +23,8 @@ class FunctionFramepointerValidator {
   FunctionFramepointerValidator& operator=(
       const FunctionFramepointerValidator&) = delete;
   FunctionFramepointerValidator(FunctionFramepointerValidator&&) = delete;
-  FunctionFramepointerValidator& operator=(
-      const FunctionFramepointerValidator&&) = delete;
+  FunctionFramepointerValidator& operator=(FunctionFramepointerValidator&&) =
+      delete;
 
   bool Validate();
 

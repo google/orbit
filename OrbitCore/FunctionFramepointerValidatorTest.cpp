@@ -7,10 +7,6 @@
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
-#define NO_FP \
-  "\x29\x25\x00\x00\x00\x00\xE8\xFD\xFF\xFF\xFF\x01\x25\x00\x00\x00\x00\xC3"
-#define LEAF "\x29\x24\x25\x00\x00\x00\x00\x48\x01\x24\x25\x00\x00\x00\x00\xC3"
-
 namespace {
 
 constexpr uint8_t kFunctionWithFP[] = {0x55, 0x89, 0xE5, 0x83, 0xC0,

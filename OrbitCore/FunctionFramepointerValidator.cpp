@@ -71,45 +71,58 @@ bool FunctionFramepointerValidator::ValidatePrologue() {
 // all are correct. However, we would not expect a compiler to produce this,
 // and for hand written assembly, we accept wrong unwinding results.
 bool FunctionFramepointerValidator::ValidateEpilogue() {
-  bool found_epilogue = false;
   for (size_t i = 0; i < instructions_count_ - 1; i++) {
-    if (IsMovInstruction(instructions_[i]) &&
-        instructions_[i + 1].id == X86_INS_POP) {
-      cs_regs regs_read_first, regs_write_first, regs_read_second,
-          regs_write_second;
-      uint8_t read_count_first, write_count_first, read_count_second,
-          write_count_second;
+    if (!IsMovInstruction(instructions_[i])) {
+      continue;
+    }
+    if (instructions_[i + 1].id != X86_INS_POP) {
+      continue;
+    }
 
-      // Check first instruction to be "mov esp, ebp"
-      bool succeeded_regs_access_first =
-          cs_regs_access(handle_, &instructions_[i], regs_read_first,
-                         &read_count_first, regs_write_first,
-                         &write_count_first) == 0;
+    cs_regs regs_read_first, regs_write_first, regs_read_second,
+        regs_write_second;
+    uint8_t read_count_first, write_count_first, read_count_second,
+        write_count_second;
 
-      bool correct_regs_access_first =
-          succeeded_regs_access_first && read_count_first == 1 &&
-          IsBasePointer(regs_read_first[0]) && write_count_first == 1 &&
-          IsStackPointer(regs_write_first[0]);
+    // Check first instruction to be "mov esp, ebp".
+    // 1. try to get which registers has been accessed.
+    if (cs_regs_access(handle_, &instructions_[i], regs_read_first,
+                       &read_count_first, regs_write_first,
+                       &write_count_first) != 0) {
+      continue;
+    }
+    // 2. Is there one read (base pointer) and one write (stack pointer).
+    if (read_count_first != 1 || write_count_first != 1) {
+      continue;
+    }
+    // 3. Check if the registers are actually the correct ones.
+    if (!IsBasePointer(regs_read_first[0]) ||
+        !IsStackPointer(regs_write_first[0])) {
+      continue;
+    }
 
-      // Check second instruction to be "pop ebp"
-      bool succeeded_regs_access_second =
-          cs_regs_access(handle_, &instructions_[i + 1], regs_read_second,
-                         &read_count_second, regs_write_second,
-                         &write_count_second) == 0;
+    // Check second instruction to be "pop ebp".
+    // 1. try to get which registers has been accessed.
+    if (cs_regs_access(handle_, &instructions_[i + 1], regs_read_second,
+                       &read_count_second, regs_write_second,
+                       &write_count_second) != 0) {
+      continue;
+    }
+    // 2. Is there one read (stack pointer) and two writes
+    // (stack pointer and base pointer).
+    if (read_count_second != 1 || write_count_second != 2) {
+      continue;
+    }
 
-      bool correct_regs_access_second =
-          succeeded_regs_access_second && read_count_second == 1 &&
-          IsStackPointer(regs_read_second[0]) && write_count_second == 2 &&
-          IsStackPointer(regs_write_second[0]) &&
-          IsBasePointer(regs_write_second[1]);
-
-      // Are both instructions as expected? If so, we found an epilogue
-      if (correct_regs_access_first && correct_regs_access_second) {
-        found_epilogue = true;
-      }
+    // 3. Check if the registers are actually the correct ones.
+    if (IsStackPointer(regs_read_second[0]) &&
+        IsStackPointer(regs_write_second[0]) &&
+        IsBasePointer(regs_write_second[1])) {
+      return true;
     }
   }
-  return found_epilogue;
+
+  return false;
 }
 
 bool FunctionFramepointerValidator::ValidateFramePointers() {
