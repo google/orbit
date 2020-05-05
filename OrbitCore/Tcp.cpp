@@ -176,7 +176,7 @@ void TcpConnection::ReadFooter() {
 }
 
 void TcpConnection::DecodeMessage(Message& a_Message) {
-  GTcpServer->GetServer()->RegisterConnection(
-      this->shared_from_this());  // TODO:
+  // TODO: What does this do? A global shouldn't be used here.
+  GTcpServer->GetServer()->RegisterConnection(this->shared_from_this());
   GTcpServer->Receive(a_Message);
 }

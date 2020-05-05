@@ -11,8 +11,6 @@
 CoreApp* GCoreApp;
 
 void CoreApp::InitializeClientTransactions() {
-  CHECK(ConnectionManager::Get().IsClient());
-
   transaction_client_ = std::make_unique<TransactionClient>(GTcpClient.get());
   symbols_client_ =
       std::make_unique<SymbolsClient>(GCoreApp, transaction_client_.get());

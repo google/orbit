@@ -22,24 +22,24 @@ ABSL_FLAG(bool, trace_gpu_driver, false,
           "Enables tracing of GPU driver tracepoint events");
 
 void LinuxTracingHandler::Start(
-    pid_t pid, const std::map<uint64_t, Function*>& selected_function_map) {
+    pid_t pid,
+    const std::vector<std::shared_ptr<Function>>& selected_functions) {
   addresses_seen_.clear();
   callstack_hashes_seen_.clear();
   string_manager_.Clear();
 
   double sampling_rate = absl::GetFlag(FLAGS_sampling_rate);
 
-  std::vector<LinuxTracing::Function> selected_functions;
-  selected_functions.reserve(selected_function_map.size());
-  for (const auto& pair : selected_function_map) {
-    const auto& function = pair.second;
-    selected_functions.emplace_back(function->GetLoadedModuleName(),
-                                    function->Offset(),
-                                    function->GetVirtualAddress());
+  std::vector<LinuxTracing::Function> instrumented_functions;
+  instrumented_functions.reserve(selected_functions.size());
+  for (const std::shared_ptr<Function>& function : selected_functions) {
+    instrumented_functions.emplace_back(function->GetLoadedModuleName(),
+                                        function->Offset(),
+                                        function->GetVirtualAddress());
   }
 
   tracer_ = std::make_unique<LinuxTracing::Tracer>(pid, sampling_rate,
-                                                   selected_functions);
+                                                   instrumented_functions);
 
   tracer_->SetListener(this);
 

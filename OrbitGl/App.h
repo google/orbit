@@ -260,17 +260,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::vector<std::string> m_SymbolDirectories;
   std::function<void(const std::string&)> m_UiCallback;
 
-  // buffering data to send large messages instead of small ones:
-  std::shared_ptr<std::thread> m_MessageBufferThread = nullptr;
-  std::vector<ContextSwitch> m_ContextSwitchBuffer;
-  Mutex m_ContextSwitchMutex;
-  std::vector<Timer> m_TimerBuffer;
-  Mutex m_TimerMutex;
-  std::vector<LinuxCallstackEvent> m_SamplingCallstackBuffer;
-  Mutex m_SamplingCallstackMutex;
-  std::vector<CallstackEvent> m_HashedSamplingCallstackBuffer;
-  Mutex m_HashedSamplingCallstackMutex;
-
   std::wstring m_User;
   std::wstring m_License;
 

@@ -151,15 +151,12 @@ void GLoadPdbAsync(const std::vector<std::string>& a_Modules) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessTimer(const Timer& a_Timer, const std::string&) {
-  CHECK(!ConnectionManager::Get().IsService());
   GCurrentTimeGraph->ProcessTimer(a_Timer);
   ++Capture::GFunctionCountMap[a_Timer.m_FunctionAddress];
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) {
-  CHECK(!ConnectionManager::Get().IsService());
-
   Capture::GSamplingProfiler->AddCallStack(a_CallStack.callstack_);
   GEventTracer.GetEventBuffer().AddCallstackEvent(
       a_CallStack.time_, a_CallStack.callstack_.m_Hash, a_CallStack.callstack_.m_ThreadId);
@@ -167,36 +164,23 @@ void OrbitApp::ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) {
-  if (ConnectionManager::Get().IsService()) {
-    ScopeLock lock(m_HashedSamplingCallstackMutex);
-    m_HashedSamplingCallstackBuffer.push_back(a_CallStack);
-  } else {
-    Capture::GSamplingProfiler->AddHashedCallStack(a_CallStack);
+  Capture::GSamplingProfiler->AddHashedCallStack(a_CallStack);
     GEventTracer.GetEventBuffer().AddCallstackEvent(
         a_CallStack.m_Time, a_CallStack.m_Id, a_CallStack.m_TID);
-  }
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) {
-  if (ConnectionManager::Get().IsService()) {
-    ScopeLock lock(m_ContextSwitchMutex);
-    m_ContextSwitchBuffer.push_back(a_ContextSwitch);
-  }
-
   GTimerManager->Add(a_ContextSwitch);
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::AddAddressInfo(LinuxAddressInfo address_info) {
-  // This should not be called for the service - make sure it doesn't
-  CHECK(!ConnectionManager::Get().IsService());
-
   Capture::GTargetProcess->AddAddressInfo(std::move(address_info));
 }
+
 //-----------------------------------------------------------------------------
 void OrbitApp::AddKeyAndString(uint64_t key, std::string_view str) {
-  CHECK(!ConnectionManager::Get().IsService());
   string_manager_->AddIfNotPresent(key, str);
 }
 

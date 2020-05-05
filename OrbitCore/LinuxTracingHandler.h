@@ -25,7 +25,7 @@ class LinuxTracingHandler : LinuxTracing::TracerListener {
   LinuxTracingHandler& operator=(LinuxTracingHandler&&) = delete;
 
   void Start(pid_t pid,
-             const std::map<uint64_t, Function*>& selected_function_map);
+             const std::vector<std::shared_ptr<Function>>& selected_functions);
   bool IsStarted();
   void Stop();
 
