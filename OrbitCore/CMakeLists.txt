@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(OrbitCore)
-add_library(OrbitCore STATIC)
+add_library(OrbitCore STATIC FunctionFramepointerValidator.cpp FunctionFramepointerValidator.h)
 
 target_compile_options(OrbitCore PRIVATE ${STRICT_COMPILE_FLAGS})
 
@@ -176,6 +176,7 @@ target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(
   OrbitCore
   PUBLIC OrbitBase
+         capstone::capstone
          cereal::cereal
          xxHash::xxHash
          concurrentqueue::concurrentqueue
@@ -213,6 +214,7 @@ add_executable(OrbitCoreTests)
 
 target_sources(OrbitCoreTests PRIVATE
     ElfFileTests.cpp
+    FunctionFramepointerValidatorTest.cpp
     LinuxTracingBufferTest.cpp
     PathTest.cpp
     RingBufferTest.cpp
