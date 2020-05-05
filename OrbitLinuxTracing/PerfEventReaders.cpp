@@ -52,7 +52,7 @@ std::unique_ptr<SamplePerfEvent> ConsumeSamplePerfEvent(
   return event;
 }
 
-std::unique_ptr<CallchainSamplePerfEvent> ConsumeSampleCallchainPerfEvent(
+std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   uint64_t nr = 0;
   ring_buffer->ReadValueAtOffset(&nr,

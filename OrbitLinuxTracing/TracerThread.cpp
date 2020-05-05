@@ -190,7 +190,7 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
         sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
         break;
       case kOff:
-        ERROR("Sampling is off");
+        FATAL("Sampling is off. This statement is unreachable.");
         CloseFileDescriptors(sampling_tracing_fds);
         return false;
     }
@@ -670,7 +670,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
       ring_buffer->SkipRecord(header);
       return;
     }
-    auto event = ConsumeSampleCallchainPerfEvent(ring_buffer, header);
+    auto event = ConsumeCallchainSamplePerfEvent(ring_buffer, header);
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
