@@ -13,7 +13,7 @@ CoreApp* GCoreApp;
 void CoreApp::InitializeClientTransactions() {
   transaction_client_ = std::make_unique<TransactionClient>(GTcpClient.get());
   symbols_client_ =
-      std::make_unique<SymbolsClient>(GCoreApp, transaction_client_.get());
+      std::make_unique<SymbolsClient>(this, transaction_client_.get());
   process_memory_client_ =
       std::make_unique<ProcessMemoryClient>(transaction_client_.get());
 }

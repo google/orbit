@@ -1,7 +1,6 @@
 #include <csignal>
 #include <iostream>
 
-#include "OrbitGrpcServer.h"
 #include "OrbitService.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -38,17 +37,10 @@ int main(int argc, char** argv) {
 
   install_sigint_handler();
 
-  std::unique_ptr<OrbitGrpcServer> grpc_server;
   std::string grpc_server_address = absl::GetFlag(FLAGS_grpc_server_address);
-  std::cout << "Starting GRPC server at " << grpc_server_address << std::endl;
-  grpc_server = OrbitGrpcServer::Create(grpc_server_address);
-
   uint16_t asio_port = absl::GetFlag(FLAGS_asio_port);
-  std::cout << "Starting OrbitService" << std::endl;
-  OrbitService service{asio_port};
-  exit_requested = false;
-  service.Run(&exit_requested);
 
-  grpc_server->Shutdown();
-  grpc_server->Wait();
+  exit_requested = false;
+  OrbitService service{grpc_server_address, asio_port};
+  service.Run(&exit_requested);
 }

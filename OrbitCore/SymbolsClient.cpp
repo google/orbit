@@ -58,7 +58,7 @@ void SymbolsClient::LoadSymbolsFromModules(
   uint64_t id = transaction_client_->EnqueueRequest(Msg_DebugSymbols,
                                                     remote_module_infos);
 
-  absl::MutexLock lock(&mutex_);
+  absl::MutexLock lock(&id_sessions_mutex_);
   id_sessions_[id] = session;
 }
 
@@ -84,10 +84,10 @@ void SymbolsClient::HandleResponse(const Message& message, uint64_t id) {
   core_app_->OnRemoteModuleDebugInfo(infos);
 
   // Finalize transaction.
-  mutex_.Lock();
+  id_sessions_mutex_.Lock();
   std::shared_ptr<Session> session = id_sessions_[id];
   id_sessions_.erase(id);
-  mutex_.Unlock();
+  id_sessions_mutex_.Unlock();
   if (session != nullptr) {
     core_app_->ApplySession(*session);
   }
