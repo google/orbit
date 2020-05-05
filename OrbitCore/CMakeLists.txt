@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(OrbitCore)
-add_library(OrbitCore STATIC FunctionFramepointerValidator.cpp FunctionFramepointerValidator.h)
+add_library(OrbitCore STATIC)
 
 target_compile_options(OrbitCore PRIVATE ${STRICT_COMPILE_FLAGS})
 
@@ -25,6 +25,7 @@ target_sources(
          Diff.h
          EventBuffer.h
          EventClasses.h
+         FunctionFramepointerValidator.h
          FunctionStats.h
          Hashing.h
          Injection.h
@@ -92,6 +93,7 @@ target_sources(
           Diff.cpp
           ElfFile.cpp
           EventBuffer.cpp
+          FunctionFramepointerValidator.cpp
           FunctionStats.cpp
           Injection.cpp
           Introspection.cpp

@@ -7,13 +7,11 @@
 
 #include <capstone/capstone.h>
 
-/*
- * Provide utilities to check whether a function was compiled with
- * "-fno-omit-frame-pointer (-momit-leaf-frame-pointer)". The latter one is
- * optional.
- * The validator checks the functions Prologue and also whether an Epilogue
- * exists.
- */
+// Provide utilities to check whether a function was compiled with
+// "-fno-omit-frame-pointer (-momit-leaf-frame-pointer)". The latter one is
+// optional.
+// The validator checks the functions Prologue and also whether an Epilogue
+// exists.
 class FunctionFramepointerValidator {
  public:
   FunctionFramepointerValidator(csh handle, const uint8_t* code,
@@ -24,18 +22,21 @@ class FunctionFramepointerValidator {
   FunctionFramepointerValidator(const FunctionFramepointerValidator&) = delete;
   FunctionFramepointerValidator& operator=(
       const FunctionFramepointerValidator&) = delete;
+  FunctionFramepointerValidator(FunctionFramepointerValidator&&) = delete;
+  FunctionFramepointerValidator& operator=(
+      const FunctionFramepointerValidator&&) = delete;
 
-  bool validate();
+  bool Validate();
 
  private:
-  bool isCallInstruction(const cs_insn& instruction);
-  bool isMovInstruction(const cs_insn& instruction);
-  bool isBasePointer(uint16_t reg);
-  bool isStackPointer(uint16_t reg);
-  bool isLeafFunction();
-  bool validateEpilogue();
-  bool validatePrologue();
-  bool validateFramePointers();
+  bool IsCallInstruction(const cs_insn& instruction);
+  bool IsMovInstruction(const cs_insn& instruction);
+  bool IsBasePointer(uint16_t reg);
+  bool IsStackPointer(uint16_t reg);
+  bool IsLeafFunction();
+  bool ValidatePrologue();
+  bool ValidateEpilogue();
+  bool ValidateFramePointers();
 
   cs_insn* instructions_;
   size_t instructions_count_;
