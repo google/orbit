@@ -108,14 +108,6 @@ void TcpServer::Receive(const Message& a_Message) {
   const Message::Header& MessageHeader = a_Message.GetHeader();
   ++m_NumReceivedMessages;
 
-  // Disregard messages from previous session
-  // TODO: Take care of the IsRemote case
-  if (!ConnectionManager::Get().IsService() &&
-      a_Message.m_SessionID != Message::GSessionID) {
-    ++m_NumMessagesFromPreviousSession;
-    return;
-  }
-
   switch (a_Message.GetType()) {
     case Msg_String: {
       const char* msg = static_cast<const char*>(a_Message.GetData());

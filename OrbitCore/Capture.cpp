@@ -304,13 +304,7 @@ std::vector<std::shared_ptr<Function>> Capture::GetSelectedFunctions() {
 void Capture::SendFunctionHooks() {
   PreFunctionHooks();
 
-  // TODO: this method is used for different purposes on the client and service,
-  //       clean up and split functionality clearly.  On the service, we don't
-  //       gather selected functions because the client has already sent us the
-  //       functions to selected.  They are in GSelectedFunctions.
-  if (ConnectionManager::Get().IsClient()) {
-    GSelectedFunctions = GetSelectedFunctions();
-  }
+  GSelectedFunctions = GetSelectedFunctions();
 
   for (auto& func : GSelectedFunctions) {
     uint64_t address = func->GetVirtualAddress();
