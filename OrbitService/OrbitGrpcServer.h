@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SERIVICE_ORBIT_GRPC_SERVER_H_
-#define ORBIT_SERIVICE_ORBIT_GRPC_SERVER_H_
+#ifndef ORBIT_SERVICE_ORBIT_GRPC_SERVER_H_
+#define ORBIT_SERVICE_ORBIT_GRPC_SERVER_H_
 
 #include <memory>
 #include <string>
 
-// Wrapper around GRPC server. This class takes care of regitering
+// Wrapper around GRPC server. This class takes care of registering
 // all GRPC services.
 //
 // Usage example:
@@ -29,4 +29,4 @@ class OrbitGrpcServer {
       std::string_view server_address);
 };
 
-#endif  // ORBIT_SERIVICE_ORBIT_GRPC_SERVER_H_
+#endif  // ORBIT_SERVICE_ORBIT_GRPC_SERVER_H_

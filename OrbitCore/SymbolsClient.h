@@ -32,7 +32,7 @@ class SymbolsClient {
   CoreApp* core_app_ = nullptr;
   TransactionClient* transaction_client_;
   absl::flat_hash_map<uint64_t, std::shared_ptr<Session>> id_sessions_;
-  absl::Mutex mutex_;
+  absl::Mutex id_sessions_mutex_;
 };
 
 #endif  // ORBIT_CORE_SYMBOLS_CLIENT_H_

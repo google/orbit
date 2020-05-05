@@ -32,9 +32,8 @@
 // The steps for issuing requests and receiving a response are:
 // 1. The client enqueues a request through "TransactionClient::EnqueueRequest".
 // 2. The TransactionClient schedules and sends out the request.
-// 3. Then service receives the request in its request handler.
-//    The request can be deserialized by calling
-//    "TransactionService::ReceiveRequest".
+// 3. The service receives the request in its request handler. The request can
+//    be deserialized by calling "TransactionService::ReceiveRequest".
 // 4. The service sends a response through "TransactionService::SendResponse".
 // 5. The client receives the response in its response handler.
 //    The response can be deserialized by calling

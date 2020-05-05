@@ -59,8 +59,6 @@ void TcpServer::StartServer(uint16_t a_Port) {
   m_TcpService = new TcpService();
   m_TcpServer = new tcp_server(*m_TcpService->m_IoService, a_Port);
 
-  PRINT_VAR(a_Port);
-
   serverThread_ = std::thread{[this]() { ServerThread(); }};
 
   m_StatTimer.Start();

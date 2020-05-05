@@ -74,9 +74,9 @@ class CoreApp {
   SymbolsClient* GetSymbolsClient() { return symbols_client_.get(); }
 
  private:
-  std::unique_ptr<TransactionClient> transaction_client_ = nullptr;
-  std::unique_ptr<SymbolsClient> symbols_client_ = nullptr;
-  std::unique_ptr<ProcessMemoryClient> process_memory_client_ = nullptr;
+  std::unique_ptr<TransactionClient> transaction_client_;
+  std::unique_ptr<SymbolsClient> symbols_client_;
+  std::unique_ptr<ProcessMemoryClient> process_memory_client_;
 };
 
 extern CoreApp* GCoreApp;

@@ -5,10 +5,11 @@
 #ifndef ORBIT_CORE_CRASH_HANDLER_H_
 #define ORBIT_CORE_CRASH_HANDLER_H_
 
-#include "client/crash_report_database.h"
 #include <client/crashpad_client.h>
 
 #include <string>
+
+#include "client/crash_report_database.h"
 
 class CrashHandler {
  public:
