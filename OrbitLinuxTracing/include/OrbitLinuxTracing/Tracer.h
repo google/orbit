@@ -4,6 +4,7 @@
 #include <OrbitLinuxTracing/Events.h>
 #include <OrbitLinuxTracing/Function.h>
 #include <OrbitLinuxTracing/TracerListener.h>
+#include <OrbitLinuxTracing/TracingOptions.h>
 #include <unistd.h>
 
 #include <atomic>
@@ -32,32 +33,30 @@ class Tracer {
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
   void SetTraceContextSwitches(bool trace_context_switches) {
-    trace_context_switches_ = trace_context_switches;
+    tracing_options_.trace_context_switches = trace_context_switches;
   }
 
-  void SetTraceCallstacks(bool trace_callstacks) {
-    trace_callstacks_ = trace_callstacks;
+  void SetSamplingMethod(SamplingMethod sampling_method) {
+    tracing_options_.sampling_method = sampling_method;
   }
 
   void SetTraceInstrumentedFunctions(bool trace_instrumented_functions) {
-    trace_instrumented_functions_ = trace_instrumented_functions;
+    tracing_options_.trace_instrumented_functions =
+        trace_instrumented_functions;
   }
 
   void SetTraceGpuDriver(bool trace_gpu_driver) {
-    trace_gpu_driver_ = trace_gpu_driver;
+    tracing_options_.trace_gpu_driver = trace_gpu_driver;
   }
 
   void Start() {
     *exit_requested_ = false;
     thread_ = std::make_shared<std::thread>(
         &Tracer::Run, pid_, sampling_period_ns_, instrumented_functions_,
-        listener_, trace_context_switches_, trace_callstacks_,
-        trace_instrumented_functions_, trace_gpu_driver_, exit_requested_);
+        listener_, tracing_options_, exit_requested_);
   }
 
-  bool IsTracing() {
-    return thread_ != nullptr && thread_->joinable();
-  }
+  bool IsTracing() { return thread_ != nullptr && thread_->joinable(); }
 
   void Stop() {
     *exit_requested_ = true;
@@ -73,11 +72,10 @@ class Tracer {
   std::vector<Function> instrumented_functions_;
 
   TracerListener* listener_ = nullptr;
-
-  bool trace_context_switches_ = true;
-  bool trace_callstacks_ = true;
-  bool trace_instrumented_functions_ = true;
-  bool trace_gpu_driver_ = true;
+  TracingOptions tracing_options_{.trace_context_switches = true,
+                                  .sampling_method = kDwarf,
+                                  .trace_instrumented_functions = true,
+                                  .trace_gpu_driver = true};
 
   // exit_requested_ must outlive this object because it is used by thread_.
   // The control block of shared_ptr is thread safe (i.e., reference counting
@@ -88,9 +86,8 @@ class Tracer {
 
   static void Run(pid_t pid, uint64_t sampling_period_ns,
                   const std::vector<Function>& instrumented_functions,
-                  TracerListener* listener, bool trace_context_switches,
-                  bool trace_callstacks, bool trace_instrumented_functions,
-                  bool trace_gpu_driver,
+                  TracerListener* listener,
+                  const TracingOptions& tracing_options,
                   const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
   static std::optional<uint64_t> ComputeSamplingPeriodNs(

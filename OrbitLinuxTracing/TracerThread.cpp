@@ -181,7 +181,19 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
   std::vector<int> sampling_tracing_fds;
   std::vector<PerfEventRingBuffer> sampling_ring_buffers;
   for (int32_t cpu : cpus) {
-    int sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
+    int sampling_fd;
+    switch (tracing_options_.sampling_method) {
+      case kFramePointers:
+        sampling_fd = callchain_sample_event_open(sampling_period_ns_, -1, cpu);
+        break;
+      case kDwarf:
+        sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
+        break;
+      case kOff:
+        FATAL("Sampling is off. This statement is unreachable.");
+        CloseFileDescriptors(sampling_tracing_fds);
+        return false;
+    }
     std::string buffer_name = absl::StrFormat("sampling_%d", cpu);
     PerfEventRingBuffer sampling_ring_buffer{
         sampling_fd, SAMPLING_RING_BUFFER_SIZE_KB, buffer_name};
@@ -197,6 +209,9 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
 
   for (int fd : sampling_tracing_fds) {
     tracing_fds_.push_back(fd);
+    if (tracing_options_.sampling_method == kFramePointers) {
+      frame_pointers_sampling_fds_.emplace(fd);
+    }
   }
   for (PerfEventRingBuffer& buffer : sampling_ring_buffers) {
     ring_buffers_.emplace_back(std::move(buffer));
@@ -323,19 +338,19 @@ void TracerThread::Run(
 
   bool perf_event_open_errors = false;
 
-  if (trace_context_switches_) {
+  if (tracing_options_.trace_context_switches) {
     perf_event_open_errors |= !OpenContextSwitches(all_cpus);
   }
 
   perf_event_open_errors |= !OpenMmapTask(cpuset_cpus);
 
   bool uprobes_event_open_errors = false;
-  if (trace_instrumented_functions_) {
+  if (tracing_options_.trace_instrumented_functions) {
     uprobes_event_open_errors = !OpenUprobes(cpuset_cpus);
     perf_event_open_errors |= uprobes_event_open_errors;
   }
 
-  if (trace_callstacks_) {
+  if (tracing_options_.sampling_method != SamplingMethod::kOff) {
     perf_event_open_errors |= !OpenSampling(cpuset_cpus);
   }
 
@@ -350,7 +365,7 @@ void TracerThread::Run(
   }
 
   bool gpu_event_open_errors = false;
-  if (trace_gpu_driver_) {
+  if (tracing_options_.trace_gpu_driver) {
     // We want to trace all GPU activity, hence we pass 'all_cpus' here.
     gpu_event_open_errors = !OpenGpuTracepoints(all_cpus);
   }
@@ -587,20 +602,26 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
                                       PerfEventRingBuffer* ring_buffer) {
   int fd = ring_buffer->GetFileDescriptor();
   bool is_gpu_event = gpu_tracing_fds_.contains(fd);
+  bool is_frame_pointers_sample = frame_pointers_sampling_fds_.contains(fd);
 
   constexpr size_t size_of_uprobes = sizeof(perf_event_sp_ip_8bytes_sample);
-  bool is_uprobe = !is_gpu_event && (header.size == size_of_uprobes);
+  bool is_uprobe = !is_gpu_event && !is_frame_pointers_sample &&
+                   (header.size == size_of_uprobes);
 
   constexpr size_t size_of_uretprobes = sizeof(perf_event_ax_sample);
-  bool is_uretprobe = !is_gpu_event && (header.size == size_of_uretprobes);
+  bool is_uretprobe = !is_gpu_event && !is_frame_pointers_sample &&
+                      (header.size == size_of_uretprobes);
 
   constexpr size_t size_of_sample = sizeof(perf_event_stack_sample);
-  bool is_sample = !is_gpu_event && (header.size == size_of_sample);
+  bool is_sample = !is_gpu_event && !is_frame_pointers_sample &&
+                   (header.size == size_of_sample);
 
   static_assert(size_of_uprobes != size_of_uretprobes &&
                 size_of_uprobes != size_of_sample &&
                 size_of_uretprobes != size_of_sample);
-  CHECK(is_gpu_event + is_uprobe + is_uretprobe + is_sample <= 1);
+  CHECK(is_gpu_event + is_uprobe + is_uretprobe + is_sample +
+            is_frame_pointers_sample <=
+        1);
 
   if (is_uprobe) {
     auto event = make_unique_for_overwrite<UprobesPerfEvent>();
@@ -639,6 +660,17 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
       return;
     }
     auto event = ConsumeSamplePerfEvent(ring_buffer, header);
+    event->SetOriginFileDescriptor(fd);
+    DeferEvent(std::move(event));
+    ++stats_.sample_count;
+
+  } else if (is_frame_pointers_sample) {
+    pid_t pid = ReadSampleRecordPid(ring_buffer);
+    if (pid != pid_) {
+      ring_buffer->SkipRecord(header);
+      return;
+    }
+    auto event = ConsumeCallchainSamplePerfEvent(ring_buffer, header);
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
@@ -702,6 +734,8 @@ void TracerThread::Reset() {
   ring_buffers_.clear();
   uprobes_ids_to_function_.clear();
   gpu_tracing_fds_.clear();
+  frame_pointers_sampling_fds_.clear();
+
   deferred_events_.clear();
   stop_deferred_thread_ = false;
 }

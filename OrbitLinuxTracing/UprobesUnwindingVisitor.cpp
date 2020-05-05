@@ -41,6 +41,23 @@ void UprobesUnwindingVisitor::visit(SamplePerfEvent* event) {
   listener_->OnCallstack(returned_callstack);
 }
 
+void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
+  CHECK(listener_ != nullptr);
+
+  if (current_maps_ == nullptr) {
+    return;
+  }
+
+  // TODO(kuebler): handle the mapping/patching for uprobes
+
+  Callstack returned_callstack{
+      event->GetTid(),
+      CallstackFramesFromInstructionPointers(event->GetCallchain(),
+                                             event->GetCallchainSize()),
+      event->GetTimestamp()};
+  listener_->OnCallstack(returned_callstack);
+}
+
 void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
   CHECK(listener_ != nullptr);
 
@@ -117,6 +134,20 @@ UprobesUnwindingVisitor::CallstackFramesFromLibunwindstackFrames(
     callstack_frames.emplace_back(
         libunwindstack_frame.pc, libunwindstack_frame.function_name,
         libunwindstack_frame.function_offset, libunwindstack_frame.map_name);
+  }
+  return callstack_frames;
+}
+
+std::vector<CallstackFrame>
+UprobesUnwindingVisitor::CallstackFramesFromInstructionPointers(
+    const uint64_t* frames, uint64_t size) {
+  if (size == 0) {
+    return std::vector<CallstackFrame>();
+  }
+  std::vector<CallstackFrame> callstack_frames;
+  for (uint64_t i = 0; i < size; i++) {
+    callstack_frames.emplace_back(frames[i], "",
+                                  CallstackFrame::kUnknownFunctionOffset, "");
   }
   return callstack_frames;
 }

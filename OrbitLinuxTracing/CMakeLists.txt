@@ -23,7 +23,8 @@ target_sources(OrbitLinuxTracing PUBLIC
         include/OrbitLinuxTracing/Function.h
         include/OrbitLinuxTracing/OrbitTracing.h
         include/OrbitLinuxTracing/Tracer.h
-        include/OrbitLinuxTracing/TracerListener.h)
+        include/OrbitLinuxTracing/TracerListener.h
+        include/OrbitLinuxTracing/TracingOptions.h)
 
 target_sources(OrbitLinuxTracing PRIVATE
         GpuTracepointEventProcessor.h

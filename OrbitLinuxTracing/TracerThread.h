@@ -4,6 +4,7 @@
 #include <OrbitLinuxTracing/Events.h>
 #include <OrbitLinuxTracing/Function.h>
 #include <OrbitLinuxTracing/TracerListener.h>
+#include <OrbitLinuxTracing/TracingOptions.h>
 #include <linux/perf_event.h>
 
 #include <atomic>
@@ -40,20 +41,8 @@ class TracerThread {
 
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
-  void SetTraceContextSwitches(bool trace_context_switches) {
-    trace_context_switches_ = trace_context_switches;
-  }
-
-  void SetTraceCallstacks(bool trace_callstacks) {
-    trace_callstacks_ = trace_callstacks;
-  }
-
-  void SetTraceInstrumentedFunctions(bool trace_instrumented_functions) {
-    trace_instrumented_functions_ = trace_instrumented_functions;
-  }
-
-  void SetTraceGpuDriver(bool trace_gpu_driver) {
-    trace_gpu_driver_ = trace_gpu_driver;
+  void SetTracingOptions(const TracingOptions& tracing_options) {
+    tracing_options_ = tracing_options;
   }
 
   void Run(const std::shared_ptr<std::atomic<bool>>& exit_requested);
@@ -112,16 +101,13 @@ class TracerThread {
   std::vector<Function> instrumented_functions_;
 
   TracerListener* listener_ = nullptr;
-
-  bool trace_context_switches_ = true;
-  bool trace_callstacks_ = true;
-  bool trace_instrumented_functions_ = true;
-  bool trace_gpu_driver_ = true;
+  TracingOptions tracing_options_;
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
   absl::flat_hash_map<uint64_t, const Function*> uprobes_ids_to_function_;
   absl::flat_hash_set<int> gpu_tracing_fds_;
+  absl::flat_hash_set<int> frame_pointers_sampling_fds_;
 
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;

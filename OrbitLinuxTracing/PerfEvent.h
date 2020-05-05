@@ -254,6 +254,33 @@ class SamplePerfEvent : public PerfEvent {
   }
 };
 
+class CallchainSamplePerfEvent : public PerfEvent {
+ public:
+  perf_event_callchain_sample ring_buffer_record;
+  std::vector<uint64_t> ips;
+  explicit CallchainSamplePerfEvent(uint64_t callchain_size)
+      : ips(callchain_size) {}
+
+  uint64_t GetTimestamp() const override {
+    return ring_buffer_record.sample_id.time;
+  }
+
+  void Accept(PerfEventVisitor* visitor) override;
+
+  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
+  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
+
+  uint64_t GetStreamId() const {
+    return ring_buffer_record.sample_id.stream_id;
+  }
+
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+
+  const uint64_t* GetCallchain() const { return ips.data(); }
+
+  uint64_t GetCallchainSize() const { return ring_buffer_record.nr; }
+};
+
 class AbstractUprobesPerfEvent {
  public:
   const Function* GetFunction() const { return function_; }

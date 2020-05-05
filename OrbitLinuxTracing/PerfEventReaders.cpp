@@ -52,6 +52,27 @@ std::unique_ptr<SamplePerfEvent> ConsumeSamplePerfEvent(
   return event;
 }
 
+std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  uint64_t nr = 0;
+  ring_buffer->ReadValueAtOffset(&nr,
+                                 offsetof(perf_event_callchain_sample, nr));
+  auto event = std::make_unique<CallchainSamplePerfEvent>(nr);
+  event->ring_buffer_record.header = header;
+  ring_buffer->ReadValueAtOffset(
+      &event->ring_buffer_record.sample_id,
+      offsetof(perf_event_callchain_sample, sample_id));
+
+  // TODO(kuebler): we should have templated read methods
+  uint64_t size_in_bytes = nr * sizeof(uint64_t) / sizeof(char);
+  ring_buffer->ReadRawAtOffset(reinterpret_cast<char*>(event->ips.data()),
+                               offsetof(perf_event_callchain_sample, nr) +
+                                   sizeof(perf_event_callchain_sample::nr),
+                               size_in_bytes);
+  ring_buffer->SkipRecord(header);
+  return event;
+}
+
 std::unique_ptr<PerfEventSampleRaw> ConsumeSampleRaw(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   uint32_t size = 0;
