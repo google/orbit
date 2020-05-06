@@ -15,8 +15,7 @@
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
-ProcessesDataView::ProcessesDataView() : DataView(DataViewType::PROCESSES) {
-}
+ProcessesDataView::ProcessesDataView() : DataView(DataViewType::PROCESSES) {}
 
 //-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& ProcessesDataView::GetColumns() {

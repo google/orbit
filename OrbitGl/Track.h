@@ -63,7 +63,7 @@ class Track : public Pickable {
   Vec2 GetMoveDelta() const {
     return m_Moving ? m_MousePos[1] - m_MousePos[0] : Vec2(0, 0);
   }
-  void SetName(const std::string& name) { name_= name; }
+  void SetName(const std::string& name) { name_ = name; }
   const std::string& GetName() const { return name_; }
   void SetLabel(const std::string& label) { label_ = label; }
   const std::string& GetLabel() const { return label_; }

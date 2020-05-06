@@ -20,8 +20,7 @@
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
-SessionsDataView::SessionsDataView() : DataView(DataViewType::SESSIONS) {
-}
+SessionsDataView::SessionsDataView() : DataView(DataViewType::SESSIONS) {}
 
 //-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& SessionsDataView::GetColumns() {

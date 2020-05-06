@@ -15,8 +15,7 @@
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
-FunctionsDataView::FunctionsDataView() : DataView(DataViewType::FUNCTIONS) {
-}
+FunctionsDataView::FunctionsDataView() : DataView(DataViewType::FUNCTIONS) {}
 
 //-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {

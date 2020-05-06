@@ -18,8 +18,8 @@ class ProcessListManagerImpl final : public ProcessListManager {
   explicit ProcessListManagerImpl(std::shared_ptr<grpc::Channel> channel,
                                   absl::Duration refresh_timeout);
 
-  void SetCallback(const std::function<void(std::vector<ProcessInfo>&&)>&
-                       listener) override;
+  void SetCallback(
+      const std::function<void(std::vector<ProcessInfo>&&)>& listener) override;
   void Start() override;
   void Shutdown() override;
 

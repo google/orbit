@@ -17,7 +17,7 @@ struct ApplicationOptions {
   std::string asio_server_address;
   // GRPC connection string
   std::string grpc_server_address;
-  
+
   CrashHandler* crash_handler = nullptr;
 };
 
