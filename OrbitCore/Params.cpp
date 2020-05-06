@@ -36,7 +36,7 @@ Params::Params()
       m_NumBytesAssembly(1024),
       m_DiffArgs("%1 %2") {}
 
-ORBIT_SERIALIZE(Params, 16) {
+ORBIT_SERIALIZE(Params, 17) {
   ORBIT_NVP_VAL(0, m_LoadTypeInfo);
   ORBIT_NVP_VAL(0, m_SendCallStacks);
   ORBIT_NVP_VAL(0, m_MaxNumTimers);
@@ -60,7 +60,7 @@ ORBIT_SERIALIZE(Params, 16) {
   ORBIT_NVP_VAL(13, m_ProcessFilter);
   ORBIT_NVP_VAL(14, m_BpftraceCallstacks);
   ORBIT_NVP_VAL(15, m_SystemWideScheduling);
-  ORBIT_NVP_VAL(15, m_UploadDumpsToServer);
+  ORBIT_NVP_VAL(17, m_UploadDumpsToServer);
 }
 
 //-----------------------------------------------------------------------------
