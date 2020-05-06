@@ -42,6 +42,8 @@ You can call 'pip3 show -f conan' to figure out where conan.exe was placed.
 # Start build
 if ($args) {
   & "$PSScriptRoot\build.ps1" $args
+} elseif (conan remote list | Select-String -NotMatch "Disabled:" | Select-String "artifactory:") {
+  & "$PSScriptRoot\build.ps1" "default_relwithdebinfo" "ggp_relwithdebinfo"
 } else {
   & "$PSScriptRoot\build.ps1"
 }
