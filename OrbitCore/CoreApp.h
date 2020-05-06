@@ -53,6 +53,8 @@ class CoreApp {
   virtual void ProcessContextSwitch(const ContextSwitch& /*a_ContextSwitch*/) {}
   virtual void AddAddressInfo(LinuxAddressInfo /*address_info*/) {}
   virtual void AddKeyAndString(uint64_t /*key*/, std::string_view /*str*/) {}
+  virtual void UpdateThreadName(uint32_t /*thread_id*/,
+                                const std::string& /*thread_name*/) {}
   virtual void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) {}
   virtual void ApplySession(const Session&) {}
   virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*

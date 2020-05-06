@@ -9,6 +9,7 @@
 #include "ScopeTimer.h"
 #include "StringManager.h"
 #include "TcpServer.h"
+#include "TidAndThreadName.h"
 #include "absl/synchronization/mutex.h"
 
 // This class buffers tracing data to be sent to the client
@@ -29,6 +30,8 @@ class LinuxTracingBuffer {
   void RecordAddressInfo(LinuxAddressInfo&& address_info);
   void RecordKeyAndString(KeyAndString&& key_and_string);
   void RecordKeyAndString(uint64_t key, const std::string& str);
+  void RecordThreadName(TidAndThreadName&& tid_and_name);
+  void RecordThreadName(uint32_t tid, const std::string& name);
 
   // These move the content of the corresponding buffer to the output vector.
   // They return true if the buffer was not empty.
@@ -38,6 +41,7 @@ class LinuxTracingBuffer {
   bool ReadAllHashedCallstacks(std::vector<CallstackEvent>* out_buffer);
   bool ReadAllAddressInfos(std::vector<LinuxAddressInfo>* out_buffer);
   bool ReadAllKeysAndStrings(std::vector<KeyAndString>* out_buffer);
+  bool ReadAllThreadNames(std::vector<TidAndThreadName>* out_buffer);
 
   void Reset();
 
@@ -60,6 +64,9 @@ class LinuxTracingBuffer {
 
   absl::Mutex key_and_string_buffer_mutex_;
   std::vector<KeyAndString> key_and_string_buffer_;
+
+  absl::Mutex thread_name_buffer_mutex_;
+  std::vector<TidAndThreadName> thread_name_buffer_;
 };
 
 #endif  // ORBIT_CORE_LINUX_TRACING_BUFFER_H_

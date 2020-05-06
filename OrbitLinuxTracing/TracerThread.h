@@ -76,12 +76,15 @@ class TracerThread {
   void ProcessLostEvent(const perf_event_header& header,
                         PerfEventRingBuffer* ring_buffer);
 
-  void Reset();
-  void PrintStatsIfTimerElapsed();
-
   void DeferEvent(std::unique_ptr<PerfEvent> event);
   std::vector<std::unique_ptr<PerfEvent>> ConsumeDeferredEvents();
   void ProcessDeferredEvents();
+
+  void UpdateThreadNamesIfDelayElapsed();
+
+  void PrintStatsIfTimerElapsed();
+
+  void Reset();
 
   // Number of records to read consecutively from a perf_event_open ring buffer
   // before switching to another one.
@@ -115,6 +118,10 @@ class TracerThread {
   std::shared_ptr<PerfEventProcessor2> uprobes_event_processor_;
   std::shared_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
 
+  static constexpr uint64_t THREAD_NAMES_UPDATE_DELAY_MS = 1000;
+  absl::flat_hash_map<pid_t, std::string> thread_names_;
+  uint64_t last_thread_names_update = 0;
+
   struct EventStats {
     void Reset() {
       event_count_begin_ns = MonotonicTimestampNs();
@@ -143,6 +150,9 @@ class TracerThread {
 
   static constexpr uint64_t EVENT_STATS_WINDOW_S = 5;
   EventStats stats_{};
+
+  static constexpr uint64_t NS_PER_MILLISECOND = 1'000'000;
+  static constexpr uint64_t NS_PER_SECOND = 1'000'000'000;
 };
 
 }  // namespace LinuxTracing

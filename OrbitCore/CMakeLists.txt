@@ -75,6 +75,7 @@ target_sources(
          TcpForward.h
          TestRemoteMessages.h
          Threading.h
+         TidAndThreadName.h
          TimerManager.h
          TransactionClient.h
          TransactionService.h

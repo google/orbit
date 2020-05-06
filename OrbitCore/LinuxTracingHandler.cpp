@@ -195,3 +195,7 @@ void LinuxTracingHandler::OnGpuJob(const LinuxTracing::GpuJob& gpu_job) {
   timer_start_to_finish.m_Type = Timer::GPU_ACTIVITY;
   tracing_buffer_->RecordTimer(std::move(timer_start_to_finish));
 }
+
+void LinuxTracingHandler::OnThreadName(pid_t tid, const std::string& name) {
+  tracing_buffer_->RecordThreadName(tid, name);
+}

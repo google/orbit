@@ -71,6 +71,7 @@ enum MessageType : int16_t {
   Msg_KeysAndStrings,
   Msg_DebugSymbols,
   Msg_MemoryTransfer,
+  Msg_ThreadNames,
 };
 
 //-----------------------------------------------------------------------------

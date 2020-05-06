@@ -23,6 +23,8 @@ std::string ReadMaps(pid_t pid);
 
 std::vector<pid_t> ListThreads(pid_t pid);
 
+std::string GetThreadName(pid_t tid);
+
 int GetNumCores();
 
 std::optional<std::string> ExtractCpusetFromCgroup(

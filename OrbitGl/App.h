@@ -93,6 +93,8 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) override;
   void AddAddressInfo(LinuxAddressInfo address_info) override;
   void AddKeyAndString(uint64_t key, std::string_view str) override;
+  void UpdateThreadName(uint32_t thread_id,
+                        const std::string& thread_name) override;
 
   int* GetScreenRes() { return m_ScreenRes; }
 

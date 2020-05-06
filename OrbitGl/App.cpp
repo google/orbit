@@ -186,6 +186,12 @@ void OrbitApp::AddKeyAndString(uint64_t key, std::string_view str) {
 }
 
 //-----------------------------------------------------------------------------
+void OrbitApp::UpdateThreadName(uint32_t thread_id,
+                                const std::string& thread_name) {
+  Capture::GTargetProcess->SetThreadName(thread_id, thread_name);
+}
+
+//-----------------------------------------------------------------------------
 void OrbitApp::LoadSystrace(const std::string& a_FileName) {
   SystraceManager::Get().Clear();
   Capture::ClearCaptureData();
