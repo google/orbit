@@ -360,14 +360,16 @@ void TracerThread::Run(
   // want to catch it.
   InitUprobesEventProcessor();
 
-  if (!InitGpuTracepointEventProcessor()) {
-    ERROR("Failed to initialize GPU tracepoint event processor");
-  }
-
   bool gpu_event_open_errors = false;
   if (tracing_options_.trace_gpu_driver) {
-    // We want to trace all GPU activity, hence we pass 'all_cpus' here.
-    gpu_event_open_errors = !OpenGpuTracepoints(all_cpus);
+    if (InitGpuTracepointEventProcessor()) {
+      // We want to trace all GPU activity, hence we pass 'all_cpus' here.
+      gpu_event_open_errors = !OpenGpuTracepoints(all_cpus);
+    } else {
+      ERROR(
+          "Failed to initialize GPU tracepoint event processor: "
+          "skipping opening GPU tracepoint events");
+    }
   }
 
   if (gpu_event_open_errors) {
