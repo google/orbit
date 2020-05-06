@@ -25,6 +25,7 @@ target_sources(
          Diff.h
          EventBuffer.h
          EventClasses.h
+         FunctionFramepointerValidator.h
          FunctionStats.h
          Hashing.h
          Injection.h
@@ -95,6 +96,7 @@ target_sources(
           Diff.cpp
           ElfFile.cpp
           EventBuffer.cpp
+          FunctionFramepointerValidator.cpp
           FunctionStats.cpp
           Injection.cpp
           Introspection.cpp
@@ -183,6 +185,7 @@ target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(
   OrbitCore
   PUBLIC OrbitBase
+         capstone::capstone
          cereal::cereal
          xxHash::xxHash
          concurrentqueue::concurrentqueue
@@ -220,6 +223,7 @@ add_executable(OrbitCoreTests)
 
 target_sources(OrbitCoreTests PRIVATE
     ElfFileTests.cpp
+    FunctionFramepointerValidatorTest.cpp
     LinuxTracingBufferTest.cpp
     PathTest.cpp
     RingBufferTest.cpp
