@@ -27,6 +27,14 @@ bool FunctionFramepointerValidator::IsCallInstruction(
   return false;
 }
 
+bool FunctionFramepointerValidator::IsRetInstruction(
+    const cs_insn& instruction) {
+  for (uint8_t i = 0; i < instruction.detail->groups_count; i++) {
+    if (instruction.detail->groups[i] == X86_GRP_RET) return true;
+  }
+  return false;
+}
+
 bool FunctionFramepointerValidator::IsMovInstruction(
     const cs_insn& instruction) {
   return instruction.id == X86_INS_MOV || instruction.id == X86_INS_MOVQ;
@@ -47,6 +55,10 @@ bool FunctionFramepointerValidator::ValidatePrologue() {
   // check the first instruction: it must be "push ebp"
   if (cs_regs_access(handle_, &instructions_[0], regs_read, &read_count,
                      regs_write, &write_count) == 0) {
+    if (instructions_[0].id == X86_INS_ENTER) {
+      return true;
+    }
+    
     if (instructions_[0].id != X86_INS_PUSH || read_count != 2 ||
         !IsStackPointer(regs_read[0]) || !IsBasePointer(regs_read[1])) {
       return false;
@@ -71,9 +83,10 @@ bool FunctionFramepointerValidator::ValidatePrologue() {
 // all are correct. However, we would not expect a compiler to produce this,
 // and for hand written assembly, we accept wrong unwinding results.
 bool FunctionFramepointerValidator::ValidateEpilogue() {
-  for (size_t i = 0; i < instructions_count_ - 1; i++) {
+  for (size_t i = 0; i < instructions_count_ - 2; i++) {
     // "leave" is equivalent to "mov esp, ebp" "pop ebp"
-    if (instructions_[i].id == X86_INS_LEAVE) {
+    if (instructions_[i].id == X86_INS_LEAVE &&
+        IsRetInstruction(instructions_[i + 1])) {
       return true;
     }
 
@@ -83,46 +96,43 @@ bool FunctionFramepointerValidator::ValidateEpilogue() {
     if (instructions_[i + 1].id != X86_INS_POP) {
       continue;
     }
+    if (!IsRetInstruction(instructions_[i + 2])) {
+      continue;
+    }
 
-    cs_regs regs_read_first, regs_write_first, regs_read_second,
-        regs_write_second;
-    uint8_t read_count_first, write_count_first, read_count_second,
-        write_count_second;
+    cs_regs regs_read, regs_write;
+    uint8_t read_count, write_count;
 
     // Check first instruction to be "mov esp, ebp".
     // 1. try to get which registers has been accessed.
-    if (cs_regs_access(handle_, &instructions_[i], regs_read_first,
-                       &read_count_first, regs_write_first,
-                       &write_count_first) != 0) {
+    if (cs_regs_access(handle_, &instructions_[i], regs_read, &read_count,
+                       regs_write, &write_count) != 0) {
       continue;
     }
     // 2. Is there one read (base pointer) and one write (stack pointer).
-    if (read_count_first != 1 || write_count_first != 1) {
+    if (read_count != 1 || write_count != 1) {
       continue;
     }
     // 3. Check if the registers are actually the correct ones.
-    if (!IsBasePointer(regs_read_first[0]) ||
-        !IsStackPointer(regs_write_first[0])) {
+    if (!IsBasePointer(regs_read[0]) || !IsStackPointer(regs_write[0])) {
       continue;
     }
 
     // Check second instruction to be "pop ebp".
     // 1. try to get which registers has been accessed.
-    if (cs_regs_access(handle_, &instructions_[i + 1], regs_read_second,
-                       &read_count_second, regs_write_second,
-                       &write_count_second) != 0) {
+    if (cs_regs_access(handle_, &instructions_[i + 1], regs_read, &read_count,
+                       regs_write, &write_count) != 0) {
       continue;
     }
     // 2. Is there one read (stack pointer) and two writes
     // (stack pointer and base pointer).
-    if (read_count_second != 1 || write_count_second != 2) {
+    if (read_count != 1 || write_count != 2) {
       continue;
     }
 
     // 3. Check if the registers are actually the correct ones.
-    if (IsStackPointer(regs_read_second[0]) &&
-        IsStackPointer(regs_write_second[0]) &&
-        IsBasePointer(regs_write_second[1])) {
+    if (IsStackPointer(regs_read[0]) && IsStackPointer(regs_write[0]) &&
+        IsBasePointer(regs_write[1])) {
       return true;
     }
   }
