@@ -16,11 +16,6 @@
 ABSL_FLAG(uint16_t, sampling_rate, 1000,
           "Frequency of callstack sampling in samples per second");
 
-// TODO: This is a temporary feature flag. Remove this once we enable this
-//  globally.
-ABSL_FLAG(bool, trace_gpu_driver, false,
-          "Enables tracing of GPU driver tracepoint events");
-
 void LinuxTracingHandler::Start(
     pid_t pid,
     const std::vector<std::shared_ptr<Function>>& selected_functions) {
@@ -46,7 +41,7 @@ void LinuxTracingHandler::Start(
   tracer_->SetTraceContextSwitches(GParams.m_TrackContextSwitches);
   tracer_->SetSamplingMethod(LinuxTracing::SamplingMethod::kDwarf);
   tracer_->SetTraceInstrumentedFunctions(true);
-  tracer_->SetTraceGpuDriver(absl::GetFlag(FLAGS_trace_gpu_driver));
+  tracer_->SetTraceGpuDriver(true);
 
   tracer_->Start();
 }
