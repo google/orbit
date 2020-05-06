@@ -2,7 +2,7 @@
 
 #include "GlCanvas.h"
 
-GraphTrack::GraphTrack(TimeGraph* time_graph) { SetTimeGraph(time_graph); }
+GraphTrack::GraphTrack(TimeGraph* time_graph) : Track(time_graph) {}
 
 void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
   UNUSED(picking);

@@ -52,6 +52,7 @@ class ThreadTrack : public Track {
 
   void SetEventTrackColor(Color color);
   void ClearSelectedEvents() { event_track_->ClearSelectedEvents(); }
+  bool IsEmpty() const;
 
   uint32_t GetThreadId() const { return thread_id_; }
 

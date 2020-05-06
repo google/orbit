@@ -10,7 +10,7 @@
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
-Track::Track() {
+Track::Track(TimeGraph* time_graph) : time_graph_(time_graph) {
   m_MousePos[0] = m_MousePos[1] = Vec2(0, 0);
   m_Pos = Vec2(0, 0);
   m_Size = Vec2(0, 0);

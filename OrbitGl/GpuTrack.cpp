@@ -11,8 +11,7 @@
 //-----------------------------------------------------------------------------
 GpuTrack::GpuTrack(TimeGraph* time_graph,
                    std::shared_ptr<StringManager> string_manager,
-                   uint64_t timeline_hash) {
-  time_graph_ = time_graph;
+                   uint64_t timeline_hash) : Track(time_graph) {
   text_renderer_ = time_graph->GetTextRenderer();
   timeline_hash_ = timeline_hash;
 
