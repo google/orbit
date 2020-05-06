@@ -36,9 +36,9 @@ std::vector<std::string> ReadSymbolsFile() {
   if (!infile.fail()) {
     std::string line;
     while (std::getline(infile, line)) {
-      if (absl::StartsWith(line, "//") || line == "") continue;
+      if (absl::StartsWith(line, "//") || line.empty()) continue;
 
-      std::string dir = line;
+      const std::string& dir = line;
       if (Path::DirExists(dir)) {
         directories.push_back(dir);
       }
@@ -77,8 +77,8 @@ bool LoadFromElfFile(std::shared_ptr<Module> module,
 
 bool FindAndLoadSymbols(std::shared_ptr<Module> module,
                         const std::vector<std::string>& search_directories) {
-  FAIL_IF(module->m_DebugSignature.empty(), "build id is empty of module %s",
-          module->m_Name.c_str());
+  FAIL_IF(module->m_DebugSignature.empty(), "build id of module is empty: %s",
+          module->m_Name);
   std::string name_without_extension = Path::StripExtension(module->m_Name);
 
   std::vector<std::string> search_file_paths;
@@ -89,7 +89,7 @@ bool FindAndLoadSymbols(std::shared_ptr<Module> module,
     search_file_paths.emplace_back(directory + module->m_Name);
   }
 
-  LOG("Trying to find symbols for module %s", module->m_Name.c_str());
+  LOG("Trying to find symbols for module: %s", module->m_Name);
   for (const auto& symbols_file_path : search_file_paths) {
     if (!Path::FileExists(symbols_file_path)) continue;
 
@@ -98,6 +98,8 @@ bool FindAndLoadSymbols(std::shared_ptr<Module> module,
     if (!symbols_file->HasSymtab()) continue;
     if (symbols_file->GetBuildId() != module->m_DebugSignature) continue;
 
+    LOG("Loading symbols for module \"%s\" from \"%s\"", module->m_Name,
+        symbols_file_path);
     return LoadFromElfFile(module, symbols_file);
   }
 
@@ -110,7 +112,7 @@ bool CheckModuleHasBuildId(std::shared_ptr<Module> module) {
         "Symbol loading from a separate file is not supported for module "
         "\"%s\", because it does not contain a build id. This likely means "
         "the build id has been turned off manually.",
-        module->m_Name.c_str());
+        module->m_Name);
     return false;
   } else {
     return true;
@@ -133,7 +135,7 @@ bool SymbolHelper::LoadSymbolsIncludedInBinary(
   std::unique_ptr<ElfFile> elf_file = ElfFile::Create(module->m_FullName);
 
   if (!elf_file) {
-    ERROR("Unable to load module as elf-file: %s", module->m_FullName.c_str());
+    ERROR("Unable to load ELF file: %s", module->m_FullName);
     return false;
   }
 
@@ -175,7 +177,7 @@ void SymbolHelper::LoadSymbolsFromDebugInfo(
 
 void SymbolHelper::FillDebugInfoFromModule(std::shared_ptr<Module> module,
                                            ModuleDebugInfo& module_info) const {
-  FAIL_IF(!module->m_Pdb, "Pdb not initiallized for module %s",
+  FAIL_IF(!module->m_Pdb, "Pdb not initialized for module: %s",
           module->m_Name.c_str());
 
   module_info.m_Name = module->m_Name;
