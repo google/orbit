@@ -73,7 +73,7 @@ class Tracer {
 
   TracerListener* listener_ = nullptr;
   TracingOptions tracing_options_{.trace_context_switches = true,
-                                  .sampling_method = kDwarf,
+                                  .sampling_method = SamplingMethod::kDwarf,
                                   .trace_instrumented_functions = true,
                                   .trace_gpu_driver = true};
 

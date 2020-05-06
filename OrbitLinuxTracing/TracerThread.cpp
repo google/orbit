@@ -183,13 +183,13 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
   for (int32_t cpu : cpus) {
     int sampling_fd;
     switch (tracing_options_.sampling_method) {
-      case kFramePointers:
+      case SamplingMethod::kFramePointers:
         sampling_fd = callchain_sample_event_open(sampling_period_ns_, -1, cpu);
         break;
-      case kDwarf:
+      case SamplingMethod::kDwarf:
         sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
         break;
-      case kOff:
+      case SamplingMethod::kOff:
         FATAL("Sampling is off. This statement is unreachable.");
         CloseFileDescriptors(sampling_tracing_fds);
         return false;
@@ -209,7 +209,7 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
 
   for (int fd : sampling_tracing_fds) {
     tracing_fds_.push_back(fd);
-    if (tracing_options_.sampling_method == kFramePointers) {
+    if (tracing_options_.sampling_method == SamplingMethod::kFramePointers) {
       frame_pointers_sampling_fds_.emplace(fd);
     }
   }
