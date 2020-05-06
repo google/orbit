@@ -41,6 +41,8 @@ TimeGraph* GCurrentTimeGraph = nullptr;
 TimeGraph::TimeGraph() {
   m_LastThreadReorder.Start();
   scheduler_track_ = std::make_shared<SchedulerTrack>(this);
+  
+  // The process track is a special ThreadTrack of id "0".
   process_track_ = GetOrCreateThreadTrack(0);
 }
 
@@ -89,6 +91,8 @@ void TimeGraph::Clear() {
   tracks_.clear();
   thread_tracks_.clear();
   scheduler_track_ = std::make_shared<SchedulerTrack>(this);
+
+  // The process track is a special ThreadTrack of id "0".
   process_track_ = GetOrCreateThreadTrack(0);
 
   m_ContextSwitchesMap.clear();

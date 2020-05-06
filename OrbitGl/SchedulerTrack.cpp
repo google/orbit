@@ -8,6 +8,10 @@
 const Color kInactiveColor(100, 100, 100, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
+SchedulerTrack::SchedulerTrack(TimeGraph* time_graph)
+    : ThreadTrack(time_graph, /*thread_id*/ 0) {
+}
+
 void SchedulerTrack::Draw(GlCanvas* /*canvas*/, bool /*picking*/) {}
 
 float SchedulerTrack::GetHeight() const {

@@ -5,8 +5,7 @@
 
 class SchedulerTrack : public ThreadTrack {
  public:
-  SchedulerTrack(TimeGraph* time_graph)
-      : ThreadTrack(time_graph, 0) {}
+  SchedulerTrack(TimeGraph* time_graph);
   ~SchedulerTrack() override = default;
 
   void Draw(GlCanvas* a_Canvas, bool a_Picking) override;
