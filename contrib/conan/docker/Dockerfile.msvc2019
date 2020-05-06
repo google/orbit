@@ -3,7 +3,7 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE.txt in the project root for license information.
 
-FROM mcr.microsoft.com/windows/servercore:1903-amd64
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
 
 SHELL ["powershell.exe", "-ExecutionPolicy", "Bypass", "-Command"]
 
@@ -31,11 +31,8 @@ RUN C:\TEMP\Install.cmd C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --n
     --installChannelUri C:\TEMP\VisualStudio.chman `
     --add Microsoft.VisualStudio.Workload.VCTools `
     --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
-    --add Microsoft.VisualStudio.Component.Windows10SDK.18362 `
+    --add Microsoft.Component.VC.Runtime.UCRTSDK `
     --add Microsoft.Component.MSBuild `
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.16299 `
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.17134 `
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.17763 `
     --add Microsoft.VisualStudio.Component.VC.ATL `
     --installPath C:\BuildTools
 
