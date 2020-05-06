@@ -159,6 +159,6 @@ void EventTrack::SelectEvents() {
 bool EventTrack::IsEmpty() const {
   ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
   const std::map<uint64_t, CallstackEvent>& callstacks =
-  GEventTracer.GetEventBuffer().GetCallstacks()[m_ThreadId];
+      GEventTracer.GetEventBuffer().GetCallstacks()[m_ThreadId];
   return callstacks.empty();
 }
