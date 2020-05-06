@@ -27,10 +27,12 @@ bool FunctionFramepointerValidator::IsCallInstruction(
   return false;
 }
 
-bool FunctionFramepointerValidator::IsRetInstruction(
+bool FunctionFramepointerValidator::IsRetOrJumpInstruction(
     const cs_insn& instruction) {
   for (uint8_t i = 0; i < instruction.detail->groups_count; i++) {
-    if (instruction.detail->groups[i] == X86_GRP_RET) return true;
+    if (instruction.detail->groups[i] == X86_GRP_RET ||
+        instruction.detail->groups[i] == X86_GRP_JUMP)
+      return true;
   }
   return false;
 }
@@ -58,7 +60,7 @@ bool FunctionFramepointerValidator::ValidatePrologue() {
     if (instructions_[0].id == X86_INS_ENTER) {
       return true;
     }
-    
+
     if (instructions_[0].id != X86_INS_PUSH || read_count != 2 ||
         !IsStackPointer(regs_read[0]) || !IsBasePointer(regs_read[1])) {
       return false;
@@ -82,11 +84,16 @@ bool FunctionFramepointerValidator::ValidatePrologue() {
 // It might be the case, that there are multiple function returns and that not
 // all are correct. However, we would not expect a compiler to produce this,
 // and for hand written assembly, we accept wrong unwinding results.
+//
+// When functions are tail call optimized, the callee might not have a "ret"
+// after the epilogue. In this case we just assume that a "jump" after the
+// epilogue is the return to the caller.
+// TODO(kuebler): Better handling for tail call optimization
 bool FunctionFramepointerValidator::ValidateEpilogue() {
   for (size_t i = 0; i < instructions_count_ - 2; i++) {
     // "leave" is equivalent to "mov esp, ebp" "pop ebp"
     if (instructions_[i].id == X86_INS_LEAVE &&
-        IsRetInstruction(instructions_[i + 1])) {
+        IsRetOrJumpInstruction(instructions_[i + 1])) {
       return true;
     }
 
@@ -96,7 +103,7 @@ bool FunctionFramepointerValidator::ValidateEpilogue() {
     if (instructions_[i + 1].id != X86_INS_POP) {
       continue;
     }
-    if (!IsRetInstruction(instructions_[i + 2])) {
+    if (!IsRetOrJumpInstruction(instructions_[i + 2])) {
       continue;
     }
 
