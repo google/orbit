@@ -68,8 +68,8 @@ void Track::Draw(GlCanvas* a_Canvas, bool a_Picking) {
   glVertex3f(x0, y1, track_z);
   glEnd();
 
-  a_Canvas->AddText(label_.c_str(), x0, y1 + label_offset + m_Size[1],
-                    text_z, Color(255, 255, 255, 255));
+  a_Canvas->AddText(label_.c_str(), x0, y1 + label_offset + m_Size[1], text_z,
+                    Color(255, 255, 255, 255));
 
   m_Canvas = a_Canvas;
 }

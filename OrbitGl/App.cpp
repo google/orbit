@@ -159,14 +159,15 @@ void OrbitApp::ProcessTimer(const Timer& a_Timer, const std::string&) {
 void OrbitApp::ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) {
   Capture::GSamplingProfiler->AddCallStack(a_CallStack.callstack_);
   GEventTracer.GetEventBuffer().AddCallstackEvent(
-      a_CallStack.time_, a_CallStack.callstack_.m_Hash, a_CallStack.callstack_.m_ThreadId);
+      a_CallStack.time_, a_CallStack.callstack_.m_Hash,
+      a_CallStack.callstack_.m_ThreadId);
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) {
   Capture::GSamplingProfiler->AddHashedCallStack(a_CallStack);
-    GEventTracer.GetEventBuffer().AddCallstackEvent(
-        a_CallStack.m_Time, a_CallStack.m_Id, a_CallStack.m_TID);
+  GEventTracer.GetEventBuffer().AddCallstackEvent(
+      a_CallStack.m_Time, a_CallStack.m_Id, a_CallStack.m_TID);
 }
 
 //-----------------------------------------------------------------------------
@@ -878,7 +879,8 @@ void OrbitApp::LoadModules() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadRemoteModules() {
-  GetSymbolsClient()->LoadSymbolsFromModules(Capture::GTargetProcess.get(), m_ModulesToLoad, nullptr);
+  GetSymbolsClient()->LoadSymbolsFromModules(Capture::GTargetProcess.get(),
+                                             m_ModulesToLoad, nullptr);
   m_ModulesToLoad.clear();
   GOrbitApp->FireRefreshCallbacks();
 }

@@ -19,8 +19,7 @@ class TextRenderer;
 
 class GpuTrack : public Track {
  public:
-  GpuTrack(TimeGraph* time_graph,
-           std::shared_ptr<StringManager> string_manager,
+  GpuTrack(TimeGraph* time_graph, std::shared_ptr<StringManager> string_manager,
            uint64_t timeline_hash);
   ~GpuTrack() override = default;
 
@@ -60,8 +59,8 @@ class GpuTrack : public Track {
   std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
 
  private:
-  Color GetTimerColor(const Timer& timer,
-                      bool is_selected, bool inactive) const;
+  Color GetTimerColor(const Timer& timer, bool is_selected,
+                      bool inactive) const;
   void SetTimesliceText(const Timer& timer, double elapsed_us, float min_x,
                         TextBox* text_box);
 

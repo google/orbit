@@ -211,7 +211,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   bool HasTcpServer() const { return !IsRemote(); }
 
   RuleEditor* GetRuleEditor() { return m_RuleEditor; }
-  const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >* GetRules()
+  const std::unordered_map<DWORD64, std::shared_ptr<class Rule>>* GetRules()
       override;
 
   DataView* GetOrCreateDataView(DataViewType type) override;
@@ -255,7 +255,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   bool m_NeedsThawing = false;
   bool m_UnrealEnabled = false;
 
-  std::vector<std::shared_ptr<class SamplingReport> > m_SamplingReports;
+  std::vector<std::shared_ptr<class SamplingReport>> m_SamplingReports;
   std::map<std::string, std::string> m_FileMapping;
   std::vector<std::string> m_SymbolDirectories;
   std::function<void(const std::string&)> m_UiCallback;
@@ -263,7 +263,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::wstring m_User;
   std::wstring m_License;
 
-  std::vector<std::shared_ptr<struct Module> > m_ModulesToLoad;
+  std::vector<std::shared_ptr<struct Module>> m_ModulesToLoad;
   std::vector<std::string> m_PostInitArguments;
 
   int m_NumTicks = 0;

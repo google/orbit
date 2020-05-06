@@ -604,7 +604,8 @@ std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(ThreadID a_TID) {
   return track;
 }
 
-std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(uint64_t timeline_hash) {
+std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(
+    uint64_t timeline_hash) {
   ScopeLock lock(m_Mutex);
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
@@ -731,7 +732,8 @@ void TimeGraph::OnRight() {
     const Timer& timer = selection->GetTimer();
     const TextBox* right = nullptr;
     if (timer.m_Type == Timer::GPU_ACTIVITY) {
-      right = GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetRight(selection);
+      right =
+          GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetRight(selection);
     } else {
       right = GetOrCreateThreadTrack(timer.m_TID)->GetRight(selection);
     }

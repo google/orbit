@@ -16,8 +16,7 @@ CallStackDataView::CallStackDataView()
     : DataView(DataViewType::CALLSTACK), m_CallStack(nullptr) {}
 
 //-----------------------------------------------------------------------------
-void CallStackDataView::SetAsMainInstance() {
-}
+void CallStackDataView::SetAsMainInstance() {}
 
 //-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& CallStackDataView::GetColumns() {

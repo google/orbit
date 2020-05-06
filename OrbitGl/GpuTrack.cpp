@@ -34,8 +34,8 @@ void GpuTrack::Draw(GlCanvas* canvas, bool picking) {
 }
 
 //-----------------------------------------------------------------------------
-Color GpuTrack::GetTimerColor(const Timer& timer,
-                              bool is_selected, bool inactive) const {
+Color GpuTrack::GetTimerColor(const Timer& timer, bool is_selected,
+                              bool inactive) const {
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
   if (is_selected) {
@@ -79,14 +79,13 @@ Color GpuTrack::GetTimerColor(const Timer& timer,
 //-----------------------------------------------------------------------------
 inline float GetYFromDepth(const TimeGraphLayout& layout, float track_y,
                            uint32_t depth) {
-  return track_y -
-         layout.GetSpaceBetweenTracksAndThread() -
+  return track_y - layout.GetSpaceBetweenTracksAndThread() -
          layout.GetTextBoxHeight() * (depth + 1);
 }
 
 //-----------------------------------------------------------------------------
 void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
-                                   float min_x, TextBox* text_box) {
+                                float min_x, TextBox* text_box) {
   if (text_box->GetText().empty()) {
     double elapsed_millis = elapsed_us * 0.001;
     std::string time = GetPrettyTime(elapsed_millis);
@@ -95,11 +94,10 @@ void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
 
     CHECK(timer.m_Type == Timer::GPU_ACTIVITY);
 
-    std::string text = absl::StrFormat("%s; submitter: %d  %s",
-                                       time_graph_->GetStringManager()
-                                       ->Get(timer.m_UserData[0])
-                                           .value_or(""),
-                                       timer.m_TID, time.c_str());
+    std::string text = absl::StrFormat(
+        "%s; submitter: %d  %s",
+        time_graph_->GetStringManager()->Get(timer.m_UserData[0]).value_or(""),
+        timer.m_TID, time.c_str());
     text_box->SetText(text);
   }
 
@@ -190,8 +188,8 @@ void GpuTrack::OnTimer(const Timer& timer) {
 float GpuTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
   return layout.GetTextBoxHeight() * GetDepth() +
-      layout.GetSpaceBetweenTracksAndThread() +
-      layout.GetTrackBottomMargin();
+         layout.GetSpaceBetweenTracksAndThread() +
+         layout.GetTrackBottomMargin();
 }
 
 //-----------------------------------------------------------------------------
@@ -206,7 +204,7 @@ std::vector<std::shared_ptr<TimerChain>> GpuTrack::GetTimers() {
 
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetFirstAfterTime(TickType time,
-                                              uint32_t depth) const {
+                                           uint32_t depth) const {
   std::shared_ptr<TimerChain> text_boxes = GetTimers(depth);
   if (text_boxes == nullptr) return nullptr;
 
@@ -222,7 +220,7 @@ const TextBox* GpuTrack::GetFirstAfterTime(TickType time,
 
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetFirstBeforeTime(TickType time,
-                                               uint32_t depth) const {
+                                            uint32_t depth) const {
   std::shared_ptr<TimerChain> text_boxes = GetTimers(depth);
   if (text_boxes == nullptr) return nullptr;
 
@@ -251,7 +249,7 @@ std::shared_ptr<TimerChain> GpuTrack::GetTimers(uint32_t depth) const {
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetLeft(TextBox* text_box) const {
   const Timer& timer = text_box->GetTimer();
-  uint64_t timeline_hash = timer.m_UserData[0];;
+  uint64_t timeline_hash = timer.m_UserData[0];
   if (timeline_hash == timeline_hash_) {
     std::shared_ptr<TimerChain> timers = GetTimers(timer.m_Depth);
     if (timers) return timers->GetElementBefore(text_box);
@@ -262,7 +260,7 @@ const TextBox* GpuTrack::GetLeft(TextBox* text_box) const {
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetRight(TextBox* text_box) const {
   const Timer& timer = text_box->GetTimer();
-  uint64_t timeline_hash = timer.m_UserData[0];;
+  uint64_t timeline_hash = timer.m_UserData[0];
   if (timeline_hash == timeline_hash_) {
     std::shared_ptr<TimerChain> timers = GetTimers(timer.m_Depth);
     if (timers) return timers->GetElementAfter(text_box);

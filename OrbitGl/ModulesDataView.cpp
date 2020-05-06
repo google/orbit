@@ -9,8 +9,7 @@
 #include "OrbitModule.h"
 
 //-----------------------------------------------------------------------------
-ModulesDataView::ModulesDataView() : DataView(DataViewType::MODULES) {
-}
+ModulesDataView::ModulesDataView() : DataView(DataViewType::MODULES) {}
 
 //-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
