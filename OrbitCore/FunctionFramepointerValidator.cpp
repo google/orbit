@@ -54,7 +54,7 @@ bool FunctionFramepointerValidator::ValidatePrologue() {
   cs_regs regs_read, regs_write;
   uint8_t read_count, write_count;
 
-  // check the first instruction: it must be "push ebp"
+  // check the first instruction: it must be "push ebp" or "enter"
   if (cs_regs_access(handle_, &instructions_[0], regs_read, &read_count,
                      regs_write, &write_count) == 0) {
     if (instructions_[0].id == X86_INS_ENTER) {
