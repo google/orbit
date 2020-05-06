@@ -25,7 +25,7 @@ if (Test-Path Env:ORBIT_OVERRIDE_ARTIFACTORY_URL) {
   conan_disable_public_remotes
 } else {
   try {
-    $response = Invoke-WebRequest -URI http://artifactory.internal/ -ErrorAction Ignore -MaximumRedirection 0
+    $response = Invoke-WebRequest -URI http://artifactory.internal/ -ErrorAction Ignore -MaximumRedirection 0 -UseBasicParsing
     Write-Host "CI machine detected. Adjusting remotes..."
 
     $process = Start-Process $conan.Path -Wait -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "remote","add","-i","0","-f","artifactory","http://artifactory.internal/artifactory/api/conan/conan"
@@ -34,7 +34,7 @@ if (Test-Path Env:ORBIT_OVERRIDE_ARTIFACTORY_URL) {
     conan_disable_public_remotes
   } catch {
     try {
-      $response = Invoke-WebRequest -URI http://orbit-artifactory/ -ErrorAction Ignore -MaximumRedirection 0
+      $response = Invoke-WebRequest -URI http://orbit-artifactory/ -ErrorAction Ignore -MaximumRedirection 0 -UseBasicParsing
       Write-Host "Internal machine detected. Adjusting remotes..."
 
       $location = $response.Headers['Location'].Split("/")[2]
