@@ -90,13 +90,16 @@ bool FunctionFramepointerValidator::ValidatePrologue() {
 // epilogue is the return to the caller.
 // TODO(kuebler): Better handling for tail call optimization
 bool FunctionFramepointerValidator::ValidateEpilogue() {
-  for (size_t i = 0; i < instructions_count_ - 2; i++) {
-    // "leave" is equivalent to "mov esp, ebp" "pop ebp"
+  // check for a "leave" "ret" sequence
+  for (size_t i = 0; i < instructions_count_ - 1; i++) {
     if (instructions_[i].id == X86_INS_LEAVE &&
         IsRetOrJumpInstruction(instructions_[i + 1])) {
       return true;
     }
+  }
 
+  // check for "mov esp, ebp" "pop ebp" "ret" sequence
+  for (size_t i = 0; i < instructions_count_ - 2; i++) {
     if (!IsMovInstruction(instructions_[i])) {
       continue;
     }
