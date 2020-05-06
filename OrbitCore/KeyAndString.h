@@ -22,4 +22,4 @@ ORBIT_SERIALIZE(KeyAndString, 0) {
   ORBIT_NVP_VAL(0, str);
 }
 
-#endif
+#endif  // ORBIT_CORE_KEY_AND_STRING_H_

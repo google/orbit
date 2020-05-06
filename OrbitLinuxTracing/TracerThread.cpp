@@ -404,6 +404,9 @@ void TracerThread::Run(
     ORBIT_SCOPE("Tracer Iteration");
 
     if (!last_iteration_saw_events) {
+      // Check for updates of thread names and in case notify the listener_.
+      UpdateThreadNamesIfDelayElapsed();
+
       // Periodically print event statistics.
       PrintStatsIfTimerElapsed();
 
@@ -731,6 +734,27 @@ void TracerThread::ProcessDeferredEvents() {
   }
 }
 
+void TracerThread::UpdateThreadNamesIfDelayElapsed() {
+  uint64_t timestamp_ns = MonotonicTimestampNs();
+  if (last_thread_names_update +
+          THREAD_NAMES_UPDATE_DELAY_MS * NS_PER_MILLISECOND <
+      timestamp_ns) {
+    for (pid_t tid : ListThreads(pid_)) {
+      std::string name = GetThreadName(tid);
+      if (name.empty()) {
+        continue;
+      }
+
+      auto last_name_it = thread_names_.find(tid);
+      if (last_name_it == thread_names_.end() || name != last_name_it->second) {
+        thread_names_[tid] = name;
+        listener_->OnThreadName(tid, name);
+      }
+    }
+    last_thread_names_update = timestamp_ns;
+  }
+}
+
 void TracerThread::Reset() {
   tracing_fds_.clear();
   ring_buffers_.clear();
@@ -740,15 +764,18 @@ void TracerThread::Reset() {
 
   deferred_events_.clear();
   stop_deferred_thread_ = false;
+
+  thread_names_.clear();
+  last_thread_names_update = 0;
 }
 
 void TracerThread::PrintStatsIfTimerElapsed() {
-  constexpr uint64_t NS_PER_SECOND = 1'000'000'000;
+  uint64_t timestamp_ns = MonotonicTimestampNs();
   if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND <
-      MonotonicTimestampNs()) {
-    double actual_window_s = static_cast<double>(MonotonicTimestampNs() -
-                                                 stats_.event_count_begin_ns) /
-                             NS_PER_SECOND;
+      timestamp_ns) {
+    double actual_window_s =
+        static_cast<double>(timestamp_ns - stats_.event_count_begin_ns) /
+        NS_PER_SECOND;
     LOG("Events per second (last %.1f s):", actual_window_s);
     LOG("  sched switches: %.0f", stats_.sched_switch_count / actual_window_s);
     LOG("  samples: %.0f", stats_.sample_count / actual_window_s);

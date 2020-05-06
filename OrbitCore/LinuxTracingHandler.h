@@ -13,7 +13,7 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
 
-class LinuxTracingHandler : LinuxTracing::TracerListener {
+class LinuxTracingHandler : public LinuxTracing::TracerListener {
  public:
   explicit LinuxTracingHandler(LinuxTracingBuffer* tracing_buffer)
       : tracing_buffer_{tracing_buffer} {}
@@ -37,6 +37,7 @@ class LinuxTracingHandler : LinuxTracing::TracerListener {
   void OnCallstack(const LinuxTracing::Callstack& callstack) override;
   void OnFunctionCall(const LinuxTracing::FunctionCall& function_call) override;
   void OnGpuJob(const LinuxTracing::GpuJob& gpu_job) override;
+  void OnThreadName(pid_t tid, const std::string& name) override;
 
  private:
   uint64_t ProcessStringAndGetKey(const std::string& string);

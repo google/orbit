@@ -69,6 +69,18 @@ std::vector<pid_t> ListThreads(pid_t pid) {
   return threads;
 }
 
+std::string GetThreadName(pid_t tid) {
+  std::string comm_filename = absl::StrFormat("/proc/%d/comm", tid);
+  std::optional<std::string> comm_content = ReadFile(comm_filename);
+  if (!comm_content.has_value()) {
+    return "";
+  }
+  if (comm_content.value().back() == '\n') {
+    comm_content.value().pop_back();
+  }
+  return comm_content.value();
+}
+
 int GetNumCores() {
   int hw_conc = static_cast<int>(std::thread::hardware_concurrency());
   // Some compilers do not support std::thread::hardware_concurrency().

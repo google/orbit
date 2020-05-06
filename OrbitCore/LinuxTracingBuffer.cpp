@@ -41,6 +41,16 @@ void LinuxTracingBuffer::RecordKeyAndString(uint64_t key,
   RecordKeyAndString({key, str});
 }
 
+void LinuxTracingBuffer::RecordThreadName(TidAndThreadName&& tid_and_name) {
+  absl::MutexLock lock(&thread_name_buffer_mutex_);
+  thread_name_buffer_.emplace_back(std::move(tid_and_name));
+}
+
+void LinuxTracingBuffer::RecordThreadName(uint32_t tid,
+                                          const std::string& name) {
+  RecordThreadName({tid, name});
+}
+
 bool LinuxTracingBuffer::ReadAllContextSwitches(
     std::vector<ContextSwitch>* out_buffer) {
   absl::MutexLock lock(&context_switch_buffer_mutex_);
@@ -112,6 +122,18 @@ bool LinuxTracingBuffer::ReadAllKeysAndStrings(
   return true;
 }
 
+bool LinuxTracingBuffer::ReadAllThreadNames(
+    std::vector<TidAndThreadName>* out_buffer) {
+  absl::MutexLock lock(&thread_name_buffer_mutex_);
+  if (thread_name_buffer_.empty()) {
+    return false;
+  }
+
+  *out_buffer = std::move(thread_name_buffer_);
+  thread_name_buffer_.clear();
+  return true;
+}
+
 void LinuxTracingBuffer::Reset() {
   {
     absl::MutexLock lock(&context_switch_buffer_mutex_);
@@ -136,5 +158,9 @@ void LinuxTracingBuffer::Reset() {
   {
     absl::MutexLock lock(&key_and_string_buffer_mutex_);
     key_and_string_buffer_.clear();
+  }
+  {
+    absl::MutexLock lock(&thread_name_buffer_mutex_);
+    thread_name_buffer_.clear();
   }
 }

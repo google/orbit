@@ -161,5 +161,12 @@ void OrbitAsioServer::TracingBufferThread() {
       tcp_server_->Send(Msg_KeysAndStrings, message_data.c_str(),
                         message_data.size());
     }
+
+    std::vector<TidAndThreadName> tid_and_names;
+    if (tracing_buffer_.ReadAllThreadNames(&tid_and_names)) {
+      std::string message_data = SerializeObjectBinary(tid_and_names);
+      tcp_server_->Send(Msg_ThreadNames, message_data.c_str(),
+                        message_data.size());
+    }
   }
 }

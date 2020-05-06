@@ -7,6 +7,7 @@
 #include <memory>
 #include <set>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "BaseTypes.h"
@@ -52,7 +53,7 @@ class Process {
   void AddThreadId(DWORD a_ThreadId) { m_ThreadIds.insert(a_ThreadId); }
   void RemoveThreadId(DWORD a_ThreadId) { m_ThreadIds.erase(a_ThreadId); };
   void SetThreadName(DWORD a_ThreadId, std::string a_Name) {
-    m_ThreadNames[a_ThreadId] = a_Name;
+    m_ThreadNames[a_ThreadId] = std::move(a_Name);
   }
   std::string GetThreadNameFromTID(DWORD a_ThreadId) {
     return m_ThreadNames[a_ThreadId];

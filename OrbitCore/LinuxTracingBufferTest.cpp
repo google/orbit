@@ -386,6 +386,40 @@ TEST(LinuxTracingBuffer, KeysAndStrings) {
   EXPECT_EQ(keys_and_strings[0].str, "str2");
 }
 
+TEST(LinuxTracingBuffer, ThreadNames) {
+  LinuxTracingBuffer buffer;
+
+  buffer.RecordThreadName(1, "thread1");
+
+  {
+    TidAndThreadName tid_and_name{2, "thread2"};
+    buffer.RecordThreadName(std::move(tid_and_name));
+  }
+
+  std::vector<TidAndThreadName> thread_names;
+  EXPECT_TRUE(buffer.ReadAllThreadNames(&thread_names));
+  EXPECT_FALSE(buffer.ReadAllThreadNames(&thread_names));
+
+  EXPECT_EQ(thread_names.size(), 2);
+
+  EXPECT_EQ(thread_names[0].tid, 1);
+  EXPECT_EQ(thread_names[0].thread_name, "thread1");
+
+  EXPECT_EQ(thread_names[1].tid, 2);
+  EXPECT_EQ(thread_names[1].thread_name, "thread2");
+
+  buffer.RecordThreadName(3, "thread3");
+
+  EXPECT_TRUE(buffer.ReadAllThreadNames(&thread_names));
+  EXPECT_EQ(thread_names.size(), 1);
+
+  EXPECT_FALSE(buffer.ReadAllThreadNames(&thread_names));
+  EXPECT_EQ(thread_names.size(), 1);
+
+  EXPECT_EQ(thread_names[0].tid, 3);
+  EXPECT_EQ(thread_names[0].thread_name, "thread3");
+}
+
 TEST(LinuxTracingBuffer, Reset) {
   LinuxTracingBuffer buffer;
 
@@ -435,6 +469,8 @@ TEST(LinuxTracingBuffer, Reset) {
 
   buffer.RecordKeyAndString(42, "str42");
 
+  buffer.RecordThreadName(42, "thread42");
+
   buffer.Reset();
 
   std::vector<ContextSwitch> context_switches;
@@ -451,4 +487,7 @@ TEST(LinuxTracingBuffer, Reset) {
 
   std::vector<KeyAndString> keys_and_strings;
   EXPECT_FALSE(buffer.ReadAllKeysAndStrings(&keys_and_strings));
+
+  std::vector<TidAndThreadName> thread_names;
+  EXPECT_FALSE(buffer.ReadAllThreadNames(&thread_names));
 }

@@ -58,6 +58,14 @@ TEST(ListThreads, OrbitLinuxTracingTestsMainAndAnother) {
   EXPECT_THAT(returned_tids, ::testing::ElementsAreArray(expected_tids));
 }
 
+TEST(GetThreadName, OrbitLinuxTracingTests) {
+  // Thread names have a length limit of 15 characters.
+  std::string expected_name =
+      std::string{"OrbitLinuxTracingTests"}.substr(0, 15);
+  std::string returned_name = GetThreadName(getpid());
+  EXPECT_EQ(returned_name, expected_name);
+}
+
 TEST(ExtractCpusetFromCgroup, NoCpuset) {
   std::string cgroup_content =
       "11:memory:/groupname/foo\n"

@@ -289,11 +289,6 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
       ++m_ThreadCountMap[a_Timer.m_TID];
     } else {
       scheduler_track_->OnTimer(a_Timer);
-      // TODO: this should be done once.
-      std::string process_name = Capture::GTargetProcess->GetName();
-      process_track_->SetName(process_name);
-      process_track_->SetLabel(process_name + " (all threads)");
-      process_track_->SetEventTrackColor(GetThreadColor(0));
     }
   }
 }
@@ -575,10 +570,15 @@ void TimeGraph::Draw(bool a_Picking) {
 void TimeGraph::DrawTracks(bool a_Picking) {
   m_Layout.SetNumCores(GetNumCores());
   for (auto& track : sorted_tracks_) {
-    if (track->GetLabel().empty()) {
-      if (track->GetType() == Track::kThreadTrack) {
-        auto thread_track = std::dynamic_pointer_cast<ThreadTrack>(track);
-        uint32_t tid = thread_track->GetThreadId();
+    if (track->GetType() == Track::kThreadTrack) {
+      auto thread_track = std::static_pointer_cast<ThreadTrack>(track);
+      uint32_t tid = thread_track->GetThreadId();
+      if (tid == 0) {
+        // This is the process_track_.
+        std::string process_name = Capture::GTargetProcess->GetName();
+        thread_track->SetName(process_name);
+        thread_track->SetLabel(process_name + " (all threads)");
+      } else {
         std::string thread_name =
             Capture::GTargetProcess->GetThreadNameFromTID(tid);
         track->SetName(thread_name);

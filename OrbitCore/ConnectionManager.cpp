@@ -42,9 +42,9 @@ void ConnectionManager::ConnectToRemote(std::string remote_address) {
 void ConnectionManager::Stop() { exit_requested_ = true; }
 
 void ConnectionManager::SetupClientCallbacks() {
-  GTcpClient->AddMainThreadCallback(Msg_RemotePerf, [=](const Message& a_Msg) {
-    PRINT_VAR(a_Msg.m_Size);
-    std::string msgStr = a_Msg.GetDataAsString();
+  GTcpClient->AddMainThreadCallback(Msg_RemotePerf, [=](const Message& msg) {
+    PRINT_VAR(msg.m_Size);
+    std::string msgStr = msg.GetDataAsString();
     std::istringstream buffer(msgStr);
 
     Capture::NewSamplingProfiler();
@@ -55,44 +55,44 @@ void ConnectionManager::SetupClientCallbacks() {
     GCoreApp->RefreshCaptureView();
   });
 
-  GTcpClient->AddCallback(Msg_Timers, [=](const Message& a_Msg) {
-    uint32_t numTimers = a_Msg.m_Size / sizeof(Timer);
-    const Timer* timers = static_cast<const Timer*>(a_Msg.GetData());
+  GTcpClient->AddCallback(Msg_Timers, [=](const Message& msg) {
+    uint32_t numTimers = msg.m_Size / sizeof(Timer);
+    const Timer* timers = static_cast<const Timer*>(msg.GetData());
     for (uint32_t i = 0; i < numTimers; ++i) {
       GTimerManager->Add(timers[i]);
     }
   });
 
-  GTcpClient->AddCallback(Msg_KeysAndStrings, [=](const Message& a_Msg) {
+  GTcpClient->AddCallback(Msg_KeysAndStrings, [=](const Message& msg) {
     std::vector<KeyAndString> keys_and_strings;
-    DeserializeObjectBinary(a_Msg.GetDataAsString(), keys_and_strings);
+    DeserializeObjectBinary(msg.GetDataAsString(), keys_and_strings);
 
     for (const auto& key_and_string : keys_and_strings) {
       GCoreApp->AddKeyAndString(key_and_string.key, key_and_string.str);
     }
   });
 
-  GTcpClient->AddCallback(Msg_LinuxAddressInfos, [=](const Message& a_Msg) {
+  GTcpClient->AddCallback(Msg_LinuxAddressInfos, [=](const Message& msg) {
     std::vector<LinuxAddressInfo> address_infos;
-    DeserializeObjectBinary(a_Msg.GetDataAsString(), address_infos);
+    DeserializeObjectBinary(msg.GetDataAsString(), address_infos);
 
     for (const auto& address_info : address_infos) {
       GCoreApp->AddAddressInfo(address_info);
     }
   });
 
-  GTcpClient->AddCallback(Msg_ContextSwitches, [=](const Message& a_Msg) {
-    uint32_t num_context_switches = a_Msg.m_Size / sizeof(ContextSwitch);
+  GTcpClient->AddCallback(Msg_ContextSwitches, [=](const Message& msg) {
+    uint32_t num_context_switches = msg.m_Size / sizeof(ContextSwitch);
     const ContextSwitch* context_switches =
-        static_cast<const ContextSwitch*>(a_Msg.GetData());
+        static_cast<const ContextSwitch*>(msg.GetData());
     for (uint32_t i = 0; i < num_context_switches; i++) {
       GCoreApp->ProcessContextSwitch(context_switches[i]);
     }
   });
 
-  GTcpClient->AddCallback(Msg_SamplingCallstacks, [=](const Message& a_Msg) {
+  GTcpClient->AddCallback(Msg_SamplingCallstacks, [=](const Message& msg) {
     std::vector<LinuxCallstackEvent> callstacks;
-    DeserializeObjectBinary(a_Msg.GetDataAsString(), callstacks);
+    DeserializeObjectBinary(msg.GetDataAsString(), callstacks);
 
     for (auto& cs : callstacks) {
       GCoreApp->ProcessSamplingCallStack(cs);
@@ -100,14 +100,23 @@ void ConnectionManager::SetupClientCallbacks() {
   });
 
   GTcpClient->AddCallback(
-      Msg_SamplingHashedCallstacks, [=](const Message& a_Msg) {
+      Msg_SamplingHashedCallstacks, [=](const Message& msg) {
         std::vector<CallstackEvent> callstacks;
-        DeserializeObjectBinary(a_Msg.GetDataAsString(), callstacks);
+        DeserializeObjectBinary(msg.GetDataAsString(), callstacks);
 
         for (auto& cs : callstacks) {
           GCoreApp->ProcessHashedSamplingCallStack(cs);
         }
       });
+
+  GTcpClient->AddCallback(Msg_ThreadNames, [=](const Message& msg) {
+    std::vector<TidAndThreadName> tid_and_names;
+    DeserializeObjectBinary(msg.GetDataAsString(), tid_and_names);
+
+    for (const auto& tid_and_name : tid_and_names) {
+      GCoreApp->UpdateThreadName(tid_and_name.tid, tid_and_name.thread_name);
+    }
+  });
 }
 
 void ConnectionManager::ConnectionThreadWorker() {
