@@ -9,7 +9,7 @@
 #include "GlCanvas.h"
 
 //-----------------------------------------------------------------------------
-EventTrack::EventTrack(TimeGraph* a_TimeGraph) : time_graph_(a_TimeGraph) {
+EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
   m_MousePos[0] = m_MousePos[1] = Vec2(0, 0);
   m_Picked = false;
   m_Color = Color(0, 255, 0, 255);
@@ -153,4 +153,12 @@ void EventTrack::SelectEvents() {
 
   selected_callstack_events_ =
       time_graph_->SelectEvents(from[0], to[0], m_ThreadId);
+}
+
+//-----------------------------------------------------------------------------
+bool EventTrack::IsEmpty() const {
+  ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
+  const std::map<uint64_t, CallstackEvent>& callstacks =
+      GEventTracer.GetEventBuffer().GetCallstacks()[m_ThreadId];
+  return callstacks.empty();
 }

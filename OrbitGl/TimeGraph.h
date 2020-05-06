@@ -14,6 +14,7 @@
 #include "Geometry.h"
 #include "GpuTrack.h"
 #include "MemoryTracker.h"
+#include "SchedulerTrack.h"
 #include "StringManager.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
@@ -166,6 +167,9 @@ class TimeGraph {
   std::unordered_map<uint64_t, std::shared_ptr<GpuTrack>> gpu_tracks_;
   std::vector<std::shared_ptr<Track>> sorted_tracks_;
   std::string m_ThreadFilter;
+
+  std::shared_ptr<SchedulerTrack> scheduler_track_;
+  std::shared_ptr<ThreadTrack> process_track_;
 
   std::shared_ptr<StringManager> string_manager_;
 };

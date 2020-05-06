@@ -33,7 +33,7 @@ class Track : public Pickable {
     kUnknown,
   };
 
-  Track();
+  Track(TimeGraph* time_graph);
   ~Track() override = default;
 
   // Pickable

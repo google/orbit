@@ -30,6 +30,7 @@ class EventTrack : public Track {
   void SetSize(float a_SizeX, float a_SizeY);
   void SetColor(Color color) { m_Color = color; }
   void ClearSelectedEvents() { selected_callstack_events_.clear(); }
+  bool IsEmpty() const;
 
  protected:
   void SelectEvents();
@@ -38,7 +39,6 @@ class EventTrack : public Track {
   TextBox m_ThreadName;
   GlCanvas* m_Canvas;
   ThreadID m_ThreadId;
-  TimeGraph* time_graph_;
   Vec2 m_Pos;
   Vec2 m_Size;
   Vec2 m_MousePos[2];
