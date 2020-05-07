@@ -227,12 +227,23 @@ std::string Path::GetDirectory(const std::string& a_FullName) {
 }
 
 std::string Path::GetParentDirectory(std::string a_Directory) {
-  if (a_Directory.size() < 1) return "";
+  if (a_Directory.empty()) return "";
   std::replace(a_Directory.begin(), a_Directory.end(), '\\', '/');
   wchar_t lastChar = a_Directory.c_str()[a_Directory.size() - 1];
   if (lastChar == '/') a_Directory.erase(a_Directory.size() - 1);
 
   return GetDirectory(a_Directory);
+}
+
+std::string Path::JoinPath(const std::vector<std::string>& parts) {
+  if (parts.empty()) {
+    return "";
+  }
+  std::filesystem::path joined{parts[0]};
+  for (size_t i = 1; i < parts.size(); ++i) {
+    joined.append(parts[i]);
+  }
+  return joined.string();
 }
 
 std::string Path::GetProgramFilesPath() {
