@@ -90,6 +90,7 @@ void TimeGraph::Clear() {
   ScopeLock lock(m_Mutex);
   tracks_.clear();
   thread_tracks_.clear();
+  gpu_tracks_.clear();
   scheduler_track_ = std::make_shared<SchedulerTrack>(this);
 
   // The process track is a special ThreadTrack of id "0".
