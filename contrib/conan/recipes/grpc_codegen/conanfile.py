@@ -42,7 +42,6 @@ class grpcConan(ConanFile):
 
     def configure(self):
         if self.settings.os_build == "Windows" and self.settings.compiler == "Visual Studio":
-            del self.options.fPIC
             compiler_version = int(str(self.settings.compiler.version))
             if compiler_version < 14:
                 raise ConanInvalidConfiguration("gRPC can only be built with Visual Studio 2015 or higher.")
