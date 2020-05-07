@@ -83,10 +83,11 @@ bool FindAndLoadSymbols(std::shared_ptr<Module> module,
 
   std::vector<std::string> search_file_paths;
   for (const auto& directory : search_directories) {
-    search_file_paths.emplace_back(directory + name_without_extension +
-                                   ".debug");
-    search_file_paths.emplace_back(directory + module->m_Name + ".debug");
-    search_file_paths.emplace_back(directory + module->m_Name);
+    search_file_paths.emplace_back(
+        Path::JoinPath({directory, name_without_extension + ".debug"}));
+    search_file_paths.emplace_back(
+        Path::JoinPath({directory, module->m_Name + ".debug"}));
+    search_file_paths.emplace_back(Path::JoinPath({directory, module->m_Name}));
   }
 
   LOG("Trying to find symbols for module: %s", module->m_Name);
