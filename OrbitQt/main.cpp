@@ -17,7 +17,11 @@
 #include "absl/flags/usage.h"
 #include "orbitmainwindow.h"
 
-ABSL_FLAG(std::string, remote, "",
+// SSH Tunneling via run_service_ssh.{ps1/sh} is the default for now. To make
+// this work the remote is set here to localhost. This will also disable the
+// StartUpWindow for now.
+// TODO(antonrohr) replace "localhost" with "" as soon as ssh is implemented
+ABSL_FLAG(std::string, remote, "localhost",
           "Connect to the specified remote on startup");
 ABSL_FLAG(uint16_t, asio_port, 44766,
           "The service's Asio tcp_server port (use default value if unsure)");
