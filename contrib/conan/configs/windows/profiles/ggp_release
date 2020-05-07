@@ -7,6 +7,7 @@ arch_build=x86_64
 compiler=clang
 compiler.version=7.0
 compiler.libcxx=libc++
+compiler.fpo=False
 build_type=Release
 [options]
 OrbitProfiler:with_gui=False
@@ -17,3 +18,5 @@ ninja/1.9.0@
 
 [env]
 CONAN_CMAKE_GENERATOR=Ninja
+CFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer
+CXXFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer
