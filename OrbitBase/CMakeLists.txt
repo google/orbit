@@ -19,26 +19,29 @@ target_include_directories(OrbitBase PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(OrbitBase PRIVATE
+        include/OrbitBase/Action.h
         include/OrbitBase/Logging.h
+        include/OrbitBase/MainThreadExecutor.h
         include/OrbitBase/SafeStrerror.h)
 
 target_sources(OrbitBase PRIVATE
+        MainThreadExecutor.cpp
         SafeStrerror.cpp)
 
 target_link_libraries(OrbitBase PUBLIC
         abseil::abseil
         std::filesystem)
 
-if (false)  # TODO: Remove if (false) once we have at least one test.
 add_executable(OrbitBaseTests)
 
 target_sources(OrbitBaseTests PRIVATE
-        )
+    MainThreadExecutorTest.cpp
+)
 
 target_link_libraries(OrbitBaseTests PRIVATE
         OrbitBase
         GTest::GTest
         GTest::Main)
-endif()
 
-#add_test(NAME OrbitBase COMMAND OrbitBaseTests)
+register_test(OrbitBaseTests)
+
