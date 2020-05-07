@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# This script first runs the ggp ssh init command to get the needed 
+# credentials to connect via ssh. Then it connects to the instance 
+# with portforwarding and starts OrbitService. To also deploy OrbitService,
+# invoke with a the argument --deploy and a path to the OrbitService executable
+# e.g. run_service_ssh.sh --deploy build/bin/OrbitService
+# All other arguments will be passed to OrbitService.
+
+
 if [ -z "$GGP_SDK_PATH" ]; then
   echo "Ggp sdk not found"
   exit 1
@@ -7,8 +15,10 @@ fi
 
 GGP_EXEC="$GGP_SDK_PATH/dev/bin/ggp"
 
-if [ ! -z "$1" ]; then
-  $GGP_EXEC ssh put $1
+OTHER_ARGS="$@"
+if [ ! -z "$1" ] && [ "$1" == "--deploy" ]; then
+  $GGP_EXEC ssh put "$2"
+  OTHER_ARGS="${@:3}"
 fi
 
 OUTPUT=$(eval $GGP_EXEC ssh init | tee /dev/tty)
@@ -37,4 +47,4 @@ if [ -z "$GGP_USER" ] || [ -z "$GGP_HOST" ] || [ -z "$GGP_PORT" ] || [ -z "$GGP_
 fi
 
 ssh -t -p"$GGP_PORT" -F/dev/null -i"$GGP_KEY_PATH" -oStrictHostKeyChecking=yes -oUserKnownHostsFile="$GGP_KNOWN_HOSTS_PATH" \
--L44766:localhost:44766 -L44755:localhost:44755 "$GGP_USER"@"$GGP_HOST" -- sudo /mnt/developer/OrbitService
+-L44766:localhost:44766 -L44755:localhost:44755 "$GGP_USER"@"$GGP_HOST" -- sudo /mnt/developer/OrbitService "$OTHER_ARGS"
