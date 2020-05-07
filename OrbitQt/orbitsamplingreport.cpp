@@ -44,23 +44,24 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
 
   m_SamplingReport->SetUiRefreshFunc([&]() { this->Refresh(); });
 
-  for (SamplingReportDataView& report : report->GetThreadReports()) {
+  for (SamplingReportDataView& report_data_view : report->GetThreadReports()) {
     QWidget* tab = new QWidget();
     tab->setObjectName(QStringLiteral("tab"));
 
     QGridLayout* gridLayout_2 = new QGridLayout(tab);
     gridLayout_2->setObjectName(QStringLiteral("gridLayout_2"));
     OrbitDataViewPanel* treeView = new OrbitDataViewPanel(tab);
-    treeView->SetDataModel(&report);
+    treeView->SetDataModel(&report_data_view);
 
-    if (!report.IsSortingAllowed()) {
+    if (!report_data_view.IsSortingAllowed()) {
       treeView->GetTreeView()->setSortingEnabled(false);
     } else {
-      int column = report.GetDefaultSortingColumn();
-      Qt::SortOrder order = report.GetColumns()[column].initial_order ==
-                                    DataView::SortingOrder::Ascending
-                                ? Qt::AscendingOrder
-                                : Qt::DescendingOrder;
+      int column = report_data_view.GetDefaultSortingColumn();
+      Qt::SortOrder order =
+          report_data_view.GetColumns()[column].initial_order ==
+                  DataView::SortingOrder::Ascending
+              ? Qt::AscendingOrder
+              : Qt::DescendingOrder;
       treeView->GetTreeView()->sortByColumn(column, order);
     }
 
@@ -72,7 +73,7 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
 
     treeView->Link(ui->CallstackTreeView);
 
-    QString threadName = QString::fromStdString(report.GetName());
+    QString threadName = QString::fromStdString(report_data_view.GetName());
     ui->tabWidget->addTab(tab, threadName);
   }
 }
