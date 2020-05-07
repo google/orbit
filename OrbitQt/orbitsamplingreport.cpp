@@ -53,7 +53,7 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
     OrbitDataViewPanel* treeView = new OrbitDataViewPanel(tab);
     treeView->SetDataModel(&report);
 
-    if (report.IsSortingAllowed()) {
+    if (!report.IsSortingAllowed()) {
       treeView->GetTreeView()->setSortingEnabled(false);
     } else {
       int column = report.GetDefaultSortingColumn();
