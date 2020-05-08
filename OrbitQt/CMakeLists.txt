@@ -84,6 +84,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/version.cmake)
 GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/version.h"
                     "${CMAKE_CURRENT_SOURCE_DIR}/version.h.in")
 target_sources(OrbitQt PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/version.h")
+target_include_directories(OrbitQt PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 if(WIN32)
   # Administrator privileges

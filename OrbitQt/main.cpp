@@ -16,6 +16,7 @@
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
 #include "orbitmainwindow.h"
+#include "version.h"
 
 // SSH Tunneling via run_service_ssh.{ps1/sh} is the default for now. To make
 // this work the remote is set here to localhost. This will also disable the
@@ -52,6 +53,8 @@ int main(int argc, char* argv[]) {
 #endif
 
   QApplication app(argc, argv);
+  QCoreApplication::setApplicationName("Orbit Profiler");
+  QCoreApplication::setApplicationVersion(OrbitQt::kVersionString);
 
   const std::string dump_path = Path::GetDumpPath();
 #ifdef _WIN32
