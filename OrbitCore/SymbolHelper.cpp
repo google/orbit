@@ -177,12 +177,12 @@ void SymbolHelper::LoadSymbolsFromDebugInfo(
 }
 
 void SymbolHelper::FillDebugInfoFromModule(std::shared_ptr<Module> module,
-                                           ModuleDebugInfo& module_info) const {
+                                           ModuleDebugInfo* module_info) const {
   FAIL_IF(!module->m_Pdb, "Pdb not initialized for module: %s",
           module->m_Name.c_str());
 
-  module_info.m_Name = module->m_Name;
-  module_info.m_Functions = module->m_Pdb->GetFunctions();
-  module_info.load_bias = module->m_Pdb->GetLoadBias();
-  module_info.m_PdbName = module->m_PdbName;
+  module_info->m_Name = module->m_Name;
+  module_info->m_Functions = module->m_Pdb->GetFunctions();
+  module_info->load_bias = module->m_Pdb->GetLoadBias();
+  module_info->m_PdbName = module->m_PdbName;
 }

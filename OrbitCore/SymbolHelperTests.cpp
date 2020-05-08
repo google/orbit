@@ -133,7 +133,7 @@ TEST(SymbolHelper, FillDebugInfoFromModule) {
   ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
 
   ModuleDebugInfo module_info;
-  symbolHelper.FillDebugInfoFromModule(module, module_info);
+  symbolHelper.FillDebugInfoFromModule(module, &module_info);
 
   EXPECT_EQ(module_info.m_Name, executable_name);
   EXPECT_EQ(module_info.m_PdbName, file_path);

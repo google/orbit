@@ -34,6 +34,8 @@ class CoreApp {
   virtual void InitializeClientTransactions();
   virtual void SendToUiAsync(const std::string& /*message*/) {}
   virtual void SendToUiNow(const std::string& /*message*/) {}
+  virtual void SendErrorToUi(const std::string& /*title*/,
+                             const std::string& /*text*/) {}
   virtual bool GetUnrealSupportEnabled() { return false; }
   virtual bool GetUnitySupportEnabled() { return false; }
   virtual bool GetUnsafeHookingEnabled() { return false; }

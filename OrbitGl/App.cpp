@@ -855,6 +855,13 @@ void OrbitApp::SendToUiNow(const std::string& message) {
 }
 
 //-----------------------------------------------------------------------------
+void OrbitApp::SendErrorToUi(const std::string& title,
+                             const std::string& text) {
+  std::string message = "error:" + title + "\n" + text;
+  SendToUiNow(message);
+}
+
+//-----------------------------------------------------------------------------
 void OrbitApp::EnqueueModuleToLoad(const std::shared_ptr<Module>& a_Module) {
   m_ModulesToLoad.push_back(a_Module);
 }
