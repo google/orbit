@@ -14,7 +14,7 @@ uint64_t ReadSampleRecordStreamId(PerfEventRingBuffer* ring_buffer);
 
 pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer);
 
-std::unique_ptr<SamplePerfEvent> ConsumeSamplePerfEvent(
+std::unique_ptr<StackSamplePerfEvent> ConsumeStackSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
 std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(

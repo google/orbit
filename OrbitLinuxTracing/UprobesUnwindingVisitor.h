@@ -54,7 +54,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
         std::move(discarded_samples_in_uretprobes_counter);
   }
 
-  void visit(SamplePerfEvent* event) override;
+  void visit(StackSamplePerfEvent* event) override;
   void visit(CallchainSamplePerfEvent* event) override;
   void visit(UprobesPerfEvent* event) override;
   void visit(UretprobesPerfEvent* event) override;

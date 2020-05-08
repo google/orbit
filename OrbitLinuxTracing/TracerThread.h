@@ -113,7 +113,7 @@ class TracerThread {
       uprobes_uretprobes_ids_to_function_;
   absl::flat_hash_set<uint64_t> uprobes_ids_;
   absl::flat_hash_set<uint64_t> uretprobes_ids_;
-  absl::flat_hash_set<uint64_t> sampling_ids_;
+  absl::flat_hash_set<uint64_t> stack_sampling_ids_;
   absl::flat_hash_set<uint64_t> gpu_tracing_ids_;
   absl::flat_hash_set<uint64_t> callchain_sampling_ids_;
 

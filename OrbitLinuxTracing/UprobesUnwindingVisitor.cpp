@@ -4,7 +4,7 @@
 
 namespace LinuxTracing {
 
-void UprobesUnwindingVisitor::visit(SamplePerfEvent* event) {
+void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
 
   if (current_maps_ == nullptr) {

@@ -119,7 +119,7 @@ int context_switch_event_open(pid_t pid, int32_t cpu);
 int mmap_task_event_open(pid_t pid, int32_t cpu);
 
 // perf_event_open for stack sampling.
-int sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
+int stack_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
 
 // perf_event_open for stack sampling using frame pointers.
 int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);

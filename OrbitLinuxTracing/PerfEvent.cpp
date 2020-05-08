@@ -20,7 +20,7 @@ void SystemWideContextSwitchPerfEvent::Accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 
-void SamplePerfEvent::Accept(PerfEventVisitor* visitor) {
+void StackSamplePerfEvent::Accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 

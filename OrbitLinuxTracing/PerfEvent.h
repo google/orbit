@@ -185,11 +185,11 @@ struct dynamically_sized_perf_event_stack_sample {
       : stack{dyn_size} {}
 };
 
-class SamplePerfEvent : public PerfEvent {
+class StackSamplePerfEvent : public PerfEvent {
  public:
   std::unique_ptr<dynamically_sized_perf_event_stack_sample> ring_buffer_record;
 
-  explicit SamplePerfEvent(uint64_t dyn_size)
+  explicit StackSamplePerfEvent(uint64_t dyn_size)
       : ring_buffer_record{
             std::make_unique<dynamically_sized_perf_event_stack_sample>(
                 dyn_size)} {}

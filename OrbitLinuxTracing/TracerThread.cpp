@@ -190,7 +190,7 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
         sampling_fd = callchain_sample_event_open(sampling_period_ns_, -1, cpu);
         break;
       case SamplingMethod::kDwarf:
-        sampling_fd = sample_event_open(sampling_period_ns_, -1, cpu);
+        sampling_fd = stack_sample_event_open(sampling_period_ns_, -1, cpu);
         break;
       case SamplingMethod::kOff:
         FATAL("Sampling is off. This statement is unreachable.");
@@ -215,7 +215,7 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
     tracing_fds_.push_back(fd);
     uint64_t stream_id = perf_event_get_id(fd);
     if (tracing_options_.sampling_method == SamplingMethod::kDwarf) {
-      sampling_ids_.insert(stream_id);
+      stack_sampling_ids_.insert(stream_id);
     } else if (tracing_options_.sampling_method ==
                SamplingMethod::kFramePointers) {
       callchain_sampling_ids_.insert(stream_id);
@@ -616,10 +616,10 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   uint64_t stream_id = ReadSampleRecordStreamId(ring_buffer);
   bool is_uprobe = uprobes_ids_.contains(stream_id);
   bool is_uretprobe = uretprobes_ids_.contains(stream_id);
-  bool is_sample = sampling_ids_.contains(stream_id);
+  bool is_stack_sample = stack_sampling_ids_.contains(stream_id);
   bool is_gpu_event = gpu_tracing_ids_.contains(stream_id);
   bool is_callchain_sample = callchain_sampling_ids_.contains(stream_id);
-  CHECK(is_uprobe + is_uretprobe + is_sample + is_gpu_event +
+  CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_gpu_event +
             is_callchain_sample <=
         1);
 
@@ -655,15 +655,15 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
 
-  } else if (is_sample) {
+  } else if (is_stack_sample) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
-    constexpr size_t size_of_sample = sizeof(perf_event_stack_sample);
-    if (header.size != size_of_sample) {
+    constexpr size_t size_of_stack_sample = sizeof(perf_event_stack_sample);
+    if (header.size != size_of_stack_sample) {
       // Skip stack samples that have an unexpected size. These normally have
       // abi == PERF_SAMPLE_REGS_ABI_NONE and no registers, and size == 0 and
       // no stack. Usually, these samples have pid == tid == 0, but that's not
       // always the case: for example, when a process exits while tracing, we
-      // might get a sample with pid and tid != 0 but still with
+      // might get a stack sample with pid and tid != 0 but still with
       // abi == PERF_SAMPLE_REGS_ABI_NONE and size == 0.
       ring_buffer->SkipRecord(header);
       return;
@@ -676,7 +676,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     // e.g., with header.misc == PERF_RECORD_MISC_KERNEL,
     // in general they seem to produce valid callstacks.
 
-    auto event = ConsumeSamplePerfEvent(ring_buffer, header);
+    auto event = ConsumeStackSamplePerfEvent(ring_buffer, header);
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
@@ -703,14 +703,6 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
 
   } else {
     ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
-    // Except for GPU driver events, which have variable size and are determined
-    // with gpu_tracing_fds_.contains(fd), skip PERF_RECORD_SAMPLEs with an
-    // unknown size. Samples to skip are normally time-based samples with
-    // abi == PERF_SAMPLE_REGS_ABI_NONE and no registers, and with size == 0 and
-    // no stack. Usually, these samples have pid == tid == 0, but that's not
-    // always the case: for example, when a process exits while tracing, we
-    // might get a sample with pid and tid != 0 but still with
-    // abi == PERF_SAMPLE_REGS_ABI_NONE and size == 0.
     ring_buffer->SkipRecord(header);
   }
 }
@@ -784,7 +776,7 @@ void TracerThread::Reset() {
   uprobes_uretprobes_ids_to_function_.clear();
   uprobes_ids_.clear();
   uretprobes_ids_.clear();
-  sampling_ids_.clear();
+  stack_sampling_ids_.clear();
   gpu_tracing_ids_.clear();
   callchain_sampling_ids_.clear();
 
