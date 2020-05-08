@@ -21,6 +21,8 @@ $ggp_path = "$($ggp_sdk_path)dev\bin\ggp.exe"
 IF($deploy) {
     $ggp_put_command = "`"$($ggp_path)`" ssh put `"$($deploy)`""
     Invoke-Expression "& $ggp_put_command"
+    $ggp_chmod_command = "`"$($ggp_path)`" ssh shell -- chmod u+x /mnt/developer/OrbitService"
+    Invoke-Expression "& $ggp_chmod_command"
 }
 
 $ggp_ssh_init_command = "`"$($ggp_path)`" ssh init"
