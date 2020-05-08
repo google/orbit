@@ -6,6 +6,7 @@
 
 #include <QBuffer>
 #include <QClipboard>
+#include <QCoreApplication>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QMouseEvent>
@@ -156,7 +157,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   CreateSelectionTab();
   CreatePluginTabs();
 
-  this->setWindowTitle("Orbit Profiler");
+  setWindowTitle(QString("%1 %2").arg(QCoreApplication::applicationName(),
+                                      QCoreApplication::applicationVersion()));
   std::string iconFileName = Path::GetExecutablePath() + "orbit.ico";
   this->setWindowIcon(QIcon(iconFileName.c_str()));
 
