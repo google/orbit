@@ -120,18 +120,18 @@ struct __attribute__((__packed__)) perf_event_ax_sample {
   perf_event_sample_regs_user_ax regs;
 };
 
-struct __attribute__((__packed__)) perf_event_lost {
-  perf_event_header header;
-  uint64_t id;
-  uint64_t lost;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-};
-
 struct __attribute__((__packed__)) perf_event_sample_raw {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   uint32_t size;
   // The rest of the sample is a char[size] that we read dynamically.
+};
+
+struct __attribute__((__packed__)) perf_event_lost {
+  perf_event_header header;
+  uint64_t id;
+  uint64_t lost;
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
 };
 
 }  // namespace LinuxTracing
