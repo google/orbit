@@ -22,7 +22,8 @@ target_sources(OrbitSsh PUBLIC
         include/OrbitSsh/ResultType.h
         include/OrbitSsh/Session.h
         include/OrbitSsh/SessionManager.h
-        include/OrbitSsh/Socket.h)
+        include/OrbitSsh/Socket.h
+        include/OrbitSsh/TunnelManager.h)
 
 target_sources(OrbitSsh PRIVATE
         Channel.cpp
@@ -31,7 +32,8 @@ target_sources(OrbitSsh PRIVATE
         LocalSocketManager.cpp
         Session.cpp
         SessionManager.cpp
-        Socket.cpp)
+        Socket.cpp
+        TunnelManager.cpp)
 
 if(WIN32)
   target_sources(OrbitSsh PRIVATE WindowsSocket.cpp)
