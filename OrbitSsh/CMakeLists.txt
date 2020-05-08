@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-
 cmake_minimum_required(VERSION 3.15)
 
 project(OrbitSsh)
@@ -15,10 +14,14 @@ target_compile_features(OrbitSsh PUBLIC cxx_std_17)
 
 target_include_directories(OrbitSsh PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
-target_sources(OrbitSsh PUBLIC include/OrbitSsh/ResultType.h
-                               include/OrbitSsh/Socket.h)
+target_sources(OrbitSsh PUBLIC
+        include/OrbitSsh/ResultType.h
+        include/OrbitSsh/Session.h
+        include/OrbitSsh/Socket.h)
 
-target_sources(OrbitSsh PRIVATE Socket.cpp)
+target_sources(OrbitSsh PRIVATE
+        Session.cpp
+        Socket.cpp)
 
 if(WIN32)
   target_sources(OrbitSsh PRIVATE WindowsSocket.cpp)
