@@ -11,6 +11,7 @@
 
 #include "BaseTypes.h"
 #include "LinuxAddressInfo.h"
+#include "FramepointerValidatorClient.h"
 #include "LinuxCallstackEvent.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"

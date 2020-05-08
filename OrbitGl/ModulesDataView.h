@@ -47,6 +47,7 @@ class ModulesDataView : public DataView {
   };
 
   static const std::string MENU_ACTION_MODULES_LOAD;
+  static const std::string MENU_ACTION_MODULES_VERIFY;
   static const std::string MENU_ACTION_DLL_FIND_PDB;
   static const std::string MENU_ACTION_DLL_EXPORTS;
 };

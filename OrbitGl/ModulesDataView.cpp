@@ -6,7 +6,13 @@
 
 #include "App.h"
 #include "Core.h"
+#include "FramepointerValidatorService.h"
 #include "OrbitModule.h"
+#include "Pdb.h"
+#include "absl/flags/flag.h"
+
+// TODO(kuebler): remove this once we have the validator complete
+ABSL_FLAG(bool, enable_validator, false, "Enable validation of framepointers");
 
 //-----------------------------------------------------------------------------
 ModulesDataView::ModulesDataView() : DataView(DataViewType::MODULES) {}
@@ -95,6 +101,8 @@ void ModulesDataView::DoSort() {
 
 //-----------------------------------------------------------------------------
 const std::string ModulesDataView::MENU_ACTION_MODULES_LOAD = "Load Symbols";
+const std::string ModulesDataView::MENU_ACTION_MODULES_VERIFY =
+    "Verify Framepointer";
 const std::string ModulesDataView::MENU_ACTION_DLL_FIND_PDB = "Find Pdb";
 const std::string ModulesDataView::MENU_ACTION_DLL_EXPORTS = "Load Symbols";
 
@@ -103,6 +111,7 @@ std::vector<std::string> ModulesDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_load = false;
   bool enable_dll = false;
+  bool enable_verify = false;
   if (a_SelectedIndices.size() == 1) {
     std::shared_ptr<Module> module = GetModule(a_SelectedIndices[0]);
     if (!module->GetLoaded()) {
@@ -111,12 +120,18 @@ std::vector<std::string> ModulesDataView::GetContextMenu(
       } else if (module->IsDll()) {
         enable_dll = true;
       }
+    } else {
+      enable_verify = true;
     }
   } else {
     for (int index : a_SelectedIndices) {
       std::shared_ptr<Module> module = GetModule(index);
-      if (!module->GetLoaded() && module->m_FoundPdb) {
-        enable_load = true;
+      if (!module->GetLoaded()) {
+        if (module->m_FoundPdb) {
+          enable_load = true;
+        }
+      } else {
+        enable_verify = true;
       }
     }
   }
@@ -124,6 +139,9 @@ std::vector<std::string> ModulesDataView::GetContextMenu(
   std::vector<std::string> menu;
   if (enable_load) {
     menu.emplace_back(MENU_ACTION_MODULES_LOAD);
+  }
+  if (enable_verify && absl::GetFlag(FLAGS_enable_validator)) {
+    menu.emplace_back(MENU_ACTION_MODULES_VERIFY);
   }
   if (enable_dll) {
     Append(menu, {MENU_ACTION_DLL_FIND_PDB, MENU_ACTION_DLL_EXPORTS});
@@ -136,22 +154,32 @@ std::vector<std::string> ModulesDataView::GetContextMenu(
 void ModulesDataView::OnContextMenu(const std::string& a_Action,
                                     int a_MenuIndex,
                                     const std::vector<int>& a_ItemIndices) {
-  if (a_Action == MENU_ACTION_MODULES_LOAD) {
+  if (a_Action == MENU_ACTION_MODULES_LOAD ||
+      a_Action == MENU_ACTION_MODULES_VERIFY) {
+    std::vector<std::shared_ptr<Module>> modules_to_validate;
     for (int index : a_ItemIndices) {
       const std::shared_ptr<Module>& module = GetModule(index);
 
       if (module->m_FoundPdb || module->IsDll()) {
-        std::map<uint64_t, std::shared_ptr<Module> >& processModules =
+        std::map<uint64_t, std::shared_ptr<Module>>& processModules =
             m_Process->GetModules();
         auto it = processModules.find(module->m_AddressStart);
         if (it != processModules.end()) {
           std::shared_ptr<Module>& mod = it->second;
-
-          if (!mod->GetLoaded()) {
-            GOrbitApp->EnqueueModuleToLoad(mod);
+          if (a_Action == MENU_ACTION_MODULES_LOAD) {
+            if (!mod->GetLoaded()) {
+              GOrbitApp->EnqueueModuleToLoad(mod);
+            }
+          } else if (a_Action == MENU_ACTION_MODULES_VERIFY) {
+            modules_to_validate.push_back(module);
           }
         }
       }
+    }
+    if (!modules_to_validate.empty()) {
+      GOrbitApp->GetFramepointerValidatorClient()
+          ->ValidateFramepointersInModules(m_Process.get(),
+                                           modules_to_validate);
     }
 
     GOrbitApp->LoadModules();
