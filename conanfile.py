@@ -68,6 +68,7 @@ class OrbitConan(ConanFile):
             self.requires("freetype/2.10.0@bincrafters/stable")
             self.requires("freetype-gl/8d9a97a@{}".format(self._orbit_channel))
             self.requires("glew/2.1.0@{}".format(self._orbit_channel))
+            self.requires("libssh2/1.9.0")
             self.requires("imgui/1.69@bincrafters/stable")
             self.requires("libpng/1.6.37@bincrafters/stable")
             if not self.options.system_mesa:
