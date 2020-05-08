@@ -25,10 +25,26 @@ pid_t ReadMmapRecordPid(PerfEventRingBuffer* ring_buffer) {
   return pid;
 }
 
+uint64_t ReadSampleRecordStreamId(PerfEventRingBuffer* ring_buffer) {
+  uint64_t stream_id;
+  // All PERF_RECORD_SAMPLEs start with
+  //   perf_event_header header;
+  //   perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  ring_buffer->ReadValueAtOffset(
+      &stream_id,
+      sizeof(perf_event_header) +
+          offsetof(perf_event_sample_id_tid_time_streamid_cpu, stream_id));
+  return stream_id;
+}
+
 pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer) {
   pid_t pid;
+  // All PERF_RECORD_SAMPLEs start with
+  //   perf_event_header header;
+  //   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   ring_buffer->ReadValueAtOffset(
-      &pid, offsetof(perf_event_stack_sample, sample_id.pid));
+      &pid, sizeof(perf_event_header) +
+                offsetof(perf_event_sample_id_tid_time_streamid_cpu, pid));
   return pid;
 }
 

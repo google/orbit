@@ -108,9 +108,14 @@ class TracerThread {
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
-  absl::flat_hash_map<uint64_t, const Function*> uprobes_ids_to_function_;
-  absl::flat_hash_set<int> gpu_tracing_fds_;
-  absl::flat_hash_set<int> frame_pointers_sampling_fds_;
+
+  absl::flat_hash_map<uint64_t, const Function*>
+      uprobes_uretprobes_ids_to_function_;
+  absl::flat_hash_set<uint64_t> uprobes_ids_;
+  absl::flat_hash_set<uint64_t> uretprobes_ids_;
+  absl::flat_hash_set<uint64_t> sampling_ids_;
+  absl::flat_hash_set<uint64_t> gpu_tracing_ids_;
+  absl::flat_hash_set<uint64_t> callchain_sampling_ids_;
 
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
