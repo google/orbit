@@ -172,6 +172,8 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   void SendToUiAsync(const std::string& message) override;
   void SendToUiNow(const std::string& message) override;
+  void SendErrorToUi(const std::string& title,
+                     const std::string& text) override;
   void NeedsRedraw();
 
   const std::map<std::string, std::string>& GetFileMapping() {

@@ -6,6 +6,7 @@
 
 #include "CoreApp.h"
 #include "SymbolHelper.h"
+#include "absl/strings/str_join.h"
 
 SymbolsClient::SymbolsClient(CoreApp* core_app,
                              TransactionClient* transaction_client)
@@ -30,23 +31,23 @@ void SymbolsClient::LoadSymbolsFromModules(
   for (const std::shared_ptr<Module>& module : modules) {
     if (module == nullptr) continue;
     ModuleDebugInfo module_info;
-    const char* name = module->m_Name.c_str();
-    module_info.m_Name = name;
+    module_info.m_Name = module->m_Name;
     module_info.m_PID = process->GetID();
 
     // Try to load modules from local machine.
     const SymbolHelper symbol_helper;
     if (symbol_helper.LoadSymbolsUsingSymbolsFile(module)) {
-      symbol_helper.FillDebugInfoFromModule(module, module_info);
+      symbol_helper.FillDebugInfoFromModule(module, &module_info);
       size_t num_functions = module_info.m_Functions.size();
-      LOG("Loaded %lu function symbols locally for %s", num_functions, name);
+      LOG("Loaded %lu function symbols locally for module: %s", num_functions,
+          module->m_Name);
     } else {
-      LOG("Did not find local symbols for module %s", name);
+      LOG("Did not find local symbols for module: %s", module->m_Name);
       remote_module_infos.push_back(std::move(module_info));
     }
   }
 
-  // Don't request anything from service if we found all modules locally.
+  // Don't request anything from the service if we found all modules locally.
   if (remote_module_infos.empty()) {
     if (session != nullptr) {
       core_app_->ApplySession(*session);
@@ -58,8 +59,11 @@ void SymbolsClient::LoadSymbolsFromModules(
   uint64_t id = transaction_client_->EnqueueRequest(Msg_DebugSymbols,
                                                     remote_module_infos);
 
-  absl::MutexLock lock(&id_sessions_mutex_);
+  absl::MutexLock lock(&mutex_);
   id_sessions_[id] = session;
+  for (const ModuleDebugInfo& not_found_module : remote_module_infos) {
+    id_not_found_module_names_[id].emplace_back(not_found_module.m_Name);
+  }
 }
 
 void SymbolsClient::LoadSymbolsFromSession(
@@ -84,11 +88,30 @@ void SymbolsClient::HandleResponse(const Message& message, uint64_t id) {
   core_app_->OnRemoteModuleDebugInfo(infos);
 
   // Finalize transaction.
-  id_sessions_mutex_.Lock();
+  mutex_.Lock();
   std::shared_ptr<Session> session = id_sessions_[id];
   id_sessions_.erase(id);
-  id_sessions_mutex_.Unlock();
+
+  std::vector<std::string> not_found_module_names =
+      std::move(id_not_found_module_names_[id]);
+  id_not_found_module_names_.erase(id);
+  mutex_.Unlock();
+
   if (session != nullptr) {
     core_app_->ApplySession(*session);
+  }
+
+  // Show an error MessageBox for modules not found locally nor remotely.
+  for (const ModuleDebugInfo& module_info : infos) {
+    if (!module_info.m_Functions.empty()) {
+      not_found_module_names.erase(std::find(not_found_module_names.begin(),
+                                             not_found_module_names.end(),
+                                             module_info.m_Name));
+    }
+  }
+  if (!not_found_module_names.empty()) {
+    std::string text = "Could not load symbols for modules:\n  " +
+                       absl::StrJoin(not_found_module_names, "\n  ");
+    core_app_->SendErrorToUi("Error loading symbols", text);
   }
 }

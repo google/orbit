@@ -20,7 +20,7 @@ class SymbolHelper {
   void LoadSymbolsFromDebugInfo(std::shared_ptr<Module> module,
                                 const ModuleDebugInfo& module_info) const;
   void FillDebugInfoFromModule(std::shared_ptr<Module> module,
-                               ModuleDebugInfo& module_info) const;
+                               ModuleDebugInfo* module_info) const;
 
   std::vector<std::string> GetSymbolsFileDirectories() const {
     return symbols_file_directories_;

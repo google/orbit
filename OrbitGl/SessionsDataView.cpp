@@ -123,10 +123,9 @@ void SessionsDataView::OnContextMenu(const std::string& a_Action,
       OnDataChanged();
     } else {
       ERROR("Deleting session \"%s\": %s", filename, SafeStrerror(errno));
-      std::string message = "error:";
-      message += "Error deleting session\n";
-      message += absl::StrFormat("Could not delete session \"%s\".", filename);
-      GOrbitApp->SendToUiNow(message);
+      GOrbitApp->SendErrorToUi(
+          "Error deleting session",
+          absl::StrFormat("Could not delete session \"%s\".", filename));
     }
 
   } else {

@@ -209,8 +209,8 @@ void SamplingReportDataView::OnContextMenu(
       if (module->m_FoundPdb && !module->GetLoaded()) {
         GOrbitApp->EnqueueModuleToLoad(module);
       }
-      GOrbitApp->LoadModules();
     }
+    GOrbitApp->LoadModules();
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }

@@ -41,7 +41,7 @@ void SymbolsService::HandleRequest(const Message& message) {
     // Load debug information.
     const SymbolHelper symbol_helper;
     if (symbol_helper.LoadSymbolsCollector(module)) {
-      symbol_helper.FillDebugInfoFromModule(module, module_info);
+      symbol_helper.FillDebugInfoFromModule(module, &module_info);
       LOG("Loaded %lu function symbols for module %s",
           module_info.m_Functions.size(), module_name.c_str());
     } else {
