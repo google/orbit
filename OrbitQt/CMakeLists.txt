@@ -10,8 +10,7 @@ target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitQt
-  PRIVATE licensedialog.h
-          orbitcodeeditor.h
+  PRIVATE orbitcodeeditor.h
           orbitdataviewpanel.h
           orbitdiffdialog.h
           orbitdisassemblydialog.h
@@ -33,8 +32,7 @@ target_sources(
 
 target_sources(
   OrbitQt
-  PRIVATE licensedialog.cpp
-          main.cpp
+  PRIVATE main.cpp
           orbitcodeeditor.cpp
           orbitdataviewpanel.cpp
           orbitdiffdialog.cpp

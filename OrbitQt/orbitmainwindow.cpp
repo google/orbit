@@ -25,7 +25,6 @@
 #include "../external/concurrentqueue/concurrentqueue.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
-#include "licensedialog.h"
 #include "orbitdiffdialog.h"
 #include "orbitdisassemblydialog.h"
 #include "orbitsamplingreport.h"
