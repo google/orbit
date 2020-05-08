@@ -51,6 +51,23 @@ if(WIN32)
   target_compile_definitions(OrbitSsh PUBLIC -DNTDDI_VERSION=0x06030000)
 endif()
 
+# example executable
+add_executable(OrbitSshExample)
+
+target_compile_options(OrbitSshExample PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_compile_features(OrbitSshExample PUBLIC cxx_std_17)
+
+target_sources(OrbitSshExample PRIVATE
+        main.cpp)
+
+target_link_libraries(OrbitSshExample PUBLIC
+        OrbitSsh
+        OrbitBase
+        OrbitGgp
+        Qt5::Core)
+
+# tests
 add_executable(OrbitSshTests)
 
 target_sources(OrbitSshTests PRIVATE SocketTests.cpp)
