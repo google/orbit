@@ -16,6 +16,7 @@ target_include_directories(OrbitSsh PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_sources(OrbitSsh PUBLIC
         include/OrbitSsh/Channel.h
+        include/OrbitSsh/ExecChannelManager.h
         include/OrbitSsh/ResultType.h
         include/OrbitSsh/Session.h
         include/OrbitSsh/SessionManager.h
@@ -23,6 +24,7 @@ target_sources(OrbitSsh PUBLIC
 
 target_sources(OrbitSsh PRIVATE
         Channel.cpp
+        ExecChannelManager.cpp
         Session.cpp
         SessionManager.cpp
         Socket.cpp)
