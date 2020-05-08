@@ -77,7 +77,13 @@ target_sources(
 
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(OrbitQt PRIVATE OrbitCore OrbitGl OrbitGgp Qt5::Widgets Qt5::Core)
+target_link_libraries(OrbitQt PRIVATE OrbitCore OrbitGl OrbitGgp Qt5::Widgets
+                                      Qt5::Core)
+
+include(${CMAKE_SOURCE_DIR}/cmake/version.cmake)
+GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/version.h"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/version.h.in")
+target_sources(OrbitQt PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/version.h")
 
 if(WIN32)
   # Administrator privileges
@@ -86,22 +92,24 @@ if(WIN32)
     PROPERTIES LINK_FLAGS
                "/MANIFESTUAC:\"level='requireAdministrator' /SUBSYSTEM:WINDOWS")
   set_target_properties(OrbitQt PROPERTIES WIN32_EXECUTABLE ON)
-  target_sources(OrbitQt PRIVATE orbit.rc)
+
+  GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/OrbitQt.rc"
+                      "${CMAKE_CURRENT_SOURCE_DIR}/OrbitQt.rc.in")
+  target_sources(OrbitQt PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/OrbitQt.rc)
 
   get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
   get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
   find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
 
-  add_custom_command(TARGET OrbitQt POST_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E
-        env PATH="${_qt_bin_dir}" "${WINDEPLOYQT_EXECUTABLE}"
-            "$<TARGET_FILE:OrbitQt>"
-    COMMENT "Running windeployqt..."
-  )
+  add_custom_command(
+    TARGET OrbitQt
+    POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E env PATH="${_qt_bin_dir}"
+            "${WINDEPLOYQT_EXECUTABLE}" "$<TARGET_FILE:OrbitQt>"
+    COMMENT "Running windeployqt...")
 endif()
 
 set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
 set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
 strip_symbols(OrbitQt)
-

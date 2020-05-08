@@ -2,12 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_VERSION_H_
-#define ORBIT_CORE_VERSION_H_
-#include <string>
+#include "Version.h"
+
+#define OrbitVersionStr "@VERSION_STRING@"
 
 namespace OrbitVersion {
-std::string GetVersion();
+std::string GetVersion() { return OrbitVersionStr; }
 }  // namespace OrbitVersion
-
-#endif  // ORBIT_CORE_VERSION_H_

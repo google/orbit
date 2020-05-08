@@ -141,8 +141,7 @@ target_sources(
           TransactionService.cpp
           Utils.cpp
           Variable.cpp
-          VariableTracing.cpp
-          Version.cpp)
+          VariableTracing.cpp)
 
 if(WIN32)
   target_sources(
@@ -219,6 +218,10 @@ target_compile_definitions(OrbitCore PUBLIC UNICODE)
 target_compile_definitions(OrbitCore PUBLIC _UNICODE)
 
 target_compile_features(OrbitCore PUBLIC cxx_std_11)
+
+include("${CMAKE_SOURCE_DIR}/cmake/version.cmake")
+GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/Version.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/Version.cpp.in")
+target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/Version.cpp")
 
 add_executable(OrbitCoreTests)
 

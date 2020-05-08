@@ -1,0 +1,27 @@
+#include <winver.h>
+#include <ntdef.h>
+
+IDI_ICON1               ICON    DISCARDABLE     "orbit.ico"
+VS_VERSION_INFO         VERSIONINFO
+FILEVERSION @MAJOR_VERSION@,@MINOR_VERSION@,@PATCH_VERSION@,@MINOR_PATCH_VERSION@
+PRODUCTVERSION @MAJOR_VERSION@,@MINOR_VERSION@,@PATCH_VERSION@,@MINOR_PATCH_VERSION@
+BEGIN
+  BLOCK "StringFileInfo" 
+  BEGIN
+    BLOCK "040904b0" 
+    BEGIN
+      VALUE "CompanyName", "The Orbit Authors"
+      VALUE "InternalName", "Orbit.exe"
+      VALUE "FileDescription", "Orbit Profiler"
+      VALUE "FileVersion", "@VERSION_STRING@"
+      VALUE "LegalCopyright", "(C) 2020 The Orbit Authors"
+      VALUE "OriginalFilename", "Orbit.exe"
+      VALUE "ProductName", "Orbit Profiler"
+      VALUE "ProductVersion", "@VERSION_STRING@"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0409, 1200
+  END
+END

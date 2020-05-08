@@ -1,0 +1,16 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#ifndef ORBITQT_VERSION_H_
+#define ORBITQT_VERSION_H_
+
+namespace OrbitQt {
+  static const int kMajorVersion = @MAJOR_VERSION@;
+  static const int kMinorVersion = @MINOR_VERSION@;
+  static const int kPatchVersion = @PATCH_VERSION@;
+  static const int kMinorPatchVersion = @MINOR_PATCH_VERSION@;
+  static const char* const kVersionString = "@VERSION_STRING@";
+} // namespace OrbitQt
+
+#endif // ORBITQT_VERSION_H_
