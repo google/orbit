@@ -22,6 +22,7 @@ target_sources(OrbitSsh PUBLIC
         include/OrbitSsh/ResultType.h
         include/OrbitSsh/Session.h
         include/OrbitSsh/SessionManager.h
+        include/OrbitSsh/SshManager.h
         include/OrbitSsh/Socket.h
         include/OrbitSsh/TunnelManager.h)
 
@@ -32,6 +33,7 @@ target_sources(OrbitSsh PRIVATE
         LocalSocketManager.cpp
         Session.cpp
         SessionManager.cpp
+        SshManager.cpp
         Socket.cpp
         TunnelManager.cpp)
 
