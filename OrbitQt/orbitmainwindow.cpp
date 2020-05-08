@@ -454,12 +454,8 @@ void OrbitMainWindow::OnSetClipboard(const std::wstring& a_Text) {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionAbout_triggered() {
-  std::string title = "Orbit Profiler";
-  title += " | Version " + GOrbitApp->GetVersion();
-  std::string text = "Copyright (c) 2013-2018 - Pierric Gimmig\n Qt:";
-  text += qVersion();
-
-  QMessageBox::about(this, title.c_str(), text.c_str());
+  const QString text{"Copyright (c) 2020 The Orbit Authors. All rights reserved."};
+  QMessageBox::about(this, windowTitle(), text);
 }
 
 //-----------------------------------------------------------------------------
