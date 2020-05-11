@@ -10,9 +10,16 @@ function(GenerateVersionFile OUTPUT_FILE INPUT_FILE COMPILE_TARGET)
 
   set(GIT_COMMIT_STATE_FILE "${OUTPUT_FILE}.state")
 
-  string(MAKE_C_IDENTIFIER "${OUTPUT_FILE}" TARGET_NAME)
+  set(TARGET_NAME "${OUTPUT_FILE}")
+
+  if("${OUTPUT_FILE}" MATCHES "${CMAKE_BINARY_DIR}*")
+    string(LENGTH "${CMAKE_BINARY_DIR}" PREFIX_LENGTH)
+    string(SUBSTRING "${OUTPUT_FILE}" ${PREFIX_LENGTH} -1 TARGET_NAME)
+  endif()
+
+  string(MAKE_C_IDENTIFIER "${TARGET_NAME}" TARGET_NAME)
   add_custom_target(
-    "check_git_version_${TARGET_NAME}" ALL
+    "${TARGET_NAME}" ALL
     DEPENDS ${INPUT_FILE}
     BYPRODUCTS ${OUTPUT_FILE} ${GIT_COMMIT_STATE_FILE}
     COMMENT "Checking Orbit's version by calling git describe"
