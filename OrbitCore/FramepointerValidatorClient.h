@@ -28,14 +28,14 @@ class FramepointerValidatorClient {
   FramepointerValidatorClient& operator=(FramepointerValidatorClient&&) =
       delete;
 
-  void ValidateFramepointersInModules(
-      Process* process, const std::vector<std::shared_ptr<Module>>& modules);
+  void AnalyzeModule(Process* process,
+                     const std::vector<std::shared_ptr<Module>>& modules);
 
  private:
   void HandleResponse(const Message& message, uint64_t id);
   TransactionClient* transaction_client_;
   absl::flat_hash_map<uint64_t, std::vector<std::shared_ptr<Module>>>
-      id_modules_;
+      modules_map_;
   absl::Mutex id_mutex_;
 };
 

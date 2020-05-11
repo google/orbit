@@ -177,9 +177,8 @@ void ModulesDataView::OnContextMenu(const std::string& a_Action,
       }
     }
     if (!modules_to_validate.empty()) {
-      GOrbitApp->GetFramepointerValidatorClient()
-          ->ValidateFramepointersInModules(m_Process.get(),
-                                           modules_to_validate);
+      GOrbitApp->GetFramepointerValidatorClient()->AnalyzeModule(
+          m_Process.get(), modules_to_validate);
     }
 
     GOrbitApp->LoadModules();

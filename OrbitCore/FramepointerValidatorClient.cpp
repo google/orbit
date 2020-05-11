@@ -5,7 +5,9 @@
 
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
+
 #include <string>
+
 #include "CoreApp.h"
 #include "Message.h"
 #include "Pdb.h"
@@ -21,7 +23,7 @@ FramepointerValidatorClient::FramepointerValidatorClient(
       {on_response, Msg_ValidateFramepointer, "Validate Framepointers"});
 }
 
-void FramepointerValidatorClient::ValidateFramepointersInModules(
+void FramepointerValidatorClient::AnalyzeModule(
     Process* process, const std::vector<std::shared_ptr<Module>>& modules) {
   if (modules.empty()) {
     ERROR("No module to validate, cancelling");
@@ -44,10 +46,10 @@ void FramepointerValidatorClient::ValidateFramepointersInModules(
   }
 
   uint64_t id = transaction_client_->EnqueueRequest(Msg_ValidateFramepointer,
-                                      remote_module_infos);
+                                                    remote_module_infos);
 
   absl::MutexLock lock(&id_mutex_);
-  id_modules_[id] = modules;
+  modules_map_[id] = modules;
 }
 
 void FramepointerValidatorClient::HandleResponse(const Message& message,
@@ -56,18 +58,17 @@ void FramepointerValidatorClient::HandleResponse(const Message& message,
   transaction_client_->ReceiveResponse(message, &functions);
 
   id_mutex_.Lock();
-  std::vector<std::shared_ptr<Module>> modules = id_modules_[id];
-  id_modules_.erase(id);
+  std::vector<std::shared_ptr<Module>> modules = modules_map_[id];
+  modules_map_.erase(id);
   id_mutex_.Unlock();
 
-  uint64_t all_functions_size = 0;
+  uint64_t num_functions = 0;
   for (const auto& module : modules) {
-    all_functions_size += module->m_Pdb->GetFunctions().size();
+    num_functions += module->m_Pdb->GetFunctions().size();
   }
 
   std::string text = absl::StrFormat(
       "info:Framepointer Validation\nFailed to validate %d out of %d functions",
-      functions.size(), all_functions_size);
+      functions.size(), num_functions);
   GCoreApp->SendToUiNow(text);
-
 }

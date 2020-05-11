@@ -37,7 +37,7 @@ void FramepointerValidatorService::HandleRequest(const Message& message) {
       continue;
     }
 
-    const bool is64Bit = process->GetIs64Bit();
+    const bool is_64_bit = process->GetIs64Bit();
 
     // Find module.
     const std::string& module_name = module_info.m_Name;
@@ -49,22 +49,22 @@ void FramepointerValidatorService::HandleRequest(const Message& message) {
 
     std::shared_ptr<Pdb> pdb = module->m_Pdb;
     if (!pdb) {
-      ERROR("Unable to retrieve Pdb %s", module_name.c_str());
+      ERROR("Unable to retrieve debug information %s", module_name.c_str());
       continue;
     }
 
     std::vector<std::shared_ptr<Function>> functions =
-        CheckFramepointers(pdb.get(), is64Bit);
+        GetFpoFunctions(pdb.get(), is_64_bit);
 
     transaction_service_->SendResponse(message.GetType(), functions);
   }
 }
 
 std::vector<std::shared_ptr<Function>>
-FramepointerValidatorService::CheckFramepointers(Pdb* pdb, bool is64Bit) {
+FramepointerValidatorService::GetFpoFunctions(Pdb* pdb, bool is_64_bit) {
   std::vector<std::shared_ptr<Function>> result;
 
-  cs_mode mode = is64Bit ? CS_MODE_64 : CS_MODE_32;
+  cs_mode mode = is_64_bit ? CS_MODE_64 : CS_MODE_32;
   csh handle;
   if (cs_open(CS_ARCH_X86, mode, &handle) != CS_ERR_OK) {
     ERROR("Unable to open capstone.");

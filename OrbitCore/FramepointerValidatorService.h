@@ -14,8 +14,8 @@
 // Runs on the service and receives requests (Msg_ValidateFramepointer) from
 // FramepointerValidatorClient to validate whether certain modules are
 // compiled with framepointers.
-// It responds a list of all functions that are identified, to don't have
-// a valid prologue/epilogue (see FunctionFramepointerValidator).
+// It returns a list of functions that don't have a prologue and epilogue
+// associated with frame pointers (see FunctionFramepointerValidator).
 class FramepointerValidatorService {
  public:
   FramepointerValidatorService(const ProcessList* process_list,
@@ -32,8 +32,8 @@ class FramepointerValidatorService {
  private:
   void HandleRequest(const Message& message);
 
-  static std::vector<std::shared_ptr<Function>> CheckFramepointers(
-      Pdb* pdb, bool is64Bit);
+  static std::vector<std::shared_ptr<Function>> GetFpoFunctions(Pdb* pdb,
+                                                                bool is_64_bit);
 
   const ProcessList* process_list_;
   TransactionService* transaction_service_;
