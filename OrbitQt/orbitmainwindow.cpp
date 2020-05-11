@@ -26,6 +26,7 @@
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "orbitaboutdialog.h"
+#include "orbitcodeeditor.h"
 #include "orbitdiffdialog.h"
 #include "orbitdisassemblydialog.h"
 #include "orbitsamplingreport.h"

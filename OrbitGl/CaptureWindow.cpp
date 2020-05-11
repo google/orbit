@@ -577,13 +577,15 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
 }
 
 //-----------------------------------------------------------------------------
-std::wstring GOTO_CALLSTACK = L"Go to Callstack";
-std::wstring GOTO_SOURCE = L"Go to Source";
+const std::string CaptureWindow::MENU_ACTION_GO_TO_CALLSTACK =
+    "Go to Callstack";
+const std::string CaptureWindow::MENU_ACTION_GO_TO_SOURCE = "Go to Source";
 
 //-----------------------------------------------------------------------------
-std::vector<std::wstring> CaptureWindow::GetContextMenu() {
-  static std::vector<std::wstring> menu = {GOTO_CALLSTACK, GOTO_SOURCE};
-  static std::vector<std::wstring> emptyMenu;
+std::vector<std::string> CaptureWindow::GetContextMenu() {
+  static std::vector<std::string> menu = {MENU_ACTION_GO_TO_CALLSTACK,
+                                          MENU_ACTION_GO_TO_SOURCE};
+  static std::vector<std::string> emptyMenu;
   TextBox* selection = Capture::GSelectedTextBox;
   return selection != nullptr && !selection->GetTimer().IsCoreActivity() &&
                  selection->GetTimer().m_Type != Timer::GPU_ACTIVITY
@@ -592,13 +594,13 @@ std::vector<std::wstring> CaptureWindow::GetContextMenu() {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureWindow::OnContextMenu(const std::wstring& a_Action,
+void CaptureWindow::OnContextMenu(const std::string& a_Action,
                                   int /*a_MenuIndex*/) {
   if (Capture::GSelectedTextBox) {
-    if (a_Action == GOTO_SOURCE) {
+    if (a_Action == MENU_ACTION_GO_TO_SOURCE) {
       GOrbitApp->GoToCode(
           Capture::GSelectedTextBox->GetTimer().m_FunctionAddress);
-    } else if (a_Action == GOTO_CALLSTACK) {
+    } else if (a_Action == MENU_ACTION_GO_TO_CALLSTACK) {
       GOrbitApp->GoToCallstack();
     }
   }

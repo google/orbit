@@ -247,15 +247,15 @@ void OrbitGLWidget::mouseReleaseEvent(QMouseEvent* event) {
 
 //-----------------------------------------------------------------------------
 void OrbitGLWidget::showContextMenu() {
-  std::vector<std::wstring> menu = m_OrbitPanel->GetContextMenu();
+  std::vector<std::string> menu = m_OrbitPanel->GetContextMenu();
 
-  if (menu.size() > 0) {
+  if (!menu.empty()) {
     QMenu contextMenu(tr("GlContextMenu"), this);
     QSignalMapper signalMapper(this);
     std::vector<QAction*> actions;
 
     for (size_t i = 0; i < menu.size(); ++i) {
-      actions.push_back(new QAction(QString::fromStdWString(menu[i])));
+      actions.push_back(new QAction(QString::fromStdString(menu[i])));
       connect(actions[i], SIGNAL(triggered()), &signalMapper, SLOT(map()));
       signalMapper.setMapping(actions[i], i);
       contextMenu.addAction(actions[i]);
@@ -270,7 +270,7 @@ void OrbitGLWidget::showContextMenu() {
 
 //-----------------------------------------------------------------------------
 void OrbitGLWidget::OnMenuClicked(int a_Index) {
-  const std::vector<std::wstring>& menu = m_OrbitPanel->GetContextMenu();
+  const std::vector<std::string>& menu = m_OrbitPanel->GetContextMenu();
   m_OrbitPanel->OnContextMenu(menu[a_Index], a_Index);
 }
 

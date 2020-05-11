@@ -18,10 +18,12 @@
 #include "orbitmainwindow.h"
 #include "version.h"
 
+ABSL_FLAG(bool, non_release_features, false, "");
+
 // SSH Tunneling via run_service_ssh.{ps1/sh} is the default for now. To make
 // this work the remote is set here to localhost. This will also disable the
 // StartUpWindow for now.
-// TODO(antonrohr) replace "localhost" with "" as soon as ssh is implemented
+// TODO(antonrohr): replace "localhost" with "" as soon as ssh is implemented
 ABSL_FLAG(std::string, remote, "localhost",
           "Connect to the specified remote on startup");
 ABSL_FLAG(uint16_t, asio_port, 44766,
@@ -78,14 +80,14 @@ int main(int argc, char* argv[]) {
   uint16_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
 
   if (!remote.empty()) {
-    // Append default port only if the user has not specified one
     if (absl::StrContains(remote, ":")) {
       // TODO: Replace this with grpc_address once everything migrated to grpc
-      std::cerr << "Seems like you specified port in your remote address, "
-                   "since the service currently listening on 2 different ports "
-                   "please use --asio_port/--grpc_port options to specify "
-                   "corresponding ports and remove port from --remote."
-                << std::endl;
+      std::cerr
+          << "It seems like you specified a port in your remote address: "
+             "since the service is currently listening on two different ports, "
+             "please use --asio_port/--grpc_port options to specify the "
+             "corresponding ports and remove the port from --remote."
+          << std::endl;
       return -1;
     }
 

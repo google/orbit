@@ -9,9 +9,8 @@
 
 #include "CrashHandler.h"
 
-// The structure used to store Orbit Client Application options
-// The default values are set by main() and passed over to App
-// class initialization method.
+// The struct used to store Orbit Client Application options.
+// The default values are set by main() and passed to OrbitApp::Init.
 struct ApplicationOptions {
   // The host and port of the collection service
   std::string asio_server_address;

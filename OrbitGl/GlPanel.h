@@ -47,10 +47,10 @@ class GlPanel {
                           bool /*a_Shift*/, bool /*a_Alt*/) {}
   virtual void KeyReleased(unsigned int /*a_KeyCode*/, bool /*a_Ctrl*/,
                            bool /*a_Shift*/, bool /*a_Alt*/) {}
-  virtual std::vector<std::wstring> GetContextMenu() {
-    return std::vector<std::wstring>();
+  virtual std::vector<std::string> GetContextMenu() {
+    return std::vector<std::string>();
   }
-  virtual void OnContextMenu(const std::wstring& /*a_Action*/,
+  virtual void OnContextMenu(const std::string& /*a_Action*/,
                              int /*a_MenuIndex*/) {}
 
   Type GetType() const { return m_Type; }
