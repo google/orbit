@@ -26,6 +26,8 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 :: Package build artifacts into a zip for integration in the installer.
 cd %REPO_ROOT%\build\package
 ren bin Orbit
+copy /Y THIRD_PARTY_LICENSES.txt Orbit\THIRD_PARTY_LICENSES.txt
+copy /Y LICENSE Orbit\LICENSE.txt
 zip -r Orbit.zip Orbit
 
 :: Uploading prebuilt packages of our dependencies
