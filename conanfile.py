@@ -127,6 +127,8 @@ class OrbitConan(ConanFile):
                           dst="{}/shaders/".format(dest))
                 self.copy("v3f-t2f-c4f.*", src=path,
                           dst="{}/shaders/".format("OrbitQt/"))
+        self.copy("license*", dst="licenses", folder=True, ignore_case=True)
+        self.copy("licence*", dst="licenses", folder=True, ignore_case=True)
 
     def package(self):
         if self.options.debian_packaging:
