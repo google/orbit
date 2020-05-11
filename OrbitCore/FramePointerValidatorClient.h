@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_FRAMEPOINTER_VALIDATOR_CLIENT_H_
-#define ORBIT_CORE_FRAMEPOINTER_VALIDATOR_CLIENT_H_
+#ifndef ORBIT_CORE_FRAME_POINTER_VALIDATOR_CLIENT_H_
+#define ORBIT_CORE_FRAME_POINTER_VALIDATOR_CLIENT_H_
 
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
@@ -12,7 +12,7 @@
 class CoreApp;
 
 // This class can be called from the UI on the client in order to validate
-// whether certain modules are compiled with framepointers.
+// whether certain modules are compiled with frame pointers.
 // It will send a request to FramePointerValidatorService, to perform the
 // analysis on the client.
 // On a response, it will display the number of functions that have a non-valid
@@ -43,4 +43,4 @@ class FramePointerValidatorClient {
   absl::Mutex id_mutex_;
 };
 
-#endif  // ORBIT_CORE_FRAMEPOINTER_VALIDATOR_CLIENT_H_
+#endif  // ORBIT_CORE_FRAME_POINTER_VALIDATOR_CLIENT_H_

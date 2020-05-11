@@ -72,7 +72,7 @@ enum MessageType : int16_t {
   Msg_DebugSymbols,
   Msg_MemoryTransfer,
   Msg_ThreadNames,
-  Msg_ValidateFramePointer,
+  Msg_ValidateFramePointers,
 };
 
 //-----------------------------------------------------------------------------

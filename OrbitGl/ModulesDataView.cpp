@@ -13,7 +13,7 @@
 
 // TODO(kuebler): remove this once we have the validator complete
 ABSL_FLAG(bool, enable_frame_pointer_validator, false,
-          "Enable validation of framepointers");
+          "Enable validation of frame pointers");
 
 //-----------------------------------------------------------------------------
 ModulesDataView::ModulesDataView() : DataView(DataViewType::MODULES) {}
@@ -103,7 +103,7 @@ void ModulesDataView::DoSort() {
 //-----------------------------------------------------------------------------
 const std::string ModulesDataView::MENU_ACTION_MODULES_LOAD = "Load Symbols";
 const std::string ModulesDataView::MENU_ACTION_MODULES_VERIFY =
-    "Verify Framepointer";
+    "Verify Frame Pointer";
 const std::string ModulesDataView::MENU_ACTION_DLL_FIND_PDB = "Find Pdb";
 const std::string ModulesDataView::MENU_ACTION_DLL_EXPORTS = "Load Symbols";
 
@@ -190,7 +190,7 @@ void ModulesDataView::OnContextMenu(const std::string& a_Action,
     }
 
     if (!modules_to_validate.empty()) {
-      GOrbitApp->GetFramepointerValidatorClient()->AnalyzeModule(
+      GOrbitApp->GetFramePointerValidatorClient()->AnalyzeModule(
           m_Process.get(), modules_to_validate);
     }
   } else if (a_Action == MENU_ACTION_DLL_FIND_PDB) {

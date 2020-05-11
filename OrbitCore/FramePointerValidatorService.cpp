@@ -19,7 +19,7 @@ FramePointerValidatorService::FramePointerValidatorService(
     : process_list_{process_list}, transaction_service_{transaction_service} {
   auto on_request = [this](const Message& msg) { HandleRequest(msg); };
   transaction_service_->RegisterTransactionRequestHandler(
-      {on_request, Msg_ValidateFramePointer, "Validate Frame Pointers"});
+      {on_request, Msg_ValidateFramePointers, "Validate Frame Pointers"});
 }
 
 void FramePointerValidatorService::HandleRequest(const Message& message) {
@@ -55,14 +55,15 @@ void FramePointerValidatorService::HandleRequest(const Message& message) {
     }
 
     std::vector<std::shared_ptr<Function>> functions =
-        GetFpoFunctions(pdb.get(), is_64_bit);
+        GetFpoFunctions(pdb.get(), module.get(), is_64_bit);
 
     transaction_service_->SendResponse(message.GetType(), functions);
   }
 }
 
 std::vector<std::shared_ptr<Function>>
-FramePointerValidatorService::GetFpoFunctions(Pdb* pdb, bool is_64_bit) {
+FramePointerValidatorService::GetFpoFunctions(Pdb* debug_info, Module* module,
+                                              bool is_64_bit) {
   std::vector<std::shared_ptr<Function>> result;
 
   cs_mode mode = is_64_bit ? CS_MODE_64 : CS_MODE_32;
@@ -74,11 +75,11 @@ FramePointerValidatorService::GetFpoFunctions(Pdb* pdb, bool is_64_bit) {
 
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 
-  std::ifstream instream(pdb->GetFileName(), std::ios::in | std::ios::binary);
+  std::ifstream instream(module->m_FullName, std::ios::in | std::ios::binary);
   std::vector<uint8_t> binary((std::istreambuf_iterator<char>(instream)),
                               std::istreambuf_iterator<char>());
 
-  for (std::shared_ptr<Function> function : pdb->GetFunctions()) {
+  for (std::shared_ptr<Function> function : debug_info->GetFunctions()) {
     uint64_t function_size = function->Size();
     if (function_size == 0) {
       continue;

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_FRAMEPOINTER_VALIDATOR_SERVICE_H_
-#define ORBIT_CORE_FRAMEPOINTER_VALIDATOR_SERVICE_H_
+#ifndef ORBIT_CORE_FRAME_POINTER_VALIDATOR_SERVICE_H_
+#define ORBIT_CORE_FRAME_POINTER_VALIDATOR_SERVICE_H_
 
 #include <vector>
 
@@ -11,7 +11,7 @@
 #include "ProcessUtils.h"
 #include "TransactionService.h"
 
-// Runs on the service and receives requests (Msg_ValidateFramePointer) from
+// Runs on the service and receives requests (Msg_ValidateFramePointers) from
 // FramePointerValidatorClient to validate whether certain modules are
 // compiled with frame pointers.
 // It returns a list of functions that don't have a prologue and epilogue
@@ -32,11 +32,12 @@ class FramePointerValidatorService {
  private:
   void HandleRequest(const Message& message);
 
-  static std::vector<std::shared_ptr<Function>> GetFpoFunctions(Pdb* pdb,
+  static std::vector<std::shared_ptr<Function>> GetFpoFunctions(Pdb* debug_info,
+                                                                Module* module,
                                                                 bool is_64_bit);
 
   const ProcessList* process_list_;
   TransactionService* transaction_service_;
 };
 
-#endif  // ORBIT_CORE_FRAMEPOINTER_VALIDATOR_SERVICE_H_
+#endif  // ORBIT_CORE_FRAME_POINTER_VALIDATOR_SERVICE_H_

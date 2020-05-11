@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_FUNCTION_FRAMEPOINTER_VALIDATOR_H_
-#define ORBIT_CORE_FUNCTION_FRAMEPOINTER_VALIDATOR_H_
+#ifndef ORBIT_CORE_FUNCTION_FRAME_POINTER_VALIDATOR_H_
+#define ORBIT_CORE_FUNCTION_FRAME_POINTER_VALIDATOR_H_
 
 #include <capstone/capstone.h>
 
@@ -44,4 +44,4 @@ class FunctionFramePointerValidator {
   csh handle_;
 };
 
-#endif  // ORBIT_CORE_FUNCTION_FRAMEPOINTER_VALIDATOR_H_
+#endif  // ORBIT_CORE_FUNCTION_FRAME_POINTER_VALIDATOR_H_

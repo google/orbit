@@ -20,7 +20,7 @@ FramePointerValidatorClient::FramePointerValidatorClient(
   };
 
   transaction_client_->RegisterTransactionResponseHandler(
-      {on_response, Msg_ValidateFramePointer, "Validate Frame Pointer"});
+      {on_response, Msg_ValidateFramePointers, "Validate Frame Pointer"});
 }
 
 void FramePointerValidatorClient::AnalyzeModule(
@@ -45,7 +45,7 @@ void FramePointerValidatorClient::AnalyzeModule(
     return;
   }
 
-  uint64_t id = transaction_client_->EnqueueRequest(Msg_ValidateFramePointer,
+  uint64_t id = transaction_client_->EnqueueRequest(Msg_ValidateFramePointers,
                                                     remote_module_infos);
 
   absl::MutexLock lock(&id_mutex_);

@@ -25,9 +25,9 @@ target_sources(
          Diff.h
          EventBuffer.h
          EventClasses.h
-        FramePointerValidatorClient.h
-        FramePointerValidatorService.h
-        FunctionFramePointerValidator.h
+         FramePointerValidatorClient.h
+         FramePointerValidatorService.h
+         FunctionFramePointerValidator.h
          FunctionStats.h
          Hashing.h
          Injection.h
@@ -94,9 +94,9 @@ target_sources(
           Diff.cpp
           ElfFile.cpp
           EventBuffer.cpp
-        FramePointerValidatorClient.cpp
-        FramePointerValidatorService.cpp
-        FunctionFramePointerValidator.cpp
+         FramePointerValidatorClient.cpp
+         FramePointerValidatorService.cpp
+         FunctionFramePointerValidator.cpp
           FunctionStats.cpp
           Injection.cpp
           Introspection.cpp
