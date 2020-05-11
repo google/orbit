@@ -18,6 +18,7 @@ target_sources(OrbitSsh PUBLIC
         include/OrbitSsh/Channel.h
         include/OrbitSsh/DirectTcpIpChannelManager.h
         include/OrbitSsh/ExecChannelManager.h
+        include/OrbitSsh/LocalSocketManager.h
         include/OrbitSsh/ResultType.h
         include/OrbitSsh/Session.h
         include/OrbitSsh/SessionManager.h
@@ -27,6 +28,7 @@ target_sources(OrbitSsh PRIVATE
         Channel.cpp
         DirectTcpIpChannelManager.cpp
         ExecChannelManager.cpp
+        LocalSocketManager.cpp
         Session.cpp
         SessionManager.cpp
         Socket.cpp)
