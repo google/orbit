@@ -1092,6 +1092,7 @@ void OrbitApp::LaunchRuleEditor(Function* a_Function) {
   SendToUiNow("RuleEditor");
 }
 
+//-----------------------------------------------------------------------------
 DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::FUNCTIONS:
@@ -1172,4 +1173,13 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   }
 
   FATAL("Unreachable");
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::InitializeClientTransactions() {
+  transaction_client_ = std::make_unique<TransactionClient>(GTcpClient.get());
+  symbols_client_ =
+      std::make_unique<SymbolsClient>(this, transaction_client_.get());
+  process_memory_client_ =
+      std::make_unique<ProcessMemoryClient>(transaction_client_.get());
 }
