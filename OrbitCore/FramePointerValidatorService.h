@@ -11,22 +11,22 @@
 #include "ProcessUtils.h"
 #include "TransactionService.h"
 
-// Runs on the service and receives requests (Msg_ValidateFramepointer) from
-// FramepointerValidatorClient to validate whether certain modules are
-// compiled with framepointers.
+// Runs on the service and receives requests (Msg_ValidateFramePointer) from
+// FramePointerValidatorClient to validate whether certain modules are
+// compiled with frame pointers.
 // It returns a list of functions that don't have a prologue and epilogue
-// associated with frame pointers (see FunctionFramepointerValidator).
-class FramepointerValidatorService {
+// associated with frame pointers (see FunctionFramePointerValidator).
+class FramePointerValidatorService {
  public:
-  FramepointerValidatorService(const ProcessList* process_list,
+  FramePointerValidatorService(const ProcessList* process_list,
                                TransactionService* transaction_service);
-  FramepointerValidatorService() = delete;
+  FramePointerValidatorService() = delete;
 
-  FramepointerValidatorService(const FramepointerValidatorService&) = delete;
-  FramepointerValidatorService& operator=(const FramepointerValidatorService&) =
+  FramePointerValidatorService(const FramePointerValidatorService&) = delete;
+  FramePointerValidatorService& operator=(const FramePointerValidatorService&) =
       delete;
-  FramepointerValidatorService(FramepointerValidatorService&&) = delete;
-  FramepointerValidatorService& operator=(FramepointerValidatorService&&) =
+  FramePointerValidatorService(FramePointerValidatorService&&) = delete;
+  FramePointerValidatorService& operator=(FramePointerValidatorService&&) =
       delete;
 
  private:

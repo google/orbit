@@ -1,7 +1,7 @@
 // Copyright (c) 2020 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-#include "FramepointerValidatorClient.h"
+#include "FramePointerValidatorClient.h"
 
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
@@ -12,7 +12,7 @@
 #include "Message.h"
 #include "Pdb.h"
 
-FramepointerValidatorClient::FramepointerValidatorClient(
+FramePointerValidatorClient::FramePointerValidatorClient(
     CoreApp* core_app, TransactionClient* transaction_client)
     : core_app_{core_app}, transaction_client_{transaction_client} {
   auto on_response = [this](const Message& msg, uint64_t id) {
@@ -20,10 +20,10 @@ FramepointerValidatorClient::FramepointerValidatorClient(
   };
 
   transaction_client_->RegisterTransactionResponseHandler(
-      {on_response, Msg_ValidateFramepointer, "Validate Framepointers"});
+      {on_response, Msg_ValidateFramePointer, "Validate Frame Pointer"});
 }
 
-void FramepointerValidatorClient::AnalyzeModule(
+void FramePointerValidatorClient::AnalyzeModule(
     Process* process, const std::vector<std::shared_ptr<Module>>& modules) {
   if (modules.empty()) {
     ERROR("No module to validate, cancelling");
@@ -45,14 +45,14 @@ void FramepointerValidatorClient::AnalyzeModule(
     return;
   }
 
-  uint64_t id = transaction_client_->EnqueueRequest(Msg_ValidateFramepointer,
+  uint64_t id = transaction_client_->EnqueueRequest(Msg_ValidateFramePointer,
                                                     remote_module_infos);
 
   absl::MutexLock lock(&id_mutex_);
   modules_map_[id] = modules;
 }
 
-void FramepointerValidatorClient::HandleResponse(const Message& message,
+void FramePointerValidatorClient::HandleResponse(const Message& message,
                                                  uint64_t id) {
   std::vector<std::shared_ptr<Function>> functions;
   transaction_client_->ReceiveResponse(message, &functions);

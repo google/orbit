@@ -4,13 +4,13 @@
 #include <thread>
 #include <vector>
 
+#include "FramePointerValidatorService.h"
 #include "LinuxTracingBuffer.h"
 #include "LinuxTracingHandler.h"
 #include "ProcessMemoryService.h"
 #include "ProcessUtils.h"
 #include "SymbolsService.h"
 #include "TransactionService.h"
-#include "FramepointerValidatorService.h"
 
 class OrbitAsioServer {
  public:
@@ -40,7 +40,7 @@ class OrbitAsioServer {
   std::unique_ptr<TransactionService> transaction_service_;
   std::unique_ptr<SymbolsService> symbols_service_;
   std::unique_ptr<ProcessMemoryService> process_memory_service_;
-  std::unique_ptr<FramepointerValidatorService> framepointer_validator_service_;
+  std::unique_ptr<FramePointerValidatorService> framepointer_validator_service_;
 
   std::vector<std::shared_ptr<Function>> selected_functions_;
   std::thread tracing_buffer_thread_;

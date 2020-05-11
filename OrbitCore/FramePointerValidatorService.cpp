@@ -2,26 +2,27 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "FramepointerValidatorService.h"
+#include "FramePointerValidatorService.h"
 
 #include <capstone/capstone.h>
+
 #include <vector>
 
-#include "FunctionFramepointerValidator.h"
+#include "FunctionFramePointerValidator.h"
 #include "OrbitFunction.h"
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
 #include "Pdb.h"
 
-FramepointerValidatorService::FramepointerValidatorService(
+FramePointerValidatorService::FramePointerValidatorService(
     const ProcessList* process_list, TransactionService* transaction_service)
     : process_list_{process_list}, transaction_service_{transaction_service} {
   auto on_request = [this](const Message& msg) { HandleRequest(msg); };
   transaction_service_->RegisterTransactionRequestHandler(
-      {on_request, Msg_ValidateFramepointer, "Validate Framepointers"});
+      {on_request, Msg_ValidateFramePointer, "Validate Frame Pointers"});
 }
 
-void FramepointerValidatorService::HandleRequest(const Message& message) {
+void FramePointerValidatorService::HandleRequest(const Message& message) {
   // TODO: The code below is about 90% copy&past from SymbolsService.cpp.
   //  We should discuss.
   std::vector<ModuleDebugInfo> module_infos;
@@ -61,7 +62,7 @@ void FramepointerValidatorService::HandleRequest(const Message& message) {
 }
 
 std::vector<std::shared_ptr<Function>>
-FramepointerValidatorService::GetFpoFunctions(Pdb* pdb, bool is_64_bit) {
+FramePointerValidatorService::GetFpoFunctions(Pdb* pdb, bool is_64_bit) {
   std::vector<std::shared_ptr<Function>> result;
 
   cs_mode mode = is_64_bit ? CS_MODE_64 : CS_MODE_32;
@@ -83,7 +84,7 @@ FramepointerValidatorService::GetFpoFunctions(Pdb* pdb, bool is_64_bit) {
       continue;
     }
 
-    FunctionFramepointerValidator validator{
+    FunctionFramePointerValidator validator{
         handle, binary.data() + function->Offset(), function_size};
 
     if (!validator.Validate()) result.push_back(function);
