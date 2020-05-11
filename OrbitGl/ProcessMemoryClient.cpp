@@ -4,7 +4,7 @@
 
 #include "ProcessMemoryClient.h"
 
-#include "ProcessMemoryService.h"
+#include "ProcessMemoryRequest.h"
 
 ProcessMemoryClient::ProcessMemoryClient(TransactionClient* transaction_client)
     : transaction_client_{transaction_client} {
@@ -17,7 +17,7 @@ ProcessMemoryClient::ProcessMemoryClient(TransactionClient* transaction_client)
 
 void ProcessMemoryClient::GetRemoteMemory(
     uint32_t pid, uint64_t address, uint64_t size,
-    const ProcessMemoryCallback& callback) {
+    const CoreApp::ProcessMemoryCallback& callback) {
   ProcessMemoryRequest request{pid, address, size};
   uint64_t id =
       transaction_client_->EnqueueRequest(Msg_MemoryTransfer, request);

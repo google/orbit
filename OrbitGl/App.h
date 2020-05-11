@@ -23,13 +23,16 @@
 #include "LogDataView.h"
 #include "Message.h"
 #include "ModulesDataView.h"
+#include "ProcessMemoryClient.h"
 #include "ProcessesDataView.h"
 #include "RuleEditor.h"
 #include "SamplingReportDataView.h"
 #include "SessionsDataView.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
+#include "SymbolsClient.h"
 #include "Threading.h"
+#include "TransactionClient.h"
 #include "TypesDataView.h"
 #include "absl/container/flat_hash_map.h"
 #include "grpcpp/grpcpp.h"
@@ -220,6 +223,16 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   DataView* GetOrCreateDataView(DataViewType type) override;
 
+  void InitializeClientTransactions();
+  TransactionClient* GetTransactionClient() {
+    return transaction_client_.get();
+  }
+  SymbolsClient* GetSymbolsClient() { return symbols_client_.get(); }
+  void GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
+                       const ProcessMemoryCallback& callback) override {
+    process_memory_client_->GetRemoteMemory(pid, address, size, callback);
+  }
+
  private:
   // TODO(dimitry): Move this to process manager
   std::shared_ptr<Process> FindProcessByPid(uint32_t pid);
@@ -281,6 +294,11 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 #else
   std::shared_ptr<class BpfTrace> m_BpfTrace;
 #endif
+
+ private:
+  std::unique_ptr<TransactionClient> transaction_client_;
+  std::unique_ptr<SymbolsClient> symbols_client_;
+  std::unique_ptr<ProcessMemoryClient> process_memory_client_;
 };
 
 //-----------------------------------------------------------------------------

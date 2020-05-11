@@ -45,6 +45,7 @@ target_sources(
          PickingManager.h
          PluginCanvas.h
          PluginManager.h
+         ProcessMemoryClient.h
          ProcessesDataView.h
          RuleEditor.h
          SamplingReport.h
@@ -52,12 +53,14 @@ target_sources(
          SchedulerTrack.h
          SessionsDataView.h
          shader.h
+         SymbolsClient.h
          TextBox.h
          TextRenderer.h
          ThreadTrack.h
          TimeGraph.h
          TimeGraphLayout.h
          Track.h
+         TransactionClient.h
          TypesDataView.h)
 
 target_sources(
@@ -93,18 +96,21 @@ target_sources(
           PluginCanvas.cpp
           PluginManager.cpp
           ProcessListManager.cpp
+          ProcessMemoryClient.cpp
           ProcessesDataView.cpp
           RuleEditor.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp
           SchedulerTrack.cpp
           SessionsDataView.cpp
+          SymbolsClient.cpp
           TextBox.cpp
           TextRenderer.cpp
           TimeGraph.cpp
           TimeGraphLayout.cpp
-          Track.cpp
           ThreadTrack.cpp
+          Track.cpp
+          TransactionClient.cpp
           TypesDataView.cpp)
 
 target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

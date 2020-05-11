@@ -54,8 +54,7 @@ target_sources(
          Path.h
          Pdb.h
          PrintVar.h
-         ProcessMemoryClient.h
-         ProcessMemoryService.h
+         ProcessMemoryRequest.h
          ProcessUtils.h
          Profiling.h
          RingBuffer.h
@@ -65,8 +64,6 @@ target_sources(
          SerializationMacros.h
          StringManager.h
          SymbolHelper.h
-         SymbolsClient.h
-         SymbolsService.h
          Systrace.h
          Tcp.h
          TcpClient.h
@@ -77,8 +74,6 @@ target_sources(
          Threading.h
          TidAndThreadName.h
          TimerManager.h
-         TransactionClient.h
-         TransactionService.h
          TypeInfoStructs.h
          Utils.h
          Variable.h
@@ -119,16 +114,13 @@ target_sources(
           OrbitUnreal.cpp
           Params.cpp
           Path.cpp
-          ProcessMemoryClient.cpp
-          ProcessMemoryService.cpp
+          ProcessMemoryRequest.cpp
           ProcessUtils.cpp
           Profiling.cpp
           SamplingProfiler.cpp
           ScopeTimer.cpp
           StringManager.cpp
           SymbolHelper.cpp
-          SymbolsClient.cpp
-          SymbolsService.cpp
           Systrace.cpp
           Tcp.cpp
           Tcp.cpp
@@ -137,8 +129,6 @@ target_sources(
           TcpServer.cpp
           TestRemoteMessages.cpp
           TimerManager.cpp
-          TransactionClient.cpp
-          TransactionService.cpp
           Utils.cpp
           Variable.cpp
           VariableTracing.cpp)

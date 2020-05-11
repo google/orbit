@@ -12,8 +12,6 @@
 #include "BaseTypes.h"
 #include "LinuxAddressInfo.h"
 #include "LinuxCallstackEvent.h"
-#include "ProcessMemoryClient.h"
-#include "SymbolsClient.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 
@@ -31,7 +29,6 @@ class Session;
 class CoreApp {
  public:
   virtual ~CoreApp() = default;
-  virtual void InitializeClientTransactions();
   virtual void SendToUiAsync(const std::string& /*message*/) {}
   virtual void SendToUiNow(const std::string& /*message*/) {}
   virtual void SendErrorToUi(const std::string& /*title*/,
@@ -65,22 +62,11 @@ class CoreApp {
   }
   virtual void RefreshCaptureView() {}
 
-  using MemoryCallback = ProcessMemoryClient::ProcessMemoryCallback;
-  void GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
-                       const MemoryCallback& callback) {
-    process_memory_client_->GetRemoteMemory(pid, address, size, callback);
-  }
-
- protected:
-  TransactionClient* GetTransactionClient() {
-    return transaction_client_.get();
-  }
-  SymbolsClient* GetSymbolsClient() { return symbols_client_.get(); }
-
- private:
-  std::unique_ptr<TransactionClient> transaction_client_;
-  std::unique_ptr<SymbolsClient> symbols_client_;
-  std::unique_ptr<ProcessMemoryClient> process_memory_client_;
+  using ProcessMemoryCallback =
+      std::function<void(const std::vector<uint8_t>&)>;
+  virtual void GetRemoteMemory(uint32_t /*pid*/, uint64_t /*address*/,
+                               uint64_t /*size*/,
+                               const ProcessMemoryCallback& /*callback*/) {}
 };
 
 extern CoreApp* GCoreApp;
