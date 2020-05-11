@@ -4,7 +4,7 @@
 
 set(VERSION_CMAKE_SCRIPT "${CMAKE_CURRENT_LIST_FILE}")
 
-function(GenerateVersionFile OUTPUT_FILE INPUT_FILE)
+function(GenerateVersionFile OUTPUT_FILE INPUT_FILE COMPILE_TARGET)
   get_filename_component(OUTPUT_FILE "${OUTPUT_FILE}" ABSOLUTE)
   get_filename_component(INPUT_FILE "${INPUT_FILE}" ABSOLUTE)
 
@@ -21,6 +21,10 @@ function(GenerateVersionFile OUTPUT_FILE INPUT_FILE)
       "-DGIT_COMMIT_STATE_FILE=${GIT_COMMIT_STATE_FILE}"
       "-DINPUT_FILE=${INPUT_FILE}" "-DOUTPUT_FILE=${OUTPUT_FILE}" -P
       "${VERSION_CMAKE_SCRIPT}")
+
+  if(COMPILE_TARGET)
+    add_dependencies(${COMPILE_TARGET} "${TARGET_NAME}")
+  endif()
 endfunction()
 
 function(DoGenerateVersionFile OUTPUT_FILE INPUT_FILE GIT_COMMIT_STATE_FILE

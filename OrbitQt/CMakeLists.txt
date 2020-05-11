@@ -80,7 +80,7 @@ target_link_libraries(OrbitQt PRIVATE OrbitCore OrbitGl OrbitGgp Qt5::Widgets
 
 include(${CMAKE_SOURCE_DIR}/cmake/version.cmake)
 GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/version.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/version.h.in")
+                    "${CMAKE_CURRENT_SOURCE_DIR}/version.h.in" OrbitQt)
 target_sources(OrbitQt PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/version.h")
 target_include_directories(OrbitQt PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
@@ -93,7 +93,7 @@ if(WIN32)
   set_target_properties(OrbitQt PROPERTIES WIN32_EXECUTABLE ON)
 
   GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/OrbitQt.rc"
-                      "${CMAKE_CURRENT_SOURCE_DIR}/OrbitQt.rc.in")
+                      "${CMAKE_CURRENT_SOURCE_DIR}/OrbitQt.rc.in" OrbitQt)
   target_sources(OrbitQt PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/OrbitQt.rc)
 
   get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
