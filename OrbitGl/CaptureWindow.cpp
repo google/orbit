@@ -15,6 +15,7 @@
 #include "TcpClient.h"
 #include "TcpServer.h"
 #include "TimerManager.h"
+#include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
 #ifdef _WIN32
@@ -29,6 +30,8 @@
 
 #include "LinuxUtils.h"
 #endif
+
+ABSL_DECLARE_FLAG(bool, non_release_features);
 
 //-----------------------------------------------------------------------------
 CaptureWindow::CaptureWindow() {
@@ -583,14 +586,19 @@ const std::string CaptureWindow::MENU_ACTION_GO_TO_SOURCE = "Go to Source";
 
 //-----------------------------------------------------------------------------
 std::vector<std::string> CaptureWindow::GetContextMenu() {
-  static std::vector<std::string> menu = {MENU_ACTION_GO_TO_CALLSTACK,
-                                          MENU_ACTION_GO_TO_SOURCE};
-  static std::vector<std::string> emptyMenu;
+  std::vector<std::string> menu;
+  if (!absl::GetFlag(FLAGS_non_release_features)) {
+    return menu;
+  }
+
   TextBox* selection = Capture::GSelectedTextBox;
-  return selection != nullptr && !selection->GetTimer().IsCoreActivity() &&
-                 selection->GetTimer().m_Type != Timer::GPU_ACTIVITY
-             ? menu
-             : emptyMenu;
+  if (selection != nullptr && !selection->GetTimer().IsCoreActivity() &&
+      selection->GetTimer().m_Type != Timer::GPU_ACTIVITY) {
+    return menu;
+  }
+
+  Append(menu, {MENU_ACTION_GO_TO_CALLSTACK, MENU_ACTION_GO_TO_SOURCE});
+  return menu;
 }
 
 //-----------------------------------------------------------------------------
