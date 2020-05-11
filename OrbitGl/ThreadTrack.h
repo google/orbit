@@ -60,6 +60,7 @@ class ThreadTrack : public Track {
   void UpdateDepth(uint32_t depth) {
     if (depth > depth_) depth_ = depth;
   }
+  virtual float GetYFromDepth(float track_y, uint32_t depth, bool collapsed);
   std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
 
  private:

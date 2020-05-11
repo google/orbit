@@ -9,8 +9,7 @@ const Color kInactiveColor(100, 100, 100, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
 SchedulerTrack::SchedulerTrack(TimeGraph* time_graph)
-    : ThreadTrack(time_graph, /*thread_id*/ 0) {
-}
+    : ThreadTrack(time_graph, /*thread_id*/ 0) {}
 
 void SchedulerTrack::Draw(GlCanvas* /*canvas*/, bool /*picking*/) {}
 
@@ -32,8 +31,9 @@ inline Color GetTimerColor(const Timer& timer, TimeGraph* time_graph,
   return time_graph->GetThreadColor(timer.m_TID);
 }
 
-inline float GetYFromDepth(const TimeGraphLayout& layout, float track_y,
-                           uint32_t depth) {
+float SchedulerTrack::GetYFromDepth(float track_y, uint32_t depth,
+                                    bool /*collapsed*/) {
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
   return track_y - layout.GetSpaceBetweenTracksAndThread() -
          (layout.GetTextCoresHeight() + layout.GetSpaceBetweenCores()) *
              (depth + 1);
@@ -68,7 +68,8 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           static_cast<float>(normalized_length * world_width);
       float world_timer_x =
           static_cast<float>(world_start_x + normalized_start * world_width);
-      float world_timer_y = GetYFromDepth(layout, m_Pos[1], timer.m_Depth);
+      float world_timer_y =
+          GetYFromDepth(m_Pos[1], timer.m_Depth, /*collapsed*/ false);
 
       bool is_visible_width = normalized_length * canvas->getWidth() > 1;
       bool is_same_pid_as_target = target_pid == 0 || target_pid == timer.m_PID;

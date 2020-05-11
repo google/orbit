@@ -3,7 +3,10 @@
 //-----------------------------------
 #pragma once
 
+#define _USE_MATH_DEFINES
+
 #include <algorithm>
+#include <math.h>
 
 #include "GteVector2.h"
 #include "GteVector3.h"

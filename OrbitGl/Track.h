@@ -15,6 +15,7 @@
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
+#include "TriangleToggle.h"
 
 class GlCanvas;
 class TimeGraph;
@@ -76,6 +77,7 @@ class Track : public Pickable {
   void SetColor(Color a_Color) { m_Color = a_Color; }
 
   void AddChild(std::shared_ptr<Track> track) { children_.emplace_back(track); }
+  virtual void OnCollapseToggle(bool should_collapse);
 
  protected:
   GlCanvas* m_Canvas;
@@ -96,4 +98,5 @@ class Track : public Pickable {
   bool m_PickingEnabled = false;
   Type type_ = kUnknown;
   std::vector<std::shared_ptr<Track>> children_;
+  TriangleToggle collapse_toggle_;
 };

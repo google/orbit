@@ -12,6 +12,9 @@ class SchedulerTrack : public ThreadTrack {
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) override;
   Type GetType() const override { return kSchedulerTrack; }
   float GetHeight() const override;
+
+  protected:
+  float GetYFromDepth(float track_y, uint32_t depth, bool collapsed) override;
 };
 
 #endif  // ORBIT_GL_SCHEDULER_TRACK_H_

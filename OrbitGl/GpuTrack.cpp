@@ -11,7 +11,8 @@
 //-----------------------------------------------------------------------------
 GpuTrack::GpuTrack(TimeGraph* time_graph,
                    std::shared_ptr<StringManager> string_manager,
-                   uint64_t timeline_hash) : Track(time_graph) {
+                   uint64_t timeline_hash)
+    : Track(time_graph) {
   text_renderer_ = time_graph->GetTextRenderer();
   timeline_hash_ = timeline_hash;
 
@@ -20,6 +21,9 @@ GpuTrack::GpuTrack(TimeGraph* time_graph,
   max_time_ = std::numeric_limits<TickType>::min();
 
   string_manager_ = string_manager;
+
+  // Gpu tracks are collapsed by default.
+  collapse_toggle_.SetActive(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -124,6 +128,7 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   float world_start_x = canvas->GetWorldTopLeftX();
   float world_width = canvas->GetWorldWidth();
   double inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
+  bool is_collapsed = !collapse_toggle_.GetActive();
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
   for (auto& text_boxes : chains_by_depth) {
@@ -142,7 +147,8 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           static_cast<float>(normalized_length * world_width);
       float world_timer_x =
           static_cast<float>(world_start_x + normalized_start * world_width);
-      float world_timer_y = GetYFromDepth(layout, m_Pos[1], timer.m_Depth);
+      uint8_t timer_depth = is_collapsed ? 0 : timer.m_Depth;
+      float world_timer_y = GetYFromDepth(layout, m_Pos[1], timer_depth);
 
       bool is_visible_width = normalized_length * canvas->getWidth() > 1;
       bool is_selected = &text_box == Capture::GSelectedTextBox;
@@ -155,7 +161,9 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
       text_box.SetSize(size);
 
       if (is_visible_width) {
-        SetTimesliceText(timer, elapsed_us, min_x, &text_box);
+        if (!is_collapsed) {
+          SetTimesliceText(timer, elapsed_us, min_x, &text_box);
+        }
         batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, &text_box);
       } else {
         auto type = PickingID::LINE;
@@ -187,7 +195,9 @@ void GpuTrack::OnTimer(const Timer& timer) {
 //-----------------------------------------------------------------------------
 float GpuTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
-  return layout.GetTextBoxHeight() * GetDepth() +
+  bool collapsed = !collapse_toggle_.GetActive();
+  uint32_t depth = collapsed ? 1 : GetDepth();
+  return layout.GetTextBoxHeight() * depth +
          layout.GetSpaceBetweenTracksAndThread() +
          layout.GetTrackBottomMargin();
 }

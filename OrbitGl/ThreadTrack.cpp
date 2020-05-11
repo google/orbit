@@ -79,11 +79,16 @@ inline Color GetTimerColor(const Timer& timer, TimeGraph* time_graph,
 }
 
 //-----------------------------------------------------------------------------
-inline float GetYFromDepth(const TimeGraphLayout& layout, float track_y,
-                           uint32_t depth) {
+float ThreadTrack::GetYFromDepth(float track_y, uint32_t depth,
+                                 bool collapsed) {
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
+  float box_height = layout.GetTextBoxHeight();
+  if (collapsed && depth_ > 0) {
+    box_height /= static_cast<float>(depth_);
+  }
+
   return track_y - layout.GetEventTrackHeight() -
-         layout.GetSpaceBetweenTracksAndThread() -
-         layout.GetTextBoxHeight() * (depth + 1);
+         layout.GetSpaceBetweenTracksAndThread() - box_height * (depth + 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -133,6 +138,7 @@ void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
 
 //-----------------------------------------------------------------------------
 void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
+  event_track_->SetPos(m_Pos[0], m_Pos[1]);
   event_track_->UpdatePrimitives(min_tick, max_tick);
 
   Batcher* batcher = &time_graph_->GetBatcher();
@@ -144,6 +150,11 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   float world_start_x = canvas->GetWorldTopLeftX();
   float world_width = canvas->GetWorldWidth();
   double inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
+  bool is_collapsed = !collapse_toggle_.GetActive();
+  float box_height = layout.GetTextBoxHeight();
+  if (is_collapsed && depth_ > 0) {
+    box_height /= static_cast<float>(depth_);
+  }
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
   for (auto& text_boxes : chains_by_depth) {
@@ -162,7 +173,8 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           static_cast<float>(normalized_length * world_width);
       float world_timer_x =
           static_cast<float>(world_start_x + normalized_start * world_width);
-      float world_timer_y = GetYFromDepth(layout, m_Pos[1], timer.m_Depth);
+      float world_timer_y =
+          GetYFromDepth(m_Pos[1], timer.m_Depth, is_collapsed);
 
       bool is_visible_width = normalized_length * canvas->getWidth() > 1;
       bool is_selected = &text_box == Capture::GSelectedTextBox;
@@ -171,14 +183,16 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           Capture::GVisibleFunctionsMap[timer.m_FunctionAddress] == nullptr;
 
       Vec2 pos(world_timer_x, world_timer_y);
-      Vec2 size(world_timer_width, layout.GetTextBoxHeight());
+      Vec2 size(world_timer_width, box_height);
       float z = GlCanvas::Z_VALUE_BOX_ACTIVE;
       Color color = GetTimerColor(timer, time_graph_, is_selected, is_inactive);
       text_box.SetPos(pos);
       text_box.SetSize(size);
 
       if (is_visible_width) {
-        SetTimesliceText(timer, elapsed_us, min_x, &text_box);
+        if (!is_collapsed) {
+          SetTimesliceText(timer, elapsed_us, min_x, &text_box);
+        }
         batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, &text_box);
       } else {
         auto type = PickingID::LINE;
@@ -214,7 +228,10 @@ void ThreadTrack::OnTimer(const Timer& timer) {
 //-----------------------------------------------------------------------------
 float ThreadTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
-  return layout.GetTextBoxHeight() * GetDepth() +
+  bool is_collapsed = !collapse_toggle_.GetActive();
+  uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
+  uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
+  return layout.GetTextBoxHeight() * depth +
          layout.GetSpaceBetweenTracksAndThread() +
          layout.GetEventTrackHeight() + layout.GetTrackBottomMargin();
 }
@@ -321,6 +338,6 @@ void ThreadTrack::SetEventTrackColor(Color color) {
 }
 
 //-----------------------------------------------------------------------------
-bool ThreadTrack::IsEmpty() const { 
-  return (GetNumTimers() == 0) && event_track_->IsEmpty(); 
+bool ThreadTrack::IsEmpty() const {
+  return (GetNumTimers() == 0) && event_track_->IsEmpty();
 }

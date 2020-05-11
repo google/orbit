@@ -343,8 +343,7 @@ void CaptureWindow::PostRender() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::Resize(int a_Width, int a_Height) {
-  m_Width = a_Width;
-  m_Height = a_Height;
+  GlCanvas::Resize(a_Width, a_Height);
   NeedsUpdate();
 }
 
@@ -453,22 +452,12 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
   ScreenToWorld(a_X, a_Y, worldx, worldy);
   m_MouseRatio = static_cast<double>(mousex) / getWidth();
 
-  static float zoomRatio = 0.1f;
   bool zoomWidth = !a_Ctrl;
-
   if (zoomWidth) {
     time_graph_.ZoomTime(delta, m_MouseRatio);
     m_WheelMomentum = delta * m_WheelMomentum < 0 ? 0 : m_WheelMomentum + delta;
   } else {
-    float zoomInc = zoomRatio * m_DesiredWorldHeight;
-    m_DesiredWorldHeight += delta * zoomInc;
-
-    float worldMin, worldMax;
-    time_graph_.GetWorldMinMax(worldMin, worldMax);
-    m_WorldTopLeftX = clamp(m_WorldTopLeftX, worldMin, worldMax - m_WorldWidth);
-    m_WorldTopLeftY = clamp(m_WorldTopLeftY, -FLT_MAX, m_WorldMaxY);
-
-    UpdateSceneBox();
+    // TODO: reimplement vertical zoom by scaling track heights.
   }
 
   // Use the original sign of a_Delta here.
@@ -626,8 +615,6 @@ void CaptureWindow::ToggleSampling() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::OnCaptureStarted() {
-  m_DesiredWorldWidth = m_Width;
-  m_DesiredWorldHeight = m_Height;
   time_graph_.ZoomAll();
   NeedsRedraw();
 }
@@ -811,8 +798,6 @@ void CaptureWindow::RenderUI() {
 
     m_StatsWindow.AddLine(VAR_TO_STR(m_Width));
     m_StatsWindow.AddLine(VAR_TO_STR(m_Height));
-    m_StatsWindow.AddLine(VAR_TO_STR(m_DesiredWorldHeight));
-    m_StatsWindow.AddLine(VAR_TO_STR(m_DesiredWorldWidth));
     m_StatsWindow.AddLine(VAR_TO_STR(m_WorldHeight));
     m_StatsWindow.AddLine(VAR_TO_STR(m_WorldWidth));
     m_StatsWindow.AddLine(VAR_TO_STR(m_WorldTopLeftX));

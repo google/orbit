@@ -686,14 +686,14 @@ void TimeGraph::SortTracks() {
     // Scheduler Track.
     sorted_tracks_.emplace_back(scheduler_track_);
 
-    // Process Track.
-    if (!process_track_->IsEmpty()) {
-      sorted_tracks_.emplace_back(process_track_);
-    }
-
     // Gpu Tracks.
     for (auto timeline_and_track : gpu_tracks_) {
       sorted_tracks_.emplace_back(timeline_and_track.second);
+    }
+
+    // Process Track.
+    if (!process_track_->IsEmpty()) {
+      sorted_tracks_.emplace_back(process_track_);
     }
 
     // Thread Tracks.

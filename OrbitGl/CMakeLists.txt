@@ -61,6 +61,7 @@ target_sources(
          TimeGraphLayout.h
          Track.h
          TransactionClient.h
+         TriangleToggle.h
          TypesDataView.h)
 
 target_sources(
@@ -111,6 +112,7 @@ target_sources(
           ThreadTrack.cpp
           Track.cpp
           TransactionClient.cpp
+          TriangleToggle.cpp
           TypesDataView.cpp)
 
 target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
