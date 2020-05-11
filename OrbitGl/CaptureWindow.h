@@ -61,8 +61,8 @@ class CaptureWindow : public GlCanvas {
   void ToggleSampling();
   void OnCaptureStarted();
   float GetTopBarTextY();
-  std::vector<std::wstring> GetContextMenu() override;
-  void OnContextMenu(const std::wstring& a_Action, int a_MenuIndex) override;
+  std::vector<std::string> GetContextMenu() override;
+  void OnContextMenu(const std::string& a_Action, int a_MenuIndex) override;
   void UpdateVerticalSlider();
   void SendProcess();
 
@@ -82,4 +82,7 @@ class CaptureWindow : public GlCanvas {
   GlSlider m_Slider;
   GlSlider m_VerticalSlider;
   int m_ProcessX;
+
+  static const std::string MENU_ACTION_GO_TO_CALLSTACK;
+  static const std::string MENU_ACTION_GO_TO_SOURCE;
 };

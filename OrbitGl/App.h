@@ -56,10 +56,8 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void PostInit();
   void OnExit();
   static void MainTick();
-  void CheckLicense();
   void SetLicense(const std::wstring& a_License);
   std::string GetVersion();
-  void CheckDebugger();
 
   std::wstring GetCaptureFileName();
   std::string GetSessionFileName();
@@ -84,7 +82,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void AppendSystrace(const std::string& a_FileName, uint64_t a_TimeOffset);
   void ListSessions();
   void RefreshCaptureView() override;
-  void RequestRemoteModules(const std::vector<std::string>& a_Modules);
   void AddWatchedVariable(Variable* a_Variable);
   void UpdateVariable(Variable* a_Variable) override;
   void ClearWatchedVariables();
