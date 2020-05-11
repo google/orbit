@@ -9,6 +9,8 @@
 #include "OrbitProcess.h"
 #include "TransactionClient.h"
 
+class CoreApp;
+
 // This class can be called from the UI on the client in order to validate
 // whether certain modules are compiled with framepointers.
 // It will send a request to FramepointerValidatorService, to perform the
@@ -18,7 +20,8 @@
 // TODO(kuebler): The right output format need to be discussed and decided.
 class FramepointerValidatorClient {
  public:
-  explicit FramepointerValidatorClient(TransactionClient* transaction_client);
+  explicit FramepointerValidatorClient(CoreApp* core_app,
+      TransactionClient* transaction_client);
 
   FramepointerValidatorClient() = delete;
   FramepointerValidatorClient(const FramepointerValidatorClient&) = delete;
@@ -33,6 +36,7 @@ class FramepointerValidatorClient {
 
  private:
   void HandleResponse(const Message& message, uint64_t id);
+  CoreApp* core_app_;
   TransactionClient* transaction_client_;
   absl::flat_hash_map<uint64_t, std::vector<std::shared_ptr<Module>>>
       modules_map_;

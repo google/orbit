@@ -33,7 +33,7 @@ void FramepointerValidatorService::HandleRequest(const Message& message) {
     std::shared_ptr<Process> process = nullptr;
     process = process_list_->GetProcess(pid);
     if (process == nullptr) {
-      ERROR("Unable to find process %u", pid);
+      ERROR("Unable to find process with pid %u", pid);
       continue;
     }
 
@@ -43,13 +43,13 @@ void FramepointerValidatorService::HandleRequest(const Message& message) {
     const std::string& module_name = module_info.m_Name;
     std::shared_ptr<Module> module = process->GetModuleFromName(module_name);
     if (!module) {
-      ERROR("Unable to find module %s", module_name.c_str());
+      ERROR("Unable to find module \"%s\"", module_name);
       continue;
     }
 
     std::shared_ptr<Pdb> pdb = module->m_Pdb;
     if (!pdb) {
-      ERROR("Unable to retrieve debug information %s", module_name.c_str());
+      ERROR("Unable to retrieve debug information \"%s\"", module_name);
       continue;
     }
 
