@@ -16,6 +16,10 @@
 ABSL_FLAG(uint16_t, sampling_rate, 1000,
           "Frequency of callstack sampling in samples per second");
 
+// TODO: Remove this flag once we have an ui option to specify.
+ABSL_FLAG(bool, frame_pointer_unwinding, false,
+          "Use frame pointer information for unwinding");
+
 void LinuxTracingHandler::Start(
     pid_t pid,
     const std::vector<std::shared_ptr<Function>>& selected_functions) {
@@ -39,7 +43,11 @@ void LinuxTracingHandler::Start(
   tracer_->SetListener(this);
 
   tracer_->SetTraceContextSwitches(GParams.m_TrackContextSwitches);
-  tracer_->SetSamplingMethod(LinuxTracing::SamplingMethod::kDwarf);
+  if (absl::GetFlag(FLAGS_frame_pointer_unwinding)) {
+    tracer_->SetSamplingMethod(LinuxTracing::SamplingMethod::kFramePointers);
+  } else {
+    tracer_->SetSamplingMethod(LinuxTracing::SamplingMethod::kDwarf);
+  }
   tracer_->SetTraceInstrumentedFunctions(true);
   tracer_->SetTraceGpuDriver(true);
 
