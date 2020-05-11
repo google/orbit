@@ -6,7 +6,6 @@
 
 #include "App.h"
 #include "Core.h"
-#include "FramePointerValidatorService.h"
 #include "OrbitModule.h"
 #include "Pdb.h"
 #include "absl/flags/flag.h"

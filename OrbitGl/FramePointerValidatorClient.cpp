@@ -8,13 +8,13 @@
 
 #include <string>
 
-#include "CoreApp.h"
+#include "App.h"
 #include "Message.h"
 #include "Pdb.h"
 
 FramePointerValidatorClient::FramePointerValidatorClient(
-    CoreApp* core_app, TransactionClient* transaction_client)
-    : core_app_{core_app}, transaction_client_{transaction_client} {
+    OrbitApp* app, TransactionClient* transaction_client)
+    : app_{app}, transaction_client_{transaction_client} {
   auto on_response = [this](const Message& msg, uint64_t id) {
     HandleResponse(msg, id);
   };
@@ -67,8 +67,8 @@ void FramePointerValidatorClient::HandleResponse(const Message& message,
     num_functions += module->m_Pdb->GetFunctions().size();
   }
 
-  std::string text = absl::StrFormat(
-      "info:Framepointer Validation\nFailed to validate %d out of %d functions",
-      functions.size(), num_functions);
-  core_app_->SendToUiNow(text);
+  std::string text =
+      absl::StrFormat("Failed to validate %d out of %d functions",
+                      functions.size(), num_functions);
+  app_->SendInfoToUi("Frame Pointer Validation", text);
 }

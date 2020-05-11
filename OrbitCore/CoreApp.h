@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "BaseTypes.h"
-#include "FramePointerValidatorClient.h"
 #include "LinuxAddressInfo.h"
 #include "LinuxCallstackEvent.h"
 #include "absl/container/flat_hash_map.h"

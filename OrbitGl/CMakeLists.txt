@@ -24,6 +24,7 @@ target_sources(
          Debugger.h
          Disassembler.h
          EventTrack.h
+         FramePointerValidatorClient.h
          FunctionsDataView.h
          Geometry.h
          GlCanvas.h
@@ -78,6 +79,7 @@ target_sources(
           Debugger.cpp
           Disassembler.cpp
           EventTrack.cpp
+          FramePointerValidatorClient.cpp
           FunctionsDataView.cpp
           GlCanvas.cpp
           GlobalsDataView.cpp

@@ -26,8 +26,6 @@ target_sources(
          EventBuffer.h
          EventClasses.h
          FramePointerValidator.h
-         FramePointerValidatorClient.h
-         FramePointerValidatorService.h
          FunctionFramePointerValidator.h
          FunctionStats.h
          Hashing.h
@@ -96,8 +94,6 @@ target_sources(
           ElfFile.cpp
           EventBuffer.cpp
           FramePointerValidator.cpp
-          FramePointerValidatorClient.cpp
-          FramePointerValidatorService.cpp
           FunctionFramePointerValidator.cpp
           FunctionStats.cpp
           Injection.cpp
