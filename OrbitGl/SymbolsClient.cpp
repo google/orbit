@@ -4,13 +4,13 @@
 
 #include "SymbolsClient.h"
 
-#include "CoreApp.h"
+#include "App.h"
 #include "SymbolHelper.h"
 #include "absl/strings/str_join.h"
 
-SymbolsClient::SymbolsClient(CoreApp* core_app,
+SymbolsClient::SymbolsClient(OrbitApp* app,
                              TransactionClient* transaction_client)
-    : core_app_{core_app}, transaction_client_{transaction_client} {
+    : app_{app}, transaction_client_{transaction_client} {
   auto on_response = [this](const Message& msg, uint64_t id) {
     HandleResponse(msg, id);
   };
@@ -50,7 +50,7 @@ void SymbolsClient::LoadSymbolsFromModules(
   // Don't request anything from the service if we found all modules locally.
   if (remote_module_infos.empty()) {
     if (session != nullptr) {
-      core_app_->ApplySession(*session);
+      app_->ApplySession(*session);
     }
     return;
   }
@@ -85,7 +85,7 @@ void SymbolsClient::HandleResponse(const Message& message, uint64_t id) {
   transaction_client_->ReceiveResponse(message, &infos);
 
   // Notify app of new debug symbols.
-  core_app_->OnRemoteModuleDebugInfo(infos);
+  app_->OnRemoteModuleDebugInfo(infos);
 
   // Finalize transaction.
   mutex_.Lock();
@@ -98,7 +98,7 @@ void SymbolsClient::HandleResponse(const Message& message, uint64_t id) {
   mutex_.Unlock();
 
   if (session != nullptr) {
-    core_app_->ApplySession(*session);
+    app_->ApplySession(*session);
   }
 
   // Show an error MessageBox for modules not found locally nor remotely.
@@ -112,6 +112,6 @@ void SymbolsClient::HandleResponse(const Message& message, uint64_t id) {
   if (!not_found_module_names.empty()) {
     std::string text = "Could not load symbols for modules:\n  " +
                        absl::StrJoin(not_found_module_names, "\n  ");
-    core_app_->SendErrorToUi("Error loading symbols", text);
+    app_->SendErrorToUi("Error loading symbols", text);
   }
 }

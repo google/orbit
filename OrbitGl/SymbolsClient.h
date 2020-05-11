@@ -8,11 +8,11 @@
 #include "OrbitProcess.h"
 #include "TransactionClient.h"
 
-class CoreApp;
+class OrbitApp;
 
 class SymbolsClient {
  public:
-  SymbolsClient(CoreApp* core_app, TransactionClient* transaction_client);
+  SymbolsClient(OrbitApp* app, TransactionClient* transaction_client);
 
   SymbolsClient() = delete;
   SymbolsClient(const SymbolsClient&) = delete;
@@ -29,7 +29,7 @@ class SymbolsClient {
  private:
   void HandleResponse(const Message& message, uint64_t id);
 
-  CoreApp* core_app_ = nullptr;
+  OrbitApp* app_ = nullptr;
   TransactionClient* transaction_client_;
   absl::flat_hash_map<uint64_t, std::shared_ptr<Session>> id_sessions_;
   absl::flat_hash_map<uint64_t, std::vector<std::string>>
