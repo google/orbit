@@ -925,9 +925,10 @@ void CaptureWindow::RenderHelpUi() {
   }
 
   ImGui::Text("Start/Stop capture: 'x'");
-  ImGui::Text("Pan/Zoom in capture: 'a','s','w','d'");
+  ImGui::Text("Pan/Zoom in capture: 'w','a','s','d'");
+  ImGui::Text("Time zoom: scroll or CTRL + right click + drag");
   ImGui::Text("Left click + drag to select or pan");
-  ImGui::Text("Y axis zoom: CTRL+scroll");
+  ImGui::Text("Y axis zoom: CTRL + scroll");
   ImGui::Text("Right click + drag to measure time");
   ImGui::Separator();
   ImGui::Text("Icons:");
