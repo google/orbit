@@ -27,7 +27,6 @@ Params::Params()
       m_AllowUnsafeHooking(false),
       m_HookOutputDebugString(false),
       m_FindFileAndLineInfo(true),
-      m_BpftraceCallstacks(false),
       m_SystemWideScheduling(true),
       m_UploadDumpsToServer(false),
       m_MaxNumTimers(1000000),
@@ -36,7 +35,7 @@ Params::Params()
       m_NumBytesAssembly(1024),
       m_DiffArgs("%1 %2") {}
 
-ORBIT_SERIALIZE(Params, 17) {
+ORBIT_SERIALIZE(Params, 18) {
   ORBIT_NVP_VAL(0, m_LoadTypeInfo);
   ORBIT_NVP_VAL(0, m_SendCallStacks);
   ORBIT_NVP_VAL(0, m_MaxNumTimers);
@@ -58,7 +57,6 @@ ORBIT_SERIALIZE(Params, 17) {
   ORBIT_NVP_VAL(10, m_WorkingDirectory);
   ORBIT_NVP_VAL(11, m_FindFileAndLineInfo);
   ORBIT_NVP_VAL(13, m_ProcessFilter);
-  ORBIT_NVP_VAL(14, m_BpftraceCallstacks);
   ORBIT_NVP_VAL(15, m_SystemWideScheduling);
   ORBIT_NVP_VAL(17, m_UploadDumpsToServer);
 }
