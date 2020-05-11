@@ -17,10 +17,12 @@ target_include_directories(OrbitSsh PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_sources(OrbitSsh PUBLIC
         include/OrbitSsh/ResultType.h
         include/OrbitSsh/Session.h
+        include/OrbitSsh/SessionManager.h
         include/OrbitSsh/Socket.h)
 
 target_sources(OrbitSsh PRIVATE
         Session.cpp
+        SessionManager.cpp
         Socket.cpp)
 
 if(WIN32)
