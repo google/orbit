@@ -32,10 +32,6 @@ class FramePointerValidatorService {
  private:
   void HandleRequest(const Message& message);
 
-  static std::vector<std::shared_ptr<Function>> GetFpoFunctions(Pdb* debug_info,
-                                                                Module* module,
-                                                                bool is_64_bit);
-
   const ProcessList* process_list_;
   TransactionService* transaction_service_;
 };

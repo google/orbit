@@ -4,11 +4,9 @@
 
 #include "FramePointerValidatorService.h"
 
-#include <capstone/capstone.h>
-
 #include <vector>
 
-#include "FunctionFramePointerValidator.h"
+#include "FramePointerValidator.h"
 #include "OrbitFunction.h"
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
@@ -23,8 +21,9 @@ FramePointerValidatorService::FramePointerValidatorService(
 }
 
 void FramePointerValidatorService::HandleRequest(const Message& message) {
-  // TODO: The code below is about 90% copy&past from SymbolsService.cpp.
-  //  We should discuss.
+  // TODO(kuebler): The code below is about 90% copy&past from
+  //  SymbolsService.cpp. We should refactor the shared code with the other
+  //  service.
   std::vector<ModuleDebugInfo> module_infos;
   transaction_service_->ReceiveRequest(message, &module_infos);
 
@@ -55,42 +54,11 @@ void FramePointerValidatorService::HandleRequest(const Message& message) {
     }
 
     std::vector<std::shared_ptr<Function>> functions =
-        GetFpoFunctions(pdb.get(), module.get(), is_64_bit);
+        FramePointerValidator::GetFpoFunctions(pdb->GetFunctions(),
+                                               module->m_FullName, is_64_bit);
 
     transaction_service_->SendResponse(message.GetType(), functions);
   }
-}
-
-std::vector<std::shared_ptr<Function>>
-FramePointerValidatorService::GetFpoFunctions(Pdb* debug_info, Module* module,
-                                              bool is_64_bit) {
-  std::vector<std::shared_ptr<Function>> result;
-
-  cs_mode mode = is_64_bit ? CS_MODE_64 : CS_MODE_32;
-  csh handle;
-  if (cs_open(CS_ARCH_X86, mode, &handle) != CS_ERR_OK) {
-    ERROR("Unable to open capstone.");
-    return result;
-  }
-
-  cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
-
-  std::ifstream instream(module->m_FullName, std::ios::in | std::ios::binary);
-  std::vector<uint8_t> binary((std::istreambuf_iterator<char>(instream)),
-                              std::istreambuf_iterator<char>());
-
-  for (std::shared_ptr<Function> function : debug_info->GetFunctions()) {
-    uint64_t function_size = function->Size();
-    if (function_size == 0) {
-      continue;
-    }
-
-    FunctionFramePointerValidator validator{
-        handle, binary.data() + function->Offset(), function_size};
-
-    if (!validator.Validate()) result.push_back(function);
-  }
-  return result;
 }
 
 //
