@@ -139,6 +139,10 @@ class OrbitConan(ConanFile):
                 self.name, self._version()), symlinks=True)
             self.copy("OrbitService", src="bin/",
                       dst="{}-{}/usr/bin/".format(self.name, self._version()))
+            self.copy("THIRD_PARTY_LICENSES.txt",
+                      dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
+            self.copy("LICENSE",
+                      dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
             basedir = "{}/{}-{}".format(self.package_folder,
                                         self.name, self._version())
             os.makedirs("{}/DEBIAN".format(basedir), exist_ok=True)
@@ -179,6 +183,8 @@ chmod -v 4775 /usr/bin/OrbitService
         self.copy("OrbitService.exe", src="bin/", dst="bin")
         self.copy("OrbitService.pdb", src="bin/", dst="bin")
         self.copy("OrbitService.debug", src="bin/", dst="bin")
+        self.copy("THIRD_PARTY_LICENSES.txt")
+        self.copy("LICENSE")
 
     def deploy(self):
         self.copy("*", src="bin", dst="bin")
