@@ -12,6 +12,10 @@ function conan_create_profile($profile) {
   $arch = If ($profile.EndsWith("x86")) { "x86" } Else { "x86_64" }
   $process = Start-Process $conan.Path -Wait -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "profile","update","settings.arch=$arch",$profile
   if ($process.ExitCode -ne 0) { Throw "Error while creating conan profile." }
+
+  $build_type = If ($profile.Contains("_debug")) { "Debug" } Else { If ($profile.Contains("_relwithdebinfo")) { "RelWithDebInfo" } Else { "Release" }}
+  $process = Start-Process $conan.Path -Wait -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "profile","update","settings.build_type=$build_type",$profile
+  if ($process.ExitCode -ne 0) { Throw "Error while creating conan profile." }
   
   $profile_path = "$Env:USERPROFILE\.conan\profiles\$profile"
   (Get-Content $profile_path) -replace '\[build_requires\]', "[build_requires]`r`ncmake/3.16.4@" | Out-File -encoding ASCII $profile_path
