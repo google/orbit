@@ -18,7 +18,9 @@
 #include "orbitmainwindow.h"
 #include "version.h"
 
-ABSL_FLAG(bool, non_release_features, false, "");
+ABSL_FLAG(bool, non_release_features, false,
+          "Enable features that are currently not working or are not "
+          "implemented in the client's UI");
 
 // SSH Tunneling via run_service_ssh.{ps1/sh} is the default for now. To make
 // this work the remote is set here to localhost. This will also disable the
