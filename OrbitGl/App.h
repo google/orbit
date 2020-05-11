@@ -291,8 +291,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   const SymbolHelper symbol_helper_;
 #if defined(_WIN32)
   std::unique_ptr<Debugger> m_Debugger;
-#else
-  std::shared_ptr<class BpfTrace> m_BpfTrace;
 #endif
 
  private:
