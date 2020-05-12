@@ -17,8 +17,8 @@
 class LinuxTracingHandler : public LinuxTracing::TracerListener {
  public:
   explicit LinuxTracingHandler(LinuxTracingBuffer* tracing_buffer,
-                               LinuxTracing::SamplingMethod sampling_method)
-      : tracing_buffer_{tracing_buffer}, sampling_method_{sampling_method} {}
+                               LinuxTracing::TracingOptions tracing_options)
+      : tracing_buffer_{tracing_buffer}, tracing_options_{tracing_options} {}
 
   ~LinuxTracingHandler() override = default;
   LinuxTracingHandler(const LinuxTracingHandler&) = delete;
@@ -45,7 +45,7 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   uint64_t ProcessStringAndGetKey(const std::string& string);
 
   LinuxTracingBuffer* tracing_buffer_;
-  LinuxTracing::SamplingMethod sampling_method_;
+  LinuxTracing::TracingOptions tracing_options_;
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
 
   absl::flat_hash_set<uint64_t> addresses_seen_;

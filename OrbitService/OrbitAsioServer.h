@@ -15,7 +15,7 @@
 class OrbitAsioServer {
  public:
   explicit OrbitAsioServer(uint16_t port,
-                           LinuxTracing::SamplingMethod sampling_method);
+                           LinuxTracing::TracingOptions tracing_options);
   void Run(std::atomic<bool>* exit_requested);
 
  private:
@@ -45,6 +45,6 @@ class OrbitAsioServer {
   std::vector<std::shared_ptr<Function>> selected_functions_;
   std::thread tracing_buffer_thread_;
   LinuxTracingBuffer tracing_buffer_;
-  LinuxTracing::SamplingMethod sampling_method_;
-  LinuxTracingHandler tracing_handler_{&tracing_buffer_, sampling_method_};
+  LinuxTracing::TracingOptions tracing_options_;
+  LinuxTracingHandler tracing_handler_{&tracing_buffer_, tracing_options_};
 };

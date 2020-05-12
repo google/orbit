@@ -7,7 +7,6 @@
 #include "OrbitLinuxTracing/Events.h"
 #include "OrbitLinuxTracing/TracingOptions.h"
 #include "OrbitModule.h"
-#include "Params.h"
 #include "absl/flags/flag.h"
 #include "llvm/Demangle/Demangle.h"
 
@@ -37,11 +36,7 @@ void LinuxTracingHandler::Start(
                                                    instrumented_functions);
 
   tracer_->SetListener(this);
-
-  tracer_->SetTraceContextSwitches(GParams.m_TrackContextSwitches);
-  tracer_->SetSamplingMethod(sampling_method_);
-  tracer_->SetTraceInstrumentedFunctions(true);
-  tracer_->SetTraceGpuDriver(true);
+  tracer_->SetTracingOptions(tracing_options_);
 
   tracer_->Start();
 }

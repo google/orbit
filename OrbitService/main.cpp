@@ -3,6 +3,7 @@
 
 #include "OrbitLinuxTracing/TracingOptions.h"
 #include "OrbitService.h"
+#include "Params.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
@@ -45,16 +46,17 @@ int main(int argc, char** argv) {
   std::string grpc_server_address = absl::GetFlag(FLAGS_grpc_server_address);
   uint16_t asio_port = absl::GetFlag(FLAGS_asio_port);
 
-  LinuxTracing::SamplingMethod sampling_method =
-      LinuxTracing::SamplingMethod::kDwarf;
+  LinuxTracing::TracingOptions tracing_options;
+  tracing_options.trace_context_switches = GParams.m_TrackContextSwitches;
+
   bool use_frame_pointer_unwinding =
       absl::GetFlag(FLAGS_frame_pointer_unwinding);
-
   if (use_frame_pointer_unwinding) {
-    sampling_method = LinuxTracing::SamplingMethod::kFramePointers;
+    tracing_options.sampling_method =
+        LinuxTracing::SamplingMethod::kFramePointers;
   }
 
   exit_requested = false;
-  OrbitService service{grpc_server_address, asio_port, sampling_method};
+  OrbitService service{grpc_server_address, asio_port, tracing_options};
   service.Run(&exit_requested);
 }

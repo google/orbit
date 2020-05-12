@@ -7,8 +7,8 @@
 #include "TcpServer.h"
 
 OrbitAsioServer::OrbitAsioServer(uint16_t port,
-                                 LinuxTracing::SamplingMethod sampling_method)
-    : sampling_method_{sampling_method} {
+                                 LinuxTracing::TracingOptions tracing_options)
+    : tracing_options_{tracing_options} {
   // TODO: Don't use the GTcpServer global. Unfortunately, it's needed in
   //  TcpConnection::DecodeMessage.
   GTcpServer = std::make_unique<TcpServer>();
