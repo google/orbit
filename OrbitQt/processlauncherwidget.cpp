@@ -8,7 +8,7 @@
 #include "absl/flags/flag.h"
 #include "ui_processlauncherwidget.h"
 
-ABSL_DECLARE_FLAG(bool, non_release_features);
+ABSL_DECLARE_FLAG(bool, enable_stale_features);
 
 ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
     : QWidget(parent), ui(new Ui::ProcessLauncherWidget) {
@@ -22,7 +22,7 @@ ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
 
   ui->ProcessComboBox->lineEdit()->setText("");
 
-  if (!absl::GetFlag(FLAGS_non_release_features)) {
+  if (!absl::GetFlag(FLAGS_enable_stale_features)) {
     ui->frame->setVisible(false);
   }
 }

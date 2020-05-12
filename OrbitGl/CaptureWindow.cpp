@@ -31,7 +31,7 @@
 #include "LinuxUtils.h"
 #endif
 
-ABSL_DECLARE_FLAG(bool, non_release_features);
+ABSL_DECLARE_FLAG(bool, enable_stale_features);
 
 //-----------------------------------------------------------------------------
 CaptureWindow::CaptureWindow() {
@@ -587,7 +587,7 @@ const std::string CaptureWindow::MENU_ACTION_GO_TO_SOURCE = "Go to Source";
 //-----------------------------------------------------------------------------
 std::vector<std::string> CaptureWindow::GetContextMenu() {
   std::vector<std::string> menu;
-  if (!absl::GetFlag(FLAGS_non_release_features)) {
+  if (!absl::GetFlag(FLAGS_enable_stale_features)) {
     return menu;
   }
 
