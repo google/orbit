@@ -565,7 +565,10 @@ void OrbitMainWindow::on_actionDisconnect_triggered() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionQuit_triggered() { QApplication::quit(); }
+void OrbitMainWindow::on_actionQuit_triggered() {
+  close();
+  QApplication::quit();
+}
 
 //-----------------------------------------------------------------------------
 QPixmap QtGrab(OrbitMainWindow* a_Window) {
