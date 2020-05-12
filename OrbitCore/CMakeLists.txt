@@ -221,6 +221,7 @@ add_executable(OrbitCoreTests)
 target_sources(OrbitCoreTests PRIVATE
     ElfFileTests.cpp
     FunctionFramepointerValidatorTest.cpp
+    FramePointerValidatorTests.cpp
     LinuxTracingBufferTest.cpp
     PathTest.cpp
     RingBufferTest.cpp
