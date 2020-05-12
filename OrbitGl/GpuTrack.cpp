@@ -160,7 +160,7 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
       text_box.SetPos(pos);
       text_box.SetSize(size);
 
-      // Only draw "hardware execution" timers when track is collapsed.
+      // When track is collapsed, only draw "hardware execution" timers.
       if (is_collapsed) {
         std::string gpu_stage =
             string_manager_->Get(timer.m_UserData[0]).value_or("");
