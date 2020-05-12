@@ -7,6 +7,7 @@
 #include "ContextSwitch.h"
 #include "LinuxCallstackEvent.h"
 #include "LinuxTracingBuffer.h"
+#include "OrbitLinuxTracing/TracingOptions.h"
 #include "OrbitProcess.h"
 #include "SamplingProfiler.h"
 #include "ScopeTimer.h"
@@ -15,8 +16,9 @@
 
 class LinuxTracingHandler : public LinuxTracing::TracerListener {
  public:
-  explicit LinuxTracingHandler(LinuxTracingBuffer* tracing_buffer)
-      : tracing_buffer_{tracing_buffer} {}
+  explicit LinuxTracingHandler(LinuxTracingBuffer* tracing_buffer,
+                               LinuxTracing::SamplingMethod sampling_method)
+      : tracing_buffer_{tracing_buffer}, sampling_method_{sampling_method} {}
 
   ~LinuxTracingHandler() override = default;
   LinuxTracingHandler(const LinuxTracingHandler&) = delete;
@@ -43,6 +45,7 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   uint64_t ProcessStringAndGetKey(const std::string& string);
 
   LinuxTracingBuffer* tracing_buffer_;
+  LinuxTracing::SamplingMethod sampling_method_;
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
 
   absl::flat_hash_set<uint64_t> addresses_seen_;

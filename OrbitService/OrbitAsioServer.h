@@ -6,6 +6,7 @@
 
 #include "LinuxTracingBuffer.h"
 #include "LinuxTracingHandler.h"
+#include "OrbitLinuxTracing/TracingOptions.h"
 #include "ProcessMemoryService.h"
 #include "ProcessUtils.h"
 #include "SymbolsService.h"
@@ -13,7 +14,8 @@
 
 class OrbitAsioServer {
  public:
-  explicit OrbitAsioServer(uint16_t port);
+  explicit OrbitAsioServer(uint16_t port,
+                           LinuxTracing::SamplingMethod sampling_method);
   void Run(std::atomic<bool>* exit_requested);
 
  private:
@@ -43,5 +45,6 @@ class OrbitAsioServer {
   std::vector<std::shared_ptr<Function>> selected_functions_;
   std::thread tracing_buffer_thread_;
   LinuxTracingBuffer tracing_buffer_;
-  LinuxTracingHandler tracing_handler_{&tracing_buffer_};
+  LinuxTracing::SamplingMethod sampling_method_;
+  LinuxTracingHandler tracing_handler_{&tracing_buffer_, sampling_method_};
 };
