@@ -22,7 +22,6 @@ target_sources(
          Core.h
          CoreApp.h
          CrashHandler.h
-         Diff.h
          EventBuffer.h
          EventClasses.h
          FunctionFramepointerValidator.h
@@ -89,7 +88,6 @@ target_sources(
           CoreApp.cpp
           CrashHandler.cpp
           ConnectionManager.cpp
-          Diff.cpp
           ElfFile.cpp
           EventBuffer.cpp
           FunctionFramepointerValidator.cpp

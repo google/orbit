@@ -290,7 +290,6 @@
      <string>Tools</string>
     </property>
     <addaction name="actionShow_Includes_Util"/>
-    <addaction name="actionDiff"/>
     <addaction name="actionRule_Editor"/>
    </widget>
    <addaction name="menuFile"/>
@@ -406,11 +405,6 @@
   <action name="actionShow_Includes_Util">
    <property name="text">
     <string>Show Includes Util</string>
-   </property>
-  </action>
-  <action name="actionDiff">
-   <property name="text">
-    <string>Diff</string>
    </property>
   </action>
   <action name="actionOutputDebugString">
