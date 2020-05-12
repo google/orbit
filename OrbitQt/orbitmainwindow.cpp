@@ -23,6 +23,7 @@
 #include "../OrbitGl/SamplingReport.h"
 #include "../OrbitPlugin/OrbitSDK.h"
 #include "../external/concurrentqueue/concurrentqueue.h"
+#include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "orbitaboutdialog.h"
@@ -38,6 +39,8 @@
 #ifdef _WIN32
 #include <shellapi.h>
 #endif
+
+ABSL_DECLARE_FLAG(bool, non_release_features);
 
 //-----------------------------------------------------------------------------
 OrbitMainWindow* GMainWindow;
@@ -56,6 +59,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   DataViewFactory* data_view_factory = GOrbitApp.get();
 
   ui->setupUi(this);
+
   ui->ProcessesList->SetDataView(
       data_view_factory->GetOrCreateDataView(DataViewType::PROCESSES));
   ui->ProcessesList->SetProcessParams();
@@ -132,6 +136,17 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   if (!m_IsDev) {
     HideTab(ui->MainTabWidget, "debug");
     HideTab(ui->MainTabWidget, "visualize");
+  }
+
+  if (!absl::GetFlag(FLAGS_non_release_features)) {
+    ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->WatchTab));
+
+    ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->TypesTab));
+    ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->GlobalsType));
+    ui->RightTabWidget->removeTab(
+        ui->RightTabWidget->indexOf(ui->CallStackTab));
+    ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
+    ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->outputTab));
   }
 
   // Output window
