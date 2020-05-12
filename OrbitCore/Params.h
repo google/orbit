@@ -35,8 +35,6 @@ struct Params {
   float m_FontSize;
   int m_Port;
   uint64_t m_NumBytesAssembly;
-  std::string m_DiffExe;
-  std::string m_DiffArgs;
   std::vector<std::string> m_PdbHistory;
   std::unordered_map<std::string, std::string> m_CachedPdbsMap;
   std::string m_ProcessPath;

@@ -85,8 +85,6 @@ class OrbitMainWindow : public QMainWindow {
 
   void on_actionShow_Includes_Util_triggered();
 
-  void on_actionDiff_triggered();
-
   void on_actionOutputDebugString_triggered(bool checked);
 
   void on_actionRule_Editor_triggered();

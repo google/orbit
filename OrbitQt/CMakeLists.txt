@@ -13,7 +13,6 @@ target_sources(
   PRIVATE orbitaboutdialog.h
           orbitcodeeditor.h
           orbitdataviewpanel.h
-          orbitdiffdialog.h
           orbitdisassemblydialog.h
           orbitglwidget.h
           orbitglwidgetwithheader.h
@@ -38,7 +37,6 @@ target_sources(
           orbitaboutdialog.ui
           orbitcodeeditor.cpp
           orbitdataviewpanel.cpp
-          orbitdiffdialog.cpp
           orbitdisassemblydialog.cpp
           orbitglwidget.cpp
           orbitglwidgetwithheader.cpp

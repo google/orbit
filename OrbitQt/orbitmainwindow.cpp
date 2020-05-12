@@ -28,7 +28,6 @@
 #include "absl/strings/str_format.h"
 #include "orbitaboutdialog.h"
 #include "orbitcodeeditor.h"
-#include "orbitdiffdialog.h"
 #include "orbitdisassemblydialog.h"
 #include "orbitsamplingreport.h"
 #include "orbitvisualizer.h"
@@ -657,16 +656,6 @@ void OrbitMainWindow::on_actionOpen_Capture_2_triggered() {
 void OrbitMainWindow::on_actionShow_Includes_Util_triggered() {
   ShowIncludesDialog* dialog = new ShowIncludesDialog(this);
   dialog->setWindowTitle("Orbit Show Includes Utility");
-  dialog->setAttribute(Qt::WA_DeleteOnClose);
-  dialog->setWindowFlags(dialog->windowFlags() | Qt::WindowMinimizeButtonHint |
-                         Qt::WindowMaximizeButtonHint);
-  dialog->show();
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionDiff_triggered() {
-  OrbitDiffDialog* dialog = new OrbitDiffDialog(this);
-  dialog->setWindowTitle("Orbit Diff Utility");
   dialog->setAttribute(Qt::WA_DeleteOnClose);
   dialog->setWindowFlags(dialog->windowFlags() | Qt::WindowMinimizeButtonHint |
                          Qt::WindowMaximizeButtonHint);

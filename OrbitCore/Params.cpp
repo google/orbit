@@ -32,10 +32,9 @@ Params::Params()
       m_MaxNumTimers(1000000),
       m_FontSize(14.f),
       m_Port(44766),
-      m_NumBytesAssembly(1024),
-      m_DiffArgs("%1 %2") {}
+      m_NumBytesAssembly(1024) {}
 
-ORBIT_SERIALIZE(Params, 18) {
+ORBIT_SERIALIZE(Params, 19) {
   ORBIT_NVP_VAL(0, m_LoadTypeInfo);
   ORBIT_NVP_VAL(0, m_SendCallStacks);
   ORBIT_NVP_VAL(0, m_MaxNumTimers);
@@ -48,8 +47,6 @@ ORBIT_SERIALIZE(Params, 18) {
   ORBIT_NVP_VAL(4, m_AllowUnsafeHooking);
   ORBIT_NVP_VAL(5, m_Port);
   ORBIT_NVP_VAL(6, m_TrackSamplingEvents);
-  ORBIT_NVP_VAL(7, m_DiffExe);
-  ORBIT_NVP_VAL(7, m_DiffArgs);
   ORBIT_NVP_VAL(8, m_NumBytesAssembly);
   ORBIT_NVP_VAL(9, m_HookOutputDebugString);
   ORBIT_NVP_VAL(10, m_ProcessPath);
