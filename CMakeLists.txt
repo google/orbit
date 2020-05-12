@@ -112,6 +112,7 @@ endif()
 find_package(asio CONFIG REQUIRED)
 find_package(crashpad CONFIG REQUIRED)
 find_package(GTest REQUIRED)
+find_package(GMock REQUIRED)
 find_package(Filesystem REQUIRED)
 
 if(WIN32)

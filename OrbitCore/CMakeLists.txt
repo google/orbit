@@ -237,6 +237,7 @@ target_link_libraries(
   OrbitCoreTests
   PRIVATE OrbitCore
           GTest::Main
+          GMock::GMock
           llvm_object::llvm_object
           abseil::abseil)
 

@@ -12,21 +12,6 @@
 #include "OrbitFunction.h"
 #include "Path.h"
 
-namespace {
-
-void ExpectContainsFunctionName(
-    const std::vector<std::shared_ptr<Function>>& functions,
-    const std::string& name) {
-  bool found_name = false;
-  for (const auto& function : functions) {
-    if (function->PrettyName() == name) {
-      found_name = true;
-      break;
-    }
-  }
-  EXPECT_TRUE(found_name);
-}
-
 TEST(FramePointerValidator, GetFpoFunctions) {
   std::string executable_path = Path::GetExecutablePath();
   std::string test_elf_file = executable_path + "/testdata/hello_world_elf";
@@ -41,12 +26,14 @@ TEST(FramePointerValidator, GetFpoFunctions) {
   std::vector<std::shared_ptr<Function>> fpo_functions =
       FramePointerValidator::GetFpoFunctions(functions, test_elf_file, true);
 
-  EXPECT_EQ(fpo_functions.size(), 6);
-  ExpectContainsFunctionName(fpo_functions, "_init");
-  ExpectContainsFunctionName(fpo_functions, "_start");
-  ExpectContainsFunctionName(fpo_functions, "__do_global_dtors_aux");
-  ExpectContainsFunctionName(fpo_functions, "main");
-  ExpectContainsFunctionName(fpo_functions, "__libc_csu_init");
-  ExpectContainsFunctionName(fpo_functions, "_fini");
+  std::vector<std::string> fpo_function_names;
+
+  std::transform(fpo_functions.begin(), fpo_functions.end(),
+                 std::back_inserter(fpo_function_names),
+                 [](const std::shared_ptr<Function>& f) -> std::string {
+                   return f->PrettyName();
+                 });
+
+  EXPECT_THAT(fpo_function_names, testing::UnorderedElementsAre(
+                                      "_start", "main", "__libc_csu_init"));
 }
-}  // namespace
