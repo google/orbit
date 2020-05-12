@@ -85,11 +85,6 @@ target_sources(OrbitQt PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/version.h")
 target_include_directories(OrbitQt PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 if(WIN32)
-  # Administrator privileges
-  set_target_properties(
-    OrbitQt
-    PROPERTIES LINK_FLAGS
-               "/MANIFESTUAC:\"level='requireAdministrator' /SUBSYSTEM:WINDOWS")
   set_target_properties(OrbitQt PROPERTIES WIN32_EXECUTABLE ON)
 
   GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/OrbitQt.rc"
