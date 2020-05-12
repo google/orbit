@@ -14,10 +14,8 @@
 #include "Params.h"
 #include "absl/strings/str_format.h"
 
-//-----------------------------------------------------------------------------
 ProcessesDataView::ProcessesDataView() : DataView(DataViewType::PROCESSES) {}
 
-//-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& ProcessesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
@@ -31,55 +29,51 @@ const std::vector<DataView::Column>& ProcessesDataView::GetColumns() {
   return columns;
 }
 
-//-----------------------------------------------------------------------------
 std::string ProcessesDataView::GetValue(int row, int col) {
-  const Process& process = *GetProcess(row);
+  const ProcessInfo& process = GetProcess(row);
 
   switch (col) {
     case COLUMN_PID:
-      return std::to_string(process.GetID());
+      return std::to_string(process.pid());
     case COLUMN_NAME:
-      return process.GetName() + (process.IsElevated() ? "*" : "");
+      return process.name();
     case COLUMN_CPU:
-      return absl::StrFormat("%.1f", process.GetCpuUsage());
+      return absl::StrFormat("%.1f", process.cpu_usage());
     case COLUMN_TYPE:
-      return process.GetIs64Bit() ? "64 bit" : "32 bit";
+      return process.is_64_bit() ? "64 bit" : "32 bit";
     default:
       return "";
   }
 }
 
-//-----------------------------------------------------------------------------
 std::string ProcessesDataView::GetToolTip(int row, int /*column*/) {
-  return GetProcess(row)->GetCmdLine();
+  return GetProcess(row).command_line();
 }
 
-//-----------------------------------------------------------------------------
-#define ORBIT_PROC_SORT(Member)                                            \
-  [&](int a, int b) {                                                      \
-    return OrbitUtils::Compare(processes[a]->Member, processes[b]->Member, \
-                               ascending);                                 \
+#define ORBIT_PROC_SORT(Member)                                          \
+  [&](int a, int b) {                                                    \
+    return OrbitUtils::Compare(processes[a].Member, processes[b].Member, \
+                               ascending);                               \
   }
 
-//-----------------------------------------------------------------------------
 void ProcessesDataView::DoSort() {
   bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  const std::vector<std::shared_ptr<Process>>& processes = process_list_;
+  const std::vector<ProcessInfo>& processes = process_list_;
 
   switch (m_SortingColumn) {
     case COLUMN_PID:
-      sorter = ORBIT_PROC_SORT(GetID());
+      sorter = ORBIT_PROC_SORT(pid());
       break;
     case COLUMN_NAME:
-      sorter = ORBIT_PROC_SORT(GetName());
+      sorter = ORBIT_PROC_SORT(name());
       break;
     case COLUMN_CPU:
-      sorter = ORBIT_PROC_SORT(GetCpuUsage());
+      sorter = ORBIT_PROC_SORT(cpu_usage());
       break;
     case COLUMN_TYPE:
-      sorter = ORBIT_PROC_SORT(GetIs64Bit());
+      sorter = ORBIT_PROC_SORT(is_64_bit());
       break;
     default:
       break;
@@ -92,10 +86,11 @@ void ProcessesDataView::DoSort() {
   SetSelectedItem();
 }
 
-//-----------------------------------------------------------------------------
+#undef ORBIT_PROC_SORT
+
 void ProcessesDataView::OnSelect(int index) {
-  std::shared_ptr<Process> selected_process = GetProcess(index);
-  selected_process_id_ = selected_process->GetID();
+  const ProcessInfo& selected_process = GetProcess(index);
+  selected_process_id_ = selected_process.pid();
 
   SetSelectedItem();
 
@@ -111,7 +106,7 @@ uint32_t ProcessesDataView::GetSelectedProcessId() const {
 //-----------------------------------------------------------------------------
 void ProcessesDataView::SetSelectedItem() {
   for (size_t i = 0; i < GetNumElements(); ++i) {
-    if (GetProcess(i)->GetID() == selected_process_id_) {
+    if (GetProcess(i).pid() == selected_process_id_) {
       m_SelectedIndex = i;
       return;
     }
@@ -123,10 +118,11 @@ void ProcessesDataView::SetSelectedItem() {
 
 bool ProcessesDataView::SelectProcess(const std::string& process_name) {
   for (size_t i = 0; i < GetNumElements(); ++i) {
-    std::shared_ptr<Process> process = GetProcess(i);
+    const ProcessInfo& process = GetProcess(i);
     // TODO: What if there are multiple processes with the same substring?
-    if (process->GetFullPath().find(process_name) != std::string::npos) {
+    if (process.full_path().find(process_name) != std::string::npos) {
       OnSelect(i);
+      // Why is this here?
       Capture::GPresetToLoad = "";
       return true;
     }
@@ -136,29 +132,29 @@ bool ProcessesDataView::SelectProcess(const std::string& process_name) {
 }
 
 //-----------------------------------------------------------------------------
-std::shared_ptr<Process> ProcessesDataView::SelectProcess(uint32_t process_id) {
+bool ProcessesDataView::SelectProcess(uint32_t process_id) {
   for (size_t i = 0; i < GetNumElements(); ++i) {
-    std::shared_ptr<Process> process = GetProcess(i);
-    if (process->GetID() == process_id) {
+    const ProcessInfo& process = GetProcess(i);
+    if (process.pid() == process_id) {
       OnSelect(i);
-      return process;
+      return true;
     }
   }
 
-  return nullptr;
+  return false;
 }
 
 //-----------------------------------------------------------------------------
 void ProcessesDataView::DoFilter() {
   std::vector<uint32_t> indices;
-  const std::vector<std::shared_ptr<Process>>& processes = process_list_;
+  const std::vector<ProcessInfo>& processes = process_list_;
 
   std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
 
   for (size_t i = 0; i < processes.size(); ++i) {
-    const Process& process = *processes[i];
-    std::string name = ToLower(process.GetName());
-    std::string type = process.GetIs64Bit() ? "64" : "32";
+    const ProcessInfo& process = processes[i];
+    std::string name = ToLower(process.name());
+    std::string type = process.is_64_bit() ? "64" : "32";
 
     bool match = true;
 
@@ -191,15 +187,15 @@ void ProcessesDataView::UpdateProcessList() {
 
 //-----------------------------------------------------------------------------
 void ProcessesDataView::SetProcessList(
-    const std::vector<std::shared_ptr<Process>>& process_list) {
-  process_list_ = process_list;
+    std::vector<ProcessInfo>&& process_list) {
+  process_list_ = std::move(process_list);
   UpdateProcessList();
   OnSort(m_SortingColumn, {});
   OnFilter(m_Filter);
   SetSelectedItem();
 }
 
-std::shared_ptr<Process> ProcessesDataView::GetProcess(uint32_t row) const {
+const ProcessInfo& ProcessesDataView::GetProcess(uint32_t row) const {
   return process_list_[m_Indices[row]];
 }
 

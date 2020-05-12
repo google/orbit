@@ -15,8 +15,19 @@ class TimeGraphLayout {
   float GetEventTrackHeight() const { return m_EventTrackHeight; }
   float GetGraphTrackHeight() const { return m_GraphTrackHeight; }
   float GetTrackBottomMargin() const { return m_TrackBottomMargin; }
-  float GetTrackLabelOffset() const { return m_TrackLabelOffset; }
+  float GetTrackTopMargin() const { return m_TrackTopMargin; }
+  float GetTrackLabelOffsetX() const { return m_TrackLabelOffsetX; }
+  float GetTrackLabelOffsetY() const { return m_TrackLabelOffsetY; }
   float GetSliderWidth() const { return m_SliderWidth; }
+  float GetTrackTabWidth() const { return m_TrackTabWidth; }
+  float GetTrackTabHeight() const { return m_TrackTabHeight; }
+  float GetTrackTabOffset() const { return m_TrackTabOffset; }
+  float GetCollapseButtonOffset() const { return m_CollapseButtonOffset; }
+  float GetRoundingRadius() const { return m_RoundingRadius; }
+  float GetRoundingNumSides() const { return m_RoundingNumSides; }
+  float GetTextOffset() const { return m_TextOffset; }
+  float GetVerticalMargin() const { return m_VerticalMargin; }
+  float GetSchedulerTrackOffset() const { return m_SchedulerTrackOffset; }
   float GetSpaceBetweenTracks() const { return m_SpaceBetweenTracks; }
   float GetSpaceBetweenCores() const { return m_SpaceBetweenCores; }
   float GetSpaceBetweenTracksAndThread() const {
@@ -37,11 +48,21 @@ class TimeGraphLayout {
   float m_EventTrackHeight;
   float m_GraphTrackHeight;
   float m_TrackBottomMargin;
-  float m_TrackLabelOffset;
+  float m_TrackTopMargin;
+  float m_TrackLabelOffsetX;
+  float m_TrackLabelOffsetY;
   float m_SliderWidth;
+  float m_TrackTabWidth;
+  float m_TrackTabHeight;
+  float m_TrackTabOffset;
+  float m_CollapseButtonOffset;
+  float m_RoundingRadius;
+  float m_RoundingNumSides;
+  float m_TextOffset;
+  float m_VerticalMargin;
+  float m_SchedulerTrackOffset;
 
   float m_SpaceBetweenCores;
-  float m_SpaceBetweenCoresAndThread;
   float m_SpaceBetweenTracks;
   float m_SpaceBetweenTracksAndThread;
   float m_SpaceBetweenThreadBlocks;

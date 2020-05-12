@@ -80,6 +80,7 @@ bool DoZoom = false;
 //-----------------------------------------------------------------------------
 OrbitApp::OrbitApp(ApplicationOptions&& options)
     : options_(std::move(options)) {
+  main_thread_executor_ = MainThreadExecutor::Create();
 #ifdef _WIN32
   m_Debugger = std::make_unique<Debugger>();
 #endif
@@ -292,9 +293,6 @@ void OrbitApp::PostInit() {
     GTcpClient->AddMainThreadCallback(
         Msg_RemoteProcess,
         [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcess(a_Msg); });
-    GTcpClient->AddMainThreadCallback(
-        Msg_RemoteProcessList,
-        [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcessList(a_Msg); });
     ConnectionManager::Get().ConnectToRemote(options_.asio_server_address);
     SetIsRemote(true);
   }
@@ -306,6 +304,21 @@ void OrbitApp::PostInit() {
       ERROR("Unable to create GRPC channel to %s",
             options_.grpc_server_address);
     }
+
+    // TODO: Replace refresh_timeout with config option. Let users to modify it.
+    process_list_manager_ =
+        ProcessListManager::Create(grpc_channel_, absl::Milliseconds(1000));
+
+    auto callback = [&](std::vector<ProcessInfo>&& process_list) {
+      main_thread_executor_->Schedule(
+          [&, list = std::move(process_list)]() mutable {
+            m_ProcessesDataView->SetProcessList(std::move(list));
+            FireRefreshCallbacks();
+          });
+    };
+
+    process_list_manager_->SetCallback(callback);
+    process_list_manager_->Start();
   }
 
   string_manager_ = std::make_shared<StringManager>();
@@ -491,6 +504,8 @@ void OrbitApp::OnExit() {
     GTcpServer->Stop();
   }
 
+  process_list_manager_->Shutdown();
+
   GCoreApp = nullptr;
   GOrbitApp = nullptr;
   Orbit_ImGui_Shutdown();
@@ -507,6 +522,8 @@ void OrbitApp::MainTick() {
 
   if (GTcpServer) GTcpServer->ProcessMainThreadCallbacks();
   if (GTcpClient) GTcpClient->ProcessMainThreadCallbacks();
+
+  GOrbitApp->main_thread_executor_->ConsumeActions();
 
   // Tick Transaction manager only from client (OrbitApp is client only);
   auto transaction_manager = GOrbitApp->GetTransactionClient();
@@ -821,7 +838,7 @@ bool OrbitApp::SelectProcess(const std::string& a_Process) {
 //-----------------------------------------------------------------------------
 bool OrbitApp::SelectProcess(uint32_t a_ProcessID) {
   if (m_ProcessesDataView) {
-    return m_ProcessesDataView->SelectProcess(a_ProcessID) != nullptr;
+    return m_ProcessesDataView->SelectProcess(a_ProcessID);
   }
 
   return false;
@@ -1023,25 +1040,6 @@ void OrbitApp::ApplySession(const Session& session) {
   }
 
   FireRefreshCallbacks();
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::OnRemoteProcessList(const Message& a_Message) {
-  std::istringstream buffer(a_Message.GetDataAsString());
-  cereal::JSONInputArchive inputAr(buffer);
-  ProcessList remoteProcessList;
-  inputAr(remoteProcessList);
-  remoteProcessList.SetRemote(true);
-  GOrbitApp->m_ProcessesDataView->SetProcessList(
-      remoteProcessList.GetProcesses());
-
-  // Trigger session loading if needed.
-  if (!Capture::GPresetToLoad.empty()) {
-    GOrbitApp->OnLoadSession(Capture::GPresetToLoad);
-    Capture::GPresetToLoad = "";
-  }
-
-  FireRefreshCallbacks(DataViewType::PROCESSES);
 }
 
 //-----------------------------------------------------------------------------

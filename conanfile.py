@@ -29,7 +29,9 @@ class OrbitConan(ConanFile):
         if not self.version:
             buf = StringIO()
             self.run("git describe --always --tags", output=buf)
-            self.version = buf.getvalue().strip()[1:]
+            self.version = buf.getvalue().strip()
+            if self.version[0] == 'v':
+                self.version[1:]
 
         return self.version
 
@@ -127,6 +129,8 @@ class OrbitConan(ConanFile):
                           dst="{}/shaders/".format(dest))
                 self.copy("v3f-t2f-c4f.*", src=path,
                           dst="{}/shaders/".format("OrbitQt/"))
+        self.copy("license*", dst="licenses", folder=True, ignore_case=True)
+        self.copy("licence*", dst="licenses", folder=True, ignore_case=True)
 
     def package(self):
         if self.options.debian_packaging:
@@ -135,6 +139,10 @@ class OrbitConan(ConanFile):
                 self.name, self._version()), symlinks=True)
             self.copy("OrbitService", src="bin/",
                       dst="{}-{}/usr/bin/".format(self.name, self._version()))
+            self.copy("THIRD_PARTY_LICENSES.txt",
+                      dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
+            self.copy("LICENSE",
+                      dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
             basedir = "{}/{}-{}".format(self.package_folder,
                                         self.name, self._version())
             os.makedirs("{}/DEBIAN".format(basedir), exist_ok=True)
@@ -175,6 +183,8 @@ chmod -v 4775 /usr/bin/OrbitService
         self.copy("OrbitService.exe", src="bin/", dst="bin")
         self.copy("OrbitService.pdb", src="bin/", dst="bin")
         self.copy("OrbitService.debug", src="bin/", dst="bin")
+        self.copy("THIRD_PARTY_LICENSES.txt")
+        self.copy("LICENSE")
 
     def deploy(self):
         self.copy("*", src="bin", dst="bin")

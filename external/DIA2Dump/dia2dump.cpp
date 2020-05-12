@@ -14,7 +14,6 @@
 
 #include "../../../OrbitCore/OrbitDia.h"
 #include "../../../OrbitCore/ScopeTimer.h"
-#include "../../../OrbitGl/App.h"
 #include "Callback.h"
 #include "PrintSymbol.h"
 

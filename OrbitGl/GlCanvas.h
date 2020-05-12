@@ -115,8 +115,6 @@ class GlCanvas : public GlPanel {
  protected:
   int m_Width;
   int m_Height;
-  float m_DesiredWorldWidth;
-  float m_DesiredWorldHeight;
   float m_WorldWidth;
   float m_WorldHeight;
   float m_WorldTopLeftX;

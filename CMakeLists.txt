@@ -158,3 +158,14 @@ if(WIN32)
   set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT
                                                               "OrbitQt")
 endif()
+
+# Collecting third-party licenses
+file(COPY external/concurrentqueue/LICENSE.md DESTINATION ${CMAKE_BINARY_DIR}/licenses/concurrentqueue/)
+file(COPY external/minhook/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/minhook/)
+file(COPY external/multicore/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/multicore/)
+file(COPY external/peparse/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/peparse/)
+file(COPY external/xxHash-r42/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/xxhash/)
+file(COPY external/gte/LICENSE_1_0.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/gte/)
+file(COPY external/oqpi/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/oqpi/)
+include("cmake/collect_licenses.cmake")
+GenerateThirdPartyLicenseFile("${CMAKE_BINARY_DIR}/THIRD_PARTY_LICENSES.txt" "${CMAKE_BINARY_DIR}/licenses/")
