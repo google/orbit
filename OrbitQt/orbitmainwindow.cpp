@@ -147,6 +147,12 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
         ui->RightTabWidget->indexOf(ui->CallStackTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->outputTab));
+
+    ui->actionEnable_Sampling->setVisible(false);
+    ui->actionEnable_Context_Switches->setVisible(false);
+    ui->actionEnable_Unreal_Support->setVisible(false);
+    ui->actionAllow_Unsafe_Hooking->setVisible(false);
+    ui->actionOutputDebugString->setVisible(false);
   }
 
   // Output window
