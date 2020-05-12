@@ -1,0 +1,25 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "orbitaboutdialog.h"
+
+#include "ui_orbitaboutdialog.h"
+
+namespace OrbitQt {
+
+OrbitAboutDialog::OrbitAboutDialog(QWidget* parent)
+    : QDialog(parent), ui_(new Ui::OrbitAboutDialog) {
+  ui_->setupUi(this);
+}
+
+void OrbitAboutDialog::setLicenseText(const QString& text) {
+  ui_->licenseTextEdit->setPlainText(text);
+}
+
+void OrbitAboutDialog::setVersionString(const QString& version) {
+  ui_->versionLabel->setText(QString{"Version %1"}.arg(version));
+}
+
+OrbitAboutDialog::~OrbitAboutDialog() noexcept = default;
+}  // namespace OrbitQt

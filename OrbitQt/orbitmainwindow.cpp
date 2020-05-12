@@ -25,6 +25,7 @@
 #include "../external/concurrentqueue/concurrentqueue.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
+#include "orbitaboutdialog.h"
 #include "orbitdiffdialog.h"
 #include "orbitdisassemblydialog.h"
 #include "orbitsamplingreport.h"
@@ -454,9 +455,16 @@ void OrbitMainWindow::OnSetClipboard(const std::wstring& a_Text) {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionAbout_triggered() {
-  const QString text{
-      "Copyright (c) 2020 The Orbit Authors. All rights reserved."};
-  QMessageBox::about(this, windowTitle(), text);
+  OrbitQt::OrbitAboutDialog dialog{this};
+  dialog.setWindowTitle(windowTitle());
+  dialog.setVersionString(QCoreApplication::applicationVersion());
+
+  QFile licenseFile{QDir{QCoreApplication::applicationDirPath()}.filePath(
+      "THIRD_PARTY_LICENSES.txt")};
+  if (licenseFile.open(QIODevice::ReadOnly)) {
+    dialog.setLicenseText(licenseFile.readAll());
+  }
+  dialog.exec();
 }
 
 //-----------------------------------------------------------------------------
