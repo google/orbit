@@ -3,8 +3,9 @@
 //-----------------------------------
 #pragma once
 
-#include <algorithm>
 #include <math.h>
+
+#include <algorithm>
 
 #include "GteVector2.h"
 #include "GteVector3.h"
