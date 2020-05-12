@@ -454,7 +454,8 @@ void OrbitMainWindow::OnSetClipboard(const std::wstring& a_Text) {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionAbout_triggered() {
-  const QString text{"Copyright (c) 2020 The Orbit Authors. All rights reserved."};
+  const QString text{
+      "Copyright (c) 2020 The Orbit Authors. All rights reserved."};
   QMessageBox::about(this, windowTitle(), text);
 }
 

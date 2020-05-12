@@ -726,9 +726,6 @@ void CaptureWindow::DrawScreenSpace() {
   const Color kBackgroundColor(70, 70, 70, 255);
   float margin_x1 = getWidth();
   float margin_x0 = margin_x1 - vertical_margin;
-  PRINT_VAR(margin_x1);
-  PRINT_VAR(margin_x0);
-  PRINT_VAR(canvasHeight);
   glColor4ubv(&kBackgroundColor[0]);
   glBegin(GL_QUADS);
   glVertex3f(margin_x0, 0, z);

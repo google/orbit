@@ -207,8 +207,7 @@ float GpuTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
   bool collapsed = collapse_toggle_.IsCollapsed();
   uint32_t depth = collapsed ? 1 : GetDepth();
-  return layout.GetTextBoxHeight() * depth +
-         layout.GetTrackBottomMargin();
+  return layout.GetTextBoxHeight() * depth + layout.GetTrackBottomMargin();
 }
 
 //-----------------------------------------------------------------------------
