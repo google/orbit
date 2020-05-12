@@ -3,7 +3,6 @@
 
 #include "OrbitLinuxTracing/TracingOptions.h"
 #include "OrbitService.h"
-#include "Params.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
@@ -14,7 +13,7 @@ ABSL_FLAG(uint16_t, asio_port, 44766, "Asio TCP server port");
 ABSL_FLAG(std::string, grpc_server_address, "0.0.0.0:44755",
           "Grpc server address");
 
-// TODO: Remove this flag once we have an ui option to specify.
+// TODO: Remove this flag once we have a ui option to specify.
 ABSL_FLAG(bool, frame_pointer_unwinding, false,
           "Use frame pointers for unwinding");
 
@@ -47,11 +46,8 @@ int main(int argc, char** argv) {
   uint16_t asio_port = absl::GetFlag(FLAGS_asio_port);
 
   LinuxTracing::TracingOptions tracing_options;
-  tracing_options.trace_context_switches = GParams.m_TrackContextSwitches;
 
-  bool use_frame_pointer_unwinding =
-      absl::GetFlag(FLAGS_frame_pointer_unwinding);
-  if (use_frame_pointer_unwinding) {
+  if (absl::GetFlag(FLAGS_frame_pointer_unwinding)) {
     tracing_options.sampling_method =
         LinuxTracing::SamplingMethod::kFramePointers;
   }
