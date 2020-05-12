@@ -5,7 +5,10 @@
 
 #include "../OrbitCore/Params.h"
 #include "App.h"
+#include "absl/flags/flag.h"
 #include "ui_processlauncherwidget.h"
+
+ABSL_DECLARE_FLAG(bool, non_release_features);
 
 ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
     : QWidget(parent), ui(new Ui::ProcessLauncherWidget) {
@@ -18,6 +21,10 @@ ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
   ui->checkBoxPause->setChecked(GParams.m_StartPaused);
 
   ui->ProcessComboBox->lineEdit()->setText("");
+
+  if (!absl::GetFlag(FLAGS_non_release_features)) {
+    ui->frame->setVisible(false);
+  }
 }
 
 ProcessLauncherWidget::~ProcessLauncherWidget() { delete ui; }
