@@ -39,7 +39,7 @@
 #include <shellapi.h>
 #endif
 
-ABSL_DECLARE_FLAG(bool, non_release_features);
+ABSL_DECLARE_FLAG(bool, enable_stale_features);
 
 //-----------------------------------------------------------------------------
 OrbitMainWindow* GMainWindow;
@@ -137,7 +137,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     HideTab(ui->MainTabWidget, "visualize");
   }
 
-  if (!absl::GetFlag(FLAGS_non_release_features)) {
+  if (!absl::GetFlag(FLAGS_enable_stale_features)) {
     ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->WatchTab));
 
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->TypesTab));
