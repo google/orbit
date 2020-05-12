@@ -31,7 +31,7 @@ class OrbitConan(ConanFile):
             self.run("git describe --always --tags", output=buf)
             self.version = buf.getvalue().strip()
             if self.version[0] == 'v':
-                self.version[1:]
+                self.version = self.version[1:]
 
         return self.version
 
