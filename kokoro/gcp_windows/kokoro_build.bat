@@ -14,7 +14,7 @@ call powershell "& %REPO_ROOT%\contrib\conan\configs\install.ps1"
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 :: Building conan
-call conan install -pr msvc2019_relwithdebinfo -if %REPO_ROOT%\build\ --build outdated %REPO_ROOT%
+call conan install -pr msvc2017_relwithdebinfo -if %REPO_ROOT%\build\ --build outdated %REPO_ROOT%
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 call conan build -bf %REPO_ROOT%\build\ %REPO_ROOT%
