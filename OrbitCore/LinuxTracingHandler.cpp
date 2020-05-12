@@ -18,7 +18,7 @@ ABSL_FLAG(uint16_t, sampling_rate, 1000,
 
 // TODO: Remove this flag once we have an ui option to specify.
 ABSL_FLAG(bool, frame_pointer_unwinding, false,
-          "Use frame pointer information for unwinding");
+          "Use frame pointers for unwinding");
 
 void LinuxTracingHandler::Start(
     pid_t pid,
