@@ -25,7 +25,9 @@ TimeGraphLayout::TimeGraphLayout() {
   m_CollapseButtonOffset = 15.f;
   m_RoundingRadius = 8.f;
   m_RoundingNumSides = 16;
-  m_TextOffset = 0.f;
+  m_TextOffset = 5.f;
+  m_VerticalMargin = 10.f;
+  m_SchedulerTrackOffset = 50.f;
   m_TextZ = -0.02f;
   m_TrackZ = -0.1f;
 };
@@ -63,6 +65,8 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(m_RoundingRadius);
   FLOAT_SLIDER(m_RoundingNumSides);
   FLOAT_SLIDER(m_TextOffset);
+  FLOAT_SLIDER(m_VerticalMargin);
+  FLOAT_SLIDER(m_SchedulerTrackOffset);
   FLOAT_SLIDER_MIN_MAX(m_TrackTabWidth, 0, 1000.f);
   FLOAT_SLIDER_MIN_MAX(m_TrackBottomMargin, 0, 20.f);
   FLOAT_SLIDER_MIN_MAX(m_TrackTopMargin, 0, 20.f);

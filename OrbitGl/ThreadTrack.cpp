@@ -39,10 +39,12 @@ void ThreadTrack::Draw(GlCanvas* canvas, bool picking) {
   Track::Draw(canvas, picking);
 
   // Event track
-  float event_track_height = time_graph_->GetLayout().GetEventTrackHeight();
-  event_track_->SetPos(m_Pos[0], m_Pos[1]);
-  event_track_->SetSize(track_width, event_track_height);
-  event_track_->Draw(canvas, picking);
+  if (HasEventTrack()) {
+    float event_track_height = time_graph_->GetLayout().GetEventTrackHeight();
+    event_track_->SetPos(m_Pos[0], m_Pos[1]);
+    event_track_->SetSize(track_width, event_track_height);
+    event_track_->Draw(canvas, picking);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -94,6 +96,7 @@ float ThreadTrack::GetYFromDepth(float track_y, uint32_t depth,
 //-----------------------------------------------------------------------------
 void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
                                    float min_x, TextBox* text_box) {
+  TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
     double elapsed_millis = elapsed_us * 0.001;
     std::string time = GetPrettyTime(elapsed_millis);
@@ -131,9 +134,9 @@ void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
   float max_size = box_pos[0] + box_size[0] - pos_x;
   TextRenderer* text_renderer = time_graph_->GetTextRenderer();
   text_renderer->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, text_box->GetPosY() + 1.f,
-      GlCanvas::Z_VALUE_TEXT, kTextWhite, text_box->GetElapsedTimeTextLength(),
-      max_size);
+      text_box->GetText().c_str(), pos_x,
+      text_box->GetPosY() + layout.GetTextOffset(), GlCanvas::Z_VALUE_TEXT,
+      kTextWhite, text_box->GetElapsedTimeTextLength(), max_size);
 }
 
 //-----------------------------------------------------------------------------
@@ -150,7 +153,7 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   float world_start_x = canvas->GetWorldTopLeftX();
   float world_width = canvas->GetWorldWidth();
   double inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
-  bool is_collapsed = !collapse_toggle_.GetActive();
+  bool is_collapsed = collapse_toggle_.IsCollapsed();
   float box_height = layout.GetTextBoxHeight();
   if (is_collapsed && depth_ > 0) {
     box_height /= static_cast<float>(depth_);
@@ -228,11 +231,11 @@ void ThreadTrack::OnTimer(const Timer& timer) {
 //-----------------------------------------------------------------------------
 float ThreadTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
-  bool is_collapsed = !collapse_toggle_.GetActive();
+  bool is_collapsed = collapse_toggle_.IsCollapsed();
   uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
   uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
   return layout.GetTextBoxHeight() * depth +
-         layout.GetSpaceBetweenTracksAndThread() +
+         (depth > 0 ? layout.GetSpaceBetweenTracksAndThread() : 0) +
          layout.GetEventTrackHeight() + layout.GetTrackBottomMargin();
 }
 

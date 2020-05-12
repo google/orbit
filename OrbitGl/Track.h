@@ -77,7 +77,8 @@ class Track : public Pickable {
   void SetColor(Color a_Color) { m_Color = a_Color; }
 
   void AddChild(std::shared_ptr<Track> track) { children_.emplace_back(track); }
-  virtual void OnCollapseToggle(bool should_collapse);
+  virtual void OnCollapseToggle(TriangleToggle::State state);
+  virtual bool IsCollapsable() const { return false; }
 
  protected:
   GlCanvas* m_Canvas;

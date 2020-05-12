@@ -696,6 +696,9 @@ void CaptureWindow::DrawScreenSpace() {
     glEnd();
   }
 
+  const TimeGraphLayout& layout = time_graph_.GetLayout();
+  float vertical_margin = layout.GetVerticalMargin();
+
   if (timeSpan > 0) {
     double start = time_graph_.GetMinTimeUs();
     double stop = time_graph_.GetMaxTimeUs();
@@ -703,19 +706,36 @@ void CaptureWindow::DrawScreenSpace() {
     double maxStart = timeSpan - width;
     double ratio =
         Capture::IsCapturing() ? 1 : (maxStart != 0 ? start / maxStart : 0);
-
-    m_Slider.SetPixelHeight(time_graph_.GetLayout().GetSliderWidth());
+    float slider_width = layout.GetSliderWidth();
+    m_Slider.SetPixelHeight(slider_width);
     m_Slider.SetSliderRatio(static_cast<float>(ratio));
     m_Slider.SetSliderWidthRatio(static_cast<float>(width / timeSpan));
     m_Slider.Draw(this, m_Picking);
 
     float verticalRatio = m_WorldHeight / time_graph_.GetThreadTotalHeight();
     if (verticalRatio < 1.f) {
-      m_VerticalSlider.SetPixelHeight(time_graph_.GetLayout().GetSliderWidth());
+      m_VerticalSlider.SetPixelHeight(slider_width);
       m_VerticalSlider.SetSliderWidthRatio(verticalRatio);
       m_VerticalSlider.Draw(this, m_Picking);
+      vertical_margin += slider_width;
     }
   }
+
+  // Draw right vertical margin.
+  time_graph_.SetVerticalMargin(vertical_margin);
+  const Color kBackgroundColor(70, 70, 70, 255);
+  float margin_x1 = getWidth();
+  float margin_x0 = margin_x1 - vertical_margin;
+  PRINT_VAR(margin_x1);
+  PRINT_VAR(margin_x0);
+  PRINT_VAR(canvasHeight);
+  glColor4ubv(&kBackgroundColor[0]);
+  glBegin(GL_QUADS);
+  glVertex3f(margin_x0, 0, z);
+  glVertex3f(margin_x1, 0, z);
+  glVertex3f(margin_x1, canvasHeight - height, z);
+  glVertex3f(margin_x0, canvasHeight - height, z);
+  glEnd();
 }
 
 //-----------------------------------------------------------------------------

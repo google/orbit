@@ -14,7 +14,9 @@
 Track::Track(TimeGraph* time_graph)
     : time_graph_(time_graph),
       collapse_toggle_(
-          true, [this](bool state) { OnCollapseToggle(state); }, time_graph) {
+          TriangleToggle::State::kExpanded,
+          [this](TriangleToggle::State state) { OnCollapseToggle(state); },
+          time_graph) {
   m_MousePos[0] = m_MousePos[1] = Vec2(0, 0);
   m_Pos = Vec2(0, 0);
   m_Size = Vec2(0, 0);
@@ -30,9 +32,9 @@ std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
   points.emplace_back(0.f, 0.f);
   points.emplace_back(0.f, radius);
 
-  float increment_radians = 0.5f * M_PI / static_cast<float>(num_sides);
+  float increment_radians = 0.5f * kPiFloat / static_cast<float>(num_sides);
   for (uint32_t i = 1; i < num_sides; ++i) {
-    float angle = M_PI + static_cast<float>(i) * increment_radians;
+    float angle = kPiFloat + static_cast<float>(i) * increment_radians;
     points.emplace_back(radius * cosf(angle) + radius,
                         radius * sinf(angle) + radius);
   }
@@ -96,20 +98,32 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   glEnd();
 
   // Draw rounded corners.
+  float vertical_margin = time_graph_->GetVerticalMargin();
+  const Color kBackgroundColor(70, 70, 70, 255);
   if (!picking) {
     float radius = std::min(layout.GetRoundingRadius(), half_label_height);
     uint32_t sides = static_cast<uint32_t>(layout.GetRoundingNumSides() + 0.5f);
     auto rounded_corner = GetRoundedCornerMask(radius, sides);
-    const Color kBackGroundColor(70, 70, 70, 255);
     Vec2 bottom_left(x0, y1);
     Vec2 bottom_right(tab_x0 + label_width, y0 + top_margin);
     Vec2 top_right(tab_x0 + label_width, y0 + label_height);
     Vec2 top_left(tab_x0, y0 + label_height);
-    float z = layout.GetTrackZ() + 0.001f;
-    DrawTriangleFan(rounded_corner, bottom_left, kBackGroundColor, 0, z);
+    Vec2 end_bottom(x1 - vertical_margin, y1);
+    Vec2 end_top(x1 - vertical_margin, y0 + top_margin);
+    float z = GlCanvas::Z_VALUE_BOX_ACTIVE + 0.001f;
+    DrawTriangleFan(rounded_corner, bottom_left, kBackgroundColor, 0, z);
     DrawTriangleFan(rounded_corner, bottom_right, color, 0, z);
-    DrawTriangleFan(rounded_corner, top_right, kBackGroundColor, 180.f, z);
-    DrawTriangleFan(rounded_corner, top_left, kBackGroundColor, -90.f, z);
+    DrawTriangleFan(rounded_corner, top_right, kBackgroundColor, 180.f, z);
+    DrawTriangleFan(rounded_corner, top_left, kBackgroundColor, -90.f, z);
+    DrawTriangleFan(rounded_corner, end_bottom, kBackgroundColor, 90.f, z);
+    DrawTriangleFan(rounded_corner, end_top, kBackgroundColor, 180.f, z);
+  }
+
+  // Collapse toggle state management.
+  if (!this->IsCollapsable()) {
+    collapse_toggle_.SetState(TriangleToggle::State::kInactive);
+  } else if (collapse_toggle_.IsInactive()) {
+    collapse_toggle_.ResetToInitialState();
   }
 
   // Draw collapsing triangle.
@@ -123,8 +137,8 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   float label_offset_y = layout.GetTrackLabelOffsetY();
   const Color kTextWhite(255, 255, 255, 255);
   canvas->AddText(label_.c_str(), tab_x0 + label_offset_x,
-                  y1 + label_offset_y + m_Size[1], text_z,
-                  kTextWhite, label_width - label_offset_x);
+                  y1 + label_offset_y + m_Size[1], text_z, kTextWhite,
+                  label_width - label_offset_x);
 
   m_Canvas = canvas;
 }
@@ -152,7 +166,7 @@ void Track::SetSize(float a_SizeX, float a_SizeY) {
 }
 
 //-----------------------------------------------------------------------------
-void Track::OnCollapseToggle(bool /*state*/) {
+void Track::OnCollapseToggle(TriangleToggle::State /*state*/) {
   time_graph_->NeedsUpdate();
   time_graph_->NeedsRedraw();
 }

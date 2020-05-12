@@ -51,6 +51,7 @@ class GpuTrack : public Track {
   const TextBox* GetDown(TextBox* textbox) const;
 
   std::vector<std::shared_ptr<TimerChain>> GetAllChains() override;
+  bool IsCollapsable() const override { return depth_ > 1; }
 
  protected:
   void UpdateDepth(uint32_t depth) {

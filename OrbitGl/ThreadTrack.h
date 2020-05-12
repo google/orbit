@@ -53,8 +53,10 @@ class ThreadTrack : public Track {
   void SetEventTrackColor(Color color);
   void ClearSelectedEvents() { event_track_->ClearSelectedEvents(); }
   bool IsEmpty() const;
+  virtual bool HasEventTrack() const { return true; }
 
   uint32_t GetThreadId() const { return thread_id_; }
+  bool IsCollapsable() const override { return depth_ > 1; }
 
  protected:
   void UpdateDepth(uint32_t depth) {

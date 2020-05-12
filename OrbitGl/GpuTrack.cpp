@@ -23,7 +23,7 @@ GpuTrack::GpuTrack(TimeGraph* time_graph,
   string_manager_ = string_manager;
 
   // Gpu tracks are collapsed by default.
-  collapse_toggle_.SetActive(false);
+  collapse_toggle_.SetState(TriangleToggle::State::kCollapsed);
 }
 
 //-----------------------------------------------------------------------------
@@ -83,13 +83,13 @@ Color GpuTrack::GetTimerColor(const Timer& timer, bool is_selected,
 //-----------------------------------------------------------------------------
 inline float GetYFromDepth(const TimeGraphLayout& layout, float track_y,
                            uint32_t depth) {
-  return track_y - layout.GetSpaceBetweenTracksAndThread() -
-         layout.GetTextBoxHeight() * (depth + 1);
+  return track_y - layout.GetTextBoxHeight() * (depth + 1);
 }
 
 //-----------------------------------------------------------------------------
 void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
                                 float min_x, TextBox* text_box) {
+  TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
     double elapsed_millis = elapsed_us * 0.001;
     std::string time = GetPrettyTime(elapsed_millis);
@@ -112,9 +112,9 @@ void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
   float max_size = box_pos[0] + box_size[0] - pos_x;
   TextRenderer* text_renderer = time_graph_->GetTextRenderer();
   text_renderer->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, text_box->GetPosY() + 1.f,
-      GlCanvas::Z_VALUE_TEXT, kTextWhite, text_box->GetElapsedTimeTextLength(),
-      max_size);
+      text_box->GetText().c_str(), pos_x,
+      text_box->GetPosY() + layout.GetTextOffset(), GlCanvas::Z_VALUE_TEXT,
+      kTextWhite, text_box->GetElapsedTimeTextLength(), max_size);
 }
 
 //-----------------------------------------------------------------------------
@@ -128,7 +128,7 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   float world_start_x = canvas->GetWorldTopLeftX();
   float world_width = canvas->GetWorldWidth();
   double inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
-  bool is_collapsed = !collapse_toggle_.GetActive();
+  bool is_collapsed = collapse_toggle_.IsCollapsed() && (depth_ > 1);
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
   for (auto& text_boxes : chains_by_depth) {
@@ -159,6 +159,16 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
       Color color = GetTimerColor(timer, is_selected, false);
       text_box.SetPos(pos);
       text_box.SetSize(size);
+
+      // Only draw "hardware execution" timers when track is collapsed.
+      if (is_collapsed) {
+        std::string gpu_stage =
+            string_manager_->Get(timer.m_UserData[0]).value_or("");
+        constexpr const char* kHwExecutionString = "hw execution";
+        if (gpu_stage != kHwExecutionString) {
+          continue;
+        }
+      }
 
       if (is_visible_width) {
         if (!is_collapsed) {
@@ -195,10 +205,9 @@ void GpuTrack::OnTimer(const Timer& timer) {
 //-----------------------------------------------------------------------------
 float GpuTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
-  bool collapsed = !collapse_toggle_.GetActive();
+  bool collapsed = collapse_toggle_.IsCollapsed();
   uint32_t depth = collapsed ? 1 : GetDepth();
   return layout.GetTextBoxHeight() * depth +
-         layout.GetSpaceBetweenTracksAndThread() +
          layout.GetTrackBottomMargin();
 }
 

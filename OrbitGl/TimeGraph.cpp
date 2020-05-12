@@ -41,7 +41,7 @@ TimeGraph* GCurrentTimeGraph = nullptr;
 TimeGraph::TimeGraph() {
   m_LastThreadReorder.Start();
   scheduler_track_ = std::make_shared<SchedulerTrack>(this);
-  
+
   // The process track is a special ThreadTrack of id "0".
   process_track_ = GetOrCreateThreadTrack(0);
 }
@@ -496,7 +496,7 @@ void TimeGraph::UpdatePrimitives() {
 
   SortTracks();
 
-  float current_y = 0.f;
+  float current_y = -m_Layout.GetSchedulerTrackOffset();
 
   for (auto& track : sorted_tracks_) {
     track->SetY(current_y);
@@ -569,7 +569,10 @@ void TimeGraph::Draw(bool a_Picking) {
 
 //-----------------------------------------------------------------------------
 void TimeGraph::DrawTracks(bool a_Picking) {
-  m_Layout.SetNumCores(GetNumCores());
+  uint32_t num_cores = GetNumCores();
+  m_Layout.SetNumCores(num_cores);
+  scheduler_track_->SetLabel(
+      absl::StrFormat("Scheduler (%u cores)", num_cores));
   for (auto& track : sorted_tracks_) {
     if (track->GetType() == Track::kThreadTrack) {
       auto thread_track = std::static_pointer_cast<ThreadTrack>(track);
@@ -684,7 +687,9 @@ void TimeGraph::SortTracks() {
     sorted_tracks_.clear();
 
     // Scheduler Track.
-    sorted_tracks_.emplace_back(scheduler_track_);
+    if (!scheduler_track_->IsEmpty()) {
+      sorted_tracks_.emplace_back(scheduler_track_);
+    }
 
     // Gpu Tracks.
     for (auto timeline_and_track : gpu_tracks_) {
