@@ -15,7 +15,8 @@
 namespace {
 
 void ExpectContainsFunctionName(
-    const std::vector<std::shared_ptr<Function>> functions, std::string name) {
+    const std::vector<std::shared_ptr<Function>>& functions,
+    const std::string& name) {
   bool found_name = false;
   for (const auto& function : functions) {
     if (function->PrettyName() == name) {
@@ -30,7 +31,7 @@ TEST(FramePointerValidator, GetFpoFunctions) {
   std::string executable_path = Path::GetExecutablePath();
   std::string test_elf_file = executable_path + "/testdata/hello_world_elf";
 
-  auto elf_file = ElfFile::Create(test_elf_file.c_str());
+  auto elf_file = ElfFile::Create(test_elf_file);
   ASSERT_NE(elf_file, nullptr);
 
   Pdb pdb;

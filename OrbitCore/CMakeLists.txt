@@ -219,9 +219,9 @@ target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/Version.cpp")
 add_executable(OrbitCoreTests)
 
 target_sources(OrbitCoreTests PRIVATE
-    ElfFileTests.cpp
+    ElfFileTest.cpp
     FunctionFramepointerValidatorTest.cpp
-    FramePointerValidatorTests.cpp
+    FramePointerValidatorTest.cpp
     LinuxTracingBufferTest.cpp
     PathTest.cpp
     RingBufferTest.cpp
