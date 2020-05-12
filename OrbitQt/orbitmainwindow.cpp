@@ -153,6 +153,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->actionEnable_Unreal_Support->setVisible(false);
     ui->actionAllow_Unsafe_Hooking->setVisible(false);
     ui->actionOutputDebugString->setVisible(false);
+
+    ui->actionShow_Includes_Util->setVisible(false);
   }
 
   // Output window
