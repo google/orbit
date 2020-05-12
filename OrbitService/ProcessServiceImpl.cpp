@@ -14,6 +14,7 @@ Status ProcessServiceImpl::GetProcessList(ServerContext*,
                                           const GetProcessListRequest*,
                                           GetProcessListResponse* response) {
   process_list_.Refresh();
+  process_list_.UpdateCpuTimes();
   for (const std::shared_ptr<Process> process : process_list_.GetProcesses()) {
     ProcessInfo* process_info = response->add_processes();
     process_info->set_pid(process->GetID());
