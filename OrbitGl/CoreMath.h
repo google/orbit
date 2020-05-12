@@ -4,10 +4,13 @@
 #pragma once
 
 #include <algorithm>
+#include <math.h>
 
 #include "GteVector2.h"
 #include "GteVector3.h"
 #include "GteVector4.h"
+
+constexpr float kPiFloat = 3.14159265358979f;
 
 typedef gte::Vector2<float> Vec2;
 typedef gte::Vector3<float> Vec3;

@@ -104,6 +104,8 @@ class TimeGraph {
   const MemoryTracker& GetMemoryTracker() const { return m_MemTracker; }
   const TimeGraphLayout& GetLayout() const { return m_Layout; }
   TimeGraphLayout& GetLayout() { return m_Layout; }
+  float GetVerticalMargin() const { return vertical_margin_; }
+  void SetVerticalMargin(float margin) { vertical_margin_ = margin; }
 
   void OnLeft();
   void OnRight();
@@ -137,6 +139,7 @@ class TimeGraph {
   float m_WorldWidth = 0;
   float min_y_ = 0;
   int m_Margin = 0;
+  float vertical_margin_ = 0;
 
   double m_ZoomValue = 0;
   double m_MouseRatio = 0;
