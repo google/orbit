@@ -148,6 +148,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->outputTab));
 
+    ui->actionOpen_PDB->setVisible(false);
+    ui->actionLaunch_Process->setVisible(false);
+    ui->actionDisconnect->setVisible(false);
+
     ui->actionEnable_Sampling->setVisible(false);
     ui->actionEnable_Context_Switches->setVisible(false);
     ui->actionEnable_Unreal_Support->setVisible(false);
