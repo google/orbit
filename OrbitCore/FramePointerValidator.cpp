@@ -10,8 +10,8 @@
 #include "OrbitBase/Logging.h"
 
 std::vector<std::shared_ptr<Function>> FramePointerValidator::GetFpoFunctions(
-    std::vector<std::shared_ptr<Function>> functions, std::string file_name,
-    bool is_64_bit) {
+    const std::vector<std::shared_ptr<Function>>& functions,
+    const std::string& file_name, bool is_64_bit) {
   std::vector<std::shared_ptr<Function>> result;
 
   cs_mode mode = is_64_bit ? CS_MODE_64 : CS_MODE_32;
@@ -27,7 +27,7 @@ std::vector<std::shared_ptr<Function>> FramePointerValidator::GetFpoFunctions(
   std::vector<uint8_t> binary((std::istreambuf_iterator<char>(instream)),
                               std::istreambuf_iterator<char>());
 
-  for (std::shared_ptr<Function> function : functions) {
+  for (const auto& function : functions) {
     uint64_t function_size = function->Size();
     if (function_size == 0) {
       continue;
@@ -36,7 +36,9 @@ std::vector<std::shared_ptr<Function>> FramePointerValidator::GetFpoFunctions(
     FunctionFramePointerValidator validator{
         handle, binary.data() + function->Offset(), function_size};
 
-    if (!validator.Validate()) result.push_back(function);
+    if (!validator.Validate()) {
+      result.push_back(function);
+    }
   }
   return result;
 }
