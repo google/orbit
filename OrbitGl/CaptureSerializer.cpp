@@ -27,7 +27,7 @@ CaptureSerializer::CaptureSerializer() {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureSerializer::Save(const std::wstring& a_FileName) {
+void CaptureSerializer::Save(const std::string& filename) {
   Capture::PreSave();
 
   std::basic_ostream<char> Stream(&GStreamCounter);
@@ -38,24 +38,23 @@ void CaptureSerializer::Save(const std::wstring& a_FileName) {
   GStreamCounter.Reset();
 
   // Binary
-  m_CaptureName = ws2s(a_FileName);
-  std::ofstream myfile(m_CaptureName, std::ios::binary);
-  if (!myfile.fail()) {
-    SCOPE_TIMER_LOG(
-        absl::StrFormat("Saving capture in %s", ws2s(a_FileName).c_str()));
-    cereal::BinaryOutputArchive archive(myfile);
+  m_CaptureName = filename;
+  std::ofstream file(m_CaptureName, std::ios::binary);
+  if (!file.fail()) {
+    SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in %s", filename));
+    cereal::BinaryOutputArchive archive(file);
     Save(archive);
-    myfile.close();
+    file.close();
   }
 }
 
 //-----------------------------------------------------------------------------
 template <class T>
-void CaptureSerializer::Save(T& a_Archive) {
+void CaptureSerializer::Save(T& archive) {
   m_NumTimers = time_graph_->GetNumTimers();
 
   // Header
-  a_Archive(cereal::make_nvp("Capture", *this));
+  archive(cereal::make_nvp("Capture", *this));
 
   // Functions
   {
@@ -69,34 +68,34 @@ void CaptureSerializer::Save(T& a_Archive) {
       }
     }
 
-    a_Archive(functions);
+    archive(functions);
   }
 
   // Function Count
-  a_Archive(Capture::GFunctionCountMap);
+  archive(Capture::GFunctionCountMap);
 
   // Process
   {
     ORBIT_SIZE_SCOPE("Capture::GTargetProcess");
-    a_Archive(Capture::GTargetProcess);
+    archive(Capture::GTargetProcess);
   }
 
   // Callstacks
   {
     ORBIT_SIZE_SCOPE("Capture::GCallstacks");
-    a_Archive(Capture::GCallstacks);
+    archive(Capture::GCallstacks);
   }
 
   // Sampling profiler
   {
     ORBIT_SIZE_SCOPE("SamplingProfiler");
-    a_Archive(Capture::GSamplingProfiler);
+    archive(Capture::GSamplingProfiler);
   }
 
   // Event buffer
   {
     ORBIT_SIZE_SCOPE("Event Buffer");
-    a_Archive(GEventTracer.GetEventBuffer());
+    archive(GEventTracer.GetEventBuffer());
   }
 
   // Timers
@@ -105,7 +104,7 @@ void CaptureSerializer::Save(T& a_Archive) {
       time_graph_->GetAllTimerChains();
   for (const std::shared_ptr<TimerChain>& chain : chains) {
     for (const TextBox& box : *chain) {
-      a_Archive(cereal::binary_data(&box.GetTimer(), sizeof(Timer)));
+      archive(cereal::binary_data(&box.GetTimer(), sizeof(Timer)));
 
       if (++numWrites > m_NumTimers) {
         return;
@@ -115,13 +114,12 @@ void CaptureSerializer::Save(T& a_Archive) {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureSerializer::Load(const std::wstring& a_FileName) {
-  SCOPE_TIMER_LOG(
-      absl::StrFormat("Loading capture %s", ws2s(a_FileName).c_str()));
+void CaptureSerializer::Load(const std::string& filename) {
+  SCOPE_TIMER_LOG(absl::StrFormat("Loading capture %s", filename));
 
 #ifdef _WIN32
   // Binary
-  std::ifstream file(ws2s(a_FileName), std::ios::binary);
+  std::ifstream file(filename, std::ios::binary);
   if (!file.fail()) {
     // header
     cereal::BinaryInputArchive archive(file);
@@ -130,7 +128,7 @@ void CaptureSerializer::Load(const std::wstring& a_FileName) {
     // functions
     std::shared_ptr<Module> module = std::make_shared<Module>();
     Capture::GTargetProcess->AddModule(module);
-    module->m_Pdb = std::make_shared<Pdb>(ws2s(a_FileName).c_str());
+    module->m_Pdb = std::make_shared<Pdb>(filename.c_str());
     std::vector<std::shared_ptr<Function>> functions =
         module->m_Pdb->GetFunctions();
     archive(functions);
@@ -162,7 +160,7 @@ void CaptureSerializer::Load(const std::wstring& a_FileName) {
 
     // Timers
     Timer timer;
-    while (file.read((char*)&timer, sizeof(Timer))) {
+    while (file.read(reinterpret_cast<char*>(&timer), sizeof(Timer))) {
       time_graph_->ProcessTimer(timer);
     }
 
