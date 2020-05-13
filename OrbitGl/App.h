@@ -58,7 +58,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void SetLicense(const std::wstring& a_License);
   std::string GetVersion();
 
-  std::wstring GetCaptureFileName();
+  std::string GetCaptureFileName();
   std::string GetSessionFileName();
   std::string GetSaveFile(const std::string& extension);
   void SetClipboard(const std::wstring& a_Text);

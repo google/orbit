@@ -625,7 +625,8 @@ void OrbitMainWindow::on_actionEnable_Sampling_toggled(bool arg1) {
 void OrbitMainWindow::on_actionSave_Capture_triggered() {
   QString file = QFileDialog::getSaveFileName(
       this, "Save capture...",
-      (Path::GetCapturePath() + ws2s(GOrbitApp->GetCaptureFileName())).c_str(),
+      Path::JoinPath({Path::GetCapturePath(), GOrbitApp->GetCaptureFileName()})
+          .c_str(),
       "*.orbit");
   if (file.isEmpty()) {
     return;

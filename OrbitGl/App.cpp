@@ -641,16 +641,16 @@ void OrbitApp::OnLaunchProcess(const std::string& process_name,
 }
 
 //-----------------------------------------------------------------------------
-std::wstring OrbitApp::GetCaptureFileName() {
-  assert(Capture::GTargetProcess);
+std::string OrbitApp::GetCaptureFileName() {
+  CHECK(Capture::GTargetProcess != nullptr);
   time_t timestamp =
       std::chrono::system_clock::to_time_t(Capture::GCaptureTimePoint);
-  std::string timestamp_string = OrbitUtils::FormatTime(timestamp);
-  std::string result =
-      Path::StripExtension(Capture::GTargetProcess->GetName()) + "_" +
-      timestamp_string + ".orbit";
-
-  return s2ws(result);
+  std::string result;
+  result.append(Path::StripExtension(Capture::GTargetProcess->GetName()));
+  result.append("_");
+  result.append(OrbitUtils::FormatTime(timestamp));
+  result.append(".orbit");
+  return result;
 }
 
 //-----------------------------------------------------------------------------
