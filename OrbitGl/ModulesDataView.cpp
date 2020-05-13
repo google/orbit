@@ -102,7 +102,7 @@ void ModulesDataView::DoSort() {
 //-----------------------------------------------------------------------------
 const std::string ModulesDataView::MENU_ACTION_MODULES_LOAD = "Load Symbols";
 const std::string ModulesDataView::MENU_ACTION_MODULES_VERIFY =
-    "Verify Frame Pointer";
+    "Verify Frame Pointers";
 const std::string ModulesDataView::MENU_ACTION_DLL_FIND_PDB = "Find Pdb";
 const std::string ModulesDataView::MENU_ACTION_DLL_EXPORTS = "Load Symbols";
 
