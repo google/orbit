@@ -313,7 +313,7 @@ void OrbitApp::PostInit() {
       main_thread_executor_->Schedule(
           [&, list = std::move(process_list)]() mutable {
             m_ProcessesDataView->SetProcessList(std::move(list));
-            FireRefreshCallbacks();
+            FireRefreshCallbacks(DataViewType::PROCESSES);
           });
     };
 
