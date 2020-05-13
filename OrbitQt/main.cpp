@@ -30,7 +30,7 @@ ABSL_FLAG(std::string, remote, "localhost",
           "Connect to the specified remote on startup");
 ABSL_FLAG(uint16_t, asio_port, 44766,
           "The service's Asio tcp_server port (use default value if unsure)");
-ABSL_FLAG(uint16_t, grpc_port, 44755,
+ABSL_FLAG(uint16_t, grpc_port, 44765,
           "The service's GRPC server port (use default value if unsure)");
 
 // TODO: remove this once we deprecated legacy parameters
