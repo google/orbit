@@ -12,11 +12,11 @@
 class CaptureSerializer {
  public:
   CaptureSerializer();
-  void Save(const std::wstring& a_FileName);
-  void Load(const std::wstring& a_FileName);
+  void Save(const std::string& filename);
+  void Load(const std::string& filename);
 
   template <class T>
-  void Save(T& a_Archive);
+  void Save(T& archive);
 
   class TimeGraph* time_graph_;
   class SamplingProfiler* m_SamplingProfiler;
