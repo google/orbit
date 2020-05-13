@@ -290,7 +290,6 @@
      <string>Tools</string>
     </property>
     <addaction name="actionShow_Includes_Util"/>
-    <addaction name="actionRule_Editor"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDev"/>
@@ -421,11 +420,6 @@
    </property>
    <property name="text">
     <string>Upload Dumps on Crash</string>
-   </property>
-  </action>
-  <action name="actionRule_Editor">
-   <property name="text">
-    <string>Rule Editor</string>
    </property>
   </action>
  </widget>

@@ -47,7 +47,6 @@ target_sources(
          PluginManager.h
          ProcessMemoryClient.h
          ProcessesDataView.h
-         RuleEditor.h
          SamplingReport.h
          SamplingReportDataView.h
          SchedulerTrack.h
@@ -99,7 +98,6 @@ target_sources(
           ProcessListManager.cpp
           ProcessMemoryClient.cpp
           ProcessesDataView.cpp
-          RuleEditor.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp
           SchedulerTrack.cpp

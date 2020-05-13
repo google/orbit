@@ -15,7 +15,6 @@
 #include "Injection.h"
 #include "Log.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitRule.h"
 #include "OrbitSession.h"
 #include "OrbitUnreal.h"
 #include "Params.h"
@@ -349,33 +348,6 @@ void Capture::SendFunctionHooks() {
       MessageType msgType = GetMessageType(static_cast<Function::OrbitType>(i));
       GTcpServer->Send(msgType, addresses);
     }
-  }
-}
-
-//-----------------------------------------------------------------------------
-void Capture::SendDataTrackingInfo() {
-  // Send information about arguments we want to track
-  for (auto& pair : *GCoreApp->GetRules()) {
-    const std::shared_ptr<Rule> rule = pair.second;
-    Function* func = rule->m_Function;
-    Message msg(Msg_ArgTracking);
-    ArgTrackingHeader& header = msg.m_Header.m_ArgTrackingHeader;
-    uint64_t address = func->GetVirtualAddress();
-    header.m_Function = address;
-    header.m_NumArgs = rule->m_TrackedVariables.size();
-
-    // TODO: Argument tracking was hijacked by data tracking
-    //       We should separate both concepts and revive argument
-    //       tracking.
-    std::vector<Argument> args;
-    for (const std::shared_ptr<Variable>& var : rule->m_TrackedVariables) {
-      Argument arg;
-      arg.m_Offset = var->m_Address;
-      arg.m_NumBytes = var->m_Size;
-      args.push_back(arg);
-    }
-
-    GTcpServer->Send(msg, args);
   }
 }
 

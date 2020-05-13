@@ -30,7 +30,6 @@
 #include "orbitcodeeditor.h"
 #include "orbitdisassemblydialog.h"
 #include "orbitsamplingreport.h"
-#include "orbitvisualizer.h"
 #include "outputdialog.h"
 #include "showincludesdialog.h"
 #include "ui_orbitmainwindow.h"
@@ -130,7 +129,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       SelectionType::kDefault, FontType::kFixed);
 
   SetupCodeView();
-  SetupRuleEditor();
 
   if (!m_IsDev) {
     HideTab(ui->MainTabWidget, "debug");
@@ -158,6 +156,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->actionOutputDebugString->setVisible(false);
 
     ui->actionShow_Includes_Util->setVisible(false);
+    ui->menuTools->menuAction()->setVisible(false);
   }
 
   // Output window
@@ -202,16 +201,6 @@ void OrbitMainWindow::SetupCodeView() {
   ui->CodeTextEdit->SetFindLineEdit(ui->lineEdit);
   ui->FileMappingWidget->hide();
   OrbitCodeEditor::setFileMappingWidget(ui->FileMappingWidget);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::SetupRuleEditor() {
-  m_RuleEditor = new OrbitVisualizer(this);
-  m_RuleEditor->Initialize(this);
-  m_RuleEditor->setWindowFlags(m_RuleEditor->windowFlags() |
-                               Qt::WindowMinimizeButtonHint |
-                               Qt::WindowMaximizeButtonHint);
-  m_RuleEditor->hide();
 }
 
 //-----------------------------------------------------------------------------
@@ -441,8 +430,6 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
     m_OutputDialog->AddLog(Replace(a_Message, "log:", ""));
   } else if (absl::StartsWith(a_Message, "asm:")) {
     OpenDisassembly(a_Message);
-  } else if (absl::StartsWith(a_Message, "RuleEditor")) {
-    m_RuleEditor->show();
   } else if (absl::StartsWith(a_Message, "UpdateProcessParams")) {
     ui->ProcessesList->UpdateProcessParams();
   } else if (absl::StartsWith(a_Message, "SetProcessParams")) {
@@ -690,9 +677,6 @@ void OrbitMainWindow::SetTitle(const std::string& a_Title) {
 void OrbitMainWindow::on_actionOutputDebugString_triggered(bool checked) {
   GOrbitApp->EnableOutputDebugString(checked);
 }
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionRule_Editor_triggered() { m_RuleEditor->show(); }
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionUploadDumpsToServer_triggered(bool checked) {

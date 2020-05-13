@@ -11,7 +11,6 @@
 #include "OrbitProcess.h"
 #include "OrbitType.h"
 #include "Pdb.h"
-#include "RuleEditor.h"
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
@@ -125,7 +124,6 @@ const std::string FunctionsDataView::MENU_ACTION_UNSELECT = "Unhook";
 const std::string FunctionsDataView::MENU_ACTION_VIEW = "Visualize";
 const std::string FunctionsDataView::MENU_ACTION_DISASSEMBLY =
     "Go to Disassembly";
-const std::string FunctionsDataView::MENU_ACTION_CREATE_RULE = "Create Rule";
 const std::string FunctionsDataView::MENU_ACTION_SET_AS_FRAME =
     "Set as Main Frame";
 
@@ -140,16 +138,10 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
     enable_unselect |= function.IsSelected();
   }
 
-  bool enable_create_rule = false;
-  if (a_SelectedIndices.size() == 1) {
-    enable_create_rule = true;
-  }
-
   std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
   Append(menu, {MENU_ACTION_VIEW, MENU_ACTION_DISASSEMBLY});
-  if (enable_create_rule) menu.emplace_back(MENU_ACTION_CREATE_RULE);
   // TODO: MENU_ACTION_SET_AS_FRAME is never shown, should it be removed?
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
@@ -171,18 +163,12 @@ void FunctionsDataView::OnContextMenu(const std::string& a_Action,
     for (int i : a_ItemIndices) {
       GetFunction(i).Print();
     }
-
     GOrbitApp->SendToUiNow("output");
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
     uint32_t pid = Capture::GTargetProcess->GetID();
     for (int i : a_ItemIndices) {
       GetFunction(i).GetDisassembly(pid);
     }
-  } else if (a_Action == MENU_ACTION_CREATE_RULE) {
-    if (a_ItemIndices.size() != 1) {
-      return;
-    }
-    GOrbitApp->LaunchRuleEditor(&GetFunction(a_ItemIndices[0]));
   } else if (a_Action == MENU_ACTION_SET_AS_FRAME) {
     if (a_ItemIndices.size() != 1) {
       return;

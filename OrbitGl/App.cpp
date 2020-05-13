@@ -47,7 +47,6 @@
 #include "PluginManager.h"
 #include "PrintVar.h"
 #include "ProcessesDataView.h"
-#include "RuleEditor.h"
 #include "SamplingProfiler.h"
 #include "SamplingReport.h"
 #include "ScopeTimer.h"
@@ -478,12 +477,6 @@ void OrbitApp::Disassemble(const std::string& a_FunctionName,
 }
 
 //-----------------------------------------------------------------------------
-const std::unordered_map<DWORD64, std::shared_ptr<class Rule>>*
-OrbitApp::GetRules() {
-  return &m_RuleEditor->GetRules();
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::SetLicense(const std::wstring& a_License) {
   m_License = a_License;
 }
@@ -570,12 +563,6 @@ std::string OrbitApp::GetVersion() { return OrbitVersion::GetVersion(); }
 void OrbitApp::RegisterCaptureWindow(CaptureWindow* a_Capture) {
   assert(m_CaptureWindow == nullptr);
   m_CaptureWindow = a_Capture;
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::RegisterRuleEditor(RuleEditor* a_RuleEditor) {
-  assert(m_RuleEditor == nullptr);
-  m_RuleEditor = a_RuleEditor;
 }
 
 //-----------------------------------------------------------------------------
@@ -1082,12 +1069,6 @@ void OrbitApp::OnRemoteModuleDebugInfo(
   }
 
   GOrbitApp->FireRefreshCallbacks();
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::LaunchRuleEditor(Function* a_Function) {
-  m_RuleEditor->m_Window.Launch(a_Function);
-  SendToUiNow("RuleEditor");
 }
 
 //-----------------------------------------------------------------------------

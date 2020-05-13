@@ -9,7 +9,6 @@
 #include "Card.h"
 #include "Context.h"
 #include "Log.h"
-#include "RuleEditor.h"
 #include "TcpServer.h"
 
 //-----------------------------------------------------------------------------
@@ -176,6 +175,5 @@ void BlackBoard::RenderUI() {
 
 //-----------------------------------------------------------------------------
 bool BlackBoard::GetNeedsRedraw() const {
-  extern bool GRedrawBlackBoard;
-  return m_NeedsRedraw || GRedrawBlackBoard;
+  return m_NeedsRedraw;
 }
