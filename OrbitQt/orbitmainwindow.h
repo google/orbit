@@ -87,16 +87,12 @@ class OrbitMainWindow : public QMainWindow {
 
   void on_actionOutputDebugString_triggered(bool checked);
 
-  void on_actionRule_Editor_triggered();
-
   void on_actionUploadDumpsToServer_triggered(bool checked);
 
  private:
   void StartMainTimer();
-  void GetLicense();
 
   void SetupCodeView();
-  void SetupRuleEditor();
 
  private:
   QApplication* m_App;
@@ -114,9 +110,6 @@ class OrbitMainWindow : public QMainWindow {
   class QWidget* m_SelectionTab;
   class OrbitSamplingReport* m_SelectionReport;
   class QGridLayout* m_SelectionLayout;
-
-  // Rule editor
-  class OrbitVisualizer* m_RuleEditor;
 
   class OutputDialog* m_OutputDialog;
   std::string m_CurrentPdbName;

@@ -10,7 +10,6 @@
 #include "HomeWindow.h"
 #include "ImmediateWindow.h"
 #include "PluginCanvas.h"
-#include "RuleEditor.h"
 
 //-----------------------------------------------------------------------------
 GlPanel* GlPanel::Create(Type a_Type, void* a_UserData) {
@@ -25,9 +24,6 @@ GlPanel* GlPanel::Create(Type a_Type, void* a_UserData) {
       break;
     case VISUALIZE:
       panel = new BlackBoard();
-      break;
-    case RULE_EDITOR:
-      panel = new RuleEditor();
       break;
     case DEBUG:
       panel = new HomeWindow();

@@ -120,10 +120,6 @@ std::string Function::GetModuleName() const {
   }
 }
 
-class Type* Function::GetParentType() {
-  return parent_id_ != 0 ? &pdb_->GetTypeFromId(parent_id_) : nullptr;
-}
-
 void Function::ResetStats() {
   if (stats_ == nullptr) {
     stats_ = std::make_shared<FunctionStats>();

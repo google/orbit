@@ -54,10 +54,6 @@ class CoreApp {
                                 const std::string& /*thread_name*/) {}
   virtual void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) {}
   virtual void ApplySession(const Session&) {}
-  virtual const std::unordered_map<DWORD64, std::shared_ptr<class Rule> >*
-  GetRules() {
-    return nullptr;
-  }
   virtual void RefreshCaptureView() {}
 
   using ProcessMemoryCallback =

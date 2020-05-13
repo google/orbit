@@ -44,7 +44,6 @@ target_sources(
          OrbitLib.h
          OrbitModule.h
          OrbitProcess.h
-         OrbitRule.h
          OrbitSession.h
          OrbitThread.h
          OrbitType.h

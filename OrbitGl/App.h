@@ -27,7 +27,6 @@
 #include "ProcessListManager.h"
 #include "ProcessMemoryClient.h"
 #include "ProcessesDataView.h"
-#include "RuleEditor.h"
 #include "SamplingReportDataView.h"
 #include "SessionsDataView.h"
 #include "StringManager.h"
@@ -101,7 +100,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   int* GetScreenRes() { return m_ScreenRes; }
 
   void RegisterCaptureWindow(class CaptureWindow* a_Capture);
-  void RegisterRuleEditor(RuleEditor* a_RuleEditor);
 
   void OnProcessSelected(uint32_t pid);
 
@@ -209,14 +207,9 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) override;
   void ApplySession(const Session& session) override;
   void LoadSession(const std::shared_ptr<Session>& session);
-  void LaunchRuleEditor(class Function* a_Function);
   void SetIsRemote(bool a_IsRemote) { m_IsRemote = a_IsRemote; }
   bool IsRemote() const { return m_IsRemote; }
   bool HasTcpServer() const { return !IsRemote(); }
-
-  RuleEditor* GetRuleEditor() { return m_RuleEditor; }
-  const std::unordered_map<DWORD64, std::shared_ptr<class Rule>>* GetRules()
-      override;
 
   DataView* GetOrCreateDataView(DataViewType type) override;
 
@@ -263,7 +256,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<LogDataView> m_LogDataView;
 
   CaptureWindow* m_CaptureWindow = nullptr;
-  RuleEditor* m_RuleEditor = nullptr;
   int m_ScreenRes[2];
   bool m_HasPromptedForUpdate = false;
   bool m_NeedsThawing = false;

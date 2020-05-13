@@ -23,7 +23,6 @@ target_sources(
           orbittreeitem.h
           orbittreemodel.h
           orbittreeview.h
-          orbitvisualizer.h
           orbitwatchwidget.h
           outputdialog.h
           processlauncherwidget.h
@@ -47,7 +46,6 @@ target_sources(
           orbittreeitem.cpp
           orbittreemodel.cpp
           orbittreeview.cpp
-          orbitvisualizer.cpp
           orbitwatchwidget.cpp
           outputdialog.cpp
           processlauncherwidget.cpp

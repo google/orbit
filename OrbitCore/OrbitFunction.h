@@ -144,7 +144,6 @@ class Function {
   bool IsMemoryFunc() const { return IsFree() || IsAlloc() || IsRealloc(); }
   std::string GetModuleName() const;
   const std::string& GetLoadedModuleName() const { return loaded_module_name_; }
-  Type* GetParentType();
   void ResetStats();
   void GetDisassembly(uint32_t pid);
   void FindFile();
