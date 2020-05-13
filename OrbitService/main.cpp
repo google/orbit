@@ -1,6 +1,7 @@
 #include <csignal>
 #include <iostream>
 
+#include "OrbitLinuxTracing/TracingOptions.h"
 #include "OrbitService.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -11,6 +12,10 @@ ABSL_FLAG(uint16_t, asio_port, 44766, "Asio TCP server port");
 // TODO: Default it 127.0.0.1 once ssh tunneling is enabled.
 ABSL_FLAG(std::string, grpc_server_address, "0.0.0.0:44755",
           "Grpc server address");
+
+// TODO: Remove this flag once we have a ui option to specify.
+ABSL_FLAG(bool, frame_pointer_unwinding, false,
+          "Use frame pointers for unwinding");
 
 namespace {
 std::atomic<bool> exit_requested;
@@ -40,7 +45,14 @@ int main(int argc, char** argv) {
   std::string grpc_server_address = absl::GetFlag(FLAGS_grpc_server_address);
   uint16_t asio_port = absl::GetFlag(FLAGS_asio_port);
 
+  LinuxTracing::TracingOptions tracing_options;
+
+  if (absl::GetFlag(FLAGS_frame_pointer_unwinding)) {
+    tracing_options.sampling_method =
+        LinuxTracing::SamplingMethod::kFramePointers;
+  }
+
   exit_requested = false;
-  OrbitService service{grpc_server_address, asio_port};
+  OrbitService service{grpc_server_address, asio_port, tracing_options};
   service.Run(&exit_requested);
 }

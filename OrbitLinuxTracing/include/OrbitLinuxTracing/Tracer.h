@@ -32,21 +32,8 @@ class Tracer {
 
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
-  void SetTraceContextSwitches(bool trace_context_switches) {
-    tracing_options_.trace_context_switches = trace_context_switches;
-  }
-
-  void SetSamplingMethod(SamplingMethod sampling_method) {
-    tracing_options_.sampling_method = sampling_method;
-  }
-
-  void SetTraceInstrumentedFunctions(bool trace_instrumented_functions) {
-    tracing_options_.trace_instrumented_functions =
-        trace_instrumented_functions;
-  }
-
-  void SetTraceGpuDriver(bool trace_gpu_driver) {
-    tracing_options_.trace_gpu_driver = trace_gpu_driver;
+  void SetTracingOptions(TracingOptions tracing_options) {
+    tracing_options_ = tracing_options;
   }
 
   void Start() {

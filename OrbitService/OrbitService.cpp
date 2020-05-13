@@ -9,7 +9,7 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
   grpc_server = OrbitGrpcServer::Create(grpc_address_);
 
   std::cout << "Starting Asio server on port " << asio_port_ << std::endl;
-  OrbitAsioServer asio_server{asio_port_};
+  OrbitAsioServer asio_server{asio_port_, tracing_options_};
   asio_server.Run(exit_requested);
 
   grpc_server->Shutdown();

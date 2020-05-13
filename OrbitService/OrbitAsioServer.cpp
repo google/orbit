@@ -6,7 +6,9 @@
 #include "Introspection.h"
 #include "TcpServer.h"
 
-OrbitAsioServer::OrbitAsioServer(uint16_t port) {
+OrbitAsioServer::OrbitAsioServer(uint16_t port,
+                                 LinuxTracing::TracingOptions tracing_options)
+    : tracing_options_{tracing_options} {
   // TODO: Don't use the GTcpServer global. Unfortunately, it's needed in
   //  TcpConnection::DecodeMessage.
   GTcpServer = std::make_unique<TcpServer>();
