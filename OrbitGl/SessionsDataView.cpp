@@ -27,8 +27,8 @@ const std::vector<DataView::Column>& SessionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(COLUMN_NUM);
-    columns[COLUMN_SESSION_NAME] = {"Session", .5f, SortingOrder::Ascending};
-    columns[COLUMN_PROCESS_NAME] = {"Process", .5f, SortingOrder::Ascending};
+    columns[COLUMN_SESSION_NAME] = {"Session", .49f, SortingOrder::Ascending};
+    columns[COLUMN_PROCESS_NAME] = {"Process", .49f, SortingOrder::Ascending};
     return columns;
   }();
   return columns;
