@@ -11,7 +11,10 @@
 #include "OrbitProcess.h"
 #include "OrbitType.h"
 #include "Pdb.h"
+#include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
+
+ABSL_DECLARE_FLAG(bool, enable_stale_features);
 
 //-----------------------------------------------------------------------------
 FunctionsDataView::FunctionsDataView() : DataView(DataViewType::FUNCTIONS) {}
@@ -132,6 +135,7 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
   bool enable_unselect = false;
+  bool enable_view = absl::GetFlag(FLAGS_enable_stale_features);
   for (int index : a_SelectedIndices) {
     const Function& function = GetFunction(index);
     enable_select |= !function.IsSelected();
@@ -141,7 +145,8 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
   std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
-  Append(menu, {MENU_ACTION_VIEW, MENU_ACTION_DISASSEMBLY});
+  if (enable_view) menu.emplace_back(MENU_ACTION_VIEW);
+  menu.emplace_back(MENU_ACTION_DISASSEMBLY);
   // TODO: MENU_ACTION_SET_AS_FRAME is never shown, should it be removed?
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;

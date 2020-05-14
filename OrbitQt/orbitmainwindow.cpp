@@ -136,6 +136,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   }
 
   if (!absl::GetFlag(FLAGS_enable_stale_features)) {
+    ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->OutputTab));
     ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->WatchTab));
 
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->TypesTab));
