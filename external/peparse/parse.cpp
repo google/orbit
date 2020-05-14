@@ -1512,12 +1512,9 @@ void ParseDll(const char* a_FileName)
         for (list<exportent>::iterator it = l.begin(), e = l.end(); it != e; ++it)
         {
             exportent i = *it;
-            std::shared_ptr<Function> func = std::make_shared<Function>();
-            func->SetName(i.symbolName);
-            func->SetPrettyName(i.symbolName);
-            func->SetAddress(i.symRVA);
-            func->SetModule(i.moduleName);
-            func->SetPdb(GPdbDbg.get());
+            std::shared_ptr<Function> func = std::make_shared<Function>(
+                i.symbolName, i.symbolName, i.symRVA, 0, 0, i.moduleName, 0,
+                GPdbDbg.get());
             GPdbDbg->AddFunction( func );
         }
 

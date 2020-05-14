@@ -48,13 +48,6 @@ Function::Function(std::string_view name, std::string_view pretty_name,
   ResetStats();
 }
 
-const std::string& Function::PrettyName() const {
-  if (pretty_name_.empty()) {
-    return name_;
-  }
-  return pretty_name_;
-}
-
 bool Function::Hookable() {
   if (Capture::IsLinuxData()) {
     return true;
@@ -98,12 +91,6 @@ void Function::SetPdb(Pdb* pdb) {
   module_base_address_ = pdb_->GetHModule();
   loaded_module_name_ = pdb_->GetLoadedModuleName();
 }
-
-uint64_t Function::GetVirtualAddress() const {
-  return address_ + module_base_address_ - load_bias_;
-}
-
-uint64_t Function::Offset() const { return address_ - load_bias_; }
 
 void Function::ResetStats() {
   if (stats_ == nullptr) {

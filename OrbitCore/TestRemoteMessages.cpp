@@ -75,15 +75,9 @@ void TestRemoteMessages::Run() {
   std::string moduleData = SerializeObjectHumanReadable(module);
   GTcpClient->Send(Msg_RemoteModule, moduleData.data(), moduleData.size());
 
-  Function function;
-  function.SetName("m_Name");
-  function.SetPrettyName("m_PrettyName");
-  function.SetFile("m_File");
-  function.SetAddress(1);
-  function.SetSize(3);
-  function.SetId(4);
-  function.SetParentId(5);
-  function.SetLine(6);
+  Function function{"m_Name", "m_PrettyName", 1, 2, 3, "m_File", 4, nullptr};
+  function.SetId(5);
+  function.SetParentId(6);
   function.SetCallingConvention(7);
 
   std::string functionData = SerializeObjectHumanReadable(function);
