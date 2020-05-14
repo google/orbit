@@ -19,6 +19,7 @@ target_sources(
   PUBLIC include/OrbitSsh/Channel.h
          include/OrbitSsh/Credentials.h
          include/OrbitSsh/DirectTcpIpChannelManager.h
+         include/OrbitSsh/Error.h
          include/OrbitSsh/ExecChannelManager.h
          include/OrbitSsh/LocalSocketManager.h
          include/OrbitSsh/ResultType.h
@@ -32,6 +33,7 @@ target_sources(
   OrbitSsh
   PRIVATE Channel.cpp
           DirectTcpIpChannelManager.cpp
+          Error.cpp
           ExecChannelManager.cpp
           LocalSocketManager.cpp
           Session.cpp
@@ -46,7 +48,10 @@ else()
   target_sources(OrbitSsh PRIVATE LinuxSocket.cpp)
 endif()
 
-target_link_libraries(OrbitSsh PUBLIC OrbitBase libssh2::libssh2)
+target_link_libraries(OrbitSsh PUBLIC
+        OrbitBase
+        Outcome::Outcome
+        libssh2::libssh2)
 
 if(WIN32)
   target_compile_definitions(OrbitSsh PUBLIC WIN32_LEAN_AND_MEAN)
