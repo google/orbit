@@ -639,7 +639,7 @@ void CaptureWindow::ResetHoverTimer() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::Draw() {
-  auto start = std::chrono::high_resolution_clock::now();
+  auto start = std::chrono::steady_clock::now();
   m_WorldMaxY =
       1.5f * ScreenToWorldHeight(static_cast<int>(m_Slider.GetPixelHeight()));
 
