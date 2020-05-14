@@ -81,13 +81,10 @@ uint64_t Systrace::ProcessString(const std::string& a_String) {
 //-----------------------------------------------------------------------------
 uint64_t Systrace::ProcessFunctionName(const std::string& a_String) {
   std::vector<std::string> tokens = Tokenize(a_String, "|");
-  if (tokens.size()) {
-    const std::string& function = tokens.back();
-    uint64_t hash = ProcessString(function);
-    Function func;
-    func.SetAddress(hash);
-    func.SetName(function);
-    func.SetPrettyName(function);
+  if (!tokens.empty()) {
+    const std::string& name = tokens.back();
+    uint64_t hash = ProcessString(name);
+    Function func{name, name, hash, 0, 0, "", 0, nullptr};
     m_Functions.push_back(func);
     return hash;
   }

@@ -846,36 +846,42 @@ bool DumpAllFunctions(IDiaSymbol* pGlobal) {
   while (SUCCEEDED(pEnumSymbols->Next(1, &pSymbol.m_Symbol, &celt)) &&
          (celt == 1)) {
     ++g_NumFunctions;
-    std::shared_ptr<Function> Func = std::make_shared<Function>();
-    DWORD dwRVA;
-    DWORD callingConv;
-    BSTR bstrName;
 
-    if (pSymbol->get_relativeVirtualAddress(&dwRVA) == S_OK) {
-      Func->SetAddress(dwRVA);
+    DWORD dwRVA = 0;
+    pSymbol->get_relativeVirtualAddress(&dwRVA);
+
+    std::string name;
+    BSTR bstrName;
+    if (pSymbol->get_name(&bstrName) == S_OK) {
+      name = ws2s(bstrName);
+      SysFreeString(bstrName);
     }
 
-    if (pSymbol->get_name(&bstrName) == S_OK) {
-      Func->SetPrettyName(ws2s(bstrName));
-      SysFreeString(bstrName);
+    // get_lengthProlog
+    ULONGLONG length = 0;
+    pSymbol->get_length(&length);
+
+    std::string file;
+    BSTR bstrFile;
+    if (pSymbol->get_sourceFileName(&bstrFile) == S_OK) {
+      file = ws2s(bstrFile);
+      SysFreeString(bstrFile);
+    }
+
+    std::shared_ptr<Function> Func = std::make_shared<Function>(
+        name, name, dwRVA, 0, length, file, 0, nullptr);
+
+    OrbitDiaSymbol pFuncType;
+    DWORD callingConv;
+    if (pSymbol->get_type(&pFuncType.m_Symbol) == S_OK) {
+      if (pFuncType->get_callingConvention(&callingConv) == S_OK) {
+        Func->SetCallingConvention(callingConv);
+      }
     }
 
     DWORD indexID;
     if (pSymbol->get_symIndexId(&indexID) == S_OK) {
       Func->SetId(indexID);
-    }
-
-    // get_lengthProlog
-    ULONGLONG length;
-    if (pSymbol->get_length(&length) == S_OK) {
-      Func->SetSize((ULONG)length);
-    }
-
-    OrbitDiaSymbol pFuncType;
-    if (pSymbol->get_type(&pFuncType.m_Symbol) == S_OK) {
-      if (pFuncType->get_callingConvention(&callingConv) == S_OK) {
-        Func->SetCallingConvention(callingConv);
-      }
     }
 
     DWORD classParentId = 0;
@@ -884,12 +890,6 @@ bool DumpAllFunctions(IDiaSymbol* pGlobal) {
       if (classParentSym.m_Symbol->get_symIndexId(&classParentId) == S_OK) {
         Func->SetParentId(classParentId);
       }
-    }
-
-    BSTR bstrFile;
-    if (pSymbol->get_sourceFileName(&bstrFile) == S_OK) {
-      Func->SetFile(ws2s(bstrFile));
-      SysFreeString(bstrName);
     }
 
     const std::string& pretty_name = Func->PrettyName();

@@ -64,7 +64,6 @@ void CaptureSerializer::Save(T& archive) {
       Function* func = pair.second;
       if (func) {
         functions.push_back(*func);
-        functions.back().SetAddress(func->Address());
       }
     }
 

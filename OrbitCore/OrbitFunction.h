@@ -71,29 +71,19 @@ class Function {
 
   Function();
   // TODO: remove references to Pdb from the function, it likely just needs
-  // the module base address and load_bias.
+  //  the module base address and load_bias.
   Function(std::string_view name, std::string_view pretty_name,
            uint64_t address, uint64_t load_bias, uint64_t size,
            std::string_view file, uint32_t line, Pdb* pdb);
 
-  void AddParameter(const FunctionParam& param) { params_.push_back(param); }
-
-  // TODO: It looks like most setters are used by TestRemoteMessages::Run()
-  //  only. Move these to a constructor?
-  void SetName(const std::string& name) { name_ = name; }
-  void SetPrettyName(const std::string& pretty_name) {
-    pretty_name_ = pretty_name;
-  }
-  void SetAddress(uint64_t address) { address_ = address; }
-  void SetSize(uint64_t size) { size_ = size; }
-  void SetFile(const std::string& file) { file_ = file; }
-  void SetLine(uint32_t line) { line_ = line; }
-
   const std::string& Name() const { return name_; }
-  const std::string& PrettyName() const;
+  const std::string& PrettyName() const {
+    return pretty_name_.empty() ? name_ : pretty_name_;
+  }
   std::string Lower() { return ToLower(PrettyName()); }
-  uint32_t Line() const { return line_; }
   uint64_t Size() const { return size_; }
+  const std::string& File() const { return file_; }
+  uint32_t Line() const { return line_; }
   int CallingConvention() const { return calling_convention_; }
   const char* GetCallingConventionString();
   void SetCallingConvention(int calling_convention) {
@@ -103,10 +93,11 @@ class Function {
   uint64_t Hash() const { return StringHash(pretty_name_); }
 
   // Calculates and returns the absolute address of the function.
-  uint64_t GetVirtualAddress() const;
   uint64_t Address() const { return address_; }
-  uint64_t Offset() const;
-  const std::string& File() const { return file_; }
+  uint64_t Offset() const { return address_ - load_bias_; }
+  uint64_t GetVirtualAddress() const {
+    return address_ + module_base_address_ - load_bias_;
+  }
 
   const Pdb* GetPdb() const { return pdb_; }
   void SetPdb(Pdb* pdb);
@@ -137,6 +128,7 @@ class Function {
 
   void SetId(uint32_t id) { id_ = id; }
   void SetParentId(uint32_t parent_id) { parent_id_ = parent_id; }
+  void AddParameter(const FunctionParam& param) { params_.push_back(param); }
   void Print();
 
   void GetDisassembly(uint32_t pid);

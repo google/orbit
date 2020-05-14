@@ -103,8 +103,8 @@ TEST(SymbolHelper, LoadSymbolsFromDebugInfo) {
   module_info.m_Name = executable_name;
   module_info.m_PdbName = "path/symbols_file_name";
   module_info.load_bias = 0x400;
-  auto function = std::make_shared<Function>();
-  function->SetName("function name");
+  auto function = std::make_shared<Function>("function name", "function name",
+                                             0, 0, 0, "", 0, nullptr);
   module_info.m_Functions = {function};
 
   std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0x40, 0);
