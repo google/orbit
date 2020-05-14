@@ -34,8 +34,9 @@ SessionManager::State SessionManager::Tick() {
       if (new_socket_opt.has_value()) {
         socket_ = std::move(new_socket_opt);
         state_ = State::kSocketCreated;
+      } else {
+        break;
       }
-      break;
     }
     case State::kSocketCreated: {
       if (socket_->Connect(credentials_.host, credentials_.port) ==
