@@ -680,7 +680,7 @@ void CaptureWindow::Draw() {
   }
   auto end = std::chrono::steady_clock::now();
   auto dur = std::chrono::duration<double>(end - start);
-  total_draw_time_ += dur.count();
+  total_draw_time_secs_ += dur.count();
   total_draw_count_++;
 }
 
@@ -841,7 +841,7 @@ void CaptureWindow::RenderUI() {
     m_StatsWindow.AddLine(VAR_TO_STR(m_MouseY));
     m_StatsWindow.AddLine(VAR_TO_STR(total_draw_count_));
     if (total_draw_count_ != 0) {
-      double avg_draw_time = total_draw_time_ / static_cast<double>(total_draw_count_);
+      double avg_draw_time = total_draw_time_secs_ / static_cast<double>(total_draw_count_);
       m_StatsWindow.AddLine(VAR_TO_STR(avg_draw_time));
     }
 

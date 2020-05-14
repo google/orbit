@@ -83,7 +83,7 @@ class CaptureWindow : public GlCanvas {
   GlSlider m_VerticalSlider;
   int m_ProcessX;
 
-  double total_draw_time_ = 0;
+  double total_draw_time_secs_ = 0;
   int64_t total_draw_count_ = 0;
 
   static const std::string MENU_ACTION_GO_TO_CALLSTACK;
