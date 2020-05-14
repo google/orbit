@@ -223,7 +223,7 @@ target_sources(OrbitCoreTests PRIVATE
     PathTest.cpp
     RingBufferTest.cpp
     StringManagerTest.cpp
-    SymbolHelperTests.cpp
+    SymbolHelperTest.cpp
 )
 
 if(NOT WIN32)
