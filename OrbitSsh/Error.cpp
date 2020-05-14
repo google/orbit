@@ -21,5 +21,7 @@ std::string SftpErrorCategory::message(int condition) const {
     case SftpError::kEagain:
       return "Marked for non-blocking I/O but the call would block.";
   }
+
+  return "Unknown error code.";
 }
 }  // namespace OrbitSsh

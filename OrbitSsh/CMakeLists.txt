@@ -25,6 +25,8 @@ target_sources(
          include/OrbitSsh/ResultType.h
          include/OrbitSsh/Session.h
          include/OrbitSsh/SessionManager.h
+         include/OrbitSsh/Sftp.h
+         include/OrbitSsh/SftpFile.h
          include/OrbitSsh/SshManager.h
          include/OrbitSsh/Socket.h
          include/OrbitSsh/TunnelManager.h)
@@ -38,6 +40,8 @@ target_sources(
           LocalSocketManager.cpp
           Session.cpp
           SessionManager.cpp
+          Sftp.cpp
+          SftpFile.cpp
           SshManager.cpp
           Socket.cpp
           TunnelManager.cpp)
