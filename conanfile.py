@@ -138,7 +138,7 @@ class OrbitConan(ConanFile):
             self.copy("*.so*", src="bin/", dst="{}-{}/usr/lib/x86_64-linux-gnu/".format(
                 self.name, self._version()), symlinks=True)
             self.copy("OrbitService", src="bin/",
-                      dst="{}-{}/usr/bin/".format(self.name, self._version()))
+                      dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
             self.copy("THIRD_PARTY_LICENSES.txt",
                       dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
             self.copy("LICENSE",
