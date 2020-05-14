@@ -10,7 +10,7 @@
 ABSL_FLAG(uint16_t, asio_port, 44766, "Asio TCP server port");
 
 // TODO: Default it 127.0.0.1 once ssh tunneling is enabled.
-ABSL_FLAG(std::string, grpc_server_address, "0.0.0.0:44755",
+ABSL_FLAG(std::string, grpc_server_address, "0.0.0.0:44765",
           "Grpc server address");
 
 // TODO: Remove this flag once we have a ui option to specify.

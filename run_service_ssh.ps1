@@ -1,5 +1,5 @@
-# This script first runs the ggp ssh init command to get the needed 
-# credentials to connect via ssh. Then it connects to the instance 
+# This script first runs the ggp ssh init command to get the needed
+# credentials to connect via ssh. Then it connects to the instance
 # with portforwarding and starts OrbitService. To also deploy OrbitService,
 # invoke with a the argument -deploy and a path to the OrbitService executable
 # e.g. run_service_ssh.ps1 -deploy build/bin/OrbitService
@@ -55,7 +55,7 @@ IF (!$ggp_user -Or !$ggp_host -Or !$ggp_port -Or !$ggp_key_path -Or !$ggp_known_
 
 $ssh_path = "$($ggp_sdk_path)tools\OpenSSH-Win64\ssh.exe"
 
-$ssh_command = "`"$($ssh_path)`" -t -p`"$($ggp_port)`" -i`"$($ggp_key_path)`" -oStrictHostKeyChecking=yes -oUserKnownHostsFile=`"$($ggp_known_hosts_path)`" -L44766:localhost:44766 -L44755:localhost:44755 $($ggp_user)@$($ggp_host) -- sudo /mnt/developer/OrbitService $($remainingArgs)"
+$ssh_command = "`"$($ssh_path)`" -t -p`"$($ggp_port)`" -i`"$($ggp_key_path)`" -oStrictHostKeyChecking=yes -oUserKnownHostsFile=`"$($ggp_known_hosts_path)`" -L44766:localhost:44766 -L44765:localhost:44765 $($ggp_user)@$($ggp_host) -- sudo /mnt/developer/OrbitService $($remainingArgs)"
 
 Invoke-Expression "& $ssh_command"
 

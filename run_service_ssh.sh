@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# This script first runs the ggp ssh init command to get the needed 
-# credentials to connect via ssh. Then it connects to the instance 
+# This script first runs the ggp ssh init command to get the needed
+# credentials to connect via ssh. Then it connects to the instance
 # with portforwarding and starts OrbitService. To also deploy OrbitService,
 # invoke with a the argument --deploy and a path to the OrbitService executable
 # e.g. run_service_ssh.sh --deploy build/bin/OrbitService
@@ -48,4 +48,4 @@ if [ -z "$GGP_USER" ] || [ -z "$GGP_HOST" ] || [ -z "$GGP_PORT" ] || [ -z "$GGP_
 fi
 
 ssh -t -p"$GGP_PORT" -F/dev/null -i"$GGP_KEY_PATH" -oStrictHostKeyChecking=yes -oUserKnownHostsFile="$GGP_KNOWN_HOSTS_PATH" \
--L44766:localhost:44766 -L44755:localhost:44755 "$GGP_USER"@"$GGP_HOST" -- sudo /mnt/developer/OrbitService "$OTHER_ARGS"
+-L44766:localhost:44766 -L44765:localhost:44765 "$GGP_USER"@"$GGP_HOST" -- sudo /mnt/developer/OrbitService "$OTHER_ARGS"
