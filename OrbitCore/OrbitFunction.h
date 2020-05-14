@@ -10,6 +10,7 @@
 #include "BaseTypes.h"
 #include "FunctionStats.h"
 #include "OrbitDbgHelp.h"
+#include "Path.h"
 #include "SerializationMacros.h"
 #include "Utils.h"
 #include "cvconst.h"
@@ -69,18 +70,26 @@ class Function {
     NUM_TYPES
   };
 
-  Function();
-  // TODO: remove references to Pdb from the function, it likely just needs
-  //  the module base address and load_bias.
+  Function() : Function{"", "", 0, 0, 0, "", 0} {}
+
   Function(std::string_view name, std::string_view pretty_name,
            uint64_t address, uint64_t load_bias, uint64_t size,
-           std::string_view file, uint32_t line, Pdb* pdb);
+           std::string_view file, uint32_t line);
 
   const std::string& Name() const { return name_; }
   const std::string& PrettyName() const {
     return pretty_name_.empty() ? name_ : pretty_name_;
   }
   std::string Lower() { return ToLower(PrettyName()); }
+  const std::string& GetLoadedModulePath() const { return loaded_module_path_; }
+  std::string GetLoadedModuleName() const {
+    return Path::GetFileName(loaded_module_path_);
+  }
+  void SetModulePathAndAddress(std::string_view module_path,
+                               uint64_t module_adddress) {
+    loaded_module_path_ = module_path;
+    module_base_address_ = module_adddress;
+  }
   uint64_t Size() const { return size_; }
   const std::string& File() const { return file_; }
   uint32_t Line() const { return line_; }
@@ -99,9 +108,6 @@ class Function {
     return address_ + module_base_address_ - load_bias_;
   }
 
-  const Pdb* GetPdb() const { return pdb_; }
-  void SetPdb(Pdb* pdb);
-
   OrbitType GetOrbitType() const { return type_; }
   void SetOrbitType(OrbitType type) { type_ = type; }
   bool IsOrbitFunc() const { return type_ != OrbitType::NONE; }
@@ -114,8 +120,6 @@ class Function {
   bool IsAlloc() const { return type_ == ALLOC; }
   bool IsFree() const { return type_ == FREE; }
   bool IsMemoryFunc() const { return IsFree() || IsAlloc() || IsRealloc(); }
-
-  const std::string& GetLoadedModuleName() const { return loaded_module_name_; }
 
   const FunctionStats& GetStats() const { return *stats_; }
   void UpdateStats(const Timer& timer);
@@ -139,19 +143,18 @@ class Function {
  private:
   std::string name_;
   std::string pretty_name_;
-  std::string loaded_module_name_;
+  std::string loaded_module_path_;
   uint64_t module_base_address_ = 0;
-  uint64_t address_ = 0;
-  uint64_t load_bias_ = 0;
-  uint64_t size_ = 0;
+  uint64_t address_;
+  uint64_t load_bias_;
+  uint64_t size_;
   std::string file_;
-  uint32_t line_ = 0;
+  uint32_t line_;
   uint32_t id_ = 0;
   uint32_t parent_id_ = 0;
   int calling_convention_ = -1;
   std::vector<FunctionParam> params_;
   std::vector<Argument> arguments_;
-  Pdb* pdb_ = nullptr;
   OrbitType type_ = NONE;
   std::shared_ptr<FunctionStats> stats_;
 };

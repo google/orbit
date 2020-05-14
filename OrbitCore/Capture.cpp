@@ -453,8 +453,8 @@ void Capture::SaveSession(const std::string& a_FileName) {
 
   for (auto& func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {
-      session.m_Modules[func->GetPdb()->GetLoadedModuleName()]
-          .m_FunctionHashes.push_back(func->Hash());
+      session.m_Modules[func->GetLoadedModulePath()].m_FunctionHashes.push_back(
+          func->Hash());
     }
   }
 

@@ -31,20 +31,16 @@
 #include "SymbolUtils.h"
 #endif
 
-Function::Function() { ResetStats(); }
-
 Function::Function(std::string_view name, std::string_view pretty_name,
                    uint64_t address, uint64_t load_bias, uint64_t size,
-                   std::string_view file, uint32_t line, Pdb* pdb)
+                   std::string_view file, uint32_t line)
     : name_(name),
       pretty_name_(pretty_name),
       address_(address),
       load_bias_(load_bias),
       size_(size),
       file_(file),
-      line_(line),
-      pdb_(pdb) {
-  CHECK(pdb != nullptr);
+      line_(line) {
   ResetStats();
 }
 
@@ -72,7 +68,7 @@ void Function::Select() {
   if (Hookable()) {
     LOG("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64
         ", load_bias_= 0x%" PRIx64 ", base_address=0x%" PRIx64 ")",
-        pretty_name_.c_str(), GetVirtualAddress(), address_, load_bias_,
+        pretty_name_, GetVirtualAddress(), address_, load_bias_,
         module_base_address_);
     Capture::GSelectedFunctionsMap[GetVirtualAddress()] = this;
   }
@@ -84,12 +80,6 @@ void Function::UnSelect() {
 
 bool Function::IsSelected() const {
   return Capture::GSelectedFunctionsMap.count(GetVirtualAddress()) > 0;
-}
-
-void Function::SetPdb(Pdb* pdb) {
-  pdb_ = pdb;
-  module_base_address_ = pdb_->GetHModule();
-  loaded_module_name_ = pdb_->GetLoadedModuleName();
 }
 
 void Function::ResetStats() {
@@ -175,7 +165,7 @@ const char* Function::GetCallingConventionString() {
 ORBIT_SERIALIZE(Function, 4) {
   ORBIT_NVP_VAL(4, name_);
   ORBIT_NVP_VAL(4, pretty_name_);
-  ORBIT_NVP_VAL(4, loaded_module_name_);
+  ORBIT_NVP_VAL(4, loaded_module_path_);
   ORBIT_NVP_VAL(4, module_base_address_);
   ORBIT_NVP_VAL(4, address_);
   ORBIT_NVP_VAL(4, load_bias_);

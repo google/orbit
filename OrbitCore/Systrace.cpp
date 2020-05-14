@@ -84,7 +84,7 @@ uint64_t Systrace::ProcessFunctionName(const std::string& a_String) {
   if (!tokens.empty()) {
     const std::string& name = tokens.back();
     uint64_t hash = ProcessString(name);
-    Function func{name, name, hash, 0, 0, "", 0, nullptr};
+    Function func{name, name, hash, 0, 0, "", 0};
     m_Functions.push_back(func);
     return hash;
   }

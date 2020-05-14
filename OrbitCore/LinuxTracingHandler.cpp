@@ -27,7 +27,7 @@ void LinuxTracingHandler::Start(
   std::vector<LinuxTracing::Function> instrumented_functions;
   instrumented_functions.reserve(selected_functions.size());
   for (const std::shared_ptr<Function>& function : selected_functions) {
-    instrumented_functions.emplace_back(function->GetLoadedModuleName(),
+    instrumented_functions.emplace_back(function->GetLoadedModulePath(),
                                         function->Offset(),
                                         function->GetVirtualAddress());
   }

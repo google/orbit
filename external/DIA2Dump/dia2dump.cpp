@@ -868,8 +868,8 @@ bool DumpAllFunctions(IDiaSymbol* pGlobal) {
       SysFreeString(bstrFile);
     }
 
-    std::shared_ptr<Function> Func = std::make_shared<Function>(
-        name, name, dwRVA, 0, length, file, 0, nullptr);
+    std::shared_ptr<Function> Func =
+        std::make_shared<Function>(name, name, dwRVA, 0, length, file, 0);
 
     OrbitDiaSymbol pFuncType;
     DWORD callingConv;

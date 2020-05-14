@@ -66,7 +66,7 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
     case COLUMN_TIME_MAX:
       return GetPrettyTime(stats.m_MaxMs);
     case COLUMN_MODULE:
-      return function.GetPdb() != nullptr ? function.GetPdb()->GetName() : "";
+      return function.GetLoadedModulePath();
     case COLUMN_ADDRESS:
       return absl::StrFormat("0x%llx", function.GetVirtualAddress());
     default:
@@ -117,7 +117,7 @@ void LiveFunctionsDataView::DoSort() {
       sorter = ORBIT_STAT_SORT(m_MaxMs);
       break;
     case COLUMN_MODULE:
-      sorter = ORBIT_FUNC_SORT(GetPdb()->GetName());
+      sorter = ORBIT_FUNC_SORT(GetLoadedModuleName());
       break;
     case COLUMN_ADDRESS:
       sorter = ORBIT_FUNC_SORT(Address());

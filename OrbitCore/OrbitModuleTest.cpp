@@ -59,21 +59,21 @@ TEST(OrbitModule, LoadFunctions) {
   EXPECT_EQ(function->PrettyName(), "deregister_tm_clones");
   EXPECT_EQ(function->Address(), 0x1080);
   EXPECT_EQ(function->Size(), 0);
-  EXPECT_EQ(function->GetPdb(), &pdb);
+  EXPECT_EQ(function->GetLoadedModuleName(), executable_name);
 
   function = functions[4].get();
   EXPECT_EQ(function->Name(), "_init");
   EXPECT_EQ(function->PrettyName(), "_init");
   EXPECT_EQ(function->Address(), 0x1000);
   EXPECT_EQ(function->Size(), 0);
-  EXPECT_EQ(function->GetPdb(), &pdb);
+  EXPECT_EQ(function->GetLoadedModuleName(), executable_name);
 
   function = functions[9].get();
   EXPECT_EQ(function->Name(), "main");
   EXPECT_EQ(function->PrettyName(), "main");
   EXPECT_EQ(function->Address(), 0x1135);
   EXPECT_EQ(function->Size(), 35);
-  EXPECT_EQ(function->GetPdb(), &pdb);
+  EXPECT_EQ(function->GetLoadedModuleName(), executable_name);
 }
 
 TEST(OrbitModule, GetFunctionFromExactAddress) {
