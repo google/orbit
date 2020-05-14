@@ -41,6 +41,7 @@ class SessionManager {
   Session* GetSessionPtr() {
     return session_.has_value() ? &session_.value() : nullptr;
   }
+  Socket* GetSocketPtr() { return &socket_.value(); }
   ResultType Close();
 
  private:
