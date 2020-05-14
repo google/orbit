@@ -678,7 +678,7 @@ void CaptureWindow::Draw() {
     glVertex3f(m_MouseX, m_WorldTopLeftY - m_WorldHeight, Z_VALUE_TEXT);
     glEnd();
   }
-  auto end = std::chrono::high_resolution_clock::now();
+  auto end = std::chrono::steady_clock::now();
   auto dur = std::chrono::duration<double>(end - start);
   total_draw_time_ += dur.count();
   total_draw_count_++;
