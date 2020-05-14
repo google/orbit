@@ -72,6 +72,8 @@ void SamplingReport::DecrementCallstackIndex() {
   size_t maxIndex = m_SelectedSortedCallstackReport->m_CallStacks.size() - 1;
   if (m_SelectedAddressCallstackIndex == 0) {
     m_SelectedAddressCallstackIndex = maxIndex;
+  } else {
+    --m_SelectedAddressCallstackIndex;
   }
 
   OnCallstackIndexChanged(m_SelectedAddressCallstackIndex);
