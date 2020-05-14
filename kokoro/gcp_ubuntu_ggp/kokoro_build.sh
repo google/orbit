@@ -18,11 +18,6 @@ if [ "$0" == "$SCRIPT" ]; then
 
   CONAN_PROFILE="ggp_relwithdebinfo"
 
-  # This variable is picked up by the `conan package` call.
-  # The current public key from keystore will be embedded into
-  # the install_signed_package.sh script.
-  export ORBIT_SIGNING_PUBLIC_KEY_FILE="/mnt/keystore/74938_SigningPublicGpg"
-
   # Building Orbit
   conan install -u -pr ${CONAN_PROFILE} -if "${DIR}/build/" \
           --build outdated -o debian_packaging=True "${DIR}"
