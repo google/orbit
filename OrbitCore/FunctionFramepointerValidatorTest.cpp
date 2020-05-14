@@ -1,11 +1,11 @@
 // Copyright (c) 2020 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-#include "FunctionFramepointerValidator.h"
-
 #include <capstone/capstone.h>
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
+
+#include "FunctionFramePointerValidator.h"
 
 namespace {
 
@@ -47,54 +47,54 @@ constexpr uint8_t kTailFunctionWithFP[] = {
     0xFF, 0xE0                     // jmp eax
 };
 
-TEST(FunctionFramepointerValidator, validateWithFP) {
+TEST(FunctionFramePointerValidator, validateWithFP) {
   csh handle;
   size_t code_size = sizeof(kFunctionWithFP);
   ASSERT_EQ(cs_open(CS_ARCH_X86, CS_MODE_32, &handle), CS_ERR_OK);
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
-  FunctionFramepointerValidator validator(handle, kFunctionWithFP, code_size);
+  FunctionFramePointerValidator validator(handle, kFunctionWithFP, code_size);
   EXPECT_TRUE(validator.Validate());
   cs_close(&handle);
 }
 
-TEST(FunctionFramepointerValidator, validateWithoutFP) {
+TEST(FunctionFramePointerValidator, validateWithoutFP) {
   csh handle;
   size_t code_size = sizeof(kFunctionWithoutFP);
   ASSERT_EQ(cs_open(CS_ARCH_X86, CS_MODE_32, &handle), CS_ERR_OK);
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
-  FunctionFramepointerValidator validator(handle, kFunctionWithoutFP,
+  FunctionFramePointerValidator validator(handle, kFunctionWithoutFP,
                                           code_size);
   EXPECT_FALSE(validator.Validate());
   cs_close(&handle);
 }
 
-TEST(FunctionFramepointerValidator, validateLeafFunction) {
+TEST(FunctionFramePointerValidator, validateLeafFunction) {
   csh handle;
   size_t code_size = sizeof(kLeafFunction);
   ASSERT_EQ(cs_open(CS_ARCH_X86, CS_MODE_32, &handle), CS_ERR_OK);
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
-  FunctionFramepointerValidator validator(handle, kLeafFunction, code_size);
+  FunctionFramePointerValidator validator(handle, kLeafFunction, code_size);
   EXPECT_TRUE(validator.Validate());
   cs_close(&handle);
 }
 
-TEST(FunctionFramepointerValidator, validateEnterLeave) {
+TEST(FunctionFramePointerValidator, validateEnterLeave) {
   csh handle;
   size_t code_size = sizeof(kFunctionWithEnterLeaveWithFP);
   ASSERT_EQ(cs_open(CS_ARCH_X86, CS_MODE_32, &handle), CS_ERR_OK);
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
-  FunctionFramepointerValidator validator(handle, kFunctionWithEnterLeaveWithFP,
+  FunctionFramePointerValidator validator(handle, kFunctionWithEnterLeaveWithFP,
                                           code_size);
   EXPECT_TRUE(validator.Validate());
   cs_close(&handle);
 }
 
-TEST(FunctionFramepointerValidator, validateTailFunction) {
+TEST(FunctionFramePointerValidator, validateTailFunction) {
   csh handle;
   size_t code_size = sizeof(kTailFunctionWithFP);
   ASSERT_EQ(cs_open(CS_ARCH_X86, CS_MODE_32, &handle), CS_ERR_OK);
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
-  FunctionFramepointerValidator validator(handle, kTailFunctionWithFP,
+  FunctionFramePointerValidator validator(handle, kTailFunctionWithFP,
                                           code_size);
   EXPECT_TRUE(validator.Validate());
   cs_close(&handle);

@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "FunctionFramepointerValidator.h"
+#include "FunctionFramePointerValidator.h"
 
 #include <capstone/capstone.h>
+
 #include <iostream>
 
-FunctionFramepointerValidator::FunctionFramepointerValidator(
+FunctionFramePointerValidator::FunctionFramePointerValidator(
     csh handle, const uint8_t* code, size_t code_size) {
   handle_ = handle;
   instructions_ = nullptr;
@@ -15,11 +16,11 @@ FunctionFramepointerValidator::FunctionFramepointerValidator(
       cs_disasm(handle, code, code_size, 0, 0, &instructions_);
 }
 
-FunctionFramepointerValidator::~FunctionFramepointerValidator() {
+FunctionFramePointerValidator::~FunctionFramePointerValidator() {
   cs_free(instructions_, instructions_count_);
 }
 
-bool FunctionFramepointerValidator::IsCallInstruction(
+bool FunctionFramePointerValidator::IsCallInstruction(
     const cs_insn& instruction) {
   for (uint8_t i = 0; i < instruction.detail->groups_count; i++) {
     if (instruction.detail->groups[i] == X86_GRP_CALL) return true;
@@ -27,7 +28,7 @@ bool FunctionFramepointerValidator::IsCallInstruction(
   return false;
 }
 
-bool FunctionFramepointerValidator::IsRetOrJumpInstruction(
+bool FunctionFramePointerValidator::IsRetOrJumpInstruction(
     const cs_insn& instruction) {
   for (uint8_t i = 0; i < instruction.detail->groups_count; i++) {
     if (instruction.detail->groups[i] == X86_GRP_RET ||
@@ -37,20 +38,20 @@ bool FunctionFramepointerValidator::IsRetOrJumpInstruction(
   return false;
 }
 
-bool FunctionFramepointerValidator::IsMovInstruction(
+bool FunctionFramePointerValidator::IsMovInstruction(
     const cs_insn& instruction) {
   return instruction.id == X86_INS_MOV || instruction.id == X86_INS_MOVQ;
 }
 
-bool FunctionFramepointerValidator::IsBasePointer(uint16_t reg) {
+bool FunctionFramePointerValidator::IsBasePointer(uint16_t reg) {
   return reg == X86_REG_BP || reg == X86_REG_EBP || reg == X86_REG_RBP;
 }
 
-bool FunctionFramepointerValidator::IsStackPointer(uint16_t reg) {
+bool FunctionFramePointerValidator::IsStackPointer(uint16_t reg) {
   return reg == X86_REG_SP || reg == X86_REG_ESP || reg == X86_REG_RSP;
 }
 
-bool FunctionFramepointerValidator::ValidatePrologue() {
+bool FunctionFramePointerValidator::ValidatePrologue() {
   cs_regs regs_read, regs_write;
   uint8_t read_count, write_count;
 
@@ -89,7 +90,7 @@ bool FunctionFramepointerValidator::ValidatePrologue() {
 // after the epilogue. In this case we just assume that a "jump" after the
 // epilogue is the return to the caller.
 // TODO(kuebler): Better handling for tail call optimization
-bool FunctionFramepointerValidator::ValidateEpilogue() {
+bool FunctionFramePointerValidator::ValidateEpilogue() {
   // check for a "leave" "ret" sequence
   for (size_t i = 0; i < instructions_count_ - 1; i++) {
     if (instructions_[i].id == X86_INS_LEAVE &&
@@ -150,11 +151,11 @@ bool FunctionFramepointerValidator::ValidateEpilogue() {
   return false;
 }
 
-bool FunctionFramepointerValidator::ValidateFramePointers() {
+bool FunctionFramePointerValidator::ValidateFramePointers() {
   return ValidatePrologue() && ValidateEpilogue();
 }
 
-bool FunctionFramepointerValidator::IsLeafFunction() {
+bool FunctionFramePointerValidator::IsLeafFunction() {
   for (size_t i = 0; i < instructions_count_; i++) {
     if (IsCallInstruction(instructions_[i])) {
       return false;
@@ -163,7 +164,7 @@ bool FunctionFramepointerValidator::IsLeafFunction() {
   return true;
 }
 
-bool FunctionFramepointerValidator::Validate() {
+bool FunctionFramePointerValidator::Validate() {
   if (instructions_count_ == 0) {
     std::cout << "ERROR: Failed to disassemble given code!\n";
     return false;

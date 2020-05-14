@@ -24,7 +24,8 @@ target_sources(
          CrashHandler.h
          EventBuffer.h
          EventClasses.h
-         FunctionFramepointerValidator.h
+         FramePointerValidator.h
+         FunctionFramePointerValidator.h
          FunctionStats.h
          Hashing.h
          Injection.h
@@ -89,7 +90,8 @@ target_sources(
           ConnectionManager.cpp
           ElfFile.cpp
           EventBuffer.cpp
-          FunctionFramepointerValidator.cpp
+          FramePointerValidator.cpp
+          FunctionFramePointerValidator.cpp
           FunctionStats.cpp
           Injection.cpp
           Introspection.cpp
@@ -214,8 +216,9 @@ target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/Version.cpp")
 add_executable(OrbitCoreTests)
 
 target_sources(OrbitCoreTests PRIVATE
-    ElfFileTests.cpp
+    ElfFileTest.cpp
     FunctionFramepointerValidatorTest.cpp
+    FramePointerValidatorTest.cpp
     LinuxTracingBufferTest.cpp
     PathTest.cpp
     RingBufferTest.cpp
@@ -231,6 +234,7 @@ target_link_libraries(
   OrbitCoreTests
   PRIVATE OrbitCore
           GTest::Main
+          GMock::GMock
           llvm_object::llvm_object
           abseil::abseil)
 

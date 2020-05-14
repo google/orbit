@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_FUNCTION_FRAMEPOINTER_VALIDATOR_H_
-#define ORBIT_CORE_FUNCTION_FRAMEPOINTER_VALIDATOR_H_
+#ifndef ORBIT_CORE_FUNCTION_FRAME_POINTER_VALIDATOR_H_
+#define ORBIT_CORE_FUNCTION_FRAME_POINTER_VALIDATOR_H_
 
 #include <capstone/capstone.h>
 
@@ -12,18 +12,18 @@
 // optional.
 // The validator checks the functions Prologue and also whether an Epilogue
 // exists.
-class FunctionFramepointerValidator {
+class FunctionFramePointerValidator {
  public:
-  FunctionFramepointerValidator(csh handle, const uint8_t* code,
+  FunctionFramePointerValidator(csh handle, const uint8_t* code,
                                 size_t code_size);
-  virtual ~FunctionFramepointerValidator();
+  virtual ~FunctionFramePointerValidator();
 
-  // FunctionFramepointerValidator is neither copyable nor movable.
-  FunctionFramepointerValidator(const FunctionFramepointerValidator&) = delete;
-  FunctionFramepointerValidator& operator=(
-      const FunctionFramepointerValidator&) = delete;
-  FunctionFramepointerValidator(FunctionFramepointerValidator&&) = delete;
-  FunctionFramepointerValidator& operator=(FunctionFramepointerValidator&&) =
+  // FunctionFramePointerValidator is neither copyable nor movable.
+  FunctionFramePointerValidator(const FunctionFramePointerValidator&) = delete;
+  FunctionFramePointerValidator& operator=(
+      const FunctionFramePointerValidator&) = delete;
+  FunctionFramePointerValidator(FunctionFramePointerValidator&&) = delete;
+  FunctionFramePointerValidator& operator=(FunctionFramePointerValidator&&) =
       delete;
 
   bool Validate();
@@ -44,4 +44,4 @@ class FunctionFramepointerValidator {
   csh handle_;
 };
 
-#endif  // ORBIT_CORE_FUNCTION_FRAMEPOINTER_VALIDATOR_H_
+#endif  // ORBIT_CORE_FUNCTION_FRAME_POINTER_VALIDATOR_H_

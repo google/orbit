@@ -859,6 +859,12 @@ void OrbitApp::SendToUiNow(const std::string& message) {
 }
 
 //-----------------------------------------------------------------------------
+void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
+  std::string message = "info:" + title + "\n" + text;
+  SendToUiNow(message);
+}
+
+//-----------------------------------------------------------------------------
 void OrbitApp::SendErrorToUi(const std::string& title,
                              const std::string& text) {
   std::string message = "error:" + title + "\n" + text;
@@ -1159,6 +1165,9 @@ void OrbitApp::InitializeClientTransactions() {
   transaction_client_ = std::make_unique<TransactionClient>(GTcpClient.get());
   symbols_client_ =
       std::make_unique<SymbolsClient>(this, transaction_client_.get());
+  frame_pointer_validator_client_ =
+      std::make_unique<FramePointerValidatorClient>(this,
+                                                    transaction_client_.get());
   process_memory_client_ =
       std::make_unique<ProcessMemoryClient>(transaction_client_.get());
 }

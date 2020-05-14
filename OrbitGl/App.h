@@ -17,6 +17,7 @@
 #include "CoreApp.h"
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
+#include "FramePointerValidatorClient.h"
 #include "FunctionsDataView.h"
 #include "GlobalsDataView.h"
 #include "LiveFunctionsDataView.h"
@@ -172,6 +173,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   void SendToUiAsync(const std::string& message) override;
   void SendToUiNow(const std::string& message) override;
+  void SendInfoToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
 
@@ -218,6 +220,9 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
     return transaction_client_.get();
   }
   SymbolsClient* GetSymbolsClient() { return symbols_client_.get(); }
+  FramePointerValidatorClient* GetFramePointerValidatorClient() {
+    return frame_pointer_validator_client_.get();
+  }
   void GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
                        const ProcessMemoryCallback& callback) override {
     process_memory_client_->GetRemoteMemory(pid, address, size, callback);
@@ -288,6 +293,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
  private:
   std::unique_ptr<TransactionClient> transaction_client_;
   std::unique_ptr<SymbolsClient> symbols_client_;
+  std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
   std::unique_ptr<ProcessMemoryClient> process_memory_client_;
 };
 
