@@ -147,7 +147,6 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
   if (enable_view) menu.emplace_back(MENU_ACTION_VIEW);
   menu.emplace_back(MENU_ACTION_DISASSEMBLY);
-  // TODO: MENU_ACTION_SET_AS_FRAME is never shown, should it be removed?
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
@@ -174,11 +173,6 @@ void FunctionsDataView::OnContextMenu(const std::string& a_Action,
     for (int i : a_ItemIndices) {
       GetFunction(i).GetDisassembly(pid);
     }
-  } else if (a_Action == MENU_ACTION_SET_AS_FRAME) {
-    if (a_ItemIndices.size() != 1) {
-      return;
-    }
-    GetFunction(a_ItemIndices[0]).SetAsMainFrameFunction();
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }
