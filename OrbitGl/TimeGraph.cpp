@@ -137,7 +137,6 @@ void TimeGraph::ZoomAll() {
     if (m_MinTimeUs < 0) m_MinTimeUs = 0;
 
     NeedsUpdate();
-    UpdatePrimitives();
   }
 }
 
