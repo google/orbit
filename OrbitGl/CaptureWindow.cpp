@@ -4,6 +4,8 @@
 
 #include "CaptureWindow.h"
 
+#include <chrono>
+
 #include "../OrbitPlugin/OrbitSDK.h"
 #include "App.h"
 #include "Capture.h"
@@ -839,7 +841,7 @@ void CaptureWindow::RenderUI() {
     m_StatsWindow.AddLine(VAR_TO_STR(m_MouseY));
     m_StatsWindow.AddLine(VAR_TO_STR(total_draw_count_));
     if (total_draw_count_ != 0) {
-      double avg_draw_time = total_draw_time / static_cast<double>(total_draw_count_);
+      double avg_draw_time = total_draw_time_ / static_cast<double>(total_draw_count_);
       m_StatsWindow.AddLine(VAR_TO_STR(avg_draw_time));
     }
 
