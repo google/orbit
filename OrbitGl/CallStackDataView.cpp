@@ -63,8 +63,8 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
     case COLUMN_LINE:
       return function != nullptr ? absl::StrFormat("%d", function->Line()) : "";
     case COLUMN_MODULE:
-      if (function != nullptr && function->GetPdb() != nullptr) {
-        return function->GetPdb()->GetName();
+      if (function != nullptr && !function->GetLoadedModuleName().empty()) {
+        return function->GetLoadedModuleName();
       }
       if (module != nullptr) {
         return module->m_Name;

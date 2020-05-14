@@ -149,7 +149,7 @@ bool ElfFileImpl<ElfT>::LoadFunctions(Pdb* pdb) const {
 
     std::shared_ptr<Function> function = std::make_shared<Function>(
         name, pretty_name, symbol_ref.getValue(), load_bias,
-        symbol_ref.getSize(), Path::GetFileName(file_path_), 0, pdb);
+        symbol_ref.getSize(), Path::GetFileName(file_path_), 0);
 
     pdb->AddFunction(function);
     function_added = true;

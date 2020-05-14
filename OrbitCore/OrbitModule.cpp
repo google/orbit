@@ -138,7 +138,8 @@ Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
 
 void Pdb::AddFunction(const std::shared_ptr<Function>& function) {
   functions_.push_back(function);
-  functions_.back()->SetPdb(this);
+  functions_.back()->SetModulePathAndAddress(GetLoadedModuleName(),
+                                             GetHModule());
 }
 
 //-----------------------------------------------------------------------------
@@ -160,7 +161,7 @@ void Pdb::ProcessData() {
   auto& globals = process->GetGlobals();
 
   for (auto& func : functions_) {
-    func->SetPdb(this);
+    func->SetModulePathAndAddress(GetLoadedModuleName(), GetHModule());
     process->AddFunction(func);
     GOrbitUnreal.OnFunctionAdded(func.get());
   }

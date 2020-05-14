@@ -62,7 +62,7 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
     case COLUMN_LINE:
       return absl::StrFormat("%i", function.Line());
     case COLUMN_MODULE:
-      return function.GetPdb() != nullptr ? function.GetPdb()->GetName() : "";
+      return function.GetLoadedModuleName();
     case COLUMN_ADDRESS:
       return absl::StrFormat("0x%llx", function.GetVirtualAddress());
     case COLUMN_CALL_CONV:
@@ -104,7 +104,7 @@ void FunctionsDataView::DoSort() {
       sorter = ORBIT_FUNC_SORT(Line());
       break;
     case COLUMN_MODULE:
-      sorter = ORBIT_FUNC_SORT(GetPdb()->GetName());
+      sorter = ORBIT_FUNC_SORT(GetLoadedModuleName());
       break;
     case COLUMN_ADDRESS:
       sorter = ORBIT_FUNC_SORT(Address());
@@ -191,7 +191,7 @@ void FunctionsDataView::DoFilter() {
       Capture::GTargetProcess->GetFunctions();
   for (size_t i = 0; i < functions.size(); ++i) {
     auto& function = functions[i];
-    std::string name = function->Lower() + function->GetPdb()->GetName();
+    std::string name = function->Lower() + function->GetLoadedModuleName();
 
     bool match = true;
 

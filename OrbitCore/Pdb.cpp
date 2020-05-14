@@ -79,7 +79,8 @@ Pdb::~Pdb() {
 //-----------------------------------------------------------------------------
 void Pdb::AddFunction(const std::shared_ptr<Function>& function) {
   functions_.push_back(function);
-  functions_.back()->SetPdb(this);
+  functions_.back()->SetModulePathAndAddress(GetLoadedModuleName(),
+                                             GetHModule());
   CheckOrbitFunction(*functions_.back());
 }
 
@@ -662,7 +663,7 @@ void Pdb::ProcessData() {
   auto& globals = Capture::GTargetProcess->GetGlobals();
 
   for (auto& func : functions_) {
-    func->SetPdb(this);
+    func->SetModulePathAndAddress(GetLoadedModuleName(), GetHModule());
     Capture::GTargetProcess->AddFunction(func);
     GOrbitUnreal.OnFunctionAdded(func.get());
   }

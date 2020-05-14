@@ -1513,9 +1513,8 @@ void ParseDll(const char* a_FileName)
         {
             exportent i = *it;
             std::shared_ptr<Function> func = std::make_shared<Function>(
-                i.symbolName, i.symbolName, i.symRVA, 0, 0, i.moduleName, 0,
-                GPdbDbg.get());
-            GPdbDbg->AddFunction( func );
+                i.symbolName, i.symbolName, i.symRVA, 0, 0, i.moduleName, 0);
+            GPdbDbg->AddFunction(func);
         }
 
         DestructParsedPE(pe);
