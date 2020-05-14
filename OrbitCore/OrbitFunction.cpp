@@ -47,11 +47,6 @@ Function::Function(std::string_view name, std::string_view pretty_name,
   ResetStats();
 }
 
-void Function::SetAsMainFrameFunction() {
-  Capture::GMainFrameFunction = GetVirtualAddress();
-  selected_ = true;
-}
-
 const std::string& Function::PrettyName() const {
   if (pretty_name_.empty()) {
     return name_;

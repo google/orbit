@@ -78,7 +78,6 @@ class Capture {
   static bool GHasContextSwitches;
 
   static Timer GTestTimer;
-  static ULONG64 GMainFrameFunction;
   static uint64_t GNumContextSwitches;
   static ULONG64 GNumLinuxEvents;
   static ULONG64 GNumProfileEvents;

@@ -41,7 +41,6 @@ uint32_t Capture::GFunctionIndex = -1;
 uint32_t Capture::GNumInstalledHooks;
 bool Capture::GHasContextSwitches;
 Timer Capture::GTestTimer;
-ULONG64 Capture::GMainFrameFunction;
 uint64_t Capture::GNumContextSwitches;
 ULONG64 Capture::GNumLinuxEvents;
 ULONG64 Capture::GNumProfileEvents;

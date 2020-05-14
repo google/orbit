@@ -77,7 +77,6 @@ class Function {
            uint64_t load_bias, Pdb* pdb);
 
   void Print();
-  void SetAsMainFrameFunction();
   void AddParameter(const FunctionParam& param) { params_.push_back(param); }
 
   // TODO: It looks like most setters are used by TestRemoteMessages::Run()
