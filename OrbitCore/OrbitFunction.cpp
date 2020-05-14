@@ -190,34 +190,9 @@ bool FunctionParam::IsFloat() {
 }
 
 void Function::Print() {
-#ifdef _WIN32
-  if (pdb_ == nullptr) {
-    return;
-  }
-
-  std::shared_ptr<OrbitDiaSymbol> diaSymbol = pdb_->GetDiaSymbolFromId(id_);
-  if (diaSymbol->m_Symbol) {
-    OrbitDia::DiaDump(diaSymbol->m_Symbol);
-
-    if (parent_id_ != 0) {
-      class Type& type = pdb_->GetTypeFromId(parent_id_);
-      type.LoadDiaInfo();
-      type.GenerateDiaHierarchy();
-    }
-
-    DiaParser parser;
-    parser.PrintFunctionType(diaSymbol->m_Symbol);
-    ORBIT_VIZ(ws2s(parser.m_Log));
-  }
-
-  LineInfo lineInfo;
-  SymUtils::GetLineInfo(address_ + module_base_address_, lineInfo);
-  ORBIT_VIZV(lineInfo.m_File);
-  ORBIT_VIZV(lineInfo.m_Line);
-  ORBIT_VIZV(lineInfo.m_Address);
-#endif
-
   ORBIT_VIZV(address_);
+  ORBIT_VIZV(file_);
+  ORBIT_VIZV(line_);
   ORBIT_VIZV(IsSelected());
 
   if (!params_.empty()) {
