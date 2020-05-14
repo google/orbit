@@ -4,8 +4,6 @@
 
 #include "CaptureWindow.h"
 
-#include <chrono>
-
 #include "../OrbitPlugin/OrbitSDK.h"
 #include "App.h"
 #include "Capture.h"
@@ -639,7 +637,6 @@ void CaptureWindow::ResetHoverTimer() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::Draw() {
-  auto start = std::chrono::steady_clock::now();
   m_WorldMaxY =
       1.5f * ScreenToWorldHeight(static_cast<int>(m_Slider.GetPixelHeight()));
 
@@ -678,10 +675,6 @@ void CaptureWindow::Draw() {
     glVertex3f(m_MouseX, m_WorldTopLeftY - m_WorldHeight, Z_VALUE_TEXT);
     glEnd();
   }
-  auto end = std::chrono::steady_clock::now();
-  auto dur = std::chrono::duration<double>(end - start);
-  total_draw_time_secs_ += dur.count();
-  total_draw_count_++;
 }
 
 //-----------------------------------------------------------------------------
@@ -839,11 +832,6 @@ void CaptureWindow::RenderUI() {
     m_StatsWindow.AddLine(VAR_TO_STR(m_WorldMinWidth));
     m_StatsWindow.AddLine(VAR_TO_STR(m_MouseX));
     m_StatsWindow.AddLine(VAR_TO_STR(m_MouseY));
-    m_StatsWindow.AddLine(VAR_TO_STR(total_draw_count_));
-    if (total_draw_count_ != 0) {
-      double avg_draw_time = total_draw_time_secs_ / static_cast<double>(total_draw_count_);
-      m_StatsWindow.AddLine(VAR_TO_STR(avg_draw_time));
-    }
 
     /*
             m_StatsWindow.AddLog( VAR_TO_CHAR(
