@@ -46,7 +46,7 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
   }
 
   Function& function = GetFunction(a_Row);
-  const FunctionStats& stats = function.Stats();
+  const FunctionStats& stats = function.GetStats();
 
   switch (a_Column) {
     case COLUMN_SELECTED:
@@ -80,10 +80,10 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
     return OrbitUtils::Compare(functions[a]->Member, functions[b]->Member, \
                                ascending);                                 \
   }
-#define ORBIT_STAT_SORT(Member)                                          \
-  [&](int a, int b) {                                                    \
-    return OrbitUtils::Compare(functions[a]->Stats().Member,             \
-                               functions[b]->Stats().Member, ascending); \
+#define ORBIT_STAT_SORT(Member)                                             \
+  [&](int a, int b) {                                                       \
+    return OrbitUtils::Compare(functions[a]->GetStats().Member,             \
+                               functions[b]->GetStats().Member, ascending); \
   }
 
 //-----------------------------------------------------------------------------

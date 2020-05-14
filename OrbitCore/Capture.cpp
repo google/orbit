@@ -228,7 +228,6 @@ void Capture::StopCapture() {
 
 //-----------------------------------------------------------------------------
 void Capture::ClearCaptureData() {
-  GSelectedFunctionsMap.clear();
   GFunctionCountMap.clear();
   GZoneNames.clear();
   GSelectedTextBox = nullptr;

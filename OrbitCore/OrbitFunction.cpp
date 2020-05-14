@@ -34,14 +34,15 @@
 Function::Function() { ResetStats(); }
 
 Function::Function(std::string_view name, std::string_view pretty_name,
-                   std::string_view file, uint64_t address, uint64_t size,
-                   uint64_t load_bias, Pdb* pdb)
+                   uint64_t address, uint64_t load_bias, uint64_t size,
+                   std::string_view file, uint32_t line, Pdb* pdb)
     : name_(name),
       pretty_name_(pretty_name),
-      file_(file),
       address_(address),
-      size_(size),
       load_bias_(load_bias),
+      size_(size),
+      file_(file),
+      line_(line),
       pdb_(pdb) {
   CHECK(pdb != nullptr);
   ResetStats();
@@ -51,7 +52,6 @@ const std::string& Function::PrettyName() const {
   if (pretty_name_.empty()) {
     return name_;
   }
-
   return pretty_name_;
 }
 
@@ -77,7 +77,6 @@ bool Function::Hookable() {
 
 void Function::Select() {
   if (Hookable()) {
-    selected_ = true;
     LOG("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64
         ", load_bias_= 0x%" PRIx64 ", base_address=0x%" PRIx64 ")",
         pretty_name_.c_str(), GetVirtualAddress(), address_, load_bias_,
@@ -87,8 +86,11 @@ void Function::Select() {
 }
 
 void Function::UnSelect() {
-  selected_ = false;
   Capture::GSelectedFunctionsMap.erase(GetVirtualAddress());
+}
+
+bool Function::IsSelected() const {
+  return Capture::GSelectedFunctionsMap.count(GetVirtualAddress()) > 0;
 }
 
 void Function::SetPdb(Pdb* pdb) {
@@ -102,18 +104,6 @@ uint64_t Function::GetVirtualAddress() const {
 }
 
 uint64_t Function::Offset() const { return address_ - load_bias_; }
-
-std::string Function::GetModuleName() const {
-  if (pdb_ != nullptr) {
-    return pdb_->GetName();
-  } else {
-    // TODO: does it assume that address is absolute - if so this is wrong
-    // the address here is always a vaddr (at least on Linux)
-    std::shared_ptr<Module> module =
-        Capture::GTargetProcess->GetModuleFromAddress(address_);
-    return module ? module->m_Name : "";
-  }
-}
 
 void Function::ResetStats() {
   if (stats_ == nullptr) {
@@ -195,20 +185,18 @@ const char* Function::GetCallingConventionString() {
   return kCallingConventions[calling_convention_];
 }
 
-ORBIT_SERIALIZE(Function, 3) {
-  ORBIT_NVP_VAL(0, name_);
-  ORBIT_NVP_VAL(0, pretty_name_);
-  ORBIT_NVP_VAL(0, address_);
-  ORBIT_NVP_VAL(0, size_);
-  ORBIT_NVP_VAL(0, load_bias_);
-  ORBIT_NVP_VAL(0, module_);
-  ORBIT_NVP_VAL(0, file_);
-  ORBIT_NVP_VAL(0, line_);
-  ORBIT_NVP_VAL(0, calling_convention_);
-  ORBIT_NVP_VAL(1, stats_);
-  ORBIT_NVP_VAL(2, probe_);
-  ORBIT_NVP_VAL(3, module_base_address_);
-  ORBIT_NVP_VAL(3, loaded_module_name_);
+ORBIT_SERIALIZE(Function, 4) {
+  ORBIT_NVP_VAL(4, name_);
+  ORBIT_NVP_VAL(4, pretty_name_);
+  ORBIT_NVP_VAL(4, loaded_module_name_);
+  ORBIT_NVP_VAL(4, module_base_address_);
+  ORBIT_NVP_VAL(4, address_);
+  ORBIT_NVP_VAL(4, load_bias_);
+  ORBIT_NVP_VAL(4, size_);
+  ORBIT_NVP_VAL(4, file_);
+  ORBIT_NVP_VAL(4, line_);
+  ORBIT_NVP_VAL(4, calling_convention_);
+  ORBIT_NVP_VAL(4, stats_);
 }
 
 FunctionParam::FunctionParam() {
@@ -222,31 +210,6 @@ bool FunctionParam::InRegister(int a_Index) { return a_Index < 4; }
 bool FunctionParam::IsFloat() {
   return (m_Type.find("float") != std::string::npos ||
           m_Type.find("double") != std::string::npos);
-}
-
-void Function::ProcessArgumentInfo() {
-#ifdef _WIN32
-  arguments_.clear();
-  arguments_.reserve(params_.size());
-
-  int argIndex = IsMemberFunction() ? 1 : 0;
-
-  for (FunctionParam& param : params_) {
-    Argument arg;
-    arg.m_Index = argIndex;
-    arg.m_Reg = (CV_HREG_e)param.m_SymbolInfo.Register;
-    arg.m_Offset = (DWORD)param.m_SymbolInfo.Address;
-    arg.m_NumBytes = param.m_SymbolInfo.Size;
-    arguments_.push_back(arg);
-
-    ++argIndex;
-  }
-#endif
-}
-
-bool Function::IsMemberFunction() {
-  // TODO
-  return false;
 }
 
 void Function::Print() {
@@ -278,7 +241,7 @@ void Function::Print() {
 #endif
 
   ORBIT_VIZV(address_);
-  ORBIT_VIZV(selected_);
+  ORBIT_VIZV(IsSelected());
 
   if (!params_.empty()) {
     ORBIT_VIZ("\nParams:");
