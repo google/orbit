@@ -78,11 +78,7 @@ void TestRemoteMessages::Run() {
   Function function;
   function.SetName("m_Name");
   function.SetPrettyName("m_PrettyName");
-  // This will initialize m_PrettyLowerName to Lower(pretty_name_)
-  function.Lower();
-  function.SetModule("m_Module");
   function.SetFile("m_File");
-  function.SetProbe("m_Probe");
   function.SetAddress(1);
   function.SetSize(3);
   function.SetId(4);

@@ -60,16 +60,13 @@ TEST(OrbitModule, LoadFunctions) {
   EXPECT_EQ(function->Address(), 0x1080);
   EXPECT_EQ(function->Size(), 0);
   EXPECT_EQ(function->GetPdb(), &pdb);
-  EXPECT_EQ(function->Probe(), file_path + ":deregister_tm_clones");
 
-  // This function points to .init section and should not have a Probe
   function = functions[4].get();
   EXPECT_EQ(function->Name(), "_init");
   EXPECT_EQ(function->PrettyName(), "_init");
   EXPECT_EQ(function->Address(), 0x1000);
   EXPECT_EQ(function->Size(), 0);
   EXPECT_EQ(function->GetPdb(), &pdb);
-  EXPECT_EQ(function->Probe(), "");
 
   function = functions[9].get();
   EXPECT_EQ(function->Name(), "main");
@@ -77,7 +74,6 @@ TEST(OrbitModule, LoadFunctions) {
   EXPECT_EQ(function->Address(), 0x1135);
   EXPECT_EQ(function->Size(), 35);
   EXPECT_EQ(function->GetPdb(), &pdb);
-  EXPECT_EQ(function->Probe(), file_path + ":main");
 }
 
 TEST(OrbitModule, GetFunctionFromExactAddress) {

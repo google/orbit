@@ -148,15 +148,8 @@ bool ElfFileImpl<ElfT>::LoadFunctions(Pdb* pdb) const {
     }
 
     std::shared_ptr<Function> function = std::make_shared<Function>(
-        name, pretty_name, Path::GetFileName(file_path_), symbol_ref.getValue(),
-        symbol_ref.getSize(), load_bias, pdb);
-
-    // For uprobes we need a function to be in the .text segment (why?)
-    // TODO: Shouldn't m_Functions be limited to the list of functions
-    // referencing .text segment?
-    if (IsAddressInTextSection(function->Address())) {
-      function->SetProbe(file_path_ + ":" + function->Name());
-    }
+        name, pretty_name, symbol_ref.getValue(), load_bias,
+        symbol_ref.getSize(), Path::GetFileName(file_path_), 0, pdb);
 
     pdb->AddFunction(function);
     function_added = true;
