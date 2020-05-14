@@ -54,13 +54,19 @@ void FramePointerValidatorClient::AnalyzeModule(
 
 void FramePointerValidatorClient::HandleResponse(const Message& message,
                                                  uint64_t id) {
-  std::vector<std::shared_ptr<Function>> functions;
-  transaction_client_->ReceiveResponse(message, &functions);
+  std::tuple<bool, std::vector<std::shared_ptr<Function>>> response;
+  transaction_client_->ReceiveResponse(message, &response);
 
   id_mutex_.Lock();
   std::vector<std::shared_ptr<Module>> modules = modules_map_[id];
   modules_map_.erase(id);
   id_mutex_.Unlock();
+
+  if (!std::get<0>(response)) {
+    app_->SendErrorToUi("Frame Pointer Validation",
+                        "Failed to validate frame pointers");
+    return;
+  }
 
   uint64_t num_functions = 0;
   for (const auto& module : modules) {
@@ -69,6 +75,6 @@ void FramePointerValidatorClient::HandleResponse(const Message& message,
 
   std::string text =
       absl::StrFormat("Failed to validate %d out of %d functions",
-                      functions.size(), num_functions);
+                      std::get<1>(response).size(), num_functions);
   app_->SendInfoToUi("Frame Pointer Validation", text);
 }

@@ -23,12 +23,14 @@ TEST(FramePointerValidator, GetFpoFunctions) {
   ASSERT_TRUE(elf_file->LoadFunctions(&pdb));
   const std::vector<std::shared_ptr<Function>>& functions = pdb.GetFunctions();
 
-  std::vector<std::shared_ptr<Function>> fpo_functions =
+  std::optional<std::vector<std::shared_ptr<Function>>> fpo_functions =
       FramePointerValidator::GetFpoFunctions(functions, test_elf_file, true);
+
+  ASSERT_TRUE(fpo_functions.has_value());
 
   std::vector<std::string> fpo_function_names;
 
-  std::transform(fpo_functions.begin(), fpo_functions.end(),
+  std::transform(fpo_functions->begin(), fpo_functions->end(),
                  std::back_inserter(fpo_function_names),
                  [](const std::shared_ptr<Function>& f) -> std::string {
                    return f->PrettyName();

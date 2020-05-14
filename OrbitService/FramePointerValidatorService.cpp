@@ -53,11 +53,15 @@ void FramePointerValidatorService::HandleRequest(const Message& message) {
       continue;
     }
 
-    std::vector<std::shared_ptr<Function>> functions =
+    std::optional<std::vector<std::shared_ptr<Function>>> functions =
         FramePointerValidator::GetFpoFunctions(pdb->GetFunctions(),
                                                module->m_FullName, is_64_bit);
 
-    transaction_service_->SendResponse(message.GetType(), functions);
+    std::vector<std::shared_ptr<Function>> empty;
+    auto response =
+        std::make_tuple(functions.has_value(), functions.value_or(empty));
+
+    transaction_service_->SendResponse(message.GetType(), response);
   }
 }
 

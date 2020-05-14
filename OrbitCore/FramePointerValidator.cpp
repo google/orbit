@@ -9,7 +9,8 @@
 #include "FunctionFramePointerValidator.h"
 #include "OrbitBase/Logging.h"
 
-std::vector<std::shared_ptr<Function>> FramePointerValidator::GetFpoFunctions(
+std::optional<std::vector<std::shared_ptr<Function>>>
+FramePointerValidator::GetFpoFunctions(
     const std::vector<std::shared_ptr<Function>>& functions,
     const std::string& file_name, bool is_64_bit) {
   std::vector<std::shared_ptr<Function>> result;
@@ -18,7 +19,7 @@ std::vector<std::shared_ptr<Function>> FramePointerValidator::GetFpoFunctions(
   csh handle;
   if (cs_open(CS_ARCH_X86, mode, &handle) != CS_ERR_OK) {
     ERROR("Unable to open capstone.");
-    return result;
+    return {};
   }
 
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
