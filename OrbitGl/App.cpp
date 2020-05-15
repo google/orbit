@@ -276,10 +276,6 @@ bool OrbitApp::Init(ApplicationOptions&& options) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit() {
-  if (options_.crash_handler != nullptr) {
-    options_.crash_handler->SetUploadsEnabled(GetUploadDumpsToServerEnabled());
-  }
-
   if (!options_.asio_server_address.empty()) {
     GTcpClient = std::make_unique<TcpClient>();
     GTcpClient->AddMainThreadCallback(
@@ -953,9 +949,6 @@ bool OrbitApp::GetUploadDumpsToServerEnabled() const {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::EnableUploadDumpsToServer(bool a_Value) {
-  if (options_.crash_handler != nullptr) {
-    options_.crash_handler->SetUploadsEnabled(a_Value);
-  }
   GParams.m_UploadDumpsToServer = a_Value;
   GParams.Save();
 }
