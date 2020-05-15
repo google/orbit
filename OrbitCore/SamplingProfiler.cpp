@@ -562,15 +562,6 @@ std::string SamplingProfiler::GetSymbolFromAddress(uint64_t a_Address) {
 }
 
 //-----------------------------------------------------------------------------
-bool SampledFunction::GetSelected() {
-  if (m_Function == nullptr) {
-    m_Function =
-        Capture::GTargetProcess->GetFunctionFromAddress(m_Address, false);
-  }
-  return m_Function ? m_Function->IsSelected() : false;
-}
-
-//-----------------------------------------------------------------------------
 ORBIT_SERIALIZE_WSTRING(SampledFunction, 0) {
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_Module);

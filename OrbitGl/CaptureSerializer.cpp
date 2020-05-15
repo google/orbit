@@ -76,12 +76,6 @@ void CaptureSerializer::Save(T& archive) {
     archive(Capture::GFunctionCountMap);
   }
 
-  // Process
-  {
-    ORBIT_SIZE_SCOPE("Capture::GTargetProcess");
-    archive(Capture::GTargetProcess);
-  }
-
   // Callstacks
   {
     ORBIT_SIZE_SCOPE("Capture::GCallstacks");
@@ -119,7 +113,6 @@ void CaptureSerializer::Save(T& archive) {
 void CaptureSerializer::Load(const std::string& filename) {
   SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", filename));
 
-#ifdef _WIN32
   // Binary
   std::ifstream file(filename, std::ios::binary);
   if (!file.fail()) {
@@ -128,25 +121,21 @@ void CaptureSerializer::Load(const std::string& filename) {
     archive(*this);
 
     // functions
-    std::shared_ptr<Module> module = std::make_shared<Module>();
-    Capture::GTargetProcess->AddModule(module);
-    module->m_Pdb = std::make_shared<Pdb>(filename.c_str());
-    std::vector<std::shared_ptr<Function>> functions =
-        module->m_Pdb->GetFunctions();
+    std::vector<Function> functions;
     archive(functions);
-    module->m_Pdb->ProcessData();
-    GPdbDbg = module->m_Pdb;
+    Capture::GSelectedFunctions.clear();
     Capture::GSelectedFunctionsMap.clear();
-    for (auto& func : module->m_Pdb->GetFunctions()) {
-      Capture::GSelectedFunctionsMap[func->GetVirtualAddress()] = func.get();
+    for (const auto& function : functions) {
+      std::shared_ptr<Function> function_ptr =
+          std::make_shared<Function>(function);
+      Capture::GSelectedFunctions.push_back(function_ptr);
+      Capture::GSelectedFunctionsMap[function_ptr->GetVirtualAddress()] =
+          function_ptr.get();
     }
     Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
     // Function count
     archive(Capture::GFunctionCountMap);
-
-    // Process
-    archive(Capture::GTargetProcess);
 
     // Callstacks
     archive(Capture::GCallstacks);
@@ -154,7 +143,6 @@ void CaptureSerializer::Load(const std::string& filename) {
     // Sampling profiler
     archive(Capture::GSamplingProfiler);
     Capture::GSamplingProfiler->SortByThreadUsage();
-    GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler, GOrbitApp.get());
     Capture::GSamplingProfiler->SetLoadedFromFile(true);
 
     // Event buffer
@@ -166,9 +154,9 @@ void CaptureSerializer::Load(const std::string& filename) {
       time_graph_->ProcessTimer(timer);
     }
 
+    GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler, GOrbitApp.get());
     GOrbitApp->FireRefreshCallbacks();
   }
-#endif
 }
 
 //-----------------------------------------------------------------------------
