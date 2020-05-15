@@ -126,7 +126,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   }
   typedef std::function<void(DataView*, std::shared_ptr<class SamplingReport>)>
       SamplingReportCallback;
-  void AddSamplingReoprtCallback(SamplingReportCallback a_Callback) {
+  void AddSamplingReportCallback(SamplingReportCallback a_Callback) {
     m_SamplingReportsCallbacks.emplace_back(std::move(a_Callback));
   }
   void AddSelectionReportCallback(SamplingReportCallback a_Callback) {
