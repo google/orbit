@@ -116,7 +116,7 @@ ResultType Channel::Read(std::string* result, int buffer_size) {
   return ResultType::kAgain;
 }
 
-ResultType Channel::Write(const std::string& text, int* written_length) {
+ResultType Channel::Write(const std::string& text, size_t* written_length) {
   CHECK(text.size() >= *written_length);
   int rc =
       libssh2_channel_write(raw_channel_ptr_, text.data() + *written_length,
@@ -132,7 +132,7 @@ ResultType Channel::Write(const std::string& text, int* written_length) {
 }
 
 ResultType Channel::WriteBlocking(const std::string& text) {
-  int written_length = 0;
+  size_t written_length = 0;
   do {
     ResultType result = Write(text, &written_length);
     if (result == ResultType::kError) return result;
