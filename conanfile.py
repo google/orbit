@@ -15,11 +15,13 @@ class OrbitConan(ConanFile):
     options = {"system_mesa": [True, False],
                "system_qt": [True, False], "with_gui": [True, False],
                "debian_packaging": [True, False],
-               "fPIC": [True, False]}
+               "fPIC": [True, False],
+               "crashdump_server": "ANY"}
     default_options = {"system_mesa": True,
                        "system_qt": True, "with_gui": True,
                        "debian_packaging": False,
-                       "fPIC": True}
+                       "fPIC": True,
+                       "crashdump_server": ""}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "external/*", "LICENSE"
     build_requires = ('grpc_codegen/1.27.3@orbitdeps/stable',
@@ -111,6 +113,7 @@ class OrbitConan(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.definitions["WITH_GUI"] = "ON" if self.options.with_gui else "OFF"
+        cmake.definitions["CRASHDUMP_SERVER"] = self.options.crashdump_server
         cmake.configure()
         cmake.build()
         if not tools.cross_building(self.settings, skip_x64_x86=True) and self.settings.get_safe("os.platform") != "GGP":

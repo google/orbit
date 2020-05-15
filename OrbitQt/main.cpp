@@ -10,6 +10,7 @@
 #include "App.h"
 #include "ApplicationOptions.h"
 #include "CrashHandler.h"
+#include "CrashOptions.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitStartupWindow.h"
 #include "Path.h"
@@ -70,8 +71,7 @@ int main(int argc, char* argv[]) {
   const std::string handler_path = QDir(QCoreApplication::applicationDirPath())
                                        .absoluteFilePath(handler_name)
                                        .toStdString();
-  const std::string crash_server_url =
-      "https://clients2.google.com/cr/staging_report";
+  const std::string crash_server_url = CrashServerOptions::GetUrl();
   CrashHandler crash_handler(dump_path, handler_path, crash_server_url);
 
   ApplicationOptions options;

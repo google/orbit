@@ -22,6 +22,7 @@ target_sources(
          Core.h
          CoreApp.h
          CrashHandler.h
+         CrashOptions.h
          EventBuffer.h
          EventClasses.h
          FramePointerValidator.h
@@ -208,6 +209,9 @@ include("${CMAKE_SOURCE_DIR}/cmake/version.cmake")
 GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/Version.cpp"
                     "${CMAKE_CURRENT_SOURCE_DIR}/Version.cpp.in" OrbitCore)
 target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/Version.cpp")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CrashOptions.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/CrashOptions.cpp)
+target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/CrashOptions.cpp")
 
 add_executable(OrbitCoreTests)
 
