@@ -41,7 +41,7 @@ void CaptureSerializer::Save(const std::string& filename) {
   m_CaptureName = filename;
   std::ofstream file(m_CaptureName, std::ios::binary);
   if (!file.fail()) {
-    SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in %s", filename));
+    SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in \"%s\"", filename));
     cereal::BinaryOutputArchive archive(file);
     Save(archive);
     file.close();
@@ -62,7 +62,7 @@ void CaptureSerializer::Save(T& archive) {
     std::vector<Function> functions;
     for (auto& pair : Capture::GSelectedFunctionsMap) {
       Function* func = pair.second;
-      if (func) {
+      if (func != nullptr) {
         functions.push_back(*func);
       }
     }
@@ -71,7 +71,10 @@ void CaptureSerializer::Save(T& archive) {
   }
 
   // Function Count
-  archive(Capture::GFunctionCountMap);
+  {
+    ORBIT_SIZE_SCOPE("Capture::GFunctionCountMap");
+    archive(Capture::GFunctionCountMap);
+  }
 
   // Process
   {
@@ -114,7 +117,7 @@ void CaptureSerializer::Save(T& archive) {
 
 //-----------------------------------------------------------------------------
 void CaptureSerializer::Load(const std::string& filename) {
-  SCOPE_TIMER_LOG(absl::StrFormat("Loading capture %s", filename));
+  SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", filename));
 
 #ifdef _WIN32
   // Binary
