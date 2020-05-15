@@ -171,7 +171,8 @@ void OrbitApp::ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::AddAddressInfo(LinuxAddressInfo address_info) {
-  Capture::GTargetProcess->AddAddressInfo(std::move(address_info));
+  uint64_t address = address_info.address;
+  Capture::GAddressInfos.emplace(address, std::move(address_info));
 }
 
 //-----------------------------------------------------------------------------

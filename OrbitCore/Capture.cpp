@@ -50,10 +50,12 @@ std::string Capture::GProcessToInject;
 std::vector<std::shared_ptr<Function>> Capture::GSelectedFunctions;
 std::map<uint64_t, Function*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, Function*> Capture::GVisibleFunctionsMap;
-std::unordered_map<ULONG64, ULONG64> Capture::GFunctionCountMap;
+std::unordered_map<uint64_t, uint64_t> Capture::GFunctionCountMap;
 std::shared_ptr<CallStack> Capture::GSelectedCallstack;
-std::vector<ULONG64> Capture::GSelectedAddressesByType[Function::NUM_TYPES];
-std::unordered_map<DWORD64, std::shared_ptr<CallStack>> Capture::GCallstacks;
+std::vector<uint64_t> Capture::GSelectedAddressesByType[Function::NUM_TYPES];
+std::unordered_map<uint64_t, std::shared_ptr<CallStack>> Capture::GCallstacks;
+std::unordered_map<uint64_t, LinuxAddressInfo> Capture::GAddressInfos;
+std::unordered_map<uint64_t, std::string> Capture::GAddressToFunctionName;
 Mutex Capture::GCallstackMutex;
 std::unordered_map<uint64_t, std::string> Capture::GZoneNames;
 TextBox* Capture::GSelectedTextBox;
@@ -228,6 +230,9 @@ void Capture::StopCapture() {
 //-----------------------------------------------------------------------------
 void Capture::ClearCaptureData() {
   GFunctionCountMap.clear();
+  GCallstacks.clear();
+  GAddressInfos.clear();
+  GAddressToFunctionName.clear();
   GZoneNames.clear();
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
@@ -340,7 +345,7 @@ void Capture::SendFunctionHooks() {
 
   // Send all hooks by type
   for (int i = 0; i < Function::NUM_TYPES; ++i) {
-    std::vector<DWORD64>& addresses = GSelectedAddressesByType[i];
+    std::vector<uint64_t>& addresses = GSelectedAddressesByType[i];
     if (!addresses.empty()) {
       MessageType msgType = GetMessageType(static_cast<Function::OrbitType>(i));
       GTcpServer->Send(msgType, addresses);
@@ -529,6 +534,15 @@ std::shared_ptr<CallStack> Capture::GetCallstack(CallstackID a_ID) {
   }
 
   return nullptr;
+}
+
+//-----------------------------------------------------------------------------
+LinuxAddressInfo* Capture::GetAddressInfo(uint64_t address) {
+  auto address_info_it = GAddressInfos.find(address);
+  if (address_info_it == GAddressInfos.end()) {
+    return nullptr;
+  }
+  return &address_info_it->second;
 }
 
 //-----------------------------------------------------------------------------

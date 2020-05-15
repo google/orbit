@@ -7,13 +7,16 @@
 #include <streambuf>
 
 #include "Capture.h"
+#include "ContextSwitch.h"
 #include "CoreApp.h"
 #include "EventBuffer.h"
+#include "KeyAndString.h"
 #include "OrbitBase/Logging.h"
 #include "SamplingProfiler.h"
 #include "Serialization.h"
 #include "TcpClient.h"
 #include "TestRemoteMessages.h"
+#include "TidAndThreadName.h"
 #include "TimerManager.h"
 
 ConnectionManager::ConnectionManager() : exit_requested_(false) {}

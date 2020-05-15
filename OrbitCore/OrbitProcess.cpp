@@ -298,12 +298,6 @@ std::shared_ptr<Module> Process::GetModuleFromName(const std::string& a_Name) {
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
-void Process::AddAddressInfo(LinuxAddressInfo address_info) {
-  uint64_t address = address_info.address;
-  m_AddressInfos[address] = std::move(address_info);
-}
-
 #ifdef _WIN32
 //-----------------------------------------------------------------------------
 std::shared_ptr<OrbitDiaSymbol> Process::SymbolFromAddress(DWORD64 a_Address) {

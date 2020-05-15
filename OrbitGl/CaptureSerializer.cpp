@@ -56,7 +56,6 @@ void CaptureSerializer::Save(T& archive) {
   // Header
   archive(cereal::make_nvp("Capture", *this));
 
-  // Functions
   {
     ORBIT_SIZE_SCOPE("Functions");
     std::vector<Function> functions;
@@ -70,25 +69,31 @@ void CaptureSerializer::Save(T& archive) {
     archive(functions);
   }
 
-  // Function Count
   {
     ORBIT_SIZE_SCOPE("Capture::GFunctionCountMap");
     archive(Capture::GFunctionCountMap);
   }
 
-  // Callstacks
   {
     ORBIT_SIZE_SCOPE("Capture::GCallstacks");
     archive(Capture::GCallstacks);
   }
 
-  // Sampling profiler
+  {
+    ORBIT_SIZE_SCOPE("Capture::GAddressInfos");
+    archive(Capture::GAddressInfos);
+  }
+
+  {
+    ORBIT_SIZE_SCOPE("Capture::GAddressToFunctionName");
+    archive(Capture::GAddressToFunctionName);
+  }
+
   {
     ORBIT_SIZE_SCOPE("SamplingProfiler");
     archive(Capture::GSamplingProfiler);
   }
 
-  // Event buffer
   {
     ORBIT_SIZE_SCOPE("Event Buffer");
     archive(GEventTracer.GetEventBuffer());
@@ -116,11 +121,11 @@ void CaptureSerializer::Load(const std::string& filename) {
   // Binary
   std::ifstream file(filename, std::ios::binary);
   if (!file.fail()) {
-    // header
+    // Header
     cereal::BinaryInputArchive archive(file);
     archive(*this);
 
-    // functions
+    // Functions
     std::vector<Function> functions;
     archive(functions);
     Capture::GSelectedFunctions.clear();
@@ -134,13 +139,14 @@ void CaptureSerializer::Load(const std::string& filename) {
     }
     Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
-    // Function count
     archive(Capture::GFunctionCountMap);
 
-    // Callstacks
     archive(Capture::GCallstacks);
 
-    // Sampling profiler
+    archive(Capture::GAddressInfos);
+
+    archive(Capture::GAddressToFunctionName);
+
     archive(Capture::GSamplingProfiler);
     Capture::GSamplingProfiler->SortByThreadUsage();
     Capture::GSamplingProfiler->SetLoadedFromFile(true);

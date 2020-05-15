@@ -7,9 +7,10 @@
 #include <string>
 
 #include "CallstackTypes.h"
-#include "LinuxTracingBuffer.h"
+#include "LinuxAddressInfo.h"
 #include "OrbitType.h"
 #include "Threading.h"
+#include "absl/container/flat_hash_map.h"
 
 class Process;
 class Session;
@@ -48,6 +49,7 @@ class Capture {
   static void RegisterZoneName(uint64_t a_ID, const char* a_Name);
   static void AddCallstack(CallStack& a_CallStack);
   static std::shared_ptr<CallStack> GetCallstack(CallstackID a_ID);
+  static LinuxAddressInfo* GetAddressInfo(uint64_t address);
   static void CheckForUnrealSupport();
   static void PreSave();
 
@@ -84,9 +86,11 @@ class Capture {
   static std::vector<std::shared_ptr<Function>> GSelectedFunctions;
   static std::map<uint64_t, Function*> GSelectedFunctionsMap;
   static std::map<uint64_t, Function*> GVisibleFunctionsMap;
-  static std::unordered_map<ULONG64, ULONG64> GFunctionCountMap;
-  static std::vector<ULONG64> GSelectedAddressesByType[Function::NUM_TYPES];
-  static std::unordered_map<DWORD64, std::shared_ptr<CallStack>> GCallstacks;
+  static std::unordered_map<uint64_t, uint64_t> GFunctionCountMap;
+  static std::vector<uint64_t> GSelectedAddressesByType[Function::NUM_TYPES];
+  static std::unordered_map<uint64_t, std::shared_ptr<CallStack>> GCallstacks;
+  static std::unordered_map<uint64_t, LinuxAddressInfo> GAddressInfos;
+  static std::unordered_map<uint64_t, std::string> GAddressToFunctionName;
   static std::unordered_map<uint64_t, std::string> GZoneNames;
   static class TextBox* GSelectedTextBox;
   static ThreadID GSelectedThreadId;

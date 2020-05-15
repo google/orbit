@@ -147,7 +147,6 @@ class SamplingProfiler {
   void ProcessSamplesAsync();
   void AddAddress(uint64_t a_Address);
 
-  std::string GetSymbolFromAddress(uint64_t a_Address);
   const ThreadSampleData& GetSummary() { return m_ThreadSampleData[0]; }
 
   ORBIT_SERIALIZABLE;
@@ -184,7 +183,6 @@ class SamplingProfiler {
       m_OriginalCallstackToResolvedCallstack;
   std::unordered_map<uint64_t, std::set<CallstackID>> m_FunctionToCallstacks;
   std::unordered_map<uint64_t, uint64_t> m_ExactAddressToFunctionAddress;
-  std::unordered_map<uint64_t, std::string> m_AddressToName;
   std::unordered_map<uint64_t, LineInfo> m_AddressToLineInfo;
   std::unordered_map<uint64_t, std::string> m_FileNames;
   std::vector<ProcessingDoneCallback> m_Callbacks;
