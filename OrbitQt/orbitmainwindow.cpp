@@ -71,7 +71,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   GOrbitApp->AddRefreshCallback(
       [this](DataViewType a_Type) { this->OnRefreshDataViewPanels(a_Type); });
-  GOrbitApp->AddSamplingReoprtCallback(
+  GOrbitApp->AddSamplingReportCallback(
       [this](DataView* callstack_data_view,
              std::shared_ptr<SamplingReport> report) {
         this->OnNewSamplingReport(callstack_data_view, std::move(report));
