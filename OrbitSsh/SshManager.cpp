@@ -10,6 +10,7 @@
 #include <queue>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/Credentials.h"
 #include "OrbitSsh/ExecChannelManager.h"
 #include "OrbitSsh/ResultType.h"
 #include "OrbitSsh/SessionManager.h"
@@ -17,12 +18,9 @@
 
 namespace OrbitSsh {
 
-SshManager::SshManager(std::string host, int port, std::string user,
-                       std::filesystem::path known_hosts_path,
-                       std::filesystem::path key_path,
-                       std::queue<Task> pre_tasks, Task main_task,
-                       std::vector<int> tunnel_ports)
-    : session_manager_(host, port, user, known_hosts_path, key_path),
+SshManager::SshManager(Credentials credentials, std::queue<Task> pre_tasks,
+                       Task main_task, std::vector<int> tunnel_ports)
+    : session_manager_(credentials),
       pre_tasks_(pre_tasks),
       main_task_(main_task),
       tunnel_ports_(tunnel_ports) {

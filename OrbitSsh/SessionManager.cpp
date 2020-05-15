@@ -5,20 +5,15 @@
 #include "OrbitSsh/SessionManager.h"
 
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/Credentials.h"
 #include "OrbitSsh/ResultType.h"
 #include "OrbitSsh/Session.h"
 #include "OrbitSsh/Socket.h"
 
 namespace OrbitSsh {
 
-SessionManager::SessionManager(std::string host, int port, std::string user,
-                               std::filesystem::path known_hosts_path,
-                               std::filesystem::path key_path)
-    : host_(host),
-      port_(port),
-      user_(user),
-      known_hosts_path_(known_hosts_path),
-      key_path_(key_path) {}
+SessionManager::SessionManager(Credentials credentials)
+    : credentials_(credentials) {}
 
 // Tick establishes a ssh connection via different states and progresses this
 // state when appropriate. Once kAuthenticated is reached, a connection is
@@ -43,7 +38,8 @@ SessionManager::State SessionManager::Tick() {
       break;
     }
     case State::kSocketCreated: {
-      if (socket_->Connect(host_, port_) == ResultType::kSuccess) {
+      if (socket_->Connect(credentials_.host, credentials_.port) ==
+          ResultType::kSuccess) {
         state_ = State::kSocketConnected;
       }
       break;
@@ -64,14 +60,16 @@ SessionManager::State SessionManager::Tick() {
       break;
     }
     case State::kHandshaked: {
-      if (session_->MatchKnownHosts(host_, port_, known_hosts_path_) ==
+      if (session_->MatchKnownHosts(credentials_.host, credentials_.port,
+                                    credentials_.known_hosts_path) ==
           ResultType::kSuccess) {
         state_ = State::kMatchedKnownHosts;
       }
       break;
     }
     case State::kMatchedKnownHosts: {
-      if (session_->Authenticate(user_, key_path_) == ResultType::kSuccess) {
+      if (session_->Authenticate(credentials_.user, credentials_.key_path) ==
+          ResultType::kSuccess) {
         state_ = State::kAuthenticated;
       }
       break;

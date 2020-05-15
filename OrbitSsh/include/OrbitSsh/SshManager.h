@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "OrbitSsh/Credentials.h"
 #include "OrbitSsh/ExecChannelManager.h"
 #include "OrbitSsh/ResultType.h"
 #include "OrbitSsh/SessionManager.h"
@@ -45,9 +46,7 @@ class SshManager {
     std::function<void(std::string)> output_callback;
     std::function<void(int)> exit_callback;
   };
-  SshManager(std::string host, int port, std::string user,
-             std::filesystem::path known_hosts_path,
-             std::filesystem::path key_path, std::queue<Task> pre_tasks,
+  SshManager(Credentials credentials, std::queue<Task> pre_tasks,
              Task main_task, std::vector<int> tunnel_ports);
   SshManager() = delete;
   SshManager(const SshManager&) = delete;

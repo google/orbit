@@ -16,6 +16,7 @@
 #include "OrbitGgp/GgpClient.h"
 #include "OrbitGgp/GgpInstance.h"
 #include "OrbitGgp/GgpSshInfo.h"
+#include "OrbitSsh/Credentials.h"
 #include "OrbitSsh/ResultType.h"
 #include "OrbitSsh/SshManager.h"
 
@@ -84,12 +85,13 @@ int main(int argc, char* argv[]) {
   }
   GgpSshInfo ssh_info = std::move(*ssh_opt);
 
-  std::string host = ssh_info.host.toStdString();
-  int port = ssh_info.port;
-  std::string user = ssh_info.user.toStdString();
-  std::filesystem::path known_hosts_path =
-      ssh_info.known_hosts_path.toStdString();
-  std::filesystem::path key_path = ssh_info.key_path.toStdString();
+  OrbitSsh::Credentials credentials = {};
+
+  credentials.host = ssh_info.host.toStdString();
+  credentials.port = ssh_info.port;
+  credentials.user = ssh_info.user.toStdString();
+  credentials.known_hosts_path = ssh_info.known_hosts_path.toStdString();
+  credentials.key_path = ssh_info.key_path.toStdString();
 
   std::queue<OrbitSsh::SshManager::Task> pre_tasks;
   pre_tasks.emplace(OrbitSsh::SshManager::Task{
@@ -104,8 +106,8 @@ int main(int argc, char* argv[]) {
       [](std::string output) { LOG("Main task output: %s", output.c_str()); },
       [](int exit_code) { LOG("Man task exit code: %d", exit_code); }};
 
-  OrbitSsh::SshManager ssh_handler(host, port, user, known_hosts_path, key_path,
-                                   pre_tasks, main_task, {44766, 44755});
+  OrbitSsh::SshManager ssh_handler(credentials, pre_tasks, main_task,
+                                   {44766, 44755});
 
   for (int i = 0; i < 5000; i++) {
     ssh_handler.Tick();
