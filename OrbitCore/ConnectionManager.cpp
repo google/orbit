@@ -42,19 +42,6 @@ void ConnectionManager::ConnectToRemote(std::string remote_address) {
 void ConnectionManager::Stop() { exit_requested_ = true; }
 
 void ConnectionManager::SetupClientCallbacks() {
-  GTcpClient->AddMainThreadCallback(Msg_RemotePerf, [=](const Message& msg) {
-    PRINT_VAR(msg.m_Size);
-    std::string msgStr = msg.GetDataAsString();
-    std::istringstream buffer(msgStr);
-
-    Capture::NewSamplingProfiler();
-    Capture::GSamplingProfiler->StartCapture();
-    Capture::GSamplingProfiler->SetIsLinuxPerf(true);
-    Capture::GSamplingProfiler->StopCapture();
-    Capture::GSamplingProfiler->ProcessSamples();
-    GCoreApp->RefreshCaptureView();
-  });
-
   GTcpClient->AddCallback(Msg_Timers, [=](const Message& msg) {
     uint32_t numTimers = msg.m_Size / sizeof(Timer);
     const Timer* timers = static_cast<const Timer*>(msg.GetData());
