@@ -1049,6 +1049,11 @@ std::shared_ptr<Process> OrbitApp::FindProcessByPid(uint32_t pid) {
 
 void OrbitApp::UpdateProcess(const std::shared_ptr<Process>& process) {
   absl::MutexLock lock(&process_map_mutex_);
+  // We want to move function map to new process object
+  auto it = process_map_.find(process->GetID());
+  if (it != process_map_.end()) {
+    process->SetFunctions(it->second->GetFunctions());
+  }
   process_map_.insert_or_assign(process->GetID(), process);
 }
 
