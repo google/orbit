@@ -20,7 +20,9 @@ if [ "$0" == "$SCRIPT" ]; then
 
   # Building Orbit
   conan install -u -pr ${CONAN_PROFILE} -if "${DIR}/build/" \
-          --build outdated "${DIR}"
+          --build outdated \
+          -o crashdump_server="$(cat /mnt/keystore/74938_orbitprofiler_crashdump_collection_server | tr -d '\n')" \
+          "${DIR}"
   conan build -bf "${DIR}/build/" "${DIR}"
   conan package -bf "${DIR}/build/" "${DIR}"
 
