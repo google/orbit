@@ -14,28 +14,31 @@ target_compile_features(OrbitSsh PUBLIC cxx_std_17)
 
 target_include_directories(OrbitSsh PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
-target_sources(OrbitSsh PUBLIC
-        include/OrbitSsh/Channel.h
-        include/OrbitSsh/DirectTcpIpChannelManager.h
-        include/OrbitSsh/ExecChannelManager.h
-        include/OrbitSsh/LocalSocketManager.h
-        include/OrbitSsh/ResultType.h
-        include/OrbitSsh/Session.h
-        include/OrbitSsh/SessionManager.h
-        include/OrbitSsh/SshManager.h
-        include/OrbitSsh/Socket.h
-        include/OrbitSsh/TunnelManager.h)
+target_sources(
+  OrbitSsh
+  PUBLIC include/OrbitSsh/Channel.h
+         include/OrbitSsh/Credentials.h
+         include/OrbitSsh/DirectTcpIpChannelManager.h
+         include/OrbitSsh/ExecChannelManager.h
+         include/OrbitSsh/LocalSocketManager.h
+         include/OrbitSsh/ResultType.h
+         include/OrbitSsh/Session.h
+         include/OrbitSsh/SessionManager.h
+         include/OrbitSsh/SshManager.h
+         include/OrbitSsh/Socket.h
+         include/OrbitSsh/TunnelManager.h)
 
-target_sources(OrbitSsh PRIVATE
-        Channel.cpp
-        DirectTcpIpChannelManager.cpp
-        ExecChannelManager.cpp
-        LocalSocketManager.cpp
-        Session.cpp
-        SessionManager.cpp
-        SshManager.cpp
-        Socket.cpp
-        TunnelManager.cpp)
+target_sources(
+  OrbitSsh
+  PRIVATE Channel.cpp
+          DirectTcpIpChannelManager.cpp
+          ExecChannelManager.cpp
+          LocalSocketManager.cpp
+          Session.cpp
+          SessionManager.cpp
+          SshManager.cpp
+          Socket.cpp
+          TunnelManager.cpp)
 
 if(WIN32)
   target_sources(OrbitSsh PRIVATE WindowsSocket.cpp)
@@ -58,14 +61,10 @@ target_compile_options(OrbitSshExample PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_compile_features(OrbitSshExample PUBLIC cxx_std_17)
 
-target_sources(OrbitSshExample PRIVATE
-        main.cpp)
+target_sources(OrbitSshExample PRIVATE main.cpp)
 
-target_link_libraries(OrbitSshExample PUBLIC
-        OrbitSsh
-        OrbitBase
-        OrbitGgp
-        Qt5::Core)
+target_link_libraries(OrbitSshExample PUBLIC OrbitSsh OrbitBase OrbitGgp
+                                             Qt5::Core)
 
 # tests
 add_executable(OrbitSshTests)

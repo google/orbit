@@ -7,6 +7,7 @@
 
 #include <filesystem>
 
+#include "OrbitSsh/Credentials.h"
 #include "OrbitSsh/ResultType.h"
 #include "OrbitSsh/Session.h"
 #include "OrbitSsh/Socket.h"
@@ -31,9 +32,7 @@ class SessionManager {
     kAuthenticated
   };
 
-  SessionManager(std::string host, int port, std::string user,
-                 std::filesystem::path known_hosts_path,
-                 std::filesystem::path key_path);
+  explicit SessionManager(Credentials credentials);
   SessionManager() = delete;
   SessionManager(const SessionManager&) = delete;
   SessionManager& operator=(const SessionManager&) = delete;
@@ -48,11 +47,7 @@ class SessionManager {
   State state_ = State::kNotInitialized;
   std::optional<Socket> socket_;
   std::optional<Session> session_;
-  std::string host_;
-  int port_;
-  std::string user_;
-  std::filesystem::path known_hosts_path_;
-  std::filesystem::path key_path_;
+  Credentials credentials_;
 };
 
 }  // namespace OrbitSsh
