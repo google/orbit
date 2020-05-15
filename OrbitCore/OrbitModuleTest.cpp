@@ -19,7 +19,7 @@ TEST(OrbitModule, Constructor) {
   uint64_t address_start = 0x700;  // sample test data
   uint64_t address_end = 0x1000;
 
-  Module module(file_path, address_start, address_end);
+  Module module(file_path, address_start, address_end, false);
 
   EXPECT_EQ(module.m_FullName, file_path);
   EXPECT_EQ(module.m_Name, executable_name);
@@ -33,6 +33,7 @@ TEST(OrbitModule, Constructor) {
   EXPECT_EQ(module.m_AddressRange, "[0000000000000700 - 0000000000001000]");
 
   EXPECT_TRUE(module.m_FoundPdb);
+  EXPECT_FALSE(module.m_IsKernelModule);
 
   EXPECT_EQ(module.m_Pdb, nullptr);
   EXPECT_EQ(module.m_PdbName, "");
@@ -43,7 +44,8 @@ TEST(OrbitModule, LoadFunctions) {
   const std::string executable_name = "hello_world_elf";
   const std::string file_path = executable_directory + executable_name;
 
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
+  std::shared_ptr<Module> module =
+      std::make_shared<Module>(file_path, 0, 0, false);
 
   SymbolHelper symbolHelper;
   ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
@@ -80,7 +82,7 @@ TEST(OrbitModule, GetFunctionFromExactAddress) {
   const std::string file_path = executable_directory + "hello_world_static_elf";
 
   std::shared_ptr<Module> module =
-      std::make_shared<Module>(file_path, 0x400000, 0);
+      std::make_shared<Module>(file_path, 0x400000, 0, false);
 
   SymbolHelper symbolHelper;
   ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
@@ -105,7 +107,7 @@ TEST(OrbitModule, GetFunctionFromProgramCounter) {
   const std::string file_path = executable_directory + "hello_world_static_elf";
 
   std::shared_ptr<Module> module =
-      std::make_shared<Module>(file_path, 0x400000, 0);
+      std::make_shared<Module>(file_path, 0x400000, 0, false);
 
   SymbolHelper symbolHelper;
 

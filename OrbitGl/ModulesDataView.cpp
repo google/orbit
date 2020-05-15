@@ -115,7 +115,7 @@ std::vector<std::string> ModulesDataView::GetContextMenu(
   if (a_SelectedIndices.size() == 1) {
     std::shared_ptr<Module> module = GetModule(a_SelectedIndices[0]);
     if (!module->GetLoaded()) {
-      if (module->m_FoundPdb) {
+      if (module->m_FoundPdb && !module->IsKernelModule()) {
         enable_load = true;
       } else if (module->IsDll()) {
         enable_dll = true;
@@ -127,7 +127,7 @@ std::vector<std::string> ModulesDataView::GetContextMenu(
     for (int index : a_SelectedIndices) {
       std::shared_ptr<Module> module = GetModule(index);
       if (!module->GetLoaded()) {
-        if (module->m_FoundPdb) {
+        if (module->m_FoundPdb && !module->IsKernelModule()) {
           enable_load = true;
         }
       } else {
@@ -157,6 +157,9 @@ void ModulesDataView::OnContextMenu(const std::string& a_Action,
   if (a_Action == MENU_ACTION_MODULES_LOAD) {
     for (int index : a_ItemIndices) {
       const std::shared_ptr<Module>& module = GetModule(index);
+      if (module->IsKernelModule()) {
+        continue;
+      }
 
       if (module->m_FoundPdb || module->IsDll()) {
         std::map<uint64_t, std::shared_ptr<Module>>& processModules =
@@ -176,6 +179,10 @@ void ModulesDataView::OnContextMenu(const std::string& a_Action,
     std::vector<std::shared_ptr<Module>> modules_to_validate;
     for (int index : a_ItemIndices) {
       const std::shared_ptr<Module>& module = GetModule(index);
+
+      if (module->IsKernelModule()) {
+        continue;
+      }
 
       if (module->m_FoundPdb || module->IsDll()) {
         std::map<uint64_t, std::shared_ptr<Module>>& processModules =
@@ -263,7 +270,8 @@ const std::shared_ptr<Module>& ModulesDataView::GetModule(
 bool ModulesDataView::GetDisplayColor(int a_Row, int /*a_Column*/,
                                       unsigned char& r, unsigned char& g,
                                       unsigned char& b) {
-  if (GetModule(a_Row)->GetLoaded()) {
+  std::shared_ptr<Module> module = GetModule(a_Row);
+  if (module->GetLoaded()) {
     static unsigned char R = 42;
     static unsigned char G = 218;
     static unsigned char B = 130;
@@ -271,7 +279,15 @@ bool ModulesDataView::GetDisplayColor(int a_Row, int /*a_Column*/,
     g = G;
     b = B;
     return true;
-  } else if (GetModule(a_Row)->m_FoundPdb) {
+  } else if (module->IsKernelModule()) {
+    static unsigned char R = 180;
+    static unsigned char G = 180;
+    static unsigned char B = 180;
+    r = R;
+    g = G;
+    b = B;
+    return true;
+  } else if (module->m_FoundPdb) {
     static unsigned char R = 42;
     static unsigned char G = 130;
     static unsigned char B = 218;

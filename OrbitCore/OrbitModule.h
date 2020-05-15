@@ -17,7 +17,7 @@ class Pdb;
 struct Module {
   Module(){};
   Module(const std::string& file_name, uint64_t address_start,
-         uint64_t address_end);
+         uint64_t address_end, bool is_kernel_module);
 
   std::string GetPrettyName();
   bool IsDll() const;
@@ -25,6 +25,7 @@ struct Module {
   bool ContainsAddress(uint64_t a_Address) {
     return m_AddressStart <= a_Address && m_AddressEnd > a_Address;
   }
+  bool IsKernelModule() { return m_IsKernelModule; }
   uint64_t ValidateAddress(uint64_t a_Address);
   void SetLoaded(bool a_Value);
   bool GetLoaded() const { return m_Loaded; }
@@ -43,6 +44,7 @@ struct Module {
   uint64_t m_EntryPoint = 0;
   bool m_FoundPdb = false;
   bool m_Selected = false;
+  bool m_IsKernelModule = false;
 
   uint64_t m_PdbSize = 0;  // Size in bytes; windows: pdb, linux: module
 

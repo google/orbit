@@ -27,7 +27,7 @@
 
 //-----------------------------------------------------------------------------
 Module::Module(const std::string& file_name, uint64_t address_start,
-               uint64_t address_end) {
+               uint64_t address_end, bool is_kernel_module) {
   if (!Path::FileExists(file_name)) {
     ERROR("Creating Module from path \"%s\": file does not exist",
           file_name.c_str());
@@ -40,6 +40,7 @@ Module::Module(const std::string& file_name, uint64_t address_start,
 
   m_AddressStart = address_start;
   m_AddressEnd = address_end;
+  m_IsKernelModule = is_kernel_module;
 
   m_PrettyName = m_FullName;
   m_AddressRange = absl::StrFormat("[%016" PRIx64 " - %016" PRIx64 "]",
@@ -100,7 +101,7 @@ uint64_t Module::ValidateAddress(uint64_t a_Address) {
 void Module::SetLoaded(bool a_Value) { m_Loaded = a_Value; }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(Module, 0) {
+ORBIT_SERIALIZE(Module, 1) {
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_FullName);
   ORBIT_NVP_VAL(0, m_PdbName);
@@ -115,6 +116,7 @@ ORBIT_SERIALIZE(Module, 0) {
   ORBIT_NVP_VAL(0, m_Selected);
   ORBIT_NVP_VAL(0, m_Loaded);
   ORBIT_NVP_VAL(0, m_PdbSize);
+  ORBIT_NVP_VAL(1, m_IsKernelModule);
 }
 
 #ifndef WIN32

@@ -15,7 +15,8 @@ TEST(SymbolHelper, LoadSymbolsIncludedInBinary) {
   const std::string executable_name = "hello_world_elf";
   const std::string file_path = executable_directory + executable_name;
 
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
+  std::shared_ptr<Module> module =
+      std::make_shared<Module>(file_path, 0, 0, false);
 
   SymbolHelper symbolHelper;
   ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
@@ -34,7 +35,8 @@ TEST(SymbolHelper, LoadSymbolsCollectorSameFile) {
   const std::string executable_name = "hello_world_elf";
   const std::string file_path = executable_directory + executable_name;
 
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
+  std::shared_ptr<Module> module =
+      std::make_shared<Module>(file_path, 0, 0, false);
 
   SymbolHelper symbolHelper({executable_directory}, {});
   ASSERT_TRUE(symbolHelper.LoadSymbolsCollector(module));
@@ -53,7 +55,8 @@ TEST(SymbolHelper, LoadSymbolsCollectorSeparateFile) {
   const std::string executable_name = "no_symbols_elf";
   const std::string file_path = executable_directory + executable_name;
 
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
+  std::shared_ptr<Module> module =
+      std::make_shared<Module>(file_path, 0, 0, false);
   module->m_DebugSignature = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
 
   std::string symbols_file_name = "no_symbols_elf.debug";
@@ -76,7 +79,8 @@ TEST(SymbolHelper, LoadSymbolsUsingSymbolsFile) {
   const std::string executable_name = "no_symbols_elf";
   const std::string file_path = executable_directory + executable_name;
 
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
+  std::shared_ptr<Module> module =
+      std::make_shared<Module>(file_path, 0, 0, false);
   module->m_DebugSignature = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
 
   std::string symbols_file_name = "no_symbols_elf.debug";
@@ -107,7 +111,8 @@ TEST(SymbolHelper, LoadSymbolsFromDebugInfo) {
                                              0, 0, 0, "", 0);
   module_info.m_Functions = {function};
 
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0x40, 0);
+  std::shared_ptr<Module> module =
+      std::make_shared<Module>(file_path, 0x40, 0, false);
   SymbolHelper symbolHelper;
   symbolHelper.LoadSymbolsFromDebugInfo(module, module_info);
 
@@ -128,7 +133,8 @@ TEST(SymbolHelper, FillDebugInfoFromModule) {
   const std::string executable_name = "hello_world_elf";
   const std::string file_path = executable_directory + executable_name;
 
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
+  std::shared_ptr<Module> module =
+      std::make_shared<Module>(file_path, 0, 0, false);
   SymbolHelper symbolHelper;
   ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
 

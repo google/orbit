@@ -96,6 +96,7 @@ void ListModules(pid_t pid,
   struct AddressRange {
     uint64_t start_address;
     uint64_t end_address;
+    bool is_kernel_module;
   };
 
   std::map<std::string, AddressRange> address_map;
@@ -107,7 +108,9 @@ void ListModules(pid_t pid,
 
     // tokens[4] is the inode column. If inode equals 0, then the memory is not
     // mapped to a file (might be heap, stack or something else)
-    if (tokens.size() != 6 || tokens[4] == "0") continue;
+    if (tokens.size() != 6) continue;
+
+    bool is_kernel_module = tokens[4] == "0";
 
     const std::string& module_name = tokens[5];
 
@@ -119,9 +122,10 @@ void ListModules(pid_t pid,
 
     auto iter = address_map.find(module_name);
     if (iter == address_map.end()) {
-      address_map[module_name] = {start, end};
+      address_map[module_name] = {start, end, is_kernel_module};
     } else {
       AddressRange& address_range = iter->second;
+      CHECK(address_range.is_kernel_module == is_kernel_module);
       address_range.start_address =
           std::min(address_range.start_address, start);
       address_range.end_address = std::max(address_range.end_address, end);
@@ -132,7 +136,8 @@ void ListModules(pid_t pid,
     module_map->insert_or_assign(
         address_range.start_address,
         std::make_shared<Module>(module_name, address_range.start_address,
-                                 address_range.end_address));
+                                 address_range.end_address,
+                                 address_range.is_kernel_module));
 
     std::shared_ptr<Module> module = (*module_map)[address_range.start_address];
 

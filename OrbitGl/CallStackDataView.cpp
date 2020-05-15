@@ -104,7 +104,7 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
       enable_view = true;
       enable_disassembly = true;
     } else if (module != nullptr && module->m_FoundPdb &&
-               !module->GetLoaded()) {
+               !module->GetLoaded() && !module->m_IsKernelModule) {
       enable_load = true;
     }
   }
@@ -128,7 +128,8 @@ void CallStackDataView::OnContextMenu(const std::string& a_Action,
     for (int i : a_ItemIndices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       std::shared_ptr<Module> module = frame.module;
-      if (module != nullptr && module->m_FoundPdb && !module->GetLoaded()) {
+      if (module != nullptr && module->m_FoundPdb && !module->GetLoaded() &&
+          !module->IsKernelModule()) {
         GOrbitApp->EnqueueModuleToLoad(module);
       }
       GOrbitApp->LoadModules();

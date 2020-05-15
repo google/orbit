@@ -179,7 +179,8 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
 
   bool enable_load = false;
   for (const auto& module : GetModulesFromIndices(a_SelectedIndices)) {
-    if (module->m_FoundPdb && !module->GetLoaded()) {
+    if (module->m_FoundPdb && !module->GetLoaded() &&
+        !module->IsKernelModule()) {
       enable_load = true;
     }
   }
@@ -206,7 +207,8 @@ void SamplingReportDataView::OnContextMenu(
     }
   } else if (a_Action == MENU_ACTION_MODULES_LOAD) {
     for (const auto& module : GetModulesFromIndices(a_ItemIndices)) {
-      if (module->m_FoundPdb && !module->GetLoaded()) {
+      if (module->m_FoundPdb && !module->GetLoaded() &&
+          !module->IsKernelModule()) {
         GOrbitApp->EnqueueModuleToLoad(module);
       }
     }
