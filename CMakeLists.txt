@@ -27,6 +27,8 @@ enable_testing()
 
 option(WITH_GUI "Setting this option will enable the Qt-based UI client." ON)
 
+set(CRASHDUMP_SERVER "" CACHE STRING "Setting this option will enable uploading crash dumps to the url specified.")
+
 set(CMAKE_CXX_STANDARD 17)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
