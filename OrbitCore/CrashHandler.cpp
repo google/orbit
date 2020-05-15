@@ -48,6 +48,7 @@ CrashHandler::CrashHandler(const std::string& dump_path,
   const std::vector<std::string> arguments = {"--no-rate-limit"};
 
   crash_report_db_ = crashpad::CrashReportDatabase::Initialize(dump_file_path);
+  SetUploadsEnabled(true);
 
   crashpad_client_.StartHandler(handler_file_path,
                                 /*database=*/dump_file_path,

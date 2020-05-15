@@ -75,7 +75,6 @@ int main(int argc, char* argv[]) {
   CrashHandler crash_handler(dump_path, handler_path, crash_server_url);
 
   ApplicationOptions options;
-  options.crash_handler = &crash_handler;
 
   ParseLegacyCommandLine(argc, argv, &options);
   std::string remote = absl::GetFlag(FLAGS_remote);

@@ -7,8 +7,6 @@
 
 #include <string>
 
-#include "CrashHandler.h"
-
 // The struct used to store Orbit Client Application options.
 // The default values are set by main() and passed to OrbitApp::Init.
 struct ApplicationOptions {
@@ -16,8 +14,6 @@ struct ApplicationOptions {
   std::string asio_server_address;
   // GRPC connection string
   std::string grpc_server_address;
-
-  CrashHandler* crash_handler = nullptr;
 };
 
 #endif  // ORBIT_GL_APPLICATION_OPTIONS_H_
