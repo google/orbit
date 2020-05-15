@@ -5,6 +5,7 @@
 
 #include "BlockChain.h"
 #include "Callstack.h"
+#include "Capture.h"
 #include "Core.h"
 #include "EventBuffer.h"
 #include "Pdb.h"
@@ -17,7 +18,9 @@ class Thread;
 struct SampledFunction {
   SampledFunction() = default;
 
-  bool GetSelected();
+  bool GetSelected() {
+    return Capture::GSelectedFunctionsMap.count(m_Address) > 0;
+  }
   std::string m_Name;
   std::string m_Module;
   std::string m_File;
