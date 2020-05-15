@@ -14,7 +14,8 @@ call powershell "& %REPO_ROOT%\contrib\conan\configs\install.ps1"
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 :: Building conan
-call conan install -pr msvc2017_relwithdebinfo -if %REPO_ROOT%\build\ --build outdated %REPO_ROOT%
+set /P CRASHDUMP_SERVER=<%KOKORO_ARTIFACTS_DIR%\keystore\74938_orbitprofiler_crashdump_collection_server
+call conan install -pr msvc2017_relwithdebinfo -if %REPO_ROOT%\build\ --build outdated -o crashdump_server="%CRASHDUMP_SERVER%" %REPO_ROOT%
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 call conan build -bf %REPO_ROOT%\build\ %REPO_ROOT%
