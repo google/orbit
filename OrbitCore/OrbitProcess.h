@@ -97,17 +97,6 @@ class Process {
 #ifdef _WIN32
   std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress(uint64_t a_Address);
 #endif
-  LinuxAddressInfo* GetLinuxAddressInfo(uint64_t a_Address) {
-    if (m_AddressInfos.contains(a_Address)) {
-      return &m_AddressInfos.at(a_Address);
-    } else {
-      return nullptr;
-    }
-  }
-  void AddAddressInfo(LinuxAddressInfo address_info);
-  bool HasAddressInfo(uint64_t address) const {
-    return m_AddressInfos.contains(address);
-  }
 
   bool LineInfoFromAddress(uint64_t a_Address, struct LineInfo& o_LineInfo);
 
@@ -176,8 +165,6 @@ class Process {
   std::vector<std::shared_ptr<Thread>> m_Threads;
   std::unordered_set<uint32_t> m_ThreadIds;
   std::map<uint32_t, std::string> m_ThreadNames;
-
-  absl::flat_hash_map<uint64_t, LinuxAddressInfo> m_AddressInfos;
 
   // Transients
   std::vector<std::shared_ptr<Function>> m_Functions;

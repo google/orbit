@@ -238,7 +238,7 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
   } else {
     std::string fallback_name;
     if (Capture::GSamplingProfiler != nullptr) {
-      fallback_name = Capture::GSamplingProfiler->GetSymbolFromAddress(address);
+      fallback_name = Capture::GAddressToFunctionName[address];
     }
     return CallStackDataViewFrame(address, fallback_name, module);
   }

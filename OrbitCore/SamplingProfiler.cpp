@@ -233,7 +233,8 @@ void SamplingProfiler::Print() {
       PRINT_VAR(reinterpret_cast<void*>(callstack->m_Hash));
       PRINT_VAR(callstack->m_Depth);
       for (uint32_t i = 0; i < callstack->m_Depth; ++i) {
-        LOG("%s", m_AddressToName[callstack->m_Data[i]].c_str());
+        LOG("%s",
+            Capture::GAddressToFunctionName[callstack->m_Data[i]].c_str());
       }
     }
   }
@@ -423,8 +424,8 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
 
     m_ExactAddressToFunctionAddress[a_Address] =
         symbol_info->Address ? symbol_info->Address : a_Address;
-    m_AddressToName[a_Address] = symName;
-    m_AddressToName[symbol_info->Address] = symName;
+    Capture::GAddressToFunctionName[a_Address] = symName;
+    Capture::GAddressToFunctionName[symbol_info->Address] = symName;
 
     LineInfo lineInfo;
     if (SymUtils::GetLineInfo(a_Address, lineInfo)) {
@@ -437,7 +438,7 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
   } else
 #endif
   {
-    LinuxAddressInfo* address_info = m_Process->GetLinuxAddressInfo(a_Address);
+    LinuxAddressInfo* address_info = Capture::GetAddressInfo(a_Address);
 
     Function* function = m_Process->GetFunctionFromAddress(a_Address, false);
 
@@ -474,8 +475,8 @@ void SamplingProfiler::AddAddress(uint64_t a_Address) {
     } else {
       function_name = address_info->function_name;
     }
-    m_AddressToName[a_Address] = function_name;
-    m_AddressToName[function_address] = function_name;
+    Capture::GAddressToFunctionName[a_Address] = function_name;
+    Capture::GAddressToFunctionName[function_address] = function_name;
   }
 }
 
@@ -498,7 +499,7 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
           100.f * numOccurences / threadSampleData.m_NumSamples;
 
       SampledFunction function;
-      function.m_Name = m_AddressToName[address];
+      function.m_Name = Capture::GAddressToFunctionName[address];
       function.m_Inclusive = inclusive_percent;
       function.m_Exclusive = 0.f;
       auto it = threadSampleData.m_ExclusiveCount.find(address);
@@ -544,24 +545,6 @@ void SamplingProfiler::GetThreadCallstack(Thread* a_Thread) {
 }
 
 //-----------------------------------------------------------------------------
-std::string SamplingProfiler::GetSymbolFromAddress(uint64_t a_Address) {
-  ScopeLock lock(m_Mutex);
-
-  auto it = m_AddressToName.find(a_Address);
-  if (it != m_AddressToName.end()) {
-    return it->second;
-  } else if (!m_LoadedFromFile) {
-    AddAddress(a_Address);
-    it = m_AddressToName.find(a_Address);
-    if (it != m_AddressToName.end()) {
-      return it->second;
-    }
-  }
-
-  return "UnknownSymbol";
-}
-
-//-----------------------------------------------------------------------------
 ORBIT_SERIALIZE_WSTRING(SampledFunction, 0) {
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_Module);
@@ -574,7 +557,7 @@ ORBIT_SERIALIZE_WSTRING(SampledFunction, 0) {
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 1) {
+ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 2) {
   ORBIT_NVP_VAL(0, m_PeriodMs);
   ORBIT_NVP_VAL(0, m_NumSamples);
   ORBIT_NVP_DEBUG(0, m_ThreadSampleData);
@@ -583,7 +566,6 @@ ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 1) {
   ORBIT_NVP_DEBUG(0, m_OriginalCallstackToResolvedCallstack);
   ORBIT_NVP_DEBUG(0, m_FunctionToCallstacks);
   ORBIT_NVP_DEBUG(0, m_ExactAddressToFunctionAddress);
-  ORBIT_NVP_DEBUG(0, m_AddressToName);
   ORBIT_NVP_DEBUG(0, m_AddressToLineInfo);
   ORBIT_NVP_DEBUG(1, m_FileNames);
   // ORBIT_NVP_VAL( 0, m_Callbacks );

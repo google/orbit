@@ -117,8 +117,8 @@ std::vector<std::string> LogDataView::GetContextMenu(
   std::vector<std::string> menu;
   if (m_SelectedCallstack) {
     for (uint32_t i = 0; i < m_SelectedCallstack->m_Depth; ++i) {
-      uint64_t addr = m_SelectedCallstack->m_Data[i];
-      menu.push_back(Capture::GSamplingProfiler->GetSymbolFromAddress(addr));
+      uint64_t address = m_SelectedCallstack->m_Data[i];
+      menu.push_back(Capture::GAddressToFunctionName[address]);
     }
   }
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
