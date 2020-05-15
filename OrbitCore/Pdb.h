@@ -148,7 +148,7 @@ class Pdb {
 #else
 class Pdb {
  public:
-  Pdb() = default;
+  explicit Pdb(const char* filename = "") { m_FileName = filename; }
   Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
       std::string module_file_name);
   Pdb(const Pdb&) = delete;
