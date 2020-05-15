@@ -40,7 +40,7 @@ TimeGraph* GCurrentTimeGraph = nullptr;
 //-----------------------------------------------------------------------------
 TimeGraph::TimeGraph() {
   m_LastThreadReorder.Start();
-  scheduler_track_ = std::make_shared<SchedulerTrack>(this);
+  scheduler_track_ = GetOrCreateSchedulerTrack();
 
   // The process track is a special ThreadTrack of id "0".
   process_track_ = GetOrCreateThreadTrack(0);
@@ -89,9 +89,12 @@ void TimeGraph::Clear() {
 
   ScopeLock lock(m_Mutex);
   tracks_.clear();
+  scheduler_track_ = nullptr;
   thread_tracks_.clear();
   gpu_tracks_.clear();
-  scheduler_track_ = std::make_shared<SchedulerTrack>(this);
+
+  cores_seen_.clear();
+  scheduler_track_ = GetOrCreateSchedulerTrack();
 
   // The process track is a special ThreadTrack of id "0".
   process_track_ = GetOrCreateThreadTrack(0);
@@ -289,6 +292,7 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
       ++m_ThreadCountMap[a_Timer.m_TID];
     } else {
       scheduler_track_->OnTimer(a_Timer);
+      cores_seen_.insert(a_Timer.m_Processor);
     }
   }
 }
@@ -306,7 +310,7 @@ uint32_t TimeGraph::GetNumTimers() const {
 //-----------------------------------------------------------------------------
 uint32_t TimeGraph::GetNumCores() const {
   ScopeLock lock(m_Mutex);
-  return m_CoreUtilizationMap.size();
+  return cores_seen_.size();
 }
 
 //-----------------------------------------------------------------------------
@@ -595,6 +599,17 @@ void TimeGraph::DrawTracks(bool a_Picking) {
 }
 
 //-----------------------------------------------------------------------------
+std::shared_ptr<SchedulerTrack> TimeGraph::GetOrCreateSchedulerTrack() {
+  ScopeLock lock(m_Mutex);
+  std::shared_ptr<SchedulerTrack> track = scheduler_track_;
+  if (track == nullptr) {
+    track = std::make_shared<SchedulerTrack>(this);
+    tracks_.emplace_back(track);
+    scheduler_track_ = track;
+  }
+  return track;
+}
+
 std::shared_ptr<ThreadTrack> TimeGraph::GetOrCreateThreadTrack(ThreadID a_TID) {
   ScopeLock lock(m_Mutex);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[a_TID];
@@ -691,7 +706,7 @@ void TimeGraph::SortTracks() {
     }
 
     // Gpu Tracks.
-    for (auto timeline_and_track : gpu_tracks_) {
+    for (const auto& timeline_and_track : gpu_tracks_) {
       sorted_tracks_.emplace_back(timeline_and_track.second);
     }
 

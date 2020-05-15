@@ -5,7 +5,7 @@
 
 class SchedulerTrack : public ThreadTrack {
  public:
-  SchedulerTrack(TimeGraph* time_graph);
+  explicit SchedulerTrack(TimeGraph* time_graph);
   ~SchedulerTrack() override = default;
 
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) override;
