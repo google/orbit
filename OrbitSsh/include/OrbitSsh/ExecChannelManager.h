@@ -44,6 +44,7 @@ class ExecChannelManager {
   State Tick();
 
  private:
+  ResultType Read(std::string* text);
   Session* session_ptr_;
   std::optional<Channel> channel_;
   std::string command_;

@@ -29,6 +29,17 @@ ExecChannelManager::~ExecChannelManager() {
   }
 }
 
+ResultType ExecChannelManager::Read(std::string* text) {
+  *text = "";
+  ResultType result = channel_->Read(text);
+
+  if (result != ResultType::kSuccess) return result;
+
+  if (text->empty()) return ResultType::kAgain;
+
+  return ResultType::kSuccess;
+}
+
 // Tick progresses the state when appropriate and is responsible for calling
 // output_callback and exit_callback. This function should be called
 // periodically.
@@ -48,7 +59,7 @@ ExecChannelManager::State ExecChannelManager::Tick() {
     }
     case State::kRunning: {
       std::string text;
-      result = channel_->Read(&text);
+      result = Read(&text);
       if (result == ResultType::kSuccess) {
         output_callback_(text);
       }
