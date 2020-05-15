@@ -151,6 +151,8 @@ void CaptureSerializer::Load(const std::string& filename) {
     Capture::GSamplingProfiler->SortByThreadUsage();
     Capture::GSamplingProfiler->SetLoadedFromFile(true);
 
+    time_graph_->Clear();
+
     // Event buffer
     archive(GEventTracer.GetEventBuffer());
 

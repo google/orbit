@@ -118,6 +118,7 @@ class TimeGraph {
  protected:
   void AddTrack(std::unique_ptr<Track> track);
   uint64_t GetGpuTimelineHash(const Timer& timer) const;
+  std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(ThreadID a_TID);
   std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(uint64_t timeline_hash);
 
@@ -171,6 +172,7 @@ class TimeGraph {
   std::vector<std::shared_ptr<Track>> sorted_tracks_;
   std::string m_ThreadFilter;
 
+  std::set<uint32_t> cores_seen_;
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   std::shared_ptr<ThreadTrack> process_track_;
 
