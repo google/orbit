@@ -20,6 +20,7 @@
 #include "OrbitGgp/GgpClient.h"
 #include "OrbitGgp/GgpInstance.h"
 #include "OrbitGgp/GgpInstanceItemModel.h"
+#include "OrbitGgp/GgpSshInfo.h"
 
 const GgpInstance localhost_placeholder_instance_ = {
     /* display_name */ "localhost",
@@ -68,8 +69,35 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
       QPointer{new QDialogButtonBox{QDialogButtonBox::StandardButton::Ok |
                                     QDialogButtonBox::StandardButton::Cancel}};
   button_box->button(QDialogButtonBox::StandardButton::Ok)->setEnabled(false);
-  QObject::connect(button_box, &QDialogButtonBox::accepted, this,
-                   &QDialog::accept);
+  QObject::connect(
+      button_box, &QDialogButtonBox::accepted, this, [this, button_box]() {
+        button_box->button(QDialogButtonBox::StandardButton::Ok)
+            ->setText("Loading...");
+        CHECK(chosen_instance_);
+        if (chosen_instance_->display_name == "localhost") {
+          button_box->button(QDialogButtonBox::StandardButton::Ok)
+              ->setText("Ok");
+          this->accept();
+        }
+        CHECK(ggp_client_);
+        ggp_client_->GetSshInformationAsync(
+            *chosen_instance_,
+            [this,
+             button_box](GgpClient::ResultOrQString<GgpSshInfo> ssh_info) {
+              button_box->button(QDialogButtonBox::StandardButton::Ok)
+                  ->setText("Ok");
+              if (!ssh_info) {
+                QMessageBox::critical(
+                    this, QApplication::applicationDisplayName(),
+                    QString("Orbit was unable to retrieve the information "
+                            "necessary to connect via ssh. The error message "
+                            "was: %1")
+                        .arg(ssh_info.error()));
+              }
+              this->ssh_info_ = ssh_info.value();
+              this->accept();
+            });
+      });
   QObject::connect(button_box, &QDialogButtonBox::rejected, this,
                    &QDialog::reject);
   layout->addWidget(button_box, 2, 0);
@@ -89,8 +117,8 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
             ->setEnabled(true);
       });
 
-  QObject::connect(table_view, &QTableView::doubleClicked, this,
-                   &QDialog::accept);
+  QObject::connect(table_view, &QTableView::doubleClicked, button_box,
+                   &QDialogButtonBox::accepted);
 
   // Fill content table
   model_->SetInstances({localhost_placeholder_instance_});
@@ -137,15 +165,4 @@ void OrbitStartupWindow::ReloadInstances() {
         instances_with_localhost.push_back(localhost_placeholder_instance_);
         model_->SetInstances(std::move(instances_with_localhost));
       });
-}
-
-int OrbitStartupWindow::Run(std::string* ip_address) {
-  // This blocks until the dialog box is dismissed
-  int dialog_result = exec();
-
-  if (dialog_result != 0) {
-    CHECK(chosen_instance_.has_value());
-    *ip_address = chosen_instance_->ip_address.toStdString();
-  }
-  return dialog_result;
 }

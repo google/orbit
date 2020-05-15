@@ -6,10 +6,13 @@
 #include <QDir>
 #include <QFontDatabase>
 #include <QStyleFactory>
+#include <QTimer>
 
 #include "App.h"
 #include "ApplicationOptions.h"
 #include "CrashHandler.h"
+#include "OrbitSsh/Credentials.h"
+#include "OrbitSsh/SshManager.h"
 #include "OrbitStartupWindow.h"
 #include "Path.h"
 #include "absl/flags/flag.h"
@@ -22,11 +25,7 @@ ABSL_FLAG(bool, enable_stale_features, false,
           "Enable obsolete features that are not working or are not "
           "implemented in the client's UI");
 
-// SSH Tunneling via run_service_ssh.{ps1/sh} is the default for now. To make
-// this work the remote is set here to localhost. This will also disable the
-// StartUpWindow for now.
-// TODO(antonrohr): replace "localhost" with "" as soon as ssh is implemented
-ABSL_FLAG(std::string, remote, "localhost",
+ABSL_FLAG(std::string, remote, "",
           "Connect to the specified remote on startup");
 ABSL_FLAG(uint16_t, asio_port, 44766,
           "The service's Asio tcp_server port (use default value if unsure)");
@@ -118,28 +117,63 @@ int main(int argc, char* argv[]) {
       "QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid "
       "white; }");
 
-  if (options.asio_server_address.empty()) {
+  OrbitSsh::Credentials ssh_credentials;
+  if (remote.empty()) {
     OrbitStartupWindow sw;
-    std::string ip_address;
-    int dialog_result = sw.Run(&ip_address);
+    int dialog_result = sw.Run(&ssh_credentials);
     if (dialog_result == 0) return 0;
+  }
 
+  if (ssh_credentials.Empty()) {
 #ifdef __linux__
     options.asio_server_address =
-        absl::StrFormat("%s:%d", ip_address, asio_port);
+        absl::StrFormat("%s:%d", "127.0.0.1", asio_port);
     options.grpc_server_address =
-        absl::StrFormat("%s:%d", ip_address, grpc_port);
-#else
-    // TODO(antonrohr) remove this ifdef as soon as the collector works on
-    // windows
-    if (ip_address != "127.0.0.1") {
-      options.asio_server_address =
-          absl::StrFormat("%s:%d", ip_address, asio_port);
-      options.grpc_server_address =
-          absl::StrFormat("%s:%d", ip_address, grpc_port);
-    }
+        absl::StrFormat("%s:%d", "127.0.0.1", grpc_port);
 #endif
+
+    OrbitMainWindow w(&app, std::move(options));
+
+    if (!w.IsHeadless()) {
+      w.showMaximized();
+    } else {
+      w.show();
+      w.hide();
+    }
+
+    w.PostInit();
+
+    int error_code = app.exec();
+
+    GOrbitApp->OnExit();
+
+    return error_code;
   }
+
+  options.asio_server_address =
+      absl::StrFormat("%s:%d", "127.0.0.1", asio_port);
+  options.grpc_server_address =
+      absl::StrFormat("%s:%d", "127.0.0.1", grpc_port);
+
+  std::queue<OrbitSsh::SshManager::Task> pre_tasks;
+  std::vector<int> tunnel_ports{asio_port, grpc_port};
+  OrbitSsh::SshManager::Task main_task = {
+      "/mnt/developer/OrbitService",
+      [](std::string output) {
+        PLATFORM_LOG(
+            absl::StrFormat("[%28s]\n%s", "OrbitService", output).c_str());
+      },
+      [](int exit_code) {
+        ERROR("!! -- !! OrbitService exited with code %d", exit_code);
+      }};
+  OrbitSsh::SshManager ssh_manager =
+      OrbitSsh::SshManager(ssh_credentials, pre_tasks, main_task, tunnel_ports);
+
+  QTimer* ssh_timer = new QTimer(&app);
+  QObject::connect(ssh_timer, &QTimer::timeout,
+                   [&ssh_manager]() { ssh_manager.Tick(); });
+  int msec = 10;
+  ssh_timer->start(msec);
 
   OrbitMainWindow w(&app, std::move(options));
 
@@ -152,9 +186,9 @@ int main(int argc, char* argv[]) {
 
   w.PostInit();
 
-  int errorCode = app.exec();
+  int error_code = app.exec();
 
   GOrbitApp->OnExit();
 
-  return errorCode;
+  return error_code;
 }
