@@ -117,6 +117,11 @@ class Process {
   void AddFunction(const std::shared_ptr<Function>& function) {
     m_Functions.push_back(function);
   }
+
+  void SetFunctions(const std::vector<std::shared_ptr<Function>>& functions) {
+    m_Functions = functions;
+  }
+
   const std::vector<std::shared_ptr<Function>>& GetFunctions() const {
     return m_Functions;
   }
