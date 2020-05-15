@@ -126,7 +126,7 @@ ResultType Socket::Receive(std::string* result, int buffer_size) {
   return ResultType::kSuccess;
 }
 
-ResultType Socket::Send(const std::string& text, int* sent_length) {
+ResultType Socket::Send(const std::string& text, size_t* sent_length) {
   int rc = send(descriptor_, text.data() + *sent_length,
                 text.length() - *sent_length, 0);
 
@@ -139,7 +139,7 @@ ResultType Socket::Send(const std::string& text, int* sent_length) {
 }
 
 ResultType Socket::SendBlocking(const std::string& text) {
-  int sent_length = 0;
+  size_t sent_length = 0;
   do {
     ResultType result = Send(text, &sent_length);
     if (result == ResultType::kError) return result;

@@ -49,7 +49,7 @@ class Channel {
 
  private:
   explicit Channel(LIBSSH2_CHANNEL* raw_channel_ptr);
-  ResultType Write(const std::string& text, int* written_length);
+  ResultType Write(const std::string& text, size_t* written_length);
   LIBSSH2_CHANNEL* raw_channel_ptr_;
 };
 

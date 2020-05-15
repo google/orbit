@@ -59,7 +59,7 @@ class Socket {
 
  private:
   explicit Socket(Descriptor descriptor);
-  ResultType Send(const std::string& text, int* sent_length);
+  ResultType Send(const std::string& text, size_t* sent_length);
   Descriptor descriptor_ = LIBSSH2_INVALID_SOCKET;
 };
 
