@@ -30,7 +30,6 @@ class SamplingReportDataView : public DataView {
   }
   void SetSampledFunctions(const std::vector<SampledFunction>& a_Functions);
   void SetThreadID(ThreadID a_TID);
-  std::vector<SampledFunction>& GetSampledFunctions() { return m_Functions; }
 
  protected:
   void DoSort() override;
