@@ -6,7 +6,8 @@
 			"label": "shell: build default relwithdebinfo",
 			"command": "cmake",
 			"args": [
-				"--build", "."
+				"--build",
+				"."
 			],
 			"options": {
 				"cwd": "${workspaceFolder}/build_default_relwithdebinfo"
