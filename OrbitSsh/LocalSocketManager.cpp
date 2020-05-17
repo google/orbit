@@ -7,63 +7,46 @@
 #include <optional>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitSsh/ResultType.h"
+#include "OrbitSsh/Error.h"
 
 namespace OrbitSsh {
 
 LocalSocketManager::LocalSocketManager(std::string address, int port)
     : address_(address), port_(port) {}
 
-ResultType LocalSocketManager::Accept() {
-  if (!listen_socket_->CanBeRead()) return ResultType::kAgain;
+outcome::result<void> LocalSocketManager::Accept() {
+  if (!listen_socket_->CanBeRead()) return Error::kEagain;
 
-  std::optional<Socket> new_socket;
-  ResultType result = listen_socket_->Accept(&new_socket);
-
-  if (result == ResultType::kSuccess) {
-    accepted_socket_ = std::move(new_socket);
-  }
-
-  return result;
+  OUTCOME_TRY(accepted_socket, listen_socket_->Accept());
+  accepted_socket_ = std::move(accepted_socket);
+  return outcome::success();
 }
 
-LocalSocketManager::State LocalSocketManager::Tick() {
+outcome::result<void> LocalSocketManager::Connect() {
   switch (state_) {
     case State::kNotInitialized: {
-      std::optional<Socket> socket_opt = Socket::Create();
-      if (socket_opt.has_value()) {
-        listen_socket_ = std::move(socket_opt);
-        state_ = State::kInitialized;
-      }
-      break;
+      OUTCOME_TRY(listen_socket, Socket::Create());
+      listen_socket_ = std::move(listen_socket);
+      state_ = State::kInitialized;
     }
     case State::kInitialized: {
-      if (listen_socket_->Bind(address_, port_) == ResultType::kSuccess) {
-        state_ = State::kBound;
-      }
-      break;
+      OUTCOME_TRY(listen_socket_->Bind(address_, port_));
+      state_ = State::kBound;
     }
     case State::kBound: {
-      if (listen_socket_->Listen() == ResultType::kSuccess) {
-        state_ = State::kListening;
-      }
-      break;
+      OUTCOME_TRY(listen_socket_->Listen());
+      state_ = State::kListening;
     }
     case State::kListening: {
-      if (Accept() == ResultType::kSuccess) {
-        state_ = State::kRunning;
-        LOG("Local Tcp/Ip connection accepted");
-      }
-      break;
+      OUTCOME_TRY(Accept());
+      state_ = State::kRunning;
     }
     case State::kRunning: {
       break;
     }
     case State::kShutdownSent: {
-      if (accepted_socket_->WaitDisconnect() == ResultType::kSuccess) {
-        state_ = State::kRemoteDisconnected;
-      }
-      break;
+      OUTCOME_TRY(accepted_socket_->WaitDisconnect());
+      state_ = State::kRemoteDisconnected;
     }
     case State::kRemoteDisconnected: {
       accepted_socket_ = std::nullopt;
@@ -72,89 +55,79 @@ LocalSocketManager::State LocalSocketManager::Tick() {
     }
   }
 
-  return state_;
+  return outcome::success();
 }
 
-ResultType LocalSocketManager::Receive(std::string* result) {
-  if (state_ != State::kRunning) {
-    ERROR("Local socket cant receive because its not running");
-    return ResultType::kError;
+outcome::result<std::string> LocalSocketManager::Receive() {
+  CHECK(state_ == State::kRunning);
+
+  if (!accepted_socket_->CanBeRead()) {
+    return Error::kEagain;
   }
 
-  if (!accepted_socket_->CanBeRead()) return ResultType::kAgain;
+  OUTCOME_TRY(data, accepted_socket_->Receive());
 
-  ResultType receive_result = accepted_socket_->Receive(result);
-
-  if (receive_result == ResultType::kSuccess && result->empty()) {
+  if (data.empty()) {
     state_ = State::kRemoteDisconnected;
-    LOG("Local Socket Disconnected");
-    return ResultType::kError;
   }
 
-  return receive_result;
+  return std::move(data);
 }
 
-ResultType LocalSocketManager::SendBlocking(const std::string& text) {
-  if (state_ != State::kRunning) {
-    ERROR("Local Socket cant send because its not running");
-    return ResultType::kError;
-  }
-  return accepted_socket_->SendBlocking(text);
+outcome::result<void> LocalSocketManager::SendBlocking(std::string_view data) {
+  CHECK(state_ == State::kRunning);
+  return accepted_socket_->SendBlocking(data);
 }
 
-ResultType LocalSocketManager::ForceReconnect() {
-  if (state_ != State::kRunning) {
-    ERROR("Local Socket cant reconnect because its not running");
-    return ResultType::kError;
+outcome::result<void> LocalSocketManager::ForceReconnect() {
+  CHECK(state_ == State::kRunning);
+
+  while (true) {
+    const auto result = accepted_socket_->Shutdown();
+    if (result) {
+      break;
+    }
+    if (!result && !shouldITryAgain(result)) {
+      return result;
+    }
   }
 
-  ResultType result;
-  do {
-    result = accepted_socket_->Shutdown();
-  } while (result == ResultType::kAgain);
-
-  if (result == ResultType::kError) return ResultType::kError;
   state_ = State::kShutdownSent;
-  return ResultType::kSuccess;
+  return outcome::success();
 }
 
 // This closes the both the listen_socket and the accepted socket gracefully.
 // This is depending on the current state_.
-ResultType LocalSocketManager::Close() {
-  ResultType result;
+outcome::result<void> LocalSocketManager::Close() {
   switch (state_) {
     // shutdown accepted socket
-    case State::kRunning:
-      result = accepted_socket_->Shutdown();
-      if (result != ResultType::kSuccess) return result;
+    case State::kRemoteDisconnected:
+    case State::kRunning: {
+      OUTCOME_TRY(accepted_socket_->Shutdown());
       state_ = State::kShutdownSent;
+    }
 
     // wait for disconnect
-    case State::kShutdownSent:
-      result = accepted_socket_->WaitDisconnect();
-      if (result != ResultType::kSuccess) return result;
-      state_ = State::kRemoteDisconnected;
-
-    // close accepted socket
-    case State::kRemoteDisconnected:
+    case State::kShutdownSent: {
+      OUTCOME_TRY(accepted_socket_->WaitDisconnect());
       accepted_socket_ = std::nullopt;
       state_ = State::kListening;
+    }
 
     // close listening socket
     case State::kListening:
     case State::kBound:
-    case State::kInitialized:
-      result = listen_socket_->Shutdown();
-      if (result != ResultType::kSuccess) return result;
+    case State::kInitialized: {
+      OUTCOME_TRY(listen_socket_->Shutdown());
       listen_socket_ = std::nullopt;
       state_ = State::kNotInitialized;
+    }
 
     // do nothing
     case State::kNotInitialized:
       break;
   }
 
-  state_ = State::kNotInitialized;
-  return ResultType::kSuccess;
+  return outcome::success();
 }
 };  // namespace OrbitSsh

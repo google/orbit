@@ -44,14 +44,10 @@ std::string ErrorCategory::message(int condition) const {
       return "Method none.";
     case Error::kAuthenticationFailed:
       return "Authentication failed.";
-    case Error::kPublicKeyUnrecognized:
-      return "Public key unrecognized.";
     case Error::kPublickeyUnverified:
       return "Public key unverified.";
     case Error::kChannelOutOfOrder:
       return "Channel out of order.";
-    case Error::kChannelFailure:
-      return "Channel failure.";
     case Error::kChannelRequestDenied:
       return "Channel request denied.";
     case Error::kChannelUnknown:
@@ -110,6 +106,12 @@ std::string ErrorCategory::message(int condition) const {
       return "Key file authentication failed.";
     case Error::kSocketNone:
       return "The socket is invalid.";
+    case Error::kInvalidIP:
+      return "Unable to parse IP address";
+    case Error::kUnknown:
+      return "Unknown error code.";
+    case Error::kFailedCreatingSession:
+      return "Failed to create a session object.";
   }
 
   return "Unknown error code.";

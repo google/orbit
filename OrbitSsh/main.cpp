@@ -20,7 +20,6 @@
 #include "OrbitGgp/GgpInstance.h"
 #include "OrbitGgp/GgpSshInfo.h"
 #include "OrbitSsh/Credentials.h"
-#include "OrbitSsh/ResultType.h"
 #include "OrbitSsh/Sftp.h"
 #include "OrbitSsh/SftpFile.h"
 #include "OrbitSsh/SshManager.h"
@@ -98,8 +97,8 @@ static auto WaitFor(qintptr fd, F generator) {
   const auto tick = [&]() {
     result = generator();
 
-    if (result || result.error() !=
-                      OrbitSsh::make_error_code(OrbitSsh::SftpError::kEagain)) {
+    if (result ||
+        result.error() != OrbitSsh::make_error_code(OrbitSsh::Error::kEagain)) {
       loop.quit();
     }
   };
@@ -127,8 +126,8 @@ static outcome::result<void> SyncWrite(qintptr fd, OrbitSsh::SftpFile* file,
   const auto write = [&]() {
     auto tmp = file->Write(data);
 
-    if (!tmp && tmp.error() !=
-                    OrbitSsh::make_error_code(OrbitSsh::SftpError::kEagain)) {
+    if (!tmp &&
+        tmp.error() != OrbitSsh::make_error_code(OrbitSsh::Error::kEagain)) {
       char* msg;
       int length;
       libssh2_session_last_error(session->GetRawSessionPtr(), &msg, &length,
@@ -180,8 +179,8 @@ static outcome::result<std::string> SyncRead(qintptr fd,
   const auto read_ = [&](auto&& read_) {
     auto tmp = file->Read(100);
 
-    if (!tmp && tmp.error() !=
-                    OrbitSsh::make_error_code(OrbitSsh::SftpError::kEagain)) {
+    if (!tmp &&
+        tmp.error() != OrbitSsh::make_error_code(OrbitSsh::Error::kEagain)) {
       char* msg;
       int length;
       libssh2_session_last_error(session->GetRawSessionPtr(), &msg, &length,
@@ -246,11 +245,9 @@ int main(int argc, char* argv[]) {
     OrbitSsh::SessionManager sessionManager{credentials};
     QEventLoop loop{};
 
-    if (sessionManager.Tick() !=
-        OrbitSsh::SessionManager::State::kAuthenticated) {
+    if (OrbitSsh::shouldITryAgain(sessionManager.Initialize())) {
       const auto tick = [&]() {
-        if (sessionManager.Tick() ==
-            OrbitSsh::SessionManager::State::kAuthenticated) {
+        if (!OrbitSsh::shouldITryAgain(sessionManager.Initialize())) {
           loop.quit();
         }
       };
@@ -336,6 +333,20 @@ int main(int argc, char* argv[]) {
     CHECK(readResult.value() == payload);
     LOG("Read string is identical to written string.");
 
+    result = WaitFor(sessionManager.GetSocketPtr()->GetFileDescriptor(),
+            [&]() { return fileRead.value().Close(); });
+
+    if (!result) {
+      FATAL("Error while closing file: %s", result.error().message());
+    }
+
+    result = WaitFor(sessionManager.GetSocketPtr()->GetFileDescriptor(),
+            [&]() { return sftp.value().Shutdown(); });
+
+    if (!result) {
+      FATAL("Error while shutting down SFTP channel: %s", result.error().message());
+    }
+
   } else {
     std::queue<OrbitSsh::SshManager::Task> pre_tasks;
     pre_tasks.emplace(OrbitSsh::SshManager::Task{
@@ -353,16 +364,17 @@ int main(int argc, char* argv[]) {
     OrbitSsh::SshManager ssh_handler(credentials, pre_tasks, main_task,
                                      {44766, 44755});
 
-    for (int i = 0; i < 5000; i++) {
-      ssh_handler.Tick();
+    outcome::result<void> tick_result = outcome::success();
+    do {
+      tick_result = ssh_handler.Tick();
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+    } while (OrbitSsh::shouldITryAgain(tick_result));
 
-    OrbitSsh::ResultType close_result;
+    outcome::result<void> close_result = outcome::success();
     do {
       close_result = ssh_handler.Close();
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while (close_result == OrbitSsh::ResultType::kAgain);
+    } while (OrbitSsh::shouldITryAgain(close_result));
   }
   return 0;
 }

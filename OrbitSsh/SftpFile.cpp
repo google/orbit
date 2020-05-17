@@ -17,7 +17,7 @@ outcome::result<SftpFile> SftpFile::Open(Session* session, Sftp* sftp,
   if (result) {
     return outcome::success(SftpFile{result});
   } else {
-    return static_cast<SftpError>(
+    return static_cast<Error>(
         libssh2_session_last_errno(session->GetRawSessionPtr()));
   }
 }
@@ -31,7 +31,7 @@ outcome::result<std::string> SftpFile::Read(int max_length_in_bytes) {
     buffer.resize(result);
     return buffer;
   } else {
-    return static_cast<SftpError>(result);
+    return static_cast<Error>(result);
   }
 }
 
@@ -42,7 +42,7 @@ outcome::result<void> SftpFile::Close() {
     file_ptr_ = nullptr;
     return outcome::success();
   } else {
-    return static_cast<SftpError>(result);
+    return static_cast<Error>(result);
   }
 }
 
@@ -52,7 +52,7 @@ outcome::result<size_t> SftpFile::Write(std::string_view data) {
   if (result >= 0) {
     return outcome::success(result);
   } else {
-    return static_cast<SftpError>(result);
+    return static_cast<Error>(result);
   }
 }
 

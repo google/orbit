@@ -8,9 +8,9 @@
 #include <libssh2.h>
 
 #include <memory>
+#include <outcome.hpp>
 
 #include "Channel.h"
-#include "ResultType.h"
 
 namespace OrbitSsh {
 
@@ -30,18 +30,12 @@ class DirectTcpIpChannelManager {
 
   DirectTcpIpChannelManager(Session* session_ptr, std::string third_party_host,
                             int third_party_port);
-  DirectTcpIpChannelManager() = delete;
-  DirectTcpIpChannelManager(const DirectTcpIpChannelManager&) = delete;
-  DirectTcpIpChannelManager& operator=(const DirectTcpIpChannelManager&) =
-      delete;
-  DirectTcpIpChannelManager(DirectTcpIpChannelManager&& other) = default;
-  DirectTcpIpChannelManager& operator=(DirectTcpIpChannelManager&& other) =
-      default;
 
-  State Tick();
-  ResultType Read(std::string* result);
-  ResultType WriteBlocking(const std::string& text);
-  ResultType Close();
+  outcome::result<State> Tick();
+  outcome::result<std::string> Read();
+  outcome::result<void> WriteBlocking(std::string_view text);
+  outcome::result<void> Initialize();
+  outcome::result<void> Close();
 
  private:
   State state_ = State::kNotInitialized;

@@ -10,9 +10,10 @@
 #include <string>
 
 #include "Channel.h"
-#include "ResultType.h"
 
 namespace OrbitSsh {
+enum class SuccessWhen { kRunning, kFinished };
+
 // ExecChannelManager manages a ssh exec channel. An exec channel executes one
 // command on the remote server, periodically returns its output and returns the
 // exit code when the command returns. The Tick function should be called
@@ -23,6 +24,13 @@ namespace OrbitSsh {
 // when an error occurred
 class ExecChannelManager {
  public:
+  ExecChannelManager(Session* session_ptr, std::string command,
+                     std::function<void(std::string)> output_callback,
+                     std::function<void(int)> exit_callback);
+
+  outcome::result<void> Run(SuccessWhen successWhen);
+
+ private:
   enum class State {
     kNotInitialized,
     kChannelOpened,
@@ -31,19 +39,6 @@ class ExecChannelManager {
     kFailed
   };
 
-  ExecChannelManager(Session* session_ptr, std::string command,
-                     std::function<void(std::string)> output_callback,
-                     std::function<void(int)> exit_callback);
-  ExecChannelManager() = delete;
-  ExecChannelManager(const ExecChannelManager&) = delete;
-  ExecChannelManager& operator=(const ExecChannelManager&) = delete;
-  ExecChannelManager(ExecChannelManager&& other) = default;
-  ExecChannelManager& operator=(ExecChannelManager&& other) = default;
-  ~ExecChannelManager();
-
-  State Tick();
-
- private:
   Session* session_ptr_;
   std::optional<Channel> channel_;
   std::string command_;

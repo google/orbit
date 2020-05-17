@@ -10,7 +10,6 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Channel.h"
-#include "OrbitSsh/ResultType.h"
 
 namespace OrbitSsh {
 
@@ -31,66 +30,37 @@ DirectTcpIpChannelManager::DirectTcpIpChannelManager(
 // * kWaitRemoteClosed: Waiting for the remote server to close the channel. Once
 // it is closed the state jumps back to kNotInitialized and tries to establish a
 // new connection.
-DirectTcpIpChannelManager::State DirectTcpIpChannelManager::Tick() {
-  switch (state_) {
-    case State::kNotInitialized: {
-      if (Channel::CreateDirectTcpIp(session_ptr_, third_party_host_,
-                                     third_party_port_,
-                                     &channel_) == ResultType::kSuccess) {
-        state_ = State::kRunning;
-        LOG("Direct Tcp Channel Connected");
-      }
-      break;
-    }
-    case State::kRunning: {
-      break;
-    }
-    case State::kSentEOFToRemote: {
-      if (channel_->WaitRemoteEOF() != ResultType::kAgain) {
-        state_ = State::kRemoteSentEOFBack;
-      }
-      break;
-    }
-    case State::kRemoteSentEOFBack: {
-      if (channel_->Close() != ResultType::kAgain) {
-        state_ = State::kWaitRemoteClosed;
-      }
-      break;
-    }
-    case State::kWaitRemoteClosed: {
-      if (channel_->WaitClosed() != ResultType::kAgain) {
-        channel_ = std::nullopt;
-        state_ = State::kNotInitialized;
-      }
-      break;
-    }
+outcome::result<DirectTcpIpChannelManager::State>
+DirectTcpIpChannelManager::Tick() {
+  if (state_ == State::kNotInitialized) {
+    OUTCOME_TRY(Initialize());
   }
-
+  if (state_ != State::kRunning) {
+    OUTCOME_TRY(Close());
+  }
   return state_;
 }
-
-ResultType DirectTcpIpChannelManager::WriteBlocking(const std::string& text) {
-  if (state_ == State::kRunning) return channel_->WriteBlocking(text);
-
-  ERROR("Unable to write to DirectTcpIpChannelManager, state not running");
-  return ResultType::kError;
+outcome::result<void> DirectTcpIpChannelManager::Initialize() {
+  if (state_ == State::kNotInitialized) {
+    OUTCOME_TRY(channel,
+                Channel::OpenTcpIpTunnel(session_ptr_, third_party_host_,
+                                         third_party_port_));
+    channel_ = std::move(channel);
+    state_ = State::kRunning;
+    LOG("Direct Tcp Channel Connected");
+  }
+  return outcome::success();
 }
 
-ResultType DirectTcpIpChannelManager::Read(std::string* result) {
-  if (state_ != State::kRunning) {
-    ERROR("Unable to write to DirectTcpIpChannelManager, state not running");
-    return ResultType::kError;
-  }
+outcome::result<void> DirectTcpIpChannelManager::WriteBlocking(
+    std::string_view data) {
+  CHECK(state_ == State::kRunning);
+  return channel_->WriteBlocking(data);
+}
 
-  ResultType read_result = channel_->Read(result);
-
-  if (channel_->GetRemoteEOF()) {
-    state_ = State::kRemoteSentEOFBack;
-    LOG("Direct Tcp Channel Disconnected");
-    return ResultType::kError;
-  }
-
-  return read_result;
+outcome::result<std::string> DirectTcpIpChannelManager::Read() {
+  CHECK(state_ == State::kRunning);
+  return channel_->Read();
 }
 
 // This function closes the channel gracefully. This includes sending
@@ -98,40 +68,39 @@ ResultType DirectTcpIpChannelManager::Read(std::string* result) {
 // messages. Therefore this function might return kAgain to for example indicate
 // its waiting for the close message. This function should be called
 // periodically until it returns kSuccess.
-ResultType DirectTcpIpChannelManager::Close() {
-  ResultType result;
+outcome::result<void> DirectTcpIpChannelManager::Close() {
   switch (state_) {
     // send eof
-    case State::kRunning:
-      result = channel_->SendEOF();
-      if (result != ResultType::kSuccess) return result;
+    case State::kRunning: {
+      OUTCOME_TRY(channel_->SendEOF());
       state_ = State::kSentEOFToRemote;
+    }
 
     // wait remote eof
-    case State::kSentEOFToRemote:
-      result = channel_->WaitRemoteEOF();
-      if (result != ResultType::kSuccess) return result;
+    case State::kSentEOFToRemote: {
+      OUTCOME_TRY(channel_->WaitRemoteEOF());
       state_ = State::kRemoteSentEOFBack;
+    }
 
     // close channel
-    case State::kRemoteSentEOFBack:
-      result = channel_->Close();
-      if (result != ResultType::kSuccess) return result;
+    case State::kRemoteSentEOFBack: {
+      OUTCOME_TRY(channel_->Close());
       state_ = State::kWaitRemoteClosed;
+    }
 
     // wait closed
-    case State::kWaitRemoteClosed:
-      result = channel_->WaitClosed();
-      if (result != ResultType::kSuccess) return result;
+    case State::kWaitRemoteClosed: {
+      OUTCOME_TRY(channel_->WaitClosed());
       channel_ = std::nullopt;
       state_ = State::kNotInitialized;
+    }
 
     // do nothing
     case State::kNotInitialized:
       break;
   }
 
-  return ResultType::kSuccess;
+  return outcome::success();
 }
 
 }  // namespace OrbitSsh

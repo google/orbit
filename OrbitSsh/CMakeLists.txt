@@ -21,8 +21,8 @@ target_sources(
          include/OrbitSsh/DirectTcpIpChannelManager.h
          include/OrbitSsh/Error.h
          include/OrbitSsh/ExecChannelManager.h
+         include/OrbitSsh/KnownHostsError.h
          include/OrbitSsh/LocalSocketManager.h
-         include/OrbitSsh/ResultType.h
          include/OrbitSsh/Session.h
          include/OrbitSsh/SessionManager.h
          include/OrbitSsh/Sftp.h
@@ -37,6 +37,7 @@ target_sources(
           DirectTcpIpChannelManager.cpp
           Error.cpp
           ExecChannelManager.cpp
+          KnownHostsError.cpp
           LocalSocketManager.cpp
           Session.cpp
           SessionManager.cpp

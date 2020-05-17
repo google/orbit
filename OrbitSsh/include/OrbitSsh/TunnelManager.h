@@ -6,10 +6,10 @@
 #define ORBIT_SSH_PORT_FORWARD_MANAGER_H_
 
 #include <memory>
+#include <outcome.hpp>
 
 #include "OrbitSsh/DirectTcpIpChannelManager.h"
 #include "OrbitSsh/LocalSocketManager.h"
-#include "OrbitSsh/ResultType.h"
 
 namespace OrbitSsh {
 
@@ -21,24 +21,23 @@ namespace OrbitSsh {
 // to move data from socket to channel and vice versa.
 class TunnelManager {
  public:
-  enum class State { kNotConnected, kConnected };
-
   explicit TunnelManager(Session* session_ptr, int local_port, int remote_port);
-  TunnelManager(const TunnelManager&) = delete;
-  TunnelManager& operator=(const TunnelManager&) = delete;
-  TunnelManager(TunnelManager&&) = default;
-  TunnelManager& operator=(TunnelManager&&) = default;
 
-  State Tick();
-  ResultType Close();
+  outcome::result<void> Tick();
+  outcome::result<void> Close();
 
  private:
-  ResultType Connect();
-  ResultType ReceiveSocketWriteChannel();
-  ResultType ReadChannelSendSocket();
+  enum class State { kNotConnected, kConnected };
+  outcome::result<void> Connect();
+  outcome::result<void> ReceiveSocketWriteChannel();
+  outcome::result<void> ReadChannelSendSocket();
   State state_ = State::kNotConnected;
-  LocalSocketManager socket_;
-  DirectTcpIpChannelManager channel_;
+  std::optional<LocalSocketManager> socket_;
+  std::optional<DirectTcpIpChannelManager> channel_;
+
+  Session* session_ptr_ = nullptr;
+  int local_port_ = 0;
+  int remote_port_ = 0;
 };
 
 }  // namespace OrbitSsh
