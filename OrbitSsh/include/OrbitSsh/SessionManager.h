@@ -6,9 +6,10 @@
 #define ORBIT_SSH_SESSIONMANAGER_H_
 
 #include <filesystem>
+#include <outcome.hpp>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitSsh/Credentials.h"
-#include "OrbitSsh/ResultType.h"
 #include "OrbitSsh/Session.h"
 #include "OrbitSsh/Socket.h"
 
@@ -21,7 +22,6 @@ namespace OrbitSsh {
 // This class is constructed with the ssh credentials needed to establish a
 // connection.
 class SessionManager {
- public:
   enum class State {
     kNotInitialized,
     kSocketCreated,
@@ -32,17 +32,28 @@ class SessionManager {
     kAuthenticated
   };
 
+ public:
   explicit SessionManager(Credentials credentials);
-  SessionManager() = delete;
+
   SessionManager(const SessionManager&) = delete;
   SessionManager& operator=(const SessionManager&) = delete;
 
-  State Tick();
-  Session* GetSessionPtr() {
-    return session_.has_value() ? &session_.value() : nullptr;
+  outcome::result<void> Initialize();
+
+  bool isInitialized() const noexcept {
+    return state_ == State::kAuthenticated;
   }
-  Socket* GetSocketPtr() { return &socket_.value(); }
-  ResultType Close();
+
+  Session* GetSessionPtr() {
+    CHECK(session_);
+    return &session_.value();
+  }
+  Socket* GetSocketPtr() {
+    CHECK(socket_);
+    return &socket_.value();
+  }
+
+  outcome::result<void> Close();
 
  private:
   State state_ = State::kNotInitialized;

@@ -7,6 +7,7 @@
 
 #include <libssh2_sftp.h>
 
+#include <outcome.hpp>
 #include <system_error>
 
 namespace OrbitSsh {
@@ -15,7 +16,7 @@ enum class Error {
   kBannerRecv = LIBSSH2_ERROR_BANNER_RECV,
   kBannerSend = LIBSSH2_ERROR_BANNER_SEND,
   kInvalidMac = LIBSSH2_ERROR_INVALID_MAC,
-  kKeyFailure = LIBSSH2_ERROR_KEX_FAILURE,
+  kKexFailure = LIBSSH2_ERROR_KEX_FAILURE,
   kAlloc = LIBSSH2_ERROR_ALLOC,
   kSocketSend = LIBSSH2_ERROR_SOCKET_SEND,
   kExchangeFailure = LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE,
@@ -29,7 +30,6 @@ enum class Error {
   kFile = LIBSSH2_ERROR_FILE,
   kMethodNone = LIBSSH2_ERROR_METHOD_NONE,
   kAuthenticationFailed = LIBSSH2_ERROR_AUTHENTICATION_FAILED,
-  kPublicKeyUnrecognized = LIBSSH2_ERROR_PUBLICKEY_UNRECOGNIZED,
   kPublickeyUnverified = LIBSSH2_ERROR_PUBLICKEY_UNVERIFIED,
   kChannelOutOfOrder = LIBSSH2_ERROR_CHANNEL_OUTOFORDER,
   kChannelFailure = LIBSSH2_ERROR_CHANNEL_FAILURE,
@@ -60,7 +60,10 @@ enum class Error {
   kKnownHosts = LIBSSH2_ERROR_KNOWN_HOSTS,
   kChannelWindowFull = LIBSSH2_ERROR_CHANNEL_WINDOW_FULL,
   kKeyfileAuthFailed = LIBSSH2_ERROR_KEYFILE_AUTH_FAILED,
-  kSocketNone = LIBSSH2_ERROR_SOCKET_NONE
+  kSocketNone = LIBSSH2_ERROR_SOCKET_NONE,
+  kInvalidIP,
+  kUnknown,
+  kFailedCreatingSession
 };
 
 struct ErrorCategory : std::error_category {
@@ -85,6 +88,16 @@ inline const ErrorCategory& GetErrorCategory() {
 
 inline std::error_code make_error_code(Error e) {
   return std::error_code{static_cast<int>(e), GetErrorCategory()};
+}
+
+inline bool shouldITryAgain(std::error_code e) {
+  return e == std::errc::resource_unavailable_try_again;
+}
+
+template <typename T>
+bool shouldITryAgain(const outcome::result<T>& result) {
+  return result.has_error() &&
+         result.error() == std::errc::resource_unavailable_try_again;
 }
 
 }  // namespace OrbitSsh

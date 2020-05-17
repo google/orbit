@@ -11,19 +11,18 @@
 #include <outcome.hpp>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitSsh/ResultType.h"
 
 namespace OrbitSsh {
 
 Channel::Channel(LIBSSH2_CHANNEL* raw_channel_ptr)
     : raw_channel_ptr_(raw_channel_ptr) {}
 
-Channel::Channel(Channel&& other) {
+Channel::Channel(Channel&& other) noexcept {
   raw_channel_ptr_ = other.raw_channel_ptr_;
   other.raw_channel_ptr_ = nullptr;
 }
 
-Channel& Channel::operator=(Channel&& other) {
+Channel& Channel::operator=(Channel&& other) noexcept {
   if (this != &other) {
     raw_channel_ptr_ = other.raw_channel_ptr_;
     other.raw_channel_ptr_ = nullptr;
@@ -31,167 +30,129 @@ Channel& Channel::operator=(Channel&& other) {
   return *this;
 }
 
-Channel::~Channel() {
+Channel::~Channel() noexcept {
   if (raw_channel_ptr_ != nullptr) {
     libssh2_channel_free(raw_channel_ptr_);
   }
 }
 
-ResultType Channel::CreateOpenSession(Session* session_ptr,
-                                      std::optional<Channel>* channel_opt) {
+outcome::result<Channel> Channel::OpenChannel(Session* session) {
   LIBSSH2_CHANNEL* raw_channel_ptr =
-      libssh2_channel_open_session(session_ptr->GetRawSessionPtr());
+      libssh2_channel_open_session(session->GetRawSessionPtr());
   if (raw_channel_ptr != nullptr) {
-    *channel_opt = Channel(raw_channel_ptr);
-    return ResultType::kSuccess;
+    return outcome::success(Channel{raw_channel_ptr});
   }
 
-  int last_errno = libssh2_session_last_errno(session_ptr->GetRawSessionPtr());
-  if (last_errno == LIBSSH2_ERROR_EAGAIN) return ResultType::kAgain;
-
-  ERROR("Unable to open channel, last errorno %d", last_errno);
-  return ResultType::kError;
+  return static_cast<Error>(
+      libssh2_session_last_errno(session->GetRawSessionPtr()));
 }
 
-ResultType Channel::CreateDirectTcpIp(Session* session_ptr,
-                                      const std::string& third_party_host,
-                                      int third_party_port,
-                                      std::optional<Channel>* channel_opt) {
-  LIBSSH2_CHANNEL* raw_channel_ptr =
-      libssh2_channel_direct_tcpip(session_ptr->GetRawSessionPtr(),
-                                   third_party_host.c_str(), third_party_port);
+outcome::result<Channel> Channel::OpenTcpIpTunnel(
+    Session* session, const std::string& third_party_host,
+    int third_party_port) {
+  LIBSSH2_CHANNEL* raw_channel_ptr = libssh2_channel_direct_tcpip(
+      session->GetRawSessionPtr(), third_party_host.c_str(), third_party_port);
   if (raw_channel_ptr != nullptr) {
-    *channel_opt = Channel(raw_channel_ptr);
-    return ResultType::kSuccess;
+    return outcome::success(Channel{raw_channel_ptr});
   }
 
-  int last_errno = libssh2_session_last_errno(session_ptr->GetRawSessionPtr());
-  if (last_errno == LIBSSH2_ERROR_EAGAIN) return ResultType::kAgain;
-
-  // TODO (antonrohr) better error handling. (resolve that in higher level)
-  if (last_errno == LIBSSH2_ERROR_CHANNEL_FAILURE) return ResultType::kAgain;
-
-  ERROR("Unable to open channel, last errno %d", last_errno);
-  return ResultType::kError;
+  return static_cast<Error>(
+      libssh2_session_last_errno(session->GetRawSessionPtr()));
 }
 
-ResultType Channel::Exec(const std::string& command) {
-  int rc = libssh2_channel_exec(raw_channel_ptr_, command.c_str());
-  if (rc == 0) return ResultType::kSuccess;
+outcome::result<void> Channel::Exec(const std::string& command) {
+  const int rc = libssh2_channel_exec(raw_channel_ptr_, command.c_str());
+  if (rc == 0) {
+    return outcome::success();
+  }
 
-  if (rc == LIBSSH2_ERROR_EAGAIN) return ResultType::kAgain;
-
-  ERROR("Unable to perform channel exec, error code %d", rc);
-  return ResultType::kError;
+  return static_cast<Error>(rc);
 }
 
-ResultType Channel::Read(std::string* result, int buffer_size) {
-  int rc;
-  bool read_at_least_once = false;
-  int length_before;
+outcome::result<std::string> Channel::Read(int buffer_size) {
+  std::string buffer(buffer_size, '\0');
+  const int rc =
+      libssh2_channel_read(raw_channel_ptr_, buffer.data(), buffer.size());
+
+  if (rc >= 0) {
+    buffer.resize(rc);
+    return outcome::success(std::move(buffer));
+  } else {
+    return static_cast<Error>(rc);
+  }
+}
+
+outcome::result<int> Channel::Write(std::string_view data) {
+  const int rc =
+      libssh2_channel_write(raw_channel_ptr_, data.data(), data.size());
+
+  if (rc >= 0) {
+    return outcome::success(rc);
+  } else {
+    return static_cast<Error>(rc);
+  }
+}
+
+outcome::result<void> Channel::WriteBlocking(std::string_view text) {
   do {
-    length_before = result->length();
-    result->resize(length_before + buffer_size);
-    rc = libssh2_channel_read(raw_channel_ptr_, result->data() + length_before,
-                              buffer_size);
-
-    if (rc == LIBSSH2_ERROR_EAGAIN) {
-      result->resize(length_before);
-      break;
+    const auto result = Write(text);
+    if (!result && result.error() != make_error_code(Error::kEagain)) {
+      return result.error();
     }
-    if (rc < 0) {
-      result->resize(length_before);
-      ERROR("Unable to read channel, error code %d", rc);
-      return ResultType::kError;
-    }
+    text = text.substr(result.value());
+  } while (!text.empty());
 
-    read_at_least_once = true;
-  } while (rc == buffer_size);
+  return outcome::success();
+}
 
-  if (rc != LIBSSH2_ERROR_EAGAIN) {
-    result->resize(length_before + rc);
+outcome::result<void> Channel::RequestPty(const std::string& term) {
+  const int rc = libssh2_channel_request_pty(raw_channel_ptr_, term.c_str());
+
+  if (rc == 0) {
+    return outcome::success();
+  } else {
+    return static_cast<Error>(rc);
   }
-
-  if (read_at_least_once) return ResultType::kSuccess;
-  return ResultType::kAgain;
 }
 
-ResultType Channel::Write(const std::string& text, size_t* written_length) {
-  CHECK(text.size() >= *written_length);
-  int rc =
-      libssh2_channel_write(raw_channel_ptr_, text.data() + *written_length,
-                            text.length() - *written_length);
-  if (rc > 0) {
-    *written_length += rc;
-    return ResultType::kSuccess;
+outcome::result<void> Channel::SendEOF() {
+  const int rc = libssh2_channel_send_eof(raw_channel_ptr_);
+
+  if (rc == 0) {
+    return outcome::success();
+  } else {
+    return static_cast<Error>(rc);
   }
-  if (rc == LIBSSH2_ERROR_EAGAIN) return ResultType::kAgain;
-
-  ERROR("Unable to write to channel, error code %d", rc);
-  return ResultType::kError;
 }
 
-ResultType Channel::WriteBlocking(const std::string& text) {
-  size_t written_length = 0;
-  do {
-    ResultType result = Write(text, &written_length);
-    if (result == ResultType::kError) return result;
-  } while (written_length < text.length());
+outcome::result<void> Channel::WaitRemoteEOF() {
+  const int rc = libssh2_channel_wait_eof(raw_channel_ptr_);
 
-  return ResultType::kSuccess;
+  if (rc == 0) {
+    return outcome::success();
+  } else {
+    return static_cast<Error>(rc);
+  }
 }
 
-ResultType Channel::RequestPty(const std::string& term) {
-  int rc = libssh2_channel_request_pty(raw_channel_ptr_, term.c_str());
+outcome::result<void> Channel::Close() {
+  const int rc = libssh2_channel_close(raw_channel_ptr_);
 
-  if (rc == 0) return ResultType::kSuccess;
-
-  if (rc == LIBSSH2_ERROR_EAGAIN) return ResultType::kAgain;
-
-  ERROR("Unable to request pty, error code %d", rc);
-  return ResultType::kError;
+  if (rc == 0) {
+    return outcome::success();
+  } else {
+    return static_cast<Error>(rc);
+  }
 }
 
-ResultType Channel::SendEOF() {
-  int rc = libssh2_channel_send_eof(raw_channel_ptr_);
+outcome::result<void> Channel::WaitClosed() {
+  const int rc = libssh2_channel_wait_closed(raw_channel_ptr_);
 
-  if (rc == 0) return ResultType::kSuccess;
-
-  if (rc == LIBSSH2_ERROR_EAGAIN) return ResultType::kAgain;
-
-  ERROR("Sending EOF to channel resulted in error code %d", rc);
-  return ResultType::kError;
-}
-
-ResultType Channel::WaitRemoteEOF() {
-  int rc = libssh2_channel_wait_eof(raw_channel_ptr_);
-
-  if (rc == 0) return ResultType::kSuccess;
-
-  if (rc == LIBSSH2_ERROR_EAGAIN) return ResultType::kAgain;
-
-  ERROR("Wait for remote EOF failed, error code %d", rc);
-  return ResultType::kError;
-}
-
-ResultType Channel::Close() {
-  int rc = libssh2_channel_close(raw_channel_ptr_);
-
-  if (rc == 0) return ResultType::kSuccess;
-  if (rc == LIBSSH2_ERROR_EAGAIN) return ResultType::kAgain;
-
-  ERROR("Channel closing failed with error code %d", rc);
-  return ResultType::kError;
-}
-
-ResultType Channel::WaitClosed() {
-  int rc = libssh2_channel_wait_closed(raw_channel_ptr_);
-
-  if (rc == 0) return ResultType::kSuccess;
-  if (rc == LIBSSH2_ERROR_EAGAIN) return ResultType::kAgain;
-
-  ERROR("Wait for closing channel failed, error code %d", rc);
-  return ResultType::kError;
+  if (rc == 0) {
+    return outcome::success();
+  } else {
+    return static_cast<Error>(rc);
+  }
 }
 
 int Channel::GetExitStatus() {

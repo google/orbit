@@ -9,42 +9,48 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/DirectTcpIpChannelManager.h"
 #include "OrbitSsh/LocalSocketManager.h"
-#include "OrbitSsh/ResultType.h"
 
 namespace OrbitSsh {
 
 TunnelManager::TunnelManager(Session* session_ptr, int local_port,
                              int remote_port)
-    : socket_("127.0.0.1", local_port),
-      channel_(session_ptr, "127.0.0.1", remote_port) {}
+    : session_ptr_(session_ptr),
+      local_port_(local_port),
+      remote_port_(remote_port) {}
 
-ResultType TunnelManager::Connect() {
-  LocalSocketManager::State socket_state = socket_.Tick();
-  DirectTcpIpChannelManager::State channel_state = channel_.Tick();
-
-  if (socket_state == LocalSocketManager::State::kRunning &&
-      channel_state == DirectTcpIpChannelManager::State::kRunning) {
-    return ResultType::kSuccess;
+outcome::result<void> TunnelManager::Connect() {
+  const std::string local_ip_addr = "127.0.0.1";
+  if (!socket_) {
+    socket_.emplace(local_ip_addr, local_port_);
   }
-  return ResultType::kAgain;
+
+  if (!channel_) {
+    channel_.emplace(session_ptr_, local_ip_addr, remote_port_);
+  }
+
+  OUTCOME_TRY(socket_->Connect());
+  OUTCOME_TRY(channel_->Initialize());
+  return outcome::success();
 }
 
-ResultType TunnelManager::ReceiveSocketWriteChannel() {
-  std::string text;
-  ResultType result = socket_.Receive(&text);
+outcome::result<void> TunnelManager::ReceiveSocketWriteChannel() {
+  OUTCOME_TRY(data, socket_->Receive());
+  if (data.empty()) {
+    return std::error_code{ENOTCONN, std::system_category()};
+  }
 
-  if (result != ResultType::kSuccess) return result;
-
-  return channel_.WriteBlocking(text);
+  OUTCOME_TRY(channel_->WriteBlocking(data));
+  return outcome::success();
 }
 
-ResultType TunnelManager::ReadChannelSendSocket() {
-  std::string text;
-  ResultType result = channel_.Read(&text);
+outcome::result<void> TunnelManager::ReadChannelSendSocket() {
+  OUTCOME_TRY(data, channel_->Read());
+  if (data.empty()) {
+    return std::error_code{ENOTCONN, std::system_category()};
+  }
 
-  if (result != ResultType::kSuccess) return result;
-
-  return socket_.SendBlocking(text);
+  OUTCOME_TRY(socket_->SendBlocking(data));
+  return outcome::success();
 }
 
 // This function keeps trying to make a connection when its in the kNotConnected
@@ -54,49 +60,37 @@ ResultType TunnelManager::ReadChannelSendSocket() {
 // the socket and writing to the channel and then reading from the channel and
 // sending to the socket. If either of these operations fails, the state will be
 // set back to kNotConnected.
-TunnelManager::State TunnelManager::Tick() {
-  ResultType result = ResultType::kAgain;
+outcome::result<void> TunnelManager::Tick() {
   switch (state_) {
     case State::kNotConnected: {
-      result = Connect();
-      if (result == ResultType::kSuccess) state_ = State::kConnected;
-      break;
+      OUTCOME_TRY(Connect());
+      state_ = State::kConnected;
     }
     case State::kConnected: {
-      ResultType result = ReceiveSocketWriteChannel();
-      if (result == ResultType::kError) {
+      if (const auto result = ReceiveSocketWriteChannel(); result.has_error()) {
         state_ = State::kNotConnected;
-        break;
+        socket_ = std::nullopt;
+        channel_ = std::nullopt;
+        return result;
       }
-      result = ReadChannelSendSocket();
-      if (result == ResultType::kError) {
+      if (const auto result = ReadChannelSendSocket(); result.has_error()) {
         // The Ui needs to realize the connection was interrupted, so it starts
         // send hello messages again;
-        socket_.ForceReconnect();
         state_ = State::kNotConnected;
+        OUTCOME_TRY(socket_->ForceReconnect());
+        return result;
       }
       break;
     }
   }
 
-  return state_;
+  return outcome::success();
 }
 
-ResultType TunnelManager::Close() {
-  ResultType result_channel = channel_.Close();
-  ResultType result_socket = socket_.Close();
-
-  if (result_channel == ResultType::kError ||
-      result_socket == ResultType::kError) {
-    return ResultType::kError;
-  }
-
-  if (result_channel == ResultType::kSuccess &&
-      result_socket == ResultType::kSuccess) {
-    return ResultType::kSuccess;
-  }
-
-  return ResultType::kAgain;
+outcome::result<void> TunnelManager::Close() {
+  OUTCOME_TRY(channel_->Close());
+  OUTCOME_TRY(socket_->Close());
+  return outcome::success();
 }
 
 }  // namespace OrbitSsh

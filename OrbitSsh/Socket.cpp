@@ -5,18 +5,18 @@
 #include "OrbitSsh/Socket.h"
 
 #include "OrbitBase/Logging.h"
-#include "OrbitSsh/ResultType.h"
+#include "OrbitSsh/Error.h"
 
 namespace OrbitSsh {
 
 Socket::Socket(Descriptor file_descriptor) : descriptor_(file_descriptor) {}
 
-Socket::Socket(Socket&& other) {
+Socket::Socket(Socket&& other) noexcept {
   descriptor_ = other.descriptor_;
   other.descriptor_ = LIBSSH2_INVALID_SOCKET;
 }
 
-Socket& Socket::operator=(Socket&& other) {
+Socket& Socket::operator=(Socket&& other) noexcept {
   if (this != &other) {
     descriptor_ = other.descriptor_;
     other.descriptor_ = LIBSSH2_INVALID_SOCKET;
@@ -25,66 +25,74 @@ Socket& Socket::operator=(Socket&& other) {
   return *this;
 }
 
-ResultType Socket::Connect(std::string ip_address, int port, int domain) {
+outcome::result<void> Socket::Connect(const std::string& ip_address, int port,
+                                      int domain) {
+  sockaddr_in sin;
+  sin.sin_family = domain;
+  sin.sin_port = htons(port);
+  sin.sin_addr.s_addr = inet_addr(ip_address.c_str());
+
+  if (sin.sin_addr.s_addr == INADDR_NONE) {
+    return Error::kInvalidIP;
+  }
+
+  const int rc = connect(descriptor_, reinterpret_cast<sockaddr*>(&sin),
+                         sizeof(sockaddr_in));
+
+  if (rc == 0) {
+    return outcome::success();
+  } else {
+    return getLastError();
+  }
+}
+
+outcome::result<void> Socket::Connect(const AddrAndPort& addrAndPort,
+                                      int domain) {
+  return Connect(addrAndPort.addr, addrAndPort.port, domain);
+}
+
+outcome::result<void> Socket::Bind(const std::string& ip_address, int port,
+                                   int domain) {
   sockaddr_in sin;
   sin.sin_family = domain;
   sin.sin_port = htons(port);
   sin.sin_addr.s_addr = inet_addr(ip_address.c_str());
   if (sin.sin_addr.s_addr == INADDR_NONE) {
-    ERROR("Unable to parse ip address");
-    return ResultType::kError;
+    return outcome::failure(Error::kInvalidIP);
   }
 
-  int rc = connect(descriptor_, reinterpret_cast<sockaddr*>(&sin),
-                   sizeof(sockaddr_in));
+  const int result =
+      bind(descriptor_, reinterpret_cast<sockaddr*>(&sin), sizeof(sockaddr_in));
 
-  if (rc == 0) return ResultType::kSuccess;
-
-  PrintWithLastError("Unable to connect to socket");
-  return ResultType::kError;
+  if (result == 0) {
+    return outcome::success();
+  } else {
+    return getLastError();
+  }
 }
 
-ResultType Socket::Bind(std::string ip_address, int port, int domain) {
-  sockaddr_in sin;
-  sin.sin_family = domain;
-  sin.sin_port = htons(port);
-  sin.sin_addr.s_addr = inet_addr(ip_address.c_str());
-  if (sin.sin_addr.s_addr == INADDR_NONE) {
-    ERROR("Unable to parse ip address");
-    return ResultType::kError;
-  }
-
-  if (0 == bind(descriptor_, reinterpret_cast<sockaddr*>(&sin),
-                sizeof(sockaddr_in))) {
-    return ResultType::kSuccess;
-  }
-
-  PrintWithLastError("Error while binding socket");
-  return ResultType::kError;
-}
-
-ResultType Socket::GetSocketAddrAndPort(std::string* ip_address, int* port) {
+outcome::result<Socket::AddrAndPort> Socket::GetSocketAddrAndPort() {
   struct sockaddr_in sin;
   socklen_t len = sizeof(sin);
   if (getsockname(descriptor_, reinterpret_cast<sockaddr*>(&sin), &len) == 0) {
-    *ip_address = inet_ntoa(sin.sin_addr);
-    *port = ntohs(sin.sin_port);
-    return ResultType::kSuccess;
+    return outcome::success(
+        AddrAndPort{std::string{inet_ntoa(sin.sin_addr)}, ntohs(sin.sin_port)});
   }
 
-  PrintWithLastError("Unable to get port");
-  return ResultType::kError;
+  return getLastError();
 }
 
-ResultType Socket::Listen() {
-  int rc = listen(descriptor_, 0);
-  if (rc == 0) return ResultType::kSuccess;
+outcome::result<void> Socket::Listen() {
+  const int rc = listen(descriptor_, 0);
 
-  PrintWithLastError("Unable to listen to socket");
-  return ResultType::kError;
+  if (rc == 0) {
+    return outcome::success();
+  } else {
+    return getLastError();
+  }
 }
 
-bool Socket::CanBeRead() {
+outcome::result<void> Socket::CanBeRead() {
   timeval select_timeout;
   select_timeout.tv_sec = 0;
   select_timeout.tv_usec = 0;
@@ -93,75 +101,66 @@ bool Socket::CanBeRead() {
   FD_ZERO(&socket_set);
   FD_SET(descriptor_, &socket_set);
 
-  // TODO error handling here
-  int result =
+  const int result =
       select(descriptor_ + 1, &socket_set, NULL, NULL, &select_timeout);
-  return result > 0;
+  if (result > 0) {
+    return outcome::success();
+  } else if (result == 0) {
+    return Error::kEagain;
+  } else {
+    return getLastError();
+  }
 }
 
-ResultType Socket::Receive(std::string* result, int buffer_size) {
-  if (!CanBeRead()) return ResultType::kAgain;
+outcome::result<std::string> Socket::Receive(size_t buffer_size) {
+  OUTCOME_TRY(CanBeRead());
 
-  CHECK(buffer_size > 0);
+  std::string buffer(buffer_size, '\0');
 
-  int rc;
-  int length_before;
-  do {
-    length_before = result->length();
-    result->resize(length_before + buffer_size);
-    // rc = recv(descriptor_, buffer_, buffer_size, flags);
-    rc = recv(descriptor_, result->data() + length_before, buffer_size, 0);
+  const int rc = recv(descriptor_, buffer.data(), buffer.size(), 0);
 
-    if (rc < 0) {
-      result->resize(length_before);
-      PrintWithLastError("Unable to receive from socket");
-      return ResultType::kError;
-    }
-
-    // result->append(buffer_, rc);
-  } while (rc == buffer_size);
-
-  result->resize(length_before + rc);
-
-  return ResultType::kSuccess;
+  if (rc < 0) {
+    return getLastError();
+  } else {
+    buffer.resize(rc);
+    return buffer;
+  }
 }
 
-ResultType Socket::Send(const std::string& text, size_t* sent_length) {
-  int rc = send(descriptor_, text.data() + *sent_length,
-                text.length() - *sent_length, 0);
+outcome::result<size_t> Socket::Send(std::string_view data) {
+  const int rc = send(descriptor_, data.data(), data.size(), 0);
 
   if (rc > 0) {
-    *sent_length += rc;
-    return ResultType::kSuccess;
+    return outcome::success(static_cast<size_t>(rc));
+  } else {
+    return getLastError();
   }
-  PrintWithLastError("Unable to send to socket");
-  return ResultType::kError;
 }
 
-ResultType Socket::SendBlocking(const std::string& text) {
-  size_t sent_length = 0;
+outcome::result<void> Socket::SendBlocking(std::string_view data) {
   do {
-    ResultType result = Send(text, &sent_length);
-    if (result == ResultType::kError) return result;
-  } while (sent_length < text.length());
+    const auto result = Send(data);
+    if (!result && !shouldITryAgain(result)) {
+      // A non recoverable error occured.
+      return result.error();
+    }
+    data = data.substr(result.value());
+  } while (!data.empty());
 
-  return ResultType::kSuccess;
+  return outcome::success();
 }
 
-ResultType Socket::WaitDisconnect() {
-  if (!CanBeRead()) return ResultType::kAgain;
+outcome::result<void> Socket::WaitDisconnect() {
+  OUTCOME_TRY(CanBeRead());
+  OUTCOME_TRY(data, Receive());
 
-  std::string text;
-  ResultType result = Receive(&text);
-
-  if (result == ResultType::kAgain) return ResultType::kAgain;
-  if (result == ResultType::kSuccess && text.empty()) {
-    return ResultType::kSuccess;
+  if (data.empty()) {
+    return outcome::success();
   }
 
   LOG("Received data after sending shutdown on socket (%d bytes)",
-      text.length());
-  return ResultType::kError;
+      data.length());
+  return getLastError();
 }
 
 }  // namespace OrbitSsh

@@ -3,12 +3,12 @@
 // found in the LICENSE file.
 
 #include "OrbitBase/Logging.h"
-#include "OrbitSsh/ResultType.h"
+#include "OrbitSsh/Error.h"
 #include "OrbitSsh/Socket.h"
 
 namespace OrbitSsh {
 
-std::optional<Socket> Socket::Create(int domain, int type, int protocol) {
+outcome::result<Socket> Socket::Create(int domain, int type, int protocol) {
   WSADATA wsadata;
   int err = WSAStartup(MAKEWORD(2, 0), &wsadata);
   if (err != 0) {
@@ -18,7 +18,7 @@ std::optional<Socket> Socket::Create(int domain, int type, int protocol) {
   Descriptor descriptor = socket(domain, type, protocol);
   if (descriptor == LIBSSH2_INVALID_SOCKET) {
     PrintWithLastError("Unable to create socket");
-    return std::nullopt;
+    return getLastError();
   }
 
   return Socket(descriptor);
@@ -35,16 +35,15 @@ Socket::~Socket() {
   PrintWithLastError("Socket abnormal close");
 }
 
-ResultType Socket::Accept(std::optional<Socket>* new_socket) {
+outcome::result<Socket> Socket::Accept() {
   Descriptor descriptor = accept(descriptor_, NULL, NULL);
 
   if (descriptor == LIBSSH2_INVALID_SOCKET) {
     PrintWithLastError("Unable to accept");
-    return ResultType::kError;
+    return getLastError();
   }
 
-  *new_socket = Socket(descriptor);
-  return ResultType::kSuccess;
+  return Socket(descriptor);
 }
 
 void Socket::PrintWithLastError(const std::string& message) {
@@ -58,11 +57,15 @@ void Socket::PrintWithLastError(const std::string& message) {
   LocalFree(error_string);
 }
 
-ResultType Socket::Shutdown() {
-  if (shutdown(descriptor_, SD_BOTH) == 0) return ResultType::kSuccess;
+outcome::result<void> Socket::Shutdown() {
+  if (shutdown(descriptor_, SD_BOTH) == 0) return outcome::success();
 
   PrintWithLastError("Socket abnormal shutdown");
-  return ResultType::kError;
+  return getLastError();
+}
+
+std::error_code Socket::getLastError() {
+  return std::error_code{::WSAGetLastError(), std::system_category()};
 }
 
 }  // namespace OrbitSsh

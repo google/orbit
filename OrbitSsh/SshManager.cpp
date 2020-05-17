@@ -12,7 +12,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSsh/ExecChannelManager.h"
-#include "OrbitSsh/ResultType.h"
 #include "OrbitSsh/SessionManager.h"
 #include "OrbitSsh/TunnelManager.h"
 
@@ -28,7 +27,7 @@ SshManager::SshManager(Credentials credentials, std::queue<Task> pre_tasks,
   LOG("Ssh initialized");
 }
 
-SshManager::~SshManager() { libssh2_exit(); }
+SshManager::~SshManager() noexcept { libssh2_exit(); }
 
 // Tick progresses through different states until it reaches
 // kMainAndTunnelRunning, in which it will keep the main task and tunnels alive
@@ -47,16 +46,15 @@ SshManager::~SshManager() { libssh2_exit(); }
 // 4. Running of Main task and Tunnels. The main task progress is managed by
 // exec_channel_ by calling its Tick function. Each tunnel is managed by one
 // TunnelManager, which packages through the tunnel everytime it Tick is called
-SshManager::State SshManager::Tick() {
+outcome::result<void> SshManager::Tick() {
   switch (state_) {
     case State::kNotInitialized: {
-      if (session_manager_.Tick() == SessionManager::State::kAuthenticated) {
-        state_ = State::kSessionRunning;
-      }
-      break;
+      OUTCOME_TRY(session_manager_.Initialize());
+      state_ = State::kPreTasksRunning;
     }
-    case State::kSessionRunning: {
-      if (!pre_tasks_.empty()) {
+    case State::kSessionRunning:
+    case State::kPreTasksRunning: {
+      if (!exec_channel_ && !pre_tasks_.empty()) {
         Task pre_task = pre_tasks_.front();
         pre_tasks_.pop();
         exec_channel_ = ExecChannelManager(
@@ -66,31 +64,37 @@ SshManager::State SshManager::Tick() {
               pre_task.exit_callback(exit_code);
               state_ = State::kSessionRunning;
             });
-        state_ = State::kPreTasksRunning;
-        break;
       }
-      exec_channel_ = ExecChannelManager(
-          session_manager_.GetSessionPtr(), main_task_.command,
-          [this](std::string text) { main_task_.output_callback(text); },
-          [this](int exit_code) { this->MainTaskExit(exit_code); });
+      if (exec_channel_) {
+        OUTCOME_TRY(exec_channel_->Run(SuccessWhen::kFinished));
+        exec_channel_ = std::nullopt;
+      }
       state_ = State::kMainTaskStarting;
-      break;
-    }
-    case State::kPreTasksRunning: {
-      exec_channel_->Tick();
-      break;
     }
     case State::kMainTaskStarting: {
-      if (exec_channel_->Tick() == ExecChannelManager::State::kRunning) {
-        StartPortForwarding();
-        state_ = State::kMainAndTunnelsRunning;
+      if (!exec_channel_) {
+        exec_channel_ = ExecChannelManager(
+            session_manager_.GetSessionPtr(), main_task_.command,
+            [this](std::string text) { main_task_.output_callback(text); },
+            [this](int exit_code) { this->MainTaskExit(exit_code); });
       }
-      break;
+
+      OUTCOME_TRY(exec_channel_->Run(SuccessWhen::kRunning));
+      StartPortForwarding();
+      state_ = State::kMainAndTunnelsRunning;
     }
     case State::kMainAndTunnelsRunning: {
-      exec_channel_->Tick();
+      const auto result = exec_channel_->Run(SuccessWhen::kFinished);
+
+      if (!result && !shouldITryAgain(result)) {
+        return result.error();
+      }
+
       for (TunnelManager& tunnel : tunnels_) {
-        tunnel.Tick();
+        const auto result = tunnel.Tick();
+        if (!result && !shouldITryAgain(result)) {
+          return result.error();
+        }
       }
       break;
     }
@@ -98,25 +102,24 @@ SshManager::State SshManager::Tick() {
       break;
     }
   }
-  return state_;
+  return outcome::success();
 }
 
 // This closes all members in the correct order, depending on the state its in.
 // In the case this function returns kAgain, it needs to be called again to
 // continue the closing. This can happen because some of the closing of the
 // members might return kAgain themselves
-ResultType SshManager::Close() {
-  ResultType result;
+outcome::result<void> SshManager::Close() {
   switch (state_) {
-    case State::kMainAndTunnelsRunning:
-      result = CloseTunnels();
-      if (result != ResultType::kSuccess) return result;
+    case State::kMainAndTunnelsRunning: {
+      OUTCOME_TRY(CloseTunnels());
       state_ = State::kSessionRunning;
+    }
 
-    case State::kSessionRunning:
-      result = session_manager_.Close();
-      if (result != ResultType::kSuccess) return result;
+    case State::kSessionRunning: {
+      OUTCOME_TRY(session_manager_.Close());
       state_ = State::kNotInitialized;
+    }
 
     // running exec tasks can't be cancelled
     case State::kPreTasksRunning:
@@ -129,7 +132,7 @@ ResultType SshManager::Close() {
   }
 
   state_ = State::kClosed;
-  return ResultType::kSuccess;
+  return outcome::success();
 }
 
 void SshManager::MainTaskExit(int exit_code) {
@@ -141,21 +144,19 @@ void SshManager::MainTaskExit(int exit_code) {
 }
 
 void SshManager::StartPortForwarding() {
-  for (auto port : tunnel_ports_) {
-    tunnels_.emplace_back(session_manager_.GetSessionPtr(), port, port);
+  if (tunnels_.empty()) {
+    for (auto port : tunnel_ports_) {
+      tunnels_.emplace_back(session_manager_.GetSessionPtr(), port, port);
+    }
   }
 }
 
-ResultType SshManager::CloseTunnels() {
-  ResultType result = ResultType::kSuccess;
-
+outcome::result<void> SshManager::CloseTunnels() {
   for (TunnelManager& tunnel : tunnels_) {
-    ResultType tunnel_result = tunnel.Close();
-    if (tunnel_result == ResultType::kError) return ResultType::kError;
-    if (tunnel_result == ResultType::kAgain) result = ResultType::kAgain;
+    OUTCOME_TRY(tunnel.Close());
   }
 
-  return result;
+  return outcome::success();
 }
 
 }  // namespace OrbitSsh

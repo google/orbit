@@ -14,7 +14,6 @@
 
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSsh/ExecChannelManager.h"
-#include "OrbitSsh/ResultType.h"
 #include "OrbitSsh/SessionManager.h"
 #include "OrbitSsh/TunnelManager.h"
 
@@ -48,17 +47,18 @@ class SshManager {
   };
   SshManager(Credentials credentials, std::queue<Task> pre_tasks,
              Task main_task, std::vector<int> tunnel_ports);
-  SshManager() = delete;
+
   SshManager(const SshManager&) = delete;
   SshManager& operator=(const SshManager&) = delete;
-  ~SshManager();
-  State Tick();
-  ResultType Close();
+  ~SshManager() noexcept;
+
+  outcome::result<void> Tick();
+  outcome::result<void> Close();
 
  private:
   void MainTaskExit(int exit_code);
   void StartPortForwarding();
-  ResultType CloseTunnels();
+  outcome::result<void> CloseTunnels();
   State state_ = State::kNotInitialized;
   SessionManager session_manager_;
   std::optional<ExecChannelManager> exec_channel_;

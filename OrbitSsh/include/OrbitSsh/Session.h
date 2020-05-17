@@ -9,31 +9,35 @@
 
 #include <filesystem>
 #include <memory>
+#include <outcome.hpp>
 #include <string>
 
-#include "ResultType.h"
 #include "Socket.h"
 
 namespace OrbitSsh {
 
 class Session {
  public:
-  Session() = delete;
   Session(const Session&) = delete;
   Session& operator=(const Session&) = delete;
-  Session(Session&&);
-  Session& operator=(Session&&);
-  ~Session();
 
-  static std::optional<Session> Create();
+  Session(Session&&) noexcept;
+  Session& operator=(Session&&) noexcept;
+  ~Session() noexcept;
 
-  ResultType Handshake(Socket* socket_ptr);
-  ResultType MatchKnownHosts(std::string host, int port,
-                             std::filesystem::path known_hosts_path);
-  ResultType Authenticate(std::string username, std::filesystem::path key_path,
-                          std::string pass_phrase = "");
-  ResultType Disconnect(std::string message = "Disconnecting normally");
-  LIBSSH2_SESSION* GetRawSessionPtr() { return raw_session_ptr_; }
+  static outcome::result<Session> Create();
+
+  outcome::result<void> Handshake(Socket* socket_ptr);
+  outcome::result<void> MatchKnownHosts(std::string host, int port,
+                                        std::filesystem::path known_hosts_path);
+  outcome::result<void> Authenticate(std::string username,
+                                     std::filesystem::path key_path,
+                                     std::string pass_phrase = "");
+  outcome::result<void> Disconnect(
+      std::string message = "Disconnecting normally");
+  LIBSSH2_SESSION* GetRawSessionPtr() const noexcept {
+    return raw_session_ptr_;
+  }
   void SetBlocking(bool value);
 
  private:

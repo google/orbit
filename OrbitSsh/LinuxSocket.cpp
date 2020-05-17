@@ -3,22 +3,22 @@
 // found in the LICENSE file.
 
 #include "OrbitBase/Logging.h"
-#include "OrbitSsh/ResultType.h"
+#include "OrbitSsh/Error.h"
 #include "OrbitSsh/Socket.h"
 
 namespace OrbitSsh {
 
-std::optional<Socket> Socket::Create(int domain, int type, int protocol) {
+outcome::result<Socket> Socket::Create(int domain, int type, int protocol) {
   Descriptor descriptor = socket(domain, type, protocol);
   if (descriptor == LIBSSH2_INVALID_SOCKET) {
     PrintWithLastError("Unable to create socket");
-    return std::nullopt;
+    return getLastError();
   }
 
   return Socket(descriptor);
 }
 
-Socket::~Socket() {
+Socket::~Socket() noexcept {
   if (descriptor_ == LIBSSH2_INVALID_SOCKET) return;
 
   if (close(descriptor_) == 0) {
@@ -28,29 +28,32 @@ Socket::~Socket() {
   PrintWithLastError("Socket abnormal close");
 }
 
-ResultType Socket::Accept(std::optional<Socket>* new_socket) {
-  if (!CanBeRead()) return ResultType::kAgain;
+outcome::result<Socket> Socket::Accept() {
+  OUTCOME_TRY(CanBeRead());
 
-  Descriptor descriptor = accept(descriptor_, NULL, NULL);
+  const Descriptor descriptor = accept(descriptor_, NULL, NULL);
 
-  if (descriptor == LIBSSH2_INVALID_SOCKET) {
+  if (descriptor < 0) {
     PrintWithLastError("Unable to accept");
-    return ResultType::kError;
+    return getLastError();
   }
 
-  *new_socket = Socket(descriptor);
-  return ResultType::kSuccess;
+  return Socket{descriptor};
 }
 
 void Socket::PrintWithLastError(const std::string& message) {
   ERROR("%s; error: %s", message.c_str(), strerror(errno));
 }
 
-ResultType Socket::Shutdown() {
-  if (shutdown(descriptor_, SHUT_RDWR) == 0) return ResultType::kSuccess;
+outcome::result<void> Socket::Shutdown() {
+  if (shutdown(descriptor_, SHUT_RDWR) == 0) return outcome::success();
 
   PrintWithLastError("Socket abnormal shutdown");
-  return ResultType::kError;
+  return getLastError();
+}
+
+std::error_code Socket::getLastError() {
+  return std::error_code{errno, std::system_category()};
 }
 
 }  // namespace OrbitSsh

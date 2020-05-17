@@ -15,7 +15,7 @@ outcome::result<Sftp> Sftp::Init(Session* session) {
   if (result) {
     return Sftp{result, session};
   } else {
-    return static_cast<SftpError>(
+    return static_cast<Error>(
         libssh2_session_last_errno(session->GetRawSessionPtr()));
   }
 }
@@ -44,7 +44,7 @@ outcome::result<void> Sftp::Shutdown() {
     raw_sftp_ptr_ = nullptr;
     return outcome::success();
   } else {
-    return outcome::failure(static_cast<SftpError>(result));
+    return outcome::failure(static_cast<Error>(result));
   }
 }
 

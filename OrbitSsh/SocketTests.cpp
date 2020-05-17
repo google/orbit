@@ -4,253 +4,207 @@
 #include <optional>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitSsh/ResultType.h"
+#include "OrbitSsh/Error.h"
 #include "OrbitSsh/Socket.h"
 
 namespace OrbitSsh {
 
 TEST(Socket, Create) {
-  std::optional<Socket> socket = Socket::Create();
-  EXPECT_NE(socket, std::nullopt);
+  auto socket = Socket::Create();
+  ASSERT_TRUE(socket);
+  ASSERT_TRUE(socket.has_value());
 }
 
 TEST(Socket, GetSocketAddrAndPort) {
-  std::optional<Socket> socket = Socket::Create();
-  EXPECT_NE(socket, std::nullopt);
-
-  ResultType result;
-  std::string ip_address;
-  int port = -1;
+  auto socket = Socket::Create();
+  ASSERT_TRUE(socket);
+  ASSERT_TRUE(socket.has_value());
 
   // when bound (0 for getting a free port)
-  result = socket->Bind("127.0.0.1", 0);
-  EXPECT_EQ(result, ResultType::kSuccess);
-  result = socket->GetSocketAddrAndPort(&ip_address, &port);
-  EXPECT_EQ(result, ResultType::kSuccess);
-  EXPECT_EQ(ip_address, "127.0.0.1");
-  EXPECT_NE(port, -1);
+  ASSERT_TRUE(socket.value().Bind("127.0.0.1", 0));
+  const auto result = socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result.value().addr, "127.0.0.1");
+  EXPECT_NE(result.value().port, -1);
 }
 
 TEST(Socket, Bind) {
-  std::optional<Socket> socket = Socket::Create();
-  ASSERT_NE(socket, std::nullopt);
+  auto socket = Socket::Create();
+  ASSERT_TRUE(socket);
+  ASSERT_TRUE(socket.has_value());
 
-  ResultType result;
-
-  // bad ip address
-  result = socket->Bind("256.0.0.1", 0);
-  EXPECT_EQ(result, ResultType::kError);
-  result = socket->Bind("localhost", 0);
-  EXPECT_EQ(result, ResultType::kError);
+  // invalid ip address
+  ASSERT_TRUE(socket.value().Bind("256.0.0.1", 0).has_error());
+  // invalid port
+  ASSERT_TRUE(socket.value().Bind("localhost", 0).has_error());
 
   // get free port from operating system
-  result = socket->Bind("127.0.0.1", 0);
-  EXPECT_EQ(result, ResultType::kSuccess);
-  std::string ip_address;
-  int port = -1;
-  result = socket->GetSocketAddrAndPort(&ip_address, &port);
-  EXPECT_EQ(result, ResultType::kSuccess);
-  EXPECT_EQ(ip_address, "127.0.0.1");
-  EXPECT_NE(port, -1);
+  ASSERT_TRUE(socket.value().Bind("127.0.0.1", 0).has_value());
+
+  const auto result = socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result.value().addr, "127.0.0.1");
+  EXPECT_NE(result.value().port, -1);
 
   // cant have two sockets binding to the same address & port
-  std::optional<Socket> socket_2 = Socket::Create();
-  ASSERT_NE(socket_2, std::nullopt);
-  result = socket_2->Bind(ip_address, port);
-  EXPECT_EQ(result, ResultType::kError);
+  auto socket_2 = Socket::Create();
+  ASSERT_TRUE(socket_2);
+  ASSERT_TRUE(socket_2.has_value());
+  ASSERT_TRUE(
+      socket_2.value().Bind("127.0.0.1", result.value().port).has_error());
 }
 
 TEST(Socket, Listen) {
-  std::optional<Socket> socket = Socket::Create();
-  ASSERT_NE(socket, std::nullopt);
-
-  ResultType result;
-  std::string ip_address;
-  int port;
+  auto socket = Socket::Create();
+  ASSERT_TRUE(socket);
+  ASSERT_TRUE(socket.has_value());
 
   // bind to 127.0.0.1
-  result = socket->Bind("127.0.0.1", 0);
-  EXPECT_EQ(result, ResultType::kSuccess);
-  result = socket->GetSocketAddrAndPort(&ip_address, &port);
-  EXPECT_EQ(result, ResultType::kSuccess);
-  EXPECT_EQ(ip_address, "127.0.0.1");
+  ASSERT_TRUE(socket.value().Bind("127.0.0.1", 0));
+  const auto result = socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(result.value().addr, "127.0.0.1");
+  EXPECT_NE(result.value().port, -1);
 
   // can't call bind again on the same socket
-  result = socket->Bind("127.0.0.1", 0);
-  EXPECT_EQ(result, ResultType::kError);
+  EXPECT_FALSE(socket.value().Bind("127.0.0.1", 0));
 
   // bind first then listen
-  socket = std::nullopt;
   socket = Socket::Create();  // fresh socket
-  ASSERT_NE(socket, std::nullopt);
-  result = socket->Bind("127.0.0.1", 0);
-  EXPECT_EQ(result, ResultType::kSuccess);
-  result = socket->Listen();
-  EXPECT_EQ(result, ResultType::kSuccess);
+  ASSERT_TRUE(socket);
+  ASSERT_TRUE(socket.has_value());
+  ASSERT_TRUE(socket.value().Bind("127.0.0.1", 0));
+  ASSERT_TRUE(socket.value().Listen());
 }
 
 TEST(Socket, Connect) {
-  ResultType result;
-  std::string ip_address = "127.0.0.1";
-  int port = -1;
+  const std::string ip_address = "127.0.0.1";
+  const int port = 0;
 
   // setup listen socket
-  std::optional<Socket> listen_socket = Socket::Create();
-  ASSERT_NE(listen_socket, std::nullopt);
-  result = listen_socket->Bind(ip_address, 0);
-  ASSERT_EQ(result, ResultType::kSuccess);
-  result = listen_socket->Listen();
-  ASSERT_EQ(result, ResultType::kSuccess);
-  result = listen_socket->GetSocketAddrAndPort(&ip_address, &port);
-  ASSERT_EQ(result, ResultType::kSuccess);
+  auto listen_socket = Socket::Create();
+  ASSERT_TRUE(listen_socket);
+  ASSERT_TRUE(listen_socket.has_value());
+  ASSERT_TRUE(listen_socket.value().Bind(ip_address, 0));
+  ASSERT_TRUE(listen_socket.value().Listen());
+  const auto addr_and_port = listen_socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(addr_and_port);
 
   // connection should be possible
-  std::optional<Socket> connect_socket = Socket::Create();
-  ASSERT_NE(connect_socket, std::nullopt);
-  result = connect_socket->Connect(ip_address, port);
-  EXPECT_EQ(result, ResultType::kSuccess);
+  auto connect_socket = Socket::Create();
+  ASSERT_TRUE(connect_socket);
+  ASSERT_TRUE(connect_socket.has_value());
+  const auto result = connect_socket.value().Connect(addr_and_port.value());
+  ASSERT_TRUE(result);
 
   // can't listen when already in use
-  result = connect_socket->Listen();
-  EXPECT_EQ(result, ResultType::kError);
+  ASSERT_FALSE(connect_socket.value().Listen());
 
   // can't connect again when already connected
-  result = connect_socket->Connect(ip_address, port);
-  EXPECT_EQ(result, ResultType::kError);
+  ASSERT_FALSE(connect_socket.value().Connect(ip_address, port));
 }
 
 TEST(Socket, Accept) {
-  ResultType result;
-  std::string ip_address = "127.0.0.1";
-  int port = -1;
-
   // setup listen socket
-  std::optional<Socket> listen_socket = Socket::Create();
-  ASSERT_NE(listen_socket, std::nullopt);
-  result = listen_socket->Bind(ip_address, 0);
-  ASSERT_EQ(result, ResultType::kSuccess);
-  result = listen_socket->Listen();
-  ASSERT_EQ(result, ResultType::kSuccess);
-  result = listen_socket->GetSocketAddrAndPort(&ip_address, &port);
-  ASSERT_EQ(result, ResultType::kSuccess);
+  auto listen_socket = Socket::Create();
+  ASSERT_TRUE(listen_socket);
+  ASSERT_TRUE(listen_socket.has_value());
+  ASSERT_TRUE(listen_socket.value().Bind("127.0.0.1", 0));
+  ASSERT_TRUE(listen_socket.value().Listen());
+  const auto addrAndPort = listen_socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(addrAndPort);
 
   // setup connect socket
-  std::optional<Socket> connect_socket = Socket::Create();
-  ASSERT_NE(connect_socket, std::nullopt);
-  result = connect_socket->Connect(ip_address, port);
-  ASSERT_EQ(result, ResultType::kSuccess);
+  auto connect_socket = Socket::Create();
+  ASSERT_TRUE(connect_socket);
+  ASSERT_TRUE(connect_socket.has_value());
+  ASSERT_TRUE(connect_socket.value().Connect(addrAndPort.value()));
 
   // accept should be possible
-  std::optional<Socket> accepted_socket;
-  result = listen_socket->Accept(&accepted_socket);
-  EXPECT_EQ(result, ResultType::kSuccess);
-  EXPECT_NE(accepted_socket, std::nullopt);
+  auto accepted_socket = listen_socket.value().Accept();
+  ASSERT_TRUE(accepted_socket);
 }
 
 TEST(Socket, SendAndReceive) {
-  ResultType result;
-  std::string ip_address = "127.0.0.1";
-  int port = -1;
-
   // setup listen socket
-  std::optional<Socket> listen_socket = Socket::Create();
-  ASSERT_NE(listen_socket, std::nullopt);
-  result = listen_socket->Bind(ip_address, 0);
-  ASSERT_EQ(result, ResultType::kSuccess);
-  result = listen_socket->Listen();
-  ASSERT_EQ(result, ResultType::kSuccess);
-  result = listen_socket->GetSocketAddrAndPort(&ip_address, &port);
-  ASSERT_EQ(result, ResultType::kSuccess);
+  auto listen_socket = Socket::Create();
+  ASSERT_TRUE(listen_socket);
+  ASSERT_TRUE(listen_socket.has_value());
+  ASSERT_TRUE(listen_socket.value().Bind("127.0.0.1", 0));
+  ASSERT_TRUE(listen_socket.value().Listen());
+  const auto addrAndPort = listen_socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(addrAndPort);
 
   // setup client socket
-  std::optional<Socket> client_socket = Socket::Create();
-  ASSERT_NE(client_socket, std::nullopt);
-  result = client_socket->Connect(ip_address, port);
-  ASSERT_EQ(result, ResultType::kSuccess);
+  auto client_socket = Socket::Create();
+  ASSERT_TRUE(client_socket);
+  ASSERT_TRUE(client_socket.has_value());
+  ASSERT_TRUE(client_socket.value().Connect(addrAndPort.value()));
 
   // accept should be possible
-  std::optional<Socket> server_socket;
-  result = listen_socket->Accept(&server_socket);
-  ASSERT_EQ(result, ResultType::kSuccess);
-  ASSERT_NE(server_socket, std::nullopt);
+  auto server_socket = listen_socket.value().Accept();
+  ASSERT_TRUE(server_socket);
 
   // listen no longer needed
-  listen_socket = std::nullopt;
+  listen_socket = OrbitSsh::Error::kUnknown;
 
   // no data available -> receive would block (aka kAgain)
-  std::string text;
-  EXPECT_EQ(server_socket->Receive(&text), ResultType::kAgain);
-  EXPECT_EQ(client_socket->Receive(&text), ResultType::kAgain);
+  EXPECT_TRUE(OrbitSsh::shouldITryAgain(server_socket.value().Receive()));
+  EXPECT_TRUE(OrbitSsh::shouldITryAgain(client_socket.value().Receive()));
 
   // Send client -> server
-  std::string send_text = "test text";
-  result = client_socket->SendBlocking(send_text);
-  EXPECT_EQ(result, ResultType::kSuccess);
+  const std::string_view send_text = "test text";
+  EXPECT_TRUE(client_socket.value().SendBlocking(send_text));
 
   // Receive at server
-  std::string receive_text;
-  result = server_socket->Receive(&receive_text);
-  EXPECT_EQ(result, ResultType::kSuccess);
-  EXPECT_EQ(send_text, receive_text);
+  const auto result = server_socket.value().Receive();
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result.value(), send_text);
 
   // no data available -> receive would block (aka kAgain)
-  EXPECT_EQ(server_socket->Receive(&text), ResultType::kAgain);
-  EXPECT_EQ(client_socket->Receive(&text), ResultType::kAgain);
+  EXPECT_TRUE(OrbitSsh::shouldITryAgain(server_socket.value().Receive()));
+  EXPECT_TRUE(OrbitSsh::shouldITryAgain(client_socket.value().Receive()));
 
   // Send server -> client
-  send_text = "test text 2";
-  result = server_socket->SendBlocking(send_text);
-  EXPECT_EQ(result, ResultType::kSuccess);
+  const std::string_view send_text2 = "test text 2";
+  ASSERT_TRUE(server_socket.value().SendBlocking(send_text2));
 
   // Receive at client
-  receive_text = "";
-  result = client_socket->Receive(&receive_text);
-  EXPECT_EQ(result, ResultType::kSuccess);
-  EXPECT_EQ(send_text, receive_text);
+  const auto result2 = client_socket.value().Receive();
+  ASSERT_TRUE(result2);
+  EXPECT_EQ(result2.value(), send_text2);
 }
 
 TEST(Socket, Shutdown) {
-  ResultType result;
-  std::string ip_address = "127.0.0.1";
-  int port = -1;
-
   // setup listen socket
-  std::optional<Socket> listen_socket = Socket::Create();
-  ASSERT_NE(listen_socket, std::nullopt);
-  result = listen_socket->Bind(ip_address, 0);
-  ASSERT_EQ(result, ResultType::kSuccess);
-  result = listen_socket->Listen();
-  ASSERT_EQ(result, ResultType::kSuccess);
-  result = listen_socket->GetSocketAddrAndPort(&ip_address, &port);
-  ASSERT_EQ(result, ResultType::kSuccess);
+  auto listen_socket = Socket::Create();
+  ASSERT_TRUE(listen_socket);
+  ASSERT_TRUE(listen_socket.has_value());
+  ASSERT_TRUE(listen_socket.value().Bind("127.0.0.1", 0));
+  ASSERT_TRUE(listen_socket.value().Listen());
+  const auto addrAndPort = listen_socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(addrAndPort);
 
   // setup client socket
-  std::optional<Socket> client_socket = Socket::Create();
-  ASSERT_NE(client_socket, std::nullopt);
-  result = client_socket->Connect(ip_address, port);
-  ASSERT_EQ(result, ResultType::kSuccess);
+  auto client_socket = Socket::Create();
+  ASSERT_TRUE(client_socket);
+  ASSERT_TRUE(client_socket.has_value());
+  ASSERT_TRUE(client_socket.value().Connect(addrAndPort.value()));
 
   // accept should be possible
-  std::optional<Socket> server_socket;
-  result = listen_socket->Accept(&server_socket);
-  ASSERT_EQ(result, ResultType::kSuccess);
-  ASSERT_NE(server_socket, std::nullopt);
-
-  // listen no longer needed
-  listen_socket = std::nullopt;
+  auto server_socket = listen_socket.value().Accept();
+  ASSERT_TRUE(server_socket);
+  ASSERT_TRUE(server_socket.has_value());
 
   // no data available -> receive would block (aka kAgain)
-  std::string text;
-  EXPECT_EQ(server_socket->Receive(&text), ResultType::kAgain);
-  EXPECT_EQ(client_socket->Receive(&text), ResultType::kAgain);
+  EXPECT_TRUE(OrbitSsh::shouldITryAgain(server_socket.value().Receive()));
+  EXPECT_TRUE(OrbitSsh::shouldITryAgain(client_socket.value().Receive()));
 
   // send shutdown client
-  result = client_socket->Shutdown();
-  EXPECT_EQ(result, ResultType::kSuccess);
+  ASSERT_TRUE(client_socket.value().Shutdown());
 
   // server should have an immidiate result with WaitDisconnect
-  result = server_socket->WaitDisconnect();
-  EXPECT_EQ(result, ResultType::kSuccess);
+  ASSERT_TRUE(server_socket.value().WaitDisconnect());
 }
 
 }  // namespace OrbitSsh

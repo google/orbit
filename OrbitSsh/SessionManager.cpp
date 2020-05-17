@@ -6,7 +6,6 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Credentials.h"
-#include "OrbitSsh/ResultType.h"
 #include "OrbitSsh/Session.h"
 #include "OrbitSsh/Socket.h"
 
@@ -27,86 +26,64 @@ SessionManager::SessionManager(Credentials credentials)
 // * kMatchedKnownHosts: the remote server has been successfully matched with
 // the known hosts file
 // * kAuthenticated: The authentication was successful.
-SessionManager::State SessionManager::Tick() {
+outcome::result<void> SessionManager::Initialize() {
   switch (state_) {
     case State::kNotInitialized: {
-      std::optional<Socket> new_socket_opt = Socket::Create();
-      if (new_socket_opt.has_value()) {
-        socket_ = std::move(new_socket_opt);
-        state_ = State::kSocketCreated;
-      } else {
-        break;
-      }
+      OUTCOME_TRY(socket, Socket::Create());
+      socket_ = std::move(socket);
+      state_ = State::kSocketCreated;
     }
     case State::kSocketCreated: {
-      if (socket_->Connect(credentials_.host, credentials_.port) ==
-          ResultType::kSuccess) {
-        state_ = State::kSocketConnected;
-      }
-      break;
+      OUTCOME_TRY(socket_->Connect(credentials_.host, credentials_.port));
+      state_ = State::kSocketConnected;
     }
     case State::kSocketConnected: {
-      std::optional<Session> session_opt = Session::Create();
-      if (session_opt.has_value()) {
-        session_ = std::move(session_opt);
-        state_ = State::kSessionCreated;
-        session_->SetBlocking(false);
-      }
-      break;
+      OUTCOME_TRY(session, Session::Create());
+      session_ = std::move(session);
+      session_->SetBlocking(false);
+      state_ = State::kSessionCreated;
     }
     case State::kSessionCreated: {
-      if (session_->Handshake(&socket_.value()) == ResultType::kSuccess) {
-        state_ = State::kHandshaked;
-      }
-      break;
+      OUTCOME_TRY(session_->Handshake(&socket_.value()));
+      state_ = State::kHandshaked;
     }
     case State::kHandshaked: {
-      if (session_->MatchKnownHosts(credentials_.host, credentials_.port,
-                                    credentials_.known_hosts_path) ==
-          ResultType::kSuccess) {
-        state_ = State::kMatchedKnownHosts;
-      }
-      break;
+      OUTCOME_TRY(session_->MatchKnownHosts(
+          credentials_.host, credentials_.port, credentials_.known_hosts_path));
+      state_ = State::kMatchedKnownHosts;
     }
     case State::kMatchedKnownHosts: {
-      if (session_->Authenticate(credentials_.user, credentials_.key_path) ==
-          ResultType::kSuccess) {
-        state_ = State::kAuthenticated;
-      }
-      break;
+      OUTCOME_TRY(
+          session_->Authenticate(credentials_.user, credentials_.key_path));
+      state_ = State::kAuthenticated;
     }
     case State::kAuthenticated: {
       break;
     }
   }
 
-  return state_;
+  return outcome::success();
 }
 
 // The Close function gracefully closes the session and the socket used by the
 // session. This is dependent on the state the session is in, aka how far the
 // establishing of a connection already progressed.
-ResultType SessionManager::Close() {
-  ResultType result;
+outcome::result<void> SessionManager::Close() {
   switch (state_) {
     // disconnect session
     case State::kAuthenticated:
     case State::kMatchedKnownHosts:
     case State::kHandshaked:
-    case State::kSessionCreated:
-      result = session_->Disconnect();
-      if (result != ResultType::kSuccess) {
-        return result;
-        session_ = std::nullopt;
-      }
-
+    case State::kSessionCreated: {
+      OUTCOME_TRY(session_->Disconnect());
       state_ = State::kSocketConnected;
+    }
 
     // shutdown socket
-    case State::kSocketConnected:
-      result = socket_->Shutdown();
-      if (result != ResultType::kSuccess) return result;
+    case State::kSocketConnected: {
+      OUTCOME_TRY(socket_->Shutdown());
       state_ = State::kSocketCreated;
+    }
 
     // close socket
     case State::kSocketCreated:
@@ -118,8 +95,7 @@ ResultType SessionManager::Close() {
       break;
   }
 
-  state_ = State::kNotInitialized;
-  return ResultType::kSuccess;
+  return outcome::success();
 }
 
 }  // namespace OrbitSsh
