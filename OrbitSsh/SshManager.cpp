@@ -27,7 +27,7 @@ SshManager::SshManager(Credentials credentials, std::queue<Task> pre_tasks,
   LOG("Ssh initialized");
 }
 
-SshManager::~SshManager() noexcept { libssh2_exit(); }
+SshManager::~SshManager() noexcept { /*libssh2_exit();*/ }
 
 // Tick progresses through different states until it reaches
 // kMainAndTunnelRunning, in which it will keep the main task and tunnels alive
