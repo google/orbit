@@ -2,6 +2,8 @@
 #define ORBIT_LINUX_TRACING_UPROBES_RETURN_ADDRESS_MANAGER_H_
 
 #include <OrbitBase/Logging.h>
+#include <unwindstack/MapInfo.h>
+#include <unwindstack/Maps.h>
 
 #include <stack>
 #include <vector>
