@@ -16,20 +16,7 @@
 namespace OrbitSsh {
 
 Session::Session(LIBSSH2_SESSION* raw_session_ptr)
-    : raw_session_ptr_(raw_session_ptr) {}
-
-Session::Session(Session&& other) noexcept {
-  raw_session_ptr_ = other.raw_session_ptr_;
-  other.raw_session_ptr_ = nullptr;
-}
-
-Session& Session::operator=(Session&& other) noexcept {
-  if (this != &other) {
-    raw_session_ptr_ = other.raw_session_ptr_;
-    other.raw_session_ptr_ = nullptr;
-  }
-  return *this;
-}
+    : raw_session_ptr_(raw_session_ptr, &libssh2_session_free) {}
 
 outcome::result<Session> Session::Create() {
   LIBSSH2_SESSION* raw_session_ptr = libssh2_session_init();
@@ -41,14 +28,8 @@ outcome::result<Session> Session::Create() {
   return outcome::success(Session{raw_session_ptr});
 }
 
-Session::~Session() noexcept {
-  if (raw_session_ptr_ != nullptr) {
-    libssh2_session_free(raw_session_ptr_);
-  }
-}
-
 outcome::result<void> Session::Handshake(Socket* socket_ptr) {
-  const int rc = libssh2_session_handshake(raw_session_ptr_,
+  const int rc = libssh2_session_handshake(raw_session_ptr_.get(),
                                            socket_ptr->GetFileDescriptor());
   if (rc == 0) {
     return outcome::success();
@@ -59,10 +40,12 @@ outcome::result<void> Session::Handshake(Socket* socket_ptr) {
 
 outcome::result<void> Session::MatchKnownHosts(
     std::string host, int port, std::filesystem::path known_hosts_path) {
-  LIBSSH2_KNOWNHOSTS* known_hosts = libssh2_knownhost_init(raw_session_ptr_);
+  LIBSSH2_KNOWNHOSTS* known_hosts =
+      libssh2_knownhost_init(raw_session_ptr_.get());
 
   if (known_hosts == nullptr) {
-    return static_cast<Error>(libssh2_session_last_errno(raw_session_ptr_));
+    return static_cast<Error>(
+        libssh2_session_last_errno(raw_session_ptr_.get()));
   }
 
   // libssh2 does not support anything else than:
@@ -78,11 +61,12 @@ outcome::result<void> Session::MatchKnownHosts(
   size_t fingerprint_length;
   int fingerprint_type;
   const char* fingerprint = libssh2_session_hostkey(
-      raw_session_ptr_, &fingerprint_length, &fingerprint_type);
+      raw_session_ptr_.get(), &fingerprint_length, &fingerprint_type);
 
   if (fingerprint == nullptr) {
     libssh2_knownhost_free(known_hosts);
-    return static_cast<Error>(libssh2_session_last_errno(raw_session_ptr_));
+    return static_cast<Error>(
+        libssh2_session_last_errno(raw_session_ptr_.get()));
   }
 
   const int check_result = libssh2_knownhost_checkp(
@@ -107,8 +91,9 @@ outcome::result<void> Session::Authenticate(std::string username,
   public_key_path.replace_filename(key_path.filename().string() + ".pub");
 
   const int rc = libssh2_userauth_publickey_fromfile(
-      raw_session_ptr_, username.c_str(), public_key_path.string().c_str(),
-      key_path.string().c_str(), pass_phrase.c_str());
+      raw_session_ptr_.get(), username.c_str(),
+      public_key_path.string().c_str(), key_path.string().c_str(),
+      pass_phrase.c_str());
 
   if (rc == 0) {
     return outcome::success();
@@ -118,7 +103,8 @@ outcome::result<void> Session::Authenticate(std::string username,
 }
 
 outcome::result<void> Session::Disconnect(std::string message) {
-  const int rc = libssh2_session_disconnect(raw_session_ptr_, message.c_str());
+  const int rc =
+      libssh2_session_disconnect(raw_session_ptr_.get(), message.c_str());
 
   if (rc == 0) {
     return outcome::success();
@@ -128,7 +114,7 @@ outcome::result<void> Session::Disconnect(std::string message) {
 }
 
 void Session::SetBlocking(bool value) {
-  libssh2_session_set_blocking(raw_session_ptr_, value);
+  libssh2_session_set_blocking(raw_session_ptr_.get(), value);
 }
 
 }  // namespace OrbitSsh

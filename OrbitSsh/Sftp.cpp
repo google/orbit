@@ -20,37 +20,16 @@ outcome::result<Sftp> Sftp::Init(Session* session) {
   }
 }
 
-Sftp::Sftp(Sftp&& other) noexcept
-    : raw_sftp_ptr_(other.raw_sftp_ptr_), session_(other.session_) {
-  other.raw_sftp_ptr_ = nullptr;
-  other.session_ = nullptr;
-}
-
-Sftp& Sftp::operator=(Sftp&& other) noexcept {
-  raw_sftp_ptr_ = other.raw_sftp_ptr_;
-  other.raw_sftp_ptr_ = nullptr;
-
-  session_ = other.session_;
-  other.session_ = nullptr;
-
-  return *this;
-}
-
 outcome::result<void> Sftp::Shutdown() {
   CHECK(raw_sftp_ptr_);
-  const auto result = libssh2_sftp_shutdown(raw_sftp_ptr_);
+  const auto result = libssh2_sftp_shutdown(raw_sftp_ptr_.get());
 
   if (result == 0) {
-    raw_sftp_ptr_ = nullptr;
+    raw_sftp_ptr_.release();
     return outcome::success();
   } else {
     return outcome::failure(static_cast<Error>(result));
   }
 }
 
-Sftp::~Sftp() {
-  if (raw_sftp_ptr_) {
-    (void)Shutdown();
-  }
-}
 }  // namespace OrbitSsh

@@ -15,26 +15,7 @@
 namespace OrbitSsh {
 
 Channel::Channel(LIBSSH2_CHANNEL* raw_channel_ptr)
-    : raw_channel_ptr_(raw_channel_ptr) {}
-
-Channel::Channel(Channel&& other) noexcept {
-  raw_channel_ptr_ = other.raw_channel_ptr_;
-  other.raw_channel_ptr_ = nullptr;
-}
-
-Channel& Channel::operator=(Channel&& other) noexcept {
-  if (this != &other) {
-    raw_channel_ptr_ = other.raw_channel_ptr_;
-    other.raw_channel_ptr_ = nullptr;
-  }
-  return *this;
-}
-
-Channel::~Channel() noexcept {
-  if (raw_channel_ptr_ != nullptr) {
-    libssh2_channel_free(raw_channel_ptr_);
-  }
-}
+    : raw_channel_ptr_(raw_channel_ptr, &libssh2_channel_free) {}
 
 outcome::result<Channel> Channel::OpenChannel(Session* session) {
   LIBSSH2_CHANNEL* raw_channel_ptr =
@@ -61,7 +42,7 @@ outcome::result<Channel> Channel::OpenTcpIpTunnel(
 }
 
 outcome::result<void> Channel::Exec(const std::string& command) {
-  const int rc = libssh2_channel_exec(raw_channel_ptr_, command.c_str());
+  const int rc = libssh2_channel_exec(raw_channel_ptr_.get(), command.c_str());
   if (rc == 0) {
     return outcome::success();
   }
@@ -71,8 +52,8 @@ outcome::result<void> Channel::Exec(const std::string& command) {
 
 outcome::result<std::string> Channel::Read(int buffer_size) {
   std::string buffer(buffer_size, '\0');
-  const int rc =
-      libssh2_channel_read(raw_channel_ptr_, buffer.data(), buffer.size());
+  const int rc = libssh2_channel_read(raw_channel_ptr_.get(), buffer.data(),
+                                      buffer.size());
 
   if (rc >= 0) {
     buffer.resize(rc);
@@ -84,7 +65,7 @@ outcome::result<std::string> Channel::Read(int buffer_size) {
 
 outcome::result<int> Channel::Write(std::string_view data) {
   const int rc =
-      libssh2_channel_write(raw_channel_ptr_, data.data(), data.size());
+      libssh2_channel_write(raw_channel_ptr_.get(), data.data(), data.size());
 
   if (rc >= 0) {
     return outcome::success(rc);
@@ -106,7 +87,8 @@ outcome::result<void> Channel::WriteBlocking(std::string_view text) {
 }
 
 outcome::result<void> Channel::RequestPty(const std::string& term) {
-  const int rc = libssh2_channel_request_pty(raw_channel_ptr_, term.c_str());
+  const int rc =
+      libssh2_channel_request_pty(raw_channel_ptr_.get(), term.c_str());
 
   if (rc == 0) {
     return outcome::success();
@@ -116,7 +98,7 @@ outcome::result<void> Channel::RequestPty(const std::string& term) {
 }
 
 outcome::result<void> Channel::SendEOF() {
-  const int rc = libssh2_channel_send_eof(raw_channel_ptr_);
+  const int rc = libssh2_channel_send_eof(raw_channel_ptr_.get());
 
   if (rc == 0) {
     return outcome::success();
@@ -126,7 +108,7 @@ outcome::result<void> Channel::SendEOF() {
 }
 
 outcome::result<void> Channel::WaitRemoteEOF() {
-  const int rc = libssh2_channel_wait_eof(raw_channel_ptr_);
+  const int rc = libssh2_channel_wait_eof(raw_channel_ptr_.get());
 
   if (rc == 0) {
     return outcome::success();
@@ -136,9 +118,10 @@ outcome::result<void> Channel::WaitRemoteEOF() {
 }
 
 outcome::result<void> Channel::Close() {
-  const int rc = libssh2_channel_close(raw_channel_ptr_);
+  const int rc = libssh2_channel_close(raw_channel_ptr_.get());
 
   if (rc == 0) {
+    raw_channel_ptr_.release();
     return outcome::success();
   } else {
     return static_cast<Error>(rc);
@@ -146,7 +129,7 @@ outcome::result<void> Channel::Close() {
 }
 
 outcome::result<void> Channel::WaitClosed() {
-  const int rc = libssh2_channel_wait_closed(raw_channel_ptr_);
+  const int rc = libssh2_channel_wait_closed(raw_channel_ptr_.get());
 
   if (rc == 0) {
     return outcome::success();
@@ -156,11 +139,11 @@ outcome::result<void> Channel::WaitClosed() {
 }
 
 int Channel::GetExitStatus() {
-  return libssh2_channel_get_exit_status(raw_channel_ptr_);
+  return libssh2_channel_get_exit_status(raw_channel_ptr_.get());
 }
 
 bool Channel::GetRemoteEOF() {
-  return libssh2_channel_eof(raw_channel_ptr_) == 1;
+  return libssh2_channel_eof(raw_channel_ptr_.get()) == 1;
 }
 
 }  // namespace OrbitSsh

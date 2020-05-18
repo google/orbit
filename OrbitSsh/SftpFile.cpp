@@ -25,7 +25,7 @@ outcome::result<SftpFile> SftpFile::Open(Session* session, Sftp* sftp,
 outcome::result<std::string> SftpFile::Read(int max_length_in_bytes) {
   std::string buffer(max_length_in_bytes, '\0');
   const auto result =
-      libssh2_sftp_read(file_ptr_, buffer.data(), buffer.size());
+      libssh2_sftp_read(file_ptr_.get(), buffer.data(), buffer.size());
 
   if (result >= 0) {
     buffer.resize(result);
@@ -36,10 +36,10 @@ outcome::result<std::string> SftpFile::Read(int max_length_in_bytes) {
 }
 
 outcome::result<void> SftpFile::Close() {
-  const auto result = libssh2_sftp_close_handle(file_ptr_);
+  const auto result = libssh2_sftp_close_handle(file_ptr_.get());
 
   if (result == 0) {
-    file_ptr_ = nullptr;
+    file_ptr_.release();
     return outcome::success();
   } else {
     return static_cast<Error>(result);
@@ -47,7 +47,8 @@ outcome::result<void> SftpFile::Close() {
 }
 
 outcome::result<size_t> SftpFile::Write(std::string_view data) {
-  const auto result = libssh2_sftp_write(file_ptr_, data.data(), data.size());
+  const auto result =
+      libssh2_sftp_write(file_ptr_.get(), data.data(), data.size());
 
   if (result >= 0) {
     return outcome::success(result);
@@ -56,19 +57,4 @@ outcome::result<size_t> SftpFile::Write(std::string_view data) {
   }
 }
 
-SftpFile::SftpFile(SftpFile&& other) noexcept : file_ptr_(other.file_ptr_) {
-  other.file_ptr_ = nullptr;
-}
-
-SftpFile& SftpFile::operator=(SftpFile&& other) noexcept {
-  file_ptr_ = other.file_ptr_;
-  other.file_ptr_ = nullptr;
-  return *this;
-}
-
-SftpFile::~SftpFile() {
-  if (file_ptr_) {
-    (void)Close();
-  }
-}
 }  // namespace OrbitSsh
