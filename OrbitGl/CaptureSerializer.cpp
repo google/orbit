@@ -95,6 +95,11 @@ void CaptureSerializer::Save(T& archive) {
   }
 
   {
+    ORBIT_SIZE_SCOPE("String manager");
+    archive(*time_graph_->GetStringManager());
+  }
+
+  {
     ORBIT_SIZE_SCOPE("Event Buffer");
     archive(GEventTracer.GetEventBuffer());
   }
@@ -152,6 +157,8 @@ void CaptureSerializer::Load(const std::string& filename) {
     Capture::GSamplingProfiler->SetLoadedFromFile(true);
 
     time_graph_->Clear();
+
+    archive(*time_graph_->GetStringManager());
 
     // Event buffer
     archive(GEventTracer.GetEventBuffer());
