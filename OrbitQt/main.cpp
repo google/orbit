@@ -10,6 +10,7 @@
 #include "App.h"
 #include "ApplicationOptions.h"
 #include "CrashHandler.h"
+#include "OrbitSsh/Credentials.h"
 #include "OrbitStartupWindow.h"
 #include "Path.h"
 #include "absl/flags/flag.h"
@@ -120,23 +121,23 @@ int main(int argc, char* argv[]) {
 
   if (options.asio_server_address.empty()) {
     OrbitStartupWindow sw;
-    std::string ip_address;
-    int dialog_result = sw.Run(&ip_address);
+    OrbitSsh::Credentials ssh_credentials;
+    int dialog_result = sw.Run(&ssh_credentials);
     if (dialog_result == 0) return 0;
 
 #ifdef __linux__
     options.asio_server_address =
-        absl::StrFormat("%s:%d", ip_address, asio_port);
+        absl::StrFormat("%s:%d", ssh_credentials.host, asio_port);
     options.grpc_server_address =
-        absl::StrFormat("%s:%d", ip_address, grpc_port);
+        absl::StrFormat("%s:%d", ssh_credentials.host, grpc_port);
 #else
     // TODO(antonrohr) remove this ifdef as soon as the collector works on
     // windows
-    if (ip_address != "127.0.0.1") {
+    if (ssh_credentials.host != "127.0.0.1") {
       options.asio_server_address =
-          absl::StrFormat("%s:%d", ip_address, asio_port);
+          absl::StrFormat("%s:%d", ssh_credentials.host, asio_port);
       options.grpc_server_address =
-          absl::StrFormat("%s:%d", ip_address, grpc_port);
+          absl::StrFormat("%s:%d", ssh_credentials.host, grpc_port);
     }
 #endif
   }
@@ -152,9 +153,9 @@ int main(int argc, char* argv[]) {
 
   w.PostInit();
 
-  int errorCode = app.exec();
+  int error_code = app.exec();
 
   GOrbitApp->OnExit();
 
-  return errorCode;
+  return error_code;
 }

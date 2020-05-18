@@ -74,8 +74,8 @@ target_sources(
 
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(OrbitQt PRIVATE OrbitCore OrbitGl OrbitGgp Qt5::Widgets
-                                      Qt5::Core)
+target_link_libraries(OrbitQt PRIVATE OrbitCore OrbitGl OrbitGgp OrbitSsh
+                                      Qt5::Widgets Qt5::Core)
 
 include(${CMAKE_SOURCE_DIR}/cmake/version.cmake)
 GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/version.h"
