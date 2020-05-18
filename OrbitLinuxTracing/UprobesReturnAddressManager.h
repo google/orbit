@@ -72,7 +72,7 @@ class UprobesReturnAddressManager {
 
     uint64_t i = 0;
     // TODO(kuebler): What about tail-call optimization, where two uretprobes
-    //  hijacked an address at the same stack.
+    //  hijacked an address at the same stack pointer?
     for (auto it = tid_uprobes_stack.rbegin(); it != tid_uprobes_stack.rend();
          it++) {
       const OpenUprobes& uprobes = *it;
