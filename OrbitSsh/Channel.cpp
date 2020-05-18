@@ -50,10 +50,23 @@ outcome::result<void> Channel::Exec(const std::string& command) {
   return static_cast<Error>(rc);
 }
 
-outcome::result<std::string> Channel::Read(int buffer_size) {
+outcome::result<std::string> Channel::ReadStdOut(int buffer_size) {
   std::string buffer(buffer_size, '\0');
   const int rc = libssh2_channel_read(raw_channel_ptr_.get(), buffer.data(),
                                       buffer.size());
+
+  if (rc >= 0) {
+    buffer.resize(rc);
+    return outcome::success(std::move(buffer));
+  } else {
+    return static_cast<Error>(rc);
+  }
+}
+
+outcome::result<std::string> Channel::ReadStdErr(int buffer_size) {
+  std::string buffer(buffer_size, '\0');
+  const int rc = libssh2_channel_read_stderr(raw_channel_ptr_.get(),
+                                             buffer.data(), buffer.size());
 
   if (rc >= 0) {
     buffer.resize(rc);
