@@ -16,7 +16,7 @@ fi
 GGP_EXEC="$GGP_SDK_PATH/dev/bin/ggp"
 
 OTHER_ARGS="$@"
-if [ ! -z "$1" ] && [ "$1" == "--deploy" ]; then
+if [ ! -z "$1" ] && [ "$1" == "--deploy" -o "$1" == "-deploy" ]; then
   $GGP_EXEC ssh put "$2"
   $GGP_EXEC ssh shell -- chmod u+x /mnt/developer/OrbitService
   OTHER_ARGS="${@:3}"
