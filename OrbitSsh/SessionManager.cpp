@@ -11,8 +11,8 @@
 
 namespace OrbitSsh {
 
-SessionManager::SessionManager(Credentials credentials)
-    : credentials_(credentials) {}
+SessionManager::SessionManager(Context* context, Credentials credentials)
+    : credentials_(credentials), context_(context) {}
 
 // Tick establishes a ssh connection via different states and progresses this
 // state when appropriate. Once kAuthenticated is reached, a connection is
@@ -38,7 +38,7 @@ outcome::result<void> SessionManager::Initialize() {
       state_ = State::kSocketConnected;
     }
     case State::kSocketConnected: {
-      OUTCOME_TRY(session, Session::Create());
+      OUTCOME_TRY(session, Session::Create(context_));
       session_ = std::move(session);
       session_->SetBlocking(false);
       state_ = State::kSessionCreated;

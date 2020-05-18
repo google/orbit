@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSsh/ExecChannelManager.h"
 #include "OrbitSsh/SessionManager.h"
@@ -45,12 +46,9 @@ class SshManager {
     std::function<void(std::string)> output_callback;
     std::function<void(int)> exit_callback;
   };
-  SshManager(Credentials credentials, std::queue<Task> pre_tasks,
-             Task main_task, std::vector<int> tunnel_ports);
-
-  SshManager(const SshManager&) = delete;
-  SshManager& operator=(const SshManager&) = delete;
-  ~SshManager() noexcept;
+  SshManager(Context* context, Credentials credentials,
+             std::queue<Task> pre_tasks, Task main_task,
+             std::vector<int> tunnel_ports);
 
   outcome::result<void> Tick();
   outcome::result<void> Close();

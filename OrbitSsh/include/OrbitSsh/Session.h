@@ -5,6 +5,8 @@
 #ifndef ORBIT_SSH_SESSION_H_
 #define ORBIT_SSH_SESSION_H_
 
+#include <OrbitSsh/Context.h>
+#include <OrbitSsh/Socket.h>
 #include <libssh2.h>
 
 #include <filesystem>
@@ -12,13 +14,11 @@
 #include <outcome.hpp>
 #include <string>
 
-#include "Socket.h"
-
 namespace OrbitSsh {
 
 class Session {
  public:
-  static outcome::result<Session> Create();
+  static outcome::result<Session> Create(Context*);
 
   outcome::result<void> Handshake(Socket* socket_ptr);
   outcome::result<void> MatchKnownHosts(std::string host, int port,

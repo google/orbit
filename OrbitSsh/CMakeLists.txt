@@ -17,6 +17,7 @@ target_include_directories(OrbitSsh PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_sources(
   OrbitSsh
   PUBLIC include/OrbitSsh/Channel.h
+         include/OrbitSsh/Context.h
          include/OrbitSsh/Credentials.h
          include/OrbitSsh/DirectTcpIpChannelManager.h
          include/OrbitSsh/Error.h
@@ -34,6 +35,7 @@ target_sources(
 target_sources(
   OrbitSsh
   PRIVATE Channel.cpp
+          Context.cpp
           DirectTcpIpChannelManager.cpp
           Error.cpp
           ExecChannelManager.cpp
@@ -79,7 +81,7 @@ target_link_libraries(OrbitSshExample PUBLIC OrbitSsh OrbitBase OrbitGgp
 # tests
 add_executable(OrbitSshTests)
 
-target_sources(OrbitSshTests PRIVATE SocketTests.cpp)
+target_sources(OrbitSshTests PRIVATE SocketTests.cpp ContextTests.cpp)
 
 target_link_libraries(OrbitSshTests PRIVATE OrbitSsh libssh2::libssh2
                                             GTest::Main)

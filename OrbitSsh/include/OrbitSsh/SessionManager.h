@@ -9,6 +9,7 @@
 #include <outcome.hpp>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSsh/Session.h"
 #include "OrbitSsh/Socket.h"
@@ -33,7 +34,7 @@ class SessionManager {
   };
 
  public:
-  explicit SessionManager(Credentials credentials);
+  explicit SessionManager(Context* context, Credentials credentials);
 
   SessionManager(const SessionManager&) = delete;
   SessionManager& operator=(const SessionManager&) = delete;
@@ -60,6 +61,7 @@ class SessionManager {
   std::optional<Socket> socket_;
   std::optional<Session> session_;
   Credentials credentials_;
+  Context* context_;
 };
 
 }  // namespace OrbitSsh

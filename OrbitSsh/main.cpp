@@ -238,11 +238,17 @@ int main(int argc, char* argv[]) {
   credentials.known_hosts_path = ssh_info.known_hosts_path.toStdString();
   credentials.key_path = ssh_info.key_path.toStdString();
 
+  auto ctxWrapper = OrbitSsh::Context::Create();
+  if (!ctxWrapper) {
+    FATAL("Error while creating SSH context: %s", ctxWrapper.error().message());
+  }
+  auto& context = ctxWrapper.value();
+
   if (a.arguments().size() > 1 && a.arguments()[1] == "sftp") {
     LOG("Starting SFTP tunnel.");
 
     // Lets copy a file.
-    OrbitSsh::SessionManager sessionManager{credentials};
+    OrbitSsh::SessionManager sessionManager{&context, credentials};
     QEventLoop loop{};
 
     if (OrbitSsh::shouldITryAgain(sessionManager.Initialize())) {
@@ -361,8 +367,8 @@ int main(int argc, char* argv[]) {
         [](std::string output) { LOG("Main task output: %s", output.c_str()); },
         [](int exit_code) { LOG("Man task exit code: %d", exit_code); }};
 
-    OrbitSsh::SshManager ssh_handler(credentials, pre_tasks, main_task,
-                                     {44766, 44755});
+    OrbitSsh::SshManager ssh_handler(&context, credentials, pre_tasks,
+                                     main_task, {44766, 44755});
 
     outcome::result<void> tick_result = outcome::success();
     do {

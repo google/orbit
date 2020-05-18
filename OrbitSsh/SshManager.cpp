@@ -17,17 +17,13 @@
 
 namespace OrbitSsh {
 
-SshManager::SshManager(Credentials credentials, std::queue<Task> pre_tasks,
-                       Task main_task, std::vector<int> tunnel_ports)
-    : session_manager_(credentials),
+SshManager::SshManager(Context* context, Credentials credentials,
+                       std::queue<Task> pre_tasks, Task main_task,
+                       std::vector<int> tunnel_ports)
+    : session_manager_(context, credentials),
       pre_tasks_(pre_tasks),
       main_task_(main_task),
-      tunnel_ports_(tunnel_ports) {
-  FAIL_IF(libssh2_init(0) != 0, "Unable to initialize libssh2");
-  LOG("Ssh initialized");
-}
-
-SshManager::~SshManager() noexcept { /*libssh2_exit();*/ }
+      tunnel_ports_(tunnel_ports) {}
 
 // Tick progresses through different states until it reaches
 // kMainAndTunnelRunning, in which it will keep the main task and tunnels alive
