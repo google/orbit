@@ -60,7 +60,6 @@ TextBox* Capture::GSelectedTextBox;
 ThreadID Capture::GSelectedThreadId;
 Timer Capture::GCaptureTimer;
 std::chrono::system_clock::time_point Capture::GCaptureTimePoint;
-Capture::LoadPdbAsyncFunc Capture::GLoadPdbAsync;
 
 std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
 std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
