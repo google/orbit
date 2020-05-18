@@ -60,7 +60,7 @@ outcome::result<void> DirectTcpIpChannelManager::WriteBlocking(
 
 outcome::result<std::string> DirectTcpIpChannelManager::Read() {
   CHECK(state_ == State::kRunning);
-  return channel_->Read();
+  return channel_->ReadStdOut();
 }
 
 // This function closes the channel gracefully. This includes sending

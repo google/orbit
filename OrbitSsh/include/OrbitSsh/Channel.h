@@ -27,7 +27,8 @@ class Channel {
       int third_party_port);
   static outcome::result<Channel> OpenChannel(Session* session_ptr);
 
-  outcome::result<std::string> Read(int buffer_size = 0x400);
+  outcome::result<std::string> ReadStdOut(int buffer_size = 0x400);
+  outcome::result<std::string> ReadStdErr(int buffer_size = 0x400);
   outcome::result<void> WriteBlocking(std::string_view text);
   outcome::result<void> Exec(const std::string& command);
   outcome::result<void> RequestPty(const std::string& term);
