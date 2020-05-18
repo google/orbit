@@ -8,6 +8,8 @@
 #include <OrbitSsh/Error.h>
 #include <OrbitSsh/Sftp.h>
 
+#include <memory>
+
 namespace OrbitSsh {
 
 enum class FxfFlags {
@@ -34,20 +36,16 @@ class SftpFile {
   outcome::result<void> Close();
   outcome::result<size_t> Write(std::string_view data);
 
-  SftpFile(const SftpFile&) = delete;
-  SftpFile& operator=(const SftpFile&) = delete;
-
-  SftpFile(SftpFile&&) noexcept;
-  SftpFile& operator=(SftpFile&&) noexcept;
-
-  ~SftpFile();
-
-  LIBSSH2_SFTP_HANDLE* GetRawFilePtr() const noexcept { return file_ptr_; }
+  LIBSSH2_SFTP_HANDLE* GetRawFilePtr() const noexcept {
+    return file_ptr_.get();
+  }
   Sftp* GetSftpPtr() const noexcept { return sftp_; }
 
  private:
-  explicit SftpFile(LIBSSH2_SFTP_HANDLE* file_ptr) : file_ptr_(file_ptr) {}
-  LIBSSH2_SFTP_HANDLE* file_ptr_ = nullptr;
+  explicit SftpFile(LIBSSH2_SFTP_HANDLE* file_ptr)
+      : file_ptr_(file_ptr, &libssh2_sftp_close_handle) {}
+  std::unique_ptr<LIBSSH2_SFTP_HANDLE, decltype(&libssh2_sftp_close_handle)>
+      file_ptr_;
   Sftp* sftp_;
 };
 }  // namespace OrbitSsh

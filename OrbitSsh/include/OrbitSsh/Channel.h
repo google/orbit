@@ -19,14 +19,6 @@ namespace OrbitSsh {
 
 class Channel {
  public:
-  Channel(const Channel&) = delete;
-  Channel& operator=(const Channel&) = delete;
-
-  Channel(Channel&& other) noexcept;
-  Channel& operator=(Channel&& other) noexcept;
-
-  ~Channel() noexcept;
-
   // This creates a tcp/ip channel to a third party via the remote ssh
   // server. In most cases this third party is a program running on the remote
   // server and therefore third_party_host is 127.0.0.1
@@ -50,7 +42,8 @@ class Channel {
  private:
   explicit Channel(LIBSSH2_CHANNEL* raw_channel_ptr);
   outcome::result<int> Write(std::string_view text);
-  LIBSSH2_CHANNEL* raw_channel_ptr_;
+  std::unique_ptr<LIBSSH2_CHANNEL, decltype(&libssh2_channel_free)>
+      raw_channel_ptr_;
 };
 
 }  // namespace OrbitSsh

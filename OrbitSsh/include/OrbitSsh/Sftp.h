@@ -8,6 +8,7 @@
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 
+#include <memory>
 #include <outcome.hpp>
 
 #include "OrbitSsh/Error.h"
@@ -19,22 +20,17 @@ class Sftp {
  public:
   static outcome::result<Sftp> Init(Session* session);
 
-  Sftp(const Sftp&) = delete;
-  Sftp& operator=(const Sftp&) = delete;
-
-  Sftp(Sftp&&) noexcept;
-  Sftp& operator=(Sftp&&) noexcept;
-
-  ~Sftp();
   outcome::result<void> Shutdown();
 
-  LIBSSH2_SFTP* GetRawSftpPtr() const noexcept { return raw_sftp_ptr_; }
+  LIBSSH2_SFTP* GetRawSftpPtr() const noexcept { return raw_sftp_ptr_.get(); }
   Session* GetSession() const noexcept { return session_; }
 
  private:
   explicit Sftp(LIBSSH2_SFTP* raw_sftp_ptr, Session* session)
-      : raw_sftp_ptr_(raw_sftp_ptr), session_(session) {}
-  LIBSSH2_SFTP* raw_sftp_ptr_ = nullptr;
+      : raw_sftp_ptr_(raw_sftp_ptr, &libssh2_sftp_shutdown),
+        session_(session) {}
+
+  std::unique_ptr<LIBSSH2_SFTP, decltype(&libssh2_sftp_shutdown)> raw_sftp_ptr_;
   Session* session_ = nullptr;
 };
 

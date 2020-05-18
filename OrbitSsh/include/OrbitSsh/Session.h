@@ -18,13 +18,6 @@ namespace OrbitSsh {
 
 class Session {
  public:
-  Session(const Session&) = delete;
-  Session& operator=(const Session&) = delete;
-
-  Session(Session&&) noexcept;
-  Session& operator=(Session&&) noexcept;
-  ~Session() noexcept;
-
   static outcome::result<Session> Create();
 
   outcome::result<void> Handshake(Socket* socket_ptr);
@@ -36,13 +29,14 @@ class Session {
   outcome::result<void> Disconnect(
       std::string message = "Disconnecting normally");
   LIBSSH2_SESSION* GetRawSessionPtr() const noexcept {
-    return raw_session_ptr_;
+    return raw_session_ptr_.get();
   }
   void SetBlocking(bool value);
 
  private:
   explicit Session(LIBSSH2_SESSION* raw_session_ptr);
-  LIBSSH2_SESSION* raw_session_ptr_ = nullptr;
+  std::unique_ptr<LIBSSH2_SESSION, decltype(&libssh2_session_free)>
+      raw_session_ptr_;
 };
 
 }  // namespace OrbitSsh
