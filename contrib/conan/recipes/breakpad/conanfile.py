@@ -6,12 +6,12 @@ import shutil
 class BreakpadConan(ConanFile):
     description = "Breakpad tools for symbol uploading"
     name = 'breakpad'
-    version = "216cea7b"
+    version = "2ffe116"
     license = 'https://chromium.googlesource.com/breakpad/breakpad/+/master/LICENSE'
     url = 'https://gitlab.com/ArsenStudio/ArsenEngine/dependencies/conan-breakpad'
     generators = 'cmake'
     branch = 'master'
-    exports = ["CMakeLists.txt", "fix-unique_ptr.patch"]
+    exports = ["CMakeLists.txt", "patches/*"]
     build_requires = "libdisasm/0.23@orbitdeps/stable"
     
     settings = 'os_build', 'arch_build', 'compiler', 'arch'
@@ -31,7 +31,9 @@ class BreakpadConan(ConanFile):
                 'git clone https://chromium.googlesource.com/linux-syscall-support breakpad/src/third_party/lss')
         self.run('git checkout {}'.format(self.version), cwd='breakpad/')
         shutil.move('CMakeLists.txt', self._source_dir)
-        tools.patch(patch_file="fix-unique_ptr.patch",
+        tools.patch(patch_file="patches/fix-unique_ptr.patch",
+                    base_path=self._source_dir)
+        tools.patch(patch_file="patches/fix-int_types.patch",
                     base_path=self._source_dir)
 
     def build(self):

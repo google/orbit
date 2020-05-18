@@ -84,8 +84,9 @@ elseif(UNIX)
 		src/common/linux/linux_libc_support.cc
 		src/common/linux/memory_mapped_file.cc
 		src/common/linux/safe_readlink.cc
-		src/common/linux/synth_elf.cc
+		src/common/linux/symbol_collector_client.cc
 		src/common/linux/symbol_upload.cc
+		src/common/linux/synth_elf.cc
 		src/common/long_string_dictionary.cc
 		src/common/md5.cc
 		src/common/module.cc
