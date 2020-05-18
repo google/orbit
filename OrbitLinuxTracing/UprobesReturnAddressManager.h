@@ -59,6 +59,34 @@ class UprobesReturnAddressManager {
     }
   }
 
+  void PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t nr,
+                      unwindstack::Maps* maps) {
+    if (!tid_uprobes_stacks_.contains(tid)) {
+      return;
+    }
+
+    auto& tid_uprobes_stack = tid_uprobes_stacks_.at(tid);
+    CHECK(!tid_uprobes_stack.empty());
+
+    uint64_t i = 0;
+    // TODO(kuebler): What about tail-call optimization, where two uretprobes
+    //  hijacked an address at the same stack.
+    for (auto it = tid_uprobes_stack.rbegin(); it != tid_uprobes_stack.rend();
+         it++) {
+      const OpenUprobes& uprobes = *it;
+      for (; i < nr; i++) {
+        uint64_t ip = callchain[i];
+        // Only patch Broken IPs
+        unwindstack::MapInfo* map_info = maps->Find(ip);
+        if (map_info == nullptr || map_info->name != "[uprobes]") {
+          continue;
+        }
+        callchain[i] = uprobes.return_address;
+        break;
+      }
+    }
+  }
+
   void ProcessUretprobes(pid_t tid) {
     if (!tid_uprobes_stacks_.contains(tid)) {
       return;

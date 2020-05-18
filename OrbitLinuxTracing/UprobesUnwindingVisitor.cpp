@@ -48,7 +48,9 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
     return;
   }
 
-  // TODO(kuebler): handle the mapping/patching for uprobes
+  return_address_manager_.PatchCallchain(event->GetTid(), event->GetCallchain(),
+                                         event->GetCallchainSize(),
+                                         current_maps_.get());
 
   Callstack returned_callstack{
       event->GetTid(),
@@ -145,7 +147,9 @@ UprobesUnwindingVisitor::CallstackFramesFromInstructionPointers(
     return std::vector<CallstackFrame>();
   }
   std::vector<CallstackFrame> callstack_frames;
-  for (uint64_t i = 0; i < size; i++) {
+  // The top of a callchain is always inside the kernel code.
+  // So we need to discard it.
+  for (uint64_t i = 1; i < size; i++) {
     callstack_frames.emplace_back(frames[i], "",
                                   CallstackFrame::kUnknownFunctionOffset, "");
   }
