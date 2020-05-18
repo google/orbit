@@ -28,7 +28,7 @@
 //-----------------------------------------------------------------------------
 Module::Module(const std::string& file_name, uint64_t address_start,
                uint64_t address_end, bool is_kernel_module) {
-  if (!Path::FileExists(file_name)) {
+  if (!is_kernel_module && !Path::FileExists(file_name)) {
     ERROR("Creating Module from path \"%s\": file does not exist",
           file_name.c_str());
   }
