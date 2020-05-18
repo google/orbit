@@ -20,7 +20,6 @@ Socket& Socket::operator=(Socket&& other) noexcept {
   if (this != &other) {
     descriptor_ = other.descriptor_;
     other.descriptor_ = LIBSSH2_INVALID_SOCKET;
-    other.~Socket();
   }
   return *this;
 }
