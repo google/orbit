@@ -51,11 +51,6 @@ class Capture {
   static void CheckForUnrealSupport();
   static void PreSave();
 
-  typedef void (*LoadPdbAsyncFunc)(const std::vector<std::string>& a_Modules);
-  static void SetLoadPdbAsyncFunc(LoadPdbAsyncFunc a_Func) {
-    GLoadPdbAsync = a_Func;
-  }
-
   typedef void (*SamplingDoneCallback)(
       std::shared_ptr<SamplingProfiler>& sampling_profiler, void* user_data);
   static void SetSamplingDoneCallback(SamplingDoneCallback callback,
@@ -98,7 +93,6 @@ class Capture {
   static Timer GCaptureTimer;
   static std::chrono::system_clock::time_point GCaptureTimePoint;
   static Mutex GCallstackMutex;
-  static LoadPdbAsyncFunc GLoadPdbAsync;
 
  private:
   static bool GUnrealSupported;

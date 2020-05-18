@@ -39,7 +39,6 @@
 #include "Log.h"
 #include "LogDataView.h"
 #include "ModulesDataView.h"
-#include "ModuleManager.h"
 #include "OrbitAsm.h"
 #include "OrbitSession.h"
 #include "Params.h"
@@ -142,11 +141,6 @@ void GetDesktopResolution(int& horizontal, int& vertical) {
   UNUSED(horizontal);
   UNUSED(vertical);
 #endif
-}
-
-//-----------------------------------------------------------------------------
-void GLoadPdbAsync(const std::vector<std::string>& a_Modules) {
-  GModuleManager.LoadPdbAsync(a_Modules, []() { GOrbitApp->OnPdbLoaded(); });
 }
 
 //-----------------------------------------------------------------------------
@@ -259,13 +253,11 @@ bool OrbitApp::Init(ApplicationOptions&& options) {
 
   Path::Init();
 
-  GModuleManager.Init();
   Capture::Init();
 
   // TODO(antonrohr) clean this up (it casts GOrbitApp* to void*)
   Capture::SetSamplingDoneCallback(&OrbitApp::AddSamplingReport,
                                    GOrbitApp.get());
-  Capture::SetLoadPdbAsyncFunc(GLoadPdbAsync);
 
 #ifdef _WIN32
   DiaManager::InitMsDiaDll();
@@ -734,11 +726,6 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
 }
 
 //-----------------------------------------------------------------------------
-void GLoadPdbAsync(const std::shared_ptr<Module>& a_Module) {
-  GModuleManager.LoadPdbAsync(a_Module, []() { GOrbitApp->OnPdbLoaded(); });
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::OnDisconnect() { GTcpServer->Send(Msg_Unload); }
 
 //-----------------------------------------------------------------------------
@@ -878,26 +865,11 @@ void OrbitApp::EnqueueModuleToLoad(const std::shared_ptr<Module>& a_Module) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadModules() {
+  CHECK(Capture::IsRemote());
   if (!m_ModulesToLoad.empty()) {
-    if (Capture::IsRemote()) {
-      LoadRemoteModules();
-      return;
-    }
-#ifdef _WIN32
-    for (std::shared_ptr<Module> module : m_ModulesToLoad) {
-      GLoadPdbAsync(module);
-    }
-#else
-    for (std::shared_ptr<Module> module : m_ModulesToLoad) {
-      if (symbol_helper_.LoadSymbolsIncludedInBinary(module)) continue;
-      if (symbol_helper_.LoadSymbolsUsingSymbolsFile(module)) continue;
-      ERROR("Could not load symbols for module %s", module->m_Name.c_str());
-    }
-    GOrbitApp->FireRefreshCallbacks();
-#endif
+    LoadRemoteModules();
+    return;
   }
-
-  m_ModulesToLoad.clear();
 }
 
 //-----------------------------------------------------------------------------
