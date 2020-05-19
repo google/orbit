@@ -313,6 +313,8 @@ void OrbitApp::PostInit() {
     process_list_manager_->Start();
   }
 
+  ListSessions();
+
   string_manager_ = std::make_shared<StringManager>();
   GCurrentTimeGraph->SetStringManager(string_manager_);
 
