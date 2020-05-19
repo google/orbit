@@ -48,13 +48,16 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
     return;
   }
 
-  return_address_manager_.PatchCallchain(event->GetTid(), event->GetCallchain(),
-                                         event->GetCallchainSize(),
-                                         current_maps_.get());
+  if (!return_address_manager_.PatchCallchain(
+          event->GetTid(), event->GetCallchain(), event->GetCallchainSize(),
+          current_maps_.get())) {
+    return;
+  }
 
   if (event->GetCallchainSize() == 0) {
     return;
   }
+
   Callstack returned_callstack{
       event->GetTid(),
       // The top of a callchain is always inside the kernel code.

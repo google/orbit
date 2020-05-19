@@ -61,36 +61,73 @@ class UprobesReturnAddressManager {
     }
   }
 
-  void PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t nr,
+  // In case of callchain sampling we don't have the complete stack to patch,
+  // but only the callchain (as list of instruction pointers). In those,
+  // a uprobe address occurs instead of the caller of an instrumented function.
+  // This function patches the callchain, using the maps information to identify
+  // instruction pointers of uprobe code and using the return address safed in
+  // the uprobes.
+  bool PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t callchain_size,
                       unwindstack::Maps* maps) {
     if (!tid_uprobes_stacks_.contains(tid)) {
-      return;
+      return true;
     }
 
     auto& tid_uprobes_stack = tid_uprobes_stacks_.at(tid);
     CHECK(!tid_uprobes_stack.empty());
 
+    std::vector<uint64_t> ips_to_patch;
+
     // TODO(kuebler): What about tail-call optimization, where two uretprobes
     //  hijacked an address at the same stack pointer.
-    auto uprobes_it = tid_uprobes_stack.rbegin();
-    for (uint64_t i = 0; i < nr; i++) {
+    for (uint64_t i = 0; i < callchain_size; i++) {
       uint64_t ip = callchain[i];
       unwindstack::MapInfo* map_info = maps->Find(ip);
 
-      // Only patch Broken IPs
       if (map_info == nullptr || map_info->name != "[uprobes]") {
         continue;
       }
 
-      const OpenUprobes& uprobes = *uprobes_it;
-      callchain[i] = uprobes.return_address;
-      uprobes_it++;
-
-      // There can't be more frames to patch as uprobes.
-      if (uprobes_it == tid_uprobes_stack.rend()) {
-        break;
-      }
+      ips_to_patch.push_back(i);
     }
+
+    // In case we already used all uprobes, we need to discard this sample.
+    // There are two situations where this may happen:
+    //  1. At the beginning of a capture, where we missed the first uprobes
+    //  2. When there are two many events, resulting in lost events or
+    //   processing out of order.
+    if (tid_uprobes_stack.size() < ips_to_patch.size()) {
+      ERROR(
+          "Discarding sample in an uprobe as some uprobe records are missing.");
+      return false;
+    }
+    // In cases of lost events, or out of order processing, there might be wrong
+    //  uprobes. So we need to discard the event. In general we should be fast
+    //  enough, such that this does not happen.
+    if (tid_uprobes_stack.size() > ips_to_patch.size() + 1) {
+      ERROR("Discarding sample in an uprobe as uprobe records are incorrect.");
+      return false;
+    }
+
+    auto uprobes_it = tid_uprobes_stack.rbegin();
+    // There are two situations where this may happen:
+    //  1. At the very end of an instrumented function, where the return
+    //   address was already restored.
+    //  2. At the very beginning of an instrumented function, where the return
+    //   address was not yet overridden.
+    // In any case, the inner most uprobe has not overridden the return address.
+    // We do not need to patch the affect of this uprobe and can move forward.
+    if (tid_uprobes_stack.size() == ips_to_patch.size() + 1) {
+      uprobes_it++;
+    }
+    for (uint64_t i : ips_to_patch) {
+      const OpenUprobes& uprobe = *uprobes_it;
+      callchain[i] = uprobe.return_address;
+      uprobes_it++;
+    }
+
+    CHECK(uprobes_it == tid_uprobes_stack.rend());
+    return true;
   }
 
   void ProcessUretprobes(pid_t tid) {
