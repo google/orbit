@@ -1034,12 +1034,14 @@ void OrbitApp::UpdateProcess(const std::shared_ptr<Process>& process) {
     std::map<uint64_t, std::shared_ptr<Module>>& new_modules =
         process->GetModules();
 
-    // Move 'loaded' flag to new modules if possible.
+    // Move 'loaded' flag to new modules if possible, together with m_Pdb,
+    // needed when loading sessions as Pdb::ApplyPresets is called.
     for (auto module_entry : old_modules) {
       uint64_t key = module_entry.first;
       auto new_module_it = new_modules.find(key);
       if (new_module_it != new_modules.end()) {
         new_module_it->second->SetLoaded(module_entry.second->GetLoaded());
+        new_module_it->second->m_Pdb = module_entry.second->m_Pdb;
       }
     }
 
