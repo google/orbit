@@ -110,8 +110,8 @@ void GlSlider::Draw(GlCanvas* a_Canvas, bool a_Picking) {
 }
 
 //-----------------------------------------------------------------------------
-void GlSlider::DrawHorizontal(GlCanvas* a_Canvas, bool a_Picking) {
-  m_Canvas = a_Canvas;
+void GlSlider::DrawHorizontal(GlCanvas* canvas, bool picking) {
+  m_Canvas = canvas;
 
   static float y = 0;
 
@@ -120,7 +120,7 @@ void GlSlider::DrawHorizontal(GlCanvas* a_Canvas, bool a_Picking) {
   float nonSliderWidth = canvasWidth - sliderWidth;
 
   // Bar
-  if (!a_Picking) {
+  if (!picking) {
     glColor4ubv(&m_BarColor[0]);
     glBegin(GL_QUADS);
     glVertex3f(0, y, 0);
@@ -133,12 +133,14 @@ void GlSlider::DrawHorizontal(GlCanvas* a_Canvas, bool a_Picking) {
   float start = m_Ratio * nonSliderWidth;
   float stop = start + sliderWidth;
 
-  a_Picking ? PickingManager::SetPickingColor(
-                  a_Canvas->GetPickingManager().CreatePickableId(this))
-            : a_Canvas->GetPickingManager().GetPicked() == this
-                  ? glColor4ubv(&m_SelectedColor[0])
-                  : glColor4ubv(&m_SliderColor[0]);
+  Color color = m_SliderColor;
+  if (picking) {
+    color = canvas->GetPickingManager().GetPickableColor(this);
+  } else if (canvas->GetPickingManager().GetPicked() == this) {
+    color = m_SelectedColor;
+  }
 
+  glColor4ubv(&color[0]);
   glBegin(GL_QUADS);
   glVertex3f(start, y, 0);
   glVertex3f(stop, y, 0);
@@ -148,8 +150,8 @@ void GlSlider::DrawHorizontal(GlCanvas* a_Canvas, bool a_Picking) {
 }
 
 //-----------------------------------------------------------------------------
-void GlSlider::DrawVertical(GlCanvas* a_Canvas, bool a_Picking) {
-  m_Canvas = a_Canvas;
+void GlSlider::DrawVertical(GlCanvas* canvas, bool picking) {
+  m_Canvas = canvas;
 
   float x = m_Canvas->getWidth() - GetPixelHeight();
 
@@ -158,7 +160,7 @@ void GlSlider::DrawVertical(GlCanvas* a_Canvas, bool a_Picking) {
   float nonSliderHeight = canvasHeight - sliderHeight;
 
   // Bar
-  if (!a_Picking) {
+  if (!picking) {
     glColor4ubv(&m_BarColor[0]);
     glBegin(GL_QUADS);
     glVertex3f(x, 0, 0);
@@ -171,11 +173,14 @@ void GlSlider::DrawVertical(GlCanvas* a_Canvas, bool a_Picking) {
   float start = canvasHeight - m_Ratio * nonSliderHeight;
   float stop = start - sliderHeight;
 
-  a_Picking ? PickingManager::SetPickingColor(
-                  a_Canvas->GetPickingManager().CreatePickableId(this))
-            : a_Canvas->GetPickingManager().GetPicked() == this
-                  ? glColor4ubv(&m_SelectedColor[0])
-                  : glColor4ubv(&m_SliderColor[0]);
+  Color color = m_SliderColor;
+  if (picking) {
+    color = canvas->GetPickingManager().GetPickableColor(this);
+  } else if (canvas->GetPickingManager().GetPicked() == this) {
+    color = m_SelectedColor;
+  }
+
+  glColor4ubv(&color[0]);
 
   glBegin(GL_QUADS);
   glVertex3f(x, start, 0);

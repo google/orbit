@@ -644,6 +644,9 @@ void CaptureWindow::Draw() {
     ZoomAll();
   }
 
+  // Reset picking manager before each draw.
+  m_PickingManager.Reset();
+
   time_graph_.Draw(m_Picking);
 
   if (m_SelectStart[0] != m_SelectStop[0]) {

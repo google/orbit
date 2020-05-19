@@ -61,8 +61,7 @@ void DrawTriangleFan(const std::vector<Vec2>& points, const Vec2& pos,
 //-----------------------------------------------------------------------------
 void Track::Draw(GlCanvas* canvas, bool picking) {
   const TimeGraphLayout& layout = time_graph_->GetLayout();
-  PickingID id = canvas->GetPickingManager().CreatePickableId(this);
-  Color picking_color = canvas->GetPickingManager().ColorFromPickingID(id);
+  Color picking_color = canvas->GetPickingManager().GetPickableColor(this);
   const Color kTabColor(50, 50, 50, 255);
   Color color = picking ? picking_color : kTabColor;
   glColor4ubv(&color[0]);
