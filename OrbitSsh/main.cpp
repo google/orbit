@@ -84,7 +84,7 @@ static std::optional<GgpSshInfo> GetSshInfoSync(int index) {
 
 /**
  * Calls `generator` over and over again until the given return value is truthy
- * or an error occured. The implementation uses QEventLoop and QSocketNotifier
+ * or an error occurred. The implementation uses QEventLoop and QSocketNotifier
  * instead of a bare select() to show how integration works with a event loop.
  **/
 template <typename F>
@@ -116,7 +116,7 @@ static auto WaitFor(qintptr fd, F generator) {
 
 /**
  * Writes `data` to the handle `file`. Blocks until the write operation is done
- * or an error occured. The implementation uses QEventLoop and QSocketNotifier
+ * or an error occurred. The implementation uses QEventLoop and QSocketNotifier
  * instead of a bare select() to show how integration works with a event loop.
  **/
 static outcome::result<void> SyncWrite(qintptr fd, OrbitSsh::SftpFile* file,
@@ -169,7 +169,7 @@ static outcome::result<void> SyncWrite(qintptr fd, OrbitSsh::SftpFile* file,
 
 /**
  * Read string from handle `file`. Blocks until no more data can be read or an
- * error occured. The implementation uses QEventLoop and QSocketNotifier instead
+ * error occurred. The implementation uses QEventLoop and QSocketNotifier instead
  * of a bare select() to show how integration works with a event loop.
  **/
 static outcome::result<std::string> SyncRead(qintptr fd,
@@ -285,7 +285,7 @@ int main(int argc, char* argv[]) {
         [&]() { return OrbitSsh::Sftp::Init(sessionManager.GetSessionPtr()); });
 
     if (!sftp) {
-      FATAL("Error occured while opening sftp connection: %s",
+      FATAL("Error occurred while opening sftp connection: %s",
             sftp.error().message());
     }
 
@@ -301,7 +301,7 @@ int main(int argc, char* argv[]) {
         });
 
     if (!file) {
-      FATAL("Error occured while opening file: %s", file.error().message());
+      FATAL("Error occurred while opening file: %s", file.error().message());
     }
 
     std::string_view payload{"I was here! 42!\n"};
@@ -327,7 +327,7 @@ int main(int argc, char* argv[]) {
         });
 
     if (!fileRead) {
-      FATAL("Error occured while opening file: %s", fileRead.error().message());
+      FATAL("Error occurred while opening file: %s", fileRead.error().message());
     }
 
     const auto readResult =
@@ -335,7 +335,7 @@ int main(int argc, char* argv[]) {
                  &fileRead.value(), sessionManager.GetSessionPtr());
 
     if (!readResult) {
-      FATAL("Error occured while reading file: %s",
+      FATAL("Error occurred while reading file: %s",
             readResult.error().message());
     }
 
