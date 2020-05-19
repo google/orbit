@@ -8,52 +8,77 @@
 
 //-----------------------------------------------------------------------------
 PickingID PickingManager::CreatePickableId(Pickable* a_Pickable) {
+  absl::MutexLock lock(&mutex_);
   ++m_IdCounter;
-  PickingID id = PickingID::Get(PickingID::PICKABLE, ++m_IdCounter);
+  PickingID id = PickingID::Get(PickingID::PICKABLE, m_IdCounter);
   m_PickableIdMap[a_Pickable] = m_IdCounter;
   m_IdPickableMap[m_IdCounter] = a_Pickable;
   return id;
 }
 
 //-----------------------------------------------------------------------------
-void PickingManager::ClearIds() {
+void PickingManager::Reset() {
+  absl::MutexLock lock(&mutex_);
   m_IdPickableMap.clear();
   m_PickableIdMap.clear();
+  m_IdCounter = 0;
+}
+
+//-----------------------------------------------------------------------------
+Pickable* PickingManager::GetPickableFromId(uint32_t id) {
+  absl::MutexLock lock(&mutex_);
+  return m_IdPickableMap[id];
+}
+
+//-----------------------------------------------------------------------------
+Pickable* PickingManager::GetPicked() {
+  absl::MutexLock lock(&mutex_);
+  return m_Picked;
 }
 
 //-----------------------------------------------------------------------------
 void PickingManager::Pick(uint32_t a_Id, int a_X, int a_Y) {
-  m_Picked = m_IdPickableMap[a_Id];
-  if (m_Picked) {
-    m_Picked->OnPick(a_X, a_Y);
+  Pickable* picked = GetPickableFromId(a_Id);
+  if (picked) {
+    picked->OnPick(a_X, a_Y);
   }
+
+  absl::MutexLock lock(&mutex_);
+  m_Picked = picked;
 }
 
 //-----------------------------------------------------------------------------
 void PickingManager::Release() {
-  if (m_Picked) {
-    m_Picked->OnRelease();
+  Pickable* picked = GetPicked();
+  if (picked != nullptr) {
+    picked->OnRelease();
+    absl::MutexLock lock(&mutex_);
+    m_Picked = nullptr;
   }
-
-  m_Picked = nullptr;
 }
 
 //-----------------------------------------------------------------------------
 void PickingManager::Drag(int a_X, int a_Y) {
-  if (m_Picked) {
-    m_Picked->OnDrag(a_X, a_Y);
+  Pickable* picked = GetPicked();
+  if (picked) {
+    picked->OnDrag(a_X, a_Y);
   }
 }
 
 //-----------------------------------------------------------------------------
-void PickingManager::SetPickingColor(PickingID a_ID) {
-  glColor4ubv(reinterpret_cast<const uint8_t*>(&a_ID));
+bool PickingManager::IsDragging() const {
+  absl::MutexLock lock(&mutex_);
+  return m_Picked && m_Picked->Draggable();
+}
+
+//-----------------------------------------------------------------------------
+Color PickingManager::GetPickableColor(Pickable* pickable) {
+  PickingID id = CreatePickableId(pickable);
+  return ColorFromPickingID(id);
 }
 
 //-----------------------------------------------------------------------------
 Color PickingManager::ColorFromPickingID(PickingID id) const {
-  static_assert(sizeof(PickingID) == sizeof(Color),
-                "PickingID should be same size as Color");
   const Color* color = reinterpret_cast<const Color*>(&id);
   return *color;
 }

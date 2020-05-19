@@ -18,7 +18,6 @@ EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
 //-----------------------------------------------------------------------------
 void EventTrack::Draw(GlCanvas* canvas, bool picking) {
   PickingManager& picking_manager = canvas->GetPickingManager();
-  PickingID id = picking_manager.CreatePickableId(this);
 
   constexpr float kNormalZ = -0.1f;
   constexpr float kPickingZ = 0.1f;
@@ -27,7 +26,7 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
 
   if (picking) {
     z = kPickingZ;
-    color = picking_manager.ColorFromPickingID(id);
+    color = picking_manager.GetPickableColor(this);
   }
 
   glColor4ubv(&color[0]);

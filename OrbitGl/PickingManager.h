@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "CoreMath.h"
+#include "absl/synchronization/mutex.h"
 
 class GlCanvas;
 
@@ -48,24 +49,26 @@ struct PickingID {
 class PickingManager {
  public:
   PickingManager() {}
-
-  PickingID CreatePickableId(Pickable* a_Pickable);
-  void ClearIds();
+  void Reset();
 
   void Pick(uint32_t a_Id, int a_X, int a_Y);
   void Release();
   void Drag(int a_X, int a_Y);
-  Pickable* GetPicked() { return m_Picked; }
-  bool IsDragging() const { return m_Picked && m_Picked->Draggable(); }
+  Pickable* GetPicked();
+  Pickable* GetPickableFromId(uint32_t id);
+  bool IsDragging() const;
 
-  static void SetPickingColor(PickingID a_ID);
+  Color GetPickableColor(Pickable* pickable);
+
+ private:
+  PickingID CreatePickableId(Pickable* a_Pickable);
   Color ColorFromPickingID(PickingID id) const;
 
- protected:
+ private:
   std::vector<Pickable*> m_Pickables;
   uint32_t m_IdCounter = 0;
-  uint32_t m_IdStart = 0;
   std::unordered_map<Pickable*, uint32_t> m_PickableIdMap;
   std::unordered_map<uint32_t, Pickable*> m_IdPickableMap;
   Pickable* m_Picked = nullptr;
+  mutable absl::Mutex mutex_;
 };
