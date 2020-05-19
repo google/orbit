@@ -112,6 +112,8 @@ std::string ErrorCategory::message(int condition) const {
       return "Unknown error code.";
     case Error::kFailedCreatingSession:
       return "Failed to create a session object.";
+    case Error::kTaskUsedAfterFinish:
+      return "Task invoked after it finished";
   }
 
   return "Unknown error code.";
