@@ -52,10 +52,15 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
                                          event->GetCallchainSize(),
                                          current_maps_.get());
 
+  if (event->GetCallchainSize() == 0) {
+    return;
+  }
   Callstack returned_callstack{
       event->GetTid(),
-      CallstackFramesFromInstructionPointers(event->GetCallchain(),
-                                             event->GetCallchainSize()),
+      // The top of a callchain is always inside the kernel code.
+      // So we need to discard the first frame.
+      CallstackFramesFromInstructionPointers(event->GetCallchain() + 1,
+                                             event->GetCallchainSize() - 1),
       event->GetTimestamp()};
   listener_->OnCallstack(returned_callstack);
 }
@@ -147,9 +152,7 @@ UprobesUnwindingVisitor::CallstackFramesFromInstructionPointers(
     return std::vector<CallstackFrame>();
   }
   std::vector<CallstackFrame> callstack_frames;
-  // The top of a callchain is always inside the kernel code.
-  // So we need to discard it.
-  for (uint64_t i = 1; i < size; i++) {
+  for (uint64_t i = 0; i < size; i++) {
     callstack_frames.emplace_back(frames[i], "",
                                   CallstackFrame::kUnknownFunctionOffset, "");
   }

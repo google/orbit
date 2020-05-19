@@ -70,20 +70,24 @@ class UprobesReturnAddressManager {
     auto& tid_uprobes_stack = tid_uprobes_stacks_.at(tid);
     CHECK(!tid_uprobes_stack.empty());
 
-    uint64_t i = 0;
     // TODO(kuebler): What about tail-call optimization, where two uretprobes
-    //  hijacked an address at the same stack pointer?
-    for (auto it = tid_uprobes_stack.rbegin(); it != tid_uprobes_stack.rend();
-         it++) {
-      const OpenUprobes& uprobes = *it;
-      for (; i < nr; i++) {
-        uint64_t ip = callchain[i];
-        // Only patch Broken IPs
-        unwindstack::MapInfo* map_info = maps->Find(ip);
-        if (map_info == nullptr || map_info->name != "[uprobes]") {
-          continue;
-        }
-        callchain[i] = uprobes.return_address;
+    //  hijacked an address at the same stack pointer.
+    auto uprobes_it = tid_uprobes_stack.rbegin();
+    for (uint64_t i = 0; i < nr; i++) {
+      uint64_t ip = callchain[i];
+      unwindstack::MapInfo* map_info = maps->Find(ip);
+
+      // Only patch Broken IPs
+      if (map_info == nullptr || map_info->name != "[uprobes]") {
+        continue;
+      }
+
+      const OpenUprobes& uprobes = *uprobes_it;
+      callchain[i] = uprobes.return_address;
+      uprobes_it++;
+
+      // There can't be more frames to patch as uprobes.
+      if (uprobes_it == tid_uprobes_stack.rend()) {
         break;
       }
     }
