@@ -5,6 +5,7 @@
 #include "PickingManager.h"
 
 #include "OpenGl.h"
+#include "OrbitBase/Logging.h"
 
 //-----------------------------------------------------------------------------
 PickingID PickingManager::CreatePickableId(Pickable* a_Pickable) {
@@ -27,7 +28,11 @@ void PickingManager::Reset() {
 //-----------------------------------------------------------------------------
 Pickable* PickingManager::GetPickableFromId(uint32_t id) {
   absl::MutexLock lock(&mutex_);
-  return m_IdPickableMap[id];
+  auto it = m_IdPickableMap.find(id);
+  if (it == m_IdPickableMap.end()) {
+    return nullptr;
+  }
+  return it->second;
 }
 
 //-----------------------------------------------------------------------------
@@ -79,6 +84,8 @@ Color PickingManager::GetPickableColor(Pickable* pickable) {
 
 //-----------------------------------------------------------------------------
 Color PickingManager::ColorFromPickingID(PickingID id) const {
+  static_assert(sizeof(PickingID) == sizeof(Color),
+                "PickingID should be same size as Color");
   const Color* color = reinterpret_cast<const Color*>(&id);
   return *color;
 }
