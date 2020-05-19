@@ -868,10 +868,8 @@ void OrbitApp::EnqueueModuleToLoad(const std::shared_ptr<Module>& a_Module) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadModules() {
-  CHECK(Capture::IsRemote());
   if (!m_ModulesToLoad.empty()) {
     LoadRemoteModules();
-    return;
   }
 }
 
