@@ -20,9 +20,12 @@
 #include "OrbitGgp/GgpInstance.h"
 #include "OrbitGgp/GgpSshInfo.h"
 #include "OrbitSsh/Credentials.h"
+#include "OrbitSsh/Error.h"
+#include "OrbitSsh/SessionManager.h"
 #include "OrbitSsh/Sftp.h"
 #include "OrbitSsh/SftpFile.h"
-#include "OrbitSsh/SshManager.h"
+#include "OrbitSsh/Task.h"
+#include "OrbitSsh/TunnelManager.h"
 
 static std::optional<GgpSshInfo> GetSshInfoSync(int index) {
   GgpClient::ResultOrQString<GgpClient> create_result = GgpClient::Create();
@@ -340,47 +343,130 @@ int main(int argc, char* argv[]) {
     LOG("Read string is identical to written string.");
 
     result = WaitFor(sessionManager.GetSocketPtr()->GetFileDescriptor(),
-            [&]() { return fileRead.value().Close(); });
+                     [&]() { return fileRead.value().Close(); });
 
     if (!result) {
       FATAL("Error while closing file: %s", result.error().message());
     }
 
     result = WaitFor(sessionManager.GetSocketPtr()->GetFileDescriptor(),
-            [&]() { return sftp.value().Shutdown(); });
+                     [&]() { return sftp.value().Shutdown(); });
 
     if (!result) {
-      FATAL("Error while shutting down SFTP channel: %s", result.error().message());
+      FATAL("Error while shutting down SFTP channel: %s",
+            result.error().message());
     }
 
   } else {
-    std::queue<OrbitSsh::SshManager::Task> pre_tasks;
-    pre_tasks.emplace(OrbitSsh::SshManager::Task{
-        "ls -al /mnt/developer",
-        [](std::string output) { LOG("Pre task output: %s", output.c_str()); },
-        [](int exit_code) {
-          LOG("Pre task finished with exit code %d", exit_code);
-        }});
+    OrbitSsh::SessionManager session_manager(&context, credentials);
 
-    OrbitSsh::SshManager::Task main_task = {
-        "ls -al /mnt/developer/",
-        [](std::string output) { LOG("Main task output: %s", output.c_str()); },
-        [](int exit_code) { LOG("Man task exit code: %d", exit_code); }};
-
-    OrbitSsh::SshManager ssh_handler(&context, credentials, pre_tasks,
-                                     main_task, {44766, 44755});
-
-    outcome::result<void> tick_result = outcome::success();
+    // ------ session start
+    outcome::result<void> session_result = outcome::success();
     do {
-      tick_result = ssh_handler.Tick();
+      session_result = session_manager.Initialize();
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while (OrbitSsh::shouldITryAgain(tick_result));
+    } while (OrbitSsh::shouldITryAgain(session_result));
+    CHECK(session_result.has_value());
+    // ------ session established
 
-    outcome::result<void> close_result = outcome::success();
+    // ------ example deployment task
+    // TODO (antonrohr) here the following needs to be done:
+    // 1. Check if and which version of OrbitService is already installed on
+    // the gamelet.
+    // 2. If the correct version is installed, this task is done.
+    // 3. If the wrong version is installed:
+    // 3a. Upload OrbitService debian package (using sftpfile class)
+    // 3b. Check OrbitService signature
+    // 3c. Install debian package
+
+    // The following task is just a placeholder example to demonstrate
+    // functionality
+
+    OrbitSsh::Task<bool> deploy_task{
+        session_manager.GetSessionPtr(), "echo \"TODO deploy task\"",
+        [](std::string std_out, std::optional<bool>* result) {
+          LOG("pre task std out: %s", std_out.c_str());
+          if (std_out == "TODO deploy task\n") {
+            *result = true;
+          }
+        },
+        [](std::string std_out, std::optional<bool>* result) {
+          LOG("pre task std err: %s", std_out.c_str());
+          *result = false;
+        },
+        [](int exit_code, std::optional<bool>* result) -> bool {
+          if (result->has_value() && *result && exit_code == 0) {
+            return true;
+          } else {
+            return false;
+          }
+        }};
+
+    outcome::result<bool> deploy_result = outcome::success(true);
     do {
-      close_result = ssh_handler.Close();
+      deploy_result = deploy_task.Run();
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } while (OrbitSsh::shouldITryAgain(close_result));
+    } while (OrbitSsh::shouldITryAgain(deploy_result));
+
+    CHECK(deploy_result.has_value() && deploy_result.value());
+    // ------ deployment done
+
+    // Setup OrbitService Task
+    OrbitSsh::Task<bool> orbit_service{
+        session_manager.GetSessionPtr(), "ls /mnt/developer/OrbitService",
+        [](std::string std_out, std::optional<bool>*) {
+          LOG("OrbitService std out: %s", std_out.c_str());
+        },
+        [](std::string std_err, std::optional<bool>*) {
+          LOG("OrbitService std error: %s", std_err.c_str());
+        },
+        [](bool exit_code, std::optional<bool>*) -> bool {
+          LOG("OrbitService returned with exit_code %d", exit_code);
+          return exit_code == 0;
+        }};
+
+    // Setup Tcp/Ip Tunnels
+    OrbitSsh::TunnelManager tunnel_44765{session_manager.GetSessionPtr(), 44765,
+                                         44765};
+    OrbitSsh::TunnelManager tunnel_44766{session_manager.GetSessionPtr(), 44766,
+                                         44766};
+
+    // ------ Run OrbitService and Tunnels
+    outcome::result<bool> orbit_service_result = outcome::success();
+    outcome::result<void> tunnel_44765_result = outcome::success();
+    outcome::result<void> tunnel_44766_result = outcome::success();
+
+    do {
+      orbit_service_result = orbit_service.Run();
+      tunnel_44765_result = tunnel_44765.Tick();
+      tunnel_44766_result = tunnel_44766.Tick();
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    } while (OrbitSsh::shouldITryAgain(orbit_service_result) &&
+             (tunnel_44765_result == outcome::success() ||
+              OrbitSsh::shouldITryAgain(tunnel_44765_result)) &&
+             (tunnel_44766_result == outcome::success() ||
+              OrbitSsh::shouldITryAgain(tunnel_44766_result)));
+
+    // ------ Orbit Service returned
+    CHECK(orbit_service_result.has_value() && orbit_service_result.value());
+
+    // ------ Close Tunnels
+    outcome::result<void> close_44765_result = outcome::success();
+    outcome::result<void> close_44766_result = outcome::success();
+    do {
+      close_44765_result = tunnel_44765.Close();
+      close_44766_result = tunnel_44766.Close();
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    } while (OrbitSsh::shouldITryAgain(close_44765_result) ||
+             OrbitSsh::shouldITryAgain(close_44766_result));
+
+    // ------ Close Session
+    outcome::result<void> close_session_result = outcome::success();
+    do {
+      close_session_result = session_manager.Close();
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    } while (OrbitSsh::shouldITryAgain(close_session_result));
   }
   return 0;
 }

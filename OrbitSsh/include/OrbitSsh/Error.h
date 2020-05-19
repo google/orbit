@@ -63,7 +63,8 @@ enum class Error {
   kSocketNone = LIBSSH2_ERROR_SOCKET_NONE,
   kInvalidIP,
   kUnknown,
-  kFailedCreatingSession
+  kFailedCreatingSession,
+  kTaskUsedAfterFinish
 };
 
 struct ErrorCategory : std::error_category {
