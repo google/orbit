@@ -29,7 +29,10 @@ void SymbolsClient::LoadSymbolsFromModules(
   std::vector<ModuleDebugInfo> remote_module_infos;
 
   for (const std::shared_ptr<Module>& module : modules) {
-    if (module == nullptr) continue;
+    if (module == nullptr || module->GetLoaded()) {
+      continue;
+    }
+
     ModuleDebugInfo module_info;
     module_info.m_Name = module->m_Name;
     module_info.m_PID = process->GetID();
