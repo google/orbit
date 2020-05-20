@@ -319,6 +319,24 @@ void SamplingProfiler::ProcessSamples() {
   m_State = DoneProcessing;
 }
 
+void SamplingProfiler::UpdateSampledFunctions() {
+  for (auto& data_entry : m_ThreadSampleData) {
+    ThreadSampleData& thread_sample_data = data_entry.second;
+    std::vector<SampledFunction>& sampled_functions =
+        thread_sample_data.m_SampleReport;
+    for (SampledFunction& sampled_function : sampled_functions) {
+      Function* function =
+          m_Process->GetFunctionFromAddress(sampled_function.m_Address, false);
+      if (function == nullptr) {
+        continue;
+      }
+
+      UpdateAddressInfo(sampled_function.m_Address);
+      sampled_function.m_Name = function->PrettyName();
+    }
+  }
+}
+
 //-----------------------------------------------------------------------------
 void ThreadSampleData::ComputeAverageThreadUsage() {
   m_AverageThreadUsage = 0.f;
@@ -395,15 +413,14 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   LinuxAddressInfo* address_info = Capture::GetAddressInfo(address);
   Function* function = m_Process->GetFunctionFromAddress(address, false);
 
-  // Find the start address of the function this address falls inside. (In the
-  // Windows code in the if branch, symbol_info->Address already contains the
-  // function's start address, but it's not the case here.) Use the Function
-  // returned by Process::GetFunctionFromAddress, and when this fails (e.g.,
-  // the module containing the function has not been loaded) use (for now)
-  // the LinuxAddressInfo that is collected for every address in a callstack.
-  // SamplingProfiler relies heavily on the association between address and
-  // function address held by m_ExactAddressToFunctionAddress, otherwise each
-  // address is considered a different function.
+  // Find the start address of the function this address falls inside.
+  // Use the Function returned by Process::GetFunctionFromAddress, and
+  // when this fails (e.g., the module containing the function has not
+  // been loaded) use (for now) the LinuxAddressInfo that is collected
+  // for every address in a callstack. SamplingProfiler relies heavily
+  // on the association between address and function address held by
+  // m_ExactAddressToFunctionAddress, otherwise each address is
+  // considered a different function.
   uint64_t function_address;
   std::string function_name = "???";
   if (function != nullptr) {

@@ -129,6 +129,14 @@ class SamplingProfiler {
   const std::vector<ThreadSampleData*>& GetThreadSampleData() const {
     return m_SortedThreadSampleData;
   }
+  const ThreadSampleData* GetThreadSampleDataByThreadId(uint32_t tid) const {
+    auto it = m_ThreadSampleData.find(tid);
+    if (it == m_ThreadSampleData.end()) {
+      return nullptr;
+    }
+
+    return &it->second;
+  }
   void SetLoadedFromFile(bool a_Value = true) { m_LoadedFromFile = a_Value; }
   void SetIsLinuxPerf(bool a_Value = true) { m_IsLinuxPerf = a_Value; }
 
@@ -141,9 +149,11 @@ class SamplingProfiler {
   void SortByThreadUsage();
   void SortByThreadID();
   bool GetLineInfo(uint64_t a_Address, LineInfo& a_LineInfo);
-  void Resolve() { ProcessSamples(); }
   void Print();
   void ProcessSamples();
+  // Updates names of sampled functions for all threads.
+  // Call this after loading a module.
+  void UpdateSampledFunctions();
   void ProcessSamplesAsync();
   void UpdateAddressInfo(uint64_t address);
 

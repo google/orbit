@@ -73,6 +73,11 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
 
     treeView->Link(ui->CallstackTreeView);
 
+    // This is hack - it is needed to update ui when data changes
+    // TODO: Remove this once model is implemented properly and there
+    // is no need in manual updates.
+    m_OrbitDataViews.push_back(treeView);
+
     QString threadName = QString::fromStdString(report_data_view.GetName());
     ui->tabWidget->addTab(tab, threadName);
   }
@@ -94,7 +99,10 @@ void OrbitSamplingReport::on_PreviousCallstackButton_clicked() {
 
 //-----------------------------------------------------------------------------
 void OrbitSamplingReport::Refresh() {
-  assert(m_SamplingReport);
+  if (m_SamplingReport == nullptr) {
+    return;
+  }
+
   if (m_SamplingReport->HasCallstacks()) {
     ui->NextCallstackButton->setEnabled(true);
     ui->PreviousCallstackButton->setEnabled(true);
@@ -102,4 +110,8 @@ void OrbitSamplingReport::Refresh() {
   std::string label = m_SamplingReport->GetSelectedCallstackString();
   ui->CallStackLabel->setText(QString::fromStdString(label));
   ui->CallstackTreeView->Refresh();
+
+  for (OrbitDataViewPanel* panel : m_OrbitDataViews) {
+    panel->Refresh();
+  }
 }

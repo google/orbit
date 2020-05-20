@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "CallStackDataView.h"
+#include "orbitdataviewpanel.h"
 
 namespace Ui {
 class OrbitSamplingReport;
@@ -22,7 +23,6 @@ class OrbitSamplingReport : public QWidget {
   void Initialize(DataView* callstack_data_view,
                   std::shared_ptr<class SamplingReport> report);
 
- protected:
   void Refresh();
 
  private slots:
@@ -32,4 +32,5 @@ class OrbitSamplingReport : public QWidget {
  private:
   Ui::OrbitSamplingReport* ui;
   std::shared_ptr<SamplingReport> m_SamplingReport;
+  std::vector<OrbitDataViewPanel*> m_OrbitDataViews;
 };

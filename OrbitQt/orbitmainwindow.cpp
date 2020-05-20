@@ -305,6 +305,10 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
     case DataViewType::SESSIONS:
       ui->SessionList->Refresh();
       break;
+    case DataViewType::SAMPLING:
+      m_OrbitSamplingReport->Refresh();
+      m_SelectionReport->Refresh();
+      break;
     default:
       break;
   }

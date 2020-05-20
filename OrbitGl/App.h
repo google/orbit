@@ -207,6 +207,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void OnRemoteProcess(const Message& a_Message);
   void OnRemoteModuleDebugInfo(const Message& a_Message);
   void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) override;
+  void UpdateSamplingReport();
   void ApplySession(const Session& session) override;
   void LoadSession(const std::shared_ptr<Session>& session);
   void SetIsRemote(bool a_IsRemote) { m_IsRemote = a_IsRemote; }
@@ -266,7 +267,8 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   bool m_NeedsThawing = false;
   bool m_UnrealEnabled = false;
 
-  std::vector<std::shared_ptr<class SamplingReport>> m_SamplingReports;
+  std::shared_ptr<class SamplingReport> sampling_report_;
+  std::shared_ptr<class SamplingReport> selection_report_;
   std::map<std::string, std::string> m_FileMapping;
   std::vector<std::string> m_SymbolDirectories;
   std::function<void(const std::string&)> m_UiCallback;

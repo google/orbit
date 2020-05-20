@@ -39,6 +39,18 @@ void SamplingReport::FillReport() {
   }
 }
 
+void SamplingReport::UpdateReport() {
+  m_Profiler->UpdateSampledFunctions();
+  for (SamplingReportDataView& thread_report : m_ThreadReports) {
+    uint32_t thread_id = thread_report.GetThreadID();
+    const ThreadSampleData* thread_sample_data =
+        m_Profiler->GetThreadSampleDataByThreadId(thread_id);
+    if (thread_sample_data != nullptr) {
+      thread_report.SetSampledFunctions(thread_sample_data->m_SampleReport);
+    }
+  }
+}
+
 //-----------------------------------------------------------------------------
 void SamplingReport::OnSelectAddress(uint64_t a_Address, ThreadID a_ThreadId) {
   if (m_CallstackDataView) {
