@@ -76,7 +76,7 @@ class UprobesReturnAddressManager {
     auto& tid_uprobes_stack = tid_uprobes_stacks_.at(tid);
     CHECK(!tid_uprobes_stack.empty());
 
-    std::vector<uint64_t> ips_to_patch;
+    std::vector<uint64_t> frames_to_patch;
 
     // TODO(kuebler): What about tail-call optimization, where two uretprobes
     //  hijacked an address at the same stack pointer.
@@ -88,14 +88,14 @@ class UprobesReturnAddressManager {
         continue;
       }
 
-      ips_to_patch.push_back(i);
+      frames_to_patch.push_back(i);
     }
 
     // In case we already used all uprobes, we need to discard this sample.
     // There are two situations where this may happen:
     //  1. At the beginning of a capture, where we missed the first uprobes
     //  2. When some events are lost or processed out of order.
-    if (tid_uprobes_stack.size() < ips_to_patch.size()) {
+    if (tid_uprobes_stack.size() < frames_to_patch.size()) {
       ERROR(
           "Discarding sample in a uprobe as some uprobe records are missing.");
       return false;
@@ -103,7 +103,7 @@ class UprobesReturnAddressManager {
     // In cases of lost events, or out of order processing, there might be wrong
     // uprobes. So we need to discard the event. In general we should be fast
     // enough, such that this does not happen.
-    if (tid_uprobes_stack.size() > ips_to_patch.size() + 1) {
+    if (tid_uprobes_stack.size() > frames_to_patch.size() + 1) {
       ERROR("Discarding sample in an uprobe as uprobe records are incorrect.");
       return false;
     }
@@ -116,10 +116,10 @@ class UprobesReturnAddressManager {
     //   address was not yet overridden.
     // In any case, the innermost uprobe has not overridden the return address.
     // We do not need to patch the effect of this uprobe and can move forward.
-    if (tid_uprobes_stack.size() == ips_to_patch.size() + 1) {
+    if (tid_uprobes_stack.size() == frames_to_patch.size() + 1) {
       uprobes_it++;
     }
-    for (uint64_t i : ips_to_patch) {
+    for (uint64_t i : frames_to_patch) {
       const OpenUprobes& uprobe = *uprobes_it;
       callchain[i] = uprobe.return_address;
       uprobes_it++;

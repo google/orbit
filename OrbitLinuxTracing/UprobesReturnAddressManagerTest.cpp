@@ -395,6 +395,7 @@ TEST(UprobesReturnAddressManager, TailCallOptimization) {
 //==============================================================================
 // Tests for frame pointer based callchains start here:
 //==============================================================================
+namespace {
 
 const std::string maps_string =
     "55d0f260c000-55d0f260d000 r--p 00000000 fe:00 3415204                    "
@@ -478,24 +479,25 @@ const std::string maps_string =
     "7fffffffe000-7ffffffff000 --xp 00000000 00:00 0                          "
     "[uprobes]";
 
-auto maps = LibunwindstackUnwinder::ParseMaps(maps_string);
+std::unique_ptr<unwindstack::BufferMaps> maps =
+    LibunwindstackUnwinder::ParseMaps(maps_string);
 
 TEST(UprobesReturnAddressManager, CallchainNoUprobes) {
   UprobesReturnAddressManager return_address_manager;
 
   std::vector<uint64_t> expected_callchain{
-      18446744073709551104lu, 94355907990078lu, 94355907990120lu,
-      94355907990170lu,       94355907990220lu, 94355907990270lu,
-      94355907990320lu,       94355907990370lu, 94355907990423lu,
-      94355907990459lu,       94355907990731lu, 139669574937531lu,
-      6143427251839320320lu};
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   std::vector<uint64_t> callchain_sample{
-      18446744073709551104lu, 94355907990078lu, 94355907990120lu,
-      94355907990170lu,       94355907990220lu, 94355907990270lu,
-      94355907990320lu,       94355907990370lu, 94355907990423lu,
-      94355907990459lu,       94355907990731lu, 139669574937531lu,
-      6143427251839320320lu};
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(
       1, callchain_sample.data(), callchain_sample.size(), maps.get()));
@@ -506,20 +508,20 @@ TEST(UprobesReturnAddressManager, CallchainOneUprobe) {
   UprobesReturnAddressManager return_address_manager;
 
   std::vector<uint64_t> expected_callchain{
-      18446744073709551104lu, 94355907990078lu, 94355907990120lu,
-      94355907990170lu,       94355907990220lu, 94355907990270lu,
-      94355907990320lu,       94355907990370lu, 94355907990423lu,
-      94355907990459lu,       94355907990731lu, 139669574937531lu,
-      6143427251839320320lu};
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
-  return_address_manager.ProcessUprobes(1, 140723234287848lu, 94355907990270lu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430E8lu, 0x55D0F260D2FElu);
 
   std::vector<uint64_t> callchain_sample{
-      18446744073709551104lu, 94355907990078lu, 94355907990120lu,
-      94355907990170lu,       94355907990220lu, 140737488347136lu,
-      94355907990320lu,       94355907990370lu, 94355907990423lu,
-      94355907990459lu,       94355907990731lu, 139669574937531lu,
-      6143427251839320320lu};
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x7FFFFFFFE000lu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(
       1, callchain_sample.data(), callchain_sample.size(), maps.get()));
@@ -530,20 +532,20 @@ TEST(UprobesReturnAddressManager, CallchainTwoUprobes) {
   UprobesReturnAddressManager return_address_manager;
 
   std::vector<uint64_t> expected_callchain{
-      18446744073709551104lu, 94355907990063lu, 94355907990120lu,
-      94355907990170lu,       94355907990220lu, 94355907990270lu,
-      94355907990320lu,       94355907990370lu, 94355907990423lu,
-      94355907990459lu,       94355907990731lu, 139669574937531lu,
-      6143427251839320320lu};
-  return_address_manager.ProcessUprobes(1, 140723234287944lu, 94355907990423lu);
-  return_address_manager.ProcessUprobes(1, 140723234287816lu, 94355907990220lu);
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE643148lu, 0x55D0F260D397lu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
 
   std::vector<uint64_t> callchain_sample{
-      18446744073709551104lu, 94355907990063lu,  94355907990120lu,
-      94355907990170lu,       140737488347136lu, 94355907990270lu,
-      94355907990320lu,       94355907990370lu,  140737488347136lu,
-      94355907990459lu,       94355907990731lu,  139669574937531lu,
-      6143427251839320320lu};
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x7FFFFFFFE000lu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x7FFFFFFFE000lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(
       1, callchain_sample.data(), callchain_sample.size(), maps.get()));
@@ -553,14 +555,14 @@ TEST(UprobesReturnAddressManager, CallchainTwoUprobes) {
 TEST(UprobesReturnAddressManager, CallchainTwoUprobesMissingOne) {
   UprobesReturnAddressManager return_address_manager;
 
-  return_address_manager.ProcessUprobes(1, 140723234287816lu, 94355907990220lu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
 
   std::vector<uint64_t> callchain_sample{
-      18446744073709551104lu, 94355907990063lu,  94355907990120lu,
-      94355907990170lu,       140737488347136lu, 94355907990270lu,
-      94355907990320lu,       94355907990370lu,  140737488347136lu,
-      94355907990459lu,       94355907990731lu,  139669574937531lu,
-      6143427251839320320lu};
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x7FFFFFFFE000lu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x7FFFFFFFE000lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   EXPECT_FALSE(return_address_manager.PatchCallchain(
       1, callchain_sample.data(), callchain_sample.size(), maps.get()));
@@ -570,22 +572,22 @@ TEST(UprobesReturnAddressManager, CallchainTwoConsecutiveUprobes) {
   UprobesReturnAddressManager return_address_manager;
 
   std::vector<uint64_t> expected_callchain{
-      18446744073709551104lu, 94355907990063lu, 94355907990120lu,
-      94355907990170lu,       94355907990220lu, 94355907990270lu,
-      94355907990320lu,       94355907990370lu, 94355907990423lu,
-      94355907990459lu,       94355907990731lu, 139669574937531lu,
-      6143427251839320320lu};
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
-  return_address_manager.ProcessUprobes(1, 140723234287944lu, 94355907990423lu);
-  return_address_manager.ProcessUprobes(1, 140723234287848lu, 94355907990270lu);
-  return_address_manager.ProcessUprobes(1, 140723234287816lu, 94355907990220lu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE643148lu, 0x55D0F260D397lu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430E8lu, 0x55D0F260D2FElu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
 
   std::vector<uint64_t> callchain_sample{
-      18446744073709551104lu, 94355907990063lu,  94355907990120lu,
-      94355907990170lu,       140737488347136lu, 140737488347136lu,
-      94355907990320lu,       94355907990370lu,  140737488347136lu,
-      94355907990459lu,       94355907990731lu,  139669574937531lu,
-      6143427251839320320lu};
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x7FFFFFFFE000lu, 0x7FFFFFFFE000lu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x7FFFFFFFE000lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(
       1, callchain_sample.data(), callchain_sample.size(), maps.get()));
@@ -596,24 +598,25 @@ TEST(UprobesReturnAddressManager, CallchainBeforeInjectionByUprobe) {
   UprobesReturnAddressManager return_address_manager;
 
   std::vector<uint64_t> expected_callchain{
-      18446744073709551104lu, 94355907990137lu, 94355907990270lu,
-      94355907990320lu,       94355907990370lu, 94355907990423lu,
-      94355907990459lu,       94355907990731lu, 139669574937531lu,
-      6143427251839320320lu};
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D279lu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
-  return_address_manager.ProcessUprobes(1, 140723234287912lu, 94355907990370lu);
-  return_address_manager.ProcessUprobes(1, 140723234287880lu, 94355907990320lu);
-  return_address_manager.ProcessUprobes(1, 140723234287816lu, 94355907990220lu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE643128lu, 0x55D0F260D362lu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE643108lu, 0x55D0F260D330lu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
 
   std::vector<uint64_t> callchain_sample{
-      18446744073709551104lu, 94355907990137lu,  94355907990270lu,
-      140737488347136lu,      140737488347136lu, 94355907990423lu,
-      94355907990459lu,       94355907990731lu,  139669574937531lu,
-      6143427251839320320lu};
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D279lu, 0x55D0F260D2FElu,
+      0x7FFFFFFFE000lu,     0x7FFFFFFFE000lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(
       1, callchain_sample.data(), callchain_sample.size(), maps.get()));
   EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
 }
+}  // namespace
 
 }  // namespace LinuxTracing
