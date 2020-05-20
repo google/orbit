@@ -30,6 +30,7 @@ class SamplingReportDataView : public DataView {
   }
   void SetSampledFunctions(const std::vector<SampledFunction>& a_Functions);
   void SetThreadID(ThreadID a_TID);
+  ThreadID GetThreadID() const { return m_TID; }
 
  protected:
   void DoSort() override;
@@ -41,6 +42,7 @@ class SamplingReportDataView : public DataView {
   std::vector<std::shared_ptr<Module>> GetModulesFromIndices(
       const std::vector<int>& a_Indices);
 
+ private:
   std::vector<SampledFunction> m_Functions;
   ThreadID m_TID = -1;
   std::string m_Name;

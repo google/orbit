@@ -17,6 +17,7 @@ class SamplingReport {
   explicit SamplingReport(std::shared_ptr<SamplingProfiler> a_SamplingProfiler);
 
   void FillReport();
+  void UpdateReport();
   std::shared_ptr<SamplingProfiler> GetProfiler() const { return m_Profiler; }
   std::vector<SamplingReportDataView>& GetThreadReports() {
     return m_ThreadReports;

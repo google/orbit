@@ -217,8 +217,9 @@ void SamplingReportDataView::OnContextMenu(
 }
 
 //-----------------------------------------------------------------------------
-void SamplingReportDataView::OnSelect(int a_Index) {
-  SampledFunction& func = GetSampledFunction(a_Index);
+void SamplingReportDataView::OnSelect(int index) {
+  m_SelectedIndex = index;
+  SampledFunction& func = GetSampledFunction(index);
   m_SamplingReport->OnSelectAddress(func.m_Address, m_TID);
 }
 

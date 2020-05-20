@@ -568,6 +568,8 @@ void OrbitApp::AddSamplingReport(
   for (SamplingReportCallback& callback : app->m_SamplingReportsCallbacks) {
     callback(app->GetOrCreateDataView(DataViewType::CALLSTACK), report);
   }
+
+  app->sampling_report_ = report;
 }
 
 //-----------------------------------------------------------------------------
@@ -581,6 +583,8 @@ void OrbitApp::AddSelectionReport(
         GOrbitApp->GetOrCreateDataView(DataViewType::CALLSTACK);
     callback(callstack_data_view, report);
   }
+
+  GOrbitApp->selection_report_ = report;
 }
 
 //-----------------------------------------------------------------------------
@@ -874,6 +878,15 @@ void OrbitApp::LoadRemoteModules() {
   GetSymbolsClient()->LoadSymbolsFromModules(Capture::GTargetProcess.get(),
                                              m_ModulesToLoad, nullptr);
   m_ModulesToLoad.clear();
+  // This is a bit counterintuitive. LoadSymbols generates request to
+  // the service if symbols cannot be loaded locally. In which case
+  // the UI update happens in OnRemoteModuleDebugInfo. But if all symbols
+  // are loaded locally it will not call remote and OnRemoteModuleDebugInfo
+  // are never called. For this case we need to make sure sampling report is
+  // updated here as well.
+  // TODO: LoadSymbolsFromModules should always call a callback even when
+  // symbols are loaded locally. Remove this call after this is done.
+  UpdateSamplingReport();
   GOrbitApp->FireRefreshCallbacks();
 }
 
@@ -1058,14 +1071,25 @@ void OrbitApp::OnRemoteModuleDebugInfo(
     if (module_info.m_Functions.empty()) {
       ERROR("Remote did not send any symbols for module %s",
             module_info.m_Name.c_str());
-    } else {
-      symbol_helper_.LoadSymbolsFromDebugInfo(module, module_info);
-      LOG("Received %lu function symbols from remote service for module %s",
-          module_info.m_Functions.size(), module_info.m_Name.c_str());
+      continue;
     }
+    symbol_helper_.LoadSymbolsFromDebugInfo(module, module_info);
+    LOG("Received %lu function symbols from remote service for module %s",
+        module_info.m_Functions.size(), module_info.m_Name.c_str());
   }
 
+  UpdateSamplingReport();
   GOrbitApp->FireRefreshCallbacks();
+}
+
+void OrbitApp::UpdateSamplingReport() {
+  if (sampling_report_ != nullptr) {
+    sampling_report_->UpdateReport();
+  }
+
+  if (selection_report_ != nullptr) {
+    selection_report_->UpdateReport();
+  }
 }
 
 //-----------------------------------------------------------------------------
