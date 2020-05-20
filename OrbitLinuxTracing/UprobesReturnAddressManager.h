@@ -63,7 +63,7 @@ class UprobesReturnAddressManager {
 
   // In case of callchain sampling we don't have the complete stack to patch,
   // but only the callchain (as list of instruction pointers). In those,
-  // a uprobe address occurs instead of the caller of an instrumented function.
+  // a uprobe address occurs in place of the caller of an instrumented function.
   // This function patches the callchain, using the maps information to identify
   // instruction pointers of uprobe code and using the return address safed in
   // the uprobes.
