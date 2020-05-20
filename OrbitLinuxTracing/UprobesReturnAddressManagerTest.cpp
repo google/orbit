@@ -1,5 +1,7 @@
+#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
+#include "LibunwindstackUnwinder.h"
 #include "UprobesReturnAddressManager.h"
 
 namespace LinuxTracing {
@@ -389,5 +391,232 @@ TEST(UprobesReturnAddressManager, TailCallOptimization) {
   // A returns.
   test_handler.OnNonUretprobesReturn();
 }
+
+//==============================================================================
+// Tests for frame pointer based callchains start here:
+//==============================================================================
+namespace {
+
+const std::string maps_string =
+    "55d0f260c000-55d0f260d000 r--p 00000000 fe:00 3415204                    "
+    "/usr/local/uprobes_target\n"
+    "55d0f260d000-55d0f260f000 r-xp 00001000 fe:00 3415204                    "
+    "/usr/local/uprobes_target\n"
+    "55d0f260f000-55d0f2610000 r--p 00003000 fe:00 3415204                    "
+    "/usr/local/uprobes_target\n"
+    "55d0f2611000-55d0f2612000 r--p 00004000 fe:00 3415204                    "
+    "/usr/local/uprobes_target\n"
+    "55d0f2612000-55d0f2613000 rw-p 00005000 fe:00 3415204                    "
+    "/usr/local/uprobes_target\n"
+    "55d0f3ce1000-55d0f3d14000 rw-p 00000000 00:00 0                          "
+    "[heap]\n"
+    "7f075b495000-7f075b4d6000 rw-p 00000000 00:00 0 \n"
+    "7f075b4f7000-7f075b4fb000 rw-p 00000000 00:00 0 \n"
+    "7f075b4fb000-7f075b50a000 r--p 00000000 fe:00 2131083                    "
+    "/usr/lib/x86_64-linux-gnu/libm-2.29.so\n"
+    "7f075b50a000-7f075b5a5000 r-xp 0000f000 fe:00 2131083                    "
+    "/usr/lib/x86_64-linux-gnu/libm-2.29.so\n"
+    "7f075b5a5000-7f075b63e000 r--p 000aa000 fe:00 2131083                    "
+    "/usr/lib/x86_64-linux-gnu/libm-2.29.so\n"
+    "7f075b63e000-7f075b63f000 r--p 00142000 fe:00 2131083                    "
+    "/usr/lib/x86_64-linux-gnu/libm-2.29.so\n"
+    "7f075b63f000-7f075b640000 rw-p 00143000 fe:00 2131083                    "
+    "/usr/lib/x86_64-linux-gnu/libm-2.29.so\n"
+    "7f075b640000-7f075b665000 r--p 00000000 fe:00 2131081                    "
+    "/usr/lib/x86_64-linux-gnu/libc-2.29.so\n"
+    "7f075b665000-7f075b7ac000 r-xp 00025000 fe:00 2131081                    "
+    "/usr/lib/x86_64-linux-gnu/libc-2.29.so\n"
+    "7f075b7ac000-7f075b7f5000 r--p 0016c000 fe:00 2131081                    "
+    "/usr/lib/x86_64-linux-gnu/libc-2.29.so\n"
+    "7f075b7f5000-7f075b7f6000 ---p 001b5000 fe:00 2131081                    "
+    "/usr/lib/x86_64-linux-gnu/libc-2.29.so\n"
+    "7f075b7f6000-7f075b7f9000 r--p 001b5000 fe:00 2131081                    "
+    "/usr/lib/x86_64-linux-gnu/libc-2.29.so\n"
+    "7f075b7f9000-7f075b7fc000 rw-p 001b8000 fe:00 2131081                    "
+    "/usr/lib/x86_64-linux-gnu/libc-2.29.so\n"
+    "7f075b7fc000-7f075b800000 rw-p 00000000 00:00 0 \n"
+    "7f075b800000-7f075b803000 r--p 00000000 fe:00 2112042                    "
+    "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1\n"
+    "7f075b803000-7f075b814000 r-xp 00003000 fe:00 2112042                    "
+    "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1\n"
+    "7f075b814000-7f075b818000 r--p 00014000 fe:00 2112042                    "
+    "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1\n"
+    "7f075b818000-7f075b819000 r--p 00017000 fe:00 2112042                    "
+    "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1\n"
+    "7f075b819000-7f075b81a000 rw-p 00018000 fe:00 2112042                    "
+    "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1\n"
+    "7f075b81a000-7f075b8b0000 r--p 00000000 fe:00 2112089                    "
+    "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28\n"
+    "7f075b8b0000-7f075b98b000 r-xp 00096000 fe:00 2112089                    "
+    "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28\n"
+    "7f075b98b000-7f075b9d4000 r--p 00171000 fe:00 2112089                    "
+    "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28\n"
+    "7f075b9d4000-7f075b9d5000 ---p 001ba000 fe:00 2112089                    "
+    "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28\n"
+    "7f075b9d5000-7f075b9e0000 r--p 001ba000 fe:00 2112089                    "
+    "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28\n"
+    "7f075b9e0000-7f075b9e3000 rw-p 001c5000 fe:00 2112089                    "
+    "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28\n"
+    "7f075b9e3000-7f075b9e6000 rw-p 00000000 00:00 0 \n"
+    "7f075ba00000-7f075ba02000 rw-p 00000000 00:00 0 \n"
+    "7f075ba02000-7f075ba03000 r--p 00000000 fe:00 2131077                    "
+    "/usr/lib/x86_64-linux-gnu/ld-2.29.so\n"
+    "7f075ba03000-7f075ba22000 r-xp 00001000 fe:00 2131077                    "
+    "/usr/lib/x86_64-linux-gnu/ld-2.29.so\n"
+    "7f075ba22000-7f075ba2a000 r--p 00020000 fe:00 2131077                    "
+    "/usr/lib/x86_64-linux-gnu/ld-2.29.so\n"
+    "7f075ba2a000-7f075ba2b000 r--p 00027000 fe:00 2131077                    "
+    "/usr/lib/x86_64-linux-gnu/ld-2.29.so\n"
+    "7f075ba2b000-7f075ba2c000 rw-p 00028000 fe:00 2131077                    "
+    "/usr/lib/x86_64-linux-gnu/ld-2.29.so\n"
+    "7f075ba2c000-7f075ba2d000 rw-p 00000000 00:00 0 \n"
+    "7ffcae624000-7ffcae646000 rw-p 00000000 00:00 0                          "
+    "[stack]\n"
+    "7ffcae7f0000-7ffcae7f3000 r--p 00000000 00:00 0                          "
+    "[vvar]\n"
+    "7ffcae7f3000-7ffcae7f4000 r-xp 00000000 00:00 0                          "
+    "[vdso]\n"
+    "7fffffffe000-7ffffffff000 --xp 00000000 00:00 0                          "
+    "[uprobes]";
+
+std::unique_ptr<unwindstack::BufferMaps> maps =
+    LibunwindstackUnwinder::ParseMaps(maps_string);
+
+TEST(UprobesReturnAddressManager, CallchainNoUprobes) {
+  UprobesReturnAddressManager return_address_manager;
+
+  std::vector<uint64_t> expected_callchain{
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  std::vector<uint64_t> callchain_sample{
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_TRUE(return_address_manager.PatchCallchain(
+      1, callchain_sample.data(), callchain_sample.size(), maps.get()));
+  EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
+}
+
+TEST(UprobesReturnAddressManager, CallchainOneUprobe) {
+  UprobesReturnAddressManager return_address_manager;
+
+  std::vector<uint64_t> expected_callchain{
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430E8lu, 0x55D0F260D2FElu);
+
+  std::vector<uint64_t> callchain_sample{
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x7FFFFFFFE000lu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_TRUE(return_address_manager.PatchCallchain(
+      1, callchain_sample.data(), callchain_sample.size(), maps.get()));
+  EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
+}
+
+TEST(UprobesReturnAddressManager, CallchainTwoUprobes) {
+  UprobesReturnAddressManager return_address_manager;
+
+  std::vector<uint64_t> expected_callchain{
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE643148lu, 0x55D0F260D397lu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
+
+  std::vector<uint64_t> callchain_sample{
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x7FFFFFFFE000lu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x7FFFFFFFE000lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_TRUE(return_address_manager.PatchCallchain(
+      1, callchain_sample.data(), callchain_sample.size(), maps.get()));
+  EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
+}
+
+TEST(UprobesReturnAddressManager, CallchainTwoUprobesMissingOne) {
+  UprobesReturnAddressManager return_address_manager;
+
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
+
+  std::vector<uint64_t> callchain_sample{
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x7FFFFFFFE000lu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x7FFFFFFFE000lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_FALSE(return_address_manager.PatchCallchain(
+      1, callchain_sample.data(), callchain_sample.size(), maps.get()));
+}
+
+TEST(UprobesReturnAddressManager, CallchainTwoConsecutiveUprobes) {
+  UprobesReturnAddressManager return_address_manager;
+
+  std::vector<uint64_t> expected_callchain{
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE643148lu, 0x55D0F260D397lu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430E8lu, 0x55D0F260D2FElu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
+
+  std::vector<uint64_t> callchain_sample{
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x7FFFFFFFE000lu, 0x7FFFFFFFE000lu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x7FFFFFFFE000lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_TRUE(return_address_manager.PatchCallchain(
+      1, callchain_sample.data(), callchain_sample.size(), maps.get()));
+  EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
+}
+
+TEST(UprobesReturnAddressManager, CallchainBeforeInjectionByUprobe) {
+  UprobesReturnAddressManager return_address_manager;
+
+  std::vector<uint64_t> expected_callchain{
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D279lu, 0x55D0F260D2FElu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE643128lu, 0x55D0F260D362lu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE643108lu, 0x55D0F260D330lu);
+  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
+
+  std::vector<uint64_t> callchain_sample{
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D279lu, 0x55D0F260D2FElu,
+      0x7FFFFFFFE000lu,     0x7FFFFFFFE000lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_TRUE(return_address_manager.PatchCallchain(
+      1, callchain_sample.data(), callchain_sample.size(), maps.get()));
+  EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
+}
+}  // namespace
 
 }  // namespace LinuxTracing

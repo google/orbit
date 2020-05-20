@@ -278,6 +278,7 @@ class CallchainSamplePerfEvent : public PerfEvent {
 
   uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 
+  uint64_t* GetCallchain() { return ips.data(); }
   const uint64_t* GetCallchain() const { return ips.data(); }
 
   uint64_t GetCallchainSize() const { return ring_buffer_record.nr; }
