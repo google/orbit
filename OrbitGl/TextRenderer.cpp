@@ -238,6 +238,10 @@ void TextRenderer::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
 void TextRenderer::AddTextTrailingCharsPrioritized(
     const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
     size_t a_TrailingCharsLength, float a_MaxSize) {
+  if (!m_Initialized) {
+    Init();
+  }
+
   float tempPenX = ToScreenSpace(a_X);
   float maxWidth = a_MaxSize == -1.f ? FLT_MAX : ToScreenSpace(a_MaxSize);
   float strWidth = 0.f;
