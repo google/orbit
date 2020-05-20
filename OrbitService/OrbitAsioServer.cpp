@@ -1,6 +1,7 @@
 #include "OrbitAsioServer.h"
 
 #include <OrbitLinuxTracing/OrbitTracing.h>
+#include <fcntl.h>
 
 #include "Core.h"
 #include "Introspection.h"
@@ -24,7 +25,17 @@ void OrbitAsioServer::Run(std::atomic<bool>* exit_requested) {
   std::thread process_list_thread{
       [this, exit_requested] { ProcessListThread(exit_requested); }};
 
+  // make stdin non blocking
+  fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
+  // buffer for reading from stdin.
+  char buffer[0x10] = "";
+
   while (!(*exit_requested)) {
+    // read from stdin to buffer. This detect the potentially sent EOF
+    while (fgets(buffer, sizeof(buffer), stdin) != nullptr) continue;
+    // exit if EOF occurred. This is used to shutdown via ssh.
+    if (feof(stdin)) *exit_requested = true;
+
     tcp_server_->ProcessMainThreadCallbacks();
     Sleep(16);
   }
