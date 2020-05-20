@@ -10,7 +10,9 @@ target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitQt
-  PRIVATE orbitaboutdialog.h
+  PRIVATE deploymentconfigurations.h
+          eventloop.h
+          orbitaboutdialog.h
           orbitcodeeditor.h
           orbitdataviewpanel.h
           orbitdisassemblydialog.h
@@ -27,11 +29,13 @@ target_sources(
           outputdialog.h
           processlauncherwidget.h
           resource.h
+          servicedeploymanager.h
           showincludesdialog.h)
 
 target_sources(
   OrbitQt
-  PRIVATE main.cpp
+  PRIVATE deploymentconfigurations.cpp
+          main.cpp
           orbitaboutdialog.cpp
           orbitaboutdialog.ui
           orbitcodeeditor.cpp
@@ -49,6 +53,7 @@ target_sources(
           orbitwatchwidget.cpp
           outputdialog.cpp
           processlauncherwidget.cpp
+          servicedeploymanager.cpp
           showincludesdialog.cpp)
 
 target_sources(
@@ -74,7 +79,7 @@ target_sources(
 
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(OrbitQt PRIVATE OrbitCore OrbitGl OrbitGgp OrbitSsh
+target_link_libraries(OrbitQt PRIVATE OrbitCore OrbitGl OrbitGgp OrbitSshQt
                                       Qt5::Widgets Qt5::Core)
 
 include(${CMAKE_SOURCE_DIR}/cmake/version.cmake)
