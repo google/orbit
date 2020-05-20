@@ -79,7 +79,7 @@ class UprobesReturnAddressManager {
     std::vector<uint64_t> frames_to_patch;
 
     // TODO(kuebler): What about tail-call optimization, where two uretprobes
-    //  hijacked an address at the same stack pointer.
+    //  hijacked an address at the same stack pointer?
     for (uint64_t i = 0; i < callchain_size; i++) {
       uint64_t ip = callchain[i];
       unwindstack::MapInfo* map_info = maps->Find(ip);
