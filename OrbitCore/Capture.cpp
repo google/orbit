@@ -155,9 +155,9 @@ bool Capture::Connect(std::string_view remote_address) {
 // TODO: This method is resposible for too many things. We should split the
 //  server side logic and client side logic into separate methods/classes.
 bool Capture::StartCapture(std::string_view remote_address) {
-  SCOPE_TIMER_LOG("Capture::StartCapture");
-
   if (GTargetProcess->GetName().empty()) return false;
+
+  SCOPE_TIMER_LOG("Capture::StartCapture");
 
   GCaptureTimer.Start();
   GCaptureTimePoint = std::chrono::system_clock::now();

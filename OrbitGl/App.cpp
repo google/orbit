@@ -765,9 +765,12 @@ void OrbitApp::AddUiMessageCallback(
 
 //-----------------------------------------------------------------------------
 void OrbitApp::StartCapture() {
-  // Tracing session is only needed when StartCapture is
-  // running on the service side
-  Capture::StartCapture(options_.asio_server_address);
+  bool started = Capture::StartCapture(options_.asio_server_address);
+  if (!started) {
+    SendErrorToUi("No process selected",
+                  "Please choose a target process for the capture.");
+    return;
+  }
 
   if (m_NeedsThawing) {
 #ifdef _WIN32
