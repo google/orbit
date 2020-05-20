@@ -40,7 +40,7 @@ struct Block {
   Block<T, Size>* m_Prev;
   Block<T, Size>* m_Next;
   BlockChain<T, Size>* m_Chain;
-  alignas(4) uint32_t m_Size;
+  uint32_t m_Size;
   T m_Data[Size];
 };
 
@@ -223,6 +223,6 @@ struct BlockChain {
 
   Block<T, BlockSize>* m_Root;
   Block<T, BlockSize>* m_Current;
-  alignas(4) uint32_t m_NumBlocks;
-  alignas(4) uint32_t m_NumItems;
+  uint32_t m_NumBlocks;
+  uint32_t m_NumItems;
 };
