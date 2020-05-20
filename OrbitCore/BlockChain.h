@@ -5,7 +5,6 @@
 #include <assert.h>
 
 #include <algorithm>
-#include <atomic>
 #include <cstdint>
 
 //-----------------------------------------------------------------------------
@@ -40,9 +39,9 @@ struct Block {
 
   Block<T, Size>* m_Prev;
   Block<T, Size>* m_Next;
-  T m_Data[Size];
   BlockChain<T, Size>* m_Chain;
-  std::atomic<uint32_t> m_Size;
+  alignas(4) uint32_t m_Size;
+  T m_Data[Size];
 };
 
 //-----------------------------------------------------------------------------
@@ -224,6 +223,6 @@ struct BlockChain {
 
   Block<T, BlockSize>* m_Root;
   Block<T, BlockSize>* m_Current;
-  std::atomic<uint32_t> m_NumBlocks;
-  std::atomic<uint32_t> m_NumItems;
+  alignas(4) uint32_t m_NumBlocks;
+  alignas(4) uint32_t m_NumItems;
 };
