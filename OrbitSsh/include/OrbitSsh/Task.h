@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SSH_TASKfine ORBIT_SSH_TASK_H_
+#ifndef ORBIT_SSH_TASK_H_
+#define ORBIT_SSH_TASK_H_
 
 #include <functional>
 #include <memory>
