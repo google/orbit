@@ -164,7 +164,7 @@ Installed-Size: `du -ks usr/ | cut -f 1`
             tools.save("{}/DEBIAN/postinst".format(basedir), """
 #!/bin/bash
 # Setting the setuid-bit for OrbitService
-chmod -v 4775 /usr/bin/OrbitService
+chmod -v 4775 /opt/developer/tools/OrbitService
 """)
 
             self.run("chmod +x {}/DEBIAN/postinst".format(basedir))
