@@ -365,7 +365,7 @@ void SamplingProfiler::ResolveCallstacks() {
 
       if (m_ExactAddressToFunctionAddress.find(addr) ==
           m_ExactAddressToFunctionAddress.end()) {
-        AddAddress(addr);
+        UpdateAddressInfo(addr);
       }
 
       auto addrIt = m_ExactAddressToFunctionAddress.find(addr);
@@ -389,95 +389,40 @@ void SamplingProfiler::ResolveCallstacks() {
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::AddAddress(uint64_t a_Address) {
+void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   ScopeLock lock(m_Mutex);
-#ifdef _WIN32
-  if (!m_IsLinuxPerf) {
-    unsigned char buffer[1024];
-    memset(buffer, 0, 1024);
-    SYMBOL_INFOW* symbol_info = (SYMBOL_INFOW*)buffer;
-    symbol_info->SizeOfStruct = sizeof(SYMBOL_INFOW);
-    symbol_info->MaxNameLen =
-        ((sizeof(buffer) - sizeof(SYMBOL_INFOW)) / sizeof(WCHAR)) - 1;
-    uint64_t displacement = 0;
 
-    if (m_Process) {
-      SymFromAddrW(m_Process->GetHandle(), (uint64_t)a_Address, &displacement,
-                   symbol_info);
-    }
+  LinuxAddressInfo* address_info = Capture::GetAddressInfo(address);
+  Function* function = m_Process->GetFunctionFromAddress(address, false);
 
-    std::string symName = ws2s(symbol_info->Name);
-    if (symName.empty()) {
-      symName = absl::StrFormat("%" PRIx64, a_Address);
-      PRINT_VAR(GetLastErrorAsString());
-
-      std::shared_ptr<OrbitDiaSymbol> symbol =
-          m_Process->SymbolFromAddress(a_Address);
-      if (symbol->m_Symbol) {
-        BSTR bstrName;
-        if (symbol->m_Symbol->get_name(&bstrName) == S_OK) {
-          symName = ws2s(bstrName);
-          SysFreeString(bstrName);
-        }
-      }
-    }
-
-    m_ExactAddressToFunctionAddress[a_Address] =
-        symbol_info->Address ? symbol_info->Address : a_Address;
-    Capture::GAddressToFunctionName[a_Address] = symName;
-    Capture::GAddressToFunctionName[symbol_info->Address] = symName;
-
-    LineInfo lineInfo;
-    if (SymUtils::GetLineInfo(a_Address, lineInfo)) {
-      uint64_t hash = StringHash(lineInfo.m_File);
-      lineInfo.m_FileNameHash = hash;
-      m_FileNames[hash] = lineInfo.m_File;
-      lineInfo.m_File = "";
-      m_AddressToLineInfo[a_Address] = lineInfo;
-    }
-  } else
-#endif
-  {
-    LinuxAddressInfo* address_info = Capture::GetAddressInfo(a_Address);
-
-    Function* function = m_Process->GetFunctionFromAddress(a_Address, false);
-
-    // Find the start address of the function this address falls inside. (In the
-    // Windows code in the if branch, symbol_info->Address already contains the
-    // function's start address, but it's not the case here.) Use the Function
-    // returned by Process::GetFunctionFromAddress, and when this fails (e.g.,
-    // the module containing the function has not been loaded) use (for now)
-    // the LinuxAddressInfo that is collected for every address in a callstack.
-    // SamplingProfiler relies heavily on the association between address and
-    // function address held by m_ExactAddressToFunctionAddress, otherwise each
-    // address is considered a different function.
-    uint64_t function_address;
-    if (function != nullptr) {
-      function_address = function->GetVirtualAddress();
-    } else if (address_info != nullptr) {
-      function_address = a_Address - address_info->offset_in_function;
-    } else {
-      function_address = a_Address;
-    }
-    m_ExactAddressToFunctionAddress[a_Address] = function_address;
-
-    std::string function_name = "???";
-    if (address_info == nullptr) {
-      if (function != nullptr) {
-        function_name = function->PrettyName();
-      }
-    } else if (address_info->function_name.empty() ||
-               absl::StrContains(address_info->function_name, "[unknown]")) {
-      if (function != nullptr) {
-        function_name = function->PrettyName();
-        address_info->function_name = function->PrettyName();
-      }
-    } else {
+  // Find the start address of the function this address falls inside. (In the
+  // Windows code in the if branch, symbol_info->Address already contains the
+  // function's start address, but it's not the case here.) Use the Function
+  // returned by Process::GetFunctionFromAddress, and when this fails (e.g.,
+  // the module containing the function has not been loaded) use (for now)
+  // the LinuxAddressInfo that is collected for every address in a callstack.
+  // SamplingProfiler relies heavily on the association between address and
+  // function address held by m_ExactAddressToFunctionAddress, otherwise each
+  // address is considered a different function.
+  uint64_t function_address;
+  std::string function_name = "???";
+  if (function != nullptr) {
+    function_address = function->GetVirtualAddress();
+    function_name = function->PrettyName();
+    address_info->function_name = function_name;
+  } else if (address_info != nullptr) {
+    function_address = address - address_info->offset_in_function;
+    if (!address_info->function_name.empty()) {
       function_name = address_info->function_name;
     }
-    Capture::GAddressToFunctionName[a_Address] = function_name;
-    Capture::GAddressToFunctionName[function_address] = function_name;
+  } else {
+    function_address = address;
   }
+
+  m_ExactAddressToFunctionAddress[address] = function_address;
+
+  Capture::GAddressToFunctionName[address] = function_name;
+  Capture::GAddressToFunctionName[function_address] = function_name;
 }
 
 //-----------------------------------------------------------------------------

@@ -145,7 +145,7 @@ class SamplingProfiler {
   void Print();
   void ProcessSamples();
   void ProcessSamplesAsync();
-  void AddAddress(uint64_t a_Address);
+  void UpdateAddressInfo(uint64_t address);
 
   const ThreadSampleData& GetSummary() { return m_ThreadSampleData[0]; }
 

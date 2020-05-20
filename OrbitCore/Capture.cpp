@@ -556,7 +556,7 @@ void Capture::CheckForUnrealSupport() {
 void Capture::PreSave() {
   // Add selected functions' exact address to sampling profiler
   for (auto& pair : GSelectedFunctionsMap) {
-    GSamplingProfiler->AddAddress(pair.first);
+    GSamplingProfiler->UpdateAddressInfo(pair.first);
   }
 }
 
