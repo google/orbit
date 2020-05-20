@@ -104,7 +104,7 @@ class UprobesReturnAddressManager {
     // uprobes. So we need to discard the event. In general we should be fast
     // enough, such that this does not happen.
     if (tid_uprobes_stack.size() > frames_to_patch.size() + 1) {
-      ERROR("Discarding sample in an uprobe as uprobe records are incorrect.");
+      ERROR("Discarding sample in a uprobe as uprobe records are incorrect.");
       return false;
     }
 
