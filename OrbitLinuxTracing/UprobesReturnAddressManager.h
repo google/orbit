@@ -65,7 +65,7 @@ class UprobesReturnAddressManager {
   // but only the callchain (as list of instruction pointers). In those,
   // a uprobe address occurs in place of the caller of an instrumented function.
   // This function patches the callchain, using the maps information to identify
-  // instruction pointers of uprobe code and using the return address safed in
+  // instruction pointers of uprobe code and using the return address saved in
   // the uprobes.
   bool PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t callchain_size,
                       unwindstack::Maps* maps) {
@@ -94,16 +94,15 @@ class UprobesReturnAddressManager {
     // In case we already used all uprobes, we need to discard this sample.
     // There are two situations where this may happen:
     //  1. At the beginning of a capture, where we missed the first uprobes
-    //  2. When there are two many events, resulting in lost events or
-    //   processing out of order.
+    //  2. When some events are lost or processed out of order.
     if (tid_uprobes_stack.size() < ips_to_patch.size()) {
       ERROR(
-          "Discarding sample in an uprobe as some uprobe records are missing.");
+          "Discarding sample in a uprobe as some uprobe records are missing.");
       return false;
     }
     // In cases of lost events, or out of order processing, there might be wrong
-    //  uprobes. So we need to discard the event. In general we should be fast
-    //  enough, such that this does not happen.
+    // uprobes. So we need to discard the event. In general we should be fast
+    // enough, such that this does not happen.
     if (tid_uprobes_stack.size() > ips_to_patch.size() + 1) {
       ERROR("Discarding sample in an uprobe as uprobe records are incorrect.");
       return false;
@@ -115,8 +114,8 @@ class UprobesReturnAddressManager {
     //   address was already restored.
     //  2. At the very beginning of an instrumented function, where the return
     //   address was not yet overridden.
-    // In any case, the inner most uprobe has not overridden the return address.
-    // We do not need to patch the affect of this uprobe and can move forward.
+    // In any case, the innermost uprobe has not overridden the return address.
+    // We do not need to patch the effect of this uprobe and can move forward.
     if (tid_uprobes_stack.size() == ips_to_patch.size() + 1) {
       uprobes_it++;
     }
