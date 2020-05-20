@@ -110,8 +110,7 @@ void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
   const Vec2& box_size = text_box->GetSize();
   float pos_x = std::max(box_pos[0], min_x);
   float max_size = box_pos[0] + box_size[0] - pos_x;
-  TextRenderer* text_renderer = time_graph_->GetTextRenderer();
-  text_renderer->AddTextTrailingCharsPrioritized(
+  text_renderer_->AddTextTrailingCharsPrioritized(
       text_box->GetText().c_str(), pos_x,
       text_box->GetPosY() + layout.GetTextOffset(), GlCanvas::Z_VALUE_TEXT,
       kTextWhite, text_box->GetElapsedTimeTextLength(), max_size);
