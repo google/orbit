@@ -652,7 +652,15 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
   if (file.isEmpty()) {
     return;
   }
-  GOrbitApp->OnLoadCapture(file.toStdString());
+  bool loaded = GOrbitApp->OnLoadCapture(file.toStdString());
+  if (!loaded) {
+    SetTitle("");
+    QMessageBox::critical(this, "Error loading capture",
+                          absl::StrFormat("Could not load capture from \"%s\".",
+                                          file.toStdString())
+                              .c_str());
+    return;
+  }
   SetTitle(file.toStdString());
   ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
 }

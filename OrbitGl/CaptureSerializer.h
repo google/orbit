@@ -13,7 +13,7 @@ class CaptureSerializer {
  public:
   CaptureSerializer();
   void Save(const std::string& filename);
-  void Load(const std::string& filename);
+  bool Load(const std::string& filename);
 
   template <class T>
   void Save(T& archive);

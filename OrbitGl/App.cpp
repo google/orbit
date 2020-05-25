@@ -681,21 +681,22 @@ bool OrbitApp::OnLoadSession(const std::string& file_name) {
   }
 
   std::ifstream file(file_path);
-  if (!file.fail()) {
-    try {
-      auto session = std::make_shared<Session>();
-      cereal::BinaryInputArchive archive(file);
-      archive(*session);
-      file.close();
-      session->m_FileName = file_path;
-      LoadSession(session);
-      return true;
-    } catch (std::exception& e) {
-      ERROR("Loading session from \"%s\": %s", file_path.c_str(), e.what());
-    }
+  if (file.fail()) {
+    return false;
   }
 
-  return false;
+  try {
+    auto session = std::make_shared<Session>();
+    cereal::BinaryInputArchive archive(file);
+    archive(*session);
+    file.close();
+    session->m_FileName = file_path;
+    LoadSession(session);
+    return true;
+  } catch (std::exception& e) {
+    ERROR("Loading session from \"%s\": %s", file_path.c_str(), e.what());
+    return false;
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -713,7 +714,7 @@ void OrbitApp::OnSaveCapture(const std::string& file_name) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnLoadCapture(const std::string& file_name) {
+bool OrbitApp::OnLoadCapture(const std::string& file_name) {
   StopCapture();
   Capture::ClearCaptureData();
   GCurrentTimeGraph->Clear();
@@ -723,10 +724,13 @@ void OrbitApp::OnLoadCapture(const std::string& file_name) {
 
   CaptureSerializer ar;
   ar.time_graph_ = GCurrentTimeGraph;
-  ar.Load(file_name);
-  m_ModulesDataView->SetProcess(Capture::GTargetProcess);
-  StopCapture();
-  DoZoom = true;  // TODO: remove global, review logic
+  bool loaded = ar.Load(file_name);
+  if (loaded) {
+    m_ModulesDataView->SetProcess(Capture::GTargetProcess);
+    StopCapture();
+    DoZoom = true;  // TODO: remove global, review logic
+  }
+  return loaded;
 }
 
 //-----------------------------------------------------------------------------
