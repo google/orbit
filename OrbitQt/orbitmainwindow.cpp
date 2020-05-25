@@ -521,9 +521,6 @@ void OrbitMainWindow::OnTimer() {
 void OrbitMainWindow::OnHideSearch() { ui->lineEdit->hide(); }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionOpen_Capture_triggered() {}
-
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionSave_Session_triggered() {
   std::string sessionName = GOrbitApp->GetSessionFileName();
   if (!sessionName.empty()) {
@@ -649,7 +646,7 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionOpen_Capture_2_triggered() {
+void OrbitMainWindow::on_actionOpen_Capture_triggered() {
   QString file = QFileDialog::getOpenFileName(
       this, "Open capture...", Path::GetCapturePath().c_str(), "*.orbit");
   if (file.isEmpty()) {
