@@ -41,6 +41,8 @@ std::vector<std::string> ReadSymbolsFile() {
       const std::string& dir = line;
       if (Path::DirExists(dir)) {
         directories.push_back(dir);
+      } else {
+        ERROR("Symbols directory \"%s\" doesn't exist", dir);
       }
     }
   }
