@@ -66,7 +66,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void OnSaveSession(const std::string& file_name);
   bool OnLoadSession(const std::string& file_name);
   void OnSaveCapture(const std::string& file_name);
-  void OnLoadCapture(const std::string& file_name);
+  bool OnLoadCapture(const std::string& file_name);
   void OnOpenPdb(const std::string& file_name);
   void OnLaunchProcess(const std::string& process_name,
                        const std::string& working_dir, const std::string& args);

@@ -120,12 +120,16 @@ void CaptureSerializer::Save(T& archive) {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureSerializer::Load(const std::string& filename) {
+bool CaptureSerializer::Load(const std::string& filename) {
   SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", filename));
 
   // Binary
   std::ifstream file(filename, std::ios::binary);
-  if (!file.fail()) {
+  if (file.fail()) {
+    return false;
+  }
+
+  try {
     // Header
     cereal::BinaryInputArchive archive(file);
     archive(*this);
@@ -171,6 +175,11 @@ void CaptureSerializer::Load(const std::string& filename) {
 
     GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler, GOrbitApp.get());
     GOrbitApp->FireRefreshCallbacks();
+    return true;
+
+  } catch (std::exception& e) {
+    ERROR("Loading capture from \"%s\": %s", filename.c_str(), e.what());
+    return false;
   }
 }
 
