@@ -23,7 +23,6 @@ class OrbitAsioServer {
   void SetupIntrospection();
 
   void ProcessListThread(std::atomic<bool>* exit_requested);
-  void SendProcessList();
 
   void SetupServerCallbacks();
   void SendProcess(uint32_t pid);

@@ -56,7 +56,6 @@ enum MessageType : int16_t {
   Msg_RemoteProcessRequest,
   Msg_RemoteModule,
   Msg_RemoteFunctions,
-  Msg_RemoteProcessList,
   Msg_RemoteModuleDebugInfo,
   Msg_Timers,
   Msg_RemoteCallStack,
