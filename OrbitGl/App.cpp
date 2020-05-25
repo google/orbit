@@ -13,6 +13,7 @@
 #include <fstream>
 #include <thread>
 #include <utility>
+#include <outcome.hpp>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
@@ -765,10 +766,10 @@ void OrbitApp::AddUiMessageCallback(
 
 //-----------------------------------------------------------------------------
 void OrbitApp::StartCapture() {
-  bool started = Capture::StartCapture(options_.asio_server_address);
-  if (!started) {
-    SendErrorToUi("No process selected",
-                  "Please choose a target process for the capture.");
+  outcome::result<void, std::string> result =
+      Capture::StartCapture(options_.asio_server_address);
+  if (result.has_error()) {
+    SendErrorToUi("Error starting capture", result.error());
     return;
   }
 

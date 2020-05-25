@@ -129,7 +129,8 @@ target_link_libraries(
          freeglut::freeglut
          capstone::capstone
          gte::gte
-         glew::glew)
+         glew::glew
+         Outcome::Outcome)
 
 if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL)
   target_link_libraries(OrbitGl PUBLIC OpenGL::GLX)

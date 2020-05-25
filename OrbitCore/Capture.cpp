@@ -154,8 +154,12 @@ bool Capture::Connect(std::string_view remote_address) {
 //-----------------------------------------------------------------------------
 // TODO: This method is resposible for too many things. We should split the
 //  server side logic and client side logic into separate methods/classes.
-bool Capture::StartCapture(std::string_view remote_address) {
-  if (GTargetProcess->GetName().empty()) return false;
+outcome::result<void, std::string> Capture::StartCapture(
+    std::string_view remote_address) {
+  if (GTargetProcess->GetName().empty()) {
+    return outcome::failure(
+        "No process selected. Please choose a target process for the capture.");
+  }
 
   SCOPE_TIMER_LOG("Capture::StartCapture");
 
@@ -165,7 +169,7 @@ bool Capture::StartCapture(std::string_view remote_address) {
 #ifdef WIN32
   if (!IsRemote()) {
     if (!Connect(remote_address)) {
-      return false;
+      return outcome::failure("Connection error.");
     }
   }
 #endif
@@ -198,7 +202,7 @@ bool Capture::StartCapture(std::string_view remote_address) {
     }
   }
 
-  return true;
+  return outcome::success();
 }
 
 //-----------------------------------------------------------------------------

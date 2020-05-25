@@ -180,7 +180,8 @@ target_link_libraries(
          asio::asio
          abseil::abseil
          llvm_object::llvm_object
-         crashpad::crashpad)
+         crashpad::crashpad
+         Outcome::Outcome)
 
 if(WIN32)
   target_link_libraries(
