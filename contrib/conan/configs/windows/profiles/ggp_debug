@@ -18,5 +18,5 @@ ninja/1.9.0@
 
 [env]
 CONAN_CMAKE_GENERATOR=Ninja
-CFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer
-CXXFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer
+CFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation
+CXXFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation
