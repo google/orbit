@@ -53,17 +53,12 @@ void OrbitAsioServer::SetupIntrospection() {
 
 void OrbitAsioServer::ProcessListThread(std::atomic<bool>* exit_requested) {
   while (!(*exit_requested)) {
-    SendProcessList();
+    // Some Asio services rely on process_list_ being somewhat up-to-date
+    // TODO: Remove this once these services are removed.
+    process_list_.Refresh();
+    process_list_.UpdateCpuTimes();
     Sleep(2000);
   }
-}
-
-void OrbitAsioServer::SendProcessList() {
-  process_list_.Refresh();
-  process_list_.UpdateCpuTimes();
-  std::string process_data = SerializeObjectHumanReadable(process_list_);
-  tcp_server_->Send(Msg_RemoteProcessList, process_data.data(),
-                    process_data.size());
 }
 
 void OrbitAsioServer::SetupServerCallbacks() {
