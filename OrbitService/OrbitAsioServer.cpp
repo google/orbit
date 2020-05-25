@@ -1,7 +1,10 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include "OrbitAsioServer.h"
 
 #include <OrbitLinuxTracing/OrbitTracing.h>
-#include <fcntl.h>
 
 #include "Core.h"
 #include "Introspection.h"
@@ -9,7 +12,7 @@
 
 OrbitAsioServer::OrbitAsioServer(uint16_t port,
                                  LinuxTracing::TracingOptions tracing_options)
-    : tracing_options_{tracing_options} {
+    : tracing_options_{tracing_options}, exit_requested_(false) {
   // TODO: Don't use the GTcpServer global. Unfortunately, it's needed in
   //  TcpConnection::DecodeMessage.
   GTcpServer = std::make_unique<TcpServer>();
@@ -19,29 +22,18 @@ OrbitAsioServer::OrbitAsioServer(uint16_t port,
   SetupIntrospection();
   SetupServerCallbacks();
   SetupTransactionServices();
+
+  process_list_thread_ = std::thread{[this] { ProcessListThread(); }};
 }
 
-void OrbitAsioServer::Run(std::atomic<bool>* exit_requested) {
-  std::thread process_list_thread{
-      [this, exit_requested] { ProcessListThread(exit_requested); }};
-
-  // make stdin non blocking
-  fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
-  // buffer for reading from stdin.
-  char buffer[0x10] = "";
-
-  while (!(*exit_requested)) {
-    // read from stdin to buffer. This detect the potentially sent EOF
-    while (fgets(buffer, sizeof(buffer), stdin) != nullptr) continue;
-    // exit if EOF occurred. This is used to shutdown via ssh.
-    if (feof(stdin)) *exit_requested = true;
-
-    tcp_server_->ProcessMainThreadCallbacks();
-    Sleep(16);
+OrbitAsioServer::~OrbitAsioServer() {
+  exit_requested_ = true;
+  if (process_list_thread_.joinable()) {
+    process_list_thread_.join();
   }
-
-  process_list_thread.join();
 }
+
+void OrbitAsioServer::LoopTick() { tcp_server_->ProcessMainThreadCallbacks(); }
 
 void OrbitAsioServer::SetupIntrospection() {
 #if ORBIT_TRACING_ENABLED
@@ -51,8 +43,8 @@ void OrbitAsioServer::SetupIntrospection() {
 #endif
 }
 
-void OrbitAsioServer::ProcessListThread(std::atomic<bool>* exit_requested) {
-  while (!(*exit_requested)) {
+void OrbitAsioServer::ProcessListThread() {
+  while (!(exit_requested_)) {
     // Some Asio services rely on process_list_ being somewhat up-to-date
     // TODO: Remove this once these services are removed.
     process_list_.Refresh();
