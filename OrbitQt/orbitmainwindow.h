@@ -55,7 +55,6 @@ class OrbitMainWindow : public QMainWindow {
   void OnTimer();
   void OnHideSearch();
 
-  void on_actionOpen_Capture_triggered();
   void on_actionSave_Session_triggered();
   void on_actionOpen_Session_triggered();
   void on_actionOpen_PDB_triggered();
@@ -81,7 +80,7 @@ class OrbitMainWindow : public QMainWindow {
 
   void on_actionSave_Capture_triggered();
 
-  void on_actionOpen_Capture_2_triggered();
+  void on_actionOpen_Capture_triggered();
 
   void on_actionShow_Includes_Util_triggered();
 

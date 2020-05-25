@@ -256,7 +256,7 @@
      <string>File</string>
     </property>
     <addaction name="actionSave_Capture"/>
-    <addaction name="actionOpen_Capture_2"/>
+    <addaction name="actionOpen_Capture"/>
     <addaction name="separator"/>
     <addaction name="actionSave_Session"/>
     <addaction name="actionSave_Session_As"/>
@@ -314,11 +314,6 @@
   <action name="actionOpen_PDB">
    <property name="text">
     <string>Open PDB</string>
-   </property>
-  </action>
-  <action name="actionOpen_Capture">
-   <property name="text">
-    <string>Open Capture</string>
    </property>
   </action>
   <action name="actionDisconnect">
@@ -391,7 +386,7 @@
     <string>Sampling</string>
    </property>
   </action>
-  <action name="actionOpen_Capture_2">
+  <action name="actionOpen_Capture">
    <property name="text">
     <string>Open Capture</string>
    </property>
