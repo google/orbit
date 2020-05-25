@@ -426,7 +426,6 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   if (function != nullptr) {
     function_address = function->GetVirtualAddress();
     function_name = function->PrettyName();
-    address_info->function_name = function_name;
   } else if (address_info != nullptr) {
     function_address = address - address_info->offset_in_function;
     if (!address_info->function_name.empty()) {
@@ -434,6 +433,10 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
     }
   } else {
     function_address = address;
+  }
+
+  if (function != nullptr && address_info != nullptr) {
+    address_info->function_name = function->PrettyName();
   }
 
   m_ExactAddressToFunctionAddress[address] = function_address;
