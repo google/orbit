@@ -12,7 +12,7 @@
 class CaptureSerializer {
  public:
   CaptureSerializer();
-  void Save(const std::string& filename);
+  bool Save(const std::string& filename);
   bool Load(const std::string& filename);
 
   template <class T>

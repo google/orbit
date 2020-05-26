@@ -451,7 +451,7 @@ void Capture::DisplayStats() {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::SaveSession(const std::string& a_FileName) {
+bool Capture::SaveSession(const std::string& filename) {
   Session session;
   session.m_ProcessFullPath = GTargetProcess->GetFullPath();
 
@@ -466,16 +466,27 @@ void Capture::SaveSession(const std::string& a_FileName) {
     }
   }
 
-  std::string saveFileName = a_FileName;
-  if (!absl::EndsWith(a_FileName, ".opr")) {
-    saveFileName += ".opr";
+  std::string filenameWithExt = filename;
+  if (!absl::EndsWith(filename, ".opr")) {
+    filenameWithExt += ".opr";
   }
 
-  SCOPE_TIMER_LOG(
-      absl::StrFormat("Saving Orbit session in %s", saveFileName.c_str()));
-  std::ofstream file(saveFileName, std::ios::binary);
-  cereal::BinaryOutputArchive archive(file);
-  archive(cereal::make_nvp("Session", session));
+  std::ofstream file(filenameWithExt, std::ios::binary);
+  if (file.fail()) {
+    ERROR("Saving session in \"%s\"", filenameWithExt);
+    return false;
+  }
+
+  try {
+    SCOPE_TIMER_LOG(
+        absl::StrFormat("Saving session in \"%s\"", filenameWithExt));
+    cereal::BinaryOutputArchive archive(file);
+    archive(cereal::make_nvp("Session", session));
+    return true;
+  } catch (cereal::Exception& e) {
+    ERROR("Saving session in \"%s\": %s", filenameWithExt, e.what());
+    return false;
+  }
 }
 
 //-----------------------------------------------------------------------------
