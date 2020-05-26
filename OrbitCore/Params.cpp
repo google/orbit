@@ -72,7 +72,7 @@ void Params::Save() {
   try {
     cereal::XMLOutputArchive archive(file);
     archive(cereal::make_nvp("Params", *this));
-  } catch (cereal::Exception& e) {
+  } catch (std::exception& e) {
     ERROR("Saving Params in \"%s\": %s", filename, e.what());
   }
 }
@@ -91,7 +91,7 @@ void Params::Load() {
   try {
     cereal::XMLInputArchive archive(file);
     archive(*this);
-  } catch (cereal::Exception& e) {
+  } catch (std::exception& e) {
     ERROR("Loading Params from \"%s\": %s", filename, e.what());
     // Try overwriting the file with default values, in case it's malformed.
     Save();

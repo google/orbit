@@ -483,7 +483,7 @@ bool Capture::SaveSession(const std::string& filename) {
     cereal::BinaryOutputArchive archive(file);
     archive(cereal::make_nvp("Session", session));
     return true;
-  } catch (cereal::Exception& e) {
+  } catch (std::exception& e) {
     ERROR("Saving session in \"%s\": %s", filenameWithExt, e.what());
     return false;
   }

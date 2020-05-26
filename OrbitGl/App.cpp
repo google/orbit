@@ -407,7 +407,7 @@ void OrbitApp::ListSessions() {
       file.close();
       session->m_FileName = filename;
       sessions.push_back(session);
-    } catch (cereal::Exception& e) {
+    } catch (std::exception& e) {
       ERROR("Loading session from \"%s\": %s", filename.c_str(), e.what());
     }
   }
@@ -700,7 +700,7 @@ bool OrbitApp::OnLoadSession(const std::string& file_name) {
     session->m_FileName = file_path;
     LoadSession(session);
     return true;
-  } catch (cereal::Exception& e) {
+  } catch (std::exception& e) {
     ERROR("Loading session from \"%s\": %s", file_path, e.what());
     return false;
   }
