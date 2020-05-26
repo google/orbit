@@ -4,10 +4,35 @@
 
 #include "OrbitService.h"
 
+#include <absl/strings/match.h>
 #include <fcntl.h>
+
+#include <chrono>
+#include <cstdio>
 
 #include "OrbitAsioServer.h"
 #include "OrbitGrpcServer.h"
+
+static std::string ReadStdIn() {
+  char tmp = fgetc(stdin);
+  if (tmp == -1) return "";
+
+  std::string result;
+  do {
+    result += tmp;
+    tmp = fgetc(stdin);
+  } while (tmp != -1);
+
+  return result;
+}
+
+static bool IsSshConnectionAlive(
+    std::chrono::time_point<std::chrono::steady_clock> last_ssh_message,
+    const int timeout_in_seconds) {
+  return std::chrono::duration_cast<std::chrono::seconds>(
+             std::chrono::steady_clock::now() - last_ssh_message)
+             .count() < timeout_in_seconds;
+}
 
 void OrbitService::Run(std::atomic<bool>* exit_requested) {
   std::cout << "Starting GRPC server at " << grpc_address_ << std::endl;
@@ -19,17 +44,27 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
 
   // make stdin non blocking
   fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
-  // buffer for reading from stdin.
-  char buffer[0x10] = "";
 
   // Main loop
   while (!(*exit_requested)) {
-    // read from stdin to buffer. This detect the potentially sent EOF
-    while (fgets(buffer, sizeof(buffer), stdin) != nullptr) continue;
-    // exit if EOF occurred. This is used to shutdown via ssh.
-    if (feof(stdin)) *exit_requested = true;
-
     asio_server.LoopTick();
+
+    std::string stdin_data = ReadStdIn();
+    // if ssh sends EOF, end main loop
+    if (feof(stdin)) break;
+
+    if (IsSshWatchdogActive() ||
+        absl::StrContains(stdin_data, start_passphrase_)) {
+      if (!stdin_data.empty()) {
+        last_stdin_message_ = std::chrono::steady_clock::now();
+      }
+
+      if (!IsSshConnectionAlive(last_stdin_message_.value(),
+                                timeout_in_seconds_)) {
+        break;
+      }
+    }
+
     Sleep(16);
   }
 
