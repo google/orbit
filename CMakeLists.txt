@@ -9,6 +9,7 @@ project(Orbit C CXX)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion
+                           -Werror=format=2
                            -Werror=inconsistent-missing-override
                            -Werror=old-style-cast
                            -Werror=unused-parameter
@@ -16,6 +17,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion
+                           -Werror=format=2
                            -Werror=old-style-cast
                            -Werror=unused-parameter
                            -Werror=unused-variable)

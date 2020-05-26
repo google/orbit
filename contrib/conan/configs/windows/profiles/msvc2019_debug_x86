@@ -13,3 +13,4 @@ OrbitProfiler:with_gui=False
 cmake/3.16.4@
 [env]
 CONAN_CMAKE_SYSTEM_VERSION=8.1
+LDFLAGS=/FIXED:NO
