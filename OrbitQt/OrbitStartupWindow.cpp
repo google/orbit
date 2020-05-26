@@ -22,14 +22,6 @@
 #include "OrbitGgp/GgpInstanceItemModel.h"
 #include "OrbitGgp/GgpSshInfo.h"
 
-const GgpInstance localhost_placeholder_instance_ = {
-    /* display_name */ "localhost",
-    /* id */ "",
-    /* ip_address */ "127.0.0.1",
-    /* last_updated */ QDateTime{},
-    /* owner */ "",
-    /* pool */ ""};
-
 OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
     : QDialog{parent, Qt::Dialog}, model_(QPointer(new GgpInstanceItemModel)) {
   // General UI
@@ -121,7 +113,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
                    &QDialogButtonBox::accepted);
 
   // Fill content table
-  model_->SetInstances({localhost_placeholder_instance_});
+  model_->SetInstances({});
 
   GgpClient::ResultOrQString<GgpClient> init_result = GgpClient::Create();
   if (!init_result) {
@@ -162,7 +154,6 @@ void OrbitStartupWindow::ReloadInstances() {
         if (!model_) return;
         QVector<GgpInstance> instances_with_localhost =
             std::move(instances.value());
-        instances_with_localhost.push_back(localhost_placeholder_instance_);
         model_->SetInstances(std::move(instances_with_localhost));
       });
 }
