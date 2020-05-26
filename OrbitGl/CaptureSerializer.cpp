@@ -50,7 +50,7 @@ bool CaptureSerializer::Save(const std::string& filename) {
     cereal::BinaryOutputArchive archive(file);
     Save(archive);
     return true;
-  } catch (cereal::Exception& e) {
+  } catch (std::exception& e) {
     ERROR("Saving capture in \"%s\": %s", filename, e.what());
     return false;
   }
