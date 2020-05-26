@@ -3,6 +3,7 @@
 //-----------------------------------
 #pragma once
 
+#include <outcome.hpp>
 #include <string>
 #include <unordered_map>
 
@@ -12,8 +13,8 @@
 class CaptureSerializer {
  public:
   CaptureSerializer();
-  bool Save(const std::string& filename);
-  bool Load(const std::string& filename);
+  outcome::result<void, std::string> Save(const std::string& filename);
+  outcome::result<void, std::string> Load(const std::string& filename);
 
   template <class T>
   void Save(T& archive);

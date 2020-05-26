@@ -451,7 +451,8 @@ void Capture::DisplayStats() {
 }
 
 //-----------------------------------------------------------------------------
-bool Capture::SaveSession(const std::string& filename) {
+outcome::result<void, std::string> Capture::SaveSession(
+    const std::string& filename) {
   Session session;
   session.m_ProcessFullPath = GTargetProcess->GetFullPath();
 
@@ -466,26 +467,26 @@ bool Capture::SaveSession(const std::string& filename) {
     }
   }
 
-  std::string filenameWithExt = filename;
+  std::string filename_with_ext = filename;
   if (!absl::EndsWith(filename, ".opr")) {
-    filenameWithExt += ".opr";
+    filename_with_ext += ".opr";
   }
 
-  std::ofstream file(filenameWithExt, std::ios::binary);
+  std::ofstream file(filename_with_ext, std::ios::binary);
   if (file.fail()) {
-    ERROR("Saving session in \"%s\"", filenameWithExt);
-    return false;
+    ERROR("Saving session in \"%s\": %s", filename_with_ext, "file.fail()");
+    return outcome::failure("Error opening the file for writing");
   }
 
   try {
     SCOPE_TIMER_LOG(
-        absl::StrFormat("Saving session in \"%s\"", filenameWithExt));
+        absl::StrFormat("Saving session in \"%s\"", filename_with_ext));
     cereal::BinaryOutputArchive archive(file);
     archive(cereal::make_nvp("Session", session));
-    return true;
+    return outcome::success();
   } catch (std::exception& e) {
-    ERROR("Saving session in \"%s\": %s", filenameWithExt, e.what());
-    return false;
+    ERROR("Saving session in \"%s\": %s", filename_with_ext, e.what());
+    return outcome::failure("Error serializing the session");
   }
 }
 

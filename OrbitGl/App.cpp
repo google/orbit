@@ -396,7 +396,7 @@ void OrbitApp::ListSessions() {
   for (std::string& filename : sessionFileNames) {
     std::ifstream file(filename, std::ios::binary);
     if (file.fail()) {
-      ERROR("Loading session from \"%s\"", filename.c_str());
+      ERROR("Loading session from \"%s\": %s", filename, "file.fail()");
       continue;
     }
 
@@ -408,7 +408,7 @@ void OrbitApp::ListSessions() {
       session->m_FileName = filename;
       sessions.push_back(session);
     } catch (std::exception& e) {
-      ERROR("Loading session from \"%s\": %s", filename.c_str(), e.what());
+      ERROR("Loading session from \"%s\": %s", filename, e.what());
     }
   }
 
@@ -669,17 +669,17 @@ void OrbitApp::SetClipboard(const std::wstring& a_Text) {
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::OnSaveSession(const std::string& file_name) {
-  bool saved = Capture::SaveSession(file_name);
-  if (saved) {
-    ListSessions();
-    Refresh(DataViewType::SESSIONS);
-  }
-  return saved;
+outcome::result<void, std::string> OrbitApp::OnSaveSession(
+    const std::string& file_name) {
+  OUTCOME_TRY(Capture::SaveSession(file_name));
+  ListSessions();
+  Refresh(DataViewType::SESSIONS);
+  return outcome::success();
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::OnLoadSession(const std::string& file_name) {
+outcome::result<void, std::string> OrbitApp::OnLoadSession(
+    const std::string& file_name) {
   std::string file_path = file_name;
 
   if (Path::GetDirectory(file_name).empty()) {
@@ -688,8 +688,8 @@ bool OrbitApp::OnLoadSession(const std::string& file_name) {
 
   std::ifstream file(file_path);
   if (file.fail()) {
-    ERROR("Loading session from \"%s\"", file_path);
-    return false;
+    ERROR("Loading session from \"%s\": %s", file_path, "file.fail()");
+    return outcome::failure("Error opening the file for reading");
   }
 
   try {
@@ -699,10 +699,10 @@ bool OrbitApp::OnLoadSession(const std::string& file_name) {
     file.close();
     session->m_FileName = file_path;
     LoadSession(session);
-    return true;
+    return outcome::success();
   } catch (std::exception& e) {
     ERROR("Loading session from \"%s\": %s", file_path, e.what());
-    return false;
+    return outcome::failure("Error parsing the session");
   }
 }
 
@@ -714,14 +714,16 @@ void OrbitApp::LoadSession(const std::shared_ptr<Session>& session) {
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::OnSaveCapture(const std::string& file_name) {
+outcome::result<void, std::string> OrbitApp::OnSaveCapture(
+    const std::string& file_name) {
   CaptureSerializer ar;
   ar.time_graph_ = GCurrentTimeGraph;
   return ar.Save(file_name);
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::OnLoadCapture(const std::string& file_name) {
+outcome::result<void, std::string> OrbitApp::OnLoadCapture(
+    const std::string& file_name) {
   StopCapture();
   Capture::ClearCaptureData();
   GCurrentTimeGraph->Clear();
@@ -731,13 +733,12 @@ bool OrbitApp::OnLoadCapture(const std::string& file_name) {
 
   CaptureSerializer ar;
   ar.time_graph_ = GCurrentTimeGraph;
-  bool loaded = ar.Load(file_name);
-  if (loaded) {
-    m_ModulesDataView->SetProcess(Capture::GTargetProcess);
-    StopCapture();
-    DoZoom = true;  // TODO: remove global, review logic
-  }
-  return loaded;
+  OUTCOME_TRY(ar.Load(file_name));
+
+  m_ModulesDataView->SetProcess(Capture::GTargetProcess);
+  StopCapture();
+  DoZoom = true;  // TODO: remove global, review logic
+  return outcome::success();
 }
 
 //-----------------------------------------------------------------------------
