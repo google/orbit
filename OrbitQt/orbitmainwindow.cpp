@@ -186,8 +186,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   CreateSelectionTab();
   CreatePluginTabs();
 
-  setWindowTitle(QString("%1 %2").arg(QCoreApplication::applicationName(),
-                                      QCoreApplication::applicationVersion()));
+  SetTitle({});
   std::string iconFileName = Path::GetExecutablePath() + "orbit.ico";
   this->setWindowIcon(QIcon(iconFileName.c_str()));
 
@@ -415,7 +414,7 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
   } else if (absl::StartsWith(a_Message, "gotocallstack")) {
     ui->RightTabWidget->setCurrentWidget(ui->CallStackTab);
   } else if (absl::StartsWith(a_Message, "startcapture")) {
-    SetTitle("");
+    SetTitle({});
   } else if (absl::StartsWith(a_Message, "gotolive")) {
     ui->RightTabWidget->setCurrentWidget(ui->LiveTab);
   } else if (absl::StartsWith(a_Message, "gotocapture")) {
@@ -654,14 +653,14 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
   }
   bool loaded = GOrbitApp->OnLoadCapture(file.toStdString());
   if (!loaded) {
-    SetTitle("");
+    SetTitle({});
     QMessageBox::critical(this, "Error loading capture",
                           absl::StrFormat("Could not load capture from \"%s\".",
                                           file.toStdString())
                               .c_str());
     return;
   }
-  SetTitle(file.toStdString());
+  SetTitle(file);
   ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
 }
 
@@ -687,13 +686,16 @@ void OrbitMainWindow::OpenDisassembly(const std::string& a_String) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::SetTitle(const std::string& a_Title) {
-  std::string title = "Orbit Profiler";
-  if (a_Title != "") {
-    title += " - ";
-    title += a_Title;
+void OrbitMainWindow::SetTitle(const QString& task_description) {
+  if (task_description.isEmpty()) {
+    setWindowTitle(QString("%1 %2 [BETA]").arg(QApplication::applicationName(),
+                                        QApplication::applicationVersion()));
+  } else {
+    setWindowTitle(QString("%1 %2 [BETA] - %3")
+                       .arg(QApplication::applicationName(),
+                            QApplication::applicationVersion(),
+                            task_description));
   }
-  this->setWindowTitle(title.c_str());
 }
 
 //-----------------------------------------------------------------------------
