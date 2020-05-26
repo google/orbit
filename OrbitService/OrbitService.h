@@ -2,6 +2,8 @@
 #define ORBIT_SERVICE_ORBIT_SERVICE_H
 
 #include <atomic>
+#include <chrono>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -18,9 +20,16 @@ class OrbitService {
   void Run(std::atomic<bool>* exit_requested);
 
  private:
+  bool IsSshWatchdogActive() { return last_stdin_message_ != std::nullopt; }
+
   std::string grpc_address_;
   uint16_t asio_port_;
   LinuxTracing::TracingOptions tracing_options_;
+
+  std::optional<std::chrono::time_point<std::chrono::steady_clock>>
+      last_stdin_message_ = std::nullopt;
+  const std::string_view start_passphrase_ = "start_watchdog";
+  const int timeout_in_seconds_ = 10;
 };
 
 #endif  // ORBIT_SERVICE_ORBIT_SERVICE_H
