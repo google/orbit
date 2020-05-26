@@ -393,19 +393,22 @@ void OrbitApp::ListSessions() {
   std::vector<std::string> sessionFileNames =
       Path::ListFiles(Path::GetPresetPath(), ".opr");
   std::vector<std::shared_ptr<Session>> sessions;
-  for (std::string& fileName : sessionFileNames) {
-    std::ifstream file(fileName, std::ios::binary);
-    if (!file.fail()) {
-      try {
-        auto session = std::make_shared<Session>();
-        cereal::BinaryInputArchive archive(file);
-        archive(*session);
-        file.close();
-        session->m_FileName = fileName;
-        sessions.push_back(session);
-      } catch (std::exception& e) {
-        ERROR("Loading session from \"%s\": %s", fileName.c_str(), e.what());
-      }
+  for (std::string& filename : sessionFileNames) {
+    std::ifstream file(filename, std::ios::binary);
+    if (file.fail()) {
+      ERROR("Loading session from \"%s\"", filename.c_str());
+      continue;
+    }
+
+    try {
+      auto session = std::make_shared<Session>();
+      cereal::BinaryInputArchive archive(file);
+      archive(*session);
+      file.close();
+      session->m_FileName = filename;
+      sessions.push_back(session);
+    } catch (cereal::Exception& e) {
+      ERROR("Loading session from \"%s\": %s", filename.c_str(), e.what());
     }
   }
 
@@ -666,10 +669,13 @@ void OrbitApp::SetClipboard(const std::wstring& a_Text) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnSaveSession(const std::string& file_name) {
-  Capture::SaveSession(file_name);
-  ListSessions();
-  Refresh(DataViewType::SESSIONS);
+bool OrbitApp::OnSaveSession(const std::string& file_name) {
+  bool saved = Capture::SaveSession(file_name);
+  if (saved) {
+    ListSessions();
+    Refresh(DataViewType::SESSIONS);
+  }
+  return saved;
 }
 
 //-----------------------------------------------------------------------------
@@ -682,6 +688,7 @@ bool OrbitApp::OnLoadSession(const std::string& file_name) {
 
   std::ifstream file(file_path);
   if (file.fail()) {
+    ERROR("Loading session from \"%s\"", file_path);
     return false;
   }
 
@@ -693,8 +700,8 @@ bool OrbitApp::OnLoadSession(const std::string& file_name) {
     session->m_FileName = file_path;
     LoadSession(session);
     return true;
-  } catch (std::exception& e) {
-    ERROR("Loading session from \"%s\": %s", file_path.c_str(), e.what());
+  } catch (cereal::Exception& e) {
+    ERROR("Loading session from \"%s\": %s", file_path, e.what());
     return false;
   }
 }
@@ -707,10 +714,10 @@ void OrbitApp::LoadSession(const std::shared_ptr<Session>& session) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnSaveCapture(const std::string& file_name) {
+bool OrbitApp::OnSaveCapture(const std::string& file_name) {
   CaptureSerializer ar;
   ar.time_graph_ = GCurrentTimeGraph;
-  ar.Save(file_name);
+  return ar.Save(file_name);
 }
 
 //-----------------------------------------------------------------------------

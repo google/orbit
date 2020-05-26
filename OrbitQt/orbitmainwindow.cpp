@@ -522,10 +522,16 @@ void OrbitMainWindow::OnHideSearch() { ui->lineEdit->hide(); }
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionSave_Session_triggered() {
   std::string sessionName = GOrbitApp->GetSessionFileName();
-  if (!sessionName.empty()) {
-    GOrbitApp->OnSaveSession(sessionName);
-  } else {
+  if (sessionName.empty()) {
     on_actionSave_Session_As_triggered();
+    return;
+  }
+  bool saved = GOrbitApp->OnSaveSession(sessionName);
+  if (!saved) {
+    QMessageBox::critical(
+        this, "Error saving session",
+        absl::StrFormat("Could not save session in \"%s\".", sessionName)
+            .c_str());
   }
 }
 
@@ -587,9 +593,15 @@ void OrbitMainWindow::on_actionSave_Session_As_triggered() {
   QString file =
       QFileDialog::getSaveFileName(this, "Specify a file to save...",
                                    Path::GetPresetPath().c_str(), "*.opr");
-  if (!file.isEmpty()) {
-    printf("filename: %s\n", file.toStdString().c_str());
-    GOrbitApp->OnSaveSession(file.toStdString());
+  if (file.isEmpty()) {
+    return;
+  }
+  bool saved = GOrbitApp->OnSaveSession(file.toStdString());
+  if (!saved) {
+    QMessageBox::critical(
+        this, "Error saving session",
+        absl::StrFormat("Could not save session in \"%s\".", file.toStdString())
+            .c_str());
   }
 }
 
@@ -641,7 +653,13 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
   if (file.isEmpty()) {
     return;
   }
-  GOrbitApp->OnSaveCapture(file.toStdString());
+  bool saved = GOrbitApp->OnSaveCapture(file.toStdString());
+  if (!saved) {
+    QMessageBox::critical(
+        this, "Error saving capture",
+        absl::StrFormat("Could not save capture in \"%s\".", file.toStdString())
+            .c_str());
+  }
 }
 
 //-----------------------------------------------------------------------------

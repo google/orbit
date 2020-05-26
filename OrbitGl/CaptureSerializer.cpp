@@ -27,7 +27,7 @@ CaptureSerializer::CaptureSerializer() {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureSerializer::Save(const std::string& filename) {
+bool CaptureSerializer::Save(const std::string& filename) {
   Capture::PreSave();
 
   std::basic_ostream<char> Stream(&GStreamCounter);
@@ -40,11 +40,19 @@ void CaptureSerializer::Save(const std::string& filename) {
   // Binary
   m_CaptureName = filename;
   std::ofstream file(m_CaptureName, std::ios::binary);
-  if (!file.fail()) {
+  if (file.fail()) {
+    ERROR("Saving capture in \"%s\"", filename);
+    return false;
+  }
+
+  try {
     SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in \"%s\"", filename));
     cereal::BinaryOutputArchive archive(file);
     Save(archive);
-    file.close();
+    return true;
+  } catch (cereal::Exception& e) {
+    ERROR("Saving capture in \"%s\": %s", filename, e.what());
+    return false;
   }
 }
 
@@ -126,6 +134,7 @@ bool CaptureSerializer::Load(const std::string& filename) {
   // Binary
   std::ifstream file(filename, std::ios::binary);
   if (file.fail()) {
+    ERROR("Loading capture from \"%s\"", filename);
     return false;
   }
 
@@ -178,7 +187,7 @@ bool CaptureSerializer::Load(const std::string& filename) {
     return true;
 
   } catch (std::exception& e) {
-    ERROR("Loading capture from \"%s\": %s", filename.c_str(), e.what());
+    ERROR("Loading capture from \"%s\": %s", filename, e.what());
     return false;
   }
 }

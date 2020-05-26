@@ -41,7 +41,7 @@ class Capture {
   static void Update();
   static void DisplayStats();
   static void TestHooks();
-  static void SaveSession(const std::string& a_FileName);
+  static bool SaveSession(const std::string& filename);
   static void NewSamplingProfiler();
   static bool IsTrackingEvents();
   // True when Orbit is receiving data from remote source
