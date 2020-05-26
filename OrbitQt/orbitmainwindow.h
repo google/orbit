@@ -48,7 +48,7 @@ class OrbitMainWindow : public QMainWindow {
                         const std::wstring& a_Dir,
                         const std::wstring& a_Filter);
   void OpenDisassembly(const std::string& a_String);
-  void SetTitle(const std::string& a_Title);
+  void SetTitle(const QString& task_description);
 
  private slots:
   void on_actionAbout_triggered();
