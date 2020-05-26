@@ -526,11 +526,13 @@ void OrbitMainWindow::on_actionSave_Session_triggered() {
     on_actionSave_Session_As_triggered();
     return;
   }
-  bool saved = GOrbitApp->OnSaveSession(sessionName);
-  if (!saved) {
+  outcome::result<void, std::string> result =
+      GOrbitApp->OnSaveSession(sessionName);
+  if (result.has_error()) {
     QMessageBox::critical(
         this, "Error saving session",
-        absl::StrFormat("Could not save session in \"%s\".", sessionName)
+        absl::StrFormat("Could not save session in \"%s\":\n%s.", sessionName,
+                        result.error())
             .c_str());
   }
 }
@@ -540,12 +542,13 @@ void OrbitMainWindow::on_actionOpen_Session_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Select a file to open...", Path::GetPresetPath().c_str(), "*.opr");
   for (const auto& file : list) {
-    bool loaded = GOrbitApp->OnLoadSession(file.toStdString());
-    if (!loaded) {
+    outcome::result<void, std::string> result =
+        GOrbitApp->OnLoadSession(file.toStdString());
+    if (result.has_error()) {
       QMessageBox::critical(
           this, "Error loading session",
-          absl::StrFormat("Could not load session from \"%s\".",
-                          file.toStdString())
+          absl::StrFormat("Could not load session from \"%s\":\n%s.",
+                          file.toStdString(), result.error())
               .c_str());
     }
     break;
@@ -596,11 +599,14 @@ void OrbitMainWindow::on_actionSave_Session_As_triggered() {
   if (file.isEmpty()) {
     return;
   }
-  bool saved = GOrbitApp->OnSaveSession(file.toStdString());
-  if (!saved) {
+
+  outcome::result<void, std::string> result =
+      GOrbitApp->OnSaveSession(file.toStdString());
+  if (result.has_error()) {
     QMessageBox::critical(
         this, "Error saving session",
-        absl::StrFormat("Could not save session in \"%s\".", file.toStdString())
+        absl::StrFormat("Could not save session in \"%s\":\n%s.",
+                        file.toStdString(), result.error())
             .c_str());
   }
 }
@@ -653,11 +659,14 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
   if (file.isEmpty()) {
     return;
   }
-  bool saved = GOrbitApp->OnSaveCapture(file.toStdString());
-  if (!saved) {
+
+  outcome::result<void, std::string> result =
+      GOrbitApp->OnSaveCapture(file.toStdString());
+  if (result.has_error()) {
     QMessageBox::critical(
         this, "Error saving capture",
-        absl::StrFormat("Could not save capture in \"%s\".", file.toStdString())
+        absl::StrFormat("Could not save capture in \"%s\":\n%s.",
+                        file.toStdString(), result.error())
             .c_str());
   }
 }
@@ -669,13 +678,16 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
   if (file.isEmpty()) {
     return;
   }
-  bool loaded = GOrbitApp->OnLoadCapture(file.toStdString());
-  if (!loaded) {
+
+  outcome::result<void, std::string> result =
+      GOrbitApp->OnLoadCapture(file.toStdString());
+  if (result.has_error()) {
     SetTitle({});
-    QMessageBox::critical(this, "Error loading capture",
-                          absl::StrFormat("Could not load capture from \"%s\".",
-                                          file.toStdString())
-                              .c_str());
+    QMessageBox::critical(
+        this, "Error loading capture",
+        absl::StrFormat("Could not load capture from \"%s\":\n%s.",
+                        file.toStdString(), result.error())
+            .c_str());
     return;
   }
   SetTitle(file);

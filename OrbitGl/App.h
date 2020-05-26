@@ -7,6 +7,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <outcome.hpp>
 #include <queue>
 #include <string>
 #include <utility>
@@ -63,10 +64,14 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::string GetSessionFileName();
   std::string GetSaveFile(const std::string& extension);
   void SetClipboard(const std::wstring& a_Text);
-  bool OnSaveSession(const std::string& file_name);
-  bool OnLoadSession(const std::string& file_name);
-  bool OnSaveCapture(const std::string& file_name);
-  bool OnLoadCapture(const std::string& file_name);
+  outcome::result<void, std::string> OnSaveSession(
+      const std::string& file_name);
+  outcome::result<void, std::string> OnLoadSession(
+      const std::string& file_name);
+  outcome::result<void, std::string> OnSaveCapture(
+      const std::string& file_name);
+  outcome::result<void, std::string> OnLoadCapture(
+      const std::string& file_name);
   void OnOpenPdb(const std::string& file_name);
   void OnLaunchProcess(const std::string& process_name,
                        const std::string& working_dir, const std::string& args);

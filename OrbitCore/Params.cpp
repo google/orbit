@@ -65,7 +65,7 @@ void Params::Save() {
   std::string filename = Path::GetParamsFileName();
   std::ofstream file(filename);
   if (file.fail()) {
-    ERROR("Saving Params in \"%s\"", filename);
+    ERROR("Saving Params in \"%s\": %s", filename, "file.fail()");
     return;
   }
 
@@ -82,7 +82,7 @@ void Params::Load() {
   std::string filename = Path::GetParamsFileName();
   std::ifstream file(filename);
   if (file.fail()) {
-    ERROR("Loading Params from \"%s\"", filename);
+    ERROR("Loading Params from \"%s\": %s", filename, "file.fail()");
     // Try creating the file with default values, in case it doesn't exist.
     Save();
     return;
