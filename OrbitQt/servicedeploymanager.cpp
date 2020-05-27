@@ -23,6 +23,8 @@
 static const std::string kLocalhost = "127.0.0.1";
 static const std::string kDebDestinationPath = "/tmp/orbitprofiler.deb";
 static const std::string kSigDestinationPath = "/tmp/orbitprofiler.deb.asc";
+static const std::string_view kSshWatchdogPassphrase = "start_watchdog";
+static const std::chrono::milliseconds kSshWatchdogInterval(1000);
 
 namespace OrbitQt {
 
@@ -335,6 +337,20 @@ outcome::result<void> ServiceDeployManager::ConnectToServer() {
   return outcome::success();
 }
 
+void ServiceDeployManager::StartWatchdog() {
+  orbit_service_task_->Write(kSshWatchdogPassphrase);
+
+  QObject::connect(&ssh_watchdog_timer_, &QTimer::timeout, [this]() {
+    if (orbit_service_task_) {
+      orbit_service_task_->Write(".");
+    } else {
+      ssh_watchdog_timer_.stop();
+    }
+  });
+
+  ssh_watchdog_timer_.start(kSshWatchdogInterval);
+}
+
 outcome::result<ServiceDeployManager::Ports> ServiceDeployManager::Exec() {
   OUTCOME_TRY(ConnectToServer());
 
@@ -351,6 +367,8 @@ outcome::result<ServiceDeployManager::Ports> ServiceDeployManager::Exec() {
     // TODO(hebecker): Replace this timeout by waiting for a
     // stdout-greeting-message.
     std::this_thread::sleep_for(std::chrono::milliseconds{100});
+
+    StartWatchdog();
 
     // Developer mode: Deploying a bare executable and start it via sudo.
   } else if (std::holds_alternative<BareExecutableAndRootPasswordDeployment>(

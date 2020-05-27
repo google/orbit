@@ -8,6 +8,7 @@
 #include <QEventLoop>
 #include <QObject>
 #include <QPointer>
+#include <QTimer>
 #include <string>
 
 #include "OrbitSshQt/Session.h"
@@ -53,6 +54,7 @@ class ServiceDeployManager : public QObject {
   std::optional<OrbitSshQt::Task> orbit_service_task_;
   std::optional<OrbitSshQt::Tunnel> asio_tunnel_;
   std::optional<OrbitSshQt::Tunnel> grpc_tunnel_;
+  QTimer ssh_watchdog_timer_;
 
   outcome::result<void> ConnectToServer();
   outcome::result<bool> CheckIfInstalled();
@@ -69,6 +71,7 @@ class ServiceDeployManager : public QObject {
       OrbitSshQt::SftpOperation::FileMode dest_mode);
   outcome::result<void> StopSftpChannel(OrbitSshQt::SftpChannel*);
 
+  void StartWatchdog();
   void ShutdownSession();
   void ShutdownOrbitService();
   void ShutdownTunnel(std::optional<OrbitSshQt::Tunnel>*);
