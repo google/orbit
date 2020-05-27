@@ -55,16 +55,16 @@ outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
   const auto command = absl::StrFormat(
       "/usr/bin/dpkg-query -W orbitprofiler 2>/dev/null | grep %s", version);
 
-  OrbitSshQt::Task checkIfInstalledTask{&session_.value(), command,
-                                        OrbitSshQt::Task::Tty::kNo};
+  OrbitSshQt::Task check_if_installed_task{&session_.value(), command,
+                                           OrbitSshQt::Task::Tty::kNo};
 
-  QObject::connect(&checkIfInstalledTask, &OrbitSshQt::Task::finished, &loop_,
-                   &EventLoop::exit);
+  QObject::connect(&check_if_installed_task, &OrbitSshQt::Task::finished,
+                   &loop_, &EventLoop::exit);
 
-  auto error_handler = ConnectErrorHandler(&checkIfInstalledTask,
+  auto error_handler = ConnectErrorHandler(&check_if_installed_task,
                                            &OrbitSshQt::Task::errorOccurred);
 
-  checkIfInstalledTask.Start();
+  check_if_installed_task.Start();
 
   OUTCOME_TRY(result, loop_.exec());
   if (result == 0) {
@@ -88,7 +88,7 @@ outcome::result<uint16_t> ServiceDeployManager::StartTunnel(
 
   auto error_handler =
       ConnectErrorHandler(&tunnel->value(), &OrbitSshQt::Tunnel::errorOccurred);
-  auto quitHandler =
+  auto quit_handler =
       ConnectQuitHandler(&tunnel->value(), &OrbitSshQt::Tunnel::started);
 
   tunnel->value().Start();
@@ -101,7 +101,7 @@ outcome::result<uint16_t> ServiceDeployManager::StartTunnel(
 
 outcome::result<void> ServiceDeployManager::StartSftpChannel(
     OrbitSshQt::SftpChannel* channel) {
-  auto quitHandler =
+  auto quit_handler =
       ConnectQuitHandler(channel, &OrbitSshQt::SftpChannel::started);
 
   auto error_handler =
@@ -114,11 +114,11 @@ outcome::result<void> ServiceDeployManager::StartSftpChannel(
 }
 
 outcome::result<void> ServiceDeployManager::CopyFileToRemote(
-    OrbitSshQt::SftpChannel& channel, std::string source, std::string dest,
+    OrbitSshQt::SftpChannel* channel, std::string source, std::string dest,
     OrbitSshQt::SftpOperation::FileMode dest_mode) {
-  OrbitSshQt::SftpOperation operation{&session_.value(), &channel};
+  OrbitSshQt::SftpOperation operation{&session_.value(), channel};
 
-  auto quitHandler =
+  auto quit_handler =
       ConnectQuitHandler(&operation, &OrbitSshQt::SftpOperation::stopped);
 
   auto error_handler = ConnectErrorHandler(
@@ -133,7 +133,7 @@ outcome::result<void> ServiceDeployManager::CopyFileToRemote(
 
 outcome::result<void> ServiceDeployManager::StopSftpChannel(
     OrbitSshQt::SftpChannel* channel) {
-  auto quitHandler =
+  auto quit_handler =
       ConnectQuitHandler(channel, &OrbitSshQt::SftpChannel::stopped);
 
   auto error_handler =
@@ -157,10 +157,10 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServicePackage() {
       std::get<SignedDebianPackageDeployment>(deployment_configuration_);
 
   using FileMode = OrbitSshQt::SftpOperation::FileMode;
-  OUTCOME_TRY(CopyFileToRemote(channel, config.path_to_package.string(),
+  OUTCOME_TRY(CopyFileToRemote(&channel, config.path_to_package.string(),
                                kDebDestinationPath, FileMode::kUserWritable));
 
-  OUTCOME_TRY(CopyFileToRemote(channel, config.path_to_signature.string(),
+  OUTCOME_TRY(CopyFileToRemote(&channel, config.path_to_signature.string(),
                                kSigDestinationPath, FileMode::kUserWritable));
 
   OUTCOME_TRY(StopSftpChannel(&channel));
@@ -184,7 +184,7 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServiceExecutable() {
       deployment_configuration_);
 
   OUTCOME_TRY(CopyFileToRemote(
-      channel, config.path_to_executable.string(), exe_destination_path,
+      &channel, config.path_to_executable.string(), exe_destination_path,
       OrbitSshQt::SftpOperation::FileMode::kUserWritableAllExecutable));
 
   OUTCOME_TRY(StopSftpChannel(&channel));
@@ -201,8 +201,8 @@ outcome::result<void> ServiceDeployManager::StartOrbitService() {
                               "/opt/developer/tools/OrbitService",
                               OrbitSshQt::Task::Tty::kNo);
 
-  auto quitHandler = ConnectQuitHandler(&orbit_service_task_.value(),
-                                        &OrbitSshQt::Task::started);
+  auto quit_handler = ConnectQuitHandler(&orbit_service_task_.value(),
+                                         &OrbitSshQt::Task::started);
 
   auto error_handler = ConnectErrorHandler(&orbit_service_task_.value(),
                                            &OrbitSshQt::Task::errorOccurred);
@@ -236,7 +236,7 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged() {
       std::get<OrbitQt::BareExecutableAndRootPasswordDeployment>(
           deployment_configuration_);
 
-  auto quitHandler = OrbitSshQt::ScopedConnection{QObject::connect(
+  auto quit_handler = OrbitSshQt::ScopedConnection{QObject::connect(
       &orbit_service_task_.value(), &OrbitSshQt::Task::bytesWritten, this,
       [&, bytes_accumulated = 0u](size_t bytesWritten) mutable {
         bytes_accumulated += bytesWritten;
@@ -258,7 +258,7 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged() {
   auto error_handler = ConnectErrorHandler(&orbit_service_task_.value(),
                                            &OrbitSshQt::Task::errorOccurred);
 
-  auto waitForPasswordRequestHandler =
+  auto wait_for_password_request_handler =
       OrbitSshQt::ScopedConnection{QObject::connect(
           &orbit_service_task_.value(), &OrbitSshQt::Task::readyRead, this,
           [&, buf = std::string{}]() mutable {
@@ -286,11 +286,11 @@ outcome::result<void> ServiceDeployManager::InstallOrbitServicePackage() {
   const auto command =
       absl::StrFormat("sudo /usr/sbin/install_signed_package.sh %s %s",
                       kDebDestinationPath, kSigDestinationPath);
-  OrbitSshQt::Task installServiceTask{&session_.value(), command,
-                                      OrbitSshQt::Task::Tty::kNo};
+  OrbitSshQt::Task install_service_task{&session_.value(), command,
+                                        OrbitSshQt::Task::Tty::kNo};
 
   QObject::connect(
-      &installServiceTask, &OrbitSshQt::Task::finished, this,
+      &install_service_task, &OrbitSshQt::Task::finished, this,
       [&](int exit_code) {
         if (exit_code == 0) {
           loop_.quit();
@@ -300,10 +300,10 @@ outcome::result<void> ServiceDeployManager::InstallOrbitServicePackage() {
         }
       });
 
-  auto error_handler = ConnectErrorHandler(&installServiceTask,
+  auto error_handler = ConnectErrorHandler(&install_service_task,
                                            &OrbitSshQt::Task::errorOccurred);
 
-  installServiceTask.Start();
+  install_service_task.Start();
 
   OUTCOME_TRY(loop_.exec());
   return outcome::success();
@@ -320,7 +320,7 @@ outcome::result<void> ServiceDeployManager::ConnectToServer() {
   session_.emplace(&context_.value());
 
   using OrbitSshQt::Session;
-  auto quitHandler = ConnectQuitHandler(&session_.value(), &Session::started);
+  auto quit_handler = ConnectQuitHandler(&session_.value(), &Session::started);
   auto error_handler =
       ConnectErrorHandler(&session_.value(), &Session::errorOccurred);
 
@@ -393,7 +393,7 @@ void ServiceDeployManager::ShutdownTunnel(
     return;
   }
 
-  auto quitHandler =
+  auto quit_handler =
       ConnectQuitHandler(&tunnel->value(), &OrbitSshQt::Tunnel::started);
   auto error_handler =
       ConnectQuitHandler(&tunnel->value(), &OrbitSshQt::Tunnel::errorOccurred);
@@ -409,8 +409,8 @@ void ServiceDeployManager::ShutdownOrbitService() {
     return;
   }
 
-  auto quitHandler = ConnectQuitHandler(&orbit_service_task_.value(),
-                                        &OrbitSshQt::Task::finished);
+  auto quit_handler = ConnectQuitHandler(&orbit_service_task_.value(),
+                                         &OrbitSshQt::Task::finished);
   auto error_handler = ConnectQuitHandler(&orbit_service_task_.value(),
                                           &OrbitSshQt::Task::errorOccurred);
 
@@ -425,7 +425,7 @@ void ServiceDeployManager::ShutdownSession() {
     return;
   }
 
-  auto quitHandler =
+  auto quit_handler =
       ConnectQuitHandler(&session_.value(), &OrbitSshQt::Session::stopped);
   auto error_handler = ConnectQuitHandler(&session_.value(),
                                           &OrbitSshQt::Session::errorOccurred);
