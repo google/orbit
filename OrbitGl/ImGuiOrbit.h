@@ -61,7 +61,7 @@ struct ScopeImguiContext {
 
 // Usage:
 //  static ExampleAppLog my_log;
-//  my_log.AddLog("Hello %d world\n", 123);
+//  my_log.AddLine(absl::StrFormat("Hello %d world\n", 123));
 //  my_log.Draw("title");
 struct DebugWindow {
   ImGuiTextBuffer Buf;
@@ -74,15 +74,12 @@ struct DebugWindow {
     LineOffsets.clear();
   }
 
-  void AddLog(const char* fmt, ...) {
+  void AddLine(const std::string& str) {
     int old_size = Buf.size();
-    va_list args;
-    va_start(args, fmt);
-    Buf.appendfv(fmt, args);
-    va_end(args);
+    Buf.append(str.c_str());
+    Buf.append("\n");
     for (int new_size = Buf.size(); old_size < new_size; old_size++)
       if (Buf[old_size] == '\n') LineOffsets.push_back(old_size);
-    // ScrollToBottom = true;
   }
 
   void Draw(const char* title, bool* p_opened = nullptr) {
@@ -184,17 +181,6 @@ struct VizWindow {
     LineOffsets.clear();
   }
 
-  void AddLog(const char* fmt, ...) {
-    int old_size = Buf.size();
-    va_list args;
-    va_start(args, fmt);
-    Buf.appendfv(fmt, args);
-    va_end(args);
-    for (int new_size = Buf.size(); old_size < new_size; old_size++)
-      if (Buf[old_size] == '\n') LineOffsets.push_back(old_size);
-    // ScrollToBottom = true;
-  }
-
   void FitCanvas() {
     WindowFlags |= ImGuiWindowFlags_NoTitleBar;
     // WindowFlags |= ImGuiWindowFlags_ShowBorders;
@@ -268,7 +254,6 @@ struct OutputWindow {
     LineOffsets.clear();
   }
   void AddLine(const std::string& a_String);
-  void AddLog(const char* fmt, ...);
   void Draw(const char* title, bool* p_opened = nullptr,
             ImVec2* a_Size = nullptr);
 };

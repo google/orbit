@@ -784,15 +784,9 @@ void SetupImGuiStyle(bool bStyleDark_, float alpha_) {
 }
 
 void OutputWindow::AddLine(const std::string& a_String) {
-  AddLog("%s\n", a_String.c_str());
-}
-
-void OutputWindow::AddLog(const char* fmt, ...) {
   int old_size = Buf.size();
-  va_list args;
-  va_start(args, fmt);
-  Buf.appendfv(fmt, args);
-  va_end(args);
+  Buf.append(a_String.c_str());
+  Buf.append("\n");
   for (int new_size = Buf.size(); old_size < new_size; old_size++)
     if (Buf[old_size] == '\n') LineOffsets.push_back(old_size);
 }
