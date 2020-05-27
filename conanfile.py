@@ -121,8 +121,6 @@ class OrbitConan(ConanFile):
 
     def imports(self):
         dest = os.getenv("CONAN_IMPORT_PATH", "bin")
-        self.copy("*.dll", src="@bindirs", dst=dest)
-        self.copy("*.so*", src="@libdirs", dst=dest)
         self.copy("crashpad_handler*", src="@bindirs", dst=dest, root_package="crashpad")
         if self.options.with_gui:
             for path in self.deps_cpp_info["freetype-gl"].resdirs:
