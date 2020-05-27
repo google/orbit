@@ -40,6 +40,8 @@
     abort();                              \
   } while (0)
 
+#define UNREACHABLE() FATAL("Unreachable code")
+
 #if defined(__GNUC__) || defined(__clang__)
 #define LIKELY(cond) __builtin_expect(!!(cond), 1)
 #define UNLIKELY(cond) __builtin_expect(!!(cond), 0)
