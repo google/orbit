@@ -28,7 +28,7 @@ void HomeWindow::VariableTracingCallback(std::vector<std::string>& a_Entries) {
   if (m_DrawDebugDisplay) {
     m_DebugWindow.Clear();
     for (std::string& entry : a_Entries) {
-      m_DebugWindow.AddLog("%s\n", entry.c_str());
+      m_DebugWindow.AddLine(entry);
     }
   }
 }
