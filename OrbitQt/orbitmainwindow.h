@@ -88,6 +88,8 @@ class OrbitMainWindow : public QMainWindow {
 
   void on_actionUploadDumpsToServer_triggered(bool checked);
 
+  void on_actionCheckFalse_triggered();
+
  private:
   void StartMainTimer();
 
