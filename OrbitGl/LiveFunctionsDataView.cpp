@@ -102,7 +102,6 @@ void LiveFunctionsDataView::DoSort() {
       sorter = ORBIT_FUNC_SORT(PrettyName());
       break;
     case COLUMN_COUNT:
-      ascending = false;
       sorter = ORBIT_STAT_SORT(m_Count);
       break;
     case COLUMN_TIME_TOTAL:
