@@ -59,42 +59,45 @@ ORBIT_SERIALIZE(Params, 19) {
 }
 
 //-----------------------------------------------------------------------------
-void Params::Save() {
+bool Params::Save() {
   GCoreApp->SendToUiNow("UpdateProcessParams");
 
   std::string filename = Path::GetParamsFileName();
   std::ofstream file(filename);
   if (file.fail()) {
     ERROR("Saving Params in \"%s\": %s", filename, "file.fail()");
-    return;
+    return false;
   }
 
   try {
     cereal::XMLOutputArchive archive(file);
     archive(cereal::make_nvp("Params", *this));
+    return true;
   } catch (std::exception& e) {
     ERROR("Saving Params in \"%s\": %s", filename, e.what());
+    return false;
   }
 }
 
 //-----------------------------------------------------------------------------
-void Params::Load() {
+bool Params::Load() {
   std::string filename = Path::GetParamsFileName();
   std::ifstream file(filename);
   if (file.fail()) {
     ERROR("Loading Params from \"%s\": %s", filename, "file.fail()");
     // Try creating the file with default values, in case it doesn't exist.
-    Save();
-    return;
+    return Save();
   }
 
   try {
     cereal::XMLInputArchive archive(file);
     archive(*this);
+    return true;
   } catch (std::exception& e) {
     ERROR("Loading Params from \"%s\": %s", filename, e.what());
     // Try overwriting the file with default values, in case it's malformed.
     Save();
+    return false;
   }
 }
 
