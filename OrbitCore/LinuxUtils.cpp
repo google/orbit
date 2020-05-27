@@ -128,13 +128,10 @@ void ListModules(pid_t pid,
     }
   }
 
-  for (const auto& [module_name, address_range] : address_map) {
-    module_map->insert_or_assign(
-        address_range.start_address,
+  for (const auto&[module_name, address_range] : address_map) {
+    std::shared_ptr<Module> module =
         std::make_shared<Module>(module_name, address_range.start_address,
-                                 address_range.end_address));
-
-    std::shared_ptr<Module> module = (*module_map)[address_range.start_address];
+                                 address_range.end_address);
 
     // This filters out entries which are inaccessible
     if (module->m_PdbSize == 0) continue;
@@ -149,6 +146,9 @@ void ListModules(pid_t pid,
     if (elf_file->GetBuildId().empty()) continue;
 
     module->m_DebugSignature = elf_file->GetBuildId();
+    module_map->insert_or_assign(
+        address_range.start_address,
+        module);
   }
 }
 
@@ -227,7 +227,7 @@ void StreamCommandOutput(const char* a_Cmd,
   }
 
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr &&
-         !(*a_ExitRequested)) {
+      !(*a_ExitRequested)) {
     a_Callback(buffer.data());
   }
 
