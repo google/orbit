@@ -25,6 +25,18 @@ function create_conan_profile {
   fi
 
   sed -i -e 's|\[build_requires\]|[build_requires]\ncmake/3.16.4@|' $HOME/.conan/profiles/$profile
+
+  if [ -n "$CC" ]; then
+    echo "CC=$CC" >> $HOME/.conan/profiles/$profile
+  fi
+  if [ -n "$CXX" ]; then
+    echo "CXX=$CXX" >> $HOME/.conan/profiles/$profile
+  fi
+  if conan profile show $profile | grep "compiler=clang" >/dev/null; then
+    echo "CFLAGS=-fsized-deallocation" >> $HOME/.conan/profiles/$profile
+    echo "CXXFLAGS=-fsized-deallocation" >> $HOME/.conan/profiles/$profile
+  fi
+
 }
 
 function conan_profile_exists {
