@@ -22,8 +22,9 @@ SignedDebianPackageDeployment::SignedDebianPackageDeployment() {
     return ver;
   }();
 
-  auto collector_directory = QDir{QCoreApplication::applicationDirPath()};
-  collector_directory.cd(kCollectorSubdirectory);
+  const auto collector_directory =
+      QDir{QDir{QCoreApplication::applicationDirPath()}.absoluteFilePath(
+          kCollectorSubdirectory)};
 
   const auto deb_path = collector_directory.absoluteFilePath(
       QString(kPackageNameTemplate).arg(version));
