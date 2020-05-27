@@ -39,6 +39,7 @@
 #endif
 
 ABSL_DECLARE_FLAG(bool, enable_stale_features);
+ABSL_DECLARE_FLAG(bool, enable_debug_menu);
 
 //-----------------------------------------------------------------------------
 OrbitMainWindow* GMainWindow;
@@ -160,6 +161,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->actionShow_Includes_Util->setVisible(false);
     ui->menuTools->menuAction()->setVisible(false);
     ui->menuDev->menuAction()->setVisible(!ui->menuDev->isEmpty());
+  }
+
+  if (!absl::GetFlag(FLAGS_enable_debug_menu)) {
+    ui->menuDebug->menuAction()->setVisible(false);
   }
 
   // Output window
@@ -736,4 +741,9 @@ void OrbitMainWindow::on_actionOutputDebugString_triggered(bool checked) {
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionUploadDumpsToServer_triggered(bool checked) {
   GOrbitApp->EnableUploadDumpsToServer(checked);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionCheckFalse_triggered() {
+    CHECK(false);
 }
