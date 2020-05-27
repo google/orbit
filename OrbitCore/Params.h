@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <outcome.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -13,8 +14,8 @@
 
 struct Params {
   Params();
-  void Load();
-  void Save();
+  bool Load();
+  bool Save();
 
   void AddToPdbHistory(const std::string& a_PdbName);
 
