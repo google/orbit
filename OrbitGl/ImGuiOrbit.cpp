@@ -484,6 +484,13 @@ ImFont* AddFontDefault() {
   return font;
 }
 
+ImFont* AddOrbitFont(float pixel_size) {
+  const auto exe_path = Path::GetExecutablePath();
+  const auto font_file_name = exe_path + "fonts/Vera.ttf";
+  return ImGui::GetIO().Fonts->AddFontFromFileTTF(font_file_name.c_str(),
+                                                  pixel_size);
+}
+
 bool Orbit_ImGui_Init() {
   // g_Window = window;
 
@@ -527,7 +534,8 @@ bool Orbit_ImGui_Init() {
 
   SetupImGuiStyle(true, 1.f);
 
-  GOrbitImguiFont = AddFontDefault();
+  const float kImguiFontOffset = 10.f;
+  GOrbitImguiFont = AddOrbitFont(GParams.m_FontSize + kImguiFontOffset);
   ImGui::GetIO().Fonts->Build();
 
   return true;
