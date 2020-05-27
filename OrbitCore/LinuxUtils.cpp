@@ -109,6 +109,10 @@ void ListModules(pid_t pid,
     // mapped to a file (might be heap, stack or something else)
     if (tokens.size() != 6 || tokens[4] == "0") continue;
 
+    // tokens[1] is the permissions column. tokens[1][2] is the permission to
+    // be executed. We discard entries that are not executable.
+    if (tokens[1].size() != 4 || tokens[1][2] != 'x') continue;
+
     const std::string& module_name = tokens[5];
 
     std::vector<std::string> addresses = absl::StrSplit(tokens[0], "-");
