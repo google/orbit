@@ -142,10 +142,11 @@ void ListModules(pid_t pid,
       continue;
     }
 
-    if (elf_file->GetBuildId().empty()) continue;
-
-    module->m_DebugSignature = elf_file->GetBuildId();
     module_map->insert_or_assign(address_range.start_address, module);
+
+    if (!elf_file->GetBuildId().empty()) {
+      module->m_DebugSignature = elf_file->GetBuildId();
+    }
   }
 }
 
