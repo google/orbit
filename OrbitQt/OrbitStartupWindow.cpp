@@ -65,6 +65,8 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
       button_box, &QDialogButtonBox::accepted, this, [this, button_box]() {
         button_box->button(QDialogButtonBox::StandardButton::Ok)
             ->setText("Loading...");
+        button_box->button(QDialogButtonBox::StandardButton::Ok)
+            ->setEnabled(false);
         CHECK(chosen_instance_);
         if (chosen_instance_->display_name == "localhost") {
           button_box->button(QDialogButtonBox::StandardButton::Ok)
@@ -72,22 +74,29 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
           this->accept();
         }
         CHECK(ggp_client_);
+        const auto self = QPointer{this};
         ggp_client_->GetSshInformationAsync(
             *chosen_instance_,
-            [this,
+            [self,
              button_box](GgpClient::ResultOrQString<GgpSshInfo> ssh_info) {
-              button_box->button(QDialogButtonBox::StandardButton::Ok)
-                  ->setText("Ok");
-              if (!ssh_info) {
-                QMessageBox::critical(
-                    this, QApplication::applicationDisplayName(),
-                    QString("Orbit was unable to retrieve the information "
-                            "necessary to connect via ssh. The error message "
-                            "was: %1")
-                        .arg(ssh_info.error()));
+              // The dialog might not exist anymore when this callback returns.
+              // So we have to check for this.
+              if (self && button_box) {
+                button_box->button(QDialogButtonBox::StandardButton::Ok)
+                    ->setText("Ok");
+                button_box->button(QDialogButtonBox::StandardButton::Ok)
+                    ->setEnabled(true);
+                if (!ssh_info) {
+                  QMessageBox::critical(
+                      self, QApplication::applicationDisplayName(),
+                      QString("Orbit was unable to retrieve the information "
+                              "necessary to connect via ssh. The error message "
+                              "was: %1")
+                          .arg(ssh_info.error()));
+                }
+                self->ssh_info_ = ssh_info.value();
+                self->accept();
               }
-              this->ssh_info_ = ssh_info.value();
-              this->accept();
             });
       });
   QObject::connect(button_box, &QDialogButtonBox::rejected, this,
