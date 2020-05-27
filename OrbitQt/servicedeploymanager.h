@@ -63,10 +63,9 @@ class ServiceDeployManager : public QObject {
   outcome::result<void> StartOrbitServicePrivileged();
   outcome::result<uint16_t> StartTunnel(
       std::optional<OrbitSshQt::Tunnel>* tunnel, uint16_t port);
-
   outcome::result<void> StartSftpChannel(OrbitSshQt::SftpChannel*);
   outcome::result<void> CopyFileToRemote(
-      OrbitSshQt::SftpChannel&, std::string source, std::string dest,
+      OrbitSshQt::SftpChannel*, std::string source, std::string dest,
       OrbitSshQt::SftpOperation::FileMode dest_mode);
   outcome::result<void> StopSftpChannel(OrbitSshQt::SftpChannel*);
 
