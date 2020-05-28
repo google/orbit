@@ -42,8 +42,9 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
   refresh_button->setIcon(
       QApplication::style()->standardIcon(QStyle::SP_BrowserReload));
   layout->addWidget(refresh_button, 0, 1, Qt::AlignRight);
-  QObject::connect(refresh_button, &QPushButton::clicked, this,
-                   &OrbitStartupWindow::ReloadInstances);
+  QObject::connect(
+      refresh_button, &QPushButton::clicked, this,
+      [this, refresh_button]() { ReloadInstances(refresh_button); });
 
   // Main content table
   const auto table_view = QPointer{new QTableView{}};
@@ -137,10 +138,10 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
   }
   ggp_client_.emplace(std::move(init_result.value()));
 
-  ReloadInstances();
+  ReloadInstances(refresh_button);
 }
 
-void OrbitStartupWindow::ReloadInstances() {
+void OrbitStartupWindow::ReloadInstances(QPointer<QPushButton> refresh_button) {
   if (!ggp_client_) {
     ERROR("ggp client is not initialized");
     return;
@@ -148,8 +149,17 @@ void OrbitStartupWindow::ReloadInstances() {
 
   if (ggp_client_->GetNumberOfRequestsRunning() > 0) return;
 
+  refresh_button->setEnabled(false);
+  refresh_button->setText("Loading...");
+
   ggp_client_->GetInstancesAsync(
-      [&](GgpClient::ResultOrQString<QVector<GgpInstance>> instances) {
+      [&, refresh_button](
+          GgpClient::ResultOrQString<QVector<GgpInstance>> instances) {
+        if (refresh_button) {
+          refresh_button->setEnabled(true);
+          refresh_button->setText("");
+        }
+
         if (!instances) {
           QMessageBox::critical(
               this, QApplication::applicationDisplayName(),

@@ -40,7 +40,7 @@ class OrbitStartupWindow : public QDialog {
   }
 
  private:
-  void ReloadInstances();
+  void ReloadInstances(QPointer<QPushButton> refresh_button);
 
   std::optional<GgpClient> ggp_client_;
   std::optional<GgpInstance> chosen_instance_;
