@@ -25,7 +25,8 @@
 #include "Path.h"
 
 OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
-    : QDialog{parent, Qt::Dialog}, model_(QPointer(new GgpInstanceItemModel)) {
+    : QDialog{parent, Qt::Dialog},
+      model_{new GgpInstanceItemModel{{}, this}} {
   // General UI
   const int width = 700;
   const int height = 400;
@@ -182,7 +183,7 @@ void OrbitStartupWindow::ReloadInstances(QPointer<QPushButton> refresh_button) {
   refresh_button->setText("Loading...");
 
   ggp_client_->GetInstancesAsync(
-      [&, refresh_button](
+      [model = model_, refresh_button](
           GgpClient::ResultOrQString<QVector<GgpInstance>> instances) {
         if (refresh_button) {
           refresh_button->setEnabled(true);
@@ -191,7 +192,7 @@ void OrbitStartupWindow::ReloadInstances(QPointer<QPushButton> refresh_button) {
 
         if (!instances) {
           QMessageBox::critical(
-              this, QApplication::applicationDisplayName(),
+              nullptr, QApplication::applicationDisplayName(),
               QString(
                   "Orbit was unable to retrieve the list of available Stadia "
                   "Instances. The error message was: %1")
@@ -199,7 +200,8 @@ void OrbitStartupWindow::ReloadInstances(QPointer<QPushButton> refresh_button) {
           return;
         }
 
-        if (!model_) return;
-        model_->SetInstances(std::move(instances.value()));
+        if (model) {
+          model->SetInstances(std::move(instances.value()));
+        }
       });
 }
