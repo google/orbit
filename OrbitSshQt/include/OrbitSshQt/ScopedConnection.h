@@ -18,6 +18,7 @@ class ScopedConnection {
   QMetaObject::Connection connection_;
 
  public:
+  ScopedConnection() = default;
   explicit ScopedConnection(QMetaObject::Connection&& conn)
       : connection_(std::move(conn)) {}
   ScopedConnection(const ScopedConnection&) = delete;
