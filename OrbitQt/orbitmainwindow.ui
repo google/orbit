@@ -262,6 +262,8 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionToggleCapture"/>
+    <addaction name="separator"/>
     <addaction name="actionSave_Capture"/>
     <addaction name="actionOpen_Capture"/>
     <addaction name="separator"/>
@@ -316,6 +318,14 @@
    <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
+  <action name="actionToggleCapture">
+   <property name="text">
+    <string>Toggle capture</string>
+   </property>
+   <property name="shortcut">
+    <string>X</string>
+   </property>
+  </action>
   <action name="actionSave_Session">
    <property name="text">
     <string>Save Session</string>
@@ -339,16 +349,6 @@
   <action name="actionDisconnect">
    <property name="text">
     <string>Disconnect</string>
-   </property>
-  </action>
-  <action name="actionStart_Captue">
-   <property name="text">
-    <string>Start Captue</string>
-   </property>
-  </action>
-  <action name="actionStop_Capture">
-   <property name="text">
-    <string>Stop Capture</string>
    </property>
   </action>
   <action name="actionQuit">
@@ -410,10 +410,16 @@
    <property name="text">
     <string>Open Capture</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
   </action>
   <action name="actionSave_Capture">
    <property name="text">
     <string>Save Capture</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="actionShow_Includes_Util">

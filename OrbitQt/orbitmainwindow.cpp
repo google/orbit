@@ -104,9 +104,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->CaptureGLWidget->Initialize(GlPanel::CAPTURE, this);
   ui->VisualizeGLWidget->Initialize(GlPanel::VISUALIZE, this);
 
-  connect(ui->ToggleCaptureButton, &QPushButton::clicked, [] {
-    GOrbitApp->ToggleCapture();
-  });
+  connect(ui->ToggleCaptureButton, &QPushButton::clicked,
+          [this] { on_actionToggleCapture_triggered(); });
 
   ui->ModulesList->Initialize(
       data_view_factory->GetOrCreateDataView(DataViewType::MODULES),
@@ -529,6 +528,14 @@ void OrbitMainWindow::OnTimer() {
 void OrbitMainWindow::OnHideSearch() { ui->lineEdit->hide(); }
 
 //-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionToggleCapture_triggered() {
+  if (ui->MainTabWidget->currentWidget() != ui->CaptureTab) {
+    ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
+  }
+  GOrbitApp->ToggleCapture();
+}
+
+//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionSave_Session_triggered() {
   std::string sessionName = GOrbitApp->GetSessionFileName();
   if (sessionName.empty()) {
@@ -748,6 +755,4 @@ void OrbitMainWindow::on_actionUploadDumpsToServer_triggered(bool checked) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionCheckFalse_triggered() {
-    CHECK(false);
-}
+void OrbitMainWindow::on_actionCheckFalse_triggered() { CHECK(false); }
