@@ -749,11 +749,12 @@ void OrbitMainWindow::on_actionCheckFalse_triggered() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionNPE_triggered() {
+void OrbitMainWindow::on_actionNullPointerDereference_triggered() {
   int* null_pointer = nullptr;
   *null_pointer = 0;
 }
 
+//-----------------------------------------------------------------------------
 void InfiniteRecursion(int num) {
   if (num != 1) {
     InfiniteRecursion(num);

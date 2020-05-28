@@ -290,7 +290,7 @@
      <string>Crash Test</string>
     </property>
     <addaction name="actionCheckFalse"/>
-    <addaction name="actionNPE"/>
+    <addaction name="actionNullPointerDereference"/>
     <addaction name="actionStackOverflow"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
@@ -434,12 +434,12 @@
   </action>
   <action name="actionCheckFalse">
    <property name="text">
-    <string>Check false</string>
+    <string>Check False</string>
    </property>
   </action>
-  <action name="actionNPE">
+  <action name="actionNullPointerDereference">
    <property name="text">
-    <string>NPE</string>
+    <string>Null Pointer Dereference</string>
    </property>
   </action>
   <action name="actionStackOverflow">
