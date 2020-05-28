@@ -39,7 +39,7 @@
 #endif
 
 ABSL_DECLARE_FLAG(bool, enable_stale_features);
-ABSL_DECLARE_FLAG(bool, enable_debug_menu);
+ABSL_DECLARE_FLAG(bool, devmode);
 
 //-----------------------------------------------------------------------------
 OrbitMainWindow* GMainWindow;
@@ -163,7 +163,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->menuDev->menuAction()->setVisible(!ui->menuDev->isEmpty());
   }
 
-  if (!absl::GetFlag(FLAGS_enable_debug_menu)) {
+  if (!absl::GetFlag(FLAGS_devmode)) {
     ui->menuDebug->menuAction()->setVisible(false);
   }
 
