@@ -286,8 +286,9 @@ outcome::result<void> ServiceDeployManager::InstallOrbitServicePackage() {
       "Installing the OrbitService package on the remote instance...");
 
   const auto command =
-      absl::StrFormat("sudo /usr/sbin/install_signed_package.sh %s %s",
-                      kDebDestinationPath, kSigDestinationPath);
+      absl::StrFormat(
+          "sudo /usr/local/cloudcast/sbin/install_signed_package.sh %s",
+          kDebDestinationPath);
   OrbitSshQt::Task install_service_task{&session_.value(), command,
                                         OrbitSshQt::Task::Tty::kNo};
 
