@@ -527,12 +527,6 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
       case 'H':
         m_DrawHelp = !m_DrawHelp;
         break;
-      case 'X':
-        GOrbitApp->ToggleCapture();
-#ifdef __linux__
-        ZoomAll();
-#endif
-        break;
       case 'O':
         if (a_Ctrl) {
           m_TextRenderer.ToggleDrawOutline();

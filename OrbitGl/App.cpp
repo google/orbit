@@ -803,10 +803,11 @@ void OrbitApp::StopCapture() {
 //-----------------------------------------------------------------------------
 void OrbitApp::ToggleCapture() {
   if (GTimerManager) {
-    if (GTimerManager->m_IsRecording)
+    if (GTimerManager->m_IsRecording) {
       StopCapture();
-    else
+    } else {
       StartCapture();
+    }
   }
 }
 
