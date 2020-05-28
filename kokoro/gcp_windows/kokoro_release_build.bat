@@ -29,10 +29,12 @@ call powershell "& %REPO_ROOT%\kokoro\gcp_windows\upload_symbols.ps1" %REPO_ROOT
 
 :: Package build artifacts into a zip for integration in the installer.
 cd %REPO_ROOT%\build\package
-ren bin Orbit
+Xcopy /E /I bin Orbit
+del /s /q Orbit\*.pdb
 copy /Y THIRD_PARTY_LICENSES.txt Orbit\THIRD_PARTY_LICENSES.txt
 copy /Y LICENSE Orbit\LICENSE.txt
 zip -r Orbit.zip Orbit
+rd /s /q Orbit
 
 :: Uploading prebuilt packages of our dependencies
 set /P ACCESS_TOKEN=<%KOKORO_ARTIFACTS_DIR%\keystore\74938_orbitprofiler_artifactory_access_token
