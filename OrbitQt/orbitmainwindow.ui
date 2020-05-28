@@ -255,13 +255,13 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionSave_Capture"/>
     <addaction name="actionOpen_Capture"/>
+    <addaction name="actionSave_Capture"/>
     <addaction name="separator"/>
+    <addaction name="actionOpen_PDB"/>
+    <addaction name="actionOpen_Session"/>
     <addaction name="actionSave_Session"/>
     <addaction name="actionSave_Session_As"/>
-    <addaction name="actionOpen_Session"/>
-    <addaction name="actionOpen_PDB"/>
     <addaction name="separator"/>
     <addaction name="actionLaunch_Process"/>
     <addaction name="actionDisconnect"/>
