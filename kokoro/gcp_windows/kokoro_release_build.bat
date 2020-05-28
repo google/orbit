@@ -25,7 +25,7 @@ call conan package -bf %REPO_ROOT%\build\ %REPO_ROOT%
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 :: Upload debug symbols
-call powershell "& %REPO_ROOT%\kokoro\gcp_windows\upload_symbols.ps1" %REPO_ROOT%\build\package\bin
+call powershell "& %REPO_ROOT%\kokoro\gcp_windows\upload_symbols.ps1" %REPO_ROOT%\build\bin
 
 :: Package build artifacts into a zip for integration in the installer.
 cd %REPO_ROOT%\build\package
