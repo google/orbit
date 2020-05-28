@@ -11,9 +11,9 @@
 
 class OrbitService {
  public:
-  OrbitService(std::string grpc_address, uint16_t asio_port,
+  OrbitService(uint16_t grpc_port, uint16_t asio_port,
                LinuxTracing::TracingOptions tracing_options)
-      : grpc_address_{std::move(grpc_address)},
+      : grpc_port_{grpc_port},
         asio_port_{asio_port},
         tracing_options_{tracing_options} {}
 
@@ -22,7 +22,7 @@ class OrbitService {
  private:
   bool IsSshWatchdogActive() { return last_stdin_message_ != std::nullopt; }
 
-  std::string grpc_address_;
+  uint16_t grpc_port_;
   uint16_t asio_port_;
   LinuxTracing::TracingOptions tracing_options_;
 
