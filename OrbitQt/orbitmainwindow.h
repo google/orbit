@@ -4,10 +4,14 @@
 
 #pragma once
 
+#include <QApplication>
 #include <QMainWindow>
-#include <atomic>
+#include <QString>
+#include <QTimer>
 #include <memory>
-#include <thread>
+#include <outcome.hpp>
+#include <string>
+#include <vector>
 
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
@@ -49,6 +53,7 @@ class OrbitMainWindow : public QMainWindow {
                         const std::wstring& a_Filter);
   void OpenDisassembly(const std::string& a_String);
   void SetTitle(const QString& task_description);
+  outcome::result<void> OpenCapture(const std::string& filepath);
 
  private slots:
   void on_actionAbout_triggered();

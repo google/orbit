@@ -61,45 +61,61 @@ using ServiceDeployManager = OrbitQt::ServiceDeployManager;
 using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;
 using ScopedConnection = OrbitSshQt::ScopedConnection;
 using Ports = ServiceDeployManager::Ports;
+using SshCredentials = OrbitSsh::Credentials;
+
+static outcome::result<Ports> DeployOrbitService(
+    std::optional<ServiceDeployManager>& service_deploy_manager,
+    const DeploymentConfiguration& deployment_configuration,
+    const SshCredentials& ssh_credentials, const Ports& remote_ports) {
+  QProgressDialog progress_dialog{};
+
+  service_deploy_manager.emplace(deployment_configuration, ssh_credentials,
+                                 remote_ports);
+  QObject::connect(&progress_dialog, &QProgressDialog::canceled,
+                   &service_deploy_manager.value(),
+                   &ServiceDeployManager::Cancel);
+  QObject::connect(&service_deploy_manager.value(),
+                   &ServiceDeployManager::statusMessage, &progress_dialog,
+                   &QProgressDialog::setLabelText);
+  QObject::connect(
+      &service_deploy_manager.value(), &ServiceDeployManager::statusMessage,
+      [](const QString& msg) { LOG("Status message: %s", msg.toStdString()); });
+
+  return service_deploy_manager->Exec();
+}
 
 static outcome::result<void> RunUiInstance(
     QApplication* app,
     std::optional<DeploymentConfiguration> deployment_configuration,
     ApplicationOptions options) {
-  const uint16_t asio_port = absl::GetFlag(FLAGS_asio_port);
-  const uint16_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
   std::optional<OrbitQt::ServiceDeployManager> service_deploy_manager;
 
-  OUTCOME_TRY(ports, [&]() -> outcome::result<Ports> {
+  OUTCOME_TRY(result, [&]() -> outcome::result<std::tuple<Ports, QString>> {
+    const Ports remote_ports{/*.asio_port =*/absl::GetFlag(FLAGS_asio_port),
+                             /*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
+
     if (deployment_configuration) {
       OrbitStartupWindow sw{};
-      OUTCOME_TRY(ssh_credentials, sw.Run<OrbitSsh::Credentials>());
+      OUTCOME_TRY(result, sw.Run<OrbitSsh::Credentials>());
 
-      QProgressDialog progress_dialog{};
-
-      service_deploy_manager.emplace(deployment_configuration.value(),
-                                     ssh_credentials,
-                                     Ports{/* .asio_port = */ asio_port,
-                                           /* .grpc_port = */ grpc_port});
-      QObject::connect(&progress_dialog, &QProgressDialog::canceled,
-                       &service_deploy_manager.value(),
-                       &ServiceDeployManager::Cancel);
-      QObject::connect(&service_deploy_manager.value(),
-                       &ServiceDeployManager::statusMessage, &progress_dialog,
-                       &QProgressDialog::setLabelText);
-      QObject::connect(&service_deploy_manager.value(),
-                       &ServiceDeployManager::statusMessage,
-                       &service_deploy_manager.value(), [](const QString& msg) {
-                         LOG("Status message: %s", msg.toStdString());
-                       });
-
-      OUTCOME_TRY(ports, service_deploy_manager->Exec());
-      progress_dialog.close();
-      return ports;
+      if (std::holds_alternative<OrbitSsh::Credentials>(result)) {
+        // The user chose a remote profiling target.
+        OUTCOME_TRY(
+            tunnel_ports,
+            DeployOrbitService(service_deploy_manager,
+                               deployment_configuration.value(),
+                               std::get<SshCredentials>(result), remote_ports));
+        return std::make_tuple(tunnel_ports, QString{});
+      } else {
+        // The user chose to open a capture.
+        return std::make_tuple(remote_ports, std::get<QString>(result));
+      }
     } else {
-      return ServiceDeployManager::Ports{asio_port, grpc_port};
+      // When the local flag is present
+      return std::make_tuple(remote_ports, QString{});
     }
   }());
+  const auto& [ports, capture_path] = result;
 
   options.asio_server_address =
       absl::StrFormat("127.0.0.1:%d", ports.asio_port);
@@ -125,6 +141,10 @@ static outcome::result<void> RunUiInstance(
       return ScopedConnection();
     }
   }();
+
+  if (!capture_path.isEmpty()) {
+    OUTCOME_TRY(w.OpenCapture(capture_path.toStdString()));
+  }
 
   app->exec();
   GOrbitApp->OnExit();
@@ -154,8 +174,8 @@ static void StyleOrbit(QApplication& app) {
   darkPalette.setColor(QPalette::HighlightedText, Qt::black);
   app.setPalette(darkPalette);
   app.setStyleSheet(
-      "QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid "
-      "white; }");
+      "QToolTip { color: #ffffff; background-color: #2a82da; border: 1px "
+      "solid white; }");
 }
 
 static std::optional<OrbitQt::DeploymentConfiguration>

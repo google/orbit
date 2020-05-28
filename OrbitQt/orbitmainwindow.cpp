@@ -679,24 +679,31 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionOpen_Capture_triggered() {
   QString file = QFileDialog::getOpenFileName(
-      this, "Open capture...", Path::GetCapturePath().c_str(), "*.orbit");
+      this, "Open capture...", QString::fromStdString(Path::GetCapturePath()),
+      "*.orbit");
   if (file.isEmpty()) {
     return;
   }
 
+  (void) OpenCapture(file.toStdString());
+}
+
+outcome::result<void> OrbitMainWindow::OpenCapture(
+    const std::string& filepath) {
   outcome::result<void, std::string> result =
-      GOrbitApp->OnLoadCapture(file.toStdString());
+      GOrbitApp->OnLoadCapture(filepath);
+
   if (result.has_error()) {
     SetTitle({});
-    QMessageBox::critical(
-        this, "Error loading capture",
-        absl::StrFormat("Could not load capture from \"%s\":\n%s.",
-                        file.toStdString(), result.error())
-            .c_str());
-    return;
+    QMessageBox::critical(this, "Error loading capture",
+                          QString::fromStdString(absl::StrFormat(
+                              "Could not load capture from \"%s\":\n%s.",
+                              filepath, result.error())));
+    return std::errc::no_such_file_or_directory;
   }
-  SetTitle(file);
+  SetTitle(QString::fromStdString(filepath));
   ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
+  return outcome::success();
 }
 
 //-----------------------------------------------------------------------------

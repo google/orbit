@@ -7,6 +7,7 @@
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QDialogButtonBox>
+#include <QFileDialog>
 #include <QGridLayout>
 #include <QHeaderView>
 #include <QItemSelectionModel>
@@ -21,6 +22,7 @@
 #include "OrbitGgp/GgpInstance.h"
 #include "OrbitGgp/GgpInstanceItemModel.h"
 #include "OrbitGgp/GgpSshInfo.h"
+#include "Path.h"
 
 OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
     : QDialog{parent, Qt::Dialog}, model_(QPointer(new GgpInstanceItemModel)) {
@@ -59,14 +61,39 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
 
   // Ok / Cancel Buttons
   const auto button_box =
-      QPointer{new QDialogButtonBox{QDialogButtonBox::StandardButton::Ok |
+      QPointer{new QDialogButtonBox{QDialogButtonBox::StandardButton::Reset |
+                                    QDialogButtonBox::StandardButton::Ok |
                                     QDialogButtonBox::StandardButton::Cancel}};
   button_box->button(QDialogButtonBox::StandardButton::Ok)->setEnabled(false);
+
+  // Open Capture button
+  // We use the Reset button role for the load capture button since it's in all
+  // styles located on the left.
+  const auto load_capture_button =
+      button_box->button(QDialogButtonBox::StandardButton::Reset);
+  CHECK(load_capture_button);
+  load_capture_button->setIcon(
+      QApplication::style()->standardIcon(QStyle::SP_DialogOpenButton));
+  load_capture_button->setText("Load Capture");
+
+  QObject::connect(
+      load_capture_button, &QPushButton::clicked, this, [this, button_box]() {
+        const QString file = QFileDialog::getOpenFileName(
+            this, "Open capture...",
+            QString::fromStdString(Path::GetCapturePath()), "*.orbit");
+        if (!file.isEmpty()) {
+          result_ = file;
+          accept();
+        }
+      });
+
   QObject::connect(
       button_box, &QDialogButtonBox::accepted, this, [this, button_box]() {
         button_box->button(QDialogButtonBox::StandardButton::Ok)
             ->setText("Loading...");
         button_box->button(QDialogButtonBox::StandardButton::Ok)
+            ->setEnabled(false);
+        button_box->button(QDialogButtonBox::StandardButton::Reset)
             ->setEnabled(false);
         CHECK(chosen_instance_);
         if (chosen_instance_->display_name == "localhost") {
@@ -87,6 +114,8 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
                     ->setText("Ok");
                 button_box->button(QDialogButtonBox::StandardButton::Ok)
                     ->setEnabled(true);
+                button_box->button(QDialogButtonBox::StandardButton::Reset)
+                    ->setEnabled(true);
                 if (!ssh_info) {
                   QMessageBox::critical(
                       self, QApplication::applicationDisplayName(),
@@ -95,7 +124,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
                               "was: %1")
                           .arg(ssh_info.error()));
                 }
-                self->ssh_info_ = ssh_info.value();
+                self->result_ = ssh_info.value();
                 self->accept();
               }
             });
@@ -171,8 +200,6 @@ void OrbitStartupWindow::ReloadInstances(QPointer<QPushButton> refresh_button) {
         }
 
         if (!model_) return;
-        QVector<GgpInstance> instances_with_localhost =
-            std::move(instances.value());
-        model_->SetInstances(std::move(instances_with_localhost));
+        model_->SetInstances(std::move(instances.value()));
       });
 }
