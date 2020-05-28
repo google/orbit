@@ -29,7 +29,13 @@ void DataView::InitSortingOrders() {
   m_SortingColumn = GetDefaultSortingColumn();
 }
 
-//-----------------------------------------------------------------------------
+void DataView::OnSelect(const std::vector<int>& selected_indexes,
+                        int current_index) {
+  current_selected_index_ = current_index;
+  selected_indexes_ = selected_indexes;
+  DoSelect(current_index);
+}
+
 void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
   if (column < 0) {
     return;

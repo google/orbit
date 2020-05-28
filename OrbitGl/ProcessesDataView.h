@@ -19,7 +19,6 @@ class ProcessesDataView final : public DataView {
   std::string GetToolTip(int row, int column) override;
   std::string GetLabel() override { return "Processes"; }
 
-  void OnSelect(int index) override;
   bool SelectProcess(const std::string& process_name);
   bool SelectProcess(uint32_t process_id);
   void SetProcessList(std::vector<ProcessInfo>&& process_list);
@@ -28,6 +27,7 @@ class ProcessesDataView final : public DataView {
  protected:
   void DoSort() override;
   void DoFilter() override;
+  void DoSelect(int index) override;
 
  private:
   void UpdateProcessList();

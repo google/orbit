@@ -123,9 +123,9 @@ void OrbitTableModel::OnFilter(const QString& a_Filter) {
   m_DataView->OnFilter(a_Filter.toStdString());
 }
 
-//-----------------------------------------------------------------------------
-void OrbitTableModel::OnClicked(const QModelIndex& index) {
-  if (static_cast<int>(m_DataView->GetNumElements()) > index.row()) {
-    m_DataView->OnSelect(index.row());
+void OrbitTableModel::OnSelected(const std::vector<int>& selected_indexes,
+                                 int current_selected_index) {
+  if (static_cast<int>(m_DataView->GetNumElements()) > current_selected_index) {
+    m_DataView->OnSelect(selected_indexes, current_selected_index);
   }
 }

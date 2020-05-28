@@ -46,6 +46,8 @@ class OrbitTreeView : public QTreeView {
   void OnRangeChanged(int a_Min, int a_Max);
 
  private:
+  std::vector<int> GetSelectedIndexes();
+
   std::unique_ptr<OrbitTableModel> model_;
   std::unique_ptr<QTimer> timer_;
   std::vector<OrbitTreeView*> links_;

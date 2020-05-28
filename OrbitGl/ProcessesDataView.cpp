@@ -82,17 +82,17 @@ void ProcessesDataView::DoSort() {
   if (sorter) {
     std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
   }
-
-  SetSelectedItem();
 }
 
 #undef ORBIT_PROC_SORT
 
-void ProcessesDataView::OnSelect(int index) {
+void ProcessesDataView::DoSelect(int index) {
+  if (index == -1) {
+    return;
+  }
+
   const ProcessInfo& selected_process = GetProcess(index);
   selected_process_id_ = selected_process.pid();
-
-  SetSelectedItem();
 
   if (selection_listener_) {
     selection_listener_(selected_process_id_);
@@ -103,17 +103,26 @@ uint32_t ProcessesDataView::GetSelectedProcessId() const {
   return selected_process_id_;
 }
 
-//-----------------------------------------------------------------------------
 void ProcessesDataView::SetSelectedItem() {
+  int selected_index = -1;
+
   for (size_t i = 0; i < GetNumElements(); ++i) {
     if (GetProcess(i).pid() == selected_process_id_) {
-      m_SelectedIndex = i;
-      return;
+      selected_index = i;
+      break;
     }
   }
 
-  // This happens when selected process disappears from the list.
-  m_SelectedIndex = -1;
+  if (selected_index == GetCurrentSelectedIndex()) {
+    return;
+  }
+
+  std::vector<int> selected_indexes;
+  if (selected_index != -1) {
+    selected_indexes.push_back(selected_index);
+  }
+
+  OnSelect(selected_indexes, selected_index);
 }
 
 bool ProcessesDataView::SelectProcess(const std::string& process_name) {
@@ -121,7 +130,7 @@ bool ProcessesDataView::SelectProcess(const std::string& process_name) {
     const ProcessInfo& process = GetProcess(i);
     // TODO: What if there are multiple processes with the same substring?
     if (process.full_path().find(process_name) != std::string::npos) {
-      OnSelect(i);
+      OnSelect({static_cast<int>(i)}, i);
       // Why is this here?
       Capture::GPresetToLoad = "";
       return true;
@@ -136,7 +145,7 @@ bool ProcessesDataView::SelectProcess(uint32_t process_id) {
   for (size_t i = 0; i < GetNumElements(); ++i) {
     const ProcessInfo& process = GetProcess(i);
     if (process.pid() == process_id) {
-      OnSelect(i);
+      OnSelect({static_cast<int>(i)}, i);
       return true;
     }
   }

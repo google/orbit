@@ -109,8 +109,7 @@ void OrbitTreeView::OnFilter(const QString& filter) {
 
 //-----------------------------------------------------------------------------
 void OrbitTreeView::Select(int row) {
-  QModelIndex idx = model_->CreateIndex(row, 0);
-  model_->OnClicked(idx);
+  model_->OnSelected(GetSelectedIndexes(), row);
   Refresh();
 }
 
@@ -124,7 +123,7 @@ void OrbitTreeView::OnTimer() {
 
 //-----------------------------------------------------------------------------
 void OrbitTreeView::OnClicked(const QModelIndex& index) {
-  model_->OnClicked(index);
+  model_->OnSelected(GetSelectedIndexes(), index.row());
 
   for (OrbitTreeView* tree_view : links_) {
     tree_view->Refresh();
@@ -133,7 +132,6 @@ void OrbitTreeView::OnClicked(const QModelIndex& index) {
 
 //-----------------------------------------------------------------------------
 void OrbitTreeView::Refresh() {
-  QModelIndexList list = selectionModel()->selectedIndexes();
 
   if (model_->GetDataView()->GetType() == DataViewType::LIVE_FUNCTIONS) {
     model_->layoutAboutToBeChanged();
@@ -144,13 +142,18 @@ void OrbitTreeView::Refresh() {
   reset();
 
   // Re-select previous selection
-  int selected = model_->GetSelectedIndex();
-  if (selected >= 0) {
-    QItemSelectionModel* selection = selectionModel();
-    QModelIndex idx = model_->CreateIndex(selected, 0);
-    selection->select(
-        idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+  const std::vector<int> selected_indexes = model_->GetSelectedIndexes();
+
+  QItemSelectionModel* selection_model = selectionModel();
+  QItemSelection selection;
+
+  for (int selected_index : selected_indexes) {
+    QModelIndex idx = model_->CreateIndex(selected_index, 0);
+    selection.select(idx, idx);
   }
+
+  selection_model->select(selection, QItemSelectionModel::ClearAndSelect |
+                                         QItemSelectionModel::Rows);
 }
 
 //-----------------------------------------------------------------------------
@@ -192,19 +195,23 @@ void OrbitTreeView::drawRow(QPainter* painter,
 //-----------------------------------------------------------------------------
 QMenu* GContextMenu;
 
-//-----------------------------------------------------------------------------
+std::vector<int> OrbitTreeView::GetSelectedIndexes() {
+  QModelIndexList selection_list = selectionModel()->selectedIndexes();
+
+  std::set<int> selection_set;
+  for (QModelIndex& selected_index : selection_list) {
+    selection_set.insert(selected_index.row());
+  }
+
+  return std::vector<int>(selection_set.begin(), selection_set.end());
+}
+
 void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
   QModelIndex index = indexAt(pos);
   if (index.isValid()) {
     int clicked_index = index.row();
 
-    QModelIndexList selection_list = selectionModel()->selectedIndexes();
-    std::set<int> selection_set;
-    for (QModelIndex& selected_index : selection_list) {
-      selection_set.insert(selected_index.row());
-    }
-    std::vector<int> selected_indices(selection_set.begin(),
-                                      selection_set.end());
+    std::vector<int> selected_indices = GetSelectedIndexes();
 
     std::vector<std::string> menu =
         model_->GetDataView()->GetContextMenu(clicked_index, selected_indices);
@@ -227,31 +234,17 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitTreeView::OnMenuClicked(const std::string& a_Action,
                                   int a_MenuIndex) {
-  QModelIndexList selection_list = selectionModel()->selectedIndexes();
-  std::set<int> selection_set;
-  for (QModelIndex& index : selection_list) {
-    selection_set.insert(index.row());
-  }
-
-  std::vector<int> indices(selection_set.begin(), selection_set.end());
+  std::vector<int> indices = GetSelectedIndexes();
   if (!indices.empty()) {
     model_->GetDataView()->OnContextMenu(a_Action, a_MenuIndex, indices);
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitTreeView::keyPressEvent(QKeyEvent* event) {
   if (event->matches(QKeySequence::Copy)) {
-    QModelIndexList list = selectionModel()->selectedIndexes();
-    std::set<int> selection;
-    for (QModelIndex& index : list) {
-      selection.insert(index.row());
-    }
-
-    std::vector<int> items(selection.begin(), selection.end());
+    std::vector<int> items = GetSelectedIndexes();
     model_->GetDataView()->CopySelection(items);
   } else {
     QTreeView::keyPressEvent(event);

@@ -32,7 +32,7 @@ class DataView {
   };
 
   explicit DataView(DataViewType type)
-      : m_UpdatePeriodMs(-1), m_SelectedIndex(-1), m_Type(type) {}
+      : m_UpdatePeriodMs(-1), m_Type(type), current_selected_index_(-1) {}
 
   virtual ~DataView() = default;
 
@@ -51,8 +51,11 @@ class DataView {
   virtual void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                              const std::vector<int>& a_ItemIndices);
   virtual void OnItemActivated() {}
-  virtual void OnSelect(int /*a_Index*/) {}
-  virtual int GetSelectedIndex() { return m_SelectedIndex; }
+  void OnSelect(const std::vector<int>& selected_indexes, int current_index);
+  int GetCurrentSelectedIndex() const { return current_selected_index_; }
+  const std::vector<int> GetSelectedIndexes() const {
+    return selected_indexes_;
+  }
   virtual void OnDataChanged();
   virtual void OnTimer() {}
   virtual bool WantsDisplayColor() { return false; }
@@ -74,6 +77,7 @@ class DataView {
 
  protected:
   void InitSortingOrders();
+  virtual void DoSelect(int /*current_index*/) {}
   virtual void DoSort() {}
   virtual void DoFilter() {}
 
@@ -82,9 +86,13 @@ class DataView {
   int m_SortingColumn = 0;
   std::string m_Filter;
   int m_UpdatePeriodMs;
-  int m_SelectedIndex;
+
   DataViewType m_Type;
 
   static const std::string MENU_ACTION_COPY_SELECTION;
   static const std::string MENU_ACTION_EXPORT_TO_CSV;
+
+ private:
+  int current_selected_index_;
+  std::vector<int> selected_indexes_;
 };

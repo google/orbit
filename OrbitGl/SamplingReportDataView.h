@@ -22,7 +22,6 @@ class SamplingReportDataView : public DataView {
 
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                      const std::vector<int>& a_ItemIndices) override;
-  void OnSelect(int a_Index) override;
 
   void LinkDataView(DataView* a_DataView) override;
   void SetSamplingReport(class SamplingReport* a_SamplingReport) {
@@ -33,6 +32,7 @@ class SamplingReportDataView : public DataView {
   ThreadID GetThreadID() const { return m_TID; }
 
  protected:
+  void DoSelect(int index) override;
   void DoSort() override;
   void DoFilter() override;
   const SampledFunction& GetSampledFunction(unsigned int a_Row) const;
