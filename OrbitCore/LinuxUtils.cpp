@@ -96,6 +96,7 @@ void ListModules(pid_t pid,
   struct AddressRange {
     uint64_t start_address;
     uint64_t end_address;
+    bool is_executable;
   };
 
   std::map<std::string, AddressRange> address_map;
@@ -109,10 +110,6 @@ void ListModules(pid_t pid,
     // mapped to a file (might be heap, stack or something else)
     if (tokens.size() != 6 || tokens[4] == "0") continue;
 
-    // tokens[1] is the permissions column. tokens[1][2] is the permission to
-    // be executed. We discard entries that are not executable.
-    if (tokens[1].size() != 4 || tokens[1][2] != 'x') continue;
-
     const std::string& module_name = tokens[5];
 
     std::vector<std::string> addresses = absl::StrSplit(tokens[0], "-");
@@ -120,19 +117,24 @@ void ListModules(pid_t pid,
 
     uint64_t start = std::stoull(addresses[0], nullptr, 16);
     uint64_t end = std::stoull(addresses[1], nullptr, 16);
+    bool is_executable = tokens[1].size() == 4 && tokens[1][2] == 'x';
 
     auto iter = address_map.find(module_name);
     if (iter == address_map.end()) {
-      address_map[module_name] = {start, end};
+      address_map[module_name] = {start, end, is_executable};
     } else {
       AddressRange& address_range = iter->second;
       address_range.start_address =
           std::min(address_range.start_address, start);
       address_range.end_address = std::max(address_range.end_address, end);
+      address_range.is_executable |= is_executable;
     }
   }
 
   for (const auto& [module_name, address_range] : address_map) {
+    // Filter out entries which are not executable
+    if (!address_range.is_executable) continue;
+    
     std::shared_ptr<Module> module = std::make_shared<Module>(
         module_name, address_range.start_address, address_range.end_address);
 
