@@ -33,15 +33,13 @@ ABSL_FLAG(bool, enable_stale_features, false,
           "Enable obsolete features that are not working or are not "
           "implemented in the client's UI");
 
-ABSL_FLAG(bool, devmode, false,
-          "Enable developer mode in the client's UI");
+ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
 
-ABSL_FLAG(std::string, remote, "",
-          "Connect to the specified remote on startup");
 ABSL_FLAG(uint16_t, asio_port, 44766,
           "The service's Asio tcp_server port (use default value if unsure)");
 ABSL_FLAG(uint16_t, grpc_port, 44765,
           "The service's GRPC server port (use default value if unsure)");
+ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
 
 // TODO: remove this once we deprecated legacy parameters
 static void ParseLegacyCommandLine(int argc, char* argv[],
@@ -59,34 +57,49 @@ static void ParseLegacyCommandLine(int argc, char* argv[],
   }
 }
 
+using ServiceDeployManager = OrbitQt::ServiceDeployManager;
+using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;
+using ScopedConnection = OrbitSshQt::ScopedConnection;
+using Ports = ServiceDeployManager::Ports;
+
 static outcome::result<void> RunUiInstance(
     QApplication* app,
-    OrbitQt::DeploymentConfiguration deployment_configuration,
+    std::optional<DeploymentConfiguration> deployment_configuration,
     ApplicationOptions options) {
-  OrbitStartupWindow sw{};
-  OUTCOME_TRY(ssh_credentials, sw.Run<OrbitSsh::Credentials>());
-
-  QProgressDialog progress_dialog{};
-
   const uint16_t asio_port = absl::GetFlag(FLAGS_asio_port);
   const uint16_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
-  OrbitQt::ServiceDeployManager service_deploy_manager{
-      std::move(deployment_configuration), ssh_credentials,
-      OrbitQt::ServiceDeployManager::Ports{/* .asio_port = */ asio_port,
-                                           /* .grpc_port = */ grpc_port}};
-  QObject::connect(&progress_dialog, &QProgressDialog::canceled,
-                   &service_deploy_manager,
-                   &OrbitQt::ServiceDeployManager::Cancel);
-  QObject::connect(&service_deploy_manager,
-                   &OrbitQt::ServiceDeployManager::statusMessage,
-                   &progress_dialog, &QProgressDialog::setLabelText);
-  QObject::connect(
-      &service_deploy_manager, &OrbitQt::ServiceDeployManager::statusMessage,
-      &service_deploy_manager,
-      [](const QString& msg) { LOG("Status message: %s", msg.toStdString()); });
+  std::optional<OrbitQt::ServiceDeployManager> service_deploy_manager;
 
-  OUTCOME_TRY(ports, service_deploy_manager.Exec());
-  progress_dialog.close();
+  OUTCOME_TRY(ports, [&]() -> outcome::result<Ports> {
+    if (deployment_configuration) {
+      OrbitStartupWindow sw{};
+      OUTCOME_TRY(ssh_credentials, sw.Run<OrbitSsh::Credentials>());
+
+      QProgressDialog progress_dialog{};
+
+      service_deploy_manager.emplace(deployment_configuration.value(),
+                                     ssh_credentials,
+                                     Ports{/* .asio_port = */ asio_port,
+                                           /* .grpc_port = */ grpc_port});
+      QObject::connect(&progress_dialog, &QProgressDialog::canceled,
+                       &service_deploy_manager.value(),
+                       &ServiceDeployManager::Cancel);
+      QObject::connect(&service_deploy_manager.value(),
+                       &ServiceDeployManager::statusMessage, &progress_dialog,
+                       &QProgressDialog::setLabelText);
+      QObject::connect(&service_deploy_manager.value(),
+                       &ServiceDeployManager::statusMessage,
+                       &service_deploy_manager.value(), [](const QString& msg) {
+                         LOG("Status message: %s", msg.toStdString());
+                       });
+
+      OUTCOME_TRY(ports, service_deploy_manager->Exec());
+      progress_dialog.close();
+      return ports;
+    } else {
+      return ServiceDeployManager::Ports{asio_port, grpc_port};
+    }
+  }());
 
   options.asio_server_address =
       absl::StrFormat("127.0.0.1:%d", ports.asio_port);
@@ -98,14 +111,20 @@ static outcome::result<void> RunUiInstance(
   w.PostInit();
 
   std::optional<std::error_code> error;
-  auto error_handler = OrbitSshQt::ScopedConnection{
-      QObject::connect(&service_deploy_manager,
-                       &OrbitQt::ServiceDeployManager::socketErrorOccurred,
-                       &service_deploy_manager, [&](std::error_code e) {
-                         error = e;
-                         w.close();
-                         app->quit();
-                       })};
+  auto error_handler = [&]() -> ScopedConnection {
+    if (service_deploy_manager) {
+      return OrbitSshQt::ScopedConnection{QObject::connect(
+          &service_deploy_manager.value(),
+          &ServiceDeployManager::socketErrorOccurred,
+          &service_deploy_manager.value(), [&](std::error_code e) {
+            error = e;
+            w.close();
+            app->quit();
+          })};
+    } else {
+      return ScopedConnection();
+    }
+  }();
 
   app->exec();
   GOrbitApp->OnExit();
@@ -139,7 +158,12 @@ static void StyleOrbit(QApplication& app) {
       "white; }");
 }
 
-static OrbitQt::DeploymentConfiguration FigureOutDeploymentConfiguration() {
+static std::optional<OrbitQt::DeploymentConfiguration>
+FigureOutDeploymentConfiguration() {
+  if (absl::GetFlag(FLAGS_local)) {
+    return std::nullopt;
+  }
+
   auto env = QProcessEnvironment::systemEnvironment();
 
   const char* const kEnvExecutablePath = "ORBIT_COLLECTOR_EXECUTABLE_PATH";
@@ -195,9 +219,10 @@ int main(int argc, char* argv[]) {
 
   while (true) {
     const auto result = RunUiInstance(&app, deployment_configuration, options);
-    if (result || result.error() == std::errc::interrupted) {
-      // It was either a clean shutdown or the user deliberately closed the
-      // dialog.
+    if (result || result.error() == std::errc::interrupted ||
+        !deployment_configuration) {
+      // It was either a clean shutdown or the deliberately closed the
+      // dialog, or we started with the --local flag.
       return 0;
     } else if (result.error() != std::errc::operation_canceled) {
       QMessageBox::critical(
