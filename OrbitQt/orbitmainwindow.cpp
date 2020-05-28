@@ -754,11 +754,13 @@ void OrbitMainWindow::on_actionNPE_triggered() {
   *null_pointer = 0;
 }
 
-void InfiniteRecursion() {
-  InfiniteRecursion();
+void InfiniteRecursion(int num) {
+  if (num != 1) {
+    InfiniteRecursion(num);
+  }
 }
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionStackOverflow_triggered() {
-  InfiniteRecursion();
+  InfiniteRecursion(0);
 }
