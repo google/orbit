@@ -46,8 +46,8 @@ function install_breakpad_tools {
   }
 }
 
-function upload_debug_symbols_for_exe($api_key, $exe_path) {
-  breakpad\bin\symupload -p $exe_path https://prod-crashsymbolcollector-pa.googleapis.com $api_key
+function upload_symbol_file($api_key, $symbol_file_path) {
+  breakpad\bin\symupload -p $symbol_file_path https://prod-crashsymbolcollector-pa.googleapis.com $api_key
 }
 
 function upload_debug_symbols($bin_folder) {
@@ -58,7 +58,17 @@ function upload_debug_symbols($bin_folder) {
   
   install_breakpad_tools
   
-  upload_debug_symbols_for_exe $api_key $bin_folder\Orbit.exe
+  upload_symbol_file $api_key $bin_folder\Orbit.exe
+  upload_symbol_file $api_key $bin_folder\Qt5Core.dll
+  upload_symbol_file $api_key $bin_folder\Qt5Gui.dll
+  upload_symbol_file $api_key $bin_folder\Qt5Network.dll
+  upload_symbol_file $api_key $bin_folder\Qt5Widgets.dll
+  upload_symbol_file $api_key $bin_folder\bearer\qgenericbearer.dll
+  upload_symbol_file $api_key $bin_folder\imageformats\qgif.dll
+  upload_symbol_file $api_key $bin_folder\imageformats\qico.dll
+  upload_symbol_file $api_key $bin_folder\imageformats\qjpeg.dll
+  upload_symbol_file $api_key $bin_folder\platforms\qwindows.dll
+  upload_symbol_file $api_key $bin_folder\styles\qwindowsvistastyle.dll
 }
 
 upload_debug_symbols $args[0]
