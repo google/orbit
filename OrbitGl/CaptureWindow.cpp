@@ -40,7 +40,7 @@ CaptureWindow::CaptureWindow() {
   time_graph_.SetPickingManager(&m_PickingManager);
   time_graph_.SetCanvas(this);
   m_DrawUI = false;
-  m_DrawHelp = false;
+  m_DrawHelp = true;
   m_DrawFilter = false;
   m_DrawMemTracker = false;
   m_FirstHelpDraw = true;
@@ -501,11 +501,6 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
       case ' ':
         ZoomAll();
         break;
-      case 'C':
-#ifdef __linux__
-        LinuxUtils::DumpClocks();
-#endif
-        break;
       case 'A':
         Pan(0.1f);
         break;
@@ -529,6 +524,7 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
         break;
       case 'X':
         GOrbitApp->ToggleCapture();
+        m_DrawHelp = false;
 #ifdef __linux__
         ZoomAll();
 #endif
@@ -537,22 +533,6 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
         if (a_Ctrl) {
           m_TextRenderer.ToggleDrawOutline();
         }
-        break;
-      case 'P':
-
-#ifdef _WIN32
-        GOrbitApp->LoadSystrace(
-            "C:/Users/pierr/Downloads/perf_traces/systrace_tutorial.html");
-#else
-        GOrbitApp->LoadSystrace(
-            "/home/pierric/perf_traces/systrace_tutorial.html");
-#endif
-        break;
-      case 'M':
-        m_DrawMemTracker = !m_DrawMemTracker;
-        break;
-      case 'K':
-        SendProcess();
         break;
       case 18:  // Left
         time_graph_.OnLeft();
@@ -795,8 +775,10 @@ void CaptureWindow::DrawStatus() {
   int PosY = s_PosY;
   int LeftY = s_PosY;
 
-  m_TextRenderer.AddText2D(" Press 'H' for help", s_PosX, LeftY,
-                           Z_VALUE_TEXT_UI, s_Color);
+  if (!m_DrawHelp) {
+    m_TextRenderer.AddText2D(" Press 'H' for help", s_PosX, LeftY,
+                             Z_VALUE_TEXT_UI, s_Color);
+  }
   LeftY += s_IncY;
 
   if (Capture::GInjected) {
@@ -939,45 +921,12 @@ void CaptureWindow::RenderHelpUi() {
     return;
   }
 
-  ImGui::Text("Start/Stop capture: 'x'");
-  ImGui::Text("Pan/Zoom in capture: 'w','a','s','d'");
-  ImGui::Text("Time zoom: scroll or CTRL + right click + drag");
-  ImGui::Text("Left click + drag to select or pan");
-  ImGui::Text("Y axis zoom: CTRL + scroll");
-  ImGui::Text("Right click + drag to measure time");
-  ImGui::Separator();
-  ImGui::Text("Icons:");
-
-  extern GLuint GTextureInjected;
-  extern GLuint GTextureTimer;
-  extern GLuint GTextureHelp;
-  extern GLuint GTextureRecord;
-  float size = m_Slider.GetPixelHeight();
-
-  ImGui::Image(
-      reinterpret_cast<void*>(static_cast<uintptr_t>(GTextureInjected)),
-      ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1),
-      ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
-  ImGui::SameLine();
-  ImGui::Text("Injected in process");
-
-  ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(GTextureTimer)),
-               ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1),
-               ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
-  ImGui::SameLine();
-  ImGui::Text("Capture time");
-
-  ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(GTextureRecord)),
-               ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1),
-               ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
-  ImGui::SameLine();
-  ImGui::Text("Recording");
-
-  ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(GTextureHelp)),
-               ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1),
-               ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
-  ImGui::SameLine();
-  ImGui::Text("Help");
+  ImGui::Text("Start/Stop Capture: 'X'");
+  ImGui::Text("Pan: 'A','D' or \"Left Click + Drag\"");
+  ImGui::Text("Zoom: 'W', 'S', Scroll or \"Ctrl + Right Click + Drag\"");
+  ImGui::Text("Select: Left Click");
+  ImGui::Text("Measure: \"Right Click + Drag\"");
+  ImGui::Text("Toggle Help: 'H'");
 
   ImGui::End();
 
