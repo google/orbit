@@ -35,9 +35,10 @@ static bool IsSshConnectionAlive(
 }
 
 void OrbitService::Run(std::atomic<bool>* exit_requested) {
-  std::cout << "Starting GRPC server at " << grpc_address_ << std::endl;
+  std::string grpc_address = absl::StrFormat("127.0.0.1:%d", grpc_port_);
+  std::cout << "Starting GRPC server at " << grpc_address << std::endl;
   std::unique_ptr<OrbitGrpcServer> grpc_server;
-  grpc_server = OrbitGrpcServer::Create(grpc_address_);
+  grpc_server = OrbitGrpcServer::Create(grpc_address);
 
   std::cout << "Starting Asio server on port " << asio_port_ << std::endl;
   OrbitAsioServer asio_server{asio_port_, tracing_options_};
