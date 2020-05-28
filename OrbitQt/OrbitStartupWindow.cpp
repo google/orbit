@@ -37,6 +37,14 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
   const auto label = QPointer{new QLabel{"Choose profiling target:"}};
   layout->addWidget(label, 0, 0);
 
+  // Refresh Button
+  const auto refresh_button = QPointer{new QPushButton{this}};
+  refresh_button->setIcon(
+      QApplication::style()->standardIcon(QStyle::SP_BrowserReload));
+  layout->addWidget(refresh_button, 0, 1, Qt::AlignRight);
+  QObject::connect(refresh_button, &QPushButton::clicked, this,
+                   &OrbitStartupWindow::ReloadInstances);
+
   // Main content table
   const auto table_view = QPointer{new QTableView{}};
   table_view->setSelectionMode(
@@ -46,15 +54,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
   table_view->viewport()->setFocusPolicy(Qt::NoFocus);
   table_view->horizontalHeader()->setStretchLastSection(true);
   table_view->setModel(model_);
-  layout->addWidget(table_view, 1, 0);
-
-  // Refresh Button
-  const auto refresh_button = QPointer{new QPushButton{this}};
-  refresh_button->setIcon(
-      QApplication::style()->standardIcon(QStyle::SP_BrowserReload));
-  layout->addWidget(refresh_button, 1, 1, Qt::AlignTop);
-  QObject::connect(refresh_button, &QPushButton::clicked, this,
-                   &OrbitStartupWindow::ReloadInstances);
+  layout->addWidget(table_view, 1, 0, 1, 2);
 
   // Ok / Cancel Buttons
   const auto button_box =
@@ -101,7 +101,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
       });
   QObject::connect(button_box, &QDialogButtonBox::rejected, this,
                    &QDialog::reject);
-  layout->addWidget(button_box, 2, 0);
+  layout->addWidget(button_box, 2, 0, 1, 2, Qt::AlignRight);
 
   // Logic for choosing a table item
   QObject::connect(
