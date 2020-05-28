@@ -104,6 +104,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->CaptureGLWidget->Initialize(GlPanel::CAPTURE, this);
   ui->VisualizeGLWidget->Initialize(GlPanel::VISUALIZE, this);
 
+  connect(ui->ToggleCaptureButton, &QPushButton::clicked, [] {
+    GOrbitApp->ToggleCapture();
+  });
+
   ui->ModulesList->Initialize(
       data_view_factory->GetOrCreateDataView(DataViewType::MODULES),
       SelectionType::kExtended, FontType::kDefault);

@@ -89,6 +89,13 @@
         </attribute>
         <layout class="QGridLayout" name="gridLayout_5">
          <item row="0" column="0">
+          <widget class="QPushButton" name="ToggleCaptureButton">
+           <property name="text">
+            <string>Toggle capture</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
           <widget class="OrbitGLWidget" name="CaptureGLWidget"/>
          </item>
         </layout>
