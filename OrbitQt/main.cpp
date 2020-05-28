@@ -33,8 +33,8 @@ ABSL_FLAG(bool, enable_stale_features, false,
           "Enable obsolete features that are not working or are not "
           "implemented in the client's UI");
 
-ABSL_FLAG(bool, enable_debug_menu, false,
-          "Enable developer menu in the client's UI");
+ABSL_FLAG(bool, devmode, false,
+          "Enable developer mode in the client's UI");
 
 ABSL_FLAG(std::string, remote, "",
           "Connect to the specified remote on startup");
