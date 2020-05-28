@@ -290,6 +290,8 @@
      <string>Crash Test</string>
     </property>
     <addaction name="actionCheckFalse"/>
+    <addaction name="actionNPE"/>
+    <addaction name="actionStackOverflow"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -433,6 +435,16 @@
   <action name="actionCheckFalse">
    <property name="text">
     <string>Check false</string>
+   </property>
+  </action>
+  <action name="actionNPE">
+   <property name="text">
+    <string>NPE</string>
+   </property>
+  </action>
+  <action name="actionStackOverflow">
+   <property name="text">
+    <string>Stack Overflow</string>
    </property>
   </action>
  </widget>

@@ -745,5 +745,20 @@ void OrbitMainWindow::on_actionUploadDumpsToServer_triggered(bool checked) {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionCheckFalse_triggered() {
-    CHECK(false);
+  CHECK(false);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionNPE_triggered() {
+  int* null_pointer = nullptr;
+  *null_pointer = 0;
+}
+
+void InfiniteRecursion() {
+  InfiniteRecursion();
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionStackOverflow_triggered() {
+  InfiniteRecursion();
 }
