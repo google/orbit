@@ -723,8 +723,9 @@ void OrbitMainWindow::OpenDisassembly(const std::string& a_String) {
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::SetTitle(const QString& task_description) {
   if (task_description.isEmpty()) {
-    setWindowTitle(QString("%1 %2 [BETA]").arg(QApplication::applicationName(),
-                                        QApplication::applicationVersion()));
+    setWindowTitle(QString("%1 %2 [BETA]")
+                       .arg(QApplication::applicationName(),
+                            QApplication::applicationVersion()));
   } else {
     setWindowTitle(QString("%1 %2 [BETA] - %3")
                        .arg(QApplication::applicationName(),
@@ -744,9 +745,7 @@ void OrbitMainWindow::on_actionUploadDumpsToServer_triggered(bool checked) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionCheckFalse_triggered() {
-  CHECK(false);
-}
+void OrbitMainWindow::on_actionCheckFalse_triggered() { CHECK(false); }
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionNullPointerDereference_triggered() {
