@@ -25,8 +25,7 @@
 #include "Path.h"
 
 OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
-    : QDialog{parent, Qt::Dialog},
-      model_{new GgpInstanceItemModel{{}, this}} {
+    : QDialog{parent, Qt::Dialog}, model_{new GgpInstanceItemModel{{}, this}} {
   // General UI
   const int width = 700;
   const int height = 400;
