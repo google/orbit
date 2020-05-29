@@ -791,22 +791,30 @@ void OrbitApp::StartCapture() {
 #endif
     m_NeedsThawing = false;
   }
+
+  for (const CaptureStartedCallback& callback : capture_started_callbacks_) {
+    callback();
+  }
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::StopCapture() {
   Capture::StopCapture();
 
+  for (const CaptureStoppedCallback& callback : capture_stopped_callbacks_) {
+    callback();
+  }
   FireRefreshCallbacks();
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ToggleCapture() {
   if (GTimerManager) {
-    if (GTimerManager->m_IsRecording)
+    if (GTimerManager->m_IsRecording) {
       StopCapture();
-    else
+    } else {
       StartCapture();
+    }
   }
 }
 
