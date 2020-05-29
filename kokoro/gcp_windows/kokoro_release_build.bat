@@ -10,7 +10,7 @@ REM found in the LICENSE file.
 SET REPO_ROOT=%KOKORO_ARTIFACTS_DIR%\github\orbitprofiler
 
 :: Install conan config
-call powershell "& %REPO_ROOT%\contrib\conan\configs\install.ps1"
+call powershell "& %REPO_ROOT%\third_party\conan\configs\install.ps1"
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 :: Building conan

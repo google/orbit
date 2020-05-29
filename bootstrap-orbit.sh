@@ -42,7 +42,7 @@ else
 fi
 
 echo "Installing conan configuration (profiles, settings, etc.)..."
-$DIR/contrib/conan/configs/install.sh || exit $?
+$DIR/third_party/conan/configs/install.sh || exit $?
 
 if [ -n "$1"] ; then
   exec $DIR/build.sh "$@"
