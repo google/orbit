@@ -13,7 +13,7 @@ function conan_disable_public_remotes {
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-# Installs conan config (build settings, public remotes, conan profiles, conan options). Have a look in \contrib\conan\configs\windows for more information.
+# Installs conan config (build settings, public remotes, conan profiles, conan options). Have a look in \third_party\conan\configs\windows for more information.
 if [ "$(uname -s)" == "Linux" ]; then
   conan config install "$DIR/linux" || exit $?
 else

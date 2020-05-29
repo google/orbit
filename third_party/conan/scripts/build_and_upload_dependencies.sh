@@ -10,10 +10,10 @@ REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../" >/dev/null 2>&1 &&
 REPO_ROOT_WIN="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../" >/dev/null 2>&1 && pwd -W 2>/dev/null)"
 
 # Path to script inside the docker container
-SCRIPT="/mnt/contrib/conan/scripts/build_and_upload_dependencies.sh"
+SCRIPT="/mnt/third_party/conan/scripts/build_and_upload_dependencies.sh"
 
 if [ "$1" ]; then
-  $REPO_ROOT/contrib/conan/configs/install.sh || exit $?
+  $REPO_ROOT/third_party/conan/configs/install.sh || exit $?
   conan user -r artifactory $ARTIFACTORY_USERNAME -p $ARTIFACTORY_API_KEY || exit $?
 
   for profile in $@; do
