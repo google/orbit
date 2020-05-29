@@ -44,7 +44,7 @@ fi
 echo "Installing conan configuration (profiles, settings, etc.)..."
 $DIR/third_party/conan/configs/install.sh || exit $?
 
-if [ -n "$1"] ; then
+if [ -n "$1" ] ; then
   exec $DIR/build.sh "$@"
 else
   conan remote list | grep -v 'Disabled:' | grep -e '^artifactory:' > /dev/null 2>&1
