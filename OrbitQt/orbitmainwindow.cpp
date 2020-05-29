@@ -22,7 +22,7 @@
 #include "../OrbitGl/PluginManager.h"
 #include "../OrbitGl/SamplingReport.h"
 #include "../OrbitPlugin/OrbitSDK.h"
-#include "../external/concurrentqueue/concurrentqueue.h"
+#include "../third_party/concurrentqueue/concurrentqueue.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"

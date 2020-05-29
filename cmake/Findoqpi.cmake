@@ -4,7 +4,7 @@
 
 add_library(oqpi INTERFACE)
 
-set(DIR external/oqpi)
+set(DIR third_party/oqpi)
 target_include_directories(oqpi SYSTEM INTERFACE ${DIR}/include)
 
 target_compile_definitions(oqpi INTERFACE WIN32_LEAN_AND_MEAN)

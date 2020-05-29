@@ -8,8 +8,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../external/minhook/src/buffer.h"
-#include "../external/minhook/src/trampoline.h"
+#include "../third_party/minhook/src/buffer.h"
+#include "../third_party/minhook/src/trampoline.h"
 #include "Callstack.h"
 #include "Context.h"
 #include "Core.h"

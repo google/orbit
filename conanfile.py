@@ -23,7 +23,7 @@ class OrbitConan(ConanFile):
                        "fPIC": True,
                        "crashdump_server": ""}
     _orbit_channel = "orbitdeps/stable"
-    exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "external/*", "LICENSE"
+    exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
     build_requires = ('grpc_codegen/1.27.3@orbitdeps/stable',
                       'protoc_installer/3.9.1@bincrafters/stable')
 

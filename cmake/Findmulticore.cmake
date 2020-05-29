@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-set(DIR external/multicore/common)
+set(DIR third_party/multicore/common)
 
 add_library(
   multicore OBJECT
