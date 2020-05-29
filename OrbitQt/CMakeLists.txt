@@ -56,31 +56,11 @@ target_sources(
           servicedeploymanager.cpp
           showincludesdialog.cpp)
 
-target_sources(
-  OrbitQt
-  PRIVATE qtpropertybrowser/qtbuttonpropertybrowser.h
-          qtpropertybrowser/qteditorfactory.h
-          qtpropertybrowser/qtgroupboxpropertybrowser.h
-          qtpropertybrowser/qtpropertybrowser.h
-          qtpropertybrowser/qtpropertybrowserutils_p.h
-          qtpropertybrowser/qtpropertymanager.h
-          qtpropertybrowser/qttreepropertybrowser.h
-          qtpropertybrowser/qtvariantproperty.h)
-target_sources(
-  OrbitQt
-  PRIVATE qtpropertybrowser/qtbuttonpropertybrowser.cpp
-          qtpropertybrowser/qteditorfactory.cpp
-          qtpropertybrowser/qtgroupboxpropertybrowser.cpp
-          qtpropertybrowser/qtpropertybrowser.cpp
-          qtpropertybrowser/qtpropertybrowserutils.cpp
-          qtpropertybrowser/qtpropertymanager.cpp
-          qtpropertybrowser/qttreepropertybrowser.cpp
-          qtpropertybrowser/qtvariantproperty.cpp)
-
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(OrbitQt PRIVATE OrbitCore OrbitGl OrbitGgp OrbitSshQt
-                                      Qt5::Widgets Qt5::Core)
+                                      Qt5::Widgets Qt5::Core
+                                      qtpropertybrowser::qtpropertybrowser)
 
 include(${CMAKE_SOURCE_DIR}/cmake/version.cmake)
 GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/version.h"
