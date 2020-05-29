@@ -1,3 +1,7 @@
+# Copyright (c) 2020 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 from conans.model.conan_file import ConanFile
 from conans import CMake
 import os

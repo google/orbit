@@ -1,3 +1,7 @@
+# Copyright (c) 2020 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 # from https://github.com/ned14/outcome/blob/develop/conan/conanfile.py
 from conans import ConanFile, tools
 
