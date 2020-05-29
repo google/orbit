@@ -125,6 +125,15 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void GoToCapture();
 
   // Callbacks
+  using CaptureStartedCallback = std::function<void()>;
+  void AddCaptureStartedCallback(CaptureStartedCallback callback) {
+    capture_started_callbacks_.emplace_back(std::move(callback));
+  }
+  using CaptureStoppedCallback = std::function<void()>;
+  void AddCaptureStoppedCallback(CaptureStoppedCallback callback) {
+    capture_stopped_callbacks_.emplace_back(std::move(callback));
+  }
+
   typedef std::function<void(DataViewType a_Type)> RefreshCallback;
   void AddRefreshCallback(RefreshCallback a_Callback) {
     m_RefreshCallbacks.emplace_back(std::move(a_Callback));
@@ -245,6 +254,8 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   absl::flat_hash_map<uint32_t, std::shared_ptr<Process>> process_map_;
 
   std::vector<std::string> m_Arguments;
+  std::vector<CaptureStartedCallback> capture_started_callbacks_;
+  std::vector<CaptureStoppedCallback> capture_stopped_callbacks_;
   std::vector<RefreshCallback> m_RefreshCallbacks;
   std::vector<WatchCallback> m_AddToWatchCallbacks;
   std::vector<WatchCallback> m_UpdateWatchCallbacks;
