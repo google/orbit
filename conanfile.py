@@ -185,6 +185,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("OrbitService.exe", src="bin/", dst="bin")
         self.copy("OrbitService.pdb", src="bin/", dst="bin")
         self.copy("OrbitService.debug", src="bin/", dst="bin")
+        self.copy("crashpad_handler*", src="bin/", dst="bin")
         self.copy("THIRD_PARTY_LICENSES.txt")
         self.copy("LICENSE")
 
