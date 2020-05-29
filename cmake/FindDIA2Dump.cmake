@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-set(DIR external/DIA2Dump)
+set(DIR third_party/DIA2Dump)
 
 add_library(DIA2Dump OBJECT)
 target_sources(DIA2Dump PUBLIC ${DIR}/Callback.h ${DIR}/DIA2Dump.h
@@ -21,6 +21,6 @@ target_link_libraries(
                   oqpi::oqpi xxHash::xxHash cereal::cereal)
 target_include_directories(DIA2Dump PRIVATE "OrbitCore/"
 	                                    "OrbitBase/include/"
-					    "external/gte")
+					    "third_party/gte")
 
 add_library(DIA2Dump::DIA2Dump ALIAS DIA2Dump)

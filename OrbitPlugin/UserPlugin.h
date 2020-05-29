@@ -1,6 +1,6 @@
 #pragma once
-#include "../external/imgui/imgui.h"
-#include "../external/imgui/imgui_internal.h"
+#include "imgui.h"
+#include "imgui_internal.h"
 #include "OrbitSdk.h"
 
 //-----------------------------------------------------------------------------
