@@ -765,6 +765,7 @@ void InfiniteRecursion(int num) {
   if (num != 1) {
     InfiniteRecursion(num);
   }
+  LOG("%s", VAR_TO_STR(num).c_str());
 }
 
 //-----------------------------------------------------------------------------
