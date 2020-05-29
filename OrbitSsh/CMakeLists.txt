@@ -19,32 +19,23 @@ target_sources(
   PUBLIC include/OrbitSsh/Channel.h
          include/OrbitSsh/Context.h
          include/OrbitSsh/Credentials.h
-         include/OrbitSsh/DirectTcpIpChannelManager.h
          include/OrbitSsh/Error.h
-         include/OrbitSsh/Task.h
          include/OrbitSsh/KnownHostsError.h
-         include/OrbitSsh/LocalSocketManager.h
          include/OrbitSsh/Session.h
-         include/OrbitSsh/SessionManager.h
          include/OrbitSsh/Sftp.h
          include/OrbitSsh/SftpFile.h
-         include/OrbitSsh/Socket.h
-         include/OrbitSsh/TunnelManager.h)
+         include/OrbitSsh/Socket.h)
 
 target_sources(
   OrbitSsh
   PRIVATE Channel.cpp
           Context.cpp
-          DirectTcpIpChannelManager.cpp
           Error.cpp
           KnownHostsError.cpp
-          LocalSocketManager.cpp
           Session.cpp
-          SessionManager.cpp
           Sftp.cpp
           SftpFile.cpp
-          Socket.cpp
-          TunnelManager.cpp)
+          Socket.cpp)
 
 if(WIN32)
   target_sources(OrbitSsh PRIVATE WindowsSocket.cpp)
@@ -60,18 +51,6 @@ if(WIN32)
   target_compile_definitions(OrbitSsh PUBLIC -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitSsh PUBLIC -DNTDDI_VERSION=0x06030000)
 endif()
-
-# example executable
-add_executable(OrbitSshExample)
-
-target_compile_options(OrbitSshExample PRIVATE ${STRICT_COMPILE_FLAGS})
-
-target_compile_features(OrbitSshExample PUBLIC cxx_std_17)
-
-target_sources(OrbitSshExample PRIVATE main.cpp)
-
-target_link_libraries(OrbitSshExample PUBLIC OrbitSsh OrbitBase OrbitGgp
-                                             Qt5::Core)
 
 # tests
 add_executable(OrbitSshTests)
