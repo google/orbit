@@ -123,9 +123,10 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
                               "necessary to connect via ssh. The error message "
                               "was: %1")
                           .arg(ssh_info.error()));
+                } else {
+                  self->result_ = ssh_info.value();
+                  self->accept();
                 }
-                self->result_ = ssh_info.value();
-                self->accept();
               }
             });
       });
