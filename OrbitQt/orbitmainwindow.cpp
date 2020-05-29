@@ -70,6 +70,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->HomeHorizontalSplitter->setSizes(sizes);
   ui->splitter_2->setSizes(sizes);
 
+  GOrbitApp->AddCaptureStartedCallback(
+      [this] { ui->HomeTab->setDisabled(true); });
+  GOrbitApp->AddCaptureStoppedCallback(
+      [this] { ui->HomeTab->setDisabled(false); });
   GOrbitApp->AddRefreshCallback(
       [this](DataViewType a_Type) { this->OnRefreshDataViewPanels(a_Type); });
   GOrbitApp->AddSamplingReportCallback(
