@@ -19,23 +19,26 @@ function get_authorization_header {
 
 function get_crash_symbol_collector_key_name($authorization) {
   $keys = Invoke-RestMethod -Header $authorization  -ContentType "application/json" -Uri "https://apikeys.googleapis.com/v2beta1/projects/60941241589/keys"
-  if (-Not $keys) { Throw "Can't get list of API keys" }
+  if (-Not $keys.keys) {
+    Write-Host $keys
+    Throw "Can't get list of API keys"
+  }
   
   $key = $keys.keys | where {$_.displayName -eq "Crash Symbol Collector API key"}
   if (-Not $key) { Throw "'Crash Symbol Collector API key' not found" }
   
-  return $key.name.Substring($key.name.LastIndexOf('/') + 1)
+  return $key.name
 }
 
-function get_api_key_by_key_name($authorization, $key_name) {
-  $key = Invoke-RestMethod -Header $authorization  -ContentType "application/json" -uri "https://apikeys.googleapis.com/v2beta1/projects/60941241589/keys/$key_name/keyString"
+function get_api_key_by_key_name($authorization, $key_full_name) {
+  $key = Invoke-RestMethod -Header $authorization  -ContentType "application/json" -uri "https://apikeys.googleapis.com/v2beta1/$key_full_name/keyString"
   return $key.keyString
 }
 
 function get_crash_symbol_collector_api_key {
   $authorization = get_authorization_header
-  $crash_symbol_key_name = get_crash_symbol_collector_key_name $authorization
-  $crash_symbol_collector_api_key = get_api_key_by_key_name $authorization $crash_symbol_key_name
+  $crash_symbol_key_full_name = get_crash_symbol_collector_key_name $authorization
+  $crash_symbol_collector_api_key = get_api_key_by_key_name $authorization $crash_symbol_key_full_name
   
   return $crash_symbol_collector_api_key
 }
