@@ -84,9 +84,6 @@ class Type {
   std::map<ULONG, Parent> m_ParentTypes;
   UdtKind m_Type;
   bool m_Selected = false;
-#ifdef _WIN32
-  TypeInfo m_TypeInfo;
-#endif
   Pdb* m_Pdb = nullptr;
   unsigned long long m_Hash = 0;
   bool m_DiaInfoLoaded = false;

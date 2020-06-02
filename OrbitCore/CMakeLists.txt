@@ -72,7 +72,6 @@ target_sources(
          Threading.h
          TidAndThreadName.h
          TimerManager.h
-         TypeInfoStructs.h
          Utils.h
          Variable.h
          VariableTracing.h
