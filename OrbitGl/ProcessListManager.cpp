@@ -4,6 +4,7 @@
 
 #include "ProcessListManager.h"
 
+#include <chrono>
 #include <memory>
 #include <string>
 
@@ -74,12 +75,16 @@ void ProcessListManagerImpl::WorkerFunction() {
       return;
     }
     shutdown_mutex_.Unlock();
+    // Timeout expired - refresh the list
 
     GetProcessListRequest request;
     GetProcessListResponse response;
     grpc::ClientContext context;
 
-    // Timeout expired - refresh the list
+    std::chrono::time_point deadline =
+        std::chrono::system_clock::now() + std::chrono::milliseconds(200);
+    context.set_deadline(deadline);
+
     grpc::Status status =
         process_service_->GetProcessList(&context, request, &response);
     if (!status.ok()) {
