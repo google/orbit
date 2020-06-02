@@ -483,7 +483,6 @@ void OrbitApp::OnExit() {
   }
 
   GParams.Save();
-  GTimerManager = nullptr;
 
   ConnectionManager::Get().Stop();
   GTcpClient->Stop();
@@ -494,6 +493,7 @@ void OrbitApp::OnExit() {
 
   process_list_manager_->Shutdown();
 
+  GTimerManager = nullptr;
   GCoreApp = nullptr;
   GOrbitApp = nullptr;
   Orbit_ImGui_Shutdown();
