@@ -24,6 +24,15 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 call conan package -bf %REPO_ROOT%\build\ %REPO_ROOT%
 if %errorlevel% neq 0 exit /b %errorlevel%
 
+for %%g in ("%KOKORO_JOB_NAME:/=" "%") do set build_type=%%g
+set symbol_uploading_required=false
+if %build_type% == "release" set symbol_uploading_required=true
+if %build_type% == "nightly" set symbol_uploading_required=true
+if "%symbol_uploading_required%" == "true" (
+  :: Upload debug symbols
+  call powershell "& %REPO_ROOT%\kokoro\gcp_windows\upload_symbols.ps1" %REPO_ROOT%\build\bin
+)
+
 :: Package build artifacts into a zip for integration in the installer.
 cd %REPO_ROOT%\build\package
 Xcopy /E /I bin Orbit
