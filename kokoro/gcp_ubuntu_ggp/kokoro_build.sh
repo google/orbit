@@ -24,6 +24,13 @@ if [ "$0" == "$SCRIPT" ]; then
   conan build -bf "${DIR}/build/" "${DIR}"
   conan package -bf "${DIR}/build/" "${DIR}"
 
+  build_type=${KOKORO_JOB_NAME##*/}
+  if [ $build_type=release ] || [ $build_type=nightly ]; then
+    set +e
+    ${DIR}/kokoro/gcp_ubuntu_ggp/upload_symbols.sh "${DIR}/build/bin"
+    set -e
+  fi
+
   rm -rf ~/.gnupg/
   rm -rf /dev/shm/signing.gpg
   mkdir -p ~/.gnupg
@@ -68,6 +75,6 @@ if [ "$0" == "$SCRIPT" ]; then
 
 else
   gcloud auth configure-docker --quiet
-  docker run --rm --network host -v ${KOKORO_ARTIFACTS_DIR}:/mnt gcr.io/orbitprofiler/clang7_gpg:latest $SCRIPT
+  docker run -e KOKORO_JOB_NAME --rm --network host -v ${KOKORO_ARTIFACTS_DIR}:/mnt gcr.io/orbitprofiler/clang7_gpg:latest $SCRIPT
 fi
 
