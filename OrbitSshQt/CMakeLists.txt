@@ -38,6 +38,6 @@ target_link_libraries(OrbitSshQtIntegrationTests PUBLIC OrbitSshQt GTest::GTest)
 # tests
 #add_executable(OrbitSshQtTests)
 #target_sources(OrbitSshQtTests PRIVATE SocketTests.cpp ContextTests.cpp)
-#target_link_libraries(OrbitSshTests PRIVATE OrbitSshQt GTest::Main)
+#target_link_libraries(OrbitSshQtTests PRIVATE OrbitSshQt GTest::Main)
 
-register_test(OrbitSshTests)
+#register_test(OrbitSshQtTests)
