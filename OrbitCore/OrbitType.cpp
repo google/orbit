@@ -18,126 +18,12 @@
 #include "Serialization.h"
 #include "TcpServer.h"
 
-#ifdef _WIN32
-#include <dia2.h>
-
-#include "DiaManager.h"
-#include "DiaParser.h"
-#include "OrbitDia.h"
-#include "SymbolUtils.h"
-#endif
-
-void Type::LoadDiaInfo() {
-#ifdef _WIN32
-  if (!m_DiaInfoLoaded) {
-    std::shared_ptr<OrbitDiaSymbol> orbitDiaSymbol = GetDiaSymbol();
-    if (orbitDiaSymbol) {
-      m_DiaInfoLoaded = true;
-      GenerateDiaHierarchy();
-      DiaParser parser;
-      parser.GetTypeInformation(this, SymTagData);
-      parser.GetTypeInformation(this, SymTagFunction);
-      GenerateDataLayout();
-    }
-  }
-#endif
-}
-
-void Type::GenerateDiaHierarchy() {
-#ifdef _WIN32
-  if (m_HierarchyGenerated) return;
-
-  LoadDiaInfo();
-  std::shared_ptr<OrbitDiaSymbol> diaSymbol = GetDiaSymbol();
-  GenerateDiaHierarchy(diaSymbol->m_Symbol);
-
-  for (auto& pair : m_ParentTypes) {
-    ULONG parentId = pair.second.m_TypeId;
-    Type& parentType = m_Pdb->GetTypeFromId(parentId);
-
-    if (parentType.m_Id == parentId) {
-      DiaParser parser;
-      parser.GetTypeInformation(&parentType, SymTagData);
-      parentType.GenerateDiaHierarchy();
-    }
-  }
-
-  m_HierarchyGenerated = true;
-#endif
-}
-
-void Type::AddParent(IDiaSymbol* a_Parent) {
-#ifdef _WIN32
-  LONG offset;
-  if (a_Parent->get_offset(&offset) == S_OK) {
-    OrbitDiaSymbol typeSym;
-    if (a_Parent->get_type(&typeSym.m_Symbol) == S_OK) {
-      DWORD typeId;
-      if (typeSym.m_Symbol->get_symIndexId(&typeId) == S_OK) {
-        if (m_ParentTypes.find(typeId) != m_ParentTypes.end()) {
-          // We have already treated this parent, perhaps a recursive
-          // hierarchy...
-          return;
-        }
-
-        Parent parent;
-        parent.m_BaseOffset = offset;
-        parent.m_Name = VAR_TO_STR(typeId);
-        parent.m_TypeId = typeId;
-        m_ParentTypes[typeId] = parent;
-      }
-    }
-  }
-#else
+void Type::AddParent(Type* a_Parent) {
   UNUSED(a_Parent);
-#endif
-}
-
-void Type::GenerateDiaHierarchy(IDiaSymbol* a_DiaSymbol) {
-#ifdef _WIN32
-  DWORD dwSymTag;
-  ULONG celt = 0;
-
-  if (a_DiaSymbol == nullptr || a_DiaSymbol->get_symTag(&dwSymTag) != S_OK) {
-    return;
-  }
-
-  if (dwSymTag == SymTagUDT) {
-    OrbitDiaEnumSymbols pEnumChildren;
-    if (SUCCEEDED(a_DiaSymbol->findChildren(SymTagBaseClass, NULL, nsNone,
-                                            &pEnumChildren.m_Symbol))) {
-      OrbitDiaSymbol pChild;
-      while (SUCCEEDED(pEnumChildren->Next(1, &pChild.m_Symbol, &celt)) &&
-             (celt == 1)) {
-        AddParent(pChild.m_Symbol);
-        pChild.Release();
-      }
-    }
-  }
-
-  for (auto& pair : m_ParentTypes) {
-    Parent& parent = pair.second;
-    Type& type = m_Pdb->GetTypeFromId(parent.m_TypeId);
-    type.GenerateDiaHierarchy();
-  }
-#else
-  UNUSED(a_DiaSymbol);
-#endif
 }
 
 void Type::GenerateDataLayout() const {
-  if (m_Hierarchy.size() == 0) {
-    GenerateHierarchy(m_Hierarchy);
-
-    for (const auto& it : m_Hierarchy) {
-      const Parent& parent = it.second;
-      LONG parentOffset = parent.m_BaseOffset;
-      const Type& type = m_Pdb->GetTypeFromId(parent.m_TypeId);
-      type.ListDataMembers(parentOffset, m_DataMembersFull);
-    }
-
-    ListDataMembers(m_BaseOffset, m_DataMembersFull);
-  }
+  LOG("Dia Loading disabled, TODO: reimplement using LLVM.");
 }
 
 void Type::ListDataMembers(ULONG a_BaseOffset,
@@ -161,24 +47,7 @@ const std::map<ULONG, Variable>& Type::GetFullVariableMap() const {
   return m_DataMembersFull;
 }
 
-#ifdef _WIN32
-std::shared_ptr<OrbitDiaSymbol> Type::GetDiaSymbol() {
-  if (!m_Pdb) {
-    return std::make_shared<OrbitDiaSymbol>();
-  }
-
-  std::shared_ptr<OrbitDiaSymbol> sym = m_Pdb->GetDiaSymbolFromId(m_Id);
-  if (sym->m_Symbol == nullptr) {
-    sym = m_Pdb->GetDiaSymbolFromId(m_UnmodifiedId);
-  }
-
-  return sym;
-}
-#endif
-
 bool Type::IsA(const std::string& a_TypeName) {
-  GenerateDiaHierarchy();
-
   if (m_Name == a_TypeName) {
     return true;
   }
@@ -195,8 +64,6 @@ bool Type::IsA(const std::string& a_TypeName) {
 }
 
 int Type::GetOffset(const std::string& a_Member) {
-  LoadDiaInfo();
-
   for (auto& pair : m_DataMembersFull) {
     Variable& var = pair.second;
     if (var.m_Name == a_Member) {
@@ -208,13 +75,10 @@ int Type::GetOffset(const std::string& a_Member) {
 }
 
 Variable* Type::FindImmediateChild(const std::string& a_Name) {
-  LoadDiaInfo();
-
   for (auto& pair : m_DataMembers) {
     Variable& var = pair.second;
     if (var.m_Name == a_Name) {
       Type* type = var.GetType();
-      type->LoadDiaInfo();
       return &var;
     }
   }
@@ -305,8 +169,6 @@ std::shared_ptr<Variable> Type::GetTemplateVariable() {
 
 std::shared_ptr<Variable> Type::GenerateVariable(DWORD64 a_Address,
                                                  const std::string* a_Name) {
-  LoadDiaInfo();
-
   std::shared_ptr<Variable> var = std::make_shared<Variable>();
 
 #ifdef _WIN32

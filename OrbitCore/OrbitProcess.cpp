@@ -300,29 +300,9 @@ std::shared_ptr<Module> Process::GetModuleFromName(const std::string& a_Name) {
   return nullptr;
 }
 
-#ifdef _WIN32
-//-----------------------------------------------------------------------------
-std::shared_ptr<OrbitDiaSymbol> Process::SymbolFromAddress(DWORD64 a_Address) {
-  std::shared_ptr<Module> module = GetModuleFromAddress(a_Address);
-  if (module && module->m_Pdb) {
-    return module->m_Pdb->SymbolFromAddress(a_Address);
-  }
-  return std::make_shared<OrbitDiaSymbol>();
-}
-#endif
-
 //-----------------------------------------------------------------------------
 bool Process::LineInfoFromAddress(uint64_t a_Address, LineInfo& o_LineInfo) {
-#ifdef _WIN32
-  std::shared_ptr<Module> module = GetModuleFromAddress(a_Address);
-  if (module && module->m_Pdb) {
-    return module->m_Pdb->LineInfoFromAddress(a_Address, o_LineInfo);
-  }
-#else
-  UNUSED(a_Address);
-  UNUSED(o_LineInfo);
-#endif
-
+  LOG("Dia Loading disabled, TODO: reimplement using LLVM.");
   return false;
 }
 

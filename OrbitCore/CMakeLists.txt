@@ -131,25 +131,19 @@ target_sources(
 if(WIN32)
   target_sources(
     OrbitCore
-    PUBLIC DiaManager.h
-           DiaParser.h
-           EventCallbacks.h
+    PUBLIC EventCallbacks.h
            EventGuid.h
            EventTracer.h
            EventUtils.h
            Hijacking.h
-           OrbitDia.h
            SymbolUtils.h)
 
   target_sources(
     OrbitCore
-    PRIVATE DiaManager.cpp
-            DiaParser.cpp
-            EventCallbacks.cpp
+    PRIVATE EventCallbacks.cpp
             EventTracer.cpp
             EventUtils.cpp
             Hijacking.cpp
-            OrbitDia.cpp
             Pdb.cpp
             SymbolUtils.cpp
             Utils.cpp)
@@ -185,8 +179,7 @@ target_link_libraries(
 if(WIN32)
   target_link_libraries(
     OrbitCore
-    PRIVATE minhook::minhook DIA2Dump::DIA2Dump
-            OrbitAsm)
+    PRIVATE minhook::minhook OrbitAsm)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib peparse::peparse)
   target_compile_definitions(OrbitCore PUBLIC -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitCore PUBLIC -DNTDDI_VERSION=0x06030000)

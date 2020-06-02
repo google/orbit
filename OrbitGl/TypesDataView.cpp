@@ -11,7 +11,6 @@
 #include "App.h"
 #include "Capture.h"
 #include "Core.h"
-#include "OrbitDia.h"
 #include "OrbitProcess.h"
 #include "OrbitType.h"
 #include "Pdb.h"
@@ -213,11 +212,7 @@ void TypesDataView::OnView(const std::vector<int>& a_Items) {
   for (auto& item : a_Items) {
     Type& type = GetType(item);
     std::shared_ptr<Variable> var = type.GetTemplateVariable();
-    var->PrintDetails();
-#ifdef _WIN32
-    std::shared_ptr<OrbitDiaSymbol> diaSymbol = type.GetDiaSymbol();
-    OrbitDia::DiaDump(diaSymbol ? diaSymbol->m_Symbol : nullptr);
-#endif
+    // TODO: output variable info.
     GOrbitApp->SendToUiNow("output");
   }
 }
