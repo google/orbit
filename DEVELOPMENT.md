@@ -127,7 +127,7 @@ Let's assume you want to build Orbit in debug mode with `clang-9`:
 mkdir build_clang9_debug # Create a build directory; should not exist before.
 cd build_clang9_debug/
 conan install -pr clang9_debug ../ # Install conan-managed dependencies
-cp ../contrib/toolchains/toolchain-linux-clang9-debug.cmake toolchain.cmake # Copy the cmake toolchain file, which matches the conan profile.
+cp ../third_party/toolchains/toolchain-linux-clang9-debug.cmake toolchain.cmake # Copy the cmake toolchain file, which matches the conan profile.
 cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake -G Ninja ../
 ninja
 ```
@@ -207,7 +207,7 @@ This message or a similar one indicates that your build profiles are
 outdated and need to be updated. You can either just call the bootstrap
 script again or you can manually update your conan config:
 ```bash
-conan config install contrib/conan/configs/[windows,linux]
+conan config install third_party/conan/configs/[windows,linux]
 ```
 
 ### How can I use separate debugging symbols for Linux binaries?

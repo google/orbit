@@ -37,7 +37,7 @@ You can call 'pip3 show -f conan' to figure out where conan.exe was placed.
 }
 
 # Install conan config
-& "$PSScriptRoot\contrib\conan\configs\install.ps1"
+& "$PSScriptRoot\third_party\conan\configs\install.ps1"
 
 # Start build
 if ($args) {

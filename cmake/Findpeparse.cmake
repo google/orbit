@@ -4,7 +4,7 @@
 
 add_library(peparse OBJECT)
 
-set(DIR external/peparse)
+set(DIR third_party/peparse)
 
 target_sources(peparse PRIVATE ${DIR}/buffer.cpp ${DIR}/dump.cpp
                                ${DIR}/parse.cpp)

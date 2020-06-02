@@ -393,19 +393,22 @@ void OrbitApp::ListSessions() {
   std::vector<std::string> sessionFileNames =
       Path::ListFiles(Path::GetPresetPath(), ".opr");
   std::vector<std::shared_ptr<Session>> sessions;
-  for (std::string& fileName : sessionFileNames) {
-    std::ifstream file(fileName, std::ios::binary);
-    if (!file.fail()) {
-      try {
-        auto session = std::make_shared<Session>();
-        cereal::BinaryInputArchive archive(file);
-        archive(*session);
-        file.close();
-        session->m_FileName = fileName;
-        sessions.push_back(session);
-      } catch (std::exception& e) {
-        ERROR("Loading session from \"%s\": %s", fileName.c_str(), e.what());
-      }
+  for (std::string& filename : sessionFileNames) {
+    std::ifstream file(filename, std::ios::binary);
+    if (file.fail()) {
+      ERROR("Loading session from \"%s\": %s", filename, "file.fail()");
+      continue;
+    }
+
+    try {
+      auto session = std::make_shared<Session>();
+      cereal::BinaryInputArchive archive(file);
+      archive(*session);
+      file.close();
+      session->m_FileName = filename;
+      sessions.push_back(session);
+    } catch (std::exception& e) {
+      ERROR("Loading session from \"%s\": %s", filename, e.what());
     }
   }
 
@@ -480,7 +483,6 @@ void OrbitApp::OnExit() {
   }
 
   GParams.Save();
-  GTimerManager = nullptr;
 
   ConnectionManager::Get().Stop();
   GTcpClient->Stop();
@@ -491,6 +493,7 @@ void OrbitApp::OnExit() {
 
   process_list_manager_->Shutdown();
 
+  GTimerManager = nullptr;
   GCoreApp = nullptr;
   GOrbitApp = nullptr;
   Orbit_ImGui_Shutdown();
@@ -666,14 +669,17 @@ void OrbitApp::SetClipboard(const std::wstring& a_Text) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnSaveSession(const std::string& file_name) {
-  Capture::SaveSession(file_name);
+outcome::result<void, std::string> OrbitApp::OnSaveSession(
+    const std::string& file_name) {
+  OUTCOME_TRY(Capture::SaveSession(file_name));
   ListSessions();
   Refresh(DataViewType::SESSIONS);
+  return outcome::success();
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::OnLoadSession(const std::string& file_name) {
+outcome::result<void, std::string> OrbitApp::OnLoadSession(
+    const std::string& file_name) {
   std::string file_path = file_name;
 
   if (Path::GetDirectory(file_name).empty()) {
@@ -682,7 +688,8 @@ bool OrbitApp::OnLoadSession(const std::string& file_name) {
 
   std::ifstream file(file_path);
   if (file.fail()) {
-    return false;
+    ERROR("Loading session from \"%s\": %s", file_path, "file.fail()");
+    return outcome::failure("Error opening the file for reading");
   }
 
   try {
@@ -692,10 +699,10 @@ bool OrbitApp::OnLoadSession(const std::string& file_name) {
     file.close();
     session->m_FileName = file_path;
     LoadSession(session);
-    return true;
+    return outcome::success();
   } catch (std::exception& e) {
-    ERROR("Loading session from \"%s\": %s", file_path.c_str(), e.what());
-    return false;
+    ERROR("Loading session from \"%s\": %s", file_path, e.what());
+    return outcome::failure("Error parsing the session");
   }
 }
 
@@ -707,14 +714,16 @@ void OrbitApp::LoadSession(const std::shared_ptr<Session>& session) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnSaveCapture(const std::string& file_name) {
+outcome::result<void, std::string> OrbitApp::OnSaveCapture(
+    const std::string& file_name) {
   CaptureSerializer ar;
   ar.time_graph_ = GCurrentTimeGraph;
-  ar.Save(file_name);
+  return ar.Save(file_name);
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::OnLoadCapture(const std::string& file_name) {
+outcome::result<void, std::string> OrbitApp::OnLoadCapture(
+    const std::string& file_name) {
   StopCapture();
   Capture::ClearCaptureData();
   GCurrentTimeGraph->Clear();
@@ -724,13 +733,12 @@ bool OrbitApp::OnLoadCapture(const std::string& file_name) {
 
   CaptureSerializer ar;
   ar.time_graph_ = GCurrentTimeGraph;
-  bool loaded = ar.Load(file_name);
-  if (loaded) {
-    m_ModulesDataView->SetProcess(Capture::GTargetProcess);
-    StopCapture();
-    DoZoom = true;  // TODO: remove global, review logic
-  }
-  return loaded;
+  OUTCOME_TRY(ar.Load(file_name));
+
+  m_ModulesDataView->SetProcess(Capture::GTargetProcess);
+  StopCapture();
+  DoZoom = true;  // TODO: remove global, review logic
+  return outcome::success();
 }
 
 //-----------------------------------------------------------------------------
@@ -783,22 +791,30 @@ void OrbitApp::StartCapture() {
 #endif
     m_NeedsThawing = false;
   }
+
+  for (const CaptureStartedCallback& callback : capture_started_callbacks_) {
+    callback();
+  }
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::StopCapture() {
   Capture::StopCapture();
 
+  for (const CaptureStoppedCallback& callback : capture_stopped_callbacks_) {
+    callback();
+  }
   FireRefreshCallbacks();
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ToggleCapture() {
   if (GTimerManager) {
-    if (GTimerManager->m_IsRecording)
+    if (GTimerManager->m_IsRecording) {
       StopCapture();
-    else
+    } else {
       StartCapture();
+    }
   }
 }
 

@@ -1,6 +1,8 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+
 
 #include "orbitsamplingreport.h"
 
@@ -42,7 +44,7 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
 
   if (!report) return;
 
-  m_SamplingReport->SetUiRefreshFunc([&]() { this->Refresh(); });
+  m_SamplingReport->SetUiRefreshFunc([&]() { this->RefreshCallstackView(); });
 
   for (SamplingReportDataView& report_data_view : report->GetThreadReports()) {
     QWidget* tab = new QWidget();
@@ -87,18 +89,18 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
 void OrbitSamplingReport::on_NextCallstackButton_clicked() {
   assert(m_SamplingReport);
   m_SamplingReport->IncrementCallstackIndex();
-  Refresh();
+  RefreshCallstackView();
 }
 
 //-----------------------------------------------------------------------------
 void OrbitSamplingReport::on_PreviousCallstackButton_clicked() {
   assert(m_SamplingReport);
   m_SamplingReport->DecrementCallstackIndex();
-  Refresh();
+  RefreshCallstackView();
 }
 
 //-----------------------------------------------------------------------------
-void OrbitSamplingReport::Refresh() {
+void OrbitSamplingReport::RefreshCallstackView() {
   if (m_SamplingReport == nullptr) {
     return;
   }
@@ -107,9 +109,16 @@ void OrbitSamplingReport::Refresh() {
     ui->NextCallstackButton->setEnabled(true);
     ui->PreviousCallstackButton->setEnabled(true);
   }
+
   std::string label = m_SamplingReport->GetSelectedCallstackString();
   ui->CallStackLabel->setText(QString::fromStdString(label));
   ui->CallstackTreeView->Refresh();
+}
+
+void OrbitSamplingReport::RefreshTabs() {
+  if (m_SamplingReport == nullptr) {
+    return;
+  }
 
   for (OrbitDataViewPanel* panel : m_OrbitDataViews) {
     panel->Refresh();

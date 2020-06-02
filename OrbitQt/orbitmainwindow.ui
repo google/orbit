@@ -33,7 +33,7 @@
        <property name="currentIndex">
         <number>0</number>
        </property>
-       <widget class="QWidget" name="tab">
+       <widget class="QWidget" name="HomeTab">
         <attribute name="title">
          <string>home</string>
         </attribute>
@@ -255,13 +255,13 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionSave_Capture"/>
     <addaction name="actionOpen_Capture"/>
+    <addaction name="actionSave_Capture"/>
     <addaction name="separator"/>
+    <addaction name="actionOpen_PDB"/>
+    <addaction name="actionOpen_Session"/>
     <addaction name="actionSave_Session"/>
     <addaction name="actionSave_Session_As"/>
-    <addaction name="actionOpen_Session"/>
-    <addaction name="actionOpen_PDB"/>
     <addaction name="separator"/>
     <addaction name="actionLaunch_Process"/>
     <addaction name="actionDisconnect"/>
@@ -285,6 +285,20 @@
     <addaction name="actionOutputDebugString"/>
     <addaction name="actionUploadDumpsToServer"/>
    </widget>
+   <widget class="QMenu" name="menuCrash">
+    <property name="title">
+     <string>Crash Test</string>
+    </property>
+    <addaction name="actionCheckFalse"/>
+    <addaction name="actionNullPointerDereference"/>
+    <addaction name="actionStackOverflow"/>
+   </widget>
+   <widget class="QMenu" name="menuDebug">
+    <property name="title">
+     <string>Debug</string>
+    </property>
+    <addaction name="menuCrash"/>
+   </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
      <string>Tools</string>
@@ -293,6 +307,7 @@
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDev"/>
+   <addaction name="menuDebug"/>
    <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -415,6 +430,21 @@
    </property>
    <property name="text">
     <string>Upload Dumps on Crash</string>
+   </property>
+  </action>
+  <action name="actionCheckFalse">
+   <property name="text">
+    <string>Check False</string>
+   </property>
+  </action>
+  <action name="actionNullPointerDereference">
+   <property name="text">
+    <string>Null Pointer Dereference</string>
+   </property>
+  </action>
+  <action name="actionStackOverflow">
+   <property name="text">
+    <string>Stack Overflow</string>
    </property>
   </action>
  </widget>

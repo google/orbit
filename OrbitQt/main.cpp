@@ -2,38 +2,44 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/flags/flag.h>
+#include <absl/flags/parse.h>
+#include <absl/flags/usage.h>
+
 #include <QApplication>
+#include <QDebug>
 #include <QDir>
 #include <QFontDatabase>
+#include <QMessageBox>
+#include <QProcessEnvironment>
+#include <QProgressDialog>
 #include <QStyleFactory>
 
 #include "App.h"
 #include "ApplicationOptions.h"
 #include "CrashHandler.h"
 #include "CrashOptions.h"
+#include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
+#include "OrbitSshQt/Session.h"
 #include "OrbitStartupWindow.h"
 #include "Path.h"
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
+#include "deploymentconfigurations.h"
 #include "orbitmainwindow.h"
+#include "servicedeploymanager.h"
 #include "version.h"
 
 ABSL_FLAG(bool, enable_stale_features, false,
           "Enable obsolete features that are not working or are not "
           "implemented in the client's UI");
 
-// SSH Tunneling via run_service_ssh.{ps1/sh} is the default for now. To make
-// this work the remote is set here to localhost. This will also disable the
-// StartUpWindow for now.
-// TODO(antonrohr): replace "localhost" with "" as soon as ssh is implemented
-ABSL_FLAG(std::string, remote, "localhost",
-          "Connect to the specified remote on startup");
+ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
+
 ABSL_FLAG(uint16_t, asio_port, 44766,
           "The service's Asio tcp_server port (use default value if unsure)");
 ABSL_FLAG(uint16_t, grpc_port, 44765,
           "The service's GRPC server port (use default value if unsure)");
+ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
 
 // TODO: remove this once we deprecated legacy parameters
 static void ParseLegacyCommandLine(int argc, char* argv[],
@@ -48,6 +54,156 @@ static void ParseLegacyCommandLine(int argc, char* argv[],
 
       options->asio_server_address = arg + std::strlen("gamelet:");
     }
+  }
+}
+
+using ServiceDeployManager = OrbitQt::ServiceDeployManager;
+using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;
+using ScopedConnection = OrbitSshQt::ScopedConnection;
+using Ports = ServiceDeployManager::Ports;
+using SshCredentials = OrbitSsh::Credentials;
+
+static outcome::result<Ports> DeployOrbitService(
+    std::optional<ServiceDeployManager>& service_deploy_manager,
+    const DeploymentConfiguration& deployment_configuration,
+    const SshCredentials& ssh_credentials, const Ports& remote_ports) {
+  QProgressDialog progress_dialog{};
+
+  service_deploy_manager.emplace(deployment_configuration, ssh_credentials,
+                                 remote_ports);
+  QObject::connect(&progress_dialog, &QProgressDialog::canceled,
+                   &service_deploy_manager.value(),
+                   &ServiceDeployManager::Cancel);
+  QObject::connect(&service_deploy_manager.value(),
+                   &ServiceDeployManager::statusMessage, &progress_dialog,
+                   &QProgressDialog::setLabelText);
+  QObject::connect(
+      &service_deploy_manager.value(), &ServiceDeployManager::statusMessage,
+      [](const QString& msg) { LOG("Status message: %s", msg.toStdString()); });
+
+  return service_deploy_manager->Exec();
+}
+
+static outcome::result<void> RunUiInstance(
+    QApplication* app,
+    std::optional<DeploymentConfiguration> deployment_configuration,
+    ApplicationOptions options) {
+  std::optional<OrbitQt::ServiceDeployManager> service_deploy_manager;
+
+  OUTCOME_TRY(result, [&]() -> outcome::result<std::tuple<Ports, QString>> {
+    const Ports remote_ports{/*.asio_port =*/absl::GetFlag(FLAGS_asio_port),
+                             /*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
+
+    if (deployment_configuration) {
+      OrbitStartupWindow sw{};
+      OUTCOME_TRY(result, sw.Run<OrbitSsh::Credentials>());
+
+      if (std::holds_alternative<OrbitSsh::Credentials>(result)) {
+        // The user chose a remote profiling target.
+        OUTCOME_TRY(
+            tunnel_ports,
+            DeployOrbitService(service_deploy_manager,
+                               deployment_configuration.value(),
+                               std::get<SshCredentials>(result), remote_ports));
+        return std::make_tuple(tunnel_ports, QString{});
+      } else {
+        // The user chose to open a capture.
+        return std::make_tuple(remote_ports, std::get<QString>(result));
+      }
+    } else {
+      // When the local flag is present
+      return std::make_tuple(remote_ports, QString{});
+    }
+  }());
+  const auto& [ports, capture_path] = result;
+
+  options.asio_server_address =
+      absl::StrFormat("127.0.0.1:%d", ports.asio_port);
+  options.grpc_server_address =
+      absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
+
+  OrbitMainWindow w(app, std::move(options));
+  w.showMaximized();
+  w.PostInit();
+
+  std::optional<std::error_code> error;
+  auto error_handler = [&]() -> ScopedConnection {
+    if (service_deploy_manager) {
+      return OrbitSshQt::ScopedConnection{QObject::connect(
+          &service_deploy_manager.value(),
+          &ServiceDeployManager::socketErrorOccurred,
+          &service_deploy_manager.value(), [&](std::error_code e) {
+            error = e;
+            w.close();
+            app->quit();
+          })};
+    } else {
+      return ScopedConnection();
+    }
+  }();
+
+  if (!capture_path.isEmpty()) {
+    OUTCOME_TRY(w.OpenCapture(capture_path.toStdString()));
+  }
+
+  app->exec();
+  GOrbitApp->OnExit();
+  if (error) {
+    return outcome::failure(error.value());
+  } else {
+    return outcome::success();
+  }
+}
+
+static void StyleOrbit(QApplication& app) {
+  app.setStyle(QStyleFactory::create("Fusion"));
+
+  QPalette darkPalette;
+  darkPalette.setColor(QPalette::Window, QColor(53, 53, 53));
+  darkPalette.setColor(QPalette::WindowText, Qt::white);
+  darkPalette.setColor(QPalette::Base, QColor(25, 25, 25));
+  darkPalette.setColor(QPalette::AlternateBase, QColor(53, 53, 53));
+  darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
+  darkPalette.setColor(QPalette::ToolTipText, Qt::white);
+  darkPalette.setColor(QPalette::Text, Qt::white);
+  darkPalette.setColor(QPalette::Button, QColor(53, 53, 53));
+  darkPalette.setColor(QPalette::ButtonText, Qt::white);
+  darkPalette.setColor(QPalette::BrightText, Qt::red);
+  darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
+  darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
+  darkPalette.setColor(QPalette::HighlightedText, Qt::black);
+  app.setPalette(darkPalette);
+  app.setStyleSheet(
+      "QToolTip { color: #ffffff; background-color: #2a82da; border: 1px "
+      "solid white; }");
+}
+
+static std::optional<OrbitQt::DeploymentConfiguration>
+FigureOutDeploymentConfiguration() {
+  if (absl::GetFlag(FLAGS_local)) {
+    return std::nullopt;
+  }
+
+  auto env = QProcessEnvironment::systemEnvironment();
+
+  const char* const kEnvExecutablePath = "ORBIT_COLLECTOR_EXECUTABLE_PATH";
+  const char* const kEnvRootPassword = "ORBIT_COLLECTOR_ROOT_PASSWORD";
+  const char* const kEnvPackagePath = "ORBIT_COLLECTOR_PACKAGE_PATH";
+  const char* const kEnvSignaturePath = "ORBIT_COLLECTOR_SIGNATURE_PATH";
+  const char* const kEnvNoDeployment = "ORBIT_COLLECTOR_NO_DEPLOYMENT";
+
+  if (env.contains(kEnvExecutablePath) && env.contains(kEnvRootPassword)) {
+    return OrbitQt::BareExecutableAndRootPasswordDeployment{
+        env.value(kEnvExecutablePath).toStdString(),
+        env.value(kEnvRootPassword).toStdString()};
+  } else if (env.contains(kEnvPackagePath) && env.contains(kEnvSignaturePath)) {
+    return OrbitQt::SignedDebianPackageDeployment{
+        env.value(kEnvPackagePath).toStdString(),
+        env.value(kEnvSignaturePath).toStdString()};
+  } else if (env.contains(kEnvNoDeployment)) {
+    return OrbitQt::NoDeployment{};
+  } else {
+    return OrbitQt::SignedDebianPackageDeployment{};
   }
 }
 
@@ -75,86 +231,26 @@ int main(int argc, char* argv[]) {
   CrashHandler crash_handler(dump_path, handler_path, crash_server_url);
 
   ApplicationOptions options;
-
   ParseLegacyCommandLine(argc, argv, &options);
-  std::string remote = absl::GetFlag(FLAGS_remote);
-  uint16_t asio_port = absl::GetFlag(FLAGS_asio_port);
-  uint16_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
 
-  if (!remote.empty()) {
-    if (absl::StrContains(remote, ":")) {
-      // TODO: Replace this with grpc_address once everything migrated to grpc
-      std::cerr
-          << "It seems like you specified a port in your remote address: "
-             "since the service is currently listening on two different ports, "
-             "please use --asio_port/--grpc_port options to specify the "
-             "corresponding ports and remove the port from --remote."
-          << std::endl;
-      return -1;
+  StyleOrbit(app);
+
+  const auto deployment_configuration = FigureOutDeploymentConfiguration();
+
+  while (true) {
+    const auto result = RunUiInstance(&app, deployment_configuration, options);
+    if (result || result.error() == std::errc::interrupted ||
+        !deployment_configuration) {
+      // It was either a clean shutdown or the deliberately closed the
+      // dialog, or we started with the --local flag.
+      return 0;
+    } else if (result.error() != std::errc::operation_canceled) {
+      QMessageBox::critical(
+          nullptr,
+          QString("%1 %2").arg(QApplication::applicationName(),
+                               QApplication::applicationVersion()),
+          QString("An error occurred: %1")
+              .arg(QString::fromStdString(result.error().message())));
     }
-
-    options.asio_server_address = absl::StrFormat("%s:%i", remote, asio_port);
-    options.grpc_server_address = absl::StrFormat("%s:%i", remote, grpc_port);
   }
-
-  app.setStyle(QStyleFactory::create("Fusion"));
-
-  QPalette darkPalette;
-  darkPalette.setColor(QPalette::Window, QColor(53, 53, 53));
-  darkPalette.setColor(QPalette::WindowText, Qt::white);
-  darkPalette.setColor(QPalette::Base, QColor(25, 25, 25));
-  darkPalette.setColor(QPalette::AlternateBase, QColor(53, 53, 53));
-  darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
-  darkPalette.setColor(QPalette::ToolTipText, Qt::white);
-  darkPalette.setColor(QPalette::Text, Qt::white);
-  darkPalette.setColor(QPalette::Button, QColor(53, 53, 53));
-  darkPalette.setColor(QPalette::ButtonText, Qt::white);
-  darkPalette.setColor(QPalette::BrightText, Qt::red);
-  darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
-  darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
-  darkPalette.setColor(QPalette::HighlightedText, Qt::black);
-  app.setPalette(darkPalette);
-  app.setStyleSheet(
-      "QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid "
-      "white; }");
-
-  if (options.asio_server_address.empty()) {
-    OrbitStartupWindow sw;
-    OrbitSsh::Credentials ssh_credentials;
-    int dialog_result = sw.Run(&ssh_credentials);
-    if (dialog_result == 0) return 0;
-
-#ifdef __linux__
-    options.asio_server_address =
-        absl::StrFormat("%s:%d", ssh_credentials.host, asio_port);
-    options.grpc_server_address =
-        absl::StrFormat("%s:%d", ssh_credentials.host, grpc_port);
-#else
-    // TODO(antonrohr) remove this ifdef as soon as the collector works on
-    // windows
-    if (ssh_credentials.host != "127.0.0.1") {
-      options.asio_server_address =
-          absl::StrFormat("%s:%d", ssh_credentials.host, asio_port);
-      options.grpc_server_address =
-          absl::StrFormat("%s:%d", ssh_credentials.host, grpc_port);
-    }
-#endif
-  }
-
-  OrbitMainWindow w(&app, std::move(options));
-
-  if (!w.IsHeadless()) {
-    w.showMaximized();
-  } else {
-    w.show();
-    w.hide();
-  }
-
-  w.PostInit();
-
-  int error_code = app.exec();
-
-  GOrbitApp->OnExit();
-
-  return error_code;
 }

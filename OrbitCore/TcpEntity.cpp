@@ -1,6 +1,8 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+
 
 // clang-format off
 #include "OrbitAsio.h"
@@ -103,7 +105,13 @@ void TcpEntity::SendData() {
       --m_NumQueuedEntries;
       TcpSocket* socket = GetSocket();
       if (socket && socket->m_Socket && socket->m_Socket->is_open()) {
-        asio::write(*socket->m_Socket, SharedConstBuffer(buffer));
+        try {
+          asio::write(*socket->m_Socket, SharedConstBuffer(buffer));
+        } catch (std::exception& e) {
+          // We observed std::system_error being thrown by OrbitService when the
+          // client is stopped while being debugged. Refer to b/155464095.
+          ERROR("asio::write: %s", e.what());
+        }
       } else {
         ORBIT_ERROR;
       }

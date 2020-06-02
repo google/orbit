@@ -1,3 +1,7 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #ifndef ORBIT_BASE_LOGGING_H_
 #define ORBIT_BASE_LOGGING_H_
 
@@ -39,6 +43,8 @@
     LOG("Fatal: " format, ##__VA_ARGS__); \
     abort();                              \
   } while (0)
+
+#define UNREACHABLE() FATAL("Unreachable code")
 
 #if defined(__GNUC__) || defined(__clang__)
 #define LIKELY(cond) __builtin_expect(!!(cond), 1)

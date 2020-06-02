@@ -1,3 +1,7 @@
+# Copyright (c) 2020 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 from conans import ConanFile, CMake, tools
 from conans.errors import ConanInvalidConfiguration
 import os
@@ -23,7 +27,7 @@ class OrbitConan(ConanFile):
                        "fPIC": True,
                        "crashdump_server": ""}
     _orbit_channel = "orbitdeps/stable"
-    exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "external/*", "LICENSE"
+    exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
     build_requires = ('grpc_codegen/1.27.3@orbitdeps/stable',
                       'protoc_installer/3.9.1@bincrafters/stable')
 
@@ -121,8 +125,6 @@ class OrbitConan(ConanFile):
 
     def imports(self):
         dest = os.getenv("CONAN_IMPORT_PATH", "bin")
-        self.copy("*.dll", src="@bindirs", dst=dest)
-        self.copy("*.so*", src="@libdirs", dst=dest)
         self.copy("crashpad_handler*", src="@bindirs", dst=dest, root_package="crashpad")
         if self.options.with_gui:
             for path in self.deps_cpp_info["freetype-gl"].resdirs:
@@ -179,14 +181,14 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("*", src="bin/shaders", dst="bin/shaders", symlinks=True)
         self.copy("*.so*", src="bin/", dst="bin", symlinks=True)
         self.copy("*.dll", src="bin/", dst="bin", symlinks=True)
+        self.copy("*.pdb", src="bin/", dst="bin")
         self.copy("Orbit", src="bin/", dst="bin")
         self.copy("Orbit.exe", src="bin/", dst="bin")
-        self.copy("Orbit.pdb", src="bin/", dst="bin")
         self.copy("Orbit.debug", src="bin/", dst="bin")
         self.copy("OrbitService", src="bin/", dst="bin")
         self.copy("OrbitService.exe", src="bin/", dst="bin")
-        self.copy("OrbitService.pdb", src="bin/", dst="bin")
         self.copy("OrbitService.debug", src="bin/", dst="bin")
+        self.copy("crashpad_handler*", src="bin/", dst="bin")
         self.copy("THIRD_PARTY_LICENSES.txt")
         self.copy("LICENSE")
 

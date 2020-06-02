@@ -1,6 +1,8 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+
 
 #include "SamplingReportDataView.h"
 
@@ -218,7 +220,6 @@ void SamplingReportDataView::OnContextMenu(
 
 //-----------------------------------------------------------------------------
 void SamplingReportDataView::OnSelect(int index) {
-  m_SelectedIndex = index;
   SampledFunction& func = GetSampledFunction(index);
   m_SamplingReport->OnSelectAddress(func.m_Address, m_TID);
 }

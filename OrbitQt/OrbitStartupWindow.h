@@ -7,9 +7,14 @@
 
 #include <QDialog>
 #include <QPointer>
+#include <QString>
 #include <QWidget>
 #include <optional>
+#include <outcome.hpp>
+#include <system_error>
+#include <variant>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitGgp/GgpClient.h"
 #include "OrbitGgp/GgpInstance.h"
 #include "OrbitGgp/GgpInstanceItemModel.h"
@@ -20,25 +25,37 @@ class OrbitStartupWindow : public QDialog {
   explicit OrbitStartupWindow(QWidget* parent = nullptr);
 
   template <typename Credentials>
-  int Run(Credentials* credentials) {
-    int dialog_result = exec();
+  outcome::result<std::variant<Credentials, QString>> Run() {
+    result_ = std::monostate{};
+    const int dialog_result = exec();
 
     if (dialog_result != 0) {
-      credentials->host = ssh_info_->host.toStdString();
-      credentials->key_path = ssh_info_->key_path.toStdString();
-      credentials->known_hosts_path = ssh_info_->known_hosts_path.toStdString();
-      credentials->user = ssh_info_->user.toStdString();
-      credentials->port = ssh_info_->port;
+      if (std::holds_alternative<GgpSshInfo>(result_)) {
+        auto& ssh_info = std::get<GgpSshInfo>(result_);
+        Credentials credentials{};
+        credentials.host = ssh_info.host.toStdString();
+        credentials.key_path = ssh_info.key_path.toStdString();
+        credentials.known_hosts_path = ssh_info.known_hosts_path.toStdString();
+        credentials.user = ssh_info.user.toStdString();
+        credentials.port = ssh_info.port;
+        return outcome::success(std::move(credentials));
+      } else if (std::holds_alternative<QString>(result_)) {
+        return outcome::success(std::get<QString>(result_));
+      } else {
+        UNREACHABLE();
+      }
     }
-    return dialog_result;
+    // TODO(hebecker): That's a hack for now. We need a proper error category
+    // which clearly states that the user pressed the cancel button.
+    return std::errc::interrupted;
   }
 
  private:
-  void ReloadInstances();
+  void ReloadInstances(QPointer<QPushButton> refresh_button);
 
   std::optional<GgpClient> ggp_client_;
   std::optional<GgpInstance> chosen_instance_;
-  std::optional<GgpSshInfo> ssh_info_;
+  std::variant<std::monostate, GgpSshInfo, QString> result_;
   QPointer<GgpInstanceItemModel> model_;
 };
 

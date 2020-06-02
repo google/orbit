@@ -9,6 +9,7 @@ project(Orbit C CXX)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion
+                           -Werror=format=2
                            -Werror=inconsistent-missing-override
                            -Werror=old-style-cast
                            -Werror=unused-parameter
@@ -16,6 +17,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion
+                           -Werror=format=2
                            -Werror=old-style-cast
                            -Werror=unused-parameter
                            -Werror=unused-variable)
@@ -103,7 +105,8 @@ find_package(oqpi REQUIRED)
 find_package(capstone CONFIG REQUIRED)
 if(WITH_GUI)
   find_package(freeglut CONFIG REQUIRED)
-  find_package(Qt5 CONFIG REQUIRED COMPONENTS Core Widgets)
+  find_package(Qt5 CONFIG REQUIRED COMPONENTS Core Network Widgets)
+  find_package(qtpropertybrowser REQUIRED)
 endif()
 find_package(abseil CONFIG REQUIRED)
 find_package(llvm_object CONFIG REQUIRED)
@@ -151,10 +154,11 @@ add_subdirectory(OrbitTest)
 add_subdirectory(protos)
 
 if(WITH_GUI)
-  add_subdirectory(OrbitGl)
-  add_subdirectory(OrbitQt)
   add_subdirectory(OrbitGgp)
   add_subdirectory(OrbitSsh)
+  add_subdirectory(OrbitSshQt)
+  add_subdirectory(OrbitGl)
+  add_subdirectory(OrbitQt)
 endif()
 
 if(WIN32)
@@ -164,12 +168,24 @@ if(WIN32)
 endif()
 
 # Collecting third-party licenses
-file(COPY external/concurrentqueue/LICENSE.md DESTINATION ${CMAKE_BINARY_DIR}/licenses/concurrentqueue/)
-file(COPY external/minhook/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/minhook/)
-file(COPY external/multicore/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/multicore/)
-file(COPY external/peparse/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/peparse/)
-file(COPY external/xxHash-r42/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/xxhash/)
-file(COPY external/gte/LICENSE_1_0.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/gte/)
-file(COPY external/oqpi/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/oqpi/)
+file(COPY third_party/concurrentqueue/LICENSE.md DESTINATION ${CMAKE_BINARY_DIR}/licenses/concurrentqueue/)
+file(COPY third_party/minhook/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/minhook/)
+file(COPY third_party/multicore/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/multicore/)
+file(COPY third_party/peparse/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/peparse/)
+file(COPY third_party/xxHash-r42/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/xxhash/)
+file(COPY third_party/gte/LICENSE_1_0.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/gte/)
+file(COPY third_party/oqpi/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/oqpi/)
+file(COPY third_party/Qt/LICENSE.LGPLv3 DESTINATION ${CMAKE_BINARY_DIR}/licenses/Qt/)
+file(COPY third_party/Outcome/LICENCE DESTINATION ${CMAKE_BINARY_DIR}/licenses/Outcome/licenses/)
+file(COPY third_party/capstone/LICENSE.TXT DESTINATION ${CMAKE_BINARY_DIR}/licenses/capstone/licenses/)
+file(COPY third_party/LLVM/LICENSE.TXT DESTINATION ${CMAKE_BINARY_DIR}/licenses/LLVM/licenses/)
+file(COPY third_party/libunwindstack/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/libunwindstack/licenses/)
+file(COPY third_party/lzma_sdk/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/lzma_sdk/licenses/)
+file(COPY third_party/freetype-gl/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/freetype-gl/licenses/)
+file(COPY third_party/OpenSSL/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/openssl/licenses/)
+file(COPY third_party/qtpropertybrowser/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/qtpropertybrowser/licenses/)
+file(COPY third_party/conan/LICENSE.md DESTINATION ${CMAKE_BINARY_DIR}/licenses/conan/licenses/)
+file(REMOVE ${CMAKE_BINARY_DIR}/licenses/freetype/licenses/LICENSE.TXT)
+file(REMOVE ${CMAKE_BINARY_DIR}/licenses/freetype/licenses/GPLv2.TXT)
 include("cmake/collect_licenses.cmake")
 GenerateThirdPartyLicenseFile("${CMAKE_BINARY_DIR}/THIRD_PARTY_LICENSES.txt" "${CMAKE_BINARY_DIR}/licenses/")

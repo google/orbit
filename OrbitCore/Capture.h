@@ -1,6 +1,8 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+
 #pragma once
 
 #include <chrono>
@@ -41,7 +43,8 @@ class Capture {
   static void Update();
   static void DisplayStats();
   static void TestHooks();
-  static void SaveSession(const std::string& a_FileName);
+  static outcome::result<void, std::string> SaveSession(
+      const std::string& filename);
   static void NewSamplingProfiler();
   static bool IsTrackingEvents();
   // True when Orbit is receiving data from remote source

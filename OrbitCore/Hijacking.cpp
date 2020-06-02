@@ -1,6 +1,8 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+
 
 #include <intrin.h>
 
@@ -8,8 +10,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../external/minhook/src/buffer.h"
-#include "../external/minhook/src/trampoline.h"
+#include "../third_party/minhook/src/buffer.h"
+#include "../third_party/minhook/src/trampoline.h"
 #include "Callstack.h"
 #include "Context.h"
 #include "Core.h"

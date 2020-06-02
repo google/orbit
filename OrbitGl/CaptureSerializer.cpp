@@ -1,3 +1,7 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include "CaptureSerializer.h"
 
 #include <fstream>
@@ -27,7 +31,8 @@ CaptureSerializer::CaptureSerializer() {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureSerializer::Save(const std::string& filename) {
+outcome::result<void, std::string> CaptureSerializer::Save(
+    const std::string& filename) {
   Capture::PreSave();
 
   std::basic_ostream<char> Stream(&GStreamCounter);
@@ -40,11 +45,19 @@ void CaptureSerializer::Save(const std::string& filename) {
   // Binary
   m_CaptureName = filename;
   std::ofstream file(m_CaptureName, std::ios::binary);
-  if (!file.fail()) {
+  if (file.fail()) {
+    ERROR("Saving capture in \"%s\": %s", filename, "file.fail()");
+    return outcome::failure("Error opening the file for writing");
+  }
+
+  try {
     SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in \"%s\"", filename));
     cereal::BinaryOutputArchive archive(file);
     Save(archive);
-    file.close();
+    return outcome::success();
+  } catch (std::exception& e) {
+    ERROR("Saving capture in \"%s\": %s", filename, e.what());
+    return outcome::failure("Error serializing the capture");
   }
 }
 
@@ -120,13 +133,15 @@ void CaptureSerializer::Save(T& archive) {
 }
 
 //-----------------------------------------------------------------------------
-bool CaptureSerializer::Load(const std::string& filename) {
+outcome::result<void, std::string> CaptureSerializer::Load(
+    const std::string& filename) {
   SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", filename));
 
   // Binary
   std::ifstream file(filename, std::ios::binary);
   if (file.fail()) {
-    return false;
+    ERROR("Loading capture from \"%s\": %s", filename, "file.fail()");
+    return outcome::failure("Error opening the file for reading");
   }
 
   try {
@@ -175,11 +190,11 @@ bool CaptureSerializer::Load(const std::string& filename) {
 
     GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler, GOrbitApp.get());
     GOrbitApp->FireRefreshCallbacks();
-    return true;
+    return outcome::success();
 
   } catch (std::exception& e) {
-    ERROR("Loading capture from \"%s\": %s", filename.c_str(), e.what());
-    return false;
+    ERROR("Loading capture from \"%s\": %s", filename, e.what());
+    return outcome::failure("Error parsing the capture");
   }
 }
 

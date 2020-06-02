@@ -1,3 +1,7 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #pragma once
 
 #include <memory>
@@ -17,12 +21,13 @@ class OrbitAsioServer {
  public:
   explicit OrbitAsioServer(uint16_t port,
                            LinuxTracing::TracingOptions tracing_options);
-  void Run(std::atomic<bool>* exit_requested);
+  ~OrbitAsioServer();
+  void LoopTick();
 
  private:
   void SetupIntrospection();
 
-  void ProcessListThread(std::atomic<bool>* exit_requested);
+  void ProcessListThread();
 
   void SetupServerCallbacks();
   void SendProcess(uint32_t pid);
@@ -49,4 +54,7 @@ class OrbitAsioServer {
   LinuxTracingBuffer tracing_buffer_;
   LinuxTracing::TracingOptions tracing_options_;
   LinuxTracingHandler tracing_handler_{&tracing_buffer_, tracing_options_};
+
+  std::thread process_list_thread_;
+  std::atomic<bool> exit_requested_;
 };

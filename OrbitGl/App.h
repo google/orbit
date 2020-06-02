@@ -7,6 +7,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <outcome.hpp>
 #include <queue>
 #include <string>
 #include <utility>
@@ -63,10 +64,14 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::string GetSessionFileName();
   std::string GetSaveFile(const std::string& extension);
   void SetClipboard(const std::wstring& a_Text);
-  void OnSaveSession(const std::string& file_name);
-  bool OnLoadSession(const std::string& file_name);
-  void OnSaveCapture(const std::string& file_name);
-  bool OnLoadCapture(const std::string& file_name);
+  outcome::result<void, std::string> OnSaveSession(
+      const std::string& file_name);
+  outcome::result<void, std::string> OnLoadSession(
+      const std::string& file_name);
+  outcome::result<void, std::string> OnSaveCapture(
+      const std::string& file_name);
+  outcome::result<void, std::string> OnLoadCapture(
+      const std::string& file_name);
   void OnOpenPdb(const std::string& file_name);
   void OnLaunchProcess(const std::string& process_name,
                        const std::string& working_dir, const std::string& args);
@@ -120,6 +125,15 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void GoToCapture();
 
   // Callbacks
+  using CaptureStartedCallback = std::function<void()>;
+  void AddCaptureStartedCallback(CaptureStartedCallback callback) {
+    capture_started_callbacks_.emplace_back(std::move(callback));
+  }
+  using CaptureStoppedCallback = std::function<void()>;
+  void AddCaptureStoppedCallback(CaptureStoppedCallback callback) {
+    capture_stopped_callbacks_.emplace_back(std::move(callback));
+  }
+
   typedef std::function<void(DataViewType a_Type)> RefreshCallback;
   void AddRefreshCallback(RefreshCallback a_Callback) {
     m_RefreshCallbacks.emplace_back(std::move(a_Callback));
@@ -240,6 +254,8 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   absl::flat_hash_map<uint32_t, std::shared_ptr<Process>> process_map_;
 
   std::vector<std::string> m_Arguments;
+  std::vector<CaptureStartedCallback> capture_started_callbacks_;
+  std::vector<CaptureStoppedCallback> capture_stopped_callbacks_;
   std::vector<RefreshCallback> m_RefreshCallbacks;
   std::vector<WatchCallback> m_AddToWatchCallbacks;
   std::vector<WatchCallback> m_UpdateWatchCallbacks;

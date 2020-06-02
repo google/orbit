@@ -1,0 +1,19 @@
+[settings]
+os=Linux
+os_build=Linux
+arch=x86_64
+arch_build=x86_64
+compiler=clang
+compiler.version=7.0
+compiler.libcxx=libstdc++11
+compiler.fpo=False
+build_type=RelWithDebInfo
+[options]
+[build_requires]
+cmake/3.16.4@
+[env]
+CC=clang-7
+CXX=clang++-7
+CFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
+CXXFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
+LDFLAGS= -Wl,-z,relro,-z,now,-z,noexecstack

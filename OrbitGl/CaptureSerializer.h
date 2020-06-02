@@ -1,8 +1,11 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+
 #pragma once
 
+#include <outcome.hpp>
 #include <string>
 #include <unordered_map>
 
@@ -12,8 +15,8 @@
 class CaptureSerializer {
  public:
   CaptureSerializer();
-  void Save(const std::string& filename);
-  bool Load(const std::string& filename);
+  outcome::result<void, std::string> Save(const std::string& filename);
+  outcome::result<void, std::string> Load(const std::string& filename);
 
   template <class T>
   void Save(T& archive);

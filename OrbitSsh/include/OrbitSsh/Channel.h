@@ -30,6 +30,7 @@ class Channel {
   outcome::result<std::string> ReadStdOut(int buffer_size = 0x400);
   outcome::result<std::string> ReadStdErr(int buffer_size = 0x400);
   outcome::result<void> WriteBlocking(std::string_view text);
+  outcome::result<int> Write(std::string_view text);
   outcome::result<void> Exec(const std::string& command);
   outcome::result<void> RequestPty(const std::string& term);
   outcome::result<void> SendEOF();
@@ -42,7 +43,6 @@ class Channel {
 
  private:
   explicit Channel(LIBSSH2_CHANNEL* raw_channel_ptr);
-  outcome::result<int> Write(std::string_view text);
   std::unique_ptr<LIBSSH2_CHANNEL, decltype(&libssh2_channel_free)>
       raw_channel_ptr_;
 };

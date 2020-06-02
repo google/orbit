@@ -7,6 +7,7 @@
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QDialogButtonBox>
+#include <QFileDialog>
 #include <QGridLayout>
 #include <QHeaderView>
 #include <QItemSelectionModel>
@@ -21,17 +22,10 @@
 #include "OrbitGgp/GgpInstance.h"
 #include "OrbitGgp/GgpInstanceItemModel.h"
 #include "OrbitGgp/GgpSshInfo.h"
-
-const GgpInstance localhost_placeholder_instance_ = {
-    /* display_name */ "localhost",
-    /* id */ "",
-    /* ip_address */ "127.0.0.1",
-    /* last_updated */ QDateTime{},
-    /* owner */ "",
-    /* pool */ ""};
+#include "Path.h"
 
 OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
-    : QDialog{parent, Qt::Dialog}, model_(QPointer(new GgpInstanceItemModel)) {
+    : QDialog{parent, Qt::Dialog}, model_{new GgpInstanceItemModel{{}, this}} {
   // General UI
   const int width = 700;
   const int height = 400;
@@ -45,6 +39,15 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
   const auto label = QPointer{new QLabel{"Choose profiling target:"}};
   layout->addWidget(label, 0, 0);
 
+  // Refresh Button
+  const auto refresh_button = QPointer{new QPushButton{this}};
+  refresh_button->setIcon(
+      QApplication::style()->standardIcon(QStyle::SP_BrowserReload));
+  layout->addWidget(refresh_button, 0, 1, Qt::AlignRight);
+  QObject::connect(
+      refresh_button, &QPushButton::clicked, this,
+      [this, refresh_button]() { ReloadInstances(refresh_button); });
+
   // Main content table
   const auto table_view = QPointer{new QTableView{}};
   table_view->setSelectionMode(
@@ -54,25 +57,44 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
   table_view->viewport()->setFocusPolicy(Qt::NoFocus);
   table_view->horizontalHeader()->setStretchLastSection(true);
   table_view->setModel(model_);
-  layout->addWidget(table_view, 1, 0);
-
-  // Refresh Button
-  const auto refresh_button = QPointer{new QPushButton{this}};
-  refresh_button->setIcon(
-      QApplication::style()->standardIcon(QStyle::SP_BrowserReload));
-  layout->addWidget(refresh_button, 1, 1, Qt::AlignTop);
-  QObject::connect(refresh_button, &QPushButton::clicked, this,
-                   &OrbitStartupWindow::ReloadInstances);
+  layout->addWidget(table_view, 1, 0, 1, 2);
 
   // Ok / Cancel Buttons
   const auto button_box =
-      QPointer{new QDialogButtonBox{QDialogButtonBox::StandardButton::Ok |
+      QPointer{new QDialogButtonBox{QDialogButtonBox::StandardButton::Reset |
+                                    QDialogButtonBox::StandardButton::Ok |
                                     QDialogButtonBox::StandardButton::Cancel}};
   button_box->button(QDialogButtonBox::StandardButton::Ok)->setEnabled(false);
+
+  // Open Capture button
+  // We use the Reset button role for the load capture button since it's in all
+  // styles located on the left.
+  const auto load_capture_button =
+      button_box->button(QDialogButtonBox::StandardButton::Reset);
+  CHECK(load_capture_button);
+  load_capture_button->setIcon(
+      QApplication::style()->standardIcon(QStyle::SP_DialogOpenButton));
+  load_capture_button->setText("Load Capture");
+
+  QObject::connect(
+      load_capture_button, &QPushButton::clicked, this, [this, button_box]() {
+        const QString file = QFileDialog::getOpenFileName(
+            this, "Open capture...",
+            QString::fromStdString(Path::GetCapturePath()), "*.orbit");
+        if (!file.isEmpty()) {
+          result_ = file;
+          accept();
+        }
+      });
+
   QObject::connect(
       button_box, &QDialogButtonBox::accepted, this, [this, button_box]() {
         button_box->button(QDialogButtonBox::StandardButton::Ok)
             ->setText("Loading...");
+        button_box->button(QDialogButtonBox::StandardButton::Ok)
+            ->setEnabled(false);
+        button_box->button(QDialogButtonBox::StandardButton::Reset)
+            ->setEnabled(false);
         CHECK(chosen_instance_);
         if (chosen_instance_->display_name == "localhost") {
           button_box->button(QDialogButtonBox::StandardButton::Ok)
@@ -80,27 +102,37 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
           this->accept();
         }
         CHECK(ggp_client_);
+        const auto self = QPointer{this};
         ggp_client_->GetSshInformationAsync(
             *chosen_instance_,
-            [this,
+            [self,
              button_box](GgpClient::ResultOrQString<GgpSshInfo> ssh_info) {
-              button_box->button(QDialogButtonBox::StandardButton::Ok)
-                  ->setText("Ok");
-              if (!ssh_info) {
-                QMessageBox::critical(
-                    this, QApplication::applicationDisplayName(),
-                    QString("Orbit was unable to retrieve the information "
-                            "necessary to connect via ssh. The error message "
-                            "was: %1")
-                        .arg(ssh_info.error()));
+              // The dialog might not exist anymore when this callback returns.
+              // So we have to check for this.
+              if (self && button_box) {
+                button_box->button(QDialogButtonBox::StandardButton::Ok)
+                    ->setText("Ok");
+                button_box->button(QDialogButtonBox::StandardButton::Ok)
+                    ->setEnabled(true);
+                button_box->button(QDialogButtonBox::StandardButton::Reset)
+                    ->setEnabled(true);
+                if (!ssh_info) {
+                  QMessageBox::critical(
+                      self, QApplication::applicationDisplayName(),
+                      QString("Orbit was unable to retrieve the information "
+                              "necessary to connect via ssh. The error message "
+                              "was: %1")
+                          .arg(ssh_info.error()));
+                } else {
+                  self->result_ = ssh_info.value();
+                  self->accept();
+                }
               }
-              this->ssh_info_ = ssh_info.value();
-              this->accept();
             });
       });
   QObject::connect(button_box, &QDialogButtonBox::rejected, this,
                    &QDialog::reject);
-  layout->addWidget(button_box, 2, 0);
+  layout->addWidget(button_box, 2, 0, 1, 2, Qt::AlignRight);
 
   // Logic for choosing a table item
   QObject::connect(
@@ -121,7 +153,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
                    &QDialogButtonBox::accepted);
 
   // Fill content table
-  model_->SetInstances({localhost_placeholder_instance_});
+  model_->SetInstances({});
 
   GgpClient::ResultOrQString<GgpClient> init_result = GgpClient::Create();
   if (!init_result) {
@@ -136,10 +168,10 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
   }
   ggp_client_.emplace(std::move(init_result.value()));
 
-  ReloadInstances();
+  ReloadInstances(refresh_button);
 }
 
-void OrbitStartupWindow::ReloadInstances() {
+void OrbitStartupWindow::ReloadInstances(QPointer<QPushButton> refresh_button) {
   if (!ggp_client_) {
     ERROR("ggp client is not initialized");
     return;
@@ -147,11 +179,20 @@ void OrbitStartupWindow::ReloadInstances() {
 
   if (ggp_client_->GetNumberOfRequestsRunning() > 0) return;
 
+  refresh_button->setEnabled(false);
+  refresh_button->setText("Loading...");
+
   ggp_client_->GetInstancesAsync(
-      [&](GgpClient::ResultOrQString<QVector<GgpInstance>> instances) {
+      [model = model_, refresh_button](
+          GgpClient::ResultOrQString<QVector<GgpInstance>> instances) {
+        if (refresh_button) {
+          refresh_button->setEnabled(true);
+          refresh_button->setText("");
+        }
+
         if (!instances) {
           QMessageBox::critical(
-              this, QApplication::applicationDisplayName(),
+              nullptr, QApplication::applicationDisplayName(),
               QString(
                   "Orbit was unable to retrieve the list of available Stadia "
                   "Instances. The error message was: %1")
@@ -159,10 +200,8 @@ void OrbitStartupWindow::ReloadInstances() {
           return;
         }
 
-        if (!model_) return;
-        QVector<GgpInstance> instances_with_localhost =
-            std::move(instances.value());
-        instances_with_localhost.push_back(localhost_placeholder_instance_);
-        model_->SetInstances(std::move(instances_with_localhost));
+        if (model) {
+          model->SetInstances(std::move(instances.value()));
+        }
       });
 }

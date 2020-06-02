@@ -1,6 +1,8 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+
 
 #include "Tcp.h"
 
@@ -15,7 +17,7 @@
 tcp_server::~tcp_server() { PRINT_FUNC; }
 
 tcp_server::tcp_server(asio::io_service& io_service, unsigned short port)
-    : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)) {
+    : acceptor_(io_service, tcp::endpoint(make_address("127.0.0.1"), port)) {
   start_accept();
 }
 

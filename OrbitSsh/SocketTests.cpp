@@ -1,7 +1,13 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <memory>
 #include <optional>
+#include <thread>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Error.h"
@@ -35,7 +41,6 @@ TEST(Socket, Bind) {
 
   // invalid ip address
   ASSERT_TRUE(socket.value().Bind("256.0.0.1", 0).has_error());
-  // invalid port
   ASSERT_TRUE(socket.value().Bind("localhost", 0).has_error());
 
   // get free port from operating system
@@ -111,14 +116,14 @@ TEST(Socket, Accept) {
   ASSERT_TRUE(listen_socket.has_value());
   ASSERT_TRUE(listen_socket.value().Bind("127.0.0.1", 0));
   ASSERT_TRUE(listen_socket.value().Listen());
-  const auto addrAndPort = listen_socket.value().GetSocketAddrAndPort();
-  ASSERT_TRUE(addrAndPort);
+  const auto addr_and_port = listen_socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(addr_and_port);
 
   // setup connect socket
   auto connect_socket = Socket::Create();
   ASSERT_TRUE(connect_socket);
   ASSERT_TRUE(connect_socket.has_value());
-  ASSERT_TRUE(connect_socket.value().Connect(addrAndPort.value()));
+  ASSERT_TRUE(connect_socket.value().Connect(addr_and_port.value()));
 
   // accept should be possible
   auto accepted_socket = listen_socket.value().Accept();
@@ -132,14 +137,14 @@ TEST(Socket, SendAndReceive) {
   ASSERT_TRUE(listen_socket.has_value());
   ASSERT_TRUE(listen_socket.value().Bind("127.0.0.1", 0));
   ASSERT_TRUE(listen_socket.value().Listen());
-  const auto addrAndPort = listen_socket.value().GetSocketAddrAndPort();
-  ASSERT_TRUE(addrAndPort);
+  const auto addr_and_port = listen_socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(addr_and_port);
 
   // setup client socket
   auto client_socket = Socket::Create();
   ASSERT_TRUE(client_socket);
   ASSERT_TRUE(client_socket.has_value());
-  ASSERT_TRUE(client_socket.value().Connect(addrAndPort.value()));
+  ASSERT_TRUE(client_socket.value().Connect(addr_and_port.value()));
 
   // accept should be possible
   auto server_socket = listen_socket.value().Accept();
@@ -156,6 +161,11 @@ TEST(Socket, SendAndReceive) {
   const std::string_view send_text = "test text";
   EXPECT_TRUE(client_socket.value().SendBlocking(send_text));
 
+  // Even though this is only a local connection, it might take a split second.
+  if (OrbitSsh::shouldITryAgain(server_socket.value().CanBeRead())) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+
   // Receive at server
   const auto result = server_socket.value().Receive();
   ASSERT_TRUE(result);
@@ -168,6 +178,11 @@ TEST(Socket, SendAndReceive) {
   // Send server -> client
   const std::string_view send_text2 = "test text 2";
   ASSERT_TRUE(server_socket.value().SendBlocking(send_text2));
+
+  // Even though this is only a local connection, it might take a split second.
+  if (OrbitSsh::shouldITryAgain(client_socket.value().CanBeRead())) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
 
   // Receive at client
   const auto result2 = client_socket.value().Receive();
@@ -182,14 +197,14 @@ TEST(Socket, Shutdown) {
   ASSERT_TRUE(listen_socket.has_value());
   ASSERT_TRUE(listen_socket.value().Bind("127.0.0.1", 0));
   ASSERT_TRUE(listen_socket.value().Listen());
-  const auto addrAndPort = listen_socket.value().GetSocketAddrAndPort();
-  ASSERT_TRUE(addrAndPort);
+  const auto addr_and_port = listen_socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(addr_and_port);
 
   // setup client socket
   auto client_socket = Socket::Create();
   ASSERT_TRUE(client_socket);
   ASSERT_TRUE(client_socket.has_value());
-  ASSERT_TRUE(client_socket.value().Connect(addrAndPort.value()));
+  ASSERT_TRUE(client_socket.value().Connect(addr_and_port.value()));
 
   // accept should be possible
   auto server_socket = listen_socket.value().Accept();

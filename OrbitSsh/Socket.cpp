@@ -140,7 +140,7 @@ outcome::result<void> Socket::SendBlocking(std::string_view data) {
   do {
     const auto result = Send(data);
     if (!result && !shouldITryAgain(result)) {
-      // A non recoverable error occured.
+      // A non recoverable error occurred.
       return result.error();
     }
     data = data.substr(result.value());

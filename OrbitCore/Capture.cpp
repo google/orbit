@@ -1,6 +1,8 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+
 
 #include "Capture.h"
 
@@ -451,7 +453,8 @@ void Capture::DisplayStats() {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::SaveSession(const std::string& a_FileName) {
+outcome::result<void, std::string> Capture::SaveSession(
+    const std::string& filename) {
   Session session;
   session.m_ProcessFullPath = GTargetProcess->GetFullPath();
 
@@ -466,16 +469,27 @@ void Capture::SaveSession(const std::string& a_FileName) {
     }
   }
 
-  std::string saveFileName = a_FileName;
-  if (!absl::EndsWith(a_FileName, ".opr")) {
-    saveFileName += ".opr";
+  std::string filename_with_ext = filename;
+  if (!absl::EndsWith(filename, ".opr")) {
+    filename_with_ext += ".opr";
   }
 
-  SCOPE_TIMER_LOG(
-      absl::StrFormat("Saving Orbit session in %s", saveFileName.c_str()));
-  std::ofstream file(saveFileName, std::ios::binary);
-  cereal::BinaryOutputArchive archive(file);
-  archive(cereal::make_nvp("Session", session));
+  std::ofstream file(filename_with_ext, std::ios::binary);
+  if (file.fail()) {
+    ERROR("Saving session in \"%s\": %s", filename_with_ext, "file.fail()");
+    return outcome::failure("Error opening the file for writing");
+  }
+
+  try {
+    SCOPE_TIMER_LOG(
+        absl::StrFormat("Saving session in \"%s\"", filename_with_ext));
+    cereal::BinaryOutputArchive archive(file);
+    archive(cereal::make_nvp("Session", session));
+    return outcome::success();
+  } catch (std::exception& e) {
+    ERROR("Saving session in \"%s\": %s", filename_with_ext, e.what());
+    return outcome::failure("Error serializing the session");
+  }
 }
 
 //-----------------------------------------------------------------------------

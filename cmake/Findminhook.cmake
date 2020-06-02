@@ -4,7 +4,7 @@
 
 add_library(minhook OBJECT)
 
-set(DIR external/minhook)
+set(DIR third_party/minhook)
 
 target_sources(
   minhook

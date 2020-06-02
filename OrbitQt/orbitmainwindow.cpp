@@ -22,7 +22,7 @@
 #include "../OrbitGl/PluginManager.h"
 #include "../OrbitGl/SamplingReport.h"
 #include "../OrbitPlugin/OrbitSDK.h"
-#include "../external/concurrentqueue/concurrentqueue.h"
+#include "../third_party/concurrentqueue/concurrentqueue.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
@@ -39,6 +39,7 @@
 #endif
 
 ABSL_DECLARE_FLAG(bool, enable_stale_features);
+ABSL_DECLARE_FLAG(bool, devmode);
 
 //-----------------------------------------------------------------------------
 OrbitMainWindow* GMainWindow;
@@ -69,6 +70,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->HomeHorizontalSplitter->setSizes(sizes);
   ui->splitter_2->setSizes(sizes);
 
+  GOrbitApp->AddCaptureStartedCallback(
+      [this] { ui->HomeTab->setDisabled(true); });
+  GOrbitApp->AddCaptureStoppedCallback(
+      [this] { ui->HomeTab->setDisabled(false); });
   GOrbitApp->AddRefreshCallback(
       [this](DataViewType a_Type) { this->OnRefreshDataViewPanels(a_Type); });
   GOrbitApp->AddSamplingReportCallback(
@@ -160,6 +165,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->actionShow_Includes_Util->setVisible(false);
     ui->menuTools->menuAction()->setVisible(false);
     ui->menuDev->menuAction()->setVisible(!ui->menuDev->isEmpty());
+  }
+
+  if (!absl::GetFlag(FLAGS_devmode)) {
+    ui->menuDebug->menuAction()->setVisible(false);
   }
 
   // Output window
@@ -305,8 +314,10 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
       ui->SessionList->Refresh();
       break;
     case DataViewType::SAMPLING:
-      m_OrbitSamplingReport->Refresh();
-      m_SelectionReport->Refresh();
+      m_OrbitSamplingReport->RefreshCallstackView();
+      m_OrbitSamplingReport->RefreshTabs();
+      m_SelectionReport->RefreshCallstackView();
+      m_SelectionReport->RefreshTabs();
       break;
     default:
       break;
@@ -522,10 +533,18 @@ void OrbitMainWindow::OnHideSearch() { ui->lineEdit->hide(); }
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionSave_Session_triggered() {
   std::string sessionName = GOrbitApp->GetSessionFileName();
-  if (!sessionName.empty()) {
-    GOrbitApp->OnSaveSession(sessionName);
-  } else {
+  if (sessionName.empty()) {
     on_actionSave_Session_As_triggered();
+    return;
+  }
+  outcome::result<void, std::string> result =
+      GOrbitApp->OnSaveSession(sessionName);
+  if (result.has_error()) {
+    QMessageBox::critical(
+        this, "Error saving session",
+        absl::StrFormat("Could not save session in \"%s\":\n%s.", sessionName,
+                        result.error())
+            .c_str());
   }
 }
 
@@ -534,12 +553,13 @@ void OrbitMainWindow::on_actionOpen_Session_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Select a file to open...", Path::GetPresetPath().c_str(), "*.opr");
   for (const auto& file : list) {
-    bool loaded = GOrbitApp->OnLoadSession(file.toStdString());
-    if (!loaded) {
+    outcome::result<void, std::string> result =
+        GOrbitApp->OnLoadSession(file.toStdString());
+    if (result.has_error()) {
       QMessageBox::critical(
           this, "Error loading session",
-          absl::StrFormat("Could not load session from \"%s\".",
-                          file.toStdString())
+          absl::StrFormat("Could not load session from \"%s\":\n%s.",
+                          file.toStdString(), result.error())
               .c_str());
     }
     break;
@@ -587,9 +607,18 @@ void OrbitMainWindow::on_actionSave_Session_As_triggered() {
   QString file =
       QFileDialog::getSaveFileName(this, "Specify a file to save...",
                                    Path::GetPresetPath().c_str(), "*.opr");
-  if (!file.isEmpty()) {
-    printf("filename: %s\n", file.toStdString().c_str());
-    GOrbitApp->OnSaveSession(file.toStdString());
+  if (file.isEmpty()) {
+    return;
+  }
+
+  outcome::result<void, std::string> result =
+      GOrbitApp->OnSaveSession(file.toStdString());
+  if (result.has_error()) {
+    QMessageBox::critical(
+        this, "Error saving session",
+        absl::StrFormat("Could not save session in \"%s\":\n%s.",
+                        file.toStdString(), result.error())
+            .c_str());
   }
 }
 
@@ -641,27 +670,46 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
   if (file.isEmpty()) {
     return;
   }
-  GOrbitApp->OnSaveCapture(file.toStdString());
+
+  outcome::result<void, std::string> result =
+      GOrbitApp->OnSaveCapture(file.toStdString());
+  if (result.has_error()) {
+    QMessageBox::critical(
+        this, "Error saving capture",
+        absl::StrFormat("Could not save capture in \"%s\":\n%s.",
+                        file.toStdString(), result.error())
+            .c_str());
+  }
 }
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionOpen_Capture_triggered() {
   QString file = QFileDialog::getOpenFileName(
-      this, "Open capture...", Path::GetCapturePath().c_str(), "*.orbit");
+      this, "Open capture...", QString::fromStdString(Path::GetCapturePath()),
+      "*.orbit");
   if (file.isEmpty()) {
     return;
   }
-  bool loaded = GOrbitApp->OnLoadCapture(file.toStdString());
-  if (!loaded) {
+
+  (void) OpenCapture(file.toStdString());
+}
+
+outcome::result<void> OrbitMainWindow::OpenCapture(
+    const std::string& filepath) {
+  outcome::result<void, std::string> result =
+      GOrbitApp->OnLoadCapture(filepath);
+
+  if (result.has_error()) {
     SetTitle({});
     QMessageBox::critical(this, "Error loading capture",
-                          absl::StrFormat("Could not load capture from \"%s\".",
-                                          file.toStdString())
-                              .c_str());
-    return;
+                          QString::fromStdString(absl::StrFormat(
+                              "Could not load capture from \"%s\":\n%s.",
+                              filepath, result.error())));
+    return std::errc::no_such_file_or_directory;
   }
-  SetTitle(file);
+  SetTitle(QString::fromStdString(filepath));
   ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
+  return outcome::success();
 }
 
 //-----------------------------------------------------------------------------
@@ -688,8 +736,9 @@ void OrbitMainWindow::OpenDisassembly(const std::string& a_String) {
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::SetTitle(const QString& task_description) {
   if (task_description.isEmpty()) {
-    setWindowTitle(QString("%1 %2 [BETA]").arg(QApplication::applicationName(),
-                                        QApplication::applicationVersion()));
+    setWindowTitle(QString("%1 %2 [BETA]")
+                       .arg(QApplication::applicationName(),
+                            QApplication::applicationVersion()));
   } else {
     setWindowTitle(QString("%1 %2 [BETA] - %3")
                        .arg(QApplication::applicationName(),
@@ -706,4 +755,26 @@ void OrbitMainWindow::on_actionOutputDebugString_triggered(bool checked) {
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionUploadDumpsToServer_triggered(bool checked) {
   GOrbitApp->EnableUploadDumpsToServer(checked);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionCheckFalse_triggered() { CHECK(false); }
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionNullPointerDereference_triggered() {
+  int* null_pointer = nullptr;
+  *null_pointer = 0;
+}
+
+//-----------------------------------------------------------------------------
+void InfiniteRecursion(int num) {
+  if (num != 1) {
+    InfiniteRecursion(num);
+  }
+  LOG("%s", VAR_TO_STR(num).c_str());
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionStackOverflow_triggered() {
+  InfiniteRecursion(0);
 }

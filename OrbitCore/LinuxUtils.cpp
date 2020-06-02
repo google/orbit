@@ -1,6 +1,8 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+
 
 #include "LinuxUtils.h"
 
@@ -96,6 +98,7 @@ void ListModules(pid_t pid,
   struct AddressRange {
     uint64_t start_address;
     uint64_t end_address;
+    bool is_executable;
   };
 
   std::map<std::string, AddressRange> address_map;
@@ -116,25 +119,26 @@ void ListModules(pid_t pid,
 
     uint64_t start = std::stoull(addresses[0], nullptr, 16);
     uint64_t end = std::stoull(addresses[1], nullptr, 16);
+    bool is_executable = tokens[1].size() == 4 && tokens[1][2] == 'x';
 
     auto iter = address_map.find(module_name);
     if (iter == address_map.end()) {
-      address_map[module_name] = {start, end};
+      address_map[module_name] = {start, end, is_executable};
     } else {
       AddressRange& address_range = iter->second;
       address_range.start_address =
           std::min(address_range.start_address, start);
       address_range.end_address = std::max(address_range.end_address, end);
+      address_range.is_executable |= is_executable;
     }
   }
 
   for (const auto& [module_name, address_range] : address_map) {
-    module_map->insert_or_assign(
-        address_range.start_address,
-        std::make_shared<Module>(module_name, address_range.start_address,
-                                 address_range.end_address));
-
-    std::shared_ptr<Module> module = (*module_map)[address_range.start_address];
+    // Filter out entries which are not executable
+    if (!address_range.is_executable) continue;
+    
+    std::shared_ptr<Module> module = std::make_shared<Module>(
+        module_name, address_range.start_address, address_range.end_address);
 
     // This filters out entries which are inaccessible
     if (module->m_PdbSize == 0) continue;
@@ -146,9 +150,11 @@ void ListModules(pid_t pid,
       continue;
     }
 
-    if (elf_file->GetBuildId().empty()) continue;
+    module_map->insert_or_assign(address_range.start_address, module);
 
-    module->m_DebugSignature = elf_file->GetBuildId();
+    if (!elf_file->GetBuildId().empty()) {
+      module->m_DebugSignature = elf_file->GetBuildId();
+    }
   }
 }
 

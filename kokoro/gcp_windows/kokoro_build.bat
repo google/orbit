@@ -10,7 +10,7 @@ REM found in the LICENSE file.
 SET REPO_ROOT=%KOKORO_ARTIFACTS_DIR%\github\orbitprofiler
 
 :: Install conan config
-call powershell "& %REPO_ROOT%\contrib\conan\configs\install.ps1"
+call powershell "& %REPO_ROOT%\third_party\conan\configs\install.ps1"
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 :: Building conan
@@ -26,10 +26,12 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 
 :: Package build artifacts into a zip for integration in the installer.
 cd %REPO_ROOT%\build\package
-ren bin Orbit
+Xcopy /E /I bin Orbit
+del /s /q Orbit\*.pdb
 copy /Y THIRD_PARTY_LICENSES.txt Orbit\THIRD_PARTY_LICENSES.txt
 copy /Y LICENSE Orbit\LICENSE.txt
 zip -r Orbit.zip Orbit
+rd /s /q Orbit
 
 :: Uploading prebuilt packages of our dependencies
 set /P ACCESS_TOKEN=<%KOKORO_ARTIFACTS_DIR%\keystore\74938_orbitprofiler_artifactory_access_token
