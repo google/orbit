@@ -4,8 +4,10 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <memory>
 #include <optional>
+#include <thread>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Error.h"
@@ -159,6 +161,11 @@ TEST(Socket, SendAndReceive) {
   const std::string_view send_text = "test text";
   EXPECT_TRUE(client_socket.value().SendBlocking(send_text));
 
+  // Even though this is only a local connection, it might take a split second.
+  if (OrbitSsh::shouldITryAgain(server_socket.value().CanBeRead())) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+
   // Receive at server
   const auto result = server_socket.value().Receive();
   ASSERT_TRUE(result);
@@ -171,6 +178,11 @@ TEST(Socket, SendAndReceive) {
   // Send server -> client
   const std::string_view send_text2 = "test text 2";
   ASSERT_TRUE(server_socket.value().SendBlocking(send_text2));
+
+  // Even though this is only a local connection, it might take a split second.
+  if (OrbitSsh::shouldITryAgain(client_socket.value().CanBeRead())) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
 
   // Receive at client
   const auto result2 = client_socket.value().Receive();
