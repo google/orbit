@@ -78,7 +78,6 @@ Variable* Type::FindImmediateChild(const std::string& a_Name) {
   for (auto& pair : m_DataMembers) {
     Variable& var = pair.second;
     if (var.m_Name == a_Name) {
-      Type* type = var.GetType();
       return &var;
     }
   }
