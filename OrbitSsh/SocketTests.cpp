@@ -39,7 +39,6 @@ TEST(Socket, Bind) {
 
   // invalid ip address
   ASSERT_TRUE(socket.value().Bind("256.0.0.1", 0).has_error());
-  // invalid port
   ASSERT_TRUE(socket.value().Bind("localhost", 0).has_error());
 
   // get free port from operating system
@@ -115,14 +114,14 @@ TEST(Socket, Accept) {
   ASSERT_TRUE(listen_socket.has_value());
   ASSERT_TRUE(listen_socket.value().Bind("127.0.0.1", 0));
   ASSERT_TRUE(listen_socket.value().Listen());
-  const auto addrAndPort = listen_socket.value().GetSocketAddrAndPort();
-  ASSERT_TRUE(addrAndPort);
+  const auto addr_and_port = listen_socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(addr_and_port);
 
   // setup connect socket
   auto connect_socket = Socket::Create();
   ASSERT_TRUE(connect_socket);
   ASSERT_TRUE(connect_socket.has_value());
-  ASSERT_TRUE(connect_socket.value().Connect(addrAndPort.value()));
+  ASSERT_TRUE(connect_socket.value().Connect(addr_and_port.value()));
 
   // accept should be possible
   auto accepted_socket = listen_socket.value().Accept();
@@ -136,14 +135,14 @@ TEST(Socket, SendAndReceive) {
   ASSERT_TRUE(listen_socket.has_value());
   ASSERT_TRUE(listen_socket.value().Bind("127.0.0.1", 0));
   ASSERT_TRUE(listen_socket.value().Listen());
-  const auto addrAndPort = listen_socket.value().GetSocketAddrAndPort();
-  ASSERT_TRUE(addrAndPort);
+  const auto addr_and_port = listen_socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(addr_and_port);
 
   // setup client socket
   auto client_socket = Socket::Create();
   ASSERT_TRUE(client_socket);
   ASSERT_TRUE(client_socket.has_value());
-  ASSERT_TRUE(client_socket.value().Connect(addrAndPort.value()));
+  ASSERT_TRUE(client_socket.value().Connect(addr_and_port.value()));
 
   // accept should be possible
   auto server_socket = listen_socket.value().Accept();
@@ -186,14 +185,14 @@ TEST(Socket, Shutdown) {
   ASSERT_TRUE(listen_socket.has_value());
   ASSERT_TRUE(listen_socket.value().Bind("127.0.0.1", 0));
   ASSERT_TRUE(listen_socket.value().Listen());
-  const auto addrAndPort = listen_socket.value().GetSocketAddrAndPort();
-  ASSERT_TRUE(addrAndPort);
+  const auto addr_and_port = listen_socket.value().GetSocketAddrAndPort();
+  ASSERT_TRUE(addr_and_port);
 
   // setup client socket
   auto client_socket = Socket::Create();
   ASSERT_TRUE(client_socket);
   ASSERT_TRUE(client_socket.has_value());
-  ASSERT_TRUE(client_socket.value().Connect(addrAndPort.value()));
+  ASSERT_TRUE(client_socket.value().Connect(addr_and_port.value()));
 
   // accept should be possible
   auto server_socket = listen_socket.value().Accept();
