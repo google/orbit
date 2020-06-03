@@ -179,10 +179,10 @@ bool LoadTextureFromFile(const char* filename, uint32_t* out_texture,
   int image_width = 0;
   int image_height = 0;
   unsigned char* image_data =
-      stbi_load(filename, &image_width, &image_height, NULL, 4);
-  if (image_data == NULL) return false;
+      stbi_load(filename, &image_width, &image_height, nullptr, 4);
+  if (image_data == nullptr) return false;
 
-  // Create a OpenGL texture identifier
+  // Create an OpenGL texture identifier
   GLuint image_texture;
   glGenTextures(1, &image_texture);
   glBindTexture(GL_TEXTURE_2D, image_texture);

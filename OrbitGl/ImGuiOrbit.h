@@ -42,6 +42,8 @@ IMGUI_API void Orbit_ImGui_CharCallback(GlCanvas* a_Canvas, unsigned int c);
 void SetupImGuiStyle(bool bStyleDark_, float alpha_);
 bool LoadTextureFromFile(const char* filename, uint32_t* out_texture,
                          int* out_width, int* out_height);
+
+// Returns OpenGL texture id or 0 in case of an error.
 uint32_t LoadTextureFromFile(const char* filename);
 
 extern ImFont* GOrbitImguiFont;

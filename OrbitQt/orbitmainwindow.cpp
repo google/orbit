@@ -432,7 +432,7 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
     ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
   } else if (absl::StartsWith(a_Message, "opencapture")) {
     on_actionOpen_Capture_triggered();
-  }else if (absl::StartsWith(a_Message, "savecapture")) {
+  } else if (absl::StartsWith(a_Message, "savecapture")) {
     on_actionSave_Capture_triggered();
   } else if (absl::StartsWith(a_Message, "pdb:")) {
     if (GOrbitApp->IsLoading()) {

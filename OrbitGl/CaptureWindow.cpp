@@ -870,8 +870,8 @@ void ColorToFloat(Color a_Color, float* o_Float) {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::RenderHelpUi() {
-  const float y_offset = 8.f;
-  ImGui::SetNextWindowPos(ImVec2(0, toolbar_height_ + y_offset));
+  constexpr float kYOffset = 8.f;
+  ImGui::SetNextWindowPos(ImVec2(0, toolbar_height_ + kYOffset));
 
   ImVec4 color(1.f, 0, 0, 1.f);
   ColorToFloat(m_Slider.GetBarColor(), &color.x);
@@ -908,9 +908,9 @@ ImTextureID TextureId(uint32_t id) {
 void CaptureWindow::RenderToolbars() {
   ImGui::SetNextWindowPos(ImVec2(0, 0));
   float width = this->getWidth();
-  ImVec4 color(1.f, 0, 0, 1.f);
   const ImVec4 transparent(0.f, 0, 0, 0.f);
-  const ImVec4 popup_color(66.f/255.f, 150.f/255.f, 250.f/255.f, 1.f);
+  const ImVec4 popup_color(66.f / 255.f, 150.f / 255.f, 250.f / 255.f, 1.f);
+  ImVec4 color(1.f, 0.f, 0.f, 1.f);
   ColorToFloat(m_Slider.GetBarColor(), &color.x);
   float icon_height = time_graph_.GetLayout().GetToolbarIconHeight();
   ImVec2 icon_size(icon_height, icon_height);
@@ -922,9 +922,8 @@ void CaptureWindow::RenderToolbars() {
 
   // Action Toolbar.
   ImGui::Begin("Toolbar", &m_DrawHelp, ImVec2(0, 0), 1.f,
-                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                        ImGuiWindowFlags_NoMove |
-                        ImGuiWindowFlags_NoSavedSettings);
+               ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
 
   // Start Capture.
   if (ImGui::ImageButton(TextureId(start_capture_icon_id_), icon_size)) {
@@ -942,7 +941,7 @@ void CaptureWindow::RenderToolbars() {
 
   // Clear Capture.
   ImGui::SameLine();
-  if( ImGui::ImageButton(TextureId(clear_capture_icon_id_), icon_size) ) {
+  if (ImGui::ImageButton(TextureId(clear_capture_icon_id_), icon_size)) {
     Capture::ClearCaptureData();
     Capture::GClearCaptureDataFunc();
     GCurrentTimeGraph->Clear();
@@ -951,14 +950,14 @@ void CaptureWindow::RenderToolbars() {
 
   // Load Capture.
   ImGui::SameLine();
-  if( ImGui::ImageButton(TextureId(load_capture_icon_id_), icon_size)){
+  if (ImGui::ImageButton(TextureId(load_capture_icon_id_), icon_size)) {
     GOrbitApp->SendToUiAsync("opencapture");
   }
   if (ImGui::IsItemHovered()) ImGui::SetTooltip("Open Capture");
 
   // Save Capture.
   ImGui::SameLine();
-  if(ImGui::ImageButton(TextureId(save_capture_icon_id_), icon_size)){
+  if (ImGui::ImageButton(TextureId(save_capture_icon_id_), icon_size)) {
     GOrbitApp->SendToUiAsync("savecapture");
   }
   if (ImGui::IsItemHovered()) ImGui::SetTooltip("Save Capture");
@@ -992,7 +991,8 @@ void CaptureWindow::RenderToolbars() {
 
   ImGui::SameLine();
   ImGui::PushItemWidth(300.f);
-  ImGui::InputText("##Track Filter", track_filter_, IM_ARRAYSIZE(track_filter_));
+  ImGui::InputText("##Track Filter", track_filter_,
+                   IM_ARRAYSIZE(track_filter_));
   ImGui::PopItemWidth();
   GCurrentTimeGraph->SetThreadFilter(track_filter_);
 
@@ -1032,7 +1032,8 @@ void CaptureWindow::RenderToolbars() {
   ImGui::End();
 
   // Process Info.
-  ImGui::SetNextWindowSize(ImVec2(width - current_x - time_graph_.GetVerticalMargin(), -1.f));
+  ImGui::SetNextWindowSize(
+      ImVec2(width - current_x - time_graph_.GetVerticalMargin(), -1.f));
   ImGui::SetNextWindowPos(ImVec2(current_x, 0));
   ImGui::Begin("ProcessInfo", nullptr, ImVec2(0, 0), 1.f,
                ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
