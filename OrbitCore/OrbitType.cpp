@@ -23,7 +23,7 @@ void Type::AddParent(Type* a_Parent) {
 }
 
 void Type::GenerateDataLayout() const {
-  LOG("Dia Loading disabled, TODO: reimplement using LLVM.");
+  LOG("Dia Loading disabled, TODO: reimplement using LLVM (b/158093728).");
 }
 
 void Type::ListDataMembers(ULONG a_BaseOffset,

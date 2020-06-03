@@ -354,13 +354,13 @@ bool Pdb::LoadPdb(const char* a_PdbName) {
 
 //-----------------------------------------------------------------------------
 bool Pdb::LoadDataFromPdb() {
-  LOG("Dia Loading disabled, TODO: reimplement using LLVM.");
+  LOG("Dia Loading disabled, TODO: reimplement using LLVM (b/158093728).");
   return false;
 }
 
 //-----------------------------------------------------------------------------
 bool Pdb::LoadPdbDia() {
-  LOG("Dia Loading disabled, TODO: reimplement using LLVM.");
+  LOG("Dia Loading disabled, TODO: reimplement using LLVM (b/158093728).");
   return false;
 }
 
@@ -454,7 +454,7 @@ Function* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
 
 //-----------------------------------------------------------------------------
 bool Pdb::LineInfoFromAddress(uint64_t a_Address, LineInfo& o_LineInfo) {
-  LOG("Dia Loading disabled, TODO: reimplement using LLVM.");
+  LOG("Dia Loading disabled, TODO: reimplement using LLVM (b/158093728).");
   return false;
 }
 
