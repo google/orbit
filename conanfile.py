@@ -113,6 +113,7 @@ class OrbitConan(ConanFile):
                     self.options["qt"].qttools = True
                     self.options["qt"].with_glib = False
                     self.options["qt"].with_harfbuzz = False
+                    self.options["qt"].opengl = "dynamic"
 
     def build(self):
         cmake = CMake(self)
