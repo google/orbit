@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "CaptureWindow.h"
 
 #include "../OrbitPlugin/OrbitSDK.h"
@@ -671,15 +669,6 @@ void CaptureWindow::DrawScreenSpace() {
   float canvasHeight = getHeight();
   float z = GlCanvas::Z_VALUE_TEXT_UI_BG;
 
-  // Top bar
-  glColor4ubv(&col[0]);
-  glBegin(GL_QUADS);
-  glVertex3f(0, canvasHeight, z);
-  glVertex3f(getWidth(), canvasHeight, z);
-  glVertex3f(getWidth(), canvasHeight - height, z);
-  glVertex3f(0, canvasHeight - height, z);
-  glEnd();
-
   // Time bar
   if (time_graph_.GetSessionTimeSpanUs() > 0) {
     glColor4ub(70, 70, 70, 200);
@@ -777,10 +766,6 @@ void CaptureWindow::DrawStatus() {
   int PosY = s_PosY;
   int LeftY = s_PosY;
 
-  if (!m_DrawHelp) {
-    m_TextRenderer.AddText2D(" Press 'H' for help", s_PosX, LeftY,
-                             Z_VALUE_TEXT_UI, s_Color);
-  }
   LeftY += s_IncY;
 
   if (Capture::GInjected) {
@@ -804,6 +789,7 @@ void CaptureWindow::RenderUI() {
   Orbit_ImGui_NewFrame(this);
 
   if (m_DrawStats) {
+    ImGui::ShowDemoWindow();
     if (time_graph_.GetLayout().DrawProperties()) {
       NeedsUpdate();
     }
@@ -819,25 +805,6 @@ void CaptureWindow::RenderUI() {
     m_StatsWindow.AddLine(VAR_TO_STR(m_WorldMinWidth));
     m_StatsWindow.AddLine(VAR_TO_STR(m_MouseX));
     m_StatsWindow.AddLine(VAR_TO_STR(m_MouseY));
-
-    /*
-            m_StatsWindow.AddLog( VAR_TO_CHAR(
-       GTimerManager->m_NumTimersFromPreviousSession ) ); m_StatsWindow.AddLog(
-       VAR_TO_CHAR( GTimerManager->m_NumFlushedTimers ) ); m_StatsWindow.AddLog(
-       VAR_TO_CHAR( Capture::GNumMessagesFromPreviousSession ) );
-            m_StatsWindow.AddLog( VAR_TO_CHAR( Capture::GNumTargetFlushedEntries
-       ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
-       Capture::GNumTargetFlushedTcpPackets ) ); m_StatsWindow.AddLog(
-       VAR_TO_CHAR( GTimerManager->m_NumQueuedEntries ) ); m_StatsWindow.AddLog(
-       VAR_TO_CHAR( GTimerManager->m_NumQueuedMessages) ); m_StatsWindow.AddLog(
-       VAR_TO_CHAR( GTimerManager->m_NumQueuedTimers) ); m_StatsWindow.AddLog(
-       VAR_TO_CHAR( m_SelectStart[0] ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
-       m_SelectStop[0] ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
-       time_graph_.m_CurrentTimeWindow ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
-       Capture::GMaxTimersAtOnce ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
-       Capture::GNumTimersAtOnce ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
-       Capture::GNumTargetQueuedEntries ) ); m_StatsWindow.AddLog( VAR_TO_CHAR(
-       m_MousePosX ) ); m_StatsWindow.AddLog( VAR_TO_CHAR( m_MousePosY ) );*/
     m_StatsWindow.AddLine(VAR_TO_STR(Capture::GNumContextSwitches));
     m_StatsWindow.AddLine(VAR_TO_STR(Capture::GNumLinuxEvents));
     m_StatsWindow.AddLine(VAR_TO_STR(Capture::GNumProfileEvents));
@@ -876,9 +843,7 @@ void CaptureWindow::RenderUI() {
     }
   }
 
-  if (m_DrawFilter) {
-    RenderThreadFilterUi();
-  }
+  RenderToolbars();
 
   if (m_DrawMemTracker && !m_DrawHelp) {
     RenderMemTracker();
@@ -887,8 +852,6 @@ void CaptureWindow::RenderUI() {
   // Rendering
   glViewport(0, 0, getWidth(), getHeight());
   ImGui::Render();
-
-  RenderBar();
 }
 
 //-----------------------------------------------------------------------------
@@ -907,8 +870,8 @@ void ColorToFloat(Color a_Color, float* o_Float) {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::RenderHelpUi() {
-  float barHeight = m_Slider.GetPixelHeight();
-  ImGui::SetNextWindowPos(ImVec2(0, barHeight * 1.5f));
+  constexpr float kYOffset = 8.f;
+  ImGui::SetNextWindowPos(ImVec2(0, toolbar_height_ + kYOffset));
 
   ImVec4 color(1.f, 0, 0, 1.f);
   ColorToFloat(m_Slider.GetBarColor(), &color.x);
@@ -936,31 +899,158 @@ void CaptureWindow::RenderHelpUi() {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureWindow::RenderThreadFilterUi() {
-  float barHeight = m_Slider.GetPixelHeight();
-  ImGui::SetNextWindowPos(ImVec2(0, barHeight * 1.5f));
-  ImGui::SetNextWindowSize(ImVec2(barHeight * 50.f, barHeight * 3.f));
+ImTextureID TextureId(uint32_t id) {
+  uint64_t texture_id = id;
+  return reinterpret_cast<ImTextureID>(texture_id);
+}
 
-  ImVec4 color(1.f, 0, 0, 1.f);
+//-----------------------------------------------------------------------------
+void CaptureWindow::RenderToolbars() {
+  ImGui::SetNextWindowPos(ImVec2(0, 0));
+  float width = this->getWidth();
+  const ImVec4 transparent(0.f, 0, 0, 0.f);
+  const ImVec4 popup_color(66.f / 255.f, 150.f / 255.f, 250.f / 255.f, 1.f);
+  ImVec4 color(1.f, 0.f, 0.f, 1.f);
   ColorToFloat(m_Slider.GetBarColor(), &color.x);
+  float icon_height = time_graph_.GetLayout().GetToolbarIconHeight();
+  ImVec2 icon_size(icon_height, icon_height);
+
   ImGui::PushStyleColor(ImGuiCol_WindowBg, color);
+  ImGui::PushStyleColor(ImGuiCol_Button, transparent);
+  ImGui::PushStyleColor(ImGuiCol_FrameBg, transparent);
+  ImGui::PushStyleColor(ImGuiCol_PopupBg, popup_color);
 
-  if (!ImGui::Begin("Thread Filter", &m_DrawHelp, ImVec2(0, 0), 1.f,
-                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                        ImGuiWindowFlags_NoMove |
-                        ImGuiWindowFlags_NoSavedSettings)) {
-    ImGui::PopStyleColor();
-    ImGui::End();
-    return;
+  // Action Toolbar.
+  ImGui::Begin("Toolbar", &m_DrawHelp, ImVec2(0, 0), 1.f,
+               ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+
+  // Start Capture.
+  if (ImGui::ImageButton(TextureId(start_capture_icon_id_), icon_size)) {
+    m_DrawHelp = false;
+    GOrbitApp->StartCapture();
   }
+  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Start Capture");
 
-  static char filter[128] = "";
-  ImGui::Text("Thread Filter");
-  ImGui::InputText("", filter, IM_ARRAYSIZE(filter));
-  GCurrentTimeGraph->SetThreadFilter(filter);
+  // Stop Capture.
+  ImGui::SameLine();
+  if (ImGui::ImageButton(TextureId(stop_capture_icon_id_), icon_size)) {
+    GOrbitApp->StopCapture();
+  }
+  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Stop Capture");
 
+  // Clear Capture.
+  ImGui::SameLine();
+  if (ImGui::ImageButton(TextureId(clear_capture_icon_id_), icon_size)) {
+    Capture::ClearCaptureData();
+    Capture::GClearCaptureDataFunc();
+    GCurrentTimeGraph->Clear();
+  }
+  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Clear Capture");
+
+  // Load Capture.
+  ImGui::SameLine();
+  if (ImGui::ImageButton(TextureId(load_capture_icon_id_), icon_size)) {
+    GOrbitApp->SendToUiAsync("opencapture");
+  }
+  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Open Capture");
+
+  // Save Capture.
+  ImGui::SameLine();
+  if (ImGui::ImageButton(TextureId(save_capture_icon_id_), icon_size)) {
+    GOrbitApp->SendToUiAsync("savecapture");
+  }
+  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Save Capture");
+
+  // Help.
+  ImGui::SameLine();
+  if (ImGui::ImageButton(TextureId(help_icon_id_), icon_size)) {
+    m_DrawHelp = !m_DrawHelp;
+  }
+  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Help");
+
+  // Feedback.
+  ImGui::SameLine();
+  if (ImGui::ImageButton(TextureId(feedback_icon_id_), icon_size)) {
+  }
+  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Feedback");
+
+  const float space_between_toolbars = 0;
+  float current_x = ImGui::GetWindowWidth() + space_between_toolbars;
+  toolbar_height_ = ImGui::GetWindowHeight();
   ImGui::End();
 
+  // Tracks Filter Toolbar.
+  ImGui::SetNextWindowPos(ImVec2(current_x, 0));
+  ImGui::Begin("Filters", &m_DrawHelp, ImVec2(0, 0), 1.f,
+               ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+
+  ImGui::ImageButton(TextureId(filter_tracks_icon_id_), icon_size);
+  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Filter Tracks");
+
+  ImGui::SameLine();
+  ImGui::PushItemWidth(300.f);
+  ImGui::InputText("##Track Filter", track_filter_,
+                   IM_ARRAYSIZE(track_filter_));
+  ImGui::PopItemWidth();
+  GCurrentTimeGraph->SetThreadFilter(track_filter_);
+
+  current_x += ImGui::GetWindowWidth() + space_between_toolbars;
+  ImGui::End();
+
+  // Search Toolbar.
+  ImGui::SetNextWindowPos(ImVec2(current_x, 0));
+  ImGui::Begin("Search", &m_DrawHelp, ImVec2(0, 0), 1.f,
+               ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+
+  ImGui::ImageButton(TextureId(search_icon_id_), icon_size);
+  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Search");
+  ImGui::SameLine();
+  ImGui::PushItemWidth(300.f);
+  ImGui::InputText("##Search", find_filter_, IM_ARRAYSIZE(find_filter_));
+  ImGui::PopItemWidth();
+  GOrbitApp->FilterFunctions(find_filter_);
+
+  current_x += ImGui::GetWindowWidth() + space_between_toolbars;
+  ImGui::End();
+
+  // Capture Info.
+  ImGui::SetNextWindowPos(ImVec2(current_x, 0));
+  ImGui::Begin("CaptureInfo", nullptr, ImVec2(0, 0), 1.f,
+               ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+  ImGui::ImageButton(TextureId(time_icon_id_), icon_size);
+  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Capture Time");
+  ImGui::SameLine();
+
+  double timeSpan = time_graph_.GetSessionTimeSpanUs();
+  std::string capture_time = GetPrettyTime(timeSpan * 0.001);
+  ImGui::Text("%s", capture_time.c_str());
+  current_x += ImGui::GetWindowWidth() + space_between_toolbars;
+  ImGui::End();
+
+  // Process Info.
+  ImGui::SetNextWindowSize(
+      ImVec2(width - current_x - time_graph_.GetVerticalMargin(), -1.f));
+  ImGui::SetNextWindowPos(ImVec2(current_x, 0));
+  ImGui::Begin("ProcessInfo", nullptr, ImVec2(0, 0), 1.f,
+               ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+  ImGui::ImageButton(TextureId(info_icon_id_), icon_size);
+  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Process Info");
+  ImGui::SameLine();
+  std::string process_info = Capture::GTargetProcess->GetName();
+  if (!process_info.empty()) {
+    uint32_t process_id = Capture::GTargetProcess->GetID();
+    ImGui::Text("%s [%u]", process_info.c_str(), process_id);
+  }
+  ImGui::End();
+
+  ImGui::PopStyleColor();
+  ImGui::PopStyleColor();
+  ImGui::PopStyleColor();
   ImGui::PopStyleColor();
 }
 
@@ -1026,35 +1116,6 @@ void DrawTexturedSquare(GLuint a_TextureId, float a_Size, float a_X,
 
   glBindTexture(GL_TEXTURE_2D, 0);
   glDisable(GL_TEXTURE_2D);
-}
-
-//-----------------------------------------------------------------------------
-void CaptureWindow::RenderBar() {
-  extern GLuint GTextureTimer;
-  extern GLuint GTextureRecord;
-
-  float barHeight = m_Slider.GetPixelHeight();
-  float size = barHeight;
-  float h = getHeight();
-  float y = h - barHeight;
-  float timerX = getWidth() / 2.f;
-
-  DrawTexturedSquare(GTextureTimer, size, timerX, y);
-
-  if (Capture::IsCapturing()) {
-    DrawTexturedSquare(GTextureRecord, size, timerX - size, y);
-  }
-
-  double timeSpan = time_graph_.GetSessionTimeSpanUs();
-  timerX += size;
-  m_TextRenderer.AddText2D(
-      absl::StrFormat("%s", GetPrettyTime(timeSpan * 0.001).c_str()).c_str(),
-      static_cast<int>(timerX), static_cast<int>(GetTopBarTextY()),
-      GlCanvas::Z_VALUE_TEXT_UI, Color(255, 255, 255, 255));
-
-  /*m_TextRenderer.AddText2D(Format("%s",
-     GetPrettyTime(time_graph_.GetCurrentTimeSpanUs()*0.001).c_str()).c_str() ,
-     timerX , 100 , GlCanvas::Z_VALUE_TEXT_UI , Color(255, 255, 255, 255));*/
 }
 
 //-----------------------------------------------------------------------------
@@ -1145,4 +1206,32 @@ void CaptureWindow::SendProcess() {
     PRINT_VAR(processData);
     GTcpClient->Send(Msg_RemoteProcess, processData.data(), processData.size());
   }
+}
+
+//-----------------------------------------------------------------------------
+void CaptureWindow::Initialize() {
+  GlCanvas::Initialize();
+  LoadIcons();
+}
+
+//-----------------------------------------------------------------------------
+uint32_t LoadIcon(const char* name) {
+  std::string icon_path = Path::GetExecutablePath() + "icons/" + name;
+  return LoadTextureFromFile(icon_path.c_str());
+}
+
+//-----------------------------------------------------------------------------
+void CaptureWindow::LoadIcons() {
+  start_capture_icon_id_ = LoadIcon("outline_play_arrow_white_48dp.png");
+  stop_capture_icon_id_ = LoadIcon("outline_stop_white_48dp.png");
+  save_capture_icon_id_ = LoadIcon("outline_save_white_48dp.png");
+  load_capture_icon_id_ = LoadIcon("outline_folder_white_48dp.png");
+  clear_capture_icon_id_ = LoadIcon("outline_clear_white_48dp.png");
+  help_icon_id_ = LoadIcon("outline_help_outline_white_48dp.png");
+  filter_tracks_icon_id_ = LoadIcon("outline_filter_list_white_48dp.png");
+  search_icon_id_ = LoadIcon("outline_search_white_48dp.png");
+  time_icon_id_ = LoadIcon("outline_access_time_white_48dp.png");
+  feedback_icon_id_ = LoadIcon("outline_feedback_white_48dp.png");
+  info_icon_id_ = LoadIcon("outline_info_white_48dp.png");
+  save_capture_icon_id_ = LoadIcon("outline_save_alt_white_48dp.png");
 }

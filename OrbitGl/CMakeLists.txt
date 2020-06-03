@@ -130,7 +130,8 @@ target_link_libraries(
          capstone::capstone
          gte::gte
          glew::glew
-         Outcome::Outcome)
+         Outcome::Outcome
+         stb::stb)
 
 if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL)
   target_link_libraries(OrbitGl PUBLIC OpenGL::GLX)
