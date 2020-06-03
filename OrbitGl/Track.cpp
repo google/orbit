@@ -77,7 +77,7 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   float top_margin = layout.GetTrackTopMargin();
 
   // Draw track background.
-  if( !picking ) {
+  if (!picking) {
     if (layout.GetDrawTrackBackground()) {
       glBegin(GL_QUADS);
       glVertex3f(x0, y0 + top_margin, track_z);
