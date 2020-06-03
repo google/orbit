@@ -227,6 +227,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void SetIsRemote(bool a_IsRemote) { m_IsRemote = a_IsRemote; }
   bool IsRemote() const { return m_IsRemote; }
   bool HasTcpServer() const { return !IsRemote(); }
+  void FilterFunctions(const std::string& filter);
 
   DataView* GetOrCreateDataView(DataViewType type) override;
 

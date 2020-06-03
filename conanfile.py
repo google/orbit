@@ -179,6 +179,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("*", src="bin/dri", dst="bin/dri", symlinks=True)
         self.copy("*", src="bin/fonts", dst="bin/fonts", symlinks=True)
         self.copy("*", src="bin/shaders", dst="bin/shaders", symlinks=True)
+        self.copy("*", src="bin/icons", dst="bin/icons", symlinks=True)
         self.copy("*.so*", src="bin/", dst="bin", symlinks=True)
         self.copy("*.dll", src="bin/", dst="bin", symlinks=True)
         self.copy("*.pdb", src="bin/", dst="bin")

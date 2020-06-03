@@ -31,9 +31,10 @@ TimeGraphLayout::TimeGraphLayout() {
   m_RoundingNumSides = 16;
   m_TextOffset = 5.f;
   m_VerticalMargin = 10.f;
-  m_SchedulerTrackOffset = 50.f;
+  m_SchedulerTrackOffset = 62.f;
   m_TextZ = -0.02f;
   m_TrackZ = -0.1f;
+  m_ToolbarIconHeight = 24.f;
 };
 
 //-----------------------------------------------------------------------------
@@ -76,6 +77,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER_MIN_MAX(m_TrackTopMargin, 0, 20.f);
   FLOAT_SLIDER_MIN_MAX(m_TextZ, -1.f, 1.f);
   FLOAT_SLIDER_MIN_MAX(m_TrackZ, -1.f, 1.f);
+  FLOAT_SLIDER(m_ToolbarIconHeight);
   ImGui::Checkbox("DrawTrackBackground", &m_DrawTrackBackground);
   ImGui::End();
 

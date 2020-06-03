@@ -639,7 +639,6 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(
 
 //-----------------------------------------------------------------------------
 void TimeGraph::SetThreadFilter(const std::string& a_Filter) {
-  std::cout << "Setting thread filter: " << a_Filter << std::endl;
   m_ThreadFilter = a_Filter;
   NeedsUpdate();
 }
