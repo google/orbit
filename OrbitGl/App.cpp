@@ -1210,3 +1210,8 @@ void OrbitApp::InitializeClientTransactions() {
   process_memory_client_ =
       std::make_unique<ProcessMemoryClient>(transaction_client_.get());
 }
+
+//-----------------------------------------------------------------------------
+void OrbitApp::FilterFunctions(const std::string& filter) {
+  m_LiveFunctionsDataView->OnFilter(filter);
+}

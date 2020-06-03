@@ -87,6 +87,10 @@ if(WIN32)
     COMMENT "Running windeployqt...")
 endif()
 
+add_custom_command(TARGET OrbitQt POST_BUILD COMMAND ${CMAKE_COMMAND}
+                   -E copy_directory ${CMAKE_SOURCE_DIR}/icons/
+                   $<TARGET_FILE_DIR:OrbitQt>/icons)
+
 set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
 set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
