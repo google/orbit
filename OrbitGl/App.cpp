@@ -25,7 +25,6 @@
 #include "CaptureWindow.h"
 #include "ConnectionManager.h"
 #include "Debugger.h"
-#include "DiaManager.h"
 #include "Disassembler.h"
 #include "EventTracer.h"
 #include "FunctionsDataView.h"
@@ -262,7 +261,6 @@ bool OrbitApp::Init(ApplicationOptions&& options) {
                                    GOrbitApp.get());
 
 #ifdef _WIN32
-  DiaManager::InitMsDiaDll();
   oqpi_tk::start_default_scheduler();
 #endif
 
@@ -425,12 +423,6 @@ void OrbitApp::RefreshCaptureView() {
 //-----------------------------------------------------------------------------
 void OrbitApp::AddWatchedVariable(Variable* a_Variable) {
 #ifdef _WIN32
-  // Make sure type hierarchy has been generated
-  if (Type* type =
-          a_Variable->m_Pdb->GetTypePtrFromId(a_Variable->m_TypeIndex)) {
-    type->LoadDiaInfo();
-  }
-
   for (WatchCallback& callback : m_AddToWatchCallbacks) {
     callback(a_Variable);
   }

@@ -14,17 +14,12 @@
 
 #include "Capture.h"
 #include "Core.h"
-#include "DiaManager.h"
 #include "Log.h"
 #include "ObjectCount.h"
 #include "OrbitSession.h"
 #include "OrbitType.h"
 #include "OrbitUnreal.h"
 #include "Params.h"
-// clang-format off
-#include "dia2dump.h"
-// clang-format on
-#include "PrintSymbol.h"
 #include "Serialization.h"
 #include "SymbolUtils.h"
 #include "Tcp.h"
@@ -43,10 +38,7 @@ Pdb::Pdb(const char* pdb_name)
       m_FinishedLoading(false),
       m_IsLoading(false),
       m_IsPopulatingFunctionMap(false),
-      m_IsPopulatingFunctionStringMap(false),
-      m_DiaSession(nullptr),
-      m_DiaGlobalSymbol(nullptr),
-      m_DiaDataSource(nullptr) {
+      m_IsPopulatingFunctionStringMap(false) {
   m_Name = Path::GetFileName(m_FileName);
   memset(&m_ModuleInfo, 0, sizeof(IMAGEHLP_MODULE64));
   m_ModuleInfo.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
@@ -65,17 +57,6 @@ Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
 
 //-----------------------------------------------------------------------------
 Pdb::~Pdb() {
-  if (m_DiaSession) {
-    m_DiaSession->Release();
-  }
-
-  if (m_DiaGlobalSymbol) {
-    m_DiaGlobalSymbol->Release();
-  }
-
-  if (m_DiaDataSource) {
-    m_DiaDataSource->Release();
-  }
 }
 
 //-----------------------------------------------------------------------------
@@ -138,10 +119,6 @@ Type* Pdb::GetTypePtrFromId(ULONG a_ID) {
 //-----------------------------------------------------------------------------
 GUID Pdb::GetGuid() {
   GUID guid = {0};
-  if (m_DiaGlobalSymbol) {
-    m_DiaGlobalSymbol->get_guid(&guid);
-  }
-
   return guid;
 }
 
@@ -349,90 +326,6 @@ bool GetFileParams(const TCHAR* pFileName, uint64_t& BaseAddr,
 }
 
 //-----------------------------------------------------------------------------
-void ShowSymbolInfo(IMAGEHLP_MODULE64& ModuleInfo) {
-  switch (ModuleInfo.SymType) {
-    case SymNone:
-      ORBIT_LOG("No symbols available for the module.\n");
-      break;
-    case SymExport:
-      ORBIT_LOG("Loaded symbols: Exports\n");
-      break;
-    case SymCoff:
-      ORBIT_LOG("Loaded symbols: COFF\n");
-      break;
-    case SymCv:
-      ORBIT_LOG("Loaded symbols: CodeView\n");
-      break;
-    case SymSym:
-      ORBIT_LOG("Loaded symbols: SYM\n");
-      break;
-    case SymVirtual:
-      ORBIT_LOG("Loaded symbols: Virtual\n");
-      break;
-    case SymPdb:
-      ORBIT_LOG("Loaded symbols: PDB\n");
-      break;
-    case SymDia:
-      ORBIT_LOG("Loaded symbols: DIA\n");
-      break;
-    case SymDeferred:
-      ORBIT_LOG("Loaded symbols: Deferred\n");
-      break;
-    default:
-      ORBIT_LOG("Loaded symbols: Unknown format.\n");
-      break;
-  }
-
-  // Image name
-  if (wcslen(ModuleInfo.ImageName) > 0) {
-    ORBIT_LOG(absl::StrFormat("Image name: %s \n", ws2s(ModuleInfo.ImageName)));
-  }
-
-  // Loaded image name
-  if (wcslen(ModuleInfo.LoadedImageName) > 0) {
-    ORBIT_LOG(absl::StrFormat("Loaded image name: %s \n",
-                              ws2s(ModuleInfo.LoadedImageName)));
-  }
-
-  // Loaded PDB name
-  if (wcslen(ModuleInfo.LoadedPdbName) > 0) {
-    ORBIT_LOG(absl::StrFormat("PDB file name: %s \n",
-                              ws2s(ModuleInfo.LoadedPdbName)));
-  }
-
-  // Is debug information unmatched ?
-  // (It can only happen if the debug information is contained
-  // in a separate file (.DBG or .PDB)
-  if (ModuleInfo.PdbUnmatched || ModuleInfo.DbgUnmatched) {
-    ORBIT_LOG("Warning: Unmatched symbols. \n");
-  }
-
-  // Line numbers available ?
-  ORBIT_LOG(absl::StrFormat("Line numbers: %s \n", ModuleInfo.LineNumbers
-                                                       ? "Available"
-                                                       : "Not available"));
-
-  // Global symbols available ?
-  ORBIT_LOG(absl::StrFormat("Global symbols: %s \n", ModuleInfo.GlobalSymbols
-                                                         ? "Available"
-                                                         : "Not available"));
-
-  // Type information available ?
-  ORBIT_LOG(absl::StrFormat("Type information: %s \n", ModuleInfo.TypeInfo
-                                                           ? "Available"
-                                                           : "Not available"));
-
-  // Source indexing available ?
-  ORBIT_LOG(absl::StrFormat("Source indexing: %s \n",
-                            ModuleInfo.SourceIndexed ? "Yes" : "No"));
-
-  // Public symbols available ?
-  ORBIT_LOG(absl::StrFormat("Public symbols: %s \n", ModuleInfo.Publics
-                                                         ? "Available"
-                                                         : "Not available"));
-}
-
-//-----------------------------------------------------------------------------
 bool Pdb::LoadPdb(const char* a_PdbName) {
   SCOPE_TIMER_LOG("LOAD PDB");
 
@@ -441,10 +334,9 @@ bool Pdb::LoadPdb(const char* a_PdbName) {
 
   std::string msg = "pdb:" + std::string(a_PdbName);
   GTcpServer->SendToUiAsync(msg);
-
   std::string nameStr = a_PdbName;
-
   std::string extension = ToLower(Path::GetExtension(nameStr));
+
   if (extension == ".dll") {
     SCOPE_TIMER_LOG("LoadDll Exports");
     ParseDll(nameStr.c_str());
@@ -452,45 +344,23 @@ bool Pdb::LoadPdb(const char* a_PdbName) {
     LoadPdbDia();
   }
 
-  ShowSymbolInfo(m_ModuleInfo);
   ProcessData();
   GParams.AddToPdbHistory(a_PdbName);
 
   m_FinishedLoading = true;
   m_IsLoading = false;
-
   return true;
 }
 
 //-----------------------------------------------------------------------------
 bool Pdb::LoadDataFromPdb() {
-  DiaManager diaManager;
-  IDiaDataSource** dataSource = (IDiaDataSource**)&m_DiaDataSource;
-  if (!diaManager.LoadDataFromPdb(s2ws(m_FileName).c_str(), dataSource,
-                                  &m_DiaSession, &m_DiaGlobalSymbol)) {
-    return false;
-  }
-
-  return true;
+  LOG("Dia Loading disabled, TODO: reimplement using LLVM (b/158093728).");
+  return false;
 }
 
 //-----------------------------------------------------------------------------
 bool Pdb::LoadPdbDia() {
-  if (m_DiaGlobalSymbol) {
-    Reserve();
-    auto group =
-        oqpi_tk::make_parallel_group<oqpi::task_type::waitable>("Fork");
-    group->addTask(oqpi_tk::make_task_item("DumpAllFunctions", DumpAllFunctions,
-                                           m_DiaGlobalSymbol));
-    group->addTask(
-        oqpi_tk::make_task_item("DumpTypes", DumpTypes, m_DiaGlobalSymbol));
-    group->addTask(oqpi_tk::make_task_item(
-        "HookDumpAllGlobals", OrbitDumpAllGlobals, m_DiaGlobalSymbol));
-    oqpi_tk::schedule_task(oqpi::task_handle(group)).wait();
-
-    return true;
-  }
-
+  LOG("Dia Loading disabled, TODO: reimplement using LLVM (b/158093728).");
   return false;
 }
 
@@ -583,75 +453,9 @@ Function* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
 }
 
 //-----------------------------------------------------------------------------
-std::shared_ptr<OrbitDiaSymbol> Pdb::SymbolFromAddress(uint64_t a_Address) {
-  std::shared_ptr<OrbitDiaSymbol> symbol = std::make_shared<OrbitDiaSymbol>();
-
-  if (m_DiaSession) {
-    DWORD rva = DWORD(a_Address - (uint64_t)GetHModule());
-    auto error =
-        m_DiaSession->findSymbolByRVA(rva, SymTagFunction, &symbol->m_Symbol);
-    if (error == S_OK) {
-      return symbol;
-    } else {
-      PrintLastError();
-    }
-  }
-
-  return symbol;
-}
-
-//-----------------------------------------------------------------------------
 bool Pdb::LineInfoFromAddress(uint64_t a_Address, LineInfo& o_LineInfo) {
-  if (!m_DiaSession) {
-    return false;
-  }
-
-  OrbitDiaEnumLineNumbers lineNumbers;
-  DWORD rva = DWORD(a_Address - (uint64_t)GetHModule());
-  std::wstring fileNameW;
-  if (SUCCEEDED(m_DiaSession->findLinesByRVA(rva, 1, &lineNumbers.m_Symbol))) {
-    OrbitDiaLineNumber pLineNumber;
-    ULONG celt = 0;
-
-    while (SUCCEEDED(lineNumbers->Next(1, &pLineNumber.m_Symbol, &celt)) &&
-           celt == 1 && fileNameW.size() == 0) {
-      OrbitDiaSourceFile sourceFile;
-      if (SUCCEEDED(pLineNumber->get_sourceFile(&sourceFile.m_Symbol))) {
-        BSTR fileName;
-        if (SUCCEEDED(sourceFile->get_fileName(&fileName))) {
-          fileNameW = std::wstring(fileName);
-          o_LineInfo.m_Address = a_Address;
-          o_LineInfo.m_File = ws2s(fileName);
-          o_LineInfo.m_Line = 0;
-
-          SysFreeString(fileName);
-        }
-
-        DWORD lineNumber;
-        if (SUCCEEDED(pLineNumber->get_lineNumber(&lineNumber))) {
-          o_LineInfo.m_Line = lineNumber;
-        }
-      }
-
-      pLineNumber.Release();
-    }
-  }
-
-  return fileNameW.size() > 0;
-}
-
-//-----------------------------------------------------------------------------
-std::shared_ptr<OrbitDiaSymbol> Pdb::GetDiaSymbolFromId(ULONG a_Id) {
-  std::shared_ptr<OrbitDiaSymbol> symbol = std::make_shared<OrbitDiaSymbol>();
-
-  if (m_DiaSession) {
-    auto error = m_DiaSession->symbolById(a_Id, &symbol->m_Symbol);
-    if (error != S_OK) {
-      PrintLastError();
-    }
-  }
-
-  return symbol;
+  LOG("Dia Loading disabled, TODO: reimplement using LLVM (b/158093728).");
+  return false;
 }
 
 //-----------------------------------------------------------------------------

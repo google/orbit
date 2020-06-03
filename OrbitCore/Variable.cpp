@@ -15,10 +15,6 @@
 #include "Serialization.h"
 #include "TcpServer.h"
 
-#ifdef _WIN32
-#include "DiaParser.h"
-#endif
-
 Variable::Variable() { m_SyncTimer = new Timer(); }
 
 void Variable::SetType(const std::string& a_Type) {
@@ -138,7 +134,6 @@ void Variable::Print(int a_Indent, DWORD64& a_ByteCounter,
 
 void Variable::PrintHierarchy(int a_Indent) {
   if (Type* type = GetType()) {
-    type->LoadDiaInfo();
     ORBIT_VIZ(absl::StrFormat("%s%s\n", Indent(a_Indent).c_str(),
                               GetTypeName().c_str()));
 
@@ -150,23 +145,9 @@ void Variable::PrintHierarchy(int a_Indent) {
   }
 }
 
-void Variable::PrintDetails() {
-#ifdef _WIN32
-  if (Type* type = GetType()) {
-    DiaParser parser;
-    type->LoadDiaInfo();
-    std::shared_ptr<OrbitDiaSymbol> diaSymbol = type->GetDiaSymbol();
-    parser.PrintTypeInDetail(diaSymbol ? diaSymbol->m_Symbol : nullptr, 0);
-    ORBIT_VIZ("\n\nDetails:\n");
-    ORBIT_VIZ(ws2s(parser.m_Log));
-  }
-#endif
-}
-
 void Variable::Populate() {
   if (!m_Populated) {
     if (Type* type = GetType()) {
-      type->LoadDiaInfo();
       const std::map<ULONG, Variable>& TypeMap = type->GetFullVariableMap();
       for (auto& pair : TypeMap) {
         std::shared_ptr<Variable> var = std::make_shared<Variable>(pair.second);
