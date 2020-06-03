@@ -115,42 +115,9 @@ OrbitWatchWidget::OrbitWatchWidget(QWidget* parent)
 //-----------------------------------------------------------------------------
 OrbitWatchWidget::~OrbitWatchWidget() { delete ui; }
 
-/*
-    Variable::Int8;
-    Variable::UInt8;
-    Variable::Int16;
-    Variable::UInt16;
-
-    Variable::Int64;
-    Variable::UInt64;
-    Variable::LongLong;
-    Variable::ULongLong;
-
-    Variable::Float;
-    Variable::Double;
-    Variable::LDouble;
-
-    Variable::Bool;
-
-    Variable::Char;
-    Variable::SChar;
-    Variable::UChar;
-
-    Variable::Enum;
-
-    Variable::WChar;
-    */
-
 //-----------------------------------------------------------------------------
 Variable::BasicType GetBasicType(const Variable* a_Variable) {
-  Type* type = const_cast<Type*>(a_Variable->GetType());
   Variable* var = const_cast<Variable*>(a_Variable);
-
-  if (type) {
-    // ensure that hierarchy is generated
-    type->LoadDiaInfo();
-  }
-
   return var->GetBasicType();
 }
 

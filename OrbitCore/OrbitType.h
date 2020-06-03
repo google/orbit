@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 
-#include "DiaManager.h"
 #include "FunctionStats.h"
 #include "OrbitDbgHelp.h"
 #include "OrbitFunction.h"
@@ -30,10 +29,7 @@ class Type {
  public:
   Type() {}
 
-  void LoadDiaInfo();
-  void GenerateDiaHierarchy();
-  void GenerateDiaHierarchy(struct IDiaSymbol* a_DiaSymbol);
-  void AddParent(IDiaSymbol* a_Parent);
+  void AddParent(Type* a_Parent);
   const std::map<ULONG, Variable>& GetFullVariableMap() const;
   Pdb* GetPdb() const { return m_Pdb; }
   const std::string& GetName() const { return m_Name; }
@@ -43,10 +39,6 @@ class Type {
     }
     return m_NameLower;
   }
-
-#ifdef _WIN32
-  std::shared_ptr<OrbitDiaSymbol> GetDiaSymbol();
-#endif
 
   bool IsA(const std::string& a_TypeName);
   int GetOffset(const std::string& a_Member);
@@ -86,7 +78,6 @@ class Type {
   bool m_Selected = false;
   Pdb* m_Pdb = nullptr;
   unsigned long long m_Hash = 0;
-  bool m_DiaInfoLoaded = false;
   bool m_HierarchyGenerated = false;
 
   // TODO: should not be mutable, but they are so we can lazy populate them

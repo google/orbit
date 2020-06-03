@@ -20,8 +20,6 @@
 #include "Serialization.h"
 
 #ifdef _WIN32
-#include <dia2.h>
-
 #include "SymbolUtils.h"
 #endif
 

@@ -26,10 +26,6 @@
 #include "Utils.h"
 
 #ifdef _WIN32
-#include <dia2.h>
-
-#include "DiaParser.h"
-#include "OrbitDia.h"
 #include "SymbolUtils.h"
 #endif
 
