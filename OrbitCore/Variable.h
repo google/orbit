@@ -64,7 +64,6 @@ class Variable {
   void Print();
   void Print(int a_Indent, DWORD64& a_ByteCounter, DWORD64 a_TotalSize);
   void PrintHierarchy(int a_Indent = 0);
-  void PrintDetails();
   void Populate();
   const Type* GetType() const;
   Type* GetType();

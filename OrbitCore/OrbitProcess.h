@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "BaseTypes.h"
-#include "DiaManager.h"
 #include "LinuxAddressInfo.h"
 #include "ScopeTimer.h"
 #include "SerializationMacros.h"
@@ -31,7 +30,6 @@ class Thread;
 class Session;
 struct Module;
 struct ModuleDebugInfo;
-struct IDiaSymbol;
 
 //-----------------------------------------------------------------------------
 class Process {
@@ -95,10 +93,6 @@ class Process {
   Function* GetFunctionFromAddress(uint64_t address, bool a_IsExact = true);
   std::shared_ptr<Module> GetModuleFromAddress(uint64_t a_Address);
   std::shared_ptr<Module> GetModuleFromName(const std::string& a_Name);
-
-#ifdef _WIN32
-  std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress(uint64_t a_Address);
-#endif
 
   bool LineInfoFromAddress(uint64_t a_Address, struct LineInfo& o_LineInfo);
 

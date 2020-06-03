@@ -15,10 +15,6 @@
 #include "OrbitType.h"
 #include "Variable.h"
 
-struct IDiaSymbol;
-struct IDiaSession;
-struct IDiaDataSource;
-
 // TODO: Create a common interface with 2 implementations for Linux and Windows
 // or separate this class into 2 differently named ones. It will hopefully
 // let us remove ifdefs from here and have implementation separated in different
@@ -81,7 +77,6 @@ class Pdb {
 
   Function* GetFunctionFromExactAddress(uint64_t a_Address);
   Function* GetFunctionFromProgramCounter(uint64_t a_Address);
-  std::shared_ptr<OrbitDiaSymbol> SymbolFromAddress(uint64_t a_Address);
   bool LineInfoFromAddress(uint64_t a_Address, struct LineInfo& o_LineInfo);
 
   void SetLoadTime(float a_LoadTime) { m_LastLoadTime = a_LoadTime; }
@@ -106,7 +101,6 @@ class Pdb {
       , CEREAL_NVP(m_TypeMap) );*/
   }
 
-  std::shared_ptr<OrbitDiaSymbol> GetDiaSymbolFromId(ULONG a_Id);
   void ProcessData();
 
  protected:
@@ -140,11 +134,6 @@ class Pdb {
   std::map<uint64_t, Function*> m_FunctionMap;
   std::unordered_map<unsigned long long, Function*> m_StringFunctionMap;
   Timer* m_LoadTimer;
-
-  // DIA
-  IDiaSession* m_DiaSession = nullptr;
-  IDiaSymbol* m_DiaGlobalSymbol = nullptr;
-  IDiaDataSource* m_DiaDataSource = nullptr;
 };
 
 #else
@@ -206,7 +195,6 @@ class Pdb {
 
   Function* GetFunctionFromExactAddress(uint64_t a_Address);
   Function* GetFunctionFromProgramCounter(uint64_t a_Address);
-  IDiaSymbol* SymbolFromAddress(uint64_t a_Address);
   bool LineInfoFromAddress(uint64_t a_Address, struct LineInfo& o_LineInfo);
   Function* FunctionFromName(const std::string& a_Name);
 
@@ -222,8 +210,6 @@ class Pdb {
 
   template <class Archive>
   void serialize(Archive&, uint32_t /*version*/) {}
-
-  IDiaSymbol* GetDiaSymbolFromId(ULONG a_Id);
   void ProcessData();
 
  protected:
