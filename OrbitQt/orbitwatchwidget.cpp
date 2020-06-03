@@ -117,7 +117,6 @@ OrbitWatchWidget::~OrbitWatchWidget() { delete ui; }
 
 //-----------------------------------------------------------------------------
 Variable::BasicType GetBasicType(const Variable* a_Variable) {
-  Type* type = const_cast<Type*>(a_Variable->GetType());
   Variable* var = const_cast<Variable*>(a_Variable);
   return var->GetBasicType();
 }
