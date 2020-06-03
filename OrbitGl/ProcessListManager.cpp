@@ -14,7 +14,7 @@
 
 namespace {
 
-constexpr uint64_t kGrpcCallTimeoutMilliseconds = 200;
+constexpr uint64_t kGrpcCallTimeoutMilliseconds = 1000;
 
 class ProcessListManagerImpl final : public ProcessListManager {
  public:
