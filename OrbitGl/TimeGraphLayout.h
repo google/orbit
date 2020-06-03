@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #ifndef ORBIT_GL_TIME_GRAPH_LAYOUT_H_
 #define ORBIT_GL_TIME_GRAPH_LAYOUT_H_
 
@@ -37,6 +35,7 @@ class TimeGraphLayout {
   }
   float GetTextZ() const { return m_TextZ; }
   float GetTrackZ() const { return m_TrackZ; }
+  float GetToolbarIconHeight() const { return m_ToolbarIconHeight; }
   void SetDrawProperties(bool value) { m_DrawProperties = value; }
   void SetNumCores(int a_NumCores) { m_NumCores = a_NumCores; }
   bool DrawProperties();
@@ -71,6 +70,7 @@ class TimeGraphLayout {
 
   float m_TextZ;
   float m_TrackZ;
+  float m_ToolbarIconHeight;
 
   bool m_DrawProperties = false;
   bool m_DrawTrackBackground = true;

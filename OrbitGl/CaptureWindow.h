@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
 #include "GlCanvas.h"
@@ -15,6 +14,7 @@ class CaptureWindow : public GlCanvas {
   CaptureWindow();
   ~CaptureWindow() override;
 
+  void Initialize() override;
   void ZoomAll();
   void Zoom(int a_Delta);
   void Pan(float a_Ratio);
@@ -49,9 +49,8 @@ class CaptureWindow : public GlCanvas {
   void PostRender() override;
   void Resize(int a_Width, int a_Height) override;
   void RenderHelpUi();
-  void RenderThreadFilterUi();
+  void RenderToolbars();
   void RenderMemTracker();
-  void RenderBar();
   void RenderTimeBar();
   void OnTimerAdded(Timer& a_Timer);
   void OnContextSwitchAdded(const ContextSwitch& a_CS);
@@ -69,6 +68,9 @@ class CaptureWindow : public GlCanvas {
   void SendProcess();
 
  private:
+  void LoadIcons();
+
+ private:
   TimeGraph time_graph_;
   OutputWindow m_StatsWindow;
   Timer m_HoverTimer;
@@ -84,6 +86,25 @@ class CaptureWindow : public GlCanvas {
   GlSlider m_Slider;
   GlSlider m_VerticalSlider;
   int m_ProcessX;
+
+  // Toolbars.
+  uint32_t start_capture_icon_id_;
+  uint32_t stop_capture_icon_id_;
+  uint32_t save_capture_icon_id_;
+  uint32_t load_capture_icon_id_;
+  uint32_t clear_capture_icon_id_;
+  uint32_t help_icon_id_;
+  uint32_t filter_tracks_icon_id_;
+  uint32_t search_icon_id_;
+  uint32_t time_icon_id_;
+  uint32_t feedback_icon_id_;
+  uint32_t info_icon_id_;
+  std::string icons_path_;
+  float toolbar_height_ = 0;
+
+  static constexpr size_t kFilterLength = 64;
+  char track_filter_[kFilterLength] = "";
+  char find_filter_[kFilterLength] = "";
 
   static const std::string MENU_ACTION_GO_TO_CALLSTACK;
   static const std::string MENU_ACTION_GO_TO_SOURCE;
