@@ -127,7 +127,9 @@ void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
       text_box->SetText(
           SystraceManager::Get().GetFunctionName(timer.m_FunctionAddress));
     } else {
-      CHECK(false);
+      ERROR("Unexpected case in ThreadTrack::SetTimesliceText");
+      PRINT_VAR(timer.m_Type);
+      PRINT_VAR(func);
     }
   }
 
