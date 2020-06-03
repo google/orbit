@@ -17,10 +17,6 @@
 #include "Utils.h"
 #include "cvconst.h"
 
-#ifdef _WIN32
-#include "TypeInfoStructs.h"
-#endif
-
 class Pdb;
 class Type;
 
