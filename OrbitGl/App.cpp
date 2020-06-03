@@ -332,9 +332,6 @@ void OrbitApp::PostInit() {
     }
   }
 
-  int my_argc = 0;
-  glutInit(&my_argc, NULL);
-  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
   GetDesktopResolution(GOrbitApp->m_ScreenRes[0], GOrbitApp->m_ScreenRes[1]);
 
   GOrbitApp->InitializeClientTransactions();
