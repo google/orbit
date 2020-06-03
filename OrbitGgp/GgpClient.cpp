@@ -85,16 +85,7 @@ GgpClient::ResultOrQString<GgpClient> GgpClient::Create() {
         .arg(ggp_process.errorString().arg(ggp_process.exitCode()));
   }
 
-  const QByteArray process_result = ggp_process.readAllStandardOutput();
-  const QList<QByteArray> tokens = process_result.split(' ');
-
-  if (tokens.size() < 2) {
-    return QString{
-        "The current version of GGP is not supported by this integration."};
-  }
-
   GgpClient client{};
-  client.version_ = tokens.first().toStdString();
   return client;
 }
 

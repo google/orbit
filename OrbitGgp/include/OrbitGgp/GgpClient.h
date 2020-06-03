@@ -23,7 +23,6 @@ class GgpClient {
 
   static ResultOrQString<GgpClient> Create();
 
-  const std::string& GetVersion() const { return version_; }
   int GetNumberOfRequestsRunning() const { return number_of_requests_running_; }
 
   void GetInstancesAsync(
@@ -36,7 +35,6 @@ class GgpClient {
  private:
   GgpClient() = default;
 
-  std::string version_;
   int number_of_requests_running_ = 0;
 };
 
