@@ -123,7 +123,6 @@ find_package(Filesystem REQUIRED)
 
 if(WIN32)
   find_package(minhook REQUIRED)
-  find_package(DIASDK REQUIRED)
   find_package(peparse REQUIRED)
 endif()
 
