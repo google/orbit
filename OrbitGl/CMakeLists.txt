@@ -31,6 +31,7 @@ target_sources(
          GlobalsDataView.h
          GlPanel.h
          GlSlider.h
+         GlutContext.h
          GlUtils.h
          GpuTrack.h
          GraphTrack.h
@@ -43,6 +44,7 @@ target_sources(
          mat4.h
          ModulesDataView.h
          OpenGl.h
+         OpenGlDetect.h
          PickingManager.h
          PluginCanvas.h
          PluginManager.h
@@ -85,6 +87,7 @@ target_sources(
           GlobalsDataView.cpp
           GlPanel.cpp
           GlSlider.cpp
+          GlutContext.cpp
           GlUtils.cpp
           GpuTrack.cpp
           GraphTrack.cpp
@@ -94,6 +97,7 @@ target_sources(
           LiveFunctionsDataView.cpp
           LogDataView.cpp
           ModulesDataView.cpp
+          OpenGlDetect.cpp
           PickingManager.cpp
           PluginCanvas.cpp
           PluginManager.cpp
