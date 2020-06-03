@@ -28,6 +28,7 @@ for %%g in ("%KOKORO_JOB_NAME:/=" "%") do set build_type=%%g
 set symbol_uploading_required=false
 if %build_type% == "release" set symbol_uploading_required=true
 if %build_type% == "nightly" set symbol_uploading_required=true
+if %build_type% == "continuous_on_release_branch" set symbol_uploading_required=true
 if "%symbol_uploading_required%" == "true" (
   :: Upload debug symbols
   call powershell "& %REPO_ROOT%\kokoro\gcp_windows\upload_symbols.ps1" %REPO_ROOT%\build\bin

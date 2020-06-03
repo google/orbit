@@ -25,7 +25,7 @@ if [ "$0" == "$SCRIPT" ]; then
   conan package -bf "${DIR}/build/" "${DIR}"
 
   build_type=${KOKORO_JOB_NAME##*/}
-  if [ $build_type=release ] || [ $build_type=nightly ]; then
+  if [ $build_type=release ] || [ $build_type=nightly ] || [ $build_type=continuous_on_release_branch ]; then
     set +e
     ${DIR}/kokoro/gcp_ubuntu_ggp/upload_symbols.sh "${DIR}/build/bin"
     set -e
