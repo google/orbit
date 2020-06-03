@@ -19,6 +19,8 @@
 #include "ApplicationOptions.h"
 #include "CrashHandler.h"
 #include "CrashOptions.h"
+#include "GlutContext.h"
+#include "OpenGlDetect.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/Session.h"
@@ -214,6 +216,8 @@ int main(int argc, char* argv[]) {
   QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
 #endif
 
+  OrbitGl::GlutContext glut_context{&argc, argv};
+
   QApplication app(argc, argv);
   QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
   QCoreApplication::setApplicationVersion(OrbitQt::kVersionString);
@@ -236,6 +240,33 @@ int main(int argc, char* argv[]) {
   StyleOrbit(app);
 
   const auto deployment_configuration = FigureOutDeploymentConfiguration();
+
+  const auto open_gl_version = OrbitGl::DetectOpenGlVersion(&glut_context);
+
+  if (!open_gl_version) {
+    QMessageBox::critical(
+        nullptr, QApplication::applicationName(),
+        "OpenGL support was not found. Please make sure you're not trying to "
+        "start Orbit in a remote session and make sure you have a recent "
+        "graphics driver installed. Then try again!");
+    return -1;
+  }
+
+  LOG("Detected OpenGL version: %i.%i", open_gl_version->major,
+      open_gl_version->minor);
+
+  if (open_gl_version->major < 2) {
+    QMessageBox::critical(
+        nullptr, QApplication::applicationName(),
+        QString(
+            "The minimum required version of OpenGL is 2.0. But this machine "
+            "only supports up to version %1.%2. Please make sure you're not "
+            "trying to start Orbit in a remote session and make sure you have "
+            "a recent graphics driver installed. Then try again!")
+            .arg(open_gl_version->major)
+            .arg(open_gl_version->minor));
+    return -1;
+  }
 
   while (true) {
     const auto result = RunUiInstance(&app, deployment_configuration, options);
