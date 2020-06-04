@@ -971,10 +971,13 @@ void CaptureWindow::RenderToolbars() {
   if (ImGui::IsItemHovered()) ImGui::SetTooltip("Help");
 
   // Feedback.
+  // Commented out for release/1.48 as the feedback button is non-functional.
+  /*
   ImGui::SameLine();
   if (ImGui::ImageButton(TextureId(feedback_icon_id_), icon_size)) {
   }
   if (ImGui::IsItemHovered()) ImGui::SetTooltip("Feedback");
+  */
 
   const float space_between_toolbars = 0;
   float current_x = ImGui::GetWindowWidth() + space_between_toolbars;
