@@ -74,6 +74,11 @@ void OrbitAsioServer::SetupServerCallbacks() {
 
   tcp_server_->AddMainThreadCallback(Msg_StopCapture,
                                      [this](const Message&) { StopCapture(); });
+
+  tcp_server_->AddMainThreadCallback(Msg_NewCaptureID, [](const Message& msg) {
+    Message::GCaptureID = msg.m_CaptureID;
+    LOG("Received new capture ID: %u", msg.m_CaptureID);
+  });
 }
 
 void OrbitAsioServer::SendProcess(uint32_t pid) {

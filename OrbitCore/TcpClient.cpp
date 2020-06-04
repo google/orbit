@@ -168,7 +168,11 @@ void TcpClient::OnError(const std::error_code& ec) {
 
 //-----------------------------------------------------------------------------
 void TcpClient::DecodeMessage(Message& a_Message) {
-  Callback(a_Message);
+  if (a_Message.m_CaptureID == Message::GCaptureID) {
+    Callback(a_Message);
+  } else {
+    LOG("Received message from previous capture");
+  }
 
 #ifdef _WIN32
   Message::Header MessageHeader = a_Message.GetHeader();
@@ -201,8 +205,8 @@ void TcpClient::DecodeMessage(Message& a_Message) {
       Send(msg, buffer);
       break;
     }
-    case Msg_NewSession:
-      Message::GSessionID = a_Message.m_SessionID;
+    case Msg_NewCaptureID:
+      Message::GCaptureID = a_Message.m_CaptureID;
       break;
     case Msg_StartCapture:
       Orbit::Start();

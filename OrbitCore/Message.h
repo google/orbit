@@ -19,7 +19,7 @@ enum MessageType : int16_t {
   Msg_GetData,
   Msg_String,
   Msg_Timer,
-  Msg_NewSession,
+  Msg_NewCaptureID,
   Msg_StartCapture,
   Msg_StopCapture,
   Msg_FunctionHook,
@@ -107,7 +107,7 @@ class Message {
           char* a_Data = nullptr)
       : m_Type(a_Type),
         m_Size(a_Size),
-        m_SessionID(GSessionID),
+        m_CaptureID(GCaptureID),
         m_ThreadId(0),
         m_Data(a_Data) {}
 
@@ -133,7 +133,7 @@ class Message {
   MessageType m_Type;
   Header m_Header;
   uint32_t m_Size;
-  uint32_t m_SessionID;
+  uint32_t m_CaptureID;
   uint32_t m_ThreadId;
   void* m_Data;
 #ifdef WIN32
@@ -142,7 +142,7 @@ class Message {
 #endif
 #endif
 
-  static uint32_t GSessionID;
+  static uint32_t GCaptureID;
 };
 
 class MessageOwner : public Message {

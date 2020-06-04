@@ -54,19 +54,19 @@ struct ThreadLocalData {
     m_ReturnAdresses.reserve(MAX_DEPTH);
     m_Contexts.reserve(MAX_DEPTH);
     m_SentCallstacks.reserve(1024);
-    m_SessionID = -1;
+    m_CaptureID = -1;
     m_ThreadID = GetCurrentThreadId();
     m_ThreadName = GetCurrentThreadName();
     m_ZoneStack = 0;
     SendThreadInfo();
   }
 
-  __forceinline void CheckSessionId() {
-    if (m_SessionID != Message::GSessionID) {
+  __forceinline void CheckCaptureId() {
+    if (m_CaptureID != Message::GCaptureID) {
       m_SentCallstacks.clear();
       m_SentLiterals.clear();
       m_SentActorNames.clear();
-      m_SessionID = Message::GSessionID;
+      m_CaptureID = Message::GCaptureID;
       Timer::ClearThreadDepthTLS();
       m_ZoneStack = 0;
     }
@@ -89,7 +89,7 @@ struct ThreadLocalData {
   std::unordered_set<CallstackID> m_SentCallstacks;
   std::unordered_set<char*> m_SentLiterals;
   std::unordered_set<char*> m_SentActorNames;
-  uint32_t m_SessionID;
+  uint32_t m_CaptureID;
   uint32_t m_ThreadID;
   int m_ZoneStack;
 };
@@ -132,7 +132,7 @@ __forceinline void CheckTls() {
   if (!TlsData) {
     TlsData = new ThreadLocalData();
   }
-  TlsData->CheckSessionId();
+  TlsData->CheckCaptureId();
 }
 __forceinline void PushContext(const Context* a_Context,
                                void* a_OriginalFunction);
@@ -584,11 +584,11 @@ inline void Hijacking::SendContext(const Context* a_Context,
     FunctionArgInfo* argInfo = GetArgInfo( address );
     size_t argDataSize = argInfo ? argInfo->m_ArgDataSize : 0;
     std::vector<unsigned char> messageData( sizeof(SavedContext) + argDataSize );
-    
+
     Message msg(Msg_SavedContext);
     msg.m_Size = (int)messageData.size();
     msg.m_Header.m_GenericHeader.m_Address = (ULONG64)address;
-    
+
     // Contexts
     size_t offset = 0;
     memcpy( messageData.data(), a_Context, sizeof(Context) );
