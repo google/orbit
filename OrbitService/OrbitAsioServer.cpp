@@ -135,51 +135,58 @@ void OrbitAsioServer::TracingBufferThread() {
   while (tracing_handler_.IsStarted()) {
     Sleep(20);
 
-    std::vector<Timer> timers;
-    if (tracing_buffer_.ReadAllTimers(&timers)) {
-      Message Msg(Msg_Timers);
-      tcp_server_->Send(Msg, timers);
-    }
-
-    std::vector<LinuxCallstackEvent> callstacks;
-    if (tracing_buffer_.ReadAllCallstacks(&callstacks)) {
-      std::string message_data = SerializeObjectBinary(callstacks);
-      tcp_server_->Send(Msg_SamplingCallstacks, message_data.c_str(),
-                        message_data.size());
-    }
-
-    std::vector<CallstackEvent> hashed_callstacks;
-    if (tracing_buffer_.ReadAllHashedCallstacks(&hashed_callstacks)) {
-      std::string message_data = SerializeObjectBinary(hashed_callstacks);
-      tcp_server_->Send(Msg_SamplingHashedCallstacks, message_data.c_str(),
-                        message_data.size());
-    }
-
-    std::vector<ContextSwitch> context_switches;
-    if (tracing_buffer_.ReadAllContextSwitches(&context_switches)) {
-      Message Msg(Msg_ContextSwitches);
-      tcp_server_->Send(Msg, context_switches);
-    }
-
-    std::vector<LinuxAddressInfo> address_infos;
-    if (tracing_buffer_.ReadAllAddressInfos(&address_infos)) {
-      std::string message_data = SerializeObjectBinary(address_infos);
-      tcp_server_->Send(Msg_LinuxAddressInfos, message_data.c_str(),
-                        message_data.size());
-    }
-
-    std::vector<KeyAndString> keys_and_strings;
-    if (tracing_buffer_.ReadAllKeysAndStrings(&keys_and_strings)) {
-      std::string message_data = SerializeObjectBinary(keys_and_strings);
-      tcp_server_->Send(Msg_KeysAndStrings, message_data.c_str(),
-                        message_data.size());
-    }
-
-    std::vector<TidAndThreadName> tid_and_names;
-    if (tracing_buffer_.ReadAllThreadNames(&tid_and_names)) {
-      std::string message_data = SerializeObjectBinary(tid_and_names);
-      tcp_server_->Send(Msg_ThreadNames, message_data.c_str(),
-                        message_data.size());
-    }
+    SendBufferedMessages();
   }
+  // While sending the buffered messages, some buffers could again be filled.
+  // Send them now, so no message gets lost
+  SendBufferedMessages();
 }
+
+void OrbitAsioServer::SendBufferedMessages() {
+  std::vector<Timer> timers;
+  if (tracing_buffer_.ReadAllTimers(&timers)) {
+    Message Msg(Msg_Timers);
+    tcp_server_->Send(Msg, timers);
+  }
+
+  std::vector<LinuxCallstackEvent> callstacks;
+  if (tracing_buffer_.ReadAllCallstacks(&callstacks)) {
+    std::string message_data = SerializeObjectBinary(callstacks);
+    tcp_server_->Send(Msg_SamplingCallstacks, message_data.c_str(),
+                      message_data.size());
+  }
+
+  std::vector<CallstackEvent> hashed_callstacks;
+  if (tracing_buffer_.ReadAllHashedCallstacks(&hashed_callstacks)) {
+    std::string message_data = SerializeObjectBinary(hashed_callstacks);
+    tcp_server_->Send(Msg_SamplingHashedCallstacks, message_data.c_str(),
+                      message_data.size());
+  }
+
+  std::vector<ContextSwitch> context_switches;
+  if (tracing_buffer_.ReadAllContextSwitches(&context_switches)) {
+    Message Msg(Msg_ContextSwitches);
+    tcp_server_->Send(Msg, context_switches);
+  }
+
+  std::vector<LinuxAddressInfo> address_infos;
+  if (tracing_buffer_.ReadAllAddressInfos(&address_infos)) {
+    std::string message_data = SerializeObjectBinary(address_infos);
+    tcp_server_->Send(Msg_LinuxAddressInfos, message_data.c_str(),
+                      message_data.size());
+  }
+
+  std::vector<KeyAndString> keys_and_strings;
+  if (tracing_buffer_.ReadAllKeysAndStrings(&keys_and_strings)) {
+    std::string message_data = SerializeObjectBinary(keys_and_strings);
+    tcp_server_->Send(Msg_KeysAndStrings, message_data.c_str(),
+                      message_data.size());
+  }
+
+  std::vector<TidAndThreadName> tid_and_names;
+  if (tracing_buffer_.ReadAllThreadNames(&tid_and_names)) {
+    std::string message_data = SerializeObjectBinary(tid_and_names);
+    tcp_server_->Send(Msg_ThreadNames, message_data.c_str(),
+                      message_data.size());
+  }
+};
