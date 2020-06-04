@@ -72,18 +72,20 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   float x1 = x0 + m_Size[0];
   float y0 = m_Pos[1];
   float y1 = y0 - m_Size[1];
-
-  // Draw track background.
   float track_z = layout.GetTrackZ();
   float text_z = layout.GetTextZ();
   float top_margin = layout.GetTrackTopMargin();
-  if (layout.GetDrawTrackBackground()) {
-    glBegin(GL_QUADS);
-    glVertex3f(x0, y0 + top_margin, track_z);
-    glVertex3f(x1, y0 + top_margin, track_z);
-    glVertex3f(x1, y1, track_z);
-    glVertex3f(x0, y1, track_z);
-    glEnd();
+
+  // Draw track background.
+  if (!picking) {
+    if (layout.GetDrawTrackBackground()) {
+      glBegin(GL_QUADS);
+      glVertex3f(x0, y0 + top_margin, track_z);
+      glVertex3f(x1, y0 + top_margin, track_z);
+      glVertex3f(x1, y1, track_z);
+      glVertex3f(x0, y1, track_z);
+      glEnd();
+    }
   }
 
   // Draw tab.
