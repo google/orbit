@@ -102,6 +102,11 @@ void OrbitAsioServer::SetSelectedFunctions(const Message& message) {
 }
 
 void OrbitAsioServer::StartCapture(uint32_t pid) {
+  if (tracing_handler_.IsStarted()) {
+    ERROR("Capture is already in progress. Ignoring this StartCapture request");
+    return;
+  }
+
   LOG("Starting capture");
   tracing_handler_.Start(pid, selected_functions_);
   tracing_buffer_thread_ = std::thread{[this] { TracingBufferThread(); }};
