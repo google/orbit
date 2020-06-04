@@ -38,6 +38,7 @@ class OrbitAsioServer {
   void SetupTransactionServices();
 
   void TracingBufferThread();
+  void SendBufferedMessages();
 
   TcpServer* tcp_server_;
 
