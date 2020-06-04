@@ -47,6 +47,8 @@ class LinuxTracingBuffer {
   bool ReadAllKeysAndStrings(std::vector<KeyAndString>* out_buffer);
   bool ReadAllThreadNames(std::vector<TidAndThreadName>* out_buffer);
 
+  bool IsEmpty();
+
   void Reset();
 
  private:
