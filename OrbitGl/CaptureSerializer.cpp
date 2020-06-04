@@ -172,8 +172,10 @@ outcome::result<void, std::string> CaptureSerializer::Load(
     archive(Capture::GAddressToFunctionName);
 
     archive(Capture::GSamplingProfiler);
-    Capture::GSamplingProfiler->SortByThreadUsage();
-    Capture::GSamplingProfiler->SetLoadedFromFile(true);
+    if (Capture::GSamplingProfiler != nullptr) {
+      Capture::GSamplingProfiler->SortByThreadUsage();
+      Capture::GSamplingProfiler->SetLoadedFromFile(true);
+    }
 
     time_graph_->Clear();
 
@@ -188,7 +190,9 @@ outcome::result<void, std::string> CaptureSerializer::Load(
       time_graph_->ProcessTimer(timer);
     }
 
-    GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler, GOrbitApp.get());
+    if (Capture::GSamplingProfiler != nullptr) {
+      GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler, GOrbitApp.get());
+    }
     GOrbitApp->FireRefreshCallbacks();
     return outcome::success();
 
