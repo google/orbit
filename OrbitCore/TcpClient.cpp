@@ -168,7 +168,11 @@ void TcpClient::OnError(const std::error_code& ec) {
 
 //-----------------------------------------------------------------------------
 void TcpClient::DecodeMessage(Message& a_Message) {
-  Callback(a_Message);
+  if (a_Message.m_SessionID == Message::GSessionID) {
+    Callback(a_Message);
+  } else {
+    LOG("Received message from previous session");
+  }
 
 #ifdef _WIN32
   Message::Header MessageHeader = a_Message.GetHeader();

@@ -74,6 +74,11 @@ void OrbitAsioServer::SetupServerCallbacks() {
 
   tcp_server_->AddMainThreadCallback(Msg_StopCapture,
                                      [this](const Message&) { StopCapture(); });
+
+  tcp_server_->AddMainThreadCallback(Msg_NewSession, [](const Message& msg) {
+    Message::GSessionID = msg.m_SessionID;
+    LOG("Received new session ID: %u", msg.m_SessionID);
+  });
 }
 
 void OrbitAsioServer::SendProcess(uint32_t pid) {

@@ -137,17 +137,9 @@ void TimerManager::ConsumeTimers() {
       --m_NumQueuedEntries;
       --m_NumQueuedTimers;
 
-      // if( Timer.m_SessionID == Message::GSessionID ) // TODO: re-enable
-      // check.
-      {
-        for (TimerAddedCallback& Callback : m_TimerAddedCallbacks) {
-          Callback(Timer);
-        }
+      for (TimerAddedCallback& Callback : m_TimerAddedCallbacks) {
+        Callback(Timer);
       }
-      /*else
-      {
-          ++m_NumTimersFromPreviousSession;
-      }*/
     }
   }
 }
