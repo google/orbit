@@ -14,6 +14,7 @@
 #include <system_error>
 #include <thread>
 
+#include "Error.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/SftpChannel.h"
@@ -27,6 +28,18 @@ static const std::string_view kSshWatchdogPassphrase = "start_watchdog";
 static const std::chrono::milliseconds kSshWatchdogInterval(1000);
 
 namespace OrbitQt {
+
+template <typename T>
+static outcome::result<T> MapError(outcome::result<T> result, Error new_error) {
+  if (result) {
+    return result;
+  } else {
+    const auto new_error_code = make_error_code(new_error);
+    ERROR("%s: %s", new_error_code.message().c_str(),
+          result.error().message().c_str());
+    return outcome::failure(new_error_code);
+  }
+}
 
 ServiceDeployManager::ServiceDeployManager(
     DeploymentConfiguration deployment_configuration,
@@ -94,7 +107,8 @@ outcome::result<uint16_t> ServiceDeployManager::StartTunnel(
 
   tunnel->value().Start();
 
-  OUTCOME_TRY(loop_.exec());
+  OUTCOME_TRY(MapError(loop_.exec(), Error::kCouldNotStartTunnel));
+
   QObject::connect(&tunnel->value(), &OrbitSshQt::Tunnel::errorOccurred, this,
                    &ServiceDeployManager::handleSocketError);
   return outcome::success(tunnel->value().GetListenPort());
@@ -158,11 +172,16 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServicePackage() {
       std::get<SignedDebianPackageDeployment>(deployment_configuration_);
 
   using FileMode = OrbitSshQt::SftpOperation::FileMode;
-  OUTCOME_TRY(CopyFileToRemote(&channel, config.path_to_package.string(),
-                               kDebDestinationPath, FileMode::kUserWritable));
 
-  OUTCOME_TRY(CopyFileToRemote(&channel, config.path_to_signature.string(),
-                               kSigDestinationPath, FileMode::kUserWritable));
+  OUTCOME_TRY(
+      MapError(CopyFileToRemote(&channel, config.path_to_package.string(),
+                                kDebDestinationPath, FileMode::kUserWritable),
+               Error::kCouldNotUploadPackage));
+
+  OUTCOME_TRY(
+      MapError(CopyFileToRemote(&channel, config.path_to_signature.string(),
+                                kSigDestinationPath, FileMode::kUserWritable),
+               Error::kCouldNotUploadSignature));
 
   OUTCOME_TRY(StopSftpChannel(&channel));
 
@@ -227,6 +246,12 @@ outcome::result<void> ServiceDeployManager::StartOrbitService() {
 }
 
 outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged() {
+  // TODO(antonrohr) Check whether the password was incorrect.
+  // There are multiple ways of doing this. the best way is probably to have a
+  // second task running before OrbitService that sets the SUID bit. It might be
+  // necessary to close stdin by sending EOF, since sudo would ask for trying to
+  // enter the password again. Another option is to use std err as soon as its
+  // implemented in OrbitSshQt::Task.
   emit statusMessage("Starting OrbitService on the remote instance...");
 
   orbit_service_task_.emplace(&session_.value(),
@@ -277,8 +302,11 @@ outcome::result<void> ServiceDeployManager::InstallOrbitServicePackage() {
         if (exit_code == 0) {
           loop_.quit();
         } else {
-          // TODO(hebecker): Replace this generic error code with a custom one.
-          loop_.error(std::make_error_code(std::errc::permission_denied));
+          // TODO(antonrohr) use stderr message once its implemented in
+          // OrbitSshQt::Task
+          ERROR("Unable to install install OrbitService package, exit code: %d",
+                exit_code);
+          loop_.error(make_error_code(Error::kCouldNotInstallPackage));
         }
       });
 
@@ -307,7 +335,9 @@ outcome::result<void> ServiceDeployManager::ConnectToServer() {
       ConnectErrorHandler(&session_.value(), &Session::errorOccurred);
 
   session_->ConnectToServer(credentials_);
-  OUTCOME_TRY(loop_.exec());
+
+  OUTCOME_TRY(MapError(loop_.exec(), Error::kCouldNotConnectToServer));
+
   emit statusMessage(QString("Successfully connected to %1:%2.")
                          .arg(QString::fromStdString(credentials_.host))
                          .arg(credentials_.port));
