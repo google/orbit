@@ -177,8 +177,8 @@ outcome::result<void, std::string> Capture::StartCapture(
 #endif
 
   GInjected = true;
-  ++Message::GSessionID;
-  GTcpServer->Send(Msg_NewSession);
+  ++Message::GCaptureID;
+  GTcpClient->Send(Msg_NewCaptureID);
   GTimerManager->StartRecording();
 
   ClearCaptureData();

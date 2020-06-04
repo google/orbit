@@ -16,7 +16,7 @@ thread_local size_t CurrentDepthLocal = 0;
 void Timer::Start() {
   m_TID = GetCurrentThreadId();
   m_Depth = CurrentDepth++;
-  m_SessionID = Message::GSessionID;
+  m_CaptureID = Message::GCaptureID;
   m_Start = OrbitTicks();
 }
 
