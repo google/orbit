@@ -61,3 +61,4 @@ target_link_libraries(OrbitSshTests PRIVATE OrbitSsh libssh2::libssh2
                                             GTest::Main)
 
 register_test(OrbitSshTests)
+set_tests_properties(OrbitSsh PROPERTIES TIMEOUT 10)
