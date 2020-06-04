@@ -13,20 +13,46 @@ TEST(LinuxTracingBuffer, Empty) {
   LinuxTracingBuffer buffer;
 
   std::vector<ContextSwitch> context_switches;
+  EXPECT_TRUE(buffer.context_switch_buffer_.empty());
   EXPECT_FALSE(buffer.ReadAllContextSwitches(&context_switches));
   EXPECT_TRUE(context_switches.empty());
+  EXPECT_TRUE(buffer.context_switch_buffer_.empty());
 
   std::vector<Timer> timers;
+  EXPECT_TRUE(buffer.timer_buffer_.empty());
   EXPECT_FALSE(buffer.ReadAllTimers(&timers));
   EXPECT_TRUE(timers.empty());
+  EXPECT_TRUE(buffer.timer_buffer_.empty());
 
   std::vector<LinuxCallstackEvent> callstacks;
+  EXPECT_TRUE(buffer.callstack_buffer_.empty());
   EXPECT_FALSE(buffer.ReadAllCallstacks(&callstacks));
   EXPECT_TRUE(callstacks.empty());
+  EXPECT_TRUE(buffer.callstack_buffer_.empty());
 
   std::vector<CallstackEvent> hashed_callstacks;
+  EXPECT_TRUE(buffer.hashed_callstack_buffer_.empty());
   EXPECT_FALSE(buffer.ReadAllHashedCallstacks(&hashed_callstacks));
   EXPECT_TRUE(hashed_callstacks.empty());
+  EXPECT_TRUE(buffer.hashed_callstack_buffer_.empty());
+
+  std::vector<LinuxAddressInfo> address_infos;
+  EXPECT_TRUE(buffer.address_info_buffer_.empty());
+  EXPECT_FALSE(buffer.ReadAllAddressInfos(&address_infos));
+  EXPECT_TRUE(address_infos.empty());
+  EXPECT_TRUE(buffer.address_info_buffer_.empty());
+
+  std::vector<KeyAndString> keys_and_strings;
+  EXPECT_TRUE(buffer.key_and_string_buffer_.empty());
+  EXPECT_FALSE(buffer.ReadAllKeysAndStrings(&keys_and_strings));
+  EXPECT_TRUE(keys_and_strings.empty());
+  EXPECT_TRUE(buffer.key_and_string_buffer_.empty());
+
+  std::vector<TidAndThreadName> thread_names;
+  EXPECT_TRUE(buffer.thread_name_buffer_.empty());
+  EXPECT_FALSE(buffer.ReadAllThreadNames(&thread_names));
+  EXPECT_TRUE(thread_names.empty());
+  EXPECT_TRUE(buffer.thread_name_buffer_.empty());
 }
 
 TEST(LinuxTracingBuffer, ContextSwitches) {
@@ -41,7 +67,9 @@ TEST(LinuxTracingBuffer, ContextSwitches) {
     context_switch.m_ProcessorIndex = 7;
     context_switch.m_ProcessorNumber = 8;
 
+    EXPECT_TRUE(buffer.context_switch_buffer_.empty());
     buffer.RecordContextSwitch(std::move(context_switch));
+    EXPECT_FALSE(buffer.context_switch_buffer_.empty());
   }
 
   {
@@ -58,7 +86,9 @@ TEST(LinuxTracingBuffer, ContextSwitches) {
 
   std::vector<ContextSwitch> context_switches;
   EXPECT_TRUE(buffer.ReadAllContextSwitches(&context_switches));
+  EXPECT_TRUE(buffer.context_switch_buffer_.empty());
   EXPECT_FALSE(buffer.ReadAllContextSwitches(&context_switches));
+  EXPECT_TRUE(buffer.context_switch_buffer_.empty());
 
   EXPECT_EQ(context_switches.size(), 2);
 
@@ -84,13 +114,16 @@ TEST(LinuxTracingBuffer, ContextSwitches) {
     context_switch.m_ProcessorNumber = 28;
 
     buffer.RecordContextSwitch(std::move(context_switch));
+    EXPECT_FALSE(buffer.context_switch_buffer_.empty());
   }
 
   // Check that the vector is reset, even if it was not empty.
   EXPECT_TRUE(buffer.ReadAllContextSwitches(&context_switches));
+  EXPECT_TRUE(buffer.context_switch_buffer_.empty());
   EXPECT_EQ(context_switches.size(), 1);
 
   EXPECT_FALSE(buffer.ReadAllContextSwitches(&context_switches));
+  EXPECT_TRUE(buffer.context_switch_buffer_.empty());
   EXPECT_EQ(context_switches.size(), 1);
 
   EXPECT_EQ(context_switches[0].m_ProcessId, 11);
@@ -118,7 +151,9 @@ TEST(LinuxTracingBuffer, Timers) {
     timer.m_Start = 800;
     timer.m_End = 900;
 
+    EXPECT_TRUE(buffer.timer_buffer_.empty());
     buffer.RecordTimer(std::move(timer));
+    EXPECT_FALSE(buffer.timer_buffer_.empty());
   }
 
   {
@@ -141,7 +176,9 @@ TEST(LinuxTracingBuffer, Timers) {
 
   std::vector<Timer> timers;
   EXPECT_TRUE(buffer.ReadAllTimers(&timers));
+  EXPECT_TRUE(buffer.timer_buffer_.empty());
   EXPECT_FALSE(buffer.ReadAllTimers(&timers));
+  EXPECT_TRUE(buffer.timer_buffer_.empty());
 
   EXPECT_EQ(timers.size(), 2);
 
@@ -186,12 +223,15 @@ TEST(LinuxTracingBuffer, Timers) {
     timer.m_End = 1900;
 
     buffer.RecordTimer(std::move(timer));
+    EXPECT_FALSE(buffer.timer_buffer_.empty());
   }
 
   EXPECT_TRUE(buffer.ReadAllTimers(&timers));
+  EXPECT_TRUE(buffer.timer_buffer_.empty());
   EXPECT_EQ(timers.size(), 1);
 
   EXPECT_FALSE(buffer.ReadAllTimers(&timers));
+  EXPECT_TRUE(buffer.timer_buffer_.empty());
   EXPECT_EQ(timers.size(), 1);
 
   EXPECT_EQ(timers[0].m_PID, 11);
@@ -219,7 +259,9 @@ TEST(LinuxTracingBuffer, Callstacks) {
     event.callstack_.m_Data.push_back(21);
     event.callstack_.m_Data.push_back(22);
 
+    EXPECT_TRUE(buffer.callstack_buffer_.empty());
     buffer.RecordCallstack(std::move(event));
+    EXPECT_FALSE(buffer.callstack_buffer_.empty());
   }
 
   {
@@ -236,6 +278,7 @@ TEST(LinuxTracingBuffer, Callstacks) {
 
   std::vector<LinuxCallstackEvent> callstacks;
   EXPECT_TRUE(buffer.ReadAllCallstacks(&callstacks));
+  EXPECT_TRUE(buffer.callstack_buffer_.empty());
   EXPECT_FALSE(buffer.ReadAllCallstacks(&callstacks));
 
   EXPECT_EQ(callstacks.size(), 2);
@@ -262,12 +305,15 @@ TEST(LinuxTracingBuffer, Callstacks) {
     event.callstack_.m_Data.push_back(222);
 
     buffer.RecordCallstack(std::move(event));
+    EXPECT_FALSE(buffer.callstack_buffer_.empty());
   }
 
   EXPECT_TRUE(buffer.ReadAllCallstacks(&callstacks));
+  EXPECT_TRUE(buffer.callstack_buffer_.empty());
   EXPECT_EQ(callstacks.size(), 1);
 
   EXPECT_FALSE(buffer.ReadAllCallstacks(&callstacks));
+  EXPECT_TRUE(buffer.callstack_buffer_.empty());
   EXPECT_EQ(callstacks.size(), 1);
 
   EXPECT_EQ(callstacks[0].time_, 3);
@@ -283,9 +329,13 @@ TEST(LinuxTracingBuffer, HashedCallstacks) {
   buffer.RecordHashedCallstack(CallstackEvent(11, 12, 13));
   buffer.RecordHashedCallstack(CallstackEvent(21, 22, 23));
 
+  EXPECT_FALSE(buffer.hashed_callstack_buffer_.empty());
+
   std::vector<CallstackEvent> callstacks;
   EXPECT_TRUE(buffer.ReadAllHashedCallstacks(&callstacks));
   EXPECT_FALSE(buffer.ReadAllHashedCallstacks(&callstacks));
+
+  EXPECT_TRUE(buffer.hashed_callstack_buffer_.empty());
 
   EXPECT_EQ(callstacks.size(), 2);
 
@@ -299,10 +349,15 @@ TEST(LinuxTracingBuffer, HashedCallstacks) {
 
   buffer.RecordHashedCallstack(CallstackEvent(31, 32, 33));
 
+  EXPECT_FALSE(buffer.hashed_callstack_buffer_.empty());
+
   EXPECT_TRUE(buffer.ReadAllHashedCallstacks(&callstacks));
   EXPECT_EQ(callstacks.size(), 1);
 
   EXPECT_FALSE(buffer.ReadAllHashedCallstacks(&callstacks));
+
+  EXPECT_TRUE(buffer.hashed_callstack_buffer_.empty());
+
   EXPECT_EQ(callstacks.size(), 1);
 
   EXPECT_EQ(callstacks[0].m_Time, 31);
@@ -315,7 +370,9 @@ TEST(LinuxTracingBuffer, AddressInfos) {
 
   {
     LinuxAddressInfo address_info{0x11, "module1", "function1", 0x1};
+    EXPECT_TRUE(buffer.address_info_buffer_.empty());
     buffer.RecordAddressInfo(std::move(address_info));
+    EXPECT_FALSE(buffer.address_info_buffer_.empty());
   }
 
   {
@@ -325,7 +382,9 @@ TEST(LinuxTracingBuffer, AddressInfos) {
 
   std::vector<LinuxAddressInfo> address_infos;
   EXPECT_TRUE(buffer.ReadAllAddressInfos(&address_infos));
+  EXPECT_TRUE(buffer.address_info_buffer_.empty());
   EXPECT_FALSE(buffer.ReadAllAddressInfos(&address_infos));
+  EXPECT_TRUE(buffer.address_info_buffer_.empty());
 
   EXPECT_EQ(address_infos.size(), 2);
 
@@ -342,12 +401,15 @@ TEST(LinuxTracingBuffer, AddressInfos) {
   {
     LinuxAddressInfo address_info{0x33, "module3", "function3", 0x3};
     buffer.RecordAddressInfo(std::move(address_info));
+    EXPECT_FALSE(buffer.address_info_buffer_.empty());
   }
 
   EXPECT_TRUE(buffer.ReadAllAddressInfos(&address_infos));
+  EXPECT_TRUE(buffer.address_info_buffer_.empty());
   EXPECT_EQ(address_infos.size(), 1);
 
   EXPECT_FALSE(buffer.ReadAllAddressInfos(&address_infos));
+  EXPECT_TRUE(buffer.address_info_buffer_.empty());
   EXPECT_EQ(address_infos.size(), 1);
 
   EXPECT_EQ(address_infos[0].address, 0x33);
@@ -361,14 +423,18 @@ TEST(LinuxTracingBuffer, KeysAndStrings) {
 
   {
     KeyAndString key_and_string{0, "str0"};
+    EXPECT_TRUE(buffer.key_and_string_buffer_.empty());
     buffer.RecordKeyAndString(std::move(key_and_string));
+    EXPECT_FALSE(buffer.key_and_string_buffer_.empty());
   }
 
   buffer.RecordKeyAndString(1, "str1");
 
   std::vector<KeyAndString> keys_and_strings;
   EXPECT_TRUE(buffer.ReadAllKeysAndStrings(&keys_and_strings));
+  EXPECT_TRUE(buffer.key_and_string_buffer_.empty());
   EXPECT_FALSE(buffer.ReadAllKeysAndStrings(&keys_and_strings));
+  EXPECT_TRUE(buffer.key_and_string_buffer_.empty());
 
   EXPECT_EQ(keys_and_strings.size(), 2);
 
@@ -379,11 +445,14 @@ TEST(LinuxTracingBuffer, KeysAndStrings) {
   EXPECT_EQ(keys_and_strings[1].str, "str1");
 
   buffer.RecordKeyAndString(2, "str2");
+  EXPECT_FALSE(buffer.key_and_string_buffer_.empty());
 
   EXPECT_TRUE(buffer.ReadAllKeysAndStrings(&keys_and_strings));
+  EXPECT_TRUE(buffer.key_and_string_buffer_.empty());
   EXPECT_EQ(keys_and_strings.size(), 1);
 
   EXPECT_FALSE(buffer.ReadAllKeysAndStrings(&keys_and_strings));
+  EXPECT_TRUE(buffer.key_and_string_buffer_.empty());
   EXPECT_EQ(keys_and_strings.size(), 1);
 
   EXPECT_EQ(keys_and_strings[0].key, 2);
@@ -393,7 +462,9 @@ TEST(LinuxTracingBuffer, KeysAndStrings) {
 TEST(LinuxTracingBuffer, ThreadNames) {
   LinuxTracingBuffer buffer;
 
+  EXPECT_TRUE(buffer.thread_name_buffer_.empty());
   buffer.RecordThreadName(1, "thread1");
+  EXPECT_FALSE(buffer.thread_name_buffer_.empty());
 
   {
     TidAndThreadName tid_and_name{2, "thread2"};
@@ -402,7 +473,9 @@ TEST(LinuxTracingBuffer, ThreadNames) {
 
   std::vector<TidAndThreadName> thread_names;
   EXPECT_TRUE(buffer.ReadAllThreadNames(&thread_names));
+  EXPECT_TRUE(buffer.thread_name_buffer_.empty());
   EXPECT_FALSE(buffer.ReadAllThreadNames(&thread_names));
+  EXPECT_TRUE(buffer.thread_name_buffer_.empty());
 
   EXPECT_EQ(thread_names.size(), 2);
 
@@ -413,11 +486,14 @@ TEST(LinuxTracingBuffer, ThreadNames) {
   EXPECT_EQ(thread_names[1].thread_name, "thread2");
 
   buffer.RecordThreadName(3, "thread3");
+  EXPECT_FALSE(buffer.thread_name_buffer_.empty());
 
   EXPECT_TRUE(buffer.ReadAllThreadNames(&thread_names));
+  EXPECT_TRUE(buffer.thread_name_buffer_.empty());
   EXPECT_EQ(thread_names.size(), 1);
 
   EXPECT_FALSE(buffer.ReadAllThreadNames(&thread_names));
+  EXPECT_TRUE(buffer.thread_name_buffer_.empty());
   EXPECT_EQ(thread_names.size(), 1);
 
   EXPECT_EQ(thread_names[0].tid, 3);
@@ -471,6 +547,10 @@ TEST(LinuxTracingBuffer, Reset) {
 
   buffer.RecordHashedCallstack(CallstackEvent(11, 12, 13));
 
+  LinuxAddressInfo address_info{0x33, "module3", "function3", 0x3};
+  buffer.RecordAddressInfo(std::move(address_info));
+  EXPECT_FALSE(buffer.address_info_buffer_.empty());
+
   buffer.RecordKeyAndString(42, "str42");
 
   buffer.RecordThreadName(42, "thread42");
@@ -479,19 +559,29 @@ TEST(LinuxTracingBuffer, Reset) {
 
   std::vector<ContextSwitch> context_switches;
   EXPECT_FALSE(buffer.ReadAllContextSwitches(&context_switches));
+  EXPECT_TRUE(buffer.context_switch_buffer_.empty());
 
   std::vector<Timer> timers;
   EXPECT_FALSE(buffer.ReadAllTimers(&timers));
+  EXPECT_TRUE(buffer.timer_buffer_.empty());
 
   std::vector<LinuxCallstackEvent> callstacks;
   EXPECT_FALSE(buffer.ReadAllCallstacks(&callstacks));
+  EXPECT_TRUE(buffer.callstack_buffer_.empty());
 
   std::vector<CallstackEvent> hashed_callstacks;
   EXPECT_FALSE(buffer.ReadAllHashedCallstacks(&hashed_callstacks));
+  EXPECT_TRUE(buffer.hashed_callstack_buffer_.empty());
+
+  std::vector<LinuxAddressInfo> address_infos;
+  EXPECT_TRUE(buffer.address_info_buffer_.empty());
+  EXPECT_FALSE(buffer.ReadAllAddressInfos(&address_infos));
 
   std::vector<KeyAndString> keys_and_strings;
   EXPECT_FALSE(buffer.ReadAllKeysAndStrings(&keys_and_strings));
+  EXPECT_TRUE(buffer.key_and_string_buffer_.empty());
 
   std::vector<TidAndThreadName> thread_names;
   EXPECT_FALSE(buffer.ReadAllThreadNames(&thread_names));
+  EXPECT_TRUE(buffer.thread_name_buffer_.empty());
 }
