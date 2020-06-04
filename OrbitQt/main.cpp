@@ -215,7 +215,7 @@ int main(int argc, char* argv[]) {
 #endif
 
   QApplication app(argc, argv);
-  QCoreApplication::setApplicationName("Orbit Profiler");
+  QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
   QCoreApplication::setApplicationVersion(OrbitQt::kVersionString);
 
   const std::string dump_path = Path::GetDumpPath();
