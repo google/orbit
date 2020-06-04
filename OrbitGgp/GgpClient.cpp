@@ -82,7 +82,7 @@ GgpClient::ResultOrQString<GgpClient> GgpClient::Create() {
       ggp_process.exitCode() != 0) {
     return QString{
         "Ggp command line process failed with error: %1 (exit code: %2)"}
-        .arg(ggp_process.errorString().arg(ggp_process.exitCode()));
+        .arg(ggp_process.errorString()).arg(ggp_process.exitCode());
   }
 
   GgpClient client{};
