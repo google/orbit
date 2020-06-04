@@ -9,21 +9,21 @@
 #include "PrintVar.h"
 
 //-----------------------------------------------------------------------------
-uint32_t Message::GSessionID;
+uint32_t Message::GCaptureID;
 
 //-----------------------------------------------------------------------------
 void Message::Dump() {
   PRINT_VAR(offsetof(Message, m_Type));
   PRINT_VAR(offsetof(Message, m_Header));
   PRINT_VAR(offsetof(Message, m_Size));
-  PRINT_VAR(offsetof(Message, m_SessionID));
+  PRINT_VAR(offsetof(Message, m_CaptureID));
   PRINT_VAR(offsetof(Message, m_ThreadId));
   PRINT_VAR(offsetof(Message, m_Data));
 
   PRINT_VAR(sizeof(m_Type));
   PRINT_VAR(sizeof(m_Header));
   PRINT_VAR(sizeof(m_Size));
-  PRINT_VAR(sizeof(m_SessionID));
+  PRINT_VAR(sizeof(m_CaptureID));
   PRINT_VAR(sizeof(m_ThreadId));
   PRINT_VAR(sizeof(m_Data));
 

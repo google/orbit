@@ -347,7 +347,7 @@ void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
           timer.m_TID = lastCS.m_ThreadId;
           timer.m_Processor = static_cast<int8_t>(lastCS.m_ProcessorIndex);
           timer.m_Depth = timer.m_Processor;
-          timer.m_SessionID = Message::GSessionID;
+          timer.m_CaptureID = Message::GCaptureID;
           timer.SetType(Timer::CORE_ACTIVITY);
 
           GTimerManager->Add(timer);
@@ -371,7 +371,7 @@ void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
           // tid from the context switch in.
           timer.m_PID = lastCS.m_ProcessId;
           timer.m_TID = lastCS.m_ThreadId;
-          timer.m_SessionID = Message::GSessionID;
+          timer.m_CaptureID = Message::GCaptureID;
           timer.SetType(Timer::THREAD_ACTIVITY);
 
           GTimerManager->Add(timer);
