@@ -162,8 +162,8 @@ TEST(Socket, SendAndReceive) {
   EXPECT_TRUE(client_socket.value().SendBlocking(send_text));
 
   // Even though this is only a local connection, it might take a split second.
-  if (OrbitSsh::shouldITryAgain(server_socket.value().CanBeRead())) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  while (OrbitSsh::shouldITryAgain(server_socket.value().CanBeRead())) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
   // Receive at server
@@ -180,8 +180,8 @@ TEST(Socket, SendAndReceive) {
   ASSERT_TRUE(server_socket.value().SendBlocking(send_text2));
 
   // Even though this is only a local connection, it might take a split second.
-  if (OrbitSsh::shouldITryAgain(client_socket.value().CanBeRead())) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  while (OrbitSsh::shouldITryAgain(client_socket.value().CanBeRead())) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
   // Receive at client
@@ -218,7 +218,12 @@ TEST(Socket, Shutdown) {
   // send shutdown client
   ASSERT_TRUE(client_socket.value().Shutdown());
 
-  // server should have an immidiate result with WaitDisconnect
+  // Even though this is only a local connection, it might take a split second.
+  while (OrbitSsh::shouldITryAgain(server_socket.value().CanBeRead())) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+
+  // server should have a result with WaitDisconnect
   ASSERT_TRUE(server_socket.value().WaitDisconnect());
 }
 
