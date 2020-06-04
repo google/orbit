@@ -44,6 +44,8 @@ outcome::result<void> Task::run() {
   bool added_new_data_to_read_buffer = false;
   while (true) {
     const size_t kChunkSize = 8192;
+
+    // TODO(antonrohr) also read stderr
     auto result = channel_->ReadStdOut(kChunkSize);
 
     if (!result && !OrbitSsh::shouldITryAgain(result)) {
