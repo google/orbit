@@ -99,17 +99,6 @@ outcome::result<void> Channel::WriteBlocking(std::string_view text) {
   return outcome::success();
 }
 
-outcome::result<void> Channel::RequestPty(const std::string& term) {
-  const int rc =
-      libssh2_channel_request_pty(raw_channel_ptr_.get(), term.c_str());
-
-  if (rc == 0) {
-    return outcome::success();
-  } else {
-    return static_cast<Error>(rc);
-  }
-}
-
 outcome::result<void> Channel::SendEOF() {
   const int rc = libssh2_channel_send_eof(raw_channel_ptr_.get());
 

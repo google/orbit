@@ -37,8 +37,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
 
   OrbitSshQt::Session session{&context.value()};
   const uint16_t port_number = 1025;
-  OrbitSshQt::Task task{&session, absl::StrFormat("nc -l %d", port_number),
-                        OrbitSshQt::Task::Tty::kNo};
+  OrbitSshQt::Task task{&session, absl::StrFormat("nc -l %d", port_number)};
   OrbitSshQt::Tunnel tunnel{&session, "127.0.0.1", port_number};
   QTcpSocket client;
   std::string data_sink;
@@ -91,7 +90,6 @@ TEST(OrbitSshQtTests, IntegrationTest) {
     task.Start();
     CheckCheckpoint(Checkpoint::kSessionStarted);
   });
-
 
   // Task
 
@@ -177,8 +175,8 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   QObject::connect(&sftp_channel, &OrbitSshQt::SftpChannel::errorOccurred,
                    &loop, [&](std::error_code e) {
                      loop.quit();
-                     FAIL() << absl::StrFormat("SFTP channel error occurred: %s",
-                                               e.message());
+                     FAIL() << absl::StrFormat(
+                         "SFTP channel error occurred: %s", e.message());
                    });
 
   QObject::connect(&sftp_channel, &OrbitSshQt::SftpChannel::stopped, &loop,
@@ -207,9 +205,10 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   LOG("connect to server");
   QTimer::singleShot(std::chrono::seconds{5}, [&]() {
     loop.quit();
-    FAIL() << "Timeout occurred. The whole integration test should be done in 5 "
-              "seconds. If not, probably it's stuck somewhere in the callback "
-              "logic.";
+    FAIL()
+        << "Timeout occurred. The whole integration test should be done in 5 "
+           "seconds. If not, probably it's stuck somewhere in the callback "
+           "logic.";
   });
 
   loop.exec();

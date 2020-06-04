@@ -57,8 +57,7 @@ outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
   const auto command = absl::StrFormat(
       "/usr/bin/dpkg-query -W orbitprofiler 2>/dev/null | grep %s", version);
 
-  OrbitSshQt::Task check_if_installed_task{&session_.value(), command,
-                                           OrbitSshQt::Task::Tty::kNo};
+  OrbitSshQt::Task check_if_installed_task{&session_.value(), command};
 
   QObject::connect(&check_if_installed_task, &OrbitSshQt::Task::finished,
                    &loop_, &EventLoop::exit);
@@ -200,8 +199,7 @@ outcome::result<void> ServiceDeployManager::StartOrbitService() {
   emit statusMessage("Starting OrbitService on the remote instance...");
 
   orbit_service_task_.emplace(&session_.value(),
-                              "/opt/developer/tools/OrbitService",
-                              OrbitSshQt::Task::Tty::kNo);
+                              "/opt/developer/tools/OrbitService");
 
   auto quit_handler = ConnectQuitHandler(&orbit_service_task_.value(),
                                          &OrbitSshQt::Task::started);
@@ -232,8 +230,7 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged() {
   emit statusMessage("Starting OrbitService on the remote instance...");
 
   orbit_service_task_.emplace(&session_.value(),
-                              "sudo --stdin /tmp/OrbitService",
-                              OrbitSshQt::Task::Tty::kNo);
+                              "sudo --stdin /tmp/OrbitService");
 
   const auto& config =
       std::get<OrbitQt::BareExecutableAndRootPasswordDeployment>(
@@ -272,8 +269,7 @@ outcome::result<void> ServiceDeployManager::InstallOrbitServicePackage() {
   const auto command = absl::StrFormat(
       "sudo /usr/local/cloudcast/sbin/install_signed_package.sh %s",
       kDebDestinationPath);
-  OrbitSshQt::Task install_service_task{&session_.value(), command,
-                                        OrbitSshQt::Task::Tty::kNo};
+  OrbitSshQt::Task install_service_task{&session_.value(), command};
 
   QObject::connect(
       &install_service_task, &OrbitSshQt::Task::finished, this,
