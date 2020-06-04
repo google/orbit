@@ -78,10 +78,7 @@ if(NOT WIN32 AND WITH_GUI)
   find_package(X11 REQUIRED)
 endif()
 
-if(NOT WIN32)
-  find_package(OpenSSL CONFIG REQUIRED)
-endif()
-
+find_package(OpenSSL CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 find_package(cereal CONFIG REQUIRED)
 find_package(xxHash REQUIRED)
