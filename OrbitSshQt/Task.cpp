@@ -9,8 +9,8 @@
 
 namespace OrbitSshQt {
 
-Task::Task(Session* session, std::string command, Tty tty)
-    : session_(session), command_(command), tty_(tty) {
+Task::Task(Session* session, std::string command)
+    : session_(session), command_(command) {
   about_to_shutdown_connection_.emplace(QObject::connect(
       session_, &Session::aboutToShutdown, this, &Task::HandleSessionShutdown));
 }
@@ -100,13 +100,6 @@ outcome::result<void> Task::startup() {
       ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kChannelInitialized: {
-      if (tty_ == Tty::kYes) {
-        OUTCOME_TRY(channel_->RequestPty("vt102"));
-      }
-      SetState(State::kTtyAcquired);
-      ABSL_FALLTHROUGH_INTENDED;
-    }
-    case State::kTtyAcquired: {
       OUTCOME_TRY(channel_->Exec(command_));
       SetState(State::kCommandRunning);
       break;
@@ -129,7 +122,6 @@ outcome::result<void> Task::shutdown() {
     case State::kInitial:
     case State::kNoChannel:
     case State::kChannelInitialized:
-    case State::kTtyAcquired:
     case State::kStarted:
     case State::kCommandRunning:
       UNREACHABLE();

@@ -20,7 +20,6 @@ enum class TaskState {
   kInitial,
   kNoChannel,
   kChannelInitialized,
-  kTtyAcquired,
   kStarted,
   kCommandRunning,
   kShutdown,
@@ -54,8 +53,7 @@ class Task : public StateMachineHelper<Task, details::TaskState> {
   friend StateMachineHelper;
 
  public:
-  enum class Tty { kYes, kNo };
-  explicit Task(Session* session, std::string command, Tty tty);
+  explicit Task(Session* session, std::string command);
   void Start();
   void Stop();
 
@@ -87,7 +85,6 @@ class Task : public StateMachineHelper<Task, details::TaskState> {
   std::optional<ScopedConnection> about_to_shutdown_connection_;
 
   std::string command_;
-  Tty tty_ = Tty::kNo;
   std::optional<OrbitSsh::Channel> channel_;
   std::string read_buffer_;
   std::string write_buffer_;

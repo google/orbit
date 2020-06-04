@@ -32,7 +32,6 @@ class Channel {
   outcome::result<void> WriteBlocking(std::string_view text);
   outcome::result<int> Write(std::string_view text);
   outcome::result<void> Exec(const std::string& command);
-  outcome::result<void> RequestPty(const std::string& term);
   outcome::result<void> SendEOF();
   outcome::result<void> WaitRemoteEOF();
   outcome::result<void> Close();
