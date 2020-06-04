@@ -214,8 +214,10 @@ void Capture::StopCapture() {
     GEventTracer.Stop();
 #endif
   } else if (Capture::IsRemote()) {
-    Capture::GSamplingProfiler->StopCapture();
-    Capture::GSamplingProfiler->ProcessSamples();
+    if (Capture::GSamplingProfiler != nullptr) {
+      Capture::GSamplingProfiler->StopCapture();
+      Capture::GSamplingProfiler->ProcessSamples();
+    }
 
     if (GCoreApp != nullptr) {
       GCoreApp->RefreshCaptureView();
