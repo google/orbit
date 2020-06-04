@@ -209,15 +209,15 @@ outcome::result<void> ServiceDeployManager::StartOrbitService() {
   auto error_handler = ConnectErrorHandler(&orbit_service_task_.value(),
                                            &OrbitSshQt::Task::errorOccurred);
 
-  QObject::connect(
-      &orbit_service_task_.value(), &OrbitSshQt::Task::readyRead, this,
-      [this]() {
-        const auto buf = orbit_service_task_->Read();
-        const auto lines = QString::fromStdString(buf).split('\n');
-        for (const auto& line : lines) {
-          LOG("%s", QString("[OrbitService] %1").arg(line).toStdString());
-        }
-      });
+  QObject::connect(&orbit_service_task_.value(), &OrbitSshQt::Task::readyRead,
+                   this, [this]() {
+                     const auto buf = orbit_service_task_->Read();
+                     std::vector<std::string_view> lines =
+                         absl::StrSplit(buf, '\n');
+                     for (const auto& line : lines) {
+                       LOG("[OrbitService] %s", line);
+                     }
+                   });
 
   orbit_service_task_->Start();
 
@@ -231,46 +231,30 @@ outcome::result<void> ServiceDeployManager::StartOrbitService() {
 outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged() {
   emit statusMessage("Starting OrbitService on the remote instance...");
 
-  orbit_service_task_.emplace(&session_.value(), "sudo /tmp/OrbitService",
-                              OrbitSshQt::Task::Tty::kYes);
+  orbit_service_task_.emplace(&session_.value(),
+                              "sudo --stdin /tmp/OrbitService",
+                              OrbitSshQt::Task::Tty::kNo);
 
   const auto& config =
       std::get<OrbitQt::BareExecutableAndRootPasswordDeployment>(
           deployment_configuration_);
 
-  auto quit_handler = OrbitSshQt::ScopedConnection{QObject::connect(
-      &orbit_service_task_.value(), &OrbitSshQt::Task::bytesWritten, this,
-      [&, bytes_accumulated = 0u](size_t bytesWritten) mutable {
-        bytes_accumulated += bytesWritten;
-        if (bytes_accumulated >= config.root_password.size() + 1) {
-          loop_.quit();
-
-          QObject::connect(&orbit_service_task_.value(),
-                           &OrbitSshQt::Task::readyRead, this, [this]() {
-                             const auto buf = orbit_service_task_->Read();
-                             std::vector<std::string_view> lines =
-                                 absl::StrSplit(buf, '\n');
-                             for (const auto& line : lines) {
-                               LOG("[OrbitService] %s", line);
-                             }
-                           });
-        }
-      })};
+  orbit_service_task_->Write(absl::StrFormat("%s\n", config.root_password));
 
   auto error_handler = ConnectErrorHandler(&orbit_service_task_.value(),
                                            &OrbitSshQt::Task::errorOccurred);
+  auto quit_handler = ConnectQuitHandler(&orbit_service_task_.value(),
+                                         &OrbitSshQt::Task::started);
 
-  auto wait_for_password_request_handler =
-      OrbitSshQt::ScopedConnection{QObject::connect(
-          &orbit_service_task_.value(), &OrbitSshQt::Task::readyRead, this,
-          [&, buf = std::string{}]() mutable {
-            buf.append(orbit_service_task_->Read());
-
-            if (absl::StrContains(buf, "[sudo] password for cloudcast:")) {
-              orbit_service_task_->Write(
-                  absl::StrFormat("%s\n", config.root_password));
-            }
-          })};
+  QObject::connect(&orbit_service_task_.value(), &OrbitSshQt::Task::readyRead,
+                   this, [this]() {
+                     const auto buf = orbit_service_task_->Read();
+                     std::vector<std::string_view> lines =
+                         absl::StrSplit(buf, '\n');
+                     for (const auto& line : lines) {
+                       LOG("[OrbitService] %s", line);
+                     }
+                   });
 
   orbit_service_task_->Start();
 
@@ -285,10 +269,9 @@ outcome::result<void> ServiceDeployManager::InstallOrbitServicePackage() {
   emit statusMessage(
       "Installing the OrbitService package on the remote instance...");
 
-  const auto command =
-      absl::StrFormat(
-          "sudo /usr/local/cloudcast/sbin/install_signed_package.sh %s",
-          kDebDestinationPath);
+  const auto command = absl::StrFormat(
+      "sudo /usr/local/cloudcast/sbin/install_signed_package.sh %s",
+      kDebDestinationPath);
   OrbitSshQt::Task install_service_task{&session_.value(), command,
                                         OrbitSshQt::Task::Tty::kNo};
 
@@ -379,6 +362,8 @@ outcome::result<ServiceDeployManager::Ports> ServiceDeployManager::Exec() {
     // TODO(hebecker): Replace this timeout by waiting for a
     // stdout-greeting-message.
     std::this_thread::sleep_for(std::chrono::milliseconds{200});
+
+    StartWatchdog();
 
     // Manual Developer mode: No deployment, no starting. Just the tunnels.
   } else if (std::holds_alternative<NoDeployment>(deployment_configuration_)) {
