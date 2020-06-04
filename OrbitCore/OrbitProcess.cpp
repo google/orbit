@@ -301,10 +301,9 @@ std::shared_ptr<Module> Process::GetModuleFromName(const std::string& a_Name) {
 }
 
 //-----------------------------------------------------------------------------
-bool Process::LineInfoFromAddress(uint64_t a_Address, LineInfo& o_LineInfo) {
-  UNUSED(a_Address);
-  UNUSED(o_LineInfo);
-  LOG("Dia Loading disabled, TODO: reimplement using LLVM (b/158093728).");
+bool Process::LineInfoFromAddress(uint64_t /*a_Address*/,
+                                  LineInfo& /*o_LineInfo*/) {
+  // TODO(b/158093728): Dia Loading was disabled, reimplement using LLVM.
   return false;
 }
 

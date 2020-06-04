@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "Pdb.h"
 
 #include <ppl.h>
@@ -56,8 +54,7 @@ Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
 }
 
 //-----------------------------------------------------------------------------
-Pdb::~Pdb() {
-}
+Pdb::~Pdb() {}
 
 //-----------------------------------------------------------------------------
 void Pdb::AddFunction(const std::shared_ptr<Function>& function) {
@@ -354,13 +351,13 @@ bool Pdb::LoadPdb(const char* a_PdbName) {
 
 //-----------------------------------------------------------------------------
 bool Pdb::LoadDataFromPdb() {
-  LOG("Dia Loading disabled, TODO: reimplement using LLVM (b/158093728).");
+  // TODO(b/158093728): Dia Loading was disabled, reimplement using LLVM.
   return false;
 }
 
 //-----------------------------------------------------------------------------
 bool Pdb::LoadPdbDia() {
-  LOG("Dia Loading disabled, TODO: reimplement using LLVM (b/158093728).");
+  // TODO(b/158093728): Dia Loading was disabled, reimplement using LLVM.
   return false;
 }
 
@@ -453,8 +450,9 @@ Function* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
 }
 
 //-----------------------------------------------------------------------------
-bool Pdb::LineInfoFromAddress(uint64_t a_Address, LineInfo& o_LineInfo) {
-  LOG("Dia Loading disabled, TODO: reimplement using LLVM (b/158093728).");
+bool Pdb::LineInfoFromAddress(uint64_t /*a_Address*/,
+                              LineInfo& /*o_LineInfo*/) {
+  // TODO(b/158093728): Dia Loading was disabled, reimplement using LLVM.
   return false;
 }
 
