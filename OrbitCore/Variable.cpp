@@ -133,7 +133,7 @@ void Variable::Print(int a_Indent, DWORD64& a_ByteCounter,
 }
 
 void Variable::PrintHierarchy(int a_Indent) {
-  if (Type* type = GetType()) {
+  if (GetType()) {
     ORBIT_VIZ(absl::StrFormat("%s%s\n", Indent(a_Indent).c_str(),
                               GetTypeName().c_str()));
 
