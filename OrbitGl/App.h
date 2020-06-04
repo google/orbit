@@ -76,7 +76,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void OnLaunchProcess(const std::string& process_name,
                        const std::string& working_dir, const std::string& args);
   void Inject(const std::string& file_name);
-  void StartCapture();
+  bool StartCapture();
   void StopCapture();
   void ToggleCapture();
   void OnDisconnect();
@@ -185,8 +185,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
     return m_Arguments;
   }
 
-  void SendToUiAsync(const std::string& message) override;
-  void SendToUiNow(const std::string& message) override;
+  void SendToUi(const std::string& message) override;
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
