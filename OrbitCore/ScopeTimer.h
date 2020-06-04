@@ -21,7 +21,7 @@ class Timer {
       : m_PID(0),
         m_TID(0),
         m_Depth(0),
-        m_SessionID(-1),
+        m_CaptureID(-1),
         m_Type(NONE),
         m_Processor(-1),
         m_CallstackHash(0),
@@ -79,7 +79,7 @@ class Timer {
   uint32_t m_PID;
   uint32_t m_TID;
   uint8_t m_Depth;
-  uint8_t m_SessionID;
+  uint8_t m_CaptureID;
   Type m_Type;
   uint8_t m_Processor;
   uint64_t m_CallstackHash;
