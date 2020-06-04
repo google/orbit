@@ -464,7 +464,7 @@ void OrbitApp::Disassemble(const std::string& a_FunctionName,
   disasm.LOGF(absl::StrFormat("asm: /* %s */\n", a_FunctionName.c_str()));
   disasm.Disassemble(a_MachineCode, a_Size, a_VirtualAddress,
                      Capture::GTargetProcess->GetIs64Bit());
-  SendToUiAsync(disasm.GetResult());
+  SendToUi(disasm.GetResult());
 }
 
 //-----------------------------------------------------------------------------
@@ -590,14 +590,14 @@ void OrbitApp::AddSelectionReport(
 //-----------------------------------------------------------------------------
 void OrbitApp::GoToCode(DWORD64 a_Address) {
   m_CaptureWindow->FindCode(a_Address);
-  SendToUiNow("gotocode");
+  SendToUi("gotocode");
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::GoToCallstack() { SendToUiNow("gotocallstack"); }
+void OrbitApp::GoToCallstack() { SendToUi("gotocallstack"); }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::GoToCapture() { SendToUiNow("gotocapture"); }
+void OrbitApp::GoToCapture() { SendToUi("gotocapture"); }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnOpenPdb(const std::string& file_name) {
@@ -745,7 +745,7 @@ void OrbitApp::OnPdbLoaded() {
   FireRefreshCallbacks();
 
   if (m_ModulesToLoad.empty()) {
-    SendToUiAsync("pdbloaded");
+    SendToUi("pdbloaded");
   } else {
     LoadModules();
   }
@@ -772,17 +772,17 @@ void OrbitApp::AddUiMessageCallback(
   m_UiCallback = a_Callback;
 }
 
-void OrbitApp::StartCapture() {
+bool OrbitApp::StartCapture() {
   if (Capture::IsCapturing()) {
     LOG("Ignoring Start Capture - already capturing...");
-    return;
+    return false;
   }
 
   outcome::result<void, std::string> result =
       Capture::StartCapture(options_.asio_server_address);
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error());
-    return;
+    return false;
   }
 
   if (m_NeedsThawing) {
@@ -795,6 +795,8 @@ void OrbitApp::StartCapture() {
   for (const CaptureStartedCallback& callback : capture_started_callbacks_) {
     callback();
   }
+
+  return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -863,28 +865,25 @@ void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::SendToUiAsync(const std::string& message) {
-  GTcpServer->SendToUiAsync(message);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::SendToUiNow(const std::string& message) {
-  if (m_UiCallback) {
-    m_UiCallback(message);
-  }
+void OrbitApp::SendToUi(const std::string& message) {
+  main_thread_executor_->Schedule([&, message] {
+    if (m_UiCallback) {
+      m_UiCallback(message);
+    }
+  });
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
   std::string message = "info:" + title + "\n" + text;
-  SendToUiNow(message);
+  SendToUi(message);
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::SendErrorToUi(const std::string& title,
                              const std::string& text) {
   std::string message = "error:" + title + "\n" + text;
-  SendToUiNow(message);
+  SendToUi(message);
 }
 
 //-----------------------------------------------------------------------------
@@ -1017,7 +1016,7 @@ void OrbitApp::OnRemoteProcess(const Message& a_Message) {
     GParams.m_ProcessPath = session->m_ProcessFullPath;
     GParams.m_Arguments = session->m_Arguments;
     GParams.m_WorkingDirectory = session->m_WorkingDirectory;
-    GCoreApp->SendToUiNow("SetProcessParams");
+    GCoreApp->SendToUi("SetProcessParams");
     Capture::GSessionPresets = nullptr;
   }
 }
