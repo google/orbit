@@ -772,8 +772,12 @@ void OrbitApp::AddUiMessageCallback(
   m_UiCallback = a_Callback;
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::StartCapture() {
+  if (Capture::IsCapturing()) {
+    LOG("Ignoring Start Capture - already capturing...");
+    return;
+  }
+
   outcome::result<void, std::string> result =
       Capture::StartCapture(options_.asio_server_address);
   if (result.has_error()) {
@@ -805,12 +809,14 @@ void OrbitApp::StopCapture() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ToggleCapture() {
-  if (GTimerManager) {
-    if (GTimerManager->m_IsRecording) {
-      StopCapture();
-    } else {
-      StartCapture();
-    }
+  if (!GTimerManager) {
+    return;
+  }
+
+  if (Capture::IsCapturing()) {
+    StopCapture();
+  } else {
+    StartCapture();
   }
 }
 
