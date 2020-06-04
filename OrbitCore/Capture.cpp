@@ -197,10 +197,10 @@ outcome::result<void, std::string> Capture::StartCapture(
   }
 
   if (GCoreApp != nullptr) {
-    GCoreApp->SendToUiNow("startcapture");
+    GCoreApp->SendToUi("startcapture");
 
     if (!GSelectedFunctionsMap.empty()) {
-      GCoreApp->SendToUiNow("gotolive");
+      GCoreApp->SendToUi("gotolive");
     }
   }
 
@@ -460,7 +460,7 @@ outcome::result<void, std::string> Capture::SaveSession(
   Session session;
   session.m_ProcessFullPath = GTargetProcess->GetFullPath();
 
-  GCoreApp->SendToUiNow("UpdateProcessParams");
+  GCoreApp->SendToUi("UpdateProcessParams");
   session.m_Arguments = GParams.m_Arguments;
   session.m_WorkingDirectory = GParams.m_WorkingDirectory;
 

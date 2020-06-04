@@ -29,8 +29,7 @@ class Session;
 class CoreApp {
  public:
   virtual ~CoreApp() = default;
-  virtual void SendToUiAsync(const std::string& /*message*/) {}
-  virtual void SendToUiNow(const std::string& /*message*/) {}
+  virtual void SendToUi(const std::string& /* message */) {}
   virtual bool GetUnrealSupportEnabled() { return false; }
   virtual bool GetUnitySupportEnabled() { return false; }
   virtual bool GetUnsafeHookingEnabled() { return false; }

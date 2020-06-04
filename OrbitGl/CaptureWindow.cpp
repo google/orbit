@@ -276,7 +276,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
           Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
       m_ToolTip = absl::StrFormat("%s %s", func ? func->PrettyName() : "",
                                   textBox->GetText());
-      GOrbitApp->SendToUiAsync("tooltip:" + m_ToolTip);
+      GOrbitApp->SendToUi("tooltip:" + m_ToolTip);
       NeedsRedraw();
     }
   }
@@ -302,7 +302,7 @@ void CaptureWindow::FindCode(DWORD64 address) {
     }
 
     if (lineInfo.m_Address != 0) {
-      GOrbitApp->SendToUiAsync(
+      GOrbitApp->SendToUi(
           absl::StrFormat("code^%s^%i", lineInfo.m_File, lineInfo.m_Line));
     }
   }
@@ -927,8 +927,9 @@ void CaptureWindow::RenderToolbars() {
 
   // Start Capture.
   if (ImGui::ImageButton(TextureId(start_capture_icon_id_), icon_size)) {
-    m_DrawHelp = false;
-    GOrbitApp->StartCapture();
+    if (GOrbitApp->StartCapture()) {
+      m_DrawHelp = false;
+    }
   }
   if (ImGui::IsItemHovered()) ImGui::SetTooltip("Start Capture");
 
@@ -951,14 +952,14 @@ void CaptureWindow::RenderToolbars() {
   // Load Capture.
   ImGui::SameLine();
   if (ImGui::ImageButton(TextureId(load_capture_icon_id_), icon_size)) {
-    GOrbitApp->SendToUiAsync("opencapture");
+    GOrbitApp->SendToUi("opencapture");
   }
   if (ImGui::IsItemHovered()) ImGui::SetTooltip("Open Capture");
 
   // Save Capture.
   ImGui::SameLine();
   if (ImGui::ImageButton(TextureId(save_capture_icon_id_), icon_size)) {
-    GOrbitApp->SendToUiAsync("savecapture");
+    GOrbitApp->SendToUi("savecapture");
   }
   if (ImGui::IsItemHovered()) ImGui::SetTooltip("Save Capture");
 
