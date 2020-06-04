@@ -140,7 +140,6 @@ void OrbitAsioServer::TracingBufferThread() {
   // While sending the buffered messages, some buffers could again be filled.
   // Send them now, so no message gets lost
   SendBufferedMessages();
-  CHECK(tracing_buffer_.IsEmpty());
 }
 
 void OrbitAsioServer::SendBufferedMessages() {

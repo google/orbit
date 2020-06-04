@@ -138,38 +138,6 @@ bool LinuxTracingBuffer::ReadAllThreadNames(
   return true;
 }
 
-bool LinuxTracingBuffer::IsEmpty() {
-  {
-    absl::MutexLock lock(&context_switch_buffer_mutex_);
-    if (!context_switch_buffer_.empty()) return false;
-  }
-  {
-    absl::MutexLock lock(&timer_buffer_mutex_);
-    if (!timer_buffer_.empty()) return false;
-  }
-  {
-    absl::MutexLock lock(&callstack_buffer_mutex_);
-    if (!callstack_buffer_.empty()) return false;
-  }
-  {
-    absl::MutexLock lock(&hashed_callstack_buffer_mutex_);
-    if (!hashed_callstack_buffer_.empty()) return false;
-  }
-  {
-    absl::MutexLock lock(&address_info_buffer_mutex_);
-    if (!address_info_buffer_.empty()) return false;
-  }
-  {
-    absl::MutexLock lock(&key_and_string_buffer_mutex_);
-    if (!key_and_string_buffer_.empty()) return false;
-  }
-  {
-    absl::MutexLock lock(&thread_name_buffer_mutex_);
-    if (!thread_name_buffer_.empty()) return false;
-  }
-  return true;
-}
-
 void LinuxTracingBuffer::Reset() {
   {
     absl::MutexLock lock(&context_switch_buffer_mutex_);
