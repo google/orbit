@@ -156,7 +156,7 @@ void CallStackDataView::OnContextMenu(const std::string& a_Action,
       Function* function = frame.function;
       function->Print();
     }
-    GOrbitApp->SendToUiNow("output");
+    GOrbitApp->SendToUi("output");
 
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
     uint32_t pid = Capture::GTargetProcess->GetID();
