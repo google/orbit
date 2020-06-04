@@ -160,6 +160,10 @@ void OrbitApp::ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) {
+  if (Capture::GSamplingProfiler == nullptr) {
+    ERROR("GSamplingProfiler is null, ignoring callstack event.");
+    return;
+  }
   Capture::GSamplingProfiler->AddHashedCallStack(a_CallStack);
   GEventTracer.GetEventBuffer().AddCallstackEvent(
       a_CallStack.m_Time, a_CallStack.m_Id, a_CallStack.m_TID);
