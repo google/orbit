@@ -178,7 +178,7 @@ void TimerManager::SendTimers() {
 }
 
 //-----------------------------------------------------------------------------
-void TimerManager::Add(const Timer& a_Timer) {
+void TimerManager::AddTimer(const Timer& a_Timer) {
   if (m_IsRecording) {
     m_LockFreeQueue.enqueue(a_Timer);
     m_ConditionVariable.signal();
@@ -188,6 +188,6 @@ void TimerManager::Add(const Timer& a_Timer) {
 }
 
 //-----------------------------------------------------------------------------
-void TimerManager::Add(const ContextSwitch& a_CS) {
+void TimerManager::AddContextSwitch(const ContextSwitch& a_CS) {
   if (m_ContextSwitchAddedCallback) m_ContextSwitchAddedCallback(a_CS);
 }

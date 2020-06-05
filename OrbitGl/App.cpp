@@ -150,7 +150,7 @@ void OrbitApp::ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) {
-  GTimerManager->Add(a_ContextSwitch);
+  GTimerManager->AddContextSwitch(a_ContextSwitch);
 }
 
 //-----------------------------------------------------------------------------

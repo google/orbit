@@ -272,7 +272,7 @@ inline void ProcessContextSwitch(PEVENT_RECORD a_EventRecord) {
     CS.m_Time = CycleTime;
     CS.m_ProcessorIndex = ProcessorIndex;
     CS.m_ProcessorNumber = ProcessorNumber;
-    GTimerManager->Add(CS);
+    GTimerManager->AddContextSwitch(CS);
   }
 
   if (GThreadToProcessMap[switchEvent->OldThreadId] == processId) {
@@ -281,7 +281,7 @@ inline void ProcessContextSwitch(PEVENT_RECORD a_EventRecord) {
     CS.m_Time = CycleTime;
     CS.m_ProcessorIndex = ProcessorIndex;
     CS.m_ProcessorNumber = ProcessorNumber;
-    GTimerManager->Add(CS);
+    GTimerManager->AddContextSwitch(CS);
   }
 }
 
