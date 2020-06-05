@@ -188,16 +188,6 @@ void TimerManager::Add(const Timer& a_Timer) {
 }
 
 //-----------------------------------------------------------------------------
-void TimerManager::Add(const Message& a_Message) {
-  if (m_IsRecording || m_IsClient) {
-    m_LockFreeMessageQueue.enqueue(a_Message);
-    m_ConditionVariable.signal();
-    ++m_NumQueuedEntries;
-    ++m_NumQueuedMessages;
-  }
-}
-
-//-----------------------------------------------------------------------------
 void TimerManager::Add(const ContextSwitch& a_CS) {
   if (m_ContextSwitchAddedCallback) m_ContextSwitchAddedCallback(a_CS);
 }
