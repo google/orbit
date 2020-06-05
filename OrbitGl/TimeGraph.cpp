@@ -350,7 +350,7 @@ void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
           timer.m_CaptureID = Message::GCaptureID;
           timer.SetType(Timer::CORE_ACTIVITY);
 
-          GTimerManager->Add(timer);
+          GTimerManager->AddTimer(timer);
         }
       }
     }
@@ -374,7 +374,7 @@ void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
           timer.m_CaptureID = Message::GCaptureID;
           timer.SetType(Timer::THREAD_ACTIVITY);
 
-          GTimerManager->Add(timer);
+          GTimerManager->AddTimer(timer);
         }
       }
     }

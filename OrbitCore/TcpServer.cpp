@@ -119,7 +119,7 @@ void TcpServer::Receive(const Message& a_Message) {
       uint32_t numTimers = a_Message.m_Size / sizeof(Timer);
       const Timer* timers = static_cast<const Timer*>(a_Message.GetData());
       for (uint32_t i = 0; i < numTimers; ++i) {
-        GTimerManager->Add(timers[i]);
+        GTimerManager->AddTimer(timers[i]);
       }
 
       if (numTimers > m_MaxTimersAtOnce) {
