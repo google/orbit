@@ -123,26 +123,6 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
   }
 }
 
-// Get the horizontal and vertical screen sizes in pixel
-//-----------------------------------------------------------------------------
-void GetDesktopResolution(int& horizontal, int& vertical) {
-#ifdef _WIN32
-  RECT desktop;
-  // Get a handle to the desktop window
-  const HWND hDesktop = GetDesktopWindow();
-  // Get the size of screen to the variable desktop
-  GetWindowRect(hDesktop, &desktop);
-  // The top left corner will have coordinates (0,0)
-  // and the bottom right corner will have coordinates
-  // (horizontal, vertical)
-  horizontal = desktop.right;
-  vertical = desktop.bottom;
-#else
-  UNUSED(horizontal);
-  UNUSED(vertical);
-#endif
-}
-
 //-----------------------------------------------------------------------------
 void OrbitApp::ProcessTimer(const Timer& a_Timer, const std::string&) {
   GCurrentTimeGraph->ProcessTimer(a_Timer);
@@ -335,7 +315,6 @@ void OrbitApp::PostInit() {
   int my_argc = 0;
   glutInit(&my_argc, NULL);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-  GetDesktopResolution(GOrbitApp->m_ScreenRes[0], GOrbitApp->m_ScreenRes[1]);
 
   GOrbitApp->InitializeClientTransactions();
 }

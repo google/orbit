@@ -103,8 +103,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void UpdateThreadName(uint32_t thread_id,
                         const std::string& thread_name) override;
 
-  int* GetScreenRes() { return m_ScreenRes; }
-
   void RegisterCaptureWindow(class CaptureWindow* a_Capture);
 
   void OnProcessSelected(uint32_t pid);
@@ -278,7 +276,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<LogDataView> m_LogDataView;
 
   CaptureWindow* m_CaptureWindow = nullptr;
-  int m_ScreenRes[2];
   bool m_HasPromptedForUpdate = false;
   bool m_NeedsThawing = false;
   bool m_UnrealEnabled = false;
