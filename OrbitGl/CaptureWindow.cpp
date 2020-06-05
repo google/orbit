@@ -899,9 +899,31 @@ void CaptureWindow::RenderHelpUi() {
 }
 
 //-----------------------------------------------------------------------------
-ImTextureID TextureId(uint32_t id) {
-  uint64_t texture_id = id;
-  return reinterpret_cast<ImTextureID>(texture_id);
+ImTextureID TextureId(uint64_t id) { return reinterpret_cast<ImTextureID>(id); }
+
+//-----------------------------------------------------------------------------
+bool IconButton(uint64_t texture_id, const char* tooltip, ImVec2 size,
+                bool enabled) {
+  ImTextureID imgui_texture_id = TextureId(texture_id);
+
+  if (!enabled) {
+    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.4f);
+  }
+
+  bool clicked = ImGui::ImageButton(imgui_texture_id, size);
+
+  if (tooltip != nullptr &&
+      ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+    ImGui::SetTooltip("%s", tooltip);
+  }
+
+  if (!enabled) {
+    ImGui::PopItemFlag();
+    ImGui::PopStyleVar();
+  }
+
+  return clicked;
 }
 
 //-----------------------------------------------------------------------------
@@ -913,7 +935,9 @@ void CaptureWindow::RenderToolbars() {
   ImVec4 color(1.f, 0.f, 0.f, 1.f);
   ColorToFloat(m_Slider.GetBarColor(), &color.x);
   float icon_height = time_graph_.GetLayout().GetToolbarIconHeight();
+  ImVec2 size(icon_height, icon_height);
   ImVec2 icon_size(icon_height, icon_height);
+  bool is_capturing = Capture::IsCapturing();
 
   ImGui::PushStyleColor(ImGuiCol_WindowBg, color);
   ImGui::PushStyleColor(ImGuiCol_Button, transparent);
@@ -921,60 +945,65 @@ void CaptureWindow::RenderToolbars() {
   ImGui::PushStyleColor(ImGuiCol_PopupBg, popup_color);
 
   // Action Toolbar.
-  ImGui::Begin("Toolbar", &m_DrawHelp, ImVec2(0, 0), 1.f,
+  ImGui::Begin("Toolbar", nullptr, ImVec2(0, 0), 1.f,
                ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
 
   // Start Capture.
-  if (ImGui::ImageButton(TextureId(start_capture_icon_id_), icon_size)) {
+  bool start_enabled = !is_capturing;
+  if (IconButton(start_capture_icon_id_, "Start Capture", icon_size,
+                 start_enabled)) {
     if (GOrbitApp->StartCapture()) {
       m_DrawHelp = false;
     }
   }
-  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Start Capture");
 
   // Stop Capture.
   ImGui::SameLine();
-  if (ImGui::ImageButton(TextureId(stop_capture_icon_id_), icon_size)) {
+  bool stop_enabled = is_capturing;
+  if (IconButton(stop_capture_icon_id_, "Stop Capture", icon_size,
+                 stop_enabled)) {
     GOrbitApp->StopCapture();
   }
-  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Stop Capture");
 
   // Clear Capture.
   ImGui::SameLine();
-  if (ImGui::ImageButton(TextureId(clear_capture_icon_id_), icon_size)) {
+  bool clear_enabled = !is_capturing;
+  if (IconButton(clear_capture_icon_id_, "Clear Capture", icon_size,
+                 clear_enabled)) {
     Capture::ClearCaptureData();
     Capture::GClearCaptureDataFunc();
     GCurrentTimeGraph->Clear();
   }
-  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Clear Capture");
 
   // Load Capture.
   ImGui::SameLine();
-  if (ImGui::ImageButton(TextureId(load_capture_icon_id_), icon_size)) {
+  bool load_enabled = !is_capturing;
+  if (IconButton(load_capture_icon_id_, "Open Capture", icon_size,
+                 load_enabled)) {
     GOrbitApp->SendToUi("opencapture");
   }
-  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Open Capture");
 
   // Save Capture.
   ImGui::SameLine();
-  if (ImGui::ImageButton(TextureId(save_capture_icon_id_), icon_size)) {
+  bool save_enabled = !is_capturing;
+  if (IconButton(save_capture_icon_id_, "Save Capture", icon_size,
+                 save_enabled)) {
     GOrbitApp->SendToUi("savecapture");
   }
-  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Save Capture");
 
   // Help.
   ImGui::SameLine();
-  if (ImGui::ImageButton(TextureId(help_icon_id_), icon_size)) {
+  bool help_enabled = true;
+  if (IconButton(help_icon_id_, "Help", icon_size, help_enabled)) {
     m_DrawHelp = !m_DrawHelp;
   }
-  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Help");
 
   // Feedback.
   ImGui::SameLine();
-  if (ImGui::ImageButton(TextureId(feedback_icon_id_), icon_size)) {
+  bool feedback_enabled = !is_capturing;
+  if (IconButton(feedback_icon_id_, "Feedback", icon_size, feedback_enabled)) {
   }
-  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Feedback");
 
   const float space_between_toolbars = 0;
   float current_x = ImGui::GetWindowWidth() + space_between_toolbars;
@@ -987,8 +1016,11 @@ void CaptureWindow::RenderToolbars() {
                ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
 
+  ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
   ImGui::ImageButton(TextureId(filter_tracks_icon_id_), icon_size);
-  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Filter Tracks");
+  ImGui::PopItemFlag();
+  if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+    ImGui::SetTooltip("Filter Tracks");
 
   ImGui::SameLine();
   ImGui::PushItemWidth(300.f);
@@ -1006,8 +1038,11 @@ void CaptureWindow::RenderToolbars() {
                ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
 
+  ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
   ImGui::ImageButton(TextureId(search_icon_id_), icon_size);
-  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Search");
+  ImGui::PopItemFlag();
+  if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+    ImGui::SetTooltip("Search");
   ImGui::SameLine();
   ImGui::PushItemWidth(300.f);
   ImGui::InputText("##Search", find_filter_, IM_ARRAYSIZE(find_filter_));
@@ -1022,8 +1057,11 @@ void CaptureWindow::RenderToolbars() {
   ImGui::Begin("CaptureInfo", nullptr, ImVec2(0, 0), 1.f,
                ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+  ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
   ImGui::ImageButton(TextureId(time_icon_id_), icon_size);
-  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Capture Time");
+  ImGui::PopItemFlag();
+  if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+    ImGui::SetTooltip("Capture Time");
   ImGui::SameLine();
 
   double timeSpan = time_graph_.GetSessionTimeSpanUs();
@@ -1039,8 +1077,12 @@ void CaptureWindow::RenderToolbars() {
   ImGui::Begin("ProcessInfo", nullptr, ImVec2(0, 0), 1.f,
                ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+
+  ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
   ImGui::ImageButton(TextureId(info_icon_id_), icon_size);
-  if (ImGui::IsItemHovered()) ImGui::SetTooltip("Process Info");
+  ImGui::PopItemFlag();
+  if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+    ImGui::SetTooltip("Process Info");
   ImGui::SameLine();
   std::string process_info = Capture::GTargetProcess->GetName();
   if (!process_info.empty()) {
