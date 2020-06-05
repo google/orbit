@@ -61,7 +61,6 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
   Message message_;
   std::vector<char> payload_;
   asio::streambuf stream_buf_;
-  std::string web_socket_key_;
   uint64_t num_bytes_received_;
 };
 
