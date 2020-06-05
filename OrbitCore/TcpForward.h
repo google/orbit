@@ -15,7 +15,6 @@ namespace asio {
 class io_context;
 }
 
-#define MAX_WS_HEADER_LENGTH 14
 #define MAGIC_FOOT_MSG 0xf007ba11
 #define ORBIT_HOST "localhost"
 #define ORBIT_EXE_NAME "Orbit.exe"
