@@ -179,12 +179,10 @@ void TimerManager::SendTimers() {
 
 //-----------------------------------------------------------------------------
 void TimerManager::AddTimer(const Timer& a_Timer) {
-  if (m_IsRecording) {
-    m_LockFreeQueue.enqueue(a_Timer);
-    m_ConditionVariable.signal();
-    ++m_NumQueuedEntries;
-    ++m_NumQueuedTimers;
-  }
+  m_LockFreeQueue.enqueue(a_Timer);
+  m_ConditionVariable.signal();
+  ++m_NumQueuedEntries;
+  ++m_NumQueuedTimers;
 }
 
 //-----------------------------------------------------------------------------
