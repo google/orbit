@@ -36,7 +36,6 @@ class TimerManager {
   void StopClient();
 
   void Add(const Timer& a_Timer);
-  void Add(const Message& a_Message);
   void Add(const ContextSwitch& a_CS);
 
   void ConsumeTimers();
