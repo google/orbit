@@ -41,8 +41,6 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
   void ReadFooter();
   void DecodeMessage(Message& message);
 
-  bool IsWebsocket() { return !web_socket_key_.empty(); }
-  void ReadWebsocketHandshake();
   uint64_t GetNumBytesReceived() { return num_bytes_received_; }
 
   void ResetStats();
@@ -58,15 +56,11 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
   void handle_write(const asio::error_code& /*error*/,
                     size_t /*bytes_transferred*/) {}
 
-  void handle_request_line(asio::error_code ec, std::size_t bytes_transferred);
-  void SendWebsocketResponse();
-
   tcp::socket socket_;
   TcpSocket wrapped_socket_;
   Message message_;
   std::vector<char> payload_;
   asio::streambuf stream_buf_;
-  std::string web_socket_key_;
   uint64_t num_bytes_received_;
 };
 

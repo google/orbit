@@ -36,12 +36,10 @@ enum MessageType : int16_t {
   Msg_ArgTracking,
   Msg_CallstackTracking,
   Msg_Unload,
-  Msg_WebSocketHandshake,
   Msg_NumQueuedEntries,
   Msg_NumFlushedEntries,
   Msg_NumFlushedItems,
   Msg_NumInstalledHooks,
-  // TODO: This should not be needed in the future.
   Msg_Callstack,
   Msg_OrbitZoneName,
   Msg_OrbitLog,
