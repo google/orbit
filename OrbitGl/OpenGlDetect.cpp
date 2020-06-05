@@ -37,17 +37,17 @@ std::optional<OpenGlVersion> DetectOpenGlVersion(GlutContext*) {
   glutMainLoopEvent();
   glutMainLoopEvent();
 
-  std::vector<std::string> pieces =
+  std::vector<std::string> tokens =
       absl::StrSplit(str, absl::MaxSplits(absl::ByAnyChar(". "), 2));
 
-  if (pieces.size() < 2) {
+  if (tokens.size() < 2) {
     ERROR("Could not split OpenGL version string: %s", str);
     return std::nullopt;
   }
 
   OpenGlVersion version{};
   const auto major_result = std::from_chars(
-      pieces[0].data(), pieces[0].data() + pieces[0].size(), version.major);
+      tokens[0].data(), tokens[0].data() + tokens[0].size(), version.major);
 
   if (major_result.ec != std::errc()) {
     ERROR("Could not parse major version in OpenGL version string: %s", str);
@@ -55,7 +55,7 @@ std::optional<OpenGlVersion> DetectOpenGlVersion(GlutContext*) {
   }
 
   const auto minor_result = std::from_chars(
-      pieces[1].data(), pieces[1].data() + pieces[1].size(), version.minor);
+      tokens[1].data(), tokens[1].data() + tokens[1].size(), version.minor);
 
   if (minor_result.ec != std::errc()) {
     ERROR("Could not parse minor version in OpenGL version string: %s", str);
