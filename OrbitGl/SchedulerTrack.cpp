@@ -56,13 +56,33 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   double inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
+
+  // We minimize overdraw by recording the previous span that we know to be drawn and
+  // don't overdraw this with any of the timer events that fall into the same span.
+  // When zoomed in a lot, this typically has no effect, as the timeslices are disjoint
+  // and no timer falls entirely into a span that was already drawn. However, when
+  // zoomed out and many events fall onto a span that is a single pixel wide, many will
+  // fall onto the same pixel and thus many will be discarded.
+  uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
+  uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
+
+  uint64_t pixel_delta_in_ticks = 
+    static_cast<uint64_t>(TicksFromMicroseconds(time_graph_->GetTimeWindowUs())) / canvas->getWidth();
+
   for (std::shared_ptr<TimerChain>& timer_chain : chains_by_depth) {
     if (timer_chain == nullptr) continue;
+    // We have to reset this when we go to the next depth, as otherwise we would miss
+    // drawing events that should be drawn.
+    min_ignore = std::numeric_limits<uint64_t>::max();
+    max_ignore = std::numeric_limits<uint64_t>::min();
+
     for (TextBox& text_box : *timer_chain) {
       const Timer& timer = text_box.GetTimer();
       if (min_tick > timer.m_End || max_tick < timer.m_Start) continue;
+      if (timer.m_Start >= min_ignore && timer.m_End <= max_ignore) continue;
 
       UpdateDepth(timer.m_Depth + 1);
+      
       double start_us = time_graph_->GetUsFromTick(timer.m_Start);
       double end_us = time_graph_->GetUsFromTick(timer.m_End);
       double elapsed_us = end_us - start_us;
@@ -90,9 +110,15 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
 
       if (is_visible_width) {
         batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, &text_box);
+        // For boxes, we can ignore the entire timespan from start to end.
+        min_ignore = timer.m_Start;
+        max_ignore = timer.m_End; 
       } else {
         auto type = PickingID::LINE;
         batcher->AddVerticalLine(pos, size[1], z, color, type, &text_box);
+        // For lines, we can ignore the entire pixel into which this event falls.
+        min_ignore = time_graph_->GetTickFromWorld(std::floor(pos[0]));
+        max_ignore = min_ignore + pixel_delta_in_ticks;
       }
     }
   }
