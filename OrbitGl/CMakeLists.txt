@@ -101,7 +101,7 @@ target_sources(
           PickingManager.cpp
           PluginCanvas.cpp
           PluginManager.cpp
-          ProcessListManager.cpp
+          ProcessManager.cpp
           ProcessMemoryClient.cpp
           ProcessesDataView.cpp
           SamplingReport.cpp

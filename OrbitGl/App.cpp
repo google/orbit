@@ -277,8 +277,8 @@ void OrbitApp::PostInit() {
     }
 
     // TODO: Replace refresh_timeout with config option. Let users to modify it.
-    process_list_manager_ =
-        ProcessListManager::Create(grpc_channel_, absl::Milliseconds(1000));
+    process_manager_ =
+        ProcessManager::Create(grpc_channel_, absl::Milliseconds(1000));
 
     auto callback = [&](std::vector<ProcessInfo>&& process_list) {
       main_thread_executor_->Schedule(
@@ -288,8 +288,8 @@ void OrbitApp::PostInit() {
           });
     };
 
-    process_list_manager_->SetCallback(callback);
-    process_list_manager_->Start();
+    process_manager_->SetCallback(callback);
+    process_manager_->Start();
   }
 
   ListSessions();
@@ -456,7 +456,7 @@ void OrbitApp::OnExit() {
     GTcpServer->Stop();
   }
 
-  process_list_manager_->Shutdown();
+  process_manager_->Shutdown();
 
   GTimerManager = nullptr;
   GCoreApp = nullptr;

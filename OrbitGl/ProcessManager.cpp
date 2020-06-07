@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ProcessListManager.h"
+#include "ProcessManager.h"
 
 #include <chrono>
 #include <memory>
@@ -16,10 +16,10 @@ namespace {
 
 constexpr uint64_t kGrpcCallTimeoutMilliseconds = 1000;
 
-class ProcessListManagerImpl final : public ProcessListManager {
+class ProcessManagerImpl final : public ProcessManager {
  public:
-  explicit ProcessListManagerImpl(std::shared_ptr<grpc::Channel> channel,
-                                  absl::Duration refresh_timeout);
+  explicit ProcessManagerImpl(std::shared_ptr<grpc::Channel> channel,
+                              absl::Duration refresh_timeout);
 
   void SetCallback(
       const std::function<void(std::vector<ProcessInfo>&&)>& listener) override;
@@ -40,24 +40,24 @@ class ProcessListManagerImpl final : public ProcessListManager {
   std::thread worker_thread_;
 };
 
-ProcessListManagerImpl::ProcessListManagerImpl(
-    std::shared_ptr<grpc::Channel> channel, absl::Duration refresh_timeout)
+ProcessManagerImpl::ProcessManagerImpl(std::shared_ptr<grpc::Channel> channel,
+                                       absl::Duration refresh_timeout)
     : process_service_(ProcessService::NewStub(channel)),
       refresh_timeout_(refresh_timeout),
       shutdown_initiated_(false) {}
 
-void ProcessListManagerImpl::SetCallback(
+void ProcessManagerImpl::SetCallback(
     const std::function<void(std::vector<ProcessInfo>&&)>& callback) {
   absl::MutexLock lock(&callback_mutex_);
   callback_ = callback;
 }
 
-void ProcessListManagerImpl::Start() {
+void ProcessManagerImpl::Start() {
   CHECK(!worker_thread_.joinable());
   worker_thread_ = std::thread([this] { WorkerFunction(); });
 }
 
-void ProcessListManagerImpl::Shutdown() {
+void ProcessManagerImpl::Shutdown() {
   shutdown_mutex_.Lock();
   shutdown_initiated_ = true;
   shutdown_mutex_.Unlock();
@@ -68,7 +68,7 @@ void ProcessListManagerImpl::Shutdown() {
 
 bool IsTrue(bool* var) { return *var; }
 
-void ProcessListManagerImpl::WorkerFunction() {
+void ProcessManagerImpl::WorkerFunction() {
   while (true) {
     if (shutdown_mutex_.LockWhenWithTimeout(
             absl::Condition(IsTrue, &shutdown_initiated_), refresh_timeout_)) {
@@ -105,7 +105,7 @@ void ProcessListManagerImpl::WorkerFunction() {
 
 }  // namespace
 
-std::unique_ptr<ProcessListManager> ProcessListManager::Create(
+std::unique_ptr<ProcessManager> ProcessManager::Create(
     std::shared_ptr<grpc::Channel> channel, absl::Duration refresh_timeout) {
-  return std::make_unique<ProcessListManagerImpl>(channel, refresh_timeout);
+  return std::make_unique<ProcessManagerImpl>(channel, refresh_timeout);
 }
