@@ -4,6 +4,7 @@
 
 syntax = "proto3";
 
+import "module.proto";
 import "process.proto";
 
 message GetProcessListRequest {}
@@ -12,6 +13,16 @@ message GetProcessListResponse {
   repeated ProcessInfo processes = 1;
 }
 
+message GetModuleListRequest {
+  uint32 process_id = 1;
+}
+
+message GetModuleListResponse {
+  repeated ModuleInfo modules = 1;
+}
+
 service ProcessService {
   rpc GetProcessList(GetProcessListRequest) returns (GetProcessListResponse) {}
+  rpc GetModuleList(GetModuleListRequest) returns (GetModuleListResponse) {}
 }
+
