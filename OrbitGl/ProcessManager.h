@@ -14,7 +14,7 @@
 #include "grpcpp/grpcpp.h"
 #include "process.pb.h"
 
-// This class is resposible for maintaining
+// This class is responsible for maintaining
 // process list. It periodically updates it
 // and calls callback to notify listeners when
 // the list is updated.
@@ -25,9 +25,7 @@
 // auto callback = [&](const std::vector<ProcessInfo>& process_list) {
 //   // Update process list in UI
 // }
-// manager.SetCallback(callback);
-//
-// manager.Start();
+// manager.SetProcessListUpdateListener(callback);
 //
 // To orderly shutdown the manager use following:
 //
@@ -38,9 +36,12 @@ class ProcessManager {
   ProcessManager() = default;
   virtual ~ProcessManager() = default;
 
-  virtual void SetCallback(
-      const std::function<void(std::vector<ProcessInfo>&&)>& listener) = 0;
-  virtual void Start() = 0;
+  virtual void SetProcessListUpdateListener(
+      const std::function<void(ProcessManager*)>& listener) = 0;
+
+  // Get a copy of process list.
+  virtual std::vector<ProcessInfo> GetProcessList() const = 0;
+
   // Note that this method waits for the worker thread to stop, which could
   // take up to refresh_timeout.
   virtual void Shutdown() = 0;

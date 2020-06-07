@@ -280,16 +280,14 @@ void OrbitApp::PostInit() {
     process_manager_ =
         ProcessManager::Create(grpc_channel_, absl::Milliseconds(1000));
 
-    auto callback = [&](std::vector<ProcessInfo>&& process_list) {
-      main_thread_executor_->Schedule(
-          [&, list = std::move(process_list)]() mutable {
-            m_ProcessesDataView->SetProcessList(std::move(list));
-            FireRefreshCallbacks(DataViewType::PROCESSES);
-          });
+    auto callback = [&](ProcessManager* process_manager) {
+      main_thread_executor_->Schedule([&, process_manager]() {
+        m_ProcessesDataView->SetProcessList(process_manager->GetProcessList());
+        FireRefreshCallbacks(DataViewType::PROCESSES);
+      });
     };
 
-    process_manager_->SetCallback(callback);
-    process_manager_->Start();
+    process_manager_->SetProcessListUpdateListener(callback);
   }
 
   ListSessions();

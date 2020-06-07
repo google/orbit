@@ -21,9 +21,10 @@ class ProcessManagerImpl final : public ProcessManager {
   explicit ProcessManagerImpl(std::shared_ptr<grpc::Channel> channel,
                               absl::Duration refresh_timeout);
 
-  void SetCallback(
-      const std::function<void(std::vector<ProcessInfo>&&)>& listener) override;
-  void Start() override;
+  void SetProcessListUpdateListener(
+      const std::function<void(ProcessManager*)>& listener) override;
+  std::vector<ProcessInfo> GetProcessList() const override;
+  void Start();
   void Shutdown() override;
 
  private:
@@ -35,8 +36,10 @@ class ProcessManagerImpl final : public ProcessManager {
   absl::Mutex shutdown_mutex_;
   bool shutdown_initiated_;
 
-  absl::Mutex callback_mutex_;
-  std::function<void(std::vector<ProcessInfo>&&)> callback_;
+  mutable absl::Mutex mutex_;
+  std::vector<ProcessInfo> process_list_;
+  std::function<void(ProcessManager*)> process_list_update_listener_;
+
   std::thread worker_thread_;
 };
 
@@ -46,10 +49,15 @@ ProcessManagerImpl::ProcessManagerImpl(std::shared_ptr<grpc::Channel> channel,
       refresh_timeout_(refresh_timeout),
       shutdown_initiated_(false) {}
 
-void ProcessManagerImpl::SetCallback(
-    const std::function<void(std::vector<ProcessInfo>&&)>& callback) {
-  absl::MutexLock lock(&callback_mutex_);
-  callback_ = callback;
+void ProcessManagerImpl::SetProcessListUpdateListener(
+    const std::function<void(ProcessManager*)>& listener) {
+  absl::MutexLock lock(&mutex_);
+  process_list_update_listener_ = listener;
+}
+
+std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
+  absl::MutexLock lock(&mutex_);
+  return process_list_;
 }
 
 void ProcessManagerImpl::Start() {
@@ -95,11 +103,12 @@ void ProcessManagerImpl::WorkerFunction() {
       continue;
     }
 
-    std::vector<ProcessInfo> processes(response.processes().begin(),
-                                       response.processes().end());
-
-    absl::MutexLock callback_lock(&callback_mutex_);
-    callback_(std::move(processes));
+    absl::MutexLock callback_lock(&mutex_);
+    const auto& processes = response.processes();
+    process_list_.assign(processes.begin(), processes.end());
+    if (process_list_update_listener_) {
+      process_list_update_listener_(this);
+    }
   }
 }
 
@@ -107,5 +116,8 @@ void ProcessManagerImpl::WorkerFunction() {
 
 std::unique_ptr<ProcessManager> ProcessManager::Create(
     std::shared_ptr<grpc::Channel> channel, absl::Duration refresh_timeout) {
-  return std::make_unique<ProcessManagerImpl>(channel, refresh_timeout);
+  std::unique_ptr<ProcessManagerImpl> impl =
+      std::make_unique<ProcessManagerImpl>(channel, refresh_timeout);
+  impl->Start();
+  return impl;
 }
