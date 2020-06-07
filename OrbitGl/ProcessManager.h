@@ -33,10 +33,10 @@
 //
 // manager.Shutdown();
 //
-class ProcessListManager {
+class ProcessManager {
  public:
-  ProcessListManager() = default;
-  virtual ~ProcessListManager() = default;
+  ProcessManager() = default;
+  virtual ~ProcessManager() = default;
 
   virtual void SetCallback(
       const std::function<void(std::vector<ProcessInfo>&&)>& listener) = 0;
@@ -45,8 +45,8 @@ class ProcessListManager {
   // take up to refresh_timeout.
   virtual void Shutdown() = 0;
 
-  // Create ProcessListManager with specified duration
-  static std::unique_ptr<ProcessListManager> Create(
+  // Create ProcessManager with specified duration
+  static std::unique_ptr<ProcessManager> Create(
       std::shared_ptr<grpc::Channel> channel, absl::Duration refresh_timeout);
 };
 
