@@ -17,7 +17,12 @@ class ProcessServiceImpl final : public ProcessService::Service {
                               const GetProcessListRequest* request,
                               GetProcessListResponse* response) override;
 
+  grpc::Status GetModuleList(grpc::ServerContext* context,
+                             const GetModuleListRequest* request,
+                             GetModuleListResponse* response) override;
+
  private:
+  absl::Mutex mutex_;
   ProcessList process_list_;
 };
 
