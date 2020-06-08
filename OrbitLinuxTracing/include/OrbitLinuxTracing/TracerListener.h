@@ -13,6 +13,7 @@ class TracerListener {
  public:
   virtual ~TracerListener() = default;
   virtual void OnTid(pid_t tid) = 0;
+  virtual void OnSchedulingSlice(const SchedulingSlice& scheduling_slice) = 0;
   virtual void OnContextSwitchIn(const ContextSwitchIn& context_switch_in) = 0;
   virtual void OnContextSwitchOut(
       const ContextSwitchOut& context_switch_out) = 0;

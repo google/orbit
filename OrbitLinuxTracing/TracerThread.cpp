@@ -354,6 +354,8 @@ void TracerThread::Run(
     perf_event_open_errors |= !OpenContextSwitches(all_cpus);
   }
 
+  context_switch_manager_.Clear();
+
   perf_event_open_errors |= !OpenMmapTask(cpuset_cpus);
 
   bool uprobes_event_open_errors = false;
@@ -362,15 +364,15 @@ void TracerThread::Run(
     perf_event_open_errors |= uprobes_event_open_errors;
   }
 
-  if (tracing_options_.sampling_method != SamplingMethod::kOff) {
-    perf_event_open_errors |= !OpenSampling(cpuset_cpus);
-  }
-
   // This takes an initial snapshot of the maps. Call it after OpenUprobes, as
   // calling perf_event_open for uprobes (just calling it, it is not necessary
   // to enable the file descriptor) causes a new [uprobes] map entry, and we
   // want to catch it.
   InitUprobesEventProcessor();
+
+  if (tracing_options_.sampling_method != SamplingMethod::kOff) {
+    perf_event_open_errors |= !OpenSampling(cpuset_cpus);
+  }
 
   bool gpu_event_open_errors = false;
   if (tracing_options_.trace_gpu_driver) {
@@ -564,9 +566,13 @@ void TracerThread::ProcessContextSwitchCpuWideEvent(
     if (event.IsSwitchOut()) {
       // Careful: when a switch out is caused by the thread exiting, pid and tid
       // have value -1.
-      listener_->OnContextSwitchOut(ContextSwitchOut(pid, tid, cpu, time));
+      std::optional<SchedulingSlice> scheduling_slice =
+          context_switch_manager_.ProcessContextSwitchOut(pid, tid, cpu, time);
+      if (scheduling_slice.has_value()) {
+        listener_->OnSchedulingSlice(scheduling_slice.value());
+      }
     } else {
-      listener_->OnContextSwitchIn(ContextSwitchIn(pid, tid, cpu, time));
+      context_switch_manager_.ProcessContextSwitchIn(pid, tid, cpu, time);
     }
   }
 

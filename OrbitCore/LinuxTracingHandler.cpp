@@ -60,6 +60,20 @@ void LinuxTracingHandler::OnTid(pid_t /*tid*/) {
   // Do nothing.
 }
 
+void LinuxTracingHandler::OnSchedulingSlice(
+    const LinuxTracing::SchedulingSlice& scheduling_slice) {
+  Timer timer;
+  timer.m_Start = scheduling_slice.GetInTimestampNs();
+  timer.m_End = scheduling_slice.GetOutTimestampNs();
+  timer.m_PID = scheduling_slice.GetPid();
+  timer.m_TID = scheduling_slice.GetTid();
+  timer.m_Processor = static_cast<int8_t>(scheduling_slice.GetCore());
+  timer.m_Depth = timer.m_Processor;
+  timer.SetType(Timer::CORE_ACTIVITY);
+  
+  tracing_buffer_->RecordTimer(std::move(timer));
+}
+
 void LinuxTracingHandler::OnContextSwitchIn(
     const LinuxTracing::ContextSwitchIn& context_switch_in) {
   ContextSwitch context_switch(ContextSwitch::In);
