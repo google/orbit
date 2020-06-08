@@ -43,10 +43,11 @@ static outcome::result<T> MapError(outcome::result<T> result, Error new_error) {
 
 ServiceDeployManager::ServiceDeployManager(
     DeploymentConfiguration deployment_configuration,
-    OrbitSsh::Credentials credentials, ServiceDeployManager::Ports remote_ports,
-    QObject* parent)
+    OrbitSsh::Context* context, OrbitSsh::Credentials credentials,
+    ServiceDeployManager::Ports remote_ports, QObject* parent)
     : QObject(parent),
       deployment_configuration_(std::move(deployment_configuration)),
+      context_(context),
       credentials_(std::move(credentials)),
       remote_ports_(std::move(remote_ports)) {}
 
@@ -324,10 +325,7 @@ outcome::result<void> ServiceDeployManager::ConnectToServer() {
                          .arg(QString::fromStdString(credentials_.host))
                          .arg(credentials_.port));
 
-  OUTCOME_TRY(context, OrbitSsh::Context::Create());
-  context_ = std::move(context);
-
-  session_.emplace(&context_.value());
+  session_.emplace(context_);
 
   using OrbitSshQt::Session;
   auto quit_handler = ConnectQuitHandler(&session_.value(), &Session::started);
