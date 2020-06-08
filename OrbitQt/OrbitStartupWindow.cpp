@@ -24,6 +24,8 @@
 #include "OrbitGgp/GgpSshInfo.h"
 #include "Path.h"
 
+namespace OrbitQt {
+
 OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
     : QDialog{parent, Qt::Dialog}, model_{new GgpInstanceItemModel{{}, this}} {
   // General UI
@@ -205,3 +207,5 @@ void OrbitStartupWindow::ReloadInstances(QPointer<QPushButton> refresh_button) {
         }
       });
 }
+
+}  // namespace OrbitQt

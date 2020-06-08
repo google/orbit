@@ -61,6 +61,7 @@ static void ParseLegacyCommandLine(int argc, char* argv[],
 
 using ServiceDeployManager = OrbitQt::ServiceDeployManager;
 using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;
+using OrbitStartupWindow = OrbitQt::OrbitStartupWindow;
 using ScopedConnection = OrbitSshQt::ScopedConnection;
 using Ports = ServiceDeployManager::Ports;
 using SshCredentials = OrbitSsh::Credentials;
