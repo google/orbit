@@ -44,6 +44,30 @@ class ContextSwitchOut : public ContextSwitch {
       : ContextSwitch(pid, tid, core, timestamp_ns) {}
 };
 
+class SchedulingSlice {
+ public:
+  SchedulingSlice(pid_t pid, pid_t tid, uint16_t core, uint64_t in_timestamp_ns,
+                  uint64_t out_timestamp_ns)
+      : pid_(pid),
+        tid_(tid),
+        core_(core),
+        in_timestamp_ns_(in_timestamp_ns),
+        out_timestamp_ns_(out_timestamp_ns) {}
+
+  pid_t GetPid() const { return pid_; }
+  pid_t GetTid() const { return tid_; }
+  uint16_t GetCore() const { return core_; }
+  uint64_t GetInTimestampNs() const { return in_timestamp_ns_; }
+  uint64_t GetOutTimestampNs() const { return out_timestamp_ns_; }
+
+ private:
+  pid_t pid_;
+  pid_t tid_;
+  uint16_t core_;
+  uint64_t in_timestamp_ns_;
+  uint64_t out_timestamp_ns_;
+};
+
 class CallstackFrame {
  public:
   CallstackFrame(uint64_t pc, std::string function_name,

@@ -27,6 +27,8 @@ target_sources(OrbitLinuxTracing PUBLIC
         include/OrbitLinuxTracing/TracingOptions.h)
 
 target_sources(OrbitLinuxTracing PRIVATE
+        ContextSwitchManager.cpp
+        ContextSwitchManager.h
         GpuTracepointEventProcessor.h
         GpuTracepointEventProcessor.cpp
         LibunwindstackUnwinder.cpp
@@ -66,6 +68,7 @@ add_executable(OrbitLinuxTracingTests)
 
 if (NOT WIN32)
     target_sources(OrbitLinuxTracingTests PRIVATE
+            ContextSwitchManagerTest.cpp
             PerfEventProcessor2Test.cpp
             UprobesFunctionCallManagerTest.cpp
             UprobesReturnAddressManagerTest.cpp
