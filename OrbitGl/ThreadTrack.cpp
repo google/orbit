@@ -221,9 +221,6 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           SetTimesliceText(timer, elapsed_us, min_x, &text_box);
         }
         batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, &text_box);
-        // For boxes, we can ignore the entire timespan from start to end.
-        min_ignore = timer.m_Start;
-        max_ignore = timer.m_End;
       } else {
         auto type = PickingID::LINE;
         batcher->AddVerticalLine(pos, size[1], z, color, type, &text_box);
