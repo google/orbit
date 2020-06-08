@@ -899,7 +899,9 @@ void CaptureWindow::RenderHelpUi() {
 }
 
 //-----------------------------------------------------------------------------
-ImTextureID TextureId(uint64_t id) { return reinterpret_cast<ImTextureID>(id); }
+ImTextureID TextureId(uint64_t id) {
+  return reinterpret_cast<ImTextureID>(static_cast<uintptr_t>(id));
+}
 
 //-----------------------------------------------------------------------------
 bool IconButton(uint64_t texture_id, const char* tooltip, ImVec2 size,
