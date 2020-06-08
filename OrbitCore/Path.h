@@ -34,6 +34,7 @@ class Path {
   static std::string GetMainDrive();
   static std::string GetSourceRoot();
   static std::string GetHome();
+  static std::string GetLogFilePath();
   static void Dump();
 
   static std::string GetFileName(const std::string& a_FullName);

@@ -22,6 +22,7 @@
 #include "Error.h"
 #include "GlutContext.h"
 #include "OpenGlDetect.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/Session.h"
@@ -213,6 +214,9 @@ FigureOutDeploymentConfiguration() {
 }
 
 int main(int argc, char* argv[]) {
+  const std::string log_file_path = Path::GetLogFilePath();
+  InitLogFile(log_file_path);
+
   absl::SetProgramUsageMessage("CPU Profiler");
   absl::ParseCommandLine(argc, argv);
 #if __linux__

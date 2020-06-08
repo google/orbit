@@ -25,6 +25,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/SafeStrerror.h)
 
 target_sources(OrbitBase PRIVATE
+        Logging.cpp
         MainThreadExecutor.cpp
         SafeStrerror.cpp)
 
