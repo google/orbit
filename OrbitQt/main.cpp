@@ -212,6 +212,10 @@ FigureOutDeploymentConfiguration() {
   }
 }
 
+static void DisplayErrorToUser(const QString& message) {
+  QMessageBox::critical(nullptr, QApplication::applicationName(), message);
+}
+
 int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage("CPU Profiler");
   absl::ParseCommandLine(argc, argv);
@@ -247,8 +251,7 @@ int main(int argc, char* argv[]) {
   const auto open_gl_version = OrbitGl::DetectOpenGlVersion(&glut_context);
 
   if (!open_gl_version) {
-    QMessageBox::critical(
-        nullptr, QApplication::applicationName(),
+    DisplayErrorToUser(
         "OpenGL support was not found. Please make sure you're not trying to "
         "start Orbit in a remote session and make sure you have a recent "
         "graphics driver installed. Then try again!");
@@ -259,8 +262,7 @@ int main(int argc, char* argv[]) {
       open_gl_version->minor);
 
   if (open_gl_version->major < 2) {
-    QMessageBox::critical(
-        nullptr, QApplication::applicationName(),
+    DisplayErrorToUser(
         QString(
             "The minimum required version of OpenGL is 2.0. But this machine "
             "only supports up to version %1.%2. Please make sure you're not "
@@ -281,10 +283,7 @@ int main(int argc, char* argv[]) {
       return 0;
     } else if (result.error() !=
                make_error_code(Error::kUserCanceledServiceDeployment)) {
-      QMessageBox::critical(
-          nullptr,
-          QString("%1 %2").arg(QApplication::applicationName(),
-                               QApplication::applicationVersion()),
+      DisplayErrorToUser(
           QString("An error occurred: %1")
               .arg(QString::fromStdString(result.error().message())));
     }
