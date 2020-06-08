@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBITQT_ORBIT_STARTUP_WINDOW_H_
-#define ORBITQT_ORBIT_STARTUP_WINDOW_H_
+#ifndef ORBIT_QT_ORBIT_STARTUP_WINDOW_H_
+#define ORBIT_QT_ORBIT_STARTUP_WINDOW_H_
 
 #include <QDialog>
 #include <QPointer>
@@ -19,6 +19,8 @@
 #include "OrbitGgp/GgpInstance.h"
 #include "OrbitGgp/GgpInstanceItemModel.h"
 #include "OrbitGgp/GgpSshInfo.h"
+
+namespace OrbitQt {
 
 class OrbitStartupWindow : public QDialog {
  public:
@@ -59,4 +61,6 @@ class OrbitStartupWindow : public QDialog {
   QPointer<GgpInstanceItemModel> model_;
 };
 
-#endif  // ORBITQT_ORBIT_STARTUP_WINDOW_H_
+}  // namespace OrbitQt
+
+#endif  // ORBIT_QT_ORBIT_STARTUP_WINDOW_H_
