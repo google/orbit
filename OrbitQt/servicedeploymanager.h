@@ -32,8 +32,8 @@ class ServiceDeployManager : public QObject {
 
   explicit ServiceDeployManager(
       DeploymentConfiguration deployment_configuration,
-      OrbitSsh::Credentials creds, Ports remote_ports,
-      QObject* parent = nullptr);
+      OrbitSsh::Context* context, OrbitSsh::Credentials creds,
+      Ports remote_ports, QObject* parent = nullptr);
 
   outcome::result<Ports> Exec();
   void Shutdown();
@@ -47,9 +47,9 @@ class ServiceDeployManager : public QObject {
   EventLoop loop_;
 
   DeploymentConfiguration deployment_configuration_;
+  OrbitSsh::Context* context_ = nullptr;
   OrbitSsh::Credentials credentials_;
   Ports remote_ports_;
-  std::optional<OrbitSsh::Context> context_;
   std::optional<OrbitSshQt::Session> session_;
   std::optional<OrbitSshQt::Task> orbit_service_task_;
   std::optional<OrbitSshQt::Tunnel> asio_tunnel_;

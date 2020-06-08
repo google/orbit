@@ -67,15 +67,16 @@ using Error = OrbitQt::Error;
 using ScopedConnection = OrbitSshQt::ScopedConnection;
 using Ports = ServiceDeployManager::Ports;
 using SshCredentials = OrbitSsh::Credentials;
+using Context = OrbitSsh::Context;
 
 static outcome::result<Ports> DeployOrbitService(
     std::optional<ServiceDeployManager>& service_deploy_manager,
-    const DeploymentConfiguration& deployment_configuration,
+    const DeploymentConfiguration& deployment_configuration, Context* context,
     const SshCredentials& ssh_credentials, const Ports& remote_ports) {
   QProgressDialog progress_dialog{};
 
-  service_deploy_manager.emplace(deployment_configuration, ssh_credentials,
-                                 remote_ports);
+  service_deploy_manager.emplace(deployment_configuration, context,
+                                 ssh_credentials, remote_ports);
   QObject::connect(&progress_dialog, &QProgressDialog::canceled,
                    &service_deploy_manager.value(),
                    &ServiceDeployManager::Cancel);
@@ -92,7 +93,7 @@ static outcome::result<Ports> DeployOrbitService(
 static outcome::result<void> RunUiInstance(
     QApplication* app,
     std::optional<DeploymentConfiguration> deployment_configuration,
-    ApplicationOptions options) {
+    Context* context, ApplicationOptions options) {
   std::optional<OrbitQt::ServiceDeployManager> service_deploy_manager;
 
   OUTCOME_TRY(result, [&]() -> outcome::result<std::tuple<Ports, QString>> {
@@ -108,7 +109,7 @@ static outcome::result<void> RunUiInstance(
         OUTCOME_TRY(
             tunnel_ports,
             DeployOrbitService(service_deploy_manager,
-                               deployment_configuration.value(),
+                               deployment_configuration.value(), context,
                                std::get<SshCredentials>(result), remote_ports));
         return std::make_tuple(tunnel_ports, QString{});
       } else {
@@ -273,8 +274,17 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  auto context = Context::Create();
+  if (!context) {
+    DisplayErrorToUser(
+        QString("An error occurred while initializing ssh: %1")
+            .arg(QString::fromStdString(context.error().message())));
+    return -1;
+  }
+
   while (true) {
-    const auto result = RunUiInstance(&app, deployment_configuration, options);
+    const auto result = RunUiInstance(&app, deployment_configuration,
+                                      &(context.value()), options);
     if (result ||
         result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
         !deployment_configuration) {
