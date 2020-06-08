@@ -54,6 +54,15 @@ for profile in ${profiles[@]}; do
     conan_profile_exists "$profile" || create_conan_profile "$profile"
   fi
 
-  conan install -u -pr $profile -if build_$profile/ --build outdated $DIR || exit $?
+  if [ ! -f "build_$profile/conan.lock" -a -f "$DIR/third_party/conan/lockfiles/$profile/conan.lock" ]; then
+    mkdir -p "build_$profile" || exit $?
+    cp -v "$DIR/third_party/conan/lockfiles/$profile/conan.lock" "build_$profile/conan.lock" || exit $?
+  fi
+
+  if [ -f "build_$profile/conan.lock" ]; then
+    LOCKFILE_OPTION="--lockfile=build_$profile/conan.lock"
+  fi
+
+  conan install -u -pr $profile -if build_$profile/ --build outdated $LOCKFILE_OPTION $DIR || exit $?
   conan build -bf build_$profile/ $DIR || exit $?
 done

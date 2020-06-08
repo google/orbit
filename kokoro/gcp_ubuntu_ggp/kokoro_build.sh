@@ -19,8 +19,15 @@ if [ "$0" == "$SCRIPT" ]; then
   CONAN_PROFILE="ggp_relwithdebinfo"
 
   # Building Orbit
+  mkdir -p "${DIR}/build/"
+  cp -v "${DIR}/third_party/conan/lockfiles/${CONAN_PROFILE}/conan.lock" \
+        "${DIR}/build/conan.lock"
+  sed -i -e "s/debian_packaging=False/debian_packaging=True/" \
+            "${DIR}/build/conan.lock"
   conan install -u -pr ${CONAN_PROFILE} -if "${DIR}/build/" \
-          --build outdated -o debian_packaging=True "${DIR}"
+          --build outdated -o debian_packaging=True \
+          --lockfile="${DIR}/build/conan.lock" \
+          "${DIR}"
   conan build -bf "${DIR}/build/" "${DIR}"
   conan package -bf "${DIR}/build/" "${DIR}"
 
