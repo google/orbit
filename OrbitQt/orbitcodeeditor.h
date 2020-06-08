@@ -84,7 +84,7 @@ class OrbitCodeEditor : public QPlainTextEdit {
   void gotoLine(int a_Line);
   void OnTimer();
   void SetText(const std::string& a_Text);
-  void HighlightWord(const std::wstring& a_Text, const QColor& a_Color,
+  void HighlightWord(const std::string& a_Text, const QColor& a_Color,
                      QList<QTextEdit::ExtraSelection>& extraSelections);
 
   static void setFileMappingWidget(QWidget* a_Widget) {
@@ -123,7 +123,7 @@ class OrbitCodeEditor : public QPlainTextEdit {
   static QWidget* GFileMapWidget;
 
   static const int HISTORY_SIZE = 2;
-  RingBuffer<std::wstring, HISTORY_SIZE> m_SelectedText;
+  RingBuffer<std::string, HISTORY_SIZE> m_SelectedText;
   QColor m_SelectedColors[HISTORY_SIZE];
 };
 

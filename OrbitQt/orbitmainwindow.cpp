@@ -89,10 +89,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->AddUiMessageCallback([this](const std::string& a_Message) {
     this->OnReceiveMessage(a_Message);
   });
-  GOrbitApp->SetFindFileCallback([this](const std::wstring& a_Caption,
-                                        const std::wstring& a_Dir,
-                                        const std::wstring& a_Filter) {
-    return this->FindFile(a_Caption, a_Dir, a_Filter);
+  GOrbitApp->SetFindFileCallback([this](const std::string& caption,
+                                        const std::string& dir,
+                                        const std::string& filter) {
+    return this->FindFile(caption, dir, filter);
   });
   GOrbitApp->AddWatchCallback(
       [this](const Variable* a_Variable) { this->OnAddToWatch(a_Variable); });
@@ -100,7 +100,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     return this->OnGetSaveFileName(extension);
   });
   GOrbitApp->SetClipboardCallback(
-      [this](const std::wstring& a_Text) { this->OnSetClipboard(a_Text); });
+      [this](const std::string& text) { this->OnSetClipboard(text); });
 
   ParseCommandlineArguments();
 
@@ -257,15 +257,14 @@ bool OrbitMainWindow::HideTab(QTabWidget* a_TabWidget, const char* a_TabName) {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring OrbitMainWindow::FindFile(const std::wstring& a_Caption,
-                                       const std::wstring& a_Dir,
-                                       const std::wstring& a_Filter) {
-  QStringList list = QFileDialog::getOpenFileNames(
-      this, ws2s(a_Caption).c_str(), ws2s(a_Dir).c_str(),
-      ws2s(a_Filter).c_str());
-  std::wstring result;
+std::string OrbitMainWindow::FindFile(const std::string& caption,
+                                      const std::string& dir,
+                                      const std::string& filter) {
+  QStringList list = QFileDialog::getOpenFileNames(this, caption.c_str(),
+                                                   dir.c_str(), filter.c_str());
+  std::string result;
   for (auto& file : list) {
-    result = file.toStdWString();
+    result = file.toStdString();
     break;
   }
 
@@ -401,10 +400,9 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
     QPixmap pixMap = this->grab();
     pixMap.save(&file, "PNG");
 
-    std::wstring fileName = file.fileName().toStdWString();
-
 #ifdef _WIN32
-    ShellExecute(0, 0, fileName.c_str(), 0, 0, SW_SHOW);
+    std::string fileName = file.fileName().toStdString();
+    ShellExecuteA(0, 0, fileName.c_str(), 0, 0, SW_SHOW);
 #endif
   } else if (absl::StartsWith(a_Message, "code")) {
     ui->FileMappingWidget->hide();
@@ -491,8 +489,8 @@ std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::OnSetClipboard(const std::wstring& a_Text) {
-  QApplication::clipboard()->setText(QString::fromStdWString(a_Text));
+void OrbitMainWindow::OnSetClipboard(const std::string& text) {
+  QApplication::clipboard()->setText(QString::fromStdString(text));
 }
 
 //-----------------------------------------------------------------------------
@@ -695,7 +693,7 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
     return;
   }
 
-  (void) OpenCapture(file.toStdString());
+  (void)OpenCapture(file.toStdString());
 }
 
 outcome::result<void> OrbitMainWindow::OpenCapture(
@@ -740,9 +738,8 @@ void OrbitMainWindow::OpenDisassembly(const std::string& a_String) {
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::SetTitle(const QString& task_description) {
   if (task_description.isEmpty()) {
-    setWindowTitle(QString("%1 %2")
-                       .arg(QApplication::applicationName(),
-                            QApplication::applicationVersion()));
+    setWindowTitle(QString("%1 %2").arg(QApplication::applicationName(),
+                                        QApplication::applicationVersion()));
   } else {
     setWindowTitle(QString("%1 %2 - %3")
                        .arg(QApplication::applicationName(),

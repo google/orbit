@@ -137,5 +137,5 @@ void DataView::CopySelection(const std::vector<int>& selection) {
     }
   }
 
-  GOrbitApp->SetClipboard(s2ws(clipboard));
+  GOrbitApp->SetClipboard(clipboard);
 }

@@ -41,8 +41,8 @@ ShowIncludesDialog::ShowIncludesDialog(QWidget* parent)
 
 enum ShowIncludesMenuItems { EXPAND, COLLAPSE };
 
-const std::vector<std::wstring>& GContextMenuShowIncludes = {L"Expand",
-                                                             L"Collapse"};
+const std::vector<std::string>& GContextMenuShowIncludes = {"Expand",
+                                                            "Collapse"};
 
 void ShowIncludesDialog::onCustomContextMenu(const QPoint& point) {
   m_ModelIndex = ui->treeView->indexAt(point);
@@ -54,7 +54,7 @@ void ShowIncludesDialog::onCustomContextMenu(const QPoint& point) {
 
       for (size_t i = 0; i < GContextMenuShowIncludes.size(); ++i) {
         actions.push_back(
-            new QAction(QString::fromStdWString(GContextMenuShowIncludes[i])));
+            new QAction(QString::fromStdString(GContextMenuShowIncludes[i])));
         connect(actions[i], SIGNAL(triggered()), &signalMapper, SLOT(map()));
         signalMapper.setMapping(actions[i], i);
         contextMenu.addAction(actions[i]);

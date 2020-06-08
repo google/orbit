@@ -43,14 +43,13 @@ class OrbitMainWindow : public QMainWindow {
   void OnReceiveMessage(const std::string& message);
   void OnAddToWatch(const class Variable* a_Variable);
   std::string OnGetSaveFileName(const std::string& extension);
-  void OnSetClipboard(const std::wstring& a_Text);
+  void OnSetClipboard(const std::string& text);
   void ParseCommandlineArguments();
   bool IsHeadless() { return m_Headless; }
   void PostInit();
   bool HideTab(QTabWidget* a_TabWidget, const char* a_TabName);
-  std::wstring FindFile(const std::wstring& a_Caption,
-                        const std::wstring& a_Dir,
-                        const std::wstring& a_Filter);
+  std::string FindFile(const std::string& caption, const std::string& dir,
+                       const std::string& filter);
   void OpenDisassembly(const std::string& a_String);
   void SetTitle(const QString& task_description);
   outcome::result<void> OpenCapture(const std::string& filepath);

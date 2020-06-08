@@ -65,9 +65,6 @@ std::string GuidToString(GUID a_Guid) {
   return guidStr;
 }
 
-//-----------------------------------------------------------------------------
-std::wstring GuidToStringW(GUID a_Guid) { return s2ws(GuidToString(a_Guid)); }
-
 #include "dde.h"
 
 struct AFX_MAP_MESSAGE {
