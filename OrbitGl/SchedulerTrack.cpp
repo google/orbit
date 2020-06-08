@@ -113,8 +113,11 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
       } else {
         auto type = PickingID::LINE;
         batcher->AddVerticalLine(pos, size[1], z, color, type, &text_box);
-        // For lines, we can ignore the entire pixel into which this event falls.
-        min_ignore = time_graph_->GetTickFromWorld(std::floor(pos[0]));
+        // For lines, we can ignore the entire pixel into which this event falls. We align
+        // this precisely on the pixel x-coordinate of the current line being drawn (in ticks).
+        uint64_t min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
+        min_ignore =  min_timegraph_tick + 
+          ((timer.m_Start - min_timegraph_tick) / pixel_delta_in_ticks) * pixel_delta_in_ticks;
         max_ignore = min_ignore + pixel_delta_in_ticks;
       }
     }
