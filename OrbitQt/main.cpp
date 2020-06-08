@@ -19,6 +19,7 @@
 #include "ApplicationOptions.h"
 #include "CrashHandler.h"
 #include "CrashOptions.h"
+#include "Error.h"
 #include "GlutContext.h"
 #include "OpenGlDetect.h"
 #include "OrbitSsh/Context.h"
@@ -62,6 +63,7 @@ static void ParseLegacyCommandLine(int argc, char* argv[],
 using ServiceDeployManager = OrbitQt::ServiceDeployManager;
 using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;
 using OrbitStartupWindow = OrbitQt::OrbitStartupWindow;
+using Error = OrbitQt::Error;
 using ScopedConnection = OrbitSshQt::ScopedConnection;
 using Ports = ServiceDeployManager::Ports;
 using SshCredentials = OrbitSsh::Credentials;
@@ -271,12 +273,14 @@ int main(int argc, char* argv[]) {
 
   while (true) {
     const auto result = RunUiInstance(&app, deployment_configuration, options);
-    if (result || result.error() == std::errc::interrupted ||
+    if (result ||
+        result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
         !deployment_configuration) {
       // It was either a clean shutdown or the deliberately closed the
       // dialog, or we started with the --local flag.
       return 0;
-    } else if (result.error() != std::errc::operation_canceled) {
+    } else if (result.error() !=
+               make_error_code(Error::kUserCanceledServiceDeployment)) {
       QMessageBox::critical(
           nullptr,
           QString("%1 %2").arg(QApplication::applicationName(),
