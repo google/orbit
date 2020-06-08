@@ -51,7 +51,7 @@ ServiceDeployManager::ServiceDeployManager(
       remote_ports_(std::move(remote_ports)) {}
 
 void ServiceDeployManager::Cancel() {
-  loop_.error(std::make_error_code(std::errc::operation_canceled));
+  loop_.error(make_error_code(Error::kUserCanceledServiceDeployment));
 }
 
 outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {

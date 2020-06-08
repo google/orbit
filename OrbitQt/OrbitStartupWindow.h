@@ -14,6 +14,7 @@
 #include <system_error>
 #include <variant>
 
+#include "Error.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/GgpClient.h"
 #include "OrbitGgp/GgpInstance.h"
@@ -31,25 +32,24 @@ class OrbitStartupWindow : public QDialog {
     result_ = std::monostate{};
     const int dialog_result = exec();
 
-    if (dialog_result != 0) {
-      if (std::holds_alternative<GgpSshInfo>(result_)) {
-        auto& ssh_info = std::get<GgpSshInfo>(result_);
-        Credentials credentials{};
-        credentials.host = ssh_info.host.toStdString();
-        credentials.key_path = ssh_info.key_path.toStdString();
-        credentials.known_hosts_path = ssh_info.known_hosts_path.toStdString();
-        credentials.user = ssh_info.user.toStdString();
-        credentials.port = ssh_info.port;
-        return outcome::success(std::move(credentials));
-      } else if (std::holds_alternative<QString>(result_)) {
-        return outcome::success(std::get<QString>(result_));
-      } else {
-        UNREACHABLE();
-      }
+    if (dialog_result == 0) {
+      return Error::kUserClosedStartUpWindow;
     }
-    // TODO(hebecker): That's a hack for now. We need a proper error category
-    // which clearly states that the user pressed the cancel button.
-    return std::errc::interrupted;
+
+    if (std::holds_alternative<GgpSshInfo>(result_)) {
+      auto& ssh_info = std::get<GgpSshInfo>(result_);
+      Credentials credentials{};
+      credentials.host = ssh_info.host.toStdString();
+      credentials.key_path = ssh_info.key_path.toStdString();
+      credentials.known_hosts_path = ssh_info.known_hosts_path.toStdString();
+      credentials.user = ssh_info.user.toStdString();
+      credentials.port = ssh_info.port;
+      return outcome::success(std::move(credentials));
+    } else if (std::holds_alternative<QString>(result_)) {
+      return outcome::success(std::get<QString>(result_));
+    } else {
+      UNREACHABLE();
+    }
   }
 
  private:

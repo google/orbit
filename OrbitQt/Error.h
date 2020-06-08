@@ -14,7 +14,9 @@ enum class Error {
   kCouldNotUploadPackage,
   kCouldNotUploadSignature,
   kCouldNotInstallPackage,
-  kCouldNotStartTunnel
+  kCouldNotStartTunnel,
+  kUserCanceledServiceDeployment,
+  kUserClosedStartUpWindow
 };
 
 struct ErrorCategory : std::error_category {
