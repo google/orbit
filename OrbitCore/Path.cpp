@@ -282,6 +282,12 @@ std::string Path::GetHome() {
   return home;
 }
 
+std::string Path::GetLogFilePath() {
+  std::string logsDir = Path::GetAppDataPath() + "logs/";
+  Path::MakeDir(logsDir);
+  return logsDir + "Orbit.log";
+}
+
 void Path::Dump() {
   PRINT_VAR(GetExecutableName());
   PRINT_VAR(GetExecutablePath());

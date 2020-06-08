@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -77,15 +78,28 @@
   } while (0 && (assertion))
 #endif
 
+extern std::ofstream log_file;
+void InitLogFile(const std::string& path);
+
 // Internal.
 #if defined(_WIN32)
 #define PLATFORM_LOG(message)       \
   do {                              \
     fprintf(stderr, "%s", message); \
     OutputDebugStringA(message);    \
+    if (log_file.is_open()) {       \
+      log_file << message;          \
+      log_file.flush();             \
+    }                               \
   } while (0)
 #else
-#define PLATFORM_LOG(message) fprintf(stderr, "%s", message)
+#define PLATFORM_LOG(message) {     \
+    fprintf(stderr, "%s", message); \
+    if (log_file.is_open()) {       \
+      log_file << message;          \
+      log_file.flush();             \
+    }                               \
+  }
 #endif
 
 #ifdef __clang__
