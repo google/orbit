@@ -151,7 +151,7 @@ void ProcessesDataView::DoFilter() {
   std::vector<uint32_t> indices;
   const std::vector<ProcessInfo>& processes = process_list_;
 
-  std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
+  std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
   for (size_t i = 0; i < processes.size(); ++i) {
     const ProcessInfo& process = processes[i];

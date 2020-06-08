@@ -176,7 +176,7 @@ void CallStackDataView::DoFilter() {
   if (!m_CallStack) return;
 
   std::vector<uint32_t> indices;
-  std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
+  std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
   for (size_t i = 0; i < m_CallStack->m_Depth; ++i) {
     CallStackDataViewFrame frame = GetFrameFromIndex(i);

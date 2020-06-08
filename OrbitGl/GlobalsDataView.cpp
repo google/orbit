@@ -151,7 +151,7 @@ void GlobalsDataView::AddToWatch(const std::vector<int>& a_Items) {
 
 //-----------------------------------------------------------------------------
 void GlobalsDataView::DoFilter() {
-  m_FilterTokens = Tokenize(ToLower(m_Filter));
+  m_FilterTokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
   // TODO: This only performs work on Windows. It is currently not an issue as
   //  globals are not supported elsewhere.
