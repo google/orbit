@@ -182,7 +182,7 @@ void FunctionsDataView::OnContextMenu(const std::string& a_Action,
 
 //-----------------------------------------------------------------------------
 void FunctionsDataView::DoFilter() {
-  m_FilterTokens = Tokenize(ToLower(m_Filter));
+  m_FilterTokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
 #ifdef WIN32
   ParallelFilter();

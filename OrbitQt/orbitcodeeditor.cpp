@@ -174,7 +174,7 @@ int OrbitCodeEditor::lineNumberAreaWidth() {
 
 //-----------------------------------------------------------------------------
 bool OrbitCodeEditor::loadCode(std::string a_Msg) {
-  std::vector<std::string> tokens = Tokenize(a_Msg, "^");
+  std::vector<std::string> tokens = absl::StrSplit(a_Msg, '^');
 
   if (tokens.size() == 3) {
     QFile file(tokens[1].c_str());

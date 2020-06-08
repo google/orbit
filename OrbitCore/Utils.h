@@ -29,6 +29,7 @@
 #include "Platform.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/str_split.h"
 
 //-----------------------------------------------------------------------------
 inline std::string ws2s(const std::wstring& wstr) {
@@ -99,28 +100,6 @@ inline T ToLower(const T& a_Str) {
   T str = a_Str;
   std::transform(str.begin(), str.end(), str.begin(), ::tolower);
   return str;
-}
-
-//-----------------------------------------------------------------------------
-inline std::vector<std::string> Tokenize(std::string a_String,
-                                         const char* a_Delimiters = " ") {
-#ifdef _WIN32
-#define strtok_r strtok_s
-#endif
-
-  std::vector<std::string> tokens;
-  char* next_token;
-  char* token = strtok_r(&a_String[0], a_Delimiters, &next_token);
-  while (token != NULL) {
-    tokens.push_back(token);
-    token = strtok_r(NULL, a_Delimiters, &next_token);
-  }
-
-#ifdef _WIN32
-#undef strtok_r
-#endif
-
-  return tokens;
 }
 
 //-----------------------------------------------------------------------------
@@ -230,7 +209,7 @@ std::string GuidToString(GUID a_Guid);
 //-----------------------------------------------------------------------------
 inline uint64_t GetMicros(std::string a_TimeStamp) {
   Replace(a_TimeStamp, ":", "");
-  std::vector<std::string> tokens = Tokenize(a_TimeStamp, ".");
+  std::vector<std::string> tokens = absl::StrSplit(a_TimeStamp, ".");
   if (tokens.size() != 2) {
     return 0;
   }

@@ -88,7 +88,7 @@ std::string TypesDataView::GetValue(int a_Row, int a_Column) {
 
 //-----------------------------------------------------------------------------
 void TypesDataView::DoFilter() {
-  m_FilterTokens = Tokenize(ToLower(m_Filter));
+  m_FilterTokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
   // TODO: This only performs work on Windows. It is currently not an issue as
   //  globals are not supported elsewhere.

@@ -41,15 +41,15 @@ bool IsTraceEnd(const std::string& line) {
 
 //-----------------------------------------------------------------------------
 std::string GetThreadName(const std::string& a_Line) {
-  auto tokens = Tokenize(a_Line, "(");
-  return tokens.size() ? tokens[0] : "unknown-thread-name";
+  std::vector<std::string> tokens = absl::StrSplit(a_Line, "(");
+  return !tokens.empty() ? tokens[0] : "unknown-thread-name";
 }
 
 //-----------------------------------------------------------------------------
 std::string GetTimeStamp(const std::string& a_Line) {
-  auto tokens = Tokenize(a_Line, "]");
+  std::vector<std::string> tokens = absl::StrSplit(a_Line, "]");
   if (tokens.size() > 1) {
-    tokens = Tokenize(tokens[1]);
+    tokens = absl::StrSplit(tokens[1], ' ');
     if (tokens.size() > 1) return tokens[1];
   }
   return "0";
@@ -57,12 +57,12 @@ std::string GetTimeStamp(const std::string& a_Line) {
 
 //-----------------------------------------------------------------------------
 std::string GetFunction(const std::string& a_Line) {
-  auto tokens = Tokenize(a_Line, "|");
-  return tokens.size() ? tokens.back() : "unknown-function";
+  std::vector<std::string> tokens = absl::StrSplit(a_Line, "|");
+  return !tokens.empty() ? tokens.back() : "unknown-function";
 }
 
 //-----------------------------------------------------------------------------
-DWORD Systrace::GetThreadId(const std::string& a_ThreadName) {
+uint32_t Systrace::GetThreadId(const std::string& a_ThreadName) {
   auto it = m_ThreadIDs.find(a_ThreadName);
   if (it == m_ThreadIDs.end()) {
     auto tid = SystraceManager::Get().GetNewThreadID();
@@ -84,7 +84,7 @@ uint64_t Systrace::ProcessString(const std::string& a_String) {
 
 //-----------------------------------------------------------------------------
 uint64_t Systrace::ProcessFunctionName(const std::string& a_String) {
-  std::vector<std::string> tokens = Tokenize(a_String, "|");
+  std::vector<std::string> tokens = absl::StrSplit(a_String, "|");
   if (!tokens.empty()) {
     const std::string& name = tokens.back();
     uint64_t hash = ProcessString(name);

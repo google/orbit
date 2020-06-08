@@ -32,7 +32,7 @@ class Systrace {
   const std::string& GetName() const { return m_Name; }
 
  protected:
-  DWORD GetThreadId(const std::string& a_ThreadName);
+  uint32_t GetThreadId(const std::string& a_ThreadName);
   uint64_t ProcessString(const std::string& a_String);
   uint64_t ProcessFunctionName(const std::string& a_String);
   void UpdateMinMax(const Timer& a_Timer);

@@ -108,12 +108,12 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
 
   for (const std::string& arg : a_Args) {
     if (absl::StrContains(arg, "preset:")) {
-      std::vector<std::string> vec = Tokenize(arg, ":");
+      std::vector<std::string> vec = absl::StrSplit(arg, ":");
       if (vec.size() > 1) {
         Capture::GPresetToLoad = vec[1];
       }
     } else if (absl::StrContains(arg, "inject:")) {
-      std::vector<std::string> vec = Tokenize(arg, ":");
+      std::vector<std::string> vec = absl::StrSplit(arg, ":");
       if (vec.size() > 1) {
         Capture::GProcessToInject = vec[1];
       }
@@ -298,7 +298,7 @@ void OrbitApp::PostInit() {
   for (std::string& arg : m_PostInitArguments) {
     if (absl::StrContains(arg, "systrace:")) {
       std::string command = Replace(arg, "systrace:", "");
-      auto tokens = Tokenize(command, ",");
+      std::vector<std::string> tokens = absl::StrSplit(command, ",");
       if (!tokens.empty()) {
         GoToCapture();
         LoadSystrace(tokens[0]);
@@ -343,12 +343,14 @@ void OrbitApp::LoadFileMapping() {
 
       bool containsQuotes = absl::StrContains(line, "\"");
 
-      std::vector<std::string> tokens = Tokenize(line);
+      std::vector<std::string> tokens = absl::StrSplit(line, ' ');
+
       if (tokens.size() == 2 && !containsQuotes) {
         m_FileMapping[ToLower(tokens[0])] = ToLower(tokens[1]);
       } else {
         std::vector<std::string> validTokens;
-        for (const std::string& token : Tokenize(line, "\"//")) {
+        std::vector<std::string> tokens = absl::StrSplit(line, '"');
+        for (const std::string& token : tokens) {
           if (!IsBlank(token)) {
             validTokens.push_back(token);
           }

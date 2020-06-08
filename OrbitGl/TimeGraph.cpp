@@ -685,7 +685,7 @@ void TimeGraph::SortTracks() {
 
     // Filter thread ids if needed
     if (!m_ThreadFilter.empty()) {
-      std::vector<std::string> filters = Tokenize(m_ThreadFilter, " ");
+      std::vector<std::string> filters = absl::StrSplit(m_ThreadFilter, ' ');
       std::vector<ThreadID> filteredThreadIds;
       for (ThreadID tid : sortedThreadIds) {
         std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(tid);

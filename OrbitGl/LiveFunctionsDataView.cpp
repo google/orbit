@@ -178,7 +178,7 @@ void LiveFunctionsDataView::OnContextMenu(
 void LiveFunctionsDataView::DoFilter() {
   std::vector<uint32_t> indices;
 
-  std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
+  std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
   for (size_t i = 0; i < m_Functions.size(); ++i) {
     const Function* function = m_Functions[i];

@@ -39,12 +39,17 @@ TcpClient::TcpClient(const std::string& a_Host) { Connect(a_Host); }
 TcpClient::~TcpClient() { Stop(); }
 
 //-----------------------------------------------------------------------------
-void TcpClient::Connect(const std::string& a_Host) {
+void TcpClient::Connect(const std::string& address) {
   PRINT_FUNC;
-  PRINT_VAR(a_Host);
-  std::vector<std::string> vec = Tokenize(a_Host, ":");
-  std::string& host = vec[0];
-  std::string& port = vec[1];
+  PRINT_VAR(address);
+  std::vector<std::string> vec = absl::StrSplit(address, ':');
+  if (vec.size() != 2) {
+    ERROR("Invalid address string: %s (expected format is 'host:port')",
+          address);
+    return;
+  }
+  const std::string& host = vec[0];
+  const std::string& port = vec[1];
 
   m_TcpService->m_IoService = new asio::io_service();
   m_TcpSocket->m_Socket = new tcp::socket(*m_TcpService->m_IoService);

@@ -210,7 +210,7 @@ void ModulesDataView::OnTimer() {}
 //-----------------------------------------------------------------------------
 void ModulesDataView::DoFilter() {
   std::vector<uint32_t> indices;
-  std::vector<std::string> tokens = Tokenize(ToLower(m_Filter));
+  std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
   for (size_t i = 0; i < m_Modules.size(); ++i) {
     std::shared_ptr<Module>& module = m_Modules[i];

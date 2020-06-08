@@ -162,7 +162,7 @@ void ListModules(pid_t pid,
 uint32_t GetPID(const char* a_Name) {
   std::string command = absl::StrFormat("ps -A | grep %s", a_Name);
   std::string result = ExecuteCommand(command.c_str());
-  auto tokens = Tokenize(result);
+  std::vector<std::string> tokens = absl::StrSplit(result, " ");
   if (!tokens.empty()) return static_cast<uint32_t>(atoi(tokens[0].c_str()));
   std::cout << "Could not find process " << a_Name;
   return 0;
@@ -177,7 +177,7 @@ std::unordered_map<uint32_t, float> GetCpuUtilization() {
   std::string line;
 
   while (std::getline(ss, line, '\n')) {
-    auto tokens = Tokenize(line, ",");
+    std::vector<std::string> tokens = absl::StrSplit(line, ",");
     if (tokens.size() > 8) {
       uint32_t pid = atoi(tokens[0].c_str());
       const auto cpu = static_cast<float>(atof(tokens[8].c_str()));
@@ -254,7 +254,7 @@ std::string GetKernelVersionStr() {
 
 //-----------------------------------------------------------------------------
 uint32_t GetVersion(const std::string& a_Version) {
-  std::vector<std::string> v = Tokenize(a_Version, ".");
+  std::vector<std::string> v = absl::StrSplit(a_Version, ".");
   if (v.size() == 3)
     return KERNEL_VERSION(std::stoi(v[0]), std::stoi(v[1]), std::stoi(v[2]));
   LOG("Error: GetVersion: Invalid argument");
