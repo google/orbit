@@ -195,8 +195,7 @@ void ModulesDataView::OnContextMenu(const std::string& a_Action,
           m_Process.get(), modules_to_validate);
     }
   } else if (a_Action == MENU_ACTION_DLL_FIND_PDB) {
-    std::string FileName =
-        ws2s(GOrbitApp->FindFile(L"Find Pdb File", L"", L"*.pdb"));
+    std::string FileName = GOrbitApp->FindFile("Find Pdb File", "", "*.pdb");
     // TODO: the result is unused, should this action be removed?
   } else if (a_Action == MENU_ACTION_DLL_EXPORTS) {
     // TODO: this action is unused, should it be removed?

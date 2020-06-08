@@ -76,12 +76,6 @@ inline unsigned long long StringHash(const std::string& a_String) {
   return XXH64(a_String.data(), a_String.size(), 0xBADDCAFEDEAD10CC);
 }
 
-//-----------------------------------------------------------------------------
-inline unsigned long long StringHash(const std::wstring& a_String) {
-  return XXH64(a_String.data(), a_String.size() * sizeof(wchar_t),
-               0xBADDCAFEDEAD10CC);
-}
-
 #ifdef _WIN32
 #define MemPrintf(Dest, DestSize, Source, ...) \
   _stprintf_s(Dest, DestSize, Source, __VA_ARGS__)
@@ -125,20 +119,6 @@ inline std::vector<std::string> Tokenize(std::string a_String,
 #ifdef _WIN32
 #undef strtok_r
 #endif
-
-  return tokens;
-}
-
-//-----------------------------------------------------------------------------
-inline std::vector<std::wstring> Tokenize(std::wstring a_String,
-                                          const wchar_t* a_Delimiters = L" ") {
-  std::vector<std::wstring> tokens;
-  wchar_t* next_token;
-  wchar_t* token = wcstok_s(&a_String[0], a_Delimiters, &next_token);
-  while (token != NULL) {
-    tokens.push_back(token);
-    token = wcstok_s(NULL, a_Delimiters, &next_token);
-  }
 
   return tokens;
 }
@@ -191,17 +171,6 @@ inline void ReplaceStringInPlace(std::string& subject,
 }
 
 //-----------------------------------------------------------------------------
-inline void ReplaceStringInPlace(std::wstring& subject,
-                                 const std::wstring& search,
-                                 const std::wstring& replace) {
-  size_t pos = 0;
-  while ((pos = subject.find(search, pos)) != std::wstring::npos) {
-    subject.replace(pos, search.length(), replace);
-    pos += std::max(replace.length(), static_cast<size_t>(1));
-  }
-}
-
-//-----------------------------------------------------------------------------
 inline std::string Replace(const std::string& a_Subject,
                            const std::string& search,
                            const std::string& replace) {
@@ -216,27 +185,8 @@ inline std::string Replace(const std::string& a_Subject,
 }
 
 //-----------------------------------------------------------------------------
-inline std::wstring Replace(const std::wstring& a_Subject,
-                            const std::wstring& search,
-                            const std::wstring& replace) {
-  std::wstring subject = a_Subject;
-  size_t pos = 0;
-  while ((pos = subject.find(search, pos)) != std::wstring::npos) {
-    subject.replace(pos, search.length(), replace);
-    pos += replace.length();
-  }
-
-  return subject;
-}
-
-//-----------------------------------------------------------------------------
 inline bool IsBlank(const std::string& a_Str) {
   return a_Str.find_first_not_of("\t\n ") == std::string::npos;
-}
-
-//-----------------------------------------------------------------------------
-inline bool IsBlank(const std::wstring& a_Str) {
-  return a_Str.find_first_not_of(L"\t\n ") == std::string::npos;
 }
 
 //-----------------------------------------------------------------------------
@@ -263,18 +213,6 @@ inline std::string trim(std::string str,
 inline std::string XorString(std::string a_String) {
   const char* keys = "carkeys835fdda1";
   const size_t numKeys = strlen(keys);
-
-  for (uint32_t i = 0; i < a_String.size(); i++) {
-    a_String[i] = a_String[i] ^ keys[i % numKeys];
-  }
-
-  return a_String;
-}
-
-//-----------------------------------------------------------------------------
-inline std::wstring XorString(std::wstring a_String) {
-  const wchar_t* keys = L"carkeys835fdda1";
-  const size_t numKeys = wcslen(keys);
 
   for (uint32_t i = 0; i < a_String.size(); i++) {
     a_String[i] = a_String[i] ^ keys[i % numKeys];
@@ -520,7 +458,6 @@ std::vector<std::pair<Key, Val> > ReverseValueSort(std::map<Key, Val>& a_Map) {
 }
 
 std::string GetTimeStamp();
-inline std::wstring GetTimeStampW() { return s2ws(GetTimeStamp()); }
 std::string FormatTime(const time_t& rawtime);
 }  // namespace OrbitUtils
 

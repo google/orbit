@@ -92,14 +92,14 @@ OrbitApp::~OrbitApp() {
 }
 
 //-----------------------------------------------------------------------------
-std::wstring OrbitApp::FindFile(const std::wstring& a_Caption,
-                                const std::wstring& a_Dir,
-                                const std::wstring& a_Filter) {
+std::string OrbitApp::FindFile(const std::string& caption,
+                               const std::string& dir,
+                               const std::string& filter) {
   if (m_FindFileCallback) {
-    return m_FindFileCallback(a_Caption, a_Dir, a_Filter);
+    return m_FindFileCallback(caption, dir, filter);
   }
 
-  return std::wstring();
+  return std::string();
 }
 
 //-----------------------------------------------------------------------------
@@ -337,11 +337,10 @@ void OrbitApp::LoadFileMapping() {
     outfile.close();
   }
 
-  std::wfstream infile(fileName);
+  std::fstream infile(fileName);
   if (!infile.fail()) {
-    std::wstring wline;
-    while (std::getline(infile, wline)) {
-      std::string line = ws2s(wline);
+    std::string line;
+    while (std::getline(infile, line)) {
       if (absl::StartsWith(line, "//")) continue;
 
       bool containsQuotes = absl::StrContains(line, "\"");
@@ -440,11 +439,6 @@ void OrbitApp::Disassemble(const std::string& a_FunctionName,
   disasm.Disassemble(a_MachineCode, a_Size, a_VirtualAddress,
                      Capture::GTargetProcess->GetIs64Bit());
   SendToUi(disasm.GetResult());
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::SetLicense(const std::wstring& a_License) {
-  m_License = a_License;
 }
 
 //-----------------------------------------------------------------------------
@@ -635,8 +629,8 @@ std::string OrbitApp::GetSaveFile(const std::string& extension) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::SetClipboard(const std::wstring& a_Text) {
-  if (m_ClipboardCallback) m_ClipboardCallback(a_Text);
+void OrbitApp::SetClipboard(const std::string& text) {
+  if (m_ClipboardCallback) m_ClipboardCallback(text);
 }
 
 //-----------------------------------------------------------------------------

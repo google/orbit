@@ -352,9 +352,9 @@ void OrbitCodeEditor::saveFileMap() {
 
 //-----------------------------------------------------------------------------
 void OrbitCodeEditor::HighlightWord(
-    const std::wstring& a_Text, const QColor& a_Color,
+    const std::string& a_Text, const QColor& a_Color,
     QList<QTextEdit::ExtraSelection>& extraSelections) {
-  QString searchString(QString::fromStdWString(a_Text));
+  QString searchString(QString::fromStdString(a_Text));
   QTextDocument* document = this->document();
   QTextCursor highlightCursor(document);
   QTextCursor cursor(document);
@@ -393,13 +393,13 @@ void OrbitCodeEditor::highlightCurrentLine() {
     QTextEdit::ExtraSelection wordSelection;
     wordSelection.cursor = textCursor();
     wordSelection.cursor.select(QTextCursor::WordUnderCursor);
-    std::wstring word = wordSelection.cursor.selectedText().toStdWString();
-    if (word == L"" || !m_SelectedText.Contains(word)) {
+    std::string word = wordSelection.cursor.selectedText().toStdString();
+    if (word.empty() || !m_SelectedText.Contains(word)) {
       m_SelectedText.Add(word);
     }
 
     for (size_t i = 0; i < m_SelectedText.Size(); ++i) {
-      std::wstring selectedWord = m_SelectedText.Data()[i];
+      std::string selectedWord = m_SelectedText.Data()[i];
       HighlightWord(selectedWord, m_SelectedColors[i], extraSelections);
     }
   }

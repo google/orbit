@@ -57,13 +57,12 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void PostInit();
   void OnExit();
   static void MainTick();
-  void SetLicense(const std::wstring& a_License);
   std::string GetVersion();
 
   std::string GetCaptureFileName();
   std::string GetSessionFileName();
   std::string GetSaveFile(const std::string& extension);
-  void SetClipboard(const std::wstring& a_Text);
+  void SetClipboard(const std::string& text);
   outcome::result<void, std::string> OnSaveSession(
       const std::string& file_name);
   outcome::result<void, std::string> OnLoadSession(
@@ -161,19 +160,18 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
     FireRefreshCallbacks(a_Type);
   }
   void AddUiMessageCallback(std::function<void(const std::string&)> a_Callback);
-  typedef std::function<std::wstring(const std::wstring& a_Caption,
-                                     const std::wstring& a_Dir,
-                                     const std::wstring& a_Filter)>
+  typedef std::function<std::string(const std::string& caption,
+                                    const std::string& dir,
+                                    const std::string& filter)>
       FindFileCallback;
-  void SetFindFileCallback(FindFileCallback a_Callback) {
-    m_FindFileCallback = std::move(a_Callback);
+  void SetFindFileCallback(FindFileCallback callback) {
+    m_FindFileCallback = std::move(callback);
   }
-  std::wstring FindFile(const std::wstring& a_Caption,
-                        const std::wstring& a_Dir,
-                        const std::wstring& a_Filter);
-  typedef std::function<void(const std::wstring&)> ClipboardCallback;
-  void SetClipboardCallback(ClipboardCallback a_Callback) {
-    m_ClipboardCallback = std::move(a_Callback);
+  std::string FindFile(const std::string& caption, const std::string& dir,
+                       const std::string& filter);
+  typedef std::function<void(const std::string&)> ClipboardCallback;
+  void SetClipboardCallback(ClipboardCallback callback) {
+    m_ClipboardCallback = std::move(callback);
   }
 
   void SetCommandLineArguments(const std::vector<std::string>& a_Args);
@@ -285,9 +283,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::map<std::string, std::string> m_FileMapping;
   std::vector<std::string> m_SymbolDirectories;
   std::function<void(const std::string&)> m_UiCallback;
-
-  std::wstring m_User;
-  std::wstring m_License;
 
   std::vector<std::shared_ptr<struct Module>> m_ModulesToLoad;
   std::vector<std::string> m_PostInitArguments;
