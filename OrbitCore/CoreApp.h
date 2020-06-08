@@ -46,7 +46,6 @@ class CoreApp {
   virtual void ProcessSamplingCallStack(LinuxCallstackEvent& /*a_CS*/) {}
   virtual void ProcessHashedSamplingCallStack(CallstackEvent& /*a_CallStack*/) {
   }
-  virtual void ProcessContextSwitch(const ContextSwitch& /*a_ContextSwitch*/) {}
   virtual void AddAddressInfo(LinuxAddressInfo /*address_info*/) {}
   virtual void AddKeyAndString(uint64_t /*key*/, std::string_view /*str*/) {}
   virtual void UpdateThreadName(uint32_t /*thread_id*/,

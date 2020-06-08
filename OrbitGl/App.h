@@ -96,7 +96,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
                     const std::string& a_FunctionName) override;
   void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) override;
   void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) override;
-  void ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) override;
   void AddAddressInfo(LinuxAddressInfo address_info) override;
   void AddKeyAndString(uint64_t key, std::string_view str) override;
   void UpdateThreadName(uint32_t thread_id,

@@ -73,15 +73,6 @@ void ConnectionManager::SetupClientCallbacks() {
     }
   });
 
-  GTcpClient->AddCallback(Msg_ContextSwitches, [=](const Message& msg) {
-    uint32_t num_context_switches = msg.m_Size / sizeof(ContextSwitch);
-    const ContextSwitch* context_switches =
-        static_cast<const ContextSwitch*>(msg.GetData());
-    for (uint32_t i = 0; i < num_context_switches; i++) {
-      GCoreApp->ProcessContextSwitch(context_switches[i]);
-    }
-  });
-
   GTcpClient->AddCallback(Msg_SamplingCallstacks, [=](const Message& msg) {
     std::vector<LinuxCallstackEvent> callstacks;
     DeserializeObjectBinary(msg.GetDataAsString(), callstacks);

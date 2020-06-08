@@ -70,32 +70,8 @@ void LinuxTracingHandler::OnSchedulingSlice(
   timer.m_Processor = static_cast<int8_t>(scheduling_slice.GetCore());
   timer.m_Depth = timer.m_Processor;
   timer.SetType(Timer::CORE_ACTIVITY);
-  
+
   tracing_buffer_->RecordTimer(std::move(timer));
-}
-
-void LinuxTracingHandler::OnContextSwitchIn(
-    const LinuxTracing::ContextSwitchIn& context_switch_in) {
-  ContextSwitch context_switch(ContextSwitch::In);
-  context_switch.m_ProcessId = context_switch_in.GetPid();
-  context_switch.m_ThreadId = context_switch_in.GetTid();
-  context_switch.m_Time = context_switch_in.GetTimestampNs();
-  context_switch.m_ProcessorIndex = context_switch_in.GetCore();
-  context_switch.m_ProcessorNumber = context_switch_in.GetCore();
-
-  tracing_buffer_->RecordContextSwitch(std::move(context_switch));
-}
-
-void LinuxTracingHandler::OnContextSwitchOut(
-    const LinuxTracing::ContextSwitchOut& context_switch_out) {
-  ContextSwitch context_switch(ContextSwitch::Out);
-  context_switch.m_ProcessId = context_switch_out.GetPid();
-  context_switch.m_ThreadId = context_switch_out.GetTid();
-  context_switch.m_Time = context_switch_out.GetTimestampNs();
-  context_switch.m_ProcessorIndex = context_switch_out.GetCore();
-  context_switch.m_ProcessorNumber = context_switch_out.GetCore();
-
-  tracing_buffer_->RecordContextSwitch(std::move(context_switch));
 }
 
 void LinuxTracingHandler::OnCallstack(

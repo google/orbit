@@ -53,8 +53,6 @@ CaptureWindow::CaptureWindow() {
 
   GTimerManager->m_TimerAddedCallbacks.emplace_back(
       [this](Timer& a_Timer) { this->OnTimerAdded(a_Timer); });
-  GTimerManager->m_ContextSwitchAddedCallback =
-      [this](const ContextSwitch& a_CS) { this->OnContextSwitchAdded(a_CS); };
 
   m_HoverDelayMs = 300;
   m_CanHover = false;
@@ -1236,11 +1234,6 @@ void CaptureWindow::RenderTimeBar() {
 //-----------------------------------------------------------------------------
 void CaptureWindow::OnTimerAdded(Timer& a_Timer) {
   time_graph_.ProcessTimer(a_Timer);
-}
-
-//-----------------------------------------------------------------------------
-void CaptureWindow::OnContextSwitchAdded(const ContextSwitch& a_CS) {
-  time_graph_.AddContextSwitch(a_CS);
 }
 
 //-----------------------------------------------------------------------------

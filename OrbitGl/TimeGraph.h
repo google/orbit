@@ -80,7 +80,6 @@ class TimeGraph {
 
   bool IsVisible(const Timer& a_Timer);
   int GetNumDrawnTextBoxes() { return m_NumDrawnTextBoxes; }
-  void AddContextSwitch(const ContextSwitch& a_CS);
   void SetPickingManager(class PickingManager* a_Manager) {
     m_PickingManager = a_Manager;
   }
@@ -149,11 +148,6 @@ class TimeGraph {
   unsigned int m_MainFrameCounter = 0;
 
   TimeGraphLayout m_Layout;
-
-  std::map<DWORD /*ThreadId*/, std::map<long long, ContextSwitch>>
-      m_ContextSwitchesMap;
-  std::map<DWORD /*CoreId*/, std::map<long long, ContextSwitch>>
-      m_CoreUtilizationMap;
 
   std::map<ThreadID, uint32_t> m_ThreadCountMap;
 
