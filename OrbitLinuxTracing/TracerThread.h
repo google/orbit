@@ -66,8 +66,6 @@ class TracerThread {
       std::vector<PerfEventRingBuffer>* gpu_ring_buffers);
   bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
 
-  void ProcessContextSwitchEvent(const perf_event_header& header,
-                                 PerfEventRingBuffer* ring_buffer);
   void ProcessContextSwitchCpuWideEvent(const perf_event_header& header,
                                         PerfEventRingBuffer* ring_buffer);
   void ProcessForkEvent(const perf_event_header& header,

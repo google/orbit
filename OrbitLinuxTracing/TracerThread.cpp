@@ -472,7 +472,6 @@ void TracerThread::Run(
                 "Unexpected PERF_RECORD_SWITCH in ring buffer '%s' (only "
                 "PERF_RECORD_SWITCH_CPU_WIDE are expected)",
                 ring_buffer.GetName().c_str());
-            ProcessContextSwitchEvent(header, &ring_buffer);
             break;
           case PERF_RECORD_SWITCH_CPU_WIDE:
             ProcessContextSwitchCpuWideEvent(header, &ring_buffer);
@@ -531,24 +530,6 @@ void TracerThread::Run(
   for (int fd : tracing_fds_) {
     close(fd);
   }
-}
-
-void TracerThread::ProcessContextSwitchEvent(const perf_event_header& header,
-                                             PerfEventRingBuffer* ring_buffer) {
-  ContextSwitchPerfEvent event;
-  ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
-  pid_t pid = event.GetPid();
-  pid_t tid = event.GetTid();
-  uint16_t cpu = static_cast<uint16_t>(event.GetCpu());
-  uint64_t time = event.GetTimestamp();
-
-  if (event.IsSwitchOut()) {
-    listener_->OnContextSwitchOut(ContextSwitchOut(pid, tid, cpu, time));
-  } else {
-    listener_->OnContextSwitchIn(ContextSwitchIn(pid, tid, cpu, time));
-  }
-
-  ++stats_.sched_switch_count;
 }
 
 void TracerThread::ProcessContextSwitchCpuWideEvent(
