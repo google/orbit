@@ -18,6 +18,7 @@
 #include <regex>
 #include <vector>
 
+#include "ContextSwitchManager.h"
 #include "GpuTracepointEventProcessor.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
@@ -124,6 +125,7 @@ class TracerThread {
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
   std::mutex deferred_events_mutex_;
+  ContextSwitchManager context_switch_manager_;
   std::shared_ptr<PerfEventProcessor2> uprobes_event_processor_;
   std::shared_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
 
