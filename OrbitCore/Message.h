@@ -63,7 +63,6 @@ enum MessageType : int16_t {
   Msg_SamplingCallstack,
   Msg_TimerCallstack,
   Msg_RemoteSelectedFunctionsMap,
-  Msg_ContextSwitches,
   Msg_SamplingCallstacks,
   Msg_SamplingHashedCallstacks,
   Msg_KeysAndStrings,

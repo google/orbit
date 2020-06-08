@@ -163,12 +163,6 @@ void OrbitAsioServer::SendBufferedMessages() {
                       message_data.size());
   }
 
-  std::vector<ContextSwitch> context_switches;
-  if (tracing_buffer_.ReadAllContextSwitches(&context_switches)) {
-    Message Msg(Msg_ContextSwitches);
-    tcp_server_->Send(Msg, context_switches);
-  }
-
   std::vector<LinuxAddressInfo> address_infos;
   if (tracing_buffer_.ReadAllAddressInfos(&address_infos)) {
     std::string message_data = SerializeObjectBinary(address_infos);

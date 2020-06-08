@@ -14,36 +14,6 @@
 
 namespace LinuxTracing {
 
-class ContextSwitch {
- public:
-  pid_t GetPid() const { return pid_; }
-  pid_t GetTid() const { return tid_; }
-  uint16_t GetCore() const { return core_; }
-  uint64_t GetTimestampNs() const { return timestamp_ns_; }
-
- protected:
-  ContextSwitch(pid_t pid, pid_t tid, uint16_t core, uint64_t timestamp_ns)
-      : pid_(pid), tid_(tid), core_(core), timestamp_ns_(timestamp_ns) {}
-
- private:
-  pid_t pid_;
-  pid_t tid_;
-  uint16_t core_;
-  uint64_t timestamp_ns_;
-};
-
-class ContextSwitchIn : public ContextSwitch {
- public:
-  ContextSwitchIn(pid_t pid, pid_t tid, uint16_t core, uint64_t timestamp_ns)
-      : ContextSwitch(pid, tid, core, timestamp_ns) {}
-};
-
-class ContextSwitchOut : public ContextSwitch {
- public:
-  ContextSwitchOut(pid_t pid, pid_t tid, uint16_t core, uint64_t timestamp_ns)
-      : ContextSwitch(pid, tid, core, timestamp_ns) {}
-};
-
 class SchedulingSlice {
  public:
   SchedulingSlice(pid_t pid, pid_t tid, uint16_t core, uint64_t in_timestamp_ns,

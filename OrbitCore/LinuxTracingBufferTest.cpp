@@ -12,10 +12,6 @@
 TEST(LinuxTracingBuffer, Empty) {
   LinuxTracingBuffer buffer;
 
-  std::vector<ContextSwitch> context_switches;
-  EXPECT_FALSE(buffer.ReadAllContextSwitches(&context_switches));
-  EXPECT_TRUE(context_switches.empty());
-
   std::vector<Timer> timers;
   EXPECT_FALSE(buffer.ReadAllTimers(&timers));
   EXPECT_TRUE(timers.empty());
@@ -27,77 +23,6 @@ TEST(LinuxTracingBuffer, Empty) {
   std::vector<CallstackEvent> hashed_callstacks;
   EXPECT_FALSE(buffer.ReadAllHashedCallstacks(&hashed_callstacks));
   EXPECT_TRUE(hashed_callstacks.empty());
-}
-
-TEST(LinuxTracingBuffer, ContextSwitches) {
-  LinuxTracingBuffer buffer;
-
-  {
-    ContextSwitch context_switch;
-    context_switch.m_ProcessId = 1;
-    context_switch.m_ThreadId = 1;
-    context_switch.m_Type = ContextSwitch::Out;
-    context_switch.m_Time = 87;
-    context_switch.m_ProcessorIndex = 7;
-    context_switch.m_ProcessorNumber = 8;
-
-    buffer.RecordContextSwitch(std::move(context_switch));
-  }
-
-  {
-    ContextSwitch context_switch;
-    context_switch.m_ProcessId = 1;
-    context_switch.m_ThreadId = 2;
-    context_switch.m_Type = ContextSwitch::In;
-    context_switch.m_Time = 78;
-    context_switch.m_ProcessorIndex = 17;
-    context_switch.m_ProcessorNumber = 18;
-
-    buffer.RecordContextSwitch(std::move(context_switch));
-  }
-
-  std::vector<ContextSwitch> context_switches;
-  EXPECT_TRUE(buffer.ReadAllContextSwitches(&context_switches));
-  EXPECT_FALSE(buffer.ReadAllContextSwitches(&context_switches));
-
-  EXPECT_EQ(context_switches.size(), 2);
-
-  EXPECT_EQ(context_switches[0].m_ProcessId, 1);
-  EXPECT_EQ(context_switches[0].m_ThreadId, 1);
-  EXPECT_EQ(context_switches[0].m_Time, 87);
-  EXPECT_EQ(context_switches[0].m_ProcessorIndex, 7);
-  EXPECT_EQ(context_switches[0].m_ProcessorNumber, 8);
-
-  EXPECT_EQ(context_switches[1].m_ProcessId, 1);
-  EXPECT_EQ(context_switches[1].m_ThreadId, 2);
-  EXPECT_EQ(context_switches[1].m_Time, 78);
-  EXPECT_EQ(context_switches[1].m_ProcessorIndex, 17);
-  EXPECT_EQ(context_switches[1].m_ProcessorNumber, 18);
-
-  {
-    ContextSwitch context_switch;
-    context_switch.m_ProcessId = 11;
-    context_switch.m_ThreadId = 12;
-    context_switch.m_Type = ContextSwitch::Out;
-    context_switch.m_Time = 187;
-    context_switch.m_ProcessorIndex = 27;
-    context_switch.m_ProcessorNumber = 28;
-
-    buffer.RecordContextSwitch(std::move(context_switch));
-  }
-
-  // Check that the vector is reset, even if it was not empty.
-  EXPECT_TRUE(buffer.ReadAllContextSwitches(&context_switches));
-  EXPECT_EQ(context_switches.size(), 1);
-
-  EXPECT_FALSE(buffer.ReadAllContextSwitches(&context_switches));
-  EXPECT_EQ(context_switches.size(), 1);
-
-  EXPECT_EQ(context_switches[0].m_ProcessId, 11);
-  EXPECT_EQ(context_switches[0].m_ThreadId, 12);
-  EXPECT_EQ(context_switches[0].m_Time, 187);
-  EXPECT_EQ(context_switches[0].m_ProcessorIndex, 27);
-  EXPECT_EQ(context_switches[0].m_ProcessorNumber, 28);
 }
 
 TEST(LinuxTracingBuffer, Timers) {
@@ -428,18 +353,6 @@ TEST(LinuxTracingBuffer, Reset) {
   LinuxTracingBuffer buffer;
 
   {
-    ContextSwitch context_switch;
-    context_switch.m_ProcessId = 1;
-    context_switch.m_ThreadId = 1;
-    context_switch.m_Type = ContextSwitch::Out;
-    context_switch.m_Time = 87;
-    context_switch.m_ProcessorIndex = 7;
-    context_switch.m_ProcessorNumber = 8;
-
-    buffer.RecordContextSwitch(std::move(context_switch));
-  }
-
-  {
     Timer timer;
     timer.m_PID = 1;
     timer.m_TID = 1;
@@ -476,9 +389,6 @@ TEST(LinuxTracingBuffer, Reset) {
   buffer.RecordThreadName(42, "thread42");
 
   buffer.Reset();
-
-  std::vector<ContextSwitch> context_switches;
-  EXPECT_FALSE(buffer.ReadAllContextSwitches(&context_switches));
 
   std::vector<Timer> timers;
   EXPECT_FALSE(buffer.ReadAllTimers(&timers));

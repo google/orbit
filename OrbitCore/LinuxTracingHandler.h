@@ -38,10 +38,6 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   void OnTid(pid_t tid) override;
   void OnSchedulingSlice(
       const LinuxTracing::SchedulingSlice& scheduling_slice) override;
-  void OnContextSwitchIn(
-      const LinuxTracing::ContextSwitchIn& context_switch_in) override;
-  void OnContextSwitchOut(
-      const LinuxTracing::ContextSwitchOut& context_switch_out) override;
   void OnCallstack(const LinuxTracing::Callstack& callstack) override;
   void OnFunctionCall(const LinuxTracing::FunctionCall& function_call) override;
   void OnGpuJob(const LinuxTracing::GpuJob& gpu_job) override;

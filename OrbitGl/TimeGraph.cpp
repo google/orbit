@@ -100,9 +100,6 @@ void TimeGraph::Clear() {
 
   // The process track is a special ThreadTrack of id "0".
   process_track_ = GetOrCreateThreadTrack(0);
-
-  m_ContextSwitchesMap.clear();
-  m_CoreUtilizationMap.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -322,68 +319,6 @@ std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
     Append(chains, track->GetAllChains());
   }
   return chains;
-}
-
-//-----------------------------------------------------------------------------
-void TimeGraph::AddContextSwitch(const ContextSwitch& a_CS) {
-  auto pair = std::make_pair(a_CS.m_Time, a_CS);
-
-  if (a_CS.m_Type == ContextSwitch::Out) {
-    if (true) {
-      // Processor time line
-      std::map<long long, ContextSwitch>& csMap =
-          m_CoreUtilizationMap[a_CS.m_ProcessorIndex];
-
-      if (!csMap.empty()) {
-        ContextSwitch& lastCS = csMap.rbegin()->second;
-        if (lastCS.m_Type == ContextSwitch::In) {
-          Timer timer;
-          timer.m_Start = lastCS.m_Time;
-          timer.m_End = a_CS.m_Time;
-          // When a context switch out is caused by a thread exiting, the
-          // perf_event_open event has pid and tid set to -1: hence, use pid and
-          // tid from the context switch in.
-          timer.m_PID = lastCS.m_ProcessId;
-          timer.m_TID = lastCS.m_ThreadId;
-          timer.m_Processor = static_cast<int8_t>(lastCS.m_ProcessorIndex);
-          timer.m_Depth = timer.m_Processor;
-          timer.m_CaptureID = Message::GCaptureID;
-          timer.SetType(Timer::CORE_ACTIVITY);
-
-          GTimerManager->AddTimer(timer);
-        }
-      }
-    }
-
-    if (false) {
-      // Thread time line
-      std::map<long long, ContextSwitch>& csMap =
-          m_ContextSwitchesMap[a_CS.m_ThreadId];
-
-      if (!csMap.empty()) {
-        ContextSwitch& lastCS = csMap.rbegin()->second;
-        if (lastCS.m_Type == ContextSwitch::In) {
-          Timer timer;
-          timer.m_Start = lastCS.m_Time;
-          timer.m_End = a_CS.m_Time;
-          // When a context switch out is caused by a thread exiting, the
-          // perf_event_open event has pid and tid set to -1: hence, use pid and
-          // tid from the context switch in.
-          timer.m_PID = lastCS.m_ProcessId;
-          timer.m_TID = lastCS.m_ThreadId;
-          timer.m_CaptureID = Message::GCaptureID;
-          timer.SetType(Timer::THREAD_ACTIVITY);
-
-          GTimerManager->AddTimer(timer);
-        }
-      }
-    }
-  }
-
-  // TODO: if events are already sorted by timestamp, then
-  //       we don't need to use maps. To investigate...
-  m_ContextSwitchesMap[a_CS.m_ThreadId].insert(pair);
-  m_CoreUtilizationMap[a_CS.m_ProcessorIndex].insert(pair);
 }
 
 //-----------------------------------------------------------------------------

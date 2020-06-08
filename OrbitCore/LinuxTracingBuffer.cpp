@@ -9,11 +9,6 @@
 #include "KeyAndString.h"
 #include "TcpServer.h"
 
-void LinuxTracingBuffer::RecordContextSwitch(ContextSwitch&& context_switch) {
-  absl::MutexLock lock(&context_switch_buffer_mutex_);
-  context_switch_buffer_.emplace_back(std::move(context_switch));
-}
-
 void LinuxTracingBuffer::RecordTimer(Timer&& timer) {
   absl::MutexLock lock(&timer_buffer_mutex_);
   timer_buffer_.emplace_back(std::move(timer));
@@ -53,18 +48,6 @@ void LinuxTracingBuffer::RecordThreadName(TidAndThreadName&& tid_and_name) {
 void LinuxTracingBuffer::RecordThreadName(uint32_t tid,
                                           const std::string& name) {
   RecordThreadName({tid, name});
-}
-
-bool LinuxTracingBuffer::ReadAllContextSwitches(
-    std::vector<ContextSwitch>* out_buffer) {
-  absl::MutexLock lock(&context_switch_buffer_mutex_);
-  if (context_switch_buffer_.empty()) {
-    return false;
-  }
-
-  *out_buffer = std::move(context_switch_buffer_);
-  context_switch_buffer_.clear();
-  return true;
 }
 
 bool LinuxTracingBuffer::ReadAllTimers(std::vector<Timer>* out_buffer) {
@@ -139,10 +122,6 @@ bool LinuxTracingBuffer::ReadAllThreadNames(
 }
 
 void LinuxTracingBuffer::Reset() {
-  {
-    absl::MutexLock lock(&context_switch_buffer_mutex_);
-    context_switch_buffer_.clear();
-  }
   {
     absl::MutexLock lock(&timer_buffer_mutex_);
     timer_buffer_.clear();

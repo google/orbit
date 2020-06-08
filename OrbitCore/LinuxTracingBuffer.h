@@ -27,7 +27,6 @@ class LinuxTracingBuffer {
   LinuxTracingBuffer(LinuxTracingBuffer&&) = delete;
   LinuxTracingBuffer& operator=(LinuxTracingBuffer&&) = delete;
 
-  void RecordContextSwitch(ContextSwitch&& context_switch);
   void RecordTimer(Timer&& timer);
   void RecordCallstack(LinuxCallstackEvent&& callstack);
   void RecordHashedCallstack(CallstackEvent&& hashed_callstack);
@@ -39,7 +38,6 @@ class LinuxTracingBuffer {
 
   // These move the content of the corresponding buffer to the output vector.
   // They return true if the buffer was not empty.
-  bool ReadAllContextSwitches(std::vector<ContextSwitch>* out_buffer);
   bool ReadAllTimers(std::vector<Timer>* out_buffer);
   bool ReadAllCallstacks(std::vector<LinuxCallstackEvent>* out_buffer);
   bool ReadAllHashedCallstacks(std::vector<CallstackEvent>* out_buffer);
@@ -51,9 +49,6 @@ class LinuxTracingBuffer {
 
  private:
   // Buffering data to send large messages instead of small ones.
-  absl::Mutex context_switch_buffer_mutex_;
-  std::vector<ContextSwitch> context_switch_buffer_;
-
   absl::Mutex timer_buffer_mutex_;
   std::vector<Timer> timer_buffer_;
 

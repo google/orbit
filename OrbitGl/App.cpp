@@ -149,11 +149,6 @@ void OrbitApp::ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::ProcessContextSwitch(const ContextSwitch& a_ContextSwitch) {
-  GTimerManager->AddContextSwitch(a_ContextSwitch);
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::AddAddressInfo(LinuxAddressInfo address_info) {
   uint64_t address = address_info.address;
   Capture::GAddressInfos.emplace(address, std::move(address_info));
