@@ -57,12 +57,10 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
 
-  // We minimize overdraw by recording the previous span that we know to be drawn and
-  // don't overdraw this with any of the timer events that fall into the same span.
-  // When zoomed in a lot, this typically has no effect, as the timeslices are disjoint
-  // and no timer falls entirely into a span that was already drawn. However, when
-  // zoomed out and many events fall onto a span that is a single pixel wide, many will
-  // fall onto the same pixel and thus many will be discarded.
+  // We minimize overdraw when drawing lines for small events by discarding events
+  // that would just draw over an already drawn line. When zoomed in enough that all 
+  // events are drawn as boxes, this has no effect. When zoomed out, many events
+  // will be discarded quickly.
   uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
   uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
 
