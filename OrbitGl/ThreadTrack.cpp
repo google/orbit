@@ -177,6 +177,7 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
 
   uint64_t pixel_delta_in_ticks =
     static_cast<uint64_t>(TicksFromMicroseconds(time_graph_->GetTimeWindowUs())) / canvas->getWidth();
+  uint64_t min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
   for (auto& text_boxes : chains_by_depth) {
     if (text_boxes == nullptr) continue;
@@ -225,7 +226,6 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
         auto type = PickingID::LINE;
         batcher->AddVerticalLine(pos, size[1], z, color, type, &text_box);
         // For lines, we can ignore the entire pixel into which this event falls.
-        uint64_t min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
         min_ignore = min_timegraph_tick +
           ((timer.m_Start - min_timegraph_tick)/pixel_delta_in_ticks) * pixel_delta_in_ticks;
         max_ignore = min_ignore + pixel_delta_in_ticks;
