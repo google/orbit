@@ -88,17 +88,17 @@ class CaptureWindow : public GlCanvas {
   int m_ProcessX;
 
   // Toolbars.
-  uint32_t start_capture_icon_id_;
-  uint32_t stop_capture_icon_id_;
-  uint32_t save_capture_icon_id_;
-  uint32_t load_capture_icon_id_;
-  uint32_t clear_capture_icon_id_;
-  uint32_t help_icon_id_;
-  uint32_t filter_tracks_icon_id_;
-  uint32_t search_icon_id_;
-  uint32_t time_icon_id_;
-  uint32_t feedback_icon_id_;
-  uint32_t info_icon_id_;
+  uint64_t start_capture_icon_id_;
+  uint64_t stop_capture_icon_id_;
+  uint64_t save_capture_icon_id_;
+  uint64_t load_capture_icon_id_;
+  uint64_t clear_capture_icon_id_;
+  uint64_t help_icon_id_;
+  uint64_t filter_tracks_icon_id_;
+  uint64_t search_icon_id_;
+  uint64_t time_icon_id_;
+  uint64_t feedback_icon_id_;
+  uint64_t info_icon_id_;
   std::string icons_path_;
   float toolbar_height_ = 0;
 
