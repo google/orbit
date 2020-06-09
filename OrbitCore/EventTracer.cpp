@@ -165,7 +165,7 @@ void EventTracer::Stop() {
     m_IsTracing = false;
     if (Capture::GSamplingProfiler) {
       Capture::GSamplingProfiler->StopCapture();
-      Capture::GSamplingProfiler->ProcessSamplesAsync();
+      Capture::GSamplingProfiler->ProcessSamples();
     }
   }
 

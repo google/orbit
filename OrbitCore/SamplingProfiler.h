@@ -156,7 +156,6 @@ class SamplingProfiler {
   // Updates names of sampled functions for all threads.
   // Call this after loading a module.
   void UpdateSampledFunctions();
-  void ProcessSamplesAsync();
   void UpdateAddressInfo(uint64_t address);
 
   const ThreadSampleData& GetSummary() { return m_ThreadSampleData[0]; }
