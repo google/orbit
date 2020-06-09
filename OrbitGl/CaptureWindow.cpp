@@ -51,9 +51,6 @@ CaptureWindow::CaptureWindow() {
   m_WorldMaxY = 0;
   m_ProcessX = 0;
 
-  GTimerManager->m_TimerAddedCallbacks.emplace_back(
-      [this](Timer& a_Timer) { this->OnTimerAdded(a_Timer); });
-
   m_HoverDelayMs = 300;
   m_CanHover = false;
   m_IsHovering = false;
@@ -1229,11 +1226,6 @@ void CaptureWindow::RenderTimeBar() {
       glEnd();
     }
   }
-}
-
-//-----------------------------------------------------------------------------
-void CaptureWindow::OnTimerAdded(Timer& a_Timer) {
-  time_graph_.ProcessTimer(a_Timer);
 }
 
 //-----------------------------------------------------------------------------

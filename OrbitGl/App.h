@@ -92,8 +92,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void RefreshWatch();
   void Disassemble(const std::string& a_FunctionName, uint64_t a_VirtualAddress,
                    const uint8_t* a_MachineCode, size_t a_Size) override;
-  void ProcessTimer(const Timer& a_Timer,
-                    const std::string& a_FunctionName) override;
+  void ProcessTimer(const Timer& timer) override;
   void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) override;
   void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) override;
   void AddAddressInfo(LinuxAddressInfo address_info) override;

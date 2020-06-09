@@ -51,7 +51,7 @@ void ConnectionManager::SetupClientCallbacks() {
     uint32_t numTimers = msg.m_Size / sizeof(Timer);
     const Timer* timers = static_cast<const Timer*>(msg.GetData());
     for (uint32_t i = 0; i < numTimers; ++i) {
-      GTimerManager->AddTimer(timers[i]);
+      GCoreApp->ProcessTimer(timers[i]);
     }
   });
 

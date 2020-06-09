@@ -124,9 +124,8 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::ProcessTimer(const Timer& a_Timer, const std::string&) {
-  GCurrentTimeGraph->ProcessTimer(a_Timer);
-  ++Capture::GFunctionCountMap[a_Timer.m_FunctionAddress];
+void OrbitApp::ProcessTimer(const Timer& timer) {
+  GCurrentTimeGraph->ProcessTimer(timer);
 }
 
 //-----------------------------------------------------------------------------
