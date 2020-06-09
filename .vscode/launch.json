@@ -10,8 +10,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/build_default_relwithdebinfo/bin/Orbit",
       "args": [
-        "--remote",
-        "127.0.0.1"
+        "--local",
       ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/build_default_relwithdebinfo/bin/",
