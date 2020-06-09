@@ -10,7 +10,10 @@
 #include <QJsonObject>
 #include <QJsonValue>
 
+namespace OrbitGgp {
+
 namespace {
+
 GgpInstance GetInstanceFromJson(const QJsonObject& obj) {
   GgpInstance inst{};
 
@@ -40,6 +43,7 @@ GgpInstance GetInstanceFromJson(const QJsonObject& obj) {
 
   return inst;
 }
+
 }  // namespace
 
 QVector<GgpInstance> GgpInstance::GetListFromJson(const QByteArray& json) {
@@ -66,3 +70,5 @@ QVector<GgpInstance> GgpInstance::GetListFromJson(const QByteArray& json) {
 bool GgpInstance::CmpById(const GgpInstance& lhs, const GgpInstance& rhs) {
   return lhs.id < rhs.id;
 }
+
+}  // namespace OrbitGgp

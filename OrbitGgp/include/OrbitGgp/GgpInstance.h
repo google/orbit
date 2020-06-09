@@ -9,6 +9,8 @@
 #include <QMetaType>
 #include <QVector>
 
+namespace OrbitGgp {
+
 struct GgpInstance {
   QString display_name;
   QString id;
@@ -32,6 +34,8 @@ struct GgpInstance {
   }
 };
 
-Q_DECLARE_METATYPE(GgpInstance)
+}  // namespace OrbitGgp
+
+Q_DECLARE_METATYPE(OrbitGgp::GgpInstance)
 
 #endif  // ORBITGGP_GPP_INSTANCE_H_

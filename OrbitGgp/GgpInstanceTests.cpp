@@ -10,6 +10,8 @@
 
 #include "OrbitGgp/GgpInstance.h"
 
+namespace OrbitGgp {
+
 TEST(GgpInstanceTests, GetListFromJson) {
   QByteArray json;
   QVector<GgpInstance> test_instances;
@@ -158,5 +160,8 @@ TEST(GgpInstanceTests, NotEqualToOperator) {
 }
 
 TEST(GgpInstanceTests, QMetaTypeId) {
-  EXPECT_STREQ("GgpInstance", QMetaType::typeName(qMetaTypeId<GgpInstance>()));
+  EXPECT_STREQ("OrbitGgp::GgpInstance",
+               QMetaType::typeName(qMetaTypeId<GgpInstance>()));
 }
+
+}  // namespace OrbitGgp

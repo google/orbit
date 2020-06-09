@@ -14,7 +14,10 @@
 #include "OrbitGgp/GgpInstance.h"
 #include "OrbitGgp/GgpSshInfo.h"
 
+namespace OrbitGgp {
+
 namespace {
+
 constexpr int kDefaultTimeoutInMs = 10'000;
 
 void RunProcessWithTimeout(
@@ -82,7 +85,8 @@ GgpClient::ResultOrQString<GgpClient> GgpClient::Create() {
       ggp_process.exitCode() != 0) {
     return QString{
         "Ggp command line process failed with error: %1 (exit code: %2)"}
-        .arg(ggp_process.errorString()).arg(ggp_process.exitCode());
+        .arg(ggp_process.errorString())
+        .arg(ggp_process.exitCode());
   }
 
   GgpClient client{};
@@ -127,3 +131,5 @@ void GgpClient::GetSshInformationAsync(
         callback(sshInfo.value());
       });
 }
+
+}  // namespace OrbitGgp

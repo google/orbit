@@ -24,6 +24,11 @@
 namespace OrbitQt {
 
 class OrbitStartupWindow : public QDialog {
+  using GgpSshInfo = OrbitGgp::GgpSshInfo;
+  using GgpClient = OrbitGgp::GgpClient;
+  using GgpInstance = OrbitGgp::GgpInstance;
+  using GgpInstanceItemModel = OrbitGgp::GgpInstanceItemModel;
+
  public:
   explicit OrbitStartupWindow(QWidget* parent = nullptr);
 

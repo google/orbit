@@ -9,6 +9,8 @@
 #include <QString>
 #include <optional>
 
+namespace OrbitGgp {
+
 struct GgpSshInfo {
   QString host;
   QString key_path;
@@ -18,5 +20,7 @@ struct GgpSshInfo {
 
   static std::optional<GgpSshInfo> CreateFromJson(const QByteArray& json);
 };
+
+}  // namespace OrbitGgp
 
 #endif  // ORBITGGP_GGP_SSH_INFO_H_

@@ -16,6 +16,8 @@ enum class Columns {
 };
 }  // namespace
 
+namespace OrbitGgp {
+
 GgpInstanceItemModel::GgpInstanceItemModel(QVector<GgpInstance> instances,
                                            QObject* parent)
     : QAbstractItemModel(parent), instances_(std::move(instances)) {
@@ -155,3 +157,5 @@ void GgpInstanceItemModel::SetInstances(QVector<GgpInstance> new_instances) {
     endRemoveRows();
   }
 }
+
+}  // namespace OrbitGgp
