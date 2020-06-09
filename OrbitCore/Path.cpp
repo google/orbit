@@ -283,9 +283,9 @@ std::string Path::GetHome() {
 }
 
 std::string Path::GetLogFilePath() {
-  std::string logsDir = Path::GetAppDataPath() + "logs/";
+  std::string logsDir = Path::JoinPath({Path::GetAppDataPath(), "logs"});
   Path::MakeDir(logsDir);
-  return logsDir + "Orbit.log";
+  return Path::JoinPath({logsDir, "Orbit.log"});
 }
 
 void Path::Dump() {
