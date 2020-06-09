@@ -8,28 +8,28 @@
 #include <QJsonDocument>
 #include <QVector>
 
-#include "OrbitGgp/GgpInstance.h"
+#include "OrbitGgp/Instance.h"
 
 namespace OrbitGgp {
 
-TEST(GgpInstanceTests, GetListFromJson) {
+TEST(InstanceTests, GetListFromJson) {
   QByteArray json;
-  QVector<GgpInstance> test_instances;
-  GgpInstance test_instance;
+  QVector<Instance> test_instances;
+  Instance test_instance;
 
   // invalid json
   json = QString("json").toUtf8();
-  test_instances = GgpInstance::GetListFromJson(json);
+  test_instances = Instance::GetListFromJson(json);
   EXPECT_TRUE(test_instances.empty());
 
   // empty json
   json = QString("[]").toUtf8();
-  test_instances = GgpInstance::GetListFromJson(json);
+  test_instances = Instance::GetListFromJson(json);
   EXPECT_TRUE(test_instances.empty());
 
   // one empty json object
   json = QString("[{}]").toUtf8();
-  test_instances = GgpInstance::GetListFromJson(json);
+  test_instances = Instance::GetListFromJson(json);
   ASSERT_EQ(test_instances.size(), 1);
   test_instance = test_instances[0];
   EXPECT_TRUE(test_instance.display_name.isEmpty());
@@ -41,10 +41,10 @@ TEST(GgpInstanceTests, GetListFromJson) {
 
   // two empty json objects
   json = QString("[{},{}]").toUtf8();
-  test_instances = GgpInstance::GetListFromJson(json);
+  test_instances = Instance::GetListFromJson(json);
   ASSERT_EQ(test_instances.size(), 2);
-  EXPECT_EQ(test_instances[0], GgpInstance{});
-  EXPECT_EQ(test_instances[1], GgpInstance{});
+  EXPECT_EQ(test_instances[0], Instance{});
+  EXPECT_EQ(test_instances[1], Instance{});
 
   // one full json object
   // pretty json:
@@ -69,7 +69,7 @@ TEST(GgpInstanceTests, GetListFromJson) {
              "key\":\"other value\",\"other complex object\":{\"object "
              "key\":\"object value\"}}]")
              .toUtf8();
-  test_instances = GgpInstance::GetListFromJson(json);
+  test_instances = Instance::GetListFromJson(json);
   ASSERT_EQ(test_instances.size(), 1);
   test_instance = test_instances[0];
   EXPECT_EQ(test_instance.display_name, QString{"a display name"});
@@ -82,32 +82,32 @@ TEST(GgpInstanceTests, GetListFromJson) {
   EXPECT_EQ(test_instance.pool, QString{"a pool"});
 }
 
-TEST(GgpInstanceTests, CmpById) {
-  GgpInstance test_instance_0;
-  GgpInstance test_instance_1;
+TEST(InstanceTests, CmpById) {
+  Instance test_instance_0;
+  Instance test_instance_1;
 
   // Empty id
-  EXPECT_FALSE(GgpInstance::CmpById(test_instance_0, test_instance_1));
+  EXPECT_FALSE(Instance::CmpById(test_instance_0, test_instance_1));
 
   // Same id
   test_instance_0.id = QString{"id"};
   test_instance_1.id = QString{"id"};
-  EXPECT_FALSE(GgpInstance::CmpById(test_instance_0, test_instance_1));
+  EXPECT_FALSE(Instance::CmpById(test_instance_0, test_instance_1));
 
   // first < second
   test_instance_0.id = QString{"id a"};
   test_instance_1.id = QString{"id b"};
-  EXPECT_TRUE(GgpInstance::CmpById(test_instance_0, test_instance_1));
+  EXPECT_TRUE(Instance::CmpById(test_instance_0, test_instance_1));
 
   // first > second
   test_instance_0.id = QString{"id b"};
   test_instance_1.id = QString{"id a"};
-  EXPECT_FALSE(GgpInstance::CmpById(test_instance_0, test_instance_1));
+  EXPECT_FALSE(Instance::CmpById(test_instance_0, test_instance_1));
 }
 
-TEST(GgpInstanceTests, EqualToOperator) {
-  GgpInstance test_instance_0;
-  GgpInstance test_instance_1;
+TEST(InstanceTests, EqualToOperator) {
+  Instance test_instance_0;
+  Instance test_instance_1;
 
   EXPECT_EQ(test_instance_0, test_instance_1);
 
@@ -132,9 +132,9 @@ TEST(GgpInstanceTests, EqualToOperator) {
   EXPECT_EQ(test_instance_0, test_instance_1);
 }
 
-TEST(GgpInstanceTests, NotEqualToOperator) {
-  GgpInstance test_instance_0;
-  GgpInstance test_instance_1;
+TEST(InstanceTests, NotEqualToOperator) {
+  Instance test_instance_0;
+  Instance test_instance_1;
 
   EXPECT_FALSE(test_instance_0 != test_instance_1);
 
@@ -159,9 +159,9 @@ TEST(GgpInstanceTests, NotEqualToOperator) {
   EXPECT_FALSE(test_instance_0 != test_instance_1);
 }
 
-TEST(GgpInstanceTests, QMetaTypeId) {
-  EXPECT_STREQ("OrbitGgp::GgpInstance",
-               QMetaType::typeName(qMetaTypeId<GgpInstance>()));
+TEST(InstanceTests, QMetaTypeId) {
+  EXPECT_STREQ("OrbitGgp::Instance",
+               QMetaType::typeName(qMetaTypeId<Instance>()));
 }
 
 }  // namespace OrbitGgp

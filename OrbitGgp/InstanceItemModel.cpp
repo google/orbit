@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitGgp/GgpInstanceItemModel.h"
+#include "OrbitGgp/InstanceItemModel.h"
 
 namespace {
 enum class Columns {
@@ -18,22 +18,22 @@ enum class Columns {
 
 namespace OrbitGgp {
 
-GgpInstanceItemModel::GgpInstanceItemModel(QVector<GgpInstance> instances,
-                                           QObject* parent)
+InstanceItemModel::InstanceItemModel(QVector<Instance> instances,
+                                     QObject* parent)
     : QAbstractItemModel(parent), instances_(std::move(instances)) {
-  std::sort(instances_.begin(), instances_.end(), &GgpInstance::CmpById);
+  std::sort(instances_.begin(), instances_.end(), &Instance::CmpById);
 }
 
-int GgpInstanceItemModel::columnCount(const QModelIndex& parent) const {
+int InstanceItemModel::columnCount(const QModelIndex& parent) const {
   return parent.isValid() ? 0 : static_cast<int>(Columns::NumberOfColumns);
 }
 
-QVariant GgpInstanceItemModel::data(const QModelIndex& index, int role) const {
+QVariant InstanceItemModel::data(const QModelIndex& index, int role) const {
   CHECK(index.isValid());
   CHECK(index.model() == this);
   CHECK(index.row() < instances_.size());  // instances_.size());
 
-  const GgpInstance& current_instance = instances_[index.row()];
+  const Instance& current_instance = instances_[index.row()];
 
   if (role == Qt::UserRole) return QVariant::fromValue(current_instance);
 
@@ -61,8 +61,8 @@ QVariant GgpInstanceItemModel::data(const QModelIndex& index, int role) const {
   return {};
 }
 
-QModelIndex GgpInstanceItemModel::index(int row, int col,
-                                        const QModelIndex& parent) const {
+QModelIndex InstanceItemModel::index(int row, int col,
+                                     const QModelIndex& parent) const {
   if (parent.isValid()) return {};
   if (row < 0 || row >= instances_.size()) return {};
   if (col < 0 || col >= static_cast<int>(Columns::NumberOfColumns)) return {};
@@ -70,9 +70,8 @@ QModelIndex GgpInstanceItemModel::index(int row, int col,
   return createIndex(row, col, nullptr);
 }
 
-QVariant GgpInstanceItemModel::headerData(int section,
-                                          Qt::Orientation orientation,
-                                          int role) const {
+QVariant InstanceItemModel::headerData(int section, Qt::Orientation orientation,
+                                       int role) const {
   if (role != Qt::DisplayRole) return {};
   if (orientation != Qt::Horizontal) return {};
   if (section < 0 || section >= static_cast<int>(Columns::NumberOfColumns)) {
@@ -101,21 +100,21 @@ QVariant GgpInstanceItemModel::headerData(int section,
   return {};
 }
 
-QModelIndex GgpInstanceItemModel::parent(const QModelIndex& /*child*/) const {
+QModelIndex InstanceItemModel::parent(const QModelIndex& /*child*/) const {
   return {};
 }
 
-int GgpInstanceItemModel::rowCount(const QModelIndex& parent) const {
+int InstanceItemModel::rowCount(const QModelIndex& parent) const {
   return parent.isValid() ? 0 : instances_.size();
 }
 
-void GgpInstanceItemModel::SetInstances(QVector<GgpInstance> new_instances) {
-  std::sort(new_instances.begin(), new_instances.end(), &GgpInstance::CmpById);
+void InstanceItemModel::SetInstances(QVector<Instance> new_instances) {
+  std::sort(new_instances.begin(), new_instances.end(), &Instance::CmpById);
 
-  QVector<GgpInstance>& old_instances(instances_);
+  QVector<Instance>& old_instances(instances_);
 
-  QVector<GgpInstance>::iterator old_iter = old_instances.begin();
-  QVector<GgpInstance>::iterator new_iter = new_instances.begin();
+  QVector<Instance>::iterator old_iter = old_instances.begin();
+  QVector<Instance>::iterator new_iter = new_instances.begin();
 
   while (old_iter != old_instances.end() && new_iter != new_instances.end()) {
     const int current_row =

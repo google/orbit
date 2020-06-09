@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBITGGP_GGP_SSH_INFO_H_
-#define ORBITGGP_GGP_SSH_INFO_H_
+#ifndef ORBIT_GGP_SSH_INFO_H_
+#define ORBIT_GGP_SSH_INFO_H_
 
 #include <QByteArray>
 #include <QString>
@@ -11,16 +11,16 @@
 
 namespace OrbitGgp {
 
-struct GgpSshInfo {
+struct SshInfo {
   QString host;
   QString key_path;
   QString known_hosts_path;
   int port;
   QString user;
 
-  static std::optional<GgpSshInfo> CreateFromJson(const QByteArray& json);
+  static std::optional<SshInfo> CreateFromJson(const QByteArray& json);
 };
 
 }  // namespace OrbitGgp
 
-#endif  // ORBITGGP_GGP_SSH_INFO_H_
+#endif  // ORBIT_GGP_SSH_INFO_H_

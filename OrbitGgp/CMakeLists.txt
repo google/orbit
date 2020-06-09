@@ -14,16 +14,16 @@ target_include_directories(OrbitGgp PUBLIC
           ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_sources(OrbitGgp PUBLIC
-          include/OrbitGgp/GgpClient.h
-          include/OrbitGgp/GgpInstance.h
-          include/OrbitGgp/GgpInstanceItemModel.h
-          include/OrbitGgp/GgpSshInfo.h)
+          include/OrbitGgp/Client.h
+          include/OrbitGgp/Instance.h
+          include/OrbitGgp/InstanceItemModel.h
+          include/OrbitGgp/SshInfo.h)
 
 target_sources(OrbitGgp PRIVATE
-          GgpClient.cpp
-          GgpInstance.cpp
-          GgpInstanceItemModel.cpp
-          GgpSshInfo.cpp)
+          Client.cpp
+          Instance.cpp
+          InstanceItemModel.cpp
+          SshInfo.cpp)
 
 target_link_libraries(
   OrbitGgp
@@ -38,9 +38,9 @@ set_target_properties(OrbitGgp PROPERTIES AUTOUIC ON)
 add_executable(OrbitGgpTests)
 
 target_sources(OrbitGgpTests PRIVATE 
-          GgpInstanceTests.cpp
-          GgpInstanceItemModelTests.cpp
-          GgpSshInfoTests.cpp
+          InstanceTests.cpp
+          InstanceItemModelTests.cpp
+          SshInfoTests.cpp
 )
 
 target_link_libraries(OrbitGgpTests PRIVATE 

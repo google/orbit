@@ -16,18 +16,18 @@
 
 #include "Error.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitGgp/GgpClient.h"
-#include "OrbitGgp/GgpInstance.h"
-#include "OrbitGgp/GgpInstanceItemModel.h"
-#include "OrbitGgp/GgpSshInfo.h"
+#include "OrbitGgp/Client.h"
+#include "OrbitGgp/Instance.h"
+#include "OrbitGgp/InstanceItemModel.h"
+#include "OrbitGgp/SshInfo.h"
 
 namespace OrbitQt {
 
 class OrbitStartupWindow : public QDialog {
-  using GgpSshInfo = OrbitGgp::GgpSshInfo;
-  using GgpClient = OrbitGgp::GgpClient;
-  using GgpInstance = OrbitGgp::GgpInstance;
-  using GgpInstanceItemModel = OrbitGgp::GgpInstanceItemModel;
+  using Client = OrbitGgp::Client;
+  using Instance = OrbitGgp::Instance;
+  using InstanceItemModel = OrbitGgp::InstanceItemModel;
+  using SshInfo = OrbitGgp::SshInfo;
 
  public:
   explicit OrbitStartupWindow(QWidget* parent = nullptr);
@@ -41,8 +41,8 @@ class OrbitStartupWindow : public QDialog {
       return Error::kUserClosedStartUpWindow;
     }
 
-    if (std::holds_alternative<GgpSshInfo>(result_)) {
-      auto& ssh_info = std::get<GgpSshInfo>(result_);
+    if (std::holds_alternative<SshInfo>(result_)) {
+      auto& ssh_info = std::get<SshInfo>(result_);
       Credentials credentials{};
       credentials.host = ssh_info.host.toStdString();
       credentials.key_path = ssh_info.key_path.toStdString();
@@ -60,10 +60,10 @@ class OrbitStartupWindow : public QDialog {
  private:
   void ReloadInstances(QPointer<QPushButton> refresh_button);
 
-  std::optional<GgpClient> ggp_client_;
-  std::optional<GgpInstance> chosen_instance_;
-  std::variant<std::monostate, GgpSshInfo, QString> result_;
-  QPointer<GgpInstanceItemModel> model_;
+  std::optional<Client> ggp_client_;
+  std::optional<Instance> chosen_instance_;
+  std::variant<std::monostate, SshInfo, QString> result_;
+  QPointer<InstanceItemModel> model_;
 };
 
 }  // namespace OrbitQt

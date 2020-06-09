@@ -2,20 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBITGGP_GGP_CLIENT_H_
-#define ORBITGGP_GGP_CLIENT_H_
+#ifndef ORBIT_GGP_CLIENT_H_
+#define ORBIT_GGP_CLIENT_H_
 
 #include <QVector>
 #include <functional>
 #include <outcome.hpp>
 #include <string>
 
-#include "GgpInstance.h"
-#include "GgpSshInfo.h"
+#include "Instance.h"
+#include "SshInfo.h"
 
 namespace OrbitGgp {
 
-class GgpClient {
+class Client {
  public:
   // this policy means when a result is wrongly accessed, std::terminate() will
   // be called. (.value() is accessed even though it is an error, or vice versa)
@@ -23,23 +23,22 @@ class GgpClient {
   using ResultOrQString =
       outcome::result<T, QString, outcome::policy::terminate>;
 
-  static ResultOrQString<GgpClient> Create();
+  static ResultOrQString<Client> Create();
 
   int GetNumberOfRequestsRunning() const { return number_of_requests_running_; }
 
   void GetInstancesAsync(
-      const std::function<void(ResultOrQString<QVector<GgpInstance>>)>&
-          callback);
+      const std::function<void(ResultOrQString<QVector<Instance>>)>& callback);
   void GetSshInformationAsync(
-      const GgpInstance& ggpInstance,
-      const std::function<void(ResultOrQString<GgpSshInfo>)>& callback);
+      const Instance& ggpInstance,
+      const std::function<void(ResultOrQString<SshInfo>)>& callback);
 
  private:
-  GgpClient() = default;
+  Client() = default;
 
   int number_of_requests_running_ = 0;
 };
 
 }  // namespace OrbitGgp
 
-#endif  // ORBITGGP_GGP_CLIENT_H_
+#endif  // ORBIT_GGP_CLIENT_H_

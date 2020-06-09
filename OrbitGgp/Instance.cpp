@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitGgp/GgpInstance.h"
+#include "OrbitGgp/Instance.h"
 
 #include <QByteArray>
 #include <QJsonArray>
@@ -14,8 +14,8 @@ namespace OrbitGgp {
 
 namespace {
 
-GgpInstance GetInstanceFromJson(const QJsonObject& obj) {
-  GgpInstance inst{};
+Instance GetInstanceFromJson(const QJsonObject& obj) {
+  Instance inst{};
 
   if (const QJsonValue val = obj.value("displayName"); !val.isUndefined()) {
     inst.display_name = val.toString();
@@ -46,17 +46,17 @@ GgpInstance GetInstanceFromJson(const QJsonObject& obj) {
 
 }  // namespace
 
-QVector<GgpInstance> GgpInstance::GetListFromJson(const QByteArray& json) {
+QVector<Instance> Instance::GetListFromJson(const QByteArray& json) {
   const QJsonDocument doc = QJsonDocument::fromJson(json);
 
   if (!doc.isArray()) return {};
 
   const QJsonArray arr = doc.array();
 
-  QVector<GgpInstance> list;
+  QVector<Instance> list;
 
   std::transform(arr.begin(), arr.end(), std::back_inserter(list),
-                 [](const QJsonValue& val) -> GgpInstance {
+                 [](const QJsonValue& val) -> Instance {
                    if (!val.isObject()) return {};
 
                    const QJsonObject obj = val.toObject();
@@ -67,7 +67,7 @@ QVector<GgpInstance> GgpInstance::GetListFromJson(const QByteArray& json) {
   return list;
 }
 
-bool GgpInstance::CmpById(const GgpInstance& lhs, const GgpInstance& rhs) {
+bool Instance::CmpById(const Instance& lhs, const Instance& rhs) {
   return lhs.id < rhs.id;
 }
 

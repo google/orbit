@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitGgp/GgpSshInfo.h"
+#include "OrbitGgp/SshInfo.h"
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -11,7 +11,7 @@
 
 namespace OrbitGgp {
 
-std::optional<GgpSshInfo> GgpSshInfo::CreateFromJson(const QByteArray& json) {
+std::optional<SshInfo> SshInfo::CreateFromJson(const QByteArray& json) {
   const QJsonDocument doc = QJsonDocument::fromJson(json);
 
   if (!doc.isObject()) return {};
@@ -37,7 +37,7 @@ std::optional<GgpSshInfo> GgpSshInfo::CreateFromJson(const QByteArray& json) {
   int port = port_val.toString().toInt(&ok);
   if (!ok) return {};
 
-  GgpSshInfo ggp_ssh_info;
+  SshInfo ggp_ssh_info;
 
   ggp_ssh_info.host = host_val.toString();
   ggp_ssh_info.key_path = key_path_val.toString();

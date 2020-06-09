@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBITGGP_GGP_INSTANCE_ITEM_MODEL_H_
-#define ORBITGGP_GGP_INSTANCE_ITEM_MODEL_H_
+#ifndef ORBIT_GGP_INSTANCE_ITEM_MODEL_H_
+#define ORBIT_GGP_INSTANCE_ITEM_MODEL_H_
 
 #include <QAbstractItemModel>
 #include <QModelIndex>
@@ -11,17 +11,17 @@
 #include <QVariant>
 #include <QVector>
 
-#include "GgpInstance.h"
+#include "Instance.h"
 #include "OrbitBase/Logging.h"
 
 namespace OrbitGgp {
 
-class GgpInstanceItemModel : public QAbstractItemModel {
+class InstanceItemModel : public QAbstractItemModel {
  public:
-  explicit GgpInstanceItemModel(QVector<GgpInstance> instances = {},
-                                QObject* parent = nullptr);
+  explicit InstanceItemModel(QVector<Instance> instances = {},
+                             QObject* parent = nullptr);
 
-  void SetInstances(QVector<GgpInstance> instances);
+  void SetInstances(QVector<Instance> instances);
 
   int columnCount(const QModelIndex& parent = {}) const override;
   QVariant data(const QModelIndex& index,
@@ -34,9 +34,9 @@ class GgpInstanceItemModel : public QAbstractItemModel {
   int rowCount(const QModelIndex& parent = {}) const override;
 
  private:
-  QVector<GgpInstance> instances_;
+  QVector<Instance> instances_;
 };
 
 }  // namespace OrbitGgp
 
-#endif  // ORBITGGP_GGP_INSTANCE_ITEM_MODEL_H_
+#endif  // ORBIT_GGP_INSTANCE_ITEM_MODEL_H_
