@@ -18,16 +18,12 @@
 #include <QVector>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitGgp/GgpClient.h"
-#include "OrbitGgp/GgpInstance.h"
-#include "OrbitGgp/GgpInstanceItemModel.h"
-#include "OrbitGgp/GgpSshInfo.h"
 #include "Path.h"
 
 namespace OrbitQt {
 
 OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
-    : QDialog{parent, Qt::Dialog}, model_{new GgpInstanceItemModel{{}, this}} {
+    : QDialog{parent, Qt::Dialog}, model_{new InstanceItemModel{{}, this}} {
   // General UI
   const int width = 700;
   const int height = 400;
@@ -107,8 +103,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
         const auto self = QPointer{this};
         ggp_client_->GetSshInformationAsync(
             *chosen_instance_,
-            [self,
-             button_box](GgpClient::ResultOrQString<GgpSshInfo> ssh_info) {
+            [self, button_box](Client::ResultOrQString<SshInfo> ssh_info) {
               // The dialog might not exist anymore when this callback returns.
               // So we have to check for this.
               if (self && button_box) {
@@ -146,7 +141,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
         }
 
         CHECK(current.model() == model_);
-        chosen_instance_ = current.data(Qt::UserRole).value<GgpInstance>();
+        chosen_instance_ = current.data(Qt::UserRole).value<Instance>();
         button_box->button(QDialogButtonBox::StandardButton::Ok)
             ->setEnabled(true);
       });
@@ -157,7 +152,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
   // Fill content table
   model_->SetInstances({});
 
-  GgpClient::ResultOrQString<GgpClient> init_result = GgpClient::Create();
+  Client::ResultOrQString<Client> init_result = Client::Create();
   if (!init_result) {
     QString error_string = QString(
                                "Orbit was unable to communicate with the GGP "
@@ -185,8 +180,8 @@ void OrbitStartupWindow::ReloadInstances(QPointer<QPushButton> refresh_button) {
   refresh_button->setText("Loading...");
 
   ggp_client_->GetInstancesAsync(
-      [model = model_, refresh_button](
-          GgpClient::ResultOrQString<QVector<GgpInstance>> instances) {
+      [model = model_,
+       refresh_button](Client::ResultOrQString<QVector<Instance>> instances) {
         if (refresh_button) {
           refresh_button->setEnabled(true);
           refresh_button->setText("");

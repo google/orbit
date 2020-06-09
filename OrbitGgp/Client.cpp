@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitGgp/GgpClient.h"
+#include "OrbitGgp/Client.h"
 
 #include <QDebug>
 #include <QEventLoop>
@@ -11,8 +11,8 @@
 #include <QTimer>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitGgp/GgpInstance.h"
-#include "OrbitGgp/GgpSshInfo.h"
+#include "OrbitGgp/Instance.h"
+#include "OrbitGgp/SshInfo.h"
 
 namespace OrbitGgp {
 
@@ -22,7 +22,7 @@ constexpr int kDefaultTimeoutInMs = 10'000;
 
 void RunProcessWithTimeout(
     const QString& program, const QStringList& arguments,
-    const std::function<void(GgpClient::ResultOrQString<QByteArray>)>& callback,
+    const std::function<void(Client::ResultOrQString<QByteArray>)>& callback,
     int timeout_in_ms = kDefaultTimeoutInMs) {
   const auto process = QPointer{new QProcess{}};
   process->setProgram(program);
@@ -74,7 +74,7 @@ void RunProcessWithTimeout(
 
 }  // namespace
 
-GgpClient::ResultOrQString<GgpClient> GgpClient::Create() {
+Client::ResultOrQString<Client> Client::Create() {
   QProcess ggp_process{};
   ggp_process.setProgram("ggp");
   ggp_process.setArguments({"version"});
@@ -89,31 +89,29 @@ GgpClient::ResultOrQString<GgpClient> GgpClient::Create() {
         .arg(ggp_process.exitCode());
   }
 
-  GgpClient client{};
+  Client client{};
   return client;
 }
 
-void GgpClient::GetInstancesAsync(
-    const std::function<void(ResultOrQString<QVector<GgpInstance>>)>&
-        callback) {
+void Client::GetInstancesAsync(
+    const std::function<void(ResultOrQString<QVector<Instance>>)>& callback) {
   CHECK(callback);
 
   number_of_requests_running_++;
-  RunProcessWithTimeout(
-      "ggp", {"instance", "list", "-s"},
-      [callback, this](ResultOrQString<QByteArray> result) {
-        number_of_requests_running_--;
-        if (!result) {
-          callback(result.error());
-          return;
-        }
-        callback(GgpInstance::GetListFromJson(result.value()));
-      });
+  RunProcessWithTimeout("ggp", {"instance", "list", "-s"},
+                        [callback, this](ResultOrQString<QByteArray> result) {
+                          number_of_requests_running_--;
+                          if (!result) {
+                            callback(result.error());
+                            return;
+                          }
+                          callback(Instance::GetListFromJson(result.value()));
+                        });
 }
 
-void GgpClient::GetSshInformationAsync(
-    const GgpInstance& ggpInstance,
-    const std::function<void(ResultOrQString<GgpSshInfo>)>& callback) {
+void Client::GetSshInformationAsync(
+    const Instance& ggpInstance,
+    const std::function<void(ResultOrQString<SshInfo>)>& callback) {
   const QStringList arguments{"ssh", "init", "-s", "--instance",
                               ggpInstance.id};
   RunProcessWithTimeout(
@@ -123,8 +121,8 @@ void GgpClient::GetSshInformationAsync(
           return;
         }
 
-        std::optional<GgpSshInfo> sshInfo =
-            GgpSshInfo::CreateFromJson(result.value());
+        std::optional<SshInfo> sshInfo =
+            SshInfo::CreateFromJson(result.value());
         if (!sshInfo) {
           callback(QString{"Unable to get ssh info for instance"});
         }
