@@ -501,7 +501,7 @@ void Pdb::ProcessData() {
 
 //-----------------------------------------------------------------------------
 void Pdb::Save() {
-  std::string fullName = Path::GetCachePath() + GetCachedName();
+  std::string fullName = Path::JoinPath({Path::GetCachePath(), GetCachedName()});
 
   SCOPE_TIMER_LOG(absl::StrFormat("Saving %s", fullName.c_str()));
 

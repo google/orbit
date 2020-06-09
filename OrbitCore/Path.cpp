@@ -91,15 +91,6 @@ bool Path::DirExists(const std::string& dir) {
 #endif
 }
 
-void Path::MakeDir(const std::string& a_Directory) {
-  // TODO: Use std::filesystem::create_directory once when we have c++ 17.
-#if _WIN32
-  _mkdir(a_Directory.c_str());
-#else
-  mkdir(a_Directory.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-#endif
-}
-
 std::string Path::GetBasePath() {
   if (!base_path_.empty()) {
     return base_path_;
@@ -126,63 +117,63 @@ std::string Path::GetDllName(bool a_Is64Bit) {
   return a_Is64Bit ? "Orbit64.dll" : "Orbit32.dll";
 }
 
+static std::string CreateAndGetConfigPath() {
+  std::string configDir = Path::JoinPath({Path::GetAppDataPath(), "config"});
+  std::filesystem::create_directory(configDir);
+  return configDir;
+}
+
 std::string Path::GetParamsFileName() {
-  std::string paramsDir = Path::GetAppDataPath() + "config/";
-  Path::MakeDir(paramsDir);
-  return paramsDir + "config.xml";
+  return Path::JoinPath({CreateAndGetConfigPath(), "config.xml"});
 }
 
 std::string Path::GetFileMappingFileName() {
-  std::string paramsDir = Path::GetAppDataPath() + "config/";
-  Path::MakeDir(paramsDir);
-  return paramsDir + std::string("FileMapping.txt");
+  return Path::JoinPath({CreateAndGetConfigPath(), "FileMapping.txt"});
 }
 
 std::string Path::GetSymbolsFileName() {
-  std::string paramsDir = Path::GetAppDataPath() + "config/";
-  Path::MakeDir(paramsDir);
-  return paramsDir + std::string("SymbolPaths.txt");
+  return Path::JoinPath({CreateAndGetConfigPath(), "SymbolPaths.txt"});
 }
 
 std::string Path::GetLicenseName() {
   std::string appDataDir = Path::GetAppDataPath();
-  Path::MakeDir(appDataDir);
-  return appDataDir + std::string("user.txt");
+  std::filesystem::create_directory(appDataDir);
+  return Path::JoinPath({appDataDir, "user.txt"});
 }
 
 std::string Path::GetCachePath() {
-  std::string cacheDir = Path::GetAppDataPath() + "cache/";
-  Path::MakeDir(cacheDir);
+  std::string cacheDir = Path::JoinPath({Path::GetAppDataPath(), "cache"});
+  std::filesystem::create_directory(cacheDir);
   return cacheDir;
 }
 
 std::string Path::GetPresetPath() {
-  std::string presetDir = Path::GetAppDataPath() + "presets/";
-  Path::MakeDir(presetDir);
+  std::string presetDir = Path::JoinPath({Path::GetAppDataPath(), "presets"});
+  std::filesystem::create_directory(presetDir);
   return presetDir;
 }
 
 std::string Path::GetPluginPath() {
-  std::string presetDir = Path::GetAppDataPath() + "plugins/";
-  Path::MakeDir(presetDir);
+  std::string presetDir = Path::JoinPath({Path::GetAppDataPath(), "plugins"});
+  std::filesystem::create_directory(presetDir);
   return presetDir;
 }
 
 std::string Path::GetCapturePath() {
-  std::string captureDir = Path::GetAppDataPath() + "output/";
-  Path::MakeDir(captureDir);
+  std::string captureDir = Path::JoinPath({Path::GetAppDataPath(), "output"});
+  std::filesystem::create_directory(captureDir);
   return captureDir;
 }
 
 std::string Path::GetDumpPath() {
-  std::string captureDir = Path::GetAppDataPath() + "dumps/";
-  Path::MakeDir(captureDir);
+  std::string captureDir = Path::JoinPath({Path::GetAppDataPath(), "dumps"});
+  std::filesystem::create_directory(captureDir);
   return captureDir;
 }
 
 std::string Path::GetTmpPath() {
-  std::string captureDir = Path::GetAppDataPath() + "temp/";
-  Path::MakeDir(captureDir);
+  std::string captureDir = Path::JoinPath({Path::GetAppDataPath(), "temp"});
+  std::filesystem::create_directory(captureDir);
   return captureDir;
 }
 
@@ -252,7 +243,7 @@ std::string Path::GetProgramFilesPath() {
 #ifdef WIN32
   char pf[MAX_PATH] = {0};
   SHGetSpecialFolderPathA(0, pf, CSIDL_PROGRAM_FILES, FALSE);
-  return std::string(pf) + "\\OrbitProfiler\\";
+  return Path::JoinPath({std::string(pf), "OrbitProfiler"});
 #else
   return "TodoLinux";
 #endif
@@ -261,11 +252,11 @@ std::string Path::GetProgramFilesPath() {
 std::string Path::GetAppDataPath() {
 #ifdef WIN32
   std::string appData = GetEnvVar("APPDATA");
-  std::string path = appData + "\\OrbitProfiler\\";
+  std::string path = Path::JoinPath({appData, "OrbitProfiler"});
 #else
-  std::string path = Path::GetHome() + ".orbitprofiler/";
+  std::string path = Path::JoinPath({Path::GetHome(), ".orbitprofiler"});
 #endif
-  Path::MakeDir(path);
+  std::filesystem::create_directory(path);
   return path;
 }
 
@@ -284,7 +275,7 @@ std::string Path::GetHome() {
 
 std::string Path::GetLogFilePath() {
   std::string logsDir = Path::JoinPath({Path::GetAppDataPath(), "logs"});
-  Path::MakeDir(logsDir);
+  std::filesystem::create_directory(logsDir);
   return Path::JoinPath({logsDir, "Orbit.log"});
 }
 

@@ -642,7 +642,7 @@ outcome::result<void, std::string> OrbitApp::OnLoadSession(
   std::string file_path = file_name;
 
   if (Path::GetDirectory(file_name).empty()) {
-    file_path = Path::GetPresetPath() + file_name;
+    file_path = Path::JoinPath({Path::GetPresetPath(), file_name});
   }
 
   std::ifstream file(file_path);
