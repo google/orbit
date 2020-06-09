@@ -8,6 +8,7 @@
 #include <QDateTime>
 #include <QMetaType>
 #include <QVector>
+#include <outcome.hpp>
 
 namespace OrbitGgp {
 
@@ -19,7 +20,8 @@ struct Instance {
   QString owner;
   QString pool;
 
-  static QVector<Instance> GetListFromJson(const QByteArray& json);
+  static outcome::result<QVector<Instance>> GetListFromJson(
+      const QByteArray& json);
   static bool CmpById(const Instance& lhs, const Instance& rhs);
 
   friend bool operator==(const Instance& lhs, const Instance& rhs) {

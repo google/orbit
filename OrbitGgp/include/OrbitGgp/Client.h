@@ -17,21 +17,15 @@ namespace OrbitGgp {
 
 class Client {
  public:
-  // this policy means when a result is wrongly accessed, std::terminate() will
-  // be called. (.value() is accessed even though it is an error, or vice versa)
-  template <class T>
-  using ResultOrQString =
-      outcome::result<T, QString, outcome::policy::terminate>;
-
-  static ResultOrQString<Client> Create();
+  static outcome::result<Client> Create();
 
   int GetNumberOfRequestsRunning() const { return number_of_requests_running_; }
 
   void GetInstancesAsync(
-      const std::function<void(ResultOrQString<QVector<Instance>>)>& callback);
+      const std::function<void(outcome::result<QVector<Instance>>)>& callback);
   void GetSshInformationAsync(
       const Instance& ggpInstance,
-      const std::function<void(ResultOrQString<SshInfo>)>& callback);
+      const std::function<void(outcome::result<SshInfo>)>& callback);
 
  private:
   Client() = default;

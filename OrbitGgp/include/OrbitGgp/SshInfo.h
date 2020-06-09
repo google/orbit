@@ -7,7 +7,7 @@
 
 #include <QByteArray>
 #include <QString>
-#include <optional>
+#include <outcome.hpp>
 
 namespace OrbitGgp {
 
@@ -18,7 +18,7 @@ struct SshInfo {
   int port;
   QString user;
 
-  static std::optional<SshInfo> CreateFromJson(const QByteArray& json);
+  static outcome::result<SshInfo> CreateFromJson(const QByteArray& json);
 };
 
 }  // namespace OrbitGgp
