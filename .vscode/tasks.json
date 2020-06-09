@@ -7,7 +7,9 @@
       "command": "cmake",
       "args": [
         "--build",
-        "."
+        ".",
+        "--",
+        "-j16"
       ],
       "options": {
         "cwd": "${workspaceFolder}/build_default_relwithdebinfo"
