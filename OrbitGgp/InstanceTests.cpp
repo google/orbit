@@ -13,73 +13,65 @@
 namespace OrbitGgp {
 
 TEST(InstanceTests, GetListFromJson) {
-  QByteArray json;
-  QVector<Instance> test_instances;
-  Instance test_instance;
+  {
+    // invalid json
+    const auto json = QString("json").toUtf8();
+    EXPECT_FALSE(Instance::GetListFromJson(json));
+  }
 
-  // invalid json
-  json = QString("json").toUtf8();
-  test_instances = Instance::GetListFromJson(json);
-  EXPECT_TRUE(test_instances.empty());
+  {
+    // empty json
+    const auto json = QString("[]").toUtf8();
+    const auto empty_instances = Instance::GetListFromJson(json);
+    ASSERT_TRUE(empty_instances);
+    EXPECT_TRUE(empty_instances.value().empty());
+  }
 
-  // empty json
-  json = QString("[]").toUtf8();
-  test_instances = Instance::GetListFromJson(json);
-  EXPECT_TRUE(test_instances.empty());
+  {
+    // one empty json object
+    const auto json = QString("[{}]").toUtf8();
+    EXPECT_FALSE(Instance::GetListFromJson(json));
+  }
 
-  // one empty json object
-  json = QString("[{}]").toUtf8();
-  test_instances = Instance::GetListFromJson(json);
-  ASSERT_EQ(test_instances.size(), 1);
-  test_instance = test_instances[0];
-  EXPECT_TRUE(test_instance.display_name.isEmpty());
-  EXPECT_TRUE(test_instance.id.isEmpty());
-  EXPECT_TRUE(test_instance.ip_address.isEmpty());
-  EXPECT_EQ(test_instance.last_updated, QDateTime{});
-  EXPECT_TRUE(test_instance.owner.isEmpty());
-  EXPECT_TRUE(test_instance.pool.isEmpty());
-
-  // two empty json objects
-  json = QString("[{},{}]").toUtf8();
-  test_instances = Instance::GetListFromJson(json);
-  ASSERT_EQ(test_instances.size(), 2);
-  EXPECT_EQ(test_instances[0], Instance{});
-  EXPECT_EQ(test_instances[1], Instance{});
-
-  // one full json object
-  // pretty json:
-  // [
-  //  {
-  //   "displayName": "a display name",
-  //   "id": "instance id",
-  //   "ipAddress": "1.1.0.1",
-  //   "lastUpdated": "2020-04-09T09:55:20Z",
-  //   "owner": "a username",
-  //   "pool": "a pool",
-  //   "other key": "other value",
-  //   "other complex object": {
-  //    "object key": "object value"
-  //   },
-  //  }
-  // ]
-  json = QString(
-             "[{\"displayName\":\"a display name\",\"id\":\"instance "
-             "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-04-09T09:"
-             "55:20Z\",\"owner\":\"a username\",\"pool\":\"a pool\",\"other "
-             "key\":\"other value\",\"other complex object\":{\"object "
-             "key\":\"object value\"}}]")
-             .toUtf8();
-  test_instances = Instance::GetListFromJson(json);
-  ASSERT_EQ(test_instances.size(), 1);
-  test_instance = test_instances[0];
-  EXPECT_EQ(test_instance.display_name, QString{"a display name"});
-  EXPECT_EQ(test_instance.id, QString{"instance id"});
-  EXPECT_EQ(test_instance.ip_address, QString{"1.1.0.1"});
-  EXPECT_EQ(
-      test_instance.last_updated,
-      QDateTime::fromString(QString{"2020-04-09T09:55:20Z"}, Qt::ISODate));
-  EXPECT_EQ(test_instance.owner, QString{"a username"});
-  EXPECT_EQ(test_instance.pool, QString{"a pool"});
+  {
+    // one full json object
+    // pretty json:
+    // [
+    //  {
+    //   "displayName": "a display name",
+    //   "id": "instance id",
+    //   "ipAddress": "1.1.0.1",
+    //   "lastUpdated": "2020-04-09T09:55:20Z",
+    //   "owner": "a username",
+    //   "pool": "a pool",
+    //   "other key": "other value",
+    //   "other complex object": {
+    //    "object key": "object value"
+    //   },
+    //  }
+    // ]
+    const auto json =
+        QString(
+            "[{\"displayName\":\"a display name\",\"id\":\"instance "
+            "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-04-09T09:"
+            "55:20Z\",\"owner\":\"a username\",\"pool\":\"a pool\",\"other "
+            "key\":\"other value\",\"other complex object\":{\"object "
+            "key\":\"object value\"}}]")
+            .toUtf8();
+    const auto result = Instance::GetListFromJson(json);
+    ASSERT_TRUE(result);
+    const QVector<Instance> instances = std::move(result.value());
+    ASSERT_EQ(instances.size(), 1);
+    const Instance instance = instances[0];
+    EXPECT_EQ(instance.display_name, QString{"a display name"});
+    EXPECT_EQ(instance.id, QString{"instance id"});
+    EXPECT_EQ(instance.ip_address, QString{"1.1.0.1"});
+    EXPECT_EQ(
+        instance.last_updated,
+        QDateTime::fromString(QString{"2020-04-09T09:55:20Z"}, Qt::ISODate));
+    EXPECT_EQ(instance.owner, QString{"a username"});
+    EXPECT_EQ(instance.pool, QString{"a pool"});
+  }
 }
 
 TEST(InstanceTests, CmpById) {

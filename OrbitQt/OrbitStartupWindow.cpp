@@ -103,7 +103,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
         const auto self = QPointer{this};
         ggp_client_->GetSshInformationAsync(
             *chosen_instance_,
-            [self, button_box](Client::ResultOrQString<SshInfo> ssh_info) {
+            [self, button_box](outcome::result<SshInfo> ssh_info) {
               // The dialog might not exist anymore when this callback returns.
               // So we have to check for this.
               if (self && button_box) {
@@ -119,9 +119,10 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
                       QString("Orbit was unable to retrieve the information "
                               "necessary to connect via ssh. The error message "
                               "was: %1")
-                          .arg(ssh_info.error()));
+                          .arg(QString::fromStdString(
+                              ssh_info.error().message())));
                 } else {
-                  self->result_ = ssh_info.value();
+                  self->result_ = std::move(ssh_info.value());
                   self->accept();
                 }
               }
@@ -152,15 +153,11 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
   // Fill content table
   model_->SetInstances({});
 
-  Client::ResultOrQString<Client> init_result = Client::Create();
+  outcome::result<Client> init_result = Client::Create();
   if (!init_result) {
-    QString error_string = QString(
-                               "Orbit was unable to communicate with the GGP "
-                               "command line tool. %1")
-                               .arg(init_result.error());
-    ERROR("%s", error_string.toStdString().c_str());
     refresh_button->setDisabled(true);
-    refresh_button->setToolTip(error_string);
+    refresh_button->setToolTip(
+        QString::fromStdString(init_result.error().message()));
     return;
   }
   ggp_client_.emplace(std::move(init_result.value()));
@@ -181,7 +178,7 @@ void OrbitStartupWindow::ReloadInstances(QPointer<QPushButton> refresh_button) {
 
   ggp_client_->GetInstancesAsync(
       [model = model_,
-       refresh_button](Client::ResultOrQString<QVector<Instance>> instances) {
+       refresh_button](outcome::result<QVector<Instance>> instances) {
         if (refresh_button) {
           refresh_button->setEnabled(true);
           refresh_button->setText("");
@@ -193,7 +190,7 @@ void OrbitStartupWindow::ReloadInstances(QPointer<QPushButton> refresh_button) {
               QString(
                   "Orbit was unable to retrieve the list of available Stadia "
                   "Instances. The error message was: %1")
-                  .arg(instances.error()));
+                  .arg(QString::fromStdString(instances.error().message())));
           return;
         }
 

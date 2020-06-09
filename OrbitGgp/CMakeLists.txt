@@ -15,12 +15,14 @@ target_include_directories(OrbitGgp PUBLIC
 
 target_sources(OrbitGgp PUBLIC
           include/OrbitGgp/Client.h
+          include/OrbitGgp/Error.h
           include/OrbitGgp/Instance.h
           include/OrbitGgp/InstanceItemModel.h
           include/OrbitGgp/SshInfo.h)
 
 target_sources(OrbitGgp PRIVATE
           Client.cpp
+          Error.cpp
           Instance.cpp
           InstanceItemModel.cpp
           SshInfo.cpp)

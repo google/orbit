@@ -8,42 +8,43 @@
 #include <QJsonObject>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitGgp/Error.h"
 
 namespace OrbitGgp {
 
-std::optional<SshInfo> SshInfo::CreateFromJson(const QByteArray& json) {
+outcome::result<SshInfo> SshInfo::CreateFromJson(const QByteArray& json) {
   const QJsonDocument doc = QJsonDocument::fromJson(json);
 
-  if (!doc.isObject()) return {};
+  if (!doc.isObject()) return Error::kUnableToParseJson;
   const QJsonObject obj = doc.object();
 
-  const QJsonValue host_val = obj.value("host");
-  const QJsonValue key_path_val = obj.value("keyPath");
-  const QJsonValue known_hosts_path_val = obj.value("knownHostsPath");
-  const QJsonValue port_val = obj.value("port");
-  const QJsonValue user_val = obj.value("user");
+  const auto process = [](const QJsonValue& val) -> outcome::result<QString> {
+    if (!val.isString()) {
+      return Error::kUnableToParseJson;
+    } else {
+      return val.toString();
+    }
+  };
 
-  if (host_val.isUndefined() || !host_val.isString() ||
-      key_path_val.isUndefined() || !key_path_val.isString() ||
-      known_hosts_path_val.isUndefined() || !known_hosts_path_val.isString() ||
-      port_val.isUndefined() || !port_val.isString() ||
-      user_val.isUndefined() || !user_val.isString()) {
-    return {};
-  }
+  OUTCOME_TRY(host, process(obj.value("host")));
+  OUTCOME_TRY(key_path, process(obj.value("keyPath")));
+  OUTCOME_TRY(known_hosts_path, process(obj.value("knownHostsPath")));
+  OUTCOME_TRY(port, process(obj.value("port")));
+  OUTCOME_TRY(user, process(obj.value("user")));
 
   // The json has the port formatted as a string ("port":"333"), hence this
   // conversion. This is standard the Qt way to check whether the casting worked
   bool ok;
-  int port = port_val.toString().toInt(&ok);
-  if (!ok) return {};
+  int port_int = port.toInt(&ok);
+  if (!ok) return Error::kUnableToParseJson;
 
   SshInfo ggp_ssh_info;
 
-  ggp_ssh_info.host = host_val.toString();
-  ggp_ssh_info.key_path = key_path_val.toString();
-  ggp_ssh_info.known_hosts_path = known_hosts_path_val.toString();
-  ggp_ssh_info.port = port;
-  ggp_ssh_info.user = user_val.toString();
+  ggp_ssh_info.host = host;
+  ggp_ssh_info.key_path = key_path;
+  ggp_ssh_info.known_hosts_path = known_hosts_path;
+  ggp_ssh_info.port = port_int;
+  ggp_ssh_info.user = user;
 
   return ggp_ssh_info;
 }
