@@ -242,13 +242,6 @@ void SamplingProfiler::Print() {
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::ProcessSamplesAsync() {
-  m_SamplingThread =
-      std::make_unique<std::thread>(&SamplingProfiler::ProcessSamples, this);
-  m_SamplingThread->detach();
-}
-
-//-----------------------------------------------------------------------------
 void SamplingProfiler::ProcessSamples() {
   ScopeLock lock(m_Mutex);
 
