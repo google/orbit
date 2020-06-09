@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "TcpServer.h"
 
 #include <thread>
@@ -105,82 +103,8 @@ TcpSocket* TcpServer::GetSocket() {
 
 //-----------------------------------------------------------------------------
 void TcpServer::Receive(const Message& a_Message) {
-  const Message::Header& MessageHeader = a_Message.GetHeader();
   ++m_NumReceivedMessages;
-
-  switch (a_Message.GetType()) {
-    case Msg_String: {
-      const char* msg = static_cast<const char*>(a_Message.GetData());
-      std::cout << msg << std::endl;
-      PRINT_VAR(msg);
-      break;
-    }
-    case Msg_Timer: {
-      uint32_t numTimers = a_Message.m_Size / sizeof(Timer);
-      const Timer* timers = static_cast<const Timer*>(a_Message.GetData());
-      for (uint32_t i = 0; i < numTimers; ++i) {
-        GTimerManager->AddTimer(timers[i]);
-      }
-
-      if (numTimers > m_MaxTimersAtOnce) {
-        m_MaxTimersAtOnce = numTimers;
-      }
-      m_NumTimersAtOnce = numTimers;
-
-      break;
-    }
-    case Msg_NumQueuedEntries:
-      m_NumTargetQueuedEntries =
-          *static_cast<const uint32_t*>(a_Message.GetData());
-      break;
-    case Msg_NumFlushedEntries:
-      m_NumTargetFlushedEntries =
-          *static_cast<const uint32_t*>(a_Message.GetData());
-      break;
-    case Msg_NumFlushedItems:
-      m_NumTargetFlushedTcpPackets =
-          *static_cast<const uint32_t*>(a_Message.GetData());
-      break;
-    case Msg_NumInstalledHooks:
-      Capture::GNumInstalledHooks =
-          *static_cast<const uint32_t*>(a_Message.GetData());
-      break;
-    case Msg_Callstack: {
-      const CallStackPOD* callstackPOD =
-          static_cast<const CallStackPOD*>(a_Message.GetData());
-      CallStack callstack(*callstackPOD);
-      Capture::AddCallstack(callstack);
-      break;
-    }
-    case Msg_OrbitZoneName: {
-      const OrbitZoneName* zoneName =
-          static_cast<const OrbitZoneName*>(a_Message.GetData());
-      Capture::RegisterZoneName(zoneName->m_Address, zoneName->m_Data);
-      break;
-    }
-    case Msg_OrbitUnrealObject: {
-      const UnrealObjectHeader& header = MessageHeader.m_UnrealObjectHeader;
-
-      std::wstring& objectName = GOrbitUnreal.GetObjectNames()[header.m_Ptr];
-      if (header.m_WideStr) {
-        objectName = static_cast<const wchar_t*>(a_Message.GetData());
-      } else {
-        objectName = s2ws(static_cast<const char*>(a_Message.GetData()));
-      }
-
-      break;
-    }
-    case Msg_ThreadInfo: {
-      std::string threadName = a_Message.GetDataAsString();
-      Capture::GTargetProcess->SetThreadName(a_Message.m_ThreadId, threadName);
-      PRINT_VAR(threadName);
-      break;
-    }
-    default: {
-      Callback(a_Message);
-      break;
-    }
-  }
+  Callback(a_Message);
 }
 
 //-----------------------------------------------------------------------------
