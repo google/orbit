@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
 #include <thread>
@@ -12,9 +11,9 @@
 
 class TcpClient : public TcpEntity {
  public:
-  TcpClient();
-  TcpClient(const std::string& a_Host);
-  ~TcpClient();
+  TcpClient() = default;
+  explicit TcpClient(const std::string& a_Host);
+  ~TcpClient() override;
 
   void Connect(const std::string& a_Host);
   void Start() override;
@@ -27,7 +26,7 @@ class TcpClient : public TcpEntity {
   void ReadFooter();
   void DecodeMessage(Message& a_Message);
   void OnError(const std::error_code& ec);
-  virtual TcpSocket* GetSocket() override final { return m_TcpSocket; }
+  TcpSocket* GetSocket() final { return m_TcpSocket; }
 
  private:
   Message m_Message;

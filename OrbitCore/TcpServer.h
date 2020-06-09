@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
 #include <functional>
@@ -16,7 +15,7 @@
 class TcpServer : public TcpEntity {
  public:
   TcpServer();
-  ~TcpServer();
+  ~TcpServer() override;
 
   void StartServer(uint16_t port);
 
