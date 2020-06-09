@@ -1,4 +1,4 @@
-// TODO(b/148520406): Add copyright here
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,13 +6,6 @@
 
 #include "Path.h"
 #include "absl/strings/match.h"
-
-TEST(Path, GetSourceRoot) {
-  // On windows GetSroucePath converts '\' to '/'
-  // to account for that call GetDirectory
-  ASSERT_TRUE(
-      absl::StartsWith(Path::GetDirectory(__FILE__), Path::GetSourceRoot()));
-}
 
 TEST(Path, FileExistsEmptyFilename) {
   std::string filename{};

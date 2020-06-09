@@ -103,10 +103,6 @@ std::string Path::GetBasePath() {
   return base_path_;
 }
 
-std::string Path::GetOrbitAppPdb() {
-  return GetBasePath() + std::string("bin/Win32/Debug/OrbitApp.pdb");
-}
-
 std::string Path::GetDllPath(bool a_Is64Bit) {
   std::string basePath = GetBasePath();
 
@@ -135,12 +131,6 @@ std::string Path::GetSymbolsFileName() {
   return Path::JoinPath({CreateAndGetConfigPath(), "SymbolPaths.txt"});
 }
 
-std::string Path::GetLicenseName() {
-  std::string appDataDir = Path::GetAppDataPath();
-  std::filesystem::create_directory(appDataDir);
-  return Path::JoinPath({appDataDir, "user.txt"});
-}
-
 std::string Path::GetCachePath() {
   std::string cacheDir = Path::JoinPath({Path::GetAppDataPath(), "cache"});
   std::filesystem::create_directory(cacheDir);
@@ -167,12 +157,6 @@ std::string Path::GetCapturePath() {
 
 std::string Path::GetDumpPath() {
   std::string captureDir = Path::JoinPath({Path::GetAppDataPath(), "dumps"});
-  std::filesystem::create_directory(captureDir);
-  return captureDir;
-}
-
-std::string Path::GetTmpPath() {
-  std::string captureDir = Path::JoinPath({Path::GetAppDataPath(), "temp"});
   std::filesystem::create_directory(captureDir);
   return captureDir;
 }
@@ -239,16 +223,6 @@ std::string Path::JoinPath(const std::vector<std::string>& parts) {
   return joined.string();
 }
 
-std::string Path::GetProgramFilesPath() {
-#ifdef WIN32
-  char pf[MAX_PATH] = {0};
-  SHGetSpecialFolderPathA(0, pf, CSIDL_PROGRAM_FILES, FALSE);
-  return Path::JoinPath({std::string(pf), "OrbitProfiler"});
-#else
-  return "TodoLinux";
-#endif
-}
-
 std::string Path::GetAppDataPath() {
 #ifdef WIN32
   std::string appData = GetEnvVar("APPDATA");
@@ -258,14 +232,6 @@ std::string Path::GetAppDataPath() {
 #endif
   std::filesystem::create_directory(path);
   return path;
-}
-
-std::string Path::GetMainDrive() { return GetEnvVar("SystemDrive"); }
-
-std::string Path::GetSourceRoot() {
-  // Assuming current file in <src_path>/OrbitCore
-  std::string current_dir = GetDirectory(__FILE__);
-  return GetParentDirectory(current_dir);
 }
 
 std::string Path::GetHome() {
@@ -283,7 +249,6 @@ void Path::Dump() {
   PRINT_VAR(GetExecutableName());
   PRINT_VAR(GetExecutablePath());
   PRINT_VAR(GetBasePath());
-  PRINT_VAR(GetOrbitAppPdb());
   PRINT_VAR(GetDllPath(true));
   PRINT_VAR(GetDllName(true));
   PRINT_VAR(GetDllPath(false));
@@ -291,23 +256,12 @@ void Path::Dump() {
   PRINT_VAR(GetParamsFileName());
   PRINT_VAR(GetFileMappingFileName());
   PRINT_VAR(GetSymbolsFileName());
-  PRINT_VAR(GetLicenseName());
   PRINT_VAR(GetCachePath());
   PRINT_VAR(GetPresetPath());
   PRINT_VAR(GetPluginPath());
   PRINT_VAR(GetCapturePath());
   PRINT_VAR(GetDumpPath());
-  PRINT_VAR(GetTmpPath());
-  PRINT_VAR(GetProgramFilesPath());
   PRINT_VAR(GetAppDataPath());
-  PRINT_VAR(GetMainDrive());
-  PRINT_VAR(GetSourceRoot());
-}
-
-bool Path::IsSourceFile(const std::string& a_File) {
-  std::string ext = Path::GetExtension(a_File);
-  return ext == ".c" || ext == ".cpp" || ext == ".h" || ext == ".hpp" ||
-         ext == ".inl" || ext == ".cxx" || ext == ".cc";
 }
 
 std::vector<std::string> Path::ListFiles(
