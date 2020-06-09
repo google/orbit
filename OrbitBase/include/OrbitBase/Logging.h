@@ -14,6 +14,7 @@
 #endif
 
 #include "absl/strings/str_format.h"
+#include "absl/synchronization/mutex.h"
 
 #ifdef __clang__
 #pragma clang diagnostic push
@@ -80,6 +81,7 @@
 
 extern std::ofstream log_file;
 void InitLogFile(const std::string& path);
+void LogToFile(const std::string& message);
 
 // Internal.
 #if defined(_WIN32)
@@ -87,18 +89,12 @@ void InitLogFile(const std::string& path);
   do {                              \
     fprintf(stderr, "%s", message); \
     OutputDebugStringA(message);    \
-    if (log_file.is_open()) {       \
-      log_file << message;          \
-      log_file.flush();             \
-    }                               \
+    LogToFile(message);             \
   } while (0)
 #else
 #define PLATFORM_LOG(message) {     \
     fprintf(stderr, "%s", message); \
-    if (log_file.is_open()) {       \
-      log_file << message;          \
-      log_file.flush();             \
-    }                               \
+    LogToFile(message);             \
   }
 #endif
 
