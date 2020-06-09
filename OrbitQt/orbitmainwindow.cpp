@@ -84,7 +84,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->AddSelectionReportCallback(
       [this](DataView* callstack_data_view,
              std::shared_ptr<SamplingReport> report) {
-        this->OnNewSelection(callstack_data_view, std::move(report));
+        this->OnNewSelectionReport(callstack_data_view, std::move(report));
       });
   GOrbitApp->AddUiMessageCallback([this](const std::string& a_Message) {
     this->OnReceiveMessage(a_Message);
@@ -379,7 +379,7 @@ void OrbitMainWindow::CreateSelectionTab() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::OnNewSelection(
+void OrbitMainWindow::OnNewSelectionReport(
     DataView* callstack_data_view,
     std::shared_ptr<class SamplingReport> sampling_report) {
   m_SelectionLayout->removeWidget(m_SelectionReport);

@@ -38,8 +38,9 @@ class OrbitMainWindow : public QMainWindow {
   void CreateSamplingTab();
   void CreateSelectionTab();
   void CreatePluginTabs();
-  void OnNewSelection(DataView* callstack_data_view,
-                      std::shared_ptr<class SamplingReport> sampling_report);
+  void OnNewSelectionReport(
+      DataView* callstack_data_view,
+      std::shared_ptr<class SamplingReport> sampling_report);
   void OnReceiveMessage(const std::string& message);
   void OnAddToWatch(const class Variable* a_Variable);
   std::string OnGetSaveFileName(const std::string& extension);

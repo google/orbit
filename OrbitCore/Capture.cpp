@@ -73,12 +73,6 @@ void (*Capture::GClearCaptureDataFunc)();
 std::vector<std::shared_ptr<SamplingProfiler>> GOldSamplingProfilers;
 bool Capture::GUnrealSupported = false;
 
-// The user_data pointer is provided by caller when registering capture
-// callback. It is then passed to the callback and can be used to store context
-// such as a pointer to a class.
-Capture::SamplingDoneCallback Capture::sampling_done_callback_ = nullptr;
-void* Capture::sampling_done_callback_user_data_ = nullptr;
-
 //-----------------------------------------------------------------------------
 void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 
@@ -415,36 +409,6 @@ TcpEntity* Capture::GetMainTcpEntity() {
     return GTcpClient.get();
   }
   return GTcpServer.get();
-}
-
-//-----------------------------------------------------------------------------
-void Capture::Update() {
-  if (GIsSampling) {
-#ifdef WIN32
-    if (GSamplingProfiler->ShouldStop()) {
-      GSamplingProfiler->StopCapture();
-    }
-#endif
-
-    if (GSamplingProfiler->GetState() == SamplingProfiler::DoneProcessing) {
-      if (sampling_done_callback_ != nullptr) {
-        sampling_done_callback_(GSamplingProfiler,
-                                sampling_done_callback_user_data_);
-      }
-      GIsSampling = false;
-    }
-  }
-
-  if (GPdbDbg) {
-    GPdbDbg->Update();
-  }
-
-#ifdef WIN32
-  if (!Capture::IsRemote() && GInjected && !GTcpServer->HasConnection()) {
-    StopCapture();
-    GInjected = false;
-  }
-#endif
 }
 
 //-----------------------------------------------------------------------------
