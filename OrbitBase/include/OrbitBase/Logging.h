@@ -92,10 +92,11 @@ void LogToFile(const std::string& message);
     LogToFile(message);             \
   } while (0)
 #else
-#define PLATFORM_LOG(message) {     \
+#define PLATFORM_LOG(message)       \
+  do {                              \
     fprintf(stderr, "%s", message); \
     LogToFile(message);             \
-  }
+  } while (0)
 #endif
 
 #ifdef __clang__
