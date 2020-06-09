@@ -40,7 +40,6 @@ class Capture {
   static void StartSampling();
   static void StopSampling();
   static bool IsCapturing();
-  static void Update();
   static void DisplayStats();
   static void TestHooks();
   static outcome::result<void, std::string> SaveSession(
@@ -57,14 +56,6 @@ class Capture {
   static LinuxAddressInfo* GetAddressInfo(uint64_t address);
   static void CheckForUnrealSupport();
   static void PreSave();
-
-  typedef void (*SamplingDoneCallback)(
-      std::shared_ptr<SamplingProfiler>& sampling_profiler, void* user_data);
-  static void SetSamplingDoneCallback(SamplingDoneCallback callback,
-                                      void* user_data) {
-    sampling_done_callback_ = callback;
-    sampling_done_callback_user_data_ = user_data;
-  }
 
   static void TestRemoteMessages();
   static class TcpEntity* GetMainTcpEntity();
@@ -105,6 +96,4 @@ class Capture {
 
  private:
   static bool GUnrealSupported;
-  static SamplingDoneCallback sampling_done_callback_;
-  static void* sampling_done_callback_user_data_;
 };

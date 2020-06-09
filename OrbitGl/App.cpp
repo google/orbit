@@ -234,10 +234,6 @@ bool OrbitApp::Init(ApplicationOptions&& options) {
 
   Capture::Init();
 
-  // TODO(antonrohr) clean this up (it casts GOrbitApp* to void*)
-  Capture::SetSamplingDoneCallback(&OrbitApp::AddSamplingReport,
-                                   GOrbitApp.get());
-
 #ifdef _WIN32
   oqpi_tk::start_default_scheduler();
 #endif
@@ -483,7 +479,6 @@ void OrbitApp::MainTick() {
   }
 
   GMainTimer.Reset();
-  Capture::Update();
   GTcpServer->MainThreadTick();
 
   if (!Capture::GProcessToInject.empty()) {
@@ -524,15 +519,16 @@ void OrbitApp::NeedsRedraw() { m_CaptureWindow->NeedsUpdate(); }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::AddSamplingReport(
-    std::shared_ptr<SamplingProfiler>& sampling_profiler, void* app_ptr) {
-  OrbitApp* app = static_cast<OrbitApp*>(app_ptr);
+    std::shared_ptr<SamplingProfiler>& sampling_profiler) {
   auto report = std::make_shared<SamplingReport>(sampling_profiler);
 
-  for (SamplingReportCallback& callback : app->m_SamplingReportsCallbacks) {
-    callback(app->GetOrCreateDataView(DataViewType::CALLSTACK), report);
+  for (SamplingReportCallback& callback : m_SamplingReportsCallbacks) {
+    DataView* callstack_data_view =
+        GetOrCreateDataView(DataViewType::CALLSTACK);
+    callback(callstack_data_view, report);
   }
 
-  app->sampling_report_ = report;
+  sampling_report_ = report;
 }
 
 //-----------------------------------------------------------------------------
@@ -540,14 +536,13 @@ void OrbitApp::AddSelectionReport(
     std::shared_ptr<SamplingProfiler>& a_SamplingProfiler) {
   auto report = std::make_shared<SamplingReport>(a_SamplingProfiler);
 
-  for (SamplingReportCallback& callback :
-       GOrbitApp->m_SelectionReportCallbacks) {
+  for (SamplingReportCallback& callback : m_SelectionReportCallbacks) {
     DataView* callstack_data_view =
-        GOrbitApp->GetOrCreateDataView(DataViewType::CALLSTACK);
+        GetOrCreateDataView(DataViewType::CALLSTACK);
     callback(callstack_data_view, report);
   }
 
-  GOrbitApp->selection_report_ = report;
+  selection_report_ = report;
 }
 
 //-----------------------------------------------------------------------------
@@ -765,6 +760,7 @@ bool OrbitApp::StartCapture() {
 //-----------------------------------------------------------------------------
 void OrbitApp::StopCapture() {
   Capture::StopCapture();
+  AddSamplingReport(Capture::GSamplingProfiler);
 
   for (const CaptureStoppedCallback& callback : capture_stopped_callbacks_) {
     callback();

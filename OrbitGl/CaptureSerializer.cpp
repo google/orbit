@@ -191,7 +191,7 @@ outcome::result<void, std::string> CaptureSerializer::Load(
       time_graph_->ProcessTimer(timer);
     }
 
-    GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler, GOrbitApp.get());
+    GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler);
     GOrbitApp->FireRefreshCallbacks();
     return outcome::success();
 

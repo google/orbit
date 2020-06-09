@@ -104,16 +104,15 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   void OnProcessSelected(uint32_t pid);
 
+  void AddSamplingReport(
+      std::shared_ptr<class SamplingProfiler>& sampling_profiler);
+  void AddSelectionReport(
+      std::shared_ptr<SamplingProfiler>& a_SamplingProfiler);
+
   void Unregister(class DataView* a_Model);
   bool SelectProcess(const std::string& a_Process);
   bool SelectProcess(uint32_t a_ProcessID);
   bool Inject(unsigned long a_ProcessId);
-  static void AddSamplingReport(
-      std::shared_ptr<class SamplingProfiler>& sampling_profiler,
-      void* app_ptr);
-
-  static void AddSelectionReport(
-      std::shared_ptr<SamplingProfiler>& a_SamplingProfiler);
 
   void GoToCode(DWORD64 a_Address);
   void GoToCallstack();
