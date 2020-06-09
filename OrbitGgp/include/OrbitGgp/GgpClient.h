@@ -13,6 +13,8 @@
 #include "GgpInstance.h"
 #include "GgpSshInfo.h"
 
+namespace OrbitGgp {
+
 class GgpClient {
  public:
   // this policy means when a result is wrongly accessed, std::terminate() will
@@ -37,5 +39,7 @@ class GgpClient {
 
   int number_of_requests_running_ = 0;
 };
+
+}  // namespace OrbitGgp
 
 #endif  // ORBITGGP_GGP_CLIENT_H_

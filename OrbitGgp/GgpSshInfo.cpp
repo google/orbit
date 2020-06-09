@@ -9,6 +9,8 @@
 
 #include "OrbitBase/Logging.h"
 
+namespace OrbitGgp {
+
 std::optional<GgpSshInfo> GgpSshInfo::CreateFromJson(const QByteArray& json) {
   const QJsonDocument doc = QJsonDocument::fromJson(json);
 
@@ -45,3 +47,5 @@ std::optional<GgpSshInfo> GgpSshInfo::CreateFromJson(const QByteArray& json) {
 
   return ggp_ssh_info;
 }
+
+}  // namespace OrbitGgp

@@ -8,6 +8,8 @@
 
 #include "OrbitGgp/GgpSshInfo.h"
 
+namespace OrbitGgp {
+
 TEST(GgpSshInfoTest, CreateFromJson) {
   QByteArray json;
   std::optional<GgpSshInfo> test_info_opt;
@@ -69,3 +71,5 @@ TEST(GgpSshInfoTest, CreateFromJson) {
   // This is supposed to fail, since its expected that the port is a string
   EXPECT_FALSE(test_info_opt);
 }
+
+}  // namespace OrbitGgp

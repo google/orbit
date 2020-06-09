@@ -14,6 +14,8 @@
 #include "GgpInstance.h"
 #include "OrbitBase/Logging.h"
 
+namespace OrbitGgp {
+
 class GgpInstanceItemModel : public QAbstractItemModel {
  public:
   explicit GgpInstanceItemModel(QVector<GgpInstance> instances = {},
@@ -34,5 +36,7 @@ class GgpInstanceItemModel : public QAbstractItemModel {
  private:
   QVector<GgpInstance> instances_;
 };
+
+}  // namespace OrbitGgp
 
 #endif  // ORBITGGP_GGP_INSTANCE_ITEM_MODEL_H_
