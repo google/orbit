@@ -52,7 +52,6 @@ class CaptureWindow : public GlCanvas {
   void RenderToolbars();
   void RenderMemTracker();
   void RenderTimeBar();
-  void OnTimerAdded(Timer& a_Timer);
   void ResetHoverTimer();
   void SelectTextBox(class TextBox* a_TextBox);
   void OnDrag(float a_Ratio);

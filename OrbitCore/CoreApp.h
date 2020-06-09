@@ -41,8 +41,7 @@ class CoreApp {
                            uint64_t /*a_VirtualAddress*/,
                            const uint8_t* /*a_MachineCode*/,
                            size_t /*a_Size*/) {}
-  virtual void ProcessTimer(const Timer& /*a_Timer*/,
-                            const std::string& /*a_FunctionName*/) {}
+  virtual void ProcessTimer(const Timer& /*timer*/) {}
   virtual void ProcessSamplingCallStack(LinuxCallstackEvent& /*a_CS*/) {}
   virtual void ProcessHashedSamplingCallStack(CallstackEvent& /*a_CallStack*/) {
   }
