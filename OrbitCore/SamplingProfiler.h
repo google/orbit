@@ -139,8 +139,6 @@ class SamplingProfiler {
 
     return &it->second;
   }
-  void SetLoadedFromFile(bool a_Value = true) { m_LoadedFromFile = a_Value; }
-  void SetIsLinuxPerf(bool a_Value = true) { m_IsLinuxPerf = a_Value; }
 
   typedef std::function<void()> ProcessingDoneCallback;
   void AddCallback(const ProcessingDoneCallback& a_Callback) {
@@ -150,8 +148,6 @@ class SamplingProfiler {
   bool GetGenerateSummary() const { return m_GenerateSummary; }
   void SortByThreadUsage();
   void SortByThreadID();
-  bool GetLineInfo(uint64_t a_Address, LineInfo& a_LineInfo);
-  void Print();
   void ProcessSamples();
   // Like ProcessSamples, but after m_Callstacks has been cleared and the other
   // fields have been filled. Call this after loading a module.
@@ -172,7 +168,6 @@ class SamplingProfiler {
 
  protected:
   std::shared_ptr<Process> m_Process;
-  std::unique_ptr<std::thread> m_SamplingThread;
   std::atomic<SamplingState> m_State;
   Timer m_SamplingTimer;
   Timer m_ThreadUsageTimer;
@@ -181,8 +176,6 @@ class SamplingProfiler {
   bool m_GenerateSummary = true;
   Mutex m_Mutex;
   int m_NumSamples = 0;
-  bool m_LoadedFromFile = false;
-  bool m_IsLinuxPerf = false;
 
   std::vector<ProcessingDoneCallback> m_Callbacks;
 
@@ -200,7 +193,4 @@ class SamplingProfiler {
   std::unordered_map<uint64_t, std::set<CallstackID>> m_FunctionToCallstacks;
   std::unordered_map<uint64_t, uint64_t> m_ExactAddressToFunctionAddress;
   std::vector<ThreadSampleData*> m_SortedThreadSampleData;
-
-  std::unordered_map<uint64_t, LineInfo> m_AddressToLineInfo;
-  std::unordered_map<uint64_t, std::string> m_FileNames;
 };
