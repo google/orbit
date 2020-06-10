@@ -500,7 +500,7 @@ void OrbitMainWindow::on_actionAbout_triggered() {
   dialog.setVersionString(QCoreApplication::applicationVersion());
 
   QFile licenseFile{QDir{QCoreApplication::applicationDirPath()}.filePath(
-      "THIRD_PARTY_LICENSES.txt")};
+      "NOTICE")};
   if (licenseFile.open(QIODevice::ReadOnly)) {
     dialog.setLicenseText(licenseFile.readAll());
   }
