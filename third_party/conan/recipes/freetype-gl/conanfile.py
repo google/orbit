@@ -13,6 +13,8 @@ class FreetypeglConan(ConanFile):
     default_options = {"shared": False, "fPIC": True}
     generators = "cmake", "cmake_find_package_multi"
     requires = "glew/2.1.0@orbitdeps/stable", "freetype/2.10.0@bincrafters/stable", "zlib/1.2.11@conan/stable"
+    exports_sources = "patches/*"
+    _cmake = None
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -22,20 +24,12 @@ class FreetypeglConan(ConanFile):
     def source(self):
         self.run("git clone https://github.com/rougier/freetype-gl.git")
         self.run("git checkout {}".format(self.version), cwd="freetype-gl/")
-        # This small hack might be useful to guarantee proper /MT /MD linkage
-        # in MSVC if the packaged project doesn't have variables to set it
-        # properly
-        tools.replace_in_file("freetype-gl/CMakeLists.txt",
-                              "project(freetype-gl LANGUAGES C CXX)",
-                              '''project(freetype-gl LANGUAGES C CXX)
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()''')
-        tools.replace_in_file("freetype-gl/CMakeLists.txt",
-                              "find_package(Freetype REQUIRED)",
-                              "find_package(Freetype CONFIG REQUIRED)")
-        os.remove("freetype-gl/cmake/Modules/FindGLEW.cmake")
+        tools.patch(base_path="freetype-gl/", patch_file="patches/001-patch.diff")
 
     def _get_cmake(self):
+        if self._cmake:
+            return self._cmake
+
         cmake = CMake(self)
         cmake.definitions["freetype-gl_WITH_GLEW"] = True
         cmake.definitions["freetype-gl_USE_VAO"] = False
@@ -45,6 +39,7 @@ conan_basic_setup()''')
         cmake.definitions["freetype-gl_BUILD_MAKEFONT"] = False
         cmake.definitions["freetype-gl_BUILD_TESTS"] = False
         cmake.configure(source_folder="freetype-gl")
+        self._cmake = cmake
         return cmake
 
     def build(self):
