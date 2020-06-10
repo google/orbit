@@ -133,10 +133,12 @@ void SamplingProfiler::AddCallStack(CallStack& a_CallStack) {
   if (!HasCallStack(hash)) {
     AddUniqueCallStack(a_CallStack);
   }
-  CallstackEvent hashedCS;
-  hashedCS.m_Id = hash;
-  hashedCS.m_TID = a_CallStack.m_ThreadId;
-  AddHashedCallStack(hashedCS);
+  CallstackEvent hashed_cs;
+  hashed_cs.m_Id = hash;
+  hashed_cs.m_TID = a_CallStack.m_ThreadId;
+  // Note: a_CallStack doesn't carry a timestamp so hashed_cs.m_Time is not
+  // filled, but that is not a problem because SamplingProfiler doesn't use it.
+  AddHashedCallStack(hashed_cs);
 }
 
 //-----------------------------------------------------------------------------
@@ -314,22 +316,42 @@ void SamplingProfiler::ProcessSamples() {
   m_State = DoneProcessing;
 }
 
-void SamplingProfiler::UpdateSampledFunctions() {
-  for (auto& data_entry : m_ThreadSampleData) {
-    ThreadSampleData& thread_sample_data = data_entry.second;
-    std::vector<SampledFunction>& sampled_functions =
-        thread_sample_data.m_SampleReport;
-    for (SampledFunction& sampled_function : sampled_functions) {
-      Function* function =
-          m_Process->GetFunctionFromAddress(sampled_function.m_Address, false);
-      if (function == nullptr) {
-        continue;
-      }
+void SamplingProfiler::ReprocessSamples() {
+  // Rebuild m_Callstacks (cleared by ProcessSamples) from m_ThreadSampleData.
+  // Note that m_Callstacks is not necessarily empty as more callstacks might
+  // have been added after the last call to ProcessSamples.
+  // Another option would be to just not call m_Callstacks.clear() in
+  // ProcessSamples.
+  for (const auto& data_it : m_ThreadSampleData) {
+    ThreadID tid = data_it.first;
+    if (tid == 0) {
+      continue;
+    }
 
-      UpdateAddressInfo(sampled_function.m_Address);
-      sampled_function.m_Name = function->PrettyName();
+    const ThreadSampleData& data = data_it.second;
+    for (const auto& callstack_count_it : data.m_CallstackCount) {
+      CallstackID callstack_id = callstack_count_it.first;
+      uint32_t callstack_count = callstack_count_it.second;
+      CallstackEvent hashed_cs;
+      hashed_cs.m_Id = callstack_id;
+      hashed_cs.m_TID = tid;
+      m_Callstacks.push_back_n(hashed_cs, callstack_count);
     }
   }
+
+  // Clear the result of ProcessSamples.
+  m_ThreadSampleData.clear();
+  m_UniqueResolvedCallstacks.clear();
+  m_OriginalCallstackToResolvedCallstack.clear();
+  m_FunctionToCallstacks.clear();
+  m_ExactAddressToFunctionAddress.clear();
+  m_SortedThreadSampleData.clear();
+
+  // Clear the rest to be sure.
+  m_AddressToLineInfo.clear();
+  m_FileNames.clear();
+
+  ProcessSamples();
 }
 
 //-----------------------------------------------------------------------------

@@ -45,7 +45,8 @@ class SamplingReport {
   CallStackDataView* m_CallstackDataView;
 
   uint64_t m_SelectedAddress;
+  uint32_t m_SelectedTid;
   std::shared_ptr<SortedCallstackReport> m_SelectedSortedCallstackReport;
-  size_t m_SelectedAddressCallstackIndex;
+  size_t m_SelectedCallstackIndex;
   std::function<void()> m_UiRefreshFunc;
 };
