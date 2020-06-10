@@ -28,22 +28,28 @@ bool TimerBlock::Intersects(uint64_t min, uint64_t max) {
   return (min <= max_timestamp_ && max >= min_timestamp_);
 }
 
-TimerChain::TimerChain() { blocks_.push_back(TimerBlock()); }
+TimerChain::TimerChain() { blocks_.push_back(new TimerBlock()); }
+
+TimerChain::~TimerChain() {
+  for (int i = 0; i < blocks_.size(); ++i) {
+    delete blocks_[i];
+  }
+}
 
 void TimerChain::push_back(const TextBox& box) {
-  if (!(blocks_.end() - 1)->AtCapacity()) {
-    TimerBlock& current = *(blocks_.end() - 1);
-    current.Add(box);
+  if (!(*(blocks_.end() - 1))->AtCapacity()) {
+    TimerBlock* current = *(blocks_.end() - 1);
+    current->Add(box);
   } else {
-    blocks_.push_back(TimerBlock());
-    TimerBlock& current = *(blocks_.end() - 1);
-    current.Add(box);
+    blocks_.push_back(new TimerBlock());
+    TimerBlock* current = *(blocks_.end() - 1);
+    current->Add(box);
   }
 }
 
 int TimerChain::GetBlockContaining(const TextBox* element) {
   for (int k = 0; k < blocks_.size(); ++k) {
-    auto& block = blocks_[k];
+    auto& block = *blocks_[k];
     int size = block.size();
     if (size > 0) {
       TextBox* begin = &block[0];
@@ -59,13 +65,13 @@ int TimerChain::GetBlockContaining(const TextBox* element) {
 TextBox* TimerChain::GetElementAfter(const TextBox* element) {
   int k = GetBlockContaining(element);
   if (k < blocks_.size()) {
-    auto& block = blocks_[k];
+    auto& block = *blocks_[k];
     TextBox* begin = &block[0];
     int index = element - begin;
     if (index < block.size() - 1) {
       return &block[index + 1];
     } else if (k + 1 < blocks_.size()) {
-      auto& next_block = blocks_[k+1];
+      auto& next_block = *blocks_[k+1];
       return &next_block[0];
     }
   }
@@ -75,13 +81,13 @@ TextBox* TimerChain::GetElementAfter(const TextBox* element) {
 TextBox* TimerChain::GetElementBefore(const TextBox* element) {
   int k = GetBlockContaining(element);
   if (k < blocks_.size()) {
-    auto& block = blocks_[k];
+    auto& block = *blocks_[k];
     TextBox* begin = &block[0];
     int index = element - begin;
     if (index > 0) {
       return &block[index - 1];
     } else if (k > 0) {
-      auto& previous_block = blocks_[k - 1];
+      auto& previous_block = *blocks_[k - 1];
       return &previous_block[previous_block.size() - 1];
     }
   }
