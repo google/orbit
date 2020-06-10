@@ -17,11 +17,18 @@ if [ "$0" == "$SCRIPT" ]; then
   ${DIR}/third_party/conan/configs/install.sh || exit $?
 
   CONAN_PROFILE="clang7_relwithdebinfo"
+  CRASHDUMP_SERVER="$(cat /mnt/keystore/74938_orbitprofiler_crashdump_collection_server | tr -d '\n')"
 
   # Building Orbit
+  mkdir -p "${DIR}/build/"
+  cp -v "${DIR}/third_party/conan/lockfiles/linux/${CONAN_PROFILE}/conan.lock" \
+        "${DIR}/build/conan.lock"
+  sed -i -e "s|crashdump_server=|crashdump_server=$CRASHDUMP_SERVER|" \
+            "${DIR}/build/conan.lock"
   conan install -u -pr ${CONAN_PROFILE} -if "${DIR}/build/" \
           --build outdated \
-          -o crashdump_server="$(cat /mnt/keystore/74938_orbitprofiler_crashdump_collection_server | tr -d '\n')" \
+          -o crashdump_server="$CRASHDUMP_SERVER" \
+          --lockfile="${DIR}/build/conan.lock" \
           "${DIR}"
   conan build -bf "${DIR}/build/" "${DIR}"
   conan package -bf "${DIR}/build/" "${DIR}"
