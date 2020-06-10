@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
+
+#include <freetype-gl/mat4.h>
 
 #include <map>
 
 #include "OpenGl.h"
 #include "Platform.h"
 #include "TextBox.h"
-#include "mat4.h"
 
 namespace ftgl {
 struct vertex_buffer_t;

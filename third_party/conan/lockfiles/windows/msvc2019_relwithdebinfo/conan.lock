@@ -289,7 +289,7 @@
     ]
    },
    "32": {
-    "pref": "freetype-gl/8d9a97a@orbitdeps/stable#0:e6743a2e9bdc1f1c4be9ffa5c3e05bce35ad00d3#0",
+    "pref": "freetype-gl/8d9a97a@orbitdeps/stable#2836d28f3d91c308ec9652c2054015db:e6743a2e9bdc1f1c4be9ffa5c3e05bce35ad00d3#0e6459a6cc4c1aea1a21081ffe38f27e",
     "options": "shared=False\nbzip2:build_executable=True\nbzip2:shared=False\nfreetype:shared=False\nfreetype:with_bzip2=True\nfreetype:with_png=True\nfreetype:with_zlib=True\nglew:shared=False\nglew:system_mesa=True\nlibpng:api_prefix=None\nlibpng:shared=False\nzlib:minizip=False\nzlib:shared=False",
     "requires": [
      "33",
