@@ -28,8 +28,8 @@ class OrbitConan(ConanFile):
                        "crashdump_server": ""}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
-    build_requires = ('grpc_codegen/1.27.3@orbitdeps/stable',
-                      'protoc_installer/3.9.1@bincrafters/stable')
+    build_requires = ('grpc_codegen/1.27.3@orbitdeps/stable#ec39b3cf6031361be942257523c1839a',
+                      'protoc_installer/3.9.1@bincrafters/stable#0')
 
     def _version(self):
         if not self.version:
@@ -52,35 +52,35 @@ class OrbitConan(ConanFile):
             raise ConanInvalidConfiguration("When disabling system_qt, you also have to "
                                             "disable system mesa.")
 
-        self.requires("asio/1.12.2@bincrafters/stable")
-        self.requires("abseil/20190808@{}".format(self._orbit_channel))
-        self.requires("bzip2/1.0.8@conan/stable")
-        self.requires("capstone/4.0.1@{}".format(self._orbit_channel))
-        self.requires("cereal/1.3.0@{}".format(self._orbit_channel))
-        self.requires('grpc/1.27.3@orbitdeps/stable')
-        self.requires("gtest/1.8.1@bincrafters/stable")
-        self.requires("llvm_object/9.0.1@orbitdeps/stable")
-        self.requires("openssl/1.1.1d@{}".format(self._orbit_channel))
-        self.requires("Outcome/3dae433e@orbitdeps/stable")
+        self.requires("asio/1.12.2@bincrafters/stable#0")
+        self.requires("abseil/20190808@{}#0".format(self._orbit_channel))
+        self.requires("bzip2/1.0.8@conan/stable#0")
+        self.requires("capstone/4.0.1@{}#0".format(self._orbit_channel))
+        self.requires("cereal/1.3.0@{}#0".format(self._orbit_channel))
+        self.requires("grpc/1.27.3@{}#0".format(self._orbit_channel))
+        self.requires("gtest/1.8.1@bincrafters/stable#0")
+        self.requires("llvm_object/9.0.1@orbitdeps/stable#0")
+        self.requires("openssl/1.1.1d@{}#0".format(self._orbit_channel))
+        self.requires("Outcome/3dae433e@orbitdeps/stable#0")
         if self.settings.os != "Windows":
             self.requires(
-                "libunwindstack/80a734f14@{}".format(self._orbit_channel))
-        self.requires("zlib/1.2.11@conan/stable")
+                "libunwindstack/80a734f14@{}#0".format(self._orbit_channel))
+        self.requires("zlib/1.2.11@conan/stable#0")
 
-        self.requires("crashpad/20191105@{}".format(self._orbit_channel))
+        self.requires("crashpad/20191105@{}#489e96c86c631bb7bffae948fc0d94b3".format(self._orbit_channel))
 
         if self.options.with_gui:
-            self.requires("freeglut/3.2.1@{}".format(self._orbit_channel))
-            self.requires("freetype/2.10.0@bincrafters/stable")
-            self.requires("freetype-gl/8d9a97a@{}".format(self._orbit_channel))
-            self.requires("glew/2.1.0@{}".format(self._orbit_channel))
-            self.requires("libssh2/1.9.0")
-            self.requires("imgui/1.69@bincrafters/stable")
-            self.requires("libpng/1.6.37@bincrafters/stable")
+            self.requires("freeglut/3.2.1@{}#0".format(self._orbit_channel))
+            self.requires("freetype/2.10.0@bincrafters/stable#0")
+            self.requires("freetype-gl/8d9a97a@{}#0".format(self._orbit_channel))
+            self.requires("glew/2.1.0@{}#0".format(self._orbit_channel))
+            self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
+            self.requires("imgui/1.69@bincrafters/stable#0")
+            self.requires("libpng/1.6.37@bincrafters/stable#0")
             if not self.options.system_mesa:
-                self.requires("libxi/1.7.10@bincrafters/stable")
+                self.requires("libxi/1.7.10@bincrafters/stable#0")
             if not self.options.system_qt:
-                self.requires("qt/5.14.1@bincrafters/stable")
+                self.requires("qt/5.14.1@bincrafters/stable#0")
 
     def configure(self):
         if self.options.debian_packaging and (self.settings.get_safe("os.platform") != "GGP" or tools.detected_os() != "Linux"):
