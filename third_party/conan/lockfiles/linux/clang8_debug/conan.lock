@@ -1,0 +1,352 @@
+{
+ "profile_host": "[settings]\narch=x86_64\narch_build=x86_64\nbuild_type=Debug\ncompiler=clang\ncompiler.fpo=False\ncompiler.libcxx=libstdc++11\ncompiler.version=8\nos=Linux\nos_build=Linux\n[options]\n[build_requires]\n*: cmake/3.16.4\n[env]\nCC=clang-8\nCFLAGS=-fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all\nCXX=clang++-8\nCXXFLAGS=-fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all\nLDFLAGS=-Wl,-z,relro,-z,now,-z,noexecstack",
+ "graph_lock": {
+  "nodes": {
+   "0": {
+    "pref": "OrbitProfiler/None:7b752f50ede2b51168dfa534ed42002963328533",
+    "options": "crashdump_server=\ndebian_packaging=False\nfPIC=True\nsystem_mesa=True\nsystem_qt=True\nwith_gui=True\nabseil:cxx_standard=17\nabseil:fPIC=True\nasio:standalone=True\nasio:with_boost_regex=False\nasio:with_openssl=False\nbzip2:build_executable=True\nbzip2:fPIC=True\nbzip2:shared=False\nc-ares:fPIC=True\nc-ares:shared=False\ncapstone:fPIC=True\ncapstone:shared=False\ncctz:build_tools=False\ncctz:fPIC=True\ncctz:shared=False\ncereal:thread_safe=False\ncrashpad:fPIC=True\ncrashpad:linktime_optimization=False\nfreeglut:fPIC=True\nfreeglut:gles=False\nfreeglut:install_pdb=False\nfreeglut:print_errors_at_runtime=True\nfreeglut:print_warnings_at_runtime=True\nfreeglut:replace_glut=True\nfreeglut:shared=False\nfreeglut:system_mesa=True\nfreetype:fPIC=True\nfreetype:shared=False\nfreetype:with_bzip2=True\nfreetype:with_png=True\nfreetype:with_zlib=True\nfreetype-gl:fPIC=True\nfreetype-gl:shared=False\nglew:fPIC=True\nglew:shared=False\nglew:system_mesa=True\ngrpc:fPIC=True\ngtest:build_gmock=True\ngtest:debug_postfix=d\ngtest:fPIC=True\ngtest:no_main=False\ngtest:shared=False\nimgui:fPIC=True\nimgui:shared=False\nlibpng:api_prefix=None\nlibpng:fPIC=True\nlibpng:shared=False\nlibssh2:crypto_backend=openssl\nlibssh2:enable_crypt_none=False\nlibssh2:enable_mac_none=False\nlibssh2:fPIC=True\nlibssh2:shared=False\nlibssh2:with_zlib=True\nlibunwindstack:fPIC=True\nllvm_binary_format:no_rtti=False\nllvm_binary_format:shared=False\nllvm_binary_format:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_bit_reader:no_rtti=False\nllvm_bit_reader:shared=False\nllvm_bit_reader:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_bitstream_reader:no_rtti=False\nllvm_bitstream_reader:shared=False\nllvm_bitstream_reader:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_core:no_rtti=False\nllvm_core:shared=False\nllvm_core:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_debuginfo_codeview:no_rtti=False\nllvm_debuginfo_codeview:shared=False\nllvm_debuginfo_codeview:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_debuginfo_msf:no_rtti=False\nllvm_debuginfo_msf:shared=False\nllvm_debuginfo_msf:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_mc:no_rtti=False\nllvm_mc:shared=False\nllvm_mc:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_mc_parser:no_rtti=False\nllvm_mc_parser:shared=False\nllvm_mc_parser:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_object:no_rtti=False\nllvm_object:shared=False\nllvm_object:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_remarks:no_rtti=False\nllvm_remarks:shared=False\nllvm_remarks:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_support:no_rtti=False\nllvm_support:shared=False\nllvm_support:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_textapi:no_rtti=False\nllvm_textapi:shared=False\nllvm_textapi:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nlzma_sdk:fPIC=True\nopenssl:386=False\nopenssl:fPIC=True\nopenssl:no_asm=False\nopenssl:no_async=False\nopenssl:no_bf=False\nopenssl:no_cast=False\nopenssl:no_des=False\nopenssl:no_dh=False\nopenssl:no_dsa=False\nopenssl:no_dso=False\nopenssl:no_hmac=False\nopenssl:no_md2=False\nopenssl:no_md5=False\nopenssl:no_mdc2=False\nopenssl:no_rc2=False\nopenssl:no_rc4=False\nopenssl:no_rc5=False\nopenssl:no_rsa=False\nopenssl:no_sha=False\nopenssl:no_sse2=False\nopenssl:no_threads=False\nopenssl:no_zlib=False\nopenssl:openssldir=None\nopenssl:shared=False\nprotobuf:fPIC=True\nprotobuf:lite=False\nprotobuf:shared=False\nprotobuf:with_zlib=False\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "requires": [
+     "1",
+     "2",
+     "4",
+     "5",
+     "6",
+     "7",
+     "12",
+     "13",
+     "9",
+     "27",
+     "28",
+     "8",
+     "30",
+     "31",
+     "32",
+     "34",
+     "35",
+     "36",
+     "37",
+     "33"
+    ],
+    "build_requires": [
+     "38",
+     "39",
+     "41"
+    ]
+   },
+   "1": {
+    "pref": "asio/1.12.2@bincrafters/stable#0:5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9#0",
+    "options": "standalone=True\nwith_boost_regex=False\nwith_openssl=False"
+   },
+   "2": {
+    "pref": "abseil/20190808@orbitdeps/stable#0:09a2ede5f978933320d6cfca8a1b1df23dc2934b#0",
+    "options": "cxx_standard=17\nfPIC=True\ncctz:build_tools=False\ncctz:fPIC=True\ncctz:shared=False",
+    "requires": [
+     "3"
+    ]
+   },
+   "3": {
+    "pref": "cctz/2.3#0:9697b802c8bad6b88d6e1caf42d63f27dc6ae723#0",
+    "options": "build_tools=False\nfPIC=True\nshared=False"
+   },
+   "4": {
+    "pref": "bzip2/1.0.8@conan/stable#0:9f3f5ca3d0785d5f63f1c4ec89c6091dbc7c30c2#c26f8d1f716d32dfb76efba6545523e0",
+    "options": "build_executable=True\nfPIC=True\nshared=False"
+   },
+   "5": {
+    "pref": "capstone/4.0.1@orbitdeps/stable#0:9697b802c8bad6b88d6e1caf42d63f27dc6ae723#0",
+    "options": "fPIC=True\nshared=False"
+   },
+   "6": {
+    "pref": "cereal/1.3.0@orbitdeps/stable#0:5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9#0",
+    "options": "thread_safe=False"
+   },
+   "7": {
+    "pref": "grpc/1.27.3@orbitdeps/stable#0:eda5d796c7b5834041ab34a55761d7a66e6c569a#e8890b763c909817600e98f80dd439a2",
+    "options": "fPIC=True\nabseil:cxx_standard=17\nabseil:fPIC=True\nc-ares:fPIC=True\nc-ares:shared=False\ncctz:build_tools=False\ncctz:fPIC=True\ncctz:shared=False\nopenssl:386=False\nopenssl:fPIC=True\nopenssl:no_asm=False\nopenssl:no_async=False\nopenssl:no_bf=False\nopenssl:no_cast=False\nopenssl:no_des=False\nopenssl:no_dh=False\nopenssl:no_dsa=False\nopenssl:no_dso=False\nopenssl:no_hmac=False\nopenssl:no_md2=False\nopenssl:no_md5=False\nopenssl:no_mdc2=False\nopenssl:no_rc2=False\nopenssl:no_rc4=False\nopenssl:no_rc5=False\nopenssl:no_rsa=False\nopenssl:no_sha=False\nopenssl:no_sse2=False\nopenssl:no_threads=False\nopenssl:no_zlib=False\nopenssl:openssldir=None\nopenssl:shared=False\nprotobuf:fPIC=True\nprotobuf:lite=False\nprotobuf:shared=False\nprotobuf:with_zlib=False\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "requires": [
+     "2",
+     "8",
+     "9",
+     "10",
+     "11"
+    ]
+   },
+   "8": {
+    "pref": "zlib/1.2.11@conan/stable#0:18d0aedf1376ac76832267d6a8f4861be577ba86#0",
+    "options": "fPIC=True\nminizip=False\nshared=False"
+   },
+   "9": {
+    "pref": "openssl/1.1.1d@orbitdeps/stable#0:4e14a9f6dc3b0b09e499540b2599e917f2e32578#0",
+    "options": "386=False\nfPIC=True\nno_asm=False\nno_async=False\nno_bf=False\nno_cast=False\nno_des=False\nno_dh=False\nno_dsa=False\nno_dso=False\nno_hmac=False\nno_md2=False\nno_md5=False\nno_mdc2=False\nno_rc2=False\nno_rc4=False\nno_rc5=False\nno_rsa=False\nno_sha=False\nno_sse2=False\nno_threads=False\nno_zlib=False\nopenssldir=None\nshared=False\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "requires": [
+     "8"
+    ]
+   },
+   "10": {
+    "pref": "protobuf/3.9.1@bincrafters/stable#0:9697b802c8bad6b88d6e1caf42d63f27dc6ae723#9ad03819583145a0cf98b8f40d424008",
+    "options": "fPIC=True\nlite=False\nshared=False\nwith_zlib=False"
+   },
+   "11": {
+    "pref": "c-ares/1.15.0@conan/stable#0:18d0aedf1376ac76832267d6a8f4861be577ba86#0",
+    "options": "fPIC=True\nshared=False"
+   },
+   "12": {
+    "pref": "gtest/1.8.1@bincrafters/stable#0:c497c9c21ffddbeb1fcc46116d4cddac91abdda1#0",
+    "options": "build_gmock=True\ndebug_postfix=d\nfPIC=True\nno_main=False\nshared=False"
+   },
+   "13": {
+    "pref": "llvm_object/9.0.1@orbitdeps/stable#0:78b249ed2fb035ee33fde8079e33069e0a107701#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_binary_format:no_rtti=False\nllvm_binary_format:shared=False\nllvm_binary_format:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_bit_reader:no_rtti=False\nllvm_bit_reader:shared=False\nllvm_bit_reader:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_bitstream_reader:no_rtti=False\nllvm_bitstream_reader:shared=False\nllvm_bitstream_reader:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_core:no_rtti=False\nllvm_core:shared=False\nllvm_core:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_debuginfo_codeview:no_rtti=False\nllvm_debuginfo_codeview:shared=False\nllvm_debuginfo_codeview:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_debuginfo_msf:no_rtti=False\nllvm_debuginfo_msf:shared=False\nllvm_debuginfo_msf:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_mc:no_rtti=False\nllvm_mc:shared=False\nllvm_mc:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_mc_parser:no_rtti=False\nllvm_mc_parser:shared=False\nllvm_mc_parser:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_remarks:no_rtti=False\nllvm_remarks:shared=False\nllvm_remarks:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_support:no_rtti=False\nllvm_support:shared=False\nllvm_support:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_textapi:no_rtti=False\nllvm_textapi:shared=False\nllvm_textapi:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "14",
+     "15",
+     "18",
+     "20",
+     "22",
+     "25",
+     "16",
+     "26"
+    ]
+   },
+   "14": {
+    "pref": "llvm_headers/9.0.1@orbitdeps/stable#0:cb054d0b3e1ca595dc66bc2339d40f1f8f04ab31#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ]
+   },
+   "15": {
+    "pref": "llvm_binary_format/9.0.1@orbitdeps/stable#0:157678df2f60e27398838f67eeacaef2bf786677#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_support:no_rtti=False\nllvm_support:shared=False\nllvm_support:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "14",
+     "16"
+    ]
+   },
+   "16": {
+    "pref": "llvm_support/9.0.1@orbitdeps/stable#0:e54b7326628477b6298e5f45dc646f783062ae4b#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "8",
+     "14",
+     "17"
+    ]
+   },
+   "17": {
+    "pref": "llvm_demangle/9.0.1@orbitdeps/stable#0:cc2f89bd6c3248d0a91f0d146955108d1e5d05f4#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "14"
+    ]
+   },
+   "18": {
+    "pref": "llvm_bit_reader/9.0.1@orbitdeps/stable#0:cfba437f2046c41647d066a8e297864c3474e012#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_binary_format:no_rtti=False\nllvm_binary_format:shared=False\nllvm_binary_format:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_bitstream_reader:no_rtti=False\nllvm_bitstream_reader:shared=False\nllvm_bitstream_reader:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_core:no_rtti=False\nllvm_core:shared=False\nllvm_core:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_remarks:no_rtti=False\nllvm_remarks:shared=False\nllvm_remarks:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_support:no_rtti=False\nllvm_support:shared=False\nllvm_support:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "14",
+     "19",
+     "20",
+     "16"
+    ]
+   },
+   "19": {
+    "pref": "llvm_bitstream_reader/9.0.1@orbitdeps/stable#0:157678df2f60e27398838f67eeacaef2bf786677#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_support:no_rtti=False\nllvm_support:shared=False\nllvm_support:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "14",
+     "16"
+    ]
+   },
+   "20": {
+    "pref": "llvm_core/9.0.1@orbitdeps/stable#0:b4f10339b62ab9d8ebab49ad32884eff3e2b4529#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_binary_format:no_rtti=False\nllvm_binary_format:shared=False\nllvm_binary_format:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_bitstream_reader:no_rtti=False\nllvm_bitstream_reader:shared=False\nllvm_bitstream_reader:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_remarks:no_rtti=False\nllvm_remarks:shared=False\nllvm_remarks:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_support:no_rtti=False\nllvm_support:shared=False\nllvm_support:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "14",
+     "15",
+     "21",
+     "16"
+    ]
+   },
+   "21": {
+    "pref": "llvm_remarks/9.0.1@orbitdeps/stable#0:5260786036da3e356c267d46760886878994a87c#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_bitstream_reader:no_rtti=False\nllvm_bitstream_reader:shared=False\nllvm_bitstream_reader:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_support:no_rtti=False\nllvm_support:shared=False\nllvm_support:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "14",
+     "19",
+     "16"
+    ]
+   },
+   "22": {
+    "pref": "llvm_mc/9.0.1@orbitdeps/stable#0:a25c05b590bbc6b18a9d0ecfe242939953b43abc#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_binary_format:no_rtti=False\nllvm_binary_format:shared=False\nllvm_binary_format:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_debuginfo_codeview:no_rtti=False\nllvm_debuginfo_codeview:shared=False\nllvm_debuginfo_codeview:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_debuginfo_msf:no_rtti=False\nllvm_debuginfo_msf:shared=False\nllvm_debuginfo_msf:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_support:no_rtti=False\nllvm_support:shared=False\nllvm_support:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "14",
+     "16",
+     "15",
+     "23"
+    ]
+   },
+   "23": {
+    "pref": "llvm_debuginfo_codeview/9.0.1@orbitdeps/stable#0:e49a42e46e90d2f4ca1ed56125f299f936e5cfa0#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_debuginfo_msf:no_rtti=False\nllvm_debuginfo_msf:shared=False\nllvm_debuginfo_msf:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_support:no_rtti=False\nllvm_support:shared=False\nllvm_support:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "14",
+     "16",
+     "24"
+    ]
+   },
+   "24": {
+    "pref": "llvm_debuginfo_msf/9.0.1@orbitdeps/stable#0:157678df2f60e27398838f67eeacaef2bf786677#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_support:no_rtti=False\nllvm_support:shared=False\nllvm_support:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "14",
+     "16"
+    ]
+   },
+   "25": {
+    "pref": "llvm_mc_parser/9.0.1@orbitdeps/stable#0:1f1e4452bd67e098c92b2c52f1920c8b3189796b#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_binary_format:no_rtti=False\nllvm_binary_format:shared=False\nllvm_binary_format:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_debuginfo_codeview:no_rtti=False\nllvm_debuginfo_codeview:shared=False\nllvm_debuginfo_codeview:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_debuginfo_msf:no_rtti=False\nllvm_debuginfo_msf:shared=False\nllvm_debuginfo_msf:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_mc:no_rtti=False\nllvm_mc:shared=False\nllvm_mc:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_support:no_rtti=False\nllvm_support:shared=False\nllvm_support:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "14",
+     "22",
+     "16"
+    ]
+   },
+   "26": {
+    "pref": "llvm_textapi/9.0.1@orbitdeps/stable#0:697e8043f25553d7156a168f1c1532a82893a4c0#0",
+    "options": "no_rtti=False\nshared=False\nsources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_binary_format:no_rtti=False\nllvm_binary_format:shared=False\nllvm_binary_format:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_demangle:no_rtti=False\nllvm_demangle:shared=False\nllvm_demangle:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_headers:no_rtti=False\nllvm_headers:shared=False\nllvm_headers:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nllvm_support:no_rtti=False\nllvm_support:shared=False\nllvm_support:sources_repo=https://github.com/llvm/llvm-project/releases/download/\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "python_requires": [
+     "llvm-common/0.0.0@orbitdeps/stable#0"
+    ],
+    "requires": [
+     "14",
+     "15",
+     "16"
+    ]
+   },
+   "27": {
+    "pref": "Outcome/3dae433e@orbitdeps/stable#0:5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9#eed933ca08813f03a7fb512a7da544d7",
+    "options": ""
+   },
+   "28": {
+    "pref": "libunwindstack/80a734f14@orbitdeps/stable#0:fcec01fe73d9914e79a88bf61bfa1b1782c08242#0",
+    "options": "fPIC=True\nlzma_sdk:fPIC=True",
+    "requires": [
+     "29"
+    ]
+   },
+   "29": {
+    "pref": "lzma_sdk/19.00@orbitdeps/stable#0:9697b802c8bad6b88d6e1caf42d63f27dc6ae723#0",
+    "options": "fPIC=True"
+   },
+   "30": {
+    "pref": "crashpad/20191105@orbitdeps/stable#489e96c86c631bb7bffae948fc0d94b3:18d0aedf1376ac76832267d6a8f4861be577ba86#6d4b53d574d23835bbb32a15953e203f",
+    "options": "fPIC=True\nlinktime_optimization=False"
+   },
+   "31": {
+    "pref": "freeglut/3.2.1@orbitdeps/stable#0:a5674e6124d0702df7b9cd1d599a6b13b79cba40#0",
+    "options": "fPIC=True\ngles=False\ninstall_pdb=False\nprint_errors_at_runtime=True\nprint_warnings_at_runtime=True\nreplace_glut=True\nshared=False\nsystem_mesa=True"
+   },
+   "32": {
+    "pref": "freetype/2.10.0@bincrafters/stable#0:7ea88bb7806c4424815e9a8e1add63139f406c99#0",
+    "options": "fPIC=True\nshared=False\nwith_bzip2=True\nwith_png=True\nwith_zlib=True\nbzip2:build_executable=True\nbzip2:fPIC=True\nbzip2:shared=False\nlibpng:api_prefix=None\nlibpng:fPIC=True\nlibpng:shared=False\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "requires": [
+     "33",
+     "8",
+     "4"
+    ]
+   },
+   "33": {
+    "pref": "libpng/1.6.37@bincrafters/stable#0:4e14a9f6dc3b0b09e499540b2599e917f2e32578#0",
+    "options": "api_prefix=None\nfPIC=True\nshared=False\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "requires": [
+     "8"
+    ]
+   },
+   "34": {
+    "pref": "freetype-gl/8d9a97a@orbitdeps/stable#0:e7980f376b801f69a92fb5db38f76d2c66d1bf27#0",
+    "options": "fPIC=True\nshared=False\nbzip2:build_executable=True\nbzip2:fPIC=True\nbzip2:shared=False\nfreetype:fPIC=True\nfreetype:shared=False\nfreetype:with_bzip2=True\nfreetype:with_png=True\nfreetype:with_zlib=True\nglew:fPIC=True\nglew:shared=False\nglew:system_mesa=True\nlibpng:api_prefix=None\nlibpng:fPIC=True\nlibpng:shared=False\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "requires": [
+     "35",
+     "32",
+     "8"
+    ]
+   },
+   "35": {
+    "pref": "glew/2.1.0@orbitdeps/stable#0:9d3130d1d777b0f3c73b86f997d3e835ae11507b#0",
+    "options": "fPIC=True\nshared=False\nsystem_mesa=True"
+   },
+   "36": {
+    "pref": "libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf:9c4227519248f7404328c07a68052c8e6ba865a7#88758f103f9d3439136f56ec2c6aac6d",
+    "options": "crypto_backend=openssl\nenable_crypt_none=False\nenable_mac_none=False\nfPIC=True\nshared=False\nwith_zlib=True\nopenssl:386=False\nopenssl:fPIC=True\nopenssl:no_asm=False\nopenssl:no_async=False\nopenssl:no_bf=False\nopenssl:no_cast=False\nopenssl:no_des=False\nopenssl:no_dh=False\nopenssl:no_dsa=False\nopenssl:no_dso=False\nopenssl:no_hmac=False\nopenssl:no_md2=False\nopenssl:no_md5=False\nopenssl:no_mdc2=False\nopenssl:no_rc2=False\nopenssl:no_rc4=False\nopenssl:no_rc5=False\nopenssl:no_rsa=False\nopenssl:no_sha=False\nopenssl:no_sse2=False\nopenssl:no_threads=False\nopenssl:no_zlib=False\nopenssl:openssldir=None\nopenssl:shared=False\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "requires": [
+     "8",
+     "9"
+    ]
+   },
+   "37": {
+    "pref": "imgui/1.69@bincrafters/stable#0:9697b802c8bad6b88d6e1caf42d63f27dc6ae723#0",
+    "options": "fPIC=True\nshared=False"
+   },
+   "38": {
+    "pref": "grpc_codegen/1.27.3@orbitdeps/stable#ec39b3cf6031361be942257523c1839a:0b6eee9c211529a5558295428b69441f41a01ae6#b1742c11862e056eec8187956508027c",
+    "options": "fPIC=True\nprotobuf:fPIC=True\nprotobuf:lite=False\nprotobuf:shared=False\nprotobuf:with_zlib=False",
+    "requires": [
+     "39"
+    ]
+   },
+   "39": {
+    "pref": "protoc_installer/3.9.1@bincrafters/stable#0:c0c1ef10e3d0ded44179e28b669d6aed0277ca6a#0",
+    "options": "protobuf:fPIC=True\nprotobuf:lite=False\nprotobuf:shared=False\nprotobuf:with_zlib=False",
+    "requires": [
+     "40"
+    ]
+   },
+   "40": {
+    "pref": "protobuf/3.9.1@bincrafters/stable#0:9697b802c8bad6b88d6e1caf42d63f27dc6ae723#9ad03819583145a0cf98b8f40d424008",
+    "options": "fPIC=True\nlite=False\nshared=False\nwith_zlib=False"
+   },
+   "41": {
+    "pref": "cmake/3.16.4#1e690d1703c6348e5055415852406022:44fcf6b9a7fb86b2586303e3db40189d3b511830#b9caae671afe934c424df3ea858447de",
+    "options": ""
+   }
+  }
+ },
+ "version": "0.3"
+}
