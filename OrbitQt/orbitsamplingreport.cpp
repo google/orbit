@@ -105,10 +105,8 @@ void OrbitSamplingReport::RefreshCallstackView() {
     return;
   }
 
-  if (m_SamplingReport->HasCallstacks()) {
-    ui->NextCallstackButton->setEnabled(true);
-    ui->PreviousCallstackButton->setEnabled(true);
-  }
+  ui->NextCallstackButton->setEnabled(m_SamplingReport->HasCallstacks());
+  ui->PreviousCallstackButton->setEnabled(m_SamplingReport->HasCallstacks());
 
   std::string label = m_SamplingReport->GetSelectedCallstackString();
   ui->CallStackLabel->setText(QString::fromStdString(label));

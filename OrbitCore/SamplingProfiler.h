@@ -153,9 +153,9 @@ class SamplingProfiler {
   bool GetLineInfo(uint64_t a_Address, LineInfo& a_LineInfo);
   void Print();
   void ProcessSamples();
-  // Updates names of sampled functions for all threads.
-  // Call this after loading a module.
-  void UpdateSampledFunctions();
+  // Like ProcessSamples, but after m_Callstacks has been cleared and the other
+  // fields have been filled. Call this after loading a module.
+  void ReprocessSamples();
   void UpdateAddressInfo(uint64_t address);
 
   const ThreadSampleData& GetSummary() { return m_ThreadSampleData[0]; }
@@ -174,7 +174,6 @@ class SamplingProfiler {
   std::shared_ptr<Process> m_Process;
   std::unique_ptr<std::thread> m_SamplingThread;
   std::atomic<SamplingState> m_State;
-  BlockChain<CallstackEvent, 16 * 1024> m_Callstacks;
   Timer m_SamplingTimer;
   Timer m_ThreadUsageTimer;
   int m_PeriodMs = 1;
@@ -185,17 +184,23 @@ class SamplingProfiler {
   bool m_LoadedFromFile = false;
   bool m_IsLinuxPerf = false;
 
-  std::unordered_map<ThreadID, ThreadSampleData> m_ThreadSampleData;
+  std::vector<ProcessingDoneCallback> m_Callbacks;
+
+  // Filled before ProcessSamples by AddCallstack, AddHashedCallstack.
+  BlockChain<CallstackEvent, 16 * 1024> m_Callstacks;
   std::unordered_map<CallstackID, std::shared_ptr<CallStack>>
       m_UniqueCallstacks;
+
+  // Filled by ProcessSamples.
+  std::unordered_map<ThreadID, ThreadSampleData> m_ThreadSampleData;
   std::unordered_map<CallstackID, std::shared_ptr<CallStack>>
       m_UniqueResolvedCallstacks;
   std::unordered_map<CallstackID, CallstackID>
       m_OriginalCallstackToResolvedCallstack;
   std::unordered_map<uint64_t, std::set<CallstackID>> m_FunctionToCallstacks;
   std::unordered_map<uint64_t, uint64_t> m_ExactAddressToFunctionAddress;
+  std::vector<ThreadSampleData*> m_SortedThreadSampleData;
+
   std::unordered_map<uint64_t, LineInfo> m_AddressToLineInfo;
   std::unordered_map<uint64_t, std::string> m_FileNames;
-  std::vector<ProcessingDoneCallback> m_Callbacks;
-  std::vector<ThreadSampleData*> m_SortedThreadSampleData;
 };
