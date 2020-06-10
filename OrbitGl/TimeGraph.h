@@ -22,6 +22,7 @@
 #include "TextRenderer.h"
 #include "ThreadTrack.h"
 #include "TimeGraphLayout.h"
+#include "TimerChain.h"
 #include "absl/container/flat_hash_map.h"
 
 class Systrace;

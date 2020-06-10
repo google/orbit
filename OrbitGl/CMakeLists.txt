@@ -61,6 +61,7 @@ target_sources(
          ThreadTrack.h
          TimeGraph.h
          TimeGraphLayout.h
+         TimerChain.h
          Track.h
          TransactionClient.h
          TriangleToggle.h
@@ -113,6 +114,7 @@ target_sources(
           TextRenderer.cpp
           TimeGraph.cpp
           TimeGraphLayout.cpp
+          TimerChain.cpp
           ThreadTrack.cpp
           Track.cpp
           TransactionClient.cpp

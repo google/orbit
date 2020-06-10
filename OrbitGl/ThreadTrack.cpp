@@ -11,6 +11,7 @@
 #include "GlCanvas.h"
 #include "OrbitUnreal.h"
 #include "Systrace.h"
+#include "TextBox.h"
 #include "TimeGraph.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
@@ -166,67 +167,78 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
 
-  // We minimize overdraw when drawing lines for small events by discarding events
-  // that would just draw over an already drawn line. When zoomed in enough that all 
-  // events are drawn as boxes, this has no effect. When zoomed out, many events
-  // will be discarded quickly.
+  // We minimize overdraw when drawing lines for small events by discarding
+  // events that would just draw over an already drawn line. When zoomed in
+  // enough that all events are drawn as boxes, this has no effect. When zoomed
+  // out, many events will be discarded quickly.
   uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
   uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
 
-  uint64_t pixel_delta_in_ticks =
-    static_cast<uint64_t>(TicksFromMicroseconds(time_graph_->GetTimeWindowUs())) / canvas->getWidth();
-  uint64_t min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
+  uint64_t pixel_delta_in_ticks = static_cast<uint64_t>(TicksFromMicroseconds(
+                                      time_graph_->GetTimeWindowUs())) /
+                                  canvas->getWidth();
+  uint64_t min_timegraph_tick =
+      time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
-  for (auto& text_boxes : chains_by_depth) {
-    if (text_boxes == nullptr) continue;
-    // We have to reset this when we go to the next depth, as otherwise we would miss
-    // drawing events that should be drawn.
-    min_ignore = std::numeric_limits<uint64_t>::max();
-    max_ignore = std::numeric_limits<uint64_t>::min();
-    
-    for (TextBox& text_box : *text_boxes) {
-      const Timer& timer = text_box.GetTimer();
-      if (min_tick > timer.m_End || max_tick < timer.m_Start) continue;
-      if (timer.m_Start >= min_ignore && timer.m_End <= max_ignore) continue;
+  for (auto& chain : chains_by_depth) {
+    for (int i = 0; i < chain->size(); ++i) {
+      TimerBlock& block = *(*chain)[i];
+      if (!block.Intersects(min_tick, max_tick)) continue;
 
-      UpdateDepth(timer.m_Depth + 1);
-      double start_us = time_graph_->GetUsFromTick(timer.m_Start);
-      double end_us = time_graph_->GetUsFromTick(timer.m_End);
-      double elapsed_us = end_us - start_us;
-      double normalized_start = start_us * inv_time_window;
-      double normalized_length = elapsed_us * inv_time_window;
-      float world_timer_width =
-          static_cast<float>(normalized_length * world_width);
-      float world_timer_x =
-          static_cast<float>(world_start_x + normalized_start * world_width);
-      float world_timer_y =
-          GetYFromDepth(m_Pos[1], timer.m_Depth, is_collapsed);
+      // We have to reset this when we go to the next depth, as otherwise we
+      // would miss drawing events that should be drawn.
+      min_ignore = std::numeric_limits<uint64_t>::max();
+      max_ignore = std::numeric_limits<uint64_t>::min();
 
-      bool is_visible_width = normalized_length * canvas->getWidth() > 1;
-      bool is_selected = &text_box == Capture::GSelectedTextBox;
-      bool is_inactive =
-          !Capture::GVisibleFunctionsMap.empty() &&
-          Capture::GVisibleFunctionsMap[timer.m_FunctionAddress] == nullptr;
+      for (int k = 0; k < block.size(); ++k) {
+        TextBox& text_box = block[k];
+        const Timer& timer = text_box.GetTimer();
+        if (min_tick > timer.m_End || max_tick < timer.m_Start) continue;
+        if (timer.m_Start >= min_ignore && timer.m_End <= max_ignore) continue;
 
-      Vec2 pos(world_timer_x, world_timer_y);
-      Vec2 size(world_timer_width, box_height);
-      float z = GlCanvas::Z_VALUE_BOX_ACTIVE;
-      Color color = GetTimerColor(timer, time_graph_, is_selected, is_inactive);
-      text_box.SetPos(pos);
-      text_box.SetSize(size);
+        UpdateDepth(timer.m_Depth + 1);
+        double start_us = time_graph_->GetUsFromTick(timer.m_Start);
+        double end_us = time_graph_->GetUsFromTick(timer.m_End);
+        double elapsed_us = end_us - start_us;
+        double normalized_start = start_us * inv_time_window;
+        double normalized_length = elapsed_us * inv_time_window;
+        float world_timer_width =
+            static_cast<float>(normalized_length * world_width);
+        float world_timer_x =
+            static_cast<float>(world_start_x + normalized_start * world_width);
+        float world_timer_y =
+            GetYFromDepth(m_Pos[1], timer.m_Depth, is_collapsed);
 
-      if (is_visible_width) {
-        if (!is_collapsed) {
-          SetTimesliceText(timer, elapsed_us, min_x, &text_box);
+        bool is_visible_width = normalized_length * canvas->getWidth() > 1;
+        bool is_selected = &text_box == Capture::GSelectedTextBox;
+        bool is_inactive =
+            !Capture::GVisibleFunctionsMap.empty() &&
+            Capture::GVisibleFunctionsMap[timer.m_FunctionAddress] == nullptr;
+
+        Vec2 pos(world_timer_x, world_timer_y);
+        Vec2 size(world_timer_width, box_height);
+        float z = GlCanvas::Z_VALUE_BOX_ACTIVE;
+        Color color =
+            GetTimerColor(timer, time_graph_, is_selected, is_inactive);
+        text_box.SetPos(pos);
+        text_box.SetSize(size);
+
+        if (is_visible_width) {
+          if (!is_collapsed) {
+            SetTimesliceText(timer, elapsed_us, min_x, &text_box);
+          }
+          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, &text_box);
+        } else {
+          auto type = PickingID::LINE;
+          batcher->AddVerticalLine(pos, size[1], z, color, type, &text_box);
+          // For lines, we can ignore the entire pixel into which this event
+          // falls.
+          min_ignore =
+              min_timegraph_tick +
+              ((timer.m_Start - min_timegraph_tick) / pixel_delta_in_ticks) *
+                  pixel_delta_in_ticks;
+          max_ignore = min_ignore + pixel_delta_in_ticks;
         }
-        batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, &text_box);
-      } else {
-        auto type = PickingID::LINE;
-        batcher->AddVerticalLine(pos, size[1], z, color, type, &text_box);
-        // For lines, we can ignore the entire pixel into which this event falls.
-        min_ignore = min_timegraph_tick +
-          ((timer.m_Start - min_timegraph_tick)/pixel_delta_in_ticks) * pixel_delta_in_ticks;
-        max_ignore = min_ignore + pixel_delta_in_ticks;
       }
     }
   }
@@ -279,34 +291,38 @@ std::vector<std::shared_ptr<TimerChain>> ThreadTrack::GetTimers() {
 //-----------------------------------------------------------------------------
 const TextBox* ThreadTrack::GetFirstAfterTime(TickType time,
                                               uint32_t depth) const {
-  std::shared_ptr<TimerChain> text_boxes = GetTimers(depth);
-  if (text_boxes == nullptr) return nullptr;
+   std::shared_ptr<TimerChain> chain = GetTimers(depth);
+  if (chain == nullptr) return nullptr;
 
   // TODO: do better than linear search...
-  for (TextBox& text_box : *text_boxes) {
-    if (text_box.GetTimer().m_Start > time) {
-      return &text_box;
+  for (int i = 0; i < chain->size(); ++i) {
+    for (int k = 0; k < (*chain)[i]->size(); ++k) {
+      const TextBox& text_box = (*(*chain)[i])[k];
+      if (text_box.GetTimer().m_Start > time) {
+        return &text_box;
+      }
     }
   }
-
   return nullptr;
 }
 
 //-----------------------------------------------------------------------------
 const TextBox* ThreadTrack::GetFirstBeforeTime(TickType time,
                                                uint32_t depth) const {
-  std::shared_ptr<TimerChain> text_boxes = GetTimers(depth);
-  if (text_boxes == nullptr) return nullptr;
+  std::shared_ptr<TimerChain> chain = GetTimers(depth);
+  if (chain == nullptr) return nullptr;
 
-  TextBox* text_box = nullptr;
+  const TextBox* text_box = nullptr;
 
-  // TODO: do better than linear search...
-  for (TextBox& box : *text_boxes) {
-    if (box.GetTimer().m_Start > time) {
-      return text_box;
+// TODO: do better than linear search...
+  for (int i = 0; i < chain->size(); ++i) {
+    for (int k = 0; k < (*chain)[i]->size(); ++k) {
+      const TextBox& box = (*(*chain)[i])[k];
+      if (box.GetTimer().m_Start > time) {
+        return text_box;
+      }
+      text_box = &box;
     }
-
-    text_box = &box;
   }
 
   return nullptr;
