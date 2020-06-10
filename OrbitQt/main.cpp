@@ -23,6 +23,7 @@
 #include "GlutContext.h"
 #include "OpenGlDetect.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGgp/Error.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/Session.h"
@@ -295,6 +296,10 @@ int main(int argc, char* argv[]) {
       // It was either a clean shutdown or the deliberately closed the
       // dialog, or we started with the --local flag.
       return 0;
+    } else if (result.error() ==
+               make_error_code(OrbitGgp::Error::kCouldNotUseGgpCli)) {
+      DisplayErrorToUser(QString::fromStdString(result.error().message()));
+      return 1;
     } else if (result.error() !=
                make_error_code(Error::kUserCanceledServiceDeployment)) {
       DisplayErrorToUser(

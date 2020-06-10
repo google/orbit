@@ -5,6 +5,7 @@
 #ifndef ORBIT_GGP_CLIENT_H_
 #define ORBIT_GGP_CLIENT_H_
 
+#include <QObject>
 #include <QVector>
 #include <functional>
 #include <outcome.hpp>
@@ -15,22 +16,20 @@
 
 namespace OrbitGgp {
 
-class Client {
- public:
-  static outcome::result<Client> Create();
+class Client : public QObject {
+  Q_OBJECT
 
-  int GetNumberOfRequestsRunning() const { return number_of_requests_running_; }
+ public:
+  static outcome::result<QPointer<Client>> Create(QObject* parent);
 
   void GetInstancesAsync(
       const std::function<void(outcome::result<QVector<Instance>>)>& callback);
-  void GetSshInformationAsync(
-      const Instance& ggpInstance,
+  void GetSshInfoAsync(
+      const Instance& ggp_instance,
       const std::function<void(outcome::result<SshInfo>)>& callback);
 
  private:
-  Client() = default;
-
-  int number_of_requests_running_ = 0;
+  explicit Client(QObject* parent) : QObject(parent) {}
 };
 
 }  // namespace OrbitGgp

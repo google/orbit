@@ -11,7 +11,9 @@ namespace OrbitGgp {
 std::string ErrorCategory::message(int condition) const {
   switch (static_cast<Error>(condition)) {
     case Error::kCouldNotUseGgpCli:
-      return "Unable to use the ggp command line interface.";
+      return "Orbit currently only supports Google Stadia and the Stadia SDK "
+             "was not found on this machine. Please make sure it is installed "
+             "and the ggp command line tool is available in path.";
     case Error::kGgpListInstancesFailed:
       return "Listing available instances failed.";
     case Error::kRequestTimedOut:

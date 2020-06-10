@@ -38,13 +38,12 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
   layout->addWidget(label, 0, 0);
 
   // Refresh Button
-  const auto refresh_button = QPointer{new QPushButton{this}};
-  refresh_button->setIcon(
+  refresh_button_ = QPointer{new QPushButton{this}};
+  refresh_button_->setIcon(
       QApplication::style()->standardIcon(QStyle::SP_BrowserReload));
-  layout->addWidget(refresh_button, 0, 1, Qt::AlignRight);
-  QObject::connect(
-      refresh_button, &QPushButton::clicked, this,
-      [this, refresh_button]() { ReloadInstances(refresh_button); });
+  layout->addWidget(refresh_button_, 0, 1, Qt::AlignRight);
+  QObject::connect(refresh_button_, &QPushButton::clicked, this,
+                   [this]() { ReloadInstances(); });
 
   // Main content table
   const auto table_view = QPointer{new QTableView{}};
@@ -62,6 +61,7 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
       QPointer{new QDialogButtonBox{QDialogButtonBox::StandardButton::Reset |
                                     QDialogButtonBox::StandardButton::Ok |
                                     QDialogButtonBox::StandardButton::Cancel}};
+  // An instance needs to be chosen before the ok button is enabled.
   button_box->button(QDialogButtonBox::StandardButton::Ok)->setEnabled(false);
 
   // Open Capture button
@@ -94,40 +94,31 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
         button_box->button(QDialogButtonBox::StandardButton::Reset)
             ->setEnabled(false);
         CHECK(chosen_instance_);
-        if (chosen_instance_->display_name == "localhost") {
-          button_box->button(QDialogButtonBox::StandardButton::Ok)
-              ->setText("Ok");
-          this->accept();
-        }
-        CHECK(ggp_client_);
-        const auto self = QPointer{this};
-        ggp_client_->GetSshInformationAsync(
+        ggp_client_->GetSshInfoAsync(
             *chosen_instance_,
-            [self, button_box](outcome::result<SshInfo> ssh_info) {
-              // The dialog might not exist anymore when this callback returns.
-              // So we have to check for this.
-              if (self && button_box) {
-                button_box->button(QDialogButtonBox::StandardButton::Ok)
-                    ->setText("Ok");
-                button_box->button(QDialogButtonBox::StandardButton::Ok)
-                    ->setEnabled(true);
-                button_box->button(QDialogButtonBox::StandardButton::Reset)
-                    ->setEnabled(true);
-                if (!ssh_info) {
-                  QMessageBox::critical(
-                      self, QApplication::applicationDisplayName(),
-                      QString("Orbit was unable to retrieve the information "
-                              "necessary to connect via ssh. The error message "
-                              "was: %1")
-                          .arg(QString::fromStdString(
-                              ssh_info.error().message())));
-                } else {
-                  self->result_ = std::move(ssh_info.value());
-                  self->accept();
-                }
+            [this, button_box](outcome::result<SshInfo> ssh_info) {
+              // this callback is only called when ggp_client still exists.
+              button_box->button(QDialogButtonBox::StandardButton::Ok)
+                  ->setText("Ok");
+              button_box->button(QDialogButtonBox::StandardButton::Ok)
+                  ->setEnabled(true);
+              button_box->button(QDialogButtonBox::StandardButton::Reset)
+                  ->setEnabled(true);
+              if (!ssh_info) {
+                QMessageBox::critical(
+                    this, QApplication::applicationDisplayName(),
+                    QString("Orbit was unable to retrieve the information "
+                            "necessary to connect via ssh. The error message "
+                            "was: %1")
+                        .arg(QString::fromStdString(
+                            ssh_info.error().message())));
+              } else {
+                result_ = std::move(ssh_info.value());
+                accept();
               }
             });
       });
+
   QObject::connect(button_box, &QDialogButtonBox::rejected, this,
                    &QDialog::reject);
   layout->addWidget(button_box, 2, 0, 1, 2, Qt::AlignRight);
@@ -152,50 +143,28 @@ OrbitStartupWindow::OrbitStartupWindow(QWidget* parent)
 
   // Fill content table
   model_->SetInstances({});
-
-  outcome::result<Client> init_result = Client::Create();
-  if (!init_result) {
-    refresh_button->setDisabled(true);
-    refresh_button->setToolTip(
-        QString::fromStdString(init_result.error().message()));
-    return;
-  }
-  ggp_client_.emplace(std::move(init_result.value()));
-
-  ReloadInstances(refresh_button);
 }
 
-void OrbitStartupWindow::ReloadInstances(QPointer<QPushButton> refresh_button) {
-  if (!ggp_client_) {
-    ERROR("ggp client is not initialized");
-    return;
-  }
+void OrbitStartupWindow::ReloadInstances() {
+  CHECK(ggp_client_);
 
-  if (ggp_client_->GetNumberOfRequestsRunning() > 0) return;
-
-  refresh_button->setEnabled(false);
-  refresh_button->setText("Loading...");
+  refresh_button_->setEnabled(false);
+  refresh_button_->setText("Loading...");
 
   ggp_client_->GetInstancesAsync(
-      [model = model_,
-       refresh_button](outcome::result<QVector<Instance>> instances) {
-        if (refresh_button) {
-          refresh_button->setEnabled(true);
-          refresh_button->setText("");
-        }
+      [this](outcome::result<QVector<Instance>> instances) {
+        refresh_button_->setEnabled(true);
+        refresh_button_->setText("");
 
         if (!instances) {
           QMessageBox::critical(
-              nullptr, QApplication::applicationDisplayName(),
+              this, QApplication::applicationDisplayName(),
               QString(
                   "Orbit was unable to retrieve the list of available Stadia "
                   "Instances. The error message was: %1")
                   .arg(QString::fromStdString(instances.error().message())));
-          return;
-        }
-
-        if (model) {
-          model->SetInstances(std::move(instances.value()));
+        } else {
+          model_->SetInstances(std::move(instances.value()));
         }
       });
 }

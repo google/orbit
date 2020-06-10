@@ -7,6 +7,7 @@
 
 #include <QDialog>
 #include <QPointer>
+#include <QPushButton>
 #include <QString>
 #include <QWidget>
 #include <optional>
@@ -34,6 +35,11 @@ class OrbitStartupWindow : public QDialog {
 
   template <typename Credentials>
   outcome::result<std::variant<Credentials, QString>> Run() {
+    OUTCOME_TRY(create_result, Client::Create(this));
+    ggp_client_ = std::move(create_result);
+
+    ReloadInstances();
+
     result_ = std::monostate{};
     const int dialog_result = exec();
 
@@ -58,12 +64,13 @@ class OrbitStartupWindow : public QDialog {
   }
 
  private:
-  void ReloadInstances(QPointer<QPushButton> refresh_button);
+  void ReloadInstances();
 
-  std::optional<Client> ggp_client_;
+  QPointer<Client> ggp_client_;
   std::optional<Instance> chosen_instance_;
   std::variant<std::monostate, SshInfo, QString> result_;
   QPointer<InstanceItemModel> model_;
+  QPointer<QPushButton> refresh_button_;
 };
 
 }  // namespace OrbitQt
