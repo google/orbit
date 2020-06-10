@@ -17,12 +17,11 @@
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
+#include "TimerChain.h"
 #include "TriangleToggle.h"
 
 class GlCanvas;
 class TimeGraph;
-
-typedef BlockChain<TextBox, 4 * 1024> TimerChain;
 
 //-----------------------------------------------------------------------------
 class Track : public Pickable {

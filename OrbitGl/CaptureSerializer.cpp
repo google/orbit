@@ -21,6 +21,7 @@
 #include "Serialization.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
+#include "TimerChain.h"
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
@@ -122,11 +123,13 @@ void CaptureSerializer::Save(T& archive) {
   std::vector<std::shared_ptr<TimerChain>> chains =
       time_graph_->GetAllTimerChains();
   for (const std::shared_ptr<TimerChain>& chain : chains) {
-    for (const TextBox& box : *chain) {
-      archive(cereal::binary_data(&box.GetTimer(), sizeof(Timer)));
+    for (int i = 0; i < chain->size(); ++i) {
+      for (int k = 0; k < (*chain)[i]->size(); ++k) {
+        archive(cereal::binary_data(&((*(*chain)[i])[k].GetTimer()), sizeof(Timer)));
 
-      if (++numWrites > m_NumTimers) {
-        return;
+        if (++numWrites > m_NumTimers) {
+          return;
+        }
       }
     }
   }
