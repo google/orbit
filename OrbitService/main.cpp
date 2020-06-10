@@ -5,11 +5,14 @@
 #include <csignal>
 #include <iostream>
 
-#include "OrbitLinuxTracing/TracingOptions.h"
-#include "OrbitService.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
+
+#include "OrbitBase/Logging.h"
+#include "OrbitLinuxTracing/TracingOptions.h"
+#include "OrbitService.h"
+#include "Path.h"
 
 ABSL_FLAG(uint16_t, asio_port, 44766, "Asio TCP server port");
 
@@ -39,6 +42,9 @@ void install_sigint_handler() {
 }  // namespace
 
 int main(int argc, char** argv) {
+  const std::string log_file_path = Path::GetServiceLogFilePath();
+  InitLogFile(log_file_path);
+
   absl::SetProgramUsageMessage("Orbit CPU Profiler Service");
   absl::ParseCommandLine(argc, argv);
 

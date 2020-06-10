@@ -27,9 +27,13 @@ class Path {
   static std::string GetCapturePath();
   static std::string GetDumpPath();
   static std::string GetAppDataPath();
-  static std::string GetHome();
   static std::string GetLogFilePath();
   static void Dump();
+
+#ifdef __linux__
+  static std::string GetHome();
+  static std::string GetServiceLogFilePath();
+#endif
 
   static std::string GetFileName(const std::string& a_FullName);
   static std::string GetFileNameNoExt(const std::string& a_FullName);

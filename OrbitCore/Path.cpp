@@ -234,16 +234,24 @@ std::string Path::GetAppDataPath() {
   return path;
 }
 
-std::string Path::GetHome() {
-  std::string home = GetEnvVar("HOME") + "/";
-  return home;
-}
-
 std::string Path::GetLogFilePath() {
   std::string logsDir = Path::JoinPath({Path::GetAppDataPath(), "logs"});
   std::filesystem::create_directory(logsDir);
   return Path::JoinPath({logsDir, "Orbit.log"});
 }
+
+#ifdef __linux__
+std::string Path::GetHome() {
+  std::string home = GetEnvVar("HOME") + "/";
+  return home;
+}
+
+std::string Path::GetServiceLogFilePath() {
+  std::string logsDir = Path::JoinPath({"/", "var", "log"});
+  std::filesystem::create_directory(logsDir);
+  return Path::JoinPath({logsDir, "OrbitService.log"});
+}
+#endif
 
 void Path::Dump() {
   PRINT_VAR(GetExecutableName());
