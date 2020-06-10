@@ -163,9 +163,8 @@ void TcpClient::OnError(const std::error_code& ec) {
 
 //-----------------------------------------------------------------------------
 void TcpClient::DecodeMessage(Message& a_Message) {
+  // Don't process messages from previous captures.
   if (a_Message.m_CaptureID == Message::GCaptureID) {
     Callback(a_Message);
-  } else {
-    LOG("Received message from previous capture");
   }
 }
