@@ -291,7 +291,7 @@ std::vector<std::shared_ptr<TimerChain>> ThreadTrack::GetTimers() {
 //-----------------------------------------------------------------------------
 const TextBox* ThreadTrack::GetFirstAfterTime(TickType time,
                                               uint32_t depth) const {
-   std::shared_ptr<TimerChain> chain = GetTimers(depth);
+  std::shared_ptr<TimerChain> chain = GetTimers(depth);
   if (chain == nullptr) return nullptr;
 
   // TODO: do better than linear search...
@@ -314,7 +314,7 @@ const TextBox* ThreadTrack::GetFirstBeforeTime(TickType time,
 
   const TextBox* text_box = nullptr;
 
-// TODO: do better than linear search...
+  // TODO: do better than linear search...
   for (int i = 0; i < chain->size(); ++i) {
     for (int k = 0; k < (*chain)[i]->size(); ++k) {
       const TextBox& box = (*(*chain)[i])[k];
