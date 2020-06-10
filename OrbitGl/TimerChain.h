@@ -50,7 +50,7 @@ class TimerBlock {
  private:
   static constexpr int kMaxSize = 1024;
   TextBox data_[kMaxSize];
-  int size_;
+  int32_t size_;
 
   uint64_t min_timestamp_;
   uint64_t max_timestamp_;
@@ -59,16 +59,17 @@ class TimerBlock {
 class TimerChain {
  public:
   TimerChain();
+  ~TimerChain();
 
   void push_back(const TextBox& box);
 
   int size() const { return blocks_.size(); }
 
-  TimerBlock& operator[](std::size_t idx) {
+  TimerBlock* operator[](std::size_t idx) {
     return blocks_[idx];
   }
     
-  const TimerBlock& operator[](std::size_t idx) const {
+  const TimerBlock* operator[](std::size_t idx) const {
     return blocks_[idx];
   }
 
@@ -79,7 +80,7 @@ class TimerChain {
   TextBox* GetElementBefore(const TextBox* element);
 
  private:
-  std::vector<TimerBlock> blocks_;
+  std::vector<TimerBlock*> blocks_;
 };
 
 #endif
