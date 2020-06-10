@@ -41,7 +41,6 @@ target_sources(
          ImmediateWindow.h
          LiveFunctionsDataView.h
          LogDataView.h
-         mat4.h
          ModulesDataView.h
          OpenGl.h
          OpenGlDetect.h
@@ -54,7 +53,6 @@ target_sources(
          SamplingReportDataView.h
          SchedulerTrack.h
          SessionsDataView.h
-         shader.h
          SymbolsClient.h
          TextBox.h
          TextRenderer.h
@@ -69,9 +67,7 @@ target_sources(
 
 target_sources(
   OrbitGl
-  PRIVATE shader.cpp
-          mat4.cpp
-          App.cpp
+  PRIVATE App.cpp
           Batcher.cpp
           BlackBoard.cpp
           CallStackDataView.cpp

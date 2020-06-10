@@ -2,12 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
-#include <iostream>
+#include <freetype-gl/mat4.h>
 
-#include "mat4.h"
+#include <iostream>
 
 void CheckGlError();
 void OutputGlMatrices();

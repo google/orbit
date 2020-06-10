@@ -2,17 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "TextRenderer.h"
+
+#include <freetype-gl/shader.h>
+#include <freetype-gl/vertex-buffer.h>
 
 #include "App.h"
 #include "Core.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "Params.h"
-#include "freetype-gl/vertex-buffer.h"
-#include "shader.h"
 
 //-----------------------------------------------------------------------------
 typedef struct {
