@@ -176,7 +176,6 @@ outcome::result<void, std::string> CaptureSerializer::Load(
       Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();
     }
     Capture::GSamplingProfiler->SortByThreadUsage();
-    Capture::GSamplingProfiler->SetLoadedFromFile(true);
 
     time_graph_->Clear();
 

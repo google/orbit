@@ -216,34 +216,6 @@ void SamplingProfiler::SortByThreadID() {
 }
 
 //-----------------------------------------------------------------------------
-bool SamplingProfiler::GetLineInfo(uint64_t a_Address, LineInfo& a_LineInfo) {
-  auto it = m_AddressToLineInfo.find(a_Address);
-  if (it != m_AddressToLineInfo.end()) {
-    a_LineInfo = it->second;
-    a_LineInfo.m_File = m_FileNames[a_LineInfo.m_FileNameHash];
-    return true;
-  }
-
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-void SamplingProfiler::Print() {
-  ScopeLock lock(m_Mutex);
-  for (auto& pair : m_UniqueCallstacks) {
-    std::shared_ptr<CallStack> callstack = pair.second;
-    if (callstack) {
-      PRINT_VAR(reinterpret_cast<void*>(callstack->m_Hash));
-      PRINT_VAR(callstack->m_Depth);
-      for (uint32_t i = 0; i < callstack->m_Depth; ++i) {
-        LOG("%s",
-            Capture::GAddressToFunctionName[callstack->m_Data[i]].c_str());
-      }
-    }
-  }
-}
-
-//-----------------------------------------------------------------------------
 void SamplingProfiler::ProcessSamples() {
   ScopeLock lock(m_Mutex);
 
@@ -346,10 +318,6 @@ void SamplingProfiler::ReprocessSamples() {
   m_FunctionToCallstacks.clear();
   m_ExactAddressToFunctionAddress.clear();
   m_SortedThreadSampleData.clear();
-
-  // Clear the rest to be sure.
-  m_AddressToLineInfo.clear();
-  m_FileNames.clear();
 
   ProcessSamples();
 }
@@ -494,9 +462,6 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
       std::shared_ptr<Module> module = m_Process->GetModuleFromAddress(address);
       function.m_Module = module ? module->m_Name : "???";
 
-      const LineInfo& lineInfo = m_AddressToLineInfo[address];
-      function.m_Line = lineInfo.m_Line;
-      function.m_File = lineInfo.m_File;
       sampleReport.push_back(function);
     }
   }
@@ -539,7 +504,7 @@ ORBIT_SERIALIZE_WSTRING(SampledFunction, 0) {
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 2) {
+ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 3) {
   ORBIT_NVP_VAL(0, m_PeriodMs);
   ORBIT_NVP_VAL(0, m_NumSamples);
   ORBIT_NVP_DEBUG(0, m_ThreadSampleData);
@@ -548,10 +513,6 @@ ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 2) {
   ORBIT_NVP_DEBUG(0, m_OriginalCallstackToResolvedCallstack);
   ORBIT_NVP_DEBUG(0, m_FunctionToCallstacks);
   ORBIT_NVP_DEBUG(0, m_ExactAddressToFunctionAddress);
-  ORBIT_NVP_DEBUG(0, m_AddressToLineInfo);
-  ORBIT_NVP_DEBUG(1, m_FileNames);
-  // ORBIT_NVP_VAL( 0, m_Callbacks );
-  // ORBIT_NVP_VAL( 0, m_SortedThreadSampleData );
 }
 
 //-----------------------------------------------------------------------------

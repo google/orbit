@@ -186,7 +186,6 @@ outcome::result<void, std::string> Capture::StartCapture(
 #endif
   } else if (Capture::IsRemote()) {
     Capture::NewSamplingProfiler();
-    Capture::GSamplingProfiler->SetIsLinuxPerf(true);
     Capture::GSamplingProfiler->StartCapture();
   }
 

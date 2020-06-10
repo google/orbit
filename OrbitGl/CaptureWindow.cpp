@@ -284,9 +284,7 @@ void CaptureWindow::FindCode(DWORD64 address) {
 
   LineInfo lineInfo;
 
-  if (SymUtils::GetLineInfo(address, lineInfo) ||
-      (Capture::GSamplingProfiler &&
-       Capture::GSamplingProfiler->GetLineInfo(address, lineInfo))) {
+  if (SymUtils::GetLineInfo(address, lineInfo)) {
     --lineInfo.m_Line;
 
     // File mapping
