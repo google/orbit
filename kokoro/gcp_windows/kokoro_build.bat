@@ -15,7 +15,11 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 
 :: Building conan
 set /P CRASHDUMP_SERVER=<%KOKORO_ARTIFACTS_DIR%\keystore\74938_orbitprofiler_crashdump_collection_server
-call conan install -pr msvc2017_relwithdebinfo -if %REPO_ROOT%\build\ --build outdated -o crashdump_server="%CRASHDUMP_SERVER%" %REPO_ROOT%
+set PROFILE=msvc2017_relwithdebinfo
+md %REPO_ROOT%\build
+xcopy /Y "%REPO_ROOT%\third_party\conan\lockfiles\windows\%PROFILE%\conan.lock" "%REPO_ROOT%\build\"
+call powershell -command "(Get-Content %REPO_ROOT%\build\conan.lock).replace("""crashdump_server=""", """crashdump_server=%CRASHDUMP_SERVER%""") | Set-Content %REPO_ROOT%\build\conan.lock"
+call conan install -pr %PROFILE% -if %REPO_ROOT%\build\ --build outdated -o crashdump_server="%CRASHDUMP_SERVER%" --lockfile="%REPO_ROOT%\build\conan.lock" %REPO_ROOT%
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 call conan build -bf %REPO_ROOT%\build\ %REPO_ROOT%
