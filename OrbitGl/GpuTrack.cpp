@@ -258,35 +258,39 @@ std::vector<std::shared_ptr<TimerChain>> GpuTrack::GetTimers() {
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetFirstAfterTime(TickType time,
                                            uint32_t depth) const {
-  // std::shared_ptr<TimerChain> text_boxes = GetTimers(depth);
-  // if (text_boxes == nullptr) return nullptr;
+  std::shared_ptr<TimerChain> chain = GetTimers(depth);
+  if (chain == nullptr) return nullptr;
 
-  // // TODO: do better than linear search...
-  // for (TextBox& text_box : *text_boxes) {
-  //   if (text_box.GetTimer().m_Start > time) {
-  //     return &text_box;
-  //   }
-  // }
-
+  // TODO: do better than linear search...
+  for (int i = 0; i < chain->size(); ++i) {
+    for (int k = 0; k < (*chain)[i]->size(); ++k) {
+      const TextBox& text_box = (*(*chain)[i])[k];
+      if (text_box.GetTimer().m_Start > time) {
+        return &text_box;
+      }
+    }
+  }
   return nullptr;
 }
 
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetFirstBeforeTime(TickType time,
                                             uint32_t depth) const {
-  // std::shared_ptr<TimerChain> text_boxes = GetTimers(depth);
-  // if (text_boxes == nullptr) return nullptr;
+  std::shared_ptr<TimerChain> chain = GetTimers(depth);
+  if (chain == nullptr) return nullptr;
 
-  // TextBox* text_box = nullptr;
+  const TextBox* text_box = nullptr;
 
-  // // TODO: do better than linear search...
-  // for (TextBox& box : *text_boxes) {
-  //   if (box.GetTimer().m_Start > time) {
-  //     return text_box;
-  //   }
-
-  //   text_box = &box;
-  // }
+  // TODO: do better than linear search...
+  for (int i = 0; i < chain->size(); ++i) {
+    for (int k = 0; k < (*chain)[i]->size(); ++k) {
+      const TextBox& box = (*(*chain)[i])[k];
+      if (box.GetTimer().m_Start > time) {
+        return text_box;
+      }
+      text_box = &box;
+    }
+  }
 
   return nullptr;
 }
@@ -301,23 +305,23 @@ std::shared_ptr<TimerChain> GpuTrack::GetTimers(uint32_t depth) const {
 
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetLeft(TextBox* text_box) const {
-  // const Timer& timer = text_box->GetTimer();
-  // uint64_t timeline_hash = timer.m_UserData[0];
-  // if (timeline_hash == timeline_hash_) {
-  //   std::shared_ptr<TimerChain> timers = GetTimers(timer.m_Depth);
-  //   if (timers) return timers->GetElementBefore(text_box);
-  // }
+  const Timer& timer = text_box->GetTimer();
+  uint64_t timeline_hash = timer.m_UserData[0];
+  if (timeline_hash == timeline_hash_) {
+    std::shared_ptr<TimerChain> timers = GetTimers(timer.m_Depth);
+    if (timers) return timers->GetElementBefore(text_box);
+  }
   return nullptr;
 }
 
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetRight(TextBox* text_box) const {
-  // const Timer& timer = text_box->GetTimer();
-  // uint64_t timeline_hash = timer.m_UserData[0];
-  // if (timeline_hash == timeline_hash_) {
-  //   std::shared_ptr<TimerChain> timers = GetTimers(timer.m_Depth);
-  //   if (timers) return timers->GetElementAfter(text_box);
-  // }
+  const Timer& timer = text_box->GetTimer();
+  uint64_t timeline_hash = timer.m_UserData[0];
+  if (timeline_hash == timeline_hash_) {
+    std::shared_ptr<TimerChain> timers = GetTimers(timer.m_Depth);
+    if (timers) return timers->GetElementAfter(text_box);
+  }
   return nullptr;
 }
 
