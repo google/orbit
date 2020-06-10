@@ -124,8 +124,8 @@ void CaptureSerializer::Save(T& archive) {
       time_graph_->GetAllTimerChains();
   for (const std::shared_ptr<TimerChain>& chain : chains) {
     for (int i = 0; i < chain->size(); ++i) {
-      for (int k = 0; k < (*chain)[i]->size(); ++k) {
-        archive(cereal::binary_data(&((*(*chain)[i])[k].GetTimer()), sizeof(Timer)));
+      for (int k = 0; k < (*chain)[i].size(); ++k) {
+        archive(cereal::binary_data(&((*chain)[i][k].GetTimer()), sizeof(Timer)));
 
         if (++numWrites > m_NumTimers) {
           return;
