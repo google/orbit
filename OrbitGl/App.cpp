@@ -273,7 +273,7 @@ void OrbitApp::PostInit() {
 
     auto callback = [&](ProcessManager* process_manager) {
       main_thread_executor_->Schedule([&, process_manager]() {
-        m_ProcessesDataView->SetProcessList(process_manager->GetProcessList());
+        m_ProcessesDataView->SetProcessList(process_manager->process_list());
         if (m_ProcessesDataView->GetSelectedProcessId() == 0 &&
             m_ProcessesDataView->GetFirstProcessId() != 0) {
           m_ProcessesDataView->SelectProcess(
