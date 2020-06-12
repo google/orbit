@@ -221,6 +221,14 @@ void SamplingProfiler::ProcessSamples() {
 
   m_State = Processing;
 
+  // Clear the result of a previous call to ProcessSamples.
+  m_ThreadSampleData.clear();
+  m_UniqueResolvedCallstacks.clear();
+  m_OriginalCallstackToResolvedCallstack.clear();
+  m_FunctionToCallstacks.clear();
+  m_ExactAddressToFunctionAddress.clear();
+  m_SortedThreadSampleData.clear();
+
   // Unique call stacks and per thread data
   for (const CallstackEvent& callstack : m_Callstacks) {
     if (!HasCallStack(callstack.m_Id)) {
@@ -284,42 +292,11 @@ void SamplingProfiler::ProcessSamples() {
   FillThreadSampleDataSampleReports();
 
   m_NumSamples = m_Callstacks.size();
-  m_Callstacks.clear();
+
+  // Don't clear m_Callstacks, so that ProcessSamples can be called again, e.g.
+  // when new callstacks have been added or after a module has been loaded.
+
   m_State = DoneProcessing;
-}
-
-void SamplingProfiler::ReprocessSamples() {
-  // Rebuild m_Callstacks (cleared by ProcessSamples) from m_ThreadSampleData.
-  // Note that m_Callstacks is not necessarily empty as more callstacks might
-  // have been added after the last call to ProcessSamples.
-  // Another option would be to just not call m_Callstacks.clear() in
-  // ProcessSamples.
-  for (const auto& data_it : m_ThreadSampleData) {
-    ThreadID tid = data_it.first;
-    if (tid == 0) {
-      continue;
-    }
-
-    const ThreadSampleData& data = data_it.second;
-    for (const auto& callstack_count_it : data.m_CallstackCount) {
-      CallstackID callstack_id = callstack_count_it.first;
-      uint32_t callstack_count = callstack_count_it.second;
-      CallstackEvent hashed_cs;
-      hashed_cs.m_Id = callstack_id;
-      hashed_cs.m_TID = tid;
-      m_Callstacks.push_back_n(hashed_cs, callstack_count);
-    }
-  }
-
-  // Clear the result of ProcessSamples.
-  m_ThreadSampleData.clear();
-  m_UniqueResolvedCallstacks.clear();
-  m_OriginalCallstackToResolvedCallstack.clear();
-  m_FunctionToCallstacks.clear();
-  m_ExactAddressToFunctionAddress.clear();
-  m_SortedThreadSampleData.clear();
-
-  ProcessSamples();
 }
 
 //-----------------------------------------------------------------------------
