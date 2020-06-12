@@ -77,6 +77,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void Inject(const std::string& file_name);
   bool StartCapture();
   void StopCapture();
+  void OnCaptureStopped() override;
   void ToggleCapture();
   void OnDisconnect();
   void OnPdbLoaded();
@@ -122,6 +123,10 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   using CaptureStartedCallback = std::function<void()>;
   void AddCaptureStartedCallback(CaptureStartedCallback callback) {
     capture_started_callbacks_.emplace_back(std::move(callback));
+  }
+  using CaptureStopRequestedCallback = std::function<void()>;
+  void AddCaptureStopRequestedCallback(CaptureStopRequestedCallback callback) {
+    capture_stop_requested_callbacks_.emplace_back(std::move(callback));
   }
   using CaptureStoppedCallback = std::function<void()>;
   void AddCaptureStoppedCallback(CaptureStoppedCallback callback) {
@@ -242,6 +247,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   std::vector<std::string> m_Arguments;
   std::vector<CaptureStartedCallback> capture_started_callbacks_;
+  std::vector<CaptureStopRequestedCallback> capture_stop_requested_callbacks_;
   std::vector<CaptureStoppedCallback> capture_stopped_callbacks_;
   std::vector<RefreshCallback> m_RefreshCallbacks;
   std::vector<WatchCallback> m_AddToWatchCallbacks;

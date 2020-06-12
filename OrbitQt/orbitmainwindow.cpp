@@ -72,8 +72,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   GOrbitApp->AddCaptureStartedCallback(
       [this] { ui->HomeTab->setDisabled(true); });
-  GOrbitApp->AddCaptureStoppedCallback(
+  GOrbitApp->AddCaptureStopRequestedCallback(
       [this] { ui->HomeTab->setDisabled(false); });
+  GOrbitApp->AddCaptureStoppedCallback([] { LOG("Capture stopped"); });
   GOrbitApp->AddRefreshCallback(
       [this](DataViewType a_Type) { this->OnRefreshDataViewPanels(a_Type); });
   GOrbitApp->AddSamplingReportCallback(

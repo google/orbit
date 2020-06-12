@@ -49,6 +49,7 @@ class CoreApp {
   virtual void AddKeyAndString(uint64_t /*key*/, std::string_view /*str*/) {}
   virtual void UpdateThreadName(uint32_t /*thread_id*/,
                                 const std::string& /*thread_name*/) {}
+  virtual void OnCaptureStopped() {}
   virtual void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) {}
   virtual void ApplySession(const Session&) {}
   virtual void RefreshCaptureView() {}
