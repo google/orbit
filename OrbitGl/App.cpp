@@ -990,14 +990,6 @@ void OrbitApp::ApplySession(const Session& session) {
   FireRefreshCallbacks();
 }
 
-//-----------------------------------------------------------------------------
-void OrbitApp::OnRemoteModuleDebugInfo(const Message& a_Message) {
-  std::vector<ModuleDebugInfo> remote_module_debug_infos;
-  DeserializeObjectBinary(a_Message.GetData(), a_Message.GetSize(),
-                          remote_module_debug_infos);
-  OnRemoteModuleDebugInfo(remote_module_debug_infos);
-}
-
 std::shared_ptr<Process> OrbitApp::FindProcessByPid(uint32_t pid) {
   absl::MutexLock lock(&process_map_mutex_);
   auto it = process_map_.find(pid);
