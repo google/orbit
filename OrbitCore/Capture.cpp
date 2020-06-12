@@ -35,6 +35,7 @@
 std::shared_ptr<Pdb> GPdbDbg;
 #endif
 
+Capture::State Capture::GState = Capture::State::kEmpty;
 bool Capture::GInjected = false;
 std::string Capture::GInjectedProcess;
 bool Capture::GIsSampling = false;
@@ -173,7 +174,6 @@ outcome::result<void, std::string> Capture::StartCapture(
   GInjected = true;
   ++Message::GCaptureID;
   GTcpClient->Send(Msg_NewCaptureID);
-  GTimerManager->StartRecording();
 
   ClearCaptureData();
   SendFunctionHooks();
@@ -197,6 +197,8 @@ outcome::result<void, std::string> Capture::StartCapture(
     }
   }
 
+  GState = State::kStarted;
+
   return outcome::success();
 }
 
@@ -214,9 +216,22 @@ void Capture::StopCapture() {
 
   TcpEntity* tcpEntity = Capture::GetMainTcpEntity();
   tcpEntity->Send(Msg_StopCapture);
-  if (GTimerManager) {
-    GTimerManager->StopRecording();
+
+  GState = State::kStopping;
+}
+
+//-----------------------------------------------------------------------------
+void Capture::FinalizeCapture() {
+  if (Capture::GSamplingProfiler != nullptr) {
+    Capture::GSamplingProfiler->StopCapture();
+    Capture::GSamplingProfiler->ProcessSamples();
   }
+
+  if (GCoreApp != nullptr) {
+    GCoreApp->RefreshCaptureView();
+  }
+
+  GState = State::kDone;
 }
 
 //-----------------------------------------------------------------------------
@@ -234,6 +249,7 @@ void Capture::ClearCaptureData() {
   GHasContextSwitches = false;
   GNumLinuxEvents = 0;
   GNumContextSwitches = 0;
+  GState = State::kEmpty;
 }
 
 //-----------------------------------------------------------------------------
@@ -390,7 +406,7 @@ void Capture::StopSampling() {
 
 //-----------------------------------------------------------------------------
 bool Capture::IsCapturing() {
-  return GTimerManager && GTimerManager->m_IsRecording;
+  return GState == State::kStarted || GState == State::kStopping;
 }
 
 //-----------------------------------------------------------------------------
