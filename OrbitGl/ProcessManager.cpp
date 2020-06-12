@@ -23,11 +23,14 @@ class ProcessManagerImpl final : public ProcessManager {
 
   void SetProcessListUpdateListener(
       const std::function<void(ProcessManager*)>& listener) override;
-  std::vector<ProcessInfo> GetProcessList() const override;
+  std::vector<ProcessInfo> process_list() const override;
+  outcome::result<std::vector<ModuleInfo>, std::string> GetModuleList(
+      uint32_t pid) override;
   void Start();
   void Shutdown() override;
 
  private:
+  std::unique_ptr<grpc::ClientContext> CreateContext();
   void WorkerFunction();
 
   std::unique_ptr<ProcessService::Stub> process_service_;
@@ -55,7 +58,26 @@ void ProcessManagerImpl::SetProcessListUpdateListener(
   process_list_update_listener_ = listener;
 }
 
-std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
+outcome::result<std::vector<ModuleInfo>, std::string>
+ProcessManagerImpl::GetModuleList(uint32_t pid) {
+  GetModuleListRequest request;
+  GetModuleListResponse response;
+  request.set_process_id(pid);
+
+  std::unique_ptr<grpc::ClientContext> context = CreateContext();
+  grpc::Status status =
+      process_service_->GetModuleList(context.get(), request, &response);
+
+  if (!status.ok()) {
+    return status.error_message();
+  }
+
+  const auto& modules = response.modules();
+
+  return std::vector<ModuleInfo>(modules.begin(), modules.end());
+}
+
+std::vector<ProcessInfo> ProcessManagerImpl::process_list() const {
   absl::MutexLock lock(&mutex_);
   return process_list_;
 }
@@ -74,6 +96,18 @@ void ProcessManagerImpl::Shutdown() {
   }
 }
 
+std::unique_ptr<grpc::ClientContext> ProcessManagerImpl::CreateContext() {
+  std::unique_ptr<grpc::ClientContext> context =
+      std::make_unique<grpc::ClientContext>();
+
+  std::chrono::time_point deadline =
+      std::chrono::system_clock::now() +
+      std::chrono::milliseconds(kGrpcCallTimeoutMilliseconds);
+  context->set_deadline(deadline);
+
+  return context;
+}
+
 bool IsTrue(bool* var) { return *var; }
 
 void ProcessManagerImpl::WorkerFunction() {
@@ -89,15 +123,10 @@ void ProcessManagerImpl::WorkerFunction() {
 
     GetProcessListRequest request;
     GetProcessListResponse response;
-    grpc::ClientContext context;
-
-    std::chrono::time_point deadline =
-        std::chrono::system_clock::now() +
-        std::chrono::milliseconds(kGrpcCallTimeoutMilliseconds);
-    context.set_deadline(deadline);
+    std::unique_ptr<grpc::ClientContext> context = CreateContext();
 
     grpc::Status status =
-        process_service_->GetProcessList(&context, request, &response);
+        process_service_->GetProcessList(context.get(), request, &response);
     if (!status.ok()) {
       ERROR("Grpc call failed: %s", status.error_message());
       continue;
