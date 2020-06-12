@@ -206,15 +206,6 @@ void Capture::StopCapture() {
 #ifdef WIN32
     GEventTracer.Stop();
 #endif
-  } else if (Capture::IsRemote()) {
-    if (Capture::GSamplingProfiler != nullptr) {
-      Capture::GSamplingProfiler->StopCapture();
-      Capture::GSamplingProfiler->ProcessSamples();
-    }
-
-    if (GCoreApp != nullptr) {
-      GCoreApp->RefreshCaptureView();
-    }
   }
 
   if (!GInjected) {
