@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "BaseTypes.h"
+#include "OrbitBase/Logging.h"
 #include "Platform.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
@@ -223,26 +224,27 @@ inline uint64_t GetMicros(std::string a_TimeStamp) {
 inline void PrintBuffer(const void* a_Buffer, uint32_t a_Size,
                         uint32_t a_Width = 16) {
   const uint8_t* buffer = static_cast<const uint8_t*>(a_Buffer);
+  std::stringstream buffer_string;
   for (size_t i = 0; i < a_Size; ++i) {
-    std::cout << std::hex << std::setfill('0') << std::setw(2) << buffer[i]
+    buffer_string << std::hex << std::setfill('0') << std::setw(2) << buffer[i]
               << " ";
 
     if ((i + 1) % a_Width == 0) {
-      std::cout << std::endl;
+      buffer_string << std::endl;
     }
   }
 
-  std::cout << std::endl;
+  buffer_string << std::endl;
 
   for (size_t i = 0; i < a_Size; ++i) {
-    std::cout << buffer[i];
+    buffer_string << buffer[i];
 
     if ((i + 1) % a_Width == 0) {
-      std::cout << std::endl;
+      buffer_string << std::endl;
     }
   }
 
-  std::cout << std::endl;
+  LOG("%s", buffer_string.str());
 }
 
 #ifdef _WIN32

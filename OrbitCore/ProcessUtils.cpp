@@ -171,7 +171,7 @@ void ProcessList::Refresh() {
 
   dir_proc = opendir(PROC_DIRECTORY);
   if (dir_proc == nullptr) {
-    perror("Couldn't open the " PROC_DIRECTORY " directory");
+    ERROR("Couldn't open the " PROC_DIRECTORY " directory");
     return;
   }
 

@@ -11,6 +11,7 @@
 #include <cstdio>
 
 #include "OrbitAsioServer.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitGrpcServer.h"
 
 static std::string ReadStdIn() {
@@ -36,11 +37,11 @@ static bool IsSshConnectionAlive(
 
 void OrbitService::Run(std::atomic<bool>* exit_requested) {
   std::string grpc_address = absl::StrFormat("127.0.0.1:%d", grpc_port_);
-  std::cout << "Starting GRPC server at " << grpc_address << std::endl;
+  LOG("Starting GRPC server at %s", grpc_address);
   std::unique_ptr<OrbitGrpcServer> grpc_server;
   grpc_server = OrbitGrpcServer::Create(grpc_address);
 
-  std::cout << "Starting Asio server on port " << asio_port_ << std::endl;
+  LOG("Starting Asio server on port %i", asio_port_);
   OrbitAsioServer asio_server{asio_port_, tracing_options_};
 
   // make stdin non blocking

@@ -84,7 +84,7 @@ std::string ExecuteCommand(const char* a_Cmd) {
   std::string result;
   std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(a_Cmd, "r"), pclose);
   if (!pipe) {
-    std::cout << "Could not open pipe" << std::endl;
+    LOG("Could not open pipe");
   }
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
     result += buffer.data();
@@ -136,7 +136,7 @@ void ListModules(pid_t pid,
   for (const auto& [module_name, address_range] : address_map) {
     // Filter out entries which are not executable
     if (!address_range.is_executable) continue;
-    
+
     std::shared_ptr<Module> module = std::make_shared<Module>(
         module_name, address_range.start_address, address_range.end_address);
 
@@ -164,7 +164,7 @@ uint32_t GetPID(const char* a_Name) {
   std::string result = ExecuteCommand(command.c_str());
   std::vector<std::string> tokens = absl::StrSplit(result, " ");
   if (!tokens.empty()) return static_cast<uint32_t>(atoi(tokens[0].c_str()));
-  std::cout << "Could not find process " << a_Name;
+  LOG("Could not find process %s", a_Name);
   return 0;
 }
 
@@ -206,30 +206,30 @@ void DumpClocks() {
   uint64_t bootTime = OrbitTicks(CLOCK_BOOTTIME);
   uint64_t tai = OrbitTicks(CLOCK_TAI);
 
-  printf("    realTime: %lu \n", realTime);
-  printf("   monotonic: %lu \n", monotonic);
-  printf("monotonicRaw: %lu \n", monotonicRaw);
-  printf("    bootTime: %lu \n", bootTime);
-  printf("         tai: %lu \n\n", tai);
+  LOG("    realTime: %lu", realTime);
+  LOG("   monotonic: %lu", monotonic);
+  LOG("monotonicRaw: %lu", monotonicRaw);
+  LOG("    bootTime: %lu", bootTime);
+  LOG("         tai: %lu \n", tai);
 
-  printf("    realTime: %f \n", GetSecondsFromNanos(realTime));
-  printf("   monotonic: %f \n", GetSecondsFromNanos(monotonic));
-  printf("monotonicRaw: %f \n", GetSecondsFromNanos(monotonicRaw));
-  printf("    bootTime: %f \n", GetSecondsFromNanos(bootTime));
-  printf("         tai: %f \n\n", GetSecondsFromNanos(tai));
+  LOG("    realTime: %f", GetSecondsFromNanos(realTime));
+  LOG("   monotonic: %f", GetSecondsFromNanos(monotonic));
+  LOG("monotonicRaw: %f", GetSecondsFromNanos(monotonicRaw));
+  LOG("    bootTime: %f", GetSecondsFromNanos(bootTime));
+  LOG("         tai: %f \n", GetSecondsFromNanos(tai));
 }
 
 //-----------------------------------------------------------------------------
 void StreamCommandOutput(const char* a_Cmd,
                          std::function<void(const std::string&)> a_Callback,
                          bool* a_ExitRequested) {
-  std::cout << "Starting output stream for command" << a_Cmd << std::endl;
+  LOG("Starting output stream for command %s", a_Cmd);
 
   std::array<char, 128> buffer;
   std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(a_Cmd, "r"), pclose);
 
   if (!pipe) {
-    std::cout << "Could not open pipe" << std::endl;
+    LOG("Could not open pipe");
   }
 
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr &&
@@ -237,7 +237,7 @@ void StreamCommandOutput(const char* a_Cmd,
     a_Callback(buffer.data());
   }
 
-  std::cout << "end stream" << std::endl;
+  LOG("end stream");
 }
 
 //-----------------------------------------------------------------------------

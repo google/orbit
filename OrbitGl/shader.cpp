@@ -11,6 +11,7 @@
 
 #include "Core.h"
 #include "OpenGl.h"
+#include "OrbitBase/Logging.h"
 
 #ifdef __cplusplus
 namespace ftgl {
@@ -24,7 +25,7 @@ char* shader_read(const char* filename) {
 
   fopen_s(&file, filename, "rb");
   if (!file) {
-    fprintf(stderr, "Unable to open file \"%s\".\n", filename);
+    LOG("Unable to open file \"%s\".", filename);
     return 0;
   }
   fseek(file, 0, SEEK_END);
@@ -48,7 +49,7 @@ GLuint shader_compile(const char* source, const GLenum type) {
   if (compile_status == GL_FALSE) {
     GLchar messages[256];
     glGetShaderInfoLog(handle, sizeof(messages), 0, &messages[0]);
-    fprintf(stderr, "%s\n", messages);
+    LOG("%s", messages);
     exit(EXIT_FAILURE);
   }
   return handle;
@@ -80,7 +81,7 @@ GLuint shader_load(const char* vert_filename, const char* frag_filename) {
   if (link_status == GL_FALSE) {
     GLchar messages[256];
     glGetProgramInfoLog(handle, sizeof(messages), 0, &messages[0]);
-    fprintf(stderr, "%s\n", messages);
+    LOG("%s", messages);
     exit(1);
   }
   return handle;

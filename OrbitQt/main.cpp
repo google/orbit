@@ -7,7 +7,6 @@
 #include <absl/flags/usage.h>
 
 #include <QApplication>
-#include <QDebug>
 #include <QDir>
 #include <QFontDatabase>
 #include <QMessageBox>
@@ -51,10 +50,9 @@ static void ParseLegacyCommandLine(int argc, char* argv[],
   for (size_t i = 0; i < static_cast<size_t>(argc); ++i) {
     const char* arg = argv[i];
     if (absl::StartsWith(arg, "gamelet:")) {
-      std::cerr << "ERROR: the 'gamelet:<host>:<port>' option is deprecated "
-                   "and will be removed soon, please use -remote <host> "
-                   "instead."
-                << std::endl;
+      ERROR(
+          "the 'gamelet:<host>:<port>' option is deprecated and will be "
+          "removed soon, please use -remote <host> instead.");
 
       options->asio_server_address = arg + std::strlen("gamelet:");
     }

@@ -482,10 +482,8 @@ void OrbitApp::MainTick() {
   GTcpServer->MainThreadTick();
 
   if (!Capture::GProcessToInject.empty()) {
-    std::cout << "Injecting into " << Capture::GTargetProcess->GetFullPath()
-              << std::endl;
-    std::cout << "Orbit host: " << GOrbitApp->options_.asio_server_address
-              << std::endl;
+    LOG("Injecting into %s",Capture::GTargetProcess->GetFullPath());
+    LOG("Orbit host: %s", GOrbitApp->options_.asio_server_address);
     GOrbitApp->SelectProcess(Capture::GProcessToInject);
     Capture::InjectRemote(GOrbitApp->options_.asio_server_address);
     exit(0);
