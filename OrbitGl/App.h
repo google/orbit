@@ -211,7 +211,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   void RequestThaw() { m_NeedsThawing = true; }
   void OnRemoteProcess(const Message& a_Message);
-  void OnRemoteModuleDebugInfo(const Message& a_Message);
   void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) override;
   void UpdateSamplingReport();
   void ApplySession(const Session& session) override;
