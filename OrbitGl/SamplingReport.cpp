@@ -43,7 +43,7 @@ void SamplingReport::FillReport() {
 }
 
 void SamplingReport::UpdateReport() {
-  m_Profiler->ReprocessSamples();
+  m_Profiler->ProcessSamples();
   for (SamplingReportDataView& thread_report : m_ThreadReports) {
     uint32_t thread_id = thread_report.GetThreadID();
     const ThreadSampleData* thread_sample_data =

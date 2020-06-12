@@ -149,9 +149,6 @@ class SamplingProfiler {
   void SortByThreadUsage();
   void SortByThreadID();
   void ProcessSamples();
-  // Like ProcessSamples, but after m_Callstacks has been cleared and the other
-  // fields have been filled. Call this after loading a module.
-  void ReprocessSamples();
   void UpdateAddressInfo(uint64_t address);
 
   const ThreadSampleData& GetSummary() { return m_ThreadSampleData[0]; }
