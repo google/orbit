@@ -101,8 +101,8 @@ void ConnectionManager::SetupClientCallbacks() {
     }
   });
 
-  GTcpClient->AddCallback(Msg_CaptureStopped,
-                          [](const Message&) { GCoreApp->OnCaptureStopped(); });
+  GTcpClient->AddMainThreadCallback(
+      Msg_CaptureStopped, [](const Message&) { GCoreApp->OnCaptureStopped(); });
 }
 
 void ConnectionManager::ConnectionThreadWorker() {
