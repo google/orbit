@@ -173,11 +173,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   void SetCommandLineArguments(const std::vector<std::string>& a_Args);
 
-  // TODO(antonrohr) check whether this is still used
-  const std::vector<std::string>& GetCommandLineArguments() {
-    return m_Arguments;
-  }
-
   void SendToUi(const std::string& message) override;
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
