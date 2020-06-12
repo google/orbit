@@ -4,7 +4,6 @@
 
 #include "OrbitGgp/Client.h"
 
-#include <QDebug>
 #include <QEventLoop>
 #include <QPointer>
 #include <QProcess>

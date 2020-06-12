@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#include "OrbitBase/Logging.h"
+
 FunctionFramePointerValidator::FunctionFramePointerValidator(
     csh handle, const uint8_t* code, size_t code_size) {
   handle_ = handle;
@@ -166,7 +168,7 @@ bool FunctionFramePointerValidator::IsLeafFunction() {
 
 bool FunctionFramePointerValidator::Validate() {
   if (instructions_count_ == 0) {
-    std::cout << "ERROR: Failed to disassemble given code!\n";
+    ERROR("Failed to disassemble given code!");
     return false;
   }
   bool validated =

@@ -15,6 +15,7 @@
 
 #include "../OrbitCore/PrintVar.h"
 #include "../OrbitCore/Utils.h"
+#include "OrbitBase/Logging.h"
 #include "orbitmainwindow.h"
 
 #define ORBIT_DEBUG_OPEN_GL 0
@@ -61,7 +62,7 @@ void OrbitGLWidget::initializeGL() {
 #if ORBIT_DEBUG_OPEN_GL
   m_DebugLogger = new QOpenGLDebugLogger(this);
   if (m_DebugLogger->initialize()) {
-    qDebug() << "GL_DEBUG Debug Logger" << m_DebugLogger << "\n";
+    LOG("GL_DEBUG Debug Logger %s", m_DebugLogger->metaObject()->className());
     connect(m_DebugLogger, SIGNAL(messageLogged(QOpenGLDebugMessage)), this,
             SLOT(messageLogged(QOpenGLDebugMessage)));
     m_DebugLogger->startLogging(QOpenGLDebugLogger::SynchronousLogging);
@@ -172,7 +173,7 @@ void OrbitGLWidget::messageLogged(const QOpenGLDebugMessage& msg) {
 #undef CASE
 
   error += ")";
-  qDebug() << qPrintable(error) << "\n" << qPrintable(msg.message()) << "\n";
+  LOG("%s\n%s", qPrintable(error), qPrintable(msg.message()));
 }
 
 //-----------------------------------------------------------------------------

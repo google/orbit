@@ -11,6 +11,7 @@
 #include "Core.h"
 #include "Hashing.h"
 #include "Log.h"
+#include "OrbitBase/Logging.h"
 #include "Params.h"
 #include "Pdb.h"
 #include "PrintVar.h"
@@ -153,7 +154,7 @@ unsigned long long Type::Hash() {
 
   return m_Hash;
 #else
-  printf("Type::Hash() returning 0... fix me\n");
+  LOG("Type::Hash() returning 0... fix me");
   return 0;
 #endif
 }

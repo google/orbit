@@ -13,6 +13,7 @@
 
 #include "../OrbitPlugin/OrbitUserData.h"
 #include "Message.h"
+#include "OrbitBase/Logging.h"
 #include "TcpForward.h"
 #include "Threading.h"
 #include "Utils.h"
@@ -36,8 +37,7 @@ class TcpPacket {
   }
 
   void Dump() const {
-    std::cout << "TcpPacket [" << std::dec << m_Data->size() << " bytes]"
-              << std::endl;
+    LOG("TcpPacket [%lu bytes]", m_Data->size());
     PrintBuffer(m_Data->data(), m_Data->size());
   }
 
