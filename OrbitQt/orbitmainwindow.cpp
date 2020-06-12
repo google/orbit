@@ -72,13 +72,22 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   GOrbitApp->AddCaptureStartedCallback(
       [this] { ui->HomeTab->setDisabled(true); });
-  GOrbitApp->AddCaptureStopRequestedCallback([] {
-    // TODO: Show some kind of "Waiting for remaining capture data" dialog.
+
+  auto finalizing_capture_message_box = std::make_shared<QMessageBox>(this);
+  finalizing_capture_message_box->setWindowTitle("Finalizing capture");
+  finalizing_capture_message_box->setText(
+      "Waiting for the remaining capture data...");
+  finalizing_capture_message_box->setIcon(QMessageBox::Information);
+  finalizing_capture_message_box->setStandardButtons(QMessageBox::NoButton);
+
+  GOrbitApp->AddCaptureStopRequestedCallback([finalizing_capture_message_box] {
+    finalizing_capture_message_box->open();
   });
-  GOrbitApp->AddCaptureStoppedCallback([this] {
-    LOG("All capture data received");
+  GOrbitApp->AddCaptureStoppedCallback([this, finalizing_capture_message_box] {
+    finalizing_capture_message_box->accept();
     ui->HomeTab->setDisabled(false);
   });
+
   GOrbitApp->AddRefreshCallback(
       [this](DataViewType a_Type) { this->OnRefreshDataViewPanels(a_Type); });
   GOrbitApp->AddSamplingReportCallback(
