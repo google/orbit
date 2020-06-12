@@ -767,13 +767,9 @@ void OrbitApp::StopCapture() {
 }
 
 void OrbitApp::OnCaptureStopped() {
-  if (Capture::GSamplingProfiler != nullptr) {
-    Capture::GSamplingProfiler->StopCapture();
-    Capture::GSamplingProfiler->ProcessSamples();
-    AddSamplingReport(Capture::GSamplingProfiler);
-  }
+  Capture::FinalizeCapture();
 
-  RefreshCaptureView();
+  AddSamplingReport(Capture::GSamplingProfiler);
 
   for (const CaptureStopRequestedCallback& callback :
        capture_stopped_callbacks_) {

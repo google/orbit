@@ -23,6 +23,8 @@ struct CallStack;
 
 class Capture {
  public:
+  enum class State { kEmpty = 0, kStarted, kStopping, kDone };
+
   static void Init();
   static bool Inject(std::string_view remote_address);
   static bool Connect(std::string_view remote_address);
@@ -33,6 +35,7 @@ class Capture {
   static outcome::result<void, std::string> StartCapture(
       std::string_view remote_address);
   static void StopCapture();
+  static void FinalizeCapture();
   static void ClearCaptureData();
   static std::vector<std::shared_ptr<Function>> GetSelectedFunctions();
   static void PreFunctionHooks();
@@ -60,6 +63,7 @@ class Capture {
   static void TestRemoteMessages();
   static class TcpEntity* GetMainTcpEntity();
 
+  static State GState;
   static bool GInjected;
   static std::string GInjectedProcess;
   static std::string GPresetToLoad;  // TODO: allow multiple presets
