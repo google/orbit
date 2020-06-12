@@ -70,6 +70,7 @@ enum MessageType : int16_t {
   Msg_MemoryTransfer,
   Msg_ThreadNames,
   Msg_ValidateFramePointers,
+  Msg_CaptureStopped
 };
 
 //-----------------------------------------------------------------------------

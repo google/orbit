@@ -118,6 +118,7 @@ void OrbitAsioServer::StopCapture() {
   if (tracing_buffer_thread_.joinable()) {
     tracing_buffer_thread_.join();
   }
+  tcp_server_->Send(Msg_CaptureStopped);
 }
 
 void OrbitAsioServer::SetupTransactionServices() {

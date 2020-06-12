@@ -100,6 +100,9 @@ void ConnectionManager::SetupClientCallbacks() {
       GCoreApp->UpdateThreadName(tid_and_name.tid, tid_and_name.thread_name);
     }
   });
+
+  GTcpClient->AddCallback(Msg_CaptureStopped,
+                          [](const Message&) { GCoreApp->OnCaptureStopped(); });
 }
 
 void ConnectionManager::ConnectionThreadWorker() {
