@@ -6,7 +6,7 @@ if [ "$(uname -s)" == "Linux" ]; then
   subdirectory="linux"
   profiles=({ggp,clang{7,8,9},gcc{8,9}}_{release,relwithdebinfo,debug})
 else
-  subdirectory="window"
+  subdirectory="windows"
   profiles=({ggp,msvc{2017,2019}}_{release,relwithdebinfo,debug})
 fi
 
