@@ -134,7 +134,7 @@ void OrbitTest::ManualInstrumentationApiTest(){
     ORBIT_FLOAT("float_var", sinf((++float_var) * sinf_coeff));
 
     static double double_var = 0.f;
-    static volatile double sin_coeff = 0.001f;
+    static volatile double sin_coeff = 0.001;
     ORBIT_DOUBLE("float_var", sin((++double_var) * sin_coeff));
 
     std::this_thread::sleep_for(std::chrono::milliseconds(15));
