@@ -20,6 +20,7 @@ class OrbitTest {
   void TestFunc(uint32_t a_Depth = 0);
   void TestFunc2(uint32_t a_Depth = 0);
   void BusyWork(uint64_t microseconds);
+  void ManualInstrumentationApiTest();
 
  private:
   bool m_ExitRequested = false;
