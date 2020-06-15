@@ -14,73 +14,109 @@
 
 #include "TextBox.h"
 
+static constexpr int kBlockSize = 1024;
+struct TimerChain;
+
+// TimerBlock is a straightforward specialization of Block (see BlockChain.h)
+// with the added bonus that it keeps track of the minimum and maximum
+// timestamps of all timers added to it. This allows trivial rejection of an
+// entire block by using the Intersects(t_min, t_max) method. This effectively
+// tests if any of the timers stored in this block intersects with the [t_min,
+// t_max] interval.
 class TimerBlock {
+  friend class TimerChain;
+  friend class TimerChainIterator;
+
  public:
-  TimerBlock();
+  TimerBlock(TimerChain* chain, TimerBlock* prev)
+      : prev_(prev), next_(nullptr), chain_(chain), size_(0) {}
 
-  bool AtCapacity() const {
-    return size_ == kMaxSize;
-  }
+  ~TimerBlock() {}
 
-  // Silently fails when the block is full.
-  void Add(const TextBox& box);
-  
+  // Adds an item to the block. If capacity of this block is reached, a new
+  // blocked is allocated and the item is added to the new block.
+  void Add(const TextBox& item);
+
+  // Tests if [min, max] intersects with [min_timestamp, max_timestamp], where
+  // {min, max}_timestamp are the minimum and maximum timestamp of the timers
+  // that have so far been added to this block.
   bool Intersects(uint64_t min, uint64_t max);
 
-  int size() const {
-    return size_;
-  }
+  uint32_t size() const { return size_; }
 
-  uint64_t min_timestamp() {
-    return min_timestamp_;
-  }
+  TextBox& operator[](std::size_t idx) { return data_[idx]; }
 
-  uint64_t max_timestamp() {
-    return max_timestamp_;
-  }
+  const TextBox& operator[](std::size_t idx) const { return data_[idx]; }
 
-  TextBox& operator[](std::size_t idx) { 
-    return data_[idx];
-  }
-    
-  const TextBox& operator[](std::size_t idx) const { 
-    return data_[idx];
-  }
-  
  private:
-  static constexpr int kMaxSize = 1024;
-  TextBox data_[kMaxSize];
-  int32_t size_;
+  TimerBlock* prev_;
+  TimerBlock* next_;
+  TimerChain* chain_;
+  uint32_t size_;
+  TextBox data_[kBlockSize];
 
   uint64_t min_timestamp_;
   uint64_t max_timestamp_;
 };
 
-class TimerChain {
+// TimerChainIterator iterates over all *blocks* of the chain, not the
+// individual items (TextBox instances) that are stored in the blocks (this is
+// different from the BlockIterator in BlockChain.h).
+class TimerChainIterator {
  public:
-  TimerChain();
+  TimerChainIterator(TimerBlock* block) : block_(block) {}
+
+  TimerBlock& operator*() { return *block_; }
+
+  bool operator!=(const TimerChainIterator& other) const {
+    return block_ != other.block_;
+  }
+
+  TimerChainIterator& operator++() {
+    block_ = block_->next_;
+    return *this;
+  }
+
+  TimerBlock* operator->() { return block_; }
+
+ private:
+  TimerBlock* block_;
+};
+
+// TimerChain is a specialization of the BlockChain data structure to make it
+// easier to keep track of min and max timestamps in the blocks, which allows
+// for fast rejection of entire blocks when rendering timers. Note that there
+// is a difference compared with BlockChain in how the iterators work: Here,
+// the iterator runs over blocks, in BlockChain the iterator runs over the
+// individually stored elements.
+class TimerChain {
+  friend class TimerBlock;
+
+ public:
+  TimerChain() : num_blocks_(1), num_items_(0) {
+    root_ = current_ = new TimerBlock(this, nullptr);
+  }
+
   ~TimerChain();
 
-  void push_back(const TextBox& box);
+  void push_back(const TextBox& item) { current_->Add(item); }
+  uint32_t size() const { return num_items_; }
 
-  int size() const { return blocks_.size(); }
-
-  TimerBlock* operator[](std::size_t idx) {
-    return blocks_[idx];
-  }
-    
-  const TimerBlock* operator[](std::size_t idx) const {
-    return blocks_[idx];
-  }
-
-  int GetBlockContaining(const TextBox* element);
+  TimerBlock* GetBlockContaining(const TextBox* element);
 
   TextBox* GetElementAfter(const TextBox* element);
 
   TextBox* GetElementBefore(const TextBox* element);
 
+  TimerChainIterator begin() { return TimerChainIterator(root_); }
+
+  TimerChainIterator end() { return TimerChainIterator(nullptr); }
+
  private:
-  std::vector<TimerBlock*> blocks_;
+  TimerBlock* root_;
+  TimerBlock* current_;
+  uint32_t num_blocks_;
+  uint32_t num_items_;
 };
 
 #endif

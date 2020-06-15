@@ -123,9 +123,11 @@ void CaptureSerializer::Save(T& archive) {
   std::vector<std::shared_ptr<TimerChain>> chains =
       time_graph_->GetAllTimerChains();
   for (const std::shared_ptr<TimerChain>& chain : chains) {
-    for (int i = 0; i < chain->size(); ++i) {
-      for (int k = 0; k < (*chain)[i]->size(); ++k) {
-        archive(cereal::binary_data(&((*(*chain)[i])[k].GetTimer()), sizeof(Timer)));
+    if (!chain) continue;
+    for (TimerChainIterator& it = chain->begin(); it != chain->end(); ++it) {
+      TimerBlock& block = *it;
+      for (int k = 0; k < block.size(); ++k) {
+        archive(cereal::binary_data(&(block[k].GetTimer()), sizeof(Timer)));
 
         if (++numWrites > m_NumTimers) {
           return;
