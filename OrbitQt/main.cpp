@@ -20,7 +20,6 @@
 #include "CrashOptions.h"
 #include "Error.h"
 #include "GlutContext.h"
-#include "OpenGlDetect.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitSsh/Context.h"
@@ -29,6 +28,7 @@
 #include "OrbitStartupWindow.h"
 #include "Path.h"
 #include "deploymentconfigurations.h"
+#include "opengldetect.h"
 #include "orbitmainwindow.h"
 #include "servicedeploymanager.h"
 #include "version.h"
@@ -252,7 +252,7 @@ int main(int argc, char* argv[]) {
 
   const auto deployment_configuration = FigureOutDeploymentConfiguration();
 
-  const auto open_gl_version = OrbitGl::DetectOpenGlVersion(&glut_context);
+  const auto open_gl_version = OrbitQt::DetectOpenGlVersion();
 
   if (!open_gl_version) {
     DisplayErrorToUser(

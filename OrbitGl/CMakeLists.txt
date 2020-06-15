@@ -43,7 +43,6 @@ target_sources(
          LogDataView.h
          ModulesDataView.h
          OpenGl.h
-         OpenGlDetect.h
          PickingManager.h
          PluginCanvas.h
          PluginManager.h
@@ -94,7 +93,6 @@ target_sources(
           LiveFunctionsDataView.cpp
           LogDataView.cpp
           ModulesDataView.cpp
-          OpenGlDetect.cpp
           PickingManager.cpp
           PluginCanvas.cpp
           PluginManager.cpp

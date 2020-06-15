@@ -27,6 +27,7 @@ target_sources(
           orbittreemodel.h
           orbittreeview.h
           orbitwatchwidget.h
+          opengldetect.h
           outputdialog.h
           processlauncherwidget.h
           resource.h
@@ -53,6 +54,7 @@ target_sources(
           orbittreemodel.cpp
           orbittreeview.cpp
           orbitwatchwidget.cpp
+          opengldetect.cpp
           outputdialog.cpp
           processlauncherwidget.cpp
           servicedeploymanager.cpp
