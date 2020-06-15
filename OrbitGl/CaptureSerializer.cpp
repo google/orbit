@@ -122,7 +122,7 @@ void CaptureSerializer::Save(T& archive) {
   int numWrites = 0;
   std::vector<std::shared_ptr<TimerChain>> chains =
       time_graph_->GetAllTimerChains();
-  for (const std::shared_ptr<TimerChain>& chain : chains) {
+  for (auto& chain : chains) {
     if (!chain) continue;
     for (TimerChainIterator& it = chain->begin(); it != chain->end(); ++it) {
       TimerBlock& block = *it;
