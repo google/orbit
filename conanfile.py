@@ -57,7 +57,7 @@ class OrbitConan(ConanFile):
         self.requires("bzip2/1.0.8@conan/stable#0")
         self.requires("capstone/4.0.1@{}#0".format(self._orbit_channel))
         self.requires("cereal/1.3.0@{}#0".format(self._orbit_channel))
-        self.requires("grpc/1.27.3@{}#0".format(self._orbit_channel))
+        self.requires("grpc/1.27.3@{}#dc2368a2df63276188566e36a6b7868a".format(self._orbit_channel))
         self.requires("gtest/1.8.1@bincrafters/stable#0")
         self.requires("llvm_object/9.0.1@orbitdeps/stable#0")
         self.requires("openssl/1.1.1d@{}#0".format(self._orbit_channel))
