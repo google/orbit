@@ -263,7 +263,7 @@ const TextBox* GpuTrack::GetFirstAfterTime(TickType time,
   if (chain == nullptr) return nullptr;
 
   // TODO: do better than linear search...
-  for (TimerChainIterator& it = chain->begin(); it != chain->end(); ++it) {
+  for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
     for (int k = 0; k < it->size(); ++k) {
       const TextBox& text_box = (*it)[k];
       if (text_box.GetTimer().m_Start > time) {
@@ -284,7 +284,7 @@ const TextBox* GpuTrack::GetFirstBeforeTime(TickType time,
   const TextBox* text_box = nullptr;
 
   // TODO: do better than linear search...
-  for (TimerChainIterator& it = chain->begin(); it != chain->end(); ++it) {
+  for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
     for (int k = 0; k < it->size(); ++k) {
       const TextBox& box = (*it)[k];
       if (box.GetTimer().m_Start > time) {
