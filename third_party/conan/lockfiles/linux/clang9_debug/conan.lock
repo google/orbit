@@ -313,7 +313,7 @@
     "options": "fPIC=True\nshared=False\nsystem_mesa=True"
    },
    "36": {
-    "pref": "libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf:76cc5e69b30eb59eaa43aebe5e3df5ff49a2dd7f#38b62fc9a560d073f0f2c52be49c3ec9",
+    "pref": "libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf:76cc5e69b30eb59eaa43aebe5e3df5ff49a2dd7f#7536d33de730427d0cd36688d0e16348",
     "options": "crypto_backend=openssl\nenable_crypt_none=False\nenable_mac_none=False\nfPIC=True\nshared=False\nwith_zlib=True\nopenssl:386=False\nopenssl:fPIC=True\nopenssl:no_asm=False\nopenssl:no_async=False\nopenssl:no_bf=False\nopenssl:no_cast=False\nopenssl:no_des=False\nopenssl:no_dh=False\nopenssl:no_dsa=False\nopenssl:no_dso=False\nopenssl:no_hmac=False\nopenssl:no_md2=False\nopenssl:no_md5=False\nopenssl:no_mdc2=False\nopenssl:no_rc2=False\nopenssl:no_rc4=False\nopenssl:no_rc5=False\nopenssl:no_rsa=False\nopenssl:no_sha=False\nopenssl:no_sse2=False\nopenssl:no_threads=False\nopenssl:no_zlib=False\nopenssl:openssldir=None\nopenssl:shared=False\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
     "requires": [
      "8",
