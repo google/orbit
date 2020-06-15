@@ -15,7 +15,7 @@
 #include "TextBox.h"
 
 static constexpr int kBlockSize = 1024;
-struct TimerChain;
+class TimerChain;
 
 // TimerBlock is a straightforward specialization of Block (see BlockChain.h)
 // with the added bonus that it keeps track of the minimum and maximum
