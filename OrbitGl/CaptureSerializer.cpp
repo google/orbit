@@ -124,7 +124,7 @@ void CaptureSerializer::Save(T& archive) {
       time_graph_->GetAllTimerChains();
   for (auto& chain : chains) {
     if (!chain) continue;
-    for (TimerChainIterator& it = chain->begin(); it != chain->end(); ++it) {
+    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
       TimerBlock& block = *it;
       for (int k = 0; k < block.size(); ++k) {
         archive(cereal::binary_data(&(block[k].GetTimer()), sizeof(Timer)));

@@ -182,7 +182,7 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
 
   for (auto& chain : chains_by_depth) {
     if (!chain) continue;
-    for (TimerChainIterator& it = chain->begin(); it != chain->end(); ++it) {
+    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
       TimerBlock& block = *it;
       if (!block.Intersects(min_tick, max_tick)) continue;
 
