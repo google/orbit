@@ -57,7 +57,8 @@ class Task : public StateMachineHelper<Task, details::TaskState> {
   void Start();
   void Stop();
 
-  std::string Read();
+  std::string ReadStdOut();
+  std::string ReadStdErr();
   void Write(std::string_view data);
 
  signals:
@@ -65,7 +66,8 @@ class Task : public StateMachineHelper<Task, details::TaskState> {
   void finished(int exit_code);
   void stopped();
   void errorOccurred(std::error_code);
-  void readyRead();
+  void readyReadStdOut();
+  void readyReadStdErr();
   void bytesWritten(size_t bytes);
   void aboutToShutdown();
 
@@ -86,7 +88,8 @@ class Task : public StateMachineHelper<Task, details::TaskState> {
 
   std::string command_;
   std::optional<OrbitSsh::Channel> channel_;
-  std::string read_buffer_;
+  std::string read_std_out_buffer_;
+  std::string read_std_err_buffer_;
   std::string write_buffer_;
 };
 

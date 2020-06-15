@@ -93,8 +93,8 @@ TEST(OrbitSshQtTests, IntegrationTest) {
 
   // Task
 
-  QObject::connect(&task, &OrbitSshQt::Task::readyRead, &loop,
-                   [&]() { data_sink.append(task.Read()); });
+  QObject::connect(&task, &OrbitSshQt::Task::readyReadStdOut, &loop,
+                   [&]() { data_sink.append(task.ReadStdOut()); });
 
   QObject::connect(&task, &OrbitSshQt::Task::started, &loop, [&]() {
     LOG("process started. Starting tunnel...");

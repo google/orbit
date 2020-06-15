@@ -5,6 +5,7 @@
 #include "servicedeploymanager.h"
 
 #include <absl/strings/str_cat.h>
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 
 #include <QApplication>
@@ -28,6 +29,20 @@ static const std::string_view kSshWatchdogPassphrase = "start_watchdog";
 static const std::chrono::milliseconds kSshWatchdogInterval(1000);
 
 namespace OrbitQt {
+
+namespace {
+
+void PrintAsOrbitService(const std::string& buffer) {
+  std::vector<std::string_view> lines = absl::StrSplit(buffer, '\n');
+  for (const auto& line : lines) {
+    if (!line.empty()) {
+      PLATFORM_LOG(
+          absl::StrFormat("[                OrbitService] %s\n", line).c_str());
+    }
+  }
+};
+
+}  // namespace
 
 template <typename T>
 static outcome::result<T> MapError(outcome::result<T> result, Error new_error) {
@@ -227,15 +242,13 @@ outcome::result<void> ServiceDeployManager::StartOrbitService() {
   auto error_handler = ConnectErrorHandler(&orbit_service_task_.value(),
                                            &OrbitSshQt::Task::errorOccurred);
 
-  QObject::connect(&orbit_service_task_.value(), &OrbitSshQt::Task::readyRead,
-                   this, [this]() {
-                     const auto buf = orbit_service_task_->Read();
-                     std::vector<std::string_view> lines =
-                         absl::StrSplit(buf, '\n');
-                     for (const auto& line : lines) {
-                       LOG("[OrbitService] %s", line);
-                     }
-                   });
+  QObject::connect(
+      &orbit_service_task_.value(), &OrbitSshQt::Task::readyReadStdOut, this,
+      [this]() { PrintAsOrbitService(orbit_service_task_->ReadStdOut()); });
+
+  QObject::connect(
+      &orbit_service_task_.value(), &OrbitSshQt::Task::readyReadStdErr, this,
+      [this]() { PrintAsOrbitService(orbit_service_task_->ReadStdErr()); });
 
   orbit_service_task_->Start();
 
@@ -269,15 +282,12 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged() {
   auto quit_handler = ConnectQuitHandler(&orbit_service_task_.value(),
                                          &OrbitSshQt::Task::started);
 
-  QObject::connect(&orbit_service_task_.value(), &OrbitSshQt::Task::readyRead,
-                   this, [this]() {
-                     const auto buf = orbit_service_task_->Read();
-                     std::vector<std::string_view> lines =
-                         absl::StrSplit(buf, '\n');
-                     for (const auto& line : lines) {
-                       LOG("[OrbitService] %s", line);
-                     }
-                   });
+  QObject::connect(
+      &orbit_service_task_.value(), &OrbitSshQt::Task::readyReadStdOut, this,
+      [this]() { PrintAsOrbitService(orbit_service_task_->ReadStdOut()); });
+  QObject::connect(
+      &orbit_service_task_.value(), &OrbitSshQt::Task::readyReadStdErr, this,
+      [this]() { PrintAsOrbitService(orbit_service_task_->ReadStdErr()); });
 
   orbit_service_task_->Start();
 

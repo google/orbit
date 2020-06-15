@@ -29,9 +29,15 @@ void Task::Stop() {
   OnEvent();
 }
 
-std::string Task::Read() {
-  auto tmp = std::move(read_buffer_);
-  read_buffer_ = std::string{};
+std::string Task::ReadStdOut() {
+  auto tmp = std::move(read_std_out_buffer_);
+  read_std_out_buffer_ = std::string{};
+  return tmp;
+}
+
+std::string Task::ReadStdErr() {
+  auto tmp = std::move(read_std_err_buffer_);
+  read_std_err_buffer_ = std::string{};
   return tmp;
 }
 
@@ -41,37 +47,67 @@ void Task::Write(std::string_view data) {
 }
 
 outcome::result<void> Task::run() {
+  // read stdout
   bool added_new_data_to_read_buffer = false;
   while (true) {
     const size_t kChunkSize = 8192;
-
-    // TODO(antonrohr) also read stderr
     auto result = channel_->ReadStdOut(kChunkSize);
 
     if (!result && !OrbitSsh::shouldITryAgain(result)) {
       if (added_new_data_to_read_buffer) {
-        emit readyRead();
+        emit readyReadStdOut();
       }
       return result.error();
     } else if (!result) {
       if (added_new_data_to_read_buffer) {
-        emit readyRead();
+        emit readyReadStdOut();
       }
       break;
     } else if (result && result.value().empty()) {
       // Channel closed
       if (added_new_data_to_read_buffer) {
-        emit readyRead();
+        emit readyReadStdOut();
       }
       SetState(State::kEOFSent);
       emit finished(channel_->GetExitStatus());
       return outcome::success();
     } else if (result) {
-      read_buffer_.append(std::move(result).value());
+      read_std_out_buffer_.append(std::move(result).value());
       added_new_data_to_read_buffer = true;
     }
   }
 
+  // read stderr
+  added_new_data_to_read_buffer = false;
+  while (true) {
+    const size_t kChunkSize = 8192;
+    auto result = channel_->ReadStdErr(kChunkSize);
+
+    if (!result && !OrbitSsh::shouldITryAgain(result)) {
+      if (added_new_data_to_read_buffer) {
+        emit readyReadStdErr();
+      }
+      return result.error();
+    } else if (!result) {
+      if (added_new_data_to_read_buffer) {
+        emit readyReadStdErr();
+      }
+      break;
+    } else if (result && result.value().empty()) {
+      // Channel closed
+      if (added_new_data_to_read_buffer) {
+        emit readyReadStdErr();
+      }
+      SetState(State::kEOFSent);
+      emit finished(channel_->GetExitStatus());
+      return outcome::success();
+    } else if (result) {
+      read_std_err_buffer_.append(std::move(result).value());
+      added_new_data_to_read_buffer = true;
+    }
+  }
+
+  // write
   if (!write_buffer_.empty()) {
     OUTCOME_TRY(result, channel_->Write(write_buffer_));
     write_buffer_ = write_buffer_.substr(result);
