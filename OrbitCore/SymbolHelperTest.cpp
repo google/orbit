@@ -26,7 +26,7 @@ TEST(SymbolHelper, LoadSymbolsIncludedInBinary) {
 
   EXPECT_NE(module->m_Pdb, nullptr);
   EXPECT_EQ(module->m_PdbName, file_path);
-  EXPECT_TRUE(module->GetLoaded());
+  EXPECT_TRUE(module->IsLoaded());
 
   Pdb& pdb = *module->m_Pdb;
   EXPECT_EQ(pdb.GetLoadedModuleName(), file_path);
@@ -45,7 +45,7 @@ TEST(SymbolHelper, LoadSymbolsCollectorSameFile) {
 
   EXPECT_NE(module->m_Pdb, nullptr);
   EXPECT_EQ(module->m_PdbName, file_path);
-  EXPECT_TRUE(module->GetLoaded());
+  EXPECT_TRUE(module->IsLoaded());
 
   Pdb& pdb = *module->m_Pdb;
   EXPECT_EQ(pdb.GetLoadedModuleName(), file_path);
@@ -68,7 +68,7 @@ TEST(SymbolHelper, LoadSymbolsCollectorSeparateFile) {
 
   EXPECT_NE(module->m_Pdb, nullptr);
   EXPECT_EQ(module->m_PdbName, symbols_path);
-  EXPECT_TRUE(module->GetLoaded());
+  EXPECT_TRUE(module->IsLoaded());
 
   Pdb& pdb = *module->m_Pdb;
   EXPECT_EQ(pdb.GetLoadedModuleName(), file_path);
@@ -91,7 +91,7 @@ TEST(SymbolHelper, LoadSymbolsUsingSymbolsFile) {
 
   EXPECT_NE(module->m_Pdb, nullptr);
   EXPECT_EQ(module->m_PdbName, symbols_path);
-  EXPECT_TRUE(module->GetLoaded());
+  EXPECT_TRUE(module->IsLoaded());
 
   Pdb& pdb = *module->m_Pdb;
   EXPECT_EQ(pdb.GetLoadedModuleName(), file_path);
@@ -117,7 +117,7 @@ TEST(SymbolHelper, LoadSymbolsFromDebugInfo) {
 
   ASSERT_NE(module->m_Pdb, nullptr);
   EXPECT_EQ(module->m_PdbName, "path/symbols_file_name");
-  EXPECT_TRUE(module->GetLoaded());
+  EXPECT_TRUE(module->IsLoaded());
 
   Pdb& pdb = *module->m_Pdb;
   EXPECT_EQ(pdb.GetLoadedModuleName(), file_path);

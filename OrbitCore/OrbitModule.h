@@ -22,14 +22,15 @@ struct Module {
          uint64_t address_end);
 
   std::string GetPrettyName();
-  bool IsDll() const;
   bool LoadDebugInfo();
   bool ContainsAddress(uint64_t a_Address) {
     return m_AddressStart <= a_Address && m_AddressEnd > a_Address;
   }
   uint64_t ValidateAddress(uint64_t a_Address);
-  void SetLoaded(bool a_Value);
-  bool GetLoaded() const { return m_Loaded; }
+  void SetLoaded(bool value);
+  void SetLoadable(bool value) { loadable_ = value; }
+  bool IsLoadable() const { return loadable_; }
+  bool IsLoaded() const { return loaded_; }
 
   std::string m_Name;       // name of the file (without path)
   std::string m_FullName;   // full filename (including path)
@@ -43,7 +44,6 @@ struct Module {
   uint64_t m_AddressStart = 0;
   uint64_t m_AddressEnd = 0;
   uint64_t m_EntryPoint = 0;
-  bool m_FoundPdb = false;
   bool m_Selected = false;
 
   uint64_t m_PdbSize = 0;  // Size in bytes; windows: pdb, linux: module
@@ -53,7 +53,8 @@ struct Module {
   ORBIT_SERIALIZABLE;
 
  private:
-  bool m_Loaded = false;
+  bool loadable_ = false;
+  bool loaded_ = false;
 
   friend class TestRemoteMessages;
 };

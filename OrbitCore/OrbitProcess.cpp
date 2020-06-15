@@ -358,7 +358,7 @@ void Process::FindPdbs(const std::vector<std::string>& a_SearchLocations) {
   for (auto& modulePair : m_Modules) {
     std::shared_ptr<Module> module = modulePair.second;
 
-    if (!module->m_FoundPdb) {
+    if (!module->IsLoadable()) {
       std::string moduleName = ToLower(module->m_Name);
       std::string pdbName = Path::StripExtension(moduleName) + ".pdb";
 
@@ -366,7 +366,7 @@ void Process::FindPdbs(const std::vector<std::string>& a_SearchLocations) {
 
       for (const std::string& pdb : pdbs) {
         module->m_PdbName = pdb;
-        module->m_FoundPdb = true;
+        module->SetLoadable(true);
         module->LoadDebugInfo();
 
         std::string signature = GuidToString(module->m_Pdb->GetGuid());
@@ -376,7 +376,7 @@ void Process::FindPdbs(const std::vector<std::string>& a_SearchLocations) {
           module->m_PdbSize = Path::FileSize(module->m_PdbName);
           break;
         } else {
-          module->m_FoundPdb = false;
+          module->SetLoadable(false);
         }
       }
     }
@@ -477,37 +477,6 @@ uint64_t Process::GetRaiseExceptionAddress() {
 #endif
 
   return 0;
-}
-
-//-----------------------------------------------------------------------------
-void Process::FindCoreFunctions() {
-#if 0
-    SCOPE_TIMER_LOG("FindCoreFunctions");
-
-    const auto prio = oqpi::task_priority::normal;
-
-    oqpi_tk::parallel_for( "FindAllocFreeFunctions", (int32_t)m_Functions.size(), [&]( int32_t a_BlockIndex, int32_t a_ElementIndex )
-    {
-        Function* func = m_Functions[a_ElementIndex];
-        const std::string & name = func->Lower();
-
-        if( Contains( name, L"operator new" ) || Contains( name, L"FMallocBinned::Malloc" ) )
-        {
-            func->Select();
-            func->m_OrbitType = Function::ALLOC;
-        }
-        else if( Contains( name, L"operator delete" ) || name == L"FMallocBinned::Free" )
-        {
-            func->Select();
-            func->m_OrbitType = Function::FREE;
-        }
-        else if( Contains( name, L"realloc" ) )
-        {
-            func->Select();
-            func->m_OrbitType = Function::REALLOC;
-        }
-    } );
-#endif
 }
 
 //-----------------------------------------------------------------------------

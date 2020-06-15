@@ -70,6 +70,16 @@ class Process {
   std::map<uint64_t, std::shared_ptr<Module>>& GetModules() {
     return m_Modules;
   }
+
+  // This method is currently used by client
+  std::vector<std::shared_ptr<Module>> GetModulesAsVector() const {
+    std::vector<std::shared_ptr<Module>> result;
+    for (auto& it : m_Modules) {
+      result.push_back(it.second);
+    }
+    return result;
+  }
+
   std::map<std::string, std::shared_ptr<Module>>& GetNameToModulesMap() {
     return m_NameToModuleMap;
   }
@@ -131,8 +141,6 @@ class Process {
 
   uint64_t GetOutputDebugStringAddress();
   uint64_t GetRaiseExceptionAddress();
-
-  void FindCoreFunctions();
 
   ORBIT_SERIALIZABLE;
 

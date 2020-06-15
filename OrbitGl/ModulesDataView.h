@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-#pragma once
+#ifndef ORBIT_GL_MODULES_DATA_VIEW_H_
+#define ORBIT_GL_MODULES_DATA_VIEW_H_
 
 #include "DataView.h"
 #include "OrbitType.h"
@@ -16,26 +16,33 @@ class ModulesDataView : public DataView {
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return COLUMN_PDB_SIZE; }
   std::vector<std::string> GetContextMenu(
-      int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
-  std::string GetValue(int a_Row, int a_Column) override;
+      int clicked_index, const std::vector<int>& selected_indices) override;
+  std::string GetValue(int row, int column) override;
 
-  void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
-                     const std::vector<int>& a_ItemIndices) override;
+  void OnContextMenu(const std::string& action, int menu_index,
+                     const std::vector<int>& item_indices) override;
   void OnTimer() override;
   bool WantsDisplayColor() override { return true; }
-  bool GetDisplayColor(int /*a_Row*/, int /*a_Column*/, unsigned char& /*r*/,
-                       unsigned char& /*g*/, unsigned char& /*b*/) override;
+  bool GetDisplayColor(int row, int column, unsigned char& red,
+                       unsigned char& green, unsigned char& blue) override;
   std::string GetLabel() override { return "Modules"; }
 
-  void SetProcess(const std::shared_ptr<Process>& a_Process);
+  void SetModules(uint32_t process_id,
+                  const std::vector<std::shared_ptr<Module>>& modules);
+
+  void SetProcess(std::shared_ptr<Process>& process) {
+    SetModules(process->GetID(), process->GetModulesAsVector());
+  }
 
  protected:
   void DoSort() override;
   void DoFilter() override;
-  const std::shared_ptr<Module>& GetModule(unsigned int a_Row) const;
 
-  std::shared_ptr<Process> m_Process;
-  std::vector<std::shared_ptr<Module> > m_Modules;
+ private:
+  const std::shared_ptr<Module>& GetModule(unsigned int row) const;
+
+  uint32_t process_id_;
+  std::vector<std::shared_ptr<Module>> modules_;
 
   enum ColumnIndex {
     COLUMN_INDEX,
@@ -50,6 +57,6 @@ class ModulesDataView : public DataView {
 
   static const std::string MENU_ACTION_MODULES_LOAD;
   static const std::string MENU_ACTION_MODULES_VERIFY;
-  static const std::string MENU_ACTION_DLL_FIND_PDB;
-  static const std::string MENU_ACTION_DLL_EXPORTS;
 };
+
+#endif  // ORBIT_GL_MODULES_DATA_VIEW_H_

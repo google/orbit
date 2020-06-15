@@ -67,7 +67,7 @@ void SymUtils::ListModules(
     Replace(filePath, ".exe", ".pdb");
     Replace(filePath, ".dll", ".pdb");
     if (Path::FileExists(filePath)) {
-      module->m_FoundPdb = true;
+      module->SetLoadable(true);
       module->m_PdbSize = Path::FileSize(filePath);
       module->m_PdbName = filePath;
     }

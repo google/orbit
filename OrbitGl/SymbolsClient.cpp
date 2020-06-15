@@ -29,7 +29,7 @@ void SymbolsClient::LoadSymbolsFromModules(
   std::vector<ModuleDebugInfo> remote_module_infos;
 
   for (const std::shared_ptr<Module>& module : modules) {
-    if (module == nullptr || module->GetLoaded()) {
+    if (module == nullptr || module->IsLoaded()) {
       continue;
     }
 

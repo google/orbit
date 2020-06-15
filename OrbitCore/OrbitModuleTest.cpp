@@ -36,11 +36,11 @@ TEST(OrbitModule, Constructor) {
   EXPECT_EQ(module.m_PrettyName, file_path);
   EXPECT_EQ(module.m_AddressRange, "[0000000000000700 - 0000000000001000]");
 
-  EXPECT_TRUE(module.m_FoundPdb);
+  EXPECT_TRUE(module.IsLoadable());
 
   EXPECT_EQ(module.m_Pdb, nullptr);
   EXPECT_EQ(module.m_PdbName, "");
-  EXPECT_FALSE(module.GetLoaded());
+  EXPECT_FALSE(module.IsLoaded());
 }
 
 TEST(OrbitModule, LoadFunctions) {

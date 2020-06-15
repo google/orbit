@@ -47,7 +47,7 @@ Module::Module(const std::string& file_name, uint64_t address_start,
   m_AddressRange = absl::StrFormat("[%016" PRIx64 " - %016" PRIx64 "]",
                                    m_AddressStart, m_AddressEnd);
 
-  m_FoundPdb = true;  // necessary, because it toggles "Load Symbols" option
+  loadable_ = true;  // necessary, because it toggles "Load Symbols" option
 }
 
 //-----------------------------------------------------------------------------
@@ -70,21 +70,15 @@ std::string Module::GetPrettyName() {
 }
 
 //-----------------------------------------------------------------------------
-bool Module::IsDll() const {
-  return ToLower(Path::GetExtension(m_FullName)) == std::string(".dll") ||
-         absl::StrContains(m_Name, ".so");
-}
-
-//-----------------------------------------------------------------------------
 bool Module::LoadDebugInfo() {
   assert(m_Pdb);
   m_Pdb->SetMainModule(m_AddressStart);
 
-  PRINT_VAR(m_FoundPdb);
-  if (!m_FoundPdb) return false;
+  PRINT_VAR(loadable_);
+  if (!loadable_) return false;
 
-  m_Loaded = m_Pdb->LoadDataFromPdb();
-  return m_Loaded;
+  loaded_ = m_Pdb->LoadDataFromPdb();
+  return loaded_;
 }
 
 //-----------------------------------------------------------------------------
@@ -99,10 +93,10 @@ uint64_t Module::ValidateAddress(uint64_t a_Address) {
 }
 
 //-----------------------------------------------------------------------------
-void Module::SetLoaded(bool a_Value) { m_Loaded = a_Value; }
+void Module::SetLoaded(bool value) { loaded_ = value; }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(Module, 0) {
+ORBIT_SERIALIZE(Module, 1) {
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_FullName);
   ORBIT_NVP_VAL(0, m_PdbName);
@@ -113,9 +107,9 @@ ORBIT_SERIALIZE(Module, 0) {
   ORBIT_NVP_VAL(0, m_AddressStart);
   ORBIT_NVP_VAL(0, m_AddressEnd);
   ORBIT_NVP_VAL(0, m_EntryPoint);
-  ORBIT_NVP_VAL(0, m_FoundPdb);
+  ORBIT_NVP_VAL(1, loadable_);
   ORBIT_NVP_VAL(0, m_Selected);
-  ORBIT_NVP_VAL(0, m_Loaded);
+  ORBIT_NVP_VAL(1, loaded_);
   ORBIT_NVP_VAL(0, m_PdbSize);
 }
 

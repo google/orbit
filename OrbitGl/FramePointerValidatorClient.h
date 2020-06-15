@@ -6,7 +6,6 @@
 #define ORBIT_CORE_FRAME_POINTER_VALIDATOR_CLIENT_H_
 
 #include "OrbitModule.h"
-#include "OrbitProcess.h"
 #include "TransactionClient.h"
 
 class OrbitApp;
@@ -31,7 +30,7 @@ class FramePointerValidatorClient {
   FramePointerValidatorClient& operator=(FramePointerValidatorClient&&) =
       delete;
 
-  void AnalyzeModule(Process* process,
+  void AnalyzeModule(uint32_t process_id,
                      const std::vector<std::shared_ptr<Module>>& modules);
 
  private:

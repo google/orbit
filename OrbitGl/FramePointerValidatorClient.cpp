@@ -24,7 +24,7 @@ FramePointerValidatorClient::FramePointerValidatorClient(
 }
 
 void FramePointerValidatorClient::AnalyzeModule(
-    Process* process, const std::vector<std::shared_ptr<Module>>& modules) {
+    uint32_t process_id, const std::vector<std::shared_ptr<Module>>& modules) {
   if (modules.empty()) {
     ERROR("No module to validate, cancelling");
     return;
@@ -37,7 +37,7 @@ void FramePointerValidatorClient::AnalyzeModule(
     ModuleDebugInfo module_info;
     const char* name = module->m_Name.c_str();
     module_info.m_Name = name;
-    module_info.m_PID = process->GetID();
+    module_info.m_PID = process_id;
     remote_module_infos.push_back(std::move(module_info));
   }
 
