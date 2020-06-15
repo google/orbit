@@ -18,7 +18,7 @@ class grpcConan(ConanFile):
     generators = "cmake"
     short_paths = True  # Otherwise some folders go out of the 260 chars path length scope rapidly (on windows)
 
-    settings = "os", "arch", "compiler", "arch"
+    settings = "os", "arch", "compiler", "build_type"
     options = {
         "fPIC": [True, False],
     }
@@ -65,7 +65,11 @@ class grpcConan(ConanFile):
         tools.replace_in_file(cmake_path, "set(_gRPC_CPP_PLUGIN $<TARGET_FILE:grpc_cpp_plugin>)", "find_program(_gRPC_CPP_PLUGIN grpc_cpp_plugin)")
         tools.replace_in_file(cmake_path, "DEPENDS ${ABS_FIL} ${_gRPC_PROTOBUF_PROTOC} grpc_cpp_plugin", "DEPENDS ${ABS_FIL} ${_gRPC_PROTOBUF_PROTOC} ${_gRPC_CPP_PLUGIN}")
 
+    _cmake = None
     def _configure_cmake(self):
+        if self._cmake:
+            return self._cmake
+
         cmake = CMake(self)
 
         cmake.definitions['gRPC_BUILD_CODEGEN'] = "ON"
@@ -99,6 +103,7 @@ class grpcConan(ConanFile):
             cmake.definitions["CMAKE_C_FLAGS"] = "-D_WIN32_WINNT=0x600"
 
         cmake.configure(build_folder=self._build_subfolder)
+        self._cmake = cmake
         return cmake
 
     def build(self):
