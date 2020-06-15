@@ -42,7 +42,7 @@ if "%symbol_uploading_required%" == "true" (
 cd %REPO_ROOT%\build\package
 Xcopy /E /I bin Orbit
 del /s /q Orbit\*.pdb
-copy /Y THIRD_PARTY_LICENSES.txt Orbit\THIRD_PARTY_LICENSES.txt
+copy /Y NOTICE Orbit\NOTICE
 copy /Y LICENSE Orbit\LICENSE.txt
 zip -r Orbit.zip Orbit
 rd /s /q Orbit

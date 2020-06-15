@@ -146,7 +146,7 @@ class OrbitConan(ConanFile):
                 self.name, self._version()), symlinks=True)
             self.copy("OrbitService", src="bin/",
                       dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
-            self.copy("THIRD_PARTY_LICENSES.txt",
+            self.copy("NOTICE",
                       dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
             self.copy("LICENSE",
                       dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
@@ -191,7 +191,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("OrbitService.exe", src="bin/", dst="bin")
         self.copy("OrbitService.debug", src="bin/", dst="bin")
         self.copy("crashpad_handler.exe", src="bin/", dst="bin")
-        self.copy("THIRD_PARTY_LICENSES.txt")
+        self.copy("NOTICE")
         self.copy("LICENSE")
 
     def deploy(self):

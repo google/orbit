@@ -186,4 +186,4 @@ file(COPY third_party/stb/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/stb/l
 file(REMOVE ${CMAKE_BINARY_DIR}/licenses/freetype/licenses/LICENSE.TXT)
 file(REMOVE ${CMAKE_BINARY_DIR}/licenses/freetype/licenses/GPLv2.TXT)
 include("cmake/collect_licenses.cmake")
-GenerateThirdPartyLicenseFile("${CMAKE_BINARY_DIR}/THIRD_PARTY_LICENSES.txt" "${CMAKE_BINARY_DIR}/licenses/")
+GenerateThirdPartyLicenseFile("${CMAKE_BINARY_DIR}/NOTICE" "${CMAKE_BINARY_DIR}/licenses/")
