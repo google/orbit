@@ -71,8 +71,14 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->HomeHorizontalSplitter->setSizes(sizes);
   ui->splitter_2->setSizes(sizes);
 
-  GOrbitApp->AddCaptureStartedCallback(
-      [this] { ui->HomeTab->setDisabled(true); });
+  GOrbitApp->AddCaptureStartedCallback([this] {
+    ui->actionOpen_Capture->setDisabled(true);
+    ui->actionSave_Capture->setDisabled(true);
+    ui->actionOpen_Session->setDisabled(true);
+    ui->actionSave_Session->setDisabled(true);
+    ui->actionSave_Session_As->setDisabled(true);
+    ui->HomeTab->setDisabled(true);
+  });
 
   auto finalizing_capture_dialog = new QProgressDialog(
       "Waiting for the remaining capture data...", "OK", 0, 0, this, Qt::Tool);
@@ -88,6 +94,11 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       [finalizing_capture_dialog] { finalizing_capture_dialog->show(); });
   GOrbitApp->AddCaptureStoppedCallback([this, finalizing_capture_dialog] {
     finalizing_capture_dialog->close();
+    ui->actionOpen_Capture->setDisabled(false);
+    ui->actionSave_Capture->setDisabled(false);
+    ui->actionOpen_Session->setDisabled(false);
+    ui->actionSave_Session->setDisabled(false);
+    ui->actionSave_Session_As->setDisabled(false);
     ui->HomeTab->setDisabled(false);
   });
 
