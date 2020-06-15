@@ -73,8 +73,8 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
 
   for (auto& chain : chains_by_depth) {
     if (!chain) continue;
-    for (int i = 0; i < chain->size(); ++i) {
-      TimerBlock& block = *(*chain)[i];
+    for (TimerChainIterator& it = chain->begin(); it != chain->end(); ++it) {
+      TimerBlock& block = *it;
       if (!block.Intersects(min_tick, max_tick)) continue;
 
       // We have to reset this when we go to the next depth, as otherwise we
