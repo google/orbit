@@ -70,10 +70,10 @@ void TestRemoteMessages::Run() {
   module.m_AddressStart = 2;
   module.m_AddressEnd = 3;
   module.m_EntryPoint = 4;
-  module.m_FoundPdb = true;
+  module.loadable_ = true;
 
   module.m_Selected = true;
-  module.m_Loaded = true;
+  module.loaded_ = true;
   module.m_PdbSize = 110;
 
   std::string moduleData = SerializeObjectHumanReadable(module);

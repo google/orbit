@@ -292,9 +292,6 @@ void Capture::PreFunctionHooks() {
     }
   }
 
-  // Find alloc/free functions
-  GTargetProcess->FindCoreFunctions();
-
   // Unreal
   CheckForUnrealSupport();
 }

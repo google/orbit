@@ -564,7 +564,7 @@ void OrbitApp::OnOpenPdb(const std::string& file_name) {
   mod->m_Name = Path::GetFileName(file_name);
   mod->m_Directory = Path::GetDirectory(file_name);
   mod->m_PdbName = mod->m_FullName;
-  mod->m_FoundPdb = true;
+  mod->SetLoadable(true);
   mod->LoadDebugInfo();
 
   Capture::GTargetProcess->SetName(Path::StripExtension(mod->m_Name));
@@ -1032,7 +1032,7 @@ void OrbitApp::UpdateProcess(const std::shared_ptr<Process>& process) {
       uint64_t key = module_entry.first;
       auto new_module_it = new_modules.find(key);
       if (new_module_it != new_modules.end()) {
-        new_module_it->second->SetLoaded(module_entry.second->GetLoaded());
+        new_module_it->second->SetLoaded(module_entry.second->IsLoaded());
         new_module_it->second->m_Pdb = module_entry.second->m_Pdb;
       }
     }

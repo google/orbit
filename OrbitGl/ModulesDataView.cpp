@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 
-
 #include "ModulesDataView.h"
 
 #include "App.h"
@@ -51,21 +50,21 @@ std::string ModulesDataView::GetValue(int row, int col) {
     case COLUMN_ADDRESS_RANGE:
       return module->m_AddressRange;
     case COLUMN_HAS_PDB:
-      return module->m_FoundPdb ? "*" : "";
+      return module->IsLoadable() ? "*" : "";
     case COLUMN_PDB_SIZE:
-      return module->m_FoundPdb ? GetPrettySize(module->m_PdbSize) : "";
+      return module->IsLoadable() ? GetPrettySize(module->m_PdbSize) : "";
     case COLUMN_LOADED:
-      return module->GetLoaded() ? "*" : "";
+      return module->IsLoaded() ? "*" : "";
     default:
       return "";
   }
 }
 
 //-----------------------------------------------------------------------------
-#define ORBIT_PROC_SORT(Member)                                            \
-  [&](int a, int b) {                                                      \
-    return OrbitUtils::Compare(m_Modules[a]->Member, m_Modules[b]->Member, \
-                               ascending);                                 \
+#define ORBIT_PROC_SORT(Member)                                          \
+  [&](int a, int b) {                                                    \
+    return OrbitUtils::Compare(modules_[a]->Member, modules_[b]->Member, \
+                               ascending);                               \
   }
 
 //-----------------------------------------------------------------------------
@@ -84,13 +83,13 @@ void ModulesDataView::DoSort() {
       sorter = ORBIT_PROC_SORT(m_AddressStart);
       break;
     case COLUMN_HAS_PDB:
-      sorter = ORBIT_PROC_SORT(m_FoundPdb);
+      sorter = ORBIT_PROC_SORT(IsLoadable());
       break;
     case COLUMN_PDB_SIZE:
       sorter = ORBIT_PROC_SORT(m_PdbSize);
       break;
     case COLUMN_LOADED:
-      sorter = ORBIT_PROC_SORT(GetLoaded());
+      sorter = ORBIT_PROC_SORT(IsLoaded());
       break;
     default:
       break;
@@ -105,36 +104,20 @@ void ModulesDataView::DoSort() {
 const std::string ModulesDataView::MENU_ACTION_MODULES_LOAD = "Load Symbols";
 const std::string ModulesDataView::MENU_ACTION_MODULES_VERIFY =
     "Verify Frame Pointers";
-const std::string ModulesDataView::MENU_ACTION_DLL_FIND_PDB = "Find Pdb";
-const std::string ModulesDataView::MENU_ACTION_DLL_EXPORTS = "Load Symbols";
 
 //-----------------------------------------------------------------------------
 std::vector<std::string> ModulesDataView::GetContextMenu(
-    int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
+    int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;
-  bool enable_dll = false;
   bool enable_verify = false;
-  if (a_SelectedIndices.size() == 1) {
-    std::shared_ptr<Module> module = GetModule(a_SelectedIndices[0]);
-    if (!module->GetLoaded()) {
-      if (module->m_FoundPdb) {
-        enable_load = true;
-      } else if (module->IsDll()) {
-        enable_dll = true;
-      }
-    } else {
-      enable_verify = true;
+  for (int index : selected_indices) {
+    std::shared_ptr<Module> module = GetModule(index);
+    if (module->IsLoadable() && !module->IsLoaded()) {
+      enable_load = true;
     }
-  } else {
-    for (int index : a_SelectedIndices) {
-      std::shared_ptr<Module> module = GetModule(index);
-      if (!module->GetLoaded()) {
-        if (module->m_FoundPdb) {
-          enable_load = true;
-        }
-      } else {
-        enable_verify = true;
-      }
+
+    if (module->IsLoaded()) {
+      enable_verify = true;
     }
   }
 
@@ -145,62 +128,38 @@ std::vector<std::string> ModulesDataView::GetContextMenu(
   if (enable_verify && absl::GetFlag(FLAGS_enable_frame_pointer_validator)) {
     menu.emplace_back(MENU_ACTION_MODULES_VERIFY);
   }
-  if (enable_dll) {
-    Append(menu, {MENU_ACTION_DLL_FIND_PDB, MENU_ACTION_DLL_EXPORTS});
-  }
-  Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
+  Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 
 //-----------------------------------------------------------------------------
-void ModulesDataView::OnContextMenu(const std::string& a_Action,
-                                    int a_MenuIndex,
-                                    const std::vector<int>& a_ItemIndices) {
-  if (a_Action == MENU_ACTION_MODULES_LOAD) {
-    for (int index : a_ItemIndices) {
+void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
+                                    const std::vector<int>& item_indices) {
+  if (action == MENU_ACTION_MODULES_LOAD) {
+    for (int index : item_indices) {
       const std::shared_ptr<Module>& module = GetModule(index);
-
-      if (module->m_FoundPdb || module->IsDll()) {
-        std::map<uint64_t, std::shared_ptr<Module>>& processModules =
-            m_Process->GetModules();
-        auto it = processModules.find(module->m_AddressStart);
-        if (it != processModules.end()) {
-          std::shared_ptr<Module>& mod = it->second;
-          if (!mod->GetLoaded()) {
-            GOrbitApp->EnqueueModuleToLoad(mod);
-          }
-        }
+      if (module->IsLoadable() && !module->IsLoaded()) {
+        GOrbitApp->EnqueueModuleToLoad(module);
       }
     }
 
     GOrbitApp->LoadModules();
-  } else if (a_Action == MENU_ACTION_MODULES_VERIFY) {
+  } else if (action == MENU_ACTION_MODULES_VERIFY) {
     std::vector<std::shared_ptr<Module>> modules_to_validate;
-    for (int index : a_ItemIndices) {
+    for (int index : item_indices) {
       const std::shared_ptr<Module>& module = GetModule(index);
 
-      if (module->m_FoundPdb || module->IsDll()) {
-        std::map<uint64_t, std::shared_ptr<Module>>& processModules =
-            m_Process->GetModules();
-        auto it = processModules.find(module->m_AddressStart);
-        if (it != processModules.end()) {
-          std::shared_ptr<Module>& mod = it->second;
-          modules_to_validate.push_back(mod);
-        }
+      if (module->IsLoadable()) {
+        modules_to_validate.push_back(module);
       }
     }
 
     if (!modules_to_validate.empty()) {
       GOrbitApp->GetFramePointerValidatorClient()->AnalyzeModule(
-          m_Process.get(), modules_to_validate);
+          process_id_, modules_to_validate);
     }
-  } else if (a_Action == MENU_ACTION_DLL_FIND_PDB) {
-    std::string FileName = GOrbitApp->FindFile("Find Pdb File", "", "*.pdb");
-    // TODO: the result is unused, should this action be removed?
-  } else if (a_Action == MENU_ACTION_DLL_EXPORTS) {
-    // TODO: this action is unused, should it be removed?
   } else {
-    DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
+    DataView::OnContextMenu(action, menu_index, item_indices);
   }
 }
 
@@ -212,8 +171,8 @@ void ModulesDataView::DoFilter() {
   std::vector<uint32_t> indices;
   std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
-  for (size_t i = 0; i < m_Modules.size(); ++i) {
-    std::shared_ptr<Module>& module = m_Modules[i];
+  for (size_t i = 0; i < modules_.size(); ++i) {
+    std::shared_ptr<Module>& module = modules_[i];
     std::string name = ToLower(module->GetPrettyName());
 
     bool match = true;
@@ -236,18 +195,13 @@ void ModulesDataView::DoFilter() {
 }
 
 //-----------------------------------------------------------------------------
-void ModulesDataView::SetProcess(const std::shared_ptr<Process>& a_Process) {
-  m_Modules.clear();
-  m_Process = a_Process;
+void ModulesDataView::SetModules(
+    uint32_t process_id, const std::vector<std::shared_ptr<Module>>& modules) {
+  process_id_ = process_id;
+  modules_ = modules;
 
-  for (auto& it : a_Process->GetModules()) {
-    it.second->GetPrettyName();
-    m_Modules.push_back(it.second);
-  }
-
-  size_t numModules = m_Modules.size();
-  m_Indices.resize(numModules);
-  for (size_t i = 0; i < numModules; ++i) {
+  m_Indices.resize(modules_.size());
+  for (size_t i = 0; i < m_Indices.size(); ++i) {
     m_Indices[i] = i;
   }
 
@@ -255,30 +209,24 @@ void ModulesDataView::SetProcess(const std::shared_ptr<Process>& a_Process) {
 }
 
 //-----------------------------------------------------------------------------
-const std::shared_ptr<Module>& ModulesDataView::GetModule(
-    unsigned int a_Row) const {
-  return m_Modules[m_Indices[a_Row]];
+const std::shared_ptr<Module>& ModulesDataView::GetModule(uint32_t row) const {
+  return modules_[m_Indices[row]];
 }
 
 //-----------------------------------------------------------------------------
-bool ModulesDataView::GetDisplayColor(int a_Row, int /*a_Column*/,
-                                      unsigned char& r, unsigned char& g,
-                                      unsigned char& b) {
-  if (GetModule(a_Row)->GetLoaded()) {
-    static unsigned char R = 42;
-    static unsigned char G = 218;
-    static unsigned char B = 130;
-    r = R;
-    g = G;
-    b = B;
+bool ModulesDataView::GetDisplayColor(int row, int /*column*/,
+                                      unsigned char& red, unsigned char& green,
+                                      unsigned char& blue) {
+  const std::shared_ptr<Module>& module = GetModule(row);
+  if (module->IsLoaded()) {
+    red = 42;
+    green = 218;
+    blue = 130;
     return true;
-  } else if (GetModule(a_Row)->m_FoundPdb) {
-    static unsigned char R = 42;
-    static unsigned char G = 130;
-    static unsigned char B = 218;
-    r = R;
-    g = G;
-    b = B;
+  } else if (module->IsLoadable()) {
+    red = 42;
+    green = 130;
+    blue = 218;
     return true;
   }
 
