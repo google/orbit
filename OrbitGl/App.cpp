@@ -676,7 +676,6 @@ outcome::result<void, std::string> OrbitApp::OnSaveCapture(
 //-----------------------------------------------------------------------------
 outcome::result<void, std::string> OrbitApp::OnLoadCapture(
     const std::string& file_name) {
-  StopCapture();
   Capture::ClearCaptureData();
   GCurrentTimeGraph->Clear();
   if (Capture::GClearCaptureDataFunc) {
@@ -688,7 +687,6 @@ outcome::result<void, std::string> OrbitApp::OnLoadCapture(
   OUTCOME_TRY(ar.Load(file_name));
 
   m_ModulesDataView->SetProcess(Capture::GTargetProcess);
-  StopCapture();
   DoZoom = true;  // TODO: remove global, review logic
   return outcome::success();
 }
