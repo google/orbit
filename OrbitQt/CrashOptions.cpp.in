@@ -7,7 +7,5 @@
 #define CRASH_SERVER_URL "@CRASHDUMP_SERVER@"
 
 namespace CrashServerOptions {
-    std::string GetUrl() {
-        return CRASH_SERVER_URL;
-    }
-} // namespace CrashServer
+std::string GetUrl() { return CRASH_SERVER_URL; }
+}  // namespace CrashServerOptions

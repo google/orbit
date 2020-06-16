@@ -7,7 +7,6 @@
 #include "OrbitLib.h"
 
 #include "Callstack.h"
-#include "CrashHandler.h"
 #include "Hijacking.h"
 #include "ScopeTimer.h"
 #include "TcpClient.h"
