@@ -21,10 +21,11 @@ class LLVMModulePackage(LLVMPackage):
     def configure(self):
         super().configure()
 
-        self.output.info("Requiring llvm base component dependency '{}' as shared library: {}".format(self.llvm_component, self._build_shared))
         self.options[self.llvm_component].shared = self._build_shared
         self.options[self.llvm_component].sources_repo = self.options.sources_repo
         self.options[self.llvm_component].no_rtti = self.options.no_rtti
+        self.options[self.llvm_component].allow_undefined_symbols = self.options.allow_undefined_symbols
+        self.options[self.llvm_component].fPIC = self.options.fPIC
 
     def copy_from_component(self, pattern, src='', dst='', keep_path=True):
         root = self.deps_cpp_info[self.llvm_component].rootpath
