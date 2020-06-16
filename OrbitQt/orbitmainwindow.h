@@ -62,7 +62,6 @@ class OrbitMainWindow : public QMainWindow {
 
   void on_actionSave_Session_triggered();
   void on_actionOpen_Session_triggered();
-  void on_actionOpen_PDB_triggered();
   void on_actionDisconnect_triggered();
   void on_actionQuit_triggered();
   void on_actionLaunch_Process_triggered();

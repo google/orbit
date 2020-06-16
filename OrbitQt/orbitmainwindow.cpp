@@ -179,7 +179,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->outputTab));
 
-    ui->actionOpen_PDB->setVisible(false);
     ui->actionLaunch_Process->setVisible(false);
     ui->actionDisconnect->setVisible(false);
 
@@ -592,16 +591,6 @@ void OrbitMainWindow::on_actionOpen_Session_triggered() {
                           file.toStdString(), result.error())
               .c_str());
     }
-    break;
-  }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionOpen_PDB_triggered() {
-  QStringList list = QFileDialog::getOpenFileNames(
-      this, "Select a pdb file to open...", "", "*.pdb");
-  for (auto& file : list) {
-    GOrbitApp->OnOpenPdb(file.toStdString());
     break;
   }
 }
