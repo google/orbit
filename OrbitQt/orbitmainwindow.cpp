@@ -10,6 +10,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QMouseEvent>
+#include <QProgressDialog>
 #include <QTimer>
 #include <QToolTip>
 #include <utility>
@@ -73,18 +74,20 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->AddCaptureStartedCallback(
       [this] { ui->HomeTab->setDisabled(true); });
 
-  auto finalizing_capture_message_box = std::make_shared<QMessageBox>(this);
-  finalizing_capture_message_box->setWindowTitle("Finalizing capture");
-  finalizing_capture_message_box->setText(
-      "Waiting for the remaining capture data...");
-  finalizing_capture_message_box->setIcon(QMessageBox::Information);
-  finalizing_capture_message_box->setStandardButtons(QMessageBox::NoButton);
+  auto finalizing_capture_dialog = new QProgressDialog(
+      "Waiting for the remaining capture data...", "OK", 0, 0, this, Qt::Tool);
+  finalizing_capture_dialog->setWindowTitle("Finalizing capture");
+  finalizing_capture_dialog->setModal(true);
+  finalizing_capture_dialog->setWindowFlags(
+      (finalizing_capture_dialog->windowFlags() | Qt::CustomizeWindowHint) &
+      ~Qt::WindowCloseButtonHint & ~Qt::WindowSystemMenuHint);
+  finalizing_capture_dialog->setFixedSize(finalizing_capture_dialog->size());
+  finalizing_capture_dialog->close();
 
-  GOrbitApp->AddCaptureStopRequestedCallback([finalizing_capture_message_box] {
-    finalizing_capture_message_box->open();
-  });
-  GOrbitApp->AddCaptureStoppedCallback([this, finalizing_capture_message_box] {
-    finalizing_capture_message_box->accept();
+  GOrbitApp->AddCaptureStopRequestedCallback(
+      [finalizing_capture_dialog] { finalizing_capture_dialog->show(); });
+  GOrbitApp->AddCaptureStoppedCallback([this, finalizing_capture_dialog] {
+    finalizing_capture_dialog->close();
     ui->HomeTab->setDisabled(false);
   });
 
