@@ -258,7 +258,6 @@
     <addaction name="actionOpen_Capture"/>
     <addaction name="actionSave_Capture"/>
     <addaction name="separator"/>
-    <addaction name="actionOpen_PDB"/>
     <addaction name="actionOpen_Session"/>
     <addaction name="actionSave_Session"/>
     <addaction name="actionSave_Session_As"/>
@@ -324,11 +323,6 @@
   <action name="actionOpen_Session">
    <property name="text">
     <string>Open Session</string>
-   </property>
-  </action>
-  <action name="actionOpen_PDB">
-   <property name="text">
-    <string>Open PDB</string>
    </property>
   </action>
   <action name="actionDisconnect">

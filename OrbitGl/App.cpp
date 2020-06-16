@@ -556,29 +556,6 @@ void OrbitApp::GoToCallstack() { SendToUi("gotocallstack"); }
 void OrbitApp::GoToCapture() { SendToUi("gotocapture"); }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnOpenPdb(const std::string& file_name) {
-  Capture::GTargetProcess = std::make_shared<Process>();
-  std::shared_ptr<Module> mod = std::make_shared<Module>();
-
-  mod->m_FullName = file_name;
-  mod->m_Name = Path::GetFileName(file_name);
-  mod->m_Directory = Path::GetDirectory(file_name);
-  mod->m_PdbName = mod->m_FullName;
-  mod->SetLoadable(true);
-  mod->LoadDebugInfo();
-
-  Capture::GTargetProcess->SetName(Path::StripExtension(mod->m_Name));
-  Capture::GTargetProcess->AddModule(mod);
-
-  m_ModulesDataView->SetProcess(Capture::GTargetProcess);
-  Capture::SetTargetProcess(Capture::GTargetProcess);
-  GOrbitApp->FireRefreshCallbacks();
-
-  EnqueueModuleToLoad(mod);
-  LoadModules();
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::OnLaunchProcess(const std::string& process_name,
                                const std::string& working_dir,
                                const std::string& args) {

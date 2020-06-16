@@ -71,7 +71,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
       const std::string& file_name);
   outcome::result<void, std::string> OnLoadCapture(
       const std::string& file_name);
-  void OnOpenPdb(const std::string& file_name);
   void OnLaunchProcess(const std::string& process_name,
                        const std::string& working_dir, const std::string& args);
   void Inject(const std::string& file_name);
