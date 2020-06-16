@@ -29,9 +29,12 @@ class TimerBlock {
 
  public:
   TimerBlock(TimerChain* chain, TimerBlock* prev)
-      : prev_(prev), next_(nullptr), chain_(chain), size_(0) {}
-
-  ~TimerBlock() {}
+      : prev_(prev),
+        next_(nullptr),
+        chain_(chain),
+        size_(0),
+        min_timestamp_(std::numeric_limits<uint64_t>::max()),
+        max_timestamp_(std::numeric_limits<uint64_t>::min()) {}
 
   // Adds an item to the block. If capacity of this block is reached, a new
   // blocked is allocated and the item is added to the new block.
@@ -42,7 +45,7 @@ class TimerBlock {
   // that have so far been added to this block.
   bool Intersects(uint64_t min, uint64_t max);
 
-  uint32_t size() const { return size_; }
+  uint64_t size() const { return size_; }
 
   TextBox& operator[](std::size_t idx) { return data_[idx]; }
 
@@ -52,7 +55,7 @@ class TimerBlock {
   TimerBlock* prev_;
   TimerBlock* next_;
   TimerChain* chain_;
-  uint32_t size_;
+  uint64_t size_;
   TextBox data_[kBlockSize];
 
   uint64_t min_timestamp_;
@@ -64,7 +67,7 @@ class TimerBlock {
 // different from the BlockIterator in BlockChain.h).
 class TimerChainIterator {
  public:
-  TimerChainIterator(TimerBlock* block) : block_(block) {}
+  explicit TimerChainIterator(TimerBlock* block) : block_(block) {}
 
   TimerBlock& operator*() { return *block_; }
 
@@ -100,7 +103,8 @@ class TimerChain {
   ~TimerChain();
 
   void push_back(const TextBox& item) { current_->Add(item); }
-  uint32_t size() const { return num_items_; }
+  bool empty() const { return num_items_ == 0; }
+  uint64_t size() const { return num_items_; }
 
   TimerBlock* GetBlockContaining(const TextBox* element);
 
@@ -115,8 +119,8 @@ class TimerChain {
  private:
   TimerBlock* root_;
   TimerBlock* current_;
-  uint32_t num_blocks_;
-  uint32_t num_items_;
+  uint64_t num_blocks_;
+  uint64_t num_items_;
 };
 
 #endif
