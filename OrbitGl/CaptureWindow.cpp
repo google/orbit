@@ -955,7 +955,7 @@ void CaptureWindow::RenderToolbars() {
 
   // Stop Capture.
   ImGui::SameLine();
-  bool stop_enabled = is_capturing;
+  bool stop_enabled = Capture::GState == Capture::State::kStarted;
   if (IconButton(stop_capture_icon_id_, "Stop Capture", icon_size,
                  stop_enabled)) {
     GOrbitApp->StopCapture();
