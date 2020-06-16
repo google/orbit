@@ -1,8 +1,8 @@
 diff --git a/build/BUILD.gn b/build/BUILD.gn
-index d8dc6cd..4f55b5f 100644
+index 8a1949c..095ce0b 100644
 --- a/build/BUILD.gn
 +++ b/build/BUILD.gn
-@@ -39,10 +39,23 @@ if (mini_chromium_is_mac) {
+@@ -39,6 +39,12 @@ if (mini_chromium_is_mac) {
      # win_sdk\bin\SetEnv.cmd inside this path will be used to configure the
      # Windows toolchain.
      win_toolchain_path = "<autodetect>"
@@ -14,7 +14,10 @@ index d8dc6cd..4f55b5f 100644
 +    dynamic_crt = false
    }
  }
- 
+
+@@ -79,6 +85,13 @@ declare_args() {
+ }
+
  config("debug") {
 +  if (mini_chromium_is_win) {
 +    if (dynamic_crt) {
@@ -23,10 +26,10 @@ index d8dc6cd..4f55b5f 100644
 +      cflags = [ "/MTd" ]
 +    }
 +  }
- }
- 
- config("release") {
-@@ -64,7 +77,6 @@ config("release") {
+   if (!mini_chromium_is_win) {
+     cflags = [ "-g" ]
+   }
+@@ -103,7 +116,6 @@ config("release") {
      }
    } else if (mini_chromium_is_win) {
      cflags = [
@@ -34,7 +37,7 @@ index d8dc6cd..4f55b5f 100644
        "/O2",
        "/Ob2",  # Both explicit and auto inlining.
        "/Oy-",  # Disable omitting frame pointers, must be after /O2.
-@@ -73,10 +85,20 @@ config("release") {
+@@ -112,10 +124,20 @@ config("release") {
      ]
      ldflags = [
        "/OPT:ICF",
@@ -57,6 +60,7 @@ index d8dc6cd..4f55b5f 100644
 +    }
    }
  }
+
 
 diff --git a/build/win_helper.py b/build/win_helper.py
 index a5e1fdd..edb93eb 100644

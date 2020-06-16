@@ -1,6 +1,8 @@
---- a/crashpad/util/BUILD.gn	2020-04-22 20:02:56.937547710 +0000
-+++ b/crashpad/util/BUILD.gn	2020-04-22 20:14:14.443421318 +0000
-@@ -285,8 +285,8 @@
+diff --git a/util/BUILD.gn b/util/BUILD.gn
+index 21f70048..c4724f8d 100644
+--- a/crashpad/util/BUILD.gn
++++ b/crashpad/util/BUILD.gn
+@@ -377,8 +377,8 @@ static_library("util") {
          deps += [ "//third_party/boringssl" ]
        } else {
          libs = [
@@ -10,7 +12,7 @@
          ]
        }
      }
-@@ -535,8 +535,8 @@
+@@ -635,8 +635,8 @@ if (!crashpad_is_android && !crashpad_is_ios) {
          deps += [ "//third_party/boringssl" ]
        } else {
          libs = [

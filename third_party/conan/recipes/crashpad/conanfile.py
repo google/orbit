@@ -6,10 +6,10 @@ import re
 
 class CrashpadConan(ConanFile):
     name = "crashpad"
-    version = "20191105"
+    version = "20200616"
     description = "Crashpad is a crash-reporting system."
     license = "Apache-2.0"
-    homepage = "https://github.com/chromium/crashpad.git"
+    homepage = "https://github.com/IrinaShkviro/crashpad.git"
     url = "https://github.com/bincrafters/conan-crashpad"
     topics = ("conan", "crash-reporting", "logging", "minidump", "crash")
     settings = "os", "compiler", "build_type", "arch"
@@ -18,7 +18,7 @@ class CrashpadConan(ConanFile):
     exports = [ "patches/*", "LICENSE.md" ]
     short_paths = True
 
-    _commit_id = "1b60c8172c783040b86c3c6960aba4df73990bc5"
+    _commit_id = "ae89bc807a2fd8c7cea9696b2c7b83b4fd4f4647"
     _source_dir = "crashpad"
     _build_name = "out/Conan"
     _build_dir = os.path.join(_source_dir, _build_name)
@@ -58,6 +58,7 @@ class CrashpadConan(ConanFile):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
+
     def configure(self):
         # It's not a C project, but libcxx is hardcoded in the project
         del self.settings.compiler.libcxx
@@ -68,7 +69,7 @@ class CrashpadConan(ConanFile):
 
     def source(self):
         self.run("gclient config --spec=\"%s\"" % self._make_spec(), run_environment=True)
-        self.run("gclient sync --no-history", run_environment=True)
+        self.run("gclient sync --no-history -A", run_environment=True)
 
         if self.settings.os == "Windows":
             tools.patch(base_path=os.path.join(self._source_dir, "third_party/mini_chromium/mini_chromium"),
