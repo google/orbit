@@ -6,7 +6,7 @@ from llvmmodulepackage import *
 
 class LLVMCommon(ConanFile):
     name = 'llvm-common'
-    version = '0.0.0'
+    version = '0.0.2'
     url = 'http://gitlab.com/henning/clang-conan-packages'
     license = 'MIT'
     description = 'Common package recipes for LLVM packages'

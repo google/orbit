@@ -20,7 +20,7 @@ def replace_in_file(file, line_to_search, replace_with, conanfile_output = None)
 
 
 class LLVMPackage(ConanFile):
-    VERSION = '9.0.1'
+    VERSION = '9.0.1-2'
     SOURCE_DIR = '.'
     BUILD_DIR = 'build'
     INSTALL_DIR = 'install'
@@ -34,9 +34,11 @@ class LLVMPackage(ConanFile):
     options = {
         'shared': [True, False],
         'sources_repo': 'ANY',
-        'no_rtti': [True, False]
+        'no_rtti': [True, False],
+        'allow_undefined_symbols': [True, False],
+        'fPIC': [True, False]
     }
-    default_options = 'shared=False', 'sources_repo=https://github.com/llvm/llvm-project/releases/download/', 'no_rtti=False'
+    default_options = 'shared=False', 'sources_repo=https://github.com/llvm/llvm-project/releases/download/', 'no_rtti=False', 'allow_undefined_symbols=False', 'fPIC=True'
 
     def configure(self):
         del self.settings.compiler.libcxx
@@ -58,7 +60,8 @@ class LLVMPackage(ConanFile):
 
     def configure(self):
         for component in self._llvm_requires:
-            self.output.info("Requiring llvm component dependency '{}' as shared library: {}".format(component, self._build_shared))
             self.options[component].shared = self._build_shared
             self.options[component].sources_repo = self.options.sources_repo
             self.options[component].no_rtti = self.options.no_rtti
+            self.options[component].allow_undefined_symbols = self.options.allow_undefined_symbols
+            self.options[component].fPIC = self.options.fPIC

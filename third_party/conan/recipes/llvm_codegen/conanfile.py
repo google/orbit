@@ -1,6 +1,6 @@
 from conans import python_requires
 
-common = python_requires('llvm-common/0.0.0@orbitdeps/stable')
+common = python_requires('llvm-common/0.0.2@orbitdeps/stable')
 
 class LLVMCodegen(common.LLVMModulePackage):
     version = common.LLVMModulePackage.version
