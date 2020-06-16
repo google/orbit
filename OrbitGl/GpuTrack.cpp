@@ -158,7 +158,7 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
       min_ignore = std::numeric_limits<uint64_t>::max();
       max_ignore = std::numeric_limits<uint64_t>::min();
 
-      for (int k = 0; k < block.size(); ++k) {
+      for (uint32_t k = 0; k < block.size(); ++k) {
         TextBox& text_box =  block[k];
         const Timer& timer = text_box.GetTimer();
         if (min_tick > timer.m_End || max_tick < timer.m_Start) continue;
@@ -264,7 +264,7 @@ const TextBox* GpuTrack::GetFirstAfterTime(TickType time,
 
   // TODO: do better than linear search...
   for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-    for (int k = 0; k < it->size(); ++k) {
+    for (uint32_t k = 0; k < it->size(); ++k) {
       const TextBox& text_box = (*it)[k];
       if (text_box.GetTimer().m_Start > time) {
         return &text_box;
@@ -285,7 +285,7 @@ const TextBox* GpuTrack::GetFirstBeforeTime(TickType time,
 
   // TODO: do better than linear search...
   for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-    for (int k = 0; k < it->size(); ++k) {
+    for (uint32_t k = 0; k < it->size(); ++k) {
       const TextBox& box = (*it)[k];
       if (box.GetTimer().m_Start > time) {
         return text_box;
