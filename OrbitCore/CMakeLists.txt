@@ -21,8 +21,6 @@ target_sources(
          ConnectionManager.h
          Core.h
          CoreApp.h
-         CrashHandler.h
-         CrashOptions.h
          EventBuffer.h
          EventClasses.h
          FramePointerValidator.h
@@ -84,7 +82,6 @@ target_sources(
           ContextSwitch.cpp
           Core.cpp
           CoreApp.cpp
-          CrashHandler.cpp
           ConnectionManager.cpp
           ElfFile.cpp
           EventBuffer.cpp
@@ -173,7 +170,6 @@ target_link_libraries(
          asio::asio
          abseil::abseil
          llvm_object::llvm_object
-         crashpad::crashpad
          Outcome::Outcome)
 
 if(WIN32)
@@ -202,9 +198,6 @@ include("${CMAKE_SOURCE_DIR}/cmake/version.cmake")
 GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/Version.cpp"
                     "${CMAKE_CURRENT_SOURCE_DIR}/Version.cpp.in" OrbitCore)
 target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/Version.cpp")
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CrashOptions.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/CrashOptions.cpp)
-target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/CrashOptions.cpp")
 
 add_executable(OrbitCoreTests)
 
