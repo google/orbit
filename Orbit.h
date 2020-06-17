@@ -60,7 +60,7 @@
 #define ORBIT_CONCAT_IND(x, y) (x##y)
 #define ORBIT_CONCAT(x, y) ORBIT_CONCAT_IND(x, y)
 #define ORBIT_UNIQUE(x) ORBIT_CONCAT(x, __COUNTER__)
-#define ORBIT_NOOP()         \
+#define ORBIT_NOOP()       \
   do {                     \
     static volatile int x; \
     x;                     \
