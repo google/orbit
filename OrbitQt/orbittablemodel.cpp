@@ -10,17 +10,14 @@
 #include <memory>
 
 //-----------------------------------------------------------------------------
-OrbitTableModel::OrbitTableModel(DataView* data_view, bool alternate_row_color,
-                                 QObject* parent)
+OrbitTableModel::OrbitTableModel(DataView* data_view, QObject* parent)
     : QAbstractTableModel(parent),
-      m_DataView(data_view),
-      m_AlternateRowColor(alternate_row_color) {}
+      m_DataView(data_view) {}
 
 //-----------------------------------------------------------------------------
 OrbitTableModel::OrbitTableModel(QObject* parent)
     : QAbstractTableModel(parent),
-      m_DataView(nullptr),
-      m_AlternateRowColor(true) {}
+      m_DataView(nullptr) {}
 
 //-----------------------------------------------------------------------------
 OrbitTableModel::~OrbitTableModel() {}
@@ -68,15 +65,6 @@ QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
   if (role == Qt::DisplayRole) {
     std::string value = m_DataView->GetValue(index.row(), index.column());
     return QVariant(QString::fromStdString(value));
-  } else if (role == Qt::BackgroundRole) {
-    if (m_AlternateRowColor) {
-      if (index.row() % 2 == 1)
-        return QColor(60, 60, 60);
-      else
-        return QColor(45, 45, 48);
-    } else {
-      return QColor(37, 37, 38);
-    }
   } else if (role == Qt::ForegroundRole) {
     if (m_DataView->WantsDisplayColor()) {
       unsigned char r, g, b;

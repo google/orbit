@@ -15,8 +15,7 @@
 class OrbitTableModel : public QAbstractTableModel {
   Q_OBJECT
  public:
-  explicit OrbitTableModel(DataView* data_view, bool alternate_row_color = true,
-                           QObject* parent = nullptr);
+  explicit OrbitTableModel(DataView* data_view, QObject* parent = nullptr);
   explicit OrbitTableModel(QObject* parent = nullptr);
   ~OrbitTableModel() override;
 
@@ -44,5 +43,4 @@ class OrbitTableModel : public QAbstractTableModel {
 
  protected:
   DataView* m_DataView;
-  bool m_AlternateRowColor;
 };

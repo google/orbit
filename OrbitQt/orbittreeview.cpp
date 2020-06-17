@@ -84,6 +84,8 @@ void OrbitTreeView::Initialize(DataView* data_view,
     setSelectionMode(ExtendedSelection);
   }
 
+  setAlternatingRowColors(true);
+
   if (font_type == FontType::kFixed) {
     const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     setFont(fixedFont);
