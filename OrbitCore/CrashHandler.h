@@ -15,7 +15,8 @@ class CrashHandler {
  public:
   explicit CrashHandler(const std::string& dump_path,
                         const std::string& handler_path,
-                        const std::string& crash_server_url);
+                        const std::string& crash_server_url,
+                        const std::vector<std::string>& attachments);
   void DumpWithoutCrash() const;
   void SetUploadsEnabled(bool is_upload_enabled);
 

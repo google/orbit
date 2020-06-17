@@ -243,7 +243,10 @@ int main(int argc, char* argv[]) {
                                        .absoluteFilePath(handler_name)
                                        .toStdString();
   const std::string crash_server_url = CrashServerOptions::GetUrl();
-  CrashHandler crash_handler(dump_path, handler_path, crash_server_url);
+  const std::vector<std::string> attachments = {Path::GetLogFilePath()};
+
+  CrashHandler crash_handler(dump_path, handler_path, crash_server_url,
+                             attachments);
 
   ApplicationOptions options;
   ParseLegacyCommandLine(argc, argv, &options);

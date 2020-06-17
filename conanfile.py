@@ -67,7 +67,7 @@ class OrbitConan(ConanFile):
                 "libunwindstack/80a734f14@{}#0".format(self._orbit_channel))
         self.requires("zlib/1.2.11@conan/stable#0")
 
-        self.requires("crashpad/20191105@{}#489e96c86c631bb7bffae948fc0d94b3".format(self._orbit_channel))
+        self.requires("crashpad/20200616@{}#35fdddb14928dc43f1662569f01fd197".format(self._orbit_channel))
 
         if self.options.with_gui:
             self.requires("freeglut/3.2.1@{}#0".format(self._orbit_channel))
