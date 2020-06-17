@@ -10,7 +10,7 @@
 #include "VariableTracing.h"
 
 //-----------------------------------------------------------------------------
-TcpService::TcpService() { m_IoService = new asio::io_service(); }
+TcpService::TcpService() { m_IoService = std::make_unique<asio::io_service>(); }
 
 //-----------------------------------------------------------------------------
 TcpService::~TcpService() { PRINT_FUNC; }

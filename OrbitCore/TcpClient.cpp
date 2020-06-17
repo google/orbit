@@ -41,7 +41,7 @@ void TcpClient::Connect(const std::string& address) {
   const std::string& host = vec[0];
   const std::string& port = vec[1];
 
-  m_TcpService->m_IoService = new asio::io_service();
+  m_TcpService->m_IoService = std::make_unique<asio::io_service>();
   m_TcpSocket->m_Socket = new tcp::socket(*m_TcpService->m_IoService);
 
   asio::ip::tcp::socket& socket = *m_TcpSocket->m_Socket;
