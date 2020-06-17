@@ -36,15 +36,9 @@ outcome::result<void, std::string> CaptureSerializer::Save(
     const std::string& filename) {
   Capture::PreSave();
 
-  std::basic_ostream<char> Stream(&GStreamCounter);
-  cereal::BinaryOutputArchive CountingArchive(Stream);
-  GStreamCounter.Reset();
-  Save(CountingArchive);
-  PRINT_VAR(GStreamCounter.Size());
-  GStreamCounter.Reset();
-
   // Binary
   m_CaptureName = filename;
+
   std::ofstream file(m_CaptureName, std::ios::binary);
   if (file.fail()) {
     ERROR("Saving capture in \"%s\": %s", filename, "file.fail()");
@@ -53,18 +47,31 @@ outcome::result<void, std::string> CaptureSerializer::Save(
 
   try {
     SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in \"%s\"", filename));
-    cereal::BinaryOutputArchive archive(file);
-    Save(archive);
-    return outcome::success();
+    Save(file);
   } catch (std::exception& e) {
     ERROR("Saving capture in \"%s\": %s", filename, e.what());
     return outcome::failure("Error serializing the capture");
   }
+
+  return outcome::success();
+}
+
+void CaptureSerializer::Save(std::ostream& stream) {
+  cereal::BinaryOutputArchive archive(stream);
+  std::basic_ostream<char> Stream(&GStreamCounter);
+  cereal::BinaryOutputArchive CountingArchive(Stream);
+  GStreamCounter.Reset();
+  SaveImpl(CountingArchive);
+  PRINT_VAR(GStreamCounter.Size());
+  GStreamCounter.Reset();
+
+  SaveImpl(archive);
 }
 
 //-----------------------------------------------------------------------------
 template <class T>
-void CaptureSerializer::Save(T& archive) {
+void CaptureSerializer::SaveImpl(T& archive) {
+  CHECK(time_graph_ != nullptr);
   m_NumTimers = time_graph_->GetNumTimers();
 
   // Header
@@ -150,61 +157,65 @@ outcome::result<void, std::string> CaptureSerializer::Load(
   }
 
   try {
-    // Header
-    cereal::BinaryInputArchive archive(file);
-    archive(*this);
-
-    // Functions
-    std::vector<Function> functions;
-    archive(functions);
-    Capture::GSelectedFunctions.clear();
-    Capture::GSelectedFunctionsMap.clear();
-    for (const auto& function : functions) {
-      std::shared_ptr<Function> function_ptr =
-          std::make_shared<Function>(function);
-      Capture::GSelectedFunctions.push_back(function_ptr);
-      Capture::GSelectedFunctionsMap[function_ptr->GetVirtualAddress()] =
-          function_ptr.get();
-    }
-    Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
-
-    archive(Capture::GFunctionCountMap);
-
-    archive(Capture::GCallstacks);
-
-    archive(Capture::GAddressInfos);
-
-    archive(Capture::GAddressToFunctionName);
-
-    archive(Capture::GSamplingProfiler);
-    if (Capture::GSamplingProfiler == nullptr) {
-      Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();
-    }
-    Capture::GSamplingProfiler->SortByThreadUsage();
-
-    time_graph_->Clear();
-
-    archive(*time_graph_->GetStringManager());
-
-    // Event buffer
-    archive(GEventTracer.GetEventBuffer());
-
-    // Timers
-    Timer timer;
-    while (file.read(reinterpret_cast<char*>(&timer), sizeof(Timer))) {
-      time_graph_->ProcessTimer(timer);
-    }
-
-    Capture::GState = Capture::State::kDone;
-
-    GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler);
-    GOrbitApp->FireRefreshCallbacks();
-    return outcome::success();
-
+    return Load(file);
   } catch (std::exception& e) {
     ERROR("Loading capture from \"%s\": %s", filename, e.what());
     return outcome::failure("Error parsing the capture");
   }
+}
+
+outcome::result<void, std::string> CaptureSerializer::Load(
+    std::istream& stream) {
+  // Header
+  cereal::BinaryInputArchive archive(stream);
+  archive(*this);
+
+  // Functions
+  std::vector<Function> functions;
+  archive(functions);
+  Capture::GSelectedFunctions.clear();
+  Capture::GSelectedFunctionsMap.clear();
+  for (const auto& function : functions) {
+    std::shared_ptr<Function> function_ptr =
+        std::make_shared<Function>(function);
+    Capture::GSelectedFunctions.push_back(function_ptr);
+    Capture::GSelectedFunctionsMap[function_ptr->GetVirtualAddress()] =
+        function_ptr.get();
+  }
+  Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
+
+  archive(Capture::GFunctionCountMap);
+
+  archive(Capture::GCallstacks);
+
+  archive(Capture::GAddressInfos);
+
+  archive(Capture::GAddressToFunctionName);
+
+  archive(Capture::GSamplingProfiler);
+  if (Capture::GSamplingProfiler == nullptr) {
+    Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();
+  }
+  Capture::GSamplingProfiler->SortByThreadUsage();
+
+  time_graph_->Clear();
+
+  archive(*time_graph_->GetStringManager());
+
+  // Event buffer
+  archive(GEventTracer.GetEventBuffer());
+
+  // Timers
+  Timer timer;
+  while (stream.read(reinterpret_cast<char*>(&timer), sizeof(Timer))) {
+    time_graph_->ProcessTimer(timer);
+  }
+
+  Capture::GState = Capture::State::kDone;
+
+  GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler);
+  GOrbitApp->FireRefreshCallbacks();
+  return outcome::success();
 }
 
 //-----------------------------------------------------------------------------

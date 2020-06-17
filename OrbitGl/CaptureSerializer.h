@@ -7,6 +7,7 @@
 #include <outcome.hpp>
 #include <string>
 #include <unordered_map>
+#include <iosfwd>
 
 #include "OrbitType.h"
 #include "SerializationMacros.h"
@@ -14,11 +15,12 @@
 class CaptureSerializer {
  public:
   CaptureSerializer();
-  outcome::result<void, std::string> Save(const std::string& filename);
-  outcome::result<void, std::string> Load(const std::string& filename);
 
-  template <class T>
-  void Save(T& archive);
+  void Save(std::ostream& stream);
+  outcome::result<void, std::string> Save(const std::string& filename);
+
+  outcome::result<void, std::string> Load(std::istream& stream);
+  outcome::result<void, std::string> Load(const std::string& filename);
 
   class TimeGraph* time_graph_;
   class SamplingProfiler* m_SamplingProfiler;
@@ -30,4 +32,8 @@ class CaptureSerializer {
   int m_SizeOfTimer;
 
   ORBIT_SERIALIZABLE;
+
+ private:
+  template <class T>
+  void SaveImpl(T& archive);
 };
