@@ -82,7 +82,7 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
       min_ignore = std::numeric_limits<uint64_t>::max();
       max_ignore = std::numeric_limits<uint64_t>::min();
 
-      for (int k = 0; k < block.size(); ++k) {
+      for (size_t k = 0; k < block.size(); ++k) {
         TextBox& text_box = block[k];
         const Timer& timer = text_box.GetTimer();
         if (min_tick > timer.m_End || max_tick < timer.m_Start) continue;
