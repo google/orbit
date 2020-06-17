@@ -10,7 +10,7 @@ compiler.fpo=False
 build_type=RelWithDebInfo
 [options]
 [build_requires]
-cmake/3.16.4@
+cmake_installer/3.16.3@conan/stable
 [env]
 CC=gcc-9
 CXX=g++-9

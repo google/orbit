@@ -12,7 +12,7 @@ build_type=Release
 [options]
 OrbitProfiler:with_gui=False
 [build_requires]
-cmake/3.16.4@
+cmake_installer/3.16.3@conan/stable
 ggp_sdk/1.43.0.14282@orbitdeps/stable
 ninja/1.9.0@
 

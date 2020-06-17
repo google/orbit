@@ -10,7 +10,7 @@ build_type=RelWithDebInfo
 OrbitProfiler:system_qt=False
 OrbitProfiler:with_gui=False
 [build_requires]
-cmake/3.16.4@
+cmake_installer/3.16.3@conan/stable
 [env]
 CONAN_CMAKE_SYSTEM_VERSION=8.1
 LDFLAGS=/FIXED:NO
