@@ -13,7 +13,7 @@
 // functions, manual instrumentation is still possible using the macros below.
 // These macros call empty functions that Orbit dynamically instruments.
 
-// To disable manual instrumentation macros, set ORBIT_API_ENABLED to 0.
+// To disable manual instrumentation macros, define ORBIT_API_ENABLED as 0.
 #define ORBIT_API_ENABLED 1
 
 #if ORBIT_API_ENABLED
@@ -23,7 +23,7 @@
 
 // ORBIT_START/ORBIT_STOP: profile time span on a single thread.
 #define ORBIT_START(name) orbit::Start(ORBIT_LITERAL(name))
-#define ORBIT_STOP orbit::Stop()
+#define ORBIT_STOP() orbit::Stop()
 
 // ORBIT_START_ASYNC/ORBIT_STOP_ASYNC: profile time span across threads.
 #define ORBIT_START_ASYNC(name, id) orbit::StartAsync(ORBIT_LITERAL(name), id)
@@ -41,7 +41,7 @@
 
 #define ORBIT_SCOPE(name)
 #define ORBIT_START(name)
-#define ORBIT_STOP
+#define ORBIT_STOP()
 #define ORBIT_START_ASYNC(name, id)
 #define ORBIT_STOP_ASYNC(id)
 #define ORBIT_INT(name, value)
@@ -61,9 +61,11 @@
 #define ORBIT_CONCAT(x, y) ORBIT_CONCAT_IND(x, y)
 #define ORBIT_UNIQUE(x) ORBIT_CONCAT(x, __COUNTER__)
 #define ORBIT_UNUSED(x) (void)(x)
-#define ORBIT_NOOP       \
-  static volatile int x; \
-  x;
+#define ORBIT_NOOP()         \
+  do {                     \
+    static volatile int x; \
+    x;                     \
+  } while (0)
 
 #if _WIN32
 #define NO_INLINE __declspec(noinline)
@@ -74,16 +76,16 @@
 namespace orbit {
 
 // NOTE: Do not use these directly, use corresponding macros instead.
-inline void NO_INLINE Start(const char*) { ORBIT_NOOP; }
-inline void NO_INLINE Stop() { ORBIT_NOOP; }
-inline void NO_INLINE StartAsync(const char*, uint64_t) { ORBIT_NOOP; }
-inline void NO_INLINE StopAsync(uint64_t) { ORBIT_NOOP; }
-inline void NO_INLINE TrackInt(const char*, int32_t) { ORBIT_NOOP; }
-inline void NO_INLINE TrackInt64(const char*, int64_t) { ORBIT_NOOP; }
-inline void NO_INLINE TrackUint(const char*, uint32_t) { ORBIT_NOOP; }
-inline void NO_INLINE TrackUint64(const char*, uint64_t) { ORBIT_NOOP; }
-inline void NO_INLINE TrackFloatAsInt(const char*, int32_t) { ORBIT_NOOP; }
-inline void NO_INLINE TrackDoubleAsInt64(const char*, int64_t) { ORBIT_NOOP; }
+inline void NO_INLINE Start(const char*) { ORBIT_NOOP(); }
+inline void NO_INLINE Stop() { ORBIT_NOOP(); }
+inline void NO_INLINE StartAsync(const char*, uint64_t) { ORBIT_NOOP(); }
+inline void NO_INLINE StopAsync(uint64_t) { ORBIT_NOOP(); }
+inline void NO_INLINE TrackInt(const char*, int32_t) { ORBIT_NOOP(); }
+inline void NO_INLINE TrackInt64(const char*, int64_t) { ORBIT_NOOP(); }
+inline void NO_INLINE TrackUint(const char*, uint32_t) { ORBIT_NOOP(); }
+inline void NO_INLINE TrackUint64(const char*, uint64_t) { ORBIT_NOOP(); }
+inline void NO_INLINE TrackFloatAsInt(const char*, int32_t) { ORBIT_NOOP(); }
+inline void NO_INLINE TrackDoubleAsInt64(const char*, int64_t) { ORBIT_NOOP(); }
 
 // Convert floating point arguments to integer arguments as we can't access
 // XMM registers with our current dynamic instrumentation on Linux (uprobes).

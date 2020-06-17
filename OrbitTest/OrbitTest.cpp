@@ -107,7 +107,7 @@ void OrbitTest::ManualInstrumentationApiTest(){
 
     ORBIT_START("ORBIT_START_TEST");
     std::this_thread::sleep_for(std::chrono::microseconds(500));
-    ORBIT_STOP;
+    ORBIT_STOP();
 
     ORBIT_START_ASYNC("ORBIT_START_ASYNC_TEST", 0);
     std::this_thread::sleep_for(std::chrono::microseconds(500));
