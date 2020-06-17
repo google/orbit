@@ -31,7 +31,8 @@ struct StringTypeConverter<std::wstring> {
 //-----------------------------------------------------------------------------
 CrashHandler::CrashHandler(const std::string& dump_path,
                            const std::string& handler_path,
-                           const std::string& crash_server_url) {
+                           const std::string& crash_server_url,
+                           const std::vector<std::string>& attachments) {
   CHECK(!is_init_);
   is_init_ = true;
 
@@ -47,6 +48,12 @@ CrashHandler::CrashHandler(const std::string& dump_path,
 
   const std::vector<std::string> arguments = {"--no-rate-limit"};
 
+  std::vector<base::FilePath> attachments_paths;
+  for (const std::string& attachment : attachments) {
+    base::FilePath attachment_path(StringTypeConverter<>()(attachment));
+    attachments_paths.push_back(attachment_path);
+  }
+
   crash_report_db_ = crashpad::CrashReportDatabase::Initialize(dump_file_path);
   SetUploadsEnabled(true);
 
@@ -54,6 +61,7 @@ CrashHandler::CrashHandler(const std::string& dump_path,
                                 /*database=*/dump_file_path,
                                 /*metrics_dir=*/dump_file_path,
                                 crash_server_url, annotations, arguments,
+                                attachments_paths,
                                 /*restartable=*/true,
                                 /*asynchronous_start=*/false);
 }
