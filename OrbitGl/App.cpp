@@ -272,7 +272,28 @@ void OrbitApp::PostInit() {
 
     auto callback = [&](ProcessManager* process_manager) {
       main_thread_executor_->Schedule([&, process_manager]() {
-        m_ProcessesDataView->SetProcessList(process_manager->GetProcessList());
+        std::vector<ProcessInfo> process_list =
+            process_manager->GetProcessList();
+
+        uint32_t highest_cpu_pid = 0;
+        if (m_ProcessesDataView->GetSelectedProcessId() == 0) {
+          highest_cpu_pid =
+              std::max_element(
+                  process_list.begin(), process_list.end(),
+                  [](const ProcessInfo& lhs, const ProcessInfo& rhs) {
+                    if (lhs.cpu_usage() != rhs.cpu_usage()) {
+                      return lhs.cpu_usage() < rhs.cpu_usage();
+                    }
+                    return lhs.pid() > rhs.pid();
+                  })
+                  ->pid();
+        }
+
+        m_ProcessesDataView->SetProcessList(std::move(process_list));
+        // Select the process with the highest CPU usage if none is selected.
+        if (highest_cpu_pid != 0) {
+          m_ProcessesDataView->SelectProcess(highest_cpu_pid);
+        }
         FireRefreshCallbacks(DataViewType::PROCESSES);
       });
     };
