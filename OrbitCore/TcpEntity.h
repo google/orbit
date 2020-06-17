@@ -102,8 +102,8 @@ class TcpEntity {
   void SendData();
 
  protected:
-  TcpService* m_TcpService;
-  TcpSocket* m_TcpSocket;
+  std::unique_ptr<TcpService> m_TcpService;
+  std::unique_ptr<TcpSocket> m_TcpSocket;
   std::thread senderThread_;
   AutoResetEvent m_ConditionVariable;
   LockFreeQueue<TcpPacket> m_SendQueue;

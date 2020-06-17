@@ -56,7 +56,7 @@ void TcpServer::StartServer(uint16_t a_Port) {
   Start();
 
   PRINT_FUNC;
-  m_TcpService = new TcpService();
+  m_TcpService = std::make_unique<TcpService>();
   m_TcpServer = new tcp_server(*m_TcpService->m_IoService, a_Port);
 
   serverThread_ = std::thread{[this]() { ServerThread(); }};

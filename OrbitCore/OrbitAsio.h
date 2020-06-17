@@ -2,8 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
+
+#include <memory>
 
 #include "asio.hpp"
 
@@ -14,7 +15,7 @@ class TcpService {
  public:
   TcpService();
   ~TcpService();
-  asio::io_context* m_IoService;
+  std::unique_ptr<asio::io_context> m_IoService;
 };
 
 //-----------------------------------------------------------------------------

@@ -23,8 +23,8 @@ TcpEntity::TcpEntity()
       m_NumFlushedItems(0) {
   PRINT_FUNC;
   m_IsValid = false;
-  m_TcpSocket = new TcpSocket();
-  m_TcpService = new TcpService();
+  m_TcpSocket = std::make_unique<TcpSocket>();
+  m_TcpService = std::make_unique<TcpService>();
 }
 
 //-----------------------------------------------------------------------------
