@@ -58,13 +58,13 @@ class OrbitConan(ConanFile):
         self.requires(
             "grpc/1.27.3@{}#dc2368a2df63276188566e36a6b7868a".format(self._orbit_channel))
         self.requires("gtest/1.8.1@bincrafters/stable#0")
-        self.requires("llvm_object/9.0.1@orbitdeps/stable#0")
+        self.requires("llvm_object/9.0.1-2@orbitdeps/stable#9fbb81e87811594e3ed6316e97675b86")
         self.requires("openssl/1.1.1d@{}#0".format(self._orbit_channel))
         self.requires("Outcome/3dae433e@orbitdeps/stable#0")
         if self.settings.os != "Windows":
             self.requires(
                 "libunwindstack/80a734f14@{}#0".format(self._orbit_channel))
-        self.requires("zlib/1.2.11@conan/stable#0")
+        self.requires("zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f")
 
         if self.options.with_gui:
             self.requires(
