@@ -106,6 +106,13 @@ uint32_t ProcessesDataView::GetSelectedProcessId() const {
   return selected_process_id_;
 }
 
+uint32_t ProcessesDataView::GetFirstProcessId() const {
+  if (m_Indices.empty()) {
+    return 0;
+  }
+  return process_list_[m_Indices[0]].pid();
+}
+
 //-----------------------------------------------------------------------------
 void ProcessesDataView::SetSelectedItem() {
   for (size_t i = 0; i < GetNumElements(); ++i) {
