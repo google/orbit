@@ -39,7 +39,26 @@ if [ $? -ne 0 ]; then
     exit 1
   fi
 else
-  echo "Found conan. Skipping installation..."
+  echo "Found conan. Checking version..."
+  CONAN_VERSION="$(conan --version | cut -d' ' -f3)"
+  CONAN_VERSION_MAJOR="$(echo "$CONAN_VERSION" | cut -d'.' -f1)"
+  CONAN_VERSION_MINOR="$(echo "$CONAN_VERSION" | cut -d'.' -f2)"
+
+  CONAN_VERSION_MAJOR_REQUIRED=1
+  CONAN_VERSION_MINOR_MIN=24
+
+  if [ "$CONAN_VERSION_MAJOR" -eq $CONAN_VERSION_MAJOR_REQUIRED -a "$CONAN_VERSION_MINOR" -lt $CONAN_VERSION_MINOR_MIN ]; then
+    echo "Your conan version $CONAN_VERSION is too old. I will try to update..."
+    pip3 install --upgrade --user conan
+    if [ $? -ne 0 ]; then
+      echo "The upgrade of your conan installation failed. Probably because conan was not installed by this script."
+      echo "Please manually update conan to at least version $CONAN_VERSION_MAJOR_REQUIRED.$CONAN_VERSION_MINOR_MIN."
+      exit 2
+    fi
+    echo "Conan updated finished."
+  else
+    echo "Conan's version fulfills the requirements. Continuing..."
+  fi
 fi
 
 echo "Installing conan configuration (profiles, settings, etc.)..."
