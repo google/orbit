@@ -26,6 +26,7 @@
 #include "Message.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/MainThreadExecutor.h"
+#include "OrbitBase/ThreadPool.h"
 #include "ProcessManager.h"
 #include "ProcessMemoryClient.h"
 #include "ProcessesDataView.h"
@@ -289,6 +290,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
   std::unique_ptr<MainThreadExecutor> main_thread_executor_;
+  std::unique_ptr<ThreadPool> thread_pool_;
   std::unique_ptr<ProcessManager> process_manager_;
 
   const SymbolHelper symbol_helper_;
@@ -296,7 +298,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<Debugger> m_Debugger;
 #endif
 
- private:
   std::unique_ptr<TransactionClient> transaction_client_;
   std::unique_ptr<SymbolsClient> symbols_client_;
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;

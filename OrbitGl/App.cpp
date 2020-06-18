@@ -79,6 +79,7 @@ bool DoZoom = false;
 OrbitApp::OrbitApp(ApplicationOptions&& options)
     : options_(std::move(options)) {
   main_thread_executor_ = MainThreadExecutor::Create();
+  thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/);
 #ifdef _WIN32
   m_Debugger = std::make_unique<Debugger>();
 #endif
@@ -452,6 +453,8 @@ void OrbitApp::OnExit() {
   }
 
   process_manager_->Shutdown();
+  thread_pool_->ShutdownAndWait();
+  main_thread_executor_->ConsumeActions();
 
   GTimerManager = nullptr;
   GCoreApp = nullptr;
