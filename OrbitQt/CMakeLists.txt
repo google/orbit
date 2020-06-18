@@ -63,6 +63,10 @@ target_sources(
           servicedeploymanager.cpp
           showincludesdialog.cpp)
 
+set_target_properties(OrbitQt PROPERTIES AUTORCC ON)
+target_sources(OrbitQt PRIVATE
+        ${CMAKE_SOURCE_DIR}/third_party/QDarkStyleSheet/qdarkstyle/style.qrc)
+
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(OrbitQt PRIVATE OrbitCore OrbitGl OrbitGgp OrbitSshQt
