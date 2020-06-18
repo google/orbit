@@ -37,7 +37,9 @@ foreach ($profile in $profiles) {
     Throw "Error while running conan install."
   }
   
-  $process = Start-Process $conan.Path -Wait -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "build","-bf","build_$profile/",$PSScriptRoot
+  $process = Start-Process $conan.Path -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "build","-bf","build_$profile/",$PSScriptRoot
+  $handle = $process.Handle # caching handle needed due to bug in .Net
+  $process.WaitForExit()
   if ($process.ExitCode -ne 0) {
     Throw "Error while running conan build."
   }
