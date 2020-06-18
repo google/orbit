@@ -18,7 +18,7 @@ function conan_create_profile($profile) {
   if ($process.ExitCode -ne 0) { Throw "Error while creating conan profile." }
   
   $profile_path = "$Env:USERPROFILE\.conan\profiles\$profile"
-  (Get-Content $profile_path) -replace '\[build_requires\]', "[build_requires]`r`ncmake/3.16.4@" | Out-File -encoding ASCII $profile_path
+  (Get-Content $profile_path) -replace '\[build_requires\]', "[build_requires]`r`ncmake_installer/3.16.3@conan/stable" | Out-File -encoding ASCII $profile_path
 }
 
 $profiles = if ($args.Count) { $args } else { @("default_relwithdebinfo") }
