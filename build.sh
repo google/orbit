@@ -28,7 +28,7 @@ function create_conan_profile {
     conan profile update settings.build_type=Release $profile
   fi
 
-  sed -i -e 's|\[build_requires\]|[build_requires]\ncmake/3.16.4@|' $HOME/.conan/profiles/$profile
+  sed -i -e 's|\[build_requires\]|[build_requires]\ncmake_installer/3.16.3@conan/stable|' $HOME/.conan/profiles/$profile
 
   if [ -n "$CC" ]; then
     echo "CC=$CC" >> $HOME/.conan/profiles/$profile
