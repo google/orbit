@@ -41,11 +41,9 @@ class OrbitConan(ConanFile):
 
         return self.version
 
-
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
-
 
     def requirements(self):
         if self.settings.os != "Windows" and self.options.with_gui and not self.options.system_qt and self.options.system_mesa:
@@ -57,7 +55,8 @@ class OrbitConan(ConanFile):
         self.requires("bzip2/1.0.8@conan/stable#0")
         self.requires("capstone/4.0.1@{}#0".format(self._orbit_channel))
         self.requires("cereal/1.3.0@{}#0".format(self._orbit_channel))
-        self.requires("grpc/1.27.3@{}#dc2368a2df63276188566e36a6b7868a".format(self._orbit_channel))
+        self.requires(
+            "grpc/1.27.3@{}#dc2368a2df63276188566e36a6b7868a".format(self._orbit_channel))
         self.requires("gtest/1.8.1@bincrafters/stable#0")
         self.requires("llvm_object/9.0.1@orbitdeps/stable#0")
         self.requires("openssl/1.1.1d@{}#0".format(self._orbit_channel))
@@ -72,7 +71,8 @@ class OrbitConan(ConanFile):
         if self.options.with_gui:
             self.requires("freeglut/3.2.1@{}#0".format(self._orbit_channel))
             self.requires("freetype/2.10.0@bincrafters/stable#0")
-            self.requires("freetype-gl/8d9a97a@{}#2836d28f3d91c308ec9652c2054015db".format(self._orbit_channel))
+            self.requires(
+                "freetype-gl/8d9a97a@{}#2836d28f3d91c308ec9652c2054015db".format(self._orbit_channel))
             self.requires("glew/2.1.0@{}#0".format(self._orbit_channel))
             self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
             self.requires("imgui/1.69@bincrafters/stable#0")
@@ -88,8 +88,8 @@ class OrbitConan(ConanFile):
                 "Debian packaging is only supported for GGP builds!")
 
         if self.settings.os != "Windows" and not self.options.fPIC:
-            raise ConanInvalidConfiguration("We only support compiling with fPIC enabled!")
-
+            raise ConanInvalidConfiguration(
+                "We only support compiling with fPIC enabled!")
 
         if self.options.with_gui and self.settings.arch == "x86":
             raise ConanInvalidConfiguration(
@@ -126,7 +126,8 @@ class OrbitConan(ConanFile):
 
     def imports(self):
         dest = os.getenv("CONAN_IMPORT_PATH", "bin")
-        self.copy("crashpad_handler*", src="@bindirs", dst=dest, root_package="crashpad")
+        self.copy("crashpad_handler*", src="@bindirs",
+                  dst=dest, root_package="crashpad")
         if self.options.with_gui:
             for path in self.deps_cpp_info["freetype-gl"].resdirs:
                 self.copy("Vera.ttf", src=path, dst="{}/fonts/".format(dest))
