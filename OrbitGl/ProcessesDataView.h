@@ -26,6 +26,7 @@ class ProcessesDataView final : public DataView {
   bool SelectProcess(uint32_t process_id);
   void SetProcessList(std::vector<ProcessInfo>&& process_list);
   uint32_t GetSelectedProcessId() const;
+  uint32_t GetFirstProcessId() const;
 
  protected:
   void DoSort() override;
