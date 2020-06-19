@@ -12,4 +12,3 @@ message ProcessInfo {
   string command_line = 5;
   bool is_64_bit = 6;
 }
-
