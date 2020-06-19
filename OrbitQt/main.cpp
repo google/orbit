@@ -162,7 +162,7 @@ static outcome::result<void> RunUiInstance(
 }
 
 static void StyleOrbit(QApplication& app) {
-  app.setStyle(QStyleFactory::create("Fusion"));
+  QApplication::setStyle(QStyleFactory::create("Fusion"));
 
   QPalette darkPalette;
   darkPalette.setColor(QPalette::Window, QColor(53, 53, 53));
@@ -178,7 +178,24 @@ static void StyleOrbit(QApplication& app) {
   darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
   darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
   darkPalette.setColor(QPalette::HighlightedText, Qt::black);
-  app.setPalette(darkPalette);
+
+  QColor light_gray{160, 160, 160};
+  QColor dark_gray{90, 90, 90};
+  QColor darker_gray{80, 80, 80};
+  darkPalette.setColor(QPalette::Disabled, QPalette::Window, dark_gray);
+  darkPalette.setColor(QPalette::Disabled, QPalette::WindowText, light_gray);
+  darkPalette.setColor(QPalette::Disabled, QPalette::Base, darker_gray);
+  darkPalette.setColor(QPalette::Disabled, QPalette::AlternateBase, dark_gray);
+  darkPalette.setColor(QPalette::Disabled, QPalette::ToolTipBase, dark_gray);
+  darkPalette.setColor(QPalette::Disabled, QPalette::ToolTipText, light_gray);
+  darkPalette.setColor(QPalette::Disabled, QPalette::Text, light_gray);
+  darkPalette.setColor(QPalette::Disabled, QPalette::Button, darker_gray);
+  darkPalette.setColor(QPalette::Disabled, QPalette::ButtonText, light_gray);
+  darkPalette.setColor(QPalette::Disabled, QPalette::BrightText, light_gray);
+  darkPalette.setColor(QPalette::Disabled, QPalette::Link, light_gray);
+  darkPalette.setColor(QPalette::Disabled, QPalette::Highlight, dark_gray);
+
+  QApplication::setPalette(darkPalette);
   app.setStyleSheet(
       "QToolTip { color: #ffffff; background-color: #2a82da; border: 1px "
       "solid white; }");
