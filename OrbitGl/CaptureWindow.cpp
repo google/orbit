@@ -492,7 +492,9 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
   if (!m_ImguiActive) {
     switch (a_KeyCode) {
       case ' ':
-        ZoomAll();
+        if (!a_Shift) {
+          ZoomAll();
+        }
         break;
       case 'A':
         Pan(0.1f);
