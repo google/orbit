@@ -183,7 +183,6 @@ file(COPY third_party/OpenSSL/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/o
 file(COPY third_party/qtpropertybrowser/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/qtpropertybrowser/licenses/)
 file(COPY third_party/conan/LICENSE.md DESTINATION ${CMAKE_BINARY_DIR}/licenses/conan/licenses/)
 file(COPY third_party/stb/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/stb/licenses/)
-file(COPY third_party/QDarkStyleSheet/LICENSE.rst DESTINATION ${CMAKE_BINARY_DIR}/licenses/QDarkStyleSheet/licenses/)
 file(REMOVE ${CMAKE_BINARY_DIR}/licenses/freetype/licenses/LICENSE.TXT)
 file(REMOVE ${CMAKE_BINARY_DIR}/licenses/freetype/licenses/GPLv2.TXT)
 include("cmake/collect_licenses.cmake")
