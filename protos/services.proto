@@ -6,8 +6,7 @@ syntax = "proto3";
 
 import "process.proto";
 
-message GetProcessListRequest {
-}
+message GetProcessListRequest {}
 
 message GetProcessListResponse {
   repeated ProcessInfo processes = 1;
