@@ -44,7 +44,8 @@ else
   if [ $(uname -s) == "Linux" ]; then
     PROFILES=( {clang{7,8,9},gcc{8,9},ggp}_{release,relwithdebinfo,debug} )
 
-    if [ -z "${ORBIT_OVERRIDE_ARTIFACTORY_URL=}" ]; then
+    curl -s http://artifactory.internal/ >/dev/null 2>&1
+    if [ -z "${ORBIT_OVERRIDE_ARTIFACTORY_URL}" -a $? -ne 0 ]; then
       echo "Note: SSH port forwarding for artifactory set up?"
       export ORBIT_OVERRIDE_ARTIFACTORY_URL="http://localhost:8080/artifactory/api/conan/conan"
     fi
@@ -58,7 +59,8 @@ else
   else # Windows
     PROFILES=( msvc{2017,2019}_{release,relwithdebinfo,debug}{,_x86} )
 
-    if [ -z "${ORBIT_OVERRIDE_ARTIFACTORY_URL=}" ]; then
+    curl -s http://artifactory.internal/ >/dev/null 2>&1
+    if [ -z "${ORBIT_OVERRIDE_ARTIFACTORY_URL}" -a $? -ne 0 ]; then
       echo "Note: SSH port forwarding for artifactory set up?"
       PUBLIC_IP="$(ipconfig | grep -A20 "Ethernet adapter Ethernet:" | grep "IPv4 Address" | head -n1 | cut -d ':' -f 2 | tr -d ' \r\n')"
       export ORBIT_OVERRIDE_ARTIFACTORY_URL="http://${PUBLIC_IP}:8080/artifactory/api/conan/conan"
@@ -66,10 +68,11 @@ else
 
     for profile in ${PROFILES[@]}; do
       docker run --isolation=process --rm -v $REPO_ROOT_WIN:C:/mnt \
-	     -e ARTIFACTORY_USERNAME -e ARTIFACTORY_API_KEY \
-	     -e ORBIT_OVERRIDE_ARTIFACTORY_URL \
-	     gcr.io/orbitprofiler/$profile:latest "C:/Program Files/Git/bin/bash.exe" \
-	     -c "/c$SCRIPT $profile" || exit $?
+       --storage-opt "size=50GB" \
+       -e ARTIFACTORY_USERNAME -e ARTIFACTORY_API_KEY \
+       -e ORBIT_OVERRIDE_ARTIFACTORY_URL \
+       gcr.io/orbitprofiler/$profile:latest "C:/Program Files/Git/bin/bash.exe" \
+       -c "/c$SCRIPT $profile" || exit $?
     done
   fi
 fi
