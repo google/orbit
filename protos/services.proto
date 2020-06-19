@@ -5,11 +5,21 @@
 syntax = "proto3";
 
 import "process.proto";
+import "frame-pointer-validator.proto";
 
 message GetProcessListRequest {}
 
 message GetProcessListResponse {
   repeated ProcessInfo processes = 1;
+}
+
+message ValidateFramePointersRequest {
+  uint32 process_id = 1;
+  string module_name = 2;
+}
+
+message ValidateFramePointersResponse {
+  FunctionsWithoutFramePointer functions_without_frame_pointer = 1;
 }
 
 service ProcessService {
