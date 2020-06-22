@@ -1027,36 +1027,6 @@ std::shared_ptr<Process> OrbitApp::FindProcessByPid(uint32_t pid) {
   return it->second;
 }
 
-void OrbitApp::UpdateProcess(const std::shared_ptr<Process>& process) {
-  absl::MutexLock lock(&process_map_mutex_);
-  // We want to move function map to new process object
-  auto old_process_it = process_map_.find(process->GetID());
-  if (old_process_it != process_map_.end()) {
-    // TODO: all the following needs to be addressed by
-    // separating client-only part of information to
-    // separate structures.
-    std::shared_ptr<Process> old_process = old_process_it->second;
-    std::map<uint64_t, std::shared_ptr<Module>>& old_modules =
-        old_process->GetModules();
-    std::map<uint64_t, std::shared_ptr<Module>>& new_modules =
-        process->GetModules();
-
-    // Move 'loaded' flag to new modules if possible, together with m_Pdb,
-    // needed when loading sessions as Pdb::ApplyPresets is called.
-    for (auto module_entry : old_modules) {
-      uint64_t key = module_entry.first;
-      auto new_module_it = new_modules.find(key);
-      if (new_module_it != new_modules.end()) {
-        new_module_it->second->SetLoaded(module_entry.second->IsLoaded());
-        new_module_it->second->m_Pdb = module_entry.second->m_Pdb;
-      }
-    }
-
-    process->SetFunctions(old_process->GetFunctions());
-  }
-  process_map_.insert_or_assign(process->GetID(), process);
-}
-
 //-----------------------------------------------------------------------------
 void OrbitApp::OnRemoteModuleDebugInfo(
     const std::vector<ModuleDebugInfo>& remote_module_debug_infos) {

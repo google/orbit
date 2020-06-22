@@ -239,7 +239,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
  private:
   // TODO(dimitry): Move this to process manager
   std::shared_ptr<Process> FindProcessByPid(uint32_t pid);
-  void UpdateProcess(const std::shared_ptr<Process>& process);
 
   ApplicationOptions options_;
 
