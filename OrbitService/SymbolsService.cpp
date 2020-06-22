@@ -30,6 +30,9 @@ void SymbolsService::HandleRequest(const Message& message) {
       continue;
     }
 
+    // Make sure modules are loaded.
+    process->ListModules();
+
     // Find module.
     const std::string& module_name = module_info.m_Name;
     std::shared_ptr<Module> module = process->GetModuleFromName(module_name);
