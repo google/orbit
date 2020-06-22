@@ -1230,16 +1230,6 @@ void CaptureWindow::RenderTimeBar() {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureWindow::SendProcess() {
-  if (Capture::GTargetProcess) {
-    std::string processData =
-        SerializeObjectHumanReadable(*Capture::GTargetProcess);
-    PRINT_VAR(processData);
-    GTcpClient->Send(Msg_RemoteProcess, processData.data(), processData.size());
-  }
-}
-
-//-----------------------------------------------------------------------------
 void CaptureWindow::Initialize() {
   GlCanvas::Initialize();
   LoadIcons();
