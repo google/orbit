@@ -18,8 +18,6 @@ target_sources(OrbitService PRIVATE
         OrbitGrpcServer.h
         OrbitService.cpp
         OrbitService.h
-        ProcessMemoryService.h
-        ProcessMemoryService.cpp
         ProcessServiceImpl.cpp
         ProcessServiceImpl.h
         SymbolsService.h
