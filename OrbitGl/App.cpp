@@ -288,6 +288,7 @@ void OrbitApp::PostInit() {
             std::shared_ptr<Process> process = std::make_shared<Process>();
             process->SetID(info.pid());
             process->SetName(info.name());
+            process->SetIsRemote(true);
             // The other fields do not appear to be used at the moment.
 
             process_map_.insert_or_assign(process->GetID(), process);
