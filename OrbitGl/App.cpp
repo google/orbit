@@ -1153,3 +1153,15 @@ void OrbitApp::InitializeClientTransactions() {
 void OrbitApp::FilterFunctions(const std::string& filter) {
   m_LiveFunctionsDataView->OnFilter(filter);
 }
+
+void OrbitApp::GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
+                               const ProcessMemoryCallback& callback) {
+  thread_pool_->Schedule([this, pid, address, size, callback] {
+    std::string memory = process_manager_->GetProcessMemory(pid, address, size);
+    main_thread_executor_->Schedule([memory = std::move(memory), callback] {
+      // TODO: This makes a copy.
+      std::vector<uint8_t> data{memory.begin(), memory.end()};
+      callback(data);
+    });
+  });
+}

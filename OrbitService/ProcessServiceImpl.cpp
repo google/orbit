@@ -20,7 +20,7 @@ Status ProcessServiceImpl::GetProcessList(ServerContext*,
 
   process_list_.Refresh();
   process_list_.UpdateCpuTimes();
-  for (const std::shared_ptr<Process> process : process_list_.GetProcesses()) {
+  for (const std::shared_ptr<Process>& process : process_list_.GetProcesses()) {
     ProcessInfo* process_info = response->add_processes();
     process_info->set_pid(process->GetID());
     process_info->set_name(process->GetName());
@@ -62,6 +62,25 @@ Status ProcessServiceImpl::GetModuleList(ServerContext*,
     module_info->set_file_size(module->m_PdbSize);
     module_info->set_address_start(module->m_AddressStart);
     module_info->set_address_end(module->m_AddressEnd);
+  }
+
+  return Status::OK;
+}
+
+Status ProcessServiceImpl::GetProcessMemory(
+    ServerContext*, const GetProcessMemoryRequest* request,
+    GetProcessMemoryResponse* response) {
+  uint64_t size = std::min(request->size(), kMaxGetProcessMemoryResponseSize);
+  response->mutable_memory()->resize(size);
+  uint64_t num_bytes_read = 0;
+  if (ReadProcessMemory(
+          request->pid(), request->address(),
+          reinterpret_cast<uint8_t*>(response->mutable_memory()->data()), size,
+          &num_bytes_read)) {
+    response->mutable_memory()->resize(num_bytes_read);
+  } else {
+    ERROR("GetProcessMemory: attempting to read %#lx", request->address());
+    response->mutable_memory()->resize(0);
   }
 
   return Status::OK;

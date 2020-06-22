@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SERIVICE_PROCESS_SERVICE_IMPL_H_
-#define ORBIT_SERIVICE_PROCESS_SERVICE_IMPL_H_
+#ifndef ORBIT_SERVICE_PROCESS_SERVICE_IMPL_H_
+#define ORBIT_SERVICE_PROCESS_SERVICE_IMPL_H_
 
 #include <memory>
 #include <string>
@@ -21,9 +21,15 @@ class ProcessServiceImpl final : public ProcessService::Service {
                              const GetModuleListRequest* request,
                              GetModuleListResponse* response) override;
 
+  grpc::Status GetProcessMemory(grpc::ServerContext* context,
+                                const GetProcessMemoryRequest* request,
+                                GetProcessMemoryResponse* response) override;
+
  private:
   absl::Mutex mutex_;
   ProcessList process_list_;
+
+  static constexpr size_t kMaxGetProcessMemoryResponseSize = 8 * 1024 * 1024;
 };
 
-#endif  // ORBIT_SERIVICE_PROCESS_SERVICE_IMPL_H_
+#endif  // ORBIT_SERVICE_PROCESS_SERVICE_IMPL_H_

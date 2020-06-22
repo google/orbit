@@ -41,6 +41,7 @@
 #include "TypesDataView.h"
 #include "absl/container/flat_hash_map.h"
 #include "grpcpp/grpcpp.h"
+#include "services.grpc.pb.h"
 
 #if defined(_WIN32)
 #include "Debugger.h"
@@ -232,9 +233,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
     return frame_pointer_validator_client_.get();
   }
   void GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
-                       const ProcessMemoryCallback& callback) override {
-    process_memory_client_->GetRemoteMemory(pid, address, size, callback);
-  }
+                       const ProcessMemoryCallback& callback) override;
 
  private:
   ApplicationOptions options_;
@@ -265,9 +264,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<LogDataView> m_LogDataView;
 
   CaptureWindow* m_CaptureWindow = nullptr;
-  bool m_HasPromptedForUpdate = false;
   bool m_NeedsThawing = false;
-  bool m_UnrealEnabled = false;
 
   std::shared_ptr<class SamplingReport> sampling_report_;
   std::shared_ptr<class SamplingReport> selection_report_;

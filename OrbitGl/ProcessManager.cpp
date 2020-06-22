@@ -18,7 +18,7 @@ constexpr uint64_t kGrpcCallTimeoutMilliseconds = 1000;
 
 class ProcessManagerImpl final : public ProcessManager {
  public:
-  explicit ProcessManagerImpl(std::shared_ptr<grpc::Channel> channel,
+  explicit ProcessManagerImpl(const std::shared_ptr<grpc::Channel>& channel,
                               absl::Duration refresh_timeout);
 
   void SetProcessListUpdateListener(
@@ -26,6 +26,8 @@ class ProcessManagerImpl final : public ProcessManager {
   std::vector<ProcessInfo> GetProcessList() const override;
   outcome::result<std::vector<ModuleInfo>, std::string> LoadModuleList(
       uint32_t pid) override;
+  std::string GetProcessMemory(uint32_t pid, uint64_t address,
+                               uint64_t size) override;
   void Start();
   void Shutdown() override;
 
@@ -46,8 +48,9 @@ class ProcessManagerImpl final : public ProcessManager {
   std::thread worker_thread_;
 };
 
-ProcessManagerImpl::ProcessManagerImpl(std::shared_ptr<grpc::Channel> channel,
-                                       absl::Duration refresh_timeout)
+ProcessManagerImpl::ProcessManagerImpl(
+    const std::shared_ptr<grpc::Channel>& channel,
+    absl::Duration refresh_timeout)
     : process_service_(ProcessService::NewStub(channel)),
       refresh_timeout_(refresh_timeout),
       shutdown_initiated_(false) {}
@@ -130,7 +133,7 @@ void ProcessManagerImpl::WorkerFunction() {
     grpc::Status status =
         process_service_->GetProcessList(context.get(), request, &response);
     if (!status.ok()) {
-      ERROR("Grpc call failed: %s", status.error_message());
+      ERROR("gRPC call to GetProcessList failed: %s", status.error_message());
       continue;
     }
 
@@ -143,10 +146,36 @@ void ProcessManagerImpl::WorkerFunction() {
   }
 }
 
+std::string ProcessManagerImpl::GetProcessMemory(uint32_t pid, uint64_t address,
+                                                 uint64_t size) {
+  grpc::ClientContext context;
+  std::chrono::time_point deadline =
+      std::chrono::system_clock::now() +
+      std::chrono::milliseconds(kGrpcCallTimeoutMilliseconds);
+  context.set_deadline(deadline);
+
+  GetProcessMemoryRequest request;
+  request.set_pid(pid);
+  request.set_address(address);
+  request.set_size(size);
+
+  GetProcessMemoryResponse response;
+
+  grpc::Status status =
+      process_service_->GetProcessMemory(&context, request, &response);
+  if (!status.ok()) {
+    ERROR("gRPC call to GetProcessMemory failed: %s", status.error_message());
+    return std::string{};
+  }
+
+  return response.memory();
+}
+
 }  // namespace
 
 std::unique_ptr<ProcessManager> ProcessManager::Create(
-    std::shared_ptr<grpc::Channel> channel, absl::Duration refresh_timeout) {
+    const std::shared_ptr<grpc::Channel>& channel,
+    absl::Duration refresh_timeout) {
   std::unique_ptr<ProcessManagerImpl> impl =
       std::make_unique<ProcessManagerImpl>(channel, refresh_timeout);
   impl->Start();
