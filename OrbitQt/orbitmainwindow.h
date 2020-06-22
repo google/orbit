@@ -57,6 +57,7 @@ class OrbitMainWindow : public QMainWindow {
 
  private slots:
   void on_actionAbout_triggered();
+  void on_actionFeedback_triggered();
   void OnTimer();
   void OnHideSearch();
 

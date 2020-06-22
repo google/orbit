@@ -1000,6 +1000,7 @@ void CaptureWindow::RenderToolbars() {
   ImGui::SameLine();
   bool feedback_enabled = !is_capturing;
   if (IconButton(feedback_icon_id_, "Feedback", icon_size, feedback_enabled)) {
+    GOrbitApp->SendToUi("feedback");
   }
 
   const float space_between_toolbars = 0;

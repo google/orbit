@@ -7,6 +7,7 @@
 #include <QBuffer>
 #include <QClipboard>
 #include <QCoreApplication>
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QMouseEvent>
@@ -494,6 +495,8 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
                            ? title_text.substr(title_text.find('\n'))
                            : title;
     QMessageBox::information(this, title.c_str(), text.c_str());
+  } else if (absl::StartsWith(a_Message, "feedback")) {
+    on_actionFeedback_triggered();
   }
 }
 
@@ -532,6 +535,11 @@ void OrbitMainWindow::on_actionAbout_triggered() {
     dialog.setLicenseText(licenseFile.readAll());
   }
   dialog.exec();
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionFeedback_triggered() {
+  QDesktopServices::openUrl(QUrl("https://community.stadia.dev", QUrl::StrictMode));
 }
 
 //-----------------------------------------------------------------------------
