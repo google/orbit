@@ -163,3 +163,19 @@ struct is_input_archive
 template <typename Archive>
 inline constexpr bool is_input_archive_v = is_input_archive<Archive>::value;
 }  // namespace OrbitCore
+
+#ifdef ORBIT_FUZZING
+namespace cereal {
+// This overload takes precedence over the one provided by cereal, so it allows
+// us to change the behaviour. Of course, that's a (temporary) hack and will be
+// removed as soon as we remove cereal from the codebase. It only applies to the
+// fuzz testing build.
+template <class T>
+void CEREAL_SERIALIZE_FUNCTION_NAME(BinaryInputArchive& ar, SizeTag<T>& t) {
+  ar(t.size);
+  if (t.size > 100 * 1024 * 1024) {  // 100 MiB
+    throw Exception("size limit reached!");
+  }
+}
+}  // namespace cereal
+#endif
