@@ -131,6 +131,10 @@ endif()
 add_definitions(-DNOMINMAX)
 add_definitions(-DUNICODE -D_UNICODE)
 
+if(WITH_FUZZING)
+  add_definitions(-DORBIT_FUZZING=1)
+endif()
+
 if(WIN32)
   add_definitions(-DWIN32)
 else()
