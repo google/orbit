@@ -5,7 +5,6 @@
 #include "ProcessServiceImpl.h"
 
 #include <memory>
-#include <string>
 
 using grpc::ServerContext;
 using grpc::Status;

@@ -7,6 +7,8 @@
 
 #include "OrbitModule.h"
 #include "TransactionClient.h"
+#include "grpcpp/grpcpp.h"
+#include "services.grpc.pb.h"
 
 class OrbitApp;
 
@@ -20,7 +22,7 @@ class OrbitApp;
 class FramePointerValidatorClient {
  public:
   explicit FramePointerValidatorClient(OrbitApp* core_app,
-                                       TransactionClient* transaction_client);
+                                       std::shared_ptr<grpc::Channel> channel);
 
   FramePointerValidatorClient() = delete;
   FramePointerValidatorClient(const FramePointerValidatorClient&) = delete;
@@ -30,16 +32,12 @@ class FramePointerValidatorClient {
   FramePointerValidatorClient& operator=(FramePointerValidatorClient&&) =
       delete;
 
-  void AnalyzeModule(uint32_t process_id,
-                     const std::vector<std::shared_ptr<Module>>& modules);
+  void AnalyzeModules(const std::vector<std::shared_ptr<Module>>& modules);
 
  private:
-  void HandleResponse(const Message& message, uint64_t id);
   OrbitApp* app_;
-  TransactionClient* transaction_client_;
-  absl::flat_hash_map<uint64_t, std::vector<std::shared_ptr<Module>>>
-      modules_map_;
-  absl::Mutex id_mutex_;
+  std::unique_ptr<FramePointerValidatorService::Stub>
+      frame_pointer_validator_service_;
 };
 
 #endif  // ORBIT_CORE_FRAME_POINTER_VALIDATOR_CLIENT_H_

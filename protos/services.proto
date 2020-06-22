@@ -13,15 +13,20 @@ message GetProcessListResponse {
   repeated ProcessInfo processes = 1;
 }
 
+service ProcessService {
+  rpc GetProcessList(GetProcessListRequest) returns (GetProcessListResponse) {}
+}
+
 message ValidateFramePointersRequest {
-  uint32 process_id = 1;
-  string module_name = 2;
+  bool is_64_bit = 1;
+  repeated ModuleInformation modules = 2;
 }
 
 message ValidateFramePointersResponse {
-  FunctionsWithoutFramePointer functions_without_frame_pointer = 1;
+  repeated FunctionInformation functions_without_frame_pointer = 1;
 }
 
-service ProcessService {
-  rpc GetProcessList(GetProcessListRequest) returns (GetProcessListResponse) {}
+service FramePointerValidatorService {
+  rpc ValidateFramePointers(ValidateFramePointersRequest)
+      returns (ValidateFramePointersResponse) {}
 }

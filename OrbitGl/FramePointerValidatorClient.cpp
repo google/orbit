@@ -11,61 +11,60 @@
 #include "App.h"
 #include "Message.h"
 #include "Pdb.h"
+#include "grpcpp/grpcpp.h"
+#include "services.grpc.pb.h"
 
 FramePointerValidatorClient::FramePointerValidatorClient(
-    OrbitApp* app, TransactionClient* transaction_client)
-    : app_{app}, transaction_client_{transaction_client} {
-  auto on_response = [this](const Message& msg, uint64_t id) {
-    HandleResponse(msg, id);
-  };
+    OrbitApp* app, std::shared_ptr<grpc::Channel> channel)
+    : app_{app},
+      frame_pointer_validator_service_{
+          FramePointerValidatorService::NewStub(channel)} {}
 
-  transaction_client_->RegisterTransactionResponseHandler(
-      {on_response, Msg_ValidateFramePointers, "Validate Frame Pointer"});
-}
-
-void FramePointerValidatorClient::AnalyzeModule(
-    uint32_t process_id, const std::vector<std::shared_ptr<Module>>& modules) {
+void FramePointerValidatorClient::AnalyzeModules(
+    const std::vector<std::shared_ptr<Module>>& modules) {
   if (modules.empty()) {
     ERROR("No module to validate, cancelling");
     return;
   }
 
-  std::vector<ModuleDebugInfo> remote_module_infos;
+  ValidateFramePointersRequest request;
+  ValidateFramePointersResponse response;
+
+  // TODO:
+  request.set_is_64_bit(true);
 
   for (const std::shared_ptr<Module>& module : modules) {
     if (module == nullptr) continue;
-    ModuleDebugInfo module_info;
-    const char* name = module->m_Name.c_str();
-    module_info.m_Name = name;
-    module_info.m_PID = process_id;
-    remote_module_infos.push_back(std::move(module_info));
+    if (module->m_Pdb == nullptr) continue;
+
+    ModuleInformation* module_info = request.add_modules();
+    module_info->set_module_path(module->m_FullName);
+    for (const auto& function : module->m_Pdb->GetFunctions()) {
+      FunctionInformation* function_info = module_info->add_functions();
+      function_info->set_offset(function->Offset());
+      function_info->set_size(function->Size());
+    }
   }
 
-  if (remote_module_infos.empty()) {
+  if (request.modules_size() == 0) {
     return;
   }
 
-  uint64_t id = transaction_client_->EnqueueRequest(Msg_ValidateFramePointers,
-                                                    remote_module_infos);
+  grpc::ClientContext context;
+  // TODO(kuebler) reasonable deadline time and use constant
+  std::chrono::time_point deadline =
+      std::chrono::system_clock::now() + std::chrono::seconds(60);
+  context.set_deadline(deadline);
 
-  absl::MutexLock lock(&id_mutex_);
-  modules_map_[id] = modules;
-}
+  // careful this is the synchronous call (maybe async is better)
+  grpc::Status status = frame_pointer_validator_service_->ValidateFramePointers(
+      &context, request, &response);
 
-void FramePointerValidatorClient::HandleResponse(const Message& message,
-                                                 uint64_t id) {
-  std::tuple<bool, std::vector<std::shared_ptr<Function>>> response;
-  transaction_client_->ReceiveResponse(message, &response);
-
-  id_mutex_.Lock();
-  std::vector<std::shared_ptr<Module>> modules = modules_map_[id];
-  modules_map_.erase(id);
-  id_mutex_.Unlock();
-
-  if (!std::get<0>(response)) {
-    app_->SendErrorToUi("Frame Pointer Validation",
-                        "Failed to validate frame pointers");
-    return;
+  if (!status.ok()) {
+    return app_->SendErrorToUi(
+        "Frame Pointer Validation",
+        absl::StrFormat("Grpc call for frame-pointer validation failed: %s",
+                        status.error_message()));
   }
 
   uint64_t num_functions = 0;
@@ -73,8 +72,8 @@ void FramePointerValidatorClient::HandleResponse(const Message& message,
     num_functions += module->m_Pdb->GetFunctions().size();
   }
 
-  std::string text =
-      absl::StrFormat("Failed to validate %d out of %d functions",
-                      std::get<1>(response).size(), num_functions);
+  std::string text = absl::StrFormat(
+      "Failed to validate %d out of %d functions",
+      response.functions_without_frame_pointer_size(), num_functions);
   app_->SendInfoToUi("Frame Pointer Validation", text);
 }

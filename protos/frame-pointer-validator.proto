@@ -4,9 +4,12 @@
 
 syntax = "proto3";
 
-message FunctionsWithoutFramePointer {
-  repeated FunctionInfo functions = 1;
+message ModuleInformation {
+  string module_path = 1;
+  repeated FunctionInformation functions = 2;
 }
- message FunctionInfo {
-  string name = 1;
- }
+
+message FunctionInformation {
+  uint64 offset = 1;
+  uint64 size = 2;
+}

@@ -155,8 +155,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
     }
 
     if (!modules_to_validate.empty()) {
-      GOrbitApp->GetFramePointerValidatorClient()->AnalyzeModule(
-          process_id_, modules_to_validate);
+      GOrbitApp->OnValidateFramePointers(modules_to_validate);
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);

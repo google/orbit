@@ -100,6 +100,8 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void AddKeyAndString(uint64_t key, std::string_view str) override;
   void UpdateThreadName(uint32_t thread_id,
                         const std::string& thread_name) override;
+  void OnValidateFramePointers(
+      std::vector<std::shared_ptr<Module>> modules_to_validate);
 
   void RegisterCaptureWindow(class CaptureWindow* a_Capture);
 
@@ -227,9 +229,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
     return transaction_client_.get();
   }
   SymbolsClient* GetSymbolsClient() { return symbols_client_.get(); }
-  FramePointerValidatorClient* GetFramePointerValidatorClient() {
-    return frame_pointer_validator_client_.get();
-  }
   void GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
                        const ProcessMemoryCallback& callback) override {
     process_memory_client_->GetRemoteMemory(pid, address, size, callback);
