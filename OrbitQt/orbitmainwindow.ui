@@ -316,14 +316,14 @@
     <string>Save Session</string>
    </property>
   </action>
-  <action name="actionAbout">
-   <property name="text">
-    <string>About</string>
-   </property>
-  </action>
   <action name="actionFeedback">
    <property name="text">
     <string>Feedback</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
   <action name="actionOpen_Session">
