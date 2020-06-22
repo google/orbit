@@ -24,6 +24,8 @@ class DataManager final {
                          const std::vector<ModuleInfo>& module_infos);
 
   const std::vector<ModuleData*> GetModules(uint32_t process_id);
+  ModuleData* FindModuleByAddressStart(uint32_t process_id,
+                                       uint64_t address_start);
 
  private:
   const std::thread::id main_thread_id_;

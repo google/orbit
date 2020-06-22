@@ -44,3 +44,13 @@ const std::vector<ModuleData*> DataManager::GetModules(uint32_t process_id) {
 
   return it->second->GetModules();
 }
+
+ModuleData* DataManager::FindModuleByAddressStart(uint32_t process_id,
+                                                  uint64_t address_start) {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+
+  auto it = process_map_.find(process_id);
+  CHECK(it != process_map_.end());
+
+  return it->second->FindModuleByAddressStart(address_start);
+}
