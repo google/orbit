@@ -47,6 +47,15 @@ class ProcessData final {
     return current_module_list_;
   }
 
+  ModuleData* FindModuleByAddressStart(uint64_t address_start) {
+    auto it = modules_.find(address_start);
+    if (it == modules_.end()) {
+      return nullptr;
+    }
+
+    return it->second.get();
+  }
+
  private:
   ProcessInfo process_info_;
 

@@ -31,6 +31,7 @@ class ModuleData final {
                            module_info_.address_end());
   }
 
+  void set_loaded(bool value) { is_loaded_ = value; }
   bool is_loaded() const { return is_loaded_; }
 
  private:

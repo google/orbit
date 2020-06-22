@@ -884,6 +884,17 @@ void OrbitApp::LoadModules() {
 void OrbitApp::LoadRemoteModules() {
   GetSymbolsClient()->LoadSymbolsFromModules(Capture::GTargetProcess.get(),
                                              m_ModulesToLoad, nullptr);
+  // Detect loaded modules - see also explanation below.
+  uint32_t process_id = Capture::GTargetProcess->GetID();
+  for (auto& module : m_ModulesToLoad) {
+    if (!module->IsLoaded()) {
+      continue;
+    }
+    ModuleData* module_data = data_manager_->FindModuleByAddressStart(
+        process_id, module->m_AddressStart);
+    module_data->set_loaded(true);
+  }
+
   m_ModulesToLoad.clear();
   // This is a bit counterintuitive. LoadSymbols generates request to
   // the service if symbols cannot be loaded locally. In which case
@@ -1047,6 +1058,12 @@ void OrbitApp::OnRemoteModuleDebugInfo(
     symbol_helper_.LoadSymbolsFromDebugInfo(module, module_info);
     LOG("Received %lu function symbols from remote service for module %s",
         module_info.m_Functions.size(), module_info.m_Name.c_str());
+
+    ModuleData* module_data = data_manager_->FindModuleByAddressStart(
+        Capture::GTargetProcess->GetID(), module->m_AddressStart);
+    if (module_data != nullptr) {
+      module_data->set_loaded(true);
+    }
   }
 
   UpdateSamplingReport();
