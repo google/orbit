@@ -47,13 +47,17 @@ class ProcessManager {
   // Get a copy of process list.
   virtual std::vector<ProcessInfo> GetProcessList() const = 0;
 
+  virtual std::string GetProcessMemory(uint32_t pid, uint64_t address,
+                                       uint64_t size) = 0;
+
   // Note that this method waits for the worker thread to stop, which could
   // take up to refresh_timeout.
   virtual void Shutdown() = 0;
 
   // Create ProcessManager with specified duration
   static std::unique_ptr<ProcessManager> Create(
-      std::shared_ptr<grpc::Channel> channel, absl::Duration refresh_timeout);
+      const std::shared_ptr<grpc::Channel>& channel,
+      absl::Duration refresh_timeout);
 };
 
 #endif  // ORBIT_GL_PROCESS_MANAGER_H_
