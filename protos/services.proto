@@ -18,8 +18,7 @@ service ProcessService {
 }
 
 message ValidateFramePointersRequest {
-  bool is_64_bit = 1;
-  repeated ModuleInformation modules = 2;
+  repeated ModuleInformation modules = 1;
 }
 
 message ValidateFramePointersResponse {

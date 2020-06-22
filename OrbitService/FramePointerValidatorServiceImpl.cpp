@@ -6,14 +6,19 @@
 
 #include <vector>
 
+#include "ElfFile.h"
 #include "FramePointerValidator.h"
 #include "OrbitFunction.h"
-#include "Pdb.h"
 
 grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
     grpc::ServerContext*, const ValidateFramePointersRequest* request,
     ValidateFramePointersResponse* response) {
   for (const auto& module_info : request->modules()) {
+    // Even though this information should be available on the client,
+    // we want not rely on this here, and for this particular use case we are
+    // fine with doing some extra work, and compute it here.
+    bool is_64_bit = ElfFile::Create(module_info.module_path())->Is64Bit();
+
     std::vector<FunctionInfo> function_infos;
 
     std::transform(
@@ -25,7 +30,7 @@ grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
 
     std::optional<std::vector<FunctionInfo>> functions =
         FramePointerValidator::GetFpoFunctions(
-            function_infos, module_info.module_path(), request->is_64_bit());
+            function_infos, module_info.module_path(), is_64_bit);
 
     if (!functions.has_value()) {
       return grpc::Status(

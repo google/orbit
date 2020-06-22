@@ -30,9 +30,6 @@ void FramePointerValidatorClient::AnalyzeModules(
   ValidateFramePointersRequest request;
   ValidateFramePointersResponse response;
 
-  // TODO:
-  request.set_is_64_bit(true);
-
   for (const std::shared_ptr<Module>& module : modules) {
     if (module == nullptr) continue;
     if (module->m_Pdb == nullptr) continue;
@@ -51,9 +48,8 @@ void FramePointerValidatorClient::AnalyzeModules(
   }
 
   grpc::ClientContext context;
-  // TODO(kuebler) reasonable deadline time and use constant
   std::chrono::time_point deadline =
-      std::chrono::system_clock::now() + std::chrono::seconds(60);
+      std::chrono::system_clock::now() + std::chrono::minutes(1);
   context.set_deadline(deadline);
 
   // careful this is the synchronous call (maybe async is better)

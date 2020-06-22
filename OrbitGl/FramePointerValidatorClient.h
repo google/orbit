@@ -14,7 +14,7 @@ class OrbitApp;
 
 // This class can be called from the UI on the client in order to validate
 // whether certain modules are compiled with frame pointers.
-// It will send a request to FramePointerValidatorService, to perform the
+// It will send a request to FramePointerValidatorServiceImpl, to perform the
 // analysis on the client.
 // On a response, it will display the number of functions that have a non-valid
 // prologue/epilogue as an infobox.
