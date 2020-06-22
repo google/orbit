@@ -117,7 +117,7 @@ void Process::ListModules() {
 
   for (auto& pair : m_Modules) {
     std::shared_ptr<Module>& module = pair.second;
-    std::string name = ToLower(module->m_Name);
+    std::string name = absl::AsciiStrToLower(module->m_Name);
     m_NameToModuleMap[name] = module;
 #ifdef _WIN32
     // TODO: check if the windows implementation does something meaningfull
@@ -338,6 +338,7 @@ void Process::AddType(Type& a_Type) {
 //-----------------------------------------------------------------------------
 void Process::AddModule(std::shared_ptr<Module>& a_Module) {
   m_Modules[a_Module->m_AddressStart] = a_Module;
+  m_NameToModuleMap[absl::AsciiStrToLower(a_Module->m_Name)] = a_Module;
 }
 
 //-----------------------------------------------------------------------------

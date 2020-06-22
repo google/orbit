@@ -16,6 +16,7 @@
 #include "CallStackDataView.h"
 #include "ContextSwitch.h"
 #include "CoreApp.h"
+#include "DataManager.h"
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
 #include "FramePointerValidatorClient.h"
@@ -188,6 +189,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   }
 
   void EnqueueModuleToLoad(const std::shared_ptr<struct Module>& a_Module);
+  void EnqueueModuleToLoad(const std::string& module_name);
   void LoadModules();
   void LoadRemoteModules();
   bool IsLoading();
@@ -210,7 +212,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   bool GetUploadDumpsToServerEnabled() const override;
 
   void RequestThaw() { m_NeedsThawing = true; }
-  void OnRemoteProcess(const Message& a_Message);
   void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) override;
   void UpdateSamplingReport();
   void ApplySession(const Session& session) override;
@@ -292,6 +293,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<MainThreadExecutor> main_thread_executor_;
   std::unique_ptr<ThreadPool> thread_pool_;
   std::unique_ptr<ProcessManager> process_manager_;
+  std::unique_ptr<DataManager> data_manager_;
 
   const SymbolHelper symbol_helper_;
 #if defined(_WIN32)

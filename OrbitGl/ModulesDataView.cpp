@@ -38,23 +38,23 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
 
 //-----------------------------------------------------------------------------
 std::string ModulesDataView::GetValue(int row, int col) {
-  const std::shared_ptr<Module>& module = GetModule(row);
+  const ModuleData* module = GetModule(row);
 
   switch (col) {
     case COLUMN_INDEX:
       return std::to_string(row);
     case COLUMN_NAME:
-      return module->m_Name;
+      return module->name();
     case COLUMN_PATH:
-      return module->m_FullName;
+      return module->path();
     case COLUMN_ADDRESS_RANGE:
-      return module->m_AddressRange;
+      return module->address_range();
     case COLUMN_HAS_PDB:
-      return module->IsLoadable() ? "*" : "";
+      return "*";
     case COLUMN_PDB_SIZE:
-      return module->IsLoadable() ? GetPrettySize(module->m_PdbSize) : "";
+      return GetPrettySize(module->size());
     case COLUMN_LOADED:
-      return module->IsLoaded() ? "*" : "";
+      return module->is_loaded() ? "*" : "";
     default:
       return "";
   }
@@ -74,22 +74,19 @@ void ModulesDataView::DoSort() {
 
   switch (m_SortingColumn) {
     case COLUMN_NAME:
-      sorter = ORBIT_PROC_SORT(m_Name);
+      sorter = ORBIT_PROC_SORT(name());
       break;
     case COLUMN_PATH:
-      sorter = ORBIT_PROC_SORT(m_FullName);
+      sorter = ORBIT_PROC_SORT(path());
       break;
     case COLUMN_ADDRESS_RANGE:
-      sorter = ORBIT_PROC_SORT(m_AddressStart);
-      break;
-    case COLUMN_HAS_PDB:
-      sorter = ORBIT_PROC_SORT(IsLoadable());
+      sorter = ORBIT_PROC_SORT(address_start());
       break;
     case COLUMN_PDB_SIZE:
-      sorter = ORBIT_PROC_SORT(m_PdbSize);
+      sorter = ORBIT_PROC_SORT(size());
       break;
     case COLUMN_LOADED:
-      sorter = ORBIT_PROC_SORT(IsLoaded());
+      sorter = ORBIT_PROC_SORT(is_loaded());
       break;
     default:
       break;
@@ -111,12 +108,12 @@ std::vector<std::string> ModulesDataView::GetContextMenu(
   bool enable_load = false;
   bool enable_verify = false;
   for (int index : selected_indices) {
-    std::shared_ptr<Module> module = GetModule(index);
-    if (module->IsLoadable() && !module->IsLoaded()) {
+    const ModuleData* module = GetModule(index);
+    if (!module->is_loaded()) {
       enable_load = true;
     }
 
-    if (module->IsLoaded()) {
+    if (module->is_loaded()) {
       enable_verify = true;
     }
   }
@@ -137,9 +134,9 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
                                     const std::vector<int>& item_indices) {
   if (action == MENU_ACTION_MODULES_LOAD) {
     for (int index : item_indices) {
-      const std::shared_ptr<Module>& module = GetModule(index);
-      if (module->IsLoadable() && !module->IsLoaded()) {
-        GOrbitApp->EnqueueModuleToLoad(module);
+      const ModuleData* module = GetModule(index);
+      if (!module->is_loaded()) {
+        GOrbitApp->EnqueueModuleToLoad(module->name());
       }
     }
 
@@ -147,11 +144,9 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
   } else if (action == MENU_ACTION_MODULES_VERIFY) {
     std::vector<std::shared_ptr<Module>> modules_to_validate;
     for (int index : item_indices) {
-      const std::shared_ptr<Module>& module = GetModule(index);
-
-      if (module->IsLoadable()) {
-        modules_to_validate.push_back(module);
-      }
+      const ModuleData* module = GetModule(index);
+      modules_to_validate.push_back(
+          Capture::GTargetProcess->GetModuleFromName(module->name()));
     }
 
     if (!modules_to_validate.empty()) {
@@ -164,21 +159,19 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
 }
 
 //-----------------------------------------------------------------------------
-void ModulesDataView::OnTimer() {}
-
-//-----------------------------------------------------------------------------
 void ModulesDataView::DoFilter() {
   std::vector<uint32_t> indices;
   std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
   for (size_t i = 0; i < modules_.size(); ++i) {
-    std::shared_ptr<Module>& module = modules_[i];
-    std::string name = ToLower(module->GetPrettyName());
+    const ModuleData* module = modules_[i];
+    std::string module_string = absl::StrFormat(
+        "%s %s", module->address_range(), ToLower(module->path()));
 
     bool match = true;
 
     for (std::string& filterToken : tokens) {
-      if (name.find(filterToken) == std::string::npos) {
+      if (module_string.find(filterToken) == std::string::npos) {
         match = false;
         break;
       }
@@ -195,8 +188,8 @@ void ModulesDataView::DoFilter() {
 }
 
 //-----------------------------------------------------------------------------
-void ModulesDataView::SetModules(
-    uint32_t process_id, const std::vector<std::shared_ptr<Module>>& modules) {
+void ModulesDataView::SetModules(uint32_t process_id,
+                                 const std::vector<ModuleData*>& modules) {
   process_id_ = process_id;
   modules_ = modules;
 
@@ -209,7 +202,7 @@ void ModulesDataView::SetModules(
 }
 
 //-----------------------------------------------------------------------------
-const std::shared_ptr<Module>& ModulesDataView::GetModule(uint32_t row) const {
+const ModuleData* ModulesDataView::GetModule(uint32_t row) const {
   return modules_[m_Indices[row]];
 }
 
@@ -217,13 +210,13 @@ const std::shared_ptr<Module>& ModulesDataView::GetModule(uint32_t row) const {
 bool ModulesDataView::GetDisplayColor(int row, int /*column*/,
                                       unsigned char& red, unsigned char& green,
                                       unsigned char& blue) {
-  const std::shared_ptr<Module>& module = GetModule(row);
-  if (module->IsLoaded()) {
+  const ModuleData* module = GetModule(row);
+  if (module->is_loaded()) {
     red = 42;
     green = 218;
     blue = 130;
     return true;
-  } else if (module->IsLoadable()) {
+  } else {
     red = 42;
     green = 130;
     blue = 218;

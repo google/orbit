@@ -24,7 +24,7 @@ class ProcessesDataView final : public DataView {
   void OnSelect(int index) override;
   bool SelectProcess(const std::string& process_name);
   bool SelectProcess(uint32_t process_id);
-  void SetProcessList(std::vector<ProcessInfo>&& process_list);
+  void SetProcessList(const std::vector<ProcessInfo>& process_list);
   uint32_t GetSelectedProcessId() const;
   uint32_t GetFirstProcessId() const;
 
