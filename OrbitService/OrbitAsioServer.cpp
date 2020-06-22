@@ -107,8 +107,6 @@ void OrbitAsioServer::SetupTransactionServices() {
   frame_pointer_validator_service_ =
       std::make_unique<FramePointerValidatorService>(
           &process_list_, transaction_service_.get());
-  process_memory_service_ =
-      std::make_unique<ProcessMemoryService>(transaction_service_.get());
 }
 
 void OrbitAsioServer::TracingBufferThread() {

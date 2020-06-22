@@ -65,7 +65,6 @@ enum MessageType : int16_t {
   Msg_SamplingHashedCallstacks,
   Msg_KeysAndStrings,
   Msg_DebugSymbols,
-  Msg_MemoryTransfer,
   Msg_ThreadNames,
   Msg_ValidateFramePointers,
   Msg_CaptureStopped

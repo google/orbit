@@ -12,7 +12,6 @@
 #include "LinuxTracingBuffer.h"
 #include "LinuxTracingHandler.h"
 #include "OrbitLinuxTracing/TracingOptions.h"
-#include "ProcessMemoryService.h"
 #include "ProcessUtils.h"
 #include "SymbolsService.h"
 #include "TransactionService.h"
@@ -45,7 +44,6 @@ class OrbitAsioServer {
 
   std::unique_ptr<TransactionService> transaction_service_;
   std::unique_ptr<SymbolsService> symbols_service_;
-  std::unique_ptr<ProcessMemoryService> process_memory_service_;
   std::unique_ptr<FramePointerValidatorService>
       frame_pointer_validator_service_;
 

@@ -46,7 +46,6 @@ target_sources(
          PickingManager.h
          PluginCanvas.h
          PluginManager.h
-         ProcessMemoryClient.h
          ProcessesDataView.h
          SamplingReport.h
          SamplingReportDataView.h
@@ -98,7 +97,6 @@ target_sources(
           PluginCanvas.cpp
           PluginManager.cpp
           ProcessManager.cpp
-          ProcessMemoryClient.cpp
           ProcessesDataView.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp

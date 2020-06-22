@@ -1145,8 +1145,6 @@ void OrbitApp::InitializeClientTransactions() {
   frame_pointer_validator_client_ =
       std::make_unique<FramePointerValidatorClient>(this,
                                                     transaction_client_.get());
-  process_memory_client_ =
-      std::make_unique<ProcessMemoryClient>(transaction_client_.get());
 }
 
 //-----------------------------------------------------------------------------

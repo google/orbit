@@ -29,7 +29,6 @@
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/ThreadPool.h"
 #include "ProcessManager.h"
-#include "ProcessMemoryClient.h"
 #include "ProcessesDataView.h"
 #include "SamplingReportDataView.h"
 #include "SessionsDataView.h"
@@ -293,7 +292,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<TransactionClient> transaction_client_;
   std::unique_ptr<SymbolsClient> symbols_client_;
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
-  std::unique_ptr<ProcessMemoryClient> process_memory_client_;
 };
 
 //-----------------------------------------------------------------------------
