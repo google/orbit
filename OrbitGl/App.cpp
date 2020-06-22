@@ -892,7 +892,10 @@ void OrbitApp::LoadRemoteModules() {
     }
     ModuleData* module_data = data_manager_->FindModuleByAddressStart(
         process_id, module->m_AddressStart);
-    module_data->set_loaded(true);
+
+    if (module_data != nullptr) {
+      module_data->set_loaded(true);
+    }
   }
 
   m_ModulesToLoad.clear();
