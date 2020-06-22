@@ -524,6 +524,14 @@ void OrbitMainWindow::OnSetClipboard(const std::string& text) {
 }
 
 //-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionFeedback_triggered() {
+  if (!QDesktopServices::openUrl(QUrl("https://community.stadia.dev", QUrl::StrictMode))) {
+    QMessageBox::critical(
+        this, "Error opening URL", "Could not open community.stadia.dev");
+  }
+}
+
+//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionAbout_triggered() {
   OrbitQt::OrbitAboutDialog dialog{this};
   dialog.setWindowTitle(windowTitle());
@@ -535,11 +543,6 @@ void OrbitMainWindow::on_actionAbout_triggered() {
     dialog.setLicenseText(licenseFile.readAll());
   }
   dialog.exec();
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionFeedback_triggered() {
-  QDesktopServices::openUrl(QUrl("https://community.stadia.dev", QUrl::StrictMode));
 }
 
 //-----------------------------------------------------------------------------
