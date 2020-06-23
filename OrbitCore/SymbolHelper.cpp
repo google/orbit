@@ -168,27 +168,21 @@ bool SymbolHelper::LoadSymbolsUsingSymbolsFile(
   return FindAndLoadSymbols(module, symbols_file_directories_);
 }
 
-void SymbolHelper::LoadSymbolsFromDebugInfo(
-    std::shared_ptr<Module> module, const ModuleDebugInfo& module_info) const {
-  module->m_Pdb =
-      std::make_shared<Pdb>(module->m_AddressStart, module_info.load_bias,
-                            module_info.m_PdbName, module->m_FullName);
+void SymbolHelper::LoadSymbolsIntoModule(
+    const std::shared_ptr<Module>& module,
+    const ModuleSymbols& module_symbols) const {
+  module->m_Pdb = std::make_shared<Pdb>(
+      module->m_AddressStart, module_symbols.load_bias(),
+      module_symbols.symbols_file_path(), module->m_FullName);
 
-  for (const auto& function : module_info.m_Functions) {
-    module->m_Pdb->AddFunction(function);
+  for (const auto& symbol_info : module_symbols.symbol_infos()) {
+    std::shared_ptr<Function> function = std::make_shared<Function>(
+        symbol_info.name(), symbol_info.pretty_name(), symbol_info.address(),
+        module_symbols.load_bias(), symbol_info.size(),
+        symbol_info.source_file(), symbol_info.source_line());
+    module->m_Pdb->AddFunction(std::move(function));
   }
   module->m_Pdb->ProcessData();
-  module->m_PdbName = module_info.m_PdbName;
+  module->m_PdbName = module_symbols.symbols_file_path();
   module->SetLoaded(true);
-}
-
-void SymbolHelper::FillDebugInfoFromModule(std::shared_ptr<Module> module,
-                                           ModuleDebugInfo* module_info) const {
-  FAIL_IF(!module->m_Pdb, "Pdb not initialized for module: %s",
-          module->m_Name.c_str());
-
-  module_info->m_Name = module->m_Name;
-  module_info->m_Functions = module->m_Pdb->GetFunctions();
-  module_info->load_bias = module->m_Pdb->GetLoadBias();
-  module_info->m_PdbName = module->m_PdbName;
 }

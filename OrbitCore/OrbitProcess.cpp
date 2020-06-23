@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "OrbitProcess.h"
 
 #include <OrbitBase/Logging.h>
@@ -119,6 +117,7 @@ void Process::ListModules() {
     std::shared_ptr<Module>& module = pair.second;
     std::string name = absl::AsciiStrToLower(module->m_Name);
     m_NameToModuleMap[name] = module;
+    path_to_module_map_[module->m_FullName] = module;
 #ifdef _WIN32
     // TODO: check if the windows implementation does something meaningfull
     module->LoadDebugInfo();
@@ -133,6 +132,7 @@ void Process::ClearTransients() {
   m_Globals.clear();
   m_WatchedVariables.clear();
   m_NameToModuleMap.clear();
+  path_to_module_map_.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -232,6 +232,17 @@ std::shared_ptr<Module> Process::GetModuleFromName(const std::string& a_Name) {
 }
 
 //-----------------------------------------------------------------------------
+std::shared_ptr<Module> Process::GetModuleFromPath(
+    const std::string& module_path) {
+  auto iter = path_to_module_map_.find(module_path);
+  if (iter != path_to_module_map_.end()) {
+    return iter->second;
+  }
+
+  return nullptr;
+}
+
+//-----------------------------------------------------------------------------
 bool Process::LineInfoFromAddress(uint64_t /*a_Address*/,
                                   LineInfo& /*o_LineInfo*/) {
   // TODO(b/158093728): Dia Loading was disabled, reimplement using LLVM.
@@ -270,6 +281,7 @@ void Process::AddType(Type& a_Type) {
 void Process::AddModule(std::shared_ptr<Module>& a_Module) {
   m_Modules[a_Module->m_AddressStart] = a_Module;
   m_NameToModuleMap[absl::AsciiStrToLower(a_Module->m_Name)] = a_Module;
+  path_to_module_map_[a_Module->m_FullName] = a_Module;
 }
 
 //-----------------------------------------------------------------------------

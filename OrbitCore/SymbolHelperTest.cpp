@@ -11,6 +11,7 @@
 #include "OrbitModule.h"
 #include "Path.h"
 #include "SymbolHelper.h"
+#include "symbol.pb.h"
 
 const std::string executable_directory =
     Path::GetExecutablePath() + "testdata/";
@@ -21,8 +22,8 @@ TEST(SymbolHelper, LoadSymbolsIncludedInBinary) {
 
   std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
 
-  SymbolHelper symbolHelper;
-  ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
+  SymbolHelper symbol_helper;
+  ASSERT_TRUE(symbol_helper.LoadSymbolsIncludedInBinary(module));
 
   EXPECT_NE(module->m_Pdb, nullptr);
   EXPECT_EQ(module->m_PdbName, file_path);
@@ -40,8 +41,8 @@ TEST(SymbolHelper, LoadSymbolsCollectorSameFile) {
 
   std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
 
-  SymbolHelper symbolHelper({executable_directory}, {});
-  ASSERT_TRUE(symbolHelper.LoadSymbolsCollector(module));
+  SymbolHelper symbol_helper({executable_directory}, {});
+  ASSERT_TRUE(symbol_helper.LoadSymbolsCollector(module));
 
   EXPECT_NE(module->m_Pdb, nullptr);
   EXPECT_EQ(module->m_PdbName, file_path);
@@ -63,8 +64,8 @@ TEST(SymbolHelper, LoadSymbolsCollectorSeparateFile) {
   std::string symbols_file_name = "no_symbols_elf.debug";
   std::string symbols_path = executable_directory + symbols_file_name;
 
-  SymbolHelper symbolHelper({executable_directory}, {});
-  ASSERT_TRUE(symbolHelper.LoadSymbolsCollector(module));
+  SymbolHelper symbol_helper({executable_directory}, {});
+  ASSERT_TRUE(symbol_helper.LoadSymbolsCollector(module));
 
   EXPECT_NE(module->m_Pdb, nullptr);
   EXPECT_EQ(module->m_PdbName, symbols_path);
@@ -86,8 +87,8 @@ TEST(SymbolHelper, LoadSymbolsUsingSymbolsFile) {
   std::string symbols_file_name = "no_symbols_elf.debug";
   std::string symbols_path = executable_directory + symbols_file_name;
 
-  SymbolHelper symbolHelper({}, {executable_directory});
-  ASSERT_TRUE(symbolHelper.LoadSymbolsUsingSymbolsFile(module));
+  SymbolHelper symbol_helper({}, {executable_directory});
+  ASSERT_TRUE(symbol_helper.LoadSymbolsUsingSymbolsFile(module));
 
   EXPECT_NE(module->m_Pdb, nullptr);
   EXPECT_EQ(module->m_PdbName, symbols_path);
@@ -99,21 +100,24 @@ TEST(SymbolHelper, LoadSymbolsUsingSymbolsFile) {
   EXPECT_EQ(pdb.GetName(), symbols_file_name);
 }
 
-TEST(SymbolHelper, LoadSymbolsFromDebugInfo) {
+TEST(SymbolHelper, LoadSymbolsIntoModule) {
   const std::string executable_name = "no_symbols_elf";
   const std::string file_path = executable_directory + executable_name;
 
-  ModuleDebugInfo module_info;
-  module_info.m_Name = executable_name;
-  module_info.m_PdbName = "path/symbols_file_name";
-  module_info.load_bias = 0x400;
-  auto function = std::make_shared<Function>("function name", "function name",
-                                             0, 0, 0, "", 0);
-  module_info.m_Functions = {function};
+  ModuleSymbols module_symbols;
+  module_symbols.set_symbols_file_path("path/symbols_file_name");
+  module_symbols.set_load_bias(0x400);
+  SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
+  symbol_info->set_name("function name");
+  symbol_info->set_pretty_name("pretty name");
+  symbol_info->set_address(15);
+  symbol_info->set_size(12);
+  symbol_info->set_source_file("file name");
+  symbol_info->set_source_line(70);
 
   std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0x40, 0);
-  SymbolHelper symbolHelper;
-  symbolHelper.LoadSymbolsFromDebugInfo(module, module_info);
+  SymbolHelper symbol_helper;
+  symbol_helper.LoadSymbolsIntoModule(module, module_symbols);
 
   ASSERT_NE(module->m_Pdb, nullptr);
   EXPECT_EQ(module->m_PdbName, "path/symbols_file_name");
@@ -125,22 +129,12 @@ TEST(SymbolHelper, LoadSymbolsFromDebugInfo) {
   EXPECT_EQ(pdb.GetName(), "symbols_file_name");
   EXPECT_EQ(pdb.GetHModule(), 0x40);
   EXPECT_EQ(pdb.GetLoadBias(), 0x400);
-  EXPECT_EQ(pdb.GetFunctions()[0]->Name(), "function name");
-}
-
-TEST(SymbolHelper, FillDebugInfoFromModule) {
-  const std::string executable_name = "hello_world_elf";
-  const std::string file_path = executable_directory + executable_name;
-
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
-  SymbolHelper symbolHelper;
-  ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
-
-  ModuleDebugInfo module_info;
-  symbolHelper.FillDebugInfoFromModule(module, &module_info);
-
-  EXPECT_EQ(module_info.m_Name, executable_name);
-  EXPECT_EQ(module_info.m_PdbName, file_path);
-  EXPECT_EQ(module_info.load_bias, 0x0);
-  EXPECT_EQ(module_info.m_Functions.size(), 10);
+  ASSERT_EQ(pdb.GetFunctions().size(), 1);
+  auto resulting_function = pdb.GetFunctions()[0];
+  EXPECT_EQ(resulting_function->Name(), "function name");
+  EXPECT_EQ(resulting_function->PrettyName(), "pretty name");
+  EXPECT_EQ(resulting_function->Address(), 15);
+  EXPECT_EQ(resulting_function->Size(), 12);
+  EXPECT_EQ(resulting_function->File(), "file name");
+  EXPECT_EQ(resulting_function->Line(), 70);
 }

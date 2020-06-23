@@ -9,6 +9,7 @@
 
 #include "OrbitModule.h"
 #include "Pdb.h"
+#include "symbol.pb.h"
 
 class SymbolHelper {
  public:
@@ -21,10 +22,8 @@ class SymbolHelper {
   bool LoadSymbolsIncludedInBinary(std::shared_ptr<Module> module) const;
   bool LoadSymbolsCollector(std::shared_ptr<Module> module) const;
   bool LoadSymbolsUsingSymbolsFile(std::shared_ptr<Module> module) const;
-  void LoadSymbolsFromDebugInfo(std::shared_ptr<Module> module,
-                                const ModuleDebugInfo& module_info) const;
-  void FillDebugInfoFromModule(std::shared_ptr<Module> module,
-                               ModuleDebugInfo* module_info) const;
+  void LoadSymbolsIntoModule(const std::shared_ptr<Module>& module,
+                             const ModuleSymbols& module_symbols) const;
 
   std::vector<std::string> GetSymbolsFileDirectories() const {
     return symbols_file_directories_;

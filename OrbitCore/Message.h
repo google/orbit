@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
 #include <string>
@@ -64,7 +63,6 @@ enum MessageType : int16_t {
   Msg_SamplingCallstacks,
   Msg_SamplingHashedCallstacks,
   Msg_KeysAndStrings,
-  Msg_DebugSymbols,
   Msg_ThreadNames,
   Msg_ValidateFramePointers,
   Msg_CaptureStopped

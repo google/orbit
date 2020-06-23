@@ -14,6 +14,7 @@
 #include "module.pb.h"
 #include "outcome.hpp"
 #include "process.pb.h"
+#include "symbol.pb.h"
 
 // This class is responsible for maintaining
 // process list. It periodically updates it
@@ -52,6 +53,10 @@ class ProcessManager {
 
   virtual outcome::result<std::string, Error, outcome::policy::terminate>
   LoadProcessMemory(int32_t pid, uint64_t address, uint64_t size) = 0;
+
+  // Get symbols for a module
+  virtual outcome::result<ModuleSymbols, std::string> LoadSymbols(
+      const std::string& module_path) const = 0;
 
   // Note that this method waits for the worker thread to stop, which could
   // take up to refresh_timeout.

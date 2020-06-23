@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #include "ModulesDataView.h"
 
 #include "App.h"
@@ -130,14 +129,16 @@ std::vector<std::string> ModulesDataView::GetContextMenu(
 void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
                                     const std::vector<int>& item_indices) {
   if (action == MENU_ACTION_MODULES_LOAD) {
+    std::vector<std::shared_ptr<Module>> modules;
     for (int index : item_indices) {
-      const ModuleData* module = GetModule(index);
-      if (!module->is_loaded()) {
-        GOrbitApp->EnqueueModuleToLoad(module->name());
+      const ModuleData* module_data = GetModule(index);
+      if (!module_data->is_loaded()) {
+        modules.push_back(Capture::GTargetProcess->GetModuleFromPath(
+            module_data->file_path()));
       }
     }
+    GOrbitApp->LoadModules(Capture::GTargetProcess->GetID(), modules);
 
-    GOrbitApp->LoadModules();
   } else if (action == MENU_ACTION_MODULES_VERIFY) {
     std::vector<std::shared_ptr<Module>> modules_to_validate;
     for (int index : item_indices) {
@@ -161,8 +162,9 @@ void ModulesDataView::DoFilter() {
 
   for (size_t i = 0; i < modules_.size(); ++i) {
     const ModuleData* module = modules_[i];
-    std::string module_string = absl::StrFormat(
-        "%s %s", module->address_range(), absl::AsciiStrToLower(module->file_path()));
+    std::string module_string =
+        absl::StrFormat("%s %s", module->address_range(),
+                        absl::AsciiStrToLower(module->file_path()));
 
     bool match = true;
 

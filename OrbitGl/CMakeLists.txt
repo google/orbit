@@ -51,7 +51,6 @@ target_sources(
          SamplingReportDataView.h
          SchedulerTrack.h
          SessionsDataView.h
-         SymbolsClient.h
          TextBox.h
          TextRenderer.h
          ThreadTrack.h
@@ -103,7 +102,6 @@ target_sources(
           SamplingReportDataView.cpp
           SchedulerTrack.cpp
           SessionsDataView.cpp
-          SymbolsClient.cpp
           TextBox.cpp
           TextRenderer.cpp
           TimeGraph.cpp

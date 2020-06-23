@@ -12,10 +12,15 @@
 #include "grpcpp/grpcpp.h"
 #include "outcome.hpp"
 #include "services.grpc.pb.h"
+#include "symbol.pb.h"
 
 namespace {
 
-constexpr uint64_t kGrpcCallTimeoutMilliseconds = 1000;
+constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 1000;
+// The actual symbol loading of a module should be relatively quick, but to
+// support slow internet connections, or multiple requests in parallel, this is
+// set to a generous 60 seconds.
+constexpr uint64_t kGrpcSymbolLoadingTimeoutMilliseconds = 60 * 1000;
 
 class ProcessManagerImpl final : public ProcessManager {
  public:
@@ -32,11 +37,15 @@ class ProcessManagerImpl final : public ProcessManager {
   outcome::result<std::string, Error, outcome::policy::terminate>
   LoadProcessMemory(int32_t pid, uint64_t address, uint64_t size) override;
 
+  outcome::result<ModuleSymbols, std::string> LoadSymbols(
+      const std::string& module_path) const override;
+
   void Start();
   void Shutdown() override;
 
  private:
-  std::unique_ptr<grpc::ClientContext> CreateContext();
+  std::unique_ptr<grpc::ClientContext> CreateContext(
+      uint64_t timeout_milliseconds) const;
   void WorkerFunction();
 
   std::unique_ptr<ProcessService::Stub> process_service_;
@@ -71,7 +80,8 @@ ProcessManagerImpl::LoadModuleList(int32_t pid) {
   GetModuleListResponse response;
   request.set_process_id(pid);
 
-  std::unique_ptr<grpc::ClientContext> context = CreateContext();
+  std::unique_ptr<grpc::ClientContext> context =
+      CreateContext(kGrpcDefaultTimeoutMilliseconds);
   grpc::Status status =
       process_service_->GetModuleList(context.get(), request, &response);
 
@@ -91,6 +101,26 @@ std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
   return process_list_;
 }
 
+outcome::result<ModuleSymbols, std::string> ProcessManagerImpl::LoadSymbols(
+    const std::string& module_path) const {
+  GetSymbolsRequest request;
+  GetSymbolsResponse response;
+
+  request.set_module_path(module_path);
+
+  std::unique_ptr<grpc::ClientContext> context =
+      CreateContext(kGrpcSymbolLoadingTimeoutMilliseconds);
+
+  grpc::Status status =
+      process_service_->GetSymbols(context.get(), request, &response);
+  if (!status.ok()) {
+    ERROR("gRPC call to GetSymbols failed: %s", status.error_message());
+    return status.error_message();
+  }
+
+  return response.module_symbols();
+}
+
 void ProcessManagerImpl::Start() {
   CHECK(!worker_thread_.joinable());
   worker_thread_ = std::thread([this] { WorkerFunction(); });
@@ -105,13 +135,13 @@ void ProcessManagerImpl::Shutdown() {
   }
 }
 
-std::unique_ptr<grpc::ClientContext> ProcessManagerImpl::CreateContext() {
-  std::unique_ptr<grpc::ClientContext> context =
-      std::make_unique<grpc::ClientContext>();
+std::unique_ptr<grpc::ClientContext> ProcessManagerImpl::CreateContext(
+    uint64_t timeout_milliseconds) const {
+  auto context = std::make_unique<grpc::ClientContext>();
 
   std::chrono::time_point deadline =
       std::chrono::system_clock::now() +
-      std::chrono::milliseconds(kGrpcCallTimeoutMilliseconds);
+      std::chrono::milliseconds(timeout_milliseconds);
   context->set_deadline(deadline);
 
   return context;
@@ -132,7 +162,8 @@ void ProcessManagerImpl::WorkerFunction() {
 
     GetProcessListRequest request;
     GetProcessListResponse response;
-    std::unique_ptr<grpc::ClientContext> context = CreateContext();
+    std::unique_ptr<grpc::ClientContext> context =
+        CreateContext(kGrpcDefaultTimeoutMilliseconds);
 
     grpc::Status status =
         process_service_->GetProcessList(context.get(), request, &response);
@@ -152,8 +183,7 @@ void ProcessManagerImpl::WorkerFunction() {
 
 outcome::result<std::string, ProcessManager::Error, outcome::policy::terminate>
 ProcessManagerImpl::LoadProcessMemory(int32_t pid, uint64_t address,
-                                     uint64_t size) {
-
+                                      uint64_t size) {
   GetProcessMemoryRequest request;
   request.set_pid(pid);
   request.set_address(address);
@@ -161,7 +191,8 @@ ProcessManagerImpl::LoadProcessMemory(int32_t pid, uint64_t address,
 
   GetProcessMemoryResponse response;
 
-  std::unique_ptr<grpc::ClientContext> context = CreateContext();
+  std::unique_ptr<grpc::ClientContext> context =
+      CreateContext(kGrpcDefaultTimeoutMilliseconds);
 
   grpc::Status status =
       process_service_->GetProcessMemory(context.get(), request, &response);
