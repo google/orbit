@@ -92,8 +92,8 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void UpdateVariable(Variable* a_Variable) override;
   void ClearWatchedVariables();
   void RefreshWatch();
-  void Disassemble(const std::string& a_FunctionName, uint64_t a_VirtualAddress,
-                   const uint8_t* a_MachineCode, size_t a_Size) override;
+  void Disassemble(uint32_t pid, const std::string& function_name,
+                   uint64_t address, uint64_t size) override;
   void ProcessTimer(const Timer& timer) override;
   void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) override;
   void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) override;
@@ -231,8 +231,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   FramePointerValidatorClient* GetFramePointerValidatorClient() {
     return frame_pointer_validator_client_.get();
   }
-  void GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
-                       const ProcessMemoryCallback& callback) override;
 
  private:
   ApplicationOptions options_;

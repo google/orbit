@@ -429,14 +429,25 @@ void OrbitApp::RefreshWatch() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::Disassemble(const std::string& a_FunctionName,
-                           uint64_t a_VirtualAddress,
-                           const uint8_t* a_MachineCode, size_t a_Size) {
-  Disassembler disasm;
-  disasm.LOGF(absl::StrFormat("asm: /* %s */\n", a_FunctionName.c_str()));
-  disasm.Disassemble(a_MachineCode, a_Size, a_VirtualAddress,
-                     Capture::GTargetProcess->GetIs64Bit());
-  SendToUi(disasm.GetResult());
+void OrbitApp::Disassemble(uint32_t pid, const std::string& function_name,
+                           uint64_t address, uint64_t size) {
+  thread_pool_->Schedule([this, pid, function_name, address, size] {
+    auto result = process_manager_->GetProcessMemory(pid, address, size);
+    if (!result.has_value()) {
+      SendErrorToUi("Error reading memory",
+                    absl::StrFormat("Could not read process memory: %s.",
+                                    result.error().message));
+      return;
+    }
+
+    const std::string& memory = result.value();
+    Disassembler disasm;
+    disasm.LOGF(absl::StrFormat("asm: /* %s */\n", function_name));
+    disasm.Disassemble(reinterpret_cast<const uint8_t*>(memory.data()),
+                       memory.size(), address,
+                       Capture::GTargetProcess->GetIs64Bit());
+    SendToUi(disasm.GetResult());
+  });
 }
 
 //-----------------------------------------------------------------------------
@@ -1150,19 +1161,4 @@ void OrbitApp::InitializeClientTransactions() {
 //-----------------------------------------------------------------------------
 void OrbitApp::FilterFunctions(const std::string& filter) {
   m_LiveFunctionsDataView->OnFilter(filter);
-}
-
-void OrbitApp::GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
-                               const ProcessMemoryCallback& callback) {
-  thread_pool_->Schedule([this, pid, address, size, callback] {
-    auto result = process_manager_->GetProcessMemory(pid, address, size);
-    if (result.has_value()) {
-      main_thread_executor_->Schedule(
-          [memory = std::move(result).value(), callback] { callback(memory); });
-    } else {
-      SendErrorToUi("Error reading memory",
-                    absl::StrFormat("Could not read process memory: %s.",
-                                    result.error().message));
-    }
-  });
 }
