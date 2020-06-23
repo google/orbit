@@ -429,10 +429,10 @@ void OrbitApp::RefreshWatch() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::Disassemble(uint32_t pid, const std::string& function_name,
-                           uint64_t address, uint64_t size) {
-  thread_pool_->Schedule([this, pid, function_name, address, size] {
-    auto result = process_manager_->GetProcessMemory(pid, address, size);
+void OrbitApp::Disassemble(uint32_t pid, const Function& function) {
+  thread_pool_->Schedule([this, pid, function] {
+    auto result = process_manager_->GetProcessMemory(
+        pid, function.GetVirtualAddress(), function.Size());
     if (!result.has_value()) {
       SendErrorToUi("Error reading memory",
                     absl::StrFormat("Could not read process memory: %s.",
@@ -442,9 +442,9 @@ void OrbitApp::Disassemble(uint32_t pid, const std::string& function_name,
 
     const std::string& memory = result.value();
     Disassembler disasm;
-    disasm.LOGF(absl::StrFormat("asm: /* %s */\n", function_name));
+    disasm.LOGF(absl::StrFormat("asm: /* %s */\n", function.PrettyName()));
     disasm.Disassemble(reinterpret_cast<const uint8_t*>(memory.data()),
-                       memory.size(), address,
+                       memory.size(), function.GetVirtualAddress(),
                        Capture::GTargetProcess->GetIs64Bit());
     SendToUi(disasm.GetResult());
   });
@@ -503,7 +503,7 @@ void OrbitApp::MainTick() {
   GTcpServer->MainThreadTick();
 
   if (!Capture::GProcessToInject.empty()) {
-    LOG("Injecting into %s",Capture::GTargetProcess->GetFullPath());
+    LOG("Injecting into %s", Capture::GTargetProcess->GetFullPath());
     LOG("Orbit host: %s", GOrbitApp->options_.asio_server_address);
     GOrbitApp->SelectProcess(Capture::GProcessToInject);
     Capture::InjectRemote(GOrbitApp->options_.asio_server_address);
