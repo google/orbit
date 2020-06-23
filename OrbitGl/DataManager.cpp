@@ -10,8 +10,8 @@ void DataManager::UpdateProcessInfos(
     const std::vector<ProcessInfo>& process_infos) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
-  // Note that at this point the data manager does not remove old processes
-  // to do it correctly we may need to implement some callback logic here
+  // Note that at this point the data manager does not remove old processes.
+  // To do it correctly we may need to implement some callback logic here
   // since the ProcessData can be in use by some views.
   for (const ProcessInfo& info : process_infos) {
     uint32_t process_id = info.pid();
