@@ -16,7 +16,7 @@ grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
   for (const auto& module_info : request->modules()) {
     // Even though this information should be available on the client,
     // we want not rely on this here, and for this particular use case we are
-    // fine with doing some extra work, and compute it here.
+    // fine with doing some extra work, and read it from the elf file.
     bool is_64_bit = ElfFile::Create(module_info.module_path())->Is64Bit();
 
     std::vector<FunctionInfo> function_infos;
