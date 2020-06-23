@@ -7,7 +7,7 @@ target_compile_options(OrbitProtos PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_definitions(OrbitProtos PRIVATE -D_WIN32_WINNT=0x0700)
 target_compile_definitions(OrbitProtos PRIVATE -DNTDDI_VERSION=0x06030000)
 
-target_sources(OrbitProtos PRIVATE frame-pointer-validator.proto
+target_sources(OrbitProtos PRIVATE code_block.proto
                                    process.proto
                                    services.proto)
 

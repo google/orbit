@@ -66,8 +66,9 @@ void FramePointerValidatorClient::AnalyzeModules(
     num_functions += module->m_Pdb->GetFunctions().size();
   }
 
-  std::string text =
-      absl::StrFormat("Failed to validate %d out of %d functions",
-                      num_fpo_functions, num_functions);
+  std::string text = absl::StrFormat(
+      "Validation complete.\n%d functions support frame pointers, %d functions "
+      "don't.",
+      num_functions - num_fpo_functions, num_fpo_functions);
   app_->SendInfoToUi("Frame Pointer Validation", text);
 }

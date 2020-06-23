@@ -39,5 +39,3 @@ grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
 
   return grpc::Status::OK;
 }
-
-//

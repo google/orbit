@@ -5,7 +5,7 @@
 syntax = "proto3";
 
 import "process.proto";
-import "frame-pointer-validator.proto";
+import "code_block.proto";
 
 message GetProcessListRequest {}
 
