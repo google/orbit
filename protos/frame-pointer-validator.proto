@@ -4,12 +4,7 @@
 
 syntax = "proto3";
 
-message ModuleInformation {
-  string module_path = 1;
-  repeated FunctionInformation functions = 2;
-}
-
-message FunctionInformation {
+message CodeBlock {
   uint64 offset = 1;
   uint64 size = 2;
 }

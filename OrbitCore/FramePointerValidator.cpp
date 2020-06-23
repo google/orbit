@@ -9,10 +9,10 @@
 #include "FunctionFramePointerValidator.h"
 #include "OrbitBase/Logging.h"
 
-std::optional<std::vector<FunctionInfo>> FramePointerValidator::GetFpoFunctions(
-    const std::vector<FunctionInfo>& functions, const std::string& file_name,
+std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
+    const std::vector<CodeBlock>& functions, const std::string& file_name,
     bool is_64_bit) {
-  std::vector<FunctionInfo> result;
+  std::vector<CodeBlock> result;
 
   cs_mode mode = is_64_bit ? CS_MODE_64 : CS_MODE_32;
   csh handle;
@@ -28,13 +28,13 @@ std::optional<std::vector<FunctionInfo>> FramePointerValidator::GetFpoFunctions(
                               std::istreambuf_iterator<char>());
 
   for (const auto& function : functions) {
-    uint64_t function_size = function.size;
+    uint64_t function_size = function.size();
     if (function_size == 0) {
       continue;
     }
 
     FunctionFramePointerValidator validator{
-        handle, binary.data() + function.offset, function_size};
+        handle, binary.data() + function.offset(), function.size()};
 
     if (!validator.Validate()) {
       result.push_back(function);

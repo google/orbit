@@ -18,11 +18,12 @@ service ProcessService {
 }
 
 message ValidateFramePointersRequest {
-  repeated ModuleInformation modules = 1;
+  string module_path = 1;
+  repeated CodeBlock functions = 2;
 }
 
 message ValidateFramePointersResponse {
-  repeated FunctionInformation functions_without_frame_pointer = 1;
+  repeated CodeBlock functions_without_frame_pointer = 1;
 }
 
 service FramePointerValidatorService {

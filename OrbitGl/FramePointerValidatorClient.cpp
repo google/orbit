@@ -27,40 +27,38 @@ void FramePointerValidatorClient::AnalyzeModules(
     return;
   }
 
-  ValidateFramePointersRequest request;
-  ValidateFramePointersResponse response;
+  uint64_t num_fpo_functions = 0;
 
   for (const std::shared_ptr<Module>& module : modules) {
+    ValidateFramePointersRequest request;
+    ValidateFramePointersResponse response;
     if (module == nullptr) continue;
     if (module->m_Pdb == nullptr) continue;
 
-    ModuleInformation* module_info = request.add_modules();
-    module_info->set_module_path(module->m_FullName);
+    request.set_module_path(module->m_FullName);
     for (const auto& function : module->m_Pdb->GetFunctions()) {
-      FunctionInformation* function_info = module_info->add_functions();
+      CodeBlock* function_info = request.add_functions();
       function_info->set_offset(function->Offset());
       function_info->set_size(function->Size());
     }
-  }
+    grpc::ClientContext context;
+    std::chrono::time_point deadline =
+        std::chrono::system_clock::now() + std::chrono::minutes(1);
+    context.set_deadline(deadline);
 
-  if (request.modules_size() == 0) {
-    return;
-  }
+    // careful this is the synchronous call (maybe async is better)
+    grpc::Status status =
+        frame_pointer_validator_service_->ValidateFramePointers(
+            &context, request, &response);
 
-  grpc::ClientContext context;
-  std::chrono::time_point deadline =
-      std::chrono::system_clock::now() + std::chrono::minutes(1);
-  context.set_deadline(deadline);
-
-  // careful this is the synchronous call (maybe async is better)
-  grpc::Status status = frame_pointer_validator_service_->ValidateFramePointers(
-      &context, request, &response);
-
-  if (!status.ok()) {
-    return app_->SendErrorToUi(
-        "Frame Pointer Validation",
-        absl::StrFormat("Grpc call for frame-pointer validation failed: %s",
-                        status.error_message()));
+    if (!status.ok()) {
+      return app_->SendErrorToUi(
+          "Frame Pointer Validation",
+          absl::StrFormat(
+              "Grpc call for frame-pointer validation failed for module %s: %s",
+              module->m_Name, status.error_message()));
+    }
+    num_fpo_functions += response.functions_without_frame_pointer_size();
   }
 
   uint64_t num_functions = 0;
@@ -68,8 +66,8 @@ void FramePointerValidatorClient::AnalyzeModules(
     num_functions += module->m_Pdb->GetFunctions().size();
   }
 
-  std::string text = absl::StrFormat(
-      "Failed to validate %d out of %d functions",
-      response.functions_without_frame_pointer_size(), num_functions);
+  std::string text =
+      absl::StrFormat("Failed to validate %d out of %d functions",
+                      num_fpo_functions, num_functions);
   app_->SendInfoToUi("Frame Pointer Validation", text);
 }

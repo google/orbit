@@ -156,9 +156,3 @@ class Function {
   OrbitType type_ = NONE;
   std::shared_ptr<FunctionStats> stats_;
 };
-
-//-----------------------------------------------------------------------------
-struct FunctionInfo {
-  uint64_t offset;
-  uint64_t size;
-};
