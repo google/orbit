@@ -15,7 +15,7 @@ class ModulesDataView : public DataView {
   ModulesDataView();
 
   const std::vector<Column>& GetColumns() override;
-  int GetDefaultSortingColumn() override { return COLUMN_PDB_SIZE; }
+  int GetDefaultSortingColumn() override { return COLUMN_FILE_SIZE; }
   std::vector<std::string> GetContextMenu(
       int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
@@ -44,8 +44,7 @@ class ModulesDataView : public DataView {
     COLUMN_NAME,
     COLUMN_PATH,
     COLUMN_ADDRESS_RANGE,
-    COLUMN_HAS_PDB,
-    COLUMN_PDB_SIZE,
+    COLUMN_FILE_SIZE,
     COLUMN_LOADED,
     COLUMN_NUM
   };
