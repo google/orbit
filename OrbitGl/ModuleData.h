@@ -21,9 +21,9 @@ class ModuleData final {
   void SetModuleInfo(const ModuleInfo& info) { module_info_ = info; }
 
   const std::string& name() const { return module_info_.name(); }
-  const std::string& path() const { return module_info_.path(); }
+  const std::string& file_path() const { return module_info_.file_path(); }
+  uint64_t file_size() const { return module_info_.file_size(); }
   uint64_t address_start() const { return module_info_.address_start(); }
-  uint64_t size() const { return module_info_.size(); }
 
   std::string address_range() const {
     return absl::StrFormat("[%016" PRIx64 " - %016" PRIx64 "]",

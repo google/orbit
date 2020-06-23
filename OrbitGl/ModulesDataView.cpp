@@ -46,13 +46,13 @@ std::string ModulesDataView::GetValue(int row, int col) {
     case COLUMN_NAME:
       return module->name();
     case COLUMN_PATH:
-      return module->path();
+      return module->file_path();
     case COLUMN_ADDRESS_RANGE:
       return module->address_range();
     case COLUMN_HAS_PDB:
       return "*";
     case COLUMN_PDB_SIZE:
-      return GetPrettySize(module->size());
+      return GetPrettySize(module->file_size());
     case COLUMN_LOADED:
       return module->is_loaded() ? "*" : "";
     default:
@@ -77,13 +77,13 @@ void ModulesDataView::DoSort() {
       sorter = ORBIT_PROC_SORT(name());
       break;
     case COLUMN_PATH:
-      sorter = ORBIT_PROC_SORT(path());
+      sorter = ORBIT_PROC_SORT(file_path());
       break;
     case COLUMN_ADDRESS_RANGE:
       sorter = ORBIT_PROC_SORT(address_start());
       break;
     case COLUMN_PDB_SIZE:
-      sorter = ORBIT_PROC_SORT(size());
+      sorter = ORBIT_PROC_SORT(file_size());
       break;
     case COLUMN_LOADED:
       sorter = ORBIT_PROC_SORT(is_loaded());
@@ -166,7 +166,7 @@ void ModulesDataView::DoFilter() {
   for (size_t i = 0; i < modules_.size(); ++i) {
     const ModuleData* module = modules_[i];
     std::string module_string = absl::StrFormat(
-        "%s %s", module->address_range(), ToLower(module->path()));
+        "%s %s", module->address_range(), absl::AsciiStrToLower(module->file_path()));
 
     bool match = true;
 

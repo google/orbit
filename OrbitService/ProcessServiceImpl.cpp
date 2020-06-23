@@ -58,10 +58,10 @@ Status ProcessServiceImpl::GetModuleList(ServerContext*,
     ModuleInfo* module_info = response->add_modules();
 
     module_info->set_name(module->m_Name);
-    module_info->set_path(module->m_FullName);
+    module_info->set_file_path(module->m_FullName);
+    module_info->set_file_size(module->m_PdbSize);
     module_info->set_address_start(module->m_AddressStart);
     module_info->set_address_end(module->m_AddressEnd);
-    module_info->set_size(module->m_PdbSize);
   }
 
   return Status::OK;
