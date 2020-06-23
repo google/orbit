@@ -178,10 +178,10 @@ Function::GetFunctionNameToOrbitTypeMap() {
 }
 
 // Detect Orbit API functions by looking for special function names part of the
-// orbit namespace. If there is a match, set the corresponding function type.
+// orbit_api namespace. On a match, set the corresponding function type.
 bool Function::SetOrbitTypeFromName() {
   const std::string& name = PrettyName();
-  if (absl::StartsWith(name, "orbit::")) {
+  if (absl::StartsWith(name, "orbit_api::")) {
     for (auto& pair : GetFunctionNameToOrbitTypeMap()) {
       if (absl::StrContains(name, pair.first)) {
         SetOrbitType(pair.second);
