@@ -30,7 +30,7 @@ class ProcessManagerImpl final : public ProcessManager {
       uint32_t pid) override;
 
   outcome::result<std::string, Error, outcome::policy::terminate>
-  GetProcessMemory(uint32_t pid, uint64_t address, uint64_t size) override;
+  LoadProcessMemory(uint32_t pid, uint64_t address, uint64_t size) override;
 
   void Start();
   void Shutdown() override;
@@ -151,7 +151,7 @@ void ProcessManagerImpl::WorkerFunction() {
 }
 
 outcome::result<std::string, ProcessManager::Error, outcome::policy::terminate>
-ProcessManagerImpl::GetProcessMemory(uint32_t pid, uint64_t address,
+ProcessManagerImpl::LoadProcessMemory(uint32_t pid, uint64_t address,
                                      uint64_t size) {
   grpc::ClientContext context;
   std::chrono::time_point deadline =
