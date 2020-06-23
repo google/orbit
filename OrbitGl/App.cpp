@@ -971,7 +971,8 @@ void OrbitApp::OnProcessSelected(uint32_t pid) {
         for (const ModuleInfo& info : module_infos) {
           std::shared_ptr<Module> module = std::make_shared<Module>();
           module->m_Name = info.name();
-          module->m_FullName = info.path();
+          module->m_FullName = info.file_path();
+          module->m_PdbSize = info.file_size();
           module->m_AddressStart = info.address_start();
           module->m_AddressEnd = info.address_end();
           module->SetLoadable(true);
