@@ -197,8 +197,8 @@ void ProcessesDataView::UpdateProcessList() {
 
 //-----------------------------------------------------------------------------
 void ProcessesDataView::SetProcessList(
-    std::vector<ProcessInfo>&& process_list) {
-  process_list_ = std::move(process_list);
+    const std::vector<ProcessInfo>& process_list) {
+  process_list_ = process_list;
   UpdateProcessList();
   OnSort(m_SortingColumn, {});
   OnFilter(m_Filter);

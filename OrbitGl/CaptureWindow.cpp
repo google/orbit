@@ -1000,6 +1000,7 @@ void CaptureWindow::RenderToolbars() {
   ImGui::SameLine();
   bool feedback_enabled = !is_capturing;
   if (IconButton(feedback_icon_id_, "Feedback", icon_size, feedback_enabled)) {
+    GOrbitApp->SendToUi("feedback");
   }
 
   const float space_between_toolbars = 0;
@@ -1225,16 +1226,6 @@ void CaptureWindow::RenderTimeBar() {
       glVertex3f(worldX, worldY + height, Z_VALUE_UI);
       glEnd();
     }
-  }
-}
-
-//-----------------------------------------------------------------------------
-void CaptureWindow::SendProcess() {
-  if (Capture::GTargetProcess) {
-    std::string processData =
-        SerializeObjectHumanReadable(*Capture::GTargetProcess);
-    PRINT_VAR(processData);
-    GTcpClient->Send(Msg_RemoteProcess, processData.data(), processData.size());
   }
 }
 

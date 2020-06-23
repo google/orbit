@@ -6,6 +6,7 @@
 #define ORBIT_GL_MODULES_DATA_VIEW_H_
 
 #include "DataView.h"
+#include "ModuleData.h"
 #include "OrbitType.h"
 #include "ProcessUtils.h"
 
@@ -21,28 +22,22 @@ class ModulesDataView : public DataView {
 
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
-  void OnTimer() override;
   bool WantsDisplayColor() override { return true; }
   bool GetDisplayColor(int row, int column, unsigned char& red,
                        unsigned char& green, unsigned char& blue) override;
   std::string GetLabel() override { return "Modules"; }
 
-  void SetModules(uint32_t process_id,
-                  const std::vector<std::shared_ptr<Module>>& modules);
-
-  void SetProcess(std::shared_ptr<Process>& process) {
-    SetModules(process->GetID(), process->GetModulesAsVector());
-  }
+  void SetModules(uint32_t process_id, const std::vector<ModuleData*>& modules);
 
  protected:
   void DoSort() override;
   void DoFilter() override;
 
  private:
-  const std::shared_ptr<Module>& GetModule(unsigned int row) const;
+  const ModuleData* GetModule(uint32_t row) const;
 
   uint32_t process_id_;
-  std::vector<std::shared_ptr<Module>> modules_;
+  std::vector<ModuleData*> modules_;
 
   enum ColumnIndex {
     COLUMN_INDEX,

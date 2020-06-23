@@ -8,6 +8,7 @@
 
 #include "FunctionFramePointerValidator.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/UniqueResource.h"
 
 std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
     const std::vector<CodeBlock>& functions, const std::string& file_name,
@@ -15,11 +16,13 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
   std::vector<CodeBlock> result;
 
   cs_mode mode = is_64_bit ? CS_MODE_64 : CS_MODE_32;
-  csh handle;
-  if (cs_open(CS_ARCH_X86, mode, &handle) != CS_ERR_OK) {
+  csh temp_handle;
+  if (cs_open(CS_ARCH_X86, mode, &temp_handle) != CS_ERR_OK) {
     ERROR("Unable to open capstone.");
     return {};
   }
+  OrbitBase::unique_resource handle{std::move(temp_handle),
+                                    [](csh handle) { cs_close(&handle); }};
 
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 

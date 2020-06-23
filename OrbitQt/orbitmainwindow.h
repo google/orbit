@@ -56,6 +56,7 @@ class OrbitMainWindow : public QMainWindow {
   outcome::result<void> OpenCapture(const std::string& filepath);
 
  private slots:
+  void on_actionFeedback_triggered();
   void on_actionAbout_triggered();
   void OnTimer();
   void OnHideSearch();

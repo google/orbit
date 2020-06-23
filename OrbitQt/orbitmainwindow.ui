@@ -271,6 +271,7 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionFeedback"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuDev">
@@ -313,6 +314,11 @@
   <action name="actionSave_Session">
    <property name="text">
     <string>Save Session</string>
+   </property>
+  </action>
+  <action name="actionFeedback">
+   <property name="text">
+    <string>Feedback</string>
    </property>
   </action>
   <action name="actionAbout">

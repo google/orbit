@@ -7,6 +7,7 @@
 #include <QBuffer>
 #include <QClipboard>
 #include <QCoreApplication>
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QMouseEvent>
@@ -494,6 +495,8 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
                            ? title_text.substr(title_text.find('\n'))
                            : title;
     QMessageBox::information(this, title.c_str(), text.c_str());
+  } else if (absl::StartsWith(a_Message, "feedback")) {
+    on_actionFeedback_triggered();
   }
 }
 
@@ -518,6 +521,14 @@ std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnSetClipboard(const std::string& text) {
   QApplication::clipboard()->setText(QString::fromStdString(text));
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionFeedback_triggered() {
+  if (!QDesktopServices::openUrl(QUrl("https://community.stadia.dev", QUrl::StrictMode))) {
+    QMessageBox::critical(
+        this, "Error opening URL", "Could not open community.stadia.dev");
+  }
 }
 
 //-----------------------------------------------------------------------------

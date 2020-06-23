@@ -12,6 +12,8 @@
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
 #include "grpcpp/grpcpp.h"
+#include "module.pb.h"
+#include "outcome.hpp"
 #include "process.pb.h"
 
 // This class is responsible for maintaining
@@ -38,6 +40,9 @@ class ProcessManager {
 
   virtual void SetProcessListUpdateListener(
       const std::function<void(ProcessManager*)>& listener) = 0;
+
+  virtual outcome::result<std::vector<ModuleInfo>, std::string> LoadModuleList(
+      uint32_t pid) = 0;
 
   // Get a copy of process list.
   virtual std::vector<ProcessInfo> GetProcessList() const = 0;

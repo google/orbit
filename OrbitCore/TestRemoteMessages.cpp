@@ -42,22 +42,6 @@ std::string SerializeObject(T& a_Object) {
 
 //-----------------------------------------------------------------------------
 void TestRemoteMessages::Run() {
-  Process process;
-  process.m_Name = "process.m_Name";
-  process.m_FullPath = "process.m_FullPath";
-  process.m_CmdLine = "process.m_CmdLine";
-  process.SetID(22);
-  process.m_Is64Bit = true;
-  process.m_DebugInfoLoaded = true;
-  process.m_IsRemote = true;
-  process.m_ThreadIds.insert(0);
-  process.m_ThreadIds.insert(1);
-  process.m_ThreadIds.insert(2);
-
-  std::string processData = SerializeObjectHumanReadable(process);
-  PRINT_VAR(processData);
-  GTcpClient->Send(Msg_RemoteProcess, processData.data(), processData.size());
-
   Module module;
   module.m_Name = "module.m_Name";
   module.m_FullName = "module.m_FullName";
@@ -91,15 +75,6 @@ void TestRemoteMessages::Run() {
 
 //-----------------------------------------------------------------------------
 void TestRemoteMessages::SetupMessageHandlers() {
-  GTcpServer->AddCallback(Msg_RemoteProcess, [=](const Message& a_Msg) {
-    PRINT_VAR(a_Msg.m_Size);
-    std::istringstream buffer(a_Msg.GetDataAsString());
-    cereal::JSONInputArchive inputAr(buffer);
-    Process process;
-    inputAr(process);
-    PRINT_VAR(process.GetName());
-  });
-
   GTcpServer->AddCallback(Msg_RemoteModule, [=](const Message& a_Msg) {
     PRINT_VAR(a_Msg.m_Size);
     std::istringstream buffer(a_Msg.GetDataAsString());

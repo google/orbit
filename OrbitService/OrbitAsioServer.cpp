@@ -55,13 +55,6 @@ void OrbitAsioServer::ProcessListThread() {
 
 void OrbitAsioServer::SetupServerCallbacks() {
   tcp_server_->AddMainThreadCallback(
-      Msg_RemoteProcessRequest, [this](const Message& msg) {
-        auto pid =
-            static_cast<uint32_t>(msg.m_Header.m_GenericHeader.m_Address);
-        SendProcess(pid);
-      });
-
-  tcp_server_->AddMainThreadCallback(
       Msg_RemoteSelectedFunctionsMap,
       [this](const Message& msg) { SetSelectedFunctions(msg); });
 
@@ -79,20 +72,6 @@ void OrbitAsioServer::SetupServerCallbacks() {
     Message::GCaptureID = msg.m_CaptureID;
     LOG("Received new capture ID: %u", msg.m_CaptureID);
   });
-}
-
-void OrbitAsioServer::SendProcess(uint32_t pid) {
-  LOG("Sending info on process %d", pid);
-  std::shared_ptr<Process> process = process_list_.GetProcess(pid);
-  if (process != nullptr) {
-    // TODO: Remove this: pid should be part of every message
-    //  and all the messages should to be as stateless as possible.
-    process->ListModules();
-    process->EnumerateThreads();
-    std::string process_data = SerializeObjectHumanReadable(*process);
-    tcp_server_->Send(Msg_RemoteProcess, process_data.data(),
-                      process_data.size());
-  }
 }
 
 void OrbitAsioServer::SetSelectedFunctions(const Message& message) {

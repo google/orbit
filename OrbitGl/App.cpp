@@ -80,6 +80,7 @@ OrbitApp::OrbitApp(ApplicationOptions&& options)
     : options_(std::move(options)) {
   main_thread_executor_ = MainThreadExecutor::Create();
   thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/);
+  data_manager_ = std::make_unique<DataManager>(std::this_thread::get_id());
 #ifdef _WIN32
   m_Debugger = std::make_unique<Debugger>();
 #endif
@@ -260,9 +261,6 @@ bool OrbitApp::Init(ApplicationOptions&& options) {
 void OrbitApp::PostInit() {
   if (!options_.asio_server_address.empty()) {
     GTcpClient = std::make_unique<TcpClient>();
-    GTcpClient->AddMainThreadCallback(
-        Msg_RemoteProcess,
-        [=](const Message& a_Msg) { GOrbitApp->OnRemoteProcess(a_Msg); });
     ConnectionManager::Get().ConnectToRemote(options_.asio_server_address);
     SetIsRemote(true);
   }
@@ -279,9 +277,13 @@ void OrbitApp::PostInit() {
     process_manager_ =
         ProcessManager::Create(grpc_channel_, absl::Milliseconds(1000));
 
-    auto callback = [&](ProcessManager* process_manager) {
-      main_thread_executor_->Schedule([&, process_manager]() {
-        m_ProcessesDataView->SetProcessList(process_manager->GetProcessList());
+    auto callback = [this](ProcessManager* process_manager) {
+      main_thread_executor_->Schedule([this, process_manager]() {
+        const std::vector<ProcessInfo>& process_infos =
+            process_manager->GetProcessList();
+        data_manager_->UpdateProcessInfos(process_infos);
+        m_ProcessesDataView->SetProcessList(process_infos);
+
         if (m_ProcessesDataView->GetSelectedProcessId() == 0 &&
             m_ProcessesDataView->GetFirstProcessId() != 0) {
           m_ProcessesDataView->SelectProcess(
@@ -682,7 +684,6 @@ outcome::result<void, std::string> OrbitApp::OnLoadCapture(
   ar.time_graph_ = GCurrentTimeGraph;
   OUTCOME_TRY(ar.Load(file_name));
 
-  m_ModulesDataView->SetProcess(Capture::GTargetProcess);
   DoZoom = true;  // TODO: remove global, review logic
   return outcome::success();
 }
@@ -854,6 +855,16 @@ void OrbitApp::EnqueueModuleToLoad(const std::shared_ptr<Module>& a_Module) {
   m_ModulesToLoad.push_back(a_Module);
 }
 
+void OrbitApp::EnqueueModuleToLoad(const std::string& module_name) {
+  const std::shared_ptr<Module> module =
+      Capture::GTargetProcess->GetModuleFromName(module_name);
+  if (!module) {
+    ERROR("Module with name=%s, not found.", module_name);
+    return;
+  }
+  EnqueueModuleToLoad(module);
+}
+
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadModules() {
   if (!m_ModulesToLoad.empty()) {
@@ -865,6 +876,20 @@ void OrbitApp::LoadModules() {
 void OrbitApp::LoadRemoteModules() {
   GetSymbolsClient()->LoadSymbolsFromModules(Capture::GTargetProcess.get(),
                                              m_ModulesToLoad, nullptr);
+  // Detect loaded modules - see also explanation below.
+  uint32_t process_id = Capture::GTargetProcess->GetID();
+  for (auto& module : m_ModulesToLoad) {
+    if (!module->IsLoaded()) {
+      continue;
+    }
+    ModuleData* module_data = data_manager_->FindModuleByAddressStart(
+        process_id, module->m_AddressStart);
+
+    if (module_data != nullptr) {
+      module_data->set_loaded(true);
+    }
+  }
+
   m_ModulesToLoad.clear();
   // This is a bit counterintuitive. LoadSymbols generates request to
   // the service if symbols cannot be loaded locally. In which case
@@ -930,17 +955,49 @@ bool OrbitApp::GetSamplingEnabled() { return GParams.m_TrackSamplingEvents; }
 //-----------------------------------------------------------------------------
 
 void OrbitApp::OnProcessSelected(uint32_t pid) {
-  Message msg(Msg_RemoteProcessRequest);
-  msg.m_Header.m_GenericHeader.m_Address = pid;
-  GTcpClient->Send(msg);
+  thread_pool_->Schedule([pid, this] {
+    outcome::result<std::vector<ModuleInfo>, std::string> result =
+        process_manager_->LoadModuleList(pid);
 
-  std::shared_ptr<Process> process = FindProcessByPid(pid);
+    if (result) {
+      main_thread_executor_->Schedule([pid, result, this] {
+        // Make sure that pid is actually what user has selected at
+        // the moment we arrive here. If not - ignore the result.
+        const std::vector<ModuleInfo>& module_infos = result.value();
+        data_manager_->UpdateModuleInfos(pid, module_infos);
+        if (pid != m_ProcessesDataView->GetSelectedProcessId()) {
+          return;
+        }
 
-  if (process) {
-    m_ModulesDataView->SetProcess(process);
-    Capture::SetTargetProcess(process);
-    FireRefreshCallbacks();
-  }
+        m_ModulesDataView->SetModules(pid, data_manager_->GetModules(pid));
+
+        // TODO: remove this part when all client code is moved to
+        // new data model.
+        std::shared_ptr<Process> process = std::make_shared<Process>();
+        process->SetID(pid);
+        process->SetIsRemote(true);
+
+        Capture::SetTargetProcess(process);
+
+        for (const ModuleInfo& info : module_infos) {
+          std::shared_ptr<Module> module = std::make_shared<Module>();
+          module->m_Name = info.name();
+          module->m_FullName = info.file_path();
+          module->m_PdbSize = info.file_size();
+          module->m_AddressStart = info.address_start();
+          module->m_AddressEnd = info.address_end();
+          module->SetLoadable(true);
+          process->AddModule(module);
+        }
+        // To this point ----------------------------------
+
+        FireRefreshCallbacks();
+      });
+    } else {
+      ERROR("Error retrieving modules: %s", result.error());
+      SendErrorToUi("Error retrieving modules", result.error());
+    }
+  });
 }
 
 //-----------------------------------------------------------------------------
@@ -955,36 +1012,6 @@ void OrbitApp::EnableUploadDumpsToServer(bool a_Value) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnRemoteProcess(const Message& a_Message) {
-  std::istringstream buffer(a_Message.GetDataAsString());
-  cereal::JSONInputArchive inputAr(buffer);
-  std::shared_ptr<Process> remote_process = std::make_shared<Process>();
-  inputAr(*remote_process);
-  remote_process->SetIsRemote(true);
-  PRINT_VAR(remote_process->GetName());
-
-  UpdateProcess(remote_process);
-
-  if (remote_process->GetID() == m_ProcessesDataView->GetSelectedProcessId()) {
-    m_ModulesDataView->SetProcess(remote_process);
-    // Is this needed?
-    Capture::SetTargetProcess(remote_process);
-    FireRefreshCallbacks();
-  }
-
-  // Trigger session loading if needed.
-  std::shared_ptr<Session> session = Capture::GSessionPresets;
-  if (session) {
-    GetSymbolsClient()->LoadSymbolsFromSession(remote_process.get(), session);
-    GParams.m_ProcessPath = session->m_ProcessFullPath;
-    GParams.m_Arguments = session->m_Arguments;
-    GParams.m_WorkingDirectory = session->m_WorkingDirectory;
-    GCoreApp->SendToUi("SetProcessParams");
-    Capture::GSessionPresets = nullptr;
-  }
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::ApplySession(const Session& session) {
   for (const auto& pair : session.m_Modules) {
     const std::string& name = pair.first;
@@ -994,46 +1021,6 @@ void OrbitApp::ApplySession(const Session& session) {
   }
 
   FireRefreshCallbacks();
-}
-
-std::shared_ptr<Process> OrbitApp::FindProcessByPid(uint32_t pid) {
-  absl::MutexLock lock(&process_map_mutex_);
-  auto it = process_map_.find(pid);
-  if (it == process_map_.end()) {
-    return nullptr;
-  }
-
-  return it->second;
-}
-
-void OrbitApp::UpdateProcess(const std::shared_ptr<Process>& process) {
-  absl::MutexLock lock(&process_map_mutex_);
-  // We want to move function map to new process object
-  auto old_process_it = process_map_.find(process->GetID());
-  if (old_process_it != process_map_.end()) {
-    // TODO: all the following needs to be addressed by
-    // separating client-only part of information to
-    // separate structures.
-    std::shared_ptr<Process> old_process = old_process_it->second;
-    std::map<uint64_t, std::shared_ptr<Module>>& old_modules =
-        old_process->GetModules();
-    std::map<uint64_t, std::shared_ptr<Module>>& new_modules =
-        process->GetModules();
-
-    // Move 'loaded' flag to new modules if possible, together with m_Pdb,
-    // needed when loading sessions as Pdb::ApplyPresets is called.
-    for (auto module_entry : old_modules) {
-      uint64_t key = module_entry.first;
-      auto new_module_it = new_modules.find(key);
-      if (new_module_it != new_modules.end()) {
-        new_module_it->second->SetLoaded(module_entry.second->IsLoaded());
-        new_module_it->second->m_Pdb = module_entry.second->m_Pdb;
-      }
-    }
-
-    process->SetFunctions(old_process->GetFunctions());
-  }
-  process_map_.insert_or_assign(process->GetID(), process);
 }
 
 //-----------------------------------------------------------------------------
@@ -1056,6 +1043,12 @@ void OrbitApp::OnRemoteModuleDebugInfo(
     symbol_helper_.LoadSymbolsFromDebugInfo(module, module_info);
     LOG("Received %lu function symbols from remote service for module %s",
         module_info.m_Functions.size(), module_info.m_Name.c_str());
+
+    ModuleData* module_data = data_manager_->FindModuleByAddressStart(
+        Capture::GTargetProcess->GetID(), module->m_AddressStart);
+    if (module_data != nullptr) {
+      module_data->set_loaded(true);
+    }
   }
 
   UpdateSamplingReport();

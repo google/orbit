@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "FunctionsDataView.h"
 
 #include "App.h"
@@ -83,6 +81,14 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
 
 //-----------------------------------------------------------------------------
 void FunctionsDataView::DoSort() {
+  // TODO(antonrohr) This sorting function can take a lot of time when a large
+  // number of functions is used (several seconds). This function is currently
+  // executed on the main thread and therefore freezes the UI and interrupts the
+  // ssh watchdog signals that are sent to the service. Therefore this should
+  // not be called on the main thread and as soon as this is done the watchdog
+  // timeout should be rolled back from 25 seconds to 10 seconds in
+  // OrbitService.h
+  SCOPE_TIMER_LOG("FunctionsDataView::DoSort");
   bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
@@ -182,6 +188,14 @@ void FunctionsDataView::OnContextMenu(const std::string& a_Action,
 
 //-----------------------------------------------------------------------------
 void FunctionsDataView::DoFilter() {
+  // TODO(antonrohr) This filter function can take a lot of time when a large
+  // number of functions is used (several seconds). This function is currently
+  // executed on the main thread and therefore freezes the UI and interrupts the
+  // ssh watchdog signals that are sent to the service. Therefore this should
+  // not be called on the main thread and as soon as this is done the watchdog
+  // timeout should be rolled back from 25 seconds to 10 seconds in
+  // OrbitService.h
+  SCOPE_TIMER_LOG("FunctionsDataView::DoFilter");
   m_FilterTokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
 #ifdef WIN32

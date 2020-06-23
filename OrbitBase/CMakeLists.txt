@@ -22,6 +22,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/Action.h
         include/OrbitBase/Logging.h
         include/OrbitBase/MainThreadExecutor.h
+        include/OrbitBase/UniqueResource.h
         include/OrbitBase/ThreadPool.h
         include/OrbitBase/SafeStrerror.h)
 
@@ -40,6 +41,7 @@ add_executable(OrbitBaseTests)
 target_sources(OrbitBaseTests PRIVATE
     MainThreadExecutorTest.cpp
     ThreadPoolTest.cpp
+    UniqueResourceTest.cpp
 )
 
 target_link_libraries(OrbitBaseTests PRIVATE

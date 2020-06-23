@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+message ModuleInfo {
+  string name = 1;
+  string file_path = 2;
+  uint64 file_size = 3;
+  uint64 address_start = 4;
+  uint64 address_end = 5;
+}
+
