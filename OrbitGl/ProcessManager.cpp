@@ -69,9 +69,9 @@ ProcessManagerImpl::GetModuleList(uint32_t pid) {
       process_service_->GetModuleList(context.get(), request, &response);
 
   if (!status.ok()) {
-    ERROR("Grpc call failed: code=%d, meesage=%s", status.error_code(),
+    ERROR("Grpc call failed: code=%d, message=%s", status.error_code(),
           status.error_message());
-    return status.error_message();
+    return outcome::failure(status.error_message());
   }
 
   const auto& modules = response.modules();
