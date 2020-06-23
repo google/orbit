@@ -37,10 +37,9 @@ class CoreApp {
   virtual bool GetOutputDebugStringEnabled() { return false; }
   virtual bool GetUploadDumpsToServerEnabled() const { return false; }
   virtual void UpdateVariable(class Variable* /*a_Variable*/) {}
-  virtual void Disassemble(const std::string& /*a_FunctionName*/,
-                           uint64_t /*a_VirtualAddress*/,
-                           const uint8_t* /*a_MachineCode*/,
-                           size_t /*a_Size*/) {}
+  virtual void Disassemble(uint32_t /*pid*/,
+                           const std::string& /*function_name*/,
+                           uint64_t /*address*/, uint64_t /*size*/) {}
   virtual void ProcessTimer(const Timer& /*timer*/) {}
   virtual void ProcessSamplingCallStack(LinuxCallstackEvent& /*a_CS*/) {}
   virtual void ProcessHashedSamplingCallStack(CallstackEvent& /*a_CallStack*/) {
@@ -53,11 +52,6 @@ class CoreApp {
   virtual void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) {}
   virtual void ApplySession(const Session&) {}
   virtual void RefreshCaptureView() {}
-
-  using ProcessMemoryCallback = std::function<void(const std::string&)>;
-  virtual void GetRemoteMemory(uint32_t /*pid*/, uint64_t /*address*/,
-                               uint64_t /*size*/,
-                               const ProcessMemoryCallback& /*callback*/) {}
 };
 
 extern CoreApp* GCoreApp;
