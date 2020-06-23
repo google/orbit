@@ -28,8 +28,7 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
     columns[COLUMN_PATH] = {"Path", .3f, SortingOrder::Ascending};
     columns[COLUMN_ADDRESS_RANGE] = {"Address Range", .15f,
                                      SortingOrder::Ascending};
-    columns[COLUMN_HAS_PDB] = {"Debug info", .0f, SortingOrder::Descending};
-    columns[COLUMN_PDB_SIZE] = {"Pdb Size", .0f, SortingOrder::Descending};
+    columns[COLUMN_FILE_SIZE] = {"File Size", .0f, SortingOrder::Descending};
     columns[COLUMN_LOADED] = {"Loaded", .0f, SortingOrder::Descending};
     return columns;
   }();
@@ -49,9 +48,7 @@ std::string ModulesDataView::GetValue(int row, int col) {
       return module->file_path();
     case COLUMN_ADDRESS_RANGE:
       return module->address_range();
-    case COLUMN_HAS_PDB:
-      return "*";
-    case COLUMN_PDB_SIZE:
+    case COLUMN_FILE_SIZE:
       return GetPrettySize(module->file_size());
     case COLUMN_LOADED:
       return module->is_loaded() ? "*" : "";
@@ -82,7 +79,7 @@ void ModulesDataView::DoSort() {
     case COLUMN_ADDRESS_RANGE:
       sorter = ORBIT_PROC_SORT(address_start());
       break;
-    case COLUMN_PDB_SIZE:
+    case COLUMN_FILE_SIZE:
       sorter = ORBIT_PROC_SORT(file_size());
       break;
     case COLUMN_LOADED:
