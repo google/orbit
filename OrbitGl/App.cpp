@@ -1155,8 +1155,14 @@ void OrbitApp::FilterFunctions(const std::string& filter) {
 void OrbitApp::GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
                                const ProcessMemoryCallback& callback) {
   thread_pool_->Schedule([this, pid, address, size, callback] {
-    std::string memory = process_manager_->GetProcessMemory(pid, address, size);
-    main_thread_executor_->Schedule(
-        [memory = std::move(memory), callback] { callback(memory); });
+    auto result = process_manager_->GetProcessMemory(pid, address, size);
+    if (result.has_value()) {
+      main_thread_executor_->Schedule(
+          [memory = std::move(result).value(), callback] { callback(memory); });
+    } else {
+      SendErrorToUi("Error reading memory",
+                    absl::StrFormat("Could not read process memory: %s.",
+                                    result.error().message));
+    }
   });
 }

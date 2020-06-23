@@ -10,6 +10,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "grpcpp/grpcpp.h"
+#include "outcome.hpp"
 #include "services.grpc.pb.h"
 
 namespace {
@@ -23,11 +24,14 @@ class ProcessManagerImpl final : public ProcessManager {
 
   void SetProcessListUpdateListener(
       const std::function<void(ProcessManager*)>& listener) override;
+
   std::vector<ProcessInfo> GetProcessList() const override;
   outcome::result<std::vector<ModuleInfo>, std::string> LoadModuleList(
       uint32_t pid) override;
-  std::string GetProcessMemory(uint32_t pid, uint64_t address,
-                               uint64_t size) override;
+
+  outcome::result<std::string, Error, outcome::policy::terminate>
+  GetProcessMemory(uint32_t pid, uint64_t address, uint64_t size) override;
+
   void Start();
   void Shutdown() override;
 
@@ -146,8 +150,9 @@ void ProcessManagerImpl::WorkerFunction() {
   }
 }
 
-std::string ProcessManagerImpl::GetProcessMemory(uint32_t pid, uint64_t address,
-                                                 uint64_t size) {
+outcome::result<std::string, ProcessManager::Error, outcome::policy::terminate>
+ProcessManagerImpl::GetProcessMemory(uint32_t pid, uint64_t address,
+                                     uint64_t size) {
   grpc::ClientContext context;
   std::chrono::time_point deadline =
       std::chrono::system_clock::now() +
@@ -165,10 +170,10 @@ std::string ProcessManagerImpl::GetProcessMemory(uint32_t pid, uint64_t address,
       process_service_->GetProcessMemory(&context, request, &response);
   if (!status.ok()) {
     ERROR("gRPC call to GetProcessMemory failed: %s", status.error_message());
-    return std::string{};
+    return outcome::failure(ProcessManager::Error{status.error_message()});
   }
 
-  return response.memory();
+  return outcome::success(std::move(*response.mutable_memory()));
 }
 
 }  // namespace
