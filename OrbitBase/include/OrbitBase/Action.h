@@ -21,8 +21,10 @@ class Action {
 template <typename F>
 class NullaryFunctorAction : public Action {
  public:
-  explicit NullaryFunctorAction(F&& functor)
-      : functor_(std::forward<F>(functor)) {}
+  template <typename T, typename = std::enable_if_t<!std::is_same_v<
+                            std::decay_t<T>, NullaryFunctorAction>>>
+  explicit NullaryFunctorAction(T&& functor)
+      : functor_(std::forward<T>(functor)) {}
 
   void Execute() override { functor_(); }
 
