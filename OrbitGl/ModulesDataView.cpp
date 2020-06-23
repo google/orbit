@@ -170,8 +170,8 @@ void ModulesDataView::DoFilter() {
 
     bool match = true;
 
-    for (std::string& filterToken : tokens) {
-      if (module_string.find(filterToken) == std::string::npos) {
+    for (std::string& filter_token : tokens) {
+      if (module_string.find(filter_token) == std::string::npos) {
         match = false;
         break;
       }
