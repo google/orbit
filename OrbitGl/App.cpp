@@ -272,7 +272,7 @@ void OrbitApp::PostInit() {
     auto callback = [this](ProcessManager* process_manager) {
       main_thread_executor_->Schedule([this, process_manager]() {
         const std::vector<ProcessInfo>& process_infos =
-            process_manager->process_list();
+            process_manager->GetProcessList();
         data_manager_->UpdateProcessInfos(process_infos);
         m_ProcessesDataView->SetProcessList(process_infos);
 
@@ -946,7 +946,7 @@ bool OrbitApp::GetSamplingEnabled() { return GParams.m_TrackSamplingEvents; }
 void OrbitApp::OnProcessSelected(uint32_t pid) {
   thread_pool_->Schedule([pid, this] {
     outcome::result<std::vector<ModuleInfo>, std::string> result =
-        process_manager_->GetModuleList(pid);
+        process_manager_->LoadModuleList(pid);
 
     if (result) {
       main_thread_executor_->Schedule([pid, result, this] {
