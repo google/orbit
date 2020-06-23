@@ -23,8 +23,8 @@ class ProcessManagerImpl final : public ProcessManager {
 
   void SetProcessListUpdateListener(
       const std::function<void(ProcessManager*)>& listener) override;
-  std::vector<ProcessInfo> process_list() const override;
-  outcome::result<std::vector<ModuleInfo>, std::string> GetModuleList(
+  std::vector<ProcessInfo> GetProcessList() const override;
+  outcome::result<std::vector<ModuleInfo>, std::string> LoadModuleList(
       uint32_t pid) override;
   void Start();
   void Shutdown() override;
@@ -59,7 +59,7 @@ void ProcessManagerImpl::SetProcessListUpdateListener(
 }
 
 outcome::result<std::vector<ModuleInfo>, std::string>
-ProcessManagerImpl::GetModuleList(uint32_t pid) {
+ProcessManagerImpl::LoadModuleList(uint32_t pid) {
   GetModuleListRequest request;
   GetModuleListResponse response;
   request.set_process_id(pid);
@@ -79,7 +79,7 @@ ProcessManagerImpl::GetModuleList(uint32_t pid) {
   return std::vector<ModuleInfo>(modules.begin(), modules.end());
 }
 
-std::vector<ProcessInfo> ProcessManagerImpl::process_list() const {
+std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
   absl::MutexLock lock(&mutex_);
   return process_list_;
 }
