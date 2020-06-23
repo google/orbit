@@ -1,0 +1,20 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+message ModuleSymbols {
+  uint64 load_bias = 1;
+  string symbols_file_path = 2;
+  repeated SymbolInfo symbol_infos = 3;
+}
+
+message SymbolInfo {
+  string name = 1;
+  string pretty_name = 2;
+  uint64 address = 3;
+  uint64 size = 4;
+  string source_file = 5;
+  uint32 source_line = 6;
+}

@@ -22,8 +22,6 @@ target_sources(OrbitService PRIVATE
         OrbitService.h
         ProcessServiceImpl.cpp
         ProcessServiceImpl.h
-        SymbolsService.h
-        SymbolsService.cpp
         TransactionService.h
         TransactionService.cpp)
 

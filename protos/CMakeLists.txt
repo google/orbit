@@ -10,6 +10,7 @@ target_compile_definitions(OrbitProtos PRIVATE -DNTDDI_VERSION=0x06030000)
 target_sources(OrbitProtos PRIVATE code_block.proto
                                    module.proto
                                    process.proto
-                                   services.proto)
+                                   services.proto
+                                   symbol.proto)
 
 grpc_helper(OrbitProtos)

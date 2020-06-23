@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "SessionsDataView.h"
 
 #include <OrbitBase/Logging.h>
@@ -109,8 +107,8 @@ void SessionsDataView::OnContextMenu(const std::string& a_Action,
       return;
     }
     const std::shared_ptr<Session>& session = GetSession(a_ItemIndices[0]);
+
     GOrbitApp->LoadSession(session);
-    GOrbitApp->LoadModules();
 
   } else if (a_Action == MENU_ACTION_DELETE) {
     if (a_ItemIndices.size() != 1) {

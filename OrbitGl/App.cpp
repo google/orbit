@@ -16,6 +16,7 @@
 #include <outcome.hpp>
 
 #include <absl/flags/flag.h>
+#include <absl/strings/str_format.h>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
@@ -54,12 +55,10 @@
 #include "Serialization.h"
 #include "SessionsDataView.h"
 #include "StringManager.h"
-#include "SymbolsClient.h"
 #include "Systrace.h"
 #include "Tcp.h"
 #include "TcpClient.h"
 #include "TcpServer.h"
-#include "TestRemoteMessages.h"
 #include "TextRenderer.h"
 #include "TimerManager.h"
 #include "TypesDataView.h"
@@ -270,8 +269,17 @@ void OrbitApp::PostInit() {
   }
 
   if (!options_.grpc_server_address.empty()) {
-    grpc_channel_ = grpc::CreateChannel(options_.grpc_server_address,
-                                        grpc::InsecureChannelCredentials());
+    grpc::ChannelArguments channel_arguments;
+    // TODO (159888769) move symbol loading to grpc stream.
+    // The default receive message size is 4mb. Symbol data can easily be more
+    // than this. This is set to an arbitrary size of 2gb (numeric max), which
+    // seems to be enough and leaves some headroom. As an example, a 1.1gb
+    // .debug symbols file results in a message size of 88mb.
+    channel_arguments.SetMaxReceiveMessageSize(
+        std::numeric_limits<int32_t>::max());
+    grpc_channel_ = grpc::CreateCustomChannel(
+        options_.grpc_server_address, grpc::InsecureChannelCredentials(),
+        channel_arguments);
     if (!grpc_channel_) {
       ERROR("Unable to create GRPC channel to %s",
             options_.grpc_server_address);
@@ -677,9 +685,18 @@ outcome::result<void, std::string> OrbitApp::OnLoadSession(
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadSession(const std::shared_ptr<Session>& session) {
-  if (SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
-    Capture::GSessionPresets = session;
+  if (Capture::GTargetProcess->GetFullPath() == session->m_ProcessFullPath) {
+    // In case we already have the correct process selected
+    GOrbitApp->LoadModulesFromSession(Capture::GTargetProcess, session);
+    return;
   }
+  if (!SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
+    SendErrorToUi("Session loading failed",
+                  absl::StrFormat("The process \"%s\" is not running.",
+                                  session->m_ProcessFullPath));
+    return;
+  }
+  Capture::GSessionPresets = session;
 }
 
 //-----------------------------------------------------------------------------
@@ -709,17 +726,6 @@ outcome::result<void, std::string> OrbitApp::OnLoadCapture(
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnDisconnect() { GTcpServer->Send(Msg_Unload); }
-
-//-----------------------------------------------------------------------------
-void OrbitApp::OnPdbLoaded() {
-  FireRefreshCallbacks();
-
-  if (m_ModulesToLoad.empty()) {
-    SendToUi("pdbloaded");
-  } else {
-    LoadModules();
-  }
-}
 
 //-----------------------------------------------------------------------------
 void OrbitApp::FireRefreshCallbacks(DataViewType a_Type) {
@@ -870,56 +876,88 @@ void OrbitApp::SendErrorToUi(const std::string& title,
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::EnqueueModuleToLoad(const std::shared_ptr<Module>& a_Module) {
-  m_ModulesToLoad.push_back(a_Module);
-}
+void OrbitApp::LoadModuleOnRemote(int32_t process_id,
+                                  const std::shared_ptr<Module>& module,
+                                  const std::shared_ptr<Session>& session) {
+  thread_pool_->Schedule([this, process_id, module, session]() {
+    const auto remote_symbols_result =
+        process_manager_->LoadSymbols(module->m_FullName);
 
-void OrbitApp::EnqueueModuleToLoad(const std::string& module_name) {
-  const std::shared_ptr<Module> module =
-      Capture::GTargetProcess->GetModuleFromName(module_name);
-  if (!module) {
-    ERROR("Module with name=%s, not found.", module_name);
-    return;
-  }
-  EnqueueModuleToLoad(module);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::LoadModules() {
-  if (!m_ModulesToLoad.empty()) {
-    LoadRemoteModules();
-  }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::LoadRemoteModules() {
-  GetSymbolsClient()->LoadSymbolsFromModules(Capture::GTargetProcess.get(),
-                                             m_ModulesToLoad, nullptr);
-  // Detect loaded modules - see also explanation below.
-  int32_t process_id = Capture::GTargetProcess->GetID();
-  for (auto& module : m_ModulesToLoad) {
-    if (!module->IsLoaded()) {
-      continue;
+    if (!remote_symbols_result) {
+      SendErrorToUi(
+          "Error loading symbols",
+          absl::StrFormat(
+              "Did not find symbols on local machine for module \"%s\". "
+              "Trying to load symbols from remote resulted in error "
+              "message: %s",
+              module->m_Name, remote_symbols_result.error()));
+      return;
     }
-    ModuleData* module_data = data_manager_->FindModuleByAddressStart(
-        process_id, module->m_AddressStart);
 
-    if (module_data != nullptr) {
-      module_data->set_loaded(true);
-    }
+    main_thread_executor_->Schedule(
+        [this, symbols = std::move(remote_symbols_result.value()), module,
+         process_id, session]() {
+          symbol_helper_.LoadSymbolsIntoModule(module, symbols);
+          LOG("Received and loaded %lu function symbols from remote service "
+              "for module %s",
+              module->m_Pdb->GetFunctions().size(), module->m_Name.c_str());
+          SymbolLoadingFinished(process_id, module, session);
+        });
+  });
+}
+
+void OrbitApp::SymbolLoadingFinished(uint32_t process_id,
+                                     const std::shared_ptr<Module>& module,
+                                     const std::shared_ptr<Session>& session) {
+  if (session != nullptr &&
+      session->m_Modules.find(module->m_FullName) != session->m_Modules.end()) {
+    module->m_Pdb->ApplyPresets(*session);
   }
 
-  m_ModulesToLoad.clear();
-  // This is a bit counterintuitive. LoadSymbols generates request to
-  // the service if symbols cannot be loaded locally. In which case
-  // the UI update happens in OnRemoteModuleDebugInfo. But if all symbols
-  // are loaded locally it will not call remote and OnRemoteModuleDebugInfo
-  // are never called. For this case we need to make sure sampling report is
-  // updated here as well.
-  // TODO: LoadSymbolsFromModules should always call a callback even when
-  // symbols are loaded locally. Remove this call after this is done.
+  data_manager_->FindModuleByAddressStart(process_id, module->m_AddressStart)
+      ->set_loaded(true);
+
+  modules_currently_loading_.erase(module->m_FullName);
+
   UpdateSamplingReport();
   GOrbitApp->FireRefreshCallbacks();
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::LoadModules(int32_t process_id,
+                           const std::vector<std::shared_ptr<Module>>& modules,
+                           const std::shared_ptr<Session>& session) {
+  // TODO(159868905) use ModuleData instead of Module
+  for (const auto& module : modules) {
+    if (modules_currently_loading_.contains(module->m_FullName)) {
+      continue;
+    }
+    modules_currently_loading_.insert(module->m_FullName);
+
+    // TODO (159889010) Move symbol loading off the main thread.
+    if (symbol_helper_.LoadSymbolsUsingSymbolsFile(module)) {
+      LOG("Loaded %lu function symbols locally for modules %s",
+          module->m_Pdb->GetFunctions().size(), module->m_Name);
+      SymbolLoadingFinished(process_id, module, session);
+    } else {
+      LOG("Did not find local symbols for module: %s", module->m_Name);
+      LoadModuleOnRemote(process_id, module, session);
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::LoadModulesFromSession(const std::shared_ptr<Process>& process,
+                                      const std::shared_ptr<Session>& session) {
+  std::vector<std::shared_ptr<Module>> modules;
+  for (const auto& pair : session->m_Modules) {
+    const std::string& module_path = pair.first;
+    const auto& module = process->GetModuleFromPath(module_path);
+    if (module != nullptr && !module->IsLoaded()) {
+      modules.emplace_back(std::move(module));
+    }
+  }
+  LoadModules(process->GetID(), modules, session);
 }
 
 //-----------------------------------------------------------------------------
@@ -999,6 +1037,7 @@ void OrbitApp::OnProcessSelected(int32_t pid) {
           process->SetName(process_data->name());
         }
         process->SetIsRemote(true);
+        process->SetFullPath(process_data->full_path());
 
         Capture::SetTargetProcess(process);
 
@@ -1012,6 +1051,12 @@ void OrbitApp::OnProcessSelected(int32_t pid) {
           module->m_DebugSignature = info.build_id();
           module->SetLoadable(true);
           process->AddModule(module);
+        }
+
+        std::shared_ptr<Session> session = Capture::GSessionPresets;
+        if (session) {
+          LoadModulesFromSession(process, session);
+          Capture::GSessionPresets = nullptr;
         }
         // To this point ----------------------------------
 
@@ -1036,49 +1081,6 @@ void OrbitApp::EnableUploadDumpsToServer(bool a_Value) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::ApplySession(const Session& session) {
-  for (const auto& pair : session.m_Modules) {
-    const std::string& name = pair.first;
-    std::shared_ptr<Module> module =
-        Capture::GTargetProcess->GetModuleFromName(Path::GetFileName(name));
-    if (module && module->m_Pdb) module->m_Pdb->ApplyPresets(session);
-  }
-
-  FireRefreshCallbacks();
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::OnRemoteModuleDebugInfo(
-    const std::vector<ModuleDebugInfo>& remote_module_debug_infos) {
-  for (const ModuleDebugInfo& module_info : remote_module_debug_infos) {
-    std::shared_ptr<Module> module =
-        Capture::GTargetProcess->GetModuleFromName(module_info.m_Name);
-
-    if (!module) {
-      ERROR("Could not find module %s", module_info.m_Name.c_str());
-      continue;
-    }
-
-    if (module_info.m_Functions.empty()) {
-      ERROR("Remote did not send any symbols for module %s",
-            module_info.m_Name.c_str());
-      continue;
-    }
-    symbol_helper_.LoadSymbolsFromDebugInfo(module, module_info);
-    LOG("Received %lu function symbols from remote service for module %s",
-        module_info.m_Functions.size(), module_info.m_Name.c_str());
-
-    ModuleData* module_data = data_manager_->FindModuleByAddressStart(
-        Capture::GTargetProcess->GetID(), module->m_AddressStart);
-    if (module_data != nullptr) {
-      module_data->set_loaded(true);
-    }
-  }
-
-  UpdateSamplingReport();
-  GOrbitApp->FireRefreshCallbacks();
-}
-
 void OrbitApp::UpdateSamplingReport() {
   if (sampling_report_ != nullptr) {
     sampling_report_->UpdateReport();
@@ -1175,8 +1177,6 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 //-----------------------------------------------------------------------------
 void OrbitApp::InitializeClientTransactions() {
   transaction_client_ = std::make_unique<TransactionClient>(GTcpClient.get());
-  symbols_client_ =
-      std::make_unique<SymbolsClient>(this, transaction_client_.get());
 }
 
 //-----------------------------------------------------------------------------

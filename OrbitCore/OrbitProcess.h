@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
 #include <map>
@@ -29,7 +28,6 @@ class Variable;
 class Thread;
 class Session;
 struct Module;
-struct ModuleDebugInfo;
 
 //-----------------------------------------------------------------------------
 class Process {
@@ -94,6 +92,7 @@ class Process {
   Function* GetFunctionFromAddress(uint64_t address, bool a_IsExact = true);
   std::shared_ptr<Module> GetModuleFromAddress(uint64_t a_Address);
   std::shared_ptr<Module> GetModuleFromName(const std::string& a_Name);
+  std::shared_ptr<Module> GetModuleFromPath(const std::string& module_path);
 
   bool LineInfoFromAddress(uint64_t a_Address, struct LineInfo& o_LineInfo);
 
@@ -155,7 +154,11 @@ class Process {
   Mutex m_DataMutex;
 
   std::map<uint64_t, std::shared_ptr<Module>> m_Modules;
+  // TODO(antonrohr) change the usage of m_NameToModuleMap to
+  // path_to_module_map_, since the name of a module is not unique
+  // (/usr/lib/libbase.so and /opt/somedir/libbase.so)
   std::map<std::string, std::shared_ptr<Module>> m_NameToModuleMap;
+  std::map<std::string, std::shared_ptr<Module>> path_to_module_map_;
   std::map<int32_t, std::string> m_ThreadNames;
 
   // Transients

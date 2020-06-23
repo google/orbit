@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "SamplingReportDataView.h"
 
 #include <memory>
@@ -207,12 +205,13 @@ void SamplingReportDataView::OnContextMenu(
       function->UnSelect();
     }
   } else if (a_Action == MENU_ACTION_MODULES_LOAD) {
+    std::vector<std::shared_ptr<Module>> modules;
     for (const auto& module : GetModulesFromIndices(a_ItemIndices)) {
       if (module->IsLoadable() && !module->IsLoaded()) {
-        GOrbitApp->EnqueueModuleToLoad(module);
+        modules.push_back(module);
       }
     }
-    GOrbitApp->LoadModules();
+    GOrbitApp->LoadModules(Capture::GTargetProcess->GetID(), modules);
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }

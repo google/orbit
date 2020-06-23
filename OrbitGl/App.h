@@ -35,11 +35,11 @@
 #include "SessionsDataView.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
-#include "SymbolsClient.h"
 #include "Threading.h"
 #include "TransactionClient.h"
 #include "TypesDataView.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
@@ -83,7 +83,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void OnCaptureStopped() override;
   void ToggleCapture();
   void OnDisconnect();
-  void OnPdbLoaded();
   void SetCallStack(std::shared_ptr<CallStack> a_CallStack);
   void LoadFileMapping();
   void LoadSystrace(const std::string& a_FileName);
@@ -191,10 +190,11 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
     return m_FileMapping;
   }
 
-  void EnqueueModuleToLoad(const std::shared_ptr<struct Module>& a_Module);
-  void EnqueueModuleToLoad(const std::string& module_name);
-  void LoadModules();
-  void LoadRemoteModules();
+  void LoadModules(int32_t process_id,
+                   const std::vector<std::shared_ptr<Module>>& modules,
+                   const std::shared_ptr<Session>& session = nullptr);
+  void LoadModulesFromSession(const std::shared_ptr<Process>& process,
+                              const std::shared_ptr<Session>& session);
   bool IsLoading();
   void SetTrackContextSwitches(bool a_Value);
   bool GetTrackContextSwitches();
@@ -215,9 +215,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   bool GetUploadDumpsToServerEnabled() const override;
 
   void RequestThaw() { m_NeedsThawing = true; }
-  void OnRemoteModuleDebugInfo(const std::vector<ModuleDebugInfo>&) override;
   void UpdateSamplingReport();
-  void ApplySession(const Session& session) override;
   void LoadSession(const std::shared_ptr<Session>& session);
   void SetIsRemote(bool a_IsRemote) { m_IsRemote = a_IsRemote; }
   bool IsRemote() const { return m_IsRemote; }
@@ -232,9 +230,15 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   TransactionClient* GetTransactionClient() {
     return transaction_client_.get();
   }
-  SymbolsClient* GetSymbolsClient() { return symbols_client_.get(); }
 
  private:
+  void LoadModuleOnRemote(int32_t process_id,
+                          const std::shared_ptr<Module>& module,
+                          const std::shared_ptr<Session>& session);
+  void SymbolLoadingFinished(uint32_t process_id,
+                             const std::shared_ptr<Module>& module,
+                             const std::shared_ptr<Session>& session);
+
   ApplicationOptions options_;
 
   std::vector<std::string> m_Arguments;
@@ -271,10 +275,11 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::vector<std::string> m_SymbolDirectories;
   std::function<void(const std::string&)> m_UiCallback;
 
-  std::vector<std::shared_ptr<struct Module>> m_ModulesToLoad;
   std::vector<std::string> m_PostInitArguments;
 
   int m_NumTicks = 0;
+
+  absl::flat_hash_set<std::string> modules_currently_loading_;
 
   std::shared_ptr<StringManager> string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
@@ -291,7 +296,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 #endif
 
   std::unique_ptr<TransactionClient> transaction_client_;
-  std::unique_ptr<SymbolsClient> symbols_client_;
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 };
 

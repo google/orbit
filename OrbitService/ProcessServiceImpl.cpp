@@ -7,6 +7,8 @@
 #include <memory>
 
 #include "OrbitModule.h"
+#include "SymbolHelper.h"
+#include "symbol.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;
@@ -89,4 +91,41 @@ Status ProcessServiceImpl::GetProcessMemory(
             "Could not read %lu bytes from address %#lx of process %u", size,
             request->address(), request->pid()));
   }
+}
+
+Status ProcessServiceImpl::GetSymbols(ServerContext*,
+                                      const GetSymbolsRequest* request,
+                                      GetSymbolsResponse* response) {
+  // TODO(antonrohr) remove this need for Module. SymbolHelper needs to be
+  // changed for that.
+  std::shared_ptr<Module> module = std::make_shared<Module>();
+  module->m_FullName = request->module_path();
+
+  const SymbolHelper symbol_helper;
+  if (!symbol_helper.LoadSymbolsCollector(module)) {
+    std::string error_message = absl::StrFormat(
+        "No symbols found on remote for module \"%s\"", request->module_path());
+    ERROR("%s", error_message.c_str());
+    return Status(StatusCode::NOT_FOUND, error_message);
+  }
+
+  ModuleSymbols* module_symbols = response->mutable_module_symbols();
+  module_symbols->set_load_bias(module->m_Pdb->GetLoadBias());
+  module_symbols->set_symbols_file_path(module->m_Pdb->GetFileName());
+
+  for (const auto& function : module->m_Pdb->GetFunctions()) {
+    SymbolInfo* symbol_info = module_symbols->add_symbol_infos();
+    symbol_info->set_name(function->Name());
+    symbol_info->set_pretty_name(function->PrettyName());
+    symbol_info->set_address(function->Address());
+    symbol_info->set_size(function->Size());
+    symbol_info->set_source_file(function->File());
+    symbol_info->set_source_line(function->Line());
+  }
+
+  LOG("Loaded %lu symbols for module %s, (size: %d bytes)",
+      module_symbols->symbol_infos().size(), request->module_path(),
+      module_symbols->ByteSize());
+
+  return Status::OK;
 }
