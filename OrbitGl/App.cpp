@@ -431,7 +431,7 @@ void OrbitApp::RefreshWatch() {
 //-----------------------------------------------------------------------------
 void OrbitApp::Disassemble(uint32_t pid, const Function& function) {
   thread_pool_->Schedule([this, pid, function] {
-    auto result = process_manager_->GetProcessMemory(
+    auto result = process_manager_->LoadProcessMemory(
         pid, function.GetVirtualAddress(), function.Size());
     if (!result.has_value()) {
       SendErrorToUi("Error reading memory",

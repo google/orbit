@@ -51,7 +51,7 @@ class ProcessManager {
   virtual std::vector<ProcessInfo> GetProcessList() const = 0;
 
   virtual outcome::result<std::string, Error, outcome::policy::terminate>
-  GetProcessMemory(uint32_t pid, uint64_t address, uint64_t size) = 0;
+  LoadProcessMemory(uint32_t pid, uint64_t address, uint64_t size) = 0;
 
   // Note that this method waits for the worker thread to stop, which could
   // take up to refresh_timeout.
