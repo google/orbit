@@ -94,10 +94,6 @@ void Function::UpdateStats(const Timer& timer) {
   }
 }
 
-void Function::GetDisassembly(uint32_t pid) {
-  GCoreApp->Disassemble(pid, pretty_name_, GetVirtualAddress(), Size());
-}
-
 void Function::FindFile() {
 #ifdef _WIN32
   LineInfo lineInfo;

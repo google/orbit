@@ -179,7 +179,7 @@ void FunctionsDataView::OnContextMenu(const std::string& a_Action,
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
     uint32_t pid = Capture::GTargetProcess->GetID();
     for (int i : a_ItemIndices) {
-      GetFunction(i).GetDisassembly(pid);
+      GOrbitApp->Disassemble(pid, GetFunction(i));
     }
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);

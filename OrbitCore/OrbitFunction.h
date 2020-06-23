@@ -133,7 +133,6 @@ class Function {
   void AddParameter(const FunctionParam& param) { params_.push_back(param); }
   void Print();
 
-  void GetDisassembly(uint32_t pid);
   void FindFile();
 
   ORBIT_SERIALIZABLE;

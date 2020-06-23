@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "CallStackDataView.h"
 
 #include "App.h"
@@ -161,9 +159,7 @@ void CallStackDataView::OnContextMenu(const std::string& a_Action,
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
     uint32_t pid = Capture::GTargetProcess->GetID();
     for (int i : a_ItemIndices) {
-      CallStackDataViewFrame frame = GetFrameFromRow(i);
-      Function* function = frame.function;
-      function->GetDisassembly(pid);
+      GOrbitApp->Disassemble(pid, *GetFrameFromRow(i).function);
     }
 
   } else {

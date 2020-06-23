@@ -37,9 +37,6 @@ class CoreApp {
   virtual bool GetOutputDebugStringEnabled() { return false; }
   virtual bool GetUploadDumpsToServerEnabled() const { return false; }
   virtual void UpdateVariable(class Variable* /*a_Variable*/) {}
-  virtual void Disassemble(uint32_t /*pid*/,
-                           const std::string& /*function_name*/,
-                           uint64_t /*address*/, uint64_t /*size*/) {}
   virtual void ProcessTimer(const Timer& /*timer*/) {}
   virtual void ProcessSamplingCallStack(LinuxCallstackEvent& /*a_CS*/) {}
   virtual void ProcessHashedSamplingCallStack(CallstackEvent& /*a_CallStack*/) {
