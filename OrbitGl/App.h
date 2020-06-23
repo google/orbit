@@ -237,13 +237,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   }
 
  private:
-  // TODO(dimitry): Move this to process manager
-  std::shared_ptr<Process> FindProcessByPid(uint32_t pid);
-
   ApplicationOptions options_;
-
-  absl::Mutex process_map_mutex_;
-  absl::flat_hash_map<uint32_t, std::shared_ptr<Process>> process_map_;
 
   std::vector<std::string> m_Arguments;
   std::vector<CaptureStartedCallback> capture_started_callbacks_;
