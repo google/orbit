@@ -10,7 +10,6 @@
 #include <thread>
 
 #include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
 #include "grpcpp/grpcpp.h"
 #include "module.pb.h"
 #include "outcome.hpp"
@@ -35,6 +34,10 @@
 //
 class ProcessManager {
  public:
+  struct Error {
+    std::string message;
+  };
+
   ProcessManager() = default;
   virtual ~ProcessManager() = default;
 
@@ -47,8 +50,8 @@ class ProcessManager {
   // Get a copy of process list.
   virtual std::vector<ProcessInfo> GetProcessList() const = 0;
 
-  virtual std::string GetProcessMemory(uint32_t pid, uint64_t address,
-                                       uint64_t size) = 0;
+  virtual outcome::result<std::string, Error, outcome::policy::terminate>
+  GetProcessMemory(uint32_t pid, uint64_t address, uint64_t size) = 0;
 
   // Note that this method waits for the worker thread to stop, which could
   // take up to refresh_timeout.
