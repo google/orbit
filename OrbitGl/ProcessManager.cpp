@@ -153,11 +153,6 @@ void ProcessManagerImpl::WorkerFunction() {
 outcome::result<std::string, ProcessManager::Error, outcome::policy::terminate>
 ProcessManagerImpl::LoadProcessMemory(uint32_t pid, uint64_t address,
                                      uint64_t size) {
-  grpc::ClientContext context;
-  std::chrono::time_point deadline =
-      std::chrono::system_clock::now() +
-      std::chrono::milliseconds(kGrpcCallTimeoutMilliseconds);
-  context.set_deadline(deadline);
 
   GetProcessMemoryRequest request;
   request.set_pid(pid);
@@ -166,8 +161,10 @@ ProcessManagerImpl::LoadProcessMemory(uint32_t pid, uint64_t address,
 
   GetProcessMemoryResponse response;
 
+  std::unique_ptr<grpc::ClientContext> context = CreateContext();
+
   grpc::Status status =
-      process_service_->GetProcessMemory(&context, request, &response);
+      process_service_->GetProcessMemory(context.get(), request, &response);
   if (!status.ok()) {
     ERROR("gRPC call to GetProcessMemory failed: %s", status.error_message());
     return outcome::failure(ProcessManager::Error{status.error_message()});
