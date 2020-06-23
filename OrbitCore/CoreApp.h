@@ -54,8 +54,7 @@ class CoreApp {
   virtual void ApplySession(const Session&) {}
   virtual void RefreshCaptureView() {}
 
-  using ProcessMemoryCallback =
-      std::function<void(const std::vector<uint8_t>&)>;
+  using ProcessMemoryCallback = std::function<void(const std::string&)>;
   virtual void GetRemoteMemory(uint32_t /*pid*/, uint64_t /*address*/,
                                uint64_t /*size*/,
                                const ProcessMemoryCallback& /*callback*/) {}
