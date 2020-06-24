@@ -54,11 +54,11 @@
 namespace LinuxUtils {
 
 //-----------------------------------------------------------------------------
-std::vector<std::string> ListModules(pid_t a_PID) {
+std::vector<std::string> ListModules(pid_t pid) {
   std::vector<std::string> modules;
   // TODO: we should read the file directly instead or memory map it.
   std::string result =
-      ExecuteCommand(absl::StrFormat("cat /proc/%u/maps", a_PID).c_str());
+      ExecuteCommand(absl::StrFormat("cat /proc/%u/maps", pid).c_str());
 
   std::stringstream ss(result);
   std::string line;
@@ -67,15 +67,6 @@ std::vector<std::string> ListModules(pid_t a_PID) {
   }
 
   return modules;
-}
-
-//-----------------------------------------------------------------------------
-uint64_t GetTracePointID(const char* a_Group, const char* a_Event) {
-  std::string cmd = absl::StrFormat(
-      "cat /sys/kernel/debug/tracing/events/%s/%s/id", a_Group, a_Event);
-  std::string result = ExecuteCommand(cmd.c_str());
-  trim(result);
-  return std::stoull(result);
 }
 
 //-----------------------------------------------------------------------------
@@ -159,16 +150,6 @@ void ListModules(pid_t pid,
 }
 
 //-----------------------------------------------------------------------------
-uint32_t GetPID(const char* a_Name) {
-  std::string command = absl::StrFormat("ps -A | grep %s", a_Name);
-  std::string result = ExecuteCommand(command.c_str());
-  std::vector<std::string> tokens = absl::StrSplit(result, " ");
-  if (!tokens.empty()) return static_cast<uint32_t>(atoi(tokens[0].c_str()));
-  LOG("Could not find process %s", a_Name);
-  return 0;
-}
-
-//-----------------------------------------------------------------------------
 std::unordered_map<uint32_t, float> GetCpuUtilization() {
   std::unordered_map<uint32_t, float> processMap;
   std::string result = ExecuteCommand(
@@ -189,92 +170,10 @@ std::unordered_map<uint32_t, float> GetCpuUtilization() {
 }
 
 //-----------------------------------------------------------------------------
-bool Is64Bit(pid_t a_PID) {
+bool Is64Bit(pid_t pid) {
   std::string result =
-      ExecuteCommand(absl::StrFormat("file -L /proc/%u/exe", a_PID).c_str());
+      ExecuteCommand(absl::StrFormat("file -L /proc/%d/exe", pid).c_str());
   return absl::StrContains(result, "64-bit");
-}
-
-//-----------------------------------------------------------------------------
-double GetSecondsFromNanos(uint64_t a_Nanos) { return 0.000000001 * a_Nanos; }
-
-//-----------------------------------------------------------------------------
-void DumpClocks() {
-  uint64_t realTime = OrbitTicks(CLOCK_REALTIME);
-  uint64_t monotonic = OrbitTicks(CLOCK_MONOTONIC);
-  uint64_t monotonicRaw = OrbitTicks(CLOCK_MONOTONIC_RAW);
-  uint64_t bootTime = OrbitTicks(CLOCK_BOOTTIME);
-  uint64_t tai = OrbitTicks(CLOCK_TAI);
-
-  LOG("    realTime: %lu", realTime);
-  LOG("   monotonic: %lu", monotonic);
-  LOG("monotonicRaw: %lu", monotonicRaw);
-  LOG("    bootTime: %lu", bootTime);
-  LOG("         tai: %lu \n", tai);
-
-  LOG("    realTime: %f", GetSecondsFromNanos(realTime));
-  LOG("   monotonic: %f", GetSecondsFromNanos(monotonic));
-  LOG("monotonicRaw: %f", GetSecondsFromNanos(monotonicRaw));
-  LOG("    bootTime: %f", GetSecondsFromNanos(bootTime));
-  LOG("         tai: %f \n", GetSecondsFromNanos(tai));
-}
-
-//-----------------------------------------------------------------------------
-void StreamCommandOutput(const char* a_Cmd,
-                         std::function<void(const std::string&)> a_Callback,
-                         bool* a_ExitRequested) {
-  LOG("Starting output stream for command %s", a_Cmd);
-
-  std::array<char, 128> buffer;
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(a_Cmd, "r"), pclose);
-
-  if (!pipe) {
-    LOG("Could not open pipe");
-  }
-
-  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr &&
-         !(*a_ExitRequested)) {
-    a_Callback(buffer.data());
-  }
-
-  LOG("end stream");
-}
-
-//-----------------------------------------------------------------------------
-std::string GetKernelVersionStr() {
-  struct utsname buffer;
-  if (uname(&buffer) != 0) {
-    return "unknown version";
-  }
-
-  std::string version = buffer.release;
-  version = version.substr(0, version.find("-"));
-  return version;
-}
-
-//-----------------------------------------------------------------------------
-uint32_t GetVersion(const std::string& a_Version) {
-  std::vector<std::string> v = absl::StrSplit(a_Version, ".");
-  if (v.size() == 3)
-    return KERNEL_VERSION(std::stoi(v[0]), std::stoi(v[1]), std::stoi(v[2]));
-  LOG("Error: GetVersion: Invalid argument");
-  return 0;
-}
-
-//-----------------------------------------------------------------------------
-uint32_t GetKernelVersion() {
-  static uint32_t version = GetVersion(GetKernelVersionStr());
-  return version;
-}
-
-//-----------------------------------------------------------------------------
-bool IsKernelOlderThan(const char* a_Version) {
-  return GetKernelVersion() < GetVersion(a_Version);
-}
-
-//-----------------------------------------------------------------------------
-std::string GetProcessDir(pid_t process_id) {
-  return "/proc/" + std::to_string(process_id) + "/";
 }
 
 }  // namespace LinuxUtils

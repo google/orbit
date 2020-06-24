@@ -19,18 +19,9 @@ struct Module;
 //-----------------------------------------------------------------------------
 namespace LinuxUtils {
 std::string ExecuteCommand(const char* a_Cmd);
-void StreamCommandOutput(const char* a_Cmd,
-                         std::function<void(const std::string&)> a_Callback,
-                         bool* a_ExitRequested);
-std::vector<std::string> ListModules(pid_t a_PID);
-uint64_t GetTracePointID(const char* a_Group, const char* a_Event);
+std::vector<std::string> ListModules(pid_t pid);
 void ListModules(pid_t pid,
                  std::map<uint64_t, std::shared_ptr<Module> >* module_map);
 std::unordered_map<uint32_t, float> GetCpuUtilization();
-bool Is64Bit(pid_t a_PID);
-void DumpClocks();
-std::string GetKernelVersionStr();
-uint32_t GetKernelVersion();
-bool IsKernelOlderThan(const char* a_Version);
-std::string GetProcessDir(pid_t process_id);
+bool Is64Bit(pid_t pid);
 }  // namespace LinuxUtils
