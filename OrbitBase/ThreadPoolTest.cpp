@@ -44,6 +44,53 @@ TEST(ThreadPool, Smoke) {
   EXPECT_FALSE(called);
 }
 
+namespace {
+class ActionTestBase {
+ public:
+  ActionTestBase() = default;
+  virtual ~ActionTestBase() = default;
+
+  void set_value(uint32_t value) {
+    absl::MutexLock lock(&mutex_);
+    value_ = value;
+  }
+
+  uint32_t value() {
+    absl::MutexLock lock(&mutex_);
+    return value_;
+  }
+
+  void IncrementValue() {
+    absl::MutexLock lock(&mutex_);
+    value_++;
+  }
+
+ private:
+  absl::Mutex mutex_;
+  uint32_t value_;
+};
+
+class ActionTestDerived : public ActionTestBase {};
+
+};  // namespace
+
+TEST(ThreadPool, MethodAction) {
+  constexpr size_t kThreadPoolMinSize = 1;
+  constexpr size_t kThreadPoolMaxSize = 2;
+  std::unique_ptr<ThreadPool> thread_pool =
+      ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize);
+
+  ActionTestDerived action_test;
+  action_test.set_value(40);
+
+  thread_pool->Schedule(&action_test, &ActionTestDerived::IncrementValue);
+  thread_pool->Schedule(&action_test, &ActionTestDerived::IncrementValue);
+
+  thread_pool->ShutdownAndWait();
+
+  EXPECT_EQ(action_test.value(), 42);
+}
+
 TEST(ThreadPool, QueuedActionsExecutedOnShutdown) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;

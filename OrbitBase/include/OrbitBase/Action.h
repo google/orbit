@@ -5,6 +5,8 @@
 #ifndef ORBIT_BASE_ACTION_H_
 #define ORBIT_BASE_ACTION_H_
 
+#include "internal/identity.h"
+
 // Actions are executed by MainThreadExecutor
 // The Action is an abstract class which can
 // be executed.
@@ -32,10 +34,30 @@ class NullaryFunctorAction : public Action {
   F functor_;
 };
 
+// This class implements an action that calls a method for some object.
+template <typename T>
+class MethodAction : public Action {
+ public:
+  explicit MethodAction(T* object,
+                        void (internal::identity<T>::type::*method)())
+      : object_(object), method_(method) {}
+
+  void Execute() override { (object_->*method_)(); }
+
+ private:
+  T* object_;
+  void (T::*method_)();
+};
+
 template <typename F>
 std::unique_ptr<Action> CreateAction(F&& functor) {
   return std::make_unique<NullaryFunctorAction<std::remove_reference_t<F>>>(
       std::forward<F>(functor));
 }
 
+template <typename T>
+std::unique_ptr<Action> CreateAction(
+    T* object, void (internal::identity<T>::type::*method)()) {
+  return std::make_unique<MethodAction<T>>(object, method);
+}
 #endif  // ORBIT_BASE_ACTION_H_

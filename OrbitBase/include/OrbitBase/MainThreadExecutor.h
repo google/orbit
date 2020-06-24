@@ -43,6 +43,11 @@ class MainThreadExecutor {
     Schedule(CreateAction(std::forward<F>(functor)));
   }
 
+  template <typename T>
+  void Schedule(T* object, void (internal::identity<T>::type::*method)()) {
+    Schedule(CreateAction(object, method));
+  }
+
   // Called from the main thread to perform scheduled actions.
   // The method checks that it is called from the thread specified
   // in Create method and fails otherwise.

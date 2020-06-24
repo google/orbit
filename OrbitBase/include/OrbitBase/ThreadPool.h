@@ -38,6 +38,11 @@ class ThreadPool {
     Schedule(CreateAction(std::forward<F>(functor)));
   }
 
+  template <typename T>
+  void Schedule(T* object, void (internal::identity<T>::type::*method)()) {
+    Schedule(CreateAction(object, method));
+  }
+
   // Initiates shutdown, any Schedule after this call will fail.
   virtual void Shutdown() = 0;
 

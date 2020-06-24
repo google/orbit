@@ -10,6 +10,26 @@
 
 #include "OrbitBase/MainThreadExecutor.h"
 
+namespace {
+
+class ActionTestBase {
+ public:
+  ActionTestBase() = default;
+  virtual ~ActionTestBase() = default;
+
+  void set_value(int value) { value_ = value; }
+  uint32_t value() const { return value_; }
+
+  void IncrementValue() { value_++; }
+
+ private:
+  uint32_t value_;
+};
+
+class ActionTestDerived : public ActionTestBase {};
+
+};  // namespace
+
 TEST(MainThreadExecutor, Smoke) {
   std::unique_ptr<MainThreadExecutor> executor = MainThreadExecutor::Create();
 
@@ -28,6 +48,19 @@ TEST(MainThreadExecutor, Smoke) {
   executor->ConsumeActions();
 
   EXPECT_FALSE(called);
+}
+
+TEST(MainThreadExecutor, MethodAction) {
+  std::unique_ptr<MainThreadExecutor> executor = MainThreadExecutor::Create();
+
+  ActionTestDerived action_test;
+  action_test.set_value(42);
+
+  executor->Schedule(&action_test, &ActionTestDerived::IncrementValue);
+
+  EXPECT_EQ(action_test.value(), 42);
+  executor->ConsumeActions();
+  EXPECT_EQ(action_test.value(), 43);
 }
 
 TEST(MainThreadExecutor, CheckThread) {
