@@ -141,13 +141,15 @@ void TcpEntity::Callback(const Message& a_Message) {
 //-----------------------------------------------------------------------------
 void TcpEntity::ProcessMainThreadCallbacks() {
   ScopeLock lock(m_Mutex);
-  for (auto& message : m_MainThreadMessages) {
+  while (!m_MainThreadMessages.empty()) {
+    auto message = std::move(m_MainThreadMessages.back());
+    m_MainThreadMessages.pop_back();
+    CHECK(message != nullptr);
+
     std::vector<MsgCallback>& callbacks =
         m_MainThreadCallbacks[message->GetType()];
     for (MsgCallback& callback : callbacks) {
       callback(*message);
     }
   }
-
-  m_MainThreadMessages.clear();
 }
