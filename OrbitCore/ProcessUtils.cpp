@@ -210,27 +210,6 @@ void ProcessList::Refresh() {
 #endif
 }
 
-void ProcessList::SortByID() {
-  std::sort(processes_.begin(), processes_.end(),
-            [](std::shared_ptr<Process>& a_P1, std::shared_ptr<Process>& a_P2) {
-              return a_P1->GetID() < a_P2->GetID();
-            });
-}
-
-void ProcessList::SortByName() {
-  std::sort(processes_.begin(), processes_.end(),
-            [](std::shared_ptr<Process>& a_P1, std::shared_ptr<Process>& a_P2) {
-              return a_P1->GetName() < a_P2->GetName();
-            });
-}
-
-void ProcessList::SortByCPU() {
-  std::sort(processes_.begin(), processes_.end(),
-            [](std::shared_ptr<Process>& a_P1, std::shared_ptr<Process>& a_P2) {
-              return a_P1->GetCpuUsage() < a_P2->GetCpuUsage();
-            });
-}
-
 void ProcessList::UpdateCpuTimes() {
 #ifdef WIN32
   for (std::shared_ptr<Process>& process : processes_) {
@@ -250,12 +229,6 @@ bool ProcessList::Contains(uint32_t pid) const {
   return processes_map_.find(pid) != processes_map_.end();
 }
 
-void ProcessList::SetRemote(bool value) {
-  for (std::shared_ptr<Process>& process : processes_) {
-    process->SetIsRemote(value);
-  }
-}
-
 std::shared_ptr<Process> ProcessList::GetProcess(uint32_t pid) const {
   auto iter = processes_map_.find(pid);
   if (iter != processes_map_.end()) {
@@ -270,20 +243,6 @@ const std::vector<std::shared_ptr<Process>>& ProcessList::GetProcesses() const {
 }
 
 size_t ProcessList::Size() const { return processes_.size(); }
-
-void ProcessList::AddProcess(std::shared_ptr<Process> process) {
-  uint32_t pid = process->GetID();
-  auto it = processes_map_.find(pid);
-
-  if (it != processes_map_.end()) {
-    // Process with this pid already in the list - do nothing..
-    ERROR("ProcessList already contains process with pid=%d - ignoring", pid);
-    return;
-  }
-
-  processes_.push_back(process);
-  processes_map_[pid] = process;
-}
 
 ORBIT_SERIALIZE(ProcessList, 0) {
   ORBIT_NVP_VAL(0, processes_);

@@ -20,18 +20,12 @@ class ProcessList {
  public:
   void Refresh();
   void Clear();
-  void SortByID();
-  void SortByName();
-  void SortByCPU();
   void UpdateCpuTimes();
-  void SetRemote(bool value);
-  bool Contains(uint32_t pid) const;
 
+  bool Contains(uint32_t pid) const;
   std::shared_ptr<Process> GetProcess(uint32_t pid) const;
   const std::vector<std::shared_ptr<Process>>& GetProcesses() const;
-
   size_t Size() const;
-  void AddProcess(std::shared_ptr<Process> process);
 
   ORBIT_SERIALIZABLE;
 
