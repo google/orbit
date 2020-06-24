@@ -986,6 +986,10 @@ void OrbitApp::OnProcessSelected(uint32_t pid) {
         // new data model.
         std::shared_ptr<Process> process = std::make_shared<Process>();
         process->SetID(pid);
+        ProcessData* process_data = data_manager_->GetProcessByPid(pid);
+        if (process_data != nullptr) {
+          process->SetName(process_data->name());
+        }
         process->SetIsRemote(true);
 
         Capture::SetTargetProcess(process);

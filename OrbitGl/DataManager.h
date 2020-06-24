@@ -23,7 +23,8 @@ class DataManager final {
   void UpdateModuleInfos(uint32_t process_id,
                          const std::vector<ModuleInfo>& module_infos);
 
-  const std::vector<ModuleData*> GetModules(uint32_t process_id);
+  ProcessData* GetProcessByPid(uint32_t process_id);
+  const std::vector<ModuleData*>& GetModules(uint32_t process_id);
   ModuleData* FindModuleByAddressStart(uint32_t process_id,
                                        uint64_t address_start);
 

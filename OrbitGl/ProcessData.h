@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_PROCESS_DATA_H_
 #define ORBIT_GL_PROCESS_DATA_H_
 
+#include <utility>
+
 #include "ModuleData.h"
 #include "OrbitBase/Logging.h"
 #include "absl/container/flat_hash_map.h"
@@ -19,14 +21,23 @@ class ProcessData final {
   ProcessData(ProcessData&&) = default;
   ProcessData& operator=(ProcessData&&) = default;
 
-  explicit ProcessData(const ProcessInfo& process_info)
-      : process_info_(process_info) {}
+  explicit ProcessData(ProcessInfo process_info)
+      : process_info_(std::move(process_info)) {}
 
   void SetProcessInfo(const ProcessInfo& process_info) {
     process_info_ = process_info;
   }
 
-  void UpdateModuleInfos(const std::vector<ModuleInfo> module_infos) {
+  uint32_t pid() const { return process_info_.pid(); }
+  const std::string& name() const { return process_info_.name(); }
+  double cpu_usage() const { return process_info_.cpu_usage(); }
+  const std::string& full_path() const { return process_info_.full_path(); }
+  const std::string& command_line() const {
+    return process_info_.command_line();
+  }
+  bool is_64_bit() const { return process_info_.is_64_bit(); }
+
+  void UpdateModuleInfos(const std::vector<ModuleInfo>& module_infos) {
     current_module_list_.clear();
     for (const ModuleInfo& info : module_infos) {
       uint64_t module_id = info.address_start();
@@ -43,7 +54,7 @@ class ProcessData final {
     }
   }
 
-  const std::vector<ModuleData*> GetModules() const {
+  const std::vector<ModuleData*>& GetModules() const {
     return current_module_list_;
   }
 
