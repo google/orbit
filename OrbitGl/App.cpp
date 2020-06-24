@@ -167,6 +167,14 @@ void OrbitApp::UpdateThreadName(uint32_t thread_id,
 }
 
 //-----------------------------------------------------------------------------
+void OrbitApp::OnValidateFramePointers(
+    std::vector<std::shared_ptr<Module>> modules_to_validate) {
+  thread_pool_->Schedule([modules_to_validate, this] {
+    frame_pointer_validator_client_->AnalyzeModules(modules_to_validate);
+  });
+}
+
+//-----------------------------------------------------------------------------
 void OrbitApp::LoadSystrace(const std::string& a_FileName) {
   SystraceManager::Get().Clear();
   Capture::ClearCaptureData();
@@ -286,6 +294,9 @@ void OrbitApp::PostInit() {
     };
 
     process_manager_->SetProcessListUpdateListener(callback);
+
+    frame_pointer_validator_client_ =
+        std::make_unique<FramePointerValidatorClient>(this, grpc_channel_);
   }
 
   ListSessions();
@@ -1153,9 +1164,6 @@ void OrbitApp::InitializeClientTransactions() {
   transaction_client_ = std::make_unique<TransactionClient>(GTcpClient.get());
   symbols_client_ =
       std::make_unique<SymbolsClient>(this, transaction_client_.get());
-  frame_pointer_validator_client_ =
-      std::make_unique<FramePointerValidatorClient>(this,
-                                                    transaction_client_.get());
 }
 
 //-----------------------------------------------------------------------------

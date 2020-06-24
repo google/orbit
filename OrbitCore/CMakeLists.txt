@@ -159,6 +159,7 @@ target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(
   OrbitCore
   PUBLIC OrbitBase
+         OrbitProtos
          capstone::capstone
          cereal::cereal
          xxHash::xxHash

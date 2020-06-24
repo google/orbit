@@ -29,6 +29,7 @@ class ElfFileImpl : public ElfFile {
   std::optional<uint64_t> GetLoadBias() const override;
   bool IsAddressInTextSection(uint64_t address) const override;
   bool HasSymtab() const override;
+  bool Is64Bit() const override;
   std::string GetBuildId() const override;
   std::string GetFilePath() const override;
 
@@ -206,6 +207,15 @@ std::string ElfFileImpl<ElfT>::GetBuildId() const {
 template <typename ElfT>
 std::string ElfFileImpl<ElfT>::GetFilePath() const {
   return file_path_;
+}
+
+template <>
+bool ElfFileImpl<llvm::object::ELF64LE>::Is64Bit() const {
+  return true;
+}
+template <>
+bool ElfFileImpl<llvm::object::ELF32LE>::Is64Bit() const {
+  return false;
 }
 
 }  // namespace

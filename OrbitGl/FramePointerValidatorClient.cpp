@@ -11,70 +11,61 @@
 #include "App.h"
 #include "Message.h"
 #include "Pdb.h"
+#include "grpcpp/grpcpp.h"
+#include "services.grpc.pb.h"
 
 FramePointerValidatorClient::FramePointerValidatorClient(
-    OrbitApp* app, TransactionClient* transaction_client)
-    : app_{app}, transaction_client_{transaction_client} {
-  auto on_response = [this](const Message& msg, uint64_t id) {
-    HandleResponse(msg, id);
-  };
+    OrbitApp* app, std::shared_ptr<grpc::Channel> channel)
+    : app_{app},
+      frame_pointer_validator_service_{
+          FramePointerValidatorService::NewStub(channel)} {}
 
-  transaction_client_->RegisterTransactionResponseHandler(
-      {on_response, Msg_ValidateFramePointers, "Validate Frame Pointer"});
-}
-
-void FramePointerValidatorClient::AnalyzeModule(
-    uint32_t process_id, const std::vector<std::shared_ptr<Module>>& modules) {
+void FramePointerValidatorClient::AnalyzeModules(
+    const std::vector<std::shared_ptr<Module>>& modules) {
   if (modules.empty()) {
     ERROR("No module to validate, cancelling");
     return;
   }
 
-  std::vector<ModuleDebugInfo> remote_module_infos;
+  std::vector<std::string> dialogue_messages;
+  dialogue_messages.push_back("Validation complete.");
 
   for (const std::shared_ptr<Module>& module : modules) {
+    ValidateFramePointersRequest request;
+    ValidateFramePointersResponse response;
     if (module == nullptr) continue;
-    ModuleDebugInfo module_info;
-    const char* name = module->m_Name.c_str();
-    module_info.m_Name = name;
-    module_info.m_PID = process_id;
-    remote_module_infos.push_back(std::move(module_info));
+    if (module->m_Pdb == nullptr) continue;
+
+    request.set_module_path(module->m_FullName);
+    for (const auto& function : module->m_Pdb->GetFunctions()) {
+      CodeBlock* function_info = request.add_functions();
+      function_info->set_offset(function->Offset());
+      function_info->set_size(function->Size());
+    }
+    grpc::ClientContext context;
+    std::chrono::time_point deadline =
+        std::chrono::system_clock::now() + std::chrono::minutes(1);
+    context.set_deadline(deadline);
+
+    // careful this is the synchronous call (maybe async is better)
+    grpc::Status status =
+        frame_pointer_validator_service_->ValidateFramePointers(
+            &context, request, &response);
+
+    if (!status.ok()) {
+      return app_->SendErrorToUi(
+          "Frame Pointer Validation",
+          absl::StrFormat(
+              "Grpc call for frame-pointer validation failed for module %s: %s",
+              module->m_Name, status.error_message()));
+    }
+    int fpo_functions = response.functions_without_frame_pointer_size();
+    int no_fpo_functions = module->m_Pdb->GetFunctions().size() - fpo_functions;
+    dialogue_messages.push_back(absl::StrFormat(
+        "Module %s: %d functions support frame pointers, %d functions don't.",
+        module->m_Name, no_fpo_functions, fpo_functions));
   }
 
-  if (remote_module_infos.empty()) {
-    return;
-  }
-
-  uint64_t id = transaction_client_->EnqueueRequest(Msg_ValidateFramePointers,
-                                                    remote_module_infos);
-
-  absl::MutexLock lock(&id_mutex_);
-  modules_map_[id] = modules;
-}
-
-void FramePointerValidatorClient::HandleResponse(const Message& message,
-                                                 uint64_t id) {
-  std::tuple<bool, std::vector<std::shared_ptr<Function>>> response;
-  transaction_client_->ReceiveResponse(message, &response);
-
-  id_mutex_.Lock();
-  std::vector<std::shared_ptr<Module>> modules = modules_map_[id];
-  modules_map_.erase(id);
-  id_mutex_.Unlock();
-
-  if (!std::get<0>(response)) {
-    app_->SendErrorToUi("Frame Pointer Validation",
-                        "Failed to validate frame pointers");
-    return;
-  }
-
-  uint64_t num_functions = 0;
-  for (const auto& module : modules) {
-    num_functions += module->m_Pdb->GetFunctions().size();
-  }
-
-  std::string text =
-      absl::StrFormat("Failed to validate %d out of %d functions",
-                      std::get<1>(response).size(), num_functions);
+  std::string text = absl::StrJoin(dialogue_messages, "\n");
   app_->SendInfoToUi("Frame Pointer Validation", text);
 }

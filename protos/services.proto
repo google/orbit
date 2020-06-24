@@ -6,6 +6,7 @@ syntax = "proto3";
 
 import "module.proto";
 import "process.proto";
+import "code_block.proto";
 
 message GetProcessListRequest {}
 
@@ -38,4 +39,18 @@ service ProcessService {
 
   rpc GetProcessMemory(GetProcessMemoryRequest)
       returns (GetProcessMemoryResponse) {}
+}
+
+message ValidateFramePointersRequest {
+  string module_path = 1;
+  repeated CodeBlock functions = 2;
+}
+
+message ValidateFramePointersResponse {
+  repeated CodeBlock functions_without_frame_pointer = 1;
+}
+
+service FramePointerValidatorService {
+  rpc ValidateFramePointers(ValidateFramePointersRequest)
+      returns (ValidateFramePointersResponse) {}
 }
