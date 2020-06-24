@@ -8,10 +8,12 @@
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QDesktopServices>
+#include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QProgressDialog>
+#include <QPointer>
 #include <QTimer>
 #include <QToolTip>
 #include <utility>
@@ -240,6 +242,45 @@ void OrbitMainWindow::SetupCodeView() {
   ui->CodeTextEdit->SetFindLineEdit(ui->lineEdit);
   ui->FileMappingWidget->hide();
   OrbitCodeEditor::setFileMappingWidget(ui->FileMappingWidget);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::ShowFeedbackDialog() {
+  QPointer<QDialog> feedback_dialog = QPointer{
+      new QDialog{this, Qt::WindowTitleHint | Qt::WindowCloseButtonHint}};
+
+  const auto layout = QPointer{new QGridLayout{feedback_dialog}};
+  const auto button_box =
+      QPointer{new QDialogButtonBox{QDialogButtonBox::StandardButton::Close}};
+
+  const QPointer<QPushButton> report_missing_feature_button =
+      QPointer{new QPushButton{feedback_dialog}};
+  button_box->addButton(report_missing_feature_button,
+                        QDialogButtonBox::AcceptRole);
+  report_missing_feature_button->setText("Report Missing Feature");
+  const QPointer<QPushButton> report_bug_button =
+      QPointer{new QPushButton{feedback_dialog}};
+  button_box->addButton(report_bug_button, QDialogButtonBox::AcceptRole);
+  report_bug_button->setText("Report Bug");
+
+  layout->addWidget(button_box, 0, 0);
+
+  QObject::connect(report_missing_feature_button, &QPushButton::clicked,
+                   feedback_dialog, [this, feedback_dialog]() {
+                     on_actionReport_Missing_Feature_triggered();
+                     feedback_dialog->accept();
+                   });
+
+  QObject::connect(report_bug_button, &QPushButton::clicked, feedback_dialog,
+                   [this, feedback_dialog]() {
+                     on_actionReport_Bug_triggered();
+                     feedback_dialog->accept();
+                   });
+
+  QObject::connect(button_box, &QDialogButtonBox::rejected, feedback_dialog,
+                   &QDialog::reject);
+
+  feedback_dialog->exec();
 }
 
 //-----------------------------------------------------------------------------
@@ -496,7 +537,7 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
                            : title;
     QMessageBox::information(this, title.c_str(), text.c_str());
   } else if (absl::StartsWith(a_Message, "feedback")) {
-    on_actionFeedback_triggered();
+    ShowFeedbackDialog();
   }
 }
 
@@ -524,10 +565,18 @@ void OrbitMainWindow::OnSetClipboard(const std::string& text) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionFeedback_triggered() {
-  if (!QDesktopServices::openUrl(QUrl("https://community.stadia.dev", QUrl::StrictMode))) {
+void OrbitMainWindow::on_actionReport_Missing_Feature_triggered() {
+  if (!QDesktopServices::openUrl(QUrl("https://community.stadia.dev/s/feature-requests", QUrl::StrictMode))) {
     QMessageBox::critical(
-        this, "Error opening URL", "Could not open community.stadia.dev");
+        this, "Error opening URL", "Could not open community.stadia.dev/s/feature-request");
+  }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionReport_Bug_triggered() {
+  if (!QDesktopServices::openUrl(QUrl("https://community.stadia.dev/s/contactsupport", QUrl::StrictMode))) {
+    QMessageBox::critical(
+        this, "Error opening URL", "Could not open community.stadia.dev/s/contactsupport");
   }
 }
 

@@ -56,8 +56,11 @@ class OrbitMainWindow : public QMainWindow {
   outcome::result<void> OpenCapture(const std::string& filepath);
 
  private slots:
-  void on_actionFeedback_triggered();
   void on_actionAbout_triggered();
+  
+  void on_actionReport_Missing_Feature_triggered();
+  void on_actionReport_Bug_triggered();
+
   void OnTimer();
   void OnHideSearch();
 
@@ -99,8 +102,8 @@ class OrbitMainWindow : public QMainWindow {
 
  private:
   void StartMainTimer();
-
   void SetupCodeView();
+  void ShowFeedbackDialog();
 
  private:
   QApplication* m_App;
