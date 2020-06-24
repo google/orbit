@@ -33,5 +33,4 @@ std::string GetKernelVersionStr();
 uint32_t GetKernelVersion();
 bool IsKernelOlderThan(const char* a_Version);
 std::string GetProcessDir(pid_t process_id);
-std::map<uint32_t, std::string> GetThreadNames(pid_t process_id);
 }  // namespace LinuxUtils

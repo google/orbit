@@ -157,7 +157,6 @@ class SamplingProfiler {
 
  protected:
   void ReserveThreadData();
-  void SampleThreadsAsync();
   void GetThreadCallstack(Thread* a_Thread);
   void GetThreadsUsage();
   void ResolveCallstacks();

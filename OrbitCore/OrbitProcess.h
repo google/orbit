@@ -41,17 +41,8 @@ class Process {
   void Init();
   void LoadDebugInfo();
   void ListModules();
-  void EnumerateThreads();
   void UpdateCpuTime();
-  void UpdateThreadUsage();
-  void SortThreadsByUsage();
-  void SortThreadsById();
   bool IsElevated() const { return m_IsElevated; }
-  bool HasThread(DWORD a_ThreadId) const {
-    return m_ThreadIds.find(a_ThreadId) != m_ThreadIds.end();
-  }
-  void AddThreadId(DWORD a_ThreadId) { m_ThreadIds.insert(a_ThreadId); }
-  void RemoveThreadId(DWORD a_ThreadId) { m_ThreadIds.erase(a_ThreadId); };
   void SetThreadName(DWORD a_ThreadId, std::string a_Name) {
     m_ThreadNames[a_ThreadId] = std::move(a_Name);
   }
@@ -123,7 +114,6 @@ class Process {
 
   std::vector<Type*>& GetTypes() { return m_Types; }
   std::vector<Variable*>& GetGlobals() { return m_Globals; }
-  std::vector<std::shared_ptr<Thread>>& GetThreads() { return m_Threads; }
 
   void AddWatchedVariable(std::shared_ptr<Variable> a_Variable) {
     m_WatchedVariables.push_back(a_Variable);
@@ -166,8 +156,6 @@ class Process {
 
   std::map<uint64_t, std::shared_ptr<Module>> m_Modules;
   std::map<std::string, std::shared_ptr<Module>> m_NameToModuleMap;
-  std::vector<std::shared_ptr<Thread>> m_Threads;
-  std::unordered_set<uint32_t> m_ThreadIds;
   std::map<uint32_t, std::string> m_ThreadNames;
 
   // Transients

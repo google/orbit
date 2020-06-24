@@ -39,10 +39,6 @@ SamplingProfiler::SamplingProfiler()
 void SamplingProfiler::StartCapture() {
   Capture::GIsSampling = true;
 
-  if (!m_Process->GetIsRemote()) {
-    m_Process->EnumerateThreads();
-  }
-
   m_SamplingTimer.Start();
   m_ThreadUsageTimer.Start();
 
@@ -51,53 +47,6 @@ void SamplingProfiler::StartCapture() {
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::StopCapture() { m_State = PendingStop; }
-
-//-----------------------------------------------------------------------------
-void SamplingProfiler::SampleThreadsAsync() {
-#ifdef _WIN32
-  SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-  ReserveThreadData();
-
-  while (m_State != PendingStop) {
-    if (m_ThreadUsageTimer.QueryMillis() > GThreadUsageSamplePeriodMs) {
-      GetThreadsUsage();
-      m_ThreadUsageTimer.Start();
-    }
-
-    for (const auto& thread : m_Process->GetThreads()) {
-      DWORD result = SuspendThread(thread->m_Handle);
-      if (result != (DWORD)-1) {
-        int prev_priority = GetThreadPriority(thread->m_Handle);
-        SetThreadPriority(thread->m_Handle, THREAD_PRIORITY_TIME_CRITICAL);
-        GetThreadCallstack(thread.get());
-        SetThreadPriority(thread->m_Handle, prev_priority);
-
-        ResumeThread(thread->m_Handle);
-      }
-    }
-
-    Sleep(m_PeriodMs);
-  }
-
-  ProcessSamples();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-void SamplingProfiler::GetThreadsUsage() {
-  for (const auto& thread : m_Process->GetThreads()) {
-    m_ThreadSampleData[thread->m_TID].m_ThreadUsage.push_back(
-        thread->GetUsage());
-  }
-}
-
-//-----------------------------------------------------------------------------
-void SamplingProfiler::ReserveThreadData() {
-  for (const auto& thread : m_Process->GetThreads()) {
-    m_ThreadSampleData[thread->m_TID].m_ThreadUsage.reserve(1024);
-    m_ThreadSampleData[thread->m_TID].m_TID = thread->m_TID;
-  }
-}
 
 //-----------------------------------------------------------------------------
 float SamplingProfiler::GetSampleTime() {
