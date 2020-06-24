@@ -19,8 +19,6 @@
 // To crash OrbitService:
 // manager.CrashOrbitService(...);
 //
-// To orderly shutdown the manager use following:
-// manager.Shutdown();
 //
 class CrashManager {
  public:
@@ -28,8 +26,6 @@ class CrashManager {
   virtual ~CrashManager() = default;
 
   virtual void CrashOrbitService(GetCrashRequest_CrashType crash_type) = 0;
-
-  virtual void Shutdown() = 0;
 
   static std::unique_ptr<CrashManager> Create(
       std::shared_ptr<grpc::Channel> channel);
