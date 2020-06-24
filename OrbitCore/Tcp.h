@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
 #ifdef _WIN32
@@ -18,10 +17,7 @@
 #include <unordered_set>
 
 #include "Message.h"
-#include "OrbitAsio.h"
 #include "TcpEntity.h"
-
-using asio::ip::tcp;
 
 class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
  public:
@@ -32,7 +28,7 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
     return std::shared_ptr<TcpConnection>(new TcpConnection(io_service));
   }
 
-  TcpSocket& GetSocket() { return wrapped_socket_; }
+  asio::ip::tcp::socket& GetSocket() { return socket_; }
 
   void start() { ReadMessage(); }
 
@@ -48,19 +44,15 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
 
  private:
   TcpConnection(asio::io_service& io_service)
-      : socket_(io_service),
-        wrapped_socket_(&socket_),
-        num_bytes_received_(0) {}
+      : socket_(io_service), num_bytes_received_(0) {}
   // handle_write() is responsible for any further actions
   // for this client connection.
   void handle_write(const asio::error_code& /*error*/,
                     size_t /*bytes_transferred*/) {}
 
-  tcp::socket socket_;
-  TcpSocket wrapped_socket_;
+  asio::ip::tcp::socket socket_;
   Message message_;
   std::vector<char> payload_;
-  asio::streambuf stream_buf_;
   uint64_t num_bytes_received_;
 };
 
@@ -72,7 +64,7 @@ class tcp_server : public std::enable_shared_from_this<tcp_server> {
 
   void Disconnect();
   bool HasConnection() { return connection_ != nullptr; }
-  TcpSocket* GetSocket() {
+  asio::ip::tcp::socket* GetSocket() {
     return connection_ != nullptr ? &connection_->GetSocket() : nullptr;
   }
   void RegisterConnection(std::shared_ptr<TcpConnection> connection);
@@ -90,7 +82,7 @@ class tcp_server : public std::enable_shared_from_this<tcp_server> {
   void handle_accept(std::shared_ptr<TcpConnection> new_connection,
                      const asio::error_code& error);
 
-  tcp::acceptor acceptor_;
+  asio::ip::tcp::acceptor acceptor_;
   std::shared_ptr<TcpConnection> connection_;
   // Is this here to keep them alive until server is destroyed?
   // This is not really used for anything else.
@@ -103,16 +95,17 @@ class SharedConstBuffer {
   SharedConstBuffer() {}
   explicit SharedConstBuffer(const Message& message, const void* payload)
       : data_(new std::vector<char>()) {
-    data_->resize(sizeof(Message) + message.m_Size + 4);
-    memcpy(data_->data(), &message, sizeof(Message));
+    const auto footer = OrbitCore::GetMagicFooter();
+    data_->resize(sizeof(Message) + message.m_Size + footer.size());
+    std::memcpy(data_->data(), &message, sizeof(Message));
 
     if (payload != nullptr) {
-      memcpy(data_->data() + sizeof(Message), payload, message.m_Size);
+      std::memcpy(data_->data() + sizeof(Message), payload, message.m_Size);
     }
 
     // Footer
-    const unsigned int footer = MAGIC_FOOT_MSG;
-    memcpy(data_->data() + sizeof(Message) + message.m_Size, &footer, 4);
+    std::memcpy(data_->data() + sizeof(Message) + message.m_Size, footer.data(),
+                footer.size());
 
     buffer_ = asio::buffer(*data_);
   }

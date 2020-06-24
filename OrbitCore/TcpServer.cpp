@@ -12,7 +12,6 @@
 #include "Context.h"
 #include "Core.h"
 #include "Log.h"
-#include "OrbitAsio.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitProcess.h"
 #include "OrbitUnreal.h"
@@ -42,9 +41,7 @@ TcpServer::TcpServer() : m_TcpServer(nullptr) {
 //-----------------------------------------------------------------------------
 TcpServer::~TcpServer() {
   if (serverThread_.joinable()) {
-    CHECK(m_TcpService);
-    CHECK(m_TcpService->m_IoService);
-    m_TcpService->m_IoService->stop();
+    io_context_.stop();
     serverThread_.join();
   }
 
@@ -56,8 +53,7 @@ void TcpServer::StartServer(uint16_t a_Port) {
   Start();
 
   PRINT_FUNC;
-  m_TcpService = std::make_unique<TcpService>();
-  m_TcpServer = new tcp_server(*m_TcpService->m_IoService, a_Port);
+  m_TcpServer = new tcp_server(io_context_, a_Port);
 
   serverThread_ = std::thread{[this]() { ServerThread(); }};
 
@@ -97,7 +93,7 @@ std::vector<std::string> TcpServer::GetStats() {
 }
 
 //-----------------------------------------------------------------------------
-TcpSocket* TcpServer::GetSocket() {
+asio::ip::tcp::socket* TcpServer::GetSocket() {
   return m_TcpServer != nullptr ? m_TcpServer->GetSocket() : nullptr;
 }
 
@@ -144,9 +140,8 @@ void TcpServer::MainThreadTick() {
   }
 
   if (!Capture::IsRemote() && Capture::GInjected && Capture::IsCapturing()) {
-    TcpSocket* socket = GetSocket();
-    if (socket == nullptr || !socket->m_Socket ||
-        !socket->m_Socket->is_open()) {
+    const auto socket = GetSocket();
+    if (socket == nullptr || !socket->is_open()) {
       Capture::StopCapture();
     }
   }
@@ -154,10 +149,9 @@ void TcpServer::MainThreadTick() {
 
 //-----------------------------------------------------------------------------
 bool TcpServer::IsLocalConnection() {
-  TcpSocket* socket = GetSocket();
-  if (socket != nullptr && socket->m_Socket) {
-    std::string endPoint =
-        socket->m_Socket->remote_endpoint().address().to_string();
+  const auto socket = GetSocket();
+  if (socket != nullptr) {
+    std::string endPoint = socket->remote_endpoint().address().to_string();
     if (endPoint == "127.0.0.1" || ToLower(endPoint) == "localhost") {
       return true;
     }
@@ -185,7 +179,5 @@ bool TcpServer::HasConnection() {
 void TcpServer::ServerThread() {
   PRINT_FUNC;
   SetCurrentThreadName(L"TcpServer");
-  CHECK(m_TcpService);
-  CHECK(m_TcpService->m_IoService);
-  m_TcpService->m_IoService->run();
+  io_context_.run();
 }

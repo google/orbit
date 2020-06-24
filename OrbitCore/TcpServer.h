@@ -43,10 +43,10 @@ class TcpServer : public TcpEntity {
   void ResetStats();
   std::vector<std::string> GetStats();
 
- protected:
-  class TcpSocket* GetSocket() final;
-
  private:
+  asio::ip::tcp::socket* GetSocket() final;
+
+  asio::io_context io_context_;
   class tcp_server* m_TcpServer = nullptr;
   std::thread serverThread_;
   void ServerThread();

@@ -2,12 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
-// clang-format off
-#include "OrbitAsio.h"
-// clang-format on
-
 #include "TcpEntity.h"
 
 #include "Core.h"
@@ -23,8 +17,6 @@ TcpEntity::TcpEntity()
       m_NumFlushedItems(0) {
   PRINT_FUNC;
   m_IsValid = false;
-  m_TcpSocket = std::make_unique<TcpSocket>();
-  m_TcpService = std::make_unique<TcpService>();
 }
 
 //-----------------------------------------------------------------------------
@@ -47,15 +39,6 @@ void TcpEntity::Stop() {
 
   if (senderThread_.joinable()) {
     senderThread_.join();
-  }
-
-  if (m_TcpSocket && m_TcpSocket->m_Socket) {
-    if (m_TcpSocket->m_Socket->is_open()) {
-      m_TcpSocket->m_Socket->close();
-    }
-  }
-  if (m_TcpService && m_TcpService->m_IoService) {
-    m_TcpService->m_IoService->stop();
   }
 }
 
@@ -103,10 +86,10 @@ void TcpEntity::SendData() {
     while (m_IsValid && !m_ExitRequested && !m_FlushRequested &&
            m_SendQueue.try_dequeue(buffer)) {
       --m_NumQueuedEntries;
-      TcpSocket* socket = GetSocket();
-      if (socket && socket->m_Socket && socket->m_Socket->is_open()) {
+      const auto  socket = GetSocket();
+      if (socket && socket->is_open()) {
         try {
-          asio::write(*socket->m_Socket, SharedConstBuffer(buffer));
+          asio::write(*socket, SharedConstBuffer(buffer));
         } catch (std::exception& e) {
           // We observed std::system_error being thrown by OrbitService when the
           // client is stopped while being debugged. Refer to b/155464095.
