@@ -485,9 +485,6 @@ void OrbitApp::OnExit() {
   }
 
   process_manager_->Shutdown();
-  if (absl::GetFlag(FLAGS_devmode)) {
-    crash_manager_->Shutdown();
-  }
   thread_pool_->ShutdownAndWait();
   main_thread_executor_->ConsumeActions();
 
@@ -1190,6 +1187,7 @@ void OrbitApp::FilterFunctions(const std::string& filter) {
 //-----------------------------------------------------------------------------
 void OrbitApp::CrashOrbitService(GetCrashRequest_CrashType crash_type) {
   if (absl::GetFlag(FLAGS_devmode)) {
-    crash_manager_->CrashOrbitService(crash_type);
+    thread_pool_->Schedule(
+        [this, crash_type] { crash_manager_->CrashOrbitService(crash_type); });
   }
 }
