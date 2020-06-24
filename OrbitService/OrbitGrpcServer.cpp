@@ -4,12 +4,16 @@
 
 #include "OrbitGrpcServer.h"
 
+#include <absl/flags/flag.h>
+
 #include "CrashServiceImpl.h"
 #include "FramePointerValidatorServiceImpl.h"
 #include "ProcessServiceImpl.h"
 #include "grpcpp/ext/proto_server_reflection_plugin.h"
 #include "grpcpp/grpcpp.h"
 #include "grpcpp/health_check_service_interface.h"
+
+ABSL_DECLARE_FLAG(bool, devmode);
 
 namespace {
 
@@ -41,7 +45,9 @@ void OrbitGrpcServerImpl::Init(std::string_view server_address) {
                            grpc::InsecureServerCredentials());
   builder.RegisterService(&process_service_);
   builder.RegisterService(&frame_pointer_validator_service_);
-  builder.RegisterService(&crash_service_);
+  if (absl::GetFlag(FLAGS_devmode)) {
+    builder.RegisterService(&crash_service_);
+  }
 
   server_ = builder.BuildAndStart();
 };

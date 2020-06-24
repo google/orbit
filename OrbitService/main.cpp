@@ -18,6 +18,8 @@ ABSL_FLAG(uint16_t, asio_port, 44766, "Asio TCP server port");
 
 ABSL_FLAG(uint64_t, grpc_port, 44765, "Grpc server port");
 
+ABSL_FLAG(bool, devmode, false, "Enable developer mode");
+
 // TODO: Remove this flag once we have a ui option to specify.
 ABSL_FLAG(bool, frame_pointer_unwinding, false,
           "Use frame pointers for unwinding");
