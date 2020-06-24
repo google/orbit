@@ -246,41 +246,40 @@ void OrbitMainWindow::SetupCodeView() {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::ShowFeedbackDialog() {
-  QPointer<QDialog> feedback_dialog = QPointer{
-      new QDialog{this, Qt::WindowTitleHint | Qt::WindowCloseButtonHint}};
+  QDialog feedback_dialog{nullptr, Qt::WindowTitleHint | Qt::WindowCloseButtonHint};
 
-  const auto layout = QPointer{new QGridLayout{feedback_dialog}};
+  const auto layout = QPointer{new QGridLayout{&feedback_dialog}};
   const auto button_box =
       QPointer{new QDialogButtonBox{QDialogButtonBox::StandardButton::Close}};
 
   const QPointer<QPushButton> report_missing_feature_button =
-      QPointer{new QPushButton{feedback_dialog}};
+      QPointer{new QPushButton{&feedback_dialog}};
   button_box->addButton(report_missing_feature_button,
                         QDialogButtonBox::AcceptRole);
   report_missing_feature_button->setText("Report Missing Feature");
   const QPointer<QPushButton> report_bug_button =
-      QPointer{new QPushButton{feedback_dialog}};
+      QPointer{new QPushButton{&feedback_dialog}};
   button_box->addButton(report_bug_button, QDialogButtonBox::AcceptRole);
   report_bug_button->setText("Report Bug");
 
   layout->addWidget(button_box, 0, 0);
 
   QObject::connect(report_missing_feature_button, &QPushButton::clicked,
-                   feedback_dialog, [this, feedback_dialog]() {
+                   &feedback_dialog, [this, &feedback_dialog]() {
                      on_actionReport_Missing_Feature_triggered();
-                     feedback_dialog->accept();
+                     feedback_dialog.accept();
                    });
 
-  QObject::connect(report_bug_button, &QPushButton::clicked, feedback_dialog,
-                   [this, feedback_dialog]() {
+  QObject::connect(report_bug_button, &QPushButton::clicked, &feedback_dialog,
+                   [this, &feedback_dialog]() {
                      on_actionReport_Bug_triggered();
-                     feedback_dialog->accept();
+                     feedback_dialog.accept();
                    });
 
-  QObject::connect(button_box, &QDialogButtonBox::rejected, feedback_dialog,
+  QObject::connect(button_box, &QDialogButtonBox::rejected, &feedback_dialog,
                    &QDialog::reject);
 
-  feedback_dialog->exec();
+  feedback_dialog.exec();
 }
 
 //-----------------------------------------------------------------------------
