@@ -295,6 +295,8 @@ void OrbitApp::PostInit() {
 
     process_manager_->SetProcessListUpdateListener(callback);
 
+    crash_manager_ = CrashManager::Create(grpc_channel_);
+
     frame_pointer_validator_client_ =
         std::make_unique<FramePointerValidatorClient>(this, grpc_channel_);
   }
@@ -477,6 +479,7 @@ void OrbitApp::OnExit() {
   }
 
   process_manager_->Shutdown();
+  crash_manager_->Shutdown();
   thread_pool_->ShutdownAndWait();
   main_thread_executor_->ConsumeActions();
 
@@ -1173,4 +1176,9 @@ void OrbitApp::InitializeClientTransactions() {
 //-----------------------------------------------------------------------------
 void OrbitApp::FilterFunctions(const std::string& filter) {
   m_LiveFunctionsDataView->OnFilter(filter);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::CrashOrbitService(GetCrashRequest_CrashType crash_type) {
+  crash_manager_->CrashOrbitService(crash_type);
 }

@@ -4,6 +4,7 @@
 
 #include "OrbitGrpcServer.h"
 
+#include "CrashServiceImpl.h"
 #include "FramePointerValidatorServiceImpl.h"
 #include "ProcessServiceImpl.h"
 #include "grpcpp/ext/proto_server_reflection_plugin.h"
@@ -24,6 +25,7 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
   void Wait() override;
 
  private:
+  CrashServiceImpl crash_service_;
   ProcessServiceImpl process_service_;
   FramePointerValidatorServiceImpl frame_pointer_validator_service_;
   std::unique_ptr<grpc::Server> server_;
@@ -39,6 +41,7 @@ void OrbitGrpcServerImpl::Init(std::string_view server_address) {
                            grpc::InsecureServerCredentials());
   builder.RegisterService(&process_service_);
   builder.RegisterService(&frame_pointer_validator_service_);
+  builder.RegisterService(&crash_service_);
 
   server_ = builder.BuildAndStart();
 };

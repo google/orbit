@@ -96,6 +96,9 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionCheckFalse_triggered();
   void on_actionNullPointerDereference_triggered();
   void on_actionStackOverflow_triggered();
+  void on_actionServiceCheckFalse_triggered();
+  void on_actionServiceNullPointerDereference_triggered();
+  void on_actionServiceStackOverflow_triggered();
 
  private:
   void StartMainTimer();
