@@ -34,7 +34,8 @@ class NullaryFunctorAction : public Action {
 
 template <typename F>
 std::unique_ptr<Action> CreateAction(F&& functor) {
-  return std::make_unique<NullaryFunctorAction<F>>(std::forward<F>(functor));
+  return std::make_unique<NullaryFunctorAction<std::remove_reference_t<F>>>(
+      std::forward<F>(functor));
 }
 
 #endif  // ORBIT_BASE_ACTION_H_
