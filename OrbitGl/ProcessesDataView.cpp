@@ -17,7 +17,7 @@
 #include "absl/strings/str_format.h"
 
 ProcessesDataView::ProcessesDataView()
-    : DataView(DataViewType::PROCESSES), selected_process_id_(0) {}
+    : DataView(DataViewType::PROCESSES), selected_process_id_(-1) {}
 
 const std::vector<DataView::Column>& ProcessesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
@@ -102,13 +102,13 @@ void ProcessesDataView::OnSelect(int index) {
   }
 }
 
-uint32_t ProcessesDataView::GetSelectedProcessId() const {
+int32_t ProcessesDataView::GetSelectedProcessId() const {
   return selected_process_id_;
 }
 
-uint32_t ProcessesDataView::GetFirstProcessId() const {
+int32_t ProcessesDataView::GetFirstProcessId() const {
   if (m_Indices.empty()) {
-    return 0;
+    return -1;
   }
   return process_list_[m_Indices[0]].pid();
 }
@@ -142,7 +142,7 @@ bool ProcessesDataView::SelectProcess(const std::string& process_name) {
 }
 
 //-----------------------------------------------------------------------------
-bool ProcessesDataView::SelectProcess(uint32_t process_id) {
+bool ProcessesDataView::SelectProcess(int32_t process_id) {
   for (size_t i = 0; i < GetNumElements(); ++i) {
     const ProcessInfo& process = GetProcess(i);
     if (process.pid() == process_id) {
@@ -210,6 +210,6 @@ const ProcessInfo& ProcessesDataView::GetProcess(uint32_t row) const {
 }
 
 void ProcessesDataView::SetSelectionListener(
-    const std::function<void(uint32_t)>& selection_listener) {
+    const std::function<void(int32_t)>& selection_listener) {
   selection_listener_ = selection_listener;
 }

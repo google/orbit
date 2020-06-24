@@ -94,20 +94,20 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void UpdateVariable(Variable* a_Variable) override;
   void ClearWatchedVariables();
   void RefreshWatch();
-  void Disassemble(uint32_t pid, const Function& function);
+  void Disassemble(int32_t pid, const Function& function);
   void ProcessTimer(const Timer& timer) override;
   void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) override;
   void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) override;
   void AddAddressInfo(LinuxAddressInfo address_info) override;
   void AddKeyAndString(uint64_t key, std::string_view str) override;
-  void UpdateThreadName(uint32_t thread_id,
+  void UpdateThreadName(int32_t thread_id,
                         const std::string& thread_name) override;
   void OnValidateFramePointers(
       std::vector<std::shared_ptr<Module>> modules_to_validate);
 
   void RegisterCaptureWindow(class CaptureWindow* a_Capture);
 
-  void OnProcessSelected(uint32_t pid);
+  void OnProcessSelected(int32_t pid);
 
   void AddSamplingReport(
       std::shared_ptr<class SamplingProfiler>& sampling_profiler);
@@ -116,7 +116,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   void Unregister(class DataView* a_Model);
   bool SelectProcess(const std::string& a_Process);
-  bool SelectProcess(uint32_t a_ProcessID);
+  bool SelectProcess(int32_t a_ProcessID);
   bool Inject(unsigned long a_ProcessId);
 
   void GoToCode(DWORD64 a_Address);

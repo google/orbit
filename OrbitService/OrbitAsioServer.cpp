@@ -61,7 +61,7 @@ void OrbitAsioServer::SetupServerCallbacks() {
   tcp_server_->AddMainThreadCallback(
       Msg_StartCapture, [this](const Message& msg) {
         auto pid =
-            static_cast<uint32_t>(msg.m_Header.m_GenericHeader.m_Address);
+            static_cast<int32_t>(msg.m_Header.m_GenericHeader.m_Address);
         StartCapture(pid);
       });
 
@@ -80,7 +80,7 @@ void OrbitAsioServer::SetSelectedFunctions(const Message& message) {
                           selected_functions_);
 }
 
-void OrbitAsioServer::StartCapture(uint32_t pid) {
+void OrbitAsioServer::StartCapture(int32_t pid) {
   if (tracing_handler_.IsStarted()) {
     ERROR("Capture is already in progress. Ignoring this StartCapture request");
     return;

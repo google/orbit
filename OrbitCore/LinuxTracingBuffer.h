@@ -34,7 +34,7 @@ class LinuxTracingBuffer {
   void RecordKeyAndString(KeyAndString&& key_and_string);
   void RecordKeyAndString(uint64_t key, const std::string& str);
   void RecordThreadName(TidAndThreadName&& tid_and_name);
-  void RecordThreadName(uint32_t tid, const std::string& name);
+  void RecordThreadName(int32_t tid, const std::string& name);
 
   // These move the content of the corresponding buffer to the output vector.
   // They return true if the buffer was not empty.

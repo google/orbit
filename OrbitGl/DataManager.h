@@ -20,17 +20,17 @@ class DataManager final {
       : main_thread_id_(thread_id) {}
 
   void UpdateProcessInfos(const std::vector<ProcessInfo>& process_infos);
-  void UpdateModuleInfos(uint32_t process_id,
+  void UpdateModuleInfos(int32_t process_id,
                          const std::vector<ModuleInfo>& module_infos);
 
-  ProcessData* GetProcessByPid(uint32_t process_id);
-  const std::vector<ModuleData*>& GetModules(uint32_t process_id);
-  ModuleData* FindModuleByAddressStart(uint32_t process_id,
+  ProcessData* GetProcessByPid(int32_t process_id);
+  const std::vector<ModuleData*>& GetModules(int32_t process_id);
+  ModuleData* FindModuleByAddressStart(int32_t process_id,
                                        uint64_t address_start);
 
  private:
   const std::thread::id main_thread_id_;
-  absl::flat_hash_map<uint32_t, std::unique_ptr<ProcessData>> process_map_;
+  absl::flat_hash_map<int32_t, std::unique_ptr<ProcessData>> process_map_;
 };
 
 #endif  // ORBIT_GL_DATA_MANAGER_H_

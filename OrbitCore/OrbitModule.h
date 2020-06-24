@@ -65,6 +65,6 @@ struct ModuleDebugInfo {
   std::vector<std::shared_ptr<Function>> m_Functions;
   uint64_t load_bias;
   std::string m_PdbName;
-  uint32_t m_PID;
+  int32_t m_PID;
   ORBIT_SERIALIZABLE;
 };

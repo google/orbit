@@ -76,8 +76,8 @@ class Timer {
  public:
   // Needs to have to exact same layout in win32/x64, debug/release
 
-  uint32_t m_PID;
-  uint32_t m_TID;
+  int32_t m_PID;
+  int32_t m_TID;
   uint8_t m_Depth;
   uint8_t m_CaptureID;
   Type m_Type;

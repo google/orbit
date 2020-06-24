@@ -129,7 +129,7 @@ class Message {
   Header m_Header;
   uint32_t m_Size;
   uint32_t m_CaptureID;
-  uint32_t m_ThreadId;
+  int32_t m_ThreadId;
   void* m_Data;
 #ifdef WIN32
 #ifndef _WIN64

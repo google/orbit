@@ -28,7 +28,7 @@ class ProcessData final {
     process_info_ = process_info;
   }
 
-  uint32_t pid() const { return process_info_.pid(); }
+  int32_t pid() const { return process_info_.pid(); }
   const std::string& name() const { return process_info_.name(); }
   double cpu_usage() const { return process_info_.cpu_usage(); }
   const std::string& full_path() const { return process_info_.full_path(); }

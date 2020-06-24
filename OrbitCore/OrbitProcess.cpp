@@ -43,7 +43,7 @@ Process::Process() {
 }
 
 //-----------------------------------------------------------------------------
-Process::Process(uint32_t id) {
+Process::Process(int32_t id) {
   m_ID = id;
   m_Handle = 0;
   m_Is64Bit = false;
@@ -98,7 +98,7 @@ void Process::LoadDebugInfo() {
 }
 
 //-----------------------------------------------------------------------------
-void Process::SetID(uint32_t id) {
+void Process::SetID(int32_t id) {
   m_ID = id;
   Init();
 }

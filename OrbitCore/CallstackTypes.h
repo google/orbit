@@ -7,4 +7,4 @@
 //-----------------------------------------------------------------------------
 #define ORBIT_STACK_SIZE 192
 typedef uint64_t CallstackID;
-typedef uint32_t ThreadID;
+typedef int32_t ThreadID;

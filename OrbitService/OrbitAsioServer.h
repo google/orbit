@@ -30,7 +30,7 @@ class OrbitAsioServer {
 
   void SetupServerCallbacks();
   void SetSelectedFunctions(const Message& message);
-  void StartCapture(uint32_t pid);
+  void StartCapture(int32_t pid);
   void StopCapture();
 
   void SetupTransactionServices();

@@ -1084,8 +1084,8 @@ void CaptureWindow::RenderToolbars() {
   ImGui::SameLine();
   std::string process_info = Capture::GTargetProcess->GetName();
   if (!process_info.empty()) {
-    uint32_t process_id = Capture::GTargetProcess->GetID();
-    ImGui::Text("%s [%u]", process_info.c_str(), process_id);
+    int32_t process_id = Capture::GTargetProcess->GetID();
+    ImGui::Text("%s [%d]", process_info.c_str(), process_id);
   }
   ImGui::End();
 

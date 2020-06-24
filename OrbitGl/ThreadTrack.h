@@ -19,7 +19,7 @@ class TextRenderer;
 
 class ThreadTrack : public Track {
  public:
-  ThreadTrack(TimeGraph* time_graph, uint32_t thread_id);
+  ThreadTrack(TimeGraph* time_graph, int32_t thread_id);
   ~ThreadTrack() override = default;
 
   // Pickable
@@ -57,7 +57,7 @@ class ThreadTrack : public Track {
   bool IsEmpty() const;
   virtual bool HasEventTrack() const { return true; }
 
-  uint32_t GetThreadId() const { return thread_id_; }
+  int32_t GetThreadId() const { return thread_id_; }
   bool IsCollapsable() const override { return depth_ > 1; }
 
  protected:

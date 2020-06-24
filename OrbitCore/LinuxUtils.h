@@ -22,6 +22,6 @@ std::string ExecuteCommand(const char* a_Cmd);
 std::vector<std::string> ListModules(pid_t pid);
 void ListModules(pid_t pid,
                  std::map<uint64_t, std::shared_ptr<Module> >* module_map);
-std::unordered_map<uint32_t, float> GetCpuUtilization();
+std::unordered_map<pid_t, float> GetCpuUtilization();
 bool Is64Bit(pid_t pid);
 }  // namespace LinuxUtils

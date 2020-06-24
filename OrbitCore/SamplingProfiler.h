@@ -131,7 +131,7 @@ class SamplingProfiler {
   const std::vector<ThreadSampleData*>& GetThreadSampleData() const {
     return m_SortedThreadSampleData;
   }
-  const ThreadSampleData* GetThreadSampleDataByThreadId(uint32_t tid) const {
+  const ThreadSampleData* GetThreadSampleDataByThreadId(int32_t tid) const {
     auto it = m_ThreadSampleData.find(tid);
     if (it == m_ThreadSampleData.end()) {
       return nullptr;

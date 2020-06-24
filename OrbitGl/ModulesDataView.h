@@ -27,7 +27,7 @@ class ModulesDataView : public DataView {
                        unsigned char& green, unsigned char& blue) override;
   std::string GetLabel() override { return "Modules"; }
 
-  void SetModules(uint32_t process_id, const std::vector<ModuleData*>& modules);
+  void SetModules(int32_t process_id, const std::vector<ModuleData*>& modules);
 
  protected:
   void DoSort() override;
@@ -36,7 +36,7 @@ class ModulesDataView : public DataView {
  private:
   const ModuleData* GetModule(uint32_t row) const;
 
-  uint32_t process_id_;
+  int32_t process_id_;
   std::vector<ModuleData*> modules_;
 
   enum ColumnIndex {

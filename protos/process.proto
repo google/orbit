@@ -5,7 +5,7 @@
 syntax = "proto3";
 
 message ProcessInfo {
-  uint32 pid = 1;
+  int32 pid = 1;
   string name = 2;
   double cpu_usage = 3;
   string full_path = 4;

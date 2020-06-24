@@ -45,7 +45,7 @@ void LinuxTracingBuffer::RecordThreadName(TidAndThreadName&& tid_and_name) {
   thread_name_buffer_.emplace_back(std::move(tid_and_name));
 }
 
-void LinuxTracingBuffer::RecordThreadName(uint32_t tid,
+void LinuxTracingBuffer::RecordThreadName(int32_t tid,
                                           const std::string& name) {
   RecordThreadName({tid, name});
 }

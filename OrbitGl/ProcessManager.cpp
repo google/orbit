@@ -27,10 +27,10 @@ class ProcessManagerImpl final : public ProcessManager {
 
   std::vector<ProcessInfo> GetProcessList() const override;
   outcome::result<std::vector<ModuleInfo>, std::string> LoadModuleList(
-      uint32_t pid) override;
+      int32_t pid) override;
 
   outcome::result<std::string, Error, outcome::policy::terminate>
-  LoadProcessMemory(uint32_t pid, uint64_t address, uint64_t size) override;
+  LoadProcessMemory(int32_t pid, uint64_t address, uint64_t size) override;
 
   void Start();
   void Shutdown() override;
@@ -66,7 +66,7 @@ void ProcessManagerImpl::SetProcessListUpdateListener(
 }
 
 outcome::result<std::vector<ModuleInfo>, std::string>
-ProcessManagerImpl::LoadModuleList(uint32_t pid) {
+ProcessManagerImpl::LoadModuleList(int32_t pid) {
   GetModuleListRequest request;
   GetModuleListResponse response;
   request.set_process_id(pid);
@@ -151,7 +151,7 @@ void ProcessManagerImpl::WorkerFunction() {
 }
 
 outcome::result<std::string, ProcessManager::Error, outcome::policy::terminate>
-ProcessManagerImpl::LoadProcessMemory(uint32_t pid, uint64_t address,
+ProcessManagerImpl::LoadProcessMemory(int32_t pid, uint64_t address,
                                      uint64_t size) {
 
   GetProcessMemoryRequest request;

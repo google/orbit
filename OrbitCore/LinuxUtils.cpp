@@ -58,7 +58,7 @@ std::vector<std::string> ListModules(pid_t pid) {
   std::vector<std::string> modules;
   // TODO: we should read the file directly instead or memory map it.
   std::string result =
-      ExecuteCommand(absl::StrFormat("cat /proc/%u/maps", pid).c_str());
+      ExecuteCommand(absl::StrFormat("cat /proc/%d/maps", pid).c_str());
 
   std::stringstream ss(result);
   std::string line;
@@ -150,8 +150,8 @@ void ListModules(pid_t pid,
 }
 
 //-----------------------------------------------------------------------------
-std::unordered_map<uint32_t, float> GetCpuUtilization() {
-  std::unordered_map<uint32_t, float> processMap;
+std::unordered_map<pid_t, float> GetCpuUtilization() {
+  std::unordered_map<pid_t, float> process_map;
   std::string result = ExecuteCommand(
       "top -b -n 1 | sed -n '8, 1000{s/^ *//;s/ *$//;s/  */,/gp;};1000q'");
   std::stringstream ss(result);
@@ -160,13 +160,13 @@ std::unordered_map<uint32_t, float> GetCpuUtilization() {
   while (std::getline(ss, line, '\n')) {
     std::vector<std::string> tokens = absl::StrSplit(line, ",");
     if (tokens.size() > 8) {
-      uint32_t pid = atoi(tokens[0].c_str());
-      const auto cpu = static_cast<float>(atof(tokens[8].c_str()));
-      processMap[pid] = cpu;
+      pid_t pid = atoi(tokens[0].c_str());
+      auto cpu = static_cast<float>(atof(tokens[8].c_str()));
+      process_map[pid] = cpu;
     }
   }
 
-  return processMap;
+  return process_map;
 }
 
 //-----------------------------------------------------------------------------

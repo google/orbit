@@ -35,7 +35,7 @@ struct ModuleDebugInfo;
 class Process {
  public:
   Process();
-  explicit Process(uint32_t a_ID);
+  explicit Process(int32_t a_ID);
   ~Process();
 
   void Init();
@@ -43,8 +43,8 @@ class Process {
   void ListModules();
   void UpdateCpuTime();
   bool IsElevated() const { return m_IsElevated; }
-  void SetThreadName(DWORD a_ThreadId, std::string a_Name) {
-    m_ThreadNames[a_ThreadId] = std::move(a_Name);
+  void SetThreadName(int32_t thread_id, std::string thread_name) {
+    m_ThreadNames[thread_id] = std::move(thread_name);
   }
   std::string GetThreadNameFromTID(DWORD a_ThreadId) {
     return m_ThreadNames[a_ThreadId];
@@ -82,7 +82,7 @@ class Process {
   const std::string& GetFullPath() const { return m_FullPath; }
   void SetCmdLine(std::string_view cmd_line) { m_CmdLine = cmd_line; }
   const std::string& GetCmdLine() const { return m_CmdLine; }
-  uint32_t GetID() const { return m_ID; }
+  int32_t GetID() const { return m_ID; }
   double GetCpuUsage() const { return m_CpuUsage; }
   HANDLE GetHandle() const { return m_Handle; }
   bool GetIs64Bit() const { return m_Is64Bit; }
@@ -125,7 +125,7 @@ class Process {
   void ClearWatchedVariables();
 
   void AddType(Type& a_Type);
-  void SetID(uint32_t id);
+  void SetID(int32_t id);
 
   Mutex& GetDataMutex() { return m_DataMutex; }
 
@@ -137,7 +137,7 @@ class Process {
  private:
   void ClearTransients();
 
-  uint32_t m_ID;
+  int32_t m_ID;
   HANDLE m_Handle;
   bool m_IsElevated;
 
@@ -156,7 +156,7 @@ class Process {
 
   std::map<uint64_t, std::shared_ptr<Module>> m_Modules;
   std::map<std::string, std::shared_ptr<Module>> m_NameToModuleMap;
-  std::map<uint32_t, std::string> m_ThreadNames;
+  std::map<int32_t, std::string> m_ThreadNames;
 
   // Transients
   std::vector<std::shared_ptr<Function>> m_Functions;

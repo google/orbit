@@ -35,7 +35,7 @@ Status ProcessServiceImpl::GetProcessList(ServerContext*,
 Status ProcessServiceImpl::GetModuleList(ServerContext*,
                                          const GetModuleListRequest* request,
                                          GetModuleListResponse* response) {
-  uint32_t pid = request->process_id();
+  int32_t pid = request->process_id();
   LOG("Sending modules for process %d", pid);
 
   absl::MutexLock lock(&mutex_);

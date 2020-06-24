@@ -49,8 +49,8 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   GlCanvas* canvas = time_graph_->GetCanvas();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   const auto& target_process = Capture::GTargetProcess;
-  uint32_t target_pid = target_process ? target_process->GetID() : 0;
-  uint32_t selected_thread_id = Capture::GSelectedThreadId;
+  int32_t target_pid = target_process ? target_process->GetID() : 0;
+  int32_t selected_thread_id = Capture::GSelectedThreadId;
 
   float world_start_x = canvas->GetWorldTopLeftX();
   float world_width = canvas->GetWorldWidth();

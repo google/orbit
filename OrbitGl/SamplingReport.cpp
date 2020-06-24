@@ -45,7 +45,7 @@ void SamplingReport::FillReport() {
 void SamplingReport::UpdateReport() {
   m_Profiler->ProcessSamples();
   for (SamplingReportDataView& thread_report : m_ThreadReports) {
-    uint32_t thread_id = thread_report.GetThreadID();
+    int32_t thread_id = thread_report.GetThreadID();
     const ThreadSampleData* thread_sample_data =
         m_Profiler->GetThreadSampleDataByThreadId(thread_id);
     if (thread_sample_data != nullptr) {
@@ -69,7 +69,7 @@ void SamplingReport::UpdateReport() {
 }
 
 //-----------------------------------------------------------------------------
-void SamplingReport::OnSelectAddress(uint64_t a_Address, ThreadID a_ThreadId) {
+void SamplingReport::OnSelectAddress(uint64_t a_Address, int32_t a_ThreadId) {
   if (m_CallstackDataView) {
     if (m_SelectedAddress != a_Address || m_SelectedTid != a_ThreadId) {
       m_SelectedSortedCallstackReport =
