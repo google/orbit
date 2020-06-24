@@ -45,13 +45,13 @@ class ProcessManager {
       const std::function<void(ProcessManager*)>& listener) = 0;
 
   virtual outcome::result<std::vector<ModuleInfo>, std::string> LoadModuleList(
-      uint32_t pid) = 0;
+      int32_t pid) = 0;
 
   // Get a copy of process list.
   virtual std::vector<ProcessInfo> GetProcessList() const = 0;
 
   virtual outcome::result<std::string, Error, outcome::policy::terminate>
-  LoadProcessMemory(uint32_t pid, uint64_t address, uint64_t size) = 0;
+  LoadProcessMemory(int32_t pid, uint64_t address, uint64_t size) = 0;
 
   // Note that this method waits for the worker thread to stop, which could
   // take up to refresh_timeout.

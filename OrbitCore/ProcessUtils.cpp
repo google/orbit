@@ -97,7 +97,7 @@ void ProcessList::Clear() {
 void ProcessList::Refresh() {
 #ifdef _WIN32
   processes_.clear();
-  std::unordered_map<uint32_t, std::shared_ptr<Process>> previousProcessesMap =
+  std::unordered_map<int32_t, std::shared_ptr<Process>> previousProcessesMap =
       processes_map_;
   processes_map_.clear();
 
@@ -216,20 +216,20 @@ void ProcessList::UpdateCpuTimes() {
     process->UpdateCpuTime();
   }
 #else
-  std::unordered_map<uint32_t, float> processMap =
+  std::unordered_map<int32_t, float> process_map =
       LinuxUtils::GetCpuUtilization();
   for (std::shared_ptr<Process>& process : processes_) {
-    uint32_t pid = process->GetID();
-    process->SetCpuUsage(processMap[pid]);
+    pid_t pid = process->GetID();
+    process->SetCpuUsage(process_map[pid]);
   }
 #endif
 }
 
-bool ProcessList::Contains(uint32_t pid) const {
+bool ProcessList::Contains(int32_t pid) const {
   return processes_map_.find(pid) != processes_map_.end();
 }
 
-std::shared_ptr<Process> ProcessList::GetProcess(uint32_t pid) const {
+std::shared_ptr<Process> ProcessList::GetProcess(int32_t pid) const {
   auto iter = processes_map_.find(pid);
   if (iter != processes_map_.end()) {
     return iter->second;

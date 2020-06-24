@@ -14,7 +14,7 @@ class ProcessesDataView final : public DataView {
   ProcessesDataView();
 
   void SetSelectionListener(
-      const std::function<void(uint32_t)>& selection_listener);
+      const std::function<void(int32_t)>& selection_listener);
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return COLUMN_CPU; }
   std::string GetValue(int row, int column) override;
@@ -23,10 +23,10 @@ class ProcessesDataView final : public DataView {
 
   void OnSelect(int index) override;
   bool SelectProcess(const std::string& process_name);
-  bool SelectProcess(uint32_t process_id);
+  bool SelectProcess(int32_t process_id);
   void SetProcessList(const std::vector<ProcessInfo>& process_list);
-  uint32_t GetSelectedProcessId() const;
-  uint32_t GetFirstProcessId() const;
+  int32_t GetSelectedProcessId() const;
+  int32_t GetFirstProcessId() const;
 
  protected:
   void DoSort() override;
@@ -39,8 +39,8 @@ class ProcessesDataView final : public DataView {
   const ProcessInfo& GetProcess(uint32_t row) const;
 
   std::vector<ProcessInfo> process_list_;
-  uint32_t selected_process_id_;
-  std::function<void(uint32_t)> selection_listener_;
+  int32_t selected_process_id_;
+  std::function<void(int32_t)> selection_listener_;
 
   enum ColumnIndex {
     COLUMN_PID,

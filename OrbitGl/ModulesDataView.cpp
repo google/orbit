@@ -184,7 +184,7 @@ void ModulesDataView::DoFilter() {
 }
 
 //-----------------------------------------------------------------------------
-void ModulesDataView::SetModules(uint32_t process_id,
+void ModulesDataView::SetModules(int32_t process_id,
                                  const std::vector<ModuleData*>& modules) {
   process_id_ = process_id;
   modules_ = modules;

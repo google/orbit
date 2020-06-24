@@ -443,7 +443,7 @@ std::string FormatTime(const time_t& rawtime);
 }  // namespace OrbitUtils
 
 //-----------------------------------------------------------------------------
-bool ReadProcessMemory(uint32_t pid, uint64_t address, byte* buffer,
+bool ReadProcessMemory(int32_t pid, uint64_t address, byte* buffer,
                        uint64_t size, uint64_t* num_bytes_read);
 
 #define CONCAT_(x, y) x##y

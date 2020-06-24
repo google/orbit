@@ -15,7 +15,7 @@ message GetProcessListResponse {
 }
 
 message GetModuleListRequest {
-  uint32 process_id = 1;
+  int32 process_id = 1;
 }
 
 message GetModuleListResponse {
@@ -23,7 +23,7 @@ message GetModuleListResponse {
 }
 
 message GetProcessMemoryRequest {
-  uint32 pid = 1;
+  int32 pid = 1;
   uint64 address = 2;
   uint64 size = 3;
 }

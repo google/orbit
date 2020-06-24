@@ -514,7 +514,7 @@ void TimeGraph::DrawTracks(bool a_Picking) {
   for (auto& track : sorted_tracks_) {
     if (track->GetType() == Track::kThreadTrack) {
       auto thread_track = std::static_pointer_cast<ThreadTrack>(track);
-      uint32_t tid = thread_track->GetThreadId();
+      int32_t tid = thread_track->GetThreadId();
       if (tid == 0) {
         // This is the process_track_.
         std::string process_name = Capture::GTargetProcess->GetName();

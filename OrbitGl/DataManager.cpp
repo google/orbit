@@ -14,7 +14,7 @@ void DataManager::UpdateProcessInfos(
   // To do it correctly we may need to implement some callback logic here
   // since the ProcessData can be in use by some views.
   for (const ProcessInfo& info : process_infos) {
-    uint32_t process_id = info.pid();
+    int32_t process_id = info.pid();
     auto it = process_map_.find(process_id);
     if (it != process_map_.end()) {
       it->second->SetProcessInfo(info);
@@ -27,7 +27,7 @@ void DataManager::UpdateProcessInfos(
 }
 
 void DataManager::UpdateModuleInfos(
-    uint32_t process_id, const std::vector<ModuleInfo>& module_infos) {
+    int32_t process_id, const std::vector<ModuleInfo>& module_infos) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
   auto it = process_map_.find(process_id);
@@ -36,7 +36,7 @@ void DataManager::UpdateModuleInfos(
   it->second->UpdateModuleInfos(module_infos);
 }
 
-ProcessData* DataManager::GetProcessByPid(uint32_t process_id) {
+ProcessData* DataManager::GetProcessByPid(int32_t process_id) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
   auto it = process_map_.find(process_id);
@@ -47,7 +47,7 @@ ProcessData* DataManager::GetProcessByPid(uint32_t process_id) {
   return it->second.get();
 }
 
-const std::vector<ModuleData*>& DataManager::GetModules(uint32_t process_id) {
+const std::vector<ModuleData*>& DataManager::GetModules(int32_t process_id) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 
   auto it = process_map_.find(process_id);
@@ -56,7 +56,7 @@ const std::vector<ModuleData*>& DataManager::GetModules(uint32_t process_id) {
   return it->second->GetModules();
 }
 
-ModuleData* DataManager::FindModuleByAddressStart(uint32_t process_id,
+ModuleData* DataManager::FindModuleByAddressStart(int32_t process_id,
                                                   uint64_t address_start) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
 

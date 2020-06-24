@@ -22,8 +22,8 @@ class ProcessList {
   void Clear();
   void UpdateCpuTimes();
 
-  bool Contains(uint32_t pid) const;
-  std::shared_ptr<Process> GetProcess(uint32_t pid) const;
+  bool Contains(int32_t pid) const;
+  std::shared_ptr<Process> GetProcess(int32_t pid) const;
   const std::vector<std::shared_ptr<Process>>& GetProcesses() const;
   size_t Size() const;
 
@@ -31,7 +31,7 @@ class ProcessList {
 
  private:
   std::vector<std::shared_ptr<Process>> processes_;
-  std::unordered_map<uint32_t, std::shared_ptr<Process>> processes_map_;
+  std::unordered_map<int32_t, std::shared_ptr<Process>> processes_map_;
 };
 
 #endif  // ORBIT_CORE_PROCESS_UTILS_H_

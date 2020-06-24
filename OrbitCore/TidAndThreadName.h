@@ -13,10 +13,10 @@
 
 struct TidAndThreadName {
   TidAndThreadName() = default;
-  TidAndThreadName(uint32_t tid, std::string thread_name)
+  TidAndThreadName(int32_t tid, std::string thread_name)
       : tid{tid}, thread_name{std::move(thread_name)} {}
 
-  uint32_t tid = 0;
+  int32_t tid = 0;
   std::string thread_name;
 
   ORBIT_SERIALIZABLE;

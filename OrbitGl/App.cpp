@@ -161,7 +161,7 @@ void OrbitApp::AddKeyAndString(uint64_t key, std::string_view str) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::UpdateThreadName(uint32_t thread_id,
+void OrbitApp::UpdateThreadName(int32_t thread_id,
                                 const std::string& thread_name) {
   Capture::GTargetProcess->SetThreadName(thread_id, thread_name);
 }
@@ -284,8 +284,8 @@ void OrbitApp::PostInit() {
         data_manager_->UpdateProcessInfos(process_infos);
         m_ProcessesDataView->SetProcessList(process_infos);
 
-        if (m_ProcessesDataView->GetSelectedProcessId() == 0 &&
-            m_ProcessesDataView->GetFirstProcessId() != 0) {
+        if (m_ProcessesDataView->GetSelectedProcessId() == -1 &&
+            m_ProcessesDataView->GetFirstProcessId() != -1) {
           m_ProcessesDataView->SelectProcess(
               m_ProcessesDataView->GetFirstProcessId());
         }
@@ -440,7 +440,7 @@ void OrbitApp::RefreshWatch() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::Disassemble(uint32_t pid, const Function& function) {
+void OrbitApp::Disassemble(int32_t pid, const Function& function) {
   thread_pool_->Schedule([this, pid, function] {
     auto result = process_manager_->LoadProcessMemory(
         pid, function.GetVirtualAddress(), function.Size());
@@ -816,7 +816,7 @@ bool OrbitApp::SelectProcess(const std::string& a_Process) {
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::SelectProcess(uint32_t a_ProcessID) {
+bool OrbitApp::SelectProcess(int32_t a_ProcessID) {
   if (m_ProcessesDataView) {
     return m_ProcessesDataView->SelectProcess(a_ProcessID);
   }
@@ -888,7 +888,7 @@ void OrbitApp::LoadRemoteModules() {
   GetSymbolsClient()->LoadSymbolsFromModules(Capture::GTargetProcess.get(),
                                              m_ModulesToLoad, nullptr);
   // Detect loaded modules - see also explanation below.
-  uint32_t process_id = Capture::GTargetProcess->GetID();
+  int32_t process_id = Capture::GTargetProcess->GetID();
   for (auto& module : m_ModulesToLoad) {
     if (!module->IsLoaded()) {
       continue;
@@ -965,7 +965,7 @@ bool OrbitApp::GetSamplingEnabled() { return GParams.m_TrackSamplingEvents; }
 
 //-----------------------------------------------------------------------------
 
-void OrbitApp::OnProcessSelected(uint32_t pid) {
+void OrbitApp::OnProcessSelected(int32_t pid) {
   thread_pool_->Schedule([pid, this] {
     outcome::result<std::vector<ModuleInfo>, std::string> result =
         process_manager_->LoadModuleList(pid);
@@ -1130,7 +1130,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       if (!m_ProcessesDataView) {
         m_ProcessesDataView = std::make_unique<ProcessesDataView>();
         m_ProcessesDataView->SetSelectionListener(
-            [&](uint32_t pid) { OnProcessSelected(pid); });
+            [&](int32_t pid) { OnProcessSelected(pid); });
         m_Panels.push_back(m_ProcessesDataView.get());
       }
       return m_ProcessesDataView.get();

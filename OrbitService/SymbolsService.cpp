@@ -22,11 +22,11 @@ void SymbolsService::HandleRequest(const Message& message) {
 
   for (auto& module_info : module_infos) {
     // Find process.
-    uint32_t pid = module_info.m_PID;
+    int32_t pid = module_info.m_PID;
     std::shared_ptr<Process> process = nullptr;
     process = process_list_->GetProcess(pid);
     if (process == nullptr) {
-      ERROR("Unable to find process %u", pid);
+      ERROR("Unable to find process %d", pid);
       continue;
     }
 
