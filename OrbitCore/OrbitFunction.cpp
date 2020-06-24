@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "OrbitFunction.h"
 
 #include <OrbitBase/Logging.h>
@@ -149,6 +147,40 @@ const char* Function::GetCallingConventionString() {
   }
 
   return kCallingConventions[calling_convention_];
+}
+
+const absl::flat_hash_map<const char*, Function::OrbitType>&
+Function::GetFunctionNameToOrbitTypeMap() {
+  static absl::flat_hash_map<const char*, OrbitType> function_name_to_type_map{
+      {"Start(", ORBIT_TIMER_START},
+      {"Stop(", ORBIT_TIMER_STOP},
+      {"StartAsync(", ORBIT_TIMER_START_ASYNC},
+      {"StopAsync(", ORBIT_TIMER_STOP_ASYNC},
+      {"TrackInt(", ORBIT_TRACK_INT},
+      {"TrackInt64(", ORBIT_TRACK_INT_64},
+      {"TrackUint(", ORBIT_TRACK_UINT},
+      {"TrackUint64(", ORBIT_TRACK_UINT_64},
+      {"TrackFloat(", ORBIT_TRACK_FLOAT},
+      {"TrackDouble(", ORBIT_TRACK_DOUBLE},
+      {"TrackFloatAsInt(", ORBIT_TRACK_FLOAT_AS_INT},
+      {"TrackDoubleAsInt64(", ORBIT_TRACK_DOUBLE_AS_INT_64},
+  };
+  return function_name_to_type_map;
+}
+
+// Detect Orbit API functions by looking for special function names part of the
+// orbit_api namespace. On a match, set the corresponding function type.
+bool Function::SetOrbitTypeFromName() {
+  const std::string& name = PrettyName();
+  if (absl::StartsWith(name, "orbit_api::")) {
+    for (auto& pair : GetFunctionNameToOrbitTypeMap()) {
+      if (absl::StrContains(name, pair.first)) {
+        SetOrbitType(pair.second);
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 ORBIT_SERIALIZE(Function, 4) {

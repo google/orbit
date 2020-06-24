@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
 #include <string>
@@ -15,6 +14,7 @@
 #include "Path.h"
 #include "SerializationMacros.h"
 #include "Utils.h"
+#include "absl/container/flat_hash_map.h"
 #include "cvconst.h"
 
 class Pdb;
@@ -65,6 +65,18 @@ class Function {
     FREE,
     REALLOC,
     ORBIT_DATA,
+    ORBIT_TIMER_START_ASYNC,
+    ORBIT_TIMER_STOP_ASYNC,
+    ORBIT_TRACK_INT,
+    ORBIT_TRACK_INT_64,
+    ORBIT_TRACK_UINT,
+    ORBIT_TRACK_UINT_64,
+    ORBIT_TRACK_FLOAT,
+    ORBIT_TRACK_DOUBLE,
+    ORBIT_TRACK_FLOAT_AS_INT,
+    ORBIT_TRACK_DOUBLE_AS_INT_64,
+    // Append new types here.
+
     NUM_TYPES
   };
 
@@ -108,6 +120,7 @@ class Function {
 
   OrbitType GetOrbitType() const { return type_; }
   void SetOrbitType(OrbitType type) { type_ = type; }
+  bool SetOrbitTypeFromName();
   bool IsOrbitFunc() const { return type_ != OrbitType::NONE; }
   bool IsOrbitZone() const {
     return type_ == ORBIT_TIMER_START || type_ == ORBIT_TIMER_STOP;
@@ -136,6 +149,10 @@ class Function {
   void FindFile();
 
   ORBIT_SERIALIZABLE;
+
+ private:
+  static const absl::flat_hash_map<const char*, OrbitType>&
+  GetFunctionNameToOrbitTypeMap();
 
  private:
   std::string name_;

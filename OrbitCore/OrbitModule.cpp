@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "OrbitModule.h"
 
 #include <cinttypes>
@@ -132,10 +130,12 @@ Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
   m_Name = Path::GetFileName(m_FileName);
 }
 
+//-----------------------------------------------------------------------------
 void Pdb::AddFunction(const std::shared_ptr<Function>& function) {
   functions_.push_back(function);
   functions_.back()->SetModulePathAndAddress(GetLoadedModuleName(),
                                              GetHModule());
+  functions_.back()->SetOrbitTypeFromName();
 }
 
 //-----------------------------------------------------------------------------

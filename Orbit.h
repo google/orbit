@@ -19,23 +19,23 @@
 #if ORBIT_API_ENABLED
 
 // ORBIT_SCOPE: profile current scope.
-#define ORBIT_SCOPE(name) orbit::Scope ORBIT_UNIQUE(ORB)(ORBIT_LITERAL(name))
+#define ORBIT_SCOPE(name) orbit_api::Scope ORBIT_VAR(ORBIT_STR(name))
 
 // ORBIT_START/ORBIT_STOP: profile time span on a single thread.
-#define ORBIT_START(name) orbit::Start(ORBIT_LITERAL(name))
-#define ORBIT_STOP() orbit::Stop()
+#define ORBIT_START(name) orbit_api::Start(ORBIT_STR(name))
+#define ORBIT_STOP() orbit_api::Stop()
 
 // ORBIT_START_ASYNC/ORBIT_STOP_ASYNC: profile time span across threads.
-#define ORBIT_START_ASYNC(name, id) orbit::StartAsync(ORBIT_LITERAL(name), id)
-#define ORBIT_STOP_ASYNC(id) orbit::StopAsync(id)
+#define ORBIT_START_ASYNC(name, id) orbit_api::StartAsync(ORBIT_STR(name), id)
+#define ORBIT_STOP_ASYNC(id) orbit_api::StopAsync(id)
 
 // ORBIT_[type]: graph variables.
-#define ORBIT_INT(name, value) orbit::TrackInt(ORBIT_LITERAL(name), value)
-#define ORBIT_INT64(name, value) orbit::TrackInt64(ORBIT_LITERAL(name), value)
-#define ORBIT_UINT(name, value) orbit::TrackUint(ORBIT_LITERAL(name), value)
-#define ORBIT_UINT64(name, value) orbit::TrackUint64(ORBIT_LITERAL(name), value)
-#define ORBIT_FLOAT(name, value) orbit::TrackFloat(ORBIT_LITERAL(name), value)
-#define ORBIT_DOUBLE(name, value) orbit::TrackDouble(ORBIT_LITERAL(name), value)
+#define ORBIT_INT(name, val) orbit_api::TrackInt(ORBIT_STR(name), val)
+#define ORBIT_INT64(name, val) orbit_api::TrackInt64(ORBIT_STR(name), val)
+#define ORBIT_UINT(name, val) orbit_api::TrackUint(ORBIT_STR(name), val)
+#define ORBIT_UINT64(name, val) orbit_api::TrackUint64(ORBIT_STR(name), val)
+#define ORBIT_FLOAT(name, val) orbit_api::TrackFloat(ORBIT_STR(name), val)
+#define ORBIT_DOUBLE(name, val) orbit_api::TrackDouble(ORBIT_STR(name), val)
 
 #else
 
@@ -56,10 +56,11 @@
 // NOTE: Do not use any of the code below directly.
 
 // Internal macros.
-#define ORBIT_LITERAL(x) ("" x)
+#define ORBIT_STR(x) ("" x)
 #define ORBIT_CONCAT_IND(x, y) (x##y)
 #define ORBIT_CONCAT(x, y) ORBIT_CONCAT_IND(x, y)
 #define ORBIT_UNIQUE(x) ORBIT_CONCAT(x, __COUNTER__)
+#define ORBIT_VAR ORBIT_UNIQUE(ORB)
 #define ORBIT_NOOP()       \
   do {                     \
     static volatile int x; \
@@ -72,7 +73,7 @@
 #define ORBIT_STUB inline __attribute__((noinline))
 #endif
 
-namespace orbit {
+namespace orbit_api {
 
 // NOTE: Do not use these directly, use corresponding macros instead.
 ORBIT_STUB void Start(const char*) { ORBIT_NOOP(); }
