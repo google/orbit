@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
+#include <asio/ip/tcp.hpp>
 #include <atomic>
+#include <optional>
 #include <thread>
 #include <type_traits>
 #include <unordered_map>
@@ -24,16 +25,18 @@ class TcpPacket {
   TcpPacket() {}
   explicit TcpPacket(const Message& a_Message, const void* a_Payload)
       : m_Data(new std::vector<char>()) {
-    m_Data->resize(sizeof(Message) + a_Message.m_Size + 4);
-    memcpy(m_Data->data(), &a_Message, sizeof(Message));
+    constexpr auto footer = OrbitCore::GetMagicFooter();
+    m_Data->resize(sizeof(Message) + a_Message.m_Size + footer.size());
+    std::memcpy(m_Data->data(), &a_Message, sizeof(Message));
 
     if (a_Payload) {
-      memcpy(m_Data->data() + sizeof(Message), a_Payload, a_Message.m_Size);
+      std::memcpy(m_Data->data() + sizeof(Message), a_Payload,
+                  a_Message.m_Size);
     }
 
     // Footer
-    const unsigned int footer = MAGIC_FOOT_MSG;
-    memcpy(m_Data->data() + sizeof(Message) + a_Message.m_Size, &footer, 4);
+    std::memcpy(m_Data->data() + sizeof(Message) + a_Message.m_Size,
+                footer.data(), footer.size());
   }
 
   void Dump() const {
@@ -98,12 +101,10 @@ class TcpEntity {
 
  protected:
   void SendMsg(Message& a_Message, const void* a_Payload);
-  virtual TcpSocket* GetSocket() = 0;
+  virtual asio::ip::tcp::socket* GetSocket() = 0;
   void SendData();
 
  protected:
-  std::unique_ptr<TcpService> m_TcpService;
-  std::unique_ptr<TcpSocket> m_TcpSocket;
   std::thread senderThread_;
   AutoResetEvent m_ConditionVariable;
   LockFreeQueue<TcpPacket> m_SendQueue;

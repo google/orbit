@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <asio/ip/tcp.hpp>
 #include <thread>
 #include <vector>
 
@@ -26,11 +27,14 @@ class TcpClient : public TcpEntity {
   void ReadFooter();
   void DecodeMessage(MessageOwner&& a_Message);
   void OnError(const std::error_code& ec);
-  TcpSocket* GetSocket() final { return m_TcpSocket.get(); }
+  asio::ip::tcp::socket* GetSocket() final { return &*socket_; }
 
  private:
-  Message m_Message;
-  std::vector<char> m_Payload;
+  asio::io_context io_context_;
+  std::optional<asio::ip::tcp::socket> socket_;
+
+  Message message_;
+  std::vector<char> payload_;
   std::thread workerThread_;
 };
 

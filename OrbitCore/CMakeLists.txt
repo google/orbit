@@ -36,7 +36,6 @@ target_sources(
          LogInterface.h
          MemoryTracker.h
          Message.h
-         OrbitAsio.h
          OrbitDbgHelp.h
          OrbitFunction.h
          OrbitLib.h
@@ -93,7 +92,6 @@ target_sources(
           LogInterface.cpp
           MemoryTracker.cpp
           Message.cpp
-          OrbitAsio.cpp
           OrbitFunction.cpp
           OrbitLib.cpp
           OrbitModule.cpp

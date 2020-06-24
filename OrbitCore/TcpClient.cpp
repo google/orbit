@@ -2,10 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// clang-format off
-#include "OrbitAsio.h"
-// clang-format on
-
 #include "TcpClient.h"
 
 #include <thread>
@@ -14,11 +10,11 @@
 #include "Core.h"
 #include "Hijacking.h"
 #include "Log.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitLib.h"
 #include "OrbitType.h"
 #include "Tcp.h"
 #include "absl/strings/str_format.h"
-#include "OrbitBase/Logging.h"
 
 std::unique_ptr<TcpClient> GTcpClient;
 
@@ -41,21 +37,19 @@ void TcpClient::Connect(const std::string& address) {
   const std::string& host = vec[0];
   const std::string& port = vec[1];
 
-  m_TcpService->m_IoService = std::make_unique<asio::io_service>();
-  m_TcpSocket->m_Socket = new tcp::socket(*m_TcpService->m_IoService);
+  socket_.emplace(io_context_);
 
-  asio::ip::tcp::socket& socket = *m_TcpSocket->m_Socket;
-  asio::ip::tcp::resolver resolver(*m_TcpService->m_IoService);
-  asio::ip::tcp::resolver::query query(host, port,
-                                       tcp::resolver::query::canonical_name);
+  asio::ip::tcp::resolver resolver(io_context_);
+  asio::ip::tcp::resolver::query query(
+      host, port, asio::ip::tcp::resolver::query::canonical_name);
   asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
   asio::ip::tcp::resolver::iterator end;
 
   // Connect to host
   asio::error_code error = asio::error::host_not_found;
   while (error && endpoint_iterator != end) {
-    socket.close();
-    auto err = socket.connect(*endpoint_iterator++, error);
+    socket_->close();
+    auto err = socket_->connect(*endpoint_iterator++, error);
     PRINT_VAR(err.message().c_str());
   }
 
@@ -73,10 +67,13 @@ void TcpClient::Stop() {
       std::this_thread::get_id() == workerThread_.get_id();
 
   if (!inWorkerThread && workerThread_.joinable()) {
-    CHECK(m_TcpService);
-    CHECK(m_TcpService->m_IoService);
-    m_TcpService->m_IoService->stop();
+    io_context_.stop();
     workerThread_.join();
+  }
+
+  if (socket_ && socket_->is_open()) {
+    socket_->close();
+    socket_ = std::nullopt;
   }
 
   TcpEntity::Stop();
@@ -100,15 +97,14 @@ void TcpClient::Start() {
 void TcpClient::ClientThread() {
   SetCurrentThreadName(L"OrbitTcpClient");
   LOG("io_service started...");
-  asio::io_service::work work(*m_TcpService->m_IoService);
-  m_TcpService->m_IoService->run();
+  asio::io_service::work work(io_context_);
+  io_context_.run();
   LOG("io_service ended...");
 }
 
 //-----------------------------------------------------------------------------
 void TcpClient::ReadMessage() {
-  asio::async_read(*m_TcpSocket->m_Socket,
-                   asio::buffer(&m_Message, sizeof(Message)),
+  asio::async_read(*socket_, asio::buffer(&message_, sizeof(Message)),
                    [this](const asio::error_code& ec, size_t) {
                      if (!ec) {
                        ReadPayload();
@@ -120,13 +116,13 @@ void TcpClient::ReadMessage() {
 
 //-----------------------------------------------------------------------------
 void TcpClient::ReadPayload() {
-  m_Payload = std::vector<char>{};
-  if (m_Message.m_Size == 0) {
+  payload_ = std::vector<char>{};  // payload_ was moved-from. So we have to
+                                   // bring it back into a specified state.
+  if (message_.m_Size == 0) {
     ReadFooter();
   } else {
-    m_Payload.resize(m_Message.m_Size);
-    asio::async_read(*m_TcpSocket->m_Socket,
-                     asio::buffer(m_Payload.data(), m_Message.m_Size),
+    payload_.resize(message_.m_Size);
+    asio::async_read(*socket_, asio::buffer(payload_.data(), message_.m_Size),
 
                      [this](asio::error_code ec, std::size_t /*length*/) {
                        if (!ec) {
@@ -140,10 +136,10 @@ void TcpClient::ReadPayload() {
 
 //-----------------------------------------------------------------------------
 void TcpClient::ReadFooter() {
-  unsigned int footer = 0;
-  asio::read(*m_TcpSocket->m_Socket, asio::buffer(&footer, 4));
-  assert(footer == MAGIC_FOOT_MSG);
-  DecodeMessage(MessageOwner{m_Message, std::move(m_Payload)});
+  OrbitCore::MagicFooterBuffer footer{};
+  asio::read(*socket_, asio::buffer(footer.data(), footer.size()));
+  CHECK(footer == OrbitCore::GetMagicFooter());
+  DecodeMessage(MessageOwner{message_, std::move(payload_)});
   ReadMessage();
 }
 
