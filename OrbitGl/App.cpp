@@ -440,14 +440,25 @@ void OrbitApp::RefreshWatch() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::Disassemble(const std::string& a_FunctionName,
-                           uint64_t a_VirtualAddress,
-                           const uint8_t* a_MachineCode, size_t a_Size) {
-  Disassembler disasm;
-  disasm.LOGF(absl::StrFormat("asm: /* %s */\n", a_FunctionName.c_str()));
-  disasm.Disassemble(a_MachineCode, a_Size, a_VirtualAddress,
-                     Capture::GTargetProcess->GetIs64Bit());
-  SendToUi(disasm.GetResult());
+void OrbitApp::Disassemble(uint32_t pid, const Function& function) {
+  thread_pool_->Schedule([this, pid, function] {
+    auto result = process_manager_->LoadProcessMemory(
+        pid, function.GetVirtualAddress(), function.Size());
+    if (!result.has_value()) {
+      SendErrorToUi("Error reading memory",
+                    absl::StrFormat("Could not read process memory: %s.",
+                                    result.error().message));
+      return;
+    }
+
+    const std::string& memory = result.value();
+    Disassembler disasm;
+    disasm.LOGF(absl::StrFormat("asm: /* %s */\n", function.PrettyName()));
+    disasm.Disassemble(reinterpret_cast<const uint8_t*>(memory.data()),
+                       memory.size(), function.GetVirtualAddress(),
+                       Capture::GTargetProcess->GetIs64Bit());
+    SendToUi(disasm.GetResult());
+  });
 }
 
 //-----------------------------------------------------------------------------
@@ -1153,8 +1164,6 @@ void OrbitApp::InitializeClientTransactions() {
   transaction_client_ = std::make_unique<TransactionClient>(GTcpClient.get());
   symbols_client_ =
       std::make_unique<SymbolsClient>(this, transaction_client_.get());
-  process_memory_client_ =
-      std::make_unique<ProcessMemoryClient>(transaction_client_.get());
 }
 
 //-----------------------------------------------------------------------------

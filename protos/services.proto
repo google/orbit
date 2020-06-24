@@ -22,9 +22,23 @@ message GetModuleListResponse {
   repeated ModuleInfo modules = 1;
 }
 
+message GetProcessMemoryRequest {
+  uint32 pid = 1;
+  uint64 address = 2;
+  uint64 size = 3;
+}
+
+message GetProcessMemoryResponse {
+  bytes memory = 1;
+}
+
 service ProcessService {
   rpc GetProcessList(GetProcessListRequest) returns (GetProcessListResponse) {}
+
   rpc GetModuleList(GetModuleListRequest) returns (GetModuleListResponse) {}
+
+  rpc GetProcessMemory(GetProcessMemoryRequest)
+      returns (GetProcessMemoryResponse) {}
 }
 
 message ValidateFramePointersRequest {

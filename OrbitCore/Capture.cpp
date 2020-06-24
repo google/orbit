@@ -153,7 +153,7 @@ bool Capture::Connect(std::string_view remote_address) {
 //  server side logic and client side logic into separate methods/classes.
 outcome::result<void, std::string> Capture::StartCapture(
     std::string_view remote_address) {
-  if (GTargetProcess->GetName().empty()) {
+  if (GTargetProcess->GetID() == 0) {
     return outcome::failure(
         "No process selected. Please choose a target process for the capture.");
   }

@@ -50,7 +50,6 @@ target_sources(
          Path.h
          Pdb.h
          PrintVar.h
-         ProcessMemoryRequest.h
          ProcessUtils.h
          Profiling.h
          RingBuffer.h
@@ -106,7 +105,6 @@ target_sources(
           OrbitUnreal.cpp
           Params.cpp
           Path.cpp
-          ProcessMemoryRequest.cpp
           ProcessUtils.cpp
           Profiling.cpp
           SamplingProfiler.cpp

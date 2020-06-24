@@ -29,7 +29,6 @@
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/ThreadPool.h"
 #include "ProcessManager.h"
-#include "ProcessMemoryClient.h"
 #include "ProcessesDataView.h"
 #include "SamplingReportDataView.h"
 #include "SessionsDataView.h"
@@ -41,6 +40,7 @@
 #include "TypesDataView.h"
 #include "absl/container/flat_hash_map.h"
 #include "grpcpp/grpcpp.h"
+#include "services.grpc.pb.h"
 
 #if defined(_WIN32)
 #include "Debugger.h"
@@ -92,8 +92,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void UpdateVariable(Variable* a_Variable) override;
   void ClearWatchedVariables();
   void RefreshWatch();
-  void Disassemble(const std::string& a_FunctionName, uint64_t a_VirtualAddress,
-                   const uint8_t* a_MachineCode, size_t a_Size) override;
+  void Disassemble(uint32_t pid, const Function& function);
   void ProcessTimer(const Timer& timer) override;
   void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) override;
   void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) override;
@@ -230,10 +229,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
     return transaction_client_.get();
   }
   SymbolsClient* GetSymbolsClient() { return symbols_client_.get(); }
-  void GetRemoteMemory(uint32_t pid, uint64_t address, uint64_t size,
-                       const ProcessMemoryCallback& callback) override {
-    process_memory_client_->GetRemoteMemory(pid, address, size, callback);
-  }
 
  private:
   ApplicationOptions options_;
@@ -264,9 +259,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<LogDataView> m_LogDataView;
 
   CaptureWindow* m_CaptureWindow = nullptr;
-  bool m_HasPromptedForUpdate = false;
   bool m_NeedsThawing = false;
-  bool m_UnrealEnabled = false;
 
   std::shared_ptr<class SamplingReport> sampling_report_;
   std::shared_ptr<class SamplingReport> selection_report_;
@@ -295,7 +288,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<TransactionClient> transaction_client_;
   std::unique_ptr<SymbolsClient> symbols_client_;
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
-  std::unique_ptr<ProcessMemoryClient> process_memory_client_;
 };
 
 //-----------------------------------------------------------------------------

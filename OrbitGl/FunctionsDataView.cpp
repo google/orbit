@@ -88,7 +88,6 @@ void FunctionsDataView::DoSort() {
   // not be called on the main thread and as soon as this is done the watchdog
   // timeout should be rolled back from 25 seconds to 10 seconds in
   // OrbitService.h
-  SCOPE_TIMER_LOG("FunctionsDataView::DoSort");
   bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
@@ -179,7 +178,7 @@ void FunctionsDataView::OnContextMenu(const std::string& a_Action,
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
     uint32_t pid = Capture::GTargetProcess->GetID();
     for (int i : a_ItemIndices) {
-      GetFunction(i).GetDisassembly(pid);
+      GOrbitApp->Disassemble(pid, GetFunction(i));
     }
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
@@ -195,7 +194,6 @@ void FunctionsDataView::DoFilter() {
   // not be called on the main thread and as soon as this is done the watchdog
   // timeout should be rolled back from 25 seconds to 10 seconds in
   // OrbitService.h
-  SCOPE_TIMER_LOG("FunctionsDataView::DoFilter");
   m_FilterTokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
 #ifdef WIN32
