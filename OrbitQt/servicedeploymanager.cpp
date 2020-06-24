@@ -4,6 +4,7 @@
 
 #include "servicedeploymanager.h"
 
+#include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
@@ -21,6 +22,8 @@
 #include "OrbitSshQt/SftpChannel.h"
 #include "OrbitSshQt/SftpOperation.h"
 #include "OrbitSshQt/Task.h"
+
+ABSL_DECLARE_FLAG(bool, devmode);
 
 static const std::string kLocalhost = "127.0.0.1";
 static const std::string kDebDestinationPath = "/tmp/orbitprofiler.deb";
@@ -233,8 +236,11 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServiceExecutable() {
 outcome::result<void> ServiceDeployManager::StartOrbitService() {
   emit statusMessage("Starting OrbitService on the remote instance...");
 
-  orbit_service_task_.emplace(&session_.value(),
-                              "/opt/developer/tools/OrbitService");
+  std::string task_string = "/opt/developer/tools/OrbitService";
+  if (absl::GetFlag(FLAGS_devmode)) {
+    task_string += " --devmode";
+  }
+  orbit_service_task_.emplace(&session_.value(), task_string);
 
   auto quit_handler = ConnectQuitHandler(&orbit_service_task_.value(),
                                          &OrbitSshQt::Task::started);
@@ -268,8 +274,11 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged() {
   // implemented in OrbitSshQt::Task.
   emit statusMessage("Starting OrbitService on the remote instance...");
 
-  orbit_service_task_.emplace(&session_.value(),
-                              "sudo --stdin /tmp/OrbitService");
+  std::string task_string = "sudo --stdin /tmp/OrbitService";
+  if (absl::GetFlag(FLAGS_devmode)) {
+    task_string += " --devmode";
+  }
+  orbit_service_task_.emplace(&session_.value(), task_string);
 
   const auto& config =
       std::get<OrbitQt::BareExecutableAndRootPasswordDeployment>(
