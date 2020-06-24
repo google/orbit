@@ -6,7 +6,6 @@
 #define ORBIT_CORE_FRAME_POINTER_VALIDATOR_CLIENT_H_
 
 #include "OrbitModule.h"
-#include "TransactionClient.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
 

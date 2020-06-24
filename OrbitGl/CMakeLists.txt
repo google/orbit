@@ -58,7 +58,6 @@ target_sources(
          TimeGraphLayout.h
          TimerChain.h
          Track.h
-         TransactionClient.h
          TriangleToggle.h
          TypesDataView.h)
 
@@ -109,7 +108,6 @@ target_sources(
           TimerChain.cpp
           ThreadTrack.cpp
           Track.cpp
-          TransactionClient.cpp
           TriangleToggle.cpp
           TypesDataView.cpp)
 

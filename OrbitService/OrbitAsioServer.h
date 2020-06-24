@@ -13,7 +13,6 @@
 #include "LinuxTracingHandler.h"
 #include "OrbitLinuxTracing/TracingOptions.h"
 #include "ProcessUtils.h"
-#include "TransactionService.h"
 
 class OrbitAsioServer {
  public:
@@ -32,16 +31,12 @@ class OrbitAsioServer {
   void StartCapture(int32_t pid);
   void StopCapture();
 
-  void SetupTransactionServices();
-
   void TracingBufferThread();
   void SendBufferedMessages();
 
   TcpServer* tcp_server_;
 
   ProcessList process_list_;
-
-  std::unique_ptr<TransactionService> transaction_service_;
 
   std::vector<std::shared_ptr<Function>> selected_functions_;
   std::thread tracing_buffer_thread_;

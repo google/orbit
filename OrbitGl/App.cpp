@@ -334,8 +334,6 @@ void OrbitApp::PostInit() {
       SystraceManager::Get().Dump();
     }
   }
-
-  GOrbitApp->InitializeClientTransactions();
 }
 
 //-----------------------------------------------------------------------------
@@ -515,16 +513,6 @@ void OrbitApp::MainTick() {
   if (GTcpClient) GTcpClient->ProcessMainThreadCallbacks();
 
   GOrbitApp->main_thread_executor_->ConsumeActions();
-
-  // Tick Transaction manager only from client (OrbitApp is client only);
-  auto transaction_manager = GOrbitApp->GetTransactionClient();
-
-  // Note that MainTick could be called before OrbitApp::PostInit() was complete
-  // in which case translaction namager is not yet initialized - check that it
-  // is not null before calling it.
-  if (transaction_manager != nullptr) {
-    transaction_manager->Tick();
-  }
 
   GMainTimer.Reset();
   GTcpServer->MainThreadTick();
@@ -1172,11 +1160,6 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   }
 
   FATAL("Unreachable");
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::InitializeClientTransactions() {
-  transaction_client_ = std::make_unique<TransactionClient>(GTcpClient.get());
 }
 
 //-----------------------------------------------------------------------------
