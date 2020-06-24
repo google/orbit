@@ -136,52 +136,6 @@ void Process::ClearTransients() {
 }
 
 //-----------------------------------------------------------------------------
-void Process::EnumerateThreads() {
-  m_Threads.clear();
-  m_ThreadIds.clear();
-
-#ifdef _WIN32
-  // https://blogs.msdn.microsoft.com/oldnewthing/20060223-14/?p=32173/
-  HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, m_ID);
-  if (h != INVALID_HANDLE_VALUE) {
-    THREADENTRY32 te;
-    te.dwSize = sizeof(te);
-    if (Thread32First(h, &te)) {
-      do {
-        if (te.dwSize >= FIELD_OFFSET(THREADENTRY32, th32OwnerProcessID) +
-                             sizeof(te.th32OwnerProcessID)) {
-          HANDLE thandle;
-          { thandle = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID); }
-
-          if (thandle == NULL) {
-            // ORBIT_LOG(GetLastErrorAsString());
-            continue;
-          }
-
-          if (te.th32OwnerProcessID == m_ID) {
-            std::shared_ptr<Thread> thread = std::make_shared<Thread>();
-            thread->m_Handle = thandle;
-            thread->m_TID = te.th32ThreadID;
-            m_ThreadNames[thread->m_TID] = GetThreadName(thandle);
-            m_Threads.push_back(thread);
-          }
-        }
-        te.dwSize = sizeof(te);
-      } while (Thread32Next(h, &te));
-    }
-
-    CloseHandle(h);
-  }
-
-  for (std::shared_ptr<Thread>& thread : m_Threads) {
-    m_ThreadIds.insert(thread->m_TID);
-  }
-#else
-  m_ThreadNames = LinuxUtils::GetThreadNames(m_ID);
-#endif
-}
-
-//-----------------------------------------------------------------------------
 void Process::UpdateCpuTime() {
 #ifdef _WIN32
   FILETIME creationTime;
@@ -202,29 +156,6 @@ void Process::UpdateCpuTime() {
     m_CpuUsage = (100.0 * double(kernMs + userMs) / elapsedMillis) / numCores;
   }
 #endif
-}
-
-//-----------------------------------------------------------------------------
-void Process::UpdateThreadUsage() {
-  for (auto& thread : m_Threads) {
-    thread->UpdateUsage();
-  }
-}
-
-//-----------------------------------------------------------------------------
-void Process::SortThreadsByUsage() {
-  std::sort(m_Threads.begin(), m_Threads.end(),
-            [](std::shared_ptr<Thread>& a_T0, std::shared_ptr<Thread>& a_T1) {
-              return a_T1->m_Usage.Latest() < a_T0->m_Usage.Latest();
-            });
-}
-
-//-----------------------------------------------------------------------------
-void Process::SortThreadsById() {
-  std::sort(m_Threads.begin(), m_Threads.end(),
-            [](std::shared_ptr<Thread>& a_T1, std::shared_ptr<Thread>& a_T0) {
-              return a_T1->m_TID < a_T0->m_TID;
-            });
 }
 
 //-----------------------------------------------------------------------------
@@ -481,7 +412,7 @@ uint64_t Process::GetRaiseExceptionAddress() {
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(Process, 3) {
+ORBIT_SERIALIZE(Process, 4) {
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(3, m_FullPath);
   ORBIT_NVP_VAL(3, m_CmdLine);
@@ -493,7 +424,6 @@ ORBIT_SERIALIZE(Process, 3) {
   ORBIT_NVP_VAL(0, m_IsRemote);
   ORBIT_NVP_VAL(0, m_Modules);
   ORBIT_NVP_VAL(0, m_NameToModuleMap);
-  ORBIT_NVP_VAL(0, m_ThreadIds);
   ORBIT_NVP_VAL(1, m_Modules);
   ORBIT_NVP_VAL(2, m_ThreadNames);
 }

@@ -299,12 +299,4 @@ inline void ProcessProfileEvent(PEVENT_RECORD a_EventRecord) {
   UNUSED(CycleTime);
   UNUSED(ProcessorNumber);
   UNUSED(ProcessorIndex);
-
-  if (Capture::GTargetProcess->HasThread(sampleEvent->ThreadId) &&
-      Capture::IsCapturing()) {
-    /*CallStack CS;
-    CS.m_ThreadId = ThreadID;
-    CS.m_Data[CS.m_Depth++] = sampleEvent->InstructionPointer;
-    Capture::GSamplingProfiler->AddCallStack( CS );*/
-  }
 }

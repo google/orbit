@@ -277,35 +277,4 @@ std::string GetProcessDir(pid_t process_id) {
   return "/proc/" + std::to_string(process_id) + "/";
 }
 
-//-----------------------------------------------------------------------------
-std::map<uint32_t, std::string> GetThreadNames(pid_t process_id) {
-  // We use std::map rather the flat_hash_map to allow "cereal" serialization
-  // and to get sorted pairs.
-  std::map<uint32_t, std::string> thread_ids_to_name;
-  std::string threads_dir = GetProcessDir(process_id) + "task/";
-  struct dirent* dir_entry = nullptr;
-  DIR* dir = nullptr;
-
-  dir = opendir(threads_dir.c_str());
-  if (dir == nullptr) {
-    ERROR("Couldn't open %s\n", threads_dir.c_str());
-    return thread_ids_to_name;
-  }
-
-  while ((dir_entry = readdir(dir))) {
-    if (dir_entry->d_type == DT_DIR && IsAllDigits(dir_entry->d_name)) {
-      std::string thread_file = threads_dir + dir_entry->d_name + "/comm";
-      std::string thread_name = FileToString(thread_file);
-      absl::StripTrailingAsciiWhitespace(&thread_name);  // Remove new-line.
-      pid_t tid = 0;
-      if (!thread_name.empty() && absl::SimpleAtoi(dir_entry->d_name, &tid)) {
-        thread_ids_to_name[tid] = thread_name;
-      }
-    }
-  }
-
-  closedir(dir);
-  return thread_ids_to_name;
-}
-
 }  // namespace LinuxUtils
