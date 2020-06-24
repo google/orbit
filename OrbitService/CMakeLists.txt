@@ -2,14 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-project(OrbitService)
+# To make OrbitAsioServer and OrbitGrpcServer available for fuzz-testing
+# the target OrbitServiceLib was introduced. OrbitService still exists,
+# but only builds main.cpp and links to OrbitServiceLib.
+project(OrbitServiceLib)
 
-add_executable(OrbitService)
+add_library(OrbitServiceLib STATIC)
+target_compile_options(OrbitServiceLib PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_compile_options(OrbitService PRIVATE ${STRICT_COMPILE_FLAGS})
-
-target_sources(OrbitService PRIVATE
-        main.cpp
+target_sources(OrbitServiceLib PRIVATE
         CrashServiceImpl.cpp
         CrashServiceImpl.h
         FramePointerValidatorServiceImpl.h
@@ -24,14 +25,19 @@ target_sources(OrbitService PRIVATE
         ProcessServiceImpl.h)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set_target_properties(OrbitService PROPERTIES COMPILE_FLAGS /wd4127)
+  set_target_properties(OrbitServiceLib PROPERTIES COMPILE_FLAGS /wd4127)
 endif()
 
-target_include_directories(OrbitService PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(OrbitServiceLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(OrbitService PRIVATE
+target_link_libraries(OrbitServiceLib PUBLIC
         OrbitCore
         OrbitProtos)
+
+project(OrbitService)
+add_executable(OrbitService main.cpp)
+target_link_libraries(OrbitService PRIVATE OrbitServiceLib)
+target_compile_options(OrbitService PRIVATE ${STRICT_COMPILE_FLAGS})
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   # Administrator privileges
