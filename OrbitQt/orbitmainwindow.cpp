@@ -35,6 +35,7 @@
 #include "orbitdisassemblydialog.h"
 #include "orbitsamplingreport.h"
 #include "outputdialog.h"
+#include "services.pb.h"
 #include "showincludesdialog.h"
 #include "ui_orbitmainwindow.h"
 
@@ -854,4 +855,19 @@ void InfiniteRecursion(int num) {
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionStackOverflow_triggered() {
   InfiniteRecursion(0);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionServiceCheckFalse_triggered() {
+  GOrbitApp->CrashOrbitService(GetCrashRequest_CrashType_CHECK_FALSE);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionServiceNullPointerDereference_triggered() {
+  GOrbitApp->CrashOrbitService(GetCrashRequest_CrashType_NULL_POINTER_DEREFERENCE);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
+  GOrbitApp->CrashOrbitService(GetCrashRequest_CrashType_STACK_OVERFLOW);
 }

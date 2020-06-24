@@ -16,6 +16,7 @@
 #include "CallStackDataView.h"
 #include "ContextSwitch.h"
 #include "CoreApp.h"
+#include "CrashManager.h"
 #include "DataManager.h"
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
@@ -41,6 +42,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
+#include "services.pb.h"
 
 #if defined(_WIN32)
 #include "Debugger.h"
@@ -222,6 +224,8 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   bool HasTcpServer() const { return !IsRemote(); }
   void FilterFunctions(const std::string& filter);
 
+  void CrashOrbitService(GetCrashRequest_CrashType crash_type);
+
   DataView* GetOrCreateDataView(DataViewType type) override;
 
   void InitializeClientTransactions();
@@ -279,6 +283,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<ThreadPool> thread_pool_;
   std::unique_ptr<ProcessManager> process_manager_;
   std::unique_ptr<DataManager> data_manager_;
+  std::unique_ptr<CrashManager> crash_manager_;
 
   const SymbolHelper symbol_helper_;
 #if defined(_WIN32)

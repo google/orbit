@@ -10,6 +10,8 @@ target_compile_options(OrbitService PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitService PRIVATE
         main.cpp
+        CrashServiceImpl.cpp
+        CrashServiceImpl.h
         FramePointerValidatorServiceImpl.h
         FramePointerValidatorServiceImpl.cpp
         OrbitAsioServer.cpp

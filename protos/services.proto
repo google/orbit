@@ -54,3 +54,18 @@ service FramePointerValidatorService {
   rpc ValidateFramePointers(ValidateFramePointersRequest)
       returns (ValidateFramePointersResponse) {}
 }
+
+message GetCrashRequest {
+  enum CrashType {
+    CHECK_FALSE = 0;
+    NULL_POINTER_DEREFERENCE = 1;
+    STACK_OVERFLOW = 2;
+  }
+  CrashType crash_type = 1;
+}
+
+message GetCrashResponse {}
+
+service CrashService {
+  rpc CrashOrbitService(GetCrashRequest) returns (GetCrashResponse) {}
+}

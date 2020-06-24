@@ -298,6 +298,9 @@
     <addaction name="actionCheckFalse"/>
     <addaction name="actionNullPointerDereference"/>
     <addaction name="actionStackOverflow"/>
+    <addaction name="actionServiceCheckFalse"/>
+    <addaction name="actionServiceNullPointerDereference"/>
+    <addaction name="actionServiceStackOverflow"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -457,6 +460,21 @@
   <action name="actionStackOverflow">
    <property name="text">
     <string>Stack Overflow</string>
+   </property>
+  </action>
+  <action name="actionServiceCheckFalse">
+   <property name="text">
+    <string>[Service] Check False</string>
+   </property>
+  </action>
+    <action name="actionServiceNullPointerDereference">
+   <property name="text">
+    <string>[Service] Null Pointer Dereference</string>
+   </property>
+  </action>
+  <action name="actionServiceStackOverflow">
+   <property name="text">
+    <string>[Service] Stack Overflow</string>
    </property>
   </action>
  </widget>

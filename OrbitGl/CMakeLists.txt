@@ -72,6 +72,7 @@ target_sources(
           CaptureSerializer.cpp
           CaptureWindow.cpp
           Card.cpp
+          CrashManager.cpp
           DataManager.cpp
           DataView.cpp
           Debugger.cpp
