@@ -27,7 +27,8 @@ void FramePointerValidatorClient::AnalyzeModules(
     return;
   }
 
-  uint64_t num_fpo_functions = 0;
+  std::vector<std::string> dialogue_messages;
+  dialogue_messages.push_back("Validation complete.");
 
   for (const std::shared_ptr<Module>& module : modules) {
     ValidateFramePointersRequest request;
@@ -58,17 +59,14 @@ void FramePointerValidatorClient::AnalyzeModules(
               "Grpc call for frame-pointer validation failed for module %s: %s",
               module->m_Name, status.error_message()));
     }
-    num_fpo_functions += response.functions_without_frame_pointer_size();
+    int fpo_functions = response.functions_without_frame_pointer_size();
+    int no_fpo_functions = module->m_Pdb->GetFunctions().size() - fpo_functions;
+    dialogue_messages.push_back(absl::StrFormat(
+        "Module %s: %d functions support frame pointers, %d functions don't.",
+        module->m_Name, no_fpo_functions, fpo_functions));
   }
 
-  uint64_t num_functions = 0;
-  for (const auto& module : modules) {
-    num_functions += module->m_Pdb->GetFunctions().size();
-  }
-
-  std::string text = absl::StrFormat(
-      "Validation complete.\n%d functions support frame pointers, %d functions "
-      "don't.",
-      num_functions - num_fpo_functions, num_fpo_functions);
+  std::string text =
+      absl::StrJoin(dialogue_messages.begin(), dialogue_messages.end(), "\n");
   app_->SendInfoToUi("Frame Pointer Validation", text);
 }
