@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "Tcp.h"
 
 #include "Capture.h"
@@ -17,7 +15,8 @@
 tcp_server::~tcp_server() { PRINT_FUNC; }
 
 tcp_server::tcp_server(asio::io_service& io_service, unsigned short port)
-    : acceptor_(io_service, tcp::endpoint(make_address("127.0.0.1"), port)) {
+    : acceptor_(io_service, asio::ip::tcp::endpoint(
+                                asio::ip::make_address("127.0.0.1"), port)) {
   start_accept();
 }
 
@@ -39,7 +38,7 @@ void tcp_server::start_accept() {
 
   // initiates an asynchronous accept operation
   // to wait for a new connection.
-  acceptor_.async_accept(*new_connection->GetSocket().m_Socket,
+  acceptor_.async_accept(new_connection->GetSocket(),
                          std::bind(&tcp_server::handle_accept, this,
                                    new_connection, std::placeholders::_1));
 }
@@ -93,7 +92,6 @@ void TcpConnection::ReadPayload() {
     payload_.resize(message_.m_Size);
     asio::async_read(
         socket_, asio::buffer(payload_.data(), message_.m_Size),
-
         [this](asio::error_code ec, std::size_t bytes_transferred) {
           if (!ec) {
             num_bytes_received_ += bytes_transferred;
@@ -107,10 +105,10 @@ void TcpConnection::ReadPayload() {
 }
 
 void TcpConnection::ReadFooter() {
-  unsigned int footer = 0;
-  asio::read(socket_, asio::buffer(&footer, 4));
-  assert(footer == MAGIC_FOOT_MSG);
-  num_bytes_received_ += 4;
+  OrbitCore::MagicFooterBuffer footer{};
+  asio::read(socket_, asio::buffer(footer.data(), footer.size()));
+  CHECK(footer == OrbitCore::GetMagicFooter());
+  num_bytes_received_ += footer.size();
   DecodeMessage(MessageOwner{message_, payload_});
   ReadMessage();
 }
