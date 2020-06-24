@@ -6,10 +6,10 @@ import re
 
 class CrashpadConan(ConanFile):
     name = "crashpad"
-    version = "20200616"
+    version = "20200624"
     description = "Crashpad is a crash-reporting system."
     license = "Apache-2.0"
-    homepage = "https://github.com/IrinaShkviro/crashpad.git"
+    homepage = "https://github.com/chromium/crashpad.git"
     url = "https://github.com/bincrafters/conan-crashpad"
     topics = ("conan", "crash-reporting", "logging", "minidump", "crash")
     settings = "os", "compiler", "build_type", "arch"
@@ -18,7 +18,7 @@ class CrashpadConan(ConanFile):
     exports = [ "patches/*", "LICENSE.md" ]
     short_paths = True
 
-    _commit_id = "ae89bc807a2fd8c7cea9696b2c7b83b4fd4f4647"
+    _commit_id = "41456998748bd3c058f36f5d785810bf7ea7a954"
     _source_dir = "crashpad"
     _build_name = "out/Conan"
     _build_dir = os.path.join(_source_dir, _build_name)
@@ -33,12 +33,10 @@ class CrashpadConan(ConanFile):
         return os.path.join(self._crashpad_source_base(), "crashpad")
 
     def build_requirements(self):
-        if self.settings.os == "Windows":
-            self.build_requires("depot_tools_installer/20190909@bincrafters/stable")
-        else:
-            self.build_requires("depot_tools_installer/20200207@bincrafters/stable")
-            self.build_requires("openssl/1.1.1d@orbitdeps/stable")
+        self.build_requires("depot_tools_installer/20200515@bincrafters/stable")
         self.build_requires("ninja/1.9.0")
+        if self.settings.os == "Linux":
+            self.build_requires("openssl/1.1.1d@orbitdeps/stable")
 
     def _mangle_spec_for_gclient(self, solutions):
         return json.dumps(solutions)          \
@@ -58,7 +56,6 @@ class CrashpadConan(ConanFile):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
-
     def configure(self):
         # It's not a C project, but libcxx is hardcoded in the project
         del self.settings.compiler.libcxx
@@ -69,7 +66,7 @@ class CrashpadConan(ConanFile):
 
     def source(self):
         self.run("gclient config --spec=\"%s\"" % self._make_spec(), run_environment=True)
-        self.run("gclient sync --no-history -A", run_environment=True)
+        self.run("gclient sync --no-history", run_environment=True)
 
         if self.settings.os == "Windows":
             tools.patch(base_path=os.path.join(self._source_dir, "third_party/mini_chromium/mini_chromium"),

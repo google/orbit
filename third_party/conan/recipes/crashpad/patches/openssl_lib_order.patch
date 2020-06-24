@@ -2,7 +2,7 @@ diff --git a/util/BUILD.gn b/util/BUILD.gn
 index 21f70048..c4724f8d 100644
 --- a/crashpad/util/BUILD.gn
 +++ b/crashpad/util/BUILD.gn
-@@ -377,8 +377,8 @@ static_library("util") {
+@@ -379,8 +379,8 @@ static_library("util") {
          deps += [ "//third_party/boringssl" ]
        } else {
          libs = [
@@ -12,7 +12,7 @@ index 21f70048..c4724f8d 100644
          ]
        }
      }
-@@ -635,8 +635,8 @@ if (!crashpad_is_android && !crashpad_is_ios) {
+@@ -637,8 +637,8 @@ if (!crashpad_is_android && !crashpad_is_ios) {
          deps += [ "//third_party/boringssl" ]
        } else {
          libs = [
