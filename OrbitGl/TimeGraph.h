@@ -98,6 +98,7 @@ class TimeGraph {
   uint32_t GetNumTimers() const;
   uint32_t GetNumCores() const;
   std::vector<std::shared_ptr<TimerChain>> GetAllTimerChains() const;
+  std::vector<std::shared_ptr<TimerChain>> GetAllThreadTrackTimerChains() const;
 
   void OnDrag(float a_Ratio);
   double GetMinTimeUs() const { return m_MinTimeUs; }
