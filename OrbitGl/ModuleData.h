@@ -8,6 +8,7 @@
 #include <cinttypes>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "absl/strings/str_format.h"
 #include "module.pb.h"
@@ -15,8 +16,8 @@
 // Represents information about module on the client
 class ModuleData final {
  public:
-  explicit ModuleData(const ModuleInfo& info)
-      : module_info_(info), is_loaded_(false) {}
+  explicit ModuleData(ModuleInfo info)
+      : module_info_(std::move(info)), is_loaded_(false) {}
 
   void SetModuleInfo(const ModuleInfo& info) { module_info_ = info; }
 
