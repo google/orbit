@@ -66,7 +66,6 @@ void FramePointerValidatorClient::AnalyzeModules(
         module->m_Name, no_fpo_functions, fpo_functions));
   }
 
-  std::string text =
-      absl::StrJoin(dialogue_messages.begin(), dialogue_messages.end(), "\n");
+  std::string text = absl::StrJoin(dialogue_messages, "\n");
   app_->SendInfoToUi("Frame Pointer Validation", text);
 }
