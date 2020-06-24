@@ -21,7 +21,6 @@ OrbitAsioServer::OrbitAsioServer(uint16_t port,
 
   SetupIntrospection();
   SetupServerCallbacks();
-  SetupTransactionServices();
 
   process_list_thread_ = std::thread{[this] { ProcessListThread(); }};
 }
@@ -98,10 +97,6 @@ void OrbitAsioServer::StopCapture() {
     tracing_buffer_thread_.join();
   }
   tcp_server_->Send(Msg_CaptureStopped);
-}
-
-void OrbitAsioServer::SetupTransactionServices() {
-  transaction_service_ = std::make_unique<TransactionService>(tcp_server_);
 }
 
 void OrbitAsioServer::TracingBufferThread() {

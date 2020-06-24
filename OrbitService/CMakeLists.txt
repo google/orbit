@@ -21,9 +21,7 @@ target_sources(OrbitService PRIVATE
         OrbitService.cpp
         OrbitService.h
         ProcessServiceImpl.cpp
-        ProcessServiceImpl.h
-        TransactionService.h
-        TransactionService.cpp)
+        ProcessServiceImpl.h)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set_target_properties(OrbitService PROPERTIES COMPILE_FLAGS /wd4127)

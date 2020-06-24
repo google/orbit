@@ -36,7 +36,6 @@
 #include "StringManager.h"
 #include "SymbolHelper.h"
 #include "Threading.h"
-#include "TransactionClient.h"
 #include "TypesDataView.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -226,11 +225,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   DataView* GetOrCreateDataView(DataViewType type) override;
 
-  void InitializeClientTransactions();
-  TransactionClient* GetTransactionClient() {
-    return transaction_client_.get();
-  }
-
  private:
   void LoadModuleOnRemote(int32_t process_id,
                           const std::shared_ptr<Module>& module,
@@ -295,7 +289,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<Debugger> m_Debugger;
 #endif
 
-  std::unique_ptr<TransactionClient> transaction_client_;
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 };
 
