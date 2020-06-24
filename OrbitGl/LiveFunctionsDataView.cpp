@@ -12,6 +12,9 @@
 #include "OrbitFunction.h"
 #include "OrbitType.h"
 #include "Pdb.h"
+#include "TextBox.h"
+#include "TimeGraph.h"
+#include "TimerChain.h"
 
 //-----------------------------------------------------------------------------
 LiveFunctionsDataView::LiveFunctionsDataView()
@@ -134,6 +137,14 @@ void LiveFunctionsDataView::DoSort() {
 //-----------------------------------------------------------------------------
 const std::string LiveFunctionsDataView::MENU_ACTION_SELECT = "Hook";
 const std::string LiveFunctionsDataView::MENU_ACTION_UNSELECT = "Unhook";
+const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_FIRST =
+    "Jump to first";
+const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_LAST =
+    "Jump to last";
+const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_MIN =
+    "Jump to min";
+const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_MAX =
+    "Jump to max";
 
 //-----------------------------------------------------------------------------
 std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
@@ -149,6 +160,14 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
+
+  // For now, these actions only make sense when one function is selected,
+  // so we don't show them otherwise.
+  if (a_SelectedIndices.size() == 1) {
+    menu.insert(menu.end(),
+                {MENU_ACTION_JUMP_TO_FIRST, MENU_ACTION_JUMP_TO_LAST,
+                 MENU_ACTION_JUMP_TO_MIN, MENU_ACTION_JUMP_TO_MAX});
+  }
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
@@ -167,6 +186,22 @@ void LiveFunctionsDataView::OnContextMenu(
       Function& function = GetFunction(i);
       function.UnSelect();
     }
+  } else if (a_Action == MENU_ACTION_JUMP_TO_FIRST) {
+    CHECK(a_ItemIndices.size() == 1);
+    JumpToNext(GetFunction(a_ItemIndices[0]),
+               std::numeric_limits<TickType>::min());
+  } else if (a_Action == MENU_ACTION_JUMP_TO_LAST) {
+    CHECK(a_ItemIndices.size() == 1);
+    JumpToPrevious(GetFunction(a_ItemIndices[0]),
+                   std::numeric_limits<TickType>::max());
+  } else if (a_Action == MENU_ACTION_JUMP_TO_MIN) {
+    CHECK(a_ItemIndices.size() == 1);
+    auto [min_box, _] = GetMinMax(GetFunction(a_ItemIndices[0]));
+    JumpToBox(min_box);
+  } else if (a_Action == MENU_ACTION_JUMP_TO_MAX) {
+    CHECK(a_ItemIndices.size() == 1);
+    auto [_, max_box] = GetMinMax(GetFunction(a_ItemIndices[0]));
+    JumpToBox(max_box);
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }
@@ -243,4 +278,88 @@ Function& LiveFunctionsDataView::GetFunction(unsigned int a_Row) const {
   CHECK(a_Row < m_Functions.size());
   CHECK(m_Functions[m_Indices[a_Row]]);
   return *m_Functions[m_Indices[a_Row]];
+}
+
+void LiveFunctionsDataView::JumpToBox(const TextBox* box) const {
+  if (box) {
+    GCurrentTimeGraph->Zoom(box);
+  }
+}
+
+std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
+    Function& function) const {
+  auto function_address = function.GetVirtualAddress();
+  TextBox *min_box = nullptr, *max_box = nullptr;
+  std::vector<std::shared_ptr<TimerChain>> chains =
+      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
+  for (auto& chain : chains) {
+    if (!chain) continue;
+    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
+      TimerBlock& block = *it;
+      for (int i = 0; i < block.size(); i++) {
+        TextBox& box = block[i];
+        if (box.GetTimer().m_FunctionAddress == function_address) {
+          if (!min_box || box.GetTimer().ElapsedMicros() <
+                              min_box->GetTimer().ElapsedMicros())
+            min_box = &box;
+          if (!max_box || box.GetTimer().ElapsedMicros() >
+                              max_box->GetTimer().ElapsedMicros())
+            max_box = &box;
+        }
+      }
+    }
+  }
+  return std::make_pair(min_box, max_box);
+}
+
+void LiveFunctionsDataView::JumpToNext(Function& function,
+                                       TickType current_time) const {
+  auto function_address = function.GetVirtualAddress();
+  TextBox* box_to_jump = nullptr;
+  TickType best_time = std::numeric_limits<TickType>::max();
+  std::vector<std::shared_ptr<TimerChain>> chains =
+      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
+  for (auto& chain : chains) {
+    if (!chain) continue;
+    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
+      TimerBlock& block = *it;
+      if (!block.Intersects(current_time, best_time)) continue;
+      for (int i = 0; i < block.size(); i++) {
+        TextBox& box = block[i];
+        auto box_time = box.GetTimer().m_End;
+        if ((box.GetTimer().m_FunctionAddress == function_address) &&
+            (box_time > current_time) && (best_time > box_time)) {
+          box_to_jump = &box;
+          best_time = box_time;
+        }
+      }
+    }
+  }
+  JumpToBox(box_to_jump);
+}
+
+void LiveFunctionsDataView::JumpToPrevious(Function& function,
+                                           TickType current_time) const {
+  auto function_address = function.GetVirtualAddress();
+  TextBox* box_to_jump = nullptr;
+  TickType best_time = std::numeric_limits<TickType>::min();
+  std::vector<std::shared_ptr<TimerChain>> chains =
+      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
+  for (auto& chain : chains) {
+    if (!chain) continue;
+    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
+      TimerBlock& block = *it;
+      if (!block.Intersects(best_time, current_time)) continue;
+      for (int i = 0; i < block.size(); i++) {
+        TextBox& box = block[i];
+        auto box_time = box.GetTimer().m_End;
+        if ((box.GetTimer().m_FunctionAddress == function_address) &&
+            (box_time < current_time) && (best_time < box_time)) {
+          box_to_jump = &box;
+          best_time = box_time;
+        }
+      }
+    }
+  }
+  JumpToBox(box_to_jump);
 }

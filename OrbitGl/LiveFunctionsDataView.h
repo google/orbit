@@ -6,6 +6,7 @@
 
 #include "DataView.h"
 #include "OrbitType.h"
+#include "TimerChain.h"
 
 //-----------------------------------------------------------------------------
 class LiveFunctionsDataView : public DataView {
@@ -27,6 +28,10 @@ class LiveFunctionsDataView : public DataView {
   void DoFilter() override;
   void DoSort() override;
   Function& GetFunction(unsigned int a_Row) const;
+  void JumpToBox(const TextBox* box) const;
+  std::pair<TextBox*, TextBox*> GetMinMax(Function& function) const;
+  void JumpToNext(Function& function, TickType current_time) const;
+  void JumpToPrevious(Function& function, TickType current_time) const;
 
   std::vector<Function*> m_Functions;
 
@@ -46,4 +51,8 @@ class LiveFunctionsDataView : public DataView {
 
   static const std::string MENU_ACTION_SELECT;
   static const std::string MENU_ACTION_UNSELECT;
+  static const std::string MENU_ACTION_JUMP_TO_FIRST;
+  static const std::string MENU_ACTION_JUMP_TO_LAST;
+  static const std::string MENU_ACTION_JUMP_TO_MIN;
+  static const std::string MENU_ACTION_JUMP_TO_MAX;
 };
