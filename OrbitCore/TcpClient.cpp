@@ -120,8 +120,8 @@ void TcpClient::ReadMessage() {
 
 //-----------------------------------------------------------------------------
 void TcpClient::ReadPayload() {
+  m_Payload = std::vector<char>{};
   if (m_Message.m_Size == 0) {
-    m_Message.m_Data = nullptr;
     ReadFooter();
   } else {
     m_Payload.resize(m_Message.m_Size);
@@ -130,7 +130,6 @@ void TcpClient::ReadPayload() {
 
                      [this](asio::error_code ec, std::size_t /*length*/) {
                        if (!ec) {
-                         m_Message.m_Data = m_Payload.data();
                          ReadFooter();
                        } else {
                          OnError(ec);
@@ -144,7 +143,7 @@ void TcpClient::ReadFooter() {
   unsigned int footer = 0;
   asio::read(*m_TcpSocket->m_Socket, asio::buffer(&footer, 4));
   assert(footer == MAGIC_FOOT_MSG);
-  DecodeMessage(m_Message);
+  DecodeMessage(MessageOwner{m_Message, std::move(m_Payload)});
   ReadMessage();
 }
 
@@ -152,7 +151,7 @@ void TcpClient::ReadFooter() {
 void TcpClient::OnError(const std::error_code& ec) {
   if ((ec == asio::error::eof) || (ec == asio::error::connection_reset)) {
     Message msg(Msg_Unload);
-    DecodeMessage(msg);
+    DecodeMessage(MessageOwner{msg, {}});
   }
 
   PRINT_VAR(ec.message().c_str());
@@ -162,9 +161,9 @@ void TcpClient::OnError(const std::error_code& ec) {
 }
 
 //-----------------------------------------------------------------------------
-void TcpClient::DecodeMessage(Message& a_Message) {
+void TcpClient::DecodeMessage(MessageOwner&& a_Message) {
   // Don't process messages from previous captures.
   if (a_Message.m_CaptureID == Message::GCaptureID) {
-    Callback(a_Message);
+    Callback(std::move(a_Message));
   }
 }

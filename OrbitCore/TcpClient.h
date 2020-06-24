@@ -24,7 +24,7 @@ class TcpClient : public TcpEntity {
   void ReadMessage();
   void ReadPayload();
   void ReadFooter();
-  void DecodeMessage(Message& a_Message);
+  void DecodeMessage(MessageOwner&& a_Message);
   void OnError(const std::error_code& ec);
   TcpSocket* GetSocket() final { return m_TcpSocket.get(); }
 

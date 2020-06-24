@@ -120,21 +120,22 @@ void TcpEntity::SendData() {
 }
 
 //-----------------------------------------------------------------------------
-void TcpEntity::Callback(const Message& a_Message) {
-  MessageType type = a_Message.GetType();
+void TcpEntity::Callback(MessageOwner&& message) {
+  const MessageType type = message.GetType();
+
   // Non main thread
-  std::vector<MsgCallback>& callbacks = m_Callbacks[type];
-  for (MsgCallback& callback : callbacks) {
-    callback(a_Message);
+  if (const auto callbacks = m_Callbacks.find(type);
+      callbacks != m_Callbacks.end()) {
+    for (MsgCallback& callback : callbacks->second) {
+      callback(message);
+    }
   }
 
   // Main thread callbacks
   ScopeLock lock(m_Mutex);
   const auto& pair = m_MainThreadCallbacks.find(type);
   if (pair != m_MainThreadCallbacks.end()) {
-    std::shared_ptr<MessageOwner> messageOwner =
-        std::make_shared<MessageOwner>(a_Message);
-    m_MainThreadMessages.push_back(messageOwner);
+    m_MainThreadMessages.emplace_back(std::move(message));
   }
 }
 
@@ -142,14 +143,14 @@ void TcpEntity::Callback(const Message& a_Message) {
 void TcpEntity::ProcessMainThreadCallbacks() {
   ScopeLock lock(m_Mutex);
   while (!m_MainThreadMessages.empty()) {
-    auto message = std::move(m_MainThreadMessages.back());
+    const auto message = std::move(m_MainThreadMessages.back());
     m_MainThreadMessages.pop_back();
-    CHECK(message != nullptr);
 
-    std::vector<MsgCallback>& callbacks =
-        m_MainThreadCallbacks[message->GetType()];
-    for (MsgCallback& callback : callbacks) {
-      callback(*message);
+    if (const auto callbacks = m_MainThreadCallbacks.find(message.GetType());
+        callbacks != m_MainThreadCallbacks.end()) {
+      for (MsgCallback& callback : callbacks->second) {
+        callback(message);
+      }
     }
   }
 }

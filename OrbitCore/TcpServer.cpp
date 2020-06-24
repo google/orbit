@@ -102,9 +102,9 @@ TcpSocket* TcpServer::GetSocket() {
 }
 
 //-----------------------------------------------------------------------------
-void TcpServer::Receive(const Message& a_Message) {
+void TcpServer::Receive(MessageOwner&& message) {
   ++m_NumReceivedMessages;
-  Callback(a_Message);
+  Callback(std::move(message));
 }
 
 //-----------------------------------------------------------------------------

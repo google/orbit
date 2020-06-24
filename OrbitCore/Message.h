@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
-
-#include "BaseTypes.h"
 
 #pragma pack(push, 1)
 
@@ -131,17 +131,19 @@ class Message {
 
 class MessageOwner : public Message {
  public:
-  MessageOwner(Message a_Message) {
-    Message* message = this;
-    *message = a_Message;
-    m_OwnedData.resize(m_Size);
-    memcpy(m_OwnedData.data(), m_Data, m_Size);
+  explicit MessageOwner(Message a_Message, std::vector<char> payload)
+      : Message(a_Message), m_OwnedData(std::move(payload)) {
     m_Data = m_OwnedData.data();
+    m_Size = m_OwnedData.size();
   }
-  const void* Data() const { return m_OwnedData.data(); }
+
+  MessageOwner(MessageOwner&&) = default;
+  MessageOwner& operator=(MessageOwner&&) = default;
+
+  MessageOwner(const MessageOwner&) = delete;
+  MessageOwner& operator=(const MessageOwner&) = delete;
 
  private:
-  MessageOwner();
   std::vector<char> m_OwnedData;
 };
 
