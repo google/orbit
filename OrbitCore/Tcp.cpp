@@ -86,8 +86,8 @@ void handle_writes(const asio::error_code& error, size_t bytes_transferred) {
 }
 
 void TcpConnection::ReadPayload() {
+  payload_ = std::vector<char>{};
   if (message_.m_Size == 0) {
-    message_.m_Data = nullptr;
     ReadFooter();
   } else {
     payload_.resize(message_.m_Size);
@@ -97,7 +97,6 @@ void TcpConnection::ReadPayload() {
         [this](asio::error_code ec, std::size_t bytes_transferred) {
           if (!ec) {
             num_bytes_received_ += bytes_transferred;
-            message_.m_Data = payload_.data();
             ReadFooter();
           } else {
             PRINT_VAR(ec.message());
@@ -112,12 +111,12 @@ void TcpConnection::ReadFooter() {
   asio::read(socket_, asio::buffer(&footer, 4));
   assert(footer == MAGIC_FOOT_MSG);
   num_bytes_received_ += 4;
-  DecodeMessage(message_);
+  DecodeMessage(MessageOwner{message_, payload_});
   ReadMessage();
 }
 
-void TcpConnection::DecodeMessage(Message& a_Message) {
+void TcpConnection::DecodeMessage(MessageOwner&& message) {
   // TODO: A global shouldn't be used here.
   GTcpServer->GetServer()->RegisterConnection(this->shared_from_this());
-  GTcpServer->Receive(a_Message);
+  GTcpServer->Receive(std::move(message));
 }

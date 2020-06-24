@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "Message.h"
+#include "BaseTypes.h"
 
 class Debugger {
  public:

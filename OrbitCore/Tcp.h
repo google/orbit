@@ -39,7 +39,7 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
   void ReadMessage();
   void ReadPayload();
   void ReadFooter();
-  void DecodeMessage(Message& message);
+  void DecodeMessage(MessageOwner&& message);
 
   uint64_t GetNumBytesReceived() { return num_bytes_received_; }
 

@@ -92,7 +92,7 @@ class TcpEntity {
   void AddMainThreadCallback(MessageType a_MsgType, MsgCallback a_Callback) {
     m_MainThreadCallbacks[a_MsgType].push_back(a_Callback);
   }
-  void Callback(const Message& a_Message);
+  void Callback(MessageOwner&& a_Message);
   void ProcessMainThreadCallbacks();
   bool IsValid() const { return m_IsValid; }
 
@@ -116,7 +116,7 @@ class TcpEntity {
 
   std::unordered_map<int, std::vector<MsgCallback>> m_Callbacks;
   std::unordered_map<int, std::vector<MsgCallback>> m_MainThreadCallbacks;
-  std::vector<std::shared_ptr<MessageOwner>> m_MainThreadMessages;
+  std::vector<MessageOwner> m_MainThreadMessages;
 };
 
 //-----------------------------------------------------------------------------
