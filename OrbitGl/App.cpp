@@ -1001,6 +1001,7 @@ void OrbitApp::OnProcessSelected(uint32_t pid) {
           module->m_PdbSize = info.file_size();
           module->m_AddressStart = info.address_start();
           module->m_AddressEnd = info.address_end();
+          module->m_DebugSignature = info.build_id();
           module->SetLoadable(true);
           process->AddModule(module);
         }

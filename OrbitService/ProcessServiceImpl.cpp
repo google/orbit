@@ -61,6 +61,7 @@ Status ProcessServiceImpl::GetModuleList(ServerContext*,
     module_info->set_file_size(module->m_PdbSize);
     module_info->set_address_start(module->m_AddressStart);
     module_info->set_address_end(module->m_AddressEnd);
+    module_info->set_build_id(module->m_DebugSignature);
   }
 
   return Status::OK;
