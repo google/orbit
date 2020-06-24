@@ -19,7 +19,7 @@ class TcpServer : public TcpEntity {
 
   void StartServer(uint16_t port);
 
-  void Receive(const Message& a_Message);
+  void Receive(MessageOwner&& a_Message);
 
   void SendToUiAsync(const std::string& a_Message);
   void SendToUiNow(const std::string& a_Message);
