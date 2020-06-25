@@ -4,12 +4,44 @@
 
 syntax = "proto3";
 
+message CaptureOptions {
+  bool trace_context_switches = 1;
+  int32 pid = 2;
+  double sampling_rate = 3;
+
+  enum UnwindingMethod {
+    kUndefined = 0;
+    kFramePointers = 1;
+    kDwarf = 2;
+  }
+  UnwindingMethod unwinding_method = 4;
+
+  message InstrumentedFunction {
+    string file_path = 1;
+    uint64 file_offset = 2;
+    uint64 absolute_address = 3;
+  }
+  repeated InstrumentedFunction instrumented_functions = 5;
+
+  bool trace_gpu_driver = 6;
+}
+
 message SchedulingSlice {
   int32 pid = 1;
   int32 tid = 2;
   int32 core = 3;
   uint64 in_timestamp_ns = 4;
   uint64 out_timestamp_ns = 5;
+}
+
+message FunctionCall {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 absolute_address = 3;
+  uint64 begin_timestamp_ns = 4;
+  uint64 end_timestamp_ns = 5;
+  int32 depth = 6;
+  uint64 return_value = 7;
 }
 
 message Callstack {
@@ -29,16 +61,6 @@ message CallstackSample {
     uint64 callstack_key = 4;
   }
   uint64 timestamp_ns = 5;
-}
-
-message FunctionCall {
-  int32 pid = 1;
-  int32 tid = 2;
-  uint64 absolute_address = 3;
-  uint64 begin_timestamp_ns = 4;
-  uint64 end_timestamp_ns = 5;
-  int32 depth = 6;
-  uint64 return_value = 7;
 }
 
 message InternedString {

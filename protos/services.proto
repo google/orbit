@@ -4,10 +4,19 @@
 
 syntax = "proto3";
 
+import "capture.proto";
 import "code_block.proto";
 import "module.proto";
 import "process.proto";
 import "symbol.proto";
+
+message CaptureRequest {
+  CaptureOptions capture_options = 1;
+}
+
+service CaptureService {
+  rpc Capture(stream CaptureRequest) returns (stream CaptureEvent) {}
+}
 
 message GetProcessListRequest {}
 
