@@ -255,12 +255,3 @@ void Pdb::ApplyPresets(const Session& session) {
     }
   }
 }
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(ModuleDebugInfo, 3) {
-  ORBIT_NVP_VAL(0, m_Name);
-  ORBIT_NVP_VAL(0, m_Functions);
-  ORBIT_NVP_VAL(0, load_bias);
-  ORBIT_NVP_VAL(0, m_PdbName);
-  ORBIT_NVP_VAL(1, m_PID);
-}
