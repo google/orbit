@@ -100,7 +100,7 @@ class CaptureWindow : public GlCanvas {
   std::string icons_path_;
   float toolbar_height_ = 0;
 
-  static constexpr size_t kFilterLength = 64;
+  static constexpr size_t kFilterLength = 512;
   char track_filter_[kFilterLength] = "";
   char find_filter_[kFilterLength] = "";
 
