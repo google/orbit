@@ -11,6 +11,8 @@ add_library(OrbitServiceLib STATIC)
 target_compile_options(OrbitServiceLib PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitServiceLib PRIVATE
+        CaptureServiceImpl.cpp
+        CaptureServiceImpl.h
         CrashServiceImpl.cpp
         CrashServiceImpl.h
         FramePointerValidatorServiceImpl.h

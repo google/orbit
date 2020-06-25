@@ -15,6 +15,7 @@ target_sources(
          Batcher.h
          BlackBoard.h
          CallStackDataView.h
+         CaptureClient.h
          CaptureSerializer.h
          CaptureWindow.h
          Card.h
@@ -65,6 +66,7 @@ target_sources(
           Batcher.cpp
           BlackBoard.cpp
           CallStackDataView.cpp
+          CaptureClient.cpp
           CaptureSerializer.cpp
           CaptureWindow.cpp
           Card.cpp
