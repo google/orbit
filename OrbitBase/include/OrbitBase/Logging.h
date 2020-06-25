@@ -79,9 +79,9 @@ static void VARIADIC_UNUSED(Args... args) {
 #define UNLIKELY(cond) (!!(cond))
 #endif
 
-#define FAIL_IF(assertion, format, ...) \
+#define FAIL_IF(condition, format, ...) \
   do {                                  \
-    if (UNLIKELY(assertion)) {          \
+    if (UNLIKELY(condition)) {          \
       FATAL(format, ##__VA_ARGS__);     \
     }                                   \
   } while (0)

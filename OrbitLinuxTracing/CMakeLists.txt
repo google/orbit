@@ -23,8 +23,7 @@ target_sources(OrbitLinuxTracing PUBLIC
         include/OrbitLinuxTracing/Function.h
         include/OrbitLinuxTracing/OrbitTracing.h
         include/OrbitLinuxTracing/Tracer.h
-        include/OrbitLinuxTracing/TracerListener.h
-        include/OrbitLinuxTracing/TracingOptions.h)
+        include/OrbitLinuxTracing/TracerListener.h)
 
 target_sources(OrbitLinuxTracing PRIVATE
         ContextSwitchManager.cpp
@@ -61,6 +60,7 @@ target_sources(OrbitLinuxTracing PRIVATE
 
 target_link_libraries(OrbitLinuxTracing PUBLIC
         OrbitBase
+        OrbitProtos
         abseil::abseil
         libunwindstack::libunwindstack)
 

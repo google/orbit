@@ -14,6 +14,28 @@
 
 namespace LinuxTracing {
 
+TracerThread::TracerThread(const CaptureOptions& capture_options)
+    : trace_context_switches_{capture_options.trace_context_switches()},
+      pid_{capture_options.pid()},
+      unwinding_method_{capture_options.unwinding_method()},
+      trace_gpu_driver_{capture_options.trace_gpu_driver()} {
+  std::optional<uint64_t> sampling_period_ns =
+      ComputeSamplingPeriodNs(capture_options.sampling_rate());
+  FAIL_IF(!sampling_period_ns.has_value(), "Invalid sampling rate: %.1f",
+          capture_options.sampling_rate());
+  sampling_period_ns_ = sampling_period_ns.value();
+
+  instrumented_functions_.clear();
+  instrumented_functions_.reserve(
+      capture_options.instrumented_functions_size());
+  for (const CaptureOptions::InstrumentedFunction& instrumented_function :
+       capture_options.instrumented_functions()) {
+    instrumented_functions_.emplace_back(
+        instrumented_function.file_path(), instrumented_function.file_offset(),
+        instrumented_function.absolute_address());
+  }
+}
+
 namespace {
 void CloseFileDescriptors(const std::vector<int>& fds) {
   for (int fd : fds) {
@@ -189,15 +211,16 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
   std::vector<PerfEventRingBuffer> sampling_ring_buffers;
   for (int32_t cpu : cpus) {
     int sampling_fd;
-    switch (tracing_options_.sampling_method) {
-      case SamplingMethod::kFramePointers:
+    switch (unwinding_method_) {
+      case CaptureOptions::kFramePointers:
         sampling_fd = callchain_sample_event_open(sampling_period_ns_, -1, cpu);
         break;
-      case SamplingMethod::kDwarf:
+      case CaptureOptions::kDwarf:
         sampling_fd = stack_sample_event_open(sampling_period_ns_, -1, cpu);
         break;
-      case SamplingMethod::kOff:
-        FATAL("Sampling is off. This statement is unreachable.");
+      case CaptureOptions::kUndefined:
+      default:
+        UNREACHABLE();
         CloseFileDescriptors(sampling_tracing_fds);
         return false;
     }
@@ -218,10 +241,9 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
   for (int fd : sampling_tracing_fds) {
     tracing_fds_.push_back(fd);
     uint64_t stream_id = perf_event_get_id(fd);
-    if (tracing_options_.sampling_method == SamplingMethod::kDwarf) {
+    if (unwinding_method_ == CaptureOptions::kDwarf) {
       stack_sampling_ids_.insert(stream_id);
-    } else if (tracing_options_.sampling_method ==
-               SamplingMethod::kFramePointers) {
+    } else if (unwinding_method_ == CaptureOptions::kFramePointers) {
       callchain_sampling_ids_.insert(stream_id);
     }
   }
@@ -350,7 +372,7 @@ void TracerThread::Run(
 
   bool perf_event_open_errors = false;
 
-  if (tracing_options_.trace_context_switches) {
+  if (trace_context_switches_) {
     perf_event_open_errors |= !OpenContextSwitches(all_cpus);
   }
 
@@ -359,7 +381,7 @@ void TracerThread::Run(
   perf_event_open_errors |= !OpenMmapTask(cpuset_cpus);
 
   bool uprobes_event_open_errors = false;
-  if (tracing_options_.trace_instrumented_functions) {
+  if (!instrumented_functions_.empty()) {
     uprobes_event_open_errors = !OpenUprobes(cpuset_cpus);
     perf_event_open_errors |= uprobes_event_open_errors;
   }
@@ -370,12 +392,13 @@ void TracerThread::Run(
   // want to catch it.
   InitUprobesEventProcessor();
 
-  if (tracing_options_.sampling_method != SamplingMethod::kOff) {
+  if (unwinding_method_ == CaptureOptions::kFramePointers ||
+      unwinding_method_ == CaptureOptions::kDwarf) {
     perf_event_open_errors |= !OpenSampling(cpuset_cpus);
   }
 
   bool gpu_event_open_errors = false;
-  if (tracing_options_.trace_gpu_driver) {
+  if (trace_gpu_driver_) {
     if (InitGpuTracepointEventProcessor()) {
       // We want to trace all GPU activity, hence we pass 'all_cpus' here.
       gpu_event_open_errors = !OpenGpuTracepoints(all_cpus);

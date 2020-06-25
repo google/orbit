@@ -11,18 +11,17 @@
 #include "ContextSwitch.h"
 #include "LinuxCallstackEvent.h"
 #include "LinuxTracingBuffer.h"
-#include "OrbitLinuxTracing/TracingOptions.h"
 #include "OrbitProcess.h"
 #include "SamplingProfiler.h"
 #include "ScopeTimer.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
+#include "capture.pb.h"
 
 class LinuxTracingHandler : public LinuxTracing::TracerListener {
  public:
-  explicit LinuxTracingHandler(LinuxTracingBuffer* tracing_buffer,
-                               LinuxTracing::TracingOptions tracing_options)
-      : tracing_buffer_{tracing_buffer}, tracing_options_{tracing_options} {}
+  explicit LinuxTracingHandler(LinuxTracingBuffer* tracing_buffer)
+      : tracing_buffer_{tracing_buffer} {}
 
   ~LinuxTracingHandler() override = default;
   LinuxTracingHandler(const LinuxTracingHandler&) = delete;
@@ -30,8 +29,7 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   LinuxTracingHandler(LinuxTracingHandler&&) = delete;
   LinuxTracingHandler& operator=(LinuxTracingHandler&&) = delete;
 
-  void Start(pid_t pid,
-             const std::vector<std::shared_ptr<Function>>& selected_functions);
+  void Start(CaptureOptions capture_options);
   bool IsStarted();
   void Stop();
 
@@ -46,7 +44,6 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   uint64_t ProcessStringAndGetKey(const std::string& string);
 
   LinuxTracingBuffer* tracing_buffer_;
-  LinuxTracing::TracingOptions tracing_options_;
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
 
   absl::flat_hash_set<uint64_t> addresses_seen_;

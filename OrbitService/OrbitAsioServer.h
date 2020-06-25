@@ -11,12 +11,11 @@
 #include "FramePointerValidatorServiceImpl.h"
 #include "LinuxTracingBuffer.h"
 #include "LinuxTracingHandler.h"
-#include "OrbitLinuxTracing/TracingOptions.h"
 
 class OrbitAsioServer {
  public:
   explicit OrbitAsioServer(uint16_t port,
-                           LinuxTracing::TracingOptions tracing_options);
+                           CaptureOptions capture_options);
   void LoopTick();
 
  private:
@@ -35,6 +34,6 @@ class OrbitAsioServer {
   std::vector<std::shared_ptr<Function>> selected_functions_;
   std::thread tracing_buffer_thread_;
   LinuxTracingBuffer tracing_buffer_;
-  LinuxTracing::TracingOptions tracing_options_;
-  LinuxTracingHandler tracing_handler_{&tracing_buffer_, tracing_options_};
+  CaptureOptions capture_options_;
+  LinuxTracingHandler tracing_handler_;
 };

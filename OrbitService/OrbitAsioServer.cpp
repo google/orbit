@@ -6,13 +6,15 @@
 
 #include <OrbitLinuxTracing/OrbitTracing.h>
 
+#include <utility>
+
 #include "Core.h"
 #include "Introspection.h"
 #include "TcpServer.h"
 
-OrbitAsioServer::OrbitAsioServer(uint16_t port,
-                                 LinuxTracing::TracingOptions tracing_options)
-    : tracing_options_{tracing_options} {
+OrbitAsioServer::OrbitAsioServer(uint16_t port, CaptureOptions capture_options)
+    : capture_options_{std::move(capture_options)},
+      tracing_handler_{&tracing_buffer_} {
   // TODO: Don't use the GTcpServer global. Unfortunately, it's needed in
   //  TcpConnection::DecodeMessage.
   GTcpServer = std::make_unique<TcpServer>();
@@ -66,7 +68,18 @@ void OrbitAsioServer::StartCapture(int32_t pid) {
   }
 
   LOG("Starting capture");
-  tracing_handler_.Start(pid, selected_functions_);
+
+  CaptureOptions capture_options = capture_options_;
+  capture_options.set_pid(pid);
+  for (const std::shared_ptr<Function>& function : selected_functions_) {
+    CaptureOptions::InstrumentedFunction* instrumented_function =
+        capture_options.add_instrumented_functions();
+    instrumented_function->set_file_path(function->GetLoadedModulePath());
+    instrumented_function->set_file_offset(function->Offset());
+    instrumented_function->set_absolute_address(function->GetVirtualAddress());
+  }
+
+  tracing_handler_.Start(capture_options);
   tracing_buffer_thread_ = std::thread{[this] { TracingBufferThread(); }};
 }
 
