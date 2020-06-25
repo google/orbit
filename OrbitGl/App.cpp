@@ -412,22 +412,14 @@ void OrbitApp::ListSessions() {
       Path::ListFiles(Path::GetPresetPath(), ".opr");
   std::vector<std::shared_ptr<Session>> sessions;
   for (std::string& filename : sessionFileNames) {
-    std::ifstream file(filename, std::ios::binary);
-    if (file.fail()) {
-      ERROR("Loading session from \"%s\": %s", filename, "file.fail()");
-      continue;
+    auto session = std::make_shared<Session>();
+    outcome::result<void, std::string> result = 
+      ReadSessionFromFile(filename, session.get());
+    if (result.has_error()) {
+      ERROR("Loading session failed: \"%s\"", result.error());
     }
-
-    try {
-      auto session = std::make_shared<Session>();
-      cereal::BinaryInputArchive archive(file);
-      archive(*session);
-      file.close();
-      session->m_FileName = filename;
-      sessions.push_back(session);
-    } catch (std::exception& e) {
-      ERROR("Loading session from \"%s\": %s", filename, e.what());
-    }
+    session->m_FileName = filename;
+    sessions.push_back(session);
   }
 
   m_SessionsDataView->SetSessions(sessions);
@@ -654,40 +646,51 @@ void OrbitApp::SetClipboard(const std::string& text) {
 
 //-----------------------------------------------------------------------------
 outcome::result<void, std::string> OrbitApp::OnSaveSession(
-    const std::string& file_name) {
-  OUTCOME_TRY(Capture::SaveSession(file_name));
+    const std::string& filename) {
+  OUTCOME_TRY(Capture::SaveSession(filename));
   ListSessions();
   Refresh(DataViewType::SESSIONS);
   return outcome::success();
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> OrbitApp::OnLoadSession(
-    const std::string& file_name) {
-  std::string file_path = file_name;
+outcome::result<void, std::string> OrbitApp::ReadSessionFromFile(
+  const std::string& filename, Session* session) {
+  std::string file_path = filename;
 
-  if (Path::GetDirectory(file_name).empty()) {
-    file_path = Path::JoinPath({Path::GetPresetPath(), file_name});
+  if (Path::GetDirectory(filename).empty()) {
+    file_path = Path::JoinPath({Path::GetPresetPath(), filename});
   }
 
-  std::ifstream file(file_path);
+  std::ifstream file(file_path, std::ios::binary);
   if (file.fail()) {
     ERROR("Loading session from \"%s\": %s", file_path, "file.fail()");
     return outcome::failure("Error opening the file for reading");
   }
 
   try {
-    auto session = std::make_shared<Session>();
     cereal::BinaryInputArchive archive(file);
     archive(*session);
     file.close();
-    session->m_FileName = file_path;
-    LoadSession(session);
     return outcome::success();
   } catch (std::exception& e) {
     ERROR("Loading session from \"%s\": %s", file_path, e.what());
-    return outcome::failure("Error parsing the session");
+    return outcome::failure("Error reading the session");
   }
+}
+
+//-----------------------------------------------------------------------------
+outcome::result<void, std::string> OrbitApp::OnLoadSession(
+    const std::string& filename) {
+  auto session = std::make_shared<Session>();
+  outcome::result<void, std::string> result = 
+    ReadSessionFromFile(filename, session.get());
+  if (result.has_error()) {
+    return result;
+  }
+  session->m_FileName = filename;
+  LoadSession(session);
+  return outcome::success();
 }
 
 //-----------------------------------------------------------------------------

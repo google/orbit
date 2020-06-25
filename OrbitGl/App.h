@@ -234,6 +234,9 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
                              const std::shared_ptr<Session>& session);
   std::shared_ptr<Process> FindProcessByPid(int32_t pid);
 
+  outcome::result<void, std::string> ReadSessionFromFile(
+    const std::string& filename, Session* session);
+
   ApplicationOptions options_;
 
   absl::Mutex process_map_mutex_;
