@@ -233,6 +233,9 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
                              const std::shared_ptr<Module>& module,
                              const std::shared_ptr<Session>& session);
 
+  outcome::result<void, std::string> ReadSessionFromFile(
+    const std::string& filename, Session* session);
+
   ApplicationOptions options_;
 
   std::vector<std::string> m_Arguments;
