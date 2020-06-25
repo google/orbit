@@ -21,7 +21,6 @@ enum MessageType : int16_t {
   Msg_NewCaptureID,
   Msg_StartCapture,
   Msg_StopCapture,
-  Msg_FunctionHook,
   Msg_SavedContext,
   Msg_ClearArgTracking,
   Msg_ArgTracking,
