@@ -664,7 +664,7 @@ outcome::result<void, std::string> OrbitApp::ReadSessionFromFile(
 
   std::ifstream file(file_path, std::ios::binary);
   if (file.fail()) {
-    ERROR("Loading session from \"%s\": %s", file_path, "file.fail()");
+    ERROR("Loading session from \"%s\": file.fail()", file_path);
     return outcome::failure("Error opening the file for reading");
   }
 
