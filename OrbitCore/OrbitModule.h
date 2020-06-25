@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
 #include <memory.h>
@@ -57,14 +56,4 @@ struct Module {
   bool loaded_ = false;
 
   friend class TestRemoteMessages;
-};
-
-//-----------------------------------------------------------------------------
-struct ModuleDebugInfo {
-  std::string m_Name;
-  std::vector<std::shared_ptr<Function>> m_Functions;
-  uint64_t load_bias;
-  std::string m_PdbName;
-  int32_t m_PID;
-  ORBIT_SERIALIZABLE;
 };
