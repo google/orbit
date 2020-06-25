@@ -408,15 +408,16 @@ void OrbitApp::LoadFileMapping() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ListSessions() {
-  std::vector<std::string> sessionFileNames =
+  std::vector<std::string> session_filenames =
       Path::ListFiles(Path::GetPresetPath(), ".opr");
   std::vector<std::shared_ptr<Session>> sessions;
-  for (std::string& filename : sessionFileNames) {
+  for (std::string& filename : session_filenames) {
     auto session = std::make_shared<Session>();
     outcome::result<void, std::string> result = 
       ReadSessionFromFile(filename, session.get());
     if (result.has_error()) {
       ERROR("Loading session failed: \"%s\"", result.error());
+      continue;
     }
     session->m_FileName = filename;
     sessions.push_back(session);
@@ -655,7 +656,7 @@ outcome::result<void, std::string> OrbitApp::OnSaveSession(
 
 //-----------------------------------------------------------------------------
 outcome::result<void, std::string> OrbitApp::ReadSessionFromFile(
-  const std::string& filename, Session* session) {
+    const std::string& filename, Session* session) {
   std::string file_path = filename;
 
   if (Path::GetDirectory(filename).empty()) {
