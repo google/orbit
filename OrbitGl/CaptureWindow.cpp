@@ -1034,7 +1034,7 @@ void CaptureWindow::RenderToolbars() {
   bool new_filter = Capture::GFunctionFilter != find_filter_;
   if (new_filter) {
     strncpy(find_filter_, Capture::GFunctionFilter.c_str(), kFilterLength);
-    find_filter_[kFilterLength-1] = 0;
+    find_filter_[kFilterLength - 1] = 0;
     ImGui::ClearActiveID();
   }
 
