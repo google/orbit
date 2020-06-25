@@ -4,6 +4,8 @@
 
 #include "SymbolHelper.h"
 
+#include <absl/strings/str_format.h>
+
 #include <fstream>
 
 #include "ElfFile.h"
@@ -150,15 +152,49 @@ bool SymbolHelper::LoadSymbolsIncludedInBinary(
   return LoadFromElfFile(module, elf_file);
 }
 
-bool SymbolHelper::LoadSymbolsCollector(std::shared_ptr<Module> module) const {
-  if (LoadSymbolsIncludedInBinary(module)) return true;
+outcome::result<ModuleSymbols, std::string> SymbolHelper::LoadSymbolsCollector(
+    const std::string& module_path) const {
+  std::unique_ptr<ElfFile> elf_file = ElfFile::Create(module_path);
 
-  if (!CheckModuleHasBuildId(module)) return false;
+  if (!elf_file) {
+    return absl::StrFormat("Unable to load ELF file: \"%s\"", module_path);
+  }
 
-  std::vector<std::string> search_directories = collector_symbol_directories_;
-  search_directories.emplace_back(Path::GetDirectory(module->m_FullName));
+  const auto module = std::make_shared<Module>();
+  module->m_FullName = module_path;
+  module->m_DebugSignature = elf_file->GetBuildId();
+  module->m_Name = Path::GetFileName(module_path);
 
-  return FindAndLoadSymbols(module, search_directories);
+  if (elf_file->HasSymtab()) {
+    if (!LoadFromElfFile(module, elf_file)) {
+      return absl::StrFormat("Error while loading symbols from file: \"%s\"",
+                             module_path);
+    }
+  } else {
+    std::vector<std::string> search_directories = collector_symbol_directories_;
+    search_directories.emplace_back(Path::GetDirectory(module->m_FullName));
+
+    if (!FindAndLoadSymbols(module, search_directories)) {
+      return absl::StrFormat("No symbols found on remote for module \"%s\"",
+                             module_path);
+    }
+  }
+
+  ModuleSymbols module_symbols;
+  module_symbols.set_load_bias(module->m_Pdb->GetLoadBias());
+  module_symbols.set_symbols_file_path(module->m_Pdb->GetFileName());
+
+  for (const auto& function : module->m_Pdb->GetFunctions()) {
+    SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
+    symbol_info->set_name(function->Name());
+    symbol_info->set_pretty_name(function->PrettyName());
+    symbol_info->set_address(function->Address());
+    symbol_info->set_size(function->Size());
+    symbol_info->set_source_file(function->File());
+    symbol_info->set_source_line(function->Line());
+  }
+
+  return module_symbols;
 }
 
 bool SymbolHelper::LoadSymbolsUsingSymbolsFile(
