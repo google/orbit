@@ -56,10 +56,6 @@ void LinuxTracingHandler::Stop() {
   tracer_.reset();
 }
 
-void LinuxTracingHandler::OnTid(pid_t /*tid*/) {
-  // Do nothing.
-}
-
 void LinuxTracingHandler::OnSchedulingSlice(
     const LinuxTracing::SchedulingSlice& scheduling_slice) {
   Timer timer;

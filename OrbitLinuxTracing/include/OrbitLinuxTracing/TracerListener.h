@@ -12,7 +12,6 @@ namespace LinuxTracing {
 class TracerListener {
  public:
   virtual ~TracerListener() = default;
-  virtual void OnTid(pid_t tid) = 0;
   virtual void OnSchedulingSlice(const SchedulingSlice& scheduling_slice) = 0;
   virtual void OnCallstack(const Callstack& callstack) = 0;
   virtual void OnFunctionCall(const FunctionCall& function_call) = 0;
