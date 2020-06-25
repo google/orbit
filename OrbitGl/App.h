@@ -14,6 +14,7 @@
 
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
+#include "CaptureClient.h"
 #include "ContextSwitch.h"
 #include "CoreApp.h"
 #include "CrashManager.h"
@@ -258,6 +259,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   std::unique_ptr<MainThreadExecutor> main_thread_executor_;
   std::unique_ptr<ThreadPool> thread_pool_;
+  std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessManager> process_manager_;
   std::unique_ptr<DataManager> data_manager_;
   std::unique_ptr<CrashManager> crash_manager_;

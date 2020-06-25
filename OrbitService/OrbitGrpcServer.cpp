@@ -6,6 +6,7 @@
 
 #include <absl/flags/flag.h>
 
+#include "CaptureServiceImpl.h"
 #include "CrashServiceImpl.h"
 #include "FramePointerValidatorServiceImpl.h"
 #include "ProcessServiceImpl.h"
@@ -29,9 +30,10 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
   void Wait() override;
 
  private:
-  CrashServiceImpl crash_service_;
+  CaptureServiceImpl capture_service_;
   ProcessServiceImpl process_service_;
   FramePointerValidatorServiceImpl frame_pointer_validator_service_;
+  CrashServiceImpl crash_service_;
   std::unique_ptr<grpc::Server> server_;
 };
 
@@ -43,6 +45,7 @@ void OrbitGrpcServerImpl::Init(std::string_view server_address) {
 
   builder.AddListeningPort(std::string(server_address),
                            grpc::InsecureServerCredentials());
+  builder.RegisterService(&capture_service_);
   builder.RegisterService(&process_service_);
   builder.RegisterService(&frame_pointer_validator_service_);
   if (absl::GetFlag(FLAGS_devmode)) {

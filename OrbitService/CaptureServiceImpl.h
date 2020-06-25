@@ -1,6 +1,17 @@
-#ifndef ORBITSERVICE_CAPTURESERVICEIMPL_H_
-#define ORBITSERVICE_CAPTURESERVICEIMPL_H_
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-class CaptureServiceImpl {};
+#ifndef ORBIT_SERVICE_CAPTURE_SERVICE_IMPL_H_
+#define ORBIT_SERVICE_CAPTURE_SERVICE_IMPL_H_
 
-#endif  // ORBITSERVICE_CAPTURESERVICEIMPL_H_
+#include "services.grpc.pb.h"
+
+class CaptureServiceImpl final : public CaptureService::Service {
+ public:
+  grpc::Status Capture(grpc::ServerContext* context,
+                       grpc::ServerReaderWriter<CaptureEvent, CaptureRequest>*
+                           reader_writer) override;
+};
+
+#endif  // ORBIT_SERVICE_CAPTURE_SERVICE_IMPL_H_

@@ -272,6 +272,8 @@ void OrbitApp::PostInit() {
             options_.grpc_server_address);
     }
 
+    capture_client_ = std::make_unique<CaptureClient>(grpc_channel_);
+
     // TODO: Replace refresh_timeout with config option. Let users to modify it.
     process_manager_ =
         ProcessManager::Create(grpc_channel_, absl::Milliseconds(1000));
@@ -730,6 +732,8 @@ bool OrbitApp::StartCapture() {
     return false;
   }
 
+  thread_pool_->Schedule([this] { capture_client_->Capture(); });
+
   for (const CaptureStartedCallback& callback : capture_started_callbacks_) {
     callback();
   }
@@ -740,6 +744,8 @@ bool OrbitApp::StartCapture() {
 //-----------------------------------------------------------------------------
 void OrbitApp::StopCapture() {
   Capture::StopCapture();
+
+  capture_client_->StopCapture();
 
   for (const CaptureStopRequestedCallback& callback :
        capture_stop_requested_callbacks_) {
