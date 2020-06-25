@@ -683,11 +683,7 @@ outcome::result<void, std::string> OrbitApp::ReadSessionFromFile(
 outcome::result<void, std::string> OrbitApp::OnLoadSession(
     const std::string& filename) {
   auto session = std::make_shared<Session>();
-  outcome::result<void, std::string> result = 
-    ReadSessionFromFile(filename, session.get());
-  if (result.has_error()) {
-    return result;
-  }
+OUTCOME_TRY(ReadSessionFromFile(filename, session.get()));
   session->m_FileName = filename;
   LoadSession(session);
   return outcome::success();
