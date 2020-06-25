@@ -8,7 +8,6 @@
 #include <OrbitLinuxTracing/Events.h>
 #include <OrbitLinuxTracing/Function.h>
 #include <OrbitLinuxTracing/TracerListener.h>
-#include <OrbitLinuxTracing/TracingOptions.h>
 #include <unistd.h>
 
 #include <atomic>
@@ -18,14 +17,14 @@
 #include <thread>
 #include <vector>
 
+#include "capture.pb.h"
+
 namespace LinuxTracing {
 
 class Tracer {
  public:
-  static constexpr double DEFAULT_SAMPLING_FREQUENCY = 1000.0;
-
-  Tracer(pid_t pid, double sampling_frequency,
-         std::vector<Function> instrumented_functions);
+  explicit Tracer(CaptureOptions capture_options)
+      : capture_options_{std::move(capture_options)} {}
 
   ~Tracer() { Stop(); }
 
@@ -36,15 +35,10 @@ class Tracer {
 
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
-  void SetTracingOptions(TracingOptions tracing_options) {
-    tracing_options_ = tracing_options;
-  }
-
   void Start() {
     *exit_requested_ = false;
-    thread_ = std::make_shared<std::thread>(
-        &Tracer::Run, pid_, sampling_period_ns_, instrumented_functions_,
-        listener_, tracing_options_, exit_requested_);
+    thread_ = std::make_shared<std::thread>(&Tracer::Run, capture_options_,
+                                            listener_, exit_requested_);
   }
 
   bool IsTracing() { return thread_ != nullptr && thread_->joinable(); }
@@ -58,15 +52,9 @@ class Tracer {
   }
 
  private:
-  pid_t pid_;
-  uint64_t sampling_period_ns_;
-  std::vector<Function> instrumented_functions_;
+  CaptureOptions capture_options_;
 
   TracerListener* listener_ = nullptr;
-  TracingOptions tracing_options_{.trace_context_switches = true,
-                                  .sampling_method = SamplingMethod::kDwarf,
-                                  .trace_instrumented_functions = true,
-                                  .trace_gpu_driver = true};
 
   // exit_requested_ must outlive this object because it is used by thread_.
   // The control block of shared_ptr is thread safe (i.e., reference counting
@@ -75,23 +63,9 @@ class Tracer {
       std::make_unique<std::atomic<bool>>(true);
   std::shared_ptr<std::thread> thread_;
 
-  static void Run(pid_t pid, uint64_t sampling_period_ns,
-                  const std::vector<Function>& instrumented_functions,
+  static void Run(const CaptureOptions& capture_options,
                   TracerListener* listener,
-                  const TracingOptions& tracing_options,
                   const std::shared_ptr<std::atomic<bool>>& exit_requested);
-
-  static std::optional<uint64_t> ComputeSamplingPeriodNs(
-      double sampling_frequency) {
-    double period_ns_dbl = 1'000'000'000 / sampling_frequency;
-    if (period_ns_dbl > 0 &&
-        period_ns_dbl <=
-            static_cast<double>(std::numeric_limits<uint64_t>::max())) {
-      return std::optional<uint64_t>(period_ns_dbl);
-    } else {
-      return std::optional<uint64_t>();
-    }
-  }
 };
 
 }  // namespace LinuxTracing

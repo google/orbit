@@ -4,44 +4,18 @@
 
 #include "LinuxTracingHandler.h"
 
-#include <functional>
-
 #include "Callstack.h"
-#include "ContextSwitch.h"
 #include "OrbitLinuxTracing/Events.h"
-#include "OrbitLinuxTracing/TracingOptions.h"
-#include "OrbitModule.h"
 #include "absl/flags/flag.h"
 #include "llvm/Demangle/Demangle.h"
 
-// TODO: Remove this flag once we enable specifying the sampling frequency or
-//  period in the client.
-ABSL_FLAG(uint16_t, sampling_rate, 1000,
-          "Frequency of callstack sampling in samples per second");
-
-void LinuxTracingHandler::Start(
-    pid_t pid,
-    const std::vector<std::shared_ptr<Function>>& selected_functions) {
+void LinuxTracingHandler::Start(CaptureOptions capture_options) {
   addresses_seen_.clear();
   callstack_hashes_seen_.clear();
   string_manager_.Clear();
 
-  double sampling_rate = absl::GetFlag(FLAGS_sampling_rate);
-
-  std::vector<LinuxTracing::Function> instrumented_functions;
-  instrumented_functions.reserve(selected_functions.size());
-  for (const std::shared_ptr<Function>& function : selected_functions) {
-    instrumented_functions.emplace_back(function->GetLoadedModulePath(),
-                                        function->Offset(),
-                                        function->GetVirtualAddress());
-  }
-
-  tracer_ = std::make_unique<LinuxTracing::Tracer>(pid, sampling_rate,
-                                                   instrumented_functions);
-
+  tracer_ = std::make_unique<LinuxTracing::Tracer>(std::move(capture_options));
   tracer_->SetListener(this);
-  tracer_->SetTracingOptions(tracing_options_);
-
   tracer_->Start();
 }
 

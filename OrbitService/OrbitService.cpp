@@ -42,7 +42,7 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
   grpc_server = OrbitGrpcServer::Create(grpc_address);
 
   LOG("Starting Asio server on port %i", asio_port_);
-  OrbitAsioServer asio_server{asio_port_, tracing_options_};
+  OrbitAsioServer asio_server{asio_port_, capture_options_};
 
   // make stdin non blocking
   fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);

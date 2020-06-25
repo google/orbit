@@ -8,7 +8,6 @@
 #include <OrbitLinuxTracing/Events.h>
 #include <OrbitLinuxTracing/Function.h>
 #include <OrbitLinuxTracing/TracerListener.h>
-#include <OrbitLinuxTracing/TracingOptions.h>
 #include <linux/perf_event.h>
 
 #include <atomic>
@@ -28,16 +27,13 @@
 #include "Utils.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "capture.pb.h"
 
 namespace LinuxTracing {
 
 class TracerThread {
  public:
-  TracerThread(pid_t pid, uint64_t sampling_period_ns,
-               std::vector<Function> instrumented_functions)
-      : pid_(pid),
-        sampling_period_ns_(sampling_period_ns),
-        instrumented_functions_(std::move(instrumented_functions)) {}
+  explicit TracerThread(const CaptureOptions& capture_options);
 
   TracerThread(const TracerThread&) = delete;
   TracerThread& operator=(const TracerThread&) = delete;
@@ -46,13 +42,21 @@ class TracerThread {
 
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
-  void SetTracingOptions(const TracingOptions& tracing_options) {
-    tracing_options_ = tracing_options;
-  }
-
   void Run(const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
  private:
+  static std::optional<uint64_t> ComputeSamplingPeriodNs(
+      double sampling_frequency) {
+    double period_ns_dbl = 1'000'000'000 / sampling_frequency;
+    if (period_ns_dbl > 0 &&
+        period_ns_dbl <=
+            static_cast<double>(std::numeric_limits<uint64_t>::max())) {
+      return std::optional<uint64_t>(period_ns_dbl);
+    } else {
+      return std::nullopt;
+    }
+  }
+
   bool OpenContextSwitches(const std::vector<int32_t>& cpus);
   void InitUprobesEventProcessor();
   bool OpenUprobes(const std::vector<int32_t>& cpus);
@@ -102,12 +106,14 @@ class TracerThread {
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_RING_BUFFERS_US = 100;
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_DEFERRED_EVENTS_US = 1000;
 
+  bool trace_context_switches_;
   pid_t pid_;
   uint64_t sampling_period_ns_;
+  CaptureOptions::UnwindingMethod unwinding_method_;
   std::vector<Function> instrumented_functions_;
+  bool trace_gpu_driver_;
 
   TracerListener* listener_ = nullptr;
-  TracingOptions tracing_options_;
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
