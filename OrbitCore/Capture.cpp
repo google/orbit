@@ -49,6 +49,7 @@ ULONG64 Capture::GNumLinuxEvents;
 ULONG64 Capture::GNumProfileEvents;
 std::string Capture::GPresetToLoad;
 std::string Capture::GProcessToInject;
+std::string Capture::GFunctionFilter;
 
 std::vector<std::shared_ptr<Function>> Capture::GSelectedFunctions;
 std::map<uint64_t, Function*> Capture::GSelectedFunctionsMap;

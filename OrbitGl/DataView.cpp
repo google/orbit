@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "DataView.h"
 
 #include <fstream>
@@ -57,6 +55,13 @@ void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
 void DataView::OnFilter(const std::string& filter) {
   m_Filter = filter;
   DoFilter();
+}
+
+//-----------------------------------------------------------------------------
+void DataView::SetUiFilterString(const std::string& filter) {
+  if (filter_callback_) {
+    filter_callback_(filter);
+  }
 }
 
 //-----------------------------------------------------------------------------

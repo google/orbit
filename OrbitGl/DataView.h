@@ -7,6 +7,7 @@
 
 #include <OrbitBase/Logging.h>
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -48,7 +49,16 @@ class DataView {
   virtual std::string GetValue(int /*a_Row*/, int /*a_Column*/) { return ""; }
   virtual std::string GetToolTip(int /*a_Row*/, int /*a_Column*/) { return ""; }
 
+  // Called from UI layer.
   void OnFilter(const std::string& filter);
+  // Called internally to set the filter string programmatically in the UI.
+  void SetUiFilterString(const std::string& filter);
+  // Filter callback set from UI layer.
+  typedef std::function<void(const std::string&)> FilterCallback;
+  void SetUiFilterCallback(FilterCallback callback) {
+    filter_callback_ = callback;
+  }
+
   void OnSort(int column, std::optional<SortingOrder> new_order);
   virtual void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                              const std::vector<int>& a_ItemIndices);
@@ -78,6 +88,7 @@ class DataView {
   void InitSortingOrders();
   virtual void DoSort() {}
   virtual void DoFilter() {}
+  FilterCallback filter_callback_;
 
   std::vector<uint32_t> m_Indices;
   std::vector<SortingOrder> m_SortingOrders;

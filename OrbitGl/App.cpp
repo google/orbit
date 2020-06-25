@@ -1173,5 +1173,6 @@ void OrbitApp::InitializeClientTransactions() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::FilterFunctions(const std::string& filter) {
-  m_LiveFunctionsDataView->OnFilter(filter);
+  Capture::GFunctionFilter = filter;
+  m_LiveFunctionsDataView->SetUiFilterString(filter);
 }
