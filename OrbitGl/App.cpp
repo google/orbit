@@ -295,6 +295,25 @@ void OrbitApp::PostInit() {
             process_manager->GetProcessList();
         data_manager_->UpdateProcessInfos(process_infos);
         m_ProcessesDataView->SetProcessList(process_infos);
+        {
+          // TODO: remove this part when client stops using Process class
+          absl::MutexLock lock(&process_map_mutex_);
+          for (const ProcessInfo& info : process_infos) {
+            auto it = process_map_.find(info.pid());
+            if (it != process_map_.end()) {
+              continue;
+            }
+
+            std::shared_ptr<Process> process = std::make_shared<Process>();
+            process->SetID(info.pid());
+            process->SetName(info.name());
+            process->SetFullPath(info.full_path());
+            process->SetIsRemote(true);
+            // The other fields do not appear to be used at the moment.
+
+            process_map_.insert_or_assign(process->GetID(), process);
+          }
+        }
 
         if (m_ProcessesDataView->GetSelectedProcessId() == -1 &&
             m_ProcessesDataView->GetFirstProcessId() != -1) {
@@ -1018,15 +1037,7 @@ void OrbitApp::OnProcessSelected(int32_t pid) {
 
         // TODO: remove this part when all client code is moved to
         // new data model.
-        std::shared_ptr<Process> process = std::make_shared<Process>();
-        process->SetID(pid);
-        ProcessData* process_data = data_manager_->GetProcessByPid(pid);
-        if (process_data != nullptr) {
-          process->SetName(process_data->name());
-        }
-        process->SetIsRemote(true);
-        process->SetFullPath(process_data->full_path());
-
+        std::shared_ptr<Process> process = FindProcessByPid(pid);
         Capture::SetTargetProcess(process);
 
         for (const ModuleInfo& info : module_infos) {
@@ -1069,6 +1080,16 @@ void OrbitApp::EnableUploadDumpsToServer(bool a_Value) {
 }
 
 //-----------------------------------------------------------------------------
+std::shared_ptr<Process> OrbitApp::FindProcessByPid(int32_t pid) {
+  absl::MutexLock lock(&process_map_mutex_);
+  auto it = process_map_.find(pid);
+  if (it == process_map_.end()) {
+    return nullptr;
+  }
+
+  return it->second;
+}
+
 void OrbitApp::UpdateSamplingReport() {
   if (sampling_report_ != nullptr) {
     sampling_report_->UpdateReport();

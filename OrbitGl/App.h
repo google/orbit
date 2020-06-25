@@ -232,8 +232,12 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void SymbolLoadingFinished(uint32_t process_id,
                              const std::shared_ptr<Module>& module,
                              const std::shared_ptr<Session>& session);
+  std::shared_ptr<Process> FindProcessByPid(int32_t pid);
 
   ApplicationOptions options_;
+
+  absl::Mutex process_map_mutex_;
+  absl::flat_hash_map<uint32_t, std::shared_ptr<Process>> process_map_;
 
   std::vector<std::string> m_Arguments;
   std::vector<CaptureStartedCallback> capture_started_callbacks_;
