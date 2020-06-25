@@ -403,11 +403,6 @@ void TracerThread::Run(
     perf_event_enable(fd);
   }
 
-  for (pid_t tid : ListThreads(pid_)) {
-    // Keep threads in sync.
-    listener_->OnTid(tid);
-  }
-
   stats_.Reset();
 
   bool last_iteration_saw_events = false;
@@ -570,7 +565,7 @@ void TracerThread::ProcessForkEvent(const perf_event_header& header,
   }
 
   // A new thread of the sampled process was spawned.
-  listener_->OnTid(event.GetTid());
+  // Nothing to do for now.
 }
 
 void TracerThread::ProcessExitEvent(const perf_event_header& header,
@@ -582,7 +577,7 @@ void TracerThread::ProcessExitEvent(const perf_event_header& header,
     return;
   }
 
-  // Nothing to do.
+  // Nothing to do for now.
 }
 
 void TracerThread::ProcessMmapEvent(const perf_event_header& header,

@@ -35,7 +35,6 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   bool IsStarted();
   void Stop();
 
-  void OnTid(pid_t tid) override;
   void OnSchedulingSlice(
       const LinuxTracing::SchedulingSlice& scheduling_slice) override;
   void OnCallstack(const LinuxTracing::Callstack& callstack) override;
