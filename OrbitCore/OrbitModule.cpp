@@ -93,24 +93,6 @@ uint64_t Module::ValidateAddress(uint64_t a_Address) {
 //-----------------------------------------------------------------------------
 void Module::SetLoaded(bool value) { loaded_ = value; }
 
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(Module, 1) {
-  ORBIT_NVP_VAL(0, m_Name);
-  ORBIT_NVP_VAL(0, m_FullName);
-  ORBIT_NVP_VAL(0, m_PdbName);
-  ORBIT_NVP_VAL(0, m_Directory);
-  ORBIT_NVP_VAL(0, m_PrettyName);
-  ORBIT_NVP_VAL(0, m_AddressRange);
-  ORBIT_NVP_VAL(0, m_DebugSignature);
-  ORBIT_NVP_VAL(0, m_AddressStart);
-  ORBIT_NVP_VAL(0, m_AddressEnd);
-  ORBIT_NVP_VAL(0, m_EntryPoint);
-  ORBIT_NVP_VAL(1, loadable_);
-  ORBIT_NVP_VAL(0, m_Selected);
-  ORBIT_NVP_VAL(1, loaded_);
-  ORBIT_NVP_VAL(0, m_PdbSize);
-}
-
 #ifndef WIN32
 
 //-----------------------------------------------------------------------------

@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #ifndef ORBIT_CORE_PROCESS_UTILS_H_
 #define ORBIT_CORE_PROCESS_UTILS_H_
 
@@ -26,8 +24,6 @@ class ProcessList {
   std::shared_ptr<Process> GetProcess(int32_t pid) const;
   const std::vector<std::shared_ptr<Process>>& GetProcesses() const;
   size_t Size() const;
-
-  ORBIT_SERIALIZABLE;
 
  private:
   std::vector<std::shared_ptr<Process>> processes_;

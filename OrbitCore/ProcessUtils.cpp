@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "ProcessUtils.h"
 
 #include <memory>
@@ -243,8 +241,3 @@ const std::vector<std::shared_ptr<Process>>& ProcessList::GetProcesses() const {
 }
 
 size_t ProcessList::Size() const { return processes_.size(); }
-
-ORBIT_SERIALIZE(ProcessList, 0) {
-  ORBIT_NVP_VAL(0, processes_);
-  ORBIT_NVP_VAL(0, processes_map_);
-}
