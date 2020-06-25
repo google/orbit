@@ -4,6 +4,7 @@
 
 #ifndef SYMBOL_HELPER_H_
 #define SYMBOL_HELPER_H_
+#include <outcome.hpp>
 #include <string>
 #include <vector>
 
@@ -20,7 +21,8 @@ class SymbolHelper {
         symbols_file_directories_(std::move(symbols_file_directories)){};
 
   bool LoadSymbolsIncludedInBinary(std::shared_ptr<Module> module) const;
-  bool LoadSymbolsCollector(std::shared_ptr<Module> module) const;
+  outcome::result<ModuleSymbols, std::string> LoadSymbolsCollector(
+      const std::string& module_path) const;
   bool LoadSymbolsUsingSymbolsFile(std::shared_ptr<Module> module) const;
   void LoadSymbolsIntoModule(const std::shared_ptr<Module>& module,
                              const ModuleSymbols& module_symbols) const;

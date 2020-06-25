@@ -6,7 +6,6 @@
 
 #include <memory>
 
-#include "OrbitModule.h"
 #include "SymbolHelper.h"
 #include "symbol.pb.h"
 
@@ -102,30 +101,16 @@ Status ProcessServiceImpl::GetSymbols(ServerContext*,
   module->m_FullName = request->module_path();
 
   const SymbolHelper symbol_helper;
-  if (!symbol_helper.LoadSymbolsCollector(module)) {
-    std::string error_message = absl::StrFormat(
-        "No symbols found on remote for module \"%s\"", request->module_path());
-    ERROR("%s", error_message.c_str());
-    return Status(StatusCode::NOT_FOUND, error_message);
-  }
+  const auto load_result =
+      symbol_helper.LoadSymbolsCollector(request->module_path());
 
-  ModuleSymbols* module_symbols = response->mutable_module_symbols();
-  module_symbols->set_load_bias(module->m_Pdb->GetLoadBias());
-  module_symbols->set_symbols_file_path(module->m_Pdb->GetFileName());
+  if (!load_result) return Status(StatusCode::NOT_FOUND, load_result.error());
 
-  for (const auto& function : module->m_Pdb->GetFunctions()) {
-    SymbolInfo* symbol_info = module_symbols->add_symbol_infos();
-    symbol_info->set_name(function->Name());
-    symbol_info->set_pretty_name(function->PrettyName());
-    symbol_info->set_address(function->Address());
-    symbol_info->set_size(function->Size());
-    symbol_info->set_source_file(function->File());
-    symbol_info->set_source_line(function->Line());
-  }
+  *response->mutable_module_symbols() = std::move(load_result.value());
 
   LOG("Loaded %lu symbols for module %s, (size: %d bytes)",
-      module_symbols->symbol_infos().size(), request->module_path(),
-      module_symbols->ByteSize());
+      response->module_symbols().symbol_infos().size(), request->module_path(),
+      response->ByteSize());
 
   return Status::OK;
 }
