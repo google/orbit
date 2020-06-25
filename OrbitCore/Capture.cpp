@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "Capture.h"
 
 #include <fstream>
@@ -27,7 +25,6 @@
 #include "TcpClient.h"
 #include "TcpForward.h"
 #include "TcpServer.h"
-#include "TestRemoteMessages.h"
 #include "TimerManager.h"
 #include "absl/strings/str_format.h"
 
@@ -547,6 +544,3 @@ void Capture::PreSave() {
     GSamplingProfiler->UpdateAddressInfo(pair.first);
   }
 }
-
-//-----------------------------------------------------------------------------
-void Capture::TestRemoteMessages() { TestRemoteMessages::Get().Run(); }

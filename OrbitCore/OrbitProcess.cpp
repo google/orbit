@@ -422,20 +422,3 @@ uint64_t Process::GetRaiseExceptionAddress() {
 
   return 0;
 }
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(Process, 4) {
-  ORBIT_NVP_VAL(0, m_Name);
-  ORBIT_NVP_VAL(3, m_FullPath);
-  ORBIT_NVP_VAL(3, m_CmdLine);
-  ORBIT_NVP_VAL(0, m_ID);
-  ORBIT_NVP_VAL(0, m_IsElevated);
-  ORBIT_NVP_VAL(0, m_CpuUsage);
-  ORBIT_NVP_VAL(0, m_Is64Bit);
-  ORBIT_NVP_VAL(0, m_DebugInfoLoaded);
-  ORBIT_NVP_VAL(0, m_IsRemote);
-  ORBIT_NVP_VAL(0, m_Modules);
-  ORBIT_NVP_VAL(0, m_NameToModuleMap);
-  ORBIT_NVP_VAL(1, m_Modules);
-  ORBIT_NVP_VAL(2, m_ThreadNames);
-}

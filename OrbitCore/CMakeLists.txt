@@ -65,7 +65,6 @@ target_sources(
          TcpEntity.h
          TcpServer.h
          TcpForward.h
-         TestRemoteMessages.h
          Threading.h
          TidAndThreadName.h
          TimerManager.h
@@ -117,7 +116,6 @@ target_sources(
           TcpClient.cpp
           TcpEntity.cpp
           TcpServer.cpp
-          TestRemoteMessages.cpp
           TimerManager.cpp
           Utils.cpp
           Variable.cpp

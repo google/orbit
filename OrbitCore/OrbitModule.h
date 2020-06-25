@@ -49,8 +49,6 @@ struct Module {
 
   mutable std::shared_ptr<Pdb> m_Pdb;
 
-  ORBIT_SERIALIZABLE;
-
  private:
   bool loadable_ = false;
   bool loaded_ = false;

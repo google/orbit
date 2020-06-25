@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "ConnectionManager.h"
 
 #include <streambuf>
@@ -17,7 +15,6 @@
 #include "SamplingProfiler.h"
 #include "Serialization.h"
 #include "TcpClient.h"
-#include "TestRemoteMessages.h"
 #include "TidAndThreadName.h"
 #include "TimerManager.h"
 

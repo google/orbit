@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
 #include <chrono>
@@ -60,7 +59,6 @@ class Capture {
   static void CheckForUnrealSupport();
   static void PreSave();
 
-  static void TestRemoteMessages();
   static class TcpEntity* GetMainTcpEntity();
 
   static State GState;

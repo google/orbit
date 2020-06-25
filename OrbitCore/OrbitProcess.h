@@ -131,8 +131,6 @@ class Process {
   uint64_t GetOutputDebugStringAddress();
   uint64_t GetRaiseExceptionAddress();
 
-  ORBIT_SERIALIZABLE;
-
  private:
   void ClearTransients();
 
