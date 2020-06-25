@@ -1032,7 +1032,7 @@ void CaptureWindow::RenderToolbars() {
 
   // Set function filter text programmatically if needed.
   bool new_filter = Capture::GFunctionFilter != find_filter_;
-  if( new_filter ) {
+  if (new_filter) {
     strncpy(find_filter_, Capture::GFunctionFilter.c_str(), kFilterLength);
     ImGui::ClearActiveID();
   }
@@ -1053,7 +1053,7 @@ void CaptureWindow::RenderToolbars() {
 
   if (ImGui::InputText("##Search", find_filter_, kFilterLength)) {
     // Don't treat programmatically set InputText as user input.
-    if( !new_filter ) {
+    if (!new_filter) {
       GOrbitApp->FilterFunctions(find_filter_);
     }
   }
