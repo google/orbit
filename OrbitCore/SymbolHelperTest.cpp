@@ -39,42 +39,25 @@ TEST(SymbolHelper, LoadSymbolsCollectorSameFile) {
   const std::string executable_name = "hello_world_elf";
   const std::string file_path = executable_directory + executable_name;
 
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
-
   SymbolHelper symbol_helper({executable_directory}, {});
-  ASSERT_TRUE(symbol_helper.LoadSymbolsCollector(module));
-
-  EXPECT_NE(module->m_Pdb, nullptr);
-  EXPECT_EQ(module->m_PdbName, file_path);
-  EXPECT_TRUE(module->IsLoaded());
-
-  Pdb& pdb = *module->m_Pdb;
-  EXPECT_EQ(pdb.GetLoadedModuleName(), file_path);
-  EXPECT_EQ(pdb.GetFileName(), file_path);
-  EXPECT_EQ(pdb.GetName(), executable_name);
+  const auto symbols_result = symbol_helper.LoadSymbolsCollector(file_path);
+  ASSERT_TRUE(symbols_result);
+  ModuleSymbols symbols = std::move(symbols_result.value());
+  EXPECT_EQ(symbols.symbols_file_path(), file_path);
 }
 
 TEST(SymbolHelper, LoadSymbolsCollectorSeparateFile) {
   const std::string executable_name = "no_symbols_elf";
   const std::string file_path = executable_directory + executable_name;
 
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
-  module->m_DebugSignature = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
-
   std::string symbols_file_name = "no_symbols_elf.debug";
   std::string symbols_path = executable_directory + symbols_file_name;
 
   SymbolHelper symbol_helper({executable_directory}, {});
-  ASSERT_TRUE(symbol_helper.LoadSymbolsCollector(module));
-
-  EXPECT_NE(module->m_Pdb, nullptr);
-  EXPECT_EQ(module->m_PdbName, symbols_path);
-  EXPECT_TRUE(module->IsLoaded());
-
-  Pdb& pdb = *module->m_Pdb;
-  EXPECT_EQ(pdb.GetLoadedModuleName(), file_path);
-  EXPECT_EQ(pdb.GetFileName(), symbols_path);
-  EXPECT_EQ(pdb.GetName(), symbols_file_name);
+  const auto symbols_result = symbol_helper.LoadSymbolsCollector(file_path);
+  ASSERT_TRUE(symbols_result);
+  ModuleSymbols symbols = std::move(symbols_result.value());
+  EXPECT_EQ(symbols.symbols_file_path(), symbols_path);
 }
 
 TEST(SymbolHelper, LoadSymbolsUsingSymbolsFile) {
