@@ -1,0 +1,82 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+message SchedulingSlice {
+  int32 pid = 1;
+  int32 tid = 2;
+  int32 core = 3;
+  uint64 in_timestamp_ns = 4;
+  uint64 out_timestamp_ns = 5;
+}
+
+message Callstack {
+  repeated uint64 pcs = 1;
+}
+
+message InternedCallstack {
+  uint64 key = 1;
+  Callstack intern = 2;
+}
+
+message CallstackSample {
+  int32 pid = 1;
+  int32 tid = 2;
+  oneof callstack_or_key {
+    Callstack callstack = 3;
+    uint64 callstack_key = 4;
+  }
+  uint64 timestamp_ns = 5;
+}
+
+message FunctionCall {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 absolute_address = 3;
+  uint64 begin_timestamp_ns = 4;
+  uint64 end_timestamp_ns = 5;
+  int32 depth = 6;
+  uint64 return_value = 7;
+}
+
+message InternedString {
+  uint64 key = 1;
+  string intern = 2;
+}
+
+message GpuJob {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint32 context = 3;
+  uint32 seqno = 4;
+  oneof timeline_or_key {
+    string timeline = 5;
+    uint64 timeline_key = 6;
+  }
+  int32 depth = 7;
+  uint64 amdgpu_cs_ioctl_time_ns = 8;
+  uint64 amdgpu_sched_run_job_time_ns = 9;
+  uint64 gpu_hardware_start_time_ns = 10;
+  uint64 dma_fence_signaled_time_ns = 11;
+}
+
+message ThreadName {
+  int32 pid = 1;
+  int32 tid = 2;
+  string name = 3;
+  uint64 timestamp_ns = 4;
+}
+
+message CaptureEvent {
+  oneof event {
+    SchedulingSlice scheduling_slice = 1;
+    InternedCallstack interned_callstack = 2;
+    CallstackSample callstack_sample = 3;
+    FunctionCall function_call = 4;
+    InternedString interned_string = 5;
+    GpuJob gpu_job = 6;
+    ThreadName thread_name = 7;
+  }
+}
