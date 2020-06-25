@@ -68,6 +68,7 @@ class Capture {
   static std::string GInjectedProcess;
   static std::string GPresetToLoad;  // TODO: allow multiple presets
   static std::string GProcessToInject;
+  static std::string GFunctionFilter;
   static bool GIsSampling;
   static bool GIsTesting;
   static uint32_t GFunctionIndex;

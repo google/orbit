@@ -2,10 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "orbitdataviewpanel.h"
 
+#include <string>
 #include <utility>
 
 #include "ui_orbitdataviewpanel.h"
@@ -35,6 +34,9 @@ void OrbitDataViewPanel::Initialize(DataView* data_view,
     this->ui->label->setText(QString::fromStdString(label));
     this->ui->label->show();
   }
+
+  data_view->SetUiFilterCallback(
+      [this](const std::string& filter) { SetFilter(filter.c_str()); });
 }
 
 //-----------------------------------------------------------------------------

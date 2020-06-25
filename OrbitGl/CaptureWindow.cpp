@@ -1030,6 +1030,14 @@ void CaptureWindow::RenderToolbars() {
   current_x += ImGui::GetWindowWidth() + space_between_toolbars;
   ImGui::End();
 
+  // Set function filter text programmatically if needed.
+  bool new_filter = Capture::GFunctionFilter != find_filter_;
+  if (new_filter) {
+    strncpy(find_filter_, Capture::GFunctionFilter.c_str(), kFilterLength);
+    find_filter_[kFilterLength - 1] = 0;
+    ImGui::ClearActiveID();
+  }
+
   // Search Toolbar.
   ImGui::SetNextWindowPos(ImVec2(current_x, 0));
   ImGui::Begin("Search", &m_DrawHelp, ImVec2(0, 0), 1.f,
@@ -1043,9 +1051,14 @@ void CaptureWindow::RenderToolbars() {
     ImGui::SetTooltip("Search");
   ImGui::SameLine();
   ImGui::PushItemWidth(300.f);
-  ImGui::InputText("##Search", find_filter_, IM_ARRAYSIZE(find_filter_));
+
+  if (ImGui::InputText("##Search", find_filter_, kFilterLength)) {
+    // Don't treat programmatically set InputText as user input.
+    if (!new_filter) {
+      GOrbitApp->FilterFunctions(find_filter_);
+    }
+  }
   ImGui::PopItemWidth();
-  GOrbitApp->FilterFunctions(find_filter_);
 
   current_x += ImGui::GetWindowWidth() + space_between_toolbars;
   ImGui::End();
