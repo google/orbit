@@ -93,7 +93,7 @@ TEST(ThreadPool, ExtendThreadPool) {
   };
 
   {
-    // Schedule 2 actions and check we have one worker thread
+    // Schedule an action and check we have one worker thread
     absl::MutexLock lock(&actions_executed_mutex);
     thread_pool->Schedule(action);
 
@@ -105,6 +105,8 @@ TEST(ThreadPool, ExtendThreadPool) {
         << "actions_started=" << actions_started << ", expected 1";
     actions_started_mutex.Unlock();
 
+    EXPECT_EQ(thread_pool->GetPoolSize(), 1);
+
     // Schedule another action and check that there are 2 workers threads now.
     thread_pool->Schedule(action);
 
@@ -115,6 +117,8 @@ TEST(ThreadPool, ExtendThreadPool) {
         absl::Milliseconds(100)));
     actions_started_mutex.Unlock();
 
+    EXPECT_EQ(thread_pool->GetPoolSize(), 2);
+
     // Add more and make sure worker thread number remains kThreadPoolMaxSize
     for (size_t i = 0; i < 5; ++i) {
       thread_pool->Schedule(action);
@@ -122,6 +126,8 @@ TEST(ThreadPool, ExtendThreadPool) {
 
     // I do not think there is a way around it - sleep for 100ms
     absl::SleepFor(absl::Milliseconds(100));
+
+    EXPECT_EQ(thread_pool->GetPoolSize(), kThreadPoolMaxSize);
 
     actions_started_mutex.Lock();
     EXPECT_EQ(actions_started, kThreadPoolMaxSize);

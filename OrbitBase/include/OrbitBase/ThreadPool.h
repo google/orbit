@@ -51,6 +51,8 @@ class ThreadPool {
     Wait();
   }
 
+  virtual size_t GetPoolSize() = 0;
+
   // Create ThreadPool with specified minimum and maximum number of worker
   // threads.
   //
