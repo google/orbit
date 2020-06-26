@@ -28,6 +28,12 @@ target_sources(OrbitServiceLib PRIVATE
         ProcessServiceImpl.cpp
         ProcessServiceImpl.h)
 
+if (NOT WIN32)
+  target_sources(OrbitServiceLib PRIVATE
+          LinuxTracingHandler.cpp
+          LinuxTracingHandler.h)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set_target_properties(OrbitServiceLib PROPERTIES COMPILE_FLAGS /wd4127)
 endif()
