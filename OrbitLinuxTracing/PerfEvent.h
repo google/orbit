@@ -5,11 +5,10 @@
 #ifndef ORBIT_LINUX_TRACING_PERF_EVENT_H_
 #define ORBIT_LINUX_TRACING_PERF_EVENT_H_
 
-#include <OrbitLinuxTracing/Function.h>
-
 #include <array>
 #include <memory>
 
+#include "Function.h"
 #include "MakeUniqueForOverwrite.h"
 #include "PerfEventRecords.h"
 

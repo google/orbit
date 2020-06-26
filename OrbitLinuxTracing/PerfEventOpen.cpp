@@ -6,11 +6,11 @@
 
 #include <OrbitBase/Logging.h>
 #include <OrbitBase/SafeStrerror.h>
-#include <OrbitLinuxTracing/Function.h>
 #include <linux/perf_event.h>
 
 #include <cerrno>
 
+#include "Function.h"
 #include "Utils.h"
 
 namespace LinuxTracing {
