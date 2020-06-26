@@ -38,7 +38,6 @@
 #include "Log.h"
 #include "LogDataView.h"
 #include "ModulesDataView.h"
-#include "OrbitAsm.h"
 #include "OrbitSession.h"
 #include "Params.h"
 #include "Pdb.h"

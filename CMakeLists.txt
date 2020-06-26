@@ -120,7 +120,6 @@ find_package(GMock REQUIRED)
 find_package(Filesystem REQUIRED)
 
 if(WIN32)
-  find_package(minhook REQUIRED)
   find_package(peparse REQUIRED)
 endif()
 
@@ -131,15 +130,7 @@ add_definitions(-DUNICODE -D_UNICODE)
 
 if(WIN32)
   add_definitions(-DWIN32)
-
-  add_subdirectory(OrbitDll)
-  add_subdirectory(OrbitAsm)
 else()
-  # Hack: Some parts on linux depend on headers in OrbitAsm, but OrbitAsm is not
-  # available for Windows.
-  add_library(OrbitAsm INTERFACE)
-  target_include_directories(OrbitAsm INTERFACE OrbitAsm/)
-
   add_subdirectory(OrbitLinuxTracing)
   add_subdirectory(OrbitService)
 endif()
@@ -165,7 +156,6 @@ endif()
 
 # Collecting third-party licenses
 file(COPY third_party/concurrentqueue/LICENSE.md DESTINATION ${CMAKE_BINARY_DIR}/licenses/concurrentqueue/)
-file(COPY third_party/minhook/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/minhook/)
 file(COPY third_party/multicore/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/multicore/)
 file(COPY third_party/peparse/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/peparse/)
 file(COPY third_party/xxHash-r42/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/xxhash/)
