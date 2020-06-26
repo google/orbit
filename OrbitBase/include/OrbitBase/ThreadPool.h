@@ -8,6 +8,7 @@
 #include <memory>
 
 #include "OrbitBase/Action.h"
+#include "absl/time/time.h"
 
 // This class implements a thread pool. ThreadPool allows to execute
 // actions in another thread without the need to manage creation and destruction
@@ -62,10 +63,13 @@ class ThreadPool {
   // the thread pool creates a new worker thread if current number of worker
   // threads is less than maximum pool size.
   //
-  // TODO: If queue is empty thread_pool reduces number of worker threads
-  // until they hit thread_pool_min_size
+  // If queue is empty thread_pool reduces number of worker threads
+  // until they hit thread_pool_min_size. thread_ttl specifies the duration
+  // for the such a thread to remain in idle state before it finishes the
+  // execution.
   static std::unique_ptr<ThreadPool> Create(size_t thread_pool_min_size,
-                                            size_t thread_pool_max_size);
+                                            size_t thread_pool_max_size,
+                                            absl::Duration thread_ttl);
 };
 
 #endif  // ORBIT_BASE_THREAD_POOL_H_
