@@ -152,3 +152,14 @@ inline void DeserializeObjectBinary(const std::string& data, T& object) {
   ORBIT_SERIALIZATION_TEMPLATE_INST(x); \
   template <class Archive>              \
   void x::serialize(Archive& a_Archive, std::uint32_t const a_Version)
+
+namespace OrbitCore {
+template <typename Archive>
+struct is_input_archive
+    : std::integral_constant<
+          bool,
+          std::is_base_of_v<cereal::detail::InputArchiveBase,
+                            cereal::traits::detail::decay_archive<Archive>>> {};
+template <typename Archive>
+inline constexpr bool is_input_archive_v = is_input_archive<Archive>::value;
+}  // namespace OrbitCore
