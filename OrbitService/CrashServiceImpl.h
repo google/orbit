@@ -10,8 +10,8 @@
 class CrashServiceImpl final : public CrashService::Service {
  public:
   grpc::Status CrashOrbitService(grpc::ServerContext* context,
-                                 const GetCrashRequest* request,
-                                 GetCrashResponse* response) override;
+                                 const CrashOrbitServiceRequest* request,
+                                 CrashOrbitServiceResponse* response) override;
 };
 
 #endif  // ORBIT_SERIVICE_CRASH_SERVICE_IMPL_H_

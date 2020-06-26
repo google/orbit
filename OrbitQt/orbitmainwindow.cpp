@@ -859,15 +859,15 @@ void OrbitMainWindow::on_actionStackOverflow_triggered() {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionServiceCheckFalse_triggered() {
-  GOrbitApp->CrashOrbitService(GetCrashRequest_CrashType_CHECK_FALSE);
+  GOrbitApp->CrashOrbitService(CrashOrbitServiceRequest_CrashType_CHECK_FALSE);
 }
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionServiceNullPointerDereference_triggered() {
-  GOrbitApp->CrashOrbitService(GetCrashRequest_CrashType_NULL_POINTER_DEREFERENCE);
+  GOrbitApp->CrashOrbitService(CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE);
 }
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
-  GOrbitApp->CrashOrbitService(GetCrashRequest_CrashType_STACK_OVERFLOW);
+  GOrbitApp->CrashOrbitService(CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW);
 }
