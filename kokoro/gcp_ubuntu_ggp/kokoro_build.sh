@@ -32,25 +32,27 @@ if [ "$0" == "$SCRIPT" ]; then
   conan package -bf "${DIR}/build/" "${DIR}"
 
   build_type=${KOKORO_JOB_NAME##*/}
-  if [ $build_type=release ] || [ $build_type=nightly ] || [ $build_type=continuous_on_release_branch ]; then
+  if [ "$build_type" = "release" ] || [ "$build_type" = "nightly" ] || [ "$build_type" = "continuous_on_release_branch" ]; then
     set +e
     ${DIR}/kokoro/gcp_ubuntu_ggp/upload_symbols.sh "${DIR}/build/bin"
     set -e
   fi
 
-  rm -rf ~/.gnupg/
-  rm -rf /dev/shm/signing.gpg
-  mkdir -p ~/.gnupg
-  chmod 700 ~/.gnupg
-  echo "allow-loopback-pinentry" > ~/.gnupg/gpg-agent.conf
+  if [ -f /mnt/keystore/74938_SigningPrivateGpg ]; then
+    rm -rf ~/.gnupg/
+    rm -rf /dev/shm/signing.gpg
+    mkdir -p ~/.gnupg
+    chmod 700 ~/.gnupg
+    echo "allow-loopback-pinentry" > ~/.gnupg/gpg-agent.conf
 
-  GPG_OPTIONS="--pinentry-mode loopback --batch --no-tty --yes --no-default-keyring --keyring /dev/shm/signing.gpg --passphrase-file /mnt/keystore/74938_SigningPrivateGpgKeyPassword"
+    GPG_OPTIONS="--pinentry-mode loopback --batch --no-tty --yes --no-default-keyring --keyring /dev/shm/signing.gpg --passphrase-file /mnt/keystore/74938_SigningPrivateGpgKeyPassword"
 
-  gpg ${GPG_OPTIONS} --import /mnt/keystore/74938_SigningPrivateGpg
+    gpg ${GPG_OPTIONS} --import /mnt/keystore/74938_SigningPrivateGpg
 
-  for deb in ${DIR}/build/package/*.deb; do
-    gpg ${GPG_OPTIONS} --output "$deb.asc" --detach-sign "$deb"
-  done
+    for deb in ${DIR}/build/package/*.deb; do
+      gpg ${GPG_OPTIONS} --output "$deb.asc" --detach-sign "$deb"
+    done
+  fi
 
   # Uploading prebuilt packages of our dependencies
   if [ -f /mnt/keystore/74938_orbitprofiler_artifactory_access_token ]; then
@@ -63,13 +65,15 @@ if [ "$0" == "$SCRIPT" ]; then
   fi
 
   # Package the Debian package and the signature into a zip for integration in the installer.
-  cd "${DIR}/build/package"
-  mkdir -p Orbit/collector
-  cp OrbitProfiler*.deb Orbit/collector/
-  cp OrbitProfiler*.deb.asc Orbit/collector/
-  zip Collector.zip -r Orbit
-  rm -rf Orbit
-  cd -
+  if [ -f /mnt/keystore/74938_SigningPrivateGpg ]; then
+    cd "${DIR}/build/package"
+    mkdir -p Orbit/collector
+    cp OrbitProfiler*.deb Orbit/collector/
+    cp OrbitProfiler*.deb.asc Orbit/collector/
+    zip Collector.zip -r Orbit
+    rm -rf Orbit
+    cd -
+  fi
 
   # Uncomment the three lines below to print the external ip into the log and
   # keep the vm alive for two hours. This is useful to debug build failures that
