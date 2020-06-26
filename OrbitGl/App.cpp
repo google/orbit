@@ -76,7 +76,8 @@ bool DoZoom = false;
 OrbitApp::OrbitApp(ApplicationOptions&& options)
     : options_(std::move(options)) {
   main_thread_executor_ = MainThreadExecutor::Create();
-  thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/);
+  thread_pool_ =
+      ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
   data_manager_ = std::make_unique<DataManager>(std::this_thread::get_id());
 #ifdef _WIN32
   m_Debugger = std::make_unique<Debugger>();

@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "OrbitBase/Logging.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 
 namespace {
@@ -15,7 +16,8 @@ namespace {
 class ThreadPoolImpl : public ThreadPool {
  public:
   explicit ThreadPoolImpl(size_t thread_pool_min_size,
-                          size_t thread_pool_max_size);
+                          size_t thread_pool_max_size,
+                          absl::Duration thread_ttl);
 
   size_t GetPoolSize() override;
   void Schedule(std::unique_ptr<Action> action) override;
@@ -24,28 +26,35 @@ class ThreadPoolImpl : public ThreadPool {
 
  private:
   bool ActionsAvailableOrShutdownInitiated();
-  // Blocking call - returns nullptr if shutdown initiated.
-  // This also decrements idle_threads_ counter (in should be
-  // done in the same scope as poping action from the queue).
+  // Blocking call - returns nullptr if the worker thread needs to exit.
   std::unique_ptr<Action> TakeAction();
+  void CleanupFinishedThreads();
   void CreateWorker();
   void WorkerFunction();
 
   absl::Mutex mutex_;
   std::list<std::unique_ptr<Action>> scheduled_actions_;
-  std::vector<std::thread> worker_threads_;
+  absl::flat_hash_map<std::thread::id, std::thread> worker_threads_;
+  std::vector<std::thread> finished_threads_;
+  size_t thread_pool_min_size_;
   size_t thread_pool_max_size_;
+  absl::Duration thread_ttl_;
   size_t idle_threads_;
   bool shutdown_initiated_;
 };
 
 ThreadPoolImpl::ThreadPoolImpl(size_t thread_pool_min_size,
-                               size_t thread_pool_max_size)
-    : thread_pool_max_size_(thread_pool_max_size),
+                               size_t thread_pool_max_size,
+                               absl::Duration thread_ttl)
+    : thread_pool_min_size_(thread_pool_min_size),
+      thread_pool_max_size_(thread_pool_max_size),
+      thread_ttl_(thread_ttl),
       idle_threads_(0),
       shutdown_initiated_(false) {
   CHECK(thread_pool_min_size > 0);
   CHECK(thread_pool_max_size >= thread_pool_min_size);
+  // Ttl should not be too small
+  CHECK(thread_ttl / absl::Nanoseconds(1) >= 1000);
 
   absl::MutexLock lock(&mutex_);
   for (size_t i = 0; i < thread_pool_min_size; ++i) {
@@ -56,7 +65,10 @@ ThreadPoolImpl::ThreadPoolImpl(size_t thread_pool_min_size,
 void ThreadPoolImpl::CreateWorker() {
   CHECK(!shutdown_initiated_);
   idle_threads_++;
-  worker_threads_.emplace_back([this] { WorkerFunction(); });
+  std::thread thread([this] { WorkerFunction(); });
+  std::thread::id thread_id = thread.get_id();
+  CHECK(!worker_threads_.contains(thread_id));
+  worker_threads_.insert_or_assign(thread_id, std::move(thread));
 }
 
 void ThreadPoolImpl::Schedule(std::unique_ptr<Action> action) {
@@ -68,6 +80,16 @@ void ThreadPoolImpl::Schedule(std::unique_ptr<Action> action) {
       worker_threads_.size() < thread_pool_max_size_) {
     CreateWorker();
   }
+
+  CleanupFinishedThreads();
+}
+
+void ThreadPoolImpl::CleanupFinishedThreads() {
+  for (std::thread& thread : finished_threads_) {
+    thread.join();
+  }
+
+  finished_threads_.clear();
 }
 
 size_t ThreadPoolImpl::GetPoolSize() {
@@ -83,14 +105,13 @@ void ThreadPoolImpl::Shutdown() {
 void ThreadPoolImpl::Wait() {
   absl::MutexLock lock(&mutex_);
   CHECK(shutdown_initiated_);
+  // First wait until all worker threads finished their work
+  // and moved to finished_threads_ list.
+  mutex_.Await(absl::Condition(
+      &worker_threads_,
+      &absl::flat_hash_map<std::thread::id, std::thread>::empty));
 
-  while (!worker_threads_.empty()) {
-    std::thread thread = std::move(worker_threads_.back());
-    worker_threads_.pop_back();
-    mutex_.Unlock();
-    thread.join();
-    mutex_.Lock();
-  }
+  CleanupFinishedThreads();
 }
 
 bool ThreadPoolImpl::ActionsAvailableOrShutdownInitiated() {
@@ -98,9 +119,19 @@ bool ThreadPoolImpl::ActionsAvailableOrShutdownInitiated() {
 }
 
 std::unique_ptr<Action> ThreadPoolImpl::TakeAction() {
-  absl::MutexLock lock(&mutex_);
-  mutex_.Await(absl::Condition(
-      this, &ThreadPoolImpl::ActionsAvailableOrShutdownInitiated));
+  while (true) {
+    if (mutex_.AwaitWithTimeout(
+            absl::Condition(
+                this, &ThreadPoolImpl::ActionsAvailableOrShutdownInitiated),
+            thread_ttl_)) {
+      break;
+    }
+
+    // Timed out - check if we need to reduce thread pool.
+    if (worker_threads_.size() > thread_pool_min_size_) {
+      return nullptr;
+    }
+  }
 
   if (scheduled_actions_.empty()) {
     return nullptr;
@@ -109,30 +140,30 @@ std::unique_ptr<Action> ThreadPoolImpl::TakeAction() {
   std::unique_ptr<Action> action = std::move(scheduled_actions_.front());
   scheduled_actions_.pop_front();
 
-  CHECK(idle_threads_ > 0);  // Sanity check
-  // Note: do not move this outside of this method. This has to be done in
-  // the same lock scope as taking an action from the queue to avoid a situation
-  // where the check in Schedule() does not create a worker thread because if it
-  // is called between taking action from a queue and reducing idle_thread_
-  // counter the idle_threads_ < scheduled_actions_.size() check will
-  // be false and the action will end up being stuck in the queue for some
-  // time.
-  --idle_threads_;
-
   return action;
 }
 
 void ThreadPoolImpl::WorkerFunction() {
   while (true) {
+    absl::MutexLock lock(&mutex_);
     std::unique_ptr<Action> action = TakeAction();
 
+    CHECK(idle_threads_ > 0);  // Sanity check
+    --idle_threads_;
+
     if (!action) {
+      // Move this thread from the worker_threads_ to finished_threads_.
+      std::thread::id thread_id = std::this_thread::get_id();
+      auto it = worker_threads_.find(thread_id);
+      CHECK(it != worker_threads_.end());
+      finished_threads_.push_back(std::move(it->second));
+      worker_threads_.erase(it);
       break;
     }
 
+    mutex_.Unlock();
     action->Execute();
-
-    absl::MutexLock lock(&mutex_);
+    mutex_.Lock();
     ++idle_threads_;
   }
 }
@@ -140,7 +171,8 @@ void ThreadPoolImpl::WorkerFunction() {
 };  // namespace
 
 std::unique_ptr<ThreadPool> ThreadPool::Create(size_t thread_pool_min_size,
-                                               size_t thread_pool_max_size) {
+                                               size_t thread_pool_max_size,
+                                               absl::Duration thread_ttl) {
   return std::make_unique<ThreadPoolImpl>(thread_pool_min_size,
-                                          thread_pool_max_size);
+                                          thread_pool_max_size, thread_ttl);
 }
