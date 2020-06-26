@@ -84,15 +84,14 @@ void LinuxTracingHandler::OnCallstack(
   }
 }
 
-void LinuxTracingHandler::OnFunctionCall(
-    const LinuxTracing::FunctionCall& function_call) {
+void LinuxTracingHandler::OnFunctionCall(FunctionCall function_call) {
   Timer timer;
-  timer.m_TID = function_call.GetTid();
-  timer.m_Start = function_call.GetBeginTimestampNs();
-  timer.m_End = function_call.GetEndTimestampNs();
-  timer.m_Depth = static_cast<uint8_t>(function_call.GetDepth());
-  timer.m_FunctionAddress = function_call.GetVirtualAddress();
-  timer.m_UserData[0] = function_call.GetIntegerReturnValue();
+  timer.m_TID = function_call.tid();
+  timer.m_Start = function_call.begin_timestamp_ns();
+  timer.m_End = function_call.end_timestamp_ns();
+  timer.m_Depth = static_cast<uint8_t>(function_call.depth());
+  timer.m_FunctionAddress = function_call.absolute_address();
+  timer.m_UserData[0] = function_call.return_value();
 
   tracing_buffer_->RecordTimer(std::move(timer));
 }
