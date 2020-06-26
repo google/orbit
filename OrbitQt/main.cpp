@@ -14,6 +14,12 @@
 #include <QProgressDialog>
 #include <QStyleFactory>
 
+#ifdef _WIN32
+#include <process.h>
+#else
+#include <unistd.h>
+#endif
+
 #include "App.h"
 #include "ApplicationOptions.h"
 #include "CrashHandler.h"
@@ -235,94 +241,100 @@ static void DisplayErrorToUser(const QString& message) {
 }
 
 int main(int argc, char* argv[]) {
-  const std::string log_file_path = Path::GetLogFilePath();
-  InitLogFile(log_file_path);
+  {
+    const std::string log_file_path = Path::GetLogFilePath();
+    InitLogFile(log_file_path);
 
-  absl::SetProgramUsageMessage("CPU Profiler");
-  absl::ParseCommandLine(argc, argv);
+    absl::SetProgramUsageMessage("CPU Profiler");
+    absl::ParseCommandLine(argc, argv);
 #if __linux__
-  QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
 #endif
 
-  OrbitGl::GlutContext glut_context{&argc, argv};
+    OrbitGl::GlutContext glut_context{&argc, argv};
 
-  QApplication app(argc, argv);
-  QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
-  QCoreApplication::setApplicationVersion(OrbitQt::kVersionString);
+    QApplication app(argc, argv);
+    QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
+    QCoreApplication::setApplicationVersion(OrbitQt::kVersionString);
 
-  const std::string dump_path = Path::GetDumpPath();
+    const std::string dump_path = Path::GetDumpPath();
 #ifdef _WIN32
-  const char* handler_name = "crashpad_handler.exe";
+    const char* handler_name = "crashpad_handler.exe";
 #else
-  const char* handler_name = "crashpad_handler";
+    const char* handler_name = "crashpad_handler";
 #endif
-  const std::string handler_path = QDir(QCoreApplication::applicationDirPath())
-                                       .absoluteFilePath(handler_name)
-                                       .toStdString();
-  const std::string crash_server_url = CrashServerOptions::GetUrl();
-  const std::vector<std::string> attachments = {Path::GetLogFilePath()};
+    const std::string handler_path =
+        QDir(QCoreApplication::applicationDirPath())
+            .absoluteFilePath(handler_name)
+            .toStdString();
+    const std::string crash_server_url = CrashServerOptions::GetUrl();
+    const std::vector<std::string> attachments = {Path::GetLogFilePath()};
 
-  CrashHandler crash_handler(dump_path, handler_path, crash_server_url,
-                             attachments);
+    CrashHandler crash_handler(dump_path, handler_path, crash_server_url,
+                               attachments);
 
-  ApplicationOptions options;
-  ParseLegacyCommandLine(argc, argv, &options);
+    ApplicationOptions options;
+    ParseLegacyCommandLine(argc, argv, &options);
 
-  StyleOrbit(app);
+    StyleOrbit(app);
 
-  const auto deployment_configuration = FigureOutDeploymentConfiguration();
+    const auto deployment_configuration = FigureOutDeploymentConfiguration();
 
-  const auto open_gl_version = OrbitQt::DetectOpenGlVersion();
+    const auto open_gl_version = OrbitQt::DetectOpenGlVersion();
 
-  if (!open_gl_version) {
-    DisplayErrorToUser(
-        "OpenGL support was not found. Please make sure you're not trying to "
-        "start Orbit in a remote session and make sure you have a recent "
-        "graphics driver installed. Then try again!");
-    return -1;
-  }
-
-  LOG("Detected OpenGL version: %i.%i", open_gl_version->major,
-      open_gl_version->minor);
-
-  if (open_gl_version->major < 2) {
-    DisplayErrorToUser(
-        QString(
-            "The minimum required version of OpenGL is 2.0. But this machine "
-            "only supports up to version %1.%2. Please make sure you're not "
-            "trying to start Orbit in a remote session and make sure you have "
-            "a recent graphics driver installed. Then try again!")
-            .arg(open_gl_version->major)
-            .arg(open_gl_version->minor));
-    return -1;
-  }
-
-  auto context = Context::Create();
-  if (!context) {
-    DisplayErrorToUser(
-        QString("An error occurred while initializing ssh: %1")
-            .arg(QString::fromStdString(context.error().message())));
-    return -1;
-  }
-
-  while (true) {
-    const auto result = RunUiInstance(&app, deployment_configuration,
-                                      &(context.value()), options);
-    if (result ||
-        result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
-        !deployment_configuration) {
-      // It was either a clean shutdown or the deliberately closed the
-      // dialog, or we started with the --local flag.
-      return 0;
-    } else if (result.error() ==
-               make_error_code(OrbitGgp::Error::kCouldNotUseGgpCli)) {
-      DisplayErrorToUser(QString::fromStdString(result.error().message()));
-      return 1;
-    } else if (result.error() !=
-               make_error_code(Error::kUserCanceledServiceDeployment)) {
+    if (!open_gl_version) {
       DisplayErrorToUser(
-          QString("An error occurred: %1")
-              .arg(QString::fromStdString(result.error().message())));
+          "OpenGL support was not found. Please make sure you're not trying to "
+          "start Orbit in a remote session and make sure you have a recent "
+          "graphics driver installed. Then try again!");
+      return -1;
+    }
+
+    LOG("Detected OpenGL version: %i.%i", open_gl_version->major,
+        open_gl_version->minor);
+
+    if (open_gl_version->major < 2) {
+      DisplayErrorToUser(
+          QString(
+              "The minimum required version of OpenGL is 2.0. But this machine "
+              "only supports up to version %1.%2. Please make sure you're not "
+              "trying to start Orbit in a remote session and make sure you "
+              "have a recent graphics driver installed. Then try again!")
+              .arg(open_gl_version->major)
+              .arg(open_gl_version->minor));
+      return -1;
+    }
+
+    auto context = Context::Create();
+    if (!context) {
+      DisplayErrorToUser(
+          QString("An error occurred while initializing ssh: %1")
+              .arg(QString::fromStdString(context.error().message())));
+      return -1;
+    }
+
+    while (true) {
+      const auto result = RunUiInstance(&app, deployment_configuration,
+                                        &(context.value()), options);
+      if (result ||
+          result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
+          !deployment_configuration) {
+        // It was either a clean shutdown or the deliberately closed the
+        // dialog, or we started with the --local flag.
+        return 0;
+      } else if (result.error() ==
+                 make_error_code(OrbitGgp::Error::kCouldNotUseGgpCli)) {
+        DisplayErrorToUser(QString::fromStdString(result.error().message()));
+        return 1;
+      } else if (result.error() !=
+                 make_error_code(Error::kUserCanceledServiceDeployment)) {
+        DisplayErrorToUser(
+            QString("An error occurred: %1")
+                .arg(QString::fromStdString(result.error().message())));
+        break;
+      }
     }
   }
+  execv(QCoreApplication::applicationFilePath().toUtf8().data(), argv);
+  UNREACHABLE();
 }
