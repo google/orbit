@@ -20,7 +20,6 @@ target_include_directories(OrbitLinuxTracing PRIVATE
 
 target_sources(OrbitLinuxTracing PUBLIC
         include/OrbitLinuxTracing/Events.h
-        include/OrbitLinuxTracing/Function.h
         include/OrbitLinuxTracing/OrbitTracing.h
         include/OrbitLinuxTracing/Tracer.h
         include/OrbitLinuxTracing/TracerListener.h)
@@ -28,6 +27,7 @@ target_sources(OrbitLinuxTracing PUBLIC
 target_sources(OrbitLinuxTracing PRIVATE
         ContextSwitchManager.cpp
         ContextSwitchManager.h
+        Function.h
         GpuTracepointEventProcessor.h
         GpuTracepointEventProcessor.cpp
         LibunwindstackUnwinder.cpp
