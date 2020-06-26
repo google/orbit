@@ -29,4 +29,8 @@ ORBIT_SERIALIZE(ContextSwitch, 0) {
   ORBIT_NVP_VAL(0, m_Time);
   ORBIT_NVP_VAL(0, m_ProcessorIndex);
   ORBIT_NVP_VAL(0, m_ProcessorNumber);
+
+  if constexpr (OrbitCore::is_input_archive_v<Archive>) {
+    CHECK(m_Type >= SwitchType::In && m_Type <= SwitchType::Invalid);
+  }
 }
