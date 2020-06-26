@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
 #include "PrintVar.h"
@@ -87,17 +86,6 @@ struct ScopeCounter {
 
 //-----------------------------------------------------------------------------
 template <typename T>
-inline std::string SerializeObjectHumanReadable(T& a_Object) {
-  std::stringstream ss;
-  {
-    cereal::JSONOutputArchive archive(ss);
-    archive(a_Object);
-  }
-  return ss.str();
-}
-
-//-----------------------------------------------------------------------------
-template <typename T>
 inline std::string SerializeObjectBinary(T& a_Object) {
   std::stringstream ss;
   {
@@ -151,15 +139,7 @@ inline void DeserializeObjectBinary(const std::string& data, T& object) {
   template void x::serialize<cereal::BinaryOutputArchive>(                     \
       cereal::BinaryOutputArchive & a_Archive, std::uint32_t const a_Version); \
   template void x::serialize<cereal::BinaryInputArchive>(                      \
-      cereal::BinaryInputArchive & a_Archive, std::uint32_t const a_Version);  \
-  template void x::serialize<cereal::XMLOutputArchive>(                        \
-      cereal::XMLOutputArchive & a_Archive, std::uint32_t const a_Version);    \
-  template void x::serialize<cereal::XMLInputArchive>(                         \
-      cereal::XMLInputArchive & a_Archive, std::uint32_t const a_Version);     \
-  template void x::serialize<cereal::JSONOutputArchive>(                       \
-      cereal::JSONOutputArchive & a_Archive, std::uint32_t const a_Version);   \
-  template void x::serialize<cereal::JSONInputArchive>(                        \
-      cereal::JSONInputArchive & a_Archive, std::uint32_t const a_Version);
+      cereal::BinaryInputArchive & a_Archive, std::uint32_t const a_Version);
 
 #define ORBIT_SERIALIZE_WSTRING(x, v)           \
   CEREAL_CLASS_VERSION(x, v);                   \
