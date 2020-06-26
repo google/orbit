@@ -61,9 +61,9 @@ CrashHandler::CrashHandler(const std::string& dump_path,
                                 /*database=*/dump_file_path,
                                 /*metrics_dir=*/dump_file_path,
                                 crash_server_url, annotations, arguments,
-                                attachments_paths,
                                 /*restartable=*/true,
-                                /*asynchronous_start=*/false);
+                                /*asynchronous_start=*/false,
+                                attachments_paths);
 }
 
 //-----------------------------------------------------------------------------
