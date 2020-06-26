@@ -276,7 +276,7 @@
     "options": "fPIC=True"
    },
    "30": {
-    "pref": "crashpad/20200616@orbitdeps/stable#35fdddb14928dc43f1662569f01fd197:5813ff386295f6a6b3834d8dd500156c91d9f78e#54982b874673be8934d211f049fb9ce8",
+    "pref": "crashpad/20200624@orbitdeps/stable#8c19cb575eb819de0b050cf7d1f317b6:5813ff386295f6a6b3834d8dd500156c91d9f78e#35b6b975ddf8cadefea50ffc92ecbe99",
     "options": "fPIC=True\nlinktime_optimization=False"
    },
    "31": {
