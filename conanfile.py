@@ -68,7 +68,7 @@ class OrbitConan(ConanFile):
 
         if self.options.with_gui:
             self.requires(
-                "crashpad/20200616@{}#35fdddb14928dc43f1662569f01fd197".format(self._orbit_channel))
+                "crashpad/20200624@{}#8c19cb575eb819de0b050cf7d1f317b6".format(self._orbit_channel))
             self.requires("freeglut/3.2.1@{}#0".format(self._orbit_channel))
             self.requires("freetype/2.10.0@bincrafters/stable#0")
             self.requires(
