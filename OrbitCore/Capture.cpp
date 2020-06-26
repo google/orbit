@@ -251,28 +251,6 @@ void Capture::ClearCaptureData() {
 }
 
 //-----------------------------------------------------------------------------
-MessageType GetMessageType(Function::OrbitType a_type) {
-  static std::map<Function::OrbitType, MessageType> typeMap;
-  if (typeMap.empty()) {
-    typeMap[Function::NONE] = Msg_FunctionHook;
-    typeMap[Function::ORBIT_TIMER_START] = Msg_FunctionHookZoneStart;
-    typeMap[Function::ORBIT_TIMER_STOP] = Msg_FunctionHookZoneStop;
-    typeMap[Function::ORBIT_LOG] = Msg_FunctionHook;
-    typeMap[Function::ORBIT_OUTPUT_DEBUG_STRING] =
-        Msg_FunctionHookOutputDebugString;
-    typeMap[Function::UNREAL_ACTOR] = Msg_FunctionHookUnrealActor;
-    typeMap[Function::ALLOC] = Msg_FunctionHookAlloc;
-    typeMap[Function::FREE] = Msg_FunctionHookFree;
-    typeMap[Function::REALLOC] = Msg_FunctionHookRealloc;
-    typeMap[Function::ORBIT_DATA] = Msg_FunctionHookOrbitData;
-  }
-
-  assert(typeMap.size() == Function::OrbitType::NUM_TYPES);
-
-  return typeMap[a_type];
-}
-
-//-----------------------------------------------------------------------------
 void Capture::PreFunctionHooks() {
   // Clear selected functions
   for (auto& selected_addresses : GSelectedAddressesByType) {
@@ -344,15 +322,6 @@ void Capture::SendFunctionHooks() {
   if (GUnrealSupported) {
     const OrbitUnrealInfo& info = GOrbitUnreal.GetUnrealInfo();
     GTcpServer->Send(Msg_OrbitUnrealInfo, info);
-  }
-
-  // Send all hooks by type
-  for (int i = 0; i < Function::NUM_TYPES; ++i) {
-    std::vector<uint64_t>& addresses = GSelectedAddressesByType[i];
-    if (!addresses.empty()) {
-      MessageType msgType = GetMessageType(static_cast<Function::OrbitType>(i));
-      GTcpServer->Send(msgType, addresses);
-    }
   }
 }
 
