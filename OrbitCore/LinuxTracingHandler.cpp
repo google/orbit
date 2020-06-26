@@ -105,28 +105,28 @@ uint64_t LinuxTracingHandler::ProcessStringAndGetKey(
   return key;
 }
 
-void LinuxTracingHandler::OnGpuJob(const LinuxTracing::GpuJob& gpu_job) {
+void LinuxTracingHandler::OnGpuJob(GpuJob gpu_job) {
   Timer timer_user_to_sched;
-  timer_user_to_sched.m_TID = gpu_job.GetTid();
-  timer_user_to_sched.m_Start = gpu_job.GetAmdgpuCsIoctlTimeNs();
-  timer_user_to_sched.m_End = gpu_job.GetAmdgpuSchedRunJobTimeNs();
-  timer_user_to_sched.m_Depth = gpu_job.GetDepth();
+  timer_user_to_sched.m_TID = gpu_job.tid();
+  timer_user_to_sched.m_Start = gpu_job.amdgpu_cs_ioctl_time_ns();
+  timer_user_to_sched.m_End = gpu_job.amdgpu_sched_run_job_time_ns();
+  timer_user_to_sched.m_Depth = gpu_job.depth();
 
   constexpr const char* sw_queue = "sw queue";
   uint64_t sw_queue_key = ProcessStringAndGetKey(sw_queue);
   timer_user_to_sched.m_UserData[0] = sw_queue_key;
 
-  uint64_t timeline_key = ProcessStringAndGetKey(gpu_job.GetTimeline());
+  uint64_t timeline_key = ProcessStringAndGetKey(gpu_job.timeline());
   timer_user_to_sched.m_UserData[1] = timeline_key;
 
   timer_user_to_sched.m_Type = Timer::GPU_ACTIVITY;
   tracing_buffer_->RecordTimer(std::move(timer_user_to_sched));
 
   Timer timer_sched_to_start;
-  timer_sched_to_start.m_TID = gpu_job.GetTid();
-  timer_sched_to_start.m_Start = gpu_job.GetAmdgpuSchedRunJobTimeNs();
-  timer_sched_to_start.m_End = gpu_job.GetGpuHardwareStartTimeNs();
-  timer_sched_to_start.m_Depth = gpu_job.GetDepth();
+  timer_sched_to_start.m_TID = gpu_job.tid();
+  timer_sched_to_start.m_Start = gpu_job.amdgpu_sched_run_job_time_ns();
+  timer_sched_to_start.m_End = gpu_job.gpu_hardware_start_time_ns();
+  timer_sched_to_start.m_Depth = gpu_job.depth();
 
   constexpr const char* hw_queue = "hw queue";
   uint64_t hw_queue_key = ProcessStringAndGetKey(hw_queue);
@@ -138,10 +138,10 @@ void LinuxTracingHandler::OnGpuJob(const LinuxTracing::GpuJob& gpu_job) {
   tracing_buffer_->RecordTimer(std::move(timer_sched_to_start));
 
   Timer timer_start_to_finish;
-  timer_start_to_finish.m_TID = gpu_job.GetTid();
-  timer_start_to_finish.m_Start = gpu_job.GetGpuHardwareStartTimeNs();
-  timer_start_to_finish.m_End = gpu_job.GetDmaFenceSignaledTimeNs();
-  timer_start_to_finish.m_Depth = gpu_job.GetDepth();
+  timer_start_to_finish.m_TID = gpu_job.tid();
+  timer_start_to_finish.m_Start = gpu_job.gpu_hardware_start_time_ns();
+  timer_start_to_finish.m_End = gpu_job.dma_fence_signaled_time_ns();
+  timer_start_to_finish.m_Depth = gpu_job.depth();
 
   constexpr const char* hw_execution = "hw execution";
   uint64_t hw_execution_key = ProcessStringAndGetKey(hw_execution);
