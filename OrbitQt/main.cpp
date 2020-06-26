@@ -335,6 +335,6 @@ int main(int argc, char* argv[]) {
       }
     }
   }
-  execv(QCoreApplication::applicationFilePath().toUtf8().data(), argv);
+  execv(argv[0], argv);
   UNREACHABLE();
 }
