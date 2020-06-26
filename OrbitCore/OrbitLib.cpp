@@ -7,7 +7,6 @@
 #include "OrbitLib.h"
 
 #include "Callstack.h"
-#include "Hijacking.h"
 #include "ScopeTimer.h"
 #include "TcpClient.h"
 #include "TimerManager.h"
@@ -91,8 +90,4 @@ void Orbit::Start() {
 void Orbit::Stop() {
   GTimerManager->StopClient();
   GIsCaptureEnabled = false;
-
-#ifdef _WIN32
-  Hijacking::DisableAllHooks();
-#endif
 }

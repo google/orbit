@@ -8,7 +8,6 @@
 
 #include "BaseTypes.h"
 #include "Core.h"
-#include "Hijacking.h"
 #include "Log.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitLib.h"

@@ -114,7 +114,6 @@ target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   OrbitGl
   PUBLIC OrbitCore
-         OrbitAsm
          OrbitProtos
          freetype-gl::freetype-gl
          OpenGL::GLU
