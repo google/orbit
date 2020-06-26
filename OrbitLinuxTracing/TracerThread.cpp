@@ -771,7 +771,12 @@ void TracerThread::UpdateThreadNamesIfDelayElapsed() {
       auto last_name_it = thread_names_.find(tid);
       if (last_name_it == thread_names_.end() || name != last_name_it->second) {
         thread_names_[tid] = name;
-        listener_->OnThreadName(tid, name);
+
+        ThreadName thread_name;
+        thread_name.set_tid(tid);
+        thread_name.set_name(std::move(name));
+        thread_name.set_timestamp_ns(timestamp_ns);
+        listener_->OnThreadName(std::move(thread_name));
       }
     }
     last_thread_names_update = timestamp_ns;

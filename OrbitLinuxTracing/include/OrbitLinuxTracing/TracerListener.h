@@ -16,7 +16,7 @@ class TracerListener {
   virtual void OnCallstackSample(CallstackSample callstack_sample) = 0;
   virtual void OnFunctionCall(FunctionCall function_call) = 0;
   virtual void OnGpuJob(GpuJob gpu_job) = 0;
-  virtual void OnThreadName(pid_t tid, const std::string& name) = 0;
+  virtual void OnThreadName(ThreadName thread_name) = 0;
   virtual void OnAddressInfo(AddressInfo address_info) = 0;
 };
 
