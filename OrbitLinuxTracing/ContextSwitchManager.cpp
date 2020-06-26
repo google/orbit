@@ -36,8 +36,13 @@ std::optional<SchedulingSlice> ContextSwitchManager::ProcessContextSwitchOut(
   // perf_event_open event has pid and tid set to -1:
   // in such case, use pid and tid from the OpenSwitchIn.
   if (pid == -1 || tid == -1) {
-    return SchedulingSlice{open_pid, open_tid, core, open_timestamp_ns,
-                           timestamp_ns};
+    SchedulingSlice scheduling_slice;
+    scheduling_slice.set_pid(open_pid);
+    scheduling_slice.set_tid(open_tid);
+    scheduling_slice.set_core(core);
+    scheduling_slice.set_in_timestamp_ns(open_timestamp_ns);
+    scheduling_slice.set_out_timestamp_ns(timestamp_ns);
+    return scheduling_slice;
   }
 
   // This can happen in case of lost in/out switches.
@@ -45,7 +50,13 @@ std::optional<SchedulingSlice> ContextSwitchManager::ProcessContextSwitchOut(
     return std::nullopt;
   }
 
-  return SchedulingSlice{pid, tid, core, open_timestamp_ns, timestamp_ns};
+  SchedulingSlice scheduling_slice;
+  scheduling_slice.set_pid(pid);
+  scheduling_slice.set_tid(tid);
+  scheduling_slice.set_core(core);
+  scheduling_slice.set_in_timestamp_ns(open_timestamp_ns);
+  scheduling_slice.set_out_timestamp_ns(timestamp_ns);
+  return scheduling_slice;
 }
 
 }  // namespace LinuxTracing

@@ -30,14 +30,13 @@ void LinuxTracingHandler::Stop() {
   tracer_.reset();
 }
 
-void LinuxTracingHandler::OnSchedulingSlice(
-    const LinuxTracing::SchedulingSlice& scheduling_slice) {
+void LinuxTracingHandler::OnSchedulingSlice(SchedulingSlice scheduling_slice) {
   Timer timer;
-  timer.m_Start = scheduling_slice.GetInTimestampNs();
-  timer.m_End = scheduling_slice.GetOutTimestampNs();
-  timer.m_PID = scheduling_slice.GetPid();
-  timer.m_TID = scheduling_slice.GetTid();
-  timer.m_Processor = static_cast<int8_t>(scheduling_slice.GetCore());
+  timer.m_Start = scheduling_slice.in_timestamp_ns();
+  timer.m_End = scheduling_slice.out_timestamp_ns();
+  timer.m_PID = scheduling_slice.pid();
+  timer.m_TID = scheduling_slice.tid();
+  timer.m_Processor = static_cast<int8_t>(scheduling_slice.core());
   timer.m_Depth = timer.m_Processor;
   timer.SetType(Timer::CORE_ACTIVITY);
 
