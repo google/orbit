@@ -33,8 +33,7 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   bool IsStarted();
   void Stop();
 
-  void OnSchedulingSlice(
-      const LinuxTracing::SchedulingSlice& scheduling_slice) override;
+  void OnSchedulingSlice(SchedulingSlice scheduling_slice) override;
   void OnCallstack(const LinuxTracing::Callstack& callstack) override;
   void OnFunctionCall(const LinuxTracing::FunctionCall& function_call) override;
   void OnGpuJob(const LinuxTracing::GpuJob& gpu_job) override;

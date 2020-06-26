@@ -7,12 +7,14 @@
 
 #include <OrbitLinuxTracing/Events.h>
 
+#include "capture.pb.h"
+
 namespace LinuxTracing {
 
 class TracerListener {
  public:
   virtual ~TracerListener() = default;
-  virtual void OnSchedulingSlice(const SchedulingSlice& scheduling_slice) = 0;
+  virtual void OnSchedulingSlice(SchedulingSlice scheduling_slice) = 0;
   virtual void OnCallstack(const Callstack& callstack) = 0;
   virtual void OnFunctionCall(const FunctionCall& function_call) = 0;
   virtual void OnGpuJob(const GpuJob& gpu_job) = 0;

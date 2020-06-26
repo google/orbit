@@ -568,7 +568,7 @@ void TracerThread::ProcessContextSwitchCpuWideEvent(
       std::optional<SchedulingSlice> scheduling_slice =
           context_switch_manager_.ProcessContextSwitchOut(pid, tid, cpu, time);
       if (scheduling_slice.has_value()) {
-        listener_->OnSchedulingSlice(scheduling_slice.value());
+        listener_->OnSchedulingSlice(std::move(scheduling_slice.value()));
       }
     } else {
       context_switch_manager_.ProcessContextSwitchIn(pid, tid, cpu, time);

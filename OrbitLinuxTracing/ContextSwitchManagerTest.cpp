@@ -21,11 +21,11 @@ TEST(ContextSwitchManager, OneCoreMatch) {
   processed_scheduling_slice =
       context_switch_manager.ProcessContextSwitchOut(kPid, kTid, kCore, 101);
   ASSERT_TRUE(processed_scheduling_slice.has_value());
-  EXPECT_EQ(processed_scheduling_slice.value().GetPid(), kPid);
-  EXPECT_EQ(processed_scheduling_slice.value().GetTid(), kTid);
-  EXPECT_EQ(processed_scheduling_slice.value().GetCore(), kCore);
-  EXPECT_EQ(processed_scheduling_slice.value().GetInTimestampNs(), 100);
-  EXPECT_EQ(processed_scheduling_slice.value().GetOutTimestampNs(), 101);
+  EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid);
+  EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid);
+  EXPECT_EQ(processed_scheduling_slice.value().core(), kCore);
+  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 100);
+  EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 101);
 
   processed_scheduling_slice =
       context_switch_manager.ProcessContextSwitchOut(kPid, kTid, kCore, 102);
@@ -44,11 +44,11 @@ TEST(ContextSwitchManager, OneCoreThreadExit) {
   processed_scheduling_slice =
       context_switch_manager.ProcessContextSwitchOut(-1, -1, kCore, 101);
   ASSERT_TRUE(processed_scheduling_slice.has_value());
-  EXPECT_EQ(processed_scheduling_slice.value().GetPid(), kPid);
-  EXPECT_EQ(processed_scheduling_slice.value().GetTid(), kTid);
-  EXPECT_EQ(processed_scheduling_slice.value().GetCore(), kCore);
-  EXPECT_EQ(processed_scheduling_slice.value().GetInTimestampNs(), 100);
-  EXPECT_EQ(processed_scheduling_slice.value().GetOutTimestampNs(), 101);
+  EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid);
+  EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid);
+  EXPECT_EQ(processed_scheduling_slice.value().core(), kCore);
+  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 100);
+  EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 101);
 
   processed_scheduling_slice =
       context_switch_manager.ProcessContextSwitchOut(kPid, kTid, kCore, 102);
@@ -95,22 +95,22 @@ TEST(ContextSwitchManager, OneCoreTwoMatches) {
   processed_scheduling_slice =
       context_switch_manager.ProcessContextSwitchOut(kPid1, kTid1, kCore, 101);
   ASSERT_TRUE(processed_scheduling_slice.has_value());
-  EXPECT_EQ(processed_scheduling_slice.value().GetPid(), kPid1);
-  EXPECT_EQ(processed_scheduling_slice.value().GetTid(), kTid1);
-  EXPECT_EQ(processed_scheduling_slice.value().GetCore(), kCore);
-  EXPECT_EQ(processed_scheduling_slice.value().GetInTimestampNs(), 100);
-  EXPECT_EQ(processed_scheduling_slice.value().GetOutTimestampNs(), 101);
+  EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid1);
+  EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid1);
+  EXPECT_EQ(processed_scheduling_slice.value().core(), kCore);
+  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 100);
+  EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 101);
 
   context_switch_manager.ProcessContextSwitchIn(kPid2, kTid2, kCore, 102);
 
   processed_scheduling_slice =
       context_switch_manager.ProcessContextSwitchOut(kPid2, kTid2, kCore, 103);
   ASSERT_TRUE(processed_scheduling_slice.has_value());
-  EXPECT_EQ(processed_scheduling_slice.value().GetPid(), kPid2);
-  EXPECT_EQ(processed_scheduling_slice.value().GetTid(), kTid2);
-  EXPECT_EQ(processed_scheduling_slice.value().GetCore(), kCore);
-  EXPECT_EQ(processed_scheduling_slice.value().GetInTimestampNs(), 102);
-  EXPECT_EQ(processed_scheduling_slice.value().GetOutTimestampNs(), 103);
+  EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid2);
+  EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid2);
+  EXPECT_EQ(processed_scheduling_slice.value().core(), kCore);
+  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 102);
+  EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 103);
 
   processed_scheduling_slice =
       context_switch_manager.ProcessContextSwitchOut(kPid2, kTid2, kCore, 104);
@@ -134,20 +134,20 @@ TEST(ContextSwitchManager, TwoCoresMatches) {
   processed_scheduling_slice =
       context_switch_manager.ProcessContextSwitchOut(kPid2, kTid2, kCore2, 103);
   ASSERT_TRUE(processed_scheduling_slice.has_value());
-  EXPECT_EQ(processed_scheduling_slice.value().GetPid(), kPid2);
-  EXPECT_EQ(processed_scheduling_slice.value().GetTid(), kTid2);
-  EXPECT_EQ(processed_scheduling_slice.value().GetCore(), kCore2);
-  EXPECT_EQ(processed_scheduling_slice.value().GetInTimestampNs(), 101);
-  EXPECT_EQ(processed_scheduling_slice.value().GetOutTimestampNs(), 103);
+  EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid2);
+  EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid2);
+  EXPECT_EQ(processed_scheduling_slice.value().core(), kCore2);
+  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 101);
+  EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 103);
 
   processed_scheduling_slice =
       context_switch_manager.ProcessContextSwitchOut(kPid1, kTid1, kCore1, 102);
   ASSERT_TRUE(processed_scheduling_slice.has_value());
-  EXPECT_EQ(processed_scheduling_slice.value().GetPid(), kPid1);
-  EXPECT_EQ(processed_scheduling_slice.value().GetTid(), kTid1);
-  EXPECT_EQ(processed_scheduling_slice.value().GetCore(), kCore1);
-  EXPECT_EQ(processed_scheduling_slice.value().GetInTimestampNs(), 100);
-  EXPECT_EQ(processed_scheduling_slice.value().GetOutTimestampNs(), 102);
+  EXPECT_EQ(processed_scheduling_slice.value().pid(), kPid1);
+  EXPECT_EQ(processed_scheduling_slice.value().tid(), kTid1);
+  EXPECT_EQ(processed_scheduling_slice.value().core(), kCore1);
+  EXPECT_EQ(processed_scheduling_slice.value().in_timestamp_ns(), 100);
+  EXPECT_EQ(processed_scheduling_slice.value().out_timestamp_ns(), 102);
 
   processed_scheduling_slice =
       context_switch_manager.ProcessContextSwitchOut(kPid1, kTid1, kCore1, 104);
