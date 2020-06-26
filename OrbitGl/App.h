@@ -221,7 +221,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   bool HasTcpServer() const { return !IsRemote(); }
   void FilterFunctions(const std::string& filter);
 
-  void CrashOrbitService(GetCrashRequest_CrashType crash_type);
+  void CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type);
 
   DataView* GetOrCreateDataView(DataViewType type) override;
 

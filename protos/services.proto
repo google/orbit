@@ -66,7 +66,7 @@ service FramePointerValidatorService {
       returns (ValidateFramePointersResponse) {}
 }
 
-message GetCrashRequest {
+message CrashOrbitServiceRequest {
   enum CrashType {
     CHECK_FALSE = 0;
     NULL_POINTER_DEREFERENCE = 1;
@@ -75,8 +75,8 @@ message GetCrashRequest {
   CrashType crash_type = 1;
 }
 
-message GetCrashResponse {}
+message CrashOrbitServiceResponse {}
 
 service CrashService {
-  rpc CrashOrbitService(GetCrashRequest) returns (GetCrashResponse) {}
+  rpc CrashOrbitService(CrashOrbitServiceRequest) returns (CrashOrbitServiceResponse) {}
 }
