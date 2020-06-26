@@ -35,9 +35,8 @@ void LinuxTracingBuffer::RecordKeyAndString(KeyAndString&& key_and_string) {
   key_and_string_buffer_.emplace_back(std::move(key_and_string));
 }
 
-void LinuxTracingBuffer::RecordKeyAndString(uint64_t key,
-                                            const std::string& str) {
-  RecordKeyAndString({key, str});
+void LinuxTracingBuffer::RecordKeyAndString(uint64_t key, std::string str) {
+  RecordKeyAndString({key, std::move(str)});
 }
 
 void LinuxTracingBuffer::RecordThreadName(TidAndThreadName&& tid_and_name) {
@@ -45,9 +44,8 @@ void LinuxTracingBuffer::RecordThreadName(TidAndThreadName&& tid_and_name) {
   thread_name_buffer_.emplace_back(std::move(tid_and_name));
 }
 
-void LinuxTracingBuffer::RecordThreadName(int32_t tid,
-                                          const std::string& name) {
-  RecordThreadName({tid, name});
+void LinuxTracingBuffer::RecordThreadName(int32_t tid, std::string name) {
+  RecordThreadName({tid, std::move(name)});
 }
 
 bool LinuxTracingBuffer::ReadAllTimers(std::vector<Timer>* out_buffer) {

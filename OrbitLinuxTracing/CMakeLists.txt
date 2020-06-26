@@ -72,7 +72,7 @@ if (NOT WIN32)
             UprobesFunctionCallManagerTest.cpp
             UprobesReturnAddressManagerTest.cpp
             UtilsTest.cpp)
-endif ()
+endif()
 
 target_link_libraries(OrbitLinuxTracingTests PRIVATE
         OrbitLinuxTracing

@@ -37,7 +37,7 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   void OnCallstackSample(CallstackSample callstack_sample) override;
   void OnFunctionCall(FunctionCall function_call) override;
   void OnGpuJob(GpuJob gpu_job) override;
-  void OnThreadName(pid_t tid, const std::string& name) override;
+  void OnThreadName(ThreadName thread_name) override;
   void OnAddressInfo(AddressInfo address_info) override;
 
  private:

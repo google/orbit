@@ -138,8 +138,9 @@ void LinuxTracingHandler::OnGpuJob(GpuJob gpu_job) {
   tracing_buffer_->RecordTimer(std::move(timer_start_to_finish));
 }
 
-void LinuxTracingHandler::OnThreadName(pid_t tid, const std::string& name) {
-  tracing_buffer_->RecordThreadName(tid, name);
+void LinuxTracingHandler::OnThreadName(ThreadName thread_name) {
+  tracing_buffer_->RecordThreadName(thread_name.tid(),
+                                    std::move(*thread_name.mutable_name()));
 }
 
 void LinuxTracingHandler::OnAddressInfo(AddressInfo address_info) {
