@@ -10,7 +10,6 @@
 #include "CaptureWindow.h"
 #include "GlCanvas.h"
 #include "HomeWindow.h"
-#include "ImmediateWindow.h"
 #include "PluginCanvas.h"
 
 //-----------------------------------------------------------------------------
@@ -20,9 +19,6 @@ GlPanel* GlPanel::Create(Type a_Type, void* a_UserData) {
   switch (a_Type) {
     case CAPTURE:
       panel = new CaptureWindow();
-      break;
-    case IMMEDIATE:
-      panel = new ImmediateWindow();
       break;
     case VISUALIZE:
       panel = new BlackBoard();

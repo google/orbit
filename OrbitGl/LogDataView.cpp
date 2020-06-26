@@ -154,19 +154,17 @@ const OrbitLogEntry& LogDataView::GetEntry(unsigned int a_Row) const {
 
 //-----------------------------------------------------------------------------
 void LogDataView::OnReceiveMessage(const Message& a_Msg) {
-  bool isLog = a_Msg.GetType() == Msg_OrbitLog;
-  assert(isLog);
-  if (isLog) {
-    OrbitLogEntry entry;
-    const OrbitLogEntry* msgEntry =
-        static_cast<const OrbitLogEntry*>(a_Msg.GetData());
-    entry.m_Time = msgEntry->m_Time;
-    entry.m_CallstackHash = msgEntry->m_CallstackHash;
-    entry.m_ThreadId = msgEntry->m_ThreadId;
-    const char* log = static_cast<const char*>(a_Msg.GetData()) +
-                      OrbitLogEntry::GetSizeWithoutString();
-    entry.m_Text = log;
-    RemoveTrailingNewLine(entry.m_Text);
-    Add(entry);
-  }
+  CHECK(a_Msg.GetType() == Msg_OrbitLog);
+
+  OrbitLogEntry entry;
+  const OrbitLogEntry* msgEntry =
+      static_cast<const OrbitLogEntry*>(a_Msg.GetData());
+  entry.m_Time = msgEntry->m_Time;
+  entry.m_CallstackHash = msgEntry->m_CallstackHash;
+  entry.m_ThreadId = msgEntry->m_ThreadId;
+  const char* log = static_cast<const char*>(a_Msg.GetData()) +
+                    OrbitLogEntry::GetSizeWithoutString();
+  entry.m_Text = log;
+  RemoveTrailingNewLine(entry.m_Text);
+  Add(entry);
 }

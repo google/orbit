@@ -3,10 +3,11 @@
 // found in the LICENSE file.
 
 #pragma once
-#include <assert.h>
 
 #include <algorithm>
 #include <cstdint>
+
+#include "OrbitBase/Logging.h"
 
 //-----------------------------------------------------------------------------
 template <class T, uint32_t BlockSize>
@@ -32,7 +33,7 @@ struct Block {
       return;
     }
 
-    assert(m_Size < Size);
+    CHECK(m_Size < Size);
     m_Data[m_Size] = a_Item;
     ++m_Size;
     ++m_Chain->m_NumItems;
@@ -143,8 +144,8 @@ struct BlockChain {
 
       m_Root = m_Root->m_Next;
 
-      assert(m_Root->m_Prev);
-      assert(m_Root->m_Prev != m_Current);
+      CHECK(m_Root->m_Prev);
+      CHECK(m_Root->m_Prev != m_Current);
 
       delete m_Root->m_Prev;
       m_Root->m_Prev = nullptr;

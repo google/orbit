@@ -14,7 +14,7 @@ void TimerBlock::Add(const TextBox& item) {
     return;
   }
 
-  assert(size_ < kBlockSize);
+  CHECK(size_ < kBlockSize);
   data_[size_] = item;
   ++size_;
   ++chain_->num_items_;

@@ -9,6 +9,7 @@
 
 #include "ElfFile.h"
 #include "FramePointerValidator.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitFunction.h"
 #include "Path.h"
 
@@ -53,7 +54,7 @@ TEST(FramePointerValidator, GetFpoFunctions) {
                          return f->Offset() == f_info.offset();
                        });
 
-                   assert(function_it != functions.end());
+                   CHECK(function_it != functions.end());
                    return (*function_it)->PrettyName();
                  });
 

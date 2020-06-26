@@ -2,11 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "orbitsamplingreport.h"
-
-#include <cassert>
 
 #include "SamplingReport.h"
 #include "orbitdataviewpanel.h"
@@ -88,14 +84,14 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
 
 //-----------------------------------------------------------------------------
 void OrbitSamplingReport::on_NextCallstackButton_clicked() {
-  assert(m_SamplingReport);
+  CHECK(m_SamplingReport != nullptr);
   m_SamplingReport->IncrementCallstackIndex();
   RefreshCallstackView();
 }
 
 //-----------------------------------------------------------------------------
 void OrbitSamplingReport::on_PreviousCallstackButton_clicked() {
-  assert(m_SamplingReport);
+  CHECK(m_SamplingReport != nullptr);
   m_SamplingReport->DecrementCallstackIndex();
   RefreshCallstackView();
 }

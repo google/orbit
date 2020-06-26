@@ -242,7 +242,7 @@ void LiveFunctionsDataView::OnTimer() {
 
 //-----------------------------------------------------------------------------
 Function& LiveFunctionsDataView::GetFunction(unsigned int a_Row) const {
-  assert(a_Row < m_Functions.size());
-  assert(m_Functions[m_Indices[a_Row]]);
+  CHECK(a_Row < m_Functions.size());
+  CHECK(m_Functions[m_Indices[a_Row]]);
   return *m_Functions[m_Indices[a_Row]];
 }

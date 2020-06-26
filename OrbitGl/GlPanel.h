@@ -12,7 +12,7 @@ class GlPanel {
   GlPanel();
   virtual ~GlPanel();
 
-  enum Type { CAPTURE, IMMEDIATE, VISUALIZE, PLUGIN, DEBUG };
+  enum Type { CAPTURE, VISUALIZE, PLUGIN, DEBUG };
 
   static GlPanel* Create(Type a_Type, void* a_UserData = nullptr);
 

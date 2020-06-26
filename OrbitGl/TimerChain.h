@@ -5,8 +5,6 @@
 #ifndef ORBIT_GL_TIMER_CHAIN_
 #define ORBIT_GL_TIMER_CHAIN_
 
-#include <assert.h>
-
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
