@@ -9,11 +9,11 @@
 
 #include "DataView.h"
 
-class Session;
+class Preset;
 
-class SessionsDataView : public DataView {
+class PresetsDataView : public DataView {
  public:
-  SessionsDataView();
+  PresetsDataView();
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return COLUMN_SESSION_NAME; }
@@ -21,20 +21,20 @@ class SessionsDataView : public DataView {
       int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) override;
   std::string GetValue(int a_Row, int a_Column) override;
   std::string GetToolTip(int a_Row, int a_Column) override;
-  std::string GetLabel() override { return "Sessions"; }
+  std::string GetLabel() override { return "Presets"; }
 
   void OnDataChanged() override;
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                      const std::vector<int>& a_ItemIndices) override;
 
-  void SetSessions(const std::vector<std::shared_ptr<Session>>& a_Sessions);
+  void SetPresets(const std::vector<std::shared_ptr<Preset>>& presets);
 
  protected:
   void DoSort() override;
   void DoFilter() override;
-  const std::shared_ptr<Session>& GetSession(unsigned int a_Row) const;
+  const std::shared_ptr<Preset>& GetPreset(unsigned int a_Row) const;
 
-  std::vector<std::shared_ptr<Session>> m_Sessions;
+  std::vector<std::shared_ptr<Preset>> presets_;
 
   enum ColumnIndex { COLUMN_SESSION_NAME, COLUMN_PROCESS_NAME, COLUMN_NUM };
 

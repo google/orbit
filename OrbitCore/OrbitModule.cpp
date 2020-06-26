@@ -220,15 +220,15 @@ Function* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
 #endif
 
 //-----------------------------------------------------------------------------
-void Pdb::ApplyPresets(const Session& session) {
-  SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ApplyPresets - %s", m_Name.c_str()));
+void Pdb::ApplyPreset(const Preset& preset) {
+  SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ApplyPreset - %s", m_Name.c_str()));
 
   std::string module_name = m_LoadedModuleName;
-  auto it = session.m_Modules.find(module_name);
-  if (it != session.m_Modules.end()) {
-    const SessionModule& session_module = it->second;
+  auto it = preset.m_Modules.find(module_name);
+  if (it != preset.m_Modules.end()) {
+    const PresetModule& preset_module = it->second;
 
-    for (uint64_t hash : session_module.m_FunctionHashes) {
+    for (uint64_t hash : preset_module.m_FunctionHashes) {
       auto fit = m_StringFunctionMap.find(hash);
       if (fit != m_StringFunctionMap.end()) {
         Function* function = fit->second;

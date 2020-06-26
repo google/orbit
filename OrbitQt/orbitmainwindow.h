@@ -57,22 +57,22 @@ class OrbitMainWindow : public QMainWindow {
 
  private slots:
   void on_actionAbout_triggered();
-  
+
   void on_actionReport_Missing_Feature_triggered();
   void on_actionReport_Bug_triggered();
 
   void OnTimer();
   void OnHideSearch();
 
-  void on_actionSave_Session_triggered();
-  void on_actionOpen_Session_triggered();
+  void on_actionSave_Preset_triggered();
+  void on_actionOpen_Preset_triggered();
   void on_actionDisconnect_triggered();
   void on_actionQuit_triggered();
   void on_actionLaunch_Process_triggered();
 
   void on_actionToogleDevMode_toggled(bool arg1);
 
-  void on_actionSave_Session_As_triggered();
+  void on_actionSave_Preset_As_triggered();
 
   void on_actionEnable_Context_Switches_triggered();
 

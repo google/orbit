@@ -63,12 +63,12 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::string GetVersion();
 
   std::string GetCaptureFileName();
-  std::string GetSessionFileName();
+  std::string GetPresetFileName();
   std::string GetSaveFile(const std::string& extension);
   void SetClipboard(const std::string& text);
-  outcome::result<void, std::string> OnSaveSession(
+  outcome::result<void, std::string> OnSavePreset(
       const std::string& file_name);
-  outcome::result<void, std::string> OnLoadSession(
+  outcome::result<void, std::string> OnLoadPreset(
       const std::string& file_name);
   outcome::result<void, std::string> OnSaveCapture(
       const std::string& file_name);
@@ -86,7 +86,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void LoadFileMapping();
   void LoadSystrace(const std::string& a_FileName);
   void AppendSystrace(const std::string& a_FileName, uint64_t a_TimeOffset);
-  void ListSessions();
+  void ListPresets();
   void RefreshCaptureView() override;
   void AddWatchedVariable(Variable* a_Variable);
   void UpdateVariable(Variable* a_Variable) override;
@@ -191,9 +191,9 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   void LoadModules(int32_t process_id,
                    const std::vector<std::shared_ptr<Module>>& modules,
-                   const std::shared_ptr<Session>& session = nullptr);
-  void LoadModulesFromSession(const std::shared_ptr<Process>& process,
-                              const std::shared_ptr<Session>& session);
+                   const std::shared_ptr<Preset>& preset = nullptr);
+  void LoadModulesFromPreset(const std::shared_ptr<Process>& process,
+                              const std::shared_ptr<Preset>& preset);
   bool IsLoading();
   void SetTrackContextSwitches(bool a_Value);
   bool GetTrackContextSwitches();
@@ -215,7 +215,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
 
   void RequestThaw() { m_NeedsThawing = true; }
   void UpdateSamplingReport();
-  void LoadSession(const std::shared_ptr<Session>& session);
+  void LoadPreset(const std::shared_ptr<Preset>& session);
   void SetIsRemote(bool a_IsRemote) { m_IsRemote = a_IsRemote; }
   bool IsRemote() const { return m_IsRemote; }
   bool HasTcpServer() const { return !IsRemote(); }
@@ -228,14 +228,14 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
  private:
   void LoadModuleOnRemote(int32_t process_id,
                           const std::shared_ptr<Module>& module,
-                          const std::shared_ptr<Session>& session);
+                          const std::shared_ptr<Preset>& preset);
   void SymbolLoadingFinished(uint32_t process_id,
                              const std::shared_ptr<Module>& module,
-                             const std::shared_ptr<Session>& session);
+                             const std::shared_ptr<Preset>& preset);
   std::shared_ptr<Process> FindProcessByPid(int32_t pid);
 
-  outcome::result<void, std::string> ReadSessionFromFile(
-    const std::string& filename, Session* session);
+  outcome::result<void, std::string> ReadPresetFromFile(
+    const std::string& filename, Preset* preset);
 
   ApplicationOptions options_;
 
@@ -264,7 +264,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<CallStackDataView> m_CallStackDataView;
   std::unique_ptr<TypesDataView> m_TypesDataView;
   std::unique_ptr<GlobalsDataView> m_GlobalsDataView;
-  std::unique_ptr<SessionsDataView> m_SessionsDataView;
+  std::unique_ptr<PresetsDataView> m_PresetsDataView;
   std::unique_ptr<LogDataView> m_LogDataView;
 
   CaptureWindow* m_CaptureWindow = nullptr;

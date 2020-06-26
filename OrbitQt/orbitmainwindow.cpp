@@ -78,9 +78,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->AddCaptureStartedCallback([this] {
     ui->actionOpen_Capture->setDisabled(true);
     ui->actionSave_Capture->setDisabled(true);
-    ui->actionOpen_Session->setDisabled(true);
-    ui->actionSave_Session->setDisabled(true);
-    ui->actionSave_Session_As->setDisabled(true);
+    ui->actionOpen_Preset->setDisabled(true);
+    ui->actionSave_Preset->setDisabled(true);
+    ui->actionSave_Preset_As->setDisabled(true);
     ui->HomeTab->setDisabled(true);
   });
 
@@ -100,9 +100,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     finalizing_capture_dialog->close();
     ui->actionOpen_Capture->setDisabled(false);
     ui->actionSave_Capture->setDisabled(false);
-    ui->actionOpen_Session->setDisabled(false);
-    ui->actionSave_Session->setDisabled(false);
-    ui->actionSave_Session_As->setDisabled(false);
+    ui->actionOpen_Preset->setDisabled(false);
+    ui->actionSave_Preset->setDisabled(false);
+    ui->actionSave_Preset_As->setDisabled(false);
     ui->HomeTab->setDisabled(false);
   });
 
@@ -159,7 +159,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       data_view_factory->GetOrCreateDataView(DataViewType::GLOBALS),
       SelectionType::kDefault, FontType::kDefault);
   ui->SessionList->Initialize(
-      data_view_factory->GetOrCreateDataView(DataViewType::SESSIONS),
+      data_view_factory->GetOrCreateDataView(DataViewType::PRESETS),
       SelectionType::kDefault, FontType::kDefault);
   ui->OutputView->Initialize(
       data_view_factory->GetOrCreateDataView(DataViewType::LOG),
@@ -378,7 +378,7 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
     case DataViewType::PROCESSES:
       ui->ProcessesList->Refresh();
       break;
-    case DataViewType::SESSIONS:
+    case DataViewType::PRESETS:
       ui->SessionList->Refresh();
       break;
     case DataViewType::SAMPLING:
@@ -620,14 +620,14 @@ void OrbitMainWindow::OnTimer() {
 void OrbitMainWindow::OnHideSearch() { ui->lineEdit->hide(); }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionSave_Session_triggered() {
-  std::string sessionName = GOrbitApp->GetSessionFileName();
+void OrbitMainWindow::on_actionSave_Preset_triggered() {
+  std::string sessionName = GOrbitApp->GetPresetFileName();
   if (sessionName.empty()) {
-    on_actionSave_Session_As_triggered();
+    on_actionSave_Preset_As_triggered();
     return;
   }
   outcome::result<void, std::string> result =
-      GOrbitApp->OnSaveSession(sessionName);
+      GOrbitApp->OnSavePreset(sessionName);
   if (result.has_error()) {
     QMessageBox::critical(
         this, "Error saving session",
@@ -638,12 +638,12 @@ void OrbitMainWindow::on_actionSave_Session_triggered() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionOpen_Session_triggered() {
+void OrbitMainWindow::on_actionOpen_Preset_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Select a file to open...", Path::GetPresetPath().c_str(), "*.opr");
   for (const auto& file : list) {
     outcome::result<void, std::string> result =
-        GOrbitApp->OnLoadSession(file.toStdString());
+        GOrbitApp->OnLoadPreset(file.toStdString());
     if (result.has_error()) {
       QMessageBox::critical(
           this, "Error loading session",
@@ -682,7 +682,7 @@ void OrbitMainWindow::on_actionToogleDevMode_toggled(bool a_Toggle) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionSave_Session_As_triggered() {
+void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
   QString file =
       QFileDialog::getSaveFileName(this, "Specify a file to save...",
                                    Path::GetPresetPath().c_str(), "*.opr");
@@ -691,7 +691,7 @@ void OrbitMainWindow::on_actionSave_Session_As_triggered() {
   }
 
   outcome::result<void, std::string> result =
-      GOrbitApp->OnSaveSession(file.toStdString());
+      GOrbitApp->OnSavePreset(file.toStdString());
   if (result.has_error()) {
     QMessageBox::critical(
         this, "Error saving session",

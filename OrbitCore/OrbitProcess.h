@@ -97,7 +97,7 @@ class Process {
   bool LineInfoFromAddress(uint64_t a_Address, struct LineInfo& o_LineInfo);
 
   void LoadSession(const Session& a_Session);
-  void SaveSession();
+  void SavePreset();
 
   void AddFunction(const std::shared_ptr<Function>& function) {
     m_Functions.push_back(function);

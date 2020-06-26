@@ -253,7 +253,7 @@ bool Process::LineInfoFromAddress(uint64_t /*a_Address*/,
 void Process::LoadSession(const Session&) {}
 
 //-----------------------------------------------------------------------------
-void Process::SaveSession() {}
+void Process::SavePreset() {}
 
 //-----------------------------------------------------------------------------
 void Process::RefreshWatchedVariables() {

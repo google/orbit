@@ -20,14 +20,14 @@
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
-SessionsDataView::SessionsDataView() : DataView(DataViewType::SESSIONS) {}
+PresetsDataView::PresetsDataView() : DataView(DataViewType::PRESETS) {}
 
 //-----------------------------------------------------------------------------
-const std::vector<DataView::Column>& SessionsDataView::GetColumns() {
+const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(COLUMN_NUM);
-    columns[COLUMN_SESSION_NAME] = {"Session", .49f, SortingOrder::Ascending};
+    columns[COLUMN_SESSION_NAME] = {"Preset", .49f, SortingOrder::Ascending};
     columns[COLUMN_PROCESS_NAME] = {"Process", .49f, SortingOrder::Ascending};
     return columns;
   }();
@@ -35,43 +35,43 @@ const std::vector<DataView::Column>& SessionsDataView::GetColumns() {
 }
 
 //-----------------------------------------------------------------------------
-std::string SessionsDataView::GetValue(int row, int col) {
-  const std::shared_ptr<Session>& session = GetSession(row);
+std::string PresetsDataView::GetValue(int row, int col) {
+  const std::shared_ptr<Preset>& preset = GetPreset(row);
 
   switch (col) {
     case COLUMN_SESSION_NAME:
-      return Path::GetFileName(session->m_FileName);
+      return Path::GetFileName(preset->m_FileName);
     case COLUMN_PROCESS_NAME:
-      return Path::GetFileName(session->m_ProcessFullPath);
+      return Path::GetFileName(preset->m_ProcessFullPath);
     default:
       return "";
   }
 }
 
 //-----------------------------------------------------------------------------
-std::string SessionsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
-  const Session& session = *GetSession(a_Row);
-  return session.m_FileName;
+std::string PresetsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
+  const Preset& preset = *GetPreset(a_Row);
+  return preset.m_FileName;
 }
 
 //-----------------------------------------------------------------------------
-#define ORBIT_SESSION_SORT(Member)                                           \
+#define ORBIT_PRESET_SORT(Member)                                           \
   [&](int a, int b) {                                                        \
-    return OrbitUtils::Compare(m_Sessions[a]->Member, m_Sessions[b]->Member, \
+    return OrbitUtils::Compare(presets_[a]->Member, presets_[b]->Member, \
                                ascending);                                   \
   }
 
 //-----------------------------------------------------------------------------
-void SessionsDataView::DoSort() {
+void PresetsDataView::DoSort() {
   bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
   switch (m_SortingColumn) {
     case COLUMN_SESSION_NAME:
-      sorter = ORBIT_SESSION_SORT(m_FileName);
+      sorter = ORBIT_PRESET_SORT(m_FileName);
       break;
     case COLUMN_PROCESS_NAME:
-      sorter = ORBIT_SESSION_SORT(m_ProcessFullPath);
+      sorter = ORBIT_PRESET_SORT(m_ProcessFullPath);
       break;
     default:
       break;
@@ -83,11 +83,11 @@ void SessionsDataView::DoSort() {
 }
 
 //-----------------------------------------------------------------------------
-const std::string SessionsDataView::MENU_ACTION_LOAD = "Load Session";
-const std::string SessionsDataView::MENU_ACTION_DELETE = "Delete Session";
+const std::string PresetsDataView::MENU_ACTION_LOAD = "Load Preset";
+const std::string PresetsDataView::MENU_ACTION_DELETE = "Delete Preset";
 
 //-----------------------------------------------------------------------------
-std::vector<std::string> SessionsDataView::GetContextMenu(
+std::vector<std::string> PresetsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   std::vector<std::string> menu;
   // Note that the UI already enforces a single selection.
@@ -99,33 +99,33 @@ std::vector<std::string> SessionsDataView::GetContextMenu(
 }
 
 //-----------------------------------------------------------------------------
-void SessionsDataView::OnContextMenu(const std::string& a_Action,
+void PresetsDataView::OnContextMenu(const std::string& a_Action,
                                      int a_MenuIndex,
                                      const std::vector<int>& a_ItemIndices) {
   if (a_Action == MENU_ACTION_LOAD) {
     if (a_ItemIndices.size() != 1) {
       return;
     }
-    const std::shared_ptr<Session>& session = GetSession(a_ItemIndices[0]);
+    const std::shared_ptr<Preset>& preset = GetPreset(a_ItemIndices[0]);
 
-    GOrbitApp->LoadSession(session);
+    GOrbitApp->LoadPreset(preset);
 
   } else if (a_Action == MENU_ACTION_DELETE) {
     if (a_ItemIndices.size() != 1) {
       return;
     }
     int row = a_ItemIndices[0];
-    const std::shared_ptr<Session>& session = GetSession(row);
-    const std::string& filename = session->m_FileName;
+    const std::shared_ptr<Preset>& preset = GetPreset(row);
+    const std::string& filename = preset->m_FileName;
     int ret = remove(filename.c_str());
     if (ret == 0) {
-      m_Sessions.erase(m_Sessions.begin() + m_Indices[row]);
+      presets_.erase(presets_.begin() + m_Indices[row]);
       OnDataChanged();
     } else {
-      ERROR("Deleting session \"%s\": %s", filename, SafeStrerror(errno));
+      ERROR("Deleting preset \"%s\": %s", filename, SafeStrerror(errno));
       GOrbitApp->SendErrorToUi(
-          "Error deleting session",
-          absl::StrFormat("Could not delete session \"%s\".", filename));
+          "Error deleting preset",
+          absl::StrFormat("Could not delete preset \"%s\".", filename));
     }
 
   } else {
@@ -134,15 +134,15 @@ void SessionsDataView::OnContextMenu(const std::string& a_Action,
 }
 
 //-----------------------------------------------------------------------------
-void SessionsDataView::DoFilter() {
+void PresetsDataView::DoFilter() {
   std::vector<uint32_t> indices;
 
   std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
-  for (size_t i = 0; i < m_Sessions.size(); ++i) {
-    const Session& session = *m_Sessions[i];
-    std::string name = Path::GetFileName(ToLower(session.m_FileName));
-    std::string path = ToLower(session.m_ProcessFullPath);
+  for (size_t i = 0; i < presets_.size(); ++i) {
+    const Preset& preset = *presets_[i];
+    std::string name = Path::GetFileName(ToLower(preset.m_FileName));
+    std::string path = ToLower(preset.m_ProcessFullPath);
 
     bool match = true;
 
@@ -165,9 +165,9 @@ void SessionsDataView::DoFilter() {
 }
 
 //-----------------------------------------------------------------------------
-void SessionsDataView::OnDataChanged() {
-  m_Indices.resize(m_Sessions.size());
-  for (size_t i = 0; i < m_Sessions.size(); ++i) {
+void PresetsDataView::OnDataChanged() {
+  m_Indices.resize(presets_.size());
+  for (size_t i = 0; i < presets_.size(); ++i) {
     m_Indices[i] = i;
   }
 
@@ -175,14 +175,14 @@ void SessionsDataView::OnDataChanged() {
 }
 
 //-----------------------------------------------------------------------------
-void SessionsDataView::SetSessions(
-    const std::vector<std::shared_ptr<Session> >& a_Sessions) {
-  m_Sessions = a_Sessions;
+void PresetsDataView::SetPresets(
+    const std::vector<std::shared_ptr<Preset> >& presets) {
+  presets_ = presets;
   OnDataChanged();
 }
 
 //-----------------------------------------------------------------------------
-const std::shared_ptr<Session>& SessionsDataView::GetSession(
+const std::shared_ptr<Preset>& PresetsDataView::GetPreset(
     unsigned int a_Row) const {
-  return m_Sessions[m_Indices[a_Row]];
+  return presets_[m_Indices[a_Row]];
 }

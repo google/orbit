@@ -9,7 +9,7 @@
 #include "Serialization.h"
 
 //-----------------------------------------------------------------------------
-struct SessionModule {
+struct PresetModule {
   std::string m_Name;
   std::vector<uint64_t> m_FunctionHashes;
 
@@ -17,10 +17,10 @@ struct SessionModule {
 };
 
 //-----------------------------------------------------------------------------
-class Session {
+class Preset {
  public:
-  Session();
-  ~Session();
+  Preset();
+  ~Preset();
 
   ORBIT_SERIALIZABLE;
 
@@ -28,5 +28,5 @@ class Session {
   std::string m_ProcessFullPath;
   std::string m_WorkingDirectory;
   std::string m_Arguments;
-  std::map<std::string, SessionModule> m_Modules;
+  std::map<std::string, PresetModule> m_Modules;
 };
