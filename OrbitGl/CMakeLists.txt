@@ -38,7 +38,6 @@ target_sources(
          HomeWindow.h
          Images.h
          ImGuiOrbit.h
-         ImmediateWindow.h
          LiveFunctionsDataView.h
          LogDataView.h
          ModulesDataView.h
@@ -88,7 +87,6 @@ target_sources(
           GraphTrack.cpp
           HomeWindow.cpp
           ImGuiOrbit.cpp
-          ImmediateWindow.cpp
           LiveFunctionsDataView.cpp
           LogDataView.cpp
           ModulesDataView.cpp

@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include <assert.h>
 #include <locale.h>
 #include <stdio.h>
 #include <wchar.h>

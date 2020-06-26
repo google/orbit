@@ -69,7 +69,7 @@ std::string Module::GetPrettyName() {
 
 //-----------------------------------------------------------------------------
 bool Module::LoadDebugInfo() {
-  assert(m_Pdb);
+  CHECK(m_Pdb != nullptr);
   m_Pdb->SetMainModule(m_AddressStart);
 
   PRINT_VAR(loadable_);

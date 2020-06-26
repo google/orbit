@@ -552,7 +552,7 @@ std::string OrbitApp::GetVersion() { return OrbitVersion::GetVersion(); }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::RegisterCaptureWindow(CaptureWindow* a_Capture) {
-  assert(m_CaptureWindow == nullptr);
+  CHECK(m_CaptureWindow == nullptr);
   m_CaptureWindow = a_Capture;
 }
 
