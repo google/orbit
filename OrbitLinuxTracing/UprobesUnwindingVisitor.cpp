@@ -19,11 +19,11 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
       event->GetTid(), event->GetRegisters()[PERF_REG_X86_SP],
       event->GetStackData(), event->GetStackSize());
 
-  const std::vector<unwindstack::FrameData>& full_callstack =
+  const std::vector<unwindstack::FrameData>& libunwindstack_callstack =
       unwinder_.Unwind(current_maps_.get(), event->GetRegisters(),
                        event->GetStackData(), event->GetStackSize());
 
-  if (full_callstack.empty()) {
+  if (libunwindstack_callstack.empty()) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
@@ -32,17 +32,31 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
 
   // Some samples can actually fall inside u(ret)probes code. Discard them,
   // because when they are unwound successfully the result is wrong.
-  if (full_callstack.front().map_name == "[uprobes]") {
+  if (libunwindstack_callstack.front().map_name == "[uprobes]") {
     if (discarded_samples_in_uretprobes_counter_ != nullptr) {
       ++(*discarded_samples_in_uretprobes_counter_);
     }
     return;
   }
 
-  Callstack returned_callstack{
-      event->GetTid(), CallstackFramesFromLibunwindstackFrames(full_callstack),
-      event->GetTimestamp()};
-  listener_->OnCallstack(returned_callstack);
+  CallstackSample sample;
+  sample.set_tid(event->GetTid());
+  sample.set_timestamp_ns(event->GetTimestamp());
+
+  Callstack* callstack = sample.mutable_callstack();
+  for (const unwindstack::FrameData& libunwindstack_frame :
+       libunwindstack_callstack) {
+    AddressInfo address_info;
+    address_info.set_absolute_address(libunwindstack_frame.pc);
+    address_info.set_function_name(libunwindstack_frame.function_name);
+    address_info.set_offset_in_function(libunwindstack_frame.function_offset);
+    address_info.set_map_name(libunwindstack_frame.map_name);
+    listener_->OnAddressInfo(std::move(address_info));
+
+    callstack->add_pcs(libunwindstack_frame.pc);
+  }
+
+  listener_->OnCallstackSample(std::move(sample));
 }
 
 void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
@@ -62,14 +76,19 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
     return;
   }
 
-  Callstack returned_callstack{
-      event->GetTid(),
-      // The top of a callchain is always inside the kernel code.
-      // So we need to discard the first frame.
-      CallstackFramesFromInstructionPointers(event->GetCallchain() + 1,
-                                             event->GetCallchainSize() - 1),
-      event->GetTimestamp()};
-  listener_->OnCallstack(returned_callstack);
+  CallstackSample sample;
+  sample.set_tid(event->GetTid());
+  sample.set_timestamp_ns(event->GetTimestamp());
+
+  Callstack* callstack = sample.mutable_callstack();
+  // Skip the first frame as the top of a perf_event_open callchain is always
+  // inside kernel code.
+  for (uint64_t frame_index = 1; frame_index < event->GetCallchainSize();
+       ++frame_index) {
+    callstack->add_pcs(event->GetCallchain()[frame_index]);
+  }
+
+  listener_->OnCallstackSample(std::move(sample));
 }
 
 void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
@@ -136,34 +155,6 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
 
 void UprobesUnwindingVisitor::visit(MapsPerfEvent* event) {
   current_maps_ = LibunwindstackUnwinder::ParseMaps(event->GetMaps());
-}
-
-std::vector<CallstackFrame>
-UprobesUnwindingVisitor::CallstackFramesFromLibunwindstackFrames(
-    const std::vector<unwindstack::FrameData>& libunwindstack_frames) {
-  std::vector<CallstackFrame> callstack_frames;
-  callstack_frames.reserve(libunwindstack_frames.size());
-  for (const unwindstack::FrameData& libunwindstack_frame :
-       libunwindstack_frames) {
-    callstack_frames.emplace_back(
-        libunwindstack_frame.pc, libunwindstack_frame.function_name,
-        libunwindstack_frame.function_offset, libunwindstack_frame.map_name);
-  }
-  return callstack_frames;
-}
-
-std::vector<CallstackFrame>
-UprobesUnwindingVisitor::CallstackFramesFromInstructionPointers(
-    const uint64_t* frames, uint64_t size) {
-  if (size == 0) {
-    return std::vector<CallstackFrame>();
-  }
-  std::vector<CallstackFrame> callstack_frames;
-  for (uint64_t i = 0; i < size; i++) {
-    callstack_frames.emplace_back(frames[i], "",
-                                  CallstackFrame::kUnknownFunctionOffset, "");
-  }
-  return callstack_frames;
 }
 
 }  // namespace LinuxTracing

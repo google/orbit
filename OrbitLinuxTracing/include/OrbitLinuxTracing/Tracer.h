@@ -5,7 +5,6 @@
 #ifndef ORBIT_LINUX_TRACING_TRACER_H_
 #define ORBIT_LINUX_TRACING_TRACER_H_
 
-#include <OrbitLinuxTracing/Events.h>
 #include <OrbitLinuxTracing/TracerListener.h>
 #include <unistd.h>
 

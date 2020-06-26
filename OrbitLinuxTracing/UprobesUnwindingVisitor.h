@@ -5,7 +5,6 @@
 #ifndef ORBIT_LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_
 #define ORBIT_LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_
 
-#include <OrbitLinuxTracing/Events.h>
 #include <OrbitLinuxTracing/TracerListener.h>
 
 #include <stack>
@@ -74,12 +73,6 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   std::shared_ptr<std::atomic<uint64_t>> unwind_error_counter_ = nullptr;
   std::shared_ptr<std::atomic<uint64_t>>
       discarded_samples_in_uretprobes_counter_ = nullptr;
-
-  static std::vector<CallstackFrame> CallstackFramesFromLibunwindstackFrames(
-      const std::vector<unwindstack::FrameData>& libunwindstack_frames);
-
-  static std::vector<CallstackFrame> CallstackFramesFromInstructionPointers(
-      const uint64_t* frames, uint64_t size);
 
   absl::flat_hash_map<pid_t,
                       std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>>
