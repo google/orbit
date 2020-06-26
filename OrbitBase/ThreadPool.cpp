@@ -17,6 +17,7 @@ class ThreadPoolImpl : public ThreadPool {
   explicit ThreadPoolImpl(size_t thread_pool_min_size,
                           size_t thread_pool_max_size);
 
+  size_t GetPoolSize() override;
   void Schedule(std::unique_ptr<Action> action) override;
   void Shutdown() override;
   void Wait() override;
@@ -67,6 +68,11 @@ void ThreadPoolImpl::Schedule(std::unique_ptr<Action> action) {
       worker_threads_.size() < thread_pool_max_size_) {
     CreateWorker();
   }
+}
+
+size_t ThreadPoolImpl::GetPoolSize() {
+  absl::MutexLock lock(&mutex_);
+  return worker_threads_.size();
 }
 
 void ThreadPoolImpl::Shutdown() {
