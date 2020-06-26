@@ -113,6 +113,12 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
                                            dma_it->second.timestamp_ns);
   }
   auto it = timeline_to_latest_dma_signal_.find(timeline);
+  // We do not have an explicit event for the following timestamp. We
+  // assume that, when the GPU queue corresponding to timeline is
+  // not executing a job, that this job starts exactly when it is
+  // scheduled by the driver. Otherwise, we assume it starts exactly
+  // when the previous job has signaled that it is done. Since we do
+  // not have an explicit signal here, this is the best we can do.
   uint64_t hw_start_time = sched_it->second.timestamp_ns;
   if (hw_start_time < it->second) {
     hw_start_time = it->second;
@@ -120,12 +126,18 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
 
   int depth = ComputeDepthForEvent(timeline, cs_it->second.timestamp_ns,
                                    dma_it->second.timestamp_ns);
-  GpuJob gpu_job(tid, cs_it->second.context, cs_it->second.seqno,
-                 cs_it->second.timeline, depth, cs_it->second.timestamp_ns,
-                 sched_it->second.timestamp_ns, hw_start_time,
-                 dma_it->second.timestamp_ns);
+  GpuJob gpu_job;
+  gpu_job.set_tid(tid);
+  gpu_job.set_context(cs_it->second.context);
+  gpu_job.set_seqno(cs_it->second.seqno);
+  gpu_job.set_timeline(cs_it->second.timeline);
+  gpu_job.set_depth(depth);
+  gpu_job.set_amdgpu_cs_ioctl_time_ns(cs_it->second.timestamp_ns);
+  gpu_job.set_amdgpu_sched_run_job_time_ns(sched_it->second.timestamp_ns);
+  gpu_job.set_gpu_hardware_start_time_ns(hw_start_time);
+  gpu_job.set_dma_fence_signaled_time_ns(dma_it->second.timestamp_ns);
 
-  listener_->OnGpuJob(gpu_job);
+  listener_->OnGpuJob(std::move(gpu_job));
 
   // We need to update the timestamp when the last GPU job so far seen
   // finishes on this timeline.
