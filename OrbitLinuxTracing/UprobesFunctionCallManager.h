@@ -6,11 +6,11 @@
 #define ORBIT_LINUX_TRACING_UPROBES_FUNCTION_CALL_MANAGER_H_
 
 #include <OrbitBase/Logging.h>
-#include <OrbitLinuxTracing/Events.h>
 
 #include <stack>
 
 #include "absl/container/flat_hash_map.h"
+#include "capture.pb.h"
 
 namespace LinuxTracing {
 
@@ -45,10 +45,15 @@ class UprobesFunctionCallManager {
     // As we erase the stack for this thread as soon as it becomes empty.
     CHECK(!tid_uprobes_stack.empty());
 
-    auto function_call = std::make_optional<FunctionCall>(
-        tid, tid_uprobes_stack.top().function_address,
-        tid_uprobes_stack.top().begin_timestamp, end_timestamp,
-        tid_uprobes_stack.size() - 1, return_value);
+    FunctionCall function_call;
+    function_call.set_tid(tid);
+    function_call.set_absolute_address(tid_uprobes_stack.top().function_address);
+    function_call.set_begin_timestamp_ns(
+        tid_uprobes_stack.top().begin_timestamp);
+    function_call.set_end_timestamp_ns(end_timestamp);
+    function_call.set_depth(tid_uprobes_stack.size() - 1);
+    function_call.set_return_value(return_value);
+
     tid_uprobes_stack.pop();
     if (tid_uprobes_stack.empty()) {
       tid_uprobes_stacks_.erase(tid);

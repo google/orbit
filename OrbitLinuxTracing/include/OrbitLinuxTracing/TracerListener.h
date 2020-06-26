@@ -16,7 +16,7 @@ class TracerListener {
   virtual ~TracerListener() = default;
   virtual void OnSchedulingSlice(SchedulingSlice scheduling_slice) = 0;
   virtual void OnCallstack(const Callstack& callstack) = 0;
-  virtual void OnFunctionCall(const FunctionCall& function_call) = 0;
+  virtual void OnFunctionCall(FunctionCall function_call) = 0;
   virtual void OnGpuJob(const GpuJob& gpu_job) = 0;
   virtual void OnThreadName(pid_t tid, const std::string& name) = 0;
 };

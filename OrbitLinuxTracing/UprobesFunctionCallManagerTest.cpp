@@ -18,12 +18,12 @@ TEST(UprobesFunctionCallManager, OneUprobe) {
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid, 2, 3);
   ASSERT_TRUE(processed_function_call.has_value());
-  EXPECT_EQ(processed_function_call.value().GetTid(), tid);
-  EXPECT_EQ(processed_function_call.value().GetVirtualAddress(), 100);
-  EXPECT_EQ(processed_function_call.value().GetBeginTimestampNs(), 1);
-  EXPECT_EQ(processed_function_call.value().GetEndTimestampNs(), 2);
-  EXPECT_EQ(processed_function_call.value().GetDepth(), 0);
-  EXPECT_EQ(processed_function_call.value().GetIntegerReturnValue(), 3);
+  EXPECT_EQ(processed_function_call.value().tid(), tid);
+  EXPECT_EQ(processed_function_call.value().absolute_address(), 100);
+  EXPECT_EQ(processed_function_call.value().begin_timestamp_ns(), 1);
+  EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 2);
+  EXPECT_EQ(processed_function_call.value().depth(), 0);
+  EXPECT_EQ(processed_function_call.value().return_value(), 3);
 }
 
 TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
@@ -37,32 +37,32 @@ TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid, 3, 4);
   ASSERT_TRUE(processed_function_call.has_value());
-  EXPECT_EQ(processed_function_call.value().GetTid(), tid);
-  EXPECT_EQ(processed_function_call.value().GetVirtualAddress(), 200);
-  EXPECT_EQ(processed_function_call.value().GetBeginTimestampNs(), 2);
-  EXPECT_EQ(processed_function_call.value().GetEndTimestampNs(), 3);
-  EXPECT_EQ(processed_function_call.value().GetDepth(), 1);
-  EXPECT_EQ(processed_function_call.value().GetIntegerReturnValue(), 4);
+  EXPECT_EQ(processed_function_call.value().tid(), tid);
+  EXPECT_EQ(processed_function_call.value().absolute_address(), 200);
+  EXPECT_EQ(processed_function_call.value().begin_timestamp_ns(), 2);
+  EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 3);
+  EXPECT_EQ(processed_function_call.value().depth(), 1);
+  EXPECT_EQ(processed_function_call.value().return_value(), 4);
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid, 4, 5);
   ASSERT_TRUE(processed_function_call.has_value());
-  EXPECT_EQ(processed_function_call.value().GetTid(), tid);
-  EXPECT_EQ(processed_function_call.value().GetVirtualAddress(), 100);
-  EXPECT_EQ(processed_function_call.value().GetBeginTimestampNs(), 1);
-  EXPECT_EQ(processed_function_call.value().GetEndTimestampNs(), 4);
-  EXPECT_EQ(processed_function_call.value().GetDepth(), 0);
-  EXPECT_EQ(processed_function_call.value().GetIntegerReturnValue(), 5);
+  EXPECT_EQ(processed_function_call.value().tid(), tid);
+  EXPECT_EQ(processed_function_call.value().absolute_address(), 100);
+  EXPECT_EQ(processed_function_call.value().begin_timestamp_ns(), 1);
+  EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 4);
+  EXPECT_EQ(processed_function_call.value().depth(), 0);
+  EXPECT_EQ(processed_function_call.value().return_value(), 5);
 
   function_call_manager.ProcessUprobes(tid, 300, 5);
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid, 6, 7);
   ASSERT_TRUE(processed_function_call.has_value());
-  EXPECT_EQ(processed_function_call.value().GetTid(), tid);
-  EXPECT_EQ(processed_function_call.value().GetVirtualAddress(), 300);
-  EXPECT_EQ(processed_function_call.value().GetBeginTimestampNs(), 5);
-  EXPECT_EQ(processed_function_call.value().GetEndTimestampNs(), 6);
-  EXPECT_EQ(processed_function_call.value().GetDepth(), 0);
-  EXPECT_EQ(processed_function_call.value().GetIntegerReturnValue(), 7);
+  EXPECT_EQ(processed_function_call.value().tid(), tid);
+  EXPECT_EQ(processed_function_call.value().absolute_address(), 300);
+  EXPECT_EQ(processed_function_call.value().begin_timestamp_ns(), 5);
+  EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 6);
+  EXPECT_EQ(processed_function_call.value().depth(), 0);
+  EXPECT_EQ(processed_function_call.value().return_value(), 7);
 }
 
 TEST(UprobesFunctionCallManager, TwoUprobesDifferentThreads) {
@@ -77,21 +77,21 @@ TEST(UprobesFunctionCallManager, TwoUprobesDifferentThreads) {
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid, 3, 4);
   ASSERT_TRUE(processed_function_call.has_value());
-  EXPECT_EQ(processed_function_call.value().GetTid(), tid);
-  EXPECT_EQ(processed_function_call.value().GetVirtualAddress(), 100);
-  EXPECT_EQ(processed_function_call.value().GetBeginTimestampNs(), 1);
-  EXPECT_EQ(processed_function_call.value().GetEndTimestampNs(), 3);
-  EXPECT_EQ(processed_function_call.value().GetDepth(), 0);
-  EXPECT_EQ(processed_function_call.value().GetIntegerReturnValue(), 4);
+  EXPECT_EQ(processed_function_call.value().tid(), tid);
+  EXPECT_EQ(processed_function_call.value().absolute_address(), 100);
+  EXPECT_EQ(processed_function_call.value().begin_timestamp_ns(), 1);
+  EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 3);
+  EXPECT_EQ(processed_function_call.value().depth(), 0);
+  EXPECT_EQ(processed_function_call.value().return_value(), 4);
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid2, 4, 5);
   ASSERT_TRUE(processed_function_call.has_value());
-  EXPECT_EQ(processed_function_call.value().GetTid(), tid2);
-  EXPECT_EQ(processed_function_call.value().GetVirtualAddress(), 200);
-  EXPECT_EQ(processed_function_call.value().GetBeginTimestampNs(), 2);
-  EXPECT_EQ(processed_function_call.value().GetEndTimestampNs(), 4);
-  EXPECT_EQ(processed_function_call.value().GetDepth(), 0);
-  EXPECT_EQ(processed_function_call.value().GetIntegerReturnValue(), 5);
+  EXPECT_EQ(processed_function_call.value().tid(), tid2);
+  EXPECT_EQ(processed_function_call.value().absolute_address(), 200);
+  EXPECT_EQ(processed_function_call.value().begin_timestamp_ns(), 2);
+  EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 4);
+  EXPECT_EQ(processed_function_call.value().depth(), 0);
+  EXPECT_EQ(processed_function_call.value().return_value(), 5);
 }
 
 TEST(UprobesFunctionCallManager, OnlyUretprobe) {
