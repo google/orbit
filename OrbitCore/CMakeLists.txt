@@ -124,13 +124,11 @@ if(WIN32)
 else()
   target_sources(
     OrbitCore
-    PUBLIC LinuxTracingHandler.h
-           LinuxUtils.h)
+    PUBLIC LinuxUtils.h)
 
   target_sources(
     OrbitCore
-    PRIVATE LinuxTracingHandler.cpp
-            LinuxUtils.cpp)
+    PRIVATE LinuxUtils.cpp)
 endif()
 
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})

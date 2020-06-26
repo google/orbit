@@ -10,10 +10,6 @@
 #include "SamplingProfiler.h"
 #include "Serialization.h"
 
-#ifdef __linux
-#include "LinuxTracingHandler.h"
-#endif
-
 EventTracer GEventTracer;
 //-----------------------------------------------------------------------------
 void EventBuffer::Print() {
