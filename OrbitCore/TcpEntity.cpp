@@ -126,8 +126,8 @@ void TcpEntity::Callback(MessageOwner&& message) {
 void TcpEntity::ProcessMainThreadCallbacks() {
   ScopeLock lock(m_Mutex);
   while (!m_MainThreadMessages.empty()) {
-    const auto message = std::move(m_MainThreadMessages.back());
-    m_MainThreadMessages.pop_back();
+    const auto message = std::move(m_MainThreadMessages.front());
+    m_MainThreadMessages.pop_front();
 
     if (const auto callbacks = m_MainThreadCallbacks.find(message.GetType());
         callbacks != m_MainThreadCallbacks.end()) {

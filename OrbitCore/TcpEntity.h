@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
+#include <deque>
 
 #include "../OrbitPlugin/OrbitUserData.h"
 #include "Message.h"
@@ -117,7 +118,7 @@ class TcpEntity {
 
   std::unordered_map<int, std::vector<MsgCallback>> m_Callbacks;
   std::unordered_map<int, std::vector<MsgCallback>> m_MainThreadCallbacks;
-  std::vector<MessageOwner> m_MainThreadMessages;
+  std::deque<MessageOwner> m_MainThreadMessages;
 };
 
 //-----------------------------------------------------------------------------
