@@ -6,7 +6,6 @@
 #define ORBIT_LINUX_TRACING_TRACER_THREAD_H_
 
 #include <Function.h>
-#include <OrbitLinuxTracing/Events.h>
 #include <OrbitLinuxTracing/TracerListener.h>
 #include <linux/perf_event.h>
 

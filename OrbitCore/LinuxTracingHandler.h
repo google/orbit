@@ -34,10 +34,11 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   void Stop();
 
   void OnSchedulingSlice(SchedulingSlice scheduling_slice) override;
-  void OnCallstack(const LinuxTracing::Callstack& callstack) override;
+  void OnCallstackSample(CallstackSample callstack_sample) override;
   void OnFunctionCall(FunctionCall function_call) override;
   void OnGpuJob(GpuJob gpu_job) override;
   void OnThreadName(pid_t tid, const std::string& name) override;
+  void OnAddressInfo(AddressInfo address_info) override;
 
  private:
   uint64_t ProcessStringAndGetKey(const std::string& string);
@@ -49,7 +50,7 @@ class LinuxTracingHandler : public LinuxTracing::TracerListener {
   absl::Mutex addresses_seen_mutex_;
   absl::flat_hash_set<uint64_t> callstack_hashes_seen_;
   absl::Mutex callstack_hashes_seen_mutex_;
-  StringManager string_manager_;
+  absl::flat_hash_set<uint64_t> string_keys_seen_;
 };
 
 #endif  // ORBIT_CORE_LINUX_TRACING_HANDLER_H_

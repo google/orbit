@@ -4,8 +4,6 @@
 
 #include "GpuTracepointEventProcessor.h"
 
-#include <OrbitLinuxTracing/Events.h>
-
 #include <string>
 #include <tuple>
 #include <vector>

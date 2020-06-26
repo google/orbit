@@ -91,6 +91,19 @@ message ThreadName {
   uint64 timestamp_ns = 4;
 }
 
+message AddressInfo {
+  uint64 absolute_address = 1;
+  oneof function_name_or_key {
+    string function_name = 2;
+    uint64 function_name_key = 3;
+  }
+  uint64 offset_in_function = 4;
+  oneof map_name_or_key {
+    string map_name = 5;
+    uint64 map_name_key = 6;
+  }
+}
+
 message CaptureEvent {
   oneof event {
     SchedulingSlice scheduling_slice = 1;
@@ -100,5 +113,6 @@ message CaptureEvent {
     InternedString interned_string = 5;
     GpuJob gpu_job = 6;
     ThreadName thread_name = 7;
+    AddressInfo address_info = 8;
   }
 }
