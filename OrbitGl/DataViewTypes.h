@@ -15,7 +15,7 @@ enum class DataViewType {
   PROCESSES,
   MODULES,
   SAMPLING,
-  SESSIONS,
+  PRESETS,
   LOG,
   ALL,
   INVALID

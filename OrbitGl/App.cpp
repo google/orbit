@@ -330,7 +330,7 @@ void OrbitApp::PostInit() {
     }
   }
 
-  ListSessions();
+  ListPresets();
 
   string_manager_ = std::make_shared<StringManager>();
   GCurrentTimeGraph->SetStringManager(string_manager_);
@@ -403,23 +403,23 @@ void OrbitApp::LoadFileMapping() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::ListSessions() {
-  std::vector<std::string> session_filenames =
+void OrbitApp::ListPresets() {
+  std::vector<std::string> preset_filenames =
       Path::ListFiles(Path::GetPresetPath(), ".opr");
-  std::vector<std::shared_ptr<Session>> sessions;
-  for (std::string& filename : session_filenames) {
-    auto session = std::make_shared<Session>();
-    outcome::result<void, std::string> result = 
-      ReadSessionFromFile(filename, session.get());
+  std::vector<std::shared_ptr<Preset>> presets;
+  for (std::string& filename : preset_filenames) {
+    auto preset = std::make_shared<Preset>();
+    outcome::result<void, std::string> result =
+      ReadPresetFromFile(filename, preset.get());
     if (result.has_error()) {
-      ERROR("Loading session failed: \"%s\"", result.error());
+      ERROR("Loading preset failed: \"%s\"", result.error());
       continue;
     }
-    session->m_FileName = filename;
-    sessions.push_back(session);
+    preset->m_FileName = filename;
+    presets.push_back(preset);
   }
 
-  m_SessionsDataView->SetSessions(sessions);
+  m_PresetsDataView->SetPresets(presets);
 }
 
 //-----------------------------------------------------------------------------
@@ -626,7 +626,7 @@ std::string OrbitApp::GetCaptureFileName() {
 }
 
 //-----------------------------------------------------------------------------
-std::string OrbitApp::GetSessionFileName() {
+std::string OrbitApp::GetPresetFileName() {
   return Capture::GSessionPresets ? Capture::GSessionPresets->m_FileName : "";
 }
 
@@ -642,17 +642,17 @@ void OrbitApp::SetClipboard(const std::string& text) {
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> OrbitApp::OnSaveSession(
+outcome::result<void, std::string> OrbitApp::OnSavePreset(
     const std::string& filename) {
-  OUTCOME_TRY(Capture::SaveSession(filename));
-  ListSessions();
-  Refresh(DataViewType::SESSIONS);
+  OUTCOME_TRY(Capture::SavePreset(filename));
+  ListPresets();
+  Refresh(DataViewType::PRESETS);
   return outcome::success();
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> OrbitApp::ReadSessionFromFile(
-    const std::string& filename, Session* session) {
+outcome::result<void, std::string> OrbitApp::ReadPresetFromFile(
+    const std::string& filename, Preset* preset) {
   std::string file_path = filename;
 
   if (Path::GetDirectory(filename).empty()) {
@@ -661,45 +661,45 @@ outcome::result<void, std::string> OrbitApp::ReadSessionFromFile(
 
   std::ifstream file(file_path, std::ios::binary);
   if (file.fail()) {
-    ERROR("Loading session from \"%s\": file.fail()", file_path);
+    ERROR("Loading preset from \"%s\": file.fail()", file_path);
     return outcome::failure("Error opening the file for reading");
   }
 
   try {
     cereal::BinaryInputArchive archive(file);
-    archive(*session);
+    archive(*preset);
     file.close();
     return outcome::success();
   } catch (std::exception& e) {
-    ERROR("Loading session from \"%s\": %s", file_path, e.what());
-    return outcome::failure("Error reading the session");
+    ERROR("Loading preset from \"%s\": %s", file_path, e.what());
+    return outcome::failure("Error reading the preset");
   }
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> OrbitApp::OnLoadSession(
+outcome::result<void, std::string> OrbitApp::OnLoadPreset(
     const std::string& filename) {
-  auto session = std::make_shared<Session>();
-  OUTCOME_TRY(ReadSessionFromFile(filename, session.get()));
-  session->m_FileName = filename;
-  LoadSession(session);
+  auto preset = std::make_shared<Preset>();
+  OUTCOME_TRY(ReadPresetFromFile(filename, preset.get()));
+  preset->m_FileName = filename;
+  LoadPreset(preset);
   return outcome::success();
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::LoadSession(const std::shared_ptr<Session>& session) {
-  if (Capture::GTargetProcess->GetFullPath() == session->m_ProcessFullPath) {
+void OrbitApp::LoadPreset(const std::shared_ptr<Preset>& preset) {
+  if (Capture::GTargetProcess->GetFullPath() == preset->m_ProcessFullPath) {
     // In case we already have the correct process selected
-    GOrbitApp->LoadModulesFromSession(Capture::GTargetProcess, session);
+    GOrbitApp->LoadModulesFromPreset(Capture::GTargetProcess, preset);
     return;
   }
-  if (!SelectProcess(Path::GetFileName(session->m_ProcessFullPath))) {
+  if (!SelectProcess(Path::GetFileName(preset->m_ProcessFullPath))) {
     SendErrorToUi("Session loading failed",
                   absl::StrFormat("The process \"%s\" is not running.",
-                                  session->m_ProcessFullPath));
+                                  preset->m_ProcessFullPath));
     return;
   }
-  Capture::GSessionPresets = session;
+  Capture::GSessionPresets = preset;
 }
 
 //-----------------------------------------------------------------------------
@@ -881,8 +881,8 @@ void OrbitApp::SendErrorToUi(const std::string& title,
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadModuleOnRemote(int32_t process_id,
                                   const std::shared_ptr<Module>& module,
-                                  const std::shared_ptr<Session>& session) {
-  thread_pool_->Schedule([this, process_id, module, session]() {
+                                  const std::shared_ptr<Preset>& preset) {
+  thread_pool_->Schedule([this, process_id, module, preset]() {
     const auto remote_symbols_result =
         process_manager_->LoadSymbols(module->m_FullName);
 
@@ -899,22 +899,22 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id,
 
     main_thread_executor_->Schedule(
         [this, symbols = std::move(remote_symbols_result.value()), module,
-         process_id, session]() {
+         process_id, preset]() {
           symbol_helper_.LoadSymbolsIntoModule(module, symbols);
           LOG("Received and loaded %lu function symbols from remote service "
               "for module %s",
               module->m_Pdb->GetFunctions().size(), module->m_Name.c_str());
-          SymbolLoadingFinished(process_id, module, session);
+          SymbolLoadingFinished(process_id, module, preset);
         });
   });
 }
 
 void OrbitApp::SymbolLoadingFinished(uint32_t process_id,
                                      const std::shared_ptr<Module>& module,
-                                     const std::shared_ptr<Session>& session) {
-  if (session != nullptr &&
-      session->m_Modules.find(module->m_FullName) != session->m_Modules.end()) {
-    module->m_Pdb->ApplyPresets(*session);
+                                     const std::shared_ptr<Preset>& preset) {
+  if (preset != nullptr &&
+      preset->m_Modules.find(module->m_FullName) != preset->m_Modules.end()) {
+    module->m_Pdb->ApplyPreset(*preset);
   }
 
   data_manager_->FindModuleByAddressStart(process_id, module->m_AddressStart)
@@ -929,7 +929,7 @@ void OrbitApp::SymbolLoadingFinished(uint32_t process_id,
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadModules(int32_t process_id,
                            const std::vector<std::shared_ptr<Module>>& modules,
-                           const std::shared_ptr<Session>& session) {
+                           const std::shared_ptr<Preset>& preset) {
   // TODO(159868905) use ModuleData instead of Module
   for (const auto& module : modules) {
     if (modules_currently_loading_.contains(module->m_FullName)) {
@@ -941,26 +941,26 @@ void OrbitApp::LoadModules(int32_t process_id,
     if (symbol_helper_.LoadSymbolsUsingSymbolsFile(module)) {
       LOG("Loaded %lu function symbols locally for modules %s",
           module->m_Pdb->GetFunctions().size(), module->m_Name);
-      SymbolLoadingFinished(process_id, module, session);
+      SymbolLoadingFinished(process_id, module, preset);
     } else {
       LOG("Did not find local symbols for module: %s", module->m_Name);
-      LoadModuleOnRemote(process_id, module, session);
+      LoadModuleOnRemote(process_id, module, preset);
     }
   }
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::LoadModulesFromSession(const std::shared_ptr<Process>& process,
-                                      const std::shared_ptr<Session>& session) {
+void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
+                                      const std::shared_ptr<Preset>& preset) {
   std::vector<std::shared_ptr<Module>> modules;
-  for (const auto& pair : session->m_Modules) {
+  for (const auto& pair : preset->m_Modules) {
     const std::string& module_path = pair.first;
     const auto& module = process->GetModuleFromPath(module_path);
     if (module != nullptr && !module->IsLoaded()) {
       modules.emplace_back(std::move(module));
     }
   }
-  LoadModules(process->GetID(), modules, session);
+  LoadModules(process->GetID(), modules, preset);
 }
 
 //-----------------------------------------------------------------------------
@@ -1048,9 +1048,9 @@ void OrbitApp::OnProcessSelected(int32_t pid) {
           process->AddModule(module);
         }
 
-        std::shared_ptr<Session> session = Capture::GSessionPresets;
-        if (session) {
-          LoadModulesFromSession(process, session);
+        std::shared_ptr<Preset> preset = Capture::GSessionPresets;
+        if (preset) {
+          LoadModulesFromPreset(process, preset);
           Capture::GSessionPresets = nullptr;
         }
         // To this point ----------------------------------
@@ -1150,12 +1150,12 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       }
       return m_ProcessesDataView.get();
 
-    case DataViewType::SESSIONS:
-      if (!m_SessionsDataView) {
-        m_SessionsDataView = std::make_unique<SessionsDataView>();
-        m_Panels.push_back(m_SessionsDataView.get());
+    case DataViewType::PRESETS:
+      if (!m_PresetsDataView) {
+        m_PresetsDataView = std::make_unique<PresetsDataView>();
+        m_Panels.push_back(m_PresetsDataView.get());
       }
-      return m_SessionsDataView.get();
+      return m_PresetsDataView.get();
 
     case DataViewType::LOG:
       if (!m_LogDataView) {

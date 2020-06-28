@@ -66,7 +66,7 @@ std::chrono::system_clock::time_point Capture::GCaptureTimePoint;
 
 std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
 std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
-std::shared_ptr<Session> Capture::GSessionPresets = nullptr;
+std::shared_ptr<Preset> Capture::GSessionPresets = nullptr;
 
 void (*Capture::GClearCaptureDataFunc)();
 std::vector<std::shared_ptr<SamplingProfiler>> GOldSamplingProfilers;
@@ -389,18 +389,18 @@ void Capture::DisplayStats() {
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> Capture::SaveSession(
+outcome::result<void, std::string> Capture::SavePreset(
     const std::string& filename) {
-  Session session;
-  session.m_ProcessFullPath = GTargetProcess->GetFullPath();
+  Preset preset;
+  preset.m_ProcessFullPath = GTargetProcess->GetFullPath();
 
   GCoreApp->SendToUi("UpdateProcessParams");
-  session.m_Arguments = GParams.m_Arguments;
-  session.m_WorkingDirectory = GParams.m_WorkingDirectory;
+  preset.m_Arguments = GParams.m_Arguments;
+  preset.m_WorkingDirectory = GParams.m_WorkingDirectory;
 
   for (auto& func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {
-      session.m_Modules[func->GetLoadedModulePath()].m_FunctionHashes.push_back(
+      preset.m_Modules[func->GetLoadedModulePath()].m_FunctionHashes.push_back(
           func->Hash());
     }
   }
@@ -412,19 +412,20 @@ outcome::result<void, std::string> Capture::SaveSession(
 
   std::ofstream file(filename_with_ext, std::ios::binary);
   if (file.fail()) {
-    ERROR("Saving session in \"%s\": %s", filename_with_ext, "file.fail()");
+    ERROR("Saving preset in \"%s\": %s", filename_with_ext, "file.fail()");
     return outcome::failure("Error opening the file for writing");
   }
 
   try {
     SCOPE_TIMER_LOG(
-        absl::StrFormat("Saving session in \"%s\"", filename_with_ext));
+        absl::StrFormat("Saving preset in \"%s\"", filename_with_ext));
     cereal::BinaryOutputArchive archive(file);
-    archive(cereal::make_nvp("Session", session));
+    // "Session" is use for backwards compatibility.
+    archive(cereal::make_nvp("Session", preset));
     return outcome::success();
   } catch (std::exception& e) {
-    ERROR("Saving session in \"%s\": %s", filename_with_ext, e.what());
-    return outcome::failure("Error serializing the session");
+    ERROR("Saving preset in \"%s\": %s", filename_with_ext, e.what());
+    return outcome::failure("Error serializing the preset");
   }
 }
 

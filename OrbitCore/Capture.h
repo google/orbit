@@ -15,7 +15,7 @@
 #include "absl/container/flat_hash_map.h"
 
 class Process;
-class Session;
+class Preset;
 class SamplingProfiler;
 class Function;
 struct CallStack;
@@ -44,7 +44,7 @@ class Capture {
   static bool IsCapturing();
   static void DisplayStats();
   static void TestHooks();
-  static outcome::result<void, std::string> SaveSession(
+  static outcome::result<void, std::string> SavePreset(
       const std::string& filename);
   static void NewSamplingProfiler();
   static bool IsTrackingEvents();
@@ -79,7 +79,7 @@ class Capture {
   static ULONG64 GNumProfileEvents;
   static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
   static std::shared_ptr<Process> GTargetProcess;
-  static std::shared_ptr<Session> GSessionPresets;
+  static std::shared_ptr<Preset> GSessionPresets;
   static std::shared_ptr<CallStack> GSelectedCallstack;
   static void (*GClearCaptureDataFunc)();
   static std::vector<std::shared_ptr<Function>> GSelectedFunctions;

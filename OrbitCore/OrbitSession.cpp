@@ -7,13 +7,13 @@
 #include "OrbitSession.h"
 
 //-----------------------------------------------------------------------------
-Session::Session() {}
+Preset::Preset() {}
 
 //-----------------------------------------------------------------------------
-Session::~Session() {}
+Preset::~Preset() {}
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(Session, 1) {
+ORBIT_SERIALIZE(Preset, 1) {
   ORBIT_NVP_VAL(0, m_ProcessFullPath);
   ORBIT_NVP_VAL(0, m_Modules);
   ORBIT_NVP_VAL(1, m_WorkingDirectory);
@@ -21,7 +21,7 @@ ORBIT_SERIALIZE(Session, 1) {
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(SessionModule, 0) {
+ORBIT_SERIALIZE(PresetModule, 0) {
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_FunctionHashes);
 }

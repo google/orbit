@@ -258,9 +258,9 @@
     <addaction name="actionOpen_Capture"/>
     <addaction name="actionSave_Capture"/>
     <addaction name="separator"/>
-    <addaction name="actionOpen_Session"/>
-    <addaction name="actionSave_Session"/>
-    <addaction name="actionSave_Session_As"/>
+    <addaction name="actionOpen_Preset"/>
+    <addaction name="actionSave_Preset"/>
+    <addaction name="actionSave_Preset_As"/>
     <addaction name="separator"/>
     <addaction name="actionLaunch_Process"/>
     <addaction name="actionDisconnect"/>
@@ -321,9 +321,9 @@
    <addaction name="menuHelp"/>
    <addaction name="menuFeedback"/>
   </widget>
-  <action name="actionSave_Session">
+  <action name="actionSave_Preset">
    <property name="text">
-    <string>Save Session</string>
+    <string>Save Preset</string>
    </property>
   </action>
   <action name="actionReport_Missing_Feature">
@@ -341,9 +341,9 @@
     <string>About</string>
    </property>
   </action>
-  <action name="actionOpen_Session">
+  <action name="actionOpen_Preset">
    <property name="text">
-    <string>Open Session</string>
+    <string>Open Preset</string>
    </property>
   </action>
   <action name="actionDisconnect">
@@ -374,9 +374,9 @@
     <string>Dev Mode</string>
    </property>
   </action>
-  <action name="actionSave_Session_As">
+  <action name="actionSave_Preset_As">
    <property name="text">
-    <string>Save Session As...</string>
+    <string>Save Preset As...</string>
    </property>
   </action>
   <action name="actionEnable_Context_Switches">

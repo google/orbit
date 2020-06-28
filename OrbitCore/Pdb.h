@@ -73,7 +73,7 @@ class Pdb {
   void PopulateStringFunctionMap();
   void Clear();
   void Reserve();
-  void ApplyPresets(const Session& session);
+  void ApplyPreset(const Preset& preset);
 
   Function* GetFunctionFromExactAddress(uint64_t a_Address);
   Function* GetFunctionFromProgramCounter(uint64_t a_Address);
@@ -191,7 +191,7 @@ class Pdb {
   void PopulateStringFunctionMap();
   void Clear();
   void Reserve();
-  void ApplyPresets(const Session& session);
+  void ApplyPreset(const Preset& preset);
 
   Function* GetFunctionFromExactAddress(uint64_t a_Address);
   Function* GetFunctionFromProgramCounter(uint64_t a_Address);
