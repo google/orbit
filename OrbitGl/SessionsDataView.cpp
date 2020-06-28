@@ -55,10 +55,10 @@ std::string PresetsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
 }
 
 //-----------------------------------------------------------------------------
-#define ORBIT_PRESET_SORT(Member)                                           \
-  [&](int a, int b) {                                                        \
+#define ORBIT_PRESET_SORT(Member)                                        \
+  [&](int a, int b) {                                                    \
     return OrbitUtils::Compare(presets_[a]->Member, presets_[b]->Member, \
-                               ascending);                                   \
+                               ascending);                               \
   }
 
 //-----------------------------------------------------------------------------
@@ -100,8 +100,8 @@ std::vector<std::string> PresetsDataView::GetContextMenu(
 
 //-----------------------------------------------------------------------------
 void PresetsDataView::OnContextMenu(const std::string& a_Action,
-                                     int a_MenuIndex,
-                                     const std::vector<int>& a_ItemIndices) {
+                                    int a_MenuIndex,
+                                    const std::vector<int>& a_ItemIndices) {
   if (a_Action == MENU_ACTION_LOAD) {
     if (a_ItemIndices.size() != 1) {
       return;

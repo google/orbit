@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 #pragma once
+#include "OrbitSdk.h"
 #include "imgui.h"
 #include "imgui_internal.h"
-#include "OrbitSdk.h"
 
 //-----------------------------------------------------------------------------
 class UserPlugin : public Orbit::Plugin {

@@ -66,10 +66,8 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::string GetPresetFileName();
   std::string GetSaveFile(const std::string& extension);
   void SetClipboard(const std::string& text);
-  outcome::result<void, std::string> OnSavePreset(
-      const std::string& file_name);
-  outcome::result<void, std::string> OnLoadPreset(
-      const std::string& file_name);
+  outcome::result<void, std::string> OnSavePreset(const std::string& file_name);
+  outcome::result<void, std::string> OnLoadPreset(const std::string& file_name);
   outcome::result<void, std::string> OnSaveCapture(
       const std::string& file_name);
   outcome::result<void, std::string> OnLoadCapture(
@@ -193,7 +191,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
                    const std::vector<std::shared_ptr<Module>>& modules,
                    const std::shared_ptr<Preset>& preset = nullptr);
   void LoadModulesFromPreset(const std::shared_ptr<Process>& process,
-                              const std::shared_ptr<Preset>& preset);
+                             const std::shared_ptr<Preset>& preset);
   bool IsLoading();
   void SetTrackContextSwitches(bool a_Value);
   bool GetTrackContextSwitches();
@@ -235,7 +233,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::shared_ptr<Process> FindProcessByPid(int32_t pid);
 
   outcome::result<void, std::string> ReadPresetFromFile(
-    const std::string& filename, Preset* preset);
+      const std::string& filename, Preset* preset);
 
   ApplicationOptions options_;
 

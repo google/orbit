@@ -12,8 +12,8 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QMouseEvent>
-#include <QProgressDialog>
 #include <QPointer>
+#include <QProgressDialog>
 #include <QTimer>
 #include <QToolTip>
 #include <utility>
@@ -247,7 +247,8 @@ void OrbitMainWindow::SetupCodeView() {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::ShowFeedbackDialog() {
-  QDialog feedback_dialog{nullptr, Qt::WindowTitleHint | Qt::WindowCloseButtonHint};
+  QDialog feedback_dialog{nullptr,
+                          Qt::WindowTitleHint | Qt::WindowCloseButtonHint};
 
   const auto layout = QPointer{new QGridLayout{&feedback_dialog}};
   const auto button_box =
@@ -566,17 +567,22 @@ void OrbitMainWindow::OnSetClipboard(const std::string& text) {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionReport_Missing_Feature_triggered() {
-  if (!QDesktopServices::openUrl(QUrl("https://community.stadia.dev/s/feature-requests", QUrl::StrictMode))) {
+  if (!QDesktopServices::openUrl(
+          QUrl("https://community.stadia.dev/s/feature-requests",
+               QUrl::StrictMode))) {
     QMessageBox::critical(
-        this, "Error opening URL", "Could not open community.stadia.dev/s/feature-request");
+        this, "Error opening URL",
+        "Could not open community.stadia.dev/s/feature-request");
   }
 }
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionReport_Bug_triggered() {
-  if (!QDesktopServices::openUrl(QUrl("https://community.stadia.dev/s/contactsupport", QUrl::StrictMode))) {
+  if (!QDesktopServices::openUrl(QUrl(
+          "https://community.stadia.dev/s/contactsupport", QUrl::StrictMode))) {
     QMessageBox::critical(
-        this, "Error opening URL", "Could not open community.stadia.dev/s/contactsupport");
+        this, "Error opening URL",
+        "Could not open community.stadia.dev/s/contactsupport");
   }
 }
 
@@ -586,8 +592,8 @@ void OrbitMainWindow::on_actionAbout_triggered() {
   dialog.setWindowTitle(windowTitle());
   dialog.setVersionString(QCoreApplication::applicationVersion());
 
-  QFile licenseFile{QDir{QCoreApplication::applicationDirPath()}.filePath(
-      "NOTICE")};
+  QFile licenseFile{
+      QDir{QCoreApplication::applicationDirPath()}.filePath("NOTICE")};
   if (licenseFile.open(QIODevice::ReadOnly)) {
     dialog.setLicenseText(licenseFile.readAll());
   }
@@ -864,7 +870,8 @@ void OrbitMainWindow::on_actionServiceCheckFalse_triggered() {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionServiceNullPointerDereference_triggered() {
-  GOrbitApp->CrashOrbitService(GetCrashRequest_CrashType_NULL_POINTER_DEREFERENCE);
+  GOrbitApp->CrashOrbitService(
+      GetCrashRequest_CrashType_NULL_POINTER_DEREFERENCE);
 }
 
 //-----------------------------------------------------------------------------

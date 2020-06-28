@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "OrbitType.h"
 
 #include "BaseTypes.h"
@@ -19,9 +17,7 @@
 #include "Serialization.h"
 #include "TcpServer.h"
 
-void Type::AddParent(Type* a_Parent) {
-  UNUSED(a_Parent);
-}
+void Type::AddParent(Type* a_Parent) { UNUSED(a_Parent); }
 
 void Type::GenerateDataLayout() const {
   // TODO(b/158093728): Dia Loading was disabled, reimplement using LLVM.

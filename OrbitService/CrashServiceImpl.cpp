@@ -18,25 +18,24 @@ static void InfiniteRecursion(int num) {
 }
 
 Status CrashServiceImpl::CrashOrbitService(ServerContext*,
-                                          const GetCrashRequest* request,
-                                          GetCrashResponse*) {
-  switch (request->crash_type())
-  {
-  case GetCrashRequest_CrashType_CHECK_FALSE: {
-    CHECK(false);
-    break;
-  }
-  case GetCrashRequest_CrashType_NULL_POINTER_DEREFERENCE: {
-    int* null_pointer = nullptr;
-    *null_pointer = 0;
-    break;
-  }
-  case GetCrashRequest_CrashType_STACK_OVERFLOW: {
-    InfiniteRecursion(0);
-    break;
-  }
-  default:
-    break;
+                                           const GetCrashRequest* request,
+                                           GetCrashResponse*) {
+  switch (request->crash_type()) {
+    case GetCrashRequest_CrashType_CHECK_FALSE: {
+      CHECK(false);
+      break;
+    }
+    case GetCrashRequest_CrashType_NULL_POINTER_DEREFERENCE: {
+      int* null_pointer = nullptr;
+      *null_pointer = 0;
+      break;
+    }
+    case GetCrashRequest_CrashType_STACK_OVERFLOW: {
+      InfiniteRecursion(0);
+      break;
+    }
+    default:
+      break;
   }
 
   return Status::OK;

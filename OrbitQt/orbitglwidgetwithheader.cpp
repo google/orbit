@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "orbitglwidgetwithheader.h"
 
 // This needs to be first because if it is not GL/glew.h

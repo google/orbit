@@ -6,8 +6,8 @@
 
 #include "Core.h"
 #include "Log.h"
-#include "Tcp.h"
 #include "OrbitBase/Logging.h"
+#include "Tcp.h"
 
 //-----------------------------------------------------------------------------
 TcpEntity::TcpEntity()
@@ -86,7 +86,7 @@ void TcpEntity::SendData() {
     while (m_IsValid && !m_ExitRequested && !m_FlushRequested &&
            m_SendQueue.try_dequeue(buffer)) {
       --m_NumQueuedEntries;
-      const auto  socket = GetSocket();
+      const auto socket = GetSocket();
       if (socket && socket->is_open()) {
         try {
           asio::write(*socket, SharedConstBuffer(buffer));

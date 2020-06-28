@@ -18,11 +18,11 @@ outcome::result<Context> Context::Create() {
   return Context{};
 }
 
-Context::Context(Context &&other)  noexcept: active_(other.active_) {
+Context::Context(Context&& other) noexcept : active_(other.active_) {
   other.active_ = false;
 }
 
-Context& Context::operator=(Context &&other)  noexcept{
+Context& Context::operator=(Context&& other) noexcept {
   if (&other != this) {
     active_ = other.active_;
     other.active_ = false;
@@ -37,4 +37,4 @@ Context::~Context() noexcept {
   }
 }
 
-} // namespace OrbitSsh
+}  // namespace OrbitSsh
