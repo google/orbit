@@ -4,6 +4,7 @@
 
 #include "SymbolHelper.h"
 
+#include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 
 #include <fstream>
@@ -11,7 +12,6 @@
 #include "ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "Path.h"
-#include "Pdb.h"
 
 namespace {
 
@@ -55,77 +55,37 @@ std::vector<std::string> ReadSymbolsFile() {
   return directories;
 }
 
-bool LoadFromElfFile(std::shared_ptr<Module> module,
-                     const std::unique_ptr<ElfFile>& elf_file) {
-  auto load_bias = elf_file->GetLoadBias();
-  if (!load_bias) {
-    ERROR(
-        "Unable to get load_bias %s (does the file have PT_LOAD program "
-        "headers?)",
-        elf_file->GetFilePath().c_str());
-    return false;
-  }
-
-  std::shared_ptr<Pdb> pdb =
-      std::make_shared<Pdb>(module->m_AddressStart, load_bias.value(),
-                            elf_file->GetFilePath(), module->m_FullName);
-
-  if (!elf_file->LoadFunctions(pdb.get())) {
-    ERROR("Unable to load functions from %s", elf_file->GetFilePath().c_str());
-    return false;
-  }
-
-  pdb->ProcessData();
-
-  module->m_Pdb = pdb;
-  module->m_PdbName = elf_file->GetFilePath();
-  module->SetLoaded(true);
-  return true;
-}
-
-bool FindAndLoadSymbols(std::shared_ptr<Module> module,
-                        const std::vector<std::string>& search_directories) {
-  FAIL_IF(module->m_DebugSignature.empty(), "build id of module is empty: %s",
-          module->m_Name);
-  std::string name_without_extension = Path::StripExtension(module->m_Name);
+outcome::result<ModuleSymbols, std::string> FindSymbols(
+    const std::string& module_path, const std::string& build_id,
+    const std::vector<std::string>& search_directories) {
+  std::string filename = Path::GetFileName(module_path);
+  std::string filename_without_extension = Path::StripExtension(filename);
 
   std::vector<std::string> search_file_paths;
   for (const auto& directory : search_directories) {
     search_file_paths.emplace_back(
-        Path::JoinPath({directory, name_without_extension + ".debug"}));
+        Path::JoinPath({directory, filename_without_extension + ".debug"}));
     search_file_paths.emplace_back(
-        Path::JoinPath({directory, module->m_Name + ".debug"}));
-    search_file_paths.emplace_back(Path::JoinPath({directory, module->m_Name}));
+        Path::JoinPath({directory, filename + ".debug"}));
+    search_file_paths.emplace_back(Path::JoinPath({directory, filename}));
   }
 
-  LOG("Trying to find symbols for module: %s", module->m_Name);
+  LOG("Trying to find symbols for module: \"%s\"", module_path);
   for (const auto& symbols_file_path : search_file_paths) {
     if (!Path::FileExists(symbols_file_path)) continue;
 
     std::unique_ptr<ElfFile> symbols_file = ElfFile::Create(symbols_file_path);
     if (!symbols_file) continue;
     if (!symbols_file->HasSymtab()) continue;
-    if (symbols_file->GetBuildId() != module->m_DebugSignature) continue;
+    if (symbols_file->GetBuildId() != build_id) continue;
 
-    LOG("Loading symbols for module \"%s\" from \"%s\"", module->m_Name,
+    LOG("Loading symbols for module \"%s\" from \"%s\"", module_path,
         symbols_file_path);
-    return LoadFromElfFile(module, symbols_file);
+    return symbols_file->LoadSymbols();
   }
 
-  return false;
-}
-
-bool CheckModuleHasBuildId(std::shared_ptr<Module> module) {
-  if (module->m_DebugSignature.empty()) {
-    ERROR(
-        "Symbol loading from a separate file is not supported for module "
-        "\"%s\", because it does not contain a build id. This likely means "
-        "the build id has been turned off manually.",
-        module->m_Name);
-    return false;
-  } else {
-    return true;
-  }
+  return absl::StrFormat("Could not find symbols for module \"%s\"",
+                         module_path);
 }
 
 }  // namespace
@@ -144,49 +104,30 @@ outcome::result<ModuleSymbols, std::string> SymbolHelper::LoadSymbolsCollector(
   std::unique_ptr<ElfFile> elf_file = ElfFile::Create(module_path);
 
   if (!elf_file) {
-    return absl::StrFormat("Unable to load ELF file: \"%s\"", module_path);
+    return outcome::failure(
+        absl::StrFormat("Unable to load ELF file: \"%s\"", module_path));
   }
-
-  const auto module = std::make_shared<Module>();
-  module->m_FullName = module_path;
-  module->m_DebugSignature = elf_file->GetBuildId();
-  module->m_Name = Path::GetFileName(module_path);
 
   if (elf_file->HasSymtab()) {
-    if (!LoadFromElfFile(module, elf_file)) {
-      return absl::StrFormat("Error while loading symbols from file: \"%s\"",
-                             module_path);
-    }
-  } else {
-    std::vector<std::string> search_directories = collector_symbol_directories_;
-    search_directories.emplace_back(Path::GetDirectory(module->m_FullName));
-
-    if (!FindAndLoadSymbols(module, search_directories)) {
-      return absl::StrFormat("No symbols found on remote for module \"%s\"",
-                             module_path);
-    }
+    return elf_file->LoadSymbols();
   }
 
-  ModuleSymbols module_symbols;
-  module_symbols.set_load_bias(module->m_Pdb->GetLoadBias());
-  module_symbols.set_symbols_file_path(module->m_Pdb->GetFileName());
-
-  for (const auto& function : module->m_Pdb->GetFunctions()) {
-    SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
-    symbol_info->set_name(function->Name());
-    symbol_info->set_pretty_name(function->PrettyName());
-    symbol_info->set_address(function->Address());
-    symbol_info->set_size(function->Size());
-    symbol_info->set_source_file(function->File());
-    symbol_info->set_source_line(function->Line());
+  if (elf_file->GetBuildId().empty()) {
+    return outcome::failure(absl::StrFormat(
+        "No symbols are contained in the module \"%s\". Symbols cannot be "
+        "loaded from a separate symbols file, because module does not "
+        "contain a build_id,",
+        module_path));
   }
 
-  return module_symbols;
+  std::vector<std::string> search_directories = collector_symbol_directories_;
+  search_directories.emplace_back(Path::GetDirectory(module_path));
+
+  return FindSymbols(module_path, elf_file->GetBuildId(), search_directories);
 }
 
-bool SymbolHelper::LoadSymbolsUsingSymbolsFile(
-    std::shared_ptr<Module> module) const {
-  if (!CheckModuleHasBuildId(module)) return false;
-
-  return FindAndLoadSymbols(module, symbols_file_directories_);
+outcome::result<ModuleSymbols, std::string>
+SymbolHelper::LoadUsingSymbolsPathFile(const std::string& module_path,
+                                       const std::string& build_id) const {
+  return FindSymbols(module_path, build_id, symbols_file_directories_);
 }

@@ -935,9 +935,13 @@ void OrbitApp::LoadModules(int32_t process_id,
     modules_currently_loading_.insert(module->m_FullName);
 
     // TODO (159889010) Move symbol loading off the main thread.
-    if (symbol_helper_.LoadSymbolsUsingSymbolsFile(module)) {
-      LOG("Loaded %lu function symbols locally for modules %s",
-          module->m_Pdb->GetFunctions().size(), module->m_Name);
+    const auto symbols = symbol_helper_.LoadUsingSymbolsPathFile(
+        module->m_FullName, module->m_DebugSignature);
+
+    if (symbols) {
+      module->LoadSymbols(symbols.value());
+      LOG("Loaded %lu function symbols locally for module \"%s\"",
+          symbols.value().symbol_infos().size(), module->m_FullName);
       SymbolLoadingFinished(process_id, module, preset);
     } else {
       LOG("Did not find local symbols for module: %s", module->m_Name);
