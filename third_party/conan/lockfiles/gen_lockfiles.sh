@@ -9,10 +9,13 @@ else
   subdirectory="windows"
   profiles=({ggp,msvc{2017,2019}}_{release,relwithdebinfo,debug})
 fi
+if [ "$#" -ne 0 ]; then
+  profiles=( "$@" )
+fi
 
 for profile in ${profiles[@]}; do
   tmpfile="$(mktemp -d)"
-  conan graph lock "$REPO_ROOT" -pr $profile "--lockfile=$tmpfile" || exit $?
+  conan graph lock "$REPO_ROOT" -pr $profile -u --build '*' "--lockfile=$tmpfile" || exit $?
   jq --indent 1 'del(.graph_lock.nodes."0".path)' < "$tmpfile/conan.lock" \
     > "$REPO_ROOT/third_party/conan/lockfiles/$subdirectory/$profile/conan.lock" || exit $?
   rm -rf "$tmpfile"
