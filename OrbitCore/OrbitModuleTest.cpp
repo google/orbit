@@ -12,6 +12,7 @@
 #include "Path.h"
 #include "Pdb.h"
 #include "SymbolHelper.h"
+#include "symbol.pb.h"
 
 const std::string executable_directory =
     Path::GetExecutablePath() + "testdata/";
@@ -53,8 +54,7 @@ TEST(OrbitModule, LoadFunctions) {
     const std::unique_ptr<ElfFile> elf_file = ElfFile::Create(file_path);
     const auto symbols = elf_file->LoadSymbols();
     ASSERT_TRUE(symbols);
-    SymbolHelper symbol_helper;
-    symbol_helper.LoadSymbolsIntoModule(module, symbols.value());
+    module->LoadSymbols(symbols.value());
   }
 
   ASSERT_TRUE(module->m_Pdb != nullptr);
@@ -96,8 +96,7 @@ TEST(OrbitModule, GetFunctionFromExactAddress) {
     const std::unique_ptr<ElfFile> elf_file = ElfFile::Create(file_path);
     const auto symbols = elf_file->LoadSymbols();
     ASSERT_TRUE(symbols);
-    SymbolHelper symbol_helper;
-    symbol_helper.LoadSymbolsIntoModule(module, symbols.value());
+    module->LoadSymbols(symbols.value());
   }
 
   ASSERT_TRUE(module->m_Pdb != nullptr);
@@ -127,8 +126,7 @@ TEST(OrbitModule, GetFunctionFromProgramCounter) {
     const std::unique_ptr<ElfFile> elf_file = ElfFile::Create(file_path);
     const auto symbols = elf_file->LoadSymbols();
     ASSERT_TRUE(symbols);
-    SymbolHelper symbol_helper;
-    symbol_helper.LoadSymbolsIntoModule(module, symbols.value());
+    module->LoadSymbols(symbols.value());
   }
 
   ASSERT_TRUE(module->m_Pdb != nullptr);
@@ -152,4 +150,40 @@ TEST(OrbitModule, GetFunctionFromProgramCounter) {
   function = pdb.GetFunctionFromProgramCounter(__free_pc_addr);
   ASSERT_NE(function, nullptr);
   EXPECT_EQ(function->Name(), "__free");
+}
+
+TEST(SymbolHelper, LoadSymbols) {
+  ModuleSymbols module_symbols;
+  module_symbols.set_symbols_file_path("path/symbols_file_name");
+  module_symbols.set_load_bias(0x400);
+  SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
+  symbol_info->set_name("function name");
+  symbol_info->set_pretty_name("pretty name");
+  symbol_info->set_address(15);
+  symbol_info->set_size(12);
+  symbol_info->set_source_file("file name");
+  symbol_info->set_source_line(70);
+
+  std::shared_ptr<Module> module =
+      std::make_shared<Module>("module name", 0x40, 0);
+  module->LoadSymbols(module_symbols);
+
+  ASSERT_NE(module->m_Pdb, nullptr);
+  EXPECT_EQ(module->m_PdbName, "path/symbols_file_name");
+  EXPECT_TRUE(module->IsLoaded());
+
+  Pdb& pdb = *module->m_Pdb;
+  EXPECT_EQ(pdb.GetLoadedModuleName(), "module name");
+  EXPECT_EQ(pdb.GetFileName(), "path/symbols_file_name");
+  EXPECT_EQ(pdb.GetName(), "symbols_file_name");
+  EXPECT_EQ(pdb.GetHModule(), 0x40);
+  EXPECT_EQ(pdb.GetLoadBias(), 0x400);
+  ASSERT_EQ(pdb.GetFunctions().size(), 1);
+  auto resulting_function = pdb.GetFunctions()[0];
+  EXPECT_EQ(resulting_function->Name(), "function name");
+  EXPECT_EQ(resulting_function->PrettyName(), "pretty name");
+  EXPECT_EQ(resulting_function->Address(), 15);
+  EXPECT_EQ(resulting_function->Size(), 12);
+  EXPECT_EQ(resulting_function->File(), "file name");
+  EXPECT_EQ(resulting_function->Line(), 70);
 }

@@ -13,6 +13,7 @@
 #include "ScopeTimer.h"
 #include "Serialization.h"
 #include "absl/strings/str_format.h"
+#include "symbol.pb.h"
 
 #ifndef WIN32
 #include "Capture.h"
@@ -77,6 +78,29 @@ bool Module::LoadDebugInfo() {
 
   loaded_ = m_Pdb->LoadDataFromPdb();
   return loaded_;
+}
+
+//-----------------------------------------------------------------------------
+void Module::LoadSymbols(const ModuleSymbols& module_symbols) {
+  if (m_Pdb != nullptr) {
+    LOG("Warning: Module %s already contained symbols, will override now.",
+        m_Name);
+  }
+
+  m_Pdb = std::make_shared<Pdb>(m_AddressStart, module_symbols.load_bias(),
+                                module_symbols.symbols_file_path(), m_FullName);
+
+  for (const SymbolInfo& symbol_info : module_symbols.symbol_infos()) {
+    std::shared_ptr<Function> function = std::make_shared<Function>(
+        symbol_info.name(), symbol_info.pretty_name(), symbol_info.address(),
+        module_symbols.load_bias(), symbol_info.size(),
+        symbol_info.source_file(), symbol_info.source_line());
+    m_Pdb->AddFunction(function);
+  }
+
+  m_Pdb->ProcessData();
+  m_PdbName = module_symbols.symbols_file_path();
+  SetLoaded(true);
 }
 
 //-----------------------------------------------------------------------------

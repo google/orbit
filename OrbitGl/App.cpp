@@ -897,7 +897,7 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id,
     main_thread_executor_->Schedule(
         [this, symbols = std::move(remote_symbols_result.value()), module,
          process_id, preset]() {
-          symbol_helper_.LoadSymbolsIntoModule(module, symbols);
+          module->LoadSymbols(symbols);
           LOG("Received and loaded %lu function symbols from remote service "
               "for module %s",
               module->m_Pdb->GetFunctions().size(), module->m_Name.c_str());
