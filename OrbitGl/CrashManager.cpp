@@ -31,11 +31,13 @@ void CrashManagerImpl::CrashOrbitService(
   CrashOrbitServiceResponse response;
   grpc::ClientContext context;
 
-  grpc::Status status =
-      crash_service_->CrashOrbitService(&context, request, &response);
-  if (!status.ok()) {
-    ERROR("Grpc call failed: %s", status.error_message());
-  }
+  std::function<void(grpc::Status)> callback = [](::grpc::Status status) {
+    if (!status.ok()) {
+      ERROR("Grpc call failed: %s", status.error_message());
+    }
+  };
+  crash_service_->experimental_async()->CrashOrbitService(&context, &request,
+                                                          &response, callback);
 }
 
 }  // namespace
