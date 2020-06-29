@@ -11,6 +11,7 @@
 #include "BaseTypes.h"
 #include "OrbitFunction.h"
 #include "SerializationMacros.h"
+#include "symbol.pb.h"
 
 class Pdb;
 
@@ -22,6 +23,7 @@ struct Module {
 
   std::string GetPrettyName();
   bool LoadDebugInfo();
+  void LoadSymbols(const ModuleSymbols& module_symbols);
   bool ContainsAddress(uint64_t a_Address) {
     return m_AddressStart <= a_Address && m_AddressEnd > a_Address;
   }

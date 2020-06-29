@@ -190,22 +190,3 @@ bool SymbolHelper::LoadSymbolsUsingSymbolsFile(
 
   return FindAndLoadSymbols(module, symbols_file_directories_);
 }
-
-void SymbolHelper::LoadSymbolsIntoModule(
-    const std::shared_ptr<Module>& module,
-    const ModuleSymbols& module_symbols) const {
-  module->m_Pdb = std::make_shared<Pdb>(
-      module->m_AddressStart, module_symbols.load_bias(),
-      module_symbols.symbols_file_path(), module->m_FullName);
-
-  for (const auto& symbol_info : module_symbols.symbol_infos()) {
-    std::shared_ptr<Function> function = std::make_shared<Function>(
-        symbol_info.name(), symbol_info.pretty_name(), symbol_info.address(),
-        module_symbols.load_bias(), symbol_info.size(),
-        symbol_info.source_file(), symbol_info.source_line());
-    module->m_Pdb->AddFunction(std::move(function));
-  }
-  module->m_Pdb->ProcessData();
-  module->m_PdbName = module_symbols.symbols_file_path();
-  module->SetLoaded(true);
-}

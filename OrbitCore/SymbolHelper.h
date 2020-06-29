@@ -23,8 +23,6 @@ class SymbolHelper {
   outcome::result<ModuleSymbols, std::string> LoadSymbolsCollector(
       const std::string& module_path) const;
   bool LoadSymbolsUsingSymbolsFile(std::shared_ptr<Module> module) const;
-  void LoadSymbolsIntoModule(const std::shared_ptr<Module>& module,
-                             const ModuleSymbols& module_symbols) const;
 
   std::vector<std::string> GetSymbolsFileDirectories() const {
     return symbols_file_directories_;
