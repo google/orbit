@@ -4,6 +4,8 @@
 
 #include "FramePointerValidatorServiceImpl.h"
 
+#include <absl/strings/str_format.h>
+
 #include <vector>
 
 #include "ElfFile.h"

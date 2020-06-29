@@ -8,8 +8,6 @@
 #include <optional>
 #include <vector>
 
-#include "OrbitFunction.h"
-#include "Pdb.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Object/ObjectFile.h"
 #include "outcome.hpp"
@@ -20,7 +18,6 @@ class ElfFile {
   ElfFile() = default;
   virtual ~ElfFile() = default;
 
-  virtual bool LoadFunctions(Pdb* pdb) const = 0;
   virtual outcome::result<ModuleSymbols, std::string> LoadSymbols() const = 0;
   // Background and some terminology
   // When an elf file is loaded to memory it has its load segments
