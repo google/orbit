@@ -16,25 +16,6 @@
 const std::string executable_directory =
     Path::GetExecutablePath() + "testdata/";
 
-TEST(SymbolHelper, LoadSymbolsIncludedInBinary) {
-  const std::string executable_name = "hello_world_elf";
-  const std::string file_path = executable_directory + executable_name;
-
-  std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
-
-  SymbolHelper symbol_helper;
-  ASSERT_TRUE(symbol_helper.LoadSymbolsIncludedInBinary(module));
-
-  EXPECT_NE(module->m_Pdb, nullptr);
-  EXPECT_EQ(module->m_PdbName, file_path);
-  EXPECT_TRUE(module->IsLoaded());
-
-  Pdb& pdb = *module->m_Pdb;
-  EXPECT_EQ(pdb.GetLoadedModuleName(), file_path);
-  EXPECT_EQ(pdb.GetFileName(), file_path);
-  EXPECT_EQ(pdb.GetName(), executable_name);
-}
-
 TEST(SymbolHelper, LoadSymbolsCollectorSameFile) {
   const std::string executable_name = "hello_world_elf";
   const std::string file_path = executable_directory + executable_name;

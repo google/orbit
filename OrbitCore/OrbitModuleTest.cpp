@@ -7,6 +7,7 @@
 
 #include <utility>
 
+#include "ElfFile.h"
 #include "OrbitModule.h"
 #include "Path.h"
 #include "Pdb.h"
@@ -48,9 +49,15 @@ TEST(OrbitModule, LoadFunctions) {
   const std::string file_path = executable_directory + executable_name;
 
   std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
+  {
+    const std::unique_ptr<ElfFile> elf_file = ElfFile::Create(file_path);
+    const auto symbols = elf_file->LoadSymbols();
+    ASSERT_TRUE(symbols);
+    SymbolHelper symbol_helper;
+    symbol_helper.LoadSymbolsIntoModule(module, symbols.value());
+  }
 
-  SymbolHelper symbolHelper;
-  ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
+  ASSERT_TRUE(module->m_Pdb != nullptr);
   Pdb& pdb = *module->m_Pdb;
 
   // Check functions
@@ -85,9 +92,15 @@ TEST(OrbitModule, GetFunctionFromExactAddress) {
 
   std::shared_ptr<Module> module =
       std::make_shared<Module>(file_path, 0x400000, 0);
+  {
+    const std::unique_ptr<ElfFile> elf_file = ElfFile::Create(file_path);
+    const auto symbols = elf_file->LoadSymbols();
+    ASSERT_TRUE(symbols);
+    SymbolHelper symbol_helper;
+    symbol_helper.LoadSymbolsIntoModule(module, symbols.value());
+  }
 
-  SymbolHelper symbolHelper;
-  ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
+  ASSERT_TRUE(module->m_Pdb != nullptr);
   Pdb& pdb = *module->m_Pdb;
 
   pdb.PopulateFunctionMap();
@@ -110,10 +123,15 @@ TEST(OrbitModule, GetFunctionFromProgramCounter) {
 
   std::shared_ptr<Module> module =
       std::make_shared<Module>(file_path, 0x400000, 0);
+  {
+    const std::unique_ptr<ElfFile> elf_file = ElfFile::Create(file_path);
+    const auto symbols = elf_file->LoadSymbols();
+    ASSERT_TRUE(symbols);
+    SymbolHelper symbol_helper;
+    symbol_helper.LoadSymbolsIntoModule(module, symbols.value());
+  }
 
-  SymbolHelper symbolHelper;
-
-  ASSERT_TRUE(symbolHelper.LoadSymbolsIncludedInBinary(module));
+  ASSERT_TRUE(module->m_Pdb != nullptr);
   Pdb& pdb = *module->m_Pdb;
 
   pdb.PopulateFunctionMap();

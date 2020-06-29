@@ -20,7 +20,6 @@ class SymbolHelper {
       : collector_symbol_directories_(std::move(collector_symbol_directories)),
         symbols_file_directories_(std::move(symbols_file_directories)){};
 
-  bool LoadSymbolsIncludedInBinary(std::shared_ptr<Module> module) const;
   outcome::result<ModuleSymbols, std::string> LoadSymbolsCollector(
       const std::string& module_path) const;
   bool LoadSymbolsUsingSymbolsFile(std::shared_ptr<Module> module) const;
