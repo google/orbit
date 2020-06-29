@@ -4,18 +4,15 @@
 
 #include "App.h"
 
-#include <chrono>
-#include <cmath>
-#include <fstream>
-#include <thread>
-#include <utility>
-#include <outcome.hpp>
-
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 
-#include "OrbitBase/Logging.h"
-#include "OrbitBase/Tracing.h"
+#include <chrono>
+#include <cmath>
+#include <fstream>
+#include <outcome.hpp>
+#include <thread>
+#include <utility>
 
 #include "CallStackDataView.h"
 #include "Callstack.h"
@@ -38,6 +35,8 @@
 #include "Log.h"
 #include "LogDataView.h"
 #include "ModulesDataView.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Tracing.h"
 #include "OrbitSession.h"
 #include "Params.h"
 #include "Pdb.h"
@@ -409,7 +408,7 @@ void OrbitApp::ListPresets() {
   for (std::string& filename : preset_filenames) {
     auto preset = std::make_shared<Preset>();
     outcome::result<void, std::string> result =
-      ReadPresetFromFile(filename, preset.get());
+        ReadPresetFromFile(filename, preset.get());
     if (result.has_error()) {
       ERROR("Loading preset failed: \"%s\"", result.error());
       continue;
@@ -950,7 +949,7 @@ void OrbitApp::LoadModules(int32_t process_id,
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
-                                      const std::shared_ptr<Preset>& preset) {
+                                     const std::shared_ptr<Preset>& preset) {
   std::vector<std::shared_ptr<Module>> modules;
   for (const auto& pair : preset->m_Modules) {
     const std::string& module_path = pair.first;
@@ -1185,7 +1184,8 @@ void OrbitApp::FilterFunctions(const std::string& filter) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) {
+void OrbitApp::CrashOrbitService(
+    CrashOrbitServiceRequest_CrashType crash_type) {
   if (absl::GetFlag(FLAGS_devmode)) {
     thread_pool_->Schedule(
         [this, crash_type] { crash_manager_->CrashOrbitService(crash_type); });

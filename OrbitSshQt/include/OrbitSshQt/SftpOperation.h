@@ -36,7 +36,7 @@ enum class SftpOperationState {
 /*
   SftpOperation represents a file operation in the SSH-SFTP subsystem.
   It needs an established SftpChannel for operation.
- 
+
   Currently only file copies (local -> remote) are supported.
 */
 class SftpOperation

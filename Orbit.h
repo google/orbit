@@ -101,6 +101,6 @@ struct Scope {
   ~Scope() { Stop(); }
 };
 
-}  // namespace orbit
+}  // namespace orbit_api
 
 #endif  // ORBIT_H_

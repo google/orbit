@@ -2,15 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
 #include <atomic>
 #include <string>
 #include <vector>
 
-#include "Message.h"
 #include "BaseTypes.h"
+#include "Message.h"
 
 class Debugger {
  public:

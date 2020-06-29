@@ -4,12 +4,12 @@
 
 #include "CrashHandler.h"
 
+#include "../OrbitCore/Version.h"
 #include "Core.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitDbgHelp.h"
 #include "ScopeTimer.h"
 #include "TcpClient.h"
-#include "../OrbitCore/Version.h"
 #include "client/settings.h"
 
 namespace {
@@ -57,13 +57,12 @@ CrashHandler::CrashHandler(const std::string& dump_path,
   crash_report_db_ = crashpad::CrashReportDatabase::Initialize(dump_file_path);
   SetUploadsEnabled(true);
 
-  crashpad_client_.StartHandler(handler_file_path,
-                                /*database=*/dump_file_path,
-                                /*metrics_dir=*/dump_file_path,
-                                crash_server_url, annotations, arguments,
-                                /*restartable=*/true,
-                                /*asynchronous_start=*/false,
-                                attachments_paths);
+  crashpad_client_.StartHandler(
+      handler_file_path,
+      /*database=*/dump_file_path,
+      /*metrics_dir=*/dump_file_path, crash_server_url, annotations, arguments,
+      /*restartable=*/true,
+      /*asynchronous_start=*/false, attachments_paths);
 }
 
 //-----------------------------------------------------------------------------

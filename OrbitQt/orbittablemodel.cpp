@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "orbittablemodel.h"
 
 #include <QColor>
@@ -11,13 +9,11 @@
 
 //-----------------------------------------------------------------------------
 OrbitTableModel::OrbitTableModel(DataView* data_view, QObject* parent)
-    : QAbstractTableModel(parent),
-      m_DataView(data_view) {}
+    : QAbstractTableModel(parent), m_DataView(data_view) {}
 
 //-----------------------------------------------------------------------------
 OrbitTableModel::OrbitTableModel(QObject* parent)
-    : QAbstractTableModel(parent),
-      m_DataView(nullptr) {}
+    : QAbstractTableModel(parent), m_DataView(nullptr) {}
 
 //-----------------------------------------------------------------------------
 OrbitTableModel::~OrbitTableModel() {}

@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "BlackBoard.h"
 
 #include "App.h"
@@ -176,6 +174,4 @@ void BlackBoard::RenderUI() {
 }
 
 //-----------------------------------------------------------------------------
-bool BlackBoard::GetNeedsRedraw() const {
-  return m_NeedsRedraw;
-}
+bool BlackBoard::GetNeedsRedraw() const { return m_NeedsRedraw; }

@@ -38,7 +38,7 @@ enum class SessionState {
 /*
   Session represents a SSH session. The class takes care of the connecting TCP
   socket, handshaking, server authentication and user authentication.
- 
+
   It's ready when the started() signal occurred. Otherwise the errorOccurred()
   will fire.
 */

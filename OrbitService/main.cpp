@@ -5,14 +5,13 @@
 #include <csignal>
 #include <iostream>
 
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
-
 #include "OrbitBase/Logging.h"
 #include "OrbitLinuxTracing/TracingOptions.h"
 #include "OrbitService.h"
 #include "Path.h"
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
 
 ABSL_FLAG(uint16_t, asio_port, 44766, "Asio TCP server port");
 

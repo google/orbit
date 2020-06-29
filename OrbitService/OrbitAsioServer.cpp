@@ -59,8 +59,7 @@ void OrbitAsioServer::SetupServerCallbacks() {
 
   tcp_server_->AddMainThreadCallback(
       Msg_StartCapture, [this](const Message& msg) {
-        auto pid =
-            static_cast<int32_t>(msg.m_Header.m_GenericHeader.m_Address);
+        auto pid = static_cast<int32_t>(msg.m_Header.m_GenericHeader.m_Address);
         StartCapture(pid);
       });
 

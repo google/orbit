@@ -6,12 +6,12 @@
 
 #include <asio/ip/tcp.hpp>
 #include <atomic>
+#include <deque>
 #include <optional>
 #include <thread>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include <deque>
 
 #include "../OrbitPlugin/OrbitUserData.h"
 #include "Message.h"

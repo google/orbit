@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 #pragma once
 
 #include <xxhash.h>
@@ -227,7 +226,7 @@ inline void PrintBuffer(const void* a_Buffer, uint32_t a_Size,
   std::stringstream buffer_string;
   for (size_t i = 0; i < a_Size; ++i) {
     buffer_string << std::hex << std::setfill('0') << std::setw(2) << buffer[i]
-              << " ";
+                  << " ";
 
     if ((i + 1) % a_Width == 0) {
       buffer_string << std::endl;

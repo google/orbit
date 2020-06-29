@@ -7,10 +7,10 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QScrollArea>
+#include <QtBoolPropertyManager>
 #include <QtButtonPropertyBrowser>
 #include <QtEnumEditorFactory>
 #include <QtGroupBoxPropertyBrowser>
-#include <QtBoolPropertyManager>
 #include <QtTreePropertyBrowser>
 
 #include "../OrbitCore/OrbitType.h"

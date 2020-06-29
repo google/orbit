@@ -13,7 +13,8 @@ class CrashManagerImpl final : public CrashManager {
  public:
   explicit CrashManagerImpl(std::shared_ptr<grpc::Channel> channel);
 
-  void CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) override;
+  void CrashOrbitService(
+      CrashOrbitServiceRequest_CrashType crash_type) override;
 
  private:
   std::unique_ptr<CrashService::Stub> crash_service_;
@@ -22,7 +23,8 @@ class CrashManagerImpl final : public CrashManager {
 CrashManagerImpl::CrashManagerImpl(std::shared_ptr<grpc::Channel> channel)
     : crash_service_(CrashService::NewStub(channel)) {}
 
-void CrashManagerImpl::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) {
+void CrashManagerImpl::CrashOrbitService(
+    CrashOrbitServiceRequest_CrashType crash_type) {
   CrashOrbitServiceRequest request;
   request.set_crash_type(crash_type);
 
