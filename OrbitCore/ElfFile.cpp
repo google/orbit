@@ -7,7 +7,6 @@
 #include <string_view>
 #include <vector>
 
-#include "OrbitFunction.h"
 #include "Path.h"
 #include "PrintVar.h"
 #include "absl/strings/str_cat.h"
@@ -27,7 +26,6 @@ class ElfFileImpl : public ElfFile {
       std::string_view file_path,
       llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
-  bool LoadFunctions(Pdb* pdb) const override;
   outcome::result<ModuleSymbols, std::string> LoadSymbols() const override;
   std::optional<uint64_t> GetLoadBias() const override;
   bool IsAddressInTextSection(uint64_t address) const override;
@@ -116,54 +114,6 @@ bool ElfFileImpl<ElfT>::IsAddressInTextSection(uint64_t address) const {
   uint64_t section_end_address = section_begin_address + text_section_->sh_size;
 
   return (address >= section_begin_address) && (address < section_end_address);
-}
-
-template <typename ElfT>
-bool ElfFileImpl<ElfT>::LoadFunctions(Pdb* pdb) const {
-  // TODO: if we want to use other sections than .symtab in the future for
-  //       example .dynsym, than we have to change this.
-  if (!has_symtab_section_) {
-    return false;
-  }
-  bool function_added = false;
-
-  std::optional<uint64_t> load_bias_optional = GetLoadBias();
-  if (!load_bias_optional) {
-    return false;
-  }
-
-  uint64_t load_bias = load_bias_optional.value();
-
-  for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
-    if ((symbol_ref.getFlags() & llvm::object::BasicSymbolRef::SF_Undefined) !=
-        0) {
-      continue;
-    }
-
-    std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
-    std::string pretty_name = llvm::demangle(name);
-
-    // Unknown type - skip and generate a warning
-    if (!symbol_ref.getType()) {
-      LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.",
-          name.c_str(), file_path_.c_str());
-      continue;
-    }
-
-    // Limit list of symbols to functions. Ignore sections and variables.
-    if (symbol_ref.getType().get() != llvm::object::SymbolRef::ST_Function) {
-      continue;
-    }
-
-    std::shared_ptr<Function> function = std::make_shared<Function>(
-        name, pretty_name, symbol_ref.getValue(), load_bias,
-        symbol_ref.getSize(), Path::GetFileName(file_path_), 0);
-
-    pdb->AddFunction(function);
-    function_added = true;
-  }
-
-  return function_added;
 }
 
 template <typename ElfT>

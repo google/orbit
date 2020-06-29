@@ -11,35 +11,6 @@
 #include "Path.h"
 #include "symbol.pb.h"
 
-TEST(ElfFile, LoadFunctions) {
-  std::string executable_path = Path::GetExecutablePath();
-  std::string test_elf_file = executable_path + "/testdata/hello_world_elf";
-
-  auto elf_file = ElfFile::Create(test_elf_file);
-  ASSERT_NE(elf_file, nullptr);
-
-  Pdb pdb{0x104D'ADD2E55, 0x104D'B1A5, test_elf_file, test_elf_file};
-  ASSERT_TRUE(elf_file->LoadFunctions(&pdb));
-  const std::vector<std::shared_ptr<Function>>& functions = pdb.GetFunctions();
-  EXPECT_EQ(functions.size(), 10);
-
-  const Function* function = functions[0].get();
-  EXPECT_EQ(function->Name(), "deregister_tm_clones");
-  EXPECT_EQ(function->PrettyName(), "deregister_tm_clones");
-  EXPECT_EQ(function->Address(), 0x1080);
-  EXPECT_EQ(function->Size(), 0);
-  EXPECT_EQ(function->GetLoadedModulePath(), test_elf_file);
-  EXPECT_EQ(function->GetLoadedModuleName(), "hello_world_elf");
-
-  function = functions[9].get();
-  EXPECT_EQ(function->Name(), "main");
-  EXPECT_EQ(function->PrettyName(), "main");
-  EXPECT_EQ(function->Address(), 0x1135);
-  EXPECT_EQ(function->Size(), 35);
-  EXPECT_EQ(function->GetLoadedModulePath(), test_elf_file);
-  EXPECT_EQ(function->GetLoadedModuleName(), "hello_world_elf");
-}
-
 TEST(ElfFile, LoadSymbols) {
   std::string executable_path = Path::GetExecutablePath();
   std::string executable = "hello_world_elf";
