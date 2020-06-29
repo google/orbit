@@ -139,19 +139,6 @@ SymbolHelper::SymbolHelper()
                                     "/srv/game/assets/debug_symbols/"},
       symbols_file_directories_(ReadSymbolsFile()) {}
 
-bool SymbolHelper::LoadSymbolsIncludedInBinary(
-    std::shared_ptr<Module> module) const {
-  std::unique_ptr<ElfFile> elf_file = ElfFile::Create(module->m_FullName);
-
-  if (!elf_file) {
-    ERROR("Unable to load ELF file: %s", module->m_FullName);
-    return false;
-  }
-
-  if (!elf_file->HasSymtab()) return false;
-  return LoadFromElfFile(module, elf_file);
-}
-
 outcome::result<ModuleSymbols, std::string> SymbolHelper::LoadSymbolsCollector(
     const std::string& module_path) const {
   std::unique_ptr<ElfFile> elf_file = ElfFile::Create(module_path);

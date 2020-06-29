@@ -12,6 +12,8 @@
 #include "Pdb.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Object/ObjectFile.h"
+#include "outcome.hpp"
+#include "symbol.pb.h"
 
 class ElfFile {
  public:
@@ -19,6 +21,7 @@ class ElfFile {
   virtual ~ElfFile() = default;
 
   virtual bool LoadFunctions(Pdb* pdb) const = 0;
+  virtual outcome::result<ModuleSymbols, std::string> LoadSymbols() const = 0;
   // Background and some terminology
   // When an elf file is loaded to memory it has its load segments
   // (segments of PT_LOAD type from program headers) mapped to some

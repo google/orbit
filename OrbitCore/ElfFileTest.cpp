@@ -9,6 +9,7 @@
 
 #include "ElfFile.h"
 #include "Path.h"
+#include "symbol.pb.h"
 
 TEST(ElfFile, LoadFunctions) {
   std::string executable_path = Path::GetExecutablePath();
@@ -37,6 +38,43 @@ TEST(ElfFile, LoadFunctions) {
   EXPECT_EQ(function->Size(), 35);
   EXPECT_EQ(function->GetLoadedModulePath(), test_elf_file);
   EXPECT_EQ(function->GetLoadedModuleName(), "hello_world_elf");
+}
+
+TEST(ElfFile, LoadSymbols) {
+  std::string executable_path = Path::GetExecutablePath();
+  std::string executable = "hello_world_elf";
+  std::string file_path = executable_path + "testdata/" + executable;
+
+  auto elf_file = ElfFile::Create(file_path);
+  ASSERT_NE(elf_file, nullptr);
+
+  const auto symbols_result = elf_file->LoadSymbols();
+  ASSERT_TRUE(symbols_result);
+
+  EXPECT_EQ(symbols_result.value().symbols_file_path(), file_path);
+
+  std::vector<SymbolInfo> symbol_infos(
+      symbols_result.value().symbol_infos().begin(),
+      symbols_result.value().symbol_infos().end());
+  EXPECT_EQ(symbol_infos.size(), 10);
+
+  SymbolInfo& symbol_info = symbol_infos[0];
+  EXPECT_EQ(symbol_info.name(), "deregister_tm_clones");
+  EXPECT_EQ(symbol_info.pretty_name(), "deregister_tm_clones");
+  EXPECT_EQ(symbol_info.address(), 0x1080);
+  EXPECT_EQ(symbol_info.size(), 0);
+  // TODO (b/154580143) have correct source file and line here
+  EXPECT_EQ(symbol_info.source_file(), "");
+  EXPECT_EQ(symbol_info.source_line(), 0);
+
+  symbol_info = symbol_infos[9];
+  EXPECT_EQ(symbol_info.name(), "main");
+  EXPECT_EQ(symbol_info.pretty_name(), "main");
+  EXPECT_EQ(symbol_info.address(), 0x1135);
+  EXPECT_EQ(symbol_info.size(), 35);
+  // TODO (b/154580143) have correct source file and line here
+  EXPECT_EQ(symbol_info.source_file(), "");
+  EXPECT_EQ(symbol_info.source_line(), 0);
 }
 
 TEST(ElfFile, IsAddressInTextSection) {

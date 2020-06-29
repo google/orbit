@@ -15,6 +15,8 @@
 #include "llvm/Demangle/Demangle.h"
 #include "llvm/Object/ELFObjectFile.h"
 #include "llvm/Object/ObjectFile.h"
+#include "outcome.hpp"
+#include "symbol.pb.h"
 
 namespace {
 
@@ -26,6 +28,7 @@ class ElfFileImpl : public ElfFile {
       llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
   bool LoadFunctions(Pdb* pdb) const override;
+  outcome::result<ModuleSymbols, std::string> LoadSymbols() const override;
   std::optional<uint64_t> GetLoadBias() const override;
   bool IsAddressInTextSection(uint64_t address) const override;
   bool HasSymtab() const override;
@@ -161,6 +164,62 @@ bool ElfFileImpl<ElfT>::LoadFunctions(Pdb* pdb) const {
   }
 
   return function_added;
+}
+
+template <typename ElfT>
+outcome::result<ModuleSymbols, std::string> ElfFileImpl<ElfT>::LoadSymbols()
+    const {
+  // TODO: if we want to use other sections than .symtab in the future for
+  //       example .dynsym, than we have to change this.
+  if (!has_symtab_section_) {
+    return "Elf file does not contain a .symtab section.";
+  }
+  bool symbol_added = false;
+
+  std::optional<uint64_t> load_bias_optional = GetLoadBias();
+  if (!load_bias_optional) {
+    return "Unable to get load bias of elf file.";
+  }
+  ModuleSymbols module_symbols;
+  module_symbols.set_load_bias(load_bias_optional.value());
+  module_symbols.set_symbols_file_path(file_path_);
+
+  for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
+    if ((symbol_ref.getFlags() & llvm::object::BasicSymbolRef::SF_Undefined) !=
+        0) {
+      continue;
+    }
+    std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
+    std::string pretty_name = llvm::demangle(name);
+
+    // Unknown type - skip and generate a warning
+    if (!symbol_ref.getType()) {
+      LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.",
+          name.c_str(), file_path_.c_str());
+      continue;
+    }
+
+    // Limit list of symbols to functions. Ignore sections and variables.
+    if (symbol_ref.getType().get() != llvm::object::SymbolRef::ST_Function) {
+      continue;
+    }
+
+    SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
+    symbol_info->set_name(name);
+    symbol_info->set_pretty_name(pretty_name);
+    symbol_info->set_address(symbol_ref.getValue());
+    symbol_info->set_size(symbol_ref.getSize());
+    // TODO (b/154580143) have correct source file and line here
+    symbol_info->set_source_file("");
+    symbol_info->set_source_line(0);
+
+    symbol_added = true;
+  }
+  if (!symbol_added) {
+    return "Unable to load symbols from elf file, not even a single symbol of "
+           "type function found.";
+  }
+  return module_symbols;
 }
 
 template <typename ElfT>
