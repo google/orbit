@@ -57,7 +57,6 @@ class CaptureWindow : public GlCanvas {
   void OnDrag(float a_Ratio);
   void OnVerticalDrag(float a_Ratio);
   void NeedsUpdate();
-  void ToggleSampling();
   void OnCaptureStarted();
   float GetTopBarTextY();
   std::vector<std::string> GetContextMenu() override;

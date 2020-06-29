@@ -755,8 +755,7 @@ bool OrbitApp::StartCapture() {
     return false;
   }
 
-  outcome::result<void, std::string> result =
-      Capture::StartCapture(options_.asio_server_address);
+  outcome::result<void, std::string> result = Capture::StartCapture();
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error());
     return false;

@@ -31,23 +31,19 @@ class Capture {
   static void SetTargetProcess(const std::shared_ptr<Process>& a_Process);
   // TODO: This method needs to be split into 2, the server side and the
   //  client-side. remote_address is only used by the client-side.
-  static outcome::result<void, std::string> StartCapture(
-      std::string_view remote_address);
+  static outcome::result<void, std::string> StartCapture();
   static void StopCapture();
   static void FinalizeCapture();
   static void ClearCaptureData();
   static std::vector<std::shared_ptr<Function>> GetSelectedFunctions();
   static void PreFunctionHooks();
   static void SendFunctionHooks();
-  static void StartSampling();
-  static void StopSampling();
   static bool IsCapturing();
   static void DisplayStats();
   static void TestHooks();
   static outcome::result<void, std::string> SavePreset(
       const std::string& filename);
   static void NewSamplingProfiler();
-  static bool IsTrackingEvents();
   // True when Orbit is receiving data from remote source
   static bool IsRemote();
   // True if receiving data from Linux remote source

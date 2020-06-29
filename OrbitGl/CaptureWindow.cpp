@@ -590,15 +590,6 @@ void CaptureWindow::OnContextMenu(const std::string& a_Action,
 }
 
 //-----------------------------------------------------------------------------
-void CaptureWindow::ToggleSampling() {
-  if (Capture::GIsSampling) {
-    Capture::StopSampling();
-  } else if (!GTimerManager->m_IsRecording) {
-    Capture::StartSampling();
-  }
-}
-
-//-----------------------------------------------------------------------------
 void CaptureWindow::OnCaptureStarted() {
   time_graph_.ZoomAll();
   NeedsRedraw();
