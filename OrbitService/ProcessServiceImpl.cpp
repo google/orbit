@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include "OrbitModule.h"
 #include "SymbolHelper.h"
 #include "symbol.pb.h"
 
@@ -95,11 +96,6 @@ Status ProcessServiceImpl::GetProcessMemory(
 Status ProcessServiceImpl::GetSymbols(ServerContext*,
                                       const GetSymbolsRequest* request,
                                       GetSymbolsResponse* response) {
-  // TODO(antonrohr) remove this need for Module. SymbolHelper needs to be
-  // changed for that.
-  std::shared_ptr<Module> module = std::make_shared<Module>();
-  module->m_FullName = request->module_path();
-
   const SymbolHelper symbol_helper;
   const auto load_result =
       symbol_helper.LoadSymbolsCollector(request->module_path());

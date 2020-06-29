@@ -8,8 +8,6 @@
 #include <string>
 #include <vector>
 
-#include "OrbitModule.h"
-#include "Pdb.h"
 #include "symbol.pb.h"
 
 class SymbolHelper {
@@ -22,11 +20,8 @@ class SymbolHelper {
 
   outcome::result<ModuleSymbols, std::string> LoadSymbolsCollector(
       const std::string& module_path) const;
-  bool LoadSymbolsUsingSymbolsFile(std::shared_ptr<Module> module) const;
-
-  std::vector<std::string> GetSymbolsFileDirectories() const {
-    return symbols_file_directories_;
-  }
+  outcome::result<ModuleSymbols, std::string> LoadUsingSymbolsPathFile(
+      const std::string& module_path, const std::string& build_id) const;
 
  private:
   const std::vector<std::string> collector_symbol_directories_;
