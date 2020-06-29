@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-
 #include "TextBox.h"
 
 #include "Capture.h"
@@ -99,8 +97,8 @@ void TextBox::Draw(TextRenderer& a_TextRenderer, float a_MinX, bool a_Visible,
   }
 
   float z = a_IsHighlighted ? GlCanvas::Z_VALUE_CONTEXT_SWITCH
-                            : isInactive ? GlCanvas::Z_VALUE_BOX_INACTIVE
-                                         : GlCanvas::Z_VALUE_BOX_ACTIVE;
+            : isInactive    ? GlCanvas::Z_VALUE_BOX_INACTIVE
+                            : GlCanvas::Z_VALUE_BOX_ACTIVE;
 
   if (!a_IsPicking) {
     glColor4ubv(&col[0]);

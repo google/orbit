@@ -12,8 +12,8 @@
 #include "EventTrack.h"
 #include "TextBox.h"
 #include "Threading.h"
-#include "Track.h"
 #include "TimerChain.h"
+#include "Track.h"
 
 class TextRenderer;
 

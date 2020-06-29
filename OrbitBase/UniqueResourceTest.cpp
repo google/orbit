@@ -53,8 +53,8 @@ TEST(UniqueResource, Release) {
 TEST(UniqueResource, Reset) {
   size_t last_deleted_resource = 0;
   {
-    OrbitBase::unique_resource ur1{123,
-                                   [&last_deleted_resource](size_t r) { last_deleted_resource = r; }};
+    OrbitBase::unique_resource ur1{
+        123, [&last_deleted_resource](size_t r) { last_deleted_resource = r; }};
     ur1.reset(456);
     ASSERT_EQ(last_deleted_resource, 123);
   }

@@ -25,7 +25,8 @@ class CrashManager {
   CrashManager() = default;
   virtual ~CrashManager() = default;
 
-  virtual void CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) = 0;
+  virtual void CrashOrbitService(
+      CrashOrbitServiceRequest_CrashType crash_type) = 0;
 
   static std::unique_ptr<CrashManager> Create(
       std::shared_ptr<grpc::Channel> channel);
