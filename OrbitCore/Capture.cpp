@@ -11,7 +11,6 @@
 #include "Core.h"
 #include "CoreApp.h"
 #include "EventBuffer.h"
-#include "EventTracer.h"
 #include "Injection.h"
 #include "Log.h"
 #include "OrbitBase/Logging.h"
@@ -149,8 +148,7 @@ bool Capture::Connect(std::string_view remote_address) {
 //-----------------------------------------------------------------------------
 // TODO: This method is resposible for too many things. We should split the
 //  server side logic and client side logic into separate methods/classes.
-outcome::result<void, std::string> Capture::StartCapture(
-    std::string_view remote_address) {
+outcome::result<void, std::string> Capture::StartCapture() {
   if (GTargetProcess->GetID() == 0) {
     return outcome::failure(
         "No process selected. Please choose a target process for the capture.");
@@ -161,14 +159,6 @@ outcome::result<void, std::string> Capture::StartCapture(
   GCaptureTimer.Start();
   GCaptureTimePoint = std::chrono::system_clock::now();
 
-#ifdef WIN32
-  if (!IsRemote()) {
-    if (!Connect(remote_address)) {
-      return outcome::failure("Connection error.");
-    }
-  }
-#endif
-
   GInjected = true;
   ++Message::GCaptureID;
   GTcpClient->Send(Msg_NewCaptureID);
@@ -176,13 +166,7 @@ outcome::result<void, std::string> Capture::StartCapture(
   ClearCaptureData();
   SendFunctionHooks();
 
-  if (Capture::IsTrackingEvents()) {
-#ifdef WIN32
-    GEventTracer.Start();
-#else
-    UNUSED(remote_address);
-#endif
-  } else if (Capture::IsRemote()) {
+if (Capture::IsRemote()) {
     Capture::NewSamplingProfiler();
     Capture::GSamplingProfiler->StartCapture();
   }
@@ -202,12 +186,6 @@ outcome::result<void, std::string> Capture::StartCapture(
 
 //-----------------------------------------------------------------------------
 void Capture::StopCapture() {
-  if (IsTrackingEvents()) {
-#ifdef WIN32
-    GEventTracer.Stop();
-#endif
-  }
-
   if (!GInjected) {
     return;
   }
@@ -337,38 +315,6 @@ void Capture::TestHooks() {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::StartSampling() {
-#ifdef WIN32
-  if (!GIsSampling && Capture::IsTrackingEvents() &&
-      GTargetProcess->GetName().size()) {
-    SCOPE_TIMER_LOG("Capture::StartSampling");
-
-    GCaptureTimer.Start();
-    GCaptureTimePoint = std::chrono::system_clock::now();
-
-    ClearCaptureData();
-    GTimerManager->StartRecording();
-    GEventTracer.Start();
-
-    GIsSampling = true;
-  }
-#endif
-}
-
-//-----------------------------------------------------------------------------
-void Capture::StopSampling() {
-  if (GIsSampling) {
-    if (IsTrackingEvents()) {
-#ifdef WIN32
-      GEventTracer.Stop();
-#endif
-    }
-
-    GTimerManager->StopRecording();
-  }
-}
-
-//-----------------------------------------------------------------------------
 bool Capture::IsCapturing() {
   return GState == State::kStarted || GState == State::kStopping;
 }
@@ -438,19 +384,6 @@ void Capture::NewSamplingProfiler() {
 
   Capture::GSamplingProfiler =
       std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
-}
-
-//-----------------------------------------------------------------------------
-bool Capture::IsTrackingEvents() {
-#ifdef __linux
-  return !IsRemote();
-#else
-  if (GTargetProcess->GetIsRemote() && !GTcpServer->IsLocalConnection()) {
-    return false;
-  }
-
-  return GParams.m_TrackContextSwitches || GParams.m_TrackSamplingEvents;
-#endif
 }
 
 //-----------------------------------------------------------------------------

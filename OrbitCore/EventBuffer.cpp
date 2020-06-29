@@ -5,16 +5,16 @@
 #include "EventBuffer.h"
 
 #include "Capture.h"
+#include "EventTracer.h"
 #include "Params.h"
 #include "SamplingProfiler.h"
 #include "Serialization.h"
 
 #ifdef __linux
-#include "EventTracer.h"
 #include "LinuxTracingHandler.h"
-EventTracer GEventTracer;
 #endif
 
+EventTracer GEventTracer;
 //-----------------------------------------------------------------------------
 void EventBuffer::Print() {
   LOG("Orbit Callstack Events:");

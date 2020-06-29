@@ -122,20 +122,8 @@ target_sources(
 if(WIN32)
   target_sources(
     OrbitCore
-    PUBLIC EventCallbacks.h
-           EventGuid.h
-           EventTracer.h
-           EventUtils.h
-           SymbolUtils.h)
-
-  target_sources(
-    OrbitCore
-    PRIVATE EventCallbacks.cpp
-            EventTracer.cpp
-            EventUtils.cpp
-            Pdb.cpp
-            SymbolUtils.cpp
-            Utils.cpp)
+    PRIVATE Pdb.cpp
+            SymbolUtils.cpp)
 else()
   target_sources(
     OrbitCore
