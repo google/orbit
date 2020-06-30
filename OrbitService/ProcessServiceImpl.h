@@ -5,10 +5,12 @@
 #ifndef ORBIT_SERVICE_PROCESS_SERVICE_IMPL_H_
 #define ORBIT_SERVICE_PROCESS_SERVICE_IMPL_H_
 
+#include <absl/synchronization/mutex.h>
+
 #include <memory>
 #include <string>
 
-#include "ProcessUtils.h"
+#include "ProcessList.h"
 #include "services.grpc.pb.h"
 
 class ProcessServiceImpl final : public ProcessService::Service {

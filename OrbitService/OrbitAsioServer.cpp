@@ -12,7 +12,7 @@
 
 OrbitAsioServer::OrbitAsioServer(uint16_t port,
                                  LinuxTracing::TracingOptions tracing_options)
-    : tracing_options_{tracing_options}, exit_requested_(false) {
+    : tracing_options_{tracing_options} {
   // TODO: Don't use the GTcpServer global. Unfortunately, it's needed in
   //  TcpConnection::DecodeMessage.
   GTcpServer = std::make_unique<TcpServer>();
@@ -21,15 +21,6 @@ OrbitAsioServer::OrbitAsioServer(uint16_t port,
 
   SetupIntrospection();
   SetupServerCallbacks();
-
-  process_list_thread_ = std::thread{[this] { ProcessListThread(); }};
-}
-
-OrbitAsioServer::~OrbitAsioServer() {
-  exit_requested_ = true;
-  if (process_list_thread_.joinable()) {
-    process_list_thread_.join();
-  }
 }
 
 void OrbitAsioServer::LoopTick() { tcp_server_->ProcessMainThreadCallbacks(); }
@@ -40,16 +31,6 @@ void OrbitAsioServer::SetupIntrospection() {
       std::make_unique<orbit::introspection::Handler>(&tracing_buffer_);
   LinuxTracing::SetOrbitTracingHandler(std::move(handler));
 #endif
-}
-
-void OrbitAsioServer::ProcessListThread() {
-  while (!(exit_requested_)) {
-    // Some Asio services rely on process_list_ being somewhat up-to-date
-    // TODO: Remove this once these services are removed.
-    process_list_.Refresh();
-    process_list_.UpdateCpuTimes();
-    Sleep(2000);
-  }
 }
 
 void OrbitAsioServer::SetupServerCallbacks() {

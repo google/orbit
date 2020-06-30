@@ -7,7 +7,7 @@
 #include <string>
 
 #include "Core.h"
-#include "ProcessUtils.h"
+#include "OrbitProcess.h"
 
 class Injection {
  public:

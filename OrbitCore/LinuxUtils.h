@@ -12,15 +12,15 @@
 #include <vector>
 
 #include "BaseTypes.h"
+#include "module.pb.h"
 
 struct Module;
 
 //-----------------------------------------------------------------------------
 namespace LinuxUtils {
 std::string ExecuteCommand(const char* a_Cmd);
-std::vector<std::string> ListModules(pid_t pid);
-void ListModules(pid_t pid,
-                 std::map<uint64_t, std::shared_ptr<Module> >* module_map);
-std::unordered_map<pid_t, float> GetCpuUtilization();
+std::vector<std::string> ReadProcMaps(pid_t pid);
+std::vector<ModuleInfo> ListModules(int32_t pid);
+std::unordered_map<pid_t, double> GetCpuUtilization();
 bool Is64Bit(pid_t pid);
 }  // namespace LinuxUtils

@@ -49,7 +49,6 @@ target_sources(
          Path.h
          Pdb.h
          PrintVar.h
-         ProcessUtils.h
          Profiling.h
          RingBuffer.h
          SamplingProfiler.h
@@ -102,7 +101,6 @@ target_sources(
           OrbitUnreal.cpp
           Params.cpp
           Path.cpp
-          ProcessUtils.cpp
           Profiling.cpp
           SamplingProfiler.cpp
           ScopeTimer.cpp

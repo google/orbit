@@ -52,7 +52,7 @@
 namespace LinuxUtils {
 
 //-----------------------------------------------------------------------------
-std::vector<std::string> ListModules(pid_t pid) {
+std::vector<std::string> ReadProcMaps(pid_t pid) {
   std::vector<std::string> modules;
   // TODO: we should read the file directly instead or memory map it.
   std::string result =
@@ -81,9 +81,7 @@ std::string ExecuteCommand(const char* a_Cmd) {
   return result;
 }
 
-//-----------------------------------------------------------------------------
-void ListModules(pid_t pid,
-                 std::map<uint64_t, std::shared_ptr<Module>>* module_map) {
+std::vector<ModuleInfo> ListModules(int32_t pid) {
   struct AddressRange {
     uint64_t start_address;
     uint64_t end_address;
@@ -91,17 +89,16 @@ void ListModules(pid_t pid,
   };
 
   std::map<std::string, AddressRange> address_map;
-  std::vector<std::string> result = ListModules(pid);
+  std::vector<std::string> proc_maps = ReadProcMaps(pid);
 
-  for (const std::string& line : result) {
+  for (const std::string& line : proc_maps) {
     std::vector<std::string> tokens =
         absl::StrSplit(line, " ", absl::SkipEmpty());
-
     // tokens[4] is the inode column. If inode equals 0, then the memory is not
     // mapped to a file (might be heap, stack or something else)
     if (tokens.size() != 6 || tokens[4] == "0") continue;
 
-    const std::string& module_name = tokens[5];
+    const std::string& module_path = tokens[5];
 
     std::vector<std::string> addresses = absl::StrSplit(tokens[0], "-");
     if (addresses.size() != 2) continue;
@@ -110,9 +107,9 @@ void ListModules(pid_t pid,
     uint64_t end = std::stoull(addresses[1], nullptr, 16);
     bool is_executable = tokens[1].size() == 4 && tokens[1][2] == 'x';
 
-    auto iter = address_map.find(module_name);
+    auto iter = address_map.find(module_path);
     if (iter == address_map.end()) {
-      address_map[module_name] = {start, end, is_executable};
+      address_map[module_path] = {start, end, is_executable};
     } else {
       AddressRange& address_range = iter->second;
       address_range.start_address =
@@ -122,34 +119,37 @@ void ListModules(pid_t pid,
     }
   }
 
-  for (const auto& [module_name, address_range] : address_map) {
+  std::vector<ModuleInfo> result;
+  for (const auto& [module_path, address_range] : address_map) {
     // Filter out entries which are not executable
     if (!address_range.is_executable) continue;
+    if (!Path::FileExists(module_path)) continue;
+    uint64_t file_size = Path::FileSize(module_path);
+    if (file_size == 0) continue;
 
-    std::shared_ptr<Module> module = std::make_shared<Module>(
-        module_name, address_range.start_address, address_range.end_address);
-
-    // This filters out entries which are inaccessible
-    if (module->m_PdbSize == 0) continue;
-
-    std::unique_ptr<ElfFile> elf_file = ElfFile::Create(module->m_FullName);
+    std::unique_ptr<ElfFile> elf_file = ElfFile::Create(module_path);
     if (!elf_file) {
-      ERROR("Unable to create an elf file for module %s",
-            module->m_FullName.c_str());
+      ERROR("Unable to create an elf file for module %s", module_path.c_str());
       continue;
     }
 
-    module_map->insert_or_assign(address_range.start_address, module);
+    ModuleInfo module_info;
+    module_info.set_name(Path::GetFileName(module_path));
+    module_info.set_file_path(module_path);
+    module_info.set_file_size(file_size);
+    module_info.set_address_start(address_range.start_address);
+    module_info.set_address_end(address_range.end_address);
+    module_info.set_build_id(elf_file->GetBuildId());
 
-    if (!elf_file->GetBuildId().empty()) {
-      module->m_DebugSignature = elf_file->GetBuildId();
-    }
+    result.push_back(module_info);
   }
+
+  return result;
 }
 
 //-----------------------------------------------------------------------------
-std::unordered_map<pid_t, float> GetCpuUtilization() {
-  std::unordered_map<pid_t, float> process_map;
+std::unordered_map<pid_t, double> GetCpuUtilization() {
+  std::unordered_map<pid_t, double> process_map;
   std::string result = ExecuteCommand(
       "top -b -n 1 | sed -n '8, 1000{s/^ *//;s/ *$//;s/  */,/gp;};1000q'");
   std::stringstream ss(result);
@@ -159,7 +159,7 @@ std::unordered_map<pid_t, float> GetCpuUtilization() {
     std::vector<std::string> tokens = absl::StrSplit(line, ",");
     if (tokens.size() > 8) {
       pid_t pid = atoi(tokens[0].c_str());
-      auto cpu = static_cast<float>(atof(tokens[8].c_str()));
+      double cpu = atof(tokens[8].c_str());
       process_map[pid] = cpu;
     }
   }

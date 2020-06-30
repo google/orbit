@@ -8,7 +8,6 @@
 #include "Log.h"
 #include "OrbitDbgHelp.h"
 #include "OrbitType.h"
-#include "ProcessUtils.h"
 #include "SamplingProfiler.h"
 
 //-----------------------------------------------------------------------------

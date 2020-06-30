@@ -41,35 +41,11 @@ Process::Process() {
 }
 
 //-----------------------------------------------------------------------------
-Process::Process(int32_t id) {
-  m_ID = id;
-  m_Handle = 0;
-  m_Is64Bit = false;
-  m_CpuUsage = 0;
-  m_DebugInfoLoaded = false;
-  m_IsRemote = false;
-  m_IsElevated = false;
-  Init();
-}
-
-//-----------------------------------------------------------------------------
 Process::~Process() {
 #ifdef _WIN32
   if (m_DebugInfoLoaded) {
     OrbitSymCleanup(m_Handle);
   }
-#endif
-}
-
-//-----------------------------------------------------------------------------
-void Process::Init() {
-#ifdef _WIN32
-  m_Handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, m_ID);
-  m_Is64Bit = ProcessUtils::Is64Bit(m_Handle);
-  m_IsElevated = IsElevated(m_Handle);
-  m_UpdateCpuTimer.Start();
-#else
-  m_Is64Bit = LinuxUtils::Is64Bit(m_ID);
 #endif
 }
 
@@ -98,31 +74,6 @@ void Process::LoadDebugInfo() {
 //-----------------------------------------------------------------------------
 void Process::SetID(int32_t id) {
   m_ID = id;
-  Init();
-}
-
-//-----------------------------------------------------------------------------
-void Process::ListModules() {
-  SCOPE_TIMER_LOG("ListModules");
-
-  ClearTransients();
-
-#ifdef _WIN32
-  SymUtils::ListModules(m_Handle, m_Modules);
-#else
-  LinuxUtils::ListModules(m_ID, &m_Modules);
-#endif
-
-  for (auto& pair : m_Modules) {
-    std::shared_ptr<Module>& module = pair.second;
-    std::string name = absl::AsciiStrToLower(module->m_Name);
-    m_NameToModuleMap[name] = module;
-    path_to_module_map_[module->m_FullName] = module;
-#ifdef _WIN32
-    // TODO: check if the windows implementation does something meaningfull
-    module->LoadDebugInfo();
-#endif
-  }
 }
 
 //-----------------------------------------------------------------------------
