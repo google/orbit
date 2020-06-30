@@ -25,7 +25,6 @@
 #include "CrashHandler.h"
 #include "CrashOptions.h"
 #include "Error.h"
-#include "GlutContext.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitSsh/Context.h"
@@ -250,8 +249,6 @@ int main(int argc, char* argv[]) {
 #if __linux__
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
 #endif
-
-    OrbitGl::GlutContext glut_context{&argc, argv};
 
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
