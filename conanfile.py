@@ -20,12 +20,14 @@ class OrbitConan(ConanFile):
                "system_qt": [True, False], "with_gui": [True, False],
                "debian_packaging": [True, False],
                "fPIC": [True, False],
-               "crashdump_server": "ANY"}
+               "crashdump_server": "ANY",
+               "with_fuzzing": [True, False]}
     default_options = {"system_mesa": True,
                        "system_qt": True, "with_gui": True,
                        "debian_packaging": False,
                        "fPIC": True,
-                       "crashdump_server": ""}
+                       "crashdump_server": "",
+                       "with_fuzzing": False}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
     build_requires = ('grpc_codegen/1.27.3@orbitdeps/stable#ec39b3cf6031361be942257523c1839a',
@@ -69,6 +71,8 @@ class OrbitConan(ConanFile):
         if self.options.with_gui:
             self.requires(
                 "crashpad/20200624@{}#8c19cb575eb819de0b050cf7d1f317b6".format(self._orbit_channel))
+
+        if self.options.with_gui or self.options.with_fuzzing:
             self.requires("freeglut/3.2.1@{}#0".format(self._orbit_channel))
             self.requires("freetype/2.10.0@bincrafters/stable#0")
             self.requires(
@@ -77,6 +81,8 @@ class OrbitConan(ConanFile):
             self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
             self.requires("imgui/1.69@bincrafters/stable#0")
             self.requires("libpng/1.6.37@bincrafters/stable#0")
+
+        if self.options.with_gui:
             if not self.options.system_mesa:
                 self.requires("libxi/1.7.10@bincrafters/stable#0")
             if not self.options.system_qt:
@@ -90,6 +96,10 @@ class OrbitConan(ConanFile):
         if self.settings.os != "Windows" and not self.options.fPIC:
             raise ConanInvalidConfiguration(
                 "We only support compiling with fPIC enabled!")
+
+        if self.settings.os != "Linux" and self.options.with_fuzzing:
+            raise ConanInvalidConfiguration(
+                "Fuzzing is only supported on Linux!")
 
         if self.options.with_gui and self.settings.arch == "x86":
             raise ConanInvalidConfiguration(
@@ -117,6 +127,7 @@ class OrbitConan(ConanFile):
 
     def build(self):
         cmake = CMake(self)
+        cmake.definitions["WITH_FUZZING"] = "ON" if self.options.with_fuzzing else "OFF"
         cmake.definitions["WITH_GUI"] = "ON" if self.options.with_gui else "OFF"
         cmake.definitions["CRASHDUMP_SERVER"] = self.options.crashdump_server
         cmake.configure()

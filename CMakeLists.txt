@@ -28,6 +28,7 @@ include(cmake/tests.cmake)
 enable_testing()
 
 option(WITH_GUI "Setting this option will enable the Qt-based UI client." ON)
+option(WITH_FUZZING "Setting this option will enable the fuzzing mode." OFF)
 
 set(CRASHDUMP_SERVER "" CACHE STRING "Setting this option will enable uploading crash dumps to the url specified.")
 
@@ -74,7 +75,7 @@ list(PREPEND CMAKE_PREFIX_PATH "${CONAN_PROTOBUF_ROOT}")
 list(PREPEND CMAKE_FIND_ROOT_PATH "${CONAN_GRPC_ROOT}")
 list(PREPEND CMAKE_FIND_ROOT_PATH "${CONAN_PROTOBUF_ROOT}")
 
-if(NOT WIN32 AND WITH_GUI)
+if(NOT WIN32 AND (WITH_GUI OR WITH_FUZZING))
   find_package(X11 REQUIRED)
 endif()
 
@@ -89,7 +90,7 @@ find_package(Protobuf CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
 
 
-if(WITH_GUI)
+if(WITH_GUI OR WITH_FUZZING)
   find_package(freetype CONFIG REQUIRED)
   find_package(freetype-gl CONFIG REQUIRED)
   find_package(OpenGL REQUIRED)
@@ -101,8 +102,10 @@ endif()
 find_package(oqpi REQUIRED)
 find_package(stb REQUIRED)
 find_package(capstone CONFIG REQUIRED)
-if(WITH_GUI)
+if(WITH_GUI OR WITH_FUZZING)
   find_package(freeglut CONFIG REQUIRED)
+endif()
+if(WITH_GUI)
   find_package(Qt5 CONFIG REQUIRED COMPONENTS Core Network Widgets)
   find_package(qtpropertybrowser REQUIRED)
   find_package(crashpad CONFIG REQUIRED)
@@ -144,8 +147,18 @@ if(WITH_GUI)
   add_subdirectory(OrbitGgp)
   add_subdirectory(OrbitSsh)
   add_subdirectory(OrbitSshQt)
+endif()
+
+if(WITH_GUI OR WITH_FUZZING)
   add_subdirectory(OrbitGl)
+endif()
+
+if (WITH_GUI)
   add_subdirectory(OrbitQt)
+endif()
+
+if (WITH_FUZZING)
+  add_subdirectory(OrbitFuzzing)
 endif()
 
 if(WIN32)
