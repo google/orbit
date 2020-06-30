@@ -17,6 +17,7 @@
 #include "CallStackDataView.h"
 #include "Callstack.h"
 #include "Capture.h"
+#include "CaptureListener.h"
 #include "CaptureSerializer.h"
 #include "CaptureWindow.h"
 #include "ConnectionManager.h"
@@ -155,6 +156,28 @@ void OrbitApp::AddKeyAndString(uint64_t key, std::string_view str) {
 void OrbitApp::UpdateThreadName(int32_t thread_id,
                                 const std::string& thread_name) {
   Capture::GTargetProcess->SetThreadName(thread_id, thread_name);
+}
+
+void OrbitApp::OnTimer(Timer timer) { ProcessTimer(timer); }
+
+void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
+  AddKeyAndString(key, std::move(str));
+}
+
+void OrbitApp::OnCallstack(CallStack callstack) {
+  Capture::GSamplingProfiler->AddUniqueCallStack(callstack);
+}
+
+void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
+  ProcessHashedSamplingCallStack(callstack_event);
+}
+
+void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
+  UpdateThreadName(thread_id, thread_name);
+}
+
+void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
+  AddAddressInfo(std::move(address_info));
 }
 
 //-----------------------------------------------------------------------------
