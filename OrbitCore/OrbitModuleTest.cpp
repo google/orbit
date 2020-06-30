@@ -158,7 +158,7 @@ TEST(SymbolHelper, LoadSymbols) {
   module_symbols.set_load_bias(0x400);
   SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
   symbol_info->set_name("function name");
-  symbol_info->set_pretty_name("pretty name");
+  symbol_info->set_demangled_name("pretty name");
   symbol_info->set_address(15);
   symbol_info->set_size(12);
   symbol_info->set_source_file("file name");

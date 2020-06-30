@@ -32,7 +32,7 @@ TEST(ElfFile, LoadSymbols) {
 
   SymbolInfo& symbol_info = symbol_infos[0];
   EXPECT_EQ(symbol_info.name(), "deregister_tm_clones");
-  EXPECT_EQ(symbol_info.pretty_name(), "deregister_tm_clones");
+  EXPECT_EQ(symbol_info.demangled_name(), "deregister_tm_clones");
   EXPECT_EQ(symbol_info.address(), 0x1080);
   EXPECT_EQ(symbol_info.size(), 0);
   // TODO (b/154580143) have correct source file and line here
@@ -41,7 +41,7 @@ TEST(ElfFile, LoadSymbols) {
 
   symbol_info = symbol_infos[9];
   EXPECT_EQ(symbol_info.name(), "main");
-  EXPECT_EQ(symbol_info.pretty_name(), "main");
+  EXPECT_EQ(symbol_info.demangled_name(), "main");
   EXPECT_EQ(symbol_info.address(), 0x1135);
   EXPECT_EQ(symbol_info.size(), 35);
   // TODO (b/154580143) have correct source file and line here
