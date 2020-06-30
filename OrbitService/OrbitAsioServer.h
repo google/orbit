@@ -12,19 +12,15 @@
 #include "LinuxTracingBuffer.h"
 #include "LinuxTracingHandler.h"
 #include "OrbitLinuxTracing/TracingOptions.h"
-#include "ProcessUtils.h"
 
 class OrbitAsioServer {
  public:
   explicit OrbitAsioServer(uint16_t port,
                            LinuxTracing::TracingOptions tracing_options);
-  ~OrbitAsioServer();
   void LoopTick();
 
  private:
   void SetupIntrospection();
-
-  void ProcessListThread();
 
   void SetupServerCallbacks();
   void SetSelectedFunctions(const Message& message);
@@ -36,14 +32,9 @@ class OrbitAsioServer {
 
   TcpServer* tcp_server_;
 
-  ProcessList process_list_;
-
   std::vector<std::shared_ptr<Function>> selected_functions_;
   std::thread tracing_buffer_thread_;
   LinuxTracingBuffer tracing_buffer_;
   LinuxTracing::TracingOptions tracing_options_;
   LinuxTracingHandler tracing_handler_{&tracing_buffer_, tracing_options_};
-
-  std::thread process_list_thread_;
-  std::atomic<bool> exit_requested_;
 };

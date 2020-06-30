@@ -6,8 +6,10 @@
 
 #include <memory>
 
-#include "OrbitModule.h"
+#include "LinuxUtils.h"
+#include "OrbitBase/Logging.h"
 #include "SymbolHelper.h"
+#include "Utils.h"
 #include "symbol.pb.h"
 
 using grpc::ServerContext;
@@ -17,18 +19,17 @@ using grpc::StatusCode;
 Status ProcessServiceImpl::GetProcessList(ServerContext*,
                                           const GetProcessListRequest*,
                                           GetProcessListResponse* response) {
-  absl::MutexLock lock(&mutex_);
+  {
+    absl::MutexLock lock(&mutex_);
 
-  process_list_.Refresh();
-  process_list_.UpdateCpuTimes();
-  for (const std::shared_ptr<Process>& process : process_list_.GetProcesses()) {
-    ProcessInfo* process_info = response->add_processes();
-    process_info->set_pid(process->GetID());
-    process_info->set_name(process->GetName());
-    process_info->set_cpu_usage(process->GetCpuUsage());
-    process_info->set_full_path(process->GetFullPath());
-    process_info->set_command_line(process->GetCmdLine());
-    process_info->set_is_64_bit(process->GetIs64Bit());
+    const auto refresh_result = process_list_.Refresh();
+    if (!refresh_result) {
+      return Status(StatusCode::INTERNAL, refresh_result.error());
+    }
+  }
+
+  for (const auto& process_info : process_list_.GetProcesses()) {
+    *(response->add_processes()) = process_info;
   }
 
   return Status::OK;
@@ -40,30 +41,9 @@ Status ProcessServiceImpl::GetModuleList(ServerContext*,
   int32_t pid = request->process_id();
   LOG("Sending modules for process %d", pid);
 
-  absl::MutexLock lock(&mutex_);
-
-  std::shared_ptr<Process> process = process_list_.GetProcess(pid);
-  if (process == nullptr) {
-    return Status(
-        StatusCode::NOT_FOUND,
-        absl::StrFormat("The process with pid=%d was not found", pid));
-  }
-
-  process->ListModules();
-
-  const std::map<uint64_t, std::shared_ptr<Module>>& modules =
-      process->GetModules();
-
-  for (auto& it : modules) {
-    std::shared_ptr<Module> module = it.second;
-    ModuleInfo* module_info = response->add_modules();
-
-    module_info->set_name(module->m_Name);
-    module_info->set_file_path(module->m_FullName);
-    module_info->set_file_size(module->m_PdbSize);
-    module_info->set_address_start(module->m_AddressStart);
-    module_info->set_address_end(module->m_AddressEnd);
-    module_info->set_build_id(module->m_DebugSignature);
+  std::vector<ModuleInfo> module_infos = LinuxUtils::ListModules(pid);
+  for (const auto& module_info : module_infos) {
+    *(response->add_modules()) = module_info;
   }
 
   return Status::OK;

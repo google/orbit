@@ -10,6 +10,7 @@
 
 #include "CallstackTypes.h"
 #include "LinuxAddressInfo.h"
+#include "OrbitProcess.h"
 #include "OrbitType.h"
 #include "Threading.h"
 #include "absl/container/flat_hash_map.h"

@@ -33,12 +33,9 @@ struct Module;
 class Process {
  public:
   Process();
-  explicit Process(int32_t a_ID);
   ~Process();
 
-  void Init();
   void LoadDebugInfo();
-  void ListModules();
   void UpdateCpuTime();
   bool IsElevated() const { return m_IsElevated; }
   void SetThreadName(int32_t thread_id, std::string thread_name) {

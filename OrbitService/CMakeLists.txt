@@ -21,6 +21,8 @@ target_sources(OrbitServiceLib PRIVATE
         OrbitGrpcServer.h
         OrbitService.cpp
         OrbitService.h
+        ProcessList.h
+        ProcessList.cpp
         ProcessServiceImpl.cpp
         ProcessServiceImpl.h)
 
