@@ -27,7 +27,7 @@ class ElfFileImpl : public ElfFile {
       llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
   outcome::result<ModuleSymbols, std::string> LoadSymbols() const override;
-  std::optional<uint64_t> GetLoadBias() const override;
+  outcome::result<uint64_t, std::string> GetLoadBias() const override;
   bool IsAddressInTextSection(uint64_t address) const override;
   bool HasSymtab() const override;
   bool Is64Bit() const override;
@@ -122,16 +122,14 @@ outcome::result<ModuleSymbols, std::string> ElfFileImpl<ElfT>::LoadSymbols()
   // TODO: if we want to use other sections than .symtab in the future for
   //       example .dynsym, than we have to change this.
   if (!has_symtab_section_) {
-    return "Elf file does not contain a .symtab section.";
+    return outcome::failure("Elf file does not contain a .symtab section.");
   }
-  bool symbol_added = false;
+  bool symbols_added = false;
 
-  std::optional<uint64_t> load_bias_optional = GetLoadBias();
-  if (!load_bias_optional) {
-    return "Unable to get load bias of elf file.";
-  }
+  OUTCOME_TRY(load_bias, GetLoadBias());
+
   ModuleSymbols module_symbols;
-  module_symbols.set_load_bias(load_bias_optional.value());
+  module_symbols.set_load_bias(load_bias);
   module_symbols.set_symbols_file_path(file_path_);
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
@@ -163,17 +161,18 @@ outcome::result<ModuleSymbols, std::string> ElfFileImpl<ElfT>::LoadSymbols()
     symbol_info->set_source_file("");
     symbol_info->set_source_line(0);
 
-    symbol_added = true;
+    symbols_added = true;
   }
-  if (!symbol_added) {
-    return "Unable to load symbols from elf file, not even a single symbol of "
-           "type function found.";
+  if (!symbols_added) {
+    return outcome::failure(
+        "Unable to load symbols from elf file, not even a single symbol of "
+        "type function found.");
   }
   return module_symbols;
 }
 
 template <typename ElfT>
-std::optional<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
+outcome::result<uint64_t, std::string> ElfFileImpl<ElfT>::GetLoadBias() const {
   const llvm::object::ELFFile<ElfT>* elf_file = object_file_->getELFFile();
 
   uint64_t min_vaddr = UINT64_MAX;
@@ -181,8 +180,12 @@ std::optional<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
   llvm::Expected<typename ElfT::PhdrRange> range = elf_file->program_headers();
 
   if (!range) {
-    LOG("No program headers found in %s\n", file_path_);
-    return {};
+    std::string error = absl::StrFormat(
+        "Unable to get load bias of elf file: \"%s\". No program headers "
+        "found.",
+        file_path_);
+    ERROR("%s", error.c_str());
+    return outcome::failure(error);
   }
 
   for (const typename ElfT::Phdr& phdr : range.get()) {
@@ -197,10 +200,14 @@ std::optional<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
   }
 
   if (!pt_load_found) {
-    LOG("No PT_LOAD program headers found in %s", file_path_);
-    return {};
+    std::string error = absl::StrFormat(
+        "Unable to get load bias of elf file: \"%s\". No PT_LOAD program "
+        "headers found.",
+        file_path_);
+    ERROR("%s", error.c_str());
+    return outcome::failure(error);
   }
-  return min_vaddr;
+  return outcome::success(min_vaddr);
 }
 
 template <typename ElfT>

@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_format.h>
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
@@ -63,18 +64,26 @@ TEST(ElfFile, IsAddressInTextSection) {
 
 TEST(ElfFile, CalculateLoadBias) {
   const std::string executable_path = Path::GetExecutablePath();
-  const std::string test_elf_file_dynamic =
-      executable_path + "/testdata/hello_world_elf";
 
-  auto elf_file_dynamic = ElfFile::Create(test_elf_file_dynamic);
-  ASSERT_NE(elf_file_dynamic, nullptr);
-  EXPECT_EQ(elf_file_dynamic->GetLoadBias(), 0x0);
+  {
+    const std::string test_elf_file_dynamic =
+        executable_path + "/testdata/hello_world_elf";
+    auto elf_file_dynamic = ElfFile::Create(test_elf_file_dynamic);
+    ASSERT_NE(elf_file_dynamic, nullptr);
+    const auto load_bias = elf_file_dynamic->GetLoadBias();
+    ASSERT_TRUE(load_bias);
+    EXPECT_EQ(load_bias.value(), 0x0);
+  }
 
-  const std::string test_elf_file_static =
-      executable_path + "/testdata/hello_world_static_elf";
-  auto elf_file_static = ElfFile::Create(test_elf_file_static);
-  ASSERT_NE(elf_file_static, nullptr);
-  EXPECT_EQ(elf_file_static->GetLoadBias(), 0x400000);
+  {
+    const std::string test_elf_file_static =
+        executable_path + "/testdata/hello_world_static_elf";
+    auto elf_file_static = ElfFile::Create(test_elf_file_static);
+    ASSERT_NE(elf_file_static, nullptr);
+    const auto load_bias = elf_file_static->GetLoadBias();
+    ASSERT_TRUE(load_bias);
+    EXPECT_EQ(load_bias.value(), 0x400000);
+  }
 }
 
 TEST(ElfFile, CalculateLoadBiasNoProgramHeaders) {
@@ -84,7 +93,14 @@ TEST(ElfFile, CalculateLoadBiasNoProgramHeaders) {
   auto elf_file = ElfFile::Create(test_elf_file);
 
   ASSERT_NE(elf_file, nullptr);
-  EXPECT_FALSE(elf_file->GetLoadBias().has_value());
+  const auto load_bias_result = elf_file->GetLoadBias();
+  ASSERT_FALSE(load_bias_result);
+  EXPECT_EQ(
+      load_bias_result.error(),
+      absl::StrFormat(
+          "Unable to get load bias of elf file: \"%s\". No PT_LOAD program "
+          "headers found.",
+          test_elf_file));
 }
 
 TEST(ElfFile, HasSymtab) {
