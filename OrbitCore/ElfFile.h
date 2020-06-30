@@ -33,7 +33,7 @@ class ElfFile {
   //
   // This method returns load bias for the elf-file if program headers are
   // available. This should be the case for all loadable elf-files.
-  virtual std::optional<uint64_t> GetLoadBias() const = 0;
+  virtual outcome::result<uint64_t, std::string> GetLoadBias() const = 0;
   virtual bool IsAddressInTextSection(uint64_t address) const = 0;
   virtual bool HasSymtab() const = 0;
   virtual bool Is64Bit() const = 0;
