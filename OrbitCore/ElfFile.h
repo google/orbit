@@ -40,5 +40,10 @@ class ElfFile {
   virtual std::string GetBuildId() const = 0;
   virtual std::string GetFilePath() const = 0;
 
-  static std::unique_ptr<ElfFile> Create(const std::string& file_path);
+  static std::unique_ptr<ElfFile> Create(std::string_view file_path);
+  static std::unique_ptr<ElfFile> Create(
+      std::string_view file_path,
+      llvm::object::OwningBinary<llvm::object::ObjectFile>&& file);
+  static std::unique_ptr<ElfFile> CreateFromBuffer(std::string_view file_path,
+                                                   const void* buf, size_t len);
 };
