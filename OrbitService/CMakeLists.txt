@@ -15,8 +15,8 @@ target_sources(OrbitServiceLib PRIVATE
         CaptureServiceImpl.h
         CrashServiceImpl.cpp
         CrashServiceImpl.h
-        FramePointerValidatorServiceImpl.h
         FramePointerValidatorServiceImpl.cpp
+        FramePointerValidatorServiceImpl.h
         OrbitAsioServer.cpp
         OrbitAsioServer.h
         OrbitGrpcServer.cpp
@@ -30,6 +30,8 @@ target_sources(OrbitServiceLib PRIVATE
 
 if (NOT WIN32)
   target_sources(OrbitServiceLib PRIVATE
+          LinuxTracingGrpcHandler.cpp
+          LinuxTracingGrpcHandler.h
           LinuxTracingHandler.cpp
           LinuxTracingHandler.h)
 endif()
