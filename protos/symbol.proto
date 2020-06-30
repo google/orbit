@@ -12,7 +12,7 @@ message ModuleSymbols {
 
 message SymbolInfo {
   string name = 1;
-  string pretty_name = 2;
+  string demangled_name = 2;
   uint64 address = 3;
   uint64 size = 4;
   string source_file = 5;

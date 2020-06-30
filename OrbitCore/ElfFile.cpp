@@ -138,7 +138,7 @@ outcome::result<ModuleSymbols, std::string> ElfFileImpl<ElfT>::LoadSymbols()
       continue;
     }
     std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
-    std::string pretty_name = llvm::demangle(name);
+    std::string demangled_name = llvm::demangle(name);
 
     // Unknown type - skip and generate a warning
     if (!symbol_ref.getType()) {
@@ -154,7 +154,7 @@ outcome::result<ModuleSymbols, std::string> ElfFileImpl<ElfT>::LoadSymbols()
 
     SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
     symbol_info->set_name(name);
-    symbol_info->set_pretty_name(pretty_name);
+    symbol_info->set_demangled_name(demangled_name);
     symbol_info->set_address(symbol_ref.getValue());
     symbol_info->set_size(symbol_ref.getSize());
     // TODO (b/154580143) have correct source file and line here

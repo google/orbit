@@ -60,7 +60,7 @@ TEST(FramePointerValidator, GetFpoFunctions) {
                          });
 
         CHECK(symbol_it != symbol_infos.end());
-        return (*symbol_it).pretty_name();
+        return (*symbol_it).demangled_name();
       });
 
   EXPECT_THAT(fpo_function_names, testing::UnorderedElementsAre(
