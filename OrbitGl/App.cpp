@@ -295,7 +295,7 @@ void OrbitApp::PostInit() {
             options_.grpc_server_address);
     }
 
-    capture_client_ = std::make_unique<CaptureClient>(grpc_channel_);
+    capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
 
     // TODO: Replace refresh_timeout with config option. Let users to modify it.
     process_manager_ =
