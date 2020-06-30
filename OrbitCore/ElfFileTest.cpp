@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <utility>
+#include <fstream>
 
 #include "ElfFile.h"
 #include "Path.h"
