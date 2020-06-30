@@ -16,6 +16,7 @@ target_sources(
          BlackBoard.h
          CallStackDataView.h
          CaptureClient.h
+         CaptureListener.h
          CaptureSerializer.h
          CaptureWindow.h
          Card.h

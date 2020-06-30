@@ -15,6 +15,7 @@
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
 #include "CaptureClient.h"
+#include "CaptureListener.h"
 #include "ContextSwitch.h"
 #include "CoreApp.h"
 #include "CrashManager.h"
@@ -48,7 +49,9 @@ struct CallStack;
 class Process;
 
 //-----------------------------------------------------------------------------
-class OrbitApp final : public CoreApp, public DataViewFactory {
+class OrbitApp final : public CoreApp,
+                       public DataViewFactory,
+                       public CaptureListener {
  public:
   explicit OrbitApp(ApplicationOptions&& options);
   ~OrbitApp() override;
@@ -84,6 +87,7 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void ClearWatchedVariables();
   void RefreshWatch();
   void Disassemble(int32_t pid, const Function& function);
+
   void ProcessTimer(const Timer& timer) override;
   void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) override;
   void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) override;
@@ -91,6 +95,14 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void AddKeyAndString(uint64_t key, std::string_view str) override;
   void UpdateThreadName(int32_t thread_id,
                         const std::string& thread_name) override;
+
+  void OnTimer(Timer timer) override;
+  void OnKeyAndString(uint64_t key, std::string str) override;
+  void OnCallstack(CallStack callstack) override;
+  void OnCallstackEvent(CallstackEvent callstack_event) override;
+  void OnThreadName(int32_t thread_id, std::string thread_name) override;
+  void OnAddressInfo(LinuxAddressInfo address_info) override;
+
   void OnValidateFramePointers(
       std::vector<std::shared_ptr<Module>> modules_to_validate);
 
