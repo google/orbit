@@ -147,3 +147,19 @@ TEST(ElfFile, GetFilePath) {
 
   EXPECT_EQ(hello_world->GetFilePath(), hello_world_path);
 }
+
+TEST(ElfFile, CreateFromBuffer) {
+  std::string executable_path = Path::GetExecutablePath();
+  std::string test_elf_file = executable_path + "/testdata/hello_world_elf";
+
+  std::ifstream test_elf_stream{test_elf_file, std::ios::binary};
+  const std::string buffer{std::istreambuf_iterator<char>{test_elf_stream},
+                           std::istreambuf_iterator<char>{}};
+  ASSERT_NE(buffer.size(), 0);
+
+  auto elf_file =
+      ElfFile::CreateFromBuffer(test_elf_file, buffer.data(), buffer.size());
+  ASSERT_NE(elf_file, nullptr);
+  EXPECT_EQ(elf_file->GetBuildId(),
+            "d12d54bc5b72ccce54a408bdeda65e2530740ac8");
+}

@@ -236,10 +236,33 @@ bool ElfFileImpl<llvm::object::ELF32LE>::Is64Bit() const {
 
 }  // namespace
 
-std::unique_ptr<ElfFile> ElfFile::Create(const std::string& file_path) {
+std::unique_ptr<ElfFile> ElfFile::CreateFromBuffer(std::string_view file_path,
+                                                   const void* buf,
+                                                   size_t len) {
+  std::unique_ptr<llvm::MemoryBuffer> buffer = llvm::MemoryBuffer::getMemBuffer(
+      llvm::StringRef(static_cast<const char*>(buf), len),
+      llvm::StringRef("buffer name"), false);
+  llvm::Expected<std::unique_ptr<llvm::object::ObjectFile>>
+      object_file_or_error =
+          llvm::object::ObjectFile::createObjectFile(buffer->getMemBufferRef());
+
+  if (!object_file_or_error) {
+    return nullptr;
+  }
+
+  return ElfFile::Create(
+      file_path, llvm::object::OwningBinary<llvm::object::ObjectFile>(
+                     std::move(object_file_or_error.get()), std::move(buffer)));
+}
+
+std::unique_ptr<ElfFile> ElfFile::Create(std::string_view file_path) {
+  // TODO(hebecker): Remove this explicit construction of StringRef when we
+  // switch to LLVM10.
+  const llvm::StringRef file_path_llvm{file_path.data(), file_path.size()};
+
   llvm::Expected<llvm::object::OwningBinary<llvm::object::ObjectFile>>
       object_file_or_error =
-          llvm::object::ObjectFile::createObjectFile(file_path);
+          llvm::object::ObjectFile::createObjectFile(file_path_llvm);
 
   if (!object_file_or_error) {
     return nullptr;
@@ -248,6 +271,12 @@ std::unique_ptr<ElfFile> ElfFile::Create(const std::string& file_path) {
   llvm::object::OwningBinary<llvm::object::ObjectFile>& file =
       object_file_or_error.get();
 
+  return ElfFile::Create(file_path, std::move(file));
+}
+
+std::unique_ptr<ElfFile> ElfFile::Create(
+    std::string_view file_path,
+    llvm::object::OwningBinary<llvm::object::ObjectFile>&& file) {
   llvm::object::ObjectFile* object_file = file.getBinary();
 
   std::unique_ptr<ElfFile> result;
