@@ -15,16 +15,17 @@ grpc::Status CaptureServiceImpl::Capture(
 
   CaptureRequest request;
   reader_writer->Read(&request);
+  LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
   tracing_handler.Start(std::move(*request.mutable_capture_options()));
 
   // The client asks for the capture to be stopped by calling WritesDone.
   // At that point, this call to Read will return false.
   // In the meantime, it blocks if no message is received.
   while (reader_writer->Read(&request)) {
-    LOG("reader_writer->Read(&request)");
   }
-  LOG("!reader_writer->Read(&request)");
+  LOG("Client finished writing on Capture's gRPC stream: stopping capture");
   tracing_handler.Stop();
 
+  LOG("Finished handling gRPC call to Capture: all capture data has been sent");
   return grpc::Status::OK;
 }

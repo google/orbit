@@ -5,7 +5,9 @@
 #include "CaptureClient.h"
 #include <OrbitBase/Logging.h>
 
-void CaptureClient::Capture() {
+void CaptureClient::Capture(
+    int32_t pid,
+    const std::vector<std::shared_ptr<Function>>& selected_functions) {
   CHECK(reader_writer_ == nullptr);
 
   callstack_intern_pool.clear();
@@ -17,12 +19,28 @@ void CaptureClient::Capture() {
   reader_writer_ = capture_service_->Capture(&context);
 
   CaptureRequest request;
+  CaptureOptions* capture_options = request.mutable_capture_options();
+  capture_options->set_trace_context_switches(true);
+  capture_options->set_pid(pid);
+  capture_options->set_sampling_rate(1000);
+  capture_options->set_unwinding_method(CaptureOptions::kDwarf);
+  capture_options->set_trace_gpu_driver(true);
+  for (const std::shared_ptr<Function>& function : selected_functions) {
+    CaptureOptions::InstrumentedFunction* instrumented_function =
+        capture_options->add_instrumented_functions();
+    instrumented_function->set_file_path(function->GetLoadedModulePath());
+    instrumented_function->set_file_offset(function->Offset());
+    instrumented_function->set_absolute_address(function->GetVirtualAddress());
+  }
+
   if (!reader_writer_->Write(request)) {
     ERROR("Sending CaptureRequest on Capture's gRPC stream");
     reader_writer_->WritesDone();
     FinishCapture();
     return;
   }
+  LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start "
+      "capturing");
 
   CaptureEvent event;
   while (reader_writer_->Read(&event)) {
@@ -56,7 +74,8 @@ void CaptureClient::Capture() {
         break;
     }
   }
-  LOG("Finished reading from Capture's gRPC stream");
+  LOG("Finished reading from Capture's gRPC stream: all capture data has been "
+      "received");
   FinishCapture();
 }
 
@@ -67,6 +86,7 @@ void CaptureClient::StopCapture() {
     ERROR("Finishing writing on Capture's gRPC stream");
     FinishCapture();
   }
+  LOG("Finished writing on Capture's gRPC stream: asking to stop capturing");
 }
 
 void CaptureClient::FinishCapture() {
