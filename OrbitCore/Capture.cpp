@@ -158,11 +158,9 @@ outcome::result<void, std::string> Capture::StartCapture() {
   GCaptureTimePoint = std::chrono::system_clock::now();
 
   GInjected = true;
-  ++Message::GCaptureID;
-  GTcpClient->Send(Msg_NewCaptureID);
 
   ClearCaptureData();
-  SendFunctionHooks();
+  PreFunctionHooks();
 
   Capture::NewSamplingProfiler();
   Capture::GSamplingProfiler->StartCapture();
@@ -185,9 +183,6 @@ void Capture::StopCapture() {
   if (!GInjected) {
     return;
   }
-
-  TcpEntity* tcpEntity = Capture::GetMainTcpEntity();
-  tcpEntity->Send(Msg_StopCapture);
 
   GState = State::kStopping;
 }
