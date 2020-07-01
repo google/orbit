@@ -73,7 +73,6 @@ class OrbitConan(ConanFile):
                 "crashpad/20200624@{}#8c19cb575eb819de0b050cf7d1f317b6".format(self._orbit_channel))
 
         if self.options.with_gui or self.options.with_fuzzing:
-            self.requires("freeglut/3.2.1@{}#0".format(self._orbit_channel))
             self.requires("freetype/2.10.0@bincrafters/stable#0")
             self.requires(
                 "freetype-gl/8d9a97a@{}#2836d28f3d91c308ec9652c2054015db".format(self._orbit_channel))
@@ -108,7 +107,6 @@ class OrbitConan(ConanFile):
         self.options["abseil"].cxx_standard = 17
         if self.options.with_gui:
             self.options["glew"].system_mesa = self.options.system_mesa
-            self.options["freeglut"].system_mesa = self.options.system_mesa
 
             if not self.options.system_qt:
                 self.options["qt"].shared = True

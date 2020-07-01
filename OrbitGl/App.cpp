@@ -59,9 +59,6 @@
 #include "Utils.h"
 #include "Version.h"
 
-#define GLUT_DISABLE_ATEXIT_HACK
-#include "GL/freeglut.h"
-
 #if __linux__
 #include <OrbitLinuxTracing/OrbitTracing.h>
 #endif

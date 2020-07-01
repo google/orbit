@@ -31,7 +31,6 @@ target_sources(
          GlobalsDataView.h
          GlPanel.h
          GlSlider.h
-         GlutContext.h
          GlUtils.h
          GpuTrack.h
          GraphTrack.h
@@ -81,7 +80,6 @@ target_sources(
           GlobalsDataView.cpp
           GlPanel.cpp
           GlSlider.cpp
-          GlutContext.cpp
           GlUtils.cpp
           GpuTrack.cpp
           GraphTrack.cpp
@@ -119,7 +117,6 @@ target_link_libraries(
          OpenGL::GLU
          freetype::freetype
          imgui::imgui
-         freeglut::freeglut
          capstone::capstone
          gte::gte
          glew::glew

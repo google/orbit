@@ -15,7 +15,6 @@
 #include <GL/glew.h>
 #include <GL/glu.h>
 #include <freetype-gl/freetype-gl.h>
-#include "GL/freeglut.h"
 
 // clang-format off
 #include <GL/gl.h>
