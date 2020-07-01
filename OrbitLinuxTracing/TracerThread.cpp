@@ -737,6 +737,7 @@ std::vector<std::unique_ptr<PerfEvent>> TracerThread::ConsumeDeferredEvents() {
 }
 
 void TracerThread::ProcessDeferredEvents() {
+  pthread_setname_np(pthread_self(), "Proc.Def.Events");
   bool should_exit = false;
   while (!should_exit) {
     // When "should_exit" becomes true, we know that we have stopped generating
