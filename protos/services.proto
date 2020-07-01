@@ -14,8 +14,12 @@ message CaptureRequest {
   CaptureOptions capture_options = 1;
 }
 
+message CaptureResponse {
+  repeated CaptureEvent capture_events = 1;
+}
+
 service CaptureService {
-  rpc Capture(stream CaptureRequest) returns (stream CaptureEvent) {}
+  rpc Capture(stream CaptureRequest) returns (stream CaptureResponse) {}
 }
 
 message GetProcessListRequest {}

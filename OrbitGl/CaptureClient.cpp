@@ -42,36 +42,38 @@ void CaptureClient::Capture(
   LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start "
       "capturing");
 
-  CaptureEvent event;
-  while (reader_writer_->Read(&event)) {
-    switch (event.event_case()) {
-      case CaptureEvent::kSchedulingSlice:
-        ProcessSchedulingSlice(event.scheduling_slice());
-        break;
-      case CaptureEvent::kInternedCallstack:
-        ProcessInternedCallstack(event.interned_callstack());
-        break;
-      case CaptureEvent::kCallstackSample:
-        ProcessCallstackSample(event.callstack_sample());
-        break;
-      case CaptureEvent::kFunctionCall:
-        ProcessFunctionCall(event.function_call());
-        break;
-      case CaptureEvent::kInternedString:
-        ProcessInternedString(event.interned_string());
-        break;
-      case CaptureEvent::kGpuJob:
-        ProcessGpuJob(event.gpu_job());
-        break;
-      case CaptureEvent::kThreadName:
-        ProcessThreadName(event.thread_name());
-        break;
-      case CaptureEvent::kAddressInfo:
-        ProcessAddressInfo(event.address_info());
-        break;
-      case CaptureEvent::EVENT_NOT_SET:
-        ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
-        break;
+  CaptureResponse response;
+  while (reader_writer_->Read(&response)) {
+    for (const CaptureEvent& event : response.capture_events()) {
+      switch (event.event_case()) {
+        case CaptureEvent::kSchedulingSlice:
+          ProcessSchedulingSlice(event.scheduling_slice());
+          break;
+        case CaptureEvent::kInternedCallstack:
+          ProcessInternedCallstack(event.interned_callstack());
+          break;
+        case CaptureEvent::kCallstackSample:
+          ProcessCallstackSample(event.callstack_sample());
+          break;
+        case CaptureEvent::kFunctionCall:
+          ProcessFunctionCall(event.function_call());
+          break;
+        case CaptureEvent::kInternedString:
+          ProcessInternedString(event.interned_string());
+          break;
+        case CaptureEvent::kGpuJob:
+          ProcessGpuJob(event.gpu_job());
+          break;
+        case CaptureEvent::kThreadName:
+          ProcessThreadName(event.thread_name());
+          break;
+        case CaptureEvent::kAddressInfo:
+          ProcessAddressInfo(event.address_info());
+          break;
+        case CaptureEvent::EVENT_NOT_SET:
+          ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
+          break;
+      }
     }
   }
   LOG("Finished reading from Capture's gRPC stream: all capture data has been "

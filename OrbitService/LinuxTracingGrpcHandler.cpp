@@ -163,8 +163,15 @@ uint64_t LinuxTracingGrpcHandler::InternStringIfNecessaryAndGetKey(
 }
 
 void LinuxTracingGrpcHandler::SenderThread() {
+  constexpr std::chrono::duration kSendEvery = std::chrono::milliseconds{20};
+  std::chrono::time_point last_sent = std::chrono::steady_clock::now();
   while (tracer_ != nullptr) {
-    std::this_thread::sleep_for(std::chrono::milliseconds{20});
+    std::chrono::duration since_sent =
+        std::chrono::steady_clock::now() - last_sent;
+    if (since_sent < kSendEvery) {
+      std::this_thread::sleep_for(kSendEvery - since_sent);
+    }
+    last_sent = std::chrono::steady_clock::now();
     SendBufferedEvents();
   }
   SendBufferedEvents();
@@ -177,7 +184,18 @@ void LinuxTracingGrpcHandler::SendBufferedEvents() {
     events = std::move(event_buffer_);
     event_buffer_.clear();
   }
-  for (const CaptureEvent& event : events) {
-    reader_writer_->Write(event);
+
+  constexpr uint64_t kMaxEventsPerResponse = 10'000;
+  CaptureResponse response;
+  for (CaptureEvent& event : events) {
+    // We buffer to avoid sending countless tiny messages, but we also want to
+    // avoid huge messages, which would cause the capture on the client to jump
+    // forward in time in few big steps and not look live anymore.
+    if (response.capture_events_size() == kMaxEventsPerResponse) {
+      reader_writer_->Write(response);
+      response.clear_capture_events();
+    }
+    response.mutable_capture_events()->Add(std::move(event));
   }
+  reader_writer_->Write(response);
 }

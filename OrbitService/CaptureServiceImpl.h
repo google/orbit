@@ -10,7 +10,7 @@
 class CaptureServiceImpl final : public CaptureService::Service {
  public:
   grpc::Status Capture(grpc::ServerContext* context,
-                       grpc::ServerReaderWriter<CaptureEvent, CaptureRequest>*
+                       grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>*
                            reader_writer) override;
 };
 
