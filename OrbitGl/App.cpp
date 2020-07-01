@@ -624,11 +624,6 @@ std::string OrbitApp::GetCaptureFileName() {
 }
 
 //-----------------------------------------------------------------------------
-std::string OrbitApp::GetPresetFileName() {
-  return Capture::GSessionPresets ? Capture::GSessionPresets->m_FileName : "";
-}
-
-//-----------------------------------------------------------------------------
 std::string OrbitApp::GetSaveFile(const std::string& extension) {
   if (!m_SaveFileCallback) return "";
   return m_SaveFileCallback(extension);

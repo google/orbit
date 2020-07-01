@@ -79,7 +79,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->actionOpen_Capture->setDisabled(true);
     ui->actionSave_Capture->setDisabled(true);
     ui->actionOpen_Preset->setDisabled(true);
-    ui->actionSave_Preset->setDisabled(true);
     ui->actionSave_Preset_As->setDisabled(true);
     ui->HomeTab->setDisabled(true);
   });
@@ -101,7 +100,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->actionOpen_Capture->setDisabled(false);
     ui->actionSave_Capture->setDisabled(false);
     ui->actionOpen_Preset->setDisabled(false);
-    ui->actionSave_Preset->setDisabled(false);
     ui->actionSave_Preset_As->setDisabled(false);
     ui->HomeTab->setDisabled(false);
   });
@@ -624,24 +622,6 @@ void OrbitMainWindow::OnTimer() {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnHideSearch() { ui->lineEdit->hide(); }
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionSave_Preset_triggered() {
-  std::string sessionName = GOrbitApp->GetPresetFileName();
-  if (sessionName.empty()) {
-    on_actionSave_Preset_As_triggered();
-    return;
-  }
-  outcome::result<void, std::string> result =
-      GOrbitApp->OnSavePreset(sessionName);
-  if (result.has_error()) {
-    QMessageBox::critical(
-        this, "Error saving session",
-        absl::StrFormat("Could not save session in \"%s\":\n%s.", sessionName,
-                        result.error())
-            .c_str());
-  }
-}
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionOpen_Preset_triggered() {

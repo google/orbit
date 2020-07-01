@@ -259,7 +259,6 @@
     <addaction name="actionSave_Capture"/>
     <addaction name="separator"/>
     <addaction name="actionOpen_Preset"/>
-    <addaction name="actionSave_Preset"/>
     <addaction name="actionSave_Preset_As"/>
     <addaction name="separator"/>
     <addaction name="actionLaunch_Process"/>
