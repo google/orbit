@@ -30,8 +30,6 @@ class Capture {
   static bool Connect(std::string_view remote_address);
   static bool InjectRemote(std::string_view remote_address);
   static void SetTargetProcess(const std::shared_ptr<Process>& a_Process);
-  // TODO: This method needs to be split into 2, the server side and the
-  //  client-side. remote_address is only used by the client-side.
   static outcome::result<void, std::string> StartCapture();
   static void StopCapture();
   static void FinalizeCapture();

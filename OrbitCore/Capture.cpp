@@ -146,8 +146,6 @@ bool Capture::Connect(std::string_view remote_address) {
 }
 
 //-----------------------------------------------------------------------------
-// TODO: This method is resposible for too many things. We should split the
-//  server side logic and client side logic into separate methods/classes.
 outcome::result<void, std::string> Capture::StartCapture() {
   if (GTargetProcess->GetID() == 0) {
     return outcome::failure(
@@ -166,10 +164,8 @@ outcome::result<void, std::string> Capture::StartCapture() {
   ClearCaptureData();
   SendFunctionHooks();
 
-if (Capture::IsRemote()) {
-    Capture::NewSamplingProfiler();
-    Capture::GSamplingProfiler->StartCapture();
-  }
+  Capture::NewSamplingProfiler();
+  Capture::GSamplingProfiler->StartCapture();
 
   if (GCoreApp != nullptr) {
     GCoreApp->SendToUi("startcapture");
@@ -240,21 +236,6 @@ void Capture::PreFunctionHooks() {
 
   // Unreal
   CheckForUnrealSupport();
-}
-
-std::vector<std::shared_ptr<Function>> Capture::GetSelectedFunctions() {
-  std::vector<std::shared_ptr<Function>> selected_functions;
-  for (auto& func : GTargetProcess->GetFunctions()) {
-    if (func->IsSelected() || func->IsOrbitFunc()) {
-      selected_functions.push_back(func);
-    }
-  }
-  return selected_functions;
-}
-
-//-----------------------------------------------------------------------------
-void Capture::SendFunctionHooks() {
-  PreFunctionHooks();
 
   GSelectedFunctions = GetSelectedFunctions();
 
@@ -271,6 +252,21 @@ void Capture::SendFunctionHooks() {
   if (GClearCaptureDataFunc) {
     GClearCaptureDataFunc();
   }
+}
+
+std::vector<std::shared_ptr<Function>> Capture::GetSelectedFunctions() {
+  std::vector<std::shared_ptr<Function>> selected_functions;
+  for (auto& func : GTargetProcess->GetFunctions()) {
+    if (func->IsSelected() || func->IsOrbitFunc()) {
+      selected_functions.push_back(func);
+    }
+  }
+  return selected_functions;
+}
+
+//-----------------------------------------------------------------------------
+void Capture::SendFunctionHooks() {
+  PreFunctionHooks();
 
   if (Capture::IsRemote()) {
     for (auto& function : GSelectedFunctions) {

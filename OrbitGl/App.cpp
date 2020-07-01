@@ -760,7 +760,6 @@ bool OrbitApp::StartCapture() {
   for (const CaptureStartedCallback& callback : capture_started_callbacks_) {
     callback();
   }
-
   return true;
 }
 
