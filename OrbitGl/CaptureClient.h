@@ -7,6 +7,7 @@
 
 #include "CaptureListener.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitFunction.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "grpcpp/channel.h"
@@ -21,7 +22,9 @@ class CaptureClient {
     CHECK(capture_listener_ != nullptr);
   }
 
-  void Capture();
+  void Capture(
+      int32_t pid,
+      const std::vector<std::shared_ptr<Function>>& selected_functions);
   void StopCapture();
 
  private:
