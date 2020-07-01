@@ -87,6 +87,10 @@ class OrbitConan(ConanFile):
             if not self.options.system_qt:
                 self.requires("qt/5.14.1@bincrafters/stable#0")
 
+        if self.options.with_fuzzing:
+            self.requires(
+                "libprotobuf-mutator/20200506@{}#5e2c709e22b0ad149482efd73db41e23".format(self._orbit_channel))
+
     def configure(self):
         if self.options.debian_packaging and (self.settings.get_safe("os.platform") != "GGP" or tools.detected_os() != "Linux"):
             raise ConanInvalidConfiguration(
