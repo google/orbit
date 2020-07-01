@@ -60,8 +60,6 @@ ORBIT_SERIALIZE(Params, 19) {
 
 //-----------------------------------------------------------------------------
 bool Params::Save() {
-  GCoreApp->SendToUi("UpdateProcessParams");
-
   std::string filename = Path::GetParamsFileName();
   std::ofstream file(filename);
   if (file.fail()) {
