@@ -76,9 +76,6 @@ OrbitApp::OrbitApp(ApplicationOptions&& options)
   thread_pool_ =
       ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
   data_manager_ = std::make_unique<DataManager>(std::this_thread::get_id());
-#ifdef _WIN32
-  m_Debugger = std::make_unique<Debugger>();
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -529,10 +526,6 @@ void OrbitApp::MainTick() {
     exit(0);
   }
 
-#ifdef _WIN32
-  GOrbitApp->m_Debugger->MainTick();
-#endif
-
   ++GOrbitApp->m_NumTicks;
 
   if (DoZoom) {
@@ -594,19 +587,6 @@ void OrbitApp::GoToCallstack() { SendToUi("gotocallstack"); }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::GoToCapture() { SendToUi("gotocapture"); }
-
-//-----------------------------------------------------------------------------
-void OrbitApp::OnLaunchProcess(const std::string& process_name,
-                               const std::string& working_dir,
-                               const std::string& args) {
-#ifdef _WIN32
-  m_Debugger->LaunchProcess(process_name, working_dir, args);
-#else
-  UNUSED(process_name);
-  UNUSED(working_dir);
-  UNUSED(args);
-#endif
-}
 
 //-----------------------------------------------------------------------------
 std::string OrbitApp::GetCaptureFileName() {
@@ -752,13 +732,6 @@ bool OrbitApp::StartCapture() {
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error());
     return false;
-  }
-
-  if (m_NeedsThawing) {
-#ifdef _WIN32
-    m_Debugger->SendThawMessage();
-#endif
-    m_NeedsThawing = false;
   }
 
   for (const CaptureStartedCallback& callback : capture_started_callbacks_) {

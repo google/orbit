@@ -261,7 +261,6 @@
     <addaction name="actionOpen_Preset"/>
     <addaction name="actionSave_Preset_As"/>
     <addaction name="separator"/>
-    <addaction name="actionLaunch_Process"/>
     <addaction name="actionDisconnect"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
@@ -384,11 +383,6 @@
    </property>
    <property name="text">
     <string>Context Switches</string>
-   </property>
-  </action>
-  <action name="actionLaunch_Process">
-   <property name="text">
-    <string>Launch Process</string>
    </property>
   </action>
   <action name="actionEnable_Unreal_Support">

@@ -71,7 +71,6 @@ target_sources(
           CrashManager.cpp
           DataManager.cpp
           DataView.cpp
-          Debugger.cpp
           Disassembler.cpp
           EventTrack.cpp
           FramePointerValidatorClient.cpp

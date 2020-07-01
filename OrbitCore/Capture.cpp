@@ -340,7 +340,6 @@ outcome::result<void, std::string> Capture::SavePreset(
   Preset preset;
   preset.m_ProcessFullPath = GTargetProcess->GetFullPath();
 
-  GCoreApp->SendToUi("UpdateProcessParams");
   preset.m_Arguments = GParams.m_Arguments;
   preset.m_WorkingDirectory = GParams.m_WorkingDirectory;
 

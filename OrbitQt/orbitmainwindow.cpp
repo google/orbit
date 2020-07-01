@@ -66,7 +66,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   ui->ProcessesList->SetDataView(
       data_view_factory->GetOrCreateDataView(DataViewType::PROCESSES));
-  ui->ProcessesList->SetProcessParams();
 
   QList<int> sizes;
   sizes.append(5000);
@@ -181,7 +180,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->outputTab));
 
-    ui->actionLaunch_Process->setVisible(false);
     ui->actionDisconnect->setVisible(false);
 
     ui->actionEnable_Sampling->setVisible(false);
@@ -517,10 +515,6 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
     m_OutputDialog->AddLog(Replace(a_Message, "log:", ""));
   } else if (absl::StartsWith(a_Message, "asm:")) {
     OpenDisassembly(a_Message);
-  } else if (absl::StartsWith(a_Message, "UpdateProcessParams")) {
-    ui->ProcessesList->UpdateProcessParams();
-  } else if (absl::StartsWith(a_Message, "SetProcessParams")) {
-    ui->ProcessesList->SetProcessParams();
   } else if (absl::StartsWith(a_Message, "error:")) {
     std::string title_text = Replace(a_Message, "error:", "");
     std::string title = title_text.substr(0, title_text.find('\n'));
@@ -693,16 +687,6 @@ void OrbitMainWindow::on_actionEnable_Context_Switches_triggered() {}
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionEnable_Context_Switches_triggered(bool checked) {
   GOrbitApp->SetTrackContextSwitches(checked);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionLaunch_Process_triggered() {
-  QStringList list = QFileDialog::getOpenFileNames(
-      this, "Select an executable to launch...", "", "*.exe");
-  for (auto& file : list) {
-    GOrbitApp->OnLaunchProcess(file.toStdString(), "", "");
-    break;
-  }
 }
 
 //-----------------------------------------------------------------------------

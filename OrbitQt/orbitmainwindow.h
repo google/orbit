@@ -67,7 +67,6 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionOpen_Preset_triggered();
   void on_actionDisconnect_triggered();
   void on_actionQuit_triggered();
-  void on_actionLaunch_Process_triggered();
 
   void on_actionToogleDevMode_toggled(bool arg1);
 

@@ -43,10 +43,6 @@
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
-#if defined(_WIN32)
-#include "Debugger.h"
-#endif
-
 struct CallStack;
 class Process;
 
@@ -71,9 +67,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
       const std::string& file_name);
   outcome::result<void, std::string> OnLoadCapture(
       const std::string& file_name);
-  void OnLaunchProcess(const std::string& process_name,
-                       const std::string& working_dir, const std::string& args);
-  void Inject(const std::string& file_name);
   bool StartCapture();
   void StopCapture();
   void OnCaptureStopped() override;
@@ -210,7 +203,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void EnableUploadDumpsToServer(bool a_Value);
   bool GetUploadDumpsToServerEnabled() const override;
 
-  void RequestThaw() { m_NeedsThawing = true; }
   void UpdateSamplingReport();
   void LoadPreset(const std::shared_ptr<Preset>& session);
   void SetIsRemote(bool a_IsRemote) { m_IsRemote = a_IsRemote; }
@@ -265,7 +257,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<LogDataView> m_LogDataView;
 
   CaptureWindow* m_CaptureWindow = nullptr;
-  bool m_NeedsThawing = false;
 
   std::shared_ptr<class SamplingReport> sampling_report_;
   std::shared_ptr<class SamplingReport> selection_report_;
@@ -289,9 +280,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::unique_ptr<CrashManager> crash_manager_;
 
   const SymbolHelper symbol_helper_;
-#if defined(_WIN32)
-  std::unique_ptr<Debugger> m_Debugger;
-#endif
 
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 };
