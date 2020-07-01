@@ -11,6 +11,7 @@
 grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerContext*,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
+  pthread_setname_np(pthread_self(), "CSImpl::Capture");
   LinuxTracingGrpcHandler tracing_handler{reader_writer};
 
   CaptureRequest request;

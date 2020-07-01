@@ -172,6 +172,7 @@ uint64_t LinuxTracingGrpcHandler::InternStringIfNecessaryAndGetKey(
 }
 
 void LinuxTracingGrpcHandler::SenderThread() {
+  pthread_setname_np(pthread_self(), "SenderThread");
   constexpr absl::Duration kSendTimeInterval = absl::Milliseconds(20);
   // This should be lower than kMaxEventsPerResponse in SendBufferedEvents as
   // a few more events are likely to arrive after the condition becomes true.
