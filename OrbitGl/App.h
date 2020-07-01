@@ -63,7 +63,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   std::string GetVersion();
 
   std::string GetCaptureFileName();
-  std::string GetPresetFileName();
   std::string GetSaveFile(const std::string& extension);
   void SetClipboard(const std::string& text);
   outcome::result<void, std::string> OnSavePreset(const std::string& file_name);
