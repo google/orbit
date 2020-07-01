@@ -1,0 +1,60 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d9be154..46c7f52 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -14,6 +14,7 @@
+ 
+ cmake_minimum_required(VERSION 3.5)
+ project(LibProtobufMutator CXX)
++include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+ 
+ enable_language(C)
+ enable_language(CXX)
+@@ -25,9 +26,6 @@ option(LIB_PROTO_MUTATOR_WITH_ASAN "Enable address sanitizer" OFF)
+ option(PKG_CONFIG_PATH "Directory to install pkgconfig file" "share/pkgconfig")
+ set(LIB_PROTO_MUTATOR_FUZZER_LIBRARIES "" CACHE STRING "Fuzzing engine libs")
+ 
+-# External dependencies
+-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/external)
+-
+ # External dependencies
+ include(ProcessorCount)
+ include(CheckCCompilerFlag)
+@@ -36,11 +34,8 @@ include(CheckCXXCompilerFlag)
+ set(THREADS_PREFER_PTHREAD_FLAG ON)
+ find_package(Threads)
+ 
+-find_package(LibLZMA)
+-include_directories(${LIBLZMA_INCLUDE_DIRS})
+-
+-find_package(ZLIB)
+-include_directories(${ZLIB_INCLUDE_DIRS})
++include_directories(${CONAN_INCLUDE_DIRS_ZLIB})
++set(ZLIB_LIBRARIES ${CONAN_LIBS_ZLIB})
+ 
+ set(CMAKE_CXX_STANDARD 11)
+ 
+@@ -124,9 +119,9 @@ endif()
+ if (LIB_PROTO_MUTATOR_DOWNLOAD_PROTOBUF)
+   include(protobuf)
+ else()
+-  find_package(Protobuf REQUIRED)
+-  include_directories(${PROTOBUF_INCLUDE_DIRS})
++  include_directories(${CONAN_INCLUDE_DIRS_PROTOBUF})
+   include_directories(${CMAKE_CURRENT_BINARY_DIR})
++  set(PROTOBUF_LIBRARIES ${CONAN_LIBS_PROTOBUF})
+ endif()
+ 
+ set(LIB_DIR "lib${LIB_SUFFIX}")
+@@ -145,11 +140,6 @@ endif()
+ 
+ add_subdirectory(src)
+ 
+-if (NOT "${LIB_PROTO_MUTATOR_FUZZER_LIBRARIES}" STREQUAL "" OR
+-    NOT "${FUZZING_FLAGS}" STREQUAL "")
+-  add_subdirectory(examples EXCLUDE_FROM_ALL)
+-endif()
+-
+ configure_file("libprotobuf-mutator.pc.in" "libprotobuf-mutator.pc" @ONLY)
+ install(FILES "${CMAKE_BINARY_DIR}/libprotobuf-mutator.pc"
+   DESTINATION ${PKG_CONFIG_PATH})

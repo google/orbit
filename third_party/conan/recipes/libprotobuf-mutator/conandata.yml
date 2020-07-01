@@ -1,0 +1,10 @@
+sources:
+        "20200506":
+                url: "https://github.com/google/libprotobuf-mutator/archive/7a2ed51a6b682a83e345ff49fc4cfd7ca47550db.zip"
+                sha256: "88e9e650e4010c142c3d408df66277af425583561ab3207c63cae702ce4065a5"
+patches:
+        "20200506":
+         - patch_file: "patches/001-conanbuildinfo.diff"
+           base_path: "libprotobuf-mutator-7a2ed51a6b682a83e345ff49fc4cfd7ca47550db"
+source_subfolder:
+        "20200506": "libprotobuf-mutator-7a2ed51a6b682a83e345ff49fc4cfd7ca47550db"
