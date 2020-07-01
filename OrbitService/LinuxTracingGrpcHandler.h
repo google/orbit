@@ -16,7 +16,7 @@
 class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
  public:
   explicit LinuxTracingGrpcHandler(
-      grpc::ServerReaderWriter<CaptureEvent, CaptureRequest>* reader_writer)
+      grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer)
       : reader_writer_{reader_writer} {}
 
   ~LinuxTracingGrpcHandler() override = default;
@@ -36,7 +36,7 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
   void OnAddressInfo(AddressInfo address_info) override;
 
  private:
-  grpc::ServerReaderWriter<CaptureEvent, CaptureRequest>* reader_writer_;
+  grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer_;
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
 
   static uint64_t ComputeCallstackKey(const Callstack& callstack);

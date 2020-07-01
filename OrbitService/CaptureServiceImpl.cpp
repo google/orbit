@@ -10,7 +10,7 @@
 
 grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerContext*,
-    grpc::ServerReaderWriter<CaptureEvent, CaptureRequest>* reader_writer) {
+    grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   LinuxTracingGrpcHandler tracing_handler{reader_writer};
 
   CaptureRequest request;

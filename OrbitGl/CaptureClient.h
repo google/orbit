@@ -31,7 +31,7 @@ class CaptureClient {
   void FinishCapture();
 
   std::unique_ptr<CaptureService::Stub> capture_service_;
-  std::unique_ptr<grpc::ClientReaderWriter<CaptureRequest, CaptureEvent>>
+  std::unique_ptr<grpc::ClientReaderWriter<CaptureRequest, CaptureResponse>>
       reader_writer_;
 
   void ProcessSchedulingSlice(const SchedulingSlice& scheduling_slice);
