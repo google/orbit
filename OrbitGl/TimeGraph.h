@@ -31,9 +31,6 @@ class TimeGraph {
   void Draw(bool a_Picking = false);
   void DrawTracks(bool a_Picking = false);
   void DrawMainFrame(TextBox& a_Box);
-  void DrawLineBuffer(bool a_Picking);
-  void DrawBoxBuffer(bool a_Picking);
-  void DrawBuffered(bool a_Picking);
   void DrawText();
 
   void NeedsUpdate();
