@@ -10,7 +10,13 @@ void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
   CHECK(!sender_thread_.joinable());
 
-  tracer_ = std::make_unique<LinuxTracing::Tracer>(std::move(capture_options));
+  {
+    // Protect tracer_ with event_buffer_mutex_ so that we can use tracer_ in
+    // Conditions for Await/LockWhen (specifically, in SenderThread).
+    absl::MutexLock lock{&event_buffer_mutex_};
+    tracer_ =
+        std::make_unique<LinuxTracing::Tracer>(std::move(capture_options));
+  }
   tracer_->SetListener(this);
   tracer_->Start();
 
@@ -22,7 +28,10 @@ void LinuxTracingGrpcHandler::Stop() {
   CHECK(sender_thread_.joinable());
 
   tracer_->Stop();
-  tracer_.reset();
+  {
+    absl::MutexLock lock{&event_buffer_mutex_};
+    tracer_.reset();
+  }
 
   sender_thread_.join();
 }
@@ -163,31 +172,39 @@ uint64_t LinuxTracingGrpcHandler::InternStringIfNecessaryAndGetKey(
 }
 
 void LinuxTracingGrpcHandler::SenderThread() {
-  constexpr std::chrono::duration kSendEvery = std::chrono::milliseconds{20};
-  std::chrono::time_point last_sent = std::chrono::steady_clock::now();
-  while (tracer_ != nullptr) {
-    std::chrono::duration since_sent =
-        std::chrono::steady_clock::now() - last_sent;
-    if (since_sent < kSendEvery) {
-      std::this_thread::sleep_for(kSendEvery - since_sent);
+  constexpr absl::Duration kSendTimeInterval = absl::Milliseconds(20);
+  // This should be lower than kMaxEventsPerResponse in SendBufferedEvents as
+  // a few more events are likely to arrive after the condition becomes true.
+  constexpr uint64_t kSendEventCountInterval = 5000;
+
+  bool stopped = false;
+  while (!stopped) {
+    event_buffer_mutex_.LockWhenWithTimeout(
+        absl::Condition(
+            +[](LinuxTracingGrpcHandler* self) {
+              return self->event_buffer_.size() >= kSendEventCountInterval ||
+                     self->tracer_ == nullptr;
+            },
+            this),
+        kSendTimeInterval);
+    if (tracer_ == nullptr) {
+      stopped = true;
     }
-    last_sent = std::chrono::steady_clock::now();
-    SendBufferedEvents();
+    std::vector<CaptureEvent> buffered_events = std::move(event_buffer_);
+    event_buffer_.clear();
+    event_buffer_mutex_.Unlock();
+    SendBufferedEvents(std::move(buffered_events));
   }
-  SendBufferedEvents();
 }
 
-void LinuxTracingGrpcHandler::SendBufferedEvents() {
-  std::vector<CaptureEvent> events;
-  {
-    absl::MutexLock lock{&event_buffer_mutex_};
-    events = std::move(event_buffer_);
-    event_buffer_.clear();
+void LinuxTracingGrpcHandler::SendBufferedEvents(
+    std::vector<CaptureEvent>&& buffered_events) {
+  if (buffered_events.empty()) {
+    return;
   }
-
   constexpr uint64_t kMaxEventsPerResponse = 10'000;
   CaptureResponse response;
-  for (CaptureEvent& event : events) {
+  for (CaptureEvent& event : buffered_events) {
     // We buffer to avoid sending countless tiny messages, but we also want to
     // avoid huge messages, which would cause the capture on the client to jump
     // forward in time in few big steps and not look live anymore.
