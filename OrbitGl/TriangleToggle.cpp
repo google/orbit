@@ -15,6 +15,9 @@ TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
       time_graph_(time_graph) {}
 
 void TriangleToggle::Draw(GlCanvas* canvas, bool picking) {
+  Batcher* batcher = canvas->GetBatcher();
+  batcher->Reset();
+
   const Color kWhite(255, 255, 255, 255);
   const Color kGrey(100, 100, 100, 255);
   Color color = state_ == State::kInactive ? kGrey : kWhite;
@@ -44,17 +47,17 @@ void TriangleToggle::Draw(GlCanvas* canvas, bool picking) {
     glEnd();
   } else {
     // When picking, draw a big square for easier picking.
-    const float scale = 2.f;
-    glScalef(scale, scale, scale);
-    glBegin(GL_QUADS);
-    glVertex3f(half_w, half_w, 0);
-    glVertex3f(-half_w, half_w, 0);
-    glVertex3f(-half_w, -half_w, 0);
-    glVertex3f(half_w, -half_w, 0);
-    glEnd();
+    float original_width = 2 * half_w;
+    float large_width = 2 * original_width;
+    Box box(Vec2(pos_[0] - original_width, pos_[1] - original_width),
+      Vec2(large_width, large_width), 0.f);
+    batcher->AddBox(box, color, PickingID::BOX);
   }
 
   glPopMatrix();
+
+  batcher->Draw();
+  batcher->Reset();
 }
 
 void TriangleToggle::OnPick(int /*x*/, int /*y*/) {}
