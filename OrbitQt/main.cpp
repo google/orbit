@@ -254,7 +254,7 @@ int main(int argc, char* argv[]) {
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
 #endif
 
-	if (absl::GetFlag(FLAGS_use_software_opengl)) {
+    if (absl::GetFlag(FLAGS_use_software_opengl)) {
       QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
     }
 
