@@ -583,13 +583,12 @@ void CaptureWindow::Draw() {
     DrawStatus();
     RenderTimeBar();
 
-    // Vertical line
-    glColor4f(0, 1, 0, 0.5f);
-    glBegin(GL_LINES);
-    glVertex3f(m_MouseX, m_WorldTopLeftY, Z_VALUE_TEXT);
-    glVertex3f(m_MouseX, m_WorldTopLeftY - m_WorldHeight, Z_VALUE_TEXT);
-    glEnd();
+    Vec2 pos(m_MouseX, m_WorldTopLeftY);
+    batcher_.AddVerticalLine(pos, -m_WorldHeight, Z_VALUE_TEXT,
+      Color(0, 255, 0, 127), PickingID::LINE);
   }
+  batcher_.Draw(m_Picking);
+  batcher_.Reset();
 }
 
 //-----------------------------------------------------------------------------
