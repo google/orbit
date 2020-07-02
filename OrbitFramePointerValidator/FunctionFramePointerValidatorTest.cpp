@@ -5,7 +5,7 @@
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
-#include "FunctionFramePointerValidator.h"
+#include "include/OrbitFramePointerValidator/FunctionFramePointerValidator.h"
 
 namespace {
 

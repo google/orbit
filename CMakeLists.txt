@@ -149,6 +149,7 @@ endif()
 add_subdirectory(ElfUtils)
 add_subdirectory(OrbitBase)
 add_subdirectory(OrbitCore)
+add_subdirectory(OrbitFramePointerValidator)
 add_subdirectory(OrbitTest)
 add_subdirectory(protos)
 
