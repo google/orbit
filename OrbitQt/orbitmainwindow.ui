@@ -282,12 +282,9 @@
     <property name="title">
      <string>Options</string>
     </property>
-    <addaction name="actionEnable_Sampling"/>
-    <addaction name="actionEnable_Context_Switches"/>
     <addaction name="actionEnable_Unreal_Support"/>
     <addaction name="actionAllow_Unsafe_Hooking"/>
     <addaction name="actionOutputDebugString"/>
-    <addaction name="actionUploadDumpsToServer"/>
    </widget>
    <widget class="QMenu" name="menuCrash">
     <property name="title">
@@ -377,14 +374,6 @@
     <string>Save Preset As...</string>
    </property>
   </action>
-  <action name="actionEnable_Context_Switches">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Context Switches</string>
-   </property>
-  </action>
   <action name="actionEnable_Unreal_Support">
    <property name="checkable">
     <bool>true</bool>
@@ -399,14 +388,6 @@
    </property>
    <property name="text">
     <string>Unsafe Hooking</string>
-   </property>
-  </action>
-  <action name="actionEnable_Sampling">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Sampling</string>
    </property>
   </action>
   <action name="actionOpen_Capture">
@@ -430,14 +411,6 @@
    </property>
    <property name="text">
     <string>OutputDebugString</string>
-   </property>
-  </action>
-  <action name="actionUploadDumpsToServer">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Upload Dumps on Crash</string>
    </property>
   </action>
   <action name="actionCheckFalse">

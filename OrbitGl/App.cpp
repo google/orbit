@@ -243,7 +243,7 @@ bool OrbitApp::Init(ApplicationOptions&& options) {
   GPluginManager.Initialize();
 
   GParams.Load();
-  GFontSize = GParams.config.font_size();
+  GFontSize = GParams.font_size;
   GOrbitApp->LoadFileMapping();
 
   return true;
@@ -934,16 +934,6 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
 bool OrbitApp::IsLoading() { return GPdbDbg->IsLoading(); }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::SetTrackContextSwitches(bool a_Value) {
-  GParams.config.set_track_context_switches(a_Value);
-}
-
-//-----------------------------------------------------------------------------
-bool OrbitApp::GetTrackContextSwitches() {
-  return GParams.config.track_context_switches();
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::EnableUnrealSupport(bool a_Value) {
   GParams.config.set_unreal_support(a_Value);
 }
@@ -971,16 +961,6 @@ bool OrbitApp::GetOutputDebugStringEnabled() {
 //-----------------------------------------------------------------------------
 void OrbitApp::EnableOutputDebugString(bool a_Value) {
   GParams.config.set_hook_output_debug_string(a_Value);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::EnableSampling(bool a_Value) {
-  GParams.config.set_track_sampling_events(a_Value);
-}
-
-//-----------------------------------------------------------------------------
-bool OrbitApp::GetSamplingEnabled() {
-  return GParams.config.track_sampling_events();
 }
 
 //-----------------------------------------------------------------------------
@@ -1033,17 +1013,6 @@ void OrbitApp::OnProcessSelected(int32_t pid) {
       SendErrorToUi("Error retrieving modules", result.error());
     }
   });
-}
-
-//-----------------------------------------------------------------------------
-bool OrbitApp::GetUploadDumpsToServerEnabled() const {
-  return GParams.config.upload_dumps_to_server();
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::EnableUploadDumpsToServer(bool a_Value) {
-  GParams.config.set_upload_dumps_to_server(a_Value);
-  GParams.Save();
 }
 
 //-----------------------------------------------------------------------------

@@ -185,23 +185,15 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
   void LoadModulesFromPreset(const std::shared_ptr<Process>& process,
                              const std::shared_ptr<Preset>& preset);
   bool IsLoading();
-  void SetTrackContextSwitches(bool a_Value);
-  bool GetTrackContextSwitches();
 
   void EnableUnrealSupport(bool a_Value);
   bool GetUnrealSupportEnabled() override;
-
-  void EnableSampling(bool a_Value);
-  bool GetSamplingEnabled() override;
 
   void EnableUnsafeHooking(bool a_Value);
   bool GetUnsafeHookingEnabled() override;
 
   void EnableOutputDebugString(bool a_Value);
   bool GetOutputDebugStringEnabled() override;
-
-  void EnableUploadDumpsToServer(bool a_Value);
-  bool GetUploadDumpsToServerEnabled() const override;
 
   void UpdateSamplingReport();
   void LoadPreset(const std::shared_ptr<Preset>& session);

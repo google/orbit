@@ -30,11 +30,8 @@ class CoreApp {
   virtual ~CoreApp() = default;
   virtual void SendToUi(const std::string& /* message */) {}
   virtual bool GetUnrealSupportEnabled() { return false; }
-  virtual bool GetUnitySupportEnabled() { return false; }
   virtual bool GetUnsafeHookingEnabled() { return false; }
-  virtual bool GetSamplingEnabled() { return false; }
   virtual bool GetOutputDebugStringEnabled() { return false; }
-  virtual bool GetUploadDumpsToServerEnabled() const { return false; }
   virtual void UpdateVariable(class Variable* /*a_Variable*/) {}
   virtual void ProcessTimer(const Timer& /*timer*/) {}
   virtual void ProcessSamplingCallStack(LinuxCallstackEvent& /*a_CS*/) {}

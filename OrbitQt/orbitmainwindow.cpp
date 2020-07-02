@@ -182,12 +182,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
     ui->actionDisconnect->setVisible(false);
 
-    ui->actionEnable_Sampling->setVisible(false);
-    ui->actionEnable_Context_Switches->setVisible(false);
+
     ui->actionEnable_Unreal_Support->setVisible(false);
     ui->actionAllow_Unsafe_Hooking->setVisible(false);
     ui->actionOutputDebugString->setVisible(false);
-    ui->actionUploadDumpsToServer->setVisible(false);
 
     ui->actionShow_Includes_Util->setVisible(false);
     ui->menuTools->menuAction()->setVisible(false);
@@ -206,17 +204,12 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   m_OutputDialog = new OutputDialog(this);
   m_OutputDialog->setWindowTitle("Orbit - Loading Pdb...");
 
-  ui->actionEnable_Context_Switches->setChecked(
-      GOrbitApp->GetTrackContextSwitches());
   ui->actionEnable_Unreal_Support->setChecked(
       GOrbitApp->GetUnrealSupportEnabled());
   ui->actionAllow_Unsafe_Hooking->setChecked(
       GOrbitApp->GetUnsafeHookingEnabled());
-  ui->actionEnable_Sampling->setChecked(GOrbitApp->GetSamplingEnabled());
   ui->actionOutputDebugString->setChecked(
       GOrbitApp->GetOutputDebugStringEnabled());
-  ui->actionUploadDumpsToServer->setChecked(
-      GOrbitApp->GetUploadDumpsToServerEnabled());
 
   CreateSamplingTab();
   CreateSelectionTab();
@@ -682,14 +675,6 @@ void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionEnable_Context_Switches_triggered() {}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionEnable_Context_Switches_triggered(bool checked) {
-  GOrbitApp->SetTrackContextSwitches(checked);
-}
-
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionEnable_Unreal_Support_triggered(bool checked) {
   GOrbitApp->EnableUnrealSupport(checked);
 }
@@ -697,16 +682,6 @@ void OrbitMainWindow::on_actionEnable_Unreal_Support_triggered(bool checked) {
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionAllow_Unsafe_Hooking_triggered(bool checked) {
   GOrbitApp->EnableUnsafeHooking(checked);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionEnable_Sampling_triggered(bool checked) {
-  GOrbitApp->EnableSampling(checked);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionEnable_Sampling_toggled(bool arg1) {
-  UNUSED(arg1);
 }
 
 //-----------------------------------------------------------------------------
@@ -798,11 +773,6 @@ void OrbitMainWindow::SetTitle(const QString& task_description) {
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionOutputDebugString_triggered(bool checked) {
   GOrbitApp->EnableOutputDebugString(checked);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionUploadDumpsToServer_triggered(bool checked) {
-  GOrbitApp->EnableUploadDumpsToServer(checked);
 }
 
 //-----------------------------------------------------------------------------

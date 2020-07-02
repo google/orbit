@@ -72,17 +72,9 @@ class OrbitMainWindow : public QMainWindow {
 
   void on_actionSave_Preset_As_triggered();
 
-  void on_actionEnable_Context_Switches_triggered();
-
-  void on_actionEnable_Context_Switches_triggered(bool checked);
-
   void on_actionEnable_Unreal_Support_triggered(bool checked);
 
   void on_actionAllow_Unsafe_Hooking_triggered(bool checked);
-
-  void on_actionEnable_Sampling_triggered(bool checked);
-
-  void on_actionEnable_Sampling_toggled(bool arg1);
 
   void on_actionSave_Capture_triggered();
 
@@ -91,8 +83,6 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionShow_Includes_Util_triggered();
 
   void on_actionOutputDebugString_triggered(bool checked);
-
-  void on_actionUploadDumpsToServer_triggered(bool checked);
 
   void on_actionCheckFalse_triggered();
   void on_actionNullPointerDereference_triggered();

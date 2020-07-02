@@ -340,9 +340,6 @@ outcome::result<void, std::string> Capture::SavePreset(
   Preset preset;
   preset.m_ProcessFullPath = GTargetProcess->GetFullPath();
 
-  preset.m_Arguments = GParams.config.arguments();
-  preset.m_WorkingDirectory = GParams.config.working_directory();
-
   for (auto& func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {
       preset.m_Modules[func->GetLoadedModulePath()].m_FunctionHashes.push_back(

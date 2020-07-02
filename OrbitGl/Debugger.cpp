@@ -170,23 +170,22 @@ void Debugger::DebuggerThread(const std::string& process_name,
         startAddress = debug_event.u.CreateProcessInfo.lpStartAddress;
         m_ProcessID = GetProcessId(hProcess);
 
-        if (GParams.config.start_paused()) {
-          // Copy original 2 bytes before installing busy loop
-          m_WaitLoop.m_Address = (DWORD64)startAddress;
-          m_WaitLoop.m_ThreadId =
-              GetThreadId(debug_event.u.CreateProcessInfo.hThread);
-          ReadProcessMemory(hProcess, startAddress, &m_WaitLoop.m_OriginalBytes,
-                            2, NULL);
+        // Copy original 2 bytes before installing busy loop
+        m_WaitLoop.m_Address = (DWORD64)startAddress;
+        m_WaitLoop.m_ThreadId =
+            GetThreadId(debug_event.u.CreateProcessInfo.hThread);
+        ReadProcessMemory(hProcess, startAddress, &m_WaitLoop.m_OriginalBytes,
+                          2, NULL);
 
-          // Install busy loop
-          unsigned char loop[] = {0xEB, 0xFE};
-          SIZE_T numWritten = 0;
-          WriteProcessMemory(hProcess, startAddress, &loop, sizeof(loop),
-                             &numWritten);
-          FlushInstructionCache(hProcess, startAddress, sizeof(loop));
+        // Install busy loop
+        unsigned char loop[] = {0xEB, 0xFE};
+        SIZE_T numWritten = 0;
+        WriteProcessMemory(hProcess, startAddress, &loop, sizeof(loop),
+                           &numWritten);
+        FlushInstructionCache(hProcess, startAddress, sizeof(loop));
 
-          m_LoopReady = true;
-        }
+        m_LoopReady = true;
+
         detach = true;
       } break;
 

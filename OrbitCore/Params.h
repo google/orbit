@@ -18,6 +18,7 @@ struct Params {
 
  public:
   Config config;
+  const float font_size = 14.f;
 };
 
 extern Params GParams;

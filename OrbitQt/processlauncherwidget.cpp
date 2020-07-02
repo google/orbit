@@ -22,10 +22,6 @@ ProcessLauncherWidget::~ProcessLauncherWidget() { delete ui; }
 void ProcessLauncherWidget::SetDataView(DataView* data_view) {
   ui->LiveProcessList->Initialize(data_view, SelectionType::kDefault,
                                   FontType::kDefault);
-
-  if (GParams.config.process_filter() != "") {
-    ui->LiveProcessList->SetFilter(GParams.config.process_filter().c_str());
-  }
 }
 
 void ProcessLauncherWidget::Refresh() { ui->LiveProcessList->Refresh(); }
