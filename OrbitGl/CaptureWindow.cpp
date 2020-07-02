@@ -577,7 +577,7 @@ void CaptureWindow::Draw() {
     std::string time = GetPrettyTime(micros * 0.001);
     TextBox box(pos, size, time, Color(0, 128, 0, 128));
     box.SetTextY(m_SelectStop[1]);
-    box.Draw(m_TextRenderer, -FLT_MAX, true, true);
+    box.Draw(&batcher_, m_TextRenderer, -FLT_MAX, true, true);
   }
 
   if (!m_Picking && !m_IsHovering) {

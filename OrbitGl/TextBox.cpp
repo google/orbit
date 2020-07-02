@@ -74,9 +74,11 @@ float TextBox::GetScreenSize(const TextRenderer& a_TextRenderer) {
 }
 
 //-----------------------------------------------------------------------------
-void TextBox::Draw(TextRenderer& a_TextRenderer, float a_MinX, bool a_Visible,
+void TextBox::Draw(Batcher* batcher, 
+                   TextRenderer& a_TextRenderer, float a_MinX, bool a_Visible,
                    bool a_RightJustify, bool isInactive, unsigned int a_ID,
                    bool a_IsPicking, bool a_IsHighlighted) {
+  batcher->Reset();
   bool isCoreActivity = m_Timer.IsType(Timer::CORE_ACTIVITY);
   bool isSameThreadIdAsSelected =
       isCoreActivity && m_Timer.m_TID == Capture::GSelectedThreadId;
@@ -100,21 +102,15 @@ void TextBox::Draw(TextRenderer& a_TextRenderer, float a_MinX, bool a_Visible,
             : isInactive    ? GlCanvas::Z_VALUE_BOX_INACTIVE
                             : GlCanvas::Z_VALUE_BOX_ACTIVE;
 
-  if (!a_IsPicking) {
-    glColor4ubv(&col[0]);
-  } else {
-    GLubyte* color = reinterpret_cast<GLubyte*>(&a_ID);
+  Color color = col;
+  if (a_IsPicking) {
+    memcpy(&color[0], &a_ID, sizeof(unsigned int));
     color[3] = 255;
-    glColor4ubv(color);
   }
 
   if (a_Visible) {
-    glBegin(GL_QUADS);
-    glVertex3f(m_Pos[0], m_Pos[1], z);
-    glVertex3f(m_Pos[0], m_Pos[1] + m_Size[1], z);
-    glVertex3f(m_Pos[0] + m_Size[0], m_Pos[1] + m_Size[1], z);
-    glVertex3f(m_Pos[0] + m_Size[0], m_Pos[1], z);
-    glEnd();
+    Box box(m_Pos, m_Size, z);
+    batcher->AddBox(box, color, PickingID::BOX);
 
     static Color s_Color(255, 255, 255, 255);
 
@@ -134,12 +130,10 @@ void TextBox::Draw(TextRenderer& a_TextRenderer, float a_MinX, bool a_Visible,
           text.c_str(), posX, m_TextY == FLT_MAX ? m_Pos[1] + 1.f : m_TextY,
           GlCanvas::Z_VALUE_TEXT, s_Color, maxSize, a_RightJustify);
     }
-
-    glColor4ubv(&grey[0]);
   }
 
-  glBegin(GL_LINES);
-  glVertex3f(m_Pos[0], m_Pos[1], z);
-  glVertex3f(m_Pos[0], m_Pos[1] + m_Size[1], z);
-  glEnd();
+  batcher->AddVerticalLine(m_Pos, m_Size[1], z, grey, PickingID::LINE);
+
+  batcher->Draw();
+  batcher->Reset();
 }

@@ -8,6 +8,7 @@
 
 #include <map>
 
+#include "Batcher.h"
 #include "OpenGl.h"
 #include "Platform.h"
 #include "TextBox.h"
@@ -23,7 +24,7 @@ class TextRenderer {
   ~TextRenderer();
 
   void Init();
-  void Display();
+  void Display(Batcher* batcher);
   void AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
                const Color& a_Color, float a_MaxSize = -1.f,
                bool a_RightJustified = false);
@@ -52,7 +53,7 @@ class TextRenderer {
                        float a_Z = -0.01f, bool a_Static = false);
   void ToScreenSpace(float a_X, float a_Y, float& o_X, float& o_Y);
   float ToScreenSpace(float a_Size);
-  void DrawOutline(vertex_buffer_t* a_Buffer);
+  void DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer);
 
  private:
   texture_atlas_t* m_Atlas;
