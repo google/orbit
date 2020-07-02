@@ -19,6 +19,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <outcome.hpp>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -110,17 +111,21 @@ inline bool IsAllDigits(const std::string_view value) {
   return std::all_of(value.begin(), value.end(), IsDigit);
 }
 
+namespace OrbitUtils {
+
 //-----------------------------------------------------------------------------
-inline std::string FileToString(const std::string_view a_FileName) {
-  std::string file_name(a_FileName);
-  std::stringstream buffer;
-  std::ifstream inFile(file_name);
-  if (!inFile.fail()) {
-    buffer << inFile.rdbuf();
-    inFile.close();
+inline outcome::result<std::string> FileToString(
+    const std::filesystem::path& file_name) {
+  std::ifstream file_stream(file_name);
+  if (file_stream.fail()) {
+    return outcome::failure(static_cast<std::errc>(errno));
   }
-  return buffer.str();
+  return outcome::success(
+      std::string{std::istreambuf_iterator<char>{file_stream},
+                  std::istreambuf_iterator<char>{}});
 }
+
+}  // namespace OrbitUtils
 
 //-----------------------------------------------------------------------------
 template <class T>

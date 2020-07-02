@@ -54,36 +54,30 @@ namespace LinuxUtils {
 using ::ElfUtils::ElfFile;
 
 //-----------------------------------------------------------------------------
-std::vector<std::string> ReadProcMaps(pid_t pid) {
-  std::vector<std::string> modules;
-  // TODO: we should read the file directly instead or memory map it.
-  std::string result =
-      ExecuteCommand(absl::StrFormat("cat /proc/%d/maps", pid).c_str());
-
-  std::stringstream ss(result);
-  std::string line;
-  while (std::getline(ss, line, '\n')) {
-    modules.push_back(line);
-  }
-
-  return modules;
+outcome::result<std::vector<std::string>> ReadProcMaps(pid_t pid) {
+  std::filesystem::path maps_path{absl::StrFormat("/proc/%d/maps", pid)};
+  OUTCOME_TRY(maps_string, OrbitUtils::FileToString(maps_path));
+  return absl::StrSplit(maps_string, "\n");
 }
 
 //-----------------------------------------------------------------------------
-std::string ExecuteCommand(const char* a_Cmd) {
+outcome::result<std::string> ExecuteCommand(const std::string& cmd) {
   std::array<char, 128> buffer;
   std::string result;
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(a_Cmd, "r"), pclose);
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
+                                                pclose);
   if (!pipe) {
-    LOG("Could not open pipe");
+    ERROR("Failed to execute command \"%s\", error: %s (errno %d)", cmd.c_str(),
+          strerror(errno), errno);
+    return outcome::failure(static_cast<std::errc>(errno));
   }
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
     result += buffer.data();
   }
-  return result;
+  return outcome::success(result);
 }
 
-std::vector<ModuleInfo> ListModules(int32_t pid) {
+outcome::result<std::vector<ModuleInfo>, std::string> ListModules(int32_t pid) {
   struct AddressRange {
     uint64_t start_address;
     uint64_t end_address;
@@ -91,9 +85,15 @@ std::vector<ModuleInfo> ListModules(int32_t pid) {
   };
 
   std::map<std::string, AddressRange> address_map;
-  std::vector<std::string> proc_maps = ReadProcMaps(pid);
 
-  for (const std::string& line : proc_maps) {
+  const auto proc_maps = ReadProcMaps(pid);
+  if (!proc_maps) {
+    return outcome::failure(
+        absl::StrFormat("Unable to read /proc/<pid>/maps, error: %s",
+                        proc_maps.error().message()));
+  }
+
+  for (const std::string& line : proc_maps.value()) {
     std::vector<std::string> tokens =
         absl::StrSplit(line, " ", absl::SkipEmpty());
     // tokens[4] is the inode column. If inode equals 0, then the memory is not
@@ -146,18 +146,18 @@ std::vector<ModuleInfo> ListModules(int32_t pid) {
     result.push_back(module_info);
   }
 
-  return result;
+  return outcome::success(result);
 }
 
 //-----------------------------------------------------------------------------
-std::unordered_map<pid_t, double> GetCpuUtilization() {
-  std::unordered_map<pid_t, double> process_map;
-  std::string result = ExecuteCommand(
-      "top -b -n 1 | sed -n '8, 1000{s/^ *//;s/ *$//;s/  */,/gp;};1000q'");
-  std::stringstream ss(result);
-  std::string line;
+outcome::result<std::unordered_map<pid_t, double>> GetCpuUtilization() {
+  const std::string cmd =
+      "top -b -n 1 | sed -n '8, 1000{s/^ *//;s/ *$//;s/  */,/gp;};1000q'";
+  OUTCOME_TRY(result, ExecuteCommand(cmd));
 
-  while (std::getline(ss, line, '\n')) {
+  std::unordered_map<pid_t, double> process_map;
+
+  for (const auto& line : absl::StrSplit(result, "\n")) {
     std::vector<std::string> tokens = absl::StrSplit(line, ",");
     if (tokens.size() > 8) {
       pid_t pid = atoi(tokens[0].c_str());
@@ -170,9 +170,9 @@ std::unordered_map<pid_t, double> GetCpuUtilization() {
 }
 
 //-----------------------------------------------------------------------------
-bool Is64Bit(pid_t pid) {
-  std::string result =
-      ExecuteCommand(absl::StrFormat("file -L /proc/%d/exe", pid).c_str());
+outcome::result<bool> Is64Bit(pid_t pid) {
+  OUTCOME_TRY(result,
+              ExecuteCommand(absl::StrFormat("file -L /proc/%d/exe", pid)));
   return absl::StrContains(result, "64-bit");
 }
 

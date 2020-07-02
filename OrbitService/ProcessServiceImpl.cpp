@@ -28,6 +28,11 @@ Status ProcessServiceImpl::GetProcessList(ServerContext*,
     }
   }
 
+  const std::vector<ProcessInfo>& processes = process_list_.GetProcesses();
+  if (processes.empty()) {
+    return Status(StatusCode::NOT_FOUND, "Error while getting processes.");
+  }
+
   for (const auto& process_info : process_list_.GetProcesses()) {
     *(response->add_processes()) = process_info;
   }
@@ -41,8 +46,12 @@ Status ProcessServiceImpl::GetModuleList(ServerContext*,
   int32_t pid = request->process_id();
   LOG("Sending modules for process %d", pid);
 
-  std::vector<ModuleInfo> module_infos = LinuxUtils::ListModules(pid);
-  for (const auto& module_info : module_infos) {
+  const auto module_infos = LinuxUtils::ListModules(pid);
+  if (!module_infos) {
+    return Status(StatusCode::NOT_FOUND, module_infos.error());
+  }
+
+  for (const auto& module_info : module_infos.value()) {
     *(response->add_modules()) = module_info;
   }
 

@@ -16,8 +16,14 @@
 #include "Utils.h"
 
 outcome::result<void, std::string> ProcessList::Refresh() {
+  const auto cpu_result = LinuxUtils::GetCpuUtilization();
+  if (!cpu_result) {
+    return outcome::failure(
+        absl::StrFormat("Unable to retrieve cpu usage of processes, error: %s",
+                        cpu_result.error().message()));
+  }
   std::unordered_map<int32_t, double> cpu_usage_map =
-      LinuxUtils::GetCpuUtilization();
+      std::move(cpu_result.value());
 
   std::vector<ProcessInfo> updated_processes;
 
@@ -25,8 +31,8 @@ outcome::result<void, std::string> ProcessList::Refresh() {
        std::filesystem::directory_iterator("/proc")) {
     if (!directory_entry.is_directory()) continue;
 
-    std::string path = directory_entry.path().string();
-    std::string folder_name = directory_entry.path().filename().string();
+    const std::filesystem::path path = directory_entry.path();
+    std::string folder_name = path.filename().string();
 
     uint32_t pid;
     if (!absl::SimpleAtoi(folder_name, &pid)) continue;
@@ -39,7 +45,14 @@ outcome::result<void, std::string> ProcessList::Refresh() {
       continue;
     }
 
-    std::string name = FileToString(path + "/comm");
+    const std::filesystem::path name_file_path = path / "comm";
+    const auto name_file_result = OrbitUtils::FileToString(name_file_path);
+    if (!name_file_result) {
+      ERROR("Failed to read %s, error: %s", name_file_path.string().c_str(),
+            name_file_result.error().message().c_str());
+      continue;
+    }
+    std::string name = std::move(name_file_result.value());
     // Remove new line character.
     absl::StripTrailingAsciiWhitespace(&name);
     if (name.empty()) continue;
@@ -51,13 +64,28 @@ outcome::result<void, std::string> ProcessList::Refresh() {
 
     // "The command-line arguments appear [...] as a set of strings
     // separated by null bytes ('\0')".
-    std::string cmdline = FileToString(path + "/cmdline");
+    const std::filesystem::path cmdline_file_path =
+        directory_entry.path() / "cmdline";
+    const auto cmdline_file_result =
+        OrbitUtils::FileToString(cmdline_file_path);
+    if (!cmdline_file_result) {
+      ERROR("Failed to read %s, error %s", cmdline_file_path.string().c_str(),
+            name_file_result.error().message().c_str());
+      continue;
+    }
+    std::string cmdline = std::move(cmdline_file_result.value());
     process.set_full_path(cmdline.substr(0, cmdline.find('\0')));
 
     std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
     process.set_command_line(cmdline);
 
-    process.set_is_64_bit(LinuxUtils::Is64Bit(pid));
+    const auto& is_64_bit_result = LinuxUtils::Is64Bit(pid);
+    if (!is_64_bit_result) {
+      ERROR("Failed to get if process \"%s\" (pid %d) is 64 bit, error: %s",
+            name.c_str(), pid, is_64_bit_result.error().message().c_str());
+      continue;
+    }
+    process.set_is_64_bit(is_64_bit_result.value());
 
     updated_processes.push_back(process);
   }
