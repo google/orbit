@@ -52,7 +52,7 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
   absl::Mutex string_keys_sent_mutex_;
 
   void SenderThread();
-  void SendBufferedEvents();
+  void SendBufferedEvents(std::vector<CaptureEvent>&& buffered_events);
 
   std::vector<CaptureEvent> event_buffer_;
   absl::Mutex event_buffer_mutex_;
