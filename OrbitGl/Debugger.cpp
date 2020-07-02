@@ -170,7 +170,7 @@ void Debugger::DebuggerThread(const std::string& process_name,
         startAddress = debug_event.u.CreateProcessInfo.lpStartAddress;
         m_ProcessID = GetProcessId(hProcess);
 
-        if (GParams.m_StartPaused) {
+        if (GParams.config.start_paused()) {
           // Copy original 2 bytes before installing busy loop
           m_WaitLoop.m_Address = (DWORD64)startAddress;
           m_WaitLoop.m_ThreadId =

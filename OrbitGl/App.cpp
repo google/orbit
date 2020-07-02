@@ -243,7 +243,7 @@ bool OrbitApp::Init(ApplicationOptions&& options) {
   GPluginManager.Initialize();
 
   GParams.Load();
-  GFontSize = GParams.m_FontSize;
+  GFontSize = GParams.config.font_size();
   GOrbitApp->LoadFileMapping();
 
   return true;
@@ -935,49 +935,53 @@ bool OrbitApp::IsLoading() { return GPdbDbg->IsLoading(); }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::SetTrackContextSwitches(bool a_Value) {
-  GParams.m_TrackContextSwitches = a_Value;
+  GParams.config.set_track_context_switches(a_Value);
 }
 
 //-----------------------------------------------------------------------------
 bool OrbitApp::GetTrackContextSwitches() {
-  return GParams.m_TrackContextSwitches;
+  return GParams.config.track_context_switches();
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::EnableUnrealSupport(bool a_Value) {
-  GParams.m_UnrealSupport = a_Value;
+  GParams.config.set_unreal_support(a_Value);
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::GetUnrealSupportEnabled() { return GParams.m_UnrealSupport; }
+bool OrbitApp::GetUnrealSupportEnabled() {
+  return GParams.config.unreal_support();
+}
 
 //-----------------------------------------------------------------------------
 void OrbitApp::EnableUnsafeHooking(bool a_Value) {
-  GParams.m_AllowUnsafeHooking = a_Value;
+  GParams.config.set_allow_unsafe_hooking(a_Value);
 }
 
 //-----------------------------------------------------------------------------
 bool OrbitApp::GetUnsafeHookingEnabled() {
-  return GParams.m_AllowUnsafeHooking;
+  return GParams.config.allow_unsafe_hooking();
 }
 
 //-----------------------------------------------------------------------------
 bool OrbitApp::GetOutputDebugStringEnabled() {
-  return GParams.m_HookOutputDebugString;
+  return GParams.config.hook_output_debug_string();
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::EnableOutputDebugString(bool a_Value) {
-  GParams.m_HookOutputDebugString = a_Value;
+  GParams.config.set_hook_output_debug_string(a_Value);
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::EnableSampling(bool a_Value) {
-  GParams.m_TrackSamplingEvents = a_Value;
+  GParams.config.set_track_sampling_events(a_Value);
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::GetSamplingEnabled() { return GParams.m_TrackSamplingEvents; }
+bool OrbitApp::GetSamplingEnabled() {
+  return GParams.config.track_sampling_events();
+}
 
 //-----------------------------------------------------------------------------
 
@@ -1033,12 +1037,12 @@ void OrbitApp::OnProcessSelected(int32_t pid) {
 
 //-----------------------------------------------------------------------------
 bool OrbitApp::GetUploadDumpsToServerEnabled() const {
-  return GParams.m_UploadDumpsToServer;
+  return GParams.config.upload_dumps_to_server();
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::EnableUploadDumpsToServer(bool a_Value) {
-  GParams.m_UploadDumpsToServer = a_Value;
+  GParams.config.set_upload_dumps_to_server(a_Value);
   GParams.Save();
 }
 
