@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "FramePointerValidator.h"
+#include "include/OrbitFramePointerValidator/FramePointerValidator.h"
 
 #include <capstone/capstone.h>
 
-#include "FunctionFramePointerValidator.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/UniqueResource.h"
+#include "include/OrbitFramePointerValidator/FunctionFramePointerValidator.h"
 
 std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
     const std::vector<CodeBlock>& functions, const std::string& file_name,

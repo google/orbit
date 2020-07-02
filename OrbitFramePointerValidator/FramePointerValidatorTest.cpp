@@ -8,9 +8,9 @@
 #include <vector>
 
 #include "ElfUtils/ElfFile.h"
-#include "FramePointerValidator.h"
 #include "OrbitBase/Logging.h"
 #include "Path.h"
+#include "include/OrbitFramePointerValidator/FramePointerValidator.h"
 
 TEST(FramePointerValidator, GetFpoFunctions) {
   std::string executable_path = Path::GetExecutablePath();

@@ -23,8 +23,6 @@ target_sources(
          CoreApp.h
          EventBuffer.h
          EventClasses.h
-         FramePointerValidator.h
-         FunctionFramePointerValidator.h
          FunctionStats.h
          Hashing.h
          Injection.h
@@ -80,8 +78,6 @@ target_sources(
           CoreApp.cpp
           ConnectionManager.cpp
           EventBuffer.cpp
-          FramePointerValidator.cpp
-          FunctionFramePointerValidator.cpp
           FunctionStats.cpp
           Injection.cpp
           Introspection.cpp
@@ -176,8 +172,6 @@ target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/Version.cpp")
 add_executable(OrbitCoreTests)
 
 target_sources(OrbitCoreTests PRIVATE
-    FunctionFramepointerValidatorTest.cpp
-    FramePointerValidatorTest.cpp
     LinuxTracingBufferTest.cpp
     PathTest.cpp
     RingBufferTest.cpp

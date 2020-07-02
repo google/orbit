@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "ElfUtils/ElfFile.h"
-#include "FramePointerValidator.h"
+#include "OrbitFramePointerValidator/FramePointerValidator.h"
 
 grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
     grpc::ServerContext*, const ValidateFramePointersRequest* request,

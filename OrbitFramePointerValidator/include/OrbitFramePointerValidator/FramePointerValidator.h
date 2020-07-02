@@ -8,7 +8,7 @@
 #include <optional>
 #include <vector>
 
-#include "services.grpc.pb.h"
+#include "code_block.pb.h"
 
 class FramePointerValidator {
  public:
