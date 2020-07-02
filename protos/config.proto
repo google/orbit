@@ -5,18 +5,8 @@
 syntax = "proto3";
 
 message Config {
-  bool track_context_switches = 1;
-  bool track_sampling_events = 2;
-  bool unreal_support = 3;
-  bool start_paused = 4;
-  bool allow_unsafe_hooking = 5;
-  bool hook_output_debug_string = 6;
-  bool find_file_and_line_info = 7;
-  bool upload_dumps_to_server = 8;
-  float font_size = 9;
-  repeated string pdb_history = 10;
-  string process_path = 11;
-  string arguments = 12;
-  string working_directory = 13;
-  string process_filter = 14;
+  bool unreal_support = 1;
+  bool allow_unsafe_hooking = 2;
+  bool hook_output_debug_string = 3;
+  repeated string pdb_history = 4;
 }

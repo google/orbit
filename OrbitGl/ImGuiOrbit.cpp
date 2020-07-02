@@ -527,7 +527,7 @@ ImFont* AddFontDefault() {
 
   const char* ttf_compressed_base85 = GetDefaultCompressedFontDataTTFBase85();
   ImFont* font = ImGui::GetIO().Fonts->AddFontFromMemoryCompressedBase85TTF(
-      ttf_compressed_base85, GParams.config.font_size(), &font_cfg,
+      ttf_compressed_base85, GParams.font_size, &font_cfg,
       ImGui::GetIO().Fonts->GetGlyphRangesDefault());
   return font;
 }
@@ -583,7 +583,7 @@ bool Orbit_ImGui_Init() {
   SetupImGuiStyle(true, 1.f);
 
   const float kImguiFontOffset = 10.f;
-  GOrbitImguiFont = AddOrbitFont(GParams.config.font_size() + kImguiFontOffset);
+  GOrbitImguiFont = AddOrbitFont(GParams.font_size + kImguiFontOffset);
   ImGui::GetIO().Fonts->Build();
 
   return true;

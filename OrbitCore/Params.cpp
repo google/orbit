@@ -17,15 +17,9 @@ Params GParams;
 
 //-----------------------------------------------------------------------------
 Params::Params() {
-  config.set_track_context_switches(true);
-  config.set_track_sampling_events(true);
   config.set_unreal_support(true);
-  config.set_start_paused(true);
   config.set_allow_unsafe_hooking(false);
   config.set_hook_output_debug_string(false);
-  config.set_find_file_and_line_info(true);
-  config.set_upload_dumps_to_server(false);
-  config.set_font_size(14.f);
 }
 
 //-----------------------------------------------------------------------------
