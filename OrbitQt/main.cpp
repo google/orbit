@@ -54,6 +54,14 @@ ABSL_FLAG(bool, use_software_opengl, false, "Uses software implementation of "
 	      "OpenGL. Requires Mesa's opengl32.dll to be placed in the same "
 	      "folder as Orbit.");
 
+// TODO(b/160549506): Remove this flag once it can be specified in the ui.
+ABSL_FLAG(uint16_t, sampling_rate, 1000,
+          "Frequency of callstack sampling in samples per second");
+
+// TODO(b/160549506): Remove this flag once it can be specified in the ui.
+ABSL_FLAG(bool, frame_pointer_unwinding, false,
+          "Use frame pointers for unwinding");
+
 // TODO: remove this once we deprecated legacy parameters
 static void ParseLegacyCommandLine(int argc, char* argv[],
                                    ApplicationOptions* options) {

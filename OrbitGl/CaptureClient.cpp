@@ -3,7 +3,13 @@
 // found in the LICENSE file.
 
 #include "CaptureClient.h"
+
 #include <OrbitBase/Logging.h>
+
+#include "absl/flags/flag.h"
+
+ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
+ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
 
 void CaptureClient::Capture(
     int32_t pid,
@@ -22,8 +28,17 @@ void CaptureClient::Capture(
   CaptureOptions* capture_options = request.mutable_capture_options();
   capture_options->set_trace_context_switches(true);
   capture_options->set_pid(pid);
-  capture_options->set_sampling_rate(1000);
-  capture_options->set_unwinding_method(CaptureOptions::kDwarf);
+  uint16_t sampling_rate = absl::GetFlag(FLAGS_sampling_rate);
+  if (sampling_rate == 0) {
+    capture_options->set_unwinding_method(CaptureOptions::kUndefined);
+  } else {
+    capture_options->set_sampling_rate(sampling_rate);
+    if (absl::GetFlag(FLAGS_frame_pointer_unwinding)) {
+      capture_options->set_unwinding_method(CaptureOptions::kFramePointers);
+    } else {
+      capture_options->set_unwinding_method(CaptureOptions::kDwarf);
+    }
+  }
   capture_options->set_trace_gpu_driver(true);
   for (const std::shared_ptr<Function>& function : selected_functions) {
     CaptureOptions::InstrumentedFunction* instrumented_function =
