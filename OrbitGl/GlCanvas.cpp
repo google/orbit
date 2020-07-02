@@ -461,7 +461,7 @@ void GlCanvas::Render(int a_Width, int a_Height) {
 
   RenderUI();
 
-  m_TextRenderer.Display();
+  m_TextRenderer.Display(&batcher_);
   RenderText();
 
   glFlush();

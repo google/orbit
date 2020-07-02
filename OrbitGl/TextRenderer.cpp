@@ -85,9 +85,9 @@ void TextRenderer::SetFontSize(int a_Size) {
 }
 
 //-----------------------------------------------------------------------------
-void TextRenderer::Display() {
+void TextRenderer::Display(Batcher* batcher) {
   if (m_DrawOutline) {
-    DrawOutline(m_Buffer);
+    DrawOutline(batcher, m_Buffer);
   }
 
   // Lazy init
@@ -135,8 +135,11 @@ void TextRenderer::Display() {
 }
 
 //-----------------------------------------------------------------------------
-void TextRenderer::DrawOutline(vertex_buffer_t* a_Buffer) {
-  glBegin(GL_LINES);
+void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer) {
+  batcher->Reset();
+
+  // TODO: No color was set here before. 
+  Color color(255, 255, 255, 255);
 
   for (size_t i = 0; i < a_Buffer->indices->size; i += 3) {
     GLuint i0 =
@@ -153,17 +156,13 @@ void TextRenderer::DrawOutline(vertex_buffer_t* a_Buffer) {
     vertex_t v2 =
         *static_cast<const vertex_t*>(vector_get(a_Buffer->vertices, i2));
 
-    glVertex3f(v0.x, v0.y, v0.z);
-    glVertex3f(v1.x, v1.y, v1.z);
-
-    glVertex3f(v1.x, v1.y, v1.z);
-    glVertex3f(v2.x, v2.y, v2.z);
-
-    glVertex3f(v2.x, v2.y, v2.z);
-    glVertex3f(v0.x, v0.y, v0.z);
+    batcher->AddLine(Vec2(v0.x, v0.y), Vec2(v1.x, v1.y), v0.z, color, PickingID::LINE);
+    batcher->AddLine(Vec2(v1.x, v1.y), Vec2(v2.x, v2.y), v1.z, color, PickingID::LINE); 
+    batcher->AddLine(Vec2(v2.x, v2.y), Vec2(v0.x, v0.y), v2.z, color, PickingID::LINE);
   }
 
-  glEnd();
+  batcher->Draw();
+  batcher->Reset();
 }
 
 //-----------------------------------------------------------------------------

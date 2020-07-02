@@ -17,6 +17,8 @@ EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
 
 //-----------------------------------------------------------------------------
 void EventTrack::Draw(GlCanvas* canvas, bool picking) {
+  Batcher* batcher = canvas->GetBatcher();
+  batcher->Reset();
   PickingManager& picking_manager = canvas->GetPickingManager();
 
   constexpr float kNormalZ = -0.1f;
@@ -29,32 +31,20 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
     color = picking_manager.GetPickableColor(this);
   }
 
-  glColor4ubv(&color[0]);
+  Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), z);
+  batcher->AddBox(box, color, PickingID::BOX);
+
+  if (canvas->GetPickingManager().GetPicked() == this) {
+    color = Color(255, 255, 255, 255);
+  }
 
   float x0 = m_Pos[0];
   float y0 = m_Pos[1];
   float x1 = x0 + m_Size[0];
   float y1 = y0 - m_Size[1];
 
-  glBegin(GL_QUADS);
-  glVertex3f(x0, y0, z);
-  glVertex3f(x1, y0, z);
-  glVertex3f(x1, y1, z);
-  glVertex3f(x0, y1, z);
-  glEnd();
-
-  if (canvas->GetPickingManager().GetPicked() == this) {
-    glColor4ub(255, 255, 255, 255);
-  } else {
-    glColor4ubv(&color[0]);
-  }
-
-  glBegin(GL_LINES);
-  glVertex3f(x0, y0, -0.1f);
-  glVertex3f(x1, y0, -0.1f);
-  glVertex3f(x1, y1, -0.1f);
-  glVertex3f(x0, y1, -0.1f);
-  glEnd();
+  batcher->AddLine(m_Pos, Vec2(x1, y0), -0.1f, color, PickingID::LINE);
+  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), -0.1f, color, PickingID::LINE);
 
   if (m_Picked) {
     Vec2& from = m_MousePos[0];
@@ -65,16 +55,15 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
     x1 = to[0];
     y1 = y0 - m_Size[1];
 
-    glColor4ub(0, 128, 255, 128);
-    glBegin(GL_QUADS);
-    glVertex3f(x0, y0, -0.f);
-    glVertex3f(x1, y0, -0.f);
-    glVertex3f(x1, y1, -0.f);
-    glVertex3f(x0, y1, -0.f);
-    glEnd();
+    Color picked_color(0, 128, 255, 128);
+    Box box(Vec2(x0, y0), Vec2(x1 - x0, m_Size[1]), -0.f);
+    batcher->AddBox(box, picked_color, PickingID::BOX);
   }
 
   m_Canvas = canvas;
+
+  batcher->Draw();
+  batcher->Reset();
 }
 
 //-----------------------------------------------------------------------------

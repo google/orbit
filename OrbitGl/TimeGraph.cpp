@@ -743,7 +743,7 @@ void TimeGraph::OnDown() {
 //----------------------------------------------------------------------------
 void TimeGraph::DrawText() {
   if (m_DrawText) {
-    m_TextRendererStatic.Display();
+    m_TextRendererStatic.Display(&m_Batcher);
   }
 }
 
@@ -765,7 +765,7 @@ void TimeGraph::DrawMainFrame(TextBox& a_Box) {
     frameBox.SetSizeX(a_Box.GetSize()[0]);
     frameBox.SetSizeY(m_SceneBox.GetSize()[0]);
     frameBox.SetColor(frameColor);
-    frameBox.Draw(*m_TextRenderer, minX, true, false, false);
+    frameBox.Draw(&m_Batcher, *m_TextRenderer, minX, true, false, false);
   }
 }
 

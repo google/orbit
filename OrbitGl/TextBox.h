@@ -22,7 +22,8 @@ class TextBox {
 
   ~TextBox();
 
-  void Draw(TextRenderer& a_TextRenderer, float a_MinX = -FLT_MAX,
+  void Draw(Batcher* batcher, 
+            TextRenderer& a_TextRenderer, float a_MinX = -FLT_MAX,
             bool a_Visible = true, bool a_RightJustify = false,
             bool a_IsInactive = false, unsigned int a_ID = 0xFFFFFFFF,
             bool a_IsPicking = false, bool a_IsHighlighted = false);

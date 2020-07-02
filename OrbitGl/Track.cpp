@@ -60,6 +60,9 @@ void DrawTriangleFan(const std::vector<Vec2>& points, const Vec2& pos,
 
 //-----------------------------------------------------------------------------
 void Track::Draw(GlCanvas* canvas, bool picking) {
+  Batcher* batcher = canvas->GetBatcher();
+  batcher->Reset();
+
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   Color picking_color = canvas->GetPickingManager().GetPickableColor(this);
   const Color kTabColor(50, 50, 50, 255);
@@ -77,12 +80,8 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   // Draw track background.
   if (!picking) {
     if (layout.GetDrawTrackBackground()) {
-      glBegin(GL_QUADS);
-      glVertex3f(x0, y0 + top_margin, track_z);
-      glVertex3f(x1, y0 + top_margin, track_z);
-      glVertex3f(x1, y1, track_z);
-      glVertex3f(x0, y1, track_z);
-      glEnd();
+      Box box(Vec2(x0, y0 + top_margin), Vec2(m_Size[0], -m_Size[1] - top_margin), track_z);
+      batcher->AddBox(box, color, PickingID::BOX);
     }
   }
 
@@ -91,12 +90,12 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   float half_label_height = 0.5f * label_height;
   float label_width = layout.GetTrackTabWidth();
   float tab_x0 = x0 + layout.GetTrackTabOffset();
-  glBegin(GL_QUADS);
-  glVertex3f(tab_x0, y0, track_z);
-  glVertex3f(tab_x0 + label_width, y0, track_z);
-  glVertex3f(tab_x0 + label_width, y0 + label_height, track_z);
-  glVertex3f(tab_x0, y0 + label_height, track_z);
-  glEnd();
+
+  Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
+  batcher->AddBox(box, color, PickingID::BOX);
+
+  batcher->Draw();
+  batcher->Reset();
 
   // Draw rounded corners.
   float vertical_margin = time_graph_->GetVerticalMargin();
