@@ -5,6 +5,7 @@
 #include "Batcher.h"
 
 #include "Core.h"
+#include "GlCanvas.h"
 
 void Batcher::AddLine(const Line& line, const Color* colors,
                       PickingID::Type picking_type, void* user_data) {
@@ -95,4 +96,63 @@ void Batcher::GetBoxGradientColors(Color color, Color* colors) {
 void Batcher::Reset() {
   line_buffer_.Reset();
   box_buffer_.Reset();
+}
+
+//----------------------------------------------------------------------------
+void Batcher::Draw(bool a_Picking) {
+  glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDisable(GL_CULL_FACE);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_COLOR_ARRAY);
+  glEnable(GL_TEXTURE_2D);
+
+  DrawBoxBuffer(a_Picking);
+  DrawLineBuffer(a_Picking);
+
+  glDisableClientState(GL_COLOR_ARRAY);
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glPopAttrib();
+}
+
+//----------------------------------------------------------------------------
+void Batcher::DrawBoxBuffer(bool a_Picking) {
+  Block<Box, BoxBuffer::NUM_BOXES_PER_BLOCK>* boxBlock =
+      GetBoxBuffer().m_Boxes.m_Root;
+  Block<Color, BoxBuffer::NUM_BOXES_PER_BLOCK * 4>* colorBlock;
+
+  colorBlock = !a_Picking ? GetBoxBuffer().m_Colors.m_Root
+                          : GetBoxBuffer().m_PickingColors.m_Root;
+
+  while (boxBlock) {
+    if (int numElems = boxBlock->m_Size) {
+      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), boxBlock->m_Data);
+      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), colorBlock->m_Data);
+      glDrawArrays(GL_QUADS, 0, numElems * 4);
+    }
+
+    boxBlock = boxBlock->m_Next;
+    colorBlock = colorBlock->m_Next;
+  }
+}
+
+//----------------------------------------------------------------------------
+void Batcher::DrawLineBuffer(bool a_Picking) {
+  Block<Line, LineBuffer::NUM_LINES_PER_BLOCK>* lineBlock =
+      GetLineBuffer().m_Lines.m_Root;
+  Block<Color, LineBuffer::NUM_LINES_PER_BLOCK * 2>* colorBlock;
+
+  colorBlock = !a_Picking ? GetLineBuffer().m_Colors.m_Root
+                          : GetLineBuffer().m_PickingColors.m_Root;
+
+  while (lineBlock) {
+    if (int numElems = lineBlock->m_Size) {
+      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), lineBlock->m_Data);
+      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), colorBlock->m_Data);
+      glDrawArrays(GL_LINES, 0, numElems * 2);
+    }
+
+    lineBlock = lineBlock->m_Next;
+    colorBlock = colorBlock->m_Next;
+  }
 }

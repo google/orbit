@@ -62,6 +62,8 @@ class Batcher {
 
   void GetBoxGradientColors(Color color, Color* colors);
 
+  void Draw(bool picking);
+
   void Reset();
 
   TextBox* GetTextBox(PickingID a_ID);
@@ -69,6 +71,8 @@ class Batcher {
   LineBuffer& GetLineBuffer() { return line_buffer_; }
 
  protected:
+  void DrawLineBuffer(bool picking);
+  void DrawBoxBuffer(bool picking);
   LineBuffer line_buffer_;
   BoxBuffer box_buffer_;
 };
