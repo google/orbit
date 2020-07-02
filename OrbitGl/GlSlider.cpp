@@ -112,6 +112,7 @@ void GlSlider::Draw(GlCanvas* a_Canvas, bool a_Picking) {
 //-----------------------------------------------------------------------------
 void GlSlider::DrawHorizontal(GlCanvas* canvas, bool picking) {
   m_Canvas = canvas;
+  batcher_.Reset();
 
   static float y = 0;
 
@@ -121,13 +122,8 @@ void GlSlider::DrawHorizontal(GlCanvas* canvas, bool picking) {
 
   // Bar
   if (!picking) {
-    glColor4ubv(&m_BarColor[0]);
-    glBegin(GL_QUADS);
-    glVertex3f(0, y, 0);
-    glVertex3f(canvasWidth, y, 0);
-    glVertex3f(canvasWidth, y + GetPixelHeight(), 0);
-    glVertex3f(0, y + GetPixelHeight(), 0);
-    glEnd();
+    Box box(Vec2(0, y), Vec2(canvasWidth, GetPixelHeight()), 0.f);
+    batcher_.AddBox(box, m_BarColor, PickingID::BOX);
   }
 
   float start = m_Ratio * nonSliderWidth;
@@ -140,18 +136,17 @@ void GlSlider::DrawHorizontal(GlCanvas* canvas, bool picking) {
     color = m_SelectedColor;
   }
 
-  glColor4ubv(&color[0]);
-  glBegin(GL_QUADS);
-  glVertex3f(start, y, 0);
-  glVertex3f(stop, y, 0);
-  glVertex3f(stop, y + GetPixelHeight(), 0);
-  glVertex3f(start, y + GetPixelHeight(), 0);
-  glEnd();
+  Box box(Vec2(start, y), Vec2(stop - start, GetPixelHeight()), 0.f);
+  batcher_.AddBox(box, color, PickingID::BOX);
+
+  batcher_.Draw();
+  batcher_.Reset();
 }
 
 //-----------------------------------------------------------------------------
 void GlSlider::DrawVertical(GlCanvas* canvas, bool picking) {
   m_Canvas = canvas;
+  batcher_.Reset();
 
   float x = m_Canvas->getWidth() - GetPixelHeight();
 
@@ -161,13 +156,8 @@ void GlSlider::DrawVertical(GlCanvas* canvas, bool picking) {
 
   // Bar
   if (!picking) {
-    glColor4ubv(&m_BarColor[0]);
-    glBegin(GL_QUADS);
-    glVertex3f(x, 0, 0);
-    glVertex3f(x, canvasHeight, 0);
-    glVertex3f(x + GetPixelHeight(), canvasHeight, 0);
-    glVertex3f(x + GetPixelHeight(), 0, 0);
-    glEnd();
+    Box box(Vec2(x, 0), Vec2(GetPixelHeight(), canvasHeight), 0.f);
+    batcher_.AddBox(box, m_BarColor, PickingID::BOX);
   }
 
   float start = canvasHeight - m_Ratio * nonSliderHeight;
@@ -180,12 +170,9 @@ void GlSlider::DrawVertical(GlCanvas* canvas, bool picking) {
     color = m_SelectedColor;
   }
 
-  glColor4ubv(&color[0]);
+  Box box(Vec2(x, start), Vec2(GetPixelHeight(), stop - start), 0.f);
+  batcher_.AddBox(box, color, PickingID::BOX);
 
-  glBegin(GL_QUADS);
-  glVertex3f(x, start, 0);
-  glVertex3f(x, stop, 0);
-  glVertex3f(x + GetPixelHeight(), stop, 0);
-  glVertex3f(x + GetPixelHeight(), start, 0);
-  glEnd();
+  batcher_.Draw();
+  batcher_.Reset();
 }

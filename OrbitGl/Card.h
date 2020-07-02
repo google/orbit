@@ -6,6 +6,7 @@
 
 #include <unordered_map>
 
+#include "Batcher.h"
 #include "../OrbitCore/RingBuffer.h"
 #include "../OrbitCore/Threading.h"
 #include "CoreMath.h"
@@ -34,6 +35,8 @@ class Card {
   Color m_Color;
   bool m_Active;
   bool m_Open;
+ protected:
+  Batcher batcher_;
 };
 
 //-----------------------------------------------------------------------------

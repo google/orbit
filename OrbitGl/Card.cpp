@@ -14,7 +14,7 @@ CardContainer GCardContainer;
 Card::Card()
     : m_Pos(500, 0),
       m_Size(512, 64),
-      m_Color(0, 0, 255, 32),
+      m_Color(255, 0, 255, 32),
       m_Active(true),
       m_Open(true) {}
 
@@ -38,13 +38,13 @@ std::map<int, std::string>& Card::GetTypeMap() {
 void Card::Draw(GlCanvas*) {
   if (!m_Active) return;
 
-  glColor4ub(m_Color[0], m_Color[1], m_Color[2], m_Color[3]);
-  glBegin(GL_QUADS);
-  glVertex3f(m_Pos[0], m_Pos[1], 0);
-  glVertex3f(m_Pos[0], m_Pos[1] + m_Size[1], 0);
-  glVertex3f(m_Pos[0] + m_Size[0], m_Pos[1] + m_Size[1], 0);
-  glVertex3f(m_Pos[0] + m_Size[0], m_Pos[1], 0);
-  glEnd();
+  batcher_.Reset();
+
+  Box box(m_Pos, m_Size, 0.f);
+  batcher_.AddBox(box, m_Color, PickingID::BOX);
+
+  batcher_.Draw();
+  batcher_.Reset();
 }
 
 //-----------------------------------------------------------------------------
@@ -112,11 +112,9 @@ void CardContainer::DrawImgui(GlCanvas* a_Canvas) {
 //-----------------------------------------------------------------------------
 void FloatGraphCard::Draw(GlCanvas* a_Canvas) {
   if (!m_Active) return;
+  batcher_.Reset();
 
   Card::Draw(a_Canvas);
-
-  glBegin(GL_LINES);
-  glColor4f(1, 1, 1, 1);
 
   UpdateMinMax();
 
@@ -134,14 +132,10 @@ void FloatGraphCard::Draw(GlCanvas* a_Canvas) {
     float y1 = m_Pos[1] + textHeight +
                (m_Data[i + 1] - m_Min) * YRangeInv * YGraphSize;
 
-    glVertex3f(x0, y0, 0);
-    glVertex3f(x1, y1, 0);
+    batcher_.AddLine(Vec2(x0, y0), Vec2(x1, y1), 0.f, Color(255, 255, 255, 255), PickingID::LINE);
   }
 
-  glEnd();
-
   Color col(255, 255, 255, 255);
-
   std::string cardValue = absl::StrFormat(
       "%s: %s  min(%s) max(%s)", m_Name.c_str(),
       std::to_string(m_Data.Latest()).c_str(), std::to_string(m_Min).c_str(),
@@ -149,6 +143,9 @@ void FloatGraphCard::Draw(GlCanvas* a_Canvas) {
   a_Canvas->GetTextRenderer().AddText2D(
       cardValue.c_str(), static_cast<int>(m_Pos[0]), static_cast<int>(m_Pos[1]),
       GlCanvas::Z_VALUE_TEXT, col, -1.f, false, false);
+
+  batcher_.Draw();
+  batcher_.Reset();
 }
 
 //-----------------------------------------------------------------------------

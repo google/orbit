@@ -62,7 +62,7 @@ class Batcher {
 
   void GetBoxGradientColors(Color color, Color* colors);
 
-  void Draw(bool picking);
+  void Draw(bool picking = false);
 
   void Reset();
 

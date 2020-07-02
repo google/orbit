@@ -421,34 +421,6 @@ float GlCanvas::ScreenToworldWidth(int a_Width) const {
 }
 
 //-----------------------------------------------------------------------------
-void GlCanvas::drawSquareGrid(float size, float delta) {
-  int halfIncrements = static_cast<int>(size * 0.5f / delta);
-  float halfSize = delta * halfIncrements;
-
-  glBegin(GL_LINES);
-
-  glColor4f(0.5f, 0.5f, 0.5f, 1);
-  for (float x = -halfSize; x <= halfSize; x += delta) {
-    for (float y = -halfSize; y <= halfSize; y += delta) {
-      glVertex3f(-x, y, 0);
-      glVertex3f(x, y, 0);
-      glVertex3f(x, -y, 0);
-      glVertex3f(x, y, 0);
-    }
-  }
-
-  glColor4f(1, 0, 0, 1);
-  glVertex3f(-halfSize, 0, 0);
-  glVertex3f(halfSize, 0, 0);
-
-  glColor4f(0, 1, 0, 1);
-  glVertex3f(0, -halfSize, 0);
-  glVertex3f(0, halfSize, 0);
-
-  glEnd();
-}
-
-//-----------------------------------------------------------------------------
 int GlCanvas::getWidth() const { return m_Width; }
 
 //-----------------------------------------------------------------------------
