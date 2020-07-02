@@ -56,7 +56,7 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
     y1 = y0 - m_Size[1];
 
     Color picked_color(0, 128, 255, 128);
-    Box box(Vec2(x0, y0), Vec2(x1 - x0, m_Size[1]), -0.f);
+    Box box(Vec2(x0, y0), Vec2(x1 - x0, -m_Size[1]), -0.f);
     batcher->AddBox(box, picked_color, PickingID::BOX);
   }
 

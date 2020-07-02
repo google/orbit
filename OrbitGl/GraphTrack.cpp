@@ -11,6 +11,8 @@ GraphTrack::GraphTrack(TimeGraph* time_graph) : Track(time_graph) {}
 void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
   UNUSED(picking);
 
+  Batcher* batcher = canvas->GetBatcher();
+
   TimeGraphLayout& layout = time_graph_->GetLayout();
   float trackWidth = canvas->GetWorldWidth();
 
@@ -23,33 +25,24 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
   float y0 = m_Pos[1];
   float y1 = y0 - m_Size[1];
 
+  const Color kPickedColor(0, 128, 255, 128);
+  Color color = m_Color;
   if (m_Picked) {
-    const Color kPickedColor(0, 128, 255, 128);
-    glColor4ubv(&kPickedColor[0]);
+    color = kPickedColor;
   }
 
   float track_z = layout.GetTrackZ();
   float text_z = layout.GetTextZ();
 
-  glColor4ubv(&m_Color[0]);
-
-  glBegin(GL_QUADS);
-  glVertex3f(x0, y0, track_z);
-  glVertex3f(x1, y0, track_z);
-  glVertex3f(x1, y1, track_z);
-  glVertex3f(x0, y1, track_z);
-  glEnd();
+  Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), track_z);
+  batcher->AddBox(box, color, PickingID::BOX);
 
   if (canvas->GetPickingManager().GetPicked() == this) {
-    glColor4ub(255, 255, 255, 255);
+    color = Color(255, 255, 255, 255);
   }
 
-  glBegin(GL_LINES);
-  glVertex3f(x0, y0, track_z);
-  glVertex3f(x1, y0, track_z);
-  glVertex3f(x1, y1, track_z);
-  glVertex3f(x0, y1, track_z);
-  glEnd();
+  batcher->AddLine(m_Pos, Vec2(x1, y0), track_z, color, PickingID::LINE);
+  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), track_z, color, PickingID::LINE);
 
   const Color kLineColor(0, 128, 255, 128);
 
@@ -78,6 +71,9 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
     previous_time = time;
     last_normalized_value = normalized_value;
   }
+
+  batcher->Draw();
+  batcher->Reset();
 }
 
 void GraphTrack::OnDrag(int /*x*/, int /*y*/) {}
