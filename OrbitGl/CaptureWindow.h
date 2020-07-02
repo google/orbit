@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Batcher.h"
 #include "GlCanvas.h"
 #include "GlSlider.h"
 
@@ -102,4 +103,10 @@ class CaptureWindow : public GlCanvas {
   static constexpr size_t kFilterLength = 512;
   char track_filter_[kFilterLength] = "";
   char find_filter_[kFilterLength] = "";
+
+  static const std::string MENU_ACTION_GO_TO_CALLSTACK;
+  static const std::string MENU_ACTION_GO_TO_SOURCE;
+
+  // Batcher to draw elements in the UI.
+  Batcher batcher_;
 };
