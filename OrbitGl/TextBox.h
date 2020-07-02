@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Batcher.h"
 #include "CoreMath.h"
 #include "ScopeTimer.h"
 
@@ -113,6 +114,8 @@ class TextBox {
   bool m_Selected;
   float m_TextY;
   size_t m_ElapsedTimeTextLength;
+
+  Batcher batcher_;
 };
 
 //-----------------------------------------------------------------------------

@@ -29,7 +29,6 @@ class GlCanvas : public GlPanel {
   void prepare2DViewport(int topleft_x, int topleft_y, int bottomrigth_x,
                          int bottomrigth_y);
   void prepareScreenSpaceViewport();
-  void drawSquareGrid(float size, float delta);
   void ScreenToWorld(int x, int y, float& wx, float& wy) const;
   void WorldToScreen(float wx, float wy, int& x, int& y) const;
   int WorldToScreenHeight(float a_Height) const;
@@ -157,4 +156,7 @@ class GlCanvas : public GlPanel {
   bool m_ControlKey;
   bool m_ShiftKey;
   bool m_AltKey;
+
+  // Batcher to draw elements in the UI.
+  Batcher batcher_;
 };

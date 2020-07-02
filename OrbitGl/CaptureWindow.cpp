@@ -549,6 +549,7 @@ void CaptureWindow::ResetHoverTimer() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::Draw() {
+  batcher_.Reset();
   m_WorldMaxY =
       1.5f * ScreenToWorldHeight(static_cast<int>(m_Slider.GetPixelHeight()));
 
@@ -593,23 +594,13 @@ void CaptureWindow::Draw() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::DrawScreenSpace() {
+  batcher_.Reset();
   double timeSpan = time_graph_.GetSessionTimeSpanUs();
 
   Color col = m_Slider.GetBarColor();
   float height = m_Slider.GetPixelHeight();
   float canvasHeight = getHeight();
   float z = GlCanvas::Z_VALUE_TEXT_UI_BG;
-
-  // Time bar
-  if (time_graph_.GetSessionTimeSpanUs() > 0) {
-    glColor4ub(70, 70, 70, 200);
-    glBegin(GL_QUADS);
-    glVertex3f(0, height, z);
-    glVertex3f(getWidth(), height, z);
-    glVertex3f(getWidth(), 2 * height, z);
-    glVertex3f(0, 2 * height, z);
-    glEnd();
-  }
 
   const TimeGraphLayout& layout = time_graph_.GetLayout();
   float vertical_margin = layout.GetVerticalMargin();
@@ -636,18 +627,23 @@ void CaptureWindow::DrawScreenSpace() {
     }
   }
 
-  // Draw right vertical margin.
+  // Right vertical margin.
   time_graph_.SetVerticalMargin(vertical_margin);
   const Color kBackgroundColor(70, 70, 70, 255);
   float margin_x1 = getWidth();
   float margin_x0 = margin_x1 - vertical_margin;
-  glColor4ubv(&kBackgroundColor[0]);
-  glBegin(GL_QUADS);
-  glVertex3f(margin_x0, 0, z);
-  glVertex3f(margin_x1, 0, z);
-  glVertex3f(margin_x1, canvasHeight - height, z);
-  glVertex3f(margin_x0, canvasHeight - height, z);
-  glEnd();
+
+  Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvasHeight - height), z);
+  batcher_.AddBox(box, kBackgroundColor, PickingID::BOX);
+
+  // Time bar
+  if (time_graph_.GetSessionTimeSpanUs() > 0) {
+    Box box(Vec2(0, height), Vec2(getWidth(), height), z);
+    batcher_.AddBox(box, Color(70,70,70,200), PickingID::BOX);
+  }
+
+  batcher_.Draw(m_Picking);
+  batcher_.Reset();
 }
 
 //-----------------------------------------------------------------------------
@@ -1084,31 +1080,6 @@ void CaptureWindow::RenderMemTracker() {
 }
 
 //-----------------------------------------------------------------------------
-void DrawTexturedSquare(GLuint a_TextureId, float a_Size, float a_X,
-                        float a_Y) {
-  glUseProgram(0);
-  glColor4ub(255, 255, 255, 255);
-
-  glEnable(GL_TEXTURE_2D);
-  glDisable(GL_COLOR_MATERIAL);
-  glBindTexture(GL_TEXTURE_2D, a_TextureId);
-
-  glBegin(GL_QUADS);
-  glTexCoord2f(0.f, 1.f);
-  glVertex3f(a_X, a_Y, 0.f);
-  glTexCoord2f(0.f, 0.f);
-  glVertex3f(a_X, a_Y + a_Size, 0.f);
-  glTexCoord2f(1.f, 0.f);
-  glVertex3f(a_X + a_Size, a_Y + a_Size, 0.f);
-  glTexCoord2f(1.f, 1.f);
-  glVertex3f(a_X + a_Size, a_Y, 0.f);
-  glEnd();
-
-  glBindTexture(GL_TEXTURE_2D, 0);
-  glDisable(GL_TEXTURE_2D);
-}
-
-//-----------------------------------------------------------------------------
 inline double GetIncrementMs(double a_MilliSeconds) {
   const double Day = 24 * 60 * 60 * 1000;
   const double Hour = 60 * 60 * 1000;
@@ -1169,11 +1140,9 @@ void CaptureWindow::RenderTimeBar() {
                              GlCanvas::Z_VALUE_TEXT_UI,
                              Color(255, 255, 255, 255));
 
-      glColor4f(1.f, 1.f, 1.f, 1.f);
-      glBegin(GL_LINES);
-      glVertex3f(worldX, worldY, Z_VALUE_UI);
-      glVertex3f(worldX, worldY + height, Z_VALUE_UI);
-      glEnd();
+      Vec2 pos(worldX, worldY);
+      batcher_.AddVerticalLine(pos, height, Z_VALUE_UI,
+        Color(255, 255, 255, 255), PickingID::LINE);
     }
   }
 }
