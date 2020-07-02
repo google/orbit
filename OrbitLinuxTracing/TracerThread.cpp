@@ -19,11 +19,15 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
       pid_{capture_options.pid()},
       unwinding_method_{capture_options.unwinding_method()},
       trace_gpu_driver_{capture_options.trace_gpu_driver()} {
-  std::optional<uint64_t> sampling_period_ns =
-      ComputeSamplingPeriodNs(capture_options.sampling_rate());
-  FAIL_IF(!sampling_period_ns.has_value(), "Invalid sampling rate: %.1f",
-          capture_options.sampling_rate());
-  sampling_period_ns_ = sampling_period_ns.value();
+  if (unwinding_method_ != CaptureOptions::kUndefined) {
+    std::optional<uint64_t> sampling_period_ns =
+        ComputeSamplingPeriodNs(capture_options.sampling_rate());
+    FAIL_IF(!sampling_period_ns.has_value(), "Invalid sampling rate: %.1f",
+            capture_options.sampling_rate());
+    sampling_period_ns_ = sampling_period_ns.value();
+  } else {
+    sampling_period_ns_ = 0;
+  }
 
   instrumented_functions_.clear();
   instrumented_functions_.reserve(
