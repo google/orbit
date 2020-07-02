@@ -114,8 +114,6 @@ class TextBox {
   bool m_Selected;
   float m_TextY;
   size_t m_ElapsedTimeTextLength;
-
-  Batcher batcher_;
 };
 
 //-----------------------------------------------------------------------------
