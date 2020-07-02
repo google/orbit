@@ -4,58 +4,28 @@
 
 #include "Params.h"
 
-#include <algorithm>
 #include <fstream>
+
+#include "google/protobuf/io/zero_copy_stream_impl.h"
+#include "google/protobuf/text_format.h"
 
 #include "Core.h"
 #include "CoreApp.h"
-#include "ScopeTimer.h"
-#include "Serialization.h"
-#include "absl/strings/str_format.h"
+#include "OrbitBase/Logging.h"
 
 Params GParams;
 
 //-----------------------------------------------------------------------------
-Params::Params()
-    : m_LoadTypeInfo(true),
-      m_SendCallStacks(true),
-      m_TrackContextSwitches(true),
-      m_TrackSamplingEvents(true),
-      m_UnrealSupport(true),
-      m_UnitySupport(true),
-      m_StartPaused(true),
-      m_AllowUnsafeHooking(false),
-      m_HookOutputDebugString(false),
-      m_FindFileAndLineInfo(true),
-      m_SystemWideScheduling(true),
-      m_UploadDumpsToServer(false),
-      m_MaxNumTimers(1000000),
-      m_FontSize(14.f),
-      m_Port(44766),
-      m_NumBytesAssembly(1024) {}
-
-ORBIT_SERIALIZE(Params, 19) {
-  ORBIT_NVP_VAL(0, m_LoadTypeInfo);
-  ORBIT_NVP_VAL(0, m_SendCallStacks);
-  ORBIT_NVP_VAL(0, m_MaxNumTimers);
-  ORBIT_NVP_VAL(0, m_FontSize);
-  ORBIT_NVP_VAL(0, m_PdbHistory);
-  ORBIT_NVP_VAL(1, m_TrackContextSwitches);
-  ORBIT_NVP_VAL(3, m_UnrealSupport);
-  ORBIT_NVP_VAL(3, m_UnitySupport);
-  ORBIT_NVP_VAL(3, m_StartPaused);
-  ORBIT_NVP_VAL(4, m_AllowUnsafeHooking);
-  ORBIT_NVP_VAL(5, m_Port);
-  ORBIT_NVP_VAL(6, m_TrackSamplingEvents);
-  ORBIT_NVP_VAL(8, m_NumBytesAssembly);
-  ORBIT_NVP_VAL(9, m_HookOutputDebugString);
-  ORBIT_NVP_VAL(10, m_ProcessPath);
-  ORBIT_NVP_VAL(10, m_Arguments);
-  ORBIT_NVP_VAL(10, m_WorkingDirectory);
-  ORBIT_NVP_VAL(11, m_FindFileAndLineInfo);
-  ORBIT_NVP_VAL(13, m_ProcessFilter);
-  ORBIT_NVP_VAL(15, m_SystemWideScheduling);
-  ORBIT_NVP_VAL(17, m_UploadDumpsToServer);
+Params::Params() {
+  config.set_track_context_switches(true);
+  config.set_track_sampling_events(true);
+  config.set_unreal_support(true);
+  config.set_start_paused(true);
+  config.set_allow_unsafe_hooking(false);
+  config.set_hook_output_debug_string(false);
+  config.set_find_file_and_line_info(true);
+  config.set_upload_dumps_to_server(false);
+  config.set_font_size(14.f);
 }
 
 //-----------------------------------------------------------------------------
@@ -67,14 +37,13 @@ bool Params::Save() {
     return false;
   }
 
-  try {
-    cereal::XMLOutputArchive archive(file);
-    archive(cereal::make_nvp("Params", *this));
-    return true;
-  } catch (std::exception& e) {
-    ERROR("Saving Params in \"%s\": %s", filename, e.what());
+  google::protobuf::io::OstreamOutputStream output_stream(&file);
+  if (!google::protobuf::TextFormat::Print(config, &output_stream)) {
+    ERROR("Saving Params in \"%s\" failed: %s", filename,
+          config.ShortDebugString());
     return false;
   }
+  return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -87,22 +56,21 @@ bool Params::Load() {
     return Save();
   }
 
-  try {
-    cereal::XMLInputArchive archive(file);
-    archive(*this);
-    return true;
-  } catch (std::exception& e) {
-    ERROR("Loading Params from \"%s\": %s", filename, e.what());
+  google::protobuf::io::IstreamInputStream input_stream(&file);
+  if (!google::protobuf::TextFormat::Parse(&input_stream, &config)) {
+    ERROR("Loading Params from \"%s\" failed", filename);
     // Try overwriting the file with default values, in case it's malformed.
     Save();
     return false;
   }
+  return true;
 }
 
 //-----------------------------------------------------------------------------
 void Params::AddToPdbHistory(const std::string& a_PdbName) {
-  m_PdbHistory.push_back(a_PdbName);
-  auto it = std::unique(m_PdbHistory.begin(), m_PdbHistory.end());
-  m_PdbHistory.resize(std::distance(m_PdbHistory.begin(), it));
-  Save();
+  if (config.pdb_history(config.pdb_history_size() - 1) != a_PdbName) {
+    std::string* new_entry = config.add_pdb_history();
+    new_entry->assign(a_PdbName);
+    Save();
+  }
 }

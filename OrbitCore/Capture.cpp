@@ -239,7 +239,7 @@ void Capture::PreFunctionHooks() {
   GTcpServer->Send(Msg_ClearArgTracking);
 
   // Find OutputDebugStringA
-  if (GParams.m_HookOutputDebugString) {
+  if (GParams.config.hook_output_debug_string()) {
     if (DWORD64 outputAddr = GTargetProcess->GetOutputDebugStringAddress()) {
       GSelectedAddressesByType[Function::ORBIT_OUTPUT_DEBUG_STRING].push_back(
           outputAddr);
@@ -340,8 +340,8 @@ outcome::result<void, std::string> Capture::SavePreset(
   Preset preset;
   preset.m_ProcessFullPath = GTargetProcess->GetFullPath();
 
-  preset.m_Arguments = GParams.m_Arguments;
-  preset.m_WorkingDirectory = GParams.m_WorkingDirectory;
+  preset.m_Arguments = GParams.config.arguments();
+  preset.m_WorkingDirectory = GParams.config.working_directory();
 
   for (auto& func : GTargetProcess->GetFunctions()) {
     if (func->IsSelected()) {

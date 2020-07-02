@@ -23,8 +23,8 @@ void ProcessLauncherWidget::SetDataView(DataView* data_view) {
   ui->LiveProcessList->Initialize(data_view, SelectionType::kDefault,
                                   FontType::kDefault);
 
-  if (GParams.m_ProcessFilter != "") {
-    ui->LiveProcessList->SetFilter(GParams.m_ProcessFilter.c_str());
+  if (GParams.config.process_filter() != "") {
+    ui->LiveProcessList->SetFilter(GParams.config.process_filter().c_str());
   }
 }
 

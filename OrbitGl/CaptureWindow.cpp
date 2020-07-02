@@ -1210,7 +1210,7 @@ void CaptureWindow::RenderTimeBar() {
     ScreenToWorld(0, screenY, dummy, worldY);
 
     float height =
-        ScreenToWorldHeight(static_cast<int>(GParams.m_FontSize) + pixelMargin);
+        ScreenToWorldHeight(static_cast<int>(GParams.config.font_size()) + pixelMargin);
     float xMargin = ScreenToworldWidth(4);
 
     for (int i = 0; i < numTimePoints; ++i) {

@@ -118,7 +118,7 @@ static std::string CreateAndGetConfigPath() {
 }
 
 std::string Path::GetParamsFileName() {
-  return Path::JoinPath({CreateAndGetConfigPath(), "config.xml"});
+  return Path::JoinPath({CreateAndGetConfigPath(), "config.textpb"});
 }
 
 std::string Path::GetFileMappingFileName() {
