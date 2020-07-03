@@ -78,7 +78,6 @@ void TextBox::Draw(Batcher* batcher,
                    TextRenderer& a_TextRenderer, float a_MinX, bool a_Visible,
                    bool a_RightJustify, bool isInactive, unsigned int a_ID,
                    bool a_IsPicking, bool a_IsHighlighted) {
-  //batcher->Reset();
   bool isCoreActivity = m_Timer.IsType(Timer::CORE_ACTIVITY);
   bool isSameThreadIdAsSelected =
       isCoreActivity && m_Timer.m_TID == Capture::GSelectedThreadId;
@@ -133,7 +132,4 @@ void TextBox::Draw(Batcher* batcher,
   }
 
   batcher->AddVerticalLine(m_Pos, m_Size[1], z, grey, PickingID::LINE);
-
-  //batcher->Draw();
-  //batcher->Reset();
 }
