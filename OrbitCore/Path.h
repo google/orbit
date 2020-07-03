@@ -17,7 +17,6 @@ class Path {
   static std::string GetBasePath();
   static std::string GetDllPath(bool a_Is64Bit);
   static std::string GetDllName(bool a_Is64Bit);
-  static std::string GetParamsFileName();
   static std::string GetFileMappingFileName();
   static std::string GetSymbolsFileName();
   static std::string GetCachePath();

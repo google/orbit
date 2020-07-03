@@ -242,7 +242,6 @@ bool OrbitApp::Init(ApplicationOptions&& options) {
 
   GPluginManager.Initialize();
 
-  GParams.Load();
   GFontSize = GParams.font_size;
   GOrbitApp->LoadFileMapping();
 
@@ -481,8 +480,6 @@ void OrbitApp::OnExit() {
   if (GTimerManager && GTimerManager->m_IsRecording) {
     StopCapture();
   }
-
-  GParams.Save();
 
   ConnectionManager::Get().Stop();
   GTcpClient->Stop();
