@@ -31,20 +31,21 @@ void TriangleToggle::Draw(GlCanvas* canvas, bool picking) {
   static float half_sqrt_three = 0.5f * sqrtf(3.f);
   float half_w = 0.5f * size_;
   float half_h = half_sqrt_three * half_w;
-  glPushMatrix();
-  glTranslatef(pos_[0], pos_[1], 0);
-  if (state_ == State::kCollapsed) {
-    glRotatef(90.f, 0, 0, 1.f);
-  }
-
-  glColor4ubv(&color[0]);
 
   if (!picking) {
-    glBegin(GL_TRIANGLES);
-    glVertex3f(half_w, half_h, 0);
-    glVertex3f(-half_w, half_h, 0);
-    glVertex3f(0, -half_w, 0);
-    glEnd();
+    Vec3 position(pos_[0], pos_[1], 0.0f);
+
+    Triangle triangle;
+    if (state_ == State::kCollapsed) {
+      triangle = Triangle(position + Vec3(-half_h, half_w, 0.f),
+        position + Vec3(-half_h, -half_w, 0.f),
+        position + Vec3(half_w, 0.f, 0.f));
+    } else {
+      triangle = Triangle(position + Vec3(half_w, half_h, 0.f), 
+        position + Vec3(-half_w, half_h, 0.f), 
+        position + Vec3(0.f, -half_w, 0.f));
+    }
+    batcher->AddTriangle(triangle, color, PickingID::TRIANGLE);
   } else {
     // When picking, draw a big square for easier picking.
     float original_width = 2 * half_w;
@@ -53,8 +54,6 @@ void TriangleToggle::Draw(GlCanvas* canvas, bool picking) {
       Vec2(large_width, large_width), 0.f);
     batcher->AddBox(box, color, PickingID::BOX);
   }
-
-  glPopMatrix();
 
   batcher->Draw();
   batcher->Reset();
