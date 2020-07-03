@@ -123,3 +123,16 @@ endif()
 if(NOT WIN32)
   target_link_libraries(OrbitGl PRIVATE X11::X11 X11::Xi X11::Xxf86vm)
 endif()
+
+add_fuzzer(CaptureSerializerLoadFuzzer CaptureSerializerLoadFuzzer.cpp)
+target_link_libraries(CaptureSerializerLoadFuzzer PRIVATE OrbitGl)
+
+add_fuzzer(DataManagerUpdateModuleInfosFuzzer
+           DataManagerUpdateModuleInfosFuzzer.cpp)
+target_link_libraries(DataManagerUpdateModuleInfosFuzzer
+                      PRIVATE OrbitGl libprotobuf-mutator::libprotobuf-mutator)
+
+add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcessEventsFuzzer.cpp)
+target_link_libraries(
+  CaptureEventProcessorProcessEventsFuzzer
+  PRIVATE OrbitGl libprotobuf-mutator::libprotobuf-mutator)

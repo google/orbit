@@ -11,6 +11,7 @@ class LibprotobufMutatorConan(ConanFile):
     build_requires = "protoc_installer/3.9.1@bincrafters/stable",
     options = { "fPIC" : [True, False] }
     default_options = { "fPIC" : True }
+    short_paths = True
 
     def configure(self):
         if self.settings.os == "Windows":
