@@ -15,7 +15,7 @@ CardContainer GCardContainer;
 Card::Card()
     : m_Pos(500, 0),
       m_Size(512, 64),
-      m_Color(255, 0, 255, 32),
+      m_Color(0, 0, 255, 32),
       m_Active(true),
       m_Open(true) {}
 
