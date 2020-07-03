@@ -35,8 +35,6 @@ class Card {
   Color m_Color;
   bool m_Active;
   bool m_Open;
- protected:
-  Batcher batcher_;
 };
 
 //-----------------------------------------------------------------------------

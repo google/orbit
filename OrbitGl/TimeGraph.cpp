@@ -500,19 +500,19 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::Draw(bool a_Picking) {
+void TimeGraph::Draw(GlCanvas* canvas, bool a_Picking) {
   if ((!a_Picking && m_NeedsUpdatePrimitives) || a_Picking) {
     UpdatePrimitives();
   }
 
-  DrawTracks(a_Picking);
+  DrawTracks(canvas, a_Picking);
   m_Batcher.Draw(a_Picking);
 
   m_NeedsRedraw = false;
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::DrawTracks(bool a_Picking) {
+void TimeGraph::DrawTracks(GlCanvas* canvas, bool a_Picking) {
   uint32_t num_cores = GetNumCores();
   m_Layout.SetNumCores(num_cores);
   scheduler_track_->SetLabel(
@@ -535,7 +535,7 @@ void TimeGraph::DrawTracks(bool a_Picking) {
       }
     }
 
-    track->Draw(m_Canvas, a_Picking);
+    track->Draw(canvas, a_Picking);
   }
 }
 
@@ -741,31 +741,9 @@ void TimeGraph::OnDown() {
 }
 
 //----------------------------------------------------------------------------
-void TimeGraph::DrawText() {
+void TimeGraph::DrawText(GlCanvas* canvas) {
   if (m_DrawText) {
-    m_TextRendererStatic.Display(&m_Batcher);
-  }
-}
-
-//-----------------------------------------------------------------------------
-void TimeGraph::DrawMainFrame(TextBox& a_Box) {
-  if (a_Box.GetMainFrameCounter() == -1) {
-    a_Box.SetMainFrameCounter(++m_MainFrameCounter);
-  }
-
-  static unsigned char grey = 180;
-  static Color frameColor(grey, grey, grey, 10);
-
-  if (a_Box.GetMainFrameCounter() % 2 == 0) {
-    float minX = m_SceneBox.GetPosX();
-    TextBox frameBox;
-
-    frameBox.SetPosX(a_Box.GetPosX());
-    frameBox.SetPosY(m_SceneBox.GetPosY());
-    frameBox.SetSizeX(a_Box.GetSize()[0]);
-    frameBox.SetSizeY(m_SceneBox.GetSize()[0]);
-    frameBox.SetColor(frameColor);
-    frameBox.Draw(&m_Batcher, *m_TextRenderer, minX, true, false, false);
+    m_TextRendererStatic.Display(canvas->GetBatcher());
   }
 }
 

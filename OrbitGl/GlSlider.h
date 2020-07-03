@@ -6,7 +6,7 @@
 
 #include <functional>
 
-#include "Batcher.h"
+//#include "Batcher.h"
 #include "Params.h"
 #include "PickingManager.h"
 #include "TextBox.h"
@@ -55,6 +55,4 @@ class GlSlider : public Pickable {
   float m_MinSliderPixelWidth;
   float m_PixelHeight;
   bool m_Vertical;
-
-  Batcher batcher_;
 };

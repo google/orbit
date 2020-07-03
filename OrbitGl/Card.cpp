@@ -4,6 +4,7 @@
 
 #include "Card.h"
 
+#include "Batcher.h"
 #include "GlCanvas.h"
 #include "ImGuiOrbit.h"
 #include "absl/strings/str_format.h"
@@ -35,16 +36,12 @@ std::map<int, std::string>& Card::GetTypeMap() {
 }
 
 //-----------------------------------------------------------------------------
-void Card::Draw(GlCanvas*) {
+void Card::Draw(GlCanvas* canvas) {
   if (!m_Active) return;
-
-  batcher_.Reset();
+  Batcher* batcher = canvas->GetBatcher();
 
   Box box(m_Pos, m_Size, 0.f);
   batcher_.AddBox(box, m_Color, PickingID::BOX);
-
-  batcher_.Draw();
-  batcher_.Reset();
 }
 
 //-----------------------------------------------------------------------------
@@ -112,7 +109,7 @@ void CardContainer::DrawImgui(GlCanvas* a_Canvas) {
 //-----------------------------------------------------------------------------
 void FloatGraphCard::Draw(GlCanvas* a_Canvas) {
   if (!m_Active) return;
-  batcher_.Reset();
+  Batcher* batcher = a_Canvas->GetBatcher();
 
   Card::Draw(a_Canvas);
 
@@ -143,9 +140,6 @@ void FloatGraphCard::Draw(GlCanvas* a_Canvas) {
   a_Canvas->GetTextRenderer().AddText2D(
       cardValue.c_str(), static_cast<int>(m_Pos[0]), static_cast<int>(m_Pos[1]),
       GlCanvas::Z_VALUE_TEXT, col, -1.f, false, false);
-
-  batcher_.Draw();
-  batcher_.Reset();
 }
 
 //-----------------------------------------------------------------------------

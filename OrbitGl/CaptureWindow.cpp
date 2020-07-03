@@ -219,6 +219,15 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
       }
       break;
     }
+    case PickingID::TRIANGLE: {
+      void** textBoxPtr =
+          time_graph_.GetBatcher().GetTriangleBuffer().user_data_.SlowAt(id);
+      if (textBoxPtr) {
+        TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
+        SelectTextBox(textBox);
+      }
+      break;
+    }
     case PickingID::PICKABLE:
       m_PickingManager.Pick(a_PickingID.m_Id, a_X, a_Y);
       break;
@@ -549,7 +558,6 @@ void CaptureWindow::ResetHoverTimer() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::Draw() {
-  batcher_.Reset();
   m_WorldMaxY =
       1.5f * ScreenToWorldHeight(static_cast<int>(m_Slider.GetPixelHeight()));
 
@@ -560,7 +568,7 @@ void CaptureWindow::Draw() {
   // Reset picking manager before each draw.
   m_PickingManager.Reset();
 
-  time_graph_.Draw(m_Picking);
+  time_graph_.Draw(this, m_Picking);
 
   if (m_SelectStart[0] != m_SelectStop[0]) {
     TickType minTime = std::min(m_TimeStart, m_TimeStop);
@@ -588,13 +596,10 @@ void CaptureWindow::Draw() {
     batcher_.AddVerticalLine(pos, -m_WorldHeight, Z_VALUE_TEXT,
       Color(0, 255, 0, 127), PickingID::LINE);
   }
-  batcher_.Draw(m_Picking);
-  batcher_.Reset();
 }
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::DrawScreenSpace() {
-  batcher_.Reset();
   double timeSpan = time_graph_.GetSessionTimeSpanUs();
 
   Color col = m_Slider.GetBarColor();
@@ -641,9 +646,6 @@ void CaptureWindow::DrawScreenSpace() {
     Box box(Vec2(0, height), Vec2(getWidth(), height), z);
     batcher_.AddBox(box, Color(70,70,70,200), PickingID::BOX);
   }
-
-  batcher_.Draw(m_Picking);
-  batcher_.Reset();
 }
 
 //-----------------------------------------------------------------------------
@@ -784,7 +786,7 @@ void CaptureWindow::RenderUI() {
 //-----------------------------------------------------------------------------
 void CaptureWindow::RenderText() {
   if (!m_Picking) {
-    time_graph_.DrawText();
+    time_graph_.DrawText(this);
   }
 }
 

@@ -436,6 +436,7 @@ void GlCanvas::Render(int a_Width, int a_Height) {
   }
 
   m_NeedsRedraw = false;
+  batcher_.Reset();
 
   ScopeImguiContext state(m_ImGuiContext);
 
@@ -456,13 +457,22 @@ void GlCanvas::Render(int a_Width, int a_Height) {
 
   Draw();
 
+  // We have to draw everything collected in the batcher at this point,
+  // as prepareScreenSpaceViewport() changes the coordinate system.
+  batcher_.Draw();
+  batcher_.Reset();
+
   prepareScreenSpaceViewport();
+
   DrawScreenSpace();
 
   RenderUI();
-
   m_TextRenderer.Display(&batcher_);
   RenderText();
+
+  // Draw remaining elements collected with the batcher.
+  batcher_.Draw();
+  batcher_.Reset();
 
   glFlush();
 

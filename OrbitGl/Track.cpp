@@ -86,7 +86,6 @@ void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
 //-----------------------------------------------------------------------------
 void Track::Draw(GlCanvas* canvas, bool picking) {
   Batcher* batcher = canvas->GetBatcher();
-  batcher->Reset();
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   Color picking_color = canvas->GetPickingManager().GetPickableColor(this);
@@ -140,9 +139,6 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
     DrawTriangleFan(batcher, rounded_corner, end_bottom, kBackgroundColor, 90.f, z);
     DrawTriangleFan(batcher, rounded_corner, end_top, kBackgroundColor, 180.f, z);
   }
-
-  batcher->Draw();
-  batcher->Reset();
 
   // Collapse toggle state management.
   if (!this->IsCollapsable()) {

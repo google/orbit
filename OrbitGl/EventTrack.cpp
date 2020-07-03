@@ -18,7 +18,6 @@ EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
 //-----------------------------------------------------------------------------
 void EventTrack::Draw(GlCanvas* canvas, bool picking) {
   Batcher* batcher = canvas->GetBatcher();
-  batcher->Reset();
   PickingManager& picking_manager = canvas->GetPickingManager();
 
   constexpr float kNormalZ = -0.1f;
@@ -61,9 +60,6 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
   }
 
   m_Canvas = canvas;
-
-  batcher->Draw();
-  batcher->Reset();
 }
 
 //-----------------------------------------------------------------------------
