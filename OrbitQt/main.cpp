@@ -50,6 +50,10 @@ ABSL_FLAG(uint16_t, grpc_port, 44765,
           "The service's GRPC server port (use default value if unsure)");
 ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
 
+ABSL_FLAG(bool, use_software_opengl, false, "Uses software implementation of "
+	      "OpenGL. Requires Mesa's opengl32.dll to be placed in the same "
+	      "folder as Orbit.");
+
 // TODO: remove this once we deprecated legacy parameters
 static void ParseLegacyCommandLine(int argc, char* argv[],
                                    ApplicationOptions* options) {
@@ -249,6 +253,10 @@ int main(int argc, char* argv[]) {
 #if __linux__
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
 #endif
+
+    if (absl::GetFlag(FLAGS_use_software_opengl)) {
+      QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
+    }
 
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
