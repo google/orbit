@@ -112,7 +112,7 @@ void GlSlider::Draw(GlCanvas* a_Canvas, bool a_Picking) {
 //-----------------------------------------------------------------------------
 void GlSlider::DrawHorizontal(GlCanvas* canvas, bool picking) {
   m_Canvas = canvas;
-  batcher_.Reset();
+  Batcher* batcher = canvas->GetBatcher();
 
   static float y = 0;
 
@@ -123,7 +123,7 @@ void GlSlider::DrawHorizontal(GlCanvas* canvas, bool picking) {
   // Bar
   if (!picking) {
     Box box(Vec2(0, y), Vec2(canvasWidth, GetPixelHeight()), 0.f);
-    batcher_.AddBox(box, m_BarColor, PickingID::BOX);
+    batcher->AddBox(box, m_BarColor, PickingID::BOX);
   }
 
   float start = m_Ratio * nonSliderWidth;
@@ -137,16 +137,13 @@ void GlSlider::DrawHorizontal(GlCanvas* canvas, bool picking) {
   }
 
   Box box(Vec2(start, y), Vec2(stop - start, GetPixelHeight()), 0.f);
-  batcher_.AddBox(box, color, PickingID::BOX);
-
-  batcher_.Draw();
-  batcher_.Reset();
+  batcher->AddBox(box, color, PickingID::BOX);
 }
 
 //-----------------------------------------------------------------------------
 void GlSlider::DrawVertical(GlCanvas* canvas, bool picking) {
   m_Canvas = canvas;
-  batcher_.Reset();
+  Batcher* batcher = canvas->GetBatcher();
 
   float x = m_Canvas->getWidth() - GetPixelHeight();
 
@@ -157,7 +154,7 @@ void GlSlider::DrawVertical(GlCanvas* canvas, bool picking) {
   // Bar
   if (!picking) {
     Box box(Vec2(x, 0), Vec2(GetPixelHeight(), canvasHeight), 0.f);
-    batcher_.AddBox(box, m_BarColor, PickingID::BOX);
+    batcher->AddBox(box, m_BarColor, PickingID::BOX);
   }
 
   float start = canvasHeight - m_Ratio * nonSliderHeight;
@@ -171,8 +168,5 @@ void GlSlider::DrawVertical(GlCanvas* canvas, bool picking) {
   }
 
   Box box(Vec2(x, start), Vec2(GetPixelHeight(), stop - start), 0.f);
-  batcher_.AddBox(box, color, PickingID::BOX);
-
-  batcher_.Draw();
-  batcher_.Reset();
+  batcher->AddBox(box, color, PickingID::BOX);
 }

@@ -28,10 +28,9 @@ class TimeGraph {
  public:
   TimeGraph();
 
-  void Draw(bool a_Picking = false);
-  void DrawTracks(bool a_Picking = false);
-  void DrawMainFrame(TextBox& a_Box);
-  void DrawText();
+  void Draw(GlCanvas* canvas, bool a_Picking = false);
+  void DrawTracks(GlCanvas* canvas, bool a_Picking = false);
+  void DrawText(GlCanvas* canvas);
 
   void NeedsUpdate();
   void UpdatePrimitives();

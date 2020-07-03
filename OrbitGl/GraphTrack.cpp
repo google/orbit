@@ -71,9 +71,6 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
     previous_time = time;
     last_normalized_value = normalized_value;
   }
-
-  batcher->Draw();
-  batcher->Reset();
 }
 
 void GraphTrack::OnDrag(int /*x*/, int /*y*/) {}

@@ -16,7 +16,6 @@ TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
 
 void TriangleToggle::Draw(GlCanvas* canvas, bool picking) {
   Batcher* batcher = canvas->GetBatcher();
-  batcher->Reset();
 
   const Color kWhite(255, 255, 255, 255);
   const Color kGrey(100, 100, 100, 255);
@@ -54,9 +53,6 @@ void TriangleToggle::Draw(GlCanvas* canvas, bool picking) {
       Vec2(large_width, large_width), 0.f);
     batcher->AddBox(box, color, PickingID::BOX);
   }
-
-  batcher->Draw();
-  batcher->Reset();
 }
 
 void TriangleToggle::OnPick(int /*x*/, int /*y*/) {}
