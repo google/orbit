@@ -42,6 +42,22 @@ struct BoxBuffer {
 };
 
 //-----------------------------------------------------------------------------
+struct TriangleBuffer {
+  void Reset() {
+    triangles_.Reset();
+    colors_.Reset();
+    picking_colors_.Reset();
+    user_data_.Reset();
+  }
+
+  static const int NUM_TRIANGLES_PER_BLOCK = 64 * 1024;
+  BlockChain<Triangle, NUM_TRIANGLES_PER_BLOCK> triangles_;
+  BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> colors_;
+  BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
+  BlockChain<void*, NUM_TRIANGLES_PER_BLOCK> user_data_;
+};
+
+//-----------------------------------------------------------------------------
 class Batcher {
  public:
   void AddLine(const Line& line, const Color* colors,
@@ -60,6 +76,9 @@ class Batcher {
   void AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
                     PickingID::Type picking_type, void* user_data = nullptr);
 
+  void AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
+                   PickingID::Type picking_type, void* user_data = nullptr);
+
   void GetBoxGradientColors(Color color, Color* colors);
 
   void Draw(bool picking = false);
@@ -69,10 +88,13 @@ class Batcher {
   TextBox* GetTextBox(PickingID a_ID);
   BoxBuffer& GetBoxBuffer() { return box_buffer_; }
   LineBuffer& GetLineBuffer() { return line_buffer_; }
+  TriangleBuffer& GetTriangleBuffer() { return triangle_buffer_; }
 
  protected:
   void DrawLineBuffer(bool picking);
   void DrawBoxBuffer(bool picking);
+  void DrawTriangleBuffer(bool picking);
   LineBuffer line_buffer_;
   BoxBuffer box_buffer_;
+  TriangleBuffer triangle_buffer_;
 };
