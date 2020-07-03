@@ -5,9 +5,7 @@
 #include "Batcher.h"
 
 #include "Core.h"
-
-// Just to get the GL includes, should be removed and replaced by the right includes
-#include "GlCanvas.h"
+#include "OpenGl.h"
 
 void Batcher::AddLine(const Line& line, const Color* colors,
                       PickingID::Type picking_type, void* user_data) {
