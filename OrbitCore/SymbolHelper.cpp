@@ -9,11 +9,13 @@
 
 #include <fstream>
 
-#include "ElfFile.h"
+#include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "Path.h"
 
 namespace {
+
+using ::ElfUtils::ElfFile;
 
 std::vector<std::string> ReadSymbolsFile() {
   std::string file_name = Path::GetSymbolsFileName();

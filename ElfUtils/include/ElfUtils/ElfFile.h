@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ELF_UTILS_ELF_FILE_H_
+#define ELF_UTILS_ELF_FILE_H_
 
 #include <memory>
 #include <optional>
@@ -12,6 +13,8 @@
 #include "llvm/Object/ObjectFile.h"
 #include "outcome.hpp"
 #include "symbol.pb.h"
+
+namespace ElfUtils {
 
 class ElfFile {
  public:
@@ -47,3 +50,7 @@ class ElfFile {
   static std::unique_ptr<ElfFile> CreateFromBuffer(std::string_view file_path,
                                                    const void* buf, size_t len);
 };
+
+}  // namespace ElfUtils
+
+#endif  // ELF_UTILS_ELF_FILE_H_

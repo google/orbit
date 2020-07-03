@@ -146,6 +146,7 @@ else()
   add_subdirectory(OrbitService)
 endif()
 
+add_subdirectory(ElfUtils)
 add_subdirectory(OrbitBase)
 add_subdirectory(OrbitCore)
 add_subdirectory(OrbitTest)

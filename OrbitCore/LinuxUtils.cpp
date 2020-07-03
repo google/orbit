@@ -34,7 +34,7 @@
 #include "Callstack.h"
 #include "Capture.h"
 #include "ConnectionManager.h"
-#include "ElfFile.h"
+#include "ElfUtils/ElfFile.h"
 #include "EventBuffer.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitModule.h"
@@ -50,6 +50,8 @@
 #include "absl/strings/strip.h"
 
 namespace LinuxUtils {
+
+using ::ElfUtils::ElfFile;
 
 //-----------------------------------------------------------------------------
 std::vector<std::string> ReadProcMaps(pid_t pid) {

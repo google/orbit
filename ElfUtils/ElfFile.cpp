@@ -2,13 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ElfFile.h"
+#include "ElfUtils/ElfFile.h"
 
 #include <string_view>
 #include <vector>
 
-#include "Path.h"
-#include "PrintVar.h"
+#include "OrbitBase/Logging.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "llvm/Demangle/Demangle.h"
@@ -16,6 +15,8 @@
 #include "llvm/Object/ObjectFile.h"
 #include "outcome.hpp"
 #include "symbol.pb.h"
+
+namespace ElfUtils {
 
 namespace {
 
@@ -296,3 +297,5 @@ std::unique_ptr<ElfFile> ElfFile::Create(
 
   return result;
 }
+
+}  // namespace ElfUtils

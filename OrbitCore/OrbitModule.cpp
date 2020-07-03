@@ -8,6 +8,7 @@
 #include <string>
 
 #include "Core.h"
+#include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "Pdb.h"
 #include "ScopeTimer.h"
@@ -17,7 +18,6 @@
 
 #ifndef WIN32
 #include "Capture.h"
-#include "ElfFile.h"
 #include "LinuxUtils.h"
 #include "OrbitProcess.h"
 #include "OrbitUnreal.h"
