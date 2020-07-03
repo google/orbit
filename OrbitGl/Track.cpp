@@ -66,18 +66,18 @@ void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
 
   std::vector<Vec2> rotated_points = RotatePoints(points, rotation);
 
-  Vec3 position(pos[0], pos[1], 0.f);
+  Vec3 position(pos[0], pos[1], z);
   std::vector<Triangle> triangles;
 
-  Vec3 pivot = position + Vec3(rotated_points[0][0], rotated_points[0][1], 0.f);
+  Vec3 pivot = position + Vec3(rotated_points[0][0], rotated_points[0][1], z);
 
   Vec3 vertices[2];
   vertices[0] =
-      position + Vec3(rotated_points[1][0], rotated_points[1][1], 0.f);
+      position + Vec3(rotated_points[1][0], rotated_points[1][1], z);
 
   for (int i = 1; i < rotated_points.size() - 1; ++i) {
     vertices[i % 2] = position + Vec3(rotated_points[i + 1][0],
-                                      rotated_points[i + 1][1], 0.f);
+                                      rotated_points[i + 1][1], z);
     Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
     batcher->AddTriangle(triangle, color, PickingID::TRIANGLE);
   }
