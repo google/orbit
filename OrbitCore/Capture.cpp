@@ -238,14 +238,6 @@ void Capture::PreFunctionHooks() {
   // Clear current argument tracking data
   GTcpServer->Send(Msg_ClearArgTracking);
 
-  // Find OutputDebugStringA
-  if (GParams.config.hook_output_debug_string()) {
-    if (DWORD64 outputAddr = GTargetProcess->GetOutputDebugStringAddress()) {
-      GSelectedAddressesByType[Function::ORBIT_OUTPUT_DEBUG_STRING].push_back(
-          outputAddr);
-    }
-  }
-
   // Unreal
   CheckForUnrealSupport();
 }
@@ -432,7 +424,6 @@ LinuxAddressInfo* Capture::GetAddressInfo(uint64_t address) {
 //-----------------------------------------------------------------------------
 void Capture::CheckForUnrealSupport() {
   GUnrealSupported = GCoreApp != nullptr &&
-                     GCoreApp->GetUnrealSupportEnabled() &&
                      GOrbitUnreal.HasFnameInfo();
 }
 

@@ -186,15 +186,6 @@ class OrbitApp final : public CoreApp, public DataViewFactory {
                              const std::shared_ptr<Preset>& preset);
   bool IsLoading();
 
-  void EnableUnrealSupport(bool a_Value);
-  bool GetUnrealSupportEnabled() override;
-
-  void EnableUnsafeHooking(bool a_Value);
-  bool GetUnsafeHookingEnabled() override;
-
-  void EnableOutputDebugString(bool a_Value);
-  bool GetOutputDebugStringEnabled() override;
-
   void UpdateSamplingReport();
   void LoadPreset(const std::shared_ptr<Preset>& session);
   void SetIsRemote(bool a_IsRemote) { m_IsRemote = a_IsRemote; }

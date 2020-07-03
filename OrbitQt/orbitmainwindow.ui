@@ -278,14 +278,6 @@
     <addaction name="actionReport_Missing_Feature"/>
     <addaction name="actionReport_Bug"/>
    </widget>
-   <widget class="QMenu" name="menuDev">
-    <property name="title">
-     <string>Options</string>
-    </property>
-    <addaction name="actionEnable_Unreal_Support"/>
-    <addaction name="actionAllow_Unsafe_Hooking"/>
-    <addaction name="actionOutputDebugString"/>
-   </widget>
    <widget class="QMenu" name="menuCrash">
     <property name="title">
      <string>Crash Test</string>
@@ -374,22 +366,6 @@
     <string>Save Preset As...</string>
    </property>
   </action>
-  <action name="actionEnable_Unreal_Support">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Unreal Support</string>
-   </property>
-  </action>
-  <action name="actionAllow_Unsafe_Hooking">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Unsafe Hooking</string>
-   </property>
-  </action>
   <action name="actionOpen_Capture">
    <property name="text">
     <string>Open Capture</string>
@@ -403,14 +379,6 @@
   <action name="actionShow_Includes_Util">
    <property name="text">
     <string>Show Includes Util</string>
-   </property>
-  </action>
-  <action name="actionOutputDebugString">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>OutputDebugString</string>
    </property>
   </action>
   <action name="actionCheckFalse">
