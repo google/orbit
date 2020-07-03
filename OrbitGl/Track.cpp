@@ -45,8 +45,8 @@ std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
 
 std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points,
                                float rotation) {
-  float cos_r = std::cosf(kPiFloat * rotation / 180.f);
-  float sin_r = std::sinf(kPiFloat * rotation / 180.f);
+  float cos_r = cosf(kPiFloat * rotation / 180.f);
+  float sin_r = sinf(kPiFloat * rotation / 180.f);
   std::vector<Vec2> result;
   for (const Vec2 point : points) {
     float x_rotated = cos_r * point[0] - sin_r * point[1];
