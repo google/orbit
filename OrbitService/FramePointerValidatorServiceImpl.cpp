@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include "ElfFile.h"
+#include "ElfUtils/ElfFile.h"
 #include "FramePointerValidator.h"
 
 grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
@@ -17,7 +17,7 @@ grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
   // Even though this information should be available on the client,
   // we want not rely on this here, and for this particular use case we are
   // fine with doing some extra work, and read it from the elf file.
-  bool is_64_bit = ElfFile::Create(request->module_path())->Is64Bit();
+  bool is_64_bit = ElfUtils::ElfFile::Create(request->module_path())->Is64Bit();
 
   std::vector<CodeBlock> function_infos(request->functions().begin(),
                                         request->functions().end());

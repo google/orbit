@@ -7,7 +7,7 @@
 
 #include <utility>
 
-#include "ElfFile.h"
+#include "ElfUtils/ElfFile.h"
 #include "OrbitModule.h"
 #include "Path.h"
 #include "Pdb.h"
@@ -16,6 +16,8 @@
 
 const std::string executable_directory =
     Path::GetExecutablePath() + "testdata/";
+
+using ElfUtils::ElfFile;
 
 TEST(OrbitModule, Constructor) {
   const std::string executable_name = "hello_world_elf";

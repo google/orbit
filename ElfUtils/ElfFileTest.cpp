@@ -9,9 +9,11 @@
 #include <utility>
 #include <fstream>
 
-#include "ElfFile.h"
+#include "ElfUtils/ElfFile.h"
 #include "Path.h"
 #include "symbol.pb.h"
+
+using ElfUtils::ElfFile;
 
 TEST(ElfFile, LoadSymbols) {
   std::string executable_path = Path::GetExecutablePath();

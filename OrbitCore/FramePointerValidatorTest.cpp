@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "ElfFile.h"
+#include "ElfUtils/ElfFile.h"
 #include "FramePointerValidator.h"
 #include "OrbitBase/Logging.h"
 #include "Path.h"
@@ -16,7 +16,7 @@ TEST(FramePointerValidator, GetFpoFunctions) {
   std::string executable_path = Path::GetExecutablePath();
   std::string test_elf_file = executable_path + "/testdata/hello_world_elf";
 
-  auto elf_file = ElfFile::Create(test_elf_file);
+  auto elf_file = ElfUtils::ElfFile::Create(test_elf_file);
   ASSERT_NE(elf_file, nullptr);
 
   const auto symbols_result = elf_file->LoadSymbols();

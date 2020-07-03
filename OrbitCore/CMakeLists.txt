@@ -79,7 +79,6 @@ target_sources(
           Core.cpp
           CoreApp.cpp
           ConnectionManager.cpp
-          ElfFile.cpp
           EventBuffer.cpp
           FramePointerValidator.cpp
           FunctionFramePointerValidator.cpp
@@ -138,7 +137,8 @@ target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(
   OrbitCore
-  PUBLIC OrbitBase
+  PUBLIC ElfUtils
+         OrbitBase
          OrbitProtos
          capstone::capstone
          cereal::cereal
@@ -178,7 +178,6 @@ target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/Version.cpp")
 add_executable(OrbitCoreTests)
 
 target_sources(OrbitCoreTests PRIVATE
-    ElfFileTest.cpp
     FunctionFramepointerValidatorTest.cpp
     FramePointerValidatorTest.cpp
     LinuxTracingBufferTest.cpp
@@ -199,9 +198,5 @@ target_link_libraries(
           GMock::GMock
           llvm_object::llvm_object
           abseil::abseil)
-
-add_custom_command(TARGET OrbitCoreTests POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/testdata
-  $<TARGET_FILE_DIR:OrbitCoreTests>/testdata)
 
 register_test(OrbitCoreTests)
