@@ -182,14 +182,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
     ui->actionDisconnect->setVisible(false);
 
-
-    ui->actionEnable_Unreal_Support->setVisible(false);
-    ui->actionAllow_Unsafe_Hooking->setVisible(false);
-    ui->actionOutputDebugString->setVisible(false);
-
     ui->actionShow_Includes_Util->setVisible(false);
     ui->menuTools->menuAction()->setVisible(false);
-    ui->menuDev->menuAction()->setVisible(!ui->menuDev->isEmpty());
   }
 
   if (!absl::GetFlag(FLAGS_devmode)) {
@@ -203,13 +197,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   m_OutputDialog = new OutputDialog(this);
   m_OutputDialog->setWindowTitle("Orbit - Loading Pdb...");
-
-  ui->actionEnable_Unreal_Support->setChecked(
-      GOrbitApp->GetUnrealSupportEnabled());
-  ui->actionAllow_Unsafe_Hooking->setChecked(
-      GOrbitApp->GetUnsafeHookingEnabled());
-  ui->actionOutputDebugString->setChecked(
-      GOrbitApp->GetOutputDebugStringEnabled());
 
   CreateSamplingTab();
   CreateSelectionTab();
@@ -675,16 +662,6 @@ void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionEnable_Unreal_Support_triggered(bool checked) {
-  GOrbitApp->EnableUnrealSupport(checked);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionAllow_Unsafe_Hooking_triggered(bool checked) {
-  GOrbitApp->EnableUnsafeHooking(checked);
-}
-
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionSave_Capture_triggered() {
   QString file = QFileDialog::getSaveFileName(
       this, "Save capture...",
@@ -768,11 +745,6 @@ void OrbitMainWindow::SetTitle(const QString& task_description) {
                             QApplication::applicationVersion(),
                             task_description));
   }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionOutputDebugString_triggered(bool checked) {
-  GOrbitApp->EnableOutputDebugString(checked);
 }
 
 //-----------------------------------------------------------------------------

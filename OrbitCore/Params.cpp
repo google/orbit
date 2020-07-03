@@ -16,11 +16,7 @@
 Params GParams;
 
 //-----------------------------------------------------------------------------
-Params::Params() {
-  config.set_unreal_support(true);
-  config.set_allow_unsafe_hooking(false);
-  config.set_hook_output_debug_string(false);
-}
+Params::Params() {}
 
 //-----------------------------------------------------------------------------
 bool Params::Save() {

@@ -5,8 +5,5 @@
 syntax = "proto3";
 
 message Config {
-  bool unreal_support = 1;
-  bool allow_unsafe_hooking = 2;
-  bool hook_output_debug_string = 3;
-  repeated string pdb_history = 4;
+  repeated string pdb_history = 1;
 }
