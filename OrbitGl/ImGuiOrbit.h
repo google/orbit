@@ -19,8 +19,6 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
-#define IMGUI_IMPL_OPENGL_LOADER_GLEW
-
 class GlCanvas;
 
 extern ImFont* GOrbitImguiFont;

@@ -21,6 +21,7 @@
 #include "OpenGl.h"
 #include "Params.h"
 #include "Pdb.h"
+#include "OrbitBase/Logging.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -40,7 +41,7 @@ GLuint GTextureTimer = 0;
 GLuint GTextureHelp = 0;
 GLuint GTextureRecord = 0;
 
-static char g_GlslVersionString[32] = "#version 100\n";
+static const char g_GlslVersionString[32] = "#version 100\n";
 static unsigned int g_VboHandle = 0, g_ElementsHandle = 0;
 static GLuint g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
 static int g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
@@ -75,21 +76,17 @@ void Orbit_ImGui_InvalidateDeviceObjects() {
 // If you get an error please report on github. You may try different GL context
 // version or GLSL version. See GL<>GLSL version table at the top of this file.
 static bool CheckShader(GLuint handle, const char* desc) {
-  // TODO(dfenner):Fix stuff below to use LOG and see if this makes sense at all
-  // in our case.
   GLint status = 0, log_length = 0;
   glGetShaderiv(handle, GL_COMPILE_STATUS, &status);
   glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &log_length);
-  if ((GLboolean)status == GL_FALSE)
-    fprintf(
-        stderr,
-        "ERROR: ImGui_ImplOpenGL3_CreateDeviceObjects: failed to compile %s!\n",
-        desc);
-  if (log_length > 0) {
+  if (log_length > 1) {
     ImVector<char> buf;
     buf.resize((int)(log_length + 1));
     glGetShaderInfoLog(handle, log_length, NULL, (GLchar*)buf.begin());
-    fprintf(stderr, "%s\n", buf.begin());
+    LOG("Log from shader compilation: %s", buf.begin());
+  }
+  if ((GLboolean)status == GL_FALSE) {
+    FATAL("Orbit_ImGui_CreateDeviceObjects: failed to compile %s!", desc);
   }
   return (GLboolean)status == GL_TRUE;
 }
@@ -97,21 +94,17 @@ static bool CheckShader(GLuint handle, const char* desc) {
 // If you get an error please report on GitHub. You may try different GL context
 // version or GLSL version.
 static bool CheckProgram(GLuint handle, const char* desc) {
-  // TODO(dfenner):Fix stuff below to use LOG and see if this makes sense at all
-  // in our case.
   GLint status = 0, log_length = 0;
   glGetProgramiv(handle, GL_LINK_STATUS, &status);
   glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &log_length);
-  if ((GLboolean)status == GL_FALSE)
-    fprintf(stderr,
-            "ERROR: ImGui_ImplOpenGL3_CreateDeviceObjects: failed to link %s! "
-            "(with GLSL '%s')\n",
-            desc, g_GlslVersionString);
-  if (log_length > 0) {
+  if (log_length > 1) {
     ImVector<char> buf;
     buf.resize((int)(log_length + 1));
     glGetProgramInfoLog(handle, log_length, NULL, (GLchar*)buf.begin());
-    fprintf(stderr, "%s\n", buf.begin());
+    LOG("Log from shader program linking: %s", buf.begin());
+  }
+  if ((GLboolean)status == GL_FALSE) {
+    FATAL("Orbit_ImGui_CreateDeviceObjects: failed to link %s!", desc);
   }
   return (GLboolean)status == GL_TRUE;
 }
@@ -291,7 +284,9 @@ bool LoadTextureFromFile(const char* filename, uint32_t* out_texture,
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   // Upload pixels into texture
+#ifdef GL_UNPACK_ROW_LENGTH
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+#endif
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA,
                GL_UNSIGNED_BYTE, image_data);
   stbi_image_free(image_data);
@@ -388,8 +383,6 @@ void SetupImGuiStyle(bool bStyleDark_, float alpha_) {
     }
   }
 }
-
-// TODO(dfenner): There are a bunch of defines in the backup/restore part where I don't know in what they do.
 
 void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   // Avoid rendering when minimized, scale coordinates for retina displays
@@ -609,96 +602,6 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
              (GLsizei)last_viewport[3]);
   glScissor(last_scissor_box[0], last_scissor_box[1],
             (GLsizei)last_scissor_box[2], (GLsizei)last_scissor_box[3]);
-
-  // **************************************************************************************
-
-  //// We are using the OpenGL fixed pipeline to make the example code simpler to
-  //// read! Setup render state: alpha-blending enabled, no face culling, no depth
-  //// testing, scissor enabled, vertex/texcoord/color pointers.
-  //GLint last_texture;
-  //glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-  //GLint last_viewport[4];
-  //glGetIntegerv(GL_VIEWPORT, last_viewport);
-  //glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
-  //glEnable(GL_BLEND);
-  //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  //glDisable(GL_CULL_FACE);
-  //// glDisable(GL_DEPTH_TEST);
-  //glEnable(GL_SCISSOR_TEST);
-  //glEnableClientState(GL_VERTEX_ARRAY);
-  //glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  //glEnableClientState(GL_COLOR_ARRAY);
-  //glEnable(GL_TEXTURE_2D);
-  //glUseProgram(
-  //    0);  // You may want this if using this code in an OpenGL 3+ context
-
-  //// Handle cases of screen coordinates != from framebuffer coordinates (e.g.
-  //// retina displays)
-  //ImGuiIO& io = ImGui::GetIO();
-  //int fb_width =
-  //    static_cast<int>(io.DisplaySize.x * io.DisplayFramebufferScale.x);
-  //int fb_height =
-  //    static_cast<int>(io.DisplaySize.y * io.DisplayFramebufferScale.y);
-  //draw_data->ScaleClipRects(io.DisplayFramebufferScale);
-
-  //// Setup viewport, orthographic projection matrix
-  //glViewport(0, 0, static_cast<GLsizei>(fb_width),
-  //           static_cast<GLsizei>(fb_height));
-  //glMatrixMode(GL_PROJECTION);
-  //glPushMatrix();
-  //glLoadIdentity();
-  //glOrtho(0.0f, io.DisplaySize.x, io.DisplaySize.y, 0.0f, -1.0f, +1.0f);
-  //glMatrixMode(GL_MODELVIEW);
-  //glPushMatrix();
-  //glLoadIdentity();
-
-  //// Render command lists
-  //for (int n = 0; n < draw_data->CmdListsCount; n++) {
-  //  const ImDrawList* cmd_list = draw_data->CmdLists[n];
-  //  const uint8_t* vtx_buffer =
-  //      reinterpret_cast<const uint8_t*>(&cmd_list->VtxBuffer.front());
-  //  const ImDrawIdx* idx_buffer = &cmd_list->IdxBuffer.front();
-  //  glVertexPointer(2, GL_FLOAT, sizeof(ImDrawVert),
-  //                  vtx_buffer + offsetof(ImDrawVert, pos));
-  //  glTexCoordPointer(2, GL_FLOAT, sizeof(ImDrawVert),
-  //                    vtx_buffer + offsetof(ImDrawVert, uv));
-  //  glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(ImDrawVert),
-  //                 vtx_buffer + offsetof(ImDrawVert, col));
-
-  //  for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.size(); cmd_i++) {
-  //    const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
-  //    if (pcmd->UserCallback) {
-  //      pcmd->UserCallback(cmd_list, pcmd);
-  //    } else {
-  //      glBindTexture(
-  //          GL_TEXTURE_2D,
-  //          static_cast<GLuint>(reinterpret_cast<intptr_t>(pcmd->TextureId)));
-  //      glScissor(static_cast<int>(pcmd->ClipRect.x),
-  //                static_cast<int>(fb_height - pcmd->ClipRect.w),
-  //                static_cast<int>(pcmd->ClipRect.z - pcmd->ClipRect.x),
-  //                static_cast<int>(pcmd->ClipRect.w - pcmd->ClipRect.y));
-  //      glDrawElements(
-  //          GL_TRIANGLES, static_cast<GLsizei>(pcmd->ElemCount),
-  //          sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-  //          idx_buffer);
-  //    }
-  //    idx_buffer += pcmd->ElemCount;
-  //  }
-  //}
-
-  //// Restore modified state
-  //glDisableClientState(GL_COLOR_ARRAY);
-  //glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-  //glDisableClientState(GL_VERTEX_ARRAY);
-  //glBindTexture(GL_TEXTURE_2D, last_texture);
-  //glMatrixMode(GL_MODELVIEW);
-  //glPopMatrix();
-  //glMatrixMode(GL_PROJECTION);
-  //glPopMatrix();
-  //glPopAttrib();
-  //glViewport(last_viewport[0], last_viewport[1],
-  //           static_cast<GLsizei>(last_viewport[2]),
-  //           static_cast<GLsizei>(last_viewport[3]));
 }
 
 ImFont* AddOrbitFont(float pixel_size) {
@@ -801,51 +704,6 @@ void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas) {
   if (!g_FontTexture) Orbit_ImGui_CreateDeviceObjects();
 
   ImGuiIO& io = ImGui::GetIO();
-
-  // WTF?
-  //static volatile bool doSsetTexture = true;
-  //if (doSsetTexture) {
-  //  // SCOPE_TIMER_LOG( "glTexImage2D" );
-  //  unsigned char* pixels;
-  //  int width, height;
-  //  io.Fonts->GetTexDataAsAlpha8(&pixels, &width, &height);
-  //  glBindTexture(GL_TEXTURE_2D, g_FontTexture);
-  //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //  glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA,
-  //               GL_UNSIGNED_BYTE, pixels);
-
-  //  glBindTexture(GL_TEXTURE_2D, GTextureInjected);
-  //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, inject_image.width,
-  //               inject_image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-  //               inject_image.pixel_data);
-
-  //  glBindTexture(GL_TEXTURE_2D, GTextureTimer);
-  //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, timer_image.width,
-  //               timer_image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-  //               timer_image.pixel_data);
-
-  //  glBindTexture(GL_TEXTURE_2D, GTextureHelp);
-  //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, help_image.width, help_image.height,
-  //               0, GL_RGBA, GL_UNSIGNED_BYTE, help_image.pixel_data);
-
-  //  glBindTexture(GL_TEXTURE_2D, GTextureRecord);
-  //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  //  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, record_image.width,
-  //               record_image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-  //               record_image.pixel_data);
-  //}
-
-  //// Store our identifier
-  //io.Fonts->TexID =
-  //    reinterpret_cast<void*>(static_cast<intptr_t>(g_FontTexture));
 
   // Setup display size (every frame to accommodate for window resizing)
   const int w = a_Canvas->getWidth();
