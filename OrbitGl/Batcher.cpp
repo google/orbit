@@ -70,13 +70,18 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
   AddBox(box, colors, picking_type, user_data);
 }
 
-void Batcher::AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
+void Batcher::AddTriangle(const Triangle& triangle, Color color,
                           PickingID::Type picking_type, void* user_data) {
   Color picking_color = PickingID::GetColor(picking_type, triangle_buffer_.triangles_.size());
-  triangle_buffer_.triangles_.push_back(Triangle(v0, v1, v2));
-  triangle_buffer_.colors_.push_back(color);
-  triangle_buffer_.picking_colors_.push_back(picking_color);
+  triangle_buffer_.triangles_.push_back(triangle);
+  triangle_buffer_.colors_.push_back_n(color, 3);
+  triangle_buffer_.picking_colors_.push_back_n(picking_color, 3);
   triangle_buffer_.user_data_.push_back(user_data);
+}
+
+void Batcher::AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
+                          PickingID::Type picking_type, void* user_data) {
+  AddTriangle(Triangle(v0, v1, v2), color, picking_type, user_data);
 }
 
 TextBox* Batcher::GetTextBox(PickingID a_ID) {
@@ -111,6 +116,7 @@ void Batcher::GetBoxGradientColors(Color color, Color* colors) {
 void Batcher::Reset() {
   line_buffer_.Reset();
   box_buffer_.Reset();
+  triangle_buffer_.Reset();
 }
 
 //----------------------------------------------------------------------------
