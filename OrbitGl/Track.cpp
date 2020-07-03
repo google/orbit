@@ -43,19 +43,44 @@ std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
   return points;
 }
 
-//-----------------------------------------------------------------------------
-void DrawTriangleFan(const std::vector<Vec2>& points, const Vec2& pos,
-                     const Color& color, float rotation, float z) {
-  glColor4ubv(&color[0]);
-  glPushMatrix();
-  glTranslatef(pos[0], pos[1], 0);
-  glRotatef(rotation, 0.f, 0.f, 1.f);
-  glBegin(GL_TRIANGLE_FAN);
-  for (const Vec2& point : points) {
-    glVertex3f(point[0], point[1], z);
+std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points,
+                               float rotation) {
+  float cos_r = std::cosf(kPiFloat * rotation / 180.f);
+  float sin_r = std::sinf(kPiFloat * rotation / 180.f);
+  std::vector<Vec2> result;
+  for (const Vec2 point : points) {
+    float x_rotated = cos_r * point[0] - sin_r * point[1];
+    float y_rotated = sin_r * point[0] + cos_r * point[1];
+    result.push_back(Vec2(x_rotated, y_rotated));
   }
-  glEnd();
-  glPopMatrix();
+  return result;
+}
+
+//-----------------------------------------------------------------------------
+void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
+                     const Vec2& pos, const Color& color, float rotation,
+                     float z) {
+  if (points.size() < 3) {
+    return;
+  }
+
+  std::vector<Vec2> rotated_points = RotatePoints(points, rotation);
+
+  Vec3 position(pos[0], pos[1], 0.f);
+  std::vector<Triangle> triangles;
+
+  Vec3 pivot = position + Vec3(rotated_points[0][0], rotated_points[0][1], 0.f);
+
+  Vec3 vertices[2];
+  vertices[0] =
+      position + Vec3(rotated_points[1][0], rotated_points[1][1], 0.f);
+
+  for (int i = 1; i < rotated_points.size() - 1; ++i) {
+    vertices[i % 2] = position + Vec3(rotated_points[i + 1][0],
+                                      rotated_points[i + 1][1], 0.f);
+    Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
+    batcher->AddTriangle(triangle, color, PickingID::TRIANGLE);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -94,9 +119,6 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
   batcher->AddBox(box, color, PickingID::BOX);
 
-  batcher->Draw();
-  batcher->Reset();
-
   // Draw rounded corners.
   float vertical_margin = time_graph_->GetVerticalMargin();
   const Color kBackgroundColor(70, 70, 70, 255);
@@ -111,13 +133,16 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
     Vec2 end_bottom(x1 - vertical_margin, y1);
     Vec2 end_top(x1 - vertical_margin, y0 + top_margin);
     float z = GlCanvas::Z_VALUE_BOX_ACTIVE + 0.001f;
-    DrawTriangleFan(rounded_corner, bottom_left, kBackgroundColor, 0, z);
-    DrawTriangleFan(rounded_corner, bottom_right, color, 0, z);
-    DrawTriangleFan(rounded_corner, top_right, kBackgroundColor, 180.f, z);
-    DrawTriangleFan(rounded_corner, top_left, kBackgroundColor, -90.f, z);
-    DrawTriangleFan(rounded_corner, end_bottom, kBackgroundColor, 90.f, z);
-    DrawTriangleFan(rounded_corner, end_top, kBackgroundColor, 180.f, z);
+    DrawTriangleFan(batcher, rounded_corner, bottom_left, kBackgroundColor, 0, z);
+    DrawTriangleFan(batcher, rounded_corner, bottom_right, color, 0, z);
+    DrawTriangleFan(batcher, rounded_corner, top_right, kBackgroundColor, 180.f, z);
+    DrawTriangleFan(batcher, rounded_corner, top_left, kBackgroundColor, -90.f, z);
+    DrawTriangleFan(batcher, rounded_corner, end_bottom, kBackgroundColor, 90.f, z);
+    DrawTriangleFan(batcher, rounded_corner, end_top, kBackgroundColor, 180.f, z);
   }
+
+  batcher->Draw();
+  batcher->Reset();
 
   // Collapse toggle state management.
   if (!this->IsCollapsable()) {
