@@ -21,16 +21,6 @@
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
 
-template <typename... Args>
-static void VARIADIC_UNUSED(Args... args) {
-  ((void)args, ...);
-}
-
-#ifdef ORBIT_FUZZING
-// In a fuzzing context we don't want to show standard log messages
-// which get interleaved with the fuzzer's output.
-#define LOG(format, ...) VARIADIC_UNUSED(format, ##__VA_ARGS__)
-#else
 #define LOG(format, ...)                                                      \
   do {                                                                        \
     std::string file__ = std::filesystem::path(__FILE__).filename().string(); \
@@ -43,7 +33,6 @@ static void VARIADIC_UNUSED(Args... args) {
         "[%28s] " format "\n", file_and_line__.c_str(), ##__VA_ARGS__);       \
     PLATFORM_LOG(formatted_log__.c_str());                                    \
   } while (0)
-#endif  // ORBIT_FUZZING
 
 #if defined(_WIN32) && defined(ERROR)
 #undef ERROR
@@ -51,23 +40,11 @@ static void VARIADIC_UNUSED(Args... args) {
 
 #define ERROR(format, ...) LOG("Error: " format, ##__VA_ARGS__)
 
-#ifdef ORBIT_FUZZING
-// In a fuzzing context an abort is considered a crash
-// and we can't continue testing. By throwing an exception
-// instead we can stop the control flow and continue
-// testing in the same process.
-#define FATAL(format, ...)                \
-  do {                                    \
-    LOG("Fatal: " format, ##__VA_ARGS__); \
-    throw std::runtime_error("fatal");    \
-  } while (0)
-#else
 #define FATAL(format, ...)                \
   do {                                    \
     LOG("Fatal: " format, ##__VA_ARGS__); \
     abort();                              \
   } while (0)
-#endif  // ORBIT_FUZZING
 
 #define UNREACHABLE() FATAL("Unreachable code")
 
@@ -86,18 +63,6 @@ static void VARIADIC_UNUSED(Args... args) {
     }                                   \
   } while (0)
 
-#ifdef ORBIT_FUZZING
-// In a fuzzing context an abort is considered a crash
-// and we can't continue testing. By throwing an exception
-// instead we can stop the control flow and continue
-// testing in the same process.
-#define CHECK(assertion)                 \
-  do {                                   \
-    if (UNLIKELY(!(assertion))) {        \
-      throw std::runtime_error("CHECK"); \
-    }                                    \
-  } while (0)
-#else
 #define CHECK(assertion)                \
   do {                                  \
     if (UNLIKELY(!(assertion))) {       \
@@ -105,7 +70,6 @@ static void VARIADIC_UNUSED(Args... args) {
       abort();                          \
     }                                   \
   } while (0)
-#endif  // ORBIT_FUZZING
 
 #ifndef NDEBUG
 #define DCHECK(assertion) CHECK(assertion)

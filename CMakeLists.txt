@@ -25,12 +25,12 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
                            -Werror=sign-compare)
 endif()
 
+include(cmake/fuzzing.cmake)
 include(cmake/strip.cmake)
 include(cmake/tests.cmake)
 enable_testing()
 
 option(WITH_GUI "Setting this option will enable the Qt-based UI client." ON)
-option(WITH_FUZZING "Setting this option will enable the fuzzing mode." OFF)
 option(WITH_CRASH_HANDLING "Setting this option will enable crash handling based on crashpad." ON)
 
 set(CRASHDUMP_SERVER "" CACHE STRING "Setting this option will enable uploading crash dumps to the url specified.")
@@ -76,7 +76,7 @@ list(APPEND CMAKE_FIND_ROOT_PATH "${CONAN_CMAKE_MODULE_PATH}")
 list(PREPEND CMAKE_PREFIX_PATH "${CONAN_GRPC_ROOT}")
 list(PREPEND CMAKE_FIND_ROOT_PATH "${CONAN_GRPC_ROOT}")
 
-if(NOT WIN32 AND (WITH_GUI OR WITH_FUZZING))
+if(NOT WIN32 AND WITH_GUI)
   find_package(X11 REQUIRED)
 endif()
 
@@ -100,7 +100,7 @@ include("third_party/protobuf/protobuf-generate.cmake")
 find_package(gRPC CONFIG REQUIRED)
 
 
-if(WITH_GUI OR WITH_FUZZING)
+if(WITH_GUI)
   find_package(freetype CONFIG REQUIRED)
   find_package(freetype-gl CONFIG REQUIRED)
   find_package(OpenGL REQUIRED)
@@ -123,6 +123,7 @@ if(WITH_GUI AND WITH_CRASH_HANDLING)
 endif()
 
 find_package(abseil CONFIG REQUIRED)
+find_package(libprotobuf-mutator CONFIG REQUIRED)
 find_package(llvm_object CONFIG REQUIRED)
 find_package(Outcome CONFIG REQUIRED)
 
@@ -135,18 +136,11 @@ find_package(GTest REQUIRED)
 find_package(GMock REQUIRED)
 find_package(Filesystem REQUIRED)
 
-if (WITH_FUZZING)
-  find_package(libprotobuf-mutator CONFIG REQUIRED)
-endif()
 
 # Set preprocessor defines These are only necessary for windows, but we will
 # define them on all platforms, to keep the builds similar as possible.
 add_definitions(-DNOMINMAX)
 add_definitions(-DUNICODE -D_UNICODE)
-
-if(WITH_FUZZING)
-  add_definitions(-DORBIT_FUZZING=1)
-endif()
 
 if(WIN32)
   add_definitions(-DWIN32)
@@ -166,18 +160,8 @@ if(WITH_GUI)
   add_subdirectory(OrbitGgp)
   add_subdirectory(OrbitSsh)
   add_subdirectory(OrbitSshQt)
-endif()
-
-if(WITH_GUI OR WITH_FUZZING)
   add_subdirectory(OrbitGl)
-endif()
-
-if (WITH_GUI)
   add_subdirectory(OrbitQt)
-endif()
-
-if (WITH_FUZZING)
-  add_subdirectory(OrbitFuzzing)
 endif()
 
 if(WIN32)

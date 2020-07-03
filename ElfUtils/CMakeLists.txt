@@ -47,3 +47,7 @@ add_custom_command(TARGET ElfUtilsTests POST_BUILD
   $<TARGET_FILE_DIR:ElfUtilsTests>/testdata)
 
 register_test(ElfUtilsTests)
+
+
+add_fuzzer(ElfFileLoadSymbolsFuzzer ElfFileLoadSymbolsFuzzer.cpp)
+target_link_libraries(ElfFileLoadSymbolsFuzzer ElfUtils)

@@ -21,14 +21,12 @@ class OrbitConan(ConanFile):
                "debian_packaging": [True, False],
                "fPIC": [True, False],
                "crashdump_server": "ANY",
-               "with_fuzzing": [True, False],
                "with_crash_handling": [True, False]}
     default_options = {"system_mesa": True,
                        "system_qt": True, "with_gui": True,
                        "debian_packaging": False,
                        "fPIC": True,
                        "crashdump_server": "",
-                       "with_fuzzing": False,
                        "with_crash_handling": True}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
@@ -71,6 +69,8 @@ class OrbitConan(ConanFile):
         self.requires("lzma_sdk/19.00@orbitdeps/stable#a7bc173325d7463a0757dee5b08bf7fd")
         self.requires("openssl/1.1.1d@{}#0".format(self._orbit_channel))
         self.requires("Outcome/3dae433e@orbitdeps/stable#0")
+        self.requires(
+            "libprotobuf-mutator/20200506@{}#4ed8fc67624c9a35b7b0227e93c9d3c4".format(self._orbit_channel))
         if self.settings.os != "Windows":
             self.requires(
                 "libunwindstack/80a734f14@{}#0".format(self._orbit_channel))
@@ -80,7 +80,7 @@ class OrbitConan(ConanFile):
             self.requires(
                 "crashpad/20200624@{}#8c19cb575eb819de0b050cf7d1f317b6".format(self._orbit_channel))
 
-        if self.options.with_gui or self.options.with_fuzzing:
+        if self.options.with_gui:
             self.requires("freetype/2.10.0@bincrafters/stable#0")
             self.requires(
                 "freetype-gl/8d9a97a@{}#2836d28f3d91c308ec9652c2054015db".format(self._orbit_channel))
@@ -95,9 +95,6 @@ class OrbitConan(ConanFile):
             if not self.options.system_qt:
                 self.requires("qt/5.14.1@bincrafters/stable#0")
 
-        if self.options.with_fuzzing:
-            self.requires(
-                "libprotobuf-mutator/20200506@{}#5e2c709e22b0ad149482efd73db41e23".format(self._orbit_channel))
 
     def configure(self):
         if self.options.debian_packaging and (self.settings.get_safe("os.platform") != "GGP" or tools.detected_os() != "Linux"):
@@ -107,10 +104,6 @@ class OrbitConan(ConanFile):
         if self.settings.os != "Windows" and not self.options.fPIC:
             raise ConanInvalidConfiguration(
                 "We only support compiling with fPIC enabled!")
-
-        if self.settings.os != "Linux" and self.options.with_fuzzing:
-            raise ConanInvalidConfiguration(
-                "Fuzzing is only supported on Linux!")
 
         if self.options.with_gui and self.settings.arch == "x86":
             raise ConanInvalidConfiguration(
