@@ -117,10 +117,6 @@ static std::string CreateAndGetConfigPath() {
   return configDir;
 }
 
-std::string Path::GetParamsFileName() {
-  return Path::JoinPath({CreateAndGetConfigPath(), "config.textpb"});
-}
-
 std::string Path::GetFileMappingFileName() {
   return Path::JoinPath({CreateAndGetConfigPath(), "FileMapping.txt"});
 }
@@ -259,7 +255,6 @@ void Path::Dump() {
   PRINT_VAR(GetDllName(true));
   PRINT_VAR(GetDllPath(false));
   PRINT_VAR(GetDllName(false));
-  PRINT_VAR(GetParamsFileName());
   PRINT_VAR(GetFileMappingFileName());
   PRINT_VAR(GetSymbolsFileName());
   PRINT_VAR(GetCachePath());

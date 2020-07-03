@@ -342,7 +342,6 @@ bool Pdb::LoadPdb(const char* a_PdbName) {
   }
 
   ProcessData();
-  GParams.AddToPdbHistory(a_PdbName);
 
   m_FinishedLoading = true;
   m_IsLoading = false;

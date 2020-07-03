@@ -5,19 +5,10 @@
 #ifndef ORBIT_CORE_PARAMS_H_
 #define ORBIT_CORE_PARAMS_H_
 
-#include <string>
-
-#include "config.pb.h"
-
 struct Params {
   Params();
-  bool Load();
-  bool Save();
-
-  void AddToPdbHistory(const std::string& a_PdbName);
 
  public:
-  Config config;
   const float font_size = 14.f;
 };
 

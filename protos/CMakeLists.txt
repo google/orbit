@@ -14,19 +14,3 @@ target_sources(OrbitProtos PRIVATE code_block.proto
                                    symbol.proto)
 
 grpc_helper(OrbitProtos)
-
-
-set(OrbitFileProtoList config.proto)
-set(OrbitFileProtoSources config.pb.cc)
-set(OrbitFileProtoHeaders config.pb.h)
-add_custom_command(
-    OUTPUT
-      ${OrbitFileProtoSources} ${OrbitFileProtoHeaders}
-    COMMAND
-      protoc ARGS --cpp_out="${CMAKE_CURRENT_BINARY_DIR}" ${OrbitFileProtoList}
-    WORKING_DIRECTORY
-      ${CMAKE_CURRENT_SOURCE_DIR})
-
-add_library(OrbitFileProtos STATIC ${OrbitFileProtoSources})
-target_link_libraries(OrbitFileProtos PUBLIC protobuf::libprotobuf)
-target_include_directories(OrbitFileProtos PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
