@@ -25,3 +25,14 @@ struct Box {
   }
   Vec3 vertices_[4];
 };
+
+//-----------------------------------------------------------------------------
+struct Triangle {
+  Triangle() = default;
+  Triangle(Vec3 v0, Vec3 v1, Vec3 v2) {
+    vertices_[0] = v0;
+    vertices_[1] = v1;
+    vertices_[2] = v2;
+  }
+  Vec3 vertices_[3];
+};

@@ -26,7 +26,7 @@ class Pickable {
 
 //-----------------------------------------------------------------------------
 struct PickingID {
-  enum Type { INVALID, LINE, EVENT, BOX, PICKABLE };
+  enum Type { INVALID, LINE, EVENT, BOX, PICKABLE, TRIANGLE };
 
   static PickingID Get(Type a_Type, unsigned a_ID) {
     static_assert(sizeof(PickingID) == 4, "PickingID must be 32 bits");

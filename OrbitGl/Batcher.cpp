@@ -70,6 +70,15 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
   AddBox(box, colors, picking_type, user_data);
 }
 
+void Batcher::AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
+                          PickingID::Type picking_type, void* user_data) {
+  Color picking_color = PickingID::GetColor(picking_type, triangle_buffer_.triangles_.size());
+  triangle_buffer_.triangles_.push_back(Triangle(v0, v1, v2));
+  triangle_buffer_.colors_.push_back(color);
+  triangle_buffer_.picking_colors_.push_back(picking_color);
+  triangle_buffer_.user_data_.push_back(user_data);
+}
+
 TextBox* Batcher::GetTextBox(PickingID a_ID) {
   if (a_ID.m_Type == PickingID::BOX) {
     if (void** textBoxPtr = box_buffer_.m_UserData.SlowAt(a_ID.m_Id)) {
@@ -77,6 +86,10 @@ TextBox* Batcher::GetTextBox(PickingID a_ID) {
     }
   } else if (a_ID.m_Type == PickingID::LINE) {
     if (void** textBoxPtr = line_buffer_.m_UserData.SlowAt(a_ID.m_Id)) {
+      return static_cast<TextBox*>(*textBoxPtr);
+    }
+  } else if (a_ID.m_Type == PickingID::TRIANGLE) {
+    if (void** textBoxPtr = triangle_buffer_.user_data_.SlowAt(a_ID.m_Id)) {
       return static_cast<TextBox*>(*textBoxPtr);
     }
   }
@@ -111,6 +124,7 @@ void Batcher::Draw(bool a_Picking) {
 
   DrawBoxBuffer(a_Picking);
   DrawLineBuffer(a_Picking);
+  DrawTriangleBuffer(a_Picking);
 
   glDisableClientState(GL_COLOR_ARRAY);
   glDisableClientState(GL_VERTEX_ARRAY);
@@ -156,5 +170,26 @@ void Batcher::DrawLineBuffer(bool a_Picking) {
 
     lineBlock = lineBlock->m_Next;
     colorBlock = colorBlock->m_Next;
+  }
+}
+
+//----------------------------------------------------------------------------
+void Batcher::DrawTriangleBuffer(bool picking) {
+  Block<Triangle, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>* triangle_block =
+      GetTriangleBuffer().triangles_.m_Root;
+  Block<Color, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK * 3>* color_block;
+
+  color_block = !picking ?  GetTriangleBuffer().colors_.m_Root
+                          : GetTriangleBuffer().picking_colors_.m_Root;
+
+  while (triangle_block) {
+    if (int num_elems = triangle_block->m_Size) {
+      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), triangle_block->m_Data);
+      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->m_Data);
+      glDrawArrays(GL_TRIANGLES, 0, num_elems * 3);
+    }
+
+    triangle_block = triangle_block->m_Next;
+    color_block = color_block->m_Next;
   }
 }
