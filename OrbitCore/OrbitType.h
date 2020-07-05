@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_ORBIT_TYPE_H_
+#define ORBIT_CORE_ORBIT_TYPE_H_
 
 #include <map>
 #include <set>
@@ -12,7 +13,6 @@
 #include "FunctionStats.h"
 #include "OrbitDbgHelp.h"
 #include "OrbitFunction.h"
-#include "SerializationMacros.h"
 #include "Variable.h"
 #include "cvconst.h"
 
@@ -85,3 +85,5 @@ class Type {
   mutable std::map<ULONG, Parent> m_Hierarchy;
   std::shared_ptr<Variable> m_TemplateVariable;
 };
+
+#endif  // ORBIT_CORE_ORBIT_TYPE_H_

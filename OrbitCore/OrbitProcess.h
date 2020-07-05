@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_ORBIT_PROCESS_H_
+#define ORBIT_CORE_ORBIT_PROCESS_H_
 
 #include <map>
 #include <memory>
@@ -14,7 +15,6 @@
 #include "BaseTypes.h"
 #include "LinuxAddressInfo.h"
 #include "ScopeTimer.h"
-#include "SerializationMacros.h"
 #include "Threading.h"
 #include "absl/container/flat_hash_map.h"
 
@@ -166,3 +166,5 @@ class Process {
 
   friend class TestRemoteMessages;
 };
+
+#endif // ORBIT_CORE_ORBIT_PROCESS_H_

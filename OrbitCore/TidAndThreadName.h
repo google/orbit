@@ -9,7 +9,6 @@
 #include <utility>
 
 #include "Serialization.h"
-#include "SerializationMacros.h"
 
 struct TidAndThreadName {
   TidAndThreadName() = default;

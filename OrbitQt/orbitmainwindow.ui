@@ -302,7 +302,6 @@
     <addaction name="actionShow_Includes_Util"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuDev"/>
    <addaction name="menuDebug"/>
    <addaction name="menuTools"/>
    <addaction name="menuHelp"/>

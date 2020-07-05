@@ -12,7 +12,6 @@
 #include "OrbitBase/Logging.h"
 #include "Pdb.h"
 #include "ScopeTimer.h"
-#include "Serialization.h"
 #include "absl/strings/str_format.h"
 #include "symbol.pb.h"
 

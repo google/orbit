@@ -2,9 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_CONTEXT_SWITCH_H_
+#define ORBIT_CORE_CONTEXT_SWITCH_H_
 
-#include "Serialization.h"
+#include <cstdint>
 
 //-----------------------------------------------------------------------------
 #pragma pack(push, 1)
@@ -27,7 +28,7 @@ struct ContextSwitch {
   // https://docs.microsoft.com/en-us/windows/win32/api/relogger/ns-relogger-etw_buffer_context
   // and EVENT_HEADER_FLAG_PROCESSOR_INDEX in
   // https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/fa4f7836-06ee-4ab6-8688-386a5a85f8c5
-
-  ORBIT_SERIALIZABLE;
 };
 #pragma pack(pop)
+
+#endif  // ORBIT_CORE_CONTEXT_SWITCH_H_

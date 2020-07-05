@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_CALLSTACK_H_
+#define ORBIT_CORE_CALLSTACK_H_
 
 #include "CallstackTypes.h"
 #include "OrbitDbgHelp.h"
@@ -58,14 +59,6 @@ struct CallStack {
   uint32_t m_Depth = 0;
   ThreadID m_ThreadId = 0;
   std::vector<uint64_t> m_Data;
-
-  ORBIT_SERIALIZABLE;
-};
-
-//-----------------------------------------------------------------------------
-struct HashedCallStack {
-  CallstackID m_Hash = 0;
-  ThreadID m_ThreadId = 0;
 
   ORBIT_SERIALIZABLE;
 };
@@ -165,3 +158,5 @@ inline CallStackPOD CallStackPOD::GetCallstackManual(
 #endif
 
 #endif
+
+#endif  // ORBIT_CORE_CALLSTACK_H_
