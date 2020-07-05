@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_VARIABLE_H_
+#define ORBIT_CORE_VARIABLE_H_
 
 #include <memory>
 
 #include "BaseTypes.h"
-#include "SerializationMacros.h"
 #include "Utils.h"
 #include "absl/strings/str_format.h"
 
@@ -147,8 +147,6 @@ class Variable {
 
   std::vector<char> m_RawData;
   std::string m_String;
-
-  ORBIT_SERIALIZABLE;
 };
 
 //-----------------------------------------------------------------------------
@@ -160,3 +158,5 @@ inline const std::string& Variable::FilterString() {
 
   return m_FilterString;
 }
+
+#endif  // ORBIT_CORE_VARIABLE_H_

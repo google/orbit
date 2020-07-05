@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_PDB_H_
+#define ORBIT_CORE_PDB_H_
 
 #include <atomic>
 #include <functional>
@@ -38,7 +39,6 @@ class Pdb {
 
   bool LoadDataFromPdb();
   bool LoadPdbDia();
-  void Update();
   void AddFunction(const std::shared_ptr<Function>& function);
   void CheckOrbitFunction(Function& a_Function);
   void AddType(const Type& a_Type);
@@ -83,22 +83,8 @@ class Pdb {
 
   std::string GetCachedName();
   std::string GetCachedKey();
-  bool Load(const std::string& a_CachedPdb);
-  void Save();
 
   bool IsLoading() const { return m_IsLoading; }
-
-  template <class Archive>
-  void serialize(Archive& ar, std::uint32_t const version) {
-    /*ar( CEREAL_NVP(m_Name)
-      , CEREAL_NVP(m_FileName)
-      , CEREAL_NVP(m_FileNameW)
-      , CEREAL_NVP(m_Functions)
-      , CEREAL_NVP(m_Types)
-      , CEREAL_NVP(m_Globals)
-      , CEREAL_NVP(m_ModuleInfo)
-      , CEREAL_NVP(m_TypeMap) );*/
-  }
 
   void ProcessData();
 
@@ -157,7 +143,6 @@ class Pdb {
     return true;
   }  // This shouldn't do anything on Linux.
   bool LoadPdbDia() { return false; }
-  void Update() {}
   void CheckOrbitFunction(Function&) {}
   void AddType(const Type&) {}
   void AddGlobal(const Variable&) {}
@@ -202,13 +187,9 @@ class Pdb {
 
   std::string GetCachedName();
   std::string GetCachedKey();
-  bool Load(const std::string& a_CachedPdb);
-  void Save();
 
   bool IsLoading() const { return m_IsLoading; }
 
-  template <class Archive>
-  void serialize(Archive&, uint32_t /*version*/) {}
   void ProcessData();
 
  protected:
@@ -242,3 +223,5 @@ class Pdb {
 #endif
 
 extern std::shared_ptr<Pdb> GPdbDbg;
+
+#endif // ORBIT_CORE_PDB_H_

@@ -14,7 +14,6 @@
 #include "Pdb.h"
 #include "PrintVar.h"
 #include "SamplingProfiler.h"
-#include "Serialization.h"
 #include "TcpServer.h"
 
 void Type::AddParent(Type* a_Parent) { UNUSED(a_Parent); }

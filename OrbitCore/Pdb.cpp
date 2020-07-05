@@ -18,7 +18,6 @@
 #include "OrbitType.h"
 #include "OrbitUnreal.h"
 #include "Params.h"
-#include "Serialization.h"
 #include "SymbolUtils.h"
 #include "Tcp.h"
 #include "TcpServer.h"
@@ -176,37 +175,6 @@ std::string Pdb::GetCachedKey() {
   std::string cachedName = GetCachedName();
   std::string cachedKey = cachedName.substr(0, cachedName.find_first_of('_'));
   return cachedKey;
-}
-
-//-----------------------------------------------------------------------------
-bool Pdb::Load(const std::string& a_CachedPdb) {
-  /*ifstream is( a_CachedPdb, std::ios::binary );
-  if( !is.fail() )
-  {
-      cereal::BinaryInputArchive Ar( is );
-      Ar(*this);
-      m_LoadedFromCache = true;
-      return true;
-  }*/
-
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-void Pdb::Update() {
-  if (m_FinishedLoading) {
-    m_LoadingCompleteCallback();
-    m_FinishedLoading = false;
-    Print();
-
-    if (!m_LoadedFromCache && false) {
-      Save();
-    }
-  }
-
-  if (m_IsLoading) {
-    SendStatusToUi();
-  }
 }
 
 //-----------------------------------------------------------------------------
@@ -494,16 +462,4 @@ void Pdb::ProcessData() {
   PopulateFunctionMap();
   PopulateStringFunctionMap();
   // TODO: parallelize: PopulateStringFunctionMap();
-}
-
-//-----------------------------------------------------------------------------
-void Pdb::Save() {
-  std::string fullName =
-      Path::JoinPath({Path::GetCachePath(), GetCachedName()});
-
-  SCOPE_TIMER_LOG(absl::StrFormat("Saving %s", fullName.c_str()));
-
-  // ofstream os( fullName, std::ios::binary );
-  // cereal::BinaryOutputArchive Ar(os);
-  // Ar( *this );
 }

@@ -4,8 +4,6 @@
 
 #include "ContextSwitch.h"
 
-#include "Serialization.h"
-
 // Context switches are sent as raw bytes, make sure it's the same size
 // on every platform.
 static_assert(sizeof(ContextSwitch) == 20);
@@ -21,16 +19,3 @@ ContextSwitch::ContextSwitch(SwitchType a_Type)
 
 //-----------------------------------------------------------------------------
 ContextSwitch::~ContextSwitch() = default;
-
-ORBIT_SERIALIZE(ContextSwitch, 0) {
-  ORBIT_NVP_VAL(0, m_ProcessId);
-  ORBIT_NVP_VAL(0, m_ThreadId);
-  ORBIT_NVP_VAL(0, m_Type);
-  ORBIT_NVP_VAL(0, m_Time);
-  ORBIT_NVP_VAL(0, m_ProcessorIndex);
-  ORBIT_NVP_VAL(0, m_ProcessorNumber);
-
-  if constexpr (OrbitCore::is_input_archive_v<Archive>) {
-    CHECK(m_Type >= SwitchType::In && m_Type <= SwitchType::Invalid);
-  }
-}

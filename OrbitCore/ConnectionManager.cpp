@@ -13,7 +13,6 @@
 #include "KeyAndString.h"
 #include "OrbitBase/Logging.h"
 #include "SamplingProfiler.h"
-#include "Serialization.h"
 #include "TcpClient.h"
 #include "TidAndThreadName.h"
 #include "TimerManager.h"

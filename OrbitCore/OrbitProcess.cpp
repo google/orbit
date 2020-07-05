@@ -18,7 +18,6 @@
 #include "Path.h"
 #include "Pdb.h"
 #include "ScopeTimer.h"
-#include "Serialization.h"
 #include "Utils.h"
 
 #ifdef _WIN32

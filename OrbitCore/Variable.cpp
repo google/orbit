@@ -10,7 +10,6 @@
 #include "Log.h"
 #include "Pdb.h"
 #include "ScopeTimer.h"
-#include "Serialization.h"
 #include "TcpServer.h"
 
 Variable::Variable() { m_SyncTimer = new Timer(); }
@@ -260,16 +259,4 @@ void Variable::SetDouble(double a_Value) {
     default:
       break;
   }
-}
-
-ORBIT_SERIALIZE_WSTRING(Variable, 0) {
-  ORBIT_NVP_VAL(0, m_Name);
-  ORBIT_NVP_VAL(0, m_Type);
-  ORBIT_NVP_VAL(0, m_Function);
-  ORBIT_NVP_VAL(0, m_File);
-  ORBIT_NVP_VAL(0, m_Line);
-  ORBIT_NVP_VAL(0, m_Address);
-  ORBIT_NVP_VAL(0, m_Size);
-  ORBIT_NVP_VAL(0, m_TypeIndex);
-  ORBIT_NVP_VAL(0, m_Children);
 }

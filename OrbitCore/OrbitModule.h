@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_ORBIT_MODULE_H_
+#define ORBIT_CORE_ORBIT_MODULE_H_
 
 #include <memory.h>
 
@@ -10,7 +11,6 @@
 
 #include "BaseTypes.h"
 #include "OrbitFunction.h"
-#include "SerializationMacros.h"
 #include "symbol.pb.h"
 
 class Pdb;
@@ -57,3 +57,5 @@ struct Module {
 
   friend class TestRemoteMessages;
 };
+
+#endif // ORBIT_CORE_ORBIT_MODULE_H_

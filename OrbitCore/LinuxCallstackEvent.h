@@ -5,14 +5,15 @@
 //-----------------------------------
 // Author: Florian Kuebler
 //-----------------------------------
-#pragma once
+
+#ifndef ORBIT_CORE_LINUX_CALLSTACK_EVENT_H_
+#define ORBIT_CORE_LINUX_CALLSTACK_EVENT_H_
 
 #include <string>
 #include <utility>
 
 #include "Callstack.h"
 #include "Serialization.h"
-#include "SerializationMacros.h"
 
 struct LinuxCallstackEvent {
   LinuxCallstackEvent() = default;
@@ -29,3 +30,5 @@ ORBIT_SERIALIZE(LinuxCallstackEvent, 1) {
   ORBIT_NVP_VAL(1, time_);
   ORBIT_NVP_VAL(1, callstack_);
 }
+
+#endif // ORBIT_CORE_LINUX_CALLSTACK_EVENT_H_
