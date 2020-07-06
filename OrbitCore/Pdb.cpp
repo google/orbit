@@ -53,9 +53,6 @@ Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
 }
 
 //-----------------------------------------------------------------------------
-Pdb::~Pdb() {}
-
-//-----------------------------------------------------------------------------
 void Pdb::AddFunction(const std::shared_ptr<Function>& function) {
   functions_.push_back(function);
   functions_.back()->SetModulePathAndAddress(GetLoadedModuleName(),
@@ -291,32 +288,6 @@ bool GetFileParams(const TCHAR* pFileName, uint64_t& BaseAddr,
 }
 
 //-----------------------------------------------------------------------------
-bool Pdb::LoadPdb(const char* a_PdbName) {
-  SCOPE_TIMER_LOG("LOAD PDB");
-
-  m_IsLoading = true;
-  m_LoadTimer->Start();
-
-  std::string msg = "pdb:" + std::string(a_PdbName);
-  GTcpServer->SendToUiAsync(msg);
-  std::string nameStr = a_PdbName;
-  std::string extension = ToLower(Path::GetExtension(nameStr));
-
-  if (extension == ".dll") {
-    SCOPE_TIMER_LOG("LoadDll Exports");
-    ParseDll(nameStr.c_str());
-  } else {
-    LoadPdbDia();
-  }
-
-  ProcessData();
-
-  m_FinishedLoading = true;
-  m_IsLoading = false;
-  return true;
-}
-
-//-----------------------------------------------------------------------------
 bool Pdb::LoadDataFromPdb() {
   // TODO(b/158093728): Dia Loading was disabled, reimplement using LLVM.
   return false;
@@ -326,18 +297,6 @@ bool Pdb::LoadDataFromPdb() {
 bool Pdb::LoadPdbDia() {
   // TODO(b/158093728): Dia Loading was disabled, reimplement using LLVM.
   return false;
-}
-
-//-----------------------------------------------------------------------------
-void Pdb::LoadPdbAsync(const char* a_PdbName,
-                       std::function<void()> a_CompletionCallback) {
-  m_FileName = a_PdbName;
-  m_Name = Path::GetFileName(m_FileName);
-
-  m_LoadingCompleteCallback = a_CompletionCallback;
-  m_LoadingThread =
-      std::make_unique<std::thread>(&Pdb::LoadPdb, this, m_FileName.c_str());
-  m_LoadingThread->detach();
 }
 
 //-----------------------------------------------------------------------------

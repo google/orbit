@@ -29,13 +29,8 @@ class Pdb {
       std::string module_file_name);
   Pdb(const Pdb&) = delete;
   Pdb& operator=(const Pdb&) = delete;
-  virtual ~Pdb();
 
   void Init();
-
-  virtual bool LoadPdb(const char* a_PdbName);
-  virtual void LoadPdbAsync(const char* a_PdbName,
-                            std::function<void()> a_CompletionCallback);
 
   bool LoadDataFromPdb();
   bool LoadPdbDia();
@@ -129,15 +124,8 @@ class Pdb {
       std::string module_file_name);
   Pdb(const Pdb&) = delete;
   Pdb& operator=(const Pdb&) = delete;
-  virtual ~Pdb() = default;
 
   void Init() {}
-
-  bool LoadPdb(const char* /*file_name*/) {
-    return false;  // Should not do anything on linux
-  }
-  virtual void LoadPdbAsync(const char* pdb_name,
-                            std::function<void()> completion_callback);
 
   bool LoadDataFromPdb() {
     return true;

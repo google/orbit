@@ -146,7 +146,7 @@ target_link_libraries(
          Outcome::Outcome)
 
 if(WIN32)
-  target_link_libraries(OrbitCore PRIVATE dbghelp.lib peparse::peparse)
+  target_link_libraries(OrbitCore PRIVATE dbghelp.lib)
   target_compile_definitions(OrbitCore PUBLIC -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitCore PUBLIC -DNTDDI_VERSION=0x06030000)
 else()
