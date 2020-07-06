@@ -197,8 +197,6 @@ bool OrbitApp::Init(ApplicationOptions&& options) {
   oqpi_tk::start_default_scheduler();
 #endif
 
-  GPluginManager.Initialize();
-
   GFontSize = GParams.font_size;
   GOrbitApp->LoadFileMapping();
 
