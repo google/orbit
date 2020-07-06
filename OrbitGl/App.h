@@ -26,7 +26,6 @@
 #include "FunctionsDataView.h"
 #include "GlobalsDataView.h"
 #include "LiveFunctionsDataView.h"
-#include "LogDataView.h"
 #include "Message.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/MainThreadExecutor.h"
@@ -285,7 +284,6 @@ class OrbitApp final : public CoreApp,
   std::unique_ptr<TypesDataView> m_TypesDataView;
   std::unique_ptr<GlobalsDataView> m_GlobalsDataView;
   std::unique_ptr<PresetsDataView> m_PresetsDataView;
-  std::unique_ptr<LogDataView> m_LogDataView;
 
   CaptureWindow* m_CaptureWindow = nullptr;
 

@@ -11,7 +11,6 @@
 #include "FunctionsDataView.h"
 #include "GlobalsDataView.h"
 #include "LiveFunctionsDataView.h"
-#include "LogDataView.h"
 #include "ModulesDataView.h"
 #include "OrbitType.h"
 #include "ProcessesDataView.h"

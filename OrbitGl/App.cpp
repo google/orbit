@@ -34,7 +34,6 @@
 #include "LinuxCallstackEvent.h"
 #include "LiveFunctionsDataView.h"
 #include "Log.h"
-#include "LogDataView.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
@@ -1007,13 +1006,6 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
         m_Panels.push_back(m_PresetsDataView.get());
       }
       return m_PresetsDataView.get();
-
-    case DataViewType::LOG:
-      if (!m_LogDataView) {
-        m_LogDataView = std::make_unique<LogDataView>();
-        m_Panels.push_back(m_LogDataView.get());
-      }
-      return m_LogDataView.get();
 
     case DataViewType::SAMPLING:
       FATAL(
