@@ -43,6 +43,7 @@ std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
   return points;
 }
 
+//-----------------------------------------------------------------------------
 std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points,
                                float rotation) {
   float cos_r = cosf(kPiFloat * rotation / 180.f);
@@ -65,10 +66,7 @@ void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
   }
 
   std::vector<Vec2> rotated_points = RotatePoints(points, rotation);
-
   Vec3 position(pos[0], pos[1], z);
-  std::vector<Triangle> triangles;
-
   Vec3 pivot = position + Vec3(rotated_points[0][0], rotated_points[0][1], z);
 
   Vec3 vertices[2];
