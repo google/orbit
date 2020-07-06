@@ -344,21 +344,6 @@ void OrbitApp::PostInit() {
 
   string_manager_ = std::make_shared<StringManager>();
   GCurrentTimeGraph->SetStringManager(string_manager_);
-
-  for (std::string& arg : m_PostInitArguments) {
-    if (absl::StrContains(arg, "systrace:")) {
-      std::string command = Replace(arg, "systrace:", "");
-      std::vector<std::string> tokens = absl::StrSplit(command, ",");
-      if (!tokens.empty()) {
-        GoToCapture();
-        LoadSystrace(tokens[0]);
-      }
-      for (size_t i = 1; i + 1 < tokens.size(); i += 2) {
-        AppendSystrace(tokens[i], std::stoull(tokens[i + 1]));
-      }
-      SystraceManager::Get().Dump();
-    }
-  }
 }
 
 //-----------------------------------------------------------------------------
@@ -568,9 +553,6 @@ void OrbitApp::AddSelectionReport(
 
   selection_report_ = report;
 }
-
-//-----------------------------------------------------------------------------
-void OrbitApp::GoToCapture() { SendToUi("gotocapture"); }
 
 //-----------------------------------------------------------------------------
 std::string OrbitApp::GetCaptureFileName() {

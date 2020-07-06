@@ -447,8 +447,6 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
     SetTitle({});
   } else if (absl::StartsWith(a_Message, "gotolive")) {
     ui->RightTabWidget->setCurrentWidget(ui->LiveTab);
-  } else if (absl::StartsWith(a_Message, "gotocapture")) {
-    ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
   } else if (absl::StartsWith(a_Message, "opencapture")) {
     on_actionOpen_Capture_triggered();
   } else if (absl::StartsWith(a_Message, "savecapture")) {
