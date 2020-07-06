@@ -742,6 +742,14 @@ void OrbitApp::RequestOpenCaptureToUi() {
   });
 }
 
+void OrbitApp::RequestSaveCaptureToUi() {
+  main_thread_executor_->Schedule([this] {
+    for (const SaveCaptureCallback& callback : save_capture_callbacks_) {
+      callback();
+    }
+  });
+}
+
 void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
   main_thread_executor_->Schedule([this, tooltip] {
     for (const TooltipCallback& callback : tooltip_callbacks_) {
