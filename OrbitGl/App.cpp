@@ -188,7 +188,6 @@ bool OrbitApp::Init(ApplicationOptions&& options) {
   GCoreApp = GOrbitApp.get();
 
   GTimerManager = std::make_unique<TimerManager>();
-  GTcpServer = std::make_unique<TcpServer>();
 
   Path::Init();
 
@@ -432,13 +431,9 @@ void OrbitApp::MainTick() {
   ORBIT_SCOPE_FUNC;
   TRACE_VAR(GMainTimer.QueryMillis());
 
-  if (GTcpServer) GTcpServer->ProcessMainThreadCallbacks();
-  if (GTcpClient) GTcpClient->ProcessMainThreadCallbacks();
-
   GOrbitApp->main_thread_executor_->ConsumeActions();
 
   GMainTimer.Reset();
-  GTcpServer->MainThreadTick();
 
   ++GOrbitApp->m_NumTicks;
 
