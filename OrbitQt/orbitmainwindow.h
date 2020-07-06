@@ -41,7 +41,6 @@ class OrbitMainWindow : public QMainWindow {
   void OnNewSelectionReport(
       DataView* callstack_data_view,
       std::shared_ptr<class SamplingReport> sampling_report);
-  void OnReceiveMessage(const std::string& message);
   void OnAddToWatch(const class Variable* a_Variable);
   std::string OnGetSaveFileName(const std::string& extension);
   void OnSetClipboard(const std::string& text);
