@@ -116,9 +116,14 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
              std::shared_ptr<SamplingReport> report) {
         this->OnNewSelectionReport(callstack_data_view, std::move(report));
       });
+
   GOrbitApp->AddUiMessageCallback([this](const std::string& a_Message) {
     this->OnReceiveMessage(a_Message);
   });
+  GOrbitApp->AddTooltipCallback([this](const std::string& tooltip) {
+    QToolTip::showText(QCursor::pos(), QString::fromStdString(tooltip), this);
+  });
+
   GOrbitApp->SetFindFileCallback([this](const std::string& caption,
                                         const std::string& dir,
                                         const std::string& filter) {
@@ -441,10 +446,7 @@ void OrbitMainWindow::OnNewSelectionReport(
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
-  if (absl::StartsWith(a_Message, "tooltip:")) {
-    QToolTip::showText(QCursor::pos(),
-                       Replace(a_Message, "tooltip:", "").c_str(), this);
-  } else if (absl::StartsWith(a_Message, "gotolive")) {
+  if (absl::StartsWith(a_Message, "gotolive")) {
     ui->RightTabWidget->setCurrentWidget(ui->LiveTab);
   } else if (absl::StartsWith(a_Message, "opencapture")) {
     on_actionOpen_Capture_triggered();
