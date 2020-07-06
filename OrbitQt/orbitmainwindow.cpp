@@ -440,16 +440,7 @@ void OrbitMainWindow::OnNewSelectionReport(
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
-  if (absl::StartsWith(a_Message, "code")) {
-    ui->FileMappingWidget->hide();
-
-    bool success = ui->CodeTextEdit->loadCode(a_Message);
-
-    if (!success) {
-      ui->FileMappingTextEdit->loadFileMap();
-      ui->FileMappingWidget->show();
-    }
-  } else if (absl::StartsWith(a_Message, "tooltip:")) {
+  if (absl::StartsWith(a_Message, "tooltip:")) {
     QToolTip::showText(QCursor::pos(),
                        Replace(a_Message, "tooltip:", "").c_str(), this);
   } else if (absl::StartsWith(a_Message, "output")) {
