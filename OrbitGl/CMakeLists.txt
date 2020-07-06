@@ -40,7 +40,6 @@ target_sources(
          Images.h
          ImGuiOrbit.h
          LiveFunctionsDataView.h
-         LogDataView.h
          ModulesDataView.h
          OpenGl.h
          PickingManager.h
@@ -88,7 +87,6 @@ target_sources(
           HomeWindow.cpp
           ImGuiOrbit.cpp
           LiveFunctionsDataView.cpp
-          LogDataView.cpp
           ModulesDataView.cpp
           PickingManager.cpp
           PluginCanvas.cpp

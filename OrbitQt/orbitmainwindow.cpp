@@ -180,9 +180,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->SessionList->Initialize(
       data_view_factory->GetOrCreateDataView(DataViewType::PRESETS),
       SelectionType::kDefault, FontType::kDefault);
-  ui->OutputView->Initialize(
-      data_view_factory->GetOrCreateDataView(DataViewType::LOG),
-      SelectionType::kDefault, FontType::kFixed);
 
   SetupCodeView();
 
@@ -200,7 +197,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->RightTabWidget->removeTab(
         ui->RightTabWidget->indexOf(ui->CallStackTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
-    ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->outputTab));
 
     ui->actionDisconnect->setVisible(false);
 
@@ -370,9 +366,6 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
       break;
     case DataViewType::MODULES:
       ui->ModulesList->Refresh();
-      break;
-    case DataViewType::LOG:
-      ui->OutputView->Refresh();
       break;
     case DataViewType::PROCESSES:
       ui->ProcessesList->Refresh();

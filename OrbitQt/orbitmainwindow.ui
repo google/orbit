@@ -227,16 +227,6 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="outputTab">
-        <attribute name="title">
-         <string>debug</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_4">
-         <item row="0" column="0">
-          <widget class="OrbitDataViewPanel" name="OutputView"/>
-         </item>
-        </layout>
-       </widget>
       </widget>
      </widget>
     </item>

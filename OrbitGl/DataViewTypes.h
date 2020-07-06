@@ -15,7 +15,6 @@ enum class DataViewType {
   MODULES,
   SAMPLING,
   PRESETS,
-  LOG,
   ALL,
   INVALID
 };
