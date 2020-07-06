@@ -404,7 +404,7 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
     disasm.Disassemble(reinterpret_cast<const uint8_t*>(memory.data()),
                        memory.size(), function.GetVirtualAddress(),
                        Capture::GTargetProcess->GetIs64Bit());
-    SendToUi(disasm.GetResult());
+    SendDisassemblyToUi(disasm.GetResult());
   });
 }
 
@@ -751,6 +751,14 @@ void OrbitApp::RequestSaveCaptureToUi() {
   main_thread_executor_->Schedule([this] {
     for (const SaveCaptureCallback& callback : save_capture_callbacks_) {
       callback();
+    }
+  });
+}
+
+void OrbitApp::SendDisassemblyToUi(const std::string& disassembly) {
+  main_thread_executor_->Schedule([this, disassembly] {
+    for (const DisassemblyCallback& callback : disassembly_callbacks_) {
+      callback(disassembly);
     }
   });
 }

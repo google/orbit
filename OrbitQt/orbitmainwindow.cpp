@@ -126,6 +126,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       [this] { on_actionSave_Capture_triggered(); });
   GOrbitApp->AddSelectLiveTabCallback(
       [this] { ui->RightTabWidget->setCurrentWidget(ui->LiveTab); });
+  GOrbitApp->AddDisassemblyCallback(
+      [this](const std::string& disassembly) { OpenDisassembly(disassembly); });
   GOrbitApp->AddTooltipCallback([this](const std::string& tooltip) {
     QToolTip::showText(QCursor::pos(), QString::fromStdString(tooltip), this);
   });
@@ -452,9 +454,7 @@ void OrbitMainWindow::OnNewSelectionReport(
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
-  if (absl::StartsWith(a_Message, "asm:")) {
-    OpenDisassembly(a_Message);
-  } else if (absl::StartsWith(a_Message, "error:")) {
+  if (absl::StartsWith(a_Message, "error:")) {
     std::string title_text = Replace(a_Message, "error:", "");
     std::string title = title_text.substr(0, title_text.find('\n'));
     std::string text = title_text.find('\n') != std::string::npos
