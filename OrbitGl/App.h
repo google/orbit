@@ -132,6 +132,11 @@ class OrbitApp final : public CoreApp,
     capture_stopped_callbacks_.emplace_back(std::move(callback));
   }
 
+  using TooltipCallback = std::function<void(const std::string&)>;
+  void AddTooltipCallback(TooltipCallback callback) {
+    tooltip_callbacks_.emplace_back(std::move(callback));
+  }
+
   typedef std::function<void(DataViewType a_Type)> RefreshCallback;
   void AddRefreshCallback(RefreshCallback a_Callback) {
     m_RefreshCallbacks.emplace_back(std::move(a_Callback));
@@ -178,6 +183,7 @@ class OrbitApp final : public CoreApp,
   void SetCommandLineArguments(const std::vector<std::string>& a_Args);
 
   void SendToUi(const std::string& message) override;
+  void SendTooltipToUi(const std::string& tooltip);
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
@@ -221,6 +227,7 @@ class OrbitApp final : public CoreApp,
   std::vector<CaptureStartedCallback> capture_started_callbacks_;
   std::vector<CaptureStopRequestedCallback> capture_stop_requested_callbacks_;
   std::vector<CaptureStoppedCallback> capture_stopped_callbacks_;
+  std::vector<TooltipCallback> tooltip_callbacks_;
   std::vector<RefreshCallback> m_RefreshCallbacks;
   std::vector<WatchCallback> m_AddToWatchCallbacks;
   std::vector<WatchCallback> m_UpdateWatchCallbacks;

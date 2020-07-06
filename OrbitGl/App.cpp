@@ -717,9 +717,7 @@ bool OrbitApp::SelectProcess(int32_t a_ProcessID) {
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::Inject(unsigned long /*a_ProcessId*/) {
-  return false;
-}
+bool OrbitApp::Inject(unsigned long /*a_ProcessId*/) { return false; }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
@@ -729,9 +727,17 @@ void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::SendToUi(const std::string& message) {
-  main_thread_executor_->Schedule([&, message] {
+  main_thread_executor_->Schedule([this, message] {
     if (m_UiCallback) {
       m_UiCallback(message);
+    }
+  });
+}
+
+void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
+  main_thread_executor_->Schedule([this, tooltip] {
+    for (const TooltipCallback& callback : tooltip_callbacks_) {
+      callback(tooltip);
     }
   });
 }
