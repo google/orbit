@@ -277,31 +277,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureWindow::FindCode(DWORD64 address) {
-#ifdef _WIN32
-  SCOPE_TIMER_LOG("FindCode");
-
-  LineInfo lineInfo;
-
-  if (SymUtils::GetLineInfo(address, lineInfo)) {
-    --lineInfo.m_Line;
-
-    // File mapping
-    const std::map<std::string, std::string>& fileMap =
-        GOrbitApp->GetFileMapping();
-    for (const auto& pair : fileMap) {
-      ReplaceStringInPlace(lineInfo.m_File, pair.first, pair.second);
-    }
-
-    if (lineInfo.m_Address != 0) {
-      GOrbitApp->SendToUi(
-          absl::StrFormat("code^%s^%i", lineInfo.m_File, lineInfo.m_Line));
-    }
-  }
-#else
-  UNUSED(address);
-#endif
-}
+void CaptureWindow::FindCode(DWORD64 /*address*/) {}
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::PreRender() {
