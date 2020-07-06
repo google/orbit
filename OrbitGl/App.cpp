@@ -771,6 +771,14 @@ void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
   });
 }
 
+void OrbitApp::RequestFeedbackDialogToUi() {
+  main_thread_executor_->Schedule([this] {
+    for (const FeedbackDialogCallback& callback : feedback_dialog_callbacks_) {
+      callback();
+    }
+  });
+}
+
 //-----------------------------------------------------------------------------
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
   std::string message = "info:" + title + "\n" + text;

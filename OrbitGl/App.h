@@ -152,6 +152,10 @@ class OrbitApp final : public CoreApp,
   void AddTooltipCallback(TooltipCallback callback) {
     tooltip_callbacks_.emplace_back(std::move(callback));
   }
+  using FeedbackDialogCallback = std::function<void()>;
+  void AddFeedbackDialogCallback(FeedbackDialogCallback callback) {
+    feedback_dialog_callbacks_.emplace_back(std::move(callback));
+  }
 
   typedef std::function<void(DataViewType a_Type)> RefreshCallback;
   void AddRefreshCallback(RefreshCallback a_Callback) {
@@ -203,6 +207,7 @@ class OrbitApp final : public CoreApp,
   void RequestSaveCaptureToUi();
   void SendDisassemblyToUi(const std::string& disassembly);
   void SendTooltipToUi(const std::string& tooltip);
+  void RequestFeedbackDialogToUi();
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
@@ -251,6 +256,7 @@ class OrbitApp final : public CoreApp,
   std::vector<SelectLiveTabCallback> select_live_tab_callbacks_;
   std::vector<DisassemblyCallback> disassembly_callbacks_;
   std::vector<TooltipCallback> tooltip_callbacks_;
+  std::vector<FeedbackDialogCallback> feedback_dialog_callbacks_;
   std::vector<RefreshCallback> m_RefreshCallbacks;
   std::vector<WatchCallback> m_AddToWatchCallbacks;
   std::vector<WatchCallback> m_UpdateWatchCallbacks;

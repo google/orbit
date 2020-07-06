@@ -131,6 +131,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->AddTooltipCallback([this](const std::string& tooltip) {
     QToolTip::showText(QCursor::pos(), QString::fromStdString(tooltip), this);
   });
+  GOrbitApp->AddFeedbackDialogCallback([this] { ShowFeedbackDialog(); });
 
   GOrbitApp->SetFindFileCallback([this](const std::string& caption,
                                         const std::string& dir,
@@ -468,8 +469,6 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
                            ? title_text.substr(title_text.find('\n'))
                            : title;
     QMessageBox::information(this, title.c_str(), text.c_str());
-  } else if (absl::StartsWith(a_Message, "feedback")) {
-    ShowFeedbackDialog();
   }
 }
 
