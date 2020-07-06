@@ -96,7 +96,7 @@ class UprobesReturnAddressManager {
 
     size_t num_unique_uprobes = 0;
     uint64_t prev_uprobe_stack_pointer = -1;
-    for (auto const& uprobe : tid_uprobes_stack) {
+    for (const auto& uprobe : tid_uprobes_stack) {
       if (uprobe.stack_pointer != prev_uprobe_stack_pointer) {
         num_unique_uprobes++;
       }
@@ -120,6 +120,7 @@ class UprobesReturnAddressManager {
       return false;
     }
 
+    // Process frames from outermost to the innermost.
     auto frames_to_patch_it = frames_to_patch.rbegin();
     size_t uprobes_size = tid_uprobes_stack.size();
 
@@ -132,18 +133,27 @@ class UprobesReturnAddressManager {
     // We do not need to patch the effect of this uprobe and can move forward.
     bool skip_last_uprobes = num_unique_uprobes == frames_to_patch.size() + 1;
 
+    // On tail-call optimization, when instrumenting the caller and the callee,
+    // the correct call-stack will only contain the callee.
+    // However, there are two uprobe records (with the same stack pointer),
+    // where the first one contains the correct return address.
     prev_uprobe_stack_pointer = -1;
-    size_t unique_uprobes = 0;
+    size_t unique_uprobes_so_far = 0;
     for (size_t uprobe_i = 0; uprobe_i < uprobes_size; uprobe_i++) {
-      if (skip_last_uprobes && unique_uprobes + 1 == num_unique_uprobes) {
+      // If the innermost frame does not need to be patched (see above), we are
+      // done and can skip that last uprobes.
+      if (skip_last_uprobes &&
+          unique_uprobes_so_far + 1 == num_unique_uprobes) {
         break;
       }
       const OpenUprobes& uprobe = tid_uprobes_stack[uprobe_i];
+      // In tail-call case, we already have process the uprobe with the correct
+      // return address and are done with that frame.
       if (uprobe.stack_pointer == prev_uprobe_stack_pointer) {
         continue;
       }
       prev_uprobe_stack_pointer = uprobe.stack_pointer;
-      unique_uprobes++;
+      unique_uprobes_so_far++;
 
       uint64_t frame_to_patch = *frames_to_patch_it;
       callchain[frame_to_patch] = uprobe.return_address;
