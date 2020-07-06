@@ -136,7 +136,7 @@ class UprobesReturnAddressManager {
     // On tail-call optimization, when instrumenting the caller and the callee,
     // the correct call-stack will only contain the callee.
     // However, there are two uprobe records (with the same stack pointer),
-    // where the first one contains the correct return address.
+    // where the first one (the caller's) contains the correct return address.
     prev_uprobe_stack_pointer = -1;
     size_t unique_uprobes_so_far = 0;
     for (size_t uprobe_i = 0; uprobe_i < uprobes_size; uprobe_i++) {
