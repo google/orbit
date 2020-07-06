@@ -648,6 +648,11 @@ bool OrbitApp::StartCapture() {
   for (const CaptureStartedCallback& callback : capture_started_callbacks_) {
     callback();
   }
+  if (!Capture::GSelectedFunctionsMap.empty()) {
+    for (const SelectLiveTabCallback& callback : select_live_tab_callbacks_) {
+      callback();
+    }
+  }
   return true;
 }
 
