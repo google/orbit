@@ -39,14 +39,10 @@ class OrbitWatchWidget : public QWidget {
   void UpdateProperty(const Variable* a_Variable);
 
  private slots:
-  void on_FindLineEdit_textChanged(const QString& arg1);
-
   void valueChanged(QtProperty* property, int val);
   void valueChanged(QtProperty* property, bool val);
   void valueChanged(QtProperty* property, double val);
   void valueChanged(QtProperty* property, const QString& val);
-
-  void on_RefreshButton_clicked();
 
   void on_ClearButton_clicked();
 

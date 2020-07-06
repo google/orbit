@@ -272,12 +272,6 @@ bool OrbitApp::Init(ApplicationOptions&& options) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::PostInit() {
-  if (!options_.asio_server_address.empty()) {
-    GTcpClient = std::make_unique<TcpClient>();
-    ConnectionManager::Get().ConnectToRemote(options_.asio_server_address);
-    SetIsRemote(true);
-  }
-
   if (!options_.grpc_server_address.empty()) {
     grpc::ChannelArguments channel_arguments;
     // TODO (159888769) move symbol loading to grpc stream.
@@ -471,13 +465,6 @@ void OrbitApp::ClearWatchedVariables() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::RefreshWatch() {
-  if (Capture::Connect(options_.asio_server_address)) {
-    Capture::GTargetProcess->RefreshWatchedVariables();
-  }
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::Disassemble(int32_t pid, const Function& function) {
   thread_pool_->Schedule([this, pid, function] {
     auto result = process_manager_->LoadProcessMemory(
@@ -503,13 +490,6 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
 void OrbitApp::OnExit() {
   if (GTimerManager && GTimerManager->m_IsRecording) {
     StopCapture();
-  }
-
-  ConnectionManager::Get().Stop();
-  GTcpClient->Stop();
-
-  if (HasTcpServer()) {
-    GTcpServer->Stop();
   }
 
   process_manager_->Shutdown();
@@ -538,14 +518,6 @@ void OrbitApp::MainTick() {
 
   GMainTimer.Reset();
   GTcpServer->MainThreadTick();
-
-  if (!Capture::GProcessToInject.empty()) {
-    LOG("Injecting into %s", Capture::GTargetProcess->GetFullPath());
-    LOG("Orbit host: %s", GOrbitApp->options_.asio_server_address);
-    GOrbitApp->SelectProcess(Capture::GProcessToInject);
-    Capture::InjectRemote(GOrbitApp->options_.asio_server_address);
-    exit(0);
-  }
 
   ++GOrbitApp->m_NumTicks;
 
@@ -835,11 +807,7 @@ bool OrbitApp::SelectProcess(int32_t a_ProcessID) {
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::Inject(unsigned long a_ProcessId) {
-  if (SelectProcess(a_ProcessId)) {
-    return Capture::Inject(options_.asio_server_address);
-  }
-
+bool OrbitApp::Inject(unsigned long /*a_ProcessId*/) {
   return false;
 }
 

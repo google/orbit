@@ -44,15 +44,13 @@ ABSL_FLAG(bool, enable_stale_features, false,
 
 ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
 
-ABSL_FLAG(uint16_t, asio_port, 44766,
-          "The service's Asio tcp_server port (use default value if unsure)");
 ABSL_FLAG(uint16_t, grpc_port, 44765,
           "The service's GRPC server port (use default value if unsure)");
 ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
 
-ABSL_FLAG(bool, use_software_opengl, false, "Uses software implementation of "
-	      "OpenGL. Requires Mesa's opengl32.dll to be placed in the same "
-	      "folder as Orbit.");
+ABSL_FLAG(bool, use_software_opengl, false,
+          "Uses software implementation of OpenGL. Requires Mesa's "
+          "opengl32.dll to be placed in the same folder as Orbit.");
 
 // TODO(b/160549506): Remove this flag once it can be specified in the ui.
 ABSL_FLAG(uint16_t, sampling_rate, 1000,
@@ -62,34 +60,19 @@ ABSL_FLAG(uint16_t, sampling_rate, 1000,
 ABSL_FLAG(bool, frame_pointer_unwinding, false,
           "Use frame pointers for unwinding");
 
-// TODO: remove this once we deprecated legacy parameters
-static void ParseLegacyCommandLine(int argc, char* argv[],
-                                   ApplicationOptions* options) {
-  for (size_t i = 0; i < static_cast<size_t>(argc); ++i) {
-    const char* arg = argv[i];
-    if (absl::StartsWith(arg, "gamelet:")) {
-      ERROR(
-          "the 'gamelet:<host>:<port>' option is deprecated and will be "
-          "removed soon, please use -remote <host> instead.");
-
-      options->asio_server_address = arg + std::strlen("gamelet:");
-    }
-  }
-}
-
 using ServiceDeployManager = OrbitQt::ServiceDeployManager;
 using DeploymentConfiguration = OrbitQt::DeploymentConfiguration;
 using OrbitStartupWindow = OrbitQt::OrbitStartupWindow;
 using Error = OrbitQt::Error;
 using ScopedConnection = OrbitSshQt::ScopedConnection;
-using Ports = ServiceDeployManager::Ports;
+using GrpcPort = ServiceDeployManager::GrpcPort;
 using SshCredentials = OrbitSsh::Credentials;
 using Context = OrbitSsh::Context;
 
-static outcome::result<Ports> DeployOrbitService(
+static outcome::result<GrpcPort> DeployOrbitService(
     std::optional<ServiceDeployManager>& service_deploy_manager,
     const DeploymentConfiguration& deployment_configuration, Context* context,
-    const SshCredentials& ssh_credentials, const Ports& remote_ports) {
+    const SshCredentials& ssh_credentials, const GrpcPort& remote_ports) {
   QProgressDialog progress_dialog{};
 
   service_deploy_manager.emplace(deployment_configuration, context,
@@ -110,12 +93,11 @@ static outcome::result<Ports> DeployOrbitService(
 static outcome::result<void> RunUiInstance(
     QApplication* app,
     std::optional<DeploymentConfiguration> deployment_configuration,
-    Context* context, ApplicationOptions options) {
+    Context* context) {
   std::optional<OrbitQt::ServiceDeployManager> service_deploy_manager;
 
-  OUTCOME_TRY(result, [&]() -> outcome::result<std::tuple<Ports, QString>> {
-    const Ports remote_ports{/*.asio_port =*/absl::GetFlag(FLAGS_asio_port),
-                             /*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
+  OUTCOME_TRY(result, [&]() -> outcome::result<std::tuple<GrpcPort, QString>> {
+    const GrpcPort remote_ports{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
 
     if (deployment_configuration) {
       OrbitStartupWindow sw{};
@@ -140,8 +122,7 @@ static outcome::result<void> RunUiInstance(
   }());
   const auto& [ports, capture_path] = result;
 
-  options.asio_server_address =
-      absl::StrFormat("127.0.0.1:%d", ports.asio_port);
+  ApplicationOptions options;
   options.grpc_server_address =
       absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
 
@@ -286,9 +267,6 @@ int main(int argc, char* argv[]) {
     CrashHandler crash_handler(dump_path, handler_path, crash_server_url,
                                attachments);
 
-    ApplicationOptions options;
-    ParseLegacyCommandLine(argc, argv, &options);
-
     StyleOrbit(app);
 
     const auto deployment_configuration = FigureOutDeploymentConfiguration();
@@ -327,8 +305,8 @@ int main(int argc, char* argv[]) {
     }
 
     while (true) {
-      const auto result = RunUiInstance(&app, deployment_configuration,
-                                        &(context.value()), options);
+      const auto result =
+          RunUiInstance(&app, deployment_configuration, &(context.value()));
       if (result ||
           result.error() == make_error_code(Error::kUserClosedStartUpWindow) ||
           !deployment_configuration) {

@@ -25,17 +25,16 @@ class ServiceDeployManager : public QObject {
   Q_OBJECT
 
  public:
-  struct Ports {
-    uint16_t asio_port;
+  struct GrpcPort {
     uint16_t grpc_port;
   };
 
   explicit ServiceDeployManager(
       DeploymentConfiguration deployment_configuration,
       OrbitSsh::Context* context, OrbitSsh::Credentials creds,
-      Ports remote_ports, QObject* parent = nullptr);
+      const GrpcPort& grpc_port, QObject* parent = nullptr);
 
-  outcome::result<Ports> Exec();
+  outcome::result<GrpcPort> Exec();
   void Shutdown();
   void Cancel();
 
@@ -49,10 +48,9 @@ class ServiceDeployManager : public QObject {
   DeploymentConfiguration deployment_configuration_;
   OrbitSsh::Context* context_ = nullptr;
   OrbitSsh::Credentials credentials_;
-  Ports remote_ports_;
+  GrpcPort grpc_port_;
   std::optional<OrbitSshQt::Session> session_;
   std::optional<OrbitSshQt::Task> orbit_service_task_;
-  std::optional<OrbitSshQt::Tunnel> asio_tunnel_;
   std::optional<OrbitSshQt::Tunnel> grpc_tunnel_;
   QTimer ssh_watchdog_timer_;
 
@@ -67,8 +65,8 @@ class ServiceDeployManager : public QObject {
       std::optional<OrbitSshQt::Tunnel>* tunnel, uint16_t port);
   outcome::result<void> StartSftpChannel(OrbitSshQt::SftpChannel*);
   outcome::result<void> CopyFileToRemote(
-      OrbitSshQt::SftpChannel*, std::string source, std::string dest,
-      OrbitSshQt::SftpOperation::FileMode dest_mode);
+      OrbitSshQt::SftpChannel*, const std::string& source,
+      const std::string& dest, OrbitSshQt::SftpOperation::FileMode dest_mode);
   outcome::result<void> StopSftpChannel(OrbitSshQt::SftpChannel*);
 
   void StartWatchdog();
