@@ -148,6 +148,16 @@ class OrbitApp final : public CoreApp,
   void AddDisassemblyCallback(DisassemblyCallback callback) {
     disassembly_callbacks_.emplace_back(std::move(callback));
   }
+  using ErrorMessageCallback =
+      std::function<void(const std::string&, const std::string&)>;
+  void AddErrorMessageCallback(ErrorMessageCallback callback) {
+    error_message_callbacks_.emplace_back(std::move(callback));
+  }
+  using InfoMessageCallback =
+      std::function<void(const std::string&, const std::string&)>;
+  void AddInfoMessageCallback(InfoMessageCallback callback) {
+    info_message_callbacks_.emplace_back(std::move(callback));
+  }
   using TooltipCallback = std::function<void(const std::string&)>;
   void AddTooltipCallback(TooltipCallback callback) {
     tooltip_callbacks_.emplace_back(std::move(callback));
@@ -255,6 +265,8 @@ class OrbitApp final : public CoreApp,
   std::vector<SaveCaptureCallback> save_capture_callbacks_;
   std::vector<SelectLiveTabCallback> select_live_tab_callbacks_;
   std::vector<DisassemblyCallback> disassembly_callbacks_;
+  std::vector<ErrorMessageCallback> error_message_callbacks_;
+  std::vector<InfoMessageCallback> info_message_callbacks_;
   std::vector<TooltipCallback> tooltip_callbacks_;
   std::vector<FeedbackDialogCallback> feedback_dialog_callbacks_;
   std::vector<RefreshCallback> m_RefreshCallbacks;
