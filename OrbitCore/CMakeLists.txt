@@ -55,7 +55,6 @@ target_sources(
          SerializationMacros.h
          StringManager.h
          SymbolHelper.h
-         Systrace.h
          Tcp.h
          TcpClient.h
          TcpEntity.h
@@ -101,7 +100,6 @@ target_sources(
           ScopeTimer.cpp
           StringManager.cpp
           SymbolHelper.cpp
-          Systrace.cpp
           Tcp.cpp
           Tcp.cpp
           TcpClient.cpp

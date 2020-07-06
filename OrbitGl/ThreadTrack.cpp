@@ -10,7 +10,6 @@
 #include "EventTrack.h"
 #include "GlCanvas.h"
 #include "OrbitUnreal.h"
-#include "Systrace.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "absl/flags/flag.h"
@@ -124,9 +123,6 @@ void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
                                              .value_or(""),
                                          time.c_str());
       text_box->SetText(text);
-    } else if (!SystraceManager::Get().IsEmpty()) {
-      text_box->SetText(
-          SystraceManager::Get().GetFunctionName(timer.m_FunctionAddress));
     } else {
       ERROR("Unexpected case in ThreadTrack::SetTimesliceText");
       PRINT_VAR(timer.m_Type);

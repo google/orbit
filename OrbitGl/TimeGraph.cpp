@@ -26,7 +26,6 @@
 #include "SamplingProfiler.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
-#include "Systrace.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "ThreadTrack.h"
