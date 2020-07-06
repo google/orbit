@@ -144,14 +144,6 @@ void Pdb::AddFunction(const std::shared_ptr<Function>& function) {
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::LoadPdbAsync(const char* a_PdbName,
-                       std::function<void()> a_CompletionCallback) {
-  m_LoadingCompleteCallback = a_CompletionCallback;
-  LoadPdb(a_PdbName);
-  a_CompletionCallback();
-}
-
-//-----------------------------------------------------------------------------
 void Pdb::ProcessData() {
   std::shared_ptr<Process> process = Capture::GTargetProcess;
   if (process == nullptr) return;

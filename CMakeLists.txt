@@ -126,10 +126,6 @@ find_package(GTest REQUIRED)
 find_package(GMock REQUIRED)
 find_package(Filesystem REQUIRED)
 
-if(WIN32)
-  find_package(peparse REQUIRED)
-endif()
-
 # Set preprocessor defines These are only necessary for windows, but we will
 # define them on all platforms, to keep the builds similar as possible.
 add_definitions(-DNOMINMAX)
@@ -179,7 +175,6 @@ endif()
 # Collecting third-party licenses
 file(COPY third_party/concurrentqueue/LICENSE.md DESTINATION ${CMAKE_BINARY_DIR}/licenses/concurrentqueue/)
 file(COPY third_party/multicore/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/multicore/)
-file(COPY third_party/peparse/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/peparse/)
 file(COPY third_party/xxHash-r42/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/xxhash/)
 file(COPY third_party/gte/LICENSE_1_0.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/gte/)
 file(COPY third_party/oqpi/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/oqpi/)
