@@ -163,12 +163,8 @@ outcome::result<void, std::string> Capture::StartCapture() {
   Capture::NewSamplingProfiler();
   Capture::GSamplingProfiler->StartCapture();
 
-  if (GCoreApp != nullptr) {
-    GCoreApp->SendToUi("startcapture");
-
-    if (!GSelectedFunctionsMap.empty()) {
-      GCoreApp->SendToUi("gotolive");
-    }
+  if (GCoreApp != nullptr && !GSelectedFunctionsMap.empty()) {
+    GCoreApp->SendToUi("gotolive");
   }
 
   GState = State::kStarted;
