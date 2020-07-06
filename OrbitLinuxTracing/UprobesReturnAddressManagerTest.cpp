@@ -621,6 +621,31 @@ TEST(UprobesReturnAddressManager, CallchainBeforeInjectionByUprobe) {
       1, callchain_sample.data(), callchain_sample.size(), maps.get()));
   EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
 }
+
+TEST(UprobesReturnAddressManager, CallchainOfTailcall) {
+  UprobesReturnAddressManager return_address_manager;
+
+  std::vector<uint64_t> expected_callchain{
+      0xFFFFFFFFFFFFFE00lu, 0x0000000000401140lu, 0x0000000000401185lu,
+      0x00000000004011E7lu, 0x00007FE90B8B9E0Blu, 0x5541D68949564100lu};
+
+  return_address_manager.ProcessUprobes(1, 0x00007FFE17645888lu,
+                                        0x00000000004011E7lu);
+  return_address_manager.ProcessUprobes(1, 0x00007FFE17645888lu,
+                                        0x00007FFFFFFFE000lu);
+  return_address_manager.ProcessUprobes(1, 0x00007FFE17645888lu,
+                                        0x00007FFFFFFFE000lu);
+  return_address_manager.ProcessUprobes(1, 0x00007FFE17645868lu,
+                                        0x0000000000401185lu);
+
+  std::vector<uint64_t> callchain_sample{
+      0xFFFFFFFFFFFFFE00lu, 0x0000000000401140lu, 0x00007FFFFFFFE000lu,
+      0x00007FFFFFFFE000lu, 0x00007FE90B8B9E0Blu, 0x5541D68949564100lu};
+
+  EXPECT_TRUE(return_address_manager.PatchCallchain(
+      1, callchain_sample.data(), callchain_sample.size(), maps.get()));
+  EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
+}
 }  // namespace
 
 }  // namespace LinuxTracing

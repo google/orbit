@@ -72,7 +72,20 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
     return;
   }
 
-  if (event->GetCallchainSize() == 0) {
+  // The top of a callchain is always inside the kernel code.
+  if (event->GetCallchainSize() <= 1) {
+    return;
+  }
+
+  uint64_t top_ip = event->GetCallchain()[1];
+  unwindstack::MapInfo* map_info = current_maps_->Find(top_ip);
+
+  // Some samples can actually fall inside u(ret)probes code. Discard them,
+  // because when they are unwound successfully the result is wrong.
+  if (map_info == nullptr || map_info->name == "[uprobes]") {
+    if (discarded_samples_in_uretprobes_counter_ != nullptr) {
+      ++(*discarded_samples_in_uretprobes_counter_);
+    }
     return;
   }
 

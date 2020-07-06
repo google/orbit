@@ -89,6 +89,7 @@ int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu) {
   pe.sample_type |= PERF_SAMPLE_CALLCHAIN;
   // TODO(kuebler): Read this from /proc/sys/kernel/perf_event_max_stack
   pe.sample_max_stack = 127;
+  pe.exclude_callchain_kernel = true;
 
   return generic_event_open(&pe, pid, cpu);
 }
