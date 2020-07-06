@@ -120,8 +120,6 @@ class OrbitApp final : public CoreApp,
   bool SelectProcess(int32_t a_ProcessID);
   bool Inject(unsigned long a_ProcessId);
 
-  void GoToCapture();
-
   // Callbacks
   using CaptureStartedCallback = std::function<void()>;
   void AddCaptureStartedCallback(CaptureStartedCallback callback) {
