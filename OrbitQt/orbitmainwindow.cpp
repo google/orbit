@@ -440,17 +440,7 @@ void OrbitMainWindow::OnNewSelectionReport(
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
-  if (a_Message == "ScreenShot") {
-    QFile file("sshot.png");
-    file.open(QIODevice::WriteOnly);
-    QPixmap pixMap = this->grab();
-    pixMap.save(&file, "PNG");
-
-#ifdef _WIN32
-    std::string fileName = file.fileName().toStdString();
-    ShellExecuteA(0, 0, fileName.c_str(), 0, 0, SW_SHOW);
-#endif
-  } else if (absl::StartsWith(a_Message, "code")) {
+  if (absl::StartsWith(a_Message, "code")) {
     ui->FileMappingWidget->hide();
 
     bool success = ui->CodeTextEdit->loadCode(a_Message);
@@ -478,21 +468,8 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
     on_actionOpen_Capture_triggered();
   } else if (absl::StartsWith(a_Message, "savecapture")) {
     on_actionSave_Capture_triggered();
-  } else if (absl::StartsWith(a_Message, "pdb:")) {
-    if (GOrbitApp->IsLoading()) {
-      m_CurrentPdbName = Replace(a_Message, "pdb:", "");
-      m_OutputDialog->Reset();
-      m_OutputDialog->SetStatus(m_CurrentPdbName);
-      m_OutputDialog->show();
-      this->setDisabled(true);
-    }
-  } else if (absl::StartsWith(a_Message, "pdbloaded")) {
-    this->setDisabled(false);
-    m_OutputDialog->hide();
   } else if (absl::StartsWith(a_Message, "status:")) {
     m_OutputDialog->SetStatus(Replace(a_Message, "status:", ""));
-  } else if (absl::StartsWith(a_Message, "log:")) {
-    m_OutputDialog->AddLog(Replace(a_Message, "log:", ""));
   } else if (absl::StartsWith(a_Message, "asm:")) {
     OpenDisassembly(a_Message);
   } else if (absl::StartsWith(a_Message, "error:")) {
