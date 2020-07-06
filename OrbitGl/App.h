@@ -144,6 +144,10 @@ class OrbitApp final : public CoreApp,
   void AddSelectLiveTabCallback(SelectLiveTabCallback callback) {
     select_live_tab_callbacks_.emplace_back(std::move(callback));
   }
+  using DisassemblyCallback = std::function<void(const std::string&)>;
+  void AddDisassemblyCallback(DisassemblyCallback callback) {
+    disassembly_callbacks_.emplace_back(std::move(callback));
+  }
   using TooltipCallback = std::function<void(const std::string&)>;
   void AddTooltipCallback(TooltipCallback callback) {
     tooltip_callbacks_.emplace_back(std::move(callback));
@@ -197,6 +201,7 @@ class OrbitApp final : public CoreApp,
   void SendToUi(const std::string& message) override;
   void RequestOpenCaptureToUi();
   void RequestSaveCaptureToUi();
+  void SendDisassemblyToUi(const std::string& disassembly);
   void SendTooltipToUi(const std::string& tooltip);
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
@@ -244,6 +249,7 @@ class OrbitApp final : public CoreApp,
   std::vector<OpenCaptureCallback> open_capture_callbacks_;
   std::vector<SaveCaptureCallback> save_capture_callbacks_;
   std::vector<SelectLiveTabCallback> select_live_tab_callbacks_;
+  std::vector<DisassemblyCallback> disassembly_callbacks_;
   std::vector<TooltipCallback> tooltip_callbacks_;
   std::vector<RefreshCallback> m_RefreshCallbacks;
   std::vector<WatchCallback> m_AddToWatchCallbacks;
