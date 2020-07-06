@@ -166,7 +166,7 @@ void Batcher::DrawLineBuffer(bool picking) {
                           : GetLineBuffer().m_PickingColors.m_Root;
 
   while (line_block) {
-    if (int num_elems = lineBlock->m_Size) {
+    if (int num_elems = line_block->m_Size) {
       glVertexPointer(3, GL_FLOAT, sizeof(Vec3), line_block->m_Data);
       glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->m_Data);
       glDrawArrays(GL_LINES, 0, num_elems * 2);
