@@ -201,9 +201,6 @@ class OrbitApp final : public CoreApp,
 
   void UpdateSamplingReport();
   void LoadPreset(const std::shared_ptr<Preset>& session);
-  void SetIsRemote(bool a_IsRemote) { m_IsRemote = a_IsRemote; }
-  bool IsRemote() const { return m_IsRemote; }
-  bool HasTcpServer() const { return !IsRemote(); }
   void FilterFunctions(const std::string& filter);
 
   void CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type);
@@ -240,7 +237,6 @@ class OrbitApp final : public CoreApp,
   FindFileCallback m_FindFileCallback;
   SaveFileCallback m_SaveFileCallback;
   ClipboardCallback m_ClipboardCallback;
-  bool m_IsRemote = false;
 
   std::unique_ptr<ProcessesDataView> m_ProcessesDataView;
   std::unique_ptr<ModulesDataView> m_ModulesDataView;

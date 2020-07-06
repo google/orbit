@@ -152,8 +152,6 @@ outcome::result<void, std::string> Capture::StartCapture() {
         "No process selected. Please choose a target process for the capture.");
   }
 
-  SCOPE_TIMER_LOG("Capture::StartCapture");
-
   GCaptureTimer.Start();
   GCaptureTimePoint = std::chrono::system_clock::now();
 

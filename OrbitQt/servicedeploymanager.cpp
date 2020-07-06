@@ -62,12 +62,12 @@ static outcome::result<T> MapError(outcome::result<T> result, Error new_error) {
 ServiceDeployManager::ServiceDeployManager(
     DeploymentConfiguration deployment_configuration,
     OrbitSsh::Context* context, OrbitSsh::Credentials credentials,
-    ServiceDeployManager::Ports remote_ports, QObject* parent)
+    const ServiceDeployManager::GrpcPort& grpc_port, QObject* parent)
     : QObject(parent),
       deployment_configuration_(std::move(deployment_configuration)),
       context_(context),
       credentials_(std::move(credentials)),
-      remote_ports_(std::move(remote_ports)) {}
+      grpc_port_(grpc_port) {}
 
 void ServiceDeployManager::Cancel() {
   loop_.error(make_error_code(Error::kUserCanceledServiceDeployment));
@@ -115,7 +115,7 @@ outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
 outcome::result<uint16_t> ServiceDeployManager::StartTunnel(
     std::optional<OrbitSshQt::Tunnel>* tunnel, uint16_t port) {
   emit statusMessage("Setting up port forwarding...");
-  LOG("Setting up tunnel on port %d", remote_ports_.grpc_port);
+  LOG("Setting up tunnel on port %d", grpc_port_.grpc_port);
 
   tunnel->emplace(&session_.value(), kLocalhost, port);
 
@@ -148,8 +148,8 @@ outcome::result<void> ServiceDeployManager::StartSftpChannel(
 }
 
 outcome::result<void> ServiceDeployManager::CopyFileToRemote(
-    OrbitSshQt::SftpChannel* channel, std::string source, std::string dest,
-    OrbitSshQt::SftpOperation::FileMode dest_mode) {
+    OrbitSshQt::SftpChannel* channel, const std::string& source,
+    const std::string& dest, OrbitSshQt::SftpOperation::FileMode dest_mode) {
   OrbitSshQt::SftpOperation operation{&session_.value(), channel};
 
   auto quit_handler =
@@ -378,7 +378,7 @@ void ServiceDeployManager::StartWatchdog() {
   ssh_watchdog_timer_.start(kSshWatchdogInterval);
 }
 
-outcome::result<ServiceDeployManager::Ports> ServiceDeployManager::Exec() {
+outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec() {
   OUTCOME_TRY(ConnectToServer());
 
   // Release mode: Deploying a signed debian package. No password required.
@@ -392,7 +392,7 @@ outcome::result<ServiceDeployManager::Ports> ServiceDeployManager::Exec() {
     }
     OUTCOME_TRY(StartOrbitService());
     // TODO(hebecker): Replace this timeout by waiting for a
-    // stdout-greeting-message.
+    //  stdout-greeting-message.
     std::this_thread::sleep_for(std::chrono::milliseconds{100});
 
     StartWatchdog();
@@ -416,17 +416,13 @@ outcome::result<ServiceDeployManager::Ports> ServiceDeployManager::Exec() {
         "running...");
   }
 
-  OUTCOME_TRY(local_asio_port,
-              StartTunnel(&asio_tunnel_, remote_ports_.asio_port));
   OUTCOME_TRY(local_grpc_port,
-              StartTunnel(&grpc_tunnel_, remote_ports_.grpc_port));
+              StartTunnel(&grpc_tunnel_, grpc_port_.grpc_port));
 
   emit statusMessage("Successfully set up port forwarding!");
 
-  LOG("Local ports for ASIO and GRPC are %d and %d.", local_asio_port,
-      local_grpc_port);
-  return outcome::success(Ports{/* .asio_port = */ local_asio_port,
-                                /* .grpc_port = */ local_grpc_port});
+  LOG("Local port for gRPC is %d", local_grpc_port);
+  return outcome::success(GrpcPort{local_grpc_port});
 }
 
 void ServiceDeployManager::handleSocketError(std::error_code e) {
@@ -485,7 +481,6 @@ void ServiceDeployManager::ShutdownSession() {
 
 void ServiceDeployManager::Shutdown() {
   ShutdownTunnel(&grpc_tunnel_);
-  ShutdownTunnel(&asio_tunnel_);
   ShutdownOrbitService();
   ShutdownSession();
 }

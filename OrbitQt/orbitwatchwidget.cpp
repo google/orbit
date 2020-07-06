@@ -272,12 +272,6 @@ void OrbitWatchWidget::OnUpdateWatch(const Variable* a_Variable) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitWatchWidget::on_FindLineEdit_textChanged(const QString& /*arg1*/) {}
-
-//-----------------------------------------------------------------------------
-void OrbitWatchWidget::on_RefreshButton_clicked() { GOrbitApp->RefreshWatch(); }
-
-//-----------------------------------------------------------------------------
 void OrbitWatchWidget::on_ClearButton_clicked() {
   Reset();
   GOrbitApp->ClearWatchedVariables();
