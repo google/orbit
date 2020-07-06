@@ -120,7 +120,7 @@ class UprobesReturnAddressManager {
       return false;
     }
 
-    // Process frames from outermost to the innermost.
+    // Process frames from the outermost to the innermost.
     auto frames_to_patch_it = frames_to_patch.rbegin();
     size_t uprobes_size = tid_uprobes_stack.size();
 
