@@ -80,6 +80,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->actionOpen_Preset->setDisabled(true);
     ui->actionSave_Preset_As->setDisabled(true);
     ui->HomeTab->setDisabled(true);
+    SetTitle({});
   });
 
   auto finalizing_capture_dialog = new QProgressDialog(
@@ -443,8 +444,6 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
   if (absl::StartsWith(a_Message, "tooltip:")) {
     QToolTip::showText(QCursor::pos(),
                        Replace(a_Message, "tooltip:", "").c_str(), this);
-  } else if (absl::StartsWith(a_Message, "startcapture")) {
-    SetTitle({});
   } else if (absl::StartsWith(a_Message, "gotolive")) {
     ui->RightTabWidget->setCurrentWidget(ui->LiveTab);
   } else if (absl::StartsWith(a_Message, "opencapture")) {
