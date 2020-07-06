@@ -44,7 +44,5 @@ class FunctionsDataView : public DataView {
 
   static const std::string MENU_ACTION_SELECT;
   static const std::string MENU_ACTION_UNSELECT;
-  static const std::string MENU_ACTION_VIEW;
   static const std::string MENU_ACTION_DISASSEMBLY;
-  static const std::string MENU_ACTION_SET_AS_FRAME;
 };

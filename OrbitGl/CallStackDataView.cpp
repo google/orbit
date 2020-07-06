@@ -11,8 +11,6 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
-ABSL_DECLARE_FLAG(bool, enable_stale_features);
-
 //----------------------------------------------------------------------------
 CallStackDataView::CallStackDataView()
     : DataView(DataViewType::CALLSTACK), m_CallStack(nullptr) {}
@@ -81,7 +79,6 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
 const std::string CallStackDataView::MENU_ACTION_MODULES_LOAD = "Load Symbols";
 const std::string CallStackDataView::MENU_ACTION_SELECT = "Hook";
 const std::string CallStackDataView::MENU_ACTION_UNSELECT = "Unhook";
-const std::string CallStackDataView::MENU_ACTION_VIEW = "Visualize";
 const std::string CallStackDataView::MENU_ACTION_DISASSEMBLY =
     "Go to Disassembly";
 
@@ -91,7 +88,6 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
   bool enable_load = false;
   bool enable_select = false;
   bool enable_unselect = false;
-  bool enable_view = false;
   bool enable_disassembly = false;
   for (int index : a_SelectedIndices) {
     CallStackDataViewFrame frame = GetFrameFromRow(index);
@@ -101,20 +97,17 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
     if (frame.function != nullptr) {
       enable_select |= !function->IsSelected();
       enable_unselect |= function->IsSelected();
-      enable_view = true;
       enable_disassembly = true;
     } else if (module != nullptr && module->IsLoadable() &&
                !module->IsLoaded()) {
       enable_load = true;
     }
   }
-  enable_view &= absl::GetFlag(FLAGS_enable_stale_features);
 
   std::vector<std::string> menu;
   if (enable_load) menu.emplace_back(MENU_ACTION_MODULES_LOAD);
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
-  if (enable_view) menu.emplace_back(MENU_ACTION_VIEW);
   if (enable_disassembly) menu.emplace_back(MENU_ACTION_DISASSEMBLY);
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
@@ -146,14 +139,6 @@ void CallStackDataView::OnContextMenu(const std::string& a_Action,
       Function* function = frame.function;
       function->UnSelect();
     }
-
-  } else if (a_Action == MENU_ACTION_VIEW) {
-    for (int i : a_ItemIndices) {
-      CallStackDataViewFrame frame = GetFrameFromRow(i);
-      Function* function = frame.function;
-      function->Print();
-    }
-    GOrbitApp->SendToUi("output");
 
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
     int32_t pid = Capture::GTargetProcess->GetID();

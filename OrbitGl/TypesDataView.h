@@ -31,7 +31,6 @@ class TypesDataView : public DataView {
 
   void OnProp(const std::vector<int>& a_Items);
   void OnView(const std::vector<int>& a_Items);
-  void OnClip(const std::vector<int>& a_Items);
 
   std::vector<std::string> m_FilterTokens;
 

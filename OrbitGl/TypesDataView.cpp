@@ -201,7 +201,6 @@ void TypesDataView::OnProp(const std::vector<int>& a_Items) {
     Type& type = GetType(item);
     std::shared_ptr<Variable> var = type.GetTemplateVariable();
     var->Print();
-    GOrbitApp->SendToUi("output");
   }
 }
 
@@ -211,13 +210,7 @@ void TypesDataView::OnView(const std::vector<int>& a_Items) {
     Type& type = GetType(item);
     std::shared_ptr<Variable> var = type.GetTemplateVariable();
     // TODO: output variable info (b/158093728).
-    GOrbitApp->SendToUi("output");
   }
-}
-
-//-----------------------------------------------------------------------------
-void TypesDataView::OnClip(const std::vector<int>& /*items*/) {
-  GOrbitApp->SendToUi("output");
 }
 
 //-----------------------------------------------------------------------------

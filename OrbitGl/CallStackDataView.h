@@ -72,6 +72,5 @@ class CallStackDataView : public DataView {
   static const std::string MENU_ACTION_MODULES_LOAD;
   static const std::string MENU_ACTION_SELECT;
   static const std::string MENU_ACTION_UNSELECT;
-  static const std::string MENU_ACTION_VIEW;
   static const std::string MENU_ACTION_DISASSEMBLY;
 };

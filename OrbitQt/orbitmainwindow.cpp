@@ -443,8 +443,6 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
   if (absl::StartsWith(a_Message, "tooltip:")) {
     QToolTip::showText(QCursor::pos(),
                        Replace(a_Message, "tooltip:", "").c_str(), this);
-  } else if (absl::StartsWith(a_Message, "output")) {
-    ui->MainTabWidget->setCurrentWidget(ui->OutputTab);
   } else if (absl::StartsWith(a_Message, "gotocode")) {
     ui->RightTabWidget->setCurrentWidget(ui->CodeTab);
   } else if (absl::StartsWith(a_Message, "gotocallstack")) {
