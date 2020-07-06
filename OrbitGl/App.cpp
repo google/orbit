@@ -781,15 +781,21 @@ void OrbitApp::RequestFeedbackDialogToUi() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
-  std::string message = "info:" + title + "\n" + text;
-  SendToUi(message);
+  main_thread_executor_->Schedule([this, title, text] {
+    for (const InfoMessageCallback& callback : info_message_callbacks_) {
+      callback(title, text);
+    }
+  });
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::SendErrorToUi(const std::string& title,
                              const std::string& text) {
-  std::string message = "error:" + title + "\n" + text;
-  SendToUi(message);
+  main_thread_executor_->Schedule([this, title, text] {
+    for (const ErrorMessageCallback& callback : error_message_callbacks_) {
+      callback(title, text);
+    }
+  });
 }
 
 //-----------------------------------------------------------------------------

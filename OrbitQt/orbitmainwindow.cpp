@@ -128,6 +128,16 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       [this] { ui->RightTabWidget->setCurrentWidget(ui->LiveTab); });
   GOrbitApp->AddDisassemblyCallback(
       [this](const std::string& disassembly) { OpenDisassembly(disassembly); });
+  GOrbitApp->AddErrorMessageCallback(
+      [this](const std::string& title, const std::string& text) {
+        QMessageBox::critical(this, QString::fromStdString(title),
+                              QString::fromStdString(text));
+      });
+  GOrbitApp->AddInfoMessageCallback(
+      [this](const std::string& title, const std::string& text) {
+        QMessageBox::information(this, QString::fromStdString(title),
+                                 QString::fromStdString(text));
+      });
   GOrbitApp->AddTooltipCallback([this](const std::string& tooltip) {
     QToolTip::showText(QCursor::pos(), QString::fromStdString(tooltip), this);
   });
@@ -454,23 +464,7 @@ void OrbitMainWindow::OnNewSelectionReport(
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
-  if (absl::StartsWith(a_Message, "error:")) {
-    std::string title_text = Replace(a_Message, "error:", "");
-    std::string title = title_text.substr(0, title_text.find('\n'));
-    std::string text = title_text.find('\n') != std::string::npos
-                           ? title_text.substr(title_text.find('\n'))
-                           : title;
-    QMessageBox::critical(this, title.c_str(), text.c_str());
-  } else if (absl::StartsWith(a_Message, "info:")) {
-    std::string title_text = Replace(a_Message, "info:", "");
-    std::string title = title_text.substr(0, title_text.find('\n'));
-    std::string text = title_text.find('\n') != std::string::npos
-                           ? title_text.substr(title_text.find('\n'))
-                           : title;
-    QMessageBox::information(this, title.c_str(), text.c_str());
-  }
-}
+void OrbitMainWindow::OnReceiveMessage(const std::string& /*a_Message*/) {}
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnAddToWatch(const class Variable* a_Variable) {
