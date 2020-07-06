@@ -11,9 +11,6 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
-#include "capture.pb.h"
-
-ABSL_FLAG(uint16_t, asio_port, 44766, "Asio TCP server port");
 
 ABSL_FLAG(uint64_t, grpc_port, 44765, "Grpc server port");
 
@@ -48,9 +45,8 @@ int main(int argc, char** argv) {
   install_sigint_handler();
 
   uint16_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
-  uint16_t asio_port = absl::GetFlag(FLAGS_asio_port);
 
   exit_requested = false;
-  OrbitService service{grpc_port, asio_port, CaptureOptions{}};
+  OrbitService service{grpc_port};
   service.Run(&exit_requested);
 }

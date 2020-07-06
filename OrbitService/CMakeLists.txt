@@ -17,8 +17,6 @@ target_sources(OrbitServiceLib PRIVATE
         CrashServiceImpl.h
         FramePointerValidatorServiceImpl.cpp
         FramePointerValidatorServiceImpl.h
-        OrbitAsioServer.cpp
-        OrbitAsioServer.h
         OrbitGrpcServer.cpp
         OrbitGrpcServer.h
         OrbitService.cpp
