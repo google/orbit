@@ -570,15 +570,6 @@ void OrbitApp::AddSelectionReport(
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::GoToCode(DWORD64 a_Address) {
-  m_CaptureWindow->FindCode(a_Address);
-  SendToUi("gotocode");
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::GoToCallstack() { SendToUi("gotocallstack"); }
-
-//-----------------------------------------------------------------------------
 void OrbitApp::GoToCapture() { SendToUi("gotocapture"); }
 
 //-----------------------------------------------------------------------------
