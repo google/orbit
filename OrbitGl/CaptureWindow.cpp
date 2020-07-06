@@ -923,7 +923,7 @@ void CaptureWindow::RenderToolbars() {
   bool save_enabled = !is_capturing;
   if (IconButton(save_capture_icon_id_, "Save Capture", icon_size,
                  save_enabled)) {
-    GOrbitApp->SendToUi("savecapture");
+    GOrbitApp->RequestSaveCaptureToUi();
   }
 
   // Help.
