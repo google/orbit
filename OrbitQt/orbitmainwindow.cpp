@@ -117,9 +117,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
         this->OnNewSelectionReport(callstack_data_view, std::move(report));
       });
 
-  GOrbitApp->AddUiMessageCallback([this](const std::string& a_Message) {
-    this->OnReceiveMessage(a_Message);
-  });
   GOrbitApp->AddOpenCaptureCallback(
       [this] { on_actionOpen_Capture_triggered(); });
   GOrbitApp->AddSaveCaptureCallback(
@@ -462,9 +459,6 @@ void OrbitMainWindow::OnNewSelectionReport(
 
   ui->RightTabWidget->setCurrentWidget(m_SelectionTab);
 }
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::OnReceiveMessage(const std::string& /*a_Message*/) {}
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnAddToWatch(const class Variable* a_Variable) {

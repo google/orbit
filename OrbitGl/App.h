@@ -195,7 +195,6 @@ class OrbitApp final : public CoreApp,
   void Refresh(DataViewType a_Type = DataViewType::ALL) {
     FireRefreshCallbacks(a_Type);
   }
-  void AddUiMessageCallback(std::function<void(const std::string&)> a_Callback);
   typedef std::function<std::string(const std::string& caption,
                                     const std::string& dir,
                                     const std::string& filter)>
@@ -212,7 +211,6 @@ class OrbitApp final : public CoreApp,
 
   void SetCommandLineArguments(const std::vector<std::string>& a_Args);
 
-  void SendToUi(const std::string& message) override;
   void RequestOpenCaptureToUi();
   void RequestSaveCaptureToUi();
   void SendDisassemblyToUi(const std::string& disassembly);
@@ -294,7 +292,6 @@ class OrbitApp final : public CoreApp,
   std::shared_ptr<class SamplingReport> sampling_report_;
   std::shared_ptr<class SamplingReport> selection_report_;
   std::map<std::string, std::string> m_FileMapping;
-  std::function<void(const std::string&)> m_UiCallback;
 
   int m_NumTicks = 0;
 

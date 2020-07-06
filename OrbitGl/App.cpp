@@ -618,13 +618,6 @@ void OrbitApp::FireRefreshCallbacks(DataViewType a_Type) {
   }
 }
 
-//-----------------------------------------------------------------------------
-void OrbitApp::AddUiMessageCallback(
-    std::function<void(const std::string&)> a_Callback) {
-  GTcpServer->SetUiCallback(a_Callback);
-  m_UiCallback = a_Callback;
-}
-
 bool OrbitApp::StartCapture() {
   if (Capture::IsCapturing()) {
     LOG("Ignoring Start Capture - already capturing...");
@@ -728,15 +721,6 @@ bool OrbitApp::Inject(unsigned long /*a_ProcessId*/) { return false; }
 void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
   m_CallStackDataView->SetCallStack(std::move(a_CallStack));
   FireRefreshCallbacks(DataViewType::CALLSTACK);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::SendToUi(const std::string& message) {
-  main_thread_executor_->Schedule([this, message] {
-    if (m_UiCallback) {
-      m_UiCallback(message);
-    }
-  });
 }
 
 void OrbitApp::RequestOpenCaptureToUi() {
