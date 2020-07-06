@@ -175,31 +175,6 @@ std::string Pdb::GetCachedKey() {
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::SendStatusToUi() {
-  std::string status = absl::StrFormat(
-      "status:Parsing %s\nFunctions: %i\nTypes: %i\nGlobals: %i\n", m_Name,
-      functions_.size(), m_Types.size(), m_Globals.size());
-
-  if (m_IsPopulatingFunctionMap) {
-    status += "PopulatingFunctionMap\n";
-  }
-  if (m_IsPopulatingFunctionStringMap) {
-    status += "PopulatingFunctionStringMap\n";
-  }
-
-  int numPoints = 10;
-  int period = 4000;
-  int progress = (int)(float(((ULONG)m_LoadTimer->QueryMillis() % period)) /
-                       (float)period * (float)numPoints);
-  if (progress > numPoints) progress = numPoints;
-  for (int i = 0; i <= progress; ++i) {
-    status += ".";
-  }
-
-  GTcpServer->SendToUiNow(status);
-}
-
-//-----------------------------------------------------------------------------
 void ParseDll(const char* a_FileName);
 
 //-----------------------------------------------------------------------------

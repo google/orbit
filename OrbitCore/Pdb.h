@@ -84,9 +84,6 @@ class Pdb {
   void ProcessData();
 
  protected:
-  void SendStatusToUi();
-
- protected:
   // State
   std::unique_ptr<std::thread> m_LoadingThread;
   std::atomic<bool> m_FinishedLoading;
@@ -179,9 +176,6 @@ class Pdb {
   bool IsLoading() const { return m_IsLoading; }
 
   void ProcessData();
-
- protected:
-  void SendStatusToUi();
 
  protected:
   // State

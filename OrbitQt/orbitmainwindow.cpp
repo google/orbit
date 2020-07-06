@@ -450,8 +450,6 @@ void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
     on_actionOpen_Capture_triggered();
   } else if (absl::StartsWith(a_Message, "savecapture")) {
     on_actionSave_Capture_triggered();
-  } else if (absl::StartsWith(a_Message, "status:")) {
-    m_OutputDialog->SetStatus(Replace(a_Message, "status:", ""));
   } else if (absl::StartsWith(a_Message, "asm:")) {
     OpenDisassembly(a_Message);
   } else if (absl::StartsWith(a_Message, "error:")) {
