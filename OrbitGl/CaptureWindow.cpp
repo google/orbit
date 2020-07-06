@@ -915,7 +915,7 @@ void CaptureWindow::RenderToolbars() {
   bool load_enabled = !is_capturing;
   if (IconButton(load_capture_icon_id_, "Open Capture", icon_size,
                  load_enabled)) {
-    GOrbitApp->SendToUi("opencapture");
+    GOrbitApp->RequestOpenCaptureToUi();
   }
 
   // Save Capture.

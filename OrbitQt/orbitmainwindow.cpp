@@ -120,6 +120,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->AddUiMessageCallback([this](const std::string& a_Message) {
     this->OnReceiveMessage(a_Message);
   });
+  GOrbitApp->AddOpenCaptureCallback(
+      [this] { on_actionOpen_Capture_triggered(); });
   GOrbitApp->AddTooltipCallback([this](const std::string& tooltip) {
     QToolTip::showText(QCursor::pos(), QString::fromStdString(tooltip), this);
   });
@@ -448,8 +450,6 @@ void OrbitMainWindow::OnNewSelectionReport(
 void OrbitMainWindow::OnReceiveMessage(const std::string& a_Message) {
   if (absl::StartsWith(a_Message, "gotolive")) {
     ui->RightTabWidget->setCurrentWidget(ui->LiveTab);
-  } else if (absl::StartsWith(a_Message, "opencapture")) {
-    on_actionOpen_Capture_triggered();
   } else if (absl::StartsWith(a_Message, "savecapture")) {
     on_actionSave_Capture_triggered();
   } else if (absl::StartsWith(a_Message, "asm:")) {
