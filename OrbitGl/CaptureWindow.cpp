@@ -10,7 +10,6 @@
 #include "EventTracer.h"
 #include "GlUtils.h"
 #include "PluginManager.h"
-#include "Systrace.h"
 #include "TcpClient.h"
 #include "TcpServer.h"
 #include "TimerManager.h"

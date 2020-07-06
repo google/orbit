@@ -78,8 +78,6 @@ class OrbitApp final : public CoreApp,
   void OnDisconnect();
   void SetCallStack(std::shared_ptr<CallStack> a_CallStack);
   void LoadFileMapping();
-  void LoadSystrace(const std::string& a_FileName);
-  void AppendSystrace(const std::string& a_FileName, uint64_t a_TimeOffset);
   void ListPresets();
   void RefreshCaptureView() override;
   void AddWatchedVariable(Variable* a_Variable);
@@ -220,7 +218,6 @@ class OrbitApp final : public CoreApp,
   absl::Mutex process_map_mutex_;
   absl::flat_hash_map<uint32_t, std::shared_ptr<Process>> process_map_;
 
-  std::vector<std::string> m_Arguments;
   std::vector<CaptureStartedCallback> capture_started_callbacks_;
   std::vector<CaptureStopRequestedCallback> capture_stop_requested_callbacks_;
   std::vector<CaptureStoppedCallback> capture_stopped_callbacks_;
@@ -249,10 +246,7 @@ class OrbitApp final : public CoreApp,
   std::shared_ptr<class SamplingReport> sampling_report_;
   std::shared_ptr<class SamplingReport> selection_report_;
   std::map<std::string, std::string> m_FileMapping;
-  std::vector<std::string> m_SymbolDirectories;
   std::function<void(const std::string&)> m_UiCallback;
-
-  std::vector<std::string> m_PostInitArguments;
 
   int m_NumTicks = 0;
 

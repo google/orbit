@@ -24,8 +24,6 @@
 #include "TimerChain.h"
 #include "absl/container/flat_hash_map.h"
 
-class Systrace;
-
 class TimeGraph {
  public:
   TimeGraph();
@@ -91,9 +89,6 @@ class TimeGraph {
   void SetCanvas(GlCanvas* a_Canvas);
   GlCanvas* GetCanvas() { return m_Canvas; }
   void SetFontSize(int a_FontSize);
-  void SetSystrace(std::shared_ptr<Systrace> a_Systrace) {
-    m_Systrace = std::move(a_Systrace);
-  }
   Batcher& GetBatcher() { return m_Batcher; }
   uint32_t GetNumTimers() const;
   uint32_t GetNumCores() const;
@@ -118,7 +113,6 @@ class TimeGraph {
   StringManager* GetStringManager() { return string_manager_.get(); }
 
  protected:
-  void AddTrack(std::unique_ptr<Track> track);
   uint64_t GetGpuTimelineHash(const Timer& timer) const;
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(ThreadID a_TID);
@@ -159,7 +153,6 @@ class TimeGraph {
   PickingManager* m_PickingManager = nullptr;
   Timer m_LastThreadReorder;
   MemoryTracker m_MemTracker;
-  std::shared_ptr<Systrace> m_Systrace;
 
   mutable Mutex m_Mutex;
   std::vector<std::shared_ptr<Track>> tracks_;

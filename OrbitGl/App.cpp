@@ -49,7 +49,6 @@
 #include "ScopeTimer.h"
 #include "SessionsDataView.h"
 #include "StringManager.h"
-#include "Systrace.h"
 #include "Tcp.h"
 #include "TcpClient.h"
 #include "TcpServer.h"
@@ -98,8 +97,6 @@ std::string OrbitApp::FindFile(const std::string& caption,
 
 //-----------------------------------------------------------------------------
 void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
-  m_Arguments = a_Args;
-
   for (const std::string& arg : a_Args) {
     if (absl::StrContains(arg, "preset:")) {
       std::vector<std::string> vec = absl::StrSplit(arg, ":");
@@ -111,8 +108,6 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
       if (vec.size() > 1) {
         Capture::GProcessToInject = vec[1];
       }
-    } else if (absl::StrContains(arg, "systrace:")) {
-      m_PostInitArguments.push_back(arg);
     }
   }
 }
@@ -186,64 +181,6 @@ void OrbitApp::OnValidateFramePointers(
   thread_pool_->Schedule([modules_to_validate, this] {
     frame_pointer_validator_client_->AnalyzeModules(modules_to_validate);
   });
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::LoadSystrace(const std::string& a_FileName) {
-  SystraceManager::Get().Clear();
-  Capture::ClearCaptureData();
-  GCurrentTimeGraph->Clear();
-  if (Capture::GClearCaptureDataFunc) {
-    Capture::GClearCaptureDataFunc();
-  }
-
-  std::shared_ptr<Systrace> systrace =
-      std::make_shared<Systrace>(a_FileName.c_str());
-
-  for (Function& func : systrace->GetFunctions()) {
-    Capture::GSelectedFunctionsMap[func.GetVirtualAddress()] = &func;
-  }
-  Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
-
-  for (const auto& timer : systrace->GetTimers()) {
-    GCurrentTimeGraph->ProcessTimer(timer);
-    ++Capture::GFunctionCountMap[timer.m_FunctionAddress];
-  }
-
-  for (const auto& pair : systrace->GetThreadNames()) {
-    Capture::GTargetProcess->SetThreadName(pair.first, pair.second);
-  }
-
-  SystraceManager::Get().Add(systrace);
-  GOrbitApp->FireRefreshCallbacks();
-  GOrbitApp->StopCapture();
-  DoZoom = true;  // TODO: remove global, review logic
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::AppendSystrace(const std::string& a_FileName,
-                              uint64_t a_TimeOffset) {
-  std::shared_ptr<Systrace> systrace =
-      std::make_shared<Systrace>(a_FileName.c_str(), a_TimeOffset);
-
-  for (Function& func : systrace->GetFunctions()) {
-    Capture::GSelectedFunctionsMap[func.GetVirtualAddress()] = &func;
-  }
-  Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
-
-  for (const auto& timer : systrace->GetTimers()) {
-    GCurrentTimeGraph->ProcessTimer(timer);
-    Capture::GFunctionCountMap[timer.m_FunctionAddress];
-  }
-
-  for (const auto& pair : systrace->GetThreadNames()) {
-    Capture::GTargetProcess->SetThreadName(pair.first, pair.second);
-  }
-
-  SystraceManager::Get().Add(systrace);
-  GOrbitApp->FireRefreshCallbacks();
-  GOrbitApp->StopCapture();
-  DoZoom = true;  // TODO: remove global, review logic
 }
 
 //-----------------------------------------------------------------------------
