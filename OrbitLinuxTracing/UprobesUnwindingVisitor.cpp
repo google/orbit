@@ -78,11 +78,11 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   }
 
   uint64_t top_ip = event->GetCallchain()[1];
-  unwindstack::MapInfo* map_info = current_maps_->Find(top_ip);
+  unwindstack::MapInfo* top_ip_map_info = current_maps_->Find(top_ip);
 
   // Some samples can actually fall inside u(ret)probes code. Discard them,
   // as we don't want to show the unnamed uprobes module in the samples.
-  if (map_info == nullptr || map_info->name == "[uprobes]") {
+  if (top_ip_map_info == nullptr || top_ip_map_info->name == "[uprobes]") {
     if (discarded_samples_in_uretprobes_counter_ != nullptr) {
       ++(*discarded_samples_in_uretprobes_counter_);
     }
