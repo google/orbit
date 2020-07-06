@@ -30,8 +30,6 @@
 #include "LinuxUtils.h"
 #endif
 
-ABSL_DECLARE_FLAG(bool, enable_stale_features);
-
 //-----------------------------------------------------------------------------
 CaptureWindow::CaptureWindow() {
   GCurrentTimeGraph = &time_graph_;
@@ -530,39 +528,13 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
 }
 
 //-----------------------------------------------------------------------------
-const std::string CaptureWindow::MENU_ACTION_GO_TO_CALLSTACK =
-    "Go to Callstack";
-const std::string CaptureWindow::MENU_ACTION_GO_TO_SOURCE = "Go to Source";
-
-//-----------------------------------------------------------------------------
 std::vector<std::string> CaptureWindow::GetContextMenu() {
-  std::vector<std::string> menu;
-  if (!absl::GetFlag(FLAGS_enable_stale_features)) {
-    return menu;
-  }
-
-  TextBox* selection = Capture::GSelectedTextBox;
-  if (selection != nullptr && !selection->GetTimer().IsCoreActivity() &&
-      selection->GetTimer().m_Type != Timer::GPU_ACTIVITY) {
-    return menu;
-  }
-
-  Append(menu, {MENU_ACTION_GO_TO_CALLSTACK, MENU_ACTION_GO_TO_SOURCE});
-  return menu;
+  return std::vector<std::string>{};
 }
 
 //-----------------------------------------------------------------------------
-void CaptureWindow::OnContextMenu(const std::string& a_Action,
-                                  int /*a_MenuIndex*/) {
-  if (Capture::GSelectedTextBox) {
-    if (a_Action == MENU_ACTION_GO_TO_SOURCE) {
-      GOrbitApp->GoToCode(
-          Capture::GSelectedTextBox->GetTimer().m_FunctionAddress);
-    } else if (a_Action == MENU_ACTION_GO_TO_CALLSTACK) {
-      GOrbitApp->GoToCallstack();
-    }
-  }
-}
+void CaptureWindow::OnContextMenu(const std::string& /*a_Action*/,
+                                  int /*a_MenuIndex*/) {}
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::OnCaptureStarted() {

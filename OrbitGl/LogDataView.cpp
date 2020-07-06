@@ -134,7 +134,7 @@ void LogDataView::OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                                 const std::vector<int>& a_ItemIndices) {
   if (m_SelectedCallstack &&
       static_cast<int>(m_SelectedCallstack->m_Depth) > a_MenuIndex) {
-    GOrbitApp->GoToCode(m_SelectedCallstack->m_Data[a_MenuIndex]);
+    // Not implemented.
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }

@@ -120,8 +120,6 @@ class OrbitApp final : public CoreApp,
   bool SelectProcess(int32_t a_ProcessID);
   bool Inject(unsigned long a_ProcessId);
 
-  void GoToCode(DWORD64 a_Address);
-  void GoToCallstack();
   void GoToCapture();
 
   // Callbacks
