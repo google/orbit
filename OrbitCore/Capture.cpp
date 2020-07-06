@@ -201,7 +201,6 @@ void Capture::ClearCaptureData() {
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
   GNumProfileEvents = 0;
-  GTcpServer->ResetStats();
   GOrbitUnreal.NewSession();
   GHasContextSwitches = false;
   GNumLinuxEvents = 0;
@@ -215,9 +214,6 @@ void Capture::PreFunctionHooks() {
   for (auto& selected_addresses : GSelectedAddressesByType) {
     selected_addresses.clear();
   }
-
-  // Clear current argument tracking data
-  GTcpServer->Send(Msg_ClearArgTracking);
 
   // Unreal
   CheckForUnrealSupport();
