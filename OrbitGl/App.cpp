@@ -444,9 +444,6 @@ void OrbitApp::MainTick() {
 }
 
 //-----------------------------------------------------------------------------
-std::string OrbitApp::GetVersion() { return OrbitVersion::GetVersion(); }
-
-//-----------------------------------------------------------------------------
 void OrbitApp::RegisterCaptureWindow(CaptureWindow* a_Capture) {
   CHECK(m_CaptureWindow == nullptr);
   m_CaptureWindow = a_Capture;
@@ -676,15 +673,6 @@ void OrbitApp::ToggleCapture() {
     StopCapture();
   } else {
     StartCapture();
-  }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::Unregister(DataView* a_Model) {
-  for (size_t i = 0; i < m_Panels.size(); ++i) {
-    if (m_Panels[i] == a_Model) {
-      m_Panels.erase(m_Panels.begin() + i);
-    }
   }
 }
 

@@ -59,7 +59,6 @@ class OrbitApp final : public CoreApp,
   void PostInit();
   void OnExit();
   static void MainTick();
-  std::string GetVersion();
 
   std::string GetCaptureFileName();
   std::string GetSaveFile(const std::string& extension);
@@ -82,7 +81,6 @@ class OrbitApp final : public CoreApp,
   void AddWatchedVariable(Variable* a_Variable);
   void UpdateVariable(Variable* a_Variable) override;
   void ClearWatchedVariables();
-  void RefreshWatch();
   void Disassemble(int32_t pid, const Function& function);
 
   void ProcessTimer(const Timer& timer) override;
@@ -112,7 +110,6 @@ class OrbitApp final : public CoreApp,
   void AddSelectionReport(
       std::shared_ptr<SamplingProfiler>& a_SamplingProfiler);
 
-  void Unregister(class DataView* a_Model);
   bool SelectProcess(const std::string& a_Process);
   bool SelectProcess(int32_t a_ProcessID);
   bool Inject(unsigned long a_ProcessId);
