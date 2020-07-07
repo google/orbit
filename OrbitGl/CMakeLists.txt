@@ -24,7 +24,6 @@ target_sources(
          CoreMath.h
          DataView.h
          DataViewTypes.h
-         Debugger.h
          Disassembler.h
          EventTrack.h
          FramePointerValidatorClient.h
