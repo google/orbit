@@ -36,7 +36,6 @@ class Capture {
   static void ClearCaptureData();
   static std::vector<std::shared_ptr<Function>> GetSelectedFunctions();
   static void PreFunctionHooks();
-  static void SendFunctionHooks();
   static bool IsCapturing();
   static void DisplayStats();
   static void TestHooks();

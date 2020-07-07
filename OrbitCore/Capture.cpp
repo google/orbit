@@ -244,33 +244,6 @@ std::vector<std::shared_ptr<Function>> Capture::GetSelectedFunctions() {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::SendFunctionHooks() {
-  PreFunctionHooks();
-
-  if (Capture::IsRemote()) {
-    for (auto& function : GSelectedFunctions) {
-      LOG("Send Selected Function: %s", function->PrettyName().c_str());
-    }
-
-    std::string selectedFunctionsData =
-        SerializeObjectBinary(GSelectedFunctions);
-    GTcpClient->Send(Msg_RemoteSelectedFunctionsMap,
-                     selectedFunctionsData.data(),
-                     selectedFunctionsData.size());
-
-    Message msg(Msg_StartCapture);
-    msg.m_Header.m_GenericHeader.m_Address = GTargetProcess->GetID();
-    GTcpClient->Send(msg);
-  }
-
-  // Unreal
-  if (GUnrealSupported) {
-    const OrbitUnrealInfo& info = GOrbitUnreal.GetUnrealInfo();
-    GTcpServer->Send(Msg_OrbitUnrealInfo, info);
-  }
-}
-
-//-----------------------------------------------------------------------------
 void Capture::TestHooks() {
   if (!GIsTesting) {
     GIsTesting = true;
