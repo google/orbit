@@ -87,9 +87,11 @@ class UprobesReturnAddressManager {
     }
 
     if (!tid_uprobes_stacks_.contains(tid)) {
-      // There are very rare cases where we don't have uprobes records, but need
-      // to patch some frames. This results either from loosing events or
-      // processing events out of order.
+      // In there are no uprobes, but the callchain needs to be patched, we need
+      // to discard the sample.
+      // There are two situations where this may happen:
+      //  1. At the beginning of a capture, where we missed the first uprobes
+      //  2. When some events are lost or processed out of order.
       if (!frames_to_patch.empty()) {
         ERROR("Discarding sample in a uprobe as uprobe records are missing.");
         return false;
@@ -109,10 +111,13 @@ class UprobesReturnAddressManager {
       prev_uprobe_stack_pointer = uprobe.stack_pointer;
     }
 
-    // In case we already used all uprobes, we need to discard this sample.
+    // In case we have less uprobes (with correct return address), than samples
+    // to be patched, we need to discard this sample.
     // There are two situations where this may happen:
     //  1. At the beginning of a capture, where we missed the first uprobes
     //  2. When some events are lost or processed out of order.
+    // This is the same situation as above, but we have at least some uprobe
+    // records.
     if (num_unique_uprobes < frames_to_patch.size()) {
       ERROR(
           "Discarding sample in a uprobe as some uprobe records are missing.");
