@@ -29,9 +29,7 @@ target_sources(OrbitServiceLib PRIVATE
 if (NOT WIN32)
   target_sources(OrbitServiceLib PRIVATE
           LinuxTracingGrpcHandler.cpp
-          LinuxTracingGrpcHandler.h
-          LinuxTracingHandler.cpp
-          LinuxTracingHandler.h)
+          LinuxTracingGrpcHandler.h)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
