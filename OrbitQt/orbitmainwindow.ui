@@ -251,8 +251,6 @@
     <addaction name="actionOpen_Preset"/>
     <addaction name="actionSave_Preset_As"/>
     <addaction name="separator"/>
-    <addaction name="actionDisconnect"/>
-    <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -320,11 +318,6 @@
   <action name="actionOpen_Preset">
    <property name="text">
     <string>Open Preset</string>
-   </property>
-  </action>
-  <action name="actionDisconnect">
-   <property name="text">
-    <string>Disconnect</string>
    </property>
   </action>
   <action name="actionStart_Captue">

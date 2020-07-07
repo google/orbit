@@ -73,7 +73,6 @@ class OrbitApp final : public CoreApp,
   void StopCapture();
   void OnCaptureStopped() override;
   void ToggleCapture();
-  void OnDisconnect();
   void SetCallStack(std::shared_ptr<CallStack> a_CallStack);
   void LoadFileMapping();
   void ListPresets();

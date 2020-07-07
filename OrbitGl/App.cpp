@@ -570,9 +570,6 @@ outcome::result<void, std::string> OrbitApp::OnLoadCapture(
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::OnDisconnect() { GTcpServer->Send(Msg_Unload); }
-
-//-----------------------------------------------------------------------------
 void OrbitApp::FireRefreshCallbacks(DataViewType type) {
   for (DataView* panel : m_Panels) {
     if (type == DataViewType::ALL || type == panel->GetType()) {

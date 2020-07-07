@@ -747,14 +747,7 @@ void CaptureWindow::RenderUI() {
     m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetNumTimers()));
     m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetThreadTotalHeight()));
 
-#ifdef WIN32
-    for (std::string& line : GTcpServer->GetStats()) {
-      m_StatsWindow.AddLine(line);
-    }
-
-    bool hasConnection = GTcpServer->HasConnection();
-    m_StatsWindow.AddLine(VAR_TO_STR(hasConnection));
-#else
+#ifndef WIN32
     m_StatsWindow.AddLine(
         VAR_TO_STR(GEventTracer.GetEventBuffer().GetCallstacks().size()));
     m_StatsWindow.AddLine(
