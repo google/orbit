@@ -8,7 +8,6 @@
 #include <ostream>
 
 #include "Core.h"
-#include "CoreApp.h"
 #include "EventBuffer.h"
 #include "Injection.h"
 #include "Log.h"
@@ -118,10 +117,6 @@ void Capture::FinalizeCapture() {
   if (Capture::GSamplingProfiler != nullptr) {
     Capture::GSamplingProfiler->StopCapture();
     Capture::GSamplingProfiler->ProcessSamples();
-  }
-
-  if (GCoreApp != nullptr) {
-    GCoreApp->RefreshCaptureView();
   }
 
   GState = State::kDone;

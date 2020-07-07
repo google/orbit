@@ -9,7 +9,6 @@
 #include <memory>
 #include <vector>
 
-#include "CoreApp.h"
 #include "OrbitBase/Tracing.h"
 #include "PrintVar.h"
 #include "Utils.h"
