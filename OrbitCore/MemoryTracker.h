@@ -29,4 +29,4 @@ class MemoryTracker {
   DWORD64 m_NumLiveBytes;
 };
 
-#endif // ORBIT_CORE_MEMORY_TRACKER_H_
+#endif  // ORBIT_CORE_MEMORY_TRACKER_H_

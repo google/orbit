@@ -22,11 +22,11 @@ class TextBox {
 
   ~TextBox();
 
-  void Draw(Batcher* batcher, 
-            TextRenderer& a_TextRenderer, float a_MinX = -FLT_MAX,
-            bool a_Visible = true, bool a_RightJustify = false,
-            bool a_IsInactive = false, unsigned int a_ID = 0xFFFFFFFF,
-            bool a_IsPicking = false, bool a_IsHighlighted = false);
+  void Draw(Batcher* batcher, TextRenderer& a_TextRenderer,
+            float a_MinX = -FLT_MAX, bool a_Visible = true,
+            bool a_RightJustify = false, bool a_IsInactive = false,
+            unsigned int a_ID = 0xFFFFFFFF, bool a_IsPicking = false,
+            bool a_IsHighlighted = false);
 
   void SetSize(const Vec2& a_Size) {
     m_Size = a_Size;

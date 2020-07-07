@@ -190,4 +190,4 @@ class SamplingProfiler {
   std::vector<ThreadSampleData*> m_SortedThreadSampleData;
 };
 
-#endif // ORBIT_CORE_SAMPLING_PROFILER_H_
+#endif  // ORBIT_CORE_SAMPLING_PROFILER_H_

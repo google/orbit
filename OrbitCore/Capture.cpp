@@ -140,7 +140,6 @@ void Capture::ClearCaptureData() {
 
 //-----------------------------------------------------------------------------
 void Capture::PreFunctionHooks() {
-
   GSelectedFunctions = GetSelectedFunctions();
 
   for (auto& func : GSelectedFunctions) {

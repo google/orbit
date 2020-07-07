@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include <iosfwd>
 #include <outcome.hpp>
 #include <string>
 #include <unordered_map>
-#include <iosfwd>
 
 #include "SerializationMacros.h"
 

@@ -70,12 +70,11 @@ void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
   Vec3 pivot = position + Vec3(rotated_points[0][0], rotated_points[0][1], z);
 
   Vec3 vertices[2];
-  vertices[0] =
-      position + Vec3(rotated_points[1][0], rotated_points[1][1], z);
+  vertices[0] = position + Vec3(rotated_points[1][0], rotated_points[1][1], z);
 
   for (int i = 1; i < rotated_points.size() - 1; ++i) {
-    vertices[i % 2] = position + Vec3(rotated_points[i + 1][0],
-                                      rotated_points[i + 1][1], z);
+    vertices[i % 2] =
+        position + Vec3(rotated_points[i + 1][0], rotated_points[i + 1][1], z);
     Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
     batcher->AddTriangle(triangle, color, PickingID::PICKABLE);
   }
@@ -86,8 +85,8 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   Batcher* batcher = canvas->GetBatcher();
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
-  Color picking_color =
-    canvas->GetPickingManager().GetPickableColor(this, PickingID::BatcherId::UI);
+  Color picking_color = canvas->GetPickingManager().GetPickableColor(
+      this, PickingID::BatcherId::UI);
   const Color kTabColor(50, 50, 50, 255);
   Color color = picking ? picking_color : kTabColor;
   glColor4ubv(&color[0]);
@@ -103,7 +102,8 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   // Draw track background.
   if (!picking) {
     if (layout.GetDrawTrackBackground()) {
-      Box box(Vec2(x0, y0 + top_margin), Vec2(m_Size[0], -m_Size[1] - top_margin), track_z);
+      Box box(Vec2(x0, y0 + top_margin),
+              Vec2(m_Size[0], -m_Size[1] - top_margin), track_z);
       batcher->AddBox(box, color, PickingID::PICKABLE);
     }
   }
@@ -131,12 +131,17 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
     Vec2 end_bottom(x1 - vertical_margin, y1);
     Vec2 end_top(x1 - vertical_margin, y0 + top_margin);
     float z = GlCanvas::Z_VALUE_BOX_ACTIVE + 0.001f;
-    DrawTriangleFan(batcher, rounded_corner, bottom_left, kBackgroundColor, 0, z);
+    DrawTriangleFan(batcher, rounded_corner, bottom_left, kBackgroundColor, 0,
+                    z);
     DrawTriangleFan(batcher, rounded_corner, bottom_right, color, 0, z);
-    DrawTriangleFan(batcher, rounded_corner, top_right, kBackgroundColor, 180.f, z);
-    DrawTriangleFan(batcher, rounded_corner, top_left, kBackgroundColor, -90.f, z);
-    DrawTriangleFan(batcher, rounded_corner, end_bottom, kBackgroundColor, 90.f, z);
-    DrawTriangleFan(batcher, rounded_corner, end_top, kBackgroundColor, 180.f, z);
+    DrawTriangleFan(batcher, rounded_corner, top_right, kBackgroundColor, 180.f,
+                    z);
+    DrawTriangleFan(batcher, rounded_corner, top_left, kBackgroundColor, -90.f,
+                    z);
+    DrawTriangleFan(batcher, rounded_corner, end_bottom, kBackgroundColor, 90.f,
+                    z);
+    DrawTriangleFan(batcher, rounded_corner, end_top, kBackgroundColor, 180.f,
+                    z);
   }
 
   // Collapse toggle state management.

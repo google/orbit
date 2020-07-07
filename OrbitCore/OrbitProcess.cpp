@@ -70,9 +70,7 @@ void Process::LoadDebugInfo() {
 }
 
 //-----------------------------------------------------------------------------
-void Process::SetID(int32_t id) {
-  m_ID = id;
-}
+void Process::SetID(int32_t id) { m_ID = id; }
 
 //-----------------------------------------------------------------------------
 void Process::ClearTransients() {

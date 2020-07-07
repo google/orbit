@@ -47,7 +47,8 @@ class UprobesFunctionCallManager {
 
     FunctionCall function_call;
     function_call.set_tid(tid);
-    function_call.set_absolute_address(tid_uprobes_stack.top().function_address);
+    function_call.set_absolute_address(
+        tid_uprobes_stack.top().function_address);
     function_call.set_begin_timestamp_ns(
         tid_uprobes_stack.top().begin_timestamp);
     function_call.set_end_timestamp_ns(end_timestamp);

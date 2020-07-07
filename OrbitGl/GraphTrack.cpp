@@ -42,7 +42,8 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
   }
 
   batcher->AddLine(m_Pos, Vec2(x1, y0), track_z, color, PickingID::PICKABLE);
-  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), track_z, color, PickingID::PICKABLE);
+  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), track_z, color,
+                   PickingID::PICKABLE);
 
   const Color kLineColor(0, 128, 255, 128);
 

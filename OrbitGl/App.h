@@ -45,8 +45,7 @@ struct CallStack;
 class Process;
 
 //-----------------------------------------------------------------------------
-class OrbitApp final : public DataViewFactory,
-                       public CaptureListener {
+class OrbitApp final : public DataViewFactory, public CaptureListener {
  public:
   explicit OrbitApp(ApplicationOptions&& options);
   ~OrbitApp() override;

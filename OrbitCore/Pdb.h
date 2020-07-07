@@ -181,4 +181,4 @@ class Pdb {
 
 extern std::shared_ptr<Pdb> GPdbDbg;
 
-#endif // ORBIT_CORE_PDB_H_
+#endif  // ORBIT_CORE_PDB_H_

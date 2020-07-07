@@ -7,8 +7,8 @@
 
 #include <optional>
 
-#include "CaptureListener.h"
 #include "CaptureEventProcessor.h"
+#include "CaptureListener.h"
 #include "OrbitBase/Logging.h"
 #include "grpcpp/channel.h"
 #include "services.grpc.pb.h"

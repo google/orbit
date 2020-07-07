@@ -148,4 +148,4 @@ class Process {
   friend class TestRemoteMessages;
 };
 
-#endif // ORBIT_CORE_ORBIT_PROCESS_H_
+#endif  // ORBIT_CORE_ORBIT_PROCESS_H_

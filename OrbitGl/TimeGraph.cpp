@@ -316,9 +316,10 @@ std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllThreadTrackTimerChains() const {
+std::vector<std::shared_ptr<TimerChain>>
+TimeGraph::GetAllThreadTrackTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
-  for (const auto& [_,track] : thread_tracks_) {
+  for (const auto& [_, track] : thread_tracks_) {
     Append(chains, track->GetAllChains());
   }
   return chains;

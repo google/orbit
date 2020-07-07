@@ -6,6 +6,7 @@
 #define ORBIT_CORE_CALLSTACK_H_
 
 #include <xxhash.h>
+
 #include <string>
 #include <vector>
 

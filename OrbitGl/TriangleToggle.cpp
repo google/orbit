@@ -37,12 +37,12 @@ void TriangleToggle::Draw(GlCanvas* canvas, bool picking) {
     Triangle triangle;
     if (state_ == State::kCollapsed) {
       triangle = Triangle(position + Vec3(-half_h, half_w, 0.f),
-        position + Vec3(-half_h, -half_w, 0.f),
-        position + Vec3(half_w, 0.f, 0.f));
+                          position + Vec3(-half_h, -half_w, 0.f),
+                          position + Vec3(half_w, 0.f, 0.f));
     } else {
-      triangle = Triangle(position + Vec3(half_w, half_h, 0.f), 
-        position + Vec3(-half_w, half_h, 0.f), 
-        position + Vec3(0.f, -half_w, 0.f));
+      triangle = Triangle(position + Vec3(half_w, half_h, 0.f),
+                          position + Vec3(-half_w, half_h, 0.f),
+                          position + Vec3(0.f, -half_w, 0.f));
     }
     batcher->AddTriangle(triangle, color, PickingID::PICKABLE);
   } else {
@@ -50,7 +50,7 @@ void TriangleToggle::Draw(GlCanvas* canvas, bool picking) {
     float original_width = 2 * half_w;
     float large_width = 2 * original_width;
     Box box(Vec2(pos_[0] - original_width, pos_[1] - original_width),
-      Vec2(large_width, large_width), 0.f);
+            Vec2(large_width, large_width), 0.f);
     batcher->AddBox(box, color, PickingID::PICKABLE);
   }
 }

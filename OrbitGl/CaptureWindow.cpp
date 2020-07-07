@@ -198,13 +198,13 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
   uint32_t id = a_PickingID.m_Id;
   uint32_t batcher_id = a_PickingID.batcher_id_;
 
-  Batcher& batcher = (batcher_id == PickingID::TIME_GRAPH) ?
-    time_graph_.GetBatcher() : ui_batcher_;
+  Batcher& batcher = (batcher_id == PickingID::TIME_GRAPH)
+                         ? time_graph_.GetBatcher()
+                         : ui_batcher_;
 
   switch (type) {
     case PickingID::BOX: {
-      void** textBoxPtr =
-          batcher.GetBoxBuffer().m_UserData.SlowAt(id);
+      void** textBoxPtr = batcher.GetBoxBuffer().m_UserData.SlowAt(id);
       if (textBoxPtr) {
         TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
         SelectTextBox(textBox);
@@ -212,8 +212,7 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
       break;
     }
     case PickingID::LINE: {
-      void** textBoxPtr =
-          batcher.GetLineBuffer().m_UserData.SlowAt(id);
+      void** textBoxPtr = batcher.GetLineBuffer().m_UserData.SlowAt(id);
       if (textBoxPtr) {
         TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
         SelectTextBox(textBox);
@@ -221,8 +220,7 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
       break;
     }
     case PickingID::TRIANGLE: {
-      void** textBoxPtr =
-          batcher.GetTriangleBuffer().user_data_.SlowAt(id);
+      void** textBoxPtr = batcher.GetTriangleBuffer().user_data_.SlowAt(id);
       if (textBoxPtr) {
         TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
         SelectTextBox(textBox);
@@ -595,7 +593,7 @@ void CaptureWindow::Draw() {
 
     Vec2 pos(m_MouseX, m_WorldTopLeftY);
     ui_batcher_.AddVerticalLine(pos, -m_WorldHeight, Z_VALUE_TEXT,
-      Color(0, 255, 0, 127), PickingID::LINE);
+                                Color(0, 255, 0, 127), PickingID::LINE);
   }
 }
 
@@ -639,13 +637,14 @@ void CaptureWindow::DrawScreenSpace() {
   float margin_x1 = getWidth();
   float margin_x0 = margin_x1 - vertical_margin;
 
-  Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvasHeight - height), z);
+  Box box(Vec2(margin_x0, 0),
+          Vec2(margin_x1 - margin_x0, canvasHeight - height), z);
   ui_batcher_.AddBox(box, kBackgroundColor, PickingID::BOX);
 
   // Time bar
   if (time_graph_.GetSessionTimeSpanUs() > 0) {
     Box box(Vec2(0, height), Vec2(getWidth(), height), z);
-    ui_batcher_.AddBox(box, Color(70,70,70,200), PickingID::BOX);
+    ui_batcher_.AddBox(box, Color(70, 70, 70, 200), PickingID::BOX);
   }
 }
 
@@ -1138,7 +1137,7 @@ void CaptureWindow::RenderTimeBar() {
 
       Vec2 pos(worldX, worldY);
       ui_batcher_.AddVerticalLine(pos, height, Z_VALUE_UI,
-        Color(255, 255, 255, 255), PickingID::LINE);
+                                  Color(255, 255, 255, 255), PickingID::LINE);
     }
   }
 }
