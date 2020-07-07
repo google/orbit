@@ -358,24 +358,6 @@ void OrbitApp::RefreshCaptureView() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::AddWatchedVariable(Variable* a_Variable) {
-#ifdef _WIN32
-  for (WatchCallback& callback : m_AddToWatchCallbacks) {
-    callback(a_Variable);
-  }
-#else
-  UNUSED(a_Variable);
-#endif
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::UpdateVariable(Variable* a_Variable) {
-  for (WatchCallback& callback : m_UpdateWatchCallbacks) {
-    callback(a_Variable);
-  }
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::ClearWatchedVariables() {
   if (Capture::GTargetProcess) {
     Capture::GTargetProcess->ClearWatchedVariables();

@@ -28,7 +28,6 @@ class Session;
 class CoreApp {
  public:
   virtual ~CoreApp() = default;
-  virtual void UpdateVariable(class Variable* /*a_Variable*/) {}
   virtual void ProcessTimer(const Timer& /*timer*/) {}
   virtual void ProcessSamplingCallStack(LinuxCallstackEvent& /*a_CS*/) {}
   virtual void ProcessHashedSamplingCallStack(CallstackEvent& /*a_CallStack*/) {

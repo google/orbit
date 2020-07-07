@@ -145,8 +145,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
                                         const std::string& filter) {
     return this->FindFile(caption, dir, filter);
   });
-  GOrbitApp->AddWatchCallback(
-      [this](const Variable* a_Variable) { this->OnAddToWatch(a_Variable); });
   GOrbitApp->SetSaveFileCallback([this](const std::string& extension) {
     return this->OnGetSaveFileName(extension);
   });

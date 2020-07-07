@@ -143,7 +143,7 @@ void GlobalsDataView::AddToWatch(const std::vector<int>& a_Items) {
     }
 
     Capture::GTargetProcess->AddWatchedVariable(var);
-    GOrbitApp->AddWatchedVariable(var.get());
+    FATAL("GOrbitApp->AddWatchedVariable(var.get()) not implemented");
   }
 }
 
