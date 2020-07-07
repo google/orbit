@@ -12,7 +12,6 @@
 #include "Capture.h"
 #include "Core.h"
 #include "OrbitModule.h"
-#include "OrbitType.h"
 #include "SamplingReport.h"
 #include "absl/strings/str_format.h"
 

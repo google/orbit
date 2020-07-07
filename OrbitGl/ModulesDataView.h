@@ -7,7 +7,6 @@
 
 #include "DataView.h"
 #include "ModuleData.h"
-#include "OrbitType.h"
 
 class ModulesDataView : public DataView {
  public:

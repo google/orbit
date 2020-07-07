@@ -9,14 +9,11 @@
 #include "App.h"
 #include "CallStackDataView.h"
 #include "FunctionsDataView.h"
-#include "GlobalsDataView.h"
 #include "LiveFunctionsDataView.h"
 #include "ModulesDataView.h"
-#include "OrbitType.h"
 #include "ProcessesDataView.h"
 #include "SamplingReportDataView.h"
 #include "SessionsDataView.h"
-#include "TypesDataView.h"
 
 //-----------------------------------------------------------------------------
 void DataView::InitSortingOrders() {

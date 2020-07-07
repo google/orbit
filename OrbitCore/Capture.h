@@ -10,8 +10,8 @@
 
 #include "CallstackTypes.h"
 #include "LinuxAddressInfo.h"
+#include "OrbitFunction.h"
 #include "OrbitProcess.h"
-#include "OrbitType.h"
 #include "Threading.h"
 #include "absl/container/flat_hash_map.h"
 
@@ -47,7 +47,6 @@ class Capture {
   static void AddCallstack(CallStack& a_CallStack);
   static std::shared_ptr<CallStack> GetCallstack(CallstackID a_ID);
   static LinuxAddressInfo* GetAddressInfo(uint64_t address);
-  static void CheckForUnrealSupport();
   static void PreSave();
 
   static State GState;
@@ -75,7 +74,6 @@ class Capture {
   static std::map<uint64_t, Function*> GSelectedFunctionsMap;
   static std::map<uint64_t, Function*> GVisibleFunctionsMap;
   static std::unordered_map<uint64_t, uint64_t> GFunctionCountMap;
-  static std::vector<uint64_t> GSelectedAddressesByType[Function::NUM_TYPES];
   static std::unordered_map<uint64_t, std::shared_ptr<CallStack>> GCallstacks;
   static std::unordered_map<uint64_t, LinuxAddressInfo> GAddressInfos;
   static std::unordered_map<uint64_t, std::string> GAddressToFunctionName;

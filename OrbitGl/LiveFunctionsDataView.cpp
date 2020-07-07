@@ -10,7 +10,6 @@
 #include "FunctionStats.h"
 #include "Log.h"
 #include "OrbitFunction.h"
-#include "OrbitType.h"
 #include "Pdb.h"
 #include "TextBox.h"
 #include "TimeGraph.h"

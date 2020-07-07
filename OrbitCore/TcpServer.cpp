@@ -13,7 +13,6 @@
 #include "Log.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitProcess.h"
-#include "OrbitUnreal.h"
 #include "SamplingProfiler.h"
 #include "Tcp.h"
 #include "VariableTracing.h"

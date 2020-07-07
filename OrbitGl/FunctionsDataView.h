@@ -5,7 +5,7 @@
 #pragma once
 
 #include "DataView.h"
-#include "OrbitType.h"
+#include "OrbitFunction.h"
 
 class FunctionsDataView : public DataView {
  public:

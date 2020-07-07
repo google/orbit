@@ -168,12 +168,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->CallStackView->Initialize(
       data_view_factory->GetOrCreateDataView(DataViewType::CALLSTACK),
       SelectionType::kExtended, FontType::kDefault);
-  ui->TypesList->Initialize(
-      data_view_factory->GetOrCreateDataView(DataViewType::TYPES),
-      SelectionType::kDefault, FontType::kDefault);
-  ui->GlobalsList->Initialize(
-      data_view_factory->GetOrCreateDataView(DataViewType::GLOBALS),
-      SelectionType::kDefault, FontType::kDefault);
   ui->SessionList->Initialize(
       data_view_factory->GetOrCreateDataView(DataViewType::PRESETS),
       SelectionType::kDefault, FontType::kDefault);
@@ -187,10 +181,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   if (!absl::GetFlag(FLAGS_enable_stale_features)) {
     ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->OutputTab));
-    ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->WatchTab));
 
-    ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->TypesTab));
-    ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->GlobalsType));
     ui->RightTabWidget->removeTab(
         ui->RightTabWidget->indexOf(ui->CallStackTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
@@ -352,12 +343,6 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
     case DataViewType::LIVE_FUNCTIONS:
       ui->LiveFunctionsList->Refresh();
       break;
-    case DataViewType::TYPES:
-      ui->TypesList->Refresh();
-      break;
-    case DataViewType::GLOBALS:
-      ui->GlobalsList->Refresh();
-      break;
     case DataViewType::MODULES:
       ui->ModulesList->Refresh();
       break;
@@ -430,12 +415,6 @@ void OrbitMainWindow::OnNewSelectionReport(
   m_SelectionLayout->addWidget(m_SelectionReport, 0, 0, 1, 1);
 
   ui->RightTabWidget->setCurrentWidget(m_SelectionTab);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::OnAddToWatch(const class Variable* a_Variable) {
-  ui->WatchWidget->AddToWatch(a_Variable);
-  ui->MainTabWidget->setCurrentWidget(ui->WatchTab);
 }
 
 //-----------------------------------------------------------------------------

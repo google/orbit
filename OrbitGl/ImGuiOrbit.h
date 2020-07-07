@@ -14,8 +14,8 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
-#include "OrbitType.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 
@@ -122,16 +122,6 @@ struct DebugWindow {
     ImGui::EndChild();
     ImGui::End();
   }
-};
-
-//-----------------------------------------------------------------------------
-class WatchWindow {
- public:
-  WatchWindow() {}
-  void Draw(const char* title, bool* p_opened = nullptr);
-
- protected:
-  ImGuiTextFilter m_Filter;
 };
 
 //-----------------------------------------------------------------------------

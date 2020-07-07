@@ -27,6 +27,5 @@ class HomeWindow : public GlCanvas {
   bool m_DrawLog;
 
   DebugWindow m_DebugWindow;
-  WatchWindow m_WatchWindow;
   LogWindow m_LogWindow;
 };

@@ -14,7 +14,6 @@
 #include "Log.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitSession.h"
-#include "OrbitUnreal.h"
 #include "Params.h"
 #include "Path.h"
 #include "Pdb.h"
@@ -49,7 +48,6 @@ std::map<uint64_t, Function*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, Function*> Capture::GVisibleFunctionsMap;
 std::unordered_map<uint64_t, uint64_t> Capture::GFunctionCountMap;
 std::shared_ptr<CallStack> Capture::GSelectedCallstack;
-std::vector<uint64_t> Capture::GSelectedAddressesByType[Function::NUM_TYPES];
 std::unordered_map<uint64_t, std::shared_ptr<CallStack>> Capture::GCallstacks;
 std::unordered_map<uint64_t, LinuxAddressInfo> Capture::GAddressInfos;
 std::unordered_map<uint64_t, std::string> Capture::GAddressToFunctionName;
@@ -81,9 +79,7 @@ void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
     GSamplingProfiler = std::make_shared<SamplingProfiler>(a_Process);
     GSelectedFunctionsMap.clear();
     GFunctionCountMap.clear();
-    GOrbitUnreal.Clear();
     GTargetProcess->LoadDebugInfo();
-    GTargetProcess->ClearWatchedVariables();
   }
 }
 
@@ -143,7 +139,6 @@ void Capture::ClearCaptureData() {
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
   GNumProfileEvents = 0;
-  GOrbitUnreal.NewSession();
   GHasContextSwitches = false;
   GNumLinuxEvents = 0;
   GNumContextSwitches = 0;
@@ -152,19 +147,11 @@ void Capture::ClearCaptureData() {
 
 //-----------------------------------------------------------------------------
 void Capture::PreFunctionHooks() {
-  // Clear selected functions
-  for (auto& selected_addresses : GSelectedAddressesByType) {
-    selected_addresses.clear();
-  }
-
-  // Unreal
-  CheckForUnrealSupport();
 
   GSelectedFunctions = GetSelectedFunctions();
 
   for (auto& func : GSelectedFunctions) {
     uint64_t address = func->GetVirtualAddress();
-    GSelectedAddressesByType[func->GetOrbitType()].push_back(address);
     GSelectedFunctionsMap[address] = func.get();
     func->ResetStats();
     GFunctionCountMap[address] = 0;
@@ -303,12 +290,6 @@ LinuxAddressInfo* Capture::GetAddressInfo(uint64_t address) {
     return nullptr;
   }
   return &address_info_it->second;
-}
-
-//-----------------------------------------------------------------------------
-void Capture::CheckForUnrealSupport() {
-  GUnrealSupported = GCoreApp != nullptr &&
-                     GOrbitUnreal.HasFnameInfo();
 }
 
 //-----------------------------------------------------------------------------

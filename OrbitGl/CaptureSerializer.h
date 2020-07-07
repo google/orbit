@@ -9,7 +9,6 @@
 #include <unordered_map>
 #include <iosfwd>
 
-#include "OrbitType.h"
 #include "SerializationMacros.h"
 
 class CaptureSerializer {

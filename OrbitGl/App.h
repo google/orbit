@@ -24,7 +24,6 @@
 #include "DataViewTypes.h"
 #include "FramePointerValidatorClient.h"
 #include "FunctionsDataView.h"
-#include "GlobalsDataView.h"
 #include "LiveFunctionsDataView.h"
 #include "Message.h"
 #include "ModulesDataView.h"
@@ -37,7 +36,6 @@
 #include "StringManager.h"
 #include "SymbolHelper.h"
 #include "Threading.h"
-#include "TypesDataView.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "grpcpp/grpcpp.h"
@@ -77,7 +75,6 @@ class OrbitApp final : public CoreApp,
   void LoadFileMapping();
   void ListPresets();
   void RefreshCaptureView() override;
-  void ClearWatchedVariables();
   void Disassemble(int32_t pid, const Function& function);
 
   void ProcessTimer(const Timer& timer) override;
@@ -266,8 +263,6 @@ class OrbitApp final : public CoreApp,
   std::unique_ptr<FunctionsDataView> m_FunctionsDataView;
   std::unique_ptr<LiveFunctionsDataView> m_LiveFunctionsDataView;
   std::unique_ptr<CallStackDataView> m_CallStackDataView;
-  std::unique_ptr<TypesDataView> m_TypesDataView;
-  std::unique_ptr<GlobalsDataView> m_GlobalsDataView;
   std::unique_ptr<PresetsDataView> m_PresetsDataView;
 
   CaptureWindow* m_CaptureWindow = nullptr;
