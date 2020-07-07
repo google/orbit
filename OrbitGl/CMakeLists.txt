@@ -16,6 +16,7 @@ target_sources(
          BlackBoard.h
          CallStackDataView.h
          CaptureClient.h
+         CaptureEventProcessor.h
          CaptureListener.h
          CaptureSerializer.h
          CaptureWindow.h
@@ -67,6 +68,7 @@ target_sources(
           BlackBoard.cpp
           CallStackDataView.cpp
           CaptureClient.cpp
+          CaptureEventProcessor.cpp
           CaptureSerializer.cpp
           CaptureWindow.cpp
           Card.cpp

@@ -5,11 +5,11 @@
 #ifndef ORBIT_GL_CAPTURE_CLIENT_H_
 #define ORBIT_GL_CAPTURE_CLIENT_H_
 
+#include <optional>
+
 #include "CaptureListener.h"
+#include "CaptureEventProcessor.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitFunction.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 #include "grpcpp/channel.h"
 #include "services.grpc.pb.h"
 
@@ -34,24 +34,9 @@ class CaptureClient {
   std::unique_ptr<grpc::ClientReaderWriter<CaptureRequest, CaptureResponse>>
       reader_writer_;
 
-  void ProcessSchedulingSlice(const SchedulingSlice& scheduling_slice);
-  void ProcessInternedCallstack(InternedCallstack interned_callstack);
-  void ProcessCallstackSample(const CallstackSample& callstack_sample);
-  void ProcessFunctionCall(const FunctionCall& function_call);
-  void ProcessInternedString(InternedString interned_string);
-  void ProcessGpuJob(const GpuJob& gpu_job);
-  void ProcessThreadName(const ThreadName& thread_name);
-  void ProcessAddressInfo(const AddressInfo& address_info);
+  CaptureListener* capture_listener_ = nullptr;
 
-  absl::flat_hash_map<uint64_t, Callstack> callstack_intern_pool;
-  absl::flat_hash_map<uint64_t, std::string> string_intern_pool;
-  CaptureListener* capture_listener_;
-
-  absl::flat_hash_set<uint64_t> callstack_hashes_seen_;
-  uint64_t GetCallstackHashAndSendToListenerIfNecessary(
-      const Callstack& callstack);
-  absl::flat_hash_set<uint64_t> string_hashes_seen_;
-  uint64_t GetStringHashAndSendToListenerIfNecessary(const std::string& str);
+  std::optional<CaptureEventProcessor> event_processor_;
 };
 
 #endif  // ORBIT_GL_CAPTURE_CLIENT_H_
