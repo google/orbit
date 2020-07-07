@@ -25,7 +25,6 @@
 #include "FramePointerValidatorClient.h"
 #include "FunctionsDataView.h"
 #include "LiveFunctionsDataView.h"
-#include "Message.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/ThreadPool.h"

@@ -18,7 +18,6 @@
 #include "Core.h"
 #include "GlCanvas.h"
 #include "Images.h"
-#include "Message.h"
 #include "OpenGl.h"
 #include "Params.h"
 #include "Pdb.h"

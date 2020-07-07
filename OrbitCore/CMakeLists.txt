@@ -32,7 +32,6 @@ target_sources(
          Log.h
          LogInterface.h
          MemoryTracker.h
-         Message.h
          OrbitDbgHelp.h
          OrbitFunction.h
          OrbitModule.h
@@ -72,7 +71,6 @@ target_sources(
           Log.cpp
           LogInterface.cpp
           MemoryTracker.cpp
-          Message.cpp
           OrbitFunction.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
