@@ -56,11 +56,19 @@ struct PickingID {
     return id;
   }
   static Color GetColor(Type a_Type, uint32_t a_ID, BatcherId batcher_id = TIME_GRAPH) {
+    static_assert(sizeof(PickingID) == sizeof(Color),
+      "PickingId and Color must have the same size");
     PickingID id = Get(a_Type, a_ID, batcher_id);
-    return *(reinterpret_cast<Color*>(&id));
+    Color color;
+    memcpy(&color, &id, sizeof(PickingID));
+    return color;
   }
   static PickingID Get(uint32_t a_Value) {
-    return *(reinterpret_cast<PickingID*>(&a_Value));
+    static_assert(sizeof(PickingID) == sizeof(uint32_t),
+      "PickingId and uint32_t must have the same size");
+    PickingID id;
+    memcpy(&id, &a_Value, sizeof(uint32_t));
+    return id;
   }
   uint32_t m_Id : 29;
   uint32_t m_Type : 2;
