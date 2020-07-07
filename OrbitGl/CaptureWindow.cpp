@@ -181,10 +181,12 @@ void CaptureWindow::Pick() {
 //-----------------------------------------------------------------------------
 void CaptureWindow::Pick(int a_X, int a_Y) {
   // 4 bytes per pixel (RGBA), 1x1 bitmap
-  std::vector<uint8_t> pixels(1 * 1 * 4);
+  std::array<uint8_t, 4 * 1 * 1> pixels;
   glReadPixels(a_X, m_MainWindowHeight - a_Y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE,
                &pixels[0]);
-  PickingID pickId = PickingID::Get(*reinterpret_cast<uint32_t*>(&pixels[0]));
+  uint32_t value;
+  std::memcpy(&value, &pixels[0], sizeof(uint32_t));
+  PickingID pickId = PickingID::Get(value);
 
   Capture::GSelectedTextBox = nullptr;
   Capture::GSelectedThreadId = 0;

@@ -84,8 +84,9 @@ Color PickingManager::GetPickableColor(Pickable* pickable, PickingID::BatcherId 
 
 //-----------------------------------------------------------------------------
 Color PickingManager::ColorFromPickingID(PickingID id) const {
-  static_assert(sizeof(PickingID) == sizeof(Color),
-                "PickingID should be same size as Color");
-  const Color* color = reinterpret_cast<const Color*>(&id);
-  return *color;
+  static_assert(sizeof(PickingID) == 4 * sizeof(uint8_t),
+                "PickingID should be same size as 4 * uint8_t");
+  std::array<uint8_t, 4> color_values;
+  std::memcpy(&color_values[0], &id, sizeof(PickingID));
+  return Color(color_values[0], color_values[1], color_values[2], color_values[3]);
 }

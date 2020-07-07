@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cstring>
 #include <unordered_map>
 #include <vector>
 
@@ -58,16 +59,23 @@ struct PickingID {
   static Color GetColor(Type a_Type, uint32_t a_ID, BatcherId batcher_id = TIME_GRAPH) {
     static_assert(sizeof(PickingID) == sizeof(Color),
       "PickingId and Color must have the same size");
+    static_assert(std::is_trivially_copyable<PickingID>::value,
+      "PickingID must be trivially copyable");
+
     PickingID id = Get(a_Type, a_ID, batcher_id);
-    Color color;
-    memcpy(&color, &id, sizeof(PickingID));
-    return color;
+    std::array<uint8_t, 4> color_values;
+    std::memcpy(&color_values[0], &id, sizeof(PickingID));
+
+    return Color(color_values[0], color_values[1], color_values[2], color_values[3]);
   }
   static PickingID Get(uint32_t a_Value) {
     static_assert(sizeof(PickingID) == sizeof(uint32_t),
       "PickingId and uint32_t must have the same size");
+    static_assert(std::is_trivially_copyable<PickingID>::value,
+      "PickingID must be trivially copyable");
+
     PickingID id;
-    memcpy(&id, &a_Value, sizeof(uint32_t));
+    std::memcpy(&id, &a_Value, sizeof(uint32_t));
     return id;
   }
   uint32_t m_Id : 29;
