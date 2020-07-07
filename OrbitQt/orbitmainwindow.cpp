@@ -74,7 +74,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->HomeHorizontalSplitter->setSizes(sizes);
   ui->splitter_2->setSizes(sizes);
 
-  GOrbitApp->AddCaptureStartedCallback([this] {
+  GOrbitApp->SetCaptureStartedCallback([this] {
     ui->actionOpen_Capture->setDisabled(true);
     ui->actionSave_Capture->setDisabled(true);
     ui->actionOpen_Preset->setDisabled(true);
@@ -93,9 +93,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   finalizing_capture_dialog->setFixedSize(finalizing_capture_dialog->size());
   finalizing_capture_dialog->close();
 
-  GOrbitApp->AddCaptureStopRequestedCallback(
+  GOrbitApp->SetCaptureStopRequestedCallback(
       [finalizing_capture_dialog] { finalizing_capture_dialog->show(); });
-  GOrbitApp->AddCaptureStoppedCallback([this, finalizing_capture_dialog] {
+  GOrbitApp->SetCaptureStoppedCallback([this, finalizing_capture_dialog] {
     finalizing_capture_dialog->close();
     ui->actionOpen_Capture->setDisabled(false);
     ui->actionSave_Capture->setDisabled(false);
@@ -104,41 +104,41 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->HomeTab->setDisabled(false);
   });
 
-  GOrbitApp->AddRefreshCallback(
+  GOrbitApp->SetRefreshCallback(
       [this](DataViewType a_Type) { this->OnRefreshDataViewPanels(a_Type); });
-  GOrbitApp->AddSamplingReportCallback(
+  GOrbitApp->SetSamplingReportCallback(
       [this](DataView* callstack_data_view,
              std::shared_ptr<SamplingReport> report) {
         this->OnNewSamplingReport(callstack_data_view, std::move(report));
       });
-  GOrbitApp->AddSelectionReportCallback(
+  GOrbitApp->SetSelectionReportCallback(
       [this](DataView* callstack_data_view,
              std::shared_ptr<SamplingReport> report) {
         this->OnNewSelectionReport(callstack_data_view, std::move(report));
       });
 
-  GOrbitApp->AddOpenCaptureCallback(
+  GOrbitApp->SetOpenCaptureCallback(
       [this] { on_actionOpen_Capture_triggered(); });
-  GOrbitApp->AddSaveCaptureCallback(
+  GOrbitApp->SetSaveCaptureCallback(
       [this] { on_actionSave_Capture_triggered(); });
-  GOrbitApp->AddSelectLiveTabCallback(
+  GOrbitApp->SetSelectLiveTabCallback(
       [this] { ui->RightTabWidget->setCurrentWidget(ui->LiveTab); });
-  GOrbitApp->AddDisassemblyCallback(
+  GOrbitApp->SetDisassemblyCallback(
       [this](const std::string& disassembly) { OpenDisassembly(disassembly); });
-  GOrbitApp->AddErrorMessageCallback(
+  GOrbitApp->SetErrorMessageCallback(
       [this](const std::string& title, const std::string& text) {
         QMessageBox::critical(this, QString::fromStdString(title),
                               QString::fromStdString(text));
       });
-  GOrbitApp->AddInfoMessageCallback(
+  GOrbitApp->SetInfoMessageCallback(
       [this](const std::string& title, const std::string& text) {
         QMessageBox::information(this, QString::fromStdString(title),
                                  QString::fromStdString(text));
       });
-  GOrbitApp->AddTooltipCallback([this](const std::string& tooltip) {
+  GOrbitApp->SetTooltipCallback([this](const std::string& tooltip) {
     QToolTip::showText(QCursor::pos(), QString::fromStdString(tooltip), this);
   });
-  GOrbitApp->AddFeedbackDialogCallback([this] { ShowFeedbackDialog(); });
+  GOrbitApp->SetFeedbackDialogCallback([this] { ShowFeedbackDialog(); });
 
   GOrbitApp->SetFindFileCallback([this](const std::string& caption,
                                         const std::string& dir,

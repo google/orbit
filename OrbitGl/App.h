@@ -116,64 +116,64 @@ class OrbitApp final : public CoreApp,
 
   // Callbacks
   using CaptureStartedCallback = std::function<void()>;
-  void AddCaptureStartedCallback(CaptureStartedCallback callback) {
-    capture_started_callbacks_.emplace_back(std::move(callback));
+  void SetCaptureStartedCallback(CaptureStartedCallback callback) {
+    capture_started_callback_ = std::move(callback);
   }
   using CaptureStopRequestedCallback = std::function<void()>;
-  void AddCaptureStopRequestedCallback(CaptureStopRequestedCallback callback) {
-    capture_stop_requested_callbacks_.emplace_back(std::move(callback));
+  void SetCaptureStopRequestedCallback(CaptureStopRequestedCallback callback) {
+    capture_stop_requested_callback_ = std::move(callback);
   }
   using CaptureStoppedCallback = std::function<void()>;
-  void AddCaptureStoppedCallback(CaptureStoppedCallback callback) {
-    capture_stopped_callbacks_.emplace_back(std::move(callback));
+  void SetCaptureStoppedCallback(CaptureStoppedCallback callback) {
+    capture_stopped_callback_ = std::move(callback);
   }
 
   using OpenCaptureCallback = std::function<void()>;
-  void AddOpenCaptureCallback(OpenCaptureCallback callback) {
-    open_capture_callbacks_.emplace_back(std::move(callback));
+  void SetOpenCaptureCallback(OpenCaptureCallback callback) {
+    open_capture_callback_ = std::move(callback);
   }
   using SaveCaptureCallback = std::function<void()>;
-  void AddSaveCaptureCallback(SaveCaptureCallback callback) {
-    save_capture_callbacks_.emplace_back(std::move(callback));
+  void SetSaveCaptureCallback(SaveCaptureCallback callback) {
+    save_capture_callback_ = std::move(callback);
   }
   using SelectLiveTabCallback = std::function<void()>;
-  void AddSelectLiveTabCallback(SelectLiveTabCallback callback) {
-    select_live_tab_callbacks_.emplace_back(std::move(callback));
+  void SetSelectLiveTabCallback(SelectLiveTabCallback callback) {
+    select_live_tab_callback_ = std::move(callback);
   }
   using DisassemblyCallback = std::function<void(const std::string&)>;
-  void AddDisassemblyCallback(DisassemblyCallback callback) {
-    disassembly_callbacks_.emplace_back(std::move(callback));
+  void SetDisassemblyCallback(DisassemblyCallback callback) {
+    disassembly_callback_ = std::move(callback);
   }
   using ErrorMessageCallback =
       std::function<void(const std::string&, const std::string&)>;
-  void AddErrorMessageCallback(ErrorMessageCallback callback) {
-    error_message_callbacks_.emplace_back(std::move(callback));
+  void SetErrorMessageCallback(ErrorMessageCallback callback) {
+    error_message_callback_ = std::move(callback);
   }
   using InfoMessageCallback =
       std::function<void(const std::string&, const std::string&)>;
-  void AddInfoMessageCallback(InfoMessageCallback callback) {
-    info_message_callbacks_.emplace_back(std::move(callback));
+  void SetInfoMessageCallback(InfoMessageCallback callback) {
+    info_message_callback_ = std::move(callback);
   }
   using TooltipCallback = std::function<void(const std::string&)>;
-  void AddTooltipCallback(TooltipCallback callback) {
-    tooltip_callbacks_.emplace_back(std::move(callback));
+  void SetTooltipCallback(TooltipCallback callback) {
+    tooltip_callback_ = std::move(callback);
   }
   using FeedbackDialogCallback = std::function<void()>;
-  void AddFeedbackDialogCallback(FeedbackDialogCallback callback) {
-    feedback_dialog_callbacks_.emplace_back(std::move(callback));
+  void SetFeedbackDialogCallback(FeedbackDialogCallback callback) {
+    feedback_dialog_callback_ = std::move(callback);
   }
 
-  typedef std::function<void(DataViewType a_Type)> RefreshCallback;
-  void AddRefreshCallback(RefreshCallback a_Callback) {
-    m_RefreshCallbacks.emplace_back(std::move(a_Callback));
+  using RefreshCallback = std::function<void(DataViewType type)>;
+  void SetRefreshCallback(RefreshCallback callback) {
+    refresh_callback_ = std::move(callback);
   }
-  typedef std::function<void(DataView*, std::shared_ptr<class SamplingReport>)>
-      SamplingReportCallback;
-  void AddSamplingReportCallback(SamplingReportCallback a_Callback) {
-    m_SamplingReportsCallbacks.emplace_back(std::move(a_Callback));
+  using SamplingReportCallback =
+      std::function<void(DataView*, std::shared_ptr<SamplingReport>)>;
+  void SetSamplingReportCallback(SamplingReportCallback callback) {
+    sampling_reports_callback_ = std::move(callback);
   }
-  void AddSelectionReportCallback(SamplingReportCallback a_Callback) {
-    m_SelectionReportCallbacks.emplace_back(std::move(a_Callback));
+  void SetSelectionReportCallback(SamplingReportCallback callback) {
+    selection_report_callback_ = std::move(callback);
   }
   typedef std::function<void(Variable* a_Variable)> WatchCallback;
   void AddWatchCallback(WatchCallback a_Callback) {
@@ -182,12 +182,12 @@ class OrbitApp final : public CoreApp,
   typedef std::function<std::string(const std::string& a_Extension)>
       SaveFileCallback;
   void SetSaveFileCallback(SaveFileCallback a_Callback) {
-    m_SaveFileCallback = std::move(a_Callback);
+    save_file_callback_ = std::move(a_Callback);
   }
   void AddUpdateWatchCallback(WatchCallback a_Callback) {
     m_UpdateWatchCallbacks.emplace_back(std::move(a_Callback));
   }
-  void FireRefreshCallbacks(DataViewType a_Type = DataViewType::ALL);
+  void FireRefreshCallbacks(DataViewType type = DataViewType::ALL);
   void Refresh(DataViewType a_Type = DataViewType::ALL) {
     FireRefreshCallbacks(a_Type);
   }
@@ -196,13 +196,13 @@ class OrbitApp final : public CoreApp,
                                     const std::string& filter)>
       FindFileCallback;
   void SetFindFileCallback(FindFileCallback callback) {
-    m_FindFileCallback = std::move(callback);
+    find_file_callback_ = std::move(callback);
   }
   std::string FindFile(const std::string& caption, const std::string& dir,
                        const std::string& filter);
   typedef std::function<void(const std::string&)> ClipboardCallback;
   void SetClipboardCallback(ClipboardCallback callback) {
-    m_ClipboardCallback = std::move(callback);
+    clipboard_callback_ = std::move(callback);
   }
 
   void SetCommandLineArguments(const std::vector<std::string>& a_Args);
@@ -252,26 +252,26 @@ class OrbitApp final : public CoreApp,
   absl::Mutex process_map_mutex_;
   absl::flat_hash_map<uint32_t, std::shared_ptr<Process>> process_map_;
 
-  std::vector<CaptureStartedCallback> capture_started_callbacks_;
-  std::vector<CaptureStopRequestedCallback> capture_stop_requested_callbacks_;
-  std::vector<CaptureStoppedCallback> capture_stopped_callbacks_;
-  std::vector<OpenCaptureCallback> open_capture_callbacks_;
-  std::vector<SaveCaptureCallback> save_capture_callbacks_;
-  std::vector<SelectLiveTabCallback> select_live_tab_callbacks_;
-  std::vector<DisassemblyCallback> disassembly_callbacks_;
-  std::vector<ErrorMessageCallback> error_message_callbacks_;
-  std::vector<InfoMessageCallback> info_message_callbacks_;
-  std::vector<TooltipCallback> tooltip_callbacks_;
-  std::vector<FeedbackDialogCallback> feedback_dialog_callbacks_;
-  std::vector<RefreshCallback> m_RefreshCallbacks;
+  CaptureStartedCallback capture_started_callback_;
+  CaptureStopRequestedCallback capture_stop_requested_callback_;
+  CaptureStoppedCallback capture_stopped_callback_;
+  OpenCaptureCallback open_capture_callback_;
+  SaveCaptureCallback save_capture_callback_;
+  SelectLiveTabCallback select_live_tab_callback_;
+  DisassemblyCallback disassembly_callback_;
+  ErrorMessageCallback error_message_callback_;
+  InfoMessageCallback info_message_callback_;
+  TooltipCallback tooltip_callback_;
+  FeedbackDialogCallback feedback_dialog_callback_;
+  RefreshCallback refresh_callback_;
+  SamplingReportCallback sampling_reports_callback_;
+  SamplingReportCallback selection_report_callback_;
   std::vector<WatchCallback> m_AddToWatchCallbacks;
   std::vector<WatchCallback> m_UpdateWatchCallbacks;
-  std::vector<SamplingReportCallback> m_SamplingReportsCallbacks;
-  std::vector<SamplingReportCallback> m_SelectionReportCallbacks;
   std::vector<class DataView*> m_Panels;
-  FindFileCallback m_FindFileCallback;
-  SaveFileCallback m_SaveFileCallback;
-  ClipboardCallback m_ClipboardCallback;
+  FindFileCallback find_file_callback_;
+  SaveFileCallback save_file_callback_;
+  ClipboardCallback clipboard_callback_;
 
   std::unique_ptr<ProcessesDataView> m_ProcessesDataView;
   std::unique_ptr<ModulesDataView> m_ModulesDataView;
