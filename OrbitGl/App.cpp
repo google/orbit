@@ -20,7 +20,6 @@
 #include "CaptureListener.h"
 #include "CaptureSerializer.h"
 #include "CaptureWindow.h"
-#include "Debugger.h"
 #include "Disassembler.h"
 #include "EventTracer.h"
 #include "FunctionsDataView.h"
