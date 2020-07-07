@@ -392,30 +392,6 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::GetThreadCallstack(Thread* a_Thread) {
-#ifdef _WIN32
-  StackFrame frame(a_Thread->m_Handle);
-
-  unsigned int depth = 0;
-  while (StackWalk64(frame.m_ImageType, m_Process->GetHandle(),
-                     a_Thread->m_Handle, &frame.m_StackFrame, &frame.m_Context,
-                     nullptr, &SymFunctionTableAccess64, &SymGetModuleBase64,
-                     nullptr) &&
-         frame.m_StackFrame.AddrPC.Offset && depth < ORBIT_STACK_SIZE) {
-    frame.m_Callstack.m_Data[depth++] = frame.m_StackFrame.AddrPC.Offset;
-  }
-
-  if (depth > 0) {
-    frame.m_Callstack.m_Depth = depth;
-    frame.m_Callstack.m_ThreadId = a_Thread->m_TID;
-    AddCallStack(frame.m_Callstack);
-  }
-#else
-  UNUSED(a_Thread);
-#endif
-}
-
-//-----------------------------------------------------------------------------
 ORBIT_SERIALIZE_WSTRING(SampledFunction, 0) {
   ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_Module);

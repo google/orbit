@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_MEMORY_TRACKER_H_
+#define ORBIT_CORE_MEMORY_TRACKER_H_
 
 #include <unordered_map>
 
@@ -15,7 +16,6 @@ class MemoryTracker {
   MemoryTracker();
   void ProcessAlloc(const Timer& a_Timer);
   void ProcessFree(const Timer& a_Timer);
-  void DumpReport();
   void Clear();
 
   DWORD64 NumAllocatedBytes() const { return m_NumAllocatedBytes; }
@@ -28,3 +28,5 @@ class MemoryTracker {
   DWORD64 m_NumFreedBytes;
   DWORD64 m_NumLiveBytes;
 };
+
+#endif // ORBIT_CORE_MEMORY_TRACKER_H_
