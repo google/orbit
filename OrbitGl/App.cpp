@@ -48,7 +48,6 @@
 #include "SessionsDataView.h"
 #include "StringManager.h"
 #include "Tcp.h"
-#include "TcpClient.h"
 #include "TcpServer.h"
 #include "TextRenderer.h"
 #include "TypesDataView.h"

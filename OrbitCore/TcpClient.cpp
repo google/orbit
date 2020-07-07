@@ -14,8 +14,6 @@
 #include "Tcp.h"
 #include "absl/strings/str_format.h"
 
-std::unique_ptr<TcpClient> GTcpClient;
-
 //-----------------------------------------------------------------------------
 TcpClient::TcpClient(const std::string& a_Host) { Connect(a_Host); }
 

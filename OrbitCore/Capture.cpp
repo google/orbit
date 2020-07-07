@@ -20,7 +20,6 @@
 #include "Pdb.h"
 #include "SamplingProfiler.h"
 #include "Serialization.h"
-#include "TcpClient.h"
 #include "TcpForward.h"
 #include "TcpServer.h"
 #include "absl/strings/str_format.h"
@@ -257,14 +256,6 @@ void Capture::TestHooks() {
 //-----------------------------------------------------------------------------
 bool Capture::IsCapturing() {
   return GState == State::kStarted || GState == State::kStopping;
-}
-
-//-----------------------------------------------------------------------------
-TcpEntity* Capture::GetMainTcpEntity() {
-  if (Capture::IsRemote()) {
-    return GTcpClient.get();
-  }
-  return GTcpServer.get();
 }
 
 //-----------------------------------------------------------------------------

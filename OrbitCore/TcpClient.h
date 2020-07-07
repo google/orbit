@@ -37,5 +37,3 @@ class TcpClient : public TcpEntity {
   std::vector<char> payload_;
   std::thread workerThread_;
 };
-
-extern std::unique_ptr<TcpClient> GTcpClient;

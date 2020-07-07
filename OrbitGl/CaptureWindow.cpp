@@ -10,7 +10,6 @@
 #include "EventTracer.h"
 #include "GlUtils.h"
 #include "PluginManager.h"
-#include "TcpClient.h"
 #include "TcpServer.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
