@@ -78,8 +78,6 @@ class OrbitApp final : public CoreApp,
   void LoadFileMapping();
   void ListPresets();
   void RefreshCaptureView() override;
-  void AddWatchedVariable(Variable* a_Variable);
-  void UpdateVariable(Variable* a_Variable) override;
   void ClearWatchedVariables();
   void Disassemble(int32_t pid, const Function& function);
 
@@ -175,17 +173,10 @@ class OrbitApp final : public CoreApp,
   void SetSelectionReportCallback(SamplingReportCallback callback) {
     selection_report_callback_ = std::move(callback);
   }
-  typedef std::function<void(Variable* a_Variable)> WatchCallback;
-  void AddWatchCallback(WatchCallback a_Callback) {
-    m_AddToWatchCallbacks.emplace_back(std::move(a_Callback));
-  }
-  typedef std::function<std::string(const std::string& a_Extension)>
-      SaveFileCallback;
-  void SetSaveFileCallback(SaveFileCallback a_Callback) {
-    save_file_callback_ = std::move(a_Callback);
-  }
-  void AddUpdateWatchCallback(WatchCallback a_Callback) {
-    m_UpdateWatchCallbacks.emplace_back(std::move(a_Callback));
+  using SaveFileCallback =
+      std::function<std::string(const std::string& extension)>;
+  void SetSaveFileCallback(SaveFileCallback callback) {
+    save_file_callback_ = std::move(callback);
   }
   void FireRefreshCallbacks(DataViewType type = DataViewType::ALL);
   void Refresh(DataViewType a_Type = DataViewType::ALL) {
@@ -266,8 +257,6 @@ class OrbitApp final : public CoreApp,
   RefreshCallback refresh_callback_;
   SamplingReportCallback sampling_reports_callback_;
   SamplingReportCallback selection_report_callback_;
-  std::vector<WatchCallback> m_AddToWatchCallbacks;
-  std::vector<WatchCallback> m_UpdateWatchCallbacks;
   std::vector<class DataView*> m_Panels;
   FindFileCallback find_file_callback_;
   SaveFileCallback save_file_callback_;

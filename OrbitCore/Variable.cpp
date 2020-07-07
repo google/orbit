@@ -49,7 +49,7 @@ void Variable::ReceiveValue(const Message& a_Msg) {
   } else {
     if (IsBasicType()) {
       memcpy(&m_Data, a_Msg.GetData(), m_Size);
-      GCoreApp->UpdateVariable(this);
+      FATAL("GCoreApp->UpdateVariable(this) not implemented");
     } else {
       m_RawData.resize(m_Size);
       memcpy(m_RawData.data(), a_Msg.GetData(), m_Size);
@@ -68,7 +68,7 @@ void Variable::UpdateFromRaw(const std::vector<char>& a_RawData,
         memcpy(&var->m_Data, a_RawData.data() + offset, size);
       }
 
-      GCoreApp->UpdateVariable(this);
+      FATAL("GCoreApp->UpdateVariable(this) not implemented");
     } else {
       var->UpdateFromRaw(a_RawData, a_BaseAddress);
     }

@@ -99,9 +99,6 @@ void OrbitWatchWidget::SetupPropertyBrowser() {
           SLOT(valueChanged(QtProperty*, int)));
   connect(doubleManager, SIGNAL(valueChanged(QtProperty*, double)), this,
           SLOT(valueChanged(QtProperty*, double)));
-
-  GOrbitApp->AddUpdateWatchCallback(
-      [this](const Variable* a_Variable) { this->OnUpdateWatch(a_Variable); });
 }
 
 //-----------------------------------------------------------------------------
