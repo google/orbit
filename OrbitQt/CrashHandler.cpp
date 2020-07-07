@@ -9,7 +9,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitDbgHelp.h"
 #include "ScopeTimer.h"
-#include "TcpClient.h"
 #include "client/settings.h"
 
 namespace {

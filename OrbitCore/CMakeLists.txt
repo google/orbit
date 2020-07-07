@@ -54,7 +54,6 @@ target_sources(
          StringManager.h
          SymbolHelper.h
          Tcp.h
-         TcpClient.h
          TcpEntity.h
          TcpServer.h
          TcpForward.h
@@ -97,7 +96,6 @@ target_sources(
           SymbolHelper.cpp
           Tcp.cpp
           Tcp.cpp
-          TcpClient.cpp
           TcpEntity.cpp
           TcpServer.cpp
           Utils.cpp
