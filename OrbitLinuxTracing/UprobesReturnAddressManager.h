@@ -88,9 +88,13 @@ class UprobesReturnAddressManager {
 
     if (!tid_uprobes_stacks_.contains(tid)) {
       // There are very rare cases where we don't have uprobes records, but need
-      // to patch some frames. In this case, we need to discard the sample.
-      // Otherwise, we don't need to patch it at all.
-      return frames_to_patch.empty();
+      // to patch some frames. This results either from loosing events or
+      // processing events out of order.
+      if (!frames_to_patch.empty()) {
+        ERROR("Discarding sample in a uprobe as uprobe records are missing.");
+        return false;
+      }
+      return true;
     }
 
     auto& tid_uprobes_stack = tid_uprobes_stacks_.at(tid);
