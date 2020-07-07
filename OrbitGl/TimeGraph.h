@@ -59,11 +59,15 @@ class TimeGraph {
   void SetMinMax(double a_MinTimeUs, double a_MaxTimeUs);
   void PanTime(int a_InitialX, int a_CurrentX, int a_Width,
                double a_InitialTime);
+  void VerticalAlign(const TextBox* a_TextBox);
   double GetTime(double a_Ratio);
   double GetTimeIntervalMicro(double a_Ratio);
   void Select(const TextBox* a_TextBox) { SelectRight(a_TextBox); }
   void SelectLeft(const TextBox* a_TextBox);
   void SelectRight(const TextBox* a_TextBox);
+  TextBox* GetPrevious(uint64_t function_address, TickType current_time) const;
+  TextBox* GetNext(uint64_t function_address, TickType current_time) const;
+  void JumpToBox(const TextBox* a_TextBox);
   double GetSessionTimeSpanUs();
   double GetCurrentTimeSpanUs();
   void NeedsRedraw() { m_NeedsRedraw = true; }
