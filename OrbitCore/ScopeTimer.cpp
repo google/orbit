@@ -4,8 +4,7 @@
 
 #include "ScopeTimer.h"
 
-#include "Log.h"
-#include "TimerManager.h"
+#include "Message.h"
 #include "absl/strings/str_format.h"
 
 thread_local size_t CurrentDepth = 0;
