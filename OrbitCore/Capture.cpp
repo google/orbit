@@ -72,52 +72,6 @@ bool Capture::GUnrealSupported = false;
 void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 
 //-----------------------------------------------------------------------------
-bool Capture::Inject(std::string_view remote_address) {
-  Injection inject;
-  std::string dllName = Path::GetDllPath(GTargetProcess->GetIs64Bit());
-
-  GTcpServer->Disconnect();
-
-  GInjected =
-      inject.Inject(remote_address, dllName, *GTargetProcess, "OrbitInit");
-  if (GInjected) {
-    ORBIT_LOG(
-        absl::StrFormat("Injected in %s", GTargetProcess->GetName().c_str()));
-    GInjectedProcess = GTargetProcess->GetName();
-  }
-
-  // Wait for connections
-  int numTries = 50;
-  while (!GTcpServer->HasConnection() && numTries-- > 0) {
-    ORBIT_LOG(absl::StrFormat("Waiting for connection on port %i",
-                              GTcpServer->GetPort()));
-    Sleep(100);
-  }
-
-  GInjected = GInjected && GTcpServer->HasConnection();
-
-  return GInjected;
-}
-
-//-----------------------------------------------------------------------------
-bool Capture::InjectRemote(std::string_view remote_address) {
-  Injection inject;
-  std::string dllName = Path::GetDllPath(GTargetProcess->GetIs64Bit());
-  GTcpServer->Disconnect();
-
-  GInjected = inject.Inject(remote_address, dllName, *GTargetProcess,
-                            "OrbitInitRemote");
-
-  if (GInjected) {
-    ORBIT_LOG(
-        absl::StrFormat("Injected in %s", GTargetProcess->GetName().c_str()));
-    GInjectedProcess = GTargetProcess->GetName();
-  }
-
-  return GInjected;
-}
-
-//-----------------------------------------------------------------------------
 void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
   if (a_Process != GTargetProcess) {
     GInjected = false;
@@ -131,15 +85,6 @@ void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
     GTargetProcess->LoadDebugInfo();
     GTargetProcess->ClearWatchedVariables();
   }
-}
-
-//-----------------------------------------------------------------------------
-bool Capture::Connect(std::string_view remote_address) {
-  if (!GInjected) {
-    Inject(remote_address);
-  }
-
-  return GInjected;
 }
 
 //-----------------------------------------------------------------------------

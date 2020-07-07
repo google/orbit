@@ -26,9 +26,6 @@ class Capture {
   enum class State { kEmpty = 0, kStarted, kStopping, kDone };
 
   static void Init();
-  static bool Inject(std::string_view remote_address);
-  static bool Connect(std::string_view remote_address);
-  static bool InjectRemote(std::string_view remote_address);
   static void SetTargetProcess(const std::shared_ptr<Process>& a_Process);
   static outcome::result<void, std::string> StartCapture();
   static void StopCapture();
