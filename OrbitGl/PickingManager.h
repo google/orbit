@@ -26,24 +26,36 @@ class Pickable {
 
 //-----------------------------------------------------------------------------
 struct PickingID {
-  enum Type { INVALID, LINE, EVENT, BOX, PICKABLE, TRIANGLE };
+  enum Type {
+    LINE,
+    BOX,
+    TRIANGLE,
+    PICKABLE,
+  };
 
-  static PickingID Get(Type a_Type, unsigned a_ID) {
+  enum BatcherId {
+    TIME_GRAPH,
+    UI
+  };
+
+  static PickingID Get(Type a_Type, uint32_t a_ID, BatcherId batcher_id = TIME_GRAPH) {
     static_assert(sizeof(PickingID) == 4, "PickingID must be 32 bits");
     PickingID id;
     id.m_Type = a_Type;
     id.m_Id = a_ID;
+    id.batcher_id_ = batcher_id;
     return id;
   }
-  static Color GetColor(Type a_Type, unsigned a_ID) {
-    PickingID id = Get(a_Type, a_ID);
+  static Color GetColor(Type a_Type, uint32_t a_ID, BatcherId batcher_id = TIME_GRAPH) {
+    PickingID id = Get(a_Type, a_ID, batcher_id);
     return *(reinterpret_cast<Color*>(&id));
   }
   static PickingID Get(uint32_t a_Value) {
     return *(reinterpret_cast<PickingID*>(&a_Value));
   }
   uint32_t m_Id : 29;
-  uint32_t m_Type : 3;
+  uint32_t m_Type : 2;
+  uint32_t batcher_id_ : 1;
 };
 
 //-----------------------------------------------------------------------------
@@ -59,10 +71,10 @@ class PickingManager {
   Pickable* GetPickableFromId(uint32_t id);
   bool IsDragging() const;
 
-  Color GetPickableColor(Pickable* pickable);
+  Color GetPickableColor(Pickable* pickable, PickingID::BatcherId batcher_id);
 
  private:
-  PickingID CreatePickableId(Pickable* a_Pickable);
+  PickingID CreatePickableId(Pickable* a_Pickable, PickingID::BatcherId batcher_id);
   Color ColorFromPickingID(PickingID id) const;
 
  private:

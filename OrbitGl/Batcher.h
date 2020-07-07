@@ -60,6 +60,9 @@ struct TriangleBuffer {
 //-----------------------------------------------------------------------------
 class Batcher {
  public:
+  explicit Batcher(PickingID::BatcherId batcher_id) : batcher_id_(batcher_id) {}
+  Batcher() : batcher_id_(PickingID::BatcherId::TIME_GRAPH) {}
+
   void AddLine(const Line& line, const Color* colors,
                PickingID::Type picking_type, void* user_data = nullptr);
   void AddLine(const Line& line, Color color, PickingID::Type picking_type,
@@ -99,4 +102,5 @@ class Batcher {
   LineBuffer line_buffer_;
   BoxBuffer box_buffer_;
   TriangleBuffer triangle_buffer_;
+  PickingID::BatcherId batcher_id_;
 };

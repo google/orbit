@@ -35,14 +35,14 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
   float text_z = layout.GetTextZ();
 
   Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), track_z);
-  batcher->AddBox(box, color, PickingID::BOX);
+  batcher->AddBox(box, color, PickingID::PICKABLE);
 
   if (canvas->GetPickingManager().GetPicked() == this) {
     color = Color(255, 255, 255, 255);
   }
 
-  batcher->AddLine(m_Pos, Vec2(x1, y0), track_z, color, PickingID::LINE);
-  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), track_z, color, PickingID::LINE);
+  batcher->AddLine(m_Pos, Vec2(x1, y0), track_z, color, PickingID::PICKABLE);
+  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), track_z, color, PickingID::PICKABLE);
 
   const Color kLineColor(0, 128, 255, 128);
 

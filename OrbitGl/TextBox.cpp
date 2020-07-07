@@ -109,7 +109,7 @@ void TextBox::Draw(Batcher* batcher,
 
   if (a_Visible) {
     Box box(m_Pos, m_Size, z);
-    batcher->AddBox(box, color, PickingID::BOX);
+    batcher->AddBox(box, color, PickingID::PICKABLE);
 
     static Color s_Color(255, 255, 255, 255);
 
@@ -131,5 +131,5 @@ void TextBox::Draw(Batcher* batcher,
     }
   }
 
-  batcher->AddVerticalLine(m_Pos, m_Size[1], z, grey, PickingID::LINE);
+  batcher->AddVerticalLine(m_Pos, m_Size[1], z, grey, PickingID::PICKABLE);
 }
