@@ -9,7 +9,6 @@
 #include <string>
 
 #include "App.h"
-#include "Message.h"
 #include "Pdb.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"

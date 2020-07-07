@@ -4,7 +4,6 @@
 
 #include "ScopeTimer.h"
 
-#include "Message.h"
 #include "absl/strings/str_format.h"
 
 thread_local size_t CurrentDepth = 0;
@@ -13,7 +12,6 @@ thread_local size_t CurrentDepthLocal = 0;
 void Timer::Start() {
   m_TID = GetCurrentThreadId();
   m_Depth = CurrentDepth++;
-  m_CaptureID = Message::GCaptureID;
   m_Start = OrbitTicks();
 }
 
