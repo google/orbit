@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_SAMPLING_PROFILER_H_
+#define ORBIT_CORE_SAMPLING_PROFILER_H_
 
 #include "BlockChain.h"
 #include "Callstack.h"
@@ -156,7 +157,6 @@ class SamplingProfiler {
 
  protected:
   void ReserveThreadData();
-  void GetThreadCallstack(Thread* a_Thread);
   void GetThreadsUsage();
   void ResolveCallstacks();
   void FillThreadSampleDataSampleReports();
@@ -189,3 +189,5 @@ class SamplingProfiler {
   std::unordered_map<uint64_t, uint64_t> m_ExactAddressToFunctionAddress;
   std::vector<ThreadSampleData*> m_SortedThreadSampleData;
 };
+
+#endif // ORBIT_CORE_SAMPLING_PROFILER_H_
