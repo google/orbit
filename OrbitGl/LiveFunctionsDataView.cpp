@@ -200,25 +200,36 @@ void LiveFunctionsDataView::OnContextMenu(
     }
   } else if (a_Action == MENU_ACTION_JUMP_TO_FIRST) {
     CHECK(a_ItemIndices.size() == 1);
-    auto function_address = GetFunction(a_ItemIndices[0]).GetVirtualAddress();
-    TextBox* first_box = GCurrentTimeGraph->GetNext(
-        function_address, std::numeric_limits<TickType>::min());
-    GCurrentTimeGraph->JumpToBox(first_box);
+    auto function_address =
+        FunctionUtils::GetAbsoluteAddress(GetFunction(a_ItemIndices[0]));
+    auto first_box = GCurrentTimeGraph->FindNextFunctionCall(
+        function_address, std::numeric_limits<TickType>::lowest());
+    if (first_box) {
+      GCurrentTimeGraph->SelectAndZoom(first_box);
+    }
   } else if (a_Action == MENU_ACTION_JUMP_TO_LAST) {
     CHECK(a_ItemIndices.size() == 1);
-    auto function_address = GetFunction(a_ItemIndices[0]).GetVirtualAddress();
-    TextBox* last_box = GCurrentTimeGraph->GetPrevious(
+    auto function_address =
+        FunctionUtils::GetAbsoluteAddress(GetFunction(a_ItemIndices[0]));
+    auto last_box = GCurrentTimeGraph->FindPreviousFunctionCall(
         function_address, std::numeric_limits<TickType>::max());
-    GCurrentTimeGraph->JumpToBox(last_box);
+    if (last_box) {
+      GCurrentTimeGraph->SelectAndZoom(last_box);
+    }
   } else if (a_Action == MENU_ACTION_JUMP_TO_MIN) {
     CHECK(a_ItemIndices.size() == 1);
     Function& function = GetFunction(a_ItemIndices[0]);
     auto [min_box, _] = GetMinMax(function);
-    GCurrentTimeGraph->JumpToBox(min_box);
+    if (min_box) {
+      GCurrentTimeGraph->SelectAndZoom(min_box);
+    }
   } else if (a_Action == MENU_ACTION_JUMP_TO_MAX) {
+    CHECK(a_ItemIndices.size() == 1);
     Function& function = GetFunction(a_ItemIndices[0]);
     auto [_, max_box] = GetMinMax(function);
-    GCurrentTimeGraph->JumpToBox(max_box);
+    if (max_box) {
+      GCurrentTimeGraph->SelectAndZoom(max_box);
+    }
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }

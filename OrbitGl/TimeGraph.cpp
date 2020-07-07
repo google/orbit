@@ -138,7 +138,6 @@ void TimeGraph::ZoomAll() {
 
 //-----------------------------------------------------------------------------
 void TimeGraph::Zoom(const TextBox* a_TextBox) {
-  if (!a_TextBox) return;
   const Timer& timer = a_TextBox->GetTimer();
 
   double start = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_Start);
@@ -212,23 +211,20 @@ void TimeGraph::PanTime(int a_InitialX, int a_CurrentX, int a_Width,
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
-void TimeGraph::VerticalAlign(const TextBox* a_TextBox) {
-  if (!a_TextBox) return;
-  if (a_TextBox->GetPos() == Vec2::Zero())  // Have to update the information of
-                                            // this TextBox before align
-    UpdatePrimitives();
-  auto m_WorldTopLeftY = m_Canvas->GetWorldTopLeftY();
-  auto topMargin =
+void TimeGraph::VerticallyScrollIntoView(const TextBox* text_box) {
+  CHECK(text_box != nullptr);
+  // TODO: Sometimes the Y-coordinate is not set.
+  auto world_top_left_y = m_Canvas->GetWorldTopLeftY();
+  auto top_margin =
       m_Layout.GetSchedulerTrackOffset() + m_Layout.GetVerticalMargin();
-  auto downMargin = m_Layout.GetSliderWidth() + m_Layout.GetVerticalMargin();
-  auto minWorldTopLeftY =
-      a_TextBox->GetPosY() + m_Layout.GetSpaceBetweenTracks() + topMargin;
-  auto maxWorldTopLeftY = a_TextBox->GetPosY() + m_Canvas->GetWorldHeight() -
-                          a_TextBox->GetSizeY() - downMargin;
-  m_WorldTopLeftY = fmin(m_WorldTopLeftY, maxWorldTopLeftY);
-  m_WorldTopLeftY = fmax(m_WorldTopLeftY, minWorldTopLeftY);
-  m_Canvas->SetWorldTopLeftY(m_WorldTopLeftY);
+  auto down_margin = m_Layout.GetSliderWidth() + m_Layout.GetVerticalMargin();
+  auto min_world_top_left_y =
+      text_box->GetPosY() + m_Layout.GetSpaceBetweenTracks() + top_margin;
+  auto max_world_top_left_y = text_box->GetPosY() + m_Canvas->GetWorldHeight() -
+                          text_box->GetSizeY() - down_margin;
+  world_top_left_y = std::min(world_top_left_y, max_world_top_left_y);
+  world_top_left_y = std::max(world_top_left_y, min_world_top_left_y);
+  m_Canvas->SetWorldTopLeftY(world_top_left_y);
   NeedsUpdate();
 }
 
@@ -432,8 +428,7 @@ void TimeGraph::SelectRight(const TextBox* a_TextBox) {
   SetMinMax(minTimeUs, maxTimeUs);
 }
 
-//-----------------------------------------------------------------------------
-TextBox* TimeGraph::GetPrevious(uint64_t function_address,
+const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address,
                                 TickType current_time) const {
   TextBox* previous_box = nullptr;
   TickType previous_box_time = std::numeric_limits<TickType>::min();
@@ -444,7 +439,7 @@ TextBox* TimeGraph::GetPrevious(uint64_t function_address,
     for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
       TimerBlock& block = *it;
       if (!block.Intersects(previous_box_time, current_time)) continue;
-      for (int i = 0; i < block.size(); i++) {
+      for (uint64_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
         auto box_time = box.GetTimer().m_End;
         if ((box.GetTimer().m_FunctionAddress == function_address) &&
@@ -457,9 +452,8 @@ TextBox* TimeGraph::GetPrevious(uint64_t function_address,
   }
   return previous_box;
 }
-
 //-----------------------------------------------------------------------------
-TextBox* TimeGraph::GetNext(uint64_t function_address,
+const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_address,
                             TickType current_time) const {
   TextBox* next_box = nullptr;
   TickType next_box_time = std::numeric_limits<TickType>::max();
@@ -470,7 +464,7 @@ TextBox* TimeGraph::GetNext(uint64_t function_address,
     for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
       TimerBlock& block = *it;
       if (!block.Intersects(current_time, next_box_time)) continue;
-      for (int i = 0; i < block.size(); i++) {
+      for (uint64_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
         auto box_time = box.GetTimer().m_End;
         if ((box.GetTimer().m_FunctionAddress == function_address) &&
@@ -769,14 +763,37 @@ void TimeGraph::OnRight() {
   NeedsUpdate();
 }
 
-//----------------------------------------------------------------------------
-void TimeGraph::JumpToBox(const TextBox* a_TextBox) {
-  if (!a_TextBox) return;
-  TextBox* text_box = const_cast<TextBox*>(a_TextBox);
+void TimeGraph::SelectAndZoom(const TextBox* text_box) {
+  CHECK(text_box);
   Zoom(text_box);
-  Capture::GSelectedTextBox = text_box;
-  UpdatePrimitives();
-  VerticalAlign(text_box);
+  Select(text_box);
+}
+
+//----------------------------------------------------------------------------
+void TimeGraph::OnShiftLeft() {
+  TextBox* selection = Capture::GSelectedTextBox;
+  if (selection) {
+    const TextBox* left = FindPreviousFunctionCall(selection->GetTimer().m_FunctionAddress,
+                                      selection->GetTimer().m_End);
+    if (left) {
+      SelectLeft(left);
+      VerticallyScrollIntoView(left);
+    }
+  }
+  NeedsUpdate();
+}
+
+//----------------------------------------------------------------------------
+void TimeGraph::OnShiftRight() {
+  TextBox* selection = Capture::GSelectedTextBox;
+  if (selection) {
+    const TextBox* right = FindNextFunctionCall(selection->GetTimer().m_FunctionAddress,
+                                   selection->GetTimer().m_End);
+    if (right) {
+      SelectRight(right);
+      VerticallyScrollIntoView(right);
+    }
+  }
   NeedsUpdate();
 }
 

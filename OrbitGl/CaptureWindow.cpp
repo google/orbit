@@ -488,10 +488,18 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
         }
         break;
       case 18:  // Left
-        time_graph_.OnLeft();
+        if (a_Shift) {
+          time_graph_.OnShiftLeft();
+        } else {
+          time_graph_.OnLeft();
+        }
         break;
       case 20:  // Right
-        time_graph_.OnRight();
+        if (a_Shift) {
+          time_graph_.OnShiftRight();
+        } else {
+          time_graph_.OnRight();
+        }
         break;
       case 19:  // Up
         time_graph_.OnUp();
