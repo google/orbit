@@ -74,15 +74,7 @@ class UprobesReturnAddressManager {
   // the uprobes.
   bool PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t callchain_size,
                       unwindstack::Maps* maps) {
-    if (!tid_uprobes_stacks_.contains(tid)) {
-      return true;
-    }
-
-    auto& tid_uprobes_stack = tid_uprobes_stacks_.at(tid);
-    CHECK(!tid_uprobes_stack.empty());
-
     std::vector<uint64_t> frames_to_patch;
-
     for (uint64_t i = 0; i < callchain_size; i++) {
       uint64_t ip = callchain[i];
       unwindstack::MapInfo* map_info = maps->Find(ip);
@@ -93,6 +85,16 @@ class UprobesReturnAddressManager {
 
       frames_to_patch.push_back(i);
     }
+
+    if (!tid_uprobes_stacks_.contains(tid)) {
+      // There are very rare cases where we don't have uprobes records, but need
+      // to patch some frames. In this case, we need to discard the sample.
+      // Otherwise, we don't need to patch it at all.
+      return frames_to_patch.empty();
+    }
+
+    auto& tid_uprobes_stack = tid_uprobes_stacks_.at(tid);
+    CHECK(!tid_uprobes_stack.empty());
 
     size_t num_unique_uprobes = 0;
     uint64_t prev_uprobe_stack_pointer = -1;
