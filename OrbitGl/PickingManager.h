@@ -33,6 +33,15 @@ struct PickingID {
     PICKABLE,
   };
 
+  // Instances of batchers used to draw must be in 1:1 correspondence with values in the
+  // following enum. Currently, two batchers are used, one to draw UI elements
+  // (corresponding to BatcherId::UI), and one for drawing events on the time graph
+  // (corresponding to BatcherId::TIME_GRAPH). If you want to add more batchers, this enum
+  // must be extended and you need to spend more bits on the batcher_id_ field below.
+  // The total number of elements that can be correctly picked is limited to the number
+  // of elements that can be encoded in the bits remaining after encoding the batcher id,
+  // and the PickingID::Type, so adding more batchers or types has to be carefully
+  // considered.
   enum BatcherId {
     TIME_GRAPH,
     UI
