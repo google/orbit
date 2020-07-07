@@ -53,8 +53,6 @@ class Capture {
   static void CheckForUnrealSupport();
   static void PreSave();
 
-  static class TcpEntity* GetMainTcpEntity();
-
   static State GState;
   static bool GInjected;
   static std::string GInjectedProcess;
