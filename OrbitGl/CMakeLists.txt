@@ -43,8 +43,6 @@ target_sources(
          ModulesDataView.h
          OpenGl.h
          PickingManager.h
-         PluginCanvas.h
-         PluginManager.h
          ProcessesDataView.h
          SamplingReport.h
          SamplingReportDataView.h
@@ -90,8 +88,6 @@ target_sources(
           LiveFunctionsDataView.cpp
           ModulesDataView.cpp
           PickingManager.cpp
-          PluginCanvas.cpp
-          PluginManager.cpp
           ProcessManager.cpp
           ProcessesDataView.cpp
           SamplingReport.cpp

@@ -23,7 +23,6 @@
 #include "../OrbitCore/Utils.h"
 #include "../OrbitCore/Version.h"
 #include "../OrbitGl/App.h"
-#include "../OrbitGl/PluginManager.h"
 #include "../OrbitGl/SamplingReport.h"
 #include "../OrbitPlugin/OrbitSDK.h"
 #include "../third_party/concurrentqueue/concurrentqueue.h"
@@ -214,7 +213,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   CreateSamplingTab();
   CreateSelectionTab();
-  CreatePluginTabs();
 
   SetTitle({});
   std::string iconFileName = Path::GetExecutablePath() + "orbit.ico";
@@ -390,21 +388,6 @@ void OrbitMainWindow::CreateSamplingTab() {
   m_SamplingLayout->addWidget(m_OrbitSamplingReport, 0, 0, 1, 1);
 
   ui->RightTabWidget->addTab(m_SamplingTab, QString("sampling"));
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::CreatePluginTabs() {
-  for (Orbit::Plugin* plugin : GPluginManager.m_Plugins) {
-    QWidget* widget = new QWidget();
-    QGridLayout* layout = new QGridLayout(widget);
-    layout->setSpacing(6);
-    layout->setContentsMargins(11, 11, 11, 11);
-    OrbitGLWidget* glWidget = new OrbitGLWidget(widget);
-    layout->addWidget(glWidget, 0, 0, 1, 1);
-    ui->RightTabWidget->addTab(widget, plugin->GetName());
-
-    glWidget->Initialize(GlPanel::PLUGIN, this, plugin);
-  }
 }
 
 //-----------------------------------------------------------------------------
