@@ -9,7 +9,6 @@
 #include "Capture.h"
 #include "EventTracer.h"
 #include "GlUtils.h"
-#include "TcpServer.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 

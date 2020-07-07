@@ -51,10 +51,6 @@ target_sources(
          SerializationMacros.h
          StringManager.h
          SymbolHelper.h
-         Tcp.h
-         TcpEntity.h
-         TcpServer.h
-         TcpForward.h
          Threading.h
          TidAndThreadName.h
          Utils.h
@@ -89,10 +85,6 @@ target_sources(
           ScopeTimer.cpp
           StringManager.cpp
           SymbolHelper.cpp
-          Tcp.cpp
-          Tcp.cpp
-          TcpEntity.cpp
-          TcpServer.cpp
           Utils.cpp
           VariableTracing.cpp)
 
