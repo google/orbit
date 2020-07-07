@@ -38,7 +38,6 @@
 #include "OrbitSession.h"
 #include "Params.h"
 #include "Pdb.h"
-#include "PluginManager.h"
 #include "PrintVar.h"
 #include "ProcessesDataView.h"
 #include "SamplingProfiler.h"

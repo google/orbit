@@ -37,7 +37,6 @@ class OrbitMainWindow : public QMainWindow {
       std::shared_ptr<class SamplingReport> sampling_report);
   void CreateSamplingTab();
   void CreateSelectionTab();
-  void CreatePluginTabs();
   void OnNewSelectionReport(
       DataView* callstack_data_view,
       std::shared_ptr<class SamplingReport> sampling_report);

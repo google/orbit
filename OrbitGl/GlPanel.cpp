@@ -8,10 +8,9 @@
 #include "CaptureWindow.h"
 #include "GlCanvas.h"
 #include "HomeWindow.h"
-#include "PluginCanvas.h"
 
 //-----------------------------------------------------------------------------
-GlPanel* GlPanel::Create(Type a_Type, void* a_UserData) {
+GlPanel* GlPanel::Create(Type a_Type) {
   GlPanel* panel = nullptr;
 
   switch (a_Type) {
@@ -23,10 +22,6 @@ GlPanel* GlPanel::Create(Type a_Type, void* a_UserData) {
       break;
     case DEBUG:
       panel = new HomeWindow();
-      break;
-    case PLUGIN:
-      panel = new PluginCanvas(static_cast<Orbit::Plugin*>(a_UserData));
-
       break;
   }
 
