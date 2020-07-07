@@ -200,20 +200,25 @@ void LiveFunctionsDataView::OnContextMenu(
     }
   } else if (a_Action == MENU_ACTION_JUMP_TO_FIRST) {
     CHECK(a_ItemIndices.size() == 1);
-    JumpToNext(GetFunction(a_ItemIndices[0]),
-               std::numeric_limits<TickType>::min());
+    auto function_address = GetFunction(a_ItemIndices[0]).GetVirtualAddress();
+    TextBox* first_box = GCurrentTimeGraph->GetNext(
+        function_address, std::numeric_limits<TickType>::min());
+    GCurrentTimeGraph->JumpToBox(first_box);
   } else if (a_Action == MENU_ACTION_JUMP_TO_LAST) {
     CHECK(a_ItemIndices.size() == 1);
-    JumpToPrevious(GetFunction(a_ItemIndices[0]),
-                   std::numeric_limits<TickType>::max());
+    auto function_address = GetFunction(a_ItemIndices[0]).GetVirtualAddress();
+    TextBox* last_box = GCurrentTimeGraph->GetPrevious(
+        function_address, std::numeric_limits<TickType>::max());
+    GCurrentTimeGraph->JumpToBox(last_box);
   } else if (a_Action == MENU_ACTION_JUMP_TO_MIN) {
     CHECK(a_ItemIndices.size() == 1);
-    auto [min_box, _] = GetMinMax(GetFunction(a_ItemIndices[0]));
-    JumpToBox(min_box);
+    Function& function = GetFunction(a_ItemIndices[0]);
+    auto [min_box, _] = GetMinMax(function);
+    GCurrentTimeGraph->JumpToBox(min_box);
   } else if (a_Action == MENU_ACTION_JUMP_TO_MAX) {
-    CHECK(a_ItemIndices.size() == 1);
-    auto [_, max_box] = GetMinMax(GetFunction(a_ItemIndices[0]));
-    JumpToBox(max_box);
+    Function& function = GetFunction(a_ItemIndices[0]);
+    auto [_, max_box] = GetMinMax(function);
+    GCurrentTimeGraph->JumpToBox(max_box);
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }
@@ -292,12 +297,6 @@ Function& LiveFunctionsDataView::GetFunction(unsigned int a_Row) const {
   return *m_Functions[m_Indices[a_Row]];
 }
 
-void LiveFunctionsDataView::JumpToBox(const TextBox* box) const {
-  if (box) {
-    GCurrentTimeGraph->Zoom(box);
-  }
-}
-
 std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
     Function& function) const {
   auto function_address = FunctionUtils::GetAbsoluteAddress(function);
@@ -322,56 +321,4 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
     }
   }
   return std::make_pair(min_box, max_box);
-}
-
-void LiveFunctionsDataView::JumpToNext(Function& function,
-                                       TickType current_time) const {
-  auto function_address = FunctionUtils::GetAbsoluteAddress(function);
-  TextBox* box_to_jump = nullptr;
-  TickType best_time = std::numeric_limits<TickType>::max();
-  std::vector<std::shared_ptr<TimerChain>> chains =
-      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
-  for (auto& chain : chains) {
-    if (!chain) continue;
-    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-      TimerBlock& block = *it;
-      if (!block.Intersects(current_time, best_time)) continue;
-      for (size_t i = 0; i < block.size(); i++) {
-        TextBox& box = block[i];
-        auto box_time = box.GetTimer().m_End;
-        if ((box.GetTimer().m_FunctionAddress == function_address) &&
-            (box_time > current_time) && (best_time > box_time)) {
-          box_to_jump = &box;
-          best_time = box_time;
-        }
-      }
-    }
-  }
-  JumpToBox(box_to_jump);
-}
-
-void LiveFunctionsDataView::JumpToPrevious(Function& function,
-                                           TickType current_time) const {
-  auto function_address = FunctionUtils::GetAbsoluteAddress(function);
-  TextBox* box_to_jump = nullptr;
-  TickType best_time = std::numeric_limits<TickType>::min();
-  std::vector<std::shared_ptr<TimerChain>> chains =
-      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
-  for (auto& chain : chains) {
-    if (!chain) continue;
-    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-      TimerBlock& block = *it;
-      if (!block.Intersects(best_time, current_time)) continue;
-      for (size_t i = 0; i < block.size(); i++) {
-        TextBox& box = block[i];
-        auto box_time = box.GetTimer().m_End;
-        if ((box.GetTimer().m_FunctionAddress == function_address) &&
-            (box_time < current_time) && (best_time < box_time)) {
-          box_to_jump = &box;
-          best_time = box_time;
-        }
-      }
-    }
-  }
-  JumpToBox(box_to_jump);
 }
