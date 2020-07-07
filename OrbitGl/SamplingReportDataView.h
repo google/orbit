@@ -6,7 +6,6 @@
 
 #include "CallStackDataView.h"
 #include "DataView.h"
-#include "OrbitType.h"
 #include "SamplingProfiler.h"
 
 class SamplingReportDataView : public DataView {

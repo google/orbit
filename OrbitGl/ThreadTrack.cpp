@@ -9,7 +9,6 @@
 #include "Capture.h"
 #include "EventTrack.h"
 #include "GlCanvas.h"
-#include "OrbitUnreal.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "absl/flags/flag.h"
@@ -55,9 +54,7 @@ void ThreadTrack::Draw(GlCanvas* canvas, bool picking) {
 std::string ThreadTrack::GetExtraInfo(const Timer& timer) {
   std::string info;
   static bool show_return_value = absl::GetFlag(FLAGS_show_return_values);
-  if (!Capture::IsCapturing() && timer.GetType() == Timer::UNREAL_OBJECT) {
-    info = "[" + ws2s(GOrbitUnreal.GetObjectNames()[timer.m_UserData[0]]) + "]";
-  } else if (show_return_value && (timer.GetType() == Timer::NONE)) {
+  if (show_return_value && (timer.GetType() == Timer::NONE)) {
     info = absl::StrFormat("[%lu]", timer.m_UserData[0]);
   }
   return info;

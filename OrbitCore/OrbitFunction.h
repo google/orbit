@@ -18,7 +18,6 @@
 #include "cvconst.h"
 
 class Pdb;
-class Type;
 
 struct FunctionParam {
   FunctionParam();

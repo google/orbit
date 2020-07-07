@@ -14,7 +14,6 @@
 #include "OrbitModule.h"
 #include "OrbitSession.h"
 #include "OrbitThread.h"
-#include "OrbitType.h"
 #include "Path.h"
 #include "Pdb.h"
 #include "ScopeTimer.h"
@@ -78,9 +77,6 @@ void Process::SetID(int32_t id) {
 //-----------------------------------------------------------------------------
 void Process::ClearTransients() {
   m_Functions.clear();
-  m_Types.clear();
-  m_Globals.clear();
-  m_WatchedVariables.clear();
   m_NameToModuleMap.clear();
   path_to_module_map_.clear();
 }
@@ -204,28 +200,6 @@ void Process::LoadSession(const Session&) {}
 
 //-----------------------------------------------------------------------------
 void Process::SavePreset() {}
-
-//-----------------------------------------------------------------------------
-void Process::RefreshWatchedVariables() {
-  for (std::shared_ptr<Variable> var : m_WatchedVariables) {
-    var->SyncValue();
-  }
-}
-
-//-----------------------------------------------------------------------------
-void Process::ClearWatchedVariables() { m_WatchedVariables.clear(); }
-
-//-----------------------------------------------------------------------------
-void Process::AddType(Type& a_Type) {
-  bool isPtr = a_Type.m_Name.find("Pointer to") != std::string::npos;
-  if (!isPtr) {
-    unsigned long long typeHash = a_Type.Hash();
-    auto it = m_UniqueTypeHash.insert(typeHash);
-    if (it.second == true) {
-      m_Types.push_back(&a_Type);
-    }
-  }
-}
 
 //-----------------------------------------------------------------------------
 void Process::AddModule(std::shared_ptr<Module>& a_Module) {

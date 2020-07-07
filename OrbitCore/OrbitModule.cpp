@@ -19,7 +19,6 @@
 #include "Capture.h"
 #include "LinuxUtils.h"
 #include "OrbitProcess.h"
-#include "OrbitUnreal.h"
 #include "Params.h"
 #include "Path.h"
 #include "ScopeTimer.h"
@@ -151,32 +150,14 @@ void Pdb::ProcessData() {
   SCOPE_TIMER_LOG("ProcessData");
   ScopeLock lock(process->GetDataMutex());
 
-  auto& globals = process->GetGlobals();
-
   for (auto& func : functions_) {
     func->SetModulePathAndAddress(GetLoadedModuleName(), GetHModule());
     process->AddFunction(func);
-    GOrbitUnreal.OnFunctionAdded(func.get());
   }
 
   SCOPE_TIMER_LOG("Find File and Line info");
   for (auto& func : functions_) {
     func->FindFile();
-  }
-
-  for (Type& type : m_Types) {
-    type.m_Pdb = this;
-    Capture::GTargetProcess->AddType(type);
-    GOrbitUnreal.OnTypeAdded(&type);
-  }
-
-  for (Variable& var : m_Globals) {
-    var.m_Pdb = this;
-    globals.push_back(&var);
-  }
-
-  for (auto& it : m_TypeMap) {
-    it.second.m_Pdb = this;
   }
 
   PopulateFunctionMap();

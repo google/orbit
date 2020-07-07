@@ -9,7 +9,6 @@
 #include "Core.h"
 #include "Log.h"
 #include "OrbitProcess.h"
-#include "OrbitType.h"
 #include "Pdb.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"

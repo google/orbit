@@ -7,7 +7,6 @@
 #include "Core.h"
 #include "Log.h"
 #include "OrbitDbgHelp.h"
-#include "OrbitType.h"
 #include "SamplingProfiler.h"
 
 //-----------------------------------------------------------------------------

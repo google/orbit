@@ -15,8 +15,6 @@
 #include "Log.h"
 #include "ObjectCount.h"
 #include "OrbitSession.h"
-#include "OrbitType.h"
-#include "OrbitUnreal.h"
 #include "Params.h"
 #include "SymbolUtils.h"
 #include "Tcp.h"
@@ -77,17 +75,6 @@ void Pdb::CheckOrbitFunction(Function& a_Function) {
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::AddType(const Type& a_Type) {
-  if (m_TypeMap.find(a_Type.m_Id) == m_TypeMap.end()) {
-    m_TypeMap[a_Type.m_Id] = a_Type;
-    m_Types.push_back(a_Type);
-  }
-}
-
-//-----------------------------------------------------------------------------
-void Pdb::AddGlobal(const Variable& a_Global) { m_Globals.push_back(a_Global); }
-
-//-----------------------------------------------------------------------------
 void Pdb::AddArgumentRegister(const std::string& a_Reg,
                               const std::string& a_Function) {
   m_ArgumentRegisters.insert(a_Reg);
@@ -97,16 +84,6 @@ void Pdb::AddArgumentRegister(const std::string& a_Reg,
   } else if (a_Reg.find("30006") != std::string::npos) {
     m_RegFunctionsMap["30006"].push_back(a_Function);
   }
-}
-
-//-----------------------------------------------------------------------------
-Type* Pdb::GetTypePtrFromId(ULONG a_ID) {
-  auto it = m_TypeMap.find(a_ID);
-  if (it != m_TypeMap.end()) {
-    return &it->second;
-  }
-
-  return nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -121,9 +98,6 @@ void Pdb::PrintFunction(Function& a_Function) { a_Function.Print(); }
 //-----------------------------------------------------------------------------
 void Pdb::Clear() {
   functions_.clear();
-  m_Types.clear();
-  m_Globals.clear();
-  m_TypeMap.clear();
   m_FunctionMap.clear();
   m_FileName = "";
 }
@@ -132,8 +106,6 @@ void Pdb::Clear() {
 void Pdb::Reserve() {
   const int size = 8 * 1024;
   functions_.reserve(size);
-  m_Types.reserve(size);
-  m_Globals.reserve(size);
 }
 
 //-----------------------------------------------------------------------------
@@ -148,13 +120,6 @@ void Pdb::Print() const {
     for (auto& func : reg.second) {
       ORBIT_LOGV(func);
     }
-  }
-}
-
-//-----------------------------------------------------------------------------
-void Pdb::PrintGlobals() const {
-  for (const auto& var : m_Globals) {
-    PRINT_VAR(var.ToString());
   }
 }
 
@@ -365,32 +330,14 @@ void Pdb::ProcessData() {
 
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
-  auto& globals = Capture::GTargetProcess->GetGlobals();
-
   for (auto& func : functions_) {
     func->SetModulePathAndAddress(GetLoadedModuleName(), GetHModule());
     Capture::GTargetProcess->AddFunction(func);
-    GOrbitUnreal.OnFunctionAdded(func.get());
   }
 
   SCOPE_TIMER_LOG("Find File and Line info");
   for (auto& func : functions_) {
     func->FindFile();
-  }
-
-  for (Type& type : m_Types) {
-    type.m_Pdb = this;
-    Capture::GTargetProcess->AddType(type);
-    GOrbitUnreal.OnTypeAdded(&type);
-  }
-
-  for (Variable& var : m_Globals) {
-    var.m_Pdb = this;
-    globals.push_back(&var);
-  }
-
-  for (auto& it : m_TypeMap) {
-    it.second.m_Pdb = this;
   }
 
   PopulateFunctionMap();

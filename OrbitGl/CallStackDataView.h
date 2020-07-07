@@ -8,7 +8,6 @@
 
 #include "DataView.h"
 #include "OrbitModule.h"
-#include "OrbitType.h"
 
 struct CallStack;
 

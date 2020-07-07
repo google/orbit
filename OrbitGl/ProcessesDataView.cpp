@@ -10,7 +10,6 @@
 #include "Callstack.h"
 #include "Capture.h"
 #include "ModulesDataView.h"
-#include "OrbitType.h"
 #include "Params.h"
 #include "absl/strings/str_format.h"
 

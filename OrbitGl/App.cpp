@@ -24,7 +24,6 @@
 #include "EventTracer.h"
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
-#include "GlobalsDataView.h"
 #include "ImGuiOrbit.h"
 #include "Injection.h"
 #include "Introspection.h"
@@ -48,7 +47,6 @@
 #include "Tcp.h"
 #include "TcpServer.h"
 #include "TextRenderer.h"
-#include "TypesDataView.h"
 #include "Utils.h"
 #include "Version.h"
 
@@ -348,13 +346,6 @@ void OrbitApp::RefreshCaptureView() {
   NeedsRedraw();
   GOrbitApp->FireRefreshCallbacks();
   DoZoom = true;  // TODO: remove global, review logic
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::ClearWatchedVariables() {
-  if (Capture::GTargetProcess) {
-    Capture::GTargetProcess->ClearWatchedVariables();
-  }
 }
 
 //-----------------------------------------------------------------------------
@@ -903,13 +894,6 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       }
       return m_FunctionsDataView.get();
 
-    case DataViewType::TYPES:
-      if (!m_TypesDataView) {
-        m_TypesDataView = std::make_unique<TypesDataView>();
-        m_Panels.push_back(m_TypesDataView.get());
-      }
-      return m_TypesDataView.get();
-
     case DataViewType::LIVE_FUNCTIONS:
       if (!m_LiveFunctionsDataView) {
         m_LiveFunctionsDataView = std::make_unique<LiveFunctionsDataView>();
@@ -923,13 +907,6 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
         m_Panels.push_back(m_CallStackDataView.get());
       }
       return m_CallStackDataView.get();
-
-    case DataViewType::GLOBALS:
-      if (!m_GlobalsDataView) {
-        m_GlobalsDataView = std::make_unique<GlobalsDataView>();
-        m_Panels.push_back(m_GlobalsDataView.get());
-      }
-      return m_GlobalsDataView.get();
 
     case DataViewType::MODULES:
       if (!m_ModulesDataView) {

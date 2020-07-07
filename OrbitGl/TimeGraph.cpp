@@ -19,8 +19,6 @@
 #include "GpuTrack.h"
 #include "GraphTrack.h"
 #include "Log.h"
-#include "OrbitType.h"
-#include "OrbitUnreal.h"
 #include "Params.h"
 #include "PickingManager.h"
 #include "SamplingProfiler.h"

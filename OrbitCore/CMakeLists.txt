@@ -39,8 +39,6 @@ target_sources(
          OrbitProcess.h
          OrbitSession.h
          OrbitThread.h
-         OrbitType.h
-         OrbitUnreal.h
          Params.h
          Path.h
          Pdb.h
@@ -60,7 +58,6 @@ target_sources(
          Threading.h
          TidAndThreadName.h
          Utils.h
-         Variable.h
          VariableTracing.h
          Version.h)
 
@@ -85,8 +82,6 @@ target_sources(
           OrbitProcess.cpp
           OrbitSession.cpp
           OrbitThread.cpp
-          OrbitType.cpp
-          OrbitUnreal.cpp
           Params.cpp
           Path.cpp
           Profiling.cpp
@@ -99,7 +94,6 @@ target_sources(
           TcpEntity.cpp
           TcpServer.cpp
           Utils.cpp
-          Variable.cpp
           VariableTracing.cpp)
 
 if(WIN32)

@@ -15,7 +15,6 @@
 #include "Core.h"
 #include "ModulesDataView.h"
 #include "OrbitSession.h"
-#include "OrbitType.h"
 #include "Pdb.h"
 #include "absl/strings/str_format.h"
 

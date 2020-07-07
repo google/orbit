@@ -23,8 +23,6 @@
 #endif
 
 class Function;
-class Type;
-class Variable;
 class Thread;
 class Session;
 struct Module;
@@ -107,20 +105,6 @@ class Process {
   const std::vector<std::shared_ptr<Function>>& GetFunctions() const {
     return m_Functions;
   }
-
-  std::vector<Type*>& GetTypes() { return m_Types; }
-  std::vector<Variable*>& GetGlobals() { return m_Globals; }
-
-  void AddWatchedVariable(std::shared_ptr<Variable> a_Variable) {
-    m_WatchedVariables.push_back(a_Variable);
-  }
-  const std::vector<std::shared_ptr<Variable>>& GetWatchedVariables() {
-    return m_WatchedVariables;
-  }
-  void RefreshWatchedVariables();
-  void ClearWatchedVariables();
-
-  void AddType(Type& a_Type);
   void SetID(int32_t id);
 
   Mutex& GetDataMutex() { return m_DataMutex; }
@@ -158,9 +142,6 @@ class Process {
 
   // Transients
   std::vector<std::shared_ptr<Function>> m_Functions;
-  std::vector<Type*> m_Types;
-  std::vector<Variable*> m_Globals;
-  std::vector<std::shared_ptr<Variable>> m_WatchedVariables;
 
   std::unordered_set<uint64_t> m_UniqueTypeHash;
 

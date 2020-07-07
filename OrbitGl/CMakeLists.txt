@@ -30,7 +30,6 @@ target_sources(
          FunctionsDataView.h
          Geometry.h
          GlCanvas.h
-         GlobalsDataView.h
          GlPanel.h
          GlSlider.h
          GlUtils.h
@@ -55,8 +54,7 @@ target_sources(
          TimeGraphLayout.h
          TimerChain.h
          Track.h
-         TriangleToggle.h
-         TypesDataView.h)
+         TriangleToggle.h)
 
 target_sources(
   OrbitGl
@@ -77,7 +75,6 @@ target_sources(
           FramePointerValidatorClient.cpp
           FunctionsDataView.cpp
           GlCanvas.cpp
-          GlobalsDataView.cpp
           GlPanel.cpp
           GlSlider.cpp
           GlUtils.cpp
@@ -101,8 +98,7 @@ target_sources(
           TimerChain.cpp
           ThreadTrack.cpp
           Track.cpp
-          TriangleToggle.cpp
-          TypesDataView.cpp)
+          TriangleToggle.cpp)
 
 target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

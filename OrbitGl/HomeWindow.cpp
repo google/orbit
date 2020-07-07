@@ -47,8 +47,6 @@ void HomeWindow::RenderUI() {
   RenderSamplingUI();
   RenderProcessUI();
 
-  m_WatchWindow.Draw("Watch");
-
   bool show_test_window = true;
   bool show_another_window = false;
   ImVec4 clear_color = ImColor(114, 144, 154);

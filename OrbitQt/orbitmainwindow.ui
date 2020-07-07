@@ -113,16 +113,6 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="WatchTab">
-        <attribute name="title">
-         <string>watch</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_14">
-         <item row="0" column="0">
-          <widget class="OrbitWatchWidget" name="WatchWidget" native="true"/>
-         </item>
-        </layout>
-       </widget>
       </widget>
       <widget class="QTabWidget" name="RightTabWidget">
        <property name="currentIndex">
@@ -135,26 +125,6 @@
         <layout class="QGridLayout" name="gridLayout_2">
          <item row="0" column="0">
           <widget class="OrbitDataViewPanel" name="FunctionsList"/>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="TypesTab">
-        <attribute name="title">
-         <string>types</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_11">
-         <item row="0" column="0">
-          <widget class="OrbitDataViewPanel" name="TypesList"/>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="GlobalsType">
-        <attribute name="title">
-         <string>globals</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_12">
-         <item row="0" column="1">
-          <widget class="OrbitDataViewPanel" name="GlobalsList"/>
          </item>
         </layout>
        </widget>
@@ -415,12 +385,6 @@
    <class>ProcessLauncherWidget</class>
    <extends>QWidget</extends>
    <header>processlauncherwidget.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>OrbitWatchWidget</class>
-   <extends>QWidget</extends>
-   <header>orbitwatchwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
