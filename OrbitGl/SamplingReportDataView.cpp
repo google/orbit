@@ -166,15 +166,19 @@ const std::string SamplingReportDataView::MENU_ACTION_SELECT = "Hook";
 const std::string SamplingReportDataView::MENU_ACTION_UNSELECT = "Unhook";
 const std::string SamplingReportDataView::MENU_ACTION_MODULES_LOAD =
     "Load Symbols";
+const std::string SamplingReportDataView::MENU_ACTION_DISASSEMBLY =
+    "Go to Disassembly";
 
 //-----------------------------------------------------------------------------
 std::vector<std::string> SamplingReportDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
   bool enable_unselect = false;
+  bool enable_disassembly = false;
   for (const Function* function : GetFunctionsFromIndices(a_SelectedIndices)) {
     enable_select |= !function->IsSelected();
     enable_unselect |= function->IsSelected();
+    enable_disassembly = true;
   }
 
   bool enable_load = false;
@@ -188,6 +192,7 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
   if (enable_load) menu.emplace_back(MENU_ACTION_MODULES_LOAD);
+  if (enable_disassembly) menu.emplace_back(MENU_ACTION_DISASSEMBLY);
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
 }
@@ -212,6 +217,11 @@ void SamplingReportDataView::OnContextMenu(
       }
     }
     GOrbitApp->LoadModules(Capture::GTargetProcess->GetID(), modules);
+  } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
+    int32_t pid = Capture::GTargetProcess->GetID();
+    for (Function* function : GetFunctionsFromIndices(a_ItemIndices)) {
+      GOrbitApp->Disassemble(pid, *function);
+    }
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }

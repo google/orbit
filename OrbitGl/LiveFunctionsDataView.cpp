@@ -145,21 +145,26 @@ const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_MIN =
     "Jump to min";
 const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_MAX =
     "Jump to max";
+const std::string LiveFunctionsDataView::MENU_ACTION_DISASSEMBLY =
+    "Go to Disassembly";
 
 //-----------------------------------------------------------------------------
 std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
   bool enable_unselect = false;
+  bool enable_disassembly = false;
   for (int index : a_SelectedIndices) {
     const Function& function = GetFunction(index);
     enable_select |= !function.IsSelected();
     enable_unselect |= function.IsSelected();
+    enable_disassembly = true;
   }
 
   std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
+  if (enable_disassembly) menu.emplace_back(MENU_ACTION_DISASSEMBLY);
 
   // For now, these actions only make sense when one function is selected,
   // so we don't show them otherwise.
@@ -185,6 +190,12 @@ void LiveFunctionsDataView::OnContextMenu(
     for (int i : a_ItemIndices) {
       Function& function = GetFunction(i);
       function.UnSelect();
+    }
+  } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
+    int32_t pid = Capture::GTargetProcess->GetID();
+    for (int i : a_ItemIndices) {
+      Function& function = GetFunction(i);
+      GOrbitApp->Disassemble(pid, function);
     }
   } else if (a_Action == MENU_ACTION_JUMP_TO_FIRST) {
     CHECK(a_ItemIndices.size() == 1);
