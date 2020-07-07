@@ -31,4 +31,4 @@ ORBIT_SERIALIZE(LinuxCallstackEvent, 1) {
   ORBIT_NVP_VAL(1, callstack_);
 }
 
-#endif // ORBIT_CORE_LINUX_CALLSTACK_EVENT_H_
+#endif  // ORBIT_CORE_LINUX_CALLSTACK_EVENT_H_

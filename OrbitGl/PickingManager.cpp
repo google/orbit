@@ -8,7 +8,8 @@
 #include "OrbitBase/Logging.h"
 
 //-----------------------------------------------------------------------------
-PickingID PickingManager::CreatePickableId(Pickable* a_Pickable, PickingID::BatcherId batcher_id) {
+PickingID PickingManager::CreatePickableId(Pickable* a_Pickable,
+                                           PickingID::BatcherId batcher_id) {
   absl::MutexLock lock(&mutex_);
   ++m_IdCounter;
   PickingID id = PickingID::Get(PickingID::PICKABLE, m_IdCounter, batcher_id);
@@ -77,7 +78,8 @@ bool PickingManager::IsDragging() const {
 }
 
 //-----------------------------------------------------------------------------
-Color PickingManager::GetPickableColor(Pickable* pickable, PickingID::BatcherId batcher_id) {
+Color PickingManager::GetPickableColor(Pickable* pickable,
+                                       PickingID::BatcherId batcher_id) {
   PickingID id = CreatePickableId(pickable, batcher_id);
   return ColorFromPickingID(id);
 }
@@ -88,5 +90,6 @@ Color PickingManager::ColorFromPickingID(PickingID id) const {
                 "PickingID should be same size as 4 * uint8_t");
   std::array<uint8_t, 4> color_values;
   std::memcpy(&color_values[0], &id, sizeof(PickingID));
-  return Color(color_values[0], color_values[1], color_values[2], color_values[3]);
+  return Color(color_values[0], color_values[1], color_values[2],
+               color_values[3]);
 }

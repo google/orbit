@@ -21,9 +21,9 @@
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
 
-template<typename...Args>
+template <typename... Args>
 static void VARIADIC_UNUSED(Args... args) {
-  ((void) args, ...);
+  ((void)args, ...);
 }
 
 #ifdef ORBIT_FUZZING
@@ -43,7 +43,7 @@ static void VARIADIC_UNUSED(Args... args) {
         "[%28s] " format "\n", file_and_line__.c_str(), ##__VA_ARGS__);       \
     PLATFORM_LOG(formatted_log__.c_str());                                    \
   } while (0)
-#endif // ORBIT_FUZZING
+#endif  // ORBIT_FUZZING
 
 #if defined(_WIN32) && defined(ERROR)
 #undef ERROR
@@ -67,7 +67,7 @@ static void VARIADIC_UNUSED(Args... args) {
     LOG("Fatal: " format, ##__VA_ARGS__); \
     abort();                              \
   } while (0)
-#endif // ORBIT_FUZZING
+#endif  // ORBIT_FUZZING
 
 #define UNREACHABLE() FATAL("Unreachable code")
 
@@ -105,7 +105,7 @@ static void VARIADIC_UNUSED(Args... args) {
       abort();                          \
     }                                   \
   } while (0)
-#endif // ORBIT_FUZZING
+#endif  // ORBIT_FUZZING
 
 #ifndef NDEBUG
 #define DCHECK(assertion) CHECK(assertion)

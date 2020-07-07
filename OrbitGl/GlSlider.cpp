@@ -132,8 +132,8 @@ void GlSlider::DrawHorizontal(GlCanvas* canvas, bool picking) {
 
   Color color = m_SliderColor;
   if (picking) {
-    color =
-      canvas->GetPickingManager().GetPickableColor(this, PickingID::BatcherId::UI);
+    color = canvas->GetPickingManager().GetPickableColor(
+        this, PickingID::BatcherId::UI);
   } else if (canvas->GetPickingManager().GetPicked() == this) {
     color = m_SelectedColor;
   }
@@ -164,8 +164,8 @@ void GlSlider::DrawVertical(GlCanvas* canvas, bool picking) {
 
   Color color = m_SliderColor;
   if (picking) {
-    color =
-      canvas->GetPickingManager().GetPickableColor(this, PickingID::BatcherId::UI);
+    color = canvas->GetPickingManager().GetPickableColor(
+        this, PickingID::BatcherId::UI);
   } else if (canvas->GetPickingManager().GetPicked() == this) {
     color = m_SelectedColor;
   }

@@ -102,9 +102,7 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
   }
 }
 
-void OrbitApp::OnTimer(Timer timer) {
-  GCurrentTimeGraph->ProcessTimer(timer);
-}
+void OrbitApp::OnTimer(Timer timer) { GCurrentTimeGraph->ProcessTimer(timer); }
 
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_->AddIfNotPresent(key, std::move(str));

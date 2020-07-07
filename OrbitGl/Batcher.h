@@ -79,8 +79,8 @@ class Batcher {
   void AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
                     PickingID::Type picking_type, void* user_data = nullptr);
 
-  void AddTriangle(const Triangle& triangle, Color color, 
-                  PickingID::Type picking_type, void* user_data = nullptr);
+  void AddTriangle(const Triangle& triangle, Color color,
+                   PickingID::Type picking_type, void* user_data = nullptr);
   void AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
                    PickingID::Type picking_type, void* user_data = nullptr);
 

@@ -44,7 +44,8 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
   float y1 = y0 - m_Size[1];
 
   batcher->AddLine(m_Pos, Vec2(x1, y0), -0.1f, color, PickingID::PICKABLE);
-  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), -0.1f, color, PickingID::PICKABLE);
+  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), -0.1f, color,
+                   PickingID::PICKABLE);
 
   if (m_Picked) {
     Vec2& from = m_MousePos[0];

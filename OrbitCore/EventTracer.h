@@ -15,4 +15,3 @@ class EventTracer {
 };
 
 extern EventTracer GEventTracer;
-

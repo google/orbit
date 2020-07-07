@@ -9,9 +9,10 @@
 
 class CaptureServiceImpl final : public CaptureService::Service {
  public:
-  grpc::Status Capture(grpc::ServerContext* context,
-                       grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>*
-                           reader_writer) override;
+  grpc::Status Capture(
+      grpc::ServerContext* context,
+      grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer)
+      override;
 };
 
 #endif  // ORBIT_SERVICE_CAPTURE_SERVICE_IMPL_H_

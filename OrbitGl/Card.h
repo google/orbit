@@ -6,9 +6,9 @@
 
 #include <unordered_map>
 
-#include "Batcher.h"
 #include "../OrbitCore/RingBuffer.h"
 #include "../OrbitCore/Threading.h"
+#include "Batcher.h"
 #include "CoreMath.h"
 #include "ImGuiOrbit.h"
 

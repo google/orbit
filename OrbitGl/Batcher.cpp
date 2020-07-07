@@ -9,8 +9,8 @@
 
 void Batcher::AddLine(const Line& line, const Color* colors,
                       PickingID::Type picking_type, void* user_data) {
-  Color picking_color =
-      PickingID::GetColor(picking_type, line_buffer_.m_Lines.size(), batcher_id_);
+  Color picking_color = PickingID::GetColor(
+      picking_type, line_buffer_.m_Lines.size(), batcher_id_);
   line_buffer_.m_Lines.push_back(line);
   line_buffer_.m_Colors.push_back(colors, 2);
   line_buffer_.m_PickingColors.push_back_n(picking_color, 2);
@@ -46,8 +46,8 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, Color color,
 
 void Batcher::AddBox(const Box& a_Box, const Color* colors,
                      PickingID::Type picking_type, void* user_data) {
-  Color picking_color = PickingID::GetColor(picking_type,
-    box_buffer_.m_Boxes.size(), batcher_id_);
+  Color picking_color = PickingID::GetColor(
+      picking_type, box_buffer_.m_Boxes.size(), batcher_id_);
   box_buffer_.m_Boxes.push_back(a_Box);
   box_buffer_.m_Colors.push_back(colors, 4);
   box_buffer_.m_PickingColors.push_back_n(picking_color, 4);
@@ -71,8 +71,8 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
 
 void Batcher::AddTriangle(const Triangle& triangle, Color color,
                           PickingID::Type picking_type, void* user_data) {
-  Color picking_color = PickingID::GetColor(picking_type,
-    triangle_buffer_.triangles_.size(), batcher_id_);
+  Color picking_color = PickingID::GetColor(
+      picking_type, triangle_buffer_.triangles_.size(), batcher_id_);
   triangle_buffer_.triangles_.push_back(triangle);
   triangle_buffer_.colors_.push_back_n(color, 3);
   triangle_buffer_.picking_colors_.push_back_n(picking_color, 3);
@@ -144,7 +144,7 @@ void Batcher::DrawBoxBuffer(bool picking) {
   Block<Color, BoxBuffer::NUM_BOXES_PER_BLOCK * 4>* color_block;
 
   color_block = !picking ? GetBoxBuffer().m_Colors.m_Root
-                          : GetBoxBuffer().m_PickingColors.m_Root;
+                         : GetBoxBuffer().m_PickingColors.m_Root;
 
   while (box_block) {
     if (int num_elems = box_block->m_Size) {
@@ -165,7 +165,7 @@ void Batcher::DrawLineBuffer(bool picking) {
   Block<Color, LineBuffer::NUM_LINES_PER_BLOCK * 2>* color_block;
 
   color_block = !picking ? GetLineBuffer().m_Colors.m_Root
-                          : GetLineBuffer().m_PickingColors.m_Root;
+                         : GetLineBuffer().m_PickingColors.m_Root;
 
   while (line_block) {
     if (int num_elems = line_block->m_Size) {
@@ -185,8 +185,8 @@ void Batcher::DrawTriangleBuffer(bool picking) {
       GetTriangleBuffer().triangles_.m_Root;
   Block<Color, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK * 3>* color_block;
 
-  color_block = !picking ?  GetTriangleBuffer().colors_.m_Root
-                          : GetTriangleBuffer().picking_colors_.m_Root;
+  color_block = !picking ? GetTriangleBuffer().colors_.m_Root
+                         : GetTriangleBuffer().picking_colors_.m_Root;
 
   while (triangle_block) {
     if (int num_elems = triangle_block->m_Size) {
