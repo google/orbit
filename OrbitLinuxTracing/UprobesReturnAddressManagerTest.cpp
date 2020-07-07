@@ -622,6 +622,20 @@ TEST(UprobesReturnAddressManager, CallchainBeforeInjectionByUprobe) {
   EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
 }
 
+TEST(UprobesReturnAddressManager, CallchainWithoutUprobeRecord) {
+  UprobesReturnAddressManager return_address_manager;
+
+  std::vector<uint64_t> callchain_sample{
+      0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x7FFFFFFFE000lu,
+      0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
+      0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_FALSE(return_address_manager.PatchCallchain(
+      1, callchain_sample.data(), callchain_sample.size(), maps.get()));
+}
+
 TEST(UprobesReturnAddressManager, CallchainOfTailcall) {
   UprobesReturnAddressManager return_address_manager;
 

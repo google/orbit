@@ -74,15 +74,7 @@ class UprobesReturnAddressManager {
   // the uprobes.
   bool PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t callchain_size,
                       unwindstack::Maps* maps) {
-    if (!tid_uprobes_stacks_.contains(tid)) {
-      return true;
-    }
-
-    auto& tid_uprobes_stack = tid_uprobes_stacks_.at(tid);
-    CHECK(!tid_uprobes_stack.empty());
-
     std::vector<uint64_t> frames_to_patch;
-
     for (uint64_t i = 0; i < callchain_size; i++) {
       uint64_t ip = callchain[i];
       unwindstack::MapInfo* map_info = maps->Find(ip);
@@ -94,6 +86,22 @@ class UprobesReturnAddressManager {
       frames_to_patch.push_back(i);
     }
 
+    if (!tid_uprobes_stacks_.contains(tid)) {
+      // In there are no uprobes, but the callchain needs to be patched, we need
+      // to discard the sample.
+      // There are two situations where this may happen:
+      //  1. At the beginning of a capture, where we missed the first uprobes
+      //  2. When some events are lost or processed out of order.
+      if (!frames_to_patch.empty()) {
+        ERROR("Discarding sample in a uprobe as uprobe records are missing.");
+        return false;
+      }
+      return true;
+    }
+
+    auto& tid_uprobes_stack = tid_uprobes_stacks_.at(tid);
+    CHECK(!tid_uprobes_stack.empty());
+
     size_t num_unique_uprobes = 0;
     uint64_t prev_uprobe_stack_pointer = -1;
     for (const auto& uprobe : tid_uprobes_stack) {
@@ -103,10 +111,13 @@ class UprobesReturnAddressManager {
       prev_uprobe_stack_pointer = uprobe.stack_pointer;
     }
 
-    // In case we already used all uprobes, we need to discard this sample.
+    // In case we have less uprobes (with correct return address) than frames
+    // to be patched, we need to discard this sample.
     // There are two situations where this may happen:
     //  1. At the beginning of a capture, where we missed the first uprobes
     //  2. When some events are lost or processed out of order.
+    // This is the same situation as above, but we have at least some uprobe
+    // records.
     if (num_unique_uprobes < frames_to_patch.size()) {
       ERROR(
           "Discarding sample in a uprobe as some uprobe records are missing.");
