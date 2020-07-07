@@ -60,7 +60,6 @@ target_sources(
          TcpForward.h
          Threading.h
          TidAndThreadName.h
-         TimerManager.h
          Utils.h
          Variable.h
          VariableTracing.h
@@ -101,7 +100,6 @@ target_sources(
           TcpClient.cpp
           TcpEntity.cpp
           TcpServer.cpp
-          TimerManager.cpp
           Utils.cpp
           Variable.cpp
           VariableTracing.cpp)

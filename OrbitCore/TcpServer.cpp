@@ -16,7 +16,6 @@
 #include "OrbitUnreal.h"
 #include "SamplingProfiler.h"
 #include "Tcp.h"
-#include "TimerManager.h"
 #include "VariableTracing.h"
 
 std::unique_ptr<TcpServer> GTcpServer;

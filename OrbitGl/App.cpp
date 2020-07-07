@@ -51,7 +51,6 @@
 #include "TcpClient.h"
 #include "TcpServer.h"
 #include "TextRenderer.h"
-#include "TimerManager.h"
 #include "TypesDataView.h"
 #include "Utils.h"
 #include "Version.h"
@@ -185,8 +184,6 @@ void OrbitApp::OnValidateFramePointers(
 bool OrbitApp::Init(ApplicationOptions&& options) {
   GOrbitApp = std::make_unique<OrbitApp>(std::move(options));
   GCoreApp = GOrbitApp.get();
-
-  GTimerManager = std::make_unique<TimerManager>();
 
   Path::Init();
 
@@ -387,7 +384,7 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnExit() {
-  if (GTimerManager && GTimerManager->m_IsRecording) {
+  if (Capture::GState == Capture::State::kStarted) {
     StopCapture();
   }
 
@@ -395,7 +392,6 @@ void OrbitApp::OnExit() {
   thread_pool_->ShutdownAndWait();
   main_thread_executor_->ConsumeActions();
 
-  GTimerManager = nullptr;
   GCoreApp = nullptr;
   GOrbitApp = nullptr;
   Orbit_ImGui_Shutdown();
@@ -645,10 +641,6 @@ void OrbitApp::OnCaptureStopped() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ToggleCapture() {
-  if (!GTimerManager) {
-    return;
-  }
-
   if (Capture::IsCapturing()) {
     StopCapture();
   } else {

@@ -359,9 +359,6 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y,
   // TRACE_VAR( m_WorldTopLeftY );
   // TRACE_VAR( m_WorldWidth );
   // TRACE_VAR( m_WorldHeight );
-  // TRACE_VAR( GTimerManager->m_NumQueuedEntries );
-  // TRACE_VAR( GTimerManager->m_NumQueuedMessages );
-  // TRACE_VAR( GTimerManager->m_NumQueuedTimers );
   // TRACE_VAR( GPdbDbg->GetHModule() );
   // TRACE_VAR( m_MinWheelDelta );
   // TRACE_VAR( m_MaxWheelDelta );
