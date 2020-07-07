@@ -184,7 +184,6 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
   std::vector<uint8_t> pixels(1 * 1 * 4);
   glReadPixels(a_X, m_MainWindowHeight - a_Y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE,
                &pixels[0]);
-
   PickingID pickId = PickingID::Get(*reinterpret_cast<uint32_t*>(&pixels[0]));
 
   Capture::GSelectedTextBox = nullptr;
@@ -199,11 +198,15 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
 void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
   uint32_t type = a_PickingID.m_Type;
   uint32_t id = a_PickingID.m_Id;
+  uint32_t batcher_id = a_PickingID.batcher_id_;
+
+  Batcher& batcher = (batcher_id == PickingID::TIME_GRAPH) ?
+    time_graph_.GetBatcher() : ui_batcher_;
 
   switch (type) {
     case PickingID::BOX: {
       void** textBoxPtr =
-          time_graph_.GetBatcher().GetBoxBuffer().m_UserData.SlowAt(id);
+          batcher.GetBoxBuffer().m_UserData.SlowAt(id);
       if (textBoxPtr) {
         TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
         SelectTextBox(textBox);
@@ -212,7 +215,7 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
     }
     case PickingID::LINE: {
       void** textBoxPtr =
-          time_graph_.GetBatcher().GetLineBuffer().m_UserData.SlowAt(id);
+          batcher.GetLineBuffer().m_UserData.SlowAt(id);
       if (textBoxPtr) {
         TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
         SelectTextBox(textBox);
@@ -221,7 +224,7 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
     }
     case PickingID::TRIANGLE: {
       void** textBoxPtr =
-          time_graph_.GetBatcher().GetTriangleBuffer().user_data_.SlowAt(id);
+          batcher.GetTriangleBuffer().user_data_.SlowAt(id);
       if (textBoxPtr) {
         TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
         SelectTextBox(textBox);
@@ -585,7 +588,7 @@ void CaptureWindow::Draw() {
     std::string time = GetPrettyTime(micros * 0.001);
     TextBox box(pos, size, time, Color(0, 128, 0, 128));
     box.SetTextY(m_SelectStop[1]);
-    box.Draw(&batcher_, m_TextRenderer, -FLT_MAX, true, true);
+    box.Draw(&ui_batcher_, m_TextRenderer, -FLT_MAX, true, true);
   }
 
   if (!m_Picking && !m_IsHovering) {
@@ -593,7 +596,7 @@ void CaptureWindow::Draw() {
     RenderTimeBar();
 
     Vec2 pos(m_MouseX, m_WorldTopLeftY);
-    batcher_.AddVerticalLine(pos, -m_WorldHeight, Z_VALUE_TEXT,
+    ui_batcher_.AddVerticalLine(pos, -m_WorldHeight, Z_VALUE_TEXT,
       Color(0, 255, 0, 127), PickingID::LINE);
   }
 }
@@ -639,12 +642,12 @@ void CaptureWindow::DrawScreenSpace() {
   float margin_x0 = margin_x1 - vertical_margin;
 
   Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvasHeight - height), z);
-  batcher_.AddBox(box, kBackgroundColor, PickingID::BOX);
+  ui_batcher_.AddBox(box, kBackgroundColor, PickingID::BOX);
 
   // Time bar
   if (time_graph_.GetSessionTimeSpanUs() > 0) {
     Box box(Vec2(0, height), Vec2(getWidth(), height), z);
-    batcher_.AddBox(box, Color(70,70,70,200), PickingID::BOX);
+    ui_batcher_.AddBox(box, Color(70,70,70,200), PickingID::BOX);
   }
 }
 
@@ -1143,7 +1146,7 @@ void CaptureWindow::RenderTimeBar() {
                              Color(255, 255, 255, 255));
 
       Vec2 pos(worldX, worldY);
-      batcher_.AddVerticalLine(pos, height, Z_VALUE_UI,
+      ui_batcher_.AddVerticalLine(pos, height, Z_VALUE_UI,
         Color(255, 255, 255, 255), PickingID::LINE);
     }
   }

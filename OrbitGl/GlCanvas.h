@@ -98,7 +98,7 @@ class GlCanvas : public GlPanel {
   void RenderSamplingUI();
 
   ImGuiContext* GetImGuiContext() { return m_ImGuiContext; }
-  Batcher* GetBatcher() { return &batcher_; }
+  Batcher* GetBatcher() { return &ui_batcher_; }
 
   PickingManager& GetPickingManager() { return m_PickingManager; }
 
@@ -159,5 +159,5 @@ class GlCanvas : public GlPanel {
   bool m_AltKey;
 
   // Batcher to draw elements in the UI.
-  Batcher batcher_;
+  Batcher ui_batcher_;
 };

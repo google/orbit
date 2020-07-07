@@ -10,7 +10,7 @@
 void Batcher::AddLine(const Line& line, const Color* colors,
                       PickingID::Type picking_type, void* user_data) {
   Color picking_color =
-      PickingID::GetColor(picking_type, line_buffer_.m_Lines.size());
+      PickingID::GetColor(picking_type, line_buffer_.m_Lines.size(), batcher_id_);
   line_buffer_.m_Lines.push_back(line);
   line_buffer_.m_Colors.push_back(colors, 2);
   line_buffer_.m_PickingColors.push_back_n(picking_color, 2);
@@ -46,7 +46,8 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, Color color,
 
 void Batcher::AddBox(const Box& a_Box, const Color* colors,
                      PickingID::Type picking_type, void* user_data) {
-  Color picking_color = PickingID::GetColor(picking_type, box_buffer_.m_Boxes.size());
+  Color picking_color = PickingID::GetColor(picking_type,
+    box_buffer_.m_Boxes.size(), batcher_id_);
   box_buffer_.m_Boxes.push_back(a_Box);
   box_buffer_.m_Colors.push_back(colors, 4);
   box_buffer_.m_PickingColors.push_back_n(picking_color, 4);
@@ -70,7 +71,8 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
 
 void Batcher::AddTriangle(const Triangle& triangle, Color color,
                           PickingID::Type picking_type, void* user_data) {
-  Color picking_color = PickingID::GetColor(picking_type, triangle_buffer_.triangles_.size());
+  Color picking_color = PickingID::GetColor(picking_type,
+    triangle_buffer_.triangles_.size(), batcher_id_);
   triangle_buffer_.triangles_.push_back(triangle);
   triangle_buffer_.colors_.push_back_n(color, 3);
   triangle_buffer_.picking_colors_.push_back_n(picking_color, 3);

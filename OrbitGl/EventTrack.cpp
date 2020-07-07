@@ -7,6 +7,7 @@
 #include "Capture.h"
 #include "EventTracer.h"
 #include "GlCanvas.h"
+#include "PickingManager.h"
 
 //-----------------------------------------------------------------------------
 EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
@@ -27,11 +28,11 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
 
   if (picking) {
     z = kPickingZ;
-    color = picking_manager.GetPickableColor(this);
+    color = picking_manager.GetPickableColor(this, PickingID::BatcherId::UI);
   }
 
   Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), z);
-  batcher->AddBox(box, color, PickingID::BOX);
+  batcher->AddBox(box, color, PickingID::PICKABLE);
 
   if (canvas->GetPickingManager().GetPicked() == this) {
     color = Color(255, 255, 255, 255);
@@ -42,8 +43,8 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
   float x1 = x0 + m_Size[0];
   float y1 = y0 - m_Size[1];
 
-  batcher->AddLine(m_Pos, Vec2(x1, y0), -0.1f, color, PickingID::LINE);
-  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), -0.1f, color, PickingID::LINE);
+  batcher->AddLine(m_Pos, Vec2(x1, y0), -0.1f, color, PickingID::PICKABLE);
+  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), -0.1f, color, PickingID::PICKABLE);
 
   if (m_Picked) {
     Vec2& from = m_MousePos[0];
@@ -56,7 +57,7 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
 
     Color picked_color(0, 128, 255, 128);
     Box box(Vec2(x0, y0), Vec2(x1 - x0, -m_Size[1]), -0.f);
-    batcher->AddBox(box, picked_color, PickingID::BOX);
+    batcher->AddBox(box, picked_color, PickingID::PICKABLE);
   }
 
   m_Canvas = canvas;
@@ -79,7 +80,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
     uint64_t time = pair.first;
     if (time > min_tick && time < max_tick) {
       Vec2 pos(time_graph_->GetWorldFromTick(time), m_Pos[1]);
-      batcher->AddVerticalLine(pos, -track_height, z, kWhite, PickingID::EVENT);
+      batcher->AddVerticalLine(pos, -track_height, z, kWhite, PickingID::LINE);
     }
   }
 
@@ -90,7 +91,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   for (CallstackEvent& event : selected_callstack_events_) {
     Vec2 pos(time_graph_->GetWorldFromTick(event.m_Time), m_Pos[1]);
     batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection,
-                             PickingID::EVENT);
+                             PickingID::LINE);
   }
 }
 

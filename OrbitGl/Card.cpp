@@ -41,7 +41,7 @@ void Card::Draw(GlCanvas* canvas) {
   Batcher* batcher = canvas->GetBatcher();
 
   Box box(m_Pos, m_Size, 0.f);
-  batcher->AddBox(box, m_Color, PickingID::BOX);
+  batcher->AddBox(box, m_Color, PickingID::PICKABLE);
 }
 
 //-----------------------------------------------------------------------------
@@ -129,7 +129,8 @@ void FloatGraphCard::Draw(GlCanvas* a_Canvas) {
     float y1 = m_Pos[1] + textHeight +
                (m_Data[i + 1] - m_Min) * YRangeInv * YGraphSize;
 
-    batcher->AddLine(Vec2(x0, y0), Vec2(x1, y1), 0.f, Color(255, 255, 255, 255), PickingID::LINE);
+    batcher->AddLine(Vec2(x0, y0), Vec2(x1, y1), 0.f,
+      Color(255, 255, 255, 255), PickingID::PICKABLE);
   }
 
   Color col(255, 255, 255, 255);

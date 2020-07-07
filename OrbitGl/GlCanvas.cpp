@@ -44,7 +44,7 @@ void ClearCaptureData() {
 }
 
 //-----------------------------------------------------------------------------
-GlCanvas::GlCanvas() {
+GlCanvas::GlCanvas() : ui_batcher_(PickingID::BatcherId::UI) {
   m_TextRenderer.SetCanvas(this);
 
   m_Width = 0;
@@ -436,7 +436,7 @@ void GlCanvas::Render(int a_Width, int a_Height) {
   }
 
   m_NeedsRedraw = false;
-  batcher_.Reset();
+  ui_batcher_.Reset();
 
   ScopeImguiContext state(m_ImGuiContext);
 
@@ -459,20 +459,20 @@ void GlCanvas::Render(int a_Width, int a_Height) {
 
   // We have to draw everything collected in the batcher at this point,
   // as prepareScreenSpaceViewport() changes the coordinate system.
-  batcher_.Draw();
-  batcher_.Reset();
+  ui_batcher_.Draw();
+  ui_batcher_.Reset();
 
   prepareScreenSpaceViewport();
 
   DrawScreenSpace();
 
   RenderUI();
-  m_TextRenderer.Display(&batcher_);
+  m_TextRenderer.Display(&ui_batcher_);
   RenderText();
 
   // Draw remaining elements collected with the batcher.
-  batcher_.Draw();
-  batcher_.Reset();
+  ui_batcher_.Draw();
+  ui_batcher_.Reset();
 
   glFlush();
 

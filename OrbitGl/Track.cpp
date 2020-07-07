@@ -77,7 +77,7 @@ void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
     vertices[i % 2] = position + Vec3(rotated_points[i + 1][0],
                                       rotated_points[i + 1][1], z);
     Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
-    batcher->AddTriangle(triangle, color, PickingID::TRIANGLE);
+    batcher->AddTriangle(triangle, color, PickingID::PICKABLE);
   }
 }
 
@@ -86,7 +86,8 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   Batcher* batcher = canvas->GetBatcher();
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
-  Color picking_color = canvas->GetPickingManager().GetPickableColor(this);
+  Color picking_color =
+    canvas->GetPickingManager().GetPickableColor(this, PickingID::BatcherId::UI);
   const Color kTabColor(50, 50, 50, 255);
   Color color = picking ? picking_color : kTabColor;
   glColor4ubv(&color[0]);
@@ -103,7 +104,7 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   if (!picking) {
     if (layout.GetDrawTrackBackground()) {
       Box box(Vec2(x0, y0 + top_margin), Vec2(m_Size[0], -m_Size[1] - top_margin), track_z);
-      batcher->AddBox(box, color, PickingID::BOX);
+      batcher->AddBox(box, color, PickingID::PICKABLE);
     }
   }
 
@@ -114,7 +115,7 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   float tab_x0 = x0 + layout.GetTrackTabOffset();
 
   Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
-  batcher->AddBox(box, color, PickingID::BOX);
+  batcher->AddBox(box, color, PickingID::PICKABLE);
 
   // Draw rounded corners.
   float vertical_margin = time_graph_->GetVerticalMargin();
