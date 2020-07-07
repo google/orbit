@@ -111,7 +111,7 @@ class UprobesReturnAddressManager {
       prev_uprobe_stack_pointer = uprobe.stack_pointer;
     }
 
-    // In case we have less uprobes (with correct return address), than samples
+    // In case we have less uprobes (with correct return address) than frames
     // to be patched, we need to discard this sample.
     // There are two situations where this may happen:
     //  1. At the beginning of a capture, where we missed the first uprobes
