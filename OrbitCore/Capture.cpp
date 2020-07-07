@@ -7,7 +7,6 @@
 #include <fstream>
 #include <ostream>
 
-#include "ConnectionManager.h"
 #include "Core.h"
 #include "CoreApp.h"
 #include "EventBuffer.h"

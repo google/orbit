@@ -18,7 +18,6 @@ target_sources(
          Capture.h
          Context.h
          ContextSwitch.h
-         ConnectionManager.h
          Core.h
          CoreApp.h
          EventBuffer.h
@@ -75,7 +74,6 @@ target_sources(
           ContextSwitch.cpp
           Core.cpp
           CoreApp.cpp
-          ConnectionManager.cpp
           EventBuffer.cpp
           FunctionStats.cpp
           Injection.cpp

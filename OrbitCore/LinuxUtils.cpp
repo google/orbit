@@ -31,21 +31,10 @@
 #include <sstream>
 #include <string>
 
-#include "Callstack.h"
-#include "Capture.h"
-#include "ConnectionManager.h"
 #include "ElfUtils/ElfFile.h"
-#include "EventBuffer.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitModule.h"
-#include "OrbitProcess.h"
 #include "Path.h"
-#include "PrintVar.h"
-#include "SamplingProfiler.h"
-#include "ScopeTimer.h"
-#include "TcpClient.h"
 #include "Utils.h"
-#include "absl/strings/numbers.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/strip.h"
 
