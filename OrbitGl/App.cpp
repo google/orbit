@@ -87,8 +87,8 @@ OrbitApp::~OrbitApp() {
 std::string OrbitApp::FindFile(const std::string& caption,
                                const std::string& dir,
                                const std::string& filter) {
-  if (m_FindFileCallback) {
-    return m_FindFileCallback(caption, dir, filter);
+  if (find_file_callback_) {
+    return find_file_callback_(caption, dir, filter);
   }
 
   return std::string();
@@ -457,10 +457,10 @@ void OrbitApp::AddSamplingReport(
     std::shared_ptr<SamplingProfiler>& sampling_profiler) {
   auto report = std::make_shared<SamplingReport>(sampling_profiler);
 
-  for (SamplingReportCallback& callback : m_SamplingReportsCallbacks) {
+  if (sampling_reports_callback_) {
     DataView* callstack_data_view =
         GetOrCreateDataView(DataViewType::CALLSTACK);
-    callback(callstack_data_view, report);
+    sampling_reports_callback_(callstack_data_view, report);
   }
 
   sampling_report_ = report;
@@ -471,10 +471,10 @@ void OrbitApp::AddSelectionReport(
     std::shared_ptr<SamplingProfiler>& a_SamplingProfiler) {
   auto report = std::make_shared<SamplingReport>(a_SamplingProfiler);
 
-  for (SamplingReportCallback& callback : m_SelectionReportCallbacks) {
+  if (selection_report_callback_) {
     DataView* callstack_data_view =
         GetOrCreateDataView(DataViewType::CALLSTACK);
-    callback(callstack_data_view, report);
+    selection_report_callback_(callstack_data_view, report);
   }
 
   selection_report_ = report;
@@ -495,13 +495,17 @@ std::string OrbitApp::GetCaptureFileName() {
 
 //-----------------------------------------------------------------------------
 std::string OrbitApp::GetSaveFile(const std::string& extension) {
-  if (!m_SaveFileCallback) return "";
-  return m_SaveFileCallback(extension);
+  if (!save_file_callback_) {
+    return "";
+  }
+  return save_file_callback_(extension);
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::SetClipboard(const std::string& text) {
-  if (m_ClipboardCallback) m_ClipboardCallback(text);
+  if (clipboard_callback_) {
+    clipboard_callback_(text);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -594,16 +598,15 @@ outcome::result<void, std::string> OrbitApp::OnLoadCapture(
 void OrbitApp::OnDisconnect() { GTcpServer->Send(Msg_Unload); }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::FireRefreshCallbacks(DataViewType a_Type) {
+void OrbitApp::FireRefreshCallbacks(DataViewType type) {
   for (DataView* panel : m_Panels) {
-    if (a_Type == DataViewType::ALL || a_Type == panel->GetType()) {
+    if (type == DataViewType::ALL || type == panel->GetType()) {
       panel->OnDataChanged();
     }
   }
 
-  // UI callbacks
-  for (RefreshCallback& callback : m_RefreshCallbacks) {
-    callback(a_Type);
+  if (refresh_callback_) {
+    refresh_callback_(type);
   }
 }
 
@@ -627,13 +630,11 @@ bool OrbitApp::StartCapture() {
     main_thread_executor_->Schedule([this] { OnCaptureStopped(); });
   });
 
-  for (const CaptureStartedCallback& callback : capture_started_callbacks_) {
-    callback();
+  if (capture_started_callback_) {
+    capture_started_callback_();
   }
-  if (!Capture::GSelectedFunctionsMap.empty()) {
-    for (const SelectLiveTabCallback& callback : select_live_tab_callbacks_) {
-      callback();
-    }
+  if (!Capture::GSelectedFunctionsMap.empty() && select_live_tab_callback_) {
+    select_live_tab_callback_();
   }
   return true;
 }
@@ -644,9 +645,8 @@ void OrbitApp::StopCapture() {
 
   capture_client_->StopCapture();
 
-  for (const CaptureStopRequestedCallback& callback :
-       capture_stop_requested_callbacks_) {
-    callback();
+  if (capture_stop_requested_callback_) {
+    capture_stop_requested_callback_();
   }
   FireRefreshCallbacks();
 }
@@ -656,9 +656,8 @@ void OrbitApp::OnCaptureStopped() {
 
   AddSamplingReport(Capture::GSamplingProfiler);
 
-  for (const CaptureStopRequestedCallback& callback :
-       capture_stopped_callbacks_) {
-    callback();
+  if (capture_stopped_callback_) {
+    capture_stopped_callback_();
   }
   FireRefreshCallbacks();
 }
@@ -705,40 +704,40 @@ void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
 
 void OrbitApp::RequestOpenCaptureToUi() {
   main_thread_executor_->Schedule([this] {
-    for (const OpenCaptureCallback& callback : open_capture_callbacks_) {
-      callback();
+    if (open_capture_callback_) {
+      open_capture_callback_();
     }
   });
 }
 
 void OrbitApp::RequestSaveCaptureToUi() {
   main_thread_executor_->Schedule([this] {
-    for (const SaveCaptureCallback& callback : save_capture_callbacks_) {
-      callback();
+    if (save_capture_callback_) {
+      save_capture_callback_();
     }
   });
 }
 
 void OrbitApp::SendDisassemblyToUi(const std::string& disassembly) {
   main_thread_executor_->Schedule([this, disassembly] {
-    for (const DisassemblyCallback& callback : disassembly_callbacks_) {
-      callback(disassembly);
+    if (disassembly_callback_) {
+      disassembly_callback_(disassembly);
     }
   });
 }
 
 void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
   main_thread_executor_->Schedule([this, tooltip] {
-    for (const TooltipCallback& callback : tooltip_callbacks_) {
-      callback(tooltip);
+    if (tooltip_callback_) {
+      tooltip_callback_(tooltip);
     }
   });
 }
 
 void OrbitApp::RequestFeedbackDialogToUi() {
   main_thread_executor_->Schedule([this] {
-    for (const FeedbackDialogCallback& callback : feedback_dialog_callbacks_) {
-      callback();
+    if (feedback_dialog_callback_) {
+      feedback_dialog_callback_();
     }
   });
 }
@@ -746,8 +745,8 @@ void OrbitApp::RequestFeedbackDialogToUi() {
 //-----------------------------------------------------------------------------
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {
-    for (const InfoMessageCallback& callback : info_message_callbacks_) {
-      callback(title, text);
+    if (info_message_callback_) {
+      info_message_callback_(title, text);
     }
   });
 }
@@ -756,8 +755,8 @@ void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
 void OrbitApp::SendErrorToUi(const std::string& title,
                              const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {
-    for (const ErrorMessageCallback& callback : error_message_callbacks_) {
-      callback(title, text);
+    if (error_message_callback_) {
+      error_message_callback_(title, text);
     }
   });
 }
