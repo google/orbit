@@ -7,7 +7,6 @@
 #include <utility>
 
 #include "KeyAndString.h"
-#include "TcpServer.h"
 
 void LinuxTracingBuffer::RecordTimer(Timer&& timer) {
   absl::MutexLock lock(&timer_buffer_mutex_);

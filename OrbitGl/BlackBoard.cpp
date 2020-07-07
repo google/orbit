@@ -9,7 +9,6 @@
 #include "Card.h"
 #include "Context.h"
 #include "Log.h"
-#include "TcpServer.h"
 
 //-----------------------------------------------------------------------------
 BlackBoard::BlackBoard() : GlCanvas() {}

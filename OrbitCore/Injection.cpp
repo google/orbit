@@ -9,7 +9,6 @@
 #include "Log.h"
 #include "SamplingProfiler.h"
 #include "ScopeTimer.h"
-#include "TcpForward.h"
 #include "absl/strings/str_format.h"
 
 #ifdef _WIN32
