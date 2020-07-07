@@ -10,7 +10,6 @@
 #include "Core.h"
 #include "Log.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitLib.h"
 #include "OrbitType.h"
 #include "Tcp.h"
 #include "absl/strings/str_format.h"

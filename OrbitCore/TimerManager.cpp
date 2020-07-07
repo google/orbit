@@ -6,7 +6,6 @@
 
 #include "Message.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitLib.h"
 #include "Params.h"
 #include "TcpClient.h"
 #include "TcpForward.h"

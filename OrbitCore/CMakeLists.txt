@@ -35,7 +35,6 @@ target_sources(
          Message.h
          OrbitDbgHelp.h
          OrbitFunction.h
-         OrbitLib.h
          OrbitModule.h
          OrbitProcess.h
          OrbitSession.h
@@ -84,7 +83,6 @@ target_sources(
           MemoryTracker.cpp
           Message.cpp
           OrbitFunction.cpp
-          OrbitLib.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
           OrbitSession.cpp
