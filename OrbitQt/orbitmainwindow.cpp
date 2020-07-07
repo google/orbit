@@ -196,8 +196,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
         ui->RightTabWidget->indexOf(ui->CallStackTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
 
-    ui->actionDisconnect->setVisible(false);
-
     ui->actionShow_Includes_Util->setVisible(false);
     ui->menuTools->menuAction()->setVisible(false);
   }
@@ -550,11 +548,6 @@ void OrbitMainWindow::on_actionOpen_Preset_triggered() {
     }
     break;
   }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionDisconnect_triggered() {
-  GOrbitApp->OnDisconnect();
 }
 
 //-----------------------------------------------------------------------------

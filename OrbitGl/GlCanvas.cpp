@@ -346,7 +346,6 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y,
 
   Capture::DisplayStats();
 
-  // extern TcpServer* GTcpServer;
   // TRACE_VAR( m_ScreenClickY );
   // TRACE_VAR( GPdbDbg->GetFunctions().size() );
   // TRACE_VAR( GPdbDbg->GetTypes().size() );
