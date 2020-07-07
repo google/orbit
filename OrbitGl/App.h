@@ -17,13 +17,13 @@
 #include "CaptureClient.h"
 #include "CaptureListener.h"
 #include "ContextSwitch.h"
-#include "CoreApp.h"
 #include "CrashManager.h"
 #include "DataManager.h"
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
 #include "FramePointerValidatorClient.h"
 #include "FunctionsDataView.h"
+#include "LinuxCallstackEvent.h"
 #include "LiveFunctionsDataView.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/MainThreadExecutor.h"
@@ -45,8 +45,7 @@ struct CallStack;
 class Process;
 
 //-----------------------------------------------------------------------------
-class OrbitApp final : public CoreApp,
-                       public DataViewFactory,
+class OrbitApp final : public DataViewFactory,
                        public CaptureListener {
  public:
   explicit OrbitApp(ApplicationOptions&& options);
@@ -68,21 +67,21 @@ class OrbitApp final : public CoreApp,
       const std::string& file_name);
   bool StartCapture();
   void StopCapture();
-  void OnCaptureStopped() override;
+  void OnCaptureStopped();
   void ToggleCapture();
   void SetCallStack(std::shared_ptr<CallStack> a_CallStack);
   void LoadFileMapping();
   void ListPresets();
-  void RefreshCaptureView() override;
+  void RefreshCaptureView();
   void Disassemble(int32_t pid, const Function& function);
 
-  void ProcessTimer(const Timer& timer) override;
-  void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) override;
-  void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) override;
-  void AddAddressInfo(LinuxAddressInfo address_info) override;
-  void AddKeyAndString(uint64_t key, std::string_view str) override;
+  void ProcessTimer(const Timer& timer);
+  void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack);
+  void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack);
+  void AddAddressInfo(LinuxAddressInfo address_info);
+  void AddKeyAndString(uint64_t key, std::string_view str);
   void UpdateThreadName(int32_t thread_id,
-                        const std::string& thread_name) override;
+                        const std::string& thread_name);
 
   void OnTimer(Timer timer) override;
   void OnKeyAndString(uint64_t key, std::string str) override;

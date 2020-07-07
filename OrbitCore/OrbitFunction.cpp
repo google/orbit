@@ -10,7 +10,6 @@
 
 #include "Capture.h"
 #include "Core.h"
-#include "CoreApp.h"
 #include "Log.h"
 #include "OrbitModule.h"
 #include "OrbitProcess.h"

@@ -176,7 +176,6 @@ void OrbitApp::OnValidateFramePointers(
 //-----------------------------------------------------------------------------
 bool OrbitApp::Init(ApplicationOptions&& options) {
   GOrbitApp = std::make_unique<OrbitApp>(std::move(options));
-  GCoreApp = GOrbitApp.get();
 
   Path::Init();
 
@@ -378,7 +377,6 @@ void OrbitApp::OnExit() {
   thread_pool_->ShutdownAndWait();
   main_thread_executor_->ConsumeActions();
 
-  GCoreApp = nullptr;
   GOrbitApp = nullptr;
   Orbit_ImGui_Shutdown();
 }
@@ -613,6 +611,8 @@ void OrbitApp::StopCapture() {
 
 void OrbitApp::OnCaptureStopped() {
   Capture::FinalizeCapture();
+
+  RefreshCaptureView();
 
   AddSamplingReport(Capture::GSamplingProfiler);
 

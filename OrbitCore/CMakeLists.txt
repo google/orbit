@@ -19,7 +19,6 @@ target_sources(
          Context.h
          ContextSwitch.h
          Core.h
-         CoreApp.h
          EventBuffer.h
          EventClasses.h
          FunctionStats.h
@@ -62,7 +61,6 @@ target_sources(
           Capture.cpp
           ContextSwitch.cpp
           Core.cpp
-          CoreApp.cpp
           EventBuffer.cpp
           FunctionStats.cpp
           Injection.cpp
