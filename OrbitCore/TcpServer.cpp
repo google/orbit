@@ -8,7 +8,6 @@
 
 #include "Callstack.h"
 #include "Capture.h"
-#include "ConnectionManager.h"
 #include "Context.h"
 #include "Core.h"
 #include "Log.h"

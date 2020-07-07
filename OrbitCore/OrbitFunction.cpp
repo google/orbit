@@ -9,7 +9,6 @@
 #include <map>
 
 #include "Capture.h"
-#include "ConnectionManager.h"
 #include "Core.h"
 #include "CoreApp.h"
 #include "Log.h"
