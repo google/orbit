@@ -20,7 +20,6 @@ target_sources(
          ContextSwitch.h
          Core.h
          EventBuffer.h
-         EventClasses.h
          FunctionStats.h
          Hashing.h
          Injection.h
