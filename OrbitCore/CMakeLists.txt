@@ -21,7 +21,6 @@ target_sources(
          Core.h
          EventBuffer.h
          FunctionStats.h
-         Hashing.h
          Injection.h
          Introspection.h
          LinuxAddressInfo.h
