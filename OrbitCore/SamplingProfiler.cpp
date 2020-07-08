@@ -38,7 +38,6 @@ void SamplingProfiler::StartCapture() {
   Capture::GIsSampling = true;
 
   m_SamplingTimer.Start();
-  m_ThreadUsageTimer.Start();
 
   m_State = Sampling;
 }
@@ -51,20 +50,6 @@ float SamplingProfiler::GetSampleTime() {
   return m_State == Sampling
              ? static_cast<float>(m_SamplingTimer.QuerySeconds())
              : 0.f;
-}
-
-//-----------------------------------------------------------------------------
-bool SamplingProfiler::ShouldStop() {
-  return m_State == Sampling
-             ? m_SamplingTimer.QuerySeconds() > m_SampleTimeSeconds
-             : false;
-}
-
-//-----------------------------------------------------------------------------
-void SamplingProfiler::FireDoneProcessingCallbacks() {
-  for (auto& callback : m_Callbacks) {
-    callback();
-  }
 }
 
 //-----------------------------------------------------------------------------
@@ -143,22 +128,6 @@ void SamplingProfiler::SortByThreadUsage() {
   sort(m_SortedThreadSampleData.begin(), m_SortedThreadSampleData.end(),
        [](const ThreadSampleData* a, const ThreadSampleData* b) {
          return a->m_AverageThreadUsage > b->m_AverageThreadUsage;
-       });
-}
-
-//-----------------------------------------------------------------------------
-void SamplingProfiler::SortByThreadID() {
-  m_SortedThreadSampleData.clear();
-  m_SortedThreadSampleData.reserve(m_ThreadSampleData.size());
-
-  for (auto& pair : m_ThreadSampleData) {
-    ThreadSampleData& data = pair.second;
-    m_SortedThreadSampleData.push_back(&data);
-  }
-
-  sort(m_SortedThreadSampleData.begin(), m_SortedThreadSampleData.end(),
-       [](const ThreadSampleData* a, const ThreadSampleData* b) {
-         return a->m_TID > b->m_TID;
        });
 }
 
@@ -405,7 +374,6 @@ ORBIT_SERIALIZE_WSTRING(SampledFunction, 0) {
 
 //-----------------------------------------------------------------------------
 ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 3) {
-  ORBIT_NVP_VAL(0, m_PeriodMs);
   ORBIT_NVP_VAL(0, m_NumSamples);
   ORBIT_NVP_DEBUG(0, m_ThreadSampleData);
   ORBIT_NVP_DEBUG(0, m_UniqueCallstacks);

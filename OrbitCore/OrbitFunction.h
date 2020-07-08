@@ -19,38 +19,6 @@
 
 class Pdb;
 
-struct FunctionParam {
-  FunctionParam();
-  std::string m_Name;
-  std::string m_ParamType;
-  std::string m_Type;
-  std::string m_Address;
-
-#ifdef _WIN32
-  SYMBOL_INFO m_SymbolInfo;
-#endif
-
-  bool InRegister(int a_Index);
-  bool IsPointer() { return m_Type.find("*") != std::string::npos; }
-  bool IsRef() { return m_Type.find("&") != std::string::npos; }
-  bool IsFloat();
-};
-
-struct Argument {
-  Argument() { memset(this, 0, sizeof(*this)); }
-  DWORD m_Index;
-  CV_HREG_e m_Reg;
-  DWORD m_Offset;
-  DWORD m_NumBytes;
-};
-
-struct FunctionArgInfo {
-  FunctionArgInfo() : m_NumStackBytes(0), m_ArgDataSize(0) {}
-  int m_NumStackBytes;
-  int m_ArgDataSize;
-  std::vector<Argument> m_Args;
-};
-
 class Function {
  public:
   enum OrbitType {
@@ -121,28 +89,15 @@ class Function {
   void SetOrbitType(OrbitType type) { type_ = type; }
   bool SetOrbitTypeFromName();
   bool IsOrbitFunc() const { return type_ != OrbitType::NONE; }
-  bool IsOrbitZone() const {
-    return type_ == ORBIT_TIMER_START || type_ == ORBIT_TIMER_STOP;
-  }
-  bool IsOrbitStart() const { return type_ == ORBIT_TIMER_START; }
-  bool IsOrbitStop() const { return type_ == ORBIT_TIMER_STOP; }
-  bool IsRealloc() const { return type_ == REALLOC; }
-  bool IsAlloc() const { return type_ == ALLOC; }
-  bool IsFree() const { return type_ == FREE; }
-  bool IsMemoryFunc() const { return IsFree() || IsAlloc() || IsRealloc(); }
 
   const FunctionStats& GetStats() const { return *stats_; }
   void UpdateStats(const Timer& timer);
   void ResetStats();
 
-  bool Hookable();
   void Select();
   void UnSelect();
   bool IsSelected() const;
 
-  void SetId(uint32_t id) { id_ = id; }
-  void SetParentId(uint32_t parent_id) { parent_id_ = parent_id; }
-  void AddParameter(const FunctionParam& param) { params_.push_back(param); }
   void Print();
 
   void FindFile();
@@ -150,6 +105,7 @@ class Function {
   ORBIT_SERIALIZABLE;
 
  private:
+  bool Hookable();
   static const absl::flat_hash_map<const char*, OrbitType>&
   GetFunctionNameToOrbitTypeMap();
 
@@ -163,11 +119,7 @@ class Function {
   uint64_t size_;
   std::string file_;
   uint32_t line_;
-  uint32_t id_ = 0;
-  uint32_t parent_id_ = 0;
   int calling_convention_ = -1;
-  std::vector<FunctionParam> params_;
-  std::vector<Argument> arguments_;
   OrbitType type_ = NONE;
   std::shared_ptr<FunctionStats> stats_;
 };

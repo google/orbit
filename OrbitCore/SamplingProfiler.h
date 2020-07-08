@@ -96,8 +96,6 @@ class SamplingProfiler {
   int GetNumSamples() const { return m_NumSamples; }
   float GetSampleTime();
   float GetSampleTimeTotal() const { return m_SampleTimeSeconds; }
-  bool ShouldStop();
-  void FireDoneProcessingCallbacks();
 
   void AddCallStack(CallStack& a_CallStack);
   void AddHashedCallStack(CallstackEvent& a_CallStack);
@@ -140,24 +138,15 @@ class SamplingProfiler {
     return &it->second;
   }
 
-  typedef std::function<void()> ProcessingDoneCallback;
-  void AddCallback(const ProcessingDoneCallback& a_Callback) {
-    m_Callbacks.push_back(a_Callback);
-  }
   void SetGenerateSummary(bool a_Value) { m_GenerateSummary = a_Value; }
   bool GetGenerateSummary() const { return m_GenerateSummary; }
   void SortByThreadUsage();
-  void SortByThreadID();
   void ProcessSamples();
   void UpdateAddressInfo(uint64_t address);
-
-  const ThreadSampleData& GetSummary() { return m_ThreadSampleData[0]; }
 
   ORBIT_SERIALIZABLE;
 
  protected:
-  void ReserveThreadData();
-  void GetThreadsUsage();
   void ResolveCallstacks();
   void FillThreadSampleDataSampleReports();
 
@@ -165,14 +154,10 @@ class SamplingProfiler {
   std::shared_ptr<Process> m_Process;
   std::atomic<SamplingState> m_State;
   Timer m_SamplingTimer;
-  Timer m_ThreadUsageTimer;
-  int m_PeriodMs = 1;
   float m_SampleTimeSeconds = FLT_MAX;
   bool m_GenerateSummary = true;
   Mutex m_Mutex;
   int m_NumSamples = 0;
-
-  std::vector<ProcessingDoneCallback> m_Callbacks;
 
   // Filled before ProcessSamples by AddCallstack, AddHashedCallstack.
   BlockChain<CallstackEvent, 16 * 1024> m_Callstacks;

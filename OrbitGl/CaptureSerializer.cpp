@@ -25,13 +25,6 @@
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
-CaptureSerializer::CaptureSerializer() {
-  m_Version = 2;
-  m_TimerVersion = Timer::Version;
-  m_SizeOfTimer = sizeof(Timer);
-}
-
-//-----------------------------------------------------------------------------
 outcome::result<void, std::string> CaptureSerializer::Save(
     const std::string& filename) {
   Capture::PreSave();
@@ -221,8 +214,5 @@ outcome::result<void, std::string> CaptureSerializer::Load(
 //-----------------------------------------------------------------------------
 ORBIT_SERIALIZE(CaptureSerializer, 0) {
   ORBIT_NVP_VAL(0, m_CaptureName);
-  ORBIT_NVP_VAL(0, m_Version);
-  ORBIT_NVP_VAL(0, m_TimerVersion);
   ORBIT_NVP_VAL(0, m_NumTimers);
-  ORBIT_NVP_VAL(0, m_SizeOfTimer);
 }

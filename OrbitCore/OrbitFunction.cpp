@@ -192,32 +192,9 @@ ORBIT_SERIALIZE(Function, 4) {
   ORBIT_NVP_VAL(4, stats_);
 }
 
-FunctionParam::FunctionParam() {
-#ifdef _WIN32
-  memset(&m_SymbolInfo, 0, sizeof(m_SymbolInfo));
-#endif
-}
-
-bool FunctionParam::InRegister(int a_Index) { return a_Index < 4; }
-
-bool FunctionParam::IsFloat() {
-  return (m_Type.find("float") != std::string::npos ||
-          m_Type.find("double") != std::string::npos);
-}
-
 void Function::Print() {
   ORBIT_VIZV(address_);
   ORBIT_VIZV(file_);
   ORBIT_VIZV(line_);
   ORBIT_VIZV(IsSelected());
-
-  if (!params_.empty()) {
-    ORBIT_VIZ("\nParams:");
-    for (auto& var : params_) {
-      ORBIT_VIZV(var.m_Name);
-      ORBIT_VIZV(var.m_Address);
-      ORBIT_VIZV(var.m_ParamType);
-      ORBIT_VIZV(var.m_Type);
-    }
-  }
 }
