@@ -695,7 +695,7 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id,
       SendErrorToUi(
           "Error loading symbols",
           absl::StrFormat(
-              "Did not find symbols on local machine for module \"%s\". "
+              "Did not find symbols on local machine for module \"%s\".\n"
               "Trying to load symbols from remote resulted in error "
               "message: %s",
               module->m_Name, remote_symbols_result.error()));

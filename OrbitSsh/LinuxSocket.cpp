@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/SafeStrerror.h"
 #include "OrbitSsh/Error.h"
 #include "OrbitSsh/Socket.h"
 
@@ -42,7 +43,7 @@ outcome::result<Socket> Socket::Accept() {
 }
 
 void Socket::PrintWithLastError(const std::string& message) {
-  ERROR("%s; error: %s", message.c_str(), strerror(errno));
+  ERROR("%s: %s", message.c_str(), SafeStrerror(errno));
 }
 
 outcome::result<void> Socket::Shutdown() {

@@ -19,7 +19,7 @@ outcome::result<void, std::string> ProcessList::Refresh() {
   const auto cpu_result = LinuxUtils::GetCpuUtilization();
   if (!cpu_result) {
     return outcome::failure(
-        absl::StrFormat("Unable to retrieve cpu usage of processes, error: %s",
+        absl::StrFormat("Unable to retrieve cpu usage of processes: %s",
                         cpu_result.error().message()));
   }
   std::unordered_map<int32_t, double> cpu_usage_map =
@@ -48,8 +48,8 @@ outcome::result<void, std::string> ProcessList::Refresh() {
     const std::filesystem::path name_file_path = path / "comm";
     const auto name_file_result = OrbitUtils::FileToString(name_file_path);
     if (!name_file_result) {
-      ERROR("Failed to read %s, error: %s", name_file_path.string().c_str(),
-            name_file_result.error().message().c_str());
+      ERROR("Failed to read %s: %s", name_file_path.string(),
+            name_file_result.error().message());
       continue;
     }
     std::string name = std::move(name_file_result.value());
@@ -69,8 +69,8 @@ outcome::result<void, std::string> ProcessList::Refresh() {
     const auto cmdline_file_result =
         OrbitUtils::FileToString(cmdline_file_path);
     if (!cmdline_file_result) {
-      ERROR("Failed to read %s, error %s", cmdline_file_path.string().c_str(),
-            name_file_result.error().message().c_str());
+      ERROR("Failed to read %s: %s", cmdline_file_path.string(),
+            name_file_result.error().message());
       continue;
     }
     std::string cmdline = std::move(cmdline_file_result.value());
@@ -81,7 +81,7 @@ outcome::result<void, std::string> ProcessList::Refresh() {
 
     const auto& is_64_bit_result = LinuxUtils::Is64Bit(pid);
     if (!is_64_bit_result) {
-      ERROR("Failed to get if process \"%s\" (pid %d) is 64 bit, error: %s",
+      ERROR("Failed to get if process \"%s\" (pid %d) is 64 bit: %s",
             name.c_str(), pid, is_64_bit_result.error().message().c_str());
       continue;
     }

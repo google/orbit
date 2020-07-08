@@ -33,6 +33,7 @@
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/SafeStrerror.h"
 #include "Path.h"
 #include "Utils.h"
 #include "absl/strings/str_format.h"
@@ -56,8 +57,8 @@ outcome::result<std::string> ExecuteCommand(const std::string& cmd) {
   std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
                                                 pclose);
   if (!pipe) {
-    ERROR("Failed to execute command \"%s\", error: %s (errno %d)", cmd.c_str(),
-          strerror(errno), errno);
+    ERROR("Failed to execute command \"%s\": %s", cmd.c_str(),
+          SafeStrerror(errno));
     return outcome::failure(static_cast<std::errc>(errno));
   }
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
@@ -77,9 +78,8 @@ outcome::result<std::vector<ModuleInfo>, std::string> ListModules(int32_t pid) {
 
   const auto proc_maps = ReadProcMaps(pid);
   if (!proc_maps) {
-    return outcome::failure(
-        absl::StrFormat("Unable to read /proc/<pid>/maps, error: %s",
-                        proc_maps.error().message()));
+    return outcome::failure(absl::StrFormat("Unable to read /proc/%d/maps: %s",
+                                            pid, proc_maps.error().message()));
   }
 
   for (const std::string& line : proc_maps.value()) {
