@@ -11,25 +11,6 @@
 #include "Serialization.h"
 
 EventTracer GEventTracer;
-//-----------------------------------------------------------------------------
-void EventBuffer::Print() {
-  LOG("Orbit Callstack Events:");
-
-  size_t numCallstacks = 0;
-  for (auto& pair : m_CallstackEvents) {
-    std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
-    numCallstacks += callstacks.size();
-  }
-
-  PRINT_VAR(numCallstacks);
-
-  for (auto& pair : m_CallstackEvents) {
-    ThreadID threadID = pair.first;
-    std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
-    PRINT_VAR(threadID);
-    PRINT_VAR(callstacks.size());
-  }
-}
 
 //-----------------------------------------------------------------------------
 std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(

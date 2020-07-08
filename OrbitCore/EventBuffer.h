@@ -33,7 +33,6 @@ class EventBuffer {
  public:
   EventBuffer() : m_MaxTime(0), m_MinTime(LLONG_MAX) {}
 
-  void Print();
   void Reset() {
     m_CallstackEvents.clear();
     m_MinTime = LLONG_MAX;
@@ -51,10 +50,6 @@ class EventBuffer {
   bool HasEvent() {
     ScopeLock lock(m_Mutex);
     return !m_CallstackEvents.empty();
-  }
-  bool HasEvent(ThreadID a_TID) {
-    ScopeLock lock(m_Mutex);
-    return m_CallstackEvents.find(a_TID) != m_CallstackEvents.end();
   }
 
 #ifdef __linux__
