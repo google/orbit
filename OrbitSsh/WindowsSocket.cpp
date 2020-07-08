@@ -53,7 +53,7 @@ void Socket::PrintWithLastError(const std::string& message) {
                 NULL, WSAGetLastError(),
                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                 (LPWSTR)&error_string, 0, NULL);
-  ERROR("%s; error: %s", message.c_str(), error_string);
+  ERROR("%s: %s", message.c_str(), error_string);
   LocalFree(error_string);
 }
 

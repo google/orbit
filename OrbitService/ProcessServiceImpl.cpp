@@ -93,7 +93,7 @@ Status ProcessServiceImpl::GetSymbols(ServerContext*,
 
   *response->mutable_module_symbols() = std::move(load_result.value());
 
-  LOG("Loaded %lu symbols for module %s, (size: %d bytes)",
+  LOG("Loaded %lu symbols for module \"%s\" (size: %d bytes)",
       response->module_symbols().symbol_infos().size(), request->module_path(),
       response->ByteSize());
 
