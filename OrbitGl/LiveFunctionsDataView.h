@@ -55,4 +55,5 @@ class LiveFunctionsDataView : public DataView {
   static const std::string MENU_ACTION_JUMP_TO_LAST;
   static const std::string MENU_ACTION_JUMP_TO_MIN;
   static const std::string MENU_ACTION_JUMP_TO_MAX;
+  static const std::string MENU_ACTION_DISASSEMBLY;
 };
