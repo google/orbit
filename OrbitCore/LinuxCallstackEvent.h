@@ -9,11 +9,9 @@
 #ifndef ORBIT_CORE_LINUX_CALLSTACK_EVENT_H_
 #define ORBIT_CORE_LINUX_CALLSTACK_EVENT_H_
 
-#include <string>
-#include <utility>
+#include <cstdint>
 
 #include "Callstack.h"
-#include "Serialization.h"
 
 struct LinuxCallstackEvent {
   LinuxCallstackEvent() = default;
@@ -22,13 +20,6 @@ struct LinuxCallstackEvent {
 
   uint64_t time_ = 0;
   CallStack callstack_;
-
-  ORBIT_SERIALIZABLE;
 };
-
-ORBIT_SERIALIZE(LinuxCallstackEvent, 1) {
-  ORBIT_NVP_VAL(1, time_);
-  ORBIT_NVP_VAL(1, callstack_);
-}
 
 #endif  // ORBIT_CORE_LINUX_CALLSTACK_EVENT_H_

@@ -369,7 +369,6 @@ ORBIT_SERIALIZE_WSTRING(SampledFunction, 0) {
   ORBIT_NVP_VAL(0, m_Inclusive);
   ORBIT_NVP_VAL(0, m_Line);
   ORBIT_NVP_VAL(0, m_Address);
-  // Function* m_Function;
 }
 
 //-----------------------------------------------------------------------------
@@ -384,18 +383,6 @@ ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 3) {
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(SortedCallstackReport, 0) {
-  ORBIT_NVP_VAL(0, m_NumCallStacksTotal);
-  ORBIT_NVP_VAL(0, m_CallStacks);
-}
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(CallstackCount, 0) {
-  ORBIT_NVP_VAL(0, m_Count);
-  ORBIT_NVP_VAL(0, m_CallstackId);
-}
-
-//-----------------------------------------------------------------------------
 ORBIT_SERIALIZE_WSTRING(ThreadSampleData, 0) {
   ORBIT_NVP_VAL(0, m_CallstackCount);
   ORBIT_NVP_VAL(0, m_AddressCount);
@@ -406,12 +393,4 @@ ORBIT_SERIALIZE_WSTRING(ThreadSampleData, 0) {
   ORBIT_NVP_VAL(0, m_ThreadUsage);
   ORBIT_NVP_VAL(0, m_AverageThreadUsage);
   ORBIT_NVP_VAL(0, m_TID);
-}
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(LineInfo, 1) {
-  ORBIT_NVP_VAL(0, m_File);
-  ORBIT_NVP_VAL(0, m_Line);
-  ORBIT_NVP_VAL(0, m_Address);
-  ORBIT_NVP_VAL(1, m_FileNameHash);
 }

@@ -43,8 +43,6 @@ struct LineInfo {
   uint32_t m_Line = 0;
   uint64_t m_Address = 0;
   uint64_t m_FileNameHash = 0;
-
-  ORBIT_SERIALIZABLE;
 };
 
 //-----------------------------------------------------------------------------
@@ -72,8 +70,6 @@ struct CallstackCount {
 
   int m_Count = 0;
   CallstackID m_CallstackId = 0;
-
-  ORBIT_SERIALIZABLE;
 };
 
 //-----------------------------------------------------------------------------
@@ -81,8 +77,6 @@ struct SortedCallstackReport {
   SortedCallstackReport() = default;
   int m_NumCallStacksTotal = 0;
   std::vector<CallstackCount> m_CallStacks;
-
-  ORBIT_SERIALIZABLE;
 };
 
 //-----------------------------------------------------------------------------
