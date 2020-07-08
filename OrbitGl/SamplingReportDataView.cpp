@@ -174,11 +174,15 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
   bool enable_unselect = false;
-  bool enable_disassembly = false;
-  for (const Function* function : GetFunctionsFromIndices(a_SelectedIndices)) {
+
+  std::vector<Function*> selected_functions =
+      GetFunctionsFromIndices(a_SelectedIndices);
+
+  bool enable_disassembly = !selected_functions.empty();
+
+  for (const Function* function : selected_functions) {
     enable_select |= !function->IsSelected();
     enable_unselect |= function->IsSelected();
-    enable_disassembly = true;
   }
 
   bool enable_load = false;

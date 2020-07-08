@@ -153,12 +153,11 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
   bool enable_unselect = false;
-  bool enable_disassembly = false;
+  bool enable_disassembly = !a_SelectedIndices.empty();
   for (int index : a_SelectedIndices) {
     const Function& function = GetFunction(index);
     enable_select |= !function.IsSelected();
     enable_unselect |= function.IsSelected();
-    enable_disassembly = true;
   }
 
   std::vector<std::string> menu;
