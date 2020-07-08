@@ -6,7 +6,7 @@
 
 #include <cstring>
 
-char* SafeStrerror(int errnum) {
+const char* SafeStrerror(int errnum) {
   constexpr size_t BUFLEN = 256;
   thread_local char buf[BUFLEN];
 #ifdef _MSC_VER
