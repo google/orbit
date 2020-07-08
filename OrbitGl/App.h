@@ -75,14 +75,6 @@ class OrbitApp final : public DataViewFactory,
   void RefreshCaptureView();
   void Disassemble(int32_t pid, const Function& function);
 
-  void ProcessTimer(const Timer& timer);
-  void ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack);
-  void ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack);
-  void AddAddressInfo(LinuxAddressInfo address_info);
-  void AddKeyAndString(uint64_t key, std::string_view str);
-  void UpdateThreadName(int32_t thread_id,
-                        const std::string& thread_name);
-
   void OnTimer(Timer timer) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnCallstack(CallStack callstack) override;

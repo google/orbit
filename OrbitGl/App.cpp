@@ -102,51 +102,12 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
   }
 }
 
-//-----------------------------------------------------------------------------
-void OrbitApp::ProcessTimer(const Timer& timer) {
+void OrbitApp::OnTimer(Timer timer) {
   GCurrentTimeGraph->ProcessTimer(timer);
 }
 
-//-----------------------------------------------------------------------------
-void OrbitApp::ProcessSamplingCallStack(LinuxCallstackEvent& a_CallStack) {
-  Capture::GSamplingProfiler->AddCallStack(a_CallStack.callstack_);
-  GEventTracer.GetEventBuffer().AddCallstackEvent(
-      a_CallStack.time_, a_CallStack.callstack_.m_Hash,
-      a_CallStack.callstack_.m_ThreadId);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack) {
-  if (Capture::GSamplingProfiler == nullptr) {
-    ERROR("GSamplingProfiler is null, ignoring callstack event.");
-    return;
-  }
-  Capture::GSamplingProfiler->AddHashedCallStack(a_CallStack);
-  GEventTracer.GetEventBuffer().AddCallstackEvent(
-      a_CallStack.m_Time, a_CallStack.m_Id, a_CallStack.m_TID);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::AddAddressInfo(LinuxAddressInfo address_info) {
-  uint64_t address = address_info.address;
-  Capture::GAddressInfos.emplace(address, std::move(address_info));
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::AddKeyAndString(uint64_t key, std::string_view str) {
-  string_manager_->AddIfNotPresent(key, str);
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::UpdateThreadName(int32_t thread_id,
-                                const std::string& thread_name) {
-  Capture::GTargetProcess->SetThreadName(thread_id, thread_name);
-}
-
-void OrbitApp::OnTimer(Timer timer) { ProcessTimer(timer); }
-
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
-  AddKeyAndString(key, std::move(str));
+  string_manager_->AddIfNotPresent(key, std::move(str));
 }
 
 void OrbitApp::OnCallstack(CallStack callstack) {
@@ -154,15 +115,22 @@ void OrbitApp::OnCallstack(CallStack callstack) {
 }
 
 void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
-  ProcessHashedSamplingCallStack(callstack_event);
+  if (Capture::GSamplingProfiler == nullptr) {
+    ERROR("GSamplingProfiler is null, ignoring callstack event.");
+    return;
+  }
+  Capture::GSamplingProfiler->AddHashedCallStack(callstack_event);
+  GEventTracer.GetEventBuffer().AddCallstackEvent(
+      callstack_event.m_Time, callstack_event.m_Id, callstack_event.m_TID);
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
-  UpdateThreadName(thread_id, thread_name);
+  Capture::GTargetProcess->SetThreadName(thread_id, std::move(thread_name));
 }
 
 void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
-  AddAddressInfo(std::move(address_info));
+  uint64_t address = address_info.address;
+  Capture::GAddressInfos.emplace(address, std::move(address_info));
 }
 
 //-----------------------------------------------------------------------------
