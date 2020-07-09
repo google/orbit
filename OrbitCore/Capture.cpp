@@ -76,7 +76,6 @@ void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
     GSamplingProfiler = std::make_shared<SamplingProfiler>(a_Process);
     GSelectedFunctionsMap.clear();
     GFunctionCountMap.clear();
-    GTargetProcess->LoadDebugInfo();
   }
 }
 
