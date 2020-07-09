@@ -13,14 +13,16 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
                            -Werror=inconsistent-missing-override
                            -Werror=old-style-cast
                            -Werror=unused-parameter
-                           -Werror=unused-variable)
+                           -Werror=unused-variable
+                           -Werror=sign-compare)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion
                            -Werror=format=2
                            -Werror=old-style-cast
                            -Werror=unused-parameter
-                           -Werror=unused-variable)
+                           -Werror=unused-variable
+                           -Werror=sign-compare)
 endif()
 
 include(cmake/strip.cmake)
