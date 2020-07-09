@@ -10,6 +10,7 @@
 
 #include "CallstackTypes.h"
 #include "LinuxAddressInfo.h"
+#include "OrbitBase/Result.h"
 #include "OrbitFunction.h"
 #include "OrbitProcess.h"
 #include "Threading.h"
@@ -27,7 +28,7 @@ class Capture {
 
   static void Init();
   static void SetTargetProcess(const std::shared_ptr<Process>& a_Process);
-  static outcome::result<void, std::string> StartCapture();
+  static Result<void, ErrorMessage> StartCapture();
   static void StopCapture();
   static void FinalizeCapture();
   static void ClearCaptureData();
@@ -36,8 +37,7 @@ class Capture {
   static bool IsCapturing();
   static void DisplayStats();
   static void TestHooks();
-  static outcome::result<void, std::string> SavePreset(
-      const std::string& filename);
+  static Result<void, ErrorMessage> SavePreset(const std::string& filename);
   static void NewSamplingProfiler();
   // True when Orbit is receiving data from remote source
   static bool IsRemote();
