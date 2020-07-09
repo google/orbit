@@ -26,12 +26,6 @@ class Process {
  public:
   Process();
 
-  void SetThreadName(int32_t thread_id, std::string thread_name) {
-    m_ThreadNames[thread_id] = std::move(thread_name);
-  }
-  std::string GetThreadNameFromTID(DWORD a_ThreadId) {
-    return m_ThreadNames[a_ThreadId];
-  }
   void AddModule(std::shared_ptr<Module>& a_Module);
 
   std::map<std::string, std::shared_ptr<Module>>& GetNameToModulesMap() {
@@ -83,7 +77,6 @@ class Process {
   // (/usr/lib/libbase.so and /opt/somedir/libbase.so)
   std::map<std::string, std::shared_ptr<Module>> m_NameToModuleMap;
   std::map<std::string, std::shared_ptr<Module>> path_to_module_map_;
-  std::map<int32_t, std::string> m_ThreadNames;
 
   // Transients
   std::vector<std::shared_ptr<Function>> m_Functions;

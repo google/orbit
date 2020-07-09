@@ -123,7 +123,7 @@ void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
-  Capture::GTargetProcess->SetThreadName(thread_id, std::move(thread_name));
+  Capture::GThreadNames.insert_or_assign(thread_id, std::move(thread_name));
 }
 
 void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {

@@ -94,6 +94,11 @@ void CaptureSerializer::SaveImpl(T& archive) {
   }
 
   {
+    ORBIT_SIZE_SCOPE("Capture::GThreadNames");
+    archive(Capture::GThreadNames);
+  }
+
+  {
     ORBIT_SIZE_SCOPE("Capture::GAddressInfos");
     archive(Capture::GAddressInfos);
   }
@@ -180,6 +185,8 @@ outcome::result<void, std::string> CaptureSerializer::Load(
   archive(Capture::GFunctionCountMap);
 
   archive(Capture::GCallstacks);
+
+  archive(Capture::GThreadNames);
 
   archive(Capture::GAddressInfos);
 
