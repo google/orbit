@@ -72,7 +72,7 @@ void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
   Vec3 vertices[2];
   vertices[0] = position + Vec3(rotated_points[1][0], rotated_points[1][1], z);
 
-  for (int i = 1; i < rotated_points.size() - 1; ++i) {
+  for (size_t i = 1; i < rotated_points.size() - 1; ++i) {
     vertices[i % 2] =
         position + Vec3(rotated_points[i + 1][0], rotated_points[i + 1][1], z);
     Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
