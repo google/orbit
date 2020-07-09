@@ -136,10 +136,10 @@ void OrbitTreeView::Refresh() {
     QModelIndex idx = model_->CreateIndex(selected, 0);
 
     // Don't re-trigger row selection callback when re-selecting.
-    is_internal_refresh = true;
+    is_internal_refresh_ = true;
     selection->select(
         idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-    is_internal_refresh = false;
+    is_internal_refresh_ = false;
   }
 }
 
@@ -253,7 +253,7 @@ void OrbitTreeView::selectionChanged(const QItemSelection& selected,
   QTreeView::selectionChanged(selected, deselected);
 
   // Dont trigger callbacks if selection was initiated internally.
-  if (is_internal_refresh) return;
+  if (is_internal_refresh_) return;
 
   // Row selection callback.
   QModelIndexList rows = selectionModel()->selectedRows();

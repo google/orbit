@@ -53,5 +53,5 @@ class OrbitTreeView : public QTreeView {
   std::unique_ptr<QTimer> timer_;
   std::vector<OrbitTreeView*> links_;
   bool auto_resize_;
-  bool is_internal_refresh = false;
+  bool is_internal_refresh_ = false;
 };
