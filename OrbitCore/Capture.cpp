@@ -53,7 +53,6 @@ Mutex Capture::GCallstackMutex;
 std::unordered_map<uint64_t, std::string> Capture::GZoneNames;
 TextBox* Capture::GSelectedTextBox;
 ThreadID Capture::GSelectedThreadId;
-Timer Capture::GCaptureTimer;
 std::chrono::system_clock::time_point Capture::GCaptureTimePoint;
 
 std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
@@ -62,7 +61,6 @@ std::shared_ptr<Preset> Capture::GSessionPresets = nullptr;
 
 void (*Capture::GClearCaptureDataFunc)();
 std::vector<std::shared_ptr<SamplingProfiler>> GOldSamplingProfilers;
-bool Capture::GUnrealSupported = false;
 
 //-----------------------------------------------------------------------------
 void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
@@ -87,7 +85,6 @@ outcome::result<void, std::string> Capture::StartCapture() {
         "No process selected. Please choose a target process for the capture.");
   }
 
-  GCaptureTimer.Start();
   GCaptureTimePoint = std::chrono::system_clock::now();
 
   GInjected = true;
@@ -236,20 +233,6 @@ void Capture::NewSamplingProfiler() {
 
   Capture::GSamplingProfiler =
       std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
-}
-
-//-----------------------------------------------------------------------------
-bool Capture::IsRemote() {
-  return GTargetProcess && GTargetProcess->GetIsRemote();
-}
-
-//-----------------------------------------------------------------------------
-bool Capture::IsLinuxData() {
-  bool isLinux = false;
-#if __linux__
-  isLinux = true;
-#endif
-  return IsRemote() || isLinux;
 }
 
 //-----------------------------------------------------------------------------

@@ -40,32 +40,12 @@ Function::Function(std::string_view name, std::string_view pretty_name,
   SetOrbitTypeFromName();
 }
 
-bool Function::Hookable() {
-  if (Capture::IsLinuxData()) {
-    return true;
-  } else {
-    // Don't allow hooking in asm implemented functions (strcpy, stccat...)
-    // TODO: give this better thought.  Here is the theory:
-    // Functions that loop back to first 5 bytes of instructions will explode as
-    // the IP lands in the middle of the relative jump instruction...
-    // Ideally, we would detect such a loop back and not allow hooking.
-    if (file_.find(".asm") != std::string::npos) {
-      return false;
-    }
-
-    CV_call_e conv = static_cast<CV_call_e>(calling_convention_);
-    return ((conv == CV_CALL_NEAR_C || conv == CV_CALL_THISCALL) && size_ >= 5);
-  }
-}
-
 void Function::Select() {
-  if (Hookable()) {
-    LOG("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64
-        ", load_bias_= 0x%" PRIx64 ", base_address=0x%" PRIx64 ")",
-        pretty_name_, GetVirtualAddress(), address_, load_bias_,
-        module_base_address_);
-    Capture::GSelectedFunctionsMap[GetVirtualAddress()] = this;
-  }
+  LOG("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64
+      ", load_bias_= 0x%" PRIx64 ", base_address=0x%" PRIx64 ")",
+      pretty_name_, GetVirtualAddress(), address_, load_bias_,
+      module_base_address_);
+  Capture::GSelectedFunctionsMap[GetVirtualAddress()] = this;
 }
 
 void Function::UnSelect() {
