@@ -27,6 +27,7 @@
 #include "LiveFunctionsDataView.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/MainThreadExecutor.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
 #include "ProcessManager.h"
 #include "ProcessesDataView.h"
@@ -58,12 +59,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::string GetCaptureFileName();
   std::string GetSaveFile(const std::string& extension);
   void SetClipboard(const std::string& text);
-  outcome::result<void, std::string> OnSavePreset(const std::string& file_name);
-  outcome::result<void, std::string> OnLoadPreset(const std::string& file_name);
-  outcome::result<void, std::string> OnSaveCapture(
-      const std::string& file_name);
-  outcome::result<void, std::string> OnLoadCapture(
-      const std::string& file_name);
+  Result<void, ErrorMessage> OnSavePreset(const std::string& file_name);
+  Result<void, ErrorMessage> OnLoadPreset(const std::string& file_name);
+  Result<void, ErrorMessage> OnSaveCapture(const std::string& file_name);
+  Result<void, ErrorMessage> OnLoadCapture(const std::string& file_name);
   bool StartCapture();
   void StopCapture();
   void OnCaptureStopped();
@@ -224,8 +223,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                              const std::shared_ptr<Preset>& preset);
   std::shared_ptr<Process> FindProcessByPid(int32_t pid);
 
-  outcome::result<void, std::string> ReadPresetFromFile(
-      const std::string& filename, Preset* preset);
+  Result<void, ErrorMessage> ReadPresetFromFile(const std::string& filename,
+                                                Preset* preset);
 
   ApplicationOptions options_;
 

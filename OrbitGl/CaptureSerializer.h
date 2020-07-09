@@ -8,15 +8,16 @@
 #include <outcome.hpp>
 #include <string>
 
+#include "OrbitBase/Result.h"
 #include "SerializationMacros.h"
 
 class CaptureSerializer {
  public:
   void Save(std::ostream& stream);
-  outcome::result<void, std::string> Save(const std::string& filename);
+  Result<void, ErrorMessage> Save(const std::string& filename);
 
-  outcome::result<void, std::string> Load(std::istream& stream);
-  outcome::result<void, std::string> Load(const std::string& filename);
+  Result<void, ErrorMessage> Load(std::istream& stream);
+  Result<void, ErrorMessage> Load(const std::string& filename);
 
   class TimeGraph* time_graph_;
 

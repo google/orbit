@@ -25,7 +25,7 @@
 #include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> CaptureSerializer::Save(
+Result<void, ErrorMessage> CaptureSerializer::Save(
     const std::string& filename) {
   Capture::PreSave();
 
@@ -153,7 +153,7 @@ void CaptureSerializer::SaveImpl(T& archive) {
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> CaptureSerializer::Load(
+Result<void, ErrorMessage> CaptureSerializer::Load(
     const std::string& filename) {
   SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", filename));
 
@@ -172,8 +172,7 @@ outcome::result<void, std::string> CaptureSerializer::Load(
   }
 }
 
-outcome::result<void, std::string> CaptureSerializer::Load(
-    std::istream& stream) {
+Result<void, ErrorMessage> CaptureSerializer::Load(std::istream& stream) {
   // Header
   cereal::BinaryInputArchive archive(stream);
   archive(*this);

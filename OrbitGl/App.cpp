@@ -291,10 +291,11 @@ void OrbitApp::ListPresets() {
   std::vector<std::shared_ptr<Preset>> presets;
   for (std::string& filename : preset_filenames) {
     auto preset = std::make_shared<Preset>();
-    outcome::result<void, std::string> result =
+    Result<void, ErrorMessage> result =
         ReadPresetFromFile(filename, preset.get());
     if (result.has_error()) {
-      ERROR("Loading preset failed: \"%s\"", result.error());
+      ERROR("Loading preset from \"%s\" failed: %s", filename,
+            result.error().message());
       continue;
     }
     preset->m_FileName = filename;
@@ -477,8 +478,7 @@ void OrbitApp::SetClipboard(const std::string& text) {
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> OrbitApp::OnSavePreset(
-    const std::string& filename) {
+Result<void, ErrorMessage> OrbitApp::OnSavePreset(const std::string& filename) {
   OUTCOME_TRY(Capture::SavePreset(filename));
   ListPresets();
   Refresh(DataViewType::PRESETS);
@@ -486,7 +486,7 @@ outcome::result<void, std::string> OrbitApp::OnSavePreset(
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> OrbitApp::ReadPresetFromFile(
+Result<void, ErrorMessage> OrbitApp::ReadPresetFromFile(
     const std::string& filename, Preset* preset) {
   std::string file_path = filename;
 
@@ -512,8 +512,7 @@ outcome::result<void, std::string> OrbitApp::ReadPresetFromFile(
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> OrbitApp::OnLoadPreset(
-    const std::string& filename) {
+Result<void, ErrorMessage> OrbitApp::OnLoadPreset(const std::string& filename) {
   auto preset = std::make_shared<Preset>();
   OUTCOME_TRY(ReadPresetFromFile(filename, preset.get()));
   preset->m_FileName = filename;
@@ -538,7 +537,7 @@ void OrbitApp::LoadPreset(const std::shared_ptr<Preset>& preset) {
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> OrbitApp::OnSaveCapture(
+Result<void, ErrorMessage> OrbitApp::OnSaveCapture(
     const std::string& file_name) {
   CaptureSerializer ar;
   ar.time_graph_ = GCurrentTimeGraph;
@@ -546,7 +545,7 @@ outcome::result<void, std::string> OrbitApp::OnSaveCapture(
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> OrbitApp::OnLoadCapture(
+Result<void, ErrorMessage> OrbitApp::OnLoadCapture(
     const std::string& file_name) {
   Capture::ClearCaptureData();
   GCurrentTimeGraph->Clear();
