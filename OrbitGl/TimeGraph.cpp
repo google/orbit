@@ -147,6 +147,7 @@ void TimeGraph::Zoom(const TextBox* a_TextBox) {
   double extent = 1.1 * (end - start) / 2.0;
 
   SetMinMax(mid - extent, mid + extent);
+  m_Canvas->NeedsRedraw();
 }
 
 //-----------------------------------------------------------------------------
