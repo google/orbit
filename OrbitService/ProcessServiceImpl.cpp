@@ -89,8 +89,9 @@ Status ProcessServiceImpl::GetSymbols(ServerContext*,
   const auto load_result =
       symbol_helper.LoadSymbolsCollector(request->module_path());
 
-  if (!load_result)
+  if (load_result.has_error()) {
     return Status(StatusCode::NOT_FOUND, load_result.error().message());
+  }
 
   *response->mutable_module_symbols() = std::move(load_result.value());
 

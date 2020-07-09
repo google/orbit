@@ -21,7 +21,7 @@ class ElfFile {
   ElfFile() = default;
   virtual ~ElfFile() = default;
 
-  virtual Result<ModuleSymbols, ErrorMessage> LoadSymbols() const = 0;
+  virtual ErrorMessageOr<ModuleSymbols> LoadSymbols() const = 0;
   // Background and some terminology
   // When an elf file is loaded to memory it has its load segments
   // (segments of PT_LOAD type from program headers) mapped to some
@@ -36,7 +36,7 @@ class ElfFile {
   //
   // This method returns load bias for the elf-file if program headers are
   // available. This should be the case for all loadable elf-files.
-  virtual Result<uint64_t, ErrorMessage> GetLoadBias() const = 0;
+  virtual ErrorMessageOr<uint64_t> GetLoadBias() const = 0;
   virtual bool IsAddressInTextSection(uint64_t address) const = 0;
   virtual bool HasSymtab() const = 0;
   virtual bool Is64Bit() const = 0;

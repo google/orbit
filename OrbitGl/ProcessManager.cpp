@@ -31,14 +31,12 @@ class ProcessManagerImpl final : public ProcessManager {
       const std::function<void(ProcessManager*)>& listener) override;
 
   std::vector<ProcessInfo> GetProcessList() const override;
-  Result<std::vector<ModuleInfo>, ErrorMessage> LoadModuleList(
-      int32_t pid) override;
+  ErrorMessageOr<std::vector<ModuleInfo>> LoadModuleList(int32_t pid) override;
 
-  Result<std::string, ErrorMessage> LoadProcessMemory(int32_t pid,
-                                                      uint64_t address,
-                                                      uint64_t size) override;
+  ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid, uint64_t address,
+                                                uint64_t size) override;
 
-  Result<ModuleSymbols, ErrorMessage> LoadSymbols(
+  ErrorMessageOr<ModuleSymbols> LoadSymbols(
       const std::string& module_path) const override;
 
   void Start();
@@ -75,8 +73,8 @@ void ProcessManagerImpl::SetProcessListUpdateListener(
   process_list_update_listener_ = listener;
 }
 
-Result<std::vector<ModuleInfo>, ErrorMessage>
-ProcessManagerImpl::LoadModuleList(int32_t pid) {
+ErrorMessageOr<std::vector<ModuleInfo>> ProcessManagerImpl::LoadModuleList(
+    int32_t pid) {
   GetModuleListRequest request;
   GetModuleListResponse response;
   request.set_process_id(pid);
@@ -102,7 +100,7 @@ std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
   return process_list_;
 }
 
-Result<ModuleSymbols, ErrorMessage> ProcessManagerImpl::LoadSymbols(
+ErrorMessageOr<ModuleSymbols> ProcessManagerImpl::LoadSymbols(
     const std::string& module_path) const {
   GetSymbolsRequest request;
   GetSymbolsResponse response;
@@ -182,7 +180,7 @@ void ProcessManagerImpl::WorkerFunction() {
   }
 }
 
-Result<std::string, ErrorMessage> ProcessManagerImpl::LoadProcessMemory(
+ErrorMessageOr<std::string> ProcessManagerImpl::LoadProcessMemory(
     int32_t pid, uint64_t address, uint64_t size) {
   GetProcessMemoryRequest request;
   request.set_pid(pid);

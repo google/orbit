@@ -57,7 +57,7 @@ std::vector<std::string> ReadSymbolsFile() {
   return directories;
 }
 
-Result<ModuleSymbols, ErrorMessage> FindSymbols(
+ErrorMessageOr<ModuleSymbols> FindSymbols(
     const std::string& module_path, const std::string& build_id,
     const std::vector<std::string>& search_directories) {
   std::string filename = Path::GetFileName(module_path);
@@ -101,7 +101,7 @@ SymbolHelper::SymbolHelper()
                                     "/srv/game/assets/debug_symbols/"},
       symbols_file_directories_(ReadSymbolsFile()) {}
 
-Result<ModuleSymbols, ErrorMessage> SymbolHelper::LoadSymbolsCollector(
+ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsCollector(
     const std::string& module_path) const {
   std::unique_ptr<ElfFile> elf_file = ElfFile::Create(module_path);
 
@@ -128,7 +128,7 @@ Result<ModuleSymbols, ErrorMessage> SymbolHelper::LoadSymbolsCollector(
   return FindSymbols(module_path, elf_file->GetBuildId(), search_directories);
 }
 
-Result<ModuleSymbols, ErrorMessage> SymbolHelper::LoadUsingSymbolsPathFile(
+ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadUsingSymbolsPathFile(
     const std::string& module_path, const std::string& build_id) const {
   return FindSymbols(module_path, build_id, symbols_file_directories_);
 }

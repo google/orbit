@@ -291,8 +291,7 @@ void OrbitApp::ListPresets() {
   std::vector<std::shared_ptr<Preset>> presets;
   for (std::string& filename : preset_filenames) {
     auto preset = std::make_shared<Preset>();
-    Result<void, ErrorMessage> result =
-        ReadPresetFromFile(filename, preset.get());
+    ErrorMessageOr<void> result = ReadPresetFromFile(filename, preset.get());
     if (result.has_error()) {
       ERROR("Loading preset from \"%s\" failed: %s", filename,
             result.error().message());
@@ -437,7 +436,7 @@ void OrbitApp::SetClipboard(const std::string& text) {
 }
 
 //-----------------------------------------------------------------------------
-Result<void, ErrorMessage> OrbitApp::OnSavePreset(const std::string& filename) {
+ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
   OUTCOME_TRY(Capture::SavePreset(filename));
   ListPresets();
   Refresh(DataViewType::PRESETS);
@@ -445,8 +444,8 @@ Result<void, ErrorMessage> OrbitApp::OnSavePreset(const std::string& filename) {
 }
 
 //-----------------------------------------------------------------------------
-Result<void, ErrorMessage> OrbitApp::ReadPresetFromFile(
-    const std::string& filename, Preset* preset) {
+ErrorMessageOr<void> OrbitApp::ReadPresetFromFile(const std::string& filename,
+                                                  Preset* preset) {
   std::string file_path = filename;
 
   if (Path::GetDirectory(filename).empty()) {
@@ -471,7 +470,7 @@ Result<void, ErrorMessage> OrbitApp::ReadPresetFromFile(
 }
 
 //-----------------------------------------------------------------------------
-Result<void, ErrorMessage> OrbitApp::OnLoadPreset(const std::string& filename) {
+ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
   auto preset = std::make_shared<Preset>();
   OUTCOME_TRY(ReadPresetFromFile(filename, preset.get()));
   preset->m_FileName = filename;
@@ -496,16 +495,14 @@ void OrbitApp::LoadPreset(const std::shared_ptr<Preset>& preset) {
 }
 
 //-----------------------------------------------------------------------------
-Result<void, ErrorMessage> OrbitApp::OnSaveCapture(
-    const std::string& file_name) {
+ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
   CaptureSerializer ar;
   ar.time_graph_ = GCurrentTimeGraph;
   return ar.Save(file_name);
 }
 
 //-----------------------------------------------------------------------------
-Result<void, ErrorMessage> OrbitApp::OnLoadCapture(
-    const std::string& file_name) {
+ErrorMessageOr<void> OrbitApp::OnLoadCapture(const std::string& file_name) {
   Capture::ClearCaptureData();
   GCurrentTimeGraph->Clear();
   if (Capture::GClearCaptureDataFunc) {
@@ -539,7 +536,7 @@ bool OrbitApp::StartCapture() {
     return false;
   }
 
-  Result<void, ErrorMessage> result = Capture::StartCapture();
+  ErrorMessageOr<void> result = Capture::StartCapture();
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());
     return false;
@@ -778,14 +775,15 @@ bool OrbitApp::IsLoading() { return GPdbDbg->IsLoading(); }
 
 void OrbitApp::OnProcessSelected(int32_t pid) {
   thread_pool_->Schedule([pid, this] {
-    Result<std::vector<ModuleInfo>, ErrorMessage> result =
+    ErrorMessageOr<std::vector<ModuleInfo>> result =
         process_manager_->LoadModuleList(pid);
 
-    if (!result) {
+    if (result.has_error()) {
       ERROR("Error retrieving modules: %s", result.error().message());
       SendErrorToUi("Error retrieving modules", result.error().message());
       return;
     }
+
     main_thread_executor_->Schedule([pid, result, this] {
       // Make sure that pid is actually what user has selected at
       // the moment we arrive here. If not - ignore the result.

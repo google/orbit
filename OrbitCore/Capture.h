@@ -28,7 +28,7 @@ class Capture {
 
   static void Init();
   static void SetTargetProcess(const std::shared_ptr<Process>& a_Process);
-  static Result<void, ErrorMessage> StartCapture();
+  static ErrorMessageOr<void> StartCapture();
   static void StopCapture();
   static void FinalizeCapture();
   static void ClearCaptureData();
@@ -37,7 +37,7 @@ class Capture {
   static bool IsCapturing();
   static void DisplayStats();
   static void TestHooks();
-  static Result<void, ErrorMessage> SavePreset(const std::string& filename);
+  static ErrorMessageOr<void> SavePreset(const std::string& filename);
   static void NewSamplingProfiler();
   // True when Orbit is receiving data from remote source
   static bool IsRemote();
