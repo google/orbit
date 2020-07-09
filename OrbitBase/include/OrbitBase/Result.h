@@ -5,7 +5,7 @@
 #ifndef ORBIT_BASE_RESULT_H_
 #define ORBIT_BASE_RESULT_H_
 
-#include <string_view>
+#include <string>
 
 #include "outcome.hpp"
 
@@ -15,13 +15,7 @@ using Result = outcome::result<T, E, outcome::policy::terminate>;
 class ErrorMessage final {
  public:
   ErrorMessage() = default;
-  explicit ErrorMessage(std::string_view message)
-      : message_(message.data(), message.size()) {}
-
-  ErrorMessage(const ErrorMessage&) = default;
-  ErrorMessage& operator=(const ErrorMessage&) = default;
-  ErrorMessage(ErrorMessage&&) = default;
-  ErrorMessage& operator=(ErrorMessage&&) = default;
+  explicit ErrorMessage(std::string message) : message_(std::move(message)) {}
 
   [[nodiscard]] const std::string& message() const { return message_; }
 
