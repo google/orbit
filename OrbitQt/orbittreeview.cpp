@@ -249,7 +249,7 @@ void OrbitTreeView::selectionChanged(const QItemSelection& selected,
                                      const QItemSelection& deselected) {
   QTreeView::selectionChanged(selected, deselected);
 
-  // Dont trigger callbacks if selection was initiated internally.
+  // Don't trigger callbacks if selection was initiated internally.
   if (is_internal_refresh_) return;
 
   // Row selection callback.
