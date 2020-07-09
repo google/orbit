@@ -75,6 +75,7 @@ class Capture {
   static std::map<uint64_t, Function*> GVisibleFunctionsMap;
   static std::unordered_map<uint64_t, uint64_t> GFunctionCountMap;
   static std::unordered_map<uint64_t, std::shared_ptr<CallStack>> GCallstacks;
+  static std::unordered_map<int32_t, std::string> GThreadNames;
   static std::unordered_map<uint64_t, LinuxAddressInfo> GAddressInfos;
   static std::unordered_map<uint64_t, std::string> GAddressToFunctionName;
   static std::unordered_map<uint64_t, std::string> GZoneNames;

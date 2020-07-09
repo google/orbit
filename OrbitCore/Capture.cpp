@@ -46,6 +46,7 @@ std::map<uint64_t, Function*> Capture::GVisibleFunctionsMap;
 std::unordered_map<uint64_t, uint64_t> Capture::GFunctionCountMap;
 std::shared_ptr<CallStack> Capture::GSelectedCallstack;
 std::unordered_map<uint64_t, std::shared_ptr<CallStack>> Capture::GCallstacks;
+std::unordered_map<int32_t, std::string> Capture::GThreadNames;
 std::unordered_map<uint64_t, LinuxAddressInfo> Capture::GAddressInfos;
 std::unordered_map<uint64_t, std::string> Capture::GAddressToFunctionName;
 Mutex Capture::GCallstackMutex;
@@ -125,6 +126,7 @@ void Capture::FinalizeCapture() {
 void Capture::ClearCaptureData() {
   GFunctionCountMap.clear();
   GCallstacks.clear();
+  GThreadNames.clear();
   GAddressInfos.clear();
   GAddressToFunctionName.clear();
   GZoneNames.clear();
