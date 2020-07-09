@@ -9,6 +9,7 @@
 
 #include "Core.h"
 #include "EventBuffer.h"
+#include "FunctionUtils.h"
 #include "Injection.h"
 #include "Log.h"
 #include "OrbitBase/Logging.h"
@@ -147,7 +148,7 @@ void Capture::PreFunctionHooks() {
   GSelectedFunctions = GetSelectedFunctions();
 
   for (auto& func : GSelectedFunctions) {
-    uint64_t address = func->GetVirtualAddress();
+    uint64_t address = function::GetAbsoluteAddress(*func);
     GSelectedFunctionsMap[address] = func.get();
     func->ResetStats();
     GFunctionCountMap[address] = 0;
@@ -163,7 +164,7 @@ void Capture::PreFunctionHooks() {
 std::vector<std::shared_ptr<Function>> Capture::GetSelectedFunctions() {
   std::vector<std::shared_ptr<Function>> selected_functions;
   for (auto& func : GTargetProcess->GetFunctions()) {
-    if (func->IsSelected() || func->IsOrbitFunc()) {
+    if (function::IsSelected(*func) || function::IsOrbitFunc(*func)) {
       selected_functions.push_back(func);
     }
   }
@@ -188,9 +189,9 @@ ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
   preset.m_ProcessFullPath = GTargetProcess->GetFullPath();
 
   for (auto& func : GTargetProcess->GetFunctions()) {
-    if (func->IsSelected()) {
-      preset.m_Modules[func->GetLoadedModulePath()].m_FunctionHashes.push_back(
-          func->Hash());
+    if (function::IsSelected(*func)) {
+      preset.m_Modules[func->loaded_module_path()].m_FunctionHashes.push_back(
+          function::GetHash(*func));
     }
   }
 

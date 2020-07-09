@@ -22,6 +22,7 @@
 #include "CaptureWindow.h"
 #include "Disassembler.h"
 #include "EventTracer.h"
+#include "FunctionUtils.h"
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
 #include "ImGuiOrbit.h"
@@ -315,7 +316,7 @@ void OrbitApp::RefreshCaptureView() {
 void OrbitApp::Disassemble(int32_t pid, const Function& function) {
   thread_pool_->Schedule([this, pid, function] {
     auto result = process_manager_->LoadProcessMemory(
-        pid, function.GetVirtualAddress(), function.Size());
+        pid, function::GetAbsoluteAddress(function), function.size());
     if (!result.has_value()) {
       SendErrorToUi("Error reading memory",
                     absl::StrFormat("Could not read process memory: %s.",
@@ -325,9 +326,10 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
 
     const std::string& memory = result.value();
     Disassembler disasm;
-    disasm.LOGF(absl::StrFormat("asm: /* %s */\n", function.PrettyName()));
+    disasm.LOGF(
+        absl::StrFormat("asm: /* %s */\n", function::GetDisplayName(function)));
     disasm.Disassemble(reinterpret_cast<const uint8_t*>(memory.data()),
-                       memory.size(), function.GetVirtualAddress(),
+                       memory.size(), function::GetAbsoluteAddress(function),
                        Capture::GTargetProcess->GetIs64Bit());
     if (!sampling_report_ || !sampling_report_->GetProfiler()) {
       SendDisassemblyToUi(disasm.GetResult());
@@ -336,7 +338,7 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
     std::shared_ptr<SamplingProfiler> profiler =
         sampling_report_->GetProfiler();
     unsigned int count_of_function =
-        profiler->GetCountOfFunction(function.GetVirtualAddress());
+        profiler->GetCountOfFunction(function::GetAbsoluteAddress(function));
     if (count_of_function == 0) {
       SendDisassemblyToUi(disasm.GetResult());
       return;

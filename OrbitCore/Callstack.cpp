@@ -5,6 +5,7 @@
 #include "Callstack.h"
 
 #include "Capture.h"
+#include "FunctionUtils.h"
 #include "Serialization.h"
 #include "absl/strings/str_format.h"
 

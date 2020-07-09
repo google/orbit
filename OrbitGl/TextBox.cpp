@@ -5,6 +5,7 @@
 #include "TextBox.h"
 
 #include "Capture.h"
+#include "FunctionUtils.h"
 #include "GlCanvas.h"
 #include "OpenGl.h"
 #include "Params.h"
@@ -121,7 +122,7 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
 
     Function* func = Capture::GSelectedFunctionsMap[m_Timer.m_FunctionAddress];
     std::string text = absl::StrFormat(
-        "%s %s", func ? func->PrettyName().c_str() : "", m_Text.c_str());
+        "%s %s", func ? function::GetDisplayName(*func).c_str() : "", m_Text.c_str());
 
     if (!a_IsPicking && !isCoreActivity) {
       a_TextRenderer.AddText(

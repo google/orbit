@@ -11,6 +11,7 @@
 #include "CallStackDataView.h"
 #include "Capture.h"
 #include "Core.h"
+#include "FunctionUtils.h"
 #include "OrbitModule.h"
 #include "SamplingReport.h"
 #include "absl/strings/str_format.h"
@@ -180,8 +181,8 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   bool enable_disassembly = !selected_functions.empty();
 
   for (const Function* function : selected_functions) {
-    enable_select |= !function->IsSelected();
-    enable_unselect |= function->IsSelected();
+    enable_select |= !function::IsSelected(*function);
+    enable_unselect |= function::IsSelected(*function);
   }
 
   bool enable_load = false;
@@ -206,11 +207,11 @@ void SamplingReportDataView::OnContextMenu(
     const std::vector<int>& a_ItemIndices) {
   if (a_Action == MENU_ACTION_SELECT) {
     for (Function* function : GetFunctionsFromIndices(a_ItemIndices)) {
-      function->Select();
+      function::Select(function);
     }
   } else if (a_Action == MENU_ACTION_UNSELECT) {
     for (Function* function : GetFunctionsFromIndices(a_ItemIndices)) {
-      function->UnSelect();
+      function::UnSelect(function);
     }
   } else if (a_Action == MENU_ACTION_MODULES_LOAD) {
     std::vector<std::shared_ptr<Module>> modules;

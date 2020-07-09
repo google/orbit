@@ -8,6 +8,7 @@
 
 #include "Capture.h"
 #include "EventTrack.h"
+#include "FunctionUtils.h"
 #include "GlCanvas.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
@@ -108,7 +109,7 @@ void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
     const char* name = nullptr;
     if (func) {
       std::string extra_info = GetExtraInfo(timer);
-      name = func->PrettyName().c_str();
+      name = function::GetDisplayName(*func).c_str();
       std::string text =
           absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());
 

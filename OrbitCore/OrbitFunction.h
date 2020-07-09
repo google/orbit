@@ -6,17 +6,9 @@
 
 #include <string>
 #include <string_view>
-#include <vector>
 
-#include "BaseTypes.h"
 #include "FunctionStats.h"
-#include "OrbitDbgHelp.h"
-#include "Path.h"
 #include "SerializationMacros.h"
-#include "Utils.h"
-#include "absl/container/flat_hash_map.h"
-
-class Pdb;
 
 class Function {
  public:
@@ -47,52 +39,33 @@ class Function {
            uint64_t address, uint64_t load_bias, uint64_t size,
            std::string_view file, uint32_t line);
 
-  const std::string& Name() const { return name_; }
-  const std::string& PrettyName() const {
-    return pretty_name_.empty() ? name_ : pretty_name_;
+  const std::string& name() const { return name_; }
+  const std::string& pretty_name() const { return pretty_name_; }
+  const std::string& loaded_module_path() const { return loaded_module_path_; }
+  void set_loaded_module_path(const std::string& loaded_module_path) {
+    loaded_module_path_ = loaded_module_path;
   }
-  std::string Lower() { return ToLower(PrettyName()); }
-  const std::string& GetLoadedModulePath() const { return loaded_module_path_; }
-  std::string GetLoadedModuleName() const {
-    return Path::GetFileName(loaded_module_path_);
-  }
-  void SetModulePathAndAddress(std::string_view module_path,
-                               uint64_t module_adddress) {
-    loaded_module_path_ = module_path;
-    module_base_address_ = module_adddress;
-  }
-  uint64_t Size() const { return size_; }
-  const std::string& File() const { return file_; }
-  uint32_t Line() const { return line_; }
-
-  uint64_t Hash() const { return StringHash(pretty_name_); }
-
-  // Calculates and returns the absolute address of the function.
-  uint64_t Address() const { return address_; }
-  uint64_t Offset() const { return address_ - load_bias_; }
-  uint64_t GetVirtualAddress() const {
-    return address_ + module_base_address_ - load_bias_;
+  uint64_t module_base_address() const { return module_base_address_; }
+  void set_module_base_address(uint64_t module_base_address) {
+    module_base_address_ = module_base_address;
   }
 
-  void SetOrbitType(OrbitType type) { type_ = type; }
-  bool SetOrbitTypeFromName();
-  bool IsOrbitFunc() const { return type_ != OrbitType::NONE; }
+  uint64_t size() const { return size_; }
+  const std::string& file() const { return file_; }
+  void set_file(std::string file) { file_ = std::move(file); }
+  uint32_t line() const { return line_; }
+  void set_line(uint32_t line) { line_ = line; }
+  uint64_t address() const { return address_; }
+  uint64_t load_bias() const { return load_bias_; }
+  OrbitType orbit_type() const { return type_; }
+  void set_orbit_type(OrbitType type) { type_ = type; }
+  std::shared_ptr<FunctionStats> stats() const { return stats_; }
 
-  const FunctionStats& GetStats() const { return *stats_; }
-  void UpdateStats(const Timer& timer);
   void ResetStats();
-
-  void Select();
-  void UnSelect();
-  bool IsSelected() const;
-
-  void Print();
 
   ORBIT_SERIALIZABLE;
 
  private:
-  static const absl::flat_hash_map<const char*, OrbitType>&
-  GetFunctionNameToOrbitTypeMap();
   std::string name_;
   std::string pretty_name_;
   std::string loaded_module_path_;

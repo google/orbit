@@ -9,28 +9,6 @@
 #include "Serialization.h"
 
 //-----------------------------------------------------------------------------
-template <class T>
-inline void UpdateMax(T& a_Max, T a_Value) {
-  if (a_Value > a_Max) a_Max = a_Value;
-}
-
-//-----------------------------------------------------------------------------
-template <class T>
-inline void UpdateMin(T& a_Min, T a_Value) {
-  if (a_Min == 0 || a_Value < a_Min) a_Min = a_Value;
-}
-
-//-----------------------------------------------------------------------------
-void FunctionStats::Update(const Timer& a_Timer) {
-  ++m_Count;
-  double elapsedMillis = a_Timer.ElapsedMillis();
-  m_TotalTimeMs += elapsedMillis;
-  m_AverageTimeMs = m_TotalTimeMs / static_cast<double>(m_Count);
-  UpdateMax(m_MaxMs, elapsedMillis);
-  UpdateMin(m_MinMs, elapsedMillis);
-}
-
-//-----------------------------------------------------------------------------
 ORBIT_SERIALIZE(FunctionStats, 0) {
   ORBIT_NVP_VAL(0, m_Address);
   ORBIT_NVP_VAL(0, m_Count);

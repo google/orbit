@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "ElfUtils/ElfFile.h"
+#include "FunctionUtils.h"
 #include "OrbitModule.h"
 #include "Path.h"
 #include "Pdb.h"
@@ -63,25 +64,25 @@ TEST(OrbitModule, LoadFunctions) {
   EXPECT_EQ(functions.size(), 10);
   const Function* function = functions[0].get();
 
-  EXPECT_EQ(function->Name(), "deregister_tm_clones");
-  EXPECT_EQ(function->PrettyName(), "deregister_tm_clones");
-  EXPECT_EQ(function->Address(), 0x1080);
-  EXPECT_EQ(function->Size(), 0);
-  EXPECT_EQ(function->GetLoadedModuleName(), executable_name);
+  EXPECT_EQ(function->name(), "deregister_tm_clones");
+  EXPECT_EQ(function->pretty_name(), "deregister_tm_clones");
+  EXPECT_EQ(function->address(), 0x1080);
+  EXPECT_EQ(function->size(), 0);
+  EXPECT_EQ(function::GetLoadedModuleName(*function), executable_name);
 
   function = functions[4].get();
-  EXPECT_EQ(function->Name(), "_init");
-  EXPECT_EQ(function->PrettyName(), "_init");
-  EXPECT_EQ(function->Address(), 0x1000);
-  EXPECT_EQ(function->Size(), 0);
-  EXPECT_EQ(function->GetLoadedModuleName(), executable_name);
+  EXPECT_EQ(function->name(), "_init");
+  EXPECT_EQ(function->pretty_name(), "_init");
+  EXPECT_EQ(function->address(), 0x1000);
+  EXPECT_EQ(function->size(), 0);
+  EXPECT_EQ(function::GetLoadedModuleName(*function), executable_name);
 
   function = functions[9].get();
-  EXPECT_EQ(function->Name(), "main");
-  EXPECT_EQ(function->PrettyName(), "main");
-  EXPECT_EQ(function->Address(), 0x1135);
-  EXPECT_EQ(function->Size(), 35);
-  EXPECT_EQ(function->GetLoadedModuleName(), executable_name);
+  EXPECT_EQ(function->name(), "main");
+  EXPECT_EQ(function->pretty_name(), "main");
+  EXPECT_EQ(function->address(), 0x1135);
+  EXPECT_EQ(function->size(), 35);
+  EXPECT_EQ(function::GetLoadedModuleName(*function), executable_name);
 }
 
 TEST(OrbitModule, GetFunctionFromExactAddress) {
@@ -109,7 +110,7 @@ TEST(OrbitModule, GetFunctionFromExactAddress) {
   constexpr const uint64_t __free_pc_addr = 0x41b854;
   const Function* function = pdb.GetFunctionFromExactAddress(__free_start_addr);
   ASSERT_NE(function, nullptr);
-  EXPECT_EQ(function->Name(), "__free");
+  EXPECT_EQ(function->name(), "__free");
 
   EXPECT_EQ(pdb.GetFunctionFromExactAddress(__free_pc_addr), nullptr);
 }
@@ -142,11 +143,11 @@ TEST(OrbitModule, GetFunctionFromProgramCounter) {
   const Function* function =
       pdb.GetFunctionFromProgramCounter(__free_start_addr);
   ASSERT_NE(function, nullptr);
-  EXPECT_EQ(function->Name(), "__free");
+  EXPECT_EQ(function->name(), "__free");
 
   function = pdb.GetFunctionFromProgramCounter(__free_pc_addr);
   ASSERT_NE(function, nullptr);
-  EXPECT_EQ(function->Name(), "__free");
+  EXPECT_EQ(function->name(), "__free");
 }
 
 TEST(SymbolHelper, LoadSymbols) {
@@ -176,10 +177,10 @@ TEST(SymbolHelper, LoadSymbols) {
   EXPECT_EQ(pdb.GetLoadBias(), 0x400);
   ASSERT_EQ(pdb.GetFunctions().size(), 1);
   auto resulting_function = pdb.GetFunctions()[0];
-  EXPECT_EQ(resulting_function->Name(), "function name");
-  EXPECT_EQ(resulting_function->PrettyName(), "pretty name");
-  EXPECT_EQ(resulting_function->Address(), 15);
-  EXPECT_EQ(resulting_function->Size(), 12);
-  EXPECT_EQ(resulting_function->File(), "file name");
-  EXPECT_EQ(resulting_function->Line(), 70);
+  EXPECT_EQ(resulting_function->name(), "function name");
+  EXPECT_EQ(resulting_function->pretty_name(), "pretty name");
+  EXPECT_EQ(resulting_function->address(), 15);
+  EXPECT_EQ(resulting_function->size(), 12);
+  EXPECT_EQ(resulting_function->file(), "file name");
+  EXPECT_EQ(resulting_function->line(), 70);
 }

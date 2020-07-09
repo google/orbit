@@ -14,6 +14,7 @@
 #include "Capture.h"
 #include "EventTracer.h"
 #include "EventTrack.h"
+#include "FunctionUtils.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "GpuTrack.h"
@@ -255,7 +256,7 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
         a_Timer.m_FunctionAddress);
     if (func != nullptr) {
       ++Capture::GFunctionCountMap[a_Timer.m_FunctionAddress];
-      func->UpdateStats(a_Timer);
+      function::UpdateStats(func, a_Timer);
     }
   }
 

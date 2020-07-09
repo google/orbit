@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "Capture.h"
+#include "FunctionUtils.h"
 #include "Injection.h"
 #include "Log.h"
 #include "OrbitModule.h"
@@ -339,8 +340,8 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   uint64_t function_address;
   std::string function_name = "???";
   if (function != nullptr) {
-    function_address = function->GetVirtualAddress();
-    function_name = function->PrettyName();
+    function_address = function::GetAbsoluteAddress(*function);
+    function_name = function::GetDisplayName(*function);
   } else if (address_info != nullptr) {
     function_address = address - address_info->offset_in_function;
     if (!address_info->function_name.empty()) {
@@ -351,7 +352,7 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   }
 
   if (function != nullptr && address_info != nullptr) {
-    address_info->function_name = function->PrettyName();
+    address_info->function_name = function::GetDisplayName(*function);
   }
 
   m_ExactAddressToFunctionAddress[address] = function_address;

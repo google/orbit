@@ -48,6 +48,8 @@ class Pdb {
   std::vector<std::shared_ptr<Function>> functions_;
   std::map<uint64_t, Function*> m_FunctionMap;
   std::unordered_map<unsigned long long, Function*> m_StringFunctionMap;
+
+  void SetModulePathAndAddress(Function* func);
 };
 
 #endif  // ORBIT_CORE_PDB_H_

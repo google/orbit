@@ -4,7 +4,8 @@
 
 #include "CaptureClient.h"
 
-#include <OrbitBase/Logging.h>
+#include "FunctionUtils.h"
+#include "OrbitBase/Logging.h"
 
 #include "absl/flags/flag.h"
 
@@ -40,9 +41,10 @@ void CaptureClient::Capture(
   for (const std::shared_ptr<Function>& function : selected_functions) {
     CaptureOptions::InstrumentedFunction* instrumented_function =
         capture_options->add_instrumented_functions();
-    instrumented_function->set_file_path(function->GetLoadedModulePath());
-    instrumented_function->set_file_offset(function->Offset());
-    instrumented_function->set_absolute_address(function->GetVirtualAddress());
+    instrumented_function->set_file_path(function->loaded_module_path());
+    instrumented_function->set_file_offset(function::Offset(*function));
+    instrumented_function->set_absolute_address(
+        function::GetAbsoluteAddress(*function));
   }
 
   if (!reader_writer_->Write(request)) {
