@@ -524,7 +524,7 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, bool a_Picking) {
       int32_t tid = thread_track->GetThreadId();
       if (tid == 0) {
         // This is the process_track_.
-        std::string process_name = Capture::GTargetProcess->GetName();
+        std::string process_name = Capture::GProcessName;
         thread_track->SetName(process_name);
         thread_track->SetLabel(process_name + " (all threads)");
       } else {

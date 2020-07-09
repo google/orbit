@@ -46,6 +46,8 @@ std::map<uint64_t, Function*> Capture::GVisibleFunctionsMap;
 std::unordered_map<uint64_t, uint64_t> Capture::GFunctionCountMap;
 std::shared_ptr<CallStack> Capture::GSelectedCallstack;
 std::unordered_map<uint64_t, std::shared_ptr<CallStack>> Capture::GCallstacks;
+int32_t Capture::GProcessId = -1;
+std::string Capture::GProcessName;
 std::unordered_map<int32_t, std::string> Capture::GThreadNames;
 std::unordered_map<uint64_t, LinuxAddressInfo> Capture::GAddressInfos;
 std::unordered_map<uint64_t, std::string> Capture::GAddressToFunctionName;
@@ -85,11 +87,14 @@ outcome::result<void, std::string> Capture::StartCapture() {
         "No process selected. Please choose a target process for the capture.");
   }
 
+  ClearCaptureData();
+
   GCaptureTimePoint = std::chrono::system_clock::now();
+  GProcessId = GTargetProcess->GetID();
+  GProcessName = GTargetProcess->GetName();
 
   GInjected = true;
 
-  ClearCaptureData();
   PreFunctionHooks();
 
   Capture::NewSamplingProfiler();
@@ -123,6 +128,8 @@ void Capture::FinalizeCapture() {
 void Capture::ClearCaptureData() {
   GFunctionCountMap.clear();
   GCallstacks.clear();
+  GProcessId = -1;
+  GProcessName = "";
   GThreadNames.clear();
   GAddressInfos.clear();
   GAddressToFunctionName.clear();
