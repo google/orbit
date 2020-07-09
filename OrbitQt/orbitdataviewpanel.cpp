@@ -62,9 +62,6 @@ void OrbitDataViewPanel::SetFilter(const QString& a_Filter) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitDataViewPanel::Select(int a_Row) { ui->treeView->Select(a_Row); }
-
-//-----------------------------------------------------------------------------
 void OrbitDataViewPanel::on_FilterLineEdit_textEdited(const QString& a_Text) {
   ui->treeView->OnFilter(a_Text);
 }

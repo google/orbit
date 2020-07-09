@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <QItemSelection>
 #include <QTimer>
 #include <QTreeView>
 #include <memory>
@@ -20,12 +21,13 @@ class OrbitTreeView : public QTreeView {
                   FontType font_type);
   void SetDataModel(DataView* model);
   void OnFilter(const QString& a_Filter);
-  void Select(int a_Row);
   void Refresh();
   void Link(OrbitTreeView* a_Link);
   void SetGlWidget(OrbitGLWidget* a_Link);
   void resizeEvent(QResizeEvent* event) override;
   void keyPressEvent(QKeyEvent* event) override;
+  void selectionChanged(const QItemSelection& selected,
+                        const QItemSelection& deselected) override;
   OrbitTableModel* GetModel() { return model_.get(); }
   std::string GetLabel();
 
@@ -41,14 +43,15 @@ class OrbitTreeView : public QTreeView {
  private slots:
   void OnSort(int a_Section, Qt::SortOrder a_Order);
   void OnTimer();
-  void OnClicked(const QModelIndex& index);
   void ShowContextMenu(const QPoint& pos);
   void OnMenuClicked(const std::string& a_Action, int a_MenuIndex);
   void OnRangeChanged(int a_Min, int a_Max);
+  void OnRowSelected(int row);
 
  private:
   std::unique_ptr<OrbitTableModel> model_;
   std::unique_ptr<QTimer> timer_;
   std::vector<OrbitTreeView*> links_;
   bool auto_resize_;
+  bool is_internal_refresh = false;
 };

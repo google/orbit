@@ -26,7 +26,6 @@ class OrbitDataViewPanel : public QWidget {
   void Refresh();
   void SetDataModel(DataView* model);
   void SetFilter(const QString& a_Filter);
-  void Select(int a_Row);
   class OrbitTreeView* GetTreeView();
 
  private slots:

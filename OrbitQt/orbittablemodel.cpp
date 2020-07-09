@@ -110,8 +110,8 @@ void OrbitTableModel::OnFilter(const QString& a_Filter) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitTableModel::OnClicked(const QModelIndex& index) {
-  if (static_cast<int>(m_DataView->GetNumElements()) > index.row()) {
-    m_DataView->OnSelect(index.row());
+void OrbitTableModel::OnRowSelected(int row) {
+  if (static_cast<int>(m_DataView->GetNumElements()) > row) {
+    m_DataView->OnSelect(row);
   }
 }
