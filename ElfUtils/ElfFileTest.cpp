@@ -99,7 +99,7 @@ TEST(ElfFile, CalculateLoadBiasNoProgramHeaders) {
   const auto load_bias_result = elf_file->GetLoadBias();
   ASSERT_FALSE(load_bias_result);
   EXPECT_EQ(
-      load_bias_result.error(),
+      load_bias_result.error().message(),
       absl::StrFormat(
           "Unable to get load bias of elf file: \"%s\". No PT_LOAD program "
           "headers found.",
