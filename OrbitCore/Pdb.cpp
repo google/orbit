@@ -5,6 +5,7 @@
 #include "Pdb.h"
 
 #include "Capture.h"
+#include "FunctionUtils.h"
 #include "OrbitProcess.h"
 #include "ScopeTimer.h"
 
@@ -19,10 +20,15 @@ Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
 }
 
 //-----------------------------------------------------------------------------
+void Pdb::SetModulePathAndAddress(Function* func) {
+  func->set_loaded_module_path(GetLoadedModuleName());
+  func->set_module_base_address(GetHModule());
+}
+
+//-----------------------------------------------------------------------------
 void Pdb::AddFunction(const std::shared_ptr<Function>& function) {
   functions_.push_back(function);
-  functions_.back()->SetModulePathAndAddress(GetLoadedModuleName(),
-                                             GetHModule());
+  SetModulePathAndAddress(functions_.back().get());
 }
 
 //-----------------------------------------------------------------------------
@@ -34,7 +40,7 @@ void Pdb::ProcessData() {
   ScopeLock lock(process->GetDataMutex());
 
   for (auto& func : functions_) {
-    func->SetModulePathAndAddress(GetLoadedModuleName(), GetHModule());
+    SetModulePathAndAddress(func.get());
     process->AddFunction(func);
   }
 
@@ -46,7 +52,7 @@ void Pdb::ProcessData() {
 void Pdb::PopulateFunctionMap() {
   SCOPE_TIMER_LOG("Pdb::PopulateFunctionMap");
   for (auto& function : functions_) {
-    m_FunctionMap.insert(std::make_pair(function->Address(), function.get()));
+    m_FunctionMap.insert(std::make_pair(function->address(), function.get()));
   }
 }
 
@@ -60,7 +66,7 @@ void Pdb::PopulateStringFunctionMap() {
   {
     // SCOPE_TIMER_LOG("Map inserts");
     for (auto& function : functions_) {
-      m_StringFunctionMap[function->Hash()] = function.get();
+      m_StringFunctionMap[function::GetHash(*function)] = function.get();
     }
   }
 }
@@ -102,7 +108,7 @@ void Pdb::ApplyPreset(const Preset& preset) {
       auto fit = m_StringFunctionMap.find(hash);
       if (fit != m_StringFunctionMap.end()) {
         Function* function = fit->second;
-        function->Select();
+        function::Select(function);
       }
     }
   }

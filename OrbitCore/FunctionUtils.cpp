@@ -1,0 +1,108 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "FunctionUtils.h"
+
+#include <map>
+
+#include "Capture.h"
+#include "Log.h"
+#include "OrbitBase/Logging.h"
+#include "Utils.h"
+
+namespace function {
+
+std::string GetLoadedModuleName(const Function& func) {
+  return Path::GetFileName(func.loaded_module_path());
+}
+
+uint64_t GetHash(const Function& func) {
+  return StringHash(func.pretty_name());
+}
+
+uint64_t Offset(const Function& func) {
+  return func.address() - func.load_bias();
+}
+
+bool IsOrbitFunc(const Function& func) {
+  return func.orbit_type() != Function::OrbitType::NONE;
+}
+
+void Select(Function* func) {
+  LOG("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64
+      ", load_bias_= 0x%" PRIx64 ", base_address=0x%" PRIx64 ")",
+      func->pretty_name(), GetAbsoluteAddress(*func), func->address(),
+      func->load_bias(), func->module_base_address());
+  Capture::GSelectedFunctionsMap[GetAbsoluteAddress(*func)] = func;
+}
+
+void UnSelect(Function* func) {
+  Capture::GSelectedFunctionsMap.erase(GetAbsoluteAddress(*func));
+}
+
+bool IsSelected(const Function& func) {
+  return Capture::GSelectedFunctionsMap.count(GetAbsoluteAddress(func)) > 0;
+}
+
+void Print(const Function& func) {
+  ORBIT_VIZV(func.address());
+  ORBIT_VIZV(func.file());
+  ORBIT_VIZV(func.line());
+  ORBIT_VIZV(IsSelected(func));
+}
+
+const absl::flat_hash_map<const char*, Function::OrbitType>&
+GetFunctionNameToOrbitTypeMap() {
+  static absl::flat_hash_map<const char*, Function::OrbitType>
+      function_name_to_type_map{
+          {"Start(", Function::ORBIT_TIMER_START},
+          {"Stop(", Function::ORBIT_TIMER_STOP},
+          {"StartAsync(", Function::ORBIT_TIMER_START_ASYNC},
+          {"StopAsync(", Function::ORBIT_TIMER_STOP_ASYNC},
+          {"TrackInt(", Function::ORBIT_TRACK_INT},
+          {"TrackInt64(", Function::ORBIT_TRACK_INT_64},
+          {"TrackUint(", Function::ORBIT_TRACK_UINT},
+          {"TrackUint64(", Function::ORBIT_TRACK_UINT_64},
+          {"TrackFloat(", Function::ORBIT_TRACK_FLOAT},
+          {"TrackDouble(", Function::ORBIT_TRACK_DOUBLE},
+          {"TrackFloatAsInt(", Function::ORBIT_TRACK_FLOAT_AS_INT},
+          {"TrackDoubleAsInt64(", Function::ORBIT_TRACK_DOUBLE_AS_INT_64},
+      };
+  return function_name_to_type_map;
+}
+
+// Detect Orbit API functions by looking for special function names part of the
+// orbit_api namespace. On a match, set the corresponding function type.
+bool SetOrbitTypeFromName(Function* func) {
+  const std::string& name = GetDisplayName(*func);
+  if (absl::StartsWith(name, "orbit_api::")) {
+    for (auto& pair : GetFunctionNameToOrbitTypeMap()) {
+      if (absl::StrContains(name, pair.first)) {
+        func->set_orbit_type(pair.second);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+void UpdateStats(Function* func, const Timer& timer) {
+  std::shared_ptr<FunctionStats> stats = func->stats();
+  if (stats != nullptr) {
+    stats->m_Count++;
+    double elapsedMillis = timer.ElapsedMillis();
+    stats->m_TotalTimeMs += elapsedMillis;
+    stats->m_AverageTimeMs = stats->m_TotalTimeMs / stats->m_Count;
+
+    if (elapsedMillis > stats->m_MaxMs) {
+      stats->m_MaxMs = elapsedMillis;
+    }
+
+    if (stats->m_MinMs == 0 || elapsedMillis < stats->m_MinMs) {
+      stats->m_MinMs = elapsedMillis;
+    }
+  }
+}
+
+}  // namespace function

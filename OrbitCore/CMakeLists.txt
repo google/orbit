@@ -21,6 +21,7 @@ target_sources(
          Core.h
          EventBuffer.h
          FunctionStats.h
+         FunctionUtils.h
          Injection.h
          Introspection.h
          LinuxAddressInfo.h
@@ -59,6 +60,7 @@ target_sources(
           Core.cpp
           EventBuffer.cpp
           FunctionStats.cpp
+          FunctionUtils.cpp
           Injection.cpp
           Introspection.cpp
           LinuxTracingBuffer.cpp

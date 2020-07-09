@@ -7,6 +7,7 @@
 #include "App.h"
 #include "Capture.h"
 #include "EventTracer.h"
+#include "FunctionUtils.h"
 #include "GlUtils.h"
 #include "absl/strings/str_format.h"
 
@@ -257,8 +258,9 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
     if (!textBox->GetTimer().IsType(Timer::CORE_ACTIVITY)) {
       Function* func =
           Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
-      m_ToolTip = absl::StrFormat("%s %s", func ? func->PrettyName() : "",
-                                  textBox->GetText());
+      m_ToolTip =
+          absl::StrFormat("%s %s", func ? function::GetDisplayName(*func) : "",
+                          textBox->GetText());
       GOrbitApp->SendTooltipToUi(m_ToolTip);
       NeedsRedraw();
     }

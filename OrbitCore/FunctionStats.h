@@ -13,7 +13,6 @@
 struct FunctionStats {
   FunctionStats() { Reset(); }
   void Reset() { memset(this, 0, sizeof(*this)); }
-  void Update(const class Timer& a_Timer);
 
   uint64_t m_Address;
   uint64_t m_Count;

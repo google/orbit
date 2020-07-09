@@ -9,6 +9,7 @@
 #include <string>
 
 #include "App.h"
+#include "FunctionUtils.h"
 #include "Pdb.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
@@ -38,8 +39,8 @@ void FramePointerValidatorClient::AnalyzeModules(
     request.set_module_path(module->m_FullName);
     for (const auto& function : module->m_Pdb->GetFunctions()) {
       CodeBlock* function_info = request.add_functions();
-      function_info->set_offset(function->Offset());
-      function_info->set_size(function->Size());
+      function_info->set_offset(function::Offset(*function));
+      function_info->set_size(function->size());
     }
     grpc::ClientContext context;
     std::chrono::time_point deadline =
