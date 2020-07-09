@@ -21,13 +21,15 @@ class OrbitConan(ConanFile):
                "debian_packaging": [True, False],
                "fPIC": [True, False],
                "crashdump_server": "ANY",
-               "with_fuzzing": [True, False]}
+               "with_fuzzing": [True, False],
+               "with_crash_handling": [True, False]}
     default_options = {"system_mesa": True,
                        "system_qt": True, "with_gui": True,
                        "debian_packaging": False,
                        "fPIC": True,
                        "crashdump_server": "",
-                       "with_fuzzing": False}
+                       "with_fuzzing": False,
+                       "with_crash_handling": True}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
     build_requires = ('grpc_codegen/1.27.3@orbitdeps/stable#ec39b3cf6031361be942257523c1839a',
@@ -46,6 +48,11 @@ class OrbitConan(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
+        if not self.options.with_gui:
+            del self.options.with_crash_handling
+            del self.options.crashdump_server
+        elif not self.options.with_crash_handling:
+            del self.options.crashdump_server
 
     def requirements(self):
         if self.settings.os != "Windows" and self.options.with_gui and not self.options.system_qt and self.options.system_mesa:
@@ -68,7 +75,7 @@ class OrbitConan(ConanFile):
                 "libunwindstack/80a734f14@{}#0".format(self._orbit_channel))
         self.requires("zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f")
 
-        if self.options.with_gui:
+        if self.options.with_gui and self.options.with_crash_handling:
             self.requires(
                 "crashpad/20200624@{}#8c19cb575eb819de0b050cf7d1f317b6".format(self._orbit_channel))
 
@@ -129,9 +136,14 @@ class OrbitConan(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.definitions["WITH_FUZZING"] = "ON" if self.options.with_fuzzing else "OFF"
         cmake.definitions["WITH_GUI"] = "ON" if self.options.with_gui else "OFF"
-        cmake.definitions["CRASHDUMP_SERVER"] = self.options.crashdump_server
+        if self.options.with_gui:
+            if self.options.with_crash_handling:
+                cmake.definitions["WITH_CRASH_HANDLING"] = "ON"
+                cmake.definitions["CRASHDUMP_SERVER"] = self.options.crashdump_server
+            else:
+                cmake.definitions["WITH_CRASH_HANDLING"] = "OFF"
+
         cmake.configure()
         cmake.build()
         if not tools.cross_building(self.settings, skip_x64_x86=True) and self.settings.get_safe("os.platform") != "GGP":

@@ -22,8 +22,6 @@
 
 #include "App.h"
 #include "ApplicationOptions.h"
-#include "CrashHandler.h"
-#include "CrashOptions.h"
 #include "Error.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Error.h"
@@ -37,6 +35,11 @@
 #include "orbitmainwindow.h"
 #include "servicedeploymanager.h"
 #include "version.h"
+
+#ifdef ORBIT_CRASH_HANDLING
+#include "CrashHandler.h"
+#include "CrashOptions.h"
+#endif
 
 ABSL_FLAG(bool, enable_stale_features, false,
           "Enable obsolete features that are not working or are not "
@@ -251,6 +254,7 @@ int main(int argc, char* argv[]) {
     QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
     QCoreApplication::setApplicationVersion(OrbitQt::kVersionString);
 
+#ifdef ORBIT_CRASH_HANDLING
     const std::string dump_path = Path::GetDumpPath();
 #ifdef _WIN32
     const char* handler_name = "crashpad_handler.exe";
@@ -266,6 +270,7 @@ int main(int argc, char* argv[]) {
 
     CrashHandler crash_handler(dump_path, handler_path, crash_server_url,
                                attachments);
+#endif // ORBIT_CRASH_HANDLING
 
     StyleOrbit(app);
 

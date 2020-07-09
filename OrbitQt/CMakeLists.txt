@@ -10,9 +10,7 @@ target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitQt
-  PRIVATE CrashHandler.h
-          CrashOptions.h
-          deploymentconfigurations.h
+  PRIVATE deploymentconfigurations.h
           Error.h
           eventloop.h
           orbitaboutdialog.h
@@ -37,8 +35,7 @@ target_sources(
 
 target_sources(
   OrbitQt
-  PRIVATE CrashHandler.cpp
-          Error.cpp
+  PRIVATE Error.cpp
           deploymentconfigurations.cpp
           main.cpp
           orbitaboutdialog.cpp
@@ -63,20 +60,34 @@ target_sources(
 
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(OrbitQt PRIVATE OrbitCore OrbitGl OrbitGgp OrbitSshQt
-                                      Qt5::Widgets Qt5::Core
-                                      qtpropertybrowser::qtpropertybrowser
-                                      crashpad::crashpad)
+target_link_libraries(
+  OrbitQt
+  PRIVATE OrbitCore
+          OrbitGl
+          OrbitGgp
+          OrbitSshQt
+          Qt5::Widgets
+          Qt5::Core
+          qtpropertybrowser::qtpropertybrowser)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CrashOptions.cpp.in
-               ${CMAKE_CURRENT_BINARY_DIR}/CrashOptions.cpp)
-target_sources(OrbitQt PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/CrashOptions.cpp")
-target_include_directories(OrbitQt PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+if(WITH_CRASH_HANDLING)
+  target_sources(
+    OrbitQt
+    PRIVATE CrashHandler.cpp
+    PUBLIC CrashHandler.h CrashOptions.h)
+  target_link_libraries(OrbitQt PRIVATE crashpad::crashpad)
+  target_compile_definitions(OrbitQt PRIVATE ORBIT_CRASH_HANDLING)
+
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CrashOptions.cpp.in
+                 ${CMAKE_CURRENT_BINARY_DIR}/CrashOptions.cpp)
+  target_sources(OrbitQt PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/CrashOptions.cpp")
+endif()
 
 include(${CMAKE_SOURCE_DIR}/cmake/version.cmake)
 GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/version.h"
                     "${CMAKE_CURRENT_SOURCE_DIR}/version.h.in" OrbitQt)
 target_sources(OrbitQt PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/version.h")
+target_include_directories(OrbitQt PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 if(WIN32)
   set_target_properties(OrbitQt PROPERTIES WIN32_EXECUTABLE ON)
