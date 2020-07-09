@@ -499,13 +499,13 @@ void OrbitMainWindow::on_actionOpen_Preset_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Select a file to open...", Path::GetPresetPath().c_str(), "*.opr");
   for (const auto& file : list) {
-    outcome::result<void, std::string> result =
+    Result<void, ErrorMessage> result =
         GOrbitApp->OnLoadPreset(file.toStdString());
     if (result.has_error()) {
       QMessageBox::critical(
           this, "Error loading session",
           absl::StrFormat("Could not load session from \"%s\":\n%s.",
-                          file.toStdString(), result.error())
+                          file.toStdString(), result.error().message())
               .c_str());
     }
     break;
@@ -542,13 +542,13 @@ void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
     return;
   }
 
-  outcome::result<void, std::string> result =
+  Result<void, ErrorMessage> result =
       GOrbitApp->OnSavePreset(file.toStdString());
   if (result.has_error()) {
     QMessageBox::critical(
         this, "Error saving session",
         absl::StrFormat("Could not save session in \"%s\":\n%s.",
-                        file.toStdString(), result.error())
+                        file.toStdString(), result.error().message())
             .c_str());
   }
 }
@@ -564,13 +564,13 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
     return;
   }
 
-  outcome::result<void, std::string> result =
+  Result<void, ErrorMessage> result =
       GOrbitApp->OnSaveCapture(file.toStdString());
   if (result.has_error()) {
     QMessageBox::critical(
         this, "Error saving capture",
         absl::StrFormat("Could not save capture in \"%s\":\n%s.",
-                        file.toStdString(), result.error())
+                        file.toStdString(), result.error().message())
             .c_str());
   }
 }
@@ -589,15 +589,14 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
 
 outcome::result<void> OrbitMainWindow::OpenCapture(
     const std::string& filepath) {
-  outcome::result<void, std::string> result =
-      GOrbitApp->OnLoadCapture(filepath);
+  Result<void, ErrorMessage> result = GOrbitApp->OnLoadCapture(filepath);
 
   if (result.has_error()) {
     SetTitle({});
     QMessageBox::critical(this, "Error loading capture",
                           QString::fromStdString(absl::StrFormat(
                               "Could not load capture from \"%s\":\n%s.",
-                              filepath, result.error())));
+                              filepath, result.error().message())));
     return std::errc::no_such_file_or_directory;
   }
   SetTitle(QString::fromStdString(filepath));
