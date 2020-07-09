@@ -580,9 +580,9 @@ bool OrbitApp::StartCapture() {
     return false;
   }
 
-  outcome::result<void, std::string> result = Capture::StartCapture();
+  Result<void, ErrorMessage> result = Capture::StartCapture();
   if (result.has_error()) {
-    SendErrorToUi("Error starting capture", result.error());
+    SendErrorToUi("Error starting capture", result.error().message());
     return false;
   }
 

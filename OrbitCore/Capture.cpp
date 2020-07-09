@@ -80,7 +80,7 @@ void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> Capture::StartCapture() {
+Result<void, ErrorMessage> Capture::StartCapture() {
   if (GTargetProcess->GetID() == 0) {
     return outcome::failure(
         "No process selected. Please choose a target process for the capture.");
@@ -183,8 +183,7 @@ void Capture::DisplayStats() {
 }
 
 //-----------------------------------------------------------------------------
-outcome::result<void, std::string> Capture::SavePreset(
-    const std::string& filename) {
+Result<void, ErrorMessage> Capture::SavePreset(const std::string& filename) {
   Preset preset;
   preset.m_ProcessFullPath = GTargetProcess->GetFullPath();
 
