@@ -21,7 +21,6 @@ struct CallStack {
     m_Hash = XXH64(m_Data.data(), m_Depth * sizeof(uint64_t), 0xca1157ac);
     return m_Hash;
   }
-  std::string GetString();
 
   CallstackID m_Hash = 0;
   uint32_t m_Depth = 0;
