@@ -31,13 +31,14 @@ class ProcessManagerImpl final : public ProcessManager {
       const std::function<void(ProcessManager*)>& listener) override;
 
   std::vector<ProcessInfo> GetProcessList() const override;
-  outcome::result<std::vector<ModuleInfo>, std::string> LoadModuleList(
+  Result<std::vector<ModuleInfo>, ErrorMessage> LoadModuleList(
       int32_t pid) override;
 
-  outcome::result<std::string, Error, outcome::policy::terminate>
-  LoadProcessMemory(int32_t pid, uint64_t address, uint64_t size) override;
+  Result<std::string, ErrorMessage> LoadProcessMemory(int32_t pid,
+                                                      uint64_t address,
+                                                      uint64_t size) override;
 
-  outcome::result<ModuleSymbols, std::string> LoadSymbols(
+  Result<ModuleSymbols, ErrorMessage> LoadSymbols(
       const std::string& module_path) const override;
 
   void Start();
@@ -74,7 +75,7 @@ void ProcessManagerImpl::SetProcessListUpdateListener(
   process_list_update_listener_ = listener;
 }
 
-outcome::result<std::vector<ModuleInfo>, std::string>
+Result<std::vector<ModuleInfo>, ErrorMessage>
 ProcessManagerImpl::LoadModuleList(int32_t pid) {
   GetModuleListRequest request;
   GetModuleListResponse response;
@@ -101,7 +102,7 @@ std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
   return process_list_;
 }
 
-outcome::result<ModuleSymbols, std::string> ProcessManagerImpl::LoadSymbols(
+Result<ModuleSymbols, ErrorMessage> ProcessManagerImpl::LoadSymbols(
     const std::string& module_path) const {
   GetSymbolsRequest request;
   GetSymbolsResponse response;
@@ -115,7 +116,7 @@ outcome::result<ModuleSymbols, std::string> ProcessManagerImpl::LoadSymbols(
       process_service_->GetSymbols(context.get(), request, &response);
   if (!status.ok()) {
     ERROR("gRPC call to GetSymbols failed: %s", status.error_message());
-    return status.error_message();
+    return outcome::failure(status.error_message());
   }
 
   return response.module_symbols();
@@ -181,9 +182,8 @@ void ProcessManagerImpl::WorkerFunction() {
   }
 }
 
-outcome::result<std::string, ProcessManager::Error, outcome::policy::terminate>
-ProcessManagerImpl::LoadProcessMemory(int32_t pid, uint64_t address,
-                                      uint64_t size) {
+Result<std::string, ErrorMessage> ProcessManagerImpl::LoadProcessMemory(
+    int32_t pid, uint64_t address, uint64_t size) {
   GetProcessMemoryRequest request;
   request.set_pid(pid);
   request.set_address(address);
@@ -198,7 +198,7 @@ ProcessManagerImpl::LoadProcessMemory(int32_t pid, uint64_t address,
       process_service_->GetProcessMemory(context.get(), request, &response);
   if (!status.ok()) {
     ERROR("gRPC call to GetProcessMemory failed: %s", status.error_message());
-    return outcome::failure(ProcessManager::Error{status.error_message()});
+    return outcome::failure(status.error_message());
   }
 
   return outcome::success(std::move(*response.mutable_memory()));
