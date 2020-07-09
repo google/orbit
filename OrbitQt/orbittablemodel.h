@@ -38,7 +38,7 @@ class OrbitTableModel : public QAbstractTableModel {
 
   void OnTimer();
   void OnFilter(const QString& a_Filter);
-  void OnClicked(const QModelIndex& index);
+  void OnRowSelected(int row);
 
  protected:
   DataView* m_DataView;
