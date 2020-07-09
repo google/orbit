@@ -29,6 +29,7 @@ enable_testing()
 
 option(WITH_GUI "Setting this option will enable the Qt-based UI client." ON)
 option(WITH_FUZZING "Setting this option will enable the fuzzing mode." OFF)
+option(WITH_CRASH_HANDLING "Setting this option will enable crash handling based on crashpad." ON)
 
 set(CRASHDUMP_SERVER "" CACHE STRING "Setting this option will enable uploading crash dumps to the url specified.")
 
@@ -109,11 +110,16 @@ endif()
 find_package(oqpi REQUIRED)
 find_package(stb REQUIRED)
 find_package(capstone CONFIG REQUIRED)
+
 if(WITH_GUI)
   find_package(Qt5 CONFIG REQUIRED COMPONENTS Core Network Widgets)
   find_package(qtpropertybrowser REQUIRED)
+endif()
+
+if(WITH_GUI AND WITH_CRASH_HANDLING)
   find_package(crashpad CONFIG REQUIRED)
 endif()
+
 find_package(abseil CONFIG REQUIRED)
 find_package(llvm_object CONFIG REQUIRED)
 find_package(Outcome CONFIG REQUIRED)
@@ -121,6 +127,7 @@ find_package(Outcome CONFIG REQUIRED)
 if(NOT WIN32)
   find_package(libunwindstack CONFIG REQUIRED)
 endif()
+
 find_package(asio CONFIG REQUIRED)
 find_package(GTest REQUIRED)
 find_package(GMock REQUIRED)
