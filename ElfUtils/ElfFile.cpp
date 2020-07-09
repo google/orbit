@@ -27,8 +27,8 @@ class ElfFileImpl : public ElfFile {
       std::string_view file_path,
       llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
-  outcome::result<ModuleSymbols, std::string> LoadSymbols() const override;
-  outcome::result<uint64_t, std::string> GetLoadBias() const override;
+  Result<ModuleSymbols, ErrorMessage> LoadSymbols() const override;
+  Result<uint64_t, ErrorMessage> GetLoadBias() const override;
   bool IsAddressInTextSection(uint64_t address) const override;
   bool HasSymtab() const override;
   bool Is64Bit() const override;
@@ -118,8 +118,7 @@ bool ElfFileImpl<ElfT>::IsAddressInTextSection(uint64_t address) const {
 }
 
 template <typename ElfT>
-outcome::result<ModuleSymbols, std::string> ElfFileImpl<ElfT>::LoadSymbols()
-    const {
+Result<ModuleSymbols, ErrorMessage> ElfFileImpl<ElfT>::LoadSymbols() const {
   // TODO: if we want to use other sections than .symtab in the future for
   //       example .dynsym, than we have to change this.
   if (!has_symtab_section_) {
@@ -173,7 +172,7 @@ outcome::result<ModuleSymbols, std::string> ElfFileImpl<ElfT>::LoadSymbols()
 }
 
 template <typename ElfT>
-outcome::result<uint64_t, std::string> ElfFileImpl<ElfT>::GetLoadBias() const {
+Result<uint64_t, ErrorMessage> ElfFileImpl<ElfT>::GetLoadBias() const {
   const llvm::object::ELFFile<ElfT>* elf_file = object_file_->getELFFile();
 
   uint64_t min_vaddr = UINT64_MAX;

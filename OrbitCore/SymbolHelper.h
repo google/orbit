@@ -4,10 +4,10 @@
 
 #ifndef SYMBOL_HELPER_H_
 #define SYMBOL_HELPER_H_
-#include <outcome.hpp>
 #include <string>
 #include <vector>
 
+#include "OrbitBase/Result.h"
 #include "symbol.pb.h"
 
 class SymbolHelper {
@@ -18,9 +18,9 @@ class SymbolHelper {
       : collector_symbol_directories_(std::move(collector_symbol_directories)),
         symbols_file_directories_(std::move(symbols_file_directories)){};
 
-  outcome::result<ModuleSymbols, std::string> LoadSymbolsCollector(
+  Result<ModuleSymbols, ErrorMessage> LoadSymbolsCollector(
       const std::string& module_path) const;
-  outcome::result<ModuleSymbols, std::string> LoadUsingSymbolsPathFile(
+  Result<ModuleSymbols, ErrorMessage> LoadUsingSymbolsPathFile(
       const std::string& module_path, const std::string& build_id) const;
 
  private:
