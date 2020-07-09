@@ -139,7 +139,6 @@ void Pdb::AddFunction(const std::shared_ptr<Function>& function) {
   functions_.push_back(function);
   functions_.back()->SetModulePathAndAddress(GetLoadedModuleName(),
                                              GetHModule());
-  functions_.back()->SetOrbitTypeFromName();
 }
 
 //-----------------------------------------------------------------------------

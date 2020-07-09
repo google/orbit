@@ -237,14 +237,6 @@ void SamplingReportDataView::OnSelect(int index) {
 }
 
 //-----------------------------------------------------------------------------
-void SamplingReportDataView::LinkDataView(DataView* a_DataView) {
-  if (a_DataView->GetType() == DataViewType::CALLSTACK) {
-    m_CallstackDataView = static_cast<CallStackDataView*>(a_DataView);
-    m_SamplingReport->SetCallstackDataView(m_CallstackDataView);
-  }
-}
-
-//-----------------------------------------------------------------------------
 void SamplingReportDataView::SetSampledFunctions(
     const std::vector<SampledFunction>& a_Functions) {
   m_Functions = a_Functions;

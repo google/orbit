@@ -23,7 +23,6 @@ class SamplingReportDataView : public DataView {
                      const std::vector<int>& a_ItemIndices) override;
   void OnSelect(int a_Index) override;
 
-  void LinkDataView(DataView* a_DataView) override;
   void SetSamplingReport(class SamplingReport* a_SamplingReport) {
     m_SamplingReport = a_SamplingReport;
   }
