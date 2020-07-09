@@ -94,6 +94,16 @@ void CaptureSerializer::SaveImpl(T& archive) {
   }
 
   {
+    ORBIT_SIZE_SCOPE("Capture::GProcessId");
+    archive(Capture::GProcessId);
+  }
+
+  {
+    ORBIT_SIZE_SCOPE("Capture::GProcessName");
+    archive(Capture::GProcessName);
+  }
+
+  {
     ORBIT_SIZE_SCOPE("Capture::GThreadNames");
     archive(Capture::GThreadNames);
   }
@@ -185,6 +195,10 @@ outcome::result<void, std::string> CaptureSerializer::Load(
   archive(Capture::GFunctionCountMap);
 
   archive(Capture::GCallstacks);
+
+  archive(Capture::GProcessId);
+
+  archive(Capture::GProcessName);
 
   archive(Capture::GThreadNames);
 

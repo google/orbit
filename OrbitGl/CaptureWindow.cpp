@@ -1023,10 +1023,8 @@ void CaptureWindow::RenderToolbars() {
   if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
     ImGui::SetTooltip("Process Info");
   ImGui::SameLine();
-  std::string process_info = Capture::GTargetProcess->GetName();
-  if (!process_info.empty()) {
-    int32_t process_id = Capture::GTargetProcess->GetID();
-    ImGui::Text("%s [%d]", process_info.c_str(), process_id);
+  if (Capture::GProcessId > 0 && !Capture::GProcessName.empty()) {
+    ImGui::Text("%s [%d]", Capture::GProcessName.c_str(), Capture::GProcessId);
   }
   ImGui::End();
 

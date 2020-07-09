@@ -409,11 +409,10 @@ void OrbitApp::AddSelectionReport(
 
 //-----------------------------------------------------------------------------
 std::string OrbitApp::GetCaptureFileName() {
-  CHECK(Capture::GTargetProcess != nullptr);
   time_t timestamp =
       std::chrono::system_clock::to_time_t(Capture::GCaptureTimePoint);
   std::string result;
-  result.append(Path::StripExtension(Capture::GTargetProcess->GetName()));
+  result.append(Path::StripExtension(Capture::GProcessName));
   result.append("_");
   result.append(OrbitUtils::FormatTime(timestamp));
   result.append(".orbit");
@@ -546,7 +545,7 @@ bool OrbitApp::StartCapture() {
     return false;
   }
 
-  int32_t pid = Capture::GTargetProcess->GetID();
+  int32_t pid = Capture::GProcessId;
   std::vector<std::shared_ptr<Function>> selected_functions =
       Capture::GSelectedFunctions;
   thread_pool_->Schedule([this, pid, selected_functions] {
