@@ -18,9 +18,9 @@ class SymbolHelper {
       : collector_symbol_directories_(std::move(collector_symbol_directories)),
         symbols_file_directories_(std::move(symbols_file_directories)){};
 
-  Result<ModuleSymbols, ErrorMessage> LoadSymbolsCollector(
+  ErrorMessageOr<ModuleSymbols> LoadSymbolsCollector(
       const std::string& module_path) const;
-  Result<ModuleSymbols, ErrorMessage> LoadUsingSymbolsPathFile(
+  ErrorMessageOr<ModuleSymbols> LoadUsingSymbolsPathFile(
       const std::string& module_path, const std::string& build_id) const;
 
  private:

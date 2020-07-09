@@ -41,17 +41,18 @@ class ProcessManager {
   virtual void SetProcessListUpdateListener(
       const std::function<void(ProcessManager*)>& listener) = 0;
 
-  virtual Result<std::vector<ModuleInfo>, ErrorMessage> LoadModuleList(
+  virtual ErrorMessageOr<std::vector<ModuleInfo>> LoadModuleList(
       int32_t pid) = 0;
 
   // Get a copy of process list.
   virtual std::vector<ProcessInfo> GetProcessList() const = 0;
 
-  virtual Result<std::string, ErrorMessage> LoadProcessMemory(
-      int32_t pid, uint64_t address, uint64_t size) = 0;
+  virtual ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid,
+                                                        uint64_t address,
+                                                        uint64_t size) = 0;
 
   // Get symbols for a module
-  virtual Result<ModuleSymbols, ErrorMessage> LoadSymbols(
+  virtual ErrorMessageOr<ModuleSymbols> LoadSymbols(
       const std::string& module_path) const = 0;
 
   // Note that this method waits for the worker thread to stop, which could

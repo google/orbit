@@ -59,10 +59,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::string GetCaptureFileName();
   std::string GetSaveFile(const std::string& extension);
   void SetClipboard(const std::string& text);
-  Result<void, ErrorMessage> OnSavePreset(const std::string& file_name);
-  Result<void, ErrorMessage> OnLoadPreset(const std::string& file_name);
-  Result<void, ErrorMessage> OnSaveCapture(const std::string& file_name);
-  Result<void, ErrorMessage> OnLoadCapture(const std::string& file_name);
+  ErrorMessageOr<void> OnSavePreset(const std::string& file_name);
+  ErrorMessageOr<void> OnLoadPreset(const std::string& file_name);
+  ErrorMessageOr<void> OnSaveCapture(const std::string& file_name);
+  ErrorMessageOr<void> OnLoadCapture(const std::string& file_name);
   bool StartCapture();
   void StopCapture();
   void OnCaptureStopped();
@@ -223,8 +223,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                              const std::shared_ptr<Preset>& preset);
   std::shared_ptr<Process> FindProcessByPid(int32_t pid);
 
-  Result<void, ErrorMessage> ReadPresetFromFile(const std::string& filename,
-                                                Preset* preset);
+  ErrorMessageOr<void> ReadPresetFromFile(const std::string& filename,
+                                          Preset* preset);
 
   ApplicationOptions options_;
 

@@ -14,10 +14,10 @@
 class CaptureSerializer {
  public:
   void Save(std::ostream& stream);
-  Result<void, ErrorMessage> Save(const std::string& filename);
+  ErrorMessageOr<void> Save(const std::string& filename);
 
-  Result<void, ErrorMessage> Load(std::istream& stream);
-  Result<void, ErrorMessage> Load(const std::string& filename);
+  ErrorMessageOr<void> Load(std::istream& stream);
+  ErrorMessageOr<void> Load(const std::string& filename);
 
   class TimeGraph* time_graph_;
 
