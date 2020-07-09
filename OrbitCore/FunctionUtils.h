@@ -9,6 +9,7 @@
 #include <string>
 
 #include "OrbitFunction.h"
+#include "SamplingProfiler.h"
 #include "ScopeTimer.h"
 
 namespace function {
@@ -36,6 +37,8 @@ void Print(const Function& func);
 
 bool SetOrbitTypeFromName(Function* func);
 void UpdateStats(Function* func, const Timer& timer);
+
+bool IsSelected(const SampledFunction& func);
 
 }  // namespace function
 

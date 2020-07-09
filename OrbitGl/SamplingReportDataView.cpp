@@ -45,7 +45,7 @@ std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
 
   switch (a_Column) {
     case COLUMN_SELECTED:
-      return func.GetSelected() ? "X" : "-";
+      return function::IsSelected(func) ? "X" : "-";
     case COLUMN_INDEX:
       return absl::StrFormat("%d", a_Row);
     case COLUMN_FUNCTION_NAME:
@@ -75,6 +75,13 @@ std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
   }
 
 //-----------------------------------------------------------------------------
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                   \
+  [&](int a, int b) {                                                  \
+    return OrbitUtils::Compare(Func(functions[a]), Func(functions[b]), \
+                               ascending);                             \
+  }
+
+//-----------------------------------------------------------------------------
 void SamplingReportDataView::DoSort() {
   bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
@@ -83,7 +90,7 @@ void SamplingReportDataView::DoSort() {
 
   switch (m_SortingColumn) {
     case COLUMN_SELECTED:
-      sorter = ORBIT_PROC_SORT(GetSelected());
+      sorter = ORBIT_CUSTOM_FUNC_SORT(function::IsSelected);
       break;
     case COLUMN_FUNCTION_NAME:
       sorter = ORBIT_PROC_SORT(m_Name);
