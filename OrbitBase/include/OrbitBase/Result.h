@@ -9,9 +9,6 @@
 
 #include "outcome.hpp"
 
-template <typename T, typename E>
-using Result = outcome::result<T, E, outcome::policy::terminate>;
-
 class ErrorMessage final {
  public:
   ErrorMessage() = default;
@@ -22,5 +19,11 @@ class ErrorMessage final {
  private:
   std::string message_;
 };
+
+template <typename T, typename E>
+using Result = outcome::result<T, E, outcome::policy::terminate>;
+
+template <typename T>
+using ErrorMessageOr = Result<T, ErrorMessage>;
 
 #endif  // ORBIT_BASE_RESULT_H_
