@@ -201,7 +201,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                    const std::shared_ptr<Preset>& preset = nullptr);
   void LoadModulesFromPreset(const std::shared_ptr<Process>& process,
                              const std::shared_ptr<Preset>& preset);
-  bool IsLoading();
 
   void UpdateSamplingReport();
   void LoadPreset(const std::shared_ptr<Preset>& session);

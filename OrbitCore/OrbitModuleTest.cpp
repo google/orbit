@@ -31,19 +31,14 @@ TEST(OrbitModule, Constructor) {
 
   EXPECT_EQ(module.m_FullName, file_path);
   EXPECT_EQ(module.m_Name, executable_name);
-  EXPECT_EQ(module.m_Directory, executable_directory);
   EXPECT_EQ(module.m_PdbSize, executable_size);
 
   EXPECT_EQ(module.m_AddressStart, address_start);
   EXPECT_EQ(module.m_AddressEnd, address_end);
 
-  EXPECT_EQ(module.m_PrettyName, file_path);
-  EXPECT_EQ(module.m_AddressRange, "[0000000000000700 - 0000000000001000]");
-
   EXPECT_TRUE(module.IsLoadable());
 
   EXPECT_EQ(module.m_Pdb, nullptr);
-  EXPECT_EQ(module.m_PdbName, "");
   EXPECT_FALSE(module.IsLoaded());
 }
 
@@ -171,7 +166,6 @@ TEST(SymbolHelper, LoadSymbols) {
   module->LoadSymbols(module_symbols);
 
   ASSERT_NE(module->m_Pdb, nullptr);
-  EXPECT_EQ(module->m_PdbName, "path/symbols_file_name");
   EXPECT_TRUE(module->IsLoaded());
 
   Pdb& pdb = *module->m_Pdb;
