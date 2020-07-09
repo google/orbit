@@ -305,7 +305,7 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
     if (!chain) continue;
     for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
       TimerBlock& block = *it;
-      for (int i = 0; i < block.size(); i++) {
+      for (size_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
         if (box.GetTimer().m_FunctionAddress == function_address) {
           if (!min_box || box.GetTimer().ElapsedMicros() <
@@ -333,7 +333,7 @@ void LiveFunctionsDataView::JumpToNext(Function& function,
     for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
       TimerBlock& block = *it;
       if (!block.Intersects(current_time, best_time)) continue;
-      for (int i = 0; i < block.size(); i++) {
+      for (size_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
         auto box_time = box.GetTimer().m_End;
         if ((box.GetTimer().m_FunctionAddress == function_address) &&
@@ -359,7 +359,7 @@ void LiveFunctionsDataView::JumpToPrevious(Function& function,
     for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
       TimerBlock& block = *it;
       if (!block.Intersects(best_time, current_time)) continue;
-      for (int i = 0; i < block.size(); i++) {
+      for (size_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
         auto box_time = box.GetTimer().m_End;
         if ((box.GetTimer().m_FunctionAddress == function_address) &&
