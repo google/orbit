@@ -74,6 +74,7 @@ target_sources(
           OrbitThread.cpp
           Params.cpp
           Path.cpp
+          Pdb.cpp
           Profiling.cpp
           SamplingProfiler.cpp
           ScopeTimer.cpp
@@ -85,8 +86,7 @@ target_sources(
 if(WIN32)
   target_sources(
     OrbitCore
-    PRIVATE Pdb.cpp
-            SymbolUtils.cpp)
+    PRIVATE SymbolUtils.cpp)
 else()
   target_sources(
     OrbitCore

@@ -773,9 +773,6 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::IsLoading() { return GPdbDbg->IsLoading(); }
-
-//-----------------------------------------------------------------------------
 
 void OrbitApp::OnProcessSelected(int32_t pid) {
   thread_pool_->Schedule([pid, this] {
