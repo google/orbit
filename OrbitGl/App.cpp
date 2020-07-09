@@ -320,7 +320,7 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
     if (!result.has_value()) {
       SendErrorToUi("Error reading memory",
                     absl::StrFormat("Could not read process memory: %s.",
-                                    result.error().message));
+                                    result.error().message()));
       return;
     }
 
@@ -740,7 +740,7 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id,
               "Did not find symbols on local machine for module \"%s\".\n"
               "Trying to load symbols from remote resulted in error "
               "message: %s",
-              module->m_Name, remote_symbols_result.error()));
+              module->m_Name, remote_symbols_result.error().message()));
       return;
     }
 
@@ -818,51 +818,51 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
 
 void OrbitApp::OnProcessSelected(int32_t pid) {
   thread_pool_->Schedule([pid, this] {
-    outcome::result<std::vector<ModuleInfo>, std::string> result =
+    Result<std::vector<ModuleInfo>, ErrorMessage> result =
         process_manager_->LoadModuleList(pid);
 
-    if (result) {
-      main_thread_executor_->Schedule([pid, result, this] {
-        // Make sure that pid is actually what user has selected at
-        // the moment we arrive here. If not - ignore the result.
-        const std::vector<ModuleInfo>& module_infos = result.value();
-        data_manager_->UpdateModuleInfos(pid, module_infos);
-        if (pid != m_ProcessesDataView->GetSelectedProcessId()) {
-          return;
-        }
-
-        m_ModulesDataView->SetModules(pid, data_manager_->GetModules(pid));
-
-        // TODO: remove this part when all client code is moved to
-        // new data model.
-        std::shared_ptr<Process> process = FindProcessByPid(pid);
-        Capture::SetTargetProcess(process);
-
-        for (const ModuleInfo& info : module_infos) {
-          std::shared_ptr<Module> module = std::make_shared<Module>();
-          module->m_Name = info.name();
-          module->m_FullName = info.file_path();
-          module->m_PdbSize = info.file_size();
-          module->m_AddressStart = info.address_start();
-          module->m_AddressEnd = info.address_end();
-          module->m_DebugSignature = info.build_id();
-          module->SetLoadable(true);
-          process->AddModule(module);
-        }
-
-        std::shared_ptr<Preset> preset = Capture::GSessionPresets;
-        if (preset) {
-          LoadModulesFromPreset(process, preset);
-          Capture::GSessionPresets = nullptr;
-        }
-        // To this point ----------------------------------
-
-        FireRefreshCallbacks();
-      });
-    } else {
-      ERROR("Error retrieving modules: %s", result.error());
-      SendErrorToUi("Error retrieving modules", result.error());
+    if (!result) {
+      ERROR("Error retrieving modules: %s", result.error().message());
+      SendErrorToUi("Error retrieving modules", result.error().message());
+      return;
     }
+    main_thread_executor_->Schedule([pid, result, this] {
+      // Make sure that pid is actually what user has selected at
+      // the moment we arrive here. If not - ignore the result.
+      const std::vector<ModuleInfo>& module_infos = result.value();
+      data_manager_->UpdateModuleInfos(pid, module_infos);
+      if (pid != m_ProcessesDataView->GetSelectedProcessId()) {
+        return;
+      }
+
+      m_ModulesDataView->SetModules(pid, data_manager_->GetModules(pid));
+
+      // TODO: remove this part when all client code is moved to
+      // new data model.
+      std::shared_ptr<Process> process = FindProcessByPid(pid);
+      Capture::SetTargetProcess(process);
+
+      for (const ModuleInfo& info : module_infos) {
+        std::shared_ptr<Module> module = std::make_shared<Module>();
+        module->m_Name = info.name();
+        module->m_FullName = info.file_path();
+        module->m_PdbSize = info.file_size();
+        module->m_AddressStart = info.address_start();
+        module->m_AddressEnd = info.address_end();
+        module->m_DebugSignature = info.build_id();
+        module->SetLoadable(true);
+        process->AddModule(module);
+      }
+
+      std::shared_ptr<Preset> preset = Capture::GSessionPresets;
+      if (preset) {
+        LoadModulesFromPreset(process, preset);
+        Capture::GSessionPresets = nullptr;
+      }
+      // To this point ----------------------------------
+
+      FireRefreshCallbacks();
+    });
   });
 }
 

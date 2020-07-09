@@ -9,10 +9,10 @@
 #include <string>
 #include <thread>
 
+#include "OrbitBase/Result.h"
 #include "absl/synchronization/mutex.h"
 #include "grpcpp/grpcpp.h"
 #include "module.pb.h"
-#include "outcome.hpp"
 #include "process.pb.h"
 #include "symbol.pb.h"
 
@@ -35,27 +35,23 @@
 //
 class ProcessManager {
  public:
-  struct Error {
-    std::string message;
-  };
-
   ProcessManager() = default;
   virtual ~ProcessManager() = default;
 
   virtual void SetProcessListUpdateListener(
       const std::function<void(ProcessManager*)>& listener) = 0;
 
-  virtual outcome::result<std::vector<ModuleInfo>, std::string> LoadModuleList(
+  virtual Result<std::vector<ModuleInfo>, ErrorMessage> LoadModuleList(
       int32_t pid) = 0;
 
   // Get a copy of process list.
   virtual std::vector<ProcessInfo> GetProcessList() const = 0;
 
-  virtual outcome::result<std::string, Error, outcome::policy::terminate>
-  LoadProcessMemory(int32_t pid, uint64_t address, uint64_t size) = 0;
+  virtual Result<std::string, ErrorMessage> LoadProcessMemory(
+      int32_t pid, uint64_t address, uint64_t size) = 0;
 
   // Get symbols for a module
-  virtual outcome::result<ModuleSymbols, std::string> LoadSymbols(
+  virtual Result<ModuleSymbols, ErrorMessage> LoadSymbols(
       const std::string& module_path) const = 0;
 
   // Note that this method waits for the worker thread to stop, which could
