@@ -96,10 +96,13 @@ class TracerThread {
   // before switching to another one.
   static constexpr int32_t ROUND_ROBIN_POLLING_BATCH_SIZE = 5;
 
-  static constexpr uint64_t CONTEXT_SWITCHES_RING_BUFFER_SIZE_KB = 256;
-  static constexpr uint64_t UPROBES_RING_BUFFER_SIZE_KB = 2 * 1024;
+  // These values are supposed to be large enough to accommodate enough events
+  // in case TracerThread::Run's thread is not scheduled for a few tens of
+  // milliseconds.
+  static constexpr uint64_t CONTEXT_SWITCHES_RING_BUFFER_SIZE_KB = 2 * 1024;
+  static constexpr uint64_t UPROBES_RING_BUFFER_SIZE_KB = 8 * 1024;
   static constexpr uint64_t MMAP_TASK_RING_BUFFER_SIZE_KB = 64;
-  static constexpr uint64_t SAMPLING_RING_BUFFER_SIZE_KB = 8 * 1024;
+  static constexpr uint64_t SAMPLING_RING_BUFFER_SIZE_KB = 16 * 1024;
   static constexpr uint64_t GPU_TRACING_RING_BUFFER_SIZE_KB = 256;
 
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_RING_BUFFERS_US = 100;
