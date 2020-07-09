@@ -47,9 +47,6 @@ OrbitTreeView::OrbitTreeView(QWidget* parent)
   connect(header(), SIGNAL(sectionResized(int, int, int)), this,
           SLOT(columnResized(int, int, int)));
 
-  connect(this, SIGNAL(clicked(const QModelIndex)), this,
-          SLOT(OnClicked(const QModelIndex)));
-
   connect(verticalScrollBar(), SIGNAL(rangeChanged(int, int)), this,
           SLOT(OnRangeChanged(int, int)));
 }
@@ -256,9 +253,9 @@ void OrbitTreeView::selectionChanged(const QItemSelection& selected,
   if (is_internal_refresh_) return;
 
   // Row selection callback.
-  QModelIndexList rows = selectionModel()->selectedRows();
-  if (rows.size() == 1) {
-    OnRowSelected(rows[0].row());
+  QModelIndex index = selectionModel()->currentIndex();
+  if (index.isValid()) {
+    OnRowSelected(selectionModel()->currentIndex().row());
   }
 }
 
