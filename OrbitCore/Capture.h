@@ -39,10 +39,6 @@ class Capture {
   static outcome::result<void, std::string> SavePreset(
       const std::string& filename);
   static void NewSamplingProfiler();
-  // True when Orbit is receiving data from remote source
-  static bool IsRemote();
-  // True if receiving data from Linux remote source
-  static bool IsLinuxData();
   static void RegisterZoneName(uint64_t a_ID, const char* a_Name);
   static void AddCallstack(CallStack& a_CallStack);
   static std::shared_ptr<CallStack> GetCallstack(CallstackID a_ID);
@@ -81,10 +77,6 @@ class Capture {
   static std::unordered_map<uint64_t, std::string> GZoneNames;
   static class TextBox* GSelectedTextBox;
   static ThreadID GSelectedThreadId;
-  static Timer GCaptureTimer;
   static std::chrono::system_clock::time_point GCaptureTimePoint;
   static Mutex GCallstackMutex;
-
- private:
-  static bool GUnrealSupported;
 };

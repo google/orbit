@@ -105,7 +105,6 @@ class Function {
   ORBIT_SERIALIZABLE;
 
  private:
-  bool Hookable();
   static const absl::flat_hash_map<const char*, OrbitType>&
   GetFunctionNameToOrbitTypeMap();
   std::string name_;
