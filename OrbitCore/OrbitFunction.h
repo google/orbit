@@ -21,6 +21,7 @@ class Pdb;
 
 class Function {
  public:
+  // TODO enum class instead of enum
   enum OrbitType {
     NONE,
     ORBIT_TIMER_START,
@@ -85,7 +86,6 @@ class Function {
     return address_ + module_base_address_ - load_bias_;
   }
 
-  OrbitType GetOrbitType() const { return type_; }
   void SetOrbitType(OrbitType type) { type_ = type; }
   bool SetOrbitTypeFromName();
   bool IsOrbitFunc() const { return type_ != OrbitType::NONE; }
@@ -108,8 +108,6 @@ class Function {
   bool Hookable();
   static const absl::flat_hash_map<const char*, OrbitType>&
   GetFunctionNameToOrbitTypeMap();
-
- private:
   std::string name_;
   std::string pretty_name_;
   std::string loaded_module_path_;

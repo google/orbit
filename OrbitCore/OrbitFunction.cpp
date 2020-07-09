@@ -5,6 +5,8 @@
 #include "OrbitFunction.h"
 
 #include <OrbitBase/Logging.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/strings/match.h>
 
 #include <map>
 
@@ -35,6 +37,7 @@ Function::Function(std::string_view name, std::string_view pretty_name,
       file_(file),
       line_(line) {
   ResetStats();
+  SetOrbitTypeFromName();
 }
 
 bool Function::Hookable() {
