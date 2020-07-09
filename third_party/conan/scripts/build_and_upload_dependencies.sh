@@ -20,7 +20,15 @@ if [ "$1" ]; then
     conan_profile_exists "$profile" || exit 128
     echo "Checking profile $profile..."
 
-    PACKAGES=$(conan info -pr $profile $REPO_ROOT -j 2>/dev/null \
+    if [ $(uname -s) == "Linux" ]; then
+      platform="linux"
+    else
+      platform="windows"
+    fi
+
+    LOCKFILE="$REPO_ROOT/third_party/conan/lockfiles/$platform/$profile/conan.lock"
+
+    PACKAGES=$(conan info -pr $profile -l $LOCKFILE $REPO_ROOT -j 2>/dev/null \
                | grep build_id \
                | jq '.[] | select(.is_ref) | select(.binary != "Download" and .binary != "Cache" and .binary != "Skip") | .reference + ":" + .id' \
                | grep -v 'llvm/' \
@@ -34,6 +42,8 @@ if [ "$1" ]; then
       echo -e "The following binary packages need to be uploaded:\n$PACKAGES"
 
       $REPO_ROOT/build.sh $profile || exit $?
+      conan install -pr $profile -if build_$profile/ --build outdated -l $LOCKFILE $REPO_ROOT || exit $?
+      conan build -bf build_$profile/ $REPO_ROOT || exit $?
 
       echo "$PACKAGES" | while read package; do
         conan upload -r artifactory -c $package
