@@ -99,8 +99,6 @@ class Function {
 
   void Print();
 
-  void FindFile();
-
   ORBIT_SERIALIZABLE;
 
  private:

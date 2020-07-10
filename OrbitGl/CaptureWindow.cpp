@@ -4,26 +4,11 @@
 
 #include "CaptureWindow.h"
 
-#include "../OrbitPlugin/OrbitSDK.h"
 #include "App.h"
 #include "Capture.h"
 #include "EventTracer.h"
 #include "GlUtils.h"
-#include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
-
-#ifdef _WIN32
-#include "SymbolUtils.h"
-#else
-#include <array>
-#include <cstdio>
-#include <iostream>
-#include <memory>
-#include <stdexcept>
-#include <string>
-
-#include "LinuxUtils.h"
-#endif
 
 //-----------------------------------------------------------------------------
 CaptureWindow::CaptureWindow() {
