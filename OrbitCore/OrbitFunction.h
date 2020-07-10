@@ -15,7 +15,6 @@
 #include "SerializationMacros.h"
 #include "Utils.h"
 #include "absl/container/flat_hash_map.h"
-#include "cvconst.h"
 
 class Pdb;
 
