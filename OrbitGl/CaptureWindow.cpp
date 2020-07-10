@@ -949,10 +949,11 @@ void CaptureWindow::RenderToolbars() {
 
   ImGui::SameLine();
   ImGui::PushItemWidth(300.f);
-  ImGui::InputText("##Track Filter", track_filter_,
-                   IM_ARRAYSIZE(track_filter_));
+  if (ImGui::InputText("##Track Filter", track_filter_,
+                       IM_ARRAYSIZE(track_filter_))) {
+    GCurrentTimeGraph->SetThreadFilter(track_filter_);
+  }
   ImGui::PopItemWidth();
-  GCurrentTimeGraph->SetThreadFilter(track_filter_);
 
   current_x += ImGui::GetWindowWidth() + space_between_toolbars;
   ImGui::End();
