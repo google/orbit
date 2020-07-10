@@ -139,8 +139,9 @@ class SamplingProfiler {
   void SortByThreadUsage();
   void ProcessSamples();
   void UpdateAddressInfo(uint64_t address);
-  [[nodiscard]] ThreadSampleData GetSummary() { return m_ThreadSampleData[0]; }
-  [[nodiscard]] unsigned int GetCountOfFunction(uint64_t function_address);
+  [[nodiscard]] std::shared_ptr<ThreadSampleData> GetSummary() const;
+  [[nodiscard]] unsigned int GetCountOfFunction(
+      uint64_t function_address) const;
 
   ORBIT_SERIALIZABLE;
 
@@ -170,7 +171,7 @@ class SamplingProfiler {
       m_OriginalCallstackToResolvedCallstack;
   std::unordered_map<uint64_t, std::set<CallstackID>> m_FunctionToCallstacks;
   std::unordered_map<uint64_t, uint64_t> m_ExactAddressToFunctionAddress;
-  std::unordered_map<uint64_t, std::set<uint64_t>>
+  std::unordered_map<uint64_t, std::unordered_set<uint64_t>>
       m_FunctionAddressToExactAddresses;
   std::vector<ThreadSampleData*> m_SortedThreadSampleData;
 };

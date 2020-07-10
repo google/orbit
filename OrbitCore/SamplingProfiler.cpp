@@ -298,20 +298,31 @@ void SamplingProfiler::ResolveCallstacks() {
 }
 
 //-----------------------------------------------------------------------------
-unsigned int SamplingProfiler::GetCountOfFunction(uint64_t function_address) {
+std::shared_ptr<ThreadSampleData> SamplingProfiler::GetSummary() const {
+  auto summary_it = m_ThreadSampleData.find(0);
+  if (summary_it == m_ThreadSampleData.end()) {
+    return nullptr;
+  }
+  return std::make_shared<ThreadSampleData>((*summary_it).second);
+}
+
+//-----------------------------------------------------------------------------
+unsigned int SamplingProfiler::GetCountOfFunction(
+    uint64_t function_address) const {
   auto addresses_of_functions_itr =
       m_FunctionAddressToExactAddresses.find(function_address);
   if (addresses_of_functions_itr == m_FunctionAddressToExactAddresses.end()) {
     return 0;
   }
   unsigned int result = 0;
-  // We assert that a summary for all threads was created!
-  CHECK(GetGenerateSummary());
-  const ThreadSampleData& summary = GetSummary();
-  auto function_addresses = (*addresses_of_functions_itr).second;
+  const std::shared_ptr<ThreadSampleData> summary = GetSummary();
+  if (summary == nullptr) {
+    return 0;
+  }
+  const auto& function_addresses = (*addresses_of_functions_itr).second;
   for (uint64_t address : function_addresses) {
-    auto count_itr = summary.m_RawAddressCount.find(address);
-    if (count_itr != summary.m_RawAddressCount.end()) {
+    auto count_itr = summary->m_RawAddressCount.find(address);
+    if (count_itr != summary->m_RawAddressCount.end()) {
       result += (*count_itr).second;
     }
   }
