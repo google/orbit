@@ -48,10 +48,12 @@ struct LineInfo {
 struct ThreadSampleData {
   ThreadSampleData() { m_ThreadUsage.push_back(0); }
   void ComputeAverageThreadUsage();
+  [[nodiscard]] unsigned int CountOfAddress(uint64_t address) const;
   std::multimap<int, CallstackID> SortCallstacks(
       const std::set<CallstackID>& a_CallStacks, int* o_TotalCallStacks);
   std::unordered_map<CallstackID, unsigned int> m_CallstackCount;
   std::unordered_map<uint64_t, unsigned int> m_AddressCount;
+  std::unordered_map<uint64_t, unsigned int> m_RawAddressCount;
   std::unordered_map<uint64_t, unsigned int> m_ExclusiveCount;
   std::multimap<unsigned int, uint64_t> m_AddressCountSorted;
   unsigned int m_NumSamples = 0;
@@ -136,6 +138,9 @@ class SamplingProfiler {
   void SortByThreadUsage();
   void ProcessSamples();
   void UpdateAddressInfo(uint64_t address);
+  [[nodiscard]] const ThreadSampleData* GetSummary() const;
+  [[nodiscard]] unsigned int GetCountOfFunction(
+      uint64_t function_address) const;
 
   ORBIT_SERIALIZABLE;
 
@@ -165,6 +170,8 @@ class SamplingProfiler {
       m_OriginalCallstackToResolvedCallstack;
   std::unordered_map<uint64_t, std::set<CallstackID>> m_FunctionToCallstacks;
   std::unordered_map<uint64_t, uint64_t> m_ExactAddressToFunctionAddress;
+  std::unordered_map<uint64_t, std::unordered_set<uint64_t>>
+      m_FunctionAddressToExactAddresses;
   std::vector<ThreadSampleData*> m_SortedThreadSampleData;
 };
 

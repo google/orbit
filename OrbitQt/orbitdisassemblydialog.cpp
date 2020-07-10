@@ -21,3 +21,9 @@ void OrbitDisassemblyDialog::SetText(const std::string& a_Text) {
   ui->plainTextEdit->moveCursor(QTextCursor::Start);
   ui->plainTextEdit->ensureCursorVisible();
 }
+
+//-----------------------------------------------------------------------------
+void OrbitDisassemblyDialog::SetLineToHitRatio(
+    const std::function<double(size_t)>& line_to_hit_ratio) {
+  ui->plainTextEdit->SetLineToHits(line_to_hit_ratio);
+}

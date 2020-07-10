@@ -135,6 +135,7 @@ void SamplingProfiler::ProcessSamples() {
   m_OriginalCallstackToResolvedCallstack.clear();
   m_FunctionToCallstacks.clear();
   m_ExactAddressToFunctionAddress.clear();
+  m_FunctionAddressToExactAddresses.clear();
   m_SortedThreadSampleData.clear();
 
   // Unique call stacks and per thread data
@@ -147,11 +148,17 @@ void SamplingProfiler::ProcessSamples() {
     ThreadSampleData& threadSampleData = m_ThreadSampleData[callstack.m_TID];
     threadSampleData.m_NumSamples++;
     threadSampleData.m_CallstackCount[callstack.m_Id]++;
+    for (uint64_t address : m_UniqueCallstacks[callstack.m_Id]->m_Data) {
+      threadSampleData.m_RawAddressCount[address]++;
+    }
 
     if (m_GenerateSummary) {
       ThreadSampleData& threadSampleDataAll = m_ThreadSampleData[0];
       threadSampleDataAll.m_NumSamples++;
       threadSampleDataAll.m_CallstackCount[callstack.m_Id]++;
+      for (uint64_t address : m_UniqueCallstacks[callstack.m_Id]->m_Data) {
+        threadSampleDataAll.m_RawAddressCount[address]++;
+      }
     }
   }
 
@@ -220,6 +227,12 @@ void ThreadSampleData::ComputeAverageThreadUsage() {
   }
 }
 
+unsigned int ThreadSampleData::CountOfAddress(uint64_t address) const {
+  auto res = m_RawAddressCount.find(address);
+  if (res == m_RawAddressCount.end()) return 0;
+  return (*res).second;
+}
+
 //-----------------------------------------------------------------------------
 std::multimap<int, CallstackID> ThreadSampleData::SortCallstacks(
     const std::set<CallstackID>& a_CallStacks, int* o_TotalCallStacks) {
@@ -277,6 +290,38 @@ void SamplingProfiler::ResolveCallstacks() {
 }
 
 //-----------------------------------------------------------------------------
+const ThreadSampleData* SamplingProfiler::GetSummary() const {
+  auto summary_it = m_ThreadSampleData.find(0);
+  if (summary_it == m_ThreadSampleData.end()) {
+    return nullptr;
+  }
+  return &((*summary_it).second);
+}
+
+//-----------------------------------------------------------------------------
+unsigned int SamplingProfiler::GetCountOfFunction(
+    uint64_t function_address) const {
+  auto addresses_of_functions_itr =
+      m_FunctionAddressToExactAddresses.find(function_address);
+  if (addresses_of_functions_itr == m_FunctionAddressToExactAddresses.end()) {
+    return 0;
+  }
+  unsigned int result = 0;
+  const ThreadSampleData* summary = GetSummary();
+  if (summary == nullptr) {
+    return 0;
+  }
+  const auto& function_addresses = (*addresses_of_functions_itr).second;
+  for (uint64_t address : function_addresses) {
+    auto count_itr = summary->m_RawAddressCount.find(address);
+    if (count_itr != summary->m_RawAddressCount.end()) {
+      result += (*count_itr).second;
+    }
+  }
+  return result;
+}
+
+//-----------------------------------------------------------------------------
 void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   ScopeLock lock(m_Mutex);
 
@@ -310,6 +355,7 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   }
 
   m_ExactAddressToFunctionAddress[address] = function_address;
+  m_FunctionAddressToExactAddresses[function_address].insert(address);
 
   Capture::GAddressToFunctionName[address] = function_name;
   Capture::GAddressToFunctionName[function_address] = function_name;
@@ -364,7 +410,7 @@ ORBIT_SERIALIZE_WSTRING(SampledFunction, 0) {
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 3) {
+ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 4) {
   ORBIT_NVP_VAL(0, m_NumSamples);
   ORBIT_NVP_DEBUG(0, m_ThreadSampleData);
   ORBIT_NVP_DEBUG(0, m_UniqueCallstacks);
@@ -372,10 +418,11 @@ ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 3) {
   ORBIT_NVP_DEBUG(0, m_OriginalCallstackToResolvedCallstack);
   ORBIT_NVP_DEBUG(0, m_FunctionToCallstacks);
   ORBIT_NVP_DEBUG(0, m_ExactAddressToFunctionAddress);
+  ORBIT_NVP_VAL(4, m_FunctionAddressToExactAddresses);
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(ThreadSampleData, 0) {
+ORBIT_SERIALIZE_WSTRING(ThreadSampleData, 1) {
   ORBIT_NVP_VAL(0, m_CallstackCount);
   ORBIT_NVP_VAL(0, m_AddressCount);
   ORBIT_NVP_VAL(0, m_ExclusiveCount);
@@ -385,4 +432,5 @@ ORBIT_SERIALIZE_WSTRING(ThreadSampleData, 0) {
   ORBIT_NVP_VAL(0, m_ThreadUsage);
   ORBIT_NVP_VAL(0, m_AverageThreadUsage);
   ORBIT_NVP_VAL(0, m_TID);
+  ORBIT_NVP_VAL(1, m_RawAddressCount);
 }

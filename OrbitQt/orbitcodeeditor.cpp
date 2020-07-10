@@ -75,6 +75,7 @@ QWidget* OrbitCodeEditor::GFileMapWidget;
 
 OrbitCodeEditor::OrbitCodeEditor(QWidget* parent) : QPlainTextEdit(parent) {
   lineNumberArea = new LineNumberArea(this);
+  heatMapArea = new HeatMapArea(this);
 
   const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
   setFont(fixedFont);
@@ -90,6 +91,8 @@ OrbitCodeEditor::OrbitCodeEditor(QWidget* parent) : QPlainTextEdit(parent) {
           SLOT(updateLineNumberAreaWidth(int)));
   connect(this, SIGNAL(updateRequest(QRect, int)), this,
           SLOT(updateLineNumberArea(QRect, int)));
+  connect(this, SIGNAL(updateRequest(QRect, int)), this,
+          SLOT(UpdateHeatMapArea(QRect, int)));
   connect(this, SIGNAL(cursorPositionChanged()), this,
           SLOT(highlightCurrentLine()));
 
@@ -168,6 +171,12 @@ int OrbitCodeEditor::lineNumberAreaWidth() {
   }
 
   int space = 3 + fontMetrics().width(QLatin1Char('9')) * digits;
+
+  return space;
+}
+
+int OrbitCodeEditor::HeatMapAreaWidth() {
+  int space = 4 + fontMetrics().width(QLatin1Char('9'));
 
   return space;
 }
@@ -252,17 +261,27 @@ void OrbitCodeEditor::SetText(const std::string& a_Text) {
 
 //-----------------------------------------------------------------------------
 void OrbitCodeEditor::updateLineNumberAreaWidth(int /* newBlockCount */) {
-  setViewportMargins(lineNumberAreaWidth(), 0, 0, 0);
+  setViewportMargins(lineNumberAreaWidth() + HeatMapAreaWidth(), 0, 0, 0);
 }
 
 //-----------------------------------------------------------------------------
 void OrbitCodeEditor::updateLineNumberArea(const QRect& rect, int dy) {
-  if (dy)
+  if (dy) {
     lineNumberArea->scroll(0, dy);
-  else
+  } else {
     lineNumberArea->update(0, rect.y(), lineNumberArea->width(), rect.height());
+  }
 
   if (rect.contains(viewport()->rect())) updateLineNumberAreaWidth(0);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitCodeEditor::UpdateHeatMapArea(const QRect& rect, int dy) {
+  if (dy) {
+    heatMapArea->scroll(0, dy);
+  } else {
+    heatMapArea->update(0, rect.y(), heatMapArea->width(), rect.height());
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -270,8 +289,10 @@ void OrbitCodeEditor::resizeEvent(QResizeEvent* e) {
   QPlainTextEdit::resizeEvent(e);
 
   QRect cr = contentsRect();
-  lineNumberArea->setGeometry(
-      QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
+  lineNumberArea->setGeometry(QRect(cr.left() + HeatMapAreaWidth(), cr.top(),
+                                    lineNumberAreaWidth(), cr.height()));
+  heatMapArea->setGeometry(
+      QRect(cr.left(), cr.top(), HeatMapAreaWidth(), cr.height()));
 }
 
 //-----------------------------------------------------------------------------
@@ -429,6 +450,43 @@ void OrbitCodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event) {
       painter.setPen(QColor(43, 145, 175));
       painter.drawText(0, top, lineNumberArea->width(), fontMetrics().height(),
                        Qt::AlignRight, number);
+    }
+
+    block = block.next();
+    top = bottom;
+    bottom = top + static_cast<int>(blockBoundingRect(block).height());
+    ++blockNumber;
+  }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitCodeEditor::HeatMapAreaPaintEvent(QPaintEvent* event) {
+  QPainter painter(heatMapArea);
+  painter.fillRect(event->rect(), QColor(30, 30, 30));
+
+  //![extraAreaPaintEvent_0]
+
+  //![extraAreaPaintEvent_1]
+  QTextBlock block = firstVisibleBlock();
+  int blockNumber = block.blockNumber();
+  int top = static_cast<int>(
+      blockBoundingGeometry(block).translated(contentOffset()).top());
+  int bottom = top + static_cast<int>(blockBoundingRect(block).height());
+  //![extraAreaPaintEvent_1]
+
+  //![extraAreaPaintEvent_2]
+  while (block.isValid() && top <= event->rect().bottom()) {
+    if (block.isVisible() && bottom >= event->rect().top()) {
+      // % of hits in this function from 0.0 to 1.0
+      const double hit_ratio = line_to_hit_ratio_(blockNumber);
+      // The sqrt maps 0.0 to 0.0 and 1.0 to 1.0 but makes small rations larger,
+      // such that in the ui you can still see that the instruction was actually
+      // hit in the sampling.
+      double sqrt_hits = std::sqrt(hit_ratio);
+      // Ceil again, so we display all instructions that are hit at least once.
+      const int alpha = static_cast<int>(std::ceil(sqrt_hits * 255));
+      painter.fillRect(0, top, heatMapArea->width(), fontMetrics().height(),
+                       QColor(255, 0, 0, alpha));
     }
 
     block = block.next();

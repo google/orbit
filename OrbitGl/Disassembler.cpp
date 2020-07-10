@@ -38,8 +38,10 @@ void Disassembler::Disassemble(const uint8_t* machine_code, size_t size,
   cs_mode mode = is_64bit ? CS_MODE_64 : CS_MODE_32;
 
   LOG("\n");
+  line_to_address_.push_back(0);
   LOGF("Platform: %s\n",
        is_64bit ? "X86 64 (Intel syntax)" : "X86 32 (Intel syntax)");
+  line_to_address_.push_back(0);
   err = cs_open(arch, mode, &handle);
   if (err) {
     LOGF("Failed on cs_open() with error returned: %u\n", err);
@@ -54,6 +56,7 @@ void Disassembler::Disassemble(const uint8_t* machine_code, size_t size,
     for (j = 0; j < count; j++) {
       LOGF("0x%" PRIx64 ":\t%-12s %s\n", insn[j].address, insn[j].mnemonic,
            insn[j].op_str);
+      line_to_address_.push_back(insn[j].address);
     }
 
     // print out the next offset, after the last insn
@@ -69,4 +72,10 @@ void Disassembler::Disassemble(const uint8_t* machine_code, size_t size,
   LOG("\n");
 
   cs_close(&handle);
+}
+
+//-----------------------------------------------------------------------------
+uint64_t Disassembler::GetAddressAtLine(size_t line) const {
+  if (line >= line_to_address_.size()) return 0;
+  return line_to_address_[line];
 }

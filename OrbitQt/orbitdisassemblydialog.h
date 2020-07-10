@@ -20,6 +20,8 @@ class OrbitDisassemblyDialog : public QDialog {
   ~OrbitDisassemblyDialog() override;
 
   void SetText(const std::string& a_Text);
+  void SetLineToHitRatio(
+      const std::function<double(size_t)>& line_to_hit_ratio);
 
  private:
   Ui::OrbitDisassemblyDialog* ui;

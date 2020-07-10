@@ -78,12 +78,17 @@ class OrbitCodeEditor : public QPlainTextEdit {
 
   void lineNumberAreaPaintEvent(QPaintEvent* event);
   int lineNumberAreaWidth();
+  void HeatMapAreaPaintEvent(QPaintEvent* event);
+  int HeatMapAreaWidth();
   bool loadCode(std::string a_Msg);
   void loadFileMap();
   void saveFileMap();
   void gotoLine(int a_Line);
   void OnTimer();
   void SetText(const std::string& a_Text);
+  void SetLineToHits(const std::function<double(size_t)>& line_to_hit_ratio) {
+    line_to_hit_ratio_ = line_to_hit_ratio;
+  }
   void HighlightWord(const std::string& a_Text, const QColor& a_Color,
                      QList<QTextEdit::ExtraSelection>& extraSelections);
 
@@ -108,16 +113,19 @@ class OrbitCodeEditor : public QPlainTextEdit {
   void updateLineNumberAreaWidth(int newBlockCount);
   void highlightCurrentLine();
   void updateLineNumberArea(const QRect&, int);
+  void UpdateHeatMapArea(const QRect&, int);
   void OnFindTextEntered(const QString&);
   void OnSaveMapFile();
 
  private:
+  QWidget* heatMapArea;
   QWidget* lineNumberArea;
   class Highlighter* highlighter;
   class QLineEdit* m_FindLineEdit;
   class QPushButton* m_SaveButton;
   EditorType m_Type;
   bool m_IsOutput;
+  std::function<double(size_t)> line_to_hit_ratio_ = [](size_t) { return 0.0; };
 
   static OrbitCodeEditor* GFileMapEditor;
   static QWidget* GFileMapWidget;
@@ -136,13 +144,32 @@ class LineNumberArea : public QWidget {
     codeEditor = editor;
   }
 
-  QSize sizeHint() const Q_DECL_OVERRIDE {
+  [[nodiscard]] QSize sizeHint() const Q_DECL_OVERRIDE {
     return QSize(codeEditor->lineNumberAreaWidth(), 0);
   }
 
  protected:
   void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE {
     codeEditor->lineNumberAreaPaintEvent(event);
+  }
+
+ private:
+  OrbitCodeEditor* codeEditor;
+};
+
+class HeatMapArea : public QWidget {
+ public:
+  explicit HeatMapArea(OrbitCodeEditor* editor) : QWidget(editor) {
+    codeEditor = editor;
+  }
+
+  [[nodiscard]] QSize sizeHint() const Q_DECL_OVERRIDE {
+    return QSize(codeEditor->lineNumberAreaWidth(), 0);
+  }
+
+ protected:
+  void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE {
+    codeEditor->HeatMapAreaPaintEvent(event);
   }
 
  private:
