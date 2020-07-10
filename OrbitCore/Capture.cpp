@@ -28,7 +28,6 @@ Capture::State Capture::GState = Capture::State::kEmpty;
 bool Capture::GInjected = false;
 std::string Capture::GInjectedProcess;
 bool Capture::GIsSampling = false;
-bool Capture::GIsTesting = false;
 uint32_t Capture::GFunctionIndex = -1;
 uint32_t Capture::GNumInstalledHooks;
 bool Capture::GHasContextSwitches;
@@ -169,17 +168,6 @@ std::vector<std::shared_ptr<Function>> Capture::GetSelectedFunctions() {
     }
   }
   return selected_functions;
-}
-
-//-----------------------------------------------------------------------------
-void Capture::TestHooks() {
-  if (!GIsTesting) {
-    GIsTesting = true;
-    GFunctionIndex = 0;
-    GTestTimer.Start();
-  } else {
-    GIsTesting = false;
-  }
 }
 
 //-----------------------------------------------------------------------------
