@@ -161,7 +161,7 @@ void OrbitStartupWindow::ReloadInstances() {
               this, QApplication::applicationDisplayName(),
               QString(
                   "Orbit was unable to retrieve the list of available Stadia "
-                  "Instances. The error message was: %1")
+                  "instances. The error message was: %1")
                   .arg(QString::fromStdString(instances.error().message())));
         } else {
           model_->SetInstances(std::move(instances.value()));

@@ -31,12 +31,14 @@ void RunProcessWithTimeout(
 
   QObject::connect(timeout_timer, &QTimer::timeout, parent,
                    [process, timeout_timer, callback]() {
-                     ERROR("Process request timed out after %dms",
-                           kDefaultTimeoutInMs);
-                     callback(Error::kRequestTimedOut);
-                     process->terminate();
-                     process->waitForFinished();
-                     if (process != nullptr) process->deleteLater();
+                     if (!process->waitForFinished(10)) {
+                       ERROR("Process request timed out after %dms",
+                             kDefaultTimeoutInMs);
+                       callback(Error::kRequestTimedOut);
+                       process->terminate();
+                       process->waitForFinished();
+                       process->deleteLater();
+                     }
 
                      timeout_timer->deleteLater();
                    });
