@@ -14,7 +14,6 @@ class LzmasdkConan(ConanFile):
     exports_sources = "CMakeLists.txt"
     options = {"fPIC" : [True, False]}
     default_options = {"fPIC": True}
-    build_requires = "cmake/[>3.15]"
 
     def config_options(self):
         if self.settings.os == "Windows":
