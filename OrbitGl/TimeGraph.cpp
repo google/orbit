@@ -81,7 +81,6 @@ void TimeGraph::Clear() {
   m_SessionMaxCounter = 0;
   m_ThreadCountMap.clear();
   GEventTracer.GetEventBuffer().Reset();
-  m_MemTracker.Clear();
 
   ScopeLock lock(m_Mutex);
   tracks_.clear();
@@ -244,12 +243,6 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
   }
 
   switch (a_Timer.m_Type) {
-    case Timer::ALLOC:
-      m_MemTracker.ProcessAlloc(a_Timer);
-      return;
-    case Timer::FREE:
-      m_MemTracker.ProcessFree(a_Timer);
-      return;
     case Timer::CORE_ACTIVITY:
       Capture::GHasContextSwitches = true;
       break;

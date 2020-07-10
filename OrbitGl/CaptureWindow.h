@@ -51,7 +51,6 @@ class CaptureWindow : public GlCanvas {
   void Resize(int a_Width, int a_Height) override;
   void RenderHelpUi();
   void RenderToolbars();
-  void RenderMemTracker();
   void RenderTimeBar();
   void ResetHoverTimer();
   void SelectTextBox(class TextBox* a_TextBox);
@@ -63,7 +62,6 @@ class CaptureWindow : public GlCanvas {
   std::vector<std::string> GetContextMenu() override;
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex) override;
   void UpdateVerticalSlider();
-  void SendProcess();
 
  private:
   void LoadIcons();
@@ -78,7 +76,6 @@ class CaptureWindow : public GlCanvas {
   bool m_CanHover;
   bool m_DrawHelp;
   bool m_DrawFilter;
-  bool m_DrawMemTracker;
   bool m_FirstHelpDraw;
   bool m_DrawStats;
   GlSlider m_Slider;
