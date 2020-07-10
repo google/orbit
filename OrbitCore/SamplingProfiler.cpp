@@ -305,11 +305,12 @@ unsigned int SamplingProfiler::GetCountOfFunction(uint64_t function_address) {
     return 0;
   }
   unsigned int result = 0;
+  // We assert that a summary for all threads was created!
   CHECK(GetGenerateSummary());
   const ThreadSampleData& summary = GetSummary();
   auto function_addresses = (*addresses_of_functions_itr).second;
-  for (uint64_t a : function_addresses) {
-    auto count_itr = summary.m_RawAddressCount.find(a);
+  for (uint64_t address : function_addresses) {
+    auto count_itr = summary.m_RawAddressCount.find(address);
     if (count_itr != summary.m_RawAddressCount.end()) {
       result += (*count_itr).second;
     }

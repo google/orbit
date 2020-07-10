@@ -344,14 +344,13 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
 
     const std::function<const double(size_t)> line_to_hits =
         [profiler, disasm, count_of_function](size_t line) {
-          LOG("Hits of line: %d", line);
           uint64_t address = disasm.GetAddressAtLine(line);
           if (address == 0) {
             return 0.0;
           }
 
           const ThreadSampleData& data = profiler->GetSummary();
-          // OI calls the address sampled might not be the address of the
+          // On calls the address sampled might not be the address of the
           // beginning of the instruction, but instead at the end. Thus, we
           // iterate over all addresses that fall into this instruction.
           uint64_t next_address = disasm.GetAddressAtLine(line + 1);
@@ -366,7 +365,7 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
             count += data.CountOfAddress(address);
             address++;
           }
-          double result = (count * 1.0) / count_of_function;
+          double result = static_cast<double>(count) / count_of_function;
           return result;
         };
     SendDisassemblyToUi(disasm.GetResult(), line_to_hits);

@@ -139,7 +139,7 @@ class SamplingProfiler {
   void SortByThreadUsage();
   void ProcessSamples();
   void UpdateAddressInfo(uint64_t address);
-  ThreadSampleData& GetSummary() { return m_ThreadSampleData[0]; }
+  [[nodiscard]] ThreadSampleData GetSummary() { return m_ThreadSampleData[0]; }
   [[nodiscard]] unsigned int GetCountOfFunction(uint64_t function_address);
 
   ORBIT_SERIALIZABLE;

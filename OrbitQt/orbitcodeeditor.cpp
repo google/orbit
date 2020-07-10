@@ -266,20 +266,22 @@ void OrbitCodeEditor::updateLineNumberAreaWidth(int /* newBlockCount */) {
 
 //-----------------------------------------------------------------------------
 void OrbitCodeEditor::updateLineNumberArea(const QRect& rect, int dy) {
-  if (dy)
+  if (dy) {
     lineNumberArea->scroll(0, dy);
-  else
+  } else {
     lineNumberArea->update(0, rect.y(), lineNumberArea->width(), rect.height());
+  }
 
   if (rect.contains(viewport()->rect())) updateLineNumberAreaWidth(0);
 }
 
 //-----------------------------------------------------------------------------
 void OrbitCodeEditor::UpdateHeatMapArea(const QRect& rect, int dy) {
-  if (dy)
+  if (dy) {
     heatMapArea->scroll(0, dy);
-  else
+  } else {
     heatMapArea->update(0, rect.y(), heatMapArea->width(), rect.height());
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -477,16 +479,12 @@ void OrbitCodeEditor::HeatMapAreaPaintEvent(QPaintEvent* event) {
     if (block.isVisible() && bottom >= event->rect().top()) {
       // % of hits in this function from 0.0 to 1.0
       const double hit_ratio = line_to_hit_ratio_(blockNumber);
-      // Create a log-scale, values smaller or equal to 1% gets mapped to a
-      // value greater then 0. However, the value 1.0 should still be mapped to
-      // 1.0, thus log(101) is used instead of log(100).
-      double log_hits =
-          std::log(std::ceil(hit_ratio * 100) + 1) / std::log(101);
-      if (log_hits < 0) {
-        log_hits = 0;
-      }
+      // The sqrt maps 0.0 to 0.0 and 1.0 to 1.0 but makes small rations larger,
+      // such that in the ui you can still see that the instruction was actually
+      // hit in the sampling.
+      double sqrt_hits = std::sqrt(hit_ratio);
       // Ceil again, so we display all instructions that are hit at least once.
-      const int alpha = static_cast<int>(std::ceil(log_hits * 255));
+      const int alpha = static_cast<int>(std::ceil(sqrt_hits * 255));
       painter.fillRect(0, top, heatMapArea->width(), fontMetrics().height(),
                        QColor(255, 0, 0, alpha));
     }
