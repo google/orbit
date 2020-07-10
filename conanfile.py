@@ -147,7 +147,7 @@ class OrbitConan(ConanFile):
         cmake.configure()
         cmake.build()
         if not tools.cross_building(self.settings, skip_x64_x86=True) and self.settings.get_safe("os.platform") != "GGP":
-            cmake.test()
+            cmake.test(output_on_failure=True)
 
     def imports(self):
         dest = os.getenv("CONAN_IMPORT_PATH", "bin")
