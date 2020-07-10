@@ -704,12 +704,6 @@ void CaptureWindow::DrawStatus() {
                                           Z_VALUE_TEXT_UI, s_Color, -1, true);
     PosY += s_IncY;
   }
-
-  if (Capture::GIsTesting) {
-    m_TextRenderer.AddText2D("TESTING", PosX, PosY, Z_VALUE_TEXT_UI, s_Color,
-                             -1, true);
-    PosY += s_IncY;
-  }
 }
 
 //-----------------------------------------------------------------------------
