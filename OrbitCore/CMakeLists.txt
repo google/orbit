@@ -81,11 +81,7 @@ target_sources(
           Utils.cpp
           VariableTracing.cpp)
 
-if(WIN32)
-  target_sources(
-    OrbitCore
-    PRIVATE SymbolUtils.cpp)
-else()
+if(NOT WIN32)
   target_sources(
     OrbitCore
     PUBLIC LinuxUtils.h)

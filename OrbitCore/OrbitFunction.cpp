@@ -22,10 +22,6 @@
 #include "Serialization.h"
 #include "Utils.h"
 
-#ifdef _WIN32
-#include "SymbolUtils.h"
-#endif
-
 Function::Function(std::string_view name, std::string_view pretty_name,
                    uint64_t address, uint64_t load_bias, uint64_t size,
                    std::string_view file, uint32_t line)
@@ -68,16 +64,6 @@ void Function::UpdateStats(const Timer& timer) {
   if (stats_ != nullptr) {
     stats_->Update(timer);
   }
-}
-
-void Function::FindFile() {
-#ifdef _WIN32
-  LineInfo lineInfo;
-  SymUtils::GetLineInfo(GetVirtualAddress(), lineInfo);
-  if (lineInfo.m_File != "") file_ = lineInfo.m_File;
-  file_ = ToLower(file_);
-  line_ = lineInfo.m_Line;
-#endif
 }
 
 const char* Function::GetCallingConventionString() {

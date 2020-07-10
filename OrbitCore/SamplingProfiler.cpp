@@ -15,10 +15,6 @@
 #include "OrbitModule.h"
 #include "Serialization.h"
 
-#ifdef _WIN32
-#include "SymbolUtils.h"
-#endif
-
 //-----------------------------------------------------------------------------
 SamplingProfiler::SamplingProfiler(const std::shared_ptr<Process>& a_Process) {
   m_Process = a_Process;

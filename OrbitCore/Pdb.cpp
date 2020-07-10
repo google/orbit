@@ -38,11 +38,6 @@ void Pdb::ProcessData() {
     process->AddFunction(func);
   }
 
-  SCOPE_TIMER_LOG("Find File and Line info");
-  for (auto& func : functions_) {
-    func->FindFile();
-  }
-
   PopulateFunctionMap();
   PopulateStringFunctionMap();
 }
