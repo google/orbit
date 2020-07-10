@@ -147,7 +147,7 @@ void TimeGraph::Zoom(const TextBox* a_TextBox) {
   double extent = 1.1 * (end - start) / 2.0;
 
   SetMinMax(mid - extent, mid + extent);
-  NeedsRedraw();
+  NeedsUpdate();
 }
 
 //-----------------------------------------------------------------------------
@@ -421,7 +421,11 @@ void TimeGraph::SelectRight(const TextBox* a_TextBox) {
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::NeedsUpdate() { m_NeedsUpdatePrimitives = true; }
+void TimeGraph::NeedsUpdate() {
+  m_NeedsUpdatePrimitives = true;
+  // If the primitives need to be updated, we also have to redraw.
+  m_NeedsRedraw = true;
+}
 
 //-----------------------------------------------------------------------------
 void TimeGraph::UpdatePrimitives() {
@@ -451,7 +455,7 @@ void TimeGraph::UpdatePrimitives() {
 
   min_y_ = current_y;
   m_NeedsUpdatePrimitives = false;
-  m_NeedsRedraw = true;
+  NeedsRedraw();
 }
 
 //-----------------------------------------------------------------------------
