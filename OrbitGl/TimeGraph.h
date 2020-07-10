@@ -141,9 +141,18 @@ class TimeGraph {
 
   std::map<ThreadID, uint32_t> m_ThreadCountMap;
 
+  // Be careful when directly changing these members without using the
+  // methods NeedsRedraw() or NeedsUpdate():
+  // m_NeedsUpdatePrimitives should always imply m_NeedsRedraw, that is
+  // m_NeedsUpdatePrimitives => m_NeedsRedraw is an invariant of this
+  // class. When updating the primitives, which computes the primitives
+  // to be drawn and their coordinates, we always have to redraw the
+  // timeline.
   bool m_NeedsUpdatePrimitives = false;
-  bool m_DrawText = true;
   bool m_NeedsRedraw = false;
+
+  bool m_DrawText = true;
+
   Batcher m_Batcher;
   PickingManager* m_PickingManager = nullptr;
   Timer m_LastThreadReorder;
