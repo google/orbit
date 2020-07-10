@@ -86,7 +86,7 @@ ErrorMessageOr<ModuleSymbols> FindSymbols(
     return symbols_file->LoadSymbols();
   }
 
-  return outcome::failure(
+  return ErrorMessage(
       absl::StrFormat("Could not find symbols for module \"%s\"", module_path));
 }
 
@@ -106,7 +106,7 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsCollector(
   std::unique_ptr<ElfFile> elf_file = ElfFile::Create(module_path);
 
   if (!elf_file) {
-    return outcome::failure(
+    return ErrorMessage(
         absl::StrFormat("Unable to load ELF file: \"%s\"", module_path));
   }
 
@@ -115,7 +115,7 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsCollector(
   }
 
   if (elf_file->GetBuildId().empty()) {
-    return outcome::failure(absl::StrFormat(
+    return ErrorMessage(absl::StrFormat(
         "No symbols are contained in the module \"%s\". Symbols cannot be "
         "loaded from a separate symbols file, because module does not "
         "contain a build_id,",

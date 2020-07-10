@@ -34,7 +34,7 @@ ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
   std::ofstream file(m_CaptureName, std::ios::binary);
   if (file.fail()) {
     ERROR("Saving capture in \"%s\": %s", filename, "file.fail()");
-    return outcome::failure("Error opening the file for writing");
+    return ErrorMessage("Error opening the file for writing");
   }
 
   try {
@@ -42,7 +42,7 @@ ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
     Save(file);
   } catch (std::exception& e) {
     ERROR("Saving capture in \"%s\": %s", filename, e.what());
-    return outcome::failure("Error serializing the capture");
+    return ErrorMessage("Error serializing the capture");
   }
 
   return outcome::success();
@@ -144,14 +144,14 @@ ErrorMessageOr<void> CaptureSerializer::Load(const std::string& filename) {
   std::ifstream file(filename, std::ios::binary);
   if (file.fail()) {
     ERROR("Loading capture from \"%s\": %s", filename, "file.fail()");
-    return outcome::failure("Error opening the file for reading");
+    return ErrorMessage("Error opening the file for reading");
   }
 
   try {
     return Load(file);
   } catch (std::exception& e) {
     ERROR("Loading capture from \"%s\": %s", filename, e.what());
-    return outcome::failure("Error parsing the capture");
+    return ErrorMessage("Error parsing the capture");
   }
 }
 

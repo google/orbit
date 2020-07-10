@@ -48,7 +48,7 @@ Status ProcessServiceImpl::GetModuleList(ServerContext*,
 
   const auto module_infos = LinuxUtils::ListModules(pid);
   if (!module_infos) {
-    return Status(StatusCode::NOT_FOUND, module_infos.error());
+    return Status(StatusCode::NOT_FOUND, module_infos.error().message());
   }
 
   for (const auto& module_info : module_infos.value()) {

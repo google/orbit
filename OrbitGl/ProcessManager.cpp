@@ -87,7 +87,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ProcessManagerImpl::LoadModuleList(
   if (!status.ok()) {
     ERROR("Grpc call failed: code=%d, message=%s", status.error_code(),
           status.error_message());
-    return outcome::failure(status.error_message());
+    return ErrorMessage(status.error_message());
   }
 
   const auto& modules = response.modules();
@@ -114,7 +114,7 @@ ErrorMessageOr<ModuleSymbols> ProcessManagerImpl::LoadSymbols(
       process_service_->GetSymbols(context.get(), request, &response);
   if (!status.ok()) {
     ERROR("gRPC call to GetSymbols failed: %s", status.error_message());
-    return outcome::failure(status.error_message());
+    return ErrorMessage(status.error_message());
   }
 
   return response.module_symbols();
@@ -196,10 +196,10 @@ ErrorMessageOr<std::string> ProcessManagerImpl::LoadProcessMemory(
       process_service_->GetProcessMemory(context.get(), request, &response);
   if (!status.ok()) {
     ERROR("gRPC call to GetProcessMemory failed: %s", status.error_message());
-    return outcome::failure(status.error_message());
+    return ErrorMessage(status.error_message());
   }
 
-  return outcome::success(std::move(*response.mutable_memory()));
+  return std::move(*response.mutable_memory());
 }
 
 }  // namespace

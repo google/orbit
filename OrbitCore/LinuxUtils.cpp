@@ -67,7 +67,7 @@ outcome::result<std::string> ExecuteCommand(const std::string& cmd) {
   return outcome::success(result);
 }
 
-outcome::result<std::vector<ModuleInfo>, std::string> ListModules(int32_t pid) {
+ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
   struct AddressRange {
     uint64_t start_address;
     uint64_t end_address;
@@ -78,8 +78,8 @@ outcome::result<std::vector<ModuleInfo>, std::string> ListModules(int32_t pid) {
 
   const auto proc_maps = ReadProcMaps(pid);
   if (!proc_maps) {
-    return outcome::failure(absl::StrFormat("Unable to read /proc/%d/maps: %s",
-                                            pid, proc_maps.error().message()));
+    return ErrorMessage(absl::StrFormat("Unable to read /proc/%d/maps: %s", pid,
+                                        proc_maps.error().message()));
   }
 
   for (const std::string& line : proc_maps.value()) {
@@ -135,7 +135,7 @@ outcome::result<std::vector<ModuleInfo>, std::string> ListModules(int32_t pid) {
     result.push_back(module_info);
   }
 
-  return outcome::success(result);
+  return result;
 }
 
 //-----------------------------------------------------------------------------

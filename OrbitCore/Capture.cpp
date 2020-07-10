@@ -83,7 +83,7 @@ void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
 //-----------------------------------------------------------------------------
 ErrorMessageOr<void> Capture::StartCapture() {
   if (GTargetProcess->GetID() == 0) {
-    return outcome::failure(
+    return ErrorMessage(
         "No process selected. Please choose a target process for the capture.");
   }
 
@@ -209,7 +209,7 @@ ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
   std::ofstream file(filename_with_ext, std::ios::binary);
   if (file.fail()) {
     ERROR("Saving preset in \"%s\": %s", filename_with_ext, "file.fail()");
-    return outcome::failure("Error opening the file for writing");
+    return ErrorMessage("Error opening the file for writing");
   }
 
   try {
@@ -221,7 +221,8 @@ ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
     return outcome::success();
   } catch (std::exception& e) {
     ERROR("Saving preset in \"%s\": %s", filename_with_ext, e.what());
-    return outcome::failure("Error serializing the preset");
+    return ErrorMessage(
+        absl::StrFormat("Error serializing the preset: %s", e.what()));
   }
 }
 
