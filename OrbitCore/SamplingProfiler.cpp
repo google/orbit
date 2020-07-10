@@ -298,12 +298,12 @@ void SamplingProfiler::ResolveCallstacks() {
 }
 
 //-----------------------------------------------------------------------------
-std::shared_ptr<ThreadSampleData> SamplingProfiler::GetSummary() const {
+const ThreadSampleData* SamplingProfiler::GetSummary() const {
   auto summary_it = m_ThreadSampleData.find(0);
   if (summary_it == m_ThreadSampleData.end()) {
     return nullptr;
   }
-  return std::make_shared<ThreadSampleData>((*summary_it).second);
+  return &((*summary_it).second);
 }
 
 //-----------------------------------------------------------------------------
@@ -315,7 +315,7 @@ unsigned int SamplingProfiler::GetCountOfFunction(
     return 0;
   }
   unsigned int result = 0;
-  const std::shared_ptr<ThreadSampleData> summary = GetSummary();
+  const ThreadSampleData* summary = GetSummary();
   if (summary == nullptr) {
     return 0;
   }

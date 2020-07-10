@@ -359,7 +359,7 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
           if (next_address == 0) {
             next_address = address + 1;
           }
-          std::shared_ptr<ThreadSampleData> data = profiler->GetSummary();
+          const ThreadSampleData* data = profiler->GetSummary();
           if (data == nullptr) {
             return 0.0;
           }

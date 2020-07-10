@@ -139,7 +139,7 @@ class SamplingProfiler {
   void SortByThreadUsage();
   void ProcessSamples();
   void UpdateAddressInfo(uint64_t address);
-  [[nodiscard]] std::shared_ptr<ThreadSampleData> GetSummary() const;
+  [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] unsigned int GetCountOfFunction(
       uint64_t function_address) const;
 
