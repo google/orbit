@@ -11,13 +11,13 @@ compiler.address_sanitizer=True
 compiler.fuzzer_sanitizer=True
 build_type=RelWithDebInfo
 [options]
-OrbitProfiler:with_gui=False
-OrbitProfiler:with_fuzzing=True
+OrbitProfiler:with_crash_handling=False
+llvm_object:allow_undefined_symbols=True
 [build_requires]
 cmake/3.16.4@
 [env]
 CC=clang-9
 CXX=clang++-9
-CFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=fuzzer-no-link,address
-CXXFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=fuzzer-no-link,address
-LDFLAGS= -Wl,-z,relro,-z,now,-z,noexecstack -fsanitize=address
+CFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=fuzzer-no-link,address -fPIC
+CXXFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=fuzzer-no-link,address -fPIC
+LDFLAGS= -Wl,-z,relro,-z,now,-z,noexecstack
