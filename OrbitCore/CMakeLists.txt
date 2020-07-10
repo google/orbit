@@ -34,7 +34,6 @@ target_sources(
          OrbitModule.h
          OrbitProcess.h
          OrbitSession.h
-         OrbitThread.h
          Params.h
          Path.h
          Pdb.h
@@ -71,7 +70,6 @@ target_sources(
           OrbitModule.cpp
           OrbitProcess.cpp
           OrbitSession.cpp
-          OrbitThread.cpp
           Params.cpp
           Path.cpp
           Pdb.cpp

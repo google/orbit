@@ -13,15 +13,11 @@
 #include "Injection.h"
 #include "Log.h"
 #include "OrbitModule.h"
-#include "OrbitThread.h"
-#include "Params.h"
 #include "Serialization.h"
 
 #ifdef _WIN32
 #include "SymbolUtils.h"
 #endif
-
-double GThreadUsageSamplePeriodMs = 200.0;
 
 //-----------------------------------------------------------------------------
 SamplingProfiler::SamplingProfiler(const std::shared_ptr<Process>& a_Process) {

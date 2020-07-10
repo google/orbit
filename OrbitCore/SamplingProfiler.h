@@ -14,7 +14,6 @@
 #include "SerializationMacros.h"
 
 class Process;
-class Thread;
 
 //-----------------------------------------------------------------------------
 struct SampledFunction {
