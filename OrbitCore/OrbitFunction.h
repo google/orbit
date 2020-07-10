@@ -33,11 +33,12 @@ class Function {
     NUM_TYPES
   };
 
-  Function() : Function{"", "", 0, 0, 0, "", 0} {}
+  Function() : Function{"", "", 0, 0, 0, "", 0, "", 0} {}
 
   Function(std::string_view name, std::string_view pretty_name,
            uint64_t address, uint64_t load_bias, uint64_t size,
-           std::string_view file, uint32_t line);
+           std::string_view file, uint32_t line,
+           std::string_view loaded_module_path, uint64_t module_base_address);
 
   const std::string& name() const { return name_; }
   const std::string& pretty_name() const { return pretty_name_; }

@@ -20,15 +20,8 @@ Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::SetModulePathAndAddress(Function* func) {
-  func->set_loaded_module_path(GetLoadedModuleName());
-  func->set_module_base_address(GetHModule());
-}
-
-//-----------------------------------------------------------------------------
 void Pdb::AddFunction(const std::shared_ptr<Function>& function) {
   functions_.push_back(function);
-  SetModulePathAndAddress(functions_.back().get());
 }
 
 //-----------------------------------------------------------------------------
@@ -40,7 +33,6 @@ void Pdb::ProcessData() {
   ScopeLock lock(process->GetDataMutex());
 
   for (auto& func : functions_) {
-    SetModulePathAndAddress(func.get());
     process->AddFunction(func);
   }
 
