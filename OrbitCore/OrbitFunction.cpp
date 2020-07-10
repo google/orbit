@@ -9,9 +9,13 @@
 
 Function::Function(std::string_view name, std::string_view pretty_name,
                    uint64_t address, uint64_t load_bias, uint64_t size,
-                   std::string_view file, uint32_t line)
+                   std::string_view file, uint32_t line,
+                   std::string_view loaded_module_path,
+                   uint64_t module_base_address)
     : name_(name),
       pretty_name_(pretty_name),
+      loaded_module_path_(loaded_module_path),
+      module_base_address_(module_base_address),
       address_(address),
       load_bias_(load_bias),
       size_(size),

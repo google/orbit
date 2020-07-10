@@ -53,7 +53,8 @@ void Module::LoadSymbols(const ModuleSymbols& module_symbols) {
     std::shared_ptr<Function> function = std::make_shared<Function>(
         symbol_info.name(), symbol_info.demangled_name(), symbol_info.address(),
         module_symbols.load_bias(), symbol_info.size(),
-        symbol_info.source_file(), symbol_info.source_line());
+        symbol_info.source_file(), symbol_info.source_line(), m_FullName,
+        m_AddressStart);
     m_Pdb->AddFunction(function);
   }
 
