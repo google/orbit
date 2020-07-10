@@ -96,9 +96,17 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   Callstack* callstack = sample.mutable_callstack();
   // Skip the first frame as the top of a perf_event_open callchain is always
   // inside kernel code.
-  for (uint64_t frame_index = 1; frame_index < event->GetCallchainSize();
+  uint64_t* raw_callchain = event->GetCallchain();
+  callstack->add_pcs(raw_callchain[1]);
+  // Only the address of the top of the stack is correct. Frame-based unwinding
+  // uses the return address of a function call as the caller's address.
+  // However, the actuall address of the call instruction is before that.
+  // As we don't know the size of the call instruction, we subtract 1 to the
+  // return address. This way we fall into the range of the call instruction.
+  // Note: This is also done the same way in Libunwindstack.
+  for (uint64_t frame_index = 2; frame_index < event->GetCallchainSize();
        ++frame_index) {
-    callstack->add_pcs(event->GetCallchain()[frame_index]);
+    callstack->add_pcs(raw_callchain[frame_index] - 1);
   }
 
   listener_->OnCallstackSample(std::move(sample));
