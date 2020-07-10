@@ -14,7 +14,6 @@
 #include "EventBuffer.h"
 #include "Geometry.h"
 #include "GpuTrack.h"
-#include "MemoryTracker.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
 #include "TextBox.h"
@@ -94,7 +93,6 @@ class TimeGraph {
   void OnDrag(float a_Ratio);
   double GetMinTimeUs() const { return m_MinTimeUs; }
   double GetMaxTimeUs() const { return m_MaxTimeUs; }
-  const MemoryTracker& GetMemoryTracker() const { return m_MemTracker; }
   const TimeGraphLayout& GetLayout() const { return m_Layout; }
   TimeGraphLayout& GetLayout() { return m_Layout; }
   float GetVerticalMargin() const { return vertical_margin_; }
@@ -156,7 +154,6 @@ class TimeGraph {
   Batcher m_Batcher;
   PickingManager* m_PickingManager = nullptr;
   Timer m_LastThreadReorder;
-  MemoryTracker m_MemTracker;
 
   mutable Mutex m_Mutex;
   std::vector<std::shared_ptr<Track>> tracks_;
