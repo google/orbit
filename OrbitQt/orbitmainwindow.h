@@ -48,7 +48,8 @@ class OrbitMainWindow : public QMainWindow {
   bool HideTab(QTabWidget* a_TabWidget, const char* a_TabName);
   std::string FindFile(const std::string& caption, const std::string& dir,
                        const std::string& filter);
-  void OpenDisassembly(const std::string& a_String);
+  void OpenDisassembly(const std::string& a_String,
+                       const std::function<double(size_t)>& line_to_hit_ratio);
   void SetTitle(const QString& task_description);
   outcome::result<void> OpenCapture(const std::string& filepath);
 

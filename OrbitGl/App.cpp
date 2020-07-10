@@ -329,7 +329,47 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
     disasm.Disassemble(reinterpret_cast<const uint8_t*>(memory.data()),
                        memory.size(), function.GetVirtualAddress(),
                        Capture::GTargetProcess->GetIs64Bit());
-    SendDisassemblyToUi(disasm.GetResult());
+    if (!sampling_report_ || !sampling_report_->GetProfiler()) {
+      SendDisassemblyToUi(disasm.GetResult());
+      return;
+    }
+    std::shared_ptr<SamplingProfiler> profiler =
+        sampling_report_->GetProfiler();
+    unsigned int count_of_function =
+        profiler->GetCountOfFunction(function.GetVirtualAddress());
+    if (count_of_function == 0) {
+      SendDisassemblyToUi(disasm.GetResult());
+      return;
+    }
+
+    const std::function<const double(size_t)> line_to_hits =
+        [profiler, disasm, count_of_function](size_t line) {
+          LOG("Hits of line: %d", line);
+          uint64_t address = disasm.GetAddressAtLine(line);
+          if (address == 0) {
+            return 0.0;
+          }
+
+          const ThreadSampleData& data = profiler->GetSummary();
+          // OI calls the address sampled might not be the address of the
+          // beginning of the instruction, but instead at the end. Thus, we
+          // iterate over all addresses that fall into this instruction.
+          uint64_t next_address = disasm.GetAddressAtLine(line + 1);
+
+          // If the current instruction is the last one (next address is 0), it
+          // can not be a call, thus we can only consider this address.
+          if (next_address == 0) {
+            next_address = address + 1;
+          }
+          size_t count = 0;
+          while (address < next_address) {
+            count += data.CountOfAddress(address);
+            address++;
+          }
+          double result = (count * 1.0) / count_of_function;
+          return result;
+        };
+    SendDisassemblyToUi(disasm.GetResult(), line_to_hits);
   });
 }
 
@@ -639,10 +679,12 @@ void OrbitApp::RequestSaveCaptureToUi() {
   });
 }
 
-void OrbitApp::SendDisassemblyToUi(const std::string& disassembly) {
-  main_thread_executor_->Schedule([this, disassembly] {
+void OrbitApp::SendDisassemblyToUi(
+    const std::string& disassembly,
+    const std::function<double(size_t)>& line_to_hit_ratio) {
+  main_thread_executor_->Schedule([this, disassembly, line_to_hit_ratio] {
     if (disassembly_callback_) {
-      disassembly_callback_(disassembly);
+      disassembly_callback_(disassembly, line_to_hit_ratio);
     }
   });
 }
