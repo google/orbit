@@ -122,7 +122,7 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbols() const {
   // TODO: if we want to use other sections than .symtab in the future for
   //       example .dynsym, than we have to change this.
   if (!has_symtab_section_) {
-    return outcome::failure("Elf file does not contain a .symtab section.");
+    return ErrorMessage("Elf file does not contain a .symtab section.");
   }
   bool symbols_added = false;
 
@@ -164,7 +164,7 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbols() const {
     symbols_added = true;
   }
   if (!symbols_added) {
-    return outcome::failure(
+    return ErrorMessage(
         "Unable to load symbols from elf file, not even a single symbol of "
         "type function found.");
   }
@@ -185,7 +185,7 @@ ErrorMessageOr<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
         "found.",
         file_path_);
     ERROR("%s", error.c_str());
-    return outcome::failure(error);
+    return ErrorMessage(std::move(error));
   }
 
   for (const typename ElfT::Phdr& phdr : range.get()) {
@@ -205,9 +205,9 @@ ErrorMessageOr<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
         "headers found.",
         file_path_);
     ERROR("%s", error.c_str());
-    return outcome::failure(error);
+    return ErrorMessage(std::move(error));
   }
-  return outcome::success(min_vaddr);
+  return min_vaddr;
 }
 
 template <typename ElfT>

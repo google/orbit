@@ -496,7 +496,7 @@ ErrorMessageOr<void> OrbitApp::ReadPresetFromFile(const std::string& filename,
   std::ifstream file(file_path, std::ios::binary);
   if (file.fail()) {
     ERROR("Loading preset from \"%s\": file.fail()", file_path);
-    return outcome::failure("Error opening the file for reading");
+    return ErrorMessage("Error opening the file for reading");
   }
 
   try {
@@ -506,7 +506,8 @@ ErrorMessageOr<void> OrbitApp::ReadPresetFromFile(const std::string& filename,
     return outcome::success();
   } catch (std::exception& e) {
     ERROR("Loading preset from \"%s\": %s", file_path, e.what());
-    return outcome::failure("Error reading the preset");
+    return ErrorMessage(
+        absl::StrFormat("Error reading the preset: %s", e.what()));
   }
 }
 
