@@ -71,19 +71,6 @@ void CaptureSerializer::SaveImpl(T& archive) {
   archive(cereal::make_nvp("Capture", *this));
 
   {
-    ORBIT_SIZE_SCOPE("Functions");
-    std::vector<Function> functions;
-    for (auto& pair : Capture::GSelectedFunctionsMap) {
-      Function* func = pair.second;
-      if (func != nullptr) {
-        functions.push_back(*func);
-      }
-    }
-
-    archive(functions);
-  }
-
-  {
     ORBIT_SIZE_SCOPE("Capture::GFunctionCountMap");
     archive(Capture::GFunctionCountMap);
   }
@@ -175,20 +162,6 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   // Header
   cereal::BinaryInputArchive archive(stream);
   archive(*this);
-
-  // Functions
-  std::vector<Function> functions;
-  archive(functions);
-  Capture::GSelectedFunctions.clear();
-  Capture::GSelectedFunctionsMap.clear();
-  for (const auto& function : functions) {
-    std::shared_ptr<Function> function_ptr =
-        std::make_shared<Function>(function);
-    Capture::GSelectedFunctions.push_back(function_ptr);
-    Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(
-        *function_ptr)] = function_ptr.get();
-  }
-  Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
   archive(Capture::GFunctionCountMap);
 

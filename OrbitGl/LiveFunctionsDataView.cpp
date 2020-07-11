@@ -10,12 +10,10 @@
 #include "FunctionUtils.h"
 #include "LiveFunctionsController.h"
 #include "Log.h"
-#include "OrbitFunction.h"
 #include "Pdb.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "TimerChain.h"
-#include "capture.pb.h"
 
 //-----------------------------------------------------------------------------
 LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsController* live_functions)
@@ -50,7 +48,7 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
   }
 
   Function& function = GetFunction(a_Row);
-  const std::shared_ptr<FunctionStats> stats = function.stats();
+  const FunctionStats& stats = function.stats();
 
   switch (a_Column) {
     case COLUMN_SELECTED:
@@ -58,15 +56,15 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
     case COLUMN_NAME:
       return FunctionUtils::GetDisplayName(function);
     case COLUMN_COUNT:
-      return absl::StrFormat("%lu", stats->count());
+      return absl::StrFormat("%lu", stats.count());
     case COLUMN_TIME_TOTAL:
-      return GetPrettyTime(stats->total_time_ms());
+      return GetPrettyTime(stats.total_time_ms());
     case COLUMN_TIME_AVG:
-      return GetPrettyTime(stats->average_time_ms());
+      return GetPrettyTime(stats.average_time_ms());
     case COLUMN_TIME_MIN:
-      return GetPrettyTime(stats->min_ms());
+      return GetPrettyTime(stats.min_ms());
     case COLUMN_TIME_MAX:
-      return GetPrettyTime(stats->max_ms());
+      return GetPrettyTime(stats.max_ms());
     case COLUMN_MODULE:
       return function.loaded_module_path();
     case COLUMN_ADDRESS:
@@ -83,10 +81,10 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
     return OrbitUtils::Compare(functions[a]->Member, functions[b]->Member, \
                                ascending);                                 \
   }
-#define ORBIT_STAT_SORT(Member)                                           \
-  [&](int a, int b) {                                                     \
-    return OrbitUtils::Compare(functions[a]->stats()->Member,             \
-                               functions[b]->stats()->Member, ascending); \
+#define ORBIT_STAT_SORT(Member)                                          \
+  [&](int a, int b) {                                                    \
+    return OrbitUtils::Compare(functions[a]->stats().Member,             \
+                               functions[b]->stats().Member, ascending); \
   }
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                     \
   [&](int a, int b) {                                                    \
@@ -165,7 +163,7 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     const Function& function = GetFunction(index);
     enable_select |= !FunctionUtils::IsSelected(function);
     enable_unselect |= FunctionUtils::IsSelected(function);
-    enable_iterator |= function.stats()->count() > 0;
+    enable_iterator |= function.stats().count() > 0;
   }
 
   std::vector<std::string> menu;
@@ -181,7 +179,7 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   // so we don't show them otherwise.
   if (a_SelectedIndices.size() == 1) {
     const Function& function = GetFunction(a_SelectedIndices[0]);
-    if (function.stats()->count() > 0) {
+    if (function.stats().count() > 0) {
       menu.insert(menu.end(), {MENU_ACTION_JUMP_TO_FIRST,
                                MENU_ACTION_JUMP_TO_LAST, MENU_ACTION_JUMP_TO_MIN,
                                MENU_ACTION_JUMP_TO_MAX});
@@ -246,7 +244,7 @@ void LiveFunctionsDataView::OnContextMenu(
   } else if (a_Action == MENU_ACTION_ITERATE) {
     for (int i : a_ItemIndices) {
       Function& function = GetFunction(i);
-      if (function.stats()->count() > 0) {
+      if (function.stats().count() > 0) {
         live_functions_->AddIterator(&function);
       }
     }

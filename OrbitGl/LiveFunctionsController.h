@@ -10,9 +10,9 @@
 #include "absl/container/flat_hash_map.h"
 
 #include "LiveFunctionsDataView.h"
-#include "OrbitFunction.h"
 #include "Profiling.h"
 #include "TextBox.h"
+#include "capture.pb.h"
 
 class LiveFunctionsController {
  public:

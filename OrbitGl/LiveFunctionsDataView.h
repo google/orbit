@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
+#define ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
 
 #include "DataView.h"
-#include "OrbitFunction.h"
 #include "TimerChain.h"
+#include "capture.pb.h"
 
 class LiveFunctionsController;
 
@@ -58,3 +59,5 @@ class LiveFunctionsDataView : public DataView {
   static const std::string MENU_ACTION_DISASSEMBLY;
   static const std::string MENU_ACTION_ITERATE;
 };
+
+#endif  // ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_

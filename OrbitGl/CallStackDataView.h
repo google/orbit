@@ -8,6 +8,7 @@
 
 #include "DataView.h"
 #include "OrbitModule.h"
+#include "capture.pb.h"
 
 struct CallStack;
 

@@ -125,3 +125,36 @@ message FunctionStats {
   double min_ms = 5;
   double max_ms = 6;
 }
+
+message Function {
+  string name = 1;
+  string pretty_name = 2;
+  string loaded_module_path = 3;
+  uint64 module_base_address = 4;
+  uint64 address = 5;
+  uint64 load_bias = 6;
+  uint64 size = 7;
+  string file = 8;
+  uint32 line = 9;
+  int32 calling_convention = 10;
+
+  enum OrbitType {
+    NONE = 0;
+    ORBIT_TIMER_START = 1;
+    ORBIT_TIMER_STOP = 2;
+    ORBIT_LOG = 3;
+    ORBIT_TIMER_START_ASYNC = 4;
+    ORBIT_TIMER_STOP_ASYNC = 5;
+    ORBIT_TRACK_INT = 6;
+    ORBIT_TRACK_INT_64 = 7;
+    ORBIT_TRACK_UINT = 8;
+    ORBIT_TRACK_UINT_64 = 9;
+    ORBIT_TRACK_FLOAT = 10;
+    ORBIT_TRACK_DOUBLE = 11;
+    ORBIT_TRACK_FLOAT_AS_INT = 12;
+    ORBIT_TRACK_DOUBLE_AS_INT_64 = 13;
+  };
+  OrbitType type = 11;
+
+  FunctionStats stats = 12;
+}

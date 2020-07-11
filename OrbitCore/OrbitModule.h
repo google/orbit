@@ -10,7 +10,6 @@
 #include <string>
 
 #include "BaseTypes.h"
-#include "OrbitFunction.h"
 #include "symbol.pb.h"
 
 class Pdb;

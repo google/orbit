@@ -26,7 +26,26 @@ uint64_t Offset(const Function& func) {
 }
 
 bool IsOrbitFunc(const Function& func) {
-  return func.orbit_type() != Function::OrbitType::NONE;
+  return func.type() != Function_OrbitType_NONE;
+}
+
+std::shared_ptr<Function> CreateFunction(
+    std::string_view name, std::string_view pretty_name, uint64_t address,
+    uint64_t load_bias, uint64_t size, std::string_view file, uint32_t line,
+    std::string_view loaded_module_path, uint64_t module_base_address) {
+  std::shared_ptr<Function> function = std::make_shared<Function>();
+  function->set_name(std::move(name.data()));
+  function->set_pretty_name(std::move(pretty_name.data()));
+  function->set_address(address);
+  function->set_load_bias(load_bias);
+  function->set_size(size);
+  function->set_file(std::move(file.data()));
+  function->set_line(line);
+  function->set_loaded_module_path(std::move(loaded_module_path.data()));
+  function->set_module_base_address(module_base_address);
+
+  SetOrbitTypeFromName(function.get());
+  return function;
 }
 
 void Select(Function* func) {
@@ -79,7 +98,7 @@ bool SetOrbitTypeFromName(Function* func) {
   if (absl::StartsWith(name, "orbit_api::")) {
     for (auto& pair : GetFunctionNameToOrbitTypeMap()) {
       if (absl::StrContains(name, pair.first)) {
-        func->set_orbit_type(pair.second);
+        func->set_type(pair.second);
         return true;
       }
     }
@@ -88,20 +107,18 @@ bool SetOrbitTypeFromName(Function* func) {
 }
 
 void UpdateStats(Function* func, const Timer& timer) {
-  std::shared_ptr<FunctionStats> stats = func->stats();
-  if (stats != nullptr) {
-    stats->set_count(stats->count() + 1);
-    double elapsedMillis = timer.ElapsedMillis();
-    stats->set_total_time_ms(stats->total_time_ms() + elapsedMillis);
-    stats->set_average_time_ms(stats->total_time_ms() / stats->count());
+  FunctionStats* stats = func->mutable_stats();
+  stats->set_count(stats->count() + 1);
+  double elapsedMillis = timer.ElapsedMillis();
+  stats->set_total_time_ms(stats->total_time_ms() + elapsedMillis);
+  stats->set_average_time_ms(stats->total_time_ms() / stats->count());
 
-    if (elapsedMillis > stats->max_ms()) {
-      stats->set_max_ms(elapsedMillis);
-    }
+  if (elapsedMillis > stats->max_ms()) {
+    stats->set_max_ms(elapsedMillis);
+  }
 
-    if (stats->min_ms() == 0 || elapsedMillis < stats->min_ms()) {
-      stats->set_min_ms(elapsedMillis);
-    }
+  if (stats->min_ms() == 0 || elapsedMillis < stats->min_ms()) {
+    stats->set_min_ms(elapsedMillis);
   }
 }
 
