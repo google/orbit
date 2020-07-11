@@ -7,8 +7,8 @@
 #include <string>
 #include <string_view>
 
-#include "FunctionStats.h"
 #include "SerializationMacros.h"
+#include "capture.pb.h"
 
 class Function {
  public:
@@ -61,8 +61,6 @@ class Function {
   OrbitType orbit_type() const { return type_; }
   void set_orbit_type(OrbitType type) { type_ = type; }
   std::shared_ptr<FunctionStats> stats() const { return stats_; }
-
-  void ResetStats();
 
   ORBIT_SERIALIZABLE;
 

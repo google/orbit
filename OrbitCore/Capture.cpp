@@ -150,7 +150,7 @@ void Capture::PreFunctionHooks() {
   for (auto& func : GSelectedFunctions) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
     GSelectedFunctionsMap[address] = func.get();
-    func->ResetStats();
+    func->stats()->Clear();
     GFunctionCountMap[address] = 0;
   }
 

@@ -20,7 +20,6 @@ target_sources(
          ContextSwitch.h
          Core.h
          EventBuffer.h
-         FunctionStats.h
          FunctionUtils.h
          Injection.h
          Introspection.h
@@ -60,7 +59,6 @@ target_sources(
           ContextSwitch.cpp
           Core.cpp
           EventBuffer.cpp
-          FunctionStats.cpp
           FunctionUtils.cpp
           Injection.cpp
           Introspection.cpp

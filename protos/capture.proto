@@ -116,3 +116,12 @@ message CaptureEvent {
     AddressInfo address_info = 8;
   }
 }
+
+message FunctionStats {
+  uint64 address = 1;
+  uint64 count = 2;
+  double total_time_ms = 3;
+  double average_time_ms = 4;
+  double min_ms = 5;
+  double max_ms = 6;
+}

@@ -21,16 +21,8 @@ Function::Function(std::string_view name, std::string_view pretty_name,
       size_(size),
       file_(file),
       line_(line) {
-  ResetStats();
+  stats_->Clear();
   FunctionUtils::SetOrbitTypeFromName(this);
-}
-
-void Function::ResetStats() {
-  if (stats_ == nullptr) {
-    stats_ = std::make_shared<FunctionStats>();
-  } else {
-    stats_->Reset();
-  }
 }
 
 ORBIT_SERIALIZE(Function, 5) {
@@ -43,5 +35,5 @@ ORBIT_SERIALIZE(Function, 5) {
   ORBIT_NVP_VAL(4, size_);
   ORBIT_NVP_VAL(4, file_);
   ORBIT_NVP_VAL(4, line_);
-  ORBIT_NVP_VAL(4, stats_);
+  // ORBIT_NVP_VAL(4, stats_);
 }

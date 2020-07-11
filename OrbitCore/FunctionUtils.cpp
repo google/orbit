@@ -90,17 +90,17 @@ bool SetOrbitTypeFromName(Function* func) {
 void UpdateStats(Function* func, const Timer& timer) {
   std::shared_ptr<FunctionStats> stats = func->stats();
   if (stats != nullptr) {
-    stats->m_Count++;
+    stats->set_count(stats->count() + 1);
     double elapsedMillis = timer.ElapsedMillis();
-    stats->m_TotalTimeMs += elapsedMillis;
-    stats->m_AverageTimeMs = stats->m_TotalTimeMs / stats->m_Count;
+    stats->set_total_time_ms(stats->total_time_ms() + elapsedMillis);
+    stats->set_average_time_ms(stats->total_time_ms() / stats->count());
 
-    if (elapsedMillis > stats->m_MaxMs) {
-      stats->m_MaxMs = elapsedMillis;
+    if (elapsedMillis > stats->max_ms()) {
+      stats->set_max_ms(elapsedMillis);
     }
 
-    if (stats->m_MinMs == 0 || elapsedMillis < stats->m_MinMs) {
-      stats->m_MinMs = elapsedMillis;
+    if (stats->min_ms() == 0 || elapsedMillis < stats->min_ms()) {
+      stats->set_min_ms(elapsedMillis);
     }
   }
 }
