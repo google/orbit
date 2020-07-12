@@ -46,19 +46,19 @@ std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
     case COLUMN_SELECTED:
       return FunctionUtils::IsSelected(func) ? "X" : "-";
     case COLUMN_FUNCTION_NAME:
-      return func.m_Name;
+      return func.name();
     case COLUMN_EXCLUSIVE:
-      return absl::StrFormat("%.2f", func.m_Exclusive);
+      return absl::StrFormat("%.2f", func.exclusive());
     case COLUMN_INCLUSIVE:
-      return absl::StrFormat("%.2f", func.m_Inclusive);
+      return absl::StrFormat("%.2f", func.inclusive());
     case COLUMN_MODULE_NAME:
-      return func.m_Module;
+      return func.module();
     case COLUMN_FILE:
-      return func.m_File;
+      return func.file();
     case COLUMN_LINE:
-      return func.m_Line > 0 ? absl::StrFormat("%d", func.m_Line) : "";
+      return func.line() > 0 ? absl::StrFormat("%d", func.line()) : "";
     case COLUMN_ADDRESS:
-      return absl::StrFormat("%#llx", func.m_Address);
+      return absl::StrFormat("%#llx", func.address());
     default:
       return "";
   }
@@ -90,25 +90,25 @@ void SamplingReportDataView::DoSort() {
       sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::IsSelected);
       break;
     case COLUMN_FUNCTION_NAME:
-      sorter = ORBIT_PROC_SORT(m_Name);
+      sorter = ORBIT_PROC_SORT(name());
       break;
     case COLUMN_EXCLUSIVE:
-      sorter = ORBIT_PROC_SORT(m_Exclusive);
+      sorter = ORBIT_PROC_SORT(exclusive());
       break;
     case COLUMN_INCLUSIVE:
-      sorter = ORBIT_PROC_SORT(m_Inclusive);
+      sorter = ORBIT_PROC_SORT(inclusive());
       break;
     case COLUMN_MODULE_NAME:
-      sorter = ORBIT_PROC_SORT(m_Module);
+      sorter = ORBIT_PROC_SORT(module());
       break;
     case COLUMN_FILE:
-      sorter = ORBIT_PROC_SORT(m_File);
+      sorter = ORBIT_PROC_SORT(file());
       break;
     case COLUMN_LINE:
-      sorter = ORBIT_PROC_SORT(m_Line);
+      sorter = ORBIT_PROC_SORT(line());
       break;
     case COLUMN_ADDRESS:
-      sorter = ORBIT_PROC_SORT(m_Address);
+      sorter = ORBIT_PROC_SORT(address());
       break;
     default:
       break;
@@ -126,15 +126,16 @@ std::vector<Function*> SamplingReportDataView::GetFunctionsFromIndices(
   if (Capture::GTargetProcess != nullptr) {
     for (int index : a_Indices) {
       SampledFunction& sampled_function = GetSampledFunction(index);
-      if (sampled_function.m_Function == nullptr) {
-        sampled_function.m_Function =
-            Capture::GTargetProcess->GetFunctionFromAddress(
-                sampled_function.m_Address, false);
+      if (!sampled_function.has_function()) {
+          Function* function = Capture::GTargetProcess->GetFunctionFromAddress(
+                sampled_function.address(), false);
+          if (function != nullptr) {
+            (*sampled_function.mutable_function()).CopyFrom(*function);
+          }
       }
 
-      Function* function = sampled_function.m_Function;
-      if (function != nullptr) {
-        functions_set.insert(function);
+      if (sampled_function.has_function()) {
+        functions_set.insert(sampled_function.mutable_function());
       }
     }
   }
@@ -151,7 +152,7 @@ SamplingReportDataView::GetModulesFromIndices(
     std::set<std::string> module_names;
     for (int index : a_Indices) {
       SampledFunction& sampled_function = GetSampledFunction(index);
-      module_names.emplace(sampled_function.m_Module);
+      module_names.emplace(sampled_function.module());
     }
 
     auto& module_map = Capture::GTargetProcess->GetNameToModulesMap();
@@ -238,7 +239,7 @@ void SamplingReportDataView::OnContextMenu(
 //-----------------------------------------------------------------------------
 void SamplingReportDataView::OnSelect(int index) {
   SampledFunction& func = GetSampledFunction(index);
-  m_SamplingReport->OnSelectAddress(func.m_Address, m_TID);
+  m_SamplingReport->OnSelectAddress(func.address(), m_TID);
 }
 
 //-----------------------------------------------------------------------------
@@ -281,8 +282,8 @@ void SamplingReportDataView::DoFilter() {
 
   for (size_t i = 0; i < m_Functions.size(); ++i) {
     SampledFunction& func = m_Functions[i];
-    std::string name = ToLower(func.m_Name);
-    std::string module = ToLower(func.m_Module);
+    std::string name = ToLower(func.name());
+    std::string module = ToLower(func.module());
 
     bool match = true;
 

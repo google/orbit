@@ -160,3 +160,14 @@ message Function {
 
   FunctionStats stats = 12;
 }
+
+message SampledFunction {
+  string name = 1;
+  string module = 2;
+  string file = 3;
+  float exclusive = 4;
+  float inclusive = 5;
+  int32 line = 6;
+  uint64 address = 7;
+  Function function = 8;
+}

@@ -123,7 +123,7 @@ void UpdateStats(Function* func, const Timer& timer) {
 }
 
 bool IsSelected(const SampledFunction& func) {
-  return Capture::GSelectedFunctionsMap.count(func.m_Address) > 0;
+  return Capture::GSelectedFunctionsMap.count(func.address()) > 0;
 }
 
 }  // namespace FunctionUtils

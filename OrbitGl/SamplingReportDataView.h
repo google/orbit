@@ -7,6 +7,7 @@
 #include "CallStackDataView.h"
 #include "DataView.h"
 #include "SamplingProfiler.h"
+#include "capture.pb.h"
 
 class SamplingReportDataView : public DataView {
  public:

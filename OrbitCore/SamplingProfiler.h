@@ -16,22 +16,6 @@
 class Process;
 
 //-----------------------------------------------------------------------------
-struct SampledFunction {
-  SampledFunction() = default;
-
-  std::string m_Name;
-  std::string m_Module;
-  std::string m_File;
-  float m_Exclusive = 0;
-  float m_Inclusive = 0;
-  int m_Line = 0;
-  uint64_t m_Address = 0;
-  Function* m_Function = nullptr;
-
-  ORBIT_SERIALIZABLE;
-};
-
-//-----------------------------------------------------------------------------
 struct LineInfo {
   LineInfo() = default;
 

@@ -380,33 +380,22 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
           100.f * numOccurences / threadSampleData.m_NumSamples;
 
       SampledFunction function;
-      function.m_Name = Capture::GAddressToFunctionName[address];
-      function.m_Inclusive = inclusive_percent;
-      function.m_Exclusive = 0.f;
+      function.set_name(Capture::GAddressToFunctionName[address]);
+      function.set_inclusive(inclusive_percent);
+      function.set_exclusive(0.f);
       auto it = threadSampleData.m_ExclusiveCount.find(address);
       if (it != threadSampleData.m_ExclusiveCount.end()) {
-        function.m_Exclusive =
-            100.f * it->second / threadSampleData.m_NumSamples;
+        function.set_exclusive(100.f * it->second /
+                               threadSampleData.m_NumSamples);
       }
-      function.m_Address = address;
+      function.set_address(address);
 
       std::shared_ptr<Module> module = m_Process->GetModuleFromAddress(address);
-      function.m_Module = module ? module->m_Name : "???";
+      function.set_module(module ? module->m_Name : "???");
 
       sampleReport.push_back(function);
     }
   }
-}
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(SampledFunction, 0) {
-  ORBIT_NVP_VAL(0, m_Name);
-  ORBIT_NVP_VAL(0, m_Module);
-  ORBIT_NVP_VAL(0, m_File);
-  ORBIT_NVP_VAL(0, m_Exclusive);
-  ORBIT_NVP_VAL(0, m_Inclusive);
-  ORBIT_NVP_VAL(0, m_Line);
-  ORBIT_NVP_VAL(0, m_Address);
 }
 
 //-----------------------------------------------------------------------------
@@ -428,7 +417,7 @@ ORBIT_SERIALIZE_WSTRING(ThreadSampleData, 1) {
   ORBIT_NVP_VAL(0, m_ExclusiveCount);
   ORBIT_NVP_VAL(0, m_AddressCountSorted);
   ORBIT_NVP_VAL(0, m_NumSamples);
-  ORBIT_NVP_VAL(0, m_SampleReport);
+  // ORBIT_NVP_VAL(0, m_SampleReport);
   ORBIT_NVP_VAL(0, m_ThreadUsage);
   ORBIT_NVP_VAL(0, m_AverageThreadUsage);
   ORBIT_NVP_VAL(0, m_TID);
