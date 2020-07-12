@@ -1,5 +1,7 @@
 #include "CaptureEventProcessor.h"
 
+#include "SamplingUtils.h"
+
 void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
   switch (event.event_case()) {
     case CaptureEvent::kSchedulingSlice:
@@ -67,7 +69,8 @@ void CaptureEventProcessor::ProcessCallstackSample(
     callstack = callstack_sample.callstack();
   }
 
-  uint64_t hash = GetCallstackHashAndSendToListenerIfNecessary(callstack);
+  CallstackID hash = SamplingUtils::InitAndGetCallstackHash(&callstack);
+  SendToListenerIfNecessary(callstack);
   CallstackEvent callstack_event{callstack_sample.timestamp_ns(), hash,
                                  callstack_sample.tid()};
   capture_listener_->OnCallstackEvent(std::move(callstack_event));
@@ -177,21 +180,12 @@ void CaptureEventProcessor::ProcessAddressInfo(
   capture_listener_->OnAddressInfo(linux_address_info);
 }
 
-uint64_t CaptureEventProcessor::GetCallstackHashAndSendToListenerIfNecessary(
+void CaptureEventProcessor::SendToListenerIfNecessary(
     const Callstack& callstack) {
-  CallStack cs;
-  for (uint64_t pc : callstack.pcs()) {
-    cs.m_Data.push_back(pc);
+  if (!callstack_hashes_seen_.contains(callstack.hash())) {
+    callstack_hashes_seen_.emplace(callstack.hash());
+    capture_listener_->OnCallstack(callstack);
   }
-  cs.m_Depth = cs.m_Data.size();
-  // TODO: Compute the hash without creating the CallStack if not necessary.
-  uint64_t hash = cs.Hash();
-
-  if (!callstack_hashes_seen_.contains(hash)) {
-    callstack_hashes_seen_.emplace(hash);
-    capture_listener_->OnCallstack(cs);
-  }
-  return hash;
 }
 
 uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(

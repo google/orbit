@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_EVENT_BUFFER_H_
+#define ORBIT_CORE_EVENT_BUFFER_H_
 
 #include <set>
 
 #include "BlockChain.h"
-#include "Callstack.h"
+#include "CallstackTypes.h"
 #include "Core.h"
 #include "SerializationMacros.h"
 
@@ -74,3 +75,5 @@ class EventBuffer {
   std::atomic<uint64_t> m_MaxTime;
   std::atomic<uint64_t> m_MinTime;
 };
+
+#endif  // ORBIT_CORE_EVENT_BUFFER_H_

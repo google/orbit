@@ -7,7 +7,6 @@
 #include <utility>
 
 #include "App.h"
-#include "Callstack.h"
 #include "Capture.h"
 #include "ModulesDataView.h"
 #include "Params.h"

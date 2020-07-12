@@ -13,7 +13,6 @@ target_sources(
   OrbitCore
   PUBLIC BaseTypes.h
          BlockChain.h
-         Callstack.h
          CallstackTypes.h
          Capture.h
          Context.h
@@ -53,8 +52,7 @@ target_sources(
 
 target_sources(
   OrbitCore
-  PRIVATE Callstack.cpp
-          Capture.cpp
+  PRIVATE Capture.cpp
           ContextSwitch.cpp
           Core.cpp
           EventBuffer.cpp

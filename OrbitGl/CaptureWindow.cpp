@@ -10,6 +10,7 @@
 #include "FunctionUtils.h"
 #include "GlUtils.h"
 #include "absl/strings/str_format.h"
+#include "capture.pb.h"
 
 //-----------------------------------------------------------------------------
 CaptureWindow::CaptureWindow() {

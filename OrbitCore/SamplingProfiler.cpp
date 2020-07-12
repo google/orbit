@@ -14,6 +14,7 @@
 #include "Injection.h"
 #include "Log.h"
 #include "OrbitModule.h"
+#include "SamplingUtils.h"
 #include "Serialization.h"
 
 namespace {
@@ -87,14 +88,14 @@ std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::AddCallStack(CallStack& a_CallStack) {
-  CallstackID hash = a_CallStack.Hash();
+void SamplingProfiler::AddCallStack(Callstack& a_CallStack) {
+  CallstackID hash = SamplingUtils::InitAndGetCallstackHash(&a_CallStack);
   if (!HasCallStack(hash)) {
     AddUniqueCallStack(a_CallStack);
   }
   CallstackEvent hashed_cs;
   hashed_cs.m_Id = hash;
-  hashed_cs.m_TID = a_CallStack.m_ThreadId;
+  hashed_cs.m_TID = a_CallStack.thread_id();
   // Note: a_CallStack doesn't carry a timestamp so hashed_cs.m_Time is not
   // filled, but that is not a problem because SamplingProfiler doesn't use it.
   AddHashedCallStack(hashed_cs);
@@ -111,10 +112,10 @@ void SamplingProfiler::AddHashedCallStack(CallstackEvent& a_CallStack) {
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::AddUniqueCallStack(CallStack& a_CallStack) {
+void SamplingProfiler::AddUniqueCallStack(Callstack& a_CallStack) {
   ScopeLock lock(m_Mutex);
-  m_UniqueCallstacks[a_CallStack.Hash()] =
-      std::make_shared<CallStack>(a_CallStack);
+  CallstackID hash = SamplingUtils::InitAndGetCallstackHash(&a_CallStack);
+  m_UniqueCallstacks[hash] = std::make_shared<Callstack>(a_CallStack);
 }
 
 //-----------------------------------------------------------------------------
@@ -183,7 +184,7 @@ void SamplingProfiler::ProcessSamples() {
     ThreadSampleData& threadSampleData = m_ThreadSampleData[callstack.m_TID];
     threadSampleData.m_NumSamples++;
     threadSampleData.m_CallstackCount[callstack.m_Id]++;
-    for (uint64_t address : m_UniqueCallstacks[callstack.m_Id]->m_Data) {
+    for (uint64_t address : m_UniqueCallstacks[callstack.m_Id]->pcs()) {
       threadSampleData.m_RawAddressCount[address]++;
     }
 
@@ -191,7 +192,7 @@ void SamplingProfiler::ProcessSamples() {
       ThreadSampleData& threadSampleDataAll = m_ThreadSampleData[0];
       threadSampleDataAll.m_NumSamples++;
       threadSampleDataAll.m_CallstackCount[callstack.m_Id]++;
-      for (uint64_t address : m_UniqueCallstacks[callstack.m_Id]->m_Data) {
+      for (uint64_t address : m_UniqueCallstacks[callstack.m_Id]->pcs()) {
         threadSampleDataAll.m_RawAddressCount[address]++;
       }
     }
@@ -211,16 +212,16 @@ void SamplingProfiler::ProcessSamples() {
 
       CallstackID resolvedCallstackID =
           m_OriginalCallstackToResolvedCallstack[callstackID];
-      std::shared_ptr<CallStack>& resolvedCallstack =
+      std::shared_ptr<Callstack>& resolvedCallstack =
           m_UniqueResolvedCallstacks[resolvedCallstackID];
 
       // exclusive stat
-      threadSampleData.m_ExclusiveCount[resolvedCallstack->m_Data[0]] +=
+      threadSampleData.m_ExclusiveCount[resolvedCallstack->pcs(0)] +=
           callstackCount;
 
       std::set<uint64_t> uniqueAddresses;
-      for (uint32_t i = 0; i < resolvedCallstack->m_Depth; ++i) {
-        uniqueAddresses.insert(resolvedCallstack->m_Data[i]);
+      for (int i = 0; i < resolvedCallstack->pcs_size(); ++i) {
+        uniqueAddresses.insert(resolvedCallstack->pcs(i));
       }
 
       for (uint64_t address : uniqueAddresses) {
@@ -254,13 +255,13 @@ void SamplingProfiler::ResolveCallstacks() {
   ScopeLock lock(m_Mutex);
   for (const auto& it : m_UniqueCallstacks) {
     CallstackID rawCallstackId = it.first;
-    const std::shared_ptr<CallStack> callstack = it.second;
+    const std::shared_ptr<Callstack> callstack = it.second;
     // A "resolved callstack" is a callstack where every address is replaced by
     // the start address of the function (if known).
-    CallStack resolved_callstack = *callstack;
+    Callstack resolved_callstack = *callstack;
 
-    for (uint32_t i = 0; i < callstack->m_Depth; ++i) {
-      uint64_t addr = callstack->m_Data[i];
+    for (int i = 0; i < callstack->pcs_size(); ++i) {
+      uint64_t addr = callstack->pcs(i);
 
       if (m_ExactAddressToFunctionAddress.find(addr) ==
           m_ExactAddressToFunctionAddress.end()) {
@@ -270,16 +271,17 @@ void SamplingProfiler::ResolveCallstacks() {
       auto addrIt = m_ExactAddressToFunctionAddress.find(addr);
       if (addrIt != m_ExactAddressToFunctionAddress.end()) {
         const uint64_t& functionAddr = addrIt->second;
-        resolved_callstack.m_Data[i] = functionAddr;
+        resolved_callstack.set_pcs(i, functionAddr);
         m_FunctionToCallstacks[functionAddr].insert(rawCallstackId);
       }
     }
 
-    CallstackID resolvedCallstackId = resolved_callstack.Hash();
+    CallstackID resolvedCallstackId =
+        SamplingUtils::InitAndGetCallstackHash(&resolved_callstack);
     if (m_UniqueResolvedCallstacks.find(resolvedCallstackId) ==
         m_UniqueResolvedCallstacks.end()) {
       m_UniqueResolvedCallstacks[resolvedCallstackId] =
-          std::make_shared<CallStack>(resolved_callstack);
+          std::make_shared<Callstack>(resolved_callstack);
     }
 
     m_OriginalCallstackToResolvedCallstack[rawCallstackId] =
@@ -411,8 +413,8 @@ ORBIT_SERIALIZE_WSTRING(SampledFunction, 0) {
 ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 4) {
   ORBIT_NVP_VAL(0, m_NumSamples);
   ORBIT_NVP_DEBUG(0, m_ThreadSampleData);
-  ORBIT_NVP_DEBUG(0, m_UniqueCallstacks);
-  ORBIT_NVP_DEBUG(0, m_UniqueResolvedCallstacks);
+  // ORBIT_NVP_DEBUG(0, m_UniqueCallstacks);
+  // ORBIT_NVP_DEBUG(0, m_UniqueResolvedCallstacks);
   ORBIT_NVP_DEBUG(0, m_OriginalCallstackToResolvedCallstack);
   ORBIT_NVP_DEBUG(0, m_FunctionToCallstacks);
   ORBIT_NVP_DEBUG(0, m_ExactAddressToFunctionAddress);

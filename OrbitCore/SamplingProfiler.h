@@ -6,12 +6,12 @@
 #define ORBIT_CORE_SAMPLING_PROFILER_H_
 
 #include "BlockChain.h"
-#include "Callstack.h"
 #include "Capture.h"
 #include "Core.h"
 #include "EventBuffer.h"
 #include "Pdb.h"
 #include "SerializationMacros.h"
+#include "capture.pb.h"
 
 class Process;
 
@@ -85,11 +85,11 @@ class SamplingProfiler {
   float GetSampleTime();
   float GetSampleTimeTotal() const { return m_SampleTimeSeconds; }
 
-  void AddCallStack(CallStack& a_CallStack);
+  void AddCallStack(Callstack& a_CallStack);
   void AddHashedCallStack(CallstackEvent& a_CallStack);
-  void AddUniqueCallStack(CallStack& a_CallStack);
+  void AddUniqueCallStack(Callstack& a_CallStack);
 
-  std::shared_ptr<CallStack> GetCallStack(CallstackID a_ID) {
+  std::shared_ptr<Callstack> GetCallStack(CallstackID a_ID) {
     ScopeLock lock(m_Mutex);
     return m_UniqueCallstacks[a_ID];
   }
@@ -152,12 +152,12 @@ class SamplingProfiler {
 
   // Filled before ProcessSamples by AddCallstack, AddHashedCallstack.
   BlockChain<CallstackEvent, 16 * 1024> m_Callstacks;
-  std::unordered_map<CallstackID, std::shared_ptr<CallStack>>
+  std::unordered_map<CallstackID, std::shared_ptr<Callstack>>
       m_UniqueCallstacks;
 
   // Filled by ProcessSamples.
   std::unordered_map<ThreadID, ThreadSampleData> m_ThreadSampleData;
-  std::unordered_map<CallstackID, std::shared_ptr<CallStack>>
+  std::unordered_map<CallstackID, std::shared_ptr<Callstack>>
       m_UniqueResolvedCallstacks;
   std::unordered_map<CallstackID, CallstackID>
       m_OriginalCallstackToResolvedCallstack;

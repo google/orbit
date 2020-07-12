@@ -4,6 +4,7 @@
 #include "CaptureEventProcessor.h"
 #include "CaptureListener.h"
 #include "absl/flags/flag.h"
+#include "capture.pb.h"
 #include "services.pb.h"
 
 ABSL_FLAG(uint16_t, sampling_rate, 1000,
@@ -15,7 +16,7 @@ namespace {
 class MyCaptureListener : public CaptureListener {
   void OnTimer(Timer) override {}
   void OnKeyAndString(uint64_t, std::string) override {}
-  void OnCallstack(CallStack) override {}
+  void OnCallstack(Callstack) override {}
   void OnCallstackEvent(CallstackEvent) override {}
   void OnThreadName(int32_t, std::string) override {}
   void OnAddressInfo(LinuxAddressInfo) override {}

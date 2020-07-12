@@ -46,6 +46,8 @@ message FunctionCall {
 
 message Callstack {
   repeated uint64 pcs = 1;
+  uint64 hash = 2;
+  uint32 thread_id = 3;
 }
 
 message InternedCallstack {

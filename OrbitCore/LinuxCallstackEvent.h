@@ -11,15 +11,15 @@
 
 #include <cstdint>
 
-#include "Callstack.h"
+#include "capture.pb.h"
 
 struct LinuxCallstackEvent {
   LinuxCallstackEvent() = default;
-  LinuxCallstackEvent(uint64_t time, CallStack callstack)
+  LinuxCallstackEvent(uint64_t time, Callstack callstack)
       : time_{time}, callstack_{std::move(callstack)} {}
 
   uint64_t time_ = 0;
-  CallStack callstack_;
+  Callstack callstack_;
 };
 
 #endif  // ORBIT_CORE_LINUX_CALLSTACK_EVENT_H_

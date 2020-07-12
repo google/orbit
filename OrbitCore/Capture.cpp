@@ -18,6 +18,7 @@
 #include "Path.h"
 #include "Pdb.h"
 #include "SamplingProfiler.h"
+#include "SamplingUtils.h"
 #include "Serialization.h"
 #include "absl/strings/str_format.h"
 
@@ -44,8 +45,8 @@ std::vector<std::shared_ptr<Function>> Capture::GSelectedFunctions;
 std::map<uint64_t, Function*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, Function*> Capture::GVisibleFunctionsMap;
 std::unordered_map<uint64_t, uint64_t> Capture::GFunctionCountMap;
-std::shared_ptr<CallStack> Capture::GSelectedCallstack;
-std::unordered_map<uint64_t, std::shared_ptr<CallStack>> Capture::GCallstacks;
+std::shared_ptr<Callstack> Capture::GSelectedCallstack;
+std::unordered_map<uint64_t, std::shared_ptr<Callstack>> Capture::GCallstacks;
 int32_t Capture::GProcessId = -1;
 std::string Capture::GProcessName;
 std::unordered_map<int32_t, std::string> Capture::GThreadNames;
@@ -237,14 +238,14 @@ void Capture::RegisterZoneName(uint64_t a_ID, const char* a_Name) {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::AddCallstack(CallStack& a_CallStack) {
+void Capture::AddCallstack(Callstack& a_CallStack) {
   ScopeLock lock(GCallstackMutex);
-  Capture::GCallstacks[a_CallStack.m_Hash] =
-      std::make_shared<CallStack>(a_CallStack);
+  CallstackID hash = SamplingUtils::InitAndGetCallstackHash(&a_CallStack);
+  Capture::GCallstacks[hash] = std::make_shared<Callstack>(a_CallStack);
 }
 
 //-----------------------------------------------------------------------------
-std::shared_ptr<CallStack> Capture::GetCallstack(CallstackID a_ID) {
+std::shared_ptr<Callstack> Capture::GetCallstack(CallstackID a_ID) {
   ScopeLock lock(GCallstackMutex);
 
   auto it = Capture::GCallstacks.find(a_ID);

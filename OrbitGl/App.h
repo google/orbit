@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_APP_H_
+#define ORBIT_GL_APP_H_
 
 #include <functional>
 #include <map>
@@ -38,11 +39,11 @@
 #include "Threading.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "capture.pb.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
-struct CallStack;
 class Process;
 
 //-----------------------------------------------------------------------------
@@ -70,7 +71,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void ToggleDrawHelp();
   void OnCaptureStopped();
   void ToggleCapture();
-  void SetCallStack(std::shared_ptr<CallStack> a_CallStack);
+  void SetCallStack(std::shared_ptr<Callstack> a_CallStack);
   void LoadFileMapping();
   void ListPresets();
   void RefreshCaptureView();
@@ -78,7 +79,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void OnTimer(Timer timer) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
-  void OnCallstack(CallStack callstack) override;
+  void OnCallstack(Callstack callstack) override;
   void OnCallstackEvent(CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
   void OnAddressInfo(LinuxAddressInfo address_info) override;
@@ -289,3 +290,5 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
 //-----------------------------------------------------------------------------
 extern std::unique_ptr<OrbitApp> GOrbitApp;
+
+#endif  // ORBIT_GL_APP_H_

@@ -541,10 +541,10 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
   samplingProfiler->SetGenerateSummary(a_TID == 0);
 
   for (CallstackEvent& event : selected_callstack_events) {
-    std::shared_ptr<CallStack> callstack =
+    std::shared_ptr<Callstack> callstack =
         Capture::GSamplingProfiler->GetCallStack(event.m_Id);
     if (callstack) {
-      callstack->m_ThreadId = event.m_TID;
+      callstack->set_thread_id(event.m_TID);
       samplingProfiler->AddCallStack(*callstack);
     }
   }
