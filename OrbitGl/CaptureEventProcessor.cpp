@@ -159,25 +159,34 @@ void CaptureEventProcessor::ProcessThreadName(const ThreadName& thread_name) {
 
 void CaptureEventProcessor::ProcessAddressInfo(
     const AddressInfo& address_info) {
-  std::string function_name;
   if (address_info.function_name_or_key_case() ==
-      AddressInfo::kFunctionNameKey) {
-    function_name = string_intern_pool[address_info.function_name_key()];
-  } else {
-    function_name = address_info.function_name();
-  }
+          AddressInfo::kFunctionNameKey ||
+      address_info.map_name_or_key_case() == AddressInfo::kMapNameKey) {
+    AddressInfo processed_address_info;
+    processed_address_info.set_absolute_address(
+        address_info.absolute_address());
+    processed_address_info.set_offset_in_function(
+        address_info.offset_in_function());
 
-  std::string map_name;
-  if (address_info.map_name_or_key_case() == AddressInfo::kMapNameKey) {
-    map_name = string_intern_pool[address_info.map_name_key()];
-  } else {
-    map_name = address_info.map_name();
-  }
+    if (address_info.function_name_or_key_case() ==
+        AddressInfo::kFunctionNameKey) {
+      processed_address_info.set_function_name(
+          string_intern_pool[address_info.function_name_key()]);
+    } else {
+      processed_address_info.set_function_name(address_info.function_name());
+    }
 
-  LinuxAddressInfo linux_address_info{address_info.absolute_address(), map_name,
-                                      function_name,
-                                      address_info.offset_in_function()};
-  capture_listener_->OnAddressInfo(linux_address_info);
+    if (address_info.map_name_or_key_case() == AddressInfo::kMapNameKey) {
+      processed_address_info.set_map_name(
+          string_intern_pool[address_info.map_name_key()]);
+    } else {
+      processed_address_info.set_map_name(address_info.map_name());
+    }
+
+    capture_listener_->OnAddressInfo(processed_address_info);
+  } else {
+    capture_listener_->OnAddressInfo(address_info);
+  }
 }
 
 void CaptureEventProcessor::SendToListenerIfNecessary(

@@ -19,7 +19,7 @@ class MyCaptureListener : public CaptureListener {
   void OnCallstack(Callstack) override {}
   void OnCallstackEvent(CallstackEvent) override {}
   void OnThreadName(int32_t, std::string) override {}
-  void OnAddressInfo(LinuxAddressInfo) override {}
+  void OnAddressInfo(AddressInfo) override {}
 };
 }  // namespace
 

@@ -70,26 +70,6 @@ void CaptureSerializer::SaveImpl(T& archive) {
   archive(cereal::make_nvp("Capture", *this));
 
   {
-    ORBIT_SIZE_SCOPE("Capture::GProcessId");
-    archive(Capture::GProcessId);
-  }
-
-  {
-    ORBIT_SIZE_SCOPE("Capture::GProcessName");
-    archive(Capture::GProcessName);
-  }
-
-  {
-    ORBIT_SIZE_SCOPE("Capture::GThreadNames");
-    archive(Capture::GThreadNames);
-  }
-
-  {
-    ORBIT_SIZE_SCOPE("Capture::GAddressInfos");
-    archive(Capture::GAddressInfos);
-  }
-
-  {
     ORBIT_SIZE_SCOPE("Capture::GAddressToFunctionName");
     archive(Capture::GAddressToFunctionName);
   }
@@ -151,14 +131,6 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   // Header
   cereal::BinaryInputArchive archive(stream);
   archive(*this);
-
-  archive(Capture::GProcessId);
-
-  archive(Capture::GProcessName);
-
-  archive(Capture::GThreadNames);
-
-  archive(Capture::GAddressInfos);
 
   archive(Capture::GAddressToFunctionName);
 

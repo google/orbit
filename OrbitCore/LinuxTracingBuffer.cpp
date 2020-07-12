@@ -24,7 +24,7 @@ void LinuxTracingBuffer::RecordHashedCallstack(
   hashed_callstack_buffer_.emplace_back(std::move(hashed_callstack));
 }
 
-void LinuxTracingBuffer::RecordAddressInfo(LinuxAddressInfo&& address_info) {
+void LinuxTracingBuffer::RecordAddressInfo(AddressInfo&& address_info) {
   absl::MutexLock lock(&address_info_buffer_mutex_);
   address_info_buffer_.emplace_back(std::move(address_info));
 }
@@ -83,7 +83,7 @@ bool LinuxTracingBuffer::ReadAllHashedCallstacks(
 }
 
 bool LinuxTracingBuffer::ReadAllAddressInfos(
-    std::vector<LinuxAddressInfo>* out_buffer) {
+    std::vector<AddressInfo>* out_buffer) {
   absl::MutexLock lock(&address_info_buffer_mutex_);
   if (address_info_buffer_.empty()) {
     return false;

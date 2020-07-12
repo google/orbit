@@ -128,8 +128,8 @@ void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
   Capture::GThreadNames.insert_or_assign(thread_id, std::move(thread_name));
 }
 
-void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
-  uint64_t address = address_info.address;
+void OrbitApp::OnAddressInfo(AddressInfo address_info) {
+  uint64_t address = address_info.absolute_address();
   Capture::GAddressInfos.emplace(address, std::move(address_info));
 }
 

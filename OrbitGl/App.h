@@ -82,7 +82,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnCallstack(Callstack callstack) override;
   void OnCallstackEvent(CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
-  void OnAddressInfo(LinuxAddressInfo address_info) override;
+  void OnAddressInfo(AddressInfo address_info) override;
 
   void OnValidateFramePointers(
       std::vector<std::shared_ptr<Module>> modules_to_validate);

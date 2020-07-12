@@ -50,7 +50,7 @@ std::unordered_map<uint64_t, std::shared_ptr<Callstack>> Capture::GCallstacks;
 int32_t Capture::GProcessId = -1;
 std::string Capture::GProcessName;
 std::unordered_map<int32_t, std::string> Capture::GThreadNames;
-std::unordered_map<uint64_t, LinuxAddressInfo> Capture::GAddressInfos;
+std::unordered_map<uint64_t, AddressInfo> Capture::GAddressInfos;
 std::unordered_map<uint64_t, std::string> Capture::GAddressToFunctionName;
 Mutex Capture::GCallstackMutex;
 std::unordered_map<uint64_t, std::string> Capture::GZoneNames;
@@ -257,7 +257,7 @@ std::shared_ptr<Callstack> Capture::GetCallstack(CallstackID a_ID) {
 }
 
 //-----------------------------------------------------------------------------
-LinuxAddressInfo* Capture::GetAddressInfo(uint64_t address) {
+AddressInfo* Capture::GetAddressInfo(uint64_t address) {
   auto address_info_it = GAddressInfos.find(address);
   if (address_info_it == GAddressInfos.end()) {
     return nullptr;

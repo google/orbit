@@ -325,7 +325,7 @@ unsigned int SamplingProfiler::GetCountOfFunction(
 void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   ScopeLock lock(m_Mutex);
 
-  LinuxAddressInfo* address_info = Capture::GetAddressInfo(address);
+  AddressInfo* address_info = Capture::GetAddressInfo(address);
   Function* function = m_Process->GetFunctionFromAddress(address, false);
 
   // Find the start address of the function this address falls inside.
@@ -342,16 +342,16 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
     function_address = FunctionUtils::GetAbsoluteAddress(*function);
     function_name = FunctionUtils::GetDisplayName(*function);
   } else if (address_info != nullptr) {
-    function_address = address - address_info->offset_in_function;
-    if (!address_info->function_name.empty()) {
-      function_name = address_info->function_name;
+    function_address = address - address_info->offset_in_function();
+    if (!address_info->function_name().empty()) {
+      function_name = address_info->function_name();
     }
   } else {
     function_address = address;
   }
 
   if (function != nullptr && address_info != nullptr) {
-    address_info->function_name = FunctionUtils::GetDisplayName(*function);
+    address_info->set_function_name(FunctionUtils::GetDisplayName(*function));
   }
 
   m_ExactAddressToFunctionAddress[address] = function_address;
