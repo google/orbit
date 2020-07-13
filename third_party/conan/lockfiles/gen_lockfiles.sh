@@ -7,7 +7,7 @@ if [ "$(uname -s)" == "Linux" ]; then
   profiles=({ggp,clang{7,8,9},gcc{8,9}}_{release,relwithdebinfo,debug})
 else
   subdirectory="windows"
-  profiles=({ggp,msvc{2017,2019}}_{release,relwithdebinfo,debug})
+  profiles=({ggp_{release,relwithdebinfo,debug},msvc{2017,2019}_{release,relwithdebinfo,debug}{,_x86}})
 fi
 if [ "$#" -ne 0 ]; then
   profiles=( "$@" )
