@@ -23,13 +23,12 @@ const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
     columns.resize(COLUMN_NUM);
     columns[COLUMN_SELECTED] = {"Hooked", .0f, SortingOrder::Descending};
     columns[COLUMN_INDEX] = {"Index", .0f, SortingOrder::Ascending};
-    columns[COLUMN_NAME] = {"Function", .5f, SortingOrder::Ascending};
+    columns[COLUMN_NAME] = {"Function", .6f, SortingOrder::Ascending};
     columns[COLUMN_SIZE] = {"Size", .0f, SortingOrder::Ascending};
     columns[COLUMN_FILE] = {"File", .0f, SortingOrder::Ascending};
     columns[COLUMN_LINE] = {"Line", .0f, SortingOrder::Ascending};
     columns[COLUMN_MODULE] = {"Module", .0f, SortingOrder::Ascending};
     columns[COLUMN_ADDRESS] = {"Address", .0f, SortingOrder::Ascending};
-    columns[COLUMN_CALL_CONV] = {"Call conv", .0f, SortingOrder::Ascending};
     return columns;
   }();
   return columns;
@@ -62,8 +61,6 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
       return function.GetLoadedModuleName();
     case COLUMN_ADDRESS:
       return absl::StrFormat("0x%llx", function.GetVirtualAddress());
-    case COLUMN_CALL_CONV:
-      return function.GetCallingConventionString();
     default:
       return "";
   }
@@ -112,9 +109,6 @@ void FunctionsDataView::DoSort() {
       break;
     case COLUMN_ADDRESS:
       sorter = ORBIT_FUNC_SORT(Address());
-      break;
-    case COLUMN_CALL_CONV:
-      sorter = ORBIT_FUNC_SORT(CallingConvention());
       break;
     default:
       break;
