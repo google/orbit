@@ -39,15 +39,11 @@ class Process {
   void SetID(int32_t id) { m_ID = id; }
   int32_t GetID() const { return m_ID; }
   bool GetIs64Bit() const { return m_Is64Bit; }
-  bool GetIsRemote() const { return m_IsRemote; }
-  void SetIsRemote(bool val) { m_IsRemote = val; }
 
   Function* GetFunctionFromAddress(uint64_t address, bool a_IsExact = true);
   std::shared_ptr<Module> GetModuleFromAddress(uint64_t a_Address);
   std::shared_ptr<Module> GetModuleFromName(const std::string& a_Name);
   std::shared_ptr<Module> GetModuleFromPath(const std::string& module_path);
-
-  bool LineInfoFromAddress(uint64_t a_Address, struct LineInfo& o_LineInfo);
 
   void AddFunction(const std::shared_ptr<Function>& function) {
     m_Functions.push_back(function);
@@ -60,8 +56,6 @@ class Process {
   Mutex& GetDataMutex() { return m_DataMutex; }
 
  private:
-  void ClearTransients();
-
   int32_t m_ID;
 
   std::string m_Name;

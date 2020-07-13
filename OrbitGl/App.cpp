@@ -203,7 +203,6 @@ void OrbitApp::PostInit() {
             process->SetID(info.pid());
             process->SetName(info.name());
             process->SetFullPath(info.full_path());
-            process->SetIsRemote(true);
             // The other fields do not appear to be used at the moment.
 
             process_map_.insert_or_assign(process->GetID(), process);
