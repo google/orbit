@@ -8,10 +8,12 @@
 #include "OrbitFunction.h"
 #include "TimerChain.h"
 
+class LiveFunctions;
+
 //-----------------------------------------------------------------------------
 class LiveFunctionsDataView : public DataView {
  public:
-  LiveFunctionsDataView();
+  LiveFunctionsDataView(LiveFunctions* live_functions);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return COLUMN_COUNT; }
@@ -24,6 +26,9 @@ class LiveFunctionsDataView : public DataView {
   void OnDataChanged() override;
   void OnTimer() override;
 
+  TextBox* JumpToNext(Function& function, TickType current_time) const;
+  TextBox* JumpToPrevious(Function& function, TickType current_time) const;
+
  protected:
   void DoFilter() override;
   void DoSort() override;
@@ -31,6 +36,8 @@ class LiveFunctionsDataView : public DataView {
   std::pair<TextBox*, TextBox*> GetMinMax(Function& function) const;
 
   std::vector<Function*> m_Functions;
+
+  LiveFunctions* live_functions_;
 
   enum ColumnIndex {
     COLUMN_SELECTED,
@@ -52,4 +59,5 @@ class LiveFunctionsDataView : public DataView {
   static const std::string MENU_ACTION_JUMP_TO_MIN;
   static const std::string MENU_ACTION_JUMP_TO_MAX;
   static const std::string MENU_ACTION_DISASSEMBLY;
+  static const std::string MENU_ACTION_ITERATE;
 };
