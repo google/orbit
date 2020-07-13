@@ -1,3 +1,8 @@
+C_COMPILER=gcc-8
+CXX_COMPILER=g++-8
+C_FLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
+CXX_FLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
+LINKER_FLAGS= -Wl,-z,relro,-z,now,-z,noexecstack
 [settings]
 os=Linux
 os_build=Linux
@@ -12,8 +17,8 @@ build_type=Release
 [build_requires]
 cmake_installer/3.16.3@conan/stable
 [env]
-CC=gcc-8
-CXX=g++-8
-CFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
-CXXFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
-LDFLAGS= -Wl,-z,relro,-z,now,-z,noexecstack
+CC=$C_COMPILER
+CXX=$CXX_COMPILER
+CFLAGS=$C_FLAGS
+CXXFLAGS=$CXX_FLAGS
+LDFLAGS=$LINKER_FLAGS
