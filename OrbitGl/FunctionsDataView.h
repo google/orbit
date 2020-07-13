@@ -38,7 +38,6 @@ class FunctionsDataView : public DataView {
     COLUMN_LINE,
     COLUMN_MODULE,
     COLUMN_ADDRESS,
-    COLUMN_CALL_CONV,
     COLUMN_NUM
   };
 
