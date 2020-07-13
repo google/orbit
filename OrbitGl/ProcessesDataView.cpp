@@ -20,10 +20,9 @@ const std::vector<DataView::Column>& ProcessesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(COLUMN_NUM);
-    columns[COLUMN_PID] = {"PID", .0f, SortingOrder::Ascending};
-    columns[COLUMN_NAME] = {"Name", .5f, SortingOrder::Ascending};
+    columns[COLUMN_PID] = {"PID", .2f, SortingOrder::Ascending};
+    columns[COLUMN_NAME] = {"Name", .6f, SortingOrder::Ascending};
     columns[COLUMN_CPU] = {"CPU", .0f, SortingOrder::Descending};
-    columns[COLUMN_TYPE] = {"Type", .0f, SortingOrder::Ascending};
     return columns;
   }();
   return columns;
@@ -39,8 +38,6 @@ std::string ProcessesDataView::GetValue(int row, int col) {
       return process.name();
     case COLUMN_CPU:
       return absl::StrFormat("%.1f", process.cpu_usage());
-    case COLUMN_TYPE:
-      return process.is_64_bit() ? "64 bit" : "32 bit";
     default:
       return "";
   }
@@ -71,9 +68,6 @@ void ProcessesDataView::DoSort() {
       break;
     case COLUMN_CPU:
       sorter = ORBIT_PROC_SORT(cpu_usage());
-      break;
-    case COLUMN_TYPE:
-      sorter = ORBIT_PROC_SORT(is_64_bit());
       break;
     default:
       break;
