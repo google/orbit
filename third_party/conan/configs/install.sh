@@ -13,14 +13,33 @@ function conan_disable_public_remotes {
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-# Installs conan config (build settings, public remotes, conan profiles, conan options). Have a look in \third_party\conan\configs\windows for more information.
-if [ "$(uname -s)" == "Linux" ]; then
-  conan config install "$DIR/linux" || exit $?
-else
-  conan config install "$DIR/windows" || exit $?
-fi
+OPTIONS=$(getopt -l "force-public-remotes,assume-linux,assume-windows" "" -- "$@")
+eval set -- "$OPTIONS"
 
-if [ -n "$ORBIT_OVERRIDE_ARTIFACTORY_URL" ]; then
+if [ "$(uname -s)" == "Linux" ]; then
+  OS="linux"
+else
+  OS="windows"
+fi
+FORCE_PUBLIC_REMOTES=""
+
+while true; do
+  case "$1" in
+    --force-public-remotes) FORCE_PUBLIC_REMOTES="yes"; shift;;
+    --assume-linux) OS="linux"; shift;;
+    --assume-windows) OS="windows"; shift;;
+    --) shift; break;;
+  esac
+done
+
+# Installs conan config (build settings, public remotes, conan profiles, conan options). Have a look in \third_party\conan\configs\windows for more information.
+conan config install "$DIR/$OS" || exit $?
+
+
+if [ "§FORCE_PUBLIC_REMOTES" == "yes" ]; then
+  echo "Using public remotes for conan."
+
+elif [ -n "$ORBIT_OVERRIDE_ARTIFACTORY_URL" ]; then
   echo "Artifactory override detected. Adjusting remotes..."
   conan remote add -i 0 -f artifactory "$ORBIT_OVERRIDE_ARTIFACTORY_URL" || exit $?
   conan_disable_public_remotes || exit $?
