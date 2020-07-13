@@ -5,6 +5,8 @@
 #pragma once
 
 #include <QApplication>
+#include <QLabel>
+#include <QLineEdit>
 #include <QMainWindow>
 #include <QString>
 #include <QTimer>
@@ -61,18 +63,22 @@ class OrbitMainWindow : public QMainWindow {
 
   void OnTimer();
   void OnHideSearch();
+  void OnLiveTabFunctionsFilterTextChanged(const QString& text);
+  void OnFilterFunctionsTextChanged(const QString& text);
+  void OnFilterTracksTextChanged(const QString& text);
 
   void on_actionOpen_Preset_triggered();
   void on_actionQuit_triggered();
-
   void on_actionToogleDevMode_toggled(bool arg1);
-
   void on_actionSave_Preset_As_triggered();
 
+  void on_actionStart_Capture_triggered();
+  void on_actionStop_Capture_triggered();
   void on_actionSave_Capture_triggered();
-
   void on_actionOpen_Capture_triggered();
-
+  void on_actionClear_Capture_triggered();
+  void on_actionHelp_triggered();
+  void on_actionFeedback_triggered();
   void on_actionShow_Includes_Util_triggered();
 
   void on_actionCheckFalse_triggered();
@@ -84,6 +90,7 @@ class OrbitMainWindow : public QMainWindow {
 
  private:
   void StartMainTimer();
+  void SetupCaptureToolbar();
   void SetupCodeView();
   void ShowFeedbackDialog();
 
@@ -94,15 +101,20 @@ class OrbitMainWindow : public QMainWindow {
   std::vector<OrbitGLWidget*> m_GlWidgets;
   bool m_Headless;
 
-  // sampling tab
+  // Sampling tab.
   class QWidget* m_SamplingTab;
   class OrbitSamplingReport* m_OrbitSamplingReport;
   class QGridLayout* m_SamplingLayout;
 
-  // selection tab
+  // Selection tab.
   class QWidget* m_SelectionTab;
   class OrbitSamplingReport* m_SelectionReport;
   class QGridLayout* m_SelectionLayout;
+
+  // Capture toolbar.
+  QLabel* timer_label_ = nullptr;
+  QLineEdit* filter_functions_line_edit_ = nullptr;
+  QLineEdit* filter_tracks_line_edit_ = nullptr;
 
   class OutputDialog* m_OutputDialog;
   std::string m_CurrentPdbName;

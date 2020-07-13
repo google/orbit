@@ -31,7 +31,7 @@ TimeGraphLayout::TimeGraphLayout() {
   m_RoundingNumSides = 16;
   m_TextOffset = 5.f;
   m_VerticalMargin = 10.f;
-  m_SchedulerTrackOffset = 62.f;
+  m_SchedulerTrackOffset = 10.f;
   m_TextZ = -0.02f;
   m_TrackZ = -0.1f;
   m_ToolbarIconHeight = 24.f;

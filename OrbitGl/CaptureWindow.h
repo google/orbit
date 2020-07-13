@@ -50,7 +50,6 @@ class CaptureWindow : public GlCanvas {
   void PostRender() override;
   void Resize(int a_Width, int a_Height) override;
   void RenderHelpUi();
-  void RenderToolbars();
   void RenderTimeBar();
   void ResetHoverTimer();
   void SelectTextBox(class TextBox* a_TextBox);
@@ -62,9 +61,7 @@ class CaptureWindow : public GlCanvas {
   std::vector<std::string> GetContextMenu() override;
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex) override;
   void UpdateVerticalSlider();
-
- private:
-  void LoadIcons();
+  void ToggleDrawHelp();
 
  private:
   TimeGraph time_graph_;
@@ -81,25 +78,6 @@ class CaptureWindow : public GlCanvas {
   GlSlider m_Slider;
   GlSlider m_VerticalSlider;
   int m_ProcessX;
-
-  // Toolbars.
-  uint64_t start_capture_icon_id_;
-  uint64_t stop_capture_icon_id_;
-  uint64_t save_capture_icon_id_;
-  uint64_t load_capture_icon_id_;
-  uint64_t clear_capture_icon_id_;
-  uint64_t help_icon_id_;
-  uint64_t filter_tracks_icon_id_;
-  uint64_t search_icon_id_;
-  uint64_t time_icon_id_;
-  uint64_t feedback_icon_id_;
-  uint64_t info_icon_id_;
-  std::string icons_path_;
-  float toolbar_height_ = 0;
-
-  static constexpr size_t kFilterLength = 512;
-  char track_filter_[kFilterLength] = "";
-  char find_filter_[kFilterLength] = "";
 
   static const std::string MENU_ACTION_GO_TO_CALLSTACK;
   static const std::string MENU_ACTION_GO_TO_SOURCE;

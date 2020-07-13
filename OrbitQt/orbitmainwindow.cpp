@@ -73,6 +73,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->splitter_2->setSizes(sizes);
 
   GOrbitApp->SetCaptureStartedCallback([this] {
+    ui->actionStart_Capture->setDisabled(true);
+    ui->actionStop_Capture->setDisabled(false);
     ui->actionOpen_Capture->setDisabled(true);
     ui->actionSave_Capture->setDisabled(true);
     ui->actionOpen_Preset->setDisabled(true);
@@ -95,6 +97,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       [finalizing_capture_dialog] { finalizing_capture_dialog->show(); });
   GOrbitApp->SetCaptureStoppedCallback([this, finalizing_capture_dialog] {
     finalizing_capture_dialog->close();
+    ui->actionStart_Capture->setDisabled(false);
+    ui->actionStop_Capture->setDisabled(true);
     ui->actionOpen_Capture->setDisabled(false);
     ui->actionSave_Capture->setDisabled(false);
     ui->actionOpen_Preset->setDisabled(false);
@@ -196,6 +200,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->menuDebug->menuAction()->setVisible(false);
   }
 
+  SetupCaptureToolbar();
+
   // Output window
   this->ui->plainTextEdit->SetIsOutputWindow();
 
@@ -214,6 +220,107 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GMainWindow = this;
 
   GOrbitApp->PostInit();
+}
+
+void SetFontSize(QWidget* widget, uint32_t font_size) {
+  QFont font = widget->font();
+  font.setPointSize(font_size);
+  widget->setFont(font);
+}
+
+QWidget* CreateSpacer(QWidget* parent) {
+  QLabel* spacer = new QLabel(parent);
+  spacer->setText("    ");
+  return spacer;
+}
+
+QAction* CreateDummyAction(const QIcon& icon, QObject* parent) {
+  QAction* action = new QAction(icon, "", parent);
+  action->setDisabled(true);
+  return action;
+}
+
+QIcon GetIcon(const std::string& icon_name) {
+  return QIcon(Path::JoinPath({Path::GetIconsPath(), icon_name}).c_str());
+}
+
+void OrbitMainWindow::SetupCaptureToolbar() {
+  // Sizes.
+  uint32_t kFontSize = 10;
+  uint32_t kIconSize = 30;
+  QToolBar* toolbar = ui->capture_toolbar;
+  toolbar->setIconSize(QSize(kIconSize, kIconSize));
+
+  // Create icons.
+  QIcon icon_start = GetIcon("outline_play_arrow_white_48dp.png");
+  QIcon icon_stop = GetIcon("outline_stop_white_48dp.png");
+  QIcon icon_clear = GetIcon("outline_clear_white_48dp.png");
+  QIcon icon_open = GetIcon("outline_folder_white_48dp.png");
+  QIcon icon_save = GetIcon("outline_save_alt_white_48dp.png");
+  QIcon icon_help = GetIcon("outline_help_outline_white_48dp.png");
+  QIcon icon_feedback = GetIcon("outline_feedback_white_48dp.png");
+  QIcon icon_search = GetIcon("outline_search_white_48dp.png");
+  QIcon icon_filter = GetIcon("outline_filter_list_white_48dp.png");
+  QIcon icon_timer = GetIcon("outline_access_time_white_48dp.png");
+
+  // Set action icons.
+  ui->actionStart_Capture->setIcon(icon_start);
+  ui->actionStop_Capture->setIcon(icon_stop);
+  ui->actionClear_Capture->setIcon(icon_clear);
+  ui->actionOpen_Capture->setIcon(icon_open);
+  ui->actionSave_Capture->setIcon(icon_save);
+  ui->actionHelp->setIcon(icon_help);
+  ui->actionFeedback->setIcon(icon_feedback);
+  ui->actionFilter_Functions->setIcon(icon_search);
+  ui->actionFilter_Tracks->setIcon(icon_filter);
+
+  // Add actions.
+  toolbar->addAction(ui->actionStart_Capture);
+  toolbar->addAction(ui->actionStop_Capture);
+  toolbar->addAction(ui->actionClear_Capture);
+  toolbar->addAction(ui->actionOpen_Capture);
+  toolbar->addAction(ui->actionSave_Capture);
+  toolbar->addAction(ui->actionHelp);
+  toolbar->addAction(ui->actionFeedback);
+
+  // Filter tracks.
+  toolbar->addWidget(CreateSpacer(toolbar));
+  toolbar->addAction(CreateDummyAction(icon_filter, toolbar));
+  filter_tracks_line_edit_ = new QLineEdit(toolbar);
+  filter_tracks_line_edit_->setClearButtonEnabled(true);
+  filter_tracks_line_edit_->setPlaceholderText("filter tracks");
+  SetFontSize(filter_tracks_line_edit_, kFontSize);
+  toolbar->addWidget(filter_tracks_line_edit_);
+  connect(filter_tracks_line_edit_, SIGNAL(textChanged(const QString&)), this,
+          SLOT(OnFilterTracksTextChanged(const QString&)));
+
+  // Filter functions.
+  toolbar->addWidget(CreateSpacer(toolbar));
+  toolbar->addAction(CreateDummyAction(icon_search, toolbar));
+  filter_functions_line_edit_ = new QLineEdit();
+  filter_functions_line_edit_->setClearButtonEnabled(true);
+  filter_functions_line_edit_->setPlaceholderText("filter functions");
+  SetFontSize(filter_functions_line_edit_, kFontSize);
+  toolbar->addWidget(filter_functions_line_edit_);
+  connect(filter_functions_line_edit_, SIGNAL(textChanged(const QString&)),
+          this, SLOT(OnFilterFunctionsTextChanged(const QString&)));
+  connect(ui->LiveFunctionsList->GetFilterLineEdit(),
+          SIGNAL(textChanged(const QString&)), this,
+          SLOT(OnLiveTabFunctionsFilterTextChanged(const QString&)));
+
+  // Timer.
+  toolbar->addWidget(CreateSpacer(toolbar));
+  toolbar->addAction(CreateDummyAction(icon_timer, toolbar));
+  timer_label_ = new QLabel(toolbar);
+  timer_label_->setText("1s");
+  SetFontSize(timer_label_, kFontSize);
+  QFontMetrics fm(timer_label_->font());
+  int pixel_width = fm.width("w");
+  timer_label_->setMinimumWidth(5 * pixel_width);
+  toolbar->addWidget(timer_label_);
+
+  // Initial state.
+  ui->actionStop_Capture->setDisabled(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -493,10 +600,34 @@ void OrbitMainWindow::OnTimer() {
 
   // Output window
   this->ui->plainTextEdit->OnTimer();
+
+  if (timer_label_) {
+    timer_label_->setText(GOrbitApp->GetCaptureTime().c_str());
+  }
 }
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnHideSearch() { ui->lineEdit->hide(); }
+
+void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
+  // The toolbar and live tab filters are mirrored.
+  ui->LiveFunctionsList->SetFilter(text);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::OnLiveTabFunctionsFilterTextChanged(const QString& text) {
+  GOrbitApp->FilterFunctions(text.toStdString());
+
+  // Set main toolbar functions filter without triggering signals.
+  filter_functions_line_edit_->blockSignals(true);
+  filter_functions_line_edit_->setText(text);
+  filter_functions_line_edit_->blockSignals(false);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitMainWindow::OnFilterTracksTextChanged(const QString& text) {
+  GOrbitApp->FilterTracks(text.toStdString());
+}
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionOpen_Preset_triggered() {
@@ -555,7 +686,22 @@ void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
   }
 }
 
-//-----------------------------------------------------------------------------
+void OrbitMainWindow::on_actionStart_Capture_triggered() {
+  GOrbitApp->StartCapture();
+}
+
+void OrbitMainWindow::on_actionStop_Capture_triggered() {
+  GOrbitApp->StopCapture();
+}
+
+void OrbitMainWindow::on_actionClear_Capture_triggered() {
+  GOrbitApp->ClearCapture();
+}
+
+void OrbitMainWindow::on_actionHelp_triggered() { GOrbitApp->ToggleDrawHelp(); }
+
+void OrbitMainWindow::on_actionFeedback_triggered() { ShowFeedbackDialog(); }
+
 void OrbitMainWindow::on_actionSave_Capture_triggered() {
   QString file = QFileDialog::getSaveFileName(
       this, "Save capture...",

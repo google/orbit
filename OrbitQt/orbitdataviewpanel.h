@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <QLineEdit>
 #include <QWidget>
 
 #include "orbittablemodel.h"
@@ -27,6 +28,7 @@ class OrbitDataViewPanel : public QWidget {
   void SetDataModel(DataView* model);
   void SetFilter(const QString& a_Filter);
   class OrbitTreeView* GetTreeView();
+  QLineEdit* GetFilterLineEdit();
 
  private slots:
   void on_FilterLineEdit_textEdited(const QString& a_Text);
