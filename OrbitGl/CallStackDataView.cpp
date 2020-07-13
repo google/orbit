@@ -49,12 +49,12 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
 
   switch (a_Column) {
     case COLUMN_SELECTED:
-      return (function != nullptr && function::IsSelected(*function)) ? "X"
+      return (function != nullptr && FunctionUtils::IsSelected(*function)) ? "X"
                                                                       : "-";
     case COLUMN_INDEX:
       return absl::StrFormat("%d", a_Row);
     case COLUMN_NAME:
-      return function != nullptr ? function::GetDisplayName(*function)
+      return function != nullptr ? FunctionUtils::GetDisplayName(*function)
                                  : frame.fallback_name;
     case COLUMN_SIZE:
       return function != nullptr ? absl::StrFormat("%lu", function->size()) : "";
@@ -64,8 +64,8 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
       return function != nullptr ? absl::StrFormat("%d", function->line()) : "";
     case COLUMN_MODULE:
       if (function != nullptr &&
-          !function::GetLoadedModuleName(*function).empty()) {
-        return function::GetLoadedModuleName(*function);
+          !FunctionUtils::GetLoadedModuleName(*function).empty()) {
+        return FunctionUtils::GetLoadedModuleName(*function);
       }
       if (module != nullptr) {
         return module->m_Name;
@@ -98,8 +98,8 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
     Module* module = frame.module.get();
 
     if (frame.function != nullptr) {
-      enable_select |= !function::IsSelected(*function);
-      enable_unselect |= function::IsSelected(*function);
+      enable_select |= !FunctionUtils::IsSelected(*function);
+      enable_unselect |= FunctionUtils::IsSelected(*function);
       enable_disassembly = true;
     } else if (module != nullptr && module->IsLoadable() &&
                !module->IsLoaded()) {
@@ -133,14 +133,14 @@ void CallStackDataView::OnContextMenu(const std::string& a_Action,
     for (int i : a_ItemIndices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       Function* function = frame.function;
-      function::Select(function);
+      FunctionUtils::Select(function);
     }
 
   } else if (a_Action == MENU_ACTION_UNSELECT) {
     for (int i : a_ItemIndices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
       Function* function = frame.function;
-      function::UnSelect(function);
+      FunctionUtils::UnSelect(function);
     }
 
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
@@ -165,7 +165,7 @@ void CallStackDataView::DoFilter() {
     CallStackDataViewFrame frame = GetFrameFromIndex(i);
     Function* function = frame.function;
     std::string name =
-        ToLower(function != nullptr ? function::GetDisplayName(*function)
+        ToLower(function != nullptr ? FunctionUtils::GetDisplayName(*function)
                                     : frame.fallback_name);
     bool match = true;
 

@@ -45,7 +45,7 @@ std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
 
   switch (a_Column) {
     case COLUMN_SELECTED:
-      return function::IsSelected(func) ? "X" : "-";
+      return FunctionUtils::IsSelected(func) ? "X" : "-";
     case COLUMN_INDEX:
       return absl::StrFormat("%d", a_Row);
     case COLUMN_FUNCTION_NAME:
@@ -90,7 +90,7 @@ void SamplingReportDataView::DoSort() {
 
   switch (m_SortingColumn) {
     case COLUMN_SELECTED:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(function::IsSelected);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::IsSelected);
       break;
     case COLUMN_FUNCTION_NAME:
       sorter = ORBIT_PROC_SORT(m_Name);
@@ -188,8 +188,8 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   bool enable_disassembly = !selected_functions.empty();
 
   for (const Function* function : selected_functions) {
-    enable_select |= !function::IsSelected(*function);
-    enable_unselect |= function::IsSelected(*function);
+    enable_select |= !FunctionUtils::IsSelected(*function);
+    enable_unselect |= FunctionUtils::IsSelected(*function);
   }
 
   bool enable_load = false;
@@ -214,11 +214,11 @@ void SamplingReportDataView::OnContextMenu(
     const std::vector<int>& a_ItemIndices) {
   if (a_Action == MENU_ACTION_SELECT) {
     for (Function* function : GetFunctionsFromIndices(a_ItemIndices)) {
-      function::Select(function);
+      FunctionUtils::Select(function);
     }
   } else if (a_Action == MENU_ACTION_UNSELECT) {
     for (Function* function : GetFunctionsFromIndices(a_ItemIndices)) {
-      function::UnSelect(function);
+      FunctionUtils::UnSelect(function);
     }
   } else if (a_Action == MENU_ACTION_MODULES_LOAD) {
     std::vector<std::shared_ptr<Module>> modules;

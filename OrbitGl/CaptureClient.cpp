@@ -42,9 +42,9 @@ void CaptureClient::Capture(
     CaptureOptions::InstrumentedFunction* instrumented_function =
         capture_options->add_instrumented_functions();
     instrumented_function->set_file_path(function->loaded_module_path());
-    instrumented_function->set_file_offset(function::Offset(*function));
+    instrumented_function->set_file_offset(FunctionUtils::Offset(*function));
     instrumented_function->set_absolute_address(
-        function::GetAbsoluteAddress(*function));
+        FunctionUtils::GetAbsoluteAddress(*function));
   }
 
   if (!reader_writer_->Write(request)) {

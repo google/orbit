@@ -185,7 +185,7 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
     std::shared_ptr<Function> function_ptr =
         std::make_shared<Function>(function);
     Capture::GSelectedFunctions.push_back(function_ptr);
-    Capture::GSelectedFunctionsMap[function::GetAbsoluteAddress(*function_ptr)] =
+    Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(*function_ptr)] =
         function_ptr.get();
   }
   Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;

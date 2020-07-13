@@ -58,7 +58,7 @@ void Pdb::PopulateStringFunctionMap() {
   {
     // SCOPE_TIMER_LOG("Map inserts");
     for (auto& function : functions_) {
-      m_StringFunctionMap[function::GetHash(*function)] = function.get();
+      m_StringFunctionMap[FunctionUtils::GetHash(*function)] = function.get();
     }
   }
 }
@@ -100,7 +100,7 @@ void Pdb::ApplyPreset(const Preset& preset) {
       auto fit = m_StringFunctionMap.find(hash);
       if (fit != m_StringFunctionMap.end()) {
         Function* function = fit->second;
-        function::Select(function);
+        FunctionUtils::Select(function);
       }
     }
   }

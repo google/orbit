@@ -54,11 +54,11 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
 
   switch (a_Column) {
     case COLUMN_SELECTED:
-      return function::IsSelected(function) ? "X" : "-";
+      return FunctionUtils::IsSelected(function) ? "X" : "-";
     case COLUMN_INDEX:
       return absl::StrFormat("%d", a_Row);
     case COLUMN_NAME:
-      return function::GetDisplayName(function);
+      return FunctionUtils::GetDisplayName(function);
     case COLUMN_COUNT:
       return absl::StrFormat("%lu", stats->m_Count);
     case COLUMN_TIME_TOTAL:
@@ -72,7 +72,7 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
     case COLUMN_MODULE:
       return function.loaded_module_path();
     case COLUMN_ADDRESS:
-      return absl::StrFormat("0x%llx", function::GetAbsoluteAddress(function));
+      return absl::StrFormat("0x%llx", FunctionUtils::GetAbsoluteAddress(function));
     default:
       return "";
   }
@@ -104,10 +104,10 @@ void LiveFunctionsDataView::DoSort() {
 
   switch (m_SortingColumn) {
     case COLUMN_SELECTED:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(function::IsSelected);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::IsSelected);
       break;
     case COLUMN_NAME:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(function::GetDisplayName);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::GetDisplayName);
       break;
     case COLUMN_COUNT:
       sorter = ORBIT_STAT_SORT(m_Count);
@@ -125,7 +125,7 @@ void LiveFunctionsDataView::DoSort() {
       sorter = ORBIT_STAT_SORT(m_MaxMs);
       break;
     case COLUMN_MODULE:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(function::GetLoadedModuleName);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::GetLoadedModuleName);
       break;
     case COLUMN_ADDRESS:
       sorter = ORBIT_FUNC_SORT(address());
@@ -161,8 +161,8 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   bool enable_disassembly = !a_SelectedIndices.empty();
   for (int index : a_SelectedIndices) {
     const Function& function = GetFunction(index);
-    enable_select |= !function::IsSelected(function);
-    enable_unselect |= function::IsSelected(function);
+    enable_select |= !FunctionUtils::IsSelected(function);
+    enable_unselect |= FunctionUtils::IsSelected(function);
   }
 
   std::vector<std::string> menu;
@@ -188,12 +188,12 @@ void LiveFunctionsDataView::OnContextMenu(
   if (a_Action == MENU_ACTION_SELECT) {
     for (int i : a_ItemIndices) {
       Function& function = GetFunction(i);
-      function::Select(&function);
+      FunctionUtils::Select(&function);
     }
   } else if (a_Action == MENU_ACTION_UNSELECT) {
     for (int i : a_ItemIndices) {
       Function& function = GetFunction(i);
-      function::UnSelect(&function);
+      FunctionUtils::UnSelect(&function);
     }
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
     int32_t pid = Capture::GTargetProcess->GetID();
@@ -232,7 +232,7 @@ void LiveFunctionsDataView::DoFilter() {
   for (size_t i = 0; i < m_Functions.size(); ++i) {
     const Function* function = m_Functions[i];
     if (function != nullptr) {
-      std::string name = ToLower(function::GetDisplayName(*function));
+      std::string name = ToLower(FunctionUtils::GetDisplayName(*function));
 
       bool match = true;
 
@@ -257,7 +257,7 @@ void LiveFunctionsDataView::DoFilter() {
   Capture::GVisibleFunctionsMap.clear();
   for (size_t i = 0; i < m_Indices.size(); ++i) {
     Function& func = GetFunction(i);
-    Capture::GVisibleFunctionsMap[function::GetAbsoluteAddress(func)] = &func;
+    Capture::GVisibleFunctionsMap[FunctionUtils::GetAbsoluteAddress(func)] = &func;
   }
 
   GOrbitApp->NeedsRedraw();
@@ -303,7 +303,7 @@ void LiveFunctionsDataView::JumpToBox(const TextBox* box) const {
 
 std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
     Function& function) const {
-  auto function_address = function::GetAbsoluteAddress(function);
+  auto function_address = FunctionUtils::GetAbsoluteAddress(function);
   TextBox *min_box = nullptr, *max_box = nullptr;
   std::vector<std::shared_ptr<TimerChain>> chains =
       GCurrentTimeGraph->GetAllThreadTrackTimerChains();
@@ -329,7 +329,7 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
 
 void LiveFunctionsDataView::JumpToNext(Function& function,
                                        TickType current_time) const {
-  auto function_address = function::GetAbsoluteAddress(function);
+  auto function_address = FunctionUtils::GetAbsoluteAddress(function);
   TextBox* box_to_jump = nullptr;
   TickType best_time = std::numeric_limits<TickType>::max();
   std::vector<std::shared_ptr<TimerChain>> chains =
@@ -355,7 +355,7 @@ void LiveFunctionsDataView::JumpToNext(Function& function,
 
 void LiveFunctionsDataView::JumpToPrevious(Function& function,
                                            TickType current_time) const {
-  auto function_address = function::GetAbsoluteAddress(function);
+  auto function_address = FunctionUtils::GetAbsoluteAddress(function);
   TextBox* box_to_jump = nullptr;
   TickType best_time = std::numeric_limits<TickType>::min();
   std::vector<std::shared_ptr<TimerChain>> chains =

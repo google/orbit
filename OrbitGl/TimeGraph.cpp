@@ -256,7 +256,7 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
         a_Timer.m_FunctionAddress);
     if (func != nullptr) {
       ++Capture::GFunctionCountMap[a_Timer.m_FunctionAddress];
-      function::UpdateStats(func, a_Timer);
+      FunctionUtils::UpdateStats(func, a_Timer);
     }
   }
 
