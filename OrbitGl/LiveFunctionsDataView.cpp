@@ -29,14 +29,13 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
     std::vector<Column> columns;
     columns.resize(COLUMN_NUM);
     columns[COLUMN_SELECTED] = {"Hooked", .0f, SortingOrder::Descending};
-    columns[COLUMN_INDEX] = {"Index", .0f, SortingOrder::Ascending};
-    columns[COLUMN_NAME] = {"Function", .5f, SortingOrder::Ascending};
+    columns[COLUMN_NAME] = {"Function", .4f, SortingOrder::Ascending};
     columns[COLUMN_COUNT] = {"Count", .0f, SortingOrder::Descending};
-    columns[COLUMN_TIME_TOTAL] = {"Total", .0f, SortingOrder::Descending};
-    columns[COLUMN_TIME_AVG] = {"Avg", .0f, SortingOrder::Descending};
-    columns[COLUMN_TIME_MIN] = {"Min", .0f, SortingOrder::Descending};
-    columns[COLUMN_TIME_MAX] = {"Max", .0f, SortingOrder::Descending};
-    columns[COLUMN_MODULE] = {"Module", .0f, SortingOrder::Ascending};
+    columns[COLUMN_TIME_TOTAL] = {"Total", .075f, SortingOrder::Descending};
+    columns[COLUMN_TIME_AVG] = {"Avg", .075f, SortingOrder::Descending};
+    columns[COLUMN_TIME_MIN] = {"Min", .075f, SortingOrder::Descending};
+    columns[COLUMN_TIME_MAX] = {"Max", .075f, SortingOrder::Descending};
+    columns[COLUMN_MODULE] = {"Module", .1f, SortingOrder::Ascending};
     columns[COLUMN_ADDRESS] = {"Address", .0f, SortingOrder::Ascending};
     return columns;
   }();
@@ -55,8 +54,6 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
   switch (a_Column) {
     case COLUMN_SELECTED:
       return FunctionUtils::IsSelected(function) ? "X" : "-";
-    case COLUMN_INDEX:
-      return absl::StrFormat("%d", a_Row);
     case COLUMN_NAME:
       return FunctionUtils::GetDisplayName(function);
     case COLUMN_COUNT:

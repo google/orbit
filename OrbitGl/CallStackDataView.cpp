@@ -25,8 +25,7 @@ const std::vector<DataView::Column>& CallStackDataView::GetColumns() {
     std::vector<Column> columns;
     columns.resize(COLUMN_NUM);
     columns[COLUMN_SELECTED] = {"Hooked", .0f, SortingOrder::Descending};
-    columns[COLUMN_INDEX] = {"Index", .0f, SortingOrder::Ascending};
-    columns[COLUMN_NAME] = {"Function", .5f, SortingOrder::Ascending};
+    columns[COLUMN_NAME] = {"Function", .65f, SortingOrder::Ascending};
     columns[COLUMN_SIZE] = {"Size", .0f, SortingOrder::Ascending};
     columns[COLUMN_FILE] = {"File", .0f, SortingOrder::Ascending};
     columns[COLUMN_LINE] = {"Line", .0f, SortingOrder::Ascending};
@@ -51,8 +50,6 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
     case COLUMN_SELECTED:
       return (function != nullptr && FunctionUtils::IsSelected(*function)) ? "X"
                                                                       : "-";
-    case COLUMN_INDEX:
-      return absl::StrFormat("%d", a_Row);
     case COLUMN_NAME:
       return function != nullptr ? FunctionUtils::GetDisplayName(*function)
                                  : frame.fallback_name;

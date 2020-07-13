@@ -38,7 +38,6 @@ class ModulesDataView : public DataView {
   std::vector<ModuleData*> modules_;
 
   enum ColumnIndex {
-    COLUMN_INDEX,
     COLUMN_NAME,
     COLUMN_PATH,
     COLUMN_ADDRESS_RANGE,
