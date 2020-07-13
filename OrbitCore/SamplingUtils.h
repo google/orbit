@@ -24,6 +24,8 @@ inline CallstackID InitAndGetCallstackHash(Callstack* callstack) {
 
 ThreadSampleData CreateThreadSampleData();
 
+void InsertToUint64Set(Uint64List* data, uint64_t new_value);
+
 }  // namespace SamplingUtils
 
 #endif  // ORBIT_CORE_SAMPLING_UTILS_H_

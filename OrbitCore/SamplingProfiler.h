@@ -44,11 +44,12 @@ struct SortedCallstackReport {
 class SamplingProfiler {
  public:
   explicit SamplingProfiler(const std::shared_ptr<Process>& a_Process);
+  explicit SamplingProfiler(std::unique_ptr<SamplingProfilerData> data_ptr);
   SamplingProfiler();
 
   void StartCapture();
   void StopCapture();
-  int GetNumSamples() const { return m_NumSamples; }
+  int GetNumSamples() const { return data->num_samples(); }
   float GetSampleTime();
   float GetSampleTimeTotal() const { return m_SampleTimeSeconds; }
 
@@ -58,13 +59,13 @@ class SamplingProfiler {
 
   std::shared_ptr<Callstack> GetCallStack(CallstackID a_ID) {
     ScopeLock lock(m_Mutex);
-    return m_UniqueCallstacks[a_ID];
+    return std::make_shared<Callstack>(
+        (*data->mutable_unique_callstacks())[a_ID]);
   }
 
   bool HasCallStack(CallstackID a_ID) {
     ScopeLock lock(m_Mutex);
-    auto it = m_UniqueCallstacks.find(a_ID);
-    return it != m_UniqueCallstacks.end();
+    return data->unique_callstacks().contains(a_ID);
   }
 
   std::multimap<int, CallstackID> GetCallstacksFromAddress(
@@ -85,8 +86,8 @@ class SamplingProfiler {
     return m_SortedThreadSampleData;
   }
   const ThreadSampleData* GetThreadSampleDataByThreadId(int32_t tid) const {
-    auto it = m_ThreadSampleData.find(tid);
-    if (it == m_ThreadSampleData.end()) {
+    auto it = data->thread_id_to_sample_data().find(tid);
+    if (it == data->thread_id_to_sample_data().end()) {
       return nullptr;
     }
 
@@ -102,7 +103,7 @@ class SamplingProfiler {
   [[nodiscard]] unsigned int GetCountOfFunction(
       uint64_t function_address) const;
 
-  ORBIT_SERIALIZABLE;
+  const std::unique_ptr<SamplingProfilerData>& GetData() { return data; }
 
  protected:
   void ResolveCallstacks();
@@ -116,24 +117,14 @@ class SamplingProfiler {
   float m_SampleTimeSeconds = FLT_MAX;
   bool m_GenerateSummary = true;
   Mutex m_Mutex;
-  int m_NumSamples = 0;
 
   // Filled before ProcessSamples by AddCallstack, AddHashedCallstack.
   BlockChain<CallstackEvent, 16 * 1024> m_Callstacks;
-  std::unordered_map<CallstackID, std::shared_ptr<Callstack>>
-      m_UniqueCallstacks;
 
   // Filled by ProcessSamples.
-  std::unordered_map<ThreadID, ThreadSampleData> m_ThreadSampleData;
-  std::unordered_map<CallstackID, std::shared_ptr<Callstack>>
-      m_UniqueResolvedCallstacks;
-  std::unordered_map<CallstackID, CallstackID>
-      m_OriginalCallstackToResolvedCallstack;
-  std::unordered_map<uint64_t, std::set<CallstackID>> m_FunctionToCallstacks;
-  std::unordered_map<uint64_t, uint64_t> m_ExactAddressToFunctionAddress;
-  std::unordered_map<uint64_t, std::unordered_set<uint64_t>>
-      m_FunctionAddressToExactAddresses;
   std::vector<ThreadSampleData*> m_SortedThreadSampleData;
+
+  std::unique_ptr<SamplingProfilerData> data;
 };
 
 #endif  // ORBIT_CORE_SAMPLING_PROFILER_H_

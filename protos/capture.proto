@@ -4,6 +4,8 @@
 
 syntax = "proto3";
 
+import "basic_types.proto";
+
 message CaptureOptions {
   bool trace_context_switches = 1;
   int32 pid = 2;
@@ -182,4 +184,15 @@ message ThreadSampleData {
   repeated float thread_usage = 7;
   float average_thread_usage = 8;
   int32 thread_id = 9;
+}
+
+message SamplingProfilerData {
+  int32 num_samples = 1;
+  map<int32, ThreadSampleData> thread_id_to_sample_data = 2;
+  map<uint64, Callstack> unique_callstacks = 3;
+  map<uint64, Callstack> unique_resolved_callstacks = 4;
+  map<uint64, uint64> original_callstack_to_resolved_callstack = 5;
+  map<uint64, Uint64List> function_to_callstacks_set = 6;
+  map<uint64, uint64> exact_address_to_function_address = 7;
+  map<uint64, Uint64List> function_address_to_exact_addresses_set = 8;
 }

@@ -21,4 +21,11 @@ ThreadSampleData CreateThreadSampleData() {
   return data;
 }
 
+void InsertToUint64Set(Uint64List* data, uint64_t new_value) {
+  auto it = std::find(data->data().begin(), data->data().end(), new_value);
+  if (it == data->data().end()) {
+    data->add_data(new_value);
+  }
+}
+
 }  // namespace SamplingUtils

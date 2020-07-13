@@ -12,6 +12,7 @@ target_compile_definitions(OrbitProtos PRIVATE -D_WIN32_WINNT=0x0700)
 target_compile_definitions(OrbitProtos PRIVATE -DNTDDI_VERSION=0x06030000)
 
 target_sources(OrbitProtos PRIVATE
+        basic_types.proto
         capture.proto
         code_block.proto
         module.proto
