@@ -15,6 +15,9 @@ SCRIPT="/mnt/third_party/conan/scripts/build_and_upload_dependencies.sh"
 if [ "$1" ]; then
   $REPO_ROOT/third_party/conan/configs/install.sh || exit $?
   conan user -r artifactory $ARTIFACTORY_USERNAME -p $ARTIFACTORY_API_KEY || exit $?
+  if [ -n "$BINTRAY_USERNAME" -a -n "$BINTRAY_API_KEY" ]; then
+    conan user -r bintray $BINTRAY_USERNAME -p $BINTRAY_API_KEY || exit $?
+  fi
 
   for profile in $@; do
     conan_profile_exists "$profile" || exit 128
@@ -47,6 +50,11 @@ if [ "$1" ]; then
 
       echo "$PACKAGES" | while read package; do
         conan upload -r artifactory -c $package
+        if [[ -n "$BINTRAY_USERNAME" && -n "$BINTRAY_API_KEY" ]] && echo "$package" | grep "orbitdeps/stable" > /dev/null; then
+          conan remote enable bintray
+          conan upload -r bintray -c $package
+          conan remote disable bintray
+        fi
       done
     fi
   done
@@ -63,6 +71,7 @@ else
     for profile in ${PROFILES[@]}; do
       docker run --network host --rm -it -v $REPO_ROOT:/mnt \
              -e ARTIFACTORY_USERNAME -e ARTIFACTORY_API_KEY \
+             -e BINTRAY_USERNAME -e BINTRAY_API_KEY \
              -e ORBIT_OVERRIDE_ARTIFACTORY_URL \
              gcr.io/orbitprofiler/$profile:latest $SCRIPT $profile || exit $?
     done
@@ -80,6 +89,7 @@ else
       docker run --isolation=process --rm -v $REPO_ROOT_WIN:C:/mnt \
        --storage-opt "size=50GB" \
        -e ARTIFACTORY_USERNAME -e ARTIFACTORY_API_KEY \
+       -e BINTRAY_USERNAME -e BINTRAY_API_KEY \
        -e ORBIT_OVERRIDE_ARTIFACTORY_URL \
        gcr.io/orbitprofiler/$profile:latest "C:/Program Files/Git/bin/bash.exe" \
        -c "/c$SCRIPT $profile" || exit $?
