@@ -109,7 +109,7 @@ void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
     const char* name = nullptr;
     if (func) {
       std::string extra_info = GetExtraInfo(timer);
-      name = function::GetDisplayName(*func).c_str();
+      name = FunctionUtils::GetDisplayName(*func).c_str();
       std::string text =
           absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());
 

@@ -47,11 +47,11 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
 
   switch (a_Column) {
     case COLUMN_SELECTED:
-      return function::IsSelected(function) ? "X" : "-";
+      return FunctionUtils::IsSelected(function) ? "X" : "-";
     case COLUMN_INDEX:
       return absl::StrFormat("%d", a_Row);
     case COLUMN_NAME:
-      return function::GetDisplayName(function);
+      return FunctionUtils::GetDisplayName(function);
     case COLUMN_SIZE:
       return absl::StrFormat("%lu", function.size());
     case COLUMN_FILE:
@@ -59,9 +59,9 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
     case COLUMN_LINE:
       return absl::StrFormat("%i", function.line());
     case COLUMN_MODULE:
-      return function::GetLoadedModuleName(function);
+      return FunctionUtils::GetLoadedModuleName(function);
     case COLUMN_ADDRESS:
-      return absl::StrFormat("0x%llx", function::GetAbsoluteAddress(function));
+      return absl::StrFormat("0x%llx", FunctionUtils::GetAbsoluteAddress(function));
     default:
       return "";
   }
@@ -98,10 +98,10 @@ void FunctionsDataView::DoSort() {
 
   switch (m_SortingColumn) {
     case COLUMN_SELECTED:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(function::IsSelected);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::IsSelected);
       break;
     case COLUMN_NAME:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(function::GetDisplayName);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::GetDisplayName);
       break;
     case COLUMN_SIZE:
       sorter = ORBIT_FUNC_SORT(size());
@@ -113,7 +113,7 @@ void FunctionsDataView::DoSort() {
       sorter = ORBIT_FUNC_SORT(line());
       break;
     case COLUMN_MODULE:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(function::GetLoadedModuleName);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::GetLoadedModuleName);
       break;
     case COLUMN_ADDRESS:
       sorter = ORBIT_FUNC_SORT(address());
@@ -140,8 +140,8 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
   bool enable_unselect = false;
   for (int index : a_SelectedIndices) {
     const Function& function = GetFunction(index);
-    enable_select |= !function::IsSelected(function);
-    enable_unselect |= function::IsSelected(function);
+    enable_select |= !FunctionUtils::IsSelected(function);
+    enable_unselect |= FunctionUtils::IsSelected(function);
   }
 
   std::vector<std::string> menu;
@@ -158,11 +158,11 @@ void FunctionsDataView::OnContextMenu(const std::string& a_Action,
                                       const std::vector<int>& a_ItemIndices) {
   if (a_Action == MENU_ACTION_SELECT) {
     for (int i : a_ItemIndices) {
-      function::Select(&GetFunction(i));
+      FunctionUtils::Select(&GetFunction(i));
     }
   } else if (a_Action == MENU_ACTION_UNSELECT) {
     for (int i : a_ItemIndices) {
-      function::UnSelect(&GetFunction(i));
+      FunctionUtils::UnSelect(&GetFunction(i));
     }
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
     int32_t pid = Capture::GTargetProcess->GetID();
@@ -194,8 +194,8 @@ void FunctionsDataView::DoFilter() {
       Capture::GTargetProcess->GetFunctions();
   for (size_t i = 0; i < functions.size(); ++i) {
     auto& function = functions[i];
-    std::string name = ToLower(function::GetDisplayName(*function)) +
-                       function::GetLoadedModuleName(*function);
+    std::string name = ToLower(FunctionUtils::GetDisplayName(*function)) +
+                       FunctionUtils::GetLoadedModuleName(*function);
 
     bool match = true;
 
@@ -233,7 +233,7 @@ void FunctionsDataView::ParallelFilter() {
       [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
         std::vector<int>& result = indicesArray[a_BlockIndex];
         const std::string& name =
-            ToLower(function::GetDisplayName(*functions[a_ElementIndex]));
+            ToLower(FunctionUtils::GetDisplayName(*functions[a_ElementIndex]));
         const std::string& file = functions[a_ElementIndex]->file();
 
         for (std::string& filterToken : m_FilterTokens) {

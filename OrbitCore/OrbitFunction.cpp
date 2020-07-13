@@ -22,7 +22,7 @@ Function::Function(std::string_view name, std::string_view pretty_name,
       file_(file),
       line_(line) {
   ResetStats();
-  function::SetOrbitTypeFromName(this);
+  FunctionUtils::SetOrbitTypeFromName(this);
 }
 
 void Function::ResetStats() {

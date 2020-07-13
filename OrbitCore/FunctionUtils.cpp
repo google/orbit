@@ -11,7 +11,7 @@
 #include "OrbitBase/Logging.h"
 #include "Utils.h"
 
-namespace function {
+namespace FunctionUtils {
 
 std::string GetLoadedModuleName(const Function& func) {
   return Path::GetFileName(func.loaded_module_path());
@@ -109,4 +109,4 @@ bool IsSelected(const SampledFunction& func) {
   return Capture::GSelectedFunctionsMap.count(func.m_Address) > 0;
 }
 
-}  // namespace function
+}  // namespace FunctionUtils

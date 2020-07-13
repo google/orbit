@@ -148,7 +148,7 @@ void Capture::PreFunctionHooks() {
   GSelectedFunctions = GetSelectedFunctions();
 
   for (auto& func : GSelectedFunctions) {
-    uint64_t address = function::GetAbsoluteAddress(*func);
+    uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
     GSelectedFunctionsMap[address] = func.get();
     func->ResetStats();
     GFunctionCountMap[address] = 0;
@@ -164,7 +164,7 @@ void Capture::PreFunctionHooks() {
 std::vector<std::shared_ptr<Function>> Capture::GetSelectedFunctions() {
   std::vector<std::shared_ptr<Function>> selected_functions;
   for (auto& func : GTargetProcess->GetFunctions()) {
-    if (function::IsSelected(*func) || function::IsOrbitFunc(*func)) {
+    if (FunctionUtils::IsSelected(*func) || FunctionUtils::IsOrbitFunc(*func)) {
       selected_functions.push_back(func);
     }
   }
@@ -189,9 +189,9 @@ ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
   preset.m_ProcessFullPath = GTargetProcess->GetFullPath();
 
   for (auto& func : GTargetProcess->GetFunctions()) {
-    if (function::IsSelected(*func)) {
+    if (FunctionUtils::IsSelected(*func)) {
       preset.m_Modules[func->loaded_module_path()].m_FunctionHashes.push_back(
-          function::GetHash(*func));
+          FunctionUtils::GetHash(*func));
     }
   }
 

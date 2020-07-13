@@ -68,21 +68,21 @@ TEST(OrbitModule, LoadFunctions) {
   EXPECT_EQ(function->pretty_name(), "deregister_tm_clones");
   EXPECT_EQ(function->address(), 0x1080);
   EXPECT_EQ(function->size(), 0);
-  EXPECT_EQ(function::GetLoadedModuleName(*function), executable_name);
+  EXPECT_EQ(FunctionUtils::GetLoadedModuleName(*function), executable_name);
 
   function = functions[4].get();
   EXPECT_EQ(function->name(), "_init");
   EXPECT_EQ(function->pretty_name(), "_init");
   EXPECT_EQ(function->address(), 0x1000);
   EXPECT_EQ(function->size(), 0);
-  EXPECT_EQ(function::GetLoadedModuleName(*function), executable_name);
+  EXPECT_EQ(FunctionUtils::GetLoadedModuleName(*function), executable_name);
 
   function = functions[9].get();
   EXPECT_EQ(function->name(), "main");
   EXPECT_EQ(function->pretty_name(), "main");
   EXPECT_EQ(function->address(), 0x1135);
   EXPECT_EQ(function->size(), 35);
-  EXPECT_EQ(function::GetLoadedModuleName(*function), executable_name);
+  EXPECT_EQ(FunctionUtils::GetLoadedModuleName(*function), executable_name);
 }
 
 TEST(OrbitModule, GetFunctionFromExactAddress) {

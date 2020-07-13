@@ -12,7 +12,7 @@
 #include "SamplingProfiler.h"
 #include "ScopeTimer.h"
 
-namespace function {
+namespace FunctionUtils {
 
 inline const std::string& GetDisplayName(const Function& func) {
   return func.pretty_name().empty() ? func.name() : func.pretty_name();
@@ -40,6 +40,6 @@ void UpdateStats(Function* func, const Timer& timer);
 
 bool IsSelected(const SampledFunction& func);
 
-}  // namespace function
+}  // namespace FunctionUtils
 
 #endif  // ORBIT_CORE_FUNCTION_UTILS_H_
