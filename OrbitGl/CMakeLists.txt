@@ -42,11 +42,11 @@ target_sources(
          ModulesDataView.h
          OpenGl.h
          PickingManager.h
+         PresetsDataView.h
          ProcessesDataView.h
          SamplingReport.h
          SamplingReportDataView.h
          SchedulerTrack.h
-         SessionsDataView.h
          TextBox.h
          TextRenderer.h
          ThreadTrack.h
@@ -85,12 +85,12 @@ target_sources(
           LiveFunctionsDataView.cpp
           ModulesDataView.cpp
           PickingManager.cpp
+          PresetsDataView.cpp
           ProcessManager.cpp
           ProcessesDataView.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp
           SchedulerTrack.cpp
-          SessionsDataView.cpp
           TextBox.cpp
           TextRenderer.cpp
           TimeGraph.cpp
