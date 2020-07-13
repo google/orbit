@@ -23,8 +23,7 @@ const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
     std::vector<Column> columns;
     columns.resize(COLUMN_NUM);
     columns[COLUMN_SELECTED] = {"Hooked", .0f, SortingOrder::Descending};
-    columns[COLUMN_INDEX] = {"Index", .0f, SortingOrder::Ascending};
-    columns[COLUMN_NAME] = {"Function", .6f, SortingOrder::Ascending};
+    columns[COLUMN_NAME] = {"Function", .65f, SortingOrder::Ascending};
     columns[COLUMN_SIZE] = {"Size", .0f, SortingOrder::Ascending};
     columns[COLUMN_FILE] = {"File", .0f, SortingOrder::Ascending};
     columns[COLUMN_LINE] = {"Line", .0f, SortingOrder::Ascending};
@@ -48,8 +47,6 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
   switch (a_Column) {
     case COLUMN_SELECTED:
       return FunctionUtils::IsSelected(function) ? "X" : "-";
-    case COLUMN_INDEX:
-      return absl::StrFormat("%d", a_Row);
     case COLUMN_NAME:
       return FunctionUtils::GetDisplayName(function);
     case COLUMN_SIZE:

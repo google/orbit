@@ -48,9 +48,8 @@ class SamplingReportDataView : public DataView {
   CallStackDataView* m_CallstackDataView;
   SamplingReport* m_SamplingReport = nullptr;
 
-  enum COLUMN_INDEX {
+  enum ColumnIndex {
     COLUMN_SELECTED,
-    COLUMN_INDEX,
     COLUMN_FUNCTION_NAME,
     COLUMN_EXCLUSIVE,
     COLUMN_INCLUSIVE,

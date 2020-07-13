@@ -26,7 +26,6 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
     std::vector<Column> columns;
     columns.resize(COLUMN_NUM);
     columns[COLUMN_SELECTED] = {"Hooked", .0f, SortingOrder::Descending};
-    columns[COLUMN_INDEX] = {"Index", .0f, SortingOrder::Ascending};
     columns[COLUMN_FUNCTION_NAME] = {"Name", .5f, SortingOrder::Ascending};
     columns[COLUMN_EXCLUSIVE] = {"Exclusive", .0f, SortingOrder::Descending};
     columns[COLUMN_INCLUSIVE] = {"Inclusive", .0f, SortingOrder::Descending};
@@ -46,8 +45,6 @@ std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
   switch (a_Column) {
     case COLUMN_SELECTED:
       return FunctionUtils::IsSelected(func) ? "X" : "-";
-    case COLUMN_INDEX:
-      return absl::StrFormat("%d", a_Row);
     case COLUMN_FUNCTION_NAME:
       return func.m_Name;
     case COLUMN_EXCLUSIVE:

@@ -22,9 +22,8 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(COLUMN_NUM);
-    columns[COLUMN_INDEX] = {"Index", .0f, SortingOrder::Ascending};
     columns[COLUMN_NAME] = {"Name", .2f, SortingOrder::Ascending};
-    columns[COLUMN_PATH] = {"Path", .3f, SortingOrder::Ascending};
+    columns[COLUMN_PATH] = {"Path", .5f, SortingOrder::Ascending};
     columns[COLUMN_ADDRESS_RANGE] = {"Address Range", .15f,
                                      SortingOrder::Ascending};
     columns[COLUMN_FILE_SIZE] = {"File Size", .0f, SortingOrder::Descending};
@@ -39,8 +38,6 @@ std::string ModulesDataView::GetValue(int row, int col) {
   const ModuleData* module = GetModule(row);
 
   switch (col) {
-    case COLUMN_INDEX:
-      return std::to_string(row);
     case COLUMN_NAME:
       return module->name();
     case COLUMN_PATH:

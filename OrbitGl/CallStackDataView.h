@@ -58,7 +58,6 @@ class CallStackDataView : public DataView {
 
   enum ColumnIndex {
     COLUMN_SELECTED,
-    COLUMN_INDEX,
     COLUMN_NAME,
     COLUMN_SIZE,
     COLUMN_FILE,

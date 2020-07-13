@@ -37,7 +37,6 @@ class LiveFunctionsDataView : public DataView {
 
   enum ColumnIndex {
     COLUMN_SELECTED,
-    COLUMN_INDEX,
     COLUMN_NAME,
     COLUMN_COUNT,
     COLUMN_TIME_TOTAL,
