@@ -1,3 +1,4 @@
+LINKER_FLAGS=/FIXED:NO
 [settings]
 os=Windows
 os_build=Windows
@@ -13,4 +14,4 @@ OrbitProfiler:with_gui=False
 cmake_installer/3.16.3@conan/stable
 [env]
 CONAN_CMAKE_SYSTEM_VERSION=8.1
-LDFLAGS=/FIXED:NO
+LDFLAGS=$LINKER_FLAGS
