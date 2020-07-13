@@ -26,13 +26,6 @@ Process::Process() {
 }
 
 //-----------------------------------------------------------------------------
-void Process::ClearTransients() {
-  m_Functions.clear();
-  m_NameToModuleMap.clear();
-  path_to_module_map_.clear();
-}
-
-//-----------------------------------------------------------------------------
 Function* Process::GetFunctionFromAddress(uint64_t address, bool a_IsExact) {
   if (m_Modules.empty()) {
     return nullptr;
@@ -100,13 +93,6 @@ std::shared_ptr<Module> Process::GetModuleFromPath(
   }
 
   return nullptr;
-}
-
-//-----------------------------------------------------------------------------
-bool Process::LineInfoFromAddress(uint64_t /*a_Address*/,
-                                  LineInfo& /*o_LineInfo*/) {
-  // TODO(b/158093728): Dia Loading was disabled, reimplement using LLVM.
-  return false;
 }
 
 //-----------------------------------------------------------------------------
