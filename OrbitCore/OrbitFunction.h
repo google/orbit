@@ -64,11 +64,6 @@ class Function {
   uint64_t Size() const { return size_; }
   const std::string& File() const { return file_; }
   uint32_t Line() const { return line_; }
-  int CallingConvention() const { return calling_convention_; }
-  const char* GetCallingConventionString();
-  void SetCallingConvention(int calling_convention) {
-    calling_convention_ = calling_convention;
-  }
 
   uint64_t Hash() const { return StringHash(pretty_name_); }
 
@@ -107,7 +102,6 @@ class Function {
   uint64_t size_;
   std::string file_;
   uint32_t line_;
-  int calling_convention_ = -1;
   OrbitType type_ = NONE;
   std::shared_ptr<FunctionStats> stats_;
 };
