@@ -7,13 +7,6 @@
 #include <fstream>
 
 #include "App.h"
-#include "CallStackDataView.h"
-#include "FunctionsDataView.h"
-#include "LiveFunctionsDataView.h"
-#include "ModulesDataView.h"
-#include "ProcessesDataView.h"
-#include "SamplingReportDataView.h"
-#include "SessionsDataView.h"
 
 //-----------------------------------------------------------------------------
 void DataView::InitSortingOrders() {
