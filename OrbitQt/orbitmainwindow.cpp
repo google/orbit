@@ -24,7 +24,6 @@
 #include "../OrbitCore/Version.h"
 #include "../OrbitGl/App.h"
 #include "../OrbitGl/SamplingReport.h"
-#include "../OrbitPlugin/OrbitSDK.h"
 #include "../third_party/concurrentqueue/concurrentqueue.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
