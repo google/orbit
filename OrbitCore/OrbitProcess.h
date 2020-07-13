@@ -38,6 +38,7 @@ class Process {
   const std::string& GetFullPath() const { return m_FullPath; }
   void SetID(int32_t id) { m_ID = id; }
   int32_t GetID() const { return m_ID; }
+  void SetIs64Bit(bool value) { m_Is64Bit = value; }
   bool GetIs64Bit() const { return m_Is64Bit; }
 
   Function* GetFunctionFromAddress(uint64_t address, bool a_IsExact = true);
