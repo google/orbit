@@ -222,27 +222,29 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->PostInit();
 }
 
-void SetFontSize(QWidget* widget, uint32_t font_size) {
+namespace {
+static void SetFontSize(QWidget* widget, uint32_t font_size) {
   QFont font = widget->font();
   font.setPointSize(font_size);
   widget->setFont(font);
 }
 
-QWidget* CreateSpacer(QWidget* parent) {
+static QWidget* CreateSpacer(QWidget* parent) {
   QLabel* spacer = new QLabel(parent);
   spacer->setText("    ");
   return spacer;
 }
 
-QAction* CreateDummyAction(const QIcon& icon, QObject* parent) {
+static QAction* CreateDummyAction(const QIcon& icon, QObject* parent) {
   QAction* action = new QAction(icon, "", parent);
   action->setDisabled(true);
   return action;
 }
 
-QIcon GetIcon(const std::string& icon_name) {
+static QIcon GetIcon(const std::string& icon_name) {
   return QIcon(Path::JoinPath({Path::GetIconsPath(), icon_name}).c_str());
 }
+}  // namespace
 
 void OrbitMainWindow::SetupCaptureToolbar() {
   // Sizes.
@@ -291,8 +293,8 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   filter_tracks_line_edit_->setPlaceholderText("filter tracks");
   SetFontSize(filter_tracks_line_edit_, kFontSize);
   toolbar->addWidget(filter_tracks_line_edit_);
-  connect(filter_tracks_line_edit_, SIGNAL(textChanged(const QString&)), this,
-          SLOT(OnFilterTracksTextChanged(const QString&)));
+  connect(filter_tracks_line_edit_, &QLineEdit::textChanged, this,
+          [this](const QString& text) { OnFilterTracksTextChanged(text); });
 
   // Filter functions.
   toolbar->addWidget(CreateSpacer(toolbar));
@@ -302,11 +304,12 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   filter_functions_line_edit_->setPlaceholderText("filter functions");
   SetFontSize(filter_functions_line_edit_, kFontSize);
   toolbar->addWidget(filter_functions_line_edit_);
-  connect(filter_functions_line_edit_, SIGNAL(textChanged(const QString&)),
-          this, SLOT(OnFilterFunctionsTextChanged(const QString&)));
-  connect(ui->LiveFunctionsList->GetFilterLineEdit(),
-          SIGNAL(textChanged(const QString&)), this,
-          SLOT(OnLiveTabFunctionsFilterTextChanged(const QString&)));
+  connect(filter_functions_line_edit_, &QLineEdit::textChanged, this,
+          [this](const QString& text) { OnFilterFunctionsTextChanged(text); });
+  connect(ui->LiveFunctionsList->GetFilterLineEdit(), &QLineEdit::textChanged,
+          this, [this](const QString& text) {
+            OnLiveTabFunctionsFilterTextChanged(text);
+          });
 
   // Timer.
   toolbar->addWidget(CreateSpacer(toolbar));
@@ -602,7 +605,7 @@ void OrbitMainWindow::OnTimer() {
   this->ui->plainTextEdit->OnTimer();
 
   if (timer_label_) {
-    timer_label_->setText(GOrbitApp->GetCaptureTime().c_str());
+    timer_label_->setText(QString::fromStdString(GOrbitApp->GetCaptureTime()));
   }
 }
 
