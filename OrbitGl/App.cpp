@@ -42,6 +42,7 @@
 #include "ProcessesDataView.h"
 #include "SamplingProfiler.h"
 #include "SamplingReport.h"
+#include "SamplingUtils.h"
 #include "ScopeTimer.h"
 #include "SessionsDataView.h"
 #include "StringManager.h"
@@ -326,10 +327,11 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
 
     const std::string& memory = result.value();
     Disassembler disasm;
-    disasm.LOGF(
-        absl::StrFormat("asm: /* %s */\n", FunctionUtils::GetDisplayName(function)));
+    disasm.LOGF(absl::StrFormat("asm: /* %s */\n",
+                                FunctionUtils::GetDisplayName(function)));
     disasm.Disassemble(reinterpret_cast<const uint8_t*>(memory.data()),
-                       memory.size(), FunctionUtils::GetAbsoluteAddress(function),
+                       memory.size(),
+                       FunctionUtils::GetAbsoluteAddress(function),
                        Capture::GTargetProcess->GetIs64Bit());
     if (!sampling_report_ || !sampling_report_->GetProfiler()) {
       SendDisassemblyToUi(disasm.GetResult());
@@ -337,8 +339,8 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
     }
     std::shared_ptr<SamplingProfiler> profiler =
         sampling_report_->GetProfiler();
-    unsigned int count_of_function =
-        profiler->GetCountOfFunction(FunctionUtils::GetAbsoluteAddress(function));
+    unsigned int count_of_function = profiler->GetCountOfFunction(
+        FunctionUtils::GetAbsoluteAddress(function));
     if (count_of_function == 0) {
       SendDisassemblyToUi(disasm.GetResult());
       return;
@@ -367,7 +369,7 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
           }
           size_t count = 0;
           while (address < next_address) {
-            count += data->CountOfAddress(address);
+            count += SamplingUtils::GetCountForAddress(*data, address);
             address++;
           }
           double result = static_cast<double>(count) / count_of_function;

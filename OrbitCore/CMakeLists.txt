@@ -41,6 +41,7 @@ target_sources(
          Profiling.h
          RingBuffer.h
          SamplingProfiler.h
+         SamplingUtils.h
          ScopeTimer.h
          Serialization.h
          SerializationMacros.h
@@ -75,6 +76,7 @@ target_sources(
           Pdb.cpp
           Profiling.cpp
           SamplingProfiler.cpp
+          SamplingUtils.cpp
           ScopeTimer.cpp
           StringManager.cpp
           SymbolHelper.cpp
