@@ -16,6 +16,40 @@
 #include "OrbitModule.h"
 #include "Serialization.h"
 
+namespace {
+
+std::multimap<int, CallstackID> SortCallstacks(
+    const ThreadSampleData& data, const std::set<CallstackID>& a_CallStacks,
+    int* o_TotalCallStacks) {
+  std::multimap<int, CallstackID> sortedCallstacks;
+  int numCallstacks = 0;
+  for (CallstackID id : a_CallStacks) {
+    auto it = data.m_CallstackCount.find(id);
+    if (it != data.m_CallstackCount.end()) {
+      int count = it->second;
+      sortedCallstacks.insert(std::make_pair(count, id));
+      numCallstacks += count;
+    }
+  }
+
+  *o_TotalCallStacks = numCallstacks;
+  return sortedCallstacks;
+}
+
+void ComputeAverageThreadUsage(ThreadSampleData* data) {
+  data->m_AverageThreadUsage = 0.f;
+
+  if (!data->m_ThreadUsage.empty()) {
+    for (float thread_usage : data->m_ThreadUsage) {
+      data->m_AverageThreadUsage += thread_usage;
+    }
+
+    data->m_AverageThreadUsage /= data->m_ThreadUsage.size();
+  }
+}
+
+}  // namespace
+
 //-----------------------------------------------------------------------------
 SamplingProfiler::SamplingProfiler(const std::shared_ptr<Process>& a_Process) {
   m_Process = a_Process;
@@ -49,7 +83,7 @@ float SamplingProfiler::GetSampleTime() {
 std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
     uint64_t a_Addr, ThreadID a_TID, int* o_NumCallstacks) {
   std::set<CallstackID>& callstacks = m_FunctionToCallstacks[a_Addr];
-  return m_ThreadSampleData[a_TID].SortCallstacks(callstacks, o_NumCallstacks);
+  return SortCallstacks(m_ThreadSampleData[a_TID], callstacks, o_NumCallstacks);
 }
 
 //-----------------------------------------------------------------------------
@@ -168,7 +202,7 @@ void SamplingProfiler::ProcessSamples() {
   for (auto& dataIt : m_ThreadSampleData) {
     ThreadSampleData& threadSampleData = dataIt.second;
 
-    threadSampleData.ComputeAverageThreadUsage();
+    ComputeAverageThreadUsage(&threadSampleData);
 
     // Address count per sample per thread
     for (auto& stackCountIt : threadSampleData.m_CallstackCount) {
@@ -213,43 +247,6 @@ void SamplingProfiler::ProcessSamples() {
   // when new callstacks have been added or after a module has been loaded.
 
   m_State = DoneProcessing;
-}
-
-//-----------------------------------------------------------------------------
-void ThreadSampleData::ComputeAverageThreadUsage() {
-  m_AverageThreadUsage = 0.f;
-
-  if (!m_ThreadUsage.empty()) {
-    for (float thread_usage : m_ThreadUsage) {
-      m_AverageThreadUsage += thread_usage;
-    }
-
-    m_AverageThreadUsage /= m_ThreadUsage.size();
-  }
-}
-
-unsigned int ThreadSampleData::CountOfAddress(uint64_t address) const {
-  auto res = m_RawAddressCount.find(address);
-  if (res == m_RawAddressCount.end()) return 0;
-  return (*res).second;
-}
-
-//-----------------------------------------------------------------------------
-std::multimap<int, CallstackID> ThreadSampleData::SortCallstacks(
-    const std::set<CallstackID>& a_CallStacks, int* o_TotalCallStacks) {
-  std::multimap<int, CallstackID> sortedCallstacks;
-  int numCallstacks = 0;
-  for (CallstackID id : a_CallStacks) {
-    auto it = m_CallstackCount.find(id);
-    if (it != m_CallstackCount.end()) {
-      int count = it->second;
-      sortedCallstacks.insert(std::make_pair(count, id));
-      numCallstacks += count;
-    }
-  }
-
-  *o_TotalCallStacks = numCallstacks;
-  return sortedCallstacks;
 }
 
 //-----------------------------------------------------------------------------

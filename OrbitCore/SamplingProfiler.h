@@ -44,10 +44,6 @@ struct LineInfo {
 //-----------------------------------------------------------------------------
 struct ThreadSampleData {
   ThreadSampleData() { m_ThreadUsage.push_back(0); }
-  void ComputeAverageThreadUsage();
-  [[nodiscard]] unsigned int CountOfAddress(uint64_t address) const;
-  std::multimap<int, CallstackID> SortCallstacks(
-      const std::set<CallstackID>& a_CallStacks, int* o_TotalCallStacks);
   std::unordered_map<CallstackID, unsigned int> m_CallstackCount;
   std::unordered_map<uint64_t, unsigned int> m_AddressCount;
   std::unordered_map<uint64_t, unsigned int> m_RawAddressCount;
