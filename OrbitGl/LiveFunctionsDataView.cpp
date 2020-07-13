@@ -8,7 +8,11 @@
 #include "Capture.h"
 #include "Core.h"
 #include "FunctionStats.h"
+<<<<<<< HEAD
 #include "FunctionUtils.h"
+=======
+#include "LiveFunctions.h"
+>>>>>>> Rough first sketch for event iterator UI
 #include "Log.h"
 #include "OrbitFunction.h"
 #include "Pdb.h"
@@ -17,8 +21,8 @@
 #include "TimerChain.h"
 
 //-----------------------------------------------------------------------------
-LiveFunctionsDataView::LiveFunctionsDataView()
-    : DataView(DataViewType::LIVE_FUNCTIONS) {
+LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctions* live_functions)
+    : DataView(DataViewType::LIVE_FUNCTIONS), live_functions_(live_functions) {
   m_UpdatePeriodMs = 300;
   OnDataChanged();
 }
@@ -149,6 +153,8 @@ const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_MAX =
     "Jump to max";
 const std::string LiveFunctionsDataView::MENU_ACTION_DISASSEMBLY =
     "Go to Disassembly";
+const std::string LiveFunctionsDataView::MENU_ACTION_ITERATE =
+    "Add iterator";
 
 //-----------------------------------------------------------------------------
 std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
@@ -172,7 +178,8 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   if (a_SelectedIndices.size() == 1) {
     menu.insert(menu.end(),
                 {MENU_ACTION_JUMP_TO_FIRST, MENU_ACTION_JUMP_TO_LAST,
-                 MENU_ACTION_JUMP_TO_MIN, MENU_ACTION_JUMP_TO_MAX});
+                 MENU_ACTION_JUMP_TO_MIN, MENU_ACTION_JUMP_TO_MAX, 
+                 MENU_ACTION_ITERATE});
   }
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
@@ -230,6 +237,12 @@ void LiveFunctionsDataView::OnContextMenu(
     if (max_box) {
       GCurrentTimeGraph->SelectAndZoom(max_box);
     }
+  } else if (a_Action == MENU_ACTION_ITERATE) {
+    Function& function = GetFunction(a_ItemIndices[0]);
+    TextBox* box = JumpToNext(function, std::numeric_limits<TickType>::min());
+
+    // TODO: This needs to be reflected in the UI as well (add buttons).
+    live_functions_->AddIterator(&function, box);
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }
@@ -333,3 +346,60 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
   }
   return std::make_pair(min_box, max_box);
 }
+<<<<<<< HEAD
+=======
+
+TextBox* LiveFunctionsDataView::JumpToNext(Function& function,
+                                       TickType current_time) const {
+  auto function_address = function.GetVirtualAddress();
+  TextBox* box_to_jump = nullptr;
+  TickType best_time = std::numeric_limits<TickType>::max();
+  std::vector<std::shared_ptr<TimerChain>> chains =
+      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
+  for (auto& chain : chains) {
+    if (!chain) continue;
+    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
+      TimerBlock& block = *it;
+      if (!block.Intersects(current_time, best_time)) continue;
+      for (size_t i = 0; i < block.size(); i++) {
+        TextBox& box = block[i];
+        auto box_time = box.GetTimer().m_End;
+        if ((box.GetTimer().m_FunctionAddress == function_address) &&
+            (box_time > current_time) && (best_time > box_time)) {
+          box_to_jump = &box;
+          best_time = box_time;
+        }
+      }
+    }
+  }
+  JumpToBox(box_to_jump);
+  return box_to_jump;
+}
+
+TextBox* LiveFunctionsDataView::JumpToPrevious(Function& function,
+                                           TickType current_time) const {
+  auto function_address = function.GetVirtualAddress();
+  TextBox* box_to_jump = nullptr;
+  TickType best_time = std::numeric_limits<TickType>::min();
+  std::vector<std::shared_ptr<TimerChain>> chains =
+      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
+  for (auto& chain : chains) {
+    if (!chain) continue;
+    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
+      TimerBlock& block = *it;
+      if (!block.Intersects(best_time, current_time)) continue;
+      for (size_t i = 0; i < block.size(); i++) {
+        TextBox& box = block[i];
+        auto box_time = box.GetTimer().m_End;
+        if ((box.GetTimer().m_FunctionAddress == function_address) &&
+            (box_time < current_time) && (best_time < box_time)) {
+          box_to_jump = &box;
+          best_time = box_time;
+        }
+      }
+    }
+  }
+  JumpToBox(box_to_jump);
+  return box_to_jump;
+}
+>>>>>>> Rough first sketch for event iterator UI

@@ -38,6 +38,7 @@ target_sources(
          HomeWindow.h
          Images.h
          ImGuiOrbit.h
+         LiveFunctions.h
          LiveFunctionsDataView.h
          ModulesDataView.h
          OpenGl.h
@@ -73,6 +74,7 @@ target_sources(
           Disassembler.cpp
           EventTrack.cpp
           FramePointerValidatorClient.cpp
+          LiveFunctions.cpp
           FunctionsDataView.cpp
           GlCanvas.cpp
           GlPanel.cpp

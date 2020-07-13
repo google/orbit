@@ -937,12 +937,12 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       }
       return m_FunctionsDataView.get();
 
-    case DataViewType::LIVE_FUNCTIONS:
-      if (!m_LiveFunctionsDataView) {
-        m_LiveFunctionsDataView = std::make_unique<LiveFunctionsDataView>();
-        m_Panels.push_back(m_LiveFunctionsDataView.get());
-      }
-      return m_LiveFunctionsDataView.get();
+    // case DataViewType::LIVE_FUNCTIONS:
+    //   if (!m_LiveFunctionsDataView) {
+    //     m_LiveFunctionsDataView = std::make_unique<LiveFunctionsDataView>();
+    //     m_Panels.push_back(m_LiveFunctionsDataView.get());
+    //   }
+    //   return m_LiveFunctionsDataView.get();
 
     case DataViewType::CALLSTACK:
       if (!m_CallStackDataView) {

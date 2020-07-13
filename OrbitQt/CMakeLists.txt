@@ -17,8 +17,10 @@ target_sources(
           orbitcodeeditor.h
           orbitdataviewpanel.h
           orbitdisassemblydialog.h
+          orbiteventiterator.h
           orbitglwidget.h
           orbitglwidgetwithheader.h
+          orbitlivefunctions.h
           orbitmainwindow.h
           orbitsamplingreport.h
           OrbitStartupWindow.h
@@ -43,8 +45,10 @@ target_sources(
           orbitcodeeditor.cpp
           orbitdataviewpanel.cpp
           orbitdisassemblydialog.cpp
+          orbiteventiterator.cpp
           orbitglwidget.cpp
           orbitglwidgetwithheader.cpp
+          orbitlivefunctions.cpp
           orbitmainwindow.cpp
           orbitsamplingreport.cpp
           OrbitStartupWindow.cpp
