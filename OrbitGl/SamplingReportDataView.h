@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <google/protobuf/repeated_field.h>
+
 #include "CallStackDataView.h"
 #include "DataView.h"
 #include "SamplingProfiler.h"
@@ -28,7 +30,8 @@ class SamplingReportDataView : public DataView {
   void SetSamplingReport(class SamplingReport* a_SamplingReport) {
     m_SamplingReport = a_SamplingReport;
   }
-  void SetSampledFunctions(const std::vector<SampledFunction>& a_Functions);
+  void SetSampledFunctions(
+      const google::protobuf::RepeatedPtrField<SampledFunction>& a_Functions);
   void SetThreadID(ThreadID a_TID);
   ThreadID GetThreadID() const { return m_TID; }
 

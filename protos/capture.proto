@@ -171,3 +171,15 @@ message SampledFunction {
   uint64 address = 7;
   Function function = 8;
 }
+
+message ThreadSampleData {
+  map<uint64, uint32> callstack_count = 1;
+  map<uint64, uint32> address_count = 2;
+  map<uint64, uint32> raw_address_count = 3;
+  map<uint64, uint32> exclusive_count = 4;
+  uint32 num_samples = 5;
+  repeated SampledFunction sample_report = 6;
+  repeated float thread_usage = 7;
+  float average_thread_usage = 8;
+  int32 thread_id = 9;
+}

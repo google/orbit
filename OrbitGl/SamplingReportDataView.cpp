@@ -252,8 +252,8 @@ void SamplingReportDataView::LinkDataView(DataView* a_DataView) {
 
 //-----------------------------------------------------------------------------
 void SamplingReportDataView::SetSampledFunctions(
-    const std::vector<SampledFunction>& a_Functions) {
-  m_Functions = a_Functions;
+    const google::protobuf::RepeatedPtrField<SampledFunction>& a_Functions) {
+  m_Functions = {a_Functions.begin(), a_Functions.end()};
 
   size_t numFunctions = m_Functions.size();
   m_Indices.resize(numFunctions);

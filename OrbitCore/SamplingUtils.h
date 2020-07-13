@@ -22,6 +22,8 @@ inline CallstackID InitAndGetCallstackHash(Callstack* callstack) {
   return callstack->hash();
 }
 
+ThreadSampleData CreateThreadSampleData();
+
 }  // namespace SamplingUtils
 
 #endif  // ORBIT_CORE_SAMPLING_UTILS_H_

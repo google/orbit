@@ -27,13 +27,13 @@ SamplingReport::SamplingReport(
 void SamplingReport::FillReport() {
   const auto& sampleData = m_Profiler->GetThreadSampleData();
 
-  for (ThreadSampleData* threadSampleData : sampleData) {
-    ThreadID tid = threadSampleData->m_TID;
+  for (ThreadSampleData* thread_sample_data : sampleData) {
+    ThreadID tid = thread_sample_data->thread_id();
 
     if (tid == 0 && !m_Profiler->GetGenerateSummary()) continue;
 
     SamplingReportDataView threadReport;
-    threadReport.SetSampledFunctions(threadSampleData->m_SampleReport);
+    threadReport.SetSampledFunctions(thread_sample_data->sample_report());
     threadReport.SetThreadID(tid);
     threadReport.SetSamplingReport(this);
     m_ThreadReports.push_back(std::move(threadReport));
@@ -47,7 +47,7 @@ void SamplingReport::UpdateReport() {
     const ThreadSampleData* thread_sample_data =
         m_Profiler->GetThreadSampleDataByThreadId(thread_id);
     if (thread_sample_data != nullptr) {
-      thread_report.SetSampledFunctions(thread_sample_data->m_SampleReport);
+      thread_report.SetSampledFunctions(thread_sample_data->sample_report());
     }
   }
 

@@ -26,23 +26,6 @@ struct LineInfo {
 };
 
 //-----------------------------------------------------------------------------
-struct ThreadSampleData {
-  ThreadSampleData() { m_ThreadUsage.push_back(0); }
-  std::unordered_map<CallstackID, unsigned int> m_CallstackCount;
-  std::unordered_map<uint64_t, unsigned int> m_AddressCount;
-  std::unordered_map<uint64_t, unsigned int> m_RawAddressCount;
-  std::unordered_map<uint64_t, unsigned int> m_ExclusiveCount;
-  std::multimap<unsigned int, uint64_t> m_AddressCountSorted;
-  unsigned int m_NumSamples = 0;
-  std::vector<SampledFunction> m_SampleReport;
-  std::vector<float> m_ThreadUsage;
-  float m_AverageThreadUsage = 0;
-  ThreadID m_TID = 0;
-
-  ORBIT_SERIALIZABLE;
-};
-
-//-----------------------------------------------------------------------------
 struct CallstackCount {
   CallstackCount() = default;
 
@@ -124,6 +107,7 @@ class SamplingProfiler {
  protected:
   void ResolveCallstacks();
   void FillThreadSampleDataSampleReports();
+  ThreadSampleData& GetThreadSampleData(ThreadID thread_id);
 
  protected:
   std::shared_ptr<Process> m_Process;

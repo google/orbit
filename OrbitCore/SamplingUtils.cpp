@@ -8,11 +8,17 @@ namespace SamplingUtils {
 
 unsigned int GetCountForAddress(const ThreadSampleData& data,
                                 uint64_t address) {
-  auto res = data.m_RawAddressCount.find(address);
-  if (res == data.m_RawAddressCount.end()) {
+  auto res = data.raw_address_count().find(address);
+  if (res == data.raw_address_count().end()) {
     return 0;
   }
   return (*res).second;
+}
+
+ThreadSampleData CreateThreadSampleData() {
+  ThreadSampleData data;
+  data.add_thread_usage(0);
+  return data;
 }
 
 }  // namespace SamplingUtils

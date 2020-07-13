@@ -70,11 +70,6 @@ void CaptureSerializer::SaveImpl(T& archive) {
   archive(cereal::make_nvp("Capture", *this));
 
   {
-    ORBIT_SIZE_SCOPE("Capture::GAddressToFunctionName");
-    archive(Capture::GAddressToFunctionName);
-  }
-
-  {
     ORBIT_SIZE_SCOPE("SamplingProfiler");
     archive(Capture::GSamplingProfiler);
   }
@@ -131,8 +126,6 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   // Header
   cereal::BinaryInputArchive archive(stream);
   archive(*this);
-
-  archive(Capture::GAddressToFunctionName);
 
   archive(Capture::GSamplingProfiler);
   if (Capture::GSamplingProfiler == nullptr) {
