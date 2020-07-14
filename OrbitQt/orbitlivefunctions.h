@@ -31,10 +31,6 @@ class OrbitLiveFunctions : public QWidget {
 
   void AddIterator(Function* function);
 
- private slots:
-  void on_NextButton_clicked();
-  void on_PreviousButton_clicked();
-
  private:
   Ui::OrbitLiveFunctions* ui;
   LiveFunctions live_functions_;
