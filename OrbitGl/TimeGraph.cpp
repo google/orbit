@@ -136,17 +136,20 @@ void TimeGraph::ZoomAll() {
   }
 }
 
-//-----------------------------------------------------------------------------
-void TimeGraph::Zoom(const TextBox* a_TextBox) {
-  const Timer& timer = a_TextBox->GetTimer();
-
-  double start = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_Start);
-  double end = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_End);
+void TimeGraph::Zoom(TickType min, TickType max) {
+  double start = MicroSecondsFromTicks(m_SessionMinCounter, min);
+  double end = MicroSecondsFromTicks(m_SessionMinCounter, max);
 
   double mid = start + ((end - start) / 2.0);
   double extent = 1.1 * (end - start) / 2.0;
 
   SetMinMax(mid - extent, mid + extent);
+}
+
+//-----------------------------------------------------------------------------
+void TimeGraph::Zoom(const TextBox* a_TextBox) {
+  const Timer& timer = a_TextBox->GetTimer();
+  Zoom(timer.m_Start, timer.m_End);
 }
 
 //-----------------------------------------------------------------------------
@@ -575,16 +578,21 @@ void TimeGraph::Draw(GlCanvas* canvas, bool a_Picking) {
 }
 
 void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
-  if (overlay_current_textbox_ != nullptr) {
-    float world_start_x = canvas->GetWorldTopLeftX();
-    float world_width = canvas->GetWorldWidth();
+  float min_x = std::numeric_limits<float>::max();
+  float max_x = std::numeric_limits<float>::min();
 
-    float world_start_y = canvas->GetWorldTopLeftY();
-    float world_height = canvas->GetWorldHeight();
+  uint64_t min_tick = std::numeric_limits<uint64_t>::max();
+  uint64_t max_tick = std::numeric_limits<uint64_t>::min();
 
+  float world_start_x = canvas->GetWorldTopLeftX();
+  float world_width = canvas->GetWorldWidth();
+
+  float world_start_y = canvas->GetWorldTopLeftY();
+  float world_height = canvas->GetWorldHeight();
+
+  for (auto current_textbox : overlay_current_textboxes_) {
     double inv_time_window = 1.0 / GetTimeWindowUs();
 
-    TextBox* current_textbox = overlay_current_textbox_;
     const Timer& timer = current_textbox->GetTimer();
     double start_us = GetUsFromTick(timer.m_Start);
     double normalized_start = start_us * inv_time_window;
@@ -593,10 +601,32 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
 
     Vec2 pos(world_timer_x, world_start_y);
 
-    float z = GlCanvas::Z_VALUE_TEXT;
+    min_x = std::min(min_x, world_timer_x);
+    min_tick = std::min(min_tick, timer.m_Start);
+    max_x = std::max(max_x, world_timer_x);
+    max_tick = std::max(max_tick, timer.m_Start);
+
+    float z = GlCanvas::Z_VALUE_BOX_ACTIVE;
     Color color = GetThreadColor(timer.m_TID);
     auto type = PickingID::LINE;
-    m_Batcher.AddVerticalLine(pos, -world_height, z, color, type, nullptr);
+    canvas->GetBatcher()->AddVerticalLine(pos, -world_height, z, color, type, nullptr);
+  }
+  if (!overlay_current_textboxes_.empty()) {
+    float from = min_x;
+    float to = max_x;
+
+    double micros = MicroSecondsFromTicks(min_tick, max_tick);
+    float sizex = to - from;
+    Vec2 pos(from, world_start_y - world_height);
+    Vec2 size(sizex, world_height);
+
+    std::string time = GetPrettyTime(micros * 0.001);
+    TextBox box(pos, size, time, Color(0, 128, 0, 128));
+    box.SetTextY(pos[1] + world_height / 2);
+    canvas->GetTextRenderer().SetFontSize(20);
+    box.Draw(canvas->GetBatcher(), canvas->GetTextRenderer(), -FLT_MAX, true,
+             true);
+    canvas->GetTextRenderer().SetFontSize(10);
   }
 }
 

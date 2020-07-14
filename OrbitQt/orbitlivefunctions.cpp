@@ -15,9 +15,9 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
 
   all_events_iterator_ = new OrbitEventIterator();
   all_events_iterator_->SetNextButtonCallback(
-      [this]() { /* TODO */ });
+      [this]() { this->live_functions_.OnAllNextButton(); });
   all_events_iterator_->SetPreviousButtonCallback(
-      [this]() { /* TODO */ });
+      [this]() { this->live_functions_.OnAllPreviousButton();  });
   all_events_iterator_->SetFunctionName("All functions");
   ui->iteratorLayout->addWidget(all_events_iterator_);
 }
@@ -65,16 +65,6 @@ void OrbitLiveFunctions::Refresh() {
 
 void OrbitLiveFunctions::OnDataChanged() {
     live_functions_.OnDataChanged();
-}
-
-void OrbitLiveFunctions::on_NextButton_clicked() {
-    // TODO: This should move all events.
-    //live_functions_.OnNextButton(0);
-}
-
-void OrbitLiveFunctions::on_PreviousButton_clicked() {
-    // TODO: This should move all events.
-    //live_functions_.OnPreviousButton(0);
 }
 
 void OrbitLiveFunctions::AddIterator(Function* function) {

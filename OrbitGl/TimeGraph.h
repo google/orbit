@@ -56,6 +56,7 @@ class TimeGraph {
   void Clear();
   void ZoomAll();
   void Zoom(const TextBox* a_TextBox);
+  void Zoom(TickType min, TickType max);
   void ZoomTime(float a_ZoomValue, double a_MouseRatio);
   void SetMinMax(double a_MinTimeUs, double a_MaxTimeUs);
   void PanTime(int a_InitialX, int a_CurrentX, int a_Width,
@@ -113,8 +114,8 @@ class TimeGraph {
   Color GetThreadColor(ThreadID tid) const;
   StringManager* GetStringManager() { return string_manager_.get(); }
 
-  void SetCurrentTextBox(TextBox* box) {
-    overlay_current_textbox_ = box;
+  void SetCurrentTextBoxes(std::vector<TextBox*> box) {
+    overlay_current_textboxes_ = box;
   }
 
  protected:
@@ -130,7 +131,7 @@ class TimeGraph {
   TextBox m_SceneBox;
   int m_NumDrawnTextBoxes = 0;
 
-  TextBox* overlay_current_textbox_ = nullptr;
+  std::vector<TextBox*> overlay_current_textboxes_;
 
   double m_RefTimeUs = 0;
   double m_MinTimeUs = 0;

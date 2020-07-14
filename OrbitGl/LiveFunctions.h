@@ -17,6 +17,9 @@ class LiveFunctions {
 
   LiveFunctionsDataView& GetDataView() { return live_functions_data_view_; }
 
+  void LiveFunctions::OnAllNextButton();
+  void LiveFunctions::OnAllPreviousButton();
+
   void LiveFunctions::OnNextButton(size_t index);
   void LiveFunctions::OnPreviousButton(size_t index);
 

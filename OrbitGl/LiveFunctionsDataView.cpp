@@ -239,7 +239,8 @@ void LiveFunctionsDataView::OnContextMenu(
     }
   } else if (a_Action == MENU_ACTION_ITERATE) {
     Function& function = GetFunction(a_ItemIndices[0]);
-    TextBox* box = JumpToNext(function, std::numeric_limits<TickType>::min());
+    TextBox* box = FindNext(function, std::numeric_limits<TickType>::min());
+    JumpToBox(box);
 
     // TODO: This needs to be reflected in the UI as well (add buttons).
     live_functions_->AddIterator(&function, box);
@@ -349,7 +350,12 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
 <<<<<<< HEAD
 =======
 
-TextBox* LiveFunctionsDataView::JumpToNext(Function& function,
+void LiveFunctionsDataView::JumpToNext(Function& function,
+                                       TickType current_time) const {
+  JumpToBox(FindNext(function, current_time));
+}
+
+TextBox* LiveFunctionsDataView::FindNext(Function& function,
                                        TickType current_time) const {
   auto function_address = function.GetVirtualAddress();
   TextBox* box_to_jump = nullptr;
@@ -372,12 +378,16 @@ TextBox* LiveFunctionsDataView::JumpToNext(Function& function,
       }
     }
   }
-  JumpToBox(box_to_jump);
   return box_to_jump;
 }
 
-TextBox* LiveFunctionsDataView::JumpToPrevious(Function& function,
-                                           TickType current_time) const {
+void LiveFunctionsDataView::JumpToPrevious(Function& function,
+                                       TickType current_time) const {
+  JumpToBox(FindPrevious(function, current_time));
+}
+
+TextBox* LiveFunctionsDataView::FindPrevious(Function& function,
+                                             TickType current_time) const {
   auto function_address = function.GetVirtualAddress();
   TextBox* box_to_jump = nullptr;
   TickType best_time = std::numeric_limits<TickType>::min();
@@ -399,7 +409,6 @@ TextBox* LiveFunctionsDataView::JumpToPrevious(Function& function,
       }
     }
   }
-  JumpToBox(box_to_jump);
   return box_to_jump;
 }
 >>>>>>> Rough first sketch for event iterator UI
