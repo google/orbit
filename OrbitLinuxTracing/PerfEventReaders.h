@@ -27,6 +27,20 @@ std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
 std::unique_ptr<RawSamplePerfEvent> ConsumeRawSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
+template <typename T>
+std::unique_ptr<T> ConsumeTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                              const perf_event_header& header) {
+  DCHECK(header.size ==
+         sizeof(T::ring_buffer_record) + sizeof(T::tracepoint_data));
+  auto event = std::make_unique<T>();
+  event->ring_buffer_record.header = header;
+  ring_buffer->ReadValueAtOffset(&event->ring_buffer_record, 0);
+  ring_buffer->ReadValueAtOffset(&event->tracepoint_data,
+                                 sizeof(event->ring_buffer_record));
+  ring_buffer->SkipRecord(header);
+  return event;
+}
+
 }  // namespace LinuxTracing
 
 #endif  // ORBIT_LINUX_TRACING_PERF_EVENT_READERS_H_
