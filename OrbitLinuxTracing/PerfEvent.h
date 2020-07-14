@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "Function.h"
+#include "KernelTracepoints.h"
 #include "MakeUniqueForOverwrite.h"
 #include "PerfEventRecords.h"
 
@@ -366,6 +367,35 @@ class MapsPerfEvent : public PerfEvent {
  private:
   uint64_t timestamp_;
   std::string maps_;
+};
+
+template <typename TracepointData>
+class TracepointPerfEventBase : public PerfEvent {
+ public:
+  perf_event_raw_sample_fixed ring_buffer_record;
+  TracepointData tracepoint_data;
+
+  uint64_t GetTimestamp() const override {
+    return ring_buffer_record.sample_id.time;
+  }
+};
+
+class TaskRenamePerfEvent
+    : public TracepointPerfEventBase<task_rename_tracepoint> {
+ public:
+  void Accept(PerfEventVisitor* visitor) override;
+
+  // The tracepoint format calls this "pid" but it's effectively the thread id.
+  pid_t GetTid() const { return tracepoint_data.pid; }
+
+  const char* GetOldComm() const { return tracepoint_data.oldcomm; }
+  const char* GetNewComm() const { return tracepoint_data.newcomm; }
+
+  uint64_t GetStreamId() const {
+    return ring_buffer_record.sample_id.stream_id;
+  }
+
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
 class RawSamplePerfEvent {
