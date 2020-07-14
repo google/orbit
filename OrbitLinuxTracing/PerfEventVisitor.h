@@ -23,6 +23,7 @@ class PerfEventVisitor {
   virtual void visit(UretprobesPerfEvent*) {}
   virtual void visit(LostPerfEvent*) {}
   virtual void visit(MapsPerfEvent*) {}
+  virtual void visit(TaskNewtaskPerfEvent*) {}
   virtual void visit(TaskRenamePerfEvent*) {}
 };
 

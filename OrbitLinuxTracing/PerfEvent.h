@@ -380,12 +380,28 @@ class TracepointPerfEventBase : public PerfEvent {
   }
 };
 
+class TaskNewtaskPerfEvent
+    : public TracepointPerfEventBase<task_newtask_tracepoint> {
+ public:
+  void Accept(PerfEventVisitor* visitor) override;
+
+  // The tracepoint format calls this "pid" but it's effectively the thread id.
+  pid_t GetTid() const { return tracepoint_data.pid; }
+
+  const char* GetComm() const { return tracepoint_data.comm; }
+
+  uint64_t GetStreamId() const {
+    return ring_buffer_record.sample_id.stream_id;
+  }
+
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+};
+
 class TaskRenamePerfEvent
     : public TracepointPerfEventBase<task_rename_tracepoint> {
  public:
   void Accept(PerfEventVisitor* visitor) override;
 
-  // The tracepoint format calls this "pid" but it's effectively the thread id.
   pid_t GetTid() const { return tracepoint_data.pid; }
 
   const char* GetOldComm() const { return tracepoint_data.oldcomm; }
