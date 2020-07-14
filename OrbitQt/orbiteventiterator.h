@@ -5,7 +5,7 @@
 #ifndef ORBIT_EVENT_ITERATOR_H_
 #define ORBIT_EVENT_ITERATOR_H_
 
-#include <QWidget>
+#include <QFrame>
 
 #include "types.h"
 
@@ -13,7 +13,7 @@ namespace Ui {
 class OrbitEventIterator;
 }
 
-class OrbitEventIterator : public QWidget {
+class OrbitEventIterator : public QFrame {
   Q_OBJECT
 
  public:
@@ -29,15 +29,23 @@ class OrbitEventIterator : public QWidget {
   }
 
   void SetFunctionName(const std::string& function);
+  void SetMaxCount(int max_count);
+  void SetIndex(int current_index);
+
+  void IncrementIndex();
+  void DecrementIndex();
 
  private slots:
   void on_NextButton_clicked();
   void on_PreviousButton_clicked();
 
  protected:
+  void UpdateCountLabel();
   Ui::OrbitEventIterator* ui;
   std::function<void(void)> next_button_callback_;
   std::function<void(void)> previous_button_callback_;
+  int max_count_ = 0;
+  int current_index_ = 0;
 };
 
 #endif  // ORBIT_EVENT_ITERATOR_H_
