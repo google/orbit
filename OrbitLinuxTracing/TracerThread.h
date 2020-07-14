@@ -62,6 +62,14 @@ class TracerThread {
   bool OpenMmapTask(const std::vector<int32_t>& cpus);
   bool OpenSampling(const std::vector<int32_t>& cpus);
 
+  static bool OpenRingBuffersForTracepointAndRedirectOnExistingIfNecessary(
+      const char* tracepoint_category, const char* tracepoint_name,
+      const std::vector<int32_t>& cpus, std::vector<int>* tracing_fds,
+      absl::flat_hash_set<uint64_t>* tracepoint_ids,
+      absl::flat_hash_map<int32_t, int>* tracepoint_ring_buffer_fds_per_cpu,
+      std::vector<PerfEventRingBuffer>* ring_buffers);
+  bool OpenTracepoints(const std::vector<int32_t>& cpus);
+
   bool InitGpuTracepointEventProcessor();
   static bool OpenRingBufferForGpuTracepoint(
       const char* tracepoint_category, const char* tracepoint_name, int32_t cpu,
@@ -103,6 +111,7 @@ class TracerThread {
   static constexpr uint64_t UPROBES_RING_BUFFER_SIZE_KB = 8 * 1024;
   static constexpr uint64_t MMAP_TASK_RING_BUFFER_SIZE_KB = 64;
   static constexpr uint64_t SAMPLING_RING_BUFFER_SIZE_KB = 16 * 1024;
+  static constexpr uint64_t TRACEPOINTS_RING_BUFFER_SIZE_KB = 256;
   static constexpr uint64_t GPU_TRACING_RING_BUFFER_SIZE_KB = 256;
 
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_RING_BUFFERS_US = 100;
@@ -125,6 +134,7 @@ class TracerThread {
   absl::flat_hash_set<uint64_t> uprobes_ids_;
   absl::flat_hash_set<uint64_t> uretprobes_ids_;
   absl::flat_hash_set<uint64_t> stack_sampling_ids_;
+  absl::flat_hash_set<uint64_t> task_rename_ids_;
   absl::flat_hash_set<uint64_t> gpu_tracing_ids_;
   absl::flat_hash_set<uint64_t> callchain_sampling_ids_;
 

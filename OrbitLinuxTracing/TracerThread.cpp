@@ -170,7 +170,7 @@ bool TracerThread::OpenUprobes(const std::vector<int32_t>& cpus) {
         // uretprobes to it. The other uprobes and uretprobes for this cpu
         // will be redirected to this ring buffer.
         int ring_buffer_fd = uprobes_fd;
-        std::string buffer_name = absl::StrFormat("uprobes_uretprobes_%u", cpu);
+        std::string buffer_name = absl::StrFormat("uprobes_uretprobes_%d", cpu);
         ring_buffers_.emplace_back(ring_buffer_fd, UPROBES_RING_BUFFER_SIZE_KB,
                                    buffer_name);
         uprobes_ring_buffer_fds_per_cpu[cpu] = ring_buffer_fd;
@@ -255,6 +255,64 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
     ring_buffers_.emplace_back(std::move(buffer));
   }
   return true;
+}
+
+bool TracerThread::OpenRingBuffersForTracepointAndRedirectOnExistingIfNecessary(
+    const char* tracepoint_category, const char* tracepoint_name,
+    const std::vector<int32_t>& cpus, std::vector<int>* tracing_fds,
+    absl::flat_hash_set<uint64_t>* tracepoint_ids,
+    absl::flat_hash_map<int32_t, int>* tracepoint_ring_buffer_fds_per_cpu,
+    std::vector<PerfEventRingBuffer>* ring_buffers) {
+  absl::flat_hash_map<int32_t, int> tracepoint_fds_per_cpu;
+  for (int32_t cpu : cpus) {
+    int fd =
+        tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
+    if (fd < 0) {
+      ERROR("Opening %s:%s tracepoint for cpu %d", tracepoint_category,
+            tracepoint_name, cpu);
+      for (const auto& open_fd : tracepoint_fds_per_cpu) {
+        close(open_fd.second);
+      }
+      return false;
+    }
+    tracepoint_fds_per_cpu.emplace(cpu, fd);
+  }
+
+  for (const auto& fd : tracepoint_fds_per_cpu) {
+    tracing_fds->push_back(fd.second);
+    uint64_t stream_id = perf_event_get_id(fd.second);
+    tracepoint_ids->insert(stream_id);
+  }
+
+  // Redirect all tracepoints on the same cpu to a single ring buffer.
+  for (int32_t cpu : cpus) {
+    int fd = tracepoint_fds_per_cpu.at(cpu);
+    if (tracepoint_ring_buffer_fds_per_cpu->contains(cpu)) {
+      // Redirect to the already opened ring buffer.
+      int ring_bugger_fd = tracepoint_ring_buffer_fds_per_cpu->at(cpu);
+      perf_event_redirect(fd, ring_bugger_fd);
+    } else {
+      // Create a ring buffer for tracepoints for this cpu.
+      int ring_buffer_fd = fd;
+      std::string buffer_name = absl::StrFormat("tracepoints_%d", cpu);
+      ring_buffers->emplace_back(ring_buffer_fd,
+                                 TRACEPOINTS_RING_BUFFER_SIZE_KB, buffer_name);
+      tracepoint_ring_buffer_fds_per_cpu->emplace(cpu, ring_buffer_fd);
+    }
+  }
+  return true;
+}
+
+bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
+  bool tracepoint_event_open_errors = false;
+  absl::flat_hash_map<int32_t, int> tracepoint_ring_buffer_fds_per_cpu;
+
+  tracepoint_event_open_errors |=
+      !OpenRingBuffersForTracepointAndRedirectOnExistingIfNecessary(
+          "task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
+          &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+
+  return !tracepoint_event_open_errors;
 }
 
 bool TracerThread::InitGpuTracepointEventProcessor() {
@@ -389,6 +447,8 @@ void TracerThread::Run(
     uprobes_event_open_errors = !OpenUprobes(cpuset_cpus);
     perf_event_open_errors |= uprobes_event_open_errors;
   }
+
+  perf_event_open_errors |= !OpenTracepoints(cpuset_cpus);
 
   // This takes an initial snapshot of the maps. Call it after OpenUprobes, as
   // calling perf_event_open for uprobes (just calling it, it is not necessary
@@ -630,10 +690,11 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   bool is_uprobe = uprobes_ids_.contains(stream_id);
   bool is_uretprobe = uretprobes_ids_.contains(stream_id);
   bool is_stack_sample = stack_sampling_ids_.contains(stream_id);
+  bool is_task_rename = task_rename_ids_.contains(stream_id);
   bool is_gpu_event = gpu_tracing_ids_.contains(stream_id);
   bool is_callchain_sample = callchain_sampling_ids_.contains(stream_id);
-  CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_gpu_event +
-            is_callchain_sample <=
+  CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_task_rename +
+            is_gpu_event + is_callchain_sample <=
         1);
 
   int fd = ring_buffer->GetFileDescriptor();
@@ -693,6 +754,12 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
+
+  } else if (is_task_rename) {
+    auto event =
+        ConsumeTracepointPerfEvent<TaskRenamePerfEvent>(ring_buffer, header);
+    LOG("task_rename: tid: %d; oldcomm: %s, newcomm: %s", event->GetTid(),
+        event->GetOldComm(), event->GetNewComm());
 
   } else if (is_gpu_event) {
     // TODO: Consider deferring GPU events.
@@ -796,6 +863,7 @@ void TracerThread::Reset() {
   uprobes_ids_.clear();
   uretprobes_ids_.clear();
   stack_sampling_ids_.clear();
+  task_rename_ids_.clear();
   gpu_tracing_ids_.clear();
   callchain_sampling_ids_.clear();
 
