@@ -26,6 +26,7 @@ function(GenerateVersionFile OUTPUT_FILE INPUT_FILE COMPILE_TARGET)
     COMMAND
       ${CMAKE_COMMAND} -DIN_VERSION_CHECK=TRUE
       "-DGIT_COMMIT_STATE_FILE=${GIT_COMMIT_STATE_FILE}"
+      "-DCOMPILER_STRING=${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}"
       "-DINPUT_FILE=${INPUT_FILE}" "-DOUTPUT_FILE=${OUTPUT_FILE}" -P
       "${VERSION_CMAKE_SCRIPT}")
 
@@ -56,6 +57,13 @@ function(DoGenerateVersionFile OUTPUT_FILE INPUT_FILE GIT_COMMIT_STATE_FILE
   else()
     set(MINOR_PATCH_VERSION "0")
   endif()
+
+  cmake_host_system_information(RESULT BUILD_MACHINE_STRING QUERY HOSTNAME)
+  cmake_host_system_information(RESULT BUILD_OS_NAME QUERY OS_NAME)
+  cmake_host_system_information(RESULT BUILD_OS_RELEASE QUERY OS_RELEASE)
+  cmake_host_system_information(RESULT BUILD_OS_VERSION QUERY OS_VERSION)
+  cmake_host_system_information(RESULT BUILD_OS_PLATFORM QUERY OS_PLATFORM)
+  string(TIMESTAMP BUILD_TIMESTAMP_STRING UTC)
 
   configure_file("${INPUT_FILE}" "${OUTPUT_FILE}")
 endfunction()

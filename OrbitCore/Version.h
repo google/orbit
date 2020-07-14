@@ -8,6 +8,14 @@
 
 namespace OrbitCore {
 std::string GetVersion();
+std::string GetCompiler();
+std::string GetBuildTimestamp();
+std::string GetBuildMachine();
+std::string GetCommitHash();
+
+// For usage with a "--version" command line flag
+std::string GetBuildReport();
+
 }  // namespace OrbitCore
 
 #endif  // ORBIT_CORE_VERSION_H_
