@@ -6,6 +6,7 @@
 
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_join.h>
 
 #include <chrono>
 #include <cmath>
@@ -532,7 +533,7 @@ void OrbitApp::LoadPreset(const std::shared_ptr<Preset>& preset) {
     return;
   }
   if (!SelectProcess(Path::GetFileName(preset->m_ProcessFullPath))) {
-    SendErrorToUi("Session loading failed",
+    SendErrorToUi("Preset loading failed",
                   absl::StrFormat("The process \"%s\" is not running.",
                                   preset->m_ProcessFullPath));
     return;
@@ -805,15 +806,33 @@ void OrbitApp::LoadModules(int32_t process_id,
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
                                      const std::shared_ptr<Preset>& preset) {
-  std::vector<std::shared_ptr<Module>> modules;
+  std::vector<std::shared_ptr<Module>> modules_to_load;
+  std::vector<std::string> modules_not_found;
   for (const auto& pair : preset->m_Modules) {
     const std::string& module_path = pair.first;
     const auto& module = process->GetModuleFromPath(module_path);
-    if (module != nullptr && !module->IsLoaded()) {
-      modules.emplace_back(std::move(module));
+    if (module == nullptr) {
+      modules_not_found.push_back(module_path);
+      continue;
     }
+    if (module->IsLoaded()) {
+      CHECK(module->m_Pdb != nullptr);
+      module->m_Pdb->ApplyPreset(*preset);
+      continue;
+    }
+    modules_to_load.emplace_back(std::move(module));
   }
-  LoadModules(process->GetID(), modules, preset);
+  if (!modules_not_found.empty()) {
+    SendErrorToUi(
+        "Preset loading incomplete",
+        absl::StrFormat(
+            "Unable to load the preset for the following modules:\n\"%s\"\nThe "
+            "modules are not loaded by process \"%s\".",
+            absl::StrJoin(modules_not_found, "\"\n\""), process->GetName()));
+  }
+  if (!modules_to_load.empty()) {
+    LoadModules(process->GetID(), modules_to_load, preset);
+  }
 }
 
 //-----------------------------------------------------------------------------
