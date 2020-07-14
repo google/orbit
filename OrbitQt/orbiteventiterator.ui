@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>OrbitEventIterator</class>
- <widget class="QWidget" name="OrbitEventIterator">
+ <widget class="QFrame" name="OrbitEventIterator">
   <!-- <property name="geometry">
    <rect>
     <x>0</x>
@@ -19,6 +19,12 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="frameShape">
+   <enum>QFrame::StyledPanel</enum>
+  </property>
+  <property name="frameShadow">
+   <enum>QFrame::Raised</enum>
+  </property>
   <layout class="QGridLayout" name="IteratorLayout">
    <item row="0" column="0">
     <widget class="QPushButton" name="PreviousButton">
@@ -34,13 +40,6 @@
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QLabel" name="Label">
-     <property name="text">
-      <string>(Function name)</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="2">
     <widget class="QPushButton" name="NextButton">
      <property name="text">
       <string>&gt;</string>
@@ -51,6 +50,14 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QLabel" name="Label">
+    </widget>
+   </item>
+   <item row="0" column="3">
+    <widget class="QLabel" name="CountLabel">
     </widget>
    </item>
   </layout>

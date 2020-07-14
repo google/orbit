@@ -8,7 +8,7 @@
 
 //-----------------------------------------------------------------------------
 OrbitEventIterator::OrbitEventIterator(QWidget* parent)
-    : QWidget(parent), ui(new Ui::OrbitEventIterator) {
+    : QFrame(parent), ui(new Ui::OrbitEventIterator) {
   ui->setupUi(this);
 }
 
@@ -32,4 +32,38 @@ void OrbitEventIterator::on_PreviousButton_clicked() {
 //-----------------------------------------------------------------------------
 void OrbitEventIterator::SetFunctionName(const std::string& function_name) {
   ui->Label->setText(QString::fromStdString(function_name));
+}
+
+//-----------------------------------------------------------------------------
+void OrbitEventIterator::SetMaxCount(int max_count) {
+  max_count_ = max_count;
+  UpdateCountLabel();
+}
+
+//-----------------------------------------------------------------------------
+void OrbitEventIterator::SetIndex(int current_index) {
+  current_index_ = 0;
+  UpdateCountLabel();
+}
+
+//-----------------------------------------------------------------------------
+void OrbitEventIterator::IncrementIndex() {
+  if (current_index_ < max_count_ - 1) {
+    ++current_index_;
+    UpdateCountLabel();
+  }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitEventIterator::DecrementIndex() {
+  if (current_index_ > 0) {
+    --current_index_;
+    UpdateCountLabel();
+  }
+}
+
+//-----------------------------------------------------------------------------
+void OrbitEventIterator::UpdateCountLabel() {
+  ui->CountLabel->setText(QString::fromStdString(
+    absl::StrFormat("%d / %d", current_index_, max_count_)));
 }
