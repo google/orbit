@@ -462,12 +462,12 @@ void OrbitMainWindow::on_actionReport_Bug_triggered() {
 void OrbitMainWindow::on_actionAbout_triggered() {
   OrbitQt::OrbitAboutDialog dialog{this};
   dialog.setWindowTitle(windowTitle());
-  dialog.setVersionString(QCoreApplication::applicationVersion());
+  dialog.SetVersionString(QCoreApplication::applicationVersion());
 
   QFile licenseFile{
       QDir{QCoreApplication::applicationDirPath()}.filePath("NOTICE")};
   if (licenseFile.open(QIODevice::ReadOnly)) {
-    dialog.setLicenseText(licenseFile.readAll());
+    dialog.SetLicenseText(licenseFile.readAll());
   }
   dialog.exec();
 }

@@ -13,11 +13,11 @@ OrbitAboutDialog::OrbitAboutDialog(QWidget* parent)
   ui_->setupUi(this);
 }
 
-void OrbitAboutDialog::setLicenseText(const QString& text) {
+void OrbitAboutDialog::SetLicenseText(const QString& text) {
   ui_->licenseTextEdit->setPlainText(text);
 }
 
-void OrbitAboutDialog::setVersionString(const QString& version) {
+void OrbitAboutDialog::SetVersionString(const QString& version) {
   ui_->versionLabel->setText(QString{"Version %1"}.arg(version));
 }
 
