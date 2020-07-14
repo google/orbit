@@ -212,3 +212,9 @@ message EventBufferData {
   uint64 max_time = 2;
   uint64 min_time = 3;
 }
+
+message CaptureHeader {
+  string capture_name = 1;
+  uint32 num_timers = 2;
+  uint32 version = 3;
+}
