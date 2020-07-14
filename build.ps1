@@ -6,19 +6,34 @@ function conan_profile_exists($profile) {
 }
 
 function conan_create_profile($profile) {
-  $process = Start-Process $conan.Path -Wait -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "profile","new","--detect",$profile
-  if ($process.ExitCode -ne 0) { Throw "Error while creating conan profile." }
-  
-  $arch = If ($profile.EndsWith("x86")) { "x86" } Else { "x86_64" }
-  $process = Start-Process $conan.Path -Wait -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "profile","update","settings.arch=$arch",$profile
-  if ($process.ExitCode -ne 0) { Throw "Error while creating conan profile." }
+  if (! (& $conan.Path profile show default)) {
+    if (! (& $conan.Path profile new --detect default)) {
+      exit $?
+    }
+  }
 
-  $build_type = If ($profile.Contains("_debug")) { "Debug" } Else { If ($profile.Contains("_relwithdebinfo")) { "RelWithDebInfo" } Else { "Release" }}
-  $process = Start-Process $conan.Path -Wait -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "profile","update","settings.build_type=$build_type",$profile
-  if ($process.ExitCode -ne 0) { Throw "Error while creating conan profile." }
-  
-  $profile_path = "$Env:USERPROFILE\.conan\profiles\$profile"
-  (Get-Content $profile_path) -replace '\[build_requires\]', "[build_requires]`r`ncmake_installer/3.16.3@conan/stable" | Out-File -encoding ASCII $profile_path
+  $compiler = & $conan.Path profile show default | Select-String -Pattern "compiler=" | ForEach-Object { ([string] $_).split("=")[1] }
+  $compiler_version = & $conan.Path profile show default | Select-String -Pattern "compiler.version=" | ForEach-Object { ([string] $_).split("=")[1] }
+
+  if ($compiler -ne "Visual Studio") {
+    Throw "It seems conan couldn't detect your Visual Studio installation. Do you have Visual Studio installed? At least Visual Studio 2017 is required!"
+  }
+
+  if ([int]$compiler_version -ne 15 -and [int]$compiler_version -ne 16) {
+    Throw "Your version of Visual Studio is not supported. We currently only support VS2017 and VS2019."
+  }
+
+  $compiler_version = if ($compiler_version -eq 15) { "msvc2017" } else { "msvc2019" }
+
+  $conan_dir = if ($env:CONAN_USER_HOME) { $env:CONAN_USER_HOME } else { $env:USERPROFILE }
+  $conan_dir += "/.conan"
+
+  $build_type = $profile -replace "default_"
+  $profile_path = "$conan_dir/profiles/$profile"
+
+  "include(${compiler_version}_${build_type})`r`n" | Set-Content -Path $profile_path
+  "[settings]`r`n[options]" | Add-Content -Path $profile_path
+  "[build_requires]`r`n[env]" | Add-Content -Path $profile_path
 }
 
 $profiles = if ($args.Count) { $args } else { @("default_relwithdebinfo") }
