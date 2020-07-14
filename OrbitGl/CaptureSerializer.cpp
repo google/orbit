@@ -69,11 +69,6 @@ void CaptureSerializer::SaveImpl(T& archive) {
   // Header
   archive(cereal::make_nvp("Capture", *this));
 
-  {
-    ORBIT_SIZE_SCOPE("Event Buffer");
-    archive(GEventTracer.GetEventBuffer());
-  }
-
   // Timers
   int numWrites = 0;
   std::vector<std::shared_ptr<TimerChain>> chains =
@@ -118,9 +113,6 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   archive(*this);
 
   time_graph_->Clear();
-
-  // Event buffer
-  archive(GEventTracer.GetEventBuffer());
 
   // Timers
   Timer timer;

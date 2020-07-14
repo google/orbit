@@ -16,15 +16,15 @@ EventTracer GEventTracer;
 std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
     uint64_t a_TimeBegin, uint64_t a_TimeEnd, ThreadID a_ThreadId /*= 0*/) {
   std::vector<CallstackEvent> callstackEvents;
-  for (auto& pair : m_CallstackEvents) {
+  for (auto& pair : data_->callstack_events()) {
     ThreadID threadID = pair.first;
-    std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
+    const Uint64ToCallstackEvent& callstacks = pair.second;
 
     if (a_ThreadId == 0 || threadID == a_ThreadId) {
-      for (auto it = callstacks.lower_bound(a_TimeBegin);
-           it != callstacks.end(); ++it) {
+      for (auto it = callstacks.data().begin(); it != callstacks.data().end();
+           ++it) {
         uint64_t time = it->first;
-        if (time < a_TimeEnd) {
+        if (a_TimeBegin <= time && time < a_TimeEnd) {
           callstackEvents.push_back(it->second);
         }
       }
@@ -43,39 +43,27 @@ void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash,
   event.set_time(time);
   event.set_callstack_id(cs_hash);
   event.set_thread_id(thread_id);
-  std::map<uint64_t, CallstackEvent>& event_map = m_CallstackEvents[thread_id];
-  event_map[time] = event;
+  Uint64ToCallstackEvent& event_map =
+      (*data_->mutable_callstack_events())[thread_id];
+  (*event_map.mutable_data())[time] = event;
 
   // Add all callstack events to "thread 0".
   CallstackEvent event0;
   event0.set_time(time);
   event0.set_callstack_id(cs_hash);
   event0.set_thread_id(0);
-  std::map<uint64_t, CallstackEvent>& event_map_0 = m_CallstackEvents[0];
-  event_map_0[time] = event0;
+  Uint64ToCallstackEvent& event_map_0 = (*data_->mutable_callstack_events())[0];
+  (*event_map_0.mutable_data())[time] = event0;
 
   RegisterTime(time);
-}
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(EventBuffer, 0) {
-  // ORBIT_NVP_VAL(0, m_CallstackEvents);
-
-  uint64_t maxTime = m_MaxTime;
-  ORBIT_NVP_VAL(0, maxTime);
-  m_MaxTime = maxTime;
-
-  uint64_t minTime = m_MinTime;
-  ORBIT_NVP_VAL(0, minTime);
-  m_MinTime = minTime;
 }
 
 #ifdef __linux
 //-----------------------------------------------------------------------------
 size_t EventBuffer::GetNumEvents() const {
   size_t numEvents = 0;
-  for (auto& pair : m_CallstackEvents) {
-    numEvents += pair.second.size();
+  for (auto& pair : data_->callstack_events()) {
+    numEvents += pair.second.data_size();
   }
 
   return numEvents;

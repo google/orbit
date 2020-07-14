@@ -202,3 +202,13 @@ message CallstackEvent {
   uint64 callstack_id = 2;
   int32 thread_id = 3;
 }
+
+message Uint64ToCallstackEvent {
+  map<uint64, CallstackEvent> data = 1;
+}
+
+message EventBufferData {
+  map<int32, Uint64ToCallstackEvent> callstack_events = 1;
+  uint64 max_time = 2;
+  uint64 min_time = 3;
+}

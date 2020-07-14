@@ -7,6 +7,7 @@
 #include "CallstackTypes.h"
 #include "EventBuffer.h"
 #include "Track.h"
+#include "capture.pb.h"
 
 class GlCanvas;
 class TimeGraph;

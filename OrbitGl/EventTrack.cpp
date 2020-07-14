@@ -72,12 +72,12 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   float track_height = layout.GetEventTrackHeight();
 
   ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
-  std::map<uint64_t, CallstackEvent>& callstacks =
-      GEventTracer.GetEventBuffer().GetCallstacks()[m_ThreadId];
+  const Uint64ToCallstackEvent& callstacks =
+      GEventTracer.GetEventBuffer().GetCallstack(m_ThreadId);
 
   // Sampling Events
   const Color kWhite(255, 255, 255, 255);
-  for (auto& pair : callstacks) {
+  for (auto& pair : callstacks.data()) {
     uint64_t time = pair.first;
     if (time > min_tick && time < max_tick) {
       Vec2 pos(time_graph_->GetWorldFromTick(time), m_Pos[1]);
@@ -144,7 +144,7 @@ void EventTrack::SelectEvents() {
 //-----------------------------------------------------------------------------
 bool EventTrack::IsEmpty() const {
   ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
-  const std::map<uint64_t, CallstackEvent>& callstacks =
-      GEventTracer.GetEventBuffer().GetCallstacks()[m_ThreadId];
-  return callstacks.empty();
+  const Uint64ToCallstackEvent& callstacks =
+      GEventTracer.GetEventBuffer().GetCallstack(m_ThreadId);
+  return callstacks.data().empty();
 }

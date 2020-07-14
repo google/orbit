@@ -7,6 +7,8 @@
 
 #include <set>
 
+#include <google/protobuf/map.h>
+
 #include "BlockChain.h"
 #include "CallstackTypes.h"
 #include "Core.h"
@@ -20,25 +22,39 @@
 //-----------------------------------------------------------------------------
 class EventBuffer {
  public:
-  EventBuffer() : m_MaxTime(0), m_MinTime(LLONG_MAX) {}
+  EventBuffer() {
+    data_ = std::make_unique<EventBufferData>();
+    Reset();
+  }
 
   void Reset() {
-    m_CallstackEvents.clear();
-    m_MinTime = LLONG_MAX;
-    m_MaxTime = 0;
+    data_->clear_callstack_events();
+    data_->set_min_time(LLONG_MAX);
+    data_->set_max_time(0);
   }
-  std::map<ThreadID, std::map<uint64_t, CallstackEvent> >& GetCallstacks() {
-    return m_CallstackEvents;
+
+  const std::unique_ptr<EventBufferData>& GetData() const { return data_; }
+  void SetData(std::unique_ptr<EventBufferData> data_ptr) {
+    data_ = std::move(data_ptr);
+  }
+
+  const google::protobuf::Map<int32_t, Uint64ToCallstackEvent>& GetCallstacks()
+      const {
+    return data_->callstack_events();
+  }
+
+  const Uint64ToCallstackEvent& GetCallstack(int id) {
+    return (*data_->mutable_callstack_events())[id];
   }
   Mutex& GetMutex() { return m_Mutex; }
   std::vector<CallstackEvent> GetCallstackEvents(uint64_t a_TimeBegin,
                                                  uint64_t a_TimeEnd,
                                                  ThreadID a_ThreadId = 0);
-  uint64_t GetMaxTime() const { return m_MaxTime; }
-  uint64_t GetMinTime() const { return m_MinTime; }
+  uint64_t GetMaxTime() const { return data_->max_time(); }
+  uint64_t GetMinTime() const { return data_->min_time(); }
   bool HasEvent() {
     ScopeLock lock(m_Mutex);
-    return !m_CallstackEvents.empty();
+    return !data_->callstack_events().empty();
   }
 
 #ifdef __linux__
@@ -47,21 +63,21 @@ class EventBuffer {
 
   //-----------------------------------------------------------------------------
   void RegisterTime(uint64_t a_Time) {
-    if (a_Time > m_MaxTime) m_MaxTime = a_Time;
-    if (a_Time > 0 && a_Time < m_MinTime) m_MinTime = a_Time;
+    if (a_Time > data_->max_time()) {
+      data_->set_max_time(a_Time);
+    }
+    if (a_Time > 0 && a_Time < data_->min_time()) {
+      data_->set_min_time(a_Time);
+    }
   }
 
   //-----------------------------------------------------------------------------
   void AddCallstackEvent(uint64_t time, CallstackID cs_hash,
                          ThreadID thread_id);
 
-  ORBIT_SERIALIZABLE;
-
  private:
   Mutex m_Mutex;
-  std::map<ThreadID, std::map<uint64_t, CallstackEvent> > m_CallstackEvents;
-  std::atomic<uint64_t> m_MaxTime;
-  std::atomic<uint64_t> m_MinTime;
+  std::unique_ptr<EventBufferData> data_;
 };
 
 #endif  // ORBIT_CORE_EVENT_BUFFER_H_

@@ -719,8 +719,8 @@ void TimeGraph::SortTracks() {
 
     for (auto& pair : GEventTracer.GetEventBuffer().GetCallstacks()) {
       ThreadID threadID = pair.first;
-      std::map<uint64_t, CallstackEvent>& callstacks = pair.second;
-      m_EventCount[threadID] = callstacks.size();
+      const Uint64ToCallstackEvent& callstacks = pair.second;
+      m_EventCount[threadID] = callstacks.data_size();
       GetOrCreateThreadTrack(threadID);
     }
   }

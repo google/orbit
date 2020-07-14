@@ -22,6 +22,7 @@
 #include "TimeGraphLayout.h"
 #include "TimerChain.h"
 #include "absl/container/flat_hash_map.h"
+#include "capture.pb.h"
 
 class TimeGraph {
  public:
