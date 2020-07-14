@@ -29,6 +29,7 @@ target_sources(OrbitLinuxTracing PRIVATE
         Function.h
         GpuTracepointEventProcessor.h
         GpuTracepointEventProcessor.cpp
+        KernelTracepoints.h
         LibunwindstackUnwinder.cpp
         LibunwindstackUnwinder.h
         MakeUniqueForOverwrite.h
