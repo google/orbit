@@ -6,12 +6,13 @@
 #include <iostream>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitVersion.h"
 #include "OrbitService.h"
+#include "OrbitVersion.h"
 #include "Path.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
+#include "absl/flags/usage_config.h"
 
 ABSL_FLAG(uint64_t, grpc_port, 44765, "Grpc server port");
 
@@ -41,6 +42,8 @@ int main(int argc, char** argv) {
   InitLogFile(log_file_path);
 
   absl::SetProgramUsageMessage("Orbit CPU Profiler Service");
+  absl::SetFlagsUsageConfig(
+      absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
   absl::ParseCommandLine(argc, argv);
 
   install_sigint_handler();
