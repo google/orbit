@@ -78,7 +78,7 @@ float TextBox::GetScreenSize(const TextRenderer& a_TextRenderer) {
 void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
                    bool a_Visible, bool a_RightJustify, bool isInactive,
                    unsigned int a_ID, bool a_IsPicking, bool a_IsHighlighted) {
-  bool isCoreActivity = m_Timer.IsType(Timer::CORE_ACTIVITY);
+  bool isCoreActivity = m_Timer.m_Type == Timer::CORE_ACTIVITY;
   bool isSameThreadIdAsSelected =
       isCoreActivity && m_Timer.m_TID == Capture::GSelectedThreadId;
 
@@ -98,8 +98,8 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
   }
 
   float z = a_IsHighlighted ? GlCanvas::Z_VALUE_CONTEXT_SWITCH
-            : isInactive    ? GlCanvas::Z_VALUE_BOX_INACTIVE
-                            : GlCanvas::Z_VALUE_BOX_ACTIVE;
+                            : isInactive ? GlCanvas::Z_VALUE_BOX_INACTIVE
+                                         : GlCanvas::Z_VALUE_BOX_ACTIVE;
 
   Color color = col;
   if (a_IsPicking) {
@@ -122,7 +122,8 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
 
     Function* func = Capture::GSelectedFunctionsMap[m_Timer.m_FunctionAddress];
     std::string text = absl::StrFormat(
-        "%s %s", func ? FunctionUtils::GetDisplayName(*func).c_str() : "", m_Text.c_str());
+        "%s %s", func ? FunctionUtils::GetDisplayName(*func).c_str() : "",
+        m_Text.c_str());
 
     if (!a_IsPicking && !isCoreActivity) {
       a_TextRenderer.AddText(
