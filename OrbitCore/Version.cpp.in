@@ -3,9 +3,35 @@
 // found in the LICENSE file.
 
 #include "Version.h"
+#include "absl/strings/str_format.h"
 
 #define OrbitVersionStr "@VERSION_STRING@"
+#define OrbitCompilerStr "@COMPILER_STRING@"
+#define OrbitBuildTimestampStr "@BUILD_TIMESTAMP_STRING@"
+#define OrbitBuildMachineStr "@BUILD_MACHINE_STRING@"
+#define OrbitBuildOsStr                                    \
+  "@BUILD_OS_NAME@ @BUILD_OS_RELEASE@ @BUILD_OS_VERSION@ " \
+  "(@BUILD_OS_PLATFORM@)"
+#define OrbitCommitHashStr "@COMMIT_HASH@"
 
 namespace OrbitCore {
 std::string GetVersion() { return OrbitVersionStr; }
+std::string GetCompiler() { return OrbitCompilerStr; }
+std::string GetBuildTimestamp() { return OrbitBuildTimestampStr; }
+std::string GetBuildMachine() { return OrbitBuildMachineStr; }
+std::string GetBuildOs() { return OrbitBuildOsStr; }
+std::string GetCommitHash() { return OrbitCommitHashStr; }
+
+std::string GetBuildReport() {
+  std::string result{};
+
+  result += absl::StrFormat("Orbit version %s\n\n", GetVersion());
+  result += absl::StrFormat("Compiler: %s\n", GetCompiler());
+  result += absl::StrFormat("Build host: %s\n", GetBuildMachine());
+  result += absl::StrFormat("Build time: %s\n", GetBuildTimestamp());
+  result += absl::StrFormat("Build OS: %s\n", GetBuildOs());
+  result += absl::StrFormat("Commit hash: %s\n", GetCommitHash());
+
+  return result;
+}
 }  // namespace OrbitCore
