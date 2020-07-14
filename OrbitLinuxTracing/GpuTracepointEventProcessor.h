@@ -22,7 +22,7 @@ class GpuTracepointEventProcessor {
         amdgpu_sched_run_job_id_(amdgpu_sched_run_job_id),
         dma_fence_signaled_id_(dma_fence_signaled_id) {}
 
-  void PushEvent(const std::unique_ptr<RawSamplePerfEvent>& sample);
+  void PushEvent(const RawSamplePerfEvent& sample);
   void SetListener(TracerListener* listener);
 
  private:

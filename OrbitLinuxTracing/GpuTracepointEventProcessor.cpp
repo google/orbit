@@ -146,12 +146,11 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
   dma_fence_signaled_events_.erase(key);
 }
 
-void GpuTracepointEventProcessor::PushEvent(
-    const std::unique_ptr<RawSamplePerfEvent>& sample) {
-  pid_t tid = sample->ring_buffer_record.sample_id.tid;
-  uint64_t timestamp_ns = sample->ring_buffer_record.sample_id.time;
+void GpuTracepointEventProcessor::PushEvent(const RawSamplePerfEvent& sample) {
+  pid_t tid = sample.ring_buffer_record.sample_id.tid;
+  uint64_t timestamp_ns = sample.ring_buffer_record.sample_id.time;
   int tp_id =
-      static_cast<int>(*reinterpret_cast<const uint16_t*>(&sample->data[0]));
+      static_cast<int>(*reinterpret_cast<const uint16_t*>(&sample.data[0]));
 
   // Handle the three different types of events that we can get from the GPU
   // driver tracepoints we are tracing. We allow for the possibility that these
@@ -163,7 +162,7 @@ void GpuTracepointEventProcessor::PushEvent(
   // received.
   if (tp_id == amdgpu_cs_ioctl_id_) {
     const perf_event_amdgpu_cs_ioctl* tracepoint_data =
-        reinterpret_cast<const perf_event_amdgpu_cs_ioctl*>(&sample->data[0]);
+        reinterpret_cast<const perf_event_amdgpu_cs_ioctl*>(&sample.data[0]);
 
     uint32_t context = tracepoint_data->context;
     uint32_t seqno = tracepoint_data->seqno;
@@ -178,7 +177,7 @@ void GpuTracepointEventProcessor::PushEvent(
   } else if (tp_id == amdgpu_sched_run_job_id_) {
     const perf_event_amdgpu_sched_run_job* tracepoint_data =
         reinterpret_cast<const perf_event_amdgpu_sched_run_job*>(
-            &sample->data[0]);
+            &sample.data[0]);
 
     uint32_t context = tracepoint_data->context;
     uint32_t seqno = tracepoint_data->seqno;
@@ -191,8 +190,7 @@ void GpuTracepointEventProcessor::PushEvent(
     CreateGpuExecutionEventIfComplete(key);
   } else if (tp_id == dma_fence_signaled_id_) {
     const perf_event_dma_fence_signaled* tracepoint_data =
-        reinterpret_cast<const perf_event_dma_fence_signaled*>(
-            &sample->data[0]);
+        reinterpret_cast<const perf_event_dma_fence_signaled*>(&sample.data[0]);
 
     uint32_t context = tracepoint_data->context;
     uint32_t seqno = tracepoint_data->seqno;
@@ -204,7 +202,7 @@ void GpuTracepointEventProcessor::PushEvent(
     dma_fence_signaled_events_.emplace(key, event);
     CreateGpuExecutionEventIfComplete(key);
   } else {
-    CHECK(false);
+    FATAL("Unexpected tracepoint id here: %d", tp_id);
   }
 }
 
