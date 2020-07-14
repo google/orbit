@@ -566,9 +566,38 @@ void TimeGraph::Draw(GlCanvas* canvas, bool a_Picking) {
   }
 
   DrawTracks(canvas, a_Picking);
+
+  DrawOverlay(canvas, a_Picking);
+
   m_Batcher.Draw(a_Picking);
 
   m_NeedsRedraw = false;
+}
+
+void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
+  if (overlay_current_textbox_ != nullptr) {
+    float world_start_x = canvas->GetWorldTopLeftX();
+    float world_width = canvas->GetWorldWidth();
+
+    float world_start_y = canvas->GetWorldTopLeftY();
+    float world_height = canvas->GetWorldHeight();
+
+    double inv_time_window = 1.0 / GetTimeWindowUs();
+
+    TextBox* current_textbox = overlay_current_textbox_;
+    const Timer& timer = current_textbox->GetTimer();
+    double start_us = GetUsFromTick(timer.m_Start);
+    double normalized_start = start_us * inv_time_window;
+    float world_timer_x =
+        static_cast<float>(world_start_x + normalized_start * world_width);
+
+    Vec2 pos(world_timer_x, world_start_y);
+
+    float z = GlCanvas::Z_VALUE_TEXT;
+    Color color = GetThreadColor(timer.m_TID);
+    auto type = PickingID::LINE;
+    m_Batcher.AddVerticalLine(pos, -world_height, z, color, type, nullptr);
+  }
 }
 
 //-----------------------------------------------------------------------------

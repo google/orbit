@@ -13,38 +13,17 @@
 
 class LiveFunctions {
  public:
-  LiveFunctions() : live_functions_data_view_(this) 
-  {}
+  LiveFunctions() : live_functions_data_view_(this) {}
 
-  void OnNextButton(size_t index) {
-      TextBox* text_box =
-        live_functions_data_view_.JumpToNext(*(function_iterators_[index]), 
-        current_textboxes_[index]->GetTimer().m_End);
-      // If text_box is nullptr, then we have reached the right end of the timeline.
-      if (text_box != nullptr) {
-        current_textboxes_[index] = text_box;
-      }
-  }
-  void OnPreviousButton(size_t index) {
-      TextBox* text_box = 
-        live_functions_data_view_.JumpToPrevious(*(function_iterators_[index]), 
-        current_textboxes_[index]->GetTimer().m_Start);
-      // If text_box is nullptr, then we have reached the left end of the timeline.
-      if (text_box != nullptr) {
-        current_textboxes_[index] = text_box;
-      } 
-  }
+  LiveFunctionsDataView& GetDataView() { return live_functions_data_view_; }
 
-  LiveFunctionsDataView& GetDataView() {
-      return live_functions_data_view_;
-  }
+  void LiveFunctions::OnNextButton(size_t index);
+  void LiveFunctions::OnPreviousButton(size_t index);
 
-  void OnDataChanged() {
-      live_functions_data_view_.OnDataChanged();
-  }
+  void OnDataChanged() { live_functions_data_view_.OnDataChanged(); }
 
   void SetAddIteratorCallback(std::function<void(Function*)> callback) {
-      add_iterator_callback_ = callback;
+    add_iterator_callback_ = callback;
   }
 
   void AddIterator(Function* function, TextBox* current_textbox) {
@@ -54,6 +33,7 @@ class LiveFunctions {
       add_iterator_callback_(function);
     }
   }
+
  private:
   LiveFunctionsDataView live_functions_data_view_;
   std::vector<Function*> function_iterators_;
