@@ -104,7 +104,7 @@ struct __attribute__((__packed__)) perf_event_stack_sample {
   perf_event_sample_stack_user stack;
 };
 
-struct __attribute__((__packed__)) perf_event_callchain_sample {
+struct __attribute__((__packed__)) perf_event_callchain_sample_fixed {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   uint64_t nr;
@@ -124,7 +124,7 @@ struct __attribute__((__packed__)) perf_event_ax_sample {
   perf_event_sample_regs_user_ax regs;
 };
 
-struct __attribute__((__packed__)) perf_event_sample_raw {
+struct __attribute__((__packed__)) perf_event_raw_sample_fixed {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   uint32_t size;

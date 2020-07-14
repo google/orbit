@@ -259,7 +259,7 @@ class StackSamplePerfEvent : public PerfEvent {
 
 class CallchainSamplePerfEvent : public PerfEvent {
  public:
-  perf_event_callchain_sample ring_buffer_record;
+  perf_event_callchain_sample_fixed ring_buffer_record;
   std::vector<uint64_t> ips;
   explicit CallchainSamplePerfEvent(uint64_t callchain_size)
       : ips(callchain_size) {
@@ -368,11 +368,11 @@ class MapsPerfEvent : public PerfEvent {
   std::string maps_;
 };
 
-class PerfEventSampleRaw {
+class RawSamplePerfEvent {
  public:
-  perf_event_sample_raw ring_buffer_record;
+  perf_event_raw_sample_fixed ring_buffer_record;
   std::vector<uint8_t> data;
-  explicit PerfEventSampleRaw(uint32_t size) : data(size) {}
+  explicit RawSamplePerfEvent(uint32_t size) : data(size) {}
 };
 
 }  // namespace LinuxTracing

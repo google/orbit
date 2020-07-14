@@ -147,7 +147,7 @@ void GpuTracepointEventProcessor::CreateGpuExecutionEventIfComplete(
 }
 
 void GpuTracepointEventProcessor::PushEvent(
-    const std::unique_ptr<PerfEventSampleRaw>& sample) {
+    const std::unique_ptr<RawSamplePerfEvent>& sample) {
   pid_t tid = sample->ring_buffer_record.sample_id.tid;
   uint64_t timestamp_ns = sample->ring_buffer_record.sample_id.time;
   int tp_id =

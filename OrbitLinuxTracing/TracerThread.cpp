@@ -696,7 +696,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
 
   } else if (is_gpu_event) {
     // TODO: Consider deferring GPU events.
-    auto event = ConsumeSampleRaw(ring_buffer, header);
+    auto event = ConsumeRawSamplePerfEvent(ring_buffer, header);
     // Do not filter GPU tracepoint events based on pid as we want to have
     // visibility into all GPU activity across the system.
     gpu_event_processor_->PushEvent(event);
