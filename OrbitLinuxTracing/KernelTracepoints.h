@@ -16,6 +16,14 @@ struct __attribute__((__packed__)) tracepoint_common {
   int32_t common_pid;
 };
 
+struct __attribute__((__packed__)) task_newtask_tracepoint {
+  tracepoint_common common;
+  int32_t pid;
+  char comm[16];
+  uint64_t clone_flags;
+  int16_t oom_score_adj;
+};
+
 struct __attribute__((__packed__)) task_rename_tracepoint {
   tracepoint_common common;
   int32_t pid;

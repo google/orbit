@@ -309,6 +309,11 @@ bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
 
   tracepoint_event_open_errors |=
       !OpenRingBuffersForTracepointAndRedirectOnExistingIfNecessary(
+          "task", "task_newtask", cpus, &tracing_fds_, &task_newtask_ids_,
+          &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+
+  tracepoint_event_open_errors |=
+      !OpenRingBuffersForTracepointAndRedirectOnExistingIfNecessary(
           "task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
           &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 
@@ -690,11 +695,12 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   bool is_uprobe = uprobes_ids_.contains(stream_id);
   bool is_uretprobe = uretprobes_ids_.contains(stream_id);
   bool is_stack_sample = stack_sampling_ids_.contains(stream_id);
+  bool is_task_newtask = task_newtask_ids_.contains(stream_id);
   bool is_task_rename = task_rename_ids_.contains(stream_id);
   bool is_gpu_event = gpu_tracing_ids_.contains(stream_id);
   bool is_callchain_sample = callchain_sampling_ids_.contains(stream_id);
-  CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_task_rename +
-            is_gpu_event + is_callchain_sample <=
+  CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_task_newtask +
+            is_task_rename + is_gpu_event + is_callchain_sample <=
         1);
 
   int fd = ring_buffer->GetFileDescriptor();
@@ -754,6 +760,15 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     event->SetOriginFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
+
+  } else if (is_task_newtask) {
+    auto event =
+        ConsumeTracepointPerfEvent<TaskNewtaskPerfEvent>(ring_buffer, header);
+    ThreadName thread_name;
+    thread_name.set_tid(event->GetTid());
+    thread_name.set_name(event->GetComm());
+    thread_name.set_timestamp_ns(event->GetTimestamp());
+    listener_->OnThreadName(std::move(thread_name));
 
   } else if (is_task_rename) {
     auto event =
@@ -856,6 +871,7 @@ void TracerThread::Reset() {
   uprobes_ids_.clear();
   uretprobes_ids_.clear();
   stack_sampling_ids_.clear();
+  task_newtask_ids_.clear();
   task_rename_ids_.clear();
   gpu_tracing_ids_.clear();
   callchain_sampling_ids_.clear();
