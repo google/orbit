@@ -273,8 +273,7 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
       track->SetColor(kGreenIntrospection);
     }
 
-    if (!a_Timer.IsType(Timer::THREAD_ACTIVITY) &&
-        !a_Timer.IsType(Timer::CORE_ACTIVITY)) {
+    if (a_Timer.m_Type != Timer::CORE_ACTIVITY) {
       track->OnTimer(a_Timer);
       ++m_ThreadCountMap[a_Timer.m_TID];
     } else {

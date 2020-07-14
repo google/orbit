@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_SCOPE_TIMER_H_
+#define ORBIT_CORE_SCOPE_TIMER_H_
 
 #include <string>
 
@@ -10,7 +11,6 @@
 
 #define SCOPE_TIMER_LOG(msg) LocalScopeTimer UNIQUE_ID(msg)
 #define SCOPE_TIMER_FUNC SCOPE_TIMER_LOG(__FUNCTION__)
-extern thread_local size_t CurrentDepth;
 
 //-----------------------------------------------------------------------------
 #pragma pack(push, 1)
@@ -20,7 +20,6 @@ class Timer {
       : m_PID(0),
         m_TID(0),
         m_Depth(0),
-        m_CaptureID(-1),
         m_Type(NONE),
         m_Processor(-1),
         m_CallstackHash(0),
@@ -49,28 +48,12 @@ class Timer {
     return ElapsedSeconds();
   }
 
-  static inline size_t GetCurrentDepthTLS() { return CurrentDepth; }
-  static inline void ClearThreadDepthTLS() { CurrentDepth = 0; }
-
-  static const int Version = 0;
-
   enum Type : uint8_t {
     NONE,
     CORE_ACTIVITY,
-    THREAD_ACTIVITY,
-    HIGHLIGHT,
-    UNREAL_OBJECT,
-    ZONE,
-    ALLOC,
-    FREE,
     INTROSPECTION,
     GPU_ACTIVITY,
   };
-
-  Type GetType() const { return m_Type; }
-  void SetType(Type a_Type) { m_Type = a_Type; }
-  bool IsType(Type a_Type) const { return m_Type == a_Type; }
-  bool IsCoreActivity() const { return m_Type == CORE_ACTIVITY; }
 
  public:
   // Needs to have to exact same layout in win32/x64, debug/release
@@ -78,7 +61,6 @@ class Timer {
   int32_t m_PID;
   int32_t m_TID;
   uint8_t m_Depth;
-  uint8_t m_CaptureID;
   Type m_Type;
   uint8_t m_Processor;
   uint64_t m_CallstackHash;
@@ -141,3 +123,4 @@ inline double Timer::ElapsedMillis() const { return ElapsedMicros() * 0.001; }
 inline double Timer::ElapsedSeconds() const {
   return ElapsedMicros() * 0.000001;
 }
+#endif  // ORBIT_CORE_SCOPE_TIMER_H_

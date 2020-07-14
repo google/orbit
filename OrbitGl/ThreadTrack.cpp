@@ -55,7 +55,7 @@ void ThreadTrack::Draw(GlCanvas* canvas, bool picking) {
 std::string ThreadTrack::GetExtraInfo(const Timer& timer) {
   std::string info;
   static bool show_return_value = absl::GetFlag(FLAGS_show_return_values);
-  if (show_return_value && (timer.GetType() == Timer::NONE)) {
+  if (show_return_value && timer.m_Type == Timer::NONE) {
     info = absl::StrFormat("[%lu]", timer.m_UserData[0]);
   }
   return info;

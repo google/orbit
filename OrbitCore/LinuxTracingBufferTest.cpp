@@ -33,7 +33,6 @@ TEST(LinuxTracingBuffer, Timers) {
     timer.m_PID = 1;
     timer.m_TID = 1;
     timer.m_Depth = 0;
-    timer.m_CaptureID = 42;
     timer.m_Type = Timer::CORE_ACTIVITY;
     timer.m_Processor = 1;
     timer.m_CallstackHash = 2;
@@ -51,7 +50,6 @@ TEST(LinuxTracingBuffer, Timers) {
     timer.m_PID = 1;
     timer.m_TID = 2;
     timer.m_Depth = 0;
-    timer.m_CaptureID = 42;
     timer.m_Type = Timer::CORE_ACTIVITY;
     timer.m_Processor = 3;
     timer.m_CallstackHash = 4;
@@ -73,7 +71,6 @@ TEST(LinuxTracingBuffer, Timers) {
   EXPECT_EQ(timers[0].m_PID, 1);
   EXPECT_EQ(timers[0].m_TID, 1);
   EXPECT_EQ(timers[0].m_Depth, 0);
-  EXPECT_EQ(timers[0].m_CaptureID, 42);
   EXPECT_EQ(timers[0].m_Type, Timer::CORE_ACTIVITY);
   EXPECT_EQ(timers[0].m_Processor, 1);
   EXPECT_EQ(timers[0].m_CallstackHash, 2);
@@ -85,7 +82,6 @@ TEST(LinuxTracingBuffer, Timers) {
   EXPECT_EQ(timers[1].m_PID, 1);
   EXPECT_EQ(timers[1].m_TID, 2);
   EXPECT_EQ(timers[1].m_Depth, 0);
-  EXPECT_EQ(timers[1].m_CaptureID, 42);
   EXPECT_EQ(timers[1].m_Type, Timer::CORE_ACTIVITY);
   EXPECT_EQ(timers[1].m_Processor, 3);
   EXPECT_EQ(timers[1].m_CallstackHash, 4);
@@ -100,7 +96,6 @@ TEST(LinuxTracingBuffer, Timers) {
     timer.m_PID = 11;
     timer.m_TID = 12;
     timer.m_Depth = 10;
-    timer.m_CaptureID = 42;
     timer.m_Type = Timer::CORE_ACTIVITY;
     timer.m_Processor = 3;
     timer.m_CallstackHash = 4;
@@ -122,7 +117,6 @@ TEST(LinuxTracingBuffer, Timers) {
   EXPECT_EQ(timers[0].m_PID, 11);
   EXPECT_EQ(timers[0].m_TID, 12);
   EXPECT_EQ(timers[0].m_Depth, 10);
-  EXPECT_EQ(timers[0].m_CaptureID, 42);
   EXPECT_EQ(timers[0].m_Type, Timer::CORE_ACTIVITY);
   EXPECT_EQ(timers[0].m_Processor, 3);
   EXPECT_EQ(timers[0].m_CallstackHash, 4);
@@ -357,7 +351,6 @@ TEST(LinuxTracingBuffer, Reset) {
     timer.m_PID = 1;
     timer.m_TID = 1;
     timer.m_Depth = 0;
-    timer.m_CaptureID = 42;
     timer.m_Type = Timer::CORE_ACTIVITY;
     timer.m_Processor = 1;
     timer.m_CallstackHash = 2;

@@ -229,14 +229,6 @@ void CaptureWindow::SelectTextBox(class TextBox* a_TextBox) {
 
   const Timer& a_Timer = a_TextBox->GetTimer();
   DWORD64 address = a_Timer.m_FunctionAddress;
-  if (a_Timer.IsType(Timer::ZONE)) {
-    std::shared_ptr<CallStack> callStack =
-        Capture::GetCallstack(a_Timer.m_CallstackHash);
-    if (callStack && callStack->m_Depth > 1) {
-      address = callStack->m_Data[1];
-    }
-  }
-
   FindCode(address);
 
   if (m_DoubleClicking && a_TextBox) {
@@ -255,12 +247,12 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
 
   TextBox* textBox = time_graph_.GetBatcher().GetTextBox(pickId);
   if (textBox) {
-    if (!textBox->GetTimer().IsType(Timer::CORE_ACTIVITY)) {
+    if (textBox->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
       Function* func =
           Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
-      m_ToolTip =
-          absl::StrFormat("%s %s", func ? FunctionUtils::GetDisplayName(*func) : "",
-                          textBox->GetText());
+      m_ToolTip = absl::StrFormat(
+          "%s %s", func ? FunctionUtils::GetDisplayName(*func) : "",
+          textBox->GetText());
       GOrbitApp->SendTooltipToUi(m_ToolTip);
       NeedsRedraw();
     }

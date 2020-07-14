@@ -41,7 +41,7 @@ void CaptureEventProcessor::ProcessSchedulingSlice(
   timer.m_TID = scheduling_slice.tid();
   timer.m_Processor = static_cast<int8_t>(scheduling_slice.core());
   timer.m_Depth = timer.m_Processor;
-  timer.SetType(Timer::CORE_ACTIVITY);
+  timer.m_Type = Timer::CORE_ACTIVITY;
 
   capture_listener_->OnTimer(timer);
 }
