@@ -28,6 +28,10 @@ class OrbitEventIterator : public QFrame {
     previous_button_callback_ = callback;
   }
 
+  void SetDeleteButtonCallback(const std::function<void(void)>& callback) {
+    delete_button_callback_ = callback;
+  }
+
   void SetFunctionName(const std::string& function);
   void SetMaxCount(int max_count);
   void SetIndex(int current_index);
@@ -35,15 +39,19 @@ class OrbitEventIterator : public QFrame {
   void IncrementIndex();
   void DecrementIndex();
 
+  void HideDeleteButton();
+
  private slots:
   void on_NextButton_clicked();
   void on_PreviousButton_clicked();
+  void on_DeleteButton_clicked();
 
  protected:
   void UpdateCountLabel();
   Ui::OrbitEventIterator* ui;
   std::function<void(void)> next_button_callback_;
   std::function<void(void)> previous_button_callback_;
+  std::function<void(void)> delete_button_callback_;
   int max_count_ = 0;
   int current_index_ = 0;
 };

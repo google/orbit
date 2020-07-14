@@ -241,8 +241,6 @@ void LiveFunctionsDataView::OnContextMenu(
     Function& function = GetFunction(a_ItemIndices[0]);
     TextBox* box = FindNext(function, std::numeric_limits<TickType>::min());
     JumpToBox(box);
-
-    // TODO: This needs to be reflected in the UI as well (add buttons).
     live_functions_->AddIterator(&function, box);
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);

@@ -10,6 +10,7 @@
 #include "LiveFunctionsDataView.h"
 #include "OrbitFunction.h"
 #include "TextBox.h"
+#include "absl/container/flat_hash_map.h"
 
 class LiveFunctions {
  public:
@@ -17,27 +18,33 @@ class LiveFunctions {
 
   LiveFunctionsDataView& GetDataView() { return live_functions_data_view_; }
 
-  void LiveFunctions::OnAllNextButton();
-  void LiveFunctions::OnAllPreviousButton();
+  bool OnAllNextButton();
+  bool OnAllPreviousButton();
 
-  void LiveFunctions::OnNextButton(size_t index);
-  void LiveFunctions::OnPreviousButton(size_t index);
+  void OnNextButton(uint64_t id);
+  void OnPreviousButton(uint64_t id);
+  void OnDeleteButton(uint64_t id);
 
   void OnDataChanged() { live_functions_data_view_.OnDataChanged(); }
 
-  void SetAddIteratorCallback(std::function<void(Function*)> callback) {
+  void SetAddIteratorCallback(
+      std::function<void(uint64_t, Function*)> callback) {
     add_iterator_callback_ = callback;
   }
 
   void AddIterator(Function* function, TextBox* current_textbox);
 
  private:
- void Move();
+  void Move();
 
   LiveFunctionsDataView live_functions_data_view_;
-  std::vector<Function*> function_iterators_;
-  std::vector<TextBox*> current_textboxes_;
-  std::function<void(Function*)> add_iterator_callback_;
+
+  absl::flat_hash_map<uint64_t, Function*> function_iterators_;
+  absl::flat_hash_map<uint64_t, TextBox*> current_textboxes_;
+
+  std::function<void(uint64_t, Function*)> add_iterator_callback_;
+
+  uint64_t next_id = 0;
 };
 
 #endif  // LIVE_FUNCTIONS_H_

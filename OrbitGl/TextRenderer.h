@@ -46,6 +46,7 @@ class TextRenderer {
   int GetNumCharacters() const;
   void ToggleDrawOutline() { m_DrawOutline = !m_DrawOutline; }
   void SetFontSize(int a_Size);
+  int GetFontSize();
 
  protected:
   void AddTextInternal(texture_font_t* font, const char* text,
@@ -60,6 +61,7 @@ class TextRenderer {
   vertex_buffer_t* m_Buffer;
   texture_font_t* m_Font;
   std::map<int, texture_font_t*> m_FontsBySize;
+  int current_font_size_;
   GlCanvas* m_Canvas;
   GLuint m_Shader;
   mat4 m_Model;

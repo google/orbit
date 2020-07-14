@@ -106,6 +106,8 @@ class GlCanvas : public GlPanel {
   static float Z_VALUE_TEXT;
   static float Z_VALUE_TEXT_UI;
   static float Z_VALUE_TEXT_UI_BG;
+  static float Z_VALUE_OVERLAY;
+  static float Z_VALUE_OVERLAY_BG;
   static float Z_VALUE_CONTEXT_SWITCH;
   static float Z_VALUE_EVENT;
   static float Z_VALUE_BOX_ACTIVE;

@@ -7,6 +7,8 @@
 
 #include <QWidget>
 
+#include "absl/container/flat_hash_map.h"
+
 #include "types.h"
 #include "LiveFunctions.h"
 #include "OrbitEventIterator.h"
@@ -28,13 +30,12 @@ class OrbitLiveFunctions : public QWidget {
   void Refresh();
   void OnDataChanged();
   void SetFilter(const QString& a_Filter);
-
-  void AddIterator(Function* function);
+  void AddIterator(uint64_t id, Function* function);
 
  private:
   Ui::OrbitLiveFunctions* ui;
   LiveFunctions live_functions_;
-  std::vector<OrbitEventIterator*> iterator_uis;
+  absl::flat_hash_map<uint64_t, OrbitEventIterator*> iterator_uis;
   OrbitEventIterator* all_events_iterator_;
 };
 
