@@ -29,15 +29,11 @@ class LiveFunctions {
     add_iterator_callback_ = callback;
   }
 
-  void AddIterator(Function* function, TextBox* current_textbox) {
-    function_iterators_.push_back(function);
-    current_textboxes_.push_back(current_textbox);
-    if (add_iterator_callback_) {
-      add_iterator_callback_(function);
-    }
-  }
+  void AddIterator(Function* function, TextBox* current_textbox);
 
  private:
+ void Move();
+
   LiveFunctionsDataView live_functions_data_view_;
   std::vector<Function*> function_iterators_;
   std::vector<TextBox*> current_textboxes_;
