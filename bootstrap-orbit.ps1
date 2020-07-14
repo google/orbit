@@ -40,7 +40,7 @@ You can call 'pip3 show -f conan' to figure out where conan.exe was placed.
   $conan_version_minor = $conan_version.split(".")[1] -as [int]
 
   $conan_version_major_required = 1
-  $conan_version_minor_min = 24
+  $conan_version_minor_min = 27
 
   if ($conan_version_major -eq $conan_version_major_required -and $conan_version_minor -lt $conan_version_minor_min) {
     Write-Host "Your conan version $conan_version is too old. Let's try to update it."
