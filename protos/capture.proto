@@ -196,3 +196,9 @@ message SamplingProfilerData {
   map<uint64, uint64> exact_address_to_function_address = 7;
   map<uint64, Uint64List> function_address_to_exact_addresses_set = 8;
 }
+
+message CallstackEvent {
+  uint64 time = 1;
+  uint64 callstack_id = 2;
+  int32 thread_id = 3;
+}

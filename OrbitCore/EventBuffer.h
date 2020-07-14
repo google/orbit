@@ -11,23 +11,11 @@
 #include "CallstackTypes.h"
 #include "Core.h"
 #include "SerializationMacros.h"
+#include "capture.pb.h"
 
 #ifdef __linux
 #include "LinuxUtils.h"
 #endif
-
-//-----------------------------------------------------------------------------
-struct CallstackEvent {
-  CallstackEvent() = default;
-  CallstackEvent(uint64_t a_Time, CallstackID a_Id, ThreadID a_TID)
-      : m_Time(a_Time), m_Id(a_Id), m_TID(a_TID) {}
-
-  uint64_t m_Time = 0;
-  CallstackID m_Id = 0;
-  ThreadID m_TID = 0;
-
-  ORBIT_SERIALIZABLE;
-};
 
 //-----------------------------------------------------------------------------
 class EventBuffer {

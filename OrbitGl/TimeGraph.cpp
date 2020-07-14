@@ -115,10 +115,10 @@ bool TimeGraph::UpdateCaptureMinMaxTimestamps() {
   m_Mutex.unlock();
 
   if (GEventTracer.GetEventBuffer().HasEvent()) {
-    capture_min_timestamp_ = std::min(capture_min_timestamp_,
-                                   GEventTracer.GetEventBuffer().GetMinTime());
-    capture_max_timestamp_ = std::max(capture_max_timestamp_,
-                                   GEventTracer.GetEventBuffer().GetMaxTime());
+    capture_min_timestamp_ = std::min(
+        capture_min_timestamp_, GEventTracer.GetEventBuffer().GetMinTime());
+    capture_max_timestamp_ = std::max(
+        capture_max_timestamp_, GEventTracer.GetEventBuffer().GetMaxTime());
   }
 
   return capture_min_timestamp_ != std::numeric_limits<TickType>::max();
@@ -155,7 +155,8 @@ void TimeGraph::Zoom(const TextBox* a_TextBox) {
 //-----------------------------------------------------------------------------
 double TimeGraph::GetCaptureTimeSpanUs() {
   if (UpdateCaptureMinMaxTimestamps()) {
-    return MicroSecondsFromTicks(capture_min_timestamp_, capture_max_timestamp_);
+    return MicroSecondsFromTicks(capture_min_timestamp_,
+                                 capture_max_timestamp_);
   }
 
   return 0;
@@ -529,7 +530,8 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
 
   selected_callstack_events_per_thread_.clear();
   for (CallstackEvent& event : selected_callstack_events) {
-    selected_callstack_events_per_thread_[event.m_TID].emplace_back(event);
+    selected_callstack_events_per_thread_[event.thread_id()].emplace_back(
+        event);
     selected_callstack_events_per_thread_[0].emplace_back(event);
   }
 
@@ -542,9 +544,9 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
 
   for (CallstackEvent& event : selected_callstack_events) {
     std::shared_ptr<Callstack> callstack =
-        Capture::GSamplingProfiler->GetCallStack(event.m_Id);
+        Capture::GSamplingProfiler->GetCallStack(event.callstack_id());
     if (callstack) {
-      callstack->set_thread_id(event.m_TID);
+      callstack->set_thread_id(event.thread_id());
       samplingProfiler->AddCallStack(*callstack);
     }
   }
@@ -615,7 +617,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
     Color color = GetThreadColor(timer.m_TID);
 
     auto type = PickingID::LINE;
-    canvas->GetBatcher()->AddVerticalLine(pos, -world_height, z, color, type, nullptr);
+    canvas->GetBatcher()->AddVerticalLine(pos, -world_height, z, color, type,
+                                          nullptr);
   }
   if (overlay_current_textboxes_.size() > 1) {
     float from = min_x;
@@ -632,7 +635,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
     int current_font_size = canvas->GetTextRenderer().GetFontSize();
     canvas->GetTextRenderer().SetFontSize(20);
     text_box.Draw(canvas->GetBatcher(), canvas->GetTextRenderer(),
-      std::numeric_limits<float>::lowest(), true, true);
+                  std::numeric_limits<float>::lowest(), true, true);
     canvas->GetTextRenderer().SetFontSize(current_font_size);
   }
 }

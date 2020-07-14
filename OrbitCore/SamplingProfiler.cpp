@@ -102,8 +102,8 @@ void SamplingProfiler::AddCallStack(Callstack& a_CallStack) {
     AddUniqueCallStack(a_CallStack);
   }
   CallstackEvent hashed_cs;
-  hashed_cs.m_Id = hash;
-  hashed_cs.m_TID = a_CallStack.thread_id();
+  hashed_cs.set_callstack_id(hash);
+  hashed_cs.set_thread_id(a_CallStack.thread_id());
   // Note: a_CallStack doesn't carry a timestamp so hashed_cs.m_Time is not
   // filled, but that is not a problem because SamplingProfiler doesn't use it.
   AddHashedCallStack(hashed_cs);
@@ -111,7 +111,7 @@ void SamplingProfiler::AddCallStack(Callstack& a_CallStack) {
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddHashedCallStack(CallstackEvent& a_CallStack) {
-  if (!HasCallStack(a_CallStack.m_Id)) {
+  if (!HasCallStack(a_CallStack.callstack_id())) {
     ERROR("Callstacks can only be added by hash when already present.");
     return;
   }
@@ -184,17 +184,19 @@ void SamplingProfiler::ProcessSamples() {
 
   // Unique call stacks and per thread data
   for (const CallstackEvent& callstack : m_Callstacks) {
-    if (!HasCallStack(callstack.m_Id)) {
+    if (!HasCallStack(callstack.callstack_id())) {
       ERROR("Processed unknown callstack!");
       continue;
     }
 
-    ThreadSampleData& threadSampleData = GetThreadSampleData(callstack.m_TID);
+    ThreadSampleData& threadSampleData =
+        GetThreadSampleData(callstack.thread_id());
     threadSampleData.set_num_samples(threadSampleData.num_samples() + 1);
-    (*threadSampleData.mutable_callstack_count())[callstack.m_Id] += 1;
-    if (data->unique_callstacks().contains(callstack.m_Id)) {
+    (*threadSampleData.mutable_callstack_count())[callstack.callstack_id()] +=
+        1;
+    if (data->unique_callstacks().contains(callstack.callstack_id())) {
       for (uint64_t address :
-           data->unique_callstacks().at(callstack.m_Id).pcs()) {
+           data->unique_callstacks().at(callstack.callstack_id()).pcs()) {
         (*threadSampleData.mutable_raw_address_count())[address] += 1;
       }
     }
@@ -203,10 +205,11 @@ void SamplingProfiler::ProcessSamples() {
       ThreadSampleData& threadSampleDataAll = GetThreadSampleData(0);
       threadSampleDataAll.set_num_samples(threadSampleDataAll.num_samples() +
                                           1);
-      (*threadSampleDataAll.mutable_callstack_count())[callstack.m_Id] += 1;
-      if (data->unique_callstacks().contains(callstack.m_Id)) {
+      (*threadSampleDataAll
+            .mutable_callstack_count())[callstack.callstack_id()] += 1;
+      if (data->unique_callstacks().contains(callstack.callstack_id())) {
         for (uint64_t address :
-             data->unique_callstacks().at(callstack.m_Id).pcs()) {
+             data->unique_callstacks().at(callstack.callstack_id()).pcs()) {
           (*threadSampleDataAll.mutable_raw_address_count())[address] += 1;
         }
       }

@@ -196,8 +196,17 @@ TEST(LinuxTracingBuffer, Callstacks) {
 TEST(LinuxTracingBuffer, HashedCallstacks) {
   LinuxTracingBuffer buffer;
 
-  buffer.RecordHashedCallstack(CallstackEvent(11, 12, 13));
-  buffer.RecordHashedCallstack(CallstackEvent(21, 22, 23));
+  CallstackEvent event1;
+  event1.set_time(11);
+  event1.set_callstack_id(12);
+  event1.set_thread_id(13);
+  buffer.RecordHashedCallstack(std::move(event1));
+
+  CallstackEvent event2;
+  event2.set_time(21);
+  event2.set_callstack_id(22);
+  event2.set_thread_id(23);
+  buffer.RecordHashedCallstack(std::move(event2));
 
   std::vector<CallstackEvent> callstacks;
   EXPECT_TRUE(buffer.ReadAllHashedCallstacks(&callstacks));
@@ -205,15 +214,19 @@ TEST(LinuxTracingBuffer, HashedCallstacks) {
 
   EXPECT_EQ(callstacks.size(), 2);
 
-  EXPECT_EQ(callstacks[0].m_Time, 11);
-  EXPECT_EQ(callstacks[0].m_Id, 12);
-  EXPECT_EQ(callstacks[0].m_TID, 13);
+  EXPECT_EQ(callstacks[0].time(), 11);
+  EXPECT_EQ(callstacks[0].callstack_id(), 12);
+  EXPECT_EQ(callstacks[0].thread_id(), 13);
 
-  EXPECT_EQ(callstacks[1].m_Time, 21);
-  EXPECT_EQ(callstacks[1].m_Id, 22);
-  EXPECT_EQ(callstacks[1].m_TID, 23);
+  EXPECT_EQ(callstacks[1].time(), 21);
+  EXPECT_EQ(callstacks[1].callstack_id(), 22);
+  EXPECT_EQ(callstacks[1].thread_id(), 23);
 
-  buffer.RecordHashedCallstack(CallstackEvent(31, 32, 33));
+  CallstackEvent event3;
+  event3.set_time(31);
+  event3.set_callstack_id(32);
+  event3.set_thread_id(33);
+  buffer.RecordHashedCallstack(std::move(event3));
 
   EXPECT_TRUE(buffer.ReadAllHashedCallstacks(&callstacks));
   EXPECT_EQ(callstacks.size(), 1);
@@ -221,9 +234,9 @@ TEST(LinuxTracingBuffer, HashedCallstacks) {
   EXPECT_FALSE(buffer.ReadAllHashedCallstacks(&callstacks));
   EXPECT_EQ(callstacks.size(), 1);
 
-  EXPECT_EQ(callstacks[0].m_Time, 31);
-  EXPECT_EQ(callstacks[0].m_Id, 32);
-  EXPECT_EQ(callstacks[0].m_TID, 33);
+  EXPECT_EQ(callstacks[0].time(), 31);
+  EXPECT_EQ(callstacks[0].callstack_id(), 32);
+  EXPECT_EQ(callstacks[0].thread_id(), 33);
 }
 
 TEST(LinuxTracingBuffer, AddressInfos) {
@@ -383,7 +396,11 @@ TEST(LinuxTracingBuffer, Reset) {
     buffer.RecordCallstack(std::move(event));
   }
 
-  buffer.RecordHashedCallstack(CallstackEvent(11, 12, 13));
+  CallstackEvent event;
+  event.set_time(21);
+  event.set_callstack_id(22);
+  event.set_thread_id(23);
+  buffer.RecordHashedCallstack(std::move(event));
 
   buffer.RecordKeyAndString(42, "str42");
 

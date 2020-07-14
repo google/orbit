@@ -38,19 +38,28 @@ std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
 void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash,
                                     ThreadID thread_id) {
   ScopeLock lock(m_Mutex);
+
+  CallstackEvent event;
+  event.set_time(time);
+  event.set_callstack_id(cs_hash);
+  event.set_thread_id(thread_id);
   std::map<uint64_t, CallstackEvent>& event_map = m_CallstackEvents[thread_id];
-  event_map[time] = CallstackEvent(time, cs_hash, thread_id);
+  event_map[time] = event;
 
   // Add all callstack events to "thread 0".
+  CallstackEvent event0;
+  event0.set_time(time);
+  event0.set_callstack_id(cs_hash);
+  event0.set_thread_id(0);
   std::map<uint64_t, CallstackEvent>& event_map_0 = m_CallstackEvents[0];
-  event_map_0[time] = CallstackEvent(time, cs_hash, 0);
+  event_map_0[time] = event0;
 
   RegisterTime(time);
 }
 
 //-----------------------------------------------------------------------------
 ORBIT_SERIALIZE(EventBuffer, 0) {
-  ORBIT_NVP_VAL(0, m_CallstackEvents);
+  // ORBIT_NVP_VAL(0, m_CallstackEvents);
 
   uint64_t maxTime = m_MaxTime;
   ORBIT_NVP_VAL(0, maxTime);
@@ -59,13 +68,6 @@ ORBIT_SERIALIZE(EventBuffer, 0) {
   uint64_t minTime = m_MinTime;
   ORBIT_NVP_VAL(0, minTime);
   m_MinTime = minTime;
-}
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(CallstackEvent, 1) {
-  ORBIT_NVP_VAL(1, m_Time);
-  ORBIT_NVP_VAL(0, m_Id);
-  ORBIT_NVP_VAL(0, m_TID);
 }
 
 #ifdef __linux
