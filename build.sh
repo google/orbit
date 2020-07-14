@@ -16,31 +16,28 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 function create_conan_profile {
-  local profile="$1"
-  conan profile new --detect $profile
-  conan profile update settings.compiler.libcxx=libstdc++11 $profile
-
-  if [ "$profile" == "default_debug" ]; then
-    conan profile update settings.build_type=Debug $profile
-  elif [ "$profile" == "default_relwithdebinfo" ]; then
-    conan profile update settings.build_type=RelWithDebInfo $profile
-  else
-    conan profile update settings.build_type=Release $profile
+  readonly profile="$1"
+  if ! conan profile show default >/dev/null; then
+    conan profile new --detect default || exit $?
   fi
 
-  sed -i -e 's|\[build_requires\]|[build_requires]\ncmake_installer/3.16.3@conan/stable|' $HOME/.conan/profiles/$profile
+  readonly compiler="$(conan profile show default | grep compiler= | cut -d= -f2 | sed -e 's/Visual Studio/msvc/')"
+  readonly compiler_version="$(conan profile show default | grep compiler.version= | cut -d= -f2 | sed -e 's/^15$/2017/' | sed -e 's/^16$/2019/')"
+  readonly conan_dir=${CONAN_USER_HOME:-~}/.conan
+  readonly build_type="${profile#default_}"
+  readonly profile_path="$conan_dir/profiles/$profile"
+
+  echo -e "include(${compiler}${compiler_version}_${build_type})\n" > $profile_path
+  echo -e "[settings]\n[options]" >> $profile_path
+  echo -e "[build_requires]\n[env]" >> $profile_path
 
   if [ -n "$CC" ]; then
-    echo "CC=$CC" >> $HOME/.conan/profiles/$profile
-  fi
-  if [ -n "$CXX" ]; then
-    echo "CXX=$CXX" >> $HOME/.conan/profiles/$profile
-  fi
-  if conan profile show $profile | grep "compiler=clang" >/dev/null; then
-    echo "CFLAGS=-fsized-deallocation" >> $HOME/.conan/profiles/$profile
-    echo "CXXFLAGS=-fsized-deallocation" >> $HOME/.conan/profiles/$profile
+    echo "CC=$CC" >> $profile_path
   fi
 
+  if [ -n "$CXX" ]; then
+    echo "CXX=$CXX" >> $profile_path
+  fi
 }
 
 function conan_profile_exists {
