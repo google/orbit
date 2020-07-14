@@ -121,9 +121,9 @@ TEST(ThreadPool, CheckTtl) {
         absl::Milliseconds(50)));
   }
 
-  // +1 because there might be some nanoseconds between action is complete and
+  // +10 because there might be some milliseconds between action is complete and
   // thread went idle
-  absl::SleepFor(absl::Milliseconds(kThreadTtlMillis + 1));
+  absl::SleepFor(absl::Milliseconds(kThreadTtlMillis + 10));
 
   EXPECT_EQ(thread_pool->GetPoolSize(), kThreadPoolMinSize);
 
@@ -201,9 +201,9 @@ TEST(ThreadPool, ExtendThreadPool) {
         << "actions_executed=" << actions_executed << ", expected 12";
   }
 
-  // Wait for ttl+1 and check that ThreadPool has reduced
+  // Wait for ttl+10 and check that ThreadPool has reduced
   // number of worker threads
-  absl::SleepFor(absl::Milliseconds(kThreadTtlMillis + 1));
+  absl::SleepFor(absl::Milliseconds(kThreadTtlMillis + 10));
   EXPECT_EQ(thread_pool->GetPoolSize(), kThreadPoolMinSize);
 
   EXPECT_EQ(actions_started, 12);
