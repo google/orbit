@@ -5,6 +5,7 @@
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
+#include <absl/flags/usage_config.h>
 
 #include <QApplication>
 #include <QDir>
@@ -24,12 +25,12 @@
 #include "ApplicationOptions.h"
 #include "Error.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitVersion.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitStartupWindow.h"
+#include "OrbitVersion.h"
 #include "Path.h"
 #include "deploymentconfigurations.h"
 #include "opengldetect.h"
@@ -241,6 +242,8 @@ int main(int argc, char* argv[]) {
     InitLogFile(log_file_path);
 
     absl::SetProgramUsageMessage("CPU Profiler");
+    absl::SetFlagsUsageConfig(
+        absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
     absl::ParseCommandLine(argc, argv);
 #if __linux__
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
@@ -252,7 +255,8 @@ int main(int argc, char* argv[]) {
 
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
-    QCoreApplication::setApplicationVersion(QString::fromStdString(OrbitCore::GetVersion()));
+    QCoreApplication::setApplicationVersion(
+        QString::fromStdString(OrbitCore::GetVersion()));
 
 #ifdef ORBIT_CRASH_HANDLING
     const std::string dump_path = Path::GetDumpPath();
