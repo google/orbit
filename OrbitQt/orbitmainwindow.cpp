@@ -174,9 +174,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   ui->FunctionsList->Initialize(
       data_view_factory->GetOrCreateDataView(DataViewType::FUNCTIONS),
       SelectionType::kExtended, FontType::kDefault);
-  // ui->LiveFunctionsList->Initialize(
-  //     data_view_factory->GetOrCreateDataView(DataViewType::LIVE_FUNCTIONS),
-  //     SelectionType::kExtended, FontType::kDefault);
   ui->CallStackView->Initialize(
       data_view_factory->GetOrCreateDataView(DataViewType::CALLSTACK),
       SelectionType::kExtended, FontType::kDefault);
@@ -216,9 +213,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   m_OutputDialog = new OutputDialog(this);
   m_OutputDialog->setWindowTitle("Orbit - Loading Pdb...");
 
+  CreateLiveTab();
   CreateSamplingTab();
   CreateSelectionTab();
-  CreateLiveTab();
 
   SetTitle({});
   std::string iconFileName = Path::GetExecutablePath() + "orbit.ico";
@@ -503,10 +500,6 @@ void OrbitMainWindow::CreateLiveTab() {
   live_layout_->setContentsMargins(11, 11, 11, 11);
   live_functions_ = new OrbitLiveFunctions(live_tab_);
   live_functions_->Initialize(SelectionType::kExtended, FontType::kDefault);
-  // ui->LiveFunctionsList->Initialize(
-  //     data_view_factory->GetOrCreateDataView(DataViewType::LIVE_FUNCTIONS),
-  //     SelectionType::kExtended, FontType::kDefault);
-
   live_layout_->addWidget(live_functions_);
   ui->RightTabWidget->addTab(live_tab_, QString("live"));
 }

@@ -61,6 +61,13 @@
    </item>
    <item row="2" column="0">
     <layout class="QVBoxLayout" name="iteratorLayout">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Select functions above, right-click, and select 'Add iterator(s)' to add iterators for instrumented functions.</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>

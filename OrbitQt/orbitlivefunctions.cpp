@@ -35,6 +35,7 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
   });
   all_events_iterator_->SetFunctionName("All functions");
   all_events_iterator_->HideDeleteButton();
+  all_events_iterator_->DisableButtons();
   ui->iteratorLayout->addWidget(all_events_iterator_);
 }
 
@@ -101,12 +102,17 @@ void OrbitLiveFunctions::AddIterator(size_t id, Function* function) {
     ui->iteratorLayout->removeWidget(it->second);
     delete it->second;
     iterator_uis.erase(id);
+    if (iterator_uis.empty()) {
+      this->all_events_iterator_->DisableButtons();
+    }
   });
   iterator_ui->SetFunctionName(function->PrettyName());
   iterator_ui->SetMaxCount(function->GetStats().m_Count);
   iterator_ui->SetIndex(0);
 
   iterator_uis.insert(std::make_pair(id, iterator_ui));
+
+  all_events_iterator_->EnableButtons();
 
   ui->iteratorLayout->addWidget(iterator_ui);
 }

@@ -937,13 +937,6 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       }
       return m_FunctionsDataView.get();
 
-    // case DataViewType::LIVE_FUNCTIONS:
-    //   if (!m_LiveFunctionsDataView) {
-    //     m_LiveFunctionsDataView = std::make_unique<LiveFunctionsDataView>();
-    //     m_Panels.push_back(m_LiveFunctionsDataView.get());
-    //   }
-    //   return m_LiveFunctionsDataView.get();
-
     case DataViewType::CALLSTACK:
       if (!m_CallStackDataView) {
         m_CallStackDataView = std::make_unique<CallStackDataView>();
@@ -978,6 +971,9 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       FATAL(
           "DataViewType::SAMPLING Data View construction is not supported by"
           "the factory.");
+    case DataViewType::LIVE_FUNCTIONS:
+      FATAL(
+          "DataViewType::LIVE_FUNCTIONS should not be used with the factory.");
 
     case DataViewType::ALL:
       FATAL("DataViewType::ALL should not be used with the factory.");
