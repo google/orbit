@@ -490,6 +490,9 @@ void TracerThread::Run(
     perf_event_enable(fd);
   }
 
+  // Get the initial thread names and notify the listener_.
+  RetrieveThreadNames();
+
   stats_.Reset();
 
   bool last_iteration_saw_events = false;
@@ -500,9 +503,6 @@ void TracerThread::Run(
     ORBIT_SCOPE("Tracer Iteration");
 
     if (!last_iteration_saw_events) {
-      // Check for updates of thread names and in case notify the listener_.
-      UpdateThreadNamesIfDelayElapsed();
-
       // Periodically print event statistics.
       PrintStatsIfTimerElapsed();
 
@@ -758,8 +758,11 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
   } else if (is_task_rename) {
     auto event =
         ConsumeTracepointPerfEvent<TaskRenamePerfEvent>(ring_buffer, header);
-    LOG("task_rename: tid: %d; oldcomm: %s, newcomm: %s", event->GetTid(),
-        event->GetOldComm(), event->GetNewComm());
+    ThreadName thread_name;
+    thread_name.set_tid(event->GetTid());
+    thread_name.set_name(event->GetNewComm());
+    thread_name.set_timestamp_ns(event->GetTimestamp());
+    listener_->OnThreadName(std::move(thread_name));
 
   } else if (is_gpu_event) {
     // TODO: Consider deferring GPU events.
@@ -829,29 +832,19 @@ void TracerThread::ProcessDeferredEvents() {
   }
 }
 
-void TracerThread::UpdateThreadNamesIfDelayElapsed() {
+void TracerThread::RetrieveThreadNames() {
   uint64_t timestamp_ns = MonotonicTimestampNs();
-  if (last_thread_names_update +
-          THREAD_NAMES_UPDATE_DELAY_MS * NS_PER_MILLISECOND <
-      timestamp_ns) {
-    for (pid_t tid : ListThreads(pid_)) {
-      std::string name = GetThreadName(tid);
-      if (name.empty()) {
-        continue;
-      }
-
-      auto last_name_it = thread_names_.find(tid);
-      if (last_name_it == thread_names_.end() || name != last_name_it->second) {
-        thread_names_[tid] = name;
-
-        ThreadName thread_name;
-        thread_name.set_tid(tid);
-        thread_name.set_name(std::move(name));
-        thread_name.set_timestamp_ns(timestamp_ns);
-        listener_->OnThreadName(std::move(thread_name));
-      }
+  for (pid_t tid : ListThreads(pid_)) {
+    std::string name = GetThreadName(tid);
+    if (name.empty()) {
+      continue;
     }
-    last_thread_names_update = timestamp_ns;
+
+    ThreadName thread_name;
+    thread_name.set_tid(tid);
+    thread_name.set_name(std::move(name));
+    thread_name.set_timestamp_ns(timestamp_ns);
+    listener_->OnThreadName(std::move(thread_name));
   }
 }
 
@@ -869,9 +862,6 @@ void TracerThread::Reset() {
 
   deferred_events_.clear();
   stop_deferred_thread_ = false;
-
-  thread_names_.clear();
-  last_thread_names_update = 0;
 }
 
 void TracerThread::PrintStatsIfTimerElapsed() {
