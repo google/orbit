@@ -29,6 +29,7 @@ class TimeGraph {
 
   void Draw(GlCanvas* canvas, bool a_Picking = false);
   void DrawTracks(GlCanvas* canvas, bool a_Picking = false);
+  void DrawOverlay(GlCanvas* canvas, bool picking);
   void DrawText(GlCanvas* canvas);
 
   void NeedsUpdate();
@@ -112,6 +113,10 @@ class TimeGraph {
   Color GetThreadColor(ThreadID tid) const;
   StringManager* GetStringManager() { return string_manager_.get(); }
 
+  void SetCurrentTextBox(TextBox* box) {
+    overlay_current_textbox_ = box;
+  }
+
  protected:
   uint64_t GetGpuTimelineHash(const Timer& timer) const;
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
@@ -124,6 +129,8 @@ class TimeGraph {
   GlCanvas* m_Canvas = nullptr;
   TextBox m_SceneBox;
   int m_NumDrawnTextBoxes = 0;
+
+  TextBox* overlay_current_textbox_ = nullptr;
 
   double m_RefTimeUs = 0;
   double m_MinTimeUs = 0;
