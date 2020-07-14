@@ -43,7 +43,7 @@ CrashHandler::CrashHandler(const std::string& dump_path,
   const base::FilePath handler_file_path(StringTypeConverter<>()(handler_path));
 
   const std::map<std::string, std::string> annotations = {
-      {"product", "OrbitProfiler"}, {"version", OrbitVersion::GetVersion()}};
+      {"product", "OrbitProfiler"}, {"version", OrbitCore::GetVersion()}};
 
   const std::vector<std::string> arguments = {"--no-rate-limit"};
 

@@ -6,8 +6,8 @@
 #define ORBIT_CORE_VERSION_H_
 #include <string>
 
-namespace OrbitVersion {
+namespace OrbitCore {
 std::string GetVersion();
-}  // namespace OrbitVersion
+}  // namespace OrbitCore
 
 #endif  // ORBIT_CORE_VERSION_H_
