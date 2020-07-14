@@ -118,9 +118,12 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
     uint64_t file_size = Path::FileSize(module_path);
     if (file_size == 0) continue;
 
-    std::unique_ptr<ElfFile> elf_file = ElfFile::Create(module_path);
+    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file =
+        ElfFile::Create(module_path);
     if (!elf_file) {
-      ERROR("Unable to create an elf file for module %s", module_path.c_str());
+      // TODO: Shouldn't this result in ErrorMessage?
+      ERROR("Unable to load module \"%s\": %s - will ignore.", module_path,
+            elf_file.error().message());
       continue;
     }
 
@@ -130,7 +133,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
     module_info.set_file_size(file_size);
     module_info.set_address_start(address_range.start_address);
     module_info.set_address_end(address_range.end_address);
-    module_info.set_build_id(elf_file->GetBuildId());
+    module_info.set_build_id(elf_file.value()->GetBuildId());
 
     result.push_back(module_info);
   }

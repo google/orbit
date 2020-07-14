@@ -49,9 +49,11 @@ TEST(OrbitModule, LoadFunctions) {
 
   std::shared_ptr<Module> module = std::make_shared<Module>(file_path, 0, 0);
   {
-    const std::unique_ptr<ElfFile> elf_file = ElfFile::Create(file_path);
-    const auto symbols = elf_file->LoadSymbols();
-    ASSERT_TRUE(symbols);
+    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file =
+        ElfFile::Create(file_path);
+    ASSERT_TRUE(elf_file) << elf_file.error().message();
+    const auto symbols = elf_file.value()->LoadSymbols();
+    ASSERT_TRUE(symbols) << symbols.error().message();
     module->LoadSymbols(symbols.value());
   }
 
@@ -91,9 +93,11 @@ TEST(OrbitModule, GetFunctionFromExactAddress) {
   std::shared_ptr<Module> module =
       std::make_shared<Module>(file_path, 0x400000, 0);
   {
-    const std::unique_ptr<ElfFile> elf_file = ElfFile::Create(file_path);
-    const auto symbols = elf_file->LoadSymbols();
-    ASSERT_TRUE(symbols);
+    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file =
+        ElfFile::Create(file_path);
+    ASSERT_TRUE(elf_file) << elf_file.error().message();
+    const auto symbols = elf_file.value()->LoadSymbols();
+    ASSERT_TRUE(symbols) << symbols.error().message();
     module->LoadSymbols(symbols.value());
   }
 
@@ -121,9 +125,11 @@ TEST(OrbitModule, GetFunctionFromProgramCounter) {
   std::shared_ptr<Module> module =
       std::make_shared<Module>(file_path, 0x400000, 0);
   {
-    const std::unique_ptr<ElfFile> elf_file = ElfFile::Create(file_path);
-    const auto symbols = elf_file->LoadSymbols();
-    ASSERT_TRUE(symbols);
+    ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file =
+        ElfFile::Create(file_path);
+    ASSERT_TRUE(elf_file) << elf_file.error().message();
+    const auto symbols = elf_file.value()->LoadSymbols();
+    ASSERT_TRUE(symbols) << symbols.error().message();
     module->LoadSymbols(symbols.value());
   }
 

@@ -17,7 +17,16 @@ grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
   // Even though this information should be available on the client,
   // we want not rely on this here, and for this particular use case we are
   // fine with doing some extra work, and read it from the elf file.
-  bool is_64_bit = ElfUtils::ElfFile::Create(request->module_path())->Is64Bit();
+  auto elf_file_result = ElfUtils::ElfFile::Create(request->module_path());
+
+  if (!elf_file_result) {
+    return grpc::Status(grpc::StatusCode::INTERNAL,
+                        absl::StrFormat("Unable to load module \"%s\": %s",
+                                        request->module_path(),
+                                        elf_file_result.error().message()));
+  }
+
+  bool is_64_bit = elf_file_result.value()->Is64Bit();
 
   std::vector<CodeBlock> function_infos(request->functions().begin(),
                                         request->functions().end());

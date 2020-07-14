@@ -76,14 +76,15 @@ ErrorMessageOr<ModuleSymbols> FindSymbols(
   for (const auto& symbols_file_path : search_file_paths) {
     if (!Path::FileExists(symbols_file_path)) continue;
 
-    std::unique_ptr<ElfFile> symbols_file = ElfFile::Create(symbols_file_path);
+    ErrorMessageOr<std::unique_ptr<ElfFile>> symbols_file =
+        ElfFile::Create(symbols_file_path);
     if (!symbols_file) continue;
-    if (!symbols_file->HasSymtab()) continue;
-    if (symbols_file->GetBuildId() != build_id) continue;
+    if (!symbols_file.value()->HasSymtab()) continue;
+    if (symbols_file.value()->GetBuildId() != build_id) continue;
 
     LOG("Loading symbols for module \"%s\" from \"%s\"", module_path,
         symbols_file_path);
-    return symbols_file->LoadSymbols();
+    return symbols_file.value()->LoadSymbols();
   }
 
   return ErrorMessage(
@@ -103,12 +104,16 @@ SymbolHelper::SymbolHelper()
 
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsCollector(
     const std::string& module_path) const {
-  std::unique_ptr<ElfFile> elf_file = ElfFile::Create(module_path);
+  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_result =
+      ElfFile::Create(module_path);
 
-  if (!elf_file) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to load ELF file: \"%s\"", module_path));
+  if (!elf_file_result) {
+    return ErrorMessage(absl::StrFormat("Unable to load ELF file: \"%s\": %s",
+                                        module_path,
+                                        elf_file_result.error().message()));
   }
+
+  std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
 
   if (elf_file->HasSymtab()) {
     return elf_file->LoadSymbols();

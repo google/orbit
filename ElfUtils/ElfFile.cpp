@@ -122,7 +122,7 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbols() const {
   // TODO: if we want to use other sections than .symtab in the future for
   //       example .dynsym, than we have to change this.
   if (!has_symtab_section_) {
-    return ErrorMessage("Elf file does not contain a .symtab section.");
+    return ErrorMessage("ELF file does not have a .symtab section.");
   }
   bool symbols_added = false;
 
@@ -165,7 +165,7 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbols() const {
   }
   if (!symbols_added) {
     return ErrorMessage(
-        "Unable to load symbols from elf file, not even a single symbol of "
+        "Unable to load symbols from ELF file, not even a single symbol of "
         "type function found.");
   }
   return module_symbols;
@@ -181,7 +181,7 @@ ErrorMessageOr<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
 
   if (!range) {
     std::string error = absl::StrFormat(
-        "Unable to get load bias of elf file: \"%s\". No program headers "
+        "Unable to get load bias of ELF file: \"%s\". No program headers "
         "found.",
         file_path_);
     ERROR("%s", error.c_str());
@@ -201,7 +201,7 @@ ErrorMessageOr<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
 
   if (!pt_load_found) {
     std::string error = absl::StrFormat(
-        "Unable to get load bias of elf file: \"%s\". No PT_LOAD program "
+        "Unable to get load bias of ELF file: \"%s\". No PT_LOAD program "
         "headers found.",
         file_path_);
     ERROR("%s", error.c_str());
@@ -236,9 +236,8 @@ bool ElfFileImpl<llvm::object::ELF32LE>::Is64Bit() const {
 
 }  // namespace
 
-std::unique_ptr<ElfFile> ElfFile::CreateFromBuffer(std::string_view file_path,
-                                                   const void* buf,
-                                                   size_t len) {
+ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::CreateFromBuffer(
+    std::string_view file_path, const void* buf, size_t len) {
   std::unique_ptr<llvm::MemoryBuffer> buffer = llvm::MemoryBuffer::getMemBuffer(
       llvm::StringRef(static_cast<const char*>(buf), len),
       llvm::StringRef("buffer name"), false);
@@ -247,7 +246,9 @@ std::unique_ptr<ElfFile> ElfFile::CreateFromBuffer(std::string_view file_path,
           llvm::object::ObjectFile::createObjectFile(buffer->getMemBufferRef());
 
   if (!object_file_or_error) {
-    return nullptr;
+    return ErrorMessage(
+        absl::StrFormat("Unable to load ELF file \"%s\": %s", file_path,
+                        llvm::toString(object_file_or_error.takeError())));
   }
 
   return ElfFile::Create(
@@ -255,7 +256,8 @@ std::unique_ptr<ElfFile> ElfFile::CreateFromBuffer(std::string_view file_path,
                      std::move(object_file_or_error.get()), std::move(buffer)));
 }
 
-std::unique_ptr<ElfFile> ElfFile::Create(std::string_view file_path) {
+ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::Create(
+    std::string_view file_path) {
   // TODO(hebecker): Remove this explicit construction of StringRef when we
   // switch to LLVM10.
   const llvm::StringRef file_path_llvm{file_path.data(), file_path.size()};
@@ -265,7 +267,9 @@ std::unique_ptr<ElfFile> ElfFile::Create(std::string_view file_path) {
           llvm::object::ObjectFile::createObjectFile(file_path_llvm);
 
   if (!object_file_or_error) {
-    return nullptr;
+    return ErrorMessage(
+        absl::StrFormat("Unable to load ELF file \"%s\": %s", file_path,
+                        llvm::toString(object_file_or_error.takeError())));
   }
 
   llvm::object::OwningBinary<llvm::object::ObjectFile>& file =
@@ -274,7 +278,7 @@ std::unique_ptr<ElfFile> ElfFile::Create(std::string_view file_path) {
   return ElfFile::Create(file_path, std::move(file));
 }
 
-std::unique_ptr<ElfFile> ElfFile::Create(
+ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::Create(
     std::string_view file_path,
     llvm::object::OwningBinary<llvm::object::ObjectFile>&& file) {
   llvm::object::ObjectFile* object_file = file.getBinary();
@@ -290,8 +294,9 @@ std::unique_ptr<ElfFile> ElfFile::Create(
     result = std::unique_ptr<ElfFile>(
         new ElfFileImpl<llvm::object::ELF64LE>(file_path, std::move(file)));
   } else {
-    // Big-endians are not supported
-    return nullptr;
+    return ErrorMessage(absl::StrFormat(
+        "Unable to load \"%s\": Big-endian architectures are not supported.",
+        file_path));
   }
 
   return result;

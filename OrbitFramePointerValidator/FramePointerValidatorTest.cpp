@@ -17,10 +17,10 @@ TEST(FramePointerValidator, GetFpoFunctions) {
   std::string test_elf_file = executable_path + "/testdata/hello_world_elf";
 
   auto elf_file = ElfUtils::ElfFile::Create(test_elf_file);
-  ASSERT_NE(elf_file, nullptr);
+  ASSERT_TRUE(elf_file) << elf_file.error().message();
 
-  const auto symbols_result = elf_file->LoadSymbols();
-  ASSERT_TRUE(symbols_result);
+  const auto symbols_result = elf_file.value()->LoadSymbols();
+  ASSERT_TRUE(symbols_result) << symbols_result.error().message();
   uint64_t load_bias = symbols_result.value().load_bias();
   const std::vector<SymbolInfo> symbol_infos(
       symbols_result.value().symbol_infos().begin(),
