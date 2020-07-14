@@ -6,11 +6,21 @@
 
 std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
     const std::vector<TextBox*> text_boxes) {
+  // If we only have a single box, we want to zoom such that the entire
+  // event is visible, so we take the time from start to end.
+  if (text_boxes.size() == 1) {
+      const Timer& timer = text_boxes[0]->GetTimer();
+      return std::make_pair(timer.m_Start, timer.m_End);
+  }
+
   uint64_t min_time = std::numeric_limits<uint64_t>::max();
   uint64_t max_time = std::numeric_limits<uint64_t>::min();
   for (size_t k = 0; k < text_boxes.size(); ++k) {
     min_time = std::min(min_time, text_boxes[k]->GetTimer().m_Start);
-    max_time = std::max(max_time, text_boxes[k]->GetTimer().m_End);
+    // For multiple events, the visualization is such that the duration
+    // from the first to the start of the last event is shown. Therefore,
+    // we use m_Start below.
+    max_time = std::max(max_time, text_boxes[k]->GetTimer().m_Start);
   }
   return std::make_pair(min_time, max_time);
 }

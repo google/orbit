@@ -36,7 +36,6 @@ void OrbitEventIterator::on_DeleteButton_clicked() {
   }
 }
 
-
 //-----------------------------------------------------------------------------
 void OrbitEventIterator::SetFunctionName(const std::string& function_name) {
   ui->Label->setText(QString::fromStdString(function_name));
@@ -79,4 +78,16 @@ void OrbitEventIterator::UpdateCountLabel() {
 //-----------------------------------------------------------------------------
 void OrbitEventIterator::HideDeleteButton() {
   ui->DeleteButton->hide();
+}
+
+//-----------------------------------------------------------------------------
+void OrbitEventIterator::EnableButtons() {
+  ui->NextButton->setEnabled(true);
+  ui->PreviousButton->setEnabled(true);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitEventIterator::DisableButtons() {
+  ui->NextButton->setEnabled(false);
+  ui->PreviousButton->setEnabled(false);
 }

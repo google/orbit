@@ -39,6 +39,8 @@ class OrbitEventIterator : public QFrame {
   void IncrementIndex();
   void DecrementIndex();
 
+  void DisableButtons();
+  void EnableButtons();
   void HideDeleteButton();
 
  private slots:

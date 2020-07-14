@@ -154,7 +154,7 @@ const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_MAX =
 const std::string LiveFunctionsDataView::MENU_ACTION_DISASSEMBLY =
     "Go to Disassembly";
 const std::string LiveFunctionsDataView::MENU_ACTION_ITERATE =
-    "Add iterator";
+    "Add iterator(s)";
 
 //-----------------------------------------------------------------------------
 std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
@@ -172,14 +172,14 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
   if (enable_disassembly) menu.emplace_back(MENU_ACTION_DISASSEMBLY);
+  menu.emplace_back(MENU_ACTION_ITERATE);
 
   // For now, these actions only make sense when one function is selected,
   // so we don't show them otherwise.
   if (a_SelectedIndices.size() == 1) {
-    menu.insert(menu.end(),
-                {MENU_ACTION_JUMP_TO_FIRST, MENU_ACTION_JUMP_TO_LAST,
-                 MENU_ACTION_JUMP_TO_MIN, MENU_ACTION_JUMP_TO_MAX, 
-                 MENU_ACTION_ITERATE});
+    menu.insert(menu.end(), {MENU_ACTION_JUMP_TO_FIRST,
+                             MENU_ACTION_JUMP_TO_LAST, MENU_ACTION_JUMP_TO_MIN,
+                             MENU_ACTION_JUMP_TO_MAX});
   }
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
@@ -238,10 +238,11 @@ void LiveFunctionsDataView::OnContextMenu(
       GCurrentTimeGraph->SelectAndZoom(max_box);
     }
   } else if (a_Action == MENU_ACTION_ITERATE) {
-    Function& function = GetFunction(a_ItemIndices[0]);
-    TextBox* box = FindNext(function, std::numeric_limits<TickType>::min());
-    JumpToBox(box);
-    live_functions_->AddIterator(&function, box);
+    for (int i : a_ItemIndices) {
+      Function& function = GetFunction(i);
+      TextBox* box = FindNext(function, std::numeric_limits<TickType>::min());
+      live_functions_->AddIterator(&function, box);
+    }
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
   }
