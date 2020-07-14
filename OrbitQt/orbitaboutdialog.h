@@ -20,6 +20,7 @@ class OrbitAboutDialog : public QDialog {
 
   void SetLicenseText(const QString& text);
   void SetVersionString(const QString& version);
+  void SetBuildInformation(const QString& build_info);
 
   ~OrbitAboutDialog() noexcept;
 
