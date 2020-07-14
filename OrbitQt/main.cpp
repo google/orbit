@@ -34,7 +34,6 @@
 #include "opengldetect.h"
 #include "orbitmainwindow.h"
 #include "servicedeploymanager.h"
-#include "version.h"
 
 #ifdef ORBIT_CRASH_HANDLING
 #include "CrashHandler.h"
@@ -252,7 +251,7 @@ int main(int argc, char* argv[]) {
 
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
-    QCoreApplication::setApplicationVersion(OrbitQt::kVersionString);
+    QCoreApplication::setApplicationVersion(QString::fromStdString(OrbitCore::GetVersion()));
 
 #ifdef ORBIT_CRASH_HANDLING
     const std::string dump_path = Path::GetDumpPath();
