@@ -611,7 +611,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
     auto type = PickingID::LINE;
     canvas->GetBatcher()->AddVerticalLine(pos, -world_height, z, color, type, nullptr);
   }
-  if (!overlay_current_textboxes_.empty()) {
+  if (overlay_current_textboxes_.size() > 1) {
     float from = min_x;
     float to = max_x;
 
@@ -621,7 +621,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
     Vec2 size(sizex, world_height);
 
     std::string time = GetPrettyTime(micros * 0.001);
-    TextBox box(pos, size, time, Color(0, 128, 0, 128));
+    TextBox box(pos, size, time, Color(160, 160, 160, 60));
     box.SetTextY(pos[1] + world_height / 2);
     canvas->GetTextRenderer().SetFontSize(20);
     box.Draw(canvas->GetBatcher(), canvas->GetTextRenderer(), -FLT_MAX, true,
