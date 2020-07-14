@@ -6,6 +6,6 @@
 
 #define OrbitVersionStr "@VERSION_STRING@"
 
-namespace OrbitVersion {
+namespace OrbitCore {
 std::string GetVersion() { return OrbitVersionStr; }
-}  // namespace OrbitVersion
+}  // namespace OrbitCore
