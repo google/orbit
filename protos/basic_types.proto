@@ -7,3 +7,7 @@ syntax = "proto3";
 message Uint64List {
   repeated uint64 data = 1;
 }
+
+message Uint64ToString {
+  map<uint64, string> data = 1;
+}

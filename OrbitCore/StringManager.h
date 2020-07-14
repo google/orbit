@@ -8,23 +8,24 @@
 #include <optional>
 #include <string>
 
-#include "SerializationMacros.h"
-#include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
+#include "basic_types.pb.h"
 
 class StringManager {
  public:
-  StringManager() = default;
+  StringManager() { key_to_string_ = std::make_unique<Uint64ToString>(); }
 
   bool AddIfNotPresent(uint64_t key, std::string_view str);
   std::optional<std::string> Get(uint64_t key);
   bool Contains(uint64_t key);
   void Clear();
-
-  ORBIT_SERIALIZABLE;
+  const std::unique_ptr<Uint64ToString>& GetData() { return key_to_string_; }
+  void SetData(std::unique_ptr<Uint64ToString> data_ptr) {
+    key_to_string_ = std::move(data_ptr);
+  }
 
  private:
-  absl::flat_hash_map<uint64_t, std::string> key_to_string_;
+  std::unique_ptr<Uint64ToString> key_to_string_;
   absl::Mutex mutex_;
 };
 

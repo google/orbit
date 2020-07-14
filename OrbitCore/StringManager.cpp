@@ -4,21 +4,19 @@
 
 #include "StringManager.h"
 
-#include "Serialization.h"
-
 bool StringManager::AddIfNotPresent(uint64_t key, std::string_view str) {
   absl::MutexLock lock{&mutex_};
-  if (key_to_string_.contains(key)) {
+  if (key_to_string_->data().contains(key)) {
     return false;
   }
-  key_to_string_.emplace(key, str);
+  (*key_to_string_->mutable_data())[key] = str;
   return true;
 }
 
 std::optional<std::string> StringManager::Get(uint64_t key) {
   absl::MutexLock lock{&mutex_};
-  auto it = key_to_string_.find(key);
-  if (it != key_to_string_.end()) {
+  auto it = key_to_string_->data().find(key);
+  if (it != key_to_string_->data().end()) {
     return it->second;
   } else {
     return std::optional<std::string>{};
@@ -27,12 +25,10 @@ std::optional<std::string> StringManager::Get(uint64_t key) {
 
 bool StringManager::Contains(uint64_t key) {
   absl::MutexLock lock{&mutex_};
-  return key_to_string_.contains(key);
+  return key_to_string_->data().contains(key);
 }
 
 void StringManager::Clear() {
   absl::MutexLock lock{&mutex_};
-  key_to_string_.clear();
+  key_to_string_->clear_data();
 }
-
-ORBIT_SERIALIZE(StringManager, 0) { ORBIT_NVP_VAL(0, key_to_string_); }
