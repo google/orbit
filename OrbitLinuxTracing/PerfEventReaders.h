@@ -24,7 +24,7 @@ std::unique_ptr<StackSamplePerfEvent> ConsumeStackSamplePerfEvent(
 std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
-std::unique_ptr<PerfEventSampleRaw> ConsumeSampleRaw(
+std::unique_ptr<RawSamplePerfEvent> ConsumeRawSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
 }  // namespace LinuxTracing

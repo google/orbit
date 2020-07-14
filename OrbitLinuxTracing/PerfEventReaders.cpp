@@ -75,35 +75,37 @@ std::unique_ptr<StackSamplePerfEvent> ConsumeStackSamplePerfEvent(
 std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   uint64_t nr = 0;
-  ring_buffer->ReadValueAtOffset(&nr,
-                                 offsetof(perf_event_callchain_sample, nr));
+  ring_buffer->ReadValueAtOffset(
+      &nr, offsetof(perf_event_callchain_sample_fixed, nr));
   auto event = std::make_unique<CallchainSamplePerfEvent>(nr);
   event->ring_buffer_record.header = header;
   ring_buffer->ReadValueAtOffset(
       &event->ring_buffer_record.sample_id,
-      offsetof(perf_event_callchain_sample, sample_id));
+      offsetof(perf_event_callchain_sample_fixed, sample_id));
 
   // TODO(kuebler): we should have templated read methods
   uint64_t size_in_bytes = nr * sizeof(uint64_t) / sizeof(char);
-  ring_buffer->ReadRawAtOffset(reinterpret_cast<char*>(event->ips.data()),
-                               offsetof(perf_event_callchain_sample, nr) +
-                                   sizeof(perf_event_callchain_sample::nr),
-                               size_in_bytes);
+  ring_buffer->ReadRawAtOffset(
+      reinterpret_cast<char*>(event->ips.data()),
+      offsetof(perf_event_callchain_sample_fixed, nr) +
+          sizeof(perf_event_callchain_sample_fixed::nr),
+      size_in_bytes);
   ring_buffer->SkipRecord(header);
   return event;
 }
 
-std::unique_ptr<PerfEventSampleRaw> ConsumeSampleRaw(
+std::unique_ptr<RawSamplePerfEvent> ConsumeRawSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   uint32_t size = 0;
-  ring_buffer->ReadValueAtOffset(&size, offsetof(perf_event_sample_raw, size));
-  auto event = std::make_unique<PerfEventSampleRaw>(size);
+  ring_buffer->ReadValueAtOffset(&size,
+                                 offsetof(perf_event_raw_sample_fixed, size));
+  auto event = std::make_unique<RawSamplePerfEvent>(size);
   ring_buffer->ReadRawAtOffset(
       reinterpret_cast<uint8_t*>(&event->ring_buffer_record), 0,
-      sizeof(perf_event_sample_raw));
+      sizeof(perf_event_raw_sample_fixed));
   ring_buffer->ReadRawAtOffset(
-      &event->data[0], offsetof(perf_event_sample_raw, size) + sizeof(uint32_t),
-      size);
+      &event->data[0],
+      offsetof(perf_event_raw_sample_fixed, size) + sizeof(uint32_t), size);
   ring_buffer->SkipRecord(header);
   return event;
 }
