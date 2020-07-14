@@ -274,7 +274,7 @@ int main(int argc, char* argv[]) {
 
     CrashHandler crash_handler(dump_path, handler_path, crash_server_url,
                                attachments);
-#endif // ORBIT_CRASH_HANDLING
+#endif  // ORBIT_CRASH_HANDLING
 
     StyleOrbit(app);
 

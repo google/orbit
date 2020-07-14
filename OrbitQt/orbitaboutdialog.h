@@ -18,8 +18,8 @@ class OrbitAboutDialog : public QDialog {
  public:
   explicit OrbitAboutDialog(QWidget* parent = nullptr);
 
-  void setLicenseText(const QString& text);
-  void setVersionString(const QString& version);
+  void SetLicenseText(const QString& text);
+  void SetVersionString(const QString& version);
 
   ~OrbitAboutDialog() noexcept;
 
