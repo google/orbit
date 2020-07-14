@@ -462,6 +462,8 @@ void OrbitMainWindow::on_actionAbout_triggered() {
   OrbitQt::OrbitAboutDialog dialog{this};
   dialog.setWindowTitle(windowTitle());
   dialog.SetVersionString(QCoreApplication::applicationVersion());
+  dialog.SetBuildInformation(
+      QString::fromStdString(OrbitCore::GetBuildReport()));
 
   QFile licenseFile{
       QDir{QCoreApplication::applicationDirPath()}.filePath("NOTICE")};

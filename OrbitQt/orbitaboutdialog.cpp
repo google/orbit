@@ -21,5 +21,9 @@ void OrbitAboutDialog::SetVersionString(const QString& version) {
   ui_->versionLabel->setText(QString{"Version %1"}.arg(version));
 }
 
+void OrbitAboutDialog::SetBuildInformation(const QString &build_info) {
+  ui_->buildInformationEdit->setPlainText(build_info);
+}
+
 OrbitAboutDialog::~OrbitAboutDialog() noexcept = default;
 }  // namespace OrbitQt
