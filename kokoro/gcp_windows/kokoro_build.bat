@@ -9,6 +9,9 @@ REM found in the LICENSE file.
 
 SET REPO_ROOT=%KOKORO_ARTIFACTS_DIR%\github\orbitprofiler
 
+
+pip3 install conan==1.27.1 conan-package-tools==0.34.0
+
 :: Install conan config
 call powershell "& %REPO_ROOT%\third_party\conan\configs\install.ps1"
 if %errorlevel% neq 0 exit /b %errorlevel%

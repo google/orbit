@@ -13,6 +13,8 @@ SCRIPT="${DIR}/kokoro/gcp_ubuntu/kokoro_build.sh"
 if [ "$0" == "$SCRIPT" ]; then
   # We are inside the docker container
 
+  pip3 install conan==1.27.1 conan-package-tools==0.34.0
+
   echo "Installing conan configuration (profiles, settings, etc.)..."
   ${DIR}/third_party/conan/configs/install.sh || exit $?
 
