@@ -606,12 +606,13 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
     max_x = std::max(max_x, world_timer_x);
     max_tick = std::max(max_tick, timer.m_Start);
 
-    float z = GlCanvas::Z_VALUE_BOX_ACTIVE;
+    float z = GlCanvas::Z_VALUE_OVERLAY;
     Color color = GetThreadColor(timer.m_TID);
     auto type = PickingID::LINE;
     canvas->GetBatcher()->AddVerticalLine(pos, -world_height, z, color, type, nullptr);
   }
   if (overlay_current_textboxes_.size() > 1) {
+    float z = GlCanvas::Z_VALUE_OVERLAY_BG;
     float from = min_x;
     float to = max_x;
 
@@ -623,10 +624,11 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
     std::string time = GetPrettyTime(micros * 0.001);
     TextBox box(pos, size, time, Color(160, 160, 160, 60));
     box.SetTextY(pos[1] + world_height / 2);
+    int current_font_size = canvas->GetTextRenderer().GetFontSize();
     canvas->GetTextRenderer().SetFontSize(20);
-    box.Draw(canvas->GetBatcher(), canvas->GetTextRenderer(), -FLT_MAX, true,
+    box.Draw(canvas->GetBatcher(), canvas->GetTextRenderer(), z, true,
              true);
-    canvas->GetTextRenderer().SetFontSize(10);
+    canvas->GetTextRenderer().SetFontSize(current_font_size);
   }
 }
 

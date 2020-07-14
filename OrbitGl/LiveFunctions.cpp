@@ -16,68 +16,89 @@ std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
 }
 
 void LiveFunctions::Move() {
-  auto min_max = ComputeMinMaxTime(current_textboxes_);
-  GCurrentTimeGraph->Zoom(min_max.first, min_max.second);
-  GCurrentTimeGraph->SetCurrentTextBoxes(current_textboxes_);
+  std::vector<TextBox*> text_boxes;
+  for (auto it : current_textboxes_) {
+    text_boxes.push_back(it.second);
+  }
+  if (!text_boxes.empty()) {
+    auto min_max = ComputeMinMaxTime(text_boxes);
+    GCurrentTimeGraph->Zoom(min_max.first, min_max.second);
+  } else {
+    GCurrentTimeGraph->ZoomAll();
+  }
+  GCurrentTimeGraph->SetCurrentTextBoxes(text_boxes);
 }
 
-void LiveFunctions::OnAllNextButton() {
-  std::vector<TextBox*> next_boxes;
-  for (size_t k = 0; k < function_iterators_.size(); ++k) {
+bool LiveFunctions::OnAllNextButton() {
+  absl::flat_hash_map<uint64_t, TextBox*> next_boxes;
+  for (auto it : function_iterators_) {
+    Function* function = it.second;
+    TextBox* current_box = current_textboxes_.find(it.first)->second;
     TextBox* box = live_functions_data_view_.FindNext(
-        *(function_iterators_[k]), current_textboxes_[k]->GetTimer().m_End);
+        *function, current_box->GetTimer().m_End);
     if (box == nullptr) {
-      return;
+      return false;
     }
-    next_boxes.push_back(box);
+    next_boxes.insert(std::make_pair(it.first, box));
   }
   // We only want to commit to the new boxes when all boxes can be moved.
   current_textboxes_ = next_boxes;
   Move();
+  return true;
 }
 
-void LiveFunctions::OnAllPreviousButton() {
-  std::vector<TextBox*> next_boxes;
-  for (size_t k = 0; k < function_iterators_.size(); ++k) {
+bool LiveFunctions::OnAllPreviousButton() {
+  absl::flat_hash_map<uint64_t, TextBox*> next_boxes;
+  for (auto it : function_iterators_) {
+    Function* function = it.second;
+    TextBox* current_box = current_textboxes_.find(it.first)->second;
     TextBox* box = live_functions_data_view_.FindPrevious(
-        *(function_iterators_[k]), current_textboxes_[k]->GetTimer().m_End);
+        *function, current_box->GetTimer().m_End);
     if (box == nullptr) {
-      return;
+      return false;
     }
-    next_boxes.push_back(box);
+    next_boxes.insert(std::make_pair(it.first, box));
   }
 
   // We only want to commit to the new boxes when all boxes can be moved.
   current_textboxes_ = next_boxes;
   Move();
+  return true;
 }
 
-void LiveFunctions::OnNextButton(size_t index) {
+void LiveFunctions::OnNextButton(uint64_t id) {
   TextBox* text_box = live_functions_data_view_.FindNext(
-      *(function_iterators_[index]),
-      current_textboxes_[index]->GetTimer().m_End);
+      *(function_iterators_[id]), current_textboxes_[id]->GetTimer().m_End);
   // If text_box is nullptr, then we have reached the right end of the timeline.
   if (text_box != nullptr) {
-    current_textboxes_[index] = text_box;
+    current_textboxes_[id] = text_box;
     Move();
   }
 }
-void LiveFunctions::OnPreviousButton(size_t index) {
+void LiveFunctions::OnPreviousButton(uint64_t id) {
   TextBox* text_box = live_functions_data_view_.FindPrevious(
-      *(function_iterators_[index]),
-      current_textboxes_[index]->GetTimer().m_Start);
+      *(function_iterators_[id]), current_textboxes_[id]->GetTimer().m_Start);
   // If text_box is nullptr, then we have reached the left end of the timeline.
   if (text_box != nullptr) {
-    current_textboxes_[index] = text_box;
+    current_textboxes_[id] = text_box;
     Move();
   }
+}
+
+void LiveFunctions::OnDeleteButton(uint64_t id) {
+  current_textboxes_.erase(id);
+  function_iterators_.erase(id);
+  Move();
 }
 
 void LiveFunctions::AddIterator(Function* function, TextBox* current_textbox) {
-  function_iterators_.push_back(function);
-  current_textboxes_.push_back(current_textbox);
+  uint64_t id = next_id;
+  ++next_id;
+
+  function_iterators_.insert(std::make_pair(id, function));
+  current_textboxes_.insert(std::make_pair(id, current_textbox));
   if (add_iterator_callback_) {
-    add_iterator_callback_(function);
+    add_iterator_callback_(id, function);
   }
   Move();
 }

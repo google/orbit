@@ -30,6 +30,14 @@ void OrbitEventIterator::on_PreviousButton_clicked() {
 }
 
 //-----------------------------------------------------------------------------
+void OrbitEventIterator::on_DeleteButton_clicked() {
+  if (delete_button_callback_) {
+    delete_button_callback_();
+  }
+}
+
+
+//-----------------------------------------------------------------------------
 void OrbitEventIterator::SetFunctionName(const std::string& function_name) {
   ui->Label->setText(QString::fromStdString(function_name));
 }
@@ -66,4 +74,9 @@ void OrbitEventIterator::DecrementIndex() {
 void OrbitEventIterator::UpdateCountLabel() {
   ui->CountLabel->setText(QString::fromStdString(
     absl::StrFormat("%d / %d", current_index_, max_count_)));
+}
+
+//-----------------------------------------------------------------------------
+void OrbitEventIterator::HideDeleteButton() {
+  ui->DeleteButton->hide();
 }

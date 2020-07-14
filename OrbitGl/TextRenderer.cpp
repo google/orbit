@@ -77,11 +77,17 @@ void TextRenderer::Init() {
 }
 
 //-----------------------------------------------------------------------------
-void TextRenderer::SetFontSize(int a_Size) {
-  texture_font_t* font = m_FontsBySize[a_Size];
+void TextRenderer::SetFontSize(int size) {
+  texture_font_t* font = m_FontsBySize[size];
   if (font) {
     m_Font = font;
+    current_font_size_ = size;
   }
+}
+
+//-----------------------------------------------------------------------------
+int TextRenderer::GetFontSize() {
+  return current_font_size_;
 }
 
 //-----------------------------------------------------------------------------
