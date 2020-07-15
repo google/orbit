@@ -5,38 +5,34 @@
 #include "TimeGraph.h"
 
 std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
-    const std::vector<TextBox*> text_boxes) {
+    const absl::flat_hash_map<uint64_t, TextBox*>& text_boxes) {
   uint64_t min_time = std::numeric_limits<uint64_t>::max();
   uint64_t max_time = std::numeric_limits<uint64_t>::min();
-  for (size_t k = 0; k < text_boxes.size(); ++k) {
-    min_time = std::min(min_time, text_boxes[k]->GetTimer().m_Start);
+  for (auto& text_box : text_boxes) {
+    min_time = std::min(min_time, text_box.second->GetTimer().m_Start);
     // For multiple events, the visualization is such that the duration
     // from the first to the start of the last event is shown. Therefore,
     // we use m_Start below.
-    max_time = std::max(max_time, text_boxes[k]->GetTimer().m_Start);
+    max_time = std::max(max_time, text_box.second->GetTimer().m_Start);
   }
   if (min_time == max_time) {
     // If we only have a single box or all events fall onto the same start,
     // we want to zoom such that at least one event is visible,
     // so we take the time from start to end of the first event.
-    const Timer& timer = text_boxes[0]->GetTimer();
+    const Timer& timer = text_boxes.begin()->second->GetTimer();
     max_time = timer.m_End;
   }
   return std::make_pair(min_time, max_time);
 }
 
 void LiveFunctions::Move() {
-  std::vector<TextBox*> text_boxes;
-  for (auto it : current_textboxes_) {
-    text_boxes.push_back(it.second);
-  }
-  if (!text_boxes.empty()) {
-    auto min_max = ComputeMinMaxTime(text_boxes);
+  if (!current_textboxes_.empty()) {
+    auto min_max = ComputeMinMaxTime(current_textboxes_);
     GCurrentTimeGraph->Zoom(min_max.first, min_max.second);
   } else {
     GCurrentTimeGraph->ZoomAll();
   }
-  GCurrentTimeGraph->SetCurrentTextBoxes(text_boxes);
+  GCurrentTimeGraph->SetCurrentTextBoxes(current_textboxes_);
 }
 
 bool LiveFunctions::OnAllNextButton() {

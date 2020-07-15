@@ -590,10 +590,10 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
   float world_start_y = canvas->GetWorldTopLeftY();
   float world_height = canvas->GetWorldHeight();
 
-  for (auto current_textbox : overlay_current_textboxes_) {
+  for (auto& current_textbox : overlay_current_textboxes_) {
     double inv_time_window = 1.0 / GetTimeWindowUs();
 
-    const Timer& timer = current_textbox->GetTimer();
+    const Timer& timer = current_textbox.second->GetTimer();
     double start_us = GetUsFromTick(timer.m_Start);
     double normalized_start = start_us * inv_time_window;
     float world_timer_x =
@@ -608,6 +608,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
 
     float z = GlCanvas::Z_VALUE_OVERLAY;
     Color color = GetThreadColor(timer.m_TID);
+
     auto type = PickingID::LINE;
     canvas->GetBatcher()->AddVerticalLine(pos, -world_height, z, color, type, nullptr);
   }
