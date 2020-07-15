@@ -14,8 +14,8 @@ std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
   uint64_t min_time = std::numeric_limits<uint64_t>::max();
   uint64_t max_time = std::numeric_limits<uint64_t>::min();
   for (auto& text_box : text_boxes) {
-    min_time = std::min(min_time, text_box.second->GetTimer().m_Start);
-    max_time = std::max(max_time, text_box.second->GetTimer().m_End);
+    min_time = std::min(min_time, text_box.second->GetTimerData().start());
+    max_time = std::max(max_time, text_box.second->GetTimerData().end());
   }
   return std::make_pair(min_time, max_time);
 }
@@ -46,12 +46,12 @@ bool LiveFunctionsController::OnAllNextButton() {
     auto function_address = FunctionUtils::GetAbsoluteAddress(*function);
     const TextBox* current_box = current_textboxes_.find(it.first)->second;
     const TextBox* box = GCurrentTimeGraph->FindNextFunctionCall(
-        function_address, current_box->GetTimer().m_End);
+        function_address, current_box->GetTimerData().end());
     if (box == nullptr) {
       return false;
     }
-    if (box->GetTimer().m_Start < min_timestamp) {
-      min_timestamp = box->GetTimer().m_Start;
+    if (box->GetTimerData().start() < min_timestamp) {
+      min_timestamp = box->GetTimerData().start();
       id_with_min_timestamp = it.first;
     }
     next_boxes.insert(std::make_pair(it.first, box));
@@ -73,12 +73,12 @@ bool LiveFunctionsController::OnAllPreviousButton() {
     auto function_address = FunctionUtils::GetAbsoluteAddress(*function);
     const TextBox* current_box = current_textboxes_.find(it.first)->second;
     const TextBox* box = GCurrentTimeGraph->FindPreviousFunctionCall(
-        function_address, current_box->GetTimer().m_End);
+        function_address, current_box->GetTimerData().end());
     if (box == nullptr) {
       return false;
     }
-    if (box->GetTimer().m_Start < min_timestamp) {
-      min_timestamp = box->GetTimer().m_Start;
+    if (box->GetTimerData().start() < min_timestamp) {
+      min_timestamp = box->GetTimerData().start();
       id_with_min_timestamp = it.first;
     }
     next_boxes.insert(std::make_pair(it.first, box));
@@ -95,7 +95,7 @@ void LiveFunctionsController::OnNextButton(uint64_t id) {
   auto function_address =
       FunctionUtils::GetAbsoluteAddress(*(function_iterators_[id]));
   const TextBox* text_box = GCurrentTimeGraph->FindNextFunctionCall(
-      function_address, current_textboxes_[id]->GetTimer().m_End);
+      function_address, current_textboxes_[id]->GetTimerData().end());
   // If text_box is nullptr, then we have reached the right end of the timeline.
   if (text_box != nullptr) {
     current_textboxes_[id] = text_box;
@@ -107,7 +107,7 @@ void LiveFunctionsController::OnPreviousButton(uint64_t id) {
   auto function_address =
       FunctionUtils::GetAbsoluteAddress(*(function_iterators_[id]));
   const TextBox* text_box = GCurrentTimeGraph->FindPreviousFunctionCall(
-      function_address, current_textboxes_[id]->GetTimer().m_End);
+      function_address, current_textboxes_[id]->GetTimerData().end());
   // If text_box is nullptr, then we have reached the left end of the timeline.
   if (text_box != nullptr) {
     current_textboxes_[id] = text_box;
@@ -150,7 +150,7 @@ void LiveFunctionsController::AddIterator(Function* function) {
 TickType LiveFunctionsController::GetStartTime(uint64_t index) {
   const auto& it = current_textboxes_.find(index);
   if (it != current_textboxes_.end()) {
-    return it->second->GetTimer().m_Start;
+    return it->second->GetTimerData().start();
   }
   return GetCaptureMin();
 }

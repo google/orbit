@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_TIME_GRAPH_H_
+#define ORBIT_GL_TIME_GRAPH_H_
 
 #include <unordered_map>
 #include <utility>
@@ -15,6 +16,7 @@
 #include "Geometry.h"
 #include "GpuTrack.h"
 #include "SchedulerTrack.h"
+#include "ScopeTimer.h"
 #include "StringManager.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
@@ -40,7 +42,7 @@ class TimeGraph {
                                            ThreadID a_TID);
   const std::vector<CallstackEvent>& GetSelectedCallstackEvents(ThreadID tid);
 
-  void ProcessTimer(const Timer& a_Timer);
+  void ProcessTimer(const TimerData& timer_data);
   void UpdateMaxTimeStamp(TickType a_Time);
 
   float GetThreadTotalHeight();
@@ -87,7 +89,7 @@ class TimeGraph {
   void ToggleDrawText() { m_DrawText = !m_DrawText; }
   void SetThreadFilter(const std::string& a_Filter);
 
-  bool IsVisible(const Timer& a_Timer);
+  bool IsVisible(const TimerData& timer_data);
   int GetNumDrawnTextBoxes() { return m_NumDrawnTextBoxes; }
   void SetPickingManager(class PickingManager* a_Manager) {
     m_PickingManager = a_Manager;
@@ -130,7 +132,6 @@ class TimeGraph {
   TickType GetCaptureMax() { return capture_max_timestamp_; }
 
  protected:
-  uint64_t GetGpuTimelineHash(const Timer& timer) const;
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(ThreadID a_TID);
   std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(uint64_t timeline_hash);
@@ -200,3 +201,5 @@ class TimeGraph {
 };
 
 extern TimeGraph* GCurrentTimeGraph;
+
+#endif  // ORBIT_GL_TIME_GRAPH_H_

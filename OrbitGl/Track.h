@@ -47,7 +47,6 @@ class Track : public Pickable {
   bool Movable() override { return true; }
 
   virtual Type GetType() const = 0;
-  virtual void AddTimer(const Timer&) {}
 
   virtual float GetHeight() const { return 0.f; };
   bool GetVisible() const { return m_Visible; }

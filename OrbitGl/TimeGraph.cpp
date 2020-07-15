@@ -31,6 +31,7 @@
 #include "Utils.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
+#include "capture.pb.h"
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
@@ -148,8 +149,8 @@ void TimeGraph::Zoom(TickType min, TickType max) {
 
 //-----------------------------------------------------------------------------
 void TimeGraph::Zoom(const TextBox* a_TextBox) {
-  const Timer& timer = a_TextBox->GetTimer();
-  Zoom(timer.m_Start, timer.m_End);
+  const TimerData& timer = a_TextBox->GetTimerData();
+  Zoom(timer.start(), timer.end());
 }
 
 //-----------------------------------------------------------------------------
@@ -220,14 +221,15 @@ void TimeGraph::PanTime(int a_InitialX, int a_CurrentX, int a_Width,
 // scale).
 void TimeGraph::HorizontallyMoveIntoView(const TextBox* text_box,
                                          double distance) {
-  const Timer& timer = text_box->GetTimer();
+  const TimerData& timer_data = text_box->GetTimerData();
 
-  if (IsVisible(timer)) {
+  if (IsVisible(timer_data)) {
     return;
   }
 
-  double start = MicroSecondsFromTicks(capture_min_timestamp_, timer.m_Start);
-  double end = MicroSecondsFromTicks(capture_min_timestamp_, timer.m_End);
+  double start =
+      MicroSecondsFromTicks(capture_min_timestamp_, timer_data.start());
+  double end = MicroSecondsFromTicks(capture_min_timestamp_, timer_data.end());
   double mid = start + ((end - start) / 2.0);
 
   // Mirror the final center position if we have to move left
@@ -280,52 +282,48 @@ double TimeGraph::GetTimeIntervalMicro(double a_Ratio) {
 }
 
 //-----------------------------------------------------------------------------
-uint64_t TimeGraph::GetGpuTimelineHash(const Timer& timer) const {
-  return timer.m_UserData[1];
-}
-
-//-----------------------------------------------------------------------------
-void TimeGraph::ProcessTimer(const Timer& a_Timer) {
-  if (a_Timer.m_End > capture_max_timestamp_) {
-    capture_max_timestamp_ = a_Timer.m_End;
+void TimeGraph::ProcessTimer(const TimerData& timer_data) {
+  if (timer_data.end() > capture_max_timestamp_) {
+    capture_max_timestamp_ = timer_data.end();
   }
 
-  switch (a_Timer.m_Type) {
-    case Timer::CORE_ACTIVITY:
+  switch (timer_data.type()) {
+    case TimerData::CORE_ACTIVITY:
       Capture::GHasContextSwitches = true;
       break;
     default:
       break;
   }
 
-  if (a_Timer.m_FunctionAddress > 0) {
+  if (timer_data.function_address() > 0) {
     Function* func = Capture::GTargetProcess->GetFunctionFromAddress(
-        a_Timer.m_FunctionAddress);
+        timer_data.function_address());
     if (func != nullptr) {
-      ++Capture::GFunctionCountMap[a_Timer.m_FunctionAddress];
-      FunctionUtils::UpdateStats(func, a_Timer);
+      ++Capture::GFunctionCountMap[timer_data.function_address()];
+      FunctionUtils::UpdateStats(func, timer_data);
     }
   }
 
-  if (a_Timer.m_Type == Timer::GPU_ACTIVITY) {
-    uint64_t timeline_hash = GetGpuTimelineHash(a_Timer);
+  if (timer_data.type() == TimerData::GPU_ACTIVITY) {
+    uint64_t timeline_hash = timer_data.timeline_hash();
     std::shared_ptr<GpuTrack> track = GetOrCreateGpuTrack(timeline_hash);
     track->SetName(string_manager_->Get(timeline_hash).value_or(""));
     track->SetLabel(string_manager_->Get(timeline_hash).value_or(""));
-    track->OnTimer(a_Timer);
+    track->OnTimer(timer_data);
   } else {
-    std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(a_Timer.m_TID);
-    if (a_Timer.m_Type == Timer::INTROSPECTION) {
+    std::shared_ptr<ThreadTrack> track =
+        GetOrCreateThreadTrack(timer_data.thread_id());
+    if (timer_data.type() == TimerData::INTROSPECTION) {
       const Color kGreenIntrospection(87, 166, 74, 255);
       track->SetColor(kGreenIntrospection);
     }
 
-    if (a_Timer.m_Type != Timer::CORE_ACTIVITY) {
-      track->OnTimer(a_Timer);
-      ++m_ThreadCountMap[a_Timer.m_TID];
+    if (timer_data.type() != TimerData::CORE_ACTIVITY) {
+      track->OnTimer(timer_data);
+      ++m_ThreadCountMap[timer_data.thread_id()];
     } else {
-      scheduler_track_->OnTimer(a_Timer);
-      cores_seen_.insert(a_Timer.m_Processor);
+      scheduler_track_->OnTimer(timer_data);
+      cores_seen_.insert(timer_data.processor());
     }
   }
 }
@@ -440,8 +438,8 @@ const TextBox* TimeGraph::FindPreviousFunctionCall(
       if (!block.Intersects(previous_box_time, current_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
-        auto box_time = box.GetTimer().m_End;
-        if ((box.GetTimer().m_FunctionAddress == function_address) &&
+        auto box_time = box.GetTimerData().end();
+        if ((box.GetTimerData().function_address() == function_address) &&
             (box_time < current_time) && (previous_box_time < box_time)) {
           previous_box = &box;
           previous_box_time = box_time;
@@ -465,8 +463,8 @@ const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_address,
       if (!block.Intersects(current_time, next_box_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
-        auto box_time = box.GetTimer().m_End;
-        if ((box.GetTimer().m_FunctionAddress == function_address) &&
+        auto box_time = box.GetTimerData().end();
+        if ((box.GetTimerData().function_address() == function_address) &&
             (box_time > current_time) && (next_box_time > box_time)) {
           next_box = &box;
           next_box_time = box_time;
@@ -600,8 +598,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
   double inv_time_window = 1.0 / GetTimeWindowUs();
 
   for (const auto& current_textbox : overlay_current_textboxes_) {
-    const Timer& timer = current_textbox.second->GetTimer();
-    double start_us = GetUsFromTick(timer.m_Start);
+    const TimerData& timer_data = current_textbox.second->GetTimerData();
+    double start_us = GetUsFromTick(timer_data.start());
     double normalized_start = start_us * inv_time_window;
     float world_timer_x =
         static_cast<float>(world_start_x + normalized_start * world_width);
@@ -609,12 +607,12 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
     Vec2 pos(world_timer_x, world_start_y);
 
     min_x = std::min(min_x, world_timer_x);
-    min_tick = std::min(min_tick, timer.m_Start);
+    min_tick = std::min(min_tick, timer_data.start());
     max_x = std::max(max_x, world_timer_x);
-    max_tick = std::max(max_tick, timer.m_Start);
+    max_tick = std::max(max_tick, timer_data.start());
 
     float z = GlCanvas::Z_VALUE_OVERLAY;
-    Color color = GetThreadColor(timer.m_TID);
+    Color color = GetThreadColor(timer_data.thread_id());
 
     auto type = PickingID::LINE;
     canvas->GetBatcher()->AddVerticalLine(pos, -world_height, z, color, type,
@@ -807,8 +805,8 @@ void TimeGraph::JumpToNeighborBox(TextBox* from, JumpDirection jump_direction,
   if (!from) {
     return;
   }
-  auto function_address = from->GetTimer().m_FunctionAddress;
-  auto current_time = from->GetTimer().m_End;
+  auto function_address = from->GetTimerData().function_address();
+  auto current_time = from->GetTimerData().end();
   if (jump_direction == JumpDirection::kPrevious) {
     if (jump_scope == JumpScope::kSameThread) {
       goal = FindPrevious(from);
@@ -838,44 +836,44 @@ void TimeGraph::JumpToNeighborBox(TextBox* from, JumpDirection jump_direction,
 
 const TextBox* TimeGraph::FindPrevious(TextBox* from) {
   CHECK(from);
-  const Timer& timer = from->GetTimer();
-  if (timer.m_Type == Timer::GPU_ACTIVITY) {
-    return GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetLeft(from);
+  const TimerData& timer_data = from->GetTimerData();
+  if (timer_data.type() == Timer::GPU_ACTIVITY) {
+    return GetOrCreateGpuTrack(timer_data.timeline_hash())->GetLeft(from);
   } else {
-    return GetOrCreateThreadTrack(timer.m_TID)->GetLeft(from);
+    return GetOrCreateThreadTrack(timer_data.thread_id())->GetLeft(from);
   }
   return nullptr;
 }
 
 const TextBox* TimeGraph::FindNext(TextBox* from) {
   CHECK(from);
-  const Timer& timer = from->GetTimer();
-  if (timer.m_Type == Timer::GPU_ACTIVITY) {
-    return GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetRight(from);
+  const TimerData& timer_data = from->GetTimerData();
+  if (timer_data.type() == Timer::GPU_ACTIVITY) {
+    return GetOrCreateGpuTrack(timer_data.timeline_hash())->GetRight(from);
   } else {
-    return GetOrCreateThreadTrack(timer.m_TID)->GetRight(from);
+    return GetOrCreateThreadTrack(timer_data.thread_id())->GetRight(from);
   }
   return nullptr;
 }
 
 const TextBox* TimeGraph::FindTop(TextBox* from) {
   CHECK(from);
-  const Timer& timer = from->GetTimer();
-  if (timer.m_Type == Timer::GPU_ACTIVITY) {
-    return GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetUp(from);
+  const TimerData& timer_data = from->GetTimerData();
+  if (timer_data.type() == Timer::GPU_ACTIVITY) {
+    return GetOrCreateGpuTrack(timer_data.timeline_hash())->GetUp(from);
   } else {
-    return GetOrCreateThreadTrack(timer.m_TID)->GetUp(from);
+    return GetOrCreateThreadTrack(timer_data.thread_id())->GetUp(from);
   }
   return nullptr;
 }
 
 const TextBox* TimeGraph::FindDown(TextBox* from) {
   CHECK(from);
-  const Timer& timer = from->GetTimer();
-  if (timer.m_Type == Timer::GPU_ACTIVITY) {
-    return GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetDown(from);
+  const TimerData& timer_data = from->GetTimerData();
+  if (timer_data.type() == Timer::GPU_ACTIVITY) {
+    return GetOrCreateGpuTrack(timer_data.timeline_hash())->GetDown(from);
   } else {
-    return GetOrCreateThreadTrack(timer.m_TID)->GetDown(from);
+    return GetOrCreateThreadTrack(timer_data.thread_id())->GetDown(from);
   }
   return nullptr;
 }
@@ -888,9 +886,10 @@ void TimeGraph::DrawText(GlCanvas* canvas) {
 }
 
 //-----------------------------------------------------------------------------
-bool TimeGraph::IsVisible(const Timer& a_Timer) {
-  double start = MicroSecondsFromTicks(capture_min_timestamp_, a_Timer.m_Start);
-  double end = MicroSecondsFromTicks(capture_min_timestamp_, a_Timer.m_End);
+bool TimeGraph::IsVisible(const TimerData& timer_data) {
+  double start =
+      MicroSecondsFromTicks(capture_min_timestamp_, timer_data.start());
+  double end = MicroSecondsFromTicks(capture_min_timestamp_, timer_data.end());
 
   double startUs = m_MinTimeUs;
 

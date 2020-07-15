@@ -77,7 +77,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void RefreshCaptureView();
   void Disassemble(int32_t pid, const Function& function);
 
-  void OnTimer(Timer timer) override;
+  void OnTimer(const TimerData& timer) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnCallstack(Callstack callstack) override;
   void OnCallstackEvent(CallstackEvent callstack_event) override;

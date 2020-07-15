@@ -8,8 +8,6 @@
 #include <cstdint>
 #include <string>
 
-#include "SamplingProfiler.h"
-#include "ScopeTimer.h"
 #include "capture.pb.h"
 
 namespace FunctionUtils {
@@ -41,7 +39,7 @@ bool IsSelected(const Function& func);
 void Print(const Function& func);
 
 bool SetOrbitTypeFromName(Function* func);
-void UpdateStats(Function* func, const Timer& timer);
+void UpdateStats(Function* func, const TimerData& timer_data);
 
 bool IsSelected(const SampledFunction& func);
 

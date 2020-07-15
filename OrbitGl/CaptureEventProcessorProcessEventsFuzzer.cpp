@@ -14,7 +14,7 @@ ABSL_FLAG(bool, frame_pointer_unwinding, false,
 
 namespace {
 class MyCaptureListener : public CaptureListener {
-  void OnTimer(Timer) override {}
+  void OnTimer(const TimerData&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}
   void OnCallstack(Callstack) override {}
   void OnCallstackEvent(CallstackEvent) override {}

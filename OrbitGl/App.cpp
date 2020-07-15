@@ -104,7 +104,9 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
   }
 }
 
-void OrbitApp::OnTimer(Timer timer) { GCurrentTimeGraph->ProcessTimer(timer); }
+void OrbitApp::OnTimer(const TimerData& timer) {
+  GCurrentTimeGraph->ProcessTimer(timer);
+}
 
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_->AddIfNotPresent(key, std::move(str));
@@ -121,7 +123,8 @@ void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
   }
   Capture::GSamplingProfiler->AddHashedCallStack(callstack_event);
   GEventTracer.GetEventBuffer().AddCallstackEvent(
-      callstack_event.time(), callstack_event.callstack_id(), callstack_event.thread_id());
+      callstack_event.time(), callstack_event.callstack_id(),
+      callstack_event.thread_id());
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {

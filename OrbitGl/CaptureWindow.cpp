@@ -223,13 +223,13 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
 void CaptureWindow::SelectTextBox(class TextBox* a_TextBox) {
   if (a_TextBox == nullptr) return;
   Capture::GSelectedTextBox = a_TextBox;
-  Capture::GSelectedThreadId = a_TextBox->GetTimer().m_TID;
+  Capture::GSelectedThreadId = a_TextBox->GetTimerData().thread_id();
   Capture::GSelectedCallstack =
-      Capture::GetCallstack(a_TextBox->GetTimer().m_CallstackHash);
+      Capture::GetCallstack(a_TextBox->GetTimerData().callstack_hash());
   GOrbitApp->SetCallStack(Capture::GSelectedCallstack);
 
-  const Timer& a_Timer = a_TextBox->GetTimer();
-  DWORD64 address = a_Timer.m_FunctionAddress;
+  const TimerData& a_Timer = a_TextBox->GetTimerData();
+  DWORD64 address = a_Timer.function_address();
   FindCode(address);
 
   if (m_DoubleClicking && a_TextBox) {
@@ -248,9 +248,9 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
 
   TextBox* textBox = time_graph_.GetBatcher().GetTextBox(pickId);
   if (textBox) {
-    if (textBox->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
-      Function* func =
-          Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
+    if (textBox->GetTimerData().type() != TimerData::CORE_ACTIVITY) {
+      Function* func = Capture::GSelectedFunctionsMap[textBox->GetTimerData()
+                                                          .function_address()];
       m_ToolTip = absl::StrFormat(
           "%s %s", func ? FunctionUtils::GetDisplayName(*func) : "",
           textBox->GetText());

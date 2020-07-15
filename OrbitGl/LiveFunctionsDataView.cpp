@@ -11,6 +11,7 @@
 #include "LiveFunctionsController.h"
 #include "Log.h"
 #include "Pdb.h"
+#include "Profiling.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "TimerChain.h"
@@ -339,12 +340,16 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
       TimerBlock& block = *it;
       for (size_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
-        if (box.GetTimer().m_FunctionAddress == function_address) {
-          if (!min_box || box.GetTimer().ElapsedMicros() <
-                              min_box->GetTimer().ElapsedMicros())
+        if (box.GetTimerData().function_address() == function_address) {
+          double elapsedMicros = MicroSecondsFromTicks(
+              box.GetTimerData().start(), box.GetTimerData().end());
+          if (!min_box || elapsedMicros < MicroSecondsFromTicks(
+                                              min_box->GetTimerData().start(),
+                                              min_box->GetTimerData().end()))
             min_box = &box;
-          if (!max_box || box.GetTimer().ElapsedMicros() >
-                              max_box->GetTimer().ElapsedMicros())
+          if (!max_box || elapsedMicros > MicroSecondsFromTicks(
+                                              max_box->GetTimerData().start(),
+                                              max_box->GetTimerData().end()))
             max_box = &box;
         }
       }

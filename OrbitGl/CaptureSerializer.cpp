@@ -75,7 +75,7 @@ void CaptureSerializer::SaveImpl(T& archive) {
     for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
       TimerBlock& block = *it;
       for (uint32_t k = 0; k < block.size(); ++k) {
-        archive(cereal::binary_data(&(block[k].GetTimer()), sizeof(Timer)));
+        archive(cereal::binary_data(&(block[k].GetTimerData()), sizeof(TimerData)));
 
         if (++numWrites > header.num_timers()) {
           return;
@@ -111,9 +111,9 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   time_graph_->Clear();
 
   // Timers
-  Timer timer;
-  while (stream.read(reinterpret_cast<char*>(&timer), sizeof(Timer))) {
-    time_graph_->ProcessTimer(timer);
+  TimerData timer_data;
+  while (stream.read(reinterpret_cast<char*>(&timer_data), sizeof(TimerData))) {
+    time_graph_->ProcessTimer(timer_data);
   }
 
   Capture::GState = Capture::State::kDone;

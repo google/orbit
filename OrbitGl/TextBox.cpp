@@ -11,6 +11,7 @@
 #include "Params.h"
 #include "TextRenderer.h"
 #include "absl/strings/str_format.h"
+#include "capture.pb.h"
 
 //-----------------------------------------------------------------------------
 TextBox::TextBox()
@@ -78,9 +79,9 @@ float TextBox::GetScreenSize(const TextRenderer& a_TextRenderer) {
 void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
                    bool a_Visible, bool a_RightJustify, bool isInactive,
                    unsigned int a_ID, bool a_IsPicking, bool a_IsHighlighted) {
-  bool isCoreActivity = m_Timer.m_Type == Timer::CORE_ACTIVITY;
+  bool isCoreActivity = m_TimerData.type() == TimerData::CORE_ACTIVITY;
   bool isSameThreadIdAsSelected =
-      isCoreActivity && m_Timer.m_TID == Capture::GSelectedThreadId;
+      isCoreActivity && m_TimerData.thread_id() == Capture::GSelectedThreadId;
 
   if (Capture::GSelectedThreadId != 0 && isCoreActivity &&
       !isSameThreadIdAsSelected) {
@@ -120,7 +121,8 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
 
     float maxSize = m_Pos[0] + m_Size[0] - posX;
 
-    Function* func = Capture::GSelectedFunctionsMap[m_Timer.m_FunctionAddress];
+    Function* func =
+        Capture::GSelectedFunctionsMap[m_TimerData.function_address()];
     std::string text = absl::StrFormat(
         "%s %s", func ? FunctionUtils::GetDisplayName(*func).c_str() : "",
         m_Text.c_str());

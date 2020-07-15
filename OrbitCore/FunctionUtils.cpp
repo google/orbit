@@ -9,6 +9,7 @@
 #include "Capture.h"
 #include "Log.h"
 #include "OrbitBase/Logging.h"
+#include "Profiling.h"
 #include "Utils.h"
 
 namespace FunctionUtils {
@@ -25,9 +26,7 @@ uint64_t Offset(const Function& func) {
   return func.address() - func.load_bias();
 }
 
-bool IsOrbitFunc(const Function& func) {
-  return func.type() != Function_OrbitType_NONE;
-}
+bool IsOrbitFunc(const Function& func) { return func.type() != Function::NONE; }
 
 std::shared_ptr<Function> CreateFunction(
     std::string_view name, std::string_view pretty_name, uint64_t address,
@@ -106,10 +105,11 @@ bool SetOrbitTypeFromName(Function* func) {
   return false;
 }
 
-void UpdateStats(Function* func, const Timer& timer) {
+void UpdateStats(Function* func, const TimerData& timer_data) {
   FunctionStats* stats = func->mutable_stats();
   stats->set_count(stats->count() + 1);
-  double elapsedMillis = timer.ElapsedMillis();
+  double elapsedMillis =
+      MilliSecondsFromTicks(timer_data.start(), timer_data.end());
   stats->set_total_time_ms(stats->total_time_ms() + elapsedMillis);
   stats->set_average_time_ms(stats->total_time_ms() / stats->count());
 

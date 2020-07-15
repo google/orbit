@@ -13,7 +13,7 @@
 class CaptureListener {
  public:
   virtual ~CaptureListener() = default;
-  virtual void OnTimer(Timer timer) = 0;
+  virtual void OnTimer(const TimerData& timer_data) = 0;
   virtual void OnKeyAndString(uint64_t key, std::string str) = 0;
   virtual void OnCallstack(Callstack callstack) = 0;
   virtual void OnCallstackEvent(CallstackEvent callstack_event) = 0;

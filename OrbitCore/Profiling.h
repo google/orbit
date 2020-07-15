@@ -7,6 +7,7 @@
 #include "BaseTypes.h"
 #include "Platform.h"
 #include "Utils.h"
+#include "absl/time/time.h"
 
 //-----------------------------------------------------------------------------
 typedef uint64_t TickType;
@@ -31,6 +32,11 @@ inline TickType OrbitTicks(uint32_t a_Clock = 1 /*CLOCK_MONOTONIC*/) {
 //-----------------------------------------------------------------------------
 inline double MicroSecondsFromTicks(TickType a_Start, TickType a_End) {
   return double((a_End - a_Start)) * 0.001;
+}
+
+inline double MilliSecondsFromTicks(TickType a_Start, TickType a_End) {
+  absl::Duration micros = absl::Microseconds(MicroSecondsFromTicks(a_Start, a_End));
+  return micros / absl::Milliseconds(1);
 }
 
 //-----------------------------------------------------------------------------

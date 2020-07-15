@@ -2,12 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_GL_CANVAS_H_
+#define ORBIT_GL_GL_CANVAS_H_
 
+#include "Batcher.h"
 #include "GlPanel.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "PickingManager.h"
+#include "Profiling.h"
+#include "ScopeTimer.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 
@@ -163,3 +167,5 @@ class GlCanvas : public GlPanel {
   // Batcher to draw elements in the UI.
   Batcher ui_batcher_;
 };
+
+#endif  // ORBIT_GL_GL_CANVAS_H_

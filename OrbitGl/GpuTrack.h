@@ -14,6 +14,7 @@
 #include "TextBox.h"
 #include "Threading.h"
 #include "Track.h"
+#include "capture.pb.h"
 
 class TextRenderer;
 
@@ -26,7 +27,7 @@ class GpuTrack : public Track {
   // Pickable
   void Draw(GlCanvas* canvas, bool picking) override;
   void OnDrag(int x, int y) override;
-  void OnTimer(const Timer& timer);
+  void OnTimer(const TimerData& timer_data);
 
   // Track
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) override;
@@ -35,7 +36,6 @@ class GpuTrack : public Track {
 
   std::vector<std::shared_ptr<TimerChain>> GetTimers() override;
   uint32_t GetDepth() const { return depth_; }
-  std::string GetExtraInfo(const Timer& timer);
 
   Color GetColor() const;
   uint32_t GetNumTimers() const { return num_timers_; }
@@ -60,10 +60,10 @@ class GpuTrack : public Track {
   std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
 
  private:
-  Color GetTimerColor(const Timer& timer, bool is_selected,
+  Color GetTimerColor(const TimerData& timer_data, bool is_selected,
                       bool inactive) const;
-  void SetTimesliceText(const Timer& timer, double elapsed_us, float min_x,
-                        TextBox* text_box);
+  void SetTimesliceText(const TimerData& timer_data, double elapsed_us,
+                        float min_x, TextBox* text_box);
 
  protected:
   TextRenderer* text_renderer_ = nullptr;

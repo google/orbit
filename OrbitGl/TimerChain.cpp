@@ -18,8 +18,8 @@ void TimerBlock::Add(const TextBox& item) {
   data_[size_] = item;
   ++size_;
   ++chain_->num_items_;
-  min_timestamp_ = std::min(item.GetTimer().m_Start, min_timestamp_);
-  max_timestamp_ = std::max(item.GetTimer().m_End, max_timestamp_);
+  min_timestamp_ = std::min(item.GetTimerData().start(), min_timestamp_);
+  max_timestamp_ = std::max(item.GetTimerData().end(), max_timestamp_);
 }
 
 bool TimerBlock::Intersects(uint64_t min, uint64_t max) {

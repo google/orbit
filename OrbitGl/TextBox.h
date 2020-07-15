@@ -2,11 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_TEXT_BOX_H_
+#define ORBIT_GL_TEXT_BOX_H_
 
+#include "BaseTypes.h"
 #include "Batcher.h"
 #include "CoreMath.h"
-#include "ScopeTimer.h"
+#include "capture.pb.h"
 
 class TextRenderer;
 
@@ -71,8 +73,8 @@ class TextBox {
   const std::string& GetText() const { return m_Text; }
   void SetText(const std::string& a_Text) { m_Text = a_Text; }
 
-  void SetTimer(const Timer& a_Timer) { m_Timer = a_Timer; }
-  const Timer& GetTimer() const { return m_Timer; }
+  void SetTimerData(const TimerData& a_TimerData) { m_TimerData = a_TimerData; }
+  const TimerData& GetTimerData() const { return m_TimerData; }
 
   void SetTextY(float a_Y) { m_TextY = a_Y; }
 
@@ -110,7 +112,7 @@ class TextBox {
   Vec2 m_Max;
   std::string m_Text;
   Color m_Color;
-  Timer m_Timer;
+  TimerData m_TimerData;
   int m_MainFrameCounter;
   bool m_Selected;
   float m_TextY;
@@ -140,3 +142,5 @@ inline void TextBox::Expand(const TextBox& a_Box) {
     }
   }
 }
+
+#endif  // ORBIT_GL_TEXT_BOX_H_

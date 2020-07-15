@@ -24,7 +24,7 @@ float SchedulerTrack::GetHeight() const {
          layout.GetTrackBottomMargin();
 }
 
-inline Color GetTimerColor(const Timer& timer, TimeGraph* time_graph,
+inline Color GetTimerColor(const TimerData& timer_data, TimeGraph* time_graph,
                            bool is_selected, bool same_tid, bool same_pid,
                            bool inactive) {
   if (is_selected) {
@@ -32,7 +32,7 @@ inline Color GetTimerColor(const Timer& timer, TimeGraph* time_graph,
   } else if (!same_tid && (inactive || !same_pid)) {
     return kInactiveColor;
   }
-  return time_graph->GetThreadColor(timer.m_TID);
+  return time_graph->GetThreadColor(timer_data.thread_id());
 }
 
 float SchedulerTrack::GetYFromDepth(float track_y, uint32_t depth,
@@ -83,14 +83,19 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
 
       for (size_t k = 0; k < block.size(); ++k) {
         TextBox& text_box = block[k];
-        const Timer& timer = text_box.GetTimer();
-        if (min_tick > timer.m_End || max_tick < timer.m_Start) continue;
-        if (timer.m_Start >= min_ignore && timer.m_End <= max_ignore) continue;
+        const TimerData& timer_data = text_box.GetTimerData();
+        if (min_tick > timer_data.end() || max_tick < timer_data.start()) {
+          continue;
+        }
+        if (timer_data.start() >= min_ignore &&
+            timer_data.end() <= max_ignore) {
+          continue;
+        }
 
-        UpdateDepth(timer.m_Depth + 1);
+        UpdateDepth(timer_data.depth() + 1);
 
-        double start_us = time_graph_->GetUsFromTick(timer.m_Start);
-        double end_us = time_graph_->GetUsFromTick(timer.m_End);
+        double start_us = time_graph_->GetUsFromTick(timer_data.start());
+        double end_us = time_graph_->GetUsFromTick(timer_data.end());
         double elapsed_us = end_us - start_us;
         double normalized_start = start_us * inv_time_window;
         double normalized_length = elapsed_us * inv_time_window;
@@ -99,19 +104,20 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
         float world_timer_x =
             static_cast<float>(world_start_x + normalized_start * world_width);
         float world_timer_y =
-            GetYFromDepth(m_Pos[1], timer.m_Depth, /*collapsed*/ false);
+            GetYFromDepth(m_Pos[1], timer_data.depth(), /*collapsed*/ false);
 
         bool is_visible_width = normalized_length * canvas->getWidth() > 1;
         bool is_same_pid_as_target =
-            target_pid == 0 || target_pid == timer.m_PID;
-        bool is_same_tid_as_selected = timer.m_TID == selected_thread_id;
+            target_pid == 0 || target_pid == timer_data.process_id();
+        bool is_same_tid_as_selected =
+            timer_data.thread_id() == selected_thread_id;
         bool is_inactive = selected_thread_id != 0 && !is_same_tid_as_selected;
         bool is_selected = &text_box == Capture::GSelectedTextBox;
 
         Vec2 pos(world_timer_x, world_timer_y);
         Vec2 size(world_timer_width, layout.GetTextCoresHeight());
         float z = GlCanvas::Z_VALUE_BOX_ACTIVE;
-        Color color = GetTimerColor(timer, time_graph_, is_selected,
+        Color color = GetTimerColor(timer_data, time_graph_, is_selected,
                                     is_same_tid_as_selected,
                                     is_same_pid_as_target, is_inactive);
 
@@ -124,9 +130,9 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           // falls. We align this precisely on the pixel x-coordinate of the
           // current line being drawn (in ticks).
           min_ignore =
-              min_timegraph_tick +
-              ((timer.m_Start - min_timegraph_tick) / pixel_delta_in_ticks) *
-                  pixel_delta_in_ticks;
+              min_timegraph_tick + ((timer_data.start() - min_timegraph_tick) /
+                                    pixel_delta_in_ticks) *
+                                       pixel_delta_in_ticks;
           max_ignore = min_ignore + pixel_delta_in_ticks;
         }
       }
