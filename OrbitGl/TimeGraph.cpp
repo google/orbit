@@ -431,7 +431,7 @@ void TimeGraph::SelectRight(const TextBox* a_TextBox) {
 const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address,
                                 TickType current_time) const {
   TextBox* previous_box = nullptr;
-  TickType previous_box_time = std::numeric_limits<TickType>::min();
+  TickType previous_box_time = std::numeric_limits<TickType>::lowest();
   std::vector<std::shared_ptr<TimerChain>> chains =
       GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
