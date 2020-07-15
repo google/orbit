@@ -4,8 +4,8 @@
 
 #include "orbiteventiterator.h"
 
-#include "ui_orbiteventiterator.h"
 #include "absl/strings/str_format.h"
+#include "ui_orbiteventiterator.h"
 
 //-----------------------------------------------------------------------------
 OrbitEventIterator::OrbitEventIterator(QWidget* parent)
@@ -73,13 +73,11 @@ void OrbitEventIterator::DecrementIndex() {
 //-----------------------------------------------------------------------------
 void OrbitEventIterator::UpdateCountLabel() {
   ui->CountLabel->setText(QString::fromStdString(
-    absl::StrFormat("%d / %d", current_index_, max_count_)));
+      absl::StrFormat("%d / %d", current_index_, max_count_)));
 }
 
 //-----------------------------------------------------------------------------
-void OrbitEventIterator::HideDeleteButton() {
-  ui->DeleteButton->hide();
-}
+void OrbitEventIterator::HideDeleteButton() { ui->DeleteButton->hide(); }
 
 //-----------------------------------------------------------------------------
 void OrbitEventIterator::EnableButtons() {
@@ -92,3 +90,5 @@ void OrbitEventIterator::DisableButtons() {
   ui->NextButton->setEnabled(false);
   ui->PreviousButton->setEnabled(false);
 }
+
+void ElidedLabel::setText(const QString& text) { text_ = text; }

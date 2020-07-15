@@ -8,7 +8,10 @@
 #include <QFrame>
 #include <QLabel>
 #include <QPaintEvent>
+#include <QPainter>
+#include <QTextLayout>
 
+#include "absl/container/flat_hash_map.h"
 #include "types.h"
 
 namespace Ui {
@@ -19,24 +22,22 @@ class OrbitEventIterator;
 class ElidedLabel : public QLabel {
   Q_OBJECT
  public:
-  explicit ElidedLabel(QWidget* parent) : QLabel(parent) {}
-  void setText(const QString& text) {
-    original_text = text;
-    QLabel::setText(text);
-  }
-  void setElidedText() {
-    QFontMetrics metrix(font());
-    QString clippedText =
-        metrix.elidedText(original_text, Qt::ElideMiddle, width() - 3);
-    QLabel::setText(clippedText);
-  }
+  explicit ElidedLabel(QWidget* parent)
+      : QLabel(parent) /*, metrics_(font())*/ {}
+  void setText(const QString& text);
 
  protected:
-  void resizeEvent(QResizeEvent* event) override {
-    QLabel::resizeEvent(event);
-    setElidedText();
+  void paintEvent(QPaintEvent* event) override {
+    QPainter painter(this);
+    QFontMetrics metrics = painter.fontMetrics();
+
+    QTextLayout textLayout(text_, painter.font());
+    textLayout.beginLayout();
+    QString elided_text = metrics.elidedText(text_, Qt::ElideMiddle, width());
+    painter.drawText(QPoint(0, metrics.ascent()), elided_text);
+    textLayout.endLayout();
   }
-  QString original_text;
+  QString text_;
 };
 
 class OrbitEventIterator : public QFrame {
