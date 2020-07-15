@@ -7,6 +7,6 @@
 #include "ElfUtils/ElfFile.h"
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t* buf, size_t len) {
-  ElfUtils::ElfFile::CreateFromBuffer("INMEMORY", buf, len);
+  (void) ElfUtils::ElfFile::CreateFromBuffer("INMEMORY", buf, len);
   return 0;
 }
