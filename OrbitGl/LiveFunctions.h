@@ -44,7 +44,9 @@ class LiveFunctions {
 
   std::function<void(uint64_t, Function*)> add_iterator_callback_;
 
-  uint64_t next_id = 0;
+  uint64_t next_iterator_id_ = 0;
+
+  uint64_t id_to_select_ = 0;
 };
 
 #endif  // LIVE_FUNCTIONS_H_
