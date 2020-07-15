@@ -24,7 +24,7 @@ class GraphTrack : public Track {
  protected:
   std::map<uint64_t, double> values_;
   double min_ = std::numeric_limits<double>::max();
-  double max_ = std::numeric_limits<double>::min();
+  double max_ = std::numeric_limits<double>::lowest();
   double value_range_ = 0;
   double inv_value_range_ = 0;
 };
