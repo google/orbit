@@ -369,56 +369,166 @@ class MapsPerfEvent : public PerfEvent {
   std::string maps_;
 };
 
-template <typename TracepointData>
-class TracepointPerfEventBase : public PerfEvent {
+class TracepointPerfEvent : public PerfEvent {
  public:
+  explicit TracepointPerfEvent(uint32_t size)
+      : tracepoint_data{make_unique_for_overwrite<uint8_t[]>(size)} {}
+
   perf_event_raw_sample_fixed ring_buffer_record;
-  TracepointData tracepoint_data;
+  std::unique_ptr<uint8_t[]> tracepoint_data;
 
   uint64_t GetTimestamp() const override {
     return ring_buffer_record.sample_id.time;
   }
+
+  uint64_t GetStreamId() const {
+    return ring_buffer_record.sample_id.stream_id;
+  }
+
+  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+
+  uint16_t GetTracepointId() const { return GetTracepointCommon().common_type; }
+
+ protected:
+  const tracepoint_common& GetTracepointCommon() const {
+    return *reinterpret_cast<const tracepoint_common*>(tracepoint_data.get());
+  }
+
+  template <typename TracepointData>
+  const TracepointData& GetTypedTracepointData() const {
+    return *reinterpret_cast<const TracepointData*>(tracepoint_data.get());
+  }
 };
 
-class TaskNewtaskPerfEvent
-    : public TracepointPerfEventBase<task_newtask_tracepoint> {
+class TaskNewtaskPerfEvent : public TracepointPerfEvent {
  public:
+  explicit TaskNewtaskPerfEvent(uint32_t tracepoint_size)
+      : TracepointPerfEvent(tracepoint_size) {}
+
   void Accept(PerfEventVisitor* visitor) override;
 
   // The tracepoint format calls this "pid" but it's effectively the thread id.
-  pid_t GetTid() const { return tracepoint_data.pid; }
-
-  const char* GetComm() const { return tracepoint_data.comm; }
-
-  uint64_t GetStreamId() const {
-    return ring_buffer_record.sample_id.stream_id;
+  pid_t GetTid() const {
+    return GetTypedTracepointData<task_newtask_tracepoint>().pid;
   }
 
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+  const char* GetComm() const {
+    return GetTypedTracepointData<task_newtask_tracepoint>().comm;
+  }
 };
 
-class TaskRenamePerfEvent
-    : public TracepointPerfEventBase<task_rename_tracepoint> {
+class TaskRenamePerfEvent : public TracepointPerfEvent {
  public:
+  explicit TaskRenamePerfEvent(uint32_t tracepoint_size)
+      : TracepointPerfEvent(tracepoint_size) {}
+
   void Accept(PerfEventVisitor* visitor) override;
 
-  pid_t GetTid() const { return tracepoint_data.pid; }
-
-  const char* GetOldComm() const { return tracepoint_data.oldcomm; }
-  const char* GetNewComm() const { return tracepoint_data.newcomm; }
-
-  uint64_t GetStreamId() const {
-    return ring_buffer_record.sample_id.stream_id;
+  pid_t GetTid() const {
+    return GetTypedTracepointData<task_rename_tracepoint>().pid;
   }
 
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+  const char* GetOldComm() const {
+    return GetTypedTracepointData<task_rename_tracepoint>().oldcomm;
+  }
+  const char* GetNewComm() const {
+    return GetTypedTracepointData<task_rename_tracepoint>().newcomm;
+  }
 };
 
-class RawSamplePerfEvent {
+class GpuPerfEvent : public TracepointPerfEvent {
  public:
-  perf_event_raw_sample_fixed ring_buffer_record;
-  std::vector<uint8_t> data;
-  explicit RawSamplePerfEvent(uint32_t size) : data(size) {}
+  explicit GpuPerfEvent(uint32_t tracepoint_size)
+      : TracepointPerfEvent(tracepoint_size) {}
+
+  std::string ExtractTimelineString() const {
+    int32_t data_loc = GetTimeline();
+    int16_t data_loc_size = static_cast<int16_t>(data_loc >> 16);
+    int16_t data_loc_offset = static_cast<int16_t>(data_loc & 0x00ff);
+
+    std::vector<char> data_loc_data(data_loc_size);
+    std::memcpy(
+        &data_loc_data[0],
+        reinterpret_cast<const char*>(tracepoint_data.get()) + data_loc_offset,
+        data_loc_size);
+
+    // While the string should be null terminated here, we make sure that it
+    // actually is by adding a zero in the last position. In the case of
+    // expected behavior, this is a no-op.
+    data_loc_data[data_loc_data.size() - 1] = 0;
+    return std::string(&data_loc_data[0]);
+  }
+
+  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
+
+  virtual uint32_t GetContext() const = 0;
+  virtual uint32_t GetSeqno() const = 0;
+
+ protected:
+  virtual int32_t GetTimeline() const = 0;
+};
+
+class AmdgpuCsIoctlPerfEvent : public GpuPerfEvent {
+ public:
+  explicit AmdgpuCsIoctlPerfEvent(uint32_t tracepoint_size)
+      : GpuPerfEvent(tracepoint_size) {}
+
+  void Accept(PerfEventVisitor* visitor) override;
+
+  uint32_t GetContext() const override {
+    return GetTypedTracepointData<amdgpu_cs_ioctl_tracepoint>().context;
+  }
+
+  uint32_t GetSeqno() const override {
+    return GetTypedTracepointData<amdgpu_cs_ioctl_tracepoint>().seqno;
+  }
+
+ protected:
+  int32_t GetTimeline() const override {
+    return GetTypedTracepointData<amdgpu_cs_ioctl_tracepoint>().timeline;
+  }
+};
+
+class AmdgpuSchedRunJobPerfEvent : public GpuPerfEvent {
+ public:
+  explicit AmdgpuSchedRunJobPerfEvent(uint32_t tracepoint_size)
+      : GpuPerfEvent(tracepoint_size) {}
+
+  void Accept(PerfEventVisitor* visitor) override;
+
+  uint32_t GetContext() const override {
+    return GetTypedTracepointData<amdgpu_sched_run_job_tracepoint>().context;
+  }
+
+  uint32_t GetSeqno() const override {
+    return GetTypedTracepointData<amdgpu_sched_run_job_tracepoint>().seqno;
+  }
+
+ protected:
+  int32_t GetTimeline() const override {
+    return GetTypedTracepointData<amdgpu_sched_run_job_tracepoint>().timeline;
+  }
+};
+
+class DmaFenceSignaledPerfEvent : public GpuPerfEvent {
+ public:
+  explicit DmaFenceSignaledPerfEvent(uint32_t tracepoint_size)
+      : GpuPerfEvent(tracepoint_size) {}
+
+  void Accept(PerfEventVisitor* visitor) override;
+
+  uint32_t GetContext() const override {
+    return GetTypedTracepointData<dma_fence_signaled_tracepoint>().context;
+  }
+
+  uint32_t GetSeqno() const override {
+    return GetTypedTracepointData<dma_fence_signaled_tracepoint>().seqno;
+  }
+
+ protected:
+  int32_t GetTimeline() const override {
+    return GetTypedTracepointData<dma_fence_signaled_tracepoint>().timeline;
+  }
 };
 
 }  // namespace LinuxTracing

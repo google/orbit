@@ -136,15 +136,17 @@ class TracerThread {
   absl::flat_hash_set<uint64_t> stack_sampling_ids_;
   absl::flat_hash_set<uint64_t> task_newtask_ids_;
   absl::flat_hash_set<uint64_t> task_rename_ids_;
-  absl::flat_hash_set<uint64_t> gpu_tracing_ids_;
+  absl::flat_hash_set<uint64_t> amdgpu_cs_ioctl_ids_;
+  absl::flat_hash_set<uint64_t> amdgpu_sched_run_job_ids_;
+  absl::flat_hash_set<uint64_t> dma_fence_signaled_ids_;
   absl::flat_hash_set<uint64_t> callchain_sampling_ids_;
 
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
   std::mutex deferred_events_mutex_;
   ContextSwitchManager context_switch_manager_;
-  std::shared_ptr<PerfEventProcessor2> uprobes_event_processor_;
-  std::shared_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
+  std::unique_ptr<PerfEventProcessor2> uprobes_event_processor_;
+  std::unique_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
 
   struct EventStats {
     void Reset() {

@@ -189,7 +189,7 @@ int GetTracepointId(const char* tracepoint_category,
   }
   int tp_id = -1;
   if (!absl::SimpleAtoi(file_content.value(), &tp_id)) {
-    ERROR("Error parsing tracepoint id for: %s:%s", tracepoint_category,
+    ERROR("Parsing tracepoint id for: %s:%s", tracepoint_category,
           tracepoint_name);
     return -1;
   }

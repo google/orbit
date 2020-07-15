@@ -24,19 +24,21 @@ std::unique_ptr<StackSamplePerfEvent> ConsumeStackSamplePerfEvent(
 std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
-std::unique_ptr<RawSamplePerfEvent> ConsumeRawSamplePerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
-
-template <typename T>
+template <typename T, typename = std::enable_if_t<
+                          std::is_base_of_v<TracepointPerfEvent, T>>>
 std::unique_ptr<T> ConsumeTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
                                               const perf_event_header& header) {
-  DCHECK(header.size ==
-         sizeof(T::ring_buffer_record) + sizeof(T::tracepoint_data));
-  auto event = std::make_unique<T>();
-  event->ring_buffer_record.header = header;
-  ring_buffer->ReadValueAtOffset(&event->ring_buffer_record, 0);
-  ring_buffer->ReadValueAtOffset(&event->tracepoint_data,
-                                 sizeof(event->ring_buffer_record));
+  uint32_t tracepoint_size;
+  ring_buffer->ReadValueAtOffset(&tracepoint_size,
+                                 offsetof(perf_event_raw_sample_fixed, size));
+  auto event = std::make_unique<T>(tracepoint_size);
+  ring_buffer->ReadRawAtOffset(
+      reinterpret_cast<uint8_t*>(&event->ring_buffer_record), 0,
+      sizeof(perf_event_raw_sample_fixed));
+  ring_buffer->ReadRawAtOffset(
+      &event->tracepoint_data[0],
+      offsetof(perf_event_raw_sample_fixed, size) + sizeof(uint32_t),
+      tracepoint_size);
   ring_buffer->SkipRecord(header);
   return event;
 }

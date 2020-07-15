@@ -15,47 +15,20 @@ namespace LinuxTracing {
 
 class GpuTracepointEventProcessor {
  public:
-  GpuTracepointEventProcessor(int amdgpu_cs_ioctl_id,
-                              int amdgpu_sched_run_job_id,
-                              int dma_fence_signaled_id)
-      : amdgpu_cs_ioctl_id_(amdgpu_cs_ioctl_id),
-        amdgpu_sched_run_job_id_(amdgpu_sched_run_job_id),
-        dma_fence_signaled_id_(dma_fence_signaled_id) {}
+  void PushEvent(const AmdgpuCsIoctlPerfEvent& sample);
+  void PushEvent(const AmdgpuSchedRunJobPerfEvent& sample);
+  void PushEvent(const DmaFenceSignaledPerfEvent& sample);
 
-  void PushEvent(const RawSamplePerfEvent& sample);
   void SetListener(TracerListener* listener);
 
  private:
   // Keys are context, seqno, and timeline
   typedef std::tuple<uint32_t, uint32_t, std::string> Key;
 
-  template <typename T>
-  std::string ExtractTimelineString(const T* tracepoint_data) {
-    int32_t data_loc = tracepoint_data->timeline;
-    int16_t data_loc_size = static_cast<int16_t>(data_loc >> 16);
-    int16_t data_loc_offset = static_cast<int16_t>(data_loc & 0x00ff);
-
-    std::vector<char> data_loc_data(data_loc_size);
-    std::memcpy(
-        &data_loc_data[0],
-        reinterpret_cast<const char*>(tracepoint_data) + data_loc_offset,
-        data_loc_size);
-
-    // While the string should be null terminated here, we make sure that it
-    // actually is by adding a zero in the last position. In the case of
-    // expected behavior, this is a no-op.
-    data_loc_data[data_loc_data.size() - 1] = 0;
-    return std::string(&data_loc_data[0]);
-  }
-
   int ComputeDepthForEvent(const std::string& timeline,
                            uint64_t start_timestamp, uint64_t end_timestamp);
 
   void CreateGpuExecutionEventIfComplete(const Key& key);
-
-  int amdgpu_cs_ioctl_id_ = 0;
-  int amdgpu_sched_run_job_id_ = 0;
-  int dma_fence_signaled_id_ = 0;
 
   TracerListener* listener_ = nullptr;
 

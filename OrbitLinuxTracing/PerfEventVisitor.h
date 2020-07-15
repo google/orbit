@@ -25,6 +25,9 @@ class PerfEventVisitor {
   virtual void visit(MapsPerfEvent*) {}
   virtual void visit(TaskNewtaskPerfEvent*) {}
   virtual void visit(TaskRenamePerfEvent*) {}
+  virtual void visit(AmdgpuCsIoctlPerfEvent*) {}
+  virtual void visit(AmdgpuSchedRunJobPerfEvent*) {}
+  virtual void visit(DmaFenceSignaledPerfEvent*) {}
 };
 
 }  // namespace LinuxTracing

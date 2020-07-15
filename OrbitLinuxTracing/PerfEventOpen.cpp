@@ -154,6 +154,9 @@ void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length) {
 int tracepoint_event_open(const char* tracepoint_category,
                           const char* tracepoint_name, pid_t pid, int32_t cpu) {
   int tp_id = GetTracepointId(tracepoint_category, tracepoint_name);
+  if (tp_id == -1) {
+    return -1;
+  }
   perf_event_attr pe = generic_event_attr();
   pe.type = PERF_TYPE_TRACEPOINT;
   pe.config = tp_id;

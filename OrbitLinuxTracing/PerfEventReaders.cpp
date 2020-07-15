@@ -94,20 +94,4 @@ std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
   return event;
 }
 
-std::unique_ptr<RawSamplePerfEvent> ConsumeRawSamplePerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
-  uint32_t size = 0;
-  ring_buffer->ReadValueAtOffset(&size,
-                                 offsetof(perf_event_raw_sample_fixed, size));
-  auto event = std::make_unique<RawSamplePerfEvent>(size);
-  ring_buffer->ReadRawAtOffset(
-      reinterpret_cast<uint8_t*>(&event->ring_buffer_record), 0,
-      sizeof(perf_event_raw_sample_fixed));
-  ring_buffer->ReadRawAtOffset(
-      &event->data[0],
-      offsetof(perf_event_raw_sample_fixed, size) + sizeof(uint32_t), size);
-  ring_buffer->SkipRecord(header);
-  return event;
-}
-
 }  // namespace LinuxTracing
