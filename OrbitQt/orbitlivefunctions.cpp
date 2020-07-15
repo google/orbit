@@ -21,7 +21,7 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
     if (!this->live_functions_.OnAllNextButton()) {
       return;
     }
-    for (auto iterator_ui : iterator_uis) {
+    for (auto& iterator_ui : iterator_uis) {
       iterator_ui.second->IncrementIndex();
     }
   });
@@ -29,7 +29,7 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
     if (!this->live_functions_.OnAllPreviousButton()) {
       return;
     }
-    for (auto iterator_ui : iterator_uis) {
+    for (auto& iterator_ui : iterator_uis) {
       iterator_ui.second->DecrementIndex();
     }
   });

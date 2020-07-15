@@ -2,14 +2,14 @@
 <ui version="4.0">
  <class>OrbitEventIterator</class>
  <widget class="QFrame" name="OrbitEventIterator">
-  <!-- <property name="geometry">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>690</width>
     <height>200</height>
    </rect>
-  </property> -->
+  </property>
   <property name="sizePolicy">
    <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
     <horstretch>0</horstretch>
@@ -53,11 +53,20 @@
     </widget>
    </item>
    <item row="0" column="2">
-    <widget class="QLabel" name="Label">
+    <widget class="ElidedLabel" name="Label">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
     </widget>
    </item>
    <item row="0" column="3">
     <widget class="QLabel" name="CountLabel">
+     <property name="alignment">
+      <set>Qt::AlignRight | Qt::AlignVCenter</set>
+     </property>
     </widget>
    </item>
    <item row="0" column="4">
@@ -77,9 +86,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>OrbitTreeView</class>
-   <extends>QTreeView</extends>
-   <header>orbittreeview.h</header>
+   <class>ElidedLabel</class>
+   <extends>QLabel</extends>
+   <header>orbiteventiterator.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
