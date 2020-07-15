@@ -21,6 +21,8 @@ void LiveFunctions::Move() {
     GCurrentTimeGraph->Zoom(min_max.first, min_max.second);
     if (current_textboxes_.find(id_to_select_) != current_textboxes_.end()) {
       GCurrentTimeGraph->Select(current_textboxes_[id_to_select_]);
+    } else {
+      CHECK(false);
     }
   } else {
     GCurrentTimeGraph->ZoomAll();
@@ -108,7 +110,7 @@ void LiveFunctions::OnDeleteButton(uint64_t id) {
   // we need to switch last_id_pressed_ to an existing id.
   if (id == id_to_select_ && !current_textboxes_.empty()) {
     id_to_select_ = current_textboxes_.begin()->first;
-  } else {
+  } else if (current_textboxes_.empty()) {
     // TODO: Not sure this is a good idea...
     id_to_select_ = 0;
   }
