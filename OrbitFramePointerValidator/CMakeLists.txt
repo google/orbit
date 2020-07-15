@@ -39,7 +39,6 @@ target_link_libraries(OrbitFramePointerValidatorTests PRIVATE
         OrbitCore
         OrbitFramePointerValidator
         GTest::Main
-        GMock::GMock
         abseil::abseil)
 
 register_test(OrbitFramePointerValidatorTests)
