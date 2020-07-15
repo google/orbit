@@ -38,7 +38,6 @@ target_link_libraries(
   PRIVATE ElfUtils
           OrbitCore # TODO: This is needed for GetExecutablePath - consider moving it to OrbitBase
           GTest::Main
-          GMock::GMock
           llvm_object::llvm_object
           abseil::abseil)
 
