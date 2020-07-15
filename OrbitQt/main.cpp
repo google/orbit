@@ -24,6 +24,7 @@
 #include "ApplicationOptions.h"
 #include "Error.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitVersion.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"

@@ -35,6 +35,7 @@
 #include "ModulesDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
+#include "OrbitVersion.h"
 #include "OrbitSession.h"
 #include "Params.h"
 #include "Pdb.h"
@@ -48,7 +49,6 @@
 #include "StringManager.h"
 #include "TextRenderer.h"
 #include "Utils.h"
-#include "Version.h"
 
 #if __linux__
 #include <OrbitLinuxTracing/OrbitTracing.h>

@@ -34,6 +34,7 @@ target_sources(
          OrbitModule.h
          OrbitProcess.h
          OrbitSession.h
+         OrbitVersion.h
          Params.h
          Path.h
          Pdb.h
@@ -50,8 +51,7 @@ target_sources(
          Threading.h
          TidAndThreadName.h
          Utils.h
-         VariableTracing.h
-         Version.h)
+         VariableTracing.h)
 
 target_sources(
   OrbitCore
@@ -131,9 +131,9 @@ target_compile_definitions(OrbitCore PUBLIC _UNICODE)
 target_compile_features(OrbitCore PUBLIC cxx_std_11)
 
 include("${CMAKE_SOURCE_DIR}/cmake/version.cmake")
-GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/Version.cpp"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/Version.cpp.in" OrbitCore)
-target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/Version.cpp")
+GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/OrbitVersion.cpp"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/OrbitVersion.cpp.in" OrbitCore)
+target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/OrbitVersion.cpp")
 
 add_executable(OrbitCoreTests)
 
