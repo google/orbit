@@ -579,7 +579,7 @@ void TimeGraph::Draw(GlCanvas* canvas, bool a_Picking) {
 
 void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
   float min_x = std::numeric_limits<float>::max();
-  float max_x = std::numeric_limits<float>::min();
+  float max_x = std::numeric_limits<float>::lowest();
 
   uint64_t min_tick = std::numeric_limits<uint64_t>::max();
   uint64_t max_tick = std::numeric_limits<uint64_t>::min();
@@ -623,12 +623,12 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
     Vec2 size(sizex, world_height);
 
     std::string time = GetPrettyTime(micros * 0.001);
-    TextBox box(pos, size, time, Color(160, 160, 160, 60));
-    box.SetTextY(pos[1] + world_height / 2);
+    TextBox text_box(pos, size, time, Color(160, 160, 160, 80));
+    text_box.SetTextY(pos[1] + world_height / 2);
     int current_font_size = canvas->GetTextRenderer().GetFontSize();
     canvas->GetTextRenderer().SetFontSize(20);
-    box.Draw(canvas->GetBatcher(), canvas->GetTextRenderer(), z, true,
-             true);
+    text_box.Draw(canvas->GetBatcher(), canvas->GetTextRenderer(), z, true,
+                  true);
     canvas->GetTextRenderer().SetFontSize(current_font_size);
   }
 }
