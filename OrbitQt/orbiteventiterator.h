@@ -6,12 +6,38 @@
 #define ORBIT_EVENT_ITERATOR_H_
 
 #include <QFrame>
+#include <QLabel>
+#include <QPaintEvent>
 
 #include "types.h"
 
 namespace Ui {
 class OrbitEventIterator;
 }
+
+// TODO: Move into its own file(s).
+class ElidedLabel : public QLabel {
+  Q_OBJECT
+ public:
+  explicit ElidedLabel(QWidget* parent) : QLabel(parent) {}
+  void setText(const QString& text) {
+    original_text = text;
+    QLabel::setText(text);
+  }
+  void setElidedText() {
+    QFontMetrics metrix(font());
+    QString clippedText =
+        metrix.elidedText(original_text, Qt::ElideMiddle, width() - 3);
+    QLabel::setText(clippedText);
+  }
+
+ protected:
+  void resizeEvent(QResizeEvent* event) override {
+    QLabel::resizeEvent(event);
+    setElidedText();
+  }
+  QString original_text;
+};
 
 class OrbitEventIterator : public QFrame {
   Q_OBJECT

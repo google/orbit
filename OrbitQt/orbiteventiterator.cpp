@@ -5,6 +5,7 @@
 #include "orbiteventiterator.h"
 
 #include "ui_orbiteventiterator.h"
+#include "absl/strings/str_format.h"
 
 //-----------------------------------------------------------------------------
 OrbitEventIterator::OrbitEventIterator(QWidget* parent)
