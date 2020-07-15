@@ -214,7 +214,33 @@ void TimeGraph::PanTime(int a_InitialX, int a_CurrentX, int a_Width,
   NeedsUpdate();
 }
 
-void TimeGraph::VerticallyScrollIntoView(const TextBox* text_box) {
+// Move the view horizontally if the text box isn't visible. The text box
+// center's position will be at 'distance' to the related border (in [0,1]
+// scale).
+void TimeGraph::HorizontallyMoveIntoView(const TextBox* text_box,
+                                         double distance) {
+  const Timer& timer = text_box->GetTimer();
+
+  if (IsVisible(timer)) {
+    return;
+  }
+
+  double start = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_Start);
+  double end = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_End);
+  double mid = start + ((end - start) / 2.0);
+
+  // Mirror the final center position if we have to move left
+  if (start < m_MinTimeUs) {
+    distance = 1 - distance;
+  }
+  double CurrentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
+  SetMinMax(mid - CurrentTimeWindowUs * (1 - distance),
+            mid + CurrentTimeWindowUs * distance);
+
+  NeedsUpdate();
+}
+
+void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
   CHECK(text_box != nullptr);
   // TODO: Sometimes the Y-coordinate is not set.
   auto world_top_left_y = m_Canvas->GetWorldTopLeftY();
@@ -393,42 +419,11 @@ void TimeGraph::GetWorldMinMax(float& a_Min, float& a_Max) const {
   a_Max = GetWorldFromTick(capture_max_timestamp_);
 }
 
-//-----------------------------------------------------------------------------
-void TimeGraph::SelectLeft(const TextBox* a_TextBox) {
-  TextBox* textBox = const_cast<TextBox*>(a_TextBox);
-  Capture::GSelectedTextBox = textBox;
-  const Timer& timer = textBox->GetTimer();
-
-  if (IsVisible(timer)) {
-    return;
-  }
-
-  double currentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
-  m_RefTimeUs = MicroSecondsFromTicks(capture_min_timestamp_, timer.m_Start);
-
-  double minTimeUs = m_RefTimeUs;
-  double maxTimeUs = m_RefTimeUs + currentTimeWindowUs;
-
-  SetMinMax(minTimeUs, maxTimeUs);
-}
-
-//-----------------------------------------------------------------------------
-void TimeGraph::SelectRight(const TextBox* a_TextBox) {
-  TextBox* textBox = const_cast<TextBox*>(a_TextBox);
-  Capture::GSelectedTextBox = textBox;
-  const Timer& timer = textBox->GetTimer();
-
-  if (IsVisible(timer)) {
-    return;
-  }
-  double currentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
-  m_RefTimeUs = MicroSecondsFromTicks(capture_min_timestamp_, timer.m_End);
-
-  static double ratio = 1.0;
-  double minTimeUs = m_RefTimeUs - ratio * currentTimeWindowUs;
-  double maxTimeUs = m_RefTimeUs + (1 - ratio) * currentTimeWindowUs;
-
-  SetMinMax(minTimeUs, maxTimeUs);
+void TimeGraph::Select(const TextBox* a_TextBox) {
+  TextBox* text_box = const_cast<TextBox*>(a_TextBox);
+  Capture::GSelectedTextBox = text_box;
+  HorizontallyMoveIntoView(a_TextBox);
+  VerticallyMoveIntoView(a_TextBox);
 }
 
 const TextBox* TimeGraph::FindPreviousFunctionCall(
@@ -455,7 +450,7 @@ const TextBox* TimeGraph::FindPreviousFunctionCall(
   }
   return previous_box;
 }
-//-----------------------------------------------------------------------------
+
 const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_address,
                                                TickType current_time) const {
   TextBox* next_box = nullptr;
@@ -809,7 +804,7 @@ void TimeGraph::OnLeft() {
       left = GetOrCreateThreadTrack(timer.m_TID)->GetLeft(selection);
     }
     if (left) {
-      SelectLeft(left);
+      Select(left);
     }
   }
   NeedsUpdate();
@@ -828,7 +823,7 @@ void TimeGraph::OnRight() {
       right = GetOrCreateThreadTrack(timer.m_TID)->GetRight(selection);
     }
     if (right) {
-      SelectRight(right);
+      Select(right);
     }
   }
   NeedsUpdate();
@@ -847,7 +842,7 @@ void TimeGraph::OnShiftLeft() {
     const TextBox* left = FindPreviousFunctionCall(
         selection->GetTimer().m_FunctionAddress, selection->GetTimer().m_End);
     if (left) {
-      SelectLeft(left);
+      Select(left);
       VerticallyScrollIntoView(left);
     }
   }
@@ -861,7 +856,7 @@ void TimeGraph::OnShiftRight() {
     const TextBox* right = FindNextFunctionCall(
         selection->GetTimer().m_FunctionAddress, selection->GetTimer().m_End);
     if (right) {
-      SelectRight(right);
+      Select(right);
       VerticallyScrollIntoView(right);
     }
   }

@@ -62,12 +62,11 @@ class TimeGraph {
   void SetMinMax(double a_MinTimeUs, double a_MaxTimeUs);
   void PanTime(int a_InitialX, int a_CurrentX, int a_Width,
                double a_InitialTime);
-  void VerticallyScrollIntoView(const TextBox* text_box);
+  void HorizontallyMoveIntoView(const TextBox* text_box, double distance = 0.3);
+  void VerticallyMoveIntoView(const TextBox* text_box);
   double GetTime(double a_Ratio);
   double GetTimeIntervalMicro(double a_Ratio);
-  void Select(const TextBox* a_TextBox) { SelectRight(a_TextBox); }
-  void SelectLeft(const TextBox* a_TextBox);
-  void SelectRight(const TextBox* a_TextBox);
+  void Select(const TextBox* a_TextBox);
   const TextBox* FindPreviousFunctionCall(uint64_t function_address,
                                           TickType current_time) const;
   const TextBox* FindNextFunctionCall(uint64_t function_address,
