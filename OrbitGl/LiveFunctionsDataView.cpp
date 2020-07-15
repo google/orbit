@@ -240,8 +240,15 @@ void LiveFunctionsDataView::OnContextMenu(
   } else if (a_Action == MENU_ACTION_ITERATE) {
     for (int i : a_ItemIndices) {
       Function& function = GetFunction(i);
-      TextBox* box = FindNext(function, std::numeric_limits<TickType>::min());
-      live_functions_->AddIterator(&function, box);
+      if (function.GetStats().m_Count > 0) {
+        TextBox* box = FindNext(function, std::numeric_limits<TickType>::min());
+        // Since the count for this function is at least 1, we must find a
+        // TextBox. Maybe change into "if" and bail out?
+        CHECK(box != nullptr);
+        live_functions_->AddIterator(&function, box);
+      } else {
+        // TODO: Display error message to user?
+      }
     }
   } else {
     DataView::OnContextMenu(a_Action, a_MenuIndex, a_ItemIndices);
