@@ -67,10 +67,17 @@ class TimeGraph {
   double GetTime(double a_Ratio);
   double GetTimeIntervalMicro(double a_Ratio);
   void Select(const TextBox* a_TextBox);
-  const TextBox* FindPreviousFunctionCall(uint64_t function_address,
-                                          TickType current_time) const;
-  const TextBox* FindNextFunctionCall(uint64_t function_address,
-                                      TickType current_time) const;
+  enum class JumpScope {
+    kGlobal,
+    kSameThread,
+    kSameFunction,
+    kSameThreadSameFunction
+  };
+  enum class JumpDirection { kPrevious, kNext, kTop, kDown };
+  void JumpToNeighborBox(TextBox* from, JumpDirection jump_direction,
+                         JumpScope jump_scope);
+  const TextBox* FindPreviousFunctionCall(uint64_t function_address, TickType current_time) const;
+  const TextBox* FindNextFunctionCall(uint64_t function_address, TickType current_time) const;
   void SelectAndZoom(const TextBox* a_TextBox);
   double GetCaptureTimeSpanUs();
   double GetCurrentTimeSpanUs();
@@ -107,12 +114,10 @@ class TimeGraph {
   float GetVerticalMargin() const { return vertical_margin_; }
   void SetVerticalMargin(float margin) { vertical_margin_ = margin; }
 
-  void OnLeft();
-  void OnRight();
-  void OnShiftLeft();
-  void OnShiftRight();
-  void OnUp();
-  void OnDown();
+  const TextBox* FindPrevious(TextBox* from);
+  const TextBox* FindNext(TextBox* from);
+  const TextBox* FindTop(TextBox* from);
+  const TextBox* FindDown(TextBox* from);
 
   Color GetThreadColor(ThreadID tid) const;
 

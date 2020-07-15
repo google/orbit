@@ -489,23 +489,35 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
         break;
       case 18:  // Left
         if (a_Shift) {
-          time_graph_.OnShiftLeft();
+          time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
+                                        TimeGraph::JumpDirection::kPrevious,
+                                        TimeGraph::JumpScope::kSameFunction);
         } else {
-          time_graph_.OnLeft();
+          time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
+                                        TimeGraph::JumpDirection::kPrevious,
+                                        TimeGraph::JumpScope::kSameThread);
         }
         break;
       case 20:  // Right
         if (a_Shift) {
-          time_graph_.OnShiftRight();
+          time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
+                                        TimeGraph::JumpDirection::kNext,
+                                        TimeGraph::JumpScope::kSameFunction);
         } else {
-          time_graph_.OnRight();
+          time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
+                                        TimeGraph::JumpDirection::kNext,
+                                        TimeGraph::JumpScope::kSameThread);
         }
         break;
       case 19:  // Up
-        time_graph_.OnUp();
+        time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
+                                      TimeGraph::JumpDirection::kTop,
+                                      TimeGraph::JumpScope::kSameThread);
         break;
       case 21:  // Down
-        time_graph_.OnDown();
+        time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
+                                      TimeGraph::JumpDirection::kDown,
+                                      TimeGraph::JumpScope::kSameThread);
         break;
     }
   }

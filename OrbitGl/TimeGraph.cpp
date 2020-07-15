@@ -225,8 +225,8 @@ void TimeGraph::HorizontallyMoveIntoView(const TextBox* text_box,
     return;
   }
 
-  double start = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_Start);
-  double end = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_End);
+  double start = MicroSecondsFromTicks(capture_min_timestamp_, timer.m_Start);
+  double end = MicroSecondsFromTicks(capture_min_timestamp_, timer.m_End);
   double mid = start + ((end - start) / 2.0);
 
   // Mirror the final center position if we have to move left
@@ -792,111 +792,89 @@ void TimeGraph::SortTracks() {
   }
 }
 
-//----------------------------------------------------------------------------
-void TimeGraph::OnLeft() {
-  TextBox* selection = Capture::GSelectedTextBox;
-  if (selection) {
-    const Timer& timer = selection->GetTimer();
-    const TextBox* left = nullptr;
-    if (timer.m_Type == Timer::GPU_ACTIVITY) {
-      left = GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetLeft(selection);
-    } else {
-      left = GetOrCreateThreadTrack(timer.m_TID)->GetLeft(selection);
-    }
-    if (left) {
-      Select(left);
-    }
-  }
-  NeedsUpdate();
-}
-
-//----------------------------------------------------------------------------
-void TimeGraph::OnRight() {
-  TextBox* selection = Capture::GSelectedTextBox;
-  if (selection) {
-    const Timer& timer = selection->GetTimer();
-    const TextBox* right = nullptr;
-    if (timer.m_Type == Timer::GPU_ACTIVITY) {
-      right =
-          GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetRight(selection);
-    } else {
-      right = GetOrCreateThreadTrack(timer.m_TID)->GetRight(selection);
-    }
-    if (right) {
-      Select(right);
-    }
-  }
-  NeedsUpdate();
-}
-
 void TimeGraph::SelectAndZoom(const TextBox* text_box) {
   CHECK(text_box);
   Zoom(text_box);
   Select(text_box);
 }
 
-//----------------------------------------------------------------------------
-void TimeGraph::OnShiftLeft() {
-  TextBox* selection = Capture::GSelectedTextBox;
-  if (selection) {
-    const TextBox* left = FindPreviousFunctionCall(
-        selection->GetTimer().m_FunctionAddress, selection->GetTimer().m_End);
-    if (left) {
-      Select(left);
-      VerticallyScrollIntoView(left);
+void TimeGraph::JumpToNeighborBox(TextBox* from, JumpDirection jump_direction,
+                                  JumpScope jump_scope) {
+  const TextBox* goal = nullptr;
+  if (!from) {
+    return;
+  }
+  auto function_address = from->GetTimer().m_FunctionAddress;
+  auto current_time = from->GetTimer().m_End;
+  if (jump_direction == JumpDirection::kPrevious) {
+    if (jump_scope == JumpScope::kSameThread) {
+      goal = FindPrevious(from);
+    }
+    if (jump_scope == JumpScope::kSameFunction) {
+      goal = FindPreviousFunctionCall(function_address, current_time);
     }
   }
-  NeedsUpdate();
+  if (jump_direction == JumpDirection::kNext) {
+    if (jump_scope == JumpScope::kSameThread) {
+      goal = FindNext(from);
+    }
+    if (jump_scope == JumpScope::kSameFunction) {
+      goal = FindNextFunctionCall(function_address, current_time);
+    }
+  }
+  if (jump_direction == JumpDirection::kTop) {
+    goal = FindTop(from);
+  }
+  if (jump_direction == JumpDirection::kDown) {
+    goal = FindDown(from);
+  }
+  if (goal) {
+    Select(goal);
+  }
 }
 
-//----------------------------------------------------------------------------
-void TimeGraph::OnShiftRight() {
-  TextBox* selection = Capture::GSelectedTextBox;
-  if (selection) {
-    const TextBox* right = FindNextFunctionCall(
-        selection->GetTimer().m_FunctionAddress, selection->GetTimer().m_End);
-    if (right) {
-      Select(right);
-      VerticallyScrollIntoView(right);
-    }
+const TextBox* TimeGraph::FindPrevious(TextBox* from) {
+  CHECK(from);
+  const Timer& timer = from->GetTimer();
+  if (timer.m_Type == Timer::GPU_ACTIVITY) {
+    return GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetLeft(from);
+  } else {
+    return GetOrCreateThreadTrack(timer.m_TID)->GetLeft(from);
   }
-  NeedsUpdate();
+  return nullptr;
 }
 
-//----------------------------------------------------------------------------
-void TimeGraph::OnUp() {
-  TextBox* selection = Capture::GSelectedTextBox;
-  if (selection) {
-    const Timer& timer = selection->GetTimer();
-    const TextBox* up = nullptr;
-    if (timer.m_Type == Timer::GPU_ACTIVITY) {
-      up = GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetUp(selection);
-    } else {
-      up = GetOrCreateThreadTrack(timer.m_TID)->GetUp(selection);
-    }
-    if (up) {
-      Select(up);
-    }
+const TextBox* TimeGraph::FindNext(TextBox* from) {
+  CHECK(from);
+  const Timer& timer = from->GetTimer();
+  if (timer.m_Type == Timer::GPU_ACTIVITY) {
+    return GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetRight(from);
+  } else {
+    return GetOrCreateThreadTrack(timer.m_TID)->GetRight(from);
   }
-  NeedsUpdate();
+  return nullptr;
 }
 
-//----------------------------------------------------------------------------
-void TimeGraph::OnDown() {
-  TextBox* selection = Capture::GSelectedTextBox;
-  if (selection) {
-    const Timer& timer = selection->GetTimer();
-    const TextBox* down = nullptr;
-    if (timer.m_Type == Timer::GPU_ACTIVITY) {
-      down = GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetDown(selection);
-    } else {
-      down = GetOrCreateThreadTrack(timer.m_TID)->GetDown(selection);
-    }
-    if (down) {
-      Select(down);
-    }
+const TextBox* TimeGraph::FindTop(TextBox* from) {
+  CHECK(from);
+  const Timer& timer = from->GetTimer();
+  if (timer.m_Type == Timer::GPU_ACTIVITY) {
+    return GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetUp(from);
+  } else {
+    return GetOrCreateThreadTrack(timer.m_TID)->GetUp(from);
   }
-  NeedsUpdate();
+  return nullptr;
+}
+
+const TextBox* TimeGraph::FindDown(TextBox* from) {
+  CHECK(from);
+  const Timer& timer = from->GetTimer();
+  if (timer.m_Type == Timer::GPU_ACTIVITY) {
+    return GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetDown(from);
+  } else {
+    return GetOrCreateThreadTrack(timer.m_TID)->GetDown(from);
+  }
+  return nullptr;
 }
 
 //----------------------------------------------------------------------------
