@@ -128,12 +128,15 @@ void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
-  Capture::GThreadNames.insert_or_assign(thread_id, std::move(thread_name));
+  (*Capture::GData.mutable_thread_names())[thread_id] = std::move(thread_name);
 }
 
 void OrbitApp::OnAddressInfo(AddressInfo address_info) {
   uint64_t address = address_info.absolute_address();
-  Capture::GAddressInfos.emplace(address, std::move(address_info));
+  if (!Capture::GData.address_infos().contains(address)) {
+    (*Capture::GData.mutable_address_infos())[address] =
+        std::move(address_info);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -461,7 +464,7 @@ std::string OrbitApp::GetCaptureFileName() {
   time_t timestamp =
       std::chrono::system_clock::to_time_t(Capture::GCaptureTimePoint);
   std::string result;
-  result.append(Path::StripExtension(Capture::GProcessName));
+  result.append(Path::StripExtension(Capture::GData.process_name()));
   result.append("_");
   result.append(OrbitUtils::FormatTime(timestamp));
   result.append(".orbit");
@@ -597,7 +600,7 @@ bool OrbitApp::StartCapture() {
     return false;
   }
 
-  int32_t pid = Capture::GProcessId;
+  int32_t pid = Capture::GData.process_id();
   std::vector<std::shared_ptr<Function>> selected_functions =
       Capture::GSelectedFunctions;
   thread_pool_->Schedule([this, pid, selected_functions] {

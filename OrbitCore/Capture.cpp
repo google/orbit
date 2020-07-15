@@ -44,19 +44,14 @@ std::string Capture::GFunctionFilter;
 std::vector<std::shared_ptr<Function>> Capture::GSelectedFunctions;
 std::map<uint64_t, Function*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, Function*> Capture::GVisibleFunctionsMap;
-std::unordered_map<uint64_t, uint64_t> Capture::GFunctionCountMap;
 std::shared_ptr<Callstack> Capture::GSelectedCallstack;
-std::unordered_map<uint64_t, std::shared_ptr<Callstack>> Capture::GCallstacks;
-int32_t Capture::GProcessId = -1;
-std::string Capture::GProcessName;
-std::unordered_map<int32_t, std::string> Capture::GThreadNames;
-std::unordered_map<uint64_t, AddressInfo> Capture::GAddressInfos;
-std::unordered_map<uint64_t, std::string> Capture::GAddressToFunctionName;
 Mutex Capture::GCallstackMutex;
 std::unordered_map<uint64_t, std::string> Capture::GZoneNames;
 TextBox* Capture::GSelectedTextBox;
 ThreadID Capture::GSelectedThreadId;
 std::chrono::system_clock::time_point Capture::GCaptureTimePoint;
+
+CaptureData Capture::GData;
 
 std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
 std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
@@ -77,7 +72,7 @@ void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
     GTargetProcess = a_Process;
     GSamplingProfiler = std::make_shared<SamplingProfiler>(a_Process);
     GSelectedFunctionsMap.clear();
-    GFunctionCountMap.clear();
+    GData.clear_function_count_map();
   }
 }
 
@@ -91,8 +86,8 @@ ErrorMessageOr<void> Capture::StartCapture() {
   ClearCaptureData();
 
   GCaptureTimePoint = std::chrono::system_clock::now();
-  GProcessId = GTargetProcess->GetID();
-  GProcessName = GTargetProcess->GetName();
+  GData.set_process_id(GTargetProcess->GetID());
+  GData.set_process_name(GTargetProcess->GetName());
 
   GInjected = true;
 
@@ -127,13 +122,13 @@ void Capture::FinalizeCapture() {
 
 //-----------------------------------------------------------------------------
 void Capture::ClearCaptureData() {
-  GFunctionCountMap.clear();
-  GCallstacks.clear();
-  GProcessId = -1;
-  GProcessName = "";
-  GThreadNames.clear();
-  GAddressInfos.clear();
-  GAddressToFunctionName.clear();
+  GData.clear_function_count_map();
+  GData.clear_callstacks();
+  GData.set_process_id(-1);
+  GData.clear_process_name();
+  GData.clear_thread_names();
+  GData.clear_address_infos();
+  GData.clear_address_to_function_name();
   GZoneNames.clear();
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
@@ -152,7 +147,7 @@ void Capture::PreFunctionHooks() {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
     GSelectedFunctionsMap[address] = func.get();
     func->clear_stats();
-    GFunctionCountMap[address] = 0;
+    (*GData.mutable_function_count_map())[address] = 0;
   }
 
   GVisibleFunctionsMap = GSelectedFunctionsMap;
@@ -238,19 +233,20 @@ void Capture::RegisterZoneName(uint64_t a_ID, const char* a_Name) {
 }
 
 //-----------------------------------------------------------------------------
-void Capture::AddCallstack(Callstack& a_CallStack) {
+void Capture::AddCallstack(Callstack a_CallStack) {
   ScopeLock lock(GCallstackMutex);
   CallstackID hash = SamplingUtils::InitAndGetCallstackHash(&a_CallStack);
-  Capture::GCallstacks[hash] = std::make_shared<Callstack>(a_CallStack);
+  (*Capture::GData.mutable_callstacks())[hash] = std::move(a_CallStack);
 }
 
 //-----------------------------------------------------------------------------
 std::shared_ptr<Callstack> Capture::GetCallstack(CallstackID a_ID) {
   ScopeLock lock(GCallstackMutex);
 
-  auto it = Capture::GCallstacks.find(a_ID);
-  if (it != Capture::GCallstacks.end()) {
-    return it->second;
+  auto callstacks = Capture::GData.mutable_callstacks();
+  auto it = callstacks->find(a_ID);
+  if (it != callstacks->end()) {
+    return std::shared_ptr<Callstack>(&it->second);
   }
 
   return nullptr;
@@ -258,8 +254,9 @@ std::shared_ptr<Callstack> Capture::GetCallstack(CallstackID a_ID) {
 
 //-----------------------------------------------------------------------------
 AddressInfo* Capture::GetAddressInfo(uint64_t address) {
-  auto address_info_it = GAddressInfos.find(address);
-  if (address_info_it == GAddressInfos.end()) {
+  auto address_infos = GData.mutable_address_infos();
+  auto address_info_it = address_infos->find(address);
+  if (address_info_it == address_infos->end()) {
     return nullptr;
   }
   return &address_info_it->second;

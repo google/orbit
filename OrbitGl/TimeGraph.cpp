@@ -299,7 +299,8 @@ void TimeGraph::ProcessTimer(const TimerData& timer_data) {
     Function* func = Capture::GTargetProcess->GetFunctionFromAddress(
         timer_data.function_address());
     if (func != nullptr) {
-      ++Capture::GFunctionCountMap[timer_data.function_address()];
+      (*Capture::GData
+            .mutable_function_count_map())[timer_data.function_address()] += 1;
       FunctionUtils::UpdateStats(func, timer_data);
     }
   }
@@ -650,11 +651,12 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, bool a_Picking) {
       int32_t tid = thread_track->GetThreadId();
       if (tid == 0) {
         // This is the process_track_.
-        std::string process_name = Capture::GProcessName;
+        std::string process_name = Capture::GData.process_name();
         thread_track->SetName(process_name);
         thread_track->SetLabel(process_name + " (all threads)");
       } else {
-        const std::string& thread_name = Capture::GThreadNames[tid];
+        const std::string& thread_name =
+            (*Capture::GData.mutable_thread_names())[tid];
         track->SetName(thread_name);
         std::string track_label = absl::StrFormat("%s [%u]", thread_name, tid);
         track->SetLabel(track_label);

@@ -372,8 +372,9 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
           [function_address],
       address);
 
-  Capture::GAddressToFunctionName[address] = function_name;
-  Capture::GAddressToFunctionName[function_address] = function_name;
+  (*Capture::GData.mutable_address_to_function_name())[address] = function_name;
+  (*Capture::GData.mutable_address_to_function_name())[function_address] =
+      function_name;
 }
 
 //-----------------------------------------------------------------------------
@@ -398,7 +399,8 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
           100.f * numOccurences / thread_sample_data.num_samples();
 
       SampledFunction* function = thread_sample_data.add_sample_report();
-      function->set_name(Capture::GAddressToFunctionName[address]);
+      function->set_name(
+          (*Capture::GData.mutable_address_to_function_name())[address]);
       function->set_inclusive(inclusive_percent);
       function->set_exclusive(0.f);
       auto it = thread_sample_data.exclusive_count().find(address);

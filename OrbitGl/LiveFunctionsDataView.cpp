@@ -298,14 +298,14 @@ void LiveFunctionsDataView::DoFilter() {
 
 //-----------------------------------------------------------------------------
 void LiveFunctionsDataView::OnDataChanged() {
-  size_t numFunctions = Capture::GFunctionCountMap.size();
+  size_t numFunctions = Capture::GData.function_count_map_size();
   m_Indices.resize(numFunctions);
   for (size_t i = 0; i < numFunctions; ++i) {
     m_Indices[i] = i;
   }
 
   m_Functions.clear();
-  for (auto& pair : Capture::GFunctionCountMap) {
+  for (auto& pair : Capture::GData.function_count_map()) {
     const ULONG64& address = pair.first;
     Function* func = Capture::GSelectedFunctionsMap[address];
     m_Functions.push_back(func);

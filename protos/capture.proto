@@ -121,6 +121,16 @@ message CaptureEvent {
   }
 }
 
+message CaptureData {
+  map<uint64, uint64> function_count_map = 1;
+  map<uint64, Callstack> callstacks = 2;
+  int32 process_id = 3;
+  string process_name = 4;
+  map<int32, string> thread_names = 5;
+  map<uint64, AddressInfo> address_infos = 6;
+  map<uint64, string> address_to_function_name = 7;
+}
+
 message FunctionStats {
   uint64 address = 1;
   uint64 count = 2;
