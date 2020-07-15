@@ -55,7 +55,7 @@ void TextRenderer::Init() {
   m_Buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
   m_Font = texture_font_new_from_file(m_Atlas, fsize, fontFileName.c_str());
   current_font_size_ = static_cast<int>(fsize);
-  for (int i = 10; i <= 100; i += 10) {
+  for (int i = 10; i <= 100; i += 1) {
     m_FontsBySize[i] =
         texture_font_new_from_file(m_Atlas, i, fontFileName.c_str());
   }

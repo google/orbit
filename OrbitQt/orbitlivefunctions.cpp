@@ -41,11 +41,11 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
 
 //-----------------------------------------------------------------------------
 OrbitLiveFunctions::~OrbitLiveFunctions() {
-  delete ui;
   for (auto it_ui : iterator_uis) {
     delete it_ui.second;
   }
   delete all_events_iterator_;
+  delete ui;
 }
 
 //-----------------------------------------------------------------------------
