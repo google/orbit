@@ -19,7 +19,9 @@ void LiveFunctions::Move() {
   if (!current_textboxes_.empty()) {
     auto min_max = ComputeMinMaxTime(current_textboxes_);
     GCurrentTimeGraph->Zoom(min_max.first, min_max.second);
-    GCurrentTimeGraph->Select(current_textboxes_[id_to_select_]);
+    if (current_textboxes_.find(id_to_select_) != current_textboxes_.end()) {
+      GCurrentTimeGraph->Select(current_textboxes_[id_to_select_]);
+    }
   } else {
     GCurrentTimeGraph->ZoomAll();
   }
