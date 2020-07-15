@@ -627,8 +627,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
     text_box.SetTextY(pos[1] + world_height / 2);
     int current_font_size = canvas->GetTextRenderer().GetFontSize();
     canvas->GetTextRenderer().SetFontSize(20);
-    text_box.Draw(canvas->GetBatcher(), canvas->GetTextRenderer(), z, true,
-                  true);
+    text_box.Draw(canvas->GetBatcher(), canvas->GetTextRenderer(),
+      std::numeric_limits<float>::lowest(), true, true);
     canvas->GetTextRenderer().SetFontSize(current_font_size);
   }
 }
