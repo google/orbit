@@ -52,4 +52,16 @@ void TaskRenamePerfEvent::Accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 
+void AmdgpuCsIoctlPerfEvent::Accept(PerfEventVisitor* visitor) {
+  visitor->visit(this);
+}
+
+void AmdgpuSchedRunJobPerfEvent::Accept(PerfEventVisitor* visitor) {
+  visitor->visit(this);
+}
+
+void DmaFenceSignaledPerfEvent::Accept(PerfEventVisitor* visitor) {
+  visitor->visit(this);
+}
+
 }  // namespace LinuxTracing
