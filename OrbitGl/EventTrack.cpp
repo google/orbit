@@ -89,7 +89,8 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   const Color kGreenSelection(0, 255, 0, 255);
   Color selectedColor[2];
   Fill(selectedColor, kGreenSelection);
-  for (CallstackEvent& event : selected_callstack_events_) {
+  for (const CallstackEvent& event :
+       time_graph_->GetSelectedCallstackEvents(m_ThreadId)) {
     Vec2 pos(time_graph_->GetWorldFromTick(event.m_Time), m_Pos[1]);
     batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection,
                              PickingID::LINE);
@@ -137,8 +138,7 @@ void EventTrack::SelectEvents() {
   Vec2& from = m_MousePos[0];
   Vec2& to = m_MousePos[1];
 
-  selected_callstack_events_ =
-      time_graph_->SelectEvents(from[0], to[0], m_ThreadId);
+  time_graph_->SelectEvents(from[0], to[0], m_ThreadId);
 }
 
 //-----------------------------------------------------------------------------

@@ -53,7 +53,6 @@ class ThreadTrack : public Track {
   std::vector<std::shared_ptr<TimerChain>> GetAllChains() override;
 
   void SetEventTrackColor(Color color);
-  void ClearSelectedEvents() { event_track_->ClearSelectedEvents(); }
   bool IsEmpty() const;
   virtual bool HasEventTrack() const { return true; }
 
