@@ -121,3 +121,8 @@ void OrbitLiveFunctions::AddIterator(size_t id, Function* function) {
 QLineEdit* OrbitLiveFunctions::GetFilterLineEdit() {
   return ui->FilterLineEdit;
 }
+
+//-----------------------------------------------------------------------------
+void OrbitLiveFunctions::on_FilterLineEdit_textEdited(const QString& a_Text) {
+  ui->treeView->OnFilter(a_Text);
+}
