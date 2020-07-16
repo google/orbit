@@ -5,15 +5,14 @@
 #ifndef ORBIT_LIVE_FUNCTIONS_
 #define ORBIT_LIVE_FUNCTIONS_
 
-#include <QWidget>
 #include <QLineEdit>
+#include <QWidget>
 
-#include "absl/container/flat_hash_map.h"
-
-#include "types.h"
 #include "LiveFunctions.h"
 #include "OrbitEventIterator.h"
 #include "OrbitFunction.h"
+#include "absl/container/flat_hash_map.h"
+#include "types.h"
 
 namespace Ui {
 class OrbitLiveFunctions;
@@ -26,13 +25,16 @@ class OrbitLiveFunctions : public QWidget {
   explicit OrbitLiveFunctions(QWidget* parent = nullptr);
   ~OrbitLiveFunctions() override;
 
-  void Initialize(SelectionType selection_type,
-                  FontType font_type, bool is_main_instance = true);
+  void Initialize(SelectionType selection_type, FontType font_type,
+                  bool is_main_instance = true);
   void Refresh();
   void OnDataChanged();
   void SetFilter(const QString& a_Filter);
   void AddIterator(uint64_t id, Function* function);
   QLineEdit* GetFilterLineEdit();
+
+ private slots:
+  void on_FilterLineEdit_textEdited(const QString& a_Text);
 
  private:
   Ui::OrbitLiveFunctions* ui;
