@@ -173,6 +173,10 @@ message Function {
   FunctionStats stats = 12;
 }
 
+message FunctionList {
+  repeated Function data = 1;
+}
+
 message SampledFunction {
   string name = 1;
   string module = 2;

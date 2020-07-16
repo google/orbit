@@ -23,8 +23,7 @@ class CaptureSerializer {
   class TimeGraph* time_graph_;
 
  private:
-  template <class T>
-  void SaveImpl(T& archive);
+  void SaveImpl(google::protobuf::io::CodedOutputStream* output);
 
   CaptureHeader header;
 
