@@ -32,16 +32,6 @@ struct SampledFunction {
 };
 
 //-----------------------------------------------------------------------------
-struct LineInfo {
-  LineInfo() = default;
-
-  std::string m_File;
-  uint32_t m_Line = 0;
-  uint64_t m_Address = 0;
-  uint64_t m_FileNameHash = 0;
-};
-
-//-----------------------------------------------------------------------------
 struct ThreadSampleData {
   ThreadSampleData() { m_ThreadUsage.push_back(0); }
   std::unordered_map<CallstackID, unsigned int> m_CallstackCount;
