@@ -5,6 +5,7 @@
 #include "orbitmainwindow.h"
 
 #include <QBuffer>
+#include <QCheckBox>
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QDesktopServices>
@@ -14,6 +15,7 @@
 #include <QMouseEvent>
 #include <QPointer>
 #include <QProgressDialog>
+#include <QSettings>
 #include <QTimer>
 #include <QToolTip>
 #include <utility>
@@ -705,7 +707,32 @@ void OrbitMainWindow::on_actionHelp_triggered() { GOrbitApp->ToggleDrawHelp(); }
 
 void OrbitMainWindow::on_actionFeedback_triggered() { ShowFeedbackDialog(); }
 
+void OrbitMainWindow::ShowCaptureOnSaveWarningIfNeeded() {
+  QSettings settings("The Orbit Authors", "Orbit Profiler");
+  const QString skip_capture_warning("SkipCaptureVersionWarning");
+  if (!settings.value(skip_capture_warning, false).toBool()) {
+    QMessageBox message_box;
+    message_box.setText(
+        "Note: Captures saved with this version of Orbit might be incompatible "
+        "with future versions. Please check release notes for more "
+        "information");
+    message_box.addButton(QMessageBox::Ok);
+    QCheckBox check_box("Don't show this message again.");
+    message_box.setCheckBox(&check_box);
+
+    QObject::connect(&check_box, &QCheckBox::stateChanged,
+                     [&settings, &skip_capture_warning](int state) {
+                       settings.setValue(skip_capture_warning,
+                                         static_cast<bool>(state));
+                     });
+
+    message_box.exec();
+  }
+}
+
 void OrbitMainWindow::on_actionSave_Capture_triggered() {
+  ShowCaptureOnSaveWarningIfNeeded();
+
   QString file = QFileDialog::getSaveFileName(
       this, "Save capture...",
       Path::JoinPath({Path::GetCapturePath(), GOrbitApp->GetCaptureFileName()})
@@ -743,10 +770,13 @@ outcome::result<void> OrbitMainWindow::OpenCapture(
 
   if (result.has_error()) {
     SetTitle({});
-    QMessageBox::critical(this, "Error loading capture",
-                          QString::fromStdString(absl::StrFormat(
-                              "Could not load capture from \"%s\":\n%s.",
-                              filepath, result.error().message())));
+    QMessageBox::critical(
+        this, "Error loading capture",
+        QString::fromStdString(absl::StrFormat(
+            "Could not load capture from \"%s\":\n%s.\nNote: If the capture "
+            "was taken in a previous Orbit version, it could be incompatible. "
+            "Please check release notes for more information.",
+            filepath, result.error().message())));
     return std::errc::no_such_file_or_directory;
   }
   SetTitle(QString::fromStdString(filepath));
