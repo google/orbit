@@ -5,6 +5,8 @@
 #ifndef ORBIT_CORE_SAMPLING_PROFILER_H_
 #define ORBIT_CORE_SAMPLING_PROFILER_H_
 
+#include <utility>
+
 #include "BlockChain.h"
 #include "Callstack.h"
 #include "Capture.h"
@@ -66,14 +68,11 @@ struct SortedCallstackReport {
 //-----------------------------------------------------------------------------
 class SamplingProfiler {
  public:
-  explicit SamplingProfiler(const std::shared_ptr<Process>& a_Process);
-  SamplingProfiler();
+  explicit SamplingProfiler(std::shared_ptr<Process> a_Process)
+      : m_Process{std::move(a_Process)} {}
+  SamplingProfiler() : SamplingProfiler{std::make_shared<Process>()} {}
 
-  void StartCapture();
-  void StopCapture();
   int GetNumSamples() const { return m_NumSamples; }
-  float GetSampleTime();
-  float GetSampleTimeTotal() const { return m_SampleTimeSeconds; }
 
   void AddCallStack(CallStack& a_CallStack);
   void AddHashedCallStack(CallstackEvent& a_CallStack);
@@ -95,15 +94,6 @@ class SamplingProfiler {
   std::shared_ptr<SortedCallstackReport> GetSortedCallstacksFromAddress(
       uint64_t a_Addr, ThreadID a_TID);
 
-  enum SamplingState {
-    Idle,
-    Sampling,
-    PendingStop,
-    Processing,
-    DoneProcessing
-  };
-  SamplingState GetState() const { return m_State; }
-  void SetState(SamplingState a_State) { m_State = a_State; }
   const std::vector<ThreadSampleData*>& GetThreadSampleData() const {
     return m_SortedThreadSampleData;
   }
@@ -133,9 +123,6 @@ class SamplingProfiler {
 
  protected:
   std::shared_ptr<Process> m_Process;
-  std::atomic<SamplingState> m_State;
-  Timer m_SamplingTimer;
-  float m_SampleTimeSeconds = FLT_MAX;
   bool m_GenerateSummary = true;
   Mutex m_Mutex;
   int m_NumSamples = 0;
