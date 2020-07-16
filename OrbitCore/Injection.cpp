@@ -196,7 +196,7 @@ HANDLE Injection::GetTargetProcessHandle(const std::string& a_Target,
 
 #ifndef _WIN64
       // If the process is 64 bit, skip it.
-      if (ProcessUtils::Is64Bit(process_handle)) {
+      if (BOOL is_64_bit = false; !IsWow64Process(process_handle, &is_64_bit) || !is_64_bit) {
         CloseHandle(process_handle);
         continue;
       }
