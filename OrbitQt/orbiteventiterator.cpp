@@ -72,8 +72,9 @@ void OrbitEventIterator::DecrementIndex() {
 
 //-----------------------------------------------------------------------------
 void OrbitEventIterator::UpdateCountLabel() {
+  // Indices start at 0, so we display index + 1 in the UI.
   ui->CountLabel->setText(QString::fromStdString(
-      absl::StrFormat("%d / %d", current_index_, max_count_)));
+      absl::StrFormat("%d / %d", current_index_ + 1, max_count_)));
 }
 
 //-----------------------------------------------------------------------------
