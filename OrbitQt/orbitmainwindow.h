@@ -88,6 +88,8 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionServiceNullPointerDereference_triggered();
   void on_actionServiceStackOverflow_triggered();
 
+  void ShowCaptureOnSaveWarningIfNeeded();
+
  private:
   void StartMainTimer();
   void SetupCaptureToolbar();
