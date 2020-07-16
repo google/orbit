@@ -44,7 +44,6 @@ void HomeWindow::RenderUI() {
 
   Orbit_ImGui_NewFrame(this);
 
-  RenderSamplingUI();
   RenderProcessUI();
 
   bool show_test_window = true;

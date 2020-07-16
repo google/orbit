@@ -93,9 +93,8 @@ class GlCanvas : public GlPanel {
 
   virtual void Draw() {}
   virtual void DrawScreenSpace() {}
-  virtual void RenderUI();
+  virtual void RenderUI() {}
   virtual void RenderText() {}
-  void RenderSamplingUI();
 
   ImGuiContext* GetImGuiContext() { return m_ImGuiContext; }
   Batcher* GetBatcher() { return &ui_batcher_; }
