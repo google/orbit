@@ -43,6 +43,11 @@ void OrbitDataViewPanel::Initialize(DataView* data_view,
 OrbitTreeView* OrbitDataViewPanel::GetTreeView() { return ui->treeView; }
 
 //-----------------------------------------------------------------------------
+QLineEdit* OrbitDataViewPanel::GetFilterLineEdit() {
+  return ui->FilterLineEdit;
+}
+
+//-----------------------------------------------------------------------------
 void OrbitDataViewPanel::Link(OrbitDataViewPanel* a_Panel) {
   ui->treeView->Link(a_Panel->ui->treeView);
 }

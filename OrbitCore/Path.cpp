@@ -234,6 +234,11 @@ std::string Path::GetLogFilePath() {
   return Path::JoinPath({logsDir, "Orbit.log"});
 }
 
+std::string Path::GetIconsPath() {
+  static std::string icons_path = JoinPath({GetExecutablePath(), "icons"});
+  return icons_path;
+}
+
 #ifdef __linux__
 std::string Path::GetHome() {
   std::string home = GetEnvVar("HOME") + "/";

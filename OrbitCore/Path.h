@@ -26,6 +26,7 @@ class Path {
   static std::string GetDumpPath();
   static std::string GetAppDataPath();
   static std::string GetLogFilePath();
+  static std::string GetIconsPath();
   static void Dump();
 
 #ifdef __linux__

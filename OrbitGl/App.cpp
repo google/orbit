@@ -466,6 +466,12 @@ std::string OrbitApp::GetCaptureFileName() {
   return result;
 }
 
+std::string OrbitApp::GetCaptureTime() {
+  double time =
+      GCurrentTimeGraph ? GCurrentTimeGraph->GetSessionTimeSpanUs() : 0;
+  return GetPrettyTime(time * 0.001);
+}
+
 //-----------------------------------------------------------------------------
 std::string OrbitApp::GetSaveFile(const std::string& extension) {
   if (!save_file_callback_) {
@@ -616,6 +622,18 @@ void OrbitApp::StopCapture() {
     capture_stop_requested_callback_();
   }
   FireRefreshCallbacks();
+}
+
+void OrbitApp::ClearCapture() {
+  Capture::ClearCaptureData();
+  Capture::GClearCaptureDataFunc();
+  GCurrentTimeGraph->Clear();
+}
+
+void OrbitApp::ToggleDrawHelp() {
+  if (m_CaptureWindow) {
+    m_CaptureWindow->ToggleDrawHelp();
+  }
 }
 
 void OrbitApp::OnCaptureStopped() {
@@ -974,7 +992,11 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 //-----------------------------------------------------------------------------
 void OrbitApp::FilterFunctions(const std::string& filter) {
   Capture::GFunctionFilter = filter;
-  m_LiveFunctionsDataView->SetUiFilterString(filter);
+}
+
+//-----------------------------------------------------------------------------
+void OrbitApp::FilterTracks(const std::string& filter) {
+  GCurrentTimeGraph->SetThreadFilter(filter);
 }
 
 //-----------------------------------------------------------------------------

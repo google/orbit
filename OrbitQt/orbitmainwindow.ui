@@ -87,11 +87,26 @@
         <attribute name="title">
          <string>capture</string>
         </attribute>
-        <layout class="QGridLayout" name="gridLayout_5">
-         <item row="0" column="0">
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QToolBar" name="capture_toolbar">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="OrbitGLWidget" name="CaptureGLWidget"/>
          </item>
         </layout>
+        <zorder>CaptureGLWidget</zorder>
+        <zorder>capture_toolbar</zorder>
        </widget>
        <widget class="QWidget" name="OutputTab">
         <attribute name="title">
@@ -290,14 +305,57 @@
     <string>Open Preset</string>
    </property>
   </action>
-  <action name="actionStart_Captue">
+  <action name="actionStart_Capture">
    <property name="text">
-    <string>Start Captue</string>
+    <string>Start Capture</string>
+   </property>
+   <property name="toolTip">
+    <string>Start Capture</string>
    </property>
   </action>
   <action name="actionStop_Capture">
    <property name="text">
     <string>Stop Capture</string>
+   </property>
+  </action>
+  <action name="actionClear_Capture">
+   <property name="text">
+    <string>Clear Capture</string>
+   </property>
+   <property name="toolTip">
+    <string>Clear Capture</string>
+   </property>
+  </action>
+  <action name="actionFilter_Tracks">
+   <property name="text">
+    <string>Filter Tracks</string>
+   </property>
+   <property name="toolTip">
+    <string>Filter Tracks</string>
+   </property>
+  </action>
+  <action name="actionFilter_Functions">
+   <property name="text">
+    <string>Search</string>
+   </property>
+   <property name="toolTip">
+    <string>Search</string>
+   </property>
+  </action>
+  <action name="actionFeedback">
+   <property name="text">
+    <string>Feedback</string>
+   </property>
+   <property name="toolTip">
+    <string>Feedback</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Help</string>
+   </property>
+   <property name="toolTip">
+    <string>Help</string>
    </property>
   </action>
   <action name="actionQuit">
