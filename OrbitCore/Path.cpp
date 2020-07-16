@@ -17,6 +17,8 @@
 #else
 #include <dirent.h>
 #include <sys/stat.h>
+
+#include "LinuxUtils.h"
 #endif
 
 std::string Path::base_path_;
@@ -25,6 +27,8 @@ bool Path::is_packaged_;
 void Path::Init() { GetBasePath(); }
 
 std::string Path::GetExecutableName() {
+  // TODO(161419404) This function should probably be called GetExecutablePath
+  // or GetExecutableFullPath
 #ifdef _WIN32
   WCHAR cwBuffer[2048] = {0};
   LPWSTR pszBuffer = cwBuffer;
@@ -42,14 +46,19 @@ std::string Path::GetExecutableName() {
   std::replace(exeFullName.begin(), exeFullName.end(), '\\', '/');
   return ws2s(exeFullName);
 #else
-  char result[PATH_MAX];
-  ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-  std::string fullPath = std::string(result, (count > 0) ? count : 0);
-  return fullPath;
+  const auto path_result = LinuxUtils::GetExecutablePath(getpid());
+  if (path_result) {
+    return path_result.value();
+  } else {
+    // TODO (161419404) implement error handling
+    return "";
+  }
 #endif
 }
 
 std::string Path::GetExecutablePath() {
+  // TODO(161419404) This function should probably be named
+  // GetExecutableDirectory
   std::string fullPath = GetExecutableName();
   std::string path = fullPath.substr(0, fullPath.find_last_of("/")) + "/";
   return path;
