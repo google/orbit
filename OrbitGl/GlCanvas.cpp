@@ -488,45 +488,6 @@ void GlCanvas::Resize(int a_Width, int a_Height) {
 }
 
 //-----------------------------------------------------------------------------
-void GlCanvas::RenderUI() {
-  if (!m_DrawUI) return;
-
-  ImGui::PushFont(GOrbitImguiFont);
-
-  ScopeImguiContext state(m_ImGuiContext);
-  Orbit_ImGui_NewFrame(this);
-  RenderSamplingUI();
-  glViewport(0, 0, getWidth(), getHeight());
-  ImGui::Render();
-
-  ImGui::PopFont();
-}
-
-//-----------------------------------------------------------------------------
-void GlCanvas::RenderSamplingUI() {
-  if (!Capture::GIsSampling) return;
-
-  ImGui::SetNextWindowSize(ImVec2(500, 100), ImGuiCond_FirstUseEver);
-  bool opened = true;
-  ImGui::Begin("Sampling target application", &opened);
-
-  //// Typically we would use ImVec2(-1.0f,0.0f) to use all available width, or
-  /// ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses
-  /// ItemWidth.
-  // ImGui::ProgressBar(progress, ImVec2(-1.0f, 0.0f));
-  ////ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-  // ImGui::Text("Progress Bar");
-
-  float curTime = Capture::GSamplingProfiler->GetSampleTime();
-  float totTime = Capture::GSamplingProfiler->GetSampleTimeTotal();
-  std::string prog = absl::StrFormat("%f/%f", curTime, totTime);
-  ImGui::ProgressBar(std::min(curTime / totTime, 1.f), ImVec2(0.f, 0.f),
-                     prog.c_str());
-
-  ImGui::End();
-}
-
-//-----------------------------------------------------------------------------
 void GlCanvas::UpdateSceneBox() {
   Vec2 pos;
   pos[0] = m_WorldTopLeftX;
