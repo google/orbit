@@ -143,16 +143,6 @@
          </item>
         </layout>
        </widget>
-       <!-- <widget class="QWidget" name="LiveTab">
-        <attribute name="title">
-         <string>live</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_15">
-         <item row="0" column="0">
-          <widget class="OrbitDataViewPanel" name="LiveFunctionsList"/>
-         </item>
-        </layout>
-       </widget> -->
        <widget class="QWidget" name="CallStackTab">
         <attribute name="title">
          <string>callstack</string>
