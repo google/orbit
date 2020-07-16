@@ -2,10 +2,11 @@
 
 #include <utility>
 
+#include "FunctionUtils.h"
 #include "TimeGraph.h"
 
 std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
-    const absl::flat_hash_map<uint64_t, TextBox*>& text_boxes) {
+    const absl::flat_hash_map<uint64_t, const TextBox*>& text_boxes) {
   uint64_t min_time = std::numeric_limits<uint64_t>::max();
   uint64_t max_time = std::numeric_limits<uint64_t>::min();
   for (auto& text_box : text_boxes) {
@@ -31,14 +32,16 @@ void LiveFunctions::Move() {
 }
 
 bool LiveFunctions::OnAllNextButton() {
-  absl::flat_hash_map<uint64_t, TextBox*> next_boxes;
+  absl::flat_hash_map<uint64_t, const TextBox*> next_boxes;
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
   for (auto it : function_iterators_) {
     Function* function = it.second;
-    TextBox* current_box = current_textboxes_.find(it.first)->second;
-    TextBox* box = live_functions_data_view_.FindNext(
-        *function, current_box->GetTimer().m_End);
+    auto function_address =
+        FunctionUtils::GetAbsoluteAddress(*function);
+    const TextBox* current_box = current_textboxes_.find(it.first)->second;
+    const TextBox* box = GCurrentTimeGraph->FindNextFunctionCall(
+        function_address, current_box->GetTimer().m_End);
     if (box == nullptr) {
       return false;
     }
@@ -57,14 +60,16 @@ bool LiveFunctions::OnAllNextButton() {
 }
 
 bool LiveFunctions::OnAllPreviousButton() {
-  absl::flat_hash_map<uint64_t, TextBox*> next_boxes;
+  absl::flat_hash_map<uint64_t, const TextBox*> next_boxes;
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
   for (auto it : function_iterators_) {
     Function* function = it.second;
-    TextBox* current_box = current_textboxes_.find(it.first)->second;
-    TextBox* box = live_functions_data_view_.FindPrevious(
-        *function, current_box->GetTimer().m_End);
+    auto function_address =
+        FunctionUtils::GetAbsoluteAddress(*function);
+    const TextBox* current_box = current_textboxes_.find(it.first)->second;
+    const TextBox* box = GCurrentTimeGraph->FindPreviousFunctionCall(
+        function_address, current_box->GetTimer().m_End);
     if (box == nullptr) {
       return false;
     }
@@ -83,8 +88,10 @@ bool LiveFunctions::OnAllPreviousButton() {
 }
 
 void LiveFunctions::OnNextButton(uint64_t id) {
-  TextBox* text_box = live_functions_data_view_.FindNext(
-      *(function_iterators_[id]), current_textboxes_[id]->GetTimer().m_End);
+  auto function_address =
+        FunctionUtils::GetAbsoluteAddress(*(function_iterators_[id]));
+  const TextBox* text_box = GCurrentTimeGraph->FindNextFunctionCall(
+      function_address, current_textboxes_[id]->GetTimer().m_End);
   // If text_box is nullptr, then we have reached the right end of the timeline.
   if (text_box != nullptr) {
     current_textboxes_[id] = text_box;
@@ -93,8 +100,10 @@ void LiveFunctions::OnNextButton(uint64_t id) {
   Move();
 }
 void LiveFunctions::OnPreviousButton(uint64_t id) {
-  TextBox* text_box = live_functions_data_view_.FindPrevious(
-      *(function_iterators_[id]), current_textboxes_[id]->GetTimer().m_Start);
+  auto function_address =
+        FunctionUtils::GetAbsoluteAddress(*(function_iterators_[id]));
+  const TextBox* text_box = GCurrentTimeGraph->FindPreviousFunctionCall(
+      function_address, current_textboxes_[id]->GetTimer().m_End);
   // If text_box is nullptr, then we have reached the left end of the timeline.
   if (text_box != nullptr) {
     current_textboxes_[id] = text_box;
@@ -117,12 +126,17 @@ void LiveFunctions::OnDeleteButton(uint64_t id) {
   Move();
 }
 
-void LiveFunctions::AddIterator(Function* function, TextBox* current_textbox) {
+void LiveFunctions::AddIterator(Function* function) {
   uint64_t id = next_iterator_id_;
   ++next_iterator_id_;
 
+  auto function_address =
+        FunctionUtils::GetAbsoluteAddress(*function);
+  const TextBox* box = GCurrentTimeGraph->FindNextFunctionCall(
+        function_address,  std::numeric_limits<TickType>::lowest());
+
   function_iterators_.insert(std::make_pair(id, function));
-  current_textboxes_.insert(std::make_pair(id, current_textbox));
+  current_textboxes_.insert(std::make_pair(id, box));
   id_to_select_ = id;
   if (add_iterator_callback_) {
     add_iterator_callback_(id, function);

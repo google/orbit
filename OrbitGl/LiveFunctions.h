@@ -32,7 +32,7 @@ class LiveFunctions {
     add_iterator_callback_ = callback;
   }
 
-  void AddIterator(Function* function, TextBox* current_textbox);
+  void AddIterator(Function* function);
 
  private:
   void Move();
@@ -40,7 +40,7 @@ class LiveFunctions {
   LiveFunctionsDataView live_functions_data_view_;
 
   absl::flat_hash_map<uint64_t, Function*> function_iterators_;
-  absl::flat_hash_map<uint64_t, TextBox*> current_textboxes_;
+  absl::flat_hash_map<uint64_t, const TextBox*> current_textboxes_;
 
   std::function<void(uint64_t, Function*)> add_iterator_callback_;
 

@@ -8,11 +8,8 @@
 #include "Capture.h"
 #include "Core.h"
 #include "FunctionStats.h"
-<<<<<<< HEAD
 #include "FunctionUtils.h"
-=======
 #include "LiveFunctions.h"
->>>>>>> Rough first sketch for event iterator UI
 #include "Log.h"
 #include "OrbitFunction.h"
 #include "Pdb.h"
@@ -240,12 +237,8 @@ void LiveFunctionsDataView::OnContextMenu(
   } else if (a_Action == MENU_ACTION_ITERATE) {
     for (int i : a_ItemIndices) {
       Function& function = GetFunction(i);
-      if (function.GetStats().m_Count > 0) {
-        TextBox* box = FindNext(function, std::numeric_limits<TickType>::min());
-        // Since the count for this function is at least 1, we must find a
-        // TextBox. Maybe change into "if" and bail out?
-        CHECK(box != nullptr);
-        live_functions_->AddIterator(&function, box);
+      if (function.stats()->m_Count > 0) {
+        live_functions_->AddIterator(&function);
       } else {
         // TODO: Display error message to user?
       }
@@ -353,68 +346,3 @@ std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(
   }
   return std::make_pair(min_box, max_box);
 }
-<<<<<<< HEAD
-=======
-
-void LiveFunctionsDataView::JumpToNext(Function& function,
-                                       TickType current_time) const {
-  JumpToBox(FindNext(function, current_time));
-}
-
-TextBox* LiveFunctionsDataView::FindNext(Function& function,
-                                       TickType current_time) const {
-  auto function_address = function.GetVirtualAddress();
-  TextBox* box_to_jump = nullptr;
-  TickType best_time = std::numeric_limits<TickType>::max();
-  std::vector<std::shared_ptr<TimerChain>> chains =
-      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
-  for (auto& chain : chains) {
-    if (!chain) continue;
-    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-      TimerBlock& block = *it;
-      if (!block.Intersects(current_time, best_time)) continue;
-      for (size_t i = 0; i < block.size(); i++) {
-        TextBox& box = block[i];
-        auto box_time = box.GetTimer().m_End;
-        if ((box.GetTimer().m_FunctionAddress == function_address) &&
-            (box_time > current_time) && (best_time > box_time)) {
-          box_to_jump = &box;
-          best_time = box_time;
-        }
-      }
-    }
-  }
-  return box_to_jump;
-}
-
-void LiveFunctionsDataView::JumpToPrevious(Function& function,
-                                       TickType current_time) const {
-  JumpToBox(FindPrevious(function, current_time));
-}
-
-TextBox* LiveFunctionsDataView::FindPrevious(Function& function,
-                                             TickType current_time) const {
-  auto function_address = function.GetVirtualAddress();
-  TextBox* box_to_jump = nullptr;
-  TickType best_time = std::numeric_limits<TickType>::min();
-  std::vector<std::shared_ptr<TimerChain>> chains =
-      GCurrentTimeGraph->GetAllThreadTrackTimerChains();
-  for (auto& chain : chains) {
-    if (!chain) continue;
-    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-      TimerBlock& block = *it;
-      if (!block.Intersects(best_time, current_time)) continue;
-      for (size_t i = 0; i < block.size(); i++) {
-        TextBox& box = block[i];
-        auto box_time = box.GetTimer().m_End;
-        if ((box.GetTimer().m_FunctionAddress == function_address) &&
-            (box_time < current_time) && (best_time < box_time)) {
-          box_to_jump = &box;
-          best_time = box_time;
-        }
-      }
-    }
-  }
-  return box_to_jump;
-}
->>>>>>> Rough first sketch for event iterator UI

@@ -18,7 +18,7 @@ void ElidedLabel::paintEvent(QPaintEvent* event) {
 }
 
 void ElidedLabel::setTextWithElision(const QString& text,
-                                     Qt::TextElideMode mode = Qt::ElideMiddle) {
+                                     Qt::TextElideMode mode) {
   text_ = text;
   elision_mode_ = mode;
 }
