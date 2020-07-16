@@ -6,6 +6,7 @@
 #define ORBITDISASSEMBLYDIALOG_H
 
 #include <QDialog>
+#include <functional>
 #include <string>
 
 namespace Ui {
