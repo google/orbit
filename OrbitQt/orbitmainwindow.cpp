@@ -217,6 +217,11 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   CreateSamplingTab();
   CreateSelectionTab();
 
+  connect(live_functions_->GetFilterLineEdit(), &QLineEdit::textChanged,
+          this, [this](const QString& text) {
+            OnLiveTabFunctionsFilterTextChanged(text);
+          });
+
   SetTitle({});
   std::string iconFileName = Path::GetExecutablePath() + "orbit.ico";
   this->setWindowIcon(QIcon(iconFileName.c_str()));
@@ -310,10 +315,6 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   toolbar->addWidget(filter_functions_line_edit_);
   connect(filter_functions_line_edit_, &QLineEdit::textChanged, this,
           [this](const QString& text) { OnFilterFunctionsTextChanged(text); });
-  connect(ui->LiveFunctionsList->GetFilterLineEdit(), &QLineEdit::textChanged,
-          this, [this](const QString& text) {
-            OnLiveTabFunctionsFilterTextChanged(text);
-          });
 
   // Timer.
   toolbar->addWidget(CreateSpacer(toolbar));
@@ -631,7 +632,7 @@ void OrbitMainWindow::OnHideSearch() { ui->lineEdit->hide(); }
 
 void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
   // The toolbar and live tab filters are mirrored.
-  ui->LiveFunctionsList->SetFilter(text);
+  live_functions_->SetFilter(text);
 }
 
 //-----------------------------------------------------------------------------

@@ -106,8 +106,8 @@ void OrbitLiveFunctions::AddIterator(size_t id, Function* function) {
       this->all_events_iterator_->DisableButtons();
     }
   });
-  iterator_ui->SetFunctionName(function->PrettyName());
-  iterator_ui->SetMaxCount(function->GetStats().m_Count);
+  iterator_ui->SetFunctionName(function->pretty_name());
+  iterator_ui->SetMaxCount(function->stats()->m_Count);
   iterator_ui->SetIndex(0);
 
   iterator_uis.insert(std::make_pair(id, iterator_ui));
@@ -115,4 +115,9 @@ void OrbitLiveFunctions::AddIterator(size_t id, Function* function) {
   all_events_iterator_->EnableButtons();
 
   ui->iteratorLayout->addWidget(iterator_ui);
+}
+
+//-----------------------------------------------------------------------------
+QLineEdit* OrbitLiveFunctions::GetFilterLineEdit() {
+  return ui->FilterLineEdit;
 }

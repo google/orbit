@@ -114,7 +114,7 @@ class TimeGraph {
   Color GetThreadColor(ThreadID tid) const;
   StringManager* GetStringManager() { return string_manager_.get(); }
 
-  void SetCurrentTextBoxes(const absl::flat_hash_map<uint64_t, TextBox*>& boxes) {
+  void SetCurrentTextBoxes(const absl::flat_hash_map<uint64_t, const TextBox*>& boxes) {
     overlay_current_textboxes_ = boxes;
   }
 
@@ -132,7 +132,7 @@ class TimeGraph {
   int m_NumDrawnTextBoxes = 0;
 
   // First member is id.
-  absl::flat_hash_map<uint64_t, TextBox*> overlay_current_textboxes_;
+  absl::flat_hash_map<uint64_t, const TextBox*> overlay_current_textboxes_;
 
   double m_RefTimeUs = 0;
   double m_MinTimeUs = 0;

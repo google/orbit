@@ -6,6 +6,7 @@
 #define ORBIT_LIVE_FUNCTIONS_
 
 #include <QWidget>
+#include <QLineEdit>
 
 #include "absl/container/flat_hash_map.h"
 
@@ -31,6 +32,7 @@ class OrbitLiveFunctions : public QWidget {
   void OnDataChanged();
   void SetFilter(const QString& a_Filter);
   void AddIterator(uint64_t id, Function* function);
+  QLineEdit* GetFilterLineEdit();
 
  private:
   Ui::OrbitLiveFunctions* ui;

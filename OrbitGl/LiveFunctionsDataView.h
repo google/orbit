@@ -26,11 +26,11 @@ class LiveFunctionsDataView : public DataView {
   void OnDataChanged() override;
   void OnTimer() override;
 
-  void JumpToNext(Function& function, TickType current_time) const;
-  void JumpToPrevious(Function& function, TickType current_time) const;
+  // void JumpToNext(Function& function, TickType current_time) const;
+  // void JumpToPrevious(Function& function, TickType current_time) const;
 
-  TextBox* FindNext(Function& function, TickType current_time) const;
-  TextBox* FindPrevious(Function& function, TickType current_time) const;
+  // TextBox* FindNext(Function& function, TickType current_time) const;
+  // TextBox* FindPrevious(Function& function, TickType current_time) const;
 
   void JumpToBox(const TextBox* box) const;
 
