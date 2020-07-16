@@ -18,28 +18,6 @@ namespace Ui {
 class OrbitEventIterator;
 }
 
-// TODO: Move into its own file(s).
-class ElidedLabel : public QLabel {
-  Q_OBJECT
- public:
-  explicit ElidedLabel(QWidget* parent)
-      : QLabel(parent) /*, metrics_(font())*/ {}
-  void setText(const QString& text);
-
- protected:
-  void paintEvent(QPaintEvent* event) override {
-    QPainter painter(this);
-    QFontMetrics metrics = painter.fontMetrics();
-
-    QTextLayout textLayout(text_, painter.font());
-    textLayout.beginLayout();
-    QString elided_text = metrics.elidedText(text_, Qt::ElideMiddle, width());
-    painter.drawText(QPoint(0, metrics.ascent()), elided_text);
-    textLayout.endLayout();
-  }
-  QString text_;
-};
-
 class OrbitEventIterator : public QFrame {
   Q_OBJECT
 

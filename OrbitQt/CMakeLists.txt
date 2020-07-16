@@ -11,6 +11,7 @@ target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(
   OrbitQt
   PRIVATE deploymentconfigurations.h
+          ElidedLabel.h
           Error.h
           eventloop.h
           orbitaboutdialog.h
@@ -38,6 +39,7 @@ target_sources(
 target_sources(
   OrbitQt
   PRIVATE Error.cpp
+          ElidedLabel.cpp
           deploymentconfigurations.cpp
           main.cpp
           orbitaboutdialog.cpp
