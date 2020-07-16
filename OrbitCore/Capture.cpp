@@ -98,7 +98,6 @@ ErrorMessageOr<void> Capture::StartCapture() {
   PreFunctionHooks();
 
   Capture::NewSamplingProfiler();
-  Capture::GSamplingProfiler->StartCapture();
 
   GState = State::kStarted;
 
@@ -117,7 +116,6 @@ void Capture::StopCapture() {
 //-----------------------------------------------------------------------------
 void Capture::FinalizeCapture() {
   if (Capture::GSamplingProfiler != nullptr) {
-    Capture::GSamplingProfiler->StopCapture();
     Capture::GSamplingProfiler->ProcessSamples();
   }
 

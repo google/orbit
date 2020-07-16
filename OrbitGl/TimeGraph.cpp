@@ -537,7 +537,6 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
   std::shared_ptr<SamplingProfiler> samplingProfiler =
       std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
 
-  samplingProfiler->SetState(SamplingProfiler::Sampling);
   samplingProfiler->SetGenerateSummary(a_TID == 0);
 
   for (CallstackEvent& event : selected_callstack_events) {

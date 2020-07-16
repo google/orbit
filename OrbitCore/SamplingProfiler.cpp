@@ -51,35 +51,6 @@ void ComputeAverageThreadUsage(ThreadSampleData* data) {
 }  // namespace
 
 //-----------------------------------------------------------------------------
-SamplingProfiler::SamplingProfiler(const std::shared_ptr<Process>& a_Process) {
-  m_Process = a_Process;
-  m_State = SamplingState::Idle;
-}
-
-//-----------------------------------------------------------------------------
-SamplingProfiler::SamplingProfiler()
-    : SamplingProfiler{std::make_shared<Process>()} {}
-
-//-----------------------------------------------------------------------------
-void SamplingProfiler::StartCapture() {
-  Capture::GIsSampling = true;
-
-  m_SamplingTimer.Start();
-
-  m_State = Sampling;
-}
-
-//-----------------------------------------------------------------------------
-void SamplingProfiler::StopCapture() { m_State = PendingStop; }
-
-//-----------------------------------------------------------------------------
-float SamplingProfiler::GetSampleTime() {
-  return m_State == Sampling
-             ? static_cast<float>(m_SamplingTimer.QuerySeconds())
-             : 0.f;
-}
-
-//-----------------------------------------------------------------------------
 std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
     uint64_t a_Addr, ThreadID a_TID, int* o_NumCallstacks) {
   std::set<CallstackID>& callstacks = m_FunctionToCallstacks[a_Addr];
@@ -162,8 +133,6 @@ void SamplingProfiler::SortByThreadUsage() {
 void SamplingProfiler::ProcessSamples() {
   ScopeLock lock(m_Mutex);
 
-  m_State = Processing;
-
   // Clear the result of a previous call to ProcessSamples.
   m_ThreadSampleData.clear();
   m_UniqueResolvedCallstacks.clear();
@@ -245,8 +214,6 @@ void SamplingProfiler::ProcessSamples() {
 
   // Don't clear m_Callstacks, so that ProcessSamples can be called again, e.g.
   // when new callstacks have been added or after a module has been loaded.
-
-  m_State = DoneProcessing;
 }
 
 //-----------------------------------------------------------------------------
