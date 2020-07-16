@@ -37,7 +37,7 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
     }
 
     FunctionFramePointerValidator validator{
-        handle, binary.data() + function.offset(), function.size()};
+        handle, binary.data() + function.offset(), static_cast<size_t>(function.size())};
 
     if (!validator.Validate()) {
       result.push_back(function);
