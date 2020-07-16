@@ -13,7 +13,7 @@ function conan_disable_public_remotes {
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-OPTIONS=$(getopt -l "force-public-remotes,assume-linux,assume-windows" "" -- "$@")
+OPTIONS=$(getopt -o "" -l "force-public-remotes,assume-linux,assume-windows" -- "$@")
 eval set -- "$OPTIONS"
 
 if [ "$(uname -s)" == "Linux" ]; then
@@ -36,7 +36,7 @@ done
 conan config install "$DIR/$OS" || exit $?
 
 
-if [ "§FORCE_PUBLIC_REMOTES" == "yes" ]; then
+if [ "$FORCE_PUBLIC_REMOTES" == "yes" ]; then
   echo "Using public remotes for conan."
 
 elif [ -n "$ORBIT_OVERRIDE_ARTIFACTORY_URL" ]; then
