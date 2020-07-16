@@ -30,7 +30,6 @@ class EventTrack : public Track {
   void SetPos(float a_X, float a_Y);
   void SetSize(float a_SizeX, float a_SizeY);
   void SetColor(Color color) { m_Color = color; }
-  void ClearSelectedEvents() { selected_callstack_events_.clear(); }
   bool IsEmpty() const;
 
  protected:
@@ -45,5 +44,4 @@ class EventTrack : public Track {
   Vec2 m_MousePos[2];
   bool m_Picked;
   Color m_Color;
-  std::vector<CallstackEvent> selected_callstack_events_;
 };

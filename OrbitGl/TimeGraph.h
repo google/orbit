@@ -37,6 +37,7 @@ class TimeGraph {
   void SortTracks();
   std::vector<CallstackEvent> SelectEvents(float a_WorldStart, float a_WorldEnd,
                                            ThreadID a_TID);
+  const std::vector<CallstackEvent>& GetSelectedCallstackEvents(ThreadID tid);
 
   void ProcessTimer(const Timer& a_Timer);
   void UpdateMaxTimeStamp(TickType a_Time);
@@ -67,8 +68,10 @@ class TimeGraph {
   void Select(const TextBox* a_TextBox) { SelectRight(a_TextBox); }
   void SelectLeft(const TextBox* a_TextBox);
   void SelectRight(const TextBox* a_TextBox);
-  const TextBox* FindPreviousFunctionCall(uint64_t function_address, TickType current_time) const;
-  const TextBox* FindNextFunctionCall(uint64_t function_address, TickType current_time) const;
+  const TextBox* FindPreviousFunctionCall(uint64_t function_address,
+                                          TickType current_time) const;
+  const TextBox* FindNextFunctionCall(uint64_t function_address,
+                                      TickType current_time) const;
   void SelectAndZoom(const TextBox* a_TextBox);
   double GetCaptureTimeSpanUs();
   double GetCurrentTimeSpanUs();
@@ -87,6 +90,7 @@ class TimeGraph {
   }
   TextRenderer* GetTextRenderer() { return &m_TextRendererStatic; }
   void SetStringManager(std::shared_ptr<StringManager> str_manager);
+  StringManager* GetStringManager() { return string_manager_.get(); }
   void SetCanvas(GlCanvas* a_Canvas);
   GlCanvas* GetCanvas() { return m_Canvas; }
   void SetFontSize(int a_FontSize);
@@ -112,7 +116,6 @@ class TimeGraph {
   void OnDown();
 
   Color GetThreadColor(ThreadID tid) const;
-  StringManager* GetStringManager() { return string_manager_.get(); }
 
   void SetCurrentTextBoxes(const absl::flat_hash_map<uint64_t, const TextBox*>& boxes) {
     overlay_current_textboxes_ = boxes;
@@ -184,6 +187,9 @@ class TimeGraph {
   std::set<uint32_t> cores_seen_;
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   std::shared_ptr<ThreadTrack> process_track_;
+
+  absl::flat_hash_map<ThreadID, std::vector<CallstackEvent>>
+      selected_callstack_events_per_thread_;
 
   std::shared_ptr<StringManager> string_manager_;
 };

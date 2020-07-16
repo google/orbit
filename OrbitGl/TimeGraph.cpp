@@ -224,7 +224,7 @@ void TimeGraph::VerticallyScrollIntoView(const TextBox* text_box) {
   auto min_world_top_left_y =
       text_box->GetPosY() + m_Layout.GetSpaceBetweenTracks() + top_margin;
   auto max_world_top_left_y = text_box->GetPosY() + m_Canvas->GetWorldHeight() -
-                          text_box->GetSizeY() - down_margin;
+                              text_box->GetSizeY() - down_margin;
   world_top_left_y = std::min(world_top_left_y, max_world_top_left_y);
   world_top_left_y = std::max(world_top_left_y, min_world_top_left_y);
   m_Canvas->SetWorldTopLeftY(world_top_left_y);
@@ -431,8 +431,8 @@ void TimeGraph::SelectRight(const TextBox* a_TextBox) {
   SetMinMax(minTimeUs, maxTimeUs);
 }
 
-const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address,
-                                TickType current_time) const {
+const TextBox* TimeGraph::FindPreviousFunctionCall(
+    uint64_t function_address, TickType current_time) const {
   TextBox* previous_box = nullptr;
   TickType previous_box_time = std::numeric_limits<TickType>::lowest();
   std::vector<std::shared_ptr<TimerChain>> chains =
@@ -457,7 +457,7 @@ const TextBox* TimeGraph::FindPreviousFunctionCall(uint64_t function_address,
 }
 //-----------------------------------------------------------------------------
 const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_address,
-                            TickType current_time) const {
+                                               TickType current_time) const {
   TextBox* next_box = nullptr;
   TickType next_box_time = std::numeric_limits<TickType>::max();
   std::vector<std::shared_ptr<TimerChain>> chains =
@@ -529,14 +529,16 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
   TickType t0 = GetTickFromWorld(a_WorldStart);
   TickType t1 = GetTickFromWorld(a_WorldEnd);
 
-  for (auto& pair : thread_tracks_) {
-    pair.second->ClearSelectedEvents();
-  }
-
   std::vector<CallstackEvent> selected_callstack_events =
       GEventTracer.GetEventBuffer().GetCallstackEvents(t0, t1, a_TID);
 
-  // Generate report
+  selected_callstack_events_per_thread_.clear();
+  for (CallstackEvent& event : selected_callstack_events) {
+    selected_callstack_events_per_thread_[event.m_TID].emplace_back(event);
+    selected_callstack_events_per_thread_[0].emplace_back(event);
+  }
+
+  // Generate selection report.
   std::shared_ptr<SamplingProfiler> samplingProfiler =
       std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
 
@@ -560,6 +562,11 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
   NeedsUpdate();
 
   return selected_callstack_events;
+}
+
+const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(
+    ThreadID tid) {
+  return selected_callstack_events_per_thread_[tid];
 }
 
 //-----------------------------------------------------------------------------
@@ -837,8 +844,8 @@ void TimeGraph::SelectAndZoom(const TextBox* text_box) {
 void TimeGraph::OnShiftLeft() {
   TextBox* selection = Capture::GSelectedTextBox;
   if (selection) {
-    const TextBox* left = FindPreviousFunctionCall(selection->GetTimer().m_FunctionAddress,
-                                      selection->GetTimer().m_End);
+    const TextBox* left = FindPreviousFunctionCall(
+        selection->GetTimer().m_FunctionAddress, selection->GetTimer().m_End);
     if (left) {
       SelectLeft(left);
       VerticallyScrollIntoView(left);
@@ -851,8 +858,8 @@ void TimeGraph::OnShiftLeft() {
 void TimeGraph::OnShiftRight() {
   TextBox* selection = Capture::GSelectedTextBox;
   if (selection) {
-    const TextBox* right = FindNextFunctionCall(selection->GetTimer().m_FunctionAddress,
-                                   selection->GetTimer().m_End);
+    const TextBox* right = FindNextFunctionCall(
+        selection->GetTimer().m_FunctionAddress, selection->GetTimer().m_End);
     if (right) {
       SelectRight(right);
       VerticallyScrollIntoView(right);
