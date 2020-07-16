@@ -88,7 +88,7 @@
   <customwidget>
    <class>ElidedLabel</class>
    <extends>QLabel</extends>
-   <header>orbiteventiterator.h</header>
+   <header>ElidedLabel.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

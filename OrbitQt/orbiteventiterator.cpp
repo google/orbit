@@ -39,7 +39,7 @@ void OrbitEventIterator::on_DeleteButton_clicked() {
 
 //-----------------------------------------------------------------------------
 void OrbitEventIterator::SetFunctionName(const std::string& function_name) {
-  ui->Label->setText(QString::fromStdString(function_name));
+  ui->Label->setTextWithElision(QString::fromStdString(function_name));
 }
 
 //-----------------------------------------------------------------------------
@@ -90,5 +90,3 @@ void OrbitEventIterator::DisableButtons() {
   ui->NextButton->setEnabled(false);
   ui->PreviousButton->setEnabled(false);
 }
-
-void ElidedLabel::setText(const QString& text) { text_ = text; }
