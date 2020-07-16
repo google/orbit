@@ -27,6 +27,10 @@ outcome::result<void, std::string> ProcessList::Refresh() {
 
   std::vector<ProcessInfo> updated_processes;
 
+
+  // TODO (161423785) This for loop should be refactored. For example, when
+  // parts are in a separate function, OUTCOME_TRY could be used to simplify
+  // error handling. Also use ErrorMessageOr
   for (const auto& directory_entry :
        std::filesystem::directory_iterator("/proc")) {
     if (!directory_entry.is_directory()) continue;
@@ -74,8 +78,6 @@ outcome::result<void, std::string> ProcessList::Refresh() {
       continue;
     }
     std::string cmdline = std::move(cmdline_file_result.value());
-    process.set_full_path(cmdline.substr(0, cmdline.find('\0')));
-
     std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
     process.set_command_line(cmdline);
 
@@ -86,6 +88,11 @@ outcome::result<void, std::string> ProcessList::Refresh() {
       continue;
     }
     process.set_is_64_bit(is_64_bit_result.value());
+
+    const auto file_path_result = LinuxUtils::GetExecutablePath(pid);
+    if (file_path_result) {
+      process.set_full_path(std::move(file_path_result.value()));
+    }
 
     updated_processes.push_back(process);
   }

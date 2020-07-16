@@ -8,6 +8,7 @@
 #include <asm/unistd.h>
 #include <cxxabi.h>
 #include <dirent.h>
+#include <linux/limits.h>
 #include <linux/perf_event.h>
 #include <linux/types.h>
 #include <linux/version.h>
@@ -33,6 +34,7 @@
 
 #include "ElfUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "Path.h"
 #include "Utils.h"
@@ -52,6 +54,8 @@ outcome::result<std::vector<std::string>> ReadProcMaps(pid_t pid) {
 
 //-----------------------------------------------------------------------------
 outcome::result<std::string> ExecuteCommand(const std::string& cmd) {
+  // TODO (antonrohr) check exit code of executed cmd. If exit code is not 0,
+  // return failure
   std::array<char, 128> buffer;
   std::string result;
   std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
@@ -163,9 +167,26 @@ outcome::result<std::unordered_map<pid_t, double>> GetCpuUtilization() {
 
 //-----------------------------------------------------------------------------
 outcome::result<bool> Is64Bit(pid_t pid) {
+  // TODO(161196904) Do this in a more reliable way. It does not work for a lot
+  // of processes
   OUTCOME_TRY(result,
               ExecuteCommand(absl::StrFormat("file -L /proc/%d/exe", pid)));
   return absl::StrContains(result, "64-bit");
+}
+
+//-----------------------------------------------------------------------------
+ErrorMessageOr<std::string> GetExecutablePath(int32_t pid) {
+  char buffer[PATH_MAX];
+
+  ssize_t length = readlink(absl::StrFormat("/proc/%d/exe", pid).c_str(),
+                            buffer, sizeof(buffer));
+  if (length == -1) {
+    return ErrorMessage(absl::StrFormat(
+        "Unable to get executable path of process with pid: %d, error: %s", pid,
+        SafeStrerror(errno)));
+  }
+
+  return std::string(buffer, length);
 }
 
 }  // namespace LinuxUtils
