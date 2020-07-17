@@ -25,7 +25,9 @@ done
 
 readonly REQUIRED_PACKAGES=( build-essential libglu1-mesa-dev mesa-common-dev \
                              libxmu-dev libxi-dev libopengl0 qt5-default \
-                             libxxf86vm-dev python3-pip )
+                             qtwebengine5-dev libqt5webchannel5-dev \
+                             libqt5websockets5-dev libxxf86vm-dev python3-pip )
+
 function add_ubuntu_universe_repo {
   sudo add-apt-repository universe
   if [ $? -ne 0 ]; then
