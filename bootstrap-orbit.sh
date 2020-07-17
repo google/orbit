@@ -17,7 +17,7 @@ sudo apt-get update
 sudo apt-get install -y build-essential
 sudo apt-get install -y libglu1-mesa-dev mesa-common-dev libxmu-dev libxi-dev
 sudo apt-get install -y libopengl0
-sudo apt-get install -y qt5-default
+sudo apt-get install -y qt5-default qtwebengine5-dev libqt5webchannel5-dev libqt5websockets5-dev
 sudo apt-get install -y libxxf86vm-dev
 sudo apt-get install -y python3-pip
 
