@@ -50,7 +50,7 @@ void OrbitEventIterator::SetMaxCount(int max_count) {
 
 //-----------------------------------------------------------------------------
 void OrbitEventIterator::SetIndex(int current_index) {
-  current_index_ = 0;
+  current_index_ = current_index;
   UpdateCountLabel();
 }
 
