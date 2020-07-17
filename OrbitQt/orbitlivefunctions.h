@@ -9,7 +9,7 @@
 #include <QWidget>
 
 #include "LiveFunctions.h"
-#include "OrbitEventIterator.h"
+#include "orbiteventiterator.h"
 #include "OrbitFunction.h"
 #include "absl/container/flat_hash_map.h"
 #include "types.h"
