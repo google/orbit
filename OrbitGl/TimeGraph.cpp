@@ -613,7 +613,6 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
     canvas->GetBatcher()->AddVerticalLine(pos, -world_height, z, color, type, nullptr);
   }
   if (overlay_current_textboxes_.size() > 1) {
-    float z = GlCanvas::Z_VALUE_OVERLAY_BG;
     float from = min_x;
     float to = max_x;
 
