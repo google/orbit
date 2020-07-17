@@ -100,7 +100,15 @@ find_package(stb REQUIRED)
 find_package(capstone CONFIG REQUIRED)
 
 if(WITH_GUI)
-  find_package(Qt5 CONFIG REQUIRED COMPONENTS Core Network Widgets)
+  find_package(
+    Qt5 CONFIG REQUIRED
+    COMPONENTS Core
+               Network
+               Widgets
+               WebEngine
+               WebEngineWidgets
+               WebSockets
+               WebChannel)
   find_package(qtpropertybrowser REQUIRED)
   find_package(libssh2 CONFIG REQUIRED)
 endif()

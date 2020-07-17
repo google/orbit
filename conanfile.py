@@ -103,7 +103,7 @@ class OrbitConan(ConanFile):
             self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
 
             if not self.options.system_qt:
-                self.requires("qt/5.14.1@bincrafters/stable#0")
+                self.requires("qt/5.15.1@{}#06ab6eeeb9219f8e79c2428b14e53a90".format(self._orbit_channel))
 
 
     def configure(self):
@@ -125,6 +125,9 @@ class OrbitConan(ConanFile):
             self.options["glew"].system_mesa = self.options.system_mesa
 
             if not self.options.system_qt:
+                self.options["qt"].qtwebengine = True
+                self.options["qt"].qtwebchannel = True
+                self.options["qt"].qtwebsockets = True
                 self.options["qt"].shared = True
                 self.options["qt"].with_sqlite3 = False
                 self.options["qt"].with_mysql = False
@@ -169,8 +172,28 @@ class OrbitConan(ConanFile):
                           dst="{}/shaders/".format(dest))
                 self.copy("v3f-t2f-c4f.*", src=path,
                           dst="{}/shaders/".format("OrbitQt/"))
-        self.copy("license*", dst="licenses", folder=True, ignore_case=True)
-        self.copy("licence*", dst="licenses", folder=True, ignore_case=True)
+        excludes = [
+                "*licensewizard*",
+                "*checklicenses*",
+                "*.py",
+                "*.pyc",
+                "*.cc",
+                "*.yml",
+                "*.vanilla",
+                "*.h",
+                "*.pl",
+                "*license_template.txt",
+                "*.patch",
+                "*.QT-LICENSE-AGREEMENT",
+                "*.ini",
+                "*.js",
+                "*license-checker*",
+                "*.html",
+                "*.json",
+                "*README.md"
+        ]
+        self.copy("LICENSE*", dst="licenses", folder=True, ignore_case=True, excludes=excludes)
+        self.copy("LICENCE*", dst="licenses", folder=True, ignore_case=True, excludes=excludes)
 
     def package(self):
         if self.options.debian_packaging:
@@ -214,6 +237,8 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("*", src="bin/fonts", dst="bin/fonts", symlinks=True)
         self.copy("*", src="bin/shaders", dst="bin/shaders", symlinks=True)
         self.copy("*", src="bin/icons", dst="bin/icons", symlinks=True)
+        self.copy("*", src="bin/resources", dst="bin/resources", symlinks=True)
+        self.copy("*", src="bin/translations", dst="bin/translations", symlinks=True)
         self.copy("*.so*", src="bin/", dst="bin", symlinks=True)
         self.copy("*.dll", src="bin/", dst="bin", symlinks=True)
         self.copy("*.pdb", src="bin/", dst="bin")
