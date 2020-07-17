@@ -555,7 +555,7 @@ void CaptureWindow::Draw() {
 
   time_graph_.Draw(this, m_Picking);
 
-  if (m_SelectStart[0] != m_SelectStop[0]) {
+  if (!m_Picking && m_SelectStart[0] != m_SelectStop[0]) {
     TickType minTime = std::min(m_TimeStart, m_TimeStop);
     TickType maxTime = std::max(m_TimeStart, m_TimeStop);
 
