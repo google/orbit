@@ -95,7 +95,7 @@ class OrbitConan(ConanFile):
             if not self.options.system_mesa:
                 self.requires("libxi/1.7.10@bincrafters/stable#0")
             if not self.options.system_qt:
-                self.requires("qt/5.14.1@bincrafters/stable#0")
+                self.requires("qt/5.15.0@bincrafters/stable#0")
 
 
     def configure(self):
@@ -117,6 +117,9 @@ class OrbitConan(ConanFile):
             self.options["glew"].system_mesa = self.options.system_mesa
 
             if not self.options.system_qt:
+                self.options["qt"].qtwebengine = True
+                self.options["qt"].qtwebchannel = True
+                self.options["qt"].qtwebsockets = True
                 self.options["qt"].shared = True
                 self.options["qt"].with_sqlite3 = False
                 self.options["qt"].with_mysql = False
