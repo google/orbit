@@ -18,6 +18,7 @@ void ElidedLabel::paintEvent(QPaintEvent* event) {
       metrics.elidedText(content, elision_mode_, width() - 10);
   painter.drawText(QPoint(0, metrics.ascent()), elided_text);
   textLayout.endLayout();
+  QLabel::paintEvent(event);
 }
 
 void ElidedLabel::setTextWithElision(const QString& text,
