@@ -8,9 +8,11 @@
 #include "absl/container/flat_hash_map.h"
 #include "types.h"
 
-#include <QLineEdit>
+#include <QVBoxLayout>
 #include <QWidget>
+#include <QLineEdit>
 
+//#include "OrbitDataViewPanel.h"
 #include "LiveFunctionsController.h"
 #include "orbiteventiterator.h"
 #include "OrbitFunction.h"
@@ -34,10 +36,7 @@ class OrbitLiveFunctions : public QWidget {
   void AddIterator(uint64_t id, Function* function);
   QLineEdit* GetFilterLineEdit();
 
- private slots:
-  void on_FilterLineEdit_textEdited(const QString& a_Text);
-
- private:
+ private:  
   Ui::OrbitLiveFunctions* ui;
   LiveFunctionsController live_functions_;
   absl::flat_hash_map<uint64_t, OrbitEventIterator*> iterator_uis;
