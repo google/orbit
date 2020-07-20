@@ -577,7 +577,10 @@ void TimeGraph::Draw(GlCanvas* canvas, bool a_Picking) {
   m_NeedsRedraw = false;
 }
 
-void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
+void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
+  if (picking) {
+    return;
+  }
   float min_x = std::numeric_limits<float>::max();
   float max_x = std::numeric_limits<float>::lowest();
 
