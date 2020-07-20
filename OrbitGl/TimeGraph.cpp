@@ -590,9 +590,9 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
   float world_start_y = canvas->GetWorldTopLeftY();
   float world_height = canvas->GetWorldHeight();
 
-  for (const auto& current_textbox : overlay_current_textboxes_) {
-    double inv_time_window = 1.0 / GetTimeWindowUs();
+  double inv_time_window = 1.0 / GetTimeWindowUs();
 
+  for (const auto& current_textbox : overlay_current_textboxes_) {
     const Timer& timer = current_textbox.second->GetTimer();
     double start_us = GetUsFromTick(timer.m_Start);
     double normalized_start = start_us * inv_time_window;
