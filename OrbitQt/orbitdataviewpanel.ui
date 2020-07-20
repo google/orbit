@@ -47,6 +47,9 @@
      <item>
       <widget class="QLineEdit" name="FilterLineEdit"/>
      </item>
+     <item>
+      <widget class="QPushButton" name="refreshButton"/>
+     </item>
     </layout>
    </item>
    <item row="1" column="0">
