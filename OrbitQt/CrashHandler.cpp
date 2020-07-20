@@ -7,7 +7,6 @@
 #include "Core.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitVersion.h"
-#include "OrbitDbgHelp.h"
 #include "ScopeTimer.h"
 #include "client/settings.h"
 
