@@ -73,6 +73,8 @@ class DataView {
     return false;
   }
   virtual std::string GetLabel() { return ""; }
+  virtual bool HasRefreshButton() const { return false; }
+  virtual void OnRefreshButtonClicked() {}
   virtual void SetGlPanel(class GlPanel* /*a_GlPanel*/) {}
   virtual void LinkDataView(DataView* /*a_DataView*/) {}
   virtual bool ScrollToBottom() { return false; }

@@ -14,10 +14,8 @@
 ABSL_FLAG(bool, enable_frame_pointer_validator, false,
           "Enable validation of frame pointers");
 
-//-----------------------------------------------------------------------------
 ModulesDataView::ModulesDataView() : DataView(DataViewType::MODULES) {}
 
-//-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
@@ -33,7 +31,6 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
   return columns;
 }
 
-//-----------------------------------------------------------------------------
 std::string ModulesDataView::GetValue(int row, int col) {
   const ModuleData* module = GetModule(row);
 
@@ -53,14 +50,12 @@ std::string ModulesDataView::GetValue(int row, int col) {
   }
 }
 
-//-----------------------------------------------------------------------------
 #define ORBIT_PROC_SORT(Member)                                          \
   [&](int a, int b) {                                                    \
     return OrbitUtils::Compare(modules_[a]->Member, modules_[b]->Member, \
                                ascending);                               \
   }
 
-//-----------------------------------------------------------------------------
 void ModulesDataView::DoSort() {
   bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
@@ -90,12 +85,10 @@ void ModulesDataView::DoSort() {
   }
 }
 
-//-----------------------------------------------------------------------------
 const std::string ModulesDataView::MENU_ACTION_MODULES_LOAD = "Load Symbols";
 const std::string ModulesDataView::MENU_ACTION_MODULES_VERIFY =
     "Verify Frame Pointers";
 
-//-----------------------------------------------------------------------------
 std::vector<std::string> ModulesDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;
@@ -122,7 +115,6 @@ std::vector<std::string> ModulesDataView::GetContextMenu(
   return menu;
 }
 
-//-----------------------------------------------------------------------------
 void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
                                     const std::vector<int>& item_indices) {
   if (action == MENU_ACTION_MODULES_LOAD) {
@@ -152,7 +144,6 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
   }
 }
 
-//-----------------------------------------------------------------------------
 void ModulesDataView::DoFilter() {
   std::vector<uint32_t> indices;
   std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
@@ -182,7 +173,6 @@ void ModulesDataView::DoFilter() {
   OnSort(m_SortingColumn, {});
 }
 
-//-----------------------------------------------------------------------------
 void ModulesDataView::SetModules(int32_t process_id,
                                  const std::vector<ModuleData*>& modules) {
   process_id_ = process_id;
@@ -196,12 +186,14 @@ void ModulesDataView::SetModules(int32_t process_id,
   OnDataChanged();
 }
 
-//-----------------------------------------------------------------------------
+void ModulesDataView::OnRefreshButtonClicked() {
+  GOrbitApp->UpdateModuleList(Capture::GTargetProcess->GetID());
+}
+
 const ModuleData* ModulesDataView::GetModule(uint32_t row) const {
   return modules_[m_Indices[row]];
 }
 
-//-----------------------------------------------------------------------------
 bool ModulesDataView::GetDisplayColor(int row, int /*column*/,
                                       unsigned char& red, unsigned char& green,
                                       unsigned char& blue) {

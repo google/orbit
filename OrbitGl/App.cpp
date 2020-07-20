@@ -36,8 +36,8 @@
 #include "ModulesDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
-#include "OrbitVersion.h"
 #include "OrbitSession.h"
+#include "OrbitVersion.h"
 #include "Params.h"
 #include "Pdb.h"
 #include "PresetsDataView.h"
@@ -853,9 +853,7 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
   }
 }
 
-//-----------------------------------------------------------------------------
-
-void OrbitApp::OnProcessSelected(int32_t pid) {
+void OrbitApp::UpdateModuleList(int32_t pid) {
   thread_pool_->Schedule([pid, this] {
     ErrorMessageOr<std::vector<ModuleInfo>> result =
         process_manager_->LoadModuleList(pid);
@@ -880,9 +878,12 @@ void OrbitApp::OnProcessSelected(int32_t pid) {
       // TODO: remove this part when all client code is moved to
       // new data model.
       std::shared_ptr<Process> process = FindProcessByPid(pid);
-      Capture::SetTargetProcess(process);
 
       for (const ModuleInfo& info : module_infos) {
+        // if module already exists, don't create it again.
+        if (process->GetModuleFromPath(info.file_path()) != nullptr) {
+          continue;
+        }
         std::shared_ptr<Module> module = std::make_shared<Module>();
         module->m_Name = info.name();
         module->m_FullName = info.file_path();
@@ -904,6 +905,17 @@ void OrbitApp::OnProcessSelected(int32_t pid) {
       FireRefreshCallbacks();
     });
   });
+}
+
+void OrbitApp::OnProcessSelected(int32_t pid) {
+  CHECK(m_ProcessesDataView->GetSelectedProcessId() == pid);
+
+  std::shared_ptr<Process> process = FindProcessByPid(pid);
+  CHECK(process != nullptr);
+  Capture::SetTargetProcess(std::move(process));
+
+  // Update modules when process changed
+  UpdateModuleList(pid);
 }
 
 //-----------------------------------------------------------------------------

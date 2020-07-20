@@ -30,6 +30,8 @@ class OrbitTreeView : public QTreeView {
                         const QItemSelection& deselected) override;
   OrbitTableModel* GetModel() { return model_.get(); }
   std::string GetLabel();
+  bool HasRefreshButton() const;
+  void OnRefreshButtonClicked();
 
  protected:
   void drawRow(QPainter* painter, const QStyleOptionViewItem& options,
