@@ -10,7 +10,6 @@
 OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
     : QWidget(parent), ui(new Ui::OrbitLiveFunctions) {
   ui->setupUi(this);
-  ui->label->hide();
 
   live_functions_.SetAddIteratorCallback([this](size_t id, Function* function) {
     this->AddIterator(id, function);
@@ -48,30 +47,16 @@ OrbitLiveFunctions::~OrbitLiveFunctions() {
 void OrbitLiveFunctions::Initialize(SelectionType selection_type,
                                     FontType font_type, bool is_main_instance) {
   DataView* data_view = &live_functions_.GetDataView();
-  ui->treeView->Initialize(data_view, selection_type, font_type);
-
-  if (is_main_instance) {
-    ui->treeView->GetModel()->GetDataView()->SetAsMainInstance();
-  }
-
-  std::string label = ui->treeView->GetLabel();
-  if (!label.empty()) {
-    this->ui->label->setText(QString::fromStdString(label));
-    this->ui->label->show();
-  }
-
-  data_view->SetUiFilterCallback(
-      [this](const std::string& filter) { SetFilter(filter.c_str()); });
+  ui->data_view_panel_->Initialize(data_view, selection_type, font_type, is_main_instance);
 }
 
 //-----------------------------------------------------------------------------
 void OrbitLiveFunctions::SetFilter(const QString& a_Filter) {
-  ui->FilterLineEdit->setText(a_Filter);
-  ui->treeView->OnFilter(a_Filter);
+  ui->data_view_panel_->SetFilter(a_Filter);
 }
 
 //-----------------------------------------------------------------------------
-void OrbitLiveFunctions::Refresh() { ui->treeView->Refresh(); }
+void OrbitLiveFunctions::Refresh() { ui->data_view_panel_->Refresh(); }
 
 void OrbitLiveFunctions::OnDataChanged() { live_functions_.OnDataChanged(); }
 
@@ -115,10 +100,5 @@ void OrbitLiveFunctions::AddIterator(size_t id, Function* function) {
 
 //-----------------------------------------------------------------------------
 QLineEdit* OrbitLiveFunctions::GetFilterLineEdit() {
-  return ui->FilterLineEdit;
-}
-
-//-----------------------------------------------------------------------------
-void OrbitLiveFunctions::on_FilterLineEdit_textEdited(const QString& a_Text) {
-  ui->treeView->OnFilter(a_Text);
+  return ui->data_view_panel_->GetFilterLineEdit();
 }
