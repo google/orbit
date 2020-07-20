@@ -225,8 +225,16 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
                &pixels[0]);
 
   PickingID pickId = *reinterpret_cast<PickingID*>(&pixels[0]);
+  std::shared_ptr<PickingUserData> userData = time_graph_.GetBatcher().GetUserData(pickId);
+  if (userData) {
+    auto tooltip = userData->m_GenerateTooltip(pickId);
+    if (!tooltip.empty()) {
+      GOrbitApp->SendTooltipToUi(tooltip);
+      NeedsRedraw();
+    }
+  }
 
-  TextBox* textBox = time_graph_.GetBatcher().GetTextBox(pickId);
+  /*TextBox* textBox = time_graph_.GetBatcher().GetTextBox(pickId);
   if (textBox) {
     if (textBox->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
       Function* func =
@@ -237,7 +245,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
       GOrbitApp->SendTooltipToUi(m_ToolTip);
       NeedsRedraw();
     }
-  }
+  }*/
 }
 
 //-----------------------------------------------------------------------------

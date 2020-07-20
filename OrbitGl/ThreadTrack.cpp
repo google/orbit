@@ -222,10 +222,17 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           if (!is_collapsed) {
             SetTimesliceText(timer, elapsed_us, min_x, &text_box);
           }
-          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, {&text_box});
+          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX,
+                                std::make_shared<PickingUserData>(&text_box, 
+                                    [&](PickingID id) { return this->GetTooltip(id); }));
         } else {
           auto type = PickingID::LINE;
-          batcher->AddVerticalLine(pos, size[1], z, color, type, {&text_box});
+          batcher->AddVerticalLine(
+              pos, size[1], z, color, type,
+                                   std::make_shared<PickingUserData>(
+                                       &text_box, [&](PickingID id) {
+                return this->GetTooltip(id);
+                                       }));
           // For lines, we can ignore the entire pixel into which this event
           // falls.
           min_ignore =
@@ -381,4 +388,21 @@ void ThreadTrack::SetEventTrackColor(Color color) {
 //-----------------------------------------------------------------------------
 bool ThreadTrack::IsEmpty() const {
   return (GetNumTimers() == 0) && event_track_->IsEmpty();
+}
+
+
+//-----------------------------------------------------------------------------
+std::string ThreadTrack::GetTooltip(PickingID id) {
+  TextBox* textBox = time_graph_->GetBatcher().GetTextBox(id);
+  if (textBox) {
+    if (textBox->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
+      Function* func =
+          Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
+      return absl::StrFormat(
+          "%s %s", func ? FunctionUtils::GetDisplayName(*func) : "",
+          textBox->GetText());
+    }
+  }
+
+  return "";
 }

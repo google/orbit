@@ -9,7 +9,7 @@
 
 void Batcher::AddLine(const Line& line, const Color* colors,
                       PickingID::Type picking_type,
-                      PickingUserData user_data) {
+                      std::shared_ptr<PickingUserData> user_data) {
   Color picking_color = PickingID::GetColor(
       picking_type, line_buffer_.m_Lines.size(), batcher_id_);
   line_buffer_.m_Lines.push_back(line);
@@ -20,7 +20,7 @@ void Batcher::AddLine(const Line& line, const Color* colors,
 
 void Batcher::AddLine(const Line& line, Color color,
                       PickingID::Type picking_type,
-                      PickingUserData user_data) {
+                      std::shared_ptr<PickingUserData> user_data) {
   Color colors[2];
   Fill(colors, color);
   AddLine(line, colors, picking_type, user_data);
@@ -28,7 +28,7 @@ void Batcher::AddLine(const Line& line, Color color,
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, Color color,
                       PickingID::Type picking_type,
-                      PickingUserData user_data) {
+                      std::shared_ptr<PickingUserData> user_data) {
   Line line;
   Color colors[2];
   Fill(colors, color);
@@ -39,7 +39,7 @@ void Batcher::AddLine(Vec2 from, Vec2 to, float z, Color color,
 
 void Batcher::AddVerticalLine(Vec2 pos, float size, float z, Color color,
                               PickingID::Type picking_type,
-                              PickingUserData user_data) {
+                              std::shared_ptr<PickingUserData> user_data) {
   Line line;
   Color colors[2];
   Fill(colors, color);
@@ -50,7 +50,7 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, Color color,
 
 void Batcher::AddBox(const Box& a_Box, const Color* colors,
                      PickingID::Type picking_type,
-                     PickingUserData user_data) {
+                     std::shared_ptr<PickingUserData> user_data) {
   Color picking_color = PickingID::GetColor(
       picking_type, box_buffer_.m_Boxes.size(), batcher_id_);
   box_buffer_.m_Boxes.push_back(a_Box);
@@ -61,7 +61,7 @@ void Batcher::AddBox(const Box& a_Box, const Color* colors,
 
 void Batcher::AddBox(const Box& a_Box, Color color,
                      PickingID::Type picking_type,
-                     PickingUserData user_data) {
+                     std::shared_ptr<PickingUserData> user_data) {
   Color colors[4];
   Fill(colors, color);
   AddBox(a_Box, colors, picking_type, user_data);
@@ -69,7 +69,7 @@ void Batcher::AddBox(const Box& a_Box, Color color,
 
 void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
                            PickingID::Type picking_type,
-                           PickingUserData user_data) {
+                           std::shared_ptr<PickingUserData> user_data) {
   Color colors[4];
   GetBoxGradientColors(color, colors);
   Box box(pos, size, z);
@@ -78,7 +78,7 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
 
 void Batcher::AddTriangle(const Triangle& triangle, Color color,
                           PickingID::Type picking_type,
-                          PickingUserData user_data) {
+                          std::shared_ptr<PickingUserData> user_data) {
   Color picking_color = PickingID::GetColor(
       picking_type, triangle_buffer_.triangles_.size(), batcher_id_);
   triangle_buffer_.triangles_.push_back(triangle);
@@ -89,26 +89,35 @@ void Batcher::AddTriangle(const Triangle& triangle, Color color,
 
 void Batcher::AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
                           PickingID::Type picking_type,
-                          PickingUserData user_data) {
+                          std::shared_ptr<PickingUserData> user_data) {
   AddTriangle(Triangle(v0, v1, v2), color, picking_type, user_data);
 }
 
-TextBox* Batcher::GetTextBox(PickingID a_ID) {
-  PickingUserData* data = nullptr;
+std::shared_ptr<PickingUserData> Batcher::GetUserData(PickingID a_ID) {
+  std::shared_ptr<PickingUserData>* data;
   switch (a_ID.m_Type) {
-      case PickingID::BOX:
-        data = box_buffer_.m_UserData.SlowAt(a_ID.m_Id);
-        break;
-      case PickingID::LINE:
-        data = line_buffer_.m_UserData.SlowAt(a_ID.m_Id);
-        break;
-      case PickingID::TRIANGLE:
-        data = triangle_buffer_.m_UserData.SlowAt(a_ID.m_Id);
-        break;
-    }
+    case PickingID::BOX:
+      data = box_buffer_.m_UserData.SlowAt(a_ID.m_Id);
+      break;
+    case PickingID::LINE:
+      data = line_buffer_.m_UserData.SlowAt(a_ID.m_Id);
+      break;
+    case PickingID::TRIANGLE:
+      data = triangle_buffer_.m_UserData.SlowAt(a_ID.m_Id);
+      break;
+  }
 
-  if (data && data->m_UserData) {
-      return static_cast<TextBox*>(data->m_UserData); 
+  if (data) {
+    return *data;
+  }
+  return nullptr;
+}
+
+TextBox* Batcher::GetTextBox(PickingID a_ID) {
+  std::shared_ptr<PickingUserData> data = GetUserData(a_ID);
+
+  if (data && data->m_TextBox) {
+      return data->m_TextBox; 
   }
 
   return nullptr;

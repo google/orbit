@@ -77,4 +77,6 @@ class ThreadTrack : public Track {
   ThreadID thread_id_;
   mutable Mutex mutex_;
   std::map<int, std::shared_ptr<TimerChain>> timers_;
+
+  std::string GetTooltip(PickingID id);
 };
