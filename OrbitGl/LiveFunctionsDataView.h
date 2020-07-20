@@ -26,8 +26,6 @@ class LiveFunctionsDataView : public DataView {
   void OnDataChanged() override;
   void OnTimer() override;
 
-  void JumpToBox(const TextBox* box) const;
-
  protected:
   void DoFilter() override;
   void DoSort() override;
