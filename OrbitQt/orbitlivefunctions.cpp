@@ -21,7 +21,9 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
       return;
     }
     for (auto& iterator_ui : iterator_uis) {
-      iterator_ui.second->IncrementIndex();
+      uint64_t index = iterator_ui.first;
+      iterator_ui.second->SetCurrentTime(
+          this->live_functions_.GetStartTime(index));
     }
   });
   all_events_iterator_->SetPreviousButtonCallback([this]() {
@@ -29,7 +31,9 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
       return;
     }
     for (auto& iterator_ui : iterator_uis) {
-      iterator_ui.second->DecrementIndex();
+      uint64_t index = iterator_ui.first;
+      iterator_ui.second->SetCurrentTime(
+          this->live_functions_.GetStartTime(index));
     }
   });
   all_events_iterator_->SetFunctionName("All functions");
@@ -39,15 +43,14 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
 }
 
 //-----------------------------------------------------------------------------
-OrbitLiveFunctions::~OrbitLiveFunctions() {
-  delete ui;
-}
+OrbitLiveFunctions::~OrbitLiveFunctions() { delete ui; }
 
 //-----------------------------------------------------------------------------
 void OrbitLiveFunctions::Initialize(SelectionType selection_type,
                                     FontType font_type, bool is_main_instance) {
   DataView* data_view = &live_functions_.GetDataView();
-  ui->data_view_panel_->Initialize(data_view, selection_type, font_type, is_main_instance);
+  ui->data_view_panel_->Initialize(data_view, selection_type, font_type,
+                                   is_main_instance);
 }
 
 //-----------------------------------------------------------------------------
@@ -66,16 +69,12 @@ void OrbitLiveFunctions::AddIterator(size_t id, Function* function) {
   iterator_ui->SetNextButtonCallback([this, id]() {
     this->live_functions_.OnNextButton(id);
     auto it = this->iterator_uis.find(id);
-    if (it != this->iterator_uis.end()) {
-      it->second->IncrementIndex();
-    }
+    it->second->SetCurrentTime(this->live_functions_.GetStartTime(id));
   });
   iterator_ui->SetPreviousButtonCallback([this, id]() {
     this->live_functions_.OnPreviousButton(id);
     auto it = this->iterator_uis.find(id);
-    if (it != this->iterator_uis.end()) {
-      it->second->DecrementIndex();
-    }
+    it->second->SetCurrentTime(this->live_functions_.GetStartTime(id));
   });
   iterator_ui->SetDeleteButtonCallback([this, id]() {
     this->live_functions_.OnDeleteButton(id);
@@ -88,8 +87,10 @@ void OrbitLiveFunctions::AddIterator(size_t id, Function* function) {
     }
   });
   iterator_ui->SetFunctionName(function->pretty_name());
-  iterator_ui->SetMaxCount(function->stats()->m_Count);
-  iterator_ui->SetIndex(0);
+
+  iterator_ui->SetMinMaxTime(live_functions_.GetCaptureMin(),
+                             live_functions_.GetCaptureMax());
+  iterator_ui->SetCurrentTime(live_functions_.GetStartTime(id));
 
   iterator_uis.insert(std::make_pair(id, iterator_ui));
 

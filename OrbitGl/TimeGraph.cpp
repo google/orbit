@@ -78,8 +78,8 @@ void TimeGraph::SetFontSize(int a_FontSize) {
 //-----------------------------------------------------------------------------
 void TimeGraph::Clear() {
   m_Batcher.Reset();
-  m_SessionMinCounter = std::numeric_limits<uint64_t>::max();
-  m_SessionMaxCounter = 0;
+  m_CaptureMinCounter = std::numeric_limits<uint64_t>::max();
+  m_CaptureMaxCounter = 0;
   m_ThreadCountMap.clear();
   GEventTracer.GetEventBuffer().Reset();
 
@@ -100,35 +100,35 @@ void TimeGraph::Clear() {
 double GNumHistorySeconds = 2.f;
 
 //-----------------------------------------------------------------------------
-bool TimeGraph::UpdateSessionMinMaxCounter() {
-  m_SessionMinCounter = LLONG_MAX;
+bool TimeGraph::UpdateCaptureMinMaxCounter() {
+  m_CaptureMinCounter = LLONG_MAX;
 
   m_Mutex.lock();
   for (auto& track : tracks_) {
     if (track->GetNumTimers()) {
       TickType min = track->GetMinTime();
-      if (min > 0 && min < m_SessionMinCounter) {
-        m_SessionMinCounter = min;
+      if (min > 0 && min < m_CaptureMinCounter) {
+        m_CaptureMinCounter = min;
       }
     }
   }
   m_Mutex.unlock();
 
   if (GEventTracer.GetEventBuffer().HasEvent()) {
-    m_SessionMinCounter = std::min(m_SessionMinCounter,
+    m_CaptureMinCounter = std::min(m_CaptureMinCounter,
                                    GEventTracer.GetEventBuffer().GetMinTime());
-    m_SessionMaxCounter = std::max(m_SessionMaxCounter,
+    m_CaptureMaxCounter = std::max(m_CaptureMaxCounter,
                                    GEventTracer.GetEventBuffer().GetMaxTime());
   }
 
-  return m_SessionMinCounter != LLONG_MAX;
+  return m_CaptureMinCounter != LLONG_MAX;
 }
 
 //-----------------------------------------------------------------------------
 void TimeGraph::ZoomAll() {
-  if (UpdateSessionMinMaxCounter()) {
+  if (UpdateCaptureMinMaxCounter()) {
     m_MaxTimeUs =
-        MicroSecondsFromTicks(m_SessionMinCounter, m_SessionMaxCounter);
+        MicroSecondsFromTicks(m_CaptureMinCounter, m_CaptureMaxCounter);
     m_MinTimeUs = m_MaxTimeUs - (GNumHistorySeconds * 1000 * 1000);
     if (m_MinTimeUs < 0) m_MinTimeUs = 0;
 
@@ -137,8 +137,8 @@ void TimeGraph::ZoomAll() {
 }
 
 void TimeGraph::Zoom(TickType min, TickType max) {
-  double start = MicroSecondsFromTicks(m_SessionMinCounter, min);
-  double end = MicroSecondsFromTicks(m_SessionMinCounter, max);
+  double start = MicroSecondsFromTicks(m_CaptureMinCounter, min);
+  double end = MicroSecondsFromTicks(m_CaptureMinCounter, max);
 
   double mid = start + ((end - start) / 2.0);
   double extent = 1.1 * (end - start) / 2.0;
@@ -153,9 +153,9 @@ void TimeGraph::Zoom(const TextBox* a_TextBox) {
 }
 
 //-----------------------------------------------------------------------------
-double TimeGraph::GetSessionTimeSpanUs() {
-  if (UpdateSessionMinMaxCounter()) {
-    return MicroSecondsFromTicks(m_SessionMinCounter, m_SessionMaxCounter);
+double TimeGraph::GetCaptureTimeSpanUs() {
+  if (UpdateCaptureMinMaxCounter()) {
+    return MicroSecondsFromTicks(m_CaptureMinCounter, m_CaptureMaxCounter);
   }
 
   return 0;
@@ -193,7 +193,7 @@ void TimeGraph::SetMinMax(double a_MinTimeUs, double a_MaxTimeUs) {
   double desiredTimeWindow = a_MaxTimeUs - a_MinTimeUs;
   m_MinTimeUs = std::max(a_MinTimeUs, 0.0);
   m_MaxTimeUs =
-      std::min(m_MinTimeUs + desiredTimeWindow, GetSessionTimeSpanUs());
+      std::min(m_MinTimeUs + desiredTimeWindow, GetCaptureTimeSpanUs());
 
   NeedsUpdate();
 }
@@ -208,7 +208,7 @@ void TimeGraph::PanTime(int a_InitialX, int a_CurrentX, int a_Width,
       static_cast<double>(a_CurrentX - a_InitialX) / a_Width * m_TimeWindowUs;
   double currentTime = a_InitialTime - dt;
   m_MinTimeUs = clamp(currentTime - initialLocalTime, 0.0,
-                      GetSessionTimeSpanUs() - m_TimeWindowUs);
+                      GetCaptureTimeSpanUs() - m_TimeWindowUs);
   m_MaxTimeUs = m_MinTimeUs + m_TimeWindowUs;
 
   NeedsUpdate();
@@ -233,7 +233,7 @@ void TimeGraph::VerticallyScrollIntoView(const TextBox* text_box) {
 
 //-----------------------------------------------------------------------------
 void TimeGraph::OnDrag(float a_Ratio) {
-  double timeSpan = GetSessionTimeSpanUs();
+  double timeSpan = GetCaptureTimeSpanUs();
   double timeWindow = m_MaxTimeUs - m_MinTimeUs;
   m_MinTimeUs = a_Ratio * (timeSpan - timeWindow);
   m_MaxTimeUs = m_MinTimeUs + timeWindow;
@@ -259,8 +259,8 @@ uint64_t TimeGraph::GetGpuTimelineHash(const Timer& timer) const {
 
 //-----------------------------------------------------------------------------
 void TimeGraph::ProcessTimer(const Timer& a_Timer) {
-  if (a_Timer.m_End > m_SessionMaxCounter) {
-    m_SessionMaxCounter = a_Timer.m_End;
+  if (a_Timer.m_End > m_CaptureMaxCounter) {
+    m_CaptureMaxCounter = a_Timer.m_End;
   }
 
   switch (a_Timer.m_Type) {
@@ -340,8 +340,8 @@ TimeGraph::GetAllThreadTrackTimerChains() const {
 
 //-----------------------------------------------------------------------------
 void TimeGraph::UpdateMaxTimeStamp(TickType a_Time) {
-  if (a_Time > m_SessionMaxCounter) {
-    m_SessionMaxCounter = a_Time;
+  if (a_Time > m_CaptureMaxCounter) {
+    m_CaptureMaxCounter = a_Time;
   }
 };
 
@@ -352,7 +352,7 @@ float TimeGraph::GetThreadTotalHeight() { return std::abs(min_y_); }
 float TimeGraph::GetWorldFromTick(TickType a_Time) const {
   if (m_TimeWindowUs > 0) {
     double start =
-        MicroSecondsFromTicks(m_SessionMinCounter, a_Time) - m_MinTimeUs;
+        MicroSecondsFromTicks(m_CaptureMinCounter, a_Time) - m_MinTimeUs;
     double normalizedStart = start / m_TimeWindowUs;
     float pos = float(m_WorldStartX + normalizedStart * m_WorldWidth);
     return pos;
@@ -368,7 +368,7 @@ float TimeGraph::GetWorldFromUs(double a_Micros) const {
 
 //-----------------------------------------------------------------------------
 double TimeGraph::GetUsFromTick(TickType time) const {
-  return MicroSecondsFromTicks(m_SessionMinCounter, time) - m_MinTimeUs;
+  return MicroSecondsFromTicks(m_CaptureMinCounter, time) - m_MinTimeUs;
 }
 
 //-----------------------------------------------------------------------------
@@ -379,18 +379,18 @@ TickType TimeGraph::GetTickFromWorld(float a_WorldX) {
           : 0;
   double timeStamp = GetTime(ratio);
 
-  return m_SessionMinCounter + TicksFromMicroseconds(timeStamp);
+  return m_CaptureMinCounter + TicksFromMicroseconds(timeStamp);
 }
 
 //-----------------------------------------------------------------------------
 TickType TimeGraph::GetTickFromUs(double a_MicroSeconds) const {
-  return m_SessionMinCounter + TicksFromMicroseconds(a_MicroSeconds);
+  return m_CaptureMinCounter + TicksFromMicroseconds(a_MicroSeconds);
 }
 
 //-----------------------------------------------------------------------------
 void TimeGraph::GetWorldMinMax(float& a_Min, float& a_Max) const {
-  a_Min = GetWorldFromTick(m_SessionMinCounter);
-  a_Max = GetWorldFromTick(m_SessionMaxCounter);
+  a_Min = GetWorldFromTick(m_CaptureMinCounter);
+  a_Max = GetWorldFromTick(m_CaptureMaxCounter);
 }
 
 //-----------------------------------------------------------------------------
@@ -404,7 +404,7 @@ void TimeGraph::SelectLeft(const TextBox* a_TextBox) {
   }
 
   double currentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
-  m_RefTimeUs = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_Start);
+  m_RefTimeUs = MicroSecondsFromTicks(m_CaptureMinCounter, timer.m_Start);
 
   double minTimeUs = m_RefTimeUs;
   double maxTimeUs = m_RefTimeUs + currentTimeWindowUs;
@@ -422,7 +422,7 @@ void TimeGraph::SelectRight(const TextBox* a_TextBox) {
     return;
   }
   double currentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
-  m_RefTimeUs = MicroSecondsFromTicks(m_SessionMinCounter, timer.m_End);
+  m_RefTimeUs = MicroSecondsFromTicks(m_CaptureMinCounter, timer.m_End);
 
   static double ratio = 1.0;
   double minTimeUs = m_RefTimeUs - ratio * currentTimeWindowUs;
@@ -906,8 +906,8 @@ void TimeGraph::DrawText(GlCanvas* canvas) {
 
 //-----------------------------------------------------------------------------
 bool TimeGraph::IsVisible(const Timer& a_Timer) {
-  double start = MicroSecondsFromTicks(m_SessionMinCounter, a_Timer.m_Start);
-  double end = MicroSecondsFromTicks(m_SessionMinCounter, a_Timer.m_End);
+  double start = MicroSecondsFromTicks(m_CaptureMinCounter, a_Timer.m_Start);
+  double end = MicroSecondsFromTicks(m_CaptureMinCounter, a_Timer.m_End);
 
   double startUs = m_MinTimeUs;
 

@@ -12,6 +12,7 @@
 #include <QTextLayout>
 
 #include "absl/container/flat_hash_map.h"
+#include "Profiling.h"
 #include "types.h"
 
 namespace Ui {
@@ -38,11 +39,8 @@ class OrbitEventIterator : public QFrame {
   }
 
   void SetFunctionName(const std::string& function);
-  void SetMaxCount(int max_count);
-  void SetIndex(int current_index);
-
-  void IncrementIndex();
-  void DecrementIndex();
+  void SetMinMaxTime(TickType min_time_us, TickType max_time_us);
+  void SetCurrentTime(TickType current_time_us);
 
   void DisableButtons();
   void EnableButtons();
@@ -54,13 +52,15 @@ class OrbitEventIterator : public QFrame {
   void on_DeleteButton_clicked();
 
  protected:
-  void UpdateCountLabel();
+  void UpdatePositionLabel();
   Ui::OrbitEventIterator* ui;
   std::function<void(void)> next_button_callback_;
   std::function<void(void)> previous_button_callback_;
   std::function<void(void)> delete_button_callback_;
-  int max_count_ = 0;
-  int current_index_ = 0;
+
+  TickType min_time_;
+  TickType max_time_;
+  TickType current_time_;
 };
 
 #endif  // ORBIT_EVENT_ITERATOR_H_

@@ -585,7 +585,7 @@ void CaptureWindow::Draw() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::DrawScreenSpace() {
-  double timeSpan = time_graph_.GetSessionTimeSpanUs();
+  double timeSpan = time_graph_.GetCaptureTimeSpanUs();
 
   Color col = m_Slider.GetBarColor();
   float height = m_Slider.GetPixelHeight();
@@ -628,7 +628,7 @@ void CaptureWindow::DrawScreenSpace() {
   ui_batcher_.AddBox(box, kBackgroundColor, PickingID::BOX);
 
   // Time bar
-  if (time_graph_.GetSessionTimeSpanUs() > 0) {
+  if (time_graph_.GetCaptureTimeSpanUs() > 0) {
     Box box(Vec2(0, height), Vec2(getWidth(), height), z);
     ui_batcher_.AddBox(box, Color(70, 70, 70, 200), PickingID::BOX);
   }
@@ -861,7 +861,7 @@ inline double GetIncrementMs(double a_MilliSeconds) {
 void CaptureWindow::RenderTimeBar() {
   static int numTimePoints = 10;
 
-  if (time_graph_.GetSessionTimeSpanUs() > 0) {
+  if (time_graph_.GetCaptureTimeSpanUs() > 0) {
     double millis = time_graph_.GetCurrentTimeSpanUs() * 0.001;
     double incr = millis / float(numTimePoints - 1);
     double unit = GetIncrementMs(incr);
