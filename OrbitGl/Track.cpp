@@ -118,9 +118,10 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   batcher->AddBox(box, color, PickingID::PICKABLE);
 
   // Draw rounded corners.
-  float vertical_margin = time_graph_->GetVerticalMargin();
-  const Color kBackgroundColor(70, 70, 70, 255);
   if (!picking) {
+    float vertical_margin = time_graph_->GetVerticalMargin();
+    const Color kBackgroundColor(70, 70, 70, 255);
+  
     float radius = std::min(layout.GetRoundingRadius(), half_label_height);
     uint32_t sides = static_cast<uint32_t>(layout.GetRoundingNumSides() + 0.5f);
     auto rounded_corner = GetRoundedCornerMask(radius, sides);
@@ -142,28 +143,29 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
                     z);
     DrawTriangleFan(batcher, rounded_corner, end_top, kBackgroundColor, 180.f,
                     z);
+
+    // Collapse toggle state management.
+    if (!this->IsCollapsable()) {
+      collapse_toggle_.SetState(TriangleToggle::State::kInactive);
+    } else if (collapse_toggle_.IsInactive()) {
+      collapse_toggle_.ResetToInitialState();
+    }
+
+    // Draw collapsing triangle.
+    float button_offset = layout.GetCollapseButtonOffset();
+    Vec2 toggle_pos =
+        Vec2(tab_x0 + button_offset, m_Pos[1] + half_label_height);
+    collapse_toggle_.SetPos(toggle_pos);
+    collapse_toggle_.Draw(canvas, picking);
+
+    // Draw label.
+    float label_offset_x = layout.GetTrackLabelOffsetX();
+    float label_offset_y = layout.GetTrackLabelOffsetY();
+    const Color kTextWhite(255, 255, 255, 255);
+    canvas->AddText(label_.c_str(), tab_x0 + label_offset_x,
+                    y1 + label_offset_y + m_Size[1], text_z, kTextWhite,
+                    label_width - label_offset_x);
   }
-
-  // Collapse toggle state management.
-  if (!this->IsCollapsable()) {
-    collapse_toggle_.SetState(TriangleToggle::State::kInactive);
-  } else if (collapse_toggle_.IsInactive()) {
-    collapse_toggle_.ResetToInitialState();
-  }
-
-  // Draw collapsing triangle.
-  float button_offset = layout.GetCollapseButtonOffset();
-  Vec2 toggle_pos = Vec2(tab_x0 + button_offset, m_Pos[1] + half_label_height);
-  collapse_toggle_.SetPos(toggle_pos);
-  collapse_toggle_.Draw(canvas, picking);
-
-  // Draw label.
-  float label_offset_x = layout.GetTrackLabelOffsetX();
-  float label_offset_y = layout.GetTrackLabelOffsetY();
-  const Color kTextWhite(255, 255, 255, 255);
-  canvas->AddText(label_.c_str(), tab_x0 + label_offset_x,
-                  y1 + label_offset_y + m_Size[1], text_z, kTextWhite,
-                  label_width - label_offset_x);
 
   m_Canvas = canvas;
 }
