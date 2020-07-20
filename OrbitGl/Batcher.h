@@ -10,6 +10,11 @@
 #include "PickingManager.h"
 
 //-----------------------------------------------------------------------------
+struct PickingUserData {
+  void* m_UserData = nullptr;
+};
+
+//-----------------------------------------------------------------------------
 struct LineBuffer {
   void Reset() {
     m_Lines.Reset();
@@ -22,7 +27,7 @@ struct LineBuffer {
   BlockChain<Line, NUM_LINES_PER_BLOCK> m_Lines;
   BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> m_Colors;
   BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> m_PickingColors;
-  BlockChain<void*, NUM_LINES_PER_BLOCK> m_UserData;
+  BlockChain<PickingUserData, NUM_LINES_PER_BLOCK> m_UserData;
 };
 
 //-----------------------------------------------------------------------------
@@ -38,7 +43,7 @@ struct BoxBuffer {
   BlockChain<Box, NUM_BOXES_PER_BLOCK> m_Boxes;
   BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> m_Colors;
   BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> m_PickingColors;
-  BlockChain<void*, NUM_BOXES_PER_BLOCK> m_UserData;
+  BlockChain<PickingUserData, NUM_BOXES_PER_BLOCK> m_UserData;
 };
 
 //-----------------------------------------------------------------------------
@@ -47,14 +52,14 @@ struct TriangleBuffer {
     triangles_.Reset();
     colors_.Reset();
     picking_colors_.Reset();
-    user_data_.Reset();
+    m_UserData.Reset();
   }
 
   static const int NUM_TRIANGLES_PER_BLOCK = 64 * 1024;
   BlockChain<Triangle, NUM_TRIANGLES_PER_BLOCK> triangles_;
   BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> colors_;
   BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
-  BlockChain<void*, NUM_TRIANGLES_PER_BLOCK> user_data_;
+  BlockChain<PickingUserData, NUM_TRIANGLES_PER_BLOCK> m_UserData;
 };
 
 //-----------------------------------------------------------------------------
@@ -64,25 +69,32 @@ class Batcher {
   Batcher() : batcher_id_(PickingID::BatcherId::TIME_GRAPH) {}
 
   void AddLine(const Line& line, const Color* colors,
-               PickingID::Type picking_type, void* user_data = nullptr);
+               PickingID::Type picking_type, 
+               PickingUserData user_data = PickingUserData());
   void AddLine(const Line& line, Color color, PickingID::Type picking_type,
-               void* user_data = nullptr);
+               PickingUserData user_data = PickingUserData());
   void AddLine(Vec2 from, Vec2 to, float z, Color color,
-               PickingID::Type picking_type, void* user_data = nullptr);
+               PickingID::Type picking_type,
+               PickingUserData user_data = PickingUserData());
   void AddVerticalLine(Vec2 pos, float size, float z, Color color,
-                       PickingID::Type picking_type, void* user_data = nullptr);
+                       PickingID::Type picking_type,
+                       PickingUserData user_data = PickingUserData());
 
   void AddBox(const Box& a_Box, const Color* colors,
-              PickingID::Type picking_type, void* user_data = nullptr);
+              PickingID::Type picking_type,
+              PickingUserData user_data = PickingUserData());
   void AddBox(const Box& a_Box, Color color, PickingID::Type picking_type,
-              void* user_data = nullptr);
+              PickingUserData user_data = PickingUserData());
   void AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
-                    PickingID::Type picking_type, void* user_data = nullptr);
+                    PickingID::Type picking_type,
+                    PickingUserData user_data = PickingUserData());
 
   void AddTriangle(const Triangle& triangle, Color color,
-                   PickingID::Type picking_type, void* user_data = nullptr);
+                   PickingID::Type picking_type,
+                   PickingUserData user_data = PickingUserData());
   void AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
-                   PickingID::Type picking_type, void* user_data = nullptr);
+                   PickingID::Type picking_type,
+                   PickingUserData user_data = PickingUserData());
 
   void GetBoxGradientColors(Color color, Color* colors);
 

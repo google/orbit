@@ -67,7 +67,7 @@ void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
     float y0 = base_y + static_cast<float>(last_normalized_value) * m_Size[1];
     float y1 = base_y + static_cast<float>(normalized_value) * m_Size[1];
     time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y1), text_z,
-                                      kLineColor, PickingID::LINE, nullptr);
+                                      kLineColor, PickingID::LINE);
 
     previous_time = time;
     last_normalized_value = normalized_value;

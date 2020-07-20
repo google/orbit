@@ -116,10 +116,11 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
                                     is_same_pid_as_target, is_inactive);
 
         if (is_visible_width) {
-          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, &text_box);
+          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX,
+                                {&text_box});
         } else {
           auto type = PickingID::LINE;
-          batcher->AddVerticalLine(pos, size[1], z, color, type, &text_box);
+          batcher->AddVerticalLine(pos, size[1], z, color, type, {&text_box});
           // For lines, we can ignore the entire pixel into which this event
           // falls. We align this precisely on the pixel x-coordinate of the
           // current line being drawn (in ticks).

@@ -222,10 +222,10 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           if (!is_collapsed) {
             SetTimesliceText(timer, elapsed_us, min_x, &text_box);
           }
-          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, &text_box);
+          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, {&text_box});
         } else {
           auto type = PickingID::LINE;
-          batcher->AddVerticalLine(pos, size[1], z, color, type, &text_box);
+          batcher->AddVerticalLine(pos, size[1], z, color, type, {&text_box});
           // For lines, we can ignore the entire pixel into which this event
           // falls.
           min_ignore =

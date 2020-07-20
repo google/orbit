@@ -187,34 +187,15 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
                          ? time_graph_.GetBatcher()
                          : ui_batcher_;
 
-  switch (type) {
-    case PickingID::BOX: {
-      void** textBoxPtr = batcher.GetBoxBuffer().m_UserData.SlowAt(id);
-      if (textBoxPtr) {
-        TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
-        SelectTextBox(textBox);
-      }
-      break;
+  TextBox* textBox = batcher.GetTextBox(a_PickingID);
+  if (textBox) {
+    SelectTextBox(textBox);
+  } else {
+    switch (type) {
+      case PickingID::PICKABLE:
+        m_PickingManager.Pick(a_PickingID.m_Id, a_X, a_Y);
+        break;
     }
-    case PickingID::LINE: {
-      void** textBoxPtr = batcher.GetLineBuffer().m_UserData.SlowAt(id);
-      if (textBoxPtr) {
-        TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
-        SelectTextBox(textBox);
-      }
-      break;
-    }
-    case PickingID::TRIANGLE: {
-      void** textBoxPtr = batcher.GetTriangleBuffer().user_data_.SlowAt(id);
-      if (textBoxPtr) {
-        TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
-        SelectTextBox(textBox);
-      }
-      break;
-    }
-    case PickingID::PICKABLE:
-      m_PickingManager.Pick(a_PickingID.m_Id, a_X, a_Y);
-      break;
   }
 }
 
