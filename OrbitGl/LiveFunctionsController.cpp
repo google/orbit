@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "LiveFunctions.h"
+#include "LiveFunctionsController.h"
 
 #include <utility>
 
@@ -20,7 +20,7 @@ std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
   return std::make_pair(min_time, max_time);
 }
 
-void LiveFunctions::Move() {
+void LiveFunctionsController::Move() {
   if (!current_textboxes_.empty()) {
     auto min_max = ComputeMinMaxTime(current_textboxes_);
     GCurrentTimeGraph->Zoom(min_max.first, min_max.second);
@@ -36,7 +36,7 @@ void LiveFunctions::Move() {
   GCurrentTimeGraph->SetCurrentTextBoxes(current_textboxes_);
 }
 
-bool LiveFunctions::OnAllNextButton() {
+bool LiveFunctionsController::OnAllNextButton() {
   absl::flat_hash_map<uint64_t, const TextBox*> next_boxes;
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
@@ -64,7 +64,7 @@ bool LiveFunctions::OnAllNextButton() {
   return true;
 }
 
-bool LiveFunctions::OnAllPreviousButton() {
+bool LiveFunctionsController::OnAllPreviousButton() {
   absl::flat_hash_map<uint64_t, const TextBox*> next_boxes;
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
@@ -92,7 +92,7 @@ bool LiveFunctions::OnAllPreviousButton() {
   return true;
 }
 
-void LiveFunctions::OnNextButton(uint64_t id) {
+void LiveFunctionsController::OnNextButton(uint64_t id) {
   auto function_address =
         FunctionUtils::GetAbsoluteAddress(*(function_iterators_[id]));
   const TextBox* text_box = GCurrentTimeGraph->FindNextFunctionCall(
@@ -104,7 +104,7 @@ void LiveFunctions::OnNextButton(uint64_t id) {
   id_to_select_ = id;
   Move();
 }
-void LiveFunctions::OnPreviousButton(uint64_t id) {
+void LiveFunctionsController::OnPreviousButton(uint64_t id) {
   auto function_address =
         FunctionUtils::GetAbsoluteAddress(*(function_iterators_[id]));
   const TextBox* text_box = GCurrentTimeGraph->FindPreviousFunctionCall(
@@ -117,7 +117,7 @@ void LiveFunctions::OnPreviousButton(uint64_t id) {
   Move();
 }
 
-void LiveFunctions::OnDeleteButton(uint64_t id) {
+void LiveFunctionsController::OnDeleteButton(uint64_t id) {
   current_textboxes_.erase(id);
   function_iterators_.erase(id);
   // If we erase the iterator that was last used by the user, then
@@ -131,7 +131,7 @@ void LiveFunctions::OnDeleteButton(uint64_t id) {
   Move();
 }
 
-void LiveFunctions::AddIterator(Function* function) {
+void LiveFunctionsController::AddIterator(Function* function) {
   uint64_t id = next_iterator_id_;
   ++next_iterator_id_;
 

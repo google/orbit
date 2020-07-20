@@ -2,17 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_LIVE_FUNCTIONS_
-#define ORBIT_LIVE_FUNCTIONS_
+#ifndef ORBIT_LIVE_FUNCTIONS_H_
+#define ORBIT_LIVE_FUNCTIONS_H_
+
+#include "absl/container/flat_hash_map.h"
+#include "types.h"
 
 #include <QLineEdit>
 #include <QWidget>
 
-#include "LiveFunctions.h"
+#include "LiveFunctionsController.h"
 #include "orbiteventiterator.h"
 #include "OrbitFunction.h"
-#include "absl/container/flat_hash_map.h"
-#include "types.h"
 
 namespace Ui {
 class OrbitLiveFunctions;
@@ -38,9 +39,9 @@ class OrbitLiveFunctions : public QWidget {
 
  private:
   Ui::OrbitLiveFunctions* ui;
-  LiveFunctions live_functions_;
+  LiveFunctionsController live_functions_;
   absl::flat_hash_map<uint64_t, OrbitEventIterator*> iterator_uis;
   OrbitEventIterator* all_events_iterator_;
 };
 
-#endif  // ORBIT_LIVE_FUNCTIONS_
+#endif  // ORBIT_LIVE_FUNCTIONS_H_

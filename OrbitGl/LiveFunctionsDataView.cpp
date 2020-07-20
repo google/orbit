@@ -9,7 +9,7 @@
 #include "Core.h"
 #include "FunctionStats.h"
 #include "FunctionUtils.h"
-#include "LiveFunctions.h"
+#include "LiveFunctionsController.h"
 #include "Log.h"
 #include "OrbitFunction.h"
 #include "Pdb.h"
@@ -18,7 +18,7 @@
 #include "TimerChain.h"
 
 //-----------------------------------------------------------------------------
-LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctions* live_functions)
+LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsController* live_functions)
     : DataView(DataViewType::LIVE_FUNCTIONS), live_functions_(live_functions) {
   m_UpdatePeriodMs = 300;
   OnDataChanged();
