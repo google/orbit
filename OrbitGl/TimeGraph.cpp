@@ -582,7 +582,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool /*picking*/) {
   float max_x = std::numeric_limits<float>::lowest();
 
   uint64_t min_tick = std::numeric_limits<uint64_t>::max();
-  uint64_t max_tick = std::numeric_limits<uint64_t>::min();
+  uint64_t max_tick = std::numeric_limits<uint64_t>::lowest();
 
   float world_start_x = canvas->GetWorldTopLeftX();
   float world_width = canvas->GetWorldWidth();
