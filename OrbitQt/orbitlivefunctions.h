@@ -12,7 +12,6 @@
 #include <QWidget>
 #include <QLineEdit>
 
-//#include "OrbitDataViewPanel.h"
 #include "LiveFunctionsController.h"
 #include "orbiteventiterator.h"
 #include "OrbitFunction.h"
