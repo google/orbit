@@ -12,9 +12,9 @@
 #include "TextBox.h"
 #include "absl/container/flat_hash_map.h"
 
-class LiveFunctions {
+class LiveFunctionsController {
  public:
-  LiveFunctions() : live_functions_data_view_(this) {}
+  LiveFunctionsController() : live_functions_data_view_(this) {}
 
   LiveFunctionsDataView& GetDataView() { return live_functions_data_view_; }
 

@@ -8,12 +8,12 @@
 #include "OrbitFunction.h"
 #include "TimerChain.h"
 
-class LiveFunctions;
+class LiveFunctionsController;
 
 //-----------------------------------------------------------------------------
 class LiveFunctionsDataView : public DataView {
  public:
-  LiveFunctionsDataView(LiveFunctions* live_functions);
+  LiveFunctionsDataView(LiveFunctionsController* live_functions);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return COLUMN_COUNT; }
@@ -36,7 +36,7 @@ class LiveFunctionsDataView : public DataView {
 
   std::vector<Function*> m_Functions;
 
-  LiveFunctions* live_functions_;
+  LiveFunctionsController* live_functions_;
 
   enum ColumnIndex {
     COLUMN_SELECTED,
