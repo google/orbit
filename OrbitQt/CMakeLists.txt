@@ -48,6 +48,7 @@ target_sources(
           orbitdataviewpanel.cpp
           orbitdisassemblydialog.cpp
           orbiteventiterator.cpp
+          orbiteventiterator.ui
           orbitglwidget.cpp
           orbitglwidgetwithheader.cpp
           orbitlivefunctions.cpp

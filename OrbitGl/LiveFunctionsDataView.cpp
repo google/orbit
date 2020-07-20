@@ -158,25 +158,33 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
   bool enable_unselect = false;
+  bool enable_iterator = false;
   bool enable_disassembly = !a_SelectedIndices.empty();
   for (int index : a_SelectedIndices) {
     const Function& function = GetFunction(index);
     enable_select |= !FunctionUtils::IsSelected(function);
     enable_unselect |= FunctionUtils::IsSelected(function);
+    enable_iterator |= function.stats()->m_Count > 0;
   }
 
   std::vector<std::string> menu;
   if (enable_select) menu.emplace_back(MENU_ACTION_SELECT);
   if (enable_unselect) menu.emplace_back(MENU_ACTION_UNSELECT);
   if (enable_disassembly) menu.emplace_back(MENU_ACTION_DISASSEMBLY);
-  menu.emplace_back(MENU_ACTION_ITERATE);
+
+  if (enable_iterator) {
+    menu.emplace_back(MENU_ACTION_ITERATE);
+  }
 
   // For now, these actions only make sense when one function is selected,
   // so we don't show them otherwise.
   if (a_SelectedIndices.size() == 1) {
-    menu.insert(menu.end(), {MENU_ACTION_JUMP_TO_FIRST,
-                             MENU_ACTION_JUMP_TO_LAST, MENU_ACTION_JUMP_TO_MIN,
-                             MENU_ACTION_JUMP_TO_MAX});
+    const Function& function = GetFunction(a_SelectedIndices[0]);
+    if (function.stats()->m_Count > 0) {
+      menu.insert(menu.end(), {MENU_ACTION_JUMP_TO_FIRST,
+                               MENU_ACTION_JUMP_TO_LAST, MENU_ACTION_JUMP_TO_MIN,
+                               MENU_ACTION_JUMP_TO_MAX});
+    }
   }
   Append(menu, DataView::GetContextMenu(a_ClickedIndex, a_SelectedIndices));
   return menu;
@@ -239,8 +247,6 @@ void LiveFunctionsDataView::OnContextMenu(
       Function& function = GetFunction(i);
       if (function.stats()->m_Count > 0) {
         live_functions_->AddIterator(&function);
-      } else {
-        // TODO: Display error message to user?
       }
     }
   } else {
