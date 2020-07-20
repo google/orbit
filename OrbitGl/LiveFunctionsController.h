@@ -7,10 +7,11 @@
 
 #include <functional>
 
+#include "absl/container/flat_hash_map.h"
+
 #include "LiveFunctionsDataView.h"
 #include "OrbitFunction.h"
 #include "TextBox.h"
-#include "absl/container/flat_hash_map.h"
 
 class LiveFunctionsController {
  public:

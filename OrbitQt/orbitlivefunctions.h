@@ -6,15 +6,15 @@
 #define ORBIT_LIVE_FUNCTIONS_H_
 
 #include "absl/container/flat_hash_map.h"
-#include "types.h"
 
+#include <QLineEdit>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <QLineEdit>
 
 #include "LiveFunctionsController.h"
 #include "orbiteventiterator.h"
 #include "OrbitFunction.h"
+#include "types.h"
 
 namespace Ui {
 class OrbitLiveFunctions;
