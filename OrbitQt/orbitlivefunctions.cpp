@@ -16,7 +16,7 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
     this->AddIterator(id, function);
   });
 
-  all_events_iterator_ = new OrbitEventIterator();
+  all_events_iterator_ = new OrbitEventIterator(this);
   all_events_iterator_->SetNextButtonCallback([this]() {
     if (!this->live_functions_.OnAllNextButton()) {
       return;
@@ -41,10 +41,6 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
 
 //-----------------------------------------------------------------------------
 OrbitLiveFunctions::~OrbitLiveFunctions() {
-  for (auto it_ui : iterator_uis) {
-    delete it_ui.second;
-  }
-  delete all_events_iterator_;
   delete ui;
 }
 
@@ -80,7 +76,7 @@ void OrbitLiveFunctions::Refresh() { ui->treeView->Refresh(); }
 void OrbitLiveFunctions::OnDataChanged() { live_functions_.OnDataChanged(); }
 
 void OrbitLiveFunctions::AddIterator(size_t id, Function* function) {
-  OrbitEventIterator* iterator_ui = new OrbitEventIterator();
+  OrbitEventIterator* iterator_ui = new OrbitEventIterator(this);
 
   iterator_ui->SetNextButtonCallback([this, id]() {
     this->live_functions_.OnNextButton(id);
