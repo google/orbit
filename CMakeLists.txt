@@ -69,13 +69,6 @@ list(PREPEND CMAKE_FIND_ROOT_PATH "${CMAKE_BINARY_DIR}")
 # scripts in a cross compilation environment.
 list(APPEND CMAKE_FIND_ROOT_PATH "${CONAN_CMAKE_MODULE_PATH}")
 
-# Temporary workaround for GRPC as long as
-# conan does not support library components yet.
-# This ensures that cmake will use the library-provided
-# cmake config files instead of the conan-generated ones.
-list(PREPEND CMAKE_PREFIX_PATH "${CONAN_GRPC_ROOT}")
-list(PREPEND CMAKE_FIND_ROOT_PATH "${CONAN_GRPC_ROOT}")
-
 if(NOT WIN32 AND WITH_GUI)
   find_package(X11 REQUIRED)
 endif()
@@ -88,16 +81,10 @@ find_package(multicore REQUIRED)
 find_package(concurrentqueue REQUIRED)
 find_package(gte REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
+find_package(grpc CONFIG REQUIRED)
 
-# Conan's protobuf target is called protobuf::protobuf while
-# the original one is called protobuf::libprotobuf, so we create
-# an alias here to make it work with packages requiring the original
-# name like gRPC.
-add_library(protobuf::libprotobuf INTERFACE IMPORTED)
-target_link_libraries(protobuf::libprotobuf INTERFACE protobuf::protobuf)
 include("third_party/protobuf/protobuf-generate.cmake")
-
-find_package(gRPC CONFIG REQUIRED)
+include("cmake/grpc_helper.cmake")
 
 
 if(WITH_GUI)
