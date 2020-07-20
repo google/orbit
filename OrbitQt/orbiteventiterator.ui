@@ -31,6 +31,9 @@
      <property name="text">
       <string>&lt;</string>
      </property>
+     <property name="autoRepeat">
+      <bool>true</bool>
+     </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -43,6 +46,9 @@
     <widget class="QPushButton" name="NextButton">
      <property name="text">
       <string>&gt;</string>
+     </property>
+     <property name="autoRepeat">
+      <bool>true</bool>
      </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -63,7 +69,7 @@
     </widget>
    </item>
    <item row="0" column="3">
-    <widget class="QLabel" name="CountLabel">
+    <widget class="QLabel" name="position_label_">
      <property name="alignment">
       <set>Qt::AlignRight | Qt::AlignVCenter</set>
      </property>

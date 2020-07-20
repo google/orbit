@@ -42,39 +42,24 @@ void OrbitEventIterator::SetFunctionName(const std::string& function_name) {
   ui->Label->setTextWithElision(QString::fromStdString(function_name));
 }
 
-//-----------------------------------------------------------------------------
-void OrbitEventIterator::SetMaxCount(int max_count) {
-  max_count_ = max_count;
-  UpdateCountLabel();
+void OrbitEventIterator::SetMinMaxTime(TickType min_time, TickType max_time) {
+  min_time_ = min_time;
+  max_time_ = max_time;
+  current_time_ = std::min(current_time_, max_time_);
+  current_time_ = std::max(current_time_, min_time_);
+  UpdatePositionLabel();
+}
+void OrbitEventIterator::SetCurrentTime(TickType current_time) {
+  current_time_ = current_time;
+  UpdatePositionLabel();
 }
 
 //-----------------------------------------------------------------------------
-void OrbitEventIterator::SetIndex(int current_index) {
-  current_index_ = current_index;
-  UpdateCountLabel();
-}
-
-//-----------------------------------------------------------------------------
-void OrbitEventIterator::IncrementIndex() {
-  if (current_index_ < max_count_ - 1) {
-    ++current_index_;
-    UpdateCountLabel();
-  }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitEventIterator::DecrementIndex() {
-  if (current_index_ > 0) {
-    --current_index_;
-    UpdateCountLabel();
-  }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitEventIterator::UpdateCountLabel() {
-  // Indices start at 0, so we display index + 1 in the UI.
-  ui->CountLabel->setText(QString::fromStdString(
-      absl::StrFormat("%d / %d", current_index_ + 1, max_count_)));
+void OrbitEventIterator::UpdatePositionLabel() {
+  double fraction = static_cast<double>(current_time_ - min_time_) /
+                    static_cast<double>(max_time_ - min_time_);
+  ui->position_label_->setText(
+      QString::fromStdString(absl::StrFormat("%.6f", fraction)));
 }
 
 //-----------------------------------------------------------------------------

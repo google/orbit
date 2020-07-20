@@ -51,7 +51,7 @@ class TimeGraph {
   double GetUsFromTick(TickType time) const;
   double GetTimeWindowUs() const { return m_TimeWindowUs; }
   void GetWorldMinMax(float& a_Min, float& a_Max) const;
-  bool UpdateSessionMinMaxCounter();
+  bool UpdateCaptureMinMaxCounter();
 
   void Clear();
   void ZoomAll();
@@ -70,7 +70,7 @@ class TimeGraph {
   const TextBox* FindPreviousFunctionCall(uint64_t function_address, TickType current_time) const;
   const TextBox* FindNextFunctionCall(uint64_t function_address, TickType current_time) const;
   void SelectAndZoom(const TextBox* a_TextBox);
-  double GetSessionTimeSpanUs();
+  double GetCaptureTimeSpanUs();
   double GetCurrentTimeSpanUs();
   void NeedsRedraw() { m_NeedsRedraw = true; }
   bool IsRedrawNeeded() const { return m_NeedsRedraw; }
@@ -118,6 +118,13 @@ class TimeGraph {
     overlay_current_textboxes_ = boxes;
   }
 
+  TickType GetCaptureMin() {
+    return m_CaptureMinCounter;
+  }
+  TickType GetCaptureMax() {
+    return m_CaptureMaxCounter;
+  }
+
  protected:
   uint64_t GetGpuTimelineHash(const Timer& timer) const;
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
@@ -137,8 +144,8 @@ class TimeGraph {
   double m_RefTimeUs = 0;
   double m_MinTimeUs = 0;
   double m_MaxTimeUs = 0;
-  TickType m_SessionMinCounter = 0;
-  TickType m_SessionMaxCounter = 0;
+  TickType m_CaptureMinCounter = 0;
+  TickType m_CaptureMaxCounter = 0;
   std::map<ThreadID, uint32_t> m_EventCount;
   double m_TimeWindowUs = 0;
   float m_WorldStartX = 0;
