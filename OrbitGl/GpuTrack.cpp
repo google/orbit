@@ -12,6 +12,10 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
+constexpr const char* kSwQueueString = "sw queue";
+constexpr const char* kHwQueueString = "hw queue";
+constexpr const char* kHwExecutionString = "hw execution";
+
 //-----------------------------------------------------------------------------
 GpuTrack::GpuTrack(TimeGraph* time_graph,
                    std::shared_ptr<StringManager> string_manager,
@@ -58,9 +62,6 @@ Color GpuTrack::GetTimerColor(const Timer& timer, bool is_selected,
 
   // We disambiguate the different types of GPU activity based on the
   // string that is displayed on their timeslice.
-  constexpr const char* kSwQueueString = "sw queue";
-  constexpr const char* kHwQueueString = "hw queue";
-  constexpr const char* kHwExecutionString = "hw execution";
   float coeff = 1.0f;
   std::string gpu_stage =
       string_manager_->Get(timer.m_UserData[0]).value_or("");
@@ -191,7 +192,6 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
         if (is_collapsed) {
           std::string gpu_stage =
               string_manager_->Get(timer.m_UserData[0]).value_or("");
-          constexpr const char* kHwExecutionString = "hw execution";
           if (gpu_stage != kHwExecutionString) {
             continue;
           }
@@ -202,12 +202,16 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
             SetTimesliceText(timer, elapsed_us, min_x, &text_box);
           }
           batcher->AddShadedBox(pos, size, z, color, PickingID::BOX,
-                                std::make_shared<PickingUserData>(&text_box));
+              std::make_shared<PickingUserData>(&text_box, [&](PickingID id) {
+                return this->GetTooltip(id);
+              }));
         } else {
           auto type = PickingID::LINE;
           batcher->AddVerticalLine(
               pos, size[1], z, color, type,
-              std::make_shared<PickingUserData>(&text_box));
+              std::make_shared<PickingUserData>(&text_box, [&](PickingID id) {
+                return this->GetTooltip(id);
+              }));
           // For lines, we can ignore the entire pixel into which this event
           // falls. We align this precisely on the pixel x-coordinate of the
           // current line being drawn (in ticks).
@@ -349,4 +353,54 @@ std::vector<std::shared_ptr<TimerChain>> GpuTrack::GetAllChains() {
     chains.push_back(pair.second);
   }
   return chains;
+}
+
+//-----------------------------------------------------------------------------
+std::string GpuTrack::GetTooltip(PickingID id) const {
+  TextBox* textBox = time_graph_->GetBatcher().GetTextBox(id);
+  if (textBox) {
+    if (textBox->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
+      std::string gpu_stage =
+          string_manager_->Get(textBox->GetTimer().m_UserData[0]).value_or("");
+      if (gpu_stage == kSwQueueString) {
+        return GetSwQueueTooltip(textBox->GetTimer());
+      } else if (gpu_stage == kHwQueueString) {
+        return GetHwQueueTooltip(textBox->GetTimer());
+      } else if (gpu_stage == kHwExecutionString) {
+        return GetHwExecutionTooltip(textBox->GetTimer());
+      }
+    }
+  }
+
+  return "";
+}
+
+std::string GpuTrack::GetSwQueueTooltip(const Timer& timer) const { 
+  return absl::StrFormat(
+    "<b>Software Queue</b><br/>"
+    "<i>Time between amdgpu_cs_ioctl and amdgpu_sched_run_job.</i>"
+    "<br/>"
+    "<br/>"
+    "<b>Submitter thread:</b> %s [%d]<br/>"
+    "<b>Time:</b> %s",
+    Capture::GThreadNames[timer.m_TID].c_str(),
+    timer.m_TID,
+    GetPrettyTime(timer.ElapsedMillis()).c_str());
+}
+
+std::string GpuTrack::GetHwQueueTooltip(const Timer& timer) const {
+  return absl::StrFormat("<b>Hardware Queue</b><br/><i>Time between amdgpu_sched_run_job and start of GPU execution</i>"
+    "<br/>"
+    "<br/>"
+    "<b>Time:</b> %s",
+    GetPrettyTime(timer.ElapsedMillis()).c_str());
+}
+
+std::string GpuTrack::GetHwExecutionTooltip(const Timer& timer) const {
+  return absl::StrFormat("<b>Harware Execution</b><br/>"
+    "<i>End is marked by \"dma_fence_signaled\" event for this command buffer submission</i>"
+    "<br/>"
+    "<br/>"
+    "<b>Time:</b> %s",
+    GetPrettyTime(timer.ElapsedMillis()).c_str());
 }

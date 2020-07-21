@@ -18,9 +18,7 @@ struct PickingUserData {
 
   PickingUserData(
       TextBox* text_box = nullptr,
-      TooltipCallback generate_tooltip = [](PickingID id) -> std::string {
-        return "";
-      })
+      TooltipCallback generate_tooltip = nullptr)
       : m_TextBox(text_box), m_GenerateTooltip(generate_tooltip) {}
 };
 

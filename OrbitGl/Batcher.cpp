@@ -94,7 +94,7 @@ void Batcher::AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
 }
 
 std::shared_ptr<PickingUserData> Batcher::GetUserData(PickingID a_ID) {
-  std::shared_ptr<PickingUserData>* data;
+  std::shared_ptr<PickingUserData>* data = nullptr;
   switch (a_ID.m_Type) {
     case PickingID::BOX:
       data = box_buffer_.m_UserData.SlowAt(a_ID.m_Id);
