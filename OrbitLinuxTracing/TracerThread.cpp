@@ -336,30 +336,6 @@ bool TracerThread::InitGpuTracepointEventProcessor() {
   return true;
 }
 
-bool TracerThread::OpenRingBufferForGpuTracepoint(
-    const char* tracepoint_category, const char* tracepoint_name, int32_t cpu,
-    std::vector<int>* gpu_tracing_fds,
-    std::vector<PerfEventRingBuffer>* gpu_ring_buffers) {
-  int fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
-  if (fd == -1) {
-    ERROR("Opening %s:%s tracepoint for cpu %d", tracepoint_category,
-          tracepoint_name, cpu);
-    return false;
-  }
-  gpu_tracing_fds->push_back(fd);
-
-  std::string buffer_name =
-      absl::StrFormat("%s:%s_%i", tracepoint_category, tracepoint_name, cpu);
-  PerfEventRingBuffer ring_buffer{fd, GPU_TRACING_RING_BUFFER_SIZE_KB,
-                                  buffer_name};
-  if (!ring_buffer.IsOpen()) {
-    return false;
-  }
-  gpu_ring_buffers->push_back(std::move(ring_buffer));
-
-  return true;
-}
-
 // This method enables events for GPU event tracing. We trace three events that
 // correspond to the following GPU driver events:
 // - A GPU job (command buffer submission) is scheduled by the application. This
@@ -374,56 +350,82 @@ bool TracerThread::OpenRingBufferForGpuTracepoint(
 // relevant events.
 // This method returns true on success, otherwise false.
 bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
-  std::vector<int> amdgpu_cs_ioctl_fds;
-  std::vector<int> amdgpu_sched_run_job_fds;
-  std::vector<int> dma_fence_signaled_fds;
-  std::vector<PerfEventRingBuffer> gpu_ring_buffers;
+  absl::flat_hash_map<int32_t, int> amdgpu_cs_ioctl_fds_per_cpu;
+  absl::flat_hash_map<int32_t, int> amdgpu_sched_run_job_fds_per_cpu;
+  absl::flat_hash_map<int32_t, int> dma_fence_signaled_fds_per_cpu;
+  bool tracepoint_event_open_errors = false;
   for (int32_t cpu : cpus) {
-    if (!OpenRingBufferForGpuTracepoint("amdgpu", "amdgpu_cs_ioctl", cpu,
-                                        &amdgpu_cs_ioctl_fds,
-                                        &gpu_ring_buffers)) {
-      CloseFileDescriptors(amdgpu_cs_ioctl_fds);
-      CloseFileDescriptors(amdgpu_sched_run_job_fds);
-      CloseFileDescriptors(dma_fence_signaled_fds);
-      return false;
+    int amdgpu_cs_ioctl_fd =
+        tracepoint_event_open("amdgpu", "amdgpu_cs_ioctl", -1, cpu);
+    if (amdgpu_cs_ioctl_fd == -1) {
+      ERROR("Opening amdgpu:amdgpu_cs_ioctl tracepoint for cpu %d", cpu);
+      tracepoint_event_open_errors = true;
+      break;
     }
-    if (!OpenRingBufferForGpuTracepoint("amdgpu", "amdgpu_sched_run_job", cpu,
-                                        &amdgpu_sched_run_job_fds,
-                                        &gpu_ring_buffers)) {
-      CloseFileDescriptors(amdgpu_cs_ioctl_fds);
-      CloseFileDescriptors(amdgpu_sched_run_job_fds);
-      CloseFileDescriptors(dma_fence_signaled_fds);
-      return false;
+    amdgpu_cs_ioctl_fds_per_cpu.emplace(cpu, amdgpu_cs_ioctl_fd);
+
+    int amdgpu_sched_run_job_fd =
+        tracepoint_event_open("amdgpu", "amdgpu_sched_run_job", -1, cpu);
+    if (amdgpu_sched_run_job_fd == -1) {
+      ERROR("Opening amdgpu:amdgpu_sched_run_job tracepoint for cpu %d", cpu);
+      tracepoint_event_open_errors = true;
+      break;
     }
-    if (!OpenRingBufferForGpuTracepoint("dma_fence", "dma_fence_signaled", cpu,
-                                        &dma_fence_signaled_fds,
-                                        &gpu_ring_buffers)) {
-      CloseFileDescriptors(amdgpu_cs_ioctl_fds);
-      CloseFileDescriptors(amdgpu_sched_run_job_fds);
-      CloseFileDescriptors(dma_fence_signaled_fds);
-      return false;
+    amdgpu_sched_run_job_fds_per_cpu.emplace(cpu, amdgpu_sched_run_job_fd);
+
+    int dma_fence_signaled_fd =
+        tracepoint_event_open("dma_fence", "dma_fence_signaled", -1, cpu);
+    if (dma_fence_signaled_fd == -1) {
+      ERROR("Opening dma_fence:dma_fence_signaled tracepoint for cpu %d", cpu);
+      tracepoint_event_open_errors = true;
+      break;
     }
+    dma_fence_signaled_fds_per_cpu.emplace(cpu, dma_fence_signaled_fd);
+  }
+
+  if (tracepoint_event_open_errors) {
+    for (const auto& cpu_and_fd : amdgpu_cs_ioctl_fds_per_cpu) {
+      close(cpu_and_fd.second);
+    }
+    for (const auto& cpu_and_fd : amdgpu_sched_run_job_fds_per_cpu) {
+      close(cpu_and_fd.second);
+    }
+    for (const auto& cpu_and_fd : dma_fence_signaled_fds_per_cpu) {
+      close(cpu_and_fd.second);
+    }
+    return false;
   }
 
   // Since all tracepoints could successfully be opened, we can now commit all
   // file descriptors and ring buffers to the TracerThread members.
-  for (int fd : amdgpu_cs_ioctl_fds) {
-    tracing_fds_.push_back(fd);
-    amdgpu_cs_ioctl_ids_.insert(perf_event_get_id(fd));
+  for (const auto& cpu_and_fd : amdgpu_cs_ioctl_fds_per_cpu) {
+    tracing_fds_.push_back(cpu_and_fd.second);
+    amdgpu_cs_ioctl_ids_.insert(perf_event_get_id(cpu_and_fd.second));
   }
-  for (int fd : amdgpu_sched_run_job_fds) {
-    tracing_fds_.push_back(fd);
-    amdgpu_sched_run_job_ids_.insert(perf_event_get_id(fd));
+  for (const auto& cpu_and_fd : amdgpu_sched_run_job_fds_per_cpu) {
+    tracing_fds_.push_back(cpu_and_fd.second);
+    amdgpu_sched_run_job_ids_.insert(perf_event_get_id(cpu_and_fd.second));
   }
-  for (int fd : dma_fence_signaled_fds) {
-    tracing_fds_.push_back(fd);
-    dma_fence_signaled_ids_.insert(perf_event_get_id(fd));
+  for (const auto& cpu_and_fd : dma_fence_signaled_fds_per_cpu) {
+    tracing_fds_.push_back(cpu_and_fd.second);
+    dma_fence_signaled_ids_.insert(perf_event_get_id(cpu_and_fd.second));
   }
-  // TODO: Consider redirecting on the same ring buffer all the three GPU events
-  //  that are open on each CPU.
-  for (PerfEventRingBuffer& buffer : gpu_ring_buffers) {
-    ring_buffers_.emplace_back(std::move(buffer));
-  }
+
+  // Redirect on the same ring buffer all the three GPU events that are open on
+  // each CPU.
+  absl::flat_hash_map<int32_t, int> gpu_tracepoint_ring_buffer_fds_per_cpu;
+  OpenRingBuffersOrRedirectOnExisting(
+      amdgpu_cs_ioctl_fds_per_cpu, &gpu_tracepoint_ring_buffer_fds_per_cpu,
+      &ring_buffers_, GPU_TRACING_RING_BUFFER_SIZE_KB,
+      absl::StrFormat("%s:%s", "amdgpu", "amdgpu_cs_ioctl"));
+  OpenRingBuffersOrRedirectOnExisting(
+      amdgpu_sched_run_job_fds_per_cpu, &gpu_tracepoint_ring_buffer_fds_per_cpu,
+      &ring_buffers_, GPU_TRACING_RING_BUFFER_SIZE_KB,
+      absl::StrFormat("%s:%s", "amdgpu", "amdgpu_sched_run_job"));
+  OpenRingBuffersOrRedirectOnExisting(
+      dma_fence_signaled_fds_per_cpu, &gpu_tracepoint_ring_buffer_fds_per_cpu,
+      &ring_buffers_, GPU_TRACING_RING_BUFFER_SIZE_KB,
+      absl::StrFormat("%s:%s", "dma_fence", "dma_fence_signaled"));
 
   return true;
 }
