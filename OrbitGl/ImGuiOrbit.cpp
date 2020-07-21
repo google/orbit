@@ -602,7 +602,7 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   else
     glDisable(GL_SCISSOR_TEST);
 #ifdef GL_POLYGON_MODE
-  glPolygonMode(GL_FRONT_AND_BACK, (GLenum)last_polygon_mode[0]);
+  glPolygonMode(GL_FRONT_AND_BACK, static_cast<GLenum>(last_polygon_mode[0]));
 #endif
   glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2],
              (GLsizei)last_viewport[3]);
