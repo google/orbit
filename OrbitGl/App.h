@@ -97,7 +97,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   bool SelectProcess(const std::string& a_Process);
   bool SelectProcess(int32_t a_ProcessID);
-  bool Inject(unsigned long a_ProcessId);
 
   // Callbacks
   using CaptureStartedCallback = std::function<void()>;

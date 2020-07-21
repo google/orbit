@@ -677,9 +677,6 @@ bool OrbitApp::SelectProcess(int32_t a_ProcessID) {
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::Inject(unsigned long /*a_ProcessId*/) { return false; }
-
-//-----------------------------------------------------------------------------
 void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
   m_CallStackDataView->SetCallStack(std::move(a_CallStack));
   FireRefreshCallbacks(DataViewType::CALLSTACK);

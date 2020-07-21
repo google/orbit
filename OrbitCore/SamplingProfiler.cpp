@@ -77,13 +77,11 @@ void SamplingProfiler::AddHashedCallStack(CallstackEvent& a_CallStack) {
     ERROR("Callstacks can only be added by hash when already present.");
     return;
   }
-  ScopeLock lock(m_Mutex);
   m_Callstacks.push_back(a_CallStack);
 }
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddUniqueCallStack(CallStack& a_CallStack) {
-  ScopeLock lock(m_Mutex);
   m_UniqueCallstacks[a_CallStack.Hash()] =
       std::make_shared<CallStack>(a_CallStack);
 }
@@ -131,8 +129,6 @@ void SamplingProfiler::SortByThreadUsage() {
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::ProcessSamples() {
-  ScopeLock lock(m_Mutex);
-
   // Clear the result of a previous call to ProcessSamples.
   m_ThreadSampleData.clear();
   m_UniqueResolvedCallstacks.clear();
@@ -218,7 +214,6 @@ void SamplingProfiler::ProcessSamples() {
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::ResolveCallstacks() {
-  ScopeLock lock(m_Mutex);
   for (const auto& it : m_UniqueCallstacks) {
     CallstackID rawCallstackId = it.first;
     const std::shared_ptr<CallStack> callstack = it.second;
@@ -287,8 +282,6 @@ uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
-  ScopeLock lock(m_Mutex);
-
   LinuxAddressInfo* address_info = Capture::GetAddressInfo(address);
   Function* function = m_Process->GetFunctionFromAddress(address, false);
 
