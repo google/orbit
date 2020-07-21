@@ -20,6 +20,7 @@ class SchedulerTrack : public ThreadTrack {
 
  protected:
   float GetYFromDepth(float track_y, uint32_t depth, bool collapsed) override;
+  std::string GetTooltip(PickingID id) const;
 };
 
 #endif  // ORBIT_GL_SCHEDULER_TRACK_H_

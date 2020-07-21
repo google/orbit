@@ -392,7 +392,7 @@ bool ThreadTrack::IsEmpty() const {
 
 
 //-----------------------------------------------------------------------------
-std::string ThreadTrack::GetTooltip(PickingID id) {
+std::string ThreadTrack::GetTooltip(PickingID id) const {
   TextBox* textBox = time_graph_->GetBatcher().GetTextBox(id);
   if (textBox) {
     if (textBox->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
