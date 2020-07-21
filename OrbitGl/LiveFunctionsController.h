@@ -49,7 +49,6 @@ class LiveFunctionsController {
   absl::flat_hash_map<uint64_t, const TextBox*> current_textboxes_;
 
   std::function<void(uint64_t, Function*)> add_iterator_callback_;
-  std::function<void(double)> set_current_time_callback_;
 
   uint64_t next_iterator_id_ = 0;
 
