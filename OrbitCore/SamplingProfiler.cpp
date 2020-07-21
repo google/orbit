@@ -176,7 +176,7 @@ void SamplingProfiler::ProcessSamples() {
     // Address count per sample per thread
     for (auto& stackCountIt : threadSampleData.m_CallstackCount) {
       const CallstackID callstackID = stackCountIt.first;
-      const unsigned int callstackCount = stackCountIt.second;
+      const uint32_t callstackCount = stackCountIt.second;
 
       CallstackID resolvedCallstackID =
           m_OriginalCallstackToResolvedCallstack[callstackID];
@@ -200,7 +200,7 @@ void SamplingProfiler::ProcessSamples() {
     // sort thread addresses by count
     for (auto& addressCountIt : threadSampleData.m_AddressCount) {
       const uint64_t address = addressCountIt.first;
-      const unsigned int count = addressCountIt.second;
+      const uint32_t count = addressCountIt.second;
       threadSampleData.m_AddressCountSorted.insert(
           std::make_pair(count, address));
     }
@@ -260,27 +260,26 @@ const ThreadSampleData* SamplingProfiler::GetSummary() const {
   if (summary_it == m_ThreadSampleData.end()) {
     return nullptr;
   }
-  return &((*summary_it).second);
+  return &(summary_it->second);
 }
 
 //-----------------------------------------------------------------------------
-unsigned int SamplingProfiler::GetCountOfFunction(
-    uint64_t function_address) const {
+uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
   auto addresses_of_functions_itr =
       m_FunctionAddressToExactAddresses.find(function_address);
   if (addresses_of_functions_itr == m_FunctionAddressToExactAddresses.end()) {
     return 0;
   }
-  unsigned int result = 0;
+  uint32_t result = 0;
   const ThreadSampleData* summary = GetSummary();
   if (summary == nullptr) {
     return 0;
   }
-  const auto& function_addresses = (*addresses_of_functions_itr).second;
+  const auto& function_addresses = addresses_of_functions_itr->second;
   for (uint64_t address : function_addresses) {
     auto count_itr = summary->m_RawAddressCount.find(address);
     if (count_itr != summary->m_RawAddressCount.end()) {
-      result += (*count_itr).second;
+      result += count_itr->second;
     }
   }
   return result;
@@ -339,7 +338,7 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
 
     for (auto sortedIt = threadSampleData.m_AddressCountSorted.rbegin();
          sortedIt != threadSampleData.m_AddressCountSorted.rend(); ++sortedIt) {
-      unsigned int numOccurences = sortedIt->first;
+      uint32_t numOccurences = sortedIt->first;
       uint64_t address = sortedIt->second;
       float inclusive_percent =
           100.f * numOccurences / threadSampleData.m_NumSamples;

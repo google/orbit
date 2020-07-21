@@ -36,12 +36,12 @@ struct SampledFunction {
 //-----------------------------------------------------------------------------
 struct ThreadSampleData {
   ThreadSampleData() { m_ThreadUsage.push_back(0); }
-  std::unordered_map<CallstackID, unsigned int> m_CallstackCount;
-  std::unordered_map<uint64_t, unsigned int> m_AddressCount;
-  std::unordered_map<uint64_t, unsigned int> m_RawAddressCount;
-  std::unordered_map<uint64_t, unsigned int> m_ExclusiveCount;
-  std::multimap<unsigned int, uint64_t> m_AddressCountSorted;
-  unsigned int m_NumSamples = 0;
+  std::unordered_map<CallstackID, uint32_t> m_CallstackCount;
+  std::unordered_map<uint64_t, uint32_t> m_AddressCount;
+  std::unordered_map<uint64_t, uint32_t> m_RawAddressCount;
+  std::unordered_map<uint64_t, uint32_t> m_ExclusiveCount;
+  std::multimap<uint32_t, uint64_t> m_AddressCountSorted;
+  uint32_t m_NumSamples = 0;
   std::vector<SampledFunction> m_SampleReport;
   std::vector<float> m_ThreadUsage;
   float m_AverageThreadUsage = 0;
@@ -112,8 +112,7 @@ class SamplingProfiler {
   void ProcessSamples();
   void UpdateAddressInfo(uint64_t address);
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
-  [[nodiscard]] unsigned int GetCountOfFunction(
-      uint64_t function_address) const;
+  [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
 
   ORBIT_SERIALIZABLE;
 
