@@ -28,6 +28,7 @@ class Pickable {
 //-----------------------------------------------------------------------------
 struct PickingID {
   enum Type {
+    INVALID,
     LINE,
     BOX,
     TRIANGLE,
@@ -79,8 +80,8 @@ struct PickingID {
     std::memcpy(&id, &a_Value, sizeof(uint32_t));
     return id;
   }
-  uint32_t m_Id : 29;
-  uint32_t m_Type : 2;
+  uint32_t m_Id : 28;
+  uint32_t m_Type : 3;
   uint32_t batcher_id_ : 1;
 };
 
