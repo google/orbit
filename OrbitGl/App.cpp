@@ -340,7 +340,7 @@ void OrbitApp::Disassemble(int32_t pid, const Function& function) {
     }
     std::shared_ptr<SamplingProfiler> profiler =
         sampling_report_->GetProfiler();
-    unsigned int count_of_function = profiler->GetCountOfFunction(
+    uint32_t count_of_function = profiler->GetCountOfFunction(
         FunctionUtils::GetAbsoluteAddress(function));
     if (count_of_function == 0) {
       SendDisassemblyToUi(disasm.GetResult());
