@@ -81,14 +81,15 @@ static bool CheckShader(GLuint handle, const char* desc) {
   glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &log_length);
   if (log_length > 1) {
     ImVector<char> buf;
-    buf.resize((int)(log_length + 1));
-    glGetShaderInfoLog(handle, log_length, NULL, (GLchar*)buf.begin());
+    buf.resize(static_cast<int>(log_length + 1));
+    glGetShaderInfoLog(handle, log_length, NULL,
+                       static_cast<GLchar*>(buf.begin()));
     LOG("Log from shader compilation: %s", buf.begin());
   }
-  if ((GLboolean)status == GL_FALSE) {
+  if (static_cast<GLboolean>(status) == GL_FALSE) {
     FATAL("Orbit_ImGui_CreateDeviceObjects: failed to compile %s!", desc);
   }
-  return (GLboolean)status == GL_TRUE;
+  return static_cast<GLboolean>(status) == GL_TRUE;
 }
 
 // If you get an error please report on GitHub. You may try different GL context
@@ -99,14 +100,15 @@ static bool CheckProgram(GLuint handle, const char* desc) {
   glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &log_length);
   if (log_length > 1) {
     ImVector<char> buf;
-    buf.resize((int)(log_length + 1));
-    glGetProgramInfoLog(handle, log_length, NULL, (GLchar*)buf.begin());
+    buf.resize(static_cast<int>(log_length + 1));
+    glGetProgramInfoLog(handle, log_length, NULL,
+                        static_cast<GLchar*>(buf.begin()));
     LOG("Log from shader program linking: %s", buf.begin());
   }
-  if ((GLboolean)status == GL_FALSE) {
+  if (static_cast<GLboolean>(status) == GL_FALSE) {
     FATAL("Orbit_ImGui_CreateDeviceObjects: failed to link %s!", desc);
   }
-  return (GLboolean)status == GL_TRUE;
+  return static_cast<GLboolean>(status) == GL_TRUE;
 }
 
 bool Orbit_ImGui_CreateTextures() {
@@ -175,7 +177,8 @@ bool Orbit_ImGui_CreateTextures() {
                record_image.pixel_data);
 
   // Store our identifier
-  io.Fonts->TexID = (ImTextureID)(intptr_t)g_FontTexture;
+  io.Fonts->TexID =
+      reinterpret_cast<ImTextureID>(static_cast<intptr_t>(g_FontTexture));
 
   // Restore state
   glBindTexture(GL_TEXTURE_2D, last_texture);
@@ -387,15 +390,15 @@ void SetupImGuiStyle(bool bStyleDark_, float alpha_) {
 void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   // Avoid rendering when minimized, scale coordinates for retina displays
   // (screen coordinates != framebuffer coordinates)
-  int fb_width =
-      (int)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
-  int fb_height =
-      (int)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y);
+  int fb_width = static_cast<int>(draw_data->DisplaySize.x *
+                                  draw_data->FramebufferScale.x);
+  int fb_height = static_cast<int>(draw_data->DisplaySize.y *
+                                   draw_data->FramebufferScale.y);
   if (fb_width <= 0 || fb_height <= 0) return;
 
-    // Backup GL state
-  GLenum last_active_texture;
-  glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint*)&last_active_texture);
+  // Backup GL state
+  GLint last_active_texture;
+  glGetIntegerv(GL_ACTIVE_TEXTURE, static_cast<GLint*>(&last_active_texture));
   glActiveTexture(GL_TEXTURE0);
   GLint last_program;
   glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
@@ -419,18 +422,18 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   glGetIntegerv(GL_VIEWPORT, last_viewport);
   GLint last_scissor_box[4];
   glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box);
-  GLenum last_blend_src_rgb;
-  glGetIntegerv(GL_BLEND_SRC_RGB, (GLint*)&last_blend_src_rgb);
-  GLenum last_blend_dst_rgb;
-  glGetIntegerv(GL_BLEND_DST_RGB, (GLint*)&last_blend_dst_rgb);
-  GLenum last_blend_src_alpha;
-  glGetIntegerv(GL_BLEND_SRC_ALPHA, (GLint*)&last_blend_src_alpha);
-  GLenum last_blend_dst_alpha;
-  glGetIntegerv(GL_BLEND_DST_ALPHA, (GLint*)&last_blend_dst_alpha);
-  GLenum last_blend_equation_rgb;
-  glGetIntegerv(GL_BLEND_EQUATION_RGB, (GLint*)&last_blend_equation_rgb);
-  GLenum last_blend_equation_alpha;
-  glGetIntegerv(GL_BLEND_EQUATION_ALPHA, (GLint*)&last_blend_equation_alpha);
+  GLint last_blend_src_rgb;
+  glGetIntegerv(GL_BLEND_SRC_RGB, &last_blend_src_rgb);
+  GLint last_blend_dst_rgb;
+  glGetIntegerv(GL_BLEND_DST_RGB, &last_blend_dst_rgb);
+  GLint last_blend_src_alpha;
+  glGetIntegerv(GL_BLEND_SRC_ALPHA, &last_blend_src_alpha);
+  GLint last_blend_dst_alpha;
+  glGetIntegerv(GL_BLEND_DST_ALPHA, &last_blend_dst_alpha);
+  GLint last_blend_equation_rgb;
+  glGetIntegerv(GL_BLEND_EQUATION_RGB, &last_blend_equation_rgb);
+  GLint last_blend_equation_alpha;
+  glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &last_blend_equation_alpha);
   GLboolean last_enable_blend = glIsEnabled(GL_BLEND);
   GLboolean last_enable_cull_face = glIsEnabled(GL_CULL_FACE);
   GLboolean last_enable_depth_test = glIsEnabled(GL_DEPTH_TEST);
