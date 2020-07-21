@@ -79,14 +79,11 @@ class SamplingProfiler {
   void AddUniqueCallStack(CallStack& a_CallStack);
 
   std::shared_ptr<CallStack> GetCallStack(CallstackID a_ID) {
-    ScopeLock lock(m_Mutex);
-    return m_UniqueCallstacks[a_ID];
+    return m_UniqueCallstacks.at(a_ID);
   }
 
   bool HasCallStack(CallstackID a_ID) {
-    ScopeLock lock(m_Mutex);
-    auto it = m_UniqueCallstacks.find(a_ID);
-    return it != m_UniqueCallstacks.end();
+    return m_UniqueCallstacks.count(a_ID) > 0;
   }
 
   std::multimap<int, CallstackID> GetCallstacksFromAddress(
@@ -123,7 +120,6 @@ class SamplingProfiler {
  protected:
   std::shared_ptr<Process> m_Process;
   bool m_GenerateSummary = true;
-  Mutex m_Mutex;
   int m_NumSamples = 0;
 
   // Filled before ProcessSamples by AddCallstack, AddHashedCallstack.
