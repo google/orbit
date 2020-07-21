@@ -440,10 +440,10 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   GLboolean last_enable_scissor_test = glIsEnabled(GL_SCISSOR_TEST);
   bool clip_origin_lower_left = true;
 #if defined(GL_CLIP_ORIGIN) && !defined(__APPLE__)
-  GLenum last_clip_origin = 0;
+  GLint last_clip_origin = 0;
   glGetIntegerv(GL_CLIP_ORIGIN,
-                (GLint*)&last_clip_origin);  // Support for GL 4.5's
-                                             // glClipControl(GL_UPPER_LEFT)
+                &last_clip_origin);  // Support for GL 4.5's
+                                     // glClipControl(GL_UPPER_LEFT)
   if (last_clip_origin == GL_UPPER_LEFT) clip_origin_lower_left = false;
 #endif
 
@@ -463,7 +463,8 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   // Our visible imgui space lies from draw_data->DisplayPos (top left) to
   // draw_data->DisplayPos+data_data->DisplaySize (bottom right). DisplayMin is
   // typically (0,0) for single viewport apps.
-  glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
+  glViewport(0, 0, static_cast<GLsizei>(fb_width),
+             static_cast<GLsizei>(fb_height));
   float L = draw_data->DisplayPos.x;
   float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
   float T = draw_data->DisplayPos.y;
@@ -496,15 +497,15 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   glEnableVertexAttribArray(g_AttribLocationPosition);
   glEnableVertexAttribArray(g_AttribLocationUV);
   glEnableVertexAttribArray(g_AttribLocationColor);
-  glVertexAttribPointer(g_AttribLocationPosition, 2, GL_FLOAT, GL_FALSE,
-                        sizeof(ImDrawVert),
-                        (GLvoid*)IM_OFFSETOF(ImDrawVert, pos));
+  glVertexAttribPointer(
+      g_AttribLocationPosition, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
+      reinterpret_cast<GLvoid*>(IM_OFFSETOF(ImDrawVert, pos)));
   glVertexAttribPointer(g_AttribLocationUV, 2, GL_FLOAT, GL_FALSE,
                         sizeof(ImDrawVert),
-                        (GLvoid*)IM_OFFSETOF(ImDrawVert, uv));
-  glVertexAttribPointer(g_AttribLocationColor, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-                        sizeof(ImDrawVert),
-                        (GLvoid*)IM_OFFSETOF(ImDrawVert, col));
+                        reinterpret_cast<GLvoid*>(IM_OFFSETOF(ImDrawVert, uv)));
+  glVertexAttribPointer(
+      g_AttribLocationColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert),
+      reinterpret_cast<GLvoid*>(IM_OFFSETOF(ImDrawVert, col)));
 
   // Will project scissor/clipping rectangles into framebuffer space
   ImVec2 clip_off =
@@ -520,13 +521,15 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
 
     glBindBuffer(GL_ARRAY_BUFFER, g_VboHandle);
     glBufferData(GL_ARRAY_BUFFER,
-                 (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert),
-                 (const GLvoid*)cmd_list->VtxBuffer.Data, GL_STREAM_DRAW);
+        static_cast<GLsizeiptr>(cmd_list->VtxBuffer.Size * sizeof(ImDrawVert)),
+        reinterpret_cast<const GLvoid*>(cmd_list->VtxBuffer.Data),
+        GL_STREAM_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_ElementsHandle);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                 (GLsizeiptr)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx),
-                 (const GLvoid*)cmd_list->IdxBuffer.Data, GL_STREAM_DRAW);
+        static_cast<GLsizeiptr>(cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx)),
+        reinterpret_cast<const GLvoid*>(cmd_list->IdxBuffer.Data),
+        GL_STREAM_DRAW);
 
     for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++) {
       const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
@@ -545,17 +548,17 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
             clip_rect.z >= 0.0f && clip_rect.w >= 0.0f) {
           // Apply scissor/clipping rectangle
           if (clip_origin_lower_left)
-            glScissor((int)clip_rect.x, (int)(fb_height - clip_rect.w),
-                      (int)(clip_rect.z - clip_rect.x),
-                      (int)(clip_rect.w - clip_rect.y));
-          else
-            glScissor(
-                (int)clip_rect.x, (int)clip_rect.y, (int)clip_rect.z,
-                (int)clip_rect
-                    .w);  // Support for GL 4.5's glClipControl(GL_UPPER_LEFT)
-
+            glScissor(clip_rect.x, (fb_height - clip_rect.w),
+                      (clip_rect.z - clip_rect.x),
+                      (clip_rect.w - clip_rect.y));
+          else {
+            // Support for GL 4.5's glClipControl(GL_UPPER_LEFT)
+            glScissor(clip_rect.x, clip_rect.y, clip_rect.z, clip_rect.w);
+          }
           // Bind texture, Draw
-          glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
+          glBindTexture(
+              GL_TEXTURE_2D,
+              static_cast<GLuint>(reinterpret_cast<intptr_t>(pcmd->TextureId)));
           glDrawElements(
               GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
               sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
