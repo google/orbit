@@ -53,7 +53,7 @@ std::unordered_map<uint64_t, LinuxAddressInfo> Capture::GAddressInfos;
 std::unordered_map<uint64_t, std::string> Capture::GAddressToFunctionName;
 Mutex Capture::GCallstackMutex;
 std::unordered_map<uint64_t, std::string> Capture::GZoneNames;
-TextBox* Capture::GSelectedTextBox;
+TextBox* Capture::GSelectedTextBox = nullptr;
 ThreadID Capture::GSelectedThreadId;
 std::chrono::system_clock::time_point Capture::GCaptureTimePoint;
 

@@ -9,6 +9,8 @@
 #include "FunctionUtils.h"
 #include "TimeGraph.h"
 
+namespace {
+
 std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
     const absl::flat_hash_map<uint64_t, const TextBox*>& text_boxes) {
   uint64_t min_time = std::numeric_limits<uint64_t>::max();
@@ -19,6 +21,68 @@ std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
   }
   return std::make_pair(min_time, max_time);
 }
+
+uint64_t AbsDiff(uint64_t a, uint64_t b) {
+  if (a > b) {
+    return a - b;
+  } else {
+    return b - a;
+  }
+}
+
+const TextBox* ClosestTo(TickType point, const TextBox* box_a,
+                         const TextBox* box_b) {
+  uint64_t a_diff = AbsDiff(point, box_a->GetTimer().m_Start);
+  uint64_t b_diff = AbsDiff(point, box_b->GetTimer().m_Start);
+  if (a_diff <= b_diff) {
+    return box_a;
+  }
+  return box_b;
+}
+
+const TextBox* SnapToClosestStart(uint64_t absolute_function_address) {
+  double min_us = GCurrentTimeGraph->GetMinTimeUs();
+  double max_us = GCurrentTimeGraph->GetMaxTimeUs();
+  double center_us = 0.5 * max_us + 0.5 * min_us;
+  TickType center = GCurrentTimeGraph->GetTickFromUs(center_us);
+
+  // First, we find the next function call (text box) that has its end timestamp
+  // after center - 1 (we use center - 1 to make sure that center itself is
+  // included in the timerange that we search). Note that FindNextFunctionCall
+  // uses the end marker of the timer as a timestamp.
+  const TextBox* box = GCurrentTimeGraph->FindNextFunctionCall(
+      absolute_function_address, center - 1);
+
+  // If we cannot find a next function call, then the closest one is the first
+  // call we find before center.
+  if (!box) {
+    return GCurrentTimeGraph->FindPreviousFunctionCall(
+        absolute_function_address, center);
+  }
+
+  // We have to consider the case where center falls into the interior of the
+  // interval of 'box'. In this case, the closest box can be any of two boxes:
+  // 'box' or the next one. It cannot be any box before 'box' because we are
+  // using the start marker to measure the distance.
+  if (box->GetTimer().m_Start <= center && center <= box->GetTimer().m_End) {
+    const TextBox* next_box = GCurrentTimeGraph->FindNextFunctionCall(
+        absolute_function_address, box->GetTimer().m_End);
+    return ClosestTo(center, box, next_box);
+  }
+
+  // Center is not inside the box, that is, m_Start of box is larger than
+  // center.
+  const TextBox* previous_box = GCurrentTimeGraph->FindPreviousFunctionCall(
+      absolute_function_address, box->GetTimer().m_Start);
+
+  if (!previous_box) {
+    return box;
+  }
+
+  return ClosestTo(center, previous_box, box);
+}
+
+}  // namespace
 
 void LiveFunctionsController::Move() {
   if (!current_textboxes_.empty()) {
@@ -135,8 +199,13 @@ void LiveFunctionsController::AddIterator(Function* function) {
   ++next_iterator_id_;
 
   auto function_address = FunctionUtils::GetAbsoluteAddress(*function);
-  const TextBox* box = GCurrentTimeGraph->FindNextFunctionCall(
-      function_address, std::numeric_limits<TickType>::lowest());
+  const TextBox* box = Capture::GSelectedTextBox;
+  // If no box is currently selected or the selected box is a different
+  // function, we search for the closest box to the current center of the
+  // screen.
+  if (!box || box->GetTimer().m_FunctionAddress != function_address) {
+    box = SnapToClosestStart(function_address);
+  }
 
   function_iterators_.insert(std::make_pair(id, function));
   current_textboxes_.insert(std::make_pair(id, box));
