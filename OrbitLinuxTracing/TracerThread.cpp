@@ -257,7 +257,32 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
   return true;
 }
 
-bool TracerThread::OpenRingBuffersForTracepointAndRedirectOnExistingIfNecessary(
+void TracerThread::OpenRingBuffersOrRedirectOnExisting(
+    const absl::flat_hash_map<int32_t, int>& fds_per_cpu,
+    absl::flat_hash_map<int32_t, int>* ring_buffer_fds_per_cpu,
+    std::vector<PerfEventRingBuffer>* ring_buffers,
+    uint64_t ring_buffer_size_kb, std::string_view buffer_name_prefix) {
+  // Redirect all events on the same cpu to a single ring buffer.
+  for (const auto& cpu_and_fd : fds_per_cpu) {
+    int32_t cpu = cpu_and_fd.first;
+    int fd = cpu_and_fd.second;
+    if (ring_buffer_fds_per_cpu->contains(cpu)) {
+      // Redirect to the already opened ring buffer.
+      int ring_bugger_fd = ring_buffer_fds_per_cpu->at(cpu);
+      perf_event_redirect(fd, ring_bugger_fd);
+    } else {
+      // Create a ring buffer for this cpu.
+      int ring_buffer_fd = fd;
+      std::string buffer_name =
+          absl::StrFormat("%s_%d", buffer_name_prefix, cpu);
+      ring_buffers->emplace_back(ring_buffer_fd, ring_buffer_size_kb,
+                                 buffer_name);
+      ring_buffer_fds_per_cpu->emplace(cpu, ring_buffer_fd);
+    }
+  }
+}
+
+bool TracerThread::OpenRingBuffersForTracepoint(
     const char* tracepoint_category, const char* tracepoint_name,
     const std::vector<int32_t>& cpus, std::vector<int>* tracing_fds,
     absl::flat_hash_set<uint64_t>* tracepoint_ids,
@@ -284,22 +309,9 @@ bool TracerThread::OpenRingBuffersForTracepointAndRedirectOnExistingIfNecessary(
     tracepoint_ids->insert(stream_id);
   }
 
-  // Redirect all tracepoints on the same cpu to a single ring buffer.
-  for (int32_t cpu : cpus) {
-    int fd = tracepoint_fds_per_cpu.at(cpu);
-    if (tracepoint_ring_buffer_fds_per_cpu->contains(cpu)) {
-      // Redirect to the already opened ring buffer.
-      int ring_bugger_fd = tracepoint_ring_buffer_fds_per_cpu->at(cpu);
-      perf_event_redirect(fd, ring_bugger_fd);
-    } else {
-      // Create a ring buffer for tracepoints for this cpu.
-      int ring_buffer_fd = fd;
-      std::string buffer_name = absl::StrFormat("tracepoints_%d", cpu);
-      ring_buffers->emplace_back(ring_buffer_fd,
-                                 TRACEPOINTS_RING_BUFFER_SIZE_KB, buffer_name);
-      tracepoint_ring_buffer_fds_per_cpu->emplace(cpu, ring_buffer_fd);
-    }
-  }
+  OpenRingBuffersOrRedirectOnExisting(
+      tracepoint_fds_per_cpu, tracepoint_ring_buffer_fds_per_cpu, ring_buffers,
+      TRACEPOINTS_RING_BUFFER_SIZE_KB, "tracepoints");
   return true;
 }
 
@@ -307,15 +319,13 @@ bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
   bool tracepoint_event_open_errors = false;
   absl::flat_hash_map<int32_t, int> tracepoint_ring_buffer_fds_per_cpu;
 
-  tracepoint_event_open_errors |=
-      !OpenRingBuffersForTracepointAndRedirectOnExistingIfNecessary(
-          "task", "task_newtask", cpus, &tracing_fds_, &task_newtask_ids_,
-          &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+  tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
+      "task", "task_newtask", cpus, &tracing_fds_, &task_newtask_ids_,
+      &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 
-  tracepoint_event_open_errors |=
-      !OpenRingBuffersForTracepointAndRedirectOnExistingIfNecessary(
-          "task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
-          &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+  tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
+      "task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
+      &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 
   return !tracepoint_event_open_errors;
 }

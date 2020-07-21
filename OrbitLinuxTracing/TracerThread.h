@@ -62,7 +62,13 @@ class TracerThread {
   bool OpenMmapTask(const std::vector<int32_t>& cpus);
   bool OpenSampling(const std::vector<int32_t>& cpus);
 
-  static bool OpenRingBuffersForTracepointAndRedirectOnExistingIfNecessary(
+  static void OpenRingBuffersOrRedirectOnExisting(
+      const absl::flat_hash_map<int32_t, int>& fds_per_cpu,
+      absl::flat_hash_map<int32_t, int>* ring_buffer_fds_per_cpu,
+      std::vector<PerfEventRingBuffer>* ring_buffers,
+      uint64_t ring_buffer_size_kb, std::string_view buffer_name_prefix);
+
+  static bool OpenRingBuffersForTracepoint(
       const char* tracepoint_category, const char* tracepoint_name,
       const std::vector<int32_t>& cpus, std::vector<int>* tracing_fds,
       absl::flat_hash_set<uint64_t>* tracepoint_ids,
