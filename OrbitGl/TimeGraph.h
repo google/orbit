@@ -51,7 +51,7 @@ class TimeGraph {
   double GetUsFromTick(TickType time) const;
   double GetTimeWindowUs() const { return m_TimeWindowUs; }
   void GetWorldMinMax(float& a_Min, float& a_Max) const;
-  bool UpdateCaptureMinMaxCounter();
+  bool UpdateCaptureMinMaxTimestamps();
 
   void Clear();
   void ZoomAll();
@@ -118,12 +118,8 @@ class TimeGraph {
     overlay_current_textboxes_ = boxes;
   }
 
-  TickType GetCaptureMin() {
-    return m_CaptureMinCounter;
-  }
-  TickType GetCaptureMax() {
-    return m_CaptureMaxCounter;
-  }
+  TickType GetCaptureMin() { return capture_min_timestamp_; }
+  TickType GetCaptureMax() { return capture_max_timestamp_; }
 
  protected:
   uint64_t GetGpuTimelineHash(const Timer& timer) const;
@@ -144,8 +140,8 @@ class TimeGraph {
   double m_RefTimeUs = 0;
   double m_MinTimeUs = 0;
   double m_MaxTimeUs = 0;
-  TickType m_CaptureMinCounter = 0;
-  TickType m_CaptureMaxCounter = 0;
+  TickType capture_min_timestamp_ = 0;
+  TickType capture_max_timestamp_ = 0;
   std::map<ThreadID, uint32_t> m_EventCount;
   double m_TimeWindowUs = 0;
   float m_WorldStartX = 0;

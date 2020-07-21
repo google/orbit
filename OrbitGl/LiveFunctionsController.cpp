@@ -148,7 +148,7 @@ void LiveFunctionsController::AddIterator(Function* function) {
 }
 
 TickType LiveFunctionsController::GetStartTime(uint64_t index) {
-  auto& it = current_textboxes_.find(index);
+  const auto& it = current_textboxes_.find(index);
   if (it != current_textboxes_.end()) {
     return it->second->GetTimer().m_Start;
   }
