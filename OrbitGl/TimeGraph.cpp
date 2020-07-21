@@ -242,7 +242,10 @@ void TimeGraph::HorizontallyMoveIntoView(const TextBox* text_box,
 
 void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
   CHECK(text_box != nullptr);
-  // TODO: Sometimes the Y-coordinate is not set.
+  // TODO: Sometimes the Y-coordinate is not set. We only need to update the
+  // Y-coordinate from this text box
+  UpdatePrimitives();
+
   auto world_top_left_y = m_Canvas->GetWorldTopLeftY();
   auto top_margin =
       m_Layout.GetSchedulerTrackOffset() + m_Layout.GetVerticalMargin();
