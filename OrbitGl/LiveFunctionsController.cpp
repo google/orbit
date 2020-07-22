@@ -26,8 +26,6 @@ void LiveFunctionsController::Move() {
     GCurrentTimeGraph->Zoom(min_max.first, min_max.second);
     if (current_textboxes_.find(id_to_select_) != current_textboxes_.end()) {
       GCurrentTimeGraph->Select(current_textboxes_[id_to_select_]);
-      GCurrentTimeGraph->VerticallyMoveIntoView(
-          current_textboxes_[id_to_select_]);
     } else {
       CHECK(false);
     }
