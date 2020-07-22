@@ -21,13 +21,11 @@
 
 class GlCanvas;
 
+extern ImFont* GOrbitImguiFont;
+
 IMGUI_API bool Orbit_ImGui_Init();
 IMGUI_API void Orbit_ImGui_Shutdown();
 IMGUI_API void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas);
-
-// Use if you want to reset your rendering device without losing ImGui state.
-IMGUI_API void Orbit_ImGui_InvalidateDeviceObjects();
-IMGUI_API bool Orbit_ImGui_CreateDeviceObjects();
 
 // GLFW callbacks (installed by default if you enable 'install_callbacks' during
 // initialization) Provided here if you want to chain callbacks. You can also
@@ -38,14 +36,9 @@ IMGUI_API void Orbit_ImGui_ScrollCallback(GlCanvas* a_Canvas, int scroll);
 IMGUI_API void Orbit_ImGui_KeyCallback(GlCanvas* a_Canvas, int key, bool down);
 IMGUI_API void Orbit_ImGui_CharCallback(GlCanvas* a_Canvas, unsigned int c);
 
-void SetupImGuiStyle(bool bStyleDark_, float alpha_);
-bool LoadTextureFromFile(const char* filename, uint32_t* out_texture,
-                         int* out_width, int* out_height);
-
 // Returns OpenGL texture id or 0 in case of an error.
 uint32_t LoadTextureFromFile(const char* filename);
 
-extern ImFont* GOrbitImguiFont;
 
 struct ScopeImguiContext {
   explicit ScopeImguiContext(ImGuiContext* a_State) : m_ImGuiContext(nullptr) {
