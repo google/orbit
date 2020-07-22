@@ -27,7 +27,6 @@
 #include "../OrbitGl/SamplingReport.h"
 #include "../third_party/concurrentqueue/concurrentqueue.h"
 #include "OrbitVersion.h"
-#include "WebEngine/Dialog.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
@@ -40,6 +39,7 @@
 #include "services.pb.h"
 #include "showincludesdialog.h"
 #include "ui_orbitmainwindow.h"
+#include "WebEngine/Dialog.h"
 
 #ifdef _WIN32
 #include <shellapi.h>
@@ -96,13 +96,12 @@ OrbitMainWindow::OrbitMainWindow(ApplicationOptions&& options,
   finalizing_capture_dialog->setFixedSize(finalizing_capture_dialog->size());
   finalizing_capture_dialog->close();
 
-  GOrbitApp->SetCaptureStopRequestedCallback([this, finalizing_capture_dialog] {
-    ui->actionStop_Capture->setDisabled(true);
-    finalizing_capture_dialog->show();
-  });
+  GOrbitApp->SetCaptureStopRequestedCallback(
+      [finalizing_capture_dialog] { finalizing_capture_dialog->show(); });
   GOrbitApp->SetCaptureStoppedCallback([this, finalizing_capture_dialog] {
     finalizing_capture_dialog->close();
     ui->actionStart_Capture->setDisabled(false);
+    ui->actionStop_Capture->setDisabled(true);
     ui->actionOpen_Capture->setDisabled(false);
     ui->actionSave_Capture->setDisabled(false);
     ui->actionOpen_Preset->setDisabled(false);
@@ -874,12 +873,6 @@ void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
 }
 
 void OrbitMainWindow::on_actionShowSourceDemo_triggered() {
-  static int counter = 0;
-  std::array files = {":/webUI/webUI/examples/orbitmainwindow.cpp",
-                      ":/webUI/webUI/examples/LiveFunctionsDataView.cpp",
-                      ":/webUI/webUI/examples/Logging.h"};
-  QFile source{files[counter++ % files.size()]};
-  source.open(QFile::ReadOnly);
-  source_code_view_.SetSourceCode(source.readAll());
+  source_code_view_.SetSourceCode("int main() {}");
   source_code_view_.exec();
 }

@@ -257,6 +257,7 @@
      <string>Debug</string>
     </property>
     <addaction name="menuCrash"/>
+    <addaction name="actionShowSourceDemo"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -409,6 +410,11 @@
   <action name="actionServiceStackOverflow">
    <property name="text">
     <string>[Service] Stack Overflow</string>
+   </property>
+  </action>
+  <action name="actionShowSourceDemo">
+   <property name="text">
+     <string>Show source dialog</string>
    </property>
   </action>
  </widget>

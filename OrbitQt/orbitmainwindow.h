@@ -10,6 +10,7 @@
 #include <QMainWindow>
 #include <QString>
 #include <QTimer>
+#include <QWebEngineProfile>
 #include <memory>
 #include <outcome.hpp>
 #include <string>
@@ -17,6 +18,7 @@
 
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
+#include "SourceCodeView.h"
 
 namespace Ui {
 class OrbitMainWindow;
@@ -26,7 +28,7 @@ class OrbitMainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
-  OrbitMainWindow(QApplication* a_App, ApplicationOptions&& options);
+  OrbitMainWindow(ApplicationOptions&& options, QWebEngineProfile* web_engine_profile);
   ~OrbitMainWindow() override;
 
   void RegisterGlWidget(class OrbitGLWidget* a_GlWidget) {
@@ -88,6 +90,8 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionServiceNullPointerDereference_triggered();
   void on_actionServiceStackOverflow_triggered();
 
+  void on_actionShowSourceDemo_triggered();
+
   void ShowCaptureOnSaveWarningIfNeeded();
 
  private:
@@ -97,7 +101,6 @@ class OrbitMainWindow : public QMainWindow {
   void ShowFeedbackDialog();
 
  private:
-  QApplication* m_App;
   Ui::OrbitMainWindow* ui;
   QTimer* m_MainTimer;
   std::vector<OrbitGLWidget*> m_GlWidgets;
@@ -125,4 +128,8 @@ class OrbitMainWindow : public QMainWindow {
   class OutputDialog* m_OutputDialog;
   std::string m_CurrentPdbName;
   bool m_IsDev;
+  
+  // Source code view
+  QWebEngineProfile* web_engine_profile_;
+  OrbitQt::SourceCodeView source_code_view_;
 };

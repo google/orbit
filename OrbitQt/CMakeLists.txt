@@ -34,7 +34,8 @@ target_sources(
           processlauncherwidget.h
           resource.h
           servicedeploymanager.h
-          showincludesdialog.h)
+          showincludesdialog.h
+          SourceCodeView.h)
 
 target_sources(
   OrbitQt
@@ -63,7 +64,9 @@ target_sources(
           outputdialog.cpp
           processlauncherwidget.cpp
           servicedeploymanager.cpp
-          showincludesdialog.cpp)
+          showincludesdialog.cpp
+          SourceCodeView.cpp
+          ${CMAKE_SOURCE_DIR}/webUI/webUI.qrc)
 
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -75,7 +78,8 @@ target_link_libraries(
           OrbitSshQt
           Qt5::Widgets
           Qt5::Core
-          qtpropertybrowser::qtpropertybrowser)
+          qtpropertybrowser::qtpropertybrowser
+          WebEngine)
 
 if(WITH_CRASH_HANDLING)
   target_sources(
@@ -117,4 +121,5 @@ add_custom_command(TARGET OrbitQt POST_BUILD COMMAND ${CMAKE_COMMAND}
 set_target_properties(OrbitQt PROPERTIES OUTPUT_NAME "Orbit")
 set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
+set_target_properties(OrbitQt PROPERTIES AUTORCC ON)
 strip_symbols(OrbitQt)

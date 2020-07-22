@@ -1,0 +1,110 @@
+<html>
+
+<head>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background-color: #2d2d2d;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        #page_wrap {
+            position: relative;
+            height: 100vh;
+        }
+
+        main {
+            position: absolute;
+            top: 3em;
+            bottom: 3em;
+            left: 0;
+            right: 0;
+            overflow: auto;
+        }
+
+        header,
+        footer {
+            background-color: blue;
+            position: absolute;
+            left: 0;
+            right: 0;
+            font-weight: 1.2rem;
+            color: white;
+            line-height: 3em;
+            height: 3em;
+            padding: 0 1em;
+        }
+
+        header {
+            top: 0;
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+        }
+
+        footer {
+            bottom: 0;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-direction: row;
+        }
+
+        #close {
+            background-color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 0.5em 1em;
+            color: #9b0063;
+            font-weight: bold;
+        }
+    </style>
+    <link rel="stylesheet" href="/webUI/SourceCodeView/prism.css">
+    <script type="text/javascript" src="/webUI/SourceCodeView/qwebchannel.js"></script>
+    <script type="text/javascript" src="/webUI/SourceCodeView/prism.js"></script>
+</head>
+
+<body>
+    <div id="page_wrap">
+
+        <header><span id="source_file_name">path/to/the/source_file.cpp</span>:</header>
+
+        <main>
+            <pre><code id="source" class="language-cpp"></code></pre>
+        </main>
+
+        <footer>
+            <input id="close" type="button" value="Close!"></input>
+        </footer>
+        <script>
+            const socket = new WebSocket("ws://localhost:12345");
+
+            socket.onopen = () => {
+                console.warn("onopen");
+                new QWebChannel(socket, channel => {
+                    window.dialog = channel.objects.dialog;
+
+                    const insertSourceCode = source_code => {
+                        console.warn("source code change");
+                        const el = document.getElementById("source");
+                        el.textContent = source_code;
+                        Prism.highlightElement(el);
+                        document.querySelector("main").scrollTop = 0;
+                    };
+
+                    insertSourceCode(channel.objects.view.source_code);
+                    channel.objects.view.sourceCodeChanged.connect(insertSourceCode);
+                });
+            };
+
+            document.getElementById("close").onclick = () => {
+                console.warn("click");
+                window.dialog.close(returnValue => console.warn(returnValue));
+            };
+        </script>
+    </div>
+</body>
+
+</html>

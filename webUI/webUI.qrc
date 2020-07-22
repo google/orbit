@@ -1,0 +1,12 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+<qresource prefix="/webUI/webUI">
+  <file>SourceCodeView/prism.js</file>
+  <file>SourceCodeView/prism.css</file>
+  <file>SourceCodeView/index.html</file>
+  <file>SourceCodeView/qwebchannel.js</file>
+  <file>examples/orbitmainwindow.cpp</file>
+  <file>examples/LiveFunctionsDataView.cpp</file>
+  <file>examples/Logging.h</file>
+</qresource>
+</RCC>
