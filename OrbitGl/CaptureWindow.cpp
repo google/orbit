@@ -225,13 +225,17 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
                &pixels[0]);
 
   PickingID pickId = *reinterpret_cast<PickingID*>(&pixels[0]);
-  std::shared_ptr<PickingUserData> userData = time_graph_.GetBatcher().GetUserData(pickId);
+  std::shared_ptr<PickingUserData> userData =
+      time_graph_.GetBatcher().GetUserData(pickId);
+  std::string tooltip = "";
+
   if (userData && userData->m_GenerateTooltip) {
-    auto tooltip = userData->m_GenerateTooltip(pickId);
-    if (!tooltip.empty()) {
-      GOrbitApp->SendTooltipToUi(tooltip);
-      NeedsRedraw();
-    }
+    tooltip = userData->m_GenerateTooltip(pickId);
+  }
+
+  if (tooltip != m_ToolTip) {
+    GOrbitApp->SendTooltipToUi(tooltip);
+    m_ToolTip = tooltip;
   }
 }
 
