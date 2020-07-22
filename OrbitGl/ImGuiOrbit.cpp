@@ -548,21 +548,24 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
             clip_rect.z >= 0.0f && clip_rect.w >= 0.0f) {
           // Apply scissor/clipping rectangle
           if (clip_origin_lower_left)
-            glScissor(clip_rect.x, (fb_height - clip_rect.w),
-                      (clip_rect.z - clip_rect.x),
-                      (clip_rect.w - clip_rect.y));
+            glScissor(static_cast<int>(clip_rect.x),
+                      static_cast<int>(fb_height - clip_rect.w),
+                      static_cast<int>(clip_rect.z - clip_rect.x),
+                      static_cast<int>(clip_rect.w - clip_rect.y));
           else {
             // Support for GL 4.5's glClipControl(GL_UPPER_LEFT)
-            glScissor(clip_rect.x, clip_rect.y, clip_rect.z, clip_rect.w);
+            glScissor(
+                static_cast<int>(clip_rect.x), static_cast<int>(clip_rect.y),
+                static_cast<int>(clip_rect.z), static_cast<int>(clip_rect.w));
           }
           // Bind texture, Draw
           glBindTexture(
               GL_TEXTURE_2D,
               static_cast<GLuint>(reinterpret_cast<intptr_t>(pcmd->TextureId)));
           glDrawElements(
-              GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
+              GL_TRIANGLES, static_cast<GLsizei>(pcmd->ElemCount),
               sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-              (void*)idx_buffer_offset);
+              reinterpret_cast<void*>(idx_buffer_offset));
         }
       }
       idx_buffer_offset += pcmd->ElemCount * sizeof(ImDrawIdx);
@@ -605,9 +608,10 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   glPolygonMode(GL_FRONT_AND_BACK, static_cast<GLenum>(last_polygon_mode[0]));
 #endif
   glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2],
-             (GLsizei)last_viewport[3]);
+             static_cast<GLsizei>(last_viewport[3]));
   glScissor(last_scissor_box[0], last_scissor_box[1],
-            (GLsizei)last_scissor_box[2], (GLsizei)last_scissor_box[3]);
+            static_cast<GLsizei>(last_scissor_box[2]),
+            static_cast<GLsizei>(last_scissor_box[3]));
 }
 
 ImFont* AddOrbitFont(float pixel_size) {
