@@ -258,12 +258,6 @@
     </property>
     <addaction name="menuCrash"/>
    </widget>
-   <widget class="QMenu" name="menuTools">
-    <property name="title">
-     <string>Tools</string>
-    </property>
-    <addaction name="actionShow_Includes_Util"/>
-   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDebug"/>
    <addaction name="menuTools"/>
@@ -374,11 +368,6 @@
   <action name="actionSave_Capture">
    <property name="text">
     <string>Save Capture</string>
-   </property>
-  </action>
-  <action name="actionShow_Includes_Util">
-   <property name="text">
-    <string>Show Includes Util</string>
    </property>
   </action>
   <action name="actionCheckFalse">

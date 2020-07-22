@@ -37,7 +37,6 @@
 #include "orbitsamplingreport.h"
 #include "outputdialog.h"
 #include "services.pb.h"
-#include "showincludesdialog.h"
 #include "ui_orbitmainwindow.h"
 
 #ifdef _WIN32
@@ -197,9 +196,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->RightTabWidget->removeTab(
         ui->RightTabWidget->indexOf(ui->CallStackTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
-
-    ui->actionShow_Includes_Util->setVisible(false);
-    ui->menuTools->menuAction()->setVisible(false);
   }
 
   if (!absl::GetFlag(FLAGS_devmode)) {
@@ -799,16 +795,6 @@ outcome::result<void> OrbitMainWindow::OpenCapture(
   SetTitle(QString::fromStdString(filepath));
   ui->MainTabWidget->setCurrentWidget(ui->CaptureTab);
   return outcome::success();
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::on_actionShow_Includes_Util_triggered() {
-  ShowIncludesDialog* dialog = new ShowIncludesDialog(this);
-  dialog->setWindowTitle("Orbit Show Includes Utility");
-  dialog->setAttribute(Qt::WA_DeleteOnClose);
-  dialog->setWindowFlags(dialog->windowFlags() | Qt::WindowMinimizeButtonHint |
-                         Qt::WindowMaximizeButtonHint);
-  dialog->show();
 }
 
 //-----------------------------------------------------------------------------
