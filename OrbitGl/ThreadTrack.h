@@ -58,6 +58,7 @@ class ThreadTrack : public Track {
 
   int32_t GetThreadId() const { return thread_id_; }
   bool IsCollapsable() const override { return depth_ > 1; }
+  float GetYFromDepth(uint32_t depth);
 
  protected:
   void UpdateDepth(uint32_t depth) {
