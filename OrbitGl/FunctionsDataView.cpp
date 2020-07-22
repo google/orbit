@@ -60,7 +60,8 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
     case COLUMN_MODULE:
       return FunctionUtils::GetLoadedModuleName(function);
     case COLUMN_ADDRESS:
-      return absl::StrFormat("0x%llx", FunctionUtils::GetAbsoluteAddress(function));
+      return absl::StrFormat("0x%llx",
+                             FunctionUtils::GetAbsoluteAddress(function));
     default:
       return "";
   }
