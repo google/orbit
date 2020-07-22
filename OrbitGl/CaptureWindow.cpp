@@ -181,12 +181,8 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
 void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
   uint32_t type = a_PickingID.m_Type;
   uint32_t id = a_PickingID.m_Id;
-  uint32_t batcher_id = a_PickingID.batcher_id_;
 
-  Batcher& batcher = (batcher_id == PickingID::TIME_GRAPH)
-                         ? time_graph_.GetBatcher()
-                         : ui_batcher_;
-
+  Batcher& batcher = GetBatcherById(a_PickingID.batcher_id_);
   TextBox* textBox = batcher.GetTextBox(a_PickingID);
   if (textBox) {
     SelectTextBox(textBox);
@@ -225,8 +221,9 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
                &pixels[0]);
 
   PickingID pickId = *reinterpret_cast<PickingID*>(&pixels[0]);
-  std::shared_ptr<PickingUserData> userData =
-      time_graph_.GetBatcher().GetUserData(pickId);
+  Batcher& batcher = GetBatcherById(pickId.batcher_id_);
+
+  std::shared_ptr<PickingUserData> userData = batcher.GetUserData(pickId);
   std::string tooltip = "";
 
   if (userData && userData->m_GenerateTooltip) {
@@ -652,6 +649,12 @@ void CaptureWindow::UpdateVerticalSlider() {
 void CaptureWindow::ToggleDrawHelp() {
   m_DrawHelp = !m_DrawHelp;
   NeedsRedraw();
+}
+
+Batcher& CaptureWindow::GetBatcherById(uint32_t batcher_id) {
+  return batcher_id == PickingID::TIME_GRAPH
+                         ? time_graph_.GetBatcher()
+                         : ui_batcher_;
 }
 
 //-----------------------------------------------------------------------------

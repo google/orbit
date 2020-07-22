@@ -63,6 +63,8 @@ class CaptureWindow : public GlCanvas {
   void UpdateVerticalSlider();
   void ToggleDrawHelp();
 
+  Batcher& GetBatcherById(uint32_t batcher_id);
+
  private:
   TimeGraph time_graph_;
   OutputWindow m_StatsWindow;
