@@ -64,6 +64,7 @@ class TimeGraph {
   void Zoom(const TextBox* a_TextBox);
   void Zoom(TickType min, TickType max);
   void ZoomTime(float a_ZoomValue, double a_MouseRatio);
+  void VerticalZoom(float a_ZoomValue, double a_MouseRatio);
   void SetMinMax(double a_MinTimeUs, double a_MaxTimeUs);
   void PanTime(int a_InitialX, int a_CurrentX, int a_Width,
                double a_InitialTime);

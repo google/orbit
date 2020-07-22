@@ -196,6 +196,34 @@ void TimeGraph::ZoomTime(float a_ZoomValue, double a_MouseRatio) {
   SetMinMax(minTimeUs, maxTimeUs);
 }
 
+void TimeGraph::VerticalZoom(float zoom_value, double mouse_relative_position) {
+  static double increment_ratio = 0.1;
+
+  double ratio = zoom_value > 0 ? 1 + increment_ratio : 1 - increment_ratio;
+
+  float world_height = m_Canvas->GetWorldHeight();
+  double y_mouse_position = m_Canvas->GetWorldTopLeftY() - mouse_relative_position * world_height;
+  double top_distance = m_Canvas->GetWorldTopLeftY() - y_mouse_position;
+
+  double new_y_mouse_position = y_mouse_position / ratio;
+
+  float new_world_top_left_y = new_y_mouse_position + top_distance;
+
+  // If we zoomed-out, we would like to see most part of the screen with events,
+  // so we set a minimum and maximum for the y-top coordinate.
+  new_world_top_left_y =
+      std::max(new_world_top_left_y, world_height - GetThreadTotalHeight());
+  // TODO: TopMargin has to be 1.5f * m_Layout.GetSliderWidth()?
+  new_world_top_left_y =
+      std::min(new_world_top_left_y, 1.5f * m_Layout.GetSliderWidth());
+
+  m_Canvas->SetWorldTopLeftY(new_world_top_left_y);
+
+  // Finally, we have to scale every item in the layout.
+  float old_scale = m_Layout.GetScale();
+  m_Layout.SetScale(old_scale / ratio);
+}
+
 //-----------------------------------------------------------------------------
 void TimeGraph::SetMinMax(double a_MinTimeUs, double a_MaxTimeUs) {
   double desiredTimeWindow = a_MaxTimeUs - a_MinTimeUs;

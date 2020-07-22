@@ -113,6 +113,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float label_height = layout.GetTrackTabHeight();
   float half_label_height = 0.5f * label_height;
   float label_width = layout.GetTrackTabWidth();
+  float half_label_width = 0.5f * label_width;
   float tab_x0 = x0 + layout.GetTrackTabOffset();
 
   Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
@@ -124,6 +125,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     const Color kBackgroundColor(70, 70, 70, 255);
 
     float radius = std::min(layout.GetRoundingRadius(), half_label_height);
+    radius = std::min(radius, half_label_width);
     uint32_t sides = static_cast<uint32_t>(layout.GetRoundingNumSides() + 0.5f);
     auto rounded_corner = GetRoundedCornerMask(radius, sides);
     Vec2 bottom_left(x0, y1);
