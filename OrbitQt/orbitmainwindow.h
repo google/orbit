@@ -81,7 +81,6 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionClear_Capture_triggered();
   void on_actionHelp_triggered();
   void on_actionFeedback_triggered();
-  void on_actionShow_Includes_Util_triggered();
 
   void on_actionCheckFalse_triggered();
   void on_actionNullPointerDereference_triggered();
