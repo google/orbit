@@ -169,6 +169,10 @@ between CLion build configurations and conan profiles. Check out
 [this blog post](https://blog.jetbrains.com/clion/2019/05/getting-started-with-the-conan-clion-plugin)
 on how to do it.
 
+Add ```-DCMAKE_CXX_FLAGS=-fsized-deallocation``` to Settings -> Build, Execution, Deployment -> CMake -> CMake options.
+This flag is needed because Orbit's codebase makes use of C++14's [sized-deallocation feature](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3536.html)
+which is not enabled by default on the clang compiler.
+
 ### How do I integrate conan with Visual Studio?
 
 Visual Studio has this concept of having multiple build configurations in the same build directory.
@@ -179,7 +183,7 @@ That means, **currently you can't have debug and release builds in the same buil
 Please ensure that Visual Studio is set to the build configuration which matches your build-
 folder's conan profile. Non-matching build configurations will result in a lot of linker errors.
 
-There is a (Conan Extension for Visual Studio)[https://marketplace.visualstudio.com/items?itemName=conan-io.conan-vs-extension],
+There is a [Conan Extension for Visual Studio](https://marketplace.visualstudio.com/items?itemName=conan-io.conan-vs-extension),
 which is currently under development, but should be able to help you, when you develop on
 Visual Studio.
 
