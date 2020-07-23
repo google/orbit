@@ -87,6 +87,10 @@ class SamplingProfiler {
   std::shared_ptr<SortedCallstackReport> GetSortedCallstacksFromAddress(
       uint64_t a_Addr, ThreadID a_TID);
 
+  BlockChain<CallstackEvent, 16 * 1024>* GetCallstacks() {
+    return &m_Callstacks;
+  }
+
   const std::vector<ThreadSampleData*>& GetThreadSampleData() const {
     return m_SortedThreadSampleData;
   }

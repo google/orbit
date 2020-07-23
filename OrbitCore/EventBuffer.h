@@ -66,8 +66,6 @@ class EventBuffer {
   void AddCallstackEvent(uint64_t time, CallstackID cs_hash,
                          ThreadID thread_id);
 
-  ORBIT_SERIALIZABLE;
-
  private:
   Mutex m_Mutex;
   std::map<ThreadID, std::map<uint64_t, CallstackEvent> > m_CallstackEvents;

@@ -49,19 +49,6 @@ void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash,
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(EventBuffer, 0) {
-  ORBIT_NVP_VAL(0, m_CallstackEvents);
-
-  uint64_t maxTime = m_MaxTime;
-  ORBIT_NVP_VAL(0, maxTime);
-  m_MaxTime = maxTime;
-
-  uint64_t minTime = m_MinTime;
-  ORBIT_NVP_VAL(0, minTime);
-  m_MinTime = minTime;
-}
-
-//-----------------------------------------------------------------------------
 ORBIT_SERIALIZE(CallstackEvent, 1) {
   ORBIT_NVP_VAL(1, m_Time);
   ORBIT_NVP_VAL(0, m_Id);

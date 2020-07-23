@@ -109,11 +109,6 @@ void CaptureSerializer::SaveImpl(T& archive) {
     archive(*time_graph_->GetStringManager());
   }
 
-  {
-    ORBIT_SIZE_SCOPE("Event Buffer");
-    archive(GEventTracer.GetEventBuffer());
-  }
-
   // Timers
   int numWrites = 0;
   std::vector<std::shared_ptr<TimerChain>> chains =
@@ -160,6 +155,14 @@ void FillFunctionCountMap() {
   }
 }
 
+void FillEventBuffer() {
+  for (const CallstackEvent& callstack_event :
+       *Capture::GSamplingProfiler->GetCallstacks()) {
+    GEventTracer.GetEventBuffer().AddCallstackEvent(
+        callstack_event.m_Time, callstack_event.m_Id, callstack_event.m_TID);
+  }
+}
+
 ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   // Header
   cereal::BinaryInputArchive archive(stream);
@@ -198,8 +201,7 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
 
   archive(*time_graph_->GetStringManager());
 
-  // Event buffer
-  archive(GEventTracer.GetEventBuffer());
+  FillEventBuffer();
 
   // Timers
   Timer timer;
