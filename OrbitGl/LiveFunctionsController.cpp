@@ -17,7 +17,7 @@ std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
   uint64_t max_time = std::numeric_limits<uint64_t>::min();
   for (auto& text_box : text_boxes) {
     min_time = std::min(min_time, text_box.second->GetTimer().m_Start);
-    max_time = std::max(max_time, text_box.second->GetTimer().m_End);
+    max_time = std::max(max_time, text_box.second->GetTimer().m_Start);
   }
   return std::make_pair(min_time, max_time);
 }
@@ -87,16 +87,8 @@ const TextBox* SnapToClosestStart(uint64_t absolute_function_address) {
 void LiveFunctionsController::Move() {
   if (!current_textboxes_.empty()) {
     auto min_max = ComputeMinMaxTime(current_textboxes_);
-    GCurrentTimeGraph->Zoom(min_max.first, min_max.second);
-    if (current_textboxes_.find(id_to_select_) != current_textboxes_.end()) {
-      GCurrentTimeGraph->Select(current_textboxes_[id_to_select_]);
-      GCurrentTimeGraph->VerticallyMoveIntoView(
-          current_textboxes_[id_to_select_]);
-    } else {
-      CHECK(false);
-    }
-  } else {
-    GCurrentTimeGraph->ZoomAll();
+    GCurrentTimeGraph->HorizontallyMoveIntoView(TimeGraph::kFullyVisible, 
+      min_max.first, min_max.second, 0.5);
   }
   GCurrentTimeGraph->SetCurrentTextBoxes(current_textboxes_);
 }
