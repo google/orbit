@@ -60,18 +60,18 @@ const TextBox* SnapToClosestStart(uint64_t absolute_function_address) {
         absolute_function_address, center);
   }
 
-  // We have to consider the case where center falls into the interior of the
-  // interval of 'box'. In this case, the closest box can be any of two boxes:
+  // We have to consider the case where center falls to the right of the start
+  // marker of 'box'. In this case, the closest box can be any of two boxes:
   // 'box' or the next one. It cannot be any box before 'box' because we are
   // using the start marker to measure the distance.
-  if (box->GetTimer().m_Start <= center && center <= box->GetTimer().m_End) {
+  if (box->GetTimer().m_Start <= center) {
     const TextBox* next_box = GCurrentTimeGraph->FindNextFunctionCall(
         absolute_function_address, box->GetTimer().m_End);
     return ClosestTo(center, box, next_box);
   }
 
-  // Center is not inside the box, that is, m_Start of box is larger than
-  // center.
+  // The center is to the left of 'box', so the closest box is either 'box' or
+  // the next box to the left of the center.
   const TextBox* previous_box = GCurrentTimeGraph->FindPreviousFunctionCall(
       absolute_function_address, box->GetTimer().m_Start);
 
