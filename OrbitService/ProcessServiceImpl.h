@@ -30,6 +30,10 @@ class ProcessServiceImpl final : public ProcessService::Service {
                                 const GetProcessMemoryRequest* request,
                                 GetProcessMemoryResponse* response) override;
 
+  grpc::Status GetDebugInfoFile(grpc::ServerContext* context,
+                                const GetDebugInfoFileRequest* request,
+                                GetDebugInfoFileResponse* response) override;
+
  private:
   absl::Mutex mutex_;
   ProcessList process_list_;

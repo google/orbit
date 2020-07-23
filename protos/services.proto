@@ -54,6 +54,15 @@ message GetSymbolsResponse {
   ModuleSymbols module_symbols = 1;
 }
 
+message GetDebugInfoFileRequest {
+  string module_path = 1;
+  string build_id = 2;
+}
+
+message GetDebugInfoFileResponse {
+  string debug_info_file_path = 1;
+}
+
 service ProcessService {
   rpc GetProcessList(GetProcessListRequest) returns (GetProcessListResponse) {}
 
@@ -63,6 +72,9 @@ service ProcessService {
       returns (GetProcessMemoryResponse) {}
 
   rpc GetSymbols(GetSymbolsRequest) returns (GetSymbolsResponse) {}
+
+  rpc GetDebugInfoFile(GetDebugInfoFileRequest)
+      returns (GetDebugInfoFileResponse) {}
 }
 
 message ValidateFramePointersRequest {

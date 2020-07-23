@@ -57,14 +57,16 @@ std::vector<std::string> ReadSymbolsFile() {
   return directories;
 }
 
-ErrorMessageOr<ModuleSymbols> FindSymbols(
-    const std::string& module_path, const std::string& build_id,
-    const std::vector<std::string>& search_directories) {
+ErrorMessageOr<std::string> FindSymbolsFile(
+    const std::string& module_path,
+    const std::vector<std::string>& search_paths, const std::string& build_id) {
   std::string filename = Path::GetFileName(module_path);
   std::string filename_without_extension = Path::StripExtension(filename);
 
   std::vector<std::string> search_file_paths;
-  for (const auto& directory : search_directories) {
+  search_file_paths.push_back(module_path);
+
+  for (const auto& directory : search_paths) {
     search_file_paths.emplace_back(
         Path::JoinPath({directory, filename_without_extension + ".debug"}));
     search_file_paths.emplace_back(
@@ -80,15 +82,47 @@ ErrorMessageOr<ModuleSymbols> FindSymbols(
         ElfFile::Create(symbols_file_path);
     if (!symbols_file) continue;
     if (!symbols_file.value()->HasSymtab()) continue;
+
+    // don't check build_id of module_path itself has symbols
+    // and requested build_id is empty.
+    if (build_id.empty() && symbols_file_path == module_path) {
+      return symbols_file_path;
+    }
+
+    // Otherwise check that build_id is not empty and correct.
+    if (symbols_file.value()->GetBuildId().empty()) continue;
     if (symbols_file.value()->GetBuildId() != build_id) continue;
 
-    LOG("Loading symbols for module \"%s\" from \"%s\"", module_path,
+    LOG("Found debug info for module \"%s\" -> \"%s\"", module_path,
         symbols_file_path);
-    return symbols_file.value()->LoadSymbols();
+    return symbols_file_path;
   }
 
-  return ErrorMessage(
-      absl::StrFormat("Could not find symbols for module \"%s\"", module_path));
+  return ErrorMessage(absl::StrFormat(
+      "Could not find a file with debug symbols for module \"%s\"",
+      module_path));
+}
+
+ErrorMessageOr<ModuleSymbols> FindSymbols(
+    const std::string& module_path, const std::string& build_id,
+    const std::vector<std::string>& search_paths) {
+  ErrorMessageOr<std::string> debug_info_file_path =
+      FindSymbolsFile(module_path, search_paths, build_id);
+
+  if (!debug_info_file_path) {
+    return debug_info_file_path.error();
+  }
+
+  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_result =
+      ElfFile::Create(debug_info_file_path.value());
+
+  if (!elf_file_result) {
+    return ErrorMessage(absl::StrFormat(
+        "Failed to load debug symbols for \"%s\" from \"%s\": %s", module_path,
+        debug_info_file_path.value(), elf_file_result.error().message()));
+  }
+
+  return elf_file_result.value()->LoadSymbols();
 }
 
 }  // namespace
@@ -136,4 +170,9 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsCollector(
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadUsingSymbolsPathFile(
     const std::string& module_path, const std::string& build_id) const {
   return FindSymbols(module_path, build_id, symbols_file_directories_);
+}
+
+ErrorMessageOr<std::string> SymbolHelper::FindDebugSymbolsFile(
+    const std::string& module_path, const std::string& build_id) const {
+  return FindSymbolsFile(module_path, collector_symbol_directories_, build_id);
 }

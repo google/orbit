@@ -101,3 +101,17 @@ Status ProcessServiceImpl::GetSymbols(ServerContext*,
 
   return Status::OK;
 }
+Status ProcessServiceImpl::GetDebugInfoFile(
+    ::grpc::ServerContext*, const ::GetDebugInfoFileRequest* request,
+    ::GetDebugInfoFileResponse* response) {
+  const SymbolHelper symbol_helper;
+  ErrorMessageOr<std::string> result = symbol_helper.FindDebugSymbolsFile(
+      request->module_path(), request->build_id());
+  if (!result) {
+    return Status(StatusCode::NOT_FOUND, result.error().message());
+  }
+
+  response->set_debug_info_file_path(result.value());
+
+  return Status::OK;
+}
