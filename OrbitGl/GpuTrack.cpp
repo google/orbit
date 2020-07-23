@@ -203,14 +203,14 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           }
           batcher->AddShadedBox(pos, size, z, color, PickingID::BOX,
               std::make_shared<PickingUserData>(&text_box, [&](PickingID id) {
-                return this->GetTooltip(id);
+                return this->GetBoxTooltip(id);
               }));
         } else {
           auto type = PickingID::LINE;
           batcher->AddVerticalLine(
               pos, size[1], z, color, type,
               std::make_shared<PickingUserData>(&text_box, [&](PickingID id) {
-                return this->GetTooltip(id);
+                return this->GetBoxTooltip(id);
               }));
           // For lines, we can ignore the entire pixel into which this event
           // falls. We align this precisely on the pixel x-coordinate of the
@@ -243,6 +243,10 @@ void GpuTrack::OnTimer(const Timer& timer) {
   ++num_timers_;
   if (timer.m_Start < min_time_) min_time_ = timer.m_Start;
   if (timer.m_End > max_time_) max_time_ = timer.m_End;
+}
+
+std::string GpuTrack::GetTooltip() const {
+  return "Shows scheduling and execution times for selected GPU calls.";
 }
 
 //-----------------------------------------------------------------------------
@@ -356,7 +360,7 @@ std::vector<std::shared_ptr<TimerChain>> GpuTrack::GetAllChains() {
 }
 
 //-----------------------------------------------------------------------------
-std::string GpuTrack::GetTooltip(PickingID id) const {
+std::string GpuTrack::GetBoxTooltip(PickingID id) const {
   TextBox* textBox = time_graph_->GetBatcher().GetTextBox(id);
   if (textBox) {
     if (textBox->GetTimer().m_Type != Timer::CORE_ACTIVITY) {

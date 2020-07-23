@@ -45,6 +45,10 @@ float SchedulerTrack::GetYFromDepth(float track_y, uint32_t depth,
          num_gaps * gap_size;
 }
 
+std::string SchedulerTrack::GetTooltip() const { 
+  return "Shows scheduling information for CPU cores.";
+}
+
 void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   Batcher* batcher = &time_graph_->GetBatcher();
   GlCanvas* canvas = time_graph_->GetCanvas();
@@ -120,7 +124,9 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           batcher->AddShadedBox(pos, size, z, color, PickingID::BOX,
             std::make_shared<PickingUserData>(
               &text_box, 
-              [&](PickingID id) -> std::string { return GetTooltip(id); }
+              [&](PickingID id) -> std::string {
+                    return GetBoxTooltip(id);
+                  }
             )
           );
         } else {
@@ -128,8 +134,9 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           batcher->AddVerticalLine(
             pos, size[1], z, color, type,
             std::make_shared<PickingUserData>(
-              &text_box,
-              [&](PickingID id) -> std::string { return GetTooltip(id); }
+              &text_box, [&](PickingID id) -> std::string {
+                    return GetBoxTooltip(id);
+                  }
             )
           );
           // For lines, we can ignore the entire pixel into which this event
@@ -146,7 +153,7 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   }
 }
 
-std::string SchedulerTrack::GetTooltip(PickingID id) const {
+std::string SchedulerTrack::GetBoxTooltip(PickingID id) const {
   TextBox* textBox = time_graph_->GetBatcher().GetTextBox(id);
   if (textBox) {
     return absl::StrFormat(

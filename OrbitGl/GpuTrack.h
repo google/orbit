@@ -27,6 +27,7 @@ class GpuTrack : public Track {
   void Draw(GlCanvas* canvas, bool picking) override;
   void OnDrag(int x, int y) override;
   void OnTimer(const Timer& timer);
+  std::string GetTooltip() const override;
 
   // Track
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) override;
@@ -75,7 +76,7 @@ class GpuTrack : public Track {
 
   std::shared_ptr<StringManager> string_manager_;
 
-  std::string GetTooltip(PickingID id) const;
+  std::string GetBoxTooltip(PickingID id) const;
   std::string GetSwQueueTooltip(const Timer& timer) const;
   std::string GetHwQueueTooltip(const Timer& timer) const;
   std::string GetHwExecutionTooltip(const Timer& timer) const;

@@ -16,6 +16,12 @@ EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
   m_Color = Color(0, 255, 0, 255);
 }
 
+std::string EventTrack::GetTooltip() const {
+  return "Left-click and drag to select samples. "
+         "Selecting samples generates a profiling report accessible "
+         "through the \"selection\" tab that allows a filtered analysis.";
+}
+
 //-----------------------------------------------------------------------------
 void EventTrack::Draw(GlCanvas* canvas, bool picking) {
   Batcher* batcher = canvas->GetBatcher();

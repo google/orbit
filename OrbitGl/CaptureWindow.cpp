@@ -223,17 +223,22 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
   PickingID pickId = *reinterpret_cast<PickingID*>(&pixels[0]);
   Batcher& batcher = GetBatcherById(pickId.batcher_id_);
 
-  std::shared_ptr<PickingUserData> userData = batcher.GetUserData(pickId);
   std::string tooltip = "";
 
-  if (userData && userData->m_GenerateTooltip) {
-    tooltip = userData->m_GenerateTooltip(pickId);
+  if (pickId.m_Type == PickingID::PICKABLE) {
+    Pickable* pickable = GetPickingManager().GetPickableFromId(pickId.m_Id);
+    if (pickable) {
+      tooltip = pickable->GetTooltip();
+    }
+  } else {
+    std::shared_ptr<PickingUserData> userData = batcher.GetUserData(pickId);
+
+    if (userData && userData->m_GenerateTooltip) {
+      tooltip = userData->m_GenerateTooltip(pickId);
+    }
   }
 
-  if (tooltip != m_ToolTip) {
-    GOrbitApp->SendTooltipToUi(tooltip);
-    m_ToolTip = tooltip;
-  }
+  GOrbitApp->SendTooltipToUi(tooltip);
 }
 
 //-----------------------------------------------------------------------------
