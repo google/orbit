@@ -117,7 +117,7 @@ TextBox* Batcher::GetTextBox(PickingID a_ID) {
   std::shared_ptr<PickingUserData> data = GetUserData(a_ID);
 
   if (data && data->m_TextBox) {
-      return data->m_TextBox; 
+    return data->m_TextBox; 
   }
 
   return nullptr;

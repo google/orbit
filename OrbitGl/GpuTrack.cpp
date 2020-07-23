@@ -198,7 +198,8 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
         }
 
         auto userData = std::make_shared<PickingUserData>(
-            &text_box, [&](PickingID id) { return this->GetBoxTooltip(id); });
+          &text_box, [&](PickingID id) { return this->GetBoxTooltip(id); });
+
         if (is_visible_width) {
           if (!is_collapsed) {
             SetTimesliceText(timer, elapsed_us, min_x, &text_box);

@@ -17,9 +17,9 @@ struct PickingUserData {
   TooltipCallback m_GenerateTooltip;
 
   PickingUserData(
-      TextBox* text_box = nullptr,
-      TooltipCallback generate_tooltip = nullptr)
-      : m_TextBox(text_box), m_GenerateTooltip(generate_tooltip) {}
+    TextBox* text_box = nullptr,
+    TooltipCallback generate_tooltip = nullptr)
+    : m_TextBox(text_box), m_GenerateTooltip(generate_tooltip) {}
 };
 
 //-----------------------------------------------------------------------------
@@ -68,7 +68,7 @@ struct TriangleBuffer {
   BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> colors_;
   BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
   BlockChain<std::shared_ptr<PickingUserData>, NUM_TRIANGLES_PER_BLOCK>
-      user_data_;
+    user_data_;
 };
 
 //-----------------------------------------------------------------------------
