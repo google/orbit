@@ -31,7 +31,8 @@ target_sources(
           outputdialog.h
           processlauncherwidget.h
           resource.h
-          servicedeploymanager.h)
+          servicedeploymanager.h
+          TopDownViewItemModel.h)
 
 target_sources(
   OrbitQt
@@ -57,7 +58,8 @@ target_sources(
           opengldetect.cpp
           outputdialog.cpp
           processlauncherwidget.cpp
-          servicedeploymanager.cpp)
+          servicedeploymanager.cpp
+          TopDownViewItemModel.cpp)
 
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 

@@ -20,13 +20,10 @@
 #include <QToolTip>
 #include <utility>
 
-#include "../OrbitCore/Path.h"
-#include "../OrbitCore/PrintVar.h"
-#include "../OrbitCore/Utils.h"
-#include "../OrbitGl/App.h"
-#include "../OrbitGl/SamplingReport.h"
-#include "../third_party/concurrentqueue/concurrentqueue.h"
+#include "App.h"
 #include "OrbitVersion.h"
+#include "SamplingReport.h"
+#include "TopDownViewItemModel.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
@@ -125,6 +122,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       [this](DataView* callstack_data_view,
              std::shared_ptr<SamplingReport> report) {
         this->OnNewSelectionReport(callstack_data_view, std::move(report));
+      });
+  GOrbitApp->SetTopDownViewCallback(
+      [this](std::unique_ptr<TopDownView> top_down_view) {
+        this->OnNewTopDownView(std::move(top_down_view));
       });
 
   GOrbitApp->SetOpenCaptureCallback(
@@ -508,6 +509,14 @@ void OrbitMainWindow::OnNewSelectionReport(
   ui->selectionGridLayout->addWidget(ui->selectionReport, 0, 0, 1, 1);
 
   ui->RightTabWidget->setCurrentWidget(ui->selectionTab);
+}
+
+void OrbitMainWindow::OnNewTopDownView(
+    std::unique_ptr<TopDownView> top_down_view) {
+  auto* model =
+      new TopDownViewItemModel{std::move(top_down_view), ui->topDownView};
+  ui->topDownView->setModel(model);
+  ui->topDownView->resizeColumnToContents(0);
 }
 
 //-----------------------------------------------------------------------------

@@ -183,6 +183,20 @@
          </item>
         </layout>
        </widget>
+       <widget class="QWidget" name="topDownTab">
+        <attribute name="title">
+         <string>top-down</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_9">
+         <item row="0" column="0">
+          <widget class="QTreeView" name="topDownView">
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
        <widget class="QWidget" name="CodeTab">
         <attribute name="title">
          <string>code</string>

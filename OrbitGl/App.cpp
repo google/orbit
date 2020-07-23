@@ -440,8 +440,8 @@ void OrbitApp::NeedsRedraw() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::AddSamplingReport(
-    std::shared_ptr<SamplingProfiler>& sampling_profiler) {
-  auto report = std::make_shared<SamplingReport>(sampling_profiler);
+    std::shared_ptr<SamplingProfiler> sampling_profiler) {
+  auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler));
 
   if (sampling_reports_callback_) {
     DataView* callstack_data_view =
@@ -454,8 +454,8 @@ void OrbitApp::AddSamplingReport(
 
 //-----------------------------------------------------------------------------
 void OrbitApp::AddSelectionReport(
-    std::shared_ptr<SamplingProfiler>& a_SamplingProfiler) {
-  auto report = std::make_shared<SamplingReport>(a_SamplingProfiler);
+    std::shared_ptr<SamplingProfiler> a_SamplingProfiler) {
+  auto report = std::make_shared<SamplingReport>(std::move(a_SamplingProfiler));
 
   if (selection_report_callback_) {
     DataView* callstack_data_view =
@@ -464,6 +464,17 @@ void OrbitApp::AddSelectionReport(
   }
 
   selection_report_ = report;
+}
+
+void OrbitApp::AddTopDownView(const SamplingProfiler& sampling_profiler) {
+  if (!top_down_view_callback_) {
+    return;
+  }
+  std::unique_ptr<TopDownView> top_down_view =
+      TopDownView::CreateFromSamplingProfiler(sampling_profiler,
+                                              Capture::GThreadNames,
+                                              Capture::GAddressToFunctionName);
+  top_down_view_callback_(std::move(top_down_view));
 }
 
 //-----------------------------------------------------------------------------
@@ -653,6 +664,7 @@ void OrbitApp::OnCaptureStopped() {
   RefreshCaptureView();
 
   AddSamplingReport(Capture::GSamplingProfiler);
+  AddTopDownView(*Capture::GSamplingProfiler);
 
   if (capture_stopped_callback_) {
     capture_stopped_callback_();
