@@ -214,19 +214,13 @@ void TimeGraph::PanTime(int a_InitialX, int a_CurrentX, int a_Width,
   NeedsUpdate();
 }
 
-// Move the view horizontally if the text box isn't visible. The text box
-// center's position will be at 'distance' to the related border (in [0,1]
-// scale).
-void TimeGraph::HorizontallyMoveIntoView(const TextBox* text_box,
-                                         double distance) {
-  const Timer& timer = text_box->GetTimer();
-
-  if (IsVisible(timer)) {
+void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, TickType min, TickType max, double distance) {
+  if (IsVisible(vis_type, min, max)) {
     return;
   }
 
-  double start = MicroSecondsFromTicks(capture_min_timestamp_, timer.m_Start);
-  double end = MicroSecondsFromTicks(capture_min_timestamp_, timer.m_End);
+  double start = MicroSecondsFromTicks(capture_min_timestamp_, min);
+  double end = MicroSecondsFromTicks(capture_min_timestamp_, max);
   double mid = start + ((end - start) / 2.0);
 
   // Mirror the final center position if we have to move left
@@ -238,6 +232,11 @@ void TimeGraph::HorizontallyMoveIntoView(const TextBox* text_box,
             mid + CurrentTimeWindowUs * distance);
 
   NeedsUpdate();
+}
+
+void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, const TextBox* text_box,
+                                         double distance) {
+  HorizontallyMoveIntoView(vis_type, text_box->GetTimer().m_Start, text_box->GetTimer().m_End);
 }
 
 void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
@@ -426,7 +425,7 @@ void TimeGraph::GetWorldMinMax(float& a_Min, float& a_Max) const {
 void TimeGraph::Select(const TextBox* a_TextBox) {
   TextBox* text_box = const_cast<TextBox*>(a_TextBox);
   Capture::GSelectedTextBox = text_box;
-  HorizontallyMoveIntoView(a_TextBox);
+  HorizontallyMoveIntoView(kPartlyVisible, a_TextBox);
   VerticallyMoveIntoView(a_TextBox);
 }
 
@@ -620,6 +619,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
     auto type = PickingID::LINE;
     canvas->GetBatcher()->AddVerticalLine(pos, -world_height, z, color, type, nullptr);
   }
+
   if (overlay_current_textboxes_.size() > 1) {
     float from = min_x;
     float to = max_x;
@@ -887,10 +887,16 @@ void TimeGraph::DrawText(GlCanvas* canvas) {
   }
 }
 
-//-----------------------------------------------------------------------------
-bool TimeGraph::IsVisible(const Timer& a_Timer) {
-  double start = MicroSecondsFromTicks(capture_min_timestamp_, a_Timer.m_Start);
-  double end = MicroSecondsFromTicks(capture_min_timestamp_, a_Timer.m_End);
+bool TimeGraph::IsFullyVisible(TickType min, TickType max) const {
+  double start = MicroSecondsFromTicks(capture_min_timestamp_, min);
+  double end = MicroSecondsFromTicks(capture_min_timestamp_, max);
+
+  return start > m_MinTimeUs && end < m_MaxTimeUs;
+}
+
+bool TimeGraph::IsPartlyVisible(TickType min, TickType max) const {
+  double start = MicroSecondsFromTicks(capture_min_timestamp_, min);
+  double end = MicroSecondsFromTicks(capture_min_timestamp_, max);
 
   double startUs = m_MinTimeUs;
 
@@ -899,4 +905,15 @@ bool TimeGraph::IsVisible(const Timer& a_Timer) {
   }
 
   return true;
+}
+
+bool TimeGraph::IsVisible(VisibilityType vis_type, TickType min, TickType max) const {
+  switch(vis_type) {
+    case kPartlyVisible:
+      return IsPartlyVisible(min, max);
+    case kFullyVisible:
+      return IsFullyVisible(min, max);
+    default:
+      return false;   
+  }
 }

@@ -62,7 +62,12 @@ class TimeGraph {
   void SetMinMax(double a_MinTimeUs, double a_MaxTimeUs);
   void PanTime(int a_InitialX, int a_CurrentX, int a_Width,
                double a_InitialTime);
-  void HorizontallyMoveIntoView(const TextBox* text_box, double distance = 0.3);
+  enum VisibilityType {
+    kPartlyVisible,
+    kFullyVisible,
+  };
+  void HorizontallyMoveIntoView(VisibilityType vis_type, TickType min, TickType max, double distance = 0.3); 
+  void HorizontallyMoveIntoView(VisibilityType vis_type, const TextBox* text_box, double distance = 0.3);
   void VerticallyMoveIntoView(const TextBox* text_box);
   double GetTime(double a_Ratio);
   double GetTimeIntervalMicro(double a_Ratio);
@@ -86,7 +91,10 @@ class TimeGraph {
   void ToggleDrawText() { m_DrawText = !m_DrawText; }
   void SetThreadFilter(const std::string& a_Filter);
 
-  bool IsVisible(const Timer& a_Timer);
+  bool IsFullyVisible(TickType min, TickType max) const;
+  bool IsPartlyVisible(TickType min, TickType max) const;
+  bool IsVisible(VisibilityType vis_type, TickType min, TickType max) const;
+
   int GetNumDrawnTextBoxes() { return m_NumDrawnTextBoxes; }
   void SetPickingManager(class PickingManager* a_Manager) {
     m_PickingManager = a_Manager;
@@ -123,6 +131,7 @@ class TimeGraph {
 
   void SetCurrentTextBoxes(const absl::flat_hash_map<uint64_t, const TextBox*>& boxes) {
     overlay_current_textboxes_ = boxes;
+    NeedsRedraw();
   }
 
   TickType GetCaptureMin() { return capture_min_timestamp_; }
