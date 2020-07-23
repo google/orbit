@@ -661,6 +661,18 @@ Batcher& CaptureWindow::GetBatcherById(uint32_t batcher_id) {
                          : ui_batcher_;
 }
 
+PickingMode CaptureWindow::GetPickingMode() { 
+  PickingMode picking_mode = PickingMode::kNone;
+  if (m_Picking) {
+    picking_mode = PickingMode::kClick;
+  }
+  if (m_IsHovering) {
+    picking_mode = PickingMode::kHover;
+  }
+
+  return picking_mode;
+}
+
 [[nodiscard]] PickingMode CaptureWindow::GetPickingMode() { 
   PickingMode picking_mode = PickingMode::kNone;
   if (m_Picking) {
