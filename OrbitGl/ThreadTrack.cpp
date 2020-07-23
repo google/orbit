@@ -227,12 +227,17 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           auto type = PickingID::LINE;
           batcher->AddVerticalLine(pos, size[1], z, color, type, &text_box);
           // For lines, we can ignore the entire pixel into which this event
-          // falls.
-          min_ignore =
-              min_timegraph_tick +
-              ((timer.m_Start - min_timegraph_tick) / pixel_delta_in_ticks) *
-                  pixel_delta_in_ticks;
-          max_ignore = min_ignore + pixel_delta_in_ticks;
+          // falls. We align this precisely on the pixel x-coordinate of the
+          // current line being drawn (in ticks). If pixel_delta_in_ticks is
+          // zero, we need to avoid dividing by zero, but we also wouldn't
+          // gain anything here.
+          if (pixel_delta_in_ticks != 0) {
+            min_ignore =
+                min_timegraph_tick +
+                ((timer.m_Start - min_timegraph_tick) / pixel_delta_in_ticks) *
+                    pixel_delta_in_ticks;
+            max_ignore = min_ignore + pixel_delta_in_ticks;
+          }
         }
       }
     }
