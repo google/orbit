@@ -36,6 +36,7 @@
 #include "StringManager.h"
 #include "SymbolHelper.h"
 #include "Threading.h"
+#include "TopDownView.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
@@ -94,10 +95,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void OnProcessSelected(int32_t pid);
 
-  void AddSamplingReport(
-      std::shared_ptr<class SamplingProfiler>& sampling_profiler);
-  void AddSelectionReport(
-      std::shared_ptr<SamplingProfiler>& a_SamplingProfiler);
+  void AddSamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler);
+  void AddSelectionReport(std::shared_ptr<SamplingProfiler> a_SamplingProfiler);
+  void AddTopDownView(const SamplingProfiler& sampling_profiler);
 
   bool SelectProcess(const std::string& a_Process);
   bool SelectProcess(int32_t a_ProcessID);
@@ -168,6 +168,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   }
   void SetSelectionReportCallback(SamplingReportCallback callback) {
     selection_report_callback_ = std::move(callback);
+  }
+  using TopDownViewCallback = std::function<void(std::unique_ptr<TopDownView>)>;
+  void SetTopDownViewCallback(TopDownViewCallback callback) {
+    top_down_view_callback_ = std::move(callback);
   }
   using SaveFileCallback =
       std::function<std::string(const std::string& extension)>;
@@ -259,6 +263,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   RefreshCallback refresh_callback_;
   SamplingReportCallback sampling_reports_callback_;
   SamplingReportCallback selection_report_callback_;
+  TopDownViewCallback top_down_view_callback_;
   std::vector<class DataView*> m_Panels;
   FindFileCallback find_file_callback_;
   SaveFileCallback save_file_callback_;

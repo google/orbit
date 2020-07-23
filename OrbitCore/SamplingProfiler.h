@@ -77,10 +77,12 @@ class SamplingProfiler {
   std::shared_ptr<CallStack> GetCallStack(CallstackID a_ID) {
     return m_UniqueCallstacks.at(a_ID);
   }
-
   bool HasCallStack(CallstackID a_ID) {
     return m_UniqueCallstacks.count(a_ID) > 0;
   }
+
+  std::shared_ptr<CallStack> GetResolvedCallstack(
+      CallstackID raw_callstack_id) const;
 
   std::multimap<int, CallstackID> GetCallstacksFromAddress(
       uint64_t a_Addr, ThreadID a_TID, int* o_NumCallstacks);

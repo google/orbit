@@ -79,6 +79,23 @@ void SamplingProfiler::AddUniqueCallStack(CallStack& a_CallStack) {
       std::make_shared<CallStack>(a_CallStack);
 }
 
+std::shared_ptr<CallStack> SamplingProfiler::GetResolvedCallstack(
+    CallstackID raw_callstack_id) const {
+  auto resolved_callstack_id_it =
+      m_OriginalCallstackToResolvedCallstack.find(raw_callstack_id);
+  if (resolved_callstack_id_it ==
+      m_OriginalCallstackToResolvedCallstack.end()) {
+    return nullptr;
+  }
+
+  auto resolved_callstack_it =
+      m_UniqueResolvedCallstacks.find(resolved_callstack_id_it->second);
+  if (resolved_callstack_it == m_UniqueResolvedCallstacks.end()) {
+    return nullptr;
+  }
+  return resolved_callstack_it->second;
+}
+
 //-----------------------------------------------------------------------------
 std::shared_ptr<SortedCallstackReport>
 SamplingProfiler::GetSortedCallstacksFromAddress(uint64_t a_Addr,
