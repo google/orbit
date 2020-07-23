@@ -115,10 +115,7 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   float tab_x0 = x0 + layout.GetTrackTabOffset();
 
   Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
-  batcher->AddBox(box, color, PickingID::PICKABLE,
-                  std::make_shared<PickingUserData>(nullptr, [&](PickingID id) {
-                    return GetGenericTooltip(id);
-                  }));
+  batcher->AddBox(box, color, PickingID::PICKABLE);
 
   // Draw rounded corners.
   if (!picking) {
@@ -200,10 +197,6 @@ void Track::SetSize(float a_SizeX, float a_SizeY) {
 void Track::OnCollapseToggle(TriangleToggle::State /*state*/) {
   time_graph_->NeedsUpdate();
   time_graph_->NeedsRedraw();
-}
-
-std::string Track::GetGenericTooltip(PickingID _) const {
-  return std::string("Displays all hooked functions executed from thread ") + GetLabel();
 }
 
 //-----------------------------------------------------------------------------

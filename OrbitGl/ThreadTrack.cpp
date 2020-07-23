@@ -276,7 +276,7 @@ void ThreadTrack::OnTimer(const Timer& timer) {
 }
 
 std::string ThreadTrack::GetTooltip() const {
-  return "Shows collected samples";
+  return "Shows collected samples and instrumented function timings (if existing).";
 }
 
 //-----------------------------------------------------------------------------

@@ -100,6 +100,4 @@ class Track : public Pickable {
   Type type_ = kUnknown;
   std::vector<std::shared_ptr<Track>> children_;
   TriangleToggle collapse_toggle_;
-
-  virtual std::string GetGenericTooltip(PickingID _) const;
 };

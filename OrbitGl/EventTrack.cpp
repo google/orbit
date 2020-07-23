@@ -17,9 +17,7 @@ EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
 }
 
 std::string EventTrack::GetTooltip() const {
-  return "Left-click and drag to select samples. "
-         "Selecting samples generates a profiling report accessible "
-         "through the \"selection\" tab that allows a filtered analysis.";
+  return "Left-click and drag to select samples.";
 }
 
 //-----------------------------------------------------------------------------
