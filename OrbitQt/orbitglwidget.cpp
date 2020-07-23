@@ -295,6 +295,14 @@ void OrbitGLWidget::mouseMoveEvent(QMouseEvent* event) {
   update();
 }
 
+void OrbitGLWidget::enterEvent(QEvent* event) {
+  m_OrbitPanel->SetIsMouseOver(true);
+}
+
+void OrbitGLWidget::leaveEvent(QEvent* event) {
+  m_OrbitPanel->SetIsMouseOver(false);
+}
+
 //-----------------------------------------------------------------------------
 void OrbitGLWidget::keyPressEvent(QKeyEvent* event) {
   if (m_OrbitPanel) {
