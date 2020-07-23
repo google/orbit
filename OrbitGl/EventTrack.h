@@ -19,7 +19,7 @@ class EventTrack : public Track {
   std::string GetTooltip() const override;
 
   void Draw(GlCanvas* canvas, bool picking) override;
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) override;
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, bool picking) override;
 
   void OnPick(int a_X, int a_Y) override;
   void OnRelease() override;
@@ -36,6 +36,7 @@ class EventTrack : public Track {
 
  protected:
   void SelectEvents();
+  std::string GetSampleTooltip(PickingID id) const;
 
  protected:
   TextBox m_ThreadName;

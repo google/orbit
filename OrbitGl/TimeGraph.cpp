@@ -497,7 +497,7 @@ void TimeGraph::NeedsUpdate() {
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::UpdatePrimitives() {
+void TimeGraph::UpdatePrimitives(bool picking) {
   CHECK(string_manager_);
 
   m_Batcher.Reset();
@@ -518,7 +518,7 @@ void TimeGraph::UpdatePrimitives() {
 
   for (auto& track : sorted_tracks_) {
     track->SetY(current_y);
-    track->UpdatePrimitives(min_tick, max_tick);
+    track->UpdatePrimitives(min_tick, max_tick, picking);
     current_y -= (track->GetHeight() + m_Layout.GetSpaceBetweenTracks());
   }
 
@@ -576,7 +576,7 @@ const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(
 //-----------------------------------------------------------------------------
 void TimeGraph::Draw(GlCanvas* canvas, bool a_Picking) {
   if ((!a_Picking && m_NeedsUpdatePrimitives) || a_Picking) {
-    UpdatePrimitives();
+    UpdatePrimitives(a_Picking);
   }
 
   DrawTracks(canvas, a_Picking);

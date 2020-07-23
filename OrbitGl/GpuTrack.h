@@ -38,7 +38,7 @@ class GpuTrack : public Track {
   std::string GetTooltip() const override;
 
   // Track
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) override;
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, bool picking) override;
   Type GetType() const override { return kGpuTrack; }
   float GetHeight() const override;
 

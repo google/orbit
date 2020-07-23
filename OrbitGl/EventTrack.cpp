@@ -5,6 +5,7 @@
 #include "EventTrack.h"
 
 #include "Capture.h"
+#include "SamplingProfiler.h"
 #include "EventTracer.h"
 #include "GlCanvas.h"
 #include "PickingManager.h"
@@ -25,13 +26,10 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
   Batcher* batcher = canvas->GetBatcher();
   PickingManager& picking_manager = canvas->GetPickingManager();
 
-  constexpr float kNormalZ = -0.1f;
-  constexpr float kPickingZ = 0.1f;
-  float z = kNormalZ;
+  constexpr float z = -0.1f;
   Color color = m_Color;
 
   if (picking) {
-    z = kPickingZ;
     color = picking_manager.GetPickableColor(this, PickingID::BatcherId::UI);
   }
 
@@ -69,7 +67,7 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
 }
 
 //-----------------------------------------------------------------------------
-void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
+void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, bool picking) {
   Batcher* batcher = &time_graph_->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float z = GlCanvas::Z_VALUE_EVENT;
@@ -79,25 +77,48 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
   std::map<uint64_t, CallstackEvent>& callstacks =
       GEventTracer.GetEventBuffer().GetCallstacks()[m_ThreadId];
 
-  // Sampling Events
   const Color kWhite(255, 255, 255, 255);
-  for (auto& pair : callstacks) {
-    uint64_t time = pair.first;
-    if (time > min_tick && time < max_tick) {
-      Vec2 pos(time_graph_->GetWorldFromTick(time), m_Pos[1]);
-      batcher->AddVerticalLine(pos, -track_height, z, kWhite, PickingID::LINE);
-    }
-  }
-
-  // Draw selected events
   const Color kGreenSelection(0, 255, 0, 255);
-  Color selectedColor[2];
-  Fill(selectedColor, kGreenSelection);
-  for (const CallstackEvent& event :
-       time_graph_->GetSelectedCallstackEvents(m_ThreadId)) {
-    Vec2 pos(time_graph_->GetWorldFromTick(event.m_Time), m_Pos[1]);
-    batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection,
-                             PickingID::LINE);
+
+  if (!picking) {
+    // Sampling Events
+    for (auto& pair : callstacks) {
+      uint64_t time = pair.first;
+      if (time > min_tick && time < max_tick) {
+        Vec2 pos(time_graph_->GetWorldFromTick(time), m_Pos[1]);
+        batcher->AddVerticalLine(pos, -track_height, z, kWhite,
+                                 PickingID::LINE);
+      }
+    }
+
+    // Draw selected events
+    Color selectedColor[2];
+    Fill(selectedColor, kGreenSelection);
+    for (const CallstackEvent& event :
+         time_graph_->GetSelectedCallstackEvents(m_ThreadId)) {
+      Vec2 pos(time_graph_->GetWorldFromTick(event.m_Time), m_Pos[1]);
+      batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection,
+                               PickingID::LINE);
+    }
+  // Draw boxes instead of lines to make picking easier, even if this may
+  // cause samples to overlap
+  } else {
+    constexpr const float kPickingBoxWidth = 9.0f;
+    constexpr const float kPickingBoxOffset = (kPickingBoxWidth - 1.0f) / 2.0f;
+
+    for (auto& pair : callstacks) {
+      uint64_t time = pair.first;
+      if (time > min_tick && time < max_tick) {
+        Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
+                  m_Pos[1] - track_height + 1);
+        Vec2 size(kPickingBoxWidth, track_height);
+        auto userData = std::make_shared<PickingUserData>(
+            nullptr,
+            [&](PickingID id) -> std::string { return GetSampleTooltip(id); });
+        userData->m_CustomData = &pair.second;
+        batcher->AddShadedBox(pos, size, z, kGreenSelection, PickingID::BOX, userData);
+      }
+    }
   }
 }
 
@@ -151,4 +172,31 @@ bool EventTrack::IsEmpty() const {
   const std::map<uint64_t, CallstackEvent>& callstacks =
       GEventTracer.GetEventBuffer().GetCallstacks()[m_ThreadId];
   return callstacks.empty();
+}
+
+//-----------------------------------------------------------------------------
+std::string EventTrack::GetSampleTooltip(PickingID id) const {
+  auto SafeGetFormattedFunctionName = [](uint64_t addr) -> std::string {
+    auto it = Capture::GAddressToFunctionName.find(addr);
+    return it == Capture::GAddressToFunctionName.end() ? "<i>???</i>" : it->second;
+  };
+
+  auto userData = time_graph_->GetBatcher().GetUserData(id);
+  if (userData->m_CustomData) {
+    CallstackEvent* callstackEvent =
+        static_cast<CallstackEvent*>(userData->m_CustomData);
+    auto callstack = Capture::GSamplingProfiler->GetCallStack(callstackEvent->m_Id);
+    
+    if (callstack) {
+      std::string functionName = SafeGetFormattedFunctionName(callstack->m_Data[0]);
+      std::string result = absl::StrFormat(
+        "<b>%s</b><br/><i>Sampled event</i><br/><br/><b>Callstack:</b>",
+        functionName.c_str());
+      for (auto addr : callstack->m_Data) {
+        result = result + "<br/>" + SafeGetFormattedFunctionName(addr);
+      }
+      return result;
+    }
+  }
+  return "Unknown sampled event";
 }

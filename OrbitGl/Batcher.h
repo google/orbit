@@ -15,6 +15,7 @@ using TooltipCallback = std::function<std::string(PickingID)>;
 struct PickingUserData {
   TextBox* m_TextBox;
   TooltipCallback m_GenerateTooltip;
+  void* m_CustomData = nullptr;
 
   PickingUserData(
     TextBox* text_box = nullptr,

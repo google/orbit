@@ -11,10 +11,10 @@ class SchedulerTrack : public ThreadTrack {
  public:
   explicit SchedulerTrack(TimeGraph* time_graph);
   ~SchedulerTrack() override = default;
-
+  
   std::string GetTooltip() const override;
 
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) override;
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, bool picking) override;
   Type GetType() const override { return kSchedulerTrack; }
   float GetHeight() const override;
   bool HasEventTrack() const override { return false; }

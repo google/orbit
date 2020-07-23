@@ -172,7 +172,7 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
 }
 
 //-----------------------------------------------------------------------------
-void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/) {}
+void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/, bool /*  picking*/) {}
 
 //-----------------------------------------------------------------------------
 void Track::SetPos(float a_X, float a_Y) {

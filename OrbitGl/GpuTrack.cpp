@@ -143,7 +143,7 @@ void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
 }
 
 //-----------------------------------------------------------------------------
-void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
+void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, bool picking) {
   Batcher* batcher = &time_graph_->GetBatcher();
   GlCanvas* canvas = time_graph_->GetCanvas();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
