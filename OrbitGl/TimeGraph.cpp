@@ -263,7 +263,7 @@ void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
   auto min_world_top_left_y =
       text_box_y_position + m_Layout.GetSpaceBetweenTracks() + top_margin;
   auto max_world_top_left_y = text_box_y_position + m_Canvas->GetWorldHeight() -
-                              text_box->GetSizeY() - down_margin;
+                              GetTextBoxHeight() - down_margin;
   CHECK (min_world_top_left_y <= max_world_top_left_y);
   world_top_left_y = std::min(world_top_left_y, max_world_top_left_y);
   world_top_left_y = std::max(world_top_left_y, min_world_top_left_y);
