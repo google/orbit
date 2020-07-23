@@ -62,7 +62,7 @@ class TimeGraph {
   void SetMinMax(double a_MinTimeUs, double a_MaxTimeUs);
   void PanTime(int a_InitialX, int a_CurrentX, int a_Width,
                double a_InitialTime);
-  enum VisibilityType {
+  enum class VisibilityType {
     kPartlyVisible,
     kFullyVisible,
   };
