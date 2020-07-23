@@ -180,12 +180,11 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
 //-----------------------------------------------------------------------------
 void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
   uint32_t type = a_PickingID.m_Type;
-  uint32_t id = a_PickingID.m_Id;
 
   Batcher& batcher = GetBatcherById(a_PickingID.batcher_id_);
-  TextBox* textBox = batcher.GetTextBox(a_PickingID);
-  if (textBox) {
-    SelectTextBox(textBox);
+  TextBox* text_box = batcher.GetTextBox(a_PickingID);
+  if (text_box) {
+    SelectTextBox(text_box);
   } else if (type == PickingID::PICKABLE) {
     m_PickingManager.Pick(a_PickingID.m_Id, a_X, a_Y);
   }
@@ -227,10 +226,10 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
       tooltip = pickable->GetTooltip();
     }
   } else {
-    std::shared_ptr<PickingUserData> userData = batcher.GetUserData(pickId);
+    std::shared_ptr<PickingUserData> user_data = batcher.GetUserData(pickId);
 
-    if (userData && userData->m_GenerateTooltip) {
-      tooltip = userData->m_GenerateTooltip(pickId);
+    if (user_data && user_data->m_GenerateTooltip) {
+      tooltip = user_data->m_GenerateTooltip(pickId);
     }
   }
 

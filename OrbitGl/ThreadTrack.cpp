@@ -218,17 +218,17 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
         text_box.SetPos(pos);
         text_box.SetSize(size);
 
-        auto userData = std::make_shared<PickingUserData>(
+        auto user_data = std::make_shared<PickingUserData>(
           &text_box, [&](PickingID id) { return this->GetBoxTooltip(id); });
 
         if (is_visible_width) {
           if (!is_collapsed) {
             SetTimesliceText(timer, elapsed_us, min_x, &text_box);
           }
-          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, userData);
+          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, user_data);
         } else {
           auto type = PickingID::LINE;
-          batcher->AddVerticalLine(pos, size[1], z, color, type, userData);
+          batcher->AddVerticalLine(pos, size[1], z, color, type, user_data);
           // For lines, we can ignore the entire pixel into which this event
           // falls.
           min_ignore =
@@ -393,11 +393,11 @@ bool ThreadTrack::IsEmpty() const {
 
 //-----------------------------------------------------------------------------
 std::string ThreadTrack::GetBoxTooltip(PickingID id) const {
-  TextBox* textBox = time_graph_->GetBatcher().GetTextBox(id);
-  if (textBox) {
-    if (textBox->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
+  TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
+  if (text_box) {
+    if (text_box->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
       Function* func =
-          Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
+          Capture::GSelectedFunctionsMap[text_box->GetTimer().m_FunctionAddress];
       if (func) {
         return absl::StrFormat(
           "<b>%s</b><br/>"
@@ -407,9 +407,9 @@ std::string ThreadTrack::GetBoxTooltip(PickingID id) const {
           "<b>Time:</b> %s",
           FunctionUtils::GetDisplayName(*func),
           FunctionUtils::GetLoadedModuleName(*func),
-          GetPrettyTime(textBox->GetTimer().ElapsedMillis()));
+          GetPrettyTime(text_box->GetTimer().ElapsedMillis()));
       } else {
-        return textBox->GetText();
+        return text_box->GetText();
       }
     }
   }

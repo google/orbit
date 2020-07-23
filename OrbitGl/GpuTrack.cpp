@@ -197,17 +197,17 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           }
         }
 
-        auto userData = std::make_shared<PickingUserData>(
+        auto user_data = std::make_shared<PickingUserData>(
           &text_box, [&](PickingID id) { return this->GetBoxTooltip(id); });
 
         if (is_visible_width) {
           if (!is_collapsed) {
             SetTimesliceText(timer, elapsed_us, min_x, &text_box);
           }
-          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, userData);
+          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, user_data);
         } else {
           auto type = PickingID::LINE;
-          batcher->AddVerticalLine(pos, size[1], z, color, type, userData);
+          batcher->AddVerticalLine(pos, size[1], z, color, type, user_data);
           // For lines, we can ignore the entire pixel into which this event
           // falls. We align this precisely on the pixel x-coordinate of the
           // current line being drawn (in ticks).
@@ -357,17 +357,17 @@ std::vector<std::shared_ptr<TimerChain>> GpuTrack::GetAllChains() {
 
 //-----------------------------------------------------------------------------
 std::string GpuTrack::GetBoxTooltip(PickingID id) const {
-  TextBox* textBox = time_graph_->GetBatcher().GetTextBox(id);
-  if (textBox) {
-    if (textBox->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
+  TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
+  if (text_box) {
+    if (text_box->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
       std::string gpu_stage =
-          string_manager_->Get(textBox->GetTimer().m_UserData[0]).value_or("");
+          string_manager_->Get(text_box->GetTimer().m_UserData[0]).value_or("");
       if (gpu_stage == kSwQueueString) {
-        return GetSwQueueTooltip(textBox->GetTimer());
+        return GetSwQueueTooltip(text_box->GetTimer());
       } else if (gpu_stage == kHwQueueString) {
-        return GetHwQueueTooltip(textBox->GetTimer());
+        return GetHwQueueTooltip(text_box->GetTimer());
       } else if (gpu_stage == kHwExecutionString) {
-        return GetHwExecutionTooltip(textBox->GetTimer());
+        return GetHwExecutionTooltip(text_box->GetTimer());
       }
     }
   }

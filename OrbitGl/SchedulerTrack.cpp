@@ -120,15 +120,15 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
                                     is_same_tid_as_selected,
                                     is_same_pid_as_target, is_inactive);
 
-        auto userData = std::make_shared<PickingUserData>(
+        auto user_data = std::make_shared<PickingUserData>(
           &text_box,
           [&](PickingID id) -> std::string { return GetBoxTooltip(id); });
 
         if (is_visible_width) {
-          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, userData);
+          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, user_data);
         } else {
           auto type = PickingID::LINE;
-          batcher->AddVerticalLine(pos, size[1], z, color, type, userData);
+          batcher->AddVerticalLine(pos, size[1], z, color, type, user_data);
           // For lines, we can ignore the entire pixel into which this event
           // falls. We align this precisely on the pixel x-coordinate of the
           // current line being drawn (in ticks).
@@ -144,16 +144,16 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
 }
 
 std::string SchedulerTrack::GetBoxTooltip(PickingID id) const {
-  TextBox* textBox = time_graph_->GetBatcher().GetTextBox(id);
-  if (textBox) {
+  TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
+  if (text_box) {
     return absl::StrFormat(
       "<b>CPU Core activity</b><br/>"
       "<br/>"
       "<b>Core:</b> %d<br/>"
       "<b>Thread:</b> %s [%d]<br/>",
-      textBox->GetTimer().m_Processor,
-      Capture::GThreadNames[textBox->GetTimer().m_TID],
-      textBox->GetTimer().m_TID
+      text_box->GetTimer().m_Processor,
+      Capture::GThreadNames[text_box->GetTimer().m_TID],
+      text_box->GetTimer().m_TID
     );
   }
 
