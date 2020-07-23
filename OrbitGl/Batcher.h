@@ -60,7 +60,7 @@ struct TriangleBuffer {
     triangles_.Reset();
     colors_.Reset();
     picking_colors_.Reset();
-    m_UserData.Reset();
+    user_data_.Reset();
   }
 
   static const int NUM_TRIANGLES_PER_BLOCK = 64 * 1024;
@@ -68,7 +68,7 @@ struct TriangleBuffer {
   BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> colors_;
   BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
   BlockChain<std::shared_ptr<PickingUserData>, NUM_TRIANGLES_PER_BLOCK>
-      m_UserData;
+      user_data_;
 };
 
 //-----------------------------------------------------------------------------
@@ -96,14 +96,14 @@ class Batcher {
               std::shared_ptr<PickingUserData> user_data = nullptr);
   void AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
                     PickingID::Type picking_type,
-      std::shared_ptr<PickingUserData> user_data = nullptr);
+                    std::shared_ptr<PickingUserData> user_data = nullptr);
 
   void AddTriangle(const Triangle& triangle, Color color,
                    PickingID::Type picking_type,
-      std::shared_ptr<PickingUserData> user_data = nullptr);
+                   std::shared_ptr<PickingUserData> user_data = nullptr);
   void AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
                    PickingID::Type picking_type,
-      std::shared_ptr<PickingUserData> user_data = nullptr);
+                   std::shared_ptr<PickingUserData> user_data = nullptr);
 
   void GetBoxGradientColors(Color color, Color* colors);
 

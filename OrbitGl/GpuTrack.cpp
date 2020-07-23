@@ -197,21 +197,16 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
           }
         }
 
+        auto userData = std::make_shared<PickingUserData>(
+            &text_box, [&](PickingID id) { return this->GetBoxTooltip(id); });
         if (is_visible_width) {
           if (!is_collapsed) {
             SetTimesliceText(timer, elapsed_us, min_x, &text_box);
           }
-          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX,
-              std::make_shared<PickingUserData>(&text_box, [&](PickingID id) {
-                return this->GetBoxTooltip(id);
-              }));
+          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, userData);
         } else {
           auto type = PickingID::LINE;
-          batcher->AddVerticalLine(
-              pos, size[1], z, color, type,
-              std::make_shared<PickingUserData>(&text_box, [&](PickingID id) {
-                return this->GetBoxTooltip(id);
-              }));
+          batcher->AddVerticalLine(pos, size[1], z, color, type, userData);
           // For lines, we can ignore the entire pixel into which this event
           // falls. We align this precisely on the pixel x-coordinate of the
           // current line being drawn (in ticks).

@@ -186,12 +186,8 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
   TextBox* textBox = batcher.GetTextBox(a_PickingID);
   if (textBox) {
     SelectTextBox(textBox);
-  } else {
-    switch (type) {
-      case PickingID::PICKABLE:
-        m_PickingManager.Pick(a_PickingID.m_Id, a_X, a_Y);
-        break;
-    }
+  } else if (type == PickingID::PICKABLE) {
+    m_PickingManager.Pick(a_PickingID.m_Id, a_X, a_Y);
   }
 }
 

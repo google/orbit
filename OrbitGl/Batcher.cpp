@@ -84,7 +84,7 @@ void Batcher::AddTriangle(const Triangle& triangle, Color color,
   triangle_buffer_.triangles_.push_back(triangle);
   triangle_buffer_.colors_.push_back_n(color, 3);
   triangle_buffer_.picking_colors_.push_back_n(picking_color, 3);
-  triangle_buffer_.m_UserData.push_back(user_data);
+  triangle_buffer_.user_data_.push_back(user_data);
 }
 
 void Batcher::AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
@@ -103,7 +103,7 @@ std::shared_ptr<PickingUserData> Batcher::GetUserData(PickingID a_ID) {
       data = line_buffer_.m_UserData.SlowAt(a_ID.m_Id);
       break;
     case PickingID::TRIANGLE:
-      data = triangle_buffer_.m_UserData.SlowAt(a_ID.m_Id);
+      data = triangle_buffer_.user_data_.SlowAt(a_ID.m_Id);
       break;
   }
 
