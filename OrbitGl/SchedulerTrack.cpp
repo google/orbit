@@ -49,7 +49,8 @@ std::string SchedulerTrack::GetTooltip() const {
   return "Shows scheduling information for CPU cores";
 }
 
-void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, bool picking) {
+void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
+                                      PickingMode picking_mode) {
   Batcher* batcher = &time_graph_->GetBatcher();
   GlCanvas* canvas = time_graph_->GetCanvas();
   const TimeGraphLayout& layout = time_graph_->GetLayout();

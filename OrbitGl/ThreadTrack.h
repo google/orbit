@@ -23,13 +23,14 @@ class ThreadTrack : public Track {
   ~ThreadTrack() override = default;
 
   // Pickable
-  void Draw(GlCanvas* canvas, bool picking) override;
+  void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
   void OnDrag(int x, int y) override;
   void OnTimer(const Timer& timer);
   std::string GetTooltip() const override;
 
   // Track
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, bool picking) override;
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
+                        PickingMode picking_mode) override;
   Type GetType() const override { return kThreadTrack; }
   float GetHeight() const override;
 

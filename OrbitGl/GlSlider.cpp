@@ -105,13 +105,15 @@ void GlSlider::OnDragHorizontal(int a_X, int /*a_Y*/) {
 }
 
 //-----------------------------------------------------------------------------
-void GlSlider::Draw(GlCanvas* a_Canvas, bool a_Picking) {
-  m_Vertical ? DrawVertical(a_Canvas, a_Picking)
-             : DrawHorizontal(a_Canvas, a_Picking);
+void GlSlider::Draw(GlCanvas* a_Canvas, PickingMode picking_mode) {
+  m_Vertical ? DrawVertical(a_Canvas, picking_mode)
+             : DrawHorizontal(a_Canvas, picking_mode);
 }
 
 //-----------------------------------------------------------------------------
-void GlSlider::DrawHorizontal(GlCanvas* canvas, bool picking) {
+void GlSlider::DrawHorizontal(GlCanvas* canvas, PickingMode picking_mode) {
+  const bool picking = picking_mode != PickingMode::kNone;
+
   m_Canvas = canvas;
   Batcher* batcher = canvas->GetBatcher();
 
@@ -143,7 +145,8 @@ void GlSlider::DrawHorizontal(GlCanvas* canvas, bool picking) {
 }
 
 //-----------------------------------------------------------------------------
-void GlSlider::DrawVertical(GlCanvas* canvas, bool picking) {
+void GlSlider::DrawVertical(GlCanvas* canvas, PickingMode picking_mode) {
+  const bool picking = picking_mode != PickingMode::kNone;
   m_Canvas = canvas;
   Batcher* batcher = canvas->GetBatcher();
 

@@ -497,7 +497,7 @@ void TimeGraph::NeedsUpdate() {
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::UpdatePrimitives(bool picking) {
+void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   CHECK(string_manager_);
 
   m_Batcher.Reset();
@@ -518,7 +518,7 @@ void TimeGraph::UpdatePrimitives(bool picking) {
 
   for (auto& track : sorted_tracks_) {
     track->SetY(current_y);
-    track->UpdatePrimitives(min_tick, max_tick, picking);
+    track->UpdatePrimitives(min_tick, max_tick, picking_mode);
     current_y -= (track->GetHeight() + m_Layout.GetSpaceBetweenTracks());
   }
 
@@ -574,14 +574,15 @@ const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::Draw(GlCanvas* canvas, bool a_Picking) {
-  if ((!a_Picking && m_NeedsUpdatePrimitives) || a_Picking) {
-    UpdatePrimitives(a_Picking);
+void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+  const bool picking = picking_mode != PickingMode::kNone;
+  if ((!picking && m_NeedsUpdatePrimitives) || picking) {
+    UpdatePrimitives(picking_mode);
   }
 
-  DrawTracks(canvas, a_Picking);
-  DrawOverlay(canvas, a_Picking);
-  m_Batcher.Draw(a_Picking);
+  DrawTracks(canvas, picking_mode);
+  DrawOverlay(canvas, picking_mode);
+  m_Batcher.Draw(picking);
 
   m_NeedsRedraw = false;
 }
@@ -638,8 +639,9 @@ void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
 
 }  // namespace
 
-void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
-  if (picking || overlay_current_textboxes_.size() == 0) {
+void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
+  if (picking_mode != PickingMode::kNone || 
+      overlay_current_textboxes_.size() == 0) {
     return;
   }
 
@@ -740,7 +742,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::DrawTracks(GlCanvas* canvas, bool a_Picking) {
+void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
   uint32_t num_cores = GetNumCores();
   m_Layout.SetNumCores(num_cores);
   scheduler_track_->SetLabel(
@@ -762,7 +764,7 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, bool a_Picking) {
       }
     }
 
-    track->Draw(canvas, a_Picking);
+    track->Draw(canvas, picking_mode);
   }
 }
 

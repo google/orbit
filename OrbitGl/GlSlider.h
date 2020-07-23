@@ -19,7 +19,7 @@ class GlSlider : public Pickable {
 
   void OnPick(int a_X, int a_Y) override;
   void OnDrag(int a_X, int a_Y) override;
-  void Draw(GlCanvas* a_Canvas, bool a_Picking) override;
+  void Draw(GlCanvas* a_Canvas, PickingMode picking_mode) override;
   bool Draggable() override { return true; }
   void SetSliderRatio(float a_Start);       // [0,1]
   void SetSliderWidthRatio(float a_Ratio);  // [0,1]
@@ -33,8 +33,8 @@ class GlSlider : public Pickable {
   void SetDragCallback(DragCallback a_Callback) { m_DragCallback = a_Callback; }
 
  protected:
-  void DrawHorizontal(GlCanvas* a_Canvas, bool a_Picking);
-  void DrawVertical(GlCanvas* a_Canvas, bool a_Picking);
+  void DrawHorizontal(GlCanvas* a_Canvas, PickingMode picking_mode);
+  void DrawVertical(GlCanvas* a_Canvas, PickingMode picking_mode);
   void OnDragHorizontal(int a_X, int a_Y);
   void OnDragVertical(int a_X, int a_Y);
   void OnPickHorizontal(int a_X, int a_Y);

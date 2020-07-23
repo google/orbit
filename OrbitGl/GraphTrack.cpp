@@ -8,8 +8,8 @@
 
 GraphTrack::GraphTrack(TimeGraph* time_graph) : Track(time_graph) {}
 
-void GraphTrack::Draw(GlCanvas* canvas, bool picking) {
-  UNUSED(picking);
+void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+  UNUSED(picking_mode);
 
   Batcher* batcher = canvas->GetBatcher();
 

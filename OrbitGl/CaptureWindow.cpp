@@ -542,7 +542,7 @@ void CaptureWindow::Draw() {
   // Reset picking manager before each draw.
   m_PickingManager.Reset();
 
-  time_graph_.Draw(this, m_Picking);
+  time_graph_.Draw(this, GetPickingMode());
 
   if (!m_Picking && m_SelectStart[0] != m_SelectStop[0]) {
     TickType minTime = std::min(m_TimeStart, m_TimeStop);
@@ -584,6 +584,8 @@ void CaptureWindow::DrawScreenSpace() {
   const TimeGraphLayout& layout = time_graph_.GetLayout();
   float vertical_margin = layout.GetVerticalMargin();
 
+  const auto picking_mode = GetPickingMode();
+
   if (timeSpan > 0) {
     double start = time_graph_.GetMinTimeUs();
     double stop = time_graph_.GetMaxTimeUs();
@@ -595,13 +597,13 @@ void CaptureWindow::DrawScreenSpace() {
     m_Slider.SetPixelHeight(slider_width);
     m_Slider.SetSliderRatio(static_cast<float>(ratio));
     m_Slider.SetSliderWidthRatio(static_cast<float>(width / timeSpan));
-    m_Slider.Draw(this, m_Picking);
+    m_Slider.Draw(this, picking_mode);
 
     float verticalRatio = m_WorldHeight / time_graph_.GetThreadTotalHeight();
     if (verticalRatio < 1.f) {
       m_VerticalSlider.SetPixelHeight(slider_width);
       m_VerticalSlider.SetSliderWidthRatio(verticalRatio);
-      m_VerticalSlider.Draw(this, m_Picking);
+      m_VerticalSlider.Draw(this, picking_mode);
       vertical_margin += slider_width;
     }
   }
@@ -657,6 +659,18 @@ Batcher& CaptureWindow::GetBatcherById(uint32_t batcher_id) {
   return batcher_id == PickingID::TIME_GRAPH
                          ? time_graph_.GetBatcher()
                          : ui_batcher_;
+}
+
+PickingMode CaptureWindow::GetPickingMode() { 
+  PickingMode picking_mode = PickingMode::kNone;
+  if (m_Picking) {
+    picking_mode = PickingMode::kClick;
+  }
+  if (m_IsHovering) {
+    picking_mode = PickingMode::kHover;
+  }
+
+  return picking_mode;
 }
 
 //-----------------------------------------------------------------------------

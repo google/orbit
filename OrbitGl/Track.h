@@ -38,8 +38,8 @@ class Track : public Pickable {
   ~Track() override = default;
 
   // Pickable
-  void Draw(GlCanvas* a_Canvas, bool a_Picking) override;
-  virtual void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, bool picking);
+  void Draw(GlCanvas* a_Canvas, PickingMode a_PickingMode) override;
+  virtual void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode);
   void OnPick(int a_X, int a_Y) override;
   void OnRelease() override;
   void OnDrag(int a_X, int a_Y) override;

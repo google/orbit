@@ -14,7 +14,8 @@ class SchedulerTrack : public ThreadTrack {
   
   std::string GetTooltip() const override;
 
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, bool picking) override;
+  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
+                        PickingMode picking_mode) override;
   Type GetType() const override { return kSchedulerTrack; }
   float GetHeight() const override;
   bool HasEventTrack() const override { return false; }

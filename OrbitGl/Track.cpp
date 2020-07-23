@@ -81,13 +81,14 @@ void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
 }
 
 //-----------------------------------------------------------------------------
-void Track::Draw(GlCanvas* canvas, bool picking) {
+void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   Color picking_color = canvas->GetPickingManager().GetPickableColor(
       this, PickingID::BatcherId::UI);
   const Color kTabColor(50, 50, 50, 255);
+  const bool picking = picking_mode != PickingMode::kNone;
   Color color = picking ? picking_color : kTabColor;
   glColor4ubv(&color[0]);
 
@@ -156,7 +157,7 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
   float button_offset = layout.GetCollapseButtonOffset();
   Vec2 toggle_pos = Vec2(tab_x0 + button_offset, m_Pos[1] + half_label_height);
   collapse_toggle_.SetPos(toggle_pos);
-  collapse_toggle_.Draw(canvas, picking);
+  collapse_toggle_.Draw(canvas, picking_mode);
 
   if (!picking) {
     // Draw label.
@@ -172,7 +173,7 @@ void Track::Draw(GlCanvas* canvas, bool picking) {
 }
 
 //-----------------------------------------------------------------------------
-void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/, bool /*  picking*/) {}
+void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/, PickingMode /*  picking_mode*/) {}
 
 //-----------------------------------------------------------------------------
 void Track::SetPos(float a_X, float a_Y) {

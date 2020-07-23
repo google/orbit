@@ -22,18 +22,23 @@ std::string EventTrack::GetTooltip() const {
 }
 
 //-----------------------------------------------------------------------------
-void EventTrack::Draw(GlCanvas* canvas, bool picking) {
+void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
   PickingManager& picking_manager = canvas->GetPickingManager();
 
-  constexpr float z = -0.1f;
+  const bool picking = picking_mode != PickingMode::kNone;
+  // The sample indicators are at z == 0 and do not respond to clicks, but
+  // have a tooltip. For picking, we want to draw the event bar over them if
+  // handling a click, and underneath otherwise.
+  // This simulates "click-through" behavior.
+  const float eventBarZ = picking_mode == PickingMode::kClick ? 0.1f : -0.1f;
   Color color = m_Color;
 
   if (picking) {
     color = picking_manager.GetPickableColor(this, PickingID::BatcherId::UI);
   }
 
-  Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), z);
+  Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), eventBarZ);
   batcher->AddBox(box, color, PickingID::PICKABLE);
 
   if (canvas->GetPickingManager().GetPicked() == this) {
@@ -67,11 +72,13 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
 }
 
 //-----------------------------------------------------------------------------
-void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, bool picking) {
+void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
+                                  PickingMode picking_mode) {
   Batcher* batcher = &time_graph_->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float z = GlCanvas::Z_VALUE_EVENT;
   float track_height = layout.GetEventTrackHeight();
+  const bool picking = picking_mode != PickingMode::kNone;
 
   ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
   std::map<uint64_t, CallstackEvent>& callstacks =
@@ -195,7 +202,7 @@ std::string EventTrack::GetSampleTooltip(PickingID id) const {
       for (auto addr : callstack->m_Data) {
         result = result + "<br/>" + SafeGetFormattedFunctionName(addr);
       }
-      return result;
+      return result + "<br/><br/><i>To select samples, click & drag across the bar underneath";
     }
   }
   return "Unknown sampled event";

@@ -27,13 +27,14 @@ class TimeGraph {
  public:
   TimeGraph();
 
-  void Draw(GlCanvas* canvas, bool a_Picking = false);
-  void DrawTracks(GlCanvas* canvas, bool a_Picking = false);
-  void DrawOverlay(GlCanvas* canvas, bool picking);
+  void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
+  void DrawTracks(GlCanvas* canvas,
+                  PickingMode picking_mode = PickingMode::kNone);
+  void DrawOverlay(GlCanvas* canvas, PickingMode picking_mode);
   void DrawText(GlCanvas* canvas);
 
   void NeedsUpdate();
-  void UpdatePrimitives(bool picking);
+  void UpdatePrimitives(PickingMode picking_mode);
   void SortTracks();
   std::vector<CallstackEvent> SelectEvents(float a_WorldStart, float a_WorldEnd,
                                            ThreadID a_TID);
