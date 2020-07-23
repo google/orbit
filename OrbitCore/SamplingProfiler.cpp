@@ -314,6 +314,16 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
 
   Capture::GAddressToFunctionName[address] = function_name;
   Capture::GAddressToFunctionName[function_address] = function_name;
+
+  std::string module_name = "???";
+  std::shared_ptr<Module> module = m_Process->GetModuleFromAddress(address);
+  if (module != nullptr) {
+    module_name = module->m_Name;
+  } else if (address_info != nullptr) {
+    module_name = Path::GetFileName(address_info->module_name);
+  }
+  Capture::GAddressToModuleName[address] = module_name;
+  Capture::GAddressToModuleName[function_address] = module_name;
 }
 
 //-----------------------------------------------------------------------------
@@ -344,9 +354,7 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
             100.f * it->second / threadSampleData.m_NumSamples;
       }
       function.m_Address = address;
-
-      std::shared_ptr<Module> module = m_Process->GetModuleFromAddress(address);
-      function.m_Module = module ? module->m_Name : "???";
+      function.m_Module = Capture::GAddressToModuleName[address];
 
       sampleReport.push_back(function);
     }
@@ -354,38 +362,7 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
 }
 
 //-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(SampledFunction, 0) {
-  ORBIT_NVP_VAL(0, m_Name);
-  ORBIT_NVP_VAL(0, m_Module);
-  ORBIT_NVP_VAL(0, m_File);
-  ORBIT_NVP_VAL(0, m_Exclusive);
-  ORBIT_NVP_VAL(0, m_Inclusive);
-  ORBIT_NVP_VAL(0, m_Line);
-  ORBIT_NVP_VAL(0, m_Address);
-}
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 4) {
-  ORBIT_NVP_VAL(0, m_NumSamples);
-  ORBIT_NVP_DEBUG(0, m_ThreadSampleData);
+ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 5) {
   ORBIT_NVP_DEBUG(0, m_UniqueCallstacks);
-  ORBIT_NVP_DEBUG(0, m_UniqueResolvedCallstacks);
-  ORBIT_NVP_DEBUG(0, m_OriginalCallstackToResolvedCallstack);
-  ORBIT_NVP_DEBUG(0, m_FunctionToCallstacks);
-  ORBIT_NVP_DEBUG(0, m_ExactAddressToFunctionAddress);
-  ORBIT_NVP_VAL(4, m_FunctionAddressToExactAddresses);
-}
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(ThreadSampleData, 1) {
-  ORBIT_NVP_VAL(0, m_CallstackCount);
-  ORBIT_NVP_VAL(0, m_AddressCount);
-  ORBIT_NVP_VAL(0, m_ExclusiveCount);
-  ORBIT_NVP_VAL(0, m_AddressCountSorted);
-  ORBIT_NVP_VAL(0, m_NumSamples);
-  ORBIT_NVP_VAL(0, m_SampleReport);
-  ORBIT_NVP_VAL(0, m_ThreadUsage);
-  ORBIT_NVP_VAL(0, m_AverageThreadUsage);
-  ORBIT_NVP_VAL(0, m_TID);
-  ORBIT_NVP_VAL(1, m_RawAddressCount);
+  ORBIT_NVP_VAL(5, callstacks_vector);
 }
