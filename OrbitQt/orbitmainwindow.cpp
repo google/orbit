@@ -96,12 +96,13 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   finalizing_capture_dialog->setFixedSize(finalizing_capture_dialog->size());
   finalizing_capture_dialog->close();
 
-  GOrbitApp->SetCaptureStopRequestedCallback(
-      [finalizing_capture_dialog] { finalizing_capture_dialog->show(); });
+  GOrbitApp->SetCaptureStopRequestedCallback([this, finalizing_capture_dialog] {
+    ui->actionStop_Capture->setDisabled(true);
+    finalizing_capture_dialog->show();
+  });
   GOrbitApp->SetCaptureStoppedCallback([this, finalizing_capture_dialog] {
     finalizing_capture_dialog->close();
     ui->actionStart_Capture->setDisabled(false);
-    ui->actionStop_Capture->setDisabled(true);
     ui->actionOpen_Capture->setDisabled(false);
     ui->actionSave_Capture->setDisabled(false);
     ui->actionOpen_Preset->setDisabled(false);
@@ -109,11 +110,10 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->HomeTab->setDisabled(false);
   });
 
-  GOrbitApp->SetRefreshCallback(
-      [this](DataViewType a_Type) { 
-        this->OnRefreshDataViewPanels(a_Type); 
-        this->live_functions_->OnDataChanged();
-      });
+  GOrbitApp->SetRefreshCallback([this](DataViewType a_Type) {
+    this->OnRefreshDataViewPanels(a_Type);
+    this->live_functions_->OnDataChanged();
+  });
   GOrbitApp->SetSamplingReportCallback(
       [this](DataView* callstack_data_view,
              std::shared_ptr<SamplingReport> report) {
@@ -217,8 +217,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   CreateSamplingTab();
   CreateSelectionTab();
 
-  connect(live_functions_->GetFilterLineEdit(), &QLineEdit::textChanged,
-          this, [this](const QString& text) {
+  connect(live_functions_->GetFilterLineEdit(), &QLineEdit::textChanged, this,
+          [this](const QString& text) {
             OnLiveTabFunctionsFilterTextChanged(text);
           });
 

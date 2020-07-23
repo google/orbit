@@ -584,10 +584,7 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 }
 
 bool OrbitApp::StartCapture() {
-  if (Capture::IsCapturing()) {
-    LOG("Ignoring Start Capture - already capturing...");
-    return false;
-  }
+  CHECK(!Capture::IsCapturing());
 
   ErrorMessageOr<void> result = Capture::StartCapture();
   if (result.has_error()) {
@@ -614,6 +611,7 @@ bool OrbitApp::StartCapture() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::StopCapture() {
+  CHECK(Capture::GState == Capture::State::kStarted);
   Capture::StopCapture();
 
   capture_client_->StopCapture();
