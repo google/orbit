@@ -84,11 +84,6 @@ void CaptureSerializer::SaveImpl(T& archive) {
   }
 
   {
-    ORBIT_SIZE_SCOPE("Capture::GFunctionCountMap");
-    archive(Capture::GFunctionCountMap);
-  }
-
-  {
     ORBIT_SIZE_SCOPE("Capture::GCallstacks");
     archive(Capture::GCallstacks);
   }
@@ -167,6 +162,15 @@ ErrorMessageOr<void> CaptureSerializer::Load(const std::string& filename) {
   }
 }
 
+void FillFunctionCountMap() {
+  Capture::GFunctionCountMap.clear();
+  for (const auto& pair : Capture::GSelectedFunctionsMap) {
+    uint64_t address = pair.first;
+    Function* function = pair.second;
+    Capture::GFunctionCountMap[address] = function->stats()->m_Count;
+  }
+}
+
 ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   // Header
   cereal::BinaryInputArchive archive(stream);
@@ -186,7 +190,7 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   }
   Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
-  archive(Capture::GFunctionCountMap);
+  FillFunctionCountMap();
 
   archive(Capture::GCallstacks);
 
