@@ -214,7 +214,8 @@ void TimeGraph::PanTime(int a_InitialX, int a_CurrentX, int a_Width,
   NeedsUpdate();
 }
 
-void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, TickType min, TickType max, double distance) {
+void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, TickType min,
+                                         TickType max, double distance) {
   if (IsVisible(vis_type, min, max)) {
     return;
   }
@@ -234,9 +235,11 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, TickType min, 
   NeedsUpdate();
 }
 
-void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, const TextBox* text_box,
+void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type,
+                                         const TextBox* text_box,
                                          double distance) {
-  HorizontallyMoveIntoView(vis_type, text_box->GetTimer().m_Start, text_box->GetTimer().m_End);
+  HorizontallyMoveIntoView(vis_type, text_box->GetTimer().m_Start,
+                           text_box->GetTimer().m_End, distance);
 }
 
 void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
