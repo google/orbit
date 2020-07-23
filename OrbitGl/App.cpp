@@ -651,9 +651,10 @@ void OrbitApp::OnCaptureStopped() {
 
 //-----------------------------------------------------------------------------
 void OrbitApp::ToggleCapture() {
-  if (Capture::IsCapturing()) {
+  if (Capture::GState == Capture::State::kStarted) {
     StopCapture();
-  } else {
+  } else if (Capture::GState == Capture::State::kDone ||
+             Capture::GState == Capture::State::kEmpty) {
     StartCapture();
   }
 }
