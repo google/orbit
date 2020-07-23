@@ -23,6 +23,9 @@ class SymbolHelper {
   ErrorMessageOr<ModuleSymbols> LoadUsingSymbolsPathFile(
       const std::string& module_path, const std::string& build_id) const;
 
+  ErrorMessageOr<std::string> FindDebugSymbolsFile(
+      const std::string& module_path, const std::string& build_id) const;
+
  private:
   const std::vector<std::string> collector_symbol_directories_;
   const std::vector<std::string> symbols_file_directories_;
