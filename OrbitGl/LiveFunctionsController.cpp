@@ -87,8 +87,9 @@ const TextBox* SnapToClosestStart(uint64_t absolute_function_address) {
 void LiveFunctionsController::Move() {
   if (!current_textboxes_.empty()) {
     auto min_max = ComputeMinMaxTime(current_textboxes_);
-    GCurrentTimeGraph->HorizontallyMoveIntoView(TimeGraph::kFullyVisible, 
-      min_max.first, min_max.second, 0.5);
+    GCurrentTimeGraph->HorizontallyMoveIntoView(
+        TimeGraph::VisibilityType::kFullyVisible, min_max.first, min_max.second,
+        0.5);
   }
   GCurrentTimeGraph->SetCurrentTextBoxes(current_textboxes_);
 }

@@ -222,13 +222,21 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, TickType min,
 
   double start = MicroSecondsFromTicks(capture_min_timestamp_, min);
   double end = MicroSecondsFromTicks(capture_min_timestamp_, max);
+
+  double CurrentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
+
+  if (vis_type == VisibilityType::kFullyVisible && CurrentTimeWindowUs < (end - start)){
+    Zoom(min, max);
+    return;
+  }
+
   double mid = start + ((end - start) / 2.0);
 
   // Mirror the final center position if we have to move left
   if (start < m_MinTimeUs) {
     distance = 1 - distance;
   }
-  double CurrentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
+
   SetMinMax(mid - CurrentTimeWindowUs * (1 - distance),
             mid + CurrentTimeWindowUs * distance);
 
@@ -428,7 +436,7 @@ void TimeGraph::GetWorldMinMax(float& a_Min, float& a_Max) const {
 void TimeGraph::Select(const TextBox* a_TextBox) {
   TextBox* text_box = const_cast<TextBox*>(a_TextBox);
   Capture::GSelectedTextBox = text_box;
-  HorizontallyMoveIntoView(kPartlyVisible, a_TextBox);
+  HorizontallyMoveIntoView(VisibilityType::kPartlyVisible, a_TextBox);
   VerticallyMoveIntoView(a_TextBox);
 }
 
@@ -912,9 +920,9 @@ bool TimeGraph::IsPartlyVisible(TickType min, TickType max) const {
 
 bool TimeGraph::IsVisible(VisibilityType vis_type, TickType min, TickType max) const {
   switch(vis_type) {
-    case kPartlyVisible:
+    case VisibilityType::kPartlyVisible:
       return IsPartlyVisible(min, max);
-    case kFullyVisible:
+    case VisibilityType::kFullyVisible:
       return IsFullyVisible(min, max);
     default:
       return false;   
