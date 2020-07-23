@@ -84,16 +84,6 @@ void CaptureSerializer::SaveImpl(T& archive) {
   }
 
   {
-    ORBIT_SIZE_SCOPE("Capture::GCallstacks");
-    archive(Capture::GCallstacks);
-  }
-
-  {
-    ORBIT_SIZE_SCOPE("Capture::GProcessId");
-    archive(Capture::GProcessId);
-  }
-
-  {
     ORBIT_SIZE_SCOPE("Capture::GProcessName");
     archive(Capture::GProcessName);
   }
@@ -190,10 +180,6 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
   FillFunctionCountMap();
-
-  archive(Capture::GCallstacks);
-
-  archive(Capture::GProcessId);
 
   archive(Capture::GProcessName);
 
