@@ -114,12 +114,8 @@ void CaptureSerializer::SaveImpl(T& archive) {
   }
 
   {
-    ORBIT_SIZE_SCOPE("Capture::GAddressToFunctionName");
-    archive(Capture::GAddressToFunctionName);
-  }
-
-  {
     ORBIT_SIZE_SCOPE("SamplingProfiler");
+    Capture::GSamplingProfiler->SaveCallstacks();
     archive(Capture::GSamplingProfiler);
   }
 
@@ -185,8 +181,8 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
     std::shared_ptr<Function> function_ptr =
         std::make_shared<Function>(function);
     Capture::GSelectedFunctions.push_back(function_ptr);
-    Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(*function_ptr)] =
-        function_ptr.get();
+    Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(
+        *function_ptr)] = function_ptr.get();
   }
   Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
@@ -202,13 +198,12 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
 
   archive(Capture::GAddressInfos);
 
-  archive(Capture::GAddressToFunctionName);
-
   archive(Capture::GSamplingProfiler);
   if (Capture::GSamplingProfiler == nullptr) {
     Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();
   }
-  Capture::GSamplingProfiler->SortByThreadUsage();
+  Capture::GSamplingProfiler->LoadCallstacks();
+  Capture::GSamplingProfiler->ProcessSamples();
 
   time_graph_->Clear();
 

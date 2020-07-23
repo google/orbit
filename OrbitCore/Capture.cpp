@@ -51,6 +51,7 @@ std::string Capture::GProcessName;
 std::unordered_map<int32_t, std::string> Capture::GThreadNames;
 std::unordered_map<uint64_t, LinuxAddressInfo> Capture::GAddressInfos;
 std::unordered_map<uint64_t, std::string> Capture::GAddressToFunctionName;
+std::unordered_map<uint64_t, std::string> Capture::GAddressToModuleName;
 Mutex Capture::GCallstackMutex;
 std::unordered_map<uint64_t, std::string> Capture::GZoneNames;
 TextBox* Capture::GSelectedTextBox = nullptr;
@@ -131,6 +132,7 @@ void Capture::ClearCaptureData() {
   GThreadNames.clear();
   GAddressInfos.clear();
   GAddressToFunctionName.clear();
+  GAddressToModuleName.clear();
   GZoneNames.clear();
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;

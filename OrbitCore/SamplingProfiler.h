@@ -29,8 +29,6 @@ struct SampledFunction {
   int m_Line = 0;
   uint64_t m_Address = 0;
   Function* m_Function = nullptr;
-
-  ORBIT_SERIALIZABLE;
 };
 
 //-----------------------------------------------------------------------------
@@ -46,8 +44,6 @@ struct ThreadSampleData {
   std::vector<float> m_ThreadUsage;
   float m_AverageThreadUsage = 0;
   ThreadID m_TID = 0;
-
-  ORBIT_SERIALIZABLE;
 };
 
 //-----------------------------------------------------------------------------
@@ -111,6 +107,22 @@ class SamplingProfiler {
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
 
+  // TODO(irinashkviro): remove this when move to protobuf
+  void SaveCallstacks() {
+    callstacks_vector.clear();
+    for (const CallstackEvent& callstack : m_Callstacks) {
+      callstacks_vector.push_back(callstack);
+    }
+  }
+
+  // TODO(irinashkviro): remove this when move to protobuf
+  void LoadCallstacks() {
+    m_Callstacks.clear();
+    for (const CallstackEvent& callstack : callstacks_vector) {
+      m_Callstacks.push_back(callstack);
+    }
+  }
+
   ORBIT_SERIALIZABLE;
 
  protected:
@@ -126,6 +138,9 @@ class SamplingProfiler {
   BlockChain<CallstackEvent, 16 * 1024> m_Callstacks;
   std::unordered_map<CallstackID, std::shared_ptr<CallStack>>
       m_UniqueCallstacks;
+
+  // TODO(irinashkviro): remove this when move to protobuf
+  std::vector<CallstackEvent> callstacks_vector;
 
   // Filled by ProcessSamples.
   std::unordered_map<ThreadID, ThreadSampleData> m_ThreadSampleData;

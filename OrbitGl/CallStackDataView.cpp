@@ -48,13 +48,15 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
 
   switch (a_Column) {
     case COLUMN_SELECTED:
-      return (function != nullptr && FunctionUtils::IsSelected(*function)) ? "X"
-                                                                      : "-";
+      return (function != nullptr && FunctionUtils::IsSelected(*function))
+                 ? "X"
+                 : "-";
     case COLUMN_NAME:
       return function != nullptr ? FunctionUtils::GetDisplayName(*function)
                                  : frame.fallback_name;
     case COLUMN_SIZE:
-      return function != nullptr ? absl::StrFormat("%lu", function->size()) : "";
+      return function != nullptr ? absl::StrFormat("%lu", function->size())
+                                 : "";
     case COLUMN_FILE:
       return function != nullptr ? function->file() : "";
     case COLUMN_LINE:
@@ -66,6 +68,9 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
       }
       if (module != nullptr) {
         return module->m_Name;
+      }
+      if (Capture::GSamplingProfiler != nullptr) {
+        return Capture::GAddressToModuleName[frame.address];
       }
       return "";
     case COLUMN_ADDRESS:
