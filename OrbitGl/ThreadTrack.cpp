@@ -95,6 +95,10 @@ float ThreadTrack::GetYFromDepth(float track_y, uint32_t depth,
          layout.GetSpaceBetweenTracksAndThread() - box_height * (depth + 1);
 }
 
+float ThreadTrack::GetYFromDepth(uint32_t depth) {
+  return GetYFromDepth(m_Pos[1], depth, collapse_toggle_.IsCollapsed());
+}
+
 //-----------------------------------------------------------------------------
 void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
                                    float min_x, TextBox* text_box) {
@@ -201,8 +205,7 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
             static_cast<float>(normalized_length * world_width);
         float world_timer_x =
             static_cast<float>(world_start_x + normalized_start * world_width);
-        float world_timer_y =
-            GetYFromDepth(m_Pos[1], timer.m_Depth, is_collapsed);
+        float world_timer_y = GetYFromDepth(timer.m_Depth);
 
         bool is_visible_width = normalized_length * canvas->getWidth() > 1;
         bool is_selected = &text_box == Capture::GSelectedTextBox;

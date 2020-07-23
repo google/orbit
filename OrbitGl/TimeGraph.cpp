@@ -242,18 +242,19 @@ void TimeGraph::HorizontallyMoveIntoView(const TextBox* text_box,
 
 void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
   CHECK(text_box != nullptr);
-  // TODO: Sometimes the Y-coordinate is not set. We only need to update the
-  // Y-coordinate from this text box
-  UpdatePrimitives();
+  const Timer& timer = text_box->GetTimer();
+  auto thread_track = GetOrCreateThreadTrack(timer.m_TID);
+  auto text_box_y_position = thread_track->GetYFromDepth(timer.m_Depth);
 
   auto world_top_left_y = m_Canvas->GetWorldTopLeftY();
   auto top_margin =
       m_Layout.GetSchedulerTrackOffset() + m_Layout.GetVerticalMargin();
   auto down_margin = m_Layout.GetSliderWidth() + m_Layout.GetVerticalMargin();
   auto min_world_top_left_y =
-      text_box->GetPosY() + m_Layout.GetSpaceBetweenTracks() + top_margin;
-  auto max_world_top_left_y = text_box->GetPosY() + m_Canvas->GetWorldHeight() -
+      text_box_y_position + m_Layout.GetSpaceBetweenTracks() + top_margin;
+  auto max_world_top_left_y = text_box_y_position + m_Canvas->GetWorldHeight() -
                               text_box->GetSizeY() - down_margin;
+  CHECK (min_world_top_left_y <= max_world_top_left_y);
   world_top_left_y = std::min(world_top_left_y, max_world_top_left_y);
   world_top_left_y = std::max(world_top_left_y, min_world_top_left_y);
   m_Canvas->SetWorldTopLeftY(world_top_left_y);
