@@ -16,6 +16,8 @@
 #include "OrbitModule.h"
 #include "Serialization.h"
 
+using orbit_client_protos::FunctionInfo;
+
 namespace {
 
 std::multimap<int, CallstackID> SortCallstacks(
@@ -281,7 +283,7 @@ uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
 //-----------------------------------------------------------------------------
 void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   LinuxAddressInfo* address_info = Capture::GetAddressInfo(address);
-  Function* function = m_Process->GetFunctionFromAddress(address, false);
+  FunctionInfo* function = m_Process->GetFunctionFromAddress(address, false);
 
   // Find the start address of the function this address falls inside.
   // Use the Function returned by Process::GetFunctionFromAddress, and

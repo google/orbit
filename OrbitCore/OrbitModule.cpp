@@ -11,8 +11,10 @@
 
 #include "Core.h"
 #include "ElfUtils/ElfFile.h"
+#include "FunctionUtils.h"
 #include "OrbitBase/Logging.h"
 #include "Pdb.h"
+#include "capture_data.pb.h"
 #include "symbol.pb.h"
 
 #ifndef WIN32
@@ -20,6 +22,8 @@
 #include "Params.h"
 #include "Path.h"
 #endif
+
+using orbit_client_protos::FunctionInfo;
 
 //-----------------------------------------------------------------------------
 Module::Module(const std::string& file_name, uint64_t address_start,
@@ -50,7 +54,7 @@ void Module::LoadSymbols(const ModuleSymbols& module_symbols) {
                                 module_symbols.symbols_file_path(), m_FullName);
 
   for (const SymbolInfo& symbol_info : module_symbols.symbol_infos()) {
-    std::shared_ptr<Function> function = std::make_shared<Function>(
+    std::shared_ptr<FunctionInfo> function = FunctionUtils::CreateFunctionInfo(
         symbol_info.name(), symbol_info.demangled_name(), symbol_info.address(),
         module_symbols.load_bias(), symbol_info.size(),
         symbol_info.source_file(), symbol_info.source_line(), m_FullName,

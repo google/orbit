@@ -18,6 +18,8 @@
 // TODO: Remove this flag once we have a way to toggle the display return values
 ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 
+using orbit_client_protos::FunctionInfo;
+
 //-----------------------------------------------------------------------------
 ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id)
     : Track(time_graph) {
@@ -105,7 +107,8 @@ void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
   TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
-    Function* func = Capture::GSelectedFunctionsMap[timer.m_FunctionAddress];
+    FunctionInfo* func =
+        Capture::GSelectedFunctionsMap[timer.m_FunctionAddress];
 
     text_box->SetElapsedTimeTextLength(time.length());
 
@@ -404,7 +407,7 @@ std::string ThreadTrack::GetBoxTooltip(PickingID id) const {
     return "";
   }
 
-  Function* func =
+  FunctionInfo* func =
       Capture::GSelectedFunctionsMap[text_box->GetTimer().m_FunctionAddress];
   if (!func) {
     return text_box->GetText();

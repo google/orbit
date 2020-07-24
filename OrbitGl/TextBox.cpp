@@ -12,6 +12,8 @@
 #include "TextRenderer.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_protos::FunctionInfo;
+
 //-----------------------------------------------------------------------------
 TextBox::TextBox()
     : m_Pos(Vec2::Zero()),
@@ -120,7 +122,8 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
 
     float maxSize = m_Pos[0] + m_Size[0] - posX;
 
-    Function* func = Capture::GSelectedFunctionsMap[m_Timer.m_FunctionAddress];
+    FunctionInfo* func =
+        Capture::GSelectedFunctionsMap[m_Timer.m_FunctionAddress];
     std::string text = absl::StrFormat(
         "%s %s", func ? FunctionUtils::GetDisplayName(*func).c_str() : "",
         m_Text.c_str());

@@ -38,6 +38,7 @@
 #include "Threading.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "capture_data.pb.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
@@ -74,7 +75,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void LoadFileMapping();
   void ListPresets();
   void RefreshCaptureView();
-  void Disassemble(int32_t pid, const Function& function);
+  void Disassemble(int32_t pid,
+                   const orbit_client_protos::FunctionInfo& function);
 
   void OnTimer(Timer timer) override;
   void OnKeyAndString(uint64_t key, std::string str) override;

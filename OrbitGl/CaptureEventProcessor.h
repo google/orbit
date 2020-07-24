@@ -2,7 +2,6 @@
 #define ORBIT_GL_CAPTURE_EVENT_PROCESSOR_H_
 
 #include "CaptureListener.h"
-#include "OrbitFunction.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "services.pb.h"

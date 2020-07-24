@@ -6,14 +6,17 @@
 
 #include "ui_orbitlivefunctions.h"
 
+using orbit_client_protos::FunctionInfo;
+
 //-----------------------------------------------------------------------------
 OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
     : QWidget(parent), ui(new Ui::OrbitLiveFunctions) {
   ui->setupUi(this);
 
-  live_functions_.SetAddIteratorCallback([this](size_t id, Function* function) {
-    this->AddIterator(id, function);
-  });
+  live_functions_.SetAddIteratorCallback(
+      [this](size_t id, FunctionInfo* function) {
+        this->AddIterator(id, function);
+      });
 
   all_events_iterator_ = new OrbitEventIterator(this);
   all_events_iterator_->SetNextButtonCallback([this]() {
@@ -63,7 +66,7 @@ void OrbitLiveFunctions::Refresh() { ui->data_view_panel_->Refresh(); }
 
 void OrbitLiveFunctions::OnDataChanged() { live_functions_.OnDataChanged(); }
 
-void OrbitLiveFunctions::AddIterator(size_t id, Function* function) {
+void OrbitLiveFunctions::AddIterator(size_t id, FunctionInfo* function) {
   OrbitEventIterator* iterator_ui = new OrbitEventIterator(this);
 
   iterator_ui->SetNextButtonCallback([this, id]() {
