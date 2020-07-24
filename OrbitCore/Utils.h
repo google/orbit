@@ -328,31 +328,25 @@ inline std::string GetPrettySize(uint64_t size) {
 }
 
 //-----------------------------------------------------------------------------
-inline std::string GetPrettyTime(double milliseconds) {
-  constexpr double Day = 24 * 60 * 60 * 1000;
-  constexpr double Hour = 60 * 60 * 1000;
-  constexpr double Minute = 60 * 1000;
-  constexpr double Second = 1000;
-  constexpr double Milli = 1;
-  constexpr double Micro = 0.001;
-  constexpr double Nano = 0.000001;
+inline std::string GetPrettyTime(absl::Duration duration) {
+  constexpr double Day = 24;
 
   std::string res;
 
-  if (milliseconds < Micro) {
-    res = absl::StrFormat("%.3f ns", milliseconds / Nano);
-  } else if (milliseconds < Milli) {
-    res = absl::StrFormat("%.3f us", milliseconds / Micro);
-  } else if (milliseconds < Second) {
-    res = absl::StrFormat("%.3f ms", milliseconds);
-  } else if (milliseconds < Minute) {
-    res = absl::StrFormat("%.3f s", milliseconds / Second);
-  } else if (milliseconds < Hour) {
-    res = absl::StrFormat("%.3f min", milliseconds / Minute);
-  } else if (milliseconds < Day) {
-    res = absl::StrFormat("%.3f h", milliseconds / Hour);
+  if (absl::ToDoubleMicroseconds(duration) < 1) {
+    res = absl::StrFormat("%.3f ns", absl::ToDoubleNanoseconds(duration));
+  } else if (absl::ToDoubleMilliseconds(duration) < 1) {
+    res = absl::StrFormat("%.3f us", absl::ToDoubleMicroseconds(duration));
+  } else if (absl::ToDoubleSeconds(duration) < 1) {
+    res = absl::StrFormat("%.3f ms", absl::ToDoubleMilliseconds(duration));
+  } else if (absl::ToDoubleMinutes(duration) < 1) {
+    res = absl::StrFormat("%.3f s", absl::ToDoubleSeconds(duration));
+  } else if (absl::ToDoubleHours(duration) < 1) {
+    res = absl::StrFormat("%.3f min", absl::ToDoubleMinutes(duration));
+  } else if (absl::ToDoubleHours(duration) < Day) {
+    res = absl::StrFormat("%.3f h", absl::ToDoubleHours(duration));
   } else {
-    res = absl::StrFormat("%.3f days", milliseconds / Day);
+    res = absl::StrFormat("%.3f days", absl::ToDoubleHours(duration) / Day);
   }
 
   return res;

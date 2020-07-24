@@ -551,12 +551,11 @@ void CaptureWindow::Draw() {
     float from = time_graph_.GetWorldFromTick(minTime);
     float to = time_graph_.GetWorldFromTick(maxTime);
 
-    double micros = MicroSecondsFromTicks(minTime, maxTime);
     float sizex = to - from;
     Vec2 pos(from, m_WorldTopLeftY - m_WorldHeight);
     Vec2 size(sizex, m_WorldHeight);
 
-    std::string time = GetPrettyTime(micros * 0.001);
+    std::string time = GetPrettyTime(TicksToDuration(minTime, maxTime));
     TextBox box(pos, size, time, Color(0, 128, 0, 128));
     box.SetTextY(m_SelectStop[1]);
     box.Draw(&ui_batcher_, m_TextRenderer, -FLT_MAX, true, true);
@@ -894,12 +893,11 @@ void CaptureWindow::RenderTimeBar() {
     float xMargin = ScreenToworldWidth(4);
 
     for (int i = 0; i < numTimePoints; ++i) {
-      double currentMicros = normStartUs + i * 1000 * normInc;
-      if (currentMicros < 0) continue;
+      double current_micros = normStartUs + i * 1000 * normInc;
+      if (current_micros < 0) continue;
 
-      double currentMillis = currentMicros * 0.001;
-      std::string text = GetPrettyTime(currentMillis);
-      float worldX = time_graph_.GetWorldFromUs(currentMicros);
+      std::string text = GetPrettyTime(absl::Microseconds(current_micros));
+      float worldX = time_graph_.GetWorldFromUs(current_micros);
       m_TextRenderer.AddText(text.c_str(), worldX + xMargin, worldY,
                              GlCanvas::Z_VALUE_TEXT_UI,
                              Color(255, 255, 255, 255));
