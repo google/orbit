@@ -158,7 +158,7 @@ void CallStackDataView::DoFilter() {
   std::vector<uint32_t> indices;
   std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
-  for (size_t i = 0; i < m_CallStack->m_Depth; ++i) {
+  for (size_t i = 0; i < m_CallStack->m_Data.size(); ++i) {
     CallStackDataViewFrame frame = GetFrameFromIndex(i);
     Function* function = frame.function;
     std::string name =
@@ -183,7 +183,7 @@ void CallStackDataView::DoFilter() {
 
 //-----------------------------------------------------------------------------
 void CallStackDataView::OnDataChanged() {
-  size_t numFunctions = m_CallStack ? m_CallStack->m_Depth : 0;
+  size_t numFunctions = m_CallStack ? m_CallStack->m_Data.size() : 0;
   m_Indices.resize(numFunctions);
   for (size_t i = 0; i < numFunctions; ++i) {
     m_Indices[i] = i;
@@ -202,7 +202,7 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromRow(
 CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
     int index_in_callstack) {
   if (m_CallStack == nullptr ||
-      index_in_callstack >= static_cast<int>(m_CallStack->m_Depth)) {
+      index_in_callstack >= static_cast<int>(m_CallStack->m_Data.size())) {
     return CallStackDataViewFrame();
   }
 

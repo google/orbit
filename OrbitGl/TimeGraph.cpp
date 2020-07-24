@@ -115,10 +115,10 @@ bool TimeGraph::UpdateCaptureMinMaxTimestamps() {
   m_Mutex.unlock();
 
   if (GEventTracer.GetEventBuffer().HasEvent()) {
-    capture_min_timestamp_ = std::min(capture_min_timestamp_,
-                                   GEventTracer.GetEventBuffer().GetMinTime());
-    capture_max_timestamp_ = std::max(capture_max_timestamp_,
-                                   GEventTracer.GetEventBuffer().GetMaxTime());
+    capture_min_timestamp_ = std::min(
+        capture_min_timestamp_, GEventTracer.GetEventBuffer().GetMinTime());
+    capture_max_timestamp_ = std::max(
+        capture_max_timestamp_, GEventTracer.GetEventBuffer().GetMaxTime());
   }
 
   return capture_min_timestamp_ != std::numeric_limits<TickType>::max();
@@ -155,7 +155,8 @@ void TimeGraph::Zoom(const TextBox* a_TextBox) {
 //-----------------------------------------------------------------------------
 double TimeGraph::GetCaptureTimeSpanUs() {
   if (UpdateCaptureMinMaxTimestamps()) {
-    return MicroSecondsFromTicks(capture_min_timestamp_, capture_max_timestamp_);
+    return MicroSecondsFromTicks(capture_min_timestamp_,
+                                 capture_max_timestamp_);
   }
 
   return 0;
@@ -554,11 +555,8 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
   samplingProfiler->SetGenerateSummary(a_TID == 0);
 
   for (CallstackEvent& event : selected_callstack_events) {
-    std::shared_ptr<CallStack> callstack =
-        Capture::GSamplingProfiler->GetCallStack(event.m_Id);
-    if (callstack) {
-      callstack->m_ThreadId = event.m_TID;
-      samplingProfiler->AddCallStack(*callstack);
+    if (Capture::GSamplingProfiler->GetCallStack(event.m_Id)) {
+      samplingProfiler->AddCallStack(event);
     }
   }
   samplingProfiler->ProcessSamples();
@@ -628,7 +626,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
     Color color = GetThreadColor(timer.m_TID);
 
     auto type = PickingID::LINE;
-    canvas->GetBatcher()->AddVerticalLine(pos, -world_height, z, color, type, nullptr);
+    canvas->GetBatcher()->AddVerticalLine(pos, -world_height, z, color, type,
+                                          nullptr);
   }
 
   if (overlay_current_textboxes_.size() > 1) {
@@ -646,7 +645,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
     int current_font_size = canvas->GetTextRenderer().GetFontSize();
     canvas->GetTextRenderer().SetFontSize(20);
     text_box.Draw(canvas->GetBatcher(), canvas->GetTextRenderer(),
-      std::numeric_limits<float>::lowest(), true, true);
+                  std::numeric_limits<float>::lowest(), true, true);
     canvas->GetTextRenderer().SetFontSize(current_font_size);
   }
 }
