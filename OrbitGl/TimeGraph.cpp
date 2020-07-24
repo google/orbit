@@ -32,6 +32,8 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_protos::FunctionInfo;
+
 TimeGraph* GCurrentTimeGraph = nullptr;
 
 //-----------------------------------------------------------------------------
@@ -313,7 +315,7 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
   }
 
   if (a_Timer.m_FunctionAddress > 0) {
-    Function* func = Capture::GTargetProcess->GetFunctionFromAddress(
+    FunctionInfo* func = Capture::GTargetProcess->GetFunctionFromAddress(
         a_Timer.m_FunctionAddress);
     if (func != nullptr) {
       ++Capture::GFunctionCountMap[a_Timer.m_FunctionAddress];

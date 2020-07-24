@@ -10,8 +10,8 @@
 #include <thread>
 #include <vector>
 
-#include "OrbitFunction.h"
 #include "OrbitSession.h"
+#include "capture_data.pb.h"
 
 class Pdb {
  public:
@@ -23,10 +23,12 @@ class Pdb {
   const std::string& GetName() const { return m_Name; }
   const std::string& GetFileName() const { return m_FileName; }
   const std::string& GetLoadedModuleName() const { return m_LoadedModuleName; }
-  const std::vector<std::shared_ptr<Function>>& GetFunctions() {
+  const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>&
+  GetFunctions() {
     return functions_;
   }
-  void AddFunction(const std::shared_ptr<Function>& function);
+  void AddFunction(
+      const std::shared_ptr<orbit_client_protos::FunctionInfo>& function);
   uint64_t GetHModule() const { return m_MainModule; }
   uint64_t GetLoadBias() const { return load_bias_; }
 
@@ -34,8 +36,10 @@ class Pdb {
   void PopulateStringFunctionMap();
   void ApplyPreset(const Preset& preset);
 
-  Function* GetFunctionFromExactAddress(uint64_t a_Address);
-  Function* GetFunctionFromProgramCounter(uint64_t a_Address);
+  orbit_client_protos::FunctionInfo* GetFunctionFromExactAddress(
+      uint64_t a_Address);
+  orbit_client_protos::FunctionInfo* GetFunctionFromProgramCounter(
+      uint64_t a_Address);
 
   void ProcessData();
 
@@ -45,11 +49,12 @@ class Pdb {
   std::string m_Name;              // name of the file containing the symbols
   std::string m_FileName;          // full path of file containing the symbols
   std::string m_LoadedModuleName;  // full path of the module
-  std::vector<std::shared_ptr<Function>> functions_;
-  std::map<uint64_t, Function*> m_FunctionMap;
-  std::unordered_map<unsigned long long, Function*> m_StringFunctionMap;
+  std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>> functions_;
+  std::map<uint64_t, orbit_client_protos::FunctionInfo*> m_FunctionMap;
+  std::unordered_map<unsigned long long, orbit_client_protos::FunctionInfo*>
+      m_StringFunctionMap;
 
-  void SetModulePathAndAddress(Function* func);
+  void SetModulePathAndAddress(orbit_client_protos::FunctionInfo* func);
 };
 
 #endif  // ORBIT_CORE_PDB_H_

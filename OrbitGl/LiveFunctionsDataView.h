@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
+#define ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
 
 #include "DataView.h"
-#include "OrbitFunction.h"
 #include "TimerChain.h"
+#include "capture_data.pb.h"
 
 class LiveFunctionsController;
 
@@ -29,10 +30,11 @@ class LiveFunctionsDataView : public DataView {
  protected:
   void DoFilter() override;
   void DoSort() override;
-  Function& GetFunction(unsigned int a_Row) const;
-  std::pair<TextBox*, TextBox*> GetMinMax(Function& function) const;
+  orbit_client_protos::FunctionInfo* GetFunction(unsigned int a_Row) const;
+  std::pair<TextBox*, TextBox*> GetMinMax(
+      const orbit_client_protos::FunctionInfo& function) const;
 
-  std::vector<Function*> m_Functions;
+  std::vector<orbit_client_protos::FunctionInfo*> m_Functions;
 
   LiveFunctionsController* live_functions_;
 
@@ -58,3 +60,5 @@ class LiveFunctionsDataView : public DataView {
   static const std::string MENU_ACTION_DISASSEMBLY;
   static const std::string MENU_ACTION_ITERATE;
 };
+
+#endif  // ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_

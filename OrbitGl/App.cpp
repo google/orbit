@@ -57,6 +57,8 @@
 
 ABSL_DECLARE_FLAG(bool, devmode);
 
+using orbit_client_protos::FunctionInfo;
+
 std::unique_ptr<OrbitApp> GOrbitApp;
 float GFontSize;
 bool DoZoom = false;
@@ -315,7 +317,7 @@ void OrbitApp::RefreshCaptureView() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::Disassemble(int32_t pid, const Function& function) {
+void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   thread_pool_->Schedule([this, pid, function] {
     auto result = process_manager_->LoadProcessMemory(
         pid, FunctionUtils::GetAbsoluteAddress(function), function.size());
@@ -591,7 +593,7 @@ bool OrbitApp::StartCapture() {
   }
 
   int32_t pid = Capture::GProcessId;
-  std::vector<std::shared_ptr<Function>> selected_functions =
+  std::vector<std::shared_ptr<FunctionInfo>> selected_functions =
       Capture::GSelectedFunctions;
   thread_pool_->Schedule([this, pid, selected_functions] {
     capture_client_->Capture(pid, selected_functions);

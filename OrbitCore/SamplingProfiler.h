@@ -14,6 +14,7 @@
 #include "EventBuffer.h"
 #include "Pdb.h"
 #include "SerializationMacros.h"
+#include "capture_data.pb.h"
 
 class Process;
 
@@ -28,7 +29,7 @@ struct SampledFunction {
   float m_Inclusive = 0;
   int m_Line = 0;
   uint64_t m_Address = 0;
-  Function* m_Function = nullptr;
+  orbit_client_protos::FunctionInfo* m_Function = nullptr;
 };
 
 //-----------------------------------------------------------------------------

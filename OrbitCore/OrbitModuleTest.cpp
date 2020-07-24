@@ -13,12 +13,14 @@
 #include "Path.h"
 #include "Pdb.h"
 #include "SymbolHelper.h"
+#include "capture_data.pb.h"
 #include "symbol.pb.h"
 
 const std::string executable_directory =
     Path::GetExecutablePath() + "testdata/";
 
 using ElfUtils::ElfFile;
+using orbit_client_protos::FunctionInfo;
 
 TEST(OrbitModule, Constructor) {
   const std::string executable_name = "hello_world_elf";
@@ -61,10 +63,10 @@ TEST(OrbitModule, LoadFunctions) {
   Pdb& pdb = *module->m_Pdb;
 
   // Check functions
-  const std::vector<std::shared_ptr<Function>>& functions = pdb.GetFunctions();
+  const std::vector<std::shared_ptr<FunctionInfo>>& functions = pdb.GetFunctions();
 
   EXPECT_EQ(functions.size(), 10);
-  const Function* function = functions[0].get();
+  const FunctionInfo* function = functions[0].get();
 
   EXPECT_EQ(function->name(), "deregister_tm_clones");
   EXPECT_EQ(function->pretty_name(), "deregister_tm_clones");
@@ -106,13 +108,13 @@ TEST(OrbitModule, GetFunctionFromExactAddress) {
 
   pdb.PopulateFunctionMap();
   pdb.PopulateStringFunctionMap();
-  const std::vector<std::shared_ptr<Function>>& functions = pdb.GetFunctions();
+  const std::vector<std::shared_ptr<FunctionInfo>>& functions = pdb.GetFunctions();
 
   ASSERT_EQ(functions.size(), 1125);
 
   constexpr const uint64_t __free_start_addr = 0x41b840;
   constexpr const uint64_t __free_pc_addr = 0x41b854;
-  const Function* function = pdb.GetFunctionFromExactAddress(__free_start_addr);
+  const FunctionInfo* function = pdb.GetFunctionFromExactAddress(__free_start_addr);
   ASSERT_NE(function, nullptr);
   EXPECT_EQ(function->name(), "__free");
 
@@ -139,14 +141,14 @@ TEST(OrbitModule, GetFunctionFromProgramCounter) {
   pdb.PopulateFunctionMap();
   pdb.PopulateStringFunctionMap();
 
-  const std::vector<std::shared_ptr<Function>>& functions = pdb.GetFunctions();
+  const std::vector<std::shared_ptr<FunctionInfo>>& functions = pdb.GetFunctions();
 
   ASSERT_EQ(functions.size(), 1125);
 
   constexpr const uint64_t __free_start_addr = 0x41b840;
   constexpr const uint64_t __free_pc_addr = 0x41b854;
 
-  const Function* function =
+  const FunctionInfo* function =
       pdb.GetFunctionFromProgramCounter(__free_start_addr);
   ASSERT_NE(function, nullptr);
   EXPECT_EQ(function->name(), "__free");

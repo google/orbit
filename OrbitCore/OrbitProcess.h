@@ -13,13 +13,11 @@
 #include <vector>
 
 #include "BaseTypes.h"
-#include "LinuxAddressInfo.h"
+#include "OrbitModule.h"
 #include "ScopeTimer.h"
 #include "Threading.h"
 #include "absl/container/flat_hash_map.h"
-
-class Function;
-struct Module;
+#include "capture_data.pb.h"
 
 //-----------------------------------------------------------------------------
 class Process {
@@ -41,16 +39,19 @@ class Process {
   void SetIs64Bit(bool value) { m_Is64Bit = value; }
   bool GetIs64Bit() const { return m_Is64Bit; }
 
-  Function* GetFunctionFromAddress(uint64_t address, bool a_IsExact = true);
+  orbit_client_protos::FunctionInfo* GetFunctionFromAddress(
+      uint64_t address, bool a_IsExact = true);
   std::shared_ptr<Module> GetModuleFromAddress(uint64_t a_Address);
   std::shared_ptr<Module> GetModuleFromName(const std::string& a_Name);
   std::shared_ptr<Module> GetModuleFromPath(const std::string& module_path);
 
-  void AddFunction(const std::shared_ptr<Function>& function) {
+  void AddFunction(
+      const std::shared_ptr<orbit_client_protos::FunctionInfo>& function) {
     m_Functions.push_back(function);
   }
 
-  const std::vector<std::shared_ptr<Function>>& GetFunctions() const {
+  const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>&
+  GetFunctions() const {
     return m_Functions;
   }
 
@@ -74,7 +75,7 @@ class Process {
   std::map<std::string, std::shared_ptr<Module>> path_to_module_map_;
 
   // Transients
-  std::vector<std::shared_ptr<Function>> m_Functions;
+  std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>> m_Functions;
 };
 
 #endif  // ORBIT_CORE_ORBIT_PROCESS_H_

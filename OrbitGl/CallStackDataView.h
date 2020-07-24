@@ -2,12 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_CALLSTACK_DATA_VIEW_H_
+#define ORBIT_GL_CALLSTACK_DATA_VIEW_H_
 
 #include <utility>
 
 #include "DataView.h"
 #include "OrbitModule.h"
+#include "capture_data.pb.h"
 
 struct CallStack;
 
@@ -38,7 +40,8 @@ class CallStackDataView : public DataView {
 
   struct CallStackDataViewFrame {
     CallStackDataViewFrame() = default;
-    CallStackDataViewFrame(uint64_t address, Function* function,
+    CallStackDataViewFrame(uint64_t address,
+                           orbit_client_protos::FunctionInfo* function,
                            std::shared_ptr<Module> module)
         : address(address), function(function), module(std::move(module)) {}
     CallStackDataViewFrame(uint64_t address, std::string fallback_name,
@@ -48,7 +51,7 @@ class CallStackDataView : public DataView {
           module(std::move(module)) {}
 
     uint64_t address = 0;
-    Function* function = nullptr;
+    orbit_client_protos::FunctionInfo* function = nullptr;
     std::string fallback_name;
     std::shared_ptr<Module> module;
   };
@@ -72,3 +75,5 @@ class CallStackDataView : public DataView {
   static const std::string MENU_ACTION_UNSELECT;
   static const std::string MENU_ACTION_DISASSEMBLY;
 };
+
+#endif  // ORBIT_GL_CALLSTACK_DATA_VIEW_H_

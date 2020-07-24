@@ -25,6 +25,8 @@
 #include "TimerChain.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_protos::FunctionInfo;
+
 //-----------------------------------------------------------------------------
 ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
   Capture::PreSave();
@@ -72,15 +74,13 @@ void CaptureSerializer::SaveImpl(T& archive) {
 
   {
     ORBIT_SIZE_SCOPE("Functions");
-    std::vector<Function> functions;
+    std::vector<FunctionInfo> functions;
     for (auto& pair : Capture::GSelectedFunctionsMap) {
-      Function* func = pair.second;
+      FunctionInfo* func = pair.second;
       if (func != nullptr) {
         functions.push_back(*func);
       }
     }
-
-    archive(functions);
   }
   {
     ORBIT_SIZE_SCOPE("Capture::GProcessId");
@@ -155,8 +155,8 @@ void FillFunctionCountMap() {
   Capture::GFunctionCountMap.clear();
   for (const auto& pair : Capture::GSelectedFunctionsMap) {
     uint64_t address = pair.first;
-    Function* function = pair.second;
-    Capture::GFunctionCountMap[address] = function->stats()->count();
+    FunctionInfo* function = pair.second;
+    Capture::GFunctionCountMap[address] = function->stats().count();
   }
 }
 
@@ -175,13 +175,12 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   archive(*this);
 
   // Functions
-  std::vector<Function> functions;
-  archive(functions);
+  std::vector<FunctionInfo> functions;
   Capture::GSelectedFunctions.clear();
   Capture::GSelectedFunctionsMap.clear();
   for (const auto& function : functions) {
-    std::shared_ptr<Function> function_ptr =
-        std::make_shared<Function>(function);
+    std::shared_ptr<FunctionInfo> function_ptr =
+        std::make_shared<FunctionInfo>(function);
     Capture::GSelectedFunctions.push_back(function_ptr);
     Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(
         *function_ptr)] = function_ptr.get();

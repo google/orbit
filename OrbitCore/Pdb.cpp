@@ -9,6 +9,8 @@
 #include "OrbitProcess.h"
 #include "ScopeTimer.h"
 
+using orbit_client_protos::FunctionInfo;
+
 //-----------------------------------------------------------------------------
 Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
          std::string module_file_name)
@@ -20,7 +22,7 @@ Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::AddFunction(const std::shared_ptr<Function>& function) {
+void Pdb::AddFunction(const std::shared_ptr<FunctionInfo>& function) {
   functions_.push_back(function);
 }
 
@@ -64,14 +66,14 @@ void Pdb::PopulateStringFunctionMap() {
 }
 
 //-----------------------------------------------------------------------------
-Function* Pdb::GetFunctionFromExactAddress(uint64_t a_Address) {
+FunctionInfo* Pdb::GetFunctionFromExactAddress(uint64_t a_Address) {
   uint64_t function_address = a_Address - GetHModule() + load_bias_;
   auto it = m_FunctionMap.find(function_address);
   return (it != m_FunctionMap.end()) ? it->second : nullptr;
 }
 
 //-----------------------------------------------------------------------------
-Function* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
+FunctionInfo* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
   if (m_FunctionMap.empty()) {
     return nullptr;
   }
@@ -99,7 +101,7 @@ void Pdb::ApplyPreset(const Preset& preset) {
     for (uint64_t hash : preset_module.m_FunctionHashes) {
       auto fit = m_StringFunctionMap.find(hash);
       if (fit != m_StringFunctionMap.end()) {
-        Function* function = fit->second;
+        FunctionInfo* function = fit->second;
         FunctionUtils::Select(function);
       }
     }

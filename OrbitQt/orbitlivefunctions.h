@@ -12,8 +12,8 @@
 #include <QWidget>
 
 #include "LiveFunctionsController.h"
+#include "capture_data.pb.h"
 #include "orbiteventiterator.h"
-#include "OrbitFunction.h"
 #include "types.h"
 
 namespace Ui {
@@ -33,10 +33,10 @@ class OrbitLiveFunctions : public QWidget {
   void OnDataChanged();
   void Reset();
   void SetFilter(const QString& a_Filter);
-  void AddIterator(uint64_t id, Function* function);
+  void AddIterator(uint64_t id, orbit_client_protos::FunctionInfo* function);
   QLineEdit* GetFilterLineEdit();
 
- private:  
+ private:
   Ui::OrbitLiveFunctions* ui;
   LiveFunctionsController live_functions_;
   absl::flat_hash_map<uint64_t, OrbitEventIterator*> iterator_uis;

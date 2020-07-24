@@ -9,6 +9,8 @@
 #include "FunctionUtils.h"
 #include "TimeGraph.h"
 
+using orbit_client_protos::FunctionInfo;
+
 namespace {
 
 std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
@@ -99,7 +101,7 @@ bool LiveFunctionsController::OnAllNextButton() {
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
   for (auto it : function_iterators_) {
-    Function* function = it.second;
+    FunctionInfo* function = it.second;
     auto function_address = FunctionUtils::GetAbsoluteAddress(*function);
     const TextBox* current_box = current_textboxes_.find(it.first)->second;
     const TextBox* box = GCurrentTimeGraph->FindNextFunctionCall(
@@ -126,7 +128,7 @@ bool LiveFunctionsController::OnAllPreviousButton() {
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
   for (auto it : function_iterators_) {
-    Function* function = it.second;
+    FunctionInfo* function = it.second;
     auto function_address = FunctionUtils::GetAbsoluteAddress(*function);
     const TextBox* current_box = current_textboxes_.find(it.first)->second;
     const TextBox* box = GCurrentTimeGraph->FindPreviousFunctionCall(
@@ -187,7 +189,7 @@ void LiveFunctionsController::OnDeleteButton(uint64_t id) {
   Move();
 }
 
-void LiveFunctionsController::AddIterator(Function* function) {
+void LiveFunctionsController::AddIterator(FunctionInfo* function) {
   uint64_t id = next_iterator_id_;
   ++next_iterator_id_;
 

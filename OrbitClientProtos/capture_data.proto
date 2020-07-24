@@ -13,3 +13,33 @@ message FunctionStats {
   uint64 min_ns = 4;
   uint64 max_ns = 5;
 }
+
+message FunctionInfo {
+  string name = 1;
+  string pretty_name = 2;
+  string loaded_module_path = 3;
+  uint64 module_base_address = 4;
+  uint64 address = 5;
+  uint64 load_bias = 6;
+  uint64 size = 7;
+  string file = 8;
+  uint32 line = 9;
+
+  enum OrbitType {
+    kNone = 0;
+    kOrbitTimerStart = 1;
+    kOrbitTimerStop = 2;
+    kOrbitTimerStartAsync = 3;
+    kOrbitTimerStopAsync = 4;
+    kOrbitTrackInt = 5;
+    kOrbitTrackInt64 = 6;
+    kOrbitTrackUint = 7;
+    kOrbitTrackUint64 = 8;
+    kOrbitTrackFloat = 9;
+    kOrbitTrackDouble = 10;
+    kOrbitTrackFloatAsInt = 11;
+    kOrbitTrackDoubleAsInt64 = 12;
+  }
+  OrbitType type = 10;
+  FunctionStats stats = 11;
+}
