@@ -5,12 +5,27 @@
       "type": "shell",
       "label": "shell: build default relwithdebinfo",
       "command": "cmake",
-      "args": [
-        "--build",
-        ".",
-        "--",
-        "-j16"
-      ],
+      "windows": {
+        "args": [
+          "--build",
+          ".",
+          "--config",
+          "RelWithDebInfo"
+        ],
+        "options": {
+          "shell": {
+            "executable": "powershell.exe"
+          }
+        }
+      },
+      "linux": {
+        "args": [
+          "--build",
+          ".",
+          "--",
+          "-j16"
+        ]
+      },
       "options": {
         "cwd": "${workspaceFolder}/build_default_relwithdebinfo"
       },
