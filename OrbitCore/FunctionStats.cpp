@@ -10,7 +10,6 @@
 
 //-----------------------------------------------------------------------------
 ORBIT_SERIALIZE(FunctionStats, 0) {
-  ORBIT_NVP_VAL(0, m_Address);
   ORBIT_NVP_VAL(0, m_Count);
   ORBIT_NVP_VAL(0, m_TotalTimeMs);
   ORBIT_NVP_VAL(0, m_AverageTimeMs);

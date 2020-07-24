@@ -14,7 +14,6 @@ struct FunctionStats {
   FunctionStats() { Reset(); }
   void Reset() { memset(this, 0, sizeof(*this)); }
 
-  uint64_t m_Address;
   uint64_t m_Count;
   double m_TotalTimeMs;
   double m_AverageTimeMs;
