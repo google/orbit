@@ -32,6 +32,7 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 
 TimeGraph* GCurrentTimeGraph = nullptr;
@@ -546,7 +547,8 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
 
   selected_callstack_events_per_thread_.clear();
   for (CallstackEvent& event : selected_callstack_events) {
-    selected_callstack_events_per_thread_[event.m_TID].emplace_back(event);
+    selected_callstack_events_per_thread_[event.thread_id()].emplace_back(
+        event);
     selected_callstack_events_per_thread_[0].emplace_back(event);
   }
 
@@ -557,7 +559,7 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
   samplingProfiler->SetGenerateSummary(a_TID == 0);
 
   for (CallstackEvent& event : selected_callstack_events) {
-    if (Capture::GSamplingProfiler->GetCallStack(event.m_Id)) {
+    if (Capture::GSamplingProfiler->GetCallStack(event.callstack_hash())) {
       samplingProfiler->AddCallStack(event);
     }
   }

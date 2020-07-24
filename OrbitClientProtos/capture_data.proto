@@ -43,3 +43,9 @@ message FunctionInfo {
   OrbitType type = 10;
   FunctionStats stats = 11;
 }
+
+message CallstackEvent {
+  uint64 time = 1;
+  uint64 callstack_hash = 2;
+  int32 thread_id = 3;
+}

@@ -36,9 +36,10 @@ class TimeGraph {
   void NeedsUpdate();
   void UpdatePrimitives(PickingMode picking_mode);
   void SortTracks();
-  std::vector<CallstackEvent> SelectEvents(float a_WorldStart, float a_WorldEnd,
-                                           ThreadID a_TID);
-  const std::vector<CallstackEvent>& GetSelectedCallstackEvents(ThreadID tid);
+  std::vector<orbit_client_protos::CallstackEvent> SelectEvents(
+      float a_WorldStart, float a_WorldEnd, ThreadID a_TID);
+  const std::vector<orbit_client_protos::CallstackEvent>&
+  GetSelectedCallstackEvents(ThreadID tid);
 
   void ProcessTimer(const Timer& a_Timer);
   void UpdateMaxTimeStamp(TickType a_Time);
@@ -67,7 +68,7 @@ class TimeGraph {
     kPartlyVisible,
     kFullyVisible,
   };
-  void HorizontallyMoveIntoView(VisibilityType vis_type, TickType min, TickType max, double distance = 0.3); 
+  void HorizontallyMoveIntoView(VisibilityType vis_type, TickType min, TickType max, double distance = 0.3);
   void HorizontallyMoveIntoView(VisibilityType vis_type, const TextBox* text_box, double distance = 0.3);
   void VerticallyMoveIntoView(const TextBox* text_box);
   double GetTime(double a_Ratio);
@@ -203,7 +204,8 @@ class TimeGraph {
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   std::shared_ptr<ThreadTrack> process_track_;
 
-  absl::flat_hash_map<ThreadID, std::vector<CallstackEvent>>
+  absl::flat_hash_map<ThreadID,
+                      std::vector<orbit_client_protos::CallstackEvent>>
       selected_callstack_events_per_thread_;
 
   std::shared_ptr<StringManager> string_manager_;

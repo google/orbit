@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_EVENT_BUFFER_H_
+#define ORBIT_CORE_EVENT_BUFFER_H_
 
 #include <set>
 
@@ -10,23 +11,11 @@
 #include "Callstack.h"
 #include "Core.h"
 #include "SerializationMacros.h"
+#include "capture_data.pb.h"
 
 #ifdef __linux
 #include "LinuxUtils.h"
 #endif
-
-//-----------------------------------------------------------------------------
-struct CallstackEvent {
-  CallstackEvent() = default;
-  CallstackEvent(uint64_t a_Time, CallstackID a_Id, ThreadID a_TID)
-      : m_Time(a_Time), m_Id(a_Id), m_TID(a_TID) {}
-
-  uint64_t m_Time = 0;
-  CallstackID m_Id = 0;
-  ThreadID m_TID = 0;
-
-  ORBIT_SERIALIZABLE;
-};
 
 //-----------------------------------------------------------------------------
 class EventBuffer {
@@ -38,13 +27,13 @@ class EventBuffer {
     m_MinTime = LLONG_MAX;
     m_MaxTime = 0;
   }
-  std::map<ThreadID, std::map<uint64_t, CallstackEvent> >& GetCallstacks() {
+  std::map<ThreadID, std::map<uint64_t, orbit_client_protos::CallstackEvent> >&
+  GetCallstacks() {
     return m_CallstackEvents;
   }
   Mutex& GetMutex() { return m_Mutex; }
-  std::vector<CallstackEvent> GetCallstackEvents(uint64_t a_TimeBegin,
-                                                 uint64_t a_TimeEnd,
-                                                 ThreadID a_ThreadId = 0);
+  std::vector<orbit_client_protos::CallstackEvent> GetCallstackEvents(
+      uint64_t a_TimeBegin, uint64_t a_TimeEnd, ThreadID a_ThreadId = 0);
   uint64_t GetMaxTime() const { return m_MaxTime; }
   uint64_t GetMinTime() const { return m_MinTime; }
   bool HasEvent() {
@@ -68,7 +57,10 @@ class EventBuffer {
 
  private:
   Mutex m_Mutex;
-  std::map<ThreadID, std::map<uint64_t, CallstackEvent> > m_CallstackEvents;
+  std::map<ThreadID, std::map<uint64_t, orbit_client_protos::CallstackEvent> >
+      m_CallstackEvents;
   std::atomic<uint64_t> m_MaxTime;
   std::atomic<uint64_t> m_MinTime;
 };
+
+#endif  // ORBIT_CORE_EVENT_BUFFER_H_

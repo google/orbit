@@ -25,6 +25,7 @@
 #include "TimerChain.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 
 //-----------------------------------------------------------------------------
@@ -104,7 +105,6 @@ void CaptureSerializer::SaveImpl(T& archive) {
 
   {
     ORBIT_SIZE_SCOPE("SamplingProfiler");
-    Capture::GSamplingProfiler->SaveCallstacks();
     archive(Capture::GSamplingProfiler);
   }
 
@@ -165,7 +165,8 @@ void FillEventBuffer() {
   for (const CallstackEvent& callstack_event :
        *Capture::GSamplingProfiler->GetCallstacks()) {
     GEventTracer.GetEventBuffer().AddCallstackEvent(
-        callstack_event.m_Time, callstack_event.m_Id, callstack_event.m_TID);
+        callstack_event.time(), callstack_event.callstack_hash(),
+        callstack_event.thread_id());
   }
 }
 
@@ -201,7 +202,6 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   if (Capture::GSamplingProfiler == nullptr) {
     Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();
   }
-  Capture::GSamplingProfiler->LoadCallstacks();
   Capture::GSamplingProfiler->ProcessSamples();
 
   time_graph_->Clear();
