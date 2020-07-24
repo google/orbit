@@ -237,7 +237,7 @@ void Capture::RegisterZoneName(uint64_t a_ID, const char* a_Name) {
 //-----------------------------------------------------------------------------
 void Capture::AddCallstack(CallStack& a_CallStack) {
   ScopeLock lock(GCallstackMutex);
-  Capture::GCallstacks[a_CallStack.m_Hash] =
+  Capture::GCallstacks[a_CallStack.Hash()] =
       std::make_shared<CallStack>(a_CallStack);
 }
 
