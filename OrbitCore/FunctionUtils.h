@@ -8,9 +8,9 @@
 #include <cstdint>
 #include <string>
 
-#include "OrbitFunction.h"
 #include "SamplingProfiler.h"
 #include "ScopeTimer.h"
+#include "function.pb.h"
 
 namespace FunctionUtils {
 
@@ -28,6 +28,11 @@ inline uint64_t GetAbsoluteAddress(const Function& func) {
 }
 
 bool IsOrbitFunc(const Function& func);
+
+std::shared_ptr<Function> CreateFunction(
+    std::string name, std::string pretty_name, uint64_t address,
+    uint64_t load_bias, uint64_t size, std::string file, uint32_t line,
+    std::string loaded_module_path, uint64_t module_base_address);
 
 void Select(Function* func);
 void UnSelect(Function* func);

@@ -26,7 +26,26 @@ uint64_t Offset(const Function& func) {
 }
 
 bool IsOrbitFunc(const Function& func) {
-  return func.orbit_type() != Function::OrbitType::NONE;
+  return func.type() != Function::kNone;
+}
+
+std::shared_ptr<Function> CreateFunction(
+    std::string name, std::string pretty_name, uint64_t address,
+    uint64_t load_bias, uint64_t size, std::string file, uint32_t line,
+    std::string loaded_module_path, uint64_t module_base_address) {
+  std::shared_ptr<Function> function = std::make_shared<Function>();
+  function->set_name(std::move(name));
+  function->set_pretty_name(std::move(pretty_name));
+  function->set_address(address);
+  function->set_load_bias(load_bias);
+  function->set_size(size);
+  function->set_file(std::move(file));
+  function->set_line(line);
+  function->set_loaded_module_path(std::move(loaded_module_path));
+  function->set_module_base_address(module_base_address);
+
+  SetOrbitTypeFromName(function.get());
+  return function;
 }
 
 void Select(Function* func) {
@@ -56,18 +75,18 @@ const absl::flat_hash_map<const char*, Function::OrbitType>&
 GetFunctionNameToOrbitTypeMap() {
   static absl::flat_hash_map<const char*, Function::OrbitType>
       function_name_to_type_map{
-          {"Start(", Function::ORBIT_TIMER_START},
-          {"Stop(", Function::ORBIT_TIMER_STOP},
-          {"StartAsync(", Function::ORBIT_TIMER_START_ASYNC},
-          {"StopAsync(", Function::ORBIT_TIMER_STOP_ASYNC},
-          {"TrackInt(", Function::ORBIT_TRACK_INT},
-          {"TrackInt64(", Function::ORBIT_TRACK_INT_64},
-          {"TrackUint(", Function::ORBIT_TRACK_UINT},
-          {"TrackUint64(", Function::ORBIT_TRACK_UINT_64},
-          {"TrackFloat(", Function::ORBIT_TRACK_FLOAT},
-          {"TrackDouble(", Function::ORBIT_TRACK_DOUBLE},
-          {"TrackFloatAsInt(", Function::ORBIT_TRACK_FLOAT_AS_INT},
-          {"TrackDoubleAsInt64(", Function::ORBIT_TRACK_DOUBLE_AS_INT_64},
+          {"Start(", Function::kOrbitTimerStart},
+          {"Stop(", Function::kOrbitTimerStop},
+          {"StartAsync(", Function::kOrbitTimerStartAsync},
+          {"StopAsync(", Function::kOrbitTimerStopAsync},
+          {"TrackInt(", Function::kOrbitTrackInt},
+          {"TrackInt64(", Function::kOrbitTrackInt64},
+          {"TrackUint(", Function::kOrbitTrackUint},
+          {"TrackUint64(", Function::kOrbitTrackUint64},
+          {"TrackFloat(", Function::kOrbitTrackFloat},
+          {"TrackDouble(", Function::kOrbitTrackDouble},
+          {"TrackFloatAsInt(", Function::kOrbitTrackFloatAsInt},
+          {"TrackDoubleAsInt64(", Function::kOrbitTrackDoubleAsInt64},
       };
   return function_name_to_type_map;
 }
@@ -79,7 +98,7 @@ bool SetOrbitTypeFromName(Function* func) {
   if (absl::StartsWith(name, "orbit_api::")) {
     for (auto& pair : GetFunctionNameToOrbitTypeMap()) {
       if (absl::StrContains(name, pair.first)) {
-        func->set_orbit_type(pair.second);
+        func->set_type(pair.second);
         return true;
       }
     }
@@ -88,20 +107,18 @@ bool SetOrbitTypeFromName(Function* func) {
 }
 
 void UpdateStats(Function* func, const Timer& timer) {
-  std::shared_ptr<FunctionStats> stats = func->stats();
-  if (stats != nullptr) {
-    stats->set_count(stats->count() + 1);
-    double elapsedMillis = timer.ElapsedMillis();
-    stats->set_total_time_ms(stats->total_time_ms() + elapsedMillis);
-    stats->set_average_time_ms(stats->total_time_ms() / stats->count());
+  FunctionStats* stats = func->mutable_stats();
+  stats->set_count(stats->count() + 1);
+  double elapsedMillis = timer.ElapsedMillis();
+  stats->set_total_time_ms(stats->total_time_ms() + elapsedMillis);
+  stats->set_average_time_ms(stats->total_time_ms() / stats->count());
 
-    if (elapsedMillis > stats->max_ms()) {
-      stats->set_max_ms(elapsedMillis);
-    }
+  if (elapsedMillis > stats->max_ms()) {
+    stats->set_max_ms(elapsedMillis);
+  }
 
-    if (stats->min_ms() == 0 || elapsedMillis < stats->min_ms()) {
-      stats->set_min_ms(elapsedMillis);
-    }
+  if (stats->min_ms() == 0 || elapsedMillis < stats->min_ms()) {
+    stats->set_min_ms(elapsedMillis);
   }
 }
 

@@ -80,7 +80,7 @@ void CaptureSerializer::SaveImpl(T& archive) {
       }
     }
 
-    archive(functions);
+    // archive(functions);
   }
 
   {
@@ -151,7 +151,7 @@ void FillFunctionCountMap() {
   for (const auto& pair : Capture::GSelectedFunctionsMap) {
     uint64_t address = pair.first;
     Function* function = pair.second;
-    Capture::GFunctionCountMap[address] = function->stats()->count();
+    Capture::GFunctionCountMap[address] = function->stats().count();
   }
 }
 
@@ -170,7 +170,7 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
 
   // Functions
   std::vector<Function> functions;
-  archive(functions);
+  // archive(functions);
   Capture::GSelectedFunctions.clear();
   Capture::GSelectedFunctionsMap.clear();
   for (const auto& function : functions) {

@@ -29,7 +29,6 @@ target_sources(
          Log.h
          LogInterface.h
          OrbitDbgHelp.h
-         OrbitFunction.h
          OrbitModule.h
          OrbitProcess.h
          OrbitSession.h
@@ -65,7 +64,6 @@ target_sources(
           LinuxTracingBuffer.cpp
           Log.cpp
           LogInterface.cpp
-          OrbitFunction.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
           OrbitSession.cpp

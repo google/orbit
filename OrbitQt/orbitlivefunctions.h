@@ -13,7 +13,7 @@
 
 #include "LiveFunctionsController.h"
 #include "orbiteventiterator.h"
-#include "OrbitFunction.h"
+#include "function.pb.h"
 #include "types.h"
 
 namespace Ui {

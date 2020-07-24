@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_CAPTURE_H_
+#define ORBIT_CORE_CAPTURE_H_
 
 #include <chrono>
 #include <outcome.hpp>
@@ -11,10 +12,10 @@
 #include "CallstackTypes.h"
 #include "LinuxAddressInfo.h"
 #include "OrbitBase/Result.h"
-#include "OrbitFunction.h"
 #include "OrbitProcess.h"
 #include "Threading.h"
 #include "absl/container/flat_hash_map.h"
+#include "function.pb.h"
 
 class Process;
 class Preset;
@@ -82,3 +83,5 @@ class Capture {
   static std::chrono::system_clock::time_point GCaptureTimePoint;
   static Mutex GCallstackMutex;
 };
+
+#endif  // ORBIT_CORE_CAPTURE_H_

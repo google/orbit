@@ -2,12 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_CALLSTACK_DATA_VIEW_H_
+#define ORBIT_GL_CALLSTACK_DATA_VIEW_H_
 
 #include <utility>
 
 #include "DataView.h"
 #include "OrbitModule.h"
+#include "function.pb.h"
 
 struct CallStack;
 
@@ -72,3 +74,5 @@ class CallStackDataView : public DataView {
   static const std::string MENU_ACTION_UNSELECT;
   static const std::string MENU_ACTION_DISASSEMBLY;
 };
+
+#endif  // ORBIT_GL_CALLSTACK_DATA_VIEW_H_

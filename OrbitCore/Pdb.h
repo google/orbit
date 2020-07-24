@@ -10,8 +10,8 @@
 #include <thread>
 #include <vector>
 
-#include "OrbitFunction.h"
 #include "OrbitSession.h"
+#include "function.pb.h"
 
 class Pdb {
  public:
