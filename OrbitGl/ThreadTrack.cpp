@@ -400,17 +400,18 @@ std::string ThreadTrack::GetBoxTooltip(PickingID id) const {
 
   Function* func =
       Capture::GSelectedFunctionsMap[text_box->GetTimer().m_FunctionAddress];
-  if (func) {
-    return absl::StrFormat(
-      "<b>%s</b><br/>"
-      "<i>Timing measured through dynamic instrumentation</i>"
-      "<br/><br/>"
-      "<b>Module:</b> %s<br/>"
-      "<b>Time:</b> %s",
-      FunctionUtils::GetDisplayName(*func),
-      FunctionUtils::GetLoadedModuleName(*func),
-      GetPrettyTime(text_box->GetTimer().ElapsedMillis()));
-  } else {
+  if (!func) {
     return text_box->GetText();
   }
+
+  return absl::StrFormat(
+    "<b>%s</b><br/>"
+    "<i>Timing measured through dynamic instrumentation</i>"
+    "<br/><br/>"
+    "<b>Module:</b> %s<br/>"
+    "<b>Time:</b> %s",
+    FunctionUtils::GetDisplayName(*func),
+    FunctionUtils::GetLoadedModuleName(*func),
+    GetPrettyTime(text_box->GetTimer().ElapsedMillis())
+  );
 }
