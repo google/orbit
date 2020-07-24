@@ -590,8 +590,8 @@ void TimeGraph::Draw(GlCanvas* canvas, bool a_Picking) {
 
 namespace {
 
-std::string GetLabelBetweenIterators(const TextBox* box_a,
-                                     const TextBox* box_b) {
+std::pair<std::string, std::string> GetLabelBetweenIterators(
+    const TextBox* box_a, const TextBox* box_b) {
   double micros = MicroSecondsFromTicks(box_a->GetTimer().m_Start,
                                         box_b->GetTimer().m_Start);
 
@@ -600,25 +600,29 @@ std::string GetLabelBetweenIterators(const TextBox* box_a,
       Capture::GAddressToFunctionName[box_a->GetTimer().m_FunctionAddress];
   std::string function_to =
       Capture::GAddressToFunctionName[box_b->GetTimer().m_FunctionAddress];
-  return absl::StrFormat("%s to %s:   %s", function_from, function_to, time);
+  return std::make_pair(absl::StrFormat("%s to %s", function_from, function_to),
+                        time);
 }
 
 Color GetIteratorBoxColor(uint64_t index) {
   constexpr uint64_t kNumColors = 4;
   Color colors[kNumColors] = {Color(73, 208, 242, 80), Color(0, 90, 112, 80),
-                     Color(0, 192, 240, 80), Color(40, 103, 122, 80)};
+                              Color(0, 192, 240, 80), Color(40, 103, 122, 80)};
   return colors[index % kNumColors];
 }
 
 void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
-                     const std::string& label, float text_y) {
+                     const std::string& label, const std::string& time,
+                     float text_y) {
   Box box(pos, size, GlCanvas::Z_VALUE_OVERLAY);
-  canvas->GetBatcher()->AddBox(box, color,PickingID::BOX);
+  canvas->GetBatcher()->AddBox(box, color, PickingID::BOX);
+
+  std::string text = absl::StrFormat("%s: %s", label, time);
 
   float max_size = size[0];
   canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
-      label.c_str(), pos[0], text_y, GlCanvas::Z_VALUE_TEXT,
-      Color(255, 255, 255, 255), 20, max_size);
+      text.c_str(), pos[0], text_y, GlCanvas::Z_VALUE_TEXT,
+      Color(255, 255, 255, 255), time.length(), max_size);
 
   constexpr float kOffsetBelowText = 5.f;
   Vec2 line_from(pos[0], text_y - kOffsetBelowText);
@@ -684,7 +688,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
     Vec2 size(size_x, world_height);
     Color color = GetIteratorBoxColor(k - 1);
 
-    std::string label =
+    auto& labels =
         GetLabelBetweenIterators(boxes[k - 1].second, boxes[k].second);
 
     float text_y_offset = world_height / 2.f /
@@ -692,7 +696,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
     float text_y =
         pos[1] + (world_height / 2.f) - static_cast<float>(k) * text_y_offset;
 
-    DrawIteratorBox(canvas, pos, size, color, label, text_y);
+    DrawIteratorBox(canvas, pos, size, color, labels.first, labels.second,
+                    text_y);
   }
 
   // When we have at least 3 boxes, we also draw the total time from the first
@@ -707,11 +712,11 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
         boxes[boxes.size() - 1].second->GetTimer().m_Start);
 
     std::string time = GetPrettyTime(micros * 0.001);
-    std::string label = absl::StrFormat("Total: %s", time);
+    std::string label("Total");
 
     float text_y = pos[1] + (world_height / 2.f);
 
-    DrawIteratorBox(canvas, pos, size, Color(0, 0, 0, 0), label, text_y);
+    DrawIteratorBox(canvas, pos, size, Color(0, 0, 0, 0), label, time, text_y);
   }
 }
 
