@@ -394,25 +394,23 @@ bool ThreadTrack::IsEmpty() const {
 //-----------------------------------------------------------------------------
 std::string ThreadTrack::GetBoxTooltip(PickingID id) const {
   TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
-  if (text_box) {
-    if (text_box->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
-      Function* func =
-          Capture::GSelectedFunctionsMap[text_box->GetTimer().m_FunctionAddress];
-      if (func) {
-        return absl::StrFormat(
-          "<b>%s</b><br/>"
-          "<i>Timing measured through dynamic instrumentation</i>"
-          "<br/><br/>"
-          "<b>Module:</b> %s<br/>"
-          "<b>Time:</b> %s",
-          FunctionUtils::GetDisplayName(*func),
-          FunctionUtils::GetLoadedModuleName(*func),
-          GetPrettyTime(text_box->GetTimer().ElapsedMillis()));
-      } else {
-        return text_box->GetText();
-      }
-    }
+  if (!text_box || text_box->GetTimer().m_Type == Timer::CORE_ACTIVITY) {
+    return "";
   }
 
-  return "";
+  Function* func =
+      Capture::GSelectedFunctionsMap[text_box->GetTimer().m_FunctionAddress];
+  if (func) {
+    return absl::StrFormat(
+      "<b>%s</b><br/>"
+      "<i>Timing measured through dynamic instrumentation</i>"
+      "<br/><br/>"
+      "<b>Module:</b> %s<br/>"
+      "<b>Time:</b> %s",
+      FunctionUtils::GetDisplayName(*func),
+      FunctionUtils::GetLoadedModuleName(*func),
+      GetPrettyTime(text_box->GetTimer().ElapsedMillis()));
+  } else {
+    return text_box->GetText();
+  }
 }

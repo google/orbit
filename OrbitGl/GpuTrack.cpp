@@ -358,18 +358,18 @@ std::vector<std::shared_ptr<TimerChain>> GpuTrack::GetAllChains() {
 //-----------------------------------------------------------------------------
 std::string GpuTrack::GetBoxTooltip(PickingID id) const {
   TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
-  if (text_box) {
-    if (text_box->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
-      std::string gpu_stage =
-          string_manager_->Get(text_box->GetTimer().m_UserData[0]).value_or("");
-      if (gpu_stage == kSwQueueString) {
-        return GetSwQueueTooltip(text_box->GetTimer());
-      } else if (gpu_stage == kHwQueueString) {
-        return GetHwQueueTooltip(text_box->GetTimer());
-      } else if (gpu_stage == kHwExecutionString) {
-        return GetHwExecutionTooltip(text_box->GetTimer());
-      }
-    }
+  if (!text_box || text_box->GetTimer().m_Type == Timer::CORE_ACTIVITY) {
+    return "";
+  }
+
+  std::string gpu_stage =
+      string_manager_->Get(text_box->GetTimer().m_UserData[0]).value_or("");
+  if (gpu_stage == kSwQueueString) {
+    return GetSwQueueTooltip(text_box->GetTimer());
+  } else if (gpu_stage == kHwQueueString) {
+    return GetHwQueueTooltip(text_box->GetTimer());
+  } else if (gpu_stage == kHwExecutionString) {
+    return GetHwExecutionTooltip(text_box->GetTimer());
   }
 
   return "";

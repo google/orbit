@@ -145,17 +145,17 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
 
 std::string SchedulerTrack::GetBoxTooltip(PickingID id) const {
   TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
-  if (text_box) {
-    return absl::StrFormat(
-      "<b>CPU Core activity</b><br/>"
-      "<br/>"
-      "<b>Core:</b> %d<br/>"
-      "<b>Thread:</b> %s [%d]<br/>",
-      text_box->GetTimer().m_Processor,
-      Capture::GThreadNames[text_box->GetTimer().m_TID],
-      text_box->GetTimer().m_TID
-    );
+  if (!text_box) {
+    return "";
   }
 
-  return "";
+  return absl::StrFormat(
+    "<b>CPU Core activity</b><br/>"
+    "<br/>"
+    "<b>Core:</b> %d<br/>"
+    "<b>Thread:</b> %s [%d]<br/>",
+    text_box->GetTimer().m_Processor,
+    Capture::GThreadNames[text_box->GetTimer().m_TID],
+    text_box->GetTimer().m_TID
+  );
 }
