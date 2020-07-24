@@ -226,7 +226,8 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, TickType min,
 
   double CurrentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
 
-  if (vis_type == VisibilityType::kFullyVisible && CurrentTimeWindowUs < (end - start)){
+  if (vis_type == VisibilityType::kFullyVisible &&
+      CurrentTimeWindowUs < (end - start)) {
     Zoom(min, max);
     return;
   }
@@ -265,7 +266,7 @@ void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
       text_box_y_position + m_Layout.GetSpaceBetweenTracks() + top_margin;
   auto max_world_top_left_y = text_box_y_position + m_Canvas->GetWorldHeight() -
                               GetTextBoxHeight() - down_margin;
-  CHECK (min_world_top_left_y <= max_world_top_left_y);
+  CHECK(min_world_top_left_y <= max_world_top_left_y);
   world_top_left_y = std::min(world_top_left_y, max_world_top_left_y);
   world_top_left_y = std::max(world_top_left_y, min_world_top_left_y);
   m_Canvas->SetWorldTopLeftY(world_top_left_y);
@@ -544,7 +545,8 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
 
   selected_callstack_events_per_thread_.clear();
   for (CallstackEvent& event : selected_callstack_events) {
-    selected_callstack_events_per_thread_[event.m_TID].emplace_back(event);
+    selected_callstack_events_per_thread_[event.thread_id()].emplace_back(
+        event);
     selected_callstack_events_per_thread_[0].emplace_back(event);
   }
 
@@ -555,7 +557,7 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
   samplingProfiler->SetGenerateSummary(a_TID == 0);
 
   for (CallstackEvent& event : selected_callstack_events) {
-    if (Capture::GSamplingProfiler->GetCallStack(event.m_Id)) {
+    if (Capture::GSamplingProfiler->GetCallStack(event.callstack_hash())) {
       samplingProfiler->AddCallStack(event);
     }
   }
@@ -917,13 +919,14 @@ bool TimeGraph::IsPartlyVisible(TickType min, TickType max) const {
   return true;
 }
 
-bool TimeGraph::IsVisible(VisibilityType vis_type, TickType min, TickType max) const {
-  switch(vis_type) {
+bool TimeGraph::IsVisible(VisibilityType vis_type, TickType min,
+                          TickType max) const {
+  switch (vis_type) {
     case VisibilityType::kPartlyVisible:
       return IsPartlyVisible(min, max);
     case VisibilityType::kFullyVisible:
       return IsFullyVisible(min, max);
     default:
-      return false;   
+      return false;
   }
 }

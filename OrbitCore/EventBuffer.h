@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_EVENT_BUFFER_H_
+#define ORBIT_CORE_EVENT_BUFFER_H_
 
 #include <set>
 
@@ -10,23 +11,11 @@
 #include "Callstack.h"
 #include "Core.h"
 #include "SerializationMacros.h"
+#include "callstack.pb.h"
 
 #ifdef __linux
 #include "LinuxUtils.h"
 #endif
-
-//-----------------------------------------------------------------------------
-struct CallstackEvent {
-  CallstackEvent() = default;
-  CallstackEvent(uint64_t a_Time, CallstackID a_Id, ThreadID a_TID)
-      : m_Time(a_Time), m_Id(a_Id), m_TID(a_TID) {}
-
-  uint64_t m_Time = 0;
-  CallstackID m_Id = 0;
-  ThreadID m_TID = 0;
-
-  ORBIT_SERIALIZABLE;
-};
 
 //-----------------------------------------------------------------------------
 class EventBuffer {
@@ -72,3 +61,5 @@ class EventBuffer {
   std::atomic<uint64_t> m_MaxTime;
   std::atomic<uint64_t> m_MinTime;
 };
+
+#endif  // ORBIT_CORE_EVENT_BUFFER_H_

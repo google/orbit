@@ -14,6 +14,7 @@
 #include "EventBuffer.h"
 #include "Pdb.h"
 #include "SerializationMacros.h"
+#include "callstack.pb.h"
 
 class Process;
 

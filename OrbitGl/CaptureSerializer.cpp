@@ -159,7 +159,8 @@ void FillEventBuffer() {
   for (const CallstackEvent& callstack_event :
        *Capture::GSamplingProfiler->GetCallstacks()) {
     GEventTracer.GetEventBuffer().AddCallstackEvent(
-        callstack_event.m_Time, callstack_event.m_Id, callstack_event.m_TID);
+        callstack_event.time(), callstack_event.callstack_hash(),
+        callstack_event.thread_id());
   }
 }
 
