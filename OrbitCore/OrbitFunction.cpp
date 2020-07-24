@@ -29,7 +29,7 @@ void Function::ResetStats() {
   if (stats_ == nullptr) {
     stats_ = std::make_shared<FunctionStats>();
   } else {
-    stats_->Reset();
+    stats_->Clear();
   }
 }
 
@@ -43,5 +43,5 @@ ORBIT_SERIALIZE(Function, 5) {
   ORBIT_NVP_VAL(4, size_);
   ORBIT_NVP_VAL(4, file_);
   ORBIT_NVP_VAL(4, line_);
-  ORBIT_NVP_VAL(4, stats_);
+  // ORBIT_NVP_VAL(4, stats_);
 }

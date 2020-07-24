@@ -7,8 +7,8 @@
 #include <string>
 #include <string_view>
 
-#include "FunctionStats.h"
 #include "SerializationMacros.h"
+#include "function.pb.h"
 
 class Function {
  public:

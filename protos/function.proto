@@ -1,0 +1,13 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+message FunctionStats {
+  uint64 count = 1;
+  double total_time_ms = 2;
+  double average_time_ms = 3;
+  double min_ms = 4;
+  double max_ms = 5;
+}

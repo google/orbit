@@ -14,6 +14,7 @@ target_compile_definitions(OrbitProtos PRIVATE -DNTDDI_VERSION=0x06030000)
 target_sources(OrbitProtos PRIVATE
         capture.proto
         code_block.proto
+        function.proto
         module.proto
         process.proto
         services.proto
