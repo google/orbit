@@ -27,12 +27,11 @@ class LiveFunctionsController {
   void OnPreviousButton(uint64_t id);
   void OnDeleteButton(uint64_t id);
 
-  void OnDataChanged() { live_functions_data_view_.OnDataChanged(); }
+  void Reset();
+  void OnDataChanged();
 
   void SetAddIteratorCallback(
-      std::function<void(uint64_t, Function*)> callback) {
-    add_iterator_callback_ = callback;
-  }
+      std::function<void(uint64_t, Function*)> callback);
 
   TickType GetCaptureMin();
   TickType GetCaptureMax();

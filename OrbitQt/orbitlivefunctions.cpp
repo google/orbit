@@ -61,7 +61,17 @@ void OrbitLiveFunctions::SetFilter(const QString& a_Filter) {
 //-----------------------------------------------------------------------------
 void OrbitLiveFunctions::Refresh() { ui->data_view_panel_->Refresh(); }
 
-void OrbitLiveFunctions::OnDataChanged() { live_functions_.OnDataChanged(); }
+void OrbitLiveFunctions::OnDataChanged() {
+  live_functions_.OnDataChanged();
+  // A data change in the live view panel means that all iterators need to be
+  // invalidated, so we clean up here.
+  for (auto& [_, iterator_ui] : iterator_uis) {
+    ui->iteratorLayout->removeWidget(iterator_ui);
+    delete iterator_ui;
+  }
+  iterator_uis.clear();
+  all_events_iterator_->DisableButtons();
+  }
 
 void OrbitLiveFunctions::AddIterator(size_t id, Function* function) {
   OrbitEventIterator* iterator_ui = new OrbitEventIterator(this);

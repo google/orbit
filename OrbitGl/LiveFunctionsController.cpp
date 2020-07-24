@@ -223,3 +223,23 @@ TickType LiveFunctionsController::GetCaptureMin() {
 TickType LiveFunctionsController::GetCaptureMax() {
   return GCurrentTimeGraph->GetCaptureMax();
 }
+
+void LiveFunctionsController::Reset() {
+  function_iterators_.clear();
+  current_textboxes_.clear();
+  GCurrentTimeGraph->SetCurrentTextBoxes({});
+  next_iterator_id_ = 0;
+  id_to_select_ = 0;
+}
+
+void LiveFunctionsController::OnDataChanged() {
+  live_functions_data_view_.OnDataChanged();
+  // A data change means that all iterators should be invalidated, so we
+  // completely reset everything here.
+  Reset();
+}
+
+void LiveFunctionsController::SetAddIteratorCallback(
+    std::function<void(uint64_t, Function*)> callback) {
+  add_iterator_callback_ = callback;
+}
