@@ -156,7 +156,7 @@ void FillFunctionCountMap() {
   for (const auto& pair : Capture::GSelectedFunctionsMap) {
     uint64_t address = pair.first;
     Function* function = pair.second;
-    Capture::GFunctionCountMap[address] = function->stats()->m_Count;
+    Capture::GFunctionCountMap[address] = function->stats()->count();
   }
 }
 

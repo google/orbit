@@ -119,8 +119,7 @@ void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
                                 float min_x, TextBox* text_box) {
   TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
-    double elapsed_millis = elapsed_us * 0.001;
-    std::string time = GetPrettyTime(elapsed_millis);
+    std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
 
     text_box->SetElapsedTimeTextLength(time.length());
 
@@ -167,7 +166,7 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
   uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
 
-  uint64_t pixel_delta_in_ticks = static_cast<uint64_t>(TicksFromMicroseconds(
+  uint64_t pixel_delta_in_ticks = static_cast<uint64_t>(MicrosecondsToTicks(
                                       time_graph_->GetTimeWindowUs())) /
                                   canvas->getWidth();
   uint64_t min_timegraph_tick =
@@ -416,7 +415,7 @@ std::string GpuTrack::GetSwQueueTooltip(const Timer& timer) const {
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
       Capture::GThreadNames[timer.m_TID].c_str(), timer.m_TID,
-      GetPrettyTime(timer.ElapsedMillis()).c_str());
+      GetPrettyTime(absl::Milliseconds(timer.ElapsedMillis())).c_str());
 }
 
 std::string GpuTrack::GetHwQueueTooltip(const Timer& timer) const {
@@ -428,7 +427,7 @@ std::string GpuTrack::GetHwQueueTooltip(const Timer& timer) const {
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
       Capture::GThreadNames[timer.m_TID].c_str(), timer.m_TID,
-      GetPrettyTime(timer.ElapsedMillis()).c_str());
+      GetPrettyTime(absl::Milliseconds(timer.ElapsedMillis())).c_str());
 }
 
 std::string GpuTrack::GetHwExecutionTooltip(const Timer& timer) const {
@@ -441,5 +440,5 @@ std::string GpuTrack::GetHwExecutionTooltip(const Timer& timer) const {
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
       Capture::GThreadNames[timer.m_TID].c_str(), timer.m_TID,
-      GetPrettyTime(timer.ElapsedMillis()).c_str());
+      GetPrettyTime(absl::Milliseconds(timer.ElapsedMillis())).c_str());
 }

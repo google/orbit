@@ -132,7 +132,7 @@ bool TimeGraph::UpdateCaptureMinMaxTimestamps() {
 void TimeGraph::ZoomAll() {
   if (UpdateCaptureMinMaxTimestamps()) {
     m_MaxTimeUs =
-        MicroSecondsFromTicks(capture_min_timestamp_, capture_max_timestamp_);
+        TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
     m_MinTimeUs = m_MaxTimeUs - (GNumHistorySeconds * 1000 * 1000);
     if (m_MinTimeUs < 0) m_MinTimeUs = 0;
 
@@ -141,8 +141,8 @@ void TimeGraph::ZoomAll() {
 }
 
 void TimeGraph::Zoom(TickType min, TickType max) {
-  double start = MicroSecondsFromTicks(capture_min_timestamp_, min);
-  double end = MicroSecondsFromTicks(capture_min_timestamp_, max);
+  double start = TicksToMicroseconds(capture_min_timestamp_, min);
+  double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
   double mid = start + ((end - start) / 2.0);
   double extent = 1.1 * (end - start) / 2.0;
@@ -159,8 +159,7 @@ void TimeGraph::Zoom(const TextBox* a_TextBox) {
 //-----------------------------------------------------------------------------
 double TimeGraph::GetCaptureTimeSpanUs() {
   if (UpdateCaptureMinMaxTimestamps()) {
-    return MicroSecondsFromTicks(capture_min_timestamp_,
-                                 capture_max_timestamp_);
+    return TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
   }
 
   return 0;
@@ -225,12 +224,12 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, TickType min,
     return;
   }
 
-  double start = MicroSecondsFromTicks(capture_min_timestamp_, min);
-  double end = MicroSecondsFromTicks(capture_min_timestamp_, max);
+  double start = TicksToMicroseconds(capture_min_timestamp_, min);
+  double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
   double CurrentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
 
-  if (vis_type == VisibilityType::kFullyVisible && CurrentTimeWindowUs < (end - start)){
+  if (vis_type == VisibilityType::kFullyVisible && CurrentTimeWindowUs < (end - start)) {
     Zoom(min, max);
     return;
   }
@@ -262,11 +261,11 @@ void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
   auto text_box_y_position = thread_track->GetYFromDepth(timer.m_Depth);
 
   float world_top_left_y = m_Canvas->GetWorldTopLeftY();
-  float min_world_top_left_y =
+  float min_world_top_left_y = 
       text_box_y_position + m_Layout.GetSpaceBetweenTracks() + m_Layout.GetTopMargin();
-  float max_world_top_left_y = text_box_y_position + m_Canvas->GetWorldHeight() -
+  float max_world_top_left_y = text_box_y_position + m_Canvas->GetWorldHeight() - 
                               GetTextBoxHeight() - m_Layout.GetBottomMargin();
-  CHECK (min_world_top_left_y <= max_world_top_left_y);
+  CHECK(min_world_top_left_y <= max_world_top_left_y);
   world_top_left_y = std::min(world_top_left_y, max_world_top_left_y);
   world_top_left_y = std::max(world_top_left_y, min_world_top_left_y);
   m_Canvas->SetWorldTopLeftY(world_top_left_y);
@@ -394,7 +393,7 @@ float TimeGraph::GetThreadTotalHeight() { return std::abs(min_y_); }
 float TimeGraph::GetWorldFromTick(TickType a_Time) const {
   if (m_TimeWindowUs > 0) {
     double start =
-        MicroSecondsFromTicks(capture_min_timestamp_, a_Time) - m_MinTimeUs;
+        TicksToMicroseconds(capture_min_timestamp_, a_Time) - m_MinTimeUs;
     double normalizedStart = start / m_TimeWindowUs;
     float pos = float(m_WorldStartX + normalizedStart * m_WorldWidth);
     return pos;
@@ -410,7 +409,7 @@ float TimeGraph::GetWorldFromUs(double a_Micros) const {
 
 //-----------------------------------------------------------------------------
 double TimeGraph::GetUsFromTick(TickType time) const {
-  return MicroSecondsFromTicks(capture_min_timestamp_, time) - m_MinTimeUs;
+  return TicksToMicroseconds(capture_min_timestamp_, time) - m_MinTimeUs;
 }
 
 //-----------------------------------------------------------------------------
@@ -421,12 +420,12 @@ TickType TimeGraph::GetTickFromWorld(float a_WorldX) {
           : 0;
   double timeStamp = GetTime(ratio);
 
-  return capture_min_timestamp_ + TicksFromMicroseconds(timeStamp);
+  return capture_min_timestamp_ + MicrosecondsToTicks(timeStamp);
 }
 
 //-----------------------------------------------------------------------------
 TickType TimeGraph::GetTickFromUs(double a_MicroSeconds) const {
-  return capture_min_timestamp_ + TicksFromMicroseconds(a_MicroSeconds);
+  return capture_min_timestamp_ + MicrosecondsToTicks(a_MicroSeconds);
 }
 
 //-----------------------------------------------------------------------------
@@ -602,10 +601,10 @@ std::string GetLabelBetweenIterators(const TextBox* box_a,
 }
 
 std::string GetTimeString(const TextBox* box_a, const TextBox* box_b) {
-  double micros = MicroSecondsFromTicks(box_a->GetTimer().m_Start,
-                                        box_b->GetTimer().m_Start);
+  absl::Duration duration =
+      TicksToDuration(box_a->GetTimer().m_Start, box_b->GetTimer().m_Start);
 
-  return GetPrettyTime(micros * 0.001);
+  return GetPrettyTime(duration);
 }
 
 Color GetIteratorBoxColor(uint64_t index) {
@@ -993,15 +992,15 @@ void TimeGraph::DrawText(GlCanvas* canvas) {
 }
 
 bool TimeGraph::IsFullyVisible(TickType min, TickType max) const {
-  double start = MicroSecondsFromTicks(capture_min_timestamp_, min);
-  double end = MicroSecondsFromTicks(capture_min_timestamp_, max);
+  double start = TicksToMicroseconds(capture_min_timestamp_, min);
+  double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
   return start > m_MinTimeUs && end < m_MaxTimeUs;
 }
 
 bool TimeGraph::IsPartlyVisible(TickType min, TickType max) const {
-  double start = MicroSecondsFromTicks(capture_min_timestamp_, min);
-  double end = MicroSecondsFromTicks(capture_min_timestamp_, max);
+  double start = TicksToMicroseconds(capture_min_timestamp_, min);
+  double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
   double startUs = m_MinTimeUs;
 
@@ -1013,12 +1012,12 @@ bool TimeGraph::IsPartlyVisible(TickType min, TickType max) const {
 }
 
 bool TimeGraph::IsVisible(VisibilityType vis_type, TickType min, TickType max) const {
-  switch(vis_type) {
+  switch (vis_type) {
     case VisibilityType::kPartlyVisible:
       return IsPartlyVisible(min, max);
     case VisibilityType::kFullyVisible:
       return IsFullyVisible(min, max);
     default:
-      return false;   
+      return false;
   }
 }

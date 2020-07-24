@@ -104,8 +104,7 @@ void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
                                    float min_x, TextBox* text_box) {
   TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
-    double elapsed_millis = elapsed_us * 0.001;
-    std::string time = GetPrettyTime(elapsed_millis);
+    std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
     Function* func = Capture::GSelectedFunctionsMap[timer.m_FunctionAddress];
 
     text_box->SetElapsedTimeTextLength(time.length());
@@ -172,7 +171,7 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, Picking
   uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
   uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
 
-  uint64_t pixel_delta_in_ticks = static_cast<uint64_t>(TicksFromMicroseconds(
+  uint64_t pixel_delta_in_ticks = static_cast<uint64_t>(MicrosecondsToTicks(
                                       time_graph_->GetTimeWindowUs())) /
                                   canvas->getWidth();
   uint64_t min_timegraph_tick =
@@ -398,7 +397,6 @@ bool ThreadTrack::IsEmpty() const {
   return (GetNumTimers() == 0) && event_track_->IsEmpty();
 }
 
-
 //-----------------------------------------------------------------------------
 std::string ThreadTrack::GetBoxTooltip(PickingID id) const {
   TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
@@ -420,6 +418,6 @@ std::string ThreadTrack::GetBoxTooltip(PickingID id) const {
     "<b>Time:</b> %s",
     FunctionUtils::GetDisplayName(*func),
     FunctionUtils::GetLoadedModuleName(*func),
-    GetPrettyTime(text_box->GetTimer().ElapsedMillis())
+    GetPrettyTime(absl::Milliseconds(text_box->GetTimer().ElapsedMillis()))
   );
 }

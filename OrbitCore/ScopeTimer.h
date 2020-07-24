@@ -113,7 +113,7 @@ class ConditionalScopeTimer {
 
 //-----------------------------------------------------------------------------
 inline double Timer::ElapsedMicros() const {
-  return MicroSecondsFromTicks(m_Start, m_End);
+  return TicksToMicroseconds(m_Start, m_End);
 }
 
 //-----------------------------------------------------------------------------

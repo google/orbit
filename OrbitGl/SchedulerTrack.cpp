@@ -70,7 +70,7 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
   uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
 
-  uint64_t pixel_delta_in_ticks = static_cast<uint64_t>(TicksFromMicroseconds(
+  uint64_t pixel_delta_in_ticks = static_cast<uint64_t>(MicrosecondsToTicks(
                                       time_graph_->GetTimeWindowUs())) /
                                   canvas->getWidth();
   uint64_t min_timegraph_tick =

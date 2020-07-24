@@ -9,9 +9,12 @@
 #include "Capture.h"
 #include "Log.h"
 #include "OrbitBase/Logging.h"
+#include "Profiling.h"
 #include "Utils.h"
 
 namespace FunctionUtils {
+
+using orbit_client_protos::FunctionStats;
 
 std::string GetLoadedModuleName(const Function& func) {
   return Path::GetFileName(func.loaded_module_path());
@@ -90,17 +93,17 @@ bool SetOrbitTypeFromName(Function* func) {
 void UpdateStats(Function* func, const Timer& timer) {
   std::shared_ptr<FunctionStats> stats = func->stats();
   if (stats != nullptr) {
-    stats->m_Count++;
-    double elapsedMillis = timer.ElapsedMillis();
-    stats->m_TotalTimeMs += elapsedMillis;
-    stats->m_AverageTimeMs = stats->m_TotalTimeMs / stats->m_Count;
+    stats->set_count(stats->count() + 1);
+    uint64_t elapsed_nanos = TicksToNanoseconds(timer.m_Start, timer.m_End);
+    stats->set_total_time_ns(stats->total_time_ns() + elapsed_nanos);
+    stats->set_average_time_ns(stats->total_time_ns() / stats->count());
 
-    if (elapsedMillis > stats->m_MaxMs) {
-      stats->m_MaxMs = elapsedMillis;
+    if (elapsed_nanos > stats->max_ns()) {
+      stats->set_max_ns(elapsed_nanos);
     }
 
-    if (stats->m_MinMs == 0 || elapsedMillis < stats->m_MinMs) {
-      stats->m_MinMs = elapsedMillis;
+    if (stats->min_ns() == 0 || elapsed_nanos < stats->min_ns()) {
+      stats->set_min_ns(elapsed_nanos);
     }
   }
 }
