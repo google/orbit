@@ -183,7 +183,6 @@ uint64_t CaptureEventProcessor::GetCallstackHashAndSendToListenerIfNecessary(
   for (uint64_t pc : callstack.pcs()) {
     cs.m_Data.push_back(pc);
   }
-  cs.m_Depth = cs.m_Data.size();
   // TODO: Compute the hash without creating the CallStack if not necessary.
   uint64_t hash = cs.Hash();
 

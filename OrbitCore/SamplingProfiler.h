@@ -74,7 +74,7 @@ class SamplingProfiler {
 
   int GetNumSamples() const { return m_NumSamples; }
 
-  void AddCallStack(CallStack& a_CallStack);
+  void AddCallStack(CallstackEvent& callstack_event);
   void AddHashedCallStack(CallstackEvent& a_CallStack);
   void AddUniqueCallStack(CallStack& a_CallStack);
 

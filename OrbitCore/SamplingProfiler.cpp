@@ -58,17 +58,15 @@ std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::AddCallStack(CallStack& a_CallStack) {
-  CallstackID hash = a_CallStack.Hash();
+void SamplingProfiler::AddCallStack(CallstackEvent& callstack_event) {
+  CallstackID hash = callstack_event.m_Id;
   if (!HasCallStack(hash)) {
-    AddUniqueCallStack(a_CallStack);
+    std::shared_ptr<CallStack> callstack =
+        Capture::GSamplingProfiler->GetCallStack(callstack_event.m_Id);
+    AddUniqueCallStack(*callstack);
   }
-  CallstackEvent hashed_cs;
-  hashed_cs.m_Id = hash;
-  hashed_cs.m_TID = a_CallStack.m_ThreadId;
-  // Note: a_CallStack doesn't carry a timestamp so hashed_cs.m_Time is not
-  // filled, but that is not a problem because SamplingProfiler doesn't use it.
-  AddHashedCallStack(hashed_cs);
+
+  AddHashedCallStack(callstack_event);
 }
 
 //-----------------------------------------------------------------------------
@@ -184,7 +182,7 @@ void SamplingProfiler::ProcessSamples() {
           callstackCount;
 
       std::set<uint64_t> uniqueAddresses;
-      for (uint32_t i = 0; i < resolvedCallstack->m_Depth; ++i) {
+      for (uint32_t i = 0; i < resolvedCallstack->m_Data.size(); ++i) {
         uniqueAddresses.insert(resolvedCallstack->m_Data[i]);
       }
 
@@ -221,7 +219,7 @@ void SamplingProfiler::ResolveCallstacks() {
     // the start address of the function (if known).
     CallStack resolved_callstack = *callstack;
 
-    for (uint32_t i = 0; i < callstack->m_Depth; ++i) {
+    for (uint32_t i = 0; i < callstack->m_Data.size(); ++i) {
       uint64_t addr = callstack->m_Data[i];
 
       if (m_ExactAddressToFunctionAddress.find(addr) ==
