@@ -612,10 +612,13 @@ Color GetIteratorBoxColor(uint64_t index) {
 
 void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
                      const std::string& label, float text_y) {
-  TextBox text_box(pos, size, label, color);
-  text_box.SetTextY(text_y);
-  text_box.Draw(canvas->GetBatcher(), canvas->GetTextRenderer(),
-                std::numeric_limits<float>::lowest(), true, true);
+  Box box(pos, size, GlCanvas::Z_VALUE_OVERLAY);
+  canvas->GetBatcher()->AddBox(box, color,PickingID::BOX);
+
+  float max_size = size[0];
+  canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
+      label.c_str(), pos[0], text_y, GlCanvas::Z_VALUE_TEXT,
+      Color(255, 255, 255, 255), 20, max_size);
 
   constexpr float kOffsetBelowText = 5.f;
   Vec2 line_from(pos[0], text_y - kOffsetBelowText);
