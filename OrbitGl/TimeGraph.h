@@ -129,7 +129,8 @@ class TimeGraph {
 
   Color GetThreadColor(ThreadID tid) const;
 
-  void SetCurrentTextBoxes(const absl::flat_hash_map<uint64_t, const TextBox*>& boxes) {
+  void SetOverlayTextBoxes(
+      const absl::flat_hash_map<uint64_t, const TextBox*>& boxes) {
     overlay_current_textboxes_ = boxes;
     NeedsRedraw();
   }

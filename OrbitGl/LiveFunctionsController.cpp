@@ -91,7 +91,7 @@ void LiveFunctionsController::Move() {
         TimeGraph::VisibilityType::kFullyVisible, min_max.first, min_max.second,
         0.5);
   }
-  GCurrentTimeGraph->SetCurrentTextBoxes(current_textboxes_);
+  GCurrentTimeGraph->SetOverlayTextBoxes(current_textboxes_);
 }
 
 bool LiveFunctionsController::OnAllNextButton() {
