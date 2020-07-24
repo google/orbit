@@ -630,19 +630,6 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
   if (picking || overlay_current_textboxes_.size() == 0) {
     return;
   }
-  float min_x = std::numeric_limits<float>::max();
-  float max_x = std::numeric_limits<float>::lowest();
-
-  TickType min_tick = std::numeric_limits<TickType>::max();
-  TickType max_tick = std::numeric_limits<TickType>::lowest();
-
-  float world_start_x = canvas->GetWorldTopLeftX();
-  float world_width = canvas->GetWorldWidth();
-
-  float world_start_y = canvas->GetWorldTopLeftY();
-  float world_height = canvas->GetWorldHeight();
-
-  double inv_time_window = 1.0 / GetTimeWindowUs();
 
   std::vector<std::pair<uint64_t, const TextBox*>> boxes(
       overlay_current_textboxes_.size());
@@ -661,6 +648,14 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
   // we avoid recomputing them and just cache them here.
   std::vector<float> x_coords;
   x_coords.reserve(boxes.size());
+
+  float world_start_x = canvas->GetWorldTopLeftX();
+  float world_width = canvas->GetWorldWidth();
+
+  float world_start_y = canvas->GetWorldTopLeftY();
+  float world_height = canvas->GetWorldHeight();
+
+  double inv_time_window = 1.0 / GetTimeWindowUs();
 
   // Draw lines for iterators.
   for (const auto& box : boxes) {
