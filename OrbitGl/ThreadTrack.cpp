@@ -218,17 +218,17 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
         text_box.SetPos(pos);
         text_box.SetSize(size);
 
-        auto user_data = std::make_shared<PickingUserData>(
+        auto user_data = std::make_unique<PickingUserData>(
           &text_box, [&](PickingID id) { return this->GetBoxTooltip(id); });
 
         if (is_visible_width) {
           if (!is_collapsed) {
             SetTimesliceText(timer, elapsed_us, min_x, &text_box);
           }
-          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, user_data);
+          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, std::move(user_data));
         } else {
           auto type = PickingID::LINE;
-          batcher->AddVerticalLine(pos, size[1], z, color, type, user_data);
+          batcher->AddVerticalLine(pos, size[1], z, color, type, std::move(user_data));
           // For lines, we can ignore the entire pixel into which this event
           // falls.
           min_ignore =

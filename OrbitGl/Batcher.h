@@ -28,14 +28,14 @@ struct LineBuffer {
     m_Lines.Reset();
     m_Colors.Reset();
     m_PickingColors.Reset();
-    m_UserData.Reset();
+    m_UserData.clear();
   }
 
   static const int NUM_LINES_PER_BLOCK = 64 * 1024;
   BlockChain<Line, NUM_LINES_PER_BLOCK> m_Lines;
   BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> m_Colors;
   BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> m_PickingColors;
-  BlockChain<std::shared_ptr<PickingUserData>, NUM_LINES_PER_BLOCK> m_UserData;
+  std::vector<std::unique_ptr<PickingUserData>> m_UserData;
 };
 
 //-----------------------------------------------------------------------------
@@ -44,14 +44,14 @@ struct BoxBuffer {
     m_Boxes.Reset();
     m_Colors.Reset();
     m_PickingColors.Reset();
-    m_UserData.Reset();
+    m_UserData.clear();
   }
 
   static const int NUM_BOXES_PER_BLOCK = 64 * 1024;
   BlockChain<Box, NUM_BOXES_PER_BLOCK> m_Boxes;
   BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> m_Colors;
   BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> m_PickingColors;
-  BlockChain<std::shared_ptr<PickingUserData>, NUM_BOXES_PER_BLOCK> m_UserData;
+  std::vector<std::unique_ptr<PickingUserData>> m_UserData;
 };
 
 //-----------------------------------------------------------------------------
@@ -60,15 +60,14 @@ struct TriangleBuffer {
     triangles_.Reset();
     colors_.Reset();
     picking_colors_.Reset();
-    user_data_.Reset();
+    user_data_.clear();
   }
 
   static const int NUM_TRIANGLES_PER_BLOCK = 64 * 1024;
   BlockChain<Triangle, NUM_TRIANGLES_PER_BLOCK> triangles_;
   BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> colors_;
   BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
-  BlockChain<std::shared_ptr<PickingUserData>, NUM_TRIANGLES_PER_BLOCK>
-    user_data_;
+  std::vector<std::unique_ptr<PickingUserData>> user_data_;
 };
 
 //-----------------------------------------------------------------------------
@@ -79,31 +78,31 @@ class Batcher {
 
   void AddLine(const Line& line, const Color* colors,
                PickingID::Type picking_type, 
-               std::shared_ptr<PickingUserData> user_data = nullptr);
+               std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddLine(const Line& line, Color color, PickingID::Type picking_type,
-               std::shared_ptr<PickingUserData> user_data = nullptr);
+               std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddLine(Vec2 from, Vec2 to, float z, Color color,
                PickingID::Type picking_type,
-               std::shared_ptr<PickingUserData> user_data = nullptr);
+               std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddVerticalLine(Vec2 pos, float size, float z, Color color,
                        PickingID::Type picking_type,
-                       std::shared_ptr<PickingUserData> user_data = nullptr);
+                       std::unique_ptr<PickingUserData> user_data = nullptr);
 
   void AddBox(const Box& a_Box, const Color* colors,
               PickingID::Type picking_type,
-              std::shared_ptr<PickingUserData> user_data = nullptr);
+              std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddBox(const Box& a_Box, Color color, PickingID::Type picking_type,
-              std::shared_ptr<PickingUserData> user_data = nullptr);
+              std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
                     PickingID::Type picking_type,
-                    std::shared_ptr<PickingUserData> user_data = nullptr);
+                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
   void AddTriangle(const Triangle& triangle, Color color,
                    PickingID::Type picking_type,
-                   std::shared_ptr<PickingUserData> user_data = nullptr);
+                   std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
                    PickingID::Type picking_type,
-                   std::shared_ptr<PickingUserData> user_data = nullptr);
+                   std::unique_ptr<PickingUserData> user_data = nullptr);
 
   void GetBoxGradientColors(Color color, Color* colors);
 
@@ -111,7 +110,7 @@ class Batcher {
 
   void Reset();
 
-  std::shared_ptr<PickingUserData> GetUserData(PickingID a_ID);
+  PickingUserData* GetUserData(PickingID a_ID);
   TextBox* GetTextBox(PickingID a_ID);
   BoxBuffer& GetBoxBuffer() { return box_buffer_; }
   LineBuffer& GetLineBuffer() { return line_buffer_; }

@@ -226,7 +226,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
       tooltip = pickable->GetTooltip();
     }
   } else {
-    std::shared_ptr<PickingUserData> user_data = batcher.GetUserData(pickId);
+    PickingUserData* user_data = batcher.GetUserData(pickId);
 
     if (user_data && user_data->m_GenerateTooltip) {
       tooltip = user_data->m_GenerateTooltip(pickId);
