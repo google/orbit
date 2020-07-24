@@ -10,6 +10,7 @@
 #include "KeyAndString.h"
 #include "LinuxAddressInfo.h"
 #include "ScopeTimer.h"
+#include "capture_data.pb.h"
 
 class CaptureListener {
  public:
@@ -17,7 +18,8 @@ class CaptureListener {
   virtual void OnTimer(Timer timer) = 0;
   virtual void OnKeyAndString(uint64_t key, std::string str) = 0;
   virtual void OnCallstack(CallStack callstack) = 0;
-  virtual void OnCallstackEvent(CallstackEvent callstack_event) = 0;
+  virtual void OnCallstackEvent(
+      orbit_client_protos::CallstackEvent callstack_event) = 0;
   virtual void OnThreadName(int32_t thread_id, std::string thread_name) = 0;
   virtual void OnAddressInfo(LinuxAddressInfo address_info) = 0;
 };

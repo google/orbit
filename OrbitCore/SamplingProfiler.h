@@ -71,8 +71,7 @@ class SamplingProfiler {
 
   int GetNumSamples() const { return m_NumSamples; }
 
-  void AddCallStack(CallstackEvent& callstack_event);
-  void AddHashedCallStack(CallstackEvent& a_CallStack);
+  void AddCallStack(orbit_client_protos::CallstackEvent& callstack_event);
   void AddUniqueCallStack(CallStack& a_CallStack);
 
   std::shared_ptr<CallStack> GetCallStack(CallstackID a_ID) {
@@ -88,7 +87,7 @@ class SamplingProfiler {
   std::shared_ptr<SortedCallstackReport> GetSortedCallstacksFromAddress(
       uint64_t a_Addr, ThreadID a_TID);
 
-  BlockChain<CallstackEvent, 16 * 1024>* GetCallstacks() {
+  BlockChain<orbit_client_protos::CallstackEvent, 16 * 1024>* GetCallstacks() {
     return &m_Callstacks;
   }
 
@@ -112,22 +111,6 @@ class SamplingProfiler {
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
 
-  // TODO(irinashkviro): remove this when move to protobuf
-  void SaveCallstacks() {
-    callstacks_vector.clear();
-    for (const CallstackEvent& callstack : m_Callstacks) {
-      callstacks_vector.push_back(callstack);
-    }
-  }
-
-  // TODO(irinashkviro): remove this when move to protobuf
-  void LoadCallstacks() {
-    m_Callstacks.clear();
-    for (const CallstackEvent& callstack : callstacks_vector) {
-      m_Callstacks.push_back(callstack);
-    }
-  }
-
   ORBIT_SERIALIZABLE;
 
  protected:
@@ -140,12 +123,9 @@ class SamplingProfiler {
   int m_NumSamples = 0;
 
   // Filled before ProcessSamples by AddCallstack, AddHashedCallstack.
-  BlockChain<CallstackEvent, 16 * 1024> m_Callstacks;
+  BlockChain<orbit_client_protos::CallstackEvent, 16 * 1024> m_Callstacks;
   std::unordered_map<CallstackID, std::shared_ptr<CallStack>>
       m_UniqueCallstacks;
-
-  // TODO(irinashkviro): remove this when move to protobuf
-  std::vector<CallstackEvent> callstacks_vector;
 
   // Filled by ProcessSamples.
   std::unordered_map<ThreadID, ThreadSampleData> m_ThreadSampleData;

@@ -57,6 +57,7 @@
 
 ABSL_DECLARE_FLAG(bool, devmode);
 
+using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 
 std::unique_ptr<OrbitApp> GOrbitApp;
@@ -122,9 +123,10 @@ void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
     ERROR("GSamplingProfiler is null, ignoring callstack event.");
     return;
   }
-  Capture::GSamplingProfiler->AddHashedCallStack(callstack_event);
+  Capture::GSamplingProfiler->AddCallStack(callstack_event);
   GEventTracer.GetEventBuffer().AddCallstackEvent(
-      callstack_event.m_Time, callstack_event.m_Id, callstack_event.m_TID);
+      callstack_event.time(), callstack_event.callstack_hash(),
+      callstack_event.thread_id());
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {

@@ -10,6 +10,8 @@
 #include "SamplingProfiler.h"
 #include "Serialization.h"
 
+using orbit_client_protos::CallstackEvent;
+
 EventTracer GEventTracer;
 
 //-----------------------------------------------------------------------------
@@ -39,20 +41,21 @@ void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash,
                                     ThreadID thread_id) {
   ScopeLock lock(m_Mutex);
   std::map<uint64_t, CallstackEvent>& event_map = m_CallstackEvents[thread_id];
-  event_map[time] = CallstackEvent(time, cs_hash, thread_id);
+  CallstackEvent event;
+  event.set_time(time);
+  event.set_callstack_hash(cs_hash);
+  event.set_thread_id(thread_id);
+  event_map[time] = event;
 
   // Add all callstack events to "thread 0".
   std::map<uint64_t, CallstackEvent>& event_map_0 = m_CallstackEvents[0];
-  event_map_0[time] = CallstackEvent(time, cs_hash, 0);
+  CallstackEvent event0;
+  event0.set_time(time);
+  event0.set_callstack_hash(cs_hash);
+  event0.set_thread_id(0);
+  event_map_0[time] = event0;
 
   RegisterTime(time);
-}
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(CallstackEvent, 1) {
-  ORBIT_NVP_VAL(1, m_Time);
-  ORBIT_NVP_VAL(0, m_Id);
-  ORBIT_NVP_VAL(0, m_TID);
 }
 
 #ifdef __linux

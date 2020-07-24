@@ -28,7 +28,8 @@ class LinuxTracingBuffer {
 
   void RecordTimer(Timer&& timer);
   void RecordCallstack(LinuxCallstackEvent&& callstack);
-  void RecordHashedCallstack(CallstackEvent&& hashed_callstack);
+  void RecordHashedCallstack(
+      orbit_client_protos::CallstackEvent&& hashed_callstack);
   void RecordAddressInfo(LinuxAddressInfo&& address_info);
   void RecordKeyAndString(KeyAndString&& key_and_string);
   void RecordKeyAndString(uint64_t key, std::string str);
@@ -39,7 +40,8 @@ class LinuxTracingBuffer {
   // They return true if the buffer was not empty.
   bool ReadAllTimers(std::vector<Timer>* out_buffer);
   bool ReadAllCallstacks(std::vector<LinuxCallstackEvent>* out_buffer);
-  bool ReadAllHashedCallstacks(std::vector<CallstackEvent>* out_buffer);
+  bool ReadAllHashedCallstacks(
+      std::vector<orbit_client_protos::CallstackEvent>* out_buffer);
   bool ReadAllAddressInfos(std::vector<LinuxAddressInfo>* out_buffer);
   bool ReadAllKeysAndStrings(std::vector<KeyAndString>* out_buffer);
   bool ReadAllThreadNames(std::vector<TidAndThreadName>* out_buffer);
@@ -55,7 +57,7 @@ class LinuxTracingBuffer {
   std::vector<LinuxCallstackEvent> callstack_buffer_;
 
   absl::Mutex hashed_callstack_buffer_mutex_;
-  std::vector<CallstackEvent> hashed_callstack_buffer_;
+  std::vector<orbit_client_protos::CallstackEvent> hashed_callstack_buffer_;
 
   absl::Mutex address_info_buffer_mutex_;
   std::vector<LinuxAddressInfo> address_info_buffer_;

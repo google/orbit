@@ -12,6 +12,8 @@ ABSL_FLAG(bool, frame_pointer_unwinding, false,
           "Use frame pointers for unwinding");
 
 namespace {
+using orbit_client_protos::CallstackEvent;
+
 class MyCaptureListener : public CaptureListener {
   void OnTimer(Timer) override {}
   void OnKeyAndString(uint64_t, std::string) override {}

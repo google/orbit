@@ -8,6 +8,8 @@
 
 #include "KeyAndString.h"
 
+using orbit_client_protos::CallstackEvent;
+
 void LinuxTracingBuffer::RecordTimer(Timer&& timer) {
   absl::MutexLock lock(&timer_buffer_mutex_);
   timer_buffer_.emplace_back(std::move(timer));

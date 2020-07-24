@@ -1,5 +1,7 @@
 #include "CaptureEventProcessor.h"
 
+using orbit_client_protos::CallstackEvent;
+
 void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
   switch (event.event_case()) {
     case CaptureEvent::kSchedulingSlice:
@@ -68,8 +70,10 @@ void CaptureEventProcessor::ProcessCallstackSample(
   }
 
   uint64_t hash = GetCallstackHashAndSendToListenerIfNecessary(callstack);
-  CallstackEvent callstack_event{callstack_sample.timestamp_ns(), hash,
-                                 callstack_sample.tid()};
+  CallstackEvent callstack_event;
+  callstack_event.set_time(callstack_sample.timestamp_ns());
+  callstack_event.set_callstack_hash(hash);
+  callstack_event.set_thread_id(callstack_sample.tid());
   capture_listener_->OnCallstackEvent(std::move(callstack_event));
 }
 

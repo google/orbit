@@ -81,7 +81,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void OnTimer(Timer timer) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnCallstack(CallStack callstack) override;
-  void OnCallstackEvent(CallstackEvent callstack_event) override;
+  void OnCallstackEvent(
+      orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
   void OnAddressInfo(LinuxAddressInfo address_info) override;
 
