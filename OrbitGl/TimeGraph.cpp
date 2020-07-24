@@ -590,18 +590,20 @@ void TimeGraph::Draw(GlCanvas* canvas, bool a_Picking) {
 
 namespace {
 
-std::pair<std::string, std::string> GetLabelBetweenIterators(
+std::string GetLabelBetweenIterators(
     const TextBox* box_a, const TextBox* box_b) {
-  double micros = MicroSecondsFromTicks(box_a->GetTimer().m_Start,
-                                        box_b->GetTimer().m_Start);
-
-  std::string time = GetPrettyTime(micros * 0.001);
   std::string function_from =
       Capture::GAddressToFunctionName[box_a->GetTimer().m_FunctionAddress];
   std::string function_to =
       Capture::GAddressToFunctionName[box_b->GetTimer().m_FunctionAddress];
-  return std::make_pair(absl::StrFormat("%s to %s", function_from, function_to),
-                        time);
+  return absl::StrFormat("%s to %s", function_from, function_to);
+}
+
+std::string GetTimeString(const TextBox* box_a, const TextBox* box_b) {
+  double micros = MicroSecondsFromTicks(box_a->GetTimer().m_Start,
+                                        box_b->GetTimer().m_Start);
+
+  return GetPrettyTime(micros * 0.001);
 }
 
 Color GetIteratorBoxColor(uint64_t index) {
@@ -688,35 +690,37 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
     Vec2 size(size_x, world_height);
     Color color = GetIteratorBoxColor(k - 1);
 
-    auto& labels =
+    const std::string& label =
         GetLabelBetweenIterators(boxes[k - 1].second, boxes[k].second);
+    const std::string& time =
+        GetTimeString(boxes[k - 1].second, boxes[k].second);
 
     float text_y_offset = world_height / 2.f /
                           static_cast<float>(overlay_current_textboxes_.size());
     float text_y =
         pos[1] + (world_height / 2.f) - static_cast<float>(k) * text_y_offset;
 
-    DrawIteratorBox(canvas, pos, size, color, labels.first, labels.second,
+    DrawIteratorBox(canvas, pos, size, color, label, time,
                     text_y);
   }
 
   // When we have at least 3 boxes, we also draw the total time from the first
   // to the last iterator.
   if (boxes.size() > 2) {
+    size_t last_index = boxes.size() - 1;
+
     Vec2 pos(x_coords[0], world_start_y - world_height);
-    float size_x = x_coords[boxes.size() - 1] - pos[0];
+    float size_x = x_coords[last_index] - pos[0];
     Vec2 size(size_x, world_height);
 
-    double micros = MicroSecondsFromTicks(
-        boxes[0].second->GetTimer().m_Start,
-        boxes[boxes.size() - 1].second->GetTimer().m_Start);
-
-    std::string time = GetPrettyTime(micros * 0.001);
+    std::string time = GetTimeString(boxes[0].second, boxes[last_index].second);
     std::string label("Total");
 
     float text_y = pos[1] + (world_height / 2.f);
 
-    DrawIteratorBox(canvas, pos, size, Color(0, 0, 0, 0), label, time, text_y);
+    // We do not want the overall box to add any color, so we just set alpha to 0.
+    const Color kColorBlackTransparent(0, 0, 0, 0);
+    DrawIteratorBox(canvas, pos, size, kColorBlackTransparent, label, time, text_y);
   }
 }
 
