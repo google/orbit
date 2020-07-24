@@ -54,7 +54,7 @@ class GpuTrack : public Track {
   std::vector<std::shared_ptr<TimerChain>> GetAllChains() override;
   bool IsCollapsable() const override { return depth_ > 1; }
 
-  void SetTimeline(const std::string& timeline);
+  void SetTimeline(std::string_view timeline);
 
  protected:
   void UpdateDepth(uint32_t depth) {
