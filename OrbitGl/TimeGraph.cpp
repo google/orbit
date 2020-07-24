@@ -324,8 +324,6 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
   if (a_Timer.m_Type == Timer::GPU_ACTIVITY) {
     uint64_t timeline_hash = GetGpuTimelineHash(a_Timer);
     std::shared_ptr<GpuTrack> track = GetOrCreateGpuTrack(timeline_hash);
-    track->SetName(string_manager_->Get(timeline_hash).value_or(""));
-    track->SetLabel(string_manager_->Get(timeline_hash).value_or(""));
     track->OnTimer(a_Timer);
   } else {
     std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(a_Timer.m_TID);
@@ -707,6 +705,7 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
     track = std::make_shared<GpuTrack>(this, string_manager_, timeline_hash);
+    track->SetTimeline(string_manager_->Get(timeline_hash).value_or(""));
     tracks_.emplace_back(track);
     gpu_tracks_[timeline_hash] = track;
   }
