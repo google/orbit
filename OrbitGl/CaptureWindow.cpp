@@ -616,9 +616,11 @@ void CaptureWindow::DrawScreenSpace() {
           Vec2(margin_x1 - margin_x0, canvasHeight - height), z);
   ui_batcher_.AddBox(box, kBackgroundColor, PickingID::BOX);
 
-  // Time bar
+  // Time bar background
   if (time_graph_.GetCaptureTimeSpanUs() > 0) {
-    Box box(Vec2(0, height), Vec2(getWidth(), height), z);
+    Box box(Vec2(0, time_graph_.GetLayout().GetTimeBarHeight()),
+            Vec2(getWidth(), time_graph_.GetLayout().GetTimeBarHeight()),
+            GlCanvas::Z_VALUE_TEXT_UI_BG);
     ui_batcher_.AddBox(box, Color(70, 70, 70, 200), PickingID::BOX);
   }
 }
@@ -857,6 +859,9 @@ void CaptureWindow::RenderTimeBar() {
   static int numTimePoints = 10;
 
   if (time_graph_.GetCaptureTimeSpanUs() > 0) {
+
+    const float time_bar_height = time_graph_.GetLayout().GetTimeBarHeight();
+
     double millis = time_graph_.GetCurrentTimeSpanUs() * 0.001;
     double incr = millis / float(numTimePoints - 1);
     double unit = GetIncrementMs(incr);
@@ -866,7 +871,7 @@ void CaptureWindow::RenderTimeBar() {
 
     static int pixelMargin = 2;
     int screenY =
-        getHeight() - static_cast<int>(m_Slider.GetPixelHeight()) - pixelMargin;
+        getHeight() - static_cast<int>(time_bar_height) - pixelMargin;
     float dummy, worldY;
     ScreenToWorld(0, screenY, dummy, worldY);
 
@@ -886,7 +891,7 @@ void CaptureWindow::RenderTimeBar() {
                              Color(255, 255, 255, 255));
 
       Vec2 pos(worldX, worldY);
-      ui_batcher_.AddVerticalLine(pos, height, Z_VALUE_UI,
+      ui_batcher_.AddVerticalLine(pos, height, GlCanvas::Z_VALUE_UI,
                                   Color(255, 255, 255, 255), PickingID::LINE);
     }
   }

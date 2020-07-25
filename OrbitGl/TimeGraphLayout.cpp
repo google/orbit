@@ -35,6 +35,7 @@ TimeGraphLayout::TimeGraphLayout() {
   m_TextZ = -0.02f;
   m_TrackZ = -0.1f;
   m_ToolbarIconHeight = 24.f;
+  time_bar_height_ = 15.f;
 };
 
 //-----------------------------------------------------------------------------
