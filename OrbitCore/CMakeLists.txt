@@ -53,8 +53,7 @@ target_sources(
 
 target_sources(
   OrbitCore
-  PRIVATE Callstack.cpp
-          Capture.cpp
+  PRIVATE Capture.cpp
           ContextSwitch.cpp
           Core.cpp
           EventBuffer.cpp
