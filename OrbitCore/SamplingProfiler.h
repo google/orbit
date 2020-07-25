@@ -111,8 +111,6 @@ class SamplingProfiler {
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
 
-  ORBIT_SERIALIZABLE;
-
  protected:
   void ResolveCallstacks();
   void FillThreadSampleDataSampleReports();

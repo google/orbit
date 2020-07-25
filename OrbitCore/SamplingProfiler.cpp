@@ -361,8 +361,3 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
     }
   }
 }
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 5) {
-  ORBIT_NVP_DEBUG(0, m_UniqueCallstacks);
-}

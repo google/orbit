@@ -13,7 +13,6 @@
 #include "CallstackTypes.h"
 #include "SerializationMacros.h"
 
-//-----------------------------------------------------------------------------
 struct CallStack {
   CallStack() = default;
   inline CallstackID Hash() {
@@ -24,8 +23,5 @@ struct CallStack {
 
   CallstackID m_Hash = 0;
   std::vector<uint64_t> m_Data;
-
-  ORBIT_SERIALIZABLE;
 };
-
 #endif  // ORBIT_CORE_CALLSTACK_H_
