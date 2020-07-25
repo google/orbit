@@ -40,6 +40,7 @@ class TimeGraphLayout {
   void SetNumCores(int a_NumCores) { m_NumCores = a_NumCores; }
   bool DrawProperties();
   bool GetDrawTrackBackground() const { return m_DrawTrackBackground; }
+  float GetTimeBarHeight() const { return time_bar_height_; }
 
  protected:
   int m_NumCores;
@@ -67,6 +68,8 @@ class TimeGraphLayout {
   float m_SpaceBetweenTracks;
   float m_SpaceBetweenTracksAndThread;
   float m_SpaceBetweenThreadBlocks;
+
+  float time_bar_height_;
 
   float m_TextZ;
   float m_TrackZ;

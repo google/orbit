@@ -607,9 +607,8 @@ std::string GetTimeString(const TextBox* box_a, const TextBox* box_b) {
 }
 
 Color GetIteratorBoxColor(uint64_t index) {
-  constexpr uint64_t kNumColors = 4;
-  Color colors[kNumColors] = {Color(73, 208, 242, 80), Color(0, 90, 112, 80),
-                              Color(0, 192, 240, 80), Color(40, 103, 122, 80)};
+  constexpr uint64_t kNumColors = 2;
+  Color colors[kNumColors] = {Color(187, 213, 240, 60), Color(91, 112, 147, 60)};
   return colors[index % kNumColors];
 }
 
@@ -621,9 +620,10 @@ void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
 
   std::string text = absl::StrFormat("%s: %s", label, time);
 
+  constexpr float kLeftOffset = 5.f;
   float max_size = size[0];
   canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
-      text.c_str(), pos[0], text_y, GlCanvas::Z_VALUE_TEXT,
+      text.c_str(), pos[0] + kLeftOffset, text_y, GlCanvas::Z_VALUE_TEXT,
       Color(255, 255, 255, 255), time.length(), max_size);
 
   constexpr float kOffsetBelowText = 5.f;
@@ -695,13 +695,24 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
     const std::string& time =
         GetTimeString(boxes[k - 1].second, boxes[k].second);
 
-    float text_y_offset = world_height / 2.f /
-                          static_cast<float>(overlay_current_textboxes_.size());
-    float text_y =
-        pos[1] + (world_height / 2.f) - static_cast<float>(k) * text_y_offset;
+    // Distance from the bottom where we don't want to draw. The bottom consists
+    // of the slider (where we have to take the width, as it is rotated), and
+    // the time bar.
+    float bottom_margin = m_Layout.GetSliderWidth() +
+                          m_Layout.GetTimeBarHeight() +
+                          m_Layout.GetVerticalMargin();
 
-    DrawIteratorBox(canvas, pos, size, color, label, time,
-                    text_y);
+    // The height of text is chosen such that the text of the last box drawn is
+    // at pos[1] + bottom_margin (lowest possible position) and the height of
+    // the box showing the overall time (see below) is at pos[1] + (world_height
+    // / 2.f), corresponding to the case k == 0 in the formula for 'text_y'.
+    float height_per_text =
+        ((world_height / 2.f) - bottom_margin) /
+        static_cast<float>(overlay_current_textboxes_.size() - 1);
+    float text_y =
+        pos[1] + (world_height / 2.f) - static_cast<float>(k) * height_per_text;
+
+    DrawIteratorBox(canvas, pos, size, color, label, time, text_y);
   }
 
   // When we have at least 3 boxes, we also draw the total time from the first
@@ -718,9 +729,11 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
 
     float text_y = pos[1] + (world_height / 2.f);
 
-    // We do not want the overall box to add any color, so we just set alpha to 0.
+    // We do not want the overall box to add any color, so we just set alpha to
+    // 0.
     const Color kColorBlackTransparent(0, 0, 0, 0);
-    DrawIteratorBox(canvas, pos, size, kColorBlackTransparent, label, time, text_y);
+    DrawIteratorBox(canvas, pos, size, kColorBlackTransparent, label, time,
+                    text_y);
   }
 }
 
