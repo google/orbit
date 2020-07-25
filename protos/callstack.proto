@@ -9,3 +9,8 @@ message CallstackEvent {
   uint64 callstack_hash = 2;
   int32 thread_id = 3;
 }
+
+message HashedCallstack {
+  uint64 callstack_hash = 1;
+  repeated uint64 data = 2;
+}

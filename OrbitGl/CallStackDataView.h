@@ -9,9 +9,8 @@
 
 #include "DataView.h"
 #include "OrbitModule.h"
+#include "callstack.pb.h"
 #include "function.pb.h"
-
-struct CallStack;
 
 class CallStackDataView : public DataView {
  public:
@@ -28,7 +27,7 @@ class CallStackDataView : public DataView {
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                      const std::vector<int>& a_ItemIndices) override;
   void OnDataChanged() override;
-  void SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
+  void SetCallStack(std::shared_ptr<HashedCallstack> a_CallStack) {
     m_CallStack = std::move(a_CallStack);
     OnDataChanged();
   }
@@ -36,7 +35,7 @@ class CallStackDataView : public DataView {
  protected:
   void DoFilter() override;
 
-  std::shared_ptr<CallStack> m_CallStack;
+  std::shared_ptr<HashedCallstack> m_CallStack;
 
   struct CallStackDataViewFrame {
     CallStackDataViewFrame() = default;

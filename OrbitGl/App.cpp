@@ -16,7 +16,6 @@
 #include <utility>
 
 #include "CallStackDataView.h"
-#include "Callstack.h"
 #include "Capture.h"
 #include "CaptureListener.h"
 #include "CaptureSerializer.h"
@@ -111,8 +110,8 @@ void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_->AddIfNotPresent(key, std::move(str));
 }
 
-void OrbitApp::OnCallstack(CallStack callstack) {
-  Capture::GSamplingProfiler->AddUniqueCallStack(callstack);
+void OrbitApp::OnCallstack(HashedCallstack callstack) {
+  Capture::GSamplingProfiler->AddUniqueCallstack(callstack);
 }
 
 void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
@@ -120,7 +119,7 @@ void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
     ERROR("GSamplingProfiler is null, ignoring callstack event.");
     return;
   }
-  Capture::GSamplingProfiler->AddHashedCallStack(callstack_event);
+  Capture::GSamplingProfiler->AddCallstackEvent(callstack_event);
   GEventTracer.GetEventBuffer().AddCallstackEvent(
       callstack_event.time(), callstack_event.callstack_hash(),
       callstack_event.thread_id());
@@ -677,7 +676,7 @@ bool OrbitApp::SelectProcess(int32_t a_ProcessID) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
+void OrbitApp::SetCallStack(std::shared_ptr<HashedCallstack> a_CallStack) {
   m_CallStackDataView->SetCallStack(std::move(a_CallStack));
   FireRefreshCallbacks(DataViewType::CALLSTACK);
 }

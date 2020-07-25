@@ -8,7 +8,6 @@
 #include <utility>
 
 #include "BlockChain.h"
-#include "Callstack.h"
 #include "Capture.h"
 #include "Core.h"
 #include "EventBuffer.h"
@@ -71,15 +70,15 @@ class SamplingProfiler {
 
   int GetNumSamples() const { return m_NumSamples; }
 
-  void AddCallStack(CallstackEvent& callstack_event);
-  void AddHashedCallStack(CallstackEvent& a_CallStack);
-  void AddUniqueCallStack(CallStack& a_CallStack);
+  void AddCallstack(CallstackEvent& callstack_event);
+  void AddCallstackEvent(CallstackEvent& callstack_event);
+  void AddUniqueCallstack(HashedCallstack& hashed_callstack);
 
-  std::shared_ptr<CallStack> GetCallStack(CallstackID a_ID) {
+  std::shared_ptr<HashedCallstack> GetCallstack(CallstackID a_ID) {
     return m_UniqueCallstacks.at(a_ID);
   }
 
-  bool HasCallStack(CallstackID a_ID) {
+  bool HasCallstack(CallstackID a_ID) {
     return m_UniqueCallstacks.count(a_ID) > 0;
   }
 
@@ -126,8 +125,6 @@ class SamplingProfiler {
     }
   }
 
-  ORBIT_SERIALIZABLE;
-
  protected:
   void ResolveCallstacks();
   void FillThreadSampleDataSampleReports();
@@ -139,7 +136,7 @@ class SamplingProfiler {
 
   // Filled before ProcessSamples by AddCallstack, AddHashedCallstack.
   BlockChain<CallstackEvent, 16 * 1024> m_Callstacks;
-  std::unordered_map<CallstackID, std::shared_ptr<CallStack>>
+  std::unordered_map<CallstackID, std::shared_ptr<HashedCallstack>>
       m_UniqueCallstacks;
 
   // TODO(irinashkviro): remove this when move to protobuf
@@ -147,7 +144,7 @@ class SamplingProfiler {
 
   // Filled by ProcessSamples.
   std::unordered_map<ThreadID, ThreadSampleData> m_ThreadSampleData;
-  std::unordered_map<CallstackID, std::shared_ptr<CallStack>>
+  std::unordered_map<CallstackID, std::shared_ptr<HashedCallstack>>
       m_UniqueResolvedCallstacks;
   std::unordered_map<CallstackID, CallstackID>
       m_OriginalCallstackToResolvedCallstack;

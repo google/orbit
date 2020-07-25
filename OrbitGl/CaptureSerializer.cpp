@@ -8,7 +8,6 @@
 #include <memory>
 
 #include "App.h"
-#include "Callstack.h"
 #include "Capture.h"
 #include "Core.h"
 #include "EventTracer.h"
@@ -24,6 +23,7 @@
 #include "TimeGraph.h"
 #include "TimerChain.h"
 #include "absl/strings/str_format.h"
+#include "callstack.pb.h"
 
 //-----------------------------------------------------------------------------
 ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
@@ -101,7 +101,7 @@ void CaptureSerializer::SaveImpl(T& archive) {
   {
     ORBIT_SIZE_SCOPE("SamplingProfiler");
     Capture::GSamplingProfiler->SaveCallstacks();
-    archive(Capture::GSamplingProfiler);
+    // archive(Capture::GSamplingProfiler);
   }
 
   {
@@ -191,7 +191,7 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
 
   archive(Capture::GAddressInfos);
 
-  archive(Capture::GSamplingProfiler);
+  // archive(Capture::GSamplingProfiler);
   if (Capture::GSamplingProfiler == nullptr) {
     Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();
   }

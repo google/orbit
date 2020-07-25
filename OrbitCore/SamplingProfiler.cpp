@@ -14,6 +14,7 @@
 #include "Injection.h"
 #include "Log.h"
 #include "OrbitModule.h"
+#include "SamplingUtils.h"
 #include "Serialization.h"
 
 namespace {
@@ -58,30 +59,30 @@ std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::AddCallStack(CallstackEvent& callstack_event) {
+void SamplingProfiler::AddCallstack(CallstackEvent& callstack_event) {
   CallstackID hash = callstack_event.callstack_hash();
-  if (!HasCallStack(hash)) {
-    std::shared_ptr<CallStack> callstack =
-        Capture::GSamplingProfiler->GetCallStack(hash);
-    AddUniqueCallStack(*callstack);
+  if (!HasCallstack(hash)) {
+    std::shared_ptr<HashedCallstack> callstack =
+        Capture::GSamplingProfiler->GetCallstack(hash);
+    AddUniqueCallstack(*callstack);
   }
 
-  AddHashedCallStack(callstack_event);
+  AddCallstackEvent(callstack_event);
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::AddHashedCallStack(CallstackEvent& a_CallStack) {
-  if (!HasCallStack(a_CallStack.callstack_hash())) {
+void SamplingProfiler::AddCallstackEvent(CallstackEvent& callstack_event) {
+  if (!HasCallstack(callstack_event.callstack_hash())) {
     ERROR("Callstacks can only be added by hash when already present.");
     return;
   }
-  m_Callstacks.push_back(a_CallStack);
+  m_Callstacks.push_back(callstack_event);
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::AddUniqueCallStack(CallStack& a_CallStack) {
-  m_UniqueCallstacks[a_CallStack.Hash()] =
-      std::make_shared<CallStack>(a_CallStack);
+void SamplingProfiler::AddUniqueCallstack(HashedCallstack& hashed_callstack) {
+  m_UniqueCallstacks[hashed_callstack.callstack_hash()] =
+      std::make_shared<HashedCallstack>(hashed_callstack);
 }
 
 //-----------------------------------------------------------------------------
@@ -138,7 +139,7 @@ void SamplingProfiler::ProcessSamples() {
 
   // Unique call stacks and per thread data
   for (const CallstackEvent& callstack : m_Callstacks) {
-    if (!HasCallStack(callstack.callstack_hash())) {
+    if (!HasCallstack(callstack.callstack_hash())) {
       ERROR("Processed unknown callstack!");
       continue;
     }
@@ -148,7 +149,7 @@ void SamplingProfiler::ProcessSamples() {
     threadSampleData.m_NumSamples++;
     threadSampleData.m_CallstackCount[callstack.callstack_hash()]++;
     for (uint64_t address :
-         m_UniqueCallstacks[callstack.callstack_hash()]->m_Data) {
+         m_UniqueCallstacks[callstack.callstack_hash()]->data()) {
       threadSampleData.m_RawAddressCount[address]++;
     }
 
@@ -157,7 +158,7 @@ void SamplingProfiler::ProcessSamples() {
       threadSampleDataAll.m_NumSamples++;
       threadSampleDataAll.m_CallstackCount[callstack.callstack_hash()]++;
       for (uint64_t address :
-           m_UniqueCallstacks[callstack.callstack_hash()]->m_Data) {
+           m_UniqueCallstacks[callstack.callstack_hash()]->data()) {
         threadSampleDataAll.m_RawAddressCount[address]++;
       }
     }
@@ -177,16 +178,16 @@ void SamplingProfiler::ProcessSamples() {
 
       CallstackID resolvedCallstackID =
           m_OriginalCallstackToResolvedCallstack[callstackID];
-      std::shared_ptr<CallStack>& resolvedCallstack =
+      std::shared_ptr<HashedCallstack>& resolvedCallstack =
           m_UniqueResolvedCallstacks[resolvedCallstackID];
 
       // exclusive stat
-      threadSampleData.m_ExclusiveCount[resolvedCallstack->m_Data[0]] +=
+      threadSampleData.m_ExclusiveCount[resolvedCallstack->data(0)] +=
           callstackCount;
 
       std::set<uint64_t> uniqueAddresses;
-      for (uint32_t i = 0; i < resolvedCallstack->m_Data.size(); ++i) {
-        uniqueAddresses.insert(resolvedCallstack->m_Data[i]);
+      for (int i = 0; i < resolvedCallstack->data_size(); ++i) {
+        uniqueAddresses.insert(resolvedCallstack->data(i));
       }
 
       for (uint64_t address : uniqueAddresses) {
@@ -217,13 +218,13 @@ void SamplingProfiler::ProcessSamples() {
 void SamplingProfiler::ResolveCallstacks() {
   for (const auto& it : m_UniqueCallstacks) {
     CallstackID rawCallstackId = it.first;
-    const std::shared_ptr<CallStack> callstack = it.second;
+    const std::shared_ptr<HashedCallstack> callstack = it.second;
     // A "resolved callstack" is a callstack where every address is replaced by
     // the start address of the function (if known).
-    CallStack resolved_callstack = *callstack;
+    HashedCallstack resolved_callstack = *callstack;
 
-    for (uint32_t i = 0; i < callstack->m_Data.size(); ++i) {
-      uint64_t addr = callstack->m_Data[i];
+    for (int i = 0; i < callstack->data_size(); ++i) {
+      uint64_t addr = callstack->data(i);
 
       if (m_ExactAddressToFunctionAddress.find(addr) ==
           m_ExactAddressToFunctionAddress.end()) {
@@ -233,20 +234,20 @@ void SamplingProfiler::ResolveCallstacks() {
       auto addrIt = m_ExactAddressToFunctionAddress.find(addr);
       if (addrIt != m_ExactAddressToFunctionAddress.end()) {
         const uint64_t& functionAddr = addrIt->second;
-        resolved_callstack.m_Data[i] = functionAddr;
+        resolved_callstack.set_data(i, functionAddr);
         m_FunctionToCallstacks[functionAddr].insert(rawCallstackId);
       }
     }
 
-    CallstackID resolvedCallstackId = resolved_callstack.Hash();
-    if (m_UniqueResolvedCallstacks.find(resolvedCallstackId) ==
+    CallstackID resolved_callstack_hash = resolved_callstack.callstack_hash();
+    if (m_UniqueResolvedCallstacks.find(resolved_callstack_hash) ==
         m_UniqueResolvedCallstacks.end()) {
-      m_UniqueResolvedCallstacks[resolvedCallstackId] =
-          std::make_shared<CallStack>(resolved_callstack);
+      m_UniqueResolvedCallstacks[resolved_callstack_hash] =
+          std::make_shared<HashedCallstack>(resolved_callstack);
     }
 
     m_OriginalCallstackToResolvedCallstack[rawCallstackId] =
-        resolvedCallstackId;
+        resolved_callstack_hash;
   }
 }
 
@@ -362,10 +363,4 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
       sampleReport.push_back(function);
     }
   }
-}
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 5) {
-  ORBIT_NVP_DEBUG(0, m_UniqueCallstacks);
-  // ORBIT_NVP_VAL(5, callstacks_vector);
 }

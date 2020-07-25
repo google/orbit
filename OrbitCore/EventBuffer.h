@@ -8,7 +8,7 @@
 #include <set>
 
 #include "BlockChain.h"
-#include "Callstack.h"
+#include "CallstackTypes.h"
 #include "Core.h"
 #include "SerializationMacros.h"
 #include "callstack.pb.h"

@@ -10,7 +10,6 @@
 #include <cstdio>
 
 #include "App.h"
-#include "Callstack.h"
 #include "Capture.h"
 #include "Core.h"
 #include "ModulesDataView.h"

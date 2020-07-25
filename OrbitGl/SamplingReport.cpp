@@ -132,7 +132,7 @@ void SamplingReport::OnCallstackIndexChanged(size_t a_Index) {
     CallstackCount& cs = m_SelectedSortedCallstackReport->m_CallStacks[a_Index];
     m_SelectedCallstackIndex = a_Index;
     m_CallstackDataView->SetCallStack(
-        m_Profiler->GetCallStack(cs.m_CallstackId));
+        m_Profiler->GetCallstack(cs.m_CallstackId));
   } else {
     m_SelectedCallstackIndex = 0;
   }

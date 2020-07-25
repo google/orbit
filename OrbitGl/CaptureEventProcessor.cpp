@@ -1,5 +1,7 @@
 #include "CaptureEventProcessor.h"
 
+#include "SamplingUtils.h"
+
 void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
   switch (event.event_case()) {
     case CaptureEvent::kSchedulingSlice:
@@ -181,15 +183,15 @@ void CaptureEventProcessor::ProcessAddressInfo(
 
 uint64_t CaptureEventProcessor::GetCallstackHashAndSendToListenerIfNecessary(
     const Callstack& callstack) {
-  CallStack cs;
-  for (uint64_t pc : callstack.pcs()) {
-    cs.m_Data.push_back(pc);
-  }
-  // TODO: Compute the hash without creating the CallStack if not necessary.
-  uint64_t hash = cs.Hash();
-
+  CallstackID hash = SamplingUtils::GetCallstackHash(callstack);
   if (!callstack_hashes_seen_.contains(hash)) {
     callstack_hashes_seen_.emplace(hash);
+
+    HashedCallstack cs;
+    for (uint64_t pc : callstack.pcs()) {
+      cs.add_data(pc);
+    }
+    cs.set_callstack_hash(hash);
     capture_listener_->OnCallstack(cs);
   }
   return hash;
