@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_PROFILING_H_
+#define ORBIT_CORE_PROFILING_H_
 
 #include "BaseTypes.h"
 #include "Platform.h"
@@ -45,3 +46,5 @@ inline double TicksToMicroseconds(TickType a_Start, TickType a_End) {
 inline TickType MicrosecondsToTicks(double a_Micros) {
   return static_cast<TickType>(a_Micros * 1000);
 }
+
+#endif  // ORBIT_CORE_PROFILING_H_

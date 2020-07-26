@@ -14,6 +14,7 @@
 #include "TextBox.h"
 #include "Threading.h"
 #include "Track.h"
+#include "capture_data.pb.h"
 
 class TextRenderer;
 
@@ -34,7 +35,7 @@ class GpuTrack : public Track {
   // Pickable
   void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
   void OnDrag(int x, int y) override;
-  void OnTimer(const Timer& timer);
+  void OnTimer(const orbit_client_protos::TimerInfo& timer_info);
   std::string GetTooltip() const override;
 
   // Track
@@ -45,7 +46,7 @@ class GpuTrack : public Track {
 
   std::vector<std::shared_ptr<TimerChain>> GetTimers() override;
   uint32_t GetDepth() const { return depth_; }
-  std::string GetExtraInfo(const Timer& timer);
+  std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer_info);
 
   Color GetColor() const;
   uint32_t GetNumTimers() const { return num_timers_; }
@@ -70,11 +71,10 @@ class GpuTrack : public Track {
   std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
 
  private:
-  Color GetTimerColor(const Timer& timer, bool is_selected,
-                      bool inactive) const;
-  void SetTimesliceText(const Timer& timer, double elapsed_us, float min_x,
-                        TextBox* text_box);
-
+  Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
+                      bool is_selected, bool inactive) const;
+  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer_info,
+                        double elapsed_us, float min_x, TextBox* text_box);
 
  protected:
   TextRenderer* text_renderer_ = nullptr;
@@ -86,9 +86,12 @@ class GpuTrack : public Track {
   std::shared_ptr<StringManager> string_manager_;
 
   std::string GetBoxTooltip(PickingID id) const;
-  std::string GetSwQueueTooltip(const Timer& timer) const;
-  std::string GetHwQueueTooltip(const Timer& timer) const;
-  std::string GetHwExecutionTooltip(const Timer& timer) const;
+  std::string GetSwQueueTooltip(
+      const orbit_client_protos::TimerInfo& timer_info) const;
+  std::string GetHwQueueTooltip(
+      const orbit_client_protos::TimerInfo& timer_info) const;
+  std::string GetHwExecutionTooltip(
+      const orbit_client_protos::TimerInfo& timer_info) const;
 };
 
 #endif  // ORBIT_GL_GPU_TRACK_H_

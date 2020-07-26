@@ -74,16 +74,6 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
 
 void GraphTrack::OnDrag(int /*x*/, int /*y*/) {}
 
-void GraphTrack::AddTimer(const Timer& timer) {
-  double value = *reinterpret_cast<const double*>(&timer.m_UserData[0]);
-  values_[timer.m_Start] = value;
-  if (value > max_) max_ = value;
-  if (value < min_) min_ = value;
-  value_range_ = max_ - min_;
-
-  if (value_range_ > 0) inv_value_range_ = 1.0 / value_range_;
-}
-
 //-----------------------------------------------------------------------------
 float GraphTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
