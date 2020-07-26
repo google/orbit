@@ -26,6 +26,7 @@ std::shared_ptr<Pdb> GPdbDbg;
 #endif
 
 using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::LinuxAddressInfo;
 
 Capture::State Capture::GState = Capture::State::kEmpty;
 bool Capture::GInjected = false;

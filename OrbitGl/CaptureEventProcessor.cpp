@@ -1,6 +1,7 @@
 #include "CaptureEventProcessor.h"
 
 using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::LinuxAddressInfo;
 
 void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
   switch (event.event_case()) {
@@ -175,9 +176,11 @@ void CaptureEventProcessor::ProcessAddressInfo(
     map_name = address_info.map_name();
   }
 
-  LinuxAddressInfo linux_address_info{address_info.absolute_address(), map_name,
-                                      function_name,
-                                      address_info.offset_in_function()};
+  LinuxAddressInfo linux_address_info;
+  linux_address_info.set_absolute_address(address_info.absolute_address());
+  linux_address_info.set_module_name(map_name);
+  linux_address_info.set_function_name(function_name);
+  linux_address_info.set_offset_in_function(address_info.offset_in_function());
   capture_listener_->OnAddressInfo(linux_address_info);
 }
 

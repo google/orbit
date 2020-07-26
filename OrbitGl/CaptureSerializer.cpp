@@ -99,11 +99,6 @@ void CaptureSerializer::SaveImpl(T& archive) {
   }
 
   {
-    ORBIT_SIZE_SCOPE("Capture::GAddressInfos");
-    archive(Capture::GAddressInfos);
-  }
-
-  {
     ORBIT_SIZE_SCOPE("String manager");
     archive(*time_graph_->GetStringManager());
   }
@@ -190,8 +185,6 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   archive(Capture::GProcessName);
 
   archive(Capture::GThreadNames);
-
-  archive(Capture::GAddressInfos);
 
   if (Capture::GSamplingProfiler == nullptr) {
     Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();

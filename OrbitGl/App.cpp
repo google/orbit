@@ -59,6 +59,7 @@ ABSL_DECLARE_FLAG(bool, devmode);
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::LinuxAddressInfo;
 
 std::unique_ptr<OrbitApp> GOrbitApp;
 float GFontSize;
@@ -134,7 +135,7 @@ void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
 }
 
 void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
-  uint64_t address = address_info.address;
+  uint64_t address = address_info.absolute_address();
   Capture::GAddressInfos.emplace(address, std::move(address_info));
 }
 

@@ -8,7 +8,6 @@
 #include "Callstack.h"
 #include "EventBuffer.h"
 #include "KeyAndString.h"
-#include "LinuxAddressInfo.h"
 #include "ScopeTimer.h"
 #include "capture_data.pb.h"
 
@@ -21,7 +20,8 @@ class CaptureListener {
   virtual void OnCallstackEvent(
       orbit_client_protos::CallstackEvent callstack_event) = 0;
   virtual void OnThreadName(int32_t thread_id, std::string thread_name) = 0;
-  virtual void OnAddressInfo(LinuxAddressInfo address_info) = 0;
+  virtual void OnAddressInfo(
+      orbit_client_protos::LinuxAddressInfo address_info) = 0;
 };
 
 #endif  // ORBIT_GL_CAPTURE_LISTENER_H_

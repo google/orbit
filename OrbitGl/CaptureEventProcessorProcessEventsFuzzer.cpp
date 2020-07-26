@@ -13,6 +13,7 @@ ABSL_FLAG(bool, frame_pointer_unwinding, false,
 
 namespace {
 using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::LinuxAddressInfo;
 
 class MyCaptureListener : public CaptureListener {
   void OnTimer(Timer) override {}
