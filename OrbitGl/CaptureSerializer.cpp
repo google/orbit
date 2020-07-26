@@ -19,7 +19,6 @@
 #include "PrintVar.h"
 #include "SamplingProfiler.h"
 #include "ScopeTimer.h"
-#include "Serialization.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "TimerChain.h"
@@ -32,10 +31,9 @@ using orbit_client_protos::FunctionInfo;
 ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
   Capture::PreSave();
 
-  // Binary
-  m_CaptureName = filename;
+  header.set_version(kRequiredCaptureVersion);
 
-  std::ofstream file(m_CaptureName, std::ios::binary);
+  std::ofstream file(filename, std::ios::binary);
   if (file.fail()) {
     ERROR("Saving capture in \"%s\": %s", filename, "file.fail()");
     return ErrorMessage("Error opening the file for writing");
@@ -68,10 +66,7 @@ void CaptureSerializer::Save(std::ostream& stream) {
 template <class T>
 void CaptureSerializer::SaveImpl(T& archive) {
   CHECK(time_graph_ != nullptr);
-  m_NumTimers = time_graph_->GetNumTimers();
-
-  // Header
-  archive(cereal::make_nvp("Capture", *this));
+  int timers_count = time_graph_->GetNumTimers();
 
   {
     ORBIT_SIZE_SCOPE("Functions");
@@ -114,7 +109,7 @@ void CaptureSerializer::SaveImpl(T& archive) {
       for (uint32_t k = 0; k < block.size(); ++k) {
         archive(cereal::binary_data(&(block[k].GetTimer()), sizeof(Timer)));
 
-        if (++numWrites > m_NumTimers) {
+        if (++numWrites > timers_count) {
           return;
         }
       }
@@ -161,9 +156,7 @@ void FillEventBuffer() {
 }
 
 ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
-  // Header
   cereal::BinaryInputArchive archive(stream);
-  archive(*this);
 
   // Functions
   std::vector<FunctionInfo> functions;
@@ -208,10 +201,4 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler);
   GOrbitApp->FireRefreshCallbacks();
   return outcome::success();
-}
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(CaptureSerializer, 0) {
-  ORBIT_NVP_VAL(0, m_CaptureName);
-  ORBIT_NVP_VAL(0, m_NumTimers);
 }
