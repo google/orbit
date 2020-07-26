@@ -10,6 +10,7 @@
 #include "LinuxTracingBuffer.h"
 
 using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::LinuxAddressInfo;
 
 TEST(LinuxTracingBuffer, Empty) {
   LinuxTracingBuffer buffer;
@@ -245,12 +246,20 @@ TEST(LinuxTracingBuffer, AddressInfos) {
   LinuxTracingBuffer buffer;
 
   {
-    LinuxAddressInfo address_info{0x11, "module1", "function1", 0x1};
+    LinuxAddressInfo address_info;
+    address_info.set_absolute_address(0x11);
+    address_info.set_module_name("module1");
+    address_info.set_function_name("function1");
+    address_info.set_offset_in_function(0x1);
     buffer.RecordAddressInfo(std::move(address_info));
   }
 
   {
-    LinuxAddressInfo address_info{0x22, "module2", "function2", 0x2};
+    LinuxAddressInfo address_info;
+    address_info.set_absolute_address(0x22);
+    address_info.set_module_name("module2");
+    address_info.set_function_name("function2");
+    address_info.set_offset_in_function(0x2);
     buffer.RecordAddressInfo(std::move(address_info));
   }
 
@@ -260,18 +269,22 @@ TEST(LinuxTracingBuffer, AddressInfos) {
 
   EXPECT_EQ(address_infos.size(), 2);
 
-  EXPECT_EQ(address_infos[0].address, 0x11);
-  EXPECT_EQ(address_infos[0].module_name, "module1");
-  EXPECT_EQ(address_infos[0].function_name, "function1");
-  EXPECT_EQ(address_infos[0].offset_in_function, 0x1);
+  EXPECT_EQ(address_infos[0].absolute_address(), 0x11);
+  EXPECT_EQ(address_infos[0].module_name(), "module1");
+  EXPECT_EQ(address_infos[0].function_name(), "function1");
+  EXPECT_EQ(address_infos[0].offset_in_function(), 0x1);
 
-  EXPECT_EQ(address_infos[1].address, 0x22);
-  EXPECT_EQ(address_infos[1].module_name, "module2");
-  EXPECT_EQ(address_infos[1].function_name, "function2");
-  EXPECT_EQ(address_infos[1].offset_in_function, 0x2);
+  EXPECT_EQ(address_infos[1].absolute_address(), 0x22);
+  EXPECT_EQ(address_infos[1].module_name(), "module2");
+  EXPECT_EQ(address_infos[1].function_name(), "function2");
+  EXPECT_EQ(address_infos[1].offset_in_function(), 0x2);
 
   {
-    LinuxAddressInfo address_info{0x33, "module3", "function3", 0x3};
+    LinuxAddressInfo address_info;
+    address_info.set_absolute_address(0x33);
+    address_info.set_module_name("module3");
+    address_info.set_function_name("function3");
+    address_info.set_offset_in_function(0x3);
     buffer.RecordAddressInfo(std::move(address_info));
   }
 
@@ -281,10 +294,10 @@ TEST(LinuxTracingBuffer, AddressInfos) {
   EXPECT_FALSE(buffer.ReadAllAddressInfos(&address_infos));
   EXPECT_EQ(address_infos.size(), 1);
 
-  EXPECT_EQ(address_infos[0].address, 0x33);
-  EXPECT_EQ(address_infos[0].module_name, "module3");
-  EXPECT_EQ(address_infos[0].function_name, "function3");
-  EXPECT_EQ(address_infos[0].offset_in_function, 0x3);
+  EXPECT_EQ(address_infos[0].absolute_address(), 0x33);
+  EXPECT_EQ(address_infos[0].module_name(), "module3");
+  EXPECT_EQ(address_infos[0].function_name(), "function3");
+  EXPECT_EQ(address_infos[0].offset_in_function(), 0x3);
 }
 
 TEST(LinuxTracingBuffer, KeysAndStrings) {

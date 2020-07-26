@@ -10,7 +10,6 @@
 #include <string>
 
 #include "CallstackTypes.h"
-#include "LinuxAddressInfo.h"
 #include "OrbitBase/Result.h"
 #include "OrbitProcess.h"
 #include "Threading.h"
@@ -43,7 +42,8 @@ class Capture {
   static void RegisterZoneName(uint64_t a_ID, const char* a_Name);
   static void AddCallstack(CallStack& a_CallStack);
   static std::shared_ptr<CallStack> GetCallstack(CallstackID a_ID);
-  static LinuxAddressInfo* GetAddressInfo(uint64_t address);
+  static orbit_client_protos::LinuxAddressInfo* GetAddressInfo(
+      uint64_t address);
   static void PreSave();
 
   static State GState;
@@ -77,7 +77,8 @@ class Capture {
   static int32_t GProcessId;
   static std::string GProcessName;
   static std::unordered_map<int32_t, std::string> GThreadNames;
-  static std::unordered_map<uint64_t, LinuxAddressInfo> GAddressInfos;
+  static std::unordered_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
+      GAddressInfos;
   static std::unordered_map<uint64_t, std::string> GAddressToFunctionName;
   static std::unordered_map<uint64_t, std::string> GAddressToModuleName;
   static std::unordered_map<uint64_t, std::string> GZoneNames;

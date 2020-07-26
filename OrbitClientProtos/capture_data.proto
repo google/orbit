@@ -49,3 +49,10 @@ message CallstackEvent {
   uint64 callstack_hash = 2;
   int32 thread_id = 3;
 }
+
+message LinuxAddressInfo {
+  uint64 absolute_address = 1;
+  string module_name = 2;
+  string function_name = 3;
+  uint64 offset_in_function = 4;
+}

@@ -23,7 +23,6 @@ target_sources(
          FunctionUtils.h
          Injection.h
          Introspection.h
-         LinuxAddressInfo.h
          LinuxCallstackEvent.h
          LinuxTracingBuffer.h
          Log.h

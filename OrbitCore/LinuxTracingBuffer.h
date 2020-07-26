@@ -8,12 +8,12 @@
 #include "ContextSwitch.h"
 #include "EventBuffer.h"
 #include "KeyAndString.h"
-#include "LinuxAddressInfo.h"
 #include "LinuxCallstackEvent.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
 #include "TidAndThreadName.h"
 #include "absl/synchronization/mutex.h"
+#include "capture_data.pb.h"
 
 // This class buffers tracing data to be sent to the client
 // and provides thread-safe access and record functions.
@@ -30,7 +30,7 @@ class LinuxTracingBuffer {
   void RecordCallstack(LinuxCallstackEvent&& callstack);
   void RecordHashedCallstack(
       orbit_client_protos::CallstackEvent&& hashed_callstack);
-  void RecordAddressInfo(LinuxAddressInfo&& address_info);
+  void RecordAddressInfo(orbit_client_protos::LinuxAddressInfo&& address_info);
   void RecordKeyAndString(KeyAndString&& key_and_string);
   void RecordKeyAndString(uint64_t key, std::string str);
   void RecordThreadName(TidAndThreadName&& tid_and_name);
@@ -42,7 +42,8 @@ class LinuxTracingBuffer {
   bool ReadAllCallstacks(std::vector<LinuxCallstackEvent>* out_buffer);
   bool ReadAllHashedCallstacks(
       std::vector<orbit_client_protos::CallstackEvent>* out_buffer);
-  bool ReadAllAddressInfos(std::vector<LinuxAddressInfo>* out_buffer);
+  bool ReadAllAddressInfos(
+      std::vector<orbit_client_protos::LinuxAddressInfo>* out_buffer);
   bool ReadAllKeysAndStrings(std::vector<KeyAndString>* out_buffer);
   bool ReadAllThreadNames(std::vector<TidAndThreadName>* out_buffer);
 
@@ -60,7 +61,7 @@ class LinuxTracingBuffer {
   std::vector<orbit_client_protos::CallstackEvent> hashed_callstack_buffer_;
 
   absl::Mutex address_info_buffer_mutex_;
-  std::vector<LinuxAddressInfo> address_info_buffer_;
+  std::vector<orbit_client_protos::LinuxAddressInfo> address_info_buffer_;
 
   absl::Mutex key_and_string_buffer_mutex_;
   std::vector<KeyAndString> key_and_string_buffer_;

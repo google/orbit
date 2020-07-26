@@ -18,6 +18,7 @@
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::LinuxAddressInfo;
 
 namespace {
 
@@ -294,16 +295,16 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
     function_address = FunctionUtils::GetAbsoluteAddress(*function);
     function_name = FunctionUtils::GetDisplayName(*function);
   } else if (address_info != nullptr) {
-    function_address = address - address_info->offset_in_function;
-    if (!address_info->function_name.empty()) {
-      function_name = address_info->function_name;
+    function_address = address - address_info->offset_in_function();
+    if (!address_info->function_name().empty()) {
+      function_name = address_info->function_name();
     }
   } else {
     function_address = address;
   }
 
   if (function != nullptr && address_info != nullptr) {
-    address_info->function_name = FunctionUtils::GetDisplayName(*function);
+    address_info->set_function_name(FunctionUtils::GetDisplayName(*function));
   }
 
   m_ExactAddressToFunctionAddress[address] = function_address;
@@ -317,7 +318,7 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   if (module != nullptr) {
     module_name = module->m_Name;
   } else if (address_info != nullptr) {
-    module_name = Path::GetFileName(address_info->module_name);
+    module_name = Path::GetFileName(address_info->module_name());
   }
   Capture::GAddressToModuleName[address] = module_name;
   Capture::GAddressToModuleName[function_address] = module_name;
