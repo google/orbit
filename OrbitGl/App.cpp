@@ -60,6 +60,7 @@ ABSL_DECLARE_FLAG(bool, devmode);
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_protos::TimerInfo;
 
 std::unique_ptr<OrbitApp> GOrbitApp;
 float GFontSize;
@@ -109,7 +110,9 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
   }
 }
 
-void OrbitApp::OnTimer(Timer timer) { GCurrentTimeGraph->ProcessTimer(timer); }
+void OrbitApp::OnTimer(const TimerInfo& timer_info) {
+  GCurrentTimeGraph->ProcessTimer(timer_info);
+}
 
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_->AddIfNotPresent(key, std::move(str));

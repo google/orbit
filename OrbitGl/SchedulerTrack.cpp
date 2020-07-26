@@ -4,12 +4,14 @@
 
 #include "SchedulerTrack.h"
 
-#include "FunctionUtils.h"
 #include "Capture.h"
 #include "EventTrack.h"
+#include "FunctionUtils.h"
 #include "GlCanvas.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
+
+using orbit_client_protos::TimerInfo;
 
 const Color kInactiveColor(100, 100, 100, 255);
 const Color kSelectionColor(0, 128, 255, 255);
@@ -25,7 +27,7 @@ float SchedulerTrack::GetHeight() const {
          layout.GetTrackBottomMargin();
 }
 
-inline Color GetTimerColor(const Timer& timer, TimeGraph* time_graph,
+inline Color GetTimerColor(const TimerInfo& timer_info, TimeGraph* time_graph,
                            bool is_selected, bool same_tid, bool same_pid,
                            bool inactive) {
   if (is_selected) {
@@ -33,7 +35,7 @@ inline Color GetTimerColor(const Timer& timer, TimeGraph* time_graph,
   } else if (!same_tid && (inactive || !same_pid)) {
     return kInactiveColor;
   }
-  return time_graph->GetThreadColor(timer.m_TID);
+  return time_graph->GetThreadColor(timer_info.thread_id());
 }
 
 float SchedulerTrack::GetYFromDepth(float track_y, uint32_t depth,
@@ -45,7 +47,7 @@ float SchedulerTrack::GetYFromDepth(float track_y, uint32_t depth,
          num_gaps * gap_size;
 }
 
-std::string SchedulerTrack::GetTooltip() const { 
+std::string SchedulerTrack::GetTooltip() const {
   return "Shows scheduling information for CPU cores";
 }
 
@@ -89,14 +91,16 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
       for (size_t k = 0; k < block.size(); ++k) {
         TextBox& text_box = block[k];
-        const Timer& timer = text_box.GetTimer();
-        if (min_tick > timer.m_End || max_tick < timer.m_Start) continue;
-        if (timer.m_Start >= min_ignore && timer.m_End <= max_ignore) continue;
+        const TimerInfo& timer_info = text_box.GetTimerInfo();
+        if (min_tick > timer_info.end() || max_tick < timer_info.start())
+          continue;
+        if (timer_info.start() >= min_ignore && timer_info.end() <= max_ignore)
+          continue;
 
-        UpdateDepth(timer.m_Depth + 1);
+        UpdateDepth(timer_info.depth() + 1);
 
-        double start_us = time_graph_->GetUsFromTick(timer.m_Start);
-        double end_us = time_graph_->GetUsFromTick(timer.m_End);
+        double start_us = time_graph_->GetUsFromTick(timer_info.start());
+        double end_us = time_graph_->GetUsFromTick(timer_info.end());
         double elapsed_us = end_us - start_us;
         double normalized_start = start_us * inv_time_window;
         double normalized_length = elapsed_us * inv_time_window;
@@ -105,41 +109,44 @@ void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         float world_timer_x =
             static_cast<float>(world_start_x + normalized_start * world_width);
         float world_timer_y =
-            GetYFromDepth(m_Pos[1], timer.m_Depth, /*collapsed*/ false);
+            GetYFromDepth(m_Pos[1], timer_info.depth(), /*collapsed*/ false);
 
         bool is_visible_width = normalized_length * canvas->getWidth() > 1;
         bool is_same_pid_as_target =
-            target_pid == 0 || target_pid == timer.m_PID;
-        bool is_same_tid_as_selected = timer.m_TID == selected_thread_id;
+            target_pid == 0 || target_pid == timer_info.process_id();
+        bool is_same_tid_as_selected =
+            timer_info.thread_id() == selected_thread_id;
         bool is_inactive = selected_thread_id != 0 && !is_same_tid_as_selected;
         bool is_selected = &text_box == Capture::GSelectedTextBox;
 
         Vec2 pos(world_timer_x, world_timer_y);
         Vec2 size(world_timer_width, layout.GetTextCoresHeight());
         float z = GlCanvas::Z_VALUE_BOX_ACTIVE;
-        Color color = GetTimerColor(timer, time_graph_, is_selected,
+        Color color = GetTimerColor(timer_info, time_graph_, is_selected,
                                     is_same_tid_as_selected,
                                     is_same_pid_as_target, is_inactive);
 
         auto user_data = std::make_unique<PickingUserData>(
-          &text_box,
-          [&](PickingID id) -> std::string { return GetBoxTooltip(id); });
+            &text_box,
+            [&](PickingID id) -> std::string { return GetBoxTooltip(id); });
 
         if (is_visible_width) {
-          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, std::move(user_data));
+          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX,
+                                std::move(user_data));
         } else {
           auto type = PickingID::LINE;
-          batcher->AddVerticalLine(pos, size[1], z, color, type, std::move(user_data));
+          batcher->AddVerticalLine(pos, size[1], z, color, type,
+                                   std::move(user_data));
           // For lines, we can ignore the entire pixel into which this event
           // falls. We align this precisely on the pixel x-coordinate of the
           // current line being drawn (in ticks). If pixel_delta_in_ticks is
           // zero, we need to avoid dividing by zero, but we also wouldn't
           // gain anything here.
           if (pixel_delta_in_ticks != 0) {
-            min_ignore =
-                min_timegraph_tick +
-                ((timer.m_Start - min_timegraph_tick) / pixel_delta_in_ticks) *
-                    pixel_delta_in_ticks;
+            min_ignore = min_timegraph_tick +
+                         ((timer_info.start() - min_timegraph_tick) /
+                          pixel_delta_in_ticks) *
+                             pixel_delta_in_ticks;
             max_ignore = min_ignore + pixel_delta_in_ticks;
           }
         }
@@ -155,12 +162,11 @@ std::string SchedulerTrack::GetBoxTooltip(PickingID id) const {
   }
 
   return absl::StrFormat(
-    "<b>CPU Core activity</b><br/>"
-    "<br/>"
-    "<b>Core:</b> %d<br/>"
-    "<b>Thread:</b> %s [%d]<br/>",
-    text_box->GetTimer().m_Processor,
-    Capture::GThreadNames[text_box->GetTimer().m_TID],
-    text_box->GetTimer().m_TID
-  );
+      "<b>CPU Core activity</b><br/>"
+      "<br/>"
+      "<b>Core:</b> %d<br/>"
+      "<b>Thread:</b> %s [%d]<br/>",
+      text_box->GetTimerInfo().processor(),
+      Capture::GThreadNames[text_box->GetTimerInfo().thread_id()],
+      text_box->GetTimerInfo().thread_id());
 }

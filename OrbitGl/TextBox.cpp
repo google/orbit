@@ -13,6 +13,7 @@
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::TimerInfo;
 
 //-----------------------------------------------------------------------------
 TextBox::TextBox()
@@ -80,9 +81,9 @@ float TextBox::GetScreenSize(const TextRenderer& a_TextRenderer) {
 void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
                    bool a_Visible, bool a_RightJustify, bool isInactive,
                    unsigned int a_ID, bool a_IsPicking, bool a_IsHighlighted) {
-  bool isCoreActivity = m_Timer.m_Type == Timer::CORE_ACTIVITY;
+  bool isCoreActivity = timer_info_.type() == TimerInfo::kCoreActivity;
   bool isSameThreadIdAsSelected =
-      isCoreActivity && m_Timer.m_TID == Capture::GSelectedThreadId;
+      isCoreActivity && timer_info_.thread_id() == Capture::GSelectedThreadId;
 
   if (Capture::GSelectedThreadId != 0 && isCoreActivity &&
       !isSameThreadIdAsSelected) {
@@ -123,7 +124,7 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
     float maxSize = m_Pos[0] + m_Size[0] - posX;
 
     FunctionInfo* func =
-        Capture::GSelectedFunctionsMap[m_Timer.m_FunctionAddress];
+        Capture::GSelectedFunctionsMap[timer_info_.function_address()];
     std::string text = absl::StrFormat(
         "%s %s", func ? FunctionUtils::GetDisplayName(*func).c_str() : "",
         m_Text.c_str());

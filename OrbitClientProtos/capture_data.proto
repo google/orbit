@@ -60,3 +60,25 @@ message LinuxAddressInfo {
 message CaptureHeader {
   string version = 1;
 }
+
+message TimerInfo {
+  uint64 start = 1;
+  uint64 end = 2;
+  int32 process_id = 3;
+  int32 thread_id = 4;
+  uint32 depth = 5;
+
+  enum Type {
+    kNone = 0;
+    kCoreActivity = 1;
+    kIntrospection = 2;
+    kGpuActivity = 3;
+  }
+  Type type = 6;
+
+  int32 processor = 7;
+  uint64 callstack_hash = 8;
+  uint64 function_address = 9;
+  uint64 user_data_key = 10;
+  uint64 timeline_hash = 11;
+}

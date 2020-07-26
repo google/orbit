@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_TIME_GRAPH_H_
+#define ORBIT_GL_TIME_GRAPH_H_
 
 #include <unordered_map>
 #include <utility>
@@ -15,6 +16,7 @@
 #include "Geometry.h"
 #include "GpuTrack.h"
 #include "SchedulerTrack.h"
+#include "ScopeTimer.h"
 #include "StringManager.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
@@ -22,6 +24,7 @@
 #include "TimeGraphLayout.h"
 #include "TimerChain.h"
 #include "absl/container/flat_hash_map.h"
+#include "capture_data.pb.h"
 
 class TimeGraph {
  public:
@@ -41,7 +44,7 @@ class TimeGraph {
   const std::vector<orbit_client_protos::CallstackEvent>&
   GetSelectedCallstackEvents(ThreadID tid);
 
-  void ProcessTimer(const Timer& a_Timer);
+  void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info);
   void UpdateMaxTimeStamp(TickType a_Time);
 
   float GetThreadTotalHeight();
@@ -141,7 +144,6 @@ class TimeGraph {
   TickType GetCaptureMax() { return capture_max_timestamp_; }
 
  protected:
-  uint64_t GetGpuTimelineHash(const Timer& timer) const;
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(ThreadID a_TID);
   std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(uint64_t timeline_hash);
@@ -212,3 +214,5 @@ class TimeGraph {
 };
 
 extern TimeGraph* GCurrentTimeGraph;
+
+#endif  // ORBIT_GL_TIME_GRAPH_H_

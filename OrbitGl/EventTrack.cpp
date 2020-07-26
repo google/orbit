@@ -9,7 +9,6 @@
 #include "GlCanvas.h"
 #include "PickingManager.h"
 #include "SamplingProfiler.h"
-#include "Utils.h"
 
 using orbit_client_protos::CallstackEvent;
 

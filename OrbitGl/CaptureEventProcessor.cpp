@@ -1,7 +1,10 @@
 #include "CaptureEventProcessor.h"
 
+#include "capture_data.pb.h"
+
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_protos::TimerInfo;
 
 void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
   switch (event.event_case()) {
@@ -37,16 +40,16 @@ void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
 
 void CaptureEventProcessor::ProcessSchedulingSlice(
     const SchedulingSlice& scheduling_slice) {
-  Timer timer;
-  timer.m_Start = scheduling_slice.in_timestamp_ns();
-  timer.m_End = scheduling_slice.out_timestamp_ns();
-  timer.m_PID = scheduling_slice.pid();
-  timer.m_TID = scheduling_slice.tid();
-  timer.m_Processor = static_cast<int8_t>(scheduling_slice.core());
-  timer.m_Depth = timer.m_Processor;
-  timer.m_Type = Timer::CORE_ACTIVITY;
+  TimerInfo timer_info;
+  timer_info.set_start(scheduling_slice.in_timestamp_ns());
+  timer_info.set_end(scheduling_slice.out_timestamp_ns());
+  timer_info.set_process_id(scheduling_slice.pid());
+  timer_info.set_thread_id(scheduling_slice.tid());
+  timer_info.set_processor(static_cast<int8_t>(scheduling_slice.core()));
+  timer_info.set_depth(timer_info.processor());
+  timer_info.set_type(TimerInfo::kCoreActivity);
 
-  capture_listener_->OnTimer(timer);
+  capture_listener_->OnTimer(timer_info);
 }
 
 void CaptureEventProcessor::ProcessInternedCallstack(
@@ -80,15 +83,17 @@ void CaptureEventProcessor::ProcessCallstackSample(
 
 void CaptureEventProcessor::ProcessFunctionCall(
     const FunctionCall& function_call) {
-  Timer timer;
-  timer.m_TID = function_call.tid();
-  timer.m_Start = function_call.begin_timestamp_ns();
-  timer.m_End = function_call.end_timestamp_ns();
-  timer.m_Depth = static_cast<uint8_t>(function_call.depth());
-  timer.m_FunctionAddress = function_call.absolute_address();
-  timer.m_UserData[0] = function_call.return_value();
+  TimerInfo timer_info;
+  timer_info.set_thread_id(function_call.tid());
+  timer_info.set_start(function_call.begin_timestamp_ns());
+  timer_info.set_end(function_call.end_timestamp_ns());
+  timer_info.set_depth(static_cast<uint8_t>(function_call.depth()));
+  timer_info.set_function_address(function_call.absolute_address());
+  timer_info.set_user_data_key(function_call.return_value());
+  timer_info.set_processor(-1);
+  timer_info.set_type(TimerInfo::kNone);
 
-  capture_listener_->OnTimer(timer);
+  capture_listener_->OnTimer(timer_info);
 }
 
 void CaptureEventProcessor::ProcessInternedString(
@@ -101,12 +106,6 @@ void CaptureEventProcessor::ProcessInternedString(
 }
 
 void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
-  Timer timer_user_to_sched;
-  timer_user_to_sched.m_TID = gpu_job.tid();
-  timer_user_to_sched.m_Start = gpu_job.amdgpu_cs_ioctl_time_ns();
-  timer_user_to_sched.m_End = gpu_job.amdgpu_sched_run_job_time_ns();
-  timer_user_to_sched.m_Depth = gpu_job.depth();
-
   std::string timeline;
   if (gpu_job.timeline_or_key_case() == GpuJob::kTimelineKey) {
     timeline = string_intern_pool[gpu_job.timeline_key()];
@@ -117,41 +116,45 @@ void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
 
   constexpr const char* sw_queue = "sw queue";
   uint64_t sw_queue_key = GetStringHashAndSendToListenerIfNecessary(sw_queue);
-  timer_user_to_sched.m_UserData[0] = sw_queue_key;
-  timer_user_to_sched.m_UserData[1] = timeline_hash;
 
-  timer_user_to_sched.m_Type = Timer::GPU_ACTIVITY;
+  TimerInfo timer_user_to_sched;
+  timer_user_to_sched.set_thread_id(gpu_job.tid());
+  timer_user_to_sched.set_start(gpu_job.amdgpu_cs_ioctl_time_ns());
+  timer_user_to_sched.set_end(gpu_job.amdgpu_sched_run_job_time_ns());
+  timer_user_to_sched.set_depth(gpu_job.depth());
+  timer_user_to_sched.set_user_data_key(sw_queue_key);
+  timer_user_to_sched.set_timeline_hash(timeline_hash);
+  timer_user_to_sched.set_processor(-1);
+  timer_user_to_sched.set_type(TimerInfo::kGpuActivity);
   capture_listener_->OnTimer(std::move(timer_user_to_sched));
-
-  Timer timer_sched_to_start;
-  timer_sched_to_start.m_TID = gpu_job.tid();
-  timer_sched_to_start.m_Start = gpu_job.amdgpu_sched_run_job_time_ns();
-  timer_sched_to_start.m_End = gpu_job.gpu_hardware_start_time_ns();
-  timer_sched_to_start.m_Depth = gpu_job.depth();
 
   constexpr const char* hw_queue = "hw queue";
   uint64_t hw_queue_key = GetStringHashAndSendToListenerIfNecessary(hw_queue);
 
-  timer_sched_to_start.m_UserData[0] = hw_queue_key;
-  timer_sched_to_start.m_UserData[1] = timeline_hash;
-
-  timer_sched_to_start.m_Type = Timer::GPU_ACTIVITY;
+  TimerInfo timer_sched_to_start;
+  timer_sched_to_start.set_thread_id(gpu_job.tid());
+  timer_sched_to_start.set_start(gpu_job.amdgpu_sched_run_job_time_ns());
+  timer_sched_to_start.set_end(gpu_job.gpu_hardware_start_time_ns());
+  timer_sched_to_start.set_depth(gpu_job.depth());
+  timer_sched_to_start.set_user_data_key(hw_queue_key);
+  timer_sched_to_start.set_timeline_hash(timeline_hash);
+  timer_sched_to_start.set_processor(-1);
+  timer_sched_to_start.set_type(TimerInfo::kGpuActivity);
   capture_listener_->OnTimer(std::move(timer_sched_to_start));
-
-  Timer timer_start_to_finish;
-  timer_start_to_finish.m_TID = gpu_job.tid();
-  timer_start_to_finish.m_Start = gpu_job.gpu_hardware_start_time_ns();
-  timer_start_to_finish.m_End = gpu_job.dma_fence_signaled_time_ns();
-  timer_start_to_finish.m_Depth = gpu_job.depth();
 
   constexpr const char* hw_execution = "hw execution";
   uint64_t hw_execution_key =
       GetStringHashAndSendToListenerIfNecessary(hw_execution);
 
-  timer_start_to_finish.m_UserData[0] = hw_execution_key;
-  timer_start_to_finish.m_UserData[1] = timeline_hash;
-
-  timer_start_to_finish.m_Type = Timer::GPU_ACTIVITY;
+  TimerInfo timer_start_to_finish;
+  timer_start_to_finish.set_thread_id(gpu_job.tid());
+  timer_start_to_finish.set_start(gpu_job.gpu_hardware_start_time_ns());
+  timer_start_to_finish.set_end(gpu_job.dma_fence_signaled_time_ns());
+  timer_start_to_finish.set_depth(gpu_job.depth());
+  timer_start_to_finish.set_user_data_key(hw_execution_key);
+  timer_start_to_finish.set_timeline_hash(timeline_hash);
+  timer_start_to_finish.set_processor(-1);
+  timer_start_to_finish.set_type(TimerInfo::kGpuActivity);
   capture_listener_->OnTimer(std::move(timer_start_to_finish));
 }
 

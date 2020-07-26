@@ -11,6 +11,8 @@
 #include "GlUtils.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_protos::TimerInfo;
+
 //-----------------------------------------------------------------------------
 CaptureWindow::CaptureWindow() {
   GCurrentTimeGraph = &time_graph_;
@@ -194,13 +196,13 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
 void CaptureWindow::SelectTextBox(class TextBox* a_TextBox) {
   if (a_TextBox == nullptr) return;
   Capture::GSelectedTextBox = a_TextBox;
-  Capture::GSelectedThreadId = a_TextBox->GetTimer().m_TID;
+  Capture::GSelectedThreadId = a_TextBox->GetTimerInfo().thread_id();
   Capture::GSelectedCallstack =
-      Capture::GetCallstack(a_TextBox->GetTimer().m_CallstackHash);
+      Capture::GetCallstack(a_TextBox->GetTimerInfo().callstack_hash());
   GOrbitApp->SetCallStack(Capture::GSelectedCallstack);
 
-  const Timer& a_Timer = a_TextBox->GetTimer();
-  DWORD64 address = a_Timer.m_FunctionAddress;
+  const TimerInfo& timer_info = a_TextBox->GetTimerInfo();
+  DWORD64 address = timer_info.function_address();
   FindCode(address);
 
   if (m_DoubleClicking && a_TextBox) {
@@ -241,7 +243,8 @@ void CaptureWindow::FindCode(DWORD64 /*address*/) {}
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::PreRender() {
-  if (is_mouse_over_ && m_CanHover && m_HoverTimer.QueryMillis() > m_HoverDelayMs) {
+  if (is_mouse_over_ && m_CanHover &&
+      m_HoverTimer.QueryMillis() > m_HoverDelayMs) {
     m_IsHovering = true;
     m_Picking = true;
     NeedsRedraw();
@@ -655,12 +658,11 @@ void CaptureWindow::ToggleDrawHelp() {
 }
 
 Batcher& CaptureWindow::GetBatcherById(uint32_t batcher_id) {
-  return batcher_id == PickingID::TIME_GRAPH
-                         ? time_graph_.GetBatcher()
-                         : ui_batcher_;
+  return batcher_id == PickingID::TIME_GRAPH ? time_graph_.GetBatcher()
+                                             : ui_batcher_;
 }
 
-[[nodiscard]] PickingMode CaptureWindow::GetPickingMode() { 
+[[nodiscard]] PickingMode CaptureWindow::GetPickingMode() {
   PickingMode picking_mode = PickingMode::kNone;
   if (m_Picking) {
     picking_mode = PickingMode::kClick;
@@ -872,7 +874,6 @@ void CaptureWindow::RenderTimeBar() {
   static int numTimePoints = 10;
 
   if (time_graph_.GetCaptureTimeSpanUs() > 0) {
-
     const float time_bar_height = time_graph_.GetLayout().GetTimeBarHeight();
 
     double millis = time_graph_.GetCurrentTimeSpanUs() * 0.001;
@@ -883,8 +884,7 @@ void CaptureWindow::RenderTimeBar() {
     double normStartUs = 1000.0 * static_cast<int>(startMs / normInc) * normInc;
 
     static int pixelMargin = 2;
-    int screenY =
-        getHeight() - static_cast<int>(time_bar_height) - pixelMargin;
+    int screenY = getHeight() - static_cast<int>(time_bar_height) - pixelMargin;
     float dummy, worldY;
     ScreenToWorld(0, screenY, dummy, worldY);
 

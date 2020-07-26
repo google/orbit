@@ -16,6 +16,7 @@ namespace FunctionUtils {
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
+using orbit_client_protos::TimerInfo;
 
 std::string GetLoadedModuleName(const FunctionInfo& func) {
   return Path::GetFileName(func.loaded_module_path());
@@ -111,10 +112,11 @@ bool SetOrbitTypeFromName(FunctionInfo* func) {
   return false;
 }
 
-void UpdateStats(FunctionInfo* func, const Timer& timer) {
+void UpdateStats(FunctionInfo* func, const TimerInfo& timer_info) {
   FunctionStats* stats = func->mutable_stats();
   stats->set_count(stats->count() + 1);
-  uint64_t elapsed_nanos = TicksToNanoseconds(timer.m_Start, timer.m_End);
+  uint64_t elapsed_nanos =
+      TicksToNanoseconds(timer_info.start(), timer_info.end());
   stats->set_total_time_ns(stats->total_time_ns() + elapsed_nanos);
   stats->set_average_time_ns(stats->total_time_ns() / stats->count());
 

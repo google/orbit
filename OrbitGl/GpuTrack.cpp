@@ -8,9 +8,12 @@
 
 #include "Capture.h"
 #include "GlCanvas.h"
+#include "Profiling.h"
 #include "TimeGraph.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
+
+using orbit_client_protos::TimerInfo;
 
 constexpr const char* kSwQueueString = "sw queue";
 constexpr const char* kHwQueueString = "hw queue";
@@ -69,7 +72,7 @@ void GpuTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 }
 
 //-----------------------------------------------------------------------------
-Color GpuTrack::GetTimerColor(const Timer& timer, bool is_selected,
+Color GpuTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
                               bool inactive) const {
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
@@ -81,13 +84,13 @@ Color GpuTrack::GetTimerColor(const Timer& timer, bool is_selected,
 
   // We color code the timeslices for GPU activity using the color
   // of the CPU thread track that submitted the job.
-  Color color = time_graph_->GetThreadColor(timer.m_TID);
+  Color color = time_graph_->GetThreadColor(timer_info.thread_id());
 
   // We disambiguate the different types of GPU activity based on the
   // string that is displayed on their timeslice.
   float coeff = 1.0f;
   std::string gpu_stage =
-      string_manager_->Get(timer.m_UserData[0]).value_or("");
+      string_manager_->Get(timer_info.user_data_key()).value_or("");
   if (gpu_stage == kSwQueueString) {
     coeff = 0.5f;
   } else if (gpu_stage == kHwQueueString) {
@@ -101,7 +104,7 @@ Color GpuTrack::GetTimerColor(const Timer& timer, bool is_selected,
   color[2] = static_cast<uint8_t>(coeff * color[2]);
 
   constexpr uint8_t kOddAlpha = 210;
-  if (!(timer.m_Depth & 0x1)) {
+  if (!(timer_info.depth() & 0x1)) {
     color[3] = kOddAlpha;
   }
 
@@ -115,7 +118,7 @@ inline float GetYFromDepth(const TimeGraphLayout& layout, float track_y,
 }
 
 //-----------------------------------------------------------------------------
-void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
+void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us,
                                 float min_x, TextBox* text_box) {
   TimeGraphLayout layout = time_graph_->GetLayout();
   if (text_box->GetText().empty()) {
@@ -123,12 +126,13 @@ void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
 
     text_box->SetElapsedTimeTextLength(time.length());
 
-    CHECK(timer.m_Type == Timer::GPU_ACTIVITY);
+    CHECK(timer_info.type() == TimerInfo::kGpuActivity);
 
-    std::string text = absl::StrFormat(
-        "%s  %s",
-        time_graph_->GetStringManager()->Get(timer.m_UserData[0]).value_or(""),
-        time.c_str());
+    std::string text = absl::StrFormat("%s  %s",
+                                       time_graph_->GetStringManager()
+                                           ->Get(timer_info.user_data_key())
+                                           .value_or(""),
+                                       time.c_str());
     text_box->SetText(text);
   }
 
@@ -184,13 +188,15 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
       for (uint32_t k = 0; k < block.size(); ++k) {
         TextBox& text_box = block[k];
-        const Timer& timer = text_box.GetTimer();
-        if (min_tick > timer.m_End || max_tick < timer.m_Start) continue;
-        if (timer.m_Start >= min_ignore && timer.m_End <= max_ignore) continue;
+        const TimerInfo& timer_info = text_box.GetTimerInfo();
+        if (min_tick > timer_info.end() || max_tick < timer_info.start())
+          continue;
+        if (timer_info.start() >= min_ignore && timer_info.end() <= max_ignore)
+          continue;
 
-        UpdateDepth(timer.m_Depth + 1);
-        double start_us = time_graph_->GetUsFromTick(timer.m_Start);
-        double end_us = time_graph_->GetUsFromTick(timer.m_End);
+        UpdateDepth(timer_info.depth() + 1);
+        double start_us = time_graph_->GetUsFromTick(timer_info.start());
+        double end_us = time_graph_->GetUsFromTick(timer_info.end());
         double elapsed_us = end_us - start_us;
         double normalized_start = start_us * inv_time_window;
         double normalized_length = elapsed_us * inv_time_window;
@@ -198,7 +204,7 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
             static_cast<float>(normalized_length * world_width);
         float world_timer_x =
             static_cast<float>(world_start_x + normalized_start * world_width);
-        uint8_t timer_depth = is_collapsed ? 0 : timer.m_Depth;
+        uint8_t timer_depth = is_collapsed ? 0 : timer_info.depth();
         float world_timer_y = GetYFromDepth(layout, m_Pos[1], timer_depth);
 
         bool is_visible_width = normalized_length * canvas->getWidth() > 1;
@@ -207,14 +213,14 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         Vec2 pos(world_timer_x, world_timer_y);
         Vec2 size(world_timer_width, layout.GetTextBoxHeight());
         float z = GlCanvas::Z_VALUE_BOX_ACTIVE;
-        Color color = GetTimerColor(timer, is_selected, false);
+        Color color = GetTimerColor(timer_info, is_selected, false);
         text_box.SetPos(pos);
         text_box.SetSize(size);
 
         // When track is collapsed, only draw "hardware execution" timers.
         if (is_collapsed) {
           std::string gpu_stage =
-              string_manager_->Get(timer.m_UserData[0]).value_or("");
+              string_manager_->Get(timer_info.user_data_key()).value_or("");
           if (gpu_stage != kHwExecutionString) {
             continue;
           }
@@ -225,7 +231,7 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 
         if (is_visible_width) {
           if (!is_collapsed) {
-            SetTimesliceText(timer, elapsed_us, min_x, &text_box);
+            SetTimesliceText(timer_info, elapsed_us, min_x, &text_box);
           }
           batcher->AddShadedBox(pos, size, z, color, PickingID::BOX,
                                 std::move(user_data));
@@ -239,10 +245,10 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
           // zero, we need to avoid dividing by zero, but we also wouldn't
           // gain anything here.
           if (pixel_delta_in_ticks != 0) {
-            min_ignore =
-                min_timegraph_tick +
-                ((timer.m_Start - min_timegraph_tick) / pixel_delta_in_ticks) *
-                    pixel_delta_in_ticks;
+            min_ignore = min_timegraph_tick +
+                         ((timer_info.start() - min_timegraph_tick) /
+                          pixel_delta_in_ticks) *
+                             pixel_delta_in_ticks;
             max_ignore = min_ignore + pixel_delta_in_ticks;
           }
         }
@@ -255,19 +261,19 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
 void GpuTrack::OnDrag(int x, int y) { Track::OnDrag(x, y); }
 
 //-----------------------------------------------------------------------------
-void GpuTrack::OnTimer(const Timer& timer) {
+void GpuTrack::OnTimer(const TimerInfo& timer_info) {
   TextBox text_box(Vec2(0, 0), Vec2(0, 0), "", Color(255, 0, 0, 255));
-  text_box.SetTimer(timer);
+  text_box.SetTimerInfo(timer_info);
 
-  std::shared_ptr<TimerChain> timer_chain = timers_[timer.m_Depth];
+  std::shared_ptr<TimerChain> timer_chain = timers_[timer_info.depth()];
   if (timer_chain == nullptr) {
     timer_chain = std::make_shared<TimerChain>();
-    timers_[timer.m_Depth] = timer_chain;
+    timers_[timer_info.depth()] = timer_chain;
   }
   timer_chain->push_back(text_box);
   ++num_timers_;
-  if (timer.m_Start < min_time_) min_time_ = timer.m_Start;
-  if (timer.m_End > max_time_) max_time_ = timer.m_End;
+  if (timer_info.start() < min_time_) min_time_ = timer_info.start();
+  if (timer_info.end() > max_time_) max_time_ = timer_info.end();
 }
 
 std::string GpuTrack::GetTooltip() const {
@@ -303,7 +309,7 @@ const TextBox* GpuTrack::GetFirstAfterTime(TickType time,
   for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
     for (uint32_t k = 0; k < it->size(); ++k) {
       const TextBox& text_box = (*it)[k];
-      if (text_box.GetTimer().m_Start > time) {
+      if (text_box.GetTimerInfo().start() > time) {
         return &text_box;
       }
     }
@@ -324,7 +330,7 @@ const TextBox* GpuTrack::GetFirstBeforeTime(TickType time,
   for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
     for (uint32_t k = 0; k < it->size(); ++k) {
       const TextBox& box = (*it)[k];
-      if (box.GetTimer().m_Start > time) {
+      if (box.GetTimerInfo().start() > time) {
         return text_box;
       }
       text_box = &box;
@@ -344,10 +350,10 @@ std::shared_ptr<TimerChain> GpuTrack::GetTimers(uint32_t depth) const {
 
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetLeft(TextBox* text_box) const {
-  const Timer& timer = text_box->GetTimer();
-  uint64_t timeline_hash = timer.m_UserData[0];
+  const TimerInfo& timer_info = text_box->GetTimerInfo();
+  uint64_t timeline_hash = timer_info.user_data_key();
   if (timeline_hash == timeline_hash_) {
-    std::shared_ptr<TimerChain> timers = GetTimers(timer.m_Depth);
+    std::shared_ptr<TimerChain> timers = GetTimers(timer_info.depth());
     if (timers) return timers->GetElementBefore(text_box);
   }
   return nullptr;
@@ -355,10 +361,10 @@ const TextBox* GpuTrack::GetLeft(TextBox* text_box) const {
 
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetRight(TextBox* text_box) const {
-  const Timer& timer = text_box->GetTimer();
-  uint64_t timeline_hash = timer.m_UserData[0];
+  const TimerInfo& timer_info = text_box->GetTimerInfo();
+  uint64_t timeline_hash = timer_info.user_data_key();
   if (timeline_hash == timeline_hash_) {
-    std::shared_ptr<TimerChain> timers = GetTimers(timer.m_Depth);
+    std::shared_ptr<TimerChain> timers = GetTimers(timer_info.depth());
     if (timers) return timers->GetElementAfter(text_box);
   }
   return nullptr;
@@ -366,14 +372,14 @@ const TextBox* GpuTrack::GetRight(TextBox* text_box) const {
 
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetUp(TextBox* text_box) const {
-  const Timer& timer = text_box->GetTimer();
-  return GetFirstBeforeTime(timer.m_Start, timer.m_Depth - 1);
+  const TimerInfo& timer_info = text_box->GetTimerInfo();
+  return GetFirstBeforeTime(timer_info.start(), timer_info.depth() - 1);
 }
 
 //-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetDown(TextBox* text_box) const {
-  const Timer& timer = text_box->GetTimer();
-  return GetFirstAfterTime(timer.m_Start, timer.m_Depth + 1);
+  const TimerInfo& timer_info = text_box->GetTimerInfo();
+  return GetFirstAfterTime(timer_info.start(), timer_info.depth() + 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -388,24 +394,26 @@ std::vector<std::shared_ptr<TimerChain>> GpuTrack::GetAllChains() {
 //-----------------------------------------------------------------------------
 std::string GpuTrack::GetBoxTooltip(PickingID id) const {
   TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
-  if (!text_box || text_box->GetTimer().m_Type == Timer::CORE_ACTIVITY) {
+  if (!text_box ||
+      text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
     return "";
   }
 
   std::string gpu_stage =
-      string_manager_->Get(text_box->GetTimer().m_UserData[0]).value_or("");
+      string_manager_->Get(text_box->GetTimerInfo().user_data_key())
+          .value_or("");
   if (gpu_stage == kSwQueueString) {
-    return GetSwQueueTooltip(text_box->GetTimer());
+    return GetSwQueueTooltip(text_box->GetTimerInfo());
   } else if (gpu_stage == kHwQueueString) {
-    return GetHwQueueTooltip(text_box->GetTimer());
+    return GetHwQueueTooltip(text_box->GetTimerInfo());
   } else if (gpu_stage == kHwExecutionString) {
-    return GetHwExecutionTooltip(text_box->GetTimer());
+    return GetHwExecutionTooltip(text_box->GetTimerInfo());
   }
 
   return "";
 }
 
-std::string GpuTrack::GetSwQueueTooltip(const Timer& timer) const {
+std::string GpuTrack::GetSwQueueTooltip(const TimerInfo& timer_info) const {
   return absl::StrFormat(
       "<b>Software Queue</b><br/>"
       "<i>Time between amdgpu_cs_ioctl (job submitted) and "
@@ -414,11 +422,13 @@ std::string GpuTrack::GetSwQueueTooltip(const Timer& timer) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      Capture::GThreadNames[timer.m_TID].c_str(), timer.m_TID,
-      GetPrettyTime(absl::Milliseconds(timer.ElapsedMillis())).c_str());
+      Capture::GThreadNames[timer_info.thread_id()].c_str(),
+      timer_info.thread_id(),
+      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end()))
+          .c_str());
 }
 
-std::string GpuTrack::GetHwQueueTooltip(const Timer& timer) const {
+std::string GpuTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
   return absl::StrFormat(
       "<b>Hardware Queue</b><br/><i>Time between amdgpu_sched_run_job "
       "(job scheduled) and start of GPU execution</i>"
@@ -426,11 +436,13 @@ std::string GpuTrack::GetHwQueueTooltip(const Timer& timer) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      Capture::GThreadNames[timer.m_TID].c_str(), timer.m_TID,
-      GetPrettyTime(absl::Milliseconds(timer.ElapsedMillis())).c_str());
+      Capture::GThreadNames[timer_info.thread_id()].c_str(),
+      timer_info.thread_id(),
+      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end()))
+          .c_str());
 }
 
-std::string GpuTrack::GetHwExecutionTooltip(const Timer& timer) const {
+std::string GpuTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
   return absl::StrFormat(
       "<b>Harware Execution</b><br/>"
       "<i>End is marked by \"dma_fence_signaled\" event for this command "
@@ -439,6 +451,8 @@ std::string GpuTrack::GetHwExecutionTooltip(const Timer& timer) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      Capture::GThreadNames[timer.m_TID].c_str(), timer.m_TID,
-      GetPrettyTime(absl::Milliseconds(timer.ElapsedMillis())).c_str());
+      Capture::GThreadNames[timer_info.thread_id()].c_str(),
+      timer_info.thread_id(),
+      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end()))
+          .c_str());
 }

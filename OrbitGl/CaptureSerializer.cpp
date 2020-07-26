@@ -23,9 +23,11 @@
 #include "TimeGraph.h"
 #include "TimerChain.h"
 #include "absl/strings/str_format.h"
+#include "capture_data.pb.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::TimerInfo;
 
 //-----------------------------------------------------------------------------
 ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
@@ -107,7 +109,8 @@ void CaptureSerializer::SaveImpl(T& archive) {
     for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
       TimerBlock& block = *it;
       for (uint32_t k = 0; k < block.size(); ++k) {
-        archive(cereal::binary_data(&(block[k].GetTimer()), sizeof(Timer)));
+        archive(
+            cereal::binary_data(&(block[k].GetTimerInfo()), sizeof(TimerInfo)));
 
         if (++numWrites > timers_count) {
           return;
@@ -191,9 +194,9 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   FillEventBuffer();
 
   // Timers
-  Timer timer;
-  while (stream.read(reinterpret_cast<char*>(&timer), sizeof(Timer))) {
-    time_graph_->ProcessTimer(timer);
+  TimerInfo timer_info;
+  while (stream.read(reinterpret_cast<char*>(&timer_info), sizeof(TimerInfo))) {
+    time_graph_->ProcessTimer(timer_info);
   }
 
   Capture::GState = Capture::State::kDone;

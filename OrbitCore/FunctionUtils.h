@@ -43,7 +43,8 @@ bool IsSelected(const orbit_client_protos::FunctionInfo& func);
 void Print(const orbit_client_protos::FunctionInfo& func);
 
 bool SetOrbitTypeFromName(orbit_client_protos::FunctionInfo* func);
-void UpdateStats(orbit_client_protos::FunctionInfo* func, const Timer& timer);
+void UpdateStats(orbit_client_protos::FunctionInfo* func,
+                 const orbit_client_protos::TimerInfo& timer_info);
 
 bool IsSelected(const SampledFunction& func);
 
