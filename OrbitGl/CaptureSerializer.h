@@ -2,14 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_CAPTURE_SERIALIZER_H_
+#define ORBIT_GL_CAPTURE_SERIALIZER_H_
 
 #include <iosfwd>
 #include <outcome.hpp>
 #include <string>
 
 #include "OrbitBase/Result.h"
-#include "SerializationMacros.h"
+#include "capture_data.pb.h"
 
 class CaptureSerializer {
  public:
@@ -21,12 +22,13 @@ class CaptureSerializer {
 
   class TimeGraph* time_graph_;
 
-  std::string m_CaptureName;
-  int m_NumTimers;
-
-  ORBIT_SERIALIZABLE;
-
  private:
   template <class T>
   void SaveImpl(T& archive);
+
+  orbit_client_protos::CaptureHeader header;
+
+  const std::string kRequiredCaptureVersion = "1.51";
 };
+
+#endif  // ORBIT_GL_CAPTURE_SERIALIZER_H_
