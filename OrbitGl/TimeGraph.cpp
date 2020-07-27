@@ -706,7 +706,7 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(
   if (track == nullptr) {
     track = std::make_shared<GpuTrack>(this, string_manager_, timeline_hash);
     std::string timeline = string_manager_->Get(timeline_hash).value_or("");
-    std::string label = MapGpuTimelineToTrackLabel(timeline);
+    std::string label = OrbitGl::MapGpuTimelineToTrackLabel(timeline);
     track->SetName(timeline);
     track->SetLabel(label);
     tracks_.emplace_back(track);

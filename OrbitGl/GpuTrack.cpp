@@ -12,11 +12,12 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
-<<<<<<< HEAD
 constexpr const char* kSwQueueString = "sw queue";
 constexpr const char* kHwQueueString = "hw queue";
 constexpr const char* kHwExecutionString = "hw execution";
-=======
+
+namespace OrbitGl {
+
 std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
   std::string label;
   if (timeline.rfind("gfx", 0) == 0) {
@@ -33,7 +34,8 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
     return std::string(timeline);
   }
 }
->>>>>>> Define GPU timeline to track label conversion in free function; add some clarifying comments.
+
+}  // namespace OrbitGl
 
 //-----------------------------------------------------------------------------
 GpuTrack::GpuTrack(TimeGraph* time_graph,
