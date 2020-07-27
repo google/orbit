@@ -620,15 +620,17 @@ void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
 
   std::string text = absl::StrFormat("%s: %s", label, time);
 
-  constexpr float kLeftOffset = 5.f;
+  constexpr const float kAdditionalSpaceForLine = 10.f;
+  constexpr const float kLeftOffset = 5.f;
+
   float max_size = size[0];
   canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
-      text.c_str(), pos[0] + kLeftOffset, text_y, GlCanvas::Z_VALUE_TEXT,
+      text.c_str(), pos[0] + kLeftOffset, text_y + kAdditionalSpaceForLine, GlCanvas::Z_VALUE_TEXT,
       Color(255, 255, 255, 255), time.length(), max_size);
 
-  constexpr float kOffsetBelowText = 5.f;
-  Vec2 line_from(pos[0], text_y - kOffsetBelowText);
-  Vec2 line_to(pos[0] + size[0], text_y - kOffsetBelowText);
+  constexpr const float kOffsetBelowText = kAdditionalSpaceForLine / 2.f;
+  Vec2 line_from(pos[0], text_y + kOffsetBelowText);
+  Vec2 line_to(pos[0] + size[0], text_y + kOffsetBelowText);
   canvas->GetBatcher()->AddLine(line_from, line_to, GlCanvas::Z_VALUE_OVERLAY,
                                 Color(255, 255, 255, 255), PickingID::LINE);
 }
@@ -699,8 +701,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
     // of the slider (where we have to take the width, as it is rotated), and
     // the time bar.
     float bottom_margin = m_Layout.GetSliderWidth() +
-                          m_Layout.GetTimeBarHeight() +
-                          m_Layout.GetVerticalMargin();
+                          m_Layout.GetTimeBarHeight();
 
     // The height of text is chosen such that the text of the last box drawn is
     // at pos[1] + bottom_margin (lowest possible position) and the height of

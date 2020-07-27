@@ -65,6 +65,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(m_SpaceBetweenTracksAndThread);
   FLOAT_SLIDER(m_SpaceBetweenThreadBlocks);
   FLOAT_SLIDER(m_SliderWidth);
+  FLOAT_SLIDER(time_bar_height_);
   FLOAT_SLIDER(m_TrackTabHeight);
   FLOAT_SLIDER(m_TrackTabOffset);
   FLOAT_SLIDER(m_CollapseButtonOffset);

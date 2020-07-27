@@ -19,6 +19,7 @@ class TimeGraphLayout {
   float GetTrackLabelOffsetX() const { return m_TrackLabelOffsetX; }
   float GetTrackLabelOffsetY() const { return m_TrackLabelOffsetY; }
   float GetSliderWidth() const { return m_SliderWidth; }
+  float GetTimeBarHeight() const { return time_bar_height_; }
   float GetTrackTabWidth() const { return m_TrackTabWidth; }
   float GetTrackTabHeight() const { return m_TrackTabHeight; }
   float GetTrackTabOffset() const { return m_TrackTabOffset; }
@@ -40,7 +41,6 @@ class TimeGraphLayout {
   void SetNumCores(int a_NumCores) { m_NumCores = a_NumCores; }
   bool DrawProperties();
   bool GetDrawTrackBackground() const { return m_DrawTrackBackground; }
-  float GetTimeBarHeight() const { return time_bar_height_; }
 
  protected:
   int m_NumCores;
@@ -54,6 +54,7 @@ class TimeGraphLayout {
   float m_TrackLabelOffsetX;
   float m_TrackLabelOffsetY;
   float m_SliderWidth;
+  float time_bar_height_;
   float m_TrackTabWidth;
   float m_TrackTabHeight;
   float m_TrackTabOffset;
@@ -68,8 +69,6 @@ class TimeGraphLayout {
   float m_SpaceBetweenTracks;
   float m_SpaceBetweenTracksAndThread;
   float m_SpaceBetweenThreadBlocks;
-
-  float time_bar_height_;
 
   float m_TextZ;
   float m_TrackZ;

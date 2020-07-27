@@ -618,7 +618,7 @@ void CaptureWindow::DrawScreenSpace() {
 
   // Time bar background
   if (time_graph_.GetCaptureTimeSpanUs() > 0) {
-    Box box(Vec2(0, time_graph_.GetLayout().GetTimeBarHeight()),
+    Box box(Vec2(0, time_graph_.GetLayout().GetSliderWidth()),
             Vec2(getWidth(), time_graph_.GetLayout().GetTimeBarHeight()),
             GlCanvas::Z_VALUE_TEXT_UI_BG);
     ui_batcher_.AddBox(box, Color(70, 70, 70, 200), PickingID::BOX);
