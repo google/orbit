@@ -4,8 +4,6 @@
 
 #include "StringManager.h"
 
-#include "Serialization.h"
-
 bool StringManager::AddIfNotPresent(uint64_t key, std::string_view str) {
   absl::MutexLock lock{&mutex_};
   if (key_to_string_.contains(key)) {
@@ -34,5 +32,3 @@ void StringManager::Clear() {
   absl::MutexLock lock{&mutex_};
   key_to_string_.clear();
 }
-
-ORBIT_SERIALIZE(StringManager, 0) { ORBIT_NVP_VAL(0, key_to_string_); }

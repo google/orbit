@@ -91,6 +91,11 @@ class SamplingProfiler {
     return &m_Callstacks;
   }
 
+  const std::unordered_map<CallstackID, std::shared_ptr<CallStack>>&
+  GetUniqueCallstacks() const {
+    return m_UniqueCallstacks;
+  }
+
   const std::vector<ThreadSampleData*>& GetThreadSampleData() const {
     return m_SortedThreadSampleData;
   }
@@ -110,6 +115,11 @@ class SamplingProfiler {
   void UpdateAddressInfo(uint64_t address);
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
+
+  void ClearCallstacks() {
+    m_UniqueCallstacks.clear();
+    m_Callstacks.clear();
+  }
 
  protected:
   void ResolveCallstacks();

@@ -50,6 +50,10 @@ message CallstackEvent {
   int32 thread_id = 3;
 }
 
+message CallstackInfo {
+  repeated uint64 data = 1;
+}
+
 message LinuxAddressInfo {
   uint64 absolute_address = 1;
   string module_name = 2;
@@ -59,6 +63,17 @@ message LinuxAddressInfo {
 
 message CaptureHeader {
   string version = 1;
+}
+
+message CaptureInfo {
+  repeated FunctionInfo selected_functions = 1;
+  int32 process_id = 2;
+  string process_name = 3;
+  map<int32, string> thread_names = 4;
+  repeated LinuxAddressInfo address_infos = 5;
+  repeated CallstackInfo callstacks = 6;
+  repeated CallstackEvent callstack_events = 7;
+  map<uint64, string> key_to_string = 8;
 }
 
 message TimerInfo {

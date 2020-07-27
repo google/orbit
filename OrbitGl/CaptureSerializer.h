@@ -23,8 +23,8 @@ class CaptureSerializer {
   class TimeGraph* time_graph_;
 
  private:
-  template <class T>
-  void SaveImpl(T& archive);
+  void FillCaptureData(orbit_client_protos::CaptureInfo* capture_info);
+  void ProcessCaptureData(const orbit_client_protos::CaptureInfo& capture_info);
 
   orbit_client_protos::CaptureHeader header;
 
