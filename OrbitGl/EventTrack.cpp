@@ -31,7 +31,9 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   // have a tooltip. For picking, we want to draw the event bar over them if
   // handling a click, and underneath otherwise.
   // This simulates "click-through" behavior.
-  const float eventBarZ = picking_mode == PickingMode::kClick ? 0.1f : -0.1f;
+  const float eventBarZ = picking_mode == PickingMode::kClick
+                              ? GlCanvas::Z_VALUE_EVENT_BAR_PICKING
+                              : GlCanvas::Z_VALUE_EVENT_BAR;
   Color color = m_Color;
 
   if (picking) {
@@ -50,8 +52,10 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float x1 = x0 + m_Size[0];
   float y1 = y0 - m_Size[1];
 
-  batcher->AddLine(m_Pos, Vec2(x1, y0), -0.1f, color, PickingID::PICKABLE);
-  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), -0.1f, color,
+  batcher->AddLine(m_Pos, Vec2(x1, y0), GlCanvas::Z_VALUE_EVENT_BAR, color,
+                   PickingID::PICKABLE);
+  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), GlCanvas::Z_VALUE_EVENT_BAR,
+                   color,
                    PickingID::PICKABLE);
 
   if (m_Picked) {
