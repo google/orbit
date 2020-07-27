@@ -55,6 +55,7 @@ class OrbitMainWindow : public QMainWindow {
                        const std::function<double(size_t)>& line_to_hit_ratio);
   void SetTitle(const QString& task_description);
   outcome::result<void> OpenCapture(const std::string& filepath);
+  void OnCaptureCleared();
 
  private slots:
   void on_actionAbout_triggered();

@@ -556,11 +556,7 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
 
 //-----------------------------------------------------------------------------
 ErrorMessageOr<void> OrbitApp::OnLoadCapture(const std::string& file_name) {
-  Capture::ClearCaptureData();
-  GCurrentTimeGraph->Clear();
-  if (Capture::GClearCaptureDataFunc) {
-    Capture::GClearCaptureDataFunc();
-  }
+  ClearCapture();
 
   CaptureSerializer ar;
   ar.time_graph_ = GCurrentTimeGraph;
@@ -585,6 +581,8 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 
 bool OrbitApp::StartCapture() {
   CHECK(!Capture::IsCapturing());
+
+  ClearCapture();
 
   ErrorMessageOr<void> result = Capture::StartCapture();
   if (result.has_error()) {
@@ -626,6 +624,9 @@ void OrbitApp::ClearCapture() {
   Capture::ClearCaptureData();
   Capture::GClearCaptureDataFunc();
   GCurrentTimeGraph->Clear();
+  if (capture_cleared_callback_) {
+    capture_cleared_callback_();
+  }
 }
 
 void OrbitApp::ToggleDrawHelp() {
