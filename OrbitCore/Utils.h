@@ -276,6 +276,25 @@ class CWindowsMessageToString {
 #endif
 
 //-----------------------------------------------------------------------------
+inline std::string ShortenStringWithEllipsis(const std::string& text, int max_len) {
+  if (max_len < 0) {
+    return text;
+  }
+  if (max_len <= 3) {
+    return text.length() <= 3 ? text : "...";
+  }
+  if (text.length() <= max_len) {
+    return text;
+  }
+
+  const size_t chars_to_cut =
+      text.length() - static_cast<uint32_t>(max_len) + 3;
+  const size_t l = (text.length() - chars_to_cut) / 2;
+  const size_t r = l + chars_to_cut;
+  return text.substr(0, l) + "..." + text.substr(r);
+}
+
+//-----------------------------------------------------------------------------
 inline std::string GetPrettySize(uint64_t size) {
   constexpr double KB = 1024.0;
   constexpr double MB = 1024.0 * KB;
