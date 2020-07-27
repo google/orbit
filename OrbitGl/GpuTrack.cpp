@@ -242,7 +242,7 @@ void GpuTrack::OnTimer(const Timer& timer) {
 }
 
 std::string GpuTrack::GetTooltip() const {
-  return "Shows scheduling and execution times for selected GPU calls.";
+  return "Shows scheduling and execution times for selected GPU job submissions";
 }
 
 //-----------------------------------------------------------------------------
@@ -378,10 +378,10 @@ std::string GpuTrack::GetBoxTooltip(PickingID id) const {
 std::string GpuTrack::GetSwQueueTooltip(const Timer& timer) const { 
   return absl::StrFormat(
     "<b>Software Queue</b><br/>"
-    "<i>Time between amdgpu_cs_ioctl and amdgpu_sched_run_job.</i>"
+    "<i>Time between amdgpu_cs_ioctl (job submitted) and amdgpu_sched_run_job (job scheduled)</i>"
     "<br/>"
     "<br/>"
-    "<b>Submitter thread:</b> %s [%d]<br/>"
+    "<b>Submitted from thread:</b> %s [%d]<br/>"
     "<b>Time:</b> %s",
     Capture::GThreadNames[timer.m_TID].c_str(),
     timer.m_TID,
@@ -389,7 +389,8 @@ std::string GpuTrack::GetSwQueueTooltip(const Timer& timer) const {
 }
 
 std::string GpuTrack::GetHwQueueTooltip(const Timer& timer) const {
-  return absl::StrFormat("<b>Hardware Queue</b><br/><i>Time between amdgpu_sched_run_job and start of GPU execution</i>"
+  return absl::StrFormat("<b>Hardware Queue</b><br/><i>Time between amdgpu_sched_run_job "
+    "(job scheduled) and start of GPU execution</i>"
     "<br/>"
     "<br/>"
     "<b>Time:</b> %s",

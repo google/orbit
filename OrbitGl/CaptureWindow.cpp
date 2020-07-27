@@ -241,7 +241,7 @@ void CaptureWindow::FindCode(DWORD64 /*address*/) {}
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::PreRender() {
-  if (m_IsMouseOver && m_CanHover && m_HoverTimer.QueryMillis() > m_HoverDelayMs) {
+  if (is_mouse_over_ && m_CanHover && m_HoverTimer.QueryMillis() > m_HoverDelayMs) {
     m_IsHovering = true;
     m_Picking = true;
     NeedsRedraw();

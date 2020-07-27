@@ -295,13 +295,11 @@ void OrbitGLWidget::mouseMoveEvent(QMouseEvent* event) {
   update();
 }
 
-void OrbitGLWidget::enterEvent(QEvent* event) {
-  UNUSED(event);
+void OrbitGLWidget::enterEvent(QEvent*) {
   m_OrbitPanel->SetIsMouseOver(true);
 }
 
-void OrbitGLWidget::leaveEvent(QEvent* event) {
-  UNUSED(event);
+void OrbitGLWidget::leaveEvent(QEvent*) {
   m_OrbitPanel->SetIsMouseOver(false);
 }
 

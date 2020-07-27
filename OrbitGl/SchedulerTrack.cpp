@@ -46,7 +46,7 @@ float SchedulerTrack::GetYFromDepth(float track_y, uint32_t depth,
 }
 
 std::string SchedulerTrack::GetTooltip() const { 
-  return "Shows scheduling information for CPU cores.";
+  return "Shows scheduling information for CPU cores";
 }
 
 void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {

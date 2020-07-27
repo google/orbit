@@ -54,8 +54,8 @@ class GlPanel {
   virtual void OnContextMenu(const std::string& /*a_Action*/,
                              int /*a_MenuIndex*/) {}
 
-  bool GetIsMouseOver() const { return m_IsMouseOver; }
-  void SetIsMouseOver(bool value) { m_IsMouseOver = value; }
+  bool GetIsMouseOver() const { return is_mouse_over_; }
+  void SetIsMouseOver(bool value) { is_mouse_over_ = value; }
 
   Type GetType() const { return m_Type; }
   virtual bool GetNeedsRedraw() const { return m_NeedsRedraw; }
@@ -68,5 +68,5 @@ class GlPanel {
   int m_MainWindowHeight;
   bool m_NeedsRedraw;
 
-  bool m_IsMouseOver;
+  bool is_mouse_over_;
 };
