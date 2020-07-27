@@ -46,7 +46,6 @@ class OrbitMainWindow : public QMainWindow {
   std::string OnGetSaveFileName(const std::string& extension);
   void OnSetClipboard(const std::string& text);
   void ParseCommandlineArguments();
-  bool IsHeadless() { return m_Headless; }
   void PostInit();
   bool HideTab(QTabWidget* a_TabWidget, const char* a_TabName);
   std::string FindFile(const std::string& caption, const std::string& dir,
@@ -102,7 +101,6 @@ class OrbitMainWindow : public QMainWindow {
   Ui::OrbitMainWindow* ui;
   QTimer* m_MainTimer;
   std::vector<OrbitGLWidget*> m_GlWidgets;
-  bool m_Headless;
 
   // Live tab
   class QWidget* live_tab_;
