@@ -12,9 +12,28 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
+<<<<<<< HEAD
 constexpr const char* kSwQueueString = "sw queue";
 constexpr const char* kHwQueueString = "hw queue";
 constexpr const char* kHwExecutionString = "hw execution";
+=======
+std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
+  std::string label;
+  if (timeline.rfind("gfx", 0) == 0) {
+    return absl::StrFormat("Graphics queue (%s)", timeline);
+  } else if (timeline.rfind("sdma", 0) == 0) {
+    return absl::StrFormat("Transfer queue (%s)", timeline);
+  } else if (timeline.rfind("comp", 0) == 0) {
+    return absl::StrFormat("Compute queue (%s)", timeline);
+  } else {
+    // On AMD, this should not happen and we don't support tracepoints for
+    // other GPUs (at the moment). We return the timeline to make sure we
+    // at least display something. When we add support for other GPU
+    // tracepoints, this needs to be changed.
+    return std::string(timeline);
+  }
+}
+>>>>>>> Define GPU timeline to track label conversion in free function; add some clarifying comments.
 
 //-----------------------------------------------------------------------------
 GpuTrack::GpuTrack(TimeGraph* time_graph,

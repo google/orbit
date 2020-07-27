@@ -17,6 +17,10 @@
 
 class TextRenderer;
 
+// Maps the Linux kernel timeline names (like "gfx", "sdma0") to a more
+// descriptive human readable form that is used for the track labe.
+std::string MapGpuTimelineToTrackLabel(std::string_view timeline);
+
 class GpuTrack : public Track {
  public:
   GpuTrack(TimeGraph* time_graph, std::shared_ptr<StringManager> string_manager,
@@ -53,8 +57,6 @@ class GpuTrack : public Track {
 
   std::vector<std::shared_ptr<TimerChain>> GetAllChains() override;
   bool IsCollapsable() const override { return depth_ > 1; }
-
-  void SetTimeline(std::string_view timeline);
 
  protected:
   void UpdateDepth(uint32_t depth) {
