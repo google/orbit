@@ -257,14 +257,11 @@ void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
   auto thread_track = GetOrCreateThreadTrack(timer.m_TID);
   auto text_box_y_position = thread_track->GetYFromDepth(timer.m_Depth);
 
-  auto world_top_left_y = m_Canvas->GetWorldTopLeftY();
-  auto top_margin =
-      m_Layout.GetSchedulerTrackOffset() + m_Layout.GetVerticalMargin();
-  auto down_margin = m_Layout.GetSliderWidth() + m_Layout.GetVerticalMargin();
-  auto min_world_top_left_y =
-      text_box_y_position + m_Layout.GetSpaceBetweenTracks() + top_margin;
-  auto max_world_top_left_y = text_box_y_position + m_Canvas->GetWorldHeight() -
-                              GetTextBoxHeight() - down_margin;
+  float world_top_left_y = m_Canvas->GetWorldTopLeftY();
+  float min_world_top_left_y =
+      text_box_y_position + m_Layout.GetSpaceBetweenTracks() + m_Layout.GetTopMargin();
+  float max_world_top_left_y = text_box_y_position + m_Canvas->GetWorldHeight() -
+                              GetTextBoxHeight() - m_Layout.GetBottomMargin();
   CHECK (min_world_top_left_y <= max_world_top_left_y);
   world_top_left_y = std::min(world_top_left_y, max_world_top_left_y);
   world_top_left_y = std::max(world_top_left_y, min_world_top_left_y);
@@ -700,11 +697,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
     const std::string& time =
         GetTimeString(boxes[k - 1].second, boxes[k].second);
 
-    // Distance from the bottom where we don't want to draw. The bottom consists
-    // of the slider (where we have to take the width, as it is rotated), and
-    // the time bar.
-    float bottom_margin = m_Layout.GetSliderWidth() +
-                          m_Layout.GetTimeBarHeight();
+    // Distance from the bottom where we don't want to draw.
+    float bottom_margin = m_Layout.GetBottomMargin();
 
     // The height of text is chosen such that the text of the last box drawn is
     // at pos[1] + bottom_margin (lowest possible position) and the height of
