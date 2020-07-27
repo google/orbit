@@ -31,6 +31,7 @@ class OrbitLiveFunctions : public QWidget {
                   bool is_main_instance = true);
   void Refresh();
   void OnDataChanged();
+  void Reset();
   void SetFilter(const QString& a_Filter);
   void AddIterator(uint64_t id, Function* function);
   QLineEdit* GetFilterLineEdit();

@@ -109,6 +109,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->actionSave_Preset_As->setDisabled(false);
     ui->HomeTab->setDisabled(false);
   });
+  GOrbitApp->SetCaptureClearedCallback([this] {
+    OnCaptureCleared();
+  });
 
   GOrbitApp->SetRefreshCallback([this](DataViewType a_Type) {
     this->OnRefreshDataViewPanels(a_Type);
@@ -874,4 +877,8 @@ void OrbitMainWindow::on_actionServiceNullPointerDereference_triggered() {
 void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
   GOrbitApp->CrashOrbitService(
       CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW);
+}
+
+void OrbitMainWindow::OnCaptureCleared() {
+  live_functions_->Reset();
 }

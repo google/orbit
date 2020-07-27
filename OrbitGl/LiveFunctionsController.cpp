@@ -223,3 +223,11 @@ TickType LiveFunctionsController::GetCaptureMin() {
 TickType LiveFunctionsController::GetCaptureMax() {
   return GCurrentTimeGraph->GetCaptureMax();
 }
+
+void LiveFunctionsController::Reset() {
+  function_iterators_.clear();
+  current_textboxes_.clear();
+  GCurrentTimeGraph->SetOverlayTextBoxes({});
+  next_iterator_id_ = 0;
+  id_to_select_ = 0;
+}

@@ -27,6 +27,7 @@ class LiveFunctionsController {
   void OnPreviousButton(uint64_t id);
   void OnDeleteButton(uint64_t id);
 
+  void Reset();
   void OnDataChanged() { live_functions_data_view_.OnDataChanged(); }
 
   void SetAddIteratorCallback(

@@ -103,3 +103,14 @@ void OrbitLiveFunctions::AddIterator(size_t id, Function* function) {
 QLineEdit* OrbitLiveFunctions::GetFilterLineEdit() {
   return ui->data_view_panel_->GetFilterLineEdit();
 }
+
+void OrbitLiveFunctions::Reset() {
+  live_functions_.Reset();
+
+  for (auto& [_, iterator_ui] : iterator_uis) {
+    ui->iteratorLayout->removeWidget(iterator_ui);
+    delete iterator_ui;
+  }
+  iterator_uis.clear();
+  all_events_iterator_->DisableButtons();
+}
