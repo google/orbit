@@ -580,9 +580,7 @@ void TimeGraph::Draw(GlCanvas* canvas, bool a_Picking) {
   }
 
   DrawTracks(canvas, a_Picking);
-
   DrawOverlay(canvas, a_Picking);
-
   m_Batcher.Draw(a_Picking);
 
   m_NeedsRedraw = false;
@@ -608,7 +606,9 @@ std::string GetTimeString(const TextBox* box_a, const TextBox* box_b) {
 
 Color GetIteratorBoxColor(uint64_t index) {
   constexpr uint64_t kNumColors = 2;
-  Color colors[kNumColors] = {Color(187, 213, 240, 60), Color(91, 112, 147, 60)};
+  const Color kLightBlueGray = Color(177, 203, 250, 60);
+  const Color kMidBlueGray = Color(81, 102, 157, 60);
+  Color colors[kNumColors] = {kLightBlueGray, kMidBlueGray};
   return colors[index % kNumColors];
 }
 
