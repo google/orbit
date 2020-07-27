@@ -55,7 +55,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     : QMainWindow(nullptr),
       m_App(a_App),
       ui(new Ui::OrbitMainWindow),
-      m_Headless(false),
       m_IsDev(false) {
   OrbitApp::Init(std::move(options), CreateMainThreadExecutor());
 
@@ -390,9 +389,7 @@ void OrbitMainWindow::ParseCommandlineArguments() {
   std::vector<std::string> arguments;
   for (const auto& qt_argument : QCoreApplication::arguments()) {
     std::string argument = qt_argument.toStdString();
-    if (absl::StrContains(argument, "inject:")) {
-      m_Headless = true;
-    } else if (argument == "dev") {
+    if (argument == "dev") {
       m_IsDev = true;
     }
 
