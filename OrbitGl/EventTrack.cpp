@@ -5,6 +5,7 @@
 #include "EventTrack.h"
 
 #include "Capture.h"
+#include "SamplingProfiler.h"
 #include "EventTracer.h"
 #include "GlCanvas.h"
 #include "PickingManager.h"
@@ -21,21 +22,25 @@ std::string EventTrack::GetTooltip() const {
 }
 
 //-----------------------------------------------------------------------------
-void EventTrack::Draw(GlCanvas* canvas, bool picking) {
+void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
   PickingManager& picking_manager = canvas->GetPickingManager();
 
-  constexpr float kNormalZ = -0.1f;
-  constexpr float kPickingZ = 0.1f;
-  float z = kNormalZ;
+  const bool picking = picking_mode != PickingMode::kNone;
+  // The sample indicators are at z == 0 and do not respond to clicks, but
+  // have a tooltip. For picking, we want to draw the event bar over them if
+  // handling a click, and underneath otherwise.
+  // This simulates "click-through" behavior.
+  const float eventBarZ = picking_mode == PickingMode::kClick
+                              ? GlCanvas::Z_VALUE_EVENT_BAR_PICKING
+                              : GlCanvas::Z_VALUE_EVENT_BAR;
   Color color = m_Color;
 
   if (picking) {
-    z = kPickingZ;
     color = picking_manager.GetPickableColor(this, PickingID::BatcherId::UI);
   }
 
-  Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), z);
+  Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), eventBarZ);
   batcher->AddBox(box, color, PickingID::PICKABLE);
 
   if (canvas->GetPickingManager().GetPicked() == this) {
@@ -47,8 +52,10 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
   float x1 = x0 + m_Size[0];
   float y1 = y0 - m_Size[1];
 
-  batcher->AddLine(m_Pos, Vec2(x1, y0), -0.1f, color, PickingID::PICKABLE);
-  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), -0.1f, color,
+  batcher->AddLine(m_Pos, Vec2(x1, y0), GlCanvas::Z_VALUE_EVENT_BAR, color,
+                   PickingID::PICKABLE);
+  batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), GlCanvas::Z_VALUE_EVENT_BAR,
+                   color,
                    PickingID::PICKABLE);
 
   if (m_Picked) {
@@ -69,35 +76,61 @@ void EventTrack::Draw(GlCanvas* canvas, bool picking) {
 }
 
 //-----------------------------------------------------------------------------
-void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
+void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
+                                  PickingMode picking_mode) {
   Batcher* batcher = &time_graph_->GetBatcher();
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float z = GlCanvas::Z_VALUE_EVENT;
   float track_height = layout.GetEventTrackHeight();
+  const bool picking = picking_mode != PickingMode::kNone;
 
   ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
   std::map<uint64_t, CallstackEvent>& callstacks =
       GEventTracer.GetEventBuffer().GetCallstacks()[m_ThreadId];
 
-  // Sampling Events
   const Color kWhite(255, 255, 255, 255);
-  for (auto& pair : callstacks) {
-    uint64_t time = pair.first;
-    if (time > min_tick && time < max_tick) {
-      Vec2 pos(time_graph_->GetWorldFromTick(time), m_Pos[1]);
-      batcher->AddVerticalLine(pos, -track_height, z, kWhite, PickingID::LINE);
-    }
-  }
-
-  // Draw selected events
   const Color kGreenSelection(0, 255, 0, 255);
-  Color selectedColor[2];
-  Fill(selectedColor, kGreenSelection);
-  for (const CallstackEvent& event :
-       time_graph_->GetSelectedCallstackEvents(m_ThreadId)) {
-    Vec2 pos(time_graph_->GetWorldFromTick(event.m_Time), m_Pos[1]);
-    batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection,
-                             PickingID::LINE);
+
+  if (!picking) {
+    // Sampling Events
+    for (auto& pair : callstacks) {
+      uint64_t time = pair.first;
+      if (time > min_tick && time < max_tick) {
+        Vec2 pos(time_graph_->GetWorldFromTick(time), m_Pos[1]);
+        batcher->AddVerticalLine(pos, -track_height, z, kWhite,
+                                 PickingID::LINE);
+      }
+    }
+
+    // Draw selected events
+    Color selectedColor[2];
+    Fill(selectedColor, kGreenSelection);
+    for (const CallstackEvent& event :
+         time_graph_->GetSelectedCallstackEvents(m_ThreadId)) {
+      Vec2 pos(time_graph_->GetWorldFromTick(event.m_Time), m_Pos[1]);
+      batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection,
+                               PickingID::LINE);
+    }
+  // Draw boxes instead of lines to make picking easier, even if this may
+  // cause samples to overlap
+  } else {
+    constexpr const float kPickingBoxWidth = 9.0f;
+    constexpr const float kPickingBoxOffset = (kPickingBoxWidth - 1.0f) / 2.0f;
+
+    for (auto& pair : callstacks) {
+      uint64_t time = pair.first;
+      if (time > min_tick && time < max_tick) {
+        Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
+                  m_Pos[1] - track_height + 1);
+        Vec2 size(kPickingBoxWidth, track_height);
+        auto user_data = std::make_unique<PickingUserData>(
+            nullptr,
+            [&](PickingID id) -> std::string { return GetSampleTooltip(id); });
+        user_data->custom_data_ = &pair.second;
+        batcher->AddShadedBox(pos, size, z, kGreenSelection, PickingID::BOX,
+                              std::move(user_data));
+      }
+    }
   }
 }
 
@@ -151,4 +184,38 @@ bool EventTrack::IsEmpty() const {
   const std::map<uint64_t, CallstackEvent>& callstacks =
       GEventTracer.GetEventBuffer().GetCallstacks()[m_ThreadId];
   return callstacks.empty();
+}
+
+//-----------------------------------------------------------------------------
+std::string EventTrack::GetSampleTooltip(PickingID id) const {
+  auto SafeGetFormattedFunctionName = [](uint64_t addr) -> std::string {
+    auto it = Capture::GAddressToFunctionName.find(addr);
+    return it == Capture::GAddressToFunctionName.end()
+               ? std::string("<i>") + "???" + "</i>"
+               : it->second;
+  };
+
+  static const std::string unknown_return_text = "Function call information missing";
+
+  auto user_data = time_graph_->GetBatcher().GetUserData(id);
+  if (!user_data || !user_data->custom_data_) {
+    return unknown_return_text;
+  }
+
+  CallstackEvent* callstack_event =
+      static_cast<CallstackEvent*>(user_data->custom_data_);
+  auto callstack = Capture::GSamplingProfiler->GetCallStack(callstack_event->m_Id);
+    
+  if (!callstack) {
+    return unknown_return_text;
+  }
+
+  std::string function_name = SafeGetFormattedFunctionName(callstack->m_Data[0]);
+  std::string result = absl::StrFormat(
+    "<b>%s</b><br/><i>Sampled event</i><br/><br/><b>Callstack:</b>",
+    function_name.c_str());
+  for (auto addr : callstack->m_Data) {
+    result = result + "<br/>" + SafeGetFormattedFunctionName(addr);
+  }
+  return result + "<br/><br/><i>To select samples, click the bar & drag across multiple samples</i>";
 }

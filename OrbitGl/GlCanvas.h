@@ -112,6 +112,8 @@ class GlCanvas : public GlPanel {
   static float Z_VALUE_BOX_ACTIVE;
   static float Z_VALUE_BOX_INACTIVE;
   static float Z_VALUE_TEXT_BG;
+  static float Z_VALUE_EVENT_BAR;
+  static float Z_VALUE_EVENT_BAR_PICKING;
 
  protected:
   int m_Width;
