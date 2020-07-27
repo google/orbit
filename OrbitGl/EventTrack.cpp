@@ -119,11 +119,12 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
                   m_Pos[1] - track_height + 1);
         Vec2 size(kPickingBoxWidth, track_height);
-        auto userData = std::make_shared<PickingUserData>(
+        auto user_data = std::make_unique<PickingUserData>(
             nullptr,
             [&](PickingID id) -> std::string { return GetSampleTooltip(id); });
-        userData->m_CustomData = &pair.second;
-        batcher->AddShadedBox(pos, size, z, kGreenSelection, PickingID::BOX, userData);
+        user_data->custom_data_ = &pair.second;
+        batcher->AddShadedBox(pos, size, z, kGreenSelection, PickingID::BOX,
+                              std::move(user_data));
       }
     }
   }
@@ -188,22 +189,27 @@ std::string EventTrack::GetSampleTooltip(PickingID id) const {
     return it == Capture::GAddressToFunctionName.end() ? "<i>???</i>" : it->second;
   };
 
-  auto userData = time_graph_->GetBatcher().GetUserData(id);
-  if (userData->m_CustomData) {
-    CallstackEvent* callstackEvent =
-        static_cast<CallstackEvent*>(userData->m_CustomData);
-    auto callstack = Capture::GSamplingProfiler->GetCallStack(callstackEvent->m_Id);
-    
-    if (callstack) {
-      std::string functionName = SafeGetFormattedFunctionName(callstack->m_Data[0]);
-      std::string result = absl::StrFormat(
-        "<b>%s</b><br/><i>Sampled event</i><br/><br/><b>Callstack:</b>",
-        functionName.c_str());
-      for (auto addr : callstack->m_Data) {
-        result = result + "<br/>" + SafeGetFormattedFunctionName(addr);
-      }
-      return result + "<br/><br/><i>To select samples, click & drag across the bar underneath";
-    }
+  static const std::string unknown_return_text = "Function call information missing";
+
+  auto user_data = time_graph_->GetBatcher().GetUserData(id);
+  if (!user_data || !user_data->custom_data_) {
+    return unknown_return_text;
   }
-  return "Unknown sampled event";
+
+  CallstackEvent* callstack_event =
+      static_cast<CallstackEvent*>(user_data->custom_data_);
+  auto callstack = Capture::GSamplingProfiler->GetCallStack(callstack_event->m_Id);
+    
+  if (!callstack) {
+    return unknown_return_text;
+  }
+
+  std::string function_name = SafeGetFormattedFunctionName(callstack->m_Data[0]);
+  std::string result = absl::StrFormat(
+    "<b>%s</b><br/><i>Sampled event</i><br/><br/><b>Callstack:</b>",
+    function_name.c_str());
+  for (auto addr : callstack->m_Data) {
+    result = result + "<br/>" + SafeGetFormattedFunctionName(addr);
+  }
+  return result + "<br/><br/><i>To select samples, click the bar & drag across multiple samples</i>";
 }

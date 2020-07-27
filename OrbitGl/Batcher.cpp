@@ -115,8 +115,8 @@ PickingUserData* Batcher::GetUserData(PickingID a_ID) {
 TextBox* Batcher::GetTextBox(PickingID a_ID) {
   PickingUserData* data = GetUserData(a_ID);
 
-  if (data && data->m_TextBox) {
-    return data->m_TextBox; 
+  if (data && data->text_box_) {
+    return data->text_box_; 
   }
 
   return nullptr;

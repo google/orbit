@@ -228,8 +228,8 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
   } else {
     PickingUserData* user_data = batcher.GetUserData(pickId);
 
-    if (user_data && user_data->m_GenerateTooltip) {
-      tooltip = user_data->m_GenerateTooltip(pickId);
+    if (user_data && user_data->generate_tooltip_) {
+      tooltip = user_data->generate_tooltip_(pickId);
     }
   }
 
@@ -661,7 +661,7 @@ Batcher& CaptureWindow::GetBatcherById(uint32_t batcher_id) {
                          : ui_batcher_;
 }
 
-PickingMode CaptureWindow::GetPickingMode() { 
+[[nodiscard]] PickingMode CaptureWindow::GetPickingMode() { 
   PickingMode picking_mode = PickingMode::kNone;
   if (m_Picking) {
     picking_mode = PickingMode::kClick;

@@ -66,7 +66,7 @@ class CaptureWindow : public GlCanvas {
   Batcher& GetBatcherById(uint32_t batcher_id);
  
  private:
-  PickingMode GetPickingMode();
+  [[nodiscard]] PickingMode GetPickingMode();
 
  private:
   TimeGraph time_graph_;
