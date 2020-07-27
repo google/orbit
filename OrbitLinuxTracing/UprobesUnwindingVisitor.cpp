@@ -94,9 +94,9 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   sample.set_timestamp_ns(event->GetTimestamp());
 
   Callstack* callstack = sample.mutable_callstack();
+  uint64_t* raw_callchain = event->GetCallchain();
   // Skip the first frame as the top of a perf_event_open callchain is always
   // inside kernel code.
-  uint64_t* raw_callchain = event->GetCallchain();
   callstack->add_pcs(raw_callchain[1]);
   // Only the address of the top of the stack is correct. Frame-based unwinding
   // uses the return address of a function call as the caller's address.
