@@ -792,9 +792,7 @@ outcome::result<void> OrbitMainWindow::OpenCapture(
     QMessageBox::critical(
         this, "Error loading capture",
         QString::fromStdString(absl::StrFormat(
-            "Could not load capture from \"%s\":\n%s.\nNote: If the capture "
-            "was taken in a previous Orbit version, it could be incompatible. "
-            "Please check release notes for more information.",
+            "Could not load capture from \"%s\":\n%s",
             filepath, result.error().message())));
     return std::errc::no_such_file_or_directory;
   }

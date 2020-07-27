@@ -8,7 +8,6 @@
 #include <optional>
 #include <string>
 
-#include "SerializationMacros.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 
@@ -21,7 +20,9 @@ class StringManager {
   bool Contains(uint64_t key);
   void Clear();
 
-  ORBIT_SERIALIZABLE;
+  const absl::flat_hash_map<uint64_t, std::string>& GetKeyToStringMap() const {
+    return key_to_string_;
+  }
 
  private:
   absl::flat_hash_map<uint64_t, std::string> key_to_string_;
