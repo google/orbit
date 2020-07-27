@@ -85,3 +85,9 @@ bool TimeGraphLayout::DrawProperties() {
 
   return needs_redraw;
 }
+
+float TimeGraphLayout::GetBottomMargin() const {
+  // The bottom consists of the slider (where we have to take the width, as it
+  // is rotated), and the time bar.
+  return GetSliderWidth() + GetTimeBarHeight(); 
+}

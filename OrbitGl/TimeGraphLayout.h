@@ -27,6 +27,8 @@ class TimeGraphLayout {
   float GetRoundingRadius() const { return m_RoundingRadius; }
   float GetRoundingNumSides() const { return m_RoundingNumSides; }
   float GetTextOffset() const { return m_TextOffset; }
+  float GetBottomMargin() const;
+  float GetTopMargin() const { return GetSchedulerTrackOffset(); }
   float GetVerticalMargin() const { return m_VerticalMargin; }
   float GetSchedulerTrackOffset() const { return m_SchedulerTrackOffset; }
   float GetSpaceBetweenTracks() const { return m_SpaceBetweenTracks; }
