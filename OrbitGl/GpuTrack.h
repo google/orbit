@@ -39,7 +39,7 @@ class GpuTrack : public Track {
 
   // Track
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
-                        PickingMode picking_mode) override;
+                        PickingMode /*picking_mode*/) override;
   Type GetType() const override { return kGpuTrack; }
   float GetHeight() const override;
 

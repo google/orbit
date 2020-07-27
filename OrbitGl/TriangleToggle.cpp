@@ -17,7 +17,7 @@ TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
 void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
 
-  const float picking = picking_mode != PickingMode::kNone;
+  const bool picking = picking_mode != PickingMode::kNone;
   const Color kWhite(255, 255, 255, 255);
   const Color kGrey(100, 100, 100, 255);
   Color color = state_ == State::kInactive ? kGrey : kWhite;

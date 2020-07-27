@@ -186,7 +186,9 @@ bool EventTrack::IsEmpty() const {
 std::string EventTrack::GetSampleTooltip(PickingID id) const {
   auto SafeGetFormattedFunctionName = [](uint64_t addr) -> std::string {
     auto it = Capture::GAddressToFunctionName.find(addr);
-    return it == Capture::GAddressToFunctionName.end() ? "<i>???</i>" : it->second;
+    return it == Capture::GAddressToFunctionName.end()
+               ? std::string("<i>") + "???" + "</i>"
+               : it->second;
   };
 
   static const std::string unknown_return_text = "Function call information missing";
