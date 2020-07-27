@@ -588,8 +588,8 @@ void TimeGraph::Draw(GlCanvas* canvas, bool a_Picking) {
 
 namespace {
 
-std::string GetLabelBetweenIterators(
-    const TextBox* box_a, const TextBox* box_b) {
+std::string GetLabelBetweenIterators(const TextBox* box_a,
+                                     const TextBox* box_b) {
   std::string function_from =
       Capture::GAddressToFunctionName[box_a->GetTimer().m_FunctionAddress];
   std::string function_to =
@@ -625,8 +625,9 @@ void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
 
   float max_size = size[0];
   canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
-      text.c_str(), pos[0] + kLeftOffset, text_y + kAdditionalSpaceForLine, GlCanvas::Z_VALUE_TEXT,
-      Color(255, 255, 255, 255), time.length(), max_size);
+      text.c_str(), pos[0] + kLeftOffset, text_y + kAdditionalSpaceForLine,
+      GlCanvas::Z_VALUE_TEXT, Color(255, 255, 255, 255), time.length(),
+      max_size);
 
   constexpr const float kOffsetBelowText = kAdditionalSpaceForLine / 2.f;
   Vec2 line_from(pos[0], text_y + kOffsetBelowText);
