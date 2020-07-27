@@ -16,6 +16,8 @@ class EventTrack : public Track {
   explicit EventTrack(TimeGraph* a_TimeGraph);
   Type GetType() const override { return kEventTrack; }
 
+  std::string GetTooltip() const override;
+
   void Draw(GlCanvas* canvas, bool picking) override;
   void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) override;
 

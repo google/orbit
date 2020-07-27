@@ -221,14 +221,17 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
         text_box.SetPos(pos);
         text_box.SetSize(size);
 
+        auto user_data = std::make_unique<PickingUserData>(
+          &text_box, [&](PickingID id) { return this->GetBoxTooltip(id); });
+
         if (is_visible_width) {
           if (!is_collapsed) {
             SetTimesliceText(timer, elapsed_us, min_x, &text_box);
           }
-          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, &text_box);
+          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, std::move(user_data));
         } else {
           auto type = PickingID::LINE;
-          batcher->AddVerticalLine(pos, size[1], z, color, type, &text_box);
+          batcher->AddVerticalLine(pos, size[1], z, color, type, std::move(user_data));
           // For lines, we can ignore the entire pixel into which this event
           // falls. We align this precisely on the pixel x-coordinate of the
           // current line being drawn (in ticks). If pixel_delta_in_ticks is
@@ -268,6 +271,10 @@ void ThreadTrack::OnTimer(const Timer& timer) {
   ++num_timers_;
   if (timer.m_Start < min_time_) min_time_ = timer.m_Start;
   if (timer.m_End > max_time_) max_time_ = timer.m_End;
+}
+
+std::string ThreadTrack::GetTooltip() const {
+  return "Shows collected samples and timings from dynamically instrumented functions";
 }
 
 //-----------------------------------------------------------------------------
@@ -389,4 +396,30 @@ void ThreadTrack::SetEventTrackColor(Color color) {
 //-----------------------------------------------------------------------------
 bool ThreadTrack::IsEmpty() const {
   return (GetNumTimers() == 0) && event_track_->IsEmpty();
+}
+
+
+//-----------------------------------------------------------------------------
+std::string ThreadTrack::GetBoxTooltip(PickingID id) const {
+  TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
+  if (!text_box || text_box->GetTimer().m_Type == Timer::CORE_ACTIVITY) {
+    return "";
+  }
+
+  Function* func =
+      Capture::GSelectedFunctionsMap[text_box->GetTimer().m_FunctionAddress];
+  if (!func) {
+    return text_box->GetText();
+  }
+
+  return absl::StrFormat(
+    "<b>%s</b><br/>"
+    "<i>Timing measured through dynamic instrumentation</i>"
+    "<br/><br/>"
+    "<b>Module:</b> %s<br/>"
+    "<b>Time:</b> %s",
+    FunctionUtils::GetDisplayName(*func),
+    FunctionUtils::GetLoadedModuleName(*func),
+    GetPrettyTime(text_box->GetTimer().ElapsedMillis())
+  );
 }

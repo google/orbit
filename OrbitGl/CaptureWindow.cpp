@@ -180,41 +180,13 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
 //-----------------------------------------------------------------------------
 void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
   uint32_t type = a_PickingID.m_Type;
-  uint32_t id = a_PickingID.m_Id;
-  uint32_t batcher_id = a_PickingID.batcher_id_;
 
-  Batcher& batcher = (batcher_id == PickingID::TIME_GRAPH)
-                         ? time_graph_.GetBatcher()
-                         : ui_batcher_;
-
-  switch (type) {
-    case PickingID::BOX: {
-      void** textBoxPtr = batcher.GetBoxBuffer().m_UserData.SlowAt(id);
-      if (textBoxPtr) {
-        TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
-        SelectTextBox(textBox);
-      }
-      break;
-    }
-    case PickingID::LINE: {
-      void** textBoxPtr = batcher.GetLineBuffer().m_UserData.SlowAt(id);
-      if (textBoxPtr) {
-        TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
-        SelectTextBox(textBox);
-      }
-      break;
-    }
-    case PickingID::TRIANGLE: {
-      void** textBoxPtr = batcher.GetTriangleBuffer().user_data_.SlowAt(id);
-      if (textBoxPtr) {
-        TextBox* textBox = static_cast<TextBox*>(*textBoxPtr);
-        SelectTextBox(textBox);
-      }
-      break;
-    }
-    case PickingID::PICKABLE:
-      m_PickingManager.Pick(a_PickingID.m_Id, a_X, a_Y);
-      break;
+  Batcher& batcher = GetBatcherById(a_PickingID.batcher_id_);
+  TextBox* text_box = batcher.GetTextBox(a_PickingID);
+  if (text_box) {
+    SelectTextBox(text_box);
+  } else if (type == PickingID::PICKABLE) {
+    m_PickingManager.Pick(a_PickingID.m_Id, a_X, a_Y);
   }
 }
 
@@ -244,19 +216,24 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
                &pixels[0]);
 
   PickingID pickId = *reinterpret_cast<PickingID*>(&pixels[0]);
+  Batcher& batcher = GetBatcherById(pickId.batcher_id_);
 
-  TextBox* textBox = time_graph_.GetBatcher().GetTextBox(pickId);
-  if (textBox) {
-    if (textBox->GetTimer().m_Type != Timer::CORE_ACTIVITY) {
-      Function* func =
-          Capture::GSelectedFunctionsMap[textBox->GetTimer().m_FunctionAddress];
-      m_ToolTip = absl::StrFormat(
-          "%s %s", func ? FunctionUtils::GetDisplayName(*func) : "",
-          textBox->GetText());
-      GOrbitApp->SendTooltipToUi(m_ToolTip);
-      NeedsRedraw();
+  std::string tooltip = "";
+
+  if (pickId.m_Type == PickingID::PICKABLE) {
+    Pickable* pickable = GetPickingManager().GetPickableFromId(pickId.m_Id);
+    if (pickable) {
+      tooltip = pickable->GetTooltip();
+    }
+  } else {
+    PickingUserData* user_data = batcher.GetUserData(pickId);
+
+    if (user_data && user_data->m_GenerateTooltip) {
+      tooltip = user_data->m_GenerateTooltip(pickId);
     }
   }
+
+  GOrbitApp->SendTooltipToUi(tooltip);
 }
 
 //-----------------------------------------------------------------------------
@@ -264,7 +241,7 @@ void CaptureWindow::FindCode(DWORD64 /*address*/) {}
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::PreRender() {
-  if (m_CanHover && m_HoverTimer.QueryMillis() > m_HoverDelayMs) {
+  if (is_mouse_over_ && m_CanHover && m_HoverTimer.QueryMillis() > m_HoverDelayMs) {
     m_IsHovering = true;
     m_Picking = true;
     NeedsRedraw();
@@ -672,6 +649,12 @@ void CaptureWindow::UpdateVerticalSlider() {
 void CaptureWindow::ToggleDrawHelp() {
   m_DrawHelp = !m_DrawHelp;
   NeedsRedraw();
+}
+
+Batcher& CaptureWindow::GetBatcherById(uint32_t batcher_id) {
+  return batcher_id == PickingID::TIME_GRAPH
+                         ? time_graph_.GetBatcher()
+                         : ui_batcher_;
 }
 
 //-----------------------------------------------------------------------------

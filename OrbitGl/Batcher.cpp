@@ -8,95 +8,115 @@
 #include "OpenGl.h"
 
 void Batcher::AddLine(const Line& line, const Color* colors,
-                      PickingID::Type picking_type, void* user_data) {
+                      PickingID::Type picking_type,
+                      std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingID::GetColor(
       picking_type, line_buffer_.m_Lines.size(), batcher_id_);
   line_buffer_.m_Lines.push_back(line);
   line_buffer_.m_Colors.push_back(colors, 2);
   line_buffer_.m_PickingColors.push_back_n(picking_color, 2);
-  line_buffer_.m_UserData.push_back(user_data);
+  line_buffer_.m_UserData.push_back(std::move(user_data));
 }
 
 void Batcher::AddLine(const Line& line, Color color,
-                      PickingID::Type picking_type, void* user_data) {
+                      PickingID::Type picking_type,
+                      std::unique_ptr<PickingUserData> user_data) {
   Color colors[2];
   Fill(colors, color);
-  AddLine(line, colors, picking_type, user_data);
+  AddLine(line, colors, picking_type, std::move(user_data));
 }
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, Color color,
-                      PickingID::Type picking_type, void* user_data) {
+                      PickingID::Type picking_type,
+                      std::unique_ptr<PickingUserData> user_data) {
   Line line;
   Color colors[2];
   Fill(colors, color);
   line.m_Beg = Vec3(from[0], from[1], z);
   line.m_End = Vec3(to[0], to[1], z);
-  AddLine(line, colors, picking_type, user_data);
+  AddLine(line, colors, picking_type, std::move(user_data));
 }
 
 void Batcher::AddVerticalLine(Vec2 pos, float size, float z, Color color,
-                              PickingID::Type picking_type, void* user_data) {
+                              PickingID::Type picking_type,
+                              std::unique_ptr<PickingUserData> user_data) {
   Line line;
   Color colors[2];
   Fill(colors, color);
   line.m_Beg = Vec3(pos[0], pos[1], z);
   line.m_End = Vec3(pos[0], pos[1] + size, z);
-  AddLine(line, colors, picking_type, user_data);
+  AddLine(line, colors, picking_type, std::move(user_data));
 }
 
 void Batcher::AddBox(const Box& a_Box, const Color* colors,
-                     PickingID::Type picking_type, void* user_data) {
+                     PickingID::Type picking_type,
+                     std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingID::GetColor(
       picking_type, box_buffer_.m_Boxes.size(), batcher_id_);
   box_buffer_.m_Boxes.push_back(a_Box);
   box_buffer_.m_Colors.push_back(colors, 4);
   box_buffer_.m_PickingColors.push_back_n(picking_color, 4);
-  box_buffer_.m_UserData.push_back(user_data);
+  box_buffer_.m_UserData.push_back(std::move(user_data));
 }
 
 void Batcher::AddBox(const Box& a_Box, Color color,
-                     PickingID::Type picking_type, void* user_data) {
+                     PickingID::Type picking_type,
+                     std::unique_ptr<PickingUserData> user_data) {
   Color colors[4];
   Fill(colors, color);
-  AddBox(a_Box, colors, picking_type, user_data);
+  AddBox(a_Box, colors, picking_type, std::move(user_data));
 }
 
 void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
-                           PickingID::Type picking_type, void* user_data) {
+                           PickingID::Type picking_type,
+                           std::unique_ptr<PickingUserData> user_data) {
   Color colors[4];
   GetBoxGradientColors(color, colors);
   Box box(pos, size, z);
-  AddBox(box, colors, picking_type, user_data);
+  AddBox(box, colors, picking_type, std::move(user_data));
 }
 
 void Batcher::AddTriangle(const Triangle& triangle, Color color,
-                          PickingID::Type picking_type, void* user_data) {
+                          PickingID::Type picking_type,
+                          std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingID::GetColor(
       picking_type, triangle_buffer_.triangles_.size(), batcher_id_);
   triangle_buffer_.triangles_.push_back(triangle);
   triangle_buffer_.colors_.push_back_n(color, 3);
   triangle_buffer_.picking_colors_.push_back_n(picking_color, 3);
-  triangle_buffer_.user_data_.push_back(user_data);
+  triangle_buffer_.user_data_.push_back(std::move(user_data));
 }
 
 void Batcher::AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
-                          PickingID::Type picking_type, void* user_data) {
-  AddTriangle(Triangle(v0, v1, v2), color, picking_type, user_data);
+                          PickingID::Type picking_type,
+                          std::unique_ptr<PickingUserData> user_data) {
+  AddTriangle(Triangle(v0, v1, v2), color, picking_type, std::move(user_data));
+}
+
+PickingUserData* Batcher::GetUserData(PickingID a_ID) {
+  CHECK(a_ID.m_Id >= 0);
+
+  switch (a_ID.m_Type) {
+    case PickingID::BOX:
+      CHECK(a_ID.m_Id < box_buffer_.m_UserData.size());
+      return box_buffer_.m_UserData[a_ID.m_Id].get();
+    case PickingID::LINE:
+      CHECK(a_ID.m_Id < line_buffer_.m_UserData.size());
+      return line_buffer_.m_UserData[a_ID.m_Id].get();
+    case PickingID::TRIANGLE:
+      CHECK(a_ID.m_Id < triangle_buffer_.user_data_.size());
+      return triangle_buffer_.user_data_[a_ID.m_Id].get();
+  }
+
+  return nullptr;
+ ;
 }
 
 TextBox* Batcher::GetTextBox(PickingID a_ID) {
-  if (a_ID.m_Type == PickingID::BOX) {
-    if (void** textBoxPtr = box_buffer_.m_UserData.SlowAt(a_ID.m_Id)) {
-      return static_cast<TextBox*>(*textBoxPtr);
-    }
-  } else if (a_ID.m_Type == PickingID::LINE) {
-    if (void** textBoxPtr = line_buffer_.m_UserData.SlowAt(a_ID.m_Id)) {
-      return static_cast<TextBox*>(*textBoxPtr);
-    }
-  } else if (a_ID.m_Type == PickingID::TRIANGLE) {
-    if (void** textBoxPtr = triangle_buffer_.user_data_.SlowAt(a_ID.m_Id)) {
-      return static_cast<TextBox*>(*textBoxPtr);
-    }
+  PickingUserData* data = GetUserData(a_ID);
+
+  if (data && data->m_TextBox) {
+    return data->m_TextBox; 
   }
 
   return nullptr;
