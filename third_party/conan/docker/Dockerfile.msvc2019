@@ -14,6 +14,7 @@ RUN iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.or
     $env:Path += '";C:\tools\python3;C:\tools\python3\Scripts"'; `
     choco install --no-progress --yes --ignorepackagecodes git --version=2.26.2; `
     choco install --no-progress --yes --ignorepackagecodes python3 --version=3.8.2 --params '"/InstallDir:C:\tools\python3"'; `
+    choco install --no-progress --yes --ignorepackagecodes python2 --version=2.7.18 --params '"/InstallDir:C:\tools\python2"'; `
     choco install --no-progress --yes --ignorepackagecodes jq --version=1.6; `
     choco install --no-progress --yes --ignorepackagecodes windows-sdk-8.1; `
     choco install --no-progress --yes --ignorepackagecodes zip --version=3.0; `
@@ -37,7 +38,7 @@ RUN C:\TEMP\Install.cmd C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --n
     --add Microsoft.Component.VC.Runtime.UCRTSDK `
     --add Microsoft.Component.MSBuild `
     --add Microsoft.VisualStudio.Component.VC.ATL `
-    --add Microsoft.VisualStudio.Component.Windows10SDK.17763 `
+    --add Microsoft.VisualStudio.Component.Windows10SDK.18362 `
     --installPath C:\BuildTools
 
 ADD https://downloads.fdossena.com/Projects/Mesa3D/Builds/MesaForWindows-x64-20.1.5.7z C:\TEMP\MesaForWindows.7z
