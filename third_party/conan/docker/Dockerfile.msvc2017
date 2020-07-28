@@ -14,9 +14,11 @@ RUN iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.or
     $env:Path += '";C:\tools\python3;C:\tools\python3\Scripts"'; `
     choco install --no-progress --yes --ignorepackagecodes git --version=2.26.2; `
     choco install --no-progress --yes --ignorepackagecodes python3 --version=3.8.2 --params '"/InstallDir:C:\tools\python3"'; `
+    choco install --no-progress --yes --ignorepackagecodes python2 --version=2.7.18 --params '"/InstallDir:C:\tools\python2"'; `
     choco install --no-progress --yes --ignorepackagecodes jq --version=1.6; `
     choco install --no-progress --yes --ignorepackagecodes windows-sdk-8.1; `
     choco install --no-progress --yes --ignorepackagecodes zip --version=3.0; `
+    choco install --no-progress --yes --ignorepackagecodes windows-sdk-10.1; `
     python -m pip install --quiet --upgrade pip; `
     python -m pip install win-unicode-console --quiet --upgrade --force-reinstall --no-cache; `
     python -m pip install conan==1.27.1 --quiet --upgrade --force-reinstall --no-cache; `
