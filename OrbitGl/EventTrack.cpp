@@ -187,7 +187,8 @@ bool EventTrack::IsEmpty() const {
 }
 
 //-----------------------------------------------------------------------------
-std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) {
+static std::string SafeGetFormattedFunctionName(uint64_t addr,
+                                                int max_line_length) {
   auto it = Capture::GAddressToFunctionName.find(addr);
   if (it == Capture::GAddressToFunctionName.end()) {
     return std::string("<i>") + "???" + "</i>";
@@ -202,9 +203,9 @@ std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) {
 };
 
 //-----------------------------------------------------------------------------
-std::string FormatCallstackForTooltip(std::shared_ptr<CallStack> callstack,
-                                      int max_line_length = 80,
-                                      int max_lines = 13) {
+static std::string FormatCallstackForTooltip(
+    std::shared_ptr<CallStack> callstack, int max_line_length = 80,
+    int max_lines = 13) {
   std::string result;
   int size = static_cast<int>(callstack->m_Data.size());
   if (max_lines <= 0) {
