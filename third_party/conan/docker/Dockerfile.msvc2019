@@ -34,7 +34,7 @@ RUN C:\TEMP\Install.cmd C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --n
     --add Microsoft.Component.VC.Runtime.UCRTSDK `
     --add Microsoft.Component.MSBuild `
     --add Microsoft.VisualStudio.Component.VC.ATL `
-    --add Microsoft.VisualStudio.Component.Windows10SDK.17763 `
+    --add Microsoft.VisualStudio.Component.Windows10SDK.18362 `
     --installPath C:\BuildTools
 
 
