@@ -37,9 +37,6 @@ class OrbitMainWindow : public QMainWindow {
   void OnNewSamplingReport(
       DataView* callstack_data_view,
       std::shared_ptr<class SamplingReport> sampling_report);
-  void CreateSamplingTab();
-  void CreateSelectionTab();
-  void CreateLiveTab();
   void OnNewSelectionReport(
       DataView* callstack_data_view,
       std::shared_ptr<class SamplingReport> sampling_report);
@@ -103,21 +100,6 @@ class OrbitMainWindow : public QMainWindow {
   QTimer* m_MainTimer;
   std::vector<OrbitGLWidget*> m_GlWidgets;
   bool m_Headless;
-
-  // Live tab
-  class QWidget* live_tab_;
-  class OrbitLiveFunctions* live_functions_;
-  class QGridLayout* live_layout_;
-
-  // Sampling tab.
-  class QWidget* m_SamplingTab;
-  class OrbitSamplingReport* m_OrbitSamplingReport;
-  class QGridLayout* m_SamplingLayout;
-
-  // Selection tab.
-  class QWidget* m_SelectionTab;
-  class OrbitSamplingReport* m_SelectionReport;
-  class QGridLayout* m_SelectionLayout;
 
   // Capture toolbar.
   QLabel* timer_label_ = nullptr;

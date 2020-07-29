@@ -114,7 +114,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   GOrbitApp->SetRefreshCallback([this](DataViewType a_Type) {
     this->OnRefreshDataViewPanels(a_Type);
-    this->live_functions_->OnDataChanged();
+    this->ui->liveFunctions->OnDataChanged();
   });
   GOrbitApp->SetSamplingReportCallback(
       [this](DataView* callstack_data_view,
@@ -132,7 +132,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->SetSaveCaptureCallback(
       [this] { on_actionSave_Capture_triggered(); });
   GOrbitApp->SetSelectLiveTabCallback(
-      [this] { ui->RightTabWidget->setCurrentWidget(live_tab_); });
+      [this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
   GOrbitApp->SetDisassemblyCallback(
       [this](const std::string& disassembly,
              const std::function<double(size_t)>& line_to_hits) {
@@ -212,11 +212,9 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   m_OutputDialog = new OutputDialog(this);
   m_OutputDialog->setWindowTitle("Orbit - Loading Pdb...");
 
-  CreateLiveTab();
-  CreateSamplingTab();
-  CreateSelectionTab();
+  ui->liveFunctions->Initialize(SelectionType::kExtended, FontType::kDefault);
 
-  connect(live_functions_->GetFilterLineEdit(), &QLineEdit::textChanged, this,
+  connect(ui->liveFunctions->GetFilterLineEdit(), &QLineEdit::textChanged, this,
           [this](const QString& text) {
             OnLiveTabFunctionsFilterTextChanged(text);
           });
@@ -382,7 +380,6 @@ void OrbitMainWindow::ShowFeedbackDialog() {
 //-----------------------------------------------------------------------------
 OrbitMainWindow::~OrbitMainWindow() {
   delete m_OutputDialog;
-  delete live_functions_;
   delete ui;
 }
 
@@ -458,7 +455,7 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
       ui->FunctionsList->Refresh();
       break;
     case DataViewType::LIVE_FUNCTIONS:
-      live_functions_->Refresh();
+      ui->liveFunctions->Refresh();
       break;
     case DataViewType::MODULES:
       ui->ModulesList->Refresh();
@@ -470,10 +467,10 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
       ui->SessionList->Refresh();
       break;
     case DataViewType::SAMPLING:
-      m_OrbitSamplingReport->RefreshCallstackView();
-      m_OrbitSamplingReport->RefreshTabs();
-      m_SelectionReport->RefreshCallstackView();
-      m_SelectionReport->RefreshTabs();
+      ui->samplingReport->RefreshCallstackView();
+      ui->samplingReport->RefreshTabs();
+      ui->selectionReport->RefreshCallstackView();
+      ui->selectionReport->RefreshTabs();
       break;
     default:
       break;
@@ -481,69 +478,36 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::CreateSamplingTab() {
-  m_SamplingTab = new QWidget();
-  m_SamplingLayout = new QGridLayout(m_SamplingTab);
-  m_SamplingLayout->setSpacing(6);
-  m_SamplingLayout->setContentsMargins(11, 11, 11, 11);
-  m_OrbitSamplingReport = new OrbitSamplingReport(m_SamplingTab);
-  m_SamplingLayout->addWidget(m_OrbitSamplingReport, 0, 0, 1, 1);
-
-  ui->RightTabWidget->addTab(m_SamplingTab, QString("sampling"));
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::CreateLiveTab() {
-  live_tab_ = new QWidget();
-  live_layout_ = new QGridLayout(live_tab_);
-  live_layout_->setSpacing(6);
-  live_layout_->setContentsMargins(11, 11, 11, 11);
-  live_functions_ = new OrbitLiveFunctions(live_tab_);
-  live_functions_->Initialize(SelectionType::kExtended, FontType::kDefault);
-  live_layout_->addWidget(live_functions_);
-  ui->RightTabWidget->addTab(live_tab_, QString("live"));
-}
-
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::OnNewSamplingReport(
     DataView* callstack_data_view,
     std::shared_ptr<SamplingReport> sampling_report) {
-  m_SamplingLayout->removeWidget(m_OrbitSamplingReport);
-  delete m_OrbitSamplingReport;
+  ui->samplingGridLayout->removeWidget(ui->samplingReport);
+  delete ui->samplingReport;
 
-  m_OrbitSamplingReport = new OrbitSamplingReport(m_SamplingTab);
-  m_OrbitSamplingReport->Initialize(callstack_data_view, sampling_report);
-  m_SamplingLayout->addWidget(m_OrbitSamplingReport, 0, 0, 1, 1);
+  ui->samplingReport = new OrbitSamplingReport(ui->samplingTab);
+  ui->samplingReport->Initialize(callstack_data_view,
+                                 std::move(sampling_report));
+  ui->samplingGridLayout->addWidget(ui->samplingReport, 0, 0, 1, 1);
 
   // Automatically switch to sampling tab if not already in live tab.
-  if (ui->RightTabWidget->currentWidget() != live_tab_) {
-    ui->RightTabWidget->setCurrentWidget(m_SamplingTab);
+  if (ui->RightTabWidget->currentWidget() != ui->liveTab) {
+    ui->RightTabWidget->setCurrentWidget(ui->samplingTab);
   }
-}
-
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::CreateSelectionTab() {
-  m_SelectionTab = new QWidget();
-  m_SelectionLayout = new QGridLayout(m_SelectionTab);
-  m_SelectionLayout->setSpacing(6);
-  m_SelectionLayout->setContentsMargins(11, 11, 11, 11);
-  m_SelectionReport = new OrbitSamplingReport(m_SelectionTab);
-  m_SelectionLayout->addWidget(m_SelectionReport, 0, 0, 1, 1);
-  ui->RightTabWidget->addTab(m_SelectionTab, QString("selection"));
 }
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnNewSelectionReport(
     DataView* callstack_data_view,
-    std::shared_ptr<class SamplingReport> sampling_report) {
-  m_SelectionLayout->removeWidget(m_SelectionReport);
-  delete m_SelectionReport;
+    std::shared_ptr<SamplingReport> sampling_report) {
+  ui->selectionGridLayout->removeWidget(ui->selectionReport);
+  delete ui->selectionReport;
 
-  m_SelectionReport = new OrbitSamplingReport(m_SelectionTab);
-  m_SelectionReport->Initialize(callstack_data_view, sampling_report);
-  m_SelectionLayout->addWidget(m_SelectionReport, 0, 0, 1, 1);
+  ui->selectionReport = new OrbitSamplingReport(ui->selectionTab);
+  ui->selectionReport->Initialize(callstack_data_view,
+                                  std::move(sampling_report));
+  ui->selectionGridLayout->addWidget(ui->selectionReport, 0, 0, 1, 1);
 
-  ui->RightTabWidget->setCurrentWidget(m_SelectionTab);
+  ui->RightTabWidget->setCurrentWidget(ui->selectionTab);
 }
 
 //-----------------------------------------------------------------------------
@@ -631,7 +595,7 @@ void OrbitMainWindow::OnHideSearch() { ui->lineEdit->hide(); }
 
 void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
   // The toolbar and live tab filters are mirrored.
-  live_functions_->SetFilter(text);
+  ui->liveFunctions->SetFilter(text);
 }
 
 //-----------------------------------------------------------------------------
@@ -864,5 +828,5 @@ void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
 }
 
 void OrbitMainWindow::OnCaptureCleared() {
-  live_functions_->Reset();
+  ui->liveFunctions->Reset();
 }

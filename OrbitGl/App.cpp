@@ -432,7 +432,11 @@ void OrbitApp::RegisterCaptureWindow(CaptureWindow* a_Capture) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::NeedsRedraw() { m_CaptureWindow->NeedsUpdate(); }
+void OrbitApp::NeedsRedraw() {
+  if (m_CaptureWindow != nullptr) {
+    m_CaptureWindow->NeedsUpdate();
+  }
+}
 
 //-----------------------------------------------------------------------------
 void OrbitApp::AddSamplingReport(
