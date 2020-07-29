@@ -144,6 +144,7 @@ target_sources(OrbitCoreTests PRIVATE
     RingBufferTest.cpp
     StringManagerTest.cpp
     SymbolHelperTest.cpp
+    UtilsTest.cpp
 )
 
 if(NOT WIN32)

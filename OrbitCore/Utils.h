@@ -32,6 +32,12 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 
+#define CONCAT_(x, y) x##y
+#define CONCAT(x, y) CONCAT_(x, y)
+#define UNIQUE_VAR CONCAT(Unique, __LINE__)
+#define UNIQUE_ID CONCAT(Id_, __LINE__)
+#define UNUSED(x) (void)(x)
+
 //-----------------------------------------------------------------------------
 inline std::string ws2s(const std::wstring& wstr) {
   std::string str;
@@ -276,6 +282,37 @@ class CWindowsMessageToString {
 #endif
 
 //-----------------------------------------------------------------------------
+enum class EllipsisPosition { kMiddle };
+
+inline std::string ShortenStringWithEllipsis(
+    std::string_view text, size_t max_len,
+    EllipsisPosition pos = EllipsisPosition::kMiddle) {
+  // Parameter is mainly here to indicate how the util works,
+  // and to be potentially extended later
+  UNUSED(pos);
+  constexpr const size_t kNumCharsEllipsis = 3;
+
+  if (max_len <= kNumCharsEllipsis) {
+    return text.length() <= kNumCharsEllipsis ? std::string(text) : "...";
+  }
+  if (text.length() <= max_len) {
+    return std::string(text);
+  }
+
+  const size_t chars_to_cut = text.length() - max_len + kNumCharsEllipsis;
+  size_t l = text.length() - chars_to_cut;
+  // Integer division by two, rounded up
+  if (l & 0x1) {
+    l = (l + 1) >> 1;
+  } else {
+    l = l >> 1;
+  }
+
+  const size_t r = l + chars_to_cut;
+  return std::string(text.substr(0, l)) + "..." + std::string(text.substr(r));
+}
+
+//-----------------------------------------------------------------------------
 inline std::string GetPrettySize(uint64_t size) {
   constexpr double KB = 1024.0;
   constexpr double MB = 1024.0 * KB;
@@ -449,12 +486,6 @@ std::string FormatTime(const time_t& rawtime);
 //-----------------------------------------------------------------------------
 bool ReadProcessMemory(int32_t pid, uint64_t address, byte* buffer,
                        uint64_t size, uint64_t* num_bytes_read);
-
-#define CONCAT_(x, y) x##y
-#define CONCAT(x, y) CONCAT_(x, y)
-#define UNIQUE_VAR CONCAT(Unique, __LINE__)
-#define UNIQUE_ID CONCAT(Id_, __LINE__)
-#define UNUSED(x) (void)(x)
 
 #if __linux__
 #define FUNCTION_NAME __PRETTY_FUNCTION__
