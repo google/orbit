@@ -82,17 +82,6 @@ void CaptureSerializer::SaveImpl(T& archive) {
 
     archive(functions);
   }
-
-  {
-    ORBIT_SIZE_SCOPE("Capture::GFunctionCountMap");
-    archive(Capture::GFunctionCountMap);
-  }
-
-  {
-    ORBIT_SIZE_SCOPE("Capture::GCallstacks");
-    archive(Capture::GCallstacks);
-  }
-
   {
     ORBIT_SIZE_SCOPE("Capture::GProcessId");
     archive(Capture::GProcessId);
@@ -114,23 +103,14 @@ void CaptureSerializer::SaveImpl(T& archive) {
   }
 
   {
-    ORBIT_SIZE_SCOPE("Capture::GAddressToFunctionName");
-    archive(Capture::GAddressToFunctionName);
-  }
-
-  {
     ORBIT_SIZE_SCOPE("SamplingProfiler");
+    Capture::GSamplingProfiler->SaveCallstacks();
     archive(Capture::GSamplingProfiler);
   }
 
   {
     ORBIT_SIZE_SCOPE("String manager");
     archive(*time_graph_->GetStringManager());
-  }
-
-  {
-    ORBIT_SIZE_SCOPE("Event Buffer");
-    archive(GEventTracer.GetEventBuffer());
   }
 
   // Timers
@@ -171,6 +151,24 @@ ErrorMessageOr<void> CaptureSerializer::Load(const std::string& filename) {
   }
 }
 
+void FillFunctionCountMap() {
+  Capture::GFunctionCountMap.clear();
+  for (const auto& pair : Capture::GSelectedFunctionsMap) {
+    uint64_t address = pair.first;
+    Function* function = pair.second;
+    Capture::GFunctionCountMap[address] = function->stats()->m_Count;
+  }
+}
+
+void FillEventBuffer() {
+  GEventTracer.GetEventBuffer().Reset();
+  for (const CallstackEvent& callstack_event :
+       *Capture::GSamplingProfiler->GetCallstacks()) {
+    GEventTracer.GetEventBuffer().AddCallstackEvent(
+        callstack_event.m_Time, callstack_event.m_Id, callstack_event.m_TID);
+  }
+}
+
 ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   // Header
   cereal::BinaryInputArchive archive(stream);
@@ -185,14 +183,12 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
     std::shared_ptr<Function> function_ptr =
         std::make_shared<Function>(function);
     Capture::GSelectedFunctions.push_back(function_ptr);
-    Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(*function_ptr)] =
-        function_ptr.get();
+    Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(
+        *function_ptr)] = function_ptr.get();
   }
   Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
-  archive(Capture::GFunctionCountMap);
-
-  archive(Capture::GCallstacks);
+  FillFunctionCountMap();
 
   archive(Capture::GProcessId);
 
@@ -202,20 +198,18 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
 
   archive(Capture::GAddressInfos);
 
-  archive(Capture::GAddressToFunctionName);
-
   archive(Capture::GSamplingProfiler);
   if (Capture::GSamplingProfiler == nullptr) {
     Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();
   }
-  Capture::GSamplingProfiler->SortByThreadUsage();
+  Capture::GSamplingProfiler->LoadCallstacks();
+  Capture::GSamplingProfiler->ProcessSamples();
 
   time_graph_->Clear();
 
   archive(*time_graph_->GetStringManager());
 
-  // Event buffer
-  archive(GEventTracer.GetEventBuffer());
+  FillEventBuffer();
 
   // Timers
   Timer timer;
