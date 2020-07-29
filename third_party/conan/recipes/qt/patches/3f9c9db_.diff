@@ -1,0 +1,23 @@
+From 3f9c9db15d95fe52438971d8c1d01dfe00c23c6c Mon Sep 17 00:00:00 2001
+From: Kai Koehne <kai.koehne@qt.io>
+Date: Tue, 30 Jul 2019 11:07:18 +0200
+Subject: [PATCH] Use pkg-config --libs-only-other to resolve e.g. -pthread
+
+Fixes: QTBUG-77159
+Change-Id: If9ab3797ccfb52c6b96a4ab120c59fd8896d5466
+---
+
+diff --git a/mkspecs/features/qt_configure.prf b/mkspecs/features/qt_configure.prf
+index 242544d..f759d04 100644
+--- a/mkspecs/features/qt_configure.prf
++++ b/mkspecs/features/qt_configure.prf
+@@ -827,5 +827,8 @@
+     contains($${1}.libs, ".*\\.$${QMAKE_EXTENSION_STATICLIB}$") {
+-        qtRunLoggedCommand("$$pkg_config --static --libs $$args", libs)|return(false)
++        qtRunLoggedCommand("$$pkg_config --static --libs-only-L $$args", libpaths)|return(false)
++        qtRunLoggedCommand("$$pkg_config --static --libs-only-l $$args", libs)|return(false)
++        qtRunLoggedCommand("$$pkg_config --static --libs-only-other $$args", libs_other)|return(false)
++        eval(libs = $$libpaths $$libs $$libs_other)
+         !qtConfResolveLibs($${1}.libs, $$libs): \
+             return(false)
+     }

@@ -1,0 +1,48 @@
+From fbde9c70c2e8c44a312aa5d8e18efd0ac81b55c6 Mon Sep 17 00:00:00 2001
+From: Joerg Bornemann <joerg.bornemann@qt.io>
+Date: Mon, 18 Nov 2019 15:13:51 +0100
+Subject: [PATCH] Fix passing FOO_LIBS variables to configure
+
+This amends commit 9864d2c6. Some variables that are set in
+qtConfLibrary_inline were not exported.
+
+Fixes: QTBUG-78873
+Change-Id: I10d766c1f41d2baa61967ee931a6631346cac2e9
+---
+
+diff --git a/mkspecs/features/qt_configure.prf b/mkspecs/features/qt_configure.prf
+index 7ed1f7f..6537d98 100644
+--- a/mkspecs/features/qt_configure.prf
++++ b/mkspecs/features/qt_configure.prf
+@@ -666,6 +666,7 @@
+         vars += $$eval(config.commandline.rev_assignments.$${iv})
+         defined(config.input.$${iv}, var) {
+             eval($${1}.builds.$${b} = $$eval(config.input.$${iv}))
++            export($${1}.builds.$${b})
+             $${1}.builds._KEYS_ *= $${b}
+             any = true
+         } else {
+@@ -680,11 +681,14 @@
+         export($${1}.builds._KEYS_)
+         # we also reset the generic libs, to avoid surprises.
+         $${1}.libs =
++        export($${1}.libs)
+     }
+ 
+     # direct libs. overwrites inline libs.
+-    defined(config.input.$${input}.libs, var): \
++    defined(config.input.$${input}.libs, var) {
+         eval($${1}.libs = $$eval(config.input.$${input}.libs))
++        export($${1}.libs)
++    }
+ 
+     includes = $$eval(config.input.$${input}.incdir)
+ 
+@@ -693,6 +697,7 @@
+     !isEmpty(prefix) {
+         includes += $$prefix/include
+         $${1}.libs = -L$$prefix/lib $$eval($${1}.libs)
++        export($${1}.libs)
+     }
+ 
+     libdir = $$eval(config.input.$${input}.libdir)

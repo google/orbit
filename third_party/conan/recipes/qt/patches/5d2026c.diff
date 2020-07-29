@@ -1,0 +1,43 @@
+From 5d2026cb04ef8fd408e5722a84e2affb5b9a3119 Mon Sep 17 00:00:00 2001
+From: Peter Varga <pvarga@inf.u-szeged.hu>
+Date: Tue, 07 Apr 2020 10:09:37 +0200
+Subject: [PATCH] Fix macOS build after 10.15.4
+
+QMAKE_MAC_SDK_VERSION is set by
+/usr/bin/xcrun --sdk macosx --show-sdk-version
+in qtbase/mkpecs/features/mac/sdk.prf
+
+From 10.15.4, xcrun outputs the SDK version in Major.Minor.Patch format
+instead of Major.Minor. mac_sdk_min gn arg is expected to be in
+Major.Minor format, therefor pass only the first 2 revision numbers to
+gn.
+
+Fixes: QTBUG-83318
+Change-Id: I3af523dd5df8149fb5cd57b259c2bed889db88b5
+Reviewed-by: Allan Sandfeld Jensen <allan.jensen@qt.io>
+---
+
+diff --git a/src/buildtools/config/mac_osx.pri b/src/buildtools/config/mac_osx.pri
+index 01aca4c..9373928 100644
+--- a/src/buildtools/config/mac_osx.pri
++++ b/src/buildtools/config/mac_osx.pri
+@@ -9,6 +9,10 @@
+      isEmpty(QMAKE_MAC_SDK_VERSION): error("Could not resolve SDK version for \'$${QMAKE_MAC_SDK}\'")
+ }
+ 
++# chromium/build/mac/find_sdk.py expects the SDK version (mac_sdk_min) in Major.Minor format.
++# If Patch version is provided it fails with "Exception: No Major.Minor.Patch+ SDK found"
++QMAKE_MAC_SDK_VERSION_MAJOR_MINOR = $$section(QMAKE_MAC_SDK_VERSION, ".", 0, 1)
++
+ QMAKE_CLANG_DIR = "/usr"
+ QMAKE_CLANG_PATH = $$eval(QMAKE_MAC_SDK.macx-clang.$${QMAKE_MAC_SDK}.QMAKE_CXX)
+ !isEmpty(QMAKE_CLANG_PATH) {
+@@ -28,7 +32,7 @@
+     clang_base_path=\"$${QMAKE_CLANG_DIR}\" \
+     clang_use_chrome_plugins=false \
+     mac_deployment_target=\"$${QMAKE_MACOSX_DEPLOYMENT_TARGET}\" \
+-    mac_sdk_min=\"$${QMAKE_MAC_SDK_VERSION}\" \
++    mac_sdk_min=\"$${QMAKE_MAC_SDK_VERSION_MAJOR_MINOR}\" \
+     use_external_popup_menu=false
+ 
+ qtConfig(webengine-spellchecker) {

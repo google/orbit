@@ -1,0 +1,27 @@
+From e2eb6e9bf75957b3139aefc4827d6256458d8836 Mon Sep 17 00:00:00 2001
+From: Thiago Macieira <thiago.macieira@intel.com>
+Date: Tue, 26 May 2020 09:10:39 -0700
+Subject: [PATCH] QMimeDatabase/zstd: use -T1 instead of --single-thread
+
+Some older versions of the command-line tool don't have --single-thread
+but do have -T1. They're slightly different according to the
+documentation, but it's not important to us. What we want is to make
+sure we consume a single CPU during build.
+
+Pick-To: 5.15
+Change-Id: Ied637aece2a7427b8a2dfffd16129fe88a0466ee
+---
+
+diff --git a/src/corelib/mimetypes/mime/generate.pl b/src/corelib/mimetypes/mime/generate.pl
+index 0f87d61..8ac4b50 100644
+--- a/src/corelib/mimetypes/mime/generate.pl
++++ b/src/corelib/mimetypes/mime/generate.pl
+@@ -60,7 +60,7 @@
+ if ($fname eq "--zstd") {
+     $fname = shift @ARGV;
+     if (checkCommand("zstd")) {
+-        $compress = "zstd -cq19 --single-thread";
++        $compress = "zstd -cq19 -T1";
+         $macro = "MIME_DATABASE_IS_ZSTD";
+     }
+ }

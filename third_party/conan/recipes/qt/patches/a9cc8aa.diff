@@ -1,0 +1,25 @@
+From d2475bdd4cbb9a70abf19db465ddbdbf29591568 Mon Sep 17 00:00:00 2001
+From: Joerg Bornemann <joerg.bornemann@qt.io>
+Date: Mon, 07 Oct 2019 08:23:11 +0200
+Subject: [PATCH] Fix build with ALSA in non-system location
+
+This amends commit f0ea2641.
+
+Fixes: QTBUG-79014
+Change-Id: Ib04d844ef64e335785408dc8d7e512a5a3651655
+Reviewed-by: VaL Doroshchuk <valentyn.doroshchuk@qt.io>
+---
+
+diff --git a/src/plugins/alsa/alsa.pro b/src/plugins/alsa/alsa.pro
+index 56657f1..4012bb8 100644
+--- a/src/plugins/alsa/alsa.pro
++++ b/src/plugins/alsa/alsa.pro
+@@ -1,7 +1,7 @@
+ TARGET = qtaudio_alsa
+ QT += multimedia-private
+ 
+-LIBS += -lasound
++QMAKE_USE += alsa
+ 
+ HEADERS += \
+     qalsaplugin.h \

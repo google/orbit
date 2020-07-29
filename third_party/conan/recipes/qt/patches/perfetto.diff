@@ -1,0 +1,10 @@
+--- a/src/3rdparty/chromium/third_party/perfetto/src/trace_processor/importers/systrace/systrace_trace_parser.cc
++++ b/src/3rdparty/chromium/third_party/perfetto/src/trace_processor/importers/systrace/systrace_trace_parser.cc
+@@ -27,6 +27,7 @@
+ #include "src/trace_processor/track_tracker.h"
+ 
+ #include <inttypes.h>
++#include <cctype>
+ #include <string>
+ #include <unordered_map>
+ 
