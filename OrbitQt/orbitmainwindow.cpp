@@ -16,6 +16,7 @@
 #include <QPointer>
 #include <QProgressDialog>
 #include <QSettings>
+#include <QSortFilterProxyModel>
 #include <QTimer>
 #include <QToolTip>
 #include <utility>
@@ -515,8 +516,13 @@ void OrbitMainWindow::OnNewTopDownView(
     std::unique_ptr<TopDownView> top_down_view) {
   auto* model =
       new TopDownViewItemModel{std::move(top_down_view), ui->topDownView};
-  ui->topDownView->setModel(model);
+  auto* proxy_model = new QSortFilterProxyModel{ui->topDownView};
+  proxy_model->setSourceModel(model);
+  proxy_model->setSortRole(Qt::EditRole);
+  ui->topDownView->setModel(proxy_model);
   ui->topDownView->resizeColumnToContents(0);
+  ui->topDownView->sortByColumn(TopDownViewItemModel::kInclusive,
+                                Qt::DescendingOrder);
 }
 
 //-----------------------------------------------------------------------------
