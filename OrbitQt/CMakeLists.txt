@@ -26,8 +26,6 @@ target_sources(
           orbitsamplingreport.h
           OrbitStartupWindow.h
           orbittablemodel.h
-          orbittreeitem.h
-          orbittreemodel.h
           orbittreeview.h
           opengldetect.h
           outputdialog.h
@@ -55,8 +53,6 @@ target_sources(
           orbitsamplingreport.cpp
           OrbitStartupWindow.cpp
           orbittablemodel.cpp
-          orbittreeitem.cpp
-          orbittreemodel.cpp
           orbittreeview.cpp
           opengldetect.cpp
           outputdialog.cpp
