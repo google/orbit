@@ -209,13 +209,13 @@ static std::string SafeGetFormattedFunctionName(uint64_t addr,
 //-----------------------------------------------------------------------------
 static std::string FormatCallstackForTooltip(
     std::shared_ptr<CallStack> callstack, int max_line_length = 80,
-    int max_lines = 13) {
+    int max_lines = 20, int bottom_n_lines = 5) {
   std::string result;
   int size = static_cast<int>(callstack->m_Data.size());
   if (max_lines <= 0) {
     max_lines = size;
   }
-  const int bottom_n = std::min(std::min(max_lines - 1, 3), size);
+  const int bottom_n = std::min(std::min(max_lines - 1, bottom_n_lines), size);
   const int top_n = std::min(max_lines, size) - bottom_n;
 
   for (int i = 0; i < top_n; ++i) {
