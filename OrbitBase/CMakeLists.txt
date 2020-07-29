@@ -22,6 +22,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/Action.h
         include/OrbitBase/Logging.h
         include/OrbitBase/MainThreadExecutor.h
+        include/OrbitBase/MakeUniqueForOverwrite.h
         include/OrbitBase/UniqueResource.h
         include/OrbitBase/ThreadPool.h
         include/OrbitBase/SafeStrerror.h)

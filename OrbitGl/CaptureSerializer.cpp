@@ -17,6 +17,7 @@
 #include "Core.h"
 #include "EventTracer.h"
 #include "FunctionUtils.h"
+#include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
 #include "SamplingProfiler.h"
@@ -152,12 +153,11 @@ bool ReadMessage(google::protobuf::Message* message,
     return false;
   }
 
-  char* buffer = new char[message_size];
-  if (!input->ReadRaw(buffer, message_size)) {
+  std::unique_ptr<char[]> buffer= make_unique_for_overwrite<char[]>(message_size);
+  if (!input->ReadRaw(buffer.get(), message_size)) {
     return false;
   }
-  message->ParseFromArray(buffer, message_size);
-  delete[] buffer;
+  message->ParseFromArray(buffer.get(), message_size);
 
   return true;
 }

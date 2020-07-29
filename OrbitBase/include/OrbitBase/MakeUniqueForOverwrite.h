@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_LINUX_TRACING_MAKE_UNIQUE_FOR_OVERWRITE_H_
-#define ORBIT_LINUX_TRACING_MAKE_UNIQUE_FOR_OVERWRITE_H_
+#ifndef ORBIT_BASE_MAKE_UNIQUE_FOR_OVERWRITE_H_
+#define ORBIT_BASE_MAKE_UNIQUE_FOR_OVERWRITE_H_
 
 #include <memory>
 
@@ -44,4 +44,4 @@ template <typename T, typename... Args>
 inline typename MakeUniqueForOverwriteIf<T>::KnownBoundArray
 make_unique_for_overwrite(Args&&...) = delete;
 
-#endif  // ORBIT_LINUX_TRACING_MAKE_UNIQUE_FOR_OVERWRITE_H_
+#endif  // ORBIT_BASE_MAKE_UNIQUE_FOR_OVERWRITE_H_
