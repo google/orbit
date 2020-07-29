@@ -32,6 +32,12 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 
+#define CONCAT_(x, y) x##y
+#define CONCAT(x, y) CONCAT_(x, y)
+#define UNIQUE_VAR CONCAT(Unique, __LINE__)
+#define UNIQUE_ID CONCAT(Id_, __LINE__)
+#define UNUSED(x) (void)(x)
+
 //-----------------------------------------------------------------------------
 inline std::string ws2s(const std::wstring& wstr) {
   std::string str;
@@ -281,6 +287,9 @@ enum class EllipsisPosition { kMiddle };
 inline std::string ShortenStringWithEllipsis(
     std::string_view text, size_t max_len,
     EllipsisPosition pos = EllipsisPosition::kMiddle) {
+  // Parameter is mainly here to indicate how the util works,
+  // and to be potentially extended later
+  UNUSED(pos);
   constexpr const size_t kNumCharsEllipsis = 3;
 
   if (max_len <= kNumCharsEllipsis) {
@@ -477,12 +486,6 @@ std::string FormatTime(const time_t& rawtime);
 //-----------------------------------------------------------------------------
 bool ReadProcessMemory(int32_t pid, uint64_t address, byte* buffer,
                        uint64_t size, uint64_t* num_bytes_read);
-
-#define CONCAT_(x, y) x##y
-#define CONCAT(x, y) CONCAT_(x, y)
-#define UNIQUE_VAR CONCAT(Unique, __LINE__)
-#define UNIQUE_ID CONCAT(Id_, __LINE__)
-#define UNUSED(x) (void)(x)
 
 #if __linux__
 #define FUNCTION_NAME __PRETTY_FUNCTION__
