@@ -60,7 +60,6 @@ class OrbitConan(ConanFile):
             raise ConanInvalidConfiguration("When disabling system_qt, you also have to "
                                             "disable system mesa.")
 
-        self.requires("asio/1.12.2@bincrafters/stable#0")
         self.requires("abseil/20190808@{}#0".format(self._orbit_channel))
         self.requires("bzip2/1.0.8@conan/stable#0")
         self.requires("capstone/4.0.1@{}#0".format(self._orbit_channel))
