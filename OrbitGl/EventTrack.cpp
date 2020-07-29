@@ -194,7 +194,11 @@ static std::string SafeGetFormattedFunctionName(uint64_t addr,
     return std::string("<i>") + "???" + "</i>";
   }
 
-  std::string fn_name = ShortenStringWithEllipsis(it->second, max_line_length);
+  std::string fn_name =
+      max_line_length >= 0
+          ? ShortenStringWithEllipsis(it->second,
+                                      static_cast<size_t>(max_line_length))
+          : it->second;
   // Simple HTML escaping
   fn_name = Replace(fn_name, "&", "&amp;");
   fn_name = Replace(fn_name, "<", "&lt;");

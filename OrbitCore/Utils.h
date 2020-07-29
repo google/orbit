@@ -276,21 +276,21 @@ class CWindowsMessageToString {
 #endif
 
 //-----------------------------------------------------------------------------
-inline std::string ShortenStringWithEllipsis(std::string_view text,
-                                             int max_len) {
-  if (max_len < 0) {
+enum class EllipsisPosition { kMiddle };
+
+inline std::string ShortenStringWithEllipsis(
+    std::string_view text, size_t max_len,
+    EllipsisPosition pos = EllipsisPosition::kMiddle) {
+  constexpr const size_t kNumCharsEllipsis = 3;
+
+  if (max_len <= kNumCharsEllipsis) {
+    return text.length() <= kNumCharsEllipsis ? std::string(text) : "...";
+  }
+  if (text.length() <= max_len) {
     return std::string(text);
   }
 
-  size_t max_len_unsigned = static_cast<size_t>(max_len);
-  if (max_len_unsigned <= 3) {
-    return text.length() <= 3 ? std::string(text) : "...";
-  }
-  if (text.length() <= max_len_unsigned) {
-    return std::string(text);
-  }
-
-  const size_t chars_to_cut = text.length() - max_len_unsigned + 3;
+  const size_t chars_to_cut = text.length() - max_len + kNumCharsEllipsis;
   size_t l = text.length() - chars_to_cut;
   // Integer division by two, rounded up
   if (l & 0x1) {
@@ -300,8 +300,7 @@ inline std::string ShortenStringWithEllipsis(std::string_view text,
   }
 
   const size_t r = l + chars_to_cut;
-  return std::string(text.substr(0, l)) + "..." +
-         std::string(text.substr(r));
+  return std::string(text.substr(0, l)) + "..." + std::string(text.substr(r));
 }
 
 //-----------------------------------------------------------------------------
