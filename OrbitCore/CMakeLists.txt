@@ -106,7 +106,6 @@ target_link_libraries(
          concurrentqueue::concurrentqueue
          multicore::multicore
          oqpi::oqpi
-         asio::asio
          abseil::abseil
          llvm_object::llvm_object
          Outcome::Outcome)
