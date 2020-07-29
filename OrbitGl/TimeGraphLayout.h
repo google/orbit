@@ -19,6 +19,7 @@ class TimeGraphLayout {
   float GetTrackLabelOffsetX() const { return m_TrackLabelOffsetX; }
   float GetTrackLabelOffsetY() const { return m_TrackLabelOffsetY; }
   float GetSliderWidth() const { return m_SliderWidth; }
+  float GetTimeBarHeight() const { return time_bar_height_; }
   float GetTrackTabWidth() const { return m_TrackTabWidth; }
   float GetTrackTabHeight() const { return m_TrackTabHeight; }
   float GetTrackTabOffset() const { return m_TrackTabOffset; }
@@ -26,6 +27,8 @@ class TimeGraphLayout {
   float GetRoundingRadius() const { return m_RoundingRadius; }
   float GetRoundingNumSides() const { return m_RoundingNumSides; }
   float GetTextOffset() const { return m_TextOffset; }
+  float GetBottomMargin() const;
+  float GetTopMargin() const { return GetSchedulerTrackOffset(); }
   float GetVerticalMargin() const { return m_VerticalMargin; }
   float GetSchedulerTrackOffset() const { return m_SchedulerTrackOffset; }
   float GetSpaceBetweenTracks() const { return m_SpaceBetweenTracks; }
@@ -53,6 +56,7 @@ class TimeGraphLayout {
   float m_TrackLabelOffsetX;
   float m_TrackLabelOffsetY;
   float m_SliderWidth;
+  float time_bar_height_;
   float m_TrackTabWidth;
   float m_TrackTabHeight;
   float m_TrackTabOffset;

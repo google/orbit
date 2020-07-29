@@ -34,6 +34,8 @@ float GlCanvas::Z_VALUE_CONTEXT_SWITCH = -0.015f;
 float GlCanvas::Z_VALUE_EVENT = -0.015f;
 float GlCanvas::Z_VALUE_BOX_ACTIVE = -0.02f;
 float GlCanvas::Z_VALUE_BOX_INACTIVE = -0.03f;
+float GlCanvas::Z_VALUE_EVENT_BAR = -0.1f;
+float GlCanvas::Z_VALUE_EVENT_BAR_PICKING = 0.1f;
 
 //-----------------------------------------------------------------------------
 void ClearCaptureData() {

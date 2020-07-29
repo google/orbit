@@ -228,8 +228,8 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
   } else {
     PickingUserData* user_data = batcher.GetUserData(pickId);
 
-    if (user_data && user_data->m_GenerateTooltip) {
-      tooltip = user_data->m_GenerateTooltip(pickId);
+    if (user_data && user_data->generate_tooltip_) {
+      tooltip = user_data->generate_tooltip_(pickId);
     }
   }
 
@@ -542,7 +542,7 @@ void CaptureWindow::Draw() {
   // Reset picking manager before each draw.
   m_PickingManager.Reset();
 
-  time_graph_.Draw(this, m_Picking);
+  time_graph_.Draw(this, GetPickingMode());
 
   if (!m_Picking && m_SelectStart[0] != m_SelectStop[0]) {
     TickType minTime = std::min(m_TimeStart, m_TimeStop);
@@ -584,6 +584,8 @@ void CaptureWindow::DrawScreenSpace() {
   const TimeGraphLayout& layout = time_graph_.GetLayout();
   float vertical_margin = layout.GetVerticalMargin();
 
+  const auto picking_mode = GetPickingMode();
+
   if (timeSpan > 0) {
     double start = time_graph_.GetMinTimeUs();
     double stop = time_graph_.GetMaxTimeUs();
@@ -595,13 +597,13 @@ void CaptureWindow::DrawScreenSpace() {
     m_Slider.SetPixelHeight(slider_width);
     m_Slider.SetSliderRatio(static_cast<float>(ratio));
     m_Slider.SetSliderWidthRatio(static_cast<float>(width / timeSpan));
-    m_Slider.Draw(this, m_Picking);
+    m_Slider.Draw(this, picking_mode);
 
     float verticalRatio = m_WorldHeight / time_graph_.GetThreadTotalHeight();
     if (verticalRatio < 1.f) {
       m_VerticalSlider.SetPixelHeight(slider_width);
       m_VerticalSlider.SetSliderWidthRatio(verticalRatio);
-      m_VerticalSlider.Draw(this, m_Picking);
+      m_VerticalSlider.Draw(this, picking_mode);
       vertical_margin += slider_width;
     }
   }
@@ -616,9 +618,11 @@ void CaptureWindow::DrawScreenSpace() {
           Vec2(margin_x1 - margin_x0, canvasHeight - height), z);
   ui_batcher_.AddBox(box, kBackgroundColor, PickingID::BOX);
 
-  // Time bar
+  // Time bar background
   if (time_graph_.GetCaptureTimeSpanUs() > 0) {
-    Box box(Vec2(0, height), Vec2(getWidth(), height), z);
+    Box box(Vec2(0, time_graph_.GetLayout().GetSliderWidth()),
+            Vec2(getWidth(), time_graph_.GetLayout().GetTimeBarHeight()),
+            GlCanvas::Z_VALUE_TEXT_UI_BG);
     ui_batcher_.AddBox(box, Color(70, 70, 70, 200), PickingID::BOX);
   }
 }
@@ -655,6 +659,18 @@ Batcher& CaptureWindow::GetBatcherById(uint32_t batcher_id) {
   return batcher_id == PickingID::TIME_GRAPH
                          ? time_graph_.GetBatcher()
                          : ui_batcher_;
+}
+
+[[nodiscard]] PickingMode CaptureWindow::GetPickingMode() { 
+  PickingMode picking_mode = PickingMode::kNone;
+  if (m_Picking) {
+    picking_mode = PickingMode::kClick;
+  }
+  if (m_IsHovering) {
+    picking_mode = PickingMode::kHover;
+  }
+
+  return picking_mode;
 }
 
 //-----------------------------------------------------------------------------
@@ -857,6 +873,9 @@ void CaptureWindow::RenderTimeBar() {
   static int numTimePoints = 10;
 
   if (time_graph_.GetCaptureTimeSpanUs() > 0) {
+
+    const float time_bar_height = time_graph_.GetLayout().GetTimeBarHeight();
+
     double millis = time_graph_.GetCurrentTimeSpanUs() * 0.001;
     double incr = millis / float(numTimePoints - 1);
     double unit = GetIncrementMs(incr);
@@ -866,7 +885,7 @@ void CaptureWindow::RenderTimeBar() {
 
     static int pixelMargin = 2;
     int screenY =
-        getHeight() - static_cast<int>(m_Slider.GetPixelHeight()) - pixelMargin;
+        getHeight() - static_cast<int>(time_bar_height) - pixelMargin;
     float dummy, worldY;
     ScreenToWorld(0, screenY, dummy, worldY);
 
@@ -886,7 +905,7 @@ void CaptureWindow::RenderTimeBar() {
                              Color(255, 255, 255, 255));
 
       Vec2 pos(worldX, worldY);
-      ui_batcher_.AddVerticalLine(pos, height, Z_VALUE_UI,
+      ui_batcher_.AddVerticalLine(pos, height, GlCanvas::Z_VALUE_UI,
                                   Color(255, 255, 255, 255), PickingID::LINE);
     }
   }

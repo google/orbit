@@ -7,8 +7,7 @@
 #ifdef _WIN32
 // clang-format off
 #include <cguid.h>
-#include <AtlBase.h>
-#include <atlconv.h>
+#include <combaseapi.h>
 // clang-format on
 #else
 #include <sys/uio.h>

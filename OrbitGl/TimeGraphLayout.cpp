@@ -35,6 +35,7 @@ TimeGraphLayout::TimeGraphLayout() {
   m_TextZ = -0.02f;
   m_TrackZ = -0.1f;
   m_ToolbarIconHeight = 24.f;
+  time_bar_height_ = 15.f;
 };
 
 //-----------------------------------------------------------------------------
@@ -64,6 +65,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(m_SpaceBetweenTracksAndThread);
   FLOAT_SLIDER(m_SpaceBetweenThreadBlocks);
   FLOAT_SLIDER(m_SliderWidth);
+  FLOAT_SLIDER(time_bar_height_);
   FLOAT_SLIDER(m_TrackTabHeight);
   FLOAT_SLIDER(m_TrackTabOffset);
   FLOAT_SLIDER(m_CollapseButtonOffset);
@@ -82,4 +84,10 @@ bool TimeGraphLayout::DrawProperties() {
   ImGui::End();
 
   return needs_redraw;
+}
+
+float TimeGraphLayout::GetBottomMargin() const {
+  // The bottom consists of the slider (where we have to take the width, as it
+  // is rotated), and the time bar.
+  return GetSliderWidth() + GetTimeBarHeight(); 
 }

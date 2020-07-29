@@ -16,6 +16,27 @@ constexpr const char* kSwQueueString = "sw queue";
 constexpr const char* kHwQueueString = "hw queue";
 constexpr const char* kHwExecutionString = "hw execution";
 
+namespace OrbitGl {
+
+std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
+  std::string label;
+  if (timeline.rfind("gfx", 0) == 0) {
+    return absl::StrFormat("Graphics queue (%s)", timeline);
+  } else if (timeline.rfind("sdma", 0) == 0) {
+    return absl::StrFormat("Transfer queue (%s)", timeline);
+  } else if (timeline.rfind("comp", 0) == 0) {
+    return absl::StrFormat("Compute queue (%s)", timeline);
+  } else {
+    // On AMD, this should not happen and we don't support tracepoints for
+    // other GPUs (at the moment). We return the timeline to make sure we
+    // at least display something. When we add support for other GPU
+    // tracepoints, this needs to be changed.
+    return std::string(timeline);
+  }
+}
+
+}  // namespace OrbitGl
+
 //-----------------------------------------------------------------------------
 GpuTrack::GpuTrack(TimeGraph* time_graph,
                    std::shared_ptr<StringManager> string_manager,
@@ -35,14 +56,14 @@ GpuTrack::GpuTrack(TimeGraph* time_graph,
 }
 
 //-----------------------------------------------------------------------------
-void GpuTrack::Draw(GlCanvas* canvas, bool picking) {
+void GpuTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float track_height = GetHeight();
   float track_width = canvas->GetWorldWidth();
 
   SetPos(canvas->GetWorldTopLeftX(), m_Pos[1]);
   SetSize(track_width, track_height);
 
-  Track::Draw(canvas, picking);
+  Track::Draw(canvas, picking_mode);
 }
 
 //-----------------------------------------------------------------------------
@@ -122,7 +143,8 @@ void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
 }
 
 //-----------------------------------------------------------------------------
-void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
+void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
+                                PickingMode /*picking_mode*/) {
   Batcher* batcher = &time_graph_->GetBatcher();
   GlCanvas* canvas = time_graph_->GetCanvas();
   const TimeGraphLayout& layout = time_graph_->GetLayout();

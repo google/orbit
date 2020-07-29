@@ -257,14 +257,11 @@ void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
   auto thread_track = GetOrCreateThreadTrack(timer.m_TID);
   auto text_box_y_position = thread_track->GetYFromDepth(timer.m_Depth);
 
-  auto world_top_left_y = m_Canvas->GetWorldTopLeftY();
-  auto top_margin =
-      m_Layout.GetSchedulerTrackOffset() + m_Layout.GetVerticalMargin();
-  auto down_margin = m_Layout.GetSliderWidth() + m_Layout.GetVerticalMargin();
-  auto min_world_top_left_y =
-      text_box_y_position + m_Layout.GetSpaceBetweenTracks() + top_margin;
-  auto max_world_top_left_y = text_box_y_position + m_Canvas->GetWorldHeight() -
-                              GetTextBoxHeight() - down_margin;
+  float world_top_left_y = m_Canvas->GetWorldTopLeftY();
+  float min_world_top_left_y =
+      text_box_y_position + m_Layout.GetSpaceBetweenTracks() + m_Layout.GetTopMargin();
+  float max_world_top_left_y = text_box_y_position + m_Canvas->GetWorldHeight() -
+                              GetTextBoxHeight() - m_Layout.GetBottomMargin();
   CHECK (min_world_top_left_y <= max_world_top_left_y);
   world_top_left_y = std::min(world_top_left_y, max_world_top_left_y);
   world_top_left_y = std::max(world_top_left_y, min_world_top_left_y);
@@ -324,8 +321,6 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
   if (a_Timer.m_Type == Timer::GPU_ACTIVITY) {
     uint64_t timeline_hash = GetGpuTimelineHash(a_Timer);
     std::shared_ptr<GpuTrack> track = GetOrCreateGpuTrack(timeline_hash);
-    track->SetName(string_manager_->Get(timeline_hash).value_or(""));
-    track->SetLabel(string_manager_->Get(timeline_hash).value_or(""));
     track->OnTimer(a_Timer);
   } else {
     std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(a_Timer.m_TID);
@@ -499,7 +494,7 @@ void TimeGraph::NeedsUpdate() {
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::UpdatePrimitives() {
+void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   CHECK(string_manager_);
 
   m_Batcher.Reset();
@@ -520,7 +515,7 @@ void TimeGraph::UpdatePrimitives() {
 
   for (auto& track : sorted_tracks_) {
     track->SetY(current_y);
-    track->UpdatePrimitives(min_tick, max_tick);
+    track->UpdatePrimitives(min_tick, max_tick, picking_mode);
     current_y -= (track->GetHeight() + m_Layout.GetSpaceBetweenTracks());
   }
 
@@ -576,29 +571,94 @@ const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::Draw(GlCanvas* canvas, bool a_Picking) {
-  if ((!a_Picking && m_NeedsUpdatePrimitives) || a_Picking) {
-    UpdatePrimitives();
+void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+  const bool picking = picking_mode != PickingMode::kNone;
+  if ((!picking && m_NeedsUpdatePrimitives) || picking) {
+    UpdatePrimitives(picking_mode);
   }
 
-  DrawTracks(canvas, a_Picking);
-
-  DrawOverlay(canvas, a_Picking);
-
-  m_Batcher.Draw(a_Picking);
+  DrawTracks(canvas, picking_mode);
+  DrawOverlay(canvas, picking_mode);
+  m_Batcher.Draw(picking);
 
   m_NeedsRedraw = false;
 }
 
-void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
-  if (picking) {
+namespace {
+
+std::string GetLabelBetweenIterators(const TextBox* box_a,
+                                     const TextBox* box_b) {
+  std::string function_from =
+      Capture::GAddressToFunctionName[box_a->GetTimer().m_FunctionAddress];
+  std::string function_to =
+      Capture::GAddressToFunctionName[box_b->GetTimer().m_FunctionAddress];
+  return absl::StrFormat("%s to %s", function_from, function_to);
+}
+
+std::string GetTimeString(const TextBox* box_a, const TextBox* box_b) {
+  double micros = MicroSecondsFromTicks(box_a->GetTimer().m_Start,
+                                        box_b->GetTimer().m_Start);
+
+  return GetPrettyTime(micros * 0.001);
+}
+
+Color GetIteratorBoxColor(uint64_t index) {
+  constexpr uint64_t kNumColors = 2;
+  const Color kLightBlueGray = Color(177, 203, 250, 60);
+  const Color kMidBlueGray = Color(81, 102, 157, 60);
+  Color colors[kNumColors] = {kLightBlueGray, kMidBlueGray};
+  return colors[index % kNumColors];
+}
+
+void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
+                     const std::string& label, const std::string& time,
+                     float text_y) {
+  Box box(pos, size, GlCanvas::Z_VALUE_OVERLAY);
+  canvas->GetBatcher()->AddBox(box, color, PickingID::BOX);
+
+  std::string text = absl::StrFormat("%s: %s", label, time);
+
+  constexpr const float kAdditionalSpaceForLine = 10.f;
+  constexpr const float kLeftOffset = 5.f;
+
+  float max_size = size[0];
+  canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
+      text.c_str(), pos[0] + kLeftOffset, text_y + kAdditionalSpaceForLine,
+      GlCanvas::Z_VALUE_TEXT, Color(255, 255, 255, 255), time.length(),
+      max_size);
+
+  constexpr const float kOffsetBelowText = kAdditionalSpaceForLine / 2.f;
+  Vec2 line_from(pos[0], text_y + kOffsetBelowText);
+  Vec2 line_to(pos[0] + size[0], text_y + kOffsetBelowText);
+  canvas->GetBatcher()->AddLine(line_from, line_to, GlCanvas::Z_VALUE_OVERLAY,
+                                Color(255, 255, 255, 255), PickingID::LINE);
+}
+
+}  // namespace
+
+void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
+  if (picking_mode != PickingMode::kNone || 
+      overlay_current_textboxes_.size() == 0) {
     return;
   }
-  float min_x = std::numeric_limits<float>::max();
-  float max_x = std::numeric_limits<float>::lowest();
 
-  TickType min_tick = std::numeric_limits<TickType>::max();
-  TickType max_tick = std::numeric_limits<TickType>::lowest();
+  std::vector<std::pair<uint64_t, const TextBox*>> boxes(
+      overlay_current_textboxes_.size());
+  std::copy(overlay_current_textboxes_.begin(),
+            overlay_current_textboxes_.end(), boxes.begin());
+
+  // Sort boxes by start time.
+  std::sort(boxes.begin(), boxes.end(),
+            [](const std::pair<uint64_t, const TextBox*>& box_a,
+               const std::pair<uint64_t, const TextBox*>& box_b) -> bool {
+              return box_a.second->GetTimer().m_Start <
+                     box_b.second->GetTimer().m_Start;
+            });
+
+  // We will need the world x coordinates for the timers multiple times, so
+  // we avoid recomputing them and just cache them here.
+  std::vector<float> x_coords;
+  x_coords.reserve(boxes.size());
 
   float world_start_x = canvas->GetWorldTopLeftX();
   float world_width = canvas->GetWorldWidth();
@@ -608,50 +668,75 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, bool picking) {
 
   double inv_time_window = 1.0 / GetTimeWindowUs();
 
-  for (const auto& current_textbox : overlay_current_textboxes_) {
-    const Timer& timer = current_textbox.second->GetTimer();
+  // Draw lines for iterators.
+  for (const auto& box : boxes) {
+    const Timer& timer = box.second->GetTimer();
+
     double start_us = GetUsFromTick(timer.m_Start);
     double normalized_start = start_us * inv_time_window;
     float world_timer_x =
         static_cast<float>(world_start_x + normalized_start * world_width);
 
     Vec2 pos(world_timer_x, world_start_y);
+    x_coords.push_back(pos[0]);
 
-    min_x = std::min(min_x, world_timer_x);
-    min_tick = std::min(min_tick, timer.m_Start);
-    max_x = std::max(max_x, world_timer_x);
-    max_tick = std::max(max_tick, timer.m_Start);
-
-    float z = GlCanvas::Z_VALUE_OVERLAY;
-    Color color = GetThreadColor(timer.m_TID);
-
-    auto type = PickingID::LINE;
-    canvas->GetBatcher()->AddVerticalLine(pos, -world_height, z, color, type,
-                                          nullptr);
+    canvas->GetBatcher()->AddVerticalLine(
+        pos, -world_height, GlCanvas::Z_VALUE_OVERLAY,
+        GetThreadColor(timer.m_TID), PickingID::LINE, nullptr);
   }
 
-  if (overlay_current_textboxes_.size() > 1) {
-    float from = min_x;
-    float to = max_x;
+  // Draw boxes with timings between iterators.
+  for (size_t k = 1; k < boxes.size(); ++k) {
+    Vec2 pos(x_coords[k - 1], world_start_y - world_height);
+    float size_x = x_coords[k] - pos[0];
+    Vec2 size(size_x, world_height);
+    Color color = GetIteratorBoxColor(k - 1);
 
-    double micros = MicroSecondsFromTicks(min_tick, max_tick);
-    float sizex = to - from;
-    Vec2 pos(from, world_start_y - world_height);
-    Vec2 size(sizex, world_height);
+    const std::string& label =
+        GetLabelBetweenIterators(boxes[k - 1].second, boxes[k].second);
+    const std::string& time =
+        GetTimeString(boxes[k - 1].second, boxes[k].second);
 
-    std::string time = GetPrettyTime(micros * 0.001);
-    TextBox text_box(pos, size, time, Color(160, 160, 160, 80));
-    text_box.SetTextY(pos[1] + world_height / 2);
-    int current_font_size = canvas->GetTextRenderer().GetFontSize();
-    canvas->GetTextRenderer().SetFontSize(20);
-    text_box.Draw(canvas->GetBatcher(), canvas->GetTextRenderer(),
-                  std::numeric_limits<float>::lowest(), true, true);
-    canvas->GetTextRenderer().SetFontSize(current_font_size);
+    // Distance from the bottom where we don't want to draw.
+    float bottom_margin = m_Layout.GetBottomMargin();
+
+    // The height of text is chosen such that the text of the last box drawn is
+    // at pos[1] + bottom_margin (lowest possible position) and the height of
+    // the box showing the overall time (see below) is at pos[1] + (world_height
+    // / 2.f), corresponding to the case k == 0 in the formula for 'text_y'.
+    float height_per_text =
+        ((world_height / 2.f) - bottom_margin) /
+        static_cast<float>(overlay_current_textboxes_.size() - 1);
+    float text_y =
+        pos[1] + (world_height / 2.f) - static_cast<float>(k) * height_per_text;
+
+    DrawIteratorBox(canvas, pos, size, color, label, time, text_y);
+  }
+
+  // When we have at least 3 boxes, we also draw the total time from the first
+  // to the last iterator.
+  if (boxes.size() > 2) {
+    size_t last_index = boxes.size() - 1;
+
+    Vec2 pos(x_coords[0], world_start_y - world_height);
+    float size_x = x_coords[last_index] - pos[0];
+    Vec2 size(size_x, world_height);
+
+    std::string time = GetTimeString(boxes[0].second, boxes[last_index].second);
+    std::string label("Total");
+
+    float text_y = pos[1] + (world_height / 2.f);
+
+    // We do not want the overall box to add any color, so we just set alpha to
+    // 0.
+    const Color kColorBlackTransparent(0, 0, 0, 0);
+    DrawIteratorBox(canvas, pos, size, kColorBlackTransparent, label, time,
+                    text_y);
   }
 }
 
 //-----------------------------------------------------------------------------
-void TimeGraph::DrawTracks(GlCanvas* canvas, bool a_Picking) {
+void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
   uint32_t num_cores = GetNumCores();
   m_Layout.SetNumCores(num_cores);
   scheduler_track_->SetLabel(
@@ -673,7 +758,7 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, bool a_Picking) {
       }
     }
 
-    track->Draw(canvas, a_Picking);
+    track->Draw(canvas, picking_mode);
   }
 }
 
@@ -707,6 +792,10 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline_hash];
   if (track == nullptr) {
     track = std::make_shared<GpuTrack>(this, string_manager_, timeline_hash);
+    std::string timeline = string_manager_->Get(timeline_hash).value_or("");
+    std::string label = OrbitGl::MapGpuTimelineToTrackLabel(timeline);
+    track->SetName(timeline);
+    track->SetLabel(label);
     tracks_.emplace_back(track);
     gpu_tracks_[timeline_hash] = track;
   }

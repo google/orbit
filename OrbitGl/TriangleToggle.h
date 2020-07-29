@@ -28,7 +28,7 @@ class TriangleToggle : public Pickable {
   TriangleToggle& operator=(TriangleToggle&&) = delete;
 
   // Pickable
-  void Draw(GlCanvas* canvas, bool picking) override;
+  void Draw(GlCanvas* canvas, PickingMode picking_mode) override;
   void OnPick(int x, int y) override;
   void OnRelease() override;
 

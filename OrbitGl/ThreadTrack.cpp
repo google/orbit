@@ -33,21 +33,21 @@ ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id)
 }
 
 //-----------------------------------------------------------------------------
-void ThreadTrack::Draw(GlCanvas* canvas, bool picking) {
+void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float track_height = GetHeight();
   float track_width = canvas->GetWorldWidth();
 
   SetPos(canvas->GetWorldTopLeftX(), m_Pos[1]);
   SetSize(track_width, track_height);
 
-  Track::Draw(canvas, picking);
+  Track::Draw(canvas, picking_mode);
 
   // Event track
   if (HasEventTrack()) {
     float event_track_height = time_graph_->GetLayout().GetEventTrackHeight();
     event_track_->SetPos(m_Pos[0], m_Pos[1]);
     event_track_->SetSize(track_width, event_track_height);
-    event_track_->Draw(canvas, picking);
+    event_track_->Draw(canvas, picking_mode);
   }
 }
 
@@ -144,9 +144,9 @@ void ThreadTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
 }
 
 //-----------------------------------------------------------------------------
-void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
+void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) {
   event_track_->SetPos(m_Pos[0], m_Pos[1]);
-  event_track_->UpdatePrimitives(min_tick, max_tick);
+  event_track_->UpdatePrimitives(min_tick, max_tick, picking_mode);
 
   Batcher* batcher = &time_graph_->GetBatcher();
   GlCanvas* canvas = time_graph_->GetCanvas();
