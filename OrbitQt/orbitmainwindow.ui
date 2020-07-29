@@ -153,6 +153,36 @@
          </item>
         </layout>
        </widget>
+       <widget class="QWidget" name="liveTab">
+        <attribute name="title">
+         <string>live</string>
+        </attribute>
+        <layout class="QGridLayout" name="liveGridLayout">
+         <item row="0" column="0">
+          <widget class="OrbitLiveFunctions" name="liveFunctions"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="samplingTab">
+        <attribute name="title">
+         <string>sampling</string>
+        </attribute>
+        <layout class="QGridLayout" name="samplingGridLayout">
+         <item row="0" column="0">
+          <widget class="OrbitSamplingReport" name="samplingReport"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="selectionTab">
+        <attribute name="title">
+         <string>selection</string>
+        </attribute>
+        <layout class="QGridLayout" name="selectionGridLayout">
+         <item row="0" column="0">
+          <widget class="OrbitSamplingReport" name="selectionReport"/>
+         </item>
+        </layout>
+       </widget>
        <widget class="QWidget" name="CodeTab">
         <attribute name="title">
          <string>code</string>
