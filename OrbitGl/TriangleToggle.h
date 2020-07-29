@@ -33,7 +33,7 @@ class TriangleToggle : public Pickable {
   void OnRelease() override;
 
   State GetState() const { return state_; }
-  void SetState(State state);
+  void SetState(State state, bool replace_initial_state = false);
   void ResetToInitialState() { state_ = initial_state_; }
   bool IsCollapsed() const { return state_ == State::kCollapsed; }
   bool IsExpanded() const { return state_ == State::kExpanded; }

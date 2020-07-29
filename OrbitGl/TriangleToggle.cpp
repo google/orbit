@@ -68,4 +68,9 @@ void TriangleToggle::OnRelease() {
   time_graph_->NeedsUpdate();
 }
 
-void TriangleToggle::SetState(State state) { state_ = state; }
+void TriangleToggle::SetState(State state, bool replace_initial_state) {
+  state_ = state;
+  if (replace_initial_state) {
+    initial_state_ = state;
+  }
+}

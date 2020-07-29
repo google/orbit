@@ -95,6 +95,8 @@ void TimeGraph::Clear() {
   // The process track is a special ThreadTrack of id "0".
   process_track_ = GetOrCreateThreadTrack(0);
 
+  NeedsUpdate();
+
   SetOverlayTextBoxes({});
 }
 
@@ -339,6 +341,8 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
       cores_seen_.insert(a_Timer.m_Processor);
     }
   }
+
+  NeedsUpdate();
 }
 
 //-----------------------------------------------------------------------------
