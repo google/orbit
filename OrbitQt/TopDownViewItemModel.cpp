@@ -55,7 +55,7 @@ QVariant TopDownViewItemModel::data(const QModelIndex& index, int role) const {
       }
     } break;
 
-    // The value return when role == Qt::EditRole is used for sorting.
+    // The value returned when role == Qt::EditRole is used for sorting.
     case Qt::EditRole: {
       auto* item = static_cast<TopDownNode*>(index.internalPointer());
       auto thread_item = dynamic_cast<TopDownThread*>(item);
@@ -97,21 +97,36 @@ Qt::ItemFlags TopDownViewItemModel::flags(const QModelIndex& index) const {
 QVariant TopDownViewItemModel::headerData(int section,
                                           Qt::Orientation orientation,
                                           int role) const {
-  if (orientation != Qt::Horizontal || role != Qt::DisplayRole) {
+  if (orientation != Qt::Horizontal) {
     return QVariant();
   }
-  switch (section) {
-    case Columns::kThreadOrFunction:
-      return "Thread / Function";
-    case Columns::kInclusive:
-      return "Inclusive";
-    case Columns::kExclusive:
-      return "Exclusive";
-    case Columns::kFunctionAddress:
-      return "Function address";
-    default:
-      return QVariant();
+  switch (role) {
+    case Qt::DisplayRole: {
+      switch (section) {
+        case Columns::kThreadOrFunction:
+          return "Thread / Function";
+        case Columns::kInclusive:
+          return "Inclusive";
+        case Columns::kExclusive:
+          return "Exclusive";
+        case Columns::kFunctionAddress:
+          return "Function address";
+      }
+    } break;
+    case Qt::InitialSortOrderRole: {
+      switch (section) {
+        case Columns::kThreadOrFunction:
+          return Qt::AscendingOrder;
+        case Columns::kInclusive:
+          return Qt::DescendingOrder;
+        case Columns::kExclusive:
+          return Qt::DescendingOrder;
+        case Columns::kFunctionAddress:
+          return Qt::AscendingOrder;
+      }
+    } break;
   }
+  return QVariant();
 }
 
 QModelIndex TopDownViewItemModel::index(int row, int column,
