@@ -127,6 +127,7 @@ static outcome::result<void> RunUiInstance(
       absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
 
   OrbitMainWindow w(app, std::move(options));
+  w.resize(1280, 720);
   w.showMaximized();
   w.PostInit();
 
