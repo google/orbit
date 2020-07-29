@@ -1,0 +1,99 @@
+sources:
+  "5.12.5":
+    url: "https://download.qt.io/archive/qt/5.12/5.12.5/single/qt-everywhere-src-5.12.5.tar.xz"
+    sha256: "a2299e21db7767caf98242767bffb18a2a88a42fee2d6a393bedd234f8c91298"
+  "5.13.1":
+    url: "https://download.qt.io/archive/qt/5.13/5.13.1/single/qt-everywhere-src-5.13.1.tar.xz"
+    sha256: "adf00266dc38352a166a9739f1a24a1e36f1be9c04bf72e16e142a256436974e"
+  "5.13.2":
+    url: "https://download.qt.io/archive/qt/5.13/5.13.2/single/qt-everywhere-src-5.13.2.tar.xz"
+    sha256: "55e8273536be41f4f63064a79e552a22133848bb419400b6fa8e9fc0dc05de08"
+  "5.14.0-alpha":
+    url: "https://download.qt.io/development_releases/qt/5.14/5.14.0-alpha/single/qt-everywhere-src-5.14.0-alpha.tar.xz"
+    sha256: "5b363eacf6f0d48b568fb38c2168ddb900cfb18a48eaa5e70dac3c3d63563a21"
+  "5.14.0-beta1":
+    url: "https://download.qt.io/development_releases/qt/5.14/5.14.0-beta1/single/qt-everywhere-src-5.14.0-beta1.tar.xz"
+    sha256: "f07cfc26762244bd343190b1b2e8b22708196f017024d6ab59f7fe1c8432f6b3"
+  "5.14.0-beta3":
+    url: "https://download.qt.io/development_releases/qt/5.14/5.14.0-beta3/single/qt-everywhere-src-5.14.0-beta3.tar.xz"
+    sha256: "b75c60644ac26477afabb4997ea55c7d5cefc842bcd3f432f04f1c4fe6d848a3"
+  "5.14.0-rc":
+    url: "https://download.qt.io/development_releases/qt/5.14/5.14.0-rc/single/qt-everywhere-src-5.14.0-rc.tar.xz"
+    sha256: "5d8642b0c5f2f7acd600bc3aac068b7b3455a49e0e3dfc8eaf5883b1d537e1be"
+  "5.14.0":
+    url: "https://download.qt.io/archive/qt/5.14/5.14.0/single/qt-everywhere-src-5.14.0.tar.xz"
+    sha256: "be9a77cd4e1f9d70b58621d0753be19ea498e6b0da0398753e5038426f76a8ba"
+  "5.14.1":
+    url: "https://download.qt.io/archive/qt/5.14/5.14.1/single/qt-everywhere-src-5.14.1.tar.xz"
+    sha256: "6f17f488f512b39c2feb57d83a5e0a13dcef32999bea2e2a8f832f54a29badb8"
+  "5.14.2":
+    url: "https://download.qt.io/archive/qt/5.14/5.14.2/single/qt-everywhere-src-5.14.2.tar.xz"
+    sha256: "c6fcd53c744df89e7d3223c02838a33309bd1c291fcb6f9341505fe99f7f19fa"
+  "5.15.0":
+    url: "https://download.qt.io/archive/qt/5.15/5.15.0/single/qt-everywhere-src-5.15.0.tar.xz"
+    sha256: "22b63d7a7a45183865cc4141124f12b673e7a17b1fe2b91e433f6547c5d548c3"
+  "5.15.1":
+    url: "https://download.qt.io/archive/qt/5.15/5.15.1/single/qt-everywhere-src-5.15.1.tar.xz"
+    sha256: "44da876057e21e1be42de31facd99be7d5f9f07893e1ea762359bcee0ef64ee9"
+patches:
+  "5.13.1":
+    - patch_file: "patches/3f9c9db.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/a9cc8aa.diff"
+      base_path: "qt5/qtmultimedia"
+  "5.13.2":
+    - patch_file: "patches/3f9c9db_.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/aa2a39dea5.diff"
+      base_path: "qt5/qtbase"
+  "5.14.0-beta3":
+    - patch_file: "patches/fbde9c7.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/aa2a39dea5.diff"
+      base_path: "qt5/qtbase"
+  "5.14.0-rc":
+    - patch_file: "patches/fbde9c7.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/aa2a39dea5.diff"
+      base_path: "qt5/qtbase"
+  "5.14.0":
+    - patch_file: "patches/aa2a39dea5.diff"
+      base_path: "qt5/qtbase"
+  "5.14.1":
+    - patch_file: "patches/aa2a39dea5.diff"
+      base_path: "qt5/qtbase"
+  "5.14.2":
+    - patch_file: "patches/aa2a39dea5.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/5d2026c.diff"
+      base_path: "qt5/qtwebengine"
+    - patch_file: "patches/c72097e.diff"
+      base_path: "qt5/qtwebengine"
+  "5.15.0":
+    - patch_file: "patches/aa2a39dea5.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/c72097e.diff"
+      base_path: "qt5/qtwebengine"
+    - patch_file: "patches/e2eb6e9.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/c994a33.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/b619f2a.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/perfetto.diff"
+      base_path: "qt5/qtwebengine"
+    - patch_file: "patches/torque.diff"
+      base_path: "qt5/qtwebengine"
+  "5.15.1":
+    - patch_file: "patches/aa2a39dea5.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/c72097e.diff"
+      base_path: "qt5/qtwebengine"
+    - patch_file: "patches/e2eb6e9.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/c994a33.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/b619f2a.diff"
+      base_path: "qt5/qtbase"
+    - patch_file: "patches/torque.diff"
+      base_path: "qt5/qtwebengine"

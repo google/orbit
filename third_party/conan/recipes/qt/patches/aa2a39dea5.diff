@@ -1,0 +1,29 @@
+From aa2a39dea5918c63045310b0d2a7e34ce9934e0c Mon Sep 17 00:00:00 2001
+From: Eric Lemanissier <eric.lemanissier@gmail.com>
+Date: Tue, 26 Nov 2019 12:47:47 +0100
+Subject: [PATCH] add inline source detection to glib
+
+this allows to use static version of glib (pkg-config only works with shared libraries)
+
+Change-Id: If9b0054985b87b8da43269425b32c2e4ffb65f5a
+---
+ src/corelib/configure.json | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/corelib/configure.json b/src/corelib/configure.json
+index ae360239c6..998687dc4e 100644
+--- a/src/corelib/configure.json
++++ b/src/corelib/configure.json
+@@ -45,7 +45,8 @@
+             },
+             "headers": "glib.h",
+             "sources": [
+-                { "type": "pkgConfig", "args": "glib-2.0 gthread-2.0" }
++                { "type": "pkgConfig", "args": "glib-2.0 gthread-2.0" },
++				"-lgthread-2.0 -lglib-2.0"
+             ]
+         },
+         "posix_iconv": {
+-- 
+2.23.0.windows.1
+

@@ -1,0 +1,27 @@
+From c994a334701ab80fcc154f5330492c751d1e2490 Mon Sep 17 00:00:00 2001
+From: Eric Lemanissier <eric.lemanissier@gmail.com>
+Date: Tue, 26 May 2020 16:51:08 +0000
+Subject: [PATCH] QMimeDatabase/xml: use xmlstarlet instead of xml
+
+some distributions (eg Ubuntu) don't provide xml executable, but only xmlstarlet executable
+
+Change-Id: Icc801ded8d4ec1ec4d1dab93289a2365f8cd9cbd
+Pick-to: 5.15
+---
+
+diff --git a/src/corelib/mimetypes/mime/generate.pl b/src/corelib/mimetypes/mime/generate.pl
+index 0f87d61..4c1cb5b 100644
+--- a/src/corelib/mimetypes/mime/generate.pl
++++ b/src/corelib/mimetypes/mime/generate.pl
+@@ -67,9 +67,9 @@
+ 
+ # Check if xml (from xmlstarlet) is in $PATH
+ my $cmd;
+-if (checkCommand("xml")) {
++if (checkCommand("xmlstarlet")) {
+     # Minify the data before compressing
+-    $cmd = "xml sel -D -B -t -c / $fname";
++    $cmd = "xmlstarlet sel -D -B -t -c / $fname";
+     $cmd .= "| $compress" if $compress;
+ } elsif ($compress) {
+     $cmd = "$compress < $fname"
