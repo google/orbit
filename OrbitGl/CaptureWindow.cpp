@@ -475,10 +475,14 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
           time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
                                         TimeGraph::JumpDirection::kPrevious,
                                         TimeGraph::JumpScope::kSameFunction);
+        } else if (a_Alt) {
+          time_graph_.JumpToNeighborBox(
+              Capture::GSelectedTextBox, TimeGraph::JumpDirection::kPrevious,
+              TimeGraph::JumpScope::kSameThreadSameFunction);
         } else {
           time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
                                         TimeGraph::JumpDirection::kPrevious,
-                                        TimeGraph::JumpScope::kSameThread);
+                                        TimeGraph::JumpScope::kSameDepth);
         }
         break;
       case 20:  // Right
@@ -486,10 +490,14 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
           time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
                                         TimeGraph::JumpDirection::kNext,
                                         TimeGraph::JumpScope::kSameFunction);
+        } else if (a_Alt) {
+          time_graph_.JumpToNeighborBox(
+              Capture::GSelectedTextBox, TimeGraph::JumpDirection::kNext,
+              TimeGraph::JumpScope::kSameThreadSameFunction);
         } else {
           time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
                                         TimeGraph::JumpDirection::kNext,
-                                        TimeGraph::JumpScope::kSameThread);
+                                        TimeGraph::JumpScope::kSameDepth);
         }
         break;
       case 19:  // Up
