@@ -72,8 +72,6 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
   }
 }
 
-void GraphTrack::OnDrag(int /*x*/, int /*y*/) {}
-
 //-----------------------------------------------------------------------------
 float GraphTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
