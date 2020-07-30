@@ -442,7 +442,8 @@ void TimeGraph::Select(const TextBox* a_TextBox) {
 }
 
 const TextBox* TimeGraph::FindPreviousFunctionCall(
-    uint64_t function_address, TickType current_time) const {
+    uint64_t function_address, TickType current_time,
+    std::optional<int32_t> thread_ID) const {
   TextBox* previous_box = nullptr;
   TickType previous_box_time = std::numeric_limits<TickType>::lowest();
   std::vector<std::shared_ptr<TimerChain>> chains =
@@ -456,6 +457,8 @@ const TextBox* TimeGraph::FindPreviousFunctionCall(
         TextBox& box = block[i];
         auto box_time = box.GetTimerInfo().end();
         if ((box.GetTimerInfo().function_address() == function_address) &&
+            (!thread_ID ||
+             thread_ID.value() == box.GetTimerInfo().thread_id()) &&
             (box_time < current_time) && (previous_box_time < box_time)) {
           previous_box = &box;
           previous_box_time = box_time;
@@ -466,8 +469,9 @@ const TextBox* TimeGraph::FindPreviousFunctionCall(
   return previous_box;
 }
 
-const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_address,
-                                               TickType current_time) const {
+const TextBox* TimeGraph::FindNextFunctionCall(
+    uint64_t function_address, TickType current_time,
+    std::optional<int32_t> thread_ID) const {
   TextBox* next_box = nullptr;
   TickType next_box_time = std::numeric_limits<TickType>::max();
   std::vector<std::shared_ptr<TimerChain>> chains =
@@ -481,6 +485,8 @@ const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_address,
         TextBox& box = block[i];
         auto box_time = box.GetTimerInfo().end();
         if ((box.GetTimerInfo().function_address() == function_address) &&
+            (!thread_ID ||
+             thread_ID.value() == box.GetTimerInfo().thread_id()) &&
             (box_time > current_time) && (next_box_time > box_time)) {
           next_box = &box;
           next_box_time = box_time;
@@ -914,20 +920,39 @@ void TimeGraph::JumpToNeighborBox(TextBox* from, JumpDirection jump_direction,
   }
   auto function_address = from->GetTimerInfo().function_address();
   auto current_time = from->GetTimerInfo().end();
+  auto thread_id = from->GetTimerInfo().thread_id();
   if (jump_direction == JumpDirection::kPrevious) {
-    if (jump_scope == JumpScope::kSameThread) {
-      goal = FindPrevious(from);
-    }
-    if (jump_scope == JumpScope::kSameFunction) {
-      goal = FindPreviousFunctionCall(function_address, current_time);
+    switch (jump_scope) {
+      case JumpScope::kSameDepth:
+        goal = FindPrevious(from);
+        break;
+      case JumpScope::kSameFunction:
+        goal = FindPreviousFunctionCall(function_address, current_time);
+        break;
+      case JumpScope::kSameThreadSameFunction:
+        goal =
+            FindPreviousFunctionCall(function_address, current_time, thread_id);
+        break;
+      default:
+        // Other choices are not implemented.
+        CHECK(false);
+        break;
     }
   }
   if (jump_direction == JumpDirection::kNext) {
-    if (jump_scope == JumpScope::kSameThread) {
-      goal = FindNext(from);
-    }
-    if (jump_scope == JumpScope::kSameFunction) {
-      goal = FindNextFunctionCall(function_address, current_time);
+    switch (jump_scope) {
+      case JumpScope::kSameDepth:
+        goal = FindNext(from);
+        break;
+      case JumpScope::kSameFunction:
+        goal = FindNextFunctionCall(function_address, current_time);
+        break;
+      case JumpScope::kSameThreadSameFunction:
+        goal = FindNextFunctionCall(function_address, current_time, thread_id);
+        break;
+      default:
+        CHECK(false);
+        break;
     }
   }
   if (jump_direction == JumpDirection::kTop) {

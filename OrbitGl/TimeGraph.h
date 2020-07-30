@@ -71,14 +71,17 @@ class TimeGraph {
     kPartlyVisible,
     kFullyVisible,
   };
-  void HorizontallyMoveIntoView(VisibilityType vis_type, TickType min, TickType max, double distance = 0.3);
-  void HorizontallyMoveIntoView(VisibilityType vis_type, const TextBox* text_box, double distance = 0.3);
+  void HorizontallyMoveIntoView(VisibilityType vis_type, TickType min,
+                                TickType max, double distance = 0.3);
+  void HorizontallyMoveIntoView(VisibilityType vis_type,
+                                const TextBox* text_box, double distance = 0.3);
   void VerticallyMoveIntoView(const TextBox* text_box);
   double GetTime(double a_Ratio);
   double GetTimeIntervalMicro(double a_Ratio);
   void Select(const TextBox* a_TextBox);
   enum class JumpScope {
     kGlobal,
+    kSameDepth,
     kSameThread,
     kSameFunction,
     kSameThreadSameFunction
@@ -86,8 +89,12 @@ class TimeGraph {
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
   void JumpToNeighborBox(TextBox* from, JumpDirection jump_direction,
                          JumpScope jump_scope);
-  const TextBox* FindPreviousFunctionCall(uint64_t function_address, TickType current_time) const;
-  const TextBox* FindNextFunctionCall(uint64_t function_address, TickType current_time) const;
+  const TextBox* FindPreviousFunctionCall(
+      uint64_t function_address, TickType current_time,
+      std::optional<int32_t> thread_ID = std::nullopt) const;
+  const TextBox* FindNextFunctionCall(
+      uint64_t function_address, TickType current_time,
+      std::optional<int32_t> thread_ID = std::nullopt) const;
   void SelectAndZoom(const TextBox* a_TextBox);
   double GetCaptureTimeSpanUs();
   double GetCurrentTimeSpanUs();
