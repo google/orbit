@@ -520,9 +520,11 @@ void OrbitMainWindow::OnNewTopDownView(
   proxy_model->setSourceModel(model);
   proxy_model->setSortRole(Qt::EditRole);
   ui->topDownView->setModel(proxy_model);
-  ui->topDownView->resizeColumnToContents(0);
   ui->topDownView->sortByColumn(TopDownViewItemModel::kInclusive,
                                 Qt::DescendingOrder);
+  for (int column = 0; column < TopDownViewItemModel::kColumnCount; ++column) {
+    ui->topDownView->resizeColumnToContents(column);
+  }
 }
 
 //-----------------------------------------------------------------------------
