@@ -96,6 +96,8 @@ void TimeGraph::Clear() {
   process_track_ = GetOrCreateThreadTrack(0);
 
   SetOverlayTextBoxes({});
+
+  NeedsUpdate();
 }
 
 //-----------------------------------------------------------------------------
@@ -339,6 +341,8 @@ void TimeGraph::ProcessTimer(const Timer& a_Timer) {
       cores_seen_.insert(a_Timer.m_Processor);
     }
   }
+
+  NeedsUpdate();
 }
 
 //-----------------------------------------------------------------------------
