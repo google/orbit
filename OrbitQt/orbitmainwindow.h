@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <DisassemblyReport.h>
+
 #include <QApplication>
 #include <QLabel>
 #include <QLineEdit>
@@ -51,7 +53,7 @@ class OrbitMainWindow : public QMainWindow {
   std::string FindFile(const std::string& caption, const std::string& dir,
                        const std::string& filter);
   void OpenDisassembly(const std::string& a_String,
-                       const std::function<double(size_t)>& line_to_hit_ratio);
+                       const DisassemblyReport& report);
   void SetTitle(const QString& task_description);
   outcome::result<void> OpenCapture(const std::string& filepath);
   void OnCaptureCleared();

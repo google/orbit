@@ -23,7 +23,7 @@ void OrbitDisassemblyDialog::SetText(const std::string& a_Text) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitDisassemblyDialog::SetLineToHitRatio(
-    const std::function<double(size_t)>& line_to_hit_ratio) {
-  ui->plainTextEdit->SetLineToHits(line_to_hit_ratio);
+void OrbitDisassemblyDialog::SetDisassemblyReport(
+    const DisassemblyReport& report) {
+  ui->plainTextEdit->SetReport(std::make_unique<DisassemblyReport>(report));
 }

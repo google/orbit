@@ -478,7 +478,9 @@ void OrbitCodeEditor::HeatMapAreaPaintEvent(QPaintEvent* event) {
   while (block.isValid() && top <= event->rect().bottom()) {
     if (block.isVisible() && bottom >= event->rect().top()) {
       // % of hits in this function from 0.0 to 1.0
-      const double hit_ratio = line_to_hit_ratio_(blockNumber);
+      const double hit_ratio =
+          static_cast<double>(report_->GetNumSamplesAtLine(blockNumber)) /
+          report_->GetNumSamplesInFunction();
       // The sqrt maps 0.0 to 0.0 and 1.0 to 1.0 but makes small rations larger,
       // such that in the ui you can still see that the instruction was actually
       // hit in the sampling.
