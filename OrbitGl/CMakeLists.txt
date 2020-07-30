@@ -130,6 +130,18 @@ if(NOT WIN32)
   target_link_libraries(OrbitGl PRIVATE X11::X11 X11::Xi X11::Xxf86vm)
 endif()
 
+add_executable(OrbitGlTests)
+
+target_sources(OrbitGlTests PRIVATE
+    PickingManagerTest.cpp)
+
+target_link_libraries(
+  OrbitGlTests
+  PRIVATE OrbitGl
+          GTest::Main)
+
+register_test(OrbitGlTests)
+
 add_fuzzer(CaptureSerializerLoadFuzzer CaptureSerializerLoadFuzzer.cpp)
 target_link_libraries(CaptureSerializerLoadFuzzer PRIVATE OrbitGl)
 
@@ -142,3 +154,4 @@ add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcess
 target_link_libraries(
   CaptureEventProcessorProcessEventsFuzzer
   PRIVATE OrbitGl libprotobuf-mutator::libprotobuf-mutator)
+  

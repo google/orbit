@@ -356,6 +356,9 @@
    <property name="toolTip">
     <string>Clear Capture</string>
    </property>
+   <property name="shortcut">
+    <string>Z</string>
+   </property>
   </action>
   <action name="actionFilter_Tracks">
    <property name="text">
