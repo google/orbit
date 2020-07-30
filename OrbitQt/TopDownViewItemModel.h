@@ -33,6 +33,7 @@ class TopDownViewItemModel : public QAbstractItemModel {
     kThreadOrFunction = 0,
     kInclusive,
     kExclusive,
+    kOfParent,
     kFunctionAddress,
     kColumnCount
   };

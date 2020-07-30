@@ -13,26 +13,44 @@ class TopDownNode {
   explicit TopDownNode(TopDownNode* parent) : parent_{parent} {}
   virtual ~TopDownNode() = default;
 
-  TopDownNode* parent() { return parent_; }
+  uint64_t sample_count() const { return sample_count_; }
+
+  void IncreaseSampleCount(uint64_t sample_count_increase) {
+    sample_count_ += sample_count_increase;
+  }
+
+  // parent(), child_count(), children() are needed by TopDownViewItemModel.
+  const TopDownNode* parent() const { return parent_; }
 
   virtual uint64_t child_count() const = 0;
 
-  virtual std::vector<TopDownNode*> children() = 0;
+  virtual std::vector<const TopDownNode*> children() const = 0;
 
  private:
   TopDownNode* parent_;
+  uint64_t sample_count_ = 0;
 };
 
 class TopDownFunction;
 
 class TopDownInternalNode : public TopDownNode {
  public:
-  explicit TopDownInternalNode(TopDownNode* parent) : TopDownNode{parent} {}
+  explicit TopDownInternalNode(TopDownNode* parent) : TopDownNode{parent} {
+    CHECK(parent != nullptr);
+  }
 
   TopDownFunction* GetFunctionOrNull(uint64_t function_absolute_address);
 
   TopDownFunction* AddAndGetFunction(uint64_t function_absolute_address,
                                      std::string function_name);
+
+  float GetInclusivePercent(uint64_t total_sample_count) const {
+    return 100.0f * sample_count() / total_sample_count;
+  }
+
+  float GetPercentOfParent() const {
+    return 100.0f * sample_count() / parent()->sample_count();
+  }
 
  protected:
   std::map<uint64_t, TopDownFunction> function_nodes_;
@@ -52,33 +70,22 @@ class TopDownFunction : public TopDownInternalNode {
 
   const std::string& function_name() const { return function_name_; }
 
-  void IncreaseSampleCount(uint64_t sample_count_increase) {
-    inclusive_sample_count_ += sample_count_increase;
-  }
-
-  uint64_t inclusive_sample_count() const { return inclusive_sample_count_; }
-
-  float inclusive_percent(uint64_t total_sample_count) const {
-    return 100.0f * inclusive_sample_count() / total_sample_count;
-  }
-
-  uint64_t exclusive_sample_count() const {
+  uint64_t GetExclusiveSampleCount() const {
     uint64_t children_sample_count = 0;
     for (const auto& child_address_and_node : function_nodes_) {
-      children_sample_count +=
-          child_address_and_node.second.inclusive_sample_count_;
+      children_sample_count += child_address_and_node.second.sample_count();
     }
-    return inclusive_sample_count_ - children_sample_count;
+    return sample_count() - children_sample_count;
   }
 
-  float exclusive_percent(uint64_t total_sample_count) const {
-    return 100.0f * exclusive_sample_count() / total_sample_count;
+  float GetExclusivePercent(uint64_t total_sample_count) const {
+    return 100.0f * GetExclusiveSampleCount() / total_sample_count;
   }
 
   uint64_t child_count() const override { return function_nodes_.size(); }
 
-  std::vector<TopDownNode*> children() override {
-    std::vector<TopDownNode*> ret;
+  std::vector<const TopDownNode*> children() const override {
+    std::vector<const TopDownNode*> ret;
     for (auto& address_and_node : function_nodes_) {
       ret.push_back(&address_and_node.second);
     }
@@ -88,7 +95,6 @@ class TopDownFunction : public TopDownInternalNode {
  private:
   uint64_t function_absolute_address_;
   std::string function_name_;
-  uint64_t inclusive_sample_count_ = 0;
 };
 
 class TopDownThread : public TopDownInternalNode {
@@ -105,18 +111,8 @@ class TopDownThread : public TopDownInternalNode {
 
   uint64_t child_count() const override { return function_nodes_.size(); }
 
-  uint64_t thread_sample_count() const { return thread_sample_count_; }
-
-  float thread_percent(uint64_t total_sample_count) const {
-    return 100.0f * thread_sample_count() / total_sample_count;
-  }
-
-  void IncreaseSampleCount(uint64_t sample_count_increase) {
-    thread_sample_count_ += sample_count_increase;
-  }
-
-  std::vector<TopDownNode*> children() override {
-    std::vector<TopDownNode*> ret;
+  std::vector<const TopDownNode*> children() const override {
+    std::vector<const TopDownNode*> ret;
     for (auto& address_and_node : function_nodes_) {
       ret.push_back(&address_and_node.second);
     }
@@ -126,7 +122,6 @@ class TopDownThread : public TopDownInternalNode {
  private:
   int32_t thread_id_;
   std::string thread_name_;
-  uint64_t thread_sample_count_ = 0;
 };
 
 class TopDownView : public TopDownNode {
@@ -143,17 +138,11 @@ class TopDownView : public TopDownNode {
 
   TopDownThread* AddAndGetThread(int32_t thread_id, std::string thread_name);
 
-  uint64_t total_sample_count() const { return total_sample_count_; }
-
-  void IncreaseSampleCount(uint64_t sample_count_increase) {
-    total_sample_count_ += sample_count_increase;
-  }
-
   uint64_t child_count() const override { return thread_nodes_.size(); }
 
-  std::vector<TopDownNode*> children() override {
-    std::vector<TopDownNode*> ret;
-    for (auto& tid_and_node : thread_nodes_) {
+  std::vector<const TopDownNode*> children() const override {
+    std::vector<const TopDownNode*> ret;
+    for (const auto& tid_and_node : thread_nodes_) {
       ret.push_back(&tid_and_node.second);
     }
     return ret;
@@ -161,7 +150,6 @@ class TopDownView : public TopDownNode {
 
  private:
   std::map<int32_t, TopDownThread> thread_nodes_;
-  uint64_t total_sample_count_ = 0;
 };
 
 #endif  // ORBIT_GL_TOP_DOWN_VIEW_H_
