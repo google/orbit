@@ -66,7 +66,7 @@ void PickingManager::Release() {
 //-----------------------------------------------------------------------------
 void PickingManager::Drag(int a_X, int a_Y) {
   Pickable* picked = GetPicked();
-  if (picked) {
+  if (picked && m_Picked->Draggable()) {
     picked->OnDrag(a_X, a_Y);
   }
 }
