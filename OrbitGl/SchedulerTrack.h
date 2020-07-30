@@ -5,25 +5,29 @@
 #ifndef ORBIT_GL_SCHEDULER_TRACK_H_
 #define ORBIT_GL_SCHEDULER_TRACK_H_
 
-#include "ThreadTrack.h"
+#include "TimerTrack.h"
+#include "capture_data.pb.h"
 
-class SchedulerTrack : public ThreadTrack {
+class SchedulerTrack : public TimerTrack {
  public:
   explicit SchedulerTrack(TimeGraph* time_graph);
   ~SchedulerTrack() override = default;
 
-  std::string GetTooltip() const override;
+  [[nodiscard]] Type GetType() const override { return kSchedulerTrack; }
+  [[nodiscard]] std::string GetTooltip() const override;
 
-  void UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
-                        PickingMode /*picking_mode*/) override;
-  Type GetType() const override { return kSchedulerTrack; }
-  float GetHeight() const override;
-  bool HasEventTrack() const override { return false; }
-  bool IsCollapsable() const override { return false; }
+  [[nodiscard]] float GetHeight() const override;
+  [[nodiscard]] bool IsCollapsable() const override { return false; }
+
+  void UpdateBoxHeight() override;
+  [[nodiscard]] float GetYFromDepth(uint32_t depth) const override;
 
  protected:
-  float GetYFromDepth(float track_y, uint32_t depth, bool collapsed) override;
-  std::string GetBoxTooltip(PickingID id) const;
+  [[nodiscard]] bool IsTimerActive(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
+  [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
+                      bool is_selected) const override;
+  [[nodiscard]] std::string GetBoxTooltip(PickingID id) const override;
 };
 
 #endif  // ORBIT_GL_SCHEDULER_TRACK_H_

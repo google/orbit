@@ -55,6 +55,7 @@ target_sources(
          TimeGraphLayout.h
          TimerChain.h
          TopDownView.h
+         TimerTrack.h
          Track.h
          TriangleToggle.h)
 
@@ -99,6 +100,7 @@ target_sources(
           TimeGraph.cpp
           TimeGraphLayout.cpp
           TimerChain.cpp
+          TimerTrack.cpp
           ThreadTrack.cpp
           TopDownView.cpp
           Track.cpp
