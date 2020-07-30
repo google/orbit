@@ -32,7 +32,7 @@ class SftpFile {
                                         std::string_view filepath,
                                         FxfFlags flags, long mode);
 
-  outcome::result<std::string> Read(int max_length_in_bytes);
+  outcome::result<std::string> Read(size_t max_length_in_bytes);
   outcome::result<void> Close();
   outcome::result<size_t> Write(std::string_view data);
 

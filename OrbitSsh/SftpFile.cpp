@@ -22,7 +22,7 @@ outcome::result<SftpFile> SftpFile::Open(Session* session, Sftp* sftp,
   }
 }
 
-outcome::result<std::string> SftpFile::Read(int max_length_in_bytes) {
+outcome::result<std::string> SftpFile::Read(size_t max_length_in_bytes) {
   std::string buffer(max_length_in_bytes, '\0');
   const auto result =
       libssh2_sftp_read(file_ptr_.get(), buffer.data(), buffer.size());

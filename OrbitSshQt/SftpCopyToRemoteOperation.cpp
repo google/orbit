@@ -83,6 +83,7 @@ outcome::result<void> SftpCopyToRemoteOperation::startup() {
           break;
         }
       }
+      ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kRemoteFileWritten: {
       OUTCOME_TRY(sftp_file_->Close());
