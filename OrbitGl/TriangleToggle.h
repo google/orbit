@@ -12,7 +12,8 @@
 class TimeGraph;
 class GlCanvas;
 
-class TriangleToggle : public Pickable {
+class TriangleToggle : public Pickable,
+                       public std::enable_shared_from_this<Pickable> {
  public:
   enum class State { kInactive, kExpanded, kCollapsed };
   enum class InitialStateUpdate { kKeepInitialState, kReplaceInitialState };

@@ -35,7 +35,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
   Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), track_z);
   batcher->AddBox(box, color, PickingID::PICKABLE);
 
-  if (canvas->GetPickingManager().GetPicked() == this) {
+  if (canvas->GetPickingManager().IsThisElementPicked(this)) {
     color = Color(255, 255, 255, 255);
   }
 

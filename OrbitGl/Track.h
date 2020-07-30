@@ -23,7 +23,7 @@ class GlCanvas;
 class TimeGraph;
 
 //-----------------------------------------------------------------------------
-class Track : public Pickable {
+class Track : public Pickable, public std::enable_shared_from_this<Track> {
  public:
   enum Type {
     kTimerTrack,
@@ -105,5 +105,5 @@ class Track : public Pickable {
   bool m_PickingEnabled = false;
   Type type_ = kUnknown;
   std::vector<std::shared_ptr<Track>> children_;
-  TriangleToggle collapse_toggle_;
+  std::shared_ptr<TriangleToggle> collapse_toggle_;
 };

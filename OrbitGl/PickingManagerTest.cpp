@@ -54,65 +54,92 @@ PickingID MockRenderPickingColor(const Color& col_vec) {
 }
 
 TEST(PickingManager, BasicFunctionality) {
-  PickableMock pickable1;
-  PickableMock pickable2;
+  auto pickable1 = std::make_shared<PickableMock>();
+  auto pickable2 = std::make_shared<PickableMock>();
   PickingManager pm;
 
-  Color col_vec1 = pm.GetPickableColor(&pickable1, PickingID::BatcherId::UI);
-  Color col_vec2 = pm.GetPickableColor(&pickable2, PickingID::BatcherId::UI);
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec1).m_Id),
-            &pickable1);
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec2).m_Id),
-            &pickable2);
-  ASSERT_EQ(pm.GetPickableFromId(0xdeadbeef), nullptr);
+  Color col_vec1 = pm.GetPickableColor(pickable1, PickingID::BatcherId::UI);
+  Color col_vec2 = pm.GetPickableColor(pickable2, PickingID::BatcherId::UI);
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec1).m_Id).lock(),
+            pickable1);
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec2).m_Id).lock(),
+            pickable2);
+  ASSERT_TRUE(pm.GetPickableFromId(0xdeadbeef).expired());
 
   pm.Reset();
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec1).m_Id),
-            nullptr);
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec2).m_Id),
-            nullptr);
+  ASSERT_TRUE(
+      pm.GetPickableFromId(MockRenderPickingColor(col_vec1).m_Id).expired());
+  ASSERT_TRUE(
+      pm.GetPickableFromId(MockRenderPickingColor(col_vec2).m_Id).expired());
 }
 
 TEST(PickingManager, Callbacks) {
-  PickableMock pickable;
+  auto pickable = std::make_shared<PickableMock>();
   PickingManager pm;
 
-  Color col_vec = pm.GetPickableColor(&pickable, PickingID::BatcherId::UI);
+  Color col_vec = pm.GetPickableColor(pickable, PickingID::BatcherId::UI);
   PickingID id = MockRenderPickingColor(col_vec);
-  ASSERT_FALSE(pickable.picked_);
+  ASSERT_FALSE(pickable->picked_);
   pm.Pick(id.m_Id, 0, 0);
-  ASSERT_TRUE(pickable.picked_);
+  ASSERT_TRUE(pickable->picked_);
 
   pm.Release();
-  ASSERT_FALSE(pickable.picked_);
+  ASSERT_FALSE(pickable->picked_);
 
   ASSERT_FALSE(pm.IsDragging());
   pm.Pick(id.m_Id, 0, 0);
   ASSERT_TRUE(pm.IsDragging());
-  ASSERT_FALSE(pickable.dragging_);
+  ASSERT_FALSE(pickable->dragging_);
 
   pm.Drag(10, 10);
   ASSERT_TRUE(pm.IsDragging());
-  ASSERT_TRUE(pickable.dragging_);
+  ASSERT_TRUE(pickable->dragging_);
 
   pm.Release();
   ASSERT_FALSE(pm.IsDragging());
-  ASSERT_FALSE(pickable.dragging_);
+  ASSERT_FALSE(pickable->dragging_);
 }
 
 TEST(PickingManager, Undraggable) {
-  UndraggableMock pickable;
+  auto pickable = std::make_shared<UndraggableMock>();
   PickingManager pm;
 
-  Color col_vec = pm.GetPickableColor(&pickable, PickingID::BatcherId::UI);
+  Color col_vec = pm.GetPickableColor(pickable, PickingID::BatcherId::UI);
   PickingID id = MockRenderPickingColor(col_vec);
 
   ASSERT_FALSE(pm.IsDragging());
   pm.Pick(id.m_Id, 0, 0);
   ASSERT_FALSE(pm.IsDragging());
-  ASSERT_FALSE(pickable.dragging_);
+  ASSERT_FALSE(pickable->dragging_);
 
   pm.Drag(10, 10);
   ASSERT_FALSE(pm.IsDragging());
-  ASSERT_FALSE(pickable.dragging_);
+  ASSERT_FALSE(pickable->dragging_);
+}
+
+TEST(PickingManager, RobustnessOnReset) {
+  std::shared_ptr<PickableMock> pickable = std::make_shared<PickableMock>();
+  PickingManager pm;
+
+  Color col_vec = pm.GetPickableColor(pickable, PickingID::BatcherId::UI);
+  PickingID id = MockRenderPickingColor(col_vec);
+  ASSERT_FALSE(pickable->picked_);
+  pm.Pick(id.m_Id, 0, 0);
+  ASSERT_TRUE(pickable->picked_);
+  pm.Drag(10, 10);
+  ASSERT_TRUE(pickable->dragging_);
+
+  pickable.reset();
+
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec).m_Id).lock(),
+            std::shared_ptr<PickableMock>());
+  ASSERT_FALSE(pm.IsDragging());
+  pm.Pick(id.m_Id, 0, 0);
+  ASSERT_TRUE(pm.GetPicked().expired());
+
+  pickable = std::make_shared<PickableMock>();
+  col_vec = pm.GetPickableColor(pickable, PickingID::BatcherId::UI);
+  id = MockRenderPickingColor(col_vec);
+
+  pickable.reset(new PickableMock());
 }

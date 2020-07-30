@@ -11,7 +11,7 @@
 class GlCanvas;
 class TimeGraph;
 
-class EventTrack : public Track {
+class EventTrack : public virtual Track {
  public:
   explicit EventTrack(TimeGraph* a_TimeGraph);
   Type GetType() const override { return kEventTrack; }
