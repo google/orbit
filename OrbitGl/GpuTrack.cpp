@@ -125,9 +125,9 @@ void GpuTrack::SetTimesliceText(const Timer& timer, double elapsed_us,
     CHECK(timer.m_Type == Timer::GPU_ACTIVITY);
 
     std::string text = absl::StrFormat(
-        "%s; submitter: %d  %s",
+        "%s  %s",
         time_graph_->GetStringManager()->Get(timer.m_UserData[0]).value_or(""),
-        timer.m_TID, time.c_str());
+        time.c_str());
     text_box->SetText(text);
   }
 
@@ -220,16 +220,18 @@ void GpuTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         }
 
         auto user_data = std::make_unique<PickingUserData>(
-          &text_box, [&](PickingID id) { return this->GetBoxTooltip(id); });
+            &text_box, [&](PickingID id) { return this->GetBoxTooltip(id); });
 
         if (is_visible_width) {
           if (!is_collapsed) {
             SetTimesliceText(timer, elapsed_us, min_x, &text_box);
           }
-          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX, std::move(user_data));
+          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX,
+                                std::move(user_data));
         } else {
           auto type = PickingID::LINE;
-          batcher->AddVerticalLine(pos, size[1], z, color, type, std::move(user_data));
+          batcher->AddVerticalLine(pos, size[1], z, color, type,
+                                   std::move(user_data));
           // For lines, we can ignore the entire pixel into which this event
           // falls. We align this precisely on the pixel x-coordinate of the
           // current line being drawn (in ticks). If pixel_delta_in_ticks is
@@ -268,7 +270,8 @@ void GpuTrack::OnTimer(const Timer& timer) {
 }
 
 std::string GpuTrack::GetTooltip() const {
-  return "Shows scheduling and execution times for selected GPU job submissions";
+  return "Shows scheduling and execution times for selected GPU job "
+         "submissions";
 }
 
 //-----------------------------------------------------------------------------
@@ -401,33 +404,40 @@ std::string GpuTrack::GetBoxTooltip(PickingID id) const {
   return "";
 }
 
-std::string GpuTrack::GetSwQueueTooltip(const Timer& timer) const { 
+std::string GpuTrack::GetSwQueueTooltip(const Timer& timer) const {
   return absl::StrFormat(
-    "<b>Software Queue</b><br/>"
-    "<i>Time between amdgpu_cs_ioctl (job submitted) and amdgpu_sched_run_job (job scheduled)</i>"
-    "<br/>"
-    "<br/>"
-    "<b>Submitted from thread:</b> %s [%d]<br/>"
-    "<b>Time:</b> %s",
-    Capture::GThreadNames[timer.m_TID].c_str(),
-    timer.m_TID,
-    GetPrettyTime(timer.ElapsedMillis()).c_str());
+      "<b>Software Queue</b><br/>"
+      "<i>Time between amdgpu_cs_ioctl (job submitted) and "
+      "amdgpu_sched_run_job (job scheduled)</i>"
+      "<br/>"
+      "<br/>"
+      "<b>Submitted from thread:</b> %s [%d]<br/>"
+      "<b>Time:</b> %s",
+      Capture::GThreadNames[timer.m_TID].c_str(), timer.m_TID,
+      GetPrettyTime(timer.ElapsedMillis()).c_str());
 }
 
 std::string GpuTrack::GetHwQueueTooltip(const Timer& timer) const {
-  return absl::StrFormat("<b>Hardware Queue</b><br/><i>Time between amdgpu_sched_run_job "
-    "(job scheduled) and start of GPU execution</i>"
-    "<br/>"
-    "<br/>"
-    "<b>Time:</b> %s",
-    GetPrettyTime(timer.ElapsedMillis()).c_str());
+  return absl::StrFormat(
+      "<b>Hardware Queue</b><br/><i>Time between amdgpu_sched_run_job "
+      "(job scheduled) and start of GPU execution</i>"
+      "<br/>"
+      "<br/>"
+      "<b>Submitted from thread:</b> %s [%d]<br/>"
+      "<b>Time:</b> %s",
+      Capture::GThreadNames[timer.m_TID].c_str(), timer.m_TID,
+      GetPrettyTime(timer.ElapsedMillis()).c_str());
 }
 
 std::string GpuTrack::GetHwExecutionTooltip(const Timer& timer) const {
-  return absl::StrFormat("<b>Harware Execution</b><br/>"
-    "<i>End is marked by \"dma_fence_signaled\" event for this command buffer submission</i>"
-    "<br/>"
-    "<br/>"
-    "<b>Time:</b> %s",
-    GetPrettyTime(timer.ElapsedMillis()).c_str());
+  return absl::StrFormat(
+      "<b>Harware Execution</b><br/>"
+      "<i>End is marked by \"dma_fence_signaled\" event for this command "
+      "buffer submission</i>"
+      "<br/>"
+      "<br/>"
+      "<b>Submitted from thread:</b> %s [%d]<br/>"
+      "<b>Time:</b> %s",
+      Capture::GThreadNames[timer.m_TID].c_str(), timer.m_TID,
+      GetPrettyTime(timer.ElapsedMillis()).c_str());
 }
