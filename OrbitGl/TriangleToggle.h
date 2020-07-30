@@ -15,6 +15,7 @@ class GlCanvas;
 class TriangleToggle : public Pickable {
  public:
   enum class State { kInactive, kExpanded, kCollapsed };
+  enum class InitialStateUpdate { kKeepInitialState, kReplaceInitialState };
 
   using StateChangeHandler = std::function<void(TriangleToggle::State)>;
   explicit TriangleToggle(State initial_state, StateChangeHandler handler,
@@ -33,7 +34,8 @@ class TriangleToggle : public Pickable {
   void OnRelease() override;
 
   State GetState() const { return state_; }
-  void SetState(State state, bool replace_initial_state = false);
+  void SetState(State state, InitialStateUpdate update_initial_state =
+                                 InitialStateUpdate::kKeepInitialState);
   void ResetToInitialState() { state_ = initial_state_; }
   bool IsCollapsed() const { return state_ == State::kCollapsed; }
   bool IsExpanded() const { return state_ == State::kExpanded; }

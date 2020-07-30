@@ -95,9 +95,9 @@ void TimeGraph::Clear() {
   // The process track is a special ThreadTrack of id "0".
   process_track_ = GetOrCreateThreadTrack(0);
 
-  NeedsUpdate();
-
   SetOverlayTextBoxes({});
+
+  NeedsUpdate();
 }
 
 //-----------------------------------------------------------------------------

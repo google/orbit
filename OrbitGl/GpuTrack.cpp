@@ -52,7 +52,9 @@ GpuTrack::GpuTrack(TimeGraph* time_graph,
   string_manager_ = string_manager;
 
   // Gpu tracks are collapsed by default.
-  collapse_toggle_.SetState(TriangleToggle::State::kCollapsed, true);
+  collapse_toggle_.SetState(
+      TriangleToggle::State::kCollapsed,
+      TriangleToggle::InitialStateUpdate::kReplaceInitialState);
 }
 
 //-----------------------------------------------------------------------------
