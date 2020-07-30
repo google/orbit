@@ -133,6 +133,7 @@ if(WIN32)
 else()
   add_subdirectory(OrbitLinuxTracing)
   add_subdirectory(OrbitService)
+  add_subdirectory(OrbitClientGgp)
 endif()
 
 add_subdirectory(ElfUtils)
