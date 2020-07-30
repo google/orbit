@@ -15,7 +15,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/SftpChannel.h"
-#include "OrbitSshQt/SftpOperation.h"
+#include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
 
@@ -45,7 +45,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   std::string greetings = "Hello World! I'm here!";
   std::string_view write_buffer{greetings};
   OrbitSshQt::SftpChannel sftp_channel{&session};
-  OrbitSshQt::SftpOperation sftp_op{&session, &sftp_channel};
+  OrbitSshQt::SftpCopyToRemoteOperation sftp_op{&session, &sftp_channel};
   QEventLoop loop{};
 
   QObject::connect(&client, &QTcpSocket::readyRead, &loop, [&]() {
@@ -168,7 +168,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
         LOG("Sftp channel opened! Starting file copy...");
         sftp_op.CopyFileToRemote(
             temp_file->fileName().toStdString(), "/tmp/temporary_file.txt",
-            OrbitSshQt::SftpOperation::FileMode::kUserWritable);
+            OrbitSshQt::SftpCopyToRemoteOperation::FileMode::kUserWritable);
         CheckCheckpoint(Checkpoint::kSftpChannelStarted);
       });
 
@@ -188,18 +188,20 @@ TEST(OrbitSshQtTests, IntegrationTest) {
 
   // SFTP Operation
 
-  QObject::connect(&sftp_op, &OrbitSshQt::SftpOperation::errorOccurred, &loop,
+  QObject::connect(&sftp_op,
+                   &OrbitSshQt::SftpCopyToRemoteOperation::errorOccurred, &loop,
                    [&](std::error_code e) {
                      loop.quit();
                      FAIL() << absl::StrFormat(
                          "SFTP operation error occurred: %s", e.message());
                    });
 
-  QObject::connect(&sftp_op, &OrbitSshQt::SftpOperation::stopped, &loop, [&]() {
-    LOG("Sftp file copy finished!");
-    sftp_channel.Stop();
-    CheckCheckpoint(Checkpoint::kSftpOperationStopped);
-  });
+  QObject::connect(&sftp_op, &OrbitSshQt::SftpCopyToRemoteOperation::stopped,
+                   &loop, [&]() {
+                     LOG("Sftp file copy finished!");
+                     sftp_channel.Stop();
+                     CheckCheckpoint(Checkpoint::kSftpOperationStopped);
+                   });
 
   session.ConnectToServer(creds);
   LOG("connect to server");

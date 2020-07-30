@@ -20,7 +20,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/SftpChannel.h"
-#include "OrbitSshQt/SftpOperation.h"
+#include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
 
 ABSL_DECLARE_FLAG(bool, devmode);
@@ -149,14 +149,15 @@ outcome::result<void> ServiceDeployManager::StartSftpChannel(
 
 outcome::result<void> ServiceDeployManager::CopyFileToRemote(
     OrbitSshQt::SftpChannel* channel, const std::string& source,
-    const std::string& dest, OrbitSshQt::SftpOperation::FileMode dest_mode) {
-  OrbitSshQt::SftpOperation operation{&session_.value(), channel};
+    const std::string& dest,
+    OrbitSshQt::SftpCopyToRemoteOperation::FileMode dest_mode) {
+  OrbitSshQt::SftpCopyToRemoteOperation operation{&session_.value(), channel};
 
-  auto quit_handler =
-      ConnectQuitHandler(&operation, &OrbitSshQt::SftpOperation::stopped);
+  auto quit_handler = ConnectQuitHandler(
+      &operation, &OrbitSshQt::SftpCopyToRemoteOperation::stopped);
 
   auto error_handler = ConnectErrorHandler(
-      &operation, &OrbitSshQt::SftpOperation::errorOccurred);
+      &operation, &OrbitSshQt::SftpCopyToRemoteOperation::errorOccurred);
 
   LOG("About to start copying from %s to %s...", source, dest);
   operation.CopyFileToRemote(source, dest, dest_mode);
@@ -190,7 +191,7 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServicePackage() {
   auto& config =
       std::get<SignedDebianPackageDeployment>(deployment_configuration_);
 
-  using FileMode = OrbitSshQt::SftpOperation::FileMode;
+  using FileMode = OrbitSshQt::SftpCopyToRemoteOperation::FileMode;
 
   OUTCOME_TRY(
       MapError(CopyFileToRemote(&channel, config.path_to_package.string(),
@@ -222,9 +223,10 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServiceExecutable() {
   auto& config = std::get<BareExecutableAndRootPasswordDeployment>(
       deployment_configuration_);
 
-  OUTCOME_TRY(CopyFileToRemote(
-      &channel, config.path_to_executable.string(), exe_destination_path,
-      OrbitSshQt::SftpOperation::FileMode::kUserWritableAllExecutable));
+  OUTCOME_TRY(CopyFileToRemote(&channel, config.path_to_executable.string(),
+                               exe_destination_path,
+                               OrbitSshQt::SftpCopyToRemoteOperation::FileMode::
+                                   kUserWritableAllExecutable));
 
   OUTCOME_TRY(StopSftpChannel(&channel));
 

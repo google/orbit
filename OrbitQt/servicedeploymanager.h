@@ -13,7 +13,7 @@
 
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/SftpChannel.h"
-#include "OrbitSshQt/SftpOperation.h"
+#include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
 #include "deploymentconfigurations.h"
@@ -66,7 +66,8 @@ class ServiceDeployManager : public QObject {
   outcome::result<void> StartSftpChannel(OrbitSshQt::SftpChannel*);
   outcome::result<void> CopyFileToRemote(
       OrbitSshQt::SftpChannel*, const std::string& source,
-      const std::string& dest, OrbitSshQt::SftpOperation::FileMode dest_mode);
+      const std::string& dest,
+      OrbitSshQt::SftpCopyToRemoteOperation::FileMode dest_mode);
   outcome::result<void> StopSftpChannel(OrbitSshQt::SftpChannel*);
 
   void StartWatchdog();
