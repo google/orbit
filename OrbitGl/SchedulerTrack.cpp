@@ -17,7 +17,7 @@ const Color kInactiveColor(100, 100, 100, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
 SchedulerTrack::SchedulerTrack(TimeGraph* time_graph)
-    : ThreadTrack(time_graph, /*thread_id*/ 0) {}
+    : TimerTrack(time_graph) {}
 
 float SchedulerTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
@@ -27,132 +27,37 @@ float SchedulerTrack::GetHeight() const {
          layout.GetTrackBottomMargin();
 }
 
-inline Color GetTimerColor(const TimerInfo& timer_info, TimeGraph* time_graph,
-                           bool is_selected, bool same_tid, bool same_pid,
-                           bool inactive) {
-  if (is_selected) {
-    return kSelectionColor;
-  } else if (!same_tid && (inactive || !same_pid)) {
-    return kInactiveColor;
-  }
-  return time_graph->GetThreadColor(timer_info.thread_id());
+bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
+  bool is_same_tid_as_selected = timer_info.thread_id() == Capture::GSelectedThreadId;
+  bool is_same_pid_as_target =
+      Capture::GProcessId == 0 || Capture::GProcessId == timer_info.process_id();
+
+  return is_same_tid_as_selected ||
+    (Capture::GSelectedThreadId == 0 && is_same_pid_as_target);
 }
 
-float SchedulerTrack::GetYFromDepth(float track_y, uint32_t depth,
-                                    bool /*collapsed*/) {
+Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
+  if (is_selected) {
+    return kSelectionColor;
+  } else if (!IsTimerActive(timer_info)) {
+    return kInactiveColor;
+  }
+  return time_graph_->GetThreadColor(timer_info.thread_id());
+}
+
+float SchedulerTrack::GetYFromDepth(uint32_t depth) const {
   const TimeGraphLayout& layout = time_graph_->GetLayout();
-  float gap_size = layout.GetSpaceBetweenCores();
   uint32_t num_gaps = depth;
-  return track_y - (layout.GetTextCoresHeight() * (depth + 1)) -
-         num_gaps * gap_size;
+  return m_Pos[1] - (layout.GetTextCoresHeight() * (depth + 1)) -
+         num_gaps * layout.GetSpaceBetweenCores();
 }
 
 std::string SchedulerTrack::GetTooltip() const {
   return "Shows scheduling information for CPU cores";
 }
 
-void SchedulerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
-                                      PickingMode /*picking_mode*/) {
-  Batcher* batcher = &time_graph_->GetBatcher();
-  GlCanvas* canvas = time_graph_->GetCanvas();
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
-  int32_t target_pid = Capture::GProcessId;
-  int32_t selected_thread_id = Capture::GSelectedThreadId;
-
-  float world_start_x = canvas->GetWorldTopLeftX();
-  float world_width = canvas->GetWorldWidth();
-  double inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
-
-  std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
-
-  // We minimize overdraw when drawing lines for small events by discarding
-  // events that would just draw over an already drawn line. When zoomed in
-  // enough that all events are drawn as boxes, this has no effect. When zoomed
-  // out, many events will be discarded quickly.
-  uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
-  uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
-
-  uint64_t pixel_delta_in_ticks = static_cast<uint64_t>(MicrosecondsToTicks(
-                                      time_graph_->GetTimeWindowUs())) /
-                                  canvas->getWidth();
-  uint64_t min_timegraph_tick =
-      time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
-
-  for (auto& chain : chains_by_depth) {
-    if (!chain) continue;
-    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-      TimerBlock& block = *it;
-      if (!block.Intersects(min_tick, max_tick)) continue;
-
-      // We have to reset this when we go to the next depth, as otherwise we
-      // would miss drawing events that should be drawn.
-      min_ignore = std::numeric_limits<uint64_t>::max();
-      max_ignore = std::numeric_limits<uint64_t>::min();
-
-      for (size_t k = 0; k < block.size(); ++k) {
-        TextBox& text_box = block[k];
-        const TimerInfo& timer_info = text_box.GetTimerInfo();
-        if (min_tick > timer_info.end() || max_tick < timer_info.start())
-          continue;
-        if (timer_info.start() >= min_ignore && timer_info.end() <= max_ignore)
-          continue;
-
-        UpdateDepth(timer_info.depth() + 1);
-
-        double start_us = time_graph_->GetUsFromTick(timer_info.start());
-        double end_us = time_graph_->GetUsFromTick(timer_info.end());
-        double elapsed_us = end_us - start_us;
-        double normalized_start = start_us * inv_time_window;
-        double normalized_length = elapsed_us * inv_time_window;
-        float world_timer_width =
-            static_cast<float>(normalized_length * world_width);
-        float world_timer_x =
-            static_cast<float>(world_start_x + normalized_start * world_width);
-        float world_timer_y =
-            GetYFromDepth(m_Pos[1], timer_info.depth(), /*collapsed*/ false);
-
-        bool is_visible_width = normalized_length * canvas->getWidth() > 1;
-        bool is_same_pid_as_target =
-            target_pid == 0 || target_pid == timer_info.process_id();
-        bool is_same_tid_as_selected =
-            timer_info.thread_id() == selected_thread_id;
-        bool is_inactive = selected_thread_id != 0 && !is_same_tid_as_selected;
-        bool is_selected = &text_box == Capture::GSelectedTextBox;
-
-        Vec2 pos(world_timer_x, world_timer_y);
-        Vec2 size(world_timer_width, layout.GetTextCoresHeight());
-        float z = GlCanvas::Z_VALUE_BOX_ACTIVE;
-        Color color = GetTimerColor(timer_info, time_graph_, is_selected,
-                                    is_same_tid_as_selected,
-                                    is_same_pid_as_target, is_inactive);
-
-        auto user_data = std::make_unique<PickingUserData>(
-            &text_box,
-            [&](PickingID id) -> std::string { return GetBoxTooltip(id); });
-
-        if (is_visible_width) {
-          batcher->AddShadedBox(pos, size, z, color, PickingID::BOX,
-                                std::move(user_data));
-        } else {
-          auto type = PickingID::LINE;
-          batcher->AddVerticalLine(pos, size[1], z, color, type,
-                                   std::move(user_data));
-          // For lines, we can ignore the entire pixel into which this event
-          // falls. We align this precisely on the pixel x-coordinate of the
-          // current line being drawn (in ticks). If pixel_delta_in_ticks is
-          // zero, we need to avoid dividing by zero, but we also wouldn't
-          // gain anything here.
-          if (pixel_delta_in_ticks != 0) {
-            min_ignore = min_timegraph_tick +
-                         ((timer_info.start() - min_timegraph_tick) /
-                          pixel_delta_in_ticks) *
-                             pixel_delta_in_ticks;
-            max_ignore = min_ignore + pixel_delta_in_ticks;
-          }
-        }
-      }
-    }
-  }
+void SchedulerTrack::UpdateBoxHeight() {
+  box_height_ = time_graph_->GetLayout().GetTextCoresHeight();
 }
 
 std::string SchedulerTrack::GetBoxTooltip(PickingID id) const {
