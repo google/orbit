@@ -471,9 +471,9 @@ void OrbitApp::AddTopDownView(const SamplingProfiler& sampling_profiler) {
     return;
   }
   std::unique_ptr<TopDownView> top_down_view =
-      TopDownView::CreateFromSamplingProfiler(sampling_profiler,
-                                              Capture::GThreadNames,
-                                              Capture::GAddressToFunctionName);
+      TopDownView::CreateFromSamplingProfiler(
+          sampling_profiler, Capture::GProcessName, Capture::GThreadNames,
+          Capture::GAddressToFunctionName);
   top_down_view_callback_(std::move(top_down_view));
 }
 

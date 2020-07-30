@@ -133,6 +133,7 @@ class TopDownView : public TopDownNode {
  public:
   static std::unique_ptr<TopDownView> CreateFromSamplingProfiler(
       const SamplingProfiler& sampling_profiler,
+      const std::string& process_name,
       const std::unordered_map<int32_t, std::string>& thread_names,
       const std::unordered_map<uint64_t, std::string>& function_names);
 
