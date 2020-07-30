@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SSH_QT_SFTP_OPERATION_H_
-#define ORBIT_SSH_QT_SFTP_OPERATION_H_
+#ifndef ORBIT_SSH_QT_SFTP_COPY_TO_REMOTE_OPERATION_H_
+#define ORBIT_SSH_QT_SFTP_COPY_TO_REMOTE_OPERATION_H_
 
 #include <OrbitSsh/SftpFile.h>
 #include <OrbitSshQt/ScopedConnection.h>
@@ -19,7 +19,7 @@
 
 namespace OrbitSshQt {
 namespace details {
-enum class SftpOperationState {
+enum class SftpCopyToRemoteOperationState {
   kInitial,
   kNoOperation,
   kStarted,
@@ -34,13 +34,14 @@ enum class SftpOperationState {
 }  // namespace details
 
 /*
-  SftpOperation represents a file operation in the SSH-SFTP subsystem.
-  It needs an established SftpChannel for operation.
+  SftpCopyToRemoteOperation represents a file operation in the SSH-SFTP
+  subsystem. It needs an established SftpChannel for operation.
 
   Currently only file copies (local -> remote) are supported.
 */
-class SftpOperation
-    : public StateMachineHelper<SftpOperation, details::SftpOperationState> {
+class SftpCopyToRemoteOperation
+    : public StateMachineHelper<SftpCopyToRemoteOperation,
+                                details::SftpCopyToRemoteOperationState> {
   Q_OBJECT
   friend StateMachineHelper;
 
@@ -50,7 +51,7 @@ class SftpOperation
     kUserWritableAllExecutable = 0755
   };
 
-  explicit SftpOperation(Session* session, SftpChannel* channel);
+  explicit SftpCopyToRemoteOperation(Session* session, SftpChannel* channel);
 
   void CopyFileToRemote(std::filesystem::path source,
                         std::filesystem::path destination,
@@ -90,4 +91,4 @@ class SftpOperation
 
 }  // namespace OrbitSshQt
 
-#endif  // ORBIT_SSH_QT_SFTP_OPERATION_H_
+#endif  // ORBIT_SSH_QT_SFTP_COPY_TO_REMOTE_OPERATION_H_
