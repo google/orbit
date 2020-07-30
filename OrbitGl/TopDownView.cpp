@@ -38,23 +38,25 @@ TopDownThread* TopDownView::AddAndGetThread(int32_t thread_id,
 }
 
 std::unique_ptr<TopDownView> TopDownView::CreateFromSamplingProfiler(
-    const SamplingProfiler& sampling_profiler,
+    const SamplingProfiler& sampling_profiler, const std::string& process_name,
     const std::unordered_map<int32_t, std::string>& thread_names,
     const std::unordered_map<uint64_t, std::string>& function_names) {
   auto top_down_view = std::make_unique<TopDownView>();
   for (const ThreadSampleData* thread_sample_data :
        sampling_profiler.GetThreadSampleData()) {
     const int32_t tid = thread_sample_data->m_TID;
-    if (tid == 0) {
-      continue;
-    }
-
     TopDownThread* thread_node = top_down_view->GetThreadOrNull(tid);
     if (thread_node == nullptr) {
       std::string thread_name;
-      auto thread_name_it = thread_names.find(tid);
-      if (thread_name_it != thread_names.end()) {
-        thread_name = thread_name_it->second;
+      // Use the node with tid == 0 as the container for all threads, like in
+      // SamplingProfiler, SamplingReport(DataView), TimeGraph.
+      if (tid == 0) {
+        thread_name = process_name;
+      } else {
+        auto thread_name_it = thread_names.find(tid);
+        if (thread_name_it != thread_names.end()) {
+          thread_name = thread_name_it->second;
+        }
       }
       thread_node = top_down_view->AddAndGetThread(tid, std::move(thread_name));
     }
@@ -67,7 +69,10 @@ std::unique_ptr<TopDownView> TopDownView::CreateFromSamplingProfiler(
         continue;
       }
       const uint64_t sample_count = callstack_id_and_count.second;
-      top_down_view->IncreaseSampleCount(sample_count);
+      // Don't count samples from the all-thread case (tid == 0) again.
+      if (tid != 0) {
+        top_down_view->IncreaseSampleCount(sample_count);
+      }
       thread_node->IncreaseSampleCount(sample_count);
 
       TopDownInternalNode* current_thread_or_function = thread_node;

@@ -20,11 +20,19 @@ QVariant TopDownViewItemModel::data(const QModelIndex& index, int role) const {
       if (thread_item != nullptr) {
         switch (index.column()) {
           case kThreadOrFunction:
-            return QString::fromStdString(
-                thread_item->thread_name().empty()
-                    ? std::to_string(thread_item->thread_id())
-                    : absl::StrFormat("%s [%d]", thread_item->thread_name(),
-                                      thread_item->thread_id()));
+            if (thread_item->thread_id() == 0) {
+              return QString::fromStdString(
+                  thread_item->thread_name().empty()
+                      ? "(all threads)"
+                      : absl::StrFormat("%s (all threads)",
+                                        thread_item->thread_name()));
+            } else {
+              return QString::fromStdString(
+                  thread_item->thread_name().empty()
+                      ? std::to_string(thread_item->thread_id())
+                      : absl::StrFormat("%s [%d]", thread_item->thread_name(),
+                                        thread_item->thread_id()));
+            }
           case kInclusive:
             return QString::fromStdString(
                 absl::StrFormat("%.2f%% (%llu)",
