@@ -18,7 +18,6 @@
 #include "CallStackDataView.h"
 #include "Callstack.h"
 #include "Capture.h"
-#include "CaptureListener.h"
 #include "CaptureSerializer.h"
 #include "CaptureWindow.h"
 #include "Disassembler.h"

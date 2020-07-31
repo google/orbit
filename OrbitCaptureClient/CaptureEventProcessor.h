@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_CAPTURE_EVENT_PROCESSOR_H_
-#define ORBIT_GL_CAPTURE_EVENT_PROCESSOR_H_
+#ifndef ORBIT_CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_
+#define ORBIT_CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_
 
 #include "CaptureListener.h"
 #include "absl/container/flat_hash_map.h"

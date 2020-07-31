@@ -15,9 +15,6 @@ target_sources(
          Batcher.h
          BlackBoard.h
          CallStackDataView.h
-         CaptureClient.h
-         CaptureEventProcessor.h
-         CaptureListener.h
          CaptureSerializer.h
          CaptureWindow.h
          Card.h
@@ -65,8 +62,6 @@ target_sources(
           Batcher.cpp
           BlackBoard.cpp
           CallStackDataView.cpp
-          CaptureClient.cpp
-          CaptureEventProcessor.cpp
           CaptureSerializer.cpp
           CaptureWindow.cpp
           Card.cpp
@@ -111,6 +106,7 @@ target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   OrbitGl
   PUBLIC OrbitCore
+         OrbitCaptureClient
          OrbitProtos
          freetype-gl::freetype-gl
          OpenGL::GLU
