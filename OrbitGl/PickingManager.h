@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <vector>
 #include <memory>
+#include <string>
+#include <type_traits>
 
 #include "CoreMath.h"
 #include "absl/synchronization/mutex.h"
@@ -98,14 +100,14 @@ class PickingManager {
   void Pick(uint32_t a_Id, int a_X, int a_Y);
   void Release();
   void Drag(int a_X, int a_Y);
-  std::weak_ptr<Pickable> GetPicked();
-  std::weak_ptr<Pickable> GetPickableFromId(uint32_t id);
-  bool IsDragging();
+  std::weak_ptr<Pickable> GetPicked() const;
+  std::weak_ptr<Pickable> GetPickableFromId(uint32_t id) const;
+  bool IsDragging() const;
 
   Color GetPickableColor(std::weak_ptr<Pickable> pickable,
                          PickingID::BatcherId batcher_id);
 
-  bool IsThisElementPicked(Pickable* pickable);
+  bool IsThisElementPicked(const Pickable* pickable) const;
 
  private:
   PickingID CreatePickableId(std::weak_ptr<Pickable> a_Pickable,

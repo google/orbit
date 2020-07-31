@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <cstring>
 
 #include "PickingManager.h"
 
@@ -48,7 +49,7 @@ TEST(PickingManager, PickableMock) {
 // Simulate "rendering" the picking color into a uint32_t target
 PickingID MockRenderPickingColor(const Color& col_vec) {
   uint32_t col;
-  memcpy(&col, &col_vec[0], sizeof(uint32_t));
+  std::memcpy(&col, &col_vec[0], sizeof(uint32_t));
   PickingID picking_id = PickingID::Get(col);
   return picking_id;
 }
@@ -80,11 +81,14 @@ TEST(PickingManager, Callbacks) {
   Color col_vec = pm.GetPickableColor(pickable, PickingID::BatcherId::UI);
   PickingID id = MockRenderPickingColor(col_vec);
   ASSERT_FALSE(pickable->picked_);
+  ASSERT_FALSE(pm.IsThisElementPicked(pickable.get()));
   pm.Pick(id.m_Id, 0, 0);
   ASSERT_TRUE(pickable->picked_);
+  ASSERT_TRUE(pm.IsThisElementPicked(pickable.get()));
 
   pm.Release();
   ASSERT_FALSE(pickable->picked_);
+  ASSERT_FALSE(pm.IsThisElementPicked(pickable.get()));
 
   ASSERT_FALSE(pm.IsDragging());
   pm.Pick(id.m_Id, 0, 0);

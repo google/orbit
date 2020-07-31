@@ -25,7 +25,7 @@ void PickingManager::Reset() {
 }
 
 //-----------------------------------------------------------------------------
-std::weak_ptr<Pickable> PickingManager::GetPickableFromId(uint32_t id) {
+std::weak_ptr<Pickable> PickingManager::GetPickableFromId(uint32_t id) const {
   absl::MutexLock lock(&mutex_);
   auto it = m_IdPickableMap.find(id);
   if (it == m_IdPickableMap.end()) {
@@ -35,7 +35,7 @@ std::weak_ptr<Pickable> PickingManager::GetPickableFromId(uint32_t id) {
 }
 
 //-----------------------------------------------------------------------------
-std::weak_ptr<Pickable> PickingManager::GetPicked() {
+std::weak_ptr<Pickable> PickingManager::GetPicked() const {
   absl::MutexLock lock(&mutex_);
   return m_Picked;
 }
@@ -70,7 +70,7 @@ void PickingManager::Drag(int a_X, int a_Y) {
 }
 
 //-----------------------------------------------------------------------------
-bool PickingManager::IsDragging() {
+bool PickingManager::IsDragging() const {
   absl::MutexLock lock(&mutex_);
   auto picked = m_Picked.lock();
   return picked && picked->Draggable();
@@ -83,7 +83,7 @@ Color PickingManager::GetPickableColor(std::weak_ptr<Pickable> pickable,
   return ColorFromPickingID(id);
 }
 
-bool PickingManager::IsThisElementPicked(Pickable* pickable) {
+bool PickingManager::IsThisElementPicked(const Pickable* pickable) const {
   auto picked = GetPicked().lock();
   return picked && picked.get() == pickable;
 }
