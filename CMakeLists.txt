@@ -140,6 +140,7 @@ add_subdirectory(OrbitBase)
 add_subdirectory(OrbitClientProtos)
 add_subdirectory(OrbitCore)
 add_subdirectory(OrbitFramePointerValidator)
+add_subdirectory(OrbitCaptureClient)
 add_subdirectory(OrbitTest)
 add_subdirectory(protos)
 
