@@ -146,9 +146,9 @@ void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
   }
   uprobe_sps_ips_cpus.emplace_back(uprobe_sp, uprobe_ip, uprobe_cpu);
 
-  function_call_manager_.ProcessUprobes(event->GetTid(),
-                                        event->GetFunction()->VirtualAddress(),
-                                        event->GetTimestamp());
+  function_call_manager_.ProcessUprobes(
+      event->GetTid(), event->GetFunction()->VirtualAddress(),
+      event->GetTimestamp(), event->ring_buffer_record.regs);
 
   return_address_manager_.ProcessUprobes(event->GetTid(), event->GetSp(),
                                          event->GetReturnAddress());

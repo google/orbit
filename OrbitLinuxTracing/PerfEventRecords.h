@@ -118,6 +118,25 @@ struct __attribute__((__packed__)) perf_event_sp_ip_8bytes_sample {
   perf_event_sample_stack_user_8bytes stack;
 };
 
+struct __attribute__((__packed__)) perf_event_uprobe_regs {
+  uint64_t abi;
+  uint64_t cx;
+  uint64_t dx;
+  uint64_t si;
+  uint64_t di;
+  uint64_t sp;
+  uint64_t ip;
+  uint64_t r8;
+  uint64_t r9;
+};
+
+struct __attribute__((__packed__)) perf_event_uprobe {
+  perf_event_header header;
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  perf_event_uprobe_regs regs;
+  perf_event_sample_stack_user_8bytes stack;
+};
+
 struct __attribute__((__packed__)) perf_event_ax_sample {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;

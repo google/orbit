@@ -13,8 +13,9 @@ TEST(UprobesFunctionCallManager, OneUprobe) {
   constexpr pid_t tid = 42;
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
+  perf_event_uprobe_regs registers;
 
-  function_call_manager.ProcessUprobes(tid, 100, 1);
+  function_call_manager.ProcessUprobes(tid, 100, 1, registers);
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid, 2, 3);
   ASSERT_TRUE(processed_function_call.has_value());
@@ -30,10 +31,11 @@ TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
   constexpr pid_t tid = 42;
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
+  perf_event_uprobe_regs registers;
 
-  function_call_manager.ProcessUprobes(tid, 100, 1);
+  function_call_manager.ProcessUprobes(tid, 100, 1, registers);
 
-  function_call_manager.ProcessUprobes(tid, 200, 2);
+  function_call_manager.ProcessUprobes(tid, 200, 2, registers);
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid, 3, 4);
   ASSERT_TRUE(processed_function_call.has_value());
@@ -53,7 +55,7 @@ TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
   EXPECT_EQ(processed_function_call.value().depth(), 0);
   EXPECT_EQ(processed_function_call.value().return_value(), 5);
 
-  function_call_manager.ProcessUprobes(tid, 300, 5);
+  function_call_manager.ProcessUprobes(tid, 300, 5, registers);
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid, 6, 7);
   ASSERT_TRUE(processed_function_call.has_value());
@@ -70,10 +72,11 @@ TEST(UprobesFunctionCallManager, TwoUprobesDifferentThreads) {
   constexpr pid_t tid2 = 111;
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
+  perf_event_uprobe_regs registers;
 
-  function_call_manager.ProcessUprobes(tid, 100, 1);
+  function_call_manager.ProcessUprobes(tid, 100, 1, registers);
 
-  function_call_manager.ProcessUprobes(tid2, 200, 2);
+  function_call_manager.ProcessUprobes(tid2, 200, 2, registers);
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid, 3, 4);
   ASSERT_TRUE(processed_function_call.has_value());

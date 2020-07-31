@@ -18,6 +18,7 @@
 
 #include "ContextSwitchManager.h"
 #include "GpuTracepointEventProcessor.h"
+#include "ManualInstrumentationConfig.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventProcessor2.h"
@@ -178,6 +179,7 @@ class TracerThread {
 
   static constexpr uint64_t EVENT_STATS_WINDOW_S = 5;
   EventStats stats_{};
+  ManualInstrumentationConfig manual_instrumentation_config_;
 
   static constexpr uint64_t NS_PER_MILLISECOND = 1'000'000;
   static constexpr uint64_t NS_PER_SECOND = 1'000'000'000;
