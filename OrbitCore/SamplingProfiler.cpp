@@ -79,21 +79,16 @@ void SamplingProfiler::AddUniqueCallStack(CallStack& a_CallStack) {
       std::make_shared<CallStack>(a_CallStack);
 }
 
-std::shared_ptr<CallStack> SamplingProfiler::GetResolvedCallstack(
+const CallStack& SamplingProfiler::GetResolvedCallstack(
     CallstackID raw_callstack_id) const {
   auto resolved_callstack_id_it =
       m_OriginalCallstackToResolvedCallstack.find(raw_callstack_id);
-  if (resolved_callstack_id_it ==
-      m_OriginalCallstackToResolvedCallstack.end()) {
-    return nullptr;
-  }
-
+  CHECK(resolved_callstack_id_it !=
+        m_OriginalCallstackToResolvedCallstack.end());
   auto resolved_callstack_it =
       m_UniqueResolvedCallstacks.find(resolved_callstack_id_it->second);
-  if (resolved_callstack_it == m_UniqueResolvedCallstacks.end()) {
-    return nullptr;
-  }
-  return resolved_callstack_it->second;
+  CHECK(resolved_callstack_it != m_UniqueResolvedCallstacks.end());
+  return *resolved_callstack_it->second;
 }
 
 //-----------------------------------------------------------------------------
@@ -117,13 +112,15 @@ SamplingProfiler::GetSortedCallstacksFromAddress(uint64_t a_Addr,
   return report;
 }
 
+const int32_t SamplingProfiler::kAllThreadsFakeTid = 0;
+
 //-----------------------------------------------------------------------------
 void SamplingProfiler::SortByThreadUsage() {
   m_SortedThreadSampleData.clear();
   m_SortedThreadSampleData.reserve(m_ThreadSampleData.size());
 
   // "All"
-  m_ThreadSampleData[0].m_AverageThreadUsage = 100.f;
+  m_ThreadSampleData[kAllThreadsFakeTid].m_AverageThreadUsage = 100.f;
 
   for (auto& pair : m_ThreadSampleData) {
     ThreadSampleData& data = pair.second;
@@ -165,7 +162,8 @@ void SamplingProfiler::ProcessSamples() {
     }
 
     if (m_GenerateSummary) {
-      ThreadSampleData& threadSampleDataAll = m_ThreadSampleData[0];
+      ThreadSampleData& threadSampleDataAll =
+          m_ThreadSampleData[kAllThreadsFakeTid];
       threadSampleDataAll.m_NumSamples++;
       threadSampleDataAll.m_CallstackCount[callstack.callstack_hash()]++;
       for (uint64_t address :
@@ -264,7 +262,7 @@ void SamplingProfiler::ResolveCallstacks() {
 
 //-----------------------------------------------------------------------------
 const ThreadSampleData* SamplingProfiler::GetSummary() const {
-  auto summary_it = m_ThreadSampleData.find(0);
+  auto summary_it = m_ThreadSampleData.find(kAllThreadsFakeTid);
   if (summary_it == m_ThreadSampleData.end()) {
     return nullptr;
   }
@@ -293,7 +291,8 @@ uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
   return result;
 }
 
-//-----------------------------------------------------------------------------
+const std::string SamplingProfiler::kUnknownFunctionOrModuleName = "???";
+
 void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   LinuxAddressInfo* address_info = Capture::GetAddressInfo(address);
   FunctionInfo* function = m_Process->GetFunctionFromAddress(address, false);
@@ -307,7 +306,7 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   // m_ExactAddressToFunctionAddress, otherwise each address is
   // considered a different function.
   uint64_t function_address;
-  std::string function_name = "???";
+  std::string function_name = kUnknownFunctionOrModuleName;
   if (function != nullptr) {
     function_address = FunctionUtils::GetAbsoluteAddress(*function);
     function_name = FunctionUtils::GetDisplayName(*function);
@@ -330,7 +329,7 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   Capture::GAddressToFunctionName[address] = function_name;
   Capture::GAddressToFunctionName[function_address] = function_name;
 
-  std::string module_name = "???";
+  std::string module_name = kUnknownFunctionOrModuleName;
   std::shared_ptr<Module> module = m_Process->GetModuleFromAddress(address);
   if (module != nullptr) {
     module_name = module->m_Name;

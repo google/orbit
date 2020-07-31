@@ -81,7 +81,7 @@ class SamplingProfiler {
     return m_UniqueCallstacks.count(a_ID) > 0;
   }
 
-  std::shared_ptr<CallStack> GetResolvedCallstack(
+  const CallStack& GetResolvedCallstack(
       CallstackID raw_callstack_id) const;
 
   std::multimap<int, CallstackID> GetCallstacksFromAddress(
@@ -122,6 +122,9 @@ class SamplingProfiler {
     m_UniqueCallstacks.clear();
     m_Callstacks.clear();
   }
+
+  static const int32_t kAllThreadsFakeTid;
+  static const std::string kUnknownFunctionOrModuleName;
 
  protected:
   void ResolveCallstacks();

@@ -8,98 +8,103 @@ TopDownViewItemModel::TopDownViewItemModel(
     std::unique_ptr<TopDownView> top_down_view, QObject* parent)
     : QAbstractItemModel{parent}, top_down_view_{std::move(top_down_view)} {}
 
+QVariant TopDownViewItemModel::GetDisplayRoleData(
+    const QModelIndex& index) const {
+  auto* item = static_cast<TopDownNode*>(index.internalPointer());
+  auto thread_item = dynamic_cast<TopDownThread*>(item);
+  auto function_item = dynamic_cast<TopDownFunction*>(item);
+  if (thread_item != nullptr) {
+    switch (index.column()) {
+      case kThreadOrFunction:
+        if (thread_item->thread_id() == 0) {
+          return QString::fromStdString(
+              thread_item->thread_name().empty()
+                  ? "(all threads)"
+                  : absl::StrFormat("%s (all threads)",
+                                    thread_item->thread_name()));
+        } else {
+          return QString::fromStdString(
+              thread_item->thread_name().empty()
+                  ? std::to_string(thread_item->thread_id())
+                  : absl::StrFormat("%s [%d]", thread_item->thread_name(),
+                                    thread_item->thread_id()));
+        }
+      case kInclusive:
+        return QString::fromStdString(absl::StrFormat(
+            "%.2f%% (%llu)",
+            thread_item->GetInclusivePercent(top_down_view_->sample_count()),
+            thread_item->sample_count()));
+      case kOfParent:
+        return QString::fromStdString(
+            absl::StrFormat("%.2f%%", thread_item->GetPercentOfParent()));
+    }
+  } else if (function_item != nullptr) {
+    switch (index.column()) {
+      case kThreadOrFunction:
+        return QString::fromStdString(function_item->function_name());
+      case kInclusive:
+        return QString::fromStdString(absl::StrFormat(
+            "%.2f%% (%llu)",
+            function_item->GetInclusivePercent(top_down_view_->sample_count()),
+            function_item->sample_count()));
+      case kExclusive:
+        return QString::fromStdString(absl::StrFormat(
+            "%.2f%% (%llu)",
+            function_item->GetExclusivePercent(top_down_view_->sample_count()),
+            function_item->GetExclusiveSampleCount()));
+      case kOfParent:
+        return QString::fromStdString(
+            absl::StrFormat("%.2f%%", function_item->GetPercentOfParent()));
+      case kFunctionAddress:
+        return QString::fromStdString(absl::StrFormat(
+            "%#llx", function_item->function_absolute_address()));
+    }
+  }
+  return QVariant();
+}
+
+QVariant TopDownViewItemModel::GetEditRoleData(const QModelIndex& index) const {
+  auto* item = static_cast<TopDownNode*>(index.internalPointer());
+  auto thread_item = dynamic_cast<TopDownThread*>(item);
+  auto function_item = dynamic_cast<TopDownFunction*>(item);
+  if (thread_item != nullptr) {
+    switch (index.column()) {
+      case kThreadOrFunction:
+        return thread_item->thread_id();
+      case kInclusive:
+        return static_cast<qulonglong>(thread_item->sample_count());
+      case kOfParent:
+        return static_cast<qulonglong>(thread_item->GetPercentOfParent());
+    }
+  } else if (function_item != nullptr) {
+    switch (index.column()) {
+      case kThreadOrFunction:
+        return QString::fromStdString(function_item->function_name());
+      case kInclusive:
+        return static_cast<qulonglong>(function_item->sample_count());
+      case kExclusive:
+        return static_cast<qulonglong>(
+            function_item->GetExclusiveSampleCount());
+      case kOfParent:
+        return static_cast<qulonglong>(function_item->GetPercentOfParent());
+      case kFunctionAddress:
+        return static_cast<qulonglong>(
+            function_item->function_absolute_address());
+    }
+  }
+  return QVariant();
+}
+
 QVariant TopDownViewItemModel::data(const QModelIndex& index, int role) const {
   if (!index.isValid()) {
     return QVariant();
   }
   switch (role) {
-    case Qt::DisplayRole: {
-      auto* item = static_cast<TopDownNode*>(index.internalPointer());
-      auto thread_item = dynamic_cast<TopDownThread*>(item);
-      auto function_item = dynamic_cast<TopDownFunction*>(item);
-      if (thread_item != nullptr) {
-        switch (index.column()) {
-          case kThreadOrFunction:
-            if (thread_item->thread_id() == 0) {
-              return QString::fromStdString(
-                  thread_item->thread_name().empty()
-                      ? "(all threads)"
-                      : absl::StrFormat("%s (all threads)",
-                                        thread_item->thread_name()));
-            } else {
-              return QString::fromStdString(
-                  thread_item->thread_name().empty()
-                      ? std::to_string(thread_item->thread_id())
-                      : absl::StrFormat("%s [%d]", thread_item->thread_name(),
-                                        thread_item->thread_id()));
-            }
-          case kInclusive:
-            return QString::fromStdString(
-                absl::StrFormat("%.2f%% (%llu)",
-                                thread_item->GetInclusivePercent(
-                                    top_down_view_->sample_count()),
-                                thread_item->sample_count()));
-          case kOfParent:
-            return QString::fromStdString(
-                absl::StrFormat("%.2f%%", thread_item->GetPercentOfParent()));
-        }
-      } else if (function_item != nullptr) {
-        switch (index.column()) {
-          case kThreadOrFunction:
-            return QString::fromStdString(function_item->function_name());
-          case kInclusive:
-            return QString::fromStdString(
-                absl::StrFormat("%.2f%% (%llu)",
-                                function_item->GetInclusivePercent(
-                                    top_down_view_->sample_count()),
-                                function_item->sample_count()));
-          case kExclusive:
-            return QString::fromStdString(
-                absl::StrFormat("%.2f%% (%llu)",
-                                function_item->GetExclusivePercent(
-                                    top_down_view_->sample_count()),
-                                function_item->GetExclusiveSampleCount()));
-          case kOfParent:
-            return QString::fromStdString(
-                absl::StrFormat("%.2f%%", function_item->GetPercentOfParent()));
-          case kFunctionAddress:
-            return QString::fromStdString(absl::StrFormat(
-                "%#llx", function_item->function_absolute_address()));
-        }
-      }
-    } break;
-
+    case Qt::DisplayRole:
+      return GetDisplayRoleData(index);
     // The value returned when role == Qt::EditRole is used for sorting.
-    case Qt::EditRole: {
-      auto* item = static_cast<TopDownNode*>(index.internalPointer());
-      auto thread_item = dynamic_cast<TopDownThread*>(item);
-      auto function_item = dynamic_cast<TopDownFunction*>(item);
-      if (thread_item != nullptr) {
-        switch (index.column()) {
-          case kThreadOrFunction:
-            return thread_item->thread_id();
-          case kInclusive:
-            return static_cast<qulonglong>(thread_item->sample_count());
-          case kOfParent:
-            return static_cast<qulonglong>(thread_item->GetPercentOfParent());
-        }
-      } else if (function_item != nullptr) {
-        switch (index.column()) {
-          case kThreadOrFunction:
-            return QString::fromStdString(function_item->function_name());
-          case kInclusive:
-            return static_cast<qulonglong>(function_item->sample_count());
-          case kExclusive:
-            return static_cast<qulonglong>(
-                function_item->GetExclusiveSampleCount());
-          case kOfParent:
-            return static_cast<qulonglong>(function_item->GetPercentOfParent());
-          case kFunctionAddress:
-            return static_cast<qulonglong>(
-                function_item->function_absolute_address());
-        }
-      }
-    } break;
+    case Qt::EditRole:
+      return GetEditRoleData(index);
   }
   return QVariant();
 }
