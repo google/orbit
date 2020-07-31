@@ -7,6 +7,9 @@ RUN sudo apt-get -qq update \
     libxmu-dev \
     libxi-dev \
     qt5-default \
+    libqt5webchannel5-dev \
+    libqt5websockets5-dev \
+    qtwebengine5-dev \
     jq \
     python2.7 \
     zip \
