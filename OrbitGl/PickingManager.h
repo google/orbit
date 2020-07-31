@@ -7,6 +7,7 @@
 #include <cstring>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 #include "CoreMath.h"
 #include "absl/synchronization/mutex.h"
