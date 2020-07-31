@@ -154,4 +154,3 @@ add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcess
 target_link_libraries(
   CaptureEventProcessorProcessEventsFuzzer
   PRIVATE OrbitGl libprotobuf-mutator::libprotobuf-mutator)
-  
