@@ -173,16 +173,6 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="selectionTab">
-        <attribute name="title">
-         <string>selection</string>
-        </attribute>
-        <layout class="QGridLayout" name="selectionGridLayout">
-         <item row="0" column="0">
-          <widget class="OrbitSamplingReport" name="selectionReport"/>
-         </item>
-        </layout>
-       </widget>
        <widget class="QWidget" name="topDownTab">
         <attribute name="title">
          <string>top-down</string>
@@ -197,6 +187,16 @@
             <bool>true</bool>
            </property>
           </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="selectionTab">
+        <attribute name="title">
+         <string>selection</string>
+        </attribute>
+        <layout class="QGridLayout" name="selectionGridLayout">
+         <item row="0" column="0">
+          <widget class="OrbitSamplingReport" name="selectionReport"/>
          </item>
         </layout>
        </widget>
