@@ -2,6 +2,8 @@
 
 ![Alt text](logos/screenshot.png)
 
+![Github](https://img.shields.io/github/v/release/google/orbit)
+
 Orbit, the **O**pen **R**untime **B**inary **I**nstrumentation **T**ool, is a standalone **C/C++** profiler for Windows and Linux. Its main purpose is to help developers visualize the execution flow of a complex application.
 
 The key differentiator with many existing tools is that no alteration to the target process is necessary. Orbit does not require you to change a single line of code. It doesn't require you to recompile or even relaunch the application you want to profile. Everything is done seamlessly, right when you need it. It requires zero integration time and zero iteration time.
@@ -48,7 +50,7 @@ Questions and comments are more than welcome, please open an [issue](https://git
 
 Orbit was created by [Pierric Gimmig](https://www.linkedin.com/in/pgimmig/) but is now actively developed and maintained by a team of engineers at Google.
 
-License (BSD 2-clause)
+License (BSD 2-clause)![Github](https://img.shields.io/github/license/google/orbit)
 ======
 
 <a href="http://opensource.org/licenses/BSD-2-Clause" target="_blank">
