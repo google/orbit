@@ -25,7 +25,5 @@ class Preset {
 
   std::string m_FileName;
   std::string m_ProcessFullPath;
-  std::string m_WorkingDirectory;
-  std::string m_Arguments;
   std::map<std::string, PresetModule> m_Modules;
 };
