@@ -9,7 +9,6 @@
 
 //-----------------------------------------------------------------------------
 struct PresetModule {
-  std::string m_Name;
   std::vector<uint64_t> m_FunctionHashes;
 
   ORBIT_SERIALIZABLE;
