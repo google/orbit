@@ -9,6 +9,7 @@
 
 #include "Path.h"
 #include "SymbolHelper.h"
+#include "absl/strings/ascii.h"
 #include "symbol.pb.h"
 
 const std::string executable_directory =
@@ -105,4 +106,37 @@ TEST(SymbolHelper, LoadUsingSymbolsPathFile) {
 
   EXPECT_EQ(symbols.symbols_file_path(), symbols_path);
   EXPECT_FALSE(symbols.symbol_infos().empty());
+}
+
+TEST(SymbolHelper, LoadFromFile) {
+  const std::string file_path = executable_directory + "no_symbols_elf.debug";
+  SymbolHelper symbol_helper;
+  const auto symbols_result = symbol_helper.LoadSymbolsFromFile(
+      file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
+
+  ASSERT_TRUE(symbols_result) << symbols_result.error().message();
+  ModuleSymbols symbols = std::move(symbols_result.value());
+
+  EXPECT_EQ(symbols.symbols_file_path(), file_path);
+  EXPECT_FALSE(symbols.symbol_infos().empty());
+}
+
+TEST(SymbolHelper, LoadFromFileInvalidFile) {
+  const std::string file_path = executable_directory + "file_does_not_exist";
+  SymbolHelper symbol_helper;
+  const auto result = symbol_helper.LoadSymbolsFromFile(
+      file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
+
+  ASSERT_FALSE(result);
+  EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
+              testing::HasSubstr("no such file or directory"));
+}
+
+TEST(SymbolHelper, LoadFromFileIvalidBuildId) {
+  const std::string file_path = executable_directory + "no_symbols_elf.debug";
+  SymbolHelper symbol_helper;
+  const auto result = symbol_helper.LoadSymbolsFromFile(file_path, "fish");
+
+  ASSERT_FALSE(result);
+  EXPECT_THAT(result.error().message(), testing::HasSubstr("invalid build id"));
 }

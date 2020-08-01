@@ -6,6 +6,7 @@
 
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_replace.h>
 
 #include <fstream>
 
@@ -175,4 +176,32 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadUsingSymbolsPathFile(
 ErrorMessageOr<std::string> SymbolHelper::FindDebugSymbolsFile(
     const std::string& module_path, const std::string& build_id) const {
   return FindSymbolsFile(module_path, collector_symbol_directories_, build_id);
+}
+
+ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(
+    const std::string& file_path, const std::string& build_id) const {
+  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_result =
+      ElfFile::Create(file_path);
+
+  if (!elf_file_result) {
+    return ErrorMessage(
+        absl::StrFormat("Failed to load debug symbols from \"%s\": %s",
+                        file_path, elf_file_result.error().message()));
+  }
+
+  const std::string& target_build_id = elf_file_result.value()->GetBuildId();
+  if (target_build_id != build_id) {
+    return ErrorMessage(
+        absl::StrFormat("Failed to load debug symbols from \"%s\": invalid "
+                        "build id \"%s\", expected: \"%s\"",
+                        file_path, target_build_id, build_id));
+  }
+
+  return elf_file_result.value()->LoadSymbols();
+}
+
+std::string SymbolHelper::GenerateCachedFileName(
+    const std::string& file_path) const {
+  auto file_name = absl::StrReplaceAll(file_path, {{"/", "_"}});
+  return Path::JoinPath({Path::GetCachePath(), file_name});
 }

@@ -17,10 +17,6 @@
 namespace {
 
 constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 1000;
-// The actual symbol loading of a module should be relatively quick, but to
-// support slow internet connections, or multiple requests in parallel, this is
-// set to a generous 60 seconds.
-constexpr uint64_t kGrpcSymbolLoadingTimeoutMilliseconds = 60 * 1000;
 
 class ProcessManagerImpl final : public ProcessManager {
  public:
@@ -36,8 +32,8 @@ class ProcessManagerImpl final : public ProcessManager {
   ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid, uint64_t address,
                                                 uint64_t size) override;
 
-  ErrorMessageOr<ModuleSymbols> LoadSymbols(
-      const std::string& module_path) const override;
+  ErrorMessageOr<std::string> FindDebugInfoFile(
+      const std::string& module_path, const std::string& build_id) override;
 
   void Start();
   void Shutdown() override;
@@ -100,24 +96,25 @@ std::vector<ProcessInfo> ProcessManagerImpl::GetProcessList() const {
   return process_list_;
 }
 
-ErrorMessageOr<ModuleSymbols> ProcessManagerImpl::LoadSymbols(
-    const std::string& module_path) const {
-  GetSymbolsRequest request;
-  GetSymbolsResponse response;
+ErrorMessageOr<std::string> ProcessManagerImpl::FindDebugInfoFile(
+    const std::string& module_path, const std::string& build_id) {
+  GetDebugInfoFileRequest request;
+  GetDebugInfoFileResponse response;
 
   request.set_module_path(module_path);
+  request.set_build_id(build_id);
 
   std::unique_ptr<grpc::ClientContext> context =
-      CreateContext(kGrpcSymbolLoadingTimeoutMilliseconds);
+      CreateContext(kGrpcDefaultTimeoutMilliseconds);
 
   grpc::Status status =
-      process_service_->GetSymbols(context.get(), request, &response);
+      process_service_->GetDebugInfoFile(context.get(), request, &response);
   if (!status.ok()) {
-    ERROR("gRPC call to GetSymbols failed: %s", status.error_message());
+    ERROR("gRPC call to GetDebugInfoFile failed: %s", status.error_message());
     return ErrorMessage(status.error_message());
   }
 
-  return response.module_symbols();
+  return response.debug_info_file_path();
 }
 
 void ProcessManagerImpl::Start() {
