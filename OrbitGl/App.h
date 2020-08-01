@@ -200,6 +200,12 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     clipboard_callback_ = std::move(callback);
   }
 
+  using SecureCopyCallback =
+      std::function<ErrorMessageOr<void>(std::string_view, std::string_view)>;
+  void SetSecureCopyCallback(SecureCopyCallback callback) {
+    secure_copy_callback_ = callback;
+  }
+
   void SetCommandLineArguments(const std::vector<std::string>& args);
 
   void RequestOpenCaptureToUi();
@@ -270,6 +276,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   FindFileCallback find_file_callback_;
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;
+  SecureCopyCallback secure_copy_callback_;
 
   std::unique_ptr<ProcessesDataView> m_ProcessesDataView;
   std::unique_ptr<ModulesDataView> m_ModulesDataView;

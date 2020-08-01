@@ -20,6 +20,7 @@
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
 #include "TopDownView.h"
+#include "servicedeploymanager.h"
 
 namespace Ui {
 class OrbitMainWindow;
@@ -29,7 +30,8 @@ class OrbitMainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
-  OrbitMainWindow(QApplication* a_App, ApplicationOptions&& options);
+  OrbitMainWindow(QApplication* a_App, ApplicationOptions&& options,
+                  OrbitQt::ServiceDeployManager* service_deploy_manager);
   ~OrbitMainWindow() override;
 
   void RegisterGlWidget(class OrbitGLWidget* a_GlWidget) {

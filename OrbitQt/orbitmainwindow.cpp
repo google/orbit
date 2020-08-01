@@ -50,8 +50,9 @@ OrbitMainWindow* GMainWindow;
 extern QMenu* GContextMenu;
 
 //-----------------------------------------------------------------------------
-OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
-                                 ApplicationOptions&& options)
+OrbitMainWindow::OrbitMainWindow(
+    QApplication* a_App, ApplicationOptions&& options,
+    OrbitQt::ServiceDeployManager* service_deploy_manager)
     : QMainWindow(nullptr),
       m_App(a_App),
       ui(new Ui::OrbitMainWindow),
@@ -166,6 +167,13 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   });
   GOrbitApp->SetClipboardCallback(
       [this](const std::string& text) { this->OnSetClipboard(text); });
+
+  GOrbitApp->SetSecureCopyCallback(
+      [service_deploy_manager](std::string_view source,
+                               std::string_view destination) {
+        CHECK(service_deploy_manager != nullptr);
+        return service_deploy_manager->CopyFileToLocal(source, destination);
+      });
 
   ParseCommandlineArguments();
 
