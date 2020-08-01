@@ -18,6 +18,5 @@ ORBIT_SERIALIZE(Preset, 1) {
 
 //-----------------------------------------------------------------------------
 ORBIT_SERIALIZE(PresetModule, 0) {
-  ORBIT_NVP_VAL(0, m_Name);
   ORBIT_NVP_VAL(0, m_FunctionHashes);
 }
