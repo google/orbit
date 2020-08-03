@@ -6,15 +6,8 @@
 
 #include "Core.h"
 #include "Serialization.h"
+#include "preset.pb.h"
 
-//-----------------------------------------------------------------------------
-struct PresetModule {
-  std::vector<uint64_t> m_FunctionHashes;
-
-  ORBIT_SERIALIZABLE;
-};
-
-//-----------------------------------------------------------------------------
 class Preset {
  public:
   Preset();
@@ -24,5 +17,5 @@ class Preset {
 
   std::string m_FileName;
   std::string m_ProcessFullPath;
-  std::map<std::string, PresetModule> m_Modules;
+  std::map<std::string, orbit_client_protos::PresetModule> m_Modules;
 };

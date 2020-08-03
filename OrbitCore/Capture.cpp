@@ -193,8 +193,8 @@ ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
 
   for (auto& func : GTargetProcess->GetFunctions()) {
     if (FunctionUtils::IsSelected(*func)) {
-      preset.m_Modules[func->loaded_module_path()].m_FunctionHashes.push_back(
-          FunctionUtils::GetHash(*func));
+      uint64_t hash = FunctionUtils::GetHash(*func);
+      preset.m_Modules[func->loaded_module_path()].add_function_hashes(hash);
     }
   }
 
