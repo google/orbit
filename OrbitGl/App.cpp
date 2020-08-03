@@ -65,10 +65,10 @@ std::unique_ptr<OrbitApp> GOrbitApp;
 float GFontSize;
 bool DoZoom = false;
 
-//-----------------------------------------------------------------------------
-OrbitApp::OrbitApp(ApplicationOptions&& options)
-    : options_(std::move(options)) {
-  main_thread_executor_ = MainThreadExecutor::Create();
+OrbitApp::OrbitApp(ApplicationOptions&& options,
+                   std::unique_ptr<MainThreadExecutor> main_thread_executor)
+    : options_(std::move(options)),
+      main_thread_executor_(std::move(main_thread_executor)) {
   thread_pool_ =
       ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
   data_manager_ = std::make_unique<DataManager>(std::this_thread::get_id());
@@ -150,8 +150,10 @@ void OrbitApp::OnValidateFramePointers(
 }
 
 //-----------------------------------------------------------------------------
-bool OrbitApp::Init(ApplicationOptions&& options) {
-  GOrbitApp = std::make_unique<OrbitApp>(std::move(options));
+bool OrbitApp::Init(ApplicationOptions&& options,
+                    std::unique_ptr<MainThreadExecutor> main_thread_executor) {
+  GOrbitApp = std::make_unique<OrbitApp>(std::move(options),
+                                         std::move(main_thread_executor));
 
   Path::Init();
 
@@ -395,7 +397,6 @@ void OrbitApp::OnExit() {
 
   process_manager_->Shutdown();
   thread_pool_->ShutdownAndWait();
-  main_thread_executor_->ConsumeActions();
 
   GOrbitApp = nullptr;
   Orbit_ImGui_Shutdown();
@@ -409,8 +410,6 @@ Timer GMainTimer;
 void OrbitApp::MainTick() {
   ORBIT_SCOPE_FUNC;
   TRACE_VAR(GMainTimer.QueryMillis());
-
-  GOrbitApp->main_thread_executor_->ConsumeActions();
 
   GMainTimer.Reset();
 

@@ -42,7 +42,7 @@ int LLVMFuzzerTestOneInput(uint8_t* buf, size_t len) {
 }
 
 int LLVMFuzzerInitialize(int*, char***) {
-  OrbitApp::Init({});
+  OrbitApp::Init({}, nullptr);
   return 0;
 }
 }  // extern "C"
