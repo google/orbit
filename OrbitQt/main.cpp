@@ -235,6 +235,19 @@ static void DisplayErrorToUser(const QString& message) {
 }
 
 int main(int argc, char* argv[]) {
+  // Will be filled by QApplication once instantiated.
+  QString path_to_executable;
+
+  // argv might be changed, so we make a copy here!
+  auto original_argv = new char*[argc + 1];
+  for (int i = 0; i < argc; ++i) {
+    const auto size = std::strlen(argv[i]);
+    auto dest = new char[size];
+    std::strncpy(dest, argv[i], size);
+    original_argv[i] = dest;
+  }
+  original_argv[argc] = nullptr;
+
   {
     const std::string log_file_path = Path::GetLogFilePath();
     InitLogFile(log_file_path);
@@ -251,6 +264,7 @@ int main(int argc, char* argv[]) {
     QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
     QCoreApplication::setApplicationVersion(
         QString::fromStdString(OrbitCore::GetVersion()));
+    path_to_executable = QCoreApplication::applicationFilePath();
 
 #ifdef ORBIT_CRASH_HANDLING
     const std::string dump_path = Path::GetDumpPath();
@@ -329,6 +343,7 @@ int main(int argc, char* argv[]) {
       }
     }
   }
-  execv(argv[0], argv);
+
+  execv(path_to_executable.toLocal8Bit().constData(), original_argv);
   UNREACHABLE();
 }
