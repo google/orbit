@@ -44,7 +44,7 @@ class GpuTrack : public TimerTrack {
                                     bool is_selected) const override;
   [[nodiscard]] bool TimerFilter(
       const orbit_client_protos::TimerInfo& timer) const override;
-  [[nodiscard]] void SetTimesliceText(
+  void SetTimesliceText(
       const orbit_client_protos::TimerInfo& timer, double elapsed_us,
       float min_x, TextBox* text_box) override;
   [[nodiscard]] std::string GetBoxTooltip(PickingID id) const override;
