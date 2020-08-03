@@ -82,25 +82,6 @@ Status ProcessServiceImpl::GetProcessMemory(
   }
 }
 
-Status ProcessServiceImpl::GetSymbols(ServerContext*,
-                                      const GetSymbolsRequest* request,
-                                      GetSymbolsResponse* response) {
-  const SymbolHelper symbol_helper;
-  const auto load_result =
-      symbol_helper.LoadSymbolsCollector(request->module_path());
-
-  if (load_result.has_error()) {
-    return Status(StatusCode::NOT_FOUND, load_result.error().message());
-  }
-
-  *response->mutable_module_symbols() = std::move(load_result.value());
-
-  LOG("Loaded %lu symbols for module \"%s\" (size: %d bytes)",
-      response->module_symbols().symbol_infos().size(), request->module_path(),
-      response->ByteSize());
-
-  return Status::OK;
-}
 Status ProcessServiceImpl::GetDebugInfoFile(
     ::grpc::ServerContext*, const ::GetDebugInfoFileRequest* request,
     ::GetDebugInfoFileResponse* response) {
