@@ -1,8 +1,8 @@
 
 #include <libfuzzer/libfuzzer_macro.h>
 
-#include "CaptureEventProcessor.h"
-#include "CaptureListener.h"
+#include "OrbitCaptureClient/CaptureEventProcessor.h"
+#include "OrbitCaptureClient/CaptureListener.h"
 #include "absl/flags/flag.h"
 #include "services.pb.h"
 
