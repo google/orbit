@@ -22,7 +22,7 @@ message CaptureOptions {
     uint64 absolute_address = 3;
 
     enum FunctionType {
-      kDefault = 0;
+      kRegular = 0;
       kTimerStart = 1;
       kTimerStop = 2;
     }

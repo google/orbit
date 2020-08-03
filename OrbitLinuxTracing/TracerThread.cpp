@@ -126,7 +126,6 @@ bool TracerThread::OpenUprobes(const LinuxTracing::Function& function,
 bool TracerThread::OpenUretprobes(
     const LinuxTracing::Function& function, const std::vector<int32_t>& cpus,
     absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
-  // This function succeeds if probes can be opened on all cpus.
   const char* module = function.BinaryPath().c_str();
   const uint64_t offset = function.FileOffset();
   for (int32_t cpu : cpus) {
