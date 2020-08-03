@@ -127,6 +127,8 @@ static outcome::result<void> RunUiInstance(
       absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
 
   OrbitMainWindow w(app, std::move(options));
+  // "resize" is required to make "showMaximized" work properly.
+  w.resize(1280, 720);
   w.showMaximized();
   w.PostInit();
 
