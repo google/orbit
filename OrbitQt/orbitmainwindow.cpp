@@ -516,17 +516,7 @@ void OrbitMainWindow::OnNewSelectionReport(
 
 void OrbitMainWindow::OnNewTopDownView(
     std::unique_ptr<TopDownView> top_down_view) {
-  auto* model =
-      new TopDownViewItemModel{std::move(top_down_view), ui->topDownView};
-  auto* proxy_model = new QSortFilterProxyModel{ui->topDownView};
-  proxy_model->setSourceModel(model);
-  proxy_model->setSortRole(Qt::EditRole);
-  ui->topDownView->setModel(proxy_model);
-  ui->topDownView->sortByColumn(TopDownViewItemModel::kInclusive,
-                                Qt::DescendingOrder);
-  for (int column = 0; column < TopDownViewItemModel::kColumnCount; ++column) {
-    ui->topDownView->resizeColumnToContents(column);
-  }
+  ui->topDownWidget->SetTopDownView(std::move(top_down_view));
 }
 
 //-----------------------------------------------------------------------------
