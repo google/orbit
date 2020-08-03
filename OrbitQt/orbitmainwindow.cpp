@@ -75,6 +75,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->SetCaptureStartedCallback([this] {
     ui->actionStart_Capture->setDisabled(true);
     ui->actionStop_Capture->setDisabled(false);
+    ui->actionClear_Capture->setDisabled(true);
     ui->actionOpen_Capture->setDisabled(true);
     ui->actionSave_Capture->setDisabled(true);
     ui->actionOpen_Preset->setDisabled(true);
@@ -104,6 +105,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
     ui->actionSave_Capture->setDisabled(false);
     ui->actionOpen_Preset->setDisabled(false);
     ui->actionSave_Preset_As->setDisabled(false);
+    ui->actionClear_Capture->setDisabled(false);
     ui->HomeTab->setDisabled(false);
   });
   GOrbitApp->SetCaptureClearedCallback([this] {
