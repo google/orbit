@@ -25,8 +25,8 @@
 #include "FunctionsDataView.h"
 #include "LinuxCallstackEvent.h"
 #include "LiveFunctionsDataView.h"
+#include "MainThreadExecutor.h"
 #include "ModulesDataView.h"
-#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
 #include "PresetsDataView.h"
@@ -50,10 +50,12 @@ class Process;
 //-----------------------------------------------------------------------------
 class OrbitApp final : public DataViewFactory, public CaptureListener {
  public:
-  explicit OrbitApp(ApplicationOptions&& options);
+  OrbitApp(ApplicationOptions&& options,
+           std::unique_ptr<MainThreadExecutor> main_thread_executor);
   ~OrbitApp() override;
 
-  static bool Init(ApplicationOptions&& options);
+  static bool Init(ApplicationOptions&& options,
+                   std::unique_ptr<MainThreadExecutor> main_thread_executor);
   void PostInit();
   void OnExit();
   static void MainTick();

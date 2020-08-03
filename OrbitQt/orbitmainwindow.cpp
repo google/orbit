@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "App.h"
+#include "MainThreadExecutorImpl.h"
 #include "OrbitVersion.h"
 #include "SamplingReport.h"
 #include "TopDownViewItemModel.h"
@@ -56,7 +57,7 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
       ui(new Ui::OrbitMainWindow),
       m_Headless(false),
       m_IsDev(false) {
-  OrbitApp::Init(std::move(options));
+  OrbitApp::Init(std::move(options), CreateMainThreadExecutor());
 
   DataViewFactory* data_view_factory = GOrbitApp.get();
 

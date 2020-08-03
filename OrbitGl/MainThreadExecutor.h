@@ -26,10 +26,6 @@
 // manager->Schedule(CreateAction([data]{
 //   UpdateSomethingWith(data);
 // }));
-//
-// To consume events the main thread should periodically call
-// manager->ConsumeActions();
-//
 class MainThreadExecutor {
  public:
   MainThreadExecutor() = default;
@@ -42,17 +38,6 @@ class MainThreadExecutor {
   void Schedule(F&& functor) {
     Schedule(CreateAction(std::forward<F>(functor)));
   }
-
-  // Called from the main thread to perform scheduled actions.
-  // The method checks that it is called from the thread specified
-  // in Create method and fails otherwise.
-  virtual void ConsumeActions() = 0;
-
-  // Create executor.
-  // thread_id is id of the consumer thread. To ensure all
-  // actions are executed on this thread.
-  static std::unique_ptr<MainThreadExecutor> Create(
-      std::thread::id thread_id = std::this_thread::get_id());
 };
 
 #endif  // ORBIT_BASE_MAIN_THREAD_EXECUTOR_H_

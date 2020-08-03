@@ -38,6 +38,7 @@ target_sources(
   OrbitQt
   PRIVATE Error.cpp
           ElidedLabel.cpp
+          MainThreadExecutorImpl.cpp
           deploymentconfigurations.cpp
           main.cpp
           orbitaboutdialog.cpp
