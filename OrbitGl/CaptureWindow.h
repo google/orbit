@@ -79,8 +79,8 @@ class CaptureWindow : public GlCanvas {
   bool m_DrawFilter;
   bool m_FirstHelpDraw;
   bool m_DrawStats;
-  GlSlider m_Slider;
-  GlSlider m_VerticalSlider;
+  std::shared_ptr<GlSlider> slider_;
+  std::shared_ptr<GlSlider> vertical_slider_;
   int m_ProcessX;
 
   static const std::string MENU_ACTION_GO_TO_CALLSTACK;

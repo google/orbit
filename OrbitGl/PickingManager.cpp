@@ -8,12 +8,11 @@
 #include "OrbitBase/Logging.h"
 
 //-----------------------------------------------------------------------------
-PickingID PickingManager::CreatePickableId(Pickable* a_Pickable,
+PickingID PickingManager::CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
                                            PickingID::BatcherId batcher_id) {
   absl::MutexLock lock(&mutex_);
   ++m_IdCounter;
   PickingID id = PickingID::Get(PickingID::PICKABLE, m_IdCounter, batcher_id);
-  m_PickableIdMap[a_Pickable] = m_IdCounter;
   m_IdPickableMap[m_IdCounter] = a_Pickable;
   return id;
 }
@@ -22,29 +21,28 @@ PickingID PickingManager::CreatePickableId(Pickable* a_Pickable,
 void PickingManager::Reset() {
   absl::MutexLock lock(&mutex_);
   m_IdPickableMap.clear();
-  m_PickableIdMap.clear();
   m_IdCounter = 0;
 }
 
 //-----------------------------------------------------------------------------
-Pickable* PickingManager::GetPickableFromId(uint32_t id) {
+std::weak_ptr<Pickable> PickingManager::GetPickableFromId(uint32_t id) const {
   absl::MutexLock lock(&mutex_);
   auto it = m_IdPickableMap.find(id);
   if (it == m_IdPickableMap.end()) {
-    return nullptr;
+    return std::weak_ptr<Pickable>();
   }
   return it->second;
 }
 
 //-----------------------------------------------------------------------------
-Pickable* PickingManager::GetPicked() {
+std::weak_ptr<Pickable> PickingManager::GetPicked() const {
   absl::MutexLock lock(&mutex_);
   return m_Picked;
 }
 
 //-----------------------------------------------------------------------------
 void PickingManager::Pick(uint32_t a_Id, int a_X, int a_Y) {
-  Pickable* picked = GetPickableFromId(a_Id);
+  auto picked = GetPickableFromId(a_Id).lock();
   if (picked) {
     picked->OnPick(a_X, a_Y);
   }
@@ -55,18 +53,18 @@ void PickingManager::Pick(uint32_t a_Id, int a_X, int a_Y) {
 
 //-----------------------------------------------------------------------------
 void PickingManager::Release() {
-  Pickable* picked = GetPicked();
+  auto picked = GetPicked().lock();
   if (picked != nullptr) {
     picked->OnRelease();
     absl::MutexLock lock(&mutex_);
-    m_Picked = nullptr;
+    m_Picked.reset();
   }
 }
 
 //-----------------------------------------------------------------------------
 void PickingManager::Drag(int a_X, int a_Y) {
-  Pickable* picked = GetPicked();
-  if (picked) {
+  auto picked = GetPicked().lock();
+  if (picked && picked->Draggable()) {
     picked->OnDrag(a_X, a_Y);
   }
 }
@@ -74,14 +72,20 @@ void PickingManager::Drag(int a_X, int a_Y) {
 //-----------------------------------------------------------------------------
 bool PickingManager::IsDragging() const {
   absl::MutexLock lock(&mutex_);
-  return m_Picked && m_Picked->Draggable();
+  auto picked = m_Picked.lock();
+  return picked && picked->Draggable();
 }
 
 //-----------------------------------------------------------------------------
-Color PickingManager::GetPickableColor(Pickable* pickable,
+Color PickingManager::GetPickableColor(std::weak_ptr<Pickable> pickable,
                                        PickingID::BatcherId batcher_id) {
   PickingID id = CreatePickableId(pickable, batcher_id);
   return ColorFromPickingID(id);
+}
+
+bool PickingManager::IsThisElementPicked(const Pickable* pickable) const {
+  auto picked = GetPicked().lock();
+  return picked && picked.get() == pickable;
 }
 
 //-----------------------------------------------------------------------------

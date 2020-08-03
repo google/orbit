@@ -54,7 +54,7 @@ std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {
 float TimerTrack::GetYFromDepth(uint32_t depth) const {
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float box_height = layout.GetTextBoxHeight();
-  if (collapse_toggle_.IsCollapsed() && depth_ > 0) {
+  if (collapse_toggle_->IsCollapsed() && depth_ > 0) {
     box_height /= static_cast<float>(depth_);
   }
 
@@ -78,7 +78,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
   float world_start_x = canvas->GetWorldTopLeftX();
   float world_width = canvas->GetWorldWidth();
   double inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
-  bool is_collapsed = collapse_toggle_.IsCollapsed();
+  bool is_collapsed = collapse_toggle_->IsCollapsed();
 
   std::vector<std::shared_ptr<TimerChain>> chains_by_depth = GetTimers();
 
@@ -194,7 +194,7 @@ std::string TimerTrack::GetTooltip() const {
 //-----------------------------------------------------------------------------
 float TimerTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
-  bool is_collapsed = collapse_toggle_.IsCollapsed();
+  bool is_collapsed = collapse_toggle_->IsCollapsed();
   uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
   uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
   return layout.GetTextBoxHeight() * depth +
