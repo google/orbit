@@ -190,10 +190,19 @@ void LiveFunctionsController::OnDeleteButton(uint64_t id) {
 }
 
 void LiveFunctionsController::AddIterator(FunctionInfo* function) {
+  CHECK(function != nullptr);
   uint64_t id = next_iterator_id_;
   ++next_iterator_id_;
 
   auto function_address = FunctionUtils::GetAbsoluteAddress(*function);
+
+  // It's possible that this function does not appear in any samples and
+  // in that case, GAddressToFunctionName would not contain the display
+  // name, so we have to add it here, so we can easily look up the display
+  // name when drawing iterators.
+  std::string function_name = FunctionUtils::GetDisplayName(*function);
+  Capture::GAddressToFunctionName[function_address] = function_name;
+
   const TextBox* box = Capture::GSelectedTextBox;
   // If no box is currently selected or the selected box is a different
   // function, we search for the closest box to the current center of the

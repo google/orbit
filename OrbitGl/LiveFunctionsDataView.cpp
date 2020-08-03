@@ -249,7 +249,7 @@ void LiveFunctionsDataView::OnContextMenu(
   } else if (a_Action == MENU_ACTION_ITERATE) {
     for (int i : a_ItemIndices) {
       FunctionInfo* function = GetFunction(i);
-      if (function->stats().count() > 0) {
+      if (function != nullptr && function->stats().count() > 0) {
         live_functions_->AddIterator(function);
       }
     }
