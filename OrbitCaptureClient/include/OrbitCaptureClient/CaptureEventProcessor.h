@@ -5,7 +5,7 @@
 #ifndef ORBIT_CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_
 #define ORBIT_CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_
 
-#include "CaptureListener.h"
+#include "OrbitCaptureClient/CaptureListener.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "services.pb.h"

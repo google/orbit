@@ -1,4 +1,4 @@
-#include "CaptureEventProcessor.h"
+#include "OrbitCaptureClient/CaptureEventProcessor.h"
 
 #include "capture_data.pb.h"
 

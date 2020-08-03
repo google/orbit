@@ -14,8 +14,8 @@
 
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
-#include "CaptureClient.h"
-#include "CaptureListener.h"
+#include "OrbitCaptureClient/CaptureClient.h"
+#include "OrbitCaptureClient/CaptureListener.h"
 #include "ContextSwitch.h"
 #include "CrashManager.h"
 #include "DataManager.h"
