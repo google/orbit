@@ -64,7 +64,6 @@ target_sources(
           LogInterface.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
-          OrbitSession.cpp
           Params.cpp
           Path.cpp
           Pdb.cpp

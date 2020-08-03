@@ -9,3 +9,8 @@ package orbit_client_protos;
 message PresetModule {
   repeated uint64 function_hashes = 1;
 }
+
+message PresetInfo {
+  string process_full_path = 1;
+  map<string, PresetModule> path_to_module = 2;
+}

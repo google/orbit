@@ -95,8 +95,8 @@ void Pdb::ApplyPreset(const Preset& preset) {
   SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ApplyPreset - %s", m_Name.c_str()));
 
   std::string module_name = m_LoadedModuleName;
-  auto it = preset.m_Modules.find(module_name);
-  if (it != preset.m_Modules.end()) {
+  auto it = preset.preset_info.path_to_module().find(module_name);
+  if (it != preset.preset_info.path_to_module().end()) {
     const PresetModule& preset_module = it->second;
 
     for (uint64_t hash : preset_module.function_hashes()) {

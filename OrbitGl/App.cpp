@@ -59,6 +59,7 @@ ABSL_DECLARE_FLAG(bool, devmode);
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_protos::PresetInfo;
 using orbit_client_protos::TimerInfo;
 
 std::unique_ptr<OrbitApp> GOrbitApp;
@@ -302,14 +303,16 @@ void OrbitApp::ListPresets() {
       Path::ListFiles(Path::GetPresetPath(), ".opr");
   std::vector<std::shared_ptr<Preset>> presets;
   for (std::string& filename : preset_filenames) {
-    auto preset = std::make_shared<Preset>();
-    ErrorMessageOr<void> result = ReadPresetFromFile(filename, preset.get());
-    if (result.has_error()) {
+    ErrorMessageOr<PresetInfo> preset_result = ReadPresetFromFile(filename);
+    if (preset_result.has_error()) {
       ERROR("Loading preset from \"%s\" failed: %s", filename,
-            result.error().message());
+            preset_result.error().message());
       continue;
     }
-    preset->m_FileName = filename;
+
+    auto preset = std::make_shared<Preset>();
+    preset->file_name = filename;
+    preset->preset_info = std::move(preset_result.value());
     presets.push_back(preset);
   }
 
@@ -517,8 +520,8 @@ ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
 }
 
 //-----------------------------------------------------------------------------
-ErrorMessageOr<void> OrbitApp::ReadPresetFromFile(const std::string& filename,
-                                                  Preset* preset) {
+ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(
+    const std::string& filename) {
   std::string file_path = filename;
 
   if (Path::GetDirectory(filename).empty()) {
@@ -531,38 +534,38 @@ ErrorMessageOr<void> OrbitApp::ReadPresetFromFile(const std::string& filename,
     return ErrorMessage("Error opening the file for reading");
   }
 
-  try {
-    cereal::BinaryInputArchive archive(file);
-    archive(*preset);
-    file.close();
-    return outcome::success();
-  } catch (std::exception& e) {
-    ERROR("Loading preset from \"%s\": %s", file_path, e.what());
-    return ErrorMessage(
-        absl::StrFormat("Error reading the preset: %s", e.what()));
+  PresetInfo preset_info;
+  if (!preset_info.ParseFromIstream(&file)) {
+    ERROR("Loading preset from \"%s\" failed", file_path);
+    return ErrorMessage(absl::StrFormat("Error reading the preset"));
   }
+  return preset_info;
 }
 
 //-----------------------------------------------------------------------------
 ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
+  OUTCOME_TRY(preset_info, ReadPresetFromFile(filename));
+
   auto preset = std::make_shared<Preset>();
-  OUTCOME_TRY(ReadPresetFromFile(filename, preset.get()));
-  preset->m_FileName = filename;
+  preset->file_name = filename;
+  preset->preset_info = std::move(preset_info);
   LoadPreset(preset);
   return outcome::success();
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::LoadPreset(const std::shared_ptr<Preset>& preset) {
-  if (Capture::GTargetProcess->GetFullPath() == preset->m_ProcessFullPath) {
+  const std::string& process_full_path =
+      preset->preset_info.process_full_path();
+  if (Capture::GTargetProcess->GetFullPath() == process_full_path) {
     // In case we already have the correct process selected
     GOrbitApp->LoadModulesFromPreset(Capture::GTargetProcess, preset);
     return;
   }
-  if (!SelectProcess(Path::GetFileName(preset->m_ProcessFullPath))) {
+  if (!SelectProcess(Path::GetFileName(process_full_path))) {
     SendErrorToUi("Preset loading failed",
                   absl::StrFormat("The process \"%s\" is not running.",
-                                  preset->m_ProcessFullPath));
+                                  process_full_path));
     return;
   }
   Capture::GSessionPresets = preset;
@@ -800,9 +803,11 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id,
 void OrbitApp::SymbolLoadingFinished(uint32_t process_id,
                                      const std::shared_ptr<Module>& module,
                                      const std::shared_ptr<Preset>& preset) {
-  if (preset != nullptr &&
-      preset->m_Modules.find(module->m_FullName) != preset->m_Modules.end()) {
-    module->m_Pdb->ApplyPreset(*preset);
+  if (preset != nullptr) {
+    auto it = preset->preset_info.path_to_module().find(module->m_FullName);
+    if (it != preset->preset_info.path_to_module().end()) {
+      module->m_Pdb->ApplyPreset(*preset);
+    }
   }
 
   data_manager_->FindModuleByAddressStart(process_id, module->m_AddressStart)
@@ -846,7 +851,7 @@ void OrbitApp::LoadModulesFromPreset(const std::shared_ptr<Process>& process,
                                      const std::shared_ptr<Preset>& preset) {
   std::vector<std::shared_ptr<Module>> modules_to_load;
   std::vector<std::string> modules_not_found;
-  for (const auto& pair : preset->m_Modules) {
+  for (const auto& pair : preset->preset_info.path_to_module()) {
     const std::string& module_path = pair.first;
     const auto& module = process->GetModuleFromPath(module_path);
     if (module == nullptr) {

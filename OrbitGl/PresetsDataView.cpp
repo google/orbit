@@ -39,9 +39,9 @@ std::string PresetsDataView::GetValue(int row, int col) {
 
   switch (col) {
     case COLUMN_SESSION_NAME:
-      return Path::GetFileName(preset->m_FileName);
+      return Path::GetFileName(preset->file_name);
     case COLUMN_PROCESS_NAME:
-      return Path::GetFileName(preset->m_ProcessFullPath);
+      return Path::GetFileName(preset->preset_info.process_full_path());
     default:
       return "";
   }
@@ -50,7 +50,7 @@ std::string PresetsDataView::GetValue(int row, int col) {
 //-----------------------------------------------------------------------------
 std::string PresetsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
   const Preset& preset = *GetPreset(a_Row);
-  return preset.m_FileName;
+  return preset.file_name;
 }
 
 //-----------------------------------------------------------------------------
@@ -67,10 +67,10 @@ void PresetsDataView::DoSort() {
 
   switch (m_SortingColumn) {
     case COLUMN_SESSION_NAME:
-      sorter = ORBIT_PRESET_SORT(m_FileName);
+      sorter = ORBIT_PRESET_SORT(file_name);
       break;
     case COLUMN_PROCESS_NAME:
-      sorter = ORBIT_PRESET_SORT(m_ProcessFullPath);
+      sorter = ORBIT_PRESET_SORT(preset_info.process_full_path());
       break;
     default:
       break;
@@ -115,7 +115,7 @@ void PresetsDataView::OnContextMenu(const std::string& a_Action,
     }
     int row = a_ItemIndices[0];
     const std::shared_ptr<Preset>& preset = GetPreset(row);
-    const std::string& filename = preset->m_FileName;
+    const std::string& filename = preset->file_name;
     int ret = remove(filename.c_str());
     if (ret == 0) {
       presets_.erase(presets_.begin() + m_Indices[row]);
@@ -140,8 +140,8 @@ void PresetsDataView::DoFilter() {
 
   for (size_t i = 0; i < presets_.size(); ++i) {
     const Preset& preset = *presets_[i];
-    std::string name = Path::GetFileName(ToLower(preset.m_FileName));
-    std::string path = ToLower(preset.m_ProcessFullPath);
+    std::string name = Path::GetFileName(ToLower(preset.file_name));
+    std::string path = ToLower(preset.preset_info.process_full_path());
 
     bool match = true;
 

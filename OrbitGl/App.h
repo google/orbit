@@ -41,6 +41,7 @@
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 #include "grpcpp/grpcpp.h"
+#include "preset.pb.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
@@ -242,8 +243,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
                              const std::shared_ptr<Preset>& preset);
   std::shared_ptr<Process> FindProcessByPid(int32_t pid);
 
-  ErrorMessageOr<void> ReadPresetFromFile(const std::string& filename,
-                                          Preset* preset);
+  ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
+      const std::string& filename);
 
   ApplicationOptions options_;
 

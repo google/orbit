@@ -7,8 +7,7 @@
 #include <memory>
 
 #include "DataView.h"
-
-class Preset;
+#include "OrbitSession.h"
 
 class PresetsDataView : public DataView {
  public:
