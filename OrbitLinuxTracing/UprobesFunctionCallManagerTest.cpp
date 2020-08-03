@@ -13,7 +13,7 @@ TEST(UprobesFunctionCallManager, OneUprobe) {
   constexpr pid_t tid = 42;
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
-  perf_event_uprobe_regs registers;
+  perf_event_sample_regs_user_sp_ip_arguments registers;
 
   function_call_manager.ProcessUprobes(tid, 100, 1, registers);
 
@@ -25,13 +25,14 @@ TEST(UprobesFunctionCallManager, OneUprobe) {
   EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 2);
   EXPECT_EQ(processed_function_call.value().depth(), 0);
   EXPECT_EQ(processed_function_call.value().return_value(), 3);
+  EXPECT_EQ(processed_function_call.value().registers_size(), 6);
 }
 
 TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
   constexpr pid_t tid = 42;
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
-  perf_event_uprobe_regs registers;
+  perf_event_sample_regs_user_sp_ip_arguments registers;
 
   function_call_manager.ProcessUprobes(tid, 100, 1, registers);
 
@@ -45,6 +46,7 @@ TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
   EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 3);
   EXPECT_EQ(processed_function_call.value().depth(), 1);
   EXPECT_EQ(processed_function_call.value().return_value(), 4);
+  EXPECT_EQ(processed_function_call.value().registers_size(), 6);
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid, 4, 5);
   ASSERT_TRUE(processed_function_call.has_value());
@@ -54,6 +56,7 @@ TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
   EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 4);
   EXPECT_EQ(processed_function_call.value().depth(), 0);
   EXPECT_EQ(processed_function_call.value().return_value(), 5);
+  EXPECT_EQ(processed_function_call.value().registers_size(), 6);
 
   function_call_manager.ProcessUprobes(tid, 300, 5, registers);
 
@@ -65,6 +68,7 @@ TEST(UprobesFunctionCallManager, TwoNestedUprobesAndAnotherUprobe) {
   EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 6);
   EXPECT_EQ(processed_function_call.value().depth(), 0);
   EXPECT_EQ(processed_function_call.value().return_value(), 7);
+  EXPECT_EQ(processed_function_call.value().registers_size(), 6);
 }
 
 TEST(UprobesFunctionCallManager, TwoUprobesDifferentThreads) {
@@ -72,7 +76,7 @@ TEST(UprobesFunctionCallManager, TwoUprobesDifferentThreads) {
   constexpr pid_t tid2 = 111;
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
-  perf_event_uprobe_regs registers;
+  perf_event_sample_regs_user_sp_ip_arguments registers;
 
   function_call_manager.ProcessUprobes(tid, 100, 1, registers);
 
@@ -86,6 +90,7 @@ TEST(UprobesFunctionCallManager, TwoUprobesDifferentThreads) {
   EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 3);
   EXPECT_EQ(processed_function_call.value().depth(), 0);
   EXPECT_EQ(processed_function_call.value().return_value(), 4);
+  EXPECT_EQ(processed_function_call.value().registers_size(), 6);
 
   processed_function_call = function_call_manager.ProcessUretprobes(tid2, 4, 5);
   ASSERT_TRUE(processed_function_call.has_value());
@@ -95,6 +100,7 @@ TEST(UprobesFunctionCallManager, TwoUprobesDifferentThreads) {
   EXPECT_EQ(processed_function_call.value().end_timestamp_ns(), 4);
   EXPECT_EQ(processed_function_call.value().depth(), 0);
   EXPECT_EQ(processed_function_call.value().return_value(), 5);
+  EXPECT_EQ(processed_function_call.value().registers_size(), 6);
 }
 
 TEST(UprobesFunctionCallManager, OnlyUretprobe) {

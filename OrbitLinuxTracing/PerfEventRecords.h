@@ -72,12 +72,18 @@ struct __attribute__((__packed__)) perf_event_sample_regs_user_ax {
   uint64_t ax;
 };
 
-// This struct must be in sync with the SAMPLE_REGS_USER_SP_IP in
+// This struct must be in sync with the SAMPLE_REGS_USER_SP_IP_ARGUMENTS in
 // PerfEventOpen.h.
-struct __attribute__((__packed__)) perf_event_sample_regs_user_sp_ip {
+struct __attribute__((__packed__)) perf_event_sample_regs_user_sp_ip_arguments {
   uint64_t abi;
+  uint64_t cx;
+  uint64_t dx;
+  uint64_t si;
+  uint64_t di;
   uint64_t sp;
   uint64_t ip;
+  uint64_t r8;
+  uint64_t r9;
 };
 
 struct __attribute__((__packed__)) perf_event_sample_stack_user {
@@ -111,29 +117,10 @@ struct __attribute__((__packed__)) perf_event_callchain_sample_fixed {
   // The rest of the sample is a uint64_t[nr] that we read dynamically.
 };
 
-struct __attribute__((__packed__)) perf_event_sp_ip_8bytes_sample {
+struct __attribute__((__packed__)) perf_event_sp_ip_arguments_8bytes_sample {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  perf_event_sample_regs_user_sp_ip regs;
-  perf_event_sample_stack_user_8bytes stack;
-};
-
-struct __attribute__((__packed__)) perf_event_uprobe_regs {
-  uint64_t abi;
-  uint64_t cx;
-  uint64_t dx;
-  uint64_t si;
-  uint64_t di;
-  uint64_t sp;
-  uint64_t ip;
-  uint64_t r8;
-  uint64_t r9;
-};
-
-struct __attribute__((__packed__)) perf_event_uprobe {
-  perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  perf_event_uprobe_regs regs;
+  perf_event_sample_regs_user_sp_ip_arguments regs;
   perf_event_sample_stack_user_8bytes stack;
 };
 

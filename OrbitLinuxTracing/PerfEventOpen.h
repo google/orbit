@@ -101,9 +101,9 @@ static constexpr uint64_t SAMPLE_REGS_USER_SP_IP =
 // PerfEventRecords.h.
 static constexpr uint64_t SAMPLE_REGS_USER_AX = (1lu << PERF_REG_X86_AX);
 
-// This must be in sync with struct perf_event_uprobe in
-// PerfEventRecords.h.
-static constexpr uint64_t SAMPLE_REGS_UPROBE =
+// This must be in sync with struct perf_event_sample_regs_user_sp_ip_arguments
+// in PerfEventRecords.h.
+static constexpr uint64_t SAMPLE_REGS_USER_SP_IP_ARGUMENTS =
     (1lu << PERF_REG_X86_CX) | (1lu << PERF_REG_X86_DX) |
     (1lu << PERF_REG_X86_SI) | (1lu << PERF_REG_X86_DI) |
     (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP) |

@@ -30,7 +30,7 @@ class UprobesFunctionCallManager {
 
   void ProcessUprobes(pid_t tid, uint64_t function_address,
                       uint64_t begin_timestamp,
-                      const perf_event_uprobe_regs& regs) {
+                      const perf_event_sample_regs_user_sp_ip_arguments& regs) {
     auto& tid_uprobes_stack = tid_uprobes_stacks_[tid];
     tid_uprobes_stack.emplace(function_address, begin_timestamp, regs);
   }
@@ -72,13 +72,13 @@ class UprobesFunctionCallManager {
  private:
   struct OpenUprobes {
     OpenUprobes(uint64_t function_address, uint64_t begin_timestamp,
-                const perf_event_uprobe_regs& regs)
+                const perf_event_sample_regs_user_sp_ip_arguments& regs)
         : function_address{function_address},
           begin_timestamp{begin_timestamp},
           registers(regs) {}
     uint64_t function_address;
     uint64_t begin_timestamp;
-    perf_event_uprobe_regs registers;
+    perf_event_sample_regs_user_sp_ip_arguments registers;
   };
 
   // This map keeps the stack of the dynamically-instrumented functions entered.

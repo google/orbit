@@ -59,9 +59,25 @@ class TracerThread {
 
   bool OpenContextSwitches(const std::vector<int32_t>& cpus);
   void InitUprobesEventProcessor();
-  bool OpenUprobes(const std::vector<int32_t>& cpus);
+  bool OpenUserSpaceProbes(const std::vector<int32_t>& cpus);
+  bool OpenUprobes(const LinuxTracing::Function& function,
+                   const std::vector<int32_t>& cpus,
+                   absl::flat_hash_map<int32_t, int>* fds_per_cpu);
+  bool OpenUretprobes(const LinuxTracing::Function& function,
+                      const std::vector<int32_t>& cpus,
+                      absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenMmapTask(const std::vector<int32_t>& cpus);
   bool OpenSampling(const std::vector<int32_t>& cpus);
+
+  void AddUprobesFileDescriptors(
+      const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
+      const LinuxTracing::Function& function);
+
+  void AddUretprobesFileDescriptors(
+      const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
+      const LinuxTracing::Function& function);
+
+  void OpenUserSpaceProbesRingBuffers();
 
   static void OpenRingBuffersOrRedirectOnExisting(
       const absl::flat_hash_map<int32_t, int>& fds_per_cpu,
@@ -130,6 +146,7 @@ class TracerThread {
   TracerListener* listener_ = nullptr;
 
   std::vector<int> tracing_fds_;
+  absl::flat_hash_map<int32_t, std::vector<int>> fds_per_cpu_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
 
   absl::flat_hash_map<uint64_t, const Function*>

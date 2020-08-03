@@ -11,19 +11,19 @@
 
 class ManualInstrumentationConfig {
  public:
-  inline void AddTimerStartAddress(uint64_t address) {
+  void AddTimerStartAddress(uint64_t address) {
     timer_start_addresses_.insert(address);
   }
 
-  inline void AddTimerStopAddress(uint64_t address) {
+  void AddTimerStopAddress(uint64_t address) {
     timer_stop_addresses_.insert(address);
   }
 
-  inline bool IsTimerStartAddress(uint64_t address) const {
+  bool IsTimerStartAddress(uint64_t address) const {
     return timer_start_addresses_.contains(address);
   }
 
-  inline bool IsTimerStopAddress(uint64_t address) const {
+  bool IsTimerStopAddress(uint64_t address) const {
     return timer_stop_addresses_.contains(address);
   }
 
