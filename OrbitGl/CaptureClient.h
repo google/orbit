@@ -10,6 +10,7 @@
 #include "CaptureEventProcessor.h"
 #include "CaptureListener.h"
 #include "OrbitBase/Logging.h"
+#include "capture_data.pb.h"
 #include "grpcpp/channel.h"
 #include "services.grpc.pb.h"
 
@@ -24,7 +25,8 @@ class CaptureClient {
 
   void Capture(
       int32_t pid,
-      const std::vector<std::shared_ptr<Function>>& selected_functions);
+      const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>&
+          selected_functions);
   void StopCapture();
 
  private:

@@ -2,24 +2,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_CAPTURE_H_
+#define ORBIT_CORE_CAPTURE_H_
 
 #include <chrono>
 #include <outcome.hpp>
 #include <string>
 
 #include "CallstackTypes.h"
-#include "LinuxAddressInfo.h"
 #include "OrbitBase/Result.h"
-#include "OrbitFunction.h"
 #include "OrbitProcess.h"
 #include "Threading.h"
 #include "absl/container/flat_hash_map.h"
+#include "capture_data.pb.h"
 
 class Process;
 class Preset;
 class SamplingProfiler;
-class Function;
 struct CallStack;
 
 class Capture {
@@ -32,7 +31,8 @@ class Capture {
   static void StopCapture();
   static void FinalizeCapture();
   static void ClearCaptureData();
-  static std::vector<std::shared_ptr<Function>> GetSelectedFunctions();
+  static std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
+  GetSelectedFunctions();
   static void PreFunctionHooks();
   static bool IsCapturing();
   static void DisplayStats();
@@ -42,7 +42,8 @@ class Capture {
   static void RegisterZoneName(uint64_t a_ID, const char* a_Name);
   static void AddCallstack(CallStack& a_CallStack);
   static std::shared_ptr<CallStack> GetCallstack(CallstackID a_ID);
-  static LinuxAddressInfo* GetAddressInfo(uint64_t address);
+  static orbit_client_protos::LinuxAddressInfo* GetAddressInfo(
+      uint64_t address);
   static void PreSave();
 
   static State GState;
@@ -65,15 +66,19 @@ class Capture {
   static std::shared_ptr<Preset> GSessionPresets;
   static std::shared_ptr<CallStack> GSelectedCallstack;
   static void (*GClearCaptureDataFunc)();
-  static std::vector<std::shared_ptr<Function>> GSelectedFunctions;
-  static std::map<uint64_t, Function*> GSelectedFunctionsMap;
-  static std::map<uint64_t, Function*> GVisibleFunctionsMap;
+  static std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
+      GSelectedFunctions;
+  static std::map<uint64_t, orbit_client_protos::FunctionInfo*>
+      GSelectedFunctionsMap;
+  static std::map<uint64_t, orbit_client_protos::FunctionInfo*>
+      GVisibleFunctionsMap;
   static std::unordered_map<uint64_t, uint64_t> GFunctionCountMap;
   static std::unordered_map<uint64_t, std::shared_ptr<CallStack>> GCallstacks;
   static int32_t GProcessId;
   static std::string GProcessName;
   static std::unordered_map<int32_t, std::string> GThreadNames;
-  static std::unordered_map<uint64_t, LinuxAddressInfo> GAddressInfos;
+  static std::unordered_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
+      GAddressInfos;
   static std::unordered_map<uint64_t, std::string> GAddressToFunctionName;
   static std::unordered_map<uint64_t, std::string> GAddressToModuleName;
   static std::unordered_map<uint64_t, std::string> GZoneNames;
@@ -82,3 +87,5 @@ class Capture {
   static std::chrono::system_clock::time_point GCaptureTimePoint;
   static Mutex GCallstackMutex;
 };
+
+#endif  // ORBIT_CORE_CAPTURE_H_

@@ -9,27 +9,52 @@
 #include "Capture.h"
 #include "Log.h"
 #include "OrbitBase/Logging.h"
+#include "Profiling.h"
 #include "Utils.h"
 
 namespace FunctionUtils {
 
-std::string GetLoadedModuleName(const Function& func) {
+using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::FunctionStats;
+using orbit_client_protos::TimerInfo;
+
+std::string GetLoadedModuleName(const FunctionInfo& func) {
   return Path::GetFileName(func.loaded_module_path());
 }
 
-uint64_t GetHash(const Function& func) {
+uint64_t GetHash(const FunctionInfo& func) {
   return StringHash(func.pretty_name());
 }
 
-uint64_t Offset(const Function& func) {
+uint64_t Offset(const FunctionInfo& func) {
   return func.address() - func.load_bias();
 }
 
-bool IsOrbitFunc(const Function& func) {
-  return func.orbit_type() != Function::OrbitType::NONE;
+bool IsOrbitFunc(const FunctionInfo& func) {
+  return func.type() != FunctionInfo::kNone;
 }
 
-void Select(Function* func) {
+std::shared_ptr<FunctionInfo> CreateFunctionInfo(
+    std::string name, std::string pretty_name, uint64_t address,
+    uint64_t load_bias, uint64_t size, std::string file, uint32_t line,
+    std::string loaded_module_path, uint64_t module_base_address) {
+  std::shared_ptr<FunctionInfo> function_info =
+      std::make_shared<FunctionInfo>();
+  function_info->set_name(std::move(name));
+  function_info->set_pretty_name(std::move(pretty_name));
+  function_info->set_address(address);
+  function_info->set_load_bias(load_bias);
+  function_info->set_size(size);
+  function_info->set_file(std::move(file));
+  function_info->set_line(line);
+  function_info->set_loaded_module_path(std::move(loaded_module_path));
+  function_info->set_module_base_address(module_base_address);
+
+  SetOrbitTypeFromName(function_info.get());
+  return function_info;
+}
+
+void Select(FunctionInfo* func) {
   LOG("Selected %s at 0x%" PRIx64 " (address_=0x%" PRIx64
       ", load_bias_= 0x%" PRIx64 ", base_address=0x%" PRIx64 ")",
       func->pretty_name(), GetAbsoluteAddress(*func), func->address(),
@@ -37,49 +62,49 @@ void Select(Function* func) {
   Capture::GSelectedFunctionsMap[GetAbsoluteAddress(*func)] = func;
 }
 
-void UnSelect(Function* func) {
+void UnSelect(FunctionInfo* func) {
   Capture::GSelectedFunctionsMap.erase(GetAbsoluteAddress(*func));
 }
 
-bool IsSelected(const Function& func) {
+bool IsSelected(const FunctionInfo& func) {
   return Capture::GSelectedFunctionsMap.count(GetAbsoluteAddress(func)) > 0;
 }
 
-void Print(const Function& func) {
+void Print(const FunctionInfo& func) {
   ORBIT_VIZV(func.address());
   ORBIT_VIZV(func.file());
   ORBIT_VIZV(func.line());
   ORBIT_VIZV(IsSelected(func));
 }
 
-const absl::flat_hash_map<const char*, Function::OrbitType>&
+const absl::flat_hash_map<const char*, FunctionInfo::OrbitType>&
 GetFunctionNameToOrbitTypeMap() {
-  static absl::flat_hash_map<const char*, Function::OrbitType>
+  static absl::flat_hash_map<const char*, FunctionInfo::OrbitType>
       function_name_to_type_map{
-          {"Start(", Function::ORBIT_TIMER_START},
-          {"Stop(", Function::ORBIT_TIMER_STOP},
-          {"StartAsync(", Function::ORBIT_TIMER_START_ASYNC},
-          {"StopAsync(", Function::ORBIT_TIMER_STOP_ASYNC},
-          {"TrackInt(", Function::ORBIT_TRACK_INT},
-          {"TrackInt64(", Function::ORBIT_TRACK_INT_64},
-          {"TrackUint(", Function::ORBIT_TRACK_UINT},
-          {"TrackUint64(", Function::ORBIT_TRACK_UINT_64},
-          {"TrackFloat(", Function::ORBIT_TRACK_FLOAT},
-          {"TrackDouble(", Function::ORBIT_TRACK_DOUBLE},
-          {"TrackFloatAsInt(", Function::ORBIT_TRACK_FLOAT_AS_INT},
-          {"TrackDoubleAsInt64(", Function::ORBIT_TRACK_DOUBLE_AS_INT_64},
+          {"Start(", FunctionInfo::kOrbitTimerStart},
+          {"Stop(", FunctionInfo::kOrbitTimerStop},
+          {"StartAsync(", FunctionInfo::kOrbitTimerStartAsync},
+          {"StopAsync(", FunctionInfo::kOrbitTimerStopAsync},
+          {"TrackInt(", FunctionInfo::kOrbitTrackInt},
+          {"TrackInt64(", FunctionInfo::kOrbitTrackInt64},
+          {"TrackUint(", FunctionInfo::kOrbitTrackUint},
+          {"TrackUint64(", FunctionInfo::kOrbitTrackUint64},
+          {"TrackFloat(", FunctionInfo::kOrbitTrackFloat},
+          {"TrackDouble(", FunctionInfo::kOrbitTrackDouble},
+          {"TrackFloatAsInt(", FunctionInfo::kOrbitTrackFloatAsInt},
+          {"TrackDoubleAsInt64(", FunctionInfo::kOrbitTrackDoubleAsInt64},
       };
   return function_name_to_type_map;
 }
 
 // Detect Orbit API functions by looking for special function names part of the
 // orbit_api namespace. On a match, set the corresponding function type.
-bool SetOrbitTypeFromName(Function* func) {
+bool SetOrbitTypeFromName(FunctionInfo* func) {
   const std::string& name = GetDisplayName(*func);
   if (absl::StartsWith(name, "orbit_api::")) {
     for (auto& pair : GetFunctionNameToOrbitTypeMap()) {
       if (absl::StrContains(name, pair.first)) {
-        func->set_orbit_type(pair.second);
+        func->set_type(pair.second);
         return true;
       }
     }
@@ -87,21 +112,20 @@ bool SetOrbitTypeFromName(Function* func) {
   return false;
 }
 
-void UpdateStats(Function* func, const Timer& timer) {
-  std::shared_ptr<FunctionStats> stats = func->stats();
-  if (stats != nullptr) {
-    stats->m_Count++;
-    double elapsedMillis = timer.ElapsedMillis();
-    stats->m_TotalTimeMs += elapsedMillis;
-    stats->m_AverageTimeMs = stats->m_TotalTimeMs / stats->m_Count;
+void UpdateStats(FunctionInfo* func, const TimerInfo& timer_info) {
+  FunctionStats* stats = func->mutable_stats();
+  stats->set_count(stats->count() + 1);
+  uint64_t elapsed_nanos =
+      TicksToNanoseconds(timer_info.start(), timer_info.end());
+  stats->set_total_time_ns(stats->total_time_ns() + elapsed_nanos);
+  stats->set_average_time_ns(stats->total_time_ns() / stats->count());
 
-    if (elapsedMillis > stats->m_MaxMs) {
-      stats->m_MaxMs = elapsedMillis;
-    }
+  if (elapsed_nanos > stats->max_ns()) {
+    stats->set_max_ns(elapsed_nanos);
+  }
 
-    if (stats->m_MinMs == 0 || elapsedMillis < stats->m_MinMs) {
-      stats->m_MinMs = elapsedMillis;
-    }
+  if (stats->min_ns() == 0 || elapsed_nanos < stats->min_ns()) {
+    stats->set_min_ns(elapsed_nanos);
   }
 }
 

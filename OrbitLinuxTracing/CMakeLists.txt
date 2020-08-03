@@ -32,7 +32,6 @@ target_sources(OrbitLinuxTracing PRIVATE
         KernelTracepoints.h
         LibunwindstackUnwinder.cpp
         LibunwindstackUnwinder.h
-        MakeUniqueForOverwrite.h
         OrbitTracing.cpp
         PerfEvent.cpp
         PerfEvent.h

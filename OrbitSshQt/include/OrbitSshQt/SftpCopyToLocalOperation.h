@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SSH_QT_SFTP_OPERATION_H_
-#define ORBIT_SSH_QT_SFTP_OPERATION_H_
+#ifndef ORBIT_SSH_QT_SFTP_COPY_TO_LOCAL_OPERATION_H_
+#define ORBIT_SSH_QT_SFTP_COPY_TO_LOCAL_OPERATION_H_
 
 #include <OrbitSsh/SftpFile.h>
 #include <OrbitSshQt/ScopedConnection.h>
@@ -19,14 +19,14 @@
 
 namespace OrbitSshQt {
 namespace details {
-enum class SftpOperationState {
+enum class SftpCopyToLocalOperationState {
   kInitial,
   kNoOperation,
   kStarted,
-  kLocalFileOpened,
   kRemoteFileOpened,
-  kRemoteFileWritten,
-  kRemoteFileClosed,
+  kLocalFileOpened,
+  kLocalFileWritten,
+  kLocalFileClosed,
   kShutdown,
   kDone,
   kError
@@ -34,27 +34,22 @@ enum class SftpOperationState {
 }  // namespace details
 
 /*
-  SftpOperation represents a file operation in the SSH-SFTP subsystem.
-  It needs an established SftpChannel for operation.
+  SftpCopyToRemoteOperation represents a file operation in the SSH-SFTP
+  subsystem. It needs an established SftpChannel for operation.
 
-  Currently only file copies (local -> remote) are supported.
+  This operation implements remote -> local copying.
 */
-class SftpOperation
-    : public StateMachineHelper<SftpOperation, details::SftpOperationState> {
+class SftpCopyToLocalOperation
+    : public StateMachineHelper<SftpCopyToLocalOperation,
+                                details::SftpCopyToLocalOperationState> {
   Q_OBJECT
   friend StateMachineHelper;
 
  public:
-  enum class FileMode : int {
-    kUserWritable = 0644,
-    kUserWritableAllExecutable = 0755
-  };
+  explicit SftpCopyToLocalOperation(Session* session, SftpChannel* channel);
 
-  explicit SftpOperation(Session* session, SftpChannel* channel);
-
-  void CopyFileToRemote(std::filesystem::path source,
-                        std::filesystem::path destination,
-                        FileMode destination_mode);
+  void CopyFileToLocal(std::filesystem::path source,
+                       std::filesystem::path destination);
 
  signals:
   void started();
@@ -71,11 +66,9 @@ class SftpOperation
   QPointer<SftpChannel> channel_;
   std::optional<OrbitSsh::SftpFile> sftp_file_;
   QFile local_file_;
-  QByteArray write_buffer_;
 
   std::filesystem::path source_;
   std::filesystem::path destination_;
-  FileMode destination_mode_;
 
   void HandleChannelShutdown();
   void HandleEagain();
@@ -89,5 +82,4 @@ class SftpOperation
 };
 
 }  // namespace OrbitSshQt
-
-#endif  // ORBIT_SSH_QT_SFTP_OPERATION_H_
+#endif  // ORBIT_SSH_QT_SFTP_COPY_TO_LOCAL_OPERATION_H_

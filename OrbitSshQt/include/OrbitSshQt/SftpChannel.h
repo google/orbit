@@ -36,7 +36,7 @@ enum class SftpChannelState {
   That's a requirement for issuing SFTP commands to the remote side.
 
   The user needs to wait for the started() signal before they can start an
-  SftpOperation. The user needs to keep the channel alive as long as
+  SftpCopyToRemoteOperation. The user needs to keep the channel alive as long as
   SftpOperations are still running.
 */
 class SftpChannel

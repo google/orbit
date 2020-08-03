@@ -1,0 +1,99 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package orbit_client_protos;
+
+message FunctionStats {
+  uint64 count = 1;
+  uint64 total_time_ns = 2;
+  uint64 average_time_ns = 3;
+  uint64 min_ns = 4;
+  uint64 max_ns = 5;
+}
+
+message FunctionInfo {
+  string name = 1;
+  string pretty_name = 2;
+  string loaded_module_path = 3;
+  uint64 module_base_address = 4;
+  uint64 address = 5;
+  uint64 load_bias = 6;
+  uint64 size = 7;
+  string file = 8;
+  uint32 line = 9;
+
+  enum OrbitType {
+    kNone = 0;
+    kOrbitTimerStart = 1;
+    kOrbitTimerStop = 2;
+    kOrbitTimerStartAsync = 3;
+    kOrbitTimerStopAsync = 4;
+    kOrbitTrackInt = 5;
+    kOrbitTrackInt64 = 6;
+    kOrbitTrackUint = 7;
+    kOrbitTrackUint64 = 8;
+    kOrbitTrackFloat = 9;
+    kOrbitTrackDouble = 10;
+    kOrbitTrackFloatAsInt = 11;
+    kOrbitTrackDoubleAsInt64 = 12;
+  }
+  OrbitType type = 10;
+  FunctionStats stats = 11;
+}
+
+message CallstackEvent {
+  uint64 time = 1;
+  uint64 callstack_hash = 2;
+  int32 thread_id = 3;
+}
+
+message CallstackInfo {
+  repeated uint64 data = 1;
+}
+
+message LinuxAddressInfo {
+  uint64 absolute_address = 1;
+  string module_name = 2;
+  string function_name = 3;
+  uint64 offset_in_function = 4;
+}
+
+message CaptureHeader {
+  string version = 1;
+}
+
+message CaptureInfo {
+  repeated FunctionInfo selected_functions = 1;
+  int32 process_id = 2;
+  string process_name = 3;
+  map<int32, string> thread_names = 4;
+  repeated LinuxAddressInfo address_infos = 5;
+  repeated CallstackInfo callstacks = 6;
+  repeated CallstackEvent callstack_events = 7;
+  map<uint64, string> key_to_string = 8;
+}
+
+message TimerInfo {
+  uint64 start = 1;
+  uint64 end = 2;
+  int32 process_id = 3;
+  int32 thread_id = 4;
+  uint32 depth = 5;
+
+  enum Type {
+    kNone = 0;
+    kCoreActivity = 1;
+    kIntrospection = 2;
+    kGpuActivity = 3;
+  }
+  Type type = 6;
+
+  int32 processor = 7;
+  uint64 callstack_hash = 8;
+  uint64 function_address = 9;
+  uint64 user_data_key = 10;
+  uint64 timeline_hash = 11;
+}

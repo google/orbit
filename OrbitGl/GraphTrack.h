@@ -18,7 +18,6 @@ class GraphTrack : public Track {
   Type GetType() const override { return kGraphTrack; }
   void Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) override;
   void OnDrag(int x, int y) override;
-  void AddTimer(const Timer& timer) override;
   float GetHeight() const override;
 
  protected:

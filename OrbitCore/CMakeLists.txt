@@ -20,17 +20,14 @@ target_sources(
          ContextSwitch.h
          Core.h
          EventBuffer.h
-         FunctionStats.h
          FunctionUtils.h
          Injection.h
          Introspection.h
-         LinuxAddressInfo.h
          LinuxCallstackEvent.h
          LinuxTracingBuffer.h
          Log.h
          LogInterface.h
          OrbitDbgHelp.h
-         OrbitFunction.h
          OrbitModule.h
          OrbitProcess.h
          OrbitSession.h
@@ -55,19 +52,16 @@ target_sources(
 
 target_sources(
   OrbitCore
-  PRIVATE Callstack.cpp
-          Capture.cpp
+  PRIVATE Capture.cpp
           ContextSwitch.cpp
           Core.cpp
           EventBuffer.cpp
-          FunctionStats.cpp
           FunctionUtils.cpp
           Injection.cpp
           Introspection.cpp
           LinuxTracingBuffer.cpp
           Log.cpp
           LogInterface.cpp
-          OrbitFunction.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
           OrbitSession.cpp
@@ -99,6 +93,7 @@ target_link_libraries(
   OrbitCore
   PUBLIC ElfUtils
          OrbitBase
+         OrbitClientProtos
          OrbitProtos
          capstone::capstone
          cereal::cereal
@@ -106,7 +101,6 @@ target_link_libraries(
          concurrentqueue::concurrentqueue
          multicore::multicore
          oqpi::oqpi
-         asio::asio
          abseil::abseil
          llvm_object::llvm_object
          Outcome::Outcome)

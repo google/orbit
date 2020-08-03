@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_TIME_GRAPH_H_
+#define ORBIT_GL_TIME_GRAPH_H_
 
 #include <unordered_map>
 #include <utility>
@@ -15,6 +16,7 @@
 #include "Geometry.h"
 #include "GpuTrack.h"
 #include "SchedulerTrack.h"
+#include "ScopeTimer.h"
 #include "StringManager.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
@@ -22,6 +24,7 @@
 #include "TimeGraphLayout.h"
 #include "TimerChain.h"
 #include "absl/container/flat_hash_map.h"
+#include "capture_data.pb.h"
 
 class TimeGraph {
  public:
@@ -36,11 +39,12 @@ class TimeGraph {
   void NeedsUpdate();
   void UpdatePrimitives(PickingMode picking_mode);
   void SortTracks();
-  std::vector<CallstackEvent> SelectEvents(float a_WorldStart, float a_WorldEnd,
-                                           ThreadID a_TID);
-  const std::vector<CallstackEvent>& GetSelectedCallstackEvents(ThreadID tid);
+  std::vector<orbit_client_protos::CallstackEvent> SelectEvents(
+      float a_WorldStart, float a_WorldEnd, ThreadID a_TID);
+  const std::vector<orbit_client_protos::CallstackEvent>&
+  GetSelectedCallstackEvents(ThreadID tid);
 
-  void ProcessTimer(const Timer& a_Timer);
+  void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info);
   void UpdateMaxTimeStamp(TickType a_Time);
 
   float GetThreadTotalHeight();
@@ -67,7 +71,7 @@ class TimeGraph {
     kPartlyVisible,
     kFullyVisible,
   };
-  void HorizontallyMoveIntoView(VisibilityType vis_type, TickType min, TickType max, double distance = 0.3); 
+  void HorizontallyMoveIntoView(VisibilityType vis_type, TickType min, TickType max, double distance = 0.3);
   void HorizontallyMoveIntoView(VisibilityType vis_type, const TextBox* text_box, double distance = 0.3);
   void VerticallyMoveIntoView(const TextBox* text_box);
   double GetTime(double a_Ratio);
@@ -140,7 +144,6 @@ class TimeGraph {
   TickType GetCaptureMax() { return capture_max_timestamp_; }
 
  protected:
-  uint64_t GetGpuTimelineHash(const Timer& timer) const;
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(ThreadID a_TID);
   std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(uint64_t timeline_hash);
@@ -203,10 +206,13 @@ class TimeGraph {
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   std::shared_ptr<ThreadTrack> process_track_;
 
-  absl::flat_hash_map<ThreadID, std::vector<CallstackEvent>>
+  absl::flat_hash_map<ThreadID,
+                      std::vector<orbit_client_protos::CallstackEvent>>
       selected_callstack_events_per_thread_;
 
   std::shared_ptr<StringManager> string_manager_;
 };
 
 extern TimeGraph* GCurrentTimeGraph;
+
+#endif  // ORBIT_GL_TIME_GRAPH_H_

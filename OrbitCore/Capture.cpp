@@ -25,6 +25,9 @@
 std::shared_ptr<Pdb> GPdbDbg;
 #endif
 
+using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::LinuxAddressInfo;
+
 Capture::State Capture::GState = Capture::State::kEmpty;
 bool Capture::GInjected = false;
 std::string Capture::GInjectedProcess;
@@ -40,9 +43,9 @@ std::string Capture::GPresetToLoad;
 std::string Capture::GProcessToInject;
 std::string Capture::GFunctionFilter;
 
-std::vector<std::shared_ptr<Function>> Capture::GSelectedFunctions;
-std::map<uint64_t, Function*> Capture::GSelectedFunctionsMap;
-std::map<uint64_t, Function*> Capture::GVisibleFunctionsMap;
+std::vector<std::shared_ptr<FunctionInfo>> Capture::GSelectedFunctions;
+std::map<uint64_t, FunctionInfo*> Capture::GSelectedFunctionsMap;
+std::map<uint64_t, FunctionInfo*> Capture::GVisibleFunctionsMap;
 std::unordered_map<uint64_t, uint64_t> Capture::GFunctionCountMap;
 std::shared_ptr<CallStack> Capture::GSelectedCallstack;
 std::unordered_map<uint64_t, std::shared_ptr<CallStack>> Capture::GCallstacks;
@@ -150,7 +153,7 @@ void Capture::PreFunctionHooks() {
   for (auto& func : GSelectedFunctions) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
     GSelectedFunctionsMap[address] = func.get();
-    func->ResetStats();
+    func->clear_stats();
     GFunctionCountMap[address] = 0;
   }
 
@@ -161,8 +164,8 @@ void Capture::PreFunctionHooks() {
   }
 }
 
-std::vector<std::shared_ptr<Function>> Capture::GetSelectedFunctions() {
-  std::vector<std::shared_ptr<Function>> selected_functions;
+std::vector<std::shared_ptr<FunctionInfo>> Capture::GetSelectedFunctions() {
+  std::vector<std::shared_ptr<FunctionInfo>> selected_functions;
   for (auto& func : GTargetProcess->GetFunctions()) {
     if (FunctionUtils::IsSelected(*func) || FunctionUtils::IsOrbitFunc(*func)) {
       selected_functions.push_back(func);

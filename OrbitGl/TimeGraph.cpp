@@ -32,6 +32,10 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::TimerInfo;
+
 TimeGraph* GCurrentTimeGraph = nullptr;
 
 //-----------------------------------------------------------------------------
@@ -96,6 +100,8 @@ void TimeGraph::Clear() {
   process_track_ = GetOrCreateThreadTrack(0);
 
   SetOverlayTextBoxes({});
+
+  NeedsUpdate();
 }
 
 //-----------------------------------------------------------------------------
@@ -130,7 +136,7 @@ bool TimeGraph::UpdateCaptureMinMaxTimestamps() {
 void TimeGraph::ZoomAll() {
   if (UpdateCaptureMinMaxTimestamps()) {
     m_MaxTimeUs =
-        MicroSecondsFromTicks(capture_min_timestamp_, capture_max_timestamp_);
+        TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
     m_MinTimeUs = m_MaxTimeUs - (GNumHistorySeconds * 1000 * 1000);
     if (m_MinTimeUs < 0) m_MinTimeUs = 0;
 
@@ -139,8 +145,8 @@ void TimeGraph::ZoomAll() {
 }
 
 void TimeGraph::Zoom(TickType min, TickType max) {
-  double start = MicroSecondsFromTicks(capture_min_timestamp_, min);
-  double end = MicroSecondsFromTicks(capture_min_timestamp_, max);
+  double start = TicksToMicroseconds(capture_min_timestamp_, min);
+  double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
   double mid = start + ((end - start) / 2.0);
   double extent = 1.1 * (end - start) / 2.0;
@@ -150,15 +156,14 @@ void TimeGraph::Zoom(TickType min, TickType max) {
 
 //-----------------------------------------------------------------------------
 void TimeGraph::Zoom(const TextBox* a_TextBox) {
-  const Timer& timer = a_TextBox->GetTimer();
-  Zoom(timer.m_Start, timer.m_End);
+  const TimerInfo& timer_info = a_TextBox->GetTimerInfo();
+  Zoom(timer_info.start(), timer_info.end());
 }
 
 //-----------------------------------------------------------------------------
 double TimeGraph::GetCaptureTimeSpanUs() {
   if (UpdateCaptureMinMaxTimestamps()) {
-    return MicroSecondsFromTicks(capture_min_timestamp_,
-                                 capture_max_timestamp_);
+    return TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
   }
 
   return 0;
@@ -223,12 +228,12 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, TickType min,
     return;
   }
 
-  double start = MicroSecondsFromTicks(capture_min_timestamp_, min);
-  double end = MicroSecondsFromTicks(capture_min_timestamp_, max);
+  double start = TicksToMicroseconds(capture_min_timestamp_, min);
+  double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
   double CurrentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
 
-  if (vis_type == VisibilityType::kFullyVisible && CurrentTimeWindowUs < (end - start)){
+  if (vis_type == VisibilityType::kFullyVisible && CurrentTimeWindowUs < (end - start)) {
     Zoom(min, max);
     return;
   }
@@ -249,22 +254,22 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, TickType min,
 void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type,
                                          const TextBox* text_box,
                                          double distance) {
-  HorizontallyMoveIntoView(vis_type, text_box->GetTimer().m_Start,
-                           text_box->GetTimer().m_End, distance);
+  HorizontallyMoveIntoView(vis_type, text_box->GetTimerInfo().start(),
+                           text_box->GetTimerInfo().end(), distance);
 }
 
 void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
   CHECK(text_box != nullptr);
-  const Timer& timer = text_box->GetTimer();
-  auto thread_track = GetOrCreateThreadTrack(timer.m_TID);
-  auto text_box_y_position = thread_track->GetYFromDepth(timer.m_Depth);
+  const TimerInfo& timer_info = text_box->GetTimerInfo();
+  auto thread_track = GetOrCreateThreadTrack(timer_info.thread_id());
+  auto text_box_y_position = thread_track->GetYFromDepth(timer_info.depth());
 
   float world_top_left_y = m_Canvas->GetWorldTopLeftY();
-  float min_world_top_left_y =
+  float min_world_top_left_y = 
       text_box_y_position + m_Layout.GetSpaceBetweenTracks() + m_Layout.GetTopMargin();
-  float max_world_top_left_y = text_box_y_position + m_Canvas->GetWorldHeight() -
+  float max_world_top_left_y = text_box_y_position + m_Canvas->GetWorldHeight() - 
                               GetTextBoxHeight() - m_Layout.GetBottomMargin();
-  CHECK (min_world_top_left_y <= max_world_top_left_y);
+  CHECK(min_world_top_left_y <= max_world_top_left_y);
   world_top_left_y = std::min(world_top_left_y, max_world_top_left_y);
   world_top_left_y = std::max(world_top_left_y, min_world_top_left_y);
   m_Canvas->SetWorldTopLeftY(world_top_left_y);
@@ -293,52 +298,50 @@ double TimeGraph::GetTimeIntervalMicro(double a_Ratio) {
 }
 
 //-----------------------------------------------------------------------------
-uint64_t TimeGraph::GetGpuTimelineHash(const Timer& timer) const {
-  return timer.m_UserData[1];
-}
-
-//-----------------------------------------------------------------------------
-void TimeGraph::ProcessTimer(const Timer& a_Timer) {
-  if (a_Timer.m_End > capture_max_timestamp_) {
-    capture_max_timestamp_ = a_Timer.m_End;
+void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
+  if (timer_info.end() > capture_max_timestamp_) {
+    capture_max_timestamp_ = timer_info.end();
   }
 
-  switch (a_Timer.m_Type) {
-    case Timer::CORE_ACTIVITY:
+  switch (timer_info.type()) {
+    case TimerInfo::kCoreActivity:
       Capture::GHasContextSwitches = true;
       break;
     default:
       break;
   }
 
-  if (a_Timer.m_FunctionAddress > 0) {
-    Function* func = Capture::GTargetProcess->GetFunctionFromAddress(
-        a_Timer.m_FunctionAddress);
+  if (timer_info.function_address() > 0) {
+    FunctionInfo* func = Capture::GTargetProcess->GetFunctionFromAddress(
+        timer_info.function_address());
     if (func != nullptr) {
-      ++Capture::GFunctionCountMap[a_Timer.m_FunctionAddress];
-      FunctionUtils::UpdateStats(func, a_Timer);
+      ++Capture::GFunctionCountMap[timer_info.function_address()];
+      FunctionUtils::UpdateStats(func, timer_info);
     }
   }
 
-  if (a_Timer.m_Type == Timer::GPU_ACTIVITY) {
-    uint64_t timeline_hash = GetGpuTimelineHash(a_Timer);
+  if (timer_info.type() == TimerInfo::kGpuActivity) {
+    uint64_t timeline_hash = timer_info.timeline_hash();
     std::shared_ptr<GpuTrack> track = GetOrCreateGpuTrack(timeline_hash);
-    track->OnTimer(a_Timer);
+    track->OnTimer(timer_info);
   } else {
-    std::shared_ptr<ThreadTrack> track = GetOrCreateThreadTrack(a_Timer.m_TID);
-    if (a_Timer.m_Type == Timer::INTROSPECTION) {
+    std::shared_ptr<ThreadTrack> track =
+        GetOrCreateThreadTrack(timer_info.thread_id());
+    if (timer_info.type() == TimerInfo::kIntrospection) {
       const Color kGreenIntrospection(87, 166, 74, 255);
       track->SetColor(kGreenIntrospection);
     }
 
-    if (a_Timer.m_Type != Timer::CORE_ACTIVITY) {
-      track->OnTimer(a_Timer);
-      ++m_ThreadCountMap[a_Timer.m_TID];
+    if (timer_info.type() != TimerInfo::kCoreActivity) {
+      track->OnTimer(timer_info);
+      ++m_ThreadCountMap[timer_info.thread_id()];
     } else {
-      scheduler_track_->OnTimer(a_Timer);
-      cores_seen_.insert(a_Timer.m_Processor);
+      scheduler_track_->OnTimer(timer_info);
+      cores_seen_.insert(timer_info.processor());
     }
   }
+
+  NeedsUpdate();
 }
 
 //-----------------------------------------------------------------------------
@@ -390,7 +393,7 @@ float TimeGraph::GetThreadTotalHeight() { return std::abs(min_y_); }
 float TimeGraph::GetWorldFromTick(TickType a_Time) const {
   if (m_TimeWindowUs > 0) {
     double start =
-        MicroSecondsFromTicks(capture_min_timestamp_, a_Time) - m_MinTimeUs;
+        TicksToMicroseconds(capture_min_timestamp_, a_Time) - m_MinTimeUs;
     double normalizedStart = start / m_TimeWindowUs;
     float pos = float(m_WorldStartX + normalizedStart * m_WorldWidth);
     return pos;
@@ -406,7 +409,7 @@ float TimeGraph::GetWorldFromUs(double a_Micros) const {
 
 //-----------------------------------------------------------------------------
 double TimeGraph::GetUsFromTick(TickType time) const {
-  return MicroSecondsFromTicks(capture_min_timestamp_, time) - m_MinTimeUs;
+  return TicksToMicroseconds(capture_min_timestamp_, time) - m_MinTimeUs;
 }
 
 //-----------------------------------------------------------------------------
@@ -417,12 +420,12 @@ TickType TimeGraph::GetTickFromWorld(float a_WorldX) {
           : 0;
   double timeStamp = GetTime(ratio);
 
-  return capture_min_timestamp_ + TicksFromMicroseconds(timeStamp);
+  return capture_min_timestamp_ + MicrosecondsToTicks(timeStamp);
 }
 
 //-----------------------------------------------------------------------------
 TickType TimeGraph::GetTickFromUs(double a_MicroSeconds) const {
-  return capture_min_timestamp_ + TicksFromMicroseconds(a_MicroSeconds);
+  return capture_min_timestamp_ + MicrosecondsToTicks(a_MicroSeconds);
 }
 
 //-----------------------------------------------------------------------------
@@ -451,8 +454,8 @@ const TextBox* TimeGraph::FindPreviousFunctionCall(
       if (!block.Intersects(previous_box_time, current_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
-        auto box_time = box.GetTimer().m_End;
-        if ((box.GetTimer().m_FunctionAddress == function_address) &&
+        auto box_time = box.GetTimerInfo().end();
+        if ((box.GetTimerInfo().function_address() == function_address) &&
             (box_time < current_time) && (previous_box_time < box_time)) {
           previous_box = &box;
           previous_box_time = box_time;
@@ -476,8 +479,8 @@ const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_address,
       if (!block.Intersects(current_time, next_box_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
         TextBox& box = block[i];
-        auto box_time = box.GetTimer().m_End;
-        if ((box.GetTimer().m_FunctionAddress == function_address) &&
+        auto box_time = box.GetTimerInfo().end();
+        if ((box.GetTimerInfo().function_address() == function_address) &&
             (box_time > current_time) && (next_box_time > box_time)) {
           next_box = &box;
           next_box_time = box_time;
@@ -541,7 +544,8 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
 
   selected_callstack_events_per_thread_.clear();
   for (CallstackEvent& event : selected_callstack_events) {
-    selected_callstack_events_per_thread_[event.m_TID].emplace_back(event);
+    selected_callstack_events_per_thread_[event.thread_id()].emplace_back(
+        event);
     selected_callstack_events_per_thread_[0].emplace_back(event);
   }
 
@@ -552,7 +556,7 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
   samplingProfiler->SetGenerateSummary(a_TID == 0);
 
   for (CallstackEvent& event : selected_callstack_events) {
-    if (Capture::GSamplingProfiler->GetCallStack(event.m_Id)) {
+    if (Capture::GSamplingProfiler->GetCallStack(event.callstack_hash())) {
       samplingProfiler->AddCallStack(event);
     }
   }
@@ -591,17 +595,17 @@ namespace {
 std::string GetLabelBetweenIterators(const TextBox* box_a,
                                      const TextBox* box_b) {
   std::string function_from =
-      Capture::GAddressToFunctionName[box_a->GetTimer().m_FunctionAddress];
+      Capture::GAddressToFunctionName[box_a->GetTimerInfo().function_address()];
   std::string function_to =
-      Capture::GAddressToFunctionName[box_b->GetTimer().m_FunctionAddress];
+      Capture::GAddressToFunctionName[box_b->GetTimerInfo().function_address()];
   return absl::StrFormat("%s to %s", function_from, function_to);
 }
 
 std::string GetTimeString(const TextBox* box_a, const TextBox* box_b) {
-  double micros = MicroSecondsFromTicks(box_a->GetTimer().m_Start,
-                                        box_b->GetTimer().m_Start);
+  absl::Duration duration = TicksToDuration(box_a->GetTimerInfo().start(),
+                                            box_b->GetTimerInfo().start());
 
-  return GetPrettyTime(micros * 0.001);
+  return GetPrettyTime(duration);
 }
 
 Color GetIteratorBoxColor(uint64_t index) {
@@ -653,8 +657,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
   std::sort(boxes.begin(), boxes.end(),
             [](const std::pair<uint64_t, const TextBox*>& box_a,
                const std::pair<uint64_t, const TextBox*>& box_b) -> bool {
-              return box_a.second->GetTimer().m_Start <
-                     box_b.second->GetTimer().m_Start;
+              return box_a.second->GetTimerInfo().start() <
+                     box_b.second->GetTimerInfo().start();
             });
 
   // We will need the world x coordinates for the timers multiple times, so
@@ -672,9 +676,9 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
 
   // Draw lines for iterators.
   for (const auto& box : boxes) {
-    const Timer& timer = box.second->GetTimer();
+    const TimerInfo& timer_info = box.second->GetTimerInfo();
 
-    double start_us = GetUsFromTick(timer.m_Start);
+    double start_us = GetUsFromTick(timer_info.start());
     double normalized_start = start_us * inv_time_window;
     float world_timer_x =
         static_cast<float>(world_start_x + normalized_start * world_width);
@@ -684,7 +688,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
 
     canvas->GetBatcher()->AddVerticalLine(
         pos, -world_height, GlCanvas::Z_VALUE_OVERLAY,
-        GetThreadColor(timer.m_TID), PickingID::LINE, nullptr);
+        GetThreadColor(timer_info.thread_id()), PickingID::LINE, nullptr);
   }
 
   // Draw boxes with timings between iterators.
@@ -908,8 +912,8 @@ void TimeGraph::JumpToNeighborBox(TextBox* from, JumpDirection jump_direction,
   if (!from) {
     return;
   }
-  auto function_address = from->GetTimer().m_FunctionAddress;
-  auto current_time = from->GetTimer().m_End;
+  auto function_address = from->GetTimerInfo().function_address();
+  auto current_time = from->GetTimerInfo().end();
   if (jump_direction == JumpDirection::kPrevious) {
     if (jump_scope == JumpScope::kSameThread) {
       goal = FindPrevious(from);
@@ -939,44 +943,44 @@ void TimeGraph::JumpToNeighborBox(TextBox* from, JumpDirection jump_direction,
 
 const TextBox* TimeGraph::FindPrevious(TextBox* from) {
   CHECK(from);
-  const Timer& timer = from->GetTimer();
-  if (timer.m_Type == Timer::GPU_ACTIVITY) {
-    return GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetLeft(from);
+  const TimerInfo& timer_info = from->GetTimerInfo();
+  if (timer_info.type() == TimerInfo::kGpuActivity) {
+    return GetOrCreateGpuTrack(timer_info.timeline_hash())->GetLeft(from);
   } else {
-    return GetOrCreateThreadTrack(timer.m_TID)->GetLeft(from);
+    return GetOrCreateThreadTrack(timer_info.thread_id())->GetLeft(from);
   }
   return nullptr;
 }
 
 const TextBox* TimeGraph::FindNext(TextBox* from) {
   CHECK(from);
-  const Timer& timer = from->GetTimer();
-  if (timer.m_Type == Timer::GPU_ACTIVITY) {
-    return GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetRight(from);
+  const TimerInfo& timer_info = from->GetTimerInfo();
+  if (timer_info.type() == TimerInfo::kGpuActivity) {
+    return GetOrCreateGpuTrack(timer_info.timeline_hash())->GetRight(from);
   } else {
-    return GetOrCreateThreadTrack(timer.m_TID)->GetRight(from);
+    return GetOrCreateThreadTrack(timer_info.thread_id())->GetRight(from);
   }
   return nullptr;
 }
 
 const TextBox* TimeGraph::FindTop(TextBox* from) {
   CHECK(from);
-  const Timer& timer = from->GetTimer();
-  if (timer.m_Type == Timer::GPU_ACTIVITY) {
-    return GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetUp(from);
+  const TimerInfo& timer_info = from->GetTimerInfo();
+  if (timer_info.type() == TimerInfo::kGpuActivity) {
+    return GetOrCreateGpuTrack(timer_info.timeline_hash())->GetUp(from);
   } else {
-    return GetOrCreateThreadTrack(timer.m_TID)->GetUp(from);
+    return GetOrCreateThreadTrack(timer_info.thread_id())->GetUp(from);
   }
   return nullptr;
 }
 
 const TextBox* TimeGraph::FindDown(TextBox* from) {
   CHECK(from);
-  const Timer& timer = from->GetTimer();
-  if (timer.m_Type == Timer::GPU_ACTIVITY) {
-    return GetOrCreateGpuTrack(GetGpuTimelineHash(timer))->GetDown(from);
+  const TimerInfo& timer_info = from->GetTimerInfo();
+  if (timer_info.type() == TimerInfo::kGpuActivity) {
+    return GetOrCreateGpuTrack(timer_info.timeline_hash())->GetDown(from);
   } else {
-    return GetOrCreateThreadTrack(timer.m_TID)->GetDown(from);
+    return GetOrCreateThreadTrack(timer_info.thread_id())->GetDown(from);
   }
   return nullptr;
 }
@@ -989,15 +993,15 @@ void TimeGraph::DrawText(GlCanvas* canvas) {
 }
 
 bool TimeGraph::IsFullyVisible(TickType min, TickType max) const {
-  double start = MicroSecondsFromTicks(capture_min_timestamp_, min);
-  double end = MicroSecondsFromTicks(capture_min_timestamp_, max);
+  double start = TicksToMicroseconds(capture_min_timestamp_, min);
+  double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
   return start > m_MinTimeUs && end < m_MaxTimeUs;
 }
 
 bool TimeGraph::IsPartlyVisible(TickType min, TickType max) const {
-  double start = MicroSecondsFromTicks(capture_min_timestamp_, min);
-  double end = MicroSecondsFromTicks(capture_min_timestamp_, max);
+  double start = TicksToMicroseconds(capture_min_timestamp_, min);
+  double end = TicksToMicroseconds(capture_min_timestamp_, max);
 
   double startUs = m_MinTimeUs;
 
@@ -1009,12 +1013,12 @@ bool TimeGraph::IsPartlyVisible(TickType min, TickType max) const {
 }
 
 bool TimeGraph::IsVisible(VisibilityType vis_type, TickType min, TickType max) const {
-  switch(vis_type) {
+  switch (vis_type) {
     case VisibilityType::kPartlyVisible:
       return IsPartlyVisible(min, max);
     case VisibilityType::kFullyVisible:
       return IsFullyVisible(min, max);
     default:
-      return false;   
+      return false;
   }
 }

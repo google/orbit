@@ -9,6 +9,9 @@
 
 #include "LinuxTracingBuffer.h"
 
+using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::LinuxAddressInfo;
+
 TEST(LinuxTracingBuffer, Empty) {
   LinuxTracingBuffer buffer;
 
@@ -190,8 +193,21 @@ TEST(LinuxTracingBuffer, Callstacks) {
 TEST(LinuxTracingBuffer, HashedCallstacks) {
   LinuxTracingBuffer buffer;
 
-  buffer.RecordHashedCallstack(CallstackEvent(11, 12, 13));
-  buffer.RecordHashedCallstack(CallstackEvent(21, 22, 23));
+  {
+    CallstackEvent event;
+    event.set_time(11);
+    event.set_callstack_hash(12);
+    event.set_thread_id(13);
+    buffer.RecordHashedCallstack(std::move(event));
+  }
+
+  {
+    CallstackEvent event;
+    event.set_time(21);
+    event.set_callstack_hash(22);
+    event.set_thread_id(23);
+    buffer.RecordHashedCallstack(std::move(event));
+  }
 
   std::vector<CallstackEvent> callstacks;
   EXPECT_TRUE(buffer.ReadAllHashedCallstacks(&callstacks));
@@ -199,15 +215,21 @@ TEST(LinuxTracingBuffer, HashedCallstacks) {
 
   EXPECT_EQ(callstacks.size(), 2);
 
-  EXPECT_EQ(callstacks[0].m_Time, 11);
-  EXPECT_EQ(callstacks[0].m_Id, 12);
-  EXPECT_EQ(callstacks[0].m_TID, 13);
+  EXPECT_EQ(callstacks[0].time(), 11);
+  EXPECT_EQ(callstacks[0].callstack_hash(), 12);
+  EXPECT_EQ(callstacks[0].thread_id(), 13);
 
-  EXPECT_EQ(callstacks[1].m_Time, 21);
-  EXPECT_EQ(callstacks[1].m_Id, 22);
-  EXPECT_EQ(callstacks[1].m_TID, 23);
+  EXPECT_EQ(callstacks[1].time(), 21);
+  EXPECT_EQ(callstacks[1].callstack_hash(), 22);
+  EXPECT_EQ(callstacks[1].thread_id(), 23);
 
-  buffer.RecordHashedCallstack(CallstackEvent(31, 32, 33));
+  {
+    CallstackEvent event;
+    event.set_time(31);
+    event.set_callstack_hash(32);
+    event.set_thread_id(33);
+    buffer.RecordHashedCallstack(std::move(event));
+  }
 
   EXPECT_TRUE(buffer.ReadAllHashedCallstacks(&callstacks));
   EXPECT_EQ(callstacks.size(), 1);
@@ -215,21 +237,29 @@ TEST(LinuxTracingBuffer, HashedCallstacks) {
   EXPECT_FALSE(buffer.ReadAllHashedCallstacks(&callstacks));
   EXPECT_EQ(callstacks.size(), 1);
 
-  EXPECT_EQ(callstacks[0].m_Time, 31);
-  EXPECT_EQ(callstacks[0].m_Id, 32);
-  EXPECT_EQ(callstacks[0].m_TID, 33);
+  EXPECT_EQ(callstacks[0].time(), 31);
+  EXPECT_EQ(callstacks[0].callstack_hash(), 32);
+  EXPECT_EQ(callstacks[0].thread_id(), 33);
 }
 
 TEST(LinuxTracingBuffer, AddressInfos) {
   LinuxTracingBuffer buffer;
 
   {
-    LinuxAddressInfo address_info{0x11, "module1", "function1", 0x1};
+    LinuxAddressInfo address_info;
+    address_info.set_absolute_address(0x11);
+    address_info.set_module_name("module1");
+    address_info.set_function_name("function1");
+    address_info.set_offset_in_function(0x1);
     buffer.RecordAddressInfo(std::move(address_info));
   }
 
   {
-    LinuxAddressInfo address_info{0x22, "module2", "function2", 0x2};
+    LinuxAddressInfo address_info;
+    address_info.set_absolute_address(0x22);
+    address_info.set_module_name("module2");
+    address_info.set_function_name("function2");
+    address_info.set_offset_in_function(0x2);
     buffer.RecordAddressInfo(std::move(address_info));
   }
 
@@ -239,18 +269,22 @@ TEST(LinuxTracingBuffer, AddressInfos) {
 
   EXPECT_EQ(address_infos.size(), 2);
 
-  EXPECT_EQ(address_infos[0].address, 0x11);
-  EXPECT_EQ(address_infos[0].module_name, "module1");
-  EXPECT_EQ(address_infos[0].function_name, "function1");
-  EXPECT_EQ(address_infos[0].offset_in_function, 0x1);
+  EXPECT_EQ(address_infos[0].absolute_address(), 0x11);
+  EXPECT_EQ(address_infos[0].module_name(), "module1");
+  EXPECT_EQ(address_infos[0].function_name(), "function1");
+  EXPECT_EQ(address_infos[0].offset_in_function(), 0x1);
 
-  EXPECT_EQ(address_infos[1].address, 0x22);
-  EXPECT_EQ(address_infos[1].module_name, "module2");
-  EXPECT_EQ(address_infos[1].function_name, "function2");
-  EXPECT_EQ(address_infos[1].offset_in_function, 0x2);
+  EXPECT_EQ(address_infos[1].absolute_address(), 0x22);
+  EXPECT_EQ(address_infos[1].module_name(), "module2");
+  EXPECT_EQ(address_infos[1].function_name(), "function2");
+  EXPECT_EQ(address_infos[1].offset_in_function(), 0x2);
 
   {
-    LinuxAddressInfo address_info{0x33, "module3", "function3", 0x3};
+    LinuxAddressInfo address_info;
+    address_info.set_absolute_address(0x33);
+    address_info.set_module_name("module3");
+    address_info.set_function_name("function3");
+    address_info.set_offset_in_function(0x3);
     buffer.RecordAddressInfo(std::move(address_info));
   }
 
@@ -260,10 +294,10 @@ TEST(LinuxTracingBuffer, AddressInfos) {
   EXPECT_FALSE(buffer.ReadAllAddressInfos(&address_infos));
   EXPECT_EQ(address_infos.size(), 1);
 
-  EXPECT_EQ(address_infos[0].address, 0x33);
-  EXPECT_EQ(address_infos[0].module_name, "module3");
-  EXPECT_EQ(address_infos[0].function_name, "function3");
-  EXPECT_EQ(address_infos[0].offset_in_function, 0x3);
+  EXPECT_EQ(address_infos[0].absolute_address(), 0x33);
+  EXPECT_EQ(address_infos[0].module_name(), "module3");
+  EXPECT_EQ(address_infos[0].function_name(), "function3");
+  EXPECT_EQ(address_infos[0].offset_in_function(), 0x3);
 }
 
 TEST(LinuxTracingBuffer, KeysAndStrings) {
@@ -364,7 +398,13 @@ TEST(LinuxTracingBuffer, Reset) {
     buffer.RecordCallstack(std::move(event));
   }
 
-  buffer.RecordHashedCallstack(CallstackEvent(11, 12, 13));
+  {
+    CallstackEvent event;
+    event.set_time(11);
+    event.set_callstack_hash(12);
+    event.set_thread_id(13);
+    buffer.RecordHashedCallstack(std::move(event));
+  }
 
   buffer.RecordKeyAndString(42, "str42");
 

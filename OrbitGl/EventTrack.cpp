@@ -9,7 +9,8 @@
 #include "GlCanvas.h"
 #include "PickingManager.h"
 #include "SamplingProfiler.h"
-#include "Utils.h"
+
+using orbit_client_protos::CallstackEvent;
 
 //-----------------------------------------------------------------------------
 EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
@@ -107,7 +108,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
     Fill(selectedColor, kGreenSelection);
     for (const CallstackEvent& event :
          time_graph_->GetSelectedCallstackEvents(m_ThreadId)) {
-      Vec2 pos(time_graph_->GetWorldFromTick(event.m_Time), m_Pos[1]);
+      Vec2 pos(time_graph_->GetWorldFromTick(event.time()), m_Pos[1]);
       batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection,
                                PickingID::LINE);
     }
@@ -247,8 +248,8 @@ std::string EventTrack::GetSampleTooltip(PickingID id) const {
 
   CallstackEvent* callstack_event =
       static_cast<CallstackEvent*>(user_data->custom_data_);
-  auto callstack =
-      Capture::GSamplingProfiler->GetCallStack(callstack_event->m_Id);
+  auto callstack = Capture::GSamplingProfiler->GetCallStack(
+      callstack_event->callstack_hash());
 
   if (!callstack) {
     return unknown_return_text;

@@ -18,6 +18,8 @@
 #include "ScopeTimer.h"
 #include "Utils.h"
 
+using orbit_client_protos::FunctionInfo;
+
 //-----------------------------------------------------------------------------
 Process::Process() {
   m_ID = 0;
@@ -26,7 +28,8 @@ Process::Process() {
 }
 
 //-----------------------------------------------------------------------------
-Function* Process::GetFunctionFromAddress(uint64_t address, bool a_IsExact) {
+FunctionInfo* Process::GetFunctionFromAddress(uint64_t address,
+                                              bool a_IsExact) {
   if (m_Modules.empty()) {
     return nullptr;
   }

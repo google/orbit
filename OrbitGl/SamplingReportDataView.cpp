@@ -16,6 +16,8 @@
 #include "SamplingReport.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_protos::FunctionInfo;
+
 //-----------------------------------------------------------------------------
 SamplingReportDataView::SamplingReportDataView()
     : DataView(DataViewType::SAMPLING), m_CallstackDataView(nullptr) {}
@@ -120,9 +122,9 @@ void SamplingReportDataView::DoSort() {
 }
 
 //-----------------------------------------------------------------------------
-std::vector<Function*> SamplingReportDataView::GetFunctionsFromIndices(
+std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
     const std::vector<int>& a_Indices) {
-  std::set<Function*> functions_set;
+  std::set<FunctionInfo*> functions_set;
   if (Capture::GTargetProcess != nullptr) {
     for (int index : a_Indices) {
       SampledFunction& sampled_function = GetSampledFunction(index);
@@ -132,14 +134,14 @@ std::vector<Function*> SamplingReportDataView::GetFunctionsFromIndices(
                 sampled_function.m_Address, false);
       }
 
-      Function* function = sampled_function.m_Function;
+      FunctionInfo* function = sampled_function.m_Function;
       if (function != nullptr) {
         functions_set.insert(function);
       }
     }
   }
 
-  return std::vector<Function*>(functions_set.begin(), functions_set.end());
+  return std::vector<FunctionInfo*>(functions_set.begin(), functions_set.end());
 }
 
 //-----------------------------------------------------------------------------
@@ -179,12 +181,12 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   bool enable_select = false;
   bool enable_unselect = false;
 
-  std::vector<Function*> selected_functions =
+  std::vector<FunctionInfo*> selected_functions =
       GetFunctionsFromIndices(a_SelectedIndices);
 
   bool enable_disassembly = !selected_functions.empty();
 
-  for (const Function* function : selected_functions) {
+  for (const FunctionInfo* function : selected_functions) {
     enable_select |= !FunctionUtils::IsSelected(*function);
     enable_unselect |= FunctionUtils::IsSelected(*function);
   }
@@ -210,11 +212,11 @@ void SamplingReportDataView::OnContextMenu(
     const std::string& a_Action, int a_MenuIndex,
     const std::vector<int>& a_ItemIndices) {
   if (a_Action == MENU_ACTION_SELECT) {
-    for (Function* function : GetFunctionsFromIndices(a_ItemIndices)) {
+    for (FunctionInfo* function : GetFunctionsFromIndices(a_ItemIndices)) {
       FunctionUtils::Select(function);
     }
   } else if (a_Action == MENU_ACTION_UNSELECT) {
-    for (Function* function : GetFunctionsFromIndices(a_ItemIndices)) {
+    for (FunctionInfo* function : GetFunctionsFromIndices(a_ItemIndices)) {
       FunctionUtils::UnSelect(function);
     }
   } else if (a_Action == MENU_ACTION_MODULES_LOAD) {
@@ -227,7 +229,7 @@ void SamplingReportDataView::OnContextMenu(
     GOrbitApp->LoadModules(Capture::GTargetProcess->GetID(), modules);
   } else if (a_Action == MENU_ACTION_DISASSEMBLY) {
     int32_t pid = Capture::GTargetProcess->GetID();
-    for (Function* function : GetFunctionsFromIndices(a_ItemIndices)) {
+    for (FunctionInfo* function : GetFunctionsFromIndices(a_ItemIndices)) {
       GOrbitApp->Disassemble(pid, *function);
     }
   } else {

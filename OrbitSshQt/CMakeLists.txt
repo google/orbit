@@ -20,12 +20,19 @@ target_sources(
   include/OrbitSshQt/Tunnel.h
   include/OrbitSshQt/ScopedConnection.h
   include/OrbitSshQt/SftpChannel.h
-  include/OrbitSshQt/SftpOperation.h
+  include/OrbitSshQt/SftpCopyToLocalOperation.h
+  include/OrbitSshQt/SftpCopyToRemoteOperation.h
   include/OrbitSshQt/Session.h)
 
 target_sources(
   OrbitSshQt
-  PRIVATE Error.cpp Session.cpp Tunnel.cpp Task.cpp SftpChannel.cpp SftpOperation.cpp)
+  PRIVATE Error.cpp
+          Session.cpp
+          Tunnel.cpp
+          Task.cpp
+          SftpChannel.cpp
+          SftpCopyToLocalOperation.cpp
+          SftpCopyToRemoteOperation.cpp)
 
 target_link_libraries(OrbitSshQt PUBLIC OrbitBase OrbitSsh Qt5::Core Qt5::Network abseil::abseil)
 set_target_properties(OrbitSshQt PROPERTIES AUTOMOC ON)

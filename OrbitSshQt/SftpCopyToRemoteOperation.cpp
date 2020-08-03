@@ -2,22 +2,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitSshQt/SftpOperation.h"
+#include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 
 #include "OrbitBase/Logging.h"
 
 namespace OrbitSshQt {
 
-SftpOperation::SftpOperation(Session* session, SftpChannel* channel)
+SftpCopyToRemoteOperation::SftpCopyToRemoteOperation(Session* session,
+                                                     SftpChannel* channel)
     : session_(session), channel_(channel) {
   about_to_shutdown_connection_.emplace(
       QObject::connect(channel_, &SftpChannel::aboutToShutdown, this,
-                       &SftpOperation::HandleChannelShutdown));
+                       &SftpCopyToRemoteOperation::HandleChannelShutdown));
 }
 
-void SftpOperation::CopyFileToRemote(std::filesystem::path source,
-                                     std::filesystem::path destination,
-                                     FileMode destination_mode) {
+void SftpCopyToRemoteOperation::CopyFileToRemote(
+    std::filesystem::path source, std::filesystem::path destination,
+    FileMode destination_mode) {
   source_ = std::move(source);
   destination_ = std::move(destination);
   destination_mode_ = destination_mode;
@@ -26,17 +27,18 @@ void SftpOperation::CopyFileToRemote(std::filesystem::path source,
   OnEvent();
 }
 
-outcome::result<void> SftpOperation::shutdown() {
+outcome::result<void> SftpCopyToRemoteOperation::shutdown() {
   data_event_connection_ = std::nullopt;
   return outcome::success();
 }
 
-outcome::result<void> SftpOperation::run() { return startup(); }
+outcome::result<void> SftpCopyToRemoteOperation::run() { return startup(); }
 
-outcome::result<void> SftpOperation::startup() {
+outcome::result<void> SftpCopyToRemoteOperation::startup() {
   if (!data_event_connection_) {
-    data_event_connection_.emplace(QObject::connect(
-        channel_, &SftpChannel::dataEvent, this, &SftpOperation::OnEvent));
+    data_event_connection_.emplace(
+        QObject::connect(channel_, &SftpChannel::dataEvent, this,
+                         &SftpCopyToRemoteOperation::OnEvent));
   }
 
   switch (CurrentState()) {
@@ -81,6 +83,7 @@ outcome::result<void> SftpOperation::startup() {
           break;
         }
       }
+      ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kRemoteFileWritten: {
       OUTCOME_TRY(sftp_file_->Close());
@@ -103,7 +106,7 @@ outcome::result<void> SftpOperation::startup() {
   return outcome::success();
 }
 
-void SftpOperation::SetError(std::error_code e) {
+void SftpCopyToRemoteOperation::SetError(std::error_code e) {
   data_event_connection_ = std::nullopt;
   about_to_shutdown_connection_ = std::nullopt;
 
@@ -114,11 +117,11 @@ void SftpOperation::SetError(std::error_code e) {
   local_file_.close();
 }
 
-void SftpOperation::HandleChannelShutdown() {
+void SftpCopyToRemoteOperation::HandleChannelShutdown() {
   SetError(Error::kUncleanChannelShutdown);
 }
 
-void SftpOperation::HandleEagain() {
+void SftpCopyToRemoteOperation::HandleEagain() {
   if (session_) {
     session_->HandleEagain();
   }

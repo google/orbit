@@ -12,6 +12,8 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_protos::FunctionInfo;
+
 //----------------------------------------------------------------------------
 CallStackDataView::CallStackDataView()
     : DataView(DataViewType::CALLSTACK), m_CallStack(nullptr) {}
@@ -43,7 +45,7 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
   }
 
   CallStackDataViewFrame frame = GetFrameFromRow(a_Row);
-  Function* function = frame.function;
+  FunctionInfo* function = frame.function;
   Module* module = frame.module.get();
 
   switch (a_Column) {
@@ -96,7 +98,7 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
   bool enable_disassembly = false;
   for (int index : a_SelectedIndices) {
     CallStackDataViewFrame frame = GetFrameFromRow(index);
-    Function* function = frame.function;
+    FunctionInfo* function = frame.function;
     Module* module = frame.module.get();
 
     if (frame.function != nullptr) {
@@ -134,14 +136,14 @@ void CallStackDataView::OnContextMenu(const std::string& a_Action,
   } else if (a_Action == MENU_ACTION_SELECT) {
     for (int i : a_ItemIndices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
-      Function* function = frame.function;
+      FunctionInfo* function = frame.function;
       FunctionUtils::Select(function);
     }
 
   } else if (a_Action == MENU_ACTION_UNSELECT) {
     for (int i : a_ItemIndices) {
       CallStackDataViewFrame frame = GetFrameFromRow(i);
-      Function* function = frame.function;
+      FunctionInfo* function = frame.function;
       FunctionUtils::UnSelect(function);
     }
 
@@ -165,7 +167,7 @@ void CallStackDataView::DoFilter() {
 
   for (size_t i = 0; i < m_CallStack->m_Data.size(); ++i) {
     CallStackDataViewFrame frame = GetFrameFromIndex(i);
-    Function* function = frame.function;
+    FunctionInfo* function = frame.function;
     std::string name =
         ToLower(function != nullptr ? FunctionUtils::GetDisplayName(*function)
                                     : frame.fallback_name);
@@ -212,7 +214,7 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
   }
 
   uint64_t address = m_CallStack->m_Data[index_in_callstack];
-  Function* function = nullptr;
+  FunctionInfo* function = nullptr;
   std::shared_ptr<Module> module = nullptr;
 
   if (Capture::GTargetProcess != nullptr) {

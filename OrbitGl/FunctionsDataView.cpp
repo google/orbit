@@ -14,6 +14,8 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_protos::FunctionInfo;
+
 //-----------------------------------------------------------------------------
 FunctionsDataView::FunctionsDataView() : DataView(DataViewType::FUNCTIONS) {}
 
@@ -42,7 +44,7 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
     return "";
   }
 
-  Function& function = GetFunction(a_Row);
+  FunctionInfo& function = GetFunction(a_Row);
 
   switch (a_Column) {
     case COLUMN_SELECTED:
@@ -90,7 +92,7 @@ void FunctionsDataView::DoSort() {
   bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  const std::vector<std::shared_ptr<Function>>& functions =
+  const std::vector<std::shared_ptr<FunctionInfo>>& functions =
       Capture::GTargetProcess->GetFunctions();
 
   switch (m_SortingColumn) {
@@ -136,7 +138,7 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
   bool enable_select = false;
   bool enable_unselect = false;
   for (int index : a_SelectedIndices) {
-    const Function& function = GetFunction(index);
+    const FunctionInfo& function = GetFunction(index);
     enable_select |= !FunctionUtils::IsSelected(function);
     enable_unselect |= FunctionUtils::IsSelected(function);
   }
@@ -187,7 +189,7 @@ void FunctionsDataView::DoFilter() {
 #else
   // TODO: port parallel filtering
   std::vector<uint32_t> indices;
-  const std::vector<std::shared_ptr<Function>>& functions =
+  const std::vector<std::shared_ptr<FunctionInfo>>& functions =
       Capture::GTargetProcess->GetFunctions();
   for (size_t i = 0; i < functions.size(); ++i) {
     auto& function = functions[i];
@@ -217,7 +219,7 @@ void FunctionsDataView::DoFilter() {
 //-----------------------------------------------------------------------------
 void FunctionsDataView::ParallelFilter() {
 #ifdef _WIN32
-  const std::vector<std::shared_ptr<Function>>& functions =
+  const std::vector<std::shared_ptr<FunctionInfo>>& functions =
       Capture::GTargetProcess->GetFunctions();
   const auto prio = oqpi::task_priority::normal;
   auto numWorkers = oqpi_tk::scheduler().workersCount(prio);
@@ -271,9 +273,9 @@ void FunctionsDataView::OnDataChanged() {
 }
 
 //-----------------------------------------------------------------------------
-Function& FunctionsDataView::GetFunction(int a_Row) const {
+FunctionInfo& FunctionsDataView::GetFunction(int a_Row) const {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
-  const std::vector<std::shared_ptr<Function>>& functions =
+  const std::vector<std::shared_ptr<FunctionInfo>>& functions =
       Capture::GTargetProcess->GetFunctions();
   return *functions[m_Indices[a_Row]];
 }

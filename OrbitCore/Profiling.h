@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_PROFILING_H_
+#define ORBIT_CORE_PROFILING_H_
 
 #include "BaseTypes.h"
 #include "Platform.h"
@@ -28,12 +29,22 @@ inline TickType OrbitTicks(uint32_t a_Clock = 1 /*CLOCK_MONOTONIC*/) {
   return 1000000000ll * ts.tv_sec + ts.tv_nsec;
 }
 
+inline uint64_t TicksToNanoseconds(TickType start, TickType end) {
+  return end - start;
+}
+
+inline absl::Duration TicksToDuration(TickType start, TickType end) {
+  return absl::Nanoseconds(TicksToNanoseconds(start, end));
+}
+
 //-----------------------------------------------------------------------------
-inline double MicroSecondsFromTicks(TickType a_Start, TickType a_End) {
+inline double TicksToMicroseconds(TickType a_Start, TickType a_End) {
   return double((a_End - a_Start)) * 0.001;
 }
 
 //-----------------------------------------------------------------------------
-inline TickType TicksFromMicroseconds(double a_Micros) {
+inline TickType MicrosecondsToTicks(double a_Micros) {
   return static_cast<TickType>(a_Micros * 1000);
 }
+
+#endif  // ORBIT_CORE_PROFILING_H_

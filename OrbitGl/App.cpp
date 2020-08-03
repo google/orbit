@@ -57,6 +57,11 @@
 
 ABSL_DECLARE_FLAG(bool, devmode);
 
+using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_protos::TimerInfo;
+
 std::unique_ptr<OrbitApp> GOrbitApp;
 float GFontSize;
 bool DoZoom = false;
@@ -105,7 +110,9 @@ void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
   }
 }
 
-void OrbitApp::OnTimer(Timer timer) { GCurrentTimeGraph->ProcessTimer(timer); }
+void OrbitApp::OnTimer(const TimerInfo& timer_info) {
+  GCurrentTimeGraph->ProcessTimer(timer_info);
+}
 
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_->AddIfNotPresent(key, std::move(str));
@@ -120,9 +127,10 @@ void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
     ERROR("GSamplingProfiler is null, ignoring callstack event.");
     return;
   }
-  Capture::GSamplingProfiler->AddHashedCallStack(callstack_event);
+  Capture::GSamplingProfiler->AddCallStack(callstack_event);
   GEventTracer.GetEventBuffer().AddCallstackEvent(
-      callstack_event.m_Time, callstack_event.m_Id, callstack_event.m_TID);
+      callstack_event.time(), callstack_event.callstack_hash(),
+      callstack_event.thread_id());
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
@@ -130,7 +138,7 @@ void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
 }
 
 void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
-  uint64_t address = address_info.address;
+  uint64_t address = address_info.absolute_address();
   Capture::GAddressInfos.emplace(address, std::move(address_info));
 }
 
@@ -315,7 +323,7 @@ void OrbitApp::RefreshCaptureView() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::Disassemble(int32_t pid, const Function& function) {
+void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   thread_pool_->Schedule([this, pid, function] {
     auto result = process_manager_->LoadProcessMemory(
         pid, FunctionUtils::GetAbsoluteAddress(function), function.size());
@@ -469,7 +477,7 @@ std::string OrbitApp::GetCaptureFileName() {
 std::string OrbitApp::GetCaptureTime() {
   double time =
       GCurrentTimeGraph ? GCurrentTimeGraph->GetCaptureTimeSpanUs() : 0;
-  return GetPrettyTime(time * 0.001);
+  return GetPrettyTime(absl::Microseconds(time));
 }
 
 //-----------------------------------------------------------------------------
@@ -591,7 +599,7 @@ bool OrbitApp::StartCapture() {
   }
 
   int32_t pid = Capture::GProcessId;
-  std::vector<std::shared_ptr<Function>> selected_functions =
+  std::vector<std::shared_ptr<FunctionInfo>> selected_functions =
       Capture::GSelectedFunctions;
   thread_pool_->Schedule([this, pid, selected_functions] {
     capture_client_->Capture(pid, selected_functions);

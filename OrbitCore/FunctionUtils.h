@@ -8,35 +8,43 @@
 #include <cstdint>
 #include <string>
 
-#include "OrbitFunction.h"
 #include "SamplingProfiler.h"
 #include "ScopeTimer.h"
+#include "capture_data.pb.h"
 
 namespace FunctionUtils {
 
-inline const std::string& GetDisplayName(const Function& func) {
+inline const std::string& GetDisplayName(
+    const orbit_client_protos::FunctionInfo& func) {
   return func.pretty_name().empty() ? func.name() : func.pretty_name();
 }
 
-std::string GetLoadedModuleName(const Function& func);
-uint64_t GetHash(const Function& func);
+std::string GetLoadedModuleName(const orbit_client_protos::FunctionInfo& func);
+uint64_t GetHash(const orbit_client_protos::FunctionInfo& func);
 
 // Calculates and returns the absolute address of the function.
-uint64_t Offset(const Function& func);
-inline uint64_t GetAbsoluteAddress(const Function& func) {
+uint64_t Offset(const orbit_client_protos::FunctionInfo& func);
+inline uint64_t GetAbsoluteAddress(
+    const orbit_client_protos::FunctionInfo& func) {
   return func.address() + func.module_base_address() - func.load_bias();
 }
 
-bool IsOrbitFunc(const Function& func);
+bool IsOrbitFunc(const orbit_client_protos::FunctionInfo& func);
 
-void Select(Function* func);
-void UnSelect(Function* func);
-bool IsSelected(const Function& func);
+std::shared_ptr<orbit_client_protos::FunctionInfo> CreateFunctionInfo(
+    std::string name, std::string pretty_name, uint64_t address,
+    uint64_t load_bias, uint64_t size, std::string file, uint32_t line,
+    std::string loaded_module_path, uint64_t module_base_address);
 
-void Print(const Function& func);
+void Select(orbit_client_protos::FunctionInfo* func);
+void UnSelect(orbit_client_protos::FunctionInfo* func);
+bool IsSelected(const orbit_client_protos::FunctionInfo& func);
 
-bool SetOrbitTypeFromName(Function* func);
-void UpdateStats(Function* func, const Timer& timer);
+void Print(const orbit_client_protos::FunctionInfo& func);
+
+bool SetOrbitTypeFromName(orbit_client_protos::FunctionInfo* func);
+void UpdateStats(orbit_client_protos::FunctionInfo* func,
+                 const orbit_client_protos::TimerInfo& timer_info);
 
 bool IsSelected(const SampledFunction& func);
 

@@ -15,7 +15,8 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/SftpChannel.h"
-#include "OrbitSshQt/SftpOperation.h"
+#include "OrbitSshQt/SftpCopyToLocalOperation.h"
+#include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
 
@@ -45,7 +46,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   std::string greetings = "Hello World! I'm here!";
   std::string_view write_buffer{greetings};
   OrbitSshQt::SftpChannel sftp_channel{&session};
-  OrbitSshQt::SftpOperation sftp_op{&session, &sftp_channel};
+  OrbitSshQt::SftpCopyToRemoteOperation sftp_op{&session, &sftp_channel};
   QEventLoop loop{};
 
   QObject::connect(&client, &QTcpSocket::readyRead, &loop, [&]() {
@@ -168,7 +169,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
         LOG("Sftp channel opened! Starting file copy...");
         sftp_op.CopyFileToRemote(
             temp_file->fileName().toStdString(), "/tmp/temporary_file.txt",
-            OrbitSshQt::SftpOperation::FileMode::kUserWritable);
+            OrbitSshQt::SftpCopyToRemoteOperation::FileMode::kUserWritable);
         CheckCheckpoint(Checkpoint::kSftpChannelStarted);
       });
 
@@ -188,22 +189,24 @@ TEST(OrbitSshQtTests, IntegrationTest) {
 
   // SFTP Operation
 
-  QObject::connect(&sftp_op, &OrbitSshQt::SftpOperation::errorOccurred, &loop,
+  QObject::connect(&sftp_op,
+                   &OrbitSshQt::SftpCopyToRemoteOperation::errorOccurred, &loop,
                    [&](std::error_code e) {
                      loop.quit();
                      FAIL() << absl::StrFormat(
                          "SFTP operation error occurred: %s", e.message());
                    });
 
-  QObject::connect(&sftp_op, &OrbitSshQt::SftpOperation::stopped, &loop, [&]() {
-    LOG("Sftp file copy finished!");
-    sftp_channel.Stop();
-    CheckCheckpoint(Checkpoint::kSftpOperationStopped);
-  });
+  QObject::connect(&sftp_op, &OrbitSshQt::SftpCopyToRemoteOperation::stopped,
+                   &loop, [&]() {
+                     LOG("Sftp file copy finished!");
+                     sftp_channel.Stop();
+                     CheckCheckpoint(Checkpoint::kSftpOperationStopped);
+                   });
 
   session.ConnectToServer(creds);
   LOG("connect to server");
-  QTimer::singleShot(std::chrono::seconds{5}, [&]() {
+  QTimer::singleShot(std::chrono::seconds{5}, &loop, [&]() {
     loop.quit();
     FAIL()
         << "Timeout occurred. The whole integration test should be done in 5 "
@@ -213,6 +216,71 @@ TEST(OrbitSshQtTests, IntegrationTest) {
 
   loop.exec();
   CheckIfAllCheckpointsAreChecked();
+}
+
+TEST(OrbitSshQtTests, CopyToLocalTest) {
+  QEventLoop loop{};
+
+  auto context = OrbitSsh::Context::Create();
+  ASSERT_TRUE(context);
+
+  auto app = QCoreApplication::instance();
+  ASSERT_EQ(app->arguments().size(), 6);
+
+  OrbitSsh::Credentials creds{
+      /* .host = */ app->arguments()[1].toStdString(),
+      /* .port = */ app->arguments()[2].toInt(),
+      /* .user = */ app->arguments()[3].toStdString(),
+      /* .known_hosts_path = */
+      std::filesystem::path{app->arguments()[4].toStdString()},
+      /* .key_path = */
+      std::filesystem::path{app->arguments()[5].toStdString()}};
+
+  OrbitSshQt::Session session{&context.value()};
+
+  OrbitSshQt::SftpChannel channel{&session};
+
+  OrbitSshQt::SftpCopyToLocalOperation sftp_copy_to_local{&session, &channel};
+
+  session.ConnectToServer(creds);
+  LOG("connect to server");
+  QObject::connect(&session, &OrbitSshQt::Session::started, &session, [&]() {
+    LOG("Session connected. Starting channel...");
+    channel.Start();
+  });
+
+  std::string file_name;
+  QObject::connect(&channel, &OrbitSshQt::SftpChannel::started, &loop, [&]() {
+    QTemporaryFile temp_file;
+    ASSERT_TRUE(temp_file.open());
+    file_name = temp_file.fileName().toStdString();
+    temp_file.remove();
+
+    LOG("Sftp channel opened! Starting file copy to \"%s\"...", file_name);
+    sftp_copy_to_local.CopyFileToLocal("/proc/cpuinfo", file_name);
+  });
+
+  QObject::connect(&channel, &OrbitSshQt::SftpChannel::stopped, &loop, [&]() {
+    LOG("Sftp channel closed!");
+    loop.quit();
+  });
+
+  QObject::connect(&sftp_copy_to_local,
+                   &OrbitSshQt::SftpCopyToLocalOperation::stopped, &loop,
+                   [&]() {
+                     LOG("Sftp file copy finished!");
+                     channel.Stop();
+                   });
+
+  QTimer::singleShot(std::chrono::seconds{5}, &loop, [&]() {
+    loop.quit();
+    FAIL()
+        << "Timeout occurred. The whole integration test should be done in 5 "
+           "seconds. If not, probably it's stuck somewhere in the callback "
+           "logic.";
+  });
+
+  loop.exec();
 }
 
 int main(int argc, char* argv[]) {

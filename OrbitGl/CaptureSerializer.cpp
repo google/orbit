@@ -7,114 +7,116 @@
 #include <fstream>
 #include <memory>
 
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/message.h>
+
 #include "App.h"
 #include "Callstack.h"
 #include "Capture.h"
 #include "Core.h"
 #include "EventTracer.h"
 #include "FunctionUtils.h"
+#include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitModule.h"
 #include "OrbitProcess.h"
-#include "Pdb.h"
-#include "PrintVar.h"
 #include "SamplingProfiler.h"
-#include "ScopeTimer.h"
-#include "Serialization.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "TimerChain.h"
 #include "absl/strings/str_format.h"
+#include "capture_data.pb.h"
+
+using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::CallstackInfo;
+using orbit_client_protos::CaptureInfo;
+using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::TimerInfo;
 
 //-----------------------------------------------------------------------------
 ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
   Capture::PreSave();
 
-  // Binary
-  m_CaptureName = filename;
+  header.set_version(kRequiredCaptureVersion);
 
-  std::ofstream file(m_CaptureName, std::ios::binary);
+  std::ofstream file(filename, std::ios::binary);
   if (file.fail()) {
     ERROR("Saving capture in \"%s\": %s", filename, "file.fail()");
     return ErrorMessage("Error opening the file for writing");
   }
 
-  try {
+  {
     SCOPE_TIMER_LOG(absl::StrFormat("Saving capture in \"%s\"", filename));
     Save(file);
-  } catch (std::exception& e) {
-    ERROR("Saving capture in \"%s\": %s", filename, e.what());
-    return ErrorMessage("Error serializing the capture");
   }
 
   return outcome::success();
 }
 
-void CaptureSerializer::Save(std::ostream& stream) {
-  cereal::BinaryOutputArchive archive(stream);
-  std::basic_ostream<char> Stream(&GStreamCounter);
-  cereal::BinaryOutputArchive CountingArchive(Stream);
-  GStreamCounter.Reset();
-  SaveImpl(CountingArchive);
-  PRINT_VAR(GStreamCounter.Size());
-  GStreamCounter.Reset();
-
-  SaveImpl(archive);
+void WriteMessage(const google::protobuf::Message* message,
+                  google::protobuf::io::CodedOutputStream* output) {
+  uint32_t message_size = message->ByteSizeLong();
+  output->WriteLittleEndian32(message_size);
+  message->SerializeToCodedStream(output);
 }
 
-//-----------------------------------------------------------------------------
-template <class T>
-void CaptureSerializer::SaveImpl(T& archive) {
-  CHECK(time_graph_ != nullptr);
-  m_NumTimers = time_graph_->GetNumTimers();
-
-  // Header
-  archive(cereal::make_nvp("Capture", *this));
-
-  {
-    ORBIT_SIZE_SCOPE("Functions");
-    std::vector<Function> functions;
-    for (auto& pair : Capture::GSelectedFunctionsMap) {
-      Function* func = pair.second;
-      if (func != nullptr) {
-        functions.push_back(*func);
-      }
+void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
+  for (auto& pair : Capture::GSelectedFunctionsMap) {
+    FunctionInfo* func = pair.second;
+    if (func != nullptr) {
+      capture_info->add_selected_functions()->CopyFrom(*func);
     }
-
-    archive(functions);
-  }
-  {
-    ORBIT_SIZE_SCOPE("Capture::GProcessId");
-    archive(Capture::GProcessId);
   }
 
-  {
-    ORBIT_SIZE_SCOPE("Capture::GProcessName");
-    archive(Capture::GProcessName);
+  capture_info->set_process_id(Capture::GProcessId);
+  capture_info->set_process_name(Capture::GProcessName);
+
+  capture_info->mutable_thread_names()->insert(Capture::GThreadNames.begin(),
+                                               Capture::GThreadNames.end());
+
+  capture_info->mutable_address_infos()->Reserve(Capture::GAddressInfos.size());
+  for (const auto& address_info : Capture::GAddressInfos) {
+    capture_info->add_address_infos()->CopyFrom(address_info.second);
   }
 
-  {
-    ORBIT_SIZE_SCOPE("Capture::GThreadNames");
-    archive(Capture::GThreadNames);
+  const auto& unique_callstacks =
+      Capture::GSamplingProfiler->GetUniqueCallstacks();
+  capture_info->mutable_callstacks()->Reserve(unique_callstacks.size());
+  for (const auto& hash_to_callstack : unique_callstacks) {
+    const std::shared_ptr<CallStack> hashed_callstack =
+        hash_to_callstack.second;
+    CallstackInfo* callstack = capture_info->add_callstacks();
+    *callstack->mutable_data() = {hashed_callstack->m_Data.begin(),
+                                  hashed_callstack->m_Data.end()};
   }
 
-  {
-    ORBIT_SIZE_SCOPE("Capture::GAddressInfos");
-    archive(Capture::GAddressInfos);
+  auto callstacks = Capture::GSamplingProfiler->GetCallstacks();
+  capture_info->mutable_callstack_events()->Reserve(callstacks->size());
+  for (const auto& callstack : *callstacks) {
+    capture_info->add_callstack_events()->CopyFrom(callstack);
   }
 
-  {
-    ORBIT_SIZE_SCOPE("SamplingProfiler");
-    Capture::GSamplingProfiler->SaveCallstacks();
-    archive(Capture::GSamplingProfiler);
-  }
+  const auto& key_to_string_map =
+      time_graph_->GetStringManager()->GetKeyToStringMap();
+  capture_info->mutable_key_to_string()->insert(key_to_string_map.begin(),
+                                                key_to_string_map.end());
+}
 
-  {
-    ORBIT_SIZE_SCOPE("String manager");
-    archive(*time_graph_->GetStringManager());
-  }
+void CaptureSerializer::Save(std::ostream& stream) {
+  google::protobuf::io::OstreamOutputStream out_stream(&stream);
+  google::protobuf::io::CodedOutputStream coded_output(&out_stream);
+
+  CHECK(time_graph_ != nullptr);
+  int timers_count = time_graph_->GetNumTimers();
+
+  WriteMessage(&header, &coded_output);
+
+  CaptureInfo capture_info;
+  FillCaptureData(&capture_info);
+  WriteMessage(&capture_info, &coded_output);
 
   // Timers
-  int numWrites = 0;
+  int writes_count = 0;
   std::vector<std::shared_ptr<TimerChain>> chains =
       time_graph_->GetAllTimerChains();
   for (auto& chain : chains) {
@@ -122,9 +124,8 @@ void CaptureSerializer::SaveImpl(T& archive) {
     for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
       TimerBlock& block = *it;
       for (uint32_t k = 0; k < block.size(); ++k) {
-        archive(cereal::binary_data(&(block[k].GetTimer()), sizeof(Timer)));
-
-        if (++numWrites > m_NumTimers) {
+        WriteMessage(&block[k].GetTimerInfo(), &coded_output);
+        if (++writes_count > timers_count) {
           return;
         }
       }
@@ -132,7 +133,6 @@ void CaptureSerializer::SaveImpl(T& archive) {
   }
 }
 
-//-----------------------------------------------------------------------------
 ErrorMessageOr<void> CaptureSerializer::Load(const std::string& filename) {
   SCOPE_TIMER_LOG(absl::StrFormat("Loading capture from \"%s\"", filename));
 
@@ -143,20 +143,31 @@ ErrorMessageOr<void> CaptureSerializer::Load(const std::string& filename) {
     return ErrorMessage("Error opening the file for reading");
   }
 
-  try {
-    return Load(file);
-  } catch (std::exception& e) {
-    ERROR("Loading capture from \"%s\": %s", filename, e.what());
-    return ErrorMessage("Error parsing the capture");
+  return Load(file);
+}
+
+bool ReadMessage(google::protobuf::Message* message,
+                 google::protobuf::io::CodedInputStream* input) {
+  uint32_t message_size;
+  if (!input->ReadLittleEndian32(&message_size)) {
+    return false;
   }
+
+  std::unique_ptr<char[]> buffer= make_unique_for_overwrite<char[]>(message_size);
+  if (!input->ReadRaw(buffer.get(), message_size)) {
+    return false;
+  }
+  message->ParseFromArray(buffer.get(), message_size);
+
+  return true;
 }
 
 void FillFunctionCountMap() {
   Capture::GFunctionCountMap.clear();
   for (const auto& pair : Capture::GSelectedFunctionsMap) {
     uint64_t address = pair.first;
-    Function* function = pair.second;
-    Capture::GFunctionCountMap[address] = function->stats()->m_Count;
+    FunctionInfo* function = pair.second;
+    Capture::GFunctionCountMap[address] = function->stats().count();
   }
 }
 
@@ -165,23 +176,18 @@ void FillEventBuffer() {
   for (const CallstackEvent& callstack_event :
        *Capture::GSamplingProfiler->GetCallstacks()) {
     GEventTracer.GetEventBuffer().AddCallstackEvent(
-        callstack_event.m_Time, callstack_event.m_Id, callstack_event.m_TID);
+        callstack_event.time(), callstack_event.callstack_hash(),
+        callstack_event.thread_id());
   }
 }
 
-ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
-  // Header
-  cereal::BinaryInputArchive archive(stream);
-  archive(*this);
-
+void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   // Functions
-  std::vector<Function> functions;
-  archive(functions);
   Capture::GSelectedFunctions.clear();
   Capture::GSelectedFunctionsMap.clear();
-  for (const auto& function : functions) {
-    std::shared_ptr<Function> function_ptr =
-        std::make_shared<Function>(function);
+  for (const auto& function : capture_info.selected_functions()) {
+    std::shared_ptr<FunctionInfo> function_ptr =
+        std::make_shared<FunctionInfo>(function);
     Capture::GSelectedFunctions.push_back(function_ptr);
     Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(
         *function_ptr)] = function_ptr.get();
@@ -190,31 +196,76 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
 
   FillFunctionCountMap();
 
-  archive(Capture::GProcessId);
+  Capture::GProcessId = capture_info.process_id();
+  Capture::GProcessName = capture_info.process_name();
 
-  archive(Capture::GProcessName);
+  Capture::GThreadNames = {capture_info.thread_names().begin(),
+                           capture_info.thread_names().end()};
 
-  archive(Capture::GThreadNames);
+  Capture::GAddressInfos.clear();
+  Capture::GAddressInfos.reserve(capture_info.address_infos_size());
+  for (const auto& address_info : capture_info.address_infos()) {
+    Capture::GAddressInfos[address_info.absolute_address()] = address_info;
+  }
 
-  archive(Capture::GAddressInfos);
-
-  archive(Capture::GSamplingProfiler);
   if (Capture::GSamplingProfiler == nullptr) {
     Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();
   }
-  Capture::GSamplingProfiler->LoadCallstacks();
+  Capture::GSamplingProfiler->ClearCallstacks();
+  for (CallstackInfo callstack : capture_info.callstacks()) {
+    CallStack unique_callstack;
+    unique_callstack.m_Data = {callstack.data().begin(),
+                               callstack.data().end()};
+    Capture::GSamplingProfiler->AddUniqueCallStack(unique_callstack);
+  }
+  for (CallstackEvent callstack_event : capture_info.callstack_events()) {
+    Capture::GSamplingProfiler->AddCallStack(callstack_event);
+  }
   Capture::GSamplingProfiler->ProcessSamples();
 
   time_graph_->Clear();
-
-  archive(*time_graph_->GetStringManager());
+  StringManager* string_manager = time_graph_->GetStringManager();
+  string_manager->Clear();
+  for (const auto& entry : capture_info.key_to_string()) {
+    string_manager->AddIfNotPresent(entry.first, entry.second);
+  }
 
   FillEventBuffer();
+}
+
+ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
+  google::protobuf::io::IstreamInputStream input_stream(&stream);
+  google::protobuf::io::CodedInputStream coded_input(&input_stream);
+
+  std::string error_message =
+      "Error parsing the capture.\nNote: If the capture "
+      "was taken with a previous Orbit version, it could be incompatible. "
+      "Please check release notes for more information.";
+
+  if (!ReadMessage(&header, &coded_input) || header.version().empty()) {
+    ERROR("%s", error_message);
+    return ErrorMessage(error_message);
+  }
+  if (header.version() != kRequiredCaptureVersion) {
+    std::string incompatible_version_error_message = absl::StrFormat(
+        "This capture format is no longer supported but could be opened with "
+        "Orbit version %s.",
+        header.version());
+    ERROR("%s", incompatible_version_error_message);
+    return ErrorMessage(incompatible_version_error_message);
+  }
+
+  CaptureInfo capture_info;
+  if (!ReadMessage(&capture_info, &coded_input)) {
+    ERROR("%s", error_message);
+    return ErrorMessage(error_message);
+  }
+  ProcessCaptureData(capture_info);
 
   // Timers
-  Timer timer;
-  while (stream.read(reinterpret_cast<char*>(&timer), sizeof(Timer))) {
-    time_graph_->ProcessTimer(timer);
+  TimerInfo timer_info;
+  while (ReadMessage(&timer_info, &coded_input)) {
+    time_graph_->ProcessTimer(timer_info);
   }
 
   Capture::GState = Capture::State::kDone;
@@ -222,10 +273,4 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler);
   GOrbitApp->FireRefreshCallbacks();
   return outcome::success();
-}
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE(CaptureSerializer, 0) {
-  ORBIT_NVP_VAL(0, m_CaptureName);
-  ORBIT_NVP_VAL(0, m_NumTimers);
 }

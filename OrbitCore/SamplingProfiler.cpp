@@ -16,6 +16,10 @@
 #include "OrbitModule.h"
 #include "Serialization.h"
 
+using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::LinuxAddressInfo;
+
 namespace {
 
 std::multimap<int, CallstackID> SortCallstacks(
@@ -59,23 +63,14 @@ std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddCallStack(CallstackEvent& callstack_event) {
-  CallstackID hash = callstack_event.m_Id;
+  CallstackID hash = callstack_event.callstack_hash();
   if (!HasCallStack(hash)) {
     std::shared_ptr<CallStack> callstack =
-        Capture::GSamplingProfiler->GetCallStack(callstack_event.m_Id);
+        Capture::GSamplingProfiler->GetCallStack(hash);
     AddUniqueCallStack(*callstack);
   }
 
-  AddHashedCallStack(callstack_event);
-}
-
-//-----------------------------------------------------------------------------
-void SamplingProfiler::AddHashedCallStack(CallstackEvent& a_CallStack) {
-  if (!HasCallStack(a_CallStack.m_Id)) {
-    ERROR("Callstacks can only be added by hash when already present.");
-    return;
-  }
-  m_Callstacks.push_back(a_CallStack);
+  m_Callstacks.push_back(callstack_event);
 }
 
 //-----------------------------------------------------------------------------
@@ -138,23 +133,26 @@ void SamplingProfiler::ProcessSamples() {
 
   // Unique call stacks and per thread data
   for (const CallstackEvent& callstack : m_Callstacks) {
-    if (!HasCallStack(callstack.m_Id)) {
+    if (!HasCallStack(callstack.callstack_hash())) {
       ERROR("Processed unknown callstack!");
       continue;
     }
 
-    ThreadSampleData& threadSampleData = m_ThreadSampleData[callstack.m_TID];
+    ThreadSampleData& threadSampleData =
+        m_ThreadSampleData[callstack.thread_id()];
     threadSampleData.m_NumSamples++;
-    threadSampleData.m_CallstackCount[callstack.m_Id]++;
-    for (uint64_t address : m_UniqueCallstacks[callstack.m_Id]->m_Data) {
+    threadSampleData.m_CallstackCount[callstack.callstack_hash()]++;
+    for (uint64_t address :
+         m_UniqueCallstacks[callstack.callstack_hash()]->m_Data) {
       threadSampleData.m_RawAddressCount[address]++;
     }
 
     if (m_GenerateSummary) {
       ThreadSampleData& threadSampleDataAll = m_ThreadSampleData[0];
       threadSampleDataAll.m_NumSamples++;
-      threadSampleDataAll.m_CallstackCount[callstack.m_Id]++;
-      for (uint64_t address : m_UniqueCallstacks[callstack.m_Id]->m_Data) {
+      threadSampleDataAll.m_CallstackCount[callstack.callstack_hash()]++;
+      for (uint64_t address :
+           m_UniqueCallstacks[callstack.callstack_hash()]->m_Data) {
         threadSampleDataAll.m_RawAddressCount[address]++;
       }
     }
@@ -281,7 +279,7 @@ uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
 //-----------------------------------------------------------------------------
 void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   LinuxAddressInfo* address_info = Capture::GetAddressInfo(address);
-  Function* function = m_Process->GetFunctionFromAddress(address, false);
+  FunctionInfo* function = m_Process->GetFunctionFromAddress(address, false);
 
   // Find the start address of the function this address falls inside.
   // Use the Function returned by Process::GetFunctionFromAddress, and
@@ -297,16 +295,16 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
     function_address = FunctionUtils::GetAbsoluteAddress(*function);
     function_name = FunctionUtils::GetDisplayName(*function);
   } else if (address_info != nullptr) {
-    function_address = address - address_info->offset_in_function;
-    if (!address_info->function_name.empty()) {
-      function_name = address_info->function_name;
+    function_address = address - address_info->offset_in_function();
+    if (!address_info->function_name().empty()) {
+      function_name = address_info->function_name();
     }
   } else {
     function_address = address;
   }
 
   if (function != nullptr && address_info != nullptr) {
-    address_info->function_name = FunctionUtils::GetDisplayName(*function);
+    address_info->set_function_name(FunctionUtils::GetDisplayName(*function));
   }
 
   m_ExactAddressToFunctionAddress[address] = function_address;
@@ -320,7 +318,7 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   if (module != nullptr) {
     module_name = module->m_Name;
   } else if (address_info != nullptr) {
-    module_name = Path::GetFileName(address_info->module_name);
+    module_name = Path::GetFileName(address_info->module_name());
   }
   Capture::GAddressToModuleName[address] = module_name;
   Capture::GAddressToModuleName[function_address] = module_name;
@@ -363,10 +361,4 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
       sampleReport.push_back(function);
     }
   }
-}
-
-//-----------------------------------------------------------------------------
-ORBIT_SERIALIZE_WSTRING(SamplingProfiler, 5) {
-  ORBIT_NVP_DEBUG(0, m_UniqueCallstacks);
-  ORBIT_NVP_VAL(5, callstacks_vector);
 }
