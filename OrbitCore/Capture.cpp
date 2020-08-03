@@ -20,6 +20,7 @@
 #include "SamplingProfiler.h"
 #include "Serialization.h"
 #include "absl/strings/str_format.h"
+#include "preset.pb.h"
 
 #ifndef _WIN32
 std::shared_ptr<Pdb> GPdbDbg;
@@ -27,6 +28,7 @@ std::shared_ptr<Pdb> GPdbDbg;
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_protos::PresetInfo;
 
 Capture::State Capture::GState = Capture::State::kEmpty;
 bool Capture::GInjected = false;
@@ -188,13 +190,14 @@ void Capture::DisplayStats() {
 
 //-----------------------------------------------------------------------------
 ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
-  Preset preset;
-  preset.m_ProcessFullPath = GTargetProcess->GetFullPath();
+  PresetInfo preset;
+  preset.set_process_full_path(GTargetProcess->GetFullPath());
 
   for (auto& func : GTargetProcess->GetFunctions()) {
     if (FunctionUtils::IsSelected(*func)) {
       uint64_t hash = FunctionUtils::GetHash(*func);
-      preset.m_Modules[func->loaded_module_path()].add_function_hashes(hash);
+      (*preset.mutable_path_to_module())[func->loaded_module_path()]
+          .add_function_hashes(hash);
     }
   }
 
@@ -209,18 +212,13 @@ ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
     return ErrorMessage("Error opening the file for writing");
   }
 
-  try {
+  {
     SCOPE_TIMER_LOG(
         absl::StrFormat("Saving preset in \"%s\"", filename_with_ext));
-    cereal::BinaryOutputArchive archive(file);
-    // "Session" is use for backwards compatibility.
-    archive(cereal::make_nvp("Session", preset));
-    return outcome::success();
-  } catch (std::exception& e) {
-    ERROR("Saving preset in \"%s\": %s", filename_with_ext, e.what());
-    return ErrorMessage(
-        absl::StrFormat("Error serializing the preset: %s", e.what()));
+    preset.SerializeToOstream(&file);
   }
+
+  return outcome::success();
 }
 
 //-----------------------------------------------------------------------------

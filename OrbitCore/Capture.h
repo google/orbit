@@ -12,12 +12,12 @@
 #include "CallstackTypes.h"
 #include "OrbitBase/Result.h"
 #include "OrbitProcess.h"
+#include "OrbitSession.h"
 #include "Threading.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
 class Process;
-class Preset;
 class SamplingProfiler;
 struct CallStack;
 
