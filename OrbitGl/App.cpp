@@ -349,7 +349,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
                        Capture::GTargetProcess->GetIs64Bit());
     if (!sampling_report_ || !sampling_report_->GetProfiler()) {
       DisassemblyReport empty_report(disasm);
-      SendDisassemblyToUi(disasm.GetResult(), empty_report);
+      SendDisassemblyToUi(disasm.GetResult(), std::move(empty_report));
       return;
     }
     std::shared_ptr<SamplingProfiler> profiler =
@@ -357,7 +357,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 
     DisassemblyReport report(
         disasm, FunctionUtils::GetAbsoluteAddress(function), profiler);
-    SendDisassemblyToUi(disasm.GetResult(), report);
+    SendDisassemblyToUi(disasm.GetResult(), std::move(report));
   });
 }
 
@@ -693,11 +693,12 @@ void OrbitApp::RequestSaveCaptureToUi() {
   });
 }
 
-void OrbitApp::SendDisassemblyToUi(const std::string& disassembly,
-                                   const DisassemblyReport& report) {
-  main_thread_executor_->Schedule([this, disassembly, report] {
+void OrbitApp::SendDisassemblyToUi(std::string disassembly,
+                                   DisassemblyReport report) {
+  main_thread_executor_->Schedule([this, disassembly = std::move(disassembly),
+                                   report = std::move(report)]() mutable {
     if (disassembly_callback_) {
-      disassembly_callback_(disassembly, report);
+      disassembly_callback_(std::move(disassembly), std::move(report));
     }
   });
 }

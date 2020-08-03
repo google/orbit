@@ -87,7 +87,7 @@ class OrbitCodeEditor : public QPlainTextEdit {
   void saveFileMap();
   void gotoLine(int a_Line);
   void OnTimer();
-  void SetText(const std::string& a_Text);
+  void SetText(std::string a_Text);
   void SetReport(std::unique_ptr<CodeReport> report) {
     report_ = std::move(report);
   }

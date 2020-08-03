@@ -3,8 +3,11 @@
 #include "SamplingUtils.h"
 
 uint32_t DisassemblyReport::GetNumSamplesAtLine(size_t line) const {
+  if (function_count_ == 0 || profiler_ == nullptr) {
+    return 0;
+  }
   uint64_t address = disasm_.GetAddressAtLine(line);
-  if (address == 0 || function_count_ == 0 || profiler_ == nullptr) {
+  if (address == 0) {
     return 0;
   }
 
