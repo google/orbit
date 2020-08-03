@@ -46,7 +46,6 @@ ABSL_DECLARE_FLAG(bool, enable_stale_features);
 ABSL_DECLARE_FLAG(bool, devmode);
 
 //-----------------------------------------------------------------------------
-OrbitMainWindow* GMainWindow;
 extern QMenu* GContextMenu;
 
 //-----------------------------------------------------------------------------
@@ -231,8 +230,6 @@ OrbitMainWindow::OrbitMainWindow(
   SetTitle({});
   std::string iconFileName = Path::GetExecutablePath() + "orbit.ico";
   this->setWindowIcon(QIcon(iconFileName.c_str()));
-
-  GMainWindow = this;
 
   GOrbitApp->PostInit();
 }
