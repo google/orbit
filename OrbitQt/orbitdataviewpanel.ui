@@ -54,10 +54,10 @@
    </item>
    <item row="1" column="0">
     <widget class="OrbitTreeView" name="treeView">
-     <attribute name="headerDefaultSectionSize">
+     <attribute name="headerMinimumSectionSize">
       <number>0</number>
      </attribute>
-     <attribute name="headerMinimumSectionSize">
+     <attribute name="headerDefaultSectionSize">
       <number>0</number>
      </attribute>
     </widget>

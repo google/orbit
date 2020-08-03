@@ -31,7 +31,7 @@
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <widget class="OrbitDataViewPanel" name="LiveProcessList"/>
+     <widget class="OrbitDataViewPanel" name="LiveProcessList" native="true"/>
     </widget>
    </item>
   </layout>
@@ -39,7 +39,7 @@
  <customwidgets>
   <customwidget>
    <class>OrbitDataViewPanel</class>
-   <extends>QTreeView</extends>
+   <extends>QWidget</extends>
    <header>orbitdataviewpanel.h</header>
   </customwidget>
  </customwidgets>
