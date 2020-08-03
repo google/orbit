@@ -63,7 +63,6 @@ target_sources(
           CallStackDataView.cpp
           CaptureSerializer.cpp
           CaptureWindow.cpp
-          CrashManager.cpp
           DataManager.cpp
           DataView.cpp
           Disassembler.cpp
@@ -84,7 +83,6 @@ target_sources(
           ModulesDataView.cpp
           PickingManager.cpp
           PresetsDataView.cpp
-          ProcessManager.cpp
           ProcessesDataView.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp
@@ -106,6 +104,7 @@ target_link_libraries(
   OrbitGl
   PUBLIC OrbitCore
          OrbitCaptureClient
+         OrbitClientServices
          OrbitProtos
          freetype-gl::freetype-gl
          OpenGL::GLU
