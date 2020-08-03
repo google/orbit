@@ -10,6 +10,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion
                            -Werror=format=2
+                           -Werror=ignored-attributes
                            -Werror=inconsistent-missing-override
                            -Werror=old-style-cast
                            -Werror=unused-parameter
@@ -19,6 +20,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion
                            -Werror=format=2
+                           -Werror=ignored-attributes
                            -Werror=old-style-cast
                            -Werror=unused-parameter
                            -Werror=unused-variable
