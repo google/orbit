@@ -177,16 +177,9 @@
         <attribute name="title">
          <string>top-down</string>
         </attribute>
-        <layout class="QGridLayout" name="gridLayout_9">
+        <layout class="QGridLayout" name="topDownGridLayout">
          <item row="0" column="0">
-          <widget class="QTreeView" name="topDownView">
-           <property name="alternatingRowColors">
-            <bool>true</bool>
-           </property>
-           <property name="sortingEnabled">
-            <bool>true</bool>
-           </property>
-          </widget>
+          <widget class="TopDownWidget" name="topDownWidget"/>
          </item>
         </layout>
        </widget>
