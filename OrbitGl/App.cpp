@@ -643,6 +643,7 @@ void OrbitApp::StopCapture() {
 }
 
 void OrbitApp::ClearCapture() {
+  CHECK(!Capture::IsCapturing());
   Capture::ClearCaptureData();
   Capture::GClearCaptureDataFunc();
   GCurrentTimeGraph->Clear();
