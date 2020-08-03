@@ -93,7 +93,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) 
 
 void ThreadTrack::UpdateBoxHeight() {
   box_height_ = time_graph_->GetLayout().GetTextBoxHeight();
-  if (collapse_toggle_.IsCollapsed() && depth_ > 0) {
+  if (collapse_toggle_->IsCollapsed() && depth_ > 0) {
     box_height_ /= static_cast<float>(depth_);
   }
 }

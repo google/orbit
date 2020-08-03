@@ -109,7 +109,7 @@ Color GpuTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) con
 //-----------------------------------------------------------------------------
 float GpuTrack::GetYFromDepth(uint32_t depth) const {
   float adjusted_depth = static_cast<float>(depth);
-  if (collapse_toggle_.IsCollapsed()) {
+  if (collapse_toggle_->IsCollapsed()) {
     adjusted_depth = 0.f;
   }
   return m_Pos[1] -
@@ -118,7 +118,7 @@ float GpuTrack::GetYFromDepth(uint32_t depth) const {
 
 // When track is collapsed, only draw "hardware execution" timers.
 bool GpuTrack::TimerFilter(const TimerInfo& timer_info) const {
-  if (collapse_toggle_.IsCollapsed()) {
+  if (collapse_toggle_->IsCollapsed()) {
     std::string gpu_stage =
         string_manager_->Get(timer_info.user_data_key()).value_or("");
     if (gpu_stage != kHwExecutionString) {
