@@ -46,14 +46,6 @@ message GetProcessMemoryResponse {
   bytes memory = 1;
 }
 
-message GetSymbolsRequest {
-  string module_path = 1;
-}
-
-message GetSymbolsResponse {
-  ModuleSymbols module_symbols = 1;
-}
-
 message GetDebugInfoFileRequest {
   string module_path = 1;
   string build_id = 2;
@@ -70,8 +62,6 @@ service ProcessService {
 
   rpc GetProcessMemory(GetProcessMemoryRequest)
       returns (GetProcessMemoryResponse) {}
-
-  rpc GetSymbols(GetSymbolsRequest) returns (GetSymbolsResponse) {}
 
   rpc GetDebugInfoFile(GetDebugInfoFileRequest)
       returns (GetDebugInfoFileResponse) {}
