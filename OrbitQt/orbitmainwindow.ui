@@ -149,7 +149,7 @@
         </attribute>
         <layout class="QGridLayout" name="liveGridLayout">
          <item row="0" column="0">
-          <widget class="OrbitLiveFunctions" name="liveFunctions"/>
+          <widget class="OrbitLiveFunctions" name="liveFunctions" native="true"/>
          </item>
         </layout>
        </widget>
@@ -159,7 +159,7 @@
         </attribute>
         <layout class="QGridLayout" name="samplingGridLayout">
          <item row="0" column="0">
-          <widget class="OrbitSamplingReport" name="samplingReport"/>
+          <widget class="OrbitSamplingReport" name="samplingReport" native="true"/>
          </item>
         </layout>
        </widget>
@@ -179,7 +179,7 @@
         </attribute>
         <layout class="QGridLayout" name="selectionGridLayout">
          <item row="0" column="0">
-          <widget class="OrbitSamplingReport" name="selectionReport"/>
+          <widget class="OrbitSamplingReport" name="selectionReport" native="true"/>
          </item>
         </layout>
        </widget>
@@ -243,7 +243,7 @@
      <x>0</x>
      <y>0</y>
      <width>976</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -271,26 +271,25 @@
     <addaction name="actionReport_Missing_Feature"/>
     <addaction name="actionReport_Bug"/>
    </widget>
-   <widget class="QMenu" name="menuCrash">
-    <property name="title">
-     <string>Crash Test</string>
-    </property>
-    <addaction name="actionCheckFalse"/>
-    <addaction name="actionNullPointerDereference"/>
-    <addaction name="actionStackOverflow"/>
-    <addaction name="actionServiceCheckFalse"/>
-    <addaction name="actionServiceNullPointerDereference"/>
-    <addaction name="actionServiceStackOverflow"/>
-   </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
      <string>Debug</string>
     </property>
+    <widget class="QMenu" name="menuCrash">
+     <property name="title">
+      <string>Crash Test</string>
+     </property>
+     <addaction name="actionCheckFalse"/>
+     <addaction name="actionNullPointerDereference"/>
+     <addaction name="actionStackOverflow"/>
+     <addaction name="actionServiceCheckFalse"/>
+     <addaction name="actionServiceNullPointerDereference"/>
+     <addaction name="actionServiceStackOverflow"/>
+    </widget>
     <addaction name="menuCrash"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDebug"/>
-   <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
    <addaction name="menuFeedback"/>
   </widget>
@@ -420,7 +419,7 @@
     <string>[Service] Check False</string>
    </property>
   </action>
-    <action name="actionServiceNullPointerDereference">
+  <action name="actionServiceNullPointerDereference">
    <property name="text">
     <string>[Service] Null Pointer Dereference</string>
    </property>
@@ -453,6 +452,16 @@
    <extends>QWidget</extends>
    <header>processlauncherwidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>OrbitLiveFunctions</class>
+   <extends>QWidget</extends>
+   <header>orbitlivefunctions.h</header>
+  </customwidget>
+  <customwidget>
+   <class>OrbitSamplingReport</class>
+   <extends>QWidget</extends>
+   <header>orbitsamplingreport.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

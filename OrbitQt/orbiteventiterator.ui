@@ -28,33 +28,33 @@
   <layout class="QGridLayout" name="IteratorLayout">
    <item row="0" column="0">
     <widget class="QPushButton" name="PreviousButton">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="text">
       <string>&lt;</string>
      </property>
      <property name="autoRepeat">
       <bool>true</bool>
      </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QPushButton" name="NextButton">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="QPushButton" name="NextButton">
      <property name="text">
       <string>&gt;</string>
      </property>
      <property name="autoRepeat">
       <bool>true</bool>
-     </property>
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
      </property>
     </widget>
    </item>
@@ -71,20 +71,20 @@
    <item row="0" column="3">
     <widget class="QLabel" name="position_label_">
      <property name="alignment">
-      <set>Qt::AlignRight | Qt::AlignVCenter</set>
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
    </item>
    <item row="0" column="4">
     <widget class="QPushButton" name="DeleteButton">
-     <property name="text">
-      <string>Delete</string>
-     </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Delete</string>
      </property>
     </widget>
    </item>

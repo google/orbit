@@ -4,6 +4,8 @@
 
 #include "orbitsamplingreport.h"
 
+#include <QHeaderView>
+
 #include "SamplingReport.h"
 #include "orbitdataviewpanel.h"
 #include "orbittreeview.h"

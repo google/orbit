@@ -113,7 +113,7 @@
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="OrbitDataViewPanel" name="CallstackTreeView">
+          <widget class="OrbitDataViewPanel" name="CallstackTreeView" native="true">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
@@ -133,7 +133,7 @@
  <customwidgets>
   <customwidget>
    <class>OrbitDataViewPanel</class>
-   <extends>QTreeView</extends>
+   <extends>QWidget</extends>
    <header>orbitdataviewpanel.h</header>
   </customwidget>
  </customwidgets>

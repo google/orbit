@@ -33,8 +33,7 @@
     <number>0</number>
    </property>
    <item row="0" column="0">
-    <widget class="OrbitDataViewPanel" name="data_view_panel_">
-    </widget>
+    <widget class="OrbitDataViewPanel" name="data_view_panel_" native="true"/>
    </item>
    <item row="1" column="0">
     <layout class="QVBoxLayout" name="iteratorLayout">

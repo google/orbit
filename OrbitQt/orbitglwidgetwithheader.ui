@@ -73,21 +73,17 @@
     </layout>
    </item>
   </layout>
-  <zorder>treeView</zorder>
-  <zorder>scrollArea</zorder>
-  <zorder>openGLWidget</zorder>
-  <zorder>openGLWidget</zorder>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>OrbitGLWidget</class>
-   <extends>QOpenGLWidget</extends>
-   <header>orbitglwidget.h</header>
-  </customwidget>
   <customwidget>
    <class>OrbitTreeView</class>
    <extends>QTreeView</extends>
    <header>orbittreeview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>OrbitGLWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header>orbitglwidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
