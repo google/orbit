@@ -765,14 +765,18 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id,
       const std::string local_debug_file_path =
           symbol_helper_.GenerateCachedFileName(module_path);
 
-      auto scp_result =
-          secure_copy_callback_(debug_file_path, local_debug_file_path);
-      if (!scp_result) {
-        SendErrorToUi("Error loading symbols",
-                      absl::StrFormat(
-                          "Could not copy debug info file from the remote: %s",
-                          scp_result.error().message()));
-        return;
+      {
+        SCOPE_TIMER_LOG(absl::StrFormat("Copying %s", debug_file_path));
+        auto scp_result =
+            secure_copy_callback_(debug_file_path, local_debug_file_path);
+        if (!scp_result) {
+          SendErrorToUi(
+              "Error loading symbols",
+              absl::StrFormat(
+                  "Could not copy debug info file from the remote: %s",
+                  scp_result.error().message()));
+          return;
+        }
       }
 
       const auto result =
