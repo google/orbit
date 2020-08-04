@@ -40,8 +40,6 @@ target_sources(
          SamplingProfiler.h
          SamplingUtils.h
          ScopeTimer.h
-         Serialization.h
-         SerializationMacros.h
          StringManager.h
          SymbolHelper.h
          Threading.h
@@ -53,7 +51,6 @@ target_sources(
   OrbitCore
   PRIVATE Capture.cpp
           ContextSwitch.cpp
-          Core.cpp
           EventBuffer.cpp
           FunctionUtils.cpp
           Injection.cpp

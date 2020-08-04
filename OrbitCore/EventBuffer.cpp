@@ -8,7 +8,6 @@
 #include "EventTracer.h"
 #include "Params.h"
 #include "SamplingProfiler.h"
-#include "Serialization.h"
 
 using orbit_client_protos::CallstackEvent;
 
