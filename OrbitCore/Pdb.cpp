@@ -10,6 +10,8 @@
 #include "ScopeTimer.h"
 
 using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::PresetFile;
+using orbit_client_protos::PresetModule;
 
 //-----------------------------------------------------------------------------
 Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
@@ -90,15 +92,15 @@ FunctionInfo* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
 }
 
 //-----------------------------------------------------------------------------
-void Pdb::ApplyPreset(const Preset& preset) {
+void Pdb::ApplyPreset(const PresetFile& preset) {
   SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ApplyPreset - %s", m_Name.c_str()));
 
   std::string module_name = m_LoadedModuleName;
-  auto it = preset.m_Modules.find(module_name);
-  if (it != preset.m_Modules.end()) {
+  auto it = preset.preset_info().path_to_module().find(module_name);
+  if (it != preset.preset_info().path_to_module().end()) {
     const PresetModule& preset_module = it->second;
 
-    for (uint64_t hash : preset_module.m_FunctionHashes) {
+    for (uint64_t hash : preset_module.function_hashes()) {
       auto fit = m_StringFunctionMap.find(hash);
       if (fit != m_StringFunctionMap.end()) {
         FunctionInfo* function = fit->second;

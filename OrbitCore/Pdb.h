@@ -10,8 +10,8 @@
 #include <thread>
 #include <vector>
 
-#include "OrbitSession.h"
 #include "capture_data.pb.h"
+#include "preset.pb.h"
 
 class Pdb {
  public:
@@ -34,7 +34,7 @@ class Pdb {
 
   void PopulateFunctionMap();
   void PopulateStringFunctionMap();
-  void ApplyPreset(const Preset& preset);
+  void ApplyPreset(const orbit_client_protos::PresetFile& preset);
 
   orbit_client_protos::FunctionInfo* GetFunctionFromExactAddress(
       uint64_t a_Address);

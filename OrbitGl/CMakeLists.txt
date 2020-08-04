@@ -18,10 +18,12 @@ target_sources(
          CaptureSerializer.h
          CaptureWindow.h
          Card.h
+         CodeReport.h
          CoreMath.h
          DataView.h
          DataViewTypes.h
          Disassembler.h
+         DisassemblyReport.h
          EventTrack.h
          FramePointerValidatorClient.h
          FunctionsDataView.h
@@ -69,6 +71,7 @@ target_sources(
           DataManager.cpp
           DataView.cpp
           Disassembler.cpp
+          DisassemblyReport.cc
           EventTrack.cpp
           FramePointerValidatorClient.cpp
           LiveFunctionsController.cpp

@@ -16,7 +16,9 @@ if [ "$1" ]; then
   $REPO_ROOT/third_party/conan/configs/install.sh || exit $?
   conan user -r artifactory $ARTIFACTORY_USERNAME -p $ARTIFACTORY_API_KEY || exit $?
   if [ -n "$BINTRAY_USERNAME" -a -n "$BINTRAY_API_KEY" ]; then
+    conan remote enable bintray
     conan user -r bintray $BINTRAY_USERNAME -p $BINTRAY_API_KEY || exit $?
+    conan remote disable bintray
   fi
 
   for profile in $@; do
@@ -44,7 +46,6 @@ if [ "$1" ]; then
     else
       echo -e "The following binary packages need to be uploaded:\n$PACKAGES"
 
-      $REPO_ROOT/build.sh $profile || exit $?
       conan install -pr $profile -if build_$profile/ --build outdated -l $LOCKFILE $REPO_ROOT || exit $?
       conan build -bf build_$profile/ $REPO_ROOT || exit $?
 
