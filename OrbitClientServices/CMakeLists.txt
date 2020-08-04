@@ -21,6 +21,7 @@ target_sources(OrbitClientServices PRIVATE
         CrashManager.cpp
         ProcessManager.cpp)
 
-target_link_libraries(OrbitClientServices PUBLIC 
+target_link_libraries(OrbitClientServices PUBLIC
+        OrbitBase
         OrbitCore
         OrbitProtos)

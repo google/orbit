@@ -32,4 +32,4 @@ class CrashManager {
       std::shared_ptr<grpc::Channel> channel);
 };
 
-#endif  // ORBIT_GL_CRASH_MANAGER_H_
+#endif  // ORBIT_CLIENT_SERVICES_CRASH_MANAGER_H_

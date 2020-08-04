@@ -65,4 +65,4 @@ class ProcessManager {
       absl::Duration refresh_timeout);
 };
 
-#endif  // ORBIT_GL_PROCESS_MANAGER_H_
+#endif  // ORBIT_CLIENT_SERVICES_PROCESS_MANAGER_H_
