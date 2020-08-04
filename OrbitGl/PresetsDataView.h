@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_PRESET_DATA_VIEW_H_
+#define ORBIT_GL_PRESET_DATA_VIEW_H_
 
 #include <memory>
 
 #include "DataView.h"
-#include "OrbitSession.h"
+#include "preset.pb.h"
 
 class PresetsDataView : public DataView {
  public:
@@ -25,17 +26,22 @@ class PresetsDataView : public DataView {
   void OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                      const std::vector<int>& a_ItemIndices) override;
 
-  void SetPresets(const std::vector<std::shared_ptr<Preset>>& presets);
+  void SetPresets(
+      const std::vector<std::shared_ptr<orbit_client_protos::PresetFile>>&
+          presets);
 
  protected:
   void DoSort() override;
   void DoFilter() override;
-  const std::shared_ptr<Preset>& GetPreset(unsigned int a_Row) const;
+  const std::shared_ptr<orbit_client_protos::PresetFile>& GetPreset(
+      unsigned int a_Row) const;
 
-  std::vector<std::shared_ptr<Preset>> presets_;
+  std::vector<std::shared_ptr<orbit_client_protos::PresetFile>> presets_;
 
   enum ColumnIndex { COLUMN_SESSION_NAME, COLUMN_PROCESS_NAME, COLUMN_NUM };
 
   static const std::string MENU_ACTION_LOAD;
   static const std::string MENU_ACTION_DELETE;
 };
+
+#endif  // ORBIT_GL_PRESET_DATA_VIEW_H_

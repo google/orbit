@@ -14,3 +14,9 @@ message PresetInfo {
   string process_full_path = 1;
   map<string, PresetModule> path_to_module = 2;
 }
+
+// this message isn't used for serialization
+message PresetFile {
+  string file_name = 1;
+  PresetInfo preset_info = 2;
+}

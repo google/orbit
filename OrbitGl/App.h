@@ -14,8 +14,6 @@
 
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
-#include "OrbitCaptureClient/CaptureClient.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "ContextSwitch.h"
 #include "CrashManager.h"
 #include "DataManager.h"
@@ -30,6 +28,8 @@
 #include "ModulesDataView.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitCaptureClient/CaptureClient.h"
+#include "OrbitCaptureClient/CaptureListener.h"
 #include "PresetsDataView.h"
 #include "ProcessManager.h"
 #include "ProcessesDataView.h"
@@ -215,15 +215,17 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     return m_FileMapping;
   }
 
-  void LoadModules(int32_t process_id,
-                   const std::vector<std::shared_ptr<Module>>& modules,
-                   const std::shared_ptr<Preset>& preset = nullptr);
-  void LoadModulesFromPreset(const std::shared_ptr<Process>& process,
-                             const std::shared_ptr<Preset>& preset);
+  void LoadModules(
+      int32_t process_id, const std::vector<std::shared_ptr<Module>>& modules,
+      const std::shared_ptr<orbit_client_protos::PresetFile>& preset = nullptr);
+  void LoadModulesFromPreset(
+      const std::shared_ptr<Process>& process,
+      const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   void UpdateModuleList(int32_t pid);
 
   void UpdateSamplingReport();
-  void LoadPreset(const std::shared_ptr<Preset>& session);
+  void LoadPreset(
+      const std::shared_ptr<orbit_client_protos::PresetFile>& session);
   void FilterFunctions(const std::string& filter);
   void FilterTracks(const std::string& filter);
 
@@ -232,12 +234,12 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   DataView* GetOrCreateDataView(DataViewType type) override;
 
  private:
-  void LoadModuleOnRemote(int32_t process_id,
-                          const std::shared_ptr<Module>& module,
-                          const std::shared_ptr<Preset>& preset);
-  void SymbolLoadingFinished(uint32_t process_id,
-                             const std::shared_ptr<Module>& module,
-                             const std::shared_ptr<Preset>& preset);
+  void LoadModuleOnRemote(
+      int32_t process_id, const std::shared_ptr<Module>& module,
+      const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  void SymbolLoadingFinished(
+      uint32_t process_id, const std::shared_ptr<Module>& module,
+      const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   std::shared_ptr<Process> FindProcessByPid(int32_t pid);
 
   ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
