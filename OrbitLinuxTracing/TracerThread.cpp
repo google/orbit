@@ -115,7 +115,7 @@ bool TracerThread::OpenUprobes(const LinuxTracing::Function& function,
   for (int32_t cpu : cpus) {
     int fd = uprobes_retaddr_event_open(module, offset, -1, cpu);
     if (fd < 0) {
-      ERROR("Uprobe 0x%llx on cpu %u", function.VirtualAddress(), cpu);
+      ERROR("Opening uprobe 0x%lx on cpu %d", function.VirtualAddress(), cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -131,7 +131,8 @@ bool TracerThread::OpenUretprobes(
   for (int32_t cpu : cpus) {
     int fd = uretprobes_event_open(module, offset, -1, cpu);
     if (fd < 0) {
-      ERROR("Uretprobe 0x%llx on cpu %u", function.VirtualAddress(), cpu);
+      ERROR("Opening uretprobe 0x%lx on cpu %d", function.VirtualAddress(),
+            cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -172,21 +173,22 @@ bool TracerThread::OpenUserSpaceProbes(const std::vector<int32_t>& cpus) {
     uint64_t address = function.VirtualAddress();
 
     if (manual_instrumentation_config_.IsTimerStartAddress(address)) {
-      // Only open uprobe for a "timer start" manual instrumentation function.
+      // Only open uprobes for a "timer start" manual instrumentation function.
       if (!OpenUprobes(function, cpus, &uprobes_fds_per_cpu)) {
         CloseFileDescriptors(uprobes_fds_per_cpu);
         uprobes_event_open_errors = true;
         continue;
       }
     } else if (manual_instrumentation_config_.IsTimerStopAddress(address)) {
-      // Only open uretprobe for a "timer stop" manual instrumentation function.
+      // Only open uretprobes for a "timer stop" manual instrumentation
+      // function.
       if (!OpenUretprobes(function, cpus, &uretprobes_fds_per_cpu)) {
         CloseFileDescriptors(uretprobes_fds_per_cpu);
         uprobes_event_open_errors = true;
         continue;
       }
     } else {
-      // Open both uprobe and uretprobes for regular functions.
+      // Open both uprobes and uretprobes for regular functions.
       bool success = OpenUprobes(function, cpus, &uprobes_fds_per_cpu) &&
                      OpenUretprobes(function, cpus, &uretprobes_fds_per_cpu);
       if (!success) {
@@ -209,7 +211,7 @@ bool TracerThread::OpenUserSpaceProbes(const std::vector<int32_t>& cpus) {
 }
 
 void TracerThread::OpenUserSpaceProbesRingBuffers() {
-  for (auto& [/*int32_t*/ cpu, /*std::vector<int>*/ fds] : fds_per_cpu_) {
+  for (const auto& [/*int32_t*/ cpu, /*std::vector<int>*/ fds] : fds_per_cpu_) {
     if (fds.empty()) continue;
 
     // Create a single ring buffer per cpu.

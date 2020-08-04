@@ -70,7 +70,7 @@ class TracerThread {
   bool OpenSampling(const std::vector<int32_t>& cpus);
 
   void AddUprobesFileDescriptors(
-      const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
+      const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
       const LinuxTracing::Function& function);
 
   void AddUretprobesFileDescriptors(
