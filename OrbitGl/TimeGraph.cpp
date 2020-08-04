@@ -99,7 +99,7 @@ void TimeGraph::Clear() {
   // The process track is a special ThreadTrack of id "0".
   process_track_ = GetOrCreateThreadTrack(0);
 
-  SetOverlayTextBoxes({});
+  SetIteratorOverlayData({}, {});
 
   NeedsUpdate();
 }
@@ -626,12 +626,10 @@ void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
 namespace {
 
-std::string GetLabelBetweenIterators(const TextBox* box_a,
-                                     const TextBox* box_b) {
-  std::string function_from =
-      Capture::GAddressToFunctionName[box_a->GetTimerInfo().function_address()];
-  std::string function_to =
-      Capture::GAddressToFunctionName[box_b->GetTimerInfo().function_address()];
+[[nodiscard]] std::string GetLabelBetweenIterators(const FunctionInfo& function_a,
+                                     const FunctionInfo& function_b) {
+  std::string function_from = FunctionUtils::GetDisplayName(function_a);
+  std::string function_to = FunctionUtils::GetDisplayName(function_b);
   return absl::StrFormat("%s to %s", function_from, function_to);
 }
 
@@ -642,7 +640,7 @@ std::string GetTimeString(const TextBox* box_a, const TextBox* box_b) {
   return GetPrettyTime(duration);
 }
 
-Color GetIteratorBoxColor(uint64_t index) {
+[[nodiscard]] Color GetIteratorBoxColor(uint64_t index) {
   constexpr uint64_t kNumColors = 2;
   const Color kLightBlueGray = Color(177, 203, 250, 60);
   const Color kMidBlueGray = Color(81, 102, 157, 60);
@@ -678,14 +676,14 @@ void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
 
 void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
   if (picking_mode != PickingMode::kNone || 
-      overlay_current_textboxes_.size() == 0) {
+      iterator_text_boxes_.size() == 0) {
     return;
   }
 
   std::vector<std::pair<uint64_t, const TextBox*>> boxes(
-      overlay_current_textboxes_.size());
-  std::copy(overlay_current_textboxes_.begin(),
-            overlay_current_textboxes_.end(), boxes.begin());
+      iterator_text_boxes_.size());
+  std::copy(iterator_text_boxes_.begin(),
+            iterator_text_boxes_.end(), boxes.begin());
 
   // Sort boxes by start time.
   std::sort(boxes.begin(), boxes.end(),
@@ -732,8 +730,12 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
     Vec2 size(size_x, world_height);
     Color color = GetIteratorBoxColor(k - 1);
 
+    uint64_t id_a = boxes[k - 1].first;
+    uint64_t id_b = boxes[k].first;
+    CHECK(iterator_functions_.find(id_a) != iterator_functions_.end());
+    CHECK(iterator_functions_.find(id_b) != iterator_functions_.end());
     const std::string& label =
-        GetLabelBetweenIterators(boxes[k - 1].second, boxes[k].second);
+        GetLabelBetweenIterators(*(iterator_functions_[id_a]), *(iterator_functions_[id_b]));
     const std::string& time =
         GetTimeString(boxes[k - 1].second, boxes[k].second);
 
@@ -746,7 +748,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
     // / 2.f), corresponding to the case k == 0 in the formula for 'text_y'.
     float height_per_text =
         ((world_height / 2.f) - bottom_margin) /
-        static_cast<float>(overlay_current_textboxes_.size() - 1);
+        static_cast<float>(iterator_text_boxes_.size() - 1);
     float text_y =
         pos[1] + (world_height / 2.f) - static_cast<float>(k) * height_per_text;
 

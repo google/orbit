@@ -142,9 +142,11 @@ class TimeGraph {
 
   Color GetThreadColor(ThreadID tid) const;
 
-  void SetOverlayTextBoxes(
-      const absl::flat_hash_map<uint64_t, const TextBox*>& boxes) {
-    overlay_current_textboxes_ = boxes;
+  void SetIteratorOverlayData(
+      const absl::flat_hash_map<uint64_t, const TextBox*>& iterator_text_boxes,
+      const absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*>& iterator_functions) {
+    iterator_text_boxes_ = iterator_text_boxes;
+    iterator_functions_ = iterator_functions;
     NeedsRedraw();
   }
 
@@ -164,7 +166,8 @@ class TimeGraph {
   int m_NumDrawnTextBoxes = 0;
 
   // First member is id.
-  absl::flat_hash_map<uint64_t, const TextBox*> overlay_current_textboxes_;
+  absl::flat_hash_map<uint64_t, const TextBox*> iterator_text_boxes_;
+  absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*> iterator_functions_;
 
   double m_RefTimeUs = 0;
   double m_MinTimeUs = 0;
