@@ -77,7 +77,6 @@ endif()
 
 find_package(OpenSSL CONFIG REQUIRED)
 find_package(Threads REQUIRED)
-find_package(cereal CONFIG REQUIRED)
 find_package(xxHash REQUIRED)
 find_package(multicore REQUIRED)
 find_package(concurrentqueue REQUIRED)
