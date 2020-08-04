@@ -255,7 +255,7 @@ void OrbitCodeEditor::OnTimer() {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitCodeEditor::SetText(const std::string& a_Text) {
+void OrbitCodeEditor::SetText(std::string a_Text) {
   this->document()->setPlainText(QString::fromStdString(a_Text));
 }
 
@@ -464,6 +464,13 @@ void OrbitCodeEditor::HeatMapAreaPaintEvent(QPaintEvent* event) {
   QPainter painter(heatMapArea);
   painter.fillRect(event->rect(), QColor(30, 30, 30));
 
+  uint32_t function_sample_count = report_->GetNumSamplesInFunction();
+  // If there are no samples in that function, there is no need to draw the
+  // heatmap. However, we still need to fill the background rect. above.
+  if (function_sample_count == 0) {
+    return;
+  }
+
   //![extraAreaPaintEvent_0]
 
   //![extraAreaPaintEvent_1]
@@ -478,7 +485,9 @@ void OrbitCodeEditor::HeatMapAreaPaintEvent(QPaintEvent* event) {
   while (block.isValid() && top <= event->rect().bottom()) {
     if (block.isVisible() && bottom >= event->rect().top()) {
       // % of hits in this function from 0.0 to 1.0
-      const double hit_ratio = line_to_hit_ratio_(blockNumber);
+      const double hit_ratio =
+          static_cast<double>(report_->GetNumSamplesAtLine(blockNumber)) /
+          function_sample_count;
       // The sqrt maps 0.0 to 0.0 and 1.0 to 1.0 but makes small rations larger,
       // such that in the ui you can still see that the instruction was actually
       // hit in the sampling.

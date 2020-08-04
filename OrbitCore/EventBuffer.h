@@ -10,7 +10,6 @@
 #include "BlockChain.h"
 #include "Callstack.h"
 #include "Core.h"
-#include "SerializationMacros.h"
 #include "capture_data.pb.h"
 
 #ifdef __linux

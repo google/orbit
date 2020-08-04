@@ -15,9 +15,9 @@
 #include "Threading.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
+#include "preset.pb.h"
 
 class Process;
-class Preset;
 class SamplingProfiler;
 struct CallStack;
 
@@ -63,7 +63,7 @@ class Capture {
   static ULONG64 GNumProfileEvents;
   static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
   static std::shared_ptr<Process> GTargetProcess;
-  static std::shared_ptr<Preset> GSessionPresets;
+  static std::shared_ptr<orbit_client_protos::PresetFile> GSessionPresets;
   static std::shared_ptr<CallStack> GSelectedCallstack;
   static void (*GClearCaptureDataFunc)();
   static std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>

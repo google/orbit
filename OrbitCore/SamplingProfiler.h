@@ -13,7 +13,6 @@
 #include "Core.h"
 #include "EventBuffer.h"
 #include "Pdb.h"
-#include "SerializationMacros.h"
 #include "capture_data.pb.h"
 
 class Process;
