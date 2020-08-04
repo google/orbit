@@ -8,8 +8,6 @@
 #include <string>
 #include <utility>
 
-#include "Serialization.h"
-
 struct TidAndThreadName {
   TidAndThreadName() = default;
   TidAndThreadName(int32_t tid, std::string thread_name)
@@ -17,13 +15,6 @@ struct TidAndThreadName {
 
   int32_t tid = 0;
   std::string thread_name;
-
-  ORBIT_SERIALIZABLE;
 };
-
-ORBIT_SERIALIZE(TidAndThreadName, 0) {
-  ORBIT_NVP_VAL(0, tid);
-  ORBIT_NVP_VAL(0, thread_name);
-}
 
 #endif  // ORBIT_CORE_TID_AND_THREAD_NAME_H_

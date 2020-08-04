@@ -139,9 +139,8 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->SetSelectLiveTabCallback(
       [this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
   GOrbitApp->SetDisassemblyCallback(
-      [this](const std::string& disassembly,
-             const std::function<double(size_t)>& line_to_hits) {
-        OpenDisassembly(disassembly, line_to_hits);
+      [this](std::string disassembly, DisassemblyReport report) {
+        OpenDisassembly(disassembly, report);
       });
   GOrbitApp->SetErrorMessageCallback(
       [this](const std::string& title, const std::string& text) {
@@ -782,12 +781,11 @@ outcome::result<void> OrbitMainWindow::OpenCapture(
 }
 
 //-----------------------------------------------------------------------------
-void OrbitMainWindow::OpenDisassembly(
-    const std::string& a_String,
-    const std::function<double(size_t)>& line_to_hit_ratio) {
+void OrbitMainWindow::OpenDisassembly(std::string a_String,
+                                      DisassemblyReport report) {
   auto* dialog = new OrbitDisassemblyDialog(this);
-  dialog->SetText(a_String);
-  dialog->SetLineToHitRatio(line_to_hit_ratio);
+  dialog->SetText(std::move(a_String));
+  dialog->SetDisassemblyReport(std::move(report));
   dialog->setWindowTitle("Orbit Disassembly");
   dialog->setAttribute(Qt::WA_DeleteOnClose);
   dialog->setWindowFlags(dialog->windowFlags() | Qt::WindowMinimizeButtonHint |

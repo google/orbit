@@ -30,7 +30,6 @@ target_sources(
          OrbitDbgHelp.h
          OrbitModule.h
          OrbitProcess.h
-         OrbitSession.h
          OrbitVersion.h
          Params.h
          Path.h
@@ -41,8 +40,6 @@ target_sources(
          SamplingProfiler.h
          SamplingUtils.h
          ScopeTimer.h
-         Serialization.h
-         SerializationMacros.h
          StringManager.h
          SymbolHelper.h
          Threading.h
@@ -54,7 +51,6 @@ target_sources(
   OrbitCore
   PRIVATE Capture.cpp
           ContextSwitch.cpp
-          Core.cpp
           EventBuffer.cpp
           FunctionUtils.cpp
           Injection.cpp
@@ -64,7 +60,6 @@ target_sources(
           LogInterface.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
-          OrbitSession.cpp
           Params.cpp
           Path.cpp
           Pdb.cpp
@@ -96,7 +91,6 @@ target_link_libraries(
          OrbitClientProtos
          OrbitProtos
          capstone::capstone
-         cereal::cereal
          xxHash::xxHash
          concurrentqueue::concurrentqueue
          multicore::multicore

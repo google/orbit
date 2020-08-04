@@ -14,13 +14,12 @@
 
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
-#include "OrbitCaptureClient/CaptureClient.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "ContextSwitch.h"
 #include "CrashManager.h"
 #include "DataManager.h"
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
+#include "DisassemblyReport.h"
 #include "FramePointerValidatorClient.h"
 #include "FunctionsDataView.h"
 #include "LinuxCallstackEvent.h"
@@ -29,6 +28,8 @@
 #include "ModulesDataView.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitCaptureClient/CaptureClient.h"
+#include "OrbitCaptureClient/CaptureListener.h"
 #include "PresetsDataView.h"
 #include "ProcessManager.h"
 #include "ProcessesDataView.h"
@@ -41,6 +42,7 @@
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 #include "grpcpp/grpcpp.h"
+#include "preset.pb.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
@@ -135,8 +137,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetSelectLiveTabCallback(SelectLiveTabCallback callback) {
     select_live_tab_callback_ = std::move(callback);
   }
-  using DisassemblyCallback = std::function<void(
-      const std::string&, const std::function<double(size_t)>&)>;
+  using DisassemblyCallback =
+      std::function<void(std::string, DisassemblyReport)>;
   void SetDisassemblyCallback(DisassemblyCallback callback) {
     disassembly_callback_ = std::move(callback);
   }
@@ -202,11 +204,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void RequestOpenCaptureToUi();
   void RequestSaveCaptureToUi();
-  void SendDisassemblyToUi(
-      const std::string& disassembly,
-      const std::function<double(size_t)>& line_to_hit_ratio = [](size_t) {
-        return 0.0;
-      });
+  void SendDisassemblyToUi(std::string disassembly, DisassemblyReport report);
   void SendTooltipToUi(const std::string& tooltip);
   void RequestFeedbackDialogToUi();
   void SendInfoToUi(const std::string& title, const std::string& text);
@@ -217,15 +215,17 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     return m_FileMapping;
   }
 
-  void LoadModules(int32_t process_id,
-                   const std::vector<std::shared_ptr<Module>>& modules,
-                   const std::shared_ptr<Preset>& preset = nullptr);
-  void LoadModulesFromPreset(const std::shared_ptr<Process>& process,
-                             const std::shared_ptr<Preset>& preset);
+  void LoadModules(
+      int32_t process_id, const std::vector<std::shared_ptr<Module>>& modules,
+      const std::shared_ptr<orbit_client_protos::PresetFile>& preset = nullptr);
+  void LoadModulesFromPreset(
+      const std::shared_ptr<Process>& process,
+      const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   void UpdateModuleList(int32_t pid);
 
   void UpdateSamplingReport();
-  void LoadPreset(const std::shared_ptr<Preset>& session);
+  void LoadPreset(
+      const std::shared_ptr<orbit_client_protos::PresetFile>& session);
   void FilterFunctions(const std::string& filter);
   void FilterTracks(const std::string& filter);
 
@@ -234,16 +234,16 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   DataView* GetOrCreateDataView(DataViewType type) override;
 
  private:
-  void LoadModuleOnRemote(int32_t process_id,
-                          const std::shared_ptr<Module>& module,
-                          const std::shared_ptr<Preset>& preset);
-  void SymbolLoadingFinished(uint32_t process_id,
-                             const std::shared_ptr<Module>& module,
-                             const std::shared_ptr<Preset>& preset);
+  void LoadModuleOnRemote(
+      int32_t process_id, const std::shared_ptr<Module>& module,
+      const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
+  void SymbolLoadingFinished(
+      uint32_t process_id, const std::shared_ptr<Module>& module,
+      const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
   std::shared_ptr<Process> FindProcessByPid(int32_t pid);
 
-  ErrorMessageOr<void> ReadPresetFromFile(const std::string& filename,
-                                          Preset* preset);
+  ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
+      const std::string& filename);
 
   ApplicationOptions options_;
 

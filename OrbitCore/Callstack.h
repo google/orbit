@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "CallstackTypes.h"
-#include "SerializationMacros.h"
 
 struct CallStack {
   CallStack() = default;

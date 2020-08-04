@@ -5,6 +5,8 @@
 #ifndef ORBITDISASSEMBLYDIALOG_H
 #define ORBITDISASSEMBLYDIALOG_H
 
+#include <DisassemblyReport.h>
+
 #include <QDialog>
 #include <functional>
 #include <string>
@@ -20,9 +22,8 @@ class OrbitDisassemblyDialog : public QDialog {
   explicit OrbitDisassemblyDialog(QWidget* parent = nullptr);
   ~OrbitDisassemblyDialog() override;
 
-  void SetText(const std::string& a_Text);
-  void SetLineToHitRatio(
-      const std::function<double(size_t)>& line_to_hit_ratio);
+  void SetText(std::string a_Text);
+  void SetDisassemblyReport(DisassemblyReport report);
 
  private:
   Ui::OrbitDisassemblyDialog* ui;

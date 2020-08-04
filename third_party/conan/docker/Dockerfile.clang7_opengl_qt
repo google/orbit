@@ -1,4 +1,4 @@
-FROM ubuntu:disco
+FROM ubuntu:eoan
 
 LABEL maintainer="Luis Martinez de Bartolome <luism@jfrog.com>"
 
@@ -10,15 +10,13 @@ ENV LLVM_VERSION=7.0 \
     PYENV_ROOT=/opt/pyenv \
     PATH=/opt/pyenv/shims:${PATH}
 
-ADD sources.list.disco /etc/apt/sources.list
-
 RUN dpkg --add-architecture i386 \
     && apt-get -qq update \
     && apt-get install -y --no-install-recommends \
        sudo=1.* \
        wget=1.* \
        git=1:2.* \
-       g++-multilib=4:8.* \
+       g++-multilib=4:9.* \
        clang-7=1:7* \
        make=4.* \
        libc6-dev-i386=2.* \

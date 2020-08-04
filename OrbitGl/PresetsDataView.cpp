@@ -14,9 +14,10 @@
 #include "Capture.h"
 #include "Core.h"
 #include "ModulesDataView.h"
-#include "OrbitSession.h"
 #include "Pdb.h"
 #include "absl/strings/str_format.h"
+
+using orbit_client_protos::PresetFile;
 
 //-----------------------------------------------------------------------------
 PresetsDataView::PresetsDataView() : DataView(DataViewType::PRESETS) {}
@@ -35,13 +36,13 @@ const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
 
 //-----------------------------------------------------------------------------
 std::string PresetsDataView::GetValue(int row, int col) {
-  const std::shared_ptr<Preset>& preset = GetPreset(row);
+  const std::shared_ptr<PresetFile>& preset = GetPreset(row);
 
   switch (col) {
     case COLUMN_SESSION_NAME:
-      return Path::GetFileName(preset->m_FileName);
+      return Path::GetFileName(preset->file_name());
     case COLUMN_PROCESS_NAME:
-      return Path::GetFileName(preset->m_ProcessFullPath);
+      return Path::GetFileName(preset->preset_info().process_full_path());
     default:
       return "";
   }
@@ -49,8 +50,8 @@ std::string PresetsDataView::GetValue(int row, int col) {
 
 //-----------------------------------------------------------------------------
 std::string PresetsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
-  const Preset& preset = *GetPreset(a_Row);
-  return preset.m_FileName;
+  const PresetFile& preset = *GetPreset(a_Row);
+  return preset.file_name();
 }
 
 //-----------------------------------------------------------------------------
@@ -67,10 +68,10 @@ void PresetsDataView::DoSort() {
 
   switch (m_SortingColumn) {
     case COLUMN_SESSION_NAME:
-      sorter = ORBIT_PRESET_SORT(m_FileName);
+      sorter = ORBIT_PRESET_SORT(file_name());
       break;
     case COLUMN_PROCESS_NAME:
-      sorter = ORBIT_PRESET_SORT(m_ProcessFullPath);
+      sorter = ORBIT_PRESET_SORT(preset_info().process_full_path());
       break;
     default:
       break;
@@ -105,7 +106,7 @@ void PresetsDataView::OnContextMenu(const std::string& a_Action,
     if (a_ItemIndices.size() != 1) {
       return;
     }
-    const std::shared_ptr<Preset>& preset = GetPreset(a_ItemIndices[0]);
+    const std::shared_ptr<PresetFile>& preset = GetPreset(a_ItemIndices[0]);
 
     GOrbitApp->LoadPreset(preset);
 
@@ -114,8 +115,8 @@ void PresetsDataView::OnContextMenu(const std::string& a_Action,
       return;
     }
     int row = a_ItemIndices[0];
-    const std::shared_ptr<Preset>& preset = GetPreset(row);
-    const std::string& filename = preset->m_FileName;
+    const std::shared_ptr<PresetFile>& preset = GetPreset(row);
+    const std::string& filename = preset->file_name();
     int ret = remove(filename.c_str());
     if (ret == 0) {
       presets_.erase(presets_.begin() + m_Indices[row]);
@@ -139,9 +140,9 @@ void PresetsDataView::DoFilter() {
   std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
   for (size_t i = 0; i < presets_.size(); ++i) {
-    const Preset& preset = *presets_[i];
-    std::string name = Path::GetFileName(ToLower(preset.m_FileName));
-    std::string path = ToLower(preset.m_ProcessFullPath);
+    const PresetFile& preset = *presets_[i];
+    std::string name = Path::GetFileName(ToLower(preset.file_name()));
+    std::string path = ToLower(preset.preset_info().process_full_path());
 
     bool match = true;
 
@@ -175,13 +176,13 @@ void PresetsDataView::OnDataChanged() {
 
 //-----------------------------------------------------------------------------
 void PresetsDataView::SetPresets(
-    const std::vector<std::shared_ptr<Preset> >& presets) {
+    const std::vector<std::shared_ptr<PresetFile> >& presets) {
   presets_ = presets;
   OnDataChanged();
 }
 
 //-----------------------------------------------------------------------------
-const std::shared_ptr<Preset>& PresetsDataView::GetPreset(
+const std::shared_ptr<PresetFile>& PresetsDataView::GetPreset(
     unsigned int a_Row) const {
   return presets_[m_Indices[a_Row]];
 }
