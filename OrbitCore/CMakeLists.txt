@@ -91,7 +91,6 @@ target_link_libraries(
          OrbitClientProtos
          OrbitProtos
          capstone::capstone
-         cereal::cereal
          xxHash::xxHash
          concurrentqueue::concurrentqueue
          multicore::multicore
