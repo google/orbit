@@ -785,6 +785,7 @@ void OrbitApp::SymbolLoadingFinished(
   modules_currently_loading_.erase(module->m_FullName);
 
   UpdateSamplingReport();
+  AddTopDownView(*Capture::GSamplingProfiler);
   GOrbitApp->FireRefreshCallbacks();
 }
 
