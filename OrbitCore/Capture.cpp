@@ -17,7 +17,6 @@
 #include "Path.h"
 #include "Pdb.h"
 #include "SamplingProfiler.h"
-#include "Serialization.h"
 #include "absl/strings/str_format.h"
 
 #ifndef _WIN32

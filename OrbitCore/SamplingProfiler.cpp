@@ -14,7 +14,6 @@
 #include "Injection.h"
 #include "Log.h"
 #include "OrbitModule.h"
-#include "Serialization.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
