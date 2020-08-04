@@ -462,9 +462,9 @@ void GlCanvas::Render(int a_Width, int a_Height) {
 
   DrawScreenSpace();
 
-  RenderUI();
   m_TextRenderer.Display(&ui_batcher_);
   RenderText();
+  RenderUI();
 
   // Draw remaining elements collected with the batcher.
   ui_batcher_.Draw();
