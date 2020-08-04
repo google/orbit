@@ -93,7 +93,7 @@ void LiveFunctionsController::Move() {
         TimeGraph::VisibilityType::kFullyVisible, min_max.first, min_max.second,
         0.5);
   }
-  GCurrentTimeGraph->SetOverlayTextBoxes(current_textboxes_);
+  GCurrentTimeGraph->SetIteratorOverlayData(current_textboxes_, function_iterators_);
 }
 
 bool LiveFunctionsController::OnAllNextButton() {
@@ -101,7 +101,7 @@ bool LiveFunctionsController::OnAllNextButton() {
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
   for (auto it : function_iterators_) {
-    FunctionInfo* function = it.second;
+    const FunctionInfo* function = it.second;
     auto function_address = FunctionUtils::GetAbsoluteAddress(*function);
     const TextBox* current_box = current_textboxes_.find(it.first)->second;
     const TextBox* box = GCurrentTimeGraph->FindNextFunctionCall(
@@ -128,7 +128,7 @@ bool LiveFunctionsController::OnAllPreviousButton() {
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
   for (auto it : function_iterators_) {
-    FunctionInfo* function = it.second;
+    const FunctionInfo* function = it.second;
     auto function_address = FunctionUtils::GetAbsoluteAddress(*function);
     const TextBox* current_box = current_textboxes_.find(it.first)->second;
     const TextBox* box = GCurrentTimeGraph->FindPreviousFunctionCall(
@@ -229,7 +229,7 @@ TickType LiveFunctionsController::GetCaptureMax() {
 void LiveFunctionsController::Reset() {
   function_iterators_.clear();
   current_textboxes_.clear();
-  GCurrentTimeGraph->SetOverlayTextBoxes({});
+  GCurrentTimeGraph->SetIteratorOverlayData({}, {});
   next_iterator_id_ = 0;
   id_to_select_ = 0;
 }
