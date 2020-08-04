@@ -30,7 +30,6 @@ target_sources(
          OrbitDbgHelp.h
          OrbitModule.h
          OrbitProcess.h
-         OrbitSession.h
          OrbitVersion.h
          Params.h
          Path.h
