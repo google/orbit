@@ -21,6 +21,7 @@
 #include "DataManager.h"
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
+#include "DisassemblyReport.h"
 #include "FramePointerValidatorClient.h"
 #include "FunctionsDataView.h"
 #include "LinuxCallstackEvent.h"
@@ -136,8 +137,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetSelectLiveTabCallback(SelectLiveTabCallback callback) {
     select_live_tab_callback_ = std::move(callback);
   }
-  using DisassemblyCallback = std::function<void(
-      const std::string&, const std::function<double(size_t)>&)>;
+  using DisassemblyCallback =
+      std::function<void(std::string, DisassemblyReport)>;
   void SetDisassemblyCallback(DisassemblyCallback callback) {
     disassembly_callback_ = std::move(callback);
   }
@@ -203,11 +204,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void RequestOpenCaptureToUi();
   void RequestSaveCaptureToUi();
-  void SendDisassemblyToUi(
-      const std::string& disassembly,
-      const std::function<double(size_t)>& line_to_hit_ratio = [](size_t) {
-        return 0.0;
-      });
+  void SendDisassemblyToUi(std::string disassembly, DisassemblyReport report);
   void SendTooltipToUi(const std::string& tooltip);
   void RequestFeedbackDialogToUi();
   void SendInfoToUi(const std::string& title, const std::string& text);

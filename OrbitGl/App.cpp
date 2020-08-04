@@ -21,6 +21,7 @@
 #include "CaptureSerializer.h"
 #include "CaptureWindow.h"
 #include "Disassembler.h"
+#include "DisassemblyReport.h"
 #include "EventTracer.h"
 #include "FunctionUtils.h"
 #include "FunctionsDataView.h"
@@ -347,48 +348,16 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
                        FunctionUtils::GetAbsoluteAddress(function),
                        Capture::GTargetProcess->GetIs64Bit());
     if (!sampling_report_ || !sampling_report_->GetProfiler()) {
-      SendDisassemblyToUi(disasm.GetResult());
+      DisassemblyReport empty_report(disasm);
+      SendDisassemblyToUi(disasm.GetResult(), std::move(empty_report));
       return;
     }
     std::shared_ptr<SamplingProfiler> profiler =
         sampling_report_->GetProfiler();
-    uint32_t count_of_function = profiler->GetCountOfFunction(
-        FunctionUtils::GetAbsoluteAddress(function));
-    if (count_of_function == 0) {
-      SendDisassemblyToUi(disasm.GetResult());
-      return;
-    }
 
-    const std::function<double(size_t)> line_to_hit_ratio =
-        [profiler, disasm, count_of_function](size_t line) {
-          uint64_t address = disasm.GetAddressAtLine(line);
-          if (address == 0) {
-            return 0.0;
-          }
-
-          // On calls the address sampled might not be the address of the
-          // beginning of the instruction, but instead at the end. Thus, we
-          // iterate over all addresses that fall into this instruction.
-          uint64_t next_address = disasm.GetAddressAtLine(line + 1);
-
-          // If the current instruction is the last one (next address is 0), it
-          // can not be a call, thus we can only consider this address.
-          if (next_address == 0) {
-            next_address = address + 1;
-          }
-          const ThreadSampleData* data = profiler->GetSummary();
-          if (data == nullptr) {
-            return 0.0;
-          }
-          size_t count = 0;
-          while (address < next_address) {
-            count += SamplingUtils::GetCountForAddress(*data, address);
-            address++;
-          }
-          double result = static_cast<double>(count) / count_of_function;
-          return result;
-        };
-    SendDisassemblyToUi(disasm.GetResult(), line_to_hit_ratio);
+    DisassemblyReport report(
+        disasm, FunctionUtils::GetAbsoluteAddress(function), profiler);
+    SendDisassemblyToUi(disasm.GetResult(), std::move(report));
   });
 }
 
@@ -724,12 +693,12 @@ void OrbitApp::RequestSaveCaptureToUi() {
   });
 }
 
-void OrbitApp::SendDisassemblyToUi(
-    const std::string& disassembly,
-    const std::function<double(size_t)>& line_to_hit_ratio) {
-  main_thread_executor_->Schedule([this, disassembly, line_to_hit_ratio] {
+void OrbitApp::SendDisassemblyToUi(std::string disassembly,
+                                   DisassemblyReport report) {
+  main_thread_executor_->Schedule([this, disassembly = std::move(disassembly),
+                                   report = std::move(report)]() mutable {
     if (disassembly_callback_) {
-      disassembly_callback_(disassembly, line_to_hit_ratio);
+      disassembly_callback_(std::move(disassembly), std::move(report));
     }
   });
 }

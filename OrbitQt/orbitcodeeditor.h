@@ -55,8 +55,10 @@
 #include <QPlainTextEdit>
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
+#include <memory>
 
 #include "../OrbitCore/RingBuffer.h"
+#include "CodeReport.h"
 
 QT_BEGIN_NAMESPACE
 class QPaintEvent;
@@ -85,9 +87,9 @@ class OrbitCodeEditor : public QPlainTextEdit {
   void saveFileMap();
   void gotoLine(int a_Line);
   void OnTimer();
-  void SetText(const std::string& a_Text);
-  void SetLineToHits(const std::function<double(size_t)>& line_to_hit_ratio) {
-    line_to_hit_ratio_ = line_to_hit_ratio;
+  void SetText(std::string a_Text);
+  void SetReport(std::unique_ptr<CodeReport> report) {
+    report_ = std::move(report);
   }
   void HighlightWord(const std::string& a_Text, const QColor& a_Color,
                      QList<QTextEdit::ExtraSelection>& extraSelections);
@@ -125,7 +127,7 @@ class OrbitCodeEditor : public QPlainTextEdit {
   class QPushButton* m_SaveButton;
   EditorType m_Type;
   bool m_IsOutput;
-  std::function<double(size_t)> line_to_hit_ratio_ = [](size_t) { return 0.0; };
+  std::unique_ptr<CodeReport> report_;
 
   static OrbitCodeEditor* GFileMapEditor;
   static QWidget* GFileMapWidget;

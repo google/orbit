@@ -16,14 +16,14 @@ OrbitDisassemblyDialog::OrbitDisassemblyDialog(QWidget* parent)
 OrbitDisassemblyDialog::~OrbitDisassemblyDialog() { delete ui; }
 
 //-----------------------------------------------------------------------------
-void OrbitDisassemblyDialog::SetText(const std::string& a_Text) {
-  ui->plainTextEdit->SetText(a_Text);
+void OrbitDisassemblyDialog::SetText(std::string a_Text) {
+  ui->plainTextEdit->SetText(std::move(a_Text));
   ui->plainTextEdit->moveCursor(QTextCursor::Start);
   ui->plainTextEdit->ensureCursorVisible();
 }
 
 //-----------------------------------------------------------------------------
-void OrbitDisassemblyDialog::SetLineToHitRatio(
-    const std::function<double(size_t)>& line_to_hit_ratio) {
-  ui->plainTextEdit->SetLineToHits(line_to_hit_ratio);
+void OrbitDisassemblyDialog::SetDisassemblyReport(DisassemblyReport report) {
+  ui->plainTextEdit->SetReport(
+      std::make_unique<DisassemblyReport>(std::move(report)));
 }
