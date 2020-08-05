@@ -5,6 +5,7 @@
 #ifndef ORBIT_QT_TOP_DOWN_WIDGET_H_
 #define ORBIT_QT_TOP_DOWN_WIDGET_H_
 
+#include <QString>
 #include <QWidget>
 #include <memory>
 
@@ -28,11 +29,11 @@ class TopDownWidget : public QWidget {
   void onCustomContextMenuRequested(const QPoint& point);
 
  private:
-  static const std::string kActionExpandRecursively;
-  static const std::string kActionCollapseRecursively;
-  static const std::string kActionCollapseChildrenRecursively;
-  static const std::string kActionExpandAll;
-  static const std::string kActionCollapseAll;
+  static const QString kActionExpandRecursively;
+  static const QString kActionCollapseRecursively;
+  static const QString kActionCollapseChildrenRecursively;
+  static const QString kActionExpandAll;
+  static const QString kActionCollapseAll;
 
   std::unique_ptr<Ui::TopDownWidget> ui_;
 };

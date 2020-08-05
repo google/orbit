@@ -21,14 +21,15 @@ void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   ui_->topDownTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
 }
 
-const std::string TopDownWidget::kActionExpandRecursively =
-    "&Expand recursively";
-const std::string TopDownWidget::kActionCollapseRecursively =
-    "&Collapse recursively";
-const std::string TopDownWidget::kActionCollapseChildrenRecursively =
-    "Collapse children recursively";
-const std::string TopDownWidget::kActionExpandAll = "Expand all";
-const std::string TopDownWidget::kActionCollapseAll = "Collapse all";
+const QString TopDownWidget::kActionExpandRecursively =
+    QStringLiteral("&Expand recursively");
+const QString TopDownWidget::kActionCollapseRecursively =
+    QStringLiteral("&Collapse recursively");
+const QString TopDownWidget::kActionCollapseChildrenRecursively =
+    QStringLiteral("Collapse children recursively");
+const QString TopDownWidget::kActionExpandAll = QStringLiteral("Expand all");
+const QString TopDownWidget::kActionCollapseAll =
+    QStringLiteral("Collapse all");
 
 static void ExpandRecursively(QTreeView* tree_view, const QModelIndex& index) {
   if (!index.isValid()) {
@@ -102,37 +103,36 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
 
   QMenu menu{ui_->topDownTreeView};
   if (enable_expand_recursively) {
-    menu.addAction(kActionExpandRecursively.c_str());
+    menu.addAction(kActionExpandRecursively);
   }
   if (enable_collapse_recursively) {
-    menu.addAction(kActionCollapseRecursively.c_str());
-    menu.addAction(kActionCollapseChildrenRecursively.c_str());
+    menu.addAction(kActionCollapseRecursively);
+    menu.addAction(kActionCollapseChildrenRecursively);
   }
   menu.addSeparator();
-  menu.addAction(kActionExpandAll.c_str());
-  menu.addAction(kActionCollapseAll.c_str());
+  menu.addAction(kActionExpandAll);
+  menu.addAction(kActionCollapseAll);
 
   QAction* action = menu.exec(ui_->topDownTreeView->mapToGlobal(point));
   if (action == nullptr) {
     return;
   }
 
-  if (action->text().toStdString() == kActionExpandRecursively) {
+  if (action->text() == kActionExpandRecursively) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
       ExpandRecursively(ui_->topDownTreeView, selected_index);
     }
-  } else if (action->text().toStdString() == kActionCollapseRecursively) {
+  } else if (action->text() == kActionCollapseRecursively) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
       CollapseRecursively(ui_->topDownTreeView, selected_index);
     }
-  } else if (action->text().toStdString() ==
-             kActionCollapseChildrenRecursively) {
+  } else if (action->text() == kActionCollapseChildrenRecursively) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
       CollapseChildrenRecursively(ui_->topDownTreeView, selected_index);
     }
-  } else if (action->text().toStdString() == kActionExpandAll) {
+  } else if (action->text() == kActionExpandAll) {
     ui_->topDownTreeView->expandAll();
-  } else if (action->text().toStdString() == kActionCollapseAll) {
+  } else if (action->text() == kActionCollapseAll) {
     ui_->topDownTreeView->collapseAll();
   }
 }
