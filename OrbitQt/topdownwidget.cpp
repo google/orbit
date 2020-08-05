@@ -67,20 +67,6 @@ static void CollapseChildrenRecursively(QTreeView* tree_view,
   }
 }
 
-static void ExpandAll(QTreeView* tree_view) {
-  for (int i = 0; i < tree_view->model()->rowCount(); ++i) {
-    const QModelIndex& child = tree_view->model()->index(i, 0);
-    ExpandRecursively(tree_view, child);
-  }
-}
-
-static void CollapseAll(QTreeView* tree_view) {
-  for (int i = 0; i < tree_view->model()->rowCount(); ++i) {
-    const QModelIndex& child = tree_view->model()->index(i, 0);
-    CollapseRecursively(tree_view, child);
-  }
-}
-
 void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
   QModelIndex index = ui_->topDownTreeView->indexAt(point);
   if (!index.isValid()) {
@@ -144,8 +130,8 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
       CollapseChildrenRecursively(ui_->topDownTreeView, selected_index);
     }
   } else if (action->text().toStdString() == kActionExpandAll) {
-    ExpandAll(ui_->topDownTreeView);
+    ui_->topDownTreeView->expandAll();
   } else if (action->text().toStdString() == kActionCollapseAll) {
-    CollapseAll(ui_->topDownTreeView);
+    ui_->topDownTreeView->collapseAll();
   }
 }
