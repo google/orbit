@@ -20,6 +20,13 @@ message CaptureOptions {
     string file_path = 1;
     uint64 file_offset = 2;
     uint64 absolute_address = 3;
+
+    enum FunctionType {
+      kRegular = 0;
+      kTimerStart = 1;
+      kTimerStop = 2;
+    }
+    FunctionType function_type = 4;
   }
   repeated InstrumentedFunction instrumented_functions = 5;
 
@@ -42,6 +49,7 @@ message FunctionCall {
   uint64 end_timestamp_ns = 5;
   int32 depth = 6;
   uint64 return_value = 7;
+  repeated uint64 registers = 8;
 }
 
 message Callstack {
