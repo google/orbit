@@ -79,16 +79,16 @@ void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
     capture_info->add_address_infos()->CopyFrom(address_info.second);
   }
 
-  const auto& unique_callstacks =
-      Capture::GSamplingProfiler->GetUniqueCallstacks();
-  capture_info->mutable_callstacks()->Reserve(unique_callstacks.size());
-  for (const auto& hash_to_callstack : unique_callstacks) {
-    const std::shared_ptr<CallStack> hashed_callstack =
-        hash_to_callstack.second;
-    CallstackInfo* callstack = capture_info->add_callstacks();
-    *callstack->mutable_data() = {hashed_callstack->m_Data.begin(),
-                                  hashed_callstack->m_Data.end()};
-  }
+  // TODO: this is not really synchronized, since GetCallstacks processing below
+  // is not under the same mutex lock we could end up having list of callstacks
+  // inconsistent with unique_callstacks. Revisit sampling profiler data
+  // thread-safety.
+  Capture::GSamplingProfiler->ForEachUniqueCallstack(
+      [&capture_info](const CallStack& call_stack) {
+        CallstackInfo* callstack = capture_info->add_callstacks();
+        *callstack->mutable_data() = {call_stack.m_Data.begin(),
+                                      call_stack.m_Data.end()};
+      });
 
   auto callstacks = Capture::GSamplingProfiler->GetCallstacks();
   capture_info->mutable_callstack_events()->Reserve(callstacks->size());
