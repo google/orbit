@@ -724,6 +724,11 @@ void CaptureWindow::DrawStatus() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::RenderUI() {
+  // Don't draw ImGui when picking.
+  if (m_Picking || m_IsHovering) {
+    return;
+  }
+
   ScopeImguiContext state(m_ImGuiContext);
   Orbit_ImGui_NewFrame(this);
 
