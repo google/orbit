@@ -17,9 +17,7 @@ void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   ui_->topDownTreeView->setModel(proxy_model);
   ui_->topDownTreeView->sortByColumn(TopDownViewItemModel::kInclusive,
                                      Qt::DescendingOrder);
-  for (int column = 0; column < TopDownViewItemModel::kColumnCount; ++column) {
-    ui_->topDownTreeView->resizeColumnToContents(column);
-  }
+  ui_->topDownTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
 }
 
 const std::string TopDownWidget::kActionExpandAll = "&Expand all";
