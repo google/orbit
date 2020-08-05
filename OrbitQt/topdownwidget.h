@@ -30,6 +30,7 @@ class TopDownWidget : public QWidget {
  private:
   static const std::string kActionExpandRecursively;
   static const std::string kActionCollapseRecursively;
+  static const std::string kActionCollapseChildrenRecursively;
   static const std::string kActionExpandAll;
   static const std::string kActionCollapseAll;
 
