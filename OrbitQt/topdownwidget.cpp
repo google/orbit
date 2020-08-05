@@ -24,6 +24,8 @@ const std::string TopDownWidget::kActionExpandRecursively =
     "&Expand recursively";
 const std::string TopDownWidget::kActionCollapseRecursively =
     "&Collapse recursively";
+const std::string TopDownWidget::kActionExpandAll = "Expand all";
+const std::string TopDownWidget::kActionCollapseAll = "Collapse all";
 
 static void ExpandRecursively(QTreeView* tree_view, const QModelIndex& index) {
   if (!index.isValid()) {
@@ -49,6 +51,20 @@ static void CollapseRecursively(QTreeView* tree_view,
   }
   if (tree_view->isExpanded(index)) {
     tree_view->collapse(index);
+  }
+}
+
+static void ExpandAll(QTreeView* tree_view) {
+  for (int i = 0; i < tree_view->model()->rowCount(); ++i) {
+    const QModelIndex& child = tree_view->model()->index(i, 0);
+    ExpandRecursively(tree_view, child);
+  }
+}
+
+static void CollapseAll(QTreeView* tree_view) {
+  for (int i = 0; i < tree_view->model()->rowCount(); ++i) {
+    const QModelIndex& child = tree_view->model()->index(i, 0);
+    CollapseRecursively(tree_view, child);
   }
 }
 
@@ -84,10 +100,15 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
   }
 
   QMenu menu{ui_->topDownTreeView};
-  if (enable_expand_recursively)
+  if (enable_expand_recursively){
     menu.addAction(kActionExpandRecursively.c_str());
-  if (enable_collapse_recursively)
+  }
+  if (enable_collapse_recursively){
     menu.addAction(kActionCollapseRecursively.c_str());
+  }
+  menu.addSeparator();
+  menu.addAction(kActionExpandAll.c_str());
+  menu.addAction(kActionCollapseAll.c_str());
 
   QAction* action = menu.exec(ui_->topDownTreeView->mapToGlobal(point));
   if (action == nullptr) {
@@ -102,5 +123,9 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
       CollapseRecursively(ui_->topDownTreeView, selected_index);
     }
+  } else if (action->text().toStdString() == kActionExpandAll) {
+    ExpandAll(ui_->topDownTreeView);
+  } else if (action->text().toStdString() == kActionCollapseAll) {
+    CollapseAll(ui_->topDownTreeView);
   }
 }
