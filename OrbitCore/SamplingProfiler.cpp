@@ -74,7 +74,8 @@ void SamplingProfiler::AddCallStack(CallstackEvent& callstack_event) {
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddUniqueCallStack(CallStack& a_CallStack) {
-  m_UniqueCallstacks[a_CallStack.Hash()] =
+  absl::MutexLock lock(&unique_callstacks_mutex_);
+  unique_callstacks_[a_CallStack.Hash()] =
       std::make_shared<CallStack>(a_CallStack);
 }
 
@@ -155,8 +156,10 @@ void SamplingProfiler::ProcessSamples() {
         m_ThreadSampleData[callstack.thread_id()];
     threadSampleData.m_NumSamples++;
     threadSampleData.m_CallstackCount[callstack.callstack_hash()]++;
+
+    absl::MutexLock lock(&unique_callstacks_mutex_);
     for (uint64_t address :
-         m_UniqueCallstacks[callstack.callstack_hash()]->m_Data) {
+         unique_callstacks_[callstack.callstack_hash()]->m_Data) {
       threadSampleData.m_RawAddressCount[address]++;
     }
 
@@ -166,7 +169,7 @@ void SamplingProfiler::ProcessSamples() {
       threadSampleDataAll.m_NumSamples++;
       threadSampleDataAll.m_CallstackCount[callstack.callstack_hash()]++;
       for (uint64_t address :
-           m_UniqueCallstacks[callstack.callstack_hash()]->m_Data) {
+           unique_callstacks_[callstack.callstack_hash()]->m_Data) {
         threadSampleDataAll.m_RawAddressCount[address]++;
       }
     }
@@ -224,7 +227,9 @@ void SamplingProfiler::ProcessSamples() {
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::ResolveCallstacks() {
-  for (const auto& it : m_UniqueCallstacks) {
+  absl::MutexLock lock(&unique_callstacks_mutex_);
+
+  for (const auto& it : unique_callstacks_) {
     CallstackID rawCallstackId = it.first;
     const std::shared_ptr<CallStack> callstack = it.second;
     // A "resolved callstack" is a callstack where every address is replaced by
