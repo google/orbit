@@ -5,6 +5,7 @@
 #include "topdownwidget.h"
 
 #include <QMenu>
+#include <QSortFilterProxyModel>
 
 #include "TopDownViewItemModel.h"
 

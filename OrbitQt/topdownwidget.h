@@ -5,7 +5,7 @@
 #ifndef ORBIT_QT_TOP_DOWN_WIDGET_H_
 #define ORBIT_QT_TOP_DOWN_WIDGET_H_
 
-#include <QSortFilterProxyModel>
+#include <QWidget>
 #include <memory>
 
 #include "TopDownView.h"
