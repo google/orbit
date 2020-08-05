@@ -754,6 +754,9 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id,
               "Trying to load symbols from remote resulted in error "
               "message: %s",
               module->m_Name, remote_symbols_result.error().message()));
+      main_thread_executor_->Schedule([this, module]() {
+        modules_currently_loading_.erase(module->m_FullName);
+      });
       return;
     }
 
