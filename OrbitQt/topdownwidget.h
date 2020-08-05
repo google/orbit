@@ -18,9 +18,8 @@ class TopDownWidget : public QWidget {
   explicit TopDownWidget(QWidget* parent = nullptr)
       : QWidget{parent}, ui_{std::make_unique<Ui::TopDownWidget>()} {
     ui_->setupUi(this);
-    connect(ui_->topDownTreeView,
-            SIGNAL(customContextMenuRequested(const QPoint&)), this,
-            SLOT(onCustomContextMenuRequested(const QPoint&)));
+    connect(ui_->topDownTreeView, &QTreeView::customContextMenuRequested, this,
+            &TopDownWidget::onCustomContextMenuRequested);
   }
 
   void SetTopDownView(std::unique_ptr<TopDownView> top_down_view);
