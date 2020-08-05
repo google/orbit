@@ -28,8 +28,8 @@ class TopDownWidget : public QWidget {
   void onCustomContextMenuRequested(const QPoint& point);
 
  private:
-  static const std::string kActionExpandAll;
-  static const std::string kActionCollapseAll;
+  static const std::string kActionExpandRecursively;
+  static const std::string kActionCollapseRecursively;
 
   std::unique_ptr<Ui::TopDownWidget> ui_;
 };

@@ -20,8 +20,10 @@ void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   ui_->topDownTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
 }
 
-const std::string TopDownWidget::kActionExpandAll = "&Expand all";
-const std::string TopDownWidget::kActionCollapseAll = "&Collapse all";
+const std::string TopDownWidget::kActionExpandRecursively =
+    "&Expand recursively";
+const std::string TopDownWidget::kActionCollapseRecursively =
+    "&Collapse recursively";
 
 static void ExpandRecursively(QTreeView* tree_view, const QModelIndex& index) {
   if (!index.isValid()) {
@@ -65,36 +67,38 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
     selected_tree_indices.push_back(selected_index);
   }
 
-  bool enable_expand_all = false;
-  bool enable_collapse_all = false;
+  bool enable_expand_recursively = false;
+  bool enable_collapse_recursively = false;
   for (const QModelIndex& selected_index : selected_tree_indices) {
     if (selected_index.model()->rowCount(selected_index) > 0) {
       // As long as at least one of the selected nodes has children, always show
-      // "Expand all", as even if the selected node is expanded there could be
-      // subtrees not expanded. But only show "Collapse all" when at least one
-      // selected node is expanded, as it would otherwise be unintuitive to
-      // collapse subtrees none of which is visible.
-      enable_expand_all = true;
+      // "Expand recursively", as even if the selected node is expanded there
+      // could be subtrees not expanded. But only show "Collapse recursively"
+      // when at least one selected node is expanded, as it would otherwise be
+      // unintuitive to collapse subtrees none of which is visible.
+      enable_expand_recursively = true;
       if (ui_->topDownTreeView->isExpanded(selected_index)) {
-        enable_collapse_all = true;
+        enable_collapse_recursively = true;
       }
     }
   }
 
   QMenu menu{ui_->topDownTreeView};
-  if (enable_expand_all) menu.addAction(kActionExpandAll.c_str());
-  if (enable_collapse_all) menu.addAction(kActionCollapseAll.c_str());
+  if (enable_expand_recursively)
+    menu.addAction(kActionExpandRecursively.c_str());
+  if (enable_collapse_recursively)
+    menu.addAction(kActionCollapseRecursively.c_str());
 
   QAction* action = menu.exec(ui_->topDownTreeView->mapToGlobal(point));
   if (action == nullptr) {
     return;
   }
 
-  if (action->text().toStdString() == kActionExpandAll) {
+  if (action->text().toStdString() == kActionExpandRecursively) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
       ExpandRecursively(ui_->topDownTreeView, selected_index);
     }
-  } else if (action->text().toStdString() == kActionCollapseAll) {
+  } else if (action->text().toStdString() == kActionCollapseRecursively) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
       CollapseRecursively(ui_->topDownTreeView, selected_index);
     }
