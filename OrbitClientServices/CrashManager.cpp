@@ -9,7 +9,7 @@
 
 namespace {
 
-constexpr uint64_t kTimeoutMilliseconds = 10;
+constexpr uint64_t kTimeoutMilliseconds = 100;
 
 class CrashManagerImpl final : public CrashManager {
  public:
