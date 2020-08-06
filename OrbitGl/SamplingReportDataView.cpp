@@ -117,7 +117,7 @@ void SamplingReportDataView::DoSort() {
   }
 
   if (sorter) {
-    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(indices_.begin(), indices_.end(), sorter);
   }
 }
 
@@ -257,9 +257,9 @@ void SamplingReportDataView::SetSampledFunctions(
   m_Functions = a_Functions;
 
   size_t numFunctions = m_Functions.size();
-  m_Indices.resize(numFunctions);
+  indices_.resize(numFunctions);
   for (size_t i = 0; i < numFunctions; ++i) {
-    m_Indices[i] = i;
+    indices_[i] = i;
   }
 
   OnDataChanged();
@@ -301,7 +301,7 @@ void SamplingReportDataView::DoFilter() {
     }
   }
 
-  m_Indices = indices;
+  indices_ = indices;
 
   OnSort(m_SortingColumn, {});
 }
@@ -309,11 +309,11 @@ void SamplingReportDataView::DoFilter() {
 //-----------------------------------------------------------------------------
 const SampledFunction& SamplingReportDataView::GetSampledFunction(
     unsigned int a_Row) const {
-  return m_Functions[m_Indices[a_Row]];
+  return m_Functions[indices_[a_Row]];
 }
 
 //-----------------------------------------------------------------------------
 SampledFunction& SamplingReportDataView::GetSampledFunction(
     unsigned int a_Row) {
-  return m_Functions[m_Indices[a_Row]];
+  return m_Functions[indices_[a_Row]];
 }

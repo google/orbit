@@ -78,7 +78,7 @@ void PresetsDataView::DoSort() {
   }
 
   if (sorter) {
-    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(indices_.begin(), indices_.end(), sorter);
   }
 }
 
@@ -119,7 +119,7 @@ void PresetsDataView::OnContextMenu(const std::string& a_Action,
     const std::string& filename = preset->file_name();
     int ret = remove(filename.c_str());
     if (ret == 0) {
-      presets_.erase(presets_.begin() + m_Indices[row]);
+      presets_.erase(presets_.begin() + indices_[row]);
       OnDataChanged();
     } else {
       ERROR("Deleting preset \"%s\": %s", filename, SafeStrerror(errno));
@@ -159,16 +159,16 @@ void PresetsDataView::DoFilter() {
     }
   }
 
-  m_Indices = indices;
+  indices_ = indices;
 
   OnSort(m_SortingColumn, {});
 }
 
 //-----------------------------------------------------------------------------
 void PresetsDataView::OnDataChanged() {
-  m_Indices.resize(presets_.size());
+  indices_.resize(presets_.size());
   for (size_t i = 0; i < presets_.size(); ++i) {
-    m_Indices[i] = i;
+    indices_[i] = i;
   }
 
   DataView::OnDataChanged();
@@ -184,5 +184,5 @@ void PresetsDataView::SetPresets(
 //-----------------------------------------------------------------------------
 const std::shared_ptr<PresetFile>& PresetsDataView::GetPreset(
     unsigned int a_Row) const {
-  return presets_[m_Indices[a_Row]];
+  return presets_[indices_[a_Row]];
 }

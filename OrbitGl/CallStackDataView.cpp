@@ -185,15 +185,15 @@ void CallStackDataView::DoFilter() {
     }
   }
 
-  m_Indices = indices;
+  indices_ = indices;
 }
 
 //-----------------------------------------------------------------------------
 void CallStackDataView::OnDataChanged() {
   size_t numFunctions = m_CallStack ? m_CallStack->m_Data.size() : 0;
-  m_Indices.resize(numFunctions);
+  indices_.resize(numFunctions);
   for (size_t i = 0; i < numFunctions; ++i) {
-    m_Indices[i] = i;
+    indices_[i] = i;
   }
 
   DataView::OnDataChanged();
@@ -202,7 +202,7 @@ void CallStackDataView::OnDataChanged() {
 //-----------------------------------------------------------------------------
 CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromRow(
     int row) {
-  return GetFrameFromIndex(m_Indices[row]);
+  return GetFrameFromIndex(indices_[row]);
 }
 
 //-----------------------------------------------------------------------------
