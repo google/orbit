@@ -21,7 +21,8 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 
 //-----------------------------------------------------------------------------
-LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsController* live_functions)
+LiveFunctionsDataView::LiveFunctionsDataView(
+    LiveFunctionsController* live_functions)
     : DataView(DataViewType::LIVE_FUNCTIONS), live_functions_(live_functions) {
   m_UpdatePeriodMs = 300;
   OnDataChanged();
@@ -102,7 +103,7 @@ void LiveFunctionsDataView::DoSort() {
   bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
 
-  const std::vector<FunctionInfo*>& functions = m_Functions;
+  const std::vector<std::shared_ptr<FunctionInfo>>& functions = functions_;
 
   switch (m_SortingColumn) {
     case COLUMN_SELECTED:
@@ -137,7 +138,7 @@ void LiveFunctionsDataView::DoSort() {
   }
 
   if (sorter) {
-    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(indices_.begin(), indices_.end(), sorter);
   }
 }
 
@@ -265,8 +266,8 @@ void LiveFunctionsDataView::DoFilter() {
 
   std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');
 
-  for (size_t i = 0; i < m_Functions.size(); ++i) {
-    const FunctionInfo* function = m_Functions[i];
+  for (size_t i = 0; i < functions_.size(); ++i) {
+    const std::shared_ptr<FunctionInfo> function = functions_[i];
     if (function != nullptr) {
       std::string name = ToLower(FunctionUtils::GetDisplayName(*function));
 
@@ -285,13 +286,13 @@ void LiveFunctionsDataView::DoFilter() {
     }
   }
 
-  m_Indices = indices;
+  indices_ = indices;
 
   OnSort(m_SortingColumn, {});
 
   // Filter drawn textboxes
   Capture::GVisibleFunctionsMap.clear();
-  for (size_t i = 0; i < m_Indices.size(); ++i) {
+  for (size_t i = 0; i < indices_.size(); ++i) {
     FunctionInfo* func = GetFunction(i);
     Capture::GVisibleFunctionsMap[FunctionUtils::GetAbsoluteAddress(*func)] =
         func;
@@ -302,17 +303,12 @@ void LiveFunctionsDataView::DoFilter() {
 
 //-----------------------------------------------------------------------------
 void LiveFunctionsDataView::OnDataChanged() {
-  size_t numFunctions = Capture::GVisibleFunctionsMap.size();
-  m_Indices.resize(numFunctions);
-  for (size_t i = 0; i < numFunctions; ++i) {
-    m_Indices[i] = i;
-  }
-
-  m_Functions.clear();
-  for (auto& pair : Capture::GVisibleFunctionsMap) {
-    const ULONG64& address = pair.first;
-    FunctionInfo* func = Capture::GVisibleFunctionsMap[address];
-    m_Functions.push_back(func);
+  functions_.clear();
+  size_t functions_count = Capture::GSelectedInCaptureFunctions.size();
+  indices_.resize(functions_count);
+  for (size_t i = 0; i < functions_count; ++i) {
+    indices_[i] = i;
+    functions_.push_back(Capture::GSelectedInCaptureFunctions[i]);
   }
 
   DataView::OnDataChanged();
@@ -327,9 +323,9 @@ void LiveFunctionsDataView::OnTimer() {
 
 //-----------------------------------------------------------------------------
 FunctionInfo* LiveFunctionsDataView::GetFunction(unsigned int a_Row) const {
-  CHECK(a_Row < m_Functions.size());
-  CHECK(m_Functions[m_Indices[a_Row]]);
-  return m_Functions[m_Indices[a_Row]];
+  CHECK(a_Row < functions_.size());
+  CHECK(functions_[indices_[a_Row]]);
+  return functions_[indices_[a_Row]].get();
 }
 
 std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(

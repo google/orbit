@@ -43,7 +43,7 @@ std::string Capture::GPresetToLoad;
 std::string Capture::GProcessToInject;
 std::string Capture::GFunctionFilter;
 
-std::vector<std::shared_ptr<FunctionInfo>> Capture::GSelectedFunctions;
+std::vector<std::shared_ptr<FunctionInfo>> Capture::GSelectedInCaptureFunctions;
 std::map<uint64_t, FunctionInfo*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, FunctionInfo*> Capture::GVisibleFunctionsMap;
 std::unordered_map<uint64_t, uint64_t> Capture::GFunctionCountMap;
@@ -148,9 +148,9 @@ void Capture::ClearCaptureData() {
 
 //-----------------------------------------------------------------------------
 void Capture::PreFunctionHooks() {
-  GSelectedFunctions = GetSelectedFunctions();
+  GSelectedInCaptureFunctions = GetSelectedFunctions();
 
-  for (auto& func : GSelectedFunctions) {
+  for (auto& func : GSelectedInCaptureFunctions) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
     GSelectedFunctionsMap[address] = func.get();
     func->clear_stats();

@@ -23,10 +23,9 @@ class CaptureClient {
     CHECK(capture_listener_ != nullptr);
   }
 
-  void Capture(
-      int32_t pid,
-      const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>&
-          selected_functions);
+  void Capture(int32_t pid,
+               const std::map<uint64_t, orbit_client_protos::FunctionInfo*>&
+                   selected_functions);
   void StopCapture();
 
  private:

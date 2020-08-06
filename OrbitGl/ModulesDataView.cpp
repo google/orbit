@@ -81,7 +81,7 @@ void ModulesDataView::DoSort() {
   }
 
   if (sorter) {
-    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(indices_.begin(), indices_.end(), sorter);
   }
 }
 
@@ -168,7 +168,7 @@ void ModulesDataView::DoFilter() {
     }
   }
 
-  m_Indices = indices;
+  indices_ = indices;
 
   OnSort(m_SortingColumn, {});
 }
@@ -178,9 +178,9 @@ void ModulesDataView::SetModules(int32_t process_id,
   process_id_ = process_id;
   modules_ = modules;
 
-  m_Indices.resize(modules_.size());
-  for (size_t i = 0; i < m_Indices.size(); ++i) {
-    m_Indices[i] = i;
+  indices_.resize(modules_.size());
+  for (size_t i = 0; i < indices_.size(); ++i) {
+    indices_[i] = i;
   }
 
   OnDataChanged();
@@ -191,7 +191,7 @@ void ModulesDataView::OnRefreshButtonClicked() {
 }
 
 const ModuleData* ModulesDataView::GetModule(uint32_t row) const {
-  return modules_[m_Indices[row]];
+  return modules_[indices_[row]];
 }
 
 bool ModulesDataView::GetDisplayColor(int row, int /*column*/,

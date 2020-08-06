@@ -44,7 +44,7 @@ class DataView {
   virtual int GetDefaultSortingColumn() { return 0; }
   virtual std::vector<std::string> GetContextMenu(
       int a_ClickedIndex, const std::vector<int>& a_SelectedIndices);
-  virtual size_t GetNumElements() { return m_Indices.size(); }
+  virtual size_t GetNumElements() { return indices_.size(); }
   virtual std::string GetValue(int /*a_Row*/, int /*a_Column*/) { return ""; }
   virtual std::string GetToolTip(int /*a_Row*/, int /*a_Column*/) { return ""; }
 
@@ -91,7 +91,7 @@ class DataView {
   virtual void DoFilter() {}
   FilterCallback filter_callback_;
 
-  std::vector<uint32_t> m_Indices;
+  std::vector<uint32_t> indices_;
   std::vector<SortingOrder> m_SortingOrders;
   int m_SortingColumn = 0;
   std::string m_Filter;
