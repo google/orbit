@@ -67,7 +67,7 @@ class Capture {
   static std::shared_ptr<CallStack> GSelectedCallstack;
   static void (*GClearCaptureDataFunc)();
   static std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
-      GSelectedFunctions;
+      GSelectedInCaptureFunctions;
   static std::map<uint64_t, orbit_client_protos::FunctionInfo*>
       GSelectedFunctionsMap;
   static std::map<uint64_t, orbit_client_protos::FunctionInfo*>

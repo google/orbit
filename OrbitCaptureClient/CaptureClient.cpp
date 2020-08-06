@@ -15,8 +15,7 @@ ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
 using orbit_client_protos::FunctionInfo;
 
 void CaptureClient::Capture(
-    int32_t pid,
-    const std::vector<std::shared_ptr<FunctionInfo>>& selected_functions) {
+    int32_t pid, const std::map<uint64_t, FunctionInfo*>& selected_functions) {
   CHECK(reader_writer_ == nullptr);
 
   event_processor_.emplace(capture_listener_);
@@ -40,13 +39,14 @@ void CaptureClient::Capture(
     }
   }
   capture_options->set_trace_gpu_driver(true);
-  for (const std::shared_ptr<FunctionInfo>& function : selected_functions) {
+  for (const auto& pair : selected_functions) {
+    const FunctionInfo& function = *pair.second;
     CaptureOptions::InstrumentedFunction* instrumented_function =
         capture_options->add_instrumented_functions();
-    instrumented_function->set_file_path(function->loaded_module_path());
-    instrumented_function->set_file_offset(FunctionUtils::Offset(*function));
+    instrumented_function->set_file_path(function.loaded_module_path());
+    instrumented_function->set_file_offset(FunctionUtils::Offset(function));
     instrumented_function->set_absolute_address(
-        FunctionUtils::GetAbsoluteAddress(*function));
+        FunctionUtils::GetAbsoluteAddress(function));
   }
 
   if (!reader_writer_->Write(request)) {

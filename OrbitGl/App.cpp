@@ -584,8 +584,8 @@ bool OrbitApp::StartCapture() {
   }
 
   int32_t pid = Capture::GProcessId;
-  std::vector<std::shared_ptr<FunctionInfo>> selected_functions =
-      Capture::GSelectedFunctions;
+  std::map<uint64_t, FunctionInfo*> selected_functions =
+      Capture::GSelectedFunctionsMap;
   thread_pool_->Schedule([this, pid, selected_functions] {
     capture_client_->Capture(pid, selected_functions);
     main_thread_executor_->Schedule([this] { OnCaptureStopped(); });
