@@ -382,9 +382,6 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
   if (delta < m_MinWheelDelta) m_MinWheelDelta = delta;
   if (delta > m_MaxWheelDelta) m_MaxWheelDelta = delta;
 
-  const auto mousex = static_cast<float>(a_X);
-  const auto mousey = static_cast<float>(a_Y);
-
   float worldx;
   float worldy;
 
@@ -392,12 +389,13 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
 
   bool zoomWidth = !a_Ctrl;
   if (zoomWidth) {
-    m_MouseRatio = static_cast<double>(mousex) / getWidth();
+    m_MouseRatio = static_cast<double>(a_X) / getWidth();
     time_graph_.ZoomTime(delta_float, m_MouseRatio);
     m_WheelMomentum =
         delta_float * m_WheelMomentum < 0 ? 0 : m_WheelMomentum + delta_float;
   } else {
-    float mouse_relative_y_position = mousey / static_cast<float>(getHeight());
+    float mouse_relative_y_position =
+        static_cast<float>(a_Y) / static_cast<float>(getHeight());
     time_graph_.VerticalZoom(delta_float, mouse_relative_y_position);
   }
 

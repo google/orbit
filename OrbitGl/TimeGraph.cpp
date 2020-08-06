@@ -197,7 +197,7 @@ void TimeGraph::ZoomTime(float a_ZoomValue, double a_MouseRatio) {
 }
 
 void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
-  static const float increment_ratio = 0.1f;
+  constexpr float increment_ratio = 0.1f;
 
   const float ratio =
       zoom_value > 0 ? 1 + increment_ratio : 1 - increment_ratio;
