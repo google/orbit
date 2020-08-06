@@ -20,7 +20,7 @@ using ::ElfUtils::ElfFile;
 
 std::vector<std::string> ReadSymbolsFile() {
   std::string file_name = Path::GetSymbolsFileName();
-  if (!Path::FileExists(file_name)) {
+  if (!std::filesystem::exists(file_name)) {
     std::ofstream outfile(file_name);
     outfile << "//-------------------" << std::endl
             << "// Orbit Symbol Locations" << std::endl
@@ -77,7 +77,7 @@ ErrorMessageOr<std::string> FindSymbolsFile(
 
   LOG("Trying to find symbols for module: \"%s\"", module_path);
   for (const auto& symbols_file_path : search_file_paths) {
-    if (!Path::FileExists(symbols_file_path)) continue;
+    if (!std::filesystem::exists(symbols_file_path)) continue;
 
     ErrorMessageOr<std::unique_ptr<ElfFile>> symbols_file =
         ElfFile::Create(symbols_file_path);

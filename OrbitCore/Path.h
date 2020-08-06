@@ -42,7 +42,6 @@ class Path {
   static std::string GetParentDirectory(std::string a_FullName);
   static std::string JoinPath(const std::vector<std::string>& parts);
 
-  static bool FileExists(const std::string& a_File);
   static uint64_t FileSize(const std::string& a_File);
   static bool DirExists(const std::string& a_Dir);
   static bool IsPackaged() { return is_packaged_; }

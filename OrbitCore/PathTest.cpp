@@ -4,12 +4,14 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
+
 #include "Path.h"
 #include "absl/strings/match.h"
 
 TEST(Path, FileExistsEmptyFilename) {
   std::string filename{};
-  EXPECT_FALSE(Path::FileExists(filename));
+  EXPECT_FALSE(std::filesystem::exists(filename));
 }
 
 TEST(Path, FileExistsRootDir) {
@@ -19,13 +21,13 @@ TEST(Path, FileExistsRootDir) {
 #else
   filename = "/";
 #endif
-  EXPECT_TRUE(Path::FileExists(filename));
+  EXPECT_TRUE(std::filesystem::exists(filename));
 }
 
 #ifndef _WIN32
 TEST(Path, FileExistsDevNull) {
   std::string filename = "/dev/null";
-  EXPECT_TRUE(Path::FileExists(filename));
+  EXPECT_TRUE(std::filesystem::exists(filename));
 }
 #endif
 
