@@ -118,16 +118,6 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="VisualizeTab">
-        <attribute name="title">
-         <string>visualize</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_6">
-         <item row="0" column="0">
-          <widget class="OrbitGLWidget" name="VisualizeGLWidget"/>
-         </item>
-        </layout>
-       </widget>
       </widget>
       <widget class="QTabWidget" name="RightTabWidget">
        <property name="currentIndex">
