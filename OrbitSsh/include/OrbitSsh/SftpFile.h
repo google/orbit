@@ -39,14 +39,18 @@ class SftpFile {
   LIBSSH2_SFTP_HANDLE* GetRawFilePtr() const noexcept {
     return file_ptr_.get();
   }
-  Sftp* GetSftpPtr() const noexcept { return sftp_; }
 
  private:
-  explicit SftpFile(LIBSSH2_SFTP_HANDLE* file_ptr)
-      : file_ptr_(file_ptr, &libssh2_sftp_close_handle) {}
+  SftpFile(LIBSSH2_SFTP_HANDLE* file_ptr, Session* session,
+           std::string_view filepath)
+      : file_ptr_(file_ptr, &libssh2_sftp_close_handle),
+        session_(session),
+        filepath_(filepath) {}
+
   std::unique_ptr<LIBSSH2_SFTP_HANDLE, decltype(&libssh2_sftp_close_handle)>
       file_ptr_;
-  Sftp* sftp_;
+  Session* session_;
+  std::string filepath_;
 };
 }  // namespace OrbitSsh
 #endif  // ORBIT_SSH_SFTP_FILE_H_

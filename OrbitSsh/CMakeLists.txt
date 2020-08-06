@@ -32,6 +32,7 @@ target_sources(
           Context.cpp
           Error.cpp
           KnownHostsError.cpp
+          LibSsh2Utils.cpp
           Session.cpp
           Sftp.cpp
           SftpFile.cpp
