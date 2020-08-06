@@ -5,26 +5,26 @@
 #ifndef ORBIT_CLIENT_GGP_CLIENT_GGP_H_
 #define ORBIT_CLIENT_GGP_CLIENT_GGP_H_
 
-#include <string>
+//#include <string>
 
-#include "capture_data.pb.h"
 #include "grpcpp/grpcpp.h"
 
-#include "Callstack.h"
-#include "EventBuffer.h"
-#include "KeyAndString.h"
-#include "ScopeTimer.h"
+//#include "Callstack.h"
+//#include "EventBuffer.h"
+//#include "KeyAndString.h"
+//#include "ScopeTimer.h"
 
 #include "ClientGgpOptions.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
+#include "OrbitProcess.h" // remove if including Capture.h in here
 
 class ClientGgp : public CaptureListener {
   public:
     ClientGgp(ClientGgpOptions&& options);
     bool InitClient();
-    void StartCapture();
-    void EndCapture();
+    bool StartCapture();
+    void StopCapture();
     void SaveCapture();
 
     // CaptureListener implementation
@@ -39,10 +39,11 @@ class ClientGgp : public CaptureListener {
 
   private:
     ClientGgpOptions options_;
-
     std::shared_ptr<grpc::Channel> grpc_channel_;
-    
     std::unique_ptr<CaptureClient> capture_client_;
+
+    void InitCapture();
+    std::shared_ptr<Process> GetOrbitProcessByPid(int32_t pid);
 };
 
 #endif // ORBIT_CLIENT_GGP_CLIENT_GGP_H_
