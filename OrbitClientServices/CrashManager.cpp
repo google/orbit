@@ -40,9 +40,7 @@ void CrashManagerImpl::CrashOrbitService(
   grpc::Status status =
       crash_service_->CrashOrbitService(&context, request, &response);
 
-  if (!status.ok()) {
-    ERROR("Grpc call failed: %s", status.error_message());
-  }
+  CHECK(status.error_code() == grpc::StatusCode::DEADLINE_EXCEEDED);
 }
 
 }  // namespace
