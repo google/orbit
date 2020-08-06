@@ -376,13 +376,11 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
   if (a_Delta == 0) return;
 
   // Normalize and invert sign, so that delta < 0 is zoom in.
-  int delta = a_Delta < 0 ? 1 : -1;
+  const int delta = a_Delta < 0 ? 1 : -1;
+  const auto delta_float = static_cast<float>(delta);
 
   if (delta < m_MinWheelDelta) m_MinWheelDelta = delta;
   if (delta > m_MaxWheelDelta) m_MaxWheelDelta = delta;
-
-  float mousex = a_X;
-  float mousey = a_Y;
 
   float worldx;
   float worldy;
@@ -391,12 +389,14 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
 
   bool zoomWidth = !a_Ctrl;
   if (zoomWidth) {
-    m_MouseRatio = static_cast<double>(mousex) / getWidth();
-    time_graph_.ZoomTime(delta, m_MouseRatio);
-    m_WheelMomentum = delta * m_WheelMomentum < 0 ? 0 : m_WheelMomentum + delta;
+    m_MouseRatio = static_cast<double>(a_X) / getWidth();
+    time_graph_.ZoomTime(delta_float, m_MouseRatio);
+    m_WheelMomentum =
+        delta_float * m_WheelMomentum < 0 ? 0 : m_WheelMomentum + delta_float;
   } else {
-    float mouse_relative_y_position = mousey / getHeight();
-    time_graph_.VerticalZoom(delta, mouse_relative_y_position);
+    float mouse_relative_y_position =
+        static_cast<float>(a_Y) / static_cast<float>(getHeight());
+    time_graph_.VerticalZoom(delta_float, mouse_relative_y_position);
   }
 
   // Use the original sign of a_Delta here.
