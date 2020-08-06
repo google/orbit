@@ -196,16 +196,18 @@ void TimeGraph::ZoomTime(float a_ZoomValue, double a_MouseRatio) {
   SetMinMax(minTimeUs, maxTimeUs);
 }
 
-void TimeGraph::VerticalZoom(float zoom_value, double mouse_relative_position) {
-  static double increment_ratio = 0.1;
+void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
+  static const float increment_ratio = 0.1f;
 
-  double ratio = zoom_value > 0 ? 1 + increment_ratio : 1 - increment_ratio;
+  const float ratio =
+      zoom_value > 0 ? 1 + increment_ratio : 1 - increment_ratio;
 
-  float world_height = m_Canvas->GetWorldHeight();
-  double y_mouse_position = m_Canvas->GetWorldTopLeftY() - mouse_relative_position * world_height;
-  double top_distance = m_Canvas->GetWorldTopLeftY() - y_mouse_position;
+  const float world_height = m_Canvas->GetWorldHeight();
+  const float y_mouse_position =
+      m_Canvas->GetWorldTopLeftY() - mouse_relative_position * world_height;
+  const float top_distance = m_Canvas->GetWorldTopLeftY() - y_mouse_position;
 
-  double new_y_mouse_position = y_mouse_position / ratio;
+  const float new_y_mouse_position = y_mouse_position / ratio;
 
   float new_world_top_left_y = new_y_mouse_position + top_distance;
 
@@ -220,7 +222,7 @@ void TimeGraph::VerticalZoom(float zoom_value, double mouse_relative_position) {
   m_Canvas->SetWorldTopLeftY(new_world_top_left_y);
 
   // Finally, we have to scale every item in the layout.
-  float old_scale = m_Layout.GetScale();
+  const float old_scale = m_Layout.GetScale();
   m_Layout.SetScale(old_scale / ratio);
 }
 
@@ -261,7 +263,8 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, TickType min,
 
   double CurrentTimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
 
-  if (vis_type == VisibilityType::kFullyVisible && CurrentTimeWindowUs < (end - start)) {
+  if (vis_type == VisibilityType::kFullyVisible &&
+      CurrentTimeWindowUs < (end - start)) {
     Zoom(min, max);
     return;
   }
@@ -293,10 +296,12 @@ void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
   auto text_box_y_position = thread_track->GetYFromDepth(timer_info.depth());
 
   float world_top_left_y = m_Canvas->GetWorldTopLeftY();
-  float min_world_top_left_y = 
-      text_box_y_position + m_Layout.GetSpaceBetweenTracks() + m_Layout.GetTopMargin();
-  float max_world_top_left_y = text_box_y_position + m_Canvas->GetWorldHeight() - 
-                              GetTextBoxHeight() - m_Layout.GetBottomMargin();
+  float min_world_top_left_y = text_box_y_position +
+                               m_Layout.GetSpaceBetweenTracks() +
+                               m_Layout.GetTopMargin();
+  float max_world_top_left_y = text_box_y_position +
+                               m_Canvas->GetWorldHeight() - GetTextBoxHeight() -
+                               m_Layout.GetBottomMargin();
   CHECK(min_world_top_left_y <= max_world_top_left_y);
   world_top_left_y = std::min(world_top_left_y, max_world_top_left_y);
   world_top_left_y = std::max(world_top_left_y, min_world_top_left_y);
@@ -626,8 +631,8 @@ void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
 namespace {
 
-[[nodiscard]] std::string GetLabelBetweenIterators(const FunctionInfo& function_a,
-                                     const FunctionInfo& function_b) {
+[[nodiscard]] std::string GetLabelBetweenIterators(
+    const FunctionInfo& function_a, const FunctionInfo& function_b) {
   std::string function_from = FunctionUtils::GetDisplayName(function_a);
   std::string function_to = FunctionUtils::GetDisplayName(function_b);
   return absl::StrFormat("%s to %s", function_from, function_to);
@@ -675,15 +680,14 @@ void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
 }  // namespace
 
 void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
-  if (picking_mode != PickingMode::kNone || 
-      iterator_text_boxes_.size() == 0) {
+  if (picking_mode != PickingMode::kNone || iterator_text_boxes_.size() == 0) {
     return;
   }
 
   std::vector<std::pair<uint64_t, const TextBox*>> boxes(
       iterator_text_boxes_.size());
-  std::copy(iterator_text_boxes_.begin(),
-            iterator_text_boxes_.end(), boxes.begin());
+  std::copy(iterator_text_boxes_.begin(), iterator_text_boxes_.end(),
+            boxes.begin());
 
   // Sort boxes by start time.
   std::sort(boxes.begin(), boxes.end(),
@@ -734,8 +738,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
     uint64_t id_b = boxes[k].first;
     CHECK(iterator_functions_.find(id_a) != iterator_functions_.end());
     CHECK(iterator_functions_.find(id_b) != iterator_functions_.end());
-    const std::string& label =
-        GetLabelBetweenIterators(*(iterator_functions_[id_a]), *(iterator_functions_[id_b]));
+    const std::string& label = GetLabelBetweenIterators(
+        *(iterator_functions_[id_a]), *(iterator_functions_[id_b]));
     const std::string& time =
         GetTimeString(boxes[k - 1].second, boxes[k].second);
 
@@ -746,9 +750,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
     // at pos[1] + bottom_margin (lowest possible position) and the height of
     // the box showing the overall time (see below) is at pos[1] + (world_height
     // / 2.f), corresponding to the case k == 0 in the formula for 'text_y'.
-    float height_per_text =
-        ((world_height / 2.f) - bottom_margin) /
-        static_cast<float>(iterator_text_boxes_.size() - 1);
+    float height_per_text = ((world_height / 2.f) - bottom_margin) /
+                            static_cast<float>(iterator_text_boxes_.size() - 1);
     float text_y =
         pos[1] + (world_height / 2.f) - static_cast<float>(k) * height_per_text;
 
@@ -1067,7 +1070,8 @@ bool TimeGraph::IsPartlyVisible(TickType min, TickType max) const {
   return true;
 }
 
-bool TimeGraph::IsVisible(VisibilityType vis_type, TickType min, TickType max) const {
+bool TimeGraph::IsVisible(VisibilityType vis_type, TickType min,
+                          TickType max) const {
   switch (vis_type) {
     case VisibilityType::kPartlyVisible:
       return IsPartlyVisible(min, max);
