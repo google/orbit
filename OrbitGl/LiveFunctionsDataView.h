@@ -34,7 +34,7 @@ class LiveFunctionsDataView : public DataView {
   std::pair<TextBox*, TextBox*> GetMinMax(
       const orbit_client_protos::FunctionInfo& function) const;
 
-  std::vector<orbit_client_protos::FunctionInfo*> m_Functions;
+  std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>> functions_;
 
   LiveFunctionsController* live_functions_;
 
