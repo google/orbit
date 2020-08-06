@@ -172,7 +172,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   ui->DebugGLWidget->Initialize(GlPanel::DEBUG, this);
   ui->CaptureGLWidget->Initialize(GlPanel::CAPTURE, this);
-  ui->VisualizeGLWidget->Initialize(GlPanel::VISUALIZE, this);
 
   ui->ModulesList->Initialize(
       data_view_factory->GetOrCreateDataView(DataViewType::MODULES),
@@ -191,7 +190,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
 
   if (!m_IsDev) {
     HideTab(ui->MainTabWidget, "debug");
-    HideTab(ui->MainTabWidget, "visualize");
   }
 
   if (!absl::GetFlag(FLAGS_enable_stale_features)) {

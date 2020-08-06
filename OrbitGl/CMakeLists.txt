@@ -13,11 +13,9 @@ target_sources(
   OrbitGl
   PUBLIC App.h
          Batcher.h
-         BlackBoard.h
          CallStackDataView.h
          CaptureSerializer.h
          CaptureWindow.h
-         Card.h
          CodeReport.h
          CoreMath.h
          DataView.h
@@ -62,11 +60,9 @@ target_sources(
   OrbitGl
   PRIVATE App.cpp
           Batcher.cpp
-          BlackBoard.cpp
           CallStackDataView.cpp
           CaptureSerializer.cpp
           CaptureWindow.cpp
-          Card.cpp
           CrashManager.cpp
           DataManager.cpp
           DataView.cpp
