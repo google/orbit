@@ -249,13 +249,14 @@ int main(int argc, char* argv[]) {
   original_argv[argc] = nullptr;
 
   {
-    const std::string log_file_path = Path::GetLogFilePath();
-    InitLogFile(log_file_path);
-
     absl::SetProgramUsageMessage("CPU Profiler");
     absl::SetFlagsUsageConfig(
         absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
     absl::ParseCommandLine(argc, argv);
+
+    const std::string log_file_path = Path::GetLogFilePath();
+    InitLogFile(log_file_path);
+
 #if __linux__
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
 #endif

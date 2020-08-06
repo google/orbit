@@ -6,7 +6,9 @@
 
 #include <filesystem>
 #include <fstream>
+#include <string>
 
+#include "absl/flags/flag.h"
 #include "PrintVar.h"
 #include "Utils.h"
 
@@ -20,6 +22,8 @@
 
 #include "LinuxUtils.h"
 #endif
+
+ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
 std::string Path::base_path_;
 bool Path::is_packaged_;
@@ -238,9 +242,14 @@ std::string Path::GetAppDataPath() {
 }
 
 std::string Path::GetLogFilePath() {
-  std::string logsDir = Path::JoinPath({Path::GetAppDataPath(), "logs"});
-  std::filesystem::create_directory(logsDir);
-  return Path::JoinPath({logsDir, "Orbit.log"});
+  std::string logs_dir;
+  if (!absl::GetFlag(FLAGS_log_dir).empty()) {
+    logs_dir = absl::GetFlag(FLAGS_log_dir);
+  } else {
+    logs_dir = Path::JoinPath({Path::GetAppDataPath(), "logs"});
+  }
+  std::filesystem::create_directory(logs_dir);
+  return Path::JoinPath({logs_dir, "Orbit.log"});
 }
 
 std::string Path::GetIconsPath() {
