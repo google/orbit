@@ -9,6 +9,8 @@
 
 namespace {
 
+constexpr uint64_t kTimeoutMilliseconds = 10;
+
 class CrashManagerImpl final : public CrashManager {
  public:
   explicit CrashManagerImpl(std::shared_ptr<grpc::Channel> channel);
@@ -28,16 +30,19 @@ void CrashManagerImpl::CrashOrbitService(
   CrashOrbitServiceRequest request;
   request.set_crash_type(crash_type);
 
-  CrashOrbitServiceResponse response;
   grpc::ClientContext context;
+  std::chrono::time_point deadline =
+      std::chrono::system_clock::now() +
+      std::chrono::milliseconds(kTimeoutMilliseconds);
+  context.set_deadline(deadline);
 
-  std::function<void(grpc::Status)> callback = [](::grpc::Status status) {
-    if (!status.ok()) {
-      ERROR("Grpc call failed: %s", status.error_message());
-    }
-  };
-  crash_service_->experimental_async()->CrashOrbitService(&context, &request,
-                                                          &response, callback);
+  CrashOrbitServiceResponse response;
+  grpc::Status status =
+      crash_service_->CrashOrbitService(&context, request, &response);
+
+  if (!status.ok()) {
+    ERROR("Grpc call failed: %s", status.error_message());
+  }
 }
 
 }  // namespace

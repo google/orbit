@@ -1004,6 +1004,7 @@ void OrbitApp::FilterTracks(const std::string& filter) {
 void OrbitApp::CrashOrbitService(
     CrashOrbitServiceRequest_CrashType crash_type) {
   if (absl::GetFlag(FLAGS_devmode)) {
-    crash_manager_->CrashOrbitService(crash_type);
+    thread_pool_->Schedule(
+        [crash_type, this] { crash_manager_->CrashOrbitService(crash_type); });
   }
 }
