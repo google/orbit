@@ -27,6 +27,7 @@ class TopDownWidget : public QWidget {
 
  private slots:
   void onCustomContextMenuRequested(const QPoint& point);
+  void on_searchLineEdit_textEdited(const QString& text);
 
  private:
   static const QString kActionExpandRecursively;
