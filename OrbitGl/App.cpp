@@ -251,7 +251,7 @@ void OrbitApp::PostInit() {
 void OrbitApp::LoadFileMapping() {
   m_FileMapping.clear();
   std::string fileName = Path::GetFileMappingFileName();
-  if (!Path::FileExists(fileName)) {
+  if (!std::filesystem::exists(fileName)) {
     std::ofstream outfile(fileName);
     outfile << "//-------------------" << std::endl
             << "// Orbit File Mapping" << std::endl

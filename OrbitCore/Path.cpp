@@ -64,12 +64,6 @@ std::string Path::GetExecutablePath() {
   return path;
 }
 
-bool Path::FileExists(const std::string& file) {
-  struct stat statbuf;
-  int ret = stat(file.c_str(), &statbuf);
-  return ret == 0;
-}
-
 uint64_t Path::FileSize(const std::string& file) {
   struct stat stat_buf;
   int ret = stat(file.c_str(), &stat_buf);

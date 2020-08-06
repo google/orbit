@@ -28,7 +28,7 @@ using orbit_client_protos::FunctionInfo;
 //-----------------------------------------------------------------------------
 Module::Module(const std::string& file_name, uint64_t address_start,
                uint64_t address_end) {
-  if (!Path::FileExists(file_name)) {
+  if (!std::filesystem::exists(file_name)) {
     ERROR("Creating Module from path \"%s\": file does not exist",
           file_name.c_str());
   }
