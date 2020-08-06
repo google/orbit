@@ -196,16 +196,16 @@ void TimeGraph::ZoomTime(float a_ZoomValue, double a_MouseRatio) {
   SetMinMax(minTimeUs, maxTimeUs);
 }
 
-void TimeGraph::VerticalZoom(float zoom_value, double mouse_relative_position) {
-  static double increment_ratio = 0.1;
+void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
+  static float increment_ratio = 0.1f;
 
-  double ratio = zoom_value > 0 ? 1 + increment_ratio : 1 - increment_ratio;
+  float ratio = zoom_value > 0 ? 1 + increment_ratio : 1 - increment_ratio;
 
   float world_height = m_Canvas->GetWorldHeight();
-  double y_mouse_position = m_Canvas->GetWorldTopLeftY() - mouse_relative_position * world_height;
-  double top_distance = m_Canvas->GetWorldTopLeftY() - y_mouse_position;
+  float y_mouse_position = m_Canvas->GetWorldTopLeftY() - mouse_relative_position * world_height;
+  float top_distance = m_Canvas->GetWorldTopLeftY() - y_mouse_position;
 
-  double new_y_mouse_position = y_mouse_position / ratio;
+  float new_y_mouse_position = y_mouse_position / ratio;
 
   float new_world_top_left_y = new_y_mouse_position + top_distance;
 

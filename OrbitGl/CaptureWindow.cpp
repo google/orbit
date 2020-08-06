@@ -395,7 +395,7 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
     time_graph_.ZoomTime(delta, m_MouseRatio);
     m_WheelMomentum = delta * m_WheelMomentum < 0 ? 0 : m_WheelMomentum + delta;
   } else {
-    double mouse_relative_y_position = static_cast<double>(mousey) / getHeight();
+    float mouse_relative_y_position = mousey / getHeight();
     time_graph_.VerticalZoom(delta, mouse_relative_y_position);
   }
 
