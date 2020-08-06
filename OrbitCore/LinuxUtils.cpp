@@ -118,7 +118,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
   for (const auto& [module_path, address_range] : address_map) {
     // Filter out entries which are not executable
     if (!address_range.is_executable) continue;
-    if (!Path::FileExists(module_path)) continue;
+    if (!std::filesystem::exists(module_path)) continue;
     uint64_t file_size = Path::FileSize(module_path);
     if (file_size == 0) continue;
 
