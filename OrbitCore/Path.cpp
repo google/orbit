@@ -242,14 +242,14 @@ std::string Path::GetAppDataPath() {
 }
 
 std::string Path::GetLogFilePath() {
-  std::string logsDir;
+  std::string logs_dir;
   if (!absl::GetFlag(FLAGS_log_dir).empty()) {
-    logsDir = absl::GetFlag(FLAGS_log_dir);
+    logs_dir = absl::GetFlag(FLAGS_log_dir);
   } else {
-    logsDir = Path::JoinPath({Path::GetAppDataPath(), "logs"});
+    logs_dir = Path::JoinPath({Path::GetAppDataPath(), "logs"});
   }
-  std::filesystem::create_directory(logsDir);
-  return Path::JoinPath({logsDir, "Orbit.log"});
+  std::filesystem::create_directory(logs_dir);
+  return Path::JoinPath({logs_dir, "Orbit.log"});
 }
 
 std::string Path::GetIconsPath() {

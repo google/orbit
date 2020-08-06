@@ -254,7 +254,7 @@ int main(int argc, char* argv[]) {
         absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
     absl::ParseCommandLine(argc, argv);
 
-	const std::string log_file_path = Path::GetLogFilePath();
+    const std::string log_file_path = Path::GetLogFilePath();
     InitLogFile(log_file_path);
 
 #if __linux__
