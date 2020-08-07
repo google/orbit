@@ -31,7 +31,7 @@ function install_jq {
 function set_api_key {
   local gcurl='curl -H "$(oauth2l/oauth2l header cloud-platform userinfo.email)" -H "Content-Type: application/json"'
   local keys=$(eval $gcurl https://apikeys.googleapis.com/v2beta1/projects/60941241589/keys)
-  if [ ! $(jq -n "$keys" | jq 'select(has("keys"))') ]; then
+  if [ -z "$keys" ] || [ $(echo "$keys" | jq 'has("keys")') == "false" ]; then
     echo "Can't get list of API keys"
     echo $keys
     exit 1
