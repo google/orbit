@@ -21,8 +21,6 @@ using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetInfo;
 
 Capture::State Capture::GState = Capture::State::kEmpty;
-bool Capture::GInjected = false;
-std::string Capture::GInjectedProcess;
 uint32_t Capture::GNumInstalledHooks;
 uint64_t Capture::GNumContextSwitches;
 uint64_t Capture::GNumLinuxEvents;
@@ -55,9 +53,6 @@ void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 //-----------------------------------------------------------------------------
 void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
   if (a_Process != GTargetProcess) {
-    GInjected = false;
-    GInjectedProcess = "";
-
     GTargetProcess = a_Process;
     GSamplingProfiler = std::make_shared<SamplingProfiler>(a_Process);
     GSelectedFunctionsMap.clear();
@@ -78,8 +73,6 @@ ErrorMessageOr<void> Capture::StartCapture() {
   GProcessId = GTargetProcess->GetID();
   GProcessName = GTargetProcess->GetName();
 
-  GInjected = true;
-
   PreFunctionHooks();
 
   Capture::NewSamplingProfiler();
@@ -91,10 +84,6 @@ ErrorMessageOr<void> Capture::StartCapture() {
 
 //-----------------------------------------------------------------------------
 void Capture::StopCapture() {
-  if (!GInjected) {
-    return;
-  }
-
   GState = State::kStopping;
 }
 
