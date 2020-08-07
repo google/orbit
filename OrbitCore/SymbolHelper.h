@@ -18,10 +18,18 @@ class SymbolHelper {
       : collector_symbol_directories_(std::move(collector_symbol_directories)),
         symbols_file_directories_(std::move(symbols_file_directories)){};
 
-  ErrorMessageOr<ModuleSymbols> LoadSymbolsCollector(
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsCollector(
       const std::string& module_path) const;
-  ErrorMessageOr<ModuleSymbols> LoadUsingSymbolsPathFile(
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadUsingSymbolsPathFile(
       const std::string& module_path, const std::string& build_id) const;
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromFile(
+      const std::string& file_path, const std::string& build_id) const;
+
+  [[nodiscard]] ErrorMessageOr<std::string> FindDebugSymbolsFile(
+      const std::string& module_path, const std::string& build_id) const;
+
+  [[nodiscard]] std::string GenerateCachedFileName(
+      const std::string& file_path) const;
 
  private:
   const std::vector<std::string> collector_symbol_directories_;

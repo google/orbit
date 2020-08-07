@@ -336,19 +336,10 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
     capture_max_timestamp_ = timer_info.end();
   }
 
-  switch (timer_info.type()) {
-    case TimerInfo::kCoreActivity:
-      Capture::GHasContextSwitches = true;
-      break;
-    default:
-      break;
-  }
-
   if (timer_info.function_address() > 0) {
     FunctionInfo* func = Capture::GTargetProcess->GetFunctionFromAddress(
         timer_info.function_address());
     if (func != nullptr) {
-      ++Capture::GFunctionCountMap[timer_info.function_address()];
       FunctionUtils::UpdateStats(func, timer_info);
     }
   }

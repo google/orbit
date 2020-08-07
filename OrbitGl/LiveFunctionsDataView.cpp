@@ -261,7 +261,6 @@ void LiveFunctionsDataView::OnContextMenu(
 
 //-----------------------------------------------------------------------------
 void LiveFunctionsDataView::DoFilter() {
-  GOrbitApp->FilterFunctions(m_Filter);
   std::vector<uint32_t> indices;
 
   std::vector<std::string> tokens = absl::StrSplit(ToLower(m_Filter), ' ');

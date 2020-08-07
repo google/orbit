@@ -4,6 +4,7 @@
 
 #include "servicedeploymanager.h"
 
+#include <OrbitSshQt/SftpCopyToLocalOperation.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
@@ -133,25 +134,28 @@ outcome::result<uint16_t> ServiceDeployManager::StartTunnel(
   return outcome::success(tunnel->value().GetListenPort());
 }
 
-outcome::result<void> ServiceDeployManager::StartSftpChannel(
-    OrbitSshQt::SftpChannel* channel) {
-  auto quit_handler =
-      ConnectQuitHandler(channel, &OrbitSshQt::SftpChannel::started);
+outcome::result<std::unique_ptr<OrbitSshQt::SftpChannel>>
+ServiceDeployManager::StartSftpChannel(EventLoop* loop) {
+  auto sftp_channel =
+      std::make_unique<OrbitSshQt::SftpChannel>(&session_.value());
 
-  auto error_handler =
-      ConnectErrorHandler(channel, &OrbitSshQt::SftpChannel::errorOccurred);
+  auto quit_handler = ConnectQuitHandler(loop, sftp_channel.get(),
+                                         &OrbitSshQt::SftpChannel::started);
 
-  channel->Start();
+  auto error_handler = ConnectErrorHandler(
+      loop, sftp_channel.get(), &OrbitSshQt::SftpChannel::errorOccurred);
 
-  OUTCOME_TRY(loop_.exec());
-  return outcome::success();
+  sftp_channel->Start();
+
+  OUTCOME_TRY(loop->exec());
+  return sftp_channel;
 }
 
 outcome::result<void> ServiceDeployManager::CopyFileToRemote(
-    OrbitSshQt::SftpChannel* channel, const std::string& source,
-    const std::string& dest,
+    const std::string& source, const std::string& dest,
     OrbitSshQt::SftpCopyToRemoteOperation::FileMode dest_mode) {
-  OrbitSshQt::SftpCopyToRemoteOperation operation{&session_.value(), channel};
+  OrbitSshQt::SftpCopyToRemoteOperation operation{&session_.value(),
+                                                  sftp_channel_.get()};
 
   auto quit_handler = ConnectQuitHandler(
       &operation, &OrbitSshQt::SftpCopyToRemoteOperation::stopped);
@@ -167,26 +171,25 @@ outcome::result<void> ServiceDeployManager::CopyFileToRemote(
 }
 
 outcome::result<void> ServiceDeployManager::StopSftpChannel(
-    OrbitSshQt::SftpChannel* channel) {
+    EventLoop* loop, OrbitSshQt::SftpChannel* sftp_channel) {
   auto quit_handler =
-      ConnectQuitHandler(channel, &OrbitSshQt::SftpChannel::stopped);
+      ConnectQuitHandler(loop, sftp_channel, &OrbitSshQt::SftpChannel::stopped);
 
-  auto error_handler =
-      ConnectErrorHandler(channel, &OrbitSshQt::SftpChannel::errorOccurred);
+  auto error_handler = ConnectErrorHandler(
+      loop, sftp_channel, &OrbitSshQt::SftpChannel::errorOccurred);
 
-  channel->Stop();
+  sftp_channel->Stop();
 
-  OUTCOME_TRY(loop_.exec());
+  OUTCOME_TRY(loop->exec());
   return outcome::success();
+}
+
+void ServiceDeployManager::StopSftpChannel() {
+  (void)StopSftpChannel(&loop_, sftp_channel_.get());
 }
 
 outcome::result<void> ServiceDeployManager::CopyOrbitServicePackage() {
   emit statusMessage("Copying OrbitService package to the remote instance...");
-
-  OrbitSshQt::SftpChannel channel{&session_.value()};
-
-  OUTCOME_TRY(StartSftpChannel(&channel));
-  LOG("SFTP Channel open.");
 
   auto& config =
       std::get<SignedDebianPackageDeployment>(deployment_configuration_);
@@ -194,19 +197,60 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServicePackage() {
   using FileMode = OrbitSshQt::SftpCopyToRemoteOperation::FileMode;
 
   OUTCOME_TRY(
-      MapError(CopyFileToRemote(&channel, config.path_to_package.string(),
+      MapError(CopyFileToRemote(config.path_to_package.string(),
                                 kDebDestinationPath, FileMode::kUserWritable),
                Error::kCouldNotUploadPackage));
 
   OUTCOME_TRY(
-      MapError(CopyFileToRemote(&channel, config.path_to_signature.string(),
+      MapError(CopyFileToRemote(config.path_to_signature.string(),
                                 kSigDestinationPath, FileMode::kUserWritable),
                Error::kCouldNotUploadSignature));
 
-  OUTCOME_TRY(StopSftpChannel(&channel));
-
   emit statusMessage(
       "Finished copying the OrbitService package to the remote instance.");
+  return outcome::success();
+}
+
+ErrorMessageOr<void> ServiceDeployManager::CopyFileToLocal(
+    std::string_view source, std::string_view destination) {
+  LOG("Copying remote \"%s\" to local \"%s\"", source, destination);
+  EventLoop loop;
+
+  auto sftp_channel = StartSftpChannel(&loop);
+
+  if (!sftp_channel) {
+    return ErrorMessage(absl::StrFormat(
+        R"(Unable to start sftp channel to copy the remote "%s" to "%s": %s)",
+        source, destination, sftp_channel.error().message()));
+  }
+
+  OrbitSshQt::SftpCopyToLocalOperation operation{&session_.value(),
+                                                 sftp_channel.value().get()};
+
+  auto quit_handler = ConnectQuitHandler(
+      &loop, &operation, &OrbitSshQt::SftpCopyToLocalOperation::stopped);
+
+  auto error_handler = ConnectErrorHandler(
+      &loop, &operation, &OrbitSshQt::SftpCopyToLocalOperation::errorOccurred);
+
+  operation.CopyFileToLocal(source, destination);
+
+  auto result = loop.exec();
+  if (!result) {
+    return ErrorMessage(
+        absl::StrFormat(R"(Error copying remote "%s" to "%s": %s)", source,
+                        destination, result.error().message()));
+  }
+
+  auto sftp_channel_stop_result =
+      StopSftpChannel(&loop, sftp_channel.value().get());
+
+  if (!sftp_channel_stop_result) {
+    ERROR(
+        R"(Error closing sftp channel (after copied remote "%s" to "%s": %s))",
+        source, destination, sftp_channel_stop_result.error().message());
+  }
+
   return outcome::success();
 }
 
@@ -214,21 +258,14 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServiceExecutable() {
   emit statusMessage(
       "Copying OrbitService executable to the remote instance...");
 
-  OrbitSshQt::SftpChannel channel{&session_.value()};
-
-  OUTCOME_TRY(StartSftpChannel(&channel));
-  LOG("SFTP Channel open.");
-
   const std::string exe_destination_path = "/tmp/OrbitService";
   auto& config = std::get<BareExecutableAndRootPasswordDeployment>(
       deployment_configuration_);
 
-  OUTCOME_TRY(CopyFileToRemote(&channel, config.path_to_executable.string(),
+  OUTCOME_TRY(CopyFileToRemote(config.path_to_executable.string(),
                                exe_destination_path,
                                OrbitSshQt::SftpCopyToRemoteOperation::FileMode::
                                    kUserWritableAllExecutable));
-
-  OUTCOME_TRY(StopSftpChannel(&channel));
 
   emit statusMessage(
       "Finished copying the OrbitService executable to the remote instance.");
@@ -382,7 +419,8 @@ void ServiceDeployManager::StartWatchdog() {
 
 outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec() {
   OUTCOME_TRY(ConnectToServer());
-
+  OUTCOME_TRY(sftp_channel, StartSftpChannel(&loop_));
+  sftp_channel_ = std::move(sftp_channel);
   // Release mode: Deploying a signed debian package. No password required.
   if (std::holds_alternative<SignedDebianPackageDeployment>(
           deployment_configuration_)) {
@@ -482,8 +520,10 @@ void ServiceDeployManager::ShutdownSession() {
 }
 
 void ServiceDeployManager::Shutdown() {
+  StopSftpChannel();
   ShutdownTunnel(&grpc_tunnel_);
   ShutdownOrbitService();
   ShutdownSession();
 }
+
 }  // namespace OrbitQt

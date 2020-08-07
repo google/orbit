@@ -94,23 +94,6 @@ std::string OrbitApp::FindFile(const std::string& caption,
   return std::string();
 }
 
-//-----------------------------------------------------------------------------
-void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
-  for (const std::string& arg : a_Args) {
-    if (absl::StrContains(arg, "preset:")) {
-      std::vector<std::string> vec = absl::StrSplit(arg, ":");
-      if (vec.size() > 1) {
-        Capture::GPresetToLoad = vec[1];
-      }
-    } else if (absl::StrContains(arg, "inject:")) {
-      std::vector<std::string> vec = absl::StrSplit(arg, ":");
-      if (vec.size() > 1) {
-        Capture::GProcessToInject = vec[1];
-      }
-    }
-  }
-}
-
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   GCurrentTimeGraph->ProcessTimer(timer_info);
 }
@@ -677,22 +660,6 @@ void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
   FireRefreshCallbacks(DataViewType::CALLSTACK);
 }
 
-void OrbitApp::RequestOpenCaptureToUi() {
-  main_thread_executor_->Schedule([this] {
-    if (open_capture_callback_) {
-      open_capture_callback_();
-    }
-  });
-}
-
-void OrbitApp::RequestSaveCaptureToUi() {
-  main_thread_executor_->Schedule([this] {
-    if (save_capture_callback_) {
-      save_capture_callback_();
-    }
-  });
-}
-
 void OrbitApp::SendDisassemblyToUi(std::string disassembly,
                                    DisassemblyReport report) {
   main_thread_executor_->Schedule([this, disassembly = std::move(disassembly),
@@ -711,15 +678,7 @@ void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
   });
 }
 
-void OrbitApp::RequestFeedbackDialogToUi() {
-  main_thread_executor_->Schedule([this] {
-    if (feedback_dialog_callback_) {
-      feedback_dialog_callback_();
-    }
-  });
-}
 
-//-----------------------------------------------------------------------------
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {
     if (info_message_callback_) {
@@ -743,32 +702,63 @@ void OrbitApp::LoadModuleOnRemote(int32_t process_id,
                                   const std::shared_ptr<Module>& module,
                                   const std::shared_ptr<PresetFile>& preset) {
   thread_pool_->Schedule([this, process_id, module, preset]() {
-    const auto remote_symbols_result =
-        process_manager_->LoadSymbols(module->m_FullName);
+    const std::string& module_path = module->m_FullName;
+    const std::string& build_id = module->m_DebugSignature;
 
-    if (!remote_symbols_result) {
-      SendErrorToUi(
-          "Error loading symbols",
-          absl::StrFormat(
-              "Did not find symbols on local machine for module \"%s\".\n"
-              "Trying to load symbols from remote resulted in error "
-              "message: %s",
-              module->m_Name, remote_symbols_result.error().message()));
+    const auto result =
+        process_manager_->FindDebugInfoFile(module_path, build_id);
+
+    if (!result) {
+      SendErrorToUi("Error loading symbols",
+                    absl::StrFormat(
+                        "Did not find symbols on remote for module \"%s\": %s",
+                        module_path, result.error().message()));
       main_thread_executor_->Schedule([this, module]() {
         modules_currently_loading_.erase(module->m_FullName);
       });
       return;
     }
 
-    main_thread_executor_->Schedule(
-        [this, symbols = std::move(remote_symbols_result.value()), module,
-         process_id, preset]() {
-          module->LoadSymbols(symbols);
-          LOG("Received and loaded %lu function symbols from remote service "
-              "for module %s",
-              module->m_Pdb->GetFunctions().size(), module->m_Name.c_str());
-          SymbolLoadingFinished(process_id, module, preset);
-        });
+    const std::string& debug_file_path = result.value();
+
+    LOG("Found file on the remote: \"%s\" - loading it using scp...",
+        debug_file_path);
+
+    main_thread_executor_->Schedule([this, module, module_path, build_id,
+                                     process_id, preset, debug_file_path]() {
+      const std::string local_debug_file_path =
+          symbol_helper_.GenerateCachedFileName(module_path);
+
+      {
+        SCOPE_TIMER_LOG(absl::StrFormat("Copying %s", debug_file_path));
+        auto scp_result =
+            secure_copy_callback_(debug_file_path, local_debug_file_path);
+        if (!scp_result) {
+          SendErrorToUi(
+              "Error loading symbols",
+              absl::StrFormat(
+                  "Could not copy debug info file from the remote: %s",
+                  scp_result.error().message()));
+          return;
+        }
+      }
+
+      const auto result =
+          symbol_helper_.LoadSymbolsFromFile(local_debug_file_path, build_id);
+      if (!result) {
+        SendErrorToUi(
+            "Error loading symbols",
+            absl::StrFormat(
+                R"(Did not load symbols for module "%s" (debug info file "%s"): %s)",
+                module_path, local_debug_file_path, result.error().message()));
+        return;
+      }
+      module->LoadSymbols(result.value());
+      LOG("Received and loaded %lu function symbols from remote service "
+          "for module %s",
+          module->m_Pdb->GetFunctions().size(), module->m_Name.c_str());
+      SymbolLoadingFinished(process_id, module, preset);
+    });
   });
 }
 
@@ -804,8 +794,17 @@ void OrbitApp::LoadModules(int32_t process_id,
     modules_currently_loading_.insert(module->m_FullName);
 
     // TODO (159889010) Move symbol loading off the main thread.
-    const auto symbols = symbol_helper_.LoadUsingSymbolsPathFile(
-        module->m_FullName, module->m_DebugSignature);
+    const std::string& module_path = module->m_FullName;
+    const std::string& build_id = module->m_DebugSignature;
+    auto symbols =
+        symbol_helper_.LoadUsingSymbolsPathFile(module_path, build_id);
+
+    // Try loading from the cache
+    if (!symbols) {
+      const std::string cached_file_name =
+          symbol_helper_.GenerateCachedFileName(module_path);
+      symbols = symbol_helper_.LoadSymbolsFromFile(cached_file_name, build_id);
+    }
 
     if (symbols) {
       module->LoadSymbols(symbols.value());
@@ -997,11 +996,6 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::FilterFunctions(const std::string& filter) {
-  Capture::GFunctionFilter = filter;
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::FilterTracks(const std::string& filter) {
   GCurrentTimeGraph->SetThreadFilter(filter);
 }
@@ -1010,6 +1004,7 @@ void OrbitApp::FilterTracks(const std::string& filter) {
 void OrbitApp::CrashOrbitService(
     CrashOrbitServiceRequest_CrashType crash_type) {
   if (absl::GetFlag(FLAGS_devmode)) {
-    crash_manager_->CrashOrbitService(crash_type);
+    thread_pool_->Schedule(
+        [crash_type, this] { crash_manager_->CrashOrbitService(crash_type); });
   }
 }

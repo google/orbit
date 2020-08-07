@@ -7,6 +7,7 @@
 #include "Batcher.h"
 #include "GlCanvas.h"
 #include "GlSlider.h"
+#include "TextBox.h"
 
 struct ContextSwitch;
 
@@ -43,7 +44,6 @@ class CaptureWindow : public GlCanvas {
   void OnTimer() override;
   void Draw() override;
   void DrawScreenSpace() override;
-  void DrawStatus();
   void RenderUI() override;
   void RenderText() override;
   void PreRender() override;
@@ -52,7 +52,7 @@ class CaptureWindow : public GlCanvas {
   void RenderHelpUi();
   void RenderTimeBar();
   void ResetHoverTimer();
-  void SelectTextBox(class TextBox* a_TextBox);
+  void SelectTextBox(TextBox* text_box);
   void OnDrag(float a_Ratio);
   void OnVerticalDrag(float a_Ratio);
   void NeedsUpdate();
@@ -81,7 +81,6 @@ class CaptureWindow : public GlCanvas {
   bool m_DrawStats;
   std::shared_ptr<GlSlider> slider_;
   std::shared_ptr<GlSlider> vertical_slider_;
-  int m_ProcessX;
 
   static const std::string MENU_ACTION_GO_TO_CALLSTACK;
   static const std::string MENU_ACTION_GO_TO_SOURCE;

@@ -200,13 +200,14 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     clipboard_callback_ = std::move(callback);
   }
 
-  void SetCommandLineArguments(const std::vector<std::string>& a_Args);
+  using SecureCopyCallback =
+      std::function<ErrorMessageOr<void>(std::string_view, std::string_view)>;
+  void SetSecureCopyCallback(SecureCopyCallback callback) {
+    secure_copy_callback_ = callback;
+  }
 
-  void RequestOpenCaptureToUi();
-  void RequestSaveCaptureToUi();
   void SendDisassemblyToUi(std::string disassembly, DisassemblyReport report);
   void SendTooltipToUi(const std::string& tooltip);
-  void RequestFeedbackDialogToUi();
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
@@ -226,7 +227,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void UpdateSamplingReport();
   void LoadPreset(
       const std::shared_ptr<orbit_client_protos::PresetFile>& session);
-  void FilterFunctions(const std::string& filter);
   void FilterTracks(const std::string& filter);
 
   void CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type);
@@ -270,6 +270,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   FindFileCallback find_file_callback_;
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;
+  SecureCopyCallback secure_copy_callback_;
 
   std::unique_ptr<ProcessesDataView> m_ProcessesDataView;
   std::unique_ptr<ModulesDataView> m_ModulesDataView;

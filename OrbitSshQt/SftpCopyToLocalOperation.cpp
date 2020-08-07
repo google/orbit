@@ -60,11 +60,11 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
       ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kLocalFileOpened: {
-      constexpr size_t kReadBufferMaxSize = 32 * 1024;
+      constexpr size_t kReadBufferMaxSize = 1 * 1024 * 1024;
 
       while (true) {
         OUTCOME_TRY(read_buffer, sftp_file_->Read(kReadBufferMaxSize));
-        if (read_buffer.size() == 0) {
+        if (read_buffer.empty()) {
           // This is end of file
           SetState(State::kLocalFileWritten);
           break;

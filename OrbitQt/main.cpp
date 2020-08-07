@@ -125,7 +125,13 @@ static outcome::result<void> RunUiInstance(
   options.grpc_server_address =
       absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
 
-  OrbitMainWindow w(app, std::move(options));
+  ServiceDeployManager* service_deploy_manager_ptr = nullptr;
+
+  if (service_deploy_manager) {
+    service_deploy_manager_ptr = &service_deploy_manager.value();
+  }
+
+  OrbitMainWindow w(app, std::move(options), service_deploy_manager_ptr);
   // "resize" is required to make "showMaximized" work properly.
   w.resize(1280, 720);
   w.showMaximized();

@@ -18,9 +18,6 @@ class ProcessServiceImpl final : public ProcessService::Service {
   grpc::Status GetProcessList(grpc::ServerContext* context,
                               const GetProcessListRequest* request,
                               GetProcessListResponse* response) override;
-  grpc::Status GetSymbols(grpc::ServerContext* context,
-                          const GetSymbolsRequest* request,
-                          GetSymbolsResponse* response) override;
 
   grpc::Status GetModuleList(grpc::ServerContext* context,
                              const GetModuleListRequest* request,
@@ -29,6 +26,10 @@ class ProcessServiceImpl final : public ProcessService::Service {
   grpc::Status GetProcessMemory(grpc::ServerContext* context,
                                 const GetProcessMemoryRequest* request,
                                 GetProcessMemoryResponse* response) override;
+
+  grpc::Status GetDebugInfoFile(grpc::ServerContext* context,
+                                const GetDebugInfoFileRequest* request,
+                                GetDebugInfoFileResponse* response) override;
 
  private:
   absl::Mutex mutex_;

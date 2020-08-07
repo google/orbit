@@ -51,9 +51,8 @@ class ProcessManager {
                                                         uint64_t address,
                                                         uint64_t size) = 0;
 
-  // Get symbols for a module
-  virtual ErrorMessageOr<ModuleSymbols> LoadSymbols(
-      const std::string& module_path) const = 0;
+  virtual ErrorMessageOr<std::string> FindDebugInfoFile(
+      const std::string& module_path, const std::string& build_id) = 0;
 
   // Note that this method waits for the worker thread to stop, which could
   // take up to refresh_timeout.

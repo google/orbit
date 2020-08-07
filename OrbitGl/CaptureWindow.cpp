@@ -28,7 +28,6 @@ CaptureWindow::CaptureWindow() {
   m_WorldTopLeftX = 0;
   m_WorldTopLeftY = 0;
   m_WorldMaxY = 0;
-  m_ProcessX = 0;
 
   slider_ = std::make_shared<GlSlider>();
   vertical_slider_ = std::make_shared<GlSlider>();
@@ -196,20 +195,17 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureWindow::SelectTextBox(class TextBox* a_TextBox) {
-  if (a_TextBox == nullptr) return;
-  Capture::GSelectedTextBox = a_TextBox;
-  Capture::GSelectedThreadId = a_TextBox->GetTimerInfo().thread_id();
-  Capture::GSelectedCallstack =
-      Capture::GetCallstack(a_TextBox->GetTimerInfo().callstack_hash());
-  GOrbitApp->SetCallStack(Capture::GSelectedCallstack);
+void CaptureWindow::SelectTextBox(class TextBox* text_box) {
+  if (text_box == nullptr) return;
+  Capture::GSelectedTextBox = text_box;
+  Capture::GSelectedThreadId = text_box->GetTimerInfo().thread_id();
 
-  const TimerInfo& timer_info = a_TextBox->GetTimerInfo();
+  const TimerInfo& timer_info = text_box->GetTimerInfo();
   DWORD64 address = timer_info.function_address();
   FindCode(address);
 
-  if (m_DoubleClicking && a_TextBox) {
-    time_graph_.Zoom(a_TextBox);
+  if (m_DoubleClicking) {
+    time_graph_.Zoom(text_box);
   }
 }
 
@@ -578,7 +574,6 @@ void CaptureWindow::Draw() {
   }
 
   if (!m_Picking && !m_IsHovering) {
-    DrawStatus();
     RenderTimeBar();
 
     Vec2 pos(m_MouseX, m_WorldTopLeftY);
@@ -700,29 +695,6 @@ float CaptureWindow::GetTopBarTextY() {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureWindow::DrawStatus() {
-  int s_PosX = 0;
-  int s_PosY = static_cast<int>(GetTopBarTextY());
-  static int s_IncY = 20;
-
-  static Color s_Color(255, 255, 255, 255);
-
-  int PosX = getWidth() - s_PosX;
-  int PosY = s_PosY;
-  int LeftY = s_PosY;
-
-  LeftY += s_IncY;
-
-  if (Capture::GInjected) {
-    std::string injectStr =
-        absl::StrFormat(" %s", Capture::GInjectedProcess.c_str());
-    m_ProcessX = m_TextRenderer.AddText2D(injectStr.c_str(), PosX, PosY,
-                                          Z_VALUE_TEXT_UI, s_Color, -1, true);
-    PosY += s_IncY;
-  }
-}
-
-//-----------------------------------------------------------------------------
 void CaptureWindow::RenderUI() {
   // Don't draw ImGui when picking.
   if (m_Picking || m_IsHovering) {
@@ -749,10 +721,6 @@ void CaptureWindow::RenderUI() {
     m_StatsWindow.AddLine(VAR_TO_STR(m_WorldMinWidth));
     m_StatsWindow.AddLine(VAR_TO_STR(m_MouseX));
     m_StatsWindow.AddLine(VAR_TO_STR(m_MouseY));
-    m_StatsWindow.AddLine(VAR_TO_STR(Capture::GNumContextSwitches));
-    m_StatsWindow.AddLine(VAR_TO_STR(Capture::GNumLinuxEvents));
-    m_StatsWindow.AddLine(VAR_TO_STR(Capture::GNumProfileEvents));
-    m_StatsWindow.AddLine(VAR_TO_STR(Capture::GNumInstalledHooks));
     m_StatsWindow.AddLine(VAR_TO_STR(Capture::GSelectedFunctionsMap.size()));
     m_StatsWindow.AddLine(VAR_TO_STR(Capture::GVisibleFunctionsMap.size()));
     m_StatsWindow.AddLine(VAR_TO_STR(time_graph_.GetNumDrawnTextBoxes()));

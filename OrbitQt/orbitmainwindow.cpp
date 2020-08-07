@@ -46,12 +46,12 @@ ABSL_DECLARE_FLAG(bool, enable_stale_features);
 ABSL_DECLARE_FLAG(bool, devmode);
 
 //-----------------------------------------------------------------------------
-OrbitMainWindow* GMainWindow;
 extern QMenu* GContextMenu;
 
 //-----------------------------------------------------------------------------
-OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
-                                 ApplicationOptions&& options)
+OrbitMainWindow::OrbitMainWindow(
+    QApplication* a_App, ApplicationOptions&& options,
+    OrbitQt::ServiceDeployManager* service_deploy_manager)
     : QMainWindow(nullptr),
       m_App(a_App),
       ui(new Ui::OrbitMainWindow),
@@ -167,6 +167,13 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   GOrbitApp->SetClipboardCallback(
       [this](const std::string& text) { this->OnSetClipboard(text); });
 
+  GOrbitApp->SetSecureCopyCallback(
+      [service_deploy_manager](std::string_view source,
+                               std::string_view destination) {
+        CHECK(service_deploy_manager != nullptr);
+        return service_deploy_manager->CopyFileToLocal(source, destination);
+      });
+
   ParseCommandlineArguments();
 
   ui->DebugGLWidget->Initialize(GlPanel::DEBUG, this);
@@ -223,8 +230,6 @@ OrbitMainWindow::OrbitMainWindow(QApplication* a_App,
   SetTitle({});
   std::string iconFileName = Path::GetExecutablePath() + "orbit.ico";
   this->setWindowIcon(QIcon(iconFileName.c_str()));
-
-  GMainWindow = this;
 
   GOrbitApp->PostInit();
 }
@@ -395,8 +400,6 @@ void OrbitMainWindow::ParseCommandlineArguments() {
 
     arguments.push_back(std::move(argument));
   }
-
-  GOrbitApp->SetCommandLineArguments(arguments);
 }
 
 //-----------------------------------------------------------------------------
@@ -604,7 +607,6 @@ void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnLiveTabFunctionsFilterTextChanged(const QString& text) {
-  GOrbitApp->FilterFunctions(text.toStdString());
 
   // Set main toolbar functions filter without triggering signals.
   filter_functions_line_edit_->blockSignals(true);
