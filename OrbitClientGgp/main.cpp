@@ -35,6 +35,7 @@ int main(int argc, char** argv) {
         absl::StrFormat("127.0.0.1:%d", grpc_port_);
   options.capture_pid = absl::GetFlag(FLAGS_pid);
 
+  //  std::unique_ptr<ClientGgp> client_ggp = std::make_unique<ClientGgp>(std::move(options));
   ClientGgp client_ggp(std::move(options));
   if (!client_ggp.InitClient()){
     return -1;
@@ -42,11 +43,15 @@ int main(int argc, char** argv) {
 
   LOG("Lets start the capture");
 
-  if(!client_ggp.StartCapture()){
+  if(!client_ggp.PrepareStartCapture()){
     return -1;
   }
 
-  LOG("Obvs not reaching here");
+  // TODO: Do this in a new thread
+  client_ggp.RequestStartCapture();
+
+  // Captures for a little while
+  sleep(10);
 
   client_ggp.StopCapture();
 
