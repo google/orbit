@@ -400,8 +400,6 @@ void OrbitMainWindow::ParseCommandlineArguments() {
 
     arguments.push_back(std::move(argument));
   }
-
-  GOrbitApp->SetCommandLineArguments(arguments);
 }
 
 //-----------------------------------------------------------------------------

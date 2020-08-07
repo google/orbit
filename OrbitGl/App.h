@@ -206,13 +206,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     secure_copy_callback_ = callback;
   }
 
-  void SetCommandLineArguments(const std::vector<std::string>& args);
-
-  void RequestOpenCaptureToUi();
-  void RequestSaveCaptureToUi();
   void SendDisassemblyToUi(std::string disassembly, DisassemblyReport report);
   void SendTooltipToUi(const std::string& tooltip);
-  void RequestFeedbackDialogToUi();
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();

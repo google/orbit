@@ -4,24 +4,16 @@
 
 #include "Capture.h"
 
-#include <fstream>
 #include <ostream>
 
 #include "Core.h"
 #include "EventBuffer.h"
 #include "FunctionUtils.h"
-#include "Injection.h"
-#include "Log.h"
 #include "OrbitBase/Logging.h"
-#include "Params.h"
 #include "Path.h"
 #include "Pdb.h"
 #include "SamplingProfiler.h"
 #include "absl/strings/str_format.h"
-
-#ifndef _WIN32
-std::shared_ptr<Pdb> GPdbDbg;
-#endif
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
@@ -32,11 +24,9 @@ Capture::State Capture::GState = Capture::State::kEmpty;
 bool Capture::GInjected = false;
 std::string Capture::GInjectedProcess;
 uint32_t Capture::GNumInstalledHooks;
-bool Capture::GHasContextSwitches;
-Timer Capture::GTestTimer;
 uint64_t Capture::GNumContextSwitches;
-ULONG64 Capture::GNumLinuxEvents;
-ULONG64 Capture::GNumProfileEvents;
+uint64_t Capture::GNumLinuxEvents;
+uint64_t Capture::GNumProfileEvents;
 std::string Capture::GProcessToInject;
 std::string Capture::GFunctionFilter;
 
@@ -135,7 +125,6 @@ void Capture::ClearCaptureData() {
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
   GNumProfileEvents = 0;
-  GHasContextSwitches = false;
   GNumLinuxEvents = 0;
   GNumContextSwitches = 0;
   GState = State::kEmpty;

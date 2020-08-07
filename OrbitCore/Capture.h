@@ -49,12 +49,10 @@ class Capture {
   static std::string GProcessToInject;
   static std::string GFunctionFilter;
   static uint32_t GNumInstalledHooks;
-  static bool GHasContextSwitches;
 
-  static Timer GTestTimer;
   static uint64_t GNumContextSwitches;
-  static ULONG64 GNumLinuxEvents;
-  static ULONG64 GNumProfileEvents;
+  static uint64_t GNumLinuxEvents;
+  static uint64_t GNumProfileEvents;
   static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
   static std::shared_ptr<Process> GTargetProcess;
   static std::shared_ptr<orbit_client_protos::PresetFile> GSessionPresets;
