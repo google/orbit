@@ -46,7 +46,6 @@ class Capture {
   static bool GInjected;
   static std::string GInjectedProcess;
   static std::string GProcessToInject;
-  static std::string GFunctionFilter;
   static uint32_t GNumInstalledHooks;
 
   static uint64_t GNumContextSwitches;
