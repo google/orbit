@@ -22,7 +22,6 @@ using orbit_client_protos::PresetInfo;
 
 Capture::State Capture::GState = Capture::State::kEmpty;
 uint64_t Capture::GNumContextSwitches;
-uint64_t Capture::GNumLinuxEvents;
 uint64_t Capture::GNumProfileEvents;
 
 std::vector<std::shared_ptr<FunctionInfo>> Capture::GSelectedInCaptureFunctions;
@@ -104,7 +103,6 @@ void Capture::ClearCaptureData() {
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
   GNumProfileEvents = 0;
-  GNumLinuxEvents = 0;
   GNumContextSwitches = 0;
   GState = State::kEmpty;
 }
