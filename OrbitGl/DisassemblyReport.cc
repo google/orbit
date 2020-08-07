@@ -1,7 +1,5 @@
 #include "DisassemblyReport.h"
 
-#include "SamplingUtils.h"
-
 uint32_t DisassemblyReport::GetNumSamplesAtLine(size_t line) const {
   if (function_count_ == 0 || profiler_ == nullptr) {
     return 0;
@@ -27,7 +25,7 @@ uint32_t DisassemblyReport::GetNumSamplesAtLine(size_t line) const {
   }
   uint32_t count = 0;
   while (address < next_address) {
-    count += SamplingUtils::GetCountForAddress(*data, address);
+    count += data->GetCountForAddress(address);
     address++;
   }
   return count;

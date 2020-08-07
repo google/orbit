@@ -34,6 +34,7 @@ struct SampledFunction {
 //-----------------------------------------------------------------------------
 struct ThreadSampleData {
   ThreadSampleData() { m_ThreadUsage.push_back(0); }
+  [[nodiscard]] uint32_t GetCountForAddress(uint64_t address) const;
   std::unordered_map<CallstackID, uint32_t> m_CallstackCount;
   std::unordered_map<uint64_t, uint32_t> m_AddressCount;
   std::unordered_map<uint64_t, uint32_t> m_RawAddressCount;
@@ -82,8 +83,7 @@ class SamplingProfiler {
     return unique_callstacks_.count(a_ID) > 0;
   }
 
-  const CallStack& GetResolvedCallstack(
-      CallstackID raw_callstack_id) const;
+  const CallStack& GetResolvedCallstack(CallstackID raw_callstack_id) const;
 
   std::multimap<int, CallstackID> GetCallstacksFromAddress(
       uint64_t a_Addr, ThreadID a_TID, int* o_NumCallstacks);

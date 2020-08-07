@@ -53,6 +53,14 @@ void ComputeAverageThreadUsage(ThreadSampleData* data) {
 
 }  // namespace
 
+uint32_t ThreadSampleData::GetCountForAddress(uint64_t address) const {
+  auto res = m_RawAddressCount.find(address);
+  if (res == m_RawAddressCount.end()) {
+    return 0;
+  }
+  return (*res).second;
+}
+
 //-----------------------------------------------------------------------------
 std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
     uint64_t a_Addr, ThreadID a_TID, int* o_NumCallstacks) {
