@@ -21,7 +21,6 @@ using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetInfo;
 
 Capture::State Capture::GState = Capture::State::kEmpty;
-uint64_t Capture::GNumContextSwitches;
 
 std::vector<std::shared_ptr<FunctionInfo>> Capture::GSelectedInCaptureFunctions;
 std::map<uint64_t, FunctionInfo*> Capture::GSelectedFunctionsMap;
@@ -101,7 +100,6 @@ void Capture::ClearCaptureData() {
   GAddressToModuleName.clear();
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
-  GNumContextSwitches = 0;
   GState = State::kEmpty;
 }
 
