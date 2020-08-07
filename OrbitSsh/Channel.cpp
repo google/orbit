@@ -123,7 +123,7 @@ outcome::result<void> Channel::Close() {
   const int rc = libssh2_channel_close(raw_channel_ptr_.get());
 
   if (rc == 0) {
-    raw_channel_ptr_.release();
+    raw_channel_ptr_.reset();
     return outcome::success();
   } else {
     return static_cast<Error>(rc);
