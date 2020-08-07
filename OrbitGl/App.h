@@ -74,7 +74,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void StopCapture();
   void ClearCapture();
   void ToggleDrawHelp();
-  void OnCaptureStopped();
   void ToggleCapture();
   void SetCallStack(std::shared_ptr<CallStack> a_CallStack);
   void LoadFileMapping();
@@ -83,6 +82,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void Disassemble(int32_t pid,
                    const orbit_client_protos::FunctionInfo& function);
 
+  void OnCaptureStarted() override;
+  void OnCaptureComplete() override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnCallstack(CallStack callstack) override;
@@ -302,6 +303,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   const SymbolHelper symbol_helper_;
 
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
+
+  // Temporary objects used by CaptureListener implementation
+  std::unordered_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
+      captured_address_infos_;
 };
 
 //-----------------------------------------------------------------------------

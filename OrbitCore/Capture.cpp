@@ -101,7 +101,6 @@ void Capture::ClearCaptureData() {
   GAddressToModuleName.clear();
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
-  GState = State::kEmpty;
 }
 
 //-----------------------------------------------------------------------------
