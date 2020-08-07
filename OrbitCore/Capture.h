@@ -57,13 +57,34 @@ class Capture {
   static int32_t GProcessId;
   static std::string GProcessName;
   static std::unordered_map<int32_t, std::string> GThreadNames;
-  static std::unordered_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
-      GAddressInfos;
   static std::unordered_map<uint64_t, std::string> GAddressToFunctionName;
   static std::unordered_map<uint64_t, std::string> GAddressToModuleName;
   static class TextBox* GSelectedTextBox;
   static ThreadID GSelectedThreadId;
   static std::chrono::system_clock::time_point GCaptureTimePoint;
+
+  static void FoeEachAddressInfo(
+      const std::function<void(const orbit_client_protos::LinuxAddressInfo&)>&
+          action);
+
+  template <typename InputIterator>
+  static void ResetAddressInfos(InputIterator begin, InputIterator end) {
+    absl::MutexLock lock(&address_infos_mutex_);
+    address_infos_.clear();
+    for (auto it = begin; it != end; ++it) {
+      const orbit_client_protos::LinuxAddressInfo& address_info = *it;
+      address_infos_.insert_or_assign(address_info.absolute_address(),
+                                      address_info);
+    }
+  }
+  static void AddAddressInfo(
+      orbit_client_protos::LinuxAddressInfo address_info);
+
+ private:
+  static absl::Mutex address_infos_mutex_;
+  static absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
+      address_infos_;
+  static void ClearAddressInfos();
 };
 
 #endif  // ORBIT_CORE_CAPTURE_H_

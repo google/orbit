@@ -28,7 +28,6 @@ std::map<uint64_t, FunctionInfo*> Capture::GVisibleFunctionsMap;
 int32_t Capture::GProcessId = -1;
 std::string Capture::GProcessName;
 std::unordered_map<int32_t, std::string> Capture::GThreadNames;
-std::unordered_map<uint64_t, LinuxAddressInfo> Capture::GAddressInfos;
 std::unordered_map<uint64_t, std::string> Capture::GAddressToFunctionName;
 std::unordered_map<uint64_t, std::string> Capture::GAddressToModuleName;
 TextBox* Capture::GSelectedTextBox = nullptr;
@@ -42,6 +41,9 @@ std::shared_ptr<PresetFile> Capture::GSessionPresets = nullptr;
 
 void (*Capture::GClearCaptureDataFunc)();
 std::vector<std::shared_ptr<SamplingProfiler>> GOldSamplingProfilers;
+
+ABSL_CONST_INIT absl::Mutex Capture::address_infos_mutex_(absl::kConstInit);
+absl::flat_hash_map<uint64_t, LinuxAddressInfo> Capture::address_infos_;
 
 //-----------------------------------------------------------------------------
 void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
@@ -96,12 +98,12 @@ void Capture::ClearCaptureData() {
   GProcessId = -1;
   GProcessName = "";
   GThreadNames.clear();
-  GAddressInfos.clear();
   GAddressToFunctionName.clear();
   GAddressToModuleName.clear();
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
   GState = State::kEmpty;
+  ClearAddressInfos();
 }
 
 //-----------------------------------------------------------------------------
@@ -189,8 +191,8 @@ void Capture::NewSamplingProfiler() {
 
 //-----------------------------------------------------------------------------
 LinuxAddressInfo* Capture::GetAddressInfo(uint64_t address) {
-  auto address_info_it = GAddressInfos.find(address);
-  if (address_info_it == GAddressInfos.end()) {
+  auto address_info_it = address_infos_.find(address);
+  if (address_info_it == address_infos_.end()) {
     return nullptr;
   }
   return &address_info_it->second;
@@ -202,4 +204,24 @@ void Capture::PreSave() {
   for (auto& pair : GSelectedFunctionsMap) {
     GSamplingProfiler->UpdateAddressInfo(pair.first);
   }
+}
+
+void Capture::FoeEachAddressInfo(
+    const std::function<void(const orbit_client_protos::LinuxAddressInfo&)>&
+        action) {
+  absl::MutexLock lock(&address_infos_mutex_);
+  for (auto it : address_infos_) {
+    action(it.second);
+  }
+}
+
+void Capture::AddAddressInfo(
+    orbit_client_protos::LinuxAddressInfo address_info) {
+  absl::MutexLock lock(&address_infos_mutex_);
+  uint64_t absolute_address = address_info.absolute_address();
+  address_infos_.emplace(absolute_address, std::move(address_info));
+}
+void Capture::ClearAddressInfos() {
+  absl::MutexLock lock(&address_infos_mutex_);
+  address_infos_.clear();
 }
