@@ -94,18 +94,6 @@ std::string OrbitApp::FindFile(const std::string& caption,
   return std::string();
 }
 
-//-----------------------------------------------------------------------------
-void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& args) {
-  for (const std::string& arg : args) {
-    if (absl::StrContains(arg, "inject:")) {
-      std::vector<std::string> vec = absl::StrSplit(arg, ":");
-      if (vec.size() > 1) {
-        Capture::GProcessToInject = vec[1];
-      }
-    }
-  }
-}
-
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   GCurrentTimeGraph->ProcessTimer(timer_info);
 }
@@ -672,22 +660,6 @@ void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
   FireRefreshCallbacks(DataViewType::CALLSTACK);
 }
 
-void OrbitApp::RequestOpenCaptureToUi() {
-  main_thread_executor_->Schedule([this] {
-    if (open_capture_callback_) {
-      open_capture_callback_();
-    }
-  });
-}
-
-void OrbitApp::RequestSaveCaptureToUi() {
-  main_thread_executor_->Schedule([this] {
-    if (save_capture_callback_) {
-      save_capture_callback_();
-    }
-  });
-}
-
 void OrbitApp::SendDisassemblyToUi(std::string disassembly,
                                    DisassemblyReport report) {
   main_thread_executor_->Schedule([this, disassembly = std::move(disassembly),
@@ -706,15 +678,7 @@ void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
   });
 }
 
-void OrbitApp::RequestFeedbackDialogToUi() {
-  main_thread_executor_->Schedule([this] {
-    if (feedback_dialog_callback_) {
-      feedback_dialog_callback_();
-    }
-  });
-}
 
-//-----------------------------------------------------------------------------
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {
     if (info_message_callback_) {
