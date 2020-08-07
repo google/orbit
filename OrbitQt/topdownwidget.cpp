@@ -6,72 +6,22 @@
 
 #include <QColor>
 #include <QMenu>
-#include <QSortFilterProxyModel>
 
 #include "TopDownViewItemModel.h"
-#include "absl/container/flat_hash_set.h"
-
-class HighlightingSortFilterProxyModel : public QSortFilterProxyModel {
- public:
-  explicit HighlightingSortFilterProxyModel(QObject* parent)
-      : QSortFilterProxyModel{parent} {}
-
-  // Specify a set where this ProxyModel should put internalPointers of indices
-  // that match the current filter.
-  void SetFilterAcceptedNodeCollectorSet(
-      absl::flat_hash_set<void*>* filter_accepted_nodes_collector) {
-    filter_accepted_nodes_collector_ = filter_accepted_nodes_collector;
-  }
-
-  // Specify a set of internalPointers whose indices should be highlighted.
-  void SetNodesToHighlightSet(
-      std::unique_ptr<absl::flat_hash_set<void*>> nodes_to_highlight) {
-    nodes_to_highlight_ = std::move(nodes_to_highlight);
-  }
-
-  QVariant data(const QModelIndex& index, int role) const override {
-    if (role == Qt::ForegroundRole && nodes_to_highlight_ != nullptr) {
-      QModelIndex source_index = mapToSource(index);
-      if (nodes_to_highlight_->contains(source_index.internalPointer())) {
-        return QColor{Qt::green};
-      }
-    }
-    return QSortFilterProxyModel::data(index, role);
-  }
-
- protected:
-  bool filterAcceptsRow(int source_row,
-                        const QModelIndex& source_parent) const override {
-    bool accepts_row =
-        QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
-    if (accepts_row && filter_accepted_nodes_collector_ != nullptr) {
-      QModelIndex source_index =
-          sourceModel()->index(source_row, 0, source_parent);
-      filter_accepted_nodes_collector_->insert(source_index.internalPointer());
-    }
-    return accepts_row;
-  }
-
- private:
-  mutable absl::flat_hash_set<void*>* filter_accepted_nodes_collector_ =
-      nullptr;
-  std::unique_ptr<absl::flat_hash_set<void*>> nodes_to_highlight_ = nullptr;
-};
 
 void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   auto* model =
       new TopDownViewItemModel{std::move(top_down_view), ui_->topDownTreeView};
-  auto* proxy_model =
-      new HighlightingSortFilterProxyModel{ui_->topDownTreeView};
-  proxy_model->setSourceModel(model);
-  proxy_model->setSortRole(Qt::EditRole);
+  proxy_model_ = new HighlightingSortFilterProxyModel{ui_->topDownTreeView};
+  proxy_model_->setSourceModel(model);
+  proxy_model_->setSortRole(Qt::EditRole);
 
-  proxy_model->setFilterRole(Qt::DisplayRole);
-  proxy_model->setFilterKeyColumn(TopDownViewItemModel::kThreadOrFunction);
-  proxy_model->setFilterCaseSensitivity(Qt::CaseInsensitive);
-  proxy_model->setRecursiveFilteringEnabled(true);
+  proxy_model_->setFilterRole(Qt::DisplayRole);
+  proxy_model_->setFilterKeyColumn(TopDownViewItemModel::kThreadOrFunction);
+  proxy_model_->setFilterCaseSensitivity(Qt::CaseInsensitive);
+  proxy_model_->setRecursiveFilteringEnabled(true);
 
-  ui_->topDownTreeView->setModel(proxy_model);
+  ui_->topDownTreeView->setModel(proxy_model_);
   ui_->topDownTreeView->sortByColumn(TopDownViewItemModel::kInclusive,
                                      Qt::DescendingOrder);
   ui_->topDownTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
@@ -221,13 +171,11 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
 }
 
 void TopDownWidget::on_searchLineEdit_textEdited(const QString& text) {
-  auto* proxy_model = dynamic_cast<HighlightingSortFilterProxyModel*>(
-      ui_->topDownTreeView->model());
-  if (proxy_model == nullptr) {
+  if (proxy_model_ == nullptr) {
     return;
   }
   if (text.isEmpty()) {
-    proxy_model->SetNodesToHighlightSet(nullptr);
+    proxy_model_->SetNodesToHighlightSet(nullptr);
     ui_->topDownTreeView->viewport()->update();
     return;
   }
@@ -245,12 +193,46 @@ void TopDownWidget::on_searchLineEdit_textEdited(const QString& text) {
   ui_->topDownTreeView->collapseAll();
   auto filter_accepted_nodes_collector =
       std::make_unique<absl::flat_hash_set<void*>>();
-  proxy_model->SetFilterAcceptedNodeCollectorSet(
+  proxy_model_->SetFilterAcceptedNodeCollectorSet(
       filter_accepted_nodes_collector.get());
-  proxy_model->setFilterFixedString(text);
+  proxy_model_->setFilterFixedString(text);
   ExpandAllButCollapseLeaves(ui_->topDownTreeView);
-  proxy_model->SetFilterAcceptedNodeCollectorSet(nullptr);
-  proxy_model->SetNodesToHighlightSet(
+  proxy_model_->SetFilterAcceptedNodeCollectorSet(nullptr);
+  proxy_model_->SetNodesToHighlightSet(
       std::move(filter_accepted_nodes_collector));
-  proxy_model->setFilterFixedString(QStringLiteral(""));
+  proxy_model_->setFilterFixedString(QStringLiteral(""));
+}
+
+void TopDownWidget::HighlightingSortFilterProxyModel::
+    SetFilterAcceptedNodeCollectorSet(
+        absl::flat_hash_set<void*>* filter_accepted_nodes_collector) {
+  filter_accepted_nodes_collector_ = filter_accepted_nodes_collector;
+}
+
+void TopDownWidget::HighlightingSortFilterProxyModel::SetNodesToHighlightSet(
+    std::unique_ptr<absl::flat_hash_set<void*>> nodes_to_highlight) {
+  nodes_to_highlight_ = std::move(nodes_to_highlight);
+}
+
+QVariant TopDownWidget::HighlightingSortFilterProxyModel::data(
+    const QModelIndex& index, int role) const {
+  if (role == Qt::ForegroundRole && nodes_to_highlight_ != nullptr) {
+    QModelIndex source_index = mapToSource(index);
+    if (nodes_to_highlight_->contains(source_index.internalPointer())) {
+      return QColor{Qt::green};
+    }
+  }
+  return QSortFilterProxyModel::data(index, role);
+}
+
+bool TopDownWidget::HighlightingSortFilterProxyModel::filterAcceptsRow(
+    int source_row, const QModelIndex& source_parent) const {
+  bool accepts_row =
+      QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+  if (accepts_row && filter_accepted_nodes_collector_ != nullptr) {
+    QModelIndex source_index =
+        sourceModel()->index(source_row, 0, source_parent);
+    filter_accepted_nodes_collector_->insert(source_index.internalPointer());
+  }
+  return accepts_row;
 }
