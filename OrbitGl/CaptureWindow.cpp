@@ -196,20 +196,17 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
 }
 
 //-----------------------------------------------------------------------------
-void CaptureWindow::SelectTextBox(class TextBox* a_TextBox) {
-  if (a_TextBox == nullptr) return;
-  Capture::GSelectedTextBox = a_TextBox;
-  Capture::GSelectedThreadId = a_TextBox->GetTimerInfo().thread_id();
-  Capture::GSelectedCallstack =
-      Capture::GetCallstack(a_TextBox->GetTimerInfo().callstack_hash());
-  GOrbitApp->SetCallStack(Capture::GSelectedCallstack);
+void CaptureWindow::SelectTextBox(class TextBox* text_box) {
+  if (text_box == nullptr) return;
+  Capture::GSelectedTextBox = text_box;
+  Capture::GSelectedThreadId = text_box->GetTimerInfo().thread_id();
 
-  const TimerInfo& timer_info = a_TextBox->GetTimerInfo();
+  const TimerInfo& timer_info = text_box->GetTimerInfo();
   DWORD64 address = timer_info.function_address();
   FindCode(address);
 
-  if (m_DoubleClicking && a_TextBox) {
-    time_graph_.Zoom(a_TextBox);
+  if (m_DoubleClicking) {
+    time_graph_.Zoom(text_box);
   }
 }
 

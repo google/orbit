@@ -7,6 +7,7 @@
 #include "Batcher.h"
 #include "GlCanvas.h"
 #include "GlSlider.h"
+#include "TextBox.h"
 
 struct ContextSwitch;
 
@@ -52,7 +53,7 @@ class CaptureWindow : public GlCanvas {
   void RenderHelpUi();
   void RenderTimeBar();
   void ResetHoverTimer();
-  void SelectTextBox(class TextBox* a_TextBox);
+  void SelectTextBox(TextBox* text_box);
   void OnDrag(float a_Ratio);
   void OnVerticalDrag(float a_Ratio);
   void NeedsUpdate();
