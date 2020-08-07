@@ -40,13 +40,16 @@ void CaptureClient::Capture(
   }
   capture_options->set_trace_gpu_driver(true);
   for (const auto& pair : selected_functions) {
-    const FunctionInfo& function = *pair.second;
+    const FunctionInfo* function = pair.second;
+    if (function == nullptr) {
+      continue;
+    }
     CaptureOptions::InstrumentedFunction* instrumented_function =
         capture_options->add_instrumented_functions();
-    instrumented_function->set_file_path(function.loaded_module_path());
-    instrumented_function->set_file_offset(FunctionUtils::Offset(function));
+    instrumented_function->set_file_path(function->loaded_module_path());
+    instrumented_function->set_file_offset(FunctionUtils::Offset(*function));
     instrumented_function->set_absolute_address(
-        FunctionUtils::GetAbsoluteAddress(function));
+        FunctionUtils::GetAbsoluteAddress(*function));
   }
 
   if (!reader_writer_->Write(request)) {
