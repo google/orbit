@@ -7,8 +7,9 @@
 # Fail on any error.
 set -e
 
-DIR="/mnt/github/orbitprofiler"
-SCRIPT="${DIR}/kokoro/gcp_ubuntu/kokoro_build.sh"
+readonly DIR="/mnt/github/orbitprofiler"
+readonly SCRIPT="${DIR}/kokoro/gcp_ubuntu/kokoro_build.sh"
+readonly CONAN_PROFILE="clang7_relwithdebinfo"
 
 if [ "$0" == "$SCRIPT" ]; then
   # We are inside the docker container
@@ -18,7 +19,6 @@ if [ "$0" == "$SCRIPT" ]; then
   echo "Installing conan configuration (profiles, settings, etc.)..."
   ${DIR}/third_party/conan/configs/install.sh || exit $?
 
-  CONAN_PROFILE="clang7_relwithdebinfo"
   CRASHDUMP_SERVER="$(cat /mnt/keystore/74938_orbitprofiler_crashdump_collection_server | tr -d '\n')"
 
   # Building Orbit
@@ -56,6 +56,6 @@ if [ "$0" == "$SCRIPT" ]; then
 
 else
   gcloud auth configure-docker --quiet
-  docker run --rm --network host -v ${KOKORO_ARTIFACTS_DIR}:/mnt gcr.io/orbitprofiler/clang7_opengl_qt:latest $SCRIPT
+  docker run --rm --network host -v ${KOKORO_ARTIFACTS_DIR}:/mnt gcr.io/orbitprofiler/${CONAN_PROFILE}:latest $SCRIPT
 fi
 
