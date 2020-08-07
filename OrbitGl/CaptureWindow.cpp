@@ -28,7 +28,6 @@ CaptureWindow::CaptureWindow() {
   m_WorldTopLeftX = 0;
   m_WorldTopLeftY = 0;
   m_WorldMaxY = 0;
-  m_ProcessX = 0;
 
   slider_ = std::make_shared<GlSlider>();
   vertical_slider_ = std::make_shared<GlSlider>();
@@ -575,7 +574,6 @@ void CaptureWindow::Draw() {
   }
 
   if (!m_Picking && !m_IsHovering) {
-    DrawStatus();
     RenderTimeBar();
 
     Vec2 pos(m_MouseX, m_WorldTopLeftY);
@@ -694,29 +692,6 @@ void CaptureWindow::NeedsUpdate() {
 float CaptureWindow::GetTopBarTextY() {
   return slider_->GetPixelHeight() * 0.5f +
          m_TextRenderer.GetStringHeight("FpjT_H") * 0.5f;
-}
-
-//-----------------------------------------------------------------------------
-void CaptureWindow::DrawStatus() {
-  int s_PosX = 0;
-  int s_PosY = static_cast<int>(GetTopBarTextY());
-  static int s_IncY = 20;
-
-  static Color s_Color(255, 255, 255, 255);
-
-  int PosX = getWidth() - s_PosX;
-  int PosY = s_PosY;
-  int LeftY = s_PosY;
-
-  LeftY += s_IncY;
-
-  if (Capture::GInjected) {
-    std::string injectStr =
-        absl::StrFormat(" %s", Capture::GInjectedProcess.c_str());
-    m_ProcessX = m_TextRenderer.AddText2D(injectStr.c_str(), PosX, PosY,
-                                          Z_VALUE_TEXT_UI, s_Color, -1, true);
-    PosY += s_IncY;
-  }
 }
 
 //-----------------------------------------------------------------------------
