@@ -161,15 +161,6 @@ bool ReadMessage(google::protobuf::Message* message,
   return true;
 }
 
-void FillFunctionCountMap() {
-  Capture::GFunctionCountMap.clear();
-  for (const auto& pair : Capture::GSelectedFunctionsMap) {
-    uint64_t address = pair.first;
-    FunctionInfo* function = pair.second;
-    Capture::GFunctionCountMap[address] = function->stats().count();
-  }
-}
-
 void FillEventBuffer() {
   GEventTracer.GetEventBuffer().Reset();
   for (const CallstackEvent& callstack_event :
@@ -192,8 +183,6 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
         *function_ptr)] = function_ptr.get();
   }
   Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
-
-  FillFunctionCountMap();
 
   Capture::GProcessId = capture_info.process_id();
   Capture::GProcessName = capture_info.process_name();
