@@ -75,17 +75,19 @@ void TimeGraph::SetFontSize(int a_FontSize) {
 }
 
 void TimeGraph::Clear() {
+  ScopeLock lock(m_Mutex);
+
   m_Batcher.Reset();
   capture_min_timestamp_ = std::numeric_limits<TickType>::max();
   capture_max_timestamp_ = 0;
   m_ThreadCountMap.clear();
   GEventTracer.GetEventBuffer().Reset();
 
-  ScopeLock lock(m_Mutex);
   tracks_.clear();
   scheduler_track_ = nullptr;
   thread_tracks_.clear();
   gpu_tracks_.clear();
+  graph_tracks_.clear();
 
   cores_seen_.clear();
   scheduler_track_ = GetOrCreateSchedulerTrack();
@@ -320,8 +322,12 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
   if (timer_info.function_address() > 0) {
     FunctionInfo* func = Capture::GTargetProcess->GetFunctionFromAddress(
         timer_info.function_address());
+
     if (func != nullptr) {
       FunctionUtils::UpdateStats(func, timer_info);
+      if (FunctionUtils::IsOrbitFunc(*func)) {
+        ProcessOrbitFunctionTimer(func, timer_info);
+      }
     }
   }
 
@@ -349,6 +355,88 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
   NeedsUpdate();
 }
 
+//-----------------------------------------------------------------------------
+void TimeGraph::ProcessOrbitFunctionTimer(const FunctionInfo* function,
+                                          const TimerInfo& timer_info) {
+  FunctionInfo::OrbitType type = function->type();
+  uint64_t time = timer_info.start();
+  CHECK(timer_info.registers_size() > 0);
+  uint64_t graph_id = timer_info.registers(0);
+
+  switch (type) {
+    case FunctionInfo::kOrbitTrackInt: {
+      int32_t value = static_cast<int32_t>(timer_info.registers(1));
+      auto track = GetOrCreateGraphTrack(graph_id);
+      track->AddValue(value, time);
+    } break;
+    case FunctionInfo::kOrbitTrackInt64: {
+      int64_t value = static_cast<int64_t>(timer_info.registers(1));
+      auto track = GetOrCreateGraphTrack(graph_id);
+      track->AddValue(value, time);
+    } break;
+    case FunctionInfo::kOrbitTrackUint: {
+      uint32_t value = static_cast<uint32_t>(timer_info.registers(1));
+      auto track = GetOrCreateGraphTrack(graph_id);
+      track->AddValue(value, time);
+    } break;
+    case FunctionInfo::kOrbitTrackUint64: {
+      uint64_t value = static_cast<uint64_t>(timer_info.registers(1));
+      auto track = GetOrCreateGraphTrack(graph_id);
+      track->AddValue(value, time);
+    } break;
+    case FunctionInfo::kOrbitTrackFloatAsInt: {
+      int32_t int_value = static_cast<int32_t>(timer_info.registers(1));
+      float value = *(reinterpret_cast<float*>(&int_value));
+      auto track = GetOrCreateGraphTrack(graph_id);
+      track->AddValue(value, time);
+      break;
+    }
+    case FunctionInfo::kOrbitTrackDoubleAsInt64: {
+      int64_t int_value = static_cast<int64_t>(timer_info.registers(1));
+      double value = *(reinterpret_cast<double*>(&int_value));
+      auto track = GetOrCreateGraphTrack(graph_id);
+      track->AddValue(value, time);
+      break;
+    }
+    case FunctionInfo::kOrbitTimerStart:
+      ProcessManualIntrumentationTimer(timer_info);
+      break;
+    default:
+      break;
+  }
+}
+
+void TimeGraph::ProcessManualIntrumentationTimer(const TimerInfo& timer_info) {
+  uint64_t string_address = timer_info.registers(0);
+
+  // Request remote string on first encounter of string_address.
+  if (!manual_instrumentation_string_manager_.Contains(string_address)) {
+    // Prevent redundant string requests while the current request is in flight.
+    manual_instrumentation_string_manager_.AddOrReplace(string_address, "");
+
+    GOrbitApp->GetThreadPool()->Schedule([this, string_address]() {
+      int32_t pid = Capture::GTargetProcess->GetID();
+      const auto& process_manager = GOrbitApp->GetProcessManager();
+      auto error_or_string =
+          process_manager->LoadNullTerminatedString(pid, string_address);
+
+      if (error_or_string.has_value()) {
+        manual_instrumentation_string_manager_.AddOrReplace(
+            string_address, error_or_string.value());
+      } else {
+        ERROR("Error loading remote string %s",
+              error_or_string.error().message());
+      }
+    });
+  }
+}
+
+std::string TimeGraph::GetManualInstrumentationString(
+    uint64_t string_address) const {
+  return manual_instrumentation_string_manager_.Get(string_address).value_or("blah");
+}
+
+//-----------------------------------------------------------------------------
 uint32_t TimeGraph::GetNumTimers() const {
   uint32_t numTimers = 0;
   ScopeLock lock(m_Mutex);
@@ -803,6 +891,48 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(
   return track;
 }
 
+<<<<<<< HEAD
+=======
+//-----------------------------------------------------------------------------
+void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track,
+                                  uint64_t string_address) {
+  const auto& thread_pool = GOrbitApp->GetThreadPool();
+
+  thread_pool->Schedule([track, string_address]() {
+    int32_t pid = Capture::GTargetProcess->GetID();
+    const auto& process_manager = GOrbitApp->GetProcessManager();
+    auto error_or_string =
+        process_manager->LoadNullTerminatedString(pid, string_address);
+
+    if (error_or_string.has_value()) {
+      GOrbitApp->GetMainThreadExecutor()->Schedule([track, error_or_string]() {
+        track->SetName(error_or_string.value());
+        track->SetLabel(error_or_string.value());
+      });
+    } else {
+      ERROR("Setting track name from remote memory: %s",
+            error_or_string.error().message());
+    }
+  });
+}
+
+//-----------------------------------------------------------------------------
+std::shared_ptr<GraphTrack> TimeGraph::GetOrCreateGraphTrack(
+    uint64_t graph_id) {
+  ScopeLock lock(m_Mutex);
+  std::shared_ptr<GraphTrack> track = graph_tracks_[graph_id];
+  if (track == nullptr) {
+    track = std::make_shared<GraphTrack>(this, graph_id);
+    SetTrackNameFromRemoteMemory(track, graph_id);
+    tracks_.emplace_back(track);
+    graph_tracks_[graph_id] = track;
+  }
+
+  return track;
+}
+
+//-----------------------------------------------------------------------------
+>>>>>>> a478d791... Manual Instrumentation UI.
 void TimeGraph::SetThreadFilter(const std::string& a_Filter) {
   m_ThreadFilter = a_Filter;
   NeedsUpdate();
@@ -872,6 +1002,11 @@ void TimeGraph::SortTracks() {
 
     // Gpu Tracks.
     for (const auto& timeline_and_track : gpu_tracks_) {
+      sorted_tracks_.emplace_back(timeline_and_track.second);
+    }
+
+    // Graph Tracks.
+    for (const auto& timeline_and_track : graph_tracks_) {
       sorted_tracks_.emplace_back(timeline_and_track.second);
     }
 
