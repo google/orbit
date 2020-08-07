@@ -29,7 +29,6 @@ uint64_t Capture::GNumProfileEvents;
 std::vector<std::shared_ptr<FunctionInfo>> Capture::GSelectedInCaptureFunctions;
 std::map<uint64_t, FunctionInfo*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, FunctionInfo*> Capture::GVisibleFunctionsMap;
-std::unordered_map<uint64_t, uint64_t> Capture::GFunctionCountMap;
 int32_t Capture::GProcessId = -1;
 std::string Capture::GProcessName;
 std::unordered_map<int32_t, std::string> Capture::GThreadNames;
@@ -56,7 +55,6 @@ void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
     GTargetProcess = a_Process;
     GSamplingProfiler = std::make_shared<SamplingProfiler>(a_Process);
     GSelectedFunctionsMap.clear();
-    GFunctionCountMap.clear();
   }
 }
 
@@ -98,7 +96,6 @@ void Capture::FinalizeCapture() {
 
 //-----------------------------------------------------------------------------
 void Capture::ClearCaptureData() {
-  GFunctionCountMap.clear();
   GProcessId = -1;
   GProcessName = "";
   GThreadNames.clear();
@@ -121,7 +118,6 @@ void Capture::PreFunctionHooks() {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
     GSelectedFunctionsMap[address] = func.get();
     func->clear_stats();
-    GFunctionCountMap[address] = 0;
   }
 
   GVisibleFunctionsMap = GSelectedFunctionsMap;
