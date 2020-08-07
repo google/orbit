@@ -45,7 +45,8 @@ bool ClientGgp::InitClient() {
   return true;
 }
 
-bool ClientGgp::StartCapture() {
+// Prepare the Capture object to be able to request a capture
+bool ClientGgp::PrepareStartCapture() {
   CHECK(!Capture::IsCapturing());
 
   ErrorMessageOr<void> result = Capture::StartCapture();
@@ -54,7 +55,11 @@ bool ClientGgp::StartCapture() {
     return false;
   }
 
-  // Client capture request
+  return true;
+}
+
+// Client requests to start the capture
+void ClientGgp::RequestStartCapture() {
   int32_t pid = Capture::GProcessId;
   LOG("Capture pid %d", pid);
 
@@ -62,19 +67,17 @@ bool ClientGgp::StartCapture() {
   std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>> selected_functions =
       Capture::GSelectedFunctions;
   capture_client_->Capture(pid, selected_functions);
-  LOG("Capture started");
-
-  return true;
+  
+  LOG("Start capture requested");
 }
 
 void ClientGgp::StopCapture() {
-  LOG("Stop captured requested");
   CHECK(Capture::IsCapturing());
   Capture::StopCapture();
 
   capture_client_->StopCapture();
 
-  LOG("Capture stopped");
+  LOG("Stop capture requested");
 }
 
 void ClientGgp::InitCapture() {

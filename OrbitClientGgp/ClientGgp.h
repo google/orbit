@@ -19,11 +19,12 @@
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitProcess.h" // remove if including Capture.h in here
 
-class ClientGgp : public CaptureListener {
+class ClientGgp final : public CaptureListener {
   public:
     ClientGgp(ClientGgpOptions&& options);
     bool InitClient();
-    bool StartCapture();
+    bool PrepareStartCapture();
+    void RequestStartCapture();
     void StopCapture();
     void SaveCapture();
 
