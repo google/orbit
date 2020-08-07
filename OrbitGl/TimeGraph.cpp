@@ -433,7 +433,8 @@ void TimeGraph::ProcessManualIntrumentationTimer(const TimerInfo& timer_info) {
 
 std::string TimeGraph::GetManualInstrumentationString(
     uint64_t string_address) const {
-  return manual_instrumentation_string_manager_.Get(string_address).value_or("blah");
+  return manual_instrumentation_string_manager_.Get(string_address)
+      .value_or("");
 }
 
 //-----------------------------------------------------------------------------
@@ -894,10 +895,9 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(
 <<<<<<< HEAD
 =======
 //-----------------------------------------------------------------------------
-void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track,
-                                  uint64_t string_address) {
-  const auto& thread_pool = GOrbitApp->GetThreadPool();
-
+static void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track,
+                                         uint64_t string_address,
+                                         ThreadPool* thread_pool) {
   thread_pool->Schedule([track, string_address]() {
     int32_t pid = Capture::GTargetProcess->GetID();
     const auto& process_manager = GOrbitApp->GetProcessManager();
@@ -923,7 +923,7 @@ std::shared_ptr<GraphTrack> TimeGraph::GetOrCreateGraphTrack(
   std::shared_ptr<GraphTrack> track = graph_tracks_[graph_id];
   if (track == nullptr) {
     track = std::make_shared<GraphTrack>(this, graph_id);
-    SetTrackNameFromRemoteMemory(track, graph_id);
+    SetTrackNameFromRemoteMemory(track, graph_id, GOrbitApp->GetThreadPool());
     tracks_.emplace_back(track);
     graph_tracks_[graph_id] = track;
   }

@@ -220,9 +220,9 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   const std::unique_ptr<ProcessManager>& GetProcessManager() {
     return process_manager_;
   }
-  const std::unique_ptr<ThreadPool>& GetThreadPool() { return thread_pool_; }
-  const std::unique_ptr<MainThreadExecutor>& GetMainThreadExecutor() {
-    return main_thread_executor_;
+  ThreadPool* GetThreadPool() { return thread_pool_.get(); }
+  MainThreadExecutor* GetMainThreadExecutor() {
+    return main_thread_executor_.get();
   }
 
  private:

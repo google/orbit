@@ -16,7 +16,7 @@ bool StringManager::AddIfNotPresent(uint64_t key, std::string_view str) {
 bool StringManager::AddOrReplace(uint64_t key, std::string_view str) {
   absl::MutexLock lock{&mutex_};
   bool added = !key_to_string_.contains(key);
-  key_to_string_[key] = str;
+  key_to_string_.insert_or_assign(key, str);
   return added;
 }
 

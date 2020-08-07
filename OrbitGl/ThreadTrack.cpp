@@ -143,7 +143,7 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info,
           return;
         }
       } else {
-        name = FunctionUtils::GetDisplayName(*func).c_str();
+        name = FunctionUtils::GetDisplayName(*func);
       }
 
       std::string text =
