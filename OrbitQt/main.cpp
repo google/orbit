@@ -99,26 +99,25 @@ static outcome::result<void> RunUiInstance(
   OUTCOME_TRY(result, [&]() -> outcome::result<std::tuple<GrpcPort, QString>> {
     const GrpcPort remote_ports{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
 
-    if (deployment_configuration) {
-      OrbitStartupWindow sw{};
-      OUTCOME_TRY(result, sw.Run<OrbitSsh::Credentials>());
-
-      if (std::holds_alternative<OrbitSsh::Credentials>(result)) {
-        // The user chose a remote profiling target.
-        OUTCOME_TRY(
-            tunnel_ports,
-            DeployOrbitService(service_deploy_manager,
-                               deployment_configuration.value(), context,
-                               std::get<SshCredentials>(result), remote_ports));
-        return std::make_tuple(tunnel_ports, QString{});
-      } else {
-        // The user chose to open a capture.
-        return std::make_tuple(remote_ports, std::get<QString>(result));
-      }
-    } else {
+    if (!deployment_configuration) {
       // When the local flag is present
       return std::make_tuple(remote_ports, QString{});
     }
+
+    OrbitStartupWindow sw{};
+    OUTCOME_TRY(result, sw.Run<OrbitSsh::Credentials>());
+
+    if (!std::holds_alternative<OrbitSsh::Credentials>(result)) {
+      // The user chose to open a capture.
+      return std::make_tuple(remote_ports, std::get<QString>(result));
+    }
+
+    // The user chose a remote profiling target.
+    OUTCOME_TRY(tunnel_ports,
+                DeployOrbitService(
+                    service_deploy_manager, deployment_configuration.value(),
+                    context, std::get<SshCredentials>(result), remote_ports));
+    return std::make_tuple(tunnel_ports, QString{});
   }());
   const auto& [ports, capture_path] = result;
 
@@ -134,25 +133,25 @@ static outcome::result<void> RunUiInstance(
 
   std::optional<std::error_code> error;
   auto error_handler = [&]() -> ScopedConnection {
-    if (service_deploy_manager) {
-      return OrbitSshQt::ScopedConnection{QObject::connect(
-          &service_deploy_manager.value(),
-          &ServiceDeployManager::socketErrorOccurred,
-          &service_deploy_manager.value(), [&](std::error_code e) {
-            error = e;
-            w.close();
-            app->quit();
-          })};
-    } else {
+    if (!service_deploy_manager) {
       return ScopedConnection();
     }
+
+    return OrbitSshQt::ScopedConnection{QObject::connect(
+        &service_deploy_manager.value(),
+        &ServiceDeployManager::socketErrorOccurred,
+        &service_deploy_manager.value(), [&](std::error_code e) {
+          error = e;
+          w.close();
+          QApplication::quit();
+        })};
   }();
 
   if (!capture_path.isEmpty()) {
     OUTCOME_TRY(w.OpenCapture(capture_path.toStdString()));
   }
 
-  app->exec();
+  QApplication::exec();
   GOrbitApp->OnExit();
   if (error) {
     return outcome::failure(error.value());
