@@ -203,16 +203,16 @@ ErrorMessageOr<std::string> ProcessManagerImpl::LoadProcessMemory(
 }
 
 ErrorMessageOr<std::string> ProcessManagerImpl::LoadNullTerminatedString(
-      int32_t pid, uint64_t address, uint64_t max_size){
-  auto errorOrString = LoadProcessMemory(pid, address, max_size);
-  if(errorOrString.has_value()) {
+    int32_t pid, uint64_t address, uint64_t max_size) {
+  auto error_or_string = LoadProcessMemory(pid, address, max_size);
+  if (error_or_string.has_value()) {
     // Make sure the string is null terminated.
-    std::string str = errorOrString.value();
-    str[str.size()-1] = '\0';
-    errorOrString = str.c_str();
+    std::string str = error_or_string.value();
+    str[str.size() - 1] = '\0';
+    error_or_string = str.c_str();
   }
 
-  return errorOrString;
+  return error_or_string;
 }
 
 }  // namespace
