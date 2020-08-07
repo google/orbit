@@ -43,11 +43,7 @@ class Capture {
   static void PreSave();
 
   static State GState;
-  static uint32_t GNumInstalledHooks;
 
-  static uint64_t GNumContextSwitches;
-  static uint64_t GNumLinuxEvents;
-  static uint64_t GNumProfileEvents;
   static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
   static std::shared_ptr<Process> GTargetProcess;
   static std::shared_ptr<orbit_client_protos::PresetFile> GSessionPresets;
