@@ -95,14 +95,9 @@ std::string OrbitApp::FindFile(const std::string& caption,
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& a_Args) {
-  for (const std::string& arg : a_Args) {
-    if (absl::StrContains(arg, "preset:")) {
-      std::vector<std::string> vec = absl::StrSplit(arg, ":");
-      if (vec.size() > 1) {
-        Capture::GPresetToLoad = vec[1];
-      }
-    } else if (absl::StrContains(arg, "inject:")) {
+void OrbitApp::SetCommandLineArguments(const std::vector<std::string>& args) {
+  for (const std::string& arg : args) {
+    if (absl::StrContains(arg, "inject:")) {
       std::vector<std::string> vec = absl::StrSplit(arg, ":");
       if (vec.size() > 1) {
         Capture::GProcessToInject = vec[1];
