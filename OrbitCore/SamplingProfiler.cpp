@@ -69,7 +69,7 @@ std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::AddCallStack(CallstackEvent& callstack_event) {
+void SamplingProfiler::AddCallStack(CallstackEvent callstack_event) {
   CallstackID hash = callstack_event.callstack_hash();
   if (!HasCallStack(hash)) {
     std::shared_ptr<CallStack> callstack =
@@ -77,14 +77,14 @@ void SamplingProfiler::AddCallStack(CallstackEvent& callstack_event) {
     AddUniqueCallStack(*callstack);
   }
 
-  m_Callstacks.push_back(callstack_event);
+  m_Callstacks.push_back(std::move(callstack_event));
 }
 
 //-----------------------------------------------------------------------------
-void SamplingProfiler::AddUniqueCallStack(CallStack& a_CallStack) {
+void SamplingProfiler::AddUniqueCallStack(CallStack call_stack) {
   absl::MutexLock lock(&unique_callstacks_mutex_);
-  unique_callstacks_[a_CallStack.Hash()] =
-      std::make_shared<CallStack>(a_CallStack);
+  auto key = call_stack.Hash();
+  unique_callstacks_[key] = std::make_shared<CallStack>(std::move(call_stack));
 }
 
 const CallStack& SamplingProfiler::GetResolvedCallstack(

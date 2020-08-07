@@ -71,8 +71,8 @@ class SamplingProfiler {
 
   int GetNumSamples() const { return m_NumSamples; }
 
-  void AddCallStack(orbit_client_protos::CallstackEvent& callstack_event);
-  void AddUniqueCallStack(CallStack& a_CallStack);
+  void AddCallStack(orbit_client_protos::CallstackEvent callstack_event);
+  void AddUniqueCallStack(CallStack call_stack);
 
   std::shared_ptr<CallStack> GetCallStack(CallstackID a_ID) {
     absl::MutexLock lock(&unique_callstacks_mutex_);

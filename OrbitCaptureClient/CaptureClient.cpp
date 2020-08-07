@@ -63,12 +63,16 @@ void CaptureClient::Capture(
   LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start "
       "capturing");
 
+  capture_listener_->OnCaptureStarted();
+
   CaptureResponse response;
   while (reader_writer_->Read(&response)) {
     event_processor_->ProcessEvents(response.capture_events());
   }
   LOG("Finished reading from Capture's gRPC stream: all capture data has been "
       "received");
+
+  capture_listener_->OnCaptureComplete();
   FinishCapture();
 }
 

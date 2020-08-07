@@ -14,6 +14,12 @@
 class CaptureListener {
  public:
   virtual ~CaptureListener() = default;
+
+  // Called after capture started but before the first event arrived.
+  virtual void OnCaptureStarted() = 0;
+  // Called when capture is complete
+  virtual void OnCaptureComplete() = 0;
+
   virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info) = 0;
   virtual void OnKeyAndString(uint64_t key, std::string str) = 0;
   virtual void OnCallstack(CallStack callstack) = 0;

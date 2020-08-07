@@ -93,6 +93,51 @@ std::string OrbitApp::FindFile(const std::string& caption,
   return std::string();
 }
 
+void OrbitApp::OnCaptureStarted() {
+  // We need to block until initialization is complete to
+  // avoid races when capture thread start processing data.
+  absl::Mutex mutex;
+  absl::MutexLock mutex_lock(&mutex);
+  bool initialization_complete = false;
+  captured_address_infos_.clear();
+
+  main_thread_executor_->Schedule([this, &initialization_complete, &mutex] {
+    ClearCapture();
+
+    if (capture_started_callback_) {
+      capture_started_callback_();
+    }
+
+    if (!Capture::GSelectedFunctionsMap.empty() && select_live_tab_callback_) {
+      select_live_tab_callback_();
+    }
+
+    absl::MutexLock lock(&mutex);
+    initialization_complete = true;
+  });
+
+  bool (*IsTrue)(bool*) = [](bool* value) { return *value; };
+  mutex.Await(absl::Condition(IsTrue, &initialization_complete));
+}
+
+void OrbitApp::OnCaptureComplete() {
+  main_thread_executor_->Schedule([this] {
+    Capture::GAddressInfos = std::move(captured_address_infos_);
+    Capture::FinalizeCapture();
+
+    RefreshCaptureView();
+
+    AddSamplingReport(Capture::GSamplingProfiler);
+    AddTopDownView(*Capture::GSamplingProfiler);
+
+    if (capture_stopped_callback_) {
+      capture_stopped_callback_();
+    }
+
+    FireRefreshCallbacks();
+  });
+}
+
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   GCurrentTimeGraph->ProcessTimer(timer_info);
 }
@@ -110,27 +155,31 @@ void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
     ERROR("GSamplingProfiler is null, ignoring callstack event.");
     return;
   }
-  Capture::GSamplingProfiler->AddCallStack(callstack_event);
   GEventTracer.GetEventBuffer().AddCallstackEvent(
       callstack_event.time(), callstack_event.callstack_hash(),
       callstack_event.thread_id());
+  Capture::GSamplingProfiler->AddCallStack(std::move(callstack_event));
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
-  Capture::GThreadNames.insert_or_assign(thread_id, std::move(thread_name));
+  main_thread_executor_->Schedule([thread_id, thread_name = std::move(
+                                                  thread_name)]() mutable {
+    Capture::GThreadNames.insert_or_assign(thread_id, std::move(thread_name));
+  });
 }
 
 void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
   uint64_t address = address_info.absolute_address();
-  Capture::GAddressInfos.emplace(address, std::move(address_info));
+  captured_address_infos_.emplace(address, std::move(address_info));
 }
 
 //-----------------------------------------------------------------------------
 void OrbitApp::OnValidateFramePointers(
     std::vector<std::shared_ptr<Module>> modules_to_validate) {
-  thread_pool_->Schedule([modules_to_validate, this] {
-    frame_pointer_validator_client_->AnalyzeModules(modules_to_validate);
-  });
+  thread_pool_->Schedule(
+      [modules_to_validate = std::move(modules_to_validate), this] {
+        frame_pointer_validator_client_->AnalyzeModules(modules_to_validate);
+      });
 }
 
 //-----------------------------------------------------------------------------
@@ -557,8 +606,6 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 bool OrbitApp::StartCapture() {
   CHECK(!Capture::IsCapturing());
 
-  ClearCapture();
-
   ErrorMessageOr<void> result = Capture::StartCapture();
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());
@@ -570,15 +617,8 @@ bool OrbitApp::StartCapture() {
       Capture::GSelectedFunctionsMap;
   thread_pool_->Schedule([this, pid, selected_functions] {
     capture_client_->Capture(pid, selected_functions);
-    main_thread_executor_->Schedule([this] { OnCaptureStopped(); });
   });
 
-  if (capture_started_callback_) {
-    capture_started_callback_();
-  }
-  if (!Capture::GSelectedFunctionsMap.empty() && select_live_tab_callback_) {
-    select_live_tab_callback_();
-  }
   return true;
 }
 
@@ -596,7 +636,6 @@ void OrbitApp::StopCapture() {
 }
 
 void OrbitApp::ClearCapture() {
-  CHECK(!Capture::IsCapturing());
   Capture::ClearCaptureData();
   Capture::GClearCaptureDataFunc();
   GCurrentTimeGraph->Clear();
@@ -609,20 +648,6 @@ void OrbitApp::ToggleDrawHelp() {
   if (m_CaptureWindow) {
     m_CaptureWindow->ToggleDrawHelp();
   }
-}
-
-void OrbitApp::OnCaptureStopped() {
-  Capture::FinalizeCapture();
-
-  RefreshCaptureView();
-
-  AddSamplingReport(Capture::GSamplingProfiler);
-  AddTopDownView(*Capture::GSamplingProfiler);
-
-  if (capture_stopped_callback_) {
-    capture_stopped_callback_();
-  }
-  FireRefreshCallbacks();
 }
 
 //-----------------------------------------------------------------------------
