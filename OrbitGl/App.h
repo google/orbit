@@ -200,7 +200,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     clipboard_callback_ = std::move(callback);
   }
 
-  void SetCommandLineArguments(const std::vector<std::string>& a_Args);
+  void SetCommandLineArguments(const std::vector<std::string>& args);
 
   void RequestOpenCaptureToUi();
   void RequestSaveCaptureToUi();

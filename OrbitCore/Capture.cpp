@@ -31,15 +31,12 @@ using orbit_client_protos::PresetInfo;
 Capture::State Capture::GState = Capture::State::kEmpty;
 bool Capture::GInjected = false;
 std::string Capture::GInjectedProcess;
-bool Capture::GIsSampling = false;
-uint32_t Capture::GFunctionIndex = -1;
 uint32_t Capture::GNumInstalledHooks;
 bool Capture::GHasContextSwitches;
 Timer Capture::GTestTimer;
 uint64_t Capture::GNumContextSwitches;
 ULONG64 Capture::GNumLinuxEvents;
 ULONG64 Capture::GNumProfileEvents;
-std::string Capture::GPresetToLoad;
 std::string Capture::GProcessToInject;
 std::string Capture::GFunctionFilter;
 
@@ -56,7 +53,6 @@ std::unordered_map<uint64_t, LinuxAddressInfo> Capture::GAddressInfos;
 std::unordered_map<uint64_t, std::string> Capture::GAddressToFunctionName;
 std::unordered_map<uint64_t, std::string> Capture::GAddressToModuleName;
 Mutex Capture::GCallstackMutex;
-std::unordered_map<uint64_t, std::string> Capture::GZoneNames;
 TextBox* Capture::GSelectedTextBox = nullptr;
 ThreadID Capture::GSelectedThreadId;
 std::chrono::system_clock::time_point Capture::GCaptureTimePoint;
@@ -136,7 +132,6 @@ void Capture::ClearCaptureData() {
   GAddressInfos.clear();
   GAddressToFunctionName.clear();
   GAddressToModuleName.clear();
-  GZoneNames.clear();
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
   GNumProfileEvents = 0;
@@ -228,18 +223,6 @@ void Capture::NewSamplingProfiler() {
 
   Capture::GSamplingProfiler =
       std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
-}
-
-//-----------------------------------------------------------------------------
-void Capture::RegisterZoneName(uint64_t a_ID, const char* a_Name) {
-  GZoneNames[a_ID] = a_Name;
-}
-
-//-----------------------------------------------------------------------------
-void Capture::AddCallstack(CallStack& a_CallStack) {
-  ScopeLock lock(GCallstackMutex);
-  Capture::GCallstacks[a_CallStack.Hash()] =
-      std::make_shared<CallStack>(a_CallStack);
 }
 
 //-----------------------------------------------------------------------------

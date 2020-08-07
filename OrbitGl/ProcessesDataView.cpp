@@ -123,8 +123,6 @@ bool ProcessesDataView::SelectProcess(const std::string& process_name) {
     // TODO: What if there are multiple processes with the same substring?
     if (process.full_path().find(process_name) != std::string::npos) {
       OnSelect(i);
-      // Why is this here?
-      Capture::GPresetToLoad = "";
       return true;
     }
   }
