@@ -64,8 +64,8 @@ void ClientGgp::RequestStartCapture() {
   LOG("Capture pid %d", pid);
 
   // TODO: selected_functions available when UploadSymbols is included
-  std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>> selected_functions =
-      Capture::GSelectedFunctions;
+  std::map<uint64_t, orbit_client_protos::FunctionInfo*> selected_functions =
+      Capture::GSelectedFunctionsMap;
   capture_client_->Capture(pid, selected_functions);
   
   LOG("Start capture requested");
