@@ -21,7 +21,6 @@ using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetInfo;
 
 Capture::State Capture::GState = Capture::State::kEmpty;
-uint32_t Capture::GNumInstalledHooks;
 uint64_t Capture::GNumContextSwitches;
 uint64_t Capture::GNumLinuxEvents;
 uint64_t Capture::GNumProfileEvents;

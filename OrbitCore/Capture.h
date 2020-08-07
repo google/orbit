@@ -43,7 +43,6 @@ class Capture {
   static void PreSave();
 
   static State GState;
-  static uint32_t GNumInstalledHooks;
 
   static uint64_t GNumContextSwitches;
   static uint64_t GNumLinuxEvents;
