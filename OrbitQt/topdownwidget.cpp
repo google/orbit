@@ -4,15 +4,65 @@
 
 #include "topdownwidget.h"
 
+#include <QColor>
 #include <QMenu>
 #include <QSortFilterProxyModel>
 
 #include "TopDownViewItemModel.h"
+#include "absl/container/flat_hash_set.h"
+
+class HighlightingSortFilterProxyModel : public QSortFilterProxyModel {
+ public:
+  explicit HighlightingSortFilterProxyModel(QObject* parent)
+      : QSortFilterProxyModel{parent} {}
+
+  // Specify a set where this ProxyModel should put internalPointers of indices
+  // that match the current filter.
+  void SetFilterAcceptedNodeCollectorSet(
+      absl::flat_hash_set<void*>* filter_accepted_nodes_collector) {
+    filter_accepted_nodes_collector_ = filter_accepted_nodes_collector;
+  }
+
+  // Specify a set of internalPointers whose indices should be highlighted.
+  void SetNodesToHighlightSet(
+      std::unique_ptr<absl::flat_hash_set<void*>> nodes_to_highlight) {
+    nodes_to_highlight_ = std::move(nodes_to_highlight);
+  }
+
+  QVariant data(const QModelIndex& index, int role) const override {
+    if (role == Qt::ForegroundRole && nodes_to_highlight_ != nullptr) {
+      QModelIndex source_index = mapToSource(index);
+      if (nodes_to_highlight_->contains(source_index.internalPointer())) {
+        return QColor{Qt::green};
+      }
+    }
+    return QSortFilterProxyModel::data(index, role);
+  }
+
+ protected:
+  bool filterAcceptsRow(int source_row,
+                        const QModelIndex& source_parent) const override {
+    bool accepts_row =
+        QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+    if (accepts_row && filter_accepted_nodes_collector_ != nullptr) {
+      QModelIndex source_index =
+          sourceModel()->index(source_row, 0, source_parent);
+      filter_accepted_nodes_collector_->insert(source_index.internalPointer());
+    }
+    return accepts_row;
+  }
+
+ private:
+  mutable absl::flat_hash_set<void*>* filter_accepted_nodes_collector_ =
+      nullptr;
+  std::unique_ptr<absl::flat_hash_set<void*>> nodes_to_highlight_ = nullptr;
+};
 
 void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   auto* model =
       new TopDownViewItemModel{std::move(top_down_view), ui_->topDownTreeView};
-  auto* proxy_model = new QSortFilterProxyModel{ui_->topDownTreeView};
+  auto* proxy_model =
+      new HighlightingSortFilterProxyModel{ui_->topDownTreeView};
   proxy_model->setSourceModel(model);
   proxy_model->setSortRole(Qt::EditRole);
 
@@ -171,12 +221,14 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
 }
 
 void TopDownWidget::on_searchLineEdit_textEdited(const QString& text) {
-  if (text.isEmpty()) {
+  auto* proxy_model = dynamic_cast<HighlightingSortFilterProxyModel*>(
+      ui_->topDownTreeView->model());
+  if (proxy_model == nullptr) {
     return;
   }
-  auto* proxy_model =
-      dynamic_cast<QSortFilterProxyModel*>(ui_->topDownTreeView->model());
-  if (proxy_model == nullptr) {
+  if (text.isEmpty()) {
+    proxy_model->SetNodesToHighlightSet(nullptr);
+    ui_->topDownTreeView->viewport()->update();
     return;
   }
   // Don't actually hide any node, but expand up to the parents of the matching
@@ -187,8 +239,18 @@ void TopDownWidget::on_searchLineEdit_textEdited(const QString& text) {
   // has no visual effect while the filter is in place, but those nodes would
   // retain the expanded state when the filter is removed). Finally, remove the
   // filter. The initial collapseAll greatly helps filtering performance.
+
+  // In parallel, collect the nodes that match the filter from the
+  // HighlightingSortFilterProxyModel and set them as nodes to highlight.
   ui_->topDownTreeView->collapseAll();
+  auto filter_accepted_nodes_collector =
+      std::make_unique<absl::flat_hash_set<void*>>();
+  proxy_model->SetFilterAcceptedNodeCollectorSet(
+      filter_accepted_nodes_collector.get());
   proxy_model->setFilterFixedString(text);
   ExpandAllButCollapseLeaves(ui_->topDownTreeView);
+  proxy_model->SetFilterAcceptedNodeCollectorSet(nullptr);
+  proxy_model->SetNodesToHighlightSet(
+      std::move(filter_accepted_nodes_collector));
   proxy_model->setFilterFixedString(QStringLiteral(""));
 }
