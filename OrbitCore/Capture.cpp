@@ -33,7 +33,8 @@ std::unordered_map<uint64_t, std::string> Capture::GAddressToFunctionName;
 std::unordered_map<uint64_t, std::string> Capture::GAddressToModuleName;
 TextBox* Capture::GSelectedTextBox = nullptr;
 ThreadID Capture::GSelectedThreadId;
-std::chrono::system_clock::time_point Capture::GCaptureTimePoint;
+std::chrono::system_clock::time_point Capture::GCaptureTimePoint =
+    std::chrono::system_clock::now();
 
 std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
 std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
