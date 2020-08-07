@@ -44,7 +44,6 @@
 #include "ProcessesDataView.h"
 #include "SamplingProfiler.h"
 #include "SamplingReport.h"
-#include "SamplingUtils.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
 #include "TextRenderer.h"
