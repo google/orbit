@@ -996,11 +996,6 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 }
 
 //-----------------------------------------------------------------------------
-void OrbitApp::FilterFunctions(const std::string& filter) {
-  Capture::GFunctionFilter = filter;
-}
-
-//-----------------------------------------------------------------------------
 void OrbitApp::FilterTracks(const std::string& filter) {
   GCurrentTimeGraph->SetThreadFilter(filter);
 }

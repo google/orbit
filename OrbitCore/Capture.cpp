@@ -28,7 +28,6 @@ uint64_t Capture::GNumContextSwitches;
 uint64_t Capture::GNumLinuxEvents;
 uint64_t Capture::GNumProfileEvents;
 std::string Capture::GProcessToInject;
-std::string Capture::GFunctionFilter;
 
 std::vector<std::shared_ptr<FunctionInfo>> Capture::GSelectedInCaptureFunctions;
 std::map<uint64_t, FunctionInfo*> Capture::GSelectedFunctionsMap;
