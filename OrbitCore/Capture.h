@@ -45,7 +45,6 @@ class Capture {
   static State GState;
 
   static uint64_t GNumContextSwitches;
-  static uint64_t GNumProfileEvents;
   static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
   static std::shared_ptr<Process> GTargetProcess;
   static std::shared_ptr<orbit_client_protos::PresetFile> GSessionPresets;
