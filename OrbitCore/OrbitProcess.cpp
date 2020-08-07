@@ -12,7 +12,6 @@
 #include "Core.h"
 #include "Injection.h"
 #include "OrbitModule.h"
-#include "OrbitSession.h"
 #include "Path.h"
 #include "Pdb.h"
 #include "ScopeTimer.h"

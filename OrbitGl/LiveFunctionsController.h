@@ -47,7 +47,7 @@ class LiveFunctionsController {
 
   LiveFunctionsDataView live_functions_data_view_;
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo*>
+  absl::flat_hash_map<uint64_t, const orbit_client_protos::FunctionInfo*>
       function_iterators_;
   absl::flat_hash_map<uint64_t, const TextBox*> current_textboxes_;
 

@@ -67,7 +67,7 @@
   do {                                  \
     if (UNLIKELY(!(assertion))) {       \
       LOG("Check failed: " #assertion); \
-      abort();                          \
+      PLATFORM_ABORT();                 \
     }                                   \
   } while (0)
 
@@ -91,12 +91,18 @@ void LogToFile(const std::string& message);
     OutputDebugStringA(message);    \
     LogToFile(message);             \
   } while (0)
+#define PLATFORM_ABORT() \
+  do {                   \
+    __debugbreak();      \
+    abort();             \
+  } while (0)
 #else
 #define PLATFORM_LOG(message)       \
   do {                              \
     fprintf(stderr, "%s", message); \
     LogToFile(message);             \
   } while (0)
+#define PLATFORM_ABORT() abort()
 #endif
 
 #ifdef __clang__

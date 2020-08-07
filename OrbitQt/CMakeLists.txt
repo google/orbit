@@ -26,20 +26,20 @@ target_sources(
           orbitsamplingreport.h
           OrbitStartupWindow.h
           orbittablemodel.h
-          orbittreeitem.h
-          orbittreemodel.h
           orbittreeview.h
           opengldetect.h
           outputdialog.h
           processlauncherwidget.h
           resource.h
           servicedeploymanager.h
-          showincludesdialog.h)
+          TopDownViewItemModel.h
+          topdownwidget.h)
 
 target_sources(
   OrbitQt
   PRIVATE Error.cpp
           ElidedLabel.cpp
+          MainThreadExecutorImpl.cpp
           deploymentconfigurations.cpp
           main.cpp
           orbitaboutdialog.cpp
@@ -56,14 +56,13 @@ target_sources(
           orbitsamplingreport.cpp
           OrbitStartupWindow.cpp
           orbittablemodel.cpp
-          orbittreeitem.cpp
-          orbittreemodel.cpp
           orbittreeview.cpp
           opengldetect.cpp
           outputdialog.cpp
           processlauncherwidget.cpp
           servicedeploymanager.cpp
-          showincludesdialog.cpp)
+          TopDownViewItemModel.cpp
+          topdownwidget.cpp)
 
 target_include_directories(OrbitQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 

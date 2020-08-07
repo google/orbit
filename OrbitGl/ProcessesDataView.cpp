@@ -74,7 +74,7 @@ void ProcessesDataView::DoSort() {
   }
 
   if (sorter) {
-    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(indices_.begin(), indices_.end(), sorter);
   }
 
   SetSelectedItem();
@@ -98,10 +98,10 @@ int32_t ProcessesDataView::GetSelectedProcessId() const {
 }
 
 int32_t ProcessesDataView::GetFirstProcessId() const {
-  if (m_Indices.empty()) {
+  if (indices_.empty()) {
     return -1;
   }
-  return process_list_[m_Indices[0]].pid();
+  return process_list_[indices_[0]].pid();
 }
 
 //-----------------------------------------------------------------------------
@@ -172,7 +172,7 @@ void ProcessesDataView::DoFilter() {
     }
   }
 
-  m_Indices = indices;
+  indices_ = indices;
 
   OnSort(m_SortingColumn, {});
 }
@@ -180,9 +180,9 @@ void ProcessesDataView::DoFilter() {
 //-----------------------------------------------------------------------------
 void ProcessesDataView::UpdateProcessList() {
   size_t numProcesses = process_list_.size();
-  m_Indices.resize(numProcesses);
+  indices_.resize(numProcesses);
   for (size_t i = 0; i < numProcesses; ++i) {
-    m_Indices[i] = i;
+    indices_[i] = i;
   }
 }
 
@@ -197,7 +197,7 @@ void ProcessesDataView::SetProcessList(
 }
 
 const ProcessInfo& ProcessesDataView::GetProcess(uint32_t row) const {
-  return process_list_[m_Indices[row]];
+  return process_list_[indices_[row]];
 }
 
 void ProcessesDataView::SetSelectionListener(

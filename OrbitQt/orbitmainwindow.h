@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <DisassemblyReport.h>
+
 #include <QApplication>
 #include <QLabel>
 #include <QLineEdit>
@@ -17,6 +19,7 @@
 
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
+#include "TopDownView.h"
 
 namespace Ui {
 class OrbitMainWindow;
@@ -37,22 +40,18 @@ class OrbitMainWindow : public QMainWindow {
   void OnNewSamplingReport(
       DataView* callstack_data_view,
       std::shared_ptr<class SamplingReport> sampling_report);
-  void CreateSamplingTab();
-  void CreateSelectionTab();
-  void CreateLiveTab();
   void OnNewSelectionReport(
       DataView* callstack_data_view,
       std::shared_ptr<class SamplingReport> sampling_report);
+  void OnNewTopDownView(std::unique_ptr<TopDownView> top_down_view);
   std::string OnGetSaveFileName(const std::string& extension);
   void OnSetClipboard(const std::string& text);
   void ParseCommandlineArguments();
-  bool IsHeadless() { return m_Headless; }
   void PostInit();
   bool HideTab(QTabWidget* a_TabWidget, const char* a_TabName);
   std::string FindFile(const std::string& caption, const std::string& dir,
                        const std::string& filter);
-  void OpenDisassembly(const std::string& a_String,
-                       const std::function<double(size_t)>& line_to_hit_ratio);
+  void OpenDisassembly(std::string a_String, DisassemblyReport report);
   void SetTitle(const QString& task_description);
   outcome::result<void> OpenCapture(const std::string& filepath);
   void OnCaptureCleared();
@@ -81,7 +80,6 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionClear_Capture_triggered();
   void on_actionHelp_triggered();
   void on_actionFeedback_triggered();
-  void on_actionShow_Includes_Util_triggered();
 
   void on_actionCheckFalse_triggered();
   void on_actionNullPointerDereference_triggered();
@@ -103,22 +101,6 @@ class OrbitMainWindow : public QMainWindow {
   Ui::OrbitMainWindow* ui;
   QTimer* m_MainTimer;
   std::vector<OrbitGLWidget*> m_GlWidgets;
-  bool m_Headless;
-
-  // Live tab
-  class QWidget* live_tab_;
-  class OrbitLiveFunctions* live_functions_;
-  class QGridLayout* live_layout_;
-
-  // Sampling tab.
-  class QWidget* m_SamplingTab;
-  class OrbitSamplingReport* m_OrbitSamplingReport;
-  class QGridLayout* m_SamplingLayout;
-
-  // Selection tab.
-  class QWidget* m_SelectionTab;
-  class OrbitSamplingReport* m_SelectionReport;
-  class QGridLayout* m_SelectionLayout;
 
   // Capture toolbar.
   QLabel* timer_label_ = nullptr;

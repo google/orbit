@@ -92,14 +92,17 @@ static constexpr uint64_t SAMPLE_REGS_USER_ALL =
     (1lu << PERF_REG_X86_R12) | (1lu << PERF_REG_X86_R13) |
     (1lu << PERF_REG_X86_R14) | (1lu << PERF_REG_X86_R15);
 
-// This must be in sync with struct perf_event_sample_regs_user_sp_ip in
-// PerfEventRecords.h.
-static constexpr uint64_t SAMPLE_REGS_USER_SP_IP =
-    (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP);
-
 // This must be in sync with struct perf_event_ax_sample in
 // PerfEventRecords.h.
 static constexpr uint64_t SAMPLE_REGS_USER_AX = (1lu << PERF_REG_X86_AX);
+
+// This must be in sync with struct perf_event_sample_regs_user_sp_ip_arguments
+// in PerfEventRecords.h.
+static constexpr uint64_t SAMPLE_REGS_USER_SP_IP_ARGUMENTS =
+    (1lu << PERF_REG_X86_CX) | (1lu << PERF_REG_X86_DX) |
+    (1lu << PERF_REG_X86_SI) | (1lu << PERF_REG_X86_DI) |
+    (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP) |
+    (1lu << PERF_REG_X86_R8) | (1lu << PERF_REG_X86_R9);
 
 // Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
 // because the kernel stores this in a short and because of alignment reasons.

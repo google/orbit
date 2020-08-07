@@ -99,26 +99,25 @@ static outcome::result<void> RunUiInstance(
   OUTCOME_TRY(result, [&]() -> outcome::result<std::tuple<GrpcPort, QString>> {
     const GrpcPort remote_ports{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
 
-    if (deployment_configuration) {
-      OrbitStartupWindow sw{};
-      OUTCOME_TRY(result, sw.Run<OrbitSsh::Credentials>());
-
-      if (std::holds_alternative<OrbitSsh::Credentials>(result)) {
-        // The user chose a remote profiling target.
-        OUTCOME_TRY(
-            tunnel_ports,
-            DeployOrbitService(service_deploy_manager,
-                               deployment_configuration.value(), context,
-                               std::get<SshCredentials>(result), remote_ports));
-        return std::make_tuple(tunnel_ports, QString{});
-      } else {
-        // The user chose to open a capture.
-        return std::make_tuple(remote_ports, std::get<QString>(result));
-      }
-    } else {
+    if (!deployment_configuration) {
       // When the local flag is present
       return std::make_tuple(remote_ports, QString{});
     }
+
+    OrbitStartupWindow sw{};
+    OUTCOME_TRY(result, sw.Run<OrbitSsh::Credentials>());
+
+    if (!std::holds_alternative<OrbitSsh::Credentials>(result)) {
+      // The user chose to open a capture.
+      return std::make_tuple(remote_ports, std::get<QString>(result));
+    }
+
+    // The user chose a remote profiling target.
+    OUTCOME_TRY(tunnel_ports,
+                DeployOrbitService(
+                    service_deploy_manager, deployment_configuration.value(),
+                    context, std::get<SshCredentials>(result), remote_ports));
+    return std::make_tuple(tunnel_ports, QString{});
   }());
   const auto& [ports, capture_path] = result;
 
@@ -127,30 +126,32 @@ static outcome::result<void> RunUiInstance(
       absl::StrFormat("127.0.0.1:%d", ports.grpc_port);
 
   OrbitMainWindow w(app, std::move(options));
+  // "resize" is required to make "showMaximized" work properly.
+  w.resize(1280, 720);
   w.showMaximized();
   w.PostInit();
 
   std::optional<std::error_code> error;
   auto error_handler = [&]() -> ScopedConnection {
-    if (service_deploy_manager) {
-      return OrbitSshQt::ScopedConnection{QObject::connect(
-          &service_deploy_manager.value(),
-          &ServiceDeployManager::socketErrorOccurred,
-          &service_deploy_manager.value(), [&](std::error_code e) {
-            error = e;
-            w.close();
-            app->quit();
-          })};
-    } else {
+    if (!service_deploy_manager) {
       return ScopedConnection();
     }
+
+    return OrbitSshQt::ScopedConnection{QObject::connect(
+        &service_deploy_manager.value(),
+        &ServiceDeployManager::socketErrorOccurred,
+        &service_deploy_manager.value(), [&](std::error_code e) {
+          error = e;
+          w.close();
+          QApplication::quit();
+        })};
   }();
 
   if (!capture_path.isEmpty()) {
     OUTCOME_TRY(w.OpenCapture(capture_path.toStdString()));
   }
 
-  app->exec();
+  QApplication::exec();
   GOrbitApp->OnExit();
   if (error) {
     return outcome::failure(error.value());
@@ -233,14 +234,28 @@ static void DisplayErrorToUser(const QString& message) {
 }
 
 int main(int argc, char* argv[]) {
-  {
-    const std::string log_file_path = Path::GetLogFilePath();
-    InitLogFile(log_file_path);
+  // Will be filled by QApplication once instantiated.
+  QString path_to_executable;
 
+  // argv might be changed, so we make a copy here!
+  auto original_argv = new char*[argc + 1];
+  for (int i = 0; i < argc; ++i) {
+    const auto size = std::strlen(argv[i]);
+    auto dest = new char[size];
+    std::strncpy(dest, argv[i], size);
+    original_argv[i] = dest;
+  }
+  original_argv[argc] = nullptr;
+
+  {
     absl::SetProgramUsageMessage("CPU Profiler");
     absl::SetFlagsUsageConfig(
         absl::FlagsUsageConfig{{}, {}, {}, &OrbitCore::GetBuildReport, {}});
     absl::ParseCommandLine(argc, argv);
+
+    const std::string log_file_path = Path::GetLogFilePath();
+    InitLogFile(log_file_path);
+
 #if __linux__
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
 #endif
@@ -249,6 +264,7 @@ int main(int argc, char* argv[]) {
     QCoreApplication::setApplicationName("Orbit Profiler [BETA]");
     QCoreApplication::setApplicationVersion(
         QString::fromStdString(OrbitCore::GetVersion()));
+    path_to_executable = QCoreApplication::applicationFilePath();
 
 #ifdef ORBIT_CRASH_HANDLING
     const std::string dump_path = Path::GetDumpPath();
@@ -327,6 +343,7 @@ int main(int argc, char* argv[]) {
       }
     }
   }
-  execv(argv[0], argv);
+
+  execv(path_to_executable.toLocal8Bit().constData(), original_argv);
   UNREACHABLE();
 }

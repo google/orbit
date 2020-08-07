@@ -4,7 +4,6 @@
 
 #include "GlPanel.h"
 
-#include "BlackBoard.h"
 #include "CaptureWindow.h"
 #include "GlCanvas.h"
 #include "HomeWindow.h"
@@ -16,9 +15,6 @@ GlPanel* GlPanel::Create(Type a_Type) {
   switch (a_Type) {
     case CAPTURE:
       panel = new CaptureWindow();
-      break;
-    case VISUALIZE:
-      panel = new BlackBoard();
       break;
     case DEBUG:
       panel = new HomeWindow();

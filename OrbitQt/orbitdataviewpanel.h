@@ -8,6 +8,7 @@
 #include <QWidget>
 
 #include "orbittablemodel.h"
+#include "orbittreeview.h"
 #include "types.h"
 
 namespace Ui {
@@ -27,7 +28,7 @@ class OrbitDataViewPanel : public QWidget {
   void Refresh();
   void SetDataModel(DataView* model);
   void SetFilter(const QString& a_Filter);
-  class OrbitTreeView* GetTreeView();
+  OrbitTreeView* GetTreeView();
   QLineEdit* GetFilterLineEdit();
 
  private slots:

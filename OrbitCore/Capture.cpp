@@ -13,12 +13,10 @@
 #include "Injection.h"
 #include "Log.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitSession.h"
 #include "Params.h"
 #include "Path.h"
 #include "Pdb.h"
 #include "SamplingProfiler.h"
-#include "Serialization.h"
 #include "absl/strings/str_format.h"
 
 #ifndef _WIN32
@@ -27,6 +25,8 @@ std::shared_ptr<Pdb> GPdbDbg;
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_protos::PresetFile;
+using orbit_client_protos::PresetInfo;
 
 Capture::State Capture::GState = Capture::State::kEmpty;
 bool Capture::GInjected = false;
@@ -43,7 +43,7 @@ std::string Capture::GPresetToLoad;
 std::string Capture::GProcessToInject;
 std::string Capture::GFunctionFilter;
 
-std::vector<std::shared_ptr<FunctionInfo>> Capture::GSelectedFunctions;
+std::vector<std::shared_ptr<FunctionInfo>> Capture::GSelectedInCaptureFunctions;
 std::map<uint64_t, FunctionInfo*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, FunctionInfo*> Capture::GVisibleFunctionsMap;
 std::unordered_map<uint64_t, uint64_t> Capture::GFunctionCountMap;
@@ -63,7 +63,7 @@ std::chrono::system_clock::time_point Capture::GCaptureTimePoint;
 
 std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
 std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
-std::shared_ptr<Preset> Capture::GSessionPresets = nullptr;
+std::shared_ptr<PresetFile> Capture::GSessionPresets = nullptr;
 
 void (*Capture::GClearCaptureDataFunc)();
 std::vector<std::shared_ptr<SamplingProfiler>> GOldSamplingProfilers;
@@ -148,9 +148,9 @@ void Capture::ClearCaptureData() {
 
 //-----------------------------------------------------------------------------
 void Capture::PreFunctionHooks() {
-  GSelectedFunctions = GetSelectedFunctions();
+  GSelectedInCaptureFunctions = GetSelectedFunctions();
 
-  for (auto& func : GSelectedFunctions) {
+  for (auto& func : GSelectedInCaptureFunctions) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
     GSelectedFunctionsMap[address] = func.get();
     func->clear_stats();
@@ -188,13 +188,14 @@ void Capture::DisplayStats() {
 
 //-----------------------------------------------------------------------------
 ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
-  Preset preset;
-  preset.m_ProcessFullPath = GTargetProcess->GetFullPath();
+  PresetInfo preset;
+  preset.set_process_full_path(GTargetProcess->GetFullPath());
 
   for (auto& func : GTargetProcess->GetFunctions()) {
     if (FunctionUtils::IsSelected(*func)) {
-      preset.m_Modules[func->loaded_module_path()].m_FunctionHashes.push_back(
-          FunctionUtils::GetHash(*func));
+      uint64_t hash = FunctionUtils::GetHash(*func);
+      (*preset.mutable_path_to_module())[func->loaded_module_path()]
+          .add_function_hashes(hash);
     }
   }
 
@@ -209,18 +210,13 @@ ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
     return ErrorMessage("Error opening the file for writing");
   }
 
-  try {
+  {
     SCOPE_TIMER_LOG(
         absl::StrFormat("Saving preset in \"%s\"", filename_with_ext));
-    cereal::BinaryOutputArchive archive(file);
-    // "Session" is use for backwards compatibility.
-    archive(cereal::make_nvp("Session", preset));
-    return outcome::success();
-  } catch (std::exception& e) {
-    ERROR("Saving preset in \"%s\": %s", filename_with_ext, e.what());
-    return ErrorMessage(
-        absl::StrFormat("Error serializing the preset: %s", e.what()));
+    preset.SerializeToOstream(&file);
   }
+
+  return outcome::success();
 }
 
 //-----------------------------------------------------------------------------

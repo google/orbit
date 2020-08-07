@@ -60,7 +60,8 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
     case COLUMN_MODULE:
       return FunctionUtils::GetLoadedModuleName(function);
     case COLUMN_ADDRESS:
-      return absl::StrFormat("0x%llx", FunctionUtils::GetAbsoluteAddress(function));
+      return absl::StrFormat("0x%llx",
+                             FunctionUtils::GetAbsoluteAddress(function));
     default:
       return "";
   }
@@ -122,7 +123,7 @@ void FunctionsDataView::DoSort() {
   }
 
   if (sorter) {
-    std::stable_sort(m_Indices.begin(), m_Indices.end(), sorter);
+    std::stable_sort(indices_.begin(), indices_.end(), sorter);
   }
 }
 
@@ -210,7 +211,7 @@ void FunctionsDataView::DoFilter() {
     }
   }
 
-  m_Indices = indices;
+  indices_ = indices;
 
   OnSort(m_SortingColumn, {});
 #endif
@@ -252,9 +253,9 @@ void FunctionsDataView::ParallelFilter() {
     }
   }
 
-  m_Indices.clear();
+  indices_.clear();
   for (int i : indicesSet) {
-    m_Indices.push_back(i);
+    indices_.push_back(i);
   }
 #endif
 }
@@ -264,9 +265,9 @@ void FunctionsDataView::OnDataChanged() {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
   size_t numFunctions = Capture::GTargetProcess->GetFunctions().size();
-  m_Indices.resize(numFunctions);
+  indices_.resize(numFunctions);
   for (size_t i = 0; i < numFunctions; ++i) {
-    m_Indices[i] = i;
+    indices_[i] = i;
   }
 
   DataView::OnDataChanged();
@@ -277,5 +278,5 @@ FunctionInfo& FunctionsDataView::GetFunction(int a_Row) const {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
   const std::vector<std::shared_ptr<FunctionInfo>>& functions =
       Capture::GTargetProcess->GetFunctions();
-  return *functions[m_Indices[a_Row]];
+  return *functions[indices_[a_Row]];
 }

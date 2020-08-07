@@ -19,7 +19,8 @@ namespace OrbitSsh {
 Session::Session(LIBSSH2_SESSION* raw_session_ptr)
     : raw_session_ptr_(raw_session_ptr, &libssh2_session_free) {}
 
-outcome::result<Session> Session::Create(Context*) {
+outcome::result<Session> Session::Create(Context* context) {
+  CHECK(context->active());
   LIBSSH2_SESSION* raw_session_ptr = libssh2_session_init();
 
   if (raw_session_ptr == nullptr) {

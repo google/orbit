@@ -61,10 +61,9 @@ void WriteMessage(const google::protobuf::Message* message,
 }
 
 void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
-  for (auto& pair : Capture::GSelectedFunctionsMap) {
-    FunctionInfo* func = pair.second;
-    if (func != nullptr) {
-      capture_info->add_selected_functions()->CopyFrom(*func);
+  for (const auto& function : Capture::GSelectedInCaptureFunctions) {
+    if (function != nullptr) {
+      capture_info->add_selected_functions()->CopyFrom(*function);
     }
   }
 
@@ -79,16 +78,16 @@ void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
     capture_info->add_address_infos()->CopyFrom(address_info.second);
   }
 
-  const auto& unique_callstacks =
-      Capture::GSamplingProfiler->GetUniqueCallstacks();
-  capture_info->mutable_callstacks()->Reserve(unique_callstacks.size());
-  for (const auto& hash_to_callstack : unique_callstacks) {
-    const std::shared_ptr<CallStack> hashed_callstack =
-        hash_to_callstack.second;
-    CallstackInfo* callstack = capture_info->add_callstacks();
-    *callstack->mutable_data() = {hashed_callstack->m_Data.begin(),
-                                  hashed_callstack->m_Data.end()};
-  }
+  // TODO: this is not really synchronized, since GetCallstacks processing below
+  // is not under the same mutex lock we could end up having list of callstacks
+  // inconsistent with unique_callstacks. Revisit sampling profiler data
+  // thread-safety.
+  Capture::GSamplingProfiler->ForEachUniqueCallstack(
+      [&capture_info](const CallStack& call_stack) {
+        CallstackInfo* callstack = capture_info->add_callstacks();
+        *callstack->mutable_data() = {call_stack.m_Data.begin(),
+                                      call_stack.m_Data.end()};
+      });
 
   auto callstacks = Capture::GSamplingProfiler->GetCallstacks();
   capture_info->mutable_callstack_events()->Reserve(callstacks->size());
@@ -183,12 +182,12 @@ void FillEventBuffer() {
 
 void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   // Functions
-  Capture::GSelectedFunctions.clear();
+  Capture::GSelectedInCaptureFunctions.clear();
   Capture::GSelectedFunctionsMap.clear();
   for (const auto& function : capture_info.selected_functions()) {
     std::shared_ptr<FunctionInfo> function_ptr =
         std::make_shared<FunctionInfo>(function);
-    Capture::GSelectedFunctions.push_back(function_ptr);
+    Capture::GSelectedInCaptureFunctions.push_back(function_ptr);
     Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(
         *function_ptr)] = function_ptr.get();
   }
@@ -271,6 +270,7 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
   Capture::GState = Capture::State::kDone;
 
   GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler);
+  GOrbitApp->AddTopDownView(*Capture::GSamplingProfiler);
   GOrbitApp->FireRefreshCallbacks();
   return outcome::success();
 }

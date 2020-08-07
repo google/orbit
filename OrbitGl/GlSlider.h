@@ -12,7 +12,8 @@
 
 class GlCanvas;
 
-class GlSlider : public Pickable {
+class GlSlider : public Pickable,
+                 public std::enable_shared_from_this<GlSlider> {
  public:
   GlSlider();
   ~GlSlider(){};

@@ -10,35 +10,39 @@ class TimeGraphLayout {
  public:
   TimeGraphLayout();
 
-  float GetTextBoxHeight() const { return m_TextBoxHeight; }
-  float GetTextCoresHeight() const { return m_CoresHeight; }
-  float GetEventTrackHeight() const { return m_EventTrackHeight; }
-  float GetGraphTrackHeight() const { return m_GraphTrackHeight; }
-  float GetTrackBottomMargin() const { return m_TrackBottomMargin; }
-  float GetTrackTopMargin() const { return m_TrackTopMargin; }
+  float GetTextBoxHeight() const { return m_TextBoxHeight * scale_; }
+  float GetTextCoresHeight() const { return m_CoresHeight * scale_; }
+  float GetEventTrackHeight() const { return m_EventTrackHeight * scale_; }
+  float GetGraphTrackHeight() const { return m_GraphTrackHeight * scale_; }
+  float GetTrackBottomMargin() const { return m_TrackBottomMargin * scale_; }
+  float GetTrackTopMargin() const { return m_TrackTopMargin * scale_; }
   float GetTrackLabelOffsetX() const { return m_TrackLabelOffsetX; }
   float GetTrackLabelOffsetY() const { return m_TrackLabelOffsetY; }
   float GetSliderWidth() const { return m_SliderWidth; }
   float GetTimeBarHeight() const { return time_bar_height_; }
   float GetTrackTabWidth() const { return m_TrackTabWidth; }
-  float GetTrackTabHeight() const { return m_TrackTabHeight; }
+  float GetTrackTabHeight() const { return m_TrackTabHeight * scale_; }
   float GetTrackTabOffset() const { return m_TrackTabOffset; }
   float GetCollapseButtonOffset() const { return m_CollapseButtonOffset; }
-  float GetRoundingRadius() const { return m_RoundingRadius; }
+  float GetRoundingRadius() const { return m_RoundingRadius * scale_; }
   float GetRoundingNumSides() const { return m_RoundingNumSides; }
   float GetTextOffset() const { return m_TextOffset; }
   float GetBottomMargin() const;
   float GetTopMargin() const { return GetSchedulerTrackOffset(); }
   float GetVerticalMargin() const { return m_VerticalMargin; }
-  float GetSchedulerTrackOffset() const { return m_SchedulerTrackOffset; }
-  float GetSpaceBetweenTracks() const { return m_SpaceBetweenTracks; }
-  float GetSpaceBetweenCores() const { return m_SpaceBetweenCores; }
+  float GetSchedulerTrackOffset() const {
+    return m_SchedulerTrackOffset * scale_;
+  }
+  float GetSpaceBetweenTracks() const { return m_SpaceBetweenTracks * scale_; }
+  float GetSpaceBetweenCores() const { return m_SpaceBetweenCores * scale_; }
   float GetSpaceBetweenTracksAndThread() const {
-    return m_SpaceBetweenTracksAndThread;
+    return m_SpaceBetweenTracksAndThread * scale_;
   }
   float GetTextZ() const { return m_TextZ; }
   float GetTrackZ() const { return m_TrackZ; }
   float GetToolbarIconHeight() const { return m_ToolbarIconHeight; }
+  float GetScale() const { return scale_; }
+  void SetScale(float value) { scale_ = value; }
   void SetDrawProperties(bool value) { m_DrawProperties = value; }
   void SetNumCores(int a_NumCores) { m_NumCores = a_NumCores; }
   bool DrawProperties();
@@ -75,6 +79,7 @@ class TimeGraphLayout {
   float m_TextZ;
   float m_TrackZ;
   float m_ToolbarIconHeight;
+  float scale_;
 
   bool m_DrawProperties = false;
   bool m_DrawTrackBackground = true;

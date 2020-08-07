@@ -24,7 +24,8 @@ void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   if (picking) {
     PickingManager& picking_manager = canvas->GetPickingManager();
-    color = picking_manager.GetPickableColor(this, PickingID::BatcherId::UI);
+    color = picking_manager.GetPickableColor(shared_from_this(),
+                                             PickingID::BatcherId::UI);
   }
 
   // Draw triangle.

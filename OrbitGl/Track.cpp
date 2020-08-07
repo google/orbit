@@ -13,10 +13,10 @@
 //-----------------------------------------------------------------------------
 Track::Track(TimeGraph* time_graph)
     : time_graph_(time_graph),
-      collapse_toggle_(
+      collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,
           [this](TriangleToggle::State state) { OnCollapseToggle(state); },
-          time_graph) {
+          time_graph)) {
   m_MousePos[0] = m_MousePos[1] = Vec2(0, 0);
   m_Pos = Vec2(0, 0);
   m_Size = Vec2(0, 0);
@@ -86,7 +86,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   Color picking_color = canvas->GetPickingManager().GetPickableColor(
-      this, PickingID::BatcherId::UI);
+      shared_from_this(), PickingID::BatcherId::UI);
   const Color kTabColor(50, 50, 50, 255);
   const bool picking = picking_mode != PickingMode::kNone;
   Color color = picking ? picking_color : kTabColor;
@@ -113,6 +113,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float label_height = layout.GetTrackTabHeight();
   float half_label_height = 0.5f * label_height;
   float label_width = layout.GetTrackTabWidth();
+  float half_label_width = 0.5f * label_width;
   float tab_x0 = x0 + layout.GetTrackTabOffset();
 
   Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
@@ -124,6 +125,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     const Color kBackgroundColor(70, 70, 70, 255);
 
     float radius = std::min(layout.GetRoundingRadius(), half_label_height);
+    radius = std::min(radius, half_label_width);
     uint32_t sides = static_cast<uint32_t>(layout.GetRoundingNumSides() + 0.5f);
     auto rounded_corner = GetRoundedCornerMask(radius, sides);
     Vec2 bottom_left(x0, y1);
@@ -148,16 +150,16 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   // Collapse toggle state management.
   if (!this->IsCollapsable()) {
-    collapse_toggle_.SetState(TriangleToggle::State::kInactive);
-  } else if (collapse_toggle_.IsInactive()) {
-    collapse_toggle_.ResetToInitialState();
+    collapse_toggle_->SetState(TriangleToggle::State::kInactive);
+  } else if (collapse_toggle_->IsInactive()) {
+    collapse_toggle_->ResetToInitialState();
   }
 
   // Draw collapsing triangle.
   float button_offset = layout.GetCollapseButtonOffset();
   Vec2 toggle_pos = Vec2(tab_x0 + button_offset, m_Pos[1] + half_label_height);
-  collapse_toggle_.SetPos(toggle_pos);
-  collapse_toggle_.Draw(canvas, picking_mode);
+  collapse_toggle_->SetPos(toggle_pos);
+  collapse_toggle_->Draw(canvas, picking_mode);
 
   if (!picking) {
     // Draw label.
@@ -173,7 +175,8 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 }
 
 //-----------------------------------------------------------------------------
-void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/, PickingMode /*  picking_mode*/) {}
+void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/,
+                             PickingMode /*  picking_mode*/) {}
 
 //-----------------------------------------------------------------------------
 void Track::SetPos(float a_X, float a_Y) {

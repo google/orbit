@@ -9,13 +9,13 @@
 
 #include "App.h"
 #include "Capture.h"
-#include "Card.h"
 #include "Core.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "Log.h"
 #include "OpenGl.h"
 #include "Pdb.h"
+#include "RingBuffer.h"
 #include "SamplingProfiler.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
@@ -462,9 +462,9 @@ void GlCanvas::Render(int a_Width, int a_Height) {
 
   DrawScreenSpace();
 
-  RenderUI();
   m_TextRenderer.Display(&ui_batcher_);
   RenderText();
+  RenderUI();
 
   // Draw remaining elements collected with the batcher.
   ui_batcher_.Draw();

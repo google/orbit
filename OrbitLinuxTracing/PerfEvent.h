@@ -299,7 +299,7 @@ class AbstractUprobesPerfEvent {
 
 class UprobesPerfEvent : public PerfEvent, public AbstractUprobesPerfEvent {
  public:
-  perf_event_sp_ip_8bytes_sample ring_buffer_record;
+  perf_event_sp_ip_arguments_8bytes_sample ring_buffer_record;
 
   uint64_t GetTimestamp() const override {
     return ring_buffer_record.sample_id.time;

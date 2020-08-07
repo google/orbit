@@ -30,17 +30,20 @@ CaptureWindow::CaptureWindow() {
   m_WorldMaxY = 0;
   m_ProcessX = 0;
 
+  slider_ = std::make_shared<GlSlider>();
+  vertical_slider_ = std::make_shared<GlSlider>();
+
   m_HoverDelayMs = 300;
   m_CanHover = false;
   m_IsHovering = false;
   ResetHoverTimer();
 
-  m_Slider.SetCanvas(this);
-  m_Slider.SetDragCallback([&](float a_Ratio) { this->OnDrag(a_Ratio); });
+  slider_->SetCanvas(this);
+  slider_->SetDragCallback([&](float a_Ratio) { this->OnDrag(a_Ratio); });
 
-  m_VerticalSlider.SetCanvas(this);
-  m_VerticalSlider.SetVertical();
-  m_VerticalSlider.SetDragCallback(
+  vertical_slider_->SetCanvas(this);
+  vertical_slider_->SetVertical();
+  vertical_slider_->SetDragCallback(
       [&](float a_Ratio) { this->OnVerticalDrag(a_Ratio); });
 
   GOrbitApp->RegisterCaptureWindow(this);
@@ -223,7 +226,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
   std::string tooltip = "";
 
   if (pickId.m_Type == PickingID::PICKABLE) {
-    Pickable* pickable = GetPickingManager().GetPickableFromId(pickId.m_Id);
+    auto pickable = GetPickingManager().GetPickableFromId(pickId.m_Id).lock();
     if (pickable) {
       tooltip = pickable->GetTooltip();
     }
@@ -373,25 +376,27 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
   if (a_Delta == 0) return;
 
   // Normalize and invert sign, so that delta < 0 is zoom in.
-  int delta = a_Delta < 0 ? 1 : -1;
+  const int delta = a_Delta < 0 ? 1 : -1;
+  const auto delta_float = static_cast<float>(delta);
 
   if (delta < m_MinWheelDelta) m_MinWheelDelta = delta;
   if (delta > m_MaxWheelDelta) m_MaxWheelDelta = delta;
-
-  float mousex = a_X;
 
   float worldx;
   float worldy;
 
   ScreenToWorld(a_X, a_Y, worldx, worldy);
-  m_MouseRatio = static_cast<double>(mousex) / getWidth();
 
   bool zoomWidth = !a_Ctrl;
   if (zoomWidth) {
-    time_graph_.ZoomTime(delta, m_MouseRatio);
-    m_WheelMomentum = delta * m_WheelMomentum < 0 ? 0 : m_WheelMomentum + delta;
+    m_MouseRatio = static_cast<double>(a_X) / getWidth();
+    time_graph_.ZoomTime(delta_float, m_MouseRatio);
+    m_WheelMomentum =
+        delta_float * m_WheelMomentum < 0 ? 0 : m_WheelMomentum + delta_float;
   } else {
-    // TODO: reimplement vertical zoom by scaling track heights.
+    float mouse_relative_y_position =
+        static_cast<float>(a_Y) / static_cast<float>(getHeight());
+    time_graph_.VerticalZoom(delta_float, mouse_relative_y_position);
   }
 
   // Use the original sign of a_Delta here.
@@ -472,10 +477,14 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
           time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
                                         TimeGraph::JumpDirection::kPrevious,
                                         TimeGraph::JumpScope::kSameFunction);
+        } else if (a_Alt) {
+          time_graph_.JumpToNeighborBox(
+              Capture::GSelectedTextBox, TimeGraph::JumpDirection::kPrevious,
+              TimeGraph::JumpScope::kSameThreadSameFunction);
         } else {
           time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
                                         TimeGraph::JumpDirection::kPrevious,
-                                        TimeGraph::JumpScope::kSameThread);
+                                        TimeGraph::JumpScope::kSameDepth);
         }
         break;
       case 20:  // Right
@@ -483,10 +492,14 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
           time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
                                         TimeGraph::JumpDirection::kNext,
                                         TimeGraph::JumpScope::kSameFunction);
+        } else if (a_Alt) {
+          time_graph_.JumpToNeighborBox(
+              Capture::GSelectedTextBox, TimeGraph::JumpDirection::kNext,
+              TimeGraph::JumpScope::kSameThreadSameFunction);
         } else {
           time_graph_.JumpToNeighborBox(Capture::GSelectedTextBox,
                                         TimeGraph::JumpDirection::kNext,
-                                        TimeGraph::JumpScope::kSameThread);
+                                        TimeGraph::JumpScope::kSameDepth);
         }
         break;
       case 19:  // Up
@@ -536,7 +549,7 @@ void CaptureWindow::ResetHoverTimer() {
 //-----------------------------------------------------------------------------
 void CaptureWindow::Draw() {
   m_WorldMaxY =
-      1.5f * ScreenToWorldHeight(static_cast<int>(m_Slider.GetPixelHeight()));
+      1.5f * ScreenToWorldHeight(static_cast<int>(slider_->GetPixelHeight()));
 
   if (Capture::IsCapturing()) {
     ZoomAll();
@@ -578,8 +591,8 @@ void CaptureWindow::Draw() {
 void CaptureWindow::DrawScreenSpace() {
   double timeSpan = time_graph_.GetCaptureTimeSpanUs();
 
-  Color col = m_Slider.GetBarColor();
-  float height = m_Slider.GetPixelHeight();
+  Color col = slider_->GetBarColor();
+  float height = slider_->GetPixelHeight();
   float canvasHeight = getHeight();
   float z = GlCanvas::Z_VALUE_TEXT_UI_BG;
 
@@ -596,16 +609,16 @@ void CaptureWindow::DrawScreenSpace() {
     double ratio =
         Capture::IsCapturing() ? 1 : (maxStart != 0 ? start / maxStart : 0);
     float slider_width = layout.GetSliderWidth();
-    m_Slider.SetPixelHeight(slider_width);
-    m_Slider.SetSliderRatio(static_cast<float>(ratio));
-    m_Slider.SetSliderWidthRatio(static_cast<float>(width / timeSpan));
-    m_Slider.Draw(this, picking_mode);
+    slider_->SetPixelHeight(slider_width);
+    slider_->SetSliderRatio(static_cast<float>(ratio));
+    slider_->SetSliderWidthRatio(static_cast<float>(width / timeSpan));
+    slider_->Draw(this, picking_mode);
 
     float verticalRatio = m_WorldHeight / time_graph_.GetThreadTotalHeight();
     if (verticalRatio < 1.f) {
-      m_VerticalSlider.SetPixelHeight(slider_width);
-      m_VerticalSlider.SetSliderWidthRatio(verticalRatio);
-      m_VerticalSlider.Draw(this, picking_mode);
+      vertical_slider_->SetPixelHeight(slider_width);
+      vertical_slider_->SetSliderWidthRatio(verticalRatio);
+      vertical_slider_->Draw(this, picking_mode);
       vertical_margin += slider_width;
     }
   }
@@ -649,7 +662,7 @@ void CaptureWindow::UpdateVerticalSlider() {
   float min = m_WorldMaxY;
   float max = m_WorldHeight - time_graph_.GetThreadTotalHeight();
   float ratio = (m_WorldTopLeftY - min) / (max - min);
-  m_VerticalSlider.SetSliderRatio(ratio);
+  vertical_slider_->SetSliderRatio(ratio);
 }
 
 void CaptureWindow::ToggleDrawHelp() {
@@ -682,7 +695,7 @@ void CaptureWindow::NeedsUpdate() {
 
 //-----------------------------------------------------------------------------
 float CaptureWindow::GetTopBarTextY() {
-  return m_Slider.GetPixelHeight() * 0.5f +
+  return slider_->GetPixelHeight() * 0.5f +
          m_TextRenderer.GetStringHeight("FpjT_H") * 0.5f;
 }
 
@@ -711,6 +724,11 @@ void CaptureWindow::DrawStatus() {
 
 //-----------------------------------------------------------------------------
 void CaptureWindow::RenderUI() {
+  // Don't draw ImGui when picking.
+  if (m_Picking || m_IsHovering) {
+    return;
+  }
+
   ScopeImguiContext state(m_ImGuiContext);
   Orbit_ImGui_NewFrame(this);
 
@@ -787,7 +805,7 @@ void CaptureWindow::RenderHelpUi() {
   ImGui::SetNextWindowPos(ImVec2(0, kYOffset));
 
   ImVec4 color(1.f, 0, 0, 1.f);
-  ColorToFloat(m_Slider.GetBarColor(), &color.x);
+  ColorToFloat(slider_->GetBarColor(), &color.x);
   ImGui::PushStyleColor(ImGuiCol_WindowBg, color);
 
   if (!ImGui::Begin("Help Overlay", &m_DrawHelp, ImVec2(0, 0), 1.f,

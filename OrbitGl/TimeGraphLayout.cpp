@@ -35,6 +35,7 @@ TimeGraphLayout::TimeGraphLayout() {
   m_TextZ = -0.02f;
   m_TrackZ = -0.1f;
   m_ToolbarIconHeight = 24.f;
+  scale_ = 1.f;
   time_bar_height_ = 15.f;
 };
 
@@ -80,6 +81,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER_MIN_MAX(m_TextZ, -1.f, 1.f);
   FLOAT_SLIDER_MIN_MAX(m_TrackZ, -1.f, 1.f);
   FLOAT_SLIDER(m_ToolbarIconHeight);
+  FLOAT_SLIDER_MIN_MAX(scale_, 0.05f, 20.f);
   ImGui::Checkbox("DrawTrackBackground", &m_DrawTrackBackground);
   ImGui::End();
 
@@ -89,5 +91,5 @@ bool TimeGraphLayout::DrawProperties() {
 float TimeGraphLayout::GetBottomMargin() const {
   // The bottom consists of the slider (where we have to take the width, as it
   // is rotated), and the time bar.
-  return GetSliderWidth() + GetTimeBarHeight(); 
+  return GetSliderWidth() + GetTimeBarHeight();
 }

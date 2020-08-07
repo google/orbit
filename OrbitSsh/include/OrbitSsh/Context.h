@@ -21,7 +21,7 @@ class Context {
 
   ~Context() noexcept;
 
-  bool isActiveContext() const { return active_; }
+  [[nodiscard]] bool active() const { return active_; }
 
  private:
   explicit Context() = default;

@@ -14,7 +14,6 @@
 #include "Injection.h"
 #include "Log.h"
 #include "OrbitModule.h"
-#include "Serialization.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -75,8 +74,21 @@ void SamplingProfiler::AddCallStack(CallstackEvent& callstack_event) {
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddUniqueCallStack(CallStack& a_CallStack) {
-  m_UniqueCallstacks[a_CallStack.Hash()] =
+  absl::MutexLock lock(&unique_callstacks_mutex_);
+  unique_callstacks_[a_CallStack.Hash()] =
       std::make_shared<CallStack>(a_CallStack);
+}
+
+const CallStack& SamplingProfiler::GetResolvedCallstack(
+    CallstackID raw_callstack_id) const {
+  auto resolved_callstack_id_it =
+      m_OriginalCallstackToResolvedCallstack.find(raw_callstack_id);
+  CHECK(resolved_callstack_id_it !=
+        m_OriginalCallstackToResolvedCallstack.end());
+  auto resolved_callstack_it =
+      m_UniqueResolvedCallstacks.find(resolved_callstack_id_it->second);
+  CHECK(resolved_callstack_it != m_UniqueResolvedCallstacks.end());
+  return *resolved_callstack_it->second;
 }
 
 //-----------------------------------------------------------------------------
@@ -100,13 +112,15 @@ SamplingProfiler::GetSortedCallstacksFromAddress(uint64_t a_Addr,
   return report;
 }
 
+const int32_t SamplingProfiler::kAllThreadsFakeTid = 0;
+
 //-----------------------------------------------------------------------------
 void SamplingProfiler::SortByThreadUsage() {
   m_SortedThreadSampleData.clear();
   m_SortedThreadSampleData.reserve(m_ThreadSampleData.size());
 
   // "All"
-  m_ThreadSampleData[0].m_AverageThreadUsage = 100.f;
+  m_ThreadSampleData[kAllThreadsFakeTid].m_AverageThreadUsage = 100.f;
 
   for (auto& pair : m_ThreadSampleData) {
     ThreadSampleData& data = pair.second;
@@ -142,17 +156,20 @@ void SamplingProfiler::ProcessSamples() {
         m_ThreadSampleData[callstack.thread_id()];
     threadSampleData.m_NumSamples++;
     threadSampleData.m_CallstackCount[callstack.callstack_hash()]++;
+
+    absl::MutexLock lock(&unique_callstacks_mutex_);
     for (uint64_t address :
-         m_UniqueCallstacks[callstack.callstack_hash()]->m_Data) {
+         unique_callstacks_[callstack.callstack_hash()]->m_Data) {
       threadSampleData.m_RawAddressCount[address]++;
     }
 
     if (m_GenerateSummary) {
-      ThreadSampleData& threadSampleDataAll = m_ThreadSampleData[0];
+      ThreadSampleData& threadSampleDataAll =
+          m_ThreadSampleData[kAllThreadsFakeTid];
       threadSampleDataAll.m_NumSamples++;
       threadSampleDataAll.m_CallstackCount[callstack.callstack_hash()]++;
       for (uint64_t address :
-           m_UniqueCallstacks[callstack.callstack_hash()]->m_Data) {
+           unique_callstacks_[callstack.callstack_hash()]->m_Data) {
         threadSampleDataAll.m_RawAddressCount[address]++;
       }
     }
@@ -210,7 +227,9 @@ void SamplingProfiler::ProcessSamples() {
 
 //-----------------------------------------------------------------------------
 void SamplingProfiler::ResolveCallstacks() {
-  for (const auto& it : m_UniqueCallstacks) {
+  absl::MutexLock lock(&unique_callstacks_mutex_);
+
+  for (const auto& it : unique_callstacks_) {
     CallstackID rawCallstackId = it.first;
     const std::shared_ptr<CallStack> callstack = it.second;
     // A "resolved callstack" is a callstack where every address is replaced by
@@ -247,7 +266,7 @@ void SamplingProfiler::ResolveCallstacks() {
 
 //-----------------------------------------------------------------------------
 const ThreadSampleData* SamplingProfiler::GetSummary() const {
-  auto summary_it = m_ThreadSampleData.find(0);
+  auto summary_it = m_ThreadSampleData.find(kAllThreadsFakeTid);
   if (summary_it == m_ThreadSampleData.end()) {
     return nullptr;
   }
@@ -276,7 +295,8 @@ uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
   return result;
 }
 
-//-----------------------------------------------------------------------------
+const std::string SamplingProfiler::kUnknownFunctionOrModuleName = "???";
+
 void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   LinuxAddressInfo* address_info = Capture::GetAddressInfo(address);
   FunctionInfo* function = m_Process->GetFunctionFromAddress(address, false);
@@ -290,7 +310,7 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   // m_ExactAddressToFunctionAddress, otherwise each address is
   // considered a different function.
   uint64_t function_address;
-  std::string function_name = "???";
+  std::string function_name = kUnknownFunctionOrModuleName;
   if (function != nullptr) {
     function_address = FunctionUtils::GetAbsoluteAddress(*function);
     function_name = FunctionUtils::GetDisplayName(*function);
@@ -313,7 +333,7 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   Capture::GAddressToFunctionName[address] = function_name;
   Capture::GAddressToFunctionName[function_address] = function_name;
 
-  std::string module_name = "???";
+  std::string module_name = kUnknownFunctionOrModuleName;
   std::shared_ptr<Module> module = m_Process->GetModuleFromAddress(address);
   if (module != nullptr) {
     module_name = module->m_Name;

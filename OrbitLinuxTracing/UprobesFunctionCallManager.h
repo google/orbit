@@ -9,6 +9,7 @@
 
 #include <stack>
 
+#include "PerfEventRecords.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture.pb.h"
 
@@ -28,9 +29,10 @@ class UprobesFunctionCallManager {
   UprobesFunctionCallManager& operator=(UprobesFunctionCallManager&&) = default;
 
   void ProcessUprobes(pid_t tid, uint64_t function_address,
-                      uint64_t begin_timestamp) {
+                      uint64_t begin_timestamp,
+                      const perf_event_sample_regs_user_sp_ip_arguments& regs) {
     auto& tid_uprobes_stack = tid_uprobes_stacks_[tid];
-    tid_uprobes_stack.emplace(function_address, begin_timestamp);
+    tid_uprobes_stack.emplace(function_address, begin_timestamp, regs);
   }
 
   std::optional<FunctionCall> ProcessUretprobes(pid_t tid,
@@ -44,16 +46,21 @@ class UprobesFunctionCallManager {
 
     // As we erase the stack for this thread as soon as it becomes empty.
     CHECK(!tid_uprobes_stack.empty());
+    auto& tid_uprobe = tid_uprobes_stack.top();
 
     FunctionCall function_call;
     function_call.set_tid(tid);
-    function_call.set_absolute_address(
-        tid_uprobes_stack.top().function_address);
-    function_call.set_begin_timestamp_ns(
-        tid_uprobes_stack.top().begin_timestamp);
+    function_call.set_absolute_address(tid_uprobe.function_address);
+    function_call.set_begin_timestamp_ns(tid_uprobe.begin_timestamp);
     function_call.set_end_timestamp_ns(end_timestamp);
     function_call.set_depth(tid_uprobes_stack.size() - 1);
     function_call.set_return_value(return_value);
+    function_call.add_registers(tid_uprobe.registers.di);
+    function_call.add_registers(tid_uprobe.registers.si);
+    function_call.add_registers(tid_uprobe.registers.dx);
+    function_call.add_registers(tid_uprobe.registers.cx);
+    function_call.add_registers(tid_uprobe.registers.r8);
+    function_call.add_registers(tid_uprobe.registers.r9);
 
     tid_uprobes_stack.pop();
     if (tid_uprobes_stack.empty()) {
@@ -64,11 +71,14 @@ class UprobesFunctionCallManager {
 
  private:
   struct OpenUprobes {
-    OpenUprobes(uint64_t function_address, uint64_t begin_timestamp)
+    OpenUprobes(uint64_t function_address, uint64_t begin_timestamp,
+                const perf_event_sample_regs_user_sp_ip_arguments& regs)
         : function_address{function_address},
-          begin_timestamp{begin_timestamp} {}
+          begin_timestamp{begin_timestamp},
+          registers(regs) {}
     uint64_t function_address;
     uint64_t begin_timestamp;
+    perf_event_sample_regs_user_sp_ip_arguments registers;
   };
 
   // This map keeps the stack of the dynamically-instrumented functions entered.

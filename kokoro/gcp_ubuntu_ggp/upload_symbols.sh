@@ -77,7 +77,7 @@ function upload_debug_symbols {
     mkdir breakpad/symbols
   fi
 
-  upload_symbol_file $bin_folder/OrbitService.debug OrbitService
+  upload_symbol_file $bin_folder/OrbitService OrbitService
 }
 
 upload_debug_symbols $1

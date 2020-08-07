@@ -7,6 +7,9 @@
 #include <cstring>
 #include <unordered_map>
 #include <vector>
+#include <memory>
+#include <string>
+#include <type_traits>
 
 #include "CoreMath.h"
 #include "absl/synchronization/mutex.h"
@@ -14,11 +17,7 @@
 class GlCanvas;
 
 //-----------------------------------------------------------------------------
-enum class PickingMode {
-  kNone,
-  kHover,
-  kClick
-};
+enum class PickingMode { kNone, kHover, kClick };
 
 class Pickable {
  public:
@@ -101,22 +100,24 @@ class PickingManager {
   void Pick(uint32_t a_Id, int a_X, int a_Y);
   void Release();
   void Drag(int a_X, int a_Y);
-  Pickable* GetPicked();
-  Pickable* GetPickableFromId(uint32_t id);
+  std::weak_ptr<Pickable> GetPicked() const;
+  std::weak_ptr<Pickable> GetPickableFromId(uint32_t id) const;
   bool IsDragging() const;
 
-  Color GetPickableColor(Pickable* pickable, PickingID::BatcherId batcher_id);
+  Color GetPickableColor(std::weak_ptr<Pickable> pickable,
+                         PickingID::BatcherId batcher_id);
+
+  bool IsThisElementPicked(const Pickable* pickable) const;
 
  private:
-  PickingID CreatePickableId(Pickable* a_Pickable,
+  PickingID CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
                              PickingID::BatcherId batcher_id);
   Color ColorFromPickingID(PickingID id) const;
 
  private:
   std::vector<Pickable*> m_Pickables;
   uint32_t m_IdCounter = 0;
-  std::unordered_map<Pickable*, uint32_t> m_PickableIdMap;
-  std::unordered_map<uint32_t, Pickable*> m_IdPickableMap;
-  Pickable* m_Picked = nullptr;
+  std::unordered_map<uint32_t, std::weak_ptr<Pickable>> m_IdPickableMap;
+  std::weak_ptr<Pickable> m_Picked;
   mutable absl::Mutex mutex_;
 };

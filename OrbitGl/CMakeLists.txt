@@ -13,18 +13,15 @@ target_sources(
   OrbitGl
   PUBLIC App.h
          Batcher.h
-         BlackBoard.h
          CallStackDataView.h
-         CaptureClient.h
-         CaptureEventProcessor.h
-         CaptureListener.h
          CaptureSerializer.h
          CaptureWindow.h
-         Card.h
+         CodeReport.h
          CoreMath.h
          DataView.h
          DataViewTypes.h
          Disassembler.h
+         DisassemblyReport.h
          EventTrack.h
          FramePointerValidatorClient.h
          FunctionsDataView.h
@@ -54,6 +51,8 @@ target_sources(
          TimeGraph.h
          TimeGraphLayout.h
          TimerChain.h
+         TopDownView.h
+         TimerTrack.h
          Track.h
          TriangleToggle.h)
 
@@ -61,17 +60,13 @@ target_sources(
   OrbitGl
   PRIVATE App.cpp
           Batcher.cpp
-          BlackBoard.cpp
           CallStackDataView.cpp
-          CaptureClient.cpp
-          CaptureEventProcessor.cpp
           CaptureSerializer.cpp
           CaptureWindow.cpp
-          Card.cpp
-          CrashManager.cpp
           DataManager.cpp
           DataView.cpp
           Disassembler.cpp
+          DisassemblyReport.cc
           EventTrack.cpp
           FramePointerValidatorClient.cpp
           LiveFunctionsController.cpp
@@ -88,7 +83,6 @@ target_sources(
           ModulesDataView.cpp
           PickingManager.cpp
           PresetsDataView.cpp
-          ProcessManager.cpp
           ProcessesDataView.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp
@@ -98,7 +92,9 @@ target_sources(
           TimeGraph.cpp
           TimeGraphLayout.cpp
           TimerChain.cpp
+          TimerTrack.cpp
           ThreadTrack.cpp
+          TopDownView.cpp
           Track.cpp
           TriangleToggle.cpp)
 
@@ -107,6 +103,8 @@ target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   OrbitGl
   PUBLIC OrbitCore
+         OrbitCaptureClient
+         OrbitClientServices
          OrbitProtos
          freetype-gl::freetype-gl
          OpenGL::GLU
@@ -125,6 +123,18 @@ endif()
 if(NOT WIN32)
   target_link_libraries(OrbitGl PRIVATE X11::X11 X11::Xi X11::Xxf86vm)
 endif()
+
+add_executable(OrbitGlTests)
+
+target_sources(OrbitGlTests PRIVATE
+    PickingManagerTest.cpp)
+
+target_link_libraries(
+  OrbitGlTests
+  PRIVATE OrbitGl
+          GTest::Main)
+
+register_test(OrbitGlTests)
 
 add_fuzzer(CaptureSerializerLoadFuzzer CaptureSerializerLoadFuzzer.cpp)
 target_link_libraries(CaptureSerializerLoadFuzzer PRIVATE OrbitGl)

@@ -10,6 +10,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion
                            -Werror=format=2
+                           -Werror=ignored-attributes
                            -Werror=inconsistent-missing-override
                            -Werror=old-style-cast
                            -Werror=unused-parameter
@@ -19,6 +20,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(STRICT_COMPILE_FLAGS -Werror=all
                            -Werror=float-conversion
                            -Werror=format=2
+                           -Werror=ignored-attributes
                            -Werror=old-style-cast
                            -Werror=unused-parameter
                            -Werror=unused-variable
@@ -75,7 +77,6 @@ endif()
 
 find_package(OpenSSL CONFIG REQUIRED)
 find_package(Threads REQUIRED)
-find_package(cereal CONFIG REQUIRED)
 find_package(xxHash REQUIRED)
 find_package(multicore REQUIRED)
 find_package(concurrentqueue REQUIRED)
@@ -136,8 +137,10 @@ endif()
 add_subdirectory(ElfUtils)
 add_subdirectory(OrbitBase)
 add_subdirectory(OrbitClientProtos)
+add_subdirectory(OrbitClientServices)
 add_subdirectory(OrbitCore)
 add_subdirectory(OrbitFramePointerValidator)
+add_subdirectory(OrbitCaptureClient)
 add_subdirectory(OrbitTest)
 add_subdirectory(protos)
 

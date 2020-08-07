@@ -13,7 +13,6 @@
 #include "Core.h"
 #include "EventBuffer.h"
 #include "Pdb.h"
-#include "SerializationMacros.h"
 #include "capture_data.pb.h"
 
 class Process;
@@ -75,12 +74,16 @@ class SamplingProfiler {
   void AddUniqueCallStack(CallStack& a_CallStack);
 
   std::shared_ptr<CallStack> GetCallStack(CallstackID a_ID) {
-    return m_UniqueCallstacks.at(a_ID);
+    absl::MutexLock lock(&unique_callstacks_mutex_);
+    return unique_callstacks_.at(a_ID);
+  }
+  bool HasCallStack(CallstackID a_ID) {
+    absl::MutexLock lock(&unique_callstacks_mutex_);
+    return unique_callstacks_.count(a_ID) > 0;
   }
 
-  bool HasCallStack(CallstackID a_ID) {
-    return m_UniqueCallstacks.count(a_ID) > 0;
-  }
+  const CallStack& GetResolvedCallstack(
+      CallstackID raw_callstack_id) const;
 
   std::multimap<int, CallstackID> GetCallstacksFromAddress(
       uint64_t a_Addr, ThreadID a_TID, int* o_NumCallstacks);
@@ -91,9 +94,12 @@ class SamplingProfiler {
     return &m_Callstacks;
   }
 
-  const std::unordered_map<CallstackID, std::shared_ptr<CallStack>>&
-  GetUniqueCallstacks() const {
-    return m_UniqueCallstacks;
+  void ForEachUniqueCallstack(
+      const std::function<void(const CallStack&)>& action) {
+    absl::MutexLock lock(&unique_callstacks_mutex_);
+    for (const auto& it : unique_callstacks_) {
+      action(*it.second);
+    }
   }
 
   const std::vector<ThreadSampleData*>& GetThreadSampleData() const {
@@ -117,9 +123,13 @@ class SamplingProfiler {
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
 
   void ClearCallstacks() {
-    m_UniqueCallstacks.clear();
+    absl::MutexLock lock(&unique_callstacks_mutex_);
+    unique_callstacks_.clear();
     m_Callstacks.clear();
   }
+
+  static const int32_t kAllThreadsFakeTid;
+  static const std::string kUnknownFunctionOrModuleName;
 
  protected:
   void ResolveCallstacks();
@@ -132,8 +142,9 @@ class SamplingProfiler {
 
   // Filled before ProcessSamples by AddCallstack, AddHashedCallstack.
   BlockChain<orbit_client_protos::CallstackEvent, 16 * 1024> m_Callstacks;
+  absl::Mutex unique_callstacks_mutex_;
   std::unordered_map<CallstackID, std::shared_ptr<CallStack>>
-      m_UniqueCallstacks;
+      unique_callstacks_;
 
   // Filled by ProcessSamples.
   std::unordered_map<ThreadID, ThreadSampleData> m_ThreadSampleData;

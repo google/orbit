@@ -15,10 +15,9 @@ class TimeGraph;
 class GraphTrack : public Track {
  public:
   explicit GraphTrack(TimeGraph* time_graph);
-  Type GetType() const override { return kGraphTrack; }
+  [[nodiscard]] Type GetType() const override { return kGraphTrack; }
   void Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) override;
-  void OnDrag(int x, int y) override;
-  float GetHeight() const override;
+  [[nodiscard]] float GetHeight() const override;
 
  protected:
   std::map<uint64_t, double> values_;

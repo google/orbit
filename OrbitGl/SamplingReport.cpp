@@ -30,7 +30,9 @@ void SamplingReport::FillReport() {
   for (ThreadSampleData* threadSampleData : sampleData) {
     ThreadID tid = threadSampleData->m_TID;
 
-    if (tid == 0 && !m_Profiler->GetGenerateSummary()) continue;
+    if (tid == SamplingProfiler::kAllThreadsFakeTid &&
+        !m_Profiler->GetGenerateSummary())
+      continue;
 
     SamplingReportDataView threadReport;
     threadReport.SetSampledFunctions(threadSampleData->m_SampleReport);
