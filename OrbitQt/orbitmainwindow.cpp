@@ -607,7 +607,6 @@ void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
 
 //-----------------------------------------------------------------------------
 void OrbitMainWindow::OnLiveTabFunctionsFilterTextChanged(const QString& text) {
-  GOrbitApp->FilterFunctions(text.toStdString());
 
   // Set main toolbar functions filter without triggering signals.
   filter_functions_line_edit_->blockSignals(true);

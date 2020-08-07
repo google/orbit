@@ -227,7 +227,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void UpdateSamplingReport();
   void LoadPreset(
       const std::shared_ptr<orbit_client_protos::PresetFile>& session);
-  void FilterFunctions(const std::string& filter);
   void FilterTracks(const std::string& filter);
 
   void CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type);
