@@ -33,7 +33,7 @@ class ProcessManagerImpl final : public ProcessManager {
                                                 uint64_t size) override;
 
   ErrorMessageOr<std::string> LoadNullTerminatedString(
-      int32_t pid, uint64_t address, uint64_t max_size) override;
+      int32_t pid, uint64_t address) override;
 
   ErrorMessageOr<std::string> FindDebugInfoFile(
       const std::string& module_path, const std::string& build_id) override;
@@ -203,7 +203,8 @@ ErrorMessageOr<std::string> ProcessManagerImpl::LoadProcessMemory(
 }
 
 ErrorMessageOr<std::string> ProcessManagerImpl::LoadNullTerminatedString(
-    int32_t pid, uint64_t address, uint64_t max_size) {
+    int32_t pid, uint64_t address) {
+  constexpr uint64_t max_size = 256;
   auto error_or_string = LoadProcessMemory(pid, address, max_size);
   if (error_or_string.has_value()) {
     std::string str = error_or_string.value();
