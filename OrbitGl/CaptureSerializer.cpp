@@ -205,7 +205,7 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
     Capture::GSamplingProfiler->AddUniqueCallStack(unique_callstack);
   }
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {
-    Capture::GSamplingProfiler->AddCallStack(callstack_event);
+    Capture::GSamplingProfiler->AddCallStack(std::move(callstack_event));
   }
   Capture::GSamplingProfiler->ProcessSamples();
 
