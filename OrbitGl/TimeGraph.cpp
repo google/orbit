@@ -546,20 +546,20 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
   }
 
   // Generate selection report.
-  std::shared_ptr<SamplingProfiler> samplingProfiler =
+  std::shared_ptr<SamplingProfiler> sampling_profiler =
       std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
 
-  samplingProfiler->SetGenerateSummary(a_TID == 0);
+  sampling_profiler->SetGenerateSummary(a_TID == 0);
 
-  for (CallstackEvent& event : selected_callstack_events) {
+  for (CallstackEvent event : selected_callstack_events) {
     if (Capture::GSamplingProfiler->GetCallStack(event.callstack_hash())) {
-      samplingProfiler->AddCallStack(event);
+      sampling_profiler->AddCallStack(std::move(event));
     }
   }
-  samplingProfiler->ProcessSamples();
+  sampling_profiler->ProcessSamples();
 
-  if (samplingProfiler->GetNumSamples() > 0) {
-    GOrbitApp->AddSelectionReport(samplingProfiler);
+  if (sampling_profiler->GetNumSamples() > 0) {
+    GOrbitApp->AddSelectionReport(sampling_profiler);
   }
 
   NeedsUpdate();

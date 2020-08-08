@@ -67,7 +67,7 @@ std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
   return SortCallstacks(m_ThreadSampleData[a_TID], callstacks, o_NumCallstacks);
 }
 
-void SamplingProfiler::AddCallStack(CallstackEvent callstack_event) {
+void SamplingProfiler::AddCallStack(CallstackEvent&& callstack_event) {
   CallstackID hash = callstack_event.callstack_hash();
   if (!HasCallStack(hash)) {
     std::shared_ptr<CallStack> callstack =
