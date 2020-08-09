@@ -207,7 +207,11 @@ ErrorMessageOr<std::string> ProcessManagerImpl::LoadNullTerminatedString(
   constexpr uint64_t max_size = 256;
   auto error_or_string = LoadProcessMemory(pid, address, max_size);
   if (error_or_string.has_value()) {
-    std::string str = error_or_string.value();
+    const std::string& str = error_or_string.value();
+    if (str.find('\0') == std::string::npos) {
+      ERROR("Remote string is not null terminated: %s", str.c_str());
+    }
+
     // The string has a size of max_size at this point. Shrink it by assigning
     // it its own str.c_str(). The result of c_str() is guaranteed to be null
     // terminated so this works when the remote string is bigger than max_size.
