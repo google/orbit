@@ -10,7 +10,6 @@
 
 #include "Batcher.h"
 #include "BlockChain.h"
-#include "ContextSwitch.h"
 #include "Core.h"
 #include "EventBuffer.h"
 #include "Geometry.h"

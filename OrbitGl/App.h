@@ -14,7 +14,6 @@
 
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
-#include "ContextSwitch.h"
 #include "DataManager.h"
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
