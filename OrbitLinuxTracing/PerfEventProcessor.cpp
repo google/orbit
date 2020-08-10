@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "PerfEventProcessor2.h"
+#include "PerfEventProcessor.h"
 
 #include <OrbitBase/Logging.h>
 
@@ -60,8 +60,8 @@ std::unique_ptr<PerfEvent> PerfEventQueue::PopEvent() {
   return top_event;
 }
 
-void PerfEventProcessor2::AddEvent(int origin_fd,
-                                   std::unique_ptr<PerfEvent> event) {
+void PerfEventProcessor::AddEvent(int origin_fd,
+                                  std::unique_ptr<PerfEvent> event) {
 #ifndef NDEBUG
   if (last_processed_timestamp_ > 0 &&
       event->GetTimestamp() <
@@ -72,7 +72,7 @@ void PerfEventProcessor2::AddEvent(int origin_fd,
   event_queue_.PushEvent(origin_fd, std::move(event));
 }
 
-void PerfEventProcessor2::ProcessAllEvents() {
+void PerfEventProcessor::ProcessAllEvents() {
   while (event_queue_.HasEvent()) {
     std::unique_ptr<PerfEvent> event = event_queue_.PopEvent();
 #ifndef NDEBUG
@@ -82,7 +82,7 @@ void PerfEventProcessor2::ProcessAllEvents() {
   }
 }
 
-void PerfEventProcessor2::ProcessOldEvents() {
+void PerfEventProcessor::ProcessOldEvents() {
   uint64_t max_timestamp = MonotonicTimestampNs();
 
   while (event_queue_.HasEvent()) {

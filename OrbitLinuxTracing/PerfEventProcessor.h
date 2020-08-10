@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_2_H_
-#define ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_2_H_
+#ifndef ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_H_
+#define ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_H_
 
 #include <ctime>
 #include <memory>
@@ -72,7 +72,7 @@ class PerfEventQueue {
 // a timestamp older than PROCESSING_DELAY_MS to be added. By not processing
 // events that are not older than this delay, we will never process events out
 // of order.
-class PerfEventProcessor2 {
+class PerfEventProcessor {
  public:
   // Do not process events that are more recent than 0.1 seconds. There could be
   // events coming out of order as they are read from different perf_event_open
@@ -80,7 +80,7 @@ class PerfEventProcessor2 {
   // order.
   static constexpr uint64_t PROCESSING_DELAY_MS = 100;
 
-  explicit PerfEventProcessor2(std::unique_ptr<PerfEventVisitor> visitor)
+  explicit PerfEventProcessor(std::unique_ptr<PerfEventVisitor> visitor)
       : visitor_(std::move(visitor)) {}
 
   void AddEvent(int origin_fd, std::unique_ptr<PerfEvent> event);
@@ -100,4 +100,4 @@ class PerfEventProcessor2 {
 
 }  // namespace LinuxTracing
 
-#endif  // ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_2_H_
+#endif  // ORBIT_LINUX_TRACING_PERF_EVENT_PROCESSOR_H_

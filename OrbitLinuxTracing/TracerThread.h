@@ -20,7 +20,7 @@
 #include "GpuTracepointEventProcessor.h"
 #include "ManualInstrumentationConfig.h"
 #include "PerfEvent.h"
-#include "PerfEventProcessor2.h"
+#include "PerfEventProcessor.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRingBuffer.h"
 #include "Utils.h"
@@ -164,7 +164,7 @@ class TracerThread {
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
   std::mutex deferred_events_mutex_;
   ContextSwitchManager context_switch_manager_;
-  std::unique_ptr<PerfEventProcessor2> uprobes_event_processor_;
+  std::unique_ptr<PerfEventProcessor> uprobes_event_processor_;
   std::unique_ptr<GpuTracepointEventProcessor> gpu_event_processor_;
 
   struct EventStats {

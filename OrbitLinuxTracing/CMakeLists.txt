@@ -38,8 +38,8 @@ target_sources(OrbitLinuxTracing PRIVATE
         PerfEvent.h
         PerfEventOpen.cpp
         PerfEventOpen.h
-        PerfEventProcessor2.cpp
-        PerfEventProcessor2.h
+        PerfEventProcessor.cpp
+        PerfEventProcessor.h
         PerfEventReaders.h
         PerfEventReaders.cpp
         PerfEventRecords.h
@@ -67,7 +67,7 @@ add_executable(OrbitLinuxTracingTests)
 if (NOT WIN32)
     target_sources(OrbitLinuxTracingTests PRIVATE
             ContextSwitchManagerTest.cpp
-            PerfEventProcessor2Test.cpp
+            PerfEventProcessorTest.cpp
             UprobesFunctionCallManagerTest.cpp
             UprobesReturnAddressManagerTest.cpp
             UtilsTest.cpp)
