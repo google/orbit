@@ -22,6 +22,7 @@
 #include "Params.h"
 #include "Path.h"
 #include "Pdb.h"
+#include "absl/base/casts.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -178,7 +179,7 @@ bool Orbit_ImGui_CreateTextures() {
 
   // Store our identifier
   io.Fonts->TexID =
-      reinterpret_cast<ImTextureID>(static_cast<intptr_t>(g_FontTexture));
+      absl::bit_cast<ImTextureID>(static_cast<intptr_t>(g_FontTexture));
 
   // Restore state
   glBindTexture(GL_TEXTURE_2D, last_texture);
@@ -561,11 +562,11 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
           // Bind texture, Draw
           glBindTexture(
               GL_TEXTURE_2D,
-              static_cast<GLuint>(reinterpret_cast<intptr_t>(pcmd->TextureId)));
+              static_cast<GLuint>(absl::bit_cast<intptr_t>(pcmd->TextureId)));
           glDrawElements(
               GL_TRIANGLES, static_cast<GLsizei>(pcmd->ElemCount),
               sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-              reinterpret_cast<void*>(idx_buffer_offset));
+              absl::bit_cast<void*>(idx_buffer_offset));
         }
       }
       idx_buffer_offset += pcmd->ElemCount * sizeof(ImDrawIdx);
