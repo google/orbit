@@ -86,7 +86,6 @@ target_link_libraries(
          OrbitBase
          OrbitClientProtos
          OrbitProtos
-         capstone::capstone
          xxHash::xxHash
          concurrentqueue::concurrentqueue
          multicore::multicore
@@ -99,11 +98,6 @@ if(WIN32)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib)
   target_compile_definitions(OrbitCore PUBLIC -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitCore PUBLIC -DNTDDI_VERSION=0x06030000)
-else()
-  target_link_libraries(
-    OrbitCore
-    PUBLIC OrbitLinuxTracing
-           libunwindstack::libunwindstack)
 endif()
 
 target_compile_definitions(OrbitCore PUBLIC WIN32_LEAN_AND_MEAN)
