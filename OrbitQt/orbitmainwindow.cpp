@@ -34,7 +34,6 @@
 #include "orbitdisassemblydialog.h"
 #include "orbitlivefunctions.h"
 #include "orbitsamplingreport.h"
-#include "outputdialog.h"
 #include "services.pb.h"
 #include "ui_orbitmainwindow.h"
 
@@ -215,9 +214,6 @@ OrbitMainWindow::OrbitMainWindow(
 
   StartMainTimer();
 
-  m_OutputDialog = new OutputDialog(this);
-  m_OutputDialog->setWindowTitle("Orbit - Loading Pdb...");
-
   ui->liveFunctions->Initialize(SelectionType::kExtended, FontType::kDefault);
 
   connect(ui->liveFunctions->GetFilterLineEdit(), &QLineEdit::textChanged, this,
@@ -380,7 +376,6 @@ void OrbitMainWindow::ShowFeedbackDialog() {
 }
 
 OrbitMainWindow::~OrbitMainWindow() {
-  delete m_OutputDialog;
   delete ui;
 }
 
