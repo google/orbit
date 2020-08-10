@@ -53,8 +53,6 @@ class Pdb {
   std::map<uint64_t, orbit_client_protos::FunctionInfo*> m_FunctionMap;
   std::unordered_map<unsigned long long, orbit_client_protos::FunctionInfo*>
       m_StringFunctionMap;
-
-  void SetModulePathAndAddress(orbit_client_protos::FunctionInfo* func);
 };
 
 #endif  // ORBIT_CORE_PDB_H_
