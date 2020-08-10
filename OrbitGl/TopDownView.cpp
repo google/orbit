@@ -39,21 +39,18 @@ TopDownThread* TopDownView::AddAndGetThread(int32_t thread_id,
 
 [[nodiscard]] static TopDownFunction* GetOrCreateFunctionNode(
     TopDownInternalNode* current_thread_or_function, uint64_t frame,
-    const std::unordered_map<uint64_t, std::string>& function_names) {
+    const std::string& function_name) {
   TopDownFunction* function_node =
       current_thread_or_function->GetFunctionOrNull(frame);
   if (function_node == nullptr) {
-    std::string function_name;
-    auto function_name_it = function_names.find(frame);
-    if (function_name_it != function_names.end() &&
-        function_name_it->second !=
-            SamplingProfiler::kUnknownFunctionOrModuleName) {
-      function_name = function_name_it->second;
+    std::string formatted_function_name;
+    if (function_name != SamplingProfiler::kUnknownFunctionOrModuleName) {
+      formatted_function_name = function_name;
     } else {
-      function_name = absl::StrFormat("[unknown@%#llx]", frame);
+      formatted_function_name = absl::StrFormat("[unknown@%#llx]", frame);
     }
     function_node = current_thread_or_function->AddAndGetFunction(
-        frame, std::move(function_name));
+        frame, std::move(formatted_function_name));
   }
   return function_node;
 }
@@ -61,13 +58,15 @@ TopDownThread* TopDownView::AddAndGetThread(int32_t thread_id,
 static void AddCallstackToTopDownThread(
     TopDownThread* thread_node, const CallStack& resolved_callstack,
     uint64_t callstack_sample_count,
-    const std::unordered_map<uint64_t, std::string>& function_names) {
+    const SamplingProfiler& sampling_profiler) {
   TopDownInternalNode* current_thread_or_function = thread_node;
   for (auto frame_it = resolved_callstack.m_Data.crbegin();
        frame_it != resolved_callstack.m_Data.crend(); ++frame_it) {
     uint64_t frame = *frame_it;
+    const std::string& function_name =
+        sampling_profiler.GetFunctionNameByAddress(frame);
     TopDownFunction* function_node = GetOrCreateFunctionNode(
-        current_thread_or_function, frame, function_names);
+        current_thread_or_function, frame, function_name);
     function_node->IncreaseSampleCount(callstack_sample_count);
     current_thread_or_function = function_node;
   }
@@ -92,8 +91,7 @@ static void AddCallstackToTopDownThread(
 
 std::unique_ptr<TopDownView> TopDownView::CreateFromSamplingProfiler(
     const SamplingProfiler& sampling_profiler, const std::string& process_name,
-    const std::unordered_map<int32_t, std::string>& thread_names,
-    const std::unordered_map<uint64_t, std::string>& function_names) {
+    const std::unordered_map<int32_t, std::string>& thread_names) {
   auto top_down_view = std::make_unique<TopDownView>();
   for (const ThreadSampleData* thread_sample_data :
        sampling_profiler.GetThreadSampleData()) {
@@ -112,8 +110,8 @@ std::unique_ptr<TopDownView> TopDownView::CreateFromSamplingProfiler(
       }
       thread_node->IncreaseSampleCount(sample_count);
 
-      AddCallstackToTopDownThread(thread_node, resolved_callstack,
-                                  sample_count, function_names);
+      AddCallstackToTopDownThread(thread_node, resolved_callstack, sample_count,
+                                  sampling_profiler);
     }
   }
   return top_down_view;

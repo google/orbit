@@ -56,7 +56,6 @@ class Capture {
   static std::unordered_map<int32_t, std::string> GThreadNames;
   static std::unordered_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
       GAddressInfos;
-  static std::unordered_map<uint64_t, std::string> GAddressToFunctionName;
   static std::unordered_map<uint64_t, std::string> GAddressToModuleName;
   static class TextBox* GSelectedTextBox;
   static ThreadID GSelectedThreadId;

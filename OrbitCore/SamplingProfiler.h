@@ -122,6 +122,9 @@ class SamplingProfiler {
     m_Callstacks.clear();
   }
 
+  [[nodiscard]] const std::string& GetFunctionNameByAddress(
+      uint64_t address) const;
+
   static const int32_t kAllThreadsFakeTid;
   static const std::string kUnknownFunctionOrModuleName;
 
@@ -151,6 +154,8 @@ class SamplingProfiler {
   std::unordered_map<uint64_t, std::unordered_set<uint64_t>>
       m_FunctionAddressToExactAddresses;
   std::vector<ThreadSampleData*> m_SortedThreadSampleData;
+
+  absl::flat_hash_map<uint64_t, std::string> address_to_function_name_;
 };
 
 #endif  // ORBIT_CORE_SAMPLING_PROFILER_H_
