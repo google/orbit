@@ -7,37 +7,31 @@
 #include "absl/strings/str_format.h"
 #include "ui_orbiteventiterator.h"
 
-//-----------------------------------------------------------------------------
 OrbitEventIterator::OrbitEventIterator(QWidget* parent)
     : QFrame(parent), ui(new Ui::OrbitEventIterator) {
   ui->setupUi(this);
 }
 
-//-----------------------------------------------------------------------------
 OrbitEventIterator::~OrbitEventIterator() { delete ui; }
 
-//-----------------------------------------------------------------------------
 void OrbitEventIterator::on_NextButton_clicked() {
   if (next_button_callback_) {
     next_button_callback_();
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitEventIterator::on_PreviousButton_clicked() {
   if (previous_button_callback_) {
     previous_button_callback_();
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitEventIterator::on_DeleteButton_clicked() {
   if (delete_button_callback_) {
     delete_button_callback_();
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitEventIterator::SetFunctionName(const std::string& function_name) {
   ui->Label->setTextWithElision(QString::fromStdString(function_name));
 }
@@ -54,7 +48,6 @@ void OrbitEventIterator::SetCurrentTime(TickType current_time) {
   UpdatePositionLabel();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitEventIterator::UpdatePositionLabel() {
   double fraction = static_cast<double>(current_time_ - min_time_) /
                     static_cast<double>(max_time_ - min_time_);
@@ -62,16 +55,13 @@ void OrbitEventIterator::UpdatePositionLabel() {
       QString::fromStdString(absl::StrFormat("%.6f", fraction)));
 }
 
-//-----------------------------------------------------------------------------
 void OrbitEventIterator::HideDeleteButton() { ui->DeleteButton->hide(); }
 
-//-----------------------------------------------------------------------------
 void OrbitEventIterator::EnableButtons() {
   ui->NextButton->setEnabled(true);
   ui->PreviousButton->setEnabled(true);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitEventIterator::DisableButtons() {
   ui->NextButton->setEnabled(false);
   ui->PreviousButton->setEnabled(false);

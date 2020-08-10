@@ -19,14 +19,12 @@
 
 using orbit_client_protos::FunctionInfo;
 
-//-----------------------------------------------------------------------------
 Process::Process() {
   m_ID = 0;
   m_Is64Bit = false;
   m_IsRemote = false;
 }
 
-//-----------------------------------------------------------------------------
 FunctionInfo* Process::GetFunctionFromAddress(uint64_t address,
                                               bool a_IsExact) {
   if (m_Modules.empty()) {
@@ -55,7 +53,6 @@ FunctionInfo* Process::GetFunctionFromAddress(uint64_t address,
   }
 }
 
-//-----------------------------------------------------------------------------
 std::shared_ptr<Module> Process::GetModuleFromAddress(uint64_t a_Address) {
   if (m_Modules.empty()) {
     return nullptr;
@@ -76,7 +73,6 @@ std::shared_ptr<Module> Process::GetModuleFromAddress(uint64_t a_Address) {
   return module;
 }
 
-//-----------------------------------------------------------------------------
 std::shared_ptr<Module> Process::GetModuleFromName(const std::string& a_Name) {
   auto iter = m_NameToModuleMap.find(absl::AsciiStrToLower(a_Name));
   if (iter != m_NameToModuleMap.end()) {
@@ -86,7 +82,6 @@ std::shared_ptr<Module> Process::GetModuleFromName(const std::string& a_Name) {
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 std::shared_ptr<Module> Process::GetModuleFromPath(
     const std::string& module_path) {
   auto iter = path_to_module_map_.find(module_path);
@@ -97,7 +92,6 @@ std::shared_ptr<Module> Process::GetModuleFromPath(
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 void Process::AddModule(std::shared_ptr<Module>& a_Module) {
   m_Modules[a_Module->m_AddressStart] = a_Module;
   m_NameToModuleMap[absl::AsciiStrToLower(a_Module->m_Name)] = a_Module;

@@ -16,7 +16,6 @@
 #include "OrbitBase/Result.h"
 #include "module.pb.h"
 
-//-----------------------------------------------------------------------------
 namespace LinuxUtils {
 outcome::result<std::string> ExecuteCommand(const std::string& cmd);
 outcome::result<std::vector<std::string>> ReadProcMaps(pid_t pid);

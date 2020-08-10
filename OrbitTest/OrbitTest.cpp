@@ -20,28 +20,24 @@
 #define NO_INLINE __declspec(noinline)
 #endif
 
-//-----------------------------------------------------------------------------
 uint64_t GetThreadID() {
   std::stringstream ss;
   ss << std::this_thread::get_id();
   return std::stoull(ss.str());
 }
 
-//-----------------------------------------------------------------------------
 void SetThreadName(const std::string& a_Name) {
 #if __linux__
   pthread_setname_np(pthread_self(), a_Name.c_str());
 #endif
 }
 
-//-----------------------------------------------------------------------------
 OrbitTest::OrbitTest(uint32_t num_threads, uint32_t recurse_depth,
                      uint32_t sleep_us)
     : num_threads_(num_threads),
       recurse_depth_(recurse_depth),
       sleep_us_(sleep_us) {}
 
-//-----------------------------------------------------------------------------
 OrbitTest::~OrbitTest() {
   m_ExitRequested = true;
 
@@ -50,7 +46,6 @@ OrbitTest::~OrbitTest() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitTest::Start() {
   std::cout << "Starting OrbitTest num_threads: " << num_threads_
             << " recurse_depth: " << recurse_depth_
@@ -64,7 +59,6 @@ void OrbitTest::Start() {
       &OrbitTest::ManualInstrumentationApiTest, this));
 }
 
-//-----------------------------------------------------------------------------
 void OrbitTest::Loop() {
   SetThreadName(std::string("OrbitThread_") + std::to_string(GetThreadID()));
   uint32_t count = 0;
@@ -73,21 +67,18 @@ void OrbitTest::Loop() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void NO_INLINE OrbitTest::TestFunc(uint32_t a_Depth) {
   if (a_Depth == recurse_depth_) return;
   TestFunc(a_Depth + 1);
   std::this_thread::sleep_for(std::chrono::microseconds(sleep_us_));
 }
 
-//-----------------------------------------------------------------------------
 void NO_INLINE OrbitTest::TestFunc2(uint32_t a_Depth) {
   if (a_Depth == recurse_depth_) return;
   TestFunc(a_Depth + 1);
   BusyWork(sleep_us_);
 }
 
-//-----------------------------------------------------------------------------
 void NO_INLINE OrbitTest::BusyWork(uint64_t microseconds) {
   auto start = std::chrono::system_clock::now();
   while (true) {
@@ -99,7 +90,6 @@ void NO_INLINE OrbitTest::BusyWork(uint64_t microseconds) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitTest::ManualInstrumentationApiTest() {
 #if ORBIT_API_ENABLED
   while (!m_ExitRequested) {

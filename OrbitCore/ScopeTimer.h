@@ -12,7 +12,6 @@
 #define SCOPE_TIMER_LOG(msg) LocalScopeTimer UNIQUE_ID(msg)
 #define SCOPE_TIMER_FUNC SCOPE_TIMER_LOG(__FUNCTION__)
 
-//-----------------------------------------------------------------------------
 #pragma pack(push, 1)
 class Timer {
  public:
@@ -71,7 +70,6 @@ class Timer {
 };
 #pragma pack(pop)
 
-//-----------------------------------------------------------------------------
 class ScopeTimer {
  public:
   ScopeTimer() {}
@@ -82,7 +80,6 @@ class ScopeTimer {
   Timer m_Timer;
 };
 
-//-----------------------------------------------------------------------------
 class LocalScopeTimer {
  public:
   LocalScopeTimer();
@@ -96,7 +93,6 @@ class LocalScopeTimer {
   std::string message_;
 };
 
-//-----------------------------------------------------------------------------
 class ConditionalScopeTimer {
  public:
   ConditionalScopeTimer() : m_Active(false) {}
@@ -111,15 +107,12 @@ class ConditionalScopeTimer {
   char m_Name[NameSize];
 };
 
-//-----------------------------------------------------------------------------
 inline double Timer::ElapsedMicros() const {
   return TicksToMicroseconds(m_Start, m_End);
 }
 
-//-----------------------------------------------------------------------------
 inline double Timer::ElapsedMillis() const { return ElapsedMicros() * 0.001; }
 
-//-----------------------------------------------------------------------------
 inline double Timer::ElapsedSeconds() const {
   return ElapsedMicros() * 0.000001;
 }

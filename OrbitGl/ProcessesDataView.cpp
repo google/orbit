@@ -104,7 +104,6 @@ int32_t ProcessesDataView::GetFirstProcessId() const {
   return process_list_[indices_[0]].pid();
 }
 
-//-----------------------------------------------------------------------------
 void ProcessesDataView::SetSelectedItem() {
   for (size_t i = 0; i < GetNumElements(); ++i) {
     if (GetProcess(i).pid() == selected_process_id_) {
@@ -130,7 +129,6 @@ bool ProcessesDataView::SelectProcess(const std::string& process_name) {
   return false;
 }
 
-//-----------------------------------------------------------------------------
 bool ProcessesDataView::SelectProcess(int32_t process_id) {
   for (size_t i = 0; i < GetNumElements(); ++i) {
     const ProcessInfo& process = GetProcess(i);
@@ -143,7 +141,6 @@ bool ProcessesDataView::SelectProcess(int32_t process_id) {
   return false;
 }
 
-//-----------------------------------------------------------------------------
 void ProcessesDataView::DoFilter() {
   std::vector<uint32_t> indices;
   const std::vector<ProcessInfo>& processes = process_list_;
@@ -175,7 +172,6 @@ void ProcessesDataView::DoFilter() {
   OnSort(m_SortingColumn, {});
 }
 
-//-----------------------------------------------------------------------------
 void ProcessesDataView::UpdateProcessList() {
   size_t numProcesses = process_list_.size();
   indices_.resize(numProcesses);
@@ -184,7 +180,6 @@ void ProcessesDataView::UpdateProcessList() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void ProcessesDataView::SetProcessList(
     const std::vector<ProcessInfo>& process_list) {
   process_list_ = process_list;

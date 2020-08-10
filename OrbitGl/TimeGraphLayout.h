@@ -5,7 +5,6 @@
 #ifndef ORBIT_GL_TIME_GRAPH_LAYOUT_H_
 #define ORBIT_GL_TIME_GRAPH_LAYOUT_H_
 
-//-----------------------------------------------------------------------------
 class TimeGraphLayout {
  public:
   TimeGraphLayout();

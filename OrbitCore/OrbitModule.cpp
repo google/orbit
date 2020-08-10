@@ -25,7 +25,6 @@
 
 using orbit_client_protos::FunctionInfo;
 
-//-----------------------------------------------------------------------------
 Module::Module(const std::string& file_name, uint64_t address_start,
                uint64_t address_end) {
   if (!std::filesystem::exists(file_name)) {
@@ -43,7 +42,6 @@ Module::Module(const std::string& file_name, uint64_t address_start,
   loadable_ = true;  // necessary, because it toggles "Load Symbols" option
 }
 
-//-----------------------------------------------------------------------------
 void Module::LoadSymbols(const ModuleSymbols& module_symbols) {
   if (m_Pdb != nullptr) {
     LOG("Warning: Module %s already contained symbols, will override now.",

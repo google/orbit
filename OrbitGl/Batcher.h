@@ -9,7 +9,6 @@
 #include "Geometry.h"
 #include "PickingManager.h"
 
-//-----------------------------------------------------------------------------
 using TooltipCallback = std::function<std::string(PickingID)>;
 
 struct PickingUserData {
@@ -23,7 +22,6 @@ struct PickingUserData {
     : text_box_(text_box), generate_tooltip_(generate_tooltip) {}
 };
 
-//-----------------------------------------------------------------------------
 struct LineBuffer {
   void Reset() {
     m_Lines.Reset();
@@ -39,7 +37,6 @@ struct LineBuffer {
   std::vector<std::unique_ptr<PickingUserData>> m_UserData;
 };
 
-//-----------------------------------------------------------------------------
 struct BoxBuffer {
   void Reset() {
     m_Boxes.Reset();
@@ -55,7 +52,6 @@ struct BoxBuffer {
   std::vector<std::unique_ptr<PickingUserData>> m_UserData;
 };
 
-//-----------------------------------------------------------------------------
 struct TriangleBuffer {
   void Reset() {
     triangles_.Reset();
@@ -71,7 +67,6 @@ struct TriangleBuffer {
   std::vector<std::unique_ptr<PickingUserData>> user_data_;
 };
 
-//-----------------------------------------------------------------------------
 class Batcher {
  public:
   explicit Batcher(PickingID::BatcherId batcher_id) : batcher_id_(batcher_id) {}

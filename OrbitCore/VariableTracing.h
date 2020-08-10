@@ -15,7 +15,6 @@
 //#define TRACE_VAR( var ) TraceVar( __FUNCTION__ ##"."#var, var );
 #define TRACE_VAR(var) TraceVar(#var, var)
 
-//-----------------------------------------------------------------------------
 class VariableTracing {
  public:
   static VariableTracing& Get();
@@ -35,7 +34,6 @@ class VariableTracing {
   std::vector<TraceCallback> m_Callbacks;
 };
 
-//-----------------------------------------------------------------------------
 template <class T>
 inline void TraceVar(const char* a_VarName, const T& a_Value) {
   std::stringstream l_StringStream;
@@ -43,7 +41,6 @@ inline void TraceVar(const char* a_VarName, const T& a_Value) {
   VariableTracing::Trace(l_StringStream.str().c_str());
 }
 
-//-----------------------------------------------------------------------------
 inline void TraceVar(const char* a_VarName, float a_Value) {
   std::stringstream l_StringStream;
   static int precision = 20;

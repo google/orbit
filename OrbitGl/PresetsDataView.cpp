@@ -19,10 +19,8 @@
 
 using orbit_client_protos::PresetFile;
 
-//-----------------------------------------------------------------------------
 PresetsDataView::PresetsDataView() : DataView(DataViewType::PRESETS) {}
 
-//-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
@@ -34,7 +32,6 @@ const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
   return columns;
 }
 
-//-----------------------------------------------------------------------------
 std::string PresetsDataView::GetValue(int row, int col) {
   const std::shared_ptr<PresetFile>& preset = GetPreset(row);
 
@@ -48,20 +45,17 @@ std::string PresetsDataView::GetValue(int row, int col) {
   }
 }
 
-//-----------------------------------------------------------------------------
 std::string PresetsDataView::GetToolTip(int a_Row, int /*a_Column*/) {
   const PresetFile& preset = *GetPreset(a_Row);
   return preset.file_name();
 }
 
-//-----------------------------------------------------------------------------
 #define ORBIT_PRESET_SORT(Member)                                        \
   [&](int a, int b) {                                                    \
     return OrbitUtils::Compare(presets_[a]->Member, presets_[b]->Member, \
                                ascending);                               \
   }
 
-//-----------------------------------------------------------------------------
 void PresetsDataView::DoSort() {
   bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
@@ -82,11 +76,9 @@ void PresetsDataView::DoSort() {
   }
 }
 
-//-----------------------------------------------------------------------------
 const std::string PresetsDataView::MENU_ACTION_LOAD = "Load Preset";
 const std::string PresetsDataView::MENU_ACTION_DELETE = "Delete Preset";
 
-//-----------------------------------------------------------------------------
 std::vector<std::string> PresetsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   std::vector<std::string> menu;
@@ -98,7 +90,6 @@ std::vector<std::string> PresetsDataView::GetContextMenu(
   return menu;
 }
 
-//-----------------------------------------------------------------------------
 void PresetsDataView::OnContextMenu(const std::string& a_Action,
                                     int a_MenuIndex,
                                     const std::vector<int>& a_ItemIndices) {
@@ -133,7 +124,6 @@ void PresetsDataView::OnContextMenu(const std::string& a_Action,
   }
 }
 
-//-----------------------------------------------------------------------------
 void PresetsDataView::DoFilter() {
   std::vector<uint32_t> indices;
 
@@ -164,7 +154,6 @@ void PresetsDataView::DoFilter() {
   OnSort(m_SortingColumn, {});
 }
 
-//-----------------------------------------------------------------------------
 void PresetsDataView::OnDataChanged() {
   indices_.resize(presets_.size());
   for (size_t i = 0; i < presets_.size(); ++i) {
@@ -174,14 +163,12 @@ void PresetsDataView::OnDataChanged() {
   DataView::OnDataChanged();
 }
 
-//-----------------------------------------------------------------------------
 void PresetsDataView::SetPresets(
     const std::vector<std::shared_ptr<PresetFile> >& presets) {
   presets_ = presets;
   OnDataChanged();
 }
 
-//-----------------------------------------------------------------------------
 const std::shared_ptr<PresetFile>& PresetsDataView::GetPreset(
     unsigned int a_Row) const {
   return presets_[indices_[a_Row]];

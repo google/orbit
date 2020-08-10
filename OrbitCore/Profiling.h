@@ -9,10 +9,8 @@
 #include "Platform.h"
 #include "Utils.h"
 
-//-----------------------------------------------------------------------------
 typedef uint64_t TickType;
 
-//-----------------------------------------------------------------------------
 #ifdef _WIN32
 inline void clock_gettime(uint32_t, struct timespec* spec) {
   __int64 time;
@@ -22,7 +20,6 @@ inline void clock_gettime(uint32_t, struct timespec* spec) {
 }
 #endif
 
-//-----------------------------------------------------------------------------
 inline TickType OrbitTicks(uint32_t a_Clock = 1 /*CLOCK_MONOTONIC*/) {
   timespec ts;
   clock_gettime(a_Clock, &ts);
@@ -37,12 +34,10 @@ inline absl::Duration TicksToDuration(TickType start, TickType end) {
   return absl::Nanoseconds(TicksToNanoseconds(start, end));
 }
 
-//-----------------------------------------------------------------------------
 inline double TicksToMicroseconds(TickType a_Start, TickType a_End) {
   return double((a_End - a_Start)) * 0.001;
 }
 
-//-----------------------------------------------------------------------------
 inline TickType MicrosecondsToTicks(double a_Micros) {
   return static_cast<TickType>(a_Micros * 1000);
 }

@@ -117,7 +117,6 @@ struct DebugWindow {
   }
 };
 
-//-----------------------------------------------------------------------------
 class LogWindow {
  public:
   LogWindow() {}

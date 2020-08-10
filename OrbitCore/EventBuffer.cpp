@@ -13,7 +13,6 @@ using orbit_client_protos::CallstackEvent;
 
 EventTracer GEventTracer;
 
-//-----------------------------------------------------------------------------
 std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
     uint64_t a_TimeBegin, uint64_t a_TimeEnd, ThreadID a_ThreadId /*= 0*/) {
   std::vector<CallstackEvent> callstackEvents;
@@ -35,7 +34,6 @@ std::vector<CallstackEvent> EventBuffer::GetCallstackEvents(
   return callstackEvents;
 }
 
-//-----------------------------------------------------------------------------
 void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash,
                                     ThreadID thread_id) {
   ScopeLock lock(m_Mutex);
@@ -58,7 +56,6 @@ void EventBuffer::AddCallstackEvent(uint64_t time, CallstackID cs_hash,
 }
 
 #ifdef __linux
-//-----------------------------------------------------------------------------
 size_t EventBuffer::GetNumEvents() const {
   size_t numEvents = 0;
   for (auto& pair : m_CallstackEvents) {

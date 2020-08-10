@@ -9,7 +9,6 @@
 
 #include "Threading.h"
 
-//-----------------------------------------------------------------------------
 class ObjectCounter {
  public:
   int Inc(const char* a_ObjectType);

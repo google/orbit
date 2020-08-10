@@ -45,14 +45,12 @@ namespace LinuxUtils {
 
 using ::ElfUtils::ElfFile;
 
-//-----------------------------------------------------------------------------
 outcome::result<std::vector<std::string>> ReadProcMaps(pid_t pid) {
   std::filesystem::path maps_path{absl::StrFormat("/proc/%d/maps", pid)};
   OUTCOME_TRY(maps_string, OrbitUtils::FileToString(maps_path));
   return absl::StrSplit(maps_string, "\n");
 }
 
-//-----------------------------------------------------------------------------
 outcome::result<std::string> ExecuteCommand(const std::string& cmd) {
   // TODO (antonrohr) check exit code of executed cmd. If exit code is not 0,
   // return failure
@@ -145,7 +143,6 @@ ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid) {
   return result;
 }
 
-//-----------------------------------------------------------------------------
 outcome::result<std::unordered_map<pid_t, double>> GetCpuUtilization() {
   const std::string cmd =
       "top -b -n 1 | sed -n '8, 1000{s/^ *//;s/ *$//;s/  */,/gp;};1000q'";
@@ -165,7 +162,6 @@ outcome::result<std::unordered_map<pid_t, double>> GetCpuUtilization() {
   return process_map;
 }
 
-//-----------------------------------------------------------------------------
 outcome::result<bool> Is64Bit(pid_t pid) {
   // TODO(161196904) Do this in a more reliable way. It does not work for a lot
   // of processes
@@ -174,7 +170,6 @@ outcome::result<bool> Is64Bit(pid_t pid) {
   return absl::StrContains(result, "64-bit");
 }
 
-//-----------------------------------------------------------------------------
 ErrorMessageOr<std::string> GetExecutablePath(int32_t pid) {
   char buffer[PATH_MAX];
 
