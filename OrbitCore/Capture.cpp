@@ -55,8 +55,6 @@ ErrorMessageOr<void> Capture::StartCapture() {
         "No process selected. Please choose a target process for the capture.");
   }
 
-  ClearCaptureData();
-
   GCaptureTimePoint = std::chrono::system_clock::now();
   GProcessId = GTargetProcess->GetID();
   GProcessName = GTargetProcess->GetName();
