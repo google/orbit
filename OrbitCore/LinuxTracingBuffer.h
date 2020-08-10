@@ -5,7 +5,6 @@
 #ifndef ORBIT_CORE_LINUX_TRACING_BUFFER_H_
 #define ORBIT_CORE_LINUX_TRACING_BUFFER_H_
 
-#include "ContextSwitch.h"
 #include "EventBuffer.h"
 #include "KeyAndString.h"
 #include "LinuxCallstackEvent.h"
