@@ -28,7 +28,6 @@ int32_t Capture::GProcessId = -1;
 std::string Capture::GProcessName;
 std::unordered_map<int32_t, std::string> Capture::GThreadNames;
 std::unordered_map<uint64_t, LinuxAddressInfo> Capture::GAddressInfos;
-std::unordered_map<uint64_t, std::string> Capture::GAddressToFunctionName;
 std::unordered_map<uint64_t, std::string> Capture::GAddressToModuleName;
 TextBox* Capture::GSelectedTextBox = nullptr;
 ThreadID Capture::GSelectedThreadId;
@@ -86,7 +85,6 @@ void Capture::ClearCaptureData() {
   GProcessName = "";
   GThreadNames.clear();
   GAddressInfos.clear();
-  GAddressToFunctionName.clear();
   GAddressToModuleName.clear();
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;

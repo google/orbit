@@ -180,16 +180,17 @@ bool EventTrack::IsEmpty() const {
 
 static std::string SafeGetFormattedFunctionName(uint64_t addr,
                                                 int max_line_length) {
-  auto it = Capture::GAddressToFunctionName.find(addr);
-  if (it == Capture::GAddressToFunctionName.end()) {
-    return std::string("<i>") + "???" + "</i>";
+  const std::string& function_name =
+      Capture::GSamplingProfiler->GetFunctionNameByAddress(addr);
+  if (function_name == SamplingProfiler::kUnknownFunctionOrModuleName) {
+    return std::string("<i>") + function_name + "</i>";
   }
 
   std::string fn_name =
       max_line_length >= 0
-          ? ShortenStringWithEllipsis(it->second,
+          ? ShortenStringWithEllipsis(function_name,
                                       static_cast<size_t>(max_line_length))
-          : it->second;
+          : function_name;
   // Simple HTML escaping
   fn_name = Replace(fn_name, "&", "&amp;");
   fn_name = Replace(fn_name, "<", "&lt;");
