@@ -64,4 +64,6 @@ void DmaFenceSignaledPerfEvent::Accept(PerfEventVisitor* visitor) {
   visitor->visit(this);
 }
 
+void SchedSwitchPerfEvent::Accept(PerfEventVisitor*) {}
+
 }  // namespace LinuxTracing
