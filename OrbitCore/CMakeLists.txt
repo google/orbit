@@ -54,7 +54,6 @@ target_sources(
           Params.cpp
           Path.cpp
           Pdb.cpp
-          Profiling.cpp
           SamplingProfiler.cpp
           ScopeTimer.cpp
           StringManager.cpp
