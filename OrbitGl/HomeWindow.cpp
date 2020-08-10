@@ -7,7 +7,6 @@
 #include "App.h"
 #include "Log.h"
 
-//-----------------------------------------------------------------------------
 HomeWindow::HomeWindow() {
   m_DrawDebugDisplay = false;
   m_DrawTestUI = false;
@@ -18,12 +17,10 @@ HomeWindow::HomeWindow() {
   });
 }
 
-//-----------------------------------------------------------------------------
 HomeWindow::~HomeWindow() {
   // TODO: remove variable tracing callback
 }
 
-//-----------------------------------------------------------------------------
 void HomeWindow::VariableTracingCallback(std::vector<std::string>& a_Entries) {
   if (m_DrawDebugDisplay) {
     m_DebugWindow.Clear();
@@ -33,10 +30,8 @@ void HomeWindow::VariableTracingCallback(std::vector<std::string>& a_Entries) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void HomeWindow::OnTimer() { GlCanvas::OnTimer(); }
 
-//-----------------------------------------------------------------------------
 void HomeWindow::RenderUI() {
   if (!m_DrawUI) return;
 
@@ -97,10 +92,8 @@ void HomeWindow::RenderUI() {
   ImGui::Render();
 }
 
-//-----------------------------------------------------------------------------
 void HomeWindow::RenderProcessUI() {}
 
-//-----------------------------------------------------------------------------
 void HomeWindow::KeyPressed(unsigned int a_KeyCode, bool /*a_Ctrl*/,
                             bool a_Shift, bool a_Alt) {
   ScopeImguiContext state(m_ImGuiContext);
@@ -129,7 +122,6 @@ void HomeWindow::KeyPressed(unsigned int a_KeyCode, bool /*a_Ctrl*/,
   Orbit_ImGui_KeyCallback(this, a_KeyCode, true);
 }
 
-//-----------------------------------------------------------------------------
 void HomeWindow::Draw() {
   static volatile bool doCallbacks = true;
   if (doCallbacks) {

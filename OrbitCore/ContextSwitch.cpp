@@ -8,7 +8,6 @@
 // on every platform.
 static_assert(sizeof(ContextSwitch) == 20);
 
-//-----------------------------------------------------------------------------
 ContextSwitch::ContextSwitch(SwitchType a_Type)
     : m_Time(0),
       m_ProcessId(0),
@@ -17,5 +16,4 @@ ContextSwitch::ContextSwitch(SwitchType a_Type)
       m_ProcessorNumber(0xFF),
       m_Type(a_Type) {}
 
-//-----------------------------------------------------------------------------
 ContextSwitch::~ContextSwitch() = default;

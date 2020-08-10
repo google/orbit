@@ -72,7 +72,6 @@ class TextRenderer {
   bool m_DrawOutline;
 };
 
-//-----------------------------------------------------------------------------
 inline vec4 ColorToVec4(const Color& a_Col) {
   const float coeff = 1.f / 255.f;
   vec4 color;

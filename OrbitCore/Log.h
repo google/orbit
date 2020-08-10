@@ -17,7 +17,6 @@
 #define ORBIT_LOG_PDB(msg)
 #define ORBIT_ERROR GLogger.LogError(__FUNCTION__, __LINE__)
 
-//-----------------------------------------------------------------------------
 class OrbitLog {
  public:
   enum Type { Global, Debug, Pdb, Viz, NumLogTypes };
@@ -37,7 +36,6 @@ class OrbitLog {
   std::vector<std::string> m_Entries;
 };
 
-//-----------------------------------------------------------------------------
 class Logger {
  public:
   void Log(OrbitLog::Type a_Type, const std::string& a_String) {

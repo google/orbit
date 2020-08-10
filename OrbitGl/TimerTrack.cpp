@@ -21,7 +21,6 @@ using orbit_client_protos::TimerInfo;
 // TODO: Remove this flag once we have a way to toggle the display return values
 ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 
-//-----------------------------------------------------------------------------
 TimerTrack::TimerTrack(TimeGraph* time_graph) : Track(time_graph) {
   text_renderer_ = time_graph->GetTextRenderer();
 
@@ -30,7 +29,6 @@ TimerTrack::TimerTrack(TimeGraph* time_graph) : Track(time_graph) {
   max_time_ = std::numeric_limits<TickType>::min();
 }
 
-//-----------------------------------------------------------------------------
 void TimerTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float track_height = GetHeight();
   float track_width = canvas->GetWorldWidth();
@@ -41,7 +39,6 @@ void TimerTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Track::Draw(canvas, picking_mode);
 }
 
-//-----------------------------------------------------------------------------
 std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {
   std::string info;
   static bool show_return_value = absl::GetFlag(FLAGS_show_return_values);
@@ -66,7 +63,6 @@ void TimerTrack::UpdateBoxHeight() {
   box_height_ = time_graph_->GetLayout().GetTextBoxHeight();
 }
 
-//-----------------------------------------------------------------------------
 void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode /*picking_mode*/) {
   UpdateBoxHeight();
 
@@ -166,7 +162,6 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
   }
 }
 
-//-----------------------------------------------------------------------------
 void TimerTrack::OnTimer(const TimerInfo& timer_info) {
   if (timer_info.type() != TimerInfo::kCoreActivity) {
     UpdateDepth(timer_info.depth() + 1);
@@ -191,7 +186,6 @@ std::string TimerTrack::GetTooltip() const {
          "functions";
 }
 
-//-----------------------------------------------------------------------------
 float TimerTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
   bool is_collapsed = collapse_toggle_->IsCollapsed();
@@ -202,7 +196,6 @@ float TimerTrack::GetHeight() const {
          layout.GetEventTrackHeight() + layout.GetTrackBottomMargin();
 }
 
-//-----------------------------------------------------------------------------
 std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() {
   std::vector<std::shared_ptr<TimerChain>> timers;
   ScopeLock lock(mutex_);
@@ -212,7 +205,6 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() {
   return timers;
 }
 
-//-----------------------------------------------------------------------------
 const TextBox* TimerTrack::GetFirstAfterTime(TickType time,
                                               uint32_t depth) const {
   std::shared_ptr<TimerChain> chain = GetTimers(depth);
@@ -230,7 +222,6 @@ const TextBox* TimerTrack::GetFirstAfterTime(TickType time,
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 const TextBox* TimerTrack::GetFirstBeforeTime(TickType time,
                                                uint32_t depth) const {
   std::shared_ptr<TimerChain> chain = GetTimers(depth);
@@ -252,7 +243,6 @@ const TextBox* TimerTrack::GetFirstBeforeTime(TickType time,
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 std::shared_ptr<TimerChain> TimerTrack::GetTimers(uint32_t depth) const {
   ScopeLock lock(mutex_);
   auto it = timers_.find(depth);
@@ -260,19 +250,16 @@ std::shared_ptr<TimerChain> TimerTrack::GetTimers(uint32_t depth) const {
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 const TextBox* TimerTrack::GetUp(TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   return GetFirstBeforeTime(timer_info.start(), timer_info.depth() - 1);
 }
 
-//-----------------------------------------------------------------------------
 const TextBox* TimerTrack::GetDown(TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   return GetFirstAfterTime(timer_info.start(), timer_info.depth() + 1);
 }
 
-//-----------------------------------------------------------------------------
 std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& pair : timers_) {
@@ -281,8 +268,6 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() {
   return chains;
 }
 
-//-----------------------------------------------------------------------------
 bool TimerTrack::IsEmpty() const { return GetNumTimers() == 0; }
 
-//-----------------------------------------------------------------------------
 std::string TimerTrack::GetBoxTooltip(PickingID /*id*/) const { return ""; }

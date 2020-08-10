@@ -9,7 +9,6 @@
 #pragma pack(push, 1)
 
 // Integer register
-//-----------------------------------------------------------------------------
 struct Reg32 {
   uint32_t Low;
   uint32_t High;
@@ -53,7 +52,6 @@ struct IntReg32 {
 };
 
 // Floating point register
-//-----------------------------------------------------------------------------
 struct XmmReg64 {
   DWORD64 Low;
   DWORD64 High;
@@ -78,7 +76,6 @@ struct XmmReg {
 static_assert(sizeof(XmmReg) == 16, "XmmReg must be 128 bits");
 
 // Return value
-//-----------------------------------------------------------------------------
 struct RetValue {
   union {
     XmmReg m_FloatVal;
@@ -86,13 +83,9 @@ struct RetValue {
   };
 };
 
-//-----------------------------------------------------------------------------
 // NOTE:  Context structs are used to cast a stack address and interpret its
 // content.
 //        Arguments must match what is being pushed by assembly (orbitasm.h).
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
 struct Context64 {
   // Has to match prologue in orbitasm.asm...
   IntReg m_R11;
@@ -116,7 +109,6 @@ struct Context64 {
   static int GetFixedDataSize() { return sizeof(Context64) - StackDataSize; }
 };
 
-//-----------------------------------------------------------------------------
 struct Context32 {
   Context32() : m_StackSize(0) {}
   /*
@@ -165,7 +157,6 @@ struct Context32 {
   static int GetFixedDataSize() { return sizeof(Context32) - StackDataSize; }
 };
 
-//-----------------------------------------------------------------------------
 struct EpilogContext64 {
   DWORD64 GetReturnValue() { return m_RAX.m_Reg64; }
   XmmReg m_XMM0;
@@ -177,7 +168,6 @@ struct EpilogContext64 {
   IntReg m_RAX;
 };
 
-//-----------------------------------------------------------------------------
 struct EpilogContext32 {
   DWORD GetReturnValue() { return m_EAX; }
   // TODO: push ST0
@@ -185,13 +175,11 @@ struct EpilogContext32 {
   DWORD m_EAX;
 };
 
-//-----------------------------------------------------------------------------
 struct SavedContext32 {
   Context32 m_Context;
   EpilogContext32 m_EpilogContext;
 };
 
-//-----------------------------------------------------------------------------
 struct SavedContext64 {
   Context64 m_Context;
   EpilogContext64 m_EpilogContext;

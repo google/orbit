@@ -7,7 +7,6 @@
 
 #include <cstdint>
 
-//-----------------------------------------------------------------------------
 #pragma pack(push, 1)
 struct ContextSwitch {
  public:

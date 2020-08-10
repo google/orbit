@@ -37,7 +37,6 @@ float GlCanvas::Z_VALUE_BOX_INACTIVE = -0.03f;
 float GlCanvas::Z_VALUE_EVENT_BAR = -0.1f;
 float GlCanvas::Z_VALUE_EVENT_BAR_PICKING = 0.1f;
 
-//-----------------------------------------------------------------------------
 void ClearCaptureData() {
   if (GCurrentTimeGraph) {
     GCurrentTimeGraph->Clear();
@@ -46,7 +45,6 @@ void ClearCaptureData() {
   GOrbitApp->FireRefreshCallbacks(DataViewType::LIVE_FUNCTIONS);
 }
 
-//-----------------------------------------------------------------------------
 GlCanvas::GlCanvas() : ui_batcher_(PickingID::BatcherId::UI) {
   m_TextRenderer.SetCanvas(this);
 
@@ -95,13 +93,11 @@ GlCanvas::GlCanvas() : ui_batcher_(PickingID::BatcherId::UI) {
   Orbit_ImGui_Init();
 }
 
-//-----------------------------------------------------------------------------
 GlCanvas::~GlCanvas() {
   ImGui::DestroyContext(m_ImGuiContext);
   ScopeImguiContext state(m_ImGuiContext);
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::Initialize() {
   static bool firstInit = true;
   if (firstInit) {
@@ -121,7 +117,6 @@ void GlCanvas::Initialize() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
                           bool /*a_Middle*/) {
   int mousex = a_X;
@@ -151,7 +146,6 @@ void GlCanvas::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::LeftDown(int a_X, int a_Y) {
   // Store world clicked pos for panning
   ScreenToWorld(a_X, a_Y, m_WorldClickX, m_WorldClickY);
@@ -164,7 +158,6 @@ void GlCanvas::LeftDown(int a_X, int a_Y) {
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) {
   // Normalize and invert sign, so that delta < 0 is zoom in.
   int delta = a_Delta < 0 ? 1 : -1;
@@ -194,21 +187,18 @@ void GlCanvas::MouseWheelMoved(int a_X, int a_Y, int a_Delta, bool a_Ctrl) {
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::LeftUp() {
   m_PickingManager.Release();
   Orbit_ImGui_MouseButtonCallback(this, 0, false);
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::LeftDoubleClick() {
   ScopeImguiContext state(m_ImGuiContext);
   m_DoubleClicking = true;
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::RightDown(int a_X, int a_Y) {
   float worldx, worldy;
   ScreenToWorld(a_X, a_Y, worldx, worldy);
@@ -220,7 +210,6 @@ void GlCanvas::RightDown(int a_X, int a_Y) {
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 bool GlCanvas::RightUp() {
   Orbit_ImGui_MouseButtonCallback(this, 1, false);
   m_IsSelecting = true;
@@ -228,15 +217,12 @@ bool GlCanvas::RightUp() {
   return false;
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::mouseLeftWindow() {}
 
-//-----------------------------------------------------------------------------
 void GlCanvas::CharEvent(unsigned int a_Char) {
   Orbit_ImGui_CharCallback(this, a_Char);
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
                           bool a_Alt) {
   UpdateSpecialKeys(a_Ctrl, a_Shift, a_Alt);
@@ -250,7 +236,6 @@ void GlCanvas::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::KeyReleased(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
                            bool a_Alt) {
   UpdateSpecialKeys(a_Ctrl, a_Shift, a_Alt);
@@ -258,23 +243,18 @@ void GlCanvas::KeyReleased(unsigned int a_KeyCode, bool a_Ctrl, bool a_Shift,
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::UpdateSpecialKeys(bool a_Ctrl, bool a_Shift, bool a_Alt) {
   m_ControlKey = a_Ctrl;
   m_ShiftKey = a_Shift;
   m_AltKey = a_Alt;
 }
 
-//-----------------------------------------------------------------------------
 bool GlCanvas::ControlPressed() { return m_ControlKey; }
 
-//-----------------------------------------------------------------------------
 bool GlCanvas::ShiftPressed() { return m_ShiftKey; }
 
-//-----------------------------------------------------------------------------
 bool GlCanvas::AltPressed() { return m_AltKey; }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::UpdateWheelMomentum(float a_DeltaTime) {
   float sign = m_WheelMomentum > 0 ? 1.f : -1.f;
   static float inc = 15;
@@ -282,7 +262,6 @@ void GlCanvas::UpdateWheelMomentum(float a_DeltaTime) {
   m_WheelMomentum = newMomentum * m_WheelMomentum > 0.f ? newMomentum : 0.f;
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::OnTimer() {
   m_UpdateTimer.Stop();
   m_DeltaTime = static_cast<float>(m_UpdateTimer.ElapsedSeconds());
@@ -377,7 +356,6 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y,
   glLoadIdentity();
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::prepareScreenSpaceViewport() {
   glViewport(0, 0, getWidth(), getHeight());
   glMatrixMode(GL_PROJECTION);
@@ -387,13 +365,11 @@ void GlCanvas::prepareScreenSpaceViewport() {
   glLoadIdentity();
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::ScreenToWorld(int x, int y, float& wx, float& wy) const {
   wx = m_WorldTopLeftX + (static_cast<float>(x) / getWidth()) * m_WorldWidth;
   wy = m_WorldTopLeftY - (static_cast<float>(y) / getHeight()) * m_WorldHeight;
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::WorldToScreen(float wx, float wy, int& x, int& y) const {
   x = static_cast<int>((wx - m_WorldTopLeftX) / m_WorldWidth) * getWidth();
 
@@ -401,28 +377,22 @@ void GlCanvas::WorldToScreen(float wx, float wy, int& x, int& y) const {
   y = static_cast<int>((1.f - ((wy - bottomY) / m_WorldHeight)) * getHeight());
 }
 
-//-----------------------------------------------------------------------------
 int GlCanvas::WorldToScreenHeight(float a_Height) const {
   return static_cast<int>((a_Height / m_WorldHeight) * getHeight());
 }
 
-//-----------------------------------------------------------------------------
 float GlCanvas::ScreenToWorldHeight(int a_Height) const {
   return (static_cast<float>(a_Height) / getHeight()) * m_WorldHeight;
 }
 
-//-----------------------------------------------------------------------------
 float GlCanvas::ScreenToworldWidth(int a_Width) const {
   return (static_cast<float>(a_Width) / getWidth()) * m_WorldWidth;
 }
 
-//-----------------------------------------------------------------------------
 int GlCanvas::getWidth() const { return m_Width; }
 
-//-----------------------------------------------------------------------------
 int GlCanvas::getHeight() const { return m_Height; }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::Render(int a_Width, int a_Height) {
   m_Width = a_Width;
   m_Height = a_Height;
@@ -482,14 +452,12 @@ void GlCanvas::Render(int a_Width, int a_Height) {
   m_DoubleClicking = false;
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::Resize(int a_Width, int a_Height) {
   m_Width = a_Width;
   m_Height = a_Height;
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::UpdateSceneBox() {
   Vec2 pos;
   pos[0] = m_WorldTopLeftX;
@@ -500,7 +468,6 @@ void GlCanvas::UpdateSceneBox() {
   m_SceneBox = TextBox(pos, size);
 }
 
-//-----------------------------------------------------------------------------
 Vec2 GlCanvas::ToScreenSpace(const Vec2& a_Point) {
   float x = (a_Point[0] / m_WorldMinWidth) * m_Width;
   float y = (a_Point[1] / m_WorldHeight) * m_Height;
@@ -508,7 +475,6 @@ Vec2 GlCanvas::ToScreenSpace(const Vec2& a_Point) {
   return Vec2(x, y);
 }
 
-//-----------------------------------------------------------------------------
 Vec2 GlCanvas::ToWorldSpace(const Vec2& a_Point) {
   float x = (a_Point[0] / m_Width) * m_WorldMinWidth;
   float y = (a_Point[1] / m_Height) * m_WorldHeight;
@@ -516,7 +482,6 @@ Vec2 GlCanvas::ToWorldSpace(const Vec2& a_Point) {
   return Vec2(x, y);
 }
 
-//-----------------------------------------------------------------------------
 void GlCanvas::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
                        const Color& a_Color, float a_MaxSize,
                        bool a_RightJustified) {
@@ -524,7 +489,6 @@ void GlCanvas::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
                          a_RightJustified);
 }
 
-//-----------------------------------------------------------------------------
 int GlCanvas::AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z,
                         const Color& a_Color, float a_MaxSize,
                         bool a_RightJustified, bool a_InvertY) {

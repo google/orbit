@@ -9,11 +9,9 @@
 
 #include "OrbitBase/Logging.h"
 
-//-----------------------------------------------------------------------------
 template <class T, uint32_t BlockSize>
 struct BlockChain;
 
-//-----------------------------------------------------------------------------
 template <class T, uint32_t Size>
 struct Block {
   Block(BlockChain<T, Size>* a_Chain, Block<T, Size>* a_Prev)
@@ -46,7 +44,6 @@ struct Block {
   T m_Data[Size];
 };
 
-//-----------------------------------------------------------------------------
 template <class T, uint32_t BlockSize>
 struct BlockIterator {
   BlockIterator(Block<T, BlockSize>* a_Block) : m_Block(a_Block) {
@@ -77,7 +74,6 @@ struct BlockIterator {
   uint32_t m_Index;
 };
 
-//-----------------------------------------------------------------------------
 template <class T, uint32_t BlockSize>
 struct BlockChain {
   BlockChain() : m_NumBlocks(1), m_NumItems(0) {

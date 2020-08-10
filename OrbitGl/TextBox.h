@@ -12,7 +12,6 @@
 
 class TextRenderer;
 
-//-----------------------------------------------------------------------------
 class TextBox {
  public:
   TextBox();
@@ -123,7 +122,6 @@ class TextBox {
   size_t m_ElapsedTimeTextLength;
 };
 
-//-----------------------------------------------------------------------------
 inline bool TextBox::Intersects(const TextBox& a_Box) {
   for (int i = 0; i < 2; i++) {
     if (m_Max[i] < a_Box.m_Min[i] || m_Min[i] > a_Box.m_Max[i]) {
@@ -134,7 +132,6 @@ inline bool TextBox::Intersects(const TextBox& a_Box) {
   return true;
 }
 
-//-----------------------------------------------------------------------------
 inline void TextBox::Expand(const TextBox& a_Box) {
   for (int i = 0; i < 2; i++) {
     if (a_Box.m_Min[i] < m_Min[i]) {

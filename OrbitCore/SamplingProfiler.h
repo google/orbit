@@ -17,7 +17,6 @@
 
 class Process;
 
-//-----------------------------------------------------------------------------
 struct SampledFunction {
   SampledFunction() = default;
 
@@ -31,7 +30,6 @@ struct SampledFunction {
   orbit_client_protos::FunctionInfo* m_Function = nullptr;
 };
 
-//-----------------------------------------------------------------------------
 struct ThreadSampleData {
   ThreadSampleData() { m_ThreadUsage.push_back(0); }
   [[nodiscard]] uint32_t GetCountForAddress(uint64_t address) const;
@@ -47,7 +45,6 @@ struct ThreadSampleData {
   ThreadID m_TID = 0;
 };
 
-//-----------------------------------------------------------------------------
 struct CallstackCount {
   CallstackCount() = default;
 
@@ -55,14 +52,12 @@ struct CallstackCount {
   CallstackID m_CallstackId = 0;
 };
 
-//-----------------------------------------------------------------------------
 struct SortedCallstackReport {
   SortedCallstackReport() = default;
   int m_NumCallStacksTotal = 0;
   std::vector<CallstackCount> m_CallStacks;
 };
 
-//-----------------------------------------------------------------------------
 class SamplingProfiler {
  public:
   explicit SamplingProfiler(std::shared_ptr<Process> a_Process)

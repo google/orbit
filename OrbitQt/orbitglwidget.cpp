@@ -18,7 +18,6 @@
 
 #define ORBIT_DEBUG_OPEN_GL 0
 
-//-----------------------------------------------------------------------------
 OrbitGLWidget::OrbitGLWidget(QWidget* parent) : QOpenGLWidget(parent) {
   m_OrbitPanel = nullptr;
   m_DebugLogger = nullptr;
@@ -28,7 +27,6 @@ OrbitGLWidget::OrbitGLWidget(QWidget* parent) : QOpenGLWidget(parent) {
   installEventFilter(this);
 }
 
-//-----------------------------------------------------------------------------
 bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
   if (event->type() == QEvent::Paint) {
     if (m_OrbitPanel) {
@@ -41,7 +39,6 @@ bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
   return false;
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::Initialize(GlPanel::Type a_Type,
                                OrbitMainWindow* a_MainWindow) {
   UNUSED(a_Type);
@@ -54,7 +51,6 @@ void OrbitGLWidget::Initialize(GlPanel::Type a_Type,
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::initializeGL() {
 #if ORBIT_DEBUG_OPEN_GL
   m_DebugLogger = new QOpenGLDebugLogger(this);
@@ -76,7 +72,6 @@ void OrbitGLWidget::initializeGL() {
   PrintContextInformation();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::PrintContextInformation() {
   QString glType;
   QString glVersion;
@@ -103,7 +98,6 @@ void OrbitGLWidget::PrintContextInformation() {
   PRINT_VAR(qPrintable(glProfile));
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::messageLogged(const QOpenGLDebugMessage& msg) {
   // From: http://www.trentreed.net/topics/cc/
 
@@ -173,7 +167,6 @@ void OrbitGLWidget::messageLogged(const QOpenGLDebugMessage& msg) {
   LOG("%s\n%s", qPrintable(error), qPrintable(msg.message()));
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::resizeGL(int w, int h) {
   if (m_OrbitPanel) {
     m_OrbitPanel->Resize(w, h);
@@ -186,7 +179,6 @@ void OrbitGLWidget::resizeGL(int w, int h) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::paintGL() {
   if (m_OrbitPanel) {
     m_OrbitPanel->Render(width(), height());
@@ -198,14 +190,12 @@ void OrbitGLWidget::paintGL() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::TakeScreenShot() {
   QImage img = this->grabFramebuffer();
   QImageWriter writer("screenshot", "jpg");
   writer.write(img);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::mousePressEvent(QMouseEvent* event) {
   if (m_OrbitPanel) {
     if (event->buttons() == Qt::LeftButton) {
@@ -224,7 +214,6 @@ void OrbitGLWidget::mousePressEvent(QMouseEvent* event) {
   update();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::mouseReleaseEvent(QMouseEvent* event) {
   if (m_OrbitPanel) {
     if (event->button() == Qt::LeftButton) {
@@ -245,7 +234,6 @@ void OrbitGLWidget::mouseReleaseEvent(QMouseEvent* event) {
   update();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::showContextMenu() {
   std::vector<std::string> menu = m_OrbitPanel->GetContextMenu();
 
@@ -268,13 +256,11 @@ void OrbitGLWidget::showContextMenu() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::OnMenuClicked(int a_Index) {
   const std::vector<std::string>& menu = m_OrbitPanel->GetContextMenu();
   m_OrbitPanel->OnContextMenu(menu[a_Index], a_Index);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::mouseDoubleClickEvent(QMouseEvent* event) {
   if (event->button() == Qt::LeftButton) {
     m_OrbitPanel->LeftDoubleClick();
@@ -283,7 +269,6 @@ void OrbitGLWidget::mouseDoubleClickEvent(QMouseEvent* event) {
   update();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::mouseMoveEvent(QMouseEvent* event) {
   if (m_OrbitPanel) {
     m_OrbitPanel->MouseMoved(event->x(), event->y(),
@@ -303,7 +288,6 @@ void OrbitGLWidget::leaveEvent(QEvent*) {
   m_OrbitPanel->SetIsMouseOver(false);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::keyPressEvent(QKeyEvent* event) {
   if (m_OrbitPanel) {
     bool ctrl = event->modifiers() & Qt::ControlModifier;
@@ -320,7 +304,6 @@ void OrbitGLWidget::keyPressEvent(QKeyEvent* event) {
   update();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::keyReleaseEvent(QKeyEvent* event) {
   if (m_OrbitPanel) {
     bool ctrl = event->modifiers() & Qt::ControlModifier;
@@ -332,7 +315,6 @@ void OrbitGLWidget::keyReleaseEvent(QKeyEvent* event) {
   update();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitGLWidget::wheelEvent(QWheelEvent* event) {
   if (m_OrbitPanel) {
     if (event->orientation() == Qt::Vertical) {

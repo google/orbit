@@ -38,7 +38,6 @@ using orbit_client_protos::TimerInfo;
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
-//-----------------------------------------------------------------------------
 TimeGraph::TimeGraph() {
   m_LastThreadReorder.Start();
   scheduler_track_ = GetOrCreateSchedulerTrack();
@@ -47,7 +46,6 @@ TimeGraph::TimeGraph() {
   process_track_ = GetOrCreateThreadTrack(0);
 }
 
-//-----------------------------------------------------------------------------
 Color TimeGraph::GetThreadColor(ThreadID tid) const {
   static unsigned char a = 255;
   static std::vector<Color> s_ThreadColors{
@@ -61,25 +59,21 @@ Color TimeGraph::GetThreadColor(ThreadID tid) const {
   return s_ThreadColors[tid % s_ThreadColors.size()];
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::SetStringManager(std::shared_ptr<StringManager> str_manager) {
   string_manager_ = std::move(str_manager);
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::SetCanvas(GlCanvas* a_Canvas) {
   m_Canvas = a_Canvas;
   m_TextRenderer->SetCanvas(a_Canvas);
   m_TextRendererStatic.SetCanvas(a_Canvas);
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::SetFontSize(int a_FontSize) {
   m_TextRenderer->SetFontSize(a_FontSize);
   m_TextRendererStatic.SetFontSize(a_FontSize);
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::Clear() {
   m_Batcher.Reset();
   capture_min_timestamp_ = std::numeric_limits<TickType>::max();
@@ -104,10 +98,8 @@ void TimeGraph::Clear() {
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 double GNumHistorySeconds = 2.f;
 
-//-----------------------------------------------------------------------------
 bool TimeGraph::UpdateCaptureMinMaxTimestamps() {
   capture_min_timestamp_ = std::numeric_limits<TickType>::max();
 
@@ -132,7 +124,6 @@ bool TimeGraph::UpdateCaptureMinMaxTimestamps() {
   return capture_min_timestamp_ != std::numeric_limits<TickType>::max();
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::ZoomAll() {
   if (UpdateCaptureMinMaxTimestamps()) {
     m_MaxTimeUs =
@@ -154,13 +145,11 @@ void TimeGraph::Zoom(TickType min, TickType max) {
   SetMinMax(mid - extent, mid + extent);
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::Zoom(const TextBox* a_TextBox) {
   const TimerInfo& timer_info = a_TextBox->GetTimerInfo();
   Zoom(timer_info.start(), timer_info.end());
 }
 
-//-----------------------------------------------------------------------------
 double TimeGraph::GetCaptureTimeSpanUs() {
   if (UpdateCaptureMinMaxTimestamps()) {
     return TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
@@ -169,10 +158,8 @@ double TimeGraph::GetCaptureTimeSpanUs() {
   return 0;
 }
 
-//-----------------------------------------------------------------------------
 double TimeGraph::GetCurrentTimeSpanUs() { return m_MaxTimeUs - m_MinTimeUs; }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::ZoomTime(float a_ZoomValue, double a_MouseRatio) {
   m_ZoomValue = a_ZoomValue;
   m_MouseRatio = a_MouseRatio;
@@ -226,7 +213,6 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
   m_Layout.SetScale(old_scale / ratio);
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::SetMinMax(double a_MinTimeUs, double a_MaxTimeUs) {
   double desiredTimeWindow = a_MaxTimeUs - a_MinTimeUs;
   m_MinTimeUs = std::max(a_MinTimeUs, 0.0);
@@ -236,7 +222,6 @@ void TimeGraph::SetMinMax(double a_MinTimeUs, double a_MaxTimeUs) {
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::PanTime(int a_InitialX, int a_CurrentX, int a_Width,
                         double a_InitialTime) {
   m_TimeWindowUs = m_MaxTimeUs - m_MinTimeUs;
@@ -309,7 +294,6 @@ void TimeGraph::VerticallyMoveIntoView(const TextBox* text_box) {
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::OnDrag(float a_Ratio) {
   double timeSpan = GetCaptureTimeSpanUs();
   double timeWindow = m_MaxTimeUs - m_MinTimeUs;
@@ -317,20 +301,17 @@ void TimeGraph::OnDrag(float a_Ratio) {
   m_MaxTimeUs = m_MinTimeUs + timeWindow;
 }
 
-//-----------------------------------------------------------------------------
 double TimeGraph::GetTime(double a_Ratio) {
   double CurrentWidth = m_MaxTimeUs - m_MinTimeUs;
   double Delta = a_Ratio * CurrentWidth;
   return m_MinTimeUs + Delta;
 }
 
-//-----------------------------------------------------------------------------
 double TimeGraph::GetTimeIntervalMicro(double a_Ratio) {
   double CurrentWidth = m_MaxTimeUs - m_MinTimeUs;
   return a_Ratio * CurrentWidth;
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
   if (timer_info.end() > capture_max_timestamp_) {
     capture_max_timestamp_ = timer_info.end();
@@ -368,7 +349,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 uint32_t TimeGraph::GetNumTimers() const {
   uint32_t numTimers = 0;
   ScopeLock lock(m_Mutex);
@@ -378,13 +358,11 @@ uint32_t TimeGraph::GetNumTimers() const {
   return numTimers;
 }
 
-//-----------------------------------------------------------------------------
 uint32_t TimeGraph::GetNumCores() const {
   ScopeLock lock(m_Mutex);
   return cores_seen_.size();
 }
 
-//-----------------------------------------------------------------------------
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& track : tracks_) {
@@ -393,7 +371,6 @@ std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
   return chains;
 }
 
-//-----------------------------------------------------------------------------
 std::vector<std::shared_ptr<TimerChain>>
 TimeGraph::GetAllThreadTrackTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
@@ -403,17 +380,14 @@ TimeGraph::GetAllThreadTrackTimerChains() const {
   return chains;
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::UpdateMaxTimeStamp(TickType a_Time) {
   if (a_Time > capture_max_timestamp_) {
     capture_max_timestamp_ = a_Time;
   }
 };
 
-//-----------------------------------------------------------------------------
 float TimeGraph::GetThreadTotalHeight() { return std::abs(min_y_); }
 
-//-----------------------------------------------------------------------------
 float TimeGraph::GetWorldFromTick(TickType a_Time) const {
   if (m_TimeWindowUs > 0) {
     double start =
@@ -426,17 +400,14 @@ float TimeGraph::GetWorldFromTick(TickType a_Time) const {
   return 0;
 }
 
-//-----------------------------------------------------------------------------
 float TimeGraph::GetWorldFromUs(double a_Micros) const {
   return GetWorldFromTick(GetTickFromUs(a_Micros));
 }
 
-//-----------------------------------------------------------------------------
 double TimeGraph::GetUsFromTick(TickType time) const {
   return TicksToMicroseconds(capture_min_timestamp_, time) - m_MinTimeUs;
 }
 
-//-----------------------------------------------------------------------------
 TickType TimeGraph::GetTickFromWorld(float a_WorldX) {
   double ratio =
       m_WorldWidth != 0
@@ -447,12 +418,10 @@ TickType TimeGraph::GetTickFromWorld(float a_WorldX) {
   return capture_min_timestamp_ + MicrosecondsToTicks(timeStamp);
 }
 
-//-----------------------------------------------------------------------------
 TickType TimeGraph::GetTickFromUs(double a_MicroSeconds) const {
   return capture_min_timestamp_ + MicrosecondsToTicks(a_MicroSeconds);
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::GetWorldMinMax(float& a_Min, float& a_Max) const {
   a_Min = GetWorldFromTick(capture_min_timestamp_);
   a_Max = GetWorldFromTick(capture_max_timestamp_);
@@ -521,14 +490,12 @@ const TextBox* TimeGraph::FindNextFunctionCall(
   return next_box;
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::NeedsUpdate() {
   m_NeedsUpdatePrimitives = true;
   // If the primitives need to be updated, we also have to redraw.
   m_NeedsRedraw = true;
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   CHECK(string_manager_);
 
@@ -558,7 +525,6 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   m_NeedsUpdatePrimitives = false;
 }
 
-//-----------------------------------------------------------------------------
 std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
                                                     float a_WorldEnd,
                                                     ThreadID a_TID) {
@@ -606,7 +572,6 @@ const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(
   return selected_callstack_events_per_thread_[tid];
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   const bool picking = picking_mode != PickingMode::kNone;
   if ((!picking && m_NeedsUpdatePrimitives) || picking) {
@@ -771,7 +736,6 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
   uint32_t num_cores = GetNumCores();
   m_Layout.SetNumCores(num_cores);
@@ -798,7 +762,6 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
   }
 }
 
-//-----------------------------------------------------------------------------
 std::shared_ptr<SchedulerTrack> TimeGraph::GetOrCreateSchedulerTrack() {
   ScopeLock lock(m_Mutex);
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
@@ -839,13 +802,11 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(
   return track;
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::SetThreadFilter(const std::string& a_Filter) {
   m_ThreadFilter = a_Filter;
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::SortTracks() {
   // Get or create thread track from events' thread id.
   {
@@ -1034,7 +995,6 @@ const TextBox* TimeGraph::FindDown(TextBox* from) {
   return nullptr;
 }
 
-//----------------------------------------------------------------------------
 void TimeGraph::DrawText(GlCanvas* canvas) {
   if (m_DrawText) {
     m_TextRendererStatic.Display(canvas->GetBatcher());

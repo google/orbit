@@ -72,7 +72,6 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
   }
 }
 
-//-----------------------------------------------------------------------------
 float GraphTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
   float height = layout.GetTextBoxHeight() +

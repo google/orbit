@@ -33,7 +33,6 @@ using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-//-----------------------------------------------------------------------------
 ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
   Capture::PreSave();
 
