@@ -99,6 +99,7 @@ void Capture::ClearCaptureData() {
 void Capture::PreFunctionHooks() {
   GSelectedInCaptureFunctions = GetSelectedFunctions();
 
+  GSelectedFunctionsMap.clear();
   for (auto& func : GSelectedInCaptureFunctions) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
     GSelectedFunctionsMap[address] = func.get();
