@@ -348,8 +348,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     Disassembler disasm;
     disasm.LOGF(absl::StrFormat("asm: /* %s */\n",
                                 FunctionUtils::GetDisplayName(function)));
-    disasm.Disassemble(reinterpret_cast<const uint8_t*>(memory.data()),
-                       memory.size(),
+    disasm.Disassemble(memory.data(), memory.size(),
                        FunctionUtils::GetAbsoluteAddress(function),
                        Capture::GTargetProcess->GetIs64Bit());
     if (!sampling_report_ || !sampling_report_->GetProfiler()) {
