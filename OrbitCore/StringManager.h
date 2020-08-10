@@ -19,11 +19,12 @@ class StringManager {
   bool AddIfNotPresent(uint64_t key, std::string_view str);
   // Rerturns true if insertion took place.
   bool AddOrReplace(uint64_t key, std::string_view str);
-  std::optional<std::string> Get(uint64_t key) const;
-  bool Contains(uint64_t key) const;
+  [[nodiscard]] std::optional<std::string> Get(uint64_t key) const;
+  [[nodiscard]] bool Contains(uint64_t key) const;
   void Clear();
 
-  const absl::flat_hash_map<uint64_t, std::string>& GetKeyToStringMap() const {
+  [[nodiscard]] const absl::flat_hash_map<uint64_t, std::string>&
+  GetKeyToStringMap() const {
     return key_to_string_;
   }
 

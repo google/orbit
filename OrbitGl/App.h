@@ -221,7 +221,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     return process_manager_.get();
   }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
-  MainThreadExecutor* GetMainThreadExecutor() {
+  [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() {
     return main_thread_executor_.get();
   }
 
