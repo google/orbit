@@ -1,0 +1,9 @@
+FROM conanio/clang9:latest
+
+RUN sudo apt-get -qq update \
+    && sudo apt-get install -y --no-install-recommends \
+    clang-format \
+    jq \
+    python2.7 \
+    zip \
+    && sudo rm -rf /var/lib/apt/lists/*

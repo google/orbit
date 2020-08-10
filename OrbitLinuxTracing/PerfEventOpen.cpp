@@ -12,6 +12,7 @@
 
 #include "Function.h"
 #include "Utils.h"
+#include "absl/base/casts.h"
 
 namespace LinuxTracing {
 namespace {
@@ -43,7 +44,7 @@ perf_event_attr uprobe_event_attr(const char* module,
   pe.type = 7;  // TODO: should be read from
                 //  "/sys/bus/event_source/devices/uprobe/type"
   pe.config1 =
-      reinterpret_cast<uint64_t>(module);  // pe.config1 == pe.uprobe_path
+      absl::bit_cast<uint64_t>(module);    // pe.config1 == pe.uprobe_path
   pe.config2 = function_offset;            // pe.config2 == pe.probe_offset
 
   return pe;
@@ -132,7 +133,7 @@ void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length) {
   // Use mmap to get access to the ring buffer.
   void* mmap_ret =
       mmap(nullptr, mmap_length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (mmap_ret == reinterpret_cast<void*>(-1)) {
+  if (mmap_ret == MAP_FAILED) {
     ERROR("mmap: %s", SafeStrerror(errno));
     return nullptr;
   }

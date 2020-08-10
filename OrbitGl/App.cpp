@@ -27,7 +27,6 @@
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
 #include "ImGuiOrbit.h"
-#include "Injection.h"
 #include "Introspection.h"
 #include "KeyAndString.h"
 #include "LinuxCallstackEvent.h"
@@ -38,6 +37,7 @@
 #include "OrbitBase/Tracing.h"
 #include "OrbitVersion.h"
 #include "Params.h"
+#include "Path.h"
 #include "Pdb.h"
 #include "PresetsDataView.h"
 #include "PrintVar.h"
@@ -46,12 +46,7 @@
 #include "SamplingReport.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
-#include "TextRenderer.h"
 #include "Utils.h"
-
-#if __linux__
-#include <OrbitLinuxTracing/OrbitTracing.h>
-#endif
 
 ABSL_DECLARE_FLAG(bool, devmode);
 
@@ -63,7 +58,6 @@ using orbit_client_protos::PresetInfo;
 using orbit_client_protos::TimerInfo;
 
 std::unique_ptr<OrbitApp> GOrbitApp;
-float GFontSize;
 bool DoZoom = false;
 
 OrbitApp::OrbitApp(ApplicationOptions&& options,
@@ -79,16 +73,6 @@ OrbitApp::~OrbitApp() {
 #ifdef _WIN32
   oqpi_tk::stop_scheduler();
 #endif
-}
-
-std::string OrbitApp::FindFile(const std::string& caption,
-                               const std::string& dir,
-                               const std::string& filter) {
-  if (find_file_callback_) {
-    return find_file_callback_(caption, dir, filter);
-  }
-
-  return std::string();
 }
 
 void OrbitApp::OnCaptureStarted() {
@@ -192,7 +176,6 @@ bool OrbitApp::Init(ApplicationOptions&& options,
   oqpi_tk::start_default_scheduler();
 #endif
 
-  GFontSize = GParams.font_size;
   GOrbitApp->LoadFileMapping();
 
   return true;
@@ -365,8 +348,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     Disassembler disasm;
     disasm.LOGF(absl::StrFormat("asm: /* %s */\n",
                                 FunctionUtils::GetDisplayName(function)));
-    disasm.Disassemble(reinterpret_cast<const uint8_t*>(memory.data()),
-                       memory.size(),
+    disasm.Disassemble(memory.data(), memory.size(),
                        FunctionUtils::GetAbsoluteAddress(function),
                        Capture::GTargetProcess->GetIs64Bit());
     if (!sampling_report_ || !sampling_report_->GetProfiler()) {
@@ -609,8 +591,12 @@ void OrbitApp::StopCapture() {
 
 void OrbitApp::ClearCapture() {
   Capture::ClearCaptureData();
-  Capture::GClearCaptureDataFunc();
-  GCurrentTimeGraph->Clear();
+
+  if (GCurrentTimeGraph) {
+    GCurrentTimeGraph->Clear();
+  }
+  GOrbitApp->FireRefreshCallbacks(DataViewType::LIVE_FUNCTIONS);
+
   if (capture_cleared_callback_) {
     capture_cleared_callback_();
   }
@@ -639,19 +625,6 @@ bool OrbitApp::SelectProcess(const std::string& a_Process) {
   return false;
 }
 
-bool OrbitApp::SelectProcess(int32_t a_ProcessID) {
-  if (m_ProcessesDataView) {
-    return m_ProcessesDataView->SelectProcess(a_ProcessID);
-  }
-
-  return false;
-}
-
-void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
-  m_CallStackDataView->SetCallStack(std::move(a_CallStack));
-  FireRefreshCallbacks(DataViewType::CALLSTACK);
-}
-
 void OrbitApp::SendDisassemblyToUi(std::string disassembly,
                                    DisassemblyReport report) {
   main_thread_executor_->Schedule([this, disassembly = std::move(disassembly),
@@ -669,7 +642,6 @@ void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
     }
   });
 }
-
 
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {

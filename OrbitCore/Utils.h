@@ -440,7 +440,7 @@ std::string GetTimeStamp();
 std::string FormatTime(const time_t& rawtime);
 }  // namespace OrbitUtils
 
-bool ReadProcessMemory(int32_t pid, uint64_t address, byte* buffer,
+bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer,
                        uint64_t size, uint64_t* num_bytes_read);
 
 #if __linux__

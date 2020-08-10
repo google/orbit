@@ -6,7 +6,6 @@
 
 #include <ostream>
 
-#include "Core.h"
 #include "EventBuffer.h"
 #include "FunctionUtils.h"
 #include "OrbitBase/Logging.h"
@@ -40,9 +39,6 @@ std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
 std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
 std::shared_ptr<PresetFile> Capture::GSessionPresets = nullptr;
 
-void (*Capture::GClearCaptureDataFunc)();
-std::vector<std::shared_ptr<SamplingProfiler>> GOldSamplingProfilers;
-
 void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 
 void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
@@ -59,15 +55,14 @@ ErrorMessageOr<void> Capture::StartCapture() {
         "No process selected. Please choose a target process for the capture.");
   }
 
-  ClearCaptureData();
-
   GCaptureTimePoint = std::chrono::system_clock::now();
   GProcessId = GTargetProcess->GetID();
   GProcessName = GTargetProcess->GetName();
 
   PreFunctionHooks();
 
-  Capture::NewSamplingProfiler();
+  Capture::GSamplingProfiler =
+      std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
 
   GState = State::kStarted;
 
@@ -100,6 +95,7 @@ void Capture::ClearCaptureData() {
 void Capture::PreFunctionHooks() {
   GSelectedInCaptureFunctions = GetSelectedFunctions();
 
+  GSelectedFunctionsMap.clear();
   for (auto& func : GSelectedInCaptureFunctions) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
     GSelectedFunctionsMap[address] = func.get();
@@ -107,10 +103,6 @@ void Capture::PreFunctionHooks() {
   }
 
   GVisibleFunctionsMap = GSelectedFunctionsMap;
-
-  if (GClearCaptureDataFunc) {
-    GClearCaptureDataFunc();
-  }
 }
 
 std::vector<std::shared_ptr<FunctionInfo>> Capture::GetSelectedFunctions() {
@@ -157,16 +149,6 @@ ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
   }
 
   return outcome::success();
-}
-
-void Capture::NewSamplingProfiler() {
-  if (GSamplingProfiler) {
-    // To prevent destruction while processing data...
-    GOldSamplingProfilers.push_back(GSamplingProfiler);
-  }
-
-  Capture::GSamplingProfiler =
-      std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
 }
 
 LinuxAddressInfo* Capture::GetAddressInfo(uint64_t address) {

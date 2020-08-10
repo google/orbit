@@ -7,7 +7,6 @@
 #include "App.h"
 #include "Callstack.h"
 #include "Capture.h"
-#include "Core.h"
 #include "FunctionUtils.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
