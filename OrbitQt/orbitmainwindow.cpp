@@ -24,6 +24,7 @@
 #include "App.h"
 #include "MainThreadExecutorImpl.h"
 #include "OrbitVersion.h"
+#include "Path.h"
 #include "PrintVar.h"
 #include "SamplingReport.h"
 #include "TopDownViewItemModel.h"

@@ -15,13 +15,13 @@
 #include <imgui.h>
 
 #include "Capture.h"
-#include "Core.h"
 #include "GlCanvas.h"
 #include "Images.h"
 #include "OpenGl.h"
-#include "Params.h"
-#include "Pdb.h"
 #include "OrbitBase/Logging.h"
+#include "Params.h"
+#include "Path.h"
+#include "Pdb.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>

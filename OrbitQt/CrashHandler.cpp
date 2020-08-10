@@ -4,7 +4,6 @@
 
 #include "CrashHandler.h"
 
-#include "Core.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitVersion.h"
 #include "ScopeTimer.h"

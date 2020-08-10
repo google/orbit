@@ -7,6 +7,7 @@
 #include "Capture.h"
 #include "FunctionUtils.h"
 #include "OrbitProcess.h"
+#include "Path.h"
 #include "ScopeTimer.h"
 
 using orbit_client_protos::FunctionInfo;

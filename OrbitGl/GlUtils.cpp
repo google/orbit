@@ -4,7 +4,6 @@
 
 #include "GlUtils.h"
 
-#include "Core.h"
 #include "Log.h"
 #include "OpenGl.h"
 #include "OrbitBase/Logging.h"

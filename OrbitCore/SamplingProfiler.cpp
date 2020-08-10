@@ -13,6 +13,7 @@
 #include "FunctionUtils.h"
 #include "Log.h"
 #include "OrbitModule.h"
+#include "Path.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;

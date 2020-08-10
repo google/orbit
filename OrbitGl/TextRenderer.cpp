@@ -8,10 +8,10 @@
 #include <freetype-gl/vertex-buffer.h>
 
 #include "App.h"
-#include "Core.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "Params.h"
+#include "Path.h"
 
 typedef struct {
   float x, y, z;     // position

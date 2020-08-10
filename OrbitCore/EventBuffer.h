@@ -9,7 +9,7 @@
 
 #include "BlockChain.h"
 #include "Callstack.h"
-#include "Core.h"
+#include "Threading.h"
 #include "capture_data.pb.h"
 
 #ifdef __linux
