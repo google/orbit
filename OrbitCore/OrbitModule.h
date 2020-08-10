@@ -9,7 +9,6 @@
 
 #include <string>
 
-#include "BaseTypes.h"
 #include "symbol.pb.h"
 
 class Pdb;

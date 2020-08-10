@@ -11,8 +11,7 @@ target_compile_options(OrbitCore PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitCore
-  PUBLIC BaseTypes.h
-         BlockChain.h
+  PUBLIC BlockChain.h
          Callstack.h
          CallstackTypes.h
          Capture.h
