@@ -5,8 +5,6 @@
 #include "GlPanel.h"
 
 #include "CaptureWindow.h"
-#include "GlCanvas.h"
-#include "HomeWindow.h"
 
 GlPanel* GlPanel::Create(Type a_Type) {
   GlPanel* panel = nullptr;
@@ -14,9 +12,6 @@ GlPanel* GlPanel::Create(Type a_Type) {
   switch (a_Type) {
     case CAPTURE:
       panel = new CaptureWindow();
-      break;
-    case DEBUG:
-      panel = new HomeWindow();
       break;
   }
 
@@ -33,8 +28,6 @@ GlPanel::GlPanel() {
   m_MainWindowHeight = 0;
   m_NeedsRedraw = true;
 }
-
-GlPanel::~GlPanel() {}
 
 void GlPanel::Initialize() {}
 

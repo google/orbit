@@ -32,7 +32,6 @@ target_sources(
          GlUtils.h
          GpuTrack.h
          GraphTrack.h
-         HomeWindow.h
          Images.h
          ImGuiOrbit.h
          LiveFunctionsController.h
@@ -77,7 +76,6 @@ target_sources(
           GlUtils.cpp
           GpuTrack.cpp
           GraphTrack.cpp
-          HomeWindow.cpp
           ImGuiOrbit.cpp
           LiveFunctionsDataView.cpp
           ModulesDataView.cpp
@@ -125,6 +123,8 @@ if(NOT WIN32)
 endif()
 
 add_executable(OrbitGlTests)
+
+target_compile_options(OrbitGlTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitGlTests PRIVATE
     PickingManagerTest.cpp)

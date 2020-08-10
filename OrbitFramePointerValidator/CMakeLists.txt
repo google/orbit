@@ -31,6 +31,8 @@ target_link_libraries(OrbitFramePointerValidator PUBLIC
 
 add_executable(OrbitFramePointerValidatorTests)
 
+target_compile_options(OrbitFramePointerValidatorTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
 target_sources(OrbitFramePointerValidatorTests PRIVATE
         FramePointerValidatorTest.cpp
         FunctionFramePointerValidatorTest.cpp)

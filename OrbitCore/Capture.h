@@ -35,7 +35,6 @@ class Capture {
   GetSelectedFunctions();
   static void PreFunctionHooks();
   static bool IsCapturing();
-  static void DisplayStats();
   static ErrorMessageOr<void> SavePreset(const std::string& filename);
   static void NewSamplingProfiler();
   static orbit_client_protos::LinuxAddressInfo* GetAddressInfo(

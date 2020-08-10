@@ -9,6 +9,7 @@
 #include "EventTracer.h"
 #include "FunctionUtils.h"
 #include "GlUtils.h"
+#include "PrintVar.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::TimerInfo;
