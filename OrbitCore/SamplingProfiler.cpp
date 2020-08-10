@@ -70,8 +70,7 @@ std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
 void SamplingProfiler::AddCallStack(CallstackEvent callstack_event) {
   CallstackID hash = callstack_event.callstack_hash();
   if (!HasCallStack(hash)) {
-    std::shared_ptr<CallStack> callstack =
-        Capture::GSamplingProfiler->GetCallStack(hash);
+    std::shared_ptr<CallStack> callstack = GetCallStack(hash);
     AddUniqueCallStack(*callstack);
   }
 
