@@ -11,23 +11,6 @@ HomeWindow::HomeWindow() {
   m_DrawDebugDisplay = false;
   m_DrawTestUI = false;
   m_DrawLog = true;
-
-  VariableTracing::AddCallback([=](std::vector<std::string>& a_Entries) {
-    this->VariableTracingCallback(a_Entries);
-  });
-}
-
-HomeWindow::~HomeWindow() {
-  // TODO: remove variable tracing callback
-}
-
-void HomeWindow::VariableTracingCallback(std::vector<std::string>& a_Entries) {
-  if (m_DrawDebugDisplay) {
-    m_DebugWindow.Clear();
-    for (std::string& entry : a_Entries) {
-      m_DebugWindow.AddLine(entry);
-    }
-  }
 }
 
 void HomeWindow::OnTimer() { GlCanvas::OnTimer(); }
@@ -120,11 +103,4 @@ void HomeWindow::KeyPressed(unsigned int a_KeyCode, bool /*a_Ctrl*/,
   io.KeyShift = a_Shift;
   io.KeyAlt = a_Alt;
   Orbit_ImGui_KeyCallback(this, a_KeyCode, true);
-}
-
-void HomeWindow::Draw() {
-  static volatile bool doCallbacks = true;
-  if (doCallbacks) {
-    VariableTracing::ProcessCallbacks();
-  }
 }

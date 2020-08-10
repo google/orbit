@@ -34,8 +34,6 @@ GlPanel::GlPanel() {
   m_NeedsRedraw = true;
 }
 
-GlPanel::~GlPanel() {}
-
 void GlPanel::Initialize() {}
 
 void GlPanel::Resize(int /*a_Width*/, int /*a_Height*/) {}

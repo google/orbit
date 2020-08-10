@@ -9,7 +9,7 @@
 class GlPanel {
  public:
   GlPanel();
-  virtual ~GlPanel();
+  virtual ~GlPanel() = default;
 
   enum Type { CAPTURE, DEBUG };
 

@@ -7,6 +7,7 @@
 #include "Capture.h"
 #include "Core.h"
 #include "Log.h"
+#include "PrintVar.h"
 #include "SamplingProfiler.h"
 #include "ScopeTimer.h"
 #include "absl/strings/str_format.h"

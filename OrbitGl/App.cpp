@@ -400,7 +400,6 @@ Timer GMainTimer;
 // TODO: make it non-static
 void OrbitApp::MainTick() {
   ORBIT_SCOPE_FUNC;
-  TRACE_VAR(GMainTimer.QueryMillis());
 
   GMainTimer.Reset();
 
