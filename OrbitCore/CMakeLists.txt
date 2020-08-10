@@ -16,7 +16,6 @@ target_sources(
          Callstack.h
          CallstackTypes.h
          Capture.h
-         Context.h
          ContextSwitch.h
          Core.h
          EventBuffer.h
