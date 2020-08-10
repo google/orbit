@@ -9,19 +9,13 @@
 #include <cinttypes>
 #include <string>
 
-#include "Core.h"
 #include "ElfUtils/ElfFile.h"
 #include "FunctionUtils.h"
 #include "OrbitBase/Logging.h"
+#include "Path.h"
 #include "Pdb.h"
 #include "capture_data.pb.h"
 #include "symbol.pb.h"
-
-#ifndef WIN32
-#include "LinuxUtils.h"
-#include "Params.h"
-#include "Path.h"
-#endif
 
 using orbit_client_protos::FunctionInfo;
 

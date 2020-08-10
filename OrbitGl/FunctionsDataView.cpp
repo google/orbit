@@ -6,7 +6,6 @@
 
 #include "App.h"
 #include "Capture.h"
-#include "Core.h"
 #include "FunctionUtils.h"
 #include "Log.h"
 #include "OrbitProcess.h"

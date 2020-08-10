@@ -7,14 +7,9 @@
 #include <OrbitBase/Logging.h>
 #include <absl/strings/ascii.h>
 
-#include <utility>
-
-#include "Core.h"
 #include "OrbitModule.h"
 #include "Path.h"
 #include "Pdb.h"
-#include "ScopeTimer.h"
-#include "Utils.h"
 
 using orbit_client_protos::FunctionInfo;
 

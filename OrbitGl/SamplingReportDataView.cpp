@@ -10,7 +10,6 @@
 #include "App.h"
 #include "CallStackDataView.h"
 #include "Capture.h"
-#include "Core.h"
 #include "FunctionUtils.h"
 #include "OrbitModule.h"
 #include "SamplingReport.h"

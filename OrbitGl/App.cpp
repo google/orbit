@@ -37,6 +37,7 @@
 #include "OrbitBase/Tracing.h"
 #include "OrbitVersion.h"
 #include "Params.h"
+#include "Path.h"
 #include "Pdb.h"
 #include "PresetsDataView.h"
 #include "PrintVar.h"

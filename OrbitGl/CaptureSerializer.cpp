@@ -14,7 +14,6 @@
 #include "App.h"
 #include "Callstack.h"
 #include "Capture.h"
-#include "Core.h"
 #include "EventTracer.h"
 #include "FunctionUtils.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"

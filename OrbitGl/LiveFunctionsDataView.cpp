@@ -6,7 +6,6 @@
 
 #include "App.h"
 #include "Capture.h"
-#include "Core.h"
 #include "FunctionUtils.h"
 #include "LiveFunctionsController.h"
 #include "Log.h"

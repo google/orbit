@@ -16,7 +16,6 @@ target_sources(
          Callstack.h
          CallstackTypes.h
          Capture.h
-         Core.h
          EventBuffer.h
          FunctionUtils.h
          Introspection.h

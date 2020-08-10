@@ -6,7 +6,6 @@
 
 #include <ostream>
 
-#include "Core.h"
 #include "EventBuffer.h"
 #include "FunctionUtils.h"
 #include "OrbitBase/Logging.h"
