@@ -13,6 +13,13 @@ readonly CONAN_PROFILE="ggp_relwithdebinfo"
 
 if [ "$0" == "$SCRIPT" ]; then
   # We are inside the docker container
+  readonly build_type=${KOKORO_JOB_NAME##*/}
+
+  if [ "$build_type" = "release" ] && ! git -C "${DIR}" describe --tags --exact-match > /dev/null; then
+    echo "We are currently conducting a release build, but we aren't on a tag. Aborting the build..."
+    echo "Maybe you missed pushing the release version tag? Please consult the release playbook for advice."
+    exit 1
+  fi
 
   pip3 install conan==1.27.1 conan-package-tools==0.34.0
 
@@ -33,7 +40,6 @@ if [ "$0" == "$SCRIPT" ]; then
   conan build -bf "${DIR}/build/" "${DIR}"
   conan package -bf "${DIR}/build/" "${DIR}"
 
-  build_type=${KOKORO_JOB_NAME##*/}
   if [ "$build_type" = "release" ] || [ "$build_type" = "nightly" ] || [ "$build_type" = "continuous_on_release_branch" ]; then
     set +e
     ${DIR}/kokoro/gcp_ubuntu_ggp/upload_symbols.sh "${DIR}/build/bin"
