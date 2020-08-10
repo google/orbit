@@ -68,7 +68,8 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
         return module->m_Name;
       }
       if (Capture::GSamplingProfiler != nullptr) {
-        return Capture::GAddressToModuleName[frame.address];
+        return Capture::GSamplingProfiler->GetModuleNameByAddress(
+            frame.address);
       }
       return "";
     case COLUMN_ADDRESS:
