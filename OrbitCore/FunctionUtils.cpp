@@ -9,6 +9,7 @@
 #include "Capture.h"
 #include "Log.h"
 #include "OrbitBase/Logging.h"
+#include "Path.h"
 #include "Profiling.h"
 #include "Utils.h"
 

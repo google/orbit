@@ -27,7 +27,6 @@
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
 #include "ImGuiOrbit.h"
-#include "Injection.h"
 #include "Introspection.h"
 #include "KeyAndString.h"
 #include "LinuxCallstackEvent.h"
@@ -38,6 +37,7 @@
 #include "OrbitBase/Tracing.h"
 #include "OrbitVersion.h"
 #include "Params.h"
+#include "Path.h"
 #include "Pdb.h"
 #include "PresetsDataView.h"
 #include "PrintVar.h"
@@ -46,12 +46,7 @@
 #include "SamplingReport.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
-#include "TextRenderer.h"
 #include "Utils.h"
-
-#if __linux__
-#include <OrbitLinuxTracing/OrbitTracing.h>
-#endif
 
 ABSL_DECLARE_FLAG(bool, devmode);
 

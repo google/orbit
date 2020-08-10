@@ -4,9 +4,11 @@
 
 #pragma once
 
+#include <functional>
+#include <string>
 #include <vector>
 
-#include "Core.h"
+#include "Threading.h"
 
 #define ORBIT_LOG(msg) GLogger.Log(OrbitLog::Global, msg)
 #define ORBIT_LOGV(var) GLogger.Log(OrbitLog::Global, #var, var)

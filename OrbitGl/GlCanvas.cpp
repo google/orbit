@@ -9,7 +9,6 @@
 
 #include "App.h"
 #include "Capture.h"
-#include "Core.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "Log.h"

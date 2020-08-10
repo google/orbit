@@ -10,7 +10,6 @@
 #include "BlockChain.h"
 #include "Callstack.h"
 #include "Capture.h"
-#include "Core.h"
 #include "EventBuffer.h"
 #include "Pdb.h"
 #include "capture_data.pb.h"

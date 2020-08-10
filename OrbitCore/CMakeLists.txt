@@ -16,18 +16,13 @@ target_sources(
          Callstack.h
          CallstackTypes.h
          Capture.h
-         Context.h
-         ContextSwitch.h
-         Core.h
          EventBuffer.h
          FunctionUtils.h
-         Injection.h
          Introspection.h
          LinuxCallstackEvent.h
          LinuxTracingBuffer.h
          Log.h
          LogInterface.h
-         OrbitDbgHelp.h
          OrbitModule.h
          OrbitProcess.h
          OrbitVersion.h
@@ -48,10 +43,8 @@ target_sources(
 target_sources(
   OrbitCore
   PRIVATE Capture.cpp
-          ContextSwitch.cpp
           EventBuffer.cpp
           FunctionUtils.cpp
-          Injection.cpp
           Introspection.cpp
           LinuxTracingBuffer.cpp
           Log.cpp
@@ -86,7 +79,6 @@ target_link_libraries(
          OrbitBase
          OrbitClientProtos
          OrbitProtos
-         capstone::capstone
          xxHash::xxHash
          concurrentqueue::concurrentqueue
          multicore::multicore
@@ -99,11 +91,6 @@ if(WIN32)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib)
   target_compile_definitions(OrbitCore PUBLIC -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitCore PUBLIC -DNTDDI_VERSION=0x06030000)
-else()
-  target_link_libraries(
-    OrbitCore
-    PUBLIC OrbitLinuxTracing
-           libunwindstack::libunwindstack)
 endif()
 
 target_compile_definitions(OrbitCore PUBLIC WIN32_LEAN_AND_MEAN)
