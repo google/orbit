@@ -49,10 +49,6 @@
 #include "TextRenderer.h"
 #include "Utils.h"
 
-#if __linux__
-#include <OrbitLinuxTracing/OrbitTracing.h>
-#endif
-
 ABSL_DECLARE_FLAG(bool, devmode);
 
 using orbit_client_protos::CallstackEvent;
