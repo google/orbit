@@ -95,6 +95,10 @@ std::shared_ptr<Process> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
 }
 
 // CaptureListener implementation
+void ClientGgp::OnCaptureStarted() {}
+
+void ClientGgp::OnCaptureComplete() {}
+
 void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   (void)timer_info;
   //LOG("OnTimer called");
