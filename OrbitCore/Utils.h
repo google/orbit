@@ -27,7 +27,6 @@
 
 #include "BaseTypes.h"
 #include "OrbitBase/Logging.h"
-#include "Platform.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
