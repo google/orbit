@@ -48,7 +48,6 @@ class OrbitMainWindow : public QMainWindow {
   void OnNewTopDownView(std::unique_ptr<TopDownView> top_down_view);
   std::string OnGetSaveFileName(const std::string& extension);
   void OnSetClipboard(const std::string& text);
-  void ParseCommandlineArguments();
   void PostInit();
   bool HideTab(QTabWidget* a_TabWidget, const char* a_TabName);
   std::string FindFile(const std::string& caption, const std::string& dir,
@@ -110,5 +109,4 @@ class OrbitMainWindow : public QMainWindow {
   QLineEdit* filter_tracks_line_edit_ = nullptr;
 
   std::string m_CurrentPdbName;
-  bool m_IsDev;
 };

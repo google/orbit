@@ -73,16 +73,6 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="DebugTab">
-        <attribute name="title">
-         <string>debug</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_3">
-         <item row="0" column="0">
-          <widget class="OrbitGLWidget" name="DebugGLWidget"/>
-         </item>
-        </layout>
-       </widget>
        <widget class="QWidget" name="CaptureTab">
         <attribute name="title">
          <string>capture</string>
