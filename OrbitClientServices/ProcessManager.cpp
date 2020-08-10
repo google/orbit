@@ -209,12 +209,13 @@ ErrorMessageOr<std::string> ProcessManagerImpl::LoadNullTerminatedString(
   if (error_or_string.has_value()) {
     const std::string& str = error_or_string.value();
     if (str.find('\0') == std::string::npos) {
-      ERROR("Remote string is not null terminated: %s", str.c_str());
+      const char* error_msg = "Remote string is not null terminated";
+      ERROR("%s: %s", error_msg, str.c_str());
+      return ErrorMessage(error_msg);
     }
 
     // The string has a size of max_size at this point. Shrink it by assigning
-    // it its own str.c_str(). The result of c_str() is guaranteed to be null
-    // terminated so this works when the remote string is bigger than max_size.
+    // it its own str.c_str(). c_str() is guaranteed to be null terminated.
     error_or_string = str.c_str();
   }
 

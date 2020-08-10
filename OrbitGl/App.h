@@ -217,10 +217,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   DataView* GetOrCreateDataView(DataViewType type) override;
 
-  const std::unique_ptr<ProcessManager>& GetProcessManager() {
-    return process_manager_;
+  [[nodiscard]] ProcessManager* GetProcessManager() {
+    return process_manager_.get();
   }
-  ThreadPool* GetThreadPool() { return thread_pool_.get(); }
+  [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   MainThreadExecutor* GetMainThreadExecutor() {
     return main_thread_executor_.get();
   }

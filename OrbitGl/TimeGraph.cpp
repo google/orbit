@@ -360,44 +360,47 @@ void TimeGraph::ProcessOrbitFunctionTimer(const FunctionInfo* function,
                                           const TimerInfo& timer_info) {
   FunctionInfo::OrbitType type = function->type();
   uint64_t time = timer_info.start();
-  CHECK(timer_info.registers_size() > 0);
-  uint64_t graph_id = timer_info.registers(0);
+  CHECK(timer_info.registers_size() > 1);
+
+  // timer_info.registers() holds a function's integer arguments in the order
+  // specified by the ABI. On x64, 6 registers are used for argument passing:
+  // rdi, rsi, rdx, rcx, r8, r9. See orbit_api functions in Orbit.h.
+  uint64_t arg_0 = timer_info.registers(0);  // first argument.
+  uint64_t arg_1 = timer_info.registers(1);  // second argument.
 
   switch (type) {
     case FunctionInfo::kOrbitTrackInt: {
-      int32_t value = static_cast<int32_t>(timer_info.registers(1));
-      auto track = GetOrCreateGraphTrack(graph_id);
+      int32_t value = static_cast<int32_t>(arg_1);
+      auto track = GetOrCreateGraphTrack(/*graph_id*/ arg_0);
       track->AddValue(value, time);
     } break;
     case FunctionInfo::kOrbitTrackInt64: {
-      int64_t value = static_cast<int64_t>(timer_info.registers(1));
-      auto track = GetOrCreateGraphTrack(graph_id);
+      int64_t value = static_cast<int64_t>(arg_1);
+      auto track = GetOrCreateGraphTrack(/*graph_id*/ arg_0);
       track->AddValue(value, time);
     } break;
     case FunctionInfo::kOrbitTrackUint: {
-      uint32_t value = static_cast<uint32_t>(timer_info.registers(1));
-      auto track = GetOrCreateGraphTrack(graph_id);
+      uint32_t value = static_cast<uint32_t>(arg_1);
+      auto track = GetOrCreateGraphTrack(/*graph_id*/ arg_0);
       track->AddValue(value, time);
     } break;
     case FunctionInfo::kOrbitTrackUint64: {
-      uint64_t value = static_cast<uint64_t>(timer_info.registers(1));
-      auto track = GetOrCreateGraphTrack(graph_id);
+      uint64_t value = static_cast<uint64_t>(arg_1);
+      auto track = GetOrCreateGraphTrack(/*graph_id*/ arg_0);
       track->AddValue(value, time);
     } break;
     case FunctionInfo::kOrbitTrackFloatAsInt: {
-      int32_t int_value = static_cast<int32_t>(timer_info.registers(1));
+      int32_t int_value = static_cast<int32_t>(arg_1);
       float value = *(reinterpret_cast<float*>(&int_value));
-      auto track = GetOrCreateGraphTrack(graph_id);
+      auto track = GetOrCreateGraphTrack(/*graph_id*/ arg_0);
       track->AddValue(value, time);
-      break;
-    }
+    } break;
     case FunctionInfo::kOrbitTrackDoubleAsInt64: {
-      int64_t int_value = static_cast<int64_t>(timer_info.registers(1));
+      int64_t int_value = static_cast<int64_t>(arg_1);
       double value = *(reinterpret_cast<double*>(&int_value));
-      auto track = GetOrCreateGraphTrack(graph_id);
+      auto track = GetOrCreateGraphTrack(/*graph_id*/ arg_0);
       track->AddValue(value, time);
-      break;
-    }
+    } break;
     case FunctionInfo::kOrbitTimerStart:
       ProcessManualIntrumentationTimer(timer_info);
       break;
@@ -407,7 +410,8 @@ void TimeGraph::ProcessOrbitFunctionTimer(const FunctionInfo* function,
 }
 
 void TimeGraph::ProcessManualIntrumentationTimer(const TimerInfo& timer_info) {
-  uint64_t string_address = timer_info.registers(0);
+  constexpr int kStringArgumentIndex = 0;
+  uint64_t string_address = timer_info.registers(kStringArgumentIndex);
 
   // Request remote string on first encounter of string_address.
   if (!manual_instrumentation_string_manager_.Contains(string_address)) {
@@ -424,8 +428,7 @@ void TimeGraph::ProcessManualIntrumentationTimer(const TimerInfo& timer_info) {
         manual_instrumentation_string_manager_.AddOrReplace(
             string_address, error_or_string.value());
       } else {
-        ERROR("Error loading remote string %s",
-              error_or_string.error().message());
+        ERROR("Loading remote string %s", error_or_string.error().message());
       }
     });
   }
@@ -917,7 +920,7 @@ static void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track,
 }
 
 //-----------------------------------------------------------------------------
-std::shared_ptr<GraphTrack> TimeGraph::GetOrCreateGraphTrack(
+GraphTrack* TimeGraph::GetOrCreateGraphTrack(
     uint64_t graph_id) {
   ScopeLock lock(m_Mutex);
   std::shared_ptr<GraphTrack> track = graph_tracks_[graph_id];
@@ -928,7 +931,7 @@ std::shared_ptr<GraphTrack> TimeGraph::GetOrCreateGraphTrack(
     graph_tracks_[graph_id] = track;
   }
 
-  return track;
+  return track.get();
 }
 
 //-----------------------------------------------------------------------------

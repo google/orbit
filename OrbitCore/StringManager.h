@@ -15,7 +15,9 @@ class StringManager {
  public:
   StringManager() = default;
 
+  // Rerturns true if insertion took place.
   bool AddIfNotPresent(uint64_t key, std::string_view str);
+  // Rerturns true if insertion took place.
   bool AddOrReplace(uint64_t key, std::string_view str);
   std::optional<std::string> Get(uint64_t key) const;
   bool Contains(uint64_t key) const;

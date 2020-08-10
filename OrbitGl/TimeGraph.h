@@ -160,7 +160,7 @@ class TimeGraph {
   std::shared_ptr<SchedulerTrack> GetOrCreateSchedulerTrack();
   std::shared_ptr<ThreadTrack> GetOrCreateThreadTrack(ThreadID a_TID);
   std::shared_ptr<GpuTrack> GetOrCreateGpuTrack(uint64_t timeline_hash);
-  std::shared_ptr<GraphTrack> GetOrCreateGraphTrack(uint64_t graph_id);
+  GraphTrack* GetOrCreateGraphTrack(uint64_t graph_id);
 
   void ProcessOrbitFunctionTimer(
       const orbit_client_protos::FunctionInfo* function, const Timer& timer);
