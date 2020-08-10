@@ -100,9 +100,6 @@ void TracerThread::InitUprobesEventProcessor() {
   uprobes_unwinding_visitor->SetListener(listener_);
   uprobes_unwinding_visitor->SetUnwindErrorsAndDiscardedSamplesCounters(
       stats_.unwind_error_count, stats_.discarded_samples_in_uretprobes_count);
-  // Switch between PerfEventProcessor and PerfEventProcessor2 here.
-  // PerfEventProcessor2 is supposedly faster but assumes that events from the
-  // same perf_event_open ring buffer are already sorted.
   uprobes_event_processor_ = std::make_unique<PerfEventProcessor2>(
       std::move(uprobes_unwinding_visitor));
 }

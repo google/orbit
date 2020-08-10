@@ -20,7 +20,6 @@
 #include "GpuTracepointEventProcessor.h"
 #include "ManualInstrumentationConfig.h"
 #include "PerfEvent.h"
-#include "PerfEventProcessor.h"
 #include "PerfEventProcessor2.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRingBuffer.h"

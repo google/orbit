@@ -38,8 +38,6 @@ target_sources(OrbitLinuxTracing PRIVATE
         PerfEvent.h
         PerfEventOpen.cpp
         PerfEventOpen.h
-        PerfEventProcessor.cpp
-        PerfEventProcessor.h
         PerfEventProcessor2.cpp
         PerfEventProcessor2.h
         PerfEventReaders.h
