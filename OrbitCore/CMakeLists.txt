@@ -26,7 +26,6 @@ target_sources(
          LinuxTracingBuffer.h
          Log.h
          LogInterface.h
-         OrbitDbgHelp.h
          OrbitModule.h
          OrbitProcess.h
          OrbitVersion.h
