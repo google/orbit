@@ -40,7 +40,6 @@ std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
 std::shared_ptr<PresetFile> Capture::GSessionPresets = nullptr;
 
 void (*Capture::GClearCaptureDataFunc)();
-std::vector<std::shared_ptr<SamplingProfiler>> GOldSamplingProfilers;
 
 void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 
@@ -66,7 +65,8 @@ ErrorMessageOr<void> Capture::StartCapture() {
 
   PreFunctionHooks();
 
-  Capture::NewSamplingProfiler();
+  Capture::GSamplingProfiler =
+      std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
 
   GState = State::kStarted;
 
@@ -156,16 +156,6 @@ ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
   }
 
   return outcome::success();
-}
-
-void Capture::NewSamplingProfiler() {
-  if (GSamplingProfiler) {
-    // To prevent destruction while processing data...
-    GOldSamplingProfilers.push_back(GSamplingProfiler);
-  }
-
-  Capture::GSamplingProfiler =
-      std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
 }
 
 LinuxAddressInfo* Capture::GetAddressInfo(uint64_t address) {
