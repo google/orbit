@@ -25,7 +25,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "BaseTypes.h"
 #include "OrbitBase/Logging.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"

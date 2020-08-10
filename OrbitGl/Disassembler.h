@@ -6,7 +6,6 @@
 
 #include <string>
 
-#include "BaseTypes.h"
 #include "Utils.h"
 #include "absl/strings/str_format.h"
 

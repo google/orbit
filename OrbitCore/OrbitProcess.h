@@ -12,7 +12,6 @@
 #include <utility>
 #include <vector>
 
-#include "BaseTypes.h"
 #include "OrbitModule.h"
 #include "ScopeTimer.h"
 #include "Threading.h"

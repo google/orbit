@@ -6,8 +6,8 @@
 #define ORBIT_GL_TEXT_BOX_H_
 
 #include <cfloat>
+#include <cstdint>
 
-#include "BaseTypes.h"
 #include "Batcher.h"
 #include "CoreMath.h"
 #include "capture_data.pb.h"
