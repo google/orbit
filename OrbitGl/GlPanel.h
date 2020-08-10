@@ -11,7 +11,7 @@ class GlPanel {
   GlPanel();
   virtual ~GlPanel() = default;
 
-  enum Type { CAPTURE, DEBUG };
+  enum Type { CAPTURE };
 
   static GlPanel* Create(Type a_Type);
 

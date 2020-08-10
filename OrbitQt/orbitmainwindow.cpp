@@ -50,10 +50,7 @@ extern QMenu* GContextMenu;
 OrbitMainWindow::OrbitMainWindow(
     QApplication* a_App, ApplicationOptions&& options,
     OrbitQt::ServiceDeployManager* service_deploy_manager)
-    : QMainWindow(nullptr),
-      m_App(a_App),
-      ui(new Ui::OrbitMainWindow),
-      m_IsDev(false) {
+    : QMainWindow(nullptr), m_App(a_App), ui(new Ui::OrbitMainWindow) {
   OrbitApp::Init(std::move(options), CreateMainThreadExecutor());
 
   DataViewFactory* data_view_factory = GOrbitApp.get();
@@ -172,9 +169,6 @@ OrbitMainWindow::OrbitMainWindow(
         return service_deploy_manager->CopyFileToLocal(source, destination);
       });
 
-  ParseCommandlineArguments();
-
-  ui->DebugGLWidget->Initialize(GlPanel::DEBUG, this);
   ui->CaptureGLWidget->Initialize(GlPanel::CAPTURE, this);
 
   ui->ModulesList->Initialize(
@@ -191,10 +185,6 @@ OrbitMainWindow::OrbitMainWindow(
       SelectionType::kDefault, FontType::kDefault);
 
   SetupCodeView();
-
-  if (!m_IsDev) {
-    HideTab(ui->MainTabWidget, "debug");
-  }
 
   if (!absl::GetFlag(FLAGS_enable_stale_features)) {
     ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->OutputTab));
@@ -378,18 +368,6 @@ void OrbitMainWindow::ShowFeedbackDialog() {
 
 OrbitMainWindow::~OrbitMainWindow() {
   delete ui;
-}
-
-void OrbitMainWindow::ParseCommandlineArguments() {
-  std::vector<std::string> arguments;
-  for (const auto& qt_argument : QCoreApplication::arguments()) {
-    std::string argument = qt_argument.toStdString();
-    if (argument == "dev") {
-      m_IsDev = true;
-    }
-
-    arguments.push_back(std::move(argument));
-  }
 }
 
 void OrbitMainWindow::PostInit() {}
