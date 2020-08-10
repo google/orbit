@@ -36,14 +36,6 @@ float GlCanvas::Z_VALUE_BOX_INACTIVE = -0.03f;
 float GlCanvas::Z_VALUE_EVENT_BAR = -0.1f;
 float GlCanvas::Z_VALUE_EVENT_BAR_PICKING = 0.1f;
 
-void ClearCaptureData() {
-  if (GCurrentTimeGraph) {
-    GCurrentTimeGraph->Clear();
-  }
-
-  GOrbitApp->FireRefreshCallbacks(DataViewType::LIVE_FUNCTIONS);
-}
-
 GlCanvas::GlCanvas() : ui_batcher_(PickingID::BatcherId::UI) {
   m_TextRenderer.SetCanvas(this);
 
@@ -80,8 +72,6 @@ GlCanvas::GlCanvas() : ui_batcher_(PickingID::BatcherId::UI) {
   m_ID = counter++;
 
   m_UpdateTimer.Start();
-
-  Capture::GClearCaptureDataFunc = ClearCaptureData;
 
   // SetCursor(wxCURSOR_BLANK);
 

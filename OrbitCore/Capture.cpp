@@ -39,8 +39,6 @@ std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
 std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
 std::shared_ptr<PresetFile> Capture::GSessionPresets = nullptr;
 
-void (*Capture::GClearCaptureDataFunc)();
-
 void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 
 void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
@@ -107,10 +105,6 @@ void Capture::PreFunctionHooks() {
   }
 
   GVisibleFunctionsMap = GSelectedFunctionsMap;
-
-  if (GClearCaptureDataFunc) {
-    GClearCaptureDataFunc();
-  }
 }
 
 std::vector<std::shared_ptr<FunctionInfo>> Capture::GetSelectedFunctions() {
