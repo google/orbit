@@ -6,9 +6,6 @@
 #define ORBIT_CORE_PARAMS_H_
 
 struct Params {
-  Params();
-
- public:
   const float font_size = 14.f;
 };
 
