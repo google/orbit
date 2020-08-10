@@ -73,7 +73,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void ClearCapture();
   void ToggleDrawHelp();
   void ToggleCapture();
-  void SetCallStack(std::shared_ptr<CallStack> a_CallStack);
   void LoadFileMapping();
   void ListPresets();
   void RefreshCaptureView();
@@ -103,7 +102,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void AddTopDownView(const SamplingProfiler& sampling_profiler);
 
   bool SelectProcess(const std::string& a_Process);
-  bool SelectProcess(int32_t a_ProcessID);
 
   // Callbacks
   using CaptureStartedCallback = std::function<void()>;
@@ -185,15 +183,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void Refresh(DataViewType a_Type = DataViewType::ALL) {
     FireRefreshCallbacks(a_Type);
   }
-  typedef std::function<std::string(const std::string& caption,
-                                    const std::string& dir,
-                                    const std::string& filter)>
-      FindFileCallback;
-  void SetFindFileCallback(FindFileCallback callback) {
-    find_file_callback_ = std::move(callback);
-  }
-  std::string FindFile(const std::string& caption, const std::string& dir,
-                       const std::string& filter);
   typedef std::function<void(const std::string&)> ClipboardCallback;
   void SetClipboardCallback(ClipboardCallback callback) {
     clipboard_callback_ = std::move(callback);
@@ -210,10 +199,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text);
   void NeedsRedraw();
-
-  const std::map<std::string, std::string>& GetFileMapping() {
-    return m_FileMapping;
-  }
 
   void LoadModules(
       int32_t process_id, const std::vector<std::shared_ptr<Module>>& modules,
@@ -266,7 +251,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   SamplingReportCallback selection_report_callback_;
   TopDownViewCallback top_down_view_callback_;
   std::vector<class DataView*> m_Panels;
-  FindFileCallback find_file_callback_;
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;
   SecureCopyCallback secure_copy_callback_;

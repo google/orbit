@@ -58,7 +58,6 @@ using orbit_client_protos::PresetInfo;
 using orbit_client_protos::TimerInfo;
 
 std::unique_ptr<OrbitApp> GOrbitApp;
-float GFontSize;
 bool DoZoom = false;
 
 OrbitApp::OrbitApp(ApplicationOptions&& options,
@@ -74,16 +73,6 @@ OrbitApp::~OrbitApp() {
 #ifdef _WIN32
   oqpi_tk::stop_scheduler();
 #endif
-}
-
-std::string OrbitApp::FindFile(const std::string& caption,
-                               const std::string& dir,
-                               const std::string& filter) {
-  if (find_file_callback_) {
-    return find_file_callback_(caption, dir, filter);
-  }
-
-  return std::string();
 }
 
 void OrbitApp::OnCaptureStarted() {
@@ -187,7 +176,6 @@ bool OrbitApp::Init(ApplicationOptions&& options,
   oqpi_tk::start_default_scheduler();
 #endif
 
-  GFontSize = GParams.font_size;
   GOrbitApp->LoadFileMapping();
 
   return true;
@@ -632,19 +620,6 @@ bool OrbitApp::SelectProcess(const std::string& a_Process) {
   }
 
   return false;
-}
-
-bool OrbitApp::SelectProcess(int32_t a_ProcessID) {
-  if (m_ProcessesDataView) {
-    return m_ProcessesDataView->SelectProcess(a_ProcessID);
-  }
-
-  return false;
-}
-
-void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
-  m_CallStackDataView->SetCallStack(std::move(a_CallStack));
-  FireRefreshCallbacks(DataViewType::CALLSTACK);
 }
 
 void OrbitApp::SendDisassemblyToUi(std::string disassembly,
