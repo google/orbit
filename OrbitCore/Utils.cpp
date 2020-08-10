@@ -42,25 +42,6 @@ std::string GetLastErrorAsString() {
   return message;
 }
 
-std::string GuidToString(GUID a_Guid) {
-  std::string guidStr;
-  LPOLESTR wszCLSID = NULL;
-  HRESULT hr = StringFromCLSID(a_Guid, &wszCLSID);
-  if (hr == S_OK) {
-    // wszCLSID looks like: "{96F93FED-50B7-44B8-94AF-C205B68334FE}"
-    guidStr = ws2s(wszCLSID);
-    CoTaskMemFree(wszCLSID);
-    auto len = guidStr.size();
-    if (len > 2) {
-      guidStr = guidStr.substr(1, len - 2);
-    }
-    guidStr.erase(std::remove(guidStr.begin(), guidStr.end(), '-'),
-                  guidStr.end());
-  }
-
-  return guidStr;
-}
-
 #include "dde.h"
 
 struct AFX_MAP_MESSAGE {

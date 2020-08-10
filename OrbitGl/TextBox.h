@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_TEXT_BOX_H_
 #define ORBIT_GL_TEXT_BOX_H_
 
+#include <cfloat>
+
 #include "BaseTypes.h"
 #include "Batcher.h"
 #include "CoreMath.h"
@@ -87,7 +89,7 @@ class TextBox {
   size_t GetElapsedTimeTextLength() const { return m_ElapsedTimeTextLength; }
 
   inline void SetColor(Color& a_Color) { m_Color = a_Color; }
-  inline void SetColor(UCHAR a_R, UCHAR a_G, UCHAR a_B) {
+  inline void SetColor(uint8_t a_R, uint8_t a_G, uint8_t a_B) {
     m_Color[0] = a_R;
     m_Color[1] = a_G;
     m_Color[2] = a_B;
