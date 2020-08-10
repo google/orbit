@@ -15,7 +15,7 @@ class TestEvent : public PerfEvent {
 
   uint64_t GetTimestamp() const override { return timestamp_; }
 
-  void Accept(PerfEventVisitor* visitor) override {}
+  void Accept(PerfEventVisitor*) override {}
 
  private:
   uint64_t timestamp_;

@@ -126,6 +126,8 @@ endif()
 
 add_executable(OrbitGlTests)
 
+target_compile_options(OrbitGlTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
 target_sources(OrbitGlTests PRIVATE
     PickingManagerTest.cpp)
 

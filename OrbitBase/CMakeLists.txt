@@ -37,6 +37,8 @@ target_link_libraries(OrbitBase PUBLIC
 
 add_executable(OrbitBaseTests)
 
+target_compile_options(OrbitBaseTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
 target_sources(OrbitBaseTests PRIVATE
     ThreadPoolTest.cpp
     UniqueResourceTest.cpp
