@@ -41,11 +41,6 @@ inline void perf_event_enable(int file_descriptor) {
   }
 }
 
-inline void perf_event_reset_and_enable(int file_descriptor) {
-  perf_event_reset(file_descriptor);
-  perf_event_enable(file_descriptor);
-}
-
 inline void perf_event_disable(int file_descriptor) {
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_DISABLE, 0);
   if (ret != 0) {
@@ -134,9 +129,6 @@ int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
 // perf_event_open for uprobes and uretprobes.
 int uprobes_retaddr_event_open(const char* module, uint64_t function_offset,
                                pid_t pid, int32_t cpu);
-
-int uprobes_stack_event_open(const char* module, uint64_t function_offset,
-                             pid_t pid, int32_t cpu);
 
 int uretprobes_event_open(const char* module, uint64_t function_offset,
                           pid_t pid, int32_t cpu);

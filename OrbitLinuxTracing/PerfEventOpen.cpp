@@ -109,17 +109,6 @@ int uprobes_retaddr_event_open(const char* module, uint64_t function_offset,
   return generic_event_open(&pe, pid, cpu);
 }
 
-int uprobes_stack_event_open(const char* module, uint64_t function_offset,
-                             pid_t pid, int32_t cpu) {
-  perf_event_attr pe = uprobe_event_attr(module, function_offset);
-  pe.config = 0;
-  pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
-  pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
-  pe.sample_stack_user = SAMPLE_STACK_USER_SIZE;
-
-  return generic_event_open(&pe, pid, cpu);
-}
-
 int uretprobes_event_open(const char* module, uint64_t function_offset,
                           pid_t pid, int32_t cpu) {
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
