@@ -151,12 +151,6 @@ OrbitMainWindow::OrbitMainWindow(
     QToolTip::showText(QCursor::pos(), QString::fromStdString(tooltip), this);
   });
   GOrbitApp->SetFeedbackDialogCallback([this] { ShowFeedbackDialog(); });
-
-  GOrbitApp->SetFindFileCallback([this](const std::string& caption,
-                                        const std::string& dir,
-                                        const std::string& filter) {
-    return this->FindFile(caption, dir, filter);
-  });
   GOrbitApp->SetSaveFileCallback([this](const std::string& extension) {
     return this->OnGetSaveFileName(extension);
   });
@@ -386,20 +380,6 @@ bool OrbitMainWindow::HideTab(QTabWidget* a_TabWidget, const char* a_TabName) {
   }
 
   return false;
-}
-
-std::string OrbitMainWindow::FindFile(const std::string& caption,
-                                      const std::string& dir,
-                                      const std::string& filter) {
-  QStringList list = QFileDialog::getOpenFileNames(this, caption.c_str(),
-                                                   dir.c_str(), filter.c_str());
-  std::string result;
-  for (auto& file : list) {
-    result = file.toStdString();
-    break;
-  }
-
-  return result;
 }
 
 void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
