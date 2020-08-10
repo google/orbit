@@ -3,7 +3,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [ "$(uname -s)" == "Linux" ]; then
-  for profile in {clang{7,8,9},gcc{8,9},ggp}_{release,relwithdebinfo,debug} clang_format; do
+  for profile in {clang{7,8,9},gcc{8,9},ggp}_{release,relwithdebinfo,debug} clang_format license_headers; do
     docker push gcr.io/orbitprofiler/$profile:latest || exit $?
   done
 else
