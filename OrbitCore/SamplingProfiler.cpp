@@ -147,6 +147,7 @@ void SamplingProfiler::ProcessSamples() {
   m_FunctionAddressToExactAddresses.clear();
   m_SortedThreadSampleData.clear();
   address_to_function_name_.clear();
+  address_to_module_name_.clear();
 
   // Unique call stacks and per thread data
   for (const CallstackEvent& callstack : m_Callstacks) {
@@ -340,8 +341,8 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   } else if (address_info != nullptr) {
     module_name = Path::GetFileName(address_info->module_name());
   }
-  Capture::GAddressToModuleName[address] = module_name;
-  Capture::GAddressToModuleName[function_address] = module_name;
+  address_to_module_name_[address] = module_name;
+  address_to_module_name_[function_address] = module_name;
 }
 
 void SamplingProfiler::FillThreadSampleDataSampleReports() {
@@ -374,8 +375,8 @@ void SamplingProfiler::FillThreadSampleDataSampleReports() {
             100.f * it->second / threadSampleData.m_NumSamples;
       }
       function.m_Address = address;
-      CHECK(Capture::GAddressToModuleName.count(address) > 0);
-      function.m_Module = Capture::GAddressToModuleName.at(address);
+      CHECK(address_to_module_name_.count(address) > 0);
+      function.m_Module = address_to_module_name_.at(address);
 
       sampleReport.push_back(function);
     }
@@ -386,6 +387,15 @@ const std::string& SamplingProfiler::GetFunctionNameByAddress(
     uint64_t address) const {
   auto it = address_to_function_name_.find(address);
   if (it != address_to_function_name_.end()) {
+    return it->second;
+  }
+  return kUnknownFunctionOrModuleName;
+}
+
+const std::string& SamplingProfiler::GetModuleNameByAddress(
+    uint64_t address) const {
+  auto it = address_to_module_name_.find(address);
+  if (it != address_to_module_name_.end()) {
     return it->second;
   }
   return kUnknownFunctionOrModuleName;
