@@ -188,7 +188,7 @@ void CaptureWindow::SelectTextBox(class TextBox* text_box) {
   Capture::GSelectedThreadId = text_box->GetTimerInfo().thread_id();
 
   const TimerInfo& timer_info = text_box->GetTimerInfo();
-  DWORD64 address = timer_info.function_address();
+  uint64_t address = timer_info.function_address();
   FindCode(address);
 
   if (m_DoubleClicking) {
@@ -223,7 +223,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
   GOrbitApp->SendTooltipToUi(tooltip);
 }
 
-void CaptureWindow::FindCode(DWORD64 /*address*/) {}
+void CaptureWindow::FindCode(uint64_t /*address*/) {}
 
 void CaptureWindow::PreRender() {
   if (is_mouse_over_ && m_CanHover &&

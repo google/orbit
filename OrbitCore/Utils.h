@@ -194,8 +194,6 @@ inline std::string XorString(std::string a_String) {
 
 std::string GetLastErrorAsString();
 
-std::string GuidToString(GUID a_Guid);
-
 inline uint64_t GetMicros(std::string a_TimeStamp) {
   Replace(a_TimeStamp, ":", "");
   std::vector<std::string> tokens = absl::StrSplit(a_TimeStamp, ".");
