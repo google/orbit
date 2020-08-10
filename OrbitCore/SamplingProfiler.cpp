@@ -11,7 +11,6 @@
 
 #include "Capture.h"
 #include "FunctionUtils.h"
-#include "Injection.h"
 #include "Log.h"
 #include "OrbitModule.h"
 

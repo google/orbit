@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "Core.h"
-#include "Injection.h"
 #include "OrbitModule.h"
 #include "Path.h"
 #include "Pdb.h"
