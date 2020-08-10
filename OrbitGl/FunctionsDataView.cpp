@@ -16,10 +16,8 @@
 
 using orbit_client_protos::FunctionInfo;
 
-//-----------------------------------------------------------------------------
 FunctionsDataView::FunctionsDataView() : DataView(DataViewType::FUNCTIONS) {}
 
-//-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
@@ -36,7 +34,6 @@ const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
   return columns;
 }
 
-//-----------------------------------------------------------------------------
 std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
@@ -67,21 +64,18 @@ std::string FunctionsDataView::GetValue(int a_Row, int a_Column) {
   }
 }
 
-//-----------------------------------------------------------------------------
 #define ORBIT_FUNC_SORT(Member)                                            \
   [&](int a, int b) {                                                      \
     return OrbitUtils::Compare(functions[a]->Member, functions[b]->Member, \
                                ascending);                                 \
   }
 
-//-----------------------------------------------------------------------------
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                     \
   [&](int a, int b) {                                                    \
     return OrbitUtils::Compare(Func(*functions[a]), Func(*functions[b]), \
                                ascending);                               \
   }
 
-//-----------------------------------------------------------------------------
 void FunctionsDataView::DoSort() {
   // TODO(antonrohr) This sorting function can take a lot of time when a large
   // number of functions is used (several seconds). This function is currently
@@ -127,13 +121,11 @@ void FunctionsDataView::DoSort() {
   }
 }
 
-//-----------------------------------------------------------------------------
 const std::string FunctionsDataView::MENU_ACTION_SELECT = "Hook";
 const std::string FunctionsDataView::MENU_ACTION_UNSELECT = "Unhook";
 const std::string FunctionsDataView::MENU_ACTION_DISASSEMBLY =
     "Go to Disassembly";
 
-//-----------------------------------------------------------------------------
 std::vector<std::string> FunctionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
@@ -152,7 +144,6 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
   return menu;
 }
 
-//-----------------------------------------------------------------------------
 void FunctionsDataView::OnContextMenu(const std::string& a_Action,
                                       int a_MenuIndex,
                                       const std::vector<int>& a_ItemIndices) {
@@ -174,7 +165,6 @@ void FunctionsDataView::OnContextMenu(const std::string& a_Action,
   }
 }
 
-//-----------------------------------------------------------------------------
 void FunctionsDataView::DoFilter() {
   // TODO(antonrohr) This filter function can take a lot of time when a large
   // number of functions is used (several seconds). This function is currently
@@ -217,7 +207,6 @@ void FunctionsDataView::DoFilter() {
 #endif
 }
 
-//-----------------------------------------------------------------------------
 void FunctionsDataView::ParallelFilter() {
 #ifdef _WIN32
   const std::vector<std::shared_ptr<FunctionInfo>>& functions =
@@ -260,7 +249,6 @@ void FunctionsDataView::ParallelFilter() {
 #endif
 }
 
-//-----------------------------------------------------------------------------
 void FunctionsDataView::OnDataChanged() {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
 
@@ -273,7 +261,6 @@ void FunctionsDataView::OnDataChanged() {
   DataView::OnDataChanged();
 }
 
-//-----------------------------------------------------------------------------
 FunctionInfo& FunctionsDataView::GetFunction(int a_Row) const {
   ScopeLock lock(Capture::GTargetProcess->GetDataMutex());
   const std::vector<std::shared_ptr<FunctionInfo>>& functions =

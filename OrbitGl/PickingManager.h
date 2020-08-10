@@ -16,7 +16,6 @@
 
 class GlCanvas;
 
-//-----------------------------------------------------------------------------
 enum class PickingMode { kNone, kHover, kClick };
 
 class Pickable {
@@ -31,7 +30,6 @@ class Pickable {
   virtual std::string GetTooltip() const { return ""; }
 };
 
-//-----------------------------------------------------------------------------
 struct PickingID {
   enum Type {
     INVALID,
@@ -91,7 +89,6 @@ struct PickingID {
   uint32_t batcher_id_ : 1;
 };
 
-//-----------------------------------------------------------------------------
 class PickingManager {
  public:
   PickingManager() {}

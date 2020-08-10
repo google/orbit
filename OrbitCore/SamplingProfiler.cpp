@@ -61,14 +61,12 @@ uint32_t ThreadSampleData::GetCountForAddress(uint64_t address) const {
   return (*res).second;
 }
 
-//-----------------------------------------------------------------------------
 std::multimap<int, CallstackID> SamplingProfiler::GetCallstacksFromAddress(
     uint64_t a_Addr, ThreadID a_TID, int* o_NumCallstacks) {
   std::set<CallstackID>& callstacks = m_FunctionToCallstacks[a_Addr];
   return SortCallstacks(m_ThreadSampleData[a_TID], callstacks, o_NumCallstacks);
 }
 
-//-----------------------------------------------------------------------------
 void SamplingProfiler::AddCallStack(CallstackEvent callstack_event) {
   CallstackID hash = callstack_event.callstack_hash();
   if (!HasCallStack(hash)) {
@@ -80,7 +78,6 @@ void SamplingProfiler::AddCallStack(CallstackEvent callstack_event) {
   m_Callstacks.push_back(std::move(callstack_event));
 }
 
-//-----------------------------------------------------------------------------
 void SamplingProfiler::AddUniqueCallStack(CallStack call_stack) {
   absl::MutexLock lock(&unique_callstacks_mutex_);
   auto key = call_stack.Hash();
@@ -99,7 +96,6 @@ const CallStack& SamplingProfiler::GetResolvedCallstack(
   return *resolved_callstack_it->second;
 }
 
-//-----------------------------------------------------------------------------
 std::shared_ptr<SortedCallstackReport>
 SamplingProfiler::GetSortedCallstacksFromAddress(uint64_t a_Addr,
                                                  ThreadID a_TID) {
@@ -122,7 +118,6 @@ SamplingProfiler::GetSortedCallstacksFromAddress(uint64_t a_Addr,
 
 const int32_t SamplingProfiler::kAllThreadsFakeTid = 0;
 
-//-----------------------------------------------------------------------------
 void SamplingProfiler::SortByThreadUsage() {
   m_SortedThreadSampleData.clear();
   m_SortedThreadSampleData.reserve(m_ThreadSampleData.size());
@@ -142,7 +137,6 @@ void SamplingProfiler::SortByThreadUsage() {
        });
 }
 
-//-----------------------------------------------------------------------------
 void SamplingProfiler::ProcessSamples() {
   // Clear the result of a previous call to ProcessSamples.
   m_ThreadSampleData.clear();
@@ -233,7 +227,6 @@ void SamplingProfiler::ProcessSamples() {
   // when new callstacks have been added or after a module has been loaded.
 }
 
-//-----------------------------------------------------------------------------
 void SamplingProfiler::ResolveCallstacks() {
   absl::MutexLock lock(&unique_callstacks_mutex_);
 
@@ -272,7 +265,6 @@ void SamplingProfiler::ResolveCallstacks() {
   }
 }
 
-//-----------------------------------------------------------------------------
 const ThreadSampleData* SamplingProfiler::GetSummary() const {
   auto summary_it = m_ThreadSampleData.find(kAllThreadsFakeTid);
   if (summary_it == m_ThreadSampleData.end()) {
@@ -281,7 +273,6 @@ const ThreadSampleData* SamplingProfiler::GetSummary() const {
   return &(summary_it->second);
 }
 
-//-----------------------------------------------------------------------------
 uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
   auto addresses_of_functions_itr =
       m_FunctionAddressToExactAddresses.find(function_address);
@@ -352,7 +343,6 @@ void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
   Capture::GAddressToModuleName[function_address] = module_name;
 }
 
-//-----------------------------------------------------------------------------
 void SamplingProfiler::FillThreadSampleDataSampleReports() {
   for (auto& data : m_ThreadSampleData) {
     ThreadID threadID = data.first;

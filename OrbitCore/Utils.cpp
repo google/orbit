@@ -21,7 +21,6 @@
 #include "absl/base/attributes.h"
 
 #ifdef _WIN32
-//-----------------------------------------------------------------------------
 std::string GetLastErrorAsString() {
   // Get the error message, if any.
   DWORD errorMessageID = ::GetLastError();
@@ -42,7 +41,6 @@ std::string GetLastErrorAsString() {
   return message;
 }
 
-//-----------------------------------------------------------------------------
 std::string GuidToString(GUID a_Guid) {
   std::string guidStr;
   LPOLESTR wszCLSID = NULL;
@@ -286,14 +284,12 @@ std::string CWindowsMessageToString::GetStringFromMsg(
 std::string GetLastErrorAsString() { return ""; }
 #endif
 
-//-----------------------------------------------------------------------------
 std::string OrbitUtils::GetTimeStamp() {
   time_t rawtime;
   time(&rawtime);
   return FormatTime(rawtime);
 }
 
-//-----------------------------------------------------------------------------
 std::string OrbitUtils::FormatTime(const time_t& rawtime) {
   struct tm* time_info = nullptr;
   char buffer[80];
@@ -310,7 +306,6 @@ std::string OrbitUtils::FormatTime(const time_t& rawtime) {
   return std::string(buffer);
 }
 
-//-----------------------------------------------------------------------------
 bool ReadProcessMemory(int32_t pid, uint64_t address, byte* buffer,
                        uint64_t size, uint64_t* num_bytes_read) {
 #ifdef _WIN32

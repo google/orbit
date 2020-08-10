@@ -8,7 +8,6 @@
 
 using orbit_client_protos::FunctionInfo;
 
-//-----------------------------------------------------------------------------
 OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
     : QWidget(parent), ui(new Ui::OrbitLiveFunctions) {
   ui->setupUi(this);
@@ -45,10 +44,8 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
   ui->iteratorLayout->addWidget(all_events_iterator_);
 }
 
-//-----------------------------------------------------------------------------
 OrbitLiveFunctions::~OrbitLiveFunctions() { delete ui; }
 
-//-----------------------------------------------------------------------------
 void OrbitLiveFunctions::Initialize(SelectionType selection_type,
                                     FontType font_type, bool is_main_instance) {
   DataView* data_view = &live_functions_.GetDataView();
@@ -56,12 +53,10 @@ void OrbitLiveFunctions::Initialize(SelectionType selection_type,
                                    is_main_instance);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitLiveFunctions::SetFilter(const QString& a_Filter) {
   ui->data_view_panel_->SetFilter(a_Filter);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitLiveFunctions::Refresh() { ui->data_view_panel_->Refresh(); }
 
 void OrbitLiveFunctions::OnDataChanged() { live_functions_.OnDataChanged(); }
@@ -102,7 +97,6 @@ void OrbitLiveFunctions::AddIterator(size_t id, FunctionInfo* function) {
   ui->iteratorLayout->addWidget(iterator_ui);
 }
 
-//-----------------------------------------------------------------------------
 QLineEdit* OrbitLiveFunctions::GetFilterLineEdit() {
   return ui->data_view_panel_->GetFilterLineEdit();
 }

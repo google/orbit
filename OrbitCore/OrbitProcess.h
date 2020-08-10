@@ -19,7 +19,6 @@
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
-//-----------------------------------------------------------------------------
 class Process {
  public:
   Process();

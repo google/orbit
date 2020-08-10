@@ -18,16 +18,13 @@
 
 #include <cstdio>
 
-//-----------------------------------------------------------------------------
 Injection::Injection()
     : m_InjectedProcessID(0), m_InjectedProcessHandle(nullptr) {}
 
-//-----------------------------------------------------------------------------
 void* Injection::RemoteWrite(const std::string& str) {
   return RemoteWrite(str.c_str(), str.size() + 1);
 }
 
-//-----------------------------------------------------------------------------
 void* Injection::RemoteWrite(const char* data, size_t size) {
   // Allocate
   LPVOID targetBaseAddress =
@@ -50,7 +47,6 @@ void* Injection::RemoteWrite(const char* data, size_t size) {
   return targetBaseAddress;
 }
 
-//-----------------------------------------------------------------------------
 bool Injection::Inject(std::string_view a_RemoteAddress,
                        const std::string& a_DllName, const Process& a_Process,
                        const std::string& ProcName) {
@@ -137,7 +133,6 @@ bool Injection::Inject(std::string_view a_RemoteAddress,
   return true;
 }
 
-//-----------------------------------------------------------------------------
 HMODULE GetModule(HANDLE pHandle) {
   HMODULE hMods[1024];
   DWORD cbNeeded;
@@ -162,7 +157,6 @@ HMODULE GetModule(HANDLE pHandle) {
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 HANDLE Injection::GetTargetProcessHandle(const std::string& a_Target,
                                          DWORD& o_ProcessID) {
   // from Very Sleepy
@@ -231,7 +225,6 @@ HANDLE Injection::GetTargetProcessHandle(const std::string& a_Target,
   return handle;
 }
 
-//-----------------------------------------------------------------------------
 HMODULE WINAPI Injection::GetRemoteModuleHandle(HANDLE hProcess,
                                                 LPCSTR lpModuleName) {
   // https://www.codeproject.com/Tips/139349/Getting-the-address-of-a-function-in-a-DLL-loaded
@@ -342,7 +335,6 @@ GRMH_FAIL_JMP:
   return NULL;
 }
 
-//-----------------------------------------------------------------------------
 FARPROC WINAPI Injection::GetRemoteProcAddress(HANDLE hProcess, HMODULE hModule,
                                                LPCSTR lpProcName, UINT Ordinal,
                                                BOOL UseOrdinal) {

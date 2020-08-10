@@ -43,10 +43,8 @@ std::shared_ptr<PresetFile> Capture::GSessionPresets = nullptr;
 void (*Capture::GClearCaptureDataFunc)();
 std::vector<std::shared_ptr<SamplingProfiler>> GOldSamplingProfilers;
 
-//-----------------------------------------------------------------------------
 void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 
-//-----------------------------------------------------------------------------
 void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
   if (a_Process != GTargetProcess) {
     GTargetProcess = a_Process;
@@ -55,7 +53,6 @@ void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
   }
 }
 
-//-----------------------------------------------------------------------------
 ErrorMessageOr<void> Capture::StartCapture() {
   if (GTargetProcess->GetID() == 0) {
     return ErrorMessage(
@@ -77,12 +74,10 @@ ErrorMessageOr<void> Capture::StartCapture() {
   return outcome::success();
 }
 
-//-----------------------------------------------------------------------------
 void Capture::StopCapture() {
   GState = State::kStopping;
 }
 
-//-----------------------------------------------------------------------------
 void Capture::FinalizeCapture() {
   if (Capture::GSamplingProfiler != nullptr) {
     Capture::GSamplingProfiler->ProcessSamples();
@@ -91,7 +86,6 @@ void Capture::FinalizeCapture() {
   GState = State::kDone;
 }
 
-//-----------------------------------------------------------------------------
 void Capture::ClearCaptureData() {
   GProcessId = -1;
   GProcessName = "";
@@ -103,7 +97,6 @@ void Capture::ClearCaptureData() {
   GSelectedThreadId = 0;
 }
 
-//-----------------------------------------------------------------------------
 void Capture::PreFunctionHooks() {
   GSelectedInCaptureFunctions = GetSelectedFunctions();
 
@@ -130,19 +123,16 @@ std::vector<std::shared_ptr<FunctionInfo>> Capture::GetSelectedFunctions() {
   return selected_functions;
 }
 
-//-----------------------------------------------------------------------------
 bool Capture::IsCapturing() {
   return GState == State::kStarted || GState == State::kStopping;
 }
 
-//-----------------------------------------------------------------------------
 void Capture::DisplayStats() {
   if (GSamplingProfiler) {
     TRACE_VAR(GSamplingProfiler->GetNumSamples());
   }
 }
 
-//-----------------------------------------------------------------------------
 ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
   PresetInfo preset;
   preset.set_process_full_path(GTargetProcess->GetFullPath());
@@ -175,7 +165,6 @@ ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
   return outcome::success();
 }
 
-//-----------------------------------------------------------------------------
 void Capture::NewSamplingProfiler() {
   if (GSamplingProfiler) {
     // To prevent destruction while processing data...
@@ -186,7 +175,6 @@ void Capture::NewSamplingProfiler() {
       std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
 }
 
-//-----------------------------------------------------------------------------
 LinuxAddressInfo* Capture::GetAddressInfo(uint64_t address) {
   auto address_info_it = GAddressInfos.find(address);
   if (address_info_it == GAddressInfos.end()) {
@@ -195,7 +183,6 @@ LinuxAddressInfo* Capture::GetAddressInfo(uint64_t address) {
   return &address_info_it->second;
 }
 
-//-----------------------------------------------------------------------------
 void Capture::PreSave() {
   // Add selected functions' exact address to sampling profiler
   for (auto& pair : GSelectedFunctionsMap) {

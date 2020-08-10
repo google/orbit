@@ -11,7 +11,6 @@
 // clang-format on
 #include "ui_orbitglwidgetwithheader.h"
 
-//-----------------------------------------------------------------------------
 OrbitGlWidgetWithHeader::OrbitGlWidgetWithHeader(QWidget* parent)
     : QWidget(parent), ui(new Ui::OrbitGlWidgetWithHeader) {
   ui->setupUi(this);
@@ -21,13 +20,10 @@ OrbitGlWidgetWithHeader::OrbitGlWidgetWithHeader(QWidget* parent)
   ui->gridLayout_2->setMargin(0);
 }
 
-//-----------------------------------------------------------------------------
 OrbitGlWidgetWithHeader::~OrbitGlWidgetWithHeader() { delete ui; }
 
-//-----------------------------------------------------------------------------
 OrbitTreeView* OrbitGlWidgetWithHeader::GetTreeView() { return ui->treeView; }
 
-//-----------------------------------------------------------------------------
 OrbitGLWidget* OrbitGlWidgetWithHeader::GetGLWidget() {
   return ui->openGLWidget;
 }

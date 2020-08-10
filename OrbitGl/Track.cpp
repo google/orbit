@@ -10,7 +10,6 @@
 #include "TimeGraphLayout.h"
 #include "absl/strings/str_format.h"
 
-//-----------------------------------------------------------------------------
 Track::Track(TimeGraph* time_graph)
     : time_graph_(time_graph),
       collapse_toggle_(std::make_shared<TriangleToggle>(
@@ -26,7 +25,6 @@ Track::Track(TimeGraph* time_graph)
   m_Canvas = nullptr;
 }
 
-//-----------------------------------------------------------------------------
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
   std::vector<Vec2> points;
   points.emplace_back(0.f, 0.f);
@@ -43,7 +41,6 @@ std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
   return points;
 }
 
-//-----------------------------------------------------------------------------
 std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points,
                                float rotation) {
   float cos_r = cosf(kPiFloat * rotation / 180.f);
@@ -57,7 +54,6 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points,
   return result;
 }
 
-//-----------------------------------------------------------------------------
 void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
                      const Vec2& pos, const Color& color, float rotation,
                      float z) {
@@ -80,7 +76,6 @@ void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
   }
 }
 
-//-----------------------------------------------------------------------------
 void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
 
@@ -174,36 +169,30 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   m_Canvas = canvas;
 }
 
-//-----------------------------------------------------------------------------
 void Track::UpdatePrimitives(uint64_t /*t_min*/, uint64_t /*t_max*/,
                              PickingMode /*  picking_mode*/) {}
 
-//-----------------------------------------------------------------------------
 void Track::SetPos(float a_X, float a_Y) {
   if (!m_Moving) {
     m_Pos = Vec2(a_X, a_Y);
   }
 }
 
-//-----------------------------------------------------------------------------
 void Track::SetY(float y) {
   if (!m_Moving) {
     m_Pos[1] = y;
   }
 }
 
-//-----------------------------------------------------------------------------
 void Track::SetSize(float a_SizeX, float a_SizeY) {
   m_Size = Vec2(a_SizeX, a_SizeY);
 }
 
-//-----------------------------------------------------------------------------
 void Track::OnCollapseToggle(TriangleToggle::State /*state*/) {
   time_graph_->NeedsUpdate();
   time_graph_->NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void Track::OnPick(int a_X, int a_Y) {
   if (!m_PickingEnabled) return;
 
@@ -214,7 +203,6 @@ void Track::OnPick(int a_X, int a_Y) {
   m_Picked = true;
 }
 
-//-----------------------------------------------------------------------------
 void Track::OnRelease() {
   if (!m_PickingEnabled) return;
 
@@ -223,7 +211,6 @@ void Track::OnRelease() {
   time_graph_->NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void Track::OnDrag(int a_X, int a_Y) {
   if (!m_PickingEnabled) return;
 

@@ -11,7 +11,6 @@
 #include "orbittreeview.h"
 #include "ui_orbitsamplingreport.h"
 
-//-----------------------------------------------------------------------------
 OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
     : QWidget(parent), ui(new Ui::OrbitSamplingReport) {
   ui->setupUi(this);
@@ -30,10 +29,8 @@ OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
   ui->splitter->setSizes(sizes);
 }
 
-//-----------------------------------------------------------------------------
 OrbitSamplingReport::~OrbitSamplingReport() { delete ui; }
 
-//-----------------------------------------------------------------------------
 void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
                                      std::shared_ptr<SamplingReport> report) {
   ui->CallstackTreeView->Initialize(
@@ -84,21 +81,18 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitSamplingReport::on_NextCallstackButton_clicked() {
   CHECK(m_SamplingReport != nullptr);
   m_SamplingReport->IncrementCallstackIndex();
   RefreshCallstackView();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitSamplingReport::on_PreviousCallstackButton_clicked() {
   CHECK(m_SamplingReport != nullptr);
   m_SamplingReport->DecrementCallstackIndex();
   RefreshCallstackView();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitSamplingReport::RefreshCallstackView() {
   if (m_SamplingReport == nullptr) {
     return;

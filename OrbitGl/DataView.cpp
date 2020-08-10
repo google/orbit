@@ -8,7 +8,6 @@
 
 #include "App.h"
 
-//-----------------------------------------------------------------------------
 void DataView::InitSortingOrders() {
   m_SortingOrders.clear();
   for (const auto& column : GetColumns()) {
@@ -18,7 +17,6 @@ void DataView::InitSortingOrders() {
   m_SortingColumn = GetDefaultSortingColumn();
 }
 
-//-----------------------------------------------------------------------------
 void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
   if (column < 0) {
     return;
@@ -40,30 +38,25 @@ void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
   DoSort();
 }
 
-//-----------------------------------------------------------------------------
 void DataView::OnFilter(const std::string& filter) {
   m_Filter = filter;
   DoFilter();
 }
 
-//-----------------------------------------------------------------------------
 void DataView::SetUiFilterString(const std::string& filter) {
   if (filter_callback_) {
     filter_callback_(filter);
   }
 }
 
-//-----------------------------------------------------------------------------
 void DataView::OnDataChanged() {
   OnSort(m_SortingColumn, std::optional<SortingOrder>{});
   OnFilter(m_Filter);
 }
 
-//-----------------------------------------------------------------------------
 const std::string DataView::MENU_ACTION_COPY_SELECTION = "Copy Selection";
 const std::string DataView::MENU_ACTION_EXPORT_TO_CSV = "Export to CSV";
 
-//-----------------------------------------------------------------------------
 std::vector<std::string> DataView::GetContextMenu(
     int /*a_ClickedIndex*/, const std::vector<int>& /*a_SelectedIndices*/) {
   static std::vector<std::string> menu = {MENU_ACTION_COPY_SELECTION,
@@ -71,7 +64,6 @@ std::vector<std::string> DataView::GetContextMenu(
   return menu;
 }
 
-//-----------------------------------------------------------------------------
 void DataView::OnContextMenu(const std::string& a_Action, int a_MenuIndex,
                              const std::vector<int>& a_ItemIndices) {
   UNUSED(a_MenuIndex);
@@ -86,7 +78,6 @@ void DataView::OnContextMenu(const std::string& a_Action, int a_MenuIndex,
   }
 }
 
-//-----------------------------------------------------------------------------
 void DataView::ExportCSV(const std::string& a_FileName) {
   std::ofstream out(a_FileName);
   if (out.fail()) return;
@@ -110,7 +101,6 @@ void DataView::ExportCSV(const std::string& a_FileName) {
   out.close();
 }
 
-//-----------------------------------------------------------------------------
 void DataView::CopySelection(const std::vector<int>& selection) {
   std::string clipboard;
   size_t numColumns = GetColumns().size();

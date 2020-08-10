@@ -7,7 +7,6 @@
 #include "Capture.h"
 #include "ImGuiOrbit.h"
 
-//-----------------------------------------------------------------------------
 TimeGraphLayout::TimeGraphLayout() {
   m_NumCores = 0;
   m_TextBoxHeight = 20.f;
@@ -39,16 +38,13 @@ TimeGraphLayout::TimeGraphLayout() {
   time_bar_height_ = 15.f;
 };
 
-//-----------------------------------------------------------------------------
 #define FLOAT_SLIDER_MIN_MAX(x, min, max)     \
   if (ImGui::SliderFloat(#x, &x, min, max)) { \
     needs_redraw = true;                      \
   }
 
-//-----------------------------------------------------------------------------
 #define FLOAT_SLIDER(x) FLOAT_SLIDER_MIN_MAX(x, 0, 100.f)
 
-//-----------------------------------------------------------------------------
 bool TimeGraphLayout::DrawProperties() {
   ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
   ImVec2 size(400, 400);

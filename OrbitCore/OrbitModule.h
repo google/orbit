@@ -14,7 +14,6 @@
 
 class Pdb;
 
-//-----------------------------------------------------------------------------
 struct Module {
   Module(){};
   Module(const std::string& file_name, uint64_t address_start,

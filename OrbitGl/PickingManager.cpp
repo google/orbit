@@ -7,7 +7,6 @@
 #include "OpenGl.h"
 #include "OrbitBase/Logging.h"
 
-//-----------------------------------------------------------------------------
 PickingID PickingManager::CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
                                            PickingID::BatcherId batcher_id) {
   absl::MutexLock lock(&mutex_);
@@ -17,14 +16,12 @@ PickingID PickingManager::CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
   return id;
 }
 
-//-----------------------------------------------------------------------------
 void PickingManager::Reset() {
   absl::MutexLock lock(&mutex_);
   m_IdPickableMap.clear();
   m_IdCounter = 0;
 }
 
-//-----------------------------------------------------------------------------
 std::weak_ptr<Pickable> PickingManager::GetPickableFromId(uint32_t id) const {
   absl::MutexLock lock(&mutex_);
   auto it = m_IdPickableMap.find(id);
@@ -34,13 +31,11 @@ std::weak_ptr<Pickable> PickingManager::GetPickableFromId(uint32_t id) const {
   return it->second;
 }
 
-//-----------------------------------------------------------------------------
 std::weak_ptr<Pickable> PickingManager::GetPicked() const {
   absl::MutexLock lock(&mutex_);
   return m_Picked;
 }
 
-//-----------------------------------------------------------------------------
 void PickingManager::Pick(uint32_t a_Id, int a_X, int a_Y) {
   auto picked = GetPickableFromId(a_Id).lock();
   if (picked) {
@@ -51,7 +46,6 @@ void PickingManager::Pick(uint32_t a_Id, int a_X, int a_Y) {
   m_Picked = picked;
 }
 
-//-----------------------------------------------------------------------------
 void PickingManager::Release() {
   auto picked = GetPicked().lock();
   if (picked != nullptr) {
@@ -61,7 +55,6 @@ void PickingManager::Release() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void PickingManager::Drag(int a_X, int a_Y) {
   auto picked = GetPicked().lock();
   if (picked && picked->Draggable()) {
@@ -69,14 +62,12 @@ void PickingManager::Drag(int a_X, int a_Y) {
   }
 }
 
-//-----------------------------------------------------------------------------
 bool PickingManager::IsDragging() const {
   absl::MutexLock lock(&mutex_);
   auto picked = m_Picked.lock();
   return picked && picked->Draggable();
 }
 
-//-----------------------------------------------------------------------------
 Color PickingManager::GetPickableColor(std::weak_ptr<Pickable> pickable,
                                        PickingID::BatcherId batcher_id) {
   PickingID id = CreatePickableId(pickable, batcher_id);
@@ -88,7 +79,6 @@ bool PickingManager::IsThisElementPicked(const Pickable* pickable) const {
   return picked && picked.get() == pickable;
 }
 
-//-----------------------------------------------------------------------------
 Color PickingManager::ColorFromPickingID(PickingID id) const {
   static_assert(sizeof(PickingID) == 4 * sizeof(uint8_t),
                 "PickingID should be same size as 4 * uint8_t");

@@ -10,7 +10,6 @@
 
 #include "DataView.h"
 
-//-----------------------------------------------------------------------------
 class OrbitTableModel : public QAbstractTableModel {
   Q_OBJECT
  public:

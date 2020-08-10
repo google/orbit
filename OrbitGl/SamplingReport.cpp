@@ -11,7 +11,6 @@
 #include "SamplingReportDataView.h"
 #include "absl/strings/str_format.h"
 
-//-----------------------------------------------------------------------------
 SamplingReport::SamplingReport(
     std::shared_ptr<class SamplingProfiler> a_SamplingProfiler) {
   m_Profiler = std::move(a_SamplingProfiler);
@@ -23,7 +22,6 @@ SamplingReport::SamplingReport(
   FillReport();
 }
 
-//-----------------------------------------------------------------------------
 void SamplingReport::FillReport() {
   const auto& sampleData = m_Profiler->GetThreadSampleData();
 
@@ -68,7 +66,6 @@ void SamplingReport::UpdateReport() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void SamplingReport::OnSelectAddress(uint64_t a_Address, int32_t a_ThreadId) {
   if (m_CallstackDataView) {
     if (m_SelectedAddress != a_Address || m_SelectedTid != a_ThreadId) {
@@ -85,7 +82,6 @@ void SamplingReport::OnSelectAddress(uint64_t a_Address, int32_t a_ThreadId) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void SamplingReport::IncrementCallstackIndex() {
   CHECK(HasCallstacks());
   size_t maxIndex = m_SelectedSortedCallstackReport->m_CallStacks.size() - 1;
@@ -96,7 +92,6 @@ void SamplingReport::IncrementCallstackIndex() {
   OnCallstackIndexChanged(m_SelectedCallstackIndex);
 }
 
-//-----------------------------------------------------------------------------
 void SamplingReport::DecrementCallstackIndex() {
   CHECK(HasCallstacks());
   size_t maxIndex = m_SelectedSortedCallstackReport->m_CallStacks.size() - 1;
@@ -109,7 +104,6 @@ void SamplingReport::DecrementCallstackIndex() {
   OnCallstackIndexChanged(m_SelectedCallstackIndex);
 }
 
-//-----------------------------------------------------------------------------
 std::string SamplingReport::GetSelectedCallstackString() {
   if (m_SelectedSortedCallstackReport) {
     int num_occurrences =
@@ -128,7 +122,6 @@ std::string SamplingReport::GetSelectedCallstackString() {
   return "Callstacks";
 }
 
-//-----------------------------------------------------------------------------
 void SamplingReport::OnCallstackIndexChanged(size_t a_Index) {
   if (a_Index < m_SelectedSortedCallstackReport->m_CallStacks.size()) {
     CallstackCount& cs = m_SelectedSortedCallstackReport->m_CallStacks[a_Index];

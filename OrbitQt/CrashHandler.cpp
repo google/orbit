@@ -26,7 +26,6 @@ struct StringTypeConverter<std::wstring> {
 };
 }  // namespace
 
-//-----------------------------------------------------------------------------
 CrashHandler::CrashHandler(const std::string& dump_path,
                            const std::string& handler_path,
                            const std::string& crash_server_url,
@@ -63,7 +62,6 @@ CrashHandler::CrashHandler(const std::string& dump_path,
       /*asynchronous_start=*/false, attachments_paths);
 }
 
-//-----------------------------------------------------------------------------
 void CrashHandler::SetUploadsEnabled(bool is_upload_enabled) {
   // set user preferences for dumps submission to collection server
   if (crash_report_db_ != nullptr) {
@@ -74,7 +72,6 @@ void CrashHandler::SetUploadsEnabled(bool is_upload_enabled) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void CrashHandler::DumpWithoutCrash() const {
   crashpad::NativeCPUContext cpu_context;
   crashpad::CaptureContext(&cpu_context);

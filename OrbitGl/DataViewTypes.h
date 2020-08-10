@@ -4,7 +4,6 @@
 
 #pragma once
 
-//-----------------------------------------------------------------------------
 enum class DataViewType {
   FUNCTIONS,
   LIVE_FUNCTIONS,

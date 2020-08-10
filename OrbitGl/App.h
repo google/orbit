@@ -49,7 +49,6 @@
 struct CallStack;
 class Process;
 
-//-----------------------------------------------------------------------------
 class OrbitApp final : public DataViewFactory, public CaptureListener {
  public:
   OrbitApp(ApplicationOptions&& options,
@@ -309,5 +308,4 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       captured_address_infos_;
 };
 
-//-----------------------------------------------------------------------------
 extern std::unique_ptr<OrbitApp> GOrbitApp;
