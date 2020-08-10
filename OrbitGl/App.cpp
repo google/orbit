@@ -27,7 +27,6 @@
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
 #include "ImGuiOrbit.h"
-#include "Injection.h"
 #include "Introspection.h"
 #include "KeyAndString.h"
 #include "LinuxCallstackEvent.h"
@@ -46,7 +45,6 @@
 #include "SamplingReport.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
-#include "TextRenderer.h"
 #include "Utils.h"
 
 ABSL_DECLARE_FLAG(bool, devmode);

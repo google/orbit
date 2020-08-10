@@ -20,7 +20,6 @@ target_sources(
          Core.h
          EventBuffer.h
          FunctionUtils.h
-         Injection.h
          Introspection.h
          LinuxCallstackEvent.h
          LinuxTracingBuffer.h
@@ -49,7 +48,6 @@ target_sources(
           ContextSwitch.cpp
           EventBuffer.cpp
           FunctionUtils.cpp
-          Injection.cpp
           Introspection.cpp
           LinuxTracingBuffer.cpp
           Log.cpp
