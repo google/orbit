@@ -127,12 +127,6 @@ bool Capture::IsCapturing() {
   return GState == State::kStarted || GState == State::kStopping;
 }
 
-void Capture::DisplayStats() {
-  if (GSamplingProfiler) {
-    TRACE_VAR(GSamplingProfiler->GetNumSamples());
-  }
-}
-
 ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
   PresetInfo preset;
   preset.set_process_full_path(GTargetProcess->GetFullPath());

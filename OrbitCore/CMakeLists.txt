@@ -43,8 +43,7 @@ target_sources(
          SymbolHelper.h
          Threading.h
          TidAndThreadName.h
-         Utils.h
-         VariableTracing.h)
+         Utils.h)
 
 target_sources(
   OrbitCore
@@ -67,8 +66,7 @@ target_sources(
           ScopeTimer.cpp
           StringManager.cpp
           SymbolHelper.cpp
-          Utils.cpp
-          VariableTracing.cpp)
+          Utils.cpp)
 
 if(NOT WIN32)
   target_sources(

@@ -15,11 +15,11 @@
 #include "Log.h"
 #include "OpenGl.h"
 #include "Pdb.h"
+#include "PrintVar.h"
 #include "RingBuffer.h"
 #include "SamplingProfiler.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
-#include "VariableTracing.h"
 #include "absl/strings/str_format.h"
 
 RingBuffer<float, 512> GDeltaTimeBuffer;
@@ -325,8 +325,6 @@ void GlCanvas::prepare2DViewport(int topleft_x, int topleft_y,
   m_WorldHeight = m_Height;
 
   UpdateSceneBox();
-
-  Capture::DisplayStats();
 
   // TRACE_VAR( m_ScreenClickY );
   // TRACE_VAR( GPdbDbg->GetFunctions().size() );
