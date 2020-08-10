@@ -67,8 +67,6 @@ void ClientGgp::RequestStartCapture() {
   std::map<uint64_t, orbit_client_protos::FunctionInfo*> selected_functions =
       Capture::GSelectedFunctionsMap;
   capture_client_->Capture(pid, selected_functions);
-  
-  LOG("Start capture requested");
 }
 
 void ClientGgp::StopCapture() {
@@ -95,9 +93,13 @@ std::shared_ptr<Process> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
 }
 
 // CaptureListener implementation
-void ClientGgp::OnCaptureStarted() {}
+void ClientGgp::OnCaptureStarted() {
+  LOG("Capture started");
+}
 
-void ClientGgp::OnCaptureComplete() {}
+void ClientGgp::OnCaptureComplete() {
+  LOG("Capture completed");
+}
 
 void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   (void)timer_info;
