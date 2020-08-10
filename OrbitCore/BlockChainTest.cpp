@@ -182,7 +182,7 @@ TEST(BlockChain, keep) {
   EXPECT_EQ(chain.size(), 2000);
   chain.keep(10);
   EXPECT_EQ(chain.size(), 2000 - 1024);
-  for (int i = 0; i < chain.size(); ++i) {
+  for (size_t i = 0; i < chain.size(); ++i) {
     EXPECT_EQ(*chain.SlowAt(i), i + 1024);
   }
 }

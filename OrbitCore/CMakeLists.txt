@@ -123,6 +123,8 @@ target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/OrbitVersion.cpp")
 
 add_executable(OrbitCoreTests)
 
+target_compile_options(OrbitCoreTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
 target_sources(OrbitCoreTests PRIVATE
     BlockChainTest.cpp
     LinuxTracingBufferTest.cpp

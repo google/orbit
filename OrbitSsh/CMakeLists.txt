@@ -55,6 +55,7 @@ endif()
 
 # tests
 add_executable(OrbitSshTests)
+target_compile_options(OrbitSshTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitSshTests PRIVATE SocketTests.cpp ContextTests.cpp)
 

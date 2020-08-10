@@ -64,6 +64,8 @@ target_link_libraries(OrbitLinuxTracing PUBLIC
 
 add_executable(OrbitLinuxTracingTests)
 
+target_compile_options(OrbitLinuxTracingTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
 if (NOT WIN32)
     target_sources(OrbitLinuxTracingTests PRIVATE
             ContextSwitchManagerTest.cpp
