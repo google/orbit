@@ -28,7 +28,6 @@ target_sources(
           orbittablemodel.h
           orbittreeview.h
           opengldetect.h
-          outputdialog.h
           processlauncherwidget.h
           resource.h
           servicedeploymanager.h
@@ -58,7 +57,6 @@ target_sources(
           orbittablemodel.cpp
           orbittreeview.cpp
           opengldetect.cpp
-          outputdialog.cpp
           processlauncherwidget.cpp
           servicedeploymanager.cpp
           TopDownViewItemModel.cpp

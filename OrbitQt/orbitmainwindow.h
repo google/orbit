@@ -109,7 +109,6 @@ class OrbitMainWindow : public QMainWindow {
   QLineEdit* filter_functions_line_edit_ = nullptr;
   QLineEdit* filter_tracks_line_edit_ = nullptr;
 
-  class OutputDialog* m_OutputDialog;
   std::string m_CurrentPdbName;
   bool m_IsDev;
 };
