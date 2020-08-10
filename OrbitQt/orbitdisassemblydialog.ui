@@ -10,10 +10,7 @@
     <height>493</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>Dialog</string>
-  </property>
-  <layout class="QGridLayout" name="gridLayout">
+  <layout class="QGridLayout">
    <item row="0" column="0">
     <widget class="OrbitCodeEditor" name="plainTextEdit"/>
    </item>
