@@ -5,5 +5,3 @@
 #include "Params.h"
 
 Params GParams;
-
-Params::Params() {}
