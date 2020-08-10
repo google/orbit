@@ -592,8 +592,12 @@ void OrbitApp::StopCapture() {
 
 void OrbitApp::ClearCapture() {
   Capture::ClearCaptureData();
-  Capture::GClearCaptureDataFunc();
-  GCurrentTimeGraph->Clear();
+
+  if (GCurrentTimeGraph) {
+    GCurrentTimeGraph->Clear();
+  }
+  GOrbitApp->FireRefreshCallbacks(DataViewType::LIVE_FUNCTIONS);
+
   if (capture_cleared_callback_) {
     capture_cleared_callback_();
   }
@@ -639,7 +643,6 @@ void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
     }
   });
 }
-
 
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {
