@@ -10,7 +10,6 @@
 
 #include "Batcher.h"
 #include "OpenGl.h"
-#include "Platform.h"
 #include "TextBox.h"
 
 namespace ftgl {

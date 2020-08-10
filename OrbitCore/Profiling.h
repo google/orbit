@@ -6,7 +6,6 @@
 #define ORBIT_CORE_PROFILING_H_
 
 #include "BaseTypes.h"
-#include "Platform.h"
 #include "Utils.h"
 
 typedef uint64_t TickType;
