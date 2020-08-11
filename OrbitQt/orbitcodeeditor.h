@@ -86,7 +86,6 @@ class OrbitCodeEditor : public QPlainTextEdit {
   void loadFileMap();
   void saveFileMap();
   void gotoLine(int a_Line);
-  void OnTimer();
   void SetText(std::string a_Text);
   void SetReport(std::unique_ptr<CodeReport> report) {
     report_ = std::move(report);
@@ -103,7 +102,6 @@ class OrbitCodeEditor : public QPlainTextEdit {
   void SetEditorType(EditorType a_Type);
   void SetFindLineEdit(class QLineEdit* a_Find);
   void SetSaveButton(class QPushButton* a_Button);
-  void SetIsOutputWindow() { m_IsOutput = true; }
 
  protected:
   void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE;
@@ -126,7 +124,6 @@ class OrbitCodeEditor : public QPlainTextEdit {
   class QLineEdit* m_FindLineEdit;
   class QPushButton* m_SaveButton;
   EditorType m_Type;
-  bool m_IsOutput;
   std::unique_ptr<CodeReport> report_;
 
   static OrbitCodeEditor* GFileMapEditor;

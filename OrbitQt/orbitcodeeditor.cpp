@@ -61,7 +61,6 @@
 #include <QtWidgets>
 #include <fstream>
 
-#include "../OrbitCore/LogInterface.h"
 #include "../OrbitCore/Path.h"
 #include "../OrbitCore/PrintVar.h"
 #include "../OrbitCore/Utils.h"
@@ -111,7 +110,6 @@ OrbitCodeEditor::OrbitCodeEditor(QWidget* parent) : QPlainTextEdit(parent) {
 
   m_FindLineEdit = nullptr;
   m_SaveButton = nullptr;
-  m_IsOutput = false;
 }
 
 void OrbitCodeEditor::SetEditorType(EditorType a_Type) {
@@ -231,18 +229,6 @@ void OrbitCodeEditor::gotoLine(int a_Line) {
 
   text_cursor.clearSelection();
   setTextCursor(text_cursor);
-}
-
-void OrbitCodeEditor::OnTimer() {
-  if (m_IsOutput && isVisible()) {
-    std::vector<std::string> outputEntries = LogInterface::GetOutput();
-    for (std::string& line : outputEntries) {
-      QTextCursor prev_cursor = textCursor();
-      moveCursor(QTextCursor::End);
-      insertPlainText(line.c_str());
-      setTextCursor(prev_cursor);
-    }
-  }
 }
 
 void OrbitCodeEditor::SetText(std::string a_Text) {

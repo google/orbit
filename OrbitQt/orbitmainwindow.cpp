@@ -182,8 +182,6 @@ OrbitMainWindow::OrbitMainWindow(
   SetupCodeView();
 
   if (!absl::GetFlag(FLAGS_enable_stale_features)) {
-    ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->OutputTab));
-
     ui->RightTabWidget->removeTab(
         ui->RightTabWidget->indexOf(ui->CallStackTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
@@ -194,9 +192,6 @@ OrbitMainWindow::OrbitMainWindow(
   }
 
   SetupCaptureToolbar();
-
-  // Output window
-  this->ui->plainTextEdit->SetIsOutputWindow();
 
   StartMainTimer();
 
@@ -523,9 +518,6 @@ void OrbitMainWindow::OnTimer() {
   for (OrbitGLWidget* glWidget : m_GlWidgets) {
     glWidget->update();
   }
-
-  // Output window
-  this->ui->plainTextEdit->OnTimer();
 
   if (timer_label_) {
     timer_label_->setText(QString::fromStdString(GOrbitApp->GetCaptureTime()));
