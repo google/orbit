@@ -9,6 +9,8 @@
 
 namespace LinuxTracing {
 
+using orbit_grpc_protos::SchedulingSlice;
+
 TEST(ContextSwitchManager, OneCoreMatch) {
   constexpr pid_t kPid = 42;
   constexpr pid_t kTid = 43;

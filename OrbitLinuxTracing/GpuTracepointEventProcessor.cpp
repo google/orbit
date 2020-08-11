@@ -10,6 +10,8 @@
 
 namespace LinuxTracing {
 
+using orbit_grpc_protos::GpuJob;
+
 int GpuTracepointEventProcessor::ComputeDepthForEvent(
     const std::string& timeline, uint64_t start_timestamp,
     uint64_t end_timestamp) {

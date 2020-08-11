@@ -9,6 +9,9 @@
 
 namespace orbit_service {
 
+using orbit_grpc_protos::CaptureRequest;
+using orbit_grpc_protos::CaptureResponse;
+
 grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerContext*,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {

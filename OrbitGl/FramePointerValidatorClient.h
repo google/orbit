@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_FRAME_POINTER_VALIDATOR_CLIENT_H_
-#define ORBIT_CORE_FRAME_POINTER_VALIDATOR_CLIENT_H_
+#ifndef ORBIT_GL_FRAME_POINTER_VALIDATOR_CLIENT_H_
+#define ORBIT_GL_FRAME_POINTER_VALIDATOR_CLIENT_H_
 
 #include "OrbitModule.h"
 #include "grpcpp/grpcpp.h"
@@ -35,8 +35,8 @@ class FramePointerValidatorClient {
 
  private:
   OrbitApp* app_;
-  std::unique_ptr<FramePointerValidatorService::Stub>
+  std::unique_ptr<orbit_grpc_protos::FramePointerValidatorService::Stub>
       frame_pointer_validator_service_;
 };
 
-#endif  // ORBIT_CORE_FRAME_POINTER_VALIDATOR_CLIENT_H_
+#endif  // ORBIT_GL_FRAME_POINTER_VALIDATOR_CLIENT_H_

@@ -14,6 +14,11 @@
 
 namespace LinuxTracing {
 
+using orbit_grpc_protos::CaptureOptions;
+using orbit_grpc_protos::CaptureOptions_InstrumentedFunction;
+using orbit_grpc_protos::SchedulingSlice;
+using orbit_grpc_protos::ThreadName;
+
 TracerThread::TracerThread(const CaptureOptions& capture_options)
     : trace_context_switches_{capture_options.trace_context_switches()},
       pid_{capture_options.pid()},

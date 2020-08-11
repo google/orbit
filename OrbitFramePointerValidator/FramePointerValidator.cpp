@@ -10,6 +10,8 @@
 #include "OrbitBase/UniqueResource.h"
 #include "include/OrbitFramePointerValidator/FunctionFramePointerValidator.h"
 
+using orbit_grpc_protos::CodeBlock;
+
 std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
     const std::vector<CodeBlock>& functions, const std::string& file_name,
     bool is_64_bit) {

@@ -39,6 +39,12 @@
 ABSL_DECLARE_FLAG(bool, enable_stale_features);
 ABSL_DECLARE_FLAG(bool, devmode);
 
+using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
+using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
+using orbit_grpc_protos::
+    CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE;
+using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
+
 extern QMenu* GContextMenu;
 
 OrbitMainWindow::OrbitMainWindow(

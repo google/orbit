@@ -49,6 +49,10 @@ using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetInfo;
 using orbit_client_protos::TimerInfo;
 
+using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
+using orbit_grpc_protos::ModuleInfo;
+using orbit_grpc_protos::ProcessInfo;
+
 std::unique_ptr<OrbitApp> GOrbitApp;
 bool DoZoom = false;
 

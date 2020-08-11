@@ -9,6 +9,11 @@
 
 namespace {
 
+using orbit_grpc_protos::CrashOrbitServiceRequest;
+using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
+using orbit_grpc_protos::CrashOrbitServiceResponse;
+using orbit_grpc_protos::CrashService;
+
 constexpr uint64_t kTimeoutMilliseconds = 100;
 
 class CrashManagerImpl final : public CrashManager {

@@ -20,6 +20,9 @@ namespace ElfUtils {
 
 namespace {
 
+using orbit_grpc_protos::ModuleSymbols;
+using orbit_grpc_protos::SymbolInfo;
+
 template <typename ElfT>
 class ElfFileImpl : public ElfFile {
  public:

@@ -4,6 +4,8 @@
 
 syntax = "proto3";
 
+package orbit_grpc_protos;
+
 message ProcessInfo {
   int32 pid = 1;
   string name = 2;

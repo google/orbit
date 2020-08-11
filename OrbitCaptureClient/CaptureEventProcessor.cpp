@@ -10,6 +10,17 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TimerInfo;
 
+using orbit_grpc_protos::AddressInfo;
+using orbit_grpc_protos::Callstack;
+using orbit_grpc_protos::CallstackSample;
+using orbit_grpc_protos::CaptureEvent;
+using orbit_grpc_protos::FunctionCall;
+using orbit_grpc_protos::GpuJob;
+using orbit_grpc_protos::InternedCallstack;
+using orbit_grpc_protos::InternedString;
+using orbit_grpc_protos::SchedulingSlice;
+using orbit_grpc_protos::ThreadName;
+
 void CaptureEventProcessor::ProcessEvent(const CaptureEvent& event) {
   switch (event.event_case()) {
     case CaptureEvent::kSchedulingSlice:

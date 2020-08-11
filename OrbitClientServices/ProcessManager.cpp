@@ -16,6 +16,18 @@
 
 namespace {
 
+using orbit_grpc_protos::GetDebugInfoFileRequest;
+using orbit_grpc_protos::GetDebugInfoFileResponse;
+using orbit_grpc_protos::GetModuleListRequest;
+using orbit_grpc_protos::GetModuleListResponse;
+using orbit_grpc_protos::GetProcessListRequest;
+using orbit_grpc_protos::GetProcessListResponse;
+using orbit_grpc_protos::GetProcessMemoryRequest;
+using orbit_grpc_protos::GetProcessMemoryResponse;
+using orbit_grpc_protos::ModuleInfo;
+using orbit_grpc_protos::ProcessInfo;
+using orbit_grpc_protos::ProcessService;
+
 constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 1000;
 
 class ProcessManagerImpl final : public ProcessManager {

@@ -4,6 +4,8 @@
 
 syntax = "proto3";
 
+package orbit_grpc_protos;
+
 message CodeBlock {
   uint64 offset = 1;
   uint64 size = 2;

@@ -8,6 +8,11 @@
 
 namespace LinuxTracing {
 
+using orbit_grpc_protos::AddressInfo;
+using orbit_grpc_protos::Callstack;
+using orbit_grpc_protos::CallstackSample;
+using orbit_grpc_protos::FunctionCall;
+
 void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
 

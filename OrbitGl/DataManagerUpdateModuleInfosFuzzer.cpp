@@ -22,6 +22,10 @@ ABSL_FLAG(uint16_t, sampling_rate, 1000,
 ABSL_FLAG(bool, frame_pointer_unwinding, false,
           "Use frame pointers for unwinding");
 
+using orbit_grpc_protos::GetModuleListResponse;
+using orbit_grpc_protos::ModuleInfo;
+using orbit_grpc_protos::ProcessInfo;
+
 DEFINE_PROTO_FUZZER(const GetModuleListResponse& module_list) {
   const auto range = module_list.modules();
   std::vector<ModuleInfo> modules{range.begin(), range.end()};

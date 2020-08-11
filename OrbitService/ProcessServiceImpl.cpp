@@ -18,6 +18,16 @@ using grpc::ServerContext;
 using grpc::Status;
 using grpc::StatusCode;
 
+using orbit_grpc_protos::GetDebugInfoFileRequest;
+using orbit_grpc_protos::GetDebugInfoFileResponse;
+using orbit_grpc_protos::GetModuleListRequest;
+using orbit_grpc_protos::GetModuleListResponse;
+using orbit_grpc_protos::GetProcessListRequest;
+using orbit_grpc_protos::GetProcessListResponse;
+using orbit_grpc_protos::GetProcessMemoryRequest;
+using orbit_grpc_protos::GetProcessMemoryResponse;
+using orbit_grpc_protos::ProcessInfo;
+
 Status ProcessServiceImpl::GetProcessList(ServerContext*,
                                           const GetProcessListRequest*,
                                           GetProcessListResponse* response) {
@@ -83,8 +93,8 @@ Status ProcessServiceImpl::GetProcessMemory(
 }
 
 Status ProcessServiceImpl::GetDebugInfoFile(
-    ::grpc::ServerContext*, const ::GetDebugInfoFileRequest* request,
-    ::GetDebugInfoFileResponse* response) {
+    ::grpc::ServerContext*, const GetDebugInfoFileRequest* request,
+    GetDebugInfoFileResponse* response) {
   const SymbolHelper symbol_helper;
   ErrorMessageOr<std::string> result = symbol_helper.FindDebugSymbolsFile(
       request->module_path(), request->build_id());

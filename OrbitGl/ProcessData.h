@@ -21,10 +21,10 @@ class ProcessData final {
   ProcessData(ProcessData&&) = default;
   ProcessData& operator=(ProcessData&&) = default;
 
-  explicit ProcessData(ProcessInfo process_info)
+  explicit ProcessData(orbit_grpc_protos::ProcessInfo process_info)
       : process_info_(std::move(process_info)) {}
 
-  void SetProcessInfo(const ProcessInfo& process_info) {
+  void SetProcessInfo(const orbit_grpc_protos::ProcessInfo& process_info) {
     process_info_ = process_info;
   }
 
@@ -37,9 +37,10 @@ class ProcessData final {
   }
   bool is_64_bit() const { return process_info_.is_64_bit(); }
 
-  void UpdateModuleInfos(const std::vector<ModuleInfo>& module_infos) {
+  void UpdateModuleInfos(
+      const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
     current_module_list_.clear();
-    for (const ModuleInfo& info : module_infos) {
+    for (const orbit_grpc_protos::ModuleInfo& info : module_infos) {
       uint64_t module_id = info.address_start();
       auto it = modules_.find(module_id);
       if (it != modules_.end()) {
@@ -68,7 +69,7 @@ class ProcessData final {
   }
 
  private:
-  ProcessInfo process_info_;
+  orbit_grpc_protos::ProcessInfo process_info_;
 
   // This list omits unloaded modules, note that they are still stored
   // in the map.

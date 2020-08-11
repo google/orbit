@@ -4,6 +4,7 @@
 
 #ifndef SYMBOL_HELPER_H_
 #define SYMBOL_HELPER_H_
+
 #include <string>
 #include <vector>
 
@@ -18,12 +19,14 @@ class SymbolHelper {
       : collector_symbol_directories_(std::move(collector_symbol_directories)),
         symbols_file_directories_(std::move(symbols_file_directories)){};
 
-  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsCollector(
-      const std::string& module_path) const;
-  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadUsingSymbolsPathFile(
-      const std::string& module_path, const std::string& build_id) const;
-  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromFile(
-      const std::string& file_path, const std::string& build_id) const;
+  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
+  LoadSymbolsCollector(const std::string& module_path) const;
+  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
+  LoadUsingSymbolsPathFile(const std::string& module_path,
+                           const std::string& build_id) const;
+  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
+  LoadSymbolsFromFile(const std::string& file_path,
+                      const std::string& build_id) const;
 
   [[nodiscard]] ErrorMessageOr<std::string> FindDebugSymbolsFile(
       const std::string& module_path, const std::string& build_id) const;

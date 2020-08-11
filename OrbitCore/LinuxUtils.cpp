@@ -26,6 +26,7 @@
 namespace LinuxUtils {
 
 using ::ElfUtils::ElfFile;
+using orbit_grpc_protos::ModuleInfo;
 
 outcome::result<std::vector<std::string>> ReadProcMaps(pid_t pid) {
   std::filesystem::path maps_path{absl::StrFormat("/proc/%d/maps", pid)};

@@ -16,10 +16,12 @@
 // Represents information about module on the client
 class ModuleData final {
  public:
-  explicit ModuleData(ModuleInfo info)
+  explicit ModuleData(orbit_grpc_protos::ModuleInfo info)
       : module_info_(std::move(info)), is_loaded_(false) {}
 
-  void SetModuleInfo(const ModuleInfo& info) { module_info_ = info; }
+  void SetModuleInfo(const orbit_grpc_protos::ModuleInfo& info) {
+    module_info_ = info;
+  }
 
   const std::string& name() const { return module_info_.name(); }
   const std::string& file_path() const { return module_info_.file_path(); }
@@ -36,7 +38,7 @@ class ModuleData final {
   bool is_loaded() const { return is_loaded_; }
 
  private:
-  ModuleInfo module_info_;
+  orbit_grpc_protos::ModuleInfo module_info_;
   bool is_loaded_;
 };
 
