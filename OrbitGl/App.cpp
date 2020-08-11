@@ -368,9 +368,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 }
 
 void OrbitApp::OnExit() {
-  if (Capture::GState == Capture::State::kStarted) {
-    StopCapture();
-  }
+  StopCapture();
 
   process_manager_->Shutdown();
   thread_pool_->ShutdownAndWait();
@@ -560,11 +558,7 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
   }
 }
 
-bool OrbitApp::IsCapturing() const { return Capture::IsCapturing(); }
-
 bool OrbitApp::StartCapture() {
-  CHECK(!Capture::IsCapturing());
-
   ErrorMessageOr<void> result = Capture::StartCapture();
   if (result.has_error()) {
     SendErrorToUi("Error starting capture", result.error().message());
@@ -574,22 +568,27 @@ bool OrbitApp::StartCapture() {
   int32_t pid = Capture::GTargetProcess->GetID();
   std::map<uint64_t, FunctionInfo*> selected_functions =
       Capture::GSelectedFunctionsMap;
-  thread_pool_->Schedule([this, pid, selected_functions] {
-    capture_client_->Capture(pid, selected_functions);
-  });
+
+  result = capture_client_->StartCapture(thread_pool_.get(), pid,
+                                         selected_functions);
+
+  if (!result) {
+    SendErrorToUi("Error starting capture", result.error().message());
+    return false;
+  }
 
   return true;
 }
 
 void OrbitApp::StopCapture() {
-  CHECK(Capture::GState == Capture::State::kStarted);
-  Capture::StopCapture();
-
-  capture_client_->StopCapture();
+  if (!capture_client_->StopCapture()) {
+    return;
+  }
 
   if (capture_stop_requested_callback_) {
     capture_stop_requested_callback_();
   }
+
   FireRefreshCallbacks();
 }
 
@@ -613,10 +612,9 @@ void OrbitApp::ToggleDrawHelp() {
 }
 
 void OrbitApp::ToggleCapture() {
-  if (Capture::GState == Capture::State::kStarted) {
+  if (IsCapturing()) {
     StopCapture();
-  } else if (Capture::GState == Capture::State::kDone ||
-             Capture::GState == Capture::State::kEmpty) {
+  } else {
     StartCapture();
   }
 }
@@ -968,3 +966,5 @@ void OrbitApp::CrashOrbitService(
         [crash_type, this] { crash_manager_->CrashOrbitService(crash_type); });
   }
 }
+
+bool OrbitApp::IsCapturing() const { return capture_client_->IsCapturing(); }

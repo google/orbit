@@ -84,7 +84,7 @@ void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
 
   // Pan
   if (a_Left && !m_ImguiActive && !m_PickingManager.IsDragging() &&
-      !Capture::IsCapturing()) {
+      !GOrbitApp->IsCapturing()) {
     float worldMin;
     float worldMax;
 
@@ -515,7 +515,7 @@ void CaptureWindow::Draw() {
   m_WorldMaxY =
       1.5f * ScreenToWorldHeight(static_cast<int>(slider_->GetPixelHeight()));
 
-  if (Capture::IsCapturing()) {
+  if (GOrbitApp->IsCapturing()) {
     ZoomAll();
   }
 
@@ -569,7 +569,7 @@ void CaptureWindow::DrawScreenSpace() {
     double width = stop - start;
     double maxStart = timeSpan - width;
     double ratio =
-        Capture::IsCapturing() ? 1 : (maxStart != 0 ? start / maxStart : 0);
+        GOrbitApp->IsCapturing() ? 1 : (maxStart != 0 ? start / maxStart : 0);
     float slider_width = layout.GetSliderWidth();
     slider_->SetPixelHeight(slider_width);
     slider_->SetSliderRatio(static_cast<float>(ratio));

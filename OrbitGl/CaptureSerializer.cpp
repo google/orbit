@@ -262,8 +262,6 @@ ErrorMessageOr<void> CaptureSerializer::Load(std::istream& stream) {
     time_graph_->ProcessTimer(timer_info);
   }
 
-  Capture::GState = Capture::State::kDone;
-
   GOrbitApp->AddSamplingReport(Capture::GSamplingProfiler);
   GOrbitApp->AddTopDownView(*Capture::GSamplingProfiler);
   GOrbitApp->FireRefreshCallbacks();

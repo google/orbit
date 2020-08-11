@@ -951,7 +951,7 @@ void TimeGraph::SortTracks() {
   }
 
   // Reorder threads once every second when capturing
-  if (!Capture::IsCapturing() || m_LastThreadReorder.QueryMillis() > 1000.0) {
+  if (!GOrbitApp->IsCapturing() || m_LastThreadReorder.QueryMillis() > 1000.0) {
     std::vector<ThreadID> sortedThreadIds;
 
     // Show threads with instrumented functions first
