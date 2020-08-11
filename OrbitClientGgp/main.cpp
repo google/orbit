@@ -6,7 +6,6 @@
 #include "absl/flags/parse.h"
 
 #include "ClientGgp.h"
-#include "OrbitBase/ThreadPool.h"
 
 ABSL_FLAG(uint64_t, grpc_port, 44765, "Grpc service's port");
 ABSL_FLAG(int32_t, pid, 0, "pid to capture");
@@ -18,17 +17,15 @@ ABSL_FLAG(bool, frame_pointer_unwinding, false,
 
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
-  uint64_t grpc_port_ = absl::GetFlag(FLAGS_grpc_port);
+  uint64_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
   uint32_t capture_length = absl::GetFlag(FLAGS_capture_length);
   
   if (!absl::GetFlag(FLAGS_pid)) {
-    ERROR("pid to capture not provided; set using -pid");
-    return -1;
+    FATAL("pid to capture not provided; set using -pid");
   }
 
   ClientGgpOptions options;
-  options.grpc_server_address = 
-        absl::StrFormat("127.0.0.1:%d", grpc_port_);
+  options.grpc_server_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
   options.capture_pid = absl::GetFlag(FLAGS_pid);
 
   ClientGgp client_ggp(std::move(options));
@@ -36,28 +33,28 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  LOG("Lets start the capture");
+  LOG("Let's start the capture");
 
   if(!client_ggp.PrepareStartCapture()){
     return -1;
   }
 
-  std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
+  std::thread client_thread;
 
   // The request is done in a separate thread to avoid blocking main()
-  thread_pool->Schedule([&]() {
+  client_thread = std::thread([&]() {
     client_ggp.RequestStartCapture();
   });
 
   LOG("Go to sleep");
   // Captures for the period of time requested
-  sleep(capture_length);
+  absl::SleepFor(absl::Seconds(capture_length));
   LOG("Back from sleep");
 
   client_ggp.StopCapture();
 
-  LOG("Shuting down the thread pool");
-  thread_pool->ShutdownAndWait();
+  LOG("Shut down the thread and wait for it to finish");
+  client_thread.join();
 
   //TODO: process/save capture data
   
