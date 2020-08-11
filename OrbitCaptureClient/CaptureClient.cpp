@@ -25,6 +25,23 @@ IntrumentedFunctionTypeFromOrbitType(FunctionInfo::OrbitType orbit_type) {
   }
 }
 
+ErrorMessageOr<void> CaptureClient::StartCapture(
+    ThreadPool* thread_pool, int32_t pid,
+    const std::map<uint64_t, FunctionInfo*>& selected_functions) {
+  absl::MutexLock lock(&state_mutex_);
+  if (state_ != State::kStopped) {
+    return ErrorMessage(
+        "Capture cannot be started, the previous capture is still "
+        "running/stopping.");
+  }
+
+  state_ = State::kStarting;
+  thread_pool->Schedule(
+      [this, pid, selected_functions]() { Capture(pid, selected_functions); });
+
+  return outcome::success();
+}
+
 void CaptureClient::Capture(
     int32_t pid, const std::map<uint64_t, FunctionInfo*>& selected_functions) {
   CHECK(reader_writer_ == nullptr);
@@ -72,10 +89,14 @@ void CaptureClient::Capture(
   LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start "
       "capturing");
 
+  state_mutex_.Lock();
+  state_ = State::kStarted;
+  state_mutex_.Unlock();
+
   capture_listener_->OnCaptureStarted();
 
   CaptureResponse response;
-  while (reader_writer_->Read(&response)) {
+  while (!force_stop_ && reader_writer_->Read(&response)) {
     event_processor_->ProcessEvents(response.capture_events());
   }
   LOG("Finished reading from Capture's gRPC stream: all capture data has been "
@@ -85,14 +106,38 @@ void CaptureClient::Capture(
   FinishCapture();
 }
 
-void CaptureClient::StopCapture() {
+bool CaptureClient::StopCapture() {
+  absl::MutexLock lock(&state_mutex_);
+  if (state_ == State::kStarting) {
+    // Block and wait until the state is not kStarting
+    bool (*IsNotStarting)(State * state) = [](State* state) {
+      return *state != State::kStarting;
+    };
+    state_mutex_.Await(absl::Condition(IsNotStarting, &state_));
+  }
+
+  if (state_ != State::kStarted) {
+    LOG("StopCapture ignored, because it is already stopping or stopped");
+    return false;
+  }
+
   CHECK(reader_writer_ != nullptr);
 
   if (!reader_writer_->WritesDone()) {
-    ERROR("Finishing writing on Capture's gRPC stream");
-    FinishCapture();
+    // Normally the capture thread waits until service stops sending messages,
+    // but in this case since we failed to notify the service we pull emergency
+    // stop plug. Setting this flag forces capture thread to exit as soon
+    // as it notices that it was set.
+    ERROR(
+        "WritesDone on Capture's gRPC stream failed: unable to finish the "
+        "capture in orderly manner, initiating emergency stop");
+    force_stop_ = true;
+  } else {
+    LOG("Finished writing on Capture's gRPC stream: asking to stop capturing");
   }
-  LOG("Finished writing on Capture's gRPC stream: asking to stop capturing");
+
+  state_ = State::kStopping;
+  return true;
 }
 
 void CaptureClient::FinishCapture() {
@@ -106,4 +151,7 @@ void CaptureClient::FinishCapture() {
   }
   reader_writer_.reset();
   event_processor_.reset();
+
+  absl::MutexLock lock(&state_mutex_);
+  state_ = State::kStopped;
 }

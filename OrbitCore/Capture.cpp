@@ -19,8 +19,6 @@ using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetInfo;
 
-Capture::State Capture::GState = Capture::State::kEmpty;
-
 CaptureData Capture::capture_data_;
 std::map<uint64_t, FunctionInfo*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, FunctionInfo*> Capture::GVisibleFunctionsMap;
@@ -56,19 +54,13 @@ ErrorMessageOr<void> Capture::StartCapture() {
   Capture::GSamplingProfiler =
       std::make_shared<SamplingProfiler>(Capture::GTargetProcess);
 
-  GState = State::kStarted;
-
   return outcome::success();
 }
-
-void Capture::StopCapture() { GState = State::kStopping; }
 
 void Capture::FinalizeCapture() {
   if (Capture::GSamplingProfiler != nullptr) {
     Capture::GSamplingProfiler->ProcessSamples();
   }
-
-  GState = State::kDone;
 }
 
 void Capture::ClearCaptureData() {
@@ -95,10 +87,6 @@ std::vector<std::shared_ptr<FunctionInfo>> Capture::GetSelectedFunctions() {
     }
   }
   return selected_functions;
-}
-
-bool Capture::IsCapturing() {
-  return GState == State::kStarted || GState == State::kStopping;
 }
 
 ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {

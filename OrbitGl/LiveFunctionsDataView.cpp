@@ -305,7 +305,7 @@ void LiveFunctionsDataView::OnDataChanged() {
 }
 
 void LiveFunctionsDataView::OnTimer() {
-  if (Capture::IsCapturing()) {
+  if (GOrbitApp->IsCapturing()) {
     OnSort(m_SortingColumn, {});
   }
 }

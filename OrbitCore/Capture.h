@@ -24,24 +24,19 @@ struct CallStack;
 
 class Capture {
  public:
-  enum class State { kEmpty = 0, kStarted, kStopping, kDone };
 
   static void Init();
   static void SetTargetProcess(const std::shared_ptr<Process>& a_Process);
   static ErrorMessageOr<void> StartCapture();
-  static void StopCapture();
   static void FinalizeCapture();
   static void ClearCaptureData();
   static std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
   GetSelectedFunctions();
   static void PreFunctionHooks();
-  static bool IsCapturing();
   static ErrorMessageOr<void> SavePreset(const std::string& filename);
   static void PreSave();
 
   static CaptureData capture_data_;
-
-  static State GState;
 
   static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
   static std::shared_ptr<Process> GTargetProcess;
