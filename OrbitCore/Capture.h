@@ -52,14 +52,11 @@ class Capture {
       GSelectedFunctionsMap;
   static std::map<uint64_t, orbit_client_protos::FunctionInfo*>
       GVisibleFunctionsMap;
-  static int32_t GProcessId;
-  static std::string GProcessName;
   static std::unordered_map<int32_t, std::string> GThreadNames;
   static std::unordered_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
       GAddressInfos;
   static class TextBox* GSelectedTextBox;
   static ThreadID GSelectedThreadId;
-  static std::chrono::system_clock::time_point GCaptureTimePoint;
 };
 
 #endif  // ORBIT_CORE_CAPTURE_H_
