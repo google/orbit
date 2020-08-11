@@ -899,8 +899,6 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(
   return track;
 }
 
-<<<<<<< HEAD
-=======
 //-----------------------------------------------------------------------------
 static void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track,
                                          uint64_t string_address,
@@ -939,7 +937,6 @@ GraphTrack* TimeGraph::GetOrCreateGraphTrack(
 }
 
 //-----------------------------------------------------------------------------
->>>>>>> a478d791... Manual Instrumentation UI.
 void TimeGraph::SetThreadFilter(const std::string& a_Filter) {
   m_ThreadFilter = a_Filter;
   NeedsUpdate();
