@@ -371,9 +371,9 @@ bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
       "task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
       &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 
-  tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
+  /*tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
       "sched", "sched_switch", cpus, &tracing_fds_, &sched_switch_ids_,
-      &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+      &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);*/
 
   return !tracepoint_event_open_errors;
 }
