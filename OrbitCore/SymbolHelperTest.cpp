@@ -12,6 +12,8 @@
 #include "absl/strings/ascii.h"
 #include "symbol.pb.h"
 
+using orbit_grpc_protos::ModuleSymbols;
+
 const std::string executable_directory =
     Path::GetExecutablePath() + "testdata/";
 

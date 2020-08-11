@@ -21,7 +21,7 @@ namespace LinuxTracing {
 
 class Tracer {
  public:
-  explicit Tracer(CaptureOptions capture_options)
+  explicit Tracer(orbit_grpc_protos::CaptureOptions capture_options)
       : capture_options_{std::move(capture_options)} {}
 
   ~Tracer() { Stop(); }
@@ -50,7 +50,7 @@ class Tracer {
   }
 
  private:
-  CaptureOptions capture_options_;
+  orbit_grpc_protos::CaptureOptions capture_options_;
 
   TracerListener* listener_ = nullptr;
 
@@ -61,7 +61,7 @@ class Tracer {
       std::make_unique<std::atomic<bool>>(true);
   std::shared_ptr<std::thread> thread_;
 
-  static void Run(const CaptureOptions& capture_options,
+  static void Run(const orbit_grpc_protos::CaptureOptions& capture_options,
                   TracerListener* listener,
                   const std::shared_ptr<std::atomic<bool>>& exit_requested);
 };

@@ -13,6 +13,10 @@ ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
 
 using orbit_client_protos::FunctionInfo;
 
+using orbit_grpc_protos::CaptureOptions;
+using orbit_grpc_protos::CaptureRequest;
+using orbit_grpc_protos::CaptureResponse;
+
 static CaptureOptions::InstrumentedFunction::FunctionType
 IntrumentedFunctionTypeFromOrbitType(FunctionInfo::OrbitType orbit_type) {
   switch (orbit_type) {

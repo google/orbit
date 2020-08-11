@@ -9,6 +9,8 @@
 
 namespace LinuxTracing {
 
+using orbit_grpc_protos::FunctionCall;
+
 TEST(UprobesFunctionCallManager, OneUprobe) {
   constexpr pid_t tid = 42;
   std::optional<FunctionCall> processed_function_call;

@@ -4,6 +4,8 @@
 
 syntax = "proto3";
 
+package orbit_grpc_protos;
+
 message CaptureOptions {
   bool trace_context_switches = 1;
   int32 pid = 2;

@@ -6,6 +6,8 @@
 
 namespace LinuxTracing {
 
+using orbit_grpc_protos::SchedulingSlice;
+
 void ContextSwitchManager::ProcessContextSwitchIn(pid_t pid, pid_t tid,
                                                   uint16_t core,
                                                   uint64_t timestamp_ns) {

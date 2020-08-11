@@ -209,7 +209,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       const std::shared_ptr<orbit_client_protos::PresetFile>& session);
   void FilterTracks(const std::string& filter);
 
-  void CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type);
+  void CrashOrbitService(
+      orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
 
   DataView* GetOrCreateDataView(DataViewType type) override;
 

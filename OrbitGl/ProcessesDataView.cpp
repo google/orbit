@@ -13,6 +13,8 @@
 #include "Params.h"
 #include "absl/strings/str_format.h"
 
+using orbit_grpc_protos::ProcessInfo;
+
 ProcessesDataView::ProcessesDataView()
     : DataView(DataViewType::kProcesses), selected_process_id_(-1) {}
 

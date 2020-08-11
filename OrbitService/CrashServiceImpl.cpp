@@ -11,6 +11,12 @@ namespace orbit_service {
 
 using grpc::ServerContext;
 using grpc::Status;
+using orbit_grpc_protos::CrashOrbitServiceRequest;
+using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
+using orbit_grpc_protos::
+    CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE;
+using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
+using orbit_grpc_protos::CrashOrbitServiceResponse;
 
 static void InfiniteRecursion(int num) {
   if (num != 1) {

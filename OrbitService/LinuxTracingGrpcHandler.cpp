@@ -8,6 +8,17 @@
 
 namespace orbit_service {
 
+using orbit_grpc_protos::AddressInfo;
+using orbit_grpc_protos::Callstack;
+using orbit_grpc_protos::CallstackSample;
+using orbit_grpc_protos::CaptureEvent;
+using orbit_grpc_protos::CaptureOptions;
+using orbit_grpc_protos::CaptureResponse;
+using orbit_grpc_protos::FunctionCall;
+using orbit_grpc_protos::GpuJob;
+using orbit_grpc_protos::SchedulingSlice;
+using orbit_grpc_protos::ThreadName;
+
 void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
   CHECK(!sender_thread_.joinable());

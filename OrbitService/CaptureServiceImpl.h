@@ -9,12 +9,14 @@
 
 namespace orbit_service {
 
-class CaptureServiceImpl final : public CaptureService::Service {
+class CaptureServiceImpl final
+    : public orbit_grpc_protos::CaptureService::Service {
  public:
   grpc::Status Capture(
       grpc::ServerContext* context,
-      grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer)
-      override;
+      grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
+                               orbit_grpc_protos::CaptureRequest>*
+          reader_writer) override;
 };
 
 }  // namespace orbit_service

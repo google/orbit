@@ -1,6 +1,7 @@
 // Copyright (c) 2020 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+
 #include "FramePointerValidatorClient.h"
 
 #include <absl/strings/str_format.h>
@@ -13,6 +14,11 @@
 #include "Pdb.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
+
+using orbit_grpc_protos::CodeBlock;
+using orbit_grpc_protos::FramePointerValidatorService;
+using orbit_grpc_protos::ValidateFramePointersRequest;
+using orbit_grpc_protos::ValidateFramePointersResponse;
 
 FramePointerValidatorClient::FramePointerValidatorClient(
     OrbitApp* app, std::shared_ptr<grpc::Channel> channel)

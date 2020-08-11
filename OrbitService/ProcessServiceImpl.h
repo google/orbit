@@ -15,23 +15,28 @@
 
 namespace orbit_service {
 
-class ProcessServiceImpl final : public ProcessService::Service {
+class ProcessServiceImpl final
+    : public orbit_grpc_protos::ProcessService::Service {
  public:
   [[nodiscard]] grpc::Status GetProcessList(
-      grpc::ServerContext* context, const GetProcessListRequest* request,
-      GetProcessListResponse* response) override;
+      grpc::ServerContext* context,
+      const orbit_grpc_protos::GetProcessListRequest* request,
+      orbit_grpc_protos::GetProcessListResponse* response) override;
 
   [[nodiscard]] grpc::Status GetModuleList(
-      grpc::ServerContext* context, const GetModuleListRequest* request,
-      GetModuleListResponse* response) override;
+      grpc::ServerContext* context,
+      const orbit_grpc_protos::GetModuleListRequest* request,
+      orbit_grpc_protos::GetModuleListResponse* response) override;
 
   [[nodiscard]] grpc::Status GetProcessMemory(
-      grpc::ServerContext* context, const GetProcessMemoryRequest* request,
-      GetProcessMemoryResponse* response) override;
+      grpc::ServerContext* context,
+      const orbit_grpc_protos::GetProcessMemoryRequest* request,
+      orbit_grpc_protos::GetProcessMemoryResponse* response) override;
 
   [[nodiscard]] grpc::Status GetDebugInfoFile(
-      grpc::ServerContext* context, const GetDebugInfoFileRequest* request,
-      GetDebugInfoFileResponse* response) override;
+      grpc::ServerContext* context,
+      const orbit_grpc_protos::GetDebugInfoFileRequest* request,
+      orbit_grpc_protos::GetDebugInfoFileResponse* response) override;
 
  private:
   absl::Mutex mutex_;

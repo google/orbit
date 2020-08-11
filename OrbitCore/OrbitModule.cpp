@@ -17,6 +17,8 @@
 #include "symbol.pb.h"
 
 using orbit_client_protos::FunctionInfo;
+using orbit_grpc_protos::ModuleSymbols;
+using orbit_grpc_protos::SymbolInfo;
 
 Module::Module(const std::string& file_name, uint64_t address_start,
                uint64_t address_end) {

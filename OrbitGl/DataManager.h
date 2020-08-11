@@ -20,9 +20,11 @@ class DataManager final {
   explicit DataManager(std::thread::id thread_id = std::this_thread::get_id())
       : main_thread_id_(thread_id) {}
 
-  void UpdateProcessInfos(const std::vector<ProcessInfo>& process_infos);
-  void UpdateModuleInfos(int32_t process_id,
-                         const std::vector<ModuleInfo>& module_infos);
+  void UpdateProcessInfos(
+      const std::vector<orbit_grpc_protos::ProcessInfo>& process_infos);
+  void UpdateModuleInfos(
+      int32_t process_id,
+      const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos);
 
   void SelectFunction(uint64_t function_address);
   void DeselectFunction(uint64_t function_address);

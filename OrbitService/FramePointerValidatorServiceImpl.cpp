@@ -13,6 +13,10 @@
 
 namespace orbit_service {
 
+using orbit_grpc_protos::CodeBlock;
+using orbit_grpc_protos::ValidateFramePointersRequest;
+using orbit_grpc_protos::ValidateFramePointersResponse;
+
 grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
     grpc::ServerContext*, const ValidateFramePointersRequest* request,
     ValidateFramePointersResponse* response) {

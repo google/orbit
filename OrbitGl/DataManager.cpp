@@ -6,6 +6,9 @@
 
 #include "OrbitBase/Logging.h"
 
+using orbit_grpc_protos::ModuleInfo;
+using orbit_grpc_protos::ProcessInfo;
+
 void DataManager::UpdateProcessInfos(
     const std::vector<ProcessInfo>& process_infos) {
   CHECK(std::this_thread::get_id() == main_thread_id_);

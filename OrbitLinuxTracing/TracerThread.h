@@ -32,7 +32,8 @@ namespace LinuxTracing {
 
 class TracerThread {
  public:
-  explicit TracerThread(const CaptureOptions& capture_options);
+  explicit TracerThread(
+      const orbit_grpc_protos::CaptureOptions& capture_options);
 
   TracerThread(const TracerThread&) = delete;
   TracerThread& operator=(const TracerThread&) = delete;
@@ -138,7 +139,7 @@ class TracerThread {
   bool trace_context_switches_;
   pid_t pid_;
   uint64_t sampling_period_ns_;
-  CaptureOptions::UnwindingMethod unwinding_method_;
+  orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
   std::vector<Function> instrumented_functions_;
   bool trace_gpu_driver_;
 

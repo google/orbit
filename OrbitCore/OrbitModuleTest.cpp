@@ -21,6 +21,8 @@ const std::string executable_directory =
 
 using ElfUtils::ElfFile;
 using orbit_client_protos::FunctionInfo;
+using orbit_grpc_protos::ModuleSymbols;
+using orbit_grpc_protos::SymbolInfo;
 
 TEST(OrbitModule, Constructor) {
   const std::string executable_name = "hello_world_elf";

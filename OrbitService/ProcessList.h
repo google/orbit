@@ -16,13 +16,14 @@ namespace orbit_service {
 class ProcessList {
  public:
   [[nodiscard]] ErrorMessageOr<void> Refresh();
-  [[nodiscard]] const std::vector<ProcessInfo>& GetProcesses() {
+  [[nodiscard]] const std::vector<orbit_grpc_protos::ProcessInfo>&
+  GetProcesses() {
     return processes_;
   }
 
  private:
-  std::vector<ProcessInfo> processes_;
-  std::unordered_map<int32_t, ProcessInfo*> processes_map_;
+  std::vector<orbit_grpc_protos::ProcessInfo> processes_;
+  std::unordered_map<int32_t, orbit_grpc_protos::ProcessInfo*> processes_map_;
 };
 
 }  // namespace orbit_service

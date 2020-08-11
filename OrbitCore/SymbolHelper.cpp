@@ -14,6 +14,8 @@
 #include "OrbitBase/Logging.h"
 #include "Path.h"
 
+using orbit_grpc_protos::ModuleSymbols;
+
 namespace {
 
 using ::ElfUtils::ElfFile;

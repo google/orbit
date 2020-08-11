@@ -17,6 +17,8 @@
 
 namespace orbit_service {
 
+using orbit_grpc_protos::ProcessInfo;
+
 ErrorMessageOr<void> ProcessList::Refresh() {
   auto cpu_result = LinuxUtils::GetCpuUtilization();
   if (!cpu_result) {

@@ -7,6 +7,8 @@
 #include "OrbitModule.h"
 #include "symbol.pb.h"
 
+using orbit_grpc_protos::ModuleSymbols;
+
 DEFINE_PROTO_FUZZER(const ModuleSymbols& symbols) {
   Module module{};
   module.LoadSymbols(symbols);

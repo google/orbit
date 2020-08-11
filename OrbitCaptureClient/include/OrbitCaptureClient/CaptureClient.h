@@ -22,7 +22,7 @@ class CaptureClient {
 
   explicit CaptureClient(const std::shared_ptr<grpc::Channel>& channel,
                          CaptureListener* capture_listener)
-      : capture_service_{CaptureService::NewStub(channel)},
+      : capture_service_{orbit_grpc_protos::CaptureService::NewStub(channel)},
         capture_listener_{capture_listener},
         state_{State::kStopped},
         force_stop_{false} {
@@ -60,8 +60,9 @@ class CaptureClient {
 
   void FinishCapture();
 
-  std::unique_ptr<CaptureService::Stub> capture_service_;
-  std::unique_ptr<grpc::ClientReaderWriter<CaptureRequest, CaptureResponse>>
+  std::unique_ptr<orbit_grpc_protos::CaptureService::Stub> capture_service_;
+  std::unique_ptr<grpc::ClientReaderWriter<orbit_grpc_protos::CaptureRequest,
+                                           orbit_grpc_protos::CaptureResponse>>
       reader_writer_;
 
   CaptureListener* capture_listener_ = nullptr;

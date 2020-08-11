@@ -41,11 +41,12 @@ class ProcessManager {
   virtual void SetProcessListUpdateListener(
       const std::function<void(ProcessManager*)>& listener) = 0;
 
-  virtual ErrorMessageOr<std::vector<ModuleInfo>> LoadModuleList(
-      int32_t pid) = 0;
+  virtual ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>>
+  LoadModuleList(int32_t pid) = 0;
 
   // Get a copy of process list.
-  virtual std::vector<ProcessInfo> GetProcessList() const = 0;
+  virtual std::vector<orbit_grpc_protos::ProcessInfo> GetProcessList()
+      const = 0;
 
   virtual ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid,
                                                         uint64_t address,

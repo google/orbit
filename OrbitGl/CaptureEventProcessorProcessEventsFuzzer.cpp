@@ -14,6 +14,8 @@ ABSL_FLAG(uint16_t, sampling_rate, 1000,
 ABSL_FLAG(bool, frame_pointer_unwinding, false,
           "Use frame pointers for unwinding");
 
+using orbit_grpc_protos::CaptureResponse;
+
 namespace {
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::LinuxAddressInfo;

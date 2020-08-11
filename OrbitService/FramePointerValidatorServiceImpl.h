@@ -14,11 +14,12 @@ namespace orbit_service {
 // It returns a list of functions that don't have a prologue and epilogue
 // associated with frame pointers (see FunctionFramePointerValidator).
 class FramePointerValidatorServiceImpl final
-    : public FramePointerValidatorService::Service {
+    : public orbit_grpc_protos::FramePointerValidatorService::Service {
  public:
   [[nodiscard]] grpc::Status ValidateFramePointers(
-      grpc::ServerContext* context, const ValidateFramePointersRequest* request,
-      ValidateFramePointersResponse* response) override;
+      grpc::ServerContext* context,
+      const orbit_grpc_protos::ValidateFramePointersRequest* request,
+      orbit_grpc_protos::ValidateFramePointersResponse* response) override;
 };
 
 }  // namespace orbit_service

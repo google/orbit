@@ -17,7 +17,7 @@ struct Module {
   Module(const std::string& file_name, uint64_t address_start,
          uint64_t address_end);
 
-  void LoadSymbols(const ModuleSymbols& module_symbols);
+  void LoadSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);
 
   void SetLoaded(bool value) { loaded_ = value; }
   void SetLoadable(bool value) { loadable_ = value; }

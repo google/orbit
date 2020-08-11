@@ -15,6 +15,7 @@
 #include "symbol.pb.h"
 
 using ElfUtils::ElfFile;
+using orbit_grpc_protos::SymbolInfo;
 
 TEST(ElfFile, LoadSymbols) {
   std::string executable_path = Path::GetExecutablePath();

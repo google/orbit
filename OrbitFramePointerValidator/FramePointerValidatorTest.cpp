@@ -12,6 +12,9 @@
 #include "Path.h"
 #include "include/OrbitFramePointerValidator/FramePointerValidator.h"
 
+using orbit_grpc_protos::CodeBlock;
+using orbit_grpc_protos::SymbolInfo;
+
 TEST(FramePointerValidator, GetFpoFunctions) {
   std::string executable_path = Path::GetExecutablePath();
   std::string test_elf_file = executable_path + "/testdata/hello_world_elf";

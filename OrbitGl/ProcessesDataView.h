@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_PROCESSES_DATA_VIEW
+#define ORBIT_GL_PROCESSES_DATA_VIEW
 
 #include "DataView.h"
 #include "OrbitProcess.h"
@@ -23,7 +24,8 @@ class ProcessesDataView final : public DataView {
   void OnSelect(int index) override;
   bool SelectProcess(const std::string& process_name);
   bool SelectProcess(int32_t process_id);
-  void SetProcessList(const std::vector<ProcessInfo>& process_list);
+  void SetProcessList(
+      const std::vector<orbit_grpc_protos::ProcessInfo>& process_list);
   int32_t GetSelectedProcessId() const;
   int32_t GetFirstProcessId() const;
 
@@ -35,11 +37,13 @@ class ProcessesDataView final : public DataView {
   void UpdateProcessList();
   void SetSelectedItem();
 
-  const ProcessInfo& GetProcess(uint32_t row) const;
+  const orbit_grpc_protos::ProcessInfo& GetProcess(uint32_t row) const;
 
-  std::vector<ProcessInfo> process_list_;
+  std::vector<orbit_grpc_protos::ProcessInfo> process_list_;
   int32_t selected_process_id_;
   std::function<void(int32_t)> selection_listener_;
 
   enum ColumnIndex { kColumnPid, kColumnName, kColumnCpu, kNumColumns };
 };
+
+#endif  // ORBIT_GL_PROCESSES_DATA_VIEW

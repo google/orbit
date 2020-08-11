@@ -18,7 +18,8 @@
 namespace LinuxUtils {
 outcome::result<std::string> ExecuteCommand(const std::string& cmd);
 outcome::result<std::vector<std::string>> ReadProcMaps(pid_t pid);
-ErrorMessageOr<std::vector<ModuleInfo>> ListModules(int32_t pid);
+ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ListModules(
+    int32_t pid);
 outcome::result<std::unordered_map<pid_t, double>> GetCpuUtilization();
 outcome::result<bool> Is64Bit(pid_t pid);
 ErrorMessageOr<std::string> GetExecutablePath(int32_t pid);
