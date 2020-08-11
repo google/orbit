@@ -751,7 +751,8 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
         thread_track->SetName(process_name);
         thread_track->SetLabel(process_name + " (all threads)");
       } else {
-        const std::string& thread_name = Capture::GThreadNames[tid];
+        const std::string& thread_name =
+            Capture::capture_data_.GetThreadName(tid);
         track->SetName(thread_name);
         std::string track_label = absl::StrFormat("%s [%u]", thread_name, tid);
         track->SetLabel(track_label);

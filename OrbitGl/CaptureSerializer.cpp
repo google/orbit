@@ -68,8 +68,9 @@ void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
   capture_info->set_process_id(Capture::capture_data_.process_id());
   capture_info->set_process_name(Capture::capture_data_.process_name());
 
-  capture_info->mutable_thread_names()->insert(Capture::GThreadNames.begin(),
-                                               Capture::GThreadNames.end());
+  capture_info->mutable_thread_names()->insert(
+      Capture::capture_data_.thread_names().begin(),
+      Capture::capture_data_.thread_names().end());
 
   capture_info->mutable_address_infos()->Reserve(
       Capture::capture_data_.address_infos().size());
@@ -194,12 +195,12 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
     address_infos[address_info.absolute_address()] = address_info;
   }
   capture_data.set_address_infos(std::move(address_infos));
+  absl::flat_hash_map<int32_t, std::string> thread_names{
+      capture_info.thread_names().begin(), capture_info.thread_names().end()};
+  capture_data.set_thread_names(thread_names);
   Capture::capture_data_ = std::move(capture_data);
 
   Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
-
-  Capture::GThreadNames = {capture_info.thread_names().begin(),
-                           capture_info.thread_names().end()};
 
   if (Capture::GSamplingProfiler == nullptr) {
     Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();
