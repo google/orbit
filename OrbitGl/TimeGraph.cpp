@@ -362,9 +362,13 @@ void TimeGraph::ProcessOrbitFunctionTimer(const FunctionInfo* function,
   uint64_t time = timer_info.start();
   CHECK(timer_info.registers_size() > 1);
 
-  // timer_info.registers() holds a function's integer arguments in the order
-  // specified by the ABI. On x64, 6 registers are used for argument passing:
-  // rdi, rsi, rdx, rcx, r8, r9. See orbit_api functions in Orbit.h.
+  // timer_info's "registers" hold a function's integer arguments in the order
+  // specified by the ABI. On x64 Linux, 6 registers are used for integer
+  // argument passing: rdi, rsi, rdx, rcx, r8, r9.
+  //
+  // "OrbitFunctions" are defined in Orbit.h. They are empty stubs that Orbit
+  // dynamically instruments. Manual instrumentation works by monitoring those
+  // function calls and the value of their arguments.
   uint64_t arg_0 = timer_info.registers(0);  // first argument.
   uint64_t arg_1 = timer_info.registers(1);  // second argument.
 
