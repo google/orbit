@@ -7,6 +7,10 @@
 
 #include "grpcpp/grpcpp.h"
 
+#include <cstdint>
+#include <string>
+#include <memory>
+
 #include "ClientGgpOptions.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"

@@ -6,6 +6,12 @@
 
 #include "capture_data.pb.h"
 
+#include <limits>
+#include <memory>
+#include <cstdint>
+#include <map>
+#include <string>
+
 #include "Capture.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
