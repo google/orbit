@@ -24,14 +24,10 @@ Capture::State Capture::GState = Capture::State::kEmpty;
 CaptureData Capture::capture_data_;
 std::map<uint64_t, FunctionInfo*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, FunctionInfo*> Capture::GVisibleFunctionsMap;
-int32_t Capture::GProcessId = -1;
-std::string Capture::GProcessName;
 std::unordered_map<int32_t, std::string> Capture::GThreadNames;
 std::unordered_map<uint64_t, LinuxAddressInfo> Capture::GAddressInfos;
 TextBox* Capture::GSelectedTextBox = nullptr;
 ThreadID Capture::GSelectedThreadId;
-std::chrono::system_clock::time_point Capture::GCaptureTimePoint =
-    std::chrono::system_clock::now();
 
 std::shared_ptr<SamplingProfiler> Capture::GSamplingProfiler = nullptr;
 std::shared_ptr<Process> Capture::GTargetProcess = nullptr;
@@ -53,10 +49,9 @@ ErrorMessageOr<void> Capture::StartCapture() {
         "No process selected. Please choose a target process for the capture.");
   }
 
-  capture_data_ = CaptureData(GetSelectedFunctions());
-  GCaptureTimePoint = std::chrono::system_clock::now();
-  GProcessId = GTargetProcess->GetID();
-  GProcessName = GTargetProcess->GetName();
+  capture_data_ =
+      CaptureData(GTargetProcess->GetID(), GTargetProcess->GetName(),
+                  GetSelectedFunctions());
 
   PreFunctionHooks();
 
@@ -68,9 +63,7 @@ ErrorMessageOr<void> Capture::StartCapture() {
   return outcome::success();
 }
 
-void Capture::StopCapture() {
-  GState = State::kStopping;
-}
+void Capture::StopCapture() { GState = State::kStopping; }
 
 void Capture::FinalizeCapture() {
   if (Capture::GSamplingProfiler != nullptr) {
@@ -81,16 +74,12 @@ void Capture::FinalizeCapture() {
 }
 
 void Capture::ClearCaptureData() {
-  GProcessId = -1;
-  GProcessName = "";
-  GThreadNames.clear();
   GAddressInfos.clear();
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
 }
 
 void Capture::PreFunctionHooks() {
-
   GSelectedFunctionsMap.clear();
   for (auto& func : capture_data_.selected_functions()) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);

@@ -4,12 +4,12 @@
 
 #include "CaptureSerializer.h"
 
-#include <fstream>
-#include <memory>
-
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/message.h>
+
+#include <fstream>
+#include <memory>
 
 #include "App.h"
 #include "Callstack.h"
@@ -65,8 +65,8 @@ void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
     }
   }
 
-  capture_info->set_process_id(Capture::GProcessId);
-  capture_info->set_process_name(Capture::GProcessName);
+  capture_info->set_process_id(Capture::capture_data_.process_id());
+  capture_info->set_process_name(Capture::capture_data_.process_name());
 
   capture_info->mutable_thread_names()->insert(Capture::GThreadNames.begin(),
                                                Capture::GThreadNames.end());
@@ -150,7 +150,8 @@ bool ReadMessage(google::protobuf::Message* message,
     return false;
   }
 
-  std::unique_ptr<char[]> buffer= make_unique_for_overwrite<char[]>(message_size);
+  std::unique_ptr<char[]> buffer =
+      make_unique_for_overwrite<char[]>(message_size);
   if (!input->ReadRaw(buffer.get(), message_size)) {
     return false;
   }
@@ -181,12 +182,11 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
     Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(
         *function_ptr)] = function_ptr.get();
   }
-  CaptureData capture_data(std::move(selected_functions));
+  CaptureData capture_data(capture_info.process_id(),
+                           capture_info.process_name(),
+                           std::move(selected_functions));
   Capture::capture_data_ = std::move(capture_data);
   Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
-
-  Capture::GProcessId = capture_info.process_id();
-  Capture::GProcessName = capture_info.process_name();
 
   Capture::GThreadNames = {capture_info.thread_names().begin(),
                            capture_info.thread_names().end()};

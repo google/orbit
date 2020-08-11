@@ -438,15 +438,16 @@ void OrbitApp::AddTopDownView(const SamplingProfiler& sampling_profiler) {
   }
   std::unique_ptr<TopDownView> top_down_view =
       TopDownView::CreateFromSamplingProfiler(
-          sampling_profiler, Capture::GProcessName, Capture::GThreadNames);
+          sampling_profiler, Capture::capture_data_.process_name(),
+          Capture::GThreadNames);
   top_down_view_callback_(std::move(top_down_view));
 }
 
 std::string OrbitApp::GetCaptureFileName() {
-  time_t timestamp =
-      std::chrono::system_clock::to_time_t(Capture::GCaptureTimePoint);
+  time_t timestamp = std::chrono::system_clock::to_time_t(
+      Capture::capture_data_.capture_time_point());
   std::string result;
-  result.append(Path::StripExtension(Capture::GProcessName));
+  result.append(Path::StripExtension(Capture::capture_data_.process_name()));
   result.append("_");
   result.append(OrbitUtils::FormatTime(timestamp));
   result.append(".orbit");
@@ -566,7 +567,7 @@ bool OrbitApp::StartCapture() {
     return false;
   }
 
-  int32_t pid = Capture::GProcessId;
+  int32_t pid = Capture::GTargetProcess->GetID();
   std::map<uint64_t, FunctionInfo*> selected_functions =
       Capture::GSelectedFunctionsMap;
   thread_pool_->Schedule([this, pid, selected_functions] {
