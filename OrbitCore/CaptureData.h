@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
 class CaptureData {
@@ -41,7 +42,23 @@ class CaptureData {
     return capture_start_time_;
   }
 
+  [[nodiscard]] const absl::flat_hash_map<
+      uint64_t, orbit_client_protos::LinuxAddressInfo>&
+  address_infos() {
+    return address_infos_;
+  }
+
+  void set_address_infos(
+      absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
+          address_infos) {
+    address_infos_ = std::move(address_infos);
+  }
+
+  orbit_client_protos::LinuxAddressInfo* GetAddressInfo(uint64_t address);
+
  private:
+  absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
+      address_infos_;
   int32_t process_id_ = -1;
   std::string process_name_;
   // TODO(kuebler): make them raw pointers at some point

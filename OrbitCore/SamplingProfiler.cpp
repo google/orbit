@@ -301,7 +301,8 @@ uint32_t SamplingProfiler::GetCountOfFunction(uint64_t function_address) const {
 const std::string SamplingProfiler::kUnknownFunctionOrModuleName = "???";
 
 void SamplingProfiler::UpdateAddressInfo(uint64_t address) {
-  LinuxAddressInfo* address_info = Capture::GetAddressInfo(address);
+  LinuxAddressInfo* address_info =
+      Capture::capture_data_.GetAddressInfo(address);
   FunctionInfo* function = process_->GetFunctionFromAddress(address, false);
 
   // Find the start address of the function this address falls inside.

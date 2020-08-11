@@ -71,8 +71,9 @@ void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
   capture_info->mutable_thread_names()->insert(Capture::GThreadNames.begin(),
                                                Capture::GThreadNames.end());
 
-  capture_info->mutable_address_infos()->Reserve(Capture::GAddressInfos.size());
-  for (const auto& address_info : Capture::GAddressInfos) {
+  capture_info->mutable_address_infos()->Reserve(
+      Capture::capture_data_.address_infos().size());
+  for (const auto& address_info : Capture::capture_data_.address_infos()) {
     capture_info->add_address_infos()->CopyFrom(address_info.second);
   }
 
@@ -185,17 +186,20 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   CaptureData capture_data(capture_info.process_id(),
                            capture_info.process_name(),
                            std::move(selected_functions));
+
+  absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
+      address_infos;
+  address_infos.reserve(capture_info.address_infos_size());
+  for (const auto& address_info : capture_info.address_infos()) {
+    address_infos[address_info.absolute_address()] = address_info;
+  }
+  capture_data.set_address_infos(std::move(address_infos));
   Capture::capture_data_ = std::move(capture_data);
+
   Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
   Capture::GThreadNames = {capture_info.thread_names().begin(),
                            capture_info.thread_names().end()};
-
-  Capture::GAddressInfos.clear();
-  Capture::GAddressInfos.reserve(capture_info.address_infos_size());
-  for (const auto& address_info : capture_info.address_infos()) {
-    Capture::GAddressInfos[address_info.absolute_address()] = address_info;
-  }
 
   if (Capture::GSamplingProfiler == nullptr) {
     Capture::GSamplingProfiler = std::make_shared<SamplingProfiler>();

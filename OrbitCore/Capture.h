@@ -37,8 +37,6 @@ class Capture {
   static void PreFunctionHooks();
   static bool IsCapturing();
   static ErrorMessageOr<void> SavePreset(const std::string& filename);
-  static orbit_client_protos::LinuxAddressInfo* GetAddressInfo(
-      uint64_t address);
   static void PreSave();
 
   static CaptureData capture_data_;
@@ -53,8 +51,6 @@ class Capture {
   static std::map<uint64_t, orbit_client_protos::FunctionInfo*>
       GVisibleFunctionsMap;
   static std::unordered_map<int32_t, std::string> GThreadNames;
-  static std::unordered_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
-      GAddressInfos;
   static class TextBox* GSelectedTextBox;
   static ThreadID GSelectedThreadId;
 };

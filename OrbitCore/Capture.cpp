@@ -25,7 +25,6 @@ CaptureData Capture::capture_data_;
 std::map<uint64_t, FunctionInfo*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, FunctionInfo*> Capture::GVisibleFunctionsMap;
 std::unordered_map<int32_t, std::string> Capture::GThreadNames;
-std::unordered_map<uint64_t, LinuxAddressInfo> Capture::GAddressInfos;
 TextBox* Capture::GSelectedTextBox = nullptr;
 ThreadID Capture::GSelectedThreadId;
 
@@ -75,7 +74,6 @@ void Capture::FinalizeCapture() {
 
 void Capture::ClearCaptureData() {
   GThreadNames.clear();
-  GAddressInfos.clear();
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
 }
@@ -135,14 +133,6 @@ ErrorMessageOr<void> Capture::SavePreset(const std::string& filename) {
   }
 
   return outcome::success();
-}
-
-LinuxAddressInfo* Capture::GetAddressInfo(uint64_t address) {
-  auto address_info_it = GAddressInfos.find(address);
-  if (address_info_it == GAddressInfos.end()) {
-    return nullptr;
-  }
-  return &address_info_it->second;
 }
 
 void Capture::PreSave() {
