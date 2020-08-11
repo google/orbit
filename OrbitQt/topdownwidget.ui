@@ -18,7 +18,7 @@
    <item row="0" column="0">
     <widget class="QLineEdit" name="searchLineEdit">
      <property name="placeholderText">
-      <string>search  (invalidates changes made to the top-down tree)</string>
+      <string>search  (invalidates the expanded/collapsed state of all nodes in the tree)</string>
      </property>
     </widget>
    </item>

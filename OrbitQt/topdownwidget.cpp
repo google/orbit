@@ -12,14 +12,10 @@
 void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   auto* model =
       new TopDownViewItemModel{std::move(top_down_view), ui_->topDownTreeView};
-  proxy_model_ = new HighlightingSortFilterProxyModel{ui_->topDownTreeView};
+  proxy_model_ =
+      new HighlightCustomFilterSortFilterProxyModel{ui_->topDownTreeView};
   proxy_model_->setSourceModel(model);
   proxy_model_->setSortRole(Qt::EditRole);
-
-  proxy_model_->setFilterRole(Qt::DisplayRole);
-  proxy_model_->setFilterKeyColumn(TopDownViewItemModel::kThreadOrFunction);
-  proxy_model_->setFilterCaseSensitivity(Qt::CaseInsensitive);
-  proxy_model_->setRecursiveFilteringEnabled(true);
 
   ui_->topDownTreeView->setModel(proxy_model_);
   ui_->topDownTreeView->sortByColumn(TopDownViewItemModel::kInclusive,
@@ -74,31 +70,6 @@ static void CollapseChildrenRecursively(QTreeView* tree_view,
   for (int i = 0; i < index.model()->rowCount(index); ++i) {
     const QModelIndex& child = index.child(i, 0);
     CollapseRecursively(tree_view, child);
-  }
-}
-
-static void ExpandRecursivelyButCollapseLeaves(QTreeView* tree_view,
-                                               const QModelIndex& index) {
-  if (!index.isValid()) {
-    return;
-  }
-  if (index.model()->rowCount(index) == 0) {
-    tree_view->collapse(index);
-    return;
-  }
-  for (int i = 0; i < index.model()->rowCount(index); ++i) {
-    const QModelIndex& child = index.child(i, 0);
-    ExpandRecursivelyButCollapseLeaves(tree_view, child);
-  }
-  if (!tree_view->isExpanded(index)) {
-    tree_view->expand(index);
-  }
-}
-
-static void ExpandAllButCollapseLeaves(QTreeView* tree_view) {
-  for (int i = 0; i < tree_view->model()->rowCount(); ++i) {
-    const QModelIndex& child = tree_view->model()->index(i, 0);
-    ExpandRecursivelyButCollapseLeaves(tree_view, child);
   }
 }
 
@@ -170,69 +141,67 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
   }
 }
 
+static bool ExpandCollapseRecursivelyBasedOnDescendantsRole(
+    QTreeView* tree_view, const QModelIndex& index, int role) {
+  if (!index.isValid()) {
+    return false;
+  }
+  bool matches = index.data(role).toBool();
+  bool descendant_matches = false;
+  for (int i = 0; i < index.model()->rowCount(index); ++i) {
+    const QModelIndex& child = index.child(i, 0);
+    descendant_matches |=
+        ExpandCollapseRecursivelyBasedOnDescendantsRole(tree_view, child, role);
+  }
+  if (descendant_matches && !tree_view->isExpanded(index)) {
+    tree_view->expand(index);
+  } else if (!descendant_matches && tree_view->isExpanded(index)) {
+    tree_view->collapse(index);
+  }
+  return matches || descendant_matches;
+}
+
+static void ExpandCollapseBasedOnRole(QTreeView* tree_view, int role) {
+  for (int i = 0; i < tree_view->model()->rowCount(); ++i) {
+    const QModelIndex& child = tree_view->model()->index(i, 0);
+    ExpandCollapseRecursivelyBasedOnDescendantsRole(tree_view, child, role);
+  }
+}
+
 void TopDownWidget::on_searchLineEdit_textEdited(const QString& text) {
   if (proxy_model_ == nullptr) {
     return;
   }
-  if (text.isEmpty()) {
-    proxy_model_->SetNodesToHighlightSet(nullptr);
-    ui_->topDownTreeView->viewport()->update();
-    return;
+  proxy_model_->SetFilter(text.toStdString());
+  ui_->topDownTreeView->viewport()->update();
+  if (!text.isEmpty()) {
+    ExpandCollapseBasedOnRole(
+        ui_->topDownTreeView,
+        TopDownWidget::HighlightCustomFilterSortFilterProxyModel::
+            kMatchesCustomFilterRole);
   }
-  // Don't actually hide any node, but expand up to the parents of the matching
-  // nodes (so that the matching nodes are shown) and collapse everything else.
-  // To do this easily, set a filter on the QTreeView, which actually hides and
-  // as a result collapses all the non-matching nodes. Then expand everything
-  // that is still visible, but collapse leaves (note that a leaf being expanded
-  // has no visual effect while the filter is in place, but those nodes would
-  // retain the expanded state when the filter is removed). Finally, remove the
-  // filter. The initial collapseAll greatly helps filtering performance.
-
-  // In parallel, collect the nodes that match the filter from the
-  // HighlightingSortFilterProxyModel and set them as nodes to highlight.
-  ui_->topDownTreeView->collapseAll();
-  auto filter_accepted_nodes_collector =
-      std::make_unique<absl::flat_hash_set<void*>>();
-  proxy_model_->SetFilterAcceptedNodeCollectorSet(
-      filter_accepted_nodes_collector.get());
-  proxy_model_->setFilterFixedString(text);
-  ExpandAllButCollapseLeaves(ui_->topDownTreeView);
-  proxy_model_->SetFilterAcceptedNodeCollectorSet(nullptr);
-  proxy_model_->SetNodesToHighlightSet(
-      std::move(filter_accepted_nodes_collector));
-  proxy_model_->setFilterFixedString(QStringLiteral(""));
 }
 
-void TopDownWidget::HighlightingSortFilterProxyModel::
-    SetFilterAcceptedNodeCollectorSet(
-        absl::flat_hash_set<void*>* filter_accepted_nodes_collector) {
-  filter_accepted_nodes_collector_ = filter_accepted_nodes_collector;
-}
-
-void TopDownWidget::HighlightingSortFilterProxyModel::SetNodesToHighlightSet(
-    std::unique_ptr<absl::flat_hash_set<void*>> nodes_to_highlight) {
-  nodes_to_highlight_ = std::move(nodes_to_highlight);
-}
-
-QVariant TopDownWidget::HighlightingSortFilterProxyModel::data(
+QVariant TopDownWidget::HighlightCustomFilterSortFilterProxyModel::data(
     const QModelIndex& index, int role) const {
-  if (role == Qt::ForegroundRole && nodes_to_highlight_ != nullptr) {
-    QModelIndex source_index = mapToSource(index);
-    if (nodes_to_highlight_->contains(source_index.internalPointer())) {
+  if (role == Qt::ForegroundRole) {
+    if (!lowercase_filter_.empty() && ItemMatchesFilter(index)) {
       return QColor{Qt::green};
     }
+  } else if (role == kMatchesCustomFilterRole) {
+    return ItemMatchesFilter(index);
   }
   return QSortFilterProxyModel::data(index, role);
 }
 
-bool TopDownWidget::HighlightingSortFilterProxyModel::filterAcceptsRow(
-    int source_row, const QModelIndex& source_parent) const {
-  bool accepts_row =
-      QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
-  if (accepts_row && filter_accepted_nodes_collector_ != nullptr) {
-    QModelIndex source_index =
-        sourceModel()->index(source_row, 0, source_parent);
-    filter_accepted_nodes_collector_->insert(source_index.internalPointer());
-  }
-  return accepts_row;
+bool TopDownWidget::HighlightCustomFilterSortFilterProxyModel::
+    ItemMatchesFilter(const QModelIndex& index) const {
+  std::string haystack = absl::AsciiStrToLower(
+      index.model()
+          ->index(index.row(), TopDownViewItemModel::kThreadOrFunction,
+                  index.parent())
+          .data()
+          .toString()
+          .toStdString());
+  return absl::StrContains(haystack, lowercase_filter_);
 }
