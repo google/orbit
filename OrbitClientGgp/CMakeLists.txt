@@ -21,5 +21,4 @@ target_link_libraries(OrbitClientGgp PUBLIC
     OrbitBase
     OrbitCaptureClient
     OrbitProtos)
-
-#strip_symbols(OrbitClientGgp)
+    

@@ -2,17 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-//#include <iostream>
-//#include <string>
-
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
-//#include "absl/flags/usage.h"
-//#include "absl/flags/usage_config.h"
-//#include "absl/strings/str_format.h"
 
 #include "ClientGgp.h"
-//#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
 
 ABSL_FLAG(uint64_t, grpc_port, 44765, "Grpc service's port");
