@@ -5,6 +5,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
 
 class GlPanel {
  public:
@@ -13,8 +14,7 @@ class GlPanel {
 
   enum Type { CAPTURE };
 
-  static GlPanel* Create(Type a_Type);
-  static void Destroy(GlPanel* panel);
+  static std::unique_ptr<GlPanel> Create(Type a_Type);
 
   virtual void Initialize();
   virtual void Resize(int a_Width, int a_Height);

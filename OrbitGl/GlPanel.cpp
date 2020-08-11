@@ -6,22 +6,19 @@
 
 #include "CaptureWindow.h"
 
-GlPanel* GlPanel::Create(Type a_Type) {
-  GlPanel* panel = nullptr;
+std::unique_ptr<GlPanel> GlPanel::Create(Type a_Type) {
+  std::unique_ptr<GlPanel> panel = nullptr;
 
   switch (a_Type) {
     case CAPTURE:
-      panel = new CaptureWindow();
+      panel = std::make_unique<CaptureWindow>();
       break;
   }
 
   panel->m_Type = a_Type;
 
-  // Todo: fix leak...
   return panel;
 }
-
-void GlPanel::Destroy(GlPanel* panel) { delete panel; }
 
 GlPanel::GlPanel() {
   m_WindowOffset[0] = 0;

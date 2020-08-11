@@ -17,14 +17,13 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 
  public:
   explicit OrbitGLWidget(QWidget* parent = nullptr);
-  ~OrbitGLWidget() override;
   void Initialize(GlPanel::Type a_Type, class OrbitMainWindow* a_MainWindow);
   void initializeGL() override;
   void resizeGL(int w, int h) override;
   void paintGL() override;
   bool eventFilter(QObject* object, QEvent* event) override;
   void TakeScreenShot();
-  GlPanel* GetPanel() { return m_OrbitPanel; }
+  GlPanel* GetPanel() { return m_OrbitPanel.get(); }
   void PrintContextInformation();
 
   void mousePressEvent(QMouseEvent* event) override;
@@ -43,6 +42,6 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   void OnMenuClicked(int a_Index);
 
  private:
-  GlPanel* m_OrbitPanel;
+  std::unique_ptr<GlPanel> m_OrbitPanel;
   QOpenGLDebugLogger* m_DebugLogger;
 };
