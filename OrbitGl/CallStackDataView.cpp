@@ -7,7 +7,6 @@
 #include "App.h"
 #include "Callstack.h"
 #include "Capture.h"
-#include "Core.h"
 #include "FunctionUtils.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
@@ -18,10 +17,8 @@ using orbit_client_protos::FunctionInfo;
 CallStackDataView::CallStackDataView()
     : DataView(DataViewType::CALLSTACK), m_CallStack(nullptr) {}
 
-//-----------------------------------------------------------------------------
 void CallStackDataView::SetAsMainInstance() {}
 
-//-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& CallStackDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
@@ -38,7 +35,6 @@ const std::vector<DataView::Column>& CallStackDataView::GetColumns() {
   return columns;
 }
 
-//-----------------------------------------------------------------------------
 std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
   if (a_Row >= static_cast<int>(GetNumElements())) {
     return "";
@@ -72,7 +68,8 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
         return module->m_Name;
       }
       if (Capture::GSamplingProfiler != nullptr) {
-        return Capture::GAddressToModuleName[frame.address];
+        return Capture::GSamplingProfiler->GetModuleNameByAddress(
+            frame.address);
       }
       return "";
     case COLUMN_ADDRESS:
@@ -82,14 +79,12 @@ std::string CallStackDataView::GetValue(int a_Row, int a_Column) {
   }
 }
 
-//-----------------------------------------------------------------------------
 const std::string CallStackDataView::MENU_ACTION_MODULES_LOAD = "Load Symbols";
 const std::string CallStackDataView::MENU_ACTION_SELECT = "Hook";
 const std::string CallStackDataView::MENU_ACTION_UNSELECT = "Unhook";
 const std::string CallStackDataView::MENU_ACTION_DISASSEMBLY =
     "Go to Disassembly";
 
-//-----------------------------------------------------------------------------
 std::vector<std::string> CallStackDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_load = false;
@@ -120,7 +115,6 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
   return menu;
 }
 
-//-----------------------------------------------------------------------------
 void CallStackDataView::OnContextMenu(const std::string& a_Action,
                                       int a_MenuIndex,
                                       const std::vector<int>& a_ItemIndices) {
@@ -158,7 +152,6 @@ void CallStackDataView::OnContextMenu(const std::string& a_Action,
   }
 }
 
-//-----------------------------------------------------------------------------
 void CallStackDataView::DoFilter() {
   if (!m_CallStack) return;
 
@@ -188,7 +181,6 @@ void CallStackDataView::DoFilter() {
   indices_ = indices;
 }
 
-//-----------------------------------------------------------------------------
 void CallStackDataView::OnDataChanged() {
   size_t numFunctions = m_CallStack ? m_CallStack->m_Data.size() : 0;
   indices_.resize(numFunctions);
@@ -199,13 +191,11 @@ void CallStackDataView::OnDataChanged() {
   DataView::OnDataChanged();
 }
 
-//-----------------------------------------------------------------------------
 CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromRow(
     int row) {
   return GetFrameFromIndex(indices_[row]);
 }
 
-//-----------------------------------------------------------------------------
 CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
     int index_in_callstack) {
   if (m_CallStack == nullptr ||
@@ -228,7 +218,8 @@ CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
   } else {
     std::string fallback_name;
     if (Capture::GSamplingProfiler != nullptr) {
-      fallback_name = Capture::GAddressToFunctionName[address];
+      fallback_name =
+          Capture::GSamplingProfiler->GetFunctionNameByAddress(address);
     }
     return CallStackDataViewFrame(address, fallback_name, module);
   }

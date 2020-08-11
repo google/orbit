@@ -19,9 +19,9 @@
 #include <thread>
 
 #include "absl/base/attributes.h"
+#include "absl/base/casts.h"
 
 #ifdef _WIN32
-//-----------------------------------------------------------------------------
 std::string GetLastErrorAsString() {
   // Get the error message, if any.
   DWORD errorMessageID = ::GetLastError();
@@ -40,26 +40,6 @@ std::string GetLastErrorAsString() {
   LocalFree(messageBuffer);
 
   return message;
-}
-
-//-----------------------------------------------------------------------------
-std::string GuidToString(GUID a_Guid) {
-  std::string guidStr;
-  LPOLESTR wszCLSID = NULL;
-  HRESULT hr = StringFromCLSID(a_Guid, &wszCLSID);
-  if (hr == S_OK) {
-    // wszCLSID looks like: "{96F93FED-50B7-44B8-94AF-C205B68334FE}"
-    guidStr = ws2s(wszCLSID);
-    CoTaskMemFree(wszCLSID);
-    auto len = guidStr.size();
-    if (len > 2) {
-      guidStr = guidStr.substr(1, len - 2);
-    }
-    guidStr.erase(std::remove(guidStr.begin(), guidStr.end(), '-'),
-                  guidStr.end());
-  }
-
-  return guidStr;
 }
 
 #include "dde.h"
@@ -286,14 +266,12 @@ std::string CWindowsMessageToString::GetStringFromMsg(
 std::string GetLastErrorAsString() { return ""; }
 #endif
 
-//-----------------------------------------------------------------------------
 std::string OrbitUtils::GetTimeStamp() {
   time_t rawtime;
   time(&rawtime);
   return FormatTime(rawtime);
 }
 
-//-----------------------------------------------------------------------------
 std::string OrbitUtils::FormatTime(const time_t& rawtime) {
   struct tm* time_info = nullptr;
   char buffer[80];
@@ -310,19 +288,18 @@ std::string OrbitUtils::FormatTime(const time_t& rawtime) {
   return std::string(buffer);
 }
 
-//-----------------------------------------------------------------------------
-bool ReadProcessMemory(int32_t pid, uint64_t address, byte* buffer,
+bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer,
                        uint64_t size, uint64_t* num_bytes_read) {
 #ifdef _WIN32
-  HANDLE h_process = reinterpret_cast<HANDLE>(static_cast<uintptr_t>(pid));
+  HANDLE h_process = absl::bit_cast<HANDLE>(static_cast<uintptr_t>(pid));
   SIZE_T bytes_read;
-  BOOL res = ReadProcessMemory(h_process, reinterpret_cast<void*>(address),
+  BOOL res = ReadProcessMemory(h_process, absl::bit_cast<void*>(address),
                                buffer, size, &bytes_read);
   if (num_bytes_read) *num_bytes_read = bytes_read;
   return res == TRUE;
 #else
   iovec local_iov[] = {{buffer, size}};
-  iovec remote_iov[] = {{reinterpret_cast<void*>(address), size}};
+  iovec remote_iov[] = {{absl::bit_cast<void*>(address), size}};
   *num_bytes_read = process_vm_readv(pid, local_iov, ABSL_ARRAYSIZE(local_iov),
                                      remote_iov, ABSL_ARRAYSIZE(remote_iov), 0);
   return *num_bytes_read == size;

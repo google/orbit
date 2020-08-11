@@ -9,6 +9,7 @@
 #include "Capture.h"
 #include "Log.h"
 #include "OrbitBase/Logging.h"
+#include "Path.h"
 #include "Profiling.h"
 #include "Utils.h"
 
@@ -130,7 +131,7 @@ void UpdateStats(FunctionInfo* func, const TimerInfo& timer_info) {
 }
 
 bool IsSelected(const SampledFunction& func) {
-  return Capture::GSelectedFunctionsMap.count(func.m_Address) > 0;
+  return Capture::GSelectedFunctionsMap.count(func.address) > 0;
 }
 
 }  // namespace FunctionUtils

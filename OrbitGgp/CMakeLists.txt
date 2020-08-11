@@ -39,6 +39,8 @@ set_target_properties(OrbitGgp PROPERTIES AUTOUIC ON)
 # Tests
 add_executable(OrbitGgpTests)
 
+target_compile_options(OrbitGgpTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
 target_sources(OrbitGgpTests PRIVATE 
           InstanceTests.cpp
           InstanceItemModelTests.cpp

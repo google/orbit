@@ -7,13 +7,13 @@
 #include "Capture.h"
 #include "FunctionUtils.h"
 #include "OrbitProcess.h"
+#include "Path.h"
 #include "ScopeTimer.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetModule;
 
-//-----------------------------------------------------------------------------
 Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
          std::string module_file_name)
     : m_MainModule(module_address),
@@ -23,12 +23,10 @@ Pdb::Pdb(uint64_t module_address, uint64_t load_bias, std::string file_name,
   m_Name = Path::GetFileName(m_FileName);
 }
 
-//-----------------------------------------------------------------------------
 void Pdb::AddFunction(const std::shared_ptr<FunctionInfo>& function) {
   functions_.push_back(function);
 }
 
-//-----------------------------------------------------------------------------
 void Pdb::ProcessData() {
   std::shared_ptr<Process> process = Capture::GTargetProcess;
   if (process == nullptr) return;
@@ -44,7 +42,6 @@ void Pdb::ProcessData() {
   PopulateStringFunctionMap();
 }
 
-//-----------------------------------------------------------------------------
 void Pdb::PopulateFunctionMap() {
   SCOPE_TIMER_LOG("Pdb::PopulateFunctionMap");
   for (auto& function : functions_) {
@@ -52,7 +49,6 @@ void Pdb::PopulateFunctionMap() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void Pdb::PopulateStringFunctionMap() {
   {
     // SCOPE_TIMER_LOG("Reserving map");
@@ -67,14 +63,12 @@ void Pdb::PopulateStringFunctionMap() {
   }
 }
 
-//-----------------------------------------------------------------------------
 FunctionInfo* Pdb::GetFunctionFromExactAddress(uint64_t a_Address) {
   uint64_t function_address = a_Address - GetHModule() + load_bias_;
   auto it = m_FunctionMap.find(function_address);
   return (it != m_FunctionMap.end()) ? it->second : nullptr;
 }
 
-//-----------------------------------------------------------------------------
 FunctionInfo* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
   if (m_FunctionMap.empty()) {
     return nullptr;
@@ -91,7 +85,6 @@ FunctionInfo* Pdb::GetFunctionFromProgramCounter(uint64_t a_Address) {
   return it->second;
 }
 
-//-----------------------------------------------------------------------------
 void Pdb::ApplyPreset(const PresetFile& preset) {
   SCOPE_TIMER_LOG(absl::StrFormat("Pdb::ApplyPreset - %s", m_Name.c_str()));
 

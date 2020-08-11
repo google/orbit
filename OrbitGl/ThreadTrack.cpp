@@ -6,6 +6,7 @@
 
 #include "FunctionUtils.h"
 #include "GlCanvas.h"
+#include "PrintVar.h"
 #include "Profiling.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
@@ -13,14 +14,12 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-//-----------------------------------------------------------------------------
 ThreadTrack::ThreadTrack(TimeGraph* time_graph, int32_t thread_id)
     : TimerTrack(time_graph), thread_id_(thread_id) {
   event_track_ = std::make_shared<EventTrack>(time_graph);
   event_track_->SetThreadId(thread_id);
 }
 
-//-----------------------------------------------------------------------------
 const TextBox* ThreadTrack::GetLeft(TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   if (timer_info.thread_id() == thread_id_) {
@@ -30,7 +29,6 @@ const TextBox* ThreadTrack::GetLeft(TextBox* text_box) const {
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 const TextBox* ThreadTrack::GetRight(TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   if (timer_info.thread_id() == thread_id_) {
@@ -40,7 +38,6 @@ const TextBox* ThreadTrack::GetRight(TextBox* text_box) const {
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 std::string ThreadTrack::GetBoxTooltip(PickingID id) const {
   TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
   if (!text_box ||
@@ -102,7 +99,6 @@ bool ThreadTrack::IsEmpty() const {
   return (GetNumTimers() == 0) && (event_track_->IsEmpty());
 }
 
-//-----------------------------------------------------------------------------
 void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   TimerTrack::Draw(canvas, picking_mode);
 
@@ -112,7 +108,6 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   event_track_->Draw(canvas, picking_mode);
 }
 
-//-----------------------------------------------------------------------------
 void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
                                    PickingMode picking_mode) {
   event_track_->SetPos(m_Pos[0], m_Pos[1]);
@@ -120,13 +115,11 @@ void ThreadTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   TimerTrack::UpdatePrimitives(min_tick, max_tick, picking_mode);
 }
 
-//-----------------------------------------------------------------------------
 void ThreadTrack::SetEventTrackColor(Color color) {
   ScopeLock lock(mutex_);
   event_track_->SetColor(color);
 }
 
-//-----------------------------------------------------------------------------
 void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info,
                                    double elapsed_us, float min_x,
                                    TextBox* text_box) {

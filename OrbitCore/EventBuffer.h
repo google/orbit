@@ -9,14 +9,13 @@
 
 #include "BlockChain.h"
 #include "Callstack.h"
-#include "Core.h"
+#include "Threading.h"
 #include "capture_data.pb.h"
 
 #ifdef __linux
 #include "LinuxUtils.h"
 #endif
 
-//-----------------------------------------------------------------------------
 class EventBuffer {
  public:
   EventBuffer() : m_MaxTime(0), m_MinTime(LLONG_MAX) {}
@@ -44,13 +43,11 @@ class EventBuffer {
   size_t GetNumEvents() const;
 #endif
 
-  //-----------------------------------------------------------------------------
   void RegisterTime(uint64_t a_Time) {
     if (a_Time > m_MaxTime) m_MaxTime = a_Time;
     if (a_Time > 0 && a_Time < m_MinTime) m_MinTime = a_Time;
   }
 
-  //-----------------------------------------------------------------------------
   void AddCallstackEvent(uint64_t time, CallstackID cs_hash,
                          ThreadID thread_id);
 

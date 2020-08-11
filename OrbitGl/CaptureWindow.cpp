@@ -7,13 +7,12 @@
 #include "App.h"
 #include "Capture.h"
 #include "EventTracer.h"
-#include "FunctionUtils.h"
 #include "GlUtils.h"
-#include "absl/strings/str_format.h"
+#include "PrintVar.h"
+#include "absl/base/casts.h"
 
 using orbit_client_protos::TimerInfo;
 
-//-----------------------------------------------------------------------------
 CaptureWindow::CaptureWindow() {
   GCurrentTimeGraph = &time_graph_;
   time_graph_.SetTextRenderer(&m_TextRenderer);
@@ -48,15 +47,12 @@ CaptureWindow::CaptureWindow() {
   GOrbitApp->RegisterCaptureWindow(this);
 }
 
-//-----------------------------------------------------------------------------
 CaptureWindow::~CaptureWindow() {
   if (GCurrentTimeGraph == &time_graph_) GCurrentTimeGraph = nullptr;
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::OnTimer() { GlCanvas::OnTimer(); }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::ZoomAll() {
   time_graph_.ZoomAll();
   m_WorldTopLeftY = m_WorldMaxY;
@@ -64,7 +60,6 @@ void CaptureWindow::ZoomAll() {
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::UpdateWheelMomentum(float a_DeltaTime) {
   GlCanvas::UpdateWheelMomentum(a_DeltaTime);
 
@@ -74,7 +69,6 @@ void CaptureWindow::UpdateWheelMomentum(float a_DeltaTime) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
                                bool /*a_Middle*/) {
   int mousex = a_X;
@@ -127,7 +121,6 @@ void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::LeftDown(int a_X, int a_Y) {
   // Store world clicked pos for panning
   ScreenToWorld(a_X, a_Y, m_WorldClickX, m_WorldClickY);
@@ -144,26 +137,22 @@ void CaptureWindow::LeftDown(int a_X, int a_Y) {
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::LeftUp() {
   GlCanvas::LeftUp();
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::LeftDoubleClick() {
   GlCanvas::LeftDoubleClick();
   m_DoubleClicking = true;
   m_Picking = true;
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::Pick() {
   m_Picking = true;
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::Pick(int a_X, int a_Y) {
   // 4 bytes per pixel (RGBA), 1x1 bitmap
   std::array<uint8_t, 4 * 1 * 1> pixels;
@@ -181,7 +170,6 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
   uint32_t type = a_PickingID.m_Type;
 
@@ -194,14 +182,13 @@ void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::SelectTextBox(class TextBox* text_box) {
   if (text_box == nullptr) return;
   Capture::GSelectedTextBox = text_box;
   Capture::GSelectedThreadId = text_box->GetTimerInfo().thread_id();
 
   const TimerInfo& timer_info = text_box->GetTimerInfo();
-  DWORD64 address = timer_info.function_address();
+  uint64_t address = timer_info.function_address();
   FindCode(address);
 
   if (m_DoubleClicking) {
@@ -209,14 +196,13 @@ void CaptureWindow::SelectTextBox(class TextBox* text_box) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::Hover(int a_X, int a_Y) {
   // 4 bytes per pixel (RGBA), 1x1 bitmap
-  std::vector<uint8_t> pixels(1 * 1 * 4);
+  uint8_t pixels[1 * 1 * 4];
   glReadPixels(a_X, m_MainWindowHeight - a_Y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE,
                &pixels[0]);
 
-  PickingID pickId = *reinterpret_cast<PickingID*>(&pixels[0]);
+  PickingID pickId = absl::bit_cast<PickingID>(pixels);
   Batcher& batcher = GetBatcherById(pickId.batcher_id_);
 
   std::string tooltip = "";
@@ -237,10 +223,8 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
   GOrbitApp->SendTooltipToUi(tooltip);
 }
 
-//-----------------------------------------------------------------------------
-void CaptureWindow::FindCode(DWORD64 /*address*/) {}
+void CaptureWindow::FindCode(uint64_t /*address*/) {}
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::PreRender() {
   if (is_mouse_over_ && m_CanHover &&
       m_HoverTimer.QueryMillis() > m_HoverDelayMs) {
@@ -252,7 +236,6 @@ void CaptureWindow::PreRender() {
   m_NeedsRedraw = m_NeedsRedraw || time_graph_.IsRedrawNeeded();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::PostRender() {
   if (m_IsHovering) {
     m_IsHovering = false;
@@ -274,13 +257,11 @@ void CaptureWindow::PostRender() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::Resize(int a_Width, int a_Height) {
   GlCanvas::Resize(a_Width, a_Height);
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::RightDown(int a_X, int a_Y) {
   ScreenToWorld(a_X, a_Y, m_WorldClickX, m_WorldClickY);
   m_ScreenClickX = a_X;
@@ -294,7 +275,6 @@ void CaptureWindow::RightDown(int a_X, int a_Y) {
   m_TimeStop = m_TimeStart;
 }
 
-//-----------------------------------------------------------------------------
 bool CaptureWindow::RightUp() {
   if (m_IsSelecting && (m_SelectStart[0] != m_SelectStop[0]) &&
       ControlPressed()) {
@@ -316,7 +296,6 @@ bool CaptureWindow::RightUp() {
   return showContextMenu;
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::MiddleDown(int a_X, int a_Y) {
   float worldx, worldy;
   ScreenToWorld(a_X, a_Y, worldx, worldy);
@@ -325,7 +304,6 @@ void CaptureWindow::MiddleDown(int a_X, int a_Y) {
   m_SelectStop = m_SelectStart;
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::MiddleUp(int a_X, int a_Y) {
   float worldx, worldy;
   ScreenToWorld(a_X, a_Y, worldx, worldy);
@@ -336,7 +314,6 @@ void CaptureWindow::MiddleUp(int a_X, int a_Y) {
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::Zoom(int a_Delta) {
   if (a_Delta == 0) return;
 
@@ -355,7 +332,6 @@ void CaptureWindow::Zoom(int a_Delta) {
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::Pan(float a_Ratio) {
   double refTime =
       time_graph_.GetTime(static_cast<double>(m_MousePosX) / getWidth());
@@ -366,7 +342,6 @@ void CaptureWindow::Pan(float a_Ratio) {
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
                                     bool a_Ctrl) {
   if (a_Delta == 0) return;
@@ -403,7 +378,6 @@ void CaptureWindow::MouseWheelMoved(int a_X, int a_Y, int a_Delta,
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::MouseWheelMovedHorizontally(int /*a_X*/, int /*a_Y*/,
                                                 int a_Delta, bool /*a_Ctrl*/) {
   if (a_Delta == 0) return;
@@ -421,7 +395,6 @@ void CaptureWindow::MouseWheelMovedHorizontally(int /*a_X*/, int /*a_Y*/,
   Orbit_ImGui_ScrollCallback(this, -delta);
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
                                bool a_Shift, bool a_Alt) {
   UpdateSpecialKeys(a_Ctrl, a_Shift, a_Alt);
@@ -521,28 +494,23 @@ void CaptureWindow::KeyPressed(unsigned int a_KeyCode, bool a_Ctrl,
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 std::vector<std::string> CaptureWindow::GetContextMenu() {
   return std::vector<std::string>{};
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::OnContextMenu(const std::string& /*a_Action*/,
                                   int /*a_MenuIndex*/) {}
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::OnCaptureStarted() {
   time_graph_.ZoomAll();
   NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::ResetHoverTimer() {
   m_HoverTimer.Reset();
   m_CanHover = true;
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::Draw() {
   m_WorldMaxY =
       1.5f * ScreenToWorldHeight(static_cast<int>(slider_->GetPixelHeight()));
@@ -582,7 +550,6 @@ void CaptureWindow::Draw() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::DrawScreenSpace() {
   double timeSpan = time_graph_.GetCaptureTimeSpanUs();
 
@@ -637,13 +604,11 @@ void CaptureWindow::DrawScreenSpace() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::OnDrag(float a_Ratio) {
   time_graph_.OnDrag(a_Ratio);
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::OnVerticalDrag(float a_Ratio) {
   float min = m_WorldMaxY;
   float max = m_WorldHeight - time_graph_.GetThreadTotalHeight();
@@ -652,7 +617,6 @@ void CaptureWindow::OnVerticalDrag(float a_Ratio) {
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::UpdateVerticalSlider() {
   float min = m_WorldMaxY;
   float max = m_WorldHeight - time_graph_.GetThreadTotalHeight();
@@ -682,19 +646,16 @@ Batcher& CaptureWindow::GetBatcherById(uint32_t batcher_id) {
   return picking_mode;
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::NeedsUpdate() {
   time_graph_.NeedsUpdate();
   m_NeedsRedraw = true;
 }
 
-//-----------------------------------------------------------------------------
 float CaptureWindow::GetTopBarTextY() {
   return slider_->GetPixelHeight() * 0.5f +
          m_TextRenderer.GetStringHeight("FpjT_H") * 0.5f;
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::RenderUI() {
   // Don't draw ImGui when picking.
   if (m_Picking || m_IsHovering) {
@@ -753,21 +714,18 @@ void CaptureWindow::RenderUI() {
   ImGui::Render();
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::RenderText() {
   if (!m_Picking) {
     time_graph_.DrawText(this);
   }
 }
 
-//-----------------------------------------------------------------------------
 void ColorToFloat(Color a_Color, float* o_Float) {
   for (size_t i = 0; i < 4; ++i) {
     o_Float[i] = a_Color[i] / 255.f;
   }
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::RenderHelpUi() {
   constexpr float kYOffset = 8.f;
   ImGui::SetNextWindowPos(ImVec2(0, kYOffset));
@@ -797,12 +755,10 @@ void CaptureWindow::RenderHelpUi() {
   ImGui::PopStyleColor();
 }
 
-//-----------------------------------------------------------------------------
 ImTextureID TextureId(uint64_t id) {
-  return reinterpret_cast<ImTextureID>(static_cast<uintptr_t>(id));
+  return absl::bit_cast<ImTextureID>(static_cast<uintptr_t>(id));
 }
 
-//-----------------------------------------------------------------------------
 bool IconButton(uint64_t texture_id, const char* tooltip, ImVec2 size,
                 bool enabled) {
   ImTextureID imgui_texture_id = TextureId(texture_id);
@@ -827,7 +783,6 @@ bool IconButton(uint64_t texture_id, const char* tooltip, ImVec2 size,
   return clicked;
 }
 
-//-----------------------------------------------------------------------------
 inline double GetIncrementMs(double a_MilliSeconds) {
   const double Day = 24 * 60 * 60 * 1000;
   const double Hour = 60 * 60 * 1000;
@@ -855,7 +810,6 @@ inline double GetIncrementMs(double a_MilliSeconds) {
     return Day;
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::RenderTimeBar() {
   static int numTimePoints = 10;
 
@@ -895,5 +849,4 @@ void CaptureWindow::RenderTimeBar() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void CaptureWindow::Initialize() { GlCanvas::Initialize(); }

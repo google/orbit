@@ -11,23 +11,17 @@ target_compile_options(OrbitCore PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitCore
-  PUBLIC BaseTypes.h
-         BlockChain.h
+  PUBLIC BlockChain.h
          Callstack.h
          CallstackTypes.h
          Capture.h
-         Context.h
-         ContextSwitch.h
-         Core.h
+         CaptureData.h
          EventBuffer.h
          FunctionUtils.h
-         Injection.h
          Introspection.h
          LinuxCallstackEvent.h
          LinuxTracingBuffer.h
          Log.h
-         LogInterface.h
-         OrbitDbgHelp.h
          OrbitModule.h
          OrbitProcess.h
          OrbitVersion.h
@@ -43,32 +37,27 @@ target_sources(
          SymbolHelper.h
          Threading.h
          TidAndThreadName.h
-         Utils.h
-         VariableTracing.h)
+         Utils.h)
 
 target_sources(
   OrbitCore
   PRIVATE Capture.cpp
-          ContextSwitch.cpp
+          CaptureData.cpp
           EventBuffer.cpp
           FunctionUtils.cpp
-          Injection.cpp
           Introspection.cpp
           LinuxTracingBuffer.cpp
           Log.cpp
-          LogInterface.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
           Params.cpp
           Path.cpp
           Pdb.cpp
-          Profiling.cpp
           SamplingProfiler.cpp
           ScopeTimer.cpp
           StringManager.cpp
           SymbolHelper.cpp
-          Utils.cpp
-          VariableTracing.cpp)
+          Utils.cpp)
 
 if(NOT WIN32)
   target_sources(
@@ -88,7 +77,6 @@ target_link_libraries(
          OrbitBase
          OrbitClientProtos
          OrbitProtos
-         capstone::capstone
          xxHash::xxHash
          concurrentqueue::concurrentqueue
          multicore::multicore
@@ -101,11 +89,6 @@ if(WIN32)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib)
   target_compile_definitions(OrbitCore PUBLIC -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitCore PUBLIC -DNTDDI_VERSION=0x06030000)
-else()
-  target_link_libraries(
-    OrbitCore
-    PUBLIC OrbitLinuxTracing
-           libunwindstack::libunwindstack)
 endif()
 
 target_compile_definitions(OrbitCore PUBLIC WIN32_LEAN_AND_MEAN)
@@ -122,6 +105,8 @@ GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/OrbitVersion.cpp"
 target_sources(OrbitCore PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/OrbitVersion.cpp")
 
 add_executable(OrbitCoreTests)
+
+target_compile_options(OrbitCoreTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitCoreTests PRIVATE
     BlockChainTest.cpp

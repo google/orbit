@@ -4,8 +4,8 @@
 
 #include "Batcher.h"
 
-#include "Core.h"
 #include "OpenGl.h"
+#include "Utils.h"
 
 void Batcher::AddLine(const Line& line, const Color* colors,
                       PickingID::Type picking_type,

@@ -10,7 +10,6 @@
 #include "App.h"
 #include "CallStackDataView.h"
 #include "Capture.h"
-#include "Core.h"
 #include "FunctionUtils.h"
 #include "OrbitModule.h"
 #include "SamplingReport.h"
@@ -18,11 +17,9 @@
 
 using orbit_client_protos::FunctionInfo;
 
-//-----------------------------------------------------------------------------
 SamplingReportDataView::SamplingReportDataView()
     : DataView(DataViewType::SAMPLING), m_CallstackDataView(nullptr) {}
 
-//-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
@@ -40,7 +37,6 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   return columns;
 }
 
-//-----------------------------------------------------------------------------
 std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
   SampledFunction& func = GetSampledFunction(a_Row);
 
@@ -48,39 +44,36 @@ std::string SamplingReportDataView::GetValue(int a_Row, int a_Column) {
     case COLUMN_SELECTED:
       return FunctionUtils::IsSelected(func) ? "X" : "-";
     case COLUMN_FUNCTION_NAME:
-      return func.m_Name;
+      return func.name;
     case COLUMN_EXCLUSIVE:
-      return absl::StrFormat("%.2f", func.m_Exclusive);
+      return absl::StrFormat("%.2f", func.exclusive);
     case COLUMN_INCLUSIVE:
-      return absl::StrFormat("%.2f", func.m_Inclusive);
+      return absl::StrFormat("%.2f", func.inclusive);
     case COLUMN_MODULE_NAME:
-      return func.m_Module;
+      return func.module;
     case COLUMN_FILE:
-      return func.m_File;
+      return func.file;
     case COLUMN_LINE:
-      return func.m_Line > 0 ? absl::StrFormat("%d", func.m_Line) : "";
+      return func.line > 0 ? absl::StrFormat("%d", func.line) : "";
     case COLUMN_ADDRESS:
-      return absl::StrFormat("%#llx", func.m_Address);
+      return absl::StrFormat("%#llx", func.address);
     default:
       return "";
   }
 }
 
-//-----------------------------------------------------------------------------
 #define ORBIT_PROC_SORT(Member)                                          \
   [&](int a, int b) {                                                    \
     return OrbitUtils::Compare(functions[a].Member, functions[b].Member, \
                                ascending);                               \
   }
 
-//-----------------------------------------------------------------------------
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                   \
   [&](int a, int b) {                                                  \
     return OrbitUtils::Compare(Func(functions[a]), Func(functions[b]), \
                                ascending);                             \
   }
 
-//-----------------------------------------------------------------------------
 void SamplingReportDataView::DoSort() {
   bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
@@ -92,25 +85,25 @@ void SamplingReportDataView::DoSort() {
       sorter = ORBIT_CUSTOM_FUNC_SORT(FunctionUtils::IsSelected);
       break;
     case COLUMN_FUNCTION_NAME:
-      sorter = ORBIT_PROC_SORT(m_Name);
+      sorter = ORBIT_PROC_SORT(name);
       break;
     case COLUMN_EXCLUSIVE:
-      sorter = ORBIT_PROC_SORT(m_Exclusive);
+      sorter = ORBIT_PROC_SORT(exclusive);
       break;
     case COLUMN_INCLUSIVE:
-      sorter = ORBIT_PROC_SORT(m_Inclusive);
+      sorter = ORBIT_PROC_SORT(inclusive);
       break;
     case COLUMN_MODULE_NAME:
-      sorter = ORBIT_PROC_SORT(m_Module);
+      sorter = ORBIT_PROC_SORT(module);
       break;
     case COLUMN_FILE:
-      sorter = ORBIT_PROC_SORT(m_File);
+      sorter = ORBIT_PROC_SORT(file);
       break;
     case COLUMN_LINE:
-      sorter = ORBIT_PROC_SORT(m_Line);
+      sorter = ORBIT_PROC_SORT(line);
       break;
     case COLUMN_ADDRESS:
-      sorter = ORBIT_PROC_SORT(m_Address);
+      sorter = ORBIT_PROC_SORT(address);
       break;
     default:
       break;
@@ -121,20 +114,19 @@ void SamplingReportDataView::DoSort() {
   }
 }
 
-//-----------------------------------------------------------------------------
 std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
     const std::vector<int>& a_Indices) {
   std::set<FunctionInfo*> functions_set;
   if (Capture::GTargetProcess != nullptr) {
     for (int index : a_Indices) {
       SampledFunction& sampled_function = GetSampledFunction(index);
-      if (sampled_function.m_Function == nullptr) {
-        sampled_function.m_Function =
+      if (sampled_function.function == nullptr) {
+        sampled_function.function =
             Capture::GTargetProcess->GetFunctionFromAddress(
-                sampled_function.m_Address, false);
+                sampled_function.address, false);
       }
 
-      FunctionInfo* function = sampled_function.m_Function;
+      FunctionInfo* function = sampled_function.function;
       if (function != nullptr) {
         functions_set.insert(function);
       }
@@ -144,7 +136,6 @@ std::vector<FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
   return std::vector<FunctionInfo*>(functions_set.begin(), functions_set.end());
 }
 
-//-----------------------------------------------------------------------------
 std::vector<std::shared_ptr<Module>>
 SamplingReportDataView::GetModulesFromIndices(
     const std::vector<int>& a_Indices) {
@@ -153,7 +144,7 @@ SamplingReportDataView::GetModulesFromIndices(
     std::set<std::string> module_names;
     for (int index : a_Indices) {
       SampledFunction& sampled_function = GetSampledFunction(index);
-      module_names.emplace(sampled_function.m_Module);
+      module_names.emplace(sampled_function.module);
     }
 
     auto& module_map = Capture::GTargetProcess->GetNameToModulesMap();
@@ -167,7 +158,6 @@ SamplingReportDataView::GetModulesFromIndices(
   return modules;
 }
 
-//-----------------------------------------------------------------------------
 const std::string SamplingReportDataView::MENU_ACTION_SELECT = "Hook";
 const std::string SamplingReportDataView::MENU_ACTION_UNSELECT = "Unhook";
 const std::string SamplingReportDataView::MENU_ACTION_MODULES_LOAD =
@@ -175,7 +165,6 @@ const std::string SamplingReportDataView::MENU_ACTION_MODULES_LOAD =
 const std::string SamplingReportDataView::MENU_ACTION_DISASSEMBLY =
     "Go to Disassembly";
 
-//-----------------------------------------------------------------------------
 std::vector<std::string> SamplingReportDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
@@ -207,7 +196,6 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   return menu;
 }
 
-//-----------------------------------------------------------------------------
 void SamplingReportDataView::OnContextMenu(
     const std::string& a_Action, int a_MenuIndex,
     const std::vector<int>& a_ItemIndices) {
@@ -237,13 +225,11 @@ void SamplingReportDataView::OnContextMenu(
   }
 }
 
-//-----------------------------------------------------------------------------
 void SamplingReportDataView::OnSelect(int index) {
   SampledFunction& func = GetSampledFunction(index);
-  m_SamplingReport->OnSelectAddress(func.m_Address, m_TID);
+  m_SamplingReport->OnSelectAddress(func.address, m_TID);
 }
 
-//-----------------------------------------------------------------------------
 void SamplingReportDataView::LinkDataView(DataView* a_DataView) {
   if (a_DataView->GetType() == DataViewType::CALLSTACK) {
     m_CallstackDataView = static_cast<CallStackDataView*>(a_DataView);
@@ -251,7 +237,6 @@ void SamplingReportDataView::LinkDataView(DataView* a_DataView) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void SamplingReportDataView::SetSampledFunctions(
     const std::vector<SampledFunction>& a_Functions) {
   m_Functions = a_Functions;
@@ -265,7 +250,6 @@ void SamplingReportDataView::SetSampledFunctions(
   OnDataChanged();
 }
 
-//-----------------------------------------------------------------------------
 void SamplingReportDataView::SetThreadID(ThreadID a_TID) {
   m_TID = a_TID;
   if (a_TID == 0) {
@@ -275,7 +259,6 @@ void SamplingReportDataView::SetThreadID(ThreadID a_TID) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void SamplingReportDataView::DoFilter() {
   std::vector<uint32_t> indices;
 
@@ -283,8 +266,8 @@ void SamplingReportDataView::DoFilter() {
 
   for (size_t i = 0; i < m_Functions.size(); ++i) {
     SampledFunction& func = m_Functions[i];
-    std::string name = ToLower(func.m_Name);
-    std::string module = ToLower(func.m_Module);
+    std::string name = ToLower(func.name);
+    std::string module = ToLower(func.module);
 
     bool match = true;
 
@@ -306,13 +289,11 @@ void SamplingReportDataView::DoFilter() {
   OnSort(m_SortingColumn, {});
 }
 
-//-----------------------------------------------------------------------------
 const SampledFunction& SamplingReportDataView::GetSampledFunction(
     unsigned int a_Row) const {
   return m_Functions[indices_[a_Row]];
 }
 
-//-----------------------------------------------------------------------------
 SampledFunction& SamplingReportDataView::GetSampledFunction(
     unsigned int a_Row) {
   return m_Functions[indices_[a_Row]];

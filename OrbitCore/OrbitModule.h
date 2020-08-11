@@ -9,12 +9,10 @@
 
 #include <string>
 
-#include "BaseTypes.h"
 #include "symbol.pb.h"
 
 class Pdb;
 
-//-----------------------------------------------------------------------------
 struct Module {
   Module(){};
   Module(const std::string& file_name, uint64_t address_start,

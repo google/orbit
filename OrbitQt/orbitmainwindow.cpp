@@ -24,6 +24,8 @@
 #include "App.h"
 #include "MainThreadExecutorImpl.h"
 #include "OrbitVersion.h"
+#include "Path.h"
+#include "PrintVar.h"
 #include "SamplingReport.h"
 #include "TopDownViewItemModel.h"
 #include "absl/flags/flag.h"
@@ -34,7 +36,6 @@
 #include "orbitdisassemblydialog.h"
 #include "orbitlivefunctions.h"
 #include "orbitsamplingreport.h"
-#include "outputdialog.h"
 #include "services.pb.h"
 #include "ui_orbitmainwindow.h"
 
@@ -45,17 +46,12 @@
 ABSL_DECLARE_FLAG(bool, enable_stale_features);
 ABSL_DECLARE_FLAG(bool, devmode);
 
-//-----------------------------------------------------------------------------
 extern QMenu* GContextMenu;
 
-//-----------------------------------------------------------------------------
 OrbitMainWindow::OrbitMainWindow(
     QApplication* a_App, ApplicationOptions&& options,
     OrbitQt::ServiceDeployManager* service_deploy_manager)
-    : QMainWindow(nullptr),
-      m_App(a_App),
-      ui(new Ui::OrbitMainWindow),
-      m_IsDev(false) {
+    : QMainWindow(nullptr), m_App(a_App), ui(new Ui::OrbitMainWindow) {
   OrbitApp::Init(std::move(options), CreateMainThreadExecutor());
 
   DataViewFactory* data_view_factory = GOrbitApp.get();
@@ -155,12 +151,6 @@ OrbitMainWindow::OrbitMainWindow(
     QToolTip::showText(QCursor::pos(), QString::fromStdString(tooltip), this);
   });
   GOrbitApp->SetFeedbackDialogCallback([this] { ShowFeedbackDialog(); });
-
-  GOrbitApp->SetFindFileCallback([this](const std::string& caption,
-                                        const std::string& dir,
-                                        const std::string& filter) {
-    return this->FindFile(caption, dir, filter);
-  });
   GOrbitApp->SetSaveFileCallback([this](const std::string& extension) {
     return this->OnGetSaveFileName(extension);
   });
@@ -174,9 +164,6 @@ OrbitMainWindow::OrbitMainWindow(
         return service_deploy_manager->CopyFileToLocal(source, destination);
       });
 
-  ParseCommandlineArguments();
-
-  ui->DebugGLWidget->Initialize(GlPanel::DEBUG, this);
   ui->CaptureGLWidget->Initialize(GlPanel::CAPTURE, this);
 
   ui->ModulesList->Initialize(
@@ -194,13 +181,7 @@ OrbitMainWindow::OrbitMainWindow(
 
   SetupCodeView();
 
-  if (!m_IsDev) {
-    HideTab(ui->MainTabWidget, "debug");
-  }
-
   if (!absl::GetFlag(FLAGS_enable_stale_features)) {
-    ui->MainTabWidget->removeTab(ui->MainTabWidget->indexOf(ui->OutputTab));
-
     ui->RightTabWidget->removeTab(
         ui->RightTabWidget->indexOf(ui->CallStackTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->CodeTab));
@@ -212,13 +193,7 @@ OrbitMainWindow::OrbitMainWindow(
 
   SetupCaptureToolbar();
 
-  // Output window
-  this->ui->plainTextEdit->SetIsOutputWindow();
-
   StartMainTimer();
-
-  m_OutputDialog = new OutputDialog(this);
-  m_OutputDialog->setWindowTitle("Orbit - Loading Pdb...");
 
   ui->liveFunctions->Initialize(SelectionType::kExtended, FontType::kDefault);
 
@@ -334,7 +309,6 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   ui->actionStop_Capture->setDisabled(true);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::SetupCodeView() {
   ui->CodeTextEdit->SetEditorType(OrbitCodeEditor::CODE_VIEW);
   ui->FileMappingTextEdit->SetEditorType(OrbitCodeEditor::FILE_MAPPING);
@@ -344,7 +318,6 @@ void OrbitMainWindow::SetupCodeView() {
   OrbitCodeEditor::setFileMappingWidget(ui->FileMappingWidget);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::ShowFeedbackDialog() {
   QDialog feedback_dialog{nullptr,
                           Qt::WindowTitleHint | Qt::WindowCloseButtonHint};
@@ -383,29 +356,12 @@ void OrbitMainWindow::ShowFeedbackDialog() {
   feedback_dialog.exec();
 }
 
-//-----------------------------------------------------------------------------
 OrbitMainWindow::~OrbitMainWindow() {
-  delete m_OutputDialog;
   delete ui;
 }
 
-//-----------------------------------------------------------------------------
-void OrbitMainWindow::ParseCommandlineArguments() {
-  std::vector<std::string> arguments;
-  for (const auto& qt_argument : QCoreApplication::arguments()) {
-    std::string argument = qt_argument.toStdString();
-    if (argument == "dev") {
-      m_IsDev = true;
-    }
-
-    arguments.push_back(std::move(argument));
-  }
-}
-
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::PostInit() {}
 
-//-----------------------------------------------------------------------------
 bool OrbitMainWindow::HideTab(QTabWidget* a_TabWidget, const char* a_TabName) {
   QTabWidget* tab = a_TabWidget;
 
@@ -421,22 +377,6 @@ bool OrbitMainWindow::HideTab(QTabWidget* a_TabWidget, const char* a_TabName) {
   return false;
 }
 
-//-----------------------------------------------------------------------------
-std::string OrbitMainWindow::FindFile(const std::string& caption,
-                                      const std::string& dir,
-                                      const std::string& filter) {
-  QStringList list = QFileDialog::getOpenFileNames(this, caption.c_str(),
-                                                   dir.c_str(), filter.c_str());
-  std::string result;
-  for (auto& file : list) {
-    result = file.toStdString();
-    break;
-  }
-
-  return result;
-}
-
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
   if (a_Type == DataViewType::ALL) {
     for (int i = 0; i < static_cast<int>(DataViewType::ALL); ++i) {
@@ -447,7 +387,6 @@ void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
   switch (a_Type) {
     case DataViewType::CALLSTACK:
@@ -479,7 +418,6 @@ void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::OnNewSamplingReport(
     DataView* callstack_data_view,
     std::shared_ptr<SamplingReport> sampling_report) {
@@ -497,7 +435,6 @@ void OrbitMainWindow::OnNewSamplingReport(
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::OnNewSelectionReport(
     DataView* callstack_data_view,
     std::shared_ptr<SamplingReport> sampling_report) {
@@ -517,7 +454,6 @@ void OrbitMainWindow::OnNewTopDownView(
   ui->topDownWidget->SetTopDownView(std::move(top_down_view));
 }
 
-//-----------------------------------------------------------------------------
 std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {
   std::string filename =
       QFileDialog::getSaveFileName(this, "Specify a file to save...", nullptr,
@@ -529,12 +465,10 @@ std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {
   return filename;
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::OnSetClipboard(const std::string& text) {
   QApplication::clipboard()->setText(QString::fromStdString(text));
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionReport_Missing_Feature_triggered() {
   if (!QDesktopServices::openUrl(
           QUrl("https://community.stadia.dev/s/feature-requests",
@@ -545,7 +479,6 @@ void OrbitMainWindow::on_actionReport_Missing_Feature_triggered() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionReport_Bug_triggered() {
   if (!QDesktopServices::openUrl(QUrl(
           "https://community.stadia.dev/s/contactsupport", QUrl::StrictMode))) {
@@ -555,7 +488,6 @@ void OrbitMainWindow::on_actionReport_Bug_triggered() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionAbout_triggered() {
   OrbitQt::OrbitAboutDialog dialog{this};
   dialog.setWindowTitle(windowTitle());
@@ -571,7 +503,6 @@ void OrbitMainWindow::on_actionAbout_triggered() {
   dialog.exec();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::StartMainTimer() {
   m_MainTimer = new QTimer(this);
   connect(m_MainTimer, SIGNAL(timeout()), this, SLOT(OnTimer()));
@@ -581,7 +512,6 @@ void OrbitMainWindow::StartMainTimer() {
   m_MainTimer->start(msec);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::OnTimer() {
   OrbitApp::MainTick();
 
@@ -589,15 +519,11 @@ void OrbitMainWindow::OnTimer() {
     glWidget->update();
   }
 
-  // Output window
-  this->ui->plainTextEdit->OnTimer();
-
   if (timer_label_) {
     timer_label_->setText(QString::fromStdString(GOrbitApp->GetCaptureTime()));
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::OnHideSearch() { ui->lineEdit->hide(); }
 
 void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
@@ -605,7 +531,6 @@ void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
   ui->liveFunctions->SetFilter(text);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::OnLiveTabFunctionsFilterTextChanged(const QString& text) {
 
   // Set main toolbar functions filter without triggering signals.
@@ -614,12 +539,10 @@ void OrbitMainWindow::OnLiveTabFunctionsFilterTextChanged(const QString& text) {
   filter_functions_line_edit_->blockSignals(false);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::OnFilterTracksTextChanged(const QString& text) {
   GOrbitApp->FilterTracks(text.toStdString());
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionOpen_Preset_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Select a file to open...", Path::GetPresetPath().c_str(), "*.opr");
@@ -636,13 +559,11 @@ void OrbitMainWindow::on_actionOpen_Preset_triggered() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionQuit_triggered() {
   close();
   QApplication::quit();
 }
 
-//-----------------------------------------------------------------------------
 QPixmap QtGrab(OrbitMainWindow* a_Window) {
   QPixmap pixMap = a_Window->grab();
   if (GContextMenu) {
@@ -652,12 +573,10 @@ QPixmap QtGrab(OrbitMainWindow* a_Window) {
   return pixMap;
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionToogleDevMode_toggled(bool a_Toggle) {
   UNUSED(a_Toggle);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
   QString file =
       QFileDialog::getSaveFileName(this, "Specify a file to save...",
@@ -737,7 +656,6 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionOpen_Capture_triggered() {
   QString file = QFileDialog::getOpenFileName(
       this, "Open capture...", QString::fromStdString(Path::GetCapturePath()),
@@ -767,7 +685,6 @@ outcome::result<void> OrbitMainWindow::OpenCapture(
   return outcome::success();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::OpenDisassembly(std::string a_String,
                                       DisassemblyReport report) {
   auto* dialog = new OrbitDisassemblyDialog(this);
@@ -780,7 +697,6 @@ void OrbitMainWindow::OpenDisassembly(std::string a_String,
   dialog->show();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::SetTitle(const QString& task_description) {
   if (task_description.isEmpty()) {
     setWindowTitle(QString("%1 %2").arg(QApplication::applicationName(),
@@ -793,40 +709,33 @@ void OrbitMainWindow::SetTitle(const QString& task_description) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionCheckFalse_triggered() { CHECK(false); }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionNullPointerDereference_triggered() {
   int* null_pointer = nullptr;
   *null_pointer = 0;
 }
 
-//-----------------------------------------------------------------------------
 void InfiniteRecursion(int num) {
   if (num != 1) {
     InfiniteRecursion(num);
   }
-  LOG("%s", VAR_TO_STR(num).c_str());
+  LOG("%s", VAR_TO_STR(num));
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionStackOverflow_triggered() {
   InfiniteRecursion(0);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionServiceCheckFalse_triggered() {
   GOrbitApp->CrashOrbitService(CrashOrbitServiceRequest_CrashType_CHECK_FALSE);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionServiceNullPointerDereference_triggered() {
   GOrbitApp->CrashOrbitService(
       CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
   GOrbitApp->CrashOrbitService(
       CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW);

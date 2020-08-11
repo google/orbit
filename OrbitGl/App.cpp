@@ -27,7 +27,6 @@
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
 #include "ImGuiOrbit.h"
-#include "Injection.h"
 #include "Introspection.h"
 #include "KeyAndString.h"
 #include "LinuxCallstackEvent.h"
@@ -38,6 +37,7 @@
 #include "OrbitBase/Tracing.h"
 #include "OrbitVersion.h"
 #include "Params.h"
+#include "Path.h"
 #include "Pdb.h"
 #include "PresetsDataView.h"
 #include "PrintVar.h"
@@ -46,12 +46,7 @@
 #include "SamplingReport.h"
 #include "ScopeTimer.h"
 #include "StringManager.h"
-#include "TextRenderer.h"
 #include "Utils.h"
-
-#if __linux__
-#include <OrbitLinuxTracing/OrbitTracing.h>
-#endif
 
 ABSL_DECLARE_FLAG(bool, devmode);
 
@@ -63,7 +58,6 @@ using orbit_client_protos::PresetInfo;
 using orbit_client_protos::TimerInfo;
 
 std::unique_ptr<OrbitApp> GOrbitApp;
-float GFontSize;
 bool DoZoom = false;
 
 OrbitApp::OrbitApp(ApplicationOptions&& options,
@@ -75,22 +69,10 @@ OrbitApp::OrbitApp(ApplicationOptions&& options,
   data_manager_ = std::make_unique<DataManager>(std::this_thread::get_id());
 }
 
-//-----------------------------------------------------------------------------
 OrbitApp::~OrbitApp() {
 #ifdef _WIN32
   oqpi_tk::stop_scheduler();
 #endif
-}
-
-//-----------------------------------------------------------------------------
-std::string OrbitApp::FindFile(const std::string& caption,
-                               const std::string& dir,
-                               const std::string& filter) {
-  if (find_file_callback_) {
-    return find_file_callback_(caption, dir, filter);
-  }
-
-  return std::string();
 }
 
 void OrbitApp::OnCaptureStarted() {
@@ -122,7 +104,8 @@ void OrbitApp::OnCaptureStarted() {
 
 void OrbitApp::OnCaptureComplete() {
   main_thread_executor_->Schedule([this] {
-    Capture::GAddressInfos = std::move(captured_address_infos_);
+    Capture::capture_data_.set_address_infos(
+        std::move(captured_address_infos_));
     Capture::FinalizeCapture();
 
     RefreshCaptureView();
@@ -162,10 +145,11 @@ void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
-  main_thread_executor_->Schedule([thread_id, thread_name = std::move(
-                                                  thread_name)]() mutable {
-    Capture::GThreadNames.insert_or_assign(thread_id, std::move(thread_name));
-  });
+  main_thread_executor_->Schedule(
+      [thread_id, thread_name = std::move(thread_name)]() mutable {
+        Capture::capture_data_.AddOrAssignThreadName(thread_id,
+                                                     std::move(thread_name));
+      });
 }
 
 void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
@@ -173,7 +157,6 @@ void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
   captured_address_infos_.emplace(address, std::move(address_info));
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::OnValidateFramePointers(
     std::vector<std::shared_ptr<Module>> modules_to_validate) {
   thread_pool_->Schedule(
@@ -182,7 +165,6 @@ void OrbitApp::OnValidateFramePointers(
       });
 }
 
-//-----------------------------------------------------------------------------
 bool OrbitApp::Init(ApplicationOptions&& options,
                     std::unique_ptr<MainThreadExecutor> main_thread_executor) {
   GOrbitApp = std::make_unique<OrbitApp>(std::move(options),
@@ -196,13 +178,11 @@ bool OrbitApp::Init(ApplicationOptions&& options,
   oqpi_tk::start_default_scheduler();
 #endif
 
-  GFontSize = GParams.font_size;
   GOrbitApp->LoadFileMapping();
 
   return true;
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::PostInit() {
   if (!options_.grpc_server_address.empty()) {
     grpc::ChannelArguments channel_arguments;
@@ -278,7 +258,6 @@ void OrbitApp::PostInit() {
   GCurrentTimeGraph->SetStringManager(string_manager_);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::LoadFileMapping() {
   m_FileMapping.clear();
   std::string fileName = Path::GetFileMappingFileName();
@@ -329,7 +308,6 @@ void OrbitApp::LoadFileMapping() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::ListPresets() {
   std::vector<std::string> preset_filenames =
       Path::ListFiles(Path::GetPresetPath(), ".opr");
@@ -351,14 +329,12 @@ void OrbitApp::ListPresets() {
   m_PresetsDataView->SetPresets(presets);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::RefreshCaptureView() {
   NeedsRedraw();
   GOrbitApp->FireRefreshCallbacks();
   DoZoom = true;  // TODO: remove global, review logic
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   thread_pool_->Schedule([this, pid, function] {
     auto result = process_manager_->LoadProcessMemory(
@@ -374,8 +350,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     Disassembler disasm;
     disasm.LOGF(absl::StrFormat("asm: /* %s */\n",
                                 FunctionUtils::GetDisplayName(function)));
-    disasm.Disassemble(reinterpret_cast<const uint8_t*>(memory.data()),
-                       memory.size(),
+    disasm.Disassemble(memory.data(), memory.size(),
                        FunctionUtils::GetAbsoluteAddress(function),
                        Capture::GTargetProcess->GetIs64Bit());
     if (!sampling_report_ || !sampling_report_->GetProfiler()) {
@@ -392,7 +367,6 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   });
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::OnExit() {
   if (Capture::GState == Capture::State::kStarted) {
     StopCapture();
@@ -405,14 +379,11 @@ void OrbitApp::OnExit() {
   Orbit_ImGui_Shutdown();
 }
 
-//-----------------------------------------------------------------------------
 Timer GMainTimer;
 
-//-----------------------------------------------------------------------------
 // TODO: make it non-static
 void OrbitApp::MainTick() {
   ORBIT_SCOPE_FUNC;
-  TRACE_VAR(GMainTimer.QueryMillis());
 
   GMainTimer.Reset();
 
@@ -426,20 +397,17 @@ void OrbitApp::MainTick() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::RegisterCaptureWindow(CaptureWindow* a_Capture) {
   CHECK(m_CaptureWindow == nullptr);
   m_CaptureWindow = a_Capture;
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::NeedsRedraw() {
   if (m_CaptureWindow != nullptr) {
     m_CaptureWindow->NeedsUpdate();
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::AddSamplingReport(
     std::shared_ptr<SamplingProfiler> sampling_profiler) {
   auto report = std::make_shared<SamplingReport>(std::move(sampling_profiler));
@@ -453,7 +421,6 @@ void OrbitApp::AddSamplingReport(
   sampling_report_ = report;
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::AddSelectionReport(
     std::shared_ptr<SamplingProfiler> a_SamplingProfiler) {
   auto report = std::make_shared<SamplingReport>(std::move(a_SamplingProfiler));
@@ -473,17 +440,16 @@ void OrbitApp::AddTopDownView(const SamplingProfiler& sampling_profiler) {
   }
   std::unique_ptr<TopDownView> top_down_view =
       TopDownView::CreateFromSamplingProfiler(
-          sampling_profiler, Capture::GProcessName, Capture::GThreadNames,
-          Capture::GAddressToFunctionName);
+          sampling_profiler, Capture::capture_data_.process_name(),
+          Capture::capture_data_.thread_names());
   top_down_view_callback_(std::move(top_down_view));
 }
 
-//-----------------------------------------------------------------------------
 std::string OrbitApp::GetCaptureFileName() {
-  time_t timestamp =
-      std::chrono::system_clock::to_time_t(Capture::GCaptureTimePoint);
+  time_t timestamp = std::chrono::system_clock::to_time_t(
+      Capture::capture_data_.capture_start_time());
   std::string result;
-  result.append(Path::StripExtension(Capture::GProcessName));
+  result.append(Path::StripExtension(Capture::capture_data_.process_name()));
   result.append("_");
   result.append(OrbitUtils::FormatTime(timestamp));
   result.append(".orbit");
@@ -496,7 +462,6 @@ std::string OrbitApp::GetCaptureTime() {
   return GetPrettyTime(absl::Microseconds(time));
 }
 
-//-----------------------------------------------------------------------------
 std::string OrbitApp::GetSaveFile(const std::string& extension) {
   if (!save_file_callback_) {
     return "";
@@ -504,14 +469,12 @@ std::string OrbitApp::GetSaveFile(const std::string& extension) {
   return save_file_callback_(extension);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::SetClipboard(const std::string& text) {
   if (clipboard_callback_) {
     clipboard_callback_(text);
   }
 }
 
-//-----------------------------------------------------------------------------
 ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
   OUTCOME_TRY(Capture::SavePreset(filename));
   ListPresets();
@@ -519,7 +482,6 @@ ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
   return outcome::success();
 }
 
-//-----------------------------------------------------------------------------
 ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(
     const std::string& filename) {
   std::string file_path = filename;
@@ -542,7 +504,6 @@ ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(
   return preset_info;
 }
 
-//-----------------------------------------------------------------------------
 ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
   OUTCOME_TRY(preset_info, ReadPresetFromFile(filename));
 
@@ -553,7 +514,6 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
   return outcome::success();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
   const std::string& process_full_path =
       preset->preset_info().process_full_path();
@@ -571,14 +531,12 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset) {
   Capture::GSessionPresets = preset;
 }
 
-//-----------------------------------------------------------------------------
 ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::string& file_name) {
   CaptureSerializer ar;
   ar.time_graph_ = GCurrentTimeGraph;
   return ar.Save(file_name);
 }
 
-//-----------------------------------------------------------------------------
 ErrorMessageOr<void> OrbitApp::OnLoadCapture(const std::string& file_name) {
   ClearCapture();
 
@@ -590,7 +548,6 @@ ErrorMessageOr<void> OrbitApp::OnLoadCapture(const std::string& file_name) {
   return outcome::success();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::FireRefreshCallbacks(DataViewType type) {
   for (DataView* panel : m_Panels) {
     if (type == DataViewType::ALL || type == panel->GetType()) {
@@ -612,7 +569,7 @@ bool OrbitApp::StartCapture() {
     return false;
   }
 
-  int32_t pid = Capture::GProcessId;
+  int32_t pid = Capture::GTargetProcess->GetID();
   std::map<uint64_t, FunctionInfo*> selected_functions =
       Capture::GSelectedFunctionsMap;
   thread_pool_->Schedule([this, pid, selected_functions] {
@@ -622,7 +579,6 @@ bool OrbitApp::StartCapture() {
   return true;
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::StopCapture() {
   CHECK(Capture::GState == Capture::State::kStarted);
   Capture::StopCapture();
@@ -637,8 +593,12 @@ void OrbitApp::StopCapture() {
 
 void OrbitApp::ClearCapture() {
   Capture::ClearCaptureData();
-  Capture::GClearCaptureDataFunc();
-  GCurrentTimeGraph->Clear();
+
+  if (GCurrentTimeGraph) {
+    GCurrentTimeGraph->Clear();
+  }
+  GOrbitApp->FireRefreshCallbacks(DataViewType::LIVE_FUNCTIONS);
+
   if (capture_cleared_callback_) {
     capture_cleared_callback_();
   }
@@ -650,7 +610,6 @@ void OrbitApp::ToggleDrawHelp() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::ToggleCapture() {
   if (Capture::GState == Capture::State::kStarted) {
     StopCapture();
@@ -660,28 +619,12 @@ void OrbitApp::ToggleCapture() {
   }
 }
 
-//-----------------------------------------------------------------------------
 bool OrbitApp::SelectProcess(const std::string& a_Process) {
   if (m_ProcessesDataView) {
     return m_ProcessesDataView->SelectProcess(a_Process);
   }
 
   return false;
-}
-
-//-----------------------------------------------------------------------------
-bool OrbitApp::SelectProcess(int32_t a_ProcessID) {
-  if (m_ProcessesDataView) {
-    return m_ProcessesDataView->SelectProcess(a_ProcessID);
-  }
-
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-void OrbitApp::SetCallStack(std::shared_ptr<CallStack> a_CallStack) {
-  m_CallStackDataView->SetCallStack(std::move(a_CallStack));
-  FireRefreshCallbacks(DataViewType::CALLSTACK);
 }
 
 void OrbitApp::SendDisassemblyToUi(std::string disassembly,
@@ -702,7 +645,6 @@ void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
   });
 }
 
-
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {
     if (info_message_callback_) {
@@ -711,7 +653,6 @@ void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
   });
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::SendErrorToUi(const std::string& title,
                              const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {
@@ -721,7 +662,6 @@ void OrbitApp::SendErrorToUi(const std::string& title,
   });
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::LoadModuleOnRemote(int32_t process_id,
                                   const std::shared_ptr<Module>& module,
                                   const std::shared_ptr<PresetFile>& preset) {
@@ -806,7 +746,6 @@ void OrbitApp::SymbolLoadingFinished(
   GOrbitApp->FireRefreshCallbacks();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::LoadModules(int32_t process_id,
                            const std::vector<std::shared_ptr<Module>>& modules,
                            const std::shared_ptr<PresetFile>& preset) {
@@ -842,7 +781,6 @@ void OrbitApp::LoadModules(int32_t process_id,
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::LoadModulesFromPreset(
     const std::shared_ptr<Process>& process,
     const std::shared_ptr<PresetFile>& preset) {
@@ -940,7 +878,6 @@ void OrbitApp::OnProcessSelected(int32_t pid) {
   UpdateModuleList(pid);
 }
 
-//-----------------------------------------------------------------------------
 std::shared_ptr<Process> OrbitApp::FindProcessByPid(int32_t pid) {
   absl::MutexLock lock(&process_map_mutex_);
   auto it = process_map_.find(pid);
@@ -961,7 +898,6 @@ void OrbitApp::UpdateSamplingReport() {
   }
 }
 
-//-----------------------------------------------------------------------------
 DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::FUNCTIONS:
@@ -1019,12 +955,10 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   FATAL("Unreachable");
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::FilterTracks(const std::string& filter) {
   GCurrentTimeGraph->SetThreadFilter(filter);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitApp::CrashOrbitService(
     CrashOrbitServiceRequest_CrashType crash_type) {
   if (absl::GetFlag(FLAGS_devmode)) {

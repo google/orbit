@@ -15,7 +15,6 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
-//-----------------------------------------------------------------------------
 TextBox::TextBox()
     : m_Pos(Vec2::Zero()),
       m_Size(Vec2(100.f, 10.f)),
@@ -26,7 +25,6 @@ TextBox::TextBox()
   Update();
 }
 
-//-----------------------------------------------------------------------------
 TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size,
                  const std::string& a_Text, const Color& a_Color)
     : m_Pos(a_Pos),
@@ -39,7 +37,6 @@ TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size,
   Update();
 }
 
-//-----------------------------------------------------------------------------
 TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size, const Color& a_Color)
     : m_Pos(a_Pos),
       m_Size(a_Size),
@@ -50,7 +47,6 @@ TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size, const Color& a_Color)
   Update();
 }
 
-//-----------------------------------------------------------------------------
 TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size)
     : m_Pos(a_Pos),
       m_Size(a_Size),
@@ -60,16 +56,13 @@ TextBox::TextBox(const Vec2& a_Pos, const Vec2& a_Size)
   Update();
 }
 
-//-----------------------------------------------------------------------------
 TextBox::~TextBox() {}
 
-//-----------------------------------------------------------------------------
 void TextBox::Update() {
   m_Min = m_Pos;
   m_Max = m_Pos + Vec2(std::abs(m_Size[0]), std::abs(m_Size[1]));
 }
 
-//-----------------------------------------------------------------------------
 float TextBox::GetScreenSize(const TextRenderer& a_TextRenderer) {
   float worldWidth = a_TextRenderer.GetSceneBox().m_Size[0];
   float screenSize = a_TextRenderer.GetCanvas()->getWidth();
@@ -77,7 +70,6 @@ float TextBox::GetScreenSize(const TextRenderer& a_TextRenderer) {
   return (m_Size[0] / worldWidth) * screenSize;
 }
 
-//-----------------------------------------------------------------------------
 void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
                    bool a_Visible, bool a_RightJustify, bool isInactive,
                    unsigned int a_ID, bool a_IsPicking, bool a_IsHighlighted) {

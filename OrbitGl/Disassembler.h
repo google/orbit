@@ -6,13 +6,12 @@
 
 #include <string>
 
-#include "BaseTypes.h"
 #include "Utils.h"
 #include "absl/strings/str_format.h"
 
 class Disassembler {
  public:
-  void Disassemble(const uint8_t* machine_code, size_t size, uint64_t address,
+  void Disassemble(const void* machine_code, size_t size, uint64_t address,
                    bool is_64bit);
   [[nodiscard]] const std::string& GetResult() const { return result_; }
   [[nodiscard]] uint64_t GetAddressAtLine(size_t line) const;

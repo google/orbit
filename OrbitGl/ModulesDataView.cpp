@@ -5,7 +5,6 @@
 #include "ModulesDataView.h"
 
 #include "App.h"
-#include "Core.h"
 #include "OrbitModule.h"
 #include "Pdb.h"
 #include "absl/flags/flag.h"

@@ -8,19 +8,17 @@
 #include <freetype-gl/vertex-buffer.h>
 
 #include "App.h"
-#include "Core.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "Params.h"
+#include "Path.h"
 
-//-----------------------------------------------------------------------------
 typedef struct {
   float x, y, z;     // position
   float s, t;        // texture
   float r, g, b, a;  // color
 } vertex_t;
 
-//-----------------------------------------------------------------------------
 TextRenderer::TextRenderer()
     : m_Atlas(NULL),
       m_Buffer(NULL),
@@ -29,7 +27,6 @@ TextRenderer::TextRenderer()
       m_Initialized(false),
       m_DrawOutline(false) {}
 
-//-----------------------------------------------------------------------------
 TextRenderer::~TextRenderer() {
   if (m_Font) {
     texture_font_delete(m_Font);
@@ -40,7 +37,6 @@ TextRenderer::~TextRenderer() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void TextRenderer::Init() {
   if (m_Initialized) return;
 
@@ -77,7 +73,6 @@ void TextRenderer::Init() {
   m_Initialized = true;
 }
 
-//-----------------------------------------------------------------------------
 void TextRenderer::SetFontSize(int size) {
   texture_font_t* font = m_FontsBySize[size];
   if (font) {
@@ -86,12 +81,10 @@ void TextRenderer::SetFontSize(int size) {
   }
 }
 
-//-----------------------------------------------------------------------------
 int TextRenderer::GetFontSize() {
   return current_font_size_;
 }
 
-//-----------------------------------------------------------------------------
 void TextRenderer::Display(Batcher* batcher) {
   if (m_DrawOutline) {
     DrawOutline(batcher, m_Buffer);
@@ -141,7 +134,6 @@ void TextRenderer::Display(Batcher* batcher) {
   glUseProgram(0);
 }
 
-//-----------------------------------------------------------------------------
 void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer) {
   // TODO: No color was set here before.
   Color color(255, 255, 255, 255);
@@ -170,7 +162,6 @@ void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void TextRenderer::AddTextInternal(texture_font_t* font, const char* text,
                                    const vec4& color, vec2* pen,
                                    float a_MaxSize, float a_Z, bool) {
@@ -223,7 +214,6 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text,
   }
 }
 
-//-----------------------------------------------------------------------------
 void TextRenderer::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
                            const Color& a_Color, float a_MaxSize,
                            bool a_RightJustified) {
@@ -239,7 +229,6 @@ void TextRenderer::AddText(const char* a_Text, float a_X, float a_Y, float a_Z,
   AddTextInternal(m_Font, a_Text, ColorToVec4(a_Color), &m_Pen, a_MaxSize, a_Z);
 }
 
-//-----------------------------------------------------------------------------
 void TextRenderer::AddTextTrailingCharsPrioritized(
     const char* a_Text, float a_X, float a_Y, float a_Z, const Color& a_Color,
     size_t a_TrailingCharsLength, float a_MaxSize) {
@@ -314,7 +303,6 @@ void TextRenderer::AddTextTrailingCharsPrioritized(
   }
 }
 
-//-----------------------------------------------------------------------------
 int TextRenderer::AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z,
                             const Color& a_Color, float a_MaxSize,
                             bool a_RightJustified, bool a_InvertY) {
@@ -332,7 +320,6 @@ int TextRenderer::AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z,
   return a_X;
 }
 
-//-----------------------------------------------------------------------------
 void TextRenderer::GetStringSize(const char* a_Text, int& a_Width,
                                  int& a_Height) {
   float stringWidth = 0;
@@ -358,14 +345,12 @@ void TextRenderer::GetStringSize(const char* a_Text, int& a_Width,
   a_Height = static_cast<int>(stringHeight);
 }
 
-//-----------------------------------------------------------------------------
 int TextRenderer::GetStringHeight(const char* a_Text) {
   int w, h;
   GetStringSize(a_Text, w, h);
   return h;
 }
 
-//-----------------------------------------------------------------------------
 void TextRenderer::ToScreenSpace(float a_X, float a_Y, float& o_X, float& o_Y) {
   float WorldWidth = m_Canvas->GetWorldWidth();
   float WorldHeight = m_Canvas->GetWorldHeight();
@@ -376,12 +361,10 @@ void TextRenderer::ToScreenSpace(float a_X, float a_Y, float& o_X, float& o_Y) {
   o_Y = ((a_Y - WorldMinLeftY) / WorldHeight) * m_Canvas->getHeight();
 }
 
-//-----------------------------------------------------------------------------
 float TextRenderer::ToScreenSpace(float a_Size) {
   return (a_Size / m_Canvas->GetWorldWidth()) * m_Canvas->getWidth();
 }
 
-//-----------------------------------------------------------------------------
 void TextRenderer::Clear() {
   m_Pen.x = 0.f;
   m_Pen.y = 0.f;
@@ -390,12 +373,10 @@ void TextRenderer::Clear() {
   }
 }
 
-//-----------------------------------------------------------------------------
 const TextBox& TextRenderer::GetSceneBox() const {
   return m_Canvas->GetSceneBox();
 }
 
-//-----------------------------------------------------------------------------
 int TextRenderer::GetNumCharacters() const {
   return int(m_Buffer->vertices->size) / 4;
 }

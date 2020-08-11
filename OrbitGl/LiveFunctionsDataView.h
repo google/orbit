@@ -11,7 +11,6 @@
 
 class LiveFunctionsController;
 
-//-----------------------------------------------------------------------------
 class LiveFunctionsDataView : public DataView {
  public:
   LiveFunctionsDataView(LiveFunctionsController* live_functions);

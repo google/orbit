@@ -22,7 +22,6 @@
 class GlCanvas;
 class TimeGraph;
 
-//-----------------------------------------------------------------------------
 class Track : public Pickable, public std::enable_shared_from_this<Track> {
  public:
   enum Type {

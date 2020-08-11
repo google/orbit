@@ -8,13 +8,11 @@
 
 class TextBox;
 
-//-----------------------------------------------------------------------------
 struct Line {
   Vec3 m_Beg;
   Vec3 m_End;
 };
 
-//-----------------------------------------------------------------------------
 struct Box {
   Box() = default;
   Box(Vec2 pos, Vec2 size, float z) {
@@ -26,7 +24,6 @@ struct Box {
   Vec3 vertices_[4];
 };
 
-//-----------------------------------------------------------------------------
 struct Triangle {
   Triangle() = default;
   Triangle(Vec3 v0, Vec3 v1, Vec3 v2) {

@@ -61,7 +61,6 @@
 #include <QtWidgets>
 #include <fstream>
 
-#include "../OrbitCore/LogInterface.h"
 #include "../OrbitCore/Path.h"
 #include "../OrbitCore/PrintVar.h"
 #include "../OrbitCore/Utils.h"
@@ -111,10 +110,8 @@ OrbitCodeEditor::OrbitCodeEditor(QWidget* parent) : QPlainTextEdit(parent) {
 
   m_FindLineEdit = nullptr;
   m_SaveButton = nullptr;
-  m_IsOutput = false;
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::SetEditorType(EditorType a_Type) {
   m_Type = a_Type;
 
@@ -123,7 +120,6 @@ void OrbitCodeEditor::SetEditorType(EditorType a_Type) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::SetFindLineEdit(QLineEdit* a_Find) {
   if (a_Find) {
     m_FindLineEdit = a_Find;
@@ -134,7 +130,6 @@ void OrbitCodeEditor::SetFindLineEdit(QLineEdit* a_Find) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::SetSaveButton(QPushButton* a_Button) {
   if (m_Type == OrbitCodeEditor::FILE_MAPPING) {
     m_SaveButton = a_Button;
@@ -142,13 +137,11 @@ void OrbitCodeEditor::SetSaveButton(QPushButton* a_Button) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::OnSaveMapFile() {
   this->saveFileMap();
   GFileMapWidget->hide();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::OnFindTextEntered(const QString&) {
   // setFocus();
   PRINT_VAR(m_FindLineEdit->text().toStdString());
@@ -181,7 +174,6 @@ int OrbitCodeEditor::HeatMapAreaWidth() {
   return space;
 }
 
-//-----------------------------------------------------------------------------
 bool OrbitCodeEditor::loadCode(std::string a_Msg) {
   std::vector<std::string> tokens = absl::StrSplit(a_Msg, '^');
 
@@ -207,7 +199,6 @@ bool OrbitCodeEditor::loadCode(std::string a_Msg) {
   return true;
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::loadFileMap() {
   QFile file(QString::fromStdString(Path::GetFileMappingFileName()));
   bool success = file.open(QFile::ReadWrite | QFile::Text);
@@ -218,7 +209,6 @@ void OrbitCodeEditor::loadFileMap() {
   file.close();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::gotoLine(int a_Line) {
   moveCursor(QTextCursor::End);
   QTextBlock block = this->document()->findBlockByLineNumber(a_Line - 1);
@@ -241,30 +231,14 @@ void OrbitCodeEditor::gotoLine(int a_Line) {
   setTextCursor(text_cursor);
 }
 
-//-----------------------------------------------------------------------------
-void OrbitCodeEditor::OnTimer() {
-  if (m_IsOutput && isVisible()) {
-    std::vector<std::string> outputEntries = LogInterface::GetOutput();
-    for (std::string& line : outputEntries) {
-      QTextCursor prev_cursor = textCursor();
-      moveCursor(QTextCursor::End);
-      insertPlainText(line.c_str());
-      setTextCursor(prev_cursor);
-    }
-  }
-}
-
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::SetText(std::string a_Text) {
   this->document()->setPlainText(QString::fromStdString(a_Text));
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::updateLineNumberAreaWidth(int /* newBlockCount */) {
   setViewportMargins(lineNumberAreaWidth() + HeatMapAreaWidth(), 0, 0, 0);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::updateLineNumberArea(const QRect& rect, int dy) {
   if (dy) {
     lineNumberArea->scroll(0, dy);
@@ -275,7 +249,6 @@ void OrbitCodeEditor::updateLineNumberArea(const QRect& rect, int dy) {
   if (rect.contains(viewport()->rect())) updateLineNumberAreaWidth(0);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::UpdateHeatMapArea(const QRect& rect, int dy) {
   if (dy) {
     heatMapArea->scroll(0, dy);
@@ -284,7 +257,6 @@ void OrbitCodeEditor::UpdateHeatMapArea(const QRect& rect, int dy) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::resizeEvent(QResizeEvent* e) {
   QPlainTextEdit::resizeEvent(e);
 
@@ -295,7 +267,6 @@ void OrbitCodeEditor::resizeEvent(QResizeEvent* e) {
       QRect(cr.left(), cr.top(), HeatMapAreaWidth(), cr.height()));
 }
 
-//-----------------------------------------------------------------------------
 bool OrbitCodeEditor::eventFilter(QObject* object, QEvent* event) {
   if (object == m_FindLineEdit && event->type() == QEvent::KeyPress) {
     QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
@@ -317,14 +288,12 @@ bool OrbitCodeEditor::eventFilter(QObject* object, QEvent* event) {
   return false;
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::Find(const QString& a_String, bool a_BackWards) {
   UNUSED(a_String);
   find(m_FindLineEdit->text(),
        a_BackWards ? QTextDocument::FindBackward : QTextDocument::FindFlag());
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::keyPressEvent(QKeyEvent* e) {
   QPlainTextEdit::keyPressEvent(e);
 
@@ -361,7 +330,6 @@ void OrbitCodeEditor::keyPressEvent(QKeyEvent* e) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::saveFileMap() {
   std::string fileName = Path::GetFileMappingFileName();
   std::wofstream outFile(fileName);
@@ -371,7 +339,6 @@ void OrbitCodeEditor::saveFileMap() {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::HighlightWord(
     const std::string& a_Text, const QColor& a_Color,
     QList<QTextEdit::ExtraSelection>& extraSelections) {
@@ -397,7 +364,6 @@ void OrbitCodeEditor::HighlightWord(
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::highlightCurrentLine() {
   QList<QTextEdit::ExtraSelection> extraSelections;
 
@@ -428,7 +394,6 @@ void OrbitCodeEditor::highlightCurrentLine() {
   setExtraSelections(extraSelections);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event) {
   QPainter painter(lineNumberArea);
   painter.fillRect(event->rect(), QColor(30, 30, 30));
@@ -459,7 +424,6 @@ void OrbitCodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event) {
   }
 }
 
-//-----------------------------------------------------------------------------
 void OrbitCodeEditor::HeatMapAreaPaintEvent(QPaintEvent* event) {
   QPainter painter(heatMapArea);
   painter.fillRect(event->rect(), QColor(30, 30, 30));
@@ -505,7 +469,6 @@ void OrbitCodeEditor::HeatMapAreaPaintEvent(QPaintEvent* event) {
   }
 }
 
-//-----------------------------------------------------------------------------
 Highlighter::Highlighter(QTextDocument* parent) : QSyntaxHighlighter(parent) {
   HighlightingRule rule;
 
@@ -597,7 +560,6 @@ Highlighter::Highlighter(QTextDocument* parent) : QSyntaxHighlighter(parent) {
   highlightingRules.append(rule);
 }
 
-//-----------------------------------------------------------------------------
 void Highlighter::highlightBlock(const QString& text) {
   foreach (const HighlightingRule& rule, highlightingRules) {
     QRegExp expression(rule.pattern);

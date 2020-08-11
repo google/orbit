@@ -12,7 +12,6 @@
 
 using orbit_client_protos::CallstackEvent;
 
-//-----------------------------------------------------------------------------
 EventTrack::EventTrack(TimeGraph* a_TimeGraph) : Track(a_TimeGraph) {
   m_MousePos[0] = m_MousePos[1] = Vec2(0, 0);
   m_Picked = false;
@@ -23,7 +22,6 @@ std::string EventTrack::GetTooltip() const {
   return "Left-click and drag to select samples";
 }
 
-//-----------------------------------------------------------------------------
 void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Batcher* batcher = canvas->GetBatcher();
   PickingManager& picking_manager = canvas->GetPickingManager();
@@ -77,7 +75,6 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   m_Canvas = canvas;
 }
 
-//-----------------------------------------------------------------------------
 void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
                                   PickingMode picking_mode) {
   Batcher* batcher = &time_graph_->GetBatcher();
@@ -136,19 +133,16 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
   }
 }
 
-//-----------------------------------------------------------------------------
 void EventTrack::SetPos(float a_X, float a_Y) {
   m_Pos = Vec2(a_X, a_Y);
   m_ThreadName.SetPos(Vec2(a_X, a_Y));
   m_ThreadName.SetSize(Vec2(m_Size[0] * 0.3f, m_Size[1]));
 }
 
-//-----------------------------------------------------------------------------
 void EventTrack::SetSize(float a_SizeX, float a_SizeY) {
   m_Size = Vec2(a_SizeX, a_SizeY);
 }
 
-//-----------------------------------------------------------------------------
 void EventTrack::OnPick(int a_X, int a_Y) {
   Capture::GSelectedThreadId = m_ThreadId;
   Vec2& mousePos = m_MousePos[0];
@@ -157,7 +151,6 @@ void EventTrack::OnPick(int a_X, int a_Y) {
   m_Picked = true;
 }
 
-//-----------------------------------------------------------------------------
 void EventTrack::OnRelease() {
   if (m_Picked) {
     SelectEvents();
@@ -166,13 +159,11 @@ void EventTrack::OnRelease() {
   m_Picked = false;
 }
 
-//-----------------------------------------------------------------------------
 void EventTrack::OnDrag(int a_X, int a_Y) {
   Vec2& to = m_MousePos[1];
   m_Canvas->ScreenToWorld(a_X, a_Y, to[0], to[1]);
 }
 
-//-----------------------------------------------------------------------------
 void EventTrack::SelectEvents() {
   Vec2& from = m_MousePos[0];
   Vec2& to = m_MousePos[1];
@@ -180,7 +171,6 @@ void EventTrack::SelectEvents() {
   time_graph_->SelectEvents(from[0], to[0], m_ThreadId);
 }
 
-//-----------------------------------------------------------------------------
 bool EventTrack::IsEmpty() const {
   ScopeLock lock(GEventTracer.GetEventBuffer().GetMutex());
   const std::map<uint64_t, CallstackEvent>& callstacks =
@@ -188,19 +178,19 @@ bool EventTrack::IsEmpty() const {
   return callstacks.empty();
 }
 
-//-----------------------------------------------------------------------------
 static std::string SafeGetFormattedFunctionName(uint64_t addr,
                                                 int max_line_length) {
-  auto it = Capture::GAddressToFunctionName.find(addr);
-  if (it == Capture::GAddressToFunctionName.end()) {
-    return std::string("<i>") + "???" + "</i>";
+  const std::string& function_name =
+      Capture::GSamplingProfiler->GetFunctionNameByAddress(addr);
+  if (function_name == SamplingProfiler::kUnknownFunctionOrModuleName) {
+    return std::string("<i>") + function_name + "</i>";
   }
 
   std::string fn_name =
       max_line_length >= 0
-          ? ShortenStringWithEllipsis(it->second,
+          ? ShortenStringWithEllipsis(function_name,
                                       static_cast<size_t>(max_line_length))
-          : it->second;
+          : function_name;
   // Simple HTML escaping
   fn_name = Replace(fn_name, "&", "&amp;");
   fn_name = Replace(fn_name, "<", "&lt;");
@@ -208,7 +198,6 @@ static std::string SafeGetFormattedFunctionName(uint64_t addr,
   return fn_name;
 };
 
-//-----------------------------------------------------------------------------
 static std::string FormatCallstackForTooltip(
     std::shared_ptr<CallStack> callstack, int max_line_length = 80,
     int max_lines = 20, int bottom_n_lines = 5) {
@@ -237,7 +226,6 @@ static std::string FormatCallstackForTooltip(
   return result;
 }
 
-//-----------------------------------------------------------------------------
 std::string EventTrack::GetSampleTooltip(PickingID id) const {
   static const std::string unknown_return_text =
       "Function call information missing";

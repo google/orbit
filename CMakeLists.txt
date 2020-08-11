@@ -11,6 +11,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
                            -Werror=float-conversion
                            -Werror=format=2
                            -Werror=ignored-attributes
+                           -Werror=implicit-fallthrough
                            -Werror=inconsistent-missing-override
                            -Werror=old-style-cast
                            -Werror=unused-parameter

@@ -7,28 +7,22 @@
 #include <QColor>
 #include <memory>
 
-//-----------------------------------------------------------------------------
 OrbitTableModel::OrbitTableModel(DataView* data_view, QObject* parent)
     : QAbstractTableModel(parent), m_DataView(data_view) {}
 
-//-----------------------------------------------------------------------------
 OrbitTableModel::OrbitTableModel(QObject* parent)
     : QAbstractTableModel(parent), m_DataView(nullptr) {}
 
-//-----------------------------------------------------------------------------
 OrbitTableModel::~OrbitTableModel() {}
 
-//-----------------------------------------------------------------------------
 int OrbitTableModel::columnCount(const QModelIndex& /*parent*/) const {
   return static_cast<int>(m_DataView->GetColumns().size());
 }
 
-//-----------------------------------------------------------------------------
 int OrbitTableModel::rowCount(const QModelIndex& /*parent*/) const {
   return static_cast<int>(m_DataView->GetNumElements());
 }
 
-//-----------------------------------------------------------------------------
 QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation,
                                      int role) const {
   switch (role) {
@@ -56,7 +50,6 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation,
   return QVariant();
 }
 
-//-----------------------------------------------------------------------------
 QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
   if (role == Qt::DisplayRole) {
     std::string value = m_DataView->GetValue(index.row(), index.column());
@@ -76,7 +69,6 @@ QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
   return QVariant();
 }
 
-//-----------------------------------------------------------------------------
 void OrbitTableModel::sort(int column, Qt::SortOrder order) {
   // On Linux, the arrows for ascending/descending are reversed, e.g. ascending
   // has an arrow pointing down, which is unexpected. This is because of some
@@ -86,7 +78,6 @@ void OrbitTableModel::sort(int column, Qt::SortOrder order) {
                                  : DataView::SortingOrder::Descending);
 }
 
-//-----------------------------------------------------------------------------
 std::pair<int, Qt::SortOrder>
 OrbitTableModel::GetDefaultSortingColumnAndOrder() {
   if (!IsSortingAllowed()) {
@@ -101,15 +92,12 @@ OrbitTableModel::GetDefaultSortingColumnAndOrder() {
   return std::make_pair(column, order);
 }
 
-//-----------------------------------------------------------------------------
 void OrbitTableModel::OnTimer() { m_DataView->OnTimer(); }
 
-//-----------------------------------------------------------------------------
 void OrbitTableModel::OnFilter(const QString& a_Filter) {
   m_DataView->OnFilter(a_Filter.toStdString());
 }
 
-//-----------------------------------------------------------------------------
 void OrbitTableModel::OnRowSelected(int row) {
   if (static_cast<int>(m_DataView->GetNumElements()) > row) {
     m_DataView->OnSelect(row);

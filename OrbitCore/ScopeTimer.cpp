@@ -4,6 +4,7 @@
 
 #include "ScopeTimer.h"
 
+#include "Threading.h"
 #include "absl/strings/str_format.h"
 
 thread_local size_t CurrentDepth = 0;

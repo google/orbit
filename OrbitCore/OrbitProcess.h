@@ -12,14 +12,12 @@
 #include <utility>
 #include <vector>
 
-#include "BaseTypes.h"
 #include "OrbitModule.h"
 #include "ScopeTimer.h"
 #include "Threading.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
-//-----------------------------------------------------------------------------
 class Process {
  public:
   Process();

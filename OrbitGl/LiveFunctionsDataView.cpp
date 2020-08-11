@@ -6,7 +6,6 @@
 
 #include "App.h"
 #include "Capture.h"
-#include "Core.h"
 #include "FunctionUtils.h"
 #include "LiveFunctionsController.h"
 #include "Log.h"
@@ -20,7 +19,6 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 
-//-----------------------------------------------------------------------------
 LiveFunctionsDataView::LiveFunctionsDataView(
     LiveFunctionsController* live_functions)
     : DataView(DataViewType::LIVE_FUNCTIONS), live_functions_(live_functions) {
@@ -28,7 +26,6 @@ LiveFunctionsDataView::LiveFunctionsDataView(
   OnDataChanged();
 }
 
-//-----------------------------------------------------------------------------
 const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
@@ -47,7 +44,6 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
   return columns;
 }
 
-//-----------------------------------------------------------------------------
 std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
   if (a_Row >= static_cast<int>(GetNumElements())) {
     return "";
@@ -81,7 +77,6 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
   }
 }
 
-//-----------------------------------------------------------------------------
 #define ORBIT_FUNC_SORT(Member)                                            \
   [&](int a, int b) {                                                      \
     return OrbitUtils::Compare(functions[a]->Member, functions[b]->Member, \
@@ -98,7 +93,6 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
                                ascending);                               \
   }
 
-//-----------------------------------------------------------------------------
 void LiveFunctionsDataView::DoSort() {
   bool ascending = m_SortingOrders[m_SortingColumn] == SortingOrder::Ascending;
   std::function<bool(int a, int b)> sorter = nullptr;
@@ -142,7 +136,6 @@ void LiveFunctionsDataView::DoSort() {
   }
 }
 
-//-----------------------------------------------------------------------------
 const std::string LiveFunctionsDataView::MENU_ACTION_SELECT = "Hook";
 const std::string LiveFunctionsDataView::MENU_ACTION_UNSELECT = "Unhook";
 const std::string LiveFunctionsDataView::MENU_ACTION_JUMP_TO_FIRST =
@@ -158,7 +151,6 @@ const std::string LiveFunctionsDataView::MENU_ACTION_DISASSEMBLY =
 const std::string LiveFunctionsDataView::MENU_ACTION_ITERATE =
     "Add iterator(s)";
 
-//-----------------------------------------------------------------------------
 std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     int a_ClickedIndex, const std::vector<int>& a_SelectedIndices) {
   bool enable_select = false;
@@ -195,7 +187,6 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   return menu;
 }
 
-//-----------------------------------------------------------------------------
 void LiveFunctionsDataView::OnContextMenu(
     const std::string& a_Action, int a_MenuIndex,
     const std::vector<int>& a_ItemIndices) {
@@ -259,7 +250,6 @@ void LiveFunctionsDataView::OnContextMenu(
   }
 }
 
-//-----------------------------------------------------------------------------
 void LiveFunctionsDataView::DoFilter() {
   std::vector<uint32_t> indices;
 
@@ -300,27 +290,26 @@ void LiveFunctionsDataView::DoFilter() {
   GOrbitApp->NeedsRedraw();
 }
 
-//-----------------------------------------------------------------------------
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
-  size_t functions_count = Capture::GSelectedInCaptureFunctions.size();
+  const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>&
+      selected_functions = Capture::capture_data_.selected_functions();
+  size_t functions_count = selected_functions.size();
   indices_.resize(functions_count);
   for (size_t i = 0; i < functions_count; ++i) {
     indices_[i] = i;
-    functions_.push_back(Capture::GSelectedInCaptureFunctions[i]);
+    functions_.push_back(selected_functions[i]);
   }
 
   DataView::OnDataChanged();
 }
 
-//-----------------------------------------------------------------------------
 void LiveFunctionsDataView::OnTimer() {
   if (Capture::IsCapturing()) {
     OnSort(m_SortingColumn, {});
   }
 }
 
-//-----------------------------------------------------------------------------
 FunctionInfo* LiveFunctionsDataView::GetFunction(unsigned int a_Row) const {
   CHECK(a_Row < functions_.size());
   CHECK(functions_[indices_[a_Row]]);

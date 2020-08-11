@@ -10,7 +10,6 @@
 
 #include "Batcher.h"
 #include "OpenGl.h"
-#include "Platform.h"
 #include "TextBox.h"
 
 namespace ftgl {
@@ -72,7 +71,6 @@ class TextRenderer {
   bool m_DrawOutline;
 };
 
-//-----------------------------------------------------------------------------
 inline vec4 ColorToVec4(const Color& a_Col) {
   const float coeff = 1.f / 255.f;
   vec4 color;

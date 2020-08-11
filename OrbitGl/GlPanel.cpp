@@ -5,19 +5,13 @@
 #include "GlPanel.h"
 
 #include "CaptureWindow.h"
-#include "GlCanvas.h"
-#include "HomeWindow.h"
 
-//-----------------------------------------------------------------------------
 GlPanel* GlPanel::Create(Type a_Type) {
   GlPanel* panel = nullptr;
 
   switch (a_Type) {
     case CAPTURE:
       panel = new CaptureWindow();
-      break;
-    case DEBUG:
-      panel = new HomeWindow();
       break;
   }
 
@@ -27,7 +21,6 @@ GlPanel* GlPanel::Create(Type a_Type) {
   return panel;
 }
 
-//-----------------------------------------------------------------------------
 GlPanel::GlPanel() {
   m_WindowOffset[0] = 0;
   m_WindowOffset[1] = 0;
@@ -36,14 +29,8 @@ GlPanel::GlPanel() {
   m_NeedsRedraw = true;
 }
 
-//-----------------------------------------------------------------------------
-GlPanel::~GlPanel() {}
-
-//-----------------------------------------------------------------------------
 void GlPanel::Initialize() {}
 
-//-----------------------------------------------------------------------------
 void GlPanel::Resize(int /*a_Width*/, int /*a_Height*/) {}
 
-//-----------------------------------------------------------------------------
 void GlPanel::Render(int /*a_Width*/, int /*a_Height*/) {}

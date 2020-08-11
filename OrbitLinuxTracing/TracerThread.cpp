@@ -100,10 +100,7 @@ void TracerThread::InitUprobesEventProcessor() {
   uprobes_unwinding_visitor->SetListener(listener_);
   uprobes_unwinding_visitor->SetUnwindErrorsAndDiscardedSamplesCounters(
       stats_.unwind_error_count, stats_.discarded_samples_in_uretprobes_count);
-  // Switch between PerfEventProcessor and PerfEventProcessor2 here.
-  // PerfEventProcessor2 is supposedly faster but assumes that events from the
-  // same perf_event_open ring buffer are already sorted.
-  uprobes_event_processor_ = std::make_unique<PerfEventProcessor2>(
+  uprobes_event_processor_ = std::make_unique<PerfEventProcessor>(
       std::move(uprobes_unwinding_visitor));
 }
 
@@ -370,10 +367,11 @@ bool TracerThread::OpenTracepoints(const std::vector<int32_t>& cpus) {
   tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
       "task", "task_rename", cpus, &tracing_fds_, &task_rename_ids_,
       &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
-
+  
   /*tracepoint_event_open_errors |= !OpenRingBuffersForTracepoint(
       "sched", "sched_switch", cpus, &tracing_fds_, &sched_switch_ids_,
       &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);*/
+
 
   return !tracepoint_event_open_errors;
 }

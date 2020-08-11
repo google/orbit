@@ -37,7 +37,6 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
 
 }  // namespace OrbitGl
 
-//-----------------------------------------------------------------------------
 GpuTrack::GpuTrack(TimeGraph* time_graph,
                    std::shared_ptr<StringManager> string_manager,
                    uint64_t timeline_hash)
@@ -67,8 +66,8 @@ bool GpuTrack::IsTimerActive(const TimerInfo& timer_info) const {
   return is_same_tid_as_selected || no_thread_selected;
 }
 
-// //-----------------------------------------------------------------------------
-Color GpuTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) const {
+Color GpuTrack::GetTimerColor(const TimerInfo& timer_info,
+                              bool is_selected) const {
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
   if (is_selected) {
@@ -106,7 +105,6 @@ Color GpuTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected) con
   return color;
 }
 
-//-----------------------------------------------------------------------------
 float GpuTrack::GetYFromDepth(uint32_t depth) const {
   float adjusted_depth = static_cast<float>(depth);
   if (collapse_toggle_->IsCollapsed()) {
@@ -128,7 +126,6 @@ bool GpuTrack::TimerFilter(const TimerInfo& timer_info) const {
   return true;
 }
 
-//-----------------------------------------------------------------------------
 void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us,
                                 float min_x, TextBox* text_box) {
   TimeGraphLayout layout = time_graph_->GetLayout();
@@ -163,7 +160,6 @@ std::string GpuTrack::GetTooltip() const {
          "submissions";
 }
 
-//-----------------------------------------------------------------------------
 float GpuTrack::GetHeight() const {
   TimeGraphLayout& layout = time_graph_->GetLayout();
   bool collapsed = collapse_toggle_->IsCollapsed();
@@ -171,7 +167,6 @@ float GpuTrack::GetHeight() const {
   return layout.GetTextBoxHeight() * depth + layout.GetTrackBottomMargin();
 }
 
-//-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetLeft(TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   uint64_t timeline_hash = timer_info.user_data_key();
@@ -182,7 +177,6 @@ const TextBox* GpuTrack::GetLeft(TextBox* text_box) const {
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 const TextBox* GpuTrack::GetRight(TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   uint64_t timeline_hash = timer_info.user_data_key();
@@ -193,7 +187,6 @@ const TextBox* GpuTrack::GetRight(TextBox* text_box) const {
   return nullptr;
 }
 
-//-----------------------------------------------------------------------------
 std::string GpuTrack::GetBoxTooltip(PickingID id) const {
   TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
   if (!text_box ||
@@ -224,7 +217,7 @@ std::string GpuTrack::GetSwQueueTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      Capture::GThreadNames[timer_info.thread_id()].c_str(),
+      Capture::capture_data_.GetThreadName(timer_info.thread_id()),
       timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end()))
           .c_str());
@@ -238,7 +231,7 @@ std::string GpuTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      Capture::GThreadNames[timer_info.thread_id()].c_str(),
+      Capture::capture_data_.GetThreadName(timer_info.thread_id()),
       timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end()))
           .c_str());
@@ -253,7 +246,7 @@ std::string GpuTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      Capture::GThreadNames[timer_info.thread_id()].c_str(),
+      Capture::capture_data_.GetThreadName(timer_info.thread_id()),
       timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end()))
           .c_str());

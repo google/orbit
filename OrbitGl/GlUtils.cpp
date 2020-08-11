@@ -4,10 +4,10 @@
 
 #include "GlUtils.h"
 
-#include "Core.h"
 #include "Log.h"
 #include "OpenGl.h"
 #include "OrbitBase/Logging.h"
+#include "PrintVar.h"
 #include "absl/strings/str_format.h"
 #include "freetype-gl/freetype-gl.h"
 

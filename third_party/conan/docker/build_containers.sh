@@ -32,10 +32,12 @@ declare -A profile_to_dockerfile=( \
   ["msvc2019_debug"]="msvc2019" \
   ["msvc2019_release_x86"]="msvc2019" \
   ["msvc2019_relwithdebinfo_x86"]="msvc2019" \
-  ["msvc2019_debug_x86"]="msvc2019" )
+  ["msvc2019_debug_x86"]="msvc2019" \
+  ["clang_format"]="clang_format" \
+  ["license_headers"]="license_headers" )
 
 if [ "$(uname -s)" == "Linux" ]; then
-  for profile in {clang{7,8,9},gcc{8,9},ggp}_{release,relwithdebinfo,debug}; do
+  for profile in {clang{7,8,9},gcc{8,9},ggp}_{release,relwithdebinfo,debug} clang_format license_headers; do
     docker build "${DIR}" -f "${DIR}/Dockerfile.${profile_to_dockerfile[$profile]}" -t gcr.io/orbitprofiler/$profile:latest || exit $?
   done
 else

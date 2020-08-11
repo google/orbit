@@ -16,7 +16,6 @@
 #define LOG(str) \
   { result_ += str; }
 
-//-----------------------------------------------------------------------------
 void Disassembler::LogHex(const uint8_t* str, size_t len) {
   const unsigned char* c;
 
@@ -27,8 +26,7 @@ void Disassembler::LogHex(const uint8_t* str, size_t len) {
   LOGF("%s", "\n");
 }
 
-//-----------------------------------------------------------------------------
-void Disassembler::Disassemble(const uint8_t* machine_code, size_t size,
+void Disassembler::Disassemble(const void* machine_code, size_t size,
                                uint64_t address, bool is_64bit) {
   csh handle = 0;
   cs_arch arch = CS_ARCH_X86;
@@ -48,7 +46,8 @@ void Disassembler::Disassemble(const uint8_t* machine_code, size_t size,
     return;
   }
 
-  count = cs_disasm(handle, machine_code, size, address, 0, &insn);
+  count = cs_disasm(handle, static_cast<const uint8_t*>(machine_code), size,
+                    address, 0, &insn);
 
   if (count) {
     size_t j;
@@ -74,7 +73,6 @@ void Disassembler::Disassemble(const uint8_t* machine_code, size_t size,
   cs_close(&handle);
 }
 
-//-----------------------------------------------------------------------------
 uint64_t Disassembler::GetAddressAtLine(size_t line) const {
   if (line >= line_to_address_.size()) return 0;
   return line_to_address_[line];
