@@ -96,4 +96,5 @@ message TimerInfo {
   uint64 function_address = 9;
   uint64 user_data_key = 10;
   uint64 timeline_hash = 11;
+  repeated uint64 registers = 12;
 }

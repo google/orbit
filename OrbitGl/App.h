@@ -217,6 +217,14 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   DataView* GetOrCreateDataView(DataViewType type) override;
 
+  [[nodiscard]] ProcessManager* GetProcessManager() {
+    return process_manager_.get();
+  }
+  [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
+  [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() {
+    return main_thread_executor_.get();
+  }
+
  private:
   void LoadModuleOnRemote(
       int32_t process_id, const std::shared_ptr<Module>& module,
