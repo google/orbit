@@ -97,7 +97,7 @@ void CaptureEventProcessor::ProcessFunctionCall(
   timer_info.set_processor(-1);
   timer_info.set_type(TimerInfo::kNone);
 
-  for(int i = 0; i < function_call.registers_size(); ++i) {
+  for (int i = 0; i < function_call.registers_size(); ++i) {
     timer_info.add_registers(function_call.registers(i));
   }
 

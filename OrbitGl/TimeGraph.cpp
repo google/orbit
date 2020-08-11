@@ -922,8 +922,7 @@ static void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track,
 }
 
 //-----------------------------------------------------------------------------
-GraphTrack* TimeGraph::GetOrCreateGraphTrack(
-    uint64_t graph_id) {
+GraphTrack* TimeGraph::GetOrCreateGraphTrack(uint64_t graph_id) {
   ScopeLock lock(m_Mutex);
   std::shared_ptr<GraphTrack> track = graph_tracks_[graph_id];
   if (track == nullptr) {
