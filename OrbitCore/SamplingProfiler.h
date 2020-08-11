@@ -99,7 +99,7 @@ class SamplingProfiler {
   }
 
   const std::vector<ThreadSampleData*>& GetThreadSampleData() const {
-    return sorted_thread_sample_data;
+    return sorted_thread_sample_data_;
   }
   const ThreadSampleData* GetThreadSampleDataByThreadId(
       int32_t thread_id) const {
@@ -158,7 +158,7 @@ class SamplingProfiler {
   absl::flat_hash_map<uint64_t, uint64_t> exact_address_to_function_address_;
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
       function_address_to_exact_addresses_;
-  std::vector<ThreadSampleData*> sorted_thread_sample_data;
+  std::vector<ThreadSampleData*> sorted_thread_sample_data_;
 
   absl::flat_hash_map<uint64_t, std::string> address_to_function_name_;
   absl::flat_hash_map<uint64_t, std::string> address_to_module_name_;
