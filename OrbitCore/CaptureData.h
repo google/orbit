@@ -37,8 +37,8 @@ class CaptureData {
   [[nodiscard]] const std::string& process_name() { return process_name_; }
 
   [[nodiscard]] const std::chrono::system_clock::time_point&
-  capture_time_point() {
-    return capture_time_point_;
+  capture_start_time() {
+    return capture_start_time_;
   }
 
  private:
@@ -48,7 +48,7 @@ class CaptureData {
   std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
       selected_functions_;
 
-  std::chrono::system_clock::time_point capture_time_point_ =
+  std::chrono::system_clock::time_point capture_start_time_ =
       std::chrono::system_clock::now();
 };
 

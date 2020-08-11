@@ -445,7 +445,7 @@ void OrbitApp::AddTopDownView(const SamplingProfiler& sampling_profiler) {
 
 std::string OrbitApp::GetCaptureFileName() {
   time_t timestamp = std::chrono::system_clock::to_time_t(
-      Capture::capture_data_.capture_time_point());
+      Capture::capture_data_.capture_start_time());
   std::string result;
   result.append(Path::StripExtension(Capture::capture_data_.process_name()));
   result.append("_");
