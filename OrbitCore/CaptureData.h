@@ -29,22 +29,24 @@ class CaptureData {
 
   [[nodiscard]] const std::vector<
       std::shared_ptr<orbit_client_protos::FunctionInfo>>&
-  selected_functions() {
+  selected_functions() const {
     return selected_functions_;
   }
 
-  [[nodiscard]] int32_t process_id() { return process_id_; }
+  [[nodiscard]] int32_t process_id() const { return process_id_; }
 
-  [[nodiscard]] const std::string& process_name() { return process_name_; }
+  [[nodiscard]] const std::string& process_name() const {
+    return process_name_;
+  }
 
   [[nodiscard]] const std::chrono::system_clock::time_point&
-  capture_start_time() {
+  capture_start_time() const {
     return capture_start_time_;
   }
 
   [[nodiscard]] const absl::flat_hash_map<
       uint64_t, orbit_client_protos::LinuxAddressInfo>&
-  address_infos() {
+  address_infos() const {
     return address_infos_;
   }
 
@@ -57,12 +59,12 @@ class CaptureData {
   [[nodiscard]] orbit_client_protos::LinuxAddressInfo* GetAddressInfo(
       uint64_t address);
 
-  [[nodiscard]] const absl::flat_hash_map<int32_t, std::string>&
-  thread_names() {
+  [[nodiscard]] const absl::flat_hash_map<int32_t, std::string>& thread_names()
+      const {
     return thread_names_;
   }
 
-  [[nodiscard]] const std::string& GetThreadName(int32_t thread_id) {
+  [[nodiscard]] const std::string& GetThreadName(int32_t thread_id) const {
     return thread_names_.at(thread_id);
   }
 
