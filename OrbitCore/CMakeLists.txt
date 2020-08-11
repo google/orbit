@@ -21,7 +21,6 @@ target_sources(
          LinuxCallstackEvent.h
          LinuxTracingBuffer.h
          Log.h
-         LogInterface.h
          OrbitModule.h
          OrbitProcess.h
          OrbitVersion.h
@@ -47,7 +46,6 @@ target_sources(
           Introspection.cpp
           LinuxTracingBuffer.cpp
           Log.cpp
-          LogInterface.cpp
           OrbitModule.cpp
           OrbitProcess.cpp
           Params.cpp
