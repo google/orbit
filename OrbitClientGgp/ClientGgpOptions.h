@@ -15,4 +15,4 @@ struct ClientGgpOptions {
   int32_t capture_pid;
 };
 
-#endif // ORBIT_CLIENT_GGP_CLIENT_GGP_OPTIONS_H_
+#endif  // ORBIT_CLIENT_GGP_CLIENT_GGP_OPTIONS_H_

@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "ClientGgp.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 
-#include "ClientGgp.h"
 
 ABSL_FLAG(uint64_t, grpc_port, 44765, "Grpc service's port");
 ABSL_FLAG(int32_t, pid, 0, "pid to capture");
@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
   uint64_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
   uint32_t capture_length = absl::GetFlag(FLAGS_capture_length);
-  
+
   if (!absl::GetFlag(FLAGS_pid)) {
     FATAL("pid to capture not provided; set using -pid");
   }
@@ -29,20 +29,18 @@ int main(int argc, char** argv) {
   options.capture_pid = absl::GetFlag(FLAGS_pid);
 
   ClientGgp client_ggp(std::move(options));
-  if (!client_ggp.InitClient()){
+  if (!client_ggp.InitClient()) {
     return -1;
   }
 
   LOG("Let's start the capture");
-  if(!client_ggp.PrepareStartCapture()){
+  if (!client_ggp.PrepareStartCapture()) {
     return -1;
   }
 
   // The request is done in a separate thread to avoid blocking main()
   std::thread client_thread;
-  client_thread = std::thread([&]() {
-    client_ggp.RequestStartCapture();
-  });
+  client_thread = std::thread([&]() { client_ggp.RequestStartCapture(); });
 
   // Captures for the period of time requested
   LOG("Go to sleep");
@@ -54,8 +52,8 @@ int main(int argc, char** argv) {
   LOG("Shut down the thread and wait for it to finish");
   client_thread.join();
 
-  //TODO: process/save capture data
-  
+  // TODO: process/save capture data
+
   LOG("All done");
   return 0;
 }
