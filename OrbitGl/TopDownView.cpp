@@ -95,12 +95,12 @@ std::unique_ptr<TopDownView> TopDownView::CreateFromSamplingProfiler(
   auto top_down_view = std::make_unique<TopDownView>();
   for (const ThreadSampleData* thread_sample_data :
        sampling_profiler.GetThreadSampleData()) {
-    const int32_t tid = thread_sample_data->m_TID;
+    const int32_t tid = thread_sample_data->thread_id;
     TopDownThread* thread_node = GetOrCreateThreadNode(
         top_down_view.get(), tid, process_name, thread_names);
 
     for (const auto& callstack_id_and_count :
-         thread_sample_data->m_CallstackCount) {
+         thread_sample_data->callstack_count) {
       const CallStack& resolved_callstack =
           sampling_profiler.GetResolvedCallstack(callstack_id_and_count.first);
       const uint64_t sample_count = callstack_id_and_count.second;
