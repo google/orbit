@@ -1,3 +1,7 @@
+# Copyright (c) 2020 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 # Connects to the instance and starts OrbitClientGgp. To also deploy OrbitClientGgp,
 # invoke with a the argument -deploy and a path to the OrbitClientGgp executable
 # e.g. run_client_ssh.ps1 -deploy build/bin/OrbitClientGgp
