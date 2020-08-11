@@ -19,7 +19,8 @@ struct Block {
 
   ~Block() {}
 
-  void Add(const T& a_Item) {
+  template <typename V>
+  void Add(V&& item) {
     if (m_Size == Size) {
       if (m_Next == nullptr) {
         m_Next = new Block<T, Size>(m_Chain, this);
@@ -27,12 +28,12 @@ struct Block {
 
       m_Chain->m_Current = m_Next;
       ++m_Chain->m_NumBlocks;
-      m_Next->Add(a_Item);
+      m_Next->Add(std::forward<V>(item));
       return;
     }
 
     CHECK(m_Size < Size);
-    m_Data[m_Size] = a_Item;
+    m_Data[m_Size] = std::forward<V>(item);
     ++m_Size;
     ++m_Chain->m_NumItems;
   }
@@ -92,7 +93,10 @@ struct BlockChain {
     }
   }
 
-  void push_back(const T& a_Item) { m_Current->Add(a_Item); }
+  template <typename V>
+  void push_back(V&& item) {
+    m_Current->Add(std::forward<V>(item));
+  }
 
   void push_back(const T* a_Array, uint32_t a_Num) {
     for (uint32_t i = 0; i < a_Num; ++i) m_Current->Add(a_Array[i]);
