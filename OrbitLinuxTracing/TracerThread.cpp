@@ -853,12 +853,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     listener_->OnThreadName(std::move(thread_name));
 
   } else if (is_sched_switch) {
-    auto event =
-        ConsumeTracepointPerfEvent<SchedSwitchPerfEvent>(ring_buffer, header);
-
-    LOG(" CPU: %d ** %s : %d -> %s : %d", event->GetCpu(), event->GetPrevComm(),
-        event->GetPrevPid(), event->GetNextComm(), event->GetNextPid());
-
+    ConsumeTracepointPerfEvent<SchedSwitchPerfEvent>(ring_buffer, header);
   } else if (is_amdgpu_cs_ioctl_event) {
     // TODO: Consider deferring GPU events.
     auto event =
