@@ -48,8 +48,6 @@ void OrbitGLWidget::Initialize(GlPanel::Type a_Type,
   }
 }
 
-OrbitGLWidget::~OrbitGLWidget() { GlPanel::Destroy(m_OrbitPanel); }
-
 void OrbitGLWidget::initializeGL() {
 #if ORBIT_DEBUG_OPEN_GL
   m_DebugLogger = new QOpenGLDebugLogger(this);
