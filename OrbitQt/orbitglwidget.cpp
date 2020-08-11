@@ -41,15 +41,14 @@ bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
 
 void OrbitGLWidget::Initialize(GlPanel::Type a_Type,
                                OrbitMainWindow* a_MainWindow) {
-  UNUSED(a_Type);
-  UNUSED(a_MainWindow);
-
   m_OrbitPanel = GlPanel::Create(a_Type);
 
   if (a_MainWindow) {
     a_MainWindow->RegisterGlWidget(this);
   }
 }
+
+OrbitGLWidget::~OrbitGLWidget() { GlPanel::Destroy(m_OrbitPanel); }
 
 void OrbitGLWidget::initializeGL() {
 #if ORBIT_DEBUG_OPEN_GL
