@@ -120,8 +120,8 @@ SamplingProfiler::GetSortedCallstacksFromAddress(uint64_t address,
 const int32_t SamplingProfiler::kAllThreadsFakeTid = 0;
 
 void SamplingProfiler::SortByThreadUsage() {
-  sorted_thread_sample_data.clear();
-  sorted_thread_sample_data.reserve(thread_id_to_sample_data_.size());
+  sorted_thread_sample_data_.clear();
+  sorted_thread_sample_data_.reserve(thread_id_to_sample_data_.size());
 
   // "All"
   thread_id_to_sample_data_[kAllThreadsFakeTid].average_thread_usage = 100.f;
@@ -129,10 +129,10 @@ void SamplingProfiler::SortByThreadUsage() {
   for (auto& pair : thread_id_to_sample_data_) {
     ThreadSampleData* data = &pair.second;
     data->thread_id = pair.first;
-    sorted_thread_sample_data.push_back(data);
+    sorted_thread_sample_data_.push_back(data);
   }
 
-  sort(sorted_thread_sample_data.begin(), sorted_thread_sample_data.end(),
+  sort(sorted_thread_sample_data_.begin(), sorted_thread_sample_data_.end(),
        [](const ThreadSampleData* a, const ThreadSampleData* b) {
          return a->average_thread_usage > b->average_thread_usage;
        });
@@ -146,7 +146,7 @@ void SamplingProfiler::ProcessSamples() {
   function_address_to_callstack_.clear();
   exact_address_to_function_address_.clear();
   function_address_to_exact_addresses_.clear();
-  sorted_thread_sample_data.clear();
+  sorted_thread_sample_data_.clear();
   address_to_function_name_.clear();
   address_to_module_name_.clear();
 
@@ -202,8 +202,8 @@ void SamplingProfiler::ProcessSamples() {
           callstack_count;
 
       std::set<uint64_t> unique_addresses;
-      for (uint32_t i = 0; i < resolved_callstack->m_Data.size(); ++i) {
-        unique_addresses.insert(resolved_callstack->m_Data[i]);
+      for (uint64_t address : resolved_callstack->m_Data) {
+        unique_addresses.insert(address);
       }
 
       for (uint64_t address : unique_addresses) {
@@ -226,8 +226,8 @@ void SamplingProfiler::ProcessSamples() {
 
   samples_count_ = callstack_events_.size();
 
-  // Don't clear m_Callstacks, so that ProcessSamples can be called again, e.g.
-  // when new callstacks have been added or after a module has been loaded.
+  // Don't clear callstack_events_, so that ProcessSamples can be called again,
+  // e.g. when new callstacks have been added or after a module has been loaded.
 }
 
 void SamplingProfiler::ResolveCallstacks() {
