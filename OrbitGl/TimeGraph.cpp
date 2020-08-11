@@ -355,7 +355,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
   NeedsUpdate();
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::ProcessOrbitFunctionTimer(const FunctionInfo* function,
                                           const TimerInfo& timer_info) {
   FunctionInfo::OrbitType type = function->type();
@@ -444,7 +443,6 @@ std::string TimeGraph::GetManualInstrumentationString(
       .value_or("");
 }
 
-//-----------------------------------------------------------------------------
 uint32_t TimeGraph::GetNumTimers() const {
   uint32_t numTimers = 0;
   ScopeLock lock(m_Mutex);
@@ -899,7 +897,6 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(
   return track;
 }
 
-//-----------------------------------------------------------------------------
 static void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track,
                                          uint64_t string_address,
                                          OrbitApp* app) {
@@ -921,7 +918,6 @@ static void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track,
   });
 }
 
-//-----------------------------------------------------------------------------
 GraphTrack* TimeGraph::GetOrCreateGraphTrack(uint64_t graph_id) {
   ScopeLock lock(m_Mutex);
   std::shared_ptr<GraphTrack> track = graph_tracks_[graph_id];
@@ -935,7 +931,6 @@ GraphTrack* TimeGraph::GetOrCreateGraphTrack(uint64_t graph_id) {
   return track.get();
 }
 
-//-----------------------------------------------------------------------------
 void TimeGraph::SetThreadFilter(const std::string& a_Filter) {
   m_ThreadFilter = a_Filter;
   NeedsUpdate();
