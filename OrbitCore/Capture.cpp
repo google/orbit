@@ -74,6 +74,7 @@ void Capture::FinalizeCapture() {
 }
 
 void Capture::ClearCaptureData() {
+  GThreadNames.clear();
   GAddressInfos.clear();
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
