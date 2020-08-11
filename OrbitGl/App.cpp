@@ -104,7 +104,8 @@ void OrbitApp::OnCaptureStarted() {
 
 void OrbitApp::OnCaptureComplete() {
   main_thread_executor_->Schedule([this] {
-    Capture::GAddressInfos = std::move(captured_address_infos_);
+    Capture::capture_data_.set_address_infos(
+        std::move(captured_address_infos_));
     Capture::FinalizeCapture();
 
     RefreshCaptureView();

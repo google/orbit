@@ -287,7 +287,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 
   // Temporary objects used by CaptureListener implementation
-  std::unordered_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
+  absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
       captured_address_infos_;
 };
 
