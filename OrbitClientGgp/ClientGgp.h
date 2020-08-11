@@ -5,8 +5,6 @@
 #ifndef ORBIT_CLIENT_GGP_CLIENT_GGP_H_
 #define ORBIT_CLIENT_GGP_CLIENT_GGP_H_
 
-#include "grpcpp/grpcpp.h"
-
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -14,36 +12,38 @@
 #include "ClientGgpOptions.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
-#include "OrbitProcess.h" // remove if including Capture.h in here
+#include "OrbitProcess.h"  // remove if including Capture.h in here
+#include "grpcpp/grpcpp.h"
+
 
 class ClientGgp final : public CaptureListener {
-  public:
-    ClientGgp(ClientGgpOptions&& options);
-    bool InitClient();
-    bool PrepareStartCapture();
-    void RequestStartCapture();
-    void StopCapture();
-    void SaveCapture();
+ public:
+  ClientGgp(ClientGgpOptions&& options);
+  bool InitClient();
+  bool PrepareStartCapture();
+  void RequestStartCapture();
+  void StopCapture();
+  void SaveCapture();
 
-    // CaptureListener implementation
-    void OnCaptureStarted() override;
-    void OnCaptureComplete() override;
-    void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
-    void OnKeyAndString(uint64_t key, std::string str) override;
-    void OnCallstack(CallStack callstack) override;
-    void OnCallstackEvent(
+  // CaptureListener implementation
+  void OnCaptureStarted() override;
+  void OnCaptureComplete() override;
+  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+  void OnKeyAndString(uint64_t key, std::string str) override;
+  void OnCallstack(CallStack callstack) override;
+  void OnCallstackEvent(
       orbit_client_protos::CallstackEvent callstack_event) override;
-    void OnThreadName(int32_t thread_id, std::string thread_name) override;
-    void OnAddressInfo(
+  void OnThreadName(int32_t thread_id, std::string thread_name) override;
+  void OnAddressInfo(
       orbit_client_protos::LinuxAddressInfo address_info) override;
 
-  private:
-    ClientGgpOptions options_;
-    std::shared_ptr<grpc::Channel> grpc_channel_;
-    std::unique_ptr<CaptureClient> capture_client_;
+ private:
+  ClientGgpOptions options_;
+  std::shared_ptr<grpc::Channel> grpc_channel_;
+  std::unique_ptr<CaptureClient> capture_client_;
 
-    void InitCapture();
-    std::shared_ptr<Process> GetOrbitProcessByPid(int32_t pid);
+  void InitCapture();
+  std::shared_ptr<Process> GetOrbitProcessByPid(int32_t pid);
 };
 
-#endif // ORBIT_CLIENT_GGP_CLIENT_GGP_H_
+#endif  // ORBIT_CLIENT_GGP_CLIENT_GGP_H_

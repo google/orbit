@@ -4,8 +4,6 @@
 
 #include "ClientGgp.h"
 
-#include "capture_data.pb.h"
-
 #include <cstdint>
 #include <limits>
 #include <map>
@@ -15,12 +13,14 @@
 #include "Capture.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "capture_data.pb.h"
 
-ClientGgp::ClientGgp(ClientGgpOptions&& options) 
+
+ClientGgp::ClientGgp(ClientGgpOptions&& options)
     : options_(std::move(options)) {}
 
 bool ClientGgp::InitClient() {
-  if (options_.grpc_server_address.empty()){
+  if (options_.grpc_server_address.empty()) {
     ERROR("gRPC server address not provided");
     return false;
   }
@@ -30,13 +30,11 @@ bool ClientGgp::InitClient() {
   channel_arguments.SetMaxReceiveMessageSize(
       std::numeric_limits<int32_t>::max());
 
-  grpc_channel_ = grpc::CreateCustomChannel(
-      options_.grpc_server_address, 
-      grpc::InsecureChannelCredentials(), 
-      channel_arguments);
+  grpc_channel_ = grpc::CreateCustomChannel(options_.grpc_server_address,
+                                            grpc::InsecureChannelCredentials(),
+                                            channel_arguments);
   if (!grpc_channel_) {
-    ERROR("Unable to create GRPC channel to %s",
-          options_.grpc_server_address);
+    ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
     return false;
   }
   LOG("Created GRPC channel to %s", options_.grpc_server_address);
@@ -94,13 +92,9 @@ std::shared_ptr<Process> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
 }
 
 // CaptureListener implementation
-void ClientGgp::OnCaptureStarted() {
-  LOG("Capture started");
-}
+void ClientGgp::OnCaptureStarted() { LOG("Capture started"); }
 
-void ClientGgp::OnCaptureComplete() {
-  LOG("Capture completed");
-}
+void ClientGgp::OnCaptureComplete() { LOG("Capture completed"); }
 
 void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo&) {}
 
