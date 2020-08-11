@@ -34,25 +34,23 @@ int main(int argc, char** argv) {
   }
 
   LOG("Let's start the capture");
-
   if(!client_ggp.PrepareStartCapture()){
     return -1;
   }
 
-  std::thread client_thread;
-
   // The request is done in a separate thread to avoid blocking main()
+  std::thread client_thread;
   client_thread = std::thread([&]() {
     client_ggp.RequestStartCapture();
   });
 
-  LOG("Go to sleep");
   // Captures for the period of time requested
+  LOG("Go to sleep");
   absl::SleepFor(absl::Seconds(capture_length));
   LOG("Back from sleep");
 
+  // Requests to stop the capture and waits for thread to finish
   client_ggp.StopCapture();
-
   LOG("Shut down the thread and wait for it to finish");
   client_thread.join();
 

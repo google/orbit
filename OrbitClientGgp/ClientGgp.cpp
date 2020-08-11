@@ -34,20 +34,17 @@ bool ClientGgp::InitClient() {
       options_.grpc_server_address, 
       grpc::InsecureChannelCredentials(), 
       channel_arguments);
-
   if (!grpc_channel_) {
     ERROR("Unable to create GRPC channel to %s",
           options_.grpc_server_address);
     return false;
   }
-  
   LOG("Created GRPC channel to %s", options_.grpc_server_address);
 
   // Initialisations needed for capture to work
   InitCapture();
-  
-  capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
 
+  capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
   return true;
 }
 
@@ -60,7 +57,6 @@ bool ClientGgp::PrepareStartCapture() {
     ERROR("Error starting capture %s", result.error().message());
     return false;
   }
-
   return true;
 }
 
@@ -80,7 +76,6 @@ void ClientGgp::StopCapture() {
   Capture::StopCapture();
 
   capture_client_->StopCapture();
-
   LOG("Stop capture requested");
 }
 
