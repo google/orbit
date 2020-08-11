@@ -12,16 +12,16 @@
 
 class CaptureData {
  public:
-  void SetSelectedFunctions(
+  explicit CaptureData(
       std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
-          selected_functions) {
-    selected_functions_ = std::move(selected_functions);
-  }
+          selected_functions)
+      : selected_functions_{std::move(selected_functions)} {}
 
-  void AddSelectedFunction(
-      const std::shared_ptr<orbit_client_protos::FunctionInfo>& function) {
-    selected_functions_.push_back(function);
-  }
+  explicit CaptureData() = default;
+  CaptureData(const CaptureData& other) = default;
+  CaptureData& operator=(const CaptureData& other) = default;
+  CaptureData(CaptureData&& other) = default;
+  CaptureData& operator=(CaptureData&& other) = default;
 
   [[nodiscard]] const std::vector<
       std::shared_ptr<orbit_client_protos::FunctionInfo>>&

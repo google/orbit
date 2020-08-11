@@ -42,7 +42,7 @@ target_sources(
 target_sources(
   OrbitCore
   PRIVATE Capture.cpp
-          CaptureData.cc
+          CaptureData.cpp
           EventBuffer.cpp
           FunctionUtils.cpp
           Introspection.cpp

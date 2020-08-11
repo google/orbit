@@ -53,6 +53,7 @@ ErrorMessageOr<void> Capture::StartCapture() {
         "No process selected. Please choose a target process for the capture.");
   }
 
+  capture_data_ = CaptureData(GetSelectedFunctions());
   GCaptureTimePoint = std::chrono::system_clock::now();
   GProcessId = GTargetProcess->GetID();
   GProcessName = GTargetProcess->GetName();
@@ -89,7 +90,6 @@ void Capture::ClearCaptureData() {
 }
 
 void Capture::PreFunctionHooks() {
-  capture_data_.SetSelectedFunctions(GetSelectedFunctions());
 
   GSelectedFunctionsMap.clear();
   for (auto& func : capture_data_.GetSelectedFunctions()) {

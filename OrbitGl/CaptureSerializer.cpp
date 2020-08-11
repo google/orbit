@@ -171,15 +171,18 @@ void FillEventBuffer() {
 
 void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   // Clear the old capture
-  Capture::capture_data_ = CaptureData();
   Capture::GSelectedFunctionsMap.clear();
+  std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
+      selected_functions;
   for (const auto& function : capture_info.selected_functions()) {
     std::shared_ptr<FunctionInfo> function_ptr =
         std::make_shared<FunctionInfo>(function);
-    Capture::capture_data_.AddSelectedFunction(function_ptr);
+    selected_functions.push_back(function_ptr);
     Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(
         *function_ptr)] = function_ptr.get();
   }
+  CaptureData capture_data(std::move(selected_functions));
+  Capture::capture_data_ = capture_data;
   Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
   Capture::GProcessId = capture_info.process_id();
