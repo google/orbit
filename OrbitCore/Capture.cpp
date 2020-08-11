@@ -21,7 +21,7 @@ using orbit_client_protos::PresetInfo;
 
 Capture::State Capture::GState = Capture::State::kEmpty;
 
-std::vector<std::shared_ptr<FunctionInfo>> Capture::GSelectedInCaptureFunctions;
+CaptureData Capture::capture_data_;
 std::map<uint64_t, FunctionInfo*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, FunctionInfo*> Capture::GVisibleFunctionsMap;
 int32_t Capture::GProcessId = -1;
@@ -89,10 +89,10 @@ void Capture::ClearCaptureData() {
 }
 
 void Capture::PreFunctionHooks() {
-  GSelectedInCaptureFunctions = GetSelectedFunctions();
+  capture_data_.SetSelectedFunctions(GetSelectedFunctions());
 
   GSelectedFunctionsMap.clear();
-  for (auto& func : GSelectedInCaptureFunctions) {
+  for (auto& func : capture_data_.GetSelectedFunctions()) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
     GSelectedFunctionsMap[address] = func.get();
     func->clear_stats();

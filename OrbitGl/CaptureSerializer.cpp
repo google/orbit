@@ -59,7 +59,7 @@ void WriteMessage(const google::protobuf::Message* message,
 }
 
 void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
-  for (const auto& function : Capture::GSelectedInCaptureFunctions) {
+  for (const auto& function : Capture::capture_data_.GetSelectedFunctions()) {
     if (function != nullptr) {
       capture_info->add_selected_functions()->CopyFrom(*function);
     }
@@ -170,13 +170,13 @@ void FillEventBuffer() {
 }
 
 void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
-  // Functions
-  Capture::GSelectedInCaptureFunctions.clear();
+  // Clear the old capture
+  Capture::capture_data_ = CaptureData();
   Capture::GSelectedFunctionsMap.clear();
   for (const auto& function : capture_info.selected_functions()) {
     std::shared_ptr<FunctionInfo> function_ptr =
         std::make_shared<FunctionInfo>(function);
-    Capture::GSelectedInCaptureFunctions.push_back(function_ptr);
+    Capture::capture_data_.AddSelectedFunction(function_ptr);
     Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(
         *function_ptr)] = function_ptr.get();
   }
