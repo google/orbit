@@ -91,15 +91,15 @@ void NO_INLINE OrbitTest::BusyWork(uint64_t microseconds) {
 }
 
 //-----------------------------------------------------------------------------
-void NO_INLINE SleepFor1Milli() {
+void NO_INLINE SleepFor1Ms() {
   std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 
 //-----------------------------------------------------------------------------
-void NO_INLINE SleepFor2Millis() {
+void NO_INLINE SleepFor2Ms() {
   ORBIT_SCOPE("Sleep for two milliseconds");
-  SleepFor1Milli();
-  SleepFor1Milli();
+  SleepFor1Ms();
+  SleepFor1Ms();
 }
 
 //-----------------------------------------------------------------------------
@@ -107,7 +107,7 @@ void OrbitTest::ManualInstrumentationApiTest() {
 #if ORBIT_API_ENABLED
   while (!m_ExitRequested) {
     ORBIT_SCOPE("ORBIT_SCOPE_TEST");
-    SleepFor2Millis();
+    SleepFor2Ms();
 
     ORBIT_START("ORBIT_START_TEST");
     std::this_thread::sleep_for(std::chrono::microseconds(500));
