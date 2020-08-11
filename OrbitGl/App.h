@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_APP_H_
+#define ORBIT_GL_APP_H_
 
 #include <functional>
 #include <map>
@@ -14,6 +15,7 @@
 
 #include "ApplicationOptions.h"
 #include "CallStackDataView.h"
+#include "Callstack.h"
 #include "DataManager.h"
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
@@ -45,7 +47,6 @@
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
-struct CallStack;
 class Process;
 
 class OrbitApp final : public DataViewFactory, public CaptureListener {
@@ -295,3 +296,5 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 };
 
 extern std::unique_ptr<OrbitApp> GOrbitApp;
+
+#endif  // ORBIT_GL_APP_H_

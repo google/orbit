@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_SAMPLING_REPORT_H_
+#define ORBIT_GL_SAMPLING_REPORT_H_
 
 #include <functional>
 #include <memory>
@@ -49,3 +50,5 @@ class SamplingReport {
   size_t m_SelectedCallstackIndex;
   std::function<void()> m_UiRefreshFunc;
 };
+
+#endif  // ORBIT_GL_SAMPLING_REPORT_H_

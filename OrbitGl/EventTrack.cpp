@@ -37,8 +37,8 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Color color = m_Color;
 
   if (picking) {
-    color = picking_manager.GetPickableColor(shared_from_this(), 
-      PickingID::BatcherId::UI);
+    color = picking_manager.GetPickableColor(shared_from_this(),
+                                             PickingID::BatcherId::UI);
   }
 
   Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), eventBarZ);
@@ -202,7 +202,7 @@ static std::string FormatCallstackForTooltip(
     std::shared_ptr<CallStack> callstack, int max_line_length = 80,
     int max_lines = 20, int bottom_n_lines = 5) {
   std::string result;
-  int size = static_cast<int>(callstack->m_Data.size());
+  int size = static_cast<int>(callstack->GetFramesCount());
   if (max_lines <= 0) {
     max_lines = size;
   }
@@ -212,7 +212,7 @@ static std::string FormatCallstackForTooltip(
   for (int i = 0; i < top_n; ++i) {
     result =
         result + "<br/>" +
-        SafeGetFormattedFunctionName(callstack->m_Data[i], max_line_length);
+        SafeGetFormattedFunctionName(callstack->GetFrame(i), max_line_length);
   }
   if (max_lines < size) {
     result += "<br/><i>... shortened for readability ...</i>";
@@ -220,7 +220,7 @@ static std::string FormatCallstackForTooltip(
   for (int i = size - bottom_n; i < size; ++i) {
     result =
         result + "<br/>" +
-        SafeGetFormattedFunctionName(callstack->m_Data[i], max_line_length);
+        SafeGetFormattedFunctionName(callstack->GetFrame(i), max_line_length);
   }
 
   return result;
@@ -245,7 +245,7 @@ std::string EventTrack::GetSampleTooltip(PickingID id) const {
   }
 
   std::string function_name =
-      SafeGetFormattedFunctionName(callstack->m_Data[0], -1);
+      SafeGetFormattedFunctionName(callstack->GetFrame(0), -1);
   std::string result = absl::StrFormat(
       "<b>%s</b><br/><i>Sampled event</i><br/><br/><b>Callstack:</b>",
       function_name.c_str());

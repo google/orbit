@@ -7,20 +7,26 @@
 
 #include <xxhash.h>
 
-#include <string>
 #include <vector>
 
 #include "CallstackTypes.h"
 
-struct CallStack {
+class CallStack {
+ public:
   CallStack() = default;
-  inline CallstackID Hash() {
-    if (m_Hash != 0) return m_Hash;
-    m_Hash = XXH64(m_Data.data(), m_Data.size() * sizeof(uint64_t), 0xca1157ac);
-    return m_Hash;
-  }
+  explicit CallStack(std::vector<uint64_t>&& addresses) {
+    frames_ = std::move(addresses);
+    hash_ =
+        XXH64(frames_.data(), frames_.size() * sizeof(uint64_t), 0xca1157ac);
+  };
 
-  CallstackID m_Hash = 0;
-  std::vector<uint64_t> m_Data;
+  CallstackID GetHash() const { return hash_; }
+  uint64_t GetFrame(size_t index) const { return frames_.at(index); }
+  const std::vector<uint64_t>& GetFrames() const { return frames_; };
+  size_t GetFramesCount() const { return frames_.size(); }
+
+ private:
+  CallstackID hash_ = 0;
+  std::vector<uint64_t> frames_;
 };
 #endif  // ORBIT_CORE_CALLSTACK_H_
