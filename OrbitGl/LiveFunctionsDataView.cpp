@@ -292,11 +292,13 @@ void LiveFunctionsDataView::DoFilter() {
 
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
-  size_t functions_count = Capture::GSelectedInCaptureFunctions.size();
+  const std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>&
+      selected_functions = Capture::capture_data_.selected_functions();
+  size_t functions_count = selected_functions.size();
   indices_.resize(functions_count);
   for (size_t i = 0; i < functions_count; ++i) {
     indices_[i] = i;
-    functions_.push_back(Capture::GSelectedInCaptureFunctions[i]);
+    functions_.push_back(selected_functions[i]);
   }
 
   DataView::OnDataChanged();

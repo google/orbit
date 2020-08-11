@@ -10,6 +10,7 @@
 #include <string>
 
 #include "CallstackTypes.h"
+#include "CaptureData.h"
 #include "OrbitBase/Result.h"
 #include "OrbitProcess.h"
 #include "Threading.h"
@@ -40,13 +41,13 @@ class Capture {
       uint64_t address);
   static void PreSave();
 
+  static CaptureData capture_data_;
+
   static State GState;
 
   static std::shared_ptr<SamplingProfiler> GSamplingProfiler;
   static std::shared_ptr<Process> GTargetProcess;
   static std::shared_ptr<orbit_client_protos::PresetFile> GSessionPresets;
-  static std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
-      GSelectedInCaptureFunctions;
   static std::map<uint64_t, orbit_client_protos::FunctionInfo*>
       GSelectedFunctionsMap;
   static std::map<uint64_t, orbit_client_protos::FunctionInfo*>

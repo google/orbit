@@ -15,6 +15,7 @@ target_sources(
          Callstack.h
          CallstackTypes.h
          Capture.h
+         CaptureData.h
          EventBuffer.h
          FunctionUtils.h
          Introspection.h
@@ -41,6 +42,7 @@ target_sources(
 target_sources(
   OrbitCore
   PRIVATE Capture.cpp
+          CaptureData.cpp
           EventBuffer.cpp
           FunctionUtils.cpp
           Introspection.cpp

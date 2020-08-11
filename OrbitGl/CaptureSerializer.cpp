@@ -59,7 +59,7 @@ void WriteMessage(const google::protobuf::Message* message,
 }
 
 void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
-  for (const auto& function : Capture::GSelectedInCaptureFunctions) {
+  for (const auto& function : Capture::capture_data_.selected_functions()) {
     if (function != nullptr) {
       capture_info->add_selected_functions()->CopyFrom(*function);
     }
@@ -170,16 +170,19 @@ void FillEventBuffer() {
 }
 
 void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
-  // Functions
-  Capture::GSelectedInCaptureFunctions.clear();
+  // Clear the old capture
   Capture::GSelectedFunctionsMap.clear();
+  std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
+      selected_functions;
   for (const auto& function : capture_info.selected_functions()) {
     std::shared_ptr<FunctionInfo> function_ptr =
         std::make_shared<FunctionInfo>(function);
-    Capture::GSelectedInCaptureFunctions.push_back(function_ptr);
+    selected_functions.push_back(function_ptr);
     Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(
         *function_ptr)] = function_ptr.get();
   }
+  CaptureData capture_data(std::move(selected_functions));
+  Capture::capture_data_ = std::move(capture_data);
   Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
   Capture::GProcessId = capture_info.process_id();
