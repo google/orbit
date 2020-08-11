@@ -904,15 +904,15 @@ std::shared_ptr<GpuTrack> TimeGraph::GetOrCreateGpuTrack(
 //-----------------------------------------------------------------------------
 static void SetTrackNameFromRemoteMemory(std::shared_ptr<Track> track,
                                          uint64_t string_address,
-                                         ThreadPool* thread_pool) {
-  thread_pool->Schedule([track, string_address]() {
+                                         OrbitApp* app) {
+  app->GetThreadPool()->Schedule([track, string_address, app]() {
     int32_t pid = Capture::GTargetProcess->GetID();
-    const auto& process_manager = GOrbitApp->GetProcessManager();
+    const auto& process_manager = app->GetProcessManager();
     auto error_or_string =
         process_manager->LoadNullTerminatedString(pid, string_address);
 
     if (error_or_string.has_value()) {
-      GOrbitApp->GetMainThreadExecutor()->Schedule([track, error_or_string]() {
+      app->GetMainThreadExecutor()->Schedule([track, error_or_string]() {
         track->SetName(error_or_string.value());
         track->SetLabel(error_or_string.value());
       });
@@ -930,7 +930,7 @@ GraphTrack* TimeGraph::GetOrCreateGraphTrack(
   std::shared_ptr<GraphTrack> track = graph_tracks_[graph_id];
   if (track == nullptr) {
     track = std::make_shared<GraphTrack>(this, graph_id);
-    SetTrackNameFromRemoteMemory(track, graph_id, GOrbitApp->GetThreadPool());
+    SetTrackNameFromRemoteMemory(track, graph_id, GOrbitApp.get());
     tracks_.emplace_back(track);
     graph_tracks_[graph_id] = track;
   }
