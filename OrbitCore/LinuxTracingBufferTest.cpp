@@ -133,22 +133,14 @@ TEST(LinuxTracingBuffer, Callstacks) {
   LinuxTracingBuffer buffer;
 
   {
-    LinuxCallstackEvent event;
-    event.time_ = 1;
-    event.callstack_.m_Hash = 0;
-    event.callstack_.m_Data.push_back(21);
-    event.callstack_.m_Data.push_back(22);
-
+    CallStack callstack({21, 22});
+    LinuxCallstackEvent event(1, callstack);
     buffer.RecordCallstack(std::move(event));
   }
 
   {
-    LinuxCallstackEvent event;
-    event.time_ = 2;
-    event.callstack_.m_Hash = 1;
-    event.callstack_.m_Data.push_back(121);
-    event.callstack_.m_Data.push_back(122);
-
+    CallStack callstack({121, 122});
+    LinuxCallstackEvent event(2, callstack);
     buffer.RecordCallstack(std::move(event));
   }
 
@@ -159,22 +151,28 @@ TEST(LinuxTracingBuffer, Callstacks) {
   EXPECT_EQ(callstacks.size(), 2);
 
   EXPECT_EQ(callstacks[0].time_, 1);
-  EXPECT_EQ(callstacks[0].callstack_.m_Hash, 0);
-  EXPECT_EQ(callstacks[0].callstack_.m_Data.size(), 2);
-  EXPECT_THAT(callstacks[0].callstack_.m_Data, testing::ElementsAre(21, 22));
+  EXPECT_EQ(callstacks[0].callstack_.GetFramesCount(), 2);
+  EXPECT_THAT(callstacks[0].callstack_.GetFrames(),
+              testing::ElementsAre(21, 22));
+  EXPECT_THAT(
+      callstacks[0].callstack_.GetHash(),
+      XXH64(callstacks[0].callstack_.GetFrames().data(),
+            callstacks[0].callstack_.GetFramesCount() * sizeof(uint64_t),
+            0xca1157ac));
 
   EXPECT_EQ(callstacks[1].time_, 2);
-  EXPECT_EQ(callstacks[1].callstack_.m_Hash, 1);
-  EXPECT_EQ(callstacks[1].callstack_.m_Data.size(), 2);
-  EXPECT_THAT(callstacks[1].callstack_.m_Data, testing::ElementsAre(121, 122));
+  EXPECT_EQ(callstacks[1].callstack_.GetFramesCount(), 2);
+  EXPECT_THAT(callstacks[1].callstack_.GetFrames(),
+              testing::ElementsAre(121, 122));
+  EXPECT_THAT(
+      callstacks[1].callstack_.GetHash(),
+      XXH64(callstacks[1].callstack_.GetFrames().data(),
+            callstacks[1].callstack_.GetFramesCount() * sizeof(uint64_t),
+            0xca1157ac));
 
   {
-    LinuxCallstackEvent event;
-    event.time_ = 3;
-    event.callstack_.m_Hash = 21;
-    event.callstack_.m_Data.push_back(221);
-    event.callstack_.m_Data.push_back(222);
-
+    CallStack callstack({221, 222});
+    LinuxCallstackEvent event(3, callstack);
     buffer.RecordCallstack(std::move(event));
   }
 
@@ -185,9 +183,14 @@ TEST(LinuxTracingBuffer, Callstacks) {
   EXPECT_EQ(callstacks.size(), 1);
 
   EXPECT_EQ(callstacks[0].time_, 3);
-  EXPECT_EQ(callstacks[0].callstack_.m_Hash, 21);
-  EXPECT_EQ(callstacks[0].callstack_.m_Data.size(), 2);
-  EXPECT_THAT(callstacks[0].callstack_.m_Data, testing::ElementsAre(221, 222));
+  EXPECT_EQ(callstacks[0].callstack_.GetFramesCount(), 2);
+  EXPECT_THAT(callstacks[0].callstack_.GetFrames(),
+              testing::ElementsAre(221, 222));
+  EXPECT_THAT(
+      callstacks[0].callstack_.GetHash(),
+      XXH64(callstacks[0].callstack_.GetFrames().data(),
+            callstacks[0].callstack_.GetFramesCount() * sizeof(uint64_t),
+            0xca1157ac));
 }
 
 TEST(LinuxTracingBuffer, HashedCallstacks) {
@@ -389,12 +392,8 @@ TEST(LinuxTracingBuffer, Reset) {
   }
 
   {
-    LinuxCallstackEvent event;
-    event.time_ = 3;
-    event.callstack_.m_Hash = 21;
-    event.callstack_.m_Data.push_back(221);
-    event.callstack_.m_Data.push_back(222);
-
+    CallStack callstack({221, 222});
+    LinuxCallstackEvent event(3, callstack);
     buffer.RecordCallstack(std::move(event));
   }
 

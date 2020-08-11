@@ -197,12 +197,9 @@ void CaptureEventProcessor::ProcessAddressInfo(
 
 uint64_t CaptureEventProcessor::GetCallstackHashAndSendToListenerIfNecessary(
     const Callstack& callstack) {
-  CallStack cs;
-  for (uint64_t pc : callstack.pcs()) {
-    cs.m_Data.push_back(pc);
-  }
+  CallStack cs({callstack.pcs().begin(), callstack.pcs().end()});
   // TODO: Compute the hash without creating the CallStack if not necessary.
-  uint64_t hash = cs.Hash();
+  uint64_t hash = cs.GetHash();
 
   if (!callstack_hashes_seen_.contains(hash)) {
     callstack_hashes_seen_.emplace(hash);

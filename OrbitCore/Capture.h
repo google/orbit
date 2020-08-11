@@ -20,7 +20,6 @@
 
 class Process;
 class SamplingProfiler;
-struct CallStack;
 
 class Capture {
  public:

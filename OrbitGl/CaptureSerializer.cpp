@@ -85,8 +85,8 @@ void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
   Capture::GSamplingProfiler->ForEachUniqueCallstack(
       [&capture_info](const CallStack& call_stack) {
         CallstackInfo* callstack = capture_info->add_callstacks();
-        *callstack->mutable_data() = {call_stack.m_Data.begin(),
-                                      call_stack.m_Data.end()};
+        *callstack->mutable_data() = {call_stack.GetFrames().begin(),
+                                      call_stack.GetFrames().end()};
       });
 
   auto callstacks = Capture::GSamplingProfiler->GetCallstacks();
@@ -207,9 +207,8 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
   }
   Capture::GSamplingProfiler->ClearCallstacks();
   for (CallstackInfo callstack : capture_info.callstacks()) {
-    CallStack unique_callstack;
-    unique_callstack.m_Data = {callstack.data().begin(),
-                               callstack.data().end()};
+    CallStack unique_callstack(
+        {callstack.data().begin(), callstack.data().end()});
     Capture::GSamplingProfiler->AddUniqueCallStack(unique_callstack);
   }
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {

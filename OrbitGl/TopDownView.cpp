@@ -60,8 +60,8 @@ static void AddCallstackToTopDownThread(
     uint64_t callstack_sample_count,
     const SamplingProfiler& sampling_profiler) {
   TopDownInternalNode* current_thread_or_function = thread_node;
-  for (auto frame_it = resolved_callstack.m_Data.crbegin();
-       frame_it != resolved_callstack.m_Data.crend(); ++frame_it) {
+  for (auto frame_it = resolved_callstack.GetFrames().crbegin();
+       frame_it != resolved_callstack.GetFrames().crend(); ++frame_it) {
     uint64_t frame = *frame_it;
     const std::string& function_name =
         sampling_profiler.GetFunctionNameByAddress(frame);
