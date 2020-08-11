@@ -59,7 +59,7 @@ void WriteMessage(const google::protobuf::Message* message,
 }
 
 void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
-  for (const auto& function : Capture::capture_data_.GetSelectedFunctions()) {
+  for (const auto& function : Capture::capture_data_.selected_functions()) {
     if (function != nullptr) {
       capture_info->add_selected_functions()->CopyFrom(*function);
     }
@@ -182,7 +182,7 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
         *function_ptr)] = function_ptr.get();
   }
   CaptureData capture_data(std::move(selected_functions));
-  Capture::capture_data_ = capture_data;
+  Capture::capture_data_ = std::move(capture_data);
   Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
   Capture::GProcessId = capture_info.process_id();

@@ -25,7 +25,7 @@ class CaptureData {
 
   [[nodiscard]] const std::vector<
       std::shared_ptr<orbit_client_protos::FunctionInfo>>&
-  GetSelectedFunctions() {
+  selected_functions() {
     return selected_functions_;
   }
 

@@ -92,7 +92,7 @@ void Capture::ClearCaptureData() {
 void Capture::PreFunctionHooks() {
 
   GSelectedFunctionsMap.clear();
-  for (auto& func : capture_data_.GetSelectedFunctions()) {
+  for (auto& func : capture_data_.selected_functions()) {
     uint64_t address = FunctionUtils::GetAbsoluteAddress(*func);
     GSelectedFunctionsMap[address] = func.get();
     func->clear_stats();
