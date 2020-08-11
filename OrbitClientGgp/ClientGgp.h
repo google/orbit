@@ -5,14 +5,7 @@
 #ifndef ORBIT_CLIENT_GGP_CLIENT_GGP_H_
 #define ORBIT_CLIENT_GGP_CLIENT_GGP_H_
 
-//#include <string>
-
 #include "grpcpp/grpcpp.h"
-
-//#include "Callstack.h"
-//#include "EventBuffer.h"
-//#include "KeyAndString.h"
-//#include "ScopeTimer.h"
 
 #include "ClientGgpOptions.h"
 #include "OrbitCaptureClient/CaptureClient.h"
