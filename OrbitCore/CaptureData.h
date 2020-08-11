@@ -30,6 +30,7 @@ class CaptureData {
   }
 
  private:
+  // TODO(kuebler): make them raw pointers at some point
   std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
       selected_functions_;
 };
