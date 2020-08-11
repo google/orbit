@@ -551,9 +551,9 @@ std::vector<CallstackEvent> TimeGraph::SelectEvents(float a_WorldStart,
 
   sampling_profiler->SetGenerateSummary(a_TID == 0);
 
-  for (CallstackEvent event : selected_callstack_events) {
+  for (const CallstackEvent& event : selected_callstack_events) {
     if (Capture::GSamplingProfiler->GetCallStack(event.callstack_hash())) {
-      sampling_profiler->AddCallStack(std::move(event));
+      sampling_profiler->AddCallStack(CallstackEvent(event));
     }
   }
   sampling_profiler->ProcessSamples();
