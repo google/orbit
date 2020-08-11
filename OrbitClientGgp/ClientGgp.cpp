@@ -6,10 +6,10 @@
 
 #include "capture_data.pb.h"
 
-#include <limits>
-#include <memory>
 #include <cstdint>
+#include <limits>
 #include <map>
+#include <memory>
 #include <string>
 
 #include "Capture.h"

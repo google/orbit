@@ -8,8 +8,8 @@
 #include "grpcpp/grpcpp.h"
 
 #include <cstdint>
-#include <string>
 #include <memory>
+#include <string>
 
 #include "ClientGgpOptions.h"
 #include "OrbitCaptureClient/CaptureClient.h"
