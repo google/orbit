@@ -21,6 +21,8 @@ GlPanel* GlPanel::Create(Type a_Type) {
   return panel;
 }
 
+void GlPanel::Destroy(GlPanel* panel) { delete panel; }
+
 GlPanel::GlPanel() {
   m_WindowOffset[0] = 0;
   m_WindowOffset[1] = 0;

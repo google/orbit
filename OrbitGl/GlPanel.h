@@ -14,6 +14,7 @@ class GlPanel {
   enum Type { CAPTURE };
 
   static GlPanel* Create(Type a_Type);
+  static void Destroy(GlPanel* panel);
 
   virtual void Initialize();
   virtual void Resize(int a_Width, int a_Height);

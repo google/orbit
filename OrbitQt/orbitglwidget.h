@@ -17,6 +17,7 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 
  public:
   explicit OrbitGLWidget(QWidget* parent = nullptr);
+  ~OrbitGLWidget() override;
   void Initialize(GlPanel::Type a_Type, class OrbitMainWindow* a_MainWindow);
   void initializeGL() override;
   void resizeGL(int w, int h) override;
