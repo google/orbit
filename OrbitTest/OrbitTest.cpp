@@ -139,7 +139,7 @@ void OrbitTest::ManualInstrumentationApiTest() {
 
     static double double_var = 0.0;
     static volatile double cos_coeff = 0.1;
-    ORBIT_DOUBLE("double_var", cosf((++double_var) * cos_coeff));
+    ORBIT_DOUBLE("double_var", cos((++double_var) * cos_coeff));
 
     std::this_thread::sleep_for(std::chrono::milliseconds(15));
   }
