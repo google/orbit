@@ -54,7 +54,26 @@ class CaptureData {
     address_infos_ = std::move(address_infos);
   }
 
-  orbit_client_protos::LinuxAddressInfo* GetAddressInfo(uint64_t address);
+  [[nodiscard]] orbit_client_protos::LinuxAddressInfo* GetAddressInfo(
+      uint64_t address);
+
+  [[nodiscard]] const absl::flat_hash_map<int32_t, std::string>&
+  thread_names() {
+    return thread_names_;
+  }
+
+  [[nodiscard]] const std::string& GetThreadName(int32_t thread_id) {
+    return thread_names_.at(thread_id);
+  }
+
+  void set_thread_names(
+      absl::flat_hash_map<int32_t, std::string> thread_names) {
+    thread_names_ = std::move(thread_names);
+  }
+
+  void AddOrAssignThreadName(int32_t thread_id, std::string thread_name) {
+    thread_names_.insert_or_assign(thread_id, std::move(thread_name));
+  }
 
  private:
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
@@ -64,6 +83,8 @@ class CaptureData {
   // TODO(kuebler): make them raw pointers at some point
   std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
       selected_functions_;
+
+  absl::flat_hash_map<int32_t, std::string> thread_names_;
 
   std::chrono::system_clock::time_point capture_start_time_ =
       std::chrono::system_clock::now();

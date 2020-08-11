@@ -50,7 +50,6 @@ class Capture {
       GSelectedFunctionsMap;
   static std::map<uint64_t, orbit_client_protos::FunctionInfo*>
       GVisibleFunctionsMap;
-  static std::unordered_map<int32_t, std::string> GThreadNames;
   static class TextBox* GSelectedTextBox;
   static ThreadID GSelectedThreadId;
 };

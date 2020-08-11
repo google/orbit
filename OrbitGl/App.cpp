@@ -145,10 +145,11 @@ void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
 }
 
 void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
-  main_thread_executor_->Schedule([thread_id, thread_name = std::move(
-                                                  thread_name)]() mutable {
-    Capture::GThreadNames.insert_or_assign(thread_id, std::move(thread_name));
-  });
+  main_thread_executor_->Schedule(
+      [thread_id, thread_name = std::move(thread_name)]() mutable {
+        Capture::capture_data_.AddOrAssignThreadName(thread_id,
+                                                     std::move(thread_name));
+      });
 }
 
 void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
@@ -440,7 +441,7 @@ void OrbitApp::AddTopDownView(const SamplingProfiler& sampling_profiler) {
   std::unique_ptr<TopDownView> top_down_view =
       TopDownView::CreateFromSamplingProfiler(
           sampling_profiler, Capture::capture_data_.process_name(),
-          Capture::GThreadNames);
+          Capture::capture_data_.thread_names());
   top_down_view_callback_(std::move(top_down_view));
 }
 

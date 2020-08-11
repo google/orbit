@@ -24,7 +24,6 @@ Capture::State Capture::GState = Capture::State::kEmpty;
 CaptureData Capture::capture_data_;
 std::map<uint64_t, FunctionInfo*> Capture::GSelectedFunctionsMap;
 std::map<uint64_t, FunctionInfo*> Capture::GVisibleFunctionsMap;
-std::unordered_map<int32_t, std::string> Capture::GThreadNames;
 TextBox* Capture::GSelectedTextBox = nullptr;
 ThreadID Capture::GSelectedThreadId;
 
@@ -73,7 +72,6 @@ void Capture::FinalizeCapture() {
 }
 
 void Capture::ClearCaptureData() {
-  GThreadNames.clear();
   GSelectedTextBox = nullptr;
   GSelectedThreadId = 0;
 }

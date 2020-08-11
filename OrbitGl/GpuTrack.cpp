@@ -217,7 +217,7 @@ std::string GpuTrack::GetSwQueueTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      Capture::GThreadNames[timer_info.thread_id()].c_str(),
+      Capture::capture_data_.GetThreadName(timer_info.thread_id()),
       timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end()))
           .c_str());
@@ -231,7 +231,7 @@ std::string GpuTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      Capture::GThreadNames[timer_info.thread_id()].c_str(),
+      Capture::capture_data_.GetThreadName(timer_info.thread_id()),
       timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end()))
           .c_str());
@@ -246,7 +246,7 @@ std::string GpuTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
       "<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      Capture::GThreadNames[timer_info.thread_id()].c_str(),
+      Capture::capture_data_.GetThreadName(timer_info.thread_id()),
       timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end()))
           .c_str());

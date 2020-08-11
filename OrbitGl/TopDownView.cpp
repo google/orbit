@@ -74,7 +74,7 @@ static void AddCallstackToTopDownThread(
 
 [[nodiscard]] static TopDownThread* GetOrCreateThreadNode(
     TopDownView* top_down_view, int32_t tid, const std::string& process_name,
-    const std::unordered_map<int32_t, std::string>& thread_names) {
+    const absl::flat_hash_map<int32_t, std::string>& thread_names) {
   TopDownThread* thread_node = top_down_view->GetThreadOrNull(tid);
   if (thread_node == nullptr) {
     std::string thread_name;
@@ -91,7 +91,7 @@ static void AddCallstackToTopDownThread(
 
 std::unique_ptr<TopDownView> TopDownView::CreateFromSamplingProfiler(
     const SamplingProfiler& sampling_profiler, const std::string& process_name,
-    const std::unordered_map<int32_t, std::string>& thread_names) {
+    const absl::flat_hash_map<int32_t, std::string>& thread_names) {
   auto top_down_view = std::make_unique<TopDownView>();
   for (const ThreadSampleData* thread_sample_data :
        sampling_profiler.GetThreadSampleData()) {

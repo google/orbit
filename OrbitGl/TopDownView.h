@@ -140,7 +140,7 @@ class [[nodiscard]] TopDownView : public TopDownNode {
   [[nodiscard]] static std::unique_ptr<TopDownView> CreateFromSamplingProfiler(
       const SamplingProfiler& sampling_profiler,
       const std::string& process_name,
-      const std::unordered_map<int32_t, std::string>& thread_names);
+      const absl::flat_hash_map<int32_t, std::string>& thread_names);
 
   TopDownView() : TopDownNode{nullptr} {}
 
