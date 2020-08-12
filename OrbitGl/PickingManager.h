@@ -25,12 +25,12 @@ class Pickable {
   virtual void OnDrag(int /*a_X*/, int /*a_Y*/) {}
   virtual void OnRelease(){};
   virtual void Draw(GlCanvas* a_Canvas, PickingMode a_PickingMode) = 0;
-  virtual bool Draggable() { return false; }
-  virtual bool Movable() { return false; }
-  virtual std::string GetTooltip() const { return ""; }
+  [[nodiscard]] virtual bool Draggable() { return false; }
+  [[nodiscard]] virtual bool Movable() { return false; }
+  [[nodiscard]] virtual std::string GetTooltip() const { return ""; }
 };
 
-enum class PickingType: uint32_t {
+enum class PickingType : uint32_t {
   kInvalid = 0,
   kLine = 1,
   kBox = 2,
@@ -48,11 +48,12 @@ enum class PickingType: uint32_t {
 // in the bits remaining after encoding the batcher id, and the
 // PickingType, so adding more batchers or types has to be carefully
 // considered.
-enum class BatcherId: uint32_t { kTimeGraph, kUi };
+enum class BatcherId : uint32_t { kTimeGraph, kUi };
 
 struct PickingID {
-  static PickingID Get(PickingType type, uint32_t id,
-                       BatcherId batcher_id = BatcherId::kTimeGraph) {
+  [[nodiscard]] static PickingID Get(
+      PickingType type, uint32_t id,
+      BatcherId batcher_id = BatcherId::kTimeGraph) {
     static_assert(sizeof(PickingID) == 4, "PickingID must be 32 bits");
     PickingID result;
     result.type_ = type;
@@ -60,8 +61,10 @@ struct PickingID {
     result.batcher_id_ = batcher_id;
     return result;
   }
-  static Color GetColor(PickingType type, uint32_t id,
-                        BatcherId batcher_id = BatcherId::kTimeGraph) {
+
+  [[nodiscard]] static Color GetColor(
+      PickingType type, uint32_t id,
+      BatcherId batcher_id = BatcherId::kTimeGraph) {
     static_assert(sizeof(PickingID) == sizeof(Color),
                   "PickingId and Color must have the same size");
     static_assert(std::is_trivially_copyable<PickingID>::value,
@@ -74,7 +77,8 @@ struct PickingID {
     return Color(color_values[0], color_values[1], color_values[2],
                  color_values[3]);
   }
-  static PickingID Get(uint32_t value) {
+
+  [[nodiscard]] static PickingID Get(uint32_t value) {
     static_assert(sizeof(PickingID) == sizeof(uint32_t),
                   "PickingId and uint32_t must have the same size");
     static_assert(std::is_trivially_copyable<PickingID>::value,
@@ -97,19 +101,19 @@ class PickingManager {
   void Pick(uint32_t id, int x, int y);
   void Release();
   void Drag(int x, int y);
-  std::weak_ptr<Pickable> GetPicked() const;
-  std::weak_ptr<Pickable> GetPickableFromId(uint32_t id) const;
-  bool IsDragging() const;
+  [[nodiscard]] std::weak_ptr<Pickable> GetPicked() const;
+  [[nodiscard]] std::weak_ptr<Pickable> GetPickableFromId(uint32_t id) const;
+  [[nodiscard]] bool IsDragging() const;
 
-  Color GetPickableColor(std::weak_ptr<Pickable> pickable,
-                         BatcherId batcher_id);
+  [[nodiscard]] Color GetPickableColor(std::weak_ptr<Pickable> pickable,
+                                       BatcherId batcher_id);
 
-  bool IsThisElementPicked(const Pickable* pickable) const;
+  [[nodiscard]] bool IsThisElementPicked(const Pickable* pickable) const;
 
  private:
-  PickingID CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
-                             BatcherId batcher_id);
-  Color ColorFromPickingID(PickingID id) const;
+  [[nodiscard]] PickingID CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
+                                           BatcherId batcher_id);
+  [[nodiscard]] Color ColorFromPickingID(PickingID id) const;
 
  private:
   uint32_t id_counter_ = 0;
