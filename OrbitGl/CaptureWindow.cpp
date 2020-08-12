@@ -171,14 +171,14 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
 }
 
 void CaptureWindow::Pick(PickingId a_PickingID, int a_X, int a_Y) {
-  PickingType type = a_PickingID.type_;
+  PickingType type = a_PickingID.type;
 
-  Batcher& batcher = GetBatcherById(a_PickingID.batcher_id_);
+  Batcher& batcher = GetBatcherById(a_PickingID.batcher_id);
   TextBox* text_box = batcher.GetTextBox(a_PickingID);
   if (text_box) {
     SelectTextBox(text_box);
   } else if (type == PickingType::kPickable) {
-    m_PickingManager.Pick(a_PickingID.id_, a_X, a_Y);
+    m_PickingManager.Pick(a_PickingID.id, a_X, a_Y);
   }
 }
 
@@ -203,12 +203,12 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
                &pixels[0]);
 
   PickingId pickId = absl::bit_cast<PickingId>(pixels);
-  Batcher& batcher = GetBatcherById(pickId.batcher_id_);
+  Batcher& batcher = GetBatcherById(pickId.batcher_id);
 
   std::string tooltip = "";
 
-  if (pickId.type_ == PickingType::kPickable) {
-    auto pickable = GetPickingManager().GetPickableFromId(pickId.id_).lock();
+  if (pickId.type == PickingType::kPickable) {
+    auto pickable = GetPickingManager().GetPickableFromId(pickId.id).lock();
     if (pickable) {
       tooltip = pickable->GetTooltip();
     }
