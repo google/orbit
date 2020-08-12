@@ -560,6 +560,8 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
   }
 }
 
+bool OrbitApp::IsCapturing() const { return Capture::IsCapturing(); }
+
 bool OrbitApp::StartCapture() {
   CHECK(!Capture::IsCapturing());
 

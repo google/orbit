@@ -68,6 +68,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<void> OnLoadPreset(const std::string& file_name);
   ErrorMessageOr<void> OnSaveCapture(const std::string& file_name);
   ErrorMessageOr<void> OnLoadCapture(const std::string& file_name);
+  bool IsCapturing() const;
   bool StartCapture();
   void StopCapture();
   void ClearCapture();
@@ -153,11 +154,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void SetTooltipCallback(TooltipCallback callback) {
     tooltip_callback_ = std::move(callback);
   }
-  using FeedbackDialogCallback = std::function<void()>;
-  void SetFeedbackDialogCallback(FeedbackDialogCallback callback) {
-    feedback_dialog_callback_ = std::move(callback);
-  }
-
   using RefreshCallback = std::function<void(DataViewType type)>;
   void SetRefreshCallback(RefreshCallback callback) {
     refresh_callback_ = std::move(callback);
@@ -217,6 +213,14 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   DataView* GetOrCreateDataView(DataViewType type) override;
 
+  [[nodiscard]] ProcessManager* GetProcessManager() {
+    return process_manager_.get();
+  }
+  [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
+  [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() {
+    return main_thread_executor_.get();
+  }
+
  private:
   void LoadModuleOnRemote(
       int32_t process_id, const std::shared_ptr<Module>& module,
@@ -245,7 +249,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageCallback error_message_callback_;
   InfoMessageCallback info_message_callback_;
   TooltipCallback tooltip_callback_;
-  FeedbackDialogCallback feedback_dialog_callback_;
   RefreshCallback refresh_callback_;
   SamplingReportCallback sampling_reports_callback_;
   SamplingReportCallback selection_report_callback_;

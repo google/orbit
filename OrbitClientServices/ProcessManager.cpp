@@ -32,6 +32,9 @@ class ProcessManagerImpl final : public ProcessManager {
   ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid, uint64_t address,
                                                 uint64_t size) override;
 
+  ErrorMessageOr<std::string> LoadNullTerminatedString(
+      int32_t pid, uint64_t address) override;
+
   ErrorMessageOr<std::string> FindDebugInfoFile(
       const std::string& module_path, const std::string& build_id) override;
 
@@ -197,6 +200,26 @@ ErrorMessageOr<std::string> ProcessManagerImpl::LoadProcessMemory(
   }
 
   return std::move(*response.mutable_memory());
+}
+
+ErrorMessageOr<std::string> ProcessManagerImpl::LoadNullTerminatedString(
+    int32_t pid, uint64_t address) {
+  constexpr uint64_t max_size = 256;
+  auto error_or_string = LoadProcessMemory(pid, address, max_size);
+  if (error_or_string.has_value()) {
+    const std::string& str = error_or_string.value();
+    if (str.find('\0') == std::string::npos) {
+      const char* error_msg = "Remote string is not null terminated";
+      ERROR("%s: %s", error_msg, str.c_str());
+      return ErrorMessage(error_msg);
+    }
+
+    // The string has a size of max_size at this point. Shrink it by assigning
+    // it its own str.c_str(). c_str() is guaranteed to be null terminated.
+    error_or_string = str.c_str();
+  }
+
+  return error_or_string;
 }
 
 }  // namespace

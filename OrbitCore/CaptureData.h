@@ -65,7 +65,9 @@ class CaptureData {
   }
 
   [[nodiscard]] const std::string& GetThreadName(int32_t thread_id) const {
-    return thread_names_.at(thread_id);
+    static const std::string kEmptyString;
+    auto it = thread_names_.find(thread_id);
+    return it != thread_names_.end() ? it->second : kEmptyString;
   }
 
   void set_thread_names(
