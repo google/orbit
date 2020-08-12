@@ -298,17 +298,12 @@
     <string>Open Preset</string>
    </property>
   </action>
-  <action name="actionStart_Capture">
+  <action name="actionToggle_Capture">
    <property name="text">
-    <string>Start Capture</string>
+    <string>Toggle Capture</string>
    </property>
    <property name="toolTip">
-    <string>Start Capture</string>
-   </property>
-  </action>
-  <action name="actionStop_Capture">
-   <property name="text">
-    <string>Stop Capture</string>
+    <string>Toggle Capture</string>
    </property>
   </action>
   <action name="actionClear_Capture">

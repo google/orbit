@@ -72,8 +72,7 @@ class OrbitMainWindow : public QMainWindow {
   void on_actionToogleDevMode_toggled(bool arg1);
   void on_actionSave_Preset_As_triggered();
 
-  void on_actionStart_Capture_triggered();
-  void on_actionStop_Capture_triggered();
+  void on_actionToggle_Capture_triggered();
   void on_actionSave_Capture_triggered();
   void on_actionOpen_Capture_triggered();
   void on_actionClear_Capture_triggered();
@@ -105,6 +104,8 @@ class OrbitMainWindow : public QMainWindow {
   QLabel* timer_label_ = nullptr;
   QLineEdit* filter_functions_line_edit_ = nullptr;
   QLineEdit* filter_tracks_line_edit_ = nullptr;
+  QIcon icon_start_capture_;
+  QIcon icon_stop_capture_;
 
   std::string m_CurrentPdbName;
 };
