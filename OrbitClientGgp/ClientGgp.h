@@ -12,7 +12,7 @@
 #include "ClientGgpOptions.h"
 #include "OrbitCaptureClient/CaptureClient.h"
 #include "OrbitCaptureClient/CaptureListener.h"
-#include "OrbitProcess.h"  // remove if including Capture.h in here
+#include "OrbitProcess.h"
 #include "grpcpp/grpcpp.h"
 
 class ClientGgp final : public CaptureListener {
@@ -41,7 +41,6 @@ class ClientGgp final : public CaptureListener {
   std::unique_ptr<CaptureClient> capture_client_;
 
   void InitCapture();
-  std::shared_ptr<Process> GetOrbitProcessByPid(int32_t pid);
 };
 
 #endif  // ORBIT_CLIENT_GGP_CLIENT_GGP_H_
