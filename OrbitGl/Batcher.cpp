@@ -140,7 +140,6 @@ void Batcher::Reset() {
   triangle_buffer_.Reset();
 }
 
-//----------------------------------------------------------------------------
 void Batcher::Draw(bool picking) {
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -158,7 +157,6 @@ void Batcher::Draw(bool picking) {
   glPopAttrib();
 }
 
-//----------------------------------------------------------------------------
 void Batcher::DrawBoxBuffer(bool picking) {
   Block<Box, BoxBuffer::NUM_BOXES_PER_BLOCK>* box_block =
       GetBoxBuffer().boxes_.m_Root;
@@ -179,7 +177,6 @@ void Batcher::DrawBoxBuffer(bool picking) {
   }
 }
 
-//----------------------------------------------------------------------------
 void Batcher::DrawLineBuffer(bool picking) {
   Block<Line, LineBuffer::NUM_LINES_PER_BLOCK>* line_block =
       GetLineBuffer().lines_.m_Root;
@@ -200,7 +197,6 @@ void Batcher::DrawLineBuffer(bool picking) {
   }
 }
 
-//----------------------------------------------------------------------------
 void Batcher::DrawTriangleBuffer(bool picking) {
   Block<Triangle, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>* triangle_block =
       GetTriangleBuffer().triangles_.m_Root;
