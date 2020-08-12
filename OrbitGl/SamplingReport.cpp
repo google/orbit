@@ -4,48 +4,44 @@
 
 #include "SamplingReport.h"
 
-#include <utility>
-
 #include "CallStackDataView.h"
-#include "SamplingProfiler.h"
-#include "SamplingReportDataView.h"
 #include "absl/strings/str_format.h"
 
 SamplingReport::SamplingReport(
-    std::shared_ptr<class SamplingProfiler> a_SamplingProfiler) {
-  m_Profiler = std::move(a_SamplingProfiler);
-  m_SelectedAddress = 0;
-  m_SelectedTid = 0;
-  m_CallstackDataView = nullptr;
-  m_SelectedSortedCallstackReport = nullptr;
-  m_SelectedCallstackIndex = 0;
+    std::shared_ptr<class SamplingProfiler> sampling_profiler) {
+  profiler_ = std::move(sampling_profiler);
+  selected_address_ = 0;
+  selected_thread_id_ = 0;
+  callstack_data_view_ = nullptr;
+  selected_sorted_callstack_report_ = nullptr;
+  selected_callstack_index_ = 0;
   FillReport();
 }
 
 void SamplingReport::FillReport() {
-  const auto& sampleData = m_Profiler->GetThreadSampleData();
+  const auto& sample_data = profiler_->GetThreadSampleData();
 
-  for (ThreadSampleData* threadSampleData : sampleData) {
+  for (ThreadSampleData* threadSampleData : sample_data) {
     ThreadID tid = threadSampleData->thread_id;
 
     if (tid == SamplingProfiler::kAllThreadsFakeTid &&
-        !m_Profiler->GetGenerateSummary())
+        !profiler_->GetGenerateSummary())
       continue;
 
-    SamplingReportDataView threadReport;
-    threadReport.SetSampledFunctions(threadSampleData->sampled_function);
-    threadReport.SetThreadID(tid);
-    threadReport.SetSamplingReport(this);
-    m_ThreadReports.push_back(std::move(threadReport));
+    SamplingReportDataView thread_report;
+    thread_report.SetSampledFunctions(threadSampleData->sampled_function);
+    thread_report.SetThreadID(tid);
+    thread_report.SetSamplingReport(this);
+    thread_reports_.push_back(std::move(thread_report));
   }
 }
 
 void SamplingReport::UpdateReport() {
-  m_Profiler->ProcessSamples();
-  for (SamplingReportDataView& thread_report : m_ThreadReports) {
-    int32_t thread_id = thread_report.GetThreadID();
+  profiler_->ProcessSamples();
+  for (SamplingReportDataView& thread_report : thread_reports_) {
+    ThreadID thread_id = thread_report.GetThreadID();
     const ThreadSampleData* thread_sample_data =
-        m_Profiler->GetThreadSampleDataByThreadId(thread_id);
+        profiler_->GetThreadSampleDataByThreadId(thread_id);
     if (thread_sample_data != nullptr) {
       thread_report.SetSampledFunctions(thread_sample_data->sampled_function);
     }
@@ -55,69 +51,69 @@ void SamplingReport::UpdateReport() {
   // for example the number of occurrences or of total callstacks might have
   // changed (OrbitSamplingReport::RefreshCallstackView will do the actual
   // update once OrbitApp::FireRefreshCallbacks is called).
-  m_SelectedSortedCallstackReport = m_Profiler->GetSortedCallstacksFromAddress(
-      m_SelectedAddress, m_SelectedTid);
-  if (m_SelectedSortedCallstackReport->callstacks_count.empty()) {
-    m_SelectedSortedCallstackReport = nullptr;
-    m_SelectedCallstackIndex = 0;
-    m_CallstackDataView->SetCallStack(nullptr);
+  selected_sorted_callstack_report_ = profiler_->GetSortedCallstacksFromAddress(
+      selected_address_, selected_thread_id_);
+  if (selected_sorted_callstack_report_->callstacks_count.empty()) {
+    selected_sorted_callstack_report_ = nullptr;
+    selected_callstack_index_ = 0;
+    callstack_data_view_->SetCallStack(nullptr);
   } else {
-    OnCallstackIndexChanged(m_SelectedCallstackIndex);
+    OnCallstackIndexChanged(selected_callstack_index_);
   }
 }
 
-void SamplingReport::OnSelectAddress(uint64_t a_Address, int32_t a_ThreadId) {
-  if (m_CallstackDataView) {
-    if (m_SelectedAddress != a_Address || m_SelectedTid != a_ThreadId) {
-      m_SelectedSortedCallstackReport =
-          m_Profiler->GetSortedCallstacksFromAddress(a_Address, a_ThreadId);
-      m_SelectedAddress = a_Address;
-      m_SelectedTid = a_ThreadId;
+void SamplingReport::OnSelectAddress(uint64_t address, ThreadID thread_id) {
+  if (callstack_data_view_) {
+    if (selected_address_ != address || selected_thread_id_ != thread_id) {
+      selected_sorted_callstack_report_ =
+          profiler_->GetSortedCallstacksFromAddress(address, thread_id);
+      selected_address_ = address;
+      selected_thread_id_ = thread_id;
       OnCallstackIndexChanged(0);
     }
   }
 
-  if (m_UiRefreshFunc) {
-    m_UiRefreshFunc();
+  if (ui_refresh_func_) {
+    ui_refresh_func_();
   }
 }
 
 void SamplingReport::IncrementCallstackIndex() {
   CHECK(HasCallstacks());
-  size_t maxIndex =
-      m_SelectedSortedCallstackReport->callstacks_count.size() - 1;
-  if (++m_SelectedCallstackIndex > maxIndex) {
-    m_SelectedCallstackIndex = 0;
+  size_t max_index =
+      selected_sorted_callstack_report_->callstacks_count.size() - 1;
+  if (++selected_callstack_index_ > max_index) {
+    selected_callstack_index_ = 0;
   }
 
-  OnCallstackIndexChanged(m_SelectedCallstackIndex);
+  OnCallstackIndexChanged(selected_callstack_index_);
 }
 
 void SamplingReport::DecrementCallstackIndex() {
   CHECK(HasCallstacks());
-  size_t maxIndex =
-      m_SelectedSortedCallstackReport->callstacks_count.size() - 1;
-  if (m_SelectedCallstackIndex == 0) {
-    m_SelectedCallstackIndex = maxIndex;
+  size_t max_index =
+      selected_sorted_callstack_report_->callstacks_count.size() - 1;
+  if (selected_callstack_index_ == 0) {
+    selected_callstack_index_ = max_index;
   } else {
-    --m_SelectedCallstackIndex;
+    --selected_callstack_index_;
   }
 
-  OnCallstackIndexChanged(m_SelectedCallstackIndex);
+  OnCallstackIndexChanged(selected_callstack_index_);
 }
 
-std::string SamplingReport::GetSelectedCallstackString() {
-  if (m_SelectedSortedCallstackReport) {
-    int num_occurrences = m_SelectedSortedCallstackReport
-                              ->callstacks_count[m_SelectedCallstackIndex]
+std::string SamplingReport::GetSelectedCallstackString() const {
+  if (selected_sorted_callstack_report_) {
+    int num_occurrences = selected_sorted_callstack_report_
+                              ->callstacks_count[selected_callstack_index_]
                               .count;
     int total_callstacks =
-        m_SelectedSortedCallstackReport->callstacks_total_count;
+        selected_sorted_callstack_report_->callstacks_total_count;
 
     return absl::StrFormat(
         "%i of %i unique callstacks.  [%i/%i total callstacks](%.2f%%)",
-        m_SelectedCallstackIndex + 1,
-        m_SelectedSortedCallstackReport->callstacks_count.size(),
+        selected_callstack_index_ + 1,
+        selected_sorted_callstack_report_->callstacks_count.size(),
         num_occurrences, total_callstacks,
         100.f * num_occurrences / total_callstacks);
   }
@@ -125,14 +121,14 @@ std::string SamplingReport::GetSelectedCallstackString() {
   return "Callstacks";
 }
 
-void SamplingReport::OnCallstackIndexChanged(size_t a_Index) {
-  if (a_Index < m_SelectedSortedCallstackReport->callstacks_count.size()) {
-    CallstackCount& cs =
-        m_SelectedSortedCallstackReport->callstacks_count[a_Index];
-    m_SelectedCallstackIndex = a_Index;
-    m_CallstackDataView->SetCallStack(
-        m_Profiler->GetCallStack(cs.callstack_id));
+void SamplingReport::OnCallstackIndexChanged(size_t index) {
+  if (index < selected_sorted_callstack_report_->callstacks_count.size()) {
+    const CallstackCount& cs =
+        selected_sorted_callstack_report_->callstacks_count[index];
+    selected_callstack_index_ = index;
+    callstack_data_view_->SetCallStack(
+        profiler_->GetCallStack(cs.callstack_id));
   } else {
-    m_SelectedCallstackIndex = 0;
+    selected_callstack_index_ = 0;
   }
 }

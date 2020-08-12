@@ -5,50 +5,55 @@
 #ifndef ORBIT_GL_SAMPLING_REPORT_H_
 #define ORBIT_GL_SAMPLING_REPORT_H_
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
+#include "CallstackTypes.h"
 #include "SamplingProfiler.h"
 #include "SamplingReportDataView.h"
 
 class SamplingReport {
  public:
-  explicit SamplingReport(std::shared_ptr<SamplingProfiler> a_SamplingProfiler);
+  explicit SamplingReport(std::shared_ptr<SamplingProfiler> sampling_profiler);
 
-  void FillReport();
   void UpdateReport();
-  std::shared_ptr<SamplingProfiler> GetProfiler() const { return m_Profiler; }
-  std::vector<SamplingReportDataView>& GetThreadReports() {
-    return m_ThreadReports;
-  }
-  void SetCallstackDataView(class CallStackDataView* a_DataView) {
-    m_CallstackDataView = a_DataView;
-  }
-  void OnSelectAddress(uint64_t a_Address, int32_t a_ThreadId);
-  void OnCallstackIndexChanged(size_t a_Index);
+  [[nodiscard]] std::shared_ptr<SamplingProfiler> GetProfiler() const {
+    return profiler_;
+  };
+  [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() {
+    return thread_reports_;
+  };
+  void SetCallstackDataView(CallStackDataView* data_view) {
+    callstack_data_view_ = data_view;
+  };
+  void OnSelectAddress(uint64_t address, ThreadID thread_id);
   void IncrementCallstackIndex();
   void DecrementCallstackIndex();
-  std::string GetSelectedCallstackString();
-  void SetUiRefreshFunc(std::function<void()> a_Func) {
-    m_UiRefreshFunc = std::move(a_Func);
-  }
-  bool HasCallstacks() const {
-    return m_SelectedSortedCallstackReport != nullptr;
-  }
+  [[nodiscard]] std::string GetSelectedCallstackString() const;
+  void SetUiRefreshFunc(std::function<void()> func) {
+    ui_refresh_func_ = std::move(func);
+  };
+  [[nodiscard]] bool HasCallstacks() const {
+    return selected_sorted_callstack_report_ != nullptr;
+  };
 
  protected:
-  std::shared_ptr<SamplingProfiler> m_Profiler;
-  std::vector<SamplingReportDataView> m_ThreadReports;
-  CallStackDataView* m_CallstackDataView;
+  void FillReport();
+  void OnCallstackIndexChanged(size_t index);
 
-  uint64_t m_SelectedAddress;
-  int32_t m_SelectedTid;
-  std::shared_ptr<SortedCallstackReport> m_SelectedSortedCallstackReport;
-  size_t m_SelectedCallstackIndex;
-  std::function<void()> m_UiRefreshFunc;
+ protected:
+  std::shared_ptr<SamplingProfiler> profiler_;
+  std::vector<SamplingReportDataView> thread_reports_;
+  CallStackDataView* callstack_data_view_;
+
+  uint64_t selected_address_;
+  ThreadID selected_thread_id_;
+  std::shared_ptr<SortedCallstackReport> selected_sorted_callstack_report_;
+  size_t selected_callstack_index_;
+  std::function<void()> ui_refresh_func_;
 };
 
 #endif  // ORBIT_GL_SAMPLING_REPORT_H_
