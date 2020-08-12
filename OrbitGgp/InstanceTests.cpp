@@ -8,6 +8,7 @@
 #include <QJsonDocument>
 #include <QVector>
 
+#include "OrbitGgp/Error.h"
 #include "OrbitGgp/Instance.h"
 
 namespace OrbitGgp {
@@ -31,6 +32,37 @@ TEST(InstanceTests, GetListFromJson) {
     // one empty json object
     const auto json = QString("[{}]").toUtf8();
     EXPECT_FALSE(Instance::GetListFromJson(json));
+  }
+
+  {
+    // one element with invalid date
+    // pretty json:
+    // [
+    //  {
+    //   "displayName": "a display name",
+    //   "id": "instance id",
+    //   "ipAddress": "1.1.0.1",
+    //   "lastUpdated": "2020-29-09T09:55:20Z",
+    //   "owner": "a username",
+    //   "pool": "a pool",
+    //   "other key": "other value",
+    //   "other complex object": {
+    //    "object key": "object value"
+    //   },
+    //  }
+    // ]
+    const auto json =
+        QString(
+            "[{\"displayName\":\"a display name\",\"id\":\"instance "
+            "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-29-09T09:"
+            "55:20Z\",\"owner\":\"a username\",\"pool\":\"a pool\",\"other "
+            "key\":\"other value\",\"other complex object\":{\"object "
+            "key\":\"object value\"}}]")
+            .toUtf8();
+    const auto result = Instance::GetListFromJson(json);
+    ASSERT_FALSE(result);
+    EXPECT_EQ(result.error().value(),
+              static_cast<int>(OrbitGgp::Error::kUnableToParseJson));
   }
 
   {
