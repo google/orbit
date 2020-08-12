@@ -23,6 +23,8 @@ Track::Track(TimeGraph* time_graph)
   m_Picked = false;
   m_Moving = false;
   m_Canvas = nullptr;
+  const Color kDarkGrey(50, 50, 50, 255);
+  m_Color = kDarkGrey;
 }
 
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {

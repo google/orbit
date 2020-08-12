@@ -6,9 +6,11 @@
 
 #include "GlCanvas.h"
 
-GraphTrack::GraphTrack(TimeGraph* time_graph) : Track(time_graph) {}
+GraphTrack::GraphTrack(TimeGraph* time_graph, uint64_t graph_id)
+    : Track(time_graph), graph_id_(graph_id) {}
 
-void GraphTrack::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
+void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+  Track::Draw(canvas, picking_mode);
   Batcher* batcher = canvas->GetBatcher();
 
   TimeGraphLayout& layout = time_graph_->GetLayout();
@@ -70,6 +72,27 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode /*picking_mode*/) {
     previous_time = time;
     last_normalized_value = normalized_value;
   }
+}
+
+void GraphTrack::AddValue(double value, uint64_t time) {
+  values_[time] = value;
+  max_ = std::max(max_, value);
+  min_ = std::min(min_, value);
+  value_range_ = max_ - min_;
+
+  if (value_range_ > 0) inv_value_range_ = 1.0 / value_range_;
+}
+
+double GraphTrack::GetValueAtTime(uint64_t time, double default_value) const {
+  auto iterator_lower = values_.lower_bound(time);
+  if (iterator_lower != values_.end()) {
+    return iterator_lower->second;
+  }
+  auto iterator_upper = values_.upper_bound(time);
+  if (iterator_upper != values_.end()) {
+    return iterator_upper->second;
+  }
+  return default_value;
 }
 
 float GraphTrack::GetHeight() const {
