@@ -158,61 +158,61 @@ void Batcher::Draw(bool picking) {
 }
 
 void Batcher::DrawBoxBuffer(bool picking) {
-  Block<Box, BoxBuffer::NUM_BOXES_PER_BLOCK>* box_block =
-      GetBoxBuffer().boxes_.m_Root;
-  Block<Color, BoxBuffer::NUM_BOXES_PER_BLOCK * 4>* color_block;
+  const Block<Box, BoxBuffer::NUM_BOXES_PER_BLOCK>* box_block =
+      GetBoxBuffer().boxes_.root();
+  const Block<Color, BoxBuffer::NUM_BOXES_PER_BLOCK * 4>* color_block;
 
-  color_block = !picking ? GetBoxBuffer().colors_.m_Root
-                         : GetBoxBuffer().picking_colors_.m_Root;
+  color_block = !picking ? GetBoxBuffer().colors_.root()
+                         : GetBoxBuffer().picking_colors_.root();
 
   while (box_block) {
-    if (int num_elems = box_block->m_Size) {
-      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), box_block->m_Data);
-      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->m_Data);
+    if (auto num_elems = box_block->size()) {
+      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), box_block->data());
+      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->data());
       glDrawArrays(GL_QUADS, 0, num_elems * 4);
     }
 
-    box_block = box_block->m_Next;
-    color_block = color_block->m_Next;
+    box_block = box_block->next();
+    color_block = color_block->next();
   }
 }
 
 void Batcher::DrawLineBuffer(bool picking) {
-  Block<Line, LineBuffer::NUM_LINES_PER_BLOCK>* line_block =
-      GetLineBuffer().lines_.m_Root;
-  Block<Color, LineBuffer::NUM_LINES_PER_BLOCK * 2>* color_block;
+  const Block<Line, LineBuffer::NUM_LINES_PER_BLOCK>* line_block =
+      GetLineBuffer().lines_.root();
+  const Block<Color, LineBuffer::NUM_LINES_PER_BLOCK * 2>* color_block;
 
-  color_block = !picking ? GetLineBuffer().colors_.m_Root
-                         : GetLineBuffer().picking_colors_.m_Root;
+  color_block = !picking ? GetLineBuffer().colors_.root()
+                         : GetLineBuffer().picking_colors_.root();
 
   while (line_block) {
-    if (int num_elems = line_block->m_Size) {
-      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), line_block->m_Data);
-      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->m_Data);
+    if (auto num_elems = line_block->size()) {
+      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), line_block->data());
+      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->data());
       glDrawArrays(GL_LINES, 0, num_elems * 2);
     }
 
-    line_block = line_block->m_Next;
-    color_block = color_block->m_Next;
+    line_block = line_block->next();
+    color_block = color_block->next();
   }
 }
 
 void Batcher::DrawTriangleBuffer(bool picking) {
-  Block<Triangle, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>* triangle_block =
-      GetTriangleBuffer().triangles_.m_Root;
-  Block<Color, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK * 3>* color_block;
+  const Block<Triangle, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>*
+      triangle_block = GetTriangleBuffer().triangles_.root();
+  const Block<Color, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK * 3>* color_block;
 
-  color_block = !picking ? GetTriangleBuffer().colors_.m_Root
-                         : GetTriangleBuffer().picking_colors_.m_Root;
+  color_block = !picking ? GetTriangleBuffer().colors_.root()
+                         : GetTriangleBuffer().picking_colors_.root();
 
   while (triangle_block) {
-    if (int num_elems = triangle_block->m_Size) {
-      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), triangle_block->m_Data);
-      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->m_Data);
+    if (int num_elems = triangle_block->size()) {
+      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), triangle_block->data());
+      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->data());
       glDrawArrays(GL_TRIANGLES, 0, num_elems * 3);
     }
 
-    triangle_block = triangle_block->m_Next;
-    color_block = color_block->m_Next;
+    triangle_block = triangle_block->next();
+    color_block = color_block->next();
   }
 }

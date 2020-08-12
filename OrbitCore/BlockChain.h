@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_BLOCK_CHAIN_H_
+#define ORBIT_CORE_BLOCK_CHAIN_H_
 
 #include <algorithm>
 #include <cstdint>
@@ -10,221 +11,235 @@
 #include "OrbitBase/Logging.h"
 
 template <class T, uint32_t BlockSize>
-struct BlockChain;
+class BlockChain;
+
+template <class T, uint32_t BlockSize>
+class BlockIterator;
 
 template <class T, uint32_t Size>
-struct Block {
-  Block(BlockChain<T, Size>* a_Chain, Block<T, Size>* a_Prev)
-      : m_Prev(a_Prev), m_Next(nullptr), m_Chain(a_Chain), m_Size(0) {}
+class Block final {
+ public:
+  explicit Block(Block<T, Size>* prev)
+      : prev_(prev), next_(nullptr), size_(0) {}
 
-  ~Block() {}
+  [[nodiscard]] bool HasNext() const { return next_ != nullptr; }
+  [[nodiscard]] const Block<T, Size>* next() const { return next_; }
+  [[nodiscard]] const Block<T, Size>* prev() const { return prev_; }
+  [[nodiscard]] uint32_t size() const { return size_; }
 
-  template <typename V>
-  void Add(V&& item) {
-    if (m_Size == Size) {
-      if (m_Next == nullptr) {
-        m_Next = new Block<T, Size>(m_Chain, this);
-      }
+  [[nodiscard]] const T* data() const { return data_; }
 
-      m_Chain->m_Current = m_Next;
-      ++m_Chain->m_NumBlocks;
-      m_Next->Add(std::forward<V>(item));
-      return;
-    }
+ private:
+  friend class BlockIterator<T, Size>;
+  friend class BlockChain<T, Size>;
 
-    CHECK(m_Size < Size);
-    m_Data[m_Size] = std::forward<V>(item);
-    ++m_Size;
-    ++m_Chain->m_NumItems;
+  [[nodiscard]] T& Get(uint32_t index) { return data_[index]; }
+  [[nodiscard]] Block<T, Size>* mutable_next() { return next_; }
+  [[nodiscard]] Block<T, Size>* mutable_prev() { return prev_; }
+
+  void ResetSize() { size_ = 0; }
+
+  void Reset() {
+    size_ = 0;
+    next_ = nullptr;
+    prev_ = nullptr;
   }
 
-  Block<T, Size>* m_Prev;
-  Block<T, Size>* m_Next;
-  BlockChain<T, Size>* m_Chain;
-  uint32_t m_Size;
-  T m_Data[Size];
+  // Returns block the element was inserted to.
+  template <typename V>
+  Block<T, Size>* Add(V&& item) {
+    if (size() == Size) {
+      if (!HasNext()) {
+        next_ = new Block<T, Size>(this);
+      }
+
+      return next_->Add(std::forward<V>(item));
+    }
+
+    CHECK(size_ < Size);
+    data_[size_++] = std::forward<V>(item);
+
+    return this;
+  }
+
+  Block<T, Size>* prev_;
+  Block<T, Size>* next_;
+  uint32_t size_;
+  T data_[Size];
 };
 
 template <class T, uint32_t BlockSize>
-struct BlockIterator {
-  BlockIterator(Block<T, BlockSize>* a_Block) : m_Block(a_Block) {
-    m_Index = (m_Block && (m_Block->m_Size > 0)) ? 0 : -1;
+class BlockIterator final {
+ public:
+  explicit BlockIterator(Block<T, BlockSize>* block) : block_(block) {
+    index_ = (block_ != nullptr && block_->size() > 0) ? 0 : -1;
   }
 
-  T& operator*() { return m_Block->m_Data[m_Index]; }
+  T& operator*() { return block_->Get(index_); }
 
   bool operator!=(const BlockIterator& other) const {
-    bool returnValue = m_Index != other.m_Index;
-    return returnValue;
+    if (block_ != other.block_) {
+      return true;
+    }
+
+    return index_ != other.index_;
   }
 
   BlockIterator& operator++() {
-    if (++m_Index == m_Block->m_Size) {
-      if (m_Block->m_Next && m_Block->m_Next->m_Size > 0) {
-        m_Index = 0;
-        m_Block = m_Block->m_Next;
-      } else {
-        m_Index = -1;
-      }
+    if (++index_ != block_->size()) {
+      return *this;
+    }
+
+    if (block_->next() != nullptr && block_->next()->size() > 0) {
+      index_ = 0;
+      block_ = block_->mutable_next();
+    } else {
+      // end()
+      block_ = nullptr;
+      index_ = -1;
     }
 
     return *this;
   }
 
-  Block<T, BlockSize>* m_Block;
-  uint32_t m_Index;
+ private:
+  Block<T, BlockSize>* block_;
+  uint32_t index_;
 };
 
 template <class T, uint32_t BlockSize>
-struct BlockChain {
-  BlockChain() : m_NumBlocks(1), m_NumItems(0) {
-    m_Root = m_Current = new Block<T, BlockSize>(this, nullptr);
+class BlockChain final {
+ public:
+  BlockChain() : size_(0) {
+    root_ = current_ = new Block<T, BlockSize>(nullptr);
   }
 
   ~BlockChain() {
     // Find last block in chain
-    while (m_Current->m_Next) m_Current = m_Current->m_Next;
+    while (current_->HasNext()) {
+      current_ = current_->mutable_next();
+    }
 
-    Block<T, BlockSize>* prev = m_Current;
+    Block<T, BlockSize>* prev = current_;
     while (prev) {
-      prev = m_Current->m_Prev;
-      delete m_Current;
-      m_Current = prev;
+      prev = current_->mutable_prev();
+      delete current_;
+      current_ = prev;
     }
   }
 
   template <typename V>
   void push_back(V&& item) {
-    m_Current->Add(std::forward<V>(item));
+    current_ = current_->Add(std::forward<V>(item));
+    ++size_;
   }
 
-  void push_back(const T* a_Array, uint32_t a_Num) {
-    for (uint32_t i = 0; i < a_Num; ++i) m_Current->Add(a_Array[i]);
+  void push_back(const T* array, uint32_t size) {
+    for (uint32_t i = 0; i < size; ++i) {
+      push_back(array[i]);
+    }
   }
 
-  void push_back_n(const T& a_Item, uint32_t a_Num) {
-    for (uint32_t i = 0; i < a_Num; ++i) m_Current->Add(a_Item);
+  void push_back_n(const T& item, uint32_t num) {
+    for (uint32_t i = 0; i < num; ++i) {
+      push_back(item);
+    }
   }
 
   void clear() {
-    m_Root->m_Size = 0;
-    m_Root->m_Next = nullptr;
-    m_NumItems = 0;
-    m_NumBlocks = 1;
+    root_->Reset();
+    size_ = 0;
 
-    Block<T, BlockSize>* prev = m_Current;
-    while (prev != m_Root) {
-      prev = m_Current->m_Prev;
-      delete m_Current;
-      m_Current = prev;
+    Block<T, BlockSize>* prev = current_;
+    while (prev != root_) {
+      prev = current_->mutable_prev();
+      delete current_;
+      current_ = prev;
     }
 
-    m_Current = m_Root;
+    current_ = root_;
   }
+
+  [[nodiscard]] const Block<T, BlockSize>* root() const { return root_; }
 
   void Reset() {
-    Block<T, BlockSize>* blockPtr = m_Root;
-    while (blockPtr) {
-      blockPtr->m_Size = 0;
-      blockPtr = blockPtr->m_Next;
-    }
-
-    m_NumItems = 0;
-    m_NumBlocks = 1;
-    m_Current = m_Root;
-  }
-
-  bool keep(uint32_t a_MaxElems) {
-    bool hasDeleted = false;
-    a_MaxElems = std::max(BlockSize + 1, a_MaxElems);
-
-    while (m_NumItems > a_MaxElems) {
-      --m_NumBlocks;
-      m_NumItems -= BlockSize;
-
-      m_Root = m_Root->m_Next;
-
-      CHECK(m_Root->m_Prev);
-      CHECK(m_Root->m_Prev != m_Current);
-
-      delete m_Root->m_Prev;
-      m_Root->m_Prev = nullptr;
-      hasDeleted = true;
-    }
-
-    return hasDeleted;
-  }
-
-  uint32_t size() const { return m_NumItems; }
-
-  T* SlowAt(uint32_t a_Index) {
-    if (a_Index < m_NumItems && a_Index >= 0) {
-      uint32_t count = 1;
-      Block<T, BlockSize>* block = m_Root;
-      while (count * BlockSize < a_Index && block && block->m_Next) {
-        block = block->m_Next;
-        ++count;
-      }
-
-      uint32_t index = a_Index % BlockSize;
-      return &block->m_Data[index];
-    }
-
-    return nullptr;
-  }
-
-  Block<T, BlockSize>* GetBlockContaining(const T* a_Element) {
-    Block<T, BlockSize>* block = m_Root;
+    Block<T, BlockSize>* block = root_;
     while (block) {
-      uint32_t size = block->m_Size;
-      if (size) {
-        T* begin = &block->m_Data[0];
-        T* end = &block->m_Data[size - 1];
-        if (begin <= a_Element && end >= a_Element) {
-          return block;
-        }
-      }
-      block = block->m_Next;
+      block->ResetSize();
+      block = block->mutable_next();
     }
 
-    return nullptr;
+    size_ = 0;
+    current_ = root_;
   }
 
-  T* GetElementAfter(const T* a_Element) {
-    auto block = GetBlockContaining(a_Element);
-    if (block) {
-      T* begin = &block->m_Data[0];
-      uint32_t index = a_Element - begin;
-      if (index < block->m_Size - 1)
-        return &block->m_Data[++index];
-      else if (block->m_Next && block->m_Next->m_Size)
-        return &block->m_Next->m_Data[0];
+  [[nodiscard]] uint32_t size() const { return size_; }
+
+  T* SlowAt(uint32_t index) {
+    if (index > size_) {
+      return nullptr;
     }
-    return nullptr;
+
+    uint32_t count = 1;
+    Block<T, BlockSize>* block = root_;
+    while (count * BlockSize < index && block && block->HasNext()) {
+      block = block->mutable_next();
+      ++count;
+    }
+
+    CHECK(block != nullptr);
+
+    return &block->Get(index % BlockSize);
   }
 
-  T* GetElementBefore(const T* a_Element) {
-    auto block = GetBlockContaining(a_Element);
-    if (block) {
-      T* begin = &block->m_Data[0];
-      uint32_t index = a_Element - begin;
-      if (index > 0)
-        return &block->m_Data[--index];
-      else if (block->m_Prev)
-        return &block->m_Prev->m_Data[block->m_Prev->m_Size - 1];
+  T* GetElementAfter(const T* element) {
+    auto block = GetBlockContaining(element);
+    if (!block) {
+      return nullptr;
     }
+
+    T* begin = &block->Get(0);
+    uint32_t index = element - begin;
+
+    if (index + 1 < block->size()) {
+      return &block->Get(index + 1);
+    }
+
+    if (block->HasNext() && block->next()->size() != 0) {
+      return &block->mutable_next()->Get(0);
+    }
+
     return nullptr;
   }
 
   BlockIterator<T, BlockSize> begin() {
-    return BlockIterator<T, BlockSize>(m_Root);
+    return BlockIterator<T, BlockSize>(root_);
   }
   BlockIterator<T, BlockSize> end() {
     return BlockIterator<T, BlockSize>(nullptr);
   }
 
-  Block<T, BlockSize>* m_Root;
-  Block<T, BlockSize>* m_Current;
-  uint32_t m_NumBlocks;
-  uint32_t m_NumItems;
+ private:
+  Block<T, BlockSize>* GetBlockContaining(const T* element) {
+    Block<T, BlockSize>* block = root_;
+    while (block != nullptr) {
+      uint32_t size = block->size();
+      if (size != 0) {
+        T* begin = &block->Get(0);
+        T* end = &block->Get(size - 1);
+        if (begin <= element && end >= element) {
+          return block;
+        }
+      }
+      block = block->mutable_next();
+    }
+
+    return nullptr;
+  }
+
+  Block<T, BlockSize>* root_;
+  Block<T, BlockSize>* current_;
+  uint32_t size_;
 };
+
+#endif  // ORBIT_CORE_BLOCK_CHAIN_H_

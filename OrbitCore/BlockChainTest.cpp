@@ -66,6 +66,11 @@ TEST(BlockChain, AddCopyableTypes) {
   EXPECT_EQ(chain.size(), 2002);
 }
 
+TEST(BlockChain, SlowAtOutOfBounds) {
+  BlockChain<std::string, 1024> chain;
+  EXPECT_EQ(chain.SlowAt(1), nullptr);
+}
+
 TEST(BlockChain, Clear) {
   const std::string v1 = "hello world";
   const std::string v2 = "or not";
@@ -126,7 +131,7 @@ TEST(BlockChain, ElementIteration) {
   EXPECT_EQ(chain.GetElementAfter(&v1), nullptr);
 
   int* el = chain.GetElementAfter(chain.SlowAt(0));
-  EXPECT_NE(el, nullptr);
+  ASSERT_NE(el, nullptr);
   EXPECT_EQ(*el, v2);
 
   // Note that only the "++it" operator is supported
@@ -153,10 +158,20 @@ TEST(BlockChain, ElementIteration) {
     chain.push_back(i);
   }
   it_count = 0;
+
   for (it = chain.begin(); it != chain.end(); ++it) {
     EXPECT_EQ(*it, it_count);
     ++it_count;
   }
+
+  auto it_begin = chain.begin();
+  it = chain.begin();
+  ++it;
+  while (it != chain.end()) {
+    EXPECT_TRUE(it != it_begin);
+    ++it;
+  }
+
   EXPECT_EQ(it_count, 2000);
 }
 
@@ -177,56 +192,33 @@ TEST(BlockChain, Reset) {
   BlockChain<int, 1024> chain;
   chain.push_back_n(5, 1024 * 3);
   EXPECT_GT(chain.size(), 0);
-  Block<int, 1024>* blockPtr[] = {chain.GetBlockContaining(chain.SlowAt(0)),
-                                  nullptr, nullptr};
-  blockPtr[1] = blockPtr[0]->m_Next;
-  blockPtr[2] = blockPtr[1]->m_Next;
+  const Block<int, 1024>* blockPtr[] = {chain.root(), nullptr, nullptr};
+  blockPtr[1] = blockPtr[0]->next();
+  blockPtr[2] = blockPtr[1]->next();
 
   // Tests below rely quite a lot on the internals of BlockChain, but this
   // seems the easiest way to actually test re-usage of the block pointers
   chain.Reset();
   EXPECT_EQ(chain.size(), 0);
-  EXPECT_EQ(blockPtr[0]->m_Size, 0);
-  EXPECT_EQ(blockPtr[1]->m_Size, 0);
-  EXPECT_EQ(blockPtr[2]->m_Size, 0);
+  EXPECT_EQ(blockPtr[0]->size(), 0);
+  EXPECT_EQ(blockPtr[1]->size(), 0);
+  EXPECT_EQ(blockPtr[2]->size(), 0);
 
   chain.push_back_n(10, 1024);
   EXPECT_GT(chain.size(), 0);
   EXPECT_EQ(*chain.SlowAt(0), 10);
-  EXPECT_EQ(chain.m_Root, blockPtr[0]);
-  EXPECT_EQ(chain.m_Root->m_Next, blockPtr[1]);
-  EXPECT_EQ(blockPtr[1]->m_Size, 0);
+  EXPECT_EQ(chain.root(), blockPtr[0]);
+  EXPECT_EQ(chain.root()->next(), blockPtr[1]);
+  EXPECT_EQ(blockPtr[1]->size(), 0);
 
   chain.push_back_n(10, 1024);
-  EXPECT_EQ(chain.m_Root->m_Next, blockPtr[1]);
-  EXPECT_EQ(blockPtr[1]->m_Size, 1024);
-  EXPECT_EQ(blockPtr[2]->m_Size, 0);
+  EXPECT_EQ(chain.root()->next(), blockPtr[1]);
+  EXPECT_EQ(blockPtr[1]->size(), 1024);
+  EXPECT_EQ(blockPtr[2]->size(), 0);
 
   chain.push_back_n(10, 1024);
-  EXPECT_EQ(chain.m_Root->m_Next->m_Next, blockPtr[2]);
-  EXPECT_EQ(blockPtr[2]->m_Size, 1024);
-}
-
-TEST(BlockChain, keep) {
-  BlockChain<int, 1024> chain;
-  for (int i = 0; i < 100; ++i) {
-    chain.push_back(i);
-  }
-  EXPECT_EQ(chain.size(), 100);
-  chain.keep(10);
-  // keep() keeps the LAST n elements, but always keeps at least 2 blocks
-  EXPECT_EQ(chain.size(), 100);
-
-  chain.clear();
-  for (int i = 0; i < 2000; ++i) {
-    chain.push_back(i);
-  }
-  EXPECT_EQ(chain.size(), 2000);
-  chain.keep(10);
-  EXPECT_EQ(chain.size(), 2000 - 1024);
-  for (size_t i = 0; i < chain.size(); ++i) {
-    EXPECT_EQ(*chain.SlowAt(i), i + 1024);
-  }
+  EXPECT_EQ(chain.root()->next()->next(), blockPtr[2]);
+  EXPECT_EQ(blockPtr[2]->size(), 1024);
 }
 
 TEST(BlockChain, MovableType) {
