@@ -4,21 +4,25 @@
 
 #include "topdownwidget.h"
 
+#include <QColor>
 #include <QMenu>
-#include <QSortFilterProxyModel>
 
 #include "TopDownViewItemModel.h"
 
 void TopDownWidget::SetTopDownView(std::unique_ptr<TopDownView> top_down_view) {
   auto* model =
       new TopDownViewItemModel{std::move(top_down_view), ui_->topDownTreeView};
-  auto* proxy_model = new QSortFilterProxyModel{ui_->topDownTreeView};
-  proxy_model->setSourceModel(model);
-  proxy_model->setSortRole(Qt::EditRole);
-  ui_->topDownTreeView->setModel(proxy_model);
+  proxy_model_ =
+      new HighlightCustomFilterSortFilterProxyModel{ui_->topDownTreeView};
+  proxy_model_->setSourceModel(model);
+  proxy_model_->setSortRole(Qt::EditRole);
+
+  ui_->topDownTreeView->setModel(proxy_model_);
   ui_->topDownTreeView->sortByColumn(TopDownViewItemModel::kInclusive,
                                      Qt::DescendingOrder);
   ui_->topDownTreeView->header()->resizeSections(QHeaderView::ResizeToContents);
+
+  on_searchLineEdit_textEdited(ui_->searchLineEdit->text());
 }
 
 const QString TopDownWidget::kActionExpandRecursively =
@@ -135,4 +139,69 @@ void TopDownWidget::onCustomContextMenuRequested(const QPoint& point) {
   } else if (action->text() == kActionCollapseAll) {
     ui_->topDownTreeView->collapseAll();
   }
+}
+
+static bool ExpandCollapseRecursivelyBasedOnDescendantsRole(
+    QTreeView* tree_view, const QModelIndex& index, int role) {
+  if (!index.isValid()) {
+    return false;
+  }
+  bool matches = index.data(role).toBool();
+  bool descendant_matches = false;
+  for (int i = 0; i < index.model()->rowCount(index); ++i) {
+    const QModelIndex& child = index.child(i, 0);
+    descendant_matches |=
+        ExpandCollapseRecursivelyBasedOnDescendantsRole(tree_view, child, role);
+  }
+  if (descendant_matches && !tree_view->isExpanded(index)) {
+    tree_view->expand(index);
+  } else if (!descendant_matches && tree_view->isExpanded(index)) {
+    tree_view->collapse(index);
+  }
+  return matches || descendant_matches;
+}
+
+static void ExpandCollapseBasedOnRole(QTreeView* tree_view, int role) {
+  for (int i = 0; i < tree_view->model()->rowCount(); ++i) {
+    const QModelIndex& child = tree_view->model()->index(i, 0);
+    ExpandCollapseRecursivelyBasedOnDescendantsRole(tree_view, child, role);
+  }
+}
+
+void TopDownWidget::on_searchLineEdit_textEdited(const QString& text) {
+  if (proxy_model_ == nullptr) {
+    return;
+  }
+  proxy_model_->SetFilter(text.toStdString());
+  ui_->topDownTreeView->viewport()->update();
+  if (!text.isEmpty()) {
+    ExpandCollapseBasedOnRole(
+        ui_->topDownTreeView,
+        TopDownWidget::HighlightCustomFilterSortFilterProxyModel::
+            kMatchesCustomFilterRole);
+  }
+}
+
+QVariant TopDownWidget::HighlightCustomFilterSortFilterProxyModel::data(
+    const QModelIndex& index, int role) const {
+  if (role == Qt::ForegroundRole) {
+    if (!lowercase_filter_.empty() && ItemMatchesFilter(index)) {
+      return QColor{Qt::green};
+    }
+  } else if (role == kMatchesCustomFilterRole) {
+    return ItemMatchesFilter(index);
+  }
+  return QSortFilterProxyModel::data(index, role);
+}
+
+bool TopDownWidget::HighlightCustomFilterSortFilterProxyModel::
+    ItemMatchesFilter(const QModelIndex& index) const {
+  std::string haystack = absl::AsciiStrToLower(
+      index.model()
+          ->index(index.row(), TopDownViewItemModel::kThreadOrFunction,
+                  index.parent())
+          .data()
+          .toString()
+          .toStdString());
+  return absl::StrContains(haystack, lowercase_filter_);
 }

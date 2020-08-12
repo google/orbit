@@ -5,6 +5,7 @@
 #ifndef ORBIT_QT_TOP_DOWN_WIDGET_H_
 #define ORBIT_QT_TOP_DOWN_WIDGET_H_
 
+#include <QSortFilterProxyModel>
 #include <QString>
 #include <QWidget>
 #include <memory>
@@ -27,6 +28,7 @@ class TopDownWidget : public QWidget {
 
  private slots:
   void onCustomContextMenuRequested(const QPoint& point);
+  void on_searchLineEdit_textEdited(const QString& text);
 
  private:
   static const QString kActionExpandRecursively;
@@ -35,7 +37,28 @@ class TopDownWidget : public QWidget {
   static const QString kActionExpandAll;
   static const QString kActionCollapseAll;
 
+  class HighlightCustomFilterSortFilterProxyModel
+      : public QSortFilterProxyModel {
+   public:
+    explicit HighlightCustomFilterSortFilterProxyModel(QObject* parent)
+        : QSortFilterProxyModel{parent} {}
+
+    void SetFilter(std::string_view filter) {
+      lowercase_filter_ = absl::AsciiStrToLower(filter);
+    }
+
+    static const int kMatchesCustomFilterRole = Qt::UserRole;
+
+    QVariant data(const QModelIndex& index, int role) const override;
+
+   private:
+    bool ItemMatchesFilter(const QModelIndex& index) const;
+
+    std::string lowercase_filter_;
+  };
+
   std::unique_ptr<Ui::TopDownWidget> ui_;
+  HighlightCustomFilterSortFilterProxyModel* proxy_model_ = nullptr;
 };
 
 #endif  // ORBIT_QT_TOP_DOWN_WIDGET_H_
