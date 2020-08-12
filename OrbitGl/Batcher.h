@@ -105,11 +105,11 @@ class Batcher {
 
   void Reset();
 
-  PickingUserData* GetUserData(PickingID id);
-  TextBox* GetTextBox(PickingID id);
-  BoxBuffer& GetBoxBuffer() { return box_buffer_; }
-  LineBuffer& GetLineBuffer() { return line_buffer_; }
-  TriangleBuffer& GetTriangleBuffer() { return triangle_buffer_; }
+  [[nodiscard]] PickingUserData* GetUserData(PickingID id);
+  [[nodiscard]] TextBox* GetTextBox(PickingID id);
+  [[nodiscard]] BoxBuffer& GetBoxBuffer() { return box_buffer_; }
+  [[nodiscard]] LineBuffer& GetLineBuffer() { return line_buffer_; }
+  [[nodiscard]] TriangleBuffer& GetTriangleBuffer() { return triangle_buffer_; }
 
  protected:
   void DrawLineBuffer(bool picking);
