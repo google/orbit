@@ -37,7 +37,7 @@ class UprobesReturnAddressManager {
     tid_uprobes_stack.emplace_back(stack_pointer, return_address);
   }
 
-  void PatchSample(pid_t tid, uint64_t stack_pointer, char* stack_data,
+  void PatchSample(pid_t tid, uint64_t stack_pointer, void* stack_data,
                    uint64_t stack_size) {
     if (!tid_uprobes_stacks_.contains(tid)) {
       return;
@@ -61,8 +61,8 @@ class UprobesReturnAddressManager {
         continue;
       }
 
-      *reinterpret_cast<uint64_t*>(&stack_data[offset]) =
-          uprobes.return_address;
+      memcpy(static_cast<uint8_t*>(stack_data) + offset,
+             &uprobes.return_address, sizeof(uprobes.return_address));
     }
   }
 

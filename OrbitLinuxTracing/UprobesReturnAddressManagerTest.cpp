@@ -54,11 +54,7 @@ class TestStack {
 
   uint64_t GetTop() const { return data_[0]; }
 
-  char* GetData() { return reinterpret_cast<char*>(data_.data()); }
-
-  const char* GetData() const {
-    return reinterpret_cast<const char*>(data_.data());
-  }
+  [[nodiscard]] void* GetData() { return data_.data(); }
 
   uint64_t GetSize() const { return data_.size() * sizeof(uint64_t); }
 
