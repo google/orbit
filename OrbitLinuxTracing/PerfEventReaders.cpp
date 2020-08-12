@@ -86,7 +86,7 @@ std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
   // TODO(kuebler): we should have templated read methods
   uint64_t size_in_bytes = nr * sizeof(uint64_t) / sizeof(char);
   ring_buffer->ReadRawAtOffset(
-      reinterpret_cast<char*>(event->ips.data()),
+      event->ips.data(),
       offsetof(perf_event_callchain_sample_fixed, nr) +
           sizeof(perf_event_callchain_sample_fixed::nr),
       size_in_bytes);

@@ -32,9 +32,8 @@ std::unique_ptr<T> ConsumeTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
   ring_buffer->ReadValueAtOffset(&tracepoint_size,
                                  offsetof(perf_event_raw_sample_fixed, size));
   auto event = std::make_unique<T>(tracepoint_size);
-  ring_buffer->ReadRawAtOffset(
-      reinterpret_cast<uint8_t*>(&event->ring_buffer_record), 0,
-      sizeof(perf_event_raw_sample_fixed));
+  ring_buffer->ReadRawAtOffset(&event->ring_buffer_record, 0,
+                               sizeof(perf_event_raw_sample_fixed));
   ring_buffer->ReadRawAtOffset(
       &event->tracepoint_data[0],
       offsetof(perf_event_raw_sample_fixed, size) + sizeof(uint32_t),

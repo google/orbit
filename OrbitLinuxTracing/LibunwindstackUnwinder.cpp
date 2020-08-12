@@ -31,7 +31,7 @@ const std::array<size_t, unwindstack::X86_64_REG_LAST>
 std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
     unwindstack::Maps* maps,
     const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
-    const char* stack_dump, uint64_t stack_dump_size) {
+    const void* stack_dump, uint64_t stack_dump_size) {
   unwindstack::RegsX86_64 regs{};
   for (size_t perf_reg = 0; perf_reg < unwindstack::X86_64_REG_LAST;
        ++perf_reg) {
@@ -40,7 +40,7 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
 
   std::shared_ptr<unwindstack::Memory> memory =
       unwindstack::Memory::CreateOfflineMemory(
-          reinterpret_cast<const uint8_t*>(stack_dump),
+          static_cast<const uint8_t*>(stack_dump),
           regs[unwindstack::X86_64_REG_RSP],
           regs[unwindstack::X86_64_REG_RSP] + stack_dump_size);
 
@@ -64,19 +64,6 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
   }
 
   return unwinder.frames();
-}
-
-std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
-    const std::string& maps_buffer,
-    const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
-    const char* stack_dump, uint64_t stack_dump_size) {
-  std::unique_ptr<unwindstack::BufferMaps> maps = ParseMaps(maps_buffer);
-  if (maps == nullptr) {
-    ERROR("Failed to parse maps");
-    return {};
-  }
-
-  return Unwind(maps.get(), perf_regs, stack_dump, stack_dump_size);
 }
 
 }  // namespace LinuxTracing

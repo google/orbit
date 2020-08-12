@@ -62,11 +62,10 @@ PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb,
   }
 
   // The first page, just before the ring buffer, is the metadata page.
-  metadata_page_ = reinterpret_cast<perf_event_mmap_page*>(mmap_address);
+  metadata_page_ = static_cast<perf_event_mmap_page*>(mmap_address);
   CHECK(metadata_page_->data_size == ring_buffer_size_);
 
-  ring_buffer_ =
-      reinterpret_cast<char*>(mmap_address) + metadata_page_->data_offset;
+  ring_buffer_ = static_cast<char*>(mmap_address) + metadata_page_->data_offset;
   CHECK(metadata_page_->data_offset == GetPageSize());
 }
 
@@ -112,7 +111,7 @@ bool PerfEventRingBuffer::HasNewData() {
 }
 
 void PerfEventRingBuffer::ReadHeader(perf_event_header* header) {
-  ReadAtTail(reinterpret_cast<uint8_t*>(header), sizeof(perf_event_header));
+  ReadAtTail(header, sizeof(perf_event_header));
   DCHECK(header->type != 0);
   DCHECK(metadata_page_->data_tail + header->size <=
          ReadRingBufferHead(metadata_page_));
@@ -130,7 +129,7 @@ void PerfEventRingBuffer::ConsumeRecord(const perf_event_header& header,
   SkipRecord(header);
 }
 
-void PerfEventRingBuffer::ReadAtOffsetFromTail(uint8_t* dest,
+void PerfEventRingBuffer::ReadAtOffsetFromTail(void* dest,
                                                uint64_t offset_from_tail,
                                                uint64_t count) {
   DCHECK(IsOpen());
@@ -167,8 +166,8 @@ void PerfEventRingBuffer::ReadAtOffsetFromTail(uint8_t* dest,
     // Need two copies as the data to read wraps around the ring buffer.
     memcpy(dest, ring_buffer_ + index_mod_size,
            ring_buffer_size_ - index_mod_size);
-    memcpy(dest + (ring_buffer_size_ - index_mod_size), ring_buffer_,
-           count - (ring_buffer_size_ - index_mod_size));
+    memcpy(static_cast<uint8_t*>(dest) + (ring_buffer_size_ - index_mod_size),
+           ring_buffer_, count - (ring_buffer_size_ - index_mod_size));
   } else {
     FATAL("Control shouldn't reach here");
   }
