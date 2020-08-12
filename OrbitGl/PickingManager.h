@@ -53,13 +53,13 @@ enum class PickingType : uint32_t {
 enum class BatcherId : uint32_t { kTimeGraph, kUi };
 
 struct PickingId {
-  [[nodiscard]] static PickingId Get(
+  [[nodiscard]] inline static PickingId Get(
       PickingType type, uint32_t id,
       BatcherId batcher_id = BatcherId::kTimeGraph) {
     PickingId result;
-    result.type_ = type;
-    result.id_ = id;
-    result.batcher_id_ = batcher_id;
+    result.type = type;
+    result.id = id;
+    result.batcher_id = batcher_id;
     return result;
   }
 
@@ -73,13 +73,13 @@ struct PickingId {
                  color_values[3]);
   }
 
-  [[nodiscard]] static PickingId Get(uint32_t value) {
+  [[nodiscard]] inline static PickingId Get(uint32_t value) {
     PickingId id = absl::bit_cast<PickingId, uint32_t>(value);
     return id;
   }
-  uint32_t id_ : 28;
-  PickingType type_ : 3;
-  BatcherId batcher_id_ : 1;
+  uint32_t id : 28;
+  PickingType type : 3;
+  BatcherId batcher_id : 1;
 };
 
 class PickingManager {
