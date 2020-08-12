@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_PICKING_MANAGER_H
+#define ORBIT_GL_PICKING_MANAGER_H
 
 #include <cstring>
 #include <memory>
@@ -109,3 +110,5 @@ class PickingManager {
   std::weak_ptr<Pickable> currently_picked_;
   mutable absl::Mutex mutex_;
 };
+
+#endif
