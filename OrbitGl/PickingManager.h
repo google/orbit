@@ -94,9 +94,9 @@ class PickingManager {
   PickingManager() {}
   void Reset();
 
-  void Pick(uint32_t a_Id, int a_X, int a_Y);
+  void Pick(uint32_t id, int x, int y);
   void Release();
-  void Drag(int a_X, int a_Y);
+  void Drag(int x, int y);
   std::weak_ptr<Pickable> GetPicked() const;
   std::weak_ptr<Pickable> GetPickableFromId(uint32_t id) const;
   bool IsDragging() const;
@@ -112,9 +112,8 @@ class PickingManager {
   Color ColorFromPickingID(PickingID id) const;
 
  private:
-  std::vector<Pickable*> m_Pickables;
-  uint32_t m_IdCounter = 0;
-  std::unordered_map<uint32_t, std::weak_ptr<Pickable>> m_IdPickableMap;
-  std::weak_ptr<Pickable> m_Picked;
+  uint32_t id_counter_ = 0;
+  std::unordered_map<uint32_t, std::weak_ptr<Pickable>> id_pickable_map_;
+  std::weak_ptr<Pickable> currently_picked_;
   mutable absl::Mutex mutex_;
 };
