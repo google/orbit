@@ -10,7 +10,6 @@
 #include "Log.h"
 #include "OrbitBase/Logging.h"
 #include "Path.h"
-#include "Profiling.h"
 #include "Utils.h"
 
 namespace FunctionUtils {
@@ -111,23 +110,6 @@ bool SetOrbitTypeFromName(FunctionInfo* func) {
     }
   }
   return false;
-}
-
-void UpdateStats(FunctionInfo* func, const TimerInfo& timer_info) {
-  FunctionStats* stats = func->mutable_stats();
-  stats->set_count(stats->count() + 1);
-  uint64_t elapsed_nanos =
-      TicksToNanoseconds(timer_info.start(), timer_info.end());
-  stats->set_total_time_ns(stats->total_time_ns() + elapsed_nanos);
-  stats->set_average_time_ns(stats->total_time_ns() / stats->count());
-
-  if (elapsed_nanos > stats->max_ns()) {
-    stats->set_max_ns(elapsed_nanos);
-  }
-
-  if (stats->min_ns() == 0 || elapsed_nanos < stats->min_ns()) {
-    stats->set_min_ns(elapsed_nanos);
-  }
 }
 
 bool IsSelected(const SampledFunction& func) {

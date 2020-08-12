@@ -50,7 +50,8 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
   }
 
   const FunctionInfo& function = *GetFunction(a_Row);
-  const FunctionStats& stats = function.stats();
+  const FunctionStats& stats =
+      Capture::capture_data_.GetFunctionStatsOrDefault(function.address());
 
   switch (a_Column) {
     case COLUMN_SELECTED:
@@ -82,10 +83,15 @@ std::string LiveFunctionsDataView::GetValue(int a_Row, int a_Column) {
     return OrbitUtils::Compare(functions[a]->Member, functions[b]->Member, \
                                ascending);                                 \
   }
-#define ORBIT_STAT_SORT(Member)                                          \
-  [&](int a, int b) {                                                    \
-    return OrbitUtils::Compare(functions[a]->stats().Member,             \
-                               functions[b]->stats().Member, ascending); \
+#define ORBIT_STAT_SORT(Member)                                            \
+  [&](int a, int b) {                                                      \
+    const FunctionStats& stats_a =                                         \
+        Capture::capture_data_.GetFunctionStatsOrDefault(                  \
+            functions[a]->address());                                      \
+    const FunctionStats& stats_b =                                         \
+        Capture::capture_data_.GetFunctionStatsOrDefault(                  \
+            functions[b]->address());                                      \
+    return OrbitUtils::Compare(stats_a.Member, stats_b.Member, ascending); \
   }
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                     \
   [&](int a, int b) {                                                    \
@@ -159,9 +165,11 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   bool enable_disassembly = !a_SelectedIndices.empty();
   for (int index : a_SelectedIndices) {
     const FunctionInfo& function = *GetFunction(index);
+    const FunctionStats& stats =
+        Capture::capture_data_.GetFunctionStatsOrDefault(function.address());
     enable_select |= !FunctionUtils::IsSelected(function);
     enable_unselect |= FunctionUtils::IsSelected(function);
-    enable_iterator |= function.stats().count() > 0;
+    enable_iterator |= stats.count() > 0;
   }
 
   std::vector<std::string> menu;
@@ -177,7 +185,9 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   // so we don't show them otherwise.
   if (a_SelectedIndices.size() == 1) {
     const FunctionInfo& function = *GetFunction(a_SelectedIndices[0]);
-    if (function.stats().count() > 0) {
+    const FunctionStats& stats =
+        Capture::capture_data_.GetFunctionStatsOrDefault(function.address());
+    if (stats.count() > 0) {
       menu.insert(menu.end(),
                   {MENU_ACTION_JUMP_TO_FIRST, MENU_ACTION_JUMP_TO_LAST,
                    MENU_ACTION_JUMP_TO_MIN, MENU_ACTION_JUMP_TO_MAX});
@@ -241,7 +251,9 @@ void LiveFunctionsDataView::OnContextMenu(
   } else if (a_Action == MENU_ACTION_ITERATE) {
     for (int i : a_ItemIndices) {
       FunctionInfo* function = GetFunction(i);
-      if (function->stats().count() > 0) {
+      const FunctionStats& stats =
+          Capture::capture_data_.GetFunctionStatsOrDefault(function->address());
+      if (stats.count() > 0) {
         live_functions_->AddIterator(function);
       }
     }
