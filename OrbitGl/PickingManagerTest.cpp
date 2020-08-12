@@ -60,8 +60,8 @@ TEST(PickingManager, BasicFunctionality) {
   auto pickable2 = std::make_shared<PickableMock>();
   PickingManager pm;
 
-  Color col_vec1 = pm.GetPickableColor(pickable1, PickingID::BatcherId::kUi);
-  Color col_vec2 = pm.GetPickableColor(pickable2, PickingID::BatcherId::kUi);
+  Color col_vec1 = pm.GetPickableColor(pickable1, BatcherId::kUi);
+  Color col_vec2 = pm.GetPickableColor(pickable2, BatcherId::kUi);
   ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec1).id_).lock(),
             pickable1);
   ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec2).id_).lock(),
@@ -79,7 +79,7 @@ TEST(PickingManager, Callbacks) {
   auto pickable = std::make_shared<PickableMock>();
   PickingManager pm;
 
-  Color col_vec = pm.GetPickableColor(pickable, PickingID::BatcherId::kUi);
+  Color col_vec = pm.GetPickableColor(pickable, BatcherId::kUi);
   PickingID id = MockRenderPickingColor(col_vec);
   ASSERT_FALSE(pickable->picked_);
   ASSERT_FALSE(pm.IsThisElementPicked(pickable.get()));
@@ -109,7 +109,7 @@ TEST(PickingManager, Undraggable) {
   auto pickable = std::make_shared<UndraggableMock>();
   PickingManager pm;
 
-  Color col_vec = pm.GetPickableColor(pickable, PickingID::BatcherId::kUi);
+  Color col_vec = pm.GetPickableColor(pickable, BatcherId::kUi);
   PickingID id = MockRenderPickingColor(col_vec);
 
   ASSERT_FALSE(pm.IsDragging());
@@ -126,7 +126,7 @@ TEST(PickingManager, RobustnessOnReset) {
   std::shared_ptr<PickableMock> pickable = std::make_shared<PickableMock>();
   PickingManager pm;
 
-  Color col_vec = pm.GetPickableColor(pickable, PickingID::BatcherId::kUi);
+  Color col_vec = pm.GetPickableColor(pickable, BatcherId::kUi);
   PickingID id = MockRenderPickingColor(col_vec);
   ASSERT_FALSE(pickable->picked_);
   pm.Pick(id.id_, 0, 0);
@@ -143,7 +143,7 @@ TEST(PickingManager, RobustnessOnReset) {
   ASSERT_TRUE(pm.GetPicked().expired());
 
   pickable = std::make_shared<PickableMock>();
-  col_vec = pm.GetPickableColor(pickable, PickingID::BatcherId::kUi);
+  col_vec = pm.GetPickableColor(pickable, BatcherId::kUi);
   id = MockRenderPickingColor(col_vec);
 
   pickable.reset(new PickableMock());

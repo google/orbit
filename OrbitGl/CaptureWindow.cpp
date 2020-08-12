@@ -171,13 +171,13 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
 }
 
 void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
-  uint32_t type = a_PickingID.type_;
+  PickingType type = a_PickingID.type_;
 
   Batcher& batcher = GetBatcherById(a_PickingID.batcher_id_);
   TextBox* text_box = batcher.GetTextBox(a_PickingID);
   if (text_box) {
     SelectTextBox(text_box);
-  } else if (type == PickingID::Type::kPickable) {
+  } else if (type == PickingType::kPickable) {
     m_PickingManager.Pick(a_PickingID.id_, a_X, a_Y);
   }
 }
@@ -207,7 +207,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
 
   std::string tooltip = "";
 
-  if (pickId.type_ == PickingID::Type::kPickable) {
+  if (pickId.type_ == PickingType::kPickable) {
     auto pickable = GetPickingManager().GetPickableFromId(pickId.id_).lock();
     if (pickable) {
       tooltip = pickable->GetTooltip();
@@ -546,7 +546,7 @@ void CaptureWindow::Draw() {
 
     Vec2 pos(m_MouseX, m_WorldTopLeftY);
     ui_batcher_.AddVerticalLine(pos, -m_WorldHeight, Z_VALUE_TEXT,
-                                Color(0, 255, 0, 127), PickingID::Type::kLine);
+                                Color(0, 255, 0, 127), PickingType::kLine);
   }
 }
 
@@ -593,14 +593,14 @@ void CaptureWindow::DrawScreenSpace() {
 
   Box box(Vec2(margin_x0, 0),
           Vec2(margin_x1 - margin_x0, canvasHeight - height), z);
-  ui_batcher_.AddBox(box, kBackgroundColor, PickingID::Type::kBox);
+  ui_batcher_.AddBox(box, kBackgroundColor, PickingType::kBox);
 
   // Time bar background
   if (time_graph_.GetCaptureTimeSpanUs() > 0) {
     Box box(Vec2(0, time_graph_.GetLayout().GetSliderWidth()),
             Vec2(getWidth(), time_graph_.GetLayout().GetTimeBarHeight()),
             GlCanvas::Z_VALUE_TEXT_UI_BG);
-    ui_batcher_.AddBox(box, Color(70, 70, 70, 200), PickingID::Type::kBox);
+    ui_batcher_.AddBox(box, Color(70, 70, 70, 200), PickingType::kBox);
   }
 }
 
@@ -629,10 +629,16 @@ void CaptureWindow::ToggleDrawHelp() {
   NeedsRedraw();
 }
 
-Batcher& CaptureWindow::GetBatcherById(uint32_t batcher_id) {
-  return batcher_id == PickingID::BatcherId::kTimeGraph
-             ? time_graph_.GetBatcher()
-             : ui_batcher_;
+Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
+  switch (batcher_id) {
+    case BatcherId::kTimeGraph:
+      return time_graph_.GetBatcher();
+    case BatcherId::kUi:
+      return ui_batcher_;
+    default:
+      CHECK(false);
+      return ui_batcher_;
+  }
 }
 
 [[nodiscard]] PickingMode CaptureWindow::GetPickingMode() {
@@ -845,7 +851,8 @@ void CaptureWindow::RenderTimeBar() {
 
       Vec2 pos(worldX, worldY);
       ui_batcher_.AddVerticalLine(pos, height, GlCanvas::Z_VALUE_UI,
-                                  Color(255, 255, 255, 255), PickingID::Type::kLine);
+                                  Color(255, 255, 255, 255),
+                                  PickingType::kLine);
     }
   }
 }

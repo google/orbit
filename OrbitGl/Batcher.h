@@ -69,35 +69,35 @@ struct TriangleBuffer {
 
 class Batcher {
  public:
-  explicit Batcher(PickingID::BatcherId batcher_id) : batcher_id_(batcher_id) {}
-  Batcher() : batcher_id_(PickingID::BatcherId::kTimeGraph) {}
+  explicit Batcher(BatcherId batcher_id) : batcher_id_(batcher_id) {}
+  Batcher() : batcher_id_(BatcherId::kTimeGraph) {}
 
   void AddLine(const Line& line, const Color* colors,
-               PickingID::Type picking_type, 
+               PickingType picking_type, 
                std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddLine(const Line& line, Color color, PickingID::Type picking_type,
+  void AddLine(const Line& line, Color color, PickingType picking_type,
                std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddLine(Vec2 from, Vec2 to, float z, Color color,
-               PickingID::Type picking_type,
+               PickingType picking_type,
                std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddVerticalLine(Vec2 pos, float size, float z, Color color,
-                       PickingID::Type picking_type,
+                       PickingType picking_type,
                        std::unique_ptr<PickingUserData> user_data = nullptr);
 
   void AddBox(const Box& a_Box, const Color* colors,
-              PickingID::Type picking_type,
+              PickingType picking_type,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Box& a_Box, Color color, PickingID::Type picking_type,
+  void AddBox(const Box& a_Box, Color color, PickingType picking_type,
               std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
-                    PickingID::Type picking_type,
+                    PickingType picking_type,
                     std::unique_ptr<PickingUserData> user_data = nullptr);
 
   void AddTriangle(const Triangle& triangle, Color color,
-                   PickingID::Type picking_type,
+                   PickingType picking_type,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
-                   PickingID::Type picking_type,
+                   PickingType picking_type,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
   void GetBoxGradientColors(Color color, Color* colors);
@@ -119,5 +119,5 @@ class Batcher {
   LineBuffer line_buffer_;
   BoxBuffer box_buffer_;
   TriangleBuffer triangle_buffer_;
-  PickingID::BatcherId batcher_id_;
+  BatcherId batcher_id_;
 };

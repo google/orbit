@@ -8,11 +8,11 @@
 #include "OrbitBase/Logging.h"
 
 PickingID PickingManager::CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
-                                           PickingID::BatcherId batcher_id) {
+                                           BatcherId batcher_id) {
   absl::MutexLock lock(&mutex_);
   ++id_counter_;
   PickingID id =
-      PickingID::Get(PickingID::Type::kPickable, id_counter_, batcher_id);
+      PickingID::Get(PickingType::kPickable, id_counter_, batcher_id);
   id_pickable_map_[id_counter_] = a_Pickable;
   return id;
 }
@@ -70,7 +70,7 @@ bool PickingManager::IsDragging() const {
 }
 
 Color PickingManager::GetPickableColor(std::weak_ptr<Pickable> pickable,
-                                       PickingID::BatcherId batcher_id) {
+                                       BatcherId batcher_id) {
   PickingID id = CreatePickableId(pickable, batcher_id);
   return ColorFromPickingID(id);
 }

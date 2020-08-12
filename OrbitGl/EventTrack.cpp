@@ -38,11 +38,11 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
   if (picking) {
     color = picking_manager.GetPickableColor(shared_from_this(),
-                                             PickingID::BatcherId::kUi);
+                                             BatcherId::kUi);
   }
 
   Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), eventBarZ);
-  batcher->AddBox(box, color, PickingID::Type::kPickable);
+  batcher->AddBox(box, color, PickingType::kPickable);
 
   if (canvas->GetPickingManager().IsThisElementPicked(this)) {
     color = Color(255, 255, 255, 255);
@@ -54,9 +54,9 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float y1 = y0 - m_Size[1];
 
   batcher->AddLine(m_Pos, Vec2(x1, y0), GlCanvas::Z_VALUE_EVENT_BAR, color,
-                   PickingID::Type::kPickable);
+                   PickingType::kPickable);
   batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), GlCanvas::Z_VALUE_EVENT_BAR,
-                   color, PickingID::Type::kPickable);
+                   color, PickingType::kPickable);
 
   if (m_Picked) {
     Vec2& from = m_MousePos[0];
@@ -69,7 +69,7 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
     Color picked_color(0, 128, 255, 128);
     Box box(Vec2(x0, y0), Vec2(x1 - x0, -m_Size[1]), -0.f);
-    batcher->AddBox(box, picked_color, PickingID::Type::kPickable);
+    batcher->AddBox(box, picked_color, PickingType::kPickable);
   }
 
   m_Canvas = canvas;
@@ -97,7 +97,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
       if (time > min_tick && time < max_tick) {
         Vec2 pos(time_graph_->GetWorldFromTick(time), m_Pos[1]);
         batcher->AddVerticalLine(pos, -track_height, z, kWhite,
-                                 PickingID::Type::kLine);
+                                 PickingType::kLine);
       }
     }
 
@@ -108,7 +108,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
          time_graph_->GetSelectedCallstackEvents(m_ThreadId)) {
       Vec2 pos(time_graph_->GetWorldFromTick(event.time()), m_Pos[1]);
       batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection,
-                               PickingID::Type::kLine);
+                               PickingType::kLine);
     }
   } else {
     // Draw boxes instead of lines to make picking easier, even if this may
@@ -126,7 +126,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
             nullptr,
             [&](PickingID id) -> std::string { return GetSampleTooltip(id); });
         user_data->custom_data_ = &pair.second;
-        batcher->AddShadedBox(pos, size, z, kGreenSelection, PickingID::Type::kBox,
+        batcher->AddShadedBox(pos, size, z, kGreenSelection, PickingType::kBox,
                               std::move(user_data));
       }
     }
