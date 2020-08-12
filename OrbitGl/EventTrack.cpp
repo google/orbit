@@ -37,8 +37,8 @@ void EventTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   Color color = m_Color;
 
   if (picking) {
-    color = picking_manager.GetPickableColor(shared_from_this(),
-                                             BatcherId::kUi);
+    color =
+        picking_manager.GetPickableColor(shared_from_this(), BatcherId::kUi);
   }
 
   Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), eventBarZ);
