@@ -186,7 +186,7 @@ void ModulesDataView::SetModules(int32_t process_id,
 }
 
 void ModulesDataView::OnRefreshButtonClicked() {
-  GOrbitApp->UpdateModuleList(Capture::GTargetProcess->GetID());
+  GOrbitApp->UpdateProcessAndModuleList(Capture::GTargetProcess->GetID());
 }
 
 const ModuleData* ModulesDataView::GetModule(uint32_t row) const {

@@ -31,10 +31,10 @@ std::shared_ptr<PresetFile> Capture::GSessionPresets = nullptr;
 
 void Capture::Init() { GTargetProcess = std::make_shared<Process>(); }
 
-void Capture::SetTargetProcess(const std::shared_ptr<Process>& a_Process) {
-  if (a_Process != GTargetProcess) {
-    GTargetProcess = a_Process;
-    GSamplingProfiler = std::make_shared<SamplingProfiler>(a_Process);
+void Capture::SetTargetProcess(std::shared_ptr<Process> process) {
+  if (process != GTargetProcess) {
+    GTargetProcess = std::move(process);
+    GSamplingProfiler = std::make_shared<SamplingProfiler>(process);
     GSelectedFunctionsMap.clear();
   }
 }
