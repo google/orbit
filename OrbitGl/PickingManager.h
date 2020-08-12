@@ -30,28 +30,28 @@ class Pickable {
   virtual std::string GetTooltip() const { return ""; }
 };
 
+enum class PickingType: uint32_t {
+  kInvalid = 0,
+  kLine = 1,
+  kBox = 2,
+  kTriangle = 3,
+  kPickable = 4
+};
+
+// Instances of batchers used to draw must be in 1:1 correspondence with
+// values in the following enum. Currently, two batchers are used, one to draw
+// UI elements (corresponding to BatcherId::UI), and one for drawing events on
+// the time graph (corresponding to BatcherId::kTimeGraph). If you want to add
+// more batchers, this enum must be extended and you need to spend more bits
+// on the batcher_id_ field below. The total number of elements that can be
+// correctly picked is limited to the number of elements that can be encoded
+// in the bits remaining after encoding the batcher id, and the
+// PickingType, so adding more batchers or types has to be carefully
+// considered.
+enum class BatcherId: uint32_t { kTimeGraph, kUi };
+
 struct PickingID {
-  enum Type {
-    kInvalid,
-    kLine,
-    kBox,
-    kTriangle,
-    kPickable,
-  };
-
-  // Instances of batchers used to draw must be in 1:1 correspondence with
-  // values in the following enum. Currently, two batchers are used, one to draw
-  // UI elements (corresponding to BatcherId::UI), and one for drawing events on
-  // the time graph (corresponding to BatcherId::kTimeGraph). If you want to add
-  // more batchers, this enum must be extended and you need to spend more bits
-  // on the batcher_id_ field below. The total number of elements that can be
-  // correctly picked is limited to the number of elements that can be encoded
-  // in the bits remaining after encoding the batcher id, and the
-  // PickingID::Type, so adding more batchers or types has to be carefully
-  // considered.
-  enum BatcherId { kTimeGraph, kUi };
-
-  static PickingID Get(Type type, uint32_t id,
+  static PickingID Get(PickingType type, uint32_t id,
                        BatcherId batcher_id = BatcherId::kTimeGraph) {
     static_assert(sizeof(PickingID) == 4, "PickingID must be 32 bits");
     PickingID result;
@@ -60,7 +60,7 @@ struct PickingID {
     result.batcher_id_ = batcher_id;
     return result;
   }
-  static Color GetColor(Type type, uint32_t id,
+  static Color GetColor(PickingType type, uint32_t id,
                         BatcherId batcher_id = BatcherId::kTimeGraph) {
     static_assert(sizeof(PickingID) == sizeof(Color),
                   "PickingId and Color must have the same size");
@@ -85,8 +85,8 @@ struct PickingID {
     return id;
   }
   uint32_t id_ : 28;
-  uint32_t type_ : 3;
-  uint32_t batcher_id_ : 1;
+  PickingType type_ : 3;
+  BatcherId batcher_id_ : 1;
 };
 
 class PickingManager {
@@ -102,13 +102,13 @@ class PickingManager {
   bool IsDragging() const;
 
   Color GetPickableColor(std::weak_ptr<Pickable> pickable,
-                         PickingID::BatcherId batcher_id);
+                         BatcherId batcher_id);
 
   bool IsThisElementPicked(const Pickable* pickable) const;
 
  private:
   PickingID CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
-                             PickingID::BatcherId batcher_id);
+                             BatcherId batcher_id);
   Color ColorFromPickingID(PickingID id) const;
 
  private:

@@ -138,10 +138,10 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
           if (!is_collapsed) {
             SetTimesliceText(timer_info, elapsed_us, min_x, &text_box);
           }
-          batcher->AddShadedBox(pos, size, z, color, PickingID::Type::kBox,
+          batcher->AddShadedBox(pos, size, z, color, PickingType::kBox,
                                 std::move(user_data));
         } else {
-          auto type = PickingID::Type::kLine;
+          auto type = PickingType::kLine;
           batcher->AddVerticalLine(pos, size[1], z, color, type,
                                    std::move(user_data));
           // For lines, we can ignore the entire pixel into which this event

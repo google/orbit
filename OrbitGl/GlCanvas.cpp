@@ -36,7 +36,7 @@ float GlCanvas::Z_VALUE_BOX_INACTIVE = -0.03f;
 float GlCanvas::Z_VALUE_EVENT_BAR = -0.1f;
 float GlCanvas::Z_VALUE_EVENT_BAR_PICKING = 0.1f;
 
-GlCanvas::GlCanvas() : ui_batcher_(PickingID::BatcherId::kUi) {
+GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi) {
   m_TextRenderer.SetCanvas(this);
 
   m_Width = 0;

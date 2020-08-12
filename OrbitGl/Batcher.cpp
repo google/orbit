@@ -8,7 +8,7 @@
 #include "Utils.h"
 
 void Batcher::AddLine(const Line& line, const Color* colors,
-                      PickingID::Type picking_type,
+                      PickingType picking_type,
                       std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingID::GetColor(
       picking_type, line_buffer_.m_Lines.size(), batcher_id_);
@@ -19,7 +19,7 @@ void Batcher::AddLine(const Line& line, const Color* colors,
 }
 
 void Batcher::AddLine(const Line& line, Color color,
-                      PickingID::Type picking_type,
+                      PickingType picking_type,
                       std::unique_ptr<PickingUserData> user_data) {
   Color colors[2];
   Fill(colors, color);
@@ -27,7 +27,7 @@ void Batcher::AddLine(const Line& line, Color color,
 }
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, Color color,
-                      PickingID::Type picking_type,
+                      PickingType picking_type,
                       std::unique_ptr<PickingUserData> user_data) {
   Line line;
   Color colors[2];
@@ -38,7 +38,7 @@ void Batcher::AddLine(Vec2 from, Vec2 to, float z, Color color,
 }
 
 void Batcher::AddVerticalLine(Vec2 pos, float size, float z, Color color,
-                              PickingID::Type picking_type,
+                              PickingType picking_type,
                               std::unique_ptr<PickingUserData> user_data) {
   Line line;
   Color colors[2];
@@ -49,7 +49,7 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, Color color,
 }
 
 void Batcher::AddBox(const Box& a_Box, const Color* colors,
-                     PickingID::Type picking_type,
+                     PickingType picking_type,
                      std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingID::GetColor(
       picking_type, box_buffer_.m_Boxes.size(), batcher_id_);
@@ -60,7 +60,7 @@ void Batcher::AddBox(const Box& a_Box, const Color* colors,
 }
 
 void Batcher::AddBox(const Box& a_Box, Color color,
-                     PickingID::Type picking_type,
+                     PickingType picking_type,
                      std::unique_ptr<PickingUserData> user_data) {
   Color colors[4];
   Fill(colors, color);
@@ -68,7 +68,7 @@ void Batcher::AddBox(const Box& a_Box, Color color,
 }
 
 void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
-                           PickingID::Type picking_type,
+                           PickingType picking_type,
                            std::unique_ptr<PickingUserData> user_data) {
   Color colors[4];
   GetBoxGradientColors(color, colors);
@@ -77,7 +77,7 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
 }
 
 void Batcher::AddTriangle(const Triangle& triangle, Color color,
-                          PickingID::Type picking_type,
+                          PickingType picking_type,
                           std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingID::GetColor(
       picking_type, triangle_buffer_.triangles_.size(), batcher_id_);
@@ -88,7 +88,7 @@ void Batcher::AddTriangle(const Triangle& triangle, Color color,
 }
 
 void Batcher::AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
-                          PickingID::Type picking_type,
+                          PickingType picking_type,
                           std::unique_ptr<PickingUserData> user_data) {
   AddTriangle(Triangle(v0, v1, v2), color, picking_type, std::move(user_data));
 }
@@ -97,13 +97,13 @@ PickingUserData* Batcher::GetUserData(PickingID a_ID) {
   CHECK(a_ID.id_ >= 0);
 
   switch (a_ID.type_) {
-    case PickingID::Type::kBox:
+    case PickingType::kBox:
       CHECK(a_ID.id_ < box_buffer_.m_UserData.size());
       return box_buffer_.m_UserData[a_ID.id_].get();
-    case PickingID::Type::kLine:
+    case PickingType::kLine:
       CHECK(a_ID.id_ < line_buffer_.m_UserData.size());
       return line_buffer_.m_UserData[a_ID.id_].get();
-    case PickingID::Type::kTriangle:
+    case PickingType::kTriangle:
       CHECK(a_ID.id_ < triangle_buffer_.user_data_.size());
       return triangle_buffer_.user_data_[a_ID.id_].get();
   }
