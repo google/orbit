@@ -10,22 +10,23 @@
 PickingID PickingManager::CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
                                            PickingID::BatcherId batcher_id) {
   absl::MutexLock lock(&mutex_);
-  ++m_IdCounter;
-  PickingID id = PickingID::Get(PickingID::Type::kPickable, m_IdCounter, batcher_id);
-  m_IdPickableMap[m_IdCounter] = a_Pickable;
+  ++id_counter_;
+  PickingID id =
+      PickingID::Get(PickingID::Type::kPickable, id_counter_, batcher_id);
+  id_pickable_map_[id_counter_] = a_Pickable;
   return id;
 }
 
 void PickingManager::Reset() {
   absl::MutexLock lock(&mutex_);
-  m_IdPickableMap.clear();
-  m_IdCounter = 0;
+  id_pickable_map_.clear();
+  id_counter_ = 0;
 }
 
 std::weak_ptr<Pickable> PickingManager::GetPickableFromId(uint32_t id) const {
   absl::MutexLock lock(&mutex_);
-  auto it = m_IdPickableMap.find(id);
-  if (it == m_IdPickableMap.end()) {
+  auto it = id_pickable_map_.find(id);
+  if (it == id_pickable_map_.end()) {
     return std::weak_ptr<Pickable>();
   }
   return it->second;
@@ -33,17 +34,17 @@ std::weak_ptr<Pickable> PickingManager::GetPickableFromId(uint32_t id) const {
 
 std::weak_ptr<Pickable> PickingManager::GetPicked() const {
   absl::MutexLock lock(&mutex_);
-  return m_Picked;
+  return currently_picked_;
 }
 
-void PickingManager::Pick(uint32_t a_Id, int a_X, int a_Y) {
-  auto picked = GetPickableFromId(a_Id).lock();
+void PickingManager::Pick(uint32_t id, int x, int y) {
+  auto picked = GetPickableFromId(id).lock();
   if (picked) {
-    picked->OnPick(a_X, a_Y);
+    picked->OnPick(x, y);
   }
 
   absl::MutexLock lock(&mutex_);
-  m_Picked = picked;
+  currently_picked_ = picked;
 }
 
 void PickingManager::Release() {
@@ -51,20 +52,20 @@ void PickingManager::Release() {
   if (picked != nullptr) {
     picked->OnRelease();
     absl::MutexLock lock(&mutex_);
-    m_Picked.reset();
+    currently_picked_.reset();
   }
 }
 
-void PickingManager::Drag(int a_X, int a_Y) {
+void PickingManager::Drag(int x, int y) {
   auto picked = GetPicked().lock();
   if (picked && picked->Draggable()) {
-    picked->OnDrag(a_X, a_Y);
+    picked->OnDrag(x, y);
   }
 }
 
 bool PickingManager::IsDragging() const {
   absl::MutexLock lock(&mutex_);
-  auto picked = m_Picked.lock();
+  auto picked = currently_picked_.lock();
   return picked && picked->Draggable();
 }
 
