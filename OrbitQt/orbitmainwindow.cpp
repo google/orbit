@@ -147,7 +147,6 @@ OrbitMainWindow::OrbitMainWindow(
   GOrbitApp->SetTooltipCallback([this](const std::string& tooltip) {
     QToolTip::showText(QCursor::pos(), QString::fromStdString(tooltip), this);
   });
-  GOrbitApp->SetFeedbackDialogCallback([this] { ShowFeedbackDialog(); });
   GOrbitApp->SetSaveFileCallback([this](const std::string& extension) {
     return this->OnGetSaveFileName(extension);
   });
@@ -305,44 +304,6 @@ void OrbitMainWindow::SetupCodeView() {
   ui->CodeTextEdit->SetFindLineEdit(ui->lineEdit);
   ui->FileMappingWidget->hide();
   OrbitCodeEditor::setFileMappingWidget(ui->FileMappingWidget);
-}
-
-void OrbitMainWindow::ShowFeedbackDialog() {
-  QDialog feedback_dialog{nullptr,
-                          Qt::WindowTitleHint | Qt::WindowCloseButtonHint};
-
-  const auto layout = QPointer{new QGridLayout{&feedback_dialog}};
-  const auto button_box =
-      QPointer{new QDialogButtonBox{QDialogButtonBox::StandardButton::Close}};
-
-  const QPointer<QPushButton> report_missing_feature_button =
-      QPointer{new QPushButton{&feedback_dialog}};
-  button_box->addButton(report_missing_feature_button,
-                        QDialogButtonBox::AcceptRole);
-  report_missing_feature_button->setText("Report Missing Feature");
-  const QPointer<QPushButton> report_bug_button =
-      QPointer{new QPushButton{&feedback_dialog}};
-  button_box->addButton(report_bug_button, QDialogButtonBox::AcceptRole);
-  report_bug_button->setText("Report Bug");
-
-  layout->addWidget(button_box, 0, 0);
-
-  QObject::connect(report_missing_feature_button, &QPushButton::clicked,
-                   &feedback_dialog, [this, &feedback_dialog]() {
-                     on_actionReport_Missing_Feature_triggered();
-                     feedback_dialog.accept();
-                   });
-
-  QObject::connect(report_bug_button, &QPushButton::clicked, &feedback_dialog,
-                   [this, &feedback_dialog]() {
-                     on_actionReport_Bug_triggered();
-                     feedback_dialog.accept();
-                   });
-
-  QObject::connect(button_box, &QDialogButtonBox::rejected, &feedback_dialog,
-                   &QDialog::reject);
-
-  feedback_dialog.exec();
 }
 
 OrbitMainWindow::~OrbitMainWindow() { delete ui; }
@@ -590,8 +551,6 @@ void OrbitMainWindow::on_actionClear_Capture_triggered() {
 }
 
 void OrbitMainWindow::on_actionHelp_triggered() { GOrbitApp->ToggleDrawHelp(); }
-
-void OrbitMainWindow::on_actionFeedback_triggered() { ShowFeedbackDialog(); }
 
 void OrbitMainWindow::ShowCaptureOnSaveWarningIfNeeded() {
   QSettings settings("The Orbit Authors", "Orbit Profiler");

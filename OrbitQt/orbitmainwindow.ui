@@ -330,14 +330,6 @@
     <string>Search</string>
    </property>
   </action>
-  <action name="actionFeedback">
-   <property name="text">
-    <string>Feedback</string>
-   </property>
-   <property name="toolTip">
-    <string>Feedback</string>
-   </property>
-  </action>
   <action name="actionHelp">
    <property name="text">
     <string>Help</string>
