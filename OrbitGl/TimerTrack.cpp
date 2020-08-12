@@ -132,7 +132,7 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
         text_box.SetSize(size);
 
         auto user_data = std::make_unique<PickingUserData>(
-            &text_box, [&](PickingID id) { return this->GetBoxTooltip(id); });
+            &text_box, [&](PickingId id) { return this->GetBoxTooltip(id); });
 
         if (is_visible_width) {
           if (!is_collapsed) {
@@ -270,4 +270,4 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() {
 
 bool TimerTrack::IsEmpty() const { return GetNumTimers() == 0; }
 
-std::string TimerTrack::GetBoxTooltip(PickingID /*id*/) const { return ""; }
+std::string TimerTrack::GetBoxTooltip(PickingId /*id*/) const { return ""; }

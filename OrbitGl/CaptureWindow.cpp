@@ -160,7 +160,7 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
                &pixels[0]);
   uint32_t value;
   std::memcpy(&value, &pixels[0], sizeof(uint32_t));
-  PickingID pickId = PickingID::Get(value);
+  PickingId pickId = PickingId::Get(value);
 
   Capture::GSelectedTextBox = nullptr;
   Capture::GSelectedThreadId = 0;
@@ -170,7 +170,7 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
   NeedsUpdate();
 }
 
-void CaptureWindow::Pick(PickingID a_PickingID, int a_X, int a_Y) {
+void CaptureWindow::Pick(PickingId a_PickingID, int a_X, int a_Y) {
   PickingType type = a_PickingID.type_;
 
   Batcher& batcher = GetBatcherById(a_PickingID.batcher_id_);
@@ -202,7 +202,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
   glReadPixels(a_X, m_MainWindowHeight - a_Y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE,
                &pixels[0]);
 
-  PickingID pickId = absl::bit_cast<PickingID>(pixels);
+  PickingId pickId = absl::bit_cast<PickingId>(pixels);
   Batcher& batcher = GetBatcherById(pickId.batcher_id_);
 
   std::string tooltip = "";
@@ -635,10 +635,9 @@ Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
       return time_graph_.GetBatcher();
     case BatcherId::kUi:
       return ui_batcher_;
-    default:
-      CHECK(false);
-      return ui_batcher_;
   }
+
+  UNREACHABLE();
 }
 
 [[nodiscard]] PickingMode CaptureWindow::GetPickingMode() {

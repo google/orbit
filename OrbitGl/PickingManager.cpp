@@ -7,12 +7,12 @@
 #include "OpenGl.h"
 #include "OrbitBase/Logging.h"
 
-PickingID PickingManager::CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
+PickingId PickingManager::CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
                                            BatcherId batcher_id) {
   absl::MutexLock lock(&mutex_);
   ++id_counter_;
-  PickingID id =
-      PickingID::Get(PickingType::kPickable, id_counter_, batcher_id);
+  PickingId id =
+      PickingId::Get(PickingType::kPickable, id_counter_, batcher_id);
   id_pickable_map_[id_counter_] = a_Pickable;
   return id;
 }
@@ -71,7 +71,7 @@ bool PickingManager::IsDragging() const {
 
 Color PickingManager::GetPickableColor(std::weak_ptr<Pickable> pickable,
                                        BatcherId batcher_id) {
-  PickingID id = CreatePickableId(pickable, batcher_id);
+  PickingId id = CreatePickableId(pickable, batcher_id);
   return ColorFromPickingID(id);
 }
 
@@ -80,11 +80,11 @@ bool PickingManager::IsThisElementPicked(const Pickable* pickable) const {
   return picked && picked.get() == pickable;
 }
 
-Color PickingManager::ColorFromPickingID(PickingID id) const {
-  static_assert(sizeof(PickingID) == 4 * sizeof(uint8_t),
-                "PickingID should be same size as 4 * uint8_t");
+Color PickingManager::ColorFromPickingID(PickingId id) const {
+  static_assert(sizeof(PickingId) == 4 * sizeof(uint8_t),
+                "PickingId should be same size as 4 * uint8_t");
   std::array<uint8_t, 4> color_values;
-  std::memcpy(&color_values[0], &id, sizeof(PickingID));
+  std::memcpy(&color_values[0], &id, sizeof(PickingId));
   return Color(color_values[0], color_values[1], color_values[2],
                color_values[3]);
 }

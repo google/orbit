@@ -37,7 +37,7 @@ class EventTrack : public Track {
 
  protected:
   void SelectEvents();
-  std::string GetSampleTooltip(PickingID id) const;
+  std::string GetSampleTooltip(PickingId id) const;
 
  protected:
   TextBox m_ThreadName;

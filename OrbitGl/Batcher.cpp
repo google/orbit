@@ -10,7 +10,7 @@
 void Batcher::AddLine(const Line& line, const Color* colors,
                       PickingType picking_type,
                       std::unique_ptr<PickingUserData> user_data) {
-  Color picking_color = PickingID::GetColor(
+  Color picking_color = PickingId::GetColor(
       picking_type, line_buffer_.lines_.size(), batcher_id_);
   line_buffer_.lines_.push_back(line);
   line_buffer_.colors_.push_back(colors, 2);
@@ -51,7 +51,7 @@ void Batcher::AddBox(const Box& box, const Color* colors,
                      PickingType picking_type,
                      std::unique_ptr<PickingUserData> user_data) {
   Color picking_color =
-      PickingID::GetColor(picking_type, box_buffer_.boxes_.size(), batcher_id_);
+      PickingId::GetColor(picking_type, box_buffer_.boxes_.size(), batcher_id_);
   box_buffer_.boxes_.push_back(box);
   box_buffer_.colors_.push_back(colors, 4);
   box_buffer_.picking_colors_.push_back_n(picking_color, 4);
@@ -77,7 +77,7 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
 void Batcher::AddTriangle(const Triangle& triangle, Color color,
                           PickingType picking_type,
                           std::unique_ptr<PickingUserData> user_data) {
-  Color picking_color = PickingID::GetColor(
+  Color picking_color = PickingId::GetColor(
       picking_type, triangle_buffer_.triangles_.size(), batcher_id_);
   triangle_buffer_.triangles_.push_back(triangle);
   triangle_buffer_.colors_.push_back_n(color, 3);
@@ -91,7 +91,7 @@ void Batcher::AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
   AddTriangle(Triangle(v0, v1, v2), color, picking_type, std::move(user_data));
 }
 
-PickingUserData* Batcher::GetUserData(PickingID id) {
+PickingUserData* Batcher::GetUserData(PickingId id) {
   CHECK(id.id_ >= 0);
 
   switch (id.type_) {
@@ -113,7 +113,7 @@ PickingUserData* Batcher::GetUserData(PickingID id) {
   return nullptr;
 }
 
-TextBox* Batcher::GetTextBox(PickingID a_ID) {
+TextBox* Batcher::GetTextBox(PickingId a_ID) {
   PickingUserData* data = GetUserData(a_ID);
 
   if (data && data->text_box_) {

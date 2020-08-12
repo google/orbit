@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "CoreMath.h"
+#include "absl/base/casts.h"
 #include "absl/synchronization/mutex.h"
 
 class GlCanvas;
@@ -50,12 +51,11 @@ enum class PickingType : uint32_t {
 // considered.
 enum class BatcherId : uint32_t { kTimeGraph, kUi };
 
-struct PickingID {
-  [[nodiscard]] static PickingID Get(
+struct PickingId {
+  [[nodiscard]] static PickingId Get(
       PickingType type, uint32_t id,
       BatcherId batcher_id = BatcherId::kTimeGraph) {
-    static_assert(sizeof(PickingID) == 4, "PickingID must be 32 bits");
-    PickingID result;
+    PickingId result;
     result.type_ = type;
     result.id_ = id;
     result.batcher_id_ = batcher_id;
@@ -65,27 +65,15 @@ struct PickingID {
   [[nodiscard]] static Color GetColor(
       PickingType type, uint32_t id,
       BatcherId batcher_id = BatcherId::kTimeGraph) {
-    static_assert(sizeof(PickingID) == sizeof(Color),
-                  "PickingId and Color must have the same size");
-    static_assert(std::is_trivially_copyable<PickingID>::value,
-                  "PickingID must be trivially copyable");
-
-    PickingID result_id = Get(type, id, batcher_id);
+    PickingId result_id = Get(type, id, batcher_id);
     std::array<uint8_t, 4> color_values;
-    std::memcpy(&color_values[0], &result_id, sizeof(PickingID));
-
+    color_values = absl::bit_cast<std::array<uint8_t, 4>, PickingId>(result_id);
     return Color(color_values[0], color_values[1], color_values[2],
                  color_values[3]);
   }
 
-  [[nodiscard]] static PickingID Get(uint32_t value) {
-    static_assert(sizeof(PickingID) == sizeof(uint32_t),
-                  "PickingId and uint32_t must have the same size");
-    static_assert(std::is_trivially_copyable<PickingID>::value,
-                  "PickingID must be trivially copyable");
-
-    PickingID id;
-    std::memcpy(&id, &value, sizeof(uint32_t));
+  [[nodiscard]] static PickingId Get(uint32_t value) {
+    PickingId id = absl::bit_cast<PickingId, uint32_t>(value);
     return id;
   }
   uint32_t id_ : 28;
@@ -111,9 +99,9 @@ class PickingManager {
   [[nodiscard]] bool IsThisElementPicked(const Pickable* pickable) const;
 
  private:
-  [[nodiscard]] PickingID CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
+  [[nodiscard]] PickingId CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
                                            BatcherId batcher_id);
-  [[nodiscard]] Color ColorFromPickingID(PickingID id) const;
+  [[nodiscard]] Color ColorFromPickingID(PickingId id) const;
 
  private:
   uint32_t id_counter_ = 0;

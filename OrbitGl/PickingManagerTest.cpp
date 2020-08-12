@@ -48,10 +48,10 @@ TEST(PickingManager, PickableMock) {
 }
 
 // Simulate "rendering" the picking color into a uint32_t target
-PickingID MockRenderPickingColor(const Color& col_vec) {
+PickingId MockRenderPickingColor(const Color& col_vec) {
   uint32_t col;
   std::memcpy(&col, &col_vec[0], sizeof(uint32_t));
-  PickingID picking_id = PickingID::Get(col);
+  PickingId picking_id = PickingId::Get(col);
   return picking_id;
 }
 
@@ -80,7 +80,7 @@ TEST(PickingManager, Callbacks) {
   PickingManager pm;
 
   Color col_vec = pm.GetPickableColor(pickable, BatcherId::kUi);
-  PickingID id = MockRenderPickingColor(col_vec);
+  PickingId id = MockRenderPickingColor(col_vec);
   ASSERT_FALSE(pickable->picked_);
   ASSERT_FALSE(pm.IsThisElementPicked(pickable.get()));
   pm.Pick(id.id_, 0, 0);
@@ -110,7 +110,7 @@ TEST(PickingManager, Undraggable) {
   PickingManager pm;
 
   Color col_vec = pm.GetPickableColor(pickable, BatcherId::kUi);
-  PickingID id = MockRenderPickingColor(col_vec);
+  PickingId id = MockRenderPickingColor(col_vec);
 
   ASSERT_FALSE(pm.IsDragging());
   pm.Pick(id.id_, 0, 0);
@@ -127,7 +127,7 @@ TEST(PickingManager, RobustnessOnReset) {
   PickingManager pm;
 
   Color col_vec = pm.GetPickableColor(pickable, BatcherId::kUi);
-  PickingID id = MockRenderPickingColor(col_vec);
+  PickingId id = MockRenderPickingColor(col_vec);
   ASSERT_FALSE(pickable->picked_);
   pm.Pick(id.id_, 0, 0);
   ASSERT_TRUE(pickable->picked_);

@@ -124,7 +124,7 @@ void EventTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
         Vec2 size(kPickingBoxWidth, track_height);
         auto user_data = std::make_unique<PickingUserData>(
             nullptr,
-            [&](PickingID id) -> std::string { return GetSampleTooltip(id); });
+            [&](PickingId id) -> std::string { return GetSampleTooltip(id); });
         user_data->custom_data_ = &pair.second;
         batcher->AddShadedBox(pos, size, z, kGreenSelection, PickingType::kBox,
                               std::move(user_data));
@@ -226,7 +226,7 @@ static std::string FormatCallstackForTooltip(
   return result;
 }
 
-std::string EventTrack::GetSampleTooltip(PickingID id) const {
+std::string EventTrack::GetSampleTooltip(PickingId id) const {
   static const std::string unknown_return_text =
       "Function call information missing";
 

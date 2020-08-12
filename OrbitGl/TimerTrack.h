@@ -100,7 +100,7 @@ class TimerTrack : public Track {
   mutable Mutex mutex_;
   std::map<int, std::shared_ptr<TimerChain>> timers_;
 
-  [[nodiscard]] virtual std::string GetBoxTooltip(PickingID /*id*/) const;
+  [[nodiscard]] virtual std::string GetBoxTooltip(PickingId /*id*/) const;
   float box_height_;
 };
 
