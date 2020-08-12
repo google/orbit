@@ -11,11 +11,11 @@ void Batcher::AddLine(const Line& line, const Color* colors,
                       PickingType picking_type,
                       std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingID::GetColor(
-      picking_type, line_buffer_.m_Lines.size(), batcher_id_);
-  line_buffer_.m_Lines.push_back(line);
-  line_buffer_.m_Colors.push_back(colors, 2);
-  line_buffer_.m_PickingColors.push_back_n(picking_color, 2);
-  line_buffer_.m_UserData.push_back(std::move(user_data));
+      picking_type, line_buffer_.lines_.size(), batcher_id_);
+  line_buffer_.lines_.push_back(line);
+  line_buffer_.colors_.push_back(colors, 2);
+  line_buffer_.picking_colors_.push_back_n(picking_color, 2);
+  line_buffer_.user_data_.push_back(std::move(user_data));
 }
 
 void Batcher::AddLine(const Line& line, Color color,
@@ -48,23 +48,23 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, Color color,
   AddLine(line, colors, picking_type, std::move(user_data));
 }
 
-void Batcher::AddBox(const Box& a_Box, const Color* colors,
+void Batcher::AddBox(const Box& box, const Color* colors,
                      PickingType picking_type,
                      std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingID::GetColor(
-      picking_type, box_buffer_.m_Boxes.size(), batcher_id_);
-  box_buffer_.m_Boxes.push_back(a_Box);
-  box_buffer_.m_Colors.push_back(colors, 4);
-  box_buffer_.m_PickingColors.push_back_n(picking_color, 4);
-  box_buffer_.m_UserData.push_back(std::move(user_data));
+      picking_type, box_buffer_.boxes_.size(), batcher_id_);
+  box_buffer_.boxes_.push_back(box);
+  box_buffer_.colors_.push_back(colors, 4);
+  box_buffer_.picking_colors_.push_back_n(picking_color, 4);
+  box_buffer_.user_data_.push_back(std::move(user_data));
 }
 
-void Batcher::AddBox(const Box& a_Box, Color color,
+void Batcher::AddBox(const Box& box, Color color,
                      PickingType picking_type,
                      std::unique_ptr<PickingUserData> user_data) {
   Color colors[4];
   Fill(colors, color);
-  AddBox(a_Box, colors, picking_type, std::move(user_data));
+  AddBox(box, colors, picking_type, std::move(user_data));
 }
 
 void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
@@ -93,19 +93,19 @@ void Batcher::AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
   AddTriangle(Triangle(v0, v1, v2), color, picking_type, std::move(user_data));
 }
 
-PickingUserData* Batcher::GetUserData(PickingID a_ID) {
-  CHECK(a_ID.id_ >= 0);
+PickingUserData* Batcher::GetUserData(PickingID id) {
+  CHECK(id.id_ >= 0);
 
-  switch (a_ID.type_) {
+  switch (id.type_) {
     case PickingType::kBox:
-      CHECK(a_ID.id_ < box_buffer_.m_UserData.size());
-      return box_buffer_.m_UserData[a_ID.id_].get();
+      CHECK(id.id_ < box_buffer_.user_data_.size());
+      return box_buffer_.user_data_[id.id_].get();
     case PickingType::kLine:
-      CHECK(a_ID.id_ < line_buffer_.m_UserData.size());
-      return line_buffer_.m_UserData[a_ID.id_].get();
+      CHECK(id.id_ < line_buffer_.user_data_.size());
+      return line_buffer_.user_data_[id.id_].get();
     case PickingType::kTriangle:
-      CHECK(a_ID.id_ < triangle_buffer_.user_data_.size());
-      return triangle_buffer_.user_data_[a_ID.id_].get();
+      CHECK(id.id_ < triangle_buffer_.user_data_.size());
+      return triangle_buffer_.user_data_[id.id_].get();
   }
 
   return nullptr;
@@ -160,11 +160,11 @@ void Batcher::Draw(bool picking) {
 //----------------------------------------------------------------------------
 void Batcher::DrawBoxBuffer(bool picking) {
   Block<Box, BoxBuffer::NUM_BOXES_PER_BLOCK>* box_block =
-      GetBoxBuffer().m_Boxes.m_Root;
+      GetBoxBuffer().boxes_.m_Root;
   Block<Color, BoxBuffer::NUM_BOXES_PER_BLOCK * 4>* color_block;
 
-  color_block = !picking ? GetBoxBuffer().m_Colors.m_Root
-                         : GetBoxBuffer().m_PickingColors.m_Root;
+  color_block = !picking ? GetBoxBuffer().colors_.m_Root
+                         : GetBoxBuffer().picking_colors_.m_Root;
 
   while (box_block) {
     if (int num_elems = box_block->m_Size) {
@@ -181,11 +181,11 @@ void Batcher::DrawBoxBuffer(bool picking) {
 //----------------------------------------------------------------------------
 void Batcher::DrawLineBuffer(bool picking) {
   Block<Line, LineBuffer::NUM_LINES_PER_BLOCK>* line_block =
-      GetLineBuffer().m_Lines.m_Root;
+      GetLineBuffer().lines_.m_Root;
   Block<Color, LineBuffer::NUM_LINES_PER_BLOCK * 2>* color_block;
 
-  color_block = !picking ? GetLineBuffer().m_Colors.m_Root
-                         : GetLineBuffer().m_PickingColors.m_Root;
+  color_block = !picking ? GetLineBuffer().colors_.m_Root
+                         : GetLineBuffer().picking_colors_.m_Root;
 
   while (line_block) {
     if (int num_elems = line_block->m_Size) {

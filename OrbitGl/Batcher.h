@@ -2,7 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_GL_BATCHER_H_
+#define ORBIT_GL_BATCHER_H_
+
 #include <vector>
 
 #include "BlockChain.h"
@@ -16,40 +18,39 @@ struct PickingUserData {
   TooltipCallback generate_tooltip_;
   void* custom_data_ = nullptr;
 
-  PickingUserData(
-    TextBox* text_box = nullptr,
-    TooltipCallback generate_tooltip = nullptr)
-    : text_box_(text_box), generate_tooltip_(generate_tooltip) {}
+  PickingUserData(TextBox* text_box = nullptr,
+                  TooltipCallback generate_tooltip = nullptr)
+      : text_box_(text_box), generate_tooltip_(generate_tooltip) {}
 };
 
 struct LineBuffer {
   void Reset() {
-    m_Lines.Reset();
-    m_Colors.Reset();
-    m_PickingColors.Reset();
-    m_UserData.clear();
+    lines_.Reset();
+    colors_.Reset();
+    picking_colors_.Reset();
+    user_data_.clear();
   }
 
   static const int NUM_LINES_PER_BLOCK = 64 * 1024;
-  BlockChain<Line, NUM_LINES_PER_BLOCK> m_Lines;
-  BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> m_Colors;
-  BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> m_PickingColors;
-  std::vector<std::unique_ptr<PickingUserData>> m_UserData;
+  BlockChain<Line, NUM_LINES_PER_BLOCK> lines_;
+  BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> colors_;
+  BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> picking_colors_;
+  std::vector<std::unique_ptr<PickingUserData>> user_data_;
 };
 
 struct BoxBuffer {
   void Reset() {
-    m_Boxes.Reset();
-    m_Colors.Reset();
-    m_PickingColors.Reset();
-    m_UserData.clear();
+    boxes_.Reset();
+    colors_.Reset();
+    picking_colors_.Reset();
+    user_data_.clear();
   }
 
   static const int NUM_BOXES_PER_BLOCK = 64 * 1024;
-  BlockChain<Box, NUM_BOXES_PER_BLOCK> m_Boxes;
-  BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> m_Colors;
-  BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> m_PickingColors;
-  std::vector<std::unique_ptr<PickingUserData>> m_UserData;
+  BlockChain<Box, NUM_BOXES_PER_BLOCK> boxes_;
+  BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> colors_;
+  BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> picking_colors_;
+  std::vector<std::unique_ptr<PickingUserData>> user_data_;
 };
 
 struct TriangleBuffer {
@@ -72,8 +73,7 @@ class Batcher {
   explicit Batcher(BatcherId batcher_id) : batcher_id_(batcher_id) {}
   Batcher() : batcher_id_(BatcherId::kTimeGraph) {}
 
-  void AddLine(const Line& line, const Color* colors,
-               PickingType picking_type, 
+  void AddLine(const Line& line, const Color* colors, PickingType picking_type,
                std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddLine(const Line& line, Color color, PickingType picking_type,
                std::unique_ptr<PickingUserData> user_data = nullptr);
@@ -84,10 +84,9 @@ class Batcher {
                        PickingType picking_type,
                        std::unique_ptr<PickingUserData> user_data = nullptr);
 
-  void AddBox(const Box& a_Box, const Color* colors,
-              PickingType picking_type,
+  void AddBox(const Box& box, const Color* colors, PickingType picking_type,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Box& a_Box, Color color, PickingType picking_type,
+  void AddBox(const Box& box, Color color, PickingType picking_type,
               std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddShadedBox(Vec2 pos, Vec2 size, float z, Color color,
                     PickingType picking_type,
@@ -106,8 +105,8 @@ class Batcher {
 
   void Reset();
 
-  PickingUserData* GetUserData(PickingID a_ID);
-  TextBox* GetTextBox(PickingID a_ID);
+  PickingUserData* GetUserData(PickingID id);
+  TextBox* GetTextBox(PickingID id);
   BoxBuffer& GetBoxBuffer() { return box_buffer_; }
   LineBuffer& GetLineBuffer() { return line_buffer_; }
   TriangleBuffer& GetTriangleBuffer() { return triangle_buffer_; }
@@ -121,3 +120,5 @@ class Batcher {
   TriangleBuffer triangle_buffer_;
   BatcherId batcher_id_;
 };
+
+#endif
