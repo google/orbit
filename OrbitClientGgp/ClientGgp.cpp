@@ -15,7 +15,6 @@
 #include "OrbitBase/Result.h"
 #include "capture_data.pb.h"
 
-
 ClientGgp::ClientGgp(ClientGgpOptions&& options)
     : options_(std::move(options)) {}
 
@@ -41,40 +40,34 @@ bool ClientGgp::InitClient() {
 
   // Initialisations needed for capture to work
   InitCapture();
-
   capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
   return true;
 }
 
-// Prepare the Capture object to be able to request a capture
-bool ClientGgp::PrepareStartCapture() {
-  CHECK(!Capture::IsCapturing());
-
+// Client requests to start the capture
+bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   ErrorMessageOr<void> result = Capture::StartCapture();
   if (result.has_error()) {
-    ERROR("Error starting capture %s", result.error().message());
+    ERROR("Error starting capture: %s", result.error().message());
     return false;
   }
-  return true;
-}
-
-// Client requests to start the capture
-void ClientGgp::RequestStartCapture() {
-  int32_t pid = Capture::GProcessId;
+  int32_t pid = Capture::GTargetProcess->GetID();
   LOG("Capture pid %d", pid);
 
   // TODO: selected_functions available when UploadSymbols is included
   std::map<uint64_t, orbit_client_protos::FunctionInfo*> selected_functions =
       Capture::GSelectedFunctionsMap;
-  capture_client_->Capture(pid, selected_functions);
+  result = capture_client_->StartCapture(thread_pool, pid, selected_functions);
+  if (result.has_error()) {
+    ERROR("Error starting capture: %s", result.error().message());
+    return false;
+  }
+  return true;
 }
 
-void ClientGgp::StopCapture() {
-  CHECK(Capture::IsCapturing());
-  Capture::StopCapture();
-
-  capture_client_->StopCapture();
-  LOG("Stop capture requested");
+bool ClientGgp::StopCapture() {
+  LOG("Request to stop capture");
+  return capture_client_->StopCapture();
 }
 
 void ClientGgp::InitCapture() {

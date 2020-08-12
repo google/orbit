@@ -15,14 +15,12 @@
 #include "OrbitProcess.h"  // remove if including Capture.h in here
 #include "grpcpp/grpcpp.h"
 
-
 class ClientGgp final : public CaptureListener {
  public:
   ClientGgp(ClientGgpOptions&& options);
   bool InitClient();
-  bool PrepareStartCapture();
-  void RequestStartCapture();
-  void StopCapture();
+  bool RequestStartCapture(ThreadPool* thread_pool);
+  bool StopCapture();
   void SaveCapture();
 
   // CaptureListener implementation
