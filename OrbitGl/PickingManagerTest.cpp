@@ -61,17 +61,17 @@ TEST(PickingManager, BasicFunctionality) {
 
   Color col_vec1 = pm.GetPickableColor(pickable1, PickingID::BatcherId::kUi);
   Color col_vec2 = pm.GetPickableColor(pickable2, PickingID::BatcherId::kUi);
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec1).m_Id).lock(),
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec1).id_).lock(),
             pickable1);
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec2).m_Id).lock(),
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec2).id_).lock(),
             pickable2);
   ASSERT_TRUE(pm.GetPickableFromId(0xdeadbeef).expired());
 
   pm.Reset();
   ASSERT_TRUE(
-      pm.GetPickableFromId(MockRenderPickingColor(col_vec1).m_Id).expired());
+      pm.GetPickableFromId(MockRenderPickingColor(col_vec1).id_).expired());
   ASSERT_TRUE(
-      pm.GetPickableFromId(MockRenderPickingColor(col_vec2).m_Id).expired());
+      pm.GetPickableFromId(MockRenderPickingColor(col_vec2).id_).expired());
 }
 
 TEST(PickingManager, Callbacks) {
@@ -82,7 +82,7 @@ TEST(PickingManager, Callbacks) {
   PickingID id = MockRenderPickingColor(col_vec);
   ASSERT_FALSE(pickable->picked_);
   ASSERT_FALSE(pm.IsThisElementPicked(pickable.get()));
-  pm.Pick(id.m_Id, 0, 0);
+  pm.Pick(id.id_, 0, 0);
   ASSERT_TRUE(pickable->picked_);
   ASSERT_TRUE(pm.IsThisElementPicked(pickable.get()));
 
@@ -91,7 +91,7 @@ TEST(PickingManager, Callbacks) {
   ASSERT_FALSE(pm.IsThisElementPicked(pickable.get()));
 
   ASSERT_FALSE(pm.IsDragging());
-  pm.Pick(id.m_Id, 0, 0);
+  pm.Pick(id.id_, 0, 0);
   ASSERT_TRUE(pm.IsDragging());
   ASSERT_FALSE(pickable->dragging_);
 
@@ -112,7 +112,7 @@ TEST(PickingManager, Undraggable) {
   PickingID id = MockRenderPickingColor(col_vec);
 
   ASSERT_FALSE(pm.IsDragging());
-  pm.Pick(id.m_Id, 0, 0);
+  pm.Pick(id.id_, 0, 0);
   ASSERT_FALSE(pm.IsDragging());
   ASSERT_FALSE(pickable->dragging_);
 
@@ -128,17 +128,17 @@ TEST(PickingManager, RobustnessOnReset) {
   Color col_vec = pm.GetPickableColor(pickable, PickingID::BatcherId::kUi);
   PickingID id = MockRenderPickingColor(col_vec);
   ASSERT_FALSE(pickable->picked_);
-  pm.Pick(id.m_Id, 0, 0);
+  pm.Pick(id.id_, 0, 0);
   ASSERT_TRUE(pickable->picked_);
   pm.Drag(10, 10);
   ASSERT_TRUE(pickable->dragging_);
 
   pickable.reset();
 
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec).m_Id).lock(),
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec).id_).lock(),
             std::shared_ptr<PickableMock>());
   ASSERT_FALSE(pm.IsDragging());
-  pm.Pick(id.m_Id, 0, 0);
+  pm.Pick(id.id_, 0, 0);
   ASSERT_TRUE(pm.GetPicked().expired());
 
   pickable = std::make_shared<PickableMock>();
