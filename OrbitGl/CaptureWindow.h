@@ -64,7 +64,7 @@ class CaptureWindow : public GlCanvas {
   void ToggleDrawHelp();
 
   Batcher& GetBatcherById(BatcherId batcher_id);
- 
+
  private:
   [[nodiscard]] PickingMode GetPickingMode();
 

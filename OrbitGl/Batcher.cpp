@@ -18,8 +18,7 @@ void Batcher::AddLine(const Line& line, const Color* colors,
   line_buffer_.user_data_.push_back(std::move(user_data));
 }
 
-void Batcher::AddLine(const Line& line, Color color,
-                      PickingType picking_type,
+void Batcher::AddLine(const Line& line, Color color, PickingType picking_type,
                       std::unique_ptr<PickingUserData> user_data) {
   Color colors[2];
   Fill(colors, color);
@@ -51,16 +50,15 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, Color color,
 void Batcher::AddBox(const Box& box, const Color* colors,
                      PickingType picking_type,
                      std::unique_ptr<PickingUserData> user_data) {
-  Color picking_color = PickingID::GetColor(
-      picking_type, box_buffer_.boxes_.size(), batcher_id_);
+  Color picking_color =
+      PickingID::GetColor(picking_type, box_buffer_.boxes_.size(), batcher_id_);
   box_buffer_.boxes_.push_back(box);
   box_buffer_.colors_.push_back(colors, 4);
   box_buffer_.picking_colors_.push_back_n(picking_color, 4);
   box_buffer_.user_data_.push_back(std::move(user_data));
 }
 
-void Batcher::AddBox(const Box& box, Color color,
-                     PickingType picking_type,
+void Batcher::AddBox(const Box& box, Color color, PickingType picking_type,
                      std::unique_ptr<PickingUserData> user_data) {
   Color colors[4];
   Fill(colors, color);
@@ -109,14 +107,13 @@ PickingUserData* Batcher::GetUserData(PickingID id) {
   }
 
   return nullptr;
- ;
 }
 
 TextBox* Batcher::GetTextBox(PickingID a_ID) {
   PickingUserData* data = GetUserData(a_ID);
 
   if (data && data->text_box_) {
-    return data->text_box_; 
+    return data->text_box_;
   }
 
   return nullptr;
