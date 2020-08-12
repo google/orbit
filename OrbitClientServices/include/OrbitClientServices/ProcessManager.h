@@ -51,6 +51,9 @@ class ProcessManager {
                                                         uint64_t address,
                                                         uint64_t size) = 0;
 
+  virtual ErrorMessageOr<std::string> LoadNullTerminatedString(
+      int32_t pid, uint64_t address) = 0;
+
   virtual ErrorMessageOr<std::string> FindDebugInfoFile(
       const std::string& module_path, const std::string& build_id) = 0;
 

@@ -69,8 +69,7 @@ OrbitMainWindow::OrbitMainWindow(
   ui->splitter_2->setSizes(sizes);
 
   GOrbitApp->SetCaptureStartedCallback([this] {
-    ui->actionStart_Capture->setDisabled(true);
-    ui->actionStop_Capture->setDisabled(false);
+    ui->actionToggle_Capture->setIcon(icon_stop_capture_);
     ui->actionClear_Capture->setDisabled(true);
     ui->actionOpen_Capture->setDisabled(true);
     ui->actionSave_Capture->setDisabled(true);
@@ -91,22 +90,20 @@ OrbitMainWindow::OrbitMainWindow(
   finalizing_capture_dialog->close();
 
   GOrbitApp->SetCaptureStopRequestedCallback([this, finalizing_capture_dialog] {
-    ui->actionStop_Capture->setDisabled(true);
+    ui->actionToggle_Capture->setDisabled(true);
     finalizing_capture_dialog->show();
   });
   GOrbitApp->SetCaptureStoppedCallback([this, finalizing_capture_dialog] {
     finalizing_capture_dialog->close();
-    ui->actionStart_Capture->setDisabled(false);
-    ui->actionOpen_Capture->setDisabled(false);
+    ui->actionToggle_Capture->setDisabled(false);
+    ui->actionToggle_Capture->setIcon(icon_start_capture_);
     ui->actionSave_Capture->setDisabled(false);
     ui->actionOpen_Preset->setDisabled(false);
     ui->actionSave_Preset_As->setDisabled(false);
     ui->actionClear_Capture->setDisabled(false);
     ui->HomeTab->setDisabled(false);
   });
-  GOrbitApp->SetCaptureClearedCallback([this] {
-    OnCaptureCleared();
-  });
+  GOrbitApp->SetCaptureClearedCallback([this] { OnCaptureCleared(); });
 
   GOrbitApp->SetRefreshCallback([this](DataViewType a_Type) {
     this->OnRefreshDataViewPanels(a_Type);
@@ -150,7 +147,6 @@ OrbitMainWindow::OrbitMainWindow(
   GOrbitApp->SetTooltipCallback([this](const std::string& tooltip) {
     QToolTip::showText(QCursor::pos(), QString::fromStdString(tooltip), this);
   });
-  GOrbitApp->SetFeedbackDialogCallback([this] { ShowFeedbackDialog(); });
   GOrbitApp->SetSaveFileCallback([this](const std::string& extension) {
     return this->OnGetSaveFileName(extension);
   });
@@ -241,36 +237,31 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   toolbar->setIconSize(QSize(kIconSize, kIconSize));
 
   // Create icons.
-  QIcon icon_start = GetIcon("outline_play_arrow_white_48dp.png");
-  QIcon icon_stop = GetIcon("outline_stop_white_48dp.png");
+  icon_start_capture_ = GetIcon("outline_play_arrow_white_48dp.png");
+  icon_stop_capture_ = GetIcon("outline_stop_white_48dp.png");
   QIcon icon_clear = GetIcon("outline_clear_white_48dp.png");
   QIcon icon_open = GetIcon("outline_folder_white_48dp.png");
   QIcon icon_save = GetIcon("outline_save_alt_white_48dp.png");
   QIcon icon_help = GetIcon("outline_help_outline_white_48dp.png");
-  QIcon icon_feedback = GetIcon("outline_feedback_white_48dp.png");
   QIcon icon_search = GetIcon("outline_search_white_48dp.png");
   QIcon icon_filter = GetIcon("outline_filter_list_white_48dp.png");
   QIcon icon_timer = GetIcon("outline_access_time_white_48dp.png");
 
   // Set action icons.
-  ui->actionStart_Capture->setIcon(icon_start);
-  ui->actionStop_Capture->setIcon(icon_stop);
+  ui->actionToggle_Capture->setIcon(icon_start_capture_);
   ui->actionClear_Capture->setIcon(icon_clear);
   ui->actionOpen_Capture->setIcon(icon_open);
   ui->actionSave_Capture->setIcon(icon_save);
   ui->actionHelp->setIcon(icon_help);
-  ui->actionFeedback->setIcon(icon_feedback);
   ui->actionFilter_Functions->setIcon(icon_search);
   ui->actionFilter_Tracks->setIcon(icon_filter);
 
   // Add actions.
-  toolbar->addAction(ui->actionStart_Capture);
-  toolbar->addAction(ui->actionStop_Capture);
+  toolbar->addAction(ui->actionToggle_Capture);
   toolbar->addAction(ui->actionClear_Capture);
   toolbar->addAction(ui->actionOpen_Capture);
   toolbar->addAction(ui->actionSave_Capture);
   toolbar->addAction(ui->actionHelp);
-  toolbar->addAction(ui->actionFeedback);
 
   // Filter tracks.
   toolbar->addWidget(CreateSpacer(toolbar));
@@ -304,9 +295,6 @@ void OrbitMainWindow::SetupCaptureToolbar() {
   int pixel_width = fm.width("w");
   timer_label_->setMinimumWidth(5 * pixel_width);
   toolbar->addWidget(timer_label_);
-
-  // Initial state.
-  ui->actionStop_Capture->setDisabled(true);
 }
 
 void OrbitMainWindow::SetupCodeView() {
@@ -318,47 +306,7 @@ void OrbitMainWindow::SetupCodeView() {
   OrbitCodeEditor::setFileMappingWidget(ui->FileMappingWidget);
 }
 
-void OrbitMainWindow::ShowFeedbackDialog() {
-  QDialog feedback_dialog{nullptr,
-                          Qt::WindowTitleHint | Qt::WindowCloseButtonHint};
-
-  const auto layout = QPointer{new QGridLayout{&feedback_dialog}};
-  const auto button_box =
-      QPointer{new QDialogButtonBox{QDialogButtonBox::StandardButton::Close}};
-
-  const QPointer<QPushButton> report_missing_feature_button =
-      QPointer{new QPushButton{&feedback_dialog}};
-  button_box->addButton(report_missing_feature_button,
-                        QDialogButtonBox::AcceptRole);
-  report_missing_feature_button->setText("Report Missing Feature");
-  const QPointer<QPushButton> report_bug_button =
-      QPointer{new QPushButton{&feedback_dialog}};
-  button_box->addButton(report_bug_button, QDialogButtonBox::AcceptRole);
-  report_bug_button->setText("Report Bug");
-
-  layout->addWidget(button_box, 0, 0);
-
-  QObject::connect(report_missing_feature_button, &QPushButton::clicked,
-                   &feedback_dialog, [this, &feedback_dialog]() {
-                     on_actionReport_Missing_Feature_triggered();
-                     feedback_dialog.accept();
-                   });
-
-  QObject::connect(report_bug_button, &QPushButton::clicked, &feedback_dialog,
-                   [this, &feedback_dialog]() {
-                     on_actionReport_Bug_triggered();
-                     feedback_dialog.accept();
-                   });
-
-  QObject::connect(button_box, &QDialogButtonBox::rejected, &feedback_dialog,
-                   &QDialog::reject);
-
-  feedback_dialog.exec();
-}
-
-OrbitMainWindow::~OrbitMainWindow() {
-  delete ui;
-}
+OrbitMainWindow::~OrbitMainWindow() { delete ui; }
 
 void OrbitMainWindow::PostInit() {}
 
@@ -532,7 +480,6 @@ void OrbitMainWindow::OnFilterFunctionsTextChanged(const QString& text) {
 }
 
 void OrbitMainWindow::OnLiveTabFunctionsFilterTextChanged(const QString& text) {
-
   // Set main toolbar functions filter without triggering signals.
   filter_functions_line_edit_->blockSignals(true);
   filter_functions_line_edit_->setText(text);
@@ -595,12 +542,8 @@ void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
   }
 }
 
-void OrbitMainWindow::on_actionStart_Capture_triggered() {
-  GOrbitApp->StartCapture();
-}
-
-void OrbitMainWindow::on_actionStop_Capture_triggered() {
-  GOrbitApp->StopCapture();
+void OrbitMainWindow::on_actionToggle_Capture_triggered() {
+  GOrbitApp->ToggleCapture();
 }
 
 void OrbitMainWindow::on_actionClear_Capture_triggered() {
@@ -608,8 +551,6 @@ void OrbitMainWindow::on_actionClear_Capture_triggered() {
 }
 
 void OrbitMainWindow::on_actionHelp_triggered() { GOrbitApp->ToggleDrawHelp(); }
-
-void OrbitMainWindow::on_actionFeedback_triggered() { ShowFeedbackDialog(); }
 
 void OrbitMainWindow::ShowCaptureOnSaveWarningIfNeeded() {
   QSettings settings("The Orbit Authors", "Orbit Profiler");
@@ -673,11 +614,10 @@ outcome::result<void> OrbitMainWindow::OpenCapture(
 
   if (result.has_error()) {
     SetTitle({});
-    QMessageBox::critical(
-        this, "Error loading capture",
-        QString::fromStdString(absl::StrFormat(
-            "Could not load capture from \"%s\":\n%s",
-            filepath, result.error().message())));
+    QMessageBox::critical(this, "Error loading capture",
+                          QString::fromStdString(absl::StrFormat(
+                              "Could not load capture from \"%s\":\n%s",
+                              filepath, result.error().message())));
     return std::errc::no_such_file_or_directory;
   }
   SetTitle(QString::fromStdString(filepath));
@@ -741,6 +681,4 @@ void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
       CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW);
 }
 
-void OrbitMainWindow::OnCaptureCleared() {
-  ui->liveFunctions->Reset();
-}
+void OrbitMainWindow::OnCaptureCleared() { ui->liveFunctions->Reset(); }

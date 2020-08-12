@@ -1,3 +1,7 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include "OrbitCaptureClient/CaptureEventProcessor.h"
 
 #include "capture_data.pb.h"
@@ -92,6 +96,10 @@ void CaptureEventProcessor::ProcessFunctionCall(
   timer_info.set_user_data_key(function_call.return_value());
   timer_info.set_processor(-1);
   timer_info.set_type(TimerInfo::kNone);
+
+  for (int i = 0; i < function_call.registers_size(); ++i) {
+    timer_info.add_registers(function_call.registers(i));
+  }
 
   capture_listener_->OnTimer(timer_info);
 }
