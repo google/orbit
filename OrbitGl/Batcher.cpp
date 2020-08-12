@@ -94,18 +94,18 @@ void Batcher::AddTriangle(Vec3 v0, Vec3 v1, Vec3 v2, Color color,
 }
 
 PickingUserData* Batcher::GetUserData(PickingID a_ID) {
-  CHECK(a_ID.m_Id >= 0);
+  CHECK(a_ID.id_ >= 0);
 
-  switch (a_ID.m_Type) {
+  switch (a_ID.type_) {
     case PickingID::Type::kBox:
-      CHECK(a_ID.m_Id < box_buffer_.m_UserData.size());
-      return box_buffer_.m_UserData[a_ID.m_Id].get();
+      CHECK(a_ID.id_ < box_buffer_.m_UserData.size());
+      return box_buffer_.m_UserData[a_ID.id_].get();
     case PickingID::Type::kLine:
-      CHECK(a_ID.m_Id < line_buffer_.m_UserData.size());
-      return line_buffer_.m_UserData[a_ID.m_Id].get();
+      CHECK(a_ID.id_ < line_buffer_.m_UserData.size());
+      return line_buffer_.m_UserData[a_ID.id_].get();
     case PickingID::Type::kTriangle:
-      CHECK(a_ID.m_Id < triangle_buffer_.user_data_.size());
-      return triangle_buffer_.user_data_[a_ID.m_Id].get();
+      CHECK(a_ID.id_ < triangle_buffer_.user_data_.size());
+      return triangle_buffer_.user_data_[a_ID.id_].get();
   }
 
   return nullptr;

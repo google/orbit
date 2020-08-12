@@ -51,41 +51,41 @@ struct PickingID {
   // considered.
   enum BatcherId { kTimeGraph, kUi };
 
-  static PickingID Get(Type a_Type, uint32_t a_ID,
+  static PickingID Get(Type type, uint32_t id,
                        BatcherId batcher_id = BatcherId::kTimeGraph) {
     static_assert(sizeof(PickingID) == 4, "PickingID must be 32 bits");
-    PickingID id;
-    id.m_Type = a_Type;
-    id.m_Id = a_ID;
-    id.batcher_id_ = batcher_id;
-    return id;
+    PickingID result;
+    result.type_ = type;
+    result.id_ = id;
+    result.batcher_id_ = batcher_id;
+    return result;
   }
-  static Color GetColor(Type a_Type, uint32_t a_ID,
+  static Color GetColor(Type type, uint32_t id,
                         BatcherId batcher_id = BatcherId::kTimeGraph) {
     static_assert(sizeof(PickingID) == sizeof(Color),
                   "PickingId and Color must have the same size");
     static_assert(std::is_trivially_copyable<PickingID>::value,
                   "PickingID must be trivially copyable");
 
-    PickingID id = Get(a_Type, a_ID, batcher_id);
+    PickingID result_id = Get(type, id, batcher_id);
     std::array<uint8_t, 4> color_values;
-    std::memcpy(&color_values[0], &id, sizeof(PickingID));
+    std::memcpy(&color_values[0], &result_id, sizeof(PickingID));
 
     return Color(color_values[0], color_values[1], color_values[2],
                  color_values[3]);
   }
-  static PickingID Get(uint32_t a_Value) {
+  static PickingID Get(uint32_t value) {
     static_assert(sizeof(PickingID) == sizeof(uint32_t),
                   "PickingId and uint32_t must have the same size");
     static_assert(std::is_trivially_copyable<PickingID>::value,
                   "PickingID must be trivially copyable");
 
     PickingID id;
-    std::memcpy(&id, &a_Value, sizeof(uint32_t));
+    std::memcpy(&id, &value, sizeof(uint32_t));
     return id;
   }
-  uint32_t m_Id : 28;
-  uint32_t m_Type : 3;
+  uint32_t id_ : 28;
+  uint32_t type_ : 3;
   uint32_t batcher_id_ : 1;
 };
 
