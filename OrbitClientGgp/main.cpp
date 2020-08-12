@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 #include "ClientGgp.h"
+#include "OrbitBase/ThreadPool.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
-
 
 ABSL_FLAG(uint64_t, grpc_port, 44765, "Grpc service's port");
 ABSL_FLAG(int32_t, pid, 0, "pid to capture");
@@ -33,24 +33,27 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  LOG("Let's start the capture");
-  if (!client_ggp.PrepareStartCapture()) {
-    return -1;
+  // The request is done in a separate thread to avoid blocking main()
+  // It is needed to provide a thread pool
+  std::unique_ptr<ThreadPool> thread_pool =
+      ThreadPool::Create(1, 1, absl::Seconds(1));
+  if (!client_ggp.RequestStartCapture(thread_pool.get())) {
+    thread_pool->ShutdownAndWait();
+    FATAL("Not possible to start the capture; exiting program");
   }
 
-  // The request is done in a separate thread to avoid blocking main()
-  std::thread client_thread;
-  client_thread = std::thread([&]() { client_ggp.RequestStartCapture(); });
-
   // Captures for the period of time requested
-  LOG("Go to sleep");
+  LOG("Go to sleep for %d seconds", capture_length);
   absl::SleepFor(absl::Seconds(capture_length));
   LOG("Back from sleep");
 
   // Requests to stop the capture and waits for thread to finish
-  client_ggp.StopCapture();
+  if (!client_ggp.StopCapture()) {
+    thread_pool->ShutdownAndWait();
+    FATAL("Not possible to stop the capture; exiting program");
+  }
   LOG("Shut down the thread and wait for it to finish");
-  client_thread.join();
+  thread_pool->ShutdownAndWait();
 
   // TODO: process/save capture data
 
