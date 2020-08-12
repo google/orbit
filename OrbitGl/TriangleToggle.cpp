@@ -25,7 +25,7 @@ void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   if (picking) {
     PickingManager& picking_manager = canvas->GetPickingManager();
     color = picking_manager.GetPickableColor(shared_from_this(),
-                                             PickingID::BatcherId::UI);
+                                             PickingID::BatcherId::kUi);
   }
 
   // Draw triangle.
@@ -46,14 +46,14 @@ void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode) {
                           position + Vec3(-half_w, half_h, 0.f),
                           position + Vec3(0.f, -half_w, 0.f));
     }
-    batcher->AddTriangle(triangle, color, PickingID::PICKABLE);
+    batcher->AddTriangle(triangle, color, PickingID::Type::kPickable);
   } else {
     // When picking, draw a big square for easier picking.
     float original_width = 2 * half_w;
     float large_width = 2 * original_width;
     Box box(Vec2(pos_[0] - original_width, pos_[1] - original_width),
             Vec2(large_width, large_width), 0.f);
-    batcher->AddBox(box, color, PickingID::PICKABLE);
+    batcher->AddBox(box, color, PickingID::Type::kPickable);
   }
 }
 

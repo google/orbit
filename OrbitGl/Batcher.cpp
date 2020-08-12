@@ -97,13 +97,13 @@ PickingUserData* Batcher::GetUserData(PickingID a_ID) {
   CHECK(a_ID.m_Id >= 0);
 
   switch (a_ID.m_Type) {
-    case PickingID::BOX:
+    case PickingID::Type::kBox:
       CHECK(a_ID.m_Id < box_buffer_.m_UserData.size());
       return box_buffer_.m_UserData[a_ID.m_Id].get();
-    case PickingID::LINE:
+    case PickingID::Type::kLine:
       CHECK(a_ID.m_Id < line_buffer_.m_UserData.size());
       return line_buffer_.m_UserData[a_ID.m_Id].get();
-    case PickingID::TRIANGLE:
+    case PickingID::Type::kTriangle:
       CHECK(a_ID.m_Id < triangle_buffer_.user_data_.size());
       return triangle_buffer_.user_data_[a_ID.m_Id].get();
   }

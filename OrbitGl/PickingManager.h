@@ -5,11 +5,11 @@
 #pragma once
 
 #include <cstring>
-#include <unordered_map>
-#include <vector>
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 #include "CoreMath.h"
 #include "absl/synchronization/mutex.h"
@@ -32,27 +32,27 @@ class Pickable {
 
 struct PickingID {
   enum Type {
-    INVALID,
-    LINE,
-    BOX,
-    TRIANGLE,
-    PICKABLE,
+    kInvalid,
+    kLine,
+    kBox,
+    kTriangle,
+    kPickable,
   };
 
   // Instances of batchers used to draw must be in 1:1 correspondence with
   // values in the following enum. Currently, two batchers are used, one to draw
   // UI elements (corresponding to BatcherId::UI), and one for drawing events on
-  // the time graph (corresponding to BatcherId::TIME_GRAPH). If you want to add
+  // the time graph (corresponding to BatcherId::kTimeGraph). If you want to add
   // more batchers, this enum must be extended and you need to spend more bits
   // on the batcher_id_ field below. The total number of elements that can be
   // correctly picked is limited to the number of elements that can be encoded
   // in the bits remaining after encoding the batcher id, and the
   // PickingID::Type, so adding more batchers or types has to be carefully
   // considered.
-  enum BatcherId { TIME_GRAPH, UI };
+  enum BatcherId { kTimeGraph, kUi };
 
   static PickingID Get(Type a_Type, uint32_t a_ID,
-                       BatcherId batcher_id = TIME_GRAPH) {
+                       BatcherId batcher_id = BatcherId::kTimeGraph) {
     static_assert(sizeof(PickingID) == 4, "PickingID must be 32 bits");
     PickingID id;
     id.m_Type = a_Type;
@@ -61,7 +61,7 @@ struct PickingID {
     return id;
   }
   static Color GetColor(Type a_Type, uint32_t a_ID,
-                        BatcherId batcher_id = TIME_GRAPH) {
+                        BatcherId batcher_id = BatcherId::kTimeGraph) {
     static_assert(sizeof(PickingID) == sizeof(Color),
                   "PickingId and Color must have the same size");
     static_assert(std::is_trivially_copyable<PickingID>::value,
