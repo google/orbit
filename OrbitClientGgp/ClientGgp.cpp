@@ -15,6 +15,15 @@
 #include "OrbitBase/Result.h"
 #include "capture_data.pb.h"
 
+namespace {
+std::shared_ptr<Process> GetOrbitProcessByPid(int32_t pid) {
+  std::shared_ptr<Process> process = std::make_shared<Process>();
+  // TODO: study if we need more information. Requires extra steps
+  process->SetID(pid);
+  return process;
+}
+}  // namespace
+
 ClientGgp::ClientGgp(ClientGgpOptions&& options)
     : options_(std::move(options)) {}
 
@@ -75,13 +84,6 @@ void ClientGgp::InitCapture() {
   std::shared_ptr<Process> process = GetOrbitProcessByPid(options_.capture_pid);
   CHECK(process != nullptr);
   Capture::SetTargetProcess(std::move(process));
-}
-
-std::shared_ptr<Process> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
-  std::shared_ptr<Process> process = std::make_shared<Process>();
-  // TODO: study if we need more information. Requires extra steps
-  process->SetID(pid);
-  return process;
 }
 
 // CaptureListener implementation
