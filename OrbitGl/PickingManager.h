@@ -53,38 +53,38 @@ enum class PickingType : uint32_t {
 enum class BatcherId : uint32_t { kTimeGraph, kUi };
 
 struct PickingId {
-  static constexpr const uint32_t kIDBitSize = 28;
+  static constexpr const uint32_t kElementIDBitSize = 28;
   static constexpr const uint32_t kPickingTypeBitSize = 3;
   static constexpr const uint32_t kBatcherIDBitSize = 1;
 
-  [[nodiscard]] inline static PickingId Get(
-      PickingType type, uint32_t id,
+  [[nodiscard]] inline static PickingId Create(
+      PickingType type, uint32_t element_id,
       BatcherId batcher_id = BatcherId::kTimeGraph) {
     PickingId result;
     result.type = type;
-    result.id = id;
+    result.element_id = element_id;
     result.batcher_id = batcher_id;
     return result;
   }
 
-  [[nodiscard]] static Color GetColor(
-      PickingType type, uint32_t id,
+  [[nodiscard]] inline static PickingId FromPixelValue(uint32_t value) {
+    PickingId id = absl::bit_cast<PickingId, uint32_t>(value);
+    return id;
+  }
+
+  [[nodiscard]] static Color ToColor(
+      PickingType type, uint32_t element_id,
       BatcherId batcher_id = BatcherId::kTimeGraph) {
-    PickingId result_id = Get(type, id, batcher_id);
+    PickingId result_id = Create(type, element_id, batcher_id);
     std::array<uint8_t, 4> color_values;
     color_values = absl::bit_cast<std::array<uint8_t, 4>, PickingId>(result_id);
     return Color(color_values[0], color_values[1], color_values[2],
                  color_values[3]);
   }
 
-  [[nodiscard]] inline static PickingId Get(uint32_t value) {
-    PickingId id = absl::bit_cast<PickingId, uint32_t>(value);
-    return id;
-  }
-  
-  uint32_t id_ : kIDBitSize;
-  PickingType type_ : kPickingTypeBitSize;
-  BatcherId batcher_id_ : kBatcherIDBitSize;
+  uint32_t element_id : kElementIDBitSize;
+  PickingType type : kPickingTypeBitSize;
+  BatcherId batcher_id : kBatcherIDBitSize;
 };
 
 class PickingManager {
@@ -92,11 +92,11 @@ class PickingManager {
   PickingManager() {}
   void Reset();
 
-  void Pick(uint32_t id, int x, int y);
+  void Pick(PickingId id, int x, int y);
   void Release();
   void Drag(int x, int y);
   [[nodiscard]] std::weak_ptr<Pickable> GetPicked() const;
-  [[nodiscard]] std::weak_ptr<Pickable> GetPickableFromId(uint32_t id) const;
+  [[nodiscard]] std::weak_ptr<Pickable> GetPickableFromId(PickingId id) const;
   [[nodiscard]] bool IsDragging() const;
 
   [[nodiscard]] Color GetPickableColor(std::weak_ptr<Pickable> pickable,

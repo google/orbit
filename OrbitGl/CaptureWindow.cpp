@@ -159,7 +159,7 @@ void CaptureWindow::Pick(int a_X, int a_Y) {
                &pixels[0]);
   uint32_t value;
   std::memcpy(&value, &pixels[0], sizeof(uint32_t));
-  PickingId pickId = PickingId::Get(value);
+  PickingId pickId = PickingId::FromPixelValue(value);
 
   Capture::GSelectedTextBox = nullptr;
   Capture::GSelectedThreadId = 0;
@@ -177,7 +177,7 @@ void CaptureWindow::Pick(PickingId a_PickingID, int a_X, int a_Y) {
   if (text_box) {
     SelectTextBox(text_box);
   } else if (type == PickingType::kPickable) {
-    m_PickingManager.Pick(a_PickingID.id, a_X, a_Y);
+    m_PickingManager.Pick(a_PickingID, a_X, a_Y);
   }
 }
 
@@ -207,7 +207,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
   std::string tooltip = "";
 
   if (pickId.type == PickingType::kPickable) {
-    auto pickable = GetPickingManager().GetPickableFromId(pickId.id).lock();
+    auto pickable = GetPickingManager().GetPickableFromId(pickId).lock();
     if (pickable) {
       tooltip = pickable->GetTooltip();
     }

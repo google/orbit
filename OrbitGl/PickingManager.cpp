@@ -12,7 +12,7 @@ PickingId PickingManager::CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
   absl::MutexLock lock(&mutex_);
   ++id_counter_;
   PickingId id =
-      PickingId::Get(PickingType::kPickable, id_counter_, batcher_id);
+      PickingId::Create(PickingType::kPickable, id_counter_, batcher_id);
   id_pickable_map_[id_counter_] = a_Pickable;
   return id;
 }
@@ -23,9 +23,11 @@ void PickingManager::Reset() {
   id_counter_ = 0;
 }
 
-std::weak_ptr<Pickable> PickingManager::GetPickableFromId(uint32_t id) const {
+std::weak_ptr<Pickable> PickingManager::GetPickableFromId(PickingId id) const {
+  CHECK(id.type == PickingType::kPickable);
+
   absl::MutexLock lock(&mutex_);
-  auto it = id_pickable_map_.find(id);
+  auto it = id_pickable_map_.find(id.element_id);
   if (it == id_pickable_map_.end()) {
     return std::weak_ptr<Pickable>();
   }
@@ -37,7 +39,7 @@ std::weak_ptr<Pickable> PickingManager::GetPicked() const {
   return currently_picked_;
 }
 
-void PickingManager::Pick(uint32_t id, int x, int y) {
+void PickingManager::Pick(PickingId id, int x, int y) {
   auto picked = GetPickableFromId(id).lock();
   if (picked) {
     picked->OnPick(x, y);
