@@ -95,6 +95,8 @@ PickingUserData* Batcher::GetUserData(PickingID id) {
   CHECK(id.id_ >= 0);
 
   switch (id.type_) {
+    case PickingType::kInvalid:
+      return nullptr;
     case PickingType::kBox:
       CHECK(id.id_ < box_buffer_.user_data_.size());
       return box_buffer_.user_data_[id.id_].get();
@@ -104,6 +106,8 @@ PickingUserData* Batcher::GetUserData(PickingID id) {
     case PickingType::kTriangle:
       CHECK(id.id_ < triangle_buffer_.user_data_.size());
       return triangle_buffer_.user_data_[id.id_].get();
+    case PickingType::kPickable:
+      return nullptr;
   }
 
   return nullptr;
