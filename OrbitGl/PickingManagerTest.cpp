@@ -51,7 +51,7 @@ TEST(PickingManager, PickableMock) {
 // Simulate "rendering" the picking color into a uint32_t target
 PickingId MockRenderPickingColor(const Color& col_vec) {
   uint32_t col = absl::bit_cast<uint32_t, Color>(col_vec);
-  PickingId picking_id = PickingId::Get(col);
+  PickingId picking_id = PickingId::FromPixelValue(col);
   return picking_id;
 }
 
@@ -62,17 +62,23 @@ TEST(PickingManager, BasicFunctionality) {
 
   Color col_vec1 = pm.GetPickableColor(pickable1, BatcherId::kUi);
   Color col_vec2 = pm.GetPickableColor(pickable2, BatcherId::kUi);
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec1).id).lock(),
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec1)).lock(),
             pickable1);
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec2).id).lock(),
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec2)).lock(),
             pickable2);
-  ASSERT_TRUE(pm.GetPickableFromId(0xdeadbeef).expired());
+
+  PickingId invalid_id;
+  invalid_id.type = PickingType::kPickable;
+  invalid_id.element_id = 0xdeadbeef;
+  ASSERT_TRUE(pm.GetPickableFromId(invalid_id).expired());
+
+  invalid_id.type = PickingType::kLine;
+  ASSERT_DEATH(auto pickable = pm.GetPickableFromId(invalid_id),
+               "PickingType::kPickable");
 
   pm.Reset();
-  ASSERT_TRUE(
-      pm.GetPickableFromId(MockRenderPickingColor(col_vec1).id).expired());
-  ASSERT_TRUE(
-      pm.GetPickableFromId(MockRenderPickingColor(col_vec2).id).expired());
+  ASSERT_TRUE(pm.GetPickableFromId(MockRenderPickingColor(col_vec1)).expired());
+  ASSERT_TRUE(pm.GetPickableFromId(MockRenderPickingColor(col_vec2)).expired());
 }
 
 TEST(PickingManager, Callbacks) {
@@ -83,7 +89,7 @@ TEST(PickingManager, Callbacks) {
   PickingId id = MockRenderPickingColor(col_vec);
   ASSERT_FALSE(pickable->picked_);
   ASSERT_FALSE(pm.IsThisElementPicked(pickable.get()));
-  pm.Pick(id.id, 0, 0);
+  pm.Pick(id, 0, 0);
   ASSERT_TRUE(pickable->picked_);
   ASSERT_TRUE(pm.IsThisElementPicked(pickable.get()));
 
@@ -92,7 +98,7 @@ TEST(PickingManager, Callbacks) {
   ASSERT_FALSE(pm.IsThisElementPicked(pickable.get()));
 
   ASSERT_FALSE(pm.IsDragging());
-  pm.Pick(id.id, 0, 0);
+  pm.Pick(id, 0, 0);
   ASSERT_TRUE(pm.IsDragging());
   ASSERT_FALSE(pickable->dragging_);
 
@@ -113,7 +119,7 @@ TEST(PickingManager, Undraggable) {
   PickingId id = MockRenderPickingColor(col_vec);
 
   ASSERT_FALSE(pm.IsDragging());
-  pm.Pick(id.id, 0, 0);
+  pm.Pick(id, 0, 0);
   ASSERT_FALSE(pm.IsDragging());
   ASSERT_FALSE(pickable->dragging_);
 
@@ -129,17 +135,17 @@ TEST(PickingManager, RobustnessOnReset) {
   Color col_vec = pm.GetPickableColor(pickable, BatcherId::kUi);
   PickingId id = MockRenderPickingColor(col_vec);
   ASSERT_FALSE(pickable->picked_);
-  pm.Pick(id.id, 0, 0);
+  pm.Pick(id, 0, 0);
   ASSERT_TRUE(pickable->picked_);
   pm.Drag(10, 10);
   ASSERT_TRUE(pickable->dragging_);
 
   pickable.reset();
 
-  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec).id).lock(),
+  ASSERT_EQ(pm.GetPickableFromId(MockRenderPickingColor(col_vec)).lock(),
             std::shared_ptr<PickableMock>());
   ASSERT_FALSE(pm.IsDragging());
-  pm.Pick(id.id, 0, 0);
+  pm.Pick(id, 0, 0);
   ASSERT_TRUE(pm.GetPicked().expired());
 
   pickable = std::make_shared<PickableMock>();
