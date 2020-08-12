@@ -78,7 +78,7 @@ void OrbitLiveFunctions::AddIterator(size_t id, FunctionInfo* function) {
     this->live_functions_.OnDeleteButton(id);
     auto it = this->iterator_uis.find(id);
     ui->iteratorLayout->removeWidget(it->second);
-    delete it->second;
+    it->second->deleteLater();
     iterator_uis.erase(id);
     if (iterator_uis.empty()) {
       this->all_events_iterator_->DisableButtons();
