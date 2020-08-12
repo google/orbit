@@ -4,11 +4,6 @@
 
 #include "SamplingProfiler.h"
 
-#include <map>
-#include <memory>
-#include <set>
-#include <vector>
-
 #include "Capture.h"
 #include "FunctionUtils.h"
 #include "Log.h"

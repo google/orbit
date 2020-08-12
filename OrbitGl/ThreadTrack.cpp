@@ -4,6 +4,7 @@
 
 #include "ThreadTrack.h"
 
+#include "Capture.h"
 #include "FunctionUtils.h"
 #include "GlCanvas.h"
 #include "PrintVar.h"
