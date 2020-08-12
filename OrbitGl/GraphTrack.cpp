@@ -35,15 +35,15 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
   float text_z = layout.GetTextZ();
 
   Box box(m_Pos, Vec2(m_Size[0], -m_Size[1]), track_z);
-  batcher->AddBox(box, color, PickingID::PICKABLE);
+  batcher->AddBox(box, color, PickingID::Type::kPickable);
 
   if (canvas->GetPickingManager().IsThisElementPicked(this)) {
     color = Color(255, 255, 255, 255);
   }
 
-  batcher->AddLine(m_Pos, Vec2(x1, y0), track_z, color, PickingID::PICKABLE);
+  batcher->AddLine(m_Pos, Vec2(x1, y0), track_z, color, PickingID::Type::kPickable);
   batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), track_z, color,
-                   PickingID::PICKABLE);
+                   PickingID::Type::kPickable);
 
   const Color kLineColor(0, 128, 255, 128);
 
@@ -67,7 +67,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode) {
     float y0 = base_y + static_cast<float>(last_normalized_value) * m_Size[1];
     float y1 = base_y + static_cast<float>(normalized_value) * m_Size[1];
     time_graph_->GetBatcher().AddLine(Vec2(x0, y0), Vec2(x1, y1), text_z,
-                                      kLineColor, PickingID::LINE);
+                                      kLineColor, PickingID::Type::kLine);
 
     previous_time = time;
     last_normalized_value = normalized_value;

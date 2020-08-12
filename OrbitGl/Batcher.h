@@ -70,7 +70,7 @@ struct TriangleBuffer {
 class Batcher {
  public:
   explicit Batcher(PickingID::BatcherId batcher_id) : batcher_id_(batcher_id) {}
-  Batcher() : batcher_id_(PickingID::BatcherId::TIME_GRAPH) {}
+  Batcher() : batcher_id_(PickingID::BatcherId::kTimeGraph) {}
 
   void AddLine(const Line& line, const Color* colors,
                PickingID::Type picking_type, 

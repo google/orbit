@@ -11,7 +11,7 @@ PickingID PickingManager::CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
                                            PickingID::BatcherId batcher_id) {
   absl::MutexLock lock(&mutex_);
   ++m_IdCounter;
-  PickingID id = PickingID::Get(PickingID::PICKABLE, m_IdCounter, batcher_id);
+  PickingID id = PickingID::Get(PickingID::Type::kPickable, m_IdCounter, batcher_id);
   m_IdPickableMap[m_IdCounter] = a_Pickable;
   return id;
 }

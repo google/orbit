@@ -115,7 +115,7 @@ void GlSlider::DrawHorizontal(GlCanvas* canvas, PickingMode picking_mode) {
   // Bar
   if (!picking) {
     Box box(Vec2(0, y), Vec2(canvasWidth, GetPixelHeight()), 0.f);
-    batcher->AddBox(box, m_BarColor, PickingID::PICKABLE);
+    batcher->AddBox(box, m_BarColor, PickingID::Type::kPickable);
   }
 
   float start = m_Ratio * nonSliderWidth;
@@ -124,13 +124,13 @@ void GlSlider::DrawHorizontal(GlCanvas* canvas, PickingMode picking_mode) {
   Color color = m_SliderColor;
   if (picking) {
     color = canvas->GetPickingManager().GetPickableColor(
-        shared_from_this(), PickingID::BatcherId::UI);
+        shared_from_this(), PickingID::BatcherId::kUi);
   } else if (canvas->GetPickingManager().IsThisElementPicked(this)) {
     color = m_SelectedColor;
   }
 
   Box box(Vec2(start, y), Vec2(stop - start, GetPixelHeight()), 0.f);
-  batcher->AddBox(box, color, PickingID::PICKABLE);
+  batcher->AddBox(box, color, PickingID::Type::kPickable);
 }
 
 void GlSlider::DrawVertical(GlCanvas* canvas, PickingMode picking_mode) {
@@ -147,7 +147,7 @@ void GlSlider::DrawVertical(GlCanvas* canvas, PickingMode picking_mode) {
   // Bar
   if (!picking) {
     Box box(Vec2(x, 0), Vec2(GetPixelHeight(), canvasHeight), 0.f);
-    batcher->AddBox(box, m_BarColor, PickingID::PICKABLE);
+    batcher->AddBox(box, m_BarColor, PickingID::Type::kPickable);
   }
 
   float start = canvasHeight - m_Ratio * nonSliderHeight;
@@ -156,11 +156,11 @@ void GlSlider::DrawVertical(GlCanvas* canvas, PickingMode picking_mode) {
   Color color = m_SliderColor;
   if (picking) {
     color = canvas->GetPickingManager().GetPickableColor(
-        shared_from_this(), PickingID::BatcherId::UI);
+        shared_from_this(), PickingID::BatcherId::kUi);
   } else if (canvas->GetPickingManager().IsThisElementPicked(this)) {
     color = m_SelectedColor;
   }
 
   Box box(Vec2(x, start), Vec2(GetPixelHeight(), stop - start), 0.f);
-  batcher->AddBox(box, color, PickingID::PICKABLE);
+  batcher->AddBox(box, color, PickingID::Type::kPickable);
 }
