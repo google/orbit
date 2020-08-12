@@ -30,6 +30,7 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::FunctionStats;
 using orbit_client_protos::TimerInfo;
 
 ErrorMessageOr<void> CaptureSerializer::Save(const std::string& filename) {
@@ -77,6 +78,11 @@ void CaptureSerializer::FillCaptureData(CaptureInfo* capture_info) {
   for (const auto& address_info : Capture::capture_data_.address_infos()) {
     capture_info->add_address_infos()->CopyFrom(address_info.second);
   }
+
+  const absl::flat_hash_map<uint64_t, FunctionStats>& functions_stats =
+      Capture::capture_data_.functions_stats();
+  capture_info->mutable_function_stats()->insert(functions_stats.begin(),
+                                                 functions_stats.end());
 
   // TODO: this is not really synchronized, since GetCallstacks processing below
   // is not under the same mutex lock we could end up having list of callstacks
@@ -184,9 +190,12 @@ void CaptureSerializer::ProcessCaptureData(const CaptureInfo& capture_info) {
     Capture::GSelectedFunctionsMap[FunctionUtils::GetAbsoluteAddress(
         *function_ptr)] = function_ptr.get();
   }
-  CaptureData capture_data(capture_info.process_id(),
-                           capture_info.process_name(),
-                           std::move(selected_functions));
+  absl::flat_hash_map<uint64_t, FunctionStats> functions_stats{
+      capture_info.function_stats().begin(),
+      capture_info.function_stats().end()};
+  CaptureData capture_data(
+      capture_info.process_id(), capture_info.process_name(),
+      std::move(selected_functions), std::move(functions_stats));
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
       address_infos;

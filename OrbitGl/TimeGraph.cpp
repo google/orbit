@@ -324,7 +324,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
         timer_info.function_address());
 
     if (func != nullptr) {
-      FunctionUtils::UpdateStats(func, timer_info);
+      Capture::capture_data_.UpdateFunctionStats(func, timer_info);
       if (FunctionUtils::IsOrbitFunc(*func)) {
         ProcessOrbitFunctionTimer(func, timer_info);
       }

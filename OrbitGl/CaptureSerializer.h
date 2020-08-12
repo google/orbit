@@ -28,7 +28,7 @@ class CaptureSerializer {
 
   orbit_client_protos::CaptureHeader header;
 
-  const std::string kRequiredCaptureVersion = "1.51";
+  const std::string kRequiredCaptureVersion = "1.52";
 };
 
 #endif  // ORBIT_GL_CAPTURE_SERIALIZER_H_

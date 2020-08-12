@@ -20,6 +20,16 @@ class CaptureData {
       : process_id_{process_id},
         process_name_{std::move(process_name)},
         selected_functions_{std::move(selected_functions)} {}
+  explicit CaptureData(
+      int32_t process_id, std::string process_name,
+      std::vector<std::shared_ptr<orbit_client_protos::FunctionInfo>>
+          selected_functions,
+      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>
+          functions_stats)
+      : process_id_{process_id},
+        process_name_{std::move(process_name)},
+        selected_functions_{std::move(selected_functions)},
+        functions_stats_{std::move(functions_stats)} {}
 
   explicit CaptureData() = default;
   CaptureData(const CaptureData& other) = default;
@@ -79,6 +89,17 @@ class CaptureData {
     thread_names_.insert_or_assign(thread_id, std::move(thread_name));
   }
 
+  const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>&
+  functions_stats() {
+    return functions_stats_;
+  }
+
+  const orbit_client_protos::FunctionStats& GetFunctionStatsOrDefault(
+      uint64_t function_address);
+
+  void UpdateFunctionStats(orbit_client_protos::FunctionInfo* func,
+                           const orbit_client_protos::TimerInfo& timer_info);
+
  private:
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>
       address_infos_;
@@ -92,6 +113,9 @@ class CaptureData {
 
   std::chrono::system_clock::time_point capture_start_time_ =
       std::chrono::system_clock::now();
+
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>
+      functions_stats_;
 };
 
 #endif  // ORBIT_CORE_CAPTURE_DATA_H_

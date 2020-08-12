@@ -15,6 +15,7 @@ message FunctionStats {
 }
 
 message FunctionInfo {
+  reserved 11;
   string name = 1;
   string pretty_name = 2;
   string loaded_module_path = 3;
@@ -41,7 +42,6 @@ message FunctionInfo {
     kOrbitTrackDoubleAsInt64 = 12;
   }
   OrbitType type = 10;
-  FunctionStats stats = 11;
 }
 
 message CallstackEvent {
@@ -74,6 +74,8 @@ message CaptureInfo {
   repeated CallstackInfo callstacks = 6;
   repeated CallstackEvent callstack_events = 7;
   map<uint64, string> key_to_string = 8;
+  // TODO(kuebler): consider removing this field completely.
+  map<uint64, FunctionStats> function_stats = 9;
 }
 
 message TimerInfo {
