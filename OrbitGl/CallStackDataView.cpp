@@ -13,7 +13,6 @@
 
 using orbit_client_protos::FunctionInfo;
 
-//----------------------------------------------------------------------------
 CallStackDataView::CallStackDataView()
     : DataView(DataViewType::CALLSTACK), callstack_(nullptr) {}
 
