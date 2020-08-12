@@ -5,18 +5,21 @@
 #ifndef ORBIT_CORE_SAMPLING_PROFILER_H_
 #define ORBIT_CORE_SAMPLING_PROFILER_H_
 
-#include <utility>
+#include <cstdint>
+#include <cstring>
+#include <map>
+#include <memory>
+#include <set>
+#include <vector>
 
 #include "BlockChain.h"
 #include "Callstack.h"
-#include "Capture.h"
-#include "EventBuffer.h"
-#include "Pdb.h"
+#include "CallstackTypes.h"
+#include "OrbitProcess.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
-
-class Process;
 
 struct SampledFunction {
   SampledFunction() = default;

@@ -8,6 +8,7 @@
 #include <filesystem>
 
 #include "App.h"
+#include "Capture.h"
 #include "CaptureSerializer.h"
 #include "SamplingProfiler.h"
 #include "TimeGraph.h"
