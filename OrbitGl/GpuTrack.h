@@ -47,7 +47,7 @@ class GpuTrack : public TimerTrack {
   void SetTimesliceText(
       const orbit_client_protos::TimerInfo& timer, double elapsed_us,
       float min_x, TextBox* text_box) override;
-  [[nodiscard]] std::string GetBoxTooltip(PickingID id) const override;
+  [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
 
  private:
   uint64_t timeline_hash_;

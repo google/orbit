@@ -40,7 +40,7 @@ class ThreadTrack : public TimerTrack {
   void SetTimesliceText(const orbit_client_protos::TimerInfo& timer,
                         double elapsed_us, float min_x,
                         TextBox* text_box) override;
-  [[nodiscard]] std::string GetBoxTooltip(PickingID id) const override;
+  [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
 
   std::shared_ptr<EventTrack> event_track_;
   int32_t thread_id_;

@@ -38,7 +38,7 @@ const TextBox* ThreadTrack::GetRight(TextBox* text_box) const {
   return nullptr;
 }
 
-std::string ThreadTrack::GetBoxTooltip(PickingID id) const {
+std::string ThreadTrack::GetBoxTooltip(PickingId id) const {
   TextBox* text_box = time_graph_->GetBatcher().GetTextBox(id);
   if (!text_box ||
       text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {

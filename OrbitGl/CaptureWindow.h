@@ -29,7 +29,7 @@ class CaptureWindow : public GlCanvas {
   void LeftUp() override;
   void Pick();
   void Pick(int a_X, int a_Y);
-  void Pick(PickingID a_ID, int a_X, int a_Y);
+  void Pick(PickingId a_ID, int a_X, int a_Y);
   void Hover(int a_X, int a_Y);
   void FindCode(uint64_t address);
   void RightDown(int a_X, int a_Y) override;

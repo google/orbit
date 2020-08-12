@@ -27,7 +27,7 @@ class SchedulerTrack : public TimerTrack {
       const orbit_client_protos::TimerInfo& timer_info) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                       bool is_selected) const override;
-  [[nodiscard]] std::string GetBoxTooltip(PickingID id) const override;
+  [[nodiscard]] std::string GetBoxTooltip(PickingId id) const override;
 };
 
 #endif  // ORBIT_GL_SCHEDULER_TRACK_H_

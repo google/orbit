@@ -11,7 +11,7 @@
 #include "Geometry.h"
 #include "PickingManager.h"
 
-using TooltipCallback = std::function<std::string(PickingID)>;
+using TooltipCallback = std::function<std::string(PickingId)>;
 
 struct PickingUserData {
   TextBox* text_box_;
@@ -105,8 +105,8 @@ class Batcher {
 
   void Reset();
 
-  [[nodiscard]] PickingUserData* GetUserData(PickingID id);
-  [[nodiscard]] TextBox* GetTextBox(PickingID id);
+  [[nodiscard]] PickingUserData* GetUserData(PickingId id);
+  [[nodiscard]] TextBox* GetTextBox(PickingId id);
   [[nodiscard]] BoxBuffer& GetBoxBuffer() { return box_buffer_; }
   [[nodiscard]] LineBuffer& GetLineBuffer() { return line_buffer_; }
   [[nodiscard]] TriangleBuffer& GetTriangleBuffer() { return triangle_buffer_; }
