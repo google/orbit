@@ -93,10 +93,8 @@ void GlCanvas::Initialize() {
       FATAL("Problem: glewInit failed, something is seriously wrong: %s",
             reinterpret_cast<const char*>(glewGetErrorString(err)));
     }
-    std::string glew = absl::StrFormat(
-        "Using GLEW %s",
+    LOG("Using GLEW %s",
         reinterpret_cast<const char*>(glewGetString(GLEW_VERSION)));
-    PRINT_VAR(glew);
     firstInit = false;
   }
 }

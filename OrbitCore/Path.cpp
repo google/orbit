@@ -262,24 +262,6 @@ std::string Path::GetServiceLogFilePath() {
 }
 #endif
 
-void Path::Dump() {
-  PRINT_VAR(GetExecutableName());
-  PRINT_VAR(GetExecutablePath());
-  PRINT_VAR(GetBasePath());
-  PRINT_VAR(GetDllPath(true));
-  PRINT_VAR(GetDllName(true));
-  PRINT_VAR(GetDllPath(false));
-  PRINT_VAR(GetDllName(false));
-  PRINT_VAR(GetFileMappingFileName());
-  PRINT_VAR(GetSymbolsFileName());
-  PRINT_VAR(GetCachePath());
-  PRINT_VAR(GetPresetPath());
-  PRINT_VAR(GetPluginPath());
-  PRINT_VAR(GetCapturePath());
-  PRINT_VAR(GetDumpPath());
-  PRINT_VAR(GetAppDataPath());
-}
-
 std::vector<std::string> Path::ListFiles(
     const std::string& directory,
     std::function<bool(const std::string&)> filter) {

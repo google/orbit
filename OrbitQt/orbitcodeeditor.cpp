@@ -144,7 +144,6 @@ void OrbitCodeEditor::OnSaveMapFile() {
 
 void OrbitCodeEditor::OnFindTextEntered(const QString&) {
   // setFocus();
-  PRINT_VAR(m_FindLineEdit->text().toStdString());
   QTextCursor cursor(textCursor());
   cursor.movePosition(QTextCursor::EndOfWord);
   setTextCursor(cursor);
