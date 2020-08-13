@@ -7,7 +7,6 @@
 #include "Capture.h"
 #include "FunctionUtils.h"
 #include "GlCanvas.h"
-#include "PrintVar.h"
 #include "Profiling.h"
 #include "TextBox.h"
 #include "TimeGraph.h"

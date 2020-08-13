@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "OrbitBase/Tracing.h"
-#include "PrintVar.h"
 #include "Utils.h"
 
 #ifdef _WIN32

@@ -25,7 +25,6 @@
 #include "MainThreadExecutorImpl.h"
 #include "OrbitVersion.h"
 #include "Path.h"
-#include "PrintVar.h"
 #include "SamplingReport.h"
 #include "TopDownViewItemModel.h"
 #include "absl/flags/flag.h"
@@ -660,7 +659,8 @@ void InfiniteRecursion(int num) {
   if (num != 1) {
     InfiniteRecursion(num);
   }
-  LOG("%s", VAR_TO_STR(num));
+
+  LOG("num=%d", num);
 }
 
 void OrbitMainWindow::on_actionStackOverflow_triggered() {

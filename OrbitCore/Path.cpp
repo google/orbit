@@ -8,7 +8,6 @@
 #include <string>
 
 #include "OrbitBase/SafeStrerror.h"
-#include "PrintVar.h"
 #include "Utils.h"
 #include "absl/flags/flag.h"
 
