@@ -44,7 +44,6 @@ class Path {
 
   static uint64_t FileSize(const std::string& a_File);
   static bool DirExists(const std::string& a_Dir);
-  static bool IsPackaged() { return is_packaged_; }
 
   static std::vector<std::string> ListFiles(
       const std::string& directory,
@@ -56,5 +55,4 @@ class Path {
 
  private:
   static std::string base_path_;
-  static bool is_packaged_;
 };

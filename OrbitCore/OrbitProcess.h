@@ -62,7 +62,6 @@ class Process {
   std::string m_FullPath;
 
   bool m_Is64Bit;
-  bool m_IsRemote;
   Mutex m_DataMutex;
 
   std::map<uint64_t, std::shared_ptr<Module>> m_Modules;

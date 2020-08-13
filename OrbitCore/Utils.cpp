@@ -266,12 +266,6 @@ std::string CWindowsMessageToString::GetStringFromMsg(
 std::string GetLastErrorAsString() { return ""; }
 #endif
 
-std::string OrbitUtils::GetTimeStamp() {
-  time_t rawtime;
-  time(&rawtime);
-  return FormatTime(rawtime);
-}
-
 std::string OrbitUtils::FormatTime(const time_t& rawtime) {
   struct tm* time_info = nullptr;
   char buffer[80];

@@ -12,7 +12,6 @@
 #include "absl/strings/str_format.h"
 
 #define PRINT_VAR(var) LOG("%s", VAR_TO_STR(var).c_str())
-#define PRINT_FUNC LOG("%s tid:%u", FUNCTION_NAME, GetCurrentThreadId())
 #define VAR_TO_STR(var) VariableToString(#var, var)
 
 template <class T>

@@ -26,7 +26,6 @@
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
 std::string Path::base_path_;
-bool Path::is_packaged_;
 
 void Path::Init() { GetBasePath(); }
 
@@ -103,7 +102,6 @@ std::string Path::GetBasePath() {
 
   std::string exePath = GetExecutablePath();
   base_path_ = exePath.substr(0, exePath.find("bin/"));
-  is_packaged_ = DirExists(GetBasePath() + "text");
 
   return base_path_;
 }

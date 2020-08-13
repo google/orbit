@@ -50,16 +50,10 @@ void Pdb::PopulateFunctionMap() {
 }
 
 void Pdb::PopulateStringFunctionMap() {
-  {
-    // SCOPE_TIMER_LOG("Reserving map");
-    m_StringFunctionMap.reserve(static_cast<size_t>(1.5f * functions_.size()));
-  }
+  m_StringFunctionMap.reserve(static_cast<size_t>(1.5f * functions_.size()));
 
-  {
-    // SCOPE_TIMER_LOG("Map inserts");
-    for (auto& function : functions_) {
-      m_StringFunctionMap[FunctionUtils::GetHash(*function)] = function.get();
-    }
+  for (auto& function : functions_) {
+    m_StringFunctionMap[FunctionUtils::GetHash(*function)] = function.get();
   }
 }
 

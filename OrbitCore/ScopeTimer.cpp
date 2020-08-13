@@ -62,14 +62,3 @@ LocalScopeTimer::~LocalScopeTimer() {
         timer_.ElapsedMillis());
   }
 }
-
-void ConditionalScopeTimer::Start(const char*) {
-  m_Timer.Start();
-  m_Active = true;
-}
-
-ConditionalScopeTimer::~ConditionalScopeTimer() {
-  if (m_Active) {
-    m_Timer.Stop();
-  }
-}

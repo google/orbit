@@ -10,22 +10,11 @@
 #include "Profiling.h"
 
 #define SCOPE_TIMER_LOG(msg) LocalScopeTimer UNIQUE_ID(msg)
-#define SCOPE_TIMER_FUNC SCOPE_TIMER_LOG(__FUNCTION__)
 
 #pragma pack(push, 1)
 class Timer {
  public:
-  Timer()
-      : m_PID(0),
-        m_TID(0),
-        m_Depth(0),
-        m_Type(NONE),
-        m_Processor(-1),
-        m_CallstackHash(0),
-        m_FunctionAddress(0) {
-    m_UserData[0] = 0;
-    m_UserData[1] = 0;
-  }
+  Timer() = default;
 
   void Start();
   void Stop();
@@ -57,24 +46,24 @@ class Timer {
  public:
   // Needs to have to exact same layout in win32/x64, debug/release
 
-  int32_t m_PID;
-  int32_t m_TID;
-  uint8_t m_Depth;
-  Type m_Type;
-  uint8_t m_Processor;
-  uint64_t m_CallstackHash;
-  uint64_t m_FunctionAddress;
-  uint64_t m_UserData[2];
-  uint64_t m_Registers[6];
-  TickType m_Start;
-  TickType m_End;
+  int32_t m_PID = 0;
+  int32_t m_TID = 0;
+  uint8_t m_Depth = 0;
+  Type m_Type = NONE;
+  uint8_t m_Processor = -1;
+  uint64_t m_CallstackHash = 0;
+  uint64_t m_FunctionAddress = 0;
+  uint64_t m_UserData[2] = {0};
+  uint64_t m_Registers[6] = {0};
+  TickType m_Start = 0;
+  TickType m_End = 0;
 };
 #pragma pack(pop)
 
 class ScopeTimer {
  public:
-  ScopeTimer() {}
-  ScopeTimer(const char* a_Name);
+  ScopeTimer() = default;
+  explicit ScopeTimer(const char* a_Name);
   ~ScopeTimer();
 
  protected:
@@ -84,28 +73,14 @@ class ScopeTimer {
 class LocalScopeTimer {
  public:
   LocalScopeTimer();
-  LocalScopeTimer(const std::string& message);
-  LocalScopeTimer(double* millis);
+  explicit LocalScopeTimer(const std::string& message);
+  explicit LocalScopeTimer(double* millis);
   ~LocalScopeTimer();
 
  protected:
   Timer timer_;
   double* millis_;
   std::string message_;
-};
-
-class ConditionalScopeTimer {
- public:
-  ConditionalScopeTimer() : m_Active(false) {}
-  ~ConditionalScopeTimer();
-  void Start(const char* a_Name);
-
- protected:
-  enum { NameSize = 64 };
-
-  Timer m_Timer;
-  bool m_Active;
-  char m_Name[NameSize];
 };
 
 inline double Timer::ElapsedMicros() const {
@@ -117,4 +92,5 @@ inline double Timer::ElapsedMillis() const { return ElapsedMicros() * 0.001; }
 inline double Timer::ElapsedSeconds() const {
   return ElapsedMicros() * 0.000001;
 }
+
 #endif  // ORBIT_CORE_SCOPE_TIMER_H_

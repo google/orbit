@@ -9,19 +9,15 @@
 
 #include <string>
 
+#include "Pdb.h"
 #include "symbol.pb.h"
 
-class Pdb;
-
 struct Module {
-  Module(){};
+  Module() = default;
   Module(const std::string& file_name, uint64_t address_start,
          uint64_t address_end);
 
   void LoadSymbols(const ModuleSymbols& module_symbols);
-  bool ContainsAddress(uint64_t a_Address) {
-    return m_AddressStart <= a_Address && m_AddressEnd > a_Address;
-  }
 
   void SetLoaded(bool value) { loaded_ = value; }
   void SetLoadable(bool value) { loadable_ = value; }
