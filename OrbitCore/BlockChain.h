@@ -176,7 +176,7 @@ class BlockChain final {
   [[nodiscard]] uint32_t size() const { return size_; }
 
   [[nodiscard]] BlockIterator<T, BlockSize> begin() const {
-    return BlockIterator<T, BlockSize>(root_);
+    return size() > 0 ? BlockIterator<T, BlockSize>(root_) : end();
   }
 
   [[nodiscard]] BlockIterator<T, BlockSize> end() const {

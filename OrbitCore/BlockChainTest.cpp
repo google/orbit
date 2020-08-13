@@ -94,6 +94,7 @@ TEST(BlockChain, ElementIteration) {
   constexpr const int v3 = 15;
 
   BlockChain<int, 1024> chain;
+
   chain.push_back(v1);
   chain.push_back(v2);
   chain.push_back(v3);
@@ -137,6 +138,12 @@ TEST(BlockChain, ElementIteration) {
   }
 
   EXPECT_EQ(it_count, 2000);
+}
+
+TEST(BlockChain, EmptyIteration) {
+  BlockChain<std::string, 1024> chain;
+  auto it = chain.begin();
+  ASSERT_FALSE(it != chain.end());
 }
 
 TEST(BlockChain, AddCopyableTypesN) {
