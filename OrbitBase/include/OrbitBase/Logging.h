@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <string>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -33,6 +34,8 @@
         "[%28s] " format "\n", file_and_line__.c_str(), ##__VA_ARGS__);       \
     PLATFORM_LOG(formatted_log__.c_str());                                    \
   } while (0)
+
+#define LOG_VAR(x) LOG("%s = %s", #x, std::to_string(x))
 
 #if defined(_WIN32) && defined(ERROR)
 #undef ERROR
