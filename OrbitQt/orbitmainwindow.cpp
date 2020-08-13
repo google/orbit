@@ -23,7 +23,7 @@
 
 #include "App.h"
 #include "MainThreadExecutorImpl.h"
-#include "OrbitVersion.h"
+#include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
 #include "SamplingReport.h"
 #include "TopDownViewItemModel.h"

@@ -7,7 +7,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitService.h"
-#include "OrbitVersion.h"
+#include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"

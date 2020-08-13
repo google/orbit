@@ -42,7 +42,8 @@ target_link_libraries(OrbitServiceLib PUBLIC
         OrbitCore
         OrbitFramePointerValidator
         OrbitLinuxTracing
-        OrbitProtos)
+        OrbitProtos
+        OrbitVersion)
 
 project(OrbitService)
 add_executable(OrbitService main.cpp)
