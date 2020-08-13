@@ -86,6 +86,10 @@ class Track : public Pickable, public std::enable_shared_from_this<Track> {
   [[nodiscard]] virtual bool IsCollapsable() const { return false; }
 
  protected:
+  void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points,
+                       const Vec2& pos, const Color& color, float rotation,
+                       float z);
+
   GlCanvas* m_Canvas;
   TimeGraph* time_graph_;
   Vec2 m_Pos;

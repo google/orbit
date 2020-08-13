@@ -7,28 +7,37 @@
 #include "OpenGl.h"
 #include "OrbitBase/Logging.h"
 
-PickingId PickingManager::CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
-                                           BatcherId batcher_id) {
+PickingId PickingManager::CreateOrGetPickableId(
+    std::weak_ptr<Pickable> pickable, BatcherId batcher_id) {
   absl::MutexLock lock(&mutex_);
-  ++id_counter_;
-  PickingId id =
-      PickingId::Create(PickingType::kPickable, id_counter_, batcher_id);
-  id_pickable_map_[id_counter_] = a_Pickable;
+  uint32_t pickable_id = 0;
+  auto it = pickable_pid_map_.find(pickable.lock().get());
+  if (it != pickable_pid_map_.end()) {
+    pickable_id = it->second;
+  } else {
+    pickable_id = ++pickable_id_counter_;
+    pid_pickable_map_[pickable_id] = pickable;
+    pickable_pid_map_[pickable.lock().get()] = pickable_id;
+  }
+
+  PickingId id = PickingId::Create(PickingType::kPickable, pickable_id_counter_,
+                                   batcher_id);
   return id;
 }
 
 void PickingManager::Reset() {
   absl::MutexLock lock(&mutex_);
-  id_pickable_map_.clear();
-  id_counter_ = 0;
+  pid_pickable_map_.clear();
+  pickable_pid_map_.clear();
+  pickable_id_counter_ = 0;
 }
 
 std::weak_ptr<Pickable> PickingManager::GetPickableFromId(PickingId id) const {
   CHECK(id.type == PickingType::kPickable);
 
   absl::MutexLock lock(&mutex_);
-  auto it = id_pickable_map_.find(id.element_id);
-  if (it == id_pickable_map_.end()) {
+  auto it = pid_pickable_map_.find(id.element_id);
+  if (it == pid_pickable_map_.end()) {
     return std::weak_ptr<Pickable>();
   }
   return it->second;
@@ -73,7 +82,7 @@ bool PickingManager::IsDragging() const {
 
 Color PickingManager::GetPickableColor(std::weak_ptr<Pickable> pickable,
                                        BatcherId batcher_id) {
-  PickingId id = CreatePickableId(pickable, batcher_id);
+  PickingId id = CreateOrGetPickableId(pickable, batcher_id);
   return ColorFromPickingID(id);
 }
 

@@ -90,6 +90,8 @@ struct PickingId {
 class PickingManager {
  public:
   PickingManager() {}
+  PickingManager(PickingManager& rhs) = delete;
+
   void Reset();
 
   void Pick(PickingId id, int x, int y);
@@ -105,13 +107,14 @@ class PickingManager {
   [[nodiscard]] bool IsThisElementPicked(const Pickable* pickable) const;
 
  private:
-  [[nodiscard]] PickingId CreatePickableId(std::weak_ptr<Pickable> a_Pickable,
-                                           BatcherId batcher_id);
+  [[nodiscard]] PickingId CreateOrGetPickableId(
+      std::weak_ptr<Pickable> pickable, BatcherId batcher_id);
   [[nodiscard]] Color ColorFromPickingID(PickingId id) const;
 
  private:
-  uint32_t id_counter_ = 0;
-  std::unordered_map<uint32_t, std::weak_ptr<Pickable>> id_pickable_map_;
+  uint32_t pickable_id_counter_ = 0;
+  std::unordered_map<uint32_t, std::weak_ptr<Pickable>> pid_pickable_map_;
+  std::unordered_map<Pickable*, uint32_t> pickable_pid_map_;
   std::weak_ptr<Pickable> currently_picked_;
   mutable absl::Mutex mutex_;
 };

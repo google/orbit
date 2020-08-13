@@ -12,28 +12,21 @@
 
 using orbit_client_protos::TimerInfo;
 
-CaptureWindow::CaptureWindow() {
+CaptureWindow::CaptureWindow() : GlCanvas() {
   GCurrentTimeGraph = &time_graph_;
   time_graph_.SetTextRenderer(&m_TextRenderer);
-  time_graph_.SetPickingManager(&m_PickingManager);
   time_graph_.SetCanvas(this);
   m_DrawUI = false;
   m_DrawHelp = true;
   m_DrawFilter = false;
   m_FirstHelpDraw = true;
   m_DrawStats = false;
-  m_Picking = false;
   m_WorldTopLeftX = 0;
   m_WorldTopLeftY = 0;
   m_WorldMaxY = 0;
 
   slider_ = std::make_shared<GlSlider>();
   vertical_slider_ = std::make_shared<GlSlider>();
-
-  m_HoverDelayMs = 300;
-  m_CanHover = false;
-  m_IsHovering = false;
-  ResetHoverTimer();
 
   slider_->SetCanvas(this);
   slider_->SetDragCallback([&](float a_Ratio) { this->OnDrag(a_Ratio); });
@@ -70,6 +63,7 @@ void CaptureWindow::UpdateWheelMomentum(float a_DeltaTime) {
 
 void CaptureWindow::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
                                bool /*a_Middle*/) {
+  // TODO: Reduce code duplication, call super!
   int mousex = a_X;
   int mousey = a_Y;
 
@@ -225,6 +219,7 @@ void CaptureWindow::Hover(int a_X, int a_Y) {
 void CaptureWindow::FindCode(uint64_t /*address*/) {}
 
 void CaptureWindow::PreRender() {
+  // TODO: Move to GlCanvas?
   if (is_mouse_over_ && m_CanHover &&
       m_HoverTimer.QueryMillis() > m_HoverDelayMs) {
     m_IsHovering = true;
@@ -505,11 +500,6 @@ void CaptureWindow::OnCaptureStarted() {
   NeedsRedraw();
 }
 
-void CaptureWindow::ResetHoverTimer() {
-  m_HoverTimer.Reset();
-  m_CanHover = true;
-}
-
 void CaptureWindow::Draw() {
   m_WorldMaxY =
       1.5f * ScreenToWorldHeight(static_cast<int>(slider_->GetPixelHeight()));
@@ -540,12 +530,12 @@ void CaptureWindow::Draw() {
     box.Draw(&ui_batcher_, m_TextRenderer, -FLT_MAX, true, true);
   }
 
-  if (!m_Picking && !m_IsHovering) {
+  if (GetPickingMode() == PickingMode::kNone) {
     RenderTimeBar();
 
     Vec2 pos(m_MouseX, m_WorldTopLeftY);
     ui_batcher_.AddVerticalLine(pos, -m_WorldHeight, Z_VALUE_TEXT,
-                                Color(0, 255, 0, 127), PickingType::kLine);
+                                Color(0, 255, 0, 127));
   }
 }
 
@@ -592,14 +582,14 @@ void CaptureWindow::DrawScreenSpace() {
 
   Box box(Vec2(margin_x0, 0),
           Vec2(margin_x1 - margin_x0, canvasHeight - height), z);
-  ui_batcher_.AddBox(box, kBackgroundColor, PickingType::kBox);
+  ui_batcher_.AddBox(box, kBackgroundColor);
 
   // Time bar background
   if (time_graph_.GetCaptureTimeSpanUs() > 0) {
     Box box(Vec2(0, time_graph_.GetLayout().GetSliderWidth()),
             Vec2(getWidth(), time_graph_.GetLayout().GetTimeBarHeight()),
             GlCanvas::Z_VALUE_TEXT_UI_BG);
-    ui_batcher_.AddBox(box, Color(70, 70, 70, 200), PickingType::kBox);
+    ui_batcher_.AddBox(box, Color(70, 70, 70, 200));
   }
 }
 
@@ -639,18 +629,6 @@ Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
   UNREACHABLE();
 }
 
-[[nodiscard]] PickingMode CaptureWindow::GetPickingMode() {
-  PickingMode picking_mode = PickingMode::kNone;
-  if (m_Picking) {
-    picking_mode = PickingMode::kClick;
-  }
-  if (m_IsHovering) {
-    picking_mode = PickingMode::kHover;
-  }
-
-  return picking_mode;
-}
-
 void CaptureWindow::NeedsUpdate() {
   time_graph_.NeedsUpdate();
   m_NeedsRedraw = true;
@@ -670,7 +648,7 @@ static std::string VariableToString(std::string_view name, const T& value) {
 
 void CaptureWindow::RenderUI() {
   // Don't draw ImGui when picking.
-  if (m_Picking || m_IsHovering) {
+  if (GetPickingMode() != PickingMode::kNone) {
     return;
   }
 
@@ -860,8 +838,7 @@ void CaptureWindow::RenderTimeBar() {
 
       Vec2 pos(worldX, worldY);
       ui_batcher_.AddVerticalLine(pos, height, GlCanvas::Z_VALUE_UI,
-                                  Color(255, 255, 255, 255),
-                                  PickingType::kLine);
+                                  Color(255, 255, 255, 255));
     }
   }
 }

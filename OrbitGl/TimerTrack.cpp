@@ -63,7 +63,8 @@ void TimerTrack::UpdateBoxHeight() {
   box_height_ = time_graph_->GetLayout().GetTextBoxHeight();
 }
 
-void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingMode /*picking_mode*/) {
+void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick,
+                                  PickingMode /*picking_mode*/) {
   UpdateBoxHeight();
 
   Batcher* batcher = &time_graph_->GetBatcher();
@@ -105,8 +106,10 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
       for (size_t k = 0; k < block.size(); ++k) {
         TextBox& text_box = block[k];
         const TimerInfo& timer_info = text_box.GetTimerInfo();
-        if (min_tick > timer_info.end() || max_tick < timer_info.start()) continue;
-        if (timer_info.start() >= min_ignore && timer_info.end() <= max_ignore) continue;
+        if (min_tick > timer_info.end() || max_tick < timer_info.start())
+          continue;
+        if (timer_info.start() >= min_ignore && timer_info.end() <= max_ignore)
+          continue;
         if (!TimerFilter(timer_info)) continue;
 
         UpdateDepth(timer_info.depth() + 1);
@@ -138,11 +141,9 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
           if (!is_collapsed) {
             SetTimesliceText(timer_info, elapsed_us, min_x, &text_box);
           }
-          batcher->AddShadedBox(pos, size, z, color, PickingType::kBox,
-                                std::move(user_data));
+          batcher->AddShadedBox(pos, size, z, color, std::move(user_data));
         } else {
-          auto type = PickingType::kLine;
-          batcher->AddVerticalLine(pos, size[1], z, color, type,
+          batcher->AddVerticalLine(pos, size[1], z, color,
                                    std::move(user_data));
           // For lines, we can ignore the entire pixel into which this event
           // falls. We align this precisely on the pixel x-coordinate of the
@@ -150,10 +151,10 @@ void TimerTrack::UpdatePrimitives(uint64_t min_tick, uint64_t max_tick, PickingM
           // zero, we need to avoid dividing by zero, but we also wouldn't
           // gain anything here.
           if (pixel_delta_in_ticks != 0) {
-            min_ignore =
-                min_timegraph_tick +
-                ((timer_info.start() - min_timegraph_tick) / pixel_delta_in_ticks) *
-                    pixel_delta_in_ticks;
+            min_ignore = min_timegraph_tick +
+                         ((timer_info.start() - min_timegraph_tick) /
+                          pixel_delta_in_ticks) *
+                             pixel_delta_in_ticks;
             max_ignore = min_ignore + pixel_delta_in_ticks;
           }
         }
@@ -206,7 +207,7 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetTimers() {
 }
 
 const TextBox* TimerTrack::GetFirstAfterTime(TickType time,
-                                              uint32_t depth) const {
+                                             uint32_t depth) const {
   std::shared_ptr<TimerChain> chain = GetTimers(depth);
   if (chain == nullptr) return nullptr;
 
@@ -223,7 +224,7 @@ const TextBox* TimerTrack::GetFirstAfterTime(TickType time,
 }
 
 const TextBox* TimerTrack::GetFirstBeforeTime(TickType time,
-                                               uint32_t depth) const {
+                                              uint32_t depth) const {
   std::shared_ptr<TimerChain> chain = GetTimers(depth);
   if (chain == nullptr) return nullptr;
 

@@ -30,7 +30,7 @@ float GlCanvas::Z_VALUE_BOX_INACTIVE = -0.03f;
 float GlCanvas::Z_VALUE_EVENT_BAR = -0.1f;
 float GlCanvas::Z_VALUE_EVENT_BAR_PICKING = 0.1f;
 
-GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi) {
+GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &m_PickingManager) {
   m_TextRenderer.SetCanvas(this);
 
   m_Width = 0;
@@ -68,6 +68,11 @@ GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi) {
   m_UpdateTimer.Start();
 
   // SetCursor(wxCURSOR_BLANK);
+
+  m_HoverDelayMs = 300;
+  m_CanHover = false;
+  m_IsHovering = false;
+  ResetHoverTimer();
 
   UpdateSceneBox();
 
@@ -124,6 +129,7 @@ void GlCanvas::MouseMoved(int a_X, int a_Y, bool a_Left, bool /*a_Right*/,
     m_SelectStop = Vec2(worldx, worldy);
   }
 
+  ResetHoverTimer();
   NeedsRedraw();
 }
 
@@ -404,7 +410,7 @@ void GlCanvas::Render(int a_Width, int a_Height) {
 
   // We have to draw everything collected in the batcher at this point,
   // as prepareScreenSpaceViewport() changes the coordinate system.
-  ui_batcher_.Draw();
+  ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
   ui_batcher_.Reset();
 
   prepareScreenSpaceViewport();
@@ -416,7 +422,7 @@ void GlCanvas::Render(int a_Width, int a_Height) {
   RenderUI();
 
   // Draw remaining elements collected with the batcher.
-  ui_batcher_.Draw();
+  ui_batcher_.Draw(GetPickingMode() != PickingMode::kNone);
   ui_batcher_.Reset();
 
   glFlush();
@@ -473,4 +479,20 @@ int GlCanvas::AddText2D(const char* a_Text, int a_X, int a_Y, float a_Z,
                         bool a_RightJustified, bool a_InvertY) {
   return m_TextRenderer.AddText2D(a_Text, a_X, a_Y, a_Z, a_Color, a_MaxSize,
                                   a_RightJustified, a_InvertY);
+}
+
+void GlCanvas::ResetHoverTimer() {
+  m_HoverTimer.Reset();
+  m_CanHover = true;
+}
+
+[[nodiscard]] PickingMode GlCanvas::GetPickingMode() {
+  if (m_Picking) {
+    return PickingMode::kClick;
+  }
+  if (m_IsHovering) {
+    return PickingMode::kHover;
+  }
+
+  return PickingMode::kNone;
 }

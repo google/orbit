@@ -162,12 +162,10 @@ void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* a_Buffer) {
     vertex_t v2 =
         *static_cast<const vertex_t*>(vector_get(a_Buffer->vertices, i2));
 
-    batcher->AddLine(Vec2(v0.x, v0.y), Vec2(v1.x, v1.y), v0.z, color,
-                     PickingType::kPickable);
-    batcher->AddLine(Vec2(v1.x, v1.y), Vec2(v2.x, v2.y), v1.z, color,
-                     PickingType::kPickable);
-    batcher->AddLine(Vec2(v2.x, v2.y), Vec2(v0.x, v0.y), v2.z, color,
-                     PickingType::kPickable);
+    // TODO: This should be pickable??
+    batcher->AddLine(Vec2(v0.x, v0.y), Vec2(v1.x, v1.y), v0.z, color);
+    batcher->AddLine(Vec2(v1.x, v1.y), Vec2(v2.x, v2.y), v1.z, color);
+    batcher->AddLine(Vec2(v2.x, v2.y), Vec2(v0.x, v0.y), v2.z, color);
   }
 }
 

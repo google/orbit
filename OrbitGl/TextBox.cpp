@@ -102,7 +102,8 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
 
   if (a_Visible) {
     Box box(m_Pos, m_Size, z);
-    batcher->AddBox(box, color, PickingType::kPickable);
+    // TODO: This should be pickable??
+    batcher->AddBox(box, color);
 
     static Color s_Color(255, 255, 255, 255);
 
@@ -126,5 +127,6 @@ void TextBox::Draw(Batcher* batcher, TextRenderer& a_TextRenderer, float a_MinX,
     }
   }
 
-  batcher->AddVerticalLine(m_Pos, m_Size[1], z, grey, PickingType::kPickable);
+  // TODO: This should be pickable??
+  batcher->AddVerticalLine(m_Pos, m_Size[1], z, grey);
 }

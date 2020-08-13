@@ -115,22 +115,18 @@ void GlSlider::DrawHorizontal(GlCanvas* canvas, PickingMode picking_mode) {
   // Bar
   if (!picking) {
     Box box(Vec2(0, y), Vec2(canvasWidth, GetPixelHeight()), 0.f);
-    batcher->AddBox(box, m_BarColor, PickingType::kPickable);
+    batcher->AddBox(box, m_BarColor, shared_from_this());
   }
 
   float start = m_Ratio * nonSliderWidth;
   float stop = start + sliderWidth;
 
-  Color color = m_SliderColor;
-  if (picking) {
-    color = canvas->GetPickingManager().GetPickableColor(shared_from_this(),
-                                                         BatcherId::kUi);
-  } else if (canvas->GetPickingManager().IsThisElementPicked(this)) {
-    color = m_SelectedColor;
-  }
+  Color color = canvas->GetPickingManager().IsThisElementPicked(this)
+                    ? m_SelectedColor
+                    : m_SliderColor;
 
   Box box(Vec2(start, y), Vec2(stop - start, GetPixelHeight()), 0.f);
-  batcher->AddBox(box, color, PickingType::kPickable);
+  batcher->AddBox(box, color, shared_from_this());
 }
 
 void GlSlider::DrawVertical(GlCanvas* canvas, PickingMode picking_mode) {
@@ -147,20 +143,16 @@ void GlSlider::DrawVertical(GlCanvas* canvas, PickingMode picking_mode) {
   // Bar
   if (!picking) {
     Box box(Vec2(x, 0), Vec2(GetPixelHeight(), canvasHeight), 0.f);
-    batcher->AddBox(box, m_BarColor, PickingType::kPickable);
+    batcher->AddBox(box, m_BarColor, shared_from_this());
   }
 
   float start = canvasHeight - m_Ratio * nonSliderHeight;
   float stop = start - sliderHeight;
 
-  Color color = m_SliderColor;
-  if (picking) {
-    color = canvas->GetPickingManager().GetPickableColor(shared_from_this(),
-                                                         BatcherId::kUi);
-  } else if (canvas->GetPickingManager().IsThisElementPicked(this)) {
-    color = m_SelectedColor;
-  }
+  Color color = canvas->GetPickingManager().IsThisElementPicked(this)
+                    ? m_SelectedColor
+                    : m_SliderColor;
 
   Box box(Vec2(x, start), Vec2(GetPixelHeight(), stop - start), 0.f);
-  batcher->AddBox(box, color, PickingType::kPickable);
+  batcher->AddBox(box, color, shared_from_this());
 }

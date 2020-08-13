@@ -37,7 +37,7 @@ using orbit_client_protos::TimerInfo;
 
 TimeGraph* GCurrentTimeGraph = nullptr;
 
-TimeGraph::TimeGraph() {
+TimeGraph::TimeGraph() : m_Batcher(BatcherId::kTimeGraph) {
   m_LastThreadReorder.Start();
   scheduler_track_ = GetOrCreateSchedulerTrack();
 
@@ -66,6 +66,7 @@ void TimeGraph::SetCanvas(GlCanvas* a_Canvas) {
   m_Canvas = a_Canvas;
   m_TextRenderer->SetCanvas(a_Canvas);
   m_TextRendererStatic.SetCanvas(a_Canvas);
+  m_Batcher.SetPickingManager(&a_Canvas->GetPickingManager());
 }
 
 void TimeGraph::SetFontSize(int a_FontSize) {
@@ -706,7 +707,7 @@ void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
                      const std::string& label, const std::string& time,
                      float text_y) {
   Box box(pos, size, GlCanvas::Z_VALUE_OVERLAY);
-  canvas->GetBatcher()->AddBox(box, color, PickingType::kBox);
+  canvas->GetBatcher()->AddBox(box, color);
 
   std::string text = absl::StrFormat("%s: %s", label, time);
 
@@ -723,7 +724,7 @@ void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
   Vec2 line_from(pos[0], text_y + kOffsetBelowText);
   Vec2 line_to(pos[0] + size[0], text_y + kOffsetBelowText);
   canvas->GetBatcher()->AddLine(line_from, line_to, GlCanvas::Z_VALUE_OVERLAY,
-                                Color(255, 255, 255, 255), PickingType::kLine);
+                                Color(255, 255, 255, 255));
 }
 
 }  // namespace
@@ -773,7 +774,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
 
     canvas->GetBatcher()->AddVerticalLine(
         pos, -world_height, GlCanvas::Z_VALUE_OVERLAY,
-        GetThreadColor(timer_info.thread_id()), PickingType::kLine, nullptr);
+        GetThreadColor(timer_info.thread_id()));
   }
 
   // Draw boxes with timings between iterators.
