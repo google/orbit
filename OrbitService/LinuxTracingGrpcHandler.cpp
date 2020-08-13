@@ -6,6 +6,8 @@
 
 #include "llvm/Demangle/Demangle.h"
 
+namespace orbit_service {
+
 void LinuxTracingGrpcHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
   CHECK(!sender_thread_.joinable());
@@ -217,3 +219,5 @@ void LinuxTracingGrpcHandler::SendBufferedEvents(
   }
   reader_writer_->Write(response);
 }
+
+}  // namespace orbit_service

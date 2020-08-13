@@ -13,6 +13,8 @@
 
 #include "capture.pb.h"
 
+namespace orbit_service {
+
 class OrbitService {
  public:
   explicit OrbitService(uint16_t grpc_port) : grpc_port_{grpc_port} {}
@@ -20,7 +22,9 @@ class OrbitService {
   void Run(std::atomic<bool>* exit_requested);
 
  private:
-  bool IsSshWatchdogActive() { return last_stdin_message_ != std::nullopt; }
+  [[nodiscard]] bool IsSshWatchdogActive() {
+    return last_stdin_message_ != std::nullopt;
+  }
 
   uint16_t grpc_port_;
 
@@ -34,5 +38,7 @@ class OrbitService {
   //  seconds back to 10 seconds.
   const int kWatchdogTimeoutInSeconds = 25;
 };
+
+}  // namespace orbit_service
 
 #endif  // ORBIT_SERVICE_ORBIT_SERVICE_H

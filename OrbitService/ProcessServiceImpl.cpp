@@ -12,6 +12,8 @@
 #include "Utils.h"
 #include "symbol.pb.h"
 
+namespace orbit_service {
+
 using grpc::ServerContext;
 using grpc::Status;
 using grpc::StatusCode;
@@ -24,7 +26,7 @@ Status ProcessServiceImpl::GetProcessList(ServerContext*,
 
     const auto refresh_result = process_list_.Refresh();
     if (!refresh_result) {
-      return Status(StatusCode::INTERNAL, refresh_result.error());
+      return Status(StatusCode::INTERNAL, refresh_result.error().message());
     }
   }
 
@@ -40,7 +42,7 @@ Status ProcessServiceImpl::GetProcessList(ServerContext*,
   return Status::OK;
 }
 
-Status ProcessServiceImpl::GetModuleList(ServerContext*,
+Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
                                          const GetModuleListRequest* request,
                                          GetModuleListResponse* response) {
   int32_t pid = request->process_id();
@@ -69,16 +71,15 @@ Status ProcessServiceImpl::GetProcessMemory(
                         &num_bytes_read)) {
     response->mutable_memory()->resize(num_bytes_read);
     return Status::OK;
-  } else {
-    response->mutable_memory()->resize(0);
-    ERROR("GetProcessMemory: reading %lu bytes from address %#lx of process %d",
-          size, request->address(), request->pid());
-    return Status(
-        StatusCode::PERMISSION_DENIED,
-        absl::StrFormat(
-            "Could not read %lu bytes from address %#lx of process %d", size,
-            request->address(), request->pid()));
   }
+
+  response->mutable_memory()->resize(0);
+  ERROR("GetProcessMemory: reading %lu bytes from address %#lx of process %u",
+        size, request->address(), request->pid());
+  return Status(StatusCode::PERMISSION_DENIED,
+                absl::StrFormat(
+                    "Could not read %lu bytes from address %#lx of process %u",
+                    size, request->address(), request->pid()));
 }
 
 Status ProcessServiceImpl::GetDebugInfoFile(
@@ -95,3 +96,5 @@ Status ProcessServiceImpl::GetDebugInfoFile(
 
   return Status::OK;
 }
+
+}  // namespace orbit_service

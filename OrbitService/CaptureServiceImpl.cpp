@@ -4,9 +4,10 @@
 
 #include "CaptureServiceImpl.h"
 
-#include <OrbitBase/Logging.h>
-
 #include "LinuxTracingGrpcHandler.h"
+#include "OrbitBase/Logging.h"
+
+namespace orbit_service {
 
 grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerContext*,
@@ -30,3 +31,5 @@ grpc::Status CaptureServiceImpl::Capture(
   LOG("Finished handling gRPC call to Capture: all capture data has been sent");
   return grpc::Status::OK;
 }
+
+}  // namespace orbit_service

@@ -11,6 +11,8 @@
 #include "ElfUtils/ElfFile.h"
 #include "OrbitFramePointerValidator/FramePointerValidator.h"
 
+namespace orbit_service {
+
 grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
     grpc::ServerContext*, const ValidateFramePointersRequest* request,
     ValidateFramePointersResponse* response) {
@@ -50,3 +52,5 @@ grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
 
   return grpc::Status::OK;
 }
+
+}  // namespace orbit_service

@@ -13,6 +13,8 @@
 #include "absl/synchronization/mutex.h"
 #include "services.grpc.pb.h"
 
+namespace orbit_service {
+
 class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
  public:
   explicit LinuxTracingGrpcHandler(
@@ -39,10 +41,11 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
   grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer_;
   std::unique_ptr<LinuxTracing::Tracer> tracer_;
 
-  static uint64_t ComputeCallstackKey(const Callstack& callstack);
-  uint64_t InternCallstackIfNecessaryAndGetKey(Callstack callstack);
-  static uint64_t ComputeStringKey(const std::string& str);
-  uint64_t InternStringIfNecessaryAndGetKey(std::string str);
+  [[nodiscard]] static uint64_t ComputeCallstackKey(const Callstack& callstack);
+  [[nodiscard]] uint64_t InternCallstackIfNecessaryAndGetKey(
+      Callstack callstack);
+  [[nodiscard]] static uint64_t ComputeStringKey(const std::string& str);
+  [[nodiscard]] uint64_t InternStringIfNecessaryAndGetKey(std::string str);
 
   absl::flat_hash_set<uint64_t> addresses_seen_;
   absl::Mutex addresses_seen_mutex_;
@@ -58,5 +61,7 @@ class LinuxTracingGrpcHandler : public LinuxTracing::TracerListener {
   absl::Mutex event_buffer_mutex_;
   std::thread sender_thread_;
 };
+
+}  // namespace orbit_service
 
 #endif  // ORBIT_SERVICE_LINUX_TRACING_GRPC_HANDLER_H_
